@@ -143,6 +143,22 @@ return {
     end,
   },
 
+  -- Trouble.nvim for displaying LSP diagnostics
+  {
+    "folke/trouble.nvim",
+    dependencies = "nvim-tree/nvim-web-devicons", -- Abhängigkeit für Icons
+    lazy = false, -- Lade das Plugin direkt beim Start
+    config = function()
+      require("trouble").setup({
+        mode = "document_diagnostics", -- Standardmodus
+        auto_open = false,             -- Öffnet Trouble nicht automatisch
+        auto_close = true,             -- Schließt Trouble, wenn keine Fehler vorhanden sind
+        auto_preview = false,          -- Vorschau bei Auswahl deaktivieren
+      })
+    end,
+  },
+
+
 
 -- 4. Git related plugins
 

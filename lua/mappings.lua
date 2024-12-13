@@ -209,3 +209,23 @@ map("n", "<leader>fz7", ":FzfLua filetypes<CR>", { desc = "Dateitypen anzeigen" 
 
 
 -- LSP
+-- Trouble.nvim Keymaps
+map("n", "<leader>xx", "<cmd>Trouble diagnostics<cr>", { silent = true, noremap = true, desc = "Show Diagnostics" })
+map("n", "<leader>xw", "<cmd>Trouble diagnostics workspace<cr>", { silent = true, noremap = true, desc = "Workspace Diagnostics" })
+map("n", "<leader>xd", "<cmd>Trouble diagnostics document<cr>", { silent = true, noremap = true, desc = "Document Diagnostics" })
+map("n", "<leader>xl", "<cmd>Trouble loclist<cr>", { silent = true, noremap = true, desc = "Location List" })
+map("n", "<leader>xq", "<cmd>Trouble quickfix<cr>", { silent = true, noremap = true, desc = "Quickfix List" })
+-- LSP bezogene Befehle
+map("n", "<leader>xr", "<cmd>Trouble lsp_references<cr>", { silent = true, noremap = true, desc = "LSP References" })
+map("n", "<leader>xi", "<cmd>Trouble lsp_implementations<cr>", { silent = true, noremap = true, desc = "LSP Implementations" })
+map("n", "<leader>xs", "<cmd>Trouble lsp_document_symbols<cr>", { silent = true, noremap = true, desc = "Document Symbols" })
+map("n", "<leader>xt", "<cmd>Trouble lsp_type_definitions<cr>", { silent = true, noremap = true, desc = "Type Definitions" })
+map("n", "<leader>xd", "<cmd>Trouble lsp_definitions<cr>", { silent = true, noremap = true, desc = "LSP Definitions" })
+-- Navigation in Fehlern und Symbolen
+map("n", "[q", "<cmd>cprevious<cr>", { silent = true, noremap = true, desc = "Previous Quickfix" })
+map("n", "]q", "<cmd>cnext<cr>", { silent = true, noremap = true, desc = "Next Quickfix" })
+map("n", "[l", "<cmd>lprevious<cr>", { silent = true, noremap = true, desc = "Previous Location List" })
+map("n", "]l", "<cmd>lnext<cr>", { silent = true, noremap = true, desc = "Next Location List" })
+-- Telescope-Integration
+map("n", "<leader>tf", "<cmd>Trouble telescope_files<cr>", { silent = true, noremap = true, desc = "Telescope Files" })
+map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { silent = true, noremap = true, desc = "Telescope Trouble" })
