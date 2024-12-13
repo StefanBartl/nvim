@@ -7,8 +7,50 @@ map("i", "jk", "<ESC>")
 map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
 
 
--- Treesitter
+-- Utils
 -- Normal mode keymaps
+map("n", "<leader>uz", ":echo len(join(getline(1, '$'), ''))<CR>", { desc = "Zeichen zählen" })
+map("n", "<leader>uw", ":echo len(split(join(getline(1, '$'), ''), '\\s\\+'))<CR>", { desc = "Wörter zählen" })
+
+map("n", "copyz", ':let @+=getline(".")<CR>:echo "Line copied to clipboard"<CR>', { desc = "Zeile in die Zwischenablage kopieren" })
+map("n", "copyc", ':.,$y+<CR>:echo "Copied to clipboard from cursor to EOF"<CR>', { desc = "Von Cursor bis EOF in die Zwischenablage kopieren" })
+map("n", "copyf", ':%y+<CR>:echo "Copied entire file to clipboard"<CR>', { desc = "Gesamte Datei in die Zwischenablage kopieren" })
+map("v", "copys", '"+y<CR>:echo "Copied selected text to clipboard"<CR>', { desc = "Ausgewählten Text in die Zwischenablage kopieren" })
+
+map("n", "<leader>ex", ":bufdo bd | qa<CR>", { desc = "Alle Buffer schließen und Neovim beenden" })
+map("n", "<leader>del", ":lua confirm_delete()<CR>", { desc = "Aktuelle Datei löschen (mit Bestätigung)" })
+map("n", "<leader>d!!", ":call DeleteFile()<CR>", { desc = "Datei löschen und Buffer schließen (ohne Bestätigung)" })
+
+map("n", "<CR>", function()
+  -- Speichert die aktuelle Cursorposition
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  -- Fügt oberhalb der aktuellen Zeile eine neue Zeile ein
+  vim.api.nvim_buf_set_lines(0, row - 1, row - 1, false, { "" })
+  -- Bewegt den Cursor in die ursprüngliche Zeile
+  vim.api.nvim_win_set_cursor(0, { row, col })
+end, { desc = "Zeile oberhalb einfügen" })
+
+
+-- Toggleterm
+-- Terminal mode keymaps
+map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+
+
+
+-- Nvimtree
+map("n", "<leader>+", function() vim.cmd("vertical resize +5") end, { desc = "Increase NvimTree width by 5" })
+map("n", "<leader>-", function() vim.cmd("vertical resize -5") end, { desc = "Decrease NvimTree width by 5" })
+
+
+-- Quixkfix
+map("n", "<leader>qo", ":copen<CR>", { desc = "Quickfix: Öffne Quickfix-Fenster" })
+map("n", "<leader>qn", ":cnext<CR>", { desc = "Quickfix: Gehe zum nächsten Fehler" })
+map("n", "<leader>qp", ":cprev<CR>", { desc = "Quickfix: Gehe zum vorherigen Fehler" })
+map("n", "<leader>qe", ":clist<CR>", { desc = "Quickfix: Zeige die Fehlerliste" })
+
+
+-- Treesitter
 map("n", "<leader>nf", "]m", { desc = "Nächste Funktion" })
 map("n", "<leader>pf", "[m", { desc = "Vorherige Funktion" })
 map("n", "<leader>nc", "]C", { desc = "Nächste Klasse" })
@@ -29,11 +71,11 @@ map("n", "<leader>np", "]p", { desc = "Nächsten Parameter finden" })
 map("n", "<leader>pp", "[p", { desc = "Vorherigen Parameter finden" })
 map("n", "<leader>ip", "vip", { desc = "Inneren Parameter auswählen" })
 map("n", "<leader>ap", "vap", { desc = "Äußeren Parameter auswählen" })
--- Visual mode keymaps
 map("x", "af", "@function.outer", { desc = "Äußere Funktion im visuellen Modus auswählen" })
 map("x", "if", "@function.inner", { desc = "Innere Funktion im visuellen Modus auswählen" })
 map("x", "ac", "@class.outer", { desc = "Äußere Klasse im visuellen Modus auswählen" })
 map("x", "ic", "@class.inner", { desc = "Innere Klasse im visuellen Modus auswählen" })
+
 
 -- Telescope
 -- Normal mode keymaps
@@ -57,6 +99,7 @@ map("n", "<leader>tu", ":Telescope<CR>", { desc = "Telescope UI starten" })
 map("i", "<M-p>", "<Cmd>lua require('telescope.builtin').find_files()<CR>", { desc = "Vorherige Suchkategorie" })
 map("i", "<M-n>", "<Cmd>lua require('telescope.builtin').find_files()<CR>", { desc = "Nächste Suchkategorie" })
 
+
 -- Harpoon
 -- Normal mode keymaps
 map("n", "<leader>h", function() require("harpoon.mark").add_file() end, { desc = "Datei zu Harpoon hinzufügen" })
@@ -70,6 +113,13 @@ map("n", "<leader>6", function() require("harpoon.ui").nav_file(6) end, { desc =
 map("n", "<leader>7", function() require("harpoon.ui").nav_file(7) end, { desc = "Navigiere zu Harpoon Datei 7" })
 map("n", "<leader>8", function() require("harpoon.ui").nav_file(8) end, { desc = "Navigiere zu Harpoon Datei 8" })
 map("n", "<leader>9", function() require("harpoon.ui").nav_file(9) end, { desc = "Navigiere zu Harpoon Datei 9" })
+
+
+-- Diffview
+map("n", "<leader>dv", ":DiffviewOpen<CR>", { desc = "Diffview öffnen" })
+map("n", "<leader>dc", ":DiffviewClose<CR>", { desc = "Diffview schließen" })
+map("n", "<leader>dh", ":DiffviewFileHistory<CR>", { desc = "Dateihistorie in Diffview anzeigen" })
+
 
 -- Fugitive
 -- Normal mode keymaps
@@ -85,9 +135,21 @@ map("n", "<leader>gp", ":Gpush<CR>", { desc = "Git: Pushe Änderungen zum Remote
 map("n", "<leader>gu", ":Gpull<CR>", { desc = "Git: Hole die neuesten Änderungen" })
 
 
+-- Neogit
+map("n", "<leader>ng", function() require("neogit").open() end, { desc = "Neogit Interface öffnen" })
+map("n", "<leader>nc", function() require("neogit").open({ "commit" }) end, { desc = "Neogit Commit" })
 
 
+-- Markdown
+map("i", "<C-Right>", "<Esc>zai", { desc = "Toggle folding under cursor" })
+map("i", "<C-Down>", "<Esc>zRi", { desc = "Open all foldings" })
+map("i", "<C-Left>", "<Esc>zci", { desc = "Close folding under cursor" })
+map("i", "<C-Up>", "<Esc>zMi", { desc = "Close all foldings" })
+map("n", "<leader>fo", "za", { desc = "Toggle Fold unter dem Cursor" }) -- Fold unter dem Cursor ein-/ausklappen
+map("n", "<leader>fa", "ggVGzM", { desc = "Alle Headings falten" })     -- Alle Headings falten
 
+
+-- Docker
 -- Normal mode keymaps
 -- Allgemeine Docker-Befehle
 map("n", "<leader>dp", ":DockerToolsOpen<CR>", { desc = "Show Docker containers" })
@@ -117,3 +179,32 @@ end, { nargs = 1, desc = "Remove a Docker container" })
 map("n", "<leader>dl", ":DockerLogs ", { desc = "Show Docker logs (type container name)" })
 map("n", "<leader>de", ":DockerExec ", { desc = "Execute command in Docker container" })
 map("n", "<leader>dr", ":DockerRm ", { desc = "Remove Docker container (type name)" })
+
+
+-- Copilot
+-- Insert mode keymaps
+map("i", "<C-y>", "<Plug>(copilot-accept)", { desc = "Accept Copilot suggestion" })
+map("i", "<C-l>", "<Plug>(copilot-accept-word)", { desc = "Accept next word of suggestion" })
+map("i", "<C-k>", "<Plug>(copilot-accept-line)", { desc = "Accept next line of suggestion" })
+map("i", "<C-r>", "<Plug>(copilot-dismiss)", { desc = "Dismiss suggestion" })
+map("i", "<C-n>", "<Plug>(copilot-next)", { desc = "Cycle to next suggestion" })
+map("i", "<C-p>", "<Plug>(copilot-previous)", { desc = "Cycle to previous suggestion" })
+map("i", "<C-s>", "<Plug>(copilot-suggest)", { desc = "Explicitly request suggestion" })
+
+-- FZF
+-- Normal mode keymaps
+map("n", "<leader>fza", ":FzfLua commands<CR>", { desc = "Befehle durchsuchen" })
+map("n", "<leader>fzb", ":FzfLua buffers<CR>", { desc = "Buffer durchsuchen" })
+map("n", "<leader>color", ":FzfLua colorschemes<CR>", { desc = "Farbschemata durchsuchen" })
+map("n", "<leader>fzd", ":FzfLua git_status<CR>", { desc = "Git-Status anzeigen" })
+map("n", "<leader>fze", ":FzfLua files<CR>", { desc = "Dateien durchsuchen" })
+map("n", "<leader>fzg", ":FzfLua git_commits<CR>", { desc = "Git-Commits durchsuchen" })
+map("n", "<leader>fzh", ":FzfLua help_tags<CR>", { desc = "Hilfe-Tags durchsuchen" })
+map("n", "<leader>fzi", ":FzfLua git_files<CR>", { desc = "Git-Dateien durchsuchen" })
+map("n", "<leader>fzj", ":FzfLua jumps<CR>", { desc = "Sprungpunkte durchsuchen" })
+map("n", "<leader>fzk", ":FzfLua lines<CR>", { desc = "Zeilen durchsuchen" })
+map("n", "<leader>reg", ":FzfLua registers<CR>", { desc = "Register durchsuchen" })
+map("n", "<leader>fzm", ":FzfLua quickfix<CR>", { desc = "Quickfix-Liste durchsuchen" })
+map("n", "<leader>fzr", ":FzfLua changes<CR>", { desc = "Änderungen durchsuchen" })
+map("n", "<leader>fz5", ":FzfLua command_history<CR>", { desc = "Befehlshistorie durchsuchen" })
+map("n", "<leader>grep", ":FzfLua live_grep<CR>", { desc = "Live-Grep" })

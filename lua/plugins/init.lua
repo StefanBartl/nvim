@@ -89,6 +89,11 @@ return {
     end
   },
 
+  {
+    "ibhagwan/fzf-lua",
+    lazy = false,
+  },
+
 
 -- 2. File management
 
