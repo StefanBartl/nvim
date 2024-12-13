@@ -31,6 +31,10 @@ dofile(vim.g.base46_cache .. "statusline")
 
 require "options"
 require "nvchad.autocmds"
+require "autocmds.text"
+
+-- Self written plugins
+require("myplugins.eslint_fix").setup()
 
 vim.schedule(function()
   require "mappings"
