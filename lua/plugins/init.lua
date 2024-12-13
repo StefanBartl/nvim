@@ -1,8 +1,138 @@
 return {
+
+-- 1. Essential dependencies and tools
+
+  -- Plenary, a necessary dependency for many other plugins
+  "nvim-lua/plenary.nvim",
+  -- Telescope for fuzzy finding files, buffers, etc.
+  {
+    "nvim-telescope/telescope.nvim",
+    lazy = false,
+    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-lua/plenary.nvim" },
+    cmd = "Telescope",
+    -- TODO: Wenn trouble installiert ist
+    --opts = function()
+    --  return require "configs.telescope"
+    --end,
+    config = function(_, opts)
+      dofile(vim.g.base46_cache .. "telescope")
+      local telescope = require "telescope"
+      telescope.setup(opts)
+      -- Load extensions
+      for _, ext in ipairs(opts.extensions_list) do
+        telescope.load_extension(ext)
+      end
+    end,
+  },
+
+  -- Telescope Search UI
+  {
+    "FabianWirth/search.nvim",
+    dependencies = { "nvim-telescope/telescope.nvim" },
+    config = function()
+      local builtin = require('telescope.builtin')
+      require("search").setup({
+        mappings = {
+          next = "<Tab>",
+          prev = "<C-p>"
+        },
+        append_tabs = {
+          {
+            "Commits",
+            builtin.git_commits,
+            available = function()
+              return vim.fn.isdirectory(".git") == 1
+            end
+          }
+        },
+        tabs = {
+          {
+            "Files",
+            function(opts)
+              opts = opts or {}
+              if vim.fn.isdirectory(".git") == 1 then
+                builtin.git_files(opts)
+              else
+                builtin.find_files(opts)
+              end
+            end
+          },
+          {
+            name = "All Files",
+            tele_func = builtin.find_files,
+            tele_opts = { no_ignore = true, hidden = true }
+          },
+          {
+            -- Neuer Tab für Grep
+            name = "Grep",
+            tele_func = builtin.live_grep, -- Verwende `live_grep` für Grep durch alle Dateien
+          },
+          {
+            -- Neuer Tab für Buffers
+            name = "Buffers",
+            tele_func = builtin.buffers, -- Verwende `buffers` zum Durchsuchen der offenen Buffer
+          },
+        },
+        collections = {
+          -- Die "git" Sammlung, wie im ursprünglichen Setup
+          git = {
+            initial_tab = 1, -- Git branches
+            tabs = {
+              { name = "Branches", tele_func = builtin.git_branches },
+              { name = "Commits",  tele_func = builtin.git_commits },
+              { name = "Stashes",  tele_func = builtin.git_stash },
+            }
+          }
+        }
+      })
+    end
+  },
+
+  -- FZF for fuzzy finding files, buffers, etc.
+  {
+    "ibhagwan/fzf-lua",
+    lazy = false,
+  },
+
+
+-- 2. File management
+
+  -- Harpoon for managing multiple files and quick navigation
+  {
+    "ThePrimeagen/harpoon",
+    lazy = false,                          -- Load immediately
+    dependencies = {
+      { "nvim-telescope/telescope.nvim" }, -- Telescope integration
+      { "nvim-lua/plenary.nvim" },
+    },
+    config = function()
+      require("harpoon").setup()
+      require("telescope").load_extension("harpoon")
+    end,
+  },
+
+
+-- 3. LSP completion
+-- TODO
   {
     "stevearc/conform.nvim",
-    -- event = 'BufWritePre', -- uncomment for format on save
-    opts = require "configs.conform",
+    config = function()
+      require("conform").setup({
+        formatters_by_ft = {
+          javascript = { "prettier" },
+          typescript = { "prettier" },
+          json = { "prettier" },
+          css = { "prettier" },
+          scss = { "prettier" },
+          tailwindcss = { "prettier" },
+          sql = { "sql_formatter" },
+        },
+        format_on_save = {
+          -- Enable for specific filetypes
+          ["*"] = { timeout_ms = 5000 },
+        },
+      })
+    end,
   },
 
   -- These are some examples, uncomment them if you want to see them work!
@@ -140,15 +270,6 @@ return {
     end,
   },
 
-  -- TODO: Was macht das
-  -- Quickfix Enhancer
-  {
-    "ashfinal/qfview.nvim",
-    event = "UIEnter",
-    config = function()
-      require("qfview").setup()
-    end,
-  },
 
   -- Auto Template Strings
   {
@@ -180,7 +301,6 @@ return {
     event = "InsertEnter",
     config = function()
       vim.g.copilot_no_tab_map = true -- Prevent conflicts with tab mappings
-      vim.api.nvim_set_keymap("i", "<C-J>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
     end,
   },
 
@@ -212,15 +332,15 @@ return {
 
 -- 8. MISC Plugins
 
-   -- Zen Mode
-   {
+  -- Zen Mode
+  {
     "folke/zen-mode.nvim",
-    },
+  },
 
-    -- TMUX
-    {
-        "aserowy/tmux.nvim",
-        config = function() return require("tmux").setup() end
-    },
+  -- TMUX
+  {
+      "aserowy/tmux.nvim",
+      config = function() return require("tmux").setup() end
+  },
 
 }

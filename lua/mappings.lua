@@ -2,13 +2,10 @@ require "nvchad.mappings"
 
 local map = vim.keymap.set
 
+-- Utils
 map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<ESC>")
 map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
-
-
--- Utils
--- Normal mode keymaps
 map("n", "<leader>uz", ":echo len(join(getline(1, '$'), ''))<CR>", { desc = "Zeichen zählen" })
 map("n", "<leader>uw", ":echo len(split(join(getline(1, '$'), ''), '\\s\\+'))<CR>", { desc = "Wörter zählen" })
 map("n", "copyz", ':let @+=getline(".")<CR>:echo "Line copied to clipboard"<CR>', { desc = "Zeile in die Zwischenablage kopieren" })
@@ -18,7 +15,6 @@ map("v", "copys", '"+y<CR>:echo "Copied selected text to clipboard"<CR>', { desc
 map("n", "<leader>ex", ":bufdo bd | qa<CR>", { desc = "Alle Buffer schließen und Neovim beenden" })
 map("n", "<leader>del", ":lua confirm_delete()<CR>", { desc = "Aktuelle Datei löschen (mit Bestätigung)" })
 map("n", "<leader>d!!", ":call DeleteFile()<CR>", { desc = "Datei löschen und Buffer schließen (ohne Bestätigung)" })
-
 map("n", "<CR>", function()
   -- Speichert die aktuelle Cursorposition
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -30,7 +26,6 @@ end, { desc = "Zeile oberhalb einfügen" })
 
 
 -- Toggleterm
--- Terminal mode keymaps
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 
@@ -70,30 +65,21 @@ map("n", "<leader>ap", "vap", { desc = "Äußeren Parameter auswählen" })
 
 
 -- Telescope
--- Normal mode keymaps
-map("n", "<leader>ff", function()
-  require("telescope.builtin").find_files()
-end, { desc = "Find Files" })
-map("n", "<leader>fg", function()
-require("telescope.builtin").live_grep()
-end, { desc = "Live Grep" })
+map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
+map("n", "<leader>fg", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
 map("n", "<leader><leader>", "<cmd> Telescope find_files follow=true no_ignore=true hidden=true <CR>", { desc = "Find all" })
 map("n", "<leader>git", "<cmd> Telescope git_files <CR>", { desc = "Öffne Git-Dateien" })
 map("n", "<Space>gf", "<cmd> Telescope live_grep <CR>", { desc = "Live-Grep" })
 map("n", "<Space>fh", "<cmd> Telescope help_tags <CR>", { desc = "Hilfe-Tags durchsuchen" })
 map("n", "<leader>pf", "<cmd> Telescope find_files <CR>", { desc = "Dateien finden" })
 map("n", "<Space>comm", "<cmd> Telescope git_commits <CR>", { desc = "Git-Commits anzeigen" })
-map("n", "<leader>gs", function()
-require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") })
-end, { desc = "Grep-Suche" })
+map("n", "<leader>gs", function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end, { desc = "Grep-Suche" })
 map("n", "<leader>tu", ":Telescope<CR>", { desc = "Telescope UI starten" })
--- Insert mode keymaps
 map("i", "<M-p>", "<Cmd>lua require('telescope.builtin').find_files()<CR>", { desc = "Vorherige Suchkategorie" })
 map("i", "<M-n>", "<Cmd>lua require('telescope.builtin').find_files()<CR>", { desc = "Nächste Suchkategorie" })
 
 
 -- Harpoon
--- Normal mode keymaps
 map("n", "<leader>h", function() require("harpoon.mark").add_file() end, { desc = "Datei zu Harpoon hinzufügen" })
 map("n", "<C-h>", function() require("harpoon.ui").toggle_quick_menu() end, { desc = "Harpoon-Menü umschalten" })
 map("n", "<leader>1", function() require("harpoon.ui").nav_file(1) end, { desc = "Navigiere zu Harpoon Datei 1" })
@@ -114,7 +100,6 @@ map("n", "<leader>dh", ":DiffviewFileHistory<CR>", { desc = "Dateihistorie in Di
 
 
 -- Fugitive
--- Normal mode keymaps
 map("n", "<leader>gf", ":Git<CR>", { desc = "Git-Status anzeigen (Fugitive)" })
 map("n", "<leader>gk", ":Git commit<CR>", { desc = "Git-Commit erstellen (Fugitive)" })
 map("n", "<leader>gi", ":Gdiffsplit<CR>", { desc = "Git-Diff im Split anzeigen (Fugitive)" })
@@ -142,7 +127,6 @@ map("n", "<leader>fa", "ggVGzM", { desc = "Alle Headings falten" })     -- Alle 
 
 
 -- Docker
--- Normal mode keymaps
 -- Allgemeine Docker-Befehle
 map("n", "<leader>dp", ":DockerToolsOpen<CR>", { desc = "Show Docker containers" })
 map("n", "<leader>di", ":DockerImages<CR>", { desc = "Show Docker images" })
@@ -156,17 +140,9 @@ map("n", "<leader>cp", ":ContainerStop ", { desc = "Stop a Docker container" })
 map("n", "<leader>cr", ":ContainerRemove ", { desc = "Remove a Docker container" })
 map("n", "<leader>cl", ":ContainerLogs ", { desc = "Show logs for Docker container" })
 -- Benutzerdefinierte Docker-Befehle
-vim.api.nvim_create_user_command("DockerLogs", function(opts)
-  vim.cmd("split | term docker logs " .. opts.args)
-end, { nargs = 1, desc = "Show Docker logs for a container" })
-
-vim.api.nvim_create_user_command("DockerExec", function(opts)
-  vim.cmd("split | term docker exec -it " .. opts.args)
-end, { nargs = 1, desc = "Execute command in a Docker container" })
-
-vim.api.nvim_create_user_command("DockerRm", function(opts)
-  vim.cmd("split | term docker rm " .. opts.args)
-end, { nargs = 1, desc = "Remove a Docker container" })
+vim.api.nvim_create_user_command("DockerLogs", function(opts) vim.cmd("split | term docker logs " .. opts.args) end, { nargs = 1, desc = "Show Docker logs for a container" })
+vim.api.nvim_create_user_command("DockerExec", function(opts) vim.cmd("split | term docker exec -it " .. opts.args) end, { nargs = 1, desc = "Execute command in a Docker container" })
+vim.api.nvim_create_user_command("DockerRm", function(opts) vim.cmd("split | term docker rm " .. opts.args) end, { nargs = 1, desc = "Remove a Docker container" })
 -- Keymaps für benutzerdefinierte Docker-Befehle
 map("n", "<leader>dl", ":DockerLogs ", { desc = "Show Docker logs (type container name)" })
 map("n", "<leader>de", ":DockerExec ", { desc = "Execute command in Docker container" })
@@ -174,14 +150,13 @@ map("n", "<leader>dr", ":DockerRm ", { desc = "Remove Docker container (type nam
 
 
 -- Copilot
--- Insert mode keymaps
-map("i", "<C-y>", "<Plug>(copilot-accept)", { desc = "Accept Copilot suggestion" })
-map("i", "<C-l>", "<Plug>(copilot-accept-word)", { desc = "Accept next word of suggestion" })
-map("i", "<C-k>", "<Plug>(copilot-accept-line)", { desc = "Accept next line of suggestion" })
-map("i", "<C-r>", "<Plug>(copilot-dismiss)", { desc = "Dismiss suggestion" })
-map("i", "<C-n>", "<Plug>(copilot-next)", { desc = "Cycle to next suggestion" })
-map("i", "<C-p>", "<Plug>(copilot-previous)", { desc = "Cycle to previous suggestion" })
-map("i", "<C-s>", "<Plug>(copilot-suggest)", { desc = "Explicitly request suggestion" })
+vim.api.nvim_set_keymap("i", "<C-y>", 'copilot#Accept("<CR>")', { silent = true, expr = true, noremap = true, desc = "Accept Copilot suggestion" })
+vim.api.nvim_set_keymap("i", "<C-l>", "<Plug>(copilot-accept-word)", { noremap = false, desc = "Accept next word of suggestion" })
+vim.api.nvim_set_keymap("i", "<C-k>", "<Plug>(copilot-accept-line)", { noremap = false, desc = "Accept next line of suggestion" })
+vim.api.nvim_set_keymap("i", "<C-r>", "<Plug>(copilot-dismiss)", { noremap = false, desc = "Dismiss Copilot suggestion" })
+vim.api.nvim_set_keymap("i", "<C-n>", "<Plug>(copilot-next)", { noremap = false, desc = "Cycle to next Copilot suggestion" })
+vim.api.nvim_set_keymap("i", "<C-p>", "<Plug>(copilot-previous)", { noremap = false, desc = "Cycle to previous Copilot suggestion" })
+vim.api.nvim_set_keymap("i", "<C-s>", "<Plug>(copilot-suggest)", { noremap = false, desc = "Explicitly request a new suggestion" })
 
 
 -- FZF
