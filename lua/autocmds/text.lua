@@ -30,3 +30,11 @@ autocmd("BufReadPost", {
     end
   end,
 })
+
+-- Image viewer
+vim.api.nvim_create_autocmd("BufReadPost", {
+    pattern = {"*.jpg", "*.jpeg", "*.png"},
+    callback = function()
+        vim.fn.system("open " .. vim.fn.expand("%"))
+    end
+})
