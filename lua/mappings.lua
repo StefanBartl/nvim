@@ -24,6 +24,17 @@ map("n", "<CR>", function()
   vim.api.nvim_win_set_cursor(0, { row, col })
 end, { desc = "Zeile oberhalb einfügen" })
 
+-- Normal mode fold mappings
+map("n", "zA", "zA", { desc = "Toggle all foldings" }) -- Standard für alle Foldings öffnen/schließen
+map("n", "zO", "zO", { desc = "Open all foldings" })   -- Alle Foldings öffnen
+map("n", "zC", "zC", { desc = "Close all foldings" })  -- Alle Foldings schließen
+
+-- Insert mode fold mappings
+map("i", "<C-Right>", "<Esc>zai", { desc = "Toggle folding under cursor" }) -- Folding unter Cursor öffnen/schließen
+map("i", "<C-Down>", "<Esc>zRi", { desc = "Open all foldings" })            -- Alle Foldings öffnen
+map("i", "<C-Left>", "<Esc>zci", { desc = "Close folding under cursor" })   -- Folding unter Cursor schließen
+map("i", "<C-Up>", "<Esc>zMi", { desc = "Close all foldings" })             -- Alle Foldings schließen
+
 
 -- Toggleterm
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
