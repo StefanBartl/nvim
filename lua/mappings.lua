@@ -35,6 +35,9 @@ map("i", "<C-Down>", "<Esc>zRi", { desc = "Open all foldings" })            -- A
 map("i", "<C-Left>", "<Esc>zci", { desc = "Close folding under cursor" })   -- Folding unter Cursor schließen
 map("i", "<C-Up>", "<Esc>zMi", { desc = "Close all foldings" })             -- Alle Foldings schließen
 
+-- Visual mode line shifting mappings
+map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "Move selected lines up" })    -- Zeilen nach oben verschieben
+map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "Move selected lines down" }) -- Zeilen nach unten verschieben
 
 -- Toggleterm
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
