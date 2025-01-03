@@ -38,3 +38,5 @@ vim.api.nvim_create_autocmd("BufReadPost", {
         vim.fn.system("open " .. vim.fn.expand("%"))
     end
 })
+
+-- Enter fügt Zeile oberhalb ein

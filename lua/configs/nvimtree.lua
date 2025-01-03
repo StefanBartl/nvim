@@ -1,19 +1,14 @@
 local function on_attach(bufnr)
   local api = require("nvim-tree.api")
 
-  -- Standard Keymaps (kann erweitert werden)
-  local function opts(desc)
-    return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
-  end
-
-  -- Finder öffnen (Mapping "f")
+  -- Mapping für den Finder (nur im nvim-tree-Buffer)
   vim.keymap.set("n", "f", function()
-    local node = require("nvim-tree.api").tree.get_node_under_cursor()
+    local node = api.tree.get_node_under_cursor()
     local path = node and node.absolute_path or vim.fn.getcwd()
     vim.fn.jobstart({ "open", path }, { detach = true })
-  end, opts("Open Finder in current directory"))
+  end, { buffer = bufnr, desc = "Open Finder in current directory" })
 
-  -- Datei mit Standardanwendung öffnen (Mapping "o")
+  -- Mapping zum Öffnen von Dateien mit Standardanwendung (nur im nvim-tree-Buffer)
   vim.keymap.set("n", "o", function()
     local node = api.tree.get_node_under_cursor()
     if node and node.type == "file" then
@@ -21,8 +16,9 @@ local function on_attach(bufnr)
     else
       vim.notify("Not a valid file to open", vim.log.levels.ERROR)
     end
-  end, opts("Open file with default application"))
+  end, { buffer = bufnr, desc = "Open file with default application" })
 end
+
 
 require("nvim-tree").setup({
   on_attach = on_attach,
