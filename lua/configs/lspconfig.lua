@@ -3,12 +3,24 @@ local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 -- Liste der LSP-Server und ihre Einstellungen
 local servers = {
-  ts_ls = {},      -- TypeScript/JavaScript
+  tsserver = {},      -- TypeScript/JavaScript
   eslint = {},        -- ESLint
   cssls = {},         -- CSS
   jsonls = {},        -- JSON
   sqls = {},          -- SQL
   tailwindcss = {},   -- Tailwind CSS
+  gopls = {           -- Golang
+    settings = {
+      gopls = {
+        analyses = {
+          unusedparams = true,
+          shadow = true,
+        },
+        staticcheck = true,
+        gofumpt = true,
+      },
+    },
+  },
 }
 
 -- Gemeinsame on_attach-Funktion
@@ -18,6 +30,8 @@ local function on_attach(client, bufnr)
   -- Keybindings für LSP
   vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
   vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+  vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
 
   -- Automatische Formatierung mit Conform
   if client.supports_method("textDocument/formatting") then
@@ -51,7 +65,7 @@ lspconfig.eslint.setup({
   },
 })
 
--- Setup für jeden Server
+-- Setup für jeden Server in der Liste
 for server, config in pairs(servers) do
   lspconfig[server].setup(vim.tbl_extend("force", {
     on_attach = on_attach,

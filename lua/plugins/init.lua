@@ -126,6 +126,7 @@ return {
           scss = { "prettier" },
           tailwindcss = { "prettier" },
           sql = { "sql_formatter" },
+          go = { "gofmt", "goimports", "golines" },
         },
         format_on_save = {
           -- Enable for specific filetypes
