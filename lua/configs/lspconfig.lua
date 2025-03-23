@@ -3,7 +3,7 @@ local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 -- Liste der LSP-Server und ihre Einstellungen
 local servers = {
-  tsserver = {},      -- TypeScript/JavaScript
+  ts_ls = {},      -- TypeScript/JavaScript
   eslint = {},        -- ESLint
   cssls = {},         -- CSS
   jsonls = {},        -- JSON
