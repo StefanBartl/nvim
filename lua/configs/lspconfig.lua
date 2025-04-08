@@ -9,6 +9,7 @@ local servers = {
   jsonls = {},        -- JSON
   sqls = {},          -- SQL
   tailwindcss = {},   -- Tailwind CSS
+  lua_ls = {},
   gopls = {           -- Golang
     settings = {
       gopls = {
@@ -26,12 +27,6 @@ local servers = {
 -- Gemeinsame on_attach-Funktion
 local function on_attach(client, bufnr)
   local opts = { noremap = true, silent = true, buffer = bufnr }
-
-  -- Keybindings für LSP
-  vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-  vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
 
   -- Automatische Formatierung mit Conform
   if client.supports_method("textDocument/formatting") then

@@ -1,6 +1,50 @@
 require "nvchad.mappings"
-
 local map = vim.keymap.set
+
+-- LSP
+-- LSP Standardfunktionen
+map("n", "grn", "<cmd>lua vim.lsp.buf.rename()<CR>", { silent = true, noremap = true, desc = "LSP: Rename Symbol" })
+map("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", { silent = true, noremap = true, desc = "LSP: Code Action" })
+map("n", "gra", "<cmd>lua vim.lsp.buf.code_action()<CR>", { silent = true, noremap = true, desc = "LSP: Code Action" })
+map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", { silent = true, noremap = true, desc = "LSP: Code Action" })
+map("n", "grr", "<cmd>lua vim.lsp.buf.references()<CR>", { silent = true, noremap = true, desc = "LSP: References" })
+map("n", "gri", "<cmd>lua vim.lsp.buf.implementation()<CR>", { silent = true, noremap = true, desc = "LSP: Implementations" })
+map("n", "gO", "<cmd>lua vim.lsp.buf.document_symbol()<CR>", { silent = true, noremap = true, desc = "LSP: Document Symbols" })
+map("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", { silent = true, noremap = true, desc = "LSP: Hover Documentation" })
+map("i", "<C-s>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", { silent = true, noremap = true, desc = "LSP: Signature Help" })
+map("n", "gq", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { silent = true, noremap = true, desc = "LSP: Format Line" })
+-- Weitere nützliche LSP-Funktionen
+map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { silent = true, noremap = true, desc = "LSP: Go to Definition" })
+map("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", { silent = true, noremap = true, desc = "LSP: Go to Declaration" })
+map("n", "gt", "<cmd>lua vim.lsp.buf.type_definition()<CR>", { silent = true, noremap = true, desc = "LSP: Type Definition" })
+-- Navigation durch Diagnostics
+map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<CR>", { silent = true, noremap = true, desc = "LSP: Previous Diagnostic" })
+map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>", { silent = true, noremap = true, desc = "LSP: Next Diagnostic" })
+-- Diagnostic Tools
+map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>", { silent = true, noremap = true, desc = "LSP: Show Diagnostic Popup" })
+map("n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", { silent = true, noremap = true, desc = "LSP: Set Location List" })
+map("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { silent = true, noremap = true, desc = "LSP: Format Document" })
+-- Trouble.nvim Keymaps
+map("n", "<leader>xx", "<cmd>Trouble diagnostics<cr>", { silent = true, noremap = true, desc = "Show Diagnostics" })
+map("n", "<leader>xw", "<cmd>Trouble diagnostics workspace<cr>", { silent = true, noremap = true, desc = "Workspace Diagnostics" })
+map("n", "<leader>xd", "<cmd>Trouble diagnostics document<cr>", { silent = true, noremap = true, desc = "Document Diagnostics" })
+map("n", "<leader>xl", "<cmd>Trouble loclist<cr>", { silent = true, noremap = true, desc = "Location List" })
+map("n", "<leader>xq", "<cmd>Trouble quickfix<cr>", { silent = true, noremap = true, desc = "Quickfix List" })
+-- LSP bezogene Befehle
+map("n", "<leader>xr", "<cmd>Trouble lsp_references<cr>", { silent = true, noremap = true, desc = "LSP References" })
+map("n", "<leader>xi", "<cmd>Trouble lsp_implementations<cr>", { silent = true, noremap = true, desc = "LSP Implementations" })
+map("n", "<leader>xs", "<cmd>Trouble lsp_document_symbols<cr>", { silent = true, noremap = true, desc = "Document Symbols" })
+map("n", "<leader>xt", "<cmd>Trouble lsp_type_definitions<cr>", { silent = true, noremap = true, desc = "Type Definitions" })
+map("n", "<leader>xd", "<cmd>Trouble lsp_definitions<cr>", { silent = true, noremap = true, desc = "LSP Definitions" })
+-- Navigation in Fehlern und Symbolen
+map("n", "[q", "<cmd>cprevious<cr>", { silent = true, noremap = true, desc = "Previous Quickfix" })
+map("n", "]q", "<cmd>cnext<cr>", { silent = true, noremap = true, desc = "Next Quickfix" })
+map("n", "[l", "<cmd>lprevious<cr>", { silent = true, noremap = true, desc = "Previous Location List" })
+map("n", "]l", "<cmd>lnext<cr>", { silent = true, noremap = true, desc = "Next Location List" })
+-- Telescope-Integration
+map("n", "<leader>tf", "<cmd>Trouble telescope_files<cr>", { silent = true, noremap = true, desc = "Telescope Files" })
+map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { silent = true, noremap = true, desc = "Telescope Trouble" })
+
 
 -- Utils
 map("n", ";", ":", { desc = "CMD enter command mode" })
@@ -39,6 +83,7 @@ map("i", "<C-Up>", "<Esc>zMi", { desc = "Close all foldings" })             -- A
 map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "Move selected lines up" })    -- Zeilen nach oben verschieben
 map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "Move selected lines down" }) -- Zeilen nach unten verschieben
 
+
 -- Toggleterm
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
@@ -48,7 +93,7 @@ map("n", "<leader>+", function() vim.cmd("vertical resize +5") end, { desc = "In
 map("n", "<leader>-", function() vim.cmd("vertical resize -5") end, { desc = "Decrease NvimTree width by 5" })
 
 
--- Quixkfix
+-- Quickfix
 map("n", "<leader>qo", ":copen<CR>", { desc = "Quickfix: Öffne Quickfix-Fenster" })
 map("n", "<leader>qn", ":cnext<CR>", { desc = "Quickfix: Gehe zum nächsten Fehler" })
 map("n", "<leader>qp", ":cprev<CR>", { desc = "Quickfix: Gehe zum vorherigen Fehler" })
@@ -220,26 +265,3 @@ map("n", "<leader>grep", ":FzfLua live_grep<CR>", { desc = "Live-Grep" })
 map("n", "<leader>fz6", ":FzfLua grep<CR>", { desc = "Grep-Historie anzeigen" })
 -- Datei-Typen
 map("n", "<leader>fz7", ":FzfLua filetypes<CR>", { desc = "Dateitypen anzeigen" })
-
-
--- LSP
--- Trouble.nvim Keymaps
-map("n", "<leader>xx", "<cmd>Trouble diagnostics<cr>", { silent = true, noremap = true, desc = "Show Diagnostics" })
-map("n", "<leader>xw", "<cmd>Trouble diagnostics workspace<cr>", { silent = true, noremap = true, desc = "Workspace Diagnostics" })
-map("n", "<leader>xd", "<cmd>Trouble diagnostics document<cr>", { silent = true, noremap = true, desc = "Document Diagnostics" })
-map("n", "<leader>xl", "<cmd>Trouble loclist<cr>", { silent = true, noremap = true, desc = "Location List" })
-map("n", "<leader>xq", "<cmd>Trouble quickfix<cr>", { silent = true, noremap = true, desc = "Quickfix List" })
--- LSP bezogene Befehle
-map("n", "<leader>xr", "<cmd>Trouble lsp_references<cr>", { silent = true, noremap = true, desc = "LSP References" })
-map("n", "<leader>xi", "<cmd>Trouble lsp_implementations<cr>", { silent = true, noremap = true, desc = "LSP Implementations" })
-map("n", "<leader>xs", "<cmd>Trouble lsp_document_symbols<cr>", { silent = true, noremap = true, desc = "Document Symbols" })
-map("n", "<leader>xt", "<cmd>Trouble lsp_type_definitions<cr>", { silent = true, noremap = true, desc = "Type Definitions" })
-map("n", "<leader>xd", "<cmd>Trouble lsp_definitions<cr>", { silent = true, noremap = true, desc = "LSP Definitions" })
--- Navigation in Fehlern und Symbolen
-map("n", "[q", "<cmd>cprevious<cr>", { silent = true, noremap = true, desc = "Previous Quickfix" })
-map("n", "]q", "<cmd>cnext<cr>", { silent = true, noremap = true, desc = "Next Quickfix" })
-map("n", "[l", "<cmd>lprevious<cr>", { silent = true, noremap = true, desc = "Previous Location List" })
-map("n", "]l", "<cmd>lnext<cr>", { silent = true, noremap = true, desc = "Next Location List" })
--- Telescope-Integration
-map("n", "<leader>tf", "<cmd>Trouble telescope_files<cr>", { silent = true, noremap = true, desc = "Telescope Files" })
-map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { silent = true, noremap = true, desc = "Telescope Trouble" })
