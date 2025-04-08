@@ -14,4 +14,6 @@ M.base46 = {
 	-- },
 }
 
+require("configs.multigrep").setup()
+
 return M

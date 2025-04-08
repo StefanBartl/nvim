@@ -125,7 +125,7 @@ map("n", "<leader>ap", "vap", { desc = "Äußeren Parameter auswählen" })
 
 -- Telescope
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
-map("n", "<leader>fg", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
+map("n", "<leader>lg", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
 map("n", "<leader><leader>", "<cmd> Telescope find_files follow=true no_ignore=true hidden=true <CR>", { desc = "Find all" })
 map("n", "<leader>git", "<cmd> Telescope git_files <CR>", { desc = "Öffne Git-Dateien" })
 map("n", "<Space>gf", "<cmd> Telescope live_grep <CR>", { desc = "Live-Grep" })
