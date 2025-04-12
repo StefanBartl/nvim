@@ -24,38 +24,46 @@ map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>", { silent = true, norem
 map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>", { silent = true, noremap = true, desc = "LSP: Show Diagnostic Popup" })
 map("n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", { silent = true, noremap = true, desc = "LSP: Set Location List" })
 map("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { silent = true, noremap = true, desc = "LSP: Format Document" })
--- Trouble.nvim Keymaps
-map("n", "<leader>xx", "<cmd>Trouble diagnostics<cr>", { silent = true, noremap = true, desc = "Show Diagnostics" })
-map("n", "<leader>xw", "<cmd>Trouble diagnostics workspace<cr>", { silent = true, noremap = true, desc = "Workspace Diagnostics" })
-map("n", "<leader>xd", "<cmd>Trouble diagnostics document<cr>", { silent = true, noremap = true, desc = "Document Diagnostics" })
-map("n", "<leader>xl", "<cmd>Trouble loclist<cr>", { silent = true, noremap = true, desc = "Location List" })
-map("n", "<leader>xq", "<cmd>Trouble quickfix<cr>", { silent = true, noremap = true, desc = "Quickfix List" })
--- LSP bezogene Befehle
-map("n", "<leader>xr", "<cmd>Trouble lsp_references<cr>", { silent = true, noremap = true, desc = "LSP References" })
-map("n", "<leader>xi", "<cmd>Trouble lsp_implementations<cr>", { silent = true, noremap = true, desc = "LSP Implementations" })
-map("n", "<leader>xs", "<cmd>Trouble lsp_document_symbols<cr>", { silent = true, noremap = true, desc = "Document Symbols" })
-map("n", "<leader>xt", "<cmd>Trouble lsp_type_definitions<cr>", { silent = true, noremap = true, desc = "Type Definitions" })
-map("n", "<leader>xd", "<cmd>Trouble lsp_definitions<cr>", { silent = true, noremap = true, desc = "LSP Definitions" })
--- Navigation in Fehlern und Symbolen
-map("n", "[q", "<cmd>cprevious<cr>", { silent = true, noremap = true, desc = "Previous Quickfix" })
-map("n", "]q", "<cmd>cnext<cr>", { silent = true, noremap = true, desc = "Next Quickfix" })
-map("n", "[l", "<cmd>lprevious<cr>", { silent = true, noremap = true, desc = "Previous Location List" })
-map("n", "]l", "<cmd>lnext<cr>", { silent = true, noremap = true, desc = "Next Location List" })
--- Telescope-Integration
-map("n", "<leader>tf", "<cmd>Trouble telescope_files<cr>", { silent = true, noremap = true, desc = "Telescope Files" })
-map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { silent = true, noremap = true, desc = "Telescope Trouble" })
+
+
+-- Trouble.nvim v3+ Keymaps
+-- 🔧 Diagnostics
+map("n", "xt", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Toggle: Diagnostics" })
+map("n", "xx", "<cmd>Trouble diagnostics<cr>", { desc = "Diagnostics: All" })
+map("n", "xw", "<cmd>Trouble diagnostics filter.buf=nil<cr>", { desc = "Diagnostics: Workspace" })
+map("n", "xd", "<cmd>Trouble diagnostics filter.buf=0<cr>", { desc = "Diagnostics: Current Buffer" })
+
+-- 🔎 LSP: Referenzen, Definitionen, Implementierungen, Symbole
+map("n", "xlr", "<cmd>Trouble lsp_references<cr>", { desc = "LSP: References" })
+map("n", "xld", "<cmd>Trouble lsp_definitions<cr>", { desc = "LSP: Definitions" })
+map("n", "xlt", "<cmd>Trouble lsp_type_definitions<cr>", { desc = "LSP: Type Definitions" })
+map("n", "xli", "<cmd>Trouble lsp_implementations<cr>", { desc = "LSP: Implementations" })
+map("n", "xls", "<cmd>Trouble lsp_document_symbols<cr>", { desc = "LSP: Document Symbols" })
+
+-- 📋 Location List & Quickfix List
+map("n", "xl", "<cmd>Trouble loclist<cr>", { desc = "Location List" })
+map("n", "xq", "<cmd>Trouble qflist<cr>", { desc = "Quickfix List" })
+
+-- 🔁 Navigation innerhalb von Listen
+map("n", "[q", "<cmd>cprevious<cr>", { desc = "Previous Quickfix Item" })
+map("n", "]q", "<cmd>cnext<cr>", { desc = "Next Quickfix Item" })
+map("n", "[l", "<cmd>lprevious<cr>", { desc = "Previous Location Item" })
+map("n", "]l", "<cmd>lnext<cr>", { desc = "Next Location Item" })
+
+-- 🔭 Telescope Integration
+map("n", "<leader>tf", "<cmd>Trouble telescope_files<cr>", { desc = "Telescope Files in Trouble" })
+map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { desc = "Telescope Results in Trouble" })
 
 
 -- Utils
-map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<ESC>")
 map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
 map("n", "<leader>uz", ":echo len(join(getline(1, '$'), ''))<CR>", { desc = "Zeichen zählen" })
 map("n", "<leader>uw", ":echo len(split(join(getline(1, '$'), ''), '\\s\\+'))<CR>", { desc = "Wörter zählen" })
 map("n", "copyz", ':let @+=getline(".")<CR>:echo "Line copied to clipboard"<CR>', { desc = "Zeile in die Zwischenablage kopieren" })
-map("n", "copyc", ':.,$y+<CR>:echo "Copied to clipboard from cursor to EOF"<CR>', { desc = "Von Cursor bis EOF in die Zwischenablage kopieren" })
-map("n", "copyf", ':%y+<CR>:echo "Copied entire file to clipboard"<CR>', { desc = "Gesamte Datei in die Zwischenablage kopieren" })
-map("v", "copys", '"+y<CR>:echo "Copied selected text to clipboard"<CR>', { desc = "Ausgewählten Text in die Zwischenablage kopieren" })
+map("n", "cpe", ':.,$y+<CR>:echo "Copied to clipboard from cursor to EOF"<CR>', { desc = "Von Cursor bis EOF in die Zwischenablage kopieren" })
+map("n", "cpf", ':%y+<CR>:echo "Copied entire file to clipboard"<CR>', { desc = "Gesamte Datei in die Zwischenablage kopieren" })
+map("v", "cps", '"+y<CR>:echo "Copied selected text to clipboard"<CR>', { desc = "Ausgewählten Text in die Zwischenablage kopieren" })
 map("n", "<leader>ex", ":bufdo bd | qa<CR>", { desc = "Alle Buffer schließen und Neovim beenden" })
 map("n", "<leader>del", ":lua confirm_delete()<CR>", { desc = "Aktuelle Datei löschen (mit Bestätigung)" })
 map("n", "<leader>d!!", ":call DeleteFile()<CR>", { desc = "Datei löschen und Buffer schließen (ohne Bestätigung)" })
@@ -67,23 +75,6 @@ map("n", "<CR>", function()
   -- Bewegt den Cursor in die ursprüngliche Zeile
   vim.api.nvim_win_set_cursor(0, { row, col })
 end, { desc = "Zeile oberhalb einfügen" })
-
--- Normal mode fold mappings
-map("n", "zA", "zA", { desc = "Toggle all foldings" }) -- Standard für alle Foldings öffnen/schließen
-map("n", "zO", "zO", { desc = "Open all foldings" })   -- Alle Foldings öffnen
-map("n", "zC", "zC", { desc = "Close all foldings" })  -- Alle Foldings schließen
-
--- Insert mode fold mappings
-map("i", "<C-Right>", "<Esc>zai", { desc = "Toggle folding under cursor" }) -- Folding unter Cursor öffnen/schließen
-map("i", "<C-Down>", "<Esc>zRi", { desc = "Open all foldings" })            -- Alle Foldings öffnen
-map("i", "<C-Left>", "<Esc>zci", { desc = "Close folding under cursor" })   -- Folding unter Cursor schließen
-map("i", "<C-Up>", "<Esc>zMi", { desc = "Close all foldings" })             -- Alle Foldings schließen
-
--- Visual mode line shifting mappings
-map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "Move selected lines up" })    -- Zeilen nach oben verschieben
-map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "Move selected lines down" }) -- Zeilen nach unten verschieben
-
-
 -- Toggleterm
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
@@ -169,7 +160,9 @@ map("n", "<leader>gc", ":Gcommit<CR>", { desc = "Git: Führe einen Git-Commit du
 map("n", "<leader>gl", ":Glog<CR>", { desc = "Git: Zeige das Git-Log" })
 map("n", "<leader>gp", ":Gpush<CR>", { desc = "Git: Pushe Änderungen zum Remote-Repository" })
 map("n", "<leader>gu", ":Gpull<CR>", { desc = "Git: Hole die neuesten Änderungen" })
-
+map("n", "<leader>ga", ":Git add .<CR>", { desc = "Git: Alle Dateien stagen (git add)" })
+map("n", "<leader>gz", ":Git stash<CR>", { desc = "Git: Stash aktueller Änderungen" })
+map("n", "<leader>gZ", ":Git stash pop<CR>", { desc = "Git: Letzten Stash anwenden" })
 
 -- Neogit
 map("n", "<leader>ng", function() require("neogit").open() end, { desc = "Neogit Interface öffnen" })
@@ -177,12 +170,28 @@ map("n", "<leader>nc", function() require("neogit").open({ "commit" }) end, { de
 
 
 -- Markdown
+-- Insert mode fold mappings
+map("i", "<C-Down>", "<Esc>zRi", { desc = "Open all foldings" })            -- Alle Foldings öffnen
+map("i", "<C-Up>", "<Esc>zMi", { desc = "Close all foldings" })             -- Alle Foldings schließen
+-- Nomral mode fold mappings
+map("n", "<C-Right>", "za", { desc = "Toggle fold under cursor" })
+map("n", "<C-Left>", "zc", { desc = "Close fold under cursor" })
+
 map("i", "<C-Right>", "<Esc>zai", { desc = "Toggle folding under cursor" })
 map("i", "<C-Down>", "<Esc>zRi", { desc = "Open all foldings" })
 map("i", "<C-Left>", "<Esc>zci", { desc = "Close folding under cursor" })
 map("i", "<C-Up>", "<Esc>zMi", { desc = "Close all foldings" })
 map("n", "<leader>fo", "za", { desc = "Toggle Fold unter dem Cursor" }) -- Fold unter dem Cursor ein-/ausklappen
 map("n", "<leader>fa", "ggVGzM", { desc = "Alle Headings falten" })     -- Alle Headings falten
+
+-- Normal mode fold mappings
+map("n", "zA", "zA", { desc = "Toggle all foldings" }) -- Standard für alle Foldings öffnen/schließen
+map("n", "zO", "zO", { desc = "Open all foldings" })   -- Alle Foldings öffnen
+map("n", "zC", "zC", { desc = "Close all foldings" })  -- Alle Foldings schließen
+
+-- Visual mode line shifting mappings
+map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "Move selected lines up" })    -- Zeilen nach oben verschieben
+map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "Move selected lines down" }) -- Zeilen nach unten verschieben
 
 
 -- Docker

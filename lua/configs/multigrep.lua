@@ -39,6 +39,8 @@ local live_multigrep = function(opts)
     entry_maker = make_entry.gen_from_vimgrep(opts),
     cwd = opts.cwd,
   }
+  --hidden for hidden files
+  --L for Symlinks
 
   pickers.new(opts, {
     debounce = 100,

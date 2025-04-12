@@ -7,7 +7,7 @@ end
 
 
 -- Allgemeine Benutzererfahrung
-vim.opt.number = false                  -- Zeilennummern anzeigen
+vim.opt.number = true                  -- Zeilennummern anzeigen
 vim.o.relativenumber = true
 vim.opt.cursorline = true              -- Hervorheben der aktuellen Zeile
 --vim.opt.wrap = false                   -- Kein automatischer Zeilenumbruch
@@ -23,7 +23,7 @@ vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt.foldcolumn = "0"   -- keine extra Informationen an der Seite
 vim.opt.foldtext = ""      -- bestimmt, wie der Text angezeigt wird, wenn ein Fold (Codeblock) geschlossen ist. "" bedeutet erste sichtbare Text im Fold-Bereich angezeigt
 vim.opt.foldlevel = 99     -- toplevel folds öffnen
-vim.opt.foldlevelstart = 1
+--vim.opt.foldlevelstart = 1
 vim.opt.foldnestmax = 6
 
 -- Tab- und Indentationssteuerung
