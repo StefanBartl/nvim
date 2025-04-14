@@ -376,7 +376,7 @@ return {
   },
 
   {
-    dir = "/media/steve/Depot/MyCodeberg/nvim-containers",
+    dir = "/media/steve/Depot/MyGithub/nvim-containers",
     event = "VeryLazy",
     config = function()
       require("containers").setup({

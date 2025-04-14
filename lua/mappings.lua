@@ -25,6 +25,11 @@ map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>", { silent = tru
 map("n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", { silent = true, noremap = true, desc = "LSP: Set Location List" })
 map("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { silent = true, noremap = true, desc = "LSP: Format Document" })
 
+-- loclist
+map("n", "<leader>ds", function()
+  vim.diagnostic.setloclist()
+  vim.cmd("lopen")
+end, { desc = "LSP diagnostic loclist (open)" })
 
 -- Trouble.nvim v3+ Keymaps
 -- Diagnostics
@@ -90,9 +95,11 @@ map("n", "<A-_>", function() vim.cmd("resize -5") end, { desc = "Decrease window
 map("n", "<A-.>", function() vim.cmd("vertical resize -5") end, { desc = "Make window narrower" }) -- Alt+.
 map("n", "<A-#>", function() vim.cmd("vertical resize +5") end, { desc = "Make window wider" })    -- Alt+#
 
+
 -- Nvimtree
 map("n", "<leader>+", function() vim.cmd("vertical resize +5") end, { desc = "Increase NvimTree width by 5" })
 map("n", "<leader>-", function() vim.cmd("vertical resize -5") end, { desc = "Decrease NvimTree width by 5" })
+
 
 -- Quickfix
 map("n", "<leader>qo", ":copen<CR>", { desc = "Quickfix: Öffne Quickfix-Fenster" })
@@ -174,6 +181,7 @@ map("n", "<leader>ga", ":Git add .<CR>", { desc = "Git: Alle Dateien stagen (git
 map("n", "<leader>gz", ":Git stash<CR>", { desc = "Git: Stash aktueller Änderungen" })
 map("n", "<leader>gZ", ":Git stash pop<CR>", { desc = "Git: Letzten Stash anwenden" })
 
+
 -- Neogit
 map("n", "<leader>ng", function() require("neogit").open() end, { desc = "Neogit Interface öffnen" })
 map("n", "<leader>nc", function() require("neogit").open({ "commit" }) end, { desc = "Neogit Commit" })
@@ -204,37 +212,14 @@ map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "Move selected lines up" })    -
 map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "Move selected lines down" }) -- Zeilen nach unten verschieben
 
 
--- Docker
--- Allgemeine Docker-Befehle
-map("n", "<leader>dp", ":DockerToolsOpen<CR>", { desc = "Show Docker containers" })
-map("n", "<leader>di", ":DockerImages<CR>", { desc = "Show Docker images" })
--- DockerTools Panel
-map("n", "<leader>do", ":DockerToolsOpen<CR>", { desc = "Open DockerTools Panel" })
-map("n", "<leader>dc", ":DockerToolsClose<CR>", { desc = "Close DockerTools Panel" })
-map("n", "<leader>dt", ":DockerToolsToggle<CR>", { desc = "Toggle DockerTools Panel" })
--- Container-Befehle
-map("n", "<leader>cs", ":ContainerStart ", { desc = "Start a Docker container" })
-map("n", "<leader>cp", ":ContainerStop ", { desc = "Stop a Docker container" })
-map("n", "<leader>cr", ":ContainerRemove ", { desc = "Remove a Docker container" })
-map("n", "<leader>cl", ":ContainerLogs ", { desc = "Show logs for Docker container" })
--- Benutzerdefinierte Docker-Befehle
-vim.api.nvim_create_user_command("DockerLogs", function(opts) vim.cmd("split | term docker logs " .. opts.args) end, { nargs = 1, desc = "Show Docker logs for a container" })
-vim.api.nvim_create_user_command("DockerExec", function(opts) vim.cmd("split | term docker exec -it " .. opts.args) end, { nargs = 1, desc = "Execute command in a Docker container" })
-vim.api.nvim_create_user_command("DockerRm", function(opts) vim.cmd("split | term docker rm " .. opts.args) end, { nargs = 1, desc = "Remove a Docker container" })
--- Keymaps für benutzerdefinierte Docker-Befehle
-map("n", "<leader>dl", ":DockerLogs ", { desc = "Show Docker logs (type container name)" })
-map("n", "<leader>de", ":DockerExec ", { desc = "Execute command in Docker container" })
-map("n", "<leader>dr", ":DockerRm ", { desc = "Remove Docker container (type name)" })
-
-
 -- Copilot
-vim.api.nvim_set_keymap("i", "<C-y>", 'copilot#Accept("<CR>")', { silent = true, expr = true, noremap = true, desc = "Accept Copilot suggestion" })
-vim.api.nvim_set_keymap("i", "<C-l>", "<Plug>(copilot-accept-word)", { noremap = false, desc = "Accept next word of suggestion" })
-vim.api.nvim_set_keymap("i", "<C-k>", "<Plug>(copilot-accept-line)", { noremap = false, desc = "Accept next line of suggestion" })
-vim.api.nvim_set_keymap("i", "<C-r>", "<Plug>(copilot-dismiss)", { noremap = false, desc = "Dismiss Copilot suggestion" })
-vim.api.nvim_set_keymap("i", "<C-n>", "<Plug>(copilot-next)", { noremap = false, desc = "Cycle to next Copilot suggestion" })
-vim.api.nvim_set_keymap("i", "<C-p>", "<Plug>(copilot-previous)", { noremap = false, desc = "Cycle to previous Copilot suggestion" })
-vim.api.nvim_set_keymap("i", "<C-s>", "<Plug>(copilot-suggest)", { noremap = false, desc = "Explicitly request a new suggestion" })
+map("i", "<C-y>", 'copilot#Accept("<CR>")', { silent = true, expr = true, noremap = true, desc = "Accept Copilot suggestion" })
+map("i", "<C-l>", "<Plug>(copilot-accept-word)", { noremap = false, desc = "Accept next word of suggestion" })
+map("i", "<C-k>", "<Plug>(copilot-accept-line)", { noremap = false, desc = "Accept next line of suggestion" })
+map("i", "<C-r>", "<Plug>(copilot-dismiss)", { noremap = false, desc = "Dismiss Copilot suggestion" })
+map("i", "<C-n>", "<Plug>(copilot-next)", { noremap = false, desc = "Cycle to next Copilot suggestion" })
+map("i", "<C-p>", "<Plug>(copilot-previous)", { noremap = false, desc = "Cycle to previous Copilot suggestion" })
+map("i", "<C-s>", "<Plug>(copilot-suggest)", { noremap = false, desc = "Explicitly request a new suggestion" })
 
 
 -- FZF
@@ -285,15 +270,24 @@ map("n", "<leader>fz6", ":FzfLua grep<CR>", { desc = "Grep-Historie anzeigen" })
 -- Datei-Typen
 map("n", "<leader>fz7", ":FzfLua filetypes<CR>", { desc = "Dateitypen anzeigen" })
 
+
+-- Custom plugins
+
+-- myterm
 local term = require("custom.myterm")
 map("n", "<leader>to", term.open, { desc = "Open terminal (bottom)" })
 map("n", "<leader>ts", term.set_command, { desc = "Set terminal command" })
 map("n", "<leader>tr", term.run_command, { desc = "Run terminal command" })
 map("n", "<leader>tc", term.clear_command, { desc = "Clear terminal command" })
 
-
+-- find mappings
 local keysearch = require("custom.keymap_search")
-vim.keymap.set("n", "<leader>fk", keysearch.search_keymaps, { desc = "Finde Keymaps (Telescope)" })
-
+map("n", "<leader>fk", keysearch.search_keymaps, { desc = "Finde Keymaps (Telescope)" })
 local run = require("custom.run_mappings")
-vim.keymap.set("n", "<leader>fs", run.find_keymap, { desc = "Keymap-Suche via Bash-Script" })
+map("n", "<leader>fs", run.find_keymap, { desc = "Keymap-Suche via Bash-Script" })
+
+-- find files on system
+map("n", "<leader>fa", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
+
+-- command history
+map({"n", "v"}, "<leader>hy", require("custom.command_history").show_command_history, { desc = "Zeige Command-History" })
