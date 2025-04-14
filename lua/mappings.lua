@@ -10,7 +10,7 @@ map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", { silent = true
 map("n", "grr", "<cmd>lua vim.lsp.buf.references()<CR>", { silent = true, noremap = true, desc = "LSP: References" })
 map("n", "gri", "<cmd>lua vim.lsp.buf.implementation()<CR>", { silent = true, noremap = true, desc = "LSP: Implementations" })
 map("n", "gO", "<cmd>lua vim.lsp.buf.document_symbol()<CR>", { silent = true, noremap = true, desc = "LSP: Document Symbols" })
-map("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", { silent = true, noremap = true, desc = "LSP: Hover Documentation" })
+--map("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", { silent = true, noremap = true, desc = "LSP: Hover Documentation" })
 map("i", "<C-s>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", { silent = true, noremap = true, desc = "LSP: Signature Help" })
 map("n", "gq", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { silent = true, noremap = true, desc = "LSP: Format Line" })
 -- Weitere nützliche LSP-Funktionen
@@ -27,30 +27,30 @@ map("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { sil
 
 
 -- Trouble.nvim v3+ Keymaps
--- 🔧 Diagnostics
-map("n", "xt", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Toggle: Diagnostics" })
-map("n", "xx", "<cmd>Trouble diagnostics<cr>", { desc = "Diagnostics: All" })
-map("n", "xw", "<cmd>Trouble diagnostics filter.buf=nil<cr>", { desc = "Diagnostics: Workspace" })
-map("n", "xd", "<cmd>Trouble diagnostics filter.buf=0<cr>", { desc = "Diagnostics: Current Buffer" })
+-- Diagnostics
+map("n", "<leader>xt", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Toggle: Diagnostics" })
+map("n", "<leader>xx", "<cmd>Trouble diagnostics<cr>", { desc = "Diagnostics: All" })
+map("n", "<leader>xw", "<cmd>Trouble diagnostics filter.buf=nil<cr>", { desc = "Diagnostics: Workspace" })
+map("n", "<leader>xd", "<cmd>Trouble diagnostics filter.buf=0<cr>", { desc = "Diagnostics: Current Buffer" })
 
--- 🔎 LSP: Referenzen, Definitionen, Implementierungen, Symbole
-map("n", "xlr", "<cmd>Trouble lsp_references<cr>", { desc = "LSP: References" })
-map("n", "xld", "<cmd>Trouble lsp_definitions<cr>", { desc = "LSP: Definitions" })
-map("n", "xlt", "<cmd>Trouble lsp_type_definitions<cr>", { desc = "LSP: Type Definitions" })
-map("n", "xli", "<cmd>Trouble lsp_implementations<cr>", { desc = "LSP: Implementations" })
-map("n", "xls", "<cmd>Trouble lsp_document_symbols<cr>", { desc = "LSP: Document Symbols" })
+-- LSP: Referenzen, Definitionen, Implementierungen, Symbole
+map("n", "<leader>xlr", "<cmd>Trouble lsp_references<cr>", { desc = "LSP: References" })
+map("n", "<leader>xld", "<cmd>Trouble lsp_definitions<cr>", { desc = "LSP: Definitions" })
+map("n", "<leader>xlt", "<cmd>Trouble lsp_type_definitions<cr>", { desc = "LSP: Type Definitions" })
+map("n", "<leader>xli", "<cmd>Trouble lsp_implementations<cr>", { desc = "LSP: Implementations" })
+map("n", "<leader>xls", "<cmd>Trouble lsp_document_symbols<cr>", { desc = "LSP: Document Symbols" })
 
--- 📋 Location List & Quickfix List
-map("n", "xl", "<cmd>Trouble loclist<cr>", { desc = "Location List" })
-map("n", "xq", "<cmd>Trouble qflist<cr>", { desc = "Quickfix List" })
+-- Location List & Quickfix List
+map("n", "<leader>xl", "<cmd>Trouble loclist<cr>", { desc = "Location List" })
+map("n", "<leader>xq", "<cmd>Trouble qflist<cr>", { desc = "Quickfix List" })
 
--- 🔁 Navigation innerhalb von Listen
+-- Navigation innerhalb von Listen
 map("n", "[q", "<cmd>cprevious<cr>", { desc = "Previous Quickfix Item" })
 map("n", "]q", "<cmd>cnext<cr>", { desc = "Next Quickfix Item" })
 map("n", "[l", "<cmd>lprevious<cr>", { desc = "Previous Location Item" })
 map("n", "]l", "<cmd>lnext<cr>", { desc = "Next Location Item" })
 
--- 🔭 Telescope Integration
+-- Telescope Integration
 map("n", "<leader>tf", "<cmd>Trouble telescope_files<cr>", { desc = "Telescope Files in Trouble" })
 map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { desc = "Telescope Results in Trouble" })
 
@@ -75,14 +75,24 @@ map("n", "<CR>", function()
   -- Bewegt den Cursor in die ursprüngliche Zeile
   vim.api.nvim_win_set_cursor(0, { row, col })
 end, { desc = "Zeile oberhalb einfügen" })
+
+
 -- Toggleterm
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+map("t", "<C-c>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
+
+-- Window and Tab manipulation
+map("n", "<leader>p", "<cmd>tabprevious<CR>", { desc = "Go to previous tab" })
+map("n", "<leader>n", "<cmd>tabnext<CR>", { desc = "Go to next tab" })
+map("n", "<A-+>", function() vim.cmd("resize +5") end, { desc = "Increase window height" })
+map("n", "<A-_>", function() vim.cmd("resize -5") end, { desc = "Decrease window height" }) -- Alt+Minus
+map("n", "<A-.>", function() vim.cmd("vertical resize -5") end, { desc = "Make window narrower" }) -- Alt+.
+map("n", "<A-#>", function() vim.cmd("vertical resize +5") end, { desc = "Make window wider" })    -- Alt+#
 
 -- Nvimtree
 map("n", "<leader>+", function() vim.cmd("vertical resize +5") end, { desc = "Increase NvimTree width by 5" })
 map("n", "<leader>-", function() vim.cmd("vertical resize -5") end, { desc = "Decrease NvimTree width by 5" })
-
 
 -- Quickfix
 map("n", "<leader>qo", ":copen<CR>", { desc = "Quickfix: Öffne Quickfix-Fenster" })
@@ -274,3 +284,16 @@ map("n", "<leader>grep", ":FzfLua live_grep<CR>", { desc = "Live-Grep" })
 map("n", "<leader>fz6", ":FzfLua grep<CR>", { desc = "Grep-Historie anzeigen" })
 -- Datei-Typen
 map("n", "<leader>fz7", ":FzfLua filetypes<CR>", { desc = "Dateitypen anzeigen" })
+
+local term = require("custom.myterm")
+map("n", "<leader>to", term.open, { desc = "Open terminal (bottom)" })
+map("n", "<leader>ts", term.set_command, { desc = "Set terminal command" })
+map("n", "<leader>tr", term.run_command, { desc = "Run terminal command" })
+map("n", "<leader>tc", term.clear_command, { desc = "Clear terminal command" })
+
+
+local keysearch = require("custom.keymap_search")
+vim.keymap.set("n", "<leader>fk", keysearch.search_keymaps, { desc = "Finde Keymaps (Telescope)" })
+
+local run = require("custom.run_mappings")
+vim.keymap.set("n", "<leader>fs", run.find_keymap, { desc = "Keymap-Suche via Bash-Script" })

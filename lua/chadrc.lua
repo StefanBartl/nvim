@@ -14,6 +14,9 @@ M.base46 = {
 	-- },
 }
 
-require("configs.multigrep").setup()
+require("custom.multigrep").setup()
+require("custom.floatterminal")
+require("custom.myterm")
+require("custom.commands")
 
 return M

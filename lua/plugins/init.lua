@@ -6,7 +6,8 @@ return {
     "nvim-treesitter/nvim-treesitter",
     opts = {
       ensure_installed = {
-        "lua", "go", "javascript", "typescript", "json", "css", "html"
+        "lua", "go", "javascript", "typescript", "json", "css", "html", "markdown", "markdown_inline",
+        highlight = { enable = true }
       },
     },
   },
@@ -232,45 +233,6 @@ return {
     config = true,
   },
 
-
---  5. Dockertools
-
-  -- Dockertools
-  {
-    "kkvh/vim-docker-tools",
-    lazy = false,
-    config = function()
-    -- Anpassung der Anzeigeformate (optional)
-      vim.api.nvim_set_var("dockertools_container_format", "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}")
-      -- vim.g.dockertools_container_format = 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}'
-    end,
-  },
-
-  -- Denops Docker Integration
-  {
-    "vim-denops/denops.vim",
-    lazy = false, -- Lade es sofort, um sicherzustellen, dass es verfügbar ist
-    config = function()
-      -- Optional: Überprüfen, ob Deno korrekt funktioniert
-      vim.cmd [[
-        command! DenopsCheckHealth echo "Denops Health Check"
-      ]]
-    end,
-  },
-  -- Denops Docker Integration
-  {
-    "skanehira/denops-docker.vim",
-    lazy = false,
-    dependencies = { "vim-denops/denops.vim" },
-    config = function()
-      -- Lade den Docker-Teil des Plugins
-      vim.cmd [[
-        command! DenopsReload call denops#server#restart()
-      ]]
-    end,
-  },
-
-
 -- 6. Markdown
 
   -- Markdown Preview
@@ -397,5 +359,30 @@ return {
     "folke/zen-mode.nvim",
   },
 
+  {
+    "mg979/vim-visual-multi",
+    branch = "master",
+    init = function()
+      -- Diese Variable MUSS vor dem Laden des Plugins gesetzt werden!
+      vim.g.VM_default_mappings = 0
+    end,
+    config = function()
+      -- Eigene Mappings setzen
+      vim.g.VM_maps = {
+        ["Find Under"]         = "<C-y>",   -- wie in VSCode
+        ["Find Subword Under"] = "<C-y>",   -- optional: für Teilwörter
+      }
+    end,
+  },
+
+  {
+    dir = "/media/steve/Depot/MyCodeberg/nvim-containers",
+    event = "VeryLazy",
+    config = function()
+      require("containers").setup({
+        engine = "podman",
+      })
+    end,
+  }
 
 }

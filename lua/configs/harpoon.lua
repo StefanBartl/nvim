@@ -9,7 +9,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     vim.defer_fn(function()
       local ok, harpoon_mark = pcall(require, "harpoon.mark")
       if not ok or not harpoon_mark or type(harpoon_mark.get_mark) ~= "function" then
-        vim.notify("Harpoon.mark ist noch nicht bereit", vim.log.levels.WARN)
+        --vim.notify("Harpoon.mark ist noch nicht bereit", vim.log.levels.WARN)
         return
       end
 
