@@ -1,3 +1,5 @@
+vim.keymap.set("t", "<esc><esc>", "<c-\\><c-n>")
+
 local state = {
   floating = {
     buf = -1,
@@ -40,16 +42,24 @@ local function create_floating_window(opts)
 end
 
 local toggle_terminal = function()
+  -- Falls Fenster nicht valide → neues erstellen
   if not vim.api.nvim_win_is_valid(state.floating.win) then
     state.floating = create_floating_window { buf = state.floating.buf }
+
+    -- Falls Buffer kein Terminal ist, starte Terminal
     if vim.bo[state.floating.buf].buftype ~= "terminal" then
       vim.cmd.terminal()
+      vim.cmd("startinsert")
     end
   else
+    -- Schließe das Terminal-Fenster
     vim.api.nvim_win_hide(state.floating.win)
   end
 end
 
--- Example usage:
 -- Create a floating window with default dimensions
 vim.api.nvim_create_user_command("Floaterminal", toggle_terminal, {})
+
+return {
+  toggle_terminal = toggle_terminal
+}

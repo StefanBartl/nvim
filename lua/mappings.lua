@@ -61,6 +61,7 @@ map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { desc = "Telescope Results
 
 
 -- Utils
+map({"i", "v", "t"}, "<C-s>", "<cmd>w<CR>", { desc = "general save file" })
 map("i", "jk", "<ESC>")
 map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
 map("n", "<leader>uz", ":echo len(join(getline(1, '$'), ''))<CR>", { desc = "Zeichen zählen" })
@@ -80,11 +81,6 @@ map("n", "<CR>", function()
   -- Bewegt den Cursor in die ursprüngliche Zeile
   vim.api.nvim_win_set_cursor(0, { row, col })
 end, { desc = "Zeile oberhalb einfügen" })
-
-
--- Toggleterm
-map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
-map("t", "<C-c>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 
 -- Window and Tab manipulation
@@ -134,7 +130,6 @@ map("n", "<leader>ap", "vap", { desc = "Äußeren Parameter auswählen" })
 -- Telescope
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
 map("n", "<leader>lg", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
-map("n", "<leader><leader>", "<cmd> Telescope find_files follow=true no_ignore=true hidden=true <CR>", { desc = "Find all" })
 map("n", "<leader>git", "<cmd> Telescope git_files <CR>", { desc = "Öffne Git-Dateien" })
 map("n", "<Space>gf", "<cmd> Telescope live_grep <CR>", { desc = "Live-Grep" })
 map("n", "<Space>fh", "<cmd> Telescope help_tags <CR>", { desc = "Hilfe-Tags durchsuchen" })
@@ -166,22 +161,7 @@ map("n", "<leader>dc", ":DiffviewClose<CR>", { desc = "Diffview schließen" })
 map("n", "<leader>dh", ":DiffviewFileHistory<CR>", { desc = "Dateihistorie in Diffview anzeigen" })
 
 
--- Fugitive
-map("n", "<leader>gf", ":Git<CR>", { desc = "Git-Status anzeigen (Fugitive)" })
-map("n", "<leader>gk", ":Git commit<CR>", { desc = "Git-Commit erstellen (Fugitive)" })
-map("n", "<leader>gi", ":Gdiffsplit<CR>", { desc = "Git-Diff im Split anzeigen (Fugitive)" })
-map("n", "<leader>gb", ":Git blame<CR>", { desc = "Git-Blame anzeigen (Fugitive)" })
-map("n", "<leader>gs", ":Gstatus<CR>", { desc = "Git: Zeige den Git-Status" })
-map("n", "<leader>gd", ":Gdiff<CR>", { desc = "Git: Zeige die Unterschiede" })
-map("n", "<leader>gc", ":Gcommit<CR>", { desc = "Git: Führe einen Git-Commit durch" })
-map("n", "<leader>gl", ":Glog<CR>", { desc = "Git: Zeige das Git-Log" })
-map("n", "<leader>gp", ":Gpush<CR>", { desc = "Git: Pushe Änderungen zum Remote-Repository" })
-map("n", "<leader>gu", ":Gpull<CR>", { desc = "Git: Hole die neuesten Änderungen" })
-map("n", "<leader>ga", ":Git add .<CR>", { desc = "Git: Alle Dateien stagen (git add)" })
-map("n", "<leader>gz", ":Git stash<CR>", { desc = "Git: Stash aktueller Änderungen" })
-map("n", "<leader>gZ", ":Git stash pop<CR>", { desc = "Git: Letzten Stash anwenden" })
-
-
+-- { "<leader>la", "<cmd>LazyGit<cr>", desc = "LazyGit" }
 -- Neogit
 map("n", "<leader>ng", function() require("neogit").open() end, { desc = "Neogit Interface öffnen" })
 map("n", "<leader>nc", function() require("neogit").open({ "commit" }) end, { desc = "Neogit Commit" })
@@ -271,11 +251,16 @@ map("n", "<leader>fz6", ":FzfLua grep<CR>", { desc = "Grep-Historie anzeigen" })
 map("n", "<leader>fz7", ":FzfLua filetypes<CR>", { desc = "Dateitypen anzeigen" })
 
 
+-- Toggleterm
+map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+map("t", "<C-c>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+
 -- Custom plugins
 
 -- myterm
 local term = require("custom.myterm")
-map("n", "<leader>to", term.open, { desc = "Open terminal (bottom)" })
+map("n", "<leader>to", ":Floaterminal<CR>", { desc = "Toggle Floating Terminal" })
 map("n", "<leader>ts", term.set_command, { desc = "Set terminal command" })
 map("n", "<leader>tr", term.run_command, { desc = "Run terminal command" })
 map("n", "<leader>tc", term.clear_command, { desc = "Clear terminal command" })
@@ -287,7 +272,7 @@ local run = require("custom.run_mappings")
 map("n", "<leader>fs", run.find_keymap, { desc = "Keymap-Suche via Bash-Script" })
 
 -- find files on system
-map("n", "<leader>fa", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
+map("n", "<leader><leader>", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
 
 -- command history
 map({"n", "v"}, "<leader>hy", require("custom.command_history").show_command_history, { desc = "Zeige Command-History" })

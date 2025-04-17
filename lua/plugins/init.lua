@@ -6,7 +6,7 @@ return {
     "nvim-treesitter/nvim-treesitter",
     opts = {
       ensure_installed = {
-        "lua", "go", "javascript", "typescript", "json", "css", "html", "markdown", "markdown_inline",
+        "query", "lua", "go", "javascript", "typescript", "json", "css", "html", "markdown", "markdown_inline",
         highlight = { enable = true }
       },
     },
@@ -187,14 +187,8 @@ return {
 
 -- 4. Git related plugins
 
--- TODO: Optimales gut plugin finden
-  -- Fugitive for Git commands within Neovim
-  {
-    "tpope/vim-fugitive",
-    lazy = false, -- Stelle sicher, dass Fugitive sofort geladen wird
-  },
-
   -- LazyGit integration for terminal Git UI
+    -- DEPENDENCY: Make sure lazygit ist installed on your system, eg.: brew install jesseduffield/lazygit/lazygit
   {
     "kdheepak/lazygit.nvim",
     lazy = true,
@@ -212,7 +206,7 @@ return {
     -- setting the keybinding for LazyGit with 'keys' is recommended in
     -- order to load the plugin when the command is run for the first time
     keys = {
-      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" }
+      { "<leader>la", "<cmd>LazyGit<cr>", desc = "LazyGit" }
     }
   },
 
@@ -375,6 +369,9 @@ return {
     end,
   },
 
+-- 9. My Plugins
+
+  -- nvim-containers
   {
     dir = "/media/steve/Depot/MyGithub/nvim-containers",
     event = "VeryLazy",
@@ -383,6 +380,14 @@ return {
         engine = "podman",
       })
     end,
-  }
+  },
+
+  {
+    dir = "/media/steve/Depot/MyGithub/nvim-cmdlog/", -- oder entsprechend deinem Setup
+    lazy = false,
+    config = function()
+      require("cmdlog").setup()
+    end,
+  },
 
 }
