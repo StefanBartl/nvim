@@ -219,31 +219,6 @@ return {
     end,
   },
 
-  -- Denops Docker Integration
-  {
-    "vim-denops/denops.vim",
-    lazy = false, -- Lade es sofort, um sicherzustellen, dass es verfügbar ist
-    config = function()
-      -- Optional: Überprüfen, ob Deno korrekt funktioniert
-      vim.cmd [[
-        command! DenopsCheckHealth echo "Denops Health Check"
-      ]]
-    end,
-  },
-  -- Denops Docker Integration
-  {
-    "skanehira/denops-docker.vim",
-    lazy = false,
-    dependencies = { "vim-denops/denops.vim" },
-    config = function()
-      -- Lade den Docker-Teil des Plugins
-      vim.cmd [[
-        command! DenopsReload call denops#server#restart()
-      ]]
-    end,
-  },
-
-
 -- 6. Markdown
 
   -- Markdown Preview
