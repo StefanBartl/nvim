@@ -1,7 +1,7 @@
 #!/bin/bash
 # Dieses Skript durchsucht die Keymaps-Datei nach einem bestimmten Begriff
 
-KEYMAP_FILE="$HOME/.config/nvim/lua/custom/mappings.lua"
+KEYMAP_FILE="$HOME/.config/nvim/lua/mappings.lua"
 
 if [ ! -f "$KEYMAP_FILE" ]; then
   echo "Keymap-Datei nicht gefunden: $KEYMAP_FILE"

@@ -6,4 +6,5 @@ return {
   "json-languageserver",
   "sql-formatter",
   "tailwindcss-language-server",
+  "lua_ls",
 }

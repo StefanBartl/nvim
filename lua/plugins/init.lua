@@ -2,6 +2,16 @@ return {
 
 -- 1. Essential dependencies and tools
 
+  {
+    "nvim-treesitter/nvim-treesitter",
+    opts = {
+      ensure_installed = {
+        "query", "lua", "go", "javascript", "typescript", "json", "css", "html", "markdown", "markdown_inline",
+        highlight = { enable = true }
+      },
+    },
+  },
+
   -- Plenary, a necessary dependency for many other plugins
   "nvim-lua/plenary.nvim",
   -- Telescope for fuzzy finding files, buffers, etc.
@@ -108,6 +118,7 @@ return {
     config = function()
       require("harpoon").setup()
       require("telescope").load_extension("harpoon")
+      require("configs.harpoon")
     end,
   },
 
@@ -126,6 +137,7 @@ return {
           scss = { "prettier" },
           tailwindcss = { "prettier" },
           sql = { "sql_formatter" },
+          go = { "gofmt", "goimports", "golines" },
         },
         format_on_save = {
           -- Enable for specific filetypes
@@ -135,9 +147,21 @@ return {
     end,
   },
 
-  -- These are some examples, uncomment them if you want to see them work!
   {
     "neovim/nvim-lspconfig",
+    dependencies = {
+        {
+          "folke/lazydev.nvim",
+          ft = "lua", -- only load on lua files
+          opts = {
+            library = {
+              -- See the configuration section for more details
+              -- Load luvit types when the `vim.uv` word is found
+              { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+            },
+          },
+        },
+    },
     config = function()
       require "configs.lspconfig"
     end,
@@ -147,6 +171,7 @@ return {
   {
     "folke/trouble.nvim",
     dependencies = "nvim-tree/nvim-web-devicons", -- Abhängigkeit für Icons
+    version = "*",
     lazy = false, -- Lade das Plugin direkt beim Start
     config = function()
       require("trouble").setup({
@@ -162,14 +187,8 @@ return {
 
 -- 4. Git related plugins
 
--- TODO: Optimales gut plugin finden
-  -- Fugitive for Git commands within Neovim
-  {
-    "tpope/vim-fugitive",
-    lazy = false, -- Stelle sicher, dass Fugitive sofort geladen wird
-  },
-
   -- LazyGit integration for terminal Git UI
+    -- DEPENDENCY: Make sure lazygit ist installed on your system, eg.: brew install jesseduffield/lazygit/lazygit
   {
     "kdheepak/lazygit.nvim",
     lazy = true,
@@ -187,7 +206,7 @@ return {
     -- setting the keybinding for LazyGit with 'keys' is recommended in
     -- order to load the plugin when the command is run for the first time
     keys = {
-      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" }
+      { "<leader>la", "<cmd>LazyGit<cr>", desc = "LazyGit" }
     }
   },
 
@@ -196,27 +215,16 @@ return {
     "TimUntersberger/neogit",
     requires = { "nvim-lua/plenary.nvim" },
     config = function()
-      require("neogit").setup()
+      require("neogit").setup({})
     end,
   },
 
   -- DiffView for visualizing Git diffs
   {
     "sindrets/diffview.nvim",
-  requires = { "nvim-lua/plenary.nvim" }
-  },
-
-
---  5. Dockertools
-
-  -- Dockertools
-  {
-    "kkvh/vim-docker-tools",
+    requires = { "nvim-lua/plenary.nvim" },
     lazy = false,
-    config = function()
-    -- Anpassung der Anzeigeformate (optional)
-    vim.g.dockertools_container_format = 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}'
-    end,
+    config = true,
   },
 
 -- 6. Markdown
@@ -237,13 +245,13 @@ return {
   },
 
   -- Headlines, Blöcke hervorheben
-  {
-    "lukas-reineke/headlines.nvim",
-    ft = { "markdown" },
-    config = function()
-      require("headlines").setup()
-    end,
-  },
+  --{
+  --  "lukas-reineke/headlines.nvim",
+  --  ft = { "markdown" },
+  --  config = function()
+  --    require("headlines").setup()
+  --  end,
+  --},
 
 
 -- 7. Code formatting, folding, and syntax highlighting
@@ -273,12 +281,12 @@ return {
   {
     "numToStr/Comment.nvim",
     keys = {
-      { "gcc", mode = "n",          desc = "Comment toggle current line" },
-      { "gc",  mode = { "n", "o" }, desc = "Comment toggle linewise" },
-      { "gc",  mode = "x",          desc = "Comment toggle linewise (visual)" },
-      { "gbc", mode = "n",          desc = "Comment toggle current block" },
-      { "gb",  mode = { "n", "o" }, desc = "Comment toggle blockwise" },
-      { "gb",  mode = "x",          desc = "Comment toggle blockwise (visual)" },
+      { "tcl", mode = "n",          desc = "Comment toggle current line" },
+      { "tl",  mode = { "n", "o" }, desc = "Comment toggle linewise" },
+      { "tl",  mode = "x",          desc = "Comment toggle linewise (visual)" },
+      { "tcb", mode = "n",          desc = "Comment toggle current block" },
+      { "tb",  mode = { "n", "o" }, desc = "Comment toggle blockwise" },
+      { "tb",  mode = "x",          desc = "Comment toggle blockwise (visual)" },
     },
     config = function(_, opts)
       require("Comment").setup(opts) -- Initialisiert das Plugin
@@ -291,7 +299,7 @@ return {
     "github/copilot.vim",
     event = "InsertEnter",
     config = function()
-      vim.g.copilot_no_tab_map = true -- Prevent conflicts with tab mappings
+      vim.api.nvim_set_var("copilot_no_tab_map", true) -- Prevent conflicts with tab mappings
     end,
   },
 
@@ -314,6 +322,11 @@ return {
       require("nvim-ts-autotag").setup(opts)
     end,
   },
+
+  -- Use delete keybindings like daf, dif (delete around/inside function) usw
+
+  { 'echasnovski/mini.ai', version = '*' },
+
 
   -- ChatGPT
 
@@ -340,10 +353,41 @@ return {
     "folke/zen-mode.nvim",
   },
 
-  -- TMUX
   {
-      "aserowy/tmux.nvim",
-      config = function() return require("tmux").setup() end
+    "mg979/vim-visual-multi",
+    branch = "master",
+    init = function()
+      -- Diese Variable MUSS vor dem Laden des Plugins gesetzt werden!
+      vim.g.VM_default_mappings = 0
+    end,
+    config = function()
+      -- Eigene Mappings setzen
+      vim.g.VM_maps = {
+        ["Find Under"]         = "<C-y>",   -- wie in VSCode
+        ["Find Subword Under"] = "<C-y>",   -- optional: für Teilwörter
+      }
+    end,
+  },
+
+-- 9. My Plugins
+
+  -- nvim-containers
+  {
+    dir = "/media/steve/Depot/MyGithub/nvim-containers",
+    event = "VeryLazy",
+    config = function()
+      require("containers").setup({
+        engine = "podman",
+      })
+    end,
+  },
+
+  {
+    dir = "/media/steve/Depot/MyGithub/nvim-cmdlog/", -- oder entsprechend deinem Setup
+    lazy = false,
+    config = function()
+      require("cmdlog").setup()
+    end,
   },
 
 }

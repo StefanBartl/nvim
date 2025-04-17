@@ -6,8 +6,12 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
 -- Entfernen von Leerzeichen in leeren Zeilen
 vim.api.nvim_create_autocmd("BufWritePre", {
-    pattern = "*",
-    command = [[%s/^\s*$//e]],
+  pattern = "*",
+  callback = function()
+    local curpos = vim.api.nvim_win_get_cursor(0)
+    vim.cmd([[silent! %s/^\s*$//e]])
+    vim.api.nvim_win_set_cursor(0, curpos)
+  end,
 })
 
 -- Restore cursor position
@@ -38,5 +42,3 @@ vim.api.nvim_create_autocmd("BufReadPost", {
         vim.fn.system("open " .. vim.fn.expand("%"))
     end
 })
-
--- Enter fügt Zeile oberhalb ein
