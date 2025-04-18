@@ -128,18 +128,15 @@ map("n", "<leader>ap", "vap", { desc = "Äußeren Parameter auswählen" })
 
 
 -- Telescope
+map("n", "<leader>ts", ":Telescope<CR>", { desc = "Telescope UI starten" })
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
-map("n", "<leader>lg", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
-map("n", "<leader>git", "<cmd> Telescope git_files <CR>", { desc = "Öffne Git-Dateien" })
-map("n", "<Space><leader>", "<cmd> Telescope live_grep <CR>", { desc = "Live-Grep" })
-map("n", "<Space>fh", "<cmd> Telescope help_tags <CR>", { desc = "Hilfe-Tags durchsuchen" })
-map("n", "<leader>pf", "<cmd> Telescope find_files <CR>", { desc = "Dateien finden" })
-map("n", "<Space>comm", "<cmd> Telescope git_commits <CR>", { desc = "Git-Commits anzeigen" })
+map("n", "<leader><leader>", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
 map("n", "<leader>gs", function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end, { desc = "Grep-Suche" })
-map("n", "<leader>tu", ":Telescope<CR>", { desc = "Telescope UI starten" })
-map("i", "<M-p>", "<Cmd>lua require('telescope.builtin').find_files()<CR>", { desc = "Vorherige Suchkategorie" })
-map("i", "<M-n>", "<Cmd>lua require('telescope.builtin').find_files()<CR>", { desc = "Nächste Suchkategorie" })
-
+map("n", "<leader>git", function() require("telescope.builtin").git_files() end, { desc = "Git-Dateien durchsuchen" })
+map("n", "<leader>hp", function() require("telescope.builtin").help_tags() end, { desc = "Hilfe-Tags durchsuchen" })
+map("n", "<leader>com", function() require("telescope.builtin").git_commits() end, { desc = "Git-Commits anzeigen" })
+map("i", "<M-p>", function() require("telescope.builtin").find_files() end, { desc = "Vorherige Suchkategorie" })
+map("i", "<M-n>", function() require("telescope.builtin").find_files() end, { desc = "Nächste Suchkategorie" })
 
 -- Harpoon
 map("n", "<leader>h", function() require("harpoon.mark").add_file() end, { desc = "Datei zu Harpoon hinzufügen" })
