@@ -1,13 +1,16 @@
 return {
 
 -- 1. Essential dependencies and tools
-
   {
     "nvim-treesitter/nvim-treesitter",
     opts = {
-      ensure_installed = {
-        "query", "lua", "go", "javascript", "typescript", "json", "css", "html", "markdown", "markdown_inline",
-        highlight = { enable = true }
+      ensure_installed = require("custom.treesitter-parser"),
+      highlight = {
+        enable = true,
+        use_languagetree = true,
+      },
+      indent = {
+        enable = true,
       },
     },
   },

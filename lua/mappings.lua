@@ -131,7 +131,7 @@ map("n", "<leader>ap", "vap", { desc = "Äußeren Parameter auswählen" })
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
 map("n", "<leader>lg", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
 map("n", "<leader>git", "<cmd> Telescope git_files <CR>", { desc = "Öffne Git-Dateien" })
-map("n", "<Space>gf", "<cmd> Telescope live_grep <CR>", { desc = "Live-Grep" })
+map("n", "<Space><leader>", "<cmd> Telescope live_grep <CR>", { desc = "Live-Grep" })
 map("n", "<Space>fh", "<cmd> Telescope help_tags <CR>", { desc = "Hilfe-Tags durchsuchen" })
 map("n", "<leader>pf", "<cmd> Telescope find_files <CR>", { desc = "Dateien finden" })
 map("n", "<Space>comm", "<cmd> Telescope git_commits <CR>", { desc = "Git-Commits anzeigen" })
@@ -272,7 +272,7 @@ local run = require("custom.run_mappings")
 map("n", "<leader>fs", run.find_keymap, { desc = "Keymap-Suche via Bash-Script" })
 
 -- find files on system
-map("n", "<leader><leader>", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
+map("n", "<leader>sf", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
 
 -- command history
 map({"n", "v"}, "<leader>hy", require("custom.command_history").show_command_history, { desc = "Zeige Command-History" })
