@@ -97,36 +97,6 @@ map("n", "<leader>+", function() vim.cmd("vertical resize +5") end, { desc = "In
 map("n", "<leader>-", function() vim.cmd("vertical resize -5") end, { desc = "Decrease NvimTree width by 5" })
 
 
--- Quickfix
-map("n", "<leader>qo", ":copen<CR>", { desc = "Quickfix: Öffne Quickfix-Fenster" })
-map("n", "<leader>qn", ":cnext<CR>", { desc = "Quickfix: Gehe zum nächsten Fehler" })
-map("n", "<leader>qp", ":cprev<CR>", { desc = "Quickfix: Gehe zum vorherigen Fehler" })
-map("n", "<leader>qe", ":clist<CR>", { desc = "Quickfix: Zeige die Fehlerliste" })
-
-
--- Treesitter
-map("n", "<leader>nf", "]m", { desc = "Nächste Funktion" })
-map("n", "<leader>pf", "[m", { desc = "Vorherige Funktion" })
-map("n", "<leader>nc", "]C", { desc = "Nächste Klasse" })
-map("n", "<leader>pc", "[C", { desc = "Vorherige Klasse" })
-map("n", "<leader>yf", "yaf", { desc = "Ganze Funktion kopieren" })
-map("n", "<leader>yc", "yac", { desc = "Ganze Klasse kopieren" })
-map("n", "<leader>df", "daf", { desc = "Ganze Funktion löschen" })
-map("n", "<leader>dc", "dac", { desc = "Ganze Klasse löschen" })
-map("n", "<leader>xf", "xaf", { desc = "Ganze Funktion ausschneiden" })
-map("n", "<leader>xc", "xac", { desc = "Ganze Klasse ausschneiden" })
-map("n", "<leader>if", "vif", { desc = "Inneren Funktionsinhalt auswählen" })
-map("n", "<leader>ic", "vic", { desc = "Inneren Klasseninhalt auswählen" })
-map("n", "<leader>ab", "vab", { desc = "Äußeren Block auswählen" })
-map("n", "<leader>ib", "vib", { desc = "Inneren Block auswählen" })
-map("n", "<leader>nb", "]b", { desc = "Nächsten Block finden" })
-map("n", "<leader>pb", "[b", { desc = "Vorherigen Block finden" })
-map("n", "<leader>np", "]p", { desc = "Nächsten Parameter finden" })
-map("n", "<leader>pp", "[p", { desc = "Vorherigen Parameter finden" })
-map("n", "<leader>ip", "vip", { desc = "Inneren Parameter auswählen" })
-map("n", "<leader>ap", "vap", { desc = "Äußeren Parameter auswählen" })
-
-
 -- Telescope
 map("n", "<leader>ts", ":Telescope<CR>", { desc = "Telescope UI starten" })
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
@@ -200,34 +170,26 @@ map("i", "<C-s>", "<Plug>(copilot-suggest)", { noremap = false, desc = "Explicit
 
 
 -- FZF
--- Allgemeine Keymaps für FZF-Lua und Navigation
-map("n", "<leader>fzh", ":FzfLua help_tags<CR>", { desc = "Hilfe-Tags durchsuchen" })
-map("n", "<leader>fzj", ":FzfLua jumps<CR>", { desc = "Sprungpunkte durchsuchen" })
 -- Befehle durchsuchen
 map("n", "<leader>fza", ":FzfLua commands<CR>", { desc = "Befehle durchsuchen" })
-map("n", "<leader>fz5", ":FzfLua command_history<CR>", { desc = "Befehlshistorie durchsuchen" })
-map("n", "<leader>fz1", ":FzfLua resume<CR>", { desc = "Letzten Befehl/Abfrage fortsetzen" })
-map("n", "<leader>fz3", ":FzfLua builtin<CR>", { desc = "Eingebaute Befehle anzeigen" })
-map("n", "<leader>fz2", ":FzfLua search_history<CR>", { desc = "Suchverlauf anzeigen" })
+map("n", "<leader>fhc", ":FzfLua command_history<CR>", { desc = "Befehlshistorie durchsuchen" })
+map("n", "<leader>fb", ":FzfLua builtin<CR>", { desc = "Eingebaute Befehle anzeigen" })
+map("n", "<leader>fsh", ":FzfLua search_history<CR>", { desc = "Suchverlauf anzeigen" })
 -- Dateien und Buffer
 map("n", "<leader>fzb", ":FzfLua buffers<CR>", { desc = "Buffer durchsuchen" })
 map("n", "<leader>fze", ":FzfLua files<CR>", { desc = "Dateien durchsuchen" })
 map("n", "<leader>fzn", ":FzfLua quickfix_stack<CR>", { desc = "Quickfix-Stack anzeigen" })
 map("n", "<leader>old", ":FzfLua oldfiles<CR>", { desc = "Dateiverlauf anzeigen" })
--- Tags und Zeilen
-map("n", "<leader>fzt", ":FzfLua tags<CR>", { desc = "Tags suchen" })
-map("n", "<leader>fzu", ":FzfLua blines<CR>", { desc = "Zeilen durchsuchen" })
-map("n", "<leader>fzk", ":FzfLua lines<CR>", { desc = "Zeilen durchsuchen" })
 -- Farben und Schlüsselzuordnungen
 map("n", "<leader>color", ":FzfLua colorschemes<CR>", { desc = "Farbschemata durchsuchen" })
 map("n", "<leader>key", ":FzfLua keymaps<CR>", { desc = "Schlüsselzuordnungen anzeigen" })
 -- Git
-map("n", "<leader>fzd", ":FzfLua git_status<CR>", { desc = "Git-Status anzeigen" })
-map("n", "<leader>fzg", ":FzfLua git_commits<CR>", { desc = "Git-Commits durchsuchen" })
-map("n", "<leader>fzi", ":FzfLua git_files<CR>", { desc = "Git-Dateien durchsuchen" })
+map("n", "<leader>fgs", ":FzfLua git_status<CR>", { desc = "Git-Status anzeigen" })
+map("n", "<leader>fgc", ":FzfLua git_commits<CR>", { desc = "Git-Commits durchsuchen" })
+map("n", "<leader>fgf", ":FzfLua git_files<CR>", { desc = "Git-Dateien durchsuchen" })
 -- Diagnosen
-map("n", "<leader>diad", ":FzfLua diagnostics_document<CR>", { desc = "Dokumentdiagnosen anzeigen" })
-map("n", "<leader>diaw", ":FzfLua diagnostics_workspace<CR>", { desc = "Workspace-Diagnosen anzeigen" })
+map("n", "<leader>fdo", ":FzfLua diagnostics_document<CR>", { desc = "Dokumentdiagnosen anzeigen" })
+map("n", "<leader>fwo", ":FzfLua diagnostics_workspace<CR>", { desc = "Workspace-Diagnosen anzeigen" })
 -- LSP
 map("n", "<leader>fzv", ":FzfLua lsp_code_actions<CR>", { desc = "Codeaktionen anzeigen" })
 map("n", "<leader>fzw", ":FzfLua lsp_document_diagnostics<CR>", { desc = "Dokumentdiagnosen anzeigen" })
@@ -239,13 +201,13 @@ map("n", "<leader>fz0", ":FzfLua lsp_implementations<CR>", { desc = "Implementie
 map("n", "<", ":FzfLua registers<CR>", { desc = "Register durchsuchen" })
 map("n", "<leader>fzr", ":FzfLua changes<CR>", { desc = "Änderungen durchsuchen" })
 -- Quickfix und Man-Pages
-map("n", "<leader>fzm", ":FzfLua quickfix<CR>", { desc = "Quickfix-Liste durchsuchen" })
-map("n", "<leader>fzs", ":FzfLua man_pages<CR>", { desc = "Man-Pages anzeigen" })
+map("n", "<leader>fqf", ":FzfLua quickfix<CR>", { desc = "Quickfix-Liste durchsuchen" })
+map("n", "<leader>man", ":FzfLua man_pages<CR>", { desc = "Man-Pages anzeigen" })
 -- Suche
-map("n", "<leader>grep", ":FzfLua live_grep<CR>", { desc = "Live-Grep" })
-map("n", "<leader>fz6", ":FzfLua grep<CR>", { desc = "Grep-Historie anzeigen" })
+map("n", "<leader>lgp", ":FzfLua live_grep<CR>", { desc = "Live-Grep" })
+map("n", "<leader>fgp", ":FzfLua grep<CR>", { desc = "Grep-Historie anzeigen" })
 -- Datei-Typen
-map("n", "<leader>fz7", ":FzfLua filetypes<CR>", { desc = "Dateitypen anzeigen" })
+map("n", "<leader>fil", ":FzfLua filetypes<CR>", { desc = "Dateitypen anzeigen" })
 
 
 -- Toggleterm

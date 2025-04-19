@@ -2,20 +2,23 @@
 -- https://github.com/NvChad/ui/blob/v3.0/lua/nvconfig.lua
 -- Please read that file to know all available options :(
 
----@type ChadrcConfig
+---@class ChadrcConfig
+
 local M = {}
 
 M.base46 = {
-	theme = "github_dark",
+  theme = "github_dark",
 
-	-- hl_override = {
-	-- 	Comment = { italic = true },
-	-- 	["@comment"] = { italic = true },
-	-- },
+  -- hl_override = {
+  --   Comment = { italic = true },
+  --   ["@comment"] = { italic = true },
+  -- },
 }
+
 require("custom.multigrep").setup()
 require("custom.floatterminal")
 require("custom.myterm")
 require("custom.commands")
 
 return M
+
