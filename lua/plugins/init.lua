@@ -1,8 +1,8 @@
---===========================
+return {
+
+  --===========================
 --=== ESSENTIALS ============
 --===========================
-
-return {
 
   -- Treesitter: Syntax parsing and highlighting
   {
@@ -317,5 +317,16 @@ return {
       require("cmdlog").setup()
     end,
   },
+
+  {
+    "floatterminal.local",
+    dir = vim.fn.stdpath("config") .. "/lua/custom/floatterminal",
+    lazy = false,
+    config = function()
+      require("custom.floatterminal") -- Registriert Floaterminal-Command hier korrekt
+    end,
+  },
+
+
 
 }

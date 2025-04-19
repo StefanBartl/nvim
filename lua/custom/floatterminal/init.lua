@@ -1,3 +1,5 @@
+print("Floatterminal module loaded")
+
 vim.keymap.set("t", "<esc><esc>", "<c-\\><c-n>")
 
 local state = {
@@ -58,7 +60,12 @@ local toggle_terminal = function()
 end
 
 -- Create a floating window with default dimensions
-vim.api.nvim_create_user_command("Floaterminal", toggle_terminal, {})
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    vim.api.nvim_create_user_command("Floaterminal", toggle_terminal, {})
+  end,
+})
+
 
 return {
   toggle_terminal = toggle_terminal
