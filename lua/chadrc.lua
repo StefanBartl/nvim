@@ -13,7 +13,6 @@ M.base46 = {
 	-- 	["@comment"] = { italic = true },
 	-- },
 }
-
 require("custom.multigrep").setup()
 require("custom.floatterminal")
 require("custom.myterm")

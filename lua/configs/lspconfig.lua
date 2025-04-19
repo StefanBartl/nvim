@@ -1,34 +1,21 @@
+local nvlsp = require("nvchad.configs.lspconfig")
 local lspconfig = require("lspconfig")
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
+local lsp_servers = require("configs.lsp_servers")
 
--- Liste der LSP-Server und ihre Einstellungen
-local servers = {
-  ts_ls = {},      -- TypeScript/JavaScript
-  eslint = {},        -- ESLint
-  cssls = {},         -- CSS
-  jsonls = {},        -- JSON
-  sqls = {},          -- SQL
-  tailwindcss = {},   -- Tailwind CSS
-  lua_ls = {},
-  gopls = {           -- Golang
-    settings = {
-      gopls = {
-        analyses = {
-          unusedparams = true,
-          shadow = true,
-        },
-        staticcheck = true,
-        gofumpt = true,
-      },
-    },
-  },
-}
+-- Nutze NvChads Defaults
+nvlsp.defaults()
 
--- Gemeinsame on_attach-Funktion
+vim.diagnostic.config({
+  virtual_text = true,
+  signs = true,
+  underline = true,
+  update_in_insert = false,
+  severity_sort = true,
+})
+
+-- Custom on_attach kombiniert mit nvchad
 local function on_attach(client, bufnr)
-  local opts = { noremap = true, silent = true, buffer = bufnr }
-
-  -- Automatische Formatierung mit Conform
+  -- Conform autoformat
   if client.supports_method("textDocument/formatting") then
     vim.api.nvim_create_autocmd("BufWritePre", {
       buffer = bufnr,
@@ -38,32 +25,51 @@ local function on_attach(client, bufnr)
     })
   end
 
-  -- ESLint fix on save
+  -- ESLint apply fixes
   if client.name == "eslint" then
     vim.api.nvim_create_autocmd("BufWritePre", {
       buffer = bufnr,
       callback = function()
-        vim.lsp.buf.execute_command({
-          command = "eslint.applyAllFixes",
-          arguments = { { uri = vim.uri_from_bufnr(bufnr) } },
-        })
+        local params = vim.lsp.util.make_range_params()
+        params.context = { only = { "source.fixAll.eslint" } }
+        local result = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 1000)
+        if result then
+          for _, res in pairs(result) do
+            for _, action in pairs(res.result or {}) do
+              if action.edit then
+                vim.lsp.util.apply_workspace_edit(action.edit, "utf-16")
+              end
+              if type(action.command) == "table" then
+                vim.lsp.buf.execute_command(action.command)
+              end
+            end
+          end
+        end
       end,
     })
   end
+
+  -- Optional: weitere Keymaps/Autocommands hier
+
+  -- Rufe auch NvChads Original on_attach auf
+  if nvlsp.on_attach then
+    nvlsp.on_attach(client, bufnr)
+  end
 end
 
--- ESLint-Server einrichten
+-- ESLint separat behandeln (falls gewünscht)
 lspconfig.eslint.setup({
   on_attach = on_attach,
   settings = {
-    packageManager = "npm", -- Optional: Wähle den Paketmanager (npm oder yarn)
+    packageManager = "npm",
   },
 })
 
--- Setup für jeden Server in der Liste
-for server, config in pairs(servers) do
+-- Alle Server aus custom/configs/lsp_servers.lua
+for server, config in pairs(lsp_servers) do
   lspconfig[server].setup(vim.tbl_extend("force", {
     on_attach = on_attach,
-    capabilities = capabilities,
+    on_init = nvlsp.on_init,
+    capabilities = nvlsp.capabilities,
   }, config))
 end

@@ -273,3 +273,9 @@ map("n", "<leader>sf", require("custom.system_find").system_find, { desc = "Syst
 
 -- command history
 map({"n", "v"}, "<leader>hy", require("custom.command_history").show_command_history, { desc = "Zeige Command-History" })
+
+-- Normal Mode: Ctrl+a = gesamte Datei visuell markieren
+map("n", "<C-a>", "ggVG", { desc = "Select all", noremap = true })
+
+-- Visual Mode: Ctrl+a = gesamte Datei markieren (bleibt im Visual Mode)
+map("v", "<C-a>", "<Esc>ggVG", { desc = "Select all", noremap = true })

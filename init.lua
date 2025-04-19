@@ -39,3 +39,7 @@ require "autocmds.workspace"
 vim.schedule(function()
   require "mappings"
 end)
+
+vim.api.nvim_create_user_command("LspDoctor", function()
+  require("custom.lspdoctor").check()
+end, {})

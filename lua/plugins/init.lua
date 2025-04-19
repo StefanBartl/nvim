@@ -127,7 +127,6 @@ return {
 
 
 -- 3. LSP completion
--- TODO
   {
     "stevearc/conform.nvim",
     config = function()
@@ -152,6 +151,8 @@ return {
 
   {
     "neovim/nvim-lspconfig",
+    --lazy = false,
+    event = { "BufReadPre", "BufNewFile" }, -- oder FileType
     dependencies = {
         {
           "folke/lazydev.nvim",
@@ -179,7 +180,7 @@ return {
     config = function()
       require("trouble").setup({
         mode = "document_diagnostics", -- Standardmodus
-        auto_open = false,             -- Öffnet Trouble nicht automatisch
+        --auto_open = false,             -- Öffnet Trouble nicht automatisch
         auto_close = true,             -- Schließt Trouble, wenn keine Fehler vorhanden sind
         auto_preview = false,          -- Vorschau bei Auswahl deaktivieren
       })
@@ -213,15 +214,6 @@ return {
     }
   },
 
-  -- Neogit for a Magit-like Git interface
---  {
---    "TimUntersberger/neogit",
---    requires = { "nvim-lua/plenary.nvim" },
---    config = function()
---      require("neogit").setup({})
---    end,
---  },
-
   -- DiffView for visualizing Git diffs
   {
     "sindrets/diffview.nvim",
@@ -246,15 +238,6 @@ return {
     config = function()
     end,
   },
-
-  -- Headlines, Blöcke hervorheben
-  --{
-  --  "lukas-reineke/headlines.nvim",
-  --  ft = { "markdown" },
-  --  config = function()
-  --    require("headlines").setup()
-  --  end,
-  --},
 
 
 -- 7. Code formatting, folding, and syntax highlighting
@@ -296,16 +279,6 @@ return {
     end,
   },
 
-  -- TODO: In nvim.cmp integirieren!
-   -- GitHub Copilot integration
-   {
-    "github/copilot.vim",
-    event = "InsertEnter",
-    config = function()
-      vim.api.nvim_set_var("copilot_no_tab_map", true) -- Prevent conflicts with tab mappings
-    end,
-  },
-
   -- Use treesitter to autoclose and autorename html tag
   {
     "windwp/nvim-ts-autotag",
@@ -331,24 +304,6 @@ return {
   { 'echasnovski/mini.ai', version = '*' },
 
 
-  -- ChatGPT
-
-  {
-      "jackMort/ChatGPT.nvim",
-      event = "VeryLazy",
-      dependencies = {
-          "MunifTanjim/nui.nvim",
-          "nvim-lua/plenary.nvim",
-          "nvim-telescope/telescope.nvim",
-      },
-      config = function()
-          require("chatgpt").setup({
-              api_key_cmd = "echo $OPENAI_API_KEY",
-          })
-      end,
-  },
-
-
 -- 8. MISC Plugins
 
   -- Zen Mode
@@ -372,7 +327,7 @@ return {
     end,
   },
 
--- 9. My Plugins
+  --  9. My Plugins
 
   -- nvim-containers
   {
