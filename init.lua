@@ -43,3 +43,11 @@ end)
 vim.api.nvim_create_user_command("LspDoctor", function()
   require("custom.lspdoctor").check()
 end, {})
+
+vim.api.nvim_create_user_command("FindKeymap", function()
+  require("custom.run_mappings").find_keymap()
+end, {})
+
+vim.api.nvim_create_user_command("MDUnfatHeadings", function()
+  vim.cmd([[%s/\*\*\([^*]\{-}\)\*\*/\1/g]])
+end, {})

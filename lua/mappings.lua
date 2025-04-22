@@ -76,7 +76,7 @@ map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>", { silent = true, norem
 map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>", { silent = true, noremap = true, desc = "LSP: Show Diagnostic Popup" })
 map("n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", { silent = true, noremap = true, desc = "LSP: Set Location List" })
 map("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { silent = true, noremap = true, desc = "LSP: Format Document" })
-map("i", "<C-h>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", { silent = true, noremap = true, desc = "LSP: Signature Help" })
+map("i", "<C-s>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", { silent = true, noremap = true, desc = "LSP: Signature Help" })
 
 map("n", "<leader>ds", function()
   vim.diagnostic.setloclist()
@@ -148,25 +148,6 @@ map("n", "copyz", ':let @+=getline(".")<CR>:echo "Line copied to clipboard"<CR>'
 map("n", "cpe", ':.,$y+<CR>:echo "Copied to clipboard from cursor to EOF"<CR>', { desc = "Von Cursor bis EOF in die Zwischenablage kopieren" })
 map("n", "cpf", ':%y+<CR>:echo "Copied entire file to clipboard"<CR>', { desc = "Gesamte Datei in die Zwischenablage kopieren" })
 map("v", "cps", '"+y<CR>:echo "Copied selected text to clipboard"<CR>', { desc = "Ausgewählten Text in die Zwischenablage kopieren" })
-
-
-
---==================================================
---=== FOLDING ======================================
---==================================================
-
-map("i", "<C-Down>", "<Esc>zRi", { desc = "Open all foldings" })
-map("i", "<C-Up>", "<Esc>zMi", { desc = "Close all foldings" })
-map("i", "<C-Right>", "<Esc>zai", { desc = "Toggle folding under cursor" })
-map("i", "<C-Left>", "<Esc>zci", { desc = "Close folding under cursor" })
-map("n", "zA", "zA", { desc = "Toggle all foldings" })
-map("n", "zO", "zO", { desc = "Open all foldings" })
-map("n", "zC", "zC", { desc = "Close all foldings" })
-map("n", "<leader>fo", "za", { desc = "Toggle Fold unter dem Cursor" })
-map("n", "<leader>fa", "ggVGzM", { desc = "Alle Headings falten" })
-map("n", "<C-Right>", "za", { desc = "Toggle fold under cursor" })
-map("n", "<C-Left>", "zc", { desc = "Close fold under cursor" })
-
 
 
 --==================================================
