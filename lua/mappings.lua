@@ -231,6 +231,3 @@ map("n", "<leader>fs", run.find_keymap, { desc = "Keymap-Suche via Bash-Script" 
 
 --=== find files on system =========================
 map("n", "<leader>sf", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
-
---=== command history ==============================
-map({"n", "v"}, "<leader>hy", require("custom.command_history").show_command_history, { desc = "Zeige Command-History" })

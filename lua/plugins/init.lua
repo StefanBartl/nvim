@@ -7,6 +7,9 @@ return {
   -- Treesitter: Syntax parsing and highlighting
   {
     "nvim-treesitter/nvim-treesitter",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter-textobjects",
+    },
     opts = {
       ensure_installed = require("custom.treesitter-parser"),
       highlight = {
@@ -14,6 +17,38 @@ return {
         use_languagetree = true,
       },
       indent = { enable = true },
+    },
+     textobjects = {
+      select = {
+        enable = true,
+        lookahead = true,
+        keymaps = {
+          ["af"] = "@function.outer",
+          ["if"] = "@function.inner",
+          ["ac"] = "@class.outer",
+          ["ic"] = "@class.inner",
+          ["ab"] = "@block.outer",
+          ["ib"] = "@block.inner",
+          ["ap"] = "@parameter.outer",
+          ["ip"] = "@parameter.inner",
+        },
+      },
+      move = {
+        enable = true,
+        set_jumps = true,
+        goto_next_start = {
+          ["]m"] = "@function.outer",
+          ["]c"] = "@class.outer",
+          ["]b"] = "@block.outer",
+          ["]p"] = "@parameter.inner",
+        },
+        goto_previous_start = {
+          ["[m"] = "@function.outer",
+          ["[c"] = "@class.outer",
+          ["[b"] = "@block.outer",
+          ["[p"] = "@parameter.inner",
+        },
+      },
     },
   },
 
@@ -314,7 +349,9 @@ return {
     dir = "/media/steve/Depot/MyGithub/nvim-cmdlog/",
     lazy = false,
     config = function()
-      require("cmdlog").setup()
+      require("cmdlog").setup({
+        picker = "telescope",
+    })
     end,
   },
 

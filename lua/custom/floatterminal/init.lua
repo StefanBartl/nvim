@@ -1,5 +1,3 @@
-print("Floatterminal module loaded")
-
 vim.keymap.set("t", "<esc><esc>", "<c-\\><c-n>")
 
 local state = {
