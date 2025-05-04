@@ -8,11 +8,11 @@ local current_command = ""
 
 --- Open a terminal in a horizontal split at the bottom
 function M.open()
-  vim.cmd.vnew()                               -- create a new vertical split
-  vim.cmd.term()                               -- open a terminal
-  vim.cmd.wincmd("J")                          -- move terminal window to bottom
-  vim.api.nvim_win_set_height(0, 5)            -- set height to 5 lines
-  job_id = vim.bo.channel                      -- store the terminal channel ID
+  vim.cmd.vnew()                    -- create a new vertical split
+  vim.cmd.term()                    -- open a terminal
+  vim.cmd.wincmd("J")               -- move terminal window to bottom
+  vim.api.nvim_win_set_height(0, 5) -- set height to 5 lines
+  job_id = vim.bo.channel           -- store the terminal channel ID
 end
 
 --- Ask user for a command and store it
@@ -32,7 +32,7 @@ function M.run_command()
   vim.fn.chansend(job_id, { current_command .. "\r\n" })
 end
 
---- Optional: Clear the current command
+--- Clear the current command
 function M.clear_command()
   current_command = ""
   vim.notify("Command cleared", vim.log.levels.INFO)

@@ -6,10 +6,10 @@
 
 local M = {}
 
-require("custom.multigrep").setup()
-require("custom.floatterminal")
-require("custom.myterm")
-require("custom.commands")
+M.ui = {
+  statusline = {
+    theme = "vscode",
+  },
+}
 
 return M
-

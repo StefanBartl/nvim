@@ -21,7 +21,7 @@ M.system_find = function()
 
     -- Check for available fd binary
     local fd_executable = vim.fn.executable("fd") == 1 and "fd"
-      or (vim.fn.executable("fdfind") == 1 and "fdfind" or nil)
+        or (vim.fn.executable("fdfind") == 1 and "fdfind" or nil)
 
     if not fd_executable then
       vim.notify("Neither 'fd' nor 'fdfind' found in PATH", vim.log.levels.ERROR)
@@ -32,9 +32,6 @@ M.system_find = function()
       fd_executable,
       name,
       "/etc", "/usr", "/home", "/media/steve",
-      "--hidden",
-      "--no-ignore",
-      "--follow",
     }
 
     if extension ~= "" then
@@ -48,5 +45,11 @@ M.system_find = function()
     })
   end)
 end
+
+vim.api.nvim_create_user_command("FindOnSystem", function()
+  require("custom.system_find").system_find()
+end, {
+  desc = "Search file on system.",
+})
 
 return M

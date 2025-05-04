@@ -31,4 +31,8 @@ function M.check()
   print("📦 trouble.nvim geladen: ", trouble_ok and "✔️" or "❌")
 end
 
+vim.api.nvim_create_user_command("LspDoctor", function()
+  require("custom.lspdoctor").check()
+end, {})
+
 return M

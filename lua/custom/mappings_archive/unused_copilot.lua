@@ -2,7 +2,10 @@
 --=== COPILOT (GitHub Copilot) =====================
 --==================================================
 
-map("i", "<C-y>", 'copilot#Accept("<CR>")', { silent = true, expr = true, noremap = true, desc = "Accept Copilot suggestion" })
+local map = vim.keymap.set
+
+map("i", "<C-y>", 'copilot#Accept("<CR>")',
+  { silent = true, expr = true, noremap = true, desc = "Accept Copilot suggestion" })
 map("i", "<C-l>", "<Plug>(copilot-accept-word)", { noremap = false, desc = "Accept next word of suggestion" })
 map("i", "<C-k>", "<Plug>(copilot-accept-line)", { noremap = false, desc = "Accept next line of suggestion" })
 map("i", "<C-r>", "<Plug>(copilot-dismiss)", { noremap = false, desc = "Dismiss Copilot suggestion" })

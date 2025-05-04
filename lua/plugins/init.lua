@@ -1,8 +1,8 @@
 return {
 
   --===========================
---=== ESSENTIALS ============
---===========================
+  --=== ESSENTIALS ============
+  --===========================
 
   {
     "nvim-treesitter/nvim-treesitter",
@@ -58,15 +58,19 @@ return {
     lazy = false,
   },
 
---===========================
---=== FUZZY FINDING =========
---===========================
+  --===========================
+  --=== FUZZY FINDING =========
+  --===========================
 
   -- Telescope: Powerful fuzzy finder
   {
     "nvim-telescope/telescope.nvim",
     lazy = false,
-    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-lua/plenary.nvim" },
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope-github.nvim",
+    },
     cmd = "Telescope",
     config = function(_, opts)
       dofile(vim.g.base46_cache .. "telescope")
@@ -91,17 +95,17 @@ return {
         },
         tabs = {
           { "Files", function(opts)
-              opts = opts or {}
-              if vim.fn.isdirectory(".git") == 1 then
-                builtin.git_files(opts)
-              else
-                builtin.find_files(opts)
-              end
+            opts = opts or {}
+            if vim.fn.isdirectory(".git") == 1 then
+              builtin.git_files(opts)
+            else
+              builtin.find_files(opts)
             end
+          end
           },
           { name = "All Files", tele_func = builtin.find_files, tele_opts = { no_ignore = true, hidden = true } },
-          { name = "Grep", tele_func = builtin.live_grep },
-          { name = "Buffers", tele_func = builtin.buffers },
+          { name = "Grep",      tele_func = builtin.live_grep },
+          { name = "Buffers",   tele_func = builtin.buffers },
         },
         collections = {
           git = {
@@ -123,9 +127,9 @@ return {
     lazy = false,
   },
 
---===========================
---=== FILE NAVIGATION ======
---===========================
+  --===========================
+  --=== FILE NAVIGATION ======
+  --===========================
 
   -- Harpoon: Fast file navigation
   {
@@ -138,13 +142,13 @@ return {
     config = function()
       require("harpoon").setup()
       require("telescope").load_extension("harpoon")
-      require("configs.harpoon")
+      require("configs.harpoon_config")
     end,
   },
 
---===========================
---=== LSP & FORMATTING ======
---===========================
+  --===========================
+  --=== LSP & FORMATTING ======
+  --===========================
 
   -- LSP Config: Core LSP plugin
   {
@@ -156,7 +160,8 @@ return {
         ft = "lua",
         opts = {
           library = {
-            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+            --{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+            { path = "/home/steve/Custom/nvim-types/neodev.nvim/types" },
           },
         },
       },
@@ -165,6 +170,7 @@ return {
       require("configs.lspconfig")
     end,
   },
+
 
   -- Conform: Formatting engine
   {
@@ -201,9 +207,9 @@ return {
     end,
   },
 
---===========================
---=== GIT INTEGRATION =======
---===========================
+  --===========================
+  --=== GIT INTEGRATION =======
+  --===========================
 
   -- LazyGit: External Git UI
   {
@@ -219,6 +225,12 @@ return {
     },
   },
 
+  {
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    config = true,
+  },
+
   -- DiffView: Visual Git diff tool
   {
     "sindrets/diffview.nvim",
@@ -227,9 +239,9 @@ return {
     config = true,
   },
 
---===========================
---=== MARKDOWN ==============
---===========================
+  --===========================
+  --=== MARKDOWN ==============
+  --===========================
 
   -- Markdown Preview (browser)
   {
@@ -244,9 +256,9 @@ return {
     ft = { "markdown" },
   },
 
---===========================
---=== EDITING TOOLS =========
---===========================
+  --===========================
+  --=== EDITING TOOLS =========
+  --===========================
 
   -- Better Quickfix Window
   {
@@ -300,38 +312,52 @@ return {
   },
 
   -- Mini.ai: Text object enhancements (e.g. "daf" for "delete around function")
+  --{
+  --  "echasnovski/mini.ai",
+  --  version = "*",
+  --},
+
   {
-    "echasnovski/mini.ai",
-    version = "*",
+    "folke/todo-comments.nvim",
+    event = "BufReadPost",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    opts = {
+      signs = true,
+      keywords = {
+        FIX = {
+          icon = " ",
+          color = "error",                            -- can be a hex color, or a named color (see below)
+          alt = { "FIXME", "BUG", "FIXIT", "ISSUE" }, -- a set of other keywords that all map to this FIX keywords
+        },
+        INFO = { icon = " ", color = "info" },
+        DEBUG = { icon = " ", color = "hint" },
+        TODO = { icon = " ", color = "info" },
+        HACK = { icon = " ", color = "warning" },
+        WARN = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
+        PERF = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
+        NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
+        TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
+        EXP = {
+          icon = "🔬", color = "test", alt = { "EXPERIMENT", "EXPERIMENTAL" },
+        },
+      },
+    },
   },
 
---===========================
---=== MISC TOOLS ============
---===========================
+
+  --===========================
+  --=== MISC TOOLS ============
+  --===========================
 
   -- Zen Mode: Focus writing
   {
     "folke/zen-mode.nvim",
   },
 
-  -- Visual multi-cursor support (like in VSCode)
-  {
-    "mg979/vim-visual-multi",
-    branch = "master",
-    init = function()
-      vim.g.VM_default_mappings = 0
-    end,
-    config = function()
-      vim.g.VM_maps = {
-        ["Find Under"]         = "<C-y>",
-        ["Find Subword Under"] = "<C-y>",
-      }
-    end,
-  },
 
---===========================
---=== PERSONAL PROJECTS =====
---===========================
+  --===========================
+  --=== PERSONAL PROJECTS =====
+  --===========================
 
   -- nvim-containers: Manage container engines from inside Neovim
   {
@@ -339,7 +365,6 @@ return {
     event = "VeryLazy",
     config = function()
       require("containers").setup({
-        engine = "podman",
       })
     end,
   },
@@ -351,9 +376,19 @@ return {
     config = function()
       require("cmdlog").setup({
         picker = "telescope",
-    })
+      })
     end,
   },
+
+  {
+    dir = "/media/steve/Depot/MyGithub/reposcope.nvim",
+    name = "reposcope", -- 👈 wichtig für require("reposcope")
+    event = "VeryLazy",
+    config = function()
+      require("reposcope.config").setup({})
+    end,
+  },
+
 
   {
     "floatterminal.local",

@@ -63,20 +63,32 @@ map("n", "<leader>fil", ":FzfLua filetypes<CR>", { desc = "Dateitypen anzeigen" 
 map("n", "grn", "<cmd>lua vim.lsp.buf.rename()<CR>", { silent = true, noremap = true, desc = "LSP: Rename Symbol" })
 map("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", { silent = true, noremap = true, desc = "LSP: Code Action" })
 map("n", "gra", "<cmd>lua vim.lsp.buf.code_action()<CR>", { silent = true, noremap = true, desc = "LSP: Code Action" })
-map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", { silent = true, noremap = true, desc = "LSP: Code Action" })
+map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Code Action" })
 map("n", "grr", "<cmd>lua vim.lsp.buf.references()<CR>", { silent = true, noremap = true, desc = "LSP: References" })
-map("n", "gri", "<cmd>lua vim.lsp.buf.implementation()<CR>", { silent = true, noremap = true, desc = "LSP: Implementations" })
-map("n", "gO", "<cmd>lua vim.lsp.buf.document_symbol()<CR>", { silent = true, noremap = true, desc = "LSP: Document Symbols" })
-map("n", "gq", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { silent = true, noremap = true, desc = "LSP: Format Line" })
+map("n", "gri", "<cmd>lua vim.lsp.buf.implementation()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Implementations" })
+map("n", "gO", "<cmd>lua vim.lsp.buf.document_symbol()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Document Symbols" })
+map("n", "gq", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>",
+  { silent = true, noremap = true, desc = "LSP: Format Line" })
 map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { silent = true, noremap = true, desc = "LSP: Go to Definition" })
-map("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", { silent = true, noremap = true, desc = "LSP: Go to Declaration" })
-map("n", "gt", "<cmd>lua vim.lsp.buf.type_definition()<CR>", { silent = true, noremap = true, desc = "LSP: Type Definition" })
-map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<CR>", { silent = true, noremap = true, desc = "LSP: Previous Diagnostic" })
-map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>", { silent = true, noremap = true, desc = "LSP: Next Diagnostic" })
-map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>", { silent = true, noremap = true, desc = "LSP: Show Diagnostic Popup" })
-map("n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", { silent = true, noremap = true, desc = "LSP: Set Location List" })
-map("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", { silent = true, noremap = true, desc = "LSP: Format Document" })
-map("i", "<C-s>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", { silent = true, noremap = true, desc = "LSP: Signature Help" })
+map("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Go to Declaration" })
+map("n", "gt", "<cmd>lua vim.lsp.buf.type_definition()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Type Definition" })
+map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Previous Diagnostic" })
+map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Next Diagnostic" })
+map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Show Diagnostic Popup" })
+map("n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Set Location List" })
+map("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>",
+  { silent = true, noremap = true, desc = "LSP: Format Document" })
+map("i", "<C-s>", "<cmd>lua vim.lsp.buf.signature_help()<CR>",
+  { silent = true, noremap = true, desc = "LSP: Signature Help" })
 
 map("n", "<leader>ds", function()
   vim.diagnostic.setloclist()
@@ -125,7 +137,8 @@ map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { desc = "Telescope Results
 map("n", "<leader>ts", ":Telescope<CR>", { desc = "Telescope UI starten" })
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
 map("n", "<leader><leader>", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
-map("n", "<leader>gs", function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end, { desc = "Grep-Suche" })
+map("n", "<leader>gs", function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end,
+  { desc = "Grep-Suche" })
 map("n", "<leader>git", function() require("telescope.builtin").git_files() end, { desc = "Git-Dateien durchsuchen" })
 map("n", "<leader>hp", function() require("telescope.builtin").help_tags() end, { desc = "Hilfe-Tags durchsuchen" })
 map("n", "<leader>com", function() require("telescope.builtin").git_commits() end, { desc = "Git-Commits anzeigen" })
@@ -138,16 +151,20 @@ map("i", "<M-n>", function() require("telescope.builtin").find_files() end, { de
 --=== UTILS (Clipboard, Counter) ===================
 --==================================================
 
-map({"n", "i", "v", "t"}, "<C-s>", "<cmd>w<CR>", { desc = "general save file" })
+map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "general save file" })
 map("i", "jk", "<ESC>")
 
 map("n", "<leader>uz", ":echo len(join(getline(1, '$'), ''))<CR>", { desc = "Zeichen zählen" })
 map("n", "<leader>uw", ":echo len(split(join(getline(1, '$'), ''), '\\s\\+'))<CR>", { desc = "Wörter zählen" })
 
-map("n", "copyz", ':let @+=getline(".")<CR>:echo "Line copied to clipboard"<CR>', { desc = "Zeile in die Zwischenablage kopieren" })
-map("n", "cpe", ':.,$y+<CR>:echo "Copied to clipboard from cursor to EOF"<CR>', { desc = "Von Cursor bis EOF in die Zwischenablage kopieren" })
-map("n", "cpf", ':%y+<CR>:echo "Copied entire file to clipboard"<CR>', { desc = "Gesamte Datei in die Zwischenablage kopieren" })
-map("v", "cps", '"+y<CR>:echo "Copied selected text to clipboard"<CR>', { desc = "Ausgewählten Text in die Zwischenablage kopieren" })
+map("n", "copyz", ':let @+=getline(".")<CR>:echo "Line copied to clipboard"<CR>',
+  { desc = "Zeile in die Zwischenablage kopieren" })
+map("n", "cpe", ':.,$y+<CR>:echo "Copied to clipboard from cursor to EOF"<CR>',
+  { desc = "Von Cursor bis EOF in die Zwischenablage kopieren" })
+map("n", "cpf", ':%y+<CR>:echo "Copied entire file to clipboard"<CR>',
+  { desc = "Gesamte Datei in die Zwischenablage kopieren" })
+map("v", "cps", '"+y<CR>:echo "Copied selected text to clipboard"<CR>',
+  { desc = "Ausgewählten Text in die Zwischenablage kopieren" })
 
 
 --==================================================
@@ -199,9 +216,9 @@ map("n", "<leader>-", function() vim.cmd("vertical resize -5") end, { desc = "De
 
 --=== Insert Lines Above Cursor ====================
 map("n", "<CR>", function()
-  local row, col = unpack(vim.api.nvim_win_get_cursor(0))         -- Save the current cursor position
-  vim.api.nvim_buf_set_lines(0, row - 1, row - 1, false, { "" })  -- Insert an empty line above the current line
-  vim.api.nvim_win_set_cursor(0, { row, col })                    -- Restore the cursor to the original position
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))        -- Save the current cursor position
+  vim.api.nvim_buf_set_lines(0, row - 1, row - 1, false, { "" }) -- Insert an empty line above the current line
+  vim.api.nvim_win_set_cursor(0, { row, col })                   -- Restore the cursor to the original position
 end, { desc = "Insert line above without moving the cursor" })
 
 --=== Move Selected Lines ==========================
@@ -224,10 +241,11 @@ map("n", "<leader>tr", term.run_command, { desc = "Run terminal command" })
 map("n", "<leader>tc", term.clear_command, { desc = "Clear terminal command" })
 
 --=== find mappings ================================
-local keysearch = require("custom.keymap_search")
+local keysearch = require("custom.mappings_search")
 map("n", "<leader>fk", keysearch.search_keymaps, { desc = "Finde Keymaps (Telescope)" })
-local run = require("custom.run_mappings")
-map("n", "<leader>fs", run.find_keymap, { desc = "Keymap-Suche via Bash-Script" })
 
 --=== find files on system =========================
-map("n", "<leader>sf", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
+map("n", "<leader>fs", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
+
+-- Keymap für Komprimieren und Listen
+vim.keymap.set("n", "<leader>cc", "<cmd>CompressDir<CR>", { desc = "Compress and copy current directory to ~/temp" })
