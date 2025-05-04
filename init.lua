@@ -30,20 +30,9 @@ dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
 
 require "options"
-require "autocmds.text"
-require "autocmds.terminals"
-require "autocmds.workspace"
-require("custom.multigrep").setup()
-require("custom.floatterminal")
-require("custom.myterm")
-require("custom.generate_docs")
-
---local require_dir = require("custom.require_dir")
---require_dir("options")
---require_dir("autocmd")
---require_dir("custom")
-
---require "configs.nvimtree"
+local require_dir = require("custom.require_dir")
+require_dir("autocmd")
+require_dir("custom")
 
 vim.schedule(function()
   require "mappings"
