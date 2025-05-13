@@ -2,10 +2,8 @@ local nvlsp = require("nvchad.configs.lspconfig")
 local lspconfig = require("lspconfig")
 local lsp_servers = require("configs.lsp_servers")
 
-require("lazydev").setup({})
-
--- Nutze NvChads Defaults
-nvlsp.defaults()
+--require("lazydev").setup({})
+--nvlsp.defaults()
 
 vim.diagnostic.config({
   virtual_text = true,
@@ -27,6 +25,7 @@ local function on_attach(client, bufnr)
     })
   end
 
+  --[[
   -- ESLint apply fixes
   if client.name == "eslint" then
     vim.api.nvim_create_autocmd("BufWritePre", {
@@ -54,10 +53,9 @@ local function on_attach(client, bufnr)
       end,
     })
   end
+--]]
 
-  -- Optional: eigene Keymaps hier ergänzen
-
-  -- Wichtig: auch NvChads Original on_attach aufrufen
+  -- NvChads Original on_attach aufrufen
   if nvlsp.on_attach then
     nvlsp.on_attach(client, bufnr)
   end
@@ -73,37 +71,40 @@ for server, config in pairs(lsp_servers) do
 end
 
 -- lua_ls separat behandeln (weil lazydev gewisse Dinge automatisch patched)
-lspconfig.lua_ls.setup({
-  on_attach = on_attach,
-  on_init = nvlsp.on_init,
-  capabilities = nvlsp.capabilities,
-  settings = {
-    Lua = {
-      runtime = {
-        -- Neovim uses LuaJIT
-        version = "LuaJIT",
-        path = vim.split(package.path, ";"),
-      },
-      diagnostics = {
-        -- Recognize the `vim` global and optionally `vim.uv`
-        globals = { "vim", "vim.uv" },
-      },
-      workspace = {
-        library = vim.tbl_extend("force",
-          vim.api.nvim_get_runtime_file("", true),
-          {
-            vim.fn.stdpath("config"),
-            "/home/steve/Custom/nvim-types/neodev.nvim/types",
-          }
-        ),
-        checkThirdParty = false,
-      },
-      telemetry = {
-        enable = false, -- Disable telemetry for privacy
-      },
-      completion = {
-        callSnippet = "Replace", -- Optional: how snippets expand
+if vim.tbl_isempty(vim.lsp.get_clients({ name = "lua_ls" })) then
+  lspconfig.lua_ls.setup({
+    on_attach = on_attach,
+    on_init = nvlsp.on_init,
+    capabilities = nvlsp.capabilities,
+    settings = {
+      Lua = {
+        runtime = {
+          -- Neovim uses LuaJIT
+          version = "LuaJIT",
+          path = vim.split(package.path, ";"),
+        },
+        diagnostics = {
+          -- Recognize the `vim` global and optionally `vim.uv`
+          globals = { "vim", "vim.uv" },
+        },
+        workspace = {
+          library = {
+            vim.fn.expand("$NVIMRUNTIME/lua"),
+            vim.fn.stdpath("config") .. "/lua",
+            vim.fn.expand("/media/steve/Depot/MyGithub/reposcope.nvim/lua"),
+          },
+          checkThirdParty = false,
+          --maxPreload = 100,
+          --preloadFileSize = 100, -- MB
+        },
+
+        telemetry = {
+          enable = false, -- Disable telemetry for privacy
+        },
+        completion = {
+          callSnippet = "Replace", -- Optional: how snippets expand
+        },
       },
     },
-  },
-})
+  })
+end

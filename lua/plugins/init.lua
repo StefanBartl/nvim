@@ -340,6 +340,21 @@ return {
         EXP = {
           icon = "🔬", color = "test", alt = { "EXPERIMENT", "EXPERIMENTAL" },
         },
+        REF = {
+          icon = "󰁨 ",
+          color = "hint",
+          alt = { "REFACTOR", "REWRITE", "CLEANUP", "IMPROVE", "RESTRUCTURE" },
+        },
+        ADD = {
+          icon = " ",
+          color = "info",
+          alt = { "EXT", "NEXT", "FUTURE", "ENHANCE", "HOOK" },
+        },
+        WATCH = {
+          icon = " ",
+          color = "warning",
+          alt = { "MONITOR", "OBSERVE", "TRACK", "INSPECT", "SURVEILLANCE" },
+        },
       },
     },
   },
@@ -382,10 +397,10 @@ return {
 
   {
     dir = "/media/steve/Depot/MyGithub/reposcope.nvim",
-    name = "reposcope", -- 👈 wichtig für require("reposcope")
+    name = "reposcope",
     event = "VeryLazy",
     config = function()
-      require("reposcope.config").setup({})
+      require("reposcope.init").setup({})
     end,
   },
 

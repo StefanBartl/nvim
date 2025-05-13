@@ -1,7 +1,7 @@
 -- Automatisches Entfernen von Trailing Leerzeichen
 vim.api.nvim_create_autocmd("BufWritePre", {
-    pattern = "*",
-    command = [[%s/\s\+$//e]],
+  pattern = "*",
+  command = [[%s/\s\+$//e]],
 })
 
 -- Entfernen von Leerzeichen in leeren Zeilen
@@ -37,8 +37,8 @@ autocmd("BufReadPost", {
 
 -- Image viewer
 vim.api.nvim_create_autocmd("BufReadPost", {
-    pattern = {"*.jpg", "*.jpeg", "*.png"},
-    callback = function()
-        vim.fn.system("open " .. vim.fn.expand("%"))
-    end
+  pattern = { "*.jpg", "*.jpeg", "*.png" },
+  callback = function()
+    vim.fn.system("open " .. vim.fn.expand("%"))
+  end
 })

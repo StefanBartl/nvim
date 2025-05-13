@@ -16,6 +16,9 @@ vim.api.nvim_create_user_command("NvimTreeSetRoot", function(opts)
   -- Expand ~ and other shorthand
   path = vim.fn.expand(path)
 
+  -- Set Neovim current working directory
+  vim.cmd("cd " .. vim.fn.fnameescape(path))
+
   -- Ensure tree is open and visible
   if not api.tree.is_visible() then
     api.tree.open()

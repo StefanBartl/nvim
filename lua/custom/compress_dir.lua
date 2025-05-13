@@ -2,7 +2,7 @@
 local M = {}
 
 --- Compresses the current working directory and saves a file list
-function M.compress_current_directory()
+function M.init()
   -- Load necessary functions
   local fn = vim.fn
 
@@ -41,7 +41,7 @@ function M.compress_current_directory()
 end
 
 vim.api.nvim_create_user_command("CompressDir", function()
-  require("custom.compress_dir").compress_current_directory()
+  require("custom.compress_dir").init()
 end, {})
 
 return M

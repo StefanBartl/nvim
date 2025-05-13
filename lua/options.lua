@@ -37,7 +37,7 @@ vim.opt.signcolumn = "yes"
 vim.opt.cmdheight = 1 -- Höhe der Befehlszeile erhöhen
 
 -- Sicherheits-/Backup-Optionen
-vim.opt.backup = false                               -- Keine Backup-Dateien erstellen
-vim.opt.swapfile = false                             -- Keine Swap-Dateien erstellen
-vim.opt.undofile = true                              -- Änderungsverlauf speichern
-vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo" -- Speicherort für Undo-Dateien
+vim.opt.backup = false   -- Keine Backup-Dateien erstellen
+vim.opt.swapfile = false -- Keine Swap-Dateien erstellen
+--vim.opt.undofile = true                              -- Änderungsverlauf speichern
+--vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo" -- Speicherort für Undo-Dateien

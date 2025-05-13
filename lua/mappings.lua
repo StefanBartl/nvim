@@ -248,4 +248,26 @@ map("n", "<leader>fk", keysearch.search_keymaps, { desc = "Finde Keymaps (Telesc
 map("n", "<leader>fs", require("custom.system_find").system_find, { desc = "Systemweite Dateisuche mit Endung" })
 
 -- Keymap für Komprimieren und Listen
-vim.keymap.set("n", "<leader>cc", "<cmd>CompressDir<CR>", { desc = "Compress and copy current directory to ~/temp" })
+map("n", "<leader>cc", "<cmd>CompressDir<CR>", { desc = "Compress and copy current directory to ~/temp" })
+
+-- Mapping: Alt+Enter inserts a new line below and moves cursor to its beginning
+map({ "n", "i", "v" }, "<A-CR>", "o<Esc>^", {
+  desc = "Insert line below and move cursor to beginning",
+  noremap = true,
+  silent = true,
+})
+
+-- Insert-mode mapping: 'jk' to exit insert mode
+map({ "i", "v", "t" }, "jk", "<Esc>", {
+  desc = "Exit insert mode with jk",
+  noremap = true,
+  silent = true,
+})
+
+-- Springt zum nächsten Funktionsende (Treesitter-Node)
+vim.api.nvim_set_keymap(
+  'n',
+  '<leader>je',
+  [[:lua require'nvim-treesitter.textobjects.move'.goto_next_end("@function.outer")<CR>]],
+  { noremap = true, silent = true }
+)
