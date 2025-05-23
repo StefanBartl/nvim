@@ -192,6 +192,11 @@ return {
     end,
   },
 
+  {
+    "artemave/workspace-diagnostics.nvim",
+    lazy = false,
+  },
+
   -- Trouble: Show LSP diagnostics in a sidebar
   {
     "folke/trouble.nvim",
@@ -206,6 +211,7 @@ return {
       })
     end,
   },
+
 
   --===========================
   --=== GIT INTEGRATION =======

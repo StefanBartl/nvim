@@ -136,7 +136,8 @@ map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { desc = "Telescope Results
 
 map("n", "<leader>ts", ":Telescope<CR>", { desc = "Telescope UI starten" })
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
-map("n", "<leader><leader>", function() require("telescope.builtin").live_grep() end, { desc = "Live Grep" })
+map("n", "<leader><leader>", function() require("custom.live_grep_memory").open() end,
+  { desc = "Live Grep with history" })
 map("n", "<leader>gs", function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end,
   { desc = "Grep-Suche" })
 map("n", "<leader>git", function() require("telescope.builtin").git_files() end, { desc = "Git-Dateien durchsuchen" })
@@ -271,3 +272,19 @@ vim.api.nvim_set_keymap(
   [[:lua require'nvim-treesitter.textobjects.move'.goto_next_end("@function.outer")<CR>]],
   { noremap = true, silent = true }
 )
+
+
+--- TESTING
+vim.keymap.set("i", "<A-h>", "<Nop>", { silent = true, noremap = true })
+-- Alt+h für links bewegen im Insert-Modus
+vim.keymap.set("i", "<A-h>", "<Left>", { silent = true, noremap = true })
+
+
+vim.keymap.set("n", "<leader>xw", function()
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+    require("workspace-diagnostics").populate_workspace_diagnostics(client, 0)
+  end
+end, { desc = "Populate workspace diagnostics" })
+
+map("n", "<leader>do", ":FzfLua diagnostics_document<CR>", { desc = "Dokumentdiagnosen anzeigen" })
+map("n", "<leader>wo", ":FzfLua diagnostics_workspace<CR>", { desc = "Workspace-Diagnosen anzeigen" })
