@@ -58,6 +58,13 @@ return {
     lazy = false,
   },
 
+  -- Toggleterm for persistent terminal trough session
+  {
+    'akinsho/toggleterm.nvim',
+    version = "*",
+    config = true,
+  },
+
   --===========================
   --=== FUZZY FINDING =========
   --===========================
@@ -192,6 +199,11 @@ return {
     end,
   },
 
+  {
+    "artemave/workspace-diagnostics.nvim",
+    lazy = false,
+  },
+
   -- Trouble: Show LSP diagnostics in a sidebar
   {
     "folke/trouble.nvim",
@@ -206,6 +218,7 @@ return {
       })
     end,
   },
+
 
   --===========================
   --=== GIT INTEGRATION =======

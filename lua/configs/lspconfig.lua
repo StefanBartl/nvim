@@ -1,9 +1,12 @@
 local nvlsp = require("nvchad.configs.lspconfig")
 local lspconfig = require("lspconfig")
 local lsp_servers = require("configs.lsp_servers")
+local lua_ls_config = require("configs.lua_ls_config")
+
 
 --require("lazydev").setup({})
 --nvlsp.defaults()
+lspconfig.lua_ls.setup(lua_ls_config)
 
 vim.diagnostic.config({
   virtual_text = true,
@@ -15,6 +18,7 @@ vim.diagnostic.config({
 
 -- Custom on_attach kombiniert mit nvchad
 local function on_attach(client, bufnr)
+  require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
   -- Autoformat über conform
   if client.supports_method("textDocument/formatting") then
     vim.api.nvim_create_autocmd("BufWritePre", {
@@ -68,43 +72,4 @@ for server, config in pairs(lsp_servers) do
     on_init = nvlsp.on_init,
     capabilities = nvlsp.capabilities,
   }, config))
-end
-
--- lua_ls separat behandeln (weil lazydev gewisse Dinge automatisch patched)
-if vim.tbl_isempty(vim.lsp.get_clients({ name = "lua_ls" })) then
-  lspconfig.lua_ls.setup({
-    on_attach = on_attach,
-    on_init = nvlsp.on_init,
-    capabilities = nvlsp.capabilities,
-    settings = {
-      Lua = {
-        runtime = {
-          -- Neovim uses LuaJIT
-          version = "LuaJIT",
-          path = vim.split(package.path, ";"),
-        },
-        diagnostics = {
-          -- Recognize the `vim` global and optionally `vim.uv`
-          globals = { "vim", "vim.uv" },
-        },
-        workspace = {
-          library = {
-            vim.fn.expand("$NVIMRUNTIME/lua"),
-            vim.fn.stdpath("config") .. "/lua",
-            vim.fn.expand("/media/steve/Depot/MyGithub/reposcope.nvim/lua"),
-          },
-          checkThirdParty = false,
-          --maxPreload = 100,
-          --preloadFileSize = 100, -- MB
-        },
-
-        telemetry = {
-          enable = false, -- Disable telemetry for privacy
-        },
-        completion = {
-          callSnippet = "Replace", -- Optional: how snippets expand
-        },
-      },
-    },
-  })
 end
