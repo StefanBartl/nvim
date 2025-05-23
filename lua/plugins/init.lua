@@ -59,11 +59,16 @@ return {
   },
 
   -- Toggleterm for persistent terminal trough session
+  -- Datei: custom/plugins/essentials.lua oder vergleichbar
   {
-    'akinsho/toggleterm.nvim',
+    "akinsho/toggleterm.nvim",
+    lazy = false,
     version = "*",
-    config = true,
+    config = function()
+      require("toggleterm").setup({})
+    end,
   },
+
 
   --===========================
   --=== FUZZY FINDING =========
