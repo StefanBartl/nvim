@@ -338,6 +338,7 @@ return {
   {
     "folke/todo-comments.nvim",
     event = "BufReadPost",
+    lazy = false,
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       signs = true,
@@ -394,7 +395,7 @@ return {
 
   -- nvim-containers: Manage container engines from inside Neovim
   {
-    dir = "/media/steve/Depot/MyGithub/nvim-containers",
+    dir = "~/MyGithub/nvim-containers",
     event = "VeryLazy",
     config = function()
       require("containers").setup({
@@ -404,7 +405,7 @@ return {
 
   -- nvim-cmdlog: Manage your command history
   {
-    dir = "/media/steve/Depot/MyGithub/nvim-cmdlog/",
+    dir = "~/MyGithub/nvim-cmdlog/",
     lazy = false,
     config = function()
       require("cmdlog").setup({
@@ -414,7 +415,7 @@ return {
   },
 
   {
-    dir = "/media/steve/Depot/MyGithub/reposcope.nvim",
+    dir = "~/MyGithub/reposcope.nvim",
     name = "reposcope",
     event = "VeryLazy",
     config = function()
