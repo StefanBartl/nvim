@@ -94,48 +94,51 @@ function M.open_history_picker(parent_bufnr)
       results = get_reversed_history(),
     },
     sorter = conf.generic_sorter({}),
-  attach_mappings = function(prompt_bufnr, map)
-    local picker = action_state.get_current_picker(prompt_bufnr)
+    attach_mappings = function(prompt_bufnr, map)
+      local picker = action_state.get_current_picker(prompt_bufnr)
 
-    actions.select_default:replace(function(inner_bufnr)
-      local selection = action_state.get_selected_entry()
-      pcall(actions.close, inner_bufnr)
-      vim.defer_fn(function()
-        M.open({ default_text = selection[1] })
-      end, 20)
-    end)
+      -- Auswahl per <CR>
+      actions.select_default:replace(function(inner_bufnr)
+        local selection = action_state.get_selected_entry()
+        pcall(actions.close, inner_bufnr)
+        vim.defer_fn(function()
+          M.open({ default_text = selection[1] })
+        end, 20)
+      end)
 
-    map("i", "<C-d>", function()
-      local selection = action_state.get_selected_entry()
+      -- <C-d>: Löscht Eintrag aus History
+      map("i", "<C-d>", function()
+        local selection = action_state.get_selected_entry()
 
-      if not selection then
-        vim.notify("No selection to delete", vim.log.levels.WARN)
-        return
-      end
-
-      for i = #M.history, 1, -1 do
-        if M.history[i] == selection[1] then
-          table.remove(M.history, i)
-          break
+        if not selection then
+          vim.notify("No selection to delete", vim.log.levels.WARN)
+          return
         end
-      end
 
-      local function get_reversed_history()
-        local reversed = {}
         for i = #M.history, 1, -1 do
-          table.insert(reversed, M.history[i])
+          if M.history[i] == selection[1] then
+            table.remove(M.history, i)
+            break
+          end
         end
-        return reversed
-      end
 
-      picker:refresh(
-        finders.new_table({ results = get_reversed_history() }),
-        { reset_prompt = true }
-      )
-    end)
+        local function get_reversed_history()
+          local reversed = {}
+          for i = #M.history, 1, -1 do
+            table.insert(reversed, M.history[i])
+          end
+          return reversed
+        end
 
-    return true
-  end
+        picker:refresh(
+          finders.new_table({ results = get_reversed_history() }),
+          { reset_prompt = true }
+        )
+      end)
+
+      return true
+    end
+
   }):find()
 end
 
