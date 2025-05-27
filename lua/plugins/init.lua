@@ -166,23 +166,50 @@ return {
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
-    dependencies = {
-      {
-        "folke/lazydev.nvim",
-        ft = "lua",
-        opts = {
-          library = {
-            --{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
-            { path = "/home/steve/Custom/nvim-types/neodev.nvim/types" },
+    config = function()
+      require("configs.lspconfig") -- deine bestehende LSP-Konfig
+    end,
+  },
+
+  {
+    "folke/lazydev.nvim",
+    ft = "lua", -- only load on lua files
+    opts = {
+      library = {
+        -- See the configuration section for more details
+        -- Load luvit types when the `vim.uv` word is found
+        { path = "${3rd}/luv/library" },
+        --"./lua/@types",
+      },
+    },
+  },
+  { -- optional cmp completion source for require statements and module annotations
+    "hrsh7th/nvim-cmp",
+    opts = function(_, opts)
+      opts.sources = opts.sources or {}
+      table.insert(opts.sources, {
+        name = "lazydev",
+        group_index = 0, -- set group index to 0 to skip loading LuaLS completions
+      })
+    end,
+  },
+  { -- optional blink completion source for require statements and module annotations
+    "saghen/blink.cmp",
+    opts = {
+      sources = {
+        -- add lazydev to your completion providers
+        default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+        providers = {
+          lazydev = {
+            name = "LazyDev",
+            module = "lazydev.integrations.blink",
+            -- make lazydev completions top priority (see `:h blink.cmp`)
+            score_offset = 100,
           },
         },
       },
     },
-    config = function()
-      require("configs.lspconfig")
-    end,
   },
-
 
   -- Conform: Formatting engine
   {
@@ -419,7 +446,25 @@ return {
     name = "reposcope",
     event = "VeryLazy",
     config = function()
-      require("reposcope.init").setup({})
+      require("reposcope.init").setup({
+        ---prompt_fields = { "keywords" },
+        --provider = "github",                  -- optional, default: "github"
+        --github_token = os.getenv("GH_TOKEN"), -- für authentifizierte API-Zugriffe
+        --request_tool = "gh", -- "gh", "curl" oder "wget"
+        --preview_limit = 100,                  -- Zeilenlimit für README-Vorschau
+        --results_limit = 50,                   -- max. Suchergebnisse
+        --layout = "default",                   -- UI-Layout
+        --metrics = true,                       -- Aktiviert internes Tracking
+        --keymaps = {
+        --  next_field = "<Tab>",
+        --  prev_field = "<S-Tab>",
+        --  open_viewer = "<C-v>",
+        --},
+        --clone = {
+        --  std_dir = "~/repos",
+        --  type = "wget", -- fallback cloning tool
+        --},
+      })
     end,
   },
 

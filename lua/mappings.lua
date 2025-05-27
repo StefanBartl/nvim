@@ -138,11 +138,11 @@ map("n", "<leader>ts", ":Telescope<CR>", { desc = "Telescope UI starten" })
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
 
 
---map("n", "<leader><leader>", function() require("custom.mygrep").open("live_grep", {}) end,
---  { desc = "Live Grep with history" })
-
 map("n", "<leader><leader>", function() require("custom.live_grep_memory").open() end,
   { desc = "Live Grep with history" })
+
+-- map("n", "<leader><leader>", function() require("custom.live_grep_memory").open() end,
+--  { desc = "Live Grep with history" })
 
 
 map("n", "<leader>gs", function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end,

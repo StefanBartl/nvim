@@ -1,4 +1,4 @@
----@module 'custom.live_grep_memory.keymaps'
+---@module 'custom.mygrep.keymaps'
 ---@class KeymapManager
 ---@brief Sets up key mappings for the LiveGrepMemory system.
 ---@description
@@ -33,25 +33,25 @@ function M.setup()
         lg.open("live_grep", {})
       end)
       if not ok then
-        vim.notify("[LiveGrepMemory] Failed to open live_grep", vim.log.levels.ERROR)
+        vim.notify("[MyGrep] Failed to open live_grep", vim.log.levels.ERROR)
       end
     end, { noremap = true, silent = true, desc = "LiveGrepMemory: Launch live_grep" })
 
     -- Map <leader>mg to open the "multigrep" tool
     vim.keymap.set("n", "<leader>mg", function()
       local ok = pcall(function()
-        local lg = require("custom.live_grep_memory")
+        local lg = require("custom.mygrep")
         -- call the open function with "multigrep" as tool name and no additional options
         lg.open("multigrep", {})
       end)
       if not ok then
-        vim.notify("[LiveGrepMemory] Failed to open multigrep", vim.log.levels.ERROR)
+        vim.notify("[MyGrep] Failed to open multigrep", vim.log.levels.ERROR)
       end
-    end, { noremap = true, silent = true, desc = "LiveGrepMemory: Launch multigrep" })
+    end, { noremap = true, silent = true, desc = "MyGrep: Launch multigrep" })
   end)
 
   if not status then
-    vim.notify("[LiveGrepMemory] Error setting key mappings: " .. tostring(err), vim.log.levels.ERROR)
+    vim.notify("[MyGrep] Error setting key mappings: " .. tostring(err), vim.log.levels.ERROR)
   end
 end
 
