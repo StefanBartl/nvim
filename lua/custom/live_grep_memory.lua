@@ -175,19 +175,29 @@ function M.open(opts)
       M.reset_history()
     end)
 
-    -- Save current prompt and then call original select
     action_set.select:replace(function(prompt_bufnr)
       local input = action_state.get_current_line()
+      local selection = action_state.get_selected_entry()
       store_history(input)
 
-      local selection = action_state.get_selected_entry()
-      actions.close(prompt_bufnr)
+      -- sicherer close
+      pcall(actions.close, prompt_bufnr)
 
-      if selection and selection.filename then
-        -- Open the file and jump to the line
-        vim.cmd("edit " .. vim.fn.fnameescape(selection.filename))
-        vim.fn.cursor(selection.lnum, 1)
-      end
+      -- warte, dann Datei öffnen und zum Match springen
+      vim.schedule(function()
+        if selection and selection.filename and selection.lnum then
+          vim.cmd("edit " .. vim.fn.fnameescape(selection.filename))
+
+          local line = vim.fn.getline(selection.lnum)
+          local col = line:find(vim.pesc(input), 1, true)
+
+          if col then
+            vim.api.nvim_win_set_cursor(0, { selection.lnum, col - 1 })
+          else
+            vim.api.nvim_win_set_cursor(0, { selection.lnum, 0 })
+          end
+        end
+      end)
     end)
 
     return true
