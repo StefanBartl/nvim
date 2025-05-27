@@ -4,9 +4,11 @@ local lsp_servers = require("configs.lsp_servers")
 local lua_ls_config = require("configs.lua_ls_config")
 
 
---require("lazydev").setup({})
---nvlsp.defaults()
+require("lazydev").setup({})
+nvlsp.defaults()
 lspconfig.lua_ls.setup(lua_ls_config)
+
+
 
 vim.diagnostic.config({
   virtual_text = true,
@@ -14,6 +16,16 @@ vim.diagnostic.config({
   underline = true,
   update_in_insert = false,
   severity_sort = true,
+})
+
+lspconfig.lua_ls.setup({
+  capabilities = nvlsp.capabilities,
+  on_attach = function(client, bufnr)
+    require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
+    if nvlsp.on_attach then
+      nvlsp.on_attach(client, bufnr)
+    end
+  end,
 })
 
 -- Custom on_attach kombiniert mit nvchad
