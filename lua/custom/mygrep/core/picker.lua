@@ -6,7 +6,7 @@
 --- such as persistent history, favorites, entry deletion, session-local undo,
 --- and result preview. It works per tool and accepts external state, making it
 --- fully modular and reusable.
-
+---
 ---@field open fun(tool: string, title: string, runner: fun(query: string), state: ToolState): nil
 local M = {}
 
@@ -60,7 +60,6 @@ function M.open(tool, title, runner, state)
     },
     sorter = conf.generic_sorter({}),
     attach_mappings = function(prompt_bufnr, map)
-
       local function refresh()
         history.save(tool, state)
         actions.close(prompt_bufnr)

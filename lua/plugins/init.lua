@@ -58,18 +58,6 @@ return {
     lazy = false,
   },
 
-  -- Toggleterm for persistent terminal trough session
-  -- Datei: custom/plugins/essentials.lua oder vergleichbar
-  {
-    "akinsho/toggleterm.nvim",
-    lazy = false,
-    version = "*",
-    config = function()
-      require("toggleterm").setup({})
-    end,
-  },
-
-
   --===========================
   --=== FUZZY FINDING =========
   --===========================
@@ -449,8 +437,8 @@ return {
       require("reposcope.init").setup({
         ---prompt_fields = { "keywords" },
         --provider = "github",                  -- optional, default: "github"
-        --github_token = os.getenv("GH_TOKEN"), -- für authentifizierte API-Zugriffe
-        --request_tool = "gh", -- "gh", "curl" oder "wget"
+        github_token = os.getenv("GH_TOKEN"), -- für authentifizierte API-Zugriffe
+        request_tool = "gh",                  -- "gh", "curl" oder "wget"
         --preview_limit = 100,                  -- Zeilenlimit für README-Vorschau
         --results_limit = 50,                   -- max. Suchergebnisse
         --layout = "default",                   -- UI-Layout
@@ -467,17 +455,4 @@ return {
       })
     end,
   },
-
-
-  {
-    "floatterminal.local",
-    dir = vim.fn.stdpath("config") .. "/lua/custom/floatterminal",
-    lazy = false,
-    config = function()
-      require("custom.floatterminal") -- Registriert Floaterminal-Command hier korrekt
-    end,
-  },
-
-
-
 }

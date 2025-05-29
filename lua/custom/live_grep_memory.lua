@@ -180,22 +180,20 @@ function M.open(opts)
       local selection = action_state.get_selected_entry()
       store_history(input)
 
-      -- sicherer close
       pcall(actions.close, prompt_bufnr)
 
-      -- warte, dann Datei öffnen und zum Match springen
       vim.schedule(function()
         if selection and selection.filename and selection.lnum then
           vim.cmd("edit " .. vim.fn.fnameescape(selection.filename))
 
           local line = vim.fn.getline(selection.lnum)
-          local col = line:find(vim.pesc(input), 1, true)
+          local regex = vim.fn.escape(input, [[\^$.*~[]])
+          local ok, start_col = pcall(function()
+            return vim.fn.match(line, regex)
+          end)
 
-          if col then
-            vim.api.nvim_win_set_cursor(0, { selection.lnum, col - 1 })
-          else
-            vim.api.nvim_win_set_cursor(0, { selection.lnum, 0 })
-          end
+          local col = (ok and start_col >= 0) and start_col + 1 or 1
+          vim.api.nvim_win_set_cursor(0, { selection.lnum, col - 1 })
         end
       end)
     end)

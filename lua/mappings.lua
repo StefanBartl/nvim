@@ -242,11 +242,11 @@ map("t", "<C-c>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 --==================================================
 
 --=== myterm =======================================
-local term = require("custom.myterm")
-map("n", "<leader>to", ":Floaterminal<CR>", { desc = "Toggle Floating Terminal" })
-map("n", "<leader>ts", term.set_command, { desc = "Set terminal command" })
-map("n", "<leader>tr", term.run_command, { desc = "Run terminal command" })
-map("n", "<leader>tc", term.clear_command, { desc = "Clear terminal command" })
+--local term = require("custom.myterm")
+--map("n", "<leader>to", ":Floaterminal<CR>", { desc = "Toggle Floating Terminal" })
+--map("n", "<leader>ts", term.set_command, { desc = "Set terminal command" })
+--map("n", "<leader>tr", term.run_command, { desc = "Run terminal command" })
+--map("n", "<leader>tc", term.clear_command, { desc = "Clear terminal command" })
 
 --=== find mappings ================================
 local keysearch = require("custom.mappings_search")
@@ -281,11 +281,19 @@ vim.api.nvim_set_keymap(
 )
 
 
---- TESTING
-vim.keymap.set("i", "<A-h>", "<Nop>", { silent = true, noremap = true })
--- Alt+h für links bewegen im Insert-Modus
-vim.keymap.set("i", "<A-h>", "<Left>", { silent = true, noremap = true })
+local function copy_current_path()
+  vim.fn.setreg("+", vim.fn.expand("%:p"))
+  print("Copied path to clipboard")
+end
 
+vim.keymap.set("n", "<leader>cp", copy_current_path, { desc = "Copy file path to clipboard" })
+vim.api.nvim_create_user_command("CopyFilepathToClipboard", copy_current_path, { desc = "Copy file path to clipboard" })
+
+
+vim.schedule(function()
+  pcall(vim.keymap.del, "i", "<A-h>")
+  vim.keymap.set("i", "<A-h>", "<Left>", { silent = true, noremap = true })
+end)
 
 vim.keymap.set("n", "<leader>xw", function()
   for _, client in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
