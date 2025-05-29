@@ -4,13 +4,17 @@
 --- Responsible for creating terminal instances in various layouts (float, horizontal, vertical).
 --- Manages opening logic, buffer association and visibility toggling of active terminals.
 
+---@class UndoEntry
+---@field id string
+---@field data string[]
 local M = {}
 
--- Internal State
+-- Internal State and Label Renderer
 local state = require("custom.myterm.state")
+local label = require("custom.myterm.label")
 
 --- Creates a floating terminal in the center of the screen
----@return integer id Terminal ID
+---@return integer|nil id Terminal ID or nil on failure
 local function open_floating()
   local width = math.floor(vim.o.columns * 0.8)
   local height = math.floor(vim.o.lines * 0.8)
@@ -29,21 +33,31 @@ local function open_floating()
   })
 
   vim.api.nvim_set_current_buf(buf)
+
   local ok = pcall(vim.fn.termopen, os.getenv("SHELL") or "bash", {
     on_exit = function(_, _, _) end,
   })
   if not ok then
+    vim.notify("[myterm] Failed to start terminal process", vim.log.levels.ERROR)
     return nil
   end
 
   vim.cmd("startinsert")
   local job_id = vim.bo[buf].channel
-  return state.add_terminal(buf, win, job_id, "float")
+
+  local id = state.add_terminal(buf, win, job_id, "float")
+  local term = state.get(id)
+  if not term then
+    return id
+  end
+  label.apply(term)
+
+  return id
 end
 
 --- Creates a terminal in a horizontal or vertical split
 ---@param direction "horizontal"|"vertical"
----@return integer id Terminal ID
+---@return integer|nil id Terminal ID or nil on failure
 local function open_split(direction)
   assert(direction == "horizontal" or direction == "vertical", "Invalid split direction")
 
@@ -64,12 +78,21 @@ local function open_split(direction)
     on_exit = function(_, _, _) end,
   })
   if not ok then
+    vim.notify("[myterm] Failed to start terminal process", vim.log.levels.ERROR)
     return nil
   end
 
   vim.cmd("startinsert")
   local job_id = vim.bo[buf].channel
-  return state.add_terminal(buf, win, job_id, direction)
+
+  local id = state.add_terminal(buf, win, job_id, direction)
+  local term = state.get(id)
+  if not term then
+    return id
+  end
+  label.apply(term)
+
+  return id
 end
 
 --- Opens a new terminal with the specified layout
@@ -84,6 +107,7 @@ function M.new_terminal(mode)
     ---@cast mode "horizontal"|"vertical"
     return open_split(mode)
   else
+    vim.notify("[myterm] Invalid terminal mode: " .. tostring(mode), vim.log.levels.ERROR)
     return nil
   end
 end

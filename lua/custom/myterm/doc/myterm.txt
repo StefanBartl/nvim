@@ -1,0 +1,86 @@
+*myterm.txt*  A modular terminal manager for Neovim      Last updated: 2025
+
+==============================================================================
+myterm.nvim                                                       *myterm*
+
+    A minimal but powerful terminal manager for Neovim.
+    Supports toggling between float, horizontal, and vertical terminals,
+    storing commands, sending background instructions and labeling.
+
+    Author:  yourname
+    License: MIT
+    Version: 0.1.0
+    Source:  https://github.com/yourname/myterm.nvim
+
+==============================================================================
+CONTENTS                                                        *myterm-index*
+
+    1. Commands ...................................... |myterm-commands|
+    2. Keybindings ................................... |myterm-keymaps|
+    3. Features ...................................... |myterm-features|
+    4. Configuration & Setup ......................... |myterm-setup|
+    5. License ....................................... |myterm-license|
+
+==============================================================================
+COMMANDS                                                        *myterm-commands*
+
+:Myterm [layout]          Toggle last terminal or open new one with given layout.
+:MytermNew [layout]       Create a new terminal. Defaults to horizontal if omitted.
+:MytermRun [id]           Run the stored command in terminal [id] or active one.
+:MytermSend {id} {cmd}    Send a command to terminal ID without opening or focusing.
+:MytermSet                Prompt and store a command to be re-used.
+:MytermClear              Clear stored command.
+:MytermFocus {id}         Switch focus to terminal by ID.
+:MytermInfo               Display current terminal ID and layout.
+:MytermClose {id}         Close terminal by ID.
+
+All layouts: `float`, `horizontal`, `vertical`
+
+==============================================================================
+KEYBINDINGS                                                     *myterm-keymaps*
+
+Default `<leader>` mappings provided:
+
+    <leader>tf        Toggle floating terminal
+    <leader>th        Toggle horizontal terminal
+    <leader>tv        Toggle vertical terminal
+    <leader>to        Toggle currently active terminal
+    <leader>tt        Set command to be executed later
+    <leader>tr        Run stored command in current terminal
+    <leader>tc        Clear stored command
+    <leader>ti        Show currently active terminal info
+    <leader>tx        Close active terminal
+
+==============================================================================
+FEATURES                                                        *myterm-features*
+
+  - Float / split layout terminal support
+  - Persistent shell command management
+  - Background command dispatch to terminals
+  - Active terminal tracking and switching
+  - Terminal labels with extmarks (e.g. Terminal 2)
+  - Optional `<Esc>` minimize behavior
+
+==============================================================================
+CONFIGURATION & SETUP                                           *myterm-setup*
+
+Install with lazy.nvim:
+
+    {
+      "yourname/myterm.nvim",
+      config = function()
+        require("custom.myterm")
+      end,
+    }
+
+Reload helptags if needed:
+
+    :helptags ~/.local/share/nvim/lazy/myterm.nvim/doc
+
+==============================================================================
+LICENSE                                                         *myterm-license*
+
+MIT License © 2025 yourname
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

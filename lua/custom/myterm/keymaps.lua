@@ -1,11 +1,10 @@
 ---@module 'myterm.keymaps'
 ---@brief Keybindings for myterm terminal management
 
-local myterm = require("custom.myterm")
-local state = require("custom.myterm.state")
-local runner = require("custom.myterm.command_runner")
 
-local function setup()
+local function setup(myterm)
+  local state = require("custom.myterm.state")
+  local runner = require("custom.myterm.command_runner")
   -- New terminals
   vim.keymap.set("n", "<leader>tf", function() myterm.new("float") end, { desc = "New Floating Terminal" })
   vim.keymap.set("n", "<leader>th", function() myterm.new("horizontal") end, { desc = "New Horizontal Terminal" })

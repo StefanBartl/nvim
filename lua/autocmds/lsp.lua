@@ -1,6 +1,6 @@
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
-    local lspconfig = require("lspconfig")
+    local lspconfig = require("configs.lspconfig")
 
     -- Nur wenn lua_ls noch nicht läuft
     for _, client in ipairs(vim.lsp.get_active_clients()) do
@@ -11,7 +11,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     end
 
     -- Suche eine existierende Lua-Datei im Projekt
-    local lua_files = vim.fn.globpath(vim.fn.getcwd(), "**/*.lua", true, true)
+    local lua_files = vim.fn.globpath(vim.fn.getcwd(), "**/*.lua", true, { true })
     local first_file = lua_files[1]
 
     if not first_file then

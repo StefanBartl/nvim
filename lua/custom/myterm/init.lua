@@ -11,6 +11,7 @@ local M = {}
 local manager = require("custom.myterm.terminal_manager")
 local state = require("custom.myterm.state")
 local commands = require("custom.myterm.command_runner")
+local label = require("custom.myterm.label")
 
 --- Opens a new terminal with the specified layout mode
 ---@param mode "float"|"horizontal"|"vertical"
@@ -25,7 +26,10 @@ end
 ---@return nil
 function M.toggle()
   local term = state.get_last_focused()
-  assert(term ~= nil, "No terminal is currently focused")
+  if not term then
+    vim.notify("[myterm] No terminal active – opening new horizontal", vim.log.levels.INFO)
+    return M.new("horizontal")
+  end
 
   if vim.api.nvim_win_is_valid(term.win) then
     vim.api.nvim_win_hide(term.win)
@@ -59,7 +63,8 @@ function M.toggle()
     vim.api.nvim_set_current_buf(term.buf)
     vim.cmd("startinsert")
     state.set_focus(term.id)
-    print("Terminal " .. term.id .. " reopened [" .. term.mode .. "]")
+    label.apply(term)
+    --print("Terminal " .. term.id .. " reopened [" .. term.mode .. "]")
   end
 end
 
@@ -138,6 +143,6 @@ end
 -- Setup user commands, autocommands and keymaps
 require("custom.myterm.usercommands").register(M)
 require("custom.myterm.autocmds").setup()
-require("custom.myterm.keymaps").setup()
+require("custom.myterm.keymaps").setup(M)
 
 return M

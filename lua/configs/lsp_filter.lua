@@ -22,7 +22,6 @@ local function is_blacklisted_diag(diagnostic)
   return diagnostic.filename and is_blacklisted_uri(diagnostic.filename)
 end
 
----@type vim.diagnostic.Handler
 M.virtual_text = vim.tbl_extend("force", vim.diagnostic.handlers.virtual_text, {
   show = function(namespace, bufnr, diagnostics, opts)
     local filtered = vim.tbl_filter(function(d)

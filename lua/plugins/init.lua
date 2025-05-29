@@ -155,7 +155,7 @@ return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     config = function()
-      require("configs.lspconfig") -- deine bestehende LSP-Konfig
+      require("configs.lspconfig")
     end,
   },
 
@@ -455,4 +455,17 @@ return {
       })
     end,
   },
+
+
+  {
+    "myterm.local",
+    dir = vim.fn.stdpath("config") .. "/lua/custom/myterm",
+    lazy = false,
+    config = function()
+      require("custom.myterm")
+    end,
+  },
+
+
+
 }

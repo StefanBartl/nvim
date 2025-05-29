@@ -5,7 +5,7 @@
 --- This module provides session-local undo functionality. It allows one to push
 --- reversible actions (like deletion or unfavoriting), and re-apply them on demand.
 --- The undo stack is part of each tool's ToolState object and is not persisted.
-
+--
 ---@field push fun(state: ToolState, action: '"delete"'|'"unfavorite"', value: string): nil Adds an action to the undo stack
 ---@field apply fun(state: ToolState): boolean Attempts to apply the most recent undo action
 

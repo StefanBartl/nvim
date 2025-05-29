@@ -48,7 +48,7 @@ function M.add_terminal(buf, win, job_id, mode)
     last_focused = true,
   }
 
-  print(string.format("Terminal %d/%d [%s] started", current_id, M.count(), mode))
+  --print(string.format("Terminal %d/%d [%s] started", current_id, M.count(), mode))
 
   return current_id
 end

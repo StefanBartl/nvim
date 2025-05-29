@@ -6,7 +6,7 @@
 --- grep tools. It supports dynamic tool registration, encapsulates tool state management,
 --- and delegates UI interactions to reusable picker logic. Users can invoke specific tools
 --- via `.open(tool_name, opts)` or predefine mappings for rapid access.
-
+--
 ---@field open fun(tool: string, opts?: table): boolean|nil Opens the named grep tool with optional Telescope options
 
 local M = {}
