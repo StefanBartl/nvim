@@ -14,15 +14,6 @@
 
 local M = {}
 
--- Tool-local state model
----@class ToolState
----@field history string[] Persistent search input history
----@field favorites string[] Persistent list of favorited queries
----@field undo UndoEntry[] In-memory session undo stack
-
----@class UndoEntry
----@field action '"delete"'|'"unfavorite"'
----@field value string
 
 local uv = vim.uv or vim.loop
 local fs = vim.fn

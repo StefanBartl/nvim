@@ -1,4 +1,4 @@
-# live_grep_memory.nvim
+# mygrep.nvim
 
 > Extendable memory-enhanced search layer for Telescope-powered grep tools in Neovim.
 
@@ -21,7 +21,7 @@ It remembers your search history, lets you mark favorites, supports undo for acc
 
 ```lua
 -- init.lua
-require("custom.live_grep_memory.keymaps").setup()
+require("custom.mygrep.keymaps").setup()
 ````
 
 Default keybindings:
@@ -51,8 +51,8 @@ end
 
 ```lua
 -- in init.lua or plugin setup
-local registry = require("custom.live_grep_memory.core.registry")
-registry.register("mygrep", require("custom.live_grep_memory.tools.mygrep"))
+local registry = require("custom.mygrep.core.registry")
+registry.register("mygrep", require("custom.mygrep.tools.mygrep"))
 ```
 
 ---

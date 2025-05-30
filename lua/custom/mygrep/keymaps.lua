@@ -3,56 +3,38 @@
 ---@brief Sets up key mappings for the LiveGrepMemory system.
 ---@description
 --- This module configures user key mappings to invoke registered grep tools via the
---- LiveGrepMemory API. It demonstrates how to safely bind keys in Neovim using pcall,
---- type guards, and proper error handling. The mappings provided include a default
---- live grep and multigrep invocation.
+--- LiveGrepMemory API. It ensures lazy-compatibility and runtime safety.
 ---
---- Example key mappings (using <leader> prefix):
---- - `<leader>lg` : Launch live_grep tool (memory-enabled)
---- - `<leader>mg` : Launch multigrep tool (memory-enabled)
----
---- The functions check for environment validity and use secure pcall wrappers to
---- prevent runtime errors from affecting user workflow.
+---@param open fun(tool: string, opts?: table): boolean|nil
+
 local M = {}
 
 --- Sets up key mappings for LiveGrepMemory tools.
---- @return nil
-function M.setup()
-  -- Ensure Neovim API is available
-  if type(vim) ~= "table" or type(vim.keymap) ~= "table" then
-    error("Neovim API is not available")
+---@param open fun(tool: string, opts?: table): boolean|nil
+---@return nil
+function M.setup(open)
+  if not vim or type(vim.keymap) ~= "table" then return end
+  if type(open) ~= "function" then
+    vim.notify("[mygrep.keymaps] Invalid .open function provided", vim.log.levels.ERROR)
+    return
   end
 
-  -- Use pcall to safely set key mappings
-  local status, err = pcall(function()
-    -- Map <leader>lg to open the "live_grep" tool
-    vim.keymap.set("n", "<leader>lg", function()
-      local ok = pcall(function()
-        local lg = require("custom.mygrep")
-        -- call the open function with "live_grep" as tool name and no additional options
-        lg.open("live_grep", {})
-      end)
-      if not ok then
-        vim.notify("[MyGrep] Failed to open live_grep", vim.log.levels.ERROR)
-      end
-    end, { noremap = true, silent = true, desc = "LiveGrepMemory: Launch live_grep" })
+  local map = vim.keymap.set
+  local opts = { noremap = true, silent = true }
 
-    -- Map <leader>mg to open the "multigrep" tool
-    vim.keymap.set("n", "<leader>mg", function()
-      local ok = pcall(function()
-        local lg = require("custom.mygrep")
-        -- call the open function with "multigrep" as tool name and no additional options
-        lg.open("multigrep", {})
-      end)
-      if not ok then
-        vim.notify("[MyGrep] Failed to open multigrep", vim.log.levels.ERROR)
-      end
-    end, { noremap = true, silent = true, desc = "MyGrep: Launch multigrep" })
-  end)
+  map("n", "<leader>lg", function()
+    local success = pcall(open, "live_grep", {})
+    if not success then
+      vim.notify("[MyGrep] Failed to open live_grep", vim.log.levels.ERROR)
+    end
+  end, vim.tbl_extend("force", opts, { desc = "LiveGrepMemory: Launch live_grep" }))
 
-  if not status then
-    vim.notify("[MyGrep] Error setting key mappings: " .. tostring(err), vim.log.levels.ERROR)
-  end
+  map("n", "<leader>mg", function()
+    local success = pcall(open, "multigrep", {})
+    if not success then
+      vim.notify("[MyGrep] Failed to open multigrep", vim.log.levels.ERROR)
+    end
+  end, vim.tbl_extend("force", opts, { desc = "MyGrep: Launch multigrep" }))
 end
 
 return M
