@@ -136,15 +136,6 @@ map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { desc = "Telescope Results
 
 map("n", "<leader>ts", ":Telescope<CR>", { desc = "Telescope UI starten" })
 map("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find Files" })
-
-
-map("n", "<leader><leader>", function() require("custom.live_grep_memory").open() end,
-  { desc = "Live Grep with history" })
-
--- map("n", "<leader><leader>", function() require("custom.live_grep_memory").open() end,
---  { desc = "Live Grep with history" })
-
-
 map("n", "<leader>gs", function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end,
   { desc = "Grep-Suche" })
 map("n", "<leader>git", function() require("telescope.builtin").git_files() end, { desc = "Git-Dateien durchsuchen" })
@@ -200,9 +191,6 @@ map("n", "<leader>n", "<cmd>tabnext<CR>", { desc = "Go to next tab" })
 map("n", "<leader>dv", ":DiffviewOpen<CR>", { desc = "Diffview öffnen" })
 map("n", "<leader>dc", ":DiffviewClose<CR>", { desc = "Diffview schließen" })
 map("n", "<leader>dh", ":DiffviewFileHistory<CR>", { desc = "Dateihistorie in Diffview anzeigen" })
--- { "<leader>la", "<cmd>LazyGit<cr>", desc = "LazyGit" }
-
-
 
 --==================================================
 --=== HARPOON (Schnellnavigation) ==================

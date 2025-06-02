@@ -18,7 +18,7 @@ function M.run()
   local messages = vim.api.nvim_exec("messages", true)
 
   -- Construct the full path to the log file
-  local log_path = vim.fn.expand("~/temp/nvimmessages.log")
+  local log_path = vim.fn.expand("~/temp/mymessages_nvim.log")
 
   -- Safely write the messages to the log file using `pcall` for error handling
   local ok, err = pcall(function()

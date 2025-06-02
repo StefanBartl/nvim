@@ -254,7 +254,7 @@ return {
     },
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
-      { "<leader>og", "<cmd>LazyGit<cr>", desc = "LazyGit" }
+      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" }
     },
   },
 
@@ -467,12 +467,14 @@ return {
   },
 
   {
-    "mygrep.local",
-    dir = vim.fn.stdpath("config") .. "/lua/custom/mygrep",
+    dir = vim.fn.expand("~/MyGithub/mygrep.nvim"),
+    name = "mygrep",
     lazy = false,
     config = function()
-      require("custom.mygrep")
+      require("mygrep").setup({
+        tool_picker_style = "ui",
+      })
     end,
-  },
+  }
 
 }
