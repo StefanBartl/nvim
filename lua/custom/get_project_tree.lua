@@ -1,81 +1,150 @@
+---@module 'custom.get_project_tree'
+---@brief Asynchronous project structure inspection (file tree, count, clipboard)
+---@description
+--- Provides safe async utilities to inspect a project structure from Neovim.
+--- Features:
+--- - Write full file tree (excluding `.git`)
+--- - Count all project files
+--- - Copy structure to clipboard (requires `xclip`)
+--- All operations are non-blocking and integrate safely with the UI.
+
+---@class ProjectTree : ProjectTreeModule
 local M = {}
 
---- Writes the project directory tree to ~/temp/<projectname>-tree.txt
-function M.init()
-  local fn = vim.fn
-  local cwd = fn.getcwd()
-  local cwd_name = fn.fnamemodify(cwd, ":t")
-  local temp_dir = fn.expand("~/temp/")
+-- System & API
+local fn = vim.fn
+local api = vim.api
+local uv = vim.uv or vim.loop
 
-  os.execute("mkdir -p " .. vim.fn.shellescape(temp_dir))
+-- Utilities
+local safe_call = require("reposcope.utils.error").safe_call
 
-  local tree_file = temp_dir .. cwd_name .. "-tree.txt"
-  local list_command = "find " .. vim.fn.shellescape(cwd)
-      .. " -not -path '*/.git/*' -printf '%P\n' | sort > "
-      .. vim.fn.shellescape(tree_file)
+---Runs a shell command asynchronously and returns output to callback
+---@param cmd string
+---@param on_exit fun(success: boolean, output: string): nil
+---@return nil
+local function run_command(cmd, on_exit)
+  local stdout = uv.new_pipe(false)
+  local stderr = uv.new_pipe(false)
+  local output = {}
 
-  local result = os.execute(list_command)
+  local handle
+  handle = uv.spawn("sh", {
+    args = { "-c", cmd },
+    stdio = { nil, stdout, stderr },
+  }, function(code)
+    stdout:close()
+    stderr:close()
+    handle:close()
+    on_exit(code == 0, table.concat(output, "\n"))
+  end)
 
-  if result == 0 then
-    vim.notify("Projektstruktur gespeichert in: " .. tree_file, vim.log.levels.INFO)
-  else
-    vim.notify("Fehler beim Schreiben der Projektstruktur.", vim.log.levels.ERROR)
-  end
+  stdout:read_start(function(err, data)
+    if err then return end
+    if data then table.insert(output, data) end
+  end)
+
+  stderr:read_start(function(err, data)
+    if err then return end
+    if data then table.insert(output, data) end
+  end)
 end
 
---- Copies the project tree file content to the clipboard using xclip
-function M.copy_to_clipboard()
-  local fn = vim.fn
+---Returns full path to tree output file
+---@return string|nil path
+---@return string|nil error
+local function get_tree_file()
   local cwd = fn.getcwd()
-  local cwd_name = fn.fnamemodify(cwd, ":t")
-  local tree_file = fn.expand("~/temp/" .. cwd_name .. "-tree.txt")
+  if cwd == "" then return nil, "Invalid working directory" end
+  local name = fn.fnamemodify(cwd, ":t")
+  local outdir = fn.expand("~/temp")
+  if fn.isdirectory(outdir) == 0 then
+    local ok, err = pcall(fn.mkdir, outdir, "p")
+    if not ok then return nil, "Failed to create output dir: " .. err end
+  end
+  return outdir .. "/" .. name .. "-tree.txt", nil
+end
 
-  if fn.filereadable(tree_file) == 0 then
-    vim.notify("Keine Projektstrukturdatei gefunden: " .. tree_file, vim.log.levels.ERROR)
+---Generates the project file tree into ~/temp/<project>-tree.txt
+---@param callback fun(success: boolean, msg: string): nil
+---@return nil
+function M.write_tree(callback)
+  local cwd = fn.getcwd()
+  local path, err = get_tree_file()
+  if not path then
+    callback(false, err)
     return
   end
 
-  local copy_command = "xclip -selection clipboard < " .. vim.fn.shellescape(tree_file)
-  local result = os.execute(copy_command)
+  local cmd = "find " .. fn.shellescape(cwd)
+      .. " -not -path '*/.git/*' -printf '%P\\n' | sort > "
+      .. fn.shellescape(path)
 
-  if result == 0 then
-    vim.notify("Projektstruktur wurde in die Zwischenablage kopiert.", vim.log.levels.INFO)
-  else
-    vim.notify("Fehler beim Kopieren in die Zwischenablage.", vim.log.levels.ERROR)
-  end
+  run_command(cmd, function(success, output)
+    local msg = success and "Tree written to: " .. path or "Failed to write tree: " .. output
+    callback(success, msg)
+  end)
 end
 
---- Counts all files (excluding .git) in the current project directory and shows the result
-function M.count_files()
-  local cwd = vim.fn.getcwd()
-  local count_command = "find " .. vim.fn.shellescape(cwd) .. " -type f -not -path '*/.git/*' | wc -l"
-  local handle = io.popen(count_command)
-  local result = handle and handle:read("*a")
-  if handle then handle:close() end
-
-  if result then
-    local count = tonumber(result:match("%d+"))
-    if count then
-      vim.notify("Anzahl der Dateien im Projekt: " .. count, vim.log.levels.INFO)
-    else
-      vim.notify("Fehler beim Zählen der Dateien (ungültiges Ergebnis).", vim.log.levels.ERROR)
-    end
-  else
-    vim.notify("Fehler beim Ausführen des Count-Kommandos.", vim.log.levels.ERROR)
+---Copies the generated tree file to clipboard via xclip
+---@param callback fun(success: boolean, msg: string): nil
+---@return nil
+function M.copy_tree_to_clipboard(callback)
+  local path, err = get_tree_file()
+  if not path or fn.filereadable(path) == 0 then
+    callback(false, err or "Tree file does not exist: " .. path)
+    return
   end
+
+  local cmd = "xclip -selection clipboard < " .. fn.shellescape(path)
+  run_command(cmd, function(success, output)
+    local msg = success and "Project tree copied to clipboard." or "Failed to copy to clipboard:\n" .. output
+    callback(success, msg)
+  end)
+end
+
+---Counts project files (excluding .git) and returns result
+---@param callback fun(success: boolean, msg: string): nil
+---@return nil
+function M.count_files(callback)
+  local cwd = fn.getcwd()
+  if cwd == "" then
+    callback(false, "Invalid working directory")
+    return
+  end
+
+  local cmd = "find " .. fn.shellescape(cwd) .. " -type f -not -path '*/.git/*' | wc -l"
+  run_command(cmd, function(success, output)
+    if not success then
+      callback(false, "Failed to count files:\n" .. output)
+      return
+    end
+    local count = tonumber(output:match("%d+"))
+    if not count then
+      callback(false, "Could not parse file count from: " .. output)
+    else
+      callback(true, "Total project files: " .. count)
+    end
+  end)
 end
 
 -- User Commands
-vim.api.nvim_create_user_command("ProjectTreeGet", function()
-  require("custom.get_project_tree").init()
+api.nvim_create_user_command("ProjectTreeGet", function()
+  M.write_tree(function(ok, msg)
+    api.nvim_notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
+  end)
 end, {})
 
-vim.api.nvim_create_user_command("ProjectTreeCopyClipboard", function()
-  require("custom.get_project_tree").copy_to_clipboard()
+api.nvim_create_user_command("ProjectTreeCopyClipboard", function()
+  M.copy_tree_to_clipboard(function(ok, msg)
+    api.nvim_notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
+  end)
 end, {})
 
-vim.api.nvim_create_user_command("ProjectFilesCount", function()
-  require("custom.get_project_tree").count_files()
+api.nvim_create_user_command("ProjectFilesCount", function()
+  M.count_files(function(ok, msg)
+    api.nvim_notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
+  end)
 end, {})
 
 return M

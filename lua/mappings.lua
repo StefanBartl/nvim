@@ -260,15 +260,6 @@ map({ "i", "v", "t" }, "jk", "<Esc>", {
   silent = true,
 })
 
--- Springt zum nächsten Funktionsende (Treesitter-Node)
-vim.api.nvim_set_keymap(
-  'n',
-  '<leader>je',
-  [[:lua require'nvim-treesitter.textobjects.move'.goto_next_end("@function.outer")<CR>]],
-  { noremap = true, silent = true }
-)
-
-
 local function copy_current_path()
   vim.fn.setreg("+", vim.fn.expand("%:p"))
   print("Copied path to clipboard")
@@ -291,3 +282,19 @@ end, { desc = "Populate workspace diagnostics" })
 
 map("n", "<leader>do", ":FzfLua diagnostics_document<CR>", { desc = "Dokumentdiagnosen anzeigen" })
 map("n", "<leader>wo", ":FzfLua diagnostics_workspace<CR>", { desc = "Workspace-Diagnosen anzeigen" })
+
+vim.keymap.set("n", "<leader><Esc>", ":qa!<CR>", { noremap = true, silent = true, desc = "Force quit all" })
+
+-- zeigt parent block info im Echo
+vim.keymap.set("n", "<leader>cc", function()
+  local node = require("nvim-treesitter.ts_utils").get_node_at_cursor()
+  if not node then return end
+  while node do
+    local type = node:type()
+    if vim.tbl_contains({ "if_statement", "function_declaration", "for_statement" }, type) then
+      print("inside " .. type)
+      break
+    end
+    node = node:parent()
+  end
+end)

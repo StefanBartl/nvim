@@ -47,7 +47,15 @@ vim.api.nvim_create_autocmd("VimEnter", {
     local clients = vim.lsp.get_clients({ name = "lua_ls" })
     if #clients > 0 then return end
 
-    local lua_files = vim.fn.globpath(vim.fn.getcwd(), "**/*.lua", true, true)
+    local function is_valid_lua_path(path)
+      return not path:find("/target/") and not path:find("/.git/")
+          and not path:find("/node_modules/")
+          and not path:find("%.d$") and not path:find("%.timestamp$")
+    end
+
+    ---@diagnostic disable-next-line: param-type-mismatch
+    local all_files = vim.fn.globpath(vim.fn.getcwd(), "**/*.lua", true, true)
+    local lua_files = vim.tbl_filter(is_valid_lua_path, all_files)
     local first_file = lua_files[1]
     if not first_file then return end
 

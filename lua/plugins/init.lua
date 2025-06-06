@@ -437,16 +437,15 @@ return {
       require("reposcope.init").setup({
         ---prompt_fields = { "keywords" },
         --provider = "github",                  -- optional, default: "github"
-        github_token = os.getenv("GH_TOKEN"), -- für authentifizierte API-Zugriffe
-        request_tool = "gh",                  -- "gh", "curl" oder "wget"
+        --github_token = "",   -- für authentifizierte API-Zugriffe
+        --request_tool = "gh", -- "gh", "curl" oder "wget"
         --preview_limit = 100,                  -- Zeilenlimit für README-Vorschau
         --results_limit = 50,                   -- max. Suchergebnisse
         --layout = "default",                   -- UI-Layout
         --metrics = true,                       -- Aktiviert internes Tracking
         --keymaps = {
-        --  next_field = "<Tab>",
-        --  prev_field = "<S-Tab>",
-        --  open_viewer = "<C-v>",
+        --  open = "<leader>rs",  -- Set the keymap to open Repsocope
+        --  close = "<leader>rc", -- Set the keymap to close Reposcope
         --},
         --clone = {
         --  std_dir = "~/repos",

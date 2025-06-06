@@ -1,47 +1,134 @@
--- custom/compress_dir.lua
+---@module 'custom.compress_dir'
+---@brief Compresses the current directory and stores a file list in a temp location.
+---@description
+--- This module provides an asynchronous, safe way to archive the current working
+--- directory and create a file list (excluding `.git`), storing both in a temporary
+--- directory. It includes structured error handling and follows standard coding rules.
+---
+--- - Excludes `.git` directory
+--- - Outputs a file listing and compressed `.tar.gz` archive
+--- - Uses `vim.fn.jobstart()` instead of `os.execute`
+--- - Notifies only from the user command, not from the module
+
+---@class CompressDir : CompressDirModule
 local M = {}
 
---- Compresses the current working directory and saves a file list
-function M.init()
-  -- Load necessary functions
-  local fn = vim.fn
+-- System
+local api = vim.api
+local fn = vim.fn
+local uv = vim.uv or vim.loop
 
-  -- Get current working directory
+-- Utilities
+local safe_call = require("reposcope.utils.error").safe_call
+
+---Validates and returns a safe target directory for compression output
+---@return string|nil tempDir Validated output directory
+---@return string|nil errorMsg Error string if invalid
+local function get_target_temp_dir()
   local cwd = fn.getcwd()
   local cwd_name = fn.fnamemodify(cwd, ":t")
-  local temp_dir = fn.expand("~/temp/" .. cwd_name .. "-comp")
-
-  -- Create target directory
-  if fn.isdirectory(temp_dir) == 0 then
-    fn.mkdir(temp_dir, "p")
+  if cwd == "" or cwd_name == "" then
+    return nil, "Invalid working directory"
   end
 
-  -- Create dir-and-file_list (excluding .git)
-  local list_file = temp_dir .. "/dir-and-file_list"
-  local list_command = "find " .. vim.fn.shellescape(cwd) .. " -not -path '*/.git/*' > " .. vim.fn.shellescape(list_file)
-  os.execute(list_command)
+  local temp_root = fn.expand("~/temp")
+  local target = temp_root .. "/" .. cwd_name .. "-comp"
 
-  -- Archive filename
-  local archive_file = temp_dir .. "/" .. cwd_name .. ".tar.gz"
+  if fn.isdirectory(temp_root) == 0 then
+    local ok, err = pcall(fn.mkdir, temp_root, "p")
+    if not ok then
+      return nil, "Failed to create temp root directory: " .. err
+    end
+  end
 
-  -- Build tar command with exclusion of .git
-  local tar_command = "tar --exclude=" .. vim.fn.shellescape(cwd .. "/.git") ..
-      " -czf " .. vim.fn.shellescape(archive_file) ..
-      " -C " .. vim.fn.shellescape(fn.fnamemodify(cwd, ":h")) ..
-      " " .. vim.fn.shellescape(cwd_name)
+  if fn.isdirectory(target) == 0 then
+    local ok, err = pcall(fn.mkdir, target, "p")
+    if not ok then
+      return nil, "Failed to create target directory: " .. err
+    end
+  end
 
-  -- Compress the directory
-  local result = os.execute(tar_command)
-  if result ~= 0 then
-    vim.notify("Compression failed!", vim.log.levels.ERROR)
+  return target, nil
+end
+
+---Runs a shell command asynchronously and invokes a callback on exit
+---@param cmd string
+---@param on_exit fun(success: boolean, output: string)
+---@return nil
+local function run_shell_async(cmd, on_exit)
+  local stdout = uv.new_pipe(false)
+  local stderr = uv.new_pipe(false)
+  local output = {}
+
+  local handle
+  handle = uv.spawn("sh", {
+    args = { "-c", cmd },
+    stdio = { nil, stdout, stderr },
+  }, function(code)
+    stdout:close()
+    stderr:close()
+    handle:close()
+    local success = code == 0
+    on_exit(success, table.concat(output, "\n"))
+  end)
+
+  stdout:read_start(function(err, data)
+    if err then return end
+    if data then table.insert(output, data) end
+  end)
+
+  stderr:read_start(function(err, data)
+    if err then return end
+    if data then table.insert(output, data) end
+  end)
+end
+
+---Compresses the current working directory into a temp folder with file listing
+---@param on_complete fun(success: boolean, message: string) Callback with status
+---@return nil
+function M.compress_current_directory(on_complete)
+  local cwd = fn.getcwd()
+  local cwd_name = fn.fnamemodify(cwd, ":t")
+
+  local target, dir_err = get_target_temp_dir()
+  if not target then
+    on_complete(false, dir_err)
     return
   end
 
-  vim.notify("Directory compressed and copied successfully to " .. temp_dir, vim.log.levels.INFO)
+  local list_path = target .. "/dir-and-file_list"
+  local archive_path = target .. "/" .. cwd_name .. ".tar.gz"
+  local parent_dir = fn.fnamemodify(cwd, ":h")
+
+  local list_cmd = "find " .. fn.shellescape(cwd) .. " -not -path '*/.git/*' > " .. fn.shellescape(list_path)
+  local tar_cmd = "tar --exclude=" .. fn.shellescape(cwd .. "/.git") ..
+      " -czf " .. fn.shellescape(archive_path) ..
+      " -C " .. fn.shellescape(parent_dir) .. " " .. fn.shellescape(cwd_name)
+
+  run_shell_async(list_cmd, function(success_list, out1)
+    if not success_list then
+      on_complete(false, "Failed to generate file list:\n" .. out1)
+      return
+    end
+
+    run_shell_async(tar_cmd, function(success_tar, out2)
+      if not success_tar then
+        on_complete(false, "Compression failed:\n" .. out2)
+      else
+        on_complete(true, "Directory compressed successfully:\n" .. archive_path)
+      end
+    end)
+  end)
 end
 
+-- User command with UI integration (notification layer)
 vim.api.nvim_create_user_command("CompressDir", function()
-  require("custom.compress_dir").init()
+  M.compress_current_directory(function(success, msg)
+    local level = success and vim.log.levels.INFO or vim.log.levels.ERROR
+    vim.schedule(function()
+      vim.notify(msg, level)
+    end)
+  end)
 end, {})
 
 return M

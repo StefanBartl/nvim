@@ -11,9 +11,6 @@ local M = {}
 function M.live_multigrep(opts)
   opts = opts or {}
   opts.cwd = opts.cwd or vim.uv.cwd()
-  print("hallo")
-  print("opt.cwd " .. opts.cwd)
-  print("dateiname" .. vim.fn.expand("%:t"))
 
   local finder = finders.new_async_job {
     command_generator = function(prompt)
@@ -33,8 +30,6 @@ function M.live_multigrep(opts)
         table.insert(args, pieces[2])
       end
 
-      print("rg args:", vim.inspect(args))
-
       local merged_args = vim.deepcopy(args)
       vim.list_extend(merged_args, {
         "--color=never",
@@ -53,12 +48,12 @@ function M.live_multigrep(opts)
   --hidden for hidden files
   --L for Symlinks
 
-  local fname = vim.fn.expand("%:t")
-  opts.default_text = opts.default_text or "  " .. fname
+  local fname = "  " .. vim.fn.expand("%:t")
+  opts.default_text = opts.default_text or fname
 
   pickers.new(opts, {
     debounce = 100,
-    prompt_title = "Multi Grep",
+    prompt_title = "Multi Grep for File",
     finder = finder,
     previewer = conf.grep_previewer(opts),
     sorter = require("telescope.sorters").empty(),
