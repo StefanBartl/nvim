@@ -42,8 +42,7 @@ return {
       runtime = {
         -- LuaJIT, wie von Neovim verwendet
         version = "LuaJIT",
-        -- Pfade für require() etc.
-        path = vim.split(package.path, ";"),
+        path = { "lua/?.lua", "lua/?/init.lua", "@types/?.lua", vim.split(package.path, ";") }
       },
       diagnostics = {
         -- Erlaubte globale Variablen (vim, vim.fn, vim.uv, etc.)

@@ -1,3 +1,5 @@
+local M = {}
+
 local nvlsp = require("nvchad.configs.lspconfig")
 local lspconfig = require("lspconfig")
 local lsp_servers = require("configs.lsp_servers")
@@ -18,15 +20,15 @@ vim.diagnostic.config({
   severity_sort = true,
 })
 
-lspconfig.lua_ls.setup({
-  capabilities = nvlsp.capabilities,
-  on_attach = function(client, bufnr)
-    require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
-    if nvlsp.on_attach then
-      nvlsp.on_attach(client, bufnr)
-    end
-  end,
-})
+--lspconfig.lua_ls.setup({
+--  capabilities = nvlsp.capabilities,
+--  on_attach = function(client, bufnr)
+--    require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
+--    if nvlsp.on_attach then
+--      nvlsp.on_attach(client, bufnr)
+--    end
+--  end,
+--})
 
 -- Custom on_attach kombiniert mit nvchad
 local function on_attach(client, bufnr)
@@ -85,3 +87,19 @@ for server, config in pairs(lsp_servers) do
     capabilities = nvlsp.capabilities,
   }, config))
 end
+
+-- Wenn nvim direkt mit einer Lua-Datei gestartet wird, attach manuell
+vim.api.nvim_create_autocmd("BufReadPost", {
+  once = true,
+  callback = function(args)
+    local bufnr = args.buf
+    local ft = vim.bo[bufnr].filetype
+    if ft == "lua" and #vim.lsp.get_clients({ bufnr = bufnr }) == 0 then
+      vim.lsp.start(lua_ls_config)
+      vim.notify("🔧 Manually attached lua_ls to initial buffer", vim.log.levels.INFO)
+    end
+  end,
+})
+
+
+return M

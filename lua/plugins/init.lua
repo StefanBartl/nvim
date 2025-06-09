@@ -474,6 +474,14 @@ return {
         tool_picker_style = "ui",
       })
     end,
-  }
+  },
 
+  {
+    dir = vim.fn.expand("~/MyGithub/train.nvim"),
+    name = "train.nvim",
+    cmd = { "Train", "TrainToday" },
+    config = function()
+      require("nvim-train").setup() -- ✅ Korrekt
+    end,
+  }
 }

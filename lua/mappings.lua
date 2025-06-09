@@ -283,18 +283,11 @@ end, { desc = "Populate workspace diagnostics" })
 map("n", "<leader>do", ":FzfLua diagnostics_document<CR>", { desc = "Dokumentdiagnosen anzeigen" })
 map("n", "<leader>wo", ":FzfLua diagnostics_workspace<CR>", { desc = "Workspace-Diagnosen anzeigen" })
 
-vim.keymap.set("n", "<leader><Esc>", ":qa!<CR>", { noremap = true, silent = true, desc = "Force quit all" })
+--vim.keymap.set("n", "<leader><Esc>", ":qa!<CR>", { noremap = true, silent = true, desc = "Force quit all" })
 
--- zeigt parent block info im Echo
-vim.keymap.set("n", "<leader>cc", function()
-  local node = require("nvim-treesitter.ts_utils").get_node_at_cursor()
-  if not node then return end
-  while node do
-    local type = node:type()
-    if vim.tbl_contains({ "if_statement", "function_declaration", "for_statement" }, type) then
-      print("inside " .. type)
-      break
-    end
-    node = node:parent()
+
+vim.keymap.set("n", "<leader>dd", function()
+  if vim.fn.confirm("Delete all lines in buffer?", "&Yes\n&No", 2) == 1 then
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
   end
-end)
+end, { desc = "Delete all lines in current buffer (confirm)" })

@@ -10,21 +10,16 @@
 --- - Uses `vim.fn.jobstart()` instead of `os.execute`
 --- - Notifies only from the user command, not from the module
 
----@class CompressDir : CompressDirModule
+---@class CompressDirModule
 local M = {}
 
--- System
-local api = vim.api
 local fn = vim.fn
 local uv = vim.uv or vim.loop
-
--- Utilities
-local safe_call = require("reposcope.utils.error").safe_call
 
 ---Validates and returns a safe target directory for compression output
 ---@return string|nil tempDir Validated output directory
 ---@return string|nil errorMsg Error string if invalid
-local function get_target_temp_dir()
+local function _get_target_temp_dir()
   local cwd = fn.getcwd()
   local cwd_name = fn.fnamemodify(cwd, ":t")
   if cwd == "" or cwd_name == "" then
@@ -51,11 +46,12 @@ local function get_target_temp_dir()
   return target, nil
 end
 
+---@private
 ---Runs a shell command asynchronously and invokes a callback on exit
 ---@param cmd string
 ---@param on_exit fun(success: boolean, output: string)
 ---@return nil
-local function run_shell_async(cmd, on_exit)
+local function _run_shell_async(cmd, on_exit)
   local stdout = uv.new_pipe(false)
   local stderr = uv.new_pipe(false)
   local output = {}
@@ -67,7 +63,7 @@ local function run_shell_async(cmd, on_exit)
   }, function(code)
     stdout:close()
     stderr:close()
-    handle:close()
+    if handle then handle:close() end
     local success = code == 0
     on_exit(success, table.concat(output, "\n"))
   end)
@@ -90,8 +86,8 @@ function M.compress_current_directory(on_complete)
   local cwd = fn.getcwd()
   local cwd_name = fn.fnamemodify(cwd, ":t")
 
-  local target, dir_err = get_target_temp_dir()
-  if not target then
+  local target, dir_err = _get_target_temp_dir()
+  if not target and dir_err then
     on_complete(false, dir_err)
     return
   end
@@ -105,13 +101,13 @@ function M.compress_current_directory(on_complete)
       " -czf " .. fn.shellescape(archive_path) ..
       " -C " .. fn.shellescape(parent_dir) .. " " .. fn.shellescape(cwd_name)
 
-  run_shell_async(list_cmd, function(success_list, out1)
+  _run_shell_async(list_cmd, function(success_list, out1)
     if not success_list then
       on_complete(false, "Failed to generate file list:\n" .. out1)
       return
     end
 
-    run_shell_async(tar_cmd, function(success_tar, out2)
+    _run_shell_async(tar_cmd, function(success_tar, out2)
       if not success_tar then
         on_complete(false, "Compression failed:\n" .. out2)
       else

@@ -42,27 +42,4 @@ vim.api.nvim_create_user_command("MDUnfatHeadings", function()
   vim.cmd([[%s/\*\*\([^*]\{-}\)\*\*/\1/g]])
 end, {})
 
-vim.api.nvim_create_autocmd("VimEnter", {
-  callback = function()
-    local clients = vim.lsp.get_clients({ name = "lua_ls" })
-    if #clients > 0 then return end
-
-    local function is_valid_lua_path(path)
-      return not path:find("/target/") and not path:find("/.git/")
-          and not path:find("/node_modules/")
-          and not path:find("%.d$") and not path:find("%.timestamp$")
-    end
-
-    ---@diagnostic disable-next-line: param-type-mismatch
-    local all_files = vim.fn.globpath(vim.fn.getcwd(), "**/*.lua", true, true)
-    local lua_files = vim.tbl_filter(is_valid_lua_path, all_files)
-    local first_file = lua_files[1]
-    if not first_file then return end
-
-    local buf = vim.fn.bufadd(first_file)
-    vim.fn.bufload(buf)
-    vim.api.nvim_buf_set_option(buf, "filetype", "lua")
-
-    vim.lsp.start(require("configs.lua_ls_config"))
-  end,
-})
+require("custom.last_file.init")

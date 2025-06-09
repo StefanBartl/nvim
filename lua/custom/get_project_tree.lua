@@ -8,7 +8,7 @@
 --- - Copy structure to clipboard (requires `xclip`)
 --- All operations are non-blocking and integrate safely with the UI.
 
----@class ProjectTree : ProjectTreeModule
+---@class ProjectTreeModule
 local M = {}
 
 -- System & API
@@ -35,7 +35,7 @@ local function run_command(cmd, on_exit)
   }, function(code)
     stdout:close()
     stderr:close()
-    handle:close()
+    if handle then handle:close() end
     on_exit(code == 0, table.concat(output, "\n"))
   end)
 
@@ -72,7 +72,7 @@ function M.write_tree(callback)
   local cwd = fn.getcwd()
   local path, err = get_tree_file()
   if not path then
-    callback(false, err)
+    callback(false, err or "Error")
     return
   end
 
@@ -92,7 +92,7 @@ end
 function M.copy_tree_to_clipboard(callback)
   local path, err = get_tree_file()
   if not path or fn.filereadable(path) == 0 then
-    callback(false, err or "Tree file does not exist: " .. path)
+    callback(false, err or ("Tree file does not exist: " .. path))
     return
   end
 
