@@ -1,0 +1,5 @@
+{"message":"Unset prompt keymaps started","timestamp":"17:07:40","time_since_start":"190113.696","time_since_last":"190113.696","context":"keymap"}
+,
+{"message":"Clearing keymaps for prompt buffer 4","timestamp":"17:07:40","time_since_start":"190114.251","time_since_last":"0.555","context":"keymap"}
+,
+{"message":"Unset prompt keymaps finished","timestamp":"17:07:40","time_since_start":"190115.090","time_since_last":"0.839","context":"keymap"}

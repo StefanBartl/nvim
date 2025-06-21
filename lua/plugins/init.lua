@@ -1,92 +1,115 @@
 return {
 
--- 1. Essential dependencies and tools
+  --===========================
+  --=== ESSENTIALS ============
+  --===========================
 
   {
     "nvim-treesitter/nvim-treesitter",
-    opts = {
-      ensure_installed = {
-        "query", "lua", "go", "javascript", "typescript", "json", "css", "html", "markdown", "markdown_inline",
-        highlight = { enable = true }
-      },
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter-textobjects",
     },
+    opts = function(_, opts)
+      opts.ensure_installed = require("custom.treesitter-parser")
+      opts.highlight = {
+        enable = true,
+        use_languagetree = true,
+      }
+      opts.indent = { enable = true }
+      opts.textobjects = vim.tbl_deep_extend("force", opts.textobjects or {}, { -- Important: vim.tbl_deep_extend
+        select = {
+          enable = true,
+          lookahead = true,
+          keymaps = {
+            ["af"] = "@function.outer",
+            ["if"] = "@function.inner",
+            ["ac"] = "@class.outer",
+            ["ic"] = "@class.inner",
+            ["ab"] = "@block.outer",
+            ["ib"] = "@block.inner",
+            ["ap"] = "@parameter.outer",
+            ["ip"] = "@parameter.inner",
+          },
+        },
+        move = {
+          enable = true,
+          set_jumps = true,
+          goto_next_start = {
+            ["]m"] = "@function.outer",
+            ["]c"] = "@class.outer",
+            ["]b"] = "@block.outer",
+            ["]p"] = "@parameter.inner",
+          },
+          goto_previous_start = {
+            ["[m"] = "@function.outer",
+            ["[c"] = "@class.outer",
+            ["[b"] = "@block.outer",
+            ["[p"] = "@parameter.inner",
+          },
+        },
+      })
+      return opts
+    end,
   },
 
-  -- Plenary, a necessary dependency for many other plugins
-  "nvim-lua/plenary.nvim",
-  -- Telescope for fuzzy finding files, buffers, etc.
+  -- Plenary: Lua helper library used by many plugins
+  {
+    "nvim-lua/plenary.nvim",
+    lazy = false,
+  },
+
+  --===========================
+  --=== FUZZY FINDING =========
+  --===========================
+
+  -- Telescope: Powerful fuzzy finder
   {
     "nvim-telescope/telescope.nvim",
     lazy = false,
-    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-lua/plenary.nvim" },
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope-github.nvim",
+    },
     cmd = "Telescope",
-    -- TODO: Wenn trouble installiert ist
-    --opts = function()
-    --  return require "configs.telescope"
-    --end,
     config = function(_, opts)
       dofile(vim.g.base46_cache .. "telescope")
-      local telescope = require "telescope"
+      local telescope = require("telescope")
       telescope.setup(opts)
-      -- Load extensions
-      for _, ext in ipairs(opts.extensions_list) do
+      for _, ext in ipairs(opts.extensions_list or {}) do
         telescope.load_extension(ext)
       end
     end,
   },
 
-  -- Telescope Search UI
+  -- Search.nvim: Tab-based UI for telescope
   {
     "FabianWirth/search.nvim",
     dependencies = { "nvim-telescope/telescope.nvim" },
     config = function()
-      local builtin = require('telescope.builtin')
+      local builtin = require("telescope.builtin")
       require("search").setup({
-        mappings = {
-          next = "<Tab>",
-          prev = "<C-p>"
-        },
+        mappings = { next = "<Tab>", prev = "<C-p>" },
         append_tabs = {
-          {
-            "Commits",
-            builtin.git_commits,
-            available = function()
-              return vim.fn.isdirectory(".git") == 1
-            end
-          }
+          { "Commits", builtin.git_commits, available = function() return vim.fn.isdirectory(".git") == 1 end },
         },
         tabs = {
-          {
-            "Files",
-            function(opts)
-              opts = opts or {}
-              if vim.fn.isdirectory(".git") == 1 then
-                builtin.git_files(opts)
-              else
-                builtin.find_files(opts)
-              end
+          { "Files", function(opts)
+            opts = opts or {}
+            if vim.fn.isdirectory(".git") == 1 then
+              builtin.git_files(opts)
+            else
+              builtin.find_files(opts)
             end
+          end
           },
-          {
-            name = "All Files",
-            tele_func = builtin.find_files,
-            tele_opts = { no_ignore = true, hidden = true }
-          },
-          {
-            -- Neuer Tab für Grep
-            name = "Grep",
-            tele_func = builtin.live_grep, -- Verwende `live_grep` für Grep durch alle Dateien
-          },
-          {
-            -- Neuer Tab für Buffers
-            name = "Buffers",
-            tele_func = builtin.buffers, -- Verwende `buffers` zum Durchsuchen der offenen Buffer
-          },
+          { name = "All Files", tele_func = builtin.find_files, tele_opts = { no_ignore = true, hidden = true } },
+          { name = "Grep",      tele_func = builtin.live_grep },
+          { name = "Buffers",   tele_func = builtin.buffers },
         },
         collections = {
-          -- Die "git" Sammlung, wie im ursprünglichen Setup
           git = {
-            initial_tab = 1, -- Git branches
+            initial_tab = 1,
             tabs = {
               { name = "Branches", tele_func = builtin.git_branches },
               { name = "Commits",  tele_func = builtin.git_commits },
@@ -95,36 +118,88 @@ return {
           }
         }
       })
-    end
+    end,
   },
 
-  -- FZF for fuzzy finding files, buffers, etc.
+  -- fzf-lua: Alternative fuzzy finder
   {
     "ibhagwan/fzf-lua",
     lazy = false,
   },
 
+  --===========================
+  --=== FILE NAVIGATION ======
+  --===========================
 
--- 2. File management
-
-  -- Harpoon for managing multiple files and quick navigation
+  -- Harpoon: Fast file navigation
   {
     "ThePrimeagen/harpoon",
-    lazy = false,                          -- Load immediately
+    lazy = false,
     dependencies = {
-      { "nvim-telescope/telescope.nvim" }, -- Telescope integration
-      { "nvim-lua/plenary.nvim" },
+      "nvim-telescope/telescope.nvim",
+      "nvim-lua/plenary.nvim",
     },
     config = function()
       require("harpoon").setup()
       require("telescope").load_extension("harpoon")
-      require("configs.harpoon")
+      require("configs.harpoon_config")
     end,
   },
 
+  --===========================
+  --=== LSP & FORMATTING ======
+  --===========================
 
--- 3. LSP completion
--- TODO
+  -- LSP Config: Core LSP plugin
+  {
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
+    config = function()
+      require("configs.lspconfig")
+    end,
+  },
+
+  {
+    "folke/lazydev.nvim",
+    ft = "lua", -- only load on lua files
+    opts = {
+      library = {
+        -- See the configuration section for more details
+        -- Load luvit types when the `vim.uv` word is found
+        { path = "${3rd}/luv/library" },
+        --"./lua/@types",
+      },
+    },
+  },
+  { -- optional cmp completion source for require statements and module annotations
+    "hrsh7th/nvim-cmp",
+    opts = function(_, opts)
+      opts.sources = opts.sources or {}
+      table.insert(opts.sources, {
+        name = "lazydev",
+        group_index = 0, -- set group index to 0 to skip loading LuaLS completions
+      })
+    end,
+  },
+  { -- optional blink completion source for require statements and module annotations
+    "saghen/blink.cmp",
+    opts = {
+      sources = {
+        -- add lazydev to your completion providers
+        default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+        providers = {
+          lazydev = {
+            name = "LazyDev",
+            module = "lazydev.integrations.blink",
+            -- make lazydev completions top priority (see `:h blink.cmp`)
+            score_offset = 100,
+          },
+        },
+      },
+    },
+  },
+
+  -- Conform: Formatting engine
   {
     "stevearc/conform.nvim",
     config = function()
@@ -139,87 +214,57 @@ return {
           sql = { "sql_formatter" },
           go = { "gofmt", "goimports", "golines" },
         },
-        format_on_save = {
-          -- Enable for specific filetypes
-          ["*"] = { timeout_ms = 5000 },
-        },
+        format_on_save = { ["*"] = { timeout_ms = 5000 } },
       })
     end,
   },
 
   {
-    "neovim/nvim-lspconfig",
-    dependencies = {
-        {
-          "folke/lazydev.nvim",
-          ft = "lua", -- only load on lua files
-          opts = {
-            library = {
-              -- See the configuration section for more details
-              -- Load luvit types when the `vim.uv` word is found
-              { path = "${3rd}/luv/library", words = { "vim%.uv" } },
-            },
-          },
-        },
-    },
-    config = function()
-      require "configs.lspconfig"
-    end,
+    "artemave/workspace-diagnostics.nvim",
+    lazy = false,
   },
 
-  -- Trouble.nvim for displaying LSP diagnostics
+  -- Trouble: Show LSP diagnostics in a sidebar
   {
     "folke/trouble.nvim",
-    dependencies = "nvim-tree/nvim-web-devicons", -- Abhängigkeit für Icons
+    dependencies = "nvim-tree/nvim-web-devicons",
     version = "*",
-    lazy = false, -- Lade das Plugin direkt beim Start
+    lazy = false,
     config = function()
       require("trouble").setup({
-        mode = "document_diagnostics", -- Standardmodus
-        auto_open = false,             -- Öffnet Trouble nicht automatisch
-        auto_close = true,             -- Schließt Trouble, wenn keine Fehler vorhanden sind
-        auto_preview = false,          -- Vorschau bei Auswahl deaktivieren
+        mode = "document_diagnostics",
+        auto_close = true,
+        auto_preview = false,
       })
     end,
   },
 
 
+  --===========================
+  --=== GIT INTEGRATION =======
+  --===========================
 
--- 4. Git related plugins
-
-  -- LazyGit integration for terminal Git UI
-    -- DEPENDENCY: Make sure lazygit ist installed on your system, eg.: brew install jesseduffield/lazygit/lazygit
+  -- LazyGit: External Git UI
   {
     "kdheepak/lazygit.nvim",
     lazy = true,
     cmd = {
-      "LazyGit",
-      "LazyGitConfig",
-      "LazyGitCurrentFile",
-      "LazyGitFilter",
-      "LazyGitFilterCurrentFile",
+      "LazyGit", "LazyGitConfig", "LazyGitCurrentFile",
+      "LazyGitFilter", "LazyGitFilterCurrentFile"
     },
-    -- optional for floating window border decoration
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-    },
-    -- setting the keybinding for LazyGit with 'keys' is recommended in
-    -- order to load the plugin when the command is run for the first time
+    dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
-      { "<leader>la", "<cmd>LazyGit<cr>", desc = "LazyGit" }
-    }
+      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" }
+    },
   },
 
-  -- Neogit for a Magit-like Git interface
   {
-    "TimUntersberger/neogit",
-    requires = { "nvim-lua/plenary.nvim" },
-    config = function()
-      require("neogit").setup({})
-    end,
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    config = true,
   },
 
-  -- DiffView for visualizing Git diffs
+  -- DiffView: Visual Git diff tool
   {
     "sindrets/diffview.nvim",
     requires = { "nvim-lua/plenary.nvim" },
@@ -227,57 +272,47 @@ return {
     config = true,
   },
 
--- 6. Markdown
+  --===========================
+  --=== MARKDOWN ==============
+  --===========================
 
-  -- Markdown Preview
+  -- Markdown Preview (browser)
   {
     "iamcco/markdown-preview.nvim",
     ft = { "markdown" },
     build = "cd app && npm install",
   },
 
-  -- Checkboxes, Tabellen-Highlighting, und mehr
+  -- Vim-Markdown: Syntax highlighting, checkboxes etc.
   {
     "preservim/vim-markdown",
     ft = { "markdown" },
-    config = function()
-    end,
   },
 
-  -- Headlines, Blöcke hervorheben
-  --{
-  --  "lukas-reineke/headlines.nvim",
-  --  ft = { "markdown" },
-  --  config = function()
-  --    require("headlines").setup()
-  --  end,
-  --},
+  --===========================
+  --=== EDITING TOOLS =========
+  --===========================
 
-
--- 7. Code formatting, folding, and syntax highlighting
-
-  -- Better Quickfix Window for better quickfix window
+  -- Better Quickfix Window
   {
     "kevinhwang91/nvim-bqf",
     ft = 'qf',
     opts = {
       auto_enable = true,
-      auto_resize_height = true, -- Automatically adjust the height of the quickfix window
+      auto_resize_height = true,
     },
     config = function(_, opts)
       require("bqf").setup(opts)
     end,
   },
 
-
-  -- Auto Template Strings
+  -- Auto Template Strings (JS/TS)
   {
     "chrisgrieser/nvim-puppeteer",
-    lazy = false, -- plugin lazy-loads itself. Can also load on filetypes.
+    lazy = false,
   },
 
-  -- TODO: Erklären was das macht, wie man das weiter erweitern kann, wie man es anwendet im workflow
-  -- TODO: ctrl / sollte das machen
+  -- Comments: Toggle code comments
   {
     "numToStr/Comment.nvim",
     keys = {
@@ -289,33 +324,19 @@ return {
       { "tb",  mode = "x",          desc = "Comment toggle blockwise (visual)" },
     },
     config = function(_, opts)
-      require("Comment").setup(opts) -- Initialisiert das Plugin
+      require("Comment").setup(opts)
     end,
   },
 
-  -- TODO: In nvim.cmp integirieren!
-   -- GitHub Copilot integration
-   {
-    "github/copilot.vim",
-    event = "InsertEnter",
-    config = function()
-      vim.api.nvim_set_var("copilot_no_tab_map", true) -- Prevent conflicts with tab mappings
-    end,
-  },
-
-  -- Use treesitter to autoclose and autorename html tag
+  -- HTML tag closing/renaming with Treesitter
   {
     "windwp/nvim-ts-autotag",
     opts = function()
       return {
-        enable_close = true,           -- Auto close tags
-        enable_rename = true,          -- Auto rename pairs of tags
-        enable_close_on_slash = false, -- Auto close on trailing </
-        per_filetype = {
-          ["html"] = {
-            enable_close = false
-          }
-        }
+        enable_close = true,
+        enable_rename = true,
+        enable_close_on_slash = false,
+        per_filetype = { ["html"] = { enable_close = false } },
       }
     end,
     config = function(_, opts)
@@ -323,71 +344,144 @@ return {
     end,
   },
 
-  -- Use delete keybindings like daf, dif (delete around/inside function) usw
-
-  { 'echasnovski/mini.ai', version = '*' },
-
-
-  -- ChatGPT
+  -- Mini.ai: Text object enhancements (e.g. "daf" for "delete around function")
+  --{
+  --  "echasnovski/mini.ai",
+  --  version = "*",
+  --},
 
   {
-      "jackMort/ChatGPT.nvim",
-      event = "VeryLazy",
-      dependencies = {
-          "MunifTanjim/nui.nvim",
-          "nvim-lua/plenary.nvim",
-          "nvim-telescope/telescope.nvim",
+    "folke/todo-comments.nvim",
+    event = "BufReadPost",
+    lazy = false,
+    dependencies = { "nvim-lua/plenary.nvim" },
+    opts = {
+      signs = true,
+      keywords = {
+        FIX = {
+          icon = " ",
+          color = "error",                            -- can be a hex color, or a named color (see below)
+          alt = { "FIXME", "BUG", "FIXIT", "ISSUE" }, -- a set of other keywords that all map to this FIX keywords
+        },
+        INFO = { icon = " ", color = "info" },
+        DEBUG = { icon = " ", color = "hint" },
+        TODO = { icon = " ", color = "info" },
+        HACK = { icon = " ", color = "warning" },
+        WARN = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
+        PERF = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
+        NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
+        TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
+        EXP = {
+          icon = "🔬", color = "test", alt = { "EXPERIMENT", "EXPERIMENTAL" },
+        },
+        REF = {
+          icon = "󰁨 ",
+          color = "hint",
+          alt = { "REFACTOR", "REWRITE", "CLEANUP", "IMPROVE", "RESTRUCTURE" },
+        },
+        ADD = {
+          icon = " ",
+          color = "info",
+          alt = { "EXT", "NEXT", "FUTURE", "ENHANCE", "HOOK" },
+        },
+        WATCH = {
+          icon = " ",
+          color = "warning",
+          alt = { "MONITOR", "OBSERVE", "TRACK", "INSPECT", "SURVEILLANCE" },
+        },
       },
-      config = function()
-          require("chatgpt").setup({
-              api_key_cmd = "echo $OPENAI_API_KEY",
-          })
-      end,
+    },
   },
 
 
--- 8. MISC Plugins
+  --===========================
+  --=== MISC TOOLS ============
+  --===========================
 
-  -- Zen Mode
+  -- Zen Mode: Focus writing
   {
     "folke/zen-mode.nvim",
   },
 
-  {
-    "mg979/vim-visual-multi",
-    branch = "master",
-    init = function()
-      -- Diese Variable MUSS vor dem Laden des Plugins gesetzt werden!
-      vim.g.VM_default_mappings = 0
-    end,
-    config = function()
-      -- Eigene Mappings setzen
-      vim.g.VM_maps = {
-        ["Find Under"]         = "<C-y>",   -- wie in VSCode
-        ["Find Subword Under"] = "<C-y>",   -- optional: für Teilwörter
-      }
-    end,
-  },
 
--- 9. My Plugins
+  --===========================
+  --=== PERSONAL PROJECTS =====
+  --===========================
 
-  -- nvim-containers
+  -- nvim-containers: Manage container engines from inside Neovim
   {
-    dir = "/media/steve/Depot/MyGithub/nvim-containers",
+    dir = "~/MyGithub/nvim-containers",
     event = "VeryLazy",
     config = function()
       require("containers").setup({
-        engine = "podman",
+      })
+    end,
+  },
+
+  -- nvim-cmdlog: Manage your command history
+  {
+    dir = "~/MyGithub/nvim-cmdlog/",
+    lazy = false,
+    config = function()
+      require("cmdlog").setup({
+        picker = "telescope",
       })
     end,
   },
 
   {
-    dir = "/media/steve/Depot/MyGithub/nvim-cmdlog/", -- oder entsprechend deinem Setup
-    lazy = false,
+    dir = "~/MyGithub/reposcope.nvim",
+    name = "reposcope",
+    event = "VeryLazy",
     config = function()
-      require("cmdlog").setup()
+      require("reposcope.init").setup({
+        ---prompt_fields = { "keywords" },
+        --provider = "github",                  -- optional, default: "github"
+        --github_token = "",   -- für authentifizierte API-Zugriffe
+        --request_tool = "gh", -- "gh", "curl" oder "wget"
+        --preview_limit = 100,                  -- Zeilenlimit für README-Vorschau
+        --results_limit = 50,                   -- max. Suchergebnisse
+        --layout = "default",                   -- UI-Layout
+        --metrics = true,                       -- Aktiviert internes Tracking
+        --keymaps = {
+        --  open = "<leader>rs",  -- Set the keymap to open Repsocope
+        --  close = "<leader>rc", -- Set the keymap to close Reposcope
+        --},
+        --clone = {
+        --  std_dir = "~/repos",
+        --  type = "wget", -- fallback cloning tool
+        --},
+      })
     end,
   },
 
+
+  {
+    "myterm.local",
+    dir = vim.fn.stdpath("config") .. "/lua/custom/myterm",
+    lazy = false,
+    config = function()
+      require("custom.myterm")
+    end,
+  },
+
+  {
+    dir = vim.fn.expand("~/MyGithub/mygrep.nvim"),
+    name = "mygrep",
+    lazy = false,
+    config = function()
+      require("mygrep").setup({
+        tool_picker_style = "ui",
+      })
+    end,
+  },
+
+  {
+    dir = vim.fn.expand("~/MyGithub/train.nvim"),
+    name = "train.nvim",
+    cmd = { "Train", "TrainToday" },
+    config = function()
+      require("nvim-train").setup() -- ✅ Korrekt
+    end,
+  }
 }

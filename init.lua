@@ -11,7 +11,7 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 
-local lazy_config = require "configs.lazy"
+local lazy_config = require "configs.lazy_config"
 
 -- load plugins
 require("lazy").setup({
@@ -30,12 +30,16 @@ dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
 
 require "options"
-require "autocmds.text"
-require "autocmds.terminals"
-require "autocmds.workspace"
-
---require "configs.nvimtree"
+local require_dir = require("custom.require_dir")
+require_dir("autocmd")
+require_dir("custom")
 
 vim.schedule(function()
   require "mappings"
 end)
+
+vim.api.nvim_create_user_command("MDUnfatHeadings", function()
+  vim.cmd([[%s/\*\*\([^*]\{-}\)\*\*/\1/g]])
+end, {})
+
+require("custom.last_file.init")

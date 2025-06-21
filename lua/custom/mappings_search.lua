@@ -12,4 +12,10 @@ M.search_keymaps = function()
   })
 end
 
+vim.api.nvim_create_user_command("FindMapppings", function()
+  require("custom.mappings_search").search_keymaps()
+end, {
+  desc = "Search keymaps in mappings.lua",
+})
+
 return M
