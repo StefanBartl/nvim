@@ -16,9 +16,6 @@ local fn = vim.fn
 local api = vim.api
 local uv = vim.uv or vim.loop
 
--- Utilities
-local safe_call = require("reposcope.utils.error").safe_call
-
 ---Runs a shell command asynchronously and returns output to callback
 ---@param cmd string
 ---@param on_exit fun(success: boolean, output: string): nil

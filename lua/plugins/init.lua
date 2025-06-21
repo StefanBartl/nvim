@@ -404,84 +404,69 @@ return {
   },
 
 
-  --===========================
-  --=== PERSONAL PROJECTS =====
-  --===========================
+--===========================
+--=== PERSONAL PROJECTS =====
+--===========================
 
-  -- nvim-containers: Manage container engines from inside Neovim
-  {
-    dir = "~/MyGithub/nvim-containers",
-    event = "VeryLazy",
-    config = function()
-      require("containers").setup({
-      })
-    end,
-  },
+-- nvim-containers: Manage container engines from inside Neovim
+{
+  dir = "E:\\MyGithub\\nvim-containers",
+  event = "VeryLazy",
+  config = function()
+    require("containers").setup({})
+  end,
+},
 
-  -- nvim-cmdlog: Manage your command history
-  {
-    dir = "~/MyGithub/nvim-cmdlog/",
-    lazy = false,
-    config = function()
-      require("cmdlog").setup({
-        picker = "telescope",
-      })
-    end,
-  },
+-- nvim-cmdlog: Manage your command history
+{
+  dir = "E:\\MyGithub\\nvim-cmdlog",
+  lazy = false,
+  config = function()
+    require("cmdlog").setup({
+      picker = "telescope",
+    })
+  end,
+},
 
-  {
-    dir = "~/MyGithub/reposcope.nvim",
-    name = "reposcope",
-    event = "VeryLazy",
-    config = function()
-      require("reposcope.init").setup({
-        ---prompt_fields = { "keywords" },
-        --provider = "github",                  -- optional, default: "github"
-        --github_token = "",   -- für authentifizierte API-Zugriffe
-        --request_tool = "gh", -- "gh", "curl" oder "wget"
-        --preview_limit = 100,                  -- Zeilenlimit für README-Vorschau
-        --results_limit = 50,                   -- max. Suchergebnisse
-        --layout = "default",                   -- UI-Layout
-        --metrics = true,                       -- Aktiviert internes Tracking
-        --keymaps = {
-        --  open = "<leader>rs",  -- Set the keymap to open Repsocope
-        --  close = "<leader>rc", -- Set the keymap to close Reposcope
-        --},
-        --clone = {
-        --  std_dir = "~/repos",
-        --  type = "wget", -- fallback cloning tool
-        --},
-      })
-    end,
-  },
+-- reposcope.nvim
+{
+  dir = "E:\\MyGithub\\reposcope.nvim",
+  name = "reposcope",
+  event = "VeryLazy",
+  config = function()
+    require("reposcope.init").setup({})
+  end,
+},
 
+-- myterm.local
+{
+  name = "myterm.local",
+  dir = vim.fn.stdpath("config") .. "\\lua\\custom\\myterm",
+  lazy = false,
+  config = function()
+    require("custom.myterm")
+  end,
+},
 
-  {
-    "myterm.local",
-    dir = vim.fn.stdpath("config") .. "/lua/custom/myterm",
-    lazy = false,
-    config = function()
-      require("custom.myterm")
-    end,
-  },
+-- mygrep.nvim
+{
+  dir = "E:\\MyGithub\\mygrep.nvim",
+  name = "mygrep",
+  lazy = false,
+  config = function()
+    require("mygrep").setup({
+      tool_picker_style = "ui",
+    })
+  end,
+},
 
-  {
-    dir = vim.fn.expand("~/MyGithub/mygrep.nvim"),
-    name = "mygrep",
-    lazy = false,
-    config = function()
-      require("mygrep").setup({
-        tool_picker_style = "ui",
-      })
-    end,
-  },
-
-  {
-    dir = vim.fn.expand("~/MyGithub/train.nvim"),
-    name = "train.nvim",
-    cmd = { "Train", "TrainToday" },
-    config = function()
-      require("nvim-train").setup() -- ✅ Korrekt
-    end,
-  }
+-- train.nvim
+{
+  dir = vim.fn.expand("E:\\MyGithub\\train.nvim"),
+  name = "train.nvim",
+  cmd = { "Train", "TrainToday" },
+  config = function()
+    require("nvim-train").setup()
+  end,
+},
 }
