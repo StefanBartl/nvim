@@ -403,6 +403,15 @@ return {
     "folke/zen-mode.nvim",
   },
 
+  -- GitHub Copilot integration
+   {
+    "github/copilot.vim",
+    event = "InsertEnter",
+    config = function()
+      vim.api.nvim_set_var("copilot_no_tab_map", true) -- Prevent conflicts with tab mappings
+    end,
+  },
+
 
 --===========================
 --=== PERSONAL PROJECTS =====
