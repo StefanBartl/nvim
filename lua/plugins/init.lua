@@ -404,78 +404,143 @@ return {
   },
 
   -- GitHub Copilot integration
-   {
-    "github/copilot.vim",
+  --{
+  --  "github/copilot.vim",
+  --  event = "InsertEnter",
+  --  config = function()
+  --    vim.api.nvim_set_var("copilot_no_tab_map", true) -- Prevent conflicts with tab mappings
+  --  end,
+  --},
+
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
     event = "InsertEnter",
     config = function()
-      vim.api.nvim_set_var("copilot_no_tab_map", true) -- Prevent conflicts with tab mappings
+      require("copilot").setup({})
     end,
   },
 
+  -- noice - cmdline ui
+  {
+    "folke/noice.nvim",
+    lazy = false,
+    event = nil,
+    opts = require("configs.noice"),
+    dependencies = {
+      "MunifTanjim/nui.nvim",
 
---===========================
---=== PERSONAL PROJECTS =====
---===========================
+      -- `nvim-notify` is only needed, if you want to use the notification view.
+      -- If not available, we use `mini` as the fallback
+      "rcarriga/nvim-notify",
+    },
+  },
 
--- nvim-containers: Manage container engines from inside Neovim
-{
-  dir = "E:\\MyGithub\\nvim-containers",
-  event = "VeryLazy",
-  config = function()
-    require("containers").setup({})
-  end,
-},
+  -- gp.nvim - nvim ai prompt
+  {
+    "robitx/gp.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      local conf = require("configs.gp_config")
+      require("gp").setup(conf)
+    end,
+    event = "VeryLazy",
+  },
 
--- nvim-cmdlog: Manage your command history
-{
-  dir = "E:\\MyGithub\\nvim-cmdlog",
-  lazy = false,
-  config = function()
-    require("cmdlog").setup({
-      picker = "telescope",
-    })
-  end,
-},
+  {
+    'vim-denops/denops.vim',
+    lazy = false,
+  },
+  -- keycaster
+  {
+    "hasundue/vim-keycasty",
+    lazy = false, -- sofort beim Start laden
+    init = function()
+      vim.g.keycasty_output_win_title = "Keycast"
+      --vim.cmd("KeycastStart")
+    end,
+    keys = {
+      {
+        "<leader>ks",
+        "<cmd>KeycastStart<CR>",
+        desc = "Keycasty: Start",
+      },
+      {
+        "<leader>ke",
+        "<cmd>KeycastStop<CR>",
+        desc = "Keycasty: Stop",
+      },
+      {
+        "<leader>kt",
+        "<cmd>KeycastToggle<CR>",
+        desc = "Keycasty: Toggle",
+      },
+    },
+  },
 
--- reposcope.nvim
-{
-  dir = "E:\\MyGithub\\reposcope.nvim",
-  name = "reposcope",
-  event = "VeryLazy",
-  config = function()
-    require("reposcope.init").setup({})
-  end,
-},
+  --===========================
+  --=== PERSONAL PROJECTS =====
+  --===========================
 
--- myterm.local
-{
-  name = "myterm.local",
-  dir = vim.fn.stdpath("config") .. "\\lua\\custom\\myterm",
-  lazy = false,
-  config = function()
-    require("custom.myterm")
-  end,
-},
+  -- nvim-containers: Manage container engines from inside Neovim
+  {
+    dir = "E:\\MyGithub\\nvim-containers",
+    event = "VeryLazy",
+    config = function()
+      require("containers").setup({})
+    end,
+  },
 
--- mygrep.nvim
-{
-  dir = "E:\\MyGithub\\mygrep.nvim",
-  name = "mygrep",
-  lazy = false,
-  config = function()
-    require("mygrep").setup({
-      tool_picker_style = "ui",
-    })
-  end,
-},
+  -- nvim-cmdlog: Manage your command history
+  {
+    dir = "E:\\MyGithub\\nvim-cmdlog",
+    lazy = false,
+    config = function()
+      require("cmdlog").setup({
+        picker = "telescope",
+      })
+    end,
+  },
 
--- train.nvim
-{
-  dir = vim.fn.expand("E:\\MyGithub\\train.nvim"),
-  name = "train.nvim",
-  cmd = { "Train", "TrainToday" },
-  config = function()
-    require("nvim-train").setup()
-  end,
-},
+  -- reposcope.nvim
+  {
+    dir = "E:\\MyGithub\\reposcope.nvim",
+    name = "reposcope",
+    event = "VeryLazy",
+    config = function()
+      require("reposcope.init").setup({})
+    end,
+  },
+
+  -- myterm.local
+  {
+    name = "myterm.local",
+    dir = vim.fn.stdpath("config") .. "\\lua\\custom\\myterm",
+    lazy = false,
+    config = function()
+      require("custom.myterm")
+    end,
+  },
+
+  -- mygrep.nvim
+  {
+    dir = "E:\\MyGithub\\mygrep.nvim",
+    name = "mygrep",
+    lazy = false,
+    config = function()
+      require("mygrep").setup({
+        tool_picker_style = "ui",
+      })
+    end,
+  },
+
+  -- train.nvim
+  {
+    dir = vim.fn.expand("E:\\MyGithub\\train.nvim"),
+    name = "train.nvim",
+    cmd = { "Train", "TrainToday" },
+    config = function()
+      require("nvim-train").setup()
+    end,
+  },
 }
