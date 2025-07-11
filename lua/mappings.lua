@@ -291,3 +291,5 @@ vim.keymap.set("n", "<leader>dd", function()
     vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
   end
 end, { desc = "Delete all lines in current buffer (confirm)" })
+
+map("n", "<leader>tr", ":lua require('base46').toggle_transparency()<CR>", { noremap = true, silent = true, desc = "Toggle Background Transparency" })
