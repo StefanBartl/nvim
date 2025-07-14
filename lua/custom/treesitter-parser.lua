@@ -2,6 +2,7 @@ return {
   "asm",
   "bash",
   "c",
+  "c_sharp",
   "cpp",
   "cmake",
   "commonlisp",

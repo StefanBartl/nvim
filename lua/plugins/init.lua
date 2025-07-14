@@ -239,6 +239,19 @@ return {
     end,
   },
 
+  {
+    "mfussenegger/nvim-dap",
+    event = "VeryLazy",
+  },
+
+  {
+    "rcarriga/nvim-dap-ui",
+    dependencies = {
+      "mfussenegger/nvim-dap",
+      "nvim-neotest/nvim-nio"
+    }
+  },
+
 
   --===========================
   --=== GIT INTEGRATION =======
@@ -478,6 +491,36 @@ return {
     },
   },
 
+--[[
+  {
+    "iabdelkareem/csharp.nvim",
+    ft = { "cs", "csproj", "sln" },
+    dependencies = {
+      "williamboman/mason.nvim",
+      "mfussenegger/nvim-dap",
+      "Tastyep/structlog.nvim",
+    },
+    config = function()
+      require("mason").setup()
+      require("csharp").setup({
+        lsp = {
+          omnisharp = {
+            enable = true,
+            cmd_path = "C:\\tools\\LanguageServerProtocol\\csharp\\omnisharp\\OmniSharp.exe",
+          },
+          --[[
+          roslyn = {
+            enable = true,
+            cmd_path = "C:\\tools\\LanguageServerProtocol\\csharp\\roslyn-lsp\\content\\LanguageServer\\win-x64\\Microsoft.CodeAnalysis.LanguageServer.dll",
+          },
+        },
+      })
+    end,
+  },
+
+]]--
+
+
   --===========================
   --=== PERSONAL PROJECTS =====
   --===========================
@@ -494,7 +537,6 @@ return {
   -- nvim-cmdlog: Manage your command history
   {
     dir = "E:\\MyGithub\\nvim-cmdlog",
-    lazy = false,
     config = function()
       require("cmdlog").setup({
         picker = "telescope",

@@ -20,15 +20,21 @@ vim.diagnostic.config({
   severity_sort = true,
 })
 
---lspconfig.lua_ls.setup({
---  capabilities = nvlsp.capabilities,
---  on_attach = function(client, bufnr)
---    require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
---    if nvlsp.on_attach then
---      nvlsp.on_attach(client, bufnr)
---    end
---  end,
---})
+--[[
+lspconfig.lua_ls.setup({
+  capabilities = nvlsp.capabilities,
+  on_attach = function(client, bufnr)
+    require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
+    if nvlsp.on_attach then
+      nvlsp.on_attach(client, bufnr)
+    end
+  end,
+})
+]]--
+
+
+
+
 
 -- Custom on_attach kombiniert mit nvchad
 local function on_attach(client, bufnr)
@@ -78,6 +84,27 @@ local function on_attach(client, bufnr)
     nvlsp.on_attach(client, bufnr)
   end
 end
+
+-- C#
+lspconfig.omnisharp.setup({
+  cmd = {
+    "C:\\tools\\LanguageServerProtocol\\csharp\\omnisharp\\OmniSharp.exe",
+    "--languageserver",
+    "--hostPID",
+    tostring(vim.fn.getpid()),
+  },
+  capabilities = nvlsp.capabilities,
+  on_attach = on_attach,
+  on_init = nvlsp.on_init,
+})
+
+
+lspconfig.tsserver.setup({
+  capabilities = nvlsp.capabilities,
+  on_attach = on_attach,
+  on_init = nvlsp.on_init,
+})
+
 
 -- Alle Server aus custom/configs/lsp_servers.lua initialisieren
 for server, config in pairs(lsp_servers) do

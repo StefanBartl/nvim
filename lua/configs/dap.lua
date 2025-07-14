@@ -41,3 +41,21 @@ dap.configurations.go = {
     program = "${file}",
   },
 }
+
+-- Konfiguration fpr C#
+dap.adapters.coreclr = {
+  type = 'executable',
+  command = 'C:/tools/netcoredbg/netcoredbg.exe',
+  args = {'--interpreter=vscode'}
+}
+
+dap.configurations.cs = {
+  {
+    type = "coreclr",
+    name = "Launch - netcoredbg",
+    request = "launch",
+    program = function()
+      return vim.fn.input('Pfad zur DLL: ', vim.fn.getcwd() .. '/bin/Debug/', 'file')
+    end,
+  },
+}
