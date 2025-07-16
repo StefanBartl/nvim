@@ -99,7 +99,7 @@ lspconfig.omnisharp.setup({
 })
 
 
-lspconfig.tsserver.setup({
+lspconfig.ts_ls.setup({
   capabilities = nvlsp.capabilities,
   on_attach = on_attach,
   on_init = nvlsp.on_init,

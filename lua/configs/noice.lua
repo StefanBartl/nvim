@@ -1,69 +1,59 @@
 ---@module 'configs.noice'
 
 ---@class NoiceConfig
----@field lsp table
----@field presets table
 ---@field cmdline table
----@field views table
+---@field hover table
+---@field lsp table
 ---@field messages table
 ---@field popupmenu table
+---@field presets table
+---@field signature table
+---@field views table
 
 ---@type NoiceConfig
 local M = {
-  lsp = {},
-  presets = {},
   cmdline = {},
-  views = {},
+  lsp = {},
   messages = {},
   popupmenu = {},
-}
-
-
-M.lsp = {
-  override = {
-    ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
-    ["vim.lsp.util.stylize_markdown"] = true,
-    ["cmp.entry.get_documentation"] = true,
-  },
+  presets = {},
+  views = {},
 }
 
 M.presets = {
-  bottom_search = false,
-  command_palette = false,
   long_message_to_split = true,
-  inc_rename = false,
   lsp_doc_border = false,
-}
-
-M.cmdline = {
-  enabled = true,
-  view = "cmdline_popup",
 }
 
 M.views = {
   cmdline_popup = {
-    position = {
-      row = vim.o.lines - vim.o.cmdheight - 2,
-      col = "0%",
-    },
-    size = {
-      width = vim.o.columns - 4,
-      height = "auto",
-    },
     border = {
-      style = "single", -- none | single | rounded | double | solid | shadow
+      style = "none",
+      padding = { 2, 3 },
+    },
+    filter_options = {},
+    win_options = {
+      winhighlight = "NormalFloat:NormalFloat,FloatBorder:FloatBorder",
     },
   },
-}
-
-M.messages = {
-  enabled = true,
-  view = "notify",
-}
-
-M.popupmenu = {
-  enabled = true,
-  backend = "nui",
+  popupmenu = {
+      relative = "editor",
+      position = {
+        row = (vim.o.lines / 2) + 4,
+        col = "50%",
+      },
+      size = {
+        width = 60,
+        height = 10,
+      },
+      border = {
+        style = "none",
+        padding = { 0, 0 },
+      },
+      win_options = {
+        winhighlight = { Normal = "Normal", FloatBorder = "DiagnosticInfo" },
+      },
+    },
 }
 
 return M

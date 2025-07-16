@@ -225,6 +225,22 @@ map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "Move selected lines down" })
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 map("t", "<C-c>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
+
+--=== NOICE ===
+
+vim.keymap.set({ "n", "i", "s" }, "<c-f>", function()
+  if not require("noice.lsp").scroll(4) then
+    return "<c-f>"
+  end
+end, { silent = true, expr = true })
+
+vim.keymap.set({ "n", "i", "s" }, "<c-b>", function()
+  if not require("noice.lsp").scroll(-4) then
+    return "<c-b>"
+  end
+end, { silent = true, expr = true })
+
+
 --==================================================
 --=== CUSTOM PLUGINS ===============================
 --==================================================
@@ -283,8 +299,7 @@ end, { desc = "Populate workspace diagnostics" })
 map("n", "<leader>do", ":FzfLua diagnostics_document<CR>", { desc = "Dokumentdiagnosen anzeigen" })
 map("n", "<leader>wo", ":FzfLua diagnostics_workspace<CR>", { desc = "Workspace-Diagnosen anzeigen" })
 
---vim.keymap.set("n", "<leader><Esc>", ":qa!<CR>", { noremap = true, silent = true, desc = "Force quit all" })
-
+vim.keymap.set("n", "<C-Esc>", ":qa!<CR>", { noremap = true, silent = true, desc = "Force quit all" })
 
 vim.keymap.set("n", "<leader>dd", function()
   if vim.fn.confirm("Delete all lines in buffer?", "&Yes\n&No", 2) == 1 then

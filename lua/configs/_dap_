@@ -1,6 +1,8 @@
+-- Hint: config -> 'dap.adapter.LNG + dap.configurations.LNG' per language
+
 local dap = require("dap")
 
--- Konfiguration für pwa-node Adapter
+
 dap.adapters["pwa-node"] = {
   type = "executable",
   command = "node",
@@ -8,8 +10,6 @@ dap.adapters["pwa-node"] = {
 }
 require("dap").set_log_level("DEBUG")
 
-
--- Konfigurationen für TypeScript und JavaScript
 for _, language in ipairs({ "typescript", "javascript" }) do
   dap.configurations[language] = {
     {
@@ -23,7 +23,7 @@ for _, language in ipairs({ "typescript", "javascript" }) do
   }
 end
 
--- Konfiguration für Golang
+
 dap.adapters.go = {
   type = "server",
   port = "${port}",
@@ -42,10 +42,10 @@ dap.configurations.go = {
   },
 }
 
--- Konfiguration fpr C#
+
 dap.adapters.coreclr = {
   type = 'executable',
-  command = 'C:/tools/netcoredbg/netcoredbg.exe',
+  command = "C:\\tools\\DebugAdapterProtocol\\netcoredbg\\netcoredbg.exe",
   args = {'--interpreter=vscode'}
 }
 
@@ -55,7 +55,7 @@ dap.configurations.cs = {
     name = "Launch - netcoredbg",
     request = "launch",
     program = function()
-      return vim.fn.input('Pfad zur DLL: ', vim.fn.getcwd() .. '/bin/Debug/', 'file')
+      return vim.fn.input('Path to DLL: ', vim.fn.getcwd() .. '/bin/Debug/', 'file')
     end,
   },
 }
