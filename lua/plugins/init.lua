@@ -540,7 +540,7 @@ return {
 
   -- nvim-containers: Manage container engines from inside Neovim
   {
-    dir = "E:\\MyGithub\\nvim-containers",
+    dir = vim.fn.expand("~/MyGithub/nvim-containers"),
     event = "VeryLazy",
     config = function()
       require("containers").setup({})
@@ -549,7 +549,7 @@ return {
 
   -- nvim-cmdlog: Manage your command history
   {
-    dir = "E:\\MyGithub\\nvim-cmdlog",
+    dir = vim.fn.expand("~/MyGithub/nvim-cmdlog"),
     config = function()
       require("cmdlog").setup({
         picker = "telescope",
@@ -559,7 +559,7 @@ return {
 
   -- reposcope.nvim
   {
-    dir = "E:\\MyGithub\\reposcope.nvim",
+    dir = vim.fn.expand("~/MyGithub/reposcope.nvim"),
     name = "reposcope",
     event = "VeryLazy",
     config = function()
@@ -570,7 +570,7 @@ return {
   -- myterm.local
   {
     name = "myterm.local",
-    dir = vim.fn.stdpath("config") .. "\\lua\\custom\\myterm",
+    dir = vim.fn.stdpath("config") .. "/lua/custom/myterm",
     lazy = false,
     config = function()
       require("custom.myterm")
@@ -579,7 +579,7 @@ return {
 
   -- mygrep.nvim
   {
-    dir = "E:\\MyGithub\\mygrep.nvim",
+    dir = vim.fn.expand("~/MyGithub/mygrep.nvim"),
     name = "mygrep",
     lazy = false,
     config = function()
@@ -591,7 +591,7 @@ return {
 
   -- train.nvim
   {
-    dir = vim.fn.expand("E:\\MyGithub\\train.nvim"),
+    dir = vim.fn.expand("~/MyGithub/train.nvim"),
     name = "train.nvim",
     cmd = { "Train", "TrainToday" },
     config = function()
