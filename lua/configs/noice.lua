@@ -35,6 +35,12 @@ M.views = {
     win_options = {
       winhighlight = "NormalFloat:NormalFloat,FloatBorder:FloatBorder",
     },
+    messages = {
+      reverse = true,
+    },
+    cmdline_output = {
+      reverse = true,
+    }
   },
   popupmenu = {
       relative = "editor",

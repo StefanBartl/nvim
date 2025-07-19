@@ -7,10 +7,10 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     dependencies = {
-      "nvim-treesitter/nvim-treesitter-textobjects",
+
     },
     opts = function(_, opts)
-      opts.ensure_installed = require("custom.treesitter-parser")
+      opts.ensure_installed = require("configs.treesitter-parser")
       opts.highlight = {
         enable = true,
         use_languagetree = true,
@@ -173,6 +173,7 @@ return {
         -- Load luvit types when the `vim.uv` word is found
         { path = "${3rd}/luv/library" },
         --"./lua/@types",
+        { "nvim-dap-ui" },
       },
     },
   },
@@ -553,11 +554,28 @@ return {
   },
 
   -- nvim-cmdlog: Manage your command history
+  --[[
   {
     dir = vim.fn.expand("E:\\MyGithub\\nvim-cmdlog"),
     config = function()
       require("cmdlog").setup({
         picker = "telescope",
+      })
+    end,
+  },
+  ]]--
+
+  {
+    "StefanBartl/nvim-cmdlog",
+    lazy = false,
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim", -- Required if you use picker = "telescope"
+      "ibhagwan/fzf-lua",              -- Required if you use picker = "fzf"
+    },
+    config = function()
+      require("cmdlog").setup({
+        picker = "telescope",  -- or "fzf"
       })
     end,
   },
