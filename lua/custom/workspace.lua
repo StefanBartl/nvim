@@ -12,7 +12,7 @@ local function open_workspace_layout()
 end
 
 -- Keymap to open custom layout (use Lazy-friendly format)
-vim.keymap.set("n", "<leader>ow", open_workspace_layout, { desc = "Workspace Layout öffnen" })
+vim.keymap.set("n", "<leader>ow", open_workspace_layout, { desc = "[Custom] Workspace Layout öffnen" })
 
 -- Zeigt den Pfad beim Öffnen oder Wechseln eines Buffers, aber nur für Dateibuffer
 vim.api.nvim_create_autocmd("BufEnter", {

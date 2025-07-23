@@ -30,14 +30,12 @@ dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
 
 require "options"
+require("custom.last_file.init")
+
 local require_dir = require("custom.require_dir")
 require_dir("autocmds")
 require_dir("custom")
 vim.schedule(function()
   require "mappings"
 end)
-require("custom.last_file.init")
-
-vim.api.nvim_create_user_command("MDUnfatHeadings", function()
-  vim.cmd([[%s/\*\*\([^*]\{-}\)\*\*/\1/g]])
-end, {})
+require_dir("usrcmds")

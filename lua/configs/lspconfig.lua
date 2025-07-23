@@ -8,8 +8,8 @@ local lua_ls_config = require("configs.lua_ls_config")
 
 require("lazydev").setup({})
 nvlsp.defaults()
+vim.lsp.enable(lsp_servers)
 lspconfig.lua_ls.setup(lua_ls_config)
-
 
 
 vim.diagnostic.config({

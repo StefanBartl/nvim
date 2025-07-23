@@ -5,7 +5,7 @@ local last_session = require("custom.last_file.last_session")
 vim.keymap.set("n", "<leader><Esc>", function()
   last_session.save()
   vim.cmd("qa!")
-end, { noremap = true, silent = true, desc = "Save last file + quit all" })
+end, { noremap = true, silent = true, desc = "[Custom] Save last session file + quit all" })
 
 -- :LastFileSave command
 vim.api.nvim_create_user_command("LastFileSave", function()

@@ -83,7 +83,6 @@ return {
       vim.api.nvim_create_user_command("TelescopeFdMultiRoot", function()
         require("custom.fd_multi_root").fd_multi_root()
       end, {})
-
     end,
   },
 
@@ -173,7 +172,7 @@ return {
         -- Load luvit types when the `vim.uv` word is found
         { path = "${3rd}/luv/library" },
         --"./lua/@types",
-        { "nvim-dap-ui" },
+        { "nvim-dap-ui" }
       },
     },
   },
@@ -260,19 +259,26 @@ return {
       "nvim-neotest/nvim-nio"
     },
     config = function()
-        local dap, dapui = require("dap"), require("dapui")
-        dapui.setup()
-        dap.listeners.after.event_initialized["dapui_config"] = function()
-          dapui.open()
-        end
-        dap.listeners.before.event_terminated["dapui_config"] = function()
-          dapui.close()
-        end
-        dap.listeners.before.event_exited["dapui_config"] = function()
-          dapui.close()
-        end
+      local dap, dapui = require("dap"), require("dapui")
+      dapui.setup()
+      dap.listeners.after.event_initialized["dapui_config"] = function()
+        dapui.open()
       end
-     },
+      dap.listeners.before.event_terminated["dapui_config"] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited["dapui_config"] = function()
+        dapui.close()
+      end
+    end
+  },
+
+  {
+    "igorlfs/nvim-dap-view",
+    ---@module 'dap-view'
+    ---@type dapview.Config
+    opts = {},
+  },
 
 
   --===========================
@@ -289,7 +295,7 @@ return {
     },
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
-      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" }
+      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "[LazyGit] Open UI" }
     },
   },
 
@@ -351,12 +357,12 @@ return {
   {
     "numToStr/Comment.nvim",
     keys = {
-      { "tcl", mode = "n",          desc = "Comment toggle current line" },
-      { "tl",  mode = { "n", "o" }, desc = "Comment toggle linewise" },
-      { "tl",  mode = "x",          desc = "Comment toggle linewise (visual)" },
-      { "tcb", mode = "n",          desc = "Comment toggle current block" },
-      { "tb",  mode = { "n", "o" }, desc = "Comment toggle blockwise" },
-      { "tb",  mode = "x",          desc = "Comment toggle blockwise (visual)" },
+      { "tcl", mode = "n",          desc = "[Comment] Toggle current line" },
+      { "tl",  mode = { "n", "o" }, desc = "[Comment] Toggle linewise" },
+      { "tl",  mode = "x",          desc = "[Comment] Toggle linewise (visual)" },
+      { "tcb", mode = "n",          desc = "[Comment] Toggle current block" },
+      { "tb",  mode = { "n", "o" }, desc = "[Comment] Toggle blockwise" },
+      { "tb",  mode = "x",          desc = "[Comment] Toggle blockwise (visual)" },
     },
     config = function(_, opts)
       require("Comment").setup(opts)
@@ -473,7 +479,7 @@ return {
     "robitx/gp.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
-      local conf = require("configs.gp_config")
+      local conf = require("configs.gp.config")
       require("gp").setup(conf)
     end,
     event = "VeryLazy",
@@ -495,22 +501,22 @@ return {
       {
         "<leader>ks",
         "<cmd>KeycastStart<CR>",
-        desc = "Keycasty: Start",
+        desc = "[Keycasty] Start",
       },
       {
         "<leader>ke",
         "<cmd>KeycastStop<CR>",
-        desc = "Keycasty: Stop",
+        desc = "[Keycasty] Stop",
       },
       {
         "<leader>kt",
         "<cmd>KeycastToggle<CR>",
-        desc = "Keycasty: Toggle",
+        desc = "[Keycasty] Toggle",
       },
     },
   },
 
---[[
+  --[[
   {
     "iabdelkareem/csharp.nvim",
     ft = { "cs", "csproj", "sln" },
@@ -537,7 +543,7 @@ return {
     end,
   },
 
-]]--
+]] --
 
 
   --===========================
@@ -563,7 +569,7 @@ return {
       })
     end,
   },
-  ]]--
+  ]] --
 
   {
     "StefanBartl/nvim-cmdlog",
@@ -575,7 +581,7 @@ return {
     },
     config = function()
       require("cmdlog").setup({
-        picker = "telescope",  -- or "fzf"
+        picker = "telescope", -- or "fzf"
       })
     end,
   },

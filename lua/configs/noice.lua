@@ -1,14 +1,7 @@
 ---@module 'configs.noice'
 
 ---@class NoiceConfig
----@field cmdline table
----@field hover table
----@field lsp table
----@field messages table
----@field popupmenu table
----@field presets table
----@field signature table
----@field views table
+---@field [string] table
 
 ---@type NoiceConfig
 local M = {
@@ -17,6 +10,7 @@ local M = {
   messages = {},
   popupmenu = {},
   presets = {},
+  routes = {},
   views = {},
 }
 

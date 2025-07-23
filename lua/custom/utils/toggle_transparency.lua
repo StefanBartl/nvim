@@ -1,15 +1,13 @@
-
 ---@module 'custom.utils.toggle_transparency'
 
 local M = {}
 
--- globaler Schalter
-vim.g.transparency = true
-
--- Funktion zum (De-)Aktivieren
 function M.toggle()
-  vim.g.transparency = not vim.g.transparency
-  require("base46").load_all_highlights() -- zwingt Theme-Neuladung
+  local ok, base46 = pcall(require, "base46")
+  if ok and base46 and base46.toggle_transparency then
+    base46.toggle_transparency()
+  end
 end
 
 return M
+
