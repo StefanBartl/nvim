@@ -1,5 +1,5 @@
 ---@module 'configs.gp'
----@type table
+
 return {
   openai_api_key = os.getenv("OPENAI_API_KEY"),
 
@@ -28,4 +28,9 @@ return {
       command = true,
     },
   },
+
+  hooks = vim.tbl_extend("force",
+    {},
+    require("configs.gp.hooks.buffer_new_chat")
+  ),
 }
