@@ -489,32 +489,6 @@ return {
     'vim-denops/denops.vim',
     lazy = false,
   },
-  -- keycaster
-  {
-    "hasundue/vim-keycasty",
-    lazy = false, -- sofort beim Start laden
-    init = function()
-      vim.g.keycasty_output_win_title = "Keycast"
-      --vim.cmd("KeycastStart")
-    end,
-    keys = {
-      {
-        "<leader>ks",
-        "<cmd>KeycastStart<CR>",
-        desc = "[Keycasty] Start",
-      },
-      {
-        "<leader>ke",
-        "<cmd>KeycastStop<CR>",
-        desc = "[Keycasty] Stop",
-      },
-      {
-        "<leader>kt",
-        "<cmd>KeycastToggle<CR>",
-        desc = "[Keycasty] Toggle",
-      },
-    },
-  },
 
   --[[
   {

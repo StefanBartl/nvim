@@ -15,6 +15,7 @@ end
 vim.keymap.set("n", "<leader>ow", open_workspace_layout, { desc = "[Custom] Workspace Layout öffnen" })
 
 -- Zeigt den Pfad beim Öffnen oder Wechseln eines Buffers, aber nur für Dateibuffer
+--[[
 vim.api.nvim_create_autocmd("BufEnter", {
   callback = function()
     if vim.bo.buftype == "" then
@@ -32,5 +33,5 @@ vim.api.nvim_create_autocmd("BufEnter", {
   end,
   desc = "Shows path for opening file buffer if visible.",
 })
-
+]]--
 

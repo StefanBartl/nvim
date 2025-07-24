@@ -1,9 +1,14 @@
--- Teleskop-Erweiterung aktivieren (falls vorhanden)
+-- If available activate Telescope-Extension
 pcall(function()
   require("telescope").load_extension("harpoon")
 end)
 
--- Datei beim Start automatisch in Harpoon-Slot hinzufügen
+---@description
+--- On VimEnter, defer 50ms and then auto-add a specific file to Harpoon slot list.
+--- Skips operation if Harpoon or required function is unavailable.
+--- Intended to auto-persist a frequently accessed config file (e.g., mappings.lua).
+---@event VimEnter
+---@defer 50ms
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
     vim.defer_fn(function()
@@ -22,6 +27,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
       end
 
       harpoon_mark.add_file(file)
-    end, 50) -- 50 ms warten, bis Harpoon sicher initialisiert ist
+    end, 50) -- wait 50 ms to make sure Harpoon is initialized
   end,
 })
