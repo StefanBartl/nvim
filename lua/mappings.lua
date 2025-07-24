@@ -11,7 +11,6 @@ map("n", "<leader>fb", ":FzfLua builtin<CR>", { desc = "[FzfLua] Show Builtin-Co
 map("n", "<leader>fsh", ":FzfLua search_history<CR>", { desc = "[FzfLua] Show Search History" })
 
 --=== Dateien und Buffer ===========================
-map("n", "<leader>fzb", ":FzfLua buffers<CR>", { desc = "[FzfLua] Search in Buffer" })
 map("n", "<leader>fze", ":FzfLua files<CR>", { desc = "[FzfLua] Dateien durchsuchen" })
 map("n", "<leader>fzn", ":FzfLua quickfix_stack<CR>", { desc = "[FzfLua] Quickfix-Stack anzeigen" })
 map("n", "<leader>old", ":FzfLua oldfiles<CR>", { desc = "[FzfLua] Dateiverlauf anzeigen" })
@@ -48,6 +47,10 @@ map("n", "<leader>man", ":FzfLua man_pages<CR>", { desc = "[FzfLua] Man-Pages an
 --=== Suche ========================================
 map("n", "<leader>lgp", ":FzfLua live_grep<CR>", { desc = "[FzfLua] Live-Grep" })
 map("n", "<leader>fgp", ":FzfLua grep<CR>", { desc = "[FzfLua] Grep-Historie anzeigen" })
+map("n", "<leader>fzb", "<cmd>FzfLua grep_curbuf<CR>",
+  { noremap = true, silent = true, desc = "[fzf-lua] Suche im aktuellen Buffer" })
+map("n", "<leader>fzl", "<cmd>FzfLua live_grep_curbuf<CR>",
+  { noremap = true, silent = true, desc = "[fzf-lua] Live-Suche im aktuellen Buffer" })
 
 --=== Datei-Typen ==================================
 map("n", "<leader>fil", ":FzfLua filetypes<CR>", { desc = "[FzfLua] Dateitypen anzeigen" })
@@ -180,18 +183,9 @@ map("v", "cps", '"+y<CR>:echo "Copied selected text to clipboard"<CR>',
 --=== BUFFER / WINDOW / TAB MANAGEMENT =============
 --==================================================
 
-map("n", "<leader>ex", ":bufdo bd | qa<CR>", { desc = "[General] Close all buffer and exit nvim" })
 map("n", "<leader>del", ":lua confirm_delete()<CR>", { desc = "[General] Delete current selected file w. confirmation" })
 map("n", "<leader>d!!", ":call DeleteFile()<CR>",
   { desc = "[General] Delete current selected file wo. confirmation and close buffer" })
-
-map("n", "<A-+>", function() vim.cmd("resize +5") end, { desc = "[Window] Increase height" })
-map("n", "<A-_>", function() vim.cmd("resize -5") end, { desc = "[Window] Decrease height" })
-map("n", "<A-.>", function() vim.cmd("vertical resize -5") end, { desc = "[Window] Make window narrower" })
-map("n", "<A-#>", function() vim.cmd("vertical resize +5") end, { desc = "[Window] Make window wider" })
-
-map("n", "<leader>p", "<cmd>tabprevious<CR>", { desc = "[Tab] Previous Tab" })
-map("n", "<leader>n", "<cmd>tabnext<CR>", { desc = "[Tab] Next Tab" })
 
 --==================================================
 --=== GIT (Diffview, Lazygit) ======================
@@ -256,13 +250,13 @@ end, { silent = true, desc = "[Noice] Dismiss UI" })
 --=== CUSTOM PLUGINS ===============================
 --==================================================
 
-local keysearch = require("custom.mappings_search")
-map("n", "<leader>fk", keysearch.search_keymaps, { desc = "[Telescope] Find Keymaps (Custom)" })
+map("n", "<leader>fk", require("custom.mappings_search").search_keymaps,
+  { desc = "[Telescope] Find Keymaps (Custom Telescope)" })
 
 map("n", "<leader>fs", require("custom.system_find").system_find,
   { desc = "[Custom] Systemwide filesearch w. extension" })
 
-map("n", "<leader>cc", "<cmd>CompressDir<CR>", { desc = "[Custom] Compress and copy current directory to ~/temp" })
+map("n", "<leader>cd", "<cmd>CompressDir<CR>", { desc = "[Custom] Compress and copy current directory to ~/temp" })
 
 local function copy_current_path()
   vim.fn.setreg("+", vim.fn.expand("%:p"))
@@ -283,7 +277,7 @@ end, { desc = "[Buffers] Delete all lines in curr buffer w confirm" })
 map("n", "<leader>tr", ":lua require('base46').toggle_transparency()<CR>",
   { noremap = true, silent = true, desc = "[Color & Theme] Toggle background transparency (buggy!)" })
 
-vim.keymap.set("n", "<leader>c", function()
+vim.keymap.set("n", "<leader>bx", function()
   local current = vim.api.nvim_get_current_buf()
   vim.cmd("bnext")
   vim.cmd("bd " .. current)
@@ -306,7 +300,7 @@ end)
 map("n", "<Esc>", "<cmd>noh<CR>", { desc = "[General] Clear highlights" })
 map("n", "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
 map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
-map("n", "<leader>n", "<cmd>set nu!<CR>", { desc = "[General] Toggle line number" })
+map("n", "<leader>ln", "<cmd>set nu!<CR>", { desc = "[General] Toggle line number" })
 map("n", "<leader>rn", "<cmd>set rnu!<CR>", { desc = "[General] Toggle relative number" })
 map("n", "<leader>ch", "<cmd>NvCheatsheet<CR>", { desc = "[General] Toggle nvcheatsheet" })
 map({ "n", "x" }, "<leader>fm", function()
@@ -324,14 +318,14 @@ map("n", "<C-j>", "<C-w>j", { desc = "[Window] Switch window down" })
 map("n", "<C-k>", "<C-w>k", { desc = "[Window] Switch window up" })
 
 -- BUFFER
-map("n", "<leader>b", "<cmd>enew<CR>", { desc = "[Buffers] New" })
+map("n", "xleader>bn", "<cmd>enew<CR>", { desc = "[Buffers] New" })
 map("n", "<tab>", function()
   require("nvchad.tabufline").next()
 end, { desc = "[Buffers] Goto next" })
 map("n", "<S-tab>", function()
   require("nvchad.tabufline").prev()
 end, { desc = "[Buffers] Goto prev" })
-map("n", "<leader>x", function()
+map("n", "<leader>bc", function()
   require("nvchad.tabufline").close_buffer()
 end, { desc = "[Buffers] Close" })
 
@@ -347,7 +341,6 @@ map("v", "<leader>/", "gc", { desc = "[Text] Toggle comment", remap = true })
 
 -- NVIMTREE
 map("n", "<C-n>", "<cmd>NvimTreeToggle<CR>", { desc = "[Nvimtree] Toggle window" })
-map("n", "<leader>e", "<cmd>NvimTreeFocus<CR>", { desc = "[Nvimtree] Focus window" })
 
 -- LSP
 map("n", "<leader>ds", vim.diagnostic.setloclist, { desc = "[LSP] Diagnostic loclist" })
@@ -365,16 +358,16 @@ map("n", "<leader>pt", "<cmd>Telescope terms<CR>", { desc = "[Telescope] Pick Hi
 map("n", "<leader>th", function()
   require("nvchad.themes").open()
 end, { desc = "[Telescope] NvChad Themes" })
-map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "[Telescope] Find Files" })
-map("n", "<leader>fa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
+map("n", "<leader>ffn", "<cmd>Telescope find_files<cr>", { desc = "[Telescope] Find Files" })
+map("n", "<leader>ffa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
   { desc = "[Telescope] Find All Files" })
 
 -- Terminals
 map("t", "<C-x>", "<C-\\><C-N>", { desc = "[Terminals] Escape Terminal Mode" })
-map("n", "<leader>h", function()
+map("n", "<leader>tz", function()
   require("nvchad.term").new { pos = "sp" }
 end, { desc = "[Terminals] New horizontal (NvChad)" })
-map("n", "<leader>v", function()
+map("n", "<leader>tv", function()
   require("nvchad.term").new { pos = "vsp" }
 end, { desc = "[Terminals] New vertical (NvChad)" })
 map({ "n", "t" }, "<A-v>", function()

@@ -8,13 +8,28 @@ local M = {}
 
 M.ui = {
   statusline = {
-    theme = "vscode",
+    --theme = "vscode",
   },
 }
 
 M.base46 = {
   transparency = true,
-  -- theme = "onedark",
+  --theme = "default-dark",
+  --theme = "github_dark",
+  theme = "everforest",
+  --theme = "gruvbox",
+  --theme = "solarized_dark",
+  --theme = "scaryforest",
+  --theme = "starlight",
+  --theme = "vesper",
+  --theme = "tokyionight",
+  --theme = "gruvbox",
+  --theme = "eldritch",
+  --theme = "hackthebox",
+  --theme = "hackthebox2",
+  --theme = "hacktivist",
 }
+
+vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1a1a1a" })
 
 return M

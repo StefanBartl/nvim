@@ -5,6 +5,7 @@ if vim.fn.has("termguicolors") == 1 then
 	vim.opt.termguicolors = true
 end
 
+vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1a1a1a" })
 
 -- Allgemeine Benutzererfahrung
 vim.opt.number = true     -- Zeilennummern anzeigen
