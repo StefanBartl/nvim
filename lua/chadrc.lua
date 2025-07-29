@@ -6,6 +6,7 @@
 
 local M = {}
 
+
 M.ui = {
   statusline = {
     --theme = "vscode",
@@ -31,5 +32,13 @@ M.base46 = {
 }
 
 vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1a1a1a" })
+
+if vim.fn.has("win32") == 1 and vim.fn.executable("pwsh") == 1 then
+  vim.opt.shell = "pwsh"
+  vim.opt.shellcmdflag =
+    "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+  vim.opt.shellquote = ""
+  vim.opt.shellxquote = ""
+end
 
 return M

@@ -7,38 +7,29 @@ end
 
 vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1a1a1a" })
 
--- Allgemeine Benutzererfahrung
-vim.opt.number = true     -- Zeilennummern anzeigen
+vim.opt.number = true
 vim.o.relativenumber = true
-vim.opt.cursorline = true -- Hervorheben der aktuellen Zeile
---vim.opt.wrap = false                   -- Kein automatischer Zeilenumbruch
---vim.opt.scrolloff = 8                  -- Abstand vom Cursor zum Rand des Fensters
---vim.opt.sidescrolloff = 8              -- Horizontaler Abstand vom Cursor zum Rand
---vim.opt.mouse = "a"                    -- Mausunterstützung aktivieren
---vim.opt.clipboard = "unnamedplus"      -- Systemzwischenablage verwenden
---vim.opt.hidden = true                  -- Puffer können gewechselt werden, ohne sie zu speichern
+vim.opt.cursorline = true -- Highlight current line
 
--- Faltmethoden und Treesitter Faltintegration konfigurieren
 vim.opt.foldmethod = "expr"
-vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-vim.opt.foldcolumn = "0" -- keine extra Informationen an der Seite
-vim.opt.foldtext =
-""                       -- bestimmt, wie der Text angezeigt wird, wenn ein Fold (Codeblock) geschlossen ist. "" bedeutet erste sichtbare Text im Fold-Bereich angezeigt
-vim.opt.foldlevel = 99   -- toplevel folds öffnen
---vim.opt.foldlevelstart = 1
-vim.opt.foldnestmax = 6
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.opt.foldtext = "" -- Controls the text shown when a fold is closed. An empty string means the first visible line in the folded section is displayed.
+vim.opt.foldlevel = 2 -- Sets the fold level globally. Folds with level higher than this will be closed.
+vim.opt.foldlevelstart = 1 -- Sets the initial fold level when a buffer is opened. If this is lower than `foldlevel`, deeper folds will be closed at startup.
+vim.opt.foldnestmax = 6 -- Limits how deep folds can be nested. Higher values allow deeper folding.
 
--- Tab- und Indentationssteuerung
---vim.opt.expandtab = true               -- Tabulatoren in Leerzeichen umwandeln
-vim.opt.shiftwidth = 2 -- Breite für Auto-Indents
-vim.opt.tabstop = 2    -- Breite eines Tabs
+vim.opt.shiftwidth = 2
+vim.opt.tabstop = 2
 
--- UI-Verbesserungen
 vim.opt.signcolumn = "yes"
-vim.opt.cmdheight = 1 -- Höhe der Befehlszeile erhöhen
+vim.opt.cmdheight = 1
 
--- Sicherheits-/Backup-Optionen
-vim.opt.backup = false   -- Keine Backup-Dateien erstellen
-vim.opt.swapfile = false -- Keine Swap-Dateien erstellen
---vim.opt.undofile = true                              -- Änderungsverlauf speichern
---vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo" -- Speicherort für Undo-Dateien
+-- vim.opt.backup = true
+-- vim.opt.writebackup = true
+-- vim.opt.backupdir = vim.fn.stdpath("data") .. "/backup//"
+
+vim.opt.swapfile = true
+vim.opt.directory = vim.fn.stdpath("data") .. "/swap//"
+
+vim.opt.undofile = true
+vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo"
