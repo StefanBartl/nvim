@@ -70,5 +70,33 @@ M.lsp = {
   },
 }
 
+M.routes = {
+  {
+    filter = {
+      event = "lsp",
+      kind = "hover",
+    },
+    opts = {
+      skip_empty = true,
+    },
+  },
+}
+
+M.views.hover = {
+  enter = false,          -- don't move focus into the hover window
+  focusable = false,      -- can't enter the window manually mit `<C-w>w`
+  border = {
+    style = "rounded",
+  },
+}
+
+M.views.signature = {
+  enter = false,
+  focusable = false,
+  border = {
+    style = "rounded",
+  },
+}
+
 
 return M

@@ -226,7 +226,7 @@ map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selected lines do
 
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "[Terminals] Exit terminal mode" })
 map("t", "<C-c>", "<C-\\><C-n>", { desc = "[Terminals] Exit terminal mode" })
-
+map("t", "<C-t>", function() require("floaterm").toggle() end, { desc = "Floaterm UI toggle" })
 
 --=== NOICE ===
 

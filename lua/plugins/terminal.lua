@@ -12,5 +12,12 @@ return {
     lazy = false,
   },
 
+  {
+    "nvzone/floaterm",
+    dependencies = "nvzone/volt",
+    opts = {},
+    cmd = "FloatermToggle",
+   },
+
 }
 
