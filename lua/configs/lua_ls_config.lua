@@ -1,20 +1,13 @@
 local nvlsp = require("nvchad.configs.lspconfig")
+local diagfilter = require("configs.lsp_filter")
 local project_root = vim.fn.getcwd()
 local lua_root = project_root .. "/lua"
-local diagfilter = require("configs.lsp_filter")
 
 vim.diagnostic.handlers.virtual_text = {
   show = diagfilter.filter_diagnostics,
   hide = vim.diagnostic.handlers.virtual_text.hide,
   update = diagfilter.filter_diagnostics,
 }
-
-local nvlsp = require("nvchad.configs.lspconfig")
-
--- Aktuelles Projektverzeichnis
-local project_root = vim.fn.getcwd()
--- Lua-Code des Projekts
-local lua_root = project_root .. "/lua"
 
 -- Hilfsfunktion: Runtime-Dateien automatisch laden
 local function get_nvim_runtime_libs()
