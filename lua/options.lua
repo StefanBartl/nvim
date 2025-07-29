@@ -14,8 +14,8 @@ vim.opt.cursorline = true -- Highlight current line
 vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldtext = "" -- Controls the text shown when a fold is closed. An empty string means the first visible line in the folded section is displayed.
-vim.opt.foldlevel = 2 -- Sets the fold level globally. Folds with level higher than this will be closed.
-vim.opt.foldlevelstart = 1 -- Sets the initial fold level when a buffer is opened. If this is lower than `foldlevel`, deeper folds will be closed at startup.
+vim.opt.foldlevel = 4 -- Sets the fold level globally. Folds with level higher than this will be closed.
+vim.opt.foldlevelstart = 3 -- Sets the initial fold level when a buffer is opened. If this is lower than `foldlevel`, deeper folds will be closed at startup.
 vim.opt.foldnestmax = 6 -- Limits how deep folds can be nested. Higher values allow deeper folding.
 
 vim.opt.shiftwidth = 2
