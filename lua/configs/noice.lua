@@ -68,6 +68,9 @@ M.lsp = {
     ["vim.lsp.util.stylize_markdown"] = true,
     ["cmp.entry.get_documentation"] = true, -- requires hrsh7th/nvim-cmp
   },
+  signature = {
+    enabled = false,
+  }
 }
 
 M.routes = {
@@ -81,22 +84,5 @@ M.routes = {
     },
   },
 }
-
-M.views.hover = {
-  enter = false,          -- don't move focus into the hover window
-  focusable = false,      -- can't enter the window manually mit `<C-w>w`
-  border = {
-    style = "rounded",
-  },
-}
-
-M.views.signature = {
-  enter = false,
-  focusable = false,
-  border = {
-    style = "rounded",
-  },
-}
-
 
 return M

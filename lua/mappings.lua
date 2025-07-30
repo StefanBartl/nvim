@@ -379,3 +379,23 @@ end, { desc = "[Terminals] Toggleable horizontal (NvChad)" })
 map({ "n", "t" }, "<A-i>", function()
   require("nvchad.term").toggle { pos = "float", id = "floatTerm" }
 end, { desc = "[Terminals] Toggle floating (NvChad)" })
+
+-- === CONTEXT MENU ===
+
+map("n", "<A-b>", function ()
+   require("menu").open("default")
+end, {})
+
+-- mouse users + nvimtree users!
+vim.keymap.set({ "n", "v" }, "<RightMouse>", function()
+  require('menu.utils').delete_old_menus()
+
+  vim.cmd.exec '"normal! \\<RightMouse>"'
+
+  -- clicked buf
+  local buf = vim.api.nvim_win_get_buf(vim.fn.getmousepos().winid)
+  local options = vim.bo[buf].ft == "NvimTree" and "nvimtree" or "default"
+
+  require("menu").open(options, { mouse = true })
+end, {})
+
