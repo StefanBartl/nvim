@@ -13,7 +13,7 @@ local M = {
   presets = {},
   routes = {},
   views = {},
-  debug = true,
+  debug = false,
 }
 
 M.presets = {
