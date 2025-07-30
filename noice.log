@@ -1871,3 +1871,218 @@
   event = "msg_showcmd",
   kind = {}
 }
+{
+  event = "msg_showcmd",
+  kind = { { 0, "q", 0 } }
+}
+{
+  event = "msg_showcmd",
+  kind = { { 0, "q:", 0 } }
+}
+{
+  event = "msg_showcmd",
+  kind = {}
+}
+{
+  event = "msg_clear"
+}
+{ false,
+  event = "cmdline_hide",
+  kind = 1
+}
+{
+  event = "msg_showcmd",
+  kind = { { 0, ":q", 0 } }
+}
+{
+  event = "msg_showcmd",
+  kind = { { 0, ":qa", 0 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showcmd",
+  kind = {}
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showcmd",
+  kind = { { 0, "!", 0 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showcmd",
+  kind = { { 0, "!^M", 0 } }
+}
+{
+  event = "msg_showcmd",
+  kind = {}
+}
+{ false,
+  event = "cmdline_hide",
+  kind = 1
+}
+{ 2, ":", "", 0, 1, 0,
+  event = "cmdline_show",
+  kind = { { 0, ".!" } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{ true,
+  event = "cmdline_hide",
+  kind = 1
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showcmd",
+  kind = { { 0, ":", 0 } }
+}
+{ 0, ":", "", 0, 1, 0,
+  event = "cmdline_show",
+  kind = { { 0, "" } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{ 1, ":", "", 0, 1, 0,
+  event = "cmdline_show",
+  kind = { { 0, "q" } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{ 2, ":", "", 0, 1, 0,
+  event = "cmdline_show",
+  kind = { { 0, "qa" } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{ 3, ":", "", 0, 1, 0,
+  event = "cmdline_show",
+  kind = { { 0, "qa!" } }
+}
+{
+  event = "msg_showmode",
+  kind = { { 60, "recording @a", 11 } }
+}
+{ false,
+  event = "cmdline_hide",
+  kind = 1
+}

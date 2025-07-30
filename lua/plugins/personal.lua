@@ -81,6 +81,7 @@ return {
   },
 
   -- markdown-toc-view.nvim: TOC viewer for Markdown files
+--[[
   {
     dir = vim.fn.expand("E:\\MyGithub\\markdown-toc-view"),
     name = "markdown-toc-view.nvim",
@@ -89,7 +90,7 @@ return {
       require("markdown_toc_view").setup()
     end,
   },
-
+  ]]--
 
 }
 
