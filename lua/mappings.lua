@@ -311,13 +311,6 @@ map("n", "<leader>wk", function()
   vim.cmd("WhichKey " .. vim.fn.input "WhichKey: ")
 end, { desc = "[General] Whichkey query Lookup" })
 
--- WINDOW
-map("n", "<C-h>", "<C-w>h", { desc = "[Window] Switch window left" })
-map("n", "<C-l>", "<C-w>l", { desc = "[Window] Switch window right" })
-map("n", "<C-j>", "<C-w>j", { desc = "[Window] Switch window down" })
-map("n", "<C-k>", "<C-w>k", { desc = "[Window] Switch window up" })
-
--- BUFFER
 map("n", "xleader>bn", "<cmd>enew<CR>", { desc = "[Buffers] New" })
 map("n", "<tab>", function()
   require("nvchad.tabufline").next()
