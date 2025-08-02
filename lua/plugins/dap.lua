@@ -21,7 +21,7 @@ return {
       "nvim-neotest/nvim-nio",
     },
     config = function()
-      local dap, dapui = require("dap"), require("dapui")
+      local dap, dapui = require("configs.dap.init"), require("dapui")
 
       dapui.setup()
 
@@ -46,4 +46,3 @@ return {
   },
 
 }
-

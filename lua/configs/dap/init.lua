@@ -1,7 +1,4 @@
 ---@module 'config.dap'
----@see 'configs.dap.node'
----@see 'configs.dap.go'
----@see 'configs.dap.dotnet'
 
 local M = {}
 

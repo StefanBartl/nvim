@@ -8,9 +8,10 @@ local is_win = vim.fn.has("win32") == 1
 local root = is_win and "E:\\" or vim.fn.expand("~/")
 
 -- Define relevant paths to be added to Harpoon
-local mappings_file = vim.fn.expand("~/.config/nvim/lua/mappings.lua")
+local notes_file = vim.fn.expand(root .. "/MyGithub/Notes/Notes.md")
 local builtin_file = vim.fn.expand(root .. "/MyGithub/Notes/CLI-Notes/CLI-Builtin.md")
 local tools_file = vim.fn.expand(root .. "/MyGithub/Notes/CLI-Notes/CLI-Tools.md")
+local mappings_file = vim.fn.expand("~/.config/nvim/lua/mappings.lua")
 
 -- Autocmd: On VimEnter, defer Harpoon integration
 vim.api.nvim_create_autocmd("VimEnter", {
@@ -19,9 +20,10 @@ vim.api.nvim_create_autocmd("VimEnter", {
     if not utils_ok then return end
 
     local paths = {
-      utils.normalize_path(mappings_file),
+      utils.normalize_path(notes_file),
       utils.normalize_path(builtin_file),
       utils.normalize_path(tools_file),
+      utils.normalize_path(mappings_file),
     }
 
     local attempts = 0

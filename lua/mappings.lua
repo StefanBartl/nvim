@@ -243,6 +243,7 @@ vim.keymap.set({ "n", "i", "s" }, "<c-b>", function()
 end, { silent = true, expr = true, desc = "[Noice] LSP scroll back" })
 
 vim.keymap.set({ "n", "i" }, "<C-x>", function()
+  ---@diagnostic disable-next-line: different-requires
   require("noice").cmd("dismiss")
 end, { silent = true, desc = "[Noice] Dismiss UI" })
 
@@ -333,7 +334,7 @@ map("n", "<leader>/", "gcc", { desc = "[Text] Toggle comment", remap = true })
 map("v", "<leader>/", "gc", { desc = "[Text] Toggle comment", remap = true })
 
 -- NVIMTREE
-map("n", "<C-n>", "<cmd>NvimTreeToggle<CR>", { desc = "[Nvimtree] Toggle window" })
+map("n", "<C-t>", "<cmd>NvimTreeToggle<CR>", { desc = "[Nvimtree] Toggle window" })
 
 -- LSP
 map("n", "<leader>ds", vim.diagnostic.setloclist, { desc = "[LSP] Diagnostic loclist" })
@@ -375,8 +376,8 @@ end, { desc = "[Terminals] Toggle floating (NvChad)" })
 
 -- === CONTEXT MENU ===
 
-map("n", "<A-b>", function ()
-   require("menu").open("default")
+map("n", "<A-b>", function()
+  require("menu").open("default")
 end, {})
 
 -- mouse users + nvimtree users!
@@ -391,4 +392,3 @@ vim.keymap.set({ "n", "v" }, "<RightMouse>", function()
 
   require("menu").open(options, { mouse = true })
 end, {})
-
