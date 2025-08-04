@@ -4,21 +4,35 @@
 ---@type LazyPluginSpec[]
 return {
 
-  -- Markdown Preview: Opens Markdown files in the browser
+  ---@type LazyPluginSpec
   {
-    "iamcco/markdown-preview.nvim",
-    cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+    "MeanderingProgrammer/render-markdown.nvim",
     ft = { "markdown" },
-    build = function()
-      vim.fn["mkdp#util#install"]()
+    opts = {
+      theme = "dark", -- optional
+    },
+    config = function(_, opts)
+      require("render-markdown").setup(opts)
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function()
+          require("render-markdown").enable()
+        end,
+      })
     end,
   },
 
-  -- Vim-Markdown: Enhanced Markdown syntax highlighting and checkboxes
+  ---@type LazyPluginSpec
   {
-    "preservim/vim-markdown",
-    ft = { "markdown" },
+      'brianhuster/live-preview.nvim',
+      dependencies = {
+          -- You can choose one of the following pickers
+          'nvim-telescope/telescope.nvim',
+          'ibhagwan/fzf-lua',
+          'echasnovski/mini.pick',
+      'folke/snacks.nvim',
+      },
+    lazy = false,
   },
 
 }
-

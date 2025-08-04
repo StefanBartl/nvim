@@ -1,3 +1,13 @@
+
+-- vim.api.nvim_create_autocmd("FileType", {
+--   pattern = "markdown",
+--   callback = function()
+--     require('render-markdown').enable()
+--   end
+-- })
+
+
+
 --- Setup a FileType-based autocommand for Markdown buffers
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "markdown",
