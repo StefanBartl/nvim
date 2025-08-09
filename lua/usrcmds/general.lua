@@ -12,3 +12,9 @@ vim.api.nvim_create_user_command("BufferClear", function()
 end, {
   desc = "Clear all lines in the current buffer",
 })
+
+vim.api.nvim_create_user_command("ZenIng", function()
+  require("zen-mode").toggle({ window = { width = .85 } })
+end, {
+  desc = "Topggle Zen Mode",
+})

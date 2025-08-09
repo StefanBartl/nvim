@@ -1,6 +1,7 @@
 ---@module 'configs.gp_config.config'
 
-return {
+---@type table
+local M = {
   openai_api_key = os.getenv("OPENAI_API_KEY"),
 
   providers = {
@@ -20,17 +21,24 @@ return {
     {
       name = "MiniHigh",
       provider = "openai",
-      model = {
-        model = "gpt-4-1-mini",
-      },
+      model = { model = "gpt-4-1-mini" },
       system_prompt = "You're a helpful coding assistant.",
       chat = true,
       command = true,
     },
   },
-
-  hooks = vim.tbl_extend("force",
-    {},
-    require("lua.configs.gp_config.hooks.buffer_new_chat")
-  ),
 }
+
+-- Load optional hooks without crashing if file is missing
+---@type table
+local extra_hooks = {}
+do
+  local ok, mod = pcall(require, "configs.gp_config.hooks.buffer_new_chat")
+  if ok and type(mod) == "table" then
+    extra_hooks = mod
+  end
+end
+
+M.hooks = vim.tbl_extend("force", {}, extra_hooks)
+
+return M

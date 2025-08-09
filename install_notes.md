@@ -7,9 +7,47 @@
 `fzf`
 `grep`
 
+---
+
 ## DAP
 
 In the folder `nvim\lua\configs\dap\` are paths to executables which are necessary to install to get 'DAP' working
+
+### `go` (mit `delve`)
+
+Für Go-Debugging mit `nvim-dap` -> **Delve (`dlv`)** – das ist der Go-Debugger.
+
+```bash
+dlv version # Wenn dieses shell-command funktioniert, sollte `nvim-dap` für Go ohne Fehlermeldung starten.
+```
+
+#### Linux / WSL
+
+```bash
+# Go muss installiert sein (mind. Go 1.20 empfohlen)
+go install github.com/go-delve/delve/cmd/dlv@latest
+
+# Binärdatei in den PATH aufnehmen (Go installiert standardmäßig in ~/go/bin)
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+* Dauerhaft in `~/.bashrc` oder `~/.zshrc` setzen:
+
+  ```bash
+  echo 'export PATH="$PATH:$(go env GOPATH)/bin"' >> ~/.bashrc
+  ```
+
+---
+
+#### Windows (PowerShell)
+
+```powershell
+# Go muss installiert sein
+go install github.com/go-delve/delve/cmd/dlv@latest
+```
+
+* Danach den Pfad `C:\Users\<DEINNAME>\go\bin` zur Windows-**PATH**-Variable hinzufügen oder Shim setze.
+---
 
 ## AI
 

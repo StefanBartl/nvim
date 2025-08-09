@@ -85,7 +85,7 @@ function M.restore()
 
       -- Attach LSP if none is running
       if #vim.lsp.get_clients({ bufnr = 0 }) == 0 and ft == "lua" then
-        local ok_config, config = pcall(require, "lsp.languageservers.lua_ls")
+        local ok_config, config = pcall(require, "lsp.servers.lua_ls")
         if ok_config then
           vim.lsp.start(config)
           vim.notify("[last_session] Attached lua_ls to restored buffer", vim.log.levels.INFO)

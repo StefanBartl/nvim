@@ -34,7 +34,6 @@ require "custom.last_file.init"
 
 local require_dir = require("utils.require_dir")
 require_dir("autocmds")
-require_dir("custom")
 require_dir("usrcmds")
 require_dir("lsp")
 require_dir("utils")
