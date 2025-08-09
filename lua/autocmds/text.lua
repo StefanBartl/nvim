@@ -1,11 +1,15 @@
+vim.api.nvim_create_augroup("mytext", { clear = true })
+
 -- Automatisches Entfernen von Trailing Leerzeichen
 vim.api.nvim_create_autocmd("BufWritePre", {
+  group = "mytext",
   pattern = "*",
   command = [[%s/\s\+$//e]],
 })
 
 -- Entfernen von Leerzeichen in leeren Zeilen
 vim.api.nvim_create_autocmd("BufWritePre", {
+  group = "mytext",
   pattern = "*",
   callback = function()
     local curpos = vim.api.nvim_win_get_cursor(0)
@@ -19,8 +23,8 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 --- -) Die Datei ist eine git commit-Nachricht.
 --- -) Die Datei ist ein Hexdump (xxd) oder eine Git-Rebase-Datei.
 
-local autocmd = vim.api.nvim_create_autocmd
-autocmd("BufReadPost", {
+vim.api.nvim_create_autocmd("BufReadPost", {
+  group = "mytext",
   pattern = "*",
   callback = function()
     local line = vim.fn.line "'\""
@@ -37,6 +41,7 @@ autocmd("BufReadPost", {
 
 -- Image viewer
 vim.api.nvim_create_autocmd("BufReadPost", {
+  group = "mytext",
   pattern = { "*.jpg", "*.jpeg", "*.png" },
   callback = function()
     vim.fn.system("open " .. vim.fn.expand("%"))

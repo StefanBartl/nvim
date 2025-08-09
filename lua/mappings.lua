@@ -1,5 +1,10 @@
 local map = vim.keymap.set
 
+for _, mode in ipairs({ "n", "i", "v", "t", "c" }) do
+  vim.keymap.set(mode, "<F1>", "<Nop>", { silent = true, noremap = true })
+end
+
+
 --==================================================
 --=== FZF-LUA (Fuzzy Finder Alternative) ===========
 --==================================================
@@ -70,6 +75,13 @@ end, { desc = "[LSP] Populate workspace diagnostics" })
 map("n", "grn", "<cmd>lua vim.lsp.buf.rename()<CR>", { silent = true, noremap = true, desc = "[LSP] Rename Symbol" })
 map("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>",
   { silent = true, noremap = true, desc = "[LSP] Vim Code Action" })
+vim.keymap.set("n", "<leader>nam", function()
+  local curr_name = vim.fn.expand("<cword>")
+  local new_name = vim.fn.input("Rename '" .. curr_name .. "' to: ", curr_name)
+  if new_name ~= "" and new_name ~= curr_name then
+    vim.lsp.buf.rename(new_name)
+  end
+end, { desc = "[LSP] Rename via cmdline", noremap = true, silent = true })
 map("n", "gra", "<cmd>lua vim.lsp.buf.code_action()<CR>",
   { silent = true, noremap = true, desc = "[LSP] Vim Code Action" })
 map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>",
@@ -226,7 +238,23 @@ map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selected lines do
 
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "[Terminals] Exit terminal mode" })
 map("t", "<C-c>", "<C-\\><C-n>", { desc = "[Terminals] Exit terminal mode" })
-map("t", "<C-t>", function() require("floaterm").toggle() end, { desc = "Floaterm UI toggle" })
+
+-- === FLOATERM ===
+
+local toggle_cmd = [[<C-\><C-n>:lua require("floaterm").toggle()<CR>]]
+
+vim.keymap.set("t", "<C-t>", toggle_cmd, {
+  desc = "Floaterm UI toggle (terminal)",
+  silent = true,
+  noremap = true,
+})
+
+vim.keymap.set("n", "<C-t>", function()
+  require("floaterm").toggle()
+end, {
+  desc = "Floaterm UI toggle (normal)",
+})
+
 
 --=== NOICE ===
 
@@ -301,8 +329,8 @@ end)
 map("n", "<Esc>", "<cmd>noh<CR>", { desc = "[General] Clear highlights" })
 map("n", "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
 map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
-map("n", "<leader>ln", "<cmd>set nu!<CR>", { desc = "[General] Toggle line number" })
-map("n", "<leader>rn", "<cmd>set rnu!<CR>", { desc = "[General] Toggle relative number" })
+map("n", "<leader>tln", "<cmd>set nu!<CR>", { desc = "[General] Toggle line number" })
+map("n", "<leader>trn", "<cmd>set rnu!<CR>", { desc = "[General] Toggle relative number" })
 map("n", "<leader>ch", "<cmd>NvCheatsheet<CR>", { desc = "[General] Toggle nvcheatsheet" })
 map({ "n", "x" }, "<leader>fm", function()
   require("conform").format { lsp_fallback = true }
@@ -334,7 +362,7 @@ map("n", "<leader>/", "gcc", { desc = "[Text] Toggle comment", remap = true })
 map("v", "<leader>/", "gc", { desc = "[Text] Toggle comment", remap = true })
 
 -- NVIMTREE
-map("n", "<C-t>", "<cmd>NvimTreeToggle<CR>", { desc = "[Nvimtree] Toggle window" })
+map("n", "<C-q>", "<cmd>NvimTreeToggle<CR>", { desc = "[Nvimtree] Toggle window" })
 
 -- LSP
 map("n", "<leader>ds", vim.diagnostic.setloclist, { desc = "[LSP] Diagnostic loclist" })

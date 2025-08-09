@@ -1,5 +1,5 @@
 local nvlsp = require("nvchad.configs.lspconfig")
-local diagfilter = require("configs.lsp_filter")
+local diagfilter = require("lsp.filter")
 local project_root = vim.fn.getcwd()
 local lua_root = project_root .. "/lua"
 

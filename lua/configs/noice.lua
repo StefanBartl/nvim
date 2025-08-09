@@ -20,8 +20,8 @@ M.presets = {
   --bottom_search = true, -- use a classic bottom cmdline for search
   --command_palette = true, -- position the cmdline and popupmenu together
   long_message_to_split = true, -- long messages will be sent to a split
-  inc_rename = false, -- enables an input dialog for inc-rename.nvim
-  lsp_doc_border = false, -- add a border to hover docs and signature help
+  inc_rename = false,           -- enables an input dialog for inc-rename.nvim
+  lsp_doc_border = false,       -- add a border to hover docs and signature help
 }
 
 M.views = {
@@ -42,23 +42,23 @@ M.views = {
     }
   },
   popupmenu = {
-      relative = "editor",
-      position = {
-        row = (vim.o.lines / 2) + 4,
-        col = "50%",
-      },
-      size = {
-        width = 60,
-        height = 10,
-      },
-      border = {
-        style = "none",
-        padding = { 0, 0 },
-      },
-      win_options = {
-        winhighlight = { Normal = "Normal", FloatBorder = "DiagnosticInfo" },
-      },
+    relative = "editor",
+    position = {
+      row = (vim.o.lines / 2) + 4,
+      col = "50%",
     },
+    size = {
+      width = 60,
+      height = 10,
+    },
+    border = {
+      style = "none",
+      padding = { 0, 0 },
+    },
+    win_options = {
+      winhighlight = { Normal = "Normal", FloatBorder = "DiagnosticInfo" },
+    },
+  },
 }
 
 M.lsp = {

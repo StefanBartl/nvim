@@ -40,3 +40,5 @@ vim.schedule(function()
   require "mappings"
 end)
 require_dir("usrcmds")
+require_dir("lsp")
+require_dir("swd")

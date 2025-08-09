@@ -36,4 +36,5 @@ return {
   vimls = {},
   volar = {}, -- Vue 3 (vue-language-server)
   yamlls = {},
+  zls = {},
 }
