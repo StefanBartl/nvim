@@ -258,19 +258,19 @@ end, {
 
 --=== NOICE ===
 
-vim.keymap.set({ "n", "i", "s" }, "<c-f>", function()
+vim.keymap.set({ "n", "i", "s" }, "<A-k>", function()
   if not require("noice.lsp").scroll(4) then
     return "<c-f>"
   end
 end, { silent = true, expr = true, desc = "[Noice] LSP Scroll forward" })
 
-vim.keymap.set({ "n", "i", "s" }, "<c-b>", function()
+vim.keymap.set({ "n", "i", "s" }, "<A-j>", function()
   if not require("noice.lsp").scroll(-4) then
     return "<c-b>"
   end
 end, { silent = true, expr = true, desc = "[Noice] LSP scroll back" })
 
-vim.keymap.set({ "n", "i" }, "<C-x>", function()
+vim.keymap.set({ "n", "i" }, "<A-x>", function()
   ---@diagnostic disable-next-line: different-requires
   require("noice").cmd("dismiss")
 end, { silent = true, desc = "[Noice] Dismiss UI" })

@@ -69,8 +69,11 @@ M.lsp = {
     ["cmp.entry.get_documentation"] = true, -- requires hrsh7th/nvim-cmp
   },
   signature = {
-    enabled = false,
-  }
+    enabled = true,
+  },
+  hover = {
+    enabled = true,
+  },
 }
 
 M.routes = {
