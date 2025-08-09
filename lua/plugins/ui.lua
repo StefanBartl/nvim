@@ -22,7 +22,7 @@ return {
     "folke/noice.nvim",
     lazy = false,
     event = nil,
-    opts = require("configs.noice"),
+    opts = require("configs.noice_ui"),
     dependencies = {
       "MunifTanjim/nui.nvim",
       "rcarriga/nvim-notify",

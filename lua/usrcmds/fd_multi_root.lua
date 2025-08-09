@@ -71,4 +71,9 @@ function M.fd_multi_root()
   end
 end
 
+-- Custom command for multi-root file finding
+vim.api.nvim_create_user_command("TelescopeFdMultiRoot", function()
+  M.fd_multi_root()
+end, {})
+
 return M

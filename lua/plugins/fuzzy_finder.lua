@@ -25,11 +25,6 @@ return {
       for _, ext in ipairs(opts.extensions_list or {}) do
         telescope.load_extension(ext)
       end
-
-      -- Custom command for multi-root file finding
-      vim.api.nvim_create_user_command("TelescopeFdMultiRoot", function()
-        require("custom.fd_multi_root").fd_multi_root()
-      end, {})
     end,
   },
 
@@ -101,4 +96,3 @@ return {
   },
 
 }
-

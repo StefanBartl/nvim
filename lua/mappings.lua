@@ -279,10 +279,10 @@ end, { silent = true, desc = "[Noice] Dismiss UI" })
 --=== CUSTOM PLUGINS ===============================
 --==================================================
 
-map("n", "<leader>fk", require("custom.mappings_search").search_keymaps,
+map("n", "<leader>fk", require("usrcmds.mappings_search").search_keymaps,
   { desc = "[Telescope] Find Keymaps (Custom Telescope)" })
 
-map("n", "<leader>fs", require("custom.system_find").system_find,
+map("n", "<leader>fs", require("usrcmds.system_find").system_find,
   { desc = "[Custom] Systemwide filesearch w. extension" })
 
 map("n", "<leader>cd", "<cmd>CompressDir<CR>", { desc = "[Custom] Compress and copy current directory to ~/temp" })
