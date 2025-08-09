@@ -12,22 +12,15 @@ local function has_valid_buf(bufnr)
   return true
 end
 
----@param opts AttachOptions
----@return AttachApi
 function M.build(opts)
   opts = opts or {}
 
-  ---@param client lsp.Client
-  ---@param _ any
-  ---@return boolean
   local function on_init(client, _)
     local ok, nvlsp = pcall(require, "nvchad.configs.lspconfig")
     if ok and type(nvlsp.on_init) == "function" then pcall(nvlsp.on_init, client) end
     return true
   end
 
-  ---@param client lsp.Client
-  ---@param bufnr integer
   local function on_attach(client, bufnr)
     if not client or type(client) ~= "table" then return end
     if not has_valid_buf(bufnr) then return end

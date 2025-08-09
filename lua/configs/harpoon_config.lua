@@ -4,14 +4,13 @@ pcall(function()
   require("telescope").load_extension("harpoon")
 end)
 
-local is_win = vim.fn.has("win32") == 1
-local root = is_win and "E:\\" or vim.fn.expand("~/")
-
 -- Define paths to be added to Harpoon-UI
-local notes_file = vim.fn.expand(root .. "/MyGithub/Notes/Notes.md")
-local builtin_file = vim.fn.expand(root .. "/MyGithub/Notes/CLI-Notes/CLI-Builtin.md")
-local tools_file = vim.fn.expand(root .. "/MyGithub/Notes/CLI-Notes/CLI-Tools.md")
-local mappings_file = vim.fn.expand("~/.config/nvim/lua/mappings.lua")
+local env = require("system.env").get()
+local root = env.repo_base
+local notes_file = vim.fs.joinpath(root, "Notes", "Notes.md")
+local builtin_file = vim.fs.joinpath(root, "Notes", "CLI-Notes", "CLI-Builtin.md")
+local tools_file = vim.fs.joinpath(root, "Notes", "CLI-Notes", "CLI-Tools.md")
+local mappings_file = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "mappings.lua")
 
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()

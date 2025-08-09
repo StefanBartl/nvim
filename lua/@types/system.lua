@@ -1,0 +1,9 @@
+---@class SystemEnv
+---@field is_windows boolean
+---@field is_macos boolean
+---@field is_wsl boolean
+---@field is_linux boolean
+---@field is_pwsh boolean
+---@field repo_base string
+---@field pathsep string
+---@field home string

@@ -29,6 +29,8 @@ require("lazy").setup({
 dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
 
+
+require "system.env"
 require "options"
 require "custom.last_file.init"
 
