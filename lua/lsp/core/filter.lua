@@ -1,13 +1,8 @@
 ---@module 'lsp.core.filter'
----@class DiagnosticFilter
----@field patterns string[]?
 
 local M = {}
 
 ---Filters diagnostics by message substring patterns (pure).
----@param diags vim.Diagnostic[]
----@param opts DiagnosticFilter
----@return vim.Diagnostic[]
 function M.filter(diags, opts)
   if type(diags) ~= "table" or #diags == 0 then return diags end
   if not opts or type(opts.patterns) ~= "table" or #opts.patterns == 0 then
@@ -30,8 +25,6 @@ end
 
 ---Deduplicate diagnostics by (lnum,col,message,severity,source).
 ---Keeps the first occurrence; order is preserved.
----@param diags vim.Diagnostic[]
----@return vim.Diagnostic[]
 function M.dedup(diags)
   if type(diags) ~= "table" or #diags == 0 then return diags end
   local seen, out = {}, {}

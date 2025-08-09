@@ -1,9 +1,4 @@
 ---@module 'lsp.core.registry'
----@class SharedCtx
----@field capabilities lsp.ClientCapabilities
----@field on_attach fun(client:lsp.Client, bufnr:integer)
----@field on_init   fun(client:lsp.Client, _):boolean
----@field formatter table
 
 local M = {}
 
@@ -16,8 +11,6 @@ local ACTIVE = {
   "zig",
 }
 
----@param shared SharedCtx
----@return boolean ok
 function M.setup_all(shared)
   if type(shared) ~= "table" then return false end
   for _, name in ipairs(ACTIVE) do

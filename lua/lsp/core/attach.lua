@@ -1,10 +1,4 @@
 ---@module 'lsp.core.attach'
----@class AttachOptions
----@field use_workspace_diagnostics boolean
----@field use_lazydev boolean
----@class AttachApi
----@field on_attach fun(client:lsp.Client, bufnr:integer)
----@field on_init   fun(client:lsp.Client, _):boolean
 
 local M = {}
 

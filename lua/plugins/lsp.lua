@@ -58,19 +58,22 @@ return {
   {
     "stevearc/conform.nvim",
     config = function()
-      require("conform").setup({
+      local conform = require("conform")
+
+      ---@diagnostic disable-next-line: redundant-parameter
+      conform.setup({
         formatters_by_ft = {
           javascript = { "prettier" },
           typescript = { "prettier" },
           json = { "prettier" },
           css = { "prettier" },
           scss = { "prettier" },
-          tailwindcss = { "prettier" },
           sql = { "sql_formatter" },
           go = { "gofmt", "goimports", "golines" },
         },
         format_on_save = {
-          ["*"] = { timeout_ms = 5000 },
+          timeout_ms = 5000,
+          lsp_fallback = true,
         },
       })
     end,

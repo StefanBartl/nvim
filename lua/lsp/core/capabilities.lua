@@ -1,10 +1,7 @@
 ---@module 'lsp.core.capabilities'
----@class LspCapabilities
----@field value lsp.ClientCapabilities
 
 local M = {}
 
----@return lsp.ClientCapabilities
 function M.get()
   do
     local ok, nvlsp = pcall(require, "nvchad.configs.lspconfig")

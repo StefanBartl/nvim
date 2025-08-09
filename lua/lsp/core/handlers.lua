@@ -1,5 +1,4 @@
 ---@module 'lsp.core.handlers'
----@class LspHandlers
 
 local M = {}
 
@@ -11,10 +10,6 @@ function M.setup()
 
   local orig = vim.lsp.handlers["textDocument/publishDiagnostics"]
 
-  ---@param err any
-  ---@param result lsp.PublishDiagnosticsParams
-  ---@param ctx lsp.HandlerContext
-  ---@param conf table|nil
   vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, conf)
     if result and type(result.diagnostics) == "table" then
       -- shallow copy to avoid mutating LSP payload
