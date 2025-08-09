@@ -1,3 +1,5 @@
+---@module 'lsp.languageservers.csharp'
+
 local lspconfig = require("lspconfig")
 local nvlsp = require("nvchad.configs.lspconfig")
 local attach = require("lsp.attach")

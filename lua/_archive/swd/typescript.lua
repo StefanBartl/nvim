@@ -1,3 +1,5 @@
+---@module 'swd.typescript'
+
 local nvlsp = require("nvchad.configs.lspconfig")
 local attach = require("lsp.attach")
 local lspconfig = require("lspconfig")

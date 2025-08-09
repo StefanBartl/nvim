@@ -49,7 +49,7 @@ function M.on_attach(client, bufnr)
   end
 
   -- Forward to NvChad on_attach if available
-  local ok_nv, nvlsp = pcall(require, "nvchad.configs.lspconfig")
+  local ok_nv, nvlsp = pcall(require, "nvchad.configs.lsponfig")
   if ok_nv and type(nvlsp.on_attach) == "function" then
     pcall(nvlsp.on_attach, client, bufnr)
   end

@@ -1,3 +1,5 @@
+---@module 'swd.zig'
+
 -- Zig integration in Neovim using zig.vim and manual LSP setup (without mason)
 
 -- Disable the error window for parse errors from zig.vim

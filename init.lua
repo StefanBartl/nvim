@@ -33,12 +33,12 @@ require "options"
 require "custom.utils.notify_patch"
 require "custom.last_file.init"
 
-local require_dir = require("custom.require_dir")
+local require_dir = require("utils.require_dir")
 require_dir("autocmds")
 require_dir("custom")
+require_dir("usrcmds")
+require_dir("lsp")
+require_dir("utils")
 vim.schedule(function()
   require "mappings"
 end)
-require_dir("usrcmds")
-require_dir("lsp")
-require_dir("swd")

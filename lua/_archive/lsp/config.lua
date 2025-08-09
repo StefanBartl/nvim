@@ -1,3 +1,5 @@
+---@module 'lsp.config'
+---@
 local M = {}
 
 local nvlsp = require("nvchad.configs.lspconfig")
@@ -14,5 +16,9 @@ vim.diagnostic.config({
   update_in_insert = false,
   severity_sort = true,
 })
+
+require("lsp.languageservers.lua_ls").setup()
+require("lsp.languageservers.csharp")
+require("lsp.languageservers.clangd")
 
 return M

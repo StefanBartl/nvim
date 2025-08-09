@@ -1,3 +1,5 @@
+---@module 'lsp.filter'
+
 local M = {}
 
 local blacklist_patterns = {
