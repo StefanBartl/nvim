@@ -1,4 +1,4 @@
----@module 'configs.nvimtree'
+---@module 'configs.nvimtree_config'
 ---@brief on_attach function for nvim-tree with default mappings and custom file opener
 
 --- Open the current node in Nautilus file manager
@@ -18,7 +18,6 @@ local function open_in_nautilus(node)
   vim.fn.jobstart({ "nautilus", path }, { detach = true })
 end
 
---- Custom on_attach callback for nvim-tree
 ---@param bufnr integer
 local function on_attach(bufnr)
   ---@type table
@@ -36,7 +35,6 @@ local function on_attach(bufnr)
     }
   end
 
-  -- Default mappings
   api.config.mappings.default_on_attach(bufnr)
 
   -- Change root
@@ -70,7 +68,6 @@ local function on_attach(bufnr)
   end, opts("Open in Nautilus"))
 end
 
--- Setup nvim-tree
 require("nvim-tree").setup({
   on_attach = on_attach,
   view = {

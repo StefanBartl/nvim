@@ -1,4 +1,4 @@
----@module 'configs.dap.go'
+---@module 'debug_adapters.go'
 
 local dap = require("dap")
 
@@ -6,7 +6,7 @@ local dap = require("dap")
 dap.adapters.go = {
   type = "server",
   port = "${port}", -- dynamic runtime replacement
-    executable = {
+  executable = {
     command = "dlv",
     args = { "dap", "-l", "127.0.0.1:${port}" }
   }

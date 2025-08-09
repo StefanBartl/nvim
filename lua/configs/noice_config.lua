@@ -1,4 +1,4 @@
----@module 'configs.noice'
+---@module 'configs.noice_config'
 
 ---@class NoiceConfig
 ---@field [string] table

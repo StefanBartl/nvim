@@ -1,3 +1,5 @@
+---@module 'configs.lazy_config'
+
 return {
   defaults = { lazy = true },
   install = { colorscheme = { "nvchad" } },

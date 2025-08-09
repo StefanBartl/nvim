@@ -1,4 +1,4 @@
----@module 'configs.dap.dotnet'
+---@module 'debug_adapters.dotnet'
 
 local dap = require("dap")
 

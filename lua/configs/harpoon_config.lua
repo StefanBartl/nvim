@@ -1,19 +1,18 @@
--- Load Telescope extension 'harpoon' if available
+---@module 'configs_harpoon_config'
+
 pcall(function()
   require("telescope").load_extension("harpoon")
 end)
 
--- Determine OS-specific root directory
 local is_win = vim.fn.has("win32") == 1
 local root = is_win and "E:\\" or vim.fn.expand("~/")
 
--- Define relevant paths to be added to Harpoon
+-- Define paths to be added to Harpoon-UI
 local notes_file = vim.fn.expand(root .. "/MyGithub/Notes/Notes.md")
 local builtin_file = vim.fn.expand(root .. "/MyGithub/Notes/CLI-Notes/CLI-Builtin.md")
 local tools_file = vim.fn.expand(root .. "/MyGithub/Notes/CLI-Notes/CLI-Tools.md")
 local mappings_file = vim.fn.expand("~/.config/nvim/lua/mappings.lua")
 
--- Autocmd: On VimEnter, defer Harpoon integration
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
     local utils_ok, utils = pcall(require, "harpoon.utils")

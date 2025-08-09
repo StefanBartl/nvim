@@ -9,7 +9,7 @@ return {
     "mfussenegger/nvim-dap",
     event = "VeryLazy",
     config = function()
-      require("configs.dap.init")
+      require("debug_adapters.init")
     end,
   },
 
@@ -21,7 +21,7 @@ return {
       "nvim-neotest/nvim-nio",
     },
     config = function()
-      local dap, dapui = require("configs.dap.init"), require("dapui")
+      local dap, dapui = require("debug_adapters.init"), require("dapui")
 
       dapui.setup()
 

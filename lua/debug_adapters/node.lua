@@ -1,4 +1,4 @@
----@module 'configs.dap.node'
+---@module 'debug_adapters.node'
 
 local dap = require("dap")
 

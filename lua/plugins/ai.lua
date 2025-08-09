@@ -19,7 +19,7 @@ return {
     "robitx/gp.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
-      local conf = require("configs.gp.config")
+      local conf = require("lua.configs.gp_config.config")
       require("gp").setup(conf)
     end,
     event = "VeryLazy",
@@ -35,4 +35,3 @@ return {
   -- },
 
 }
-

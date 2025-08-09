@@ -1,4 +1,4 @@
----@module 'configs.gp'
+---@module 'configs.gp_config.config'
 
 return {
   openai_api_key = os.getenv("OPENAI_API_KEY"),
@@ -31,6 +31,6 @@ return {
 
   hooks = vim.tbl_extend("force",
     {},
-    require("configs.gp.hooks.buffer_new_chat")
+    require("lua.configs.gp_config.hooks.buffer_new_chat")
   ),
 }
