@@ -1,21 +1,20 @@
----@module 'custom.system_find'
----@brief Systemweite Datei-Suche über fd + Telescope
+---@module 'usrcmds.system_find'
 ---@description
---- Führt eine systemweite Datei-Suche mit optionalem Filter (Name, Endung, Pfad) aus.
---- Nutzt `fd` oder `fdfind` in Kombination mit Telescope.
+--- Starts systemwide File-Search mit `fd` with optional filter (name, ext, path).
+--- Uses `fd` or `fdfind` in combination with telescope.
 ---
---- Eingabe kann z. B. sein:
+--- Input could be:
 ---   `init.lua`
 ---   `/etc/init.lua`
 ---   `/home/*nvim.lua`
 ---   `log /var/log`
 ---   `rc .conf /etc`
 ---
---- Alles wird in einen fd-Befehl übersetzt und mit Telescope angezeigt.
+--- The command will be translated to an `fd`-Command and showed with Telescope..
 
 local M = {}
 
----Startet eine systemweite Datei-Suche mit fd
+---Starts systemwide File-Search mit `fd`
 ---@return nil
 function M.system_find()
   local builtin = require("telescope.builtin")
@@ -24,7 +23,6 @@ function M.system_find()
   vim.ui.input(input_opts, function(input)
     if not input or input == "" then return end
 
-    -- Prüfe auf verfügbares fd
     local fd_exec = vim.fn.executable("fd") == 1 and "fd"
         or (vim.fn.executable("fdfind") == 1 and "fdfind" or nil)
     if not fd_exec then
@@ -32,7 +30,6 @@ function M.system_find()
       return
     end
 
-    -- Eingabe in Tokens splitten
     local args = {}
     for word in input:gmatch("%S+") do
       table.insert(args, word)
@@ -52,12 +49,10 @@ function M.system_find()
       end
     end
 
-    -- Fallback: wenn keine Pfade → Standardpfade
     if #paths == 0 then
       paths = { "/etc", "/usr", "/home", "/media/steve" }
     end
 
-    -- fd-Befehl aufbauen
     local fd_cmd = { fd_exec }
     if name then
       table.insert(fd_cmd, name)
@@ -80,7 +75,7 @@ vim.api.nvim_create_user_command("FindOnSystem", function()
   require("custom.system_find").system_find()
 end, {
   desc = "Systemweite Dateisuche (fd + telescope)",
-  nargs = "*", -- Verhindert "Trailing characters"-Fehler
+  nargs = "*",
 })
 
 return M

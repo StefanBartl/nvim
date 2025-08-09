@@ -1,5 +1,4 @@
 #!/bin/bash
-# Dieses Skript durchsucht die Keymaps-Datei nach einem bestimmten Begriff
 
 KEYMAP_FILE="$HOME/.config/nvim/lua/mappings.lua"
 

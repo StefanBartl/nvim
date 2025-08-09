@@ -11,7 +11,6 @@
 ---@class ProjectTreeModule
 local M = {}
 
--- System & API
 local fn = vim.fn
 local api = vim.api
 local uv = vim.uv or vim.loop

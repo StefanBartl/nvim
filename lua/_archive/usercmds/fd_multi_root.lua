@@ -1,3 +1,5 @@
+---@module 'usercmds.fd_multi_roots'
+
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local previewers = require("telescope.previewers")
@@ -22,8 +24,8 @@ end
 ---@async
 function M.fd_multi_root()
   local search_dirs = {
-    "C:/Users",    -- Beispiel 1
-    "E:/MyGithub", -- Beispiel 2
+    "C:/Users",
+    "E:/MyGithub",
   }
 
   local all_results = {}
@@ -31,12 +33,11 @@ function M.fd_multi_root()
 
   for _, dir in ipairs(search_dirs) do
     Job:new({
-      command = "fd", -- ggf. "fd.exe" unter Windows
+      command = "fd",
       args = { "--type", "f", "--hidden", "--exclude", ".git" },
       cwd = dir,
       on_exit = function(j)
         for _, line in ipairs(j:result()) do
-          -- fd gibt relative Pfade zurück → auf absoluten Pfad mappen
           table.insert(all_results, dir .. "/" .. line)
         end
 
@@ -55,7 +56,6 @@ function M.fd_multi_root()
                 local function open_file()
                   local entry = action_state.get_selected_entry()
                   actions.close(prompt_bufnr)
-                  -- fnameescape für Leerzeichen etc.
                   vim.cmd("edit " .. vim.fn.fnameescape(entry.path or entry.value))
                 end
 
@@ -71,7 +71,7 @@ function M.fd_multi_root()
   end
 end
 
--- Custom command for multi-root file finding
+-- Custom user command for multi-root file finding
 vim.api.nvim_create_user_command("TelescopeFdMultiRoot", function()
   M.fd_multi_root()
 end, {})

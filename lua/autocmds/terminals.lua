@@ -1,34 +1,27 @@
-local autocmd = vim.api.nvim_create_autocmd
+---@module 'autocmds.terminals'
 
-vim.api.nvim_create_augroup("myterminal", { clear = true })
+-- Create (or clear) an augroup for terminal-related autocmds
+vim.api.nvim_create_augroup("terminal_autocmds", { clear = true })
 
----   Disable absolute and relative line numbers in any terminal buffer.
----   Triggered automatically on the 'TermOpen' event.
----   Useful to reduce visual clutter in embedded or floating terminals.
----@event TermOpen
----@group custom-term-open
-autocmd("TermOpen", {
-  group = "myterminal",
+--- Disable absolute and relative line numbers in any terminal buffer
+--- Triggered on the 'TermOpen' event
+vim.api.nvim_create_autocmd("TermOpen", {
+  group = "terminal_autocmds",
   callback = function()
     vim.opt.number = false
     vim.opt.relativenumber = false
   end,
 })
 
---- On VimEnter, disables Kitty terminal padding and margin via shell command.
---- Requires Kitty to be running and the `kitty @` remote control interface to be available.
----@event VimEnter
----@command :silent !kitty @ set-spacing padding=0 margin=0
-autocmd("VimEnter", {
-  group = "myterminal",
+--- On VimEnter, disable Kitty terminal padding and margin via remote control
+--- Requires Kitty with `kitty @` remote control enabled
+vim.api.nvim_create_autocmd("VimEnter", {
+  group = "terminal_autocmds",
   command = ":silent !kitty @ set-spacing padding=0 margin=0",
 })
 
---- On VimLeavePre, restores default Kitty padding and margin via shell command.
---- Used in conjunction with a layout optimized for Neovim.
----@event VimLeavePre
----@command :silent !kitty @ set-spacing padding=20 margin=10
-autocmd("VimLeavePre", {
-  group = "myterminal",
+--- On VimLeavePre, restore default Kitty padding and margin
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = "terminal_autocmds",
   command = ":silent !kitty @ set-spacing padding=20 margin=10",
 })

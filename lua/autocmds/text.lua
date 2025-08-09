@@ -1,49 +1,51 @@
-vim.api.nvim_create_augroup("mytext", { clear = true })
+---@module 'autocmds.text'
 
--- Automatisches Entfernen von Trailing Leerzeichen
+-- Create (or clear) an augroup for text-related autocmds
+vim.api.nvim_create_augroup("text_autocmds", { clear = true })
+
+--- Remove trailing whitespace on save
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = "mytext",
+  group = "text_autocmds",
   pattern = "*",
   command = [[%s/\s\+$//e]],
 })
 
--- Entfernen von Leerzeichen in leeren Zeilen
+--- Remove whitespace from empty lines while preserving cursor position
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = "mytext",
+  group = "text_autocmds",
   pattern = "*",
   callback = function()
-    local curpos = vim.api.nvim_win_get_cursor(0)
+    ---@type integer, integer
+    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
     vim.cmd([[silent! %s/^\s*$//e]])
-    vim.api.nvim_win_set_cursor(0, curpos)
+    vim.api.nvim_win_set_cursor(0, { row, col })
   end,
 })
 
--- Restore cursor position
--- Der Code sorgt dafür, dass beim Öffnen einer Datei der Cursor automatisch zur letzten gespeicherten Position in der Datei springt, außer in folgenden Fällen:
---- -) Die Datei ist eine git commit-Nachricht.
---- -) Die Datei ist ein Hexdump (xxd) oder eine Git-Rebase-Datei.
-
+--- Restore last cursor position when reopening a file
+--- Skips commit messages, hexdumps, and git rebase files
 vim.api.nvim_create_autocmd("BufReadPost", {
-  group = "mytext",
+  group = "text_autocmds",
   pattern = "*",
   callback = function()
-    local line = vim.fn.line "'\""
+    ---@type integer
+    local line = vim.fn.line([['"]])
     if
         line > 1
-        and line <= vim.fn.line "$"
+        and line <= vim.fn.line("$")
         and vim.bo.filetype ~= "commit"
         and vim.fn.index({ "xxd", "gitrebase" }, vim.bo.filetype) == -1
     then
-      vim.cmd 'normal! g`"'
+      vim.cmd([[normal! g`"]])
     end
   end,
 })
 
--- Image viewer
+--- Automatically open images with the default image viewer on read
 vim.api.nvim_create_autocmd("BufReadPost", {
-  group = "mytext",
+  group = "text_autocmds",
   pattern = { "*.jpg", "*.jpeg", "*.png" },
   callback = function()
     vim.fn.system("open " .. vim.fn.expand("%"))
-  end
+  end,
 })

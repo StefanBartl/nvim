@@ -1,4 +1,4 @@
----@module 'custom.compress_dir'
+---@module 'usercmds.compress_dir'
 ---@brief Compresses the current directory and stores a file list in a temp location.
 ---@description
 --- This module provides an asynchronous, safe way to archive the current working
@@ -117,7 +117,7 @@ function M.compress_current_directory(on_complete)
   end)
 end
 
--- User command with UI integration (notification layer)
+-- Custom user command with UI integration (notification layer)
 vim.api.nvim_create_user_command("CompressDir", function()
   M.compress_current_directory(function(success, msg)
     local level = success and vim.log.levels.INFO or vim.log.levels.ERROR

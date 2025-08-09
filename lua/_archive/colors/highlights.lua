@@ -28,4 +28,3 @@ function M.override(hl, c)
 end
 
 return M
-

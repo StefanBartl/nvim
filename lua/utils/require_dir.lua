@@ -1,3 +1,5 @@
+---@module 'utils.require_dir'
+
 --- Windows version
 --- Loads all Lua modules in a directory and calls .setup() if present
 --- @param dir string Relative to `lua/`, e.g. "autocmds"

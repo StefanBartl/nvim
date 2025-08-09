@@ -30,7 +30,6 @@ dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
 
 require "options"
-require "custom.utils.notify_patch"
 require "custom.last_file.init"
 
 local require_dir = require("utils.require_dir")
