@@ -8,12 +8,18 @@ function M.setup()
   map("n", "<leader>+", function() vim.cmd("vertical resize +5") end, { desc = "[Window] Increase width" })
   map("n", "<leader>-", function() vim.cmd("vertical resize -5") end, { desc = "[Window] Decrease width" })
 
-  -- Insert empty line above on <CR> without moving cursor
-  map("n", "<CR>", function()
-    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-    vim.api.nvim_buf_set_lines(0, row - 1, row - 1, false, { "" })
-    vim.api.nvim_win_set_cursor(0, { row, col })
-  end, { desc = "[Text] Insert line above" })
+  -- Mapping: Insert blank line above (safe)
+  local text = require("utils.text")
+  if type(text) ~= "table" or type(text.insert_blank_line_above) ~= "function" then
+    error("utils.text must return a table with function 'insert_blank_line_above'")
+  end
+
+  vim.keymap.set("n", "<CR>", function()
+    text.insert_blank_line_above({
+      keep_cursor_on_text = true,
+      notify = true,
+    })
+  end, { desc = "[Text] Insert blank line above (safe)" })
 
   -- Insert line below and move to beginning
   map({ "n", "i", "v" }, "<A-CR>", "o<Esc>^", { desc = "[Text] Insert line below, go to BOL" })
