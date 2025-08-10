@@ -40,5 +40,5 @@ require_dir("usrcmds")
 require_dir("lsp")
 require_dir("utils")
 vim.schedule(function()
-  require "mappings"
+  require "mappings".setup()
 end)

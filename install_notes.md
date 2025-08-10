@@ -68,3 +68,21 @@ go install github.com/go-delve/delve/cmd/dlv@latest
   ```
 
   `:Copilot setup`
+
+## `wakatime`
+
+```bash
+wakatime --config-file ~/.wakatime.cfg
+```
+
+oder einfach die Config-Datei selbst anlegen:
+
+```ini
+# ~/.wakatime.cfg
+[settings]
+api_key = DEIN_API_KEY
+```
+
+* Wenn du WSL + Neovim nutzt, musst du sicherstellen, dass `~/.wakatime.cfg` in deinem **WSL-Home** liegt, nicht nur unter Windows.
+* Für **private Projekte** musst du im Dashboard „Share anonymized data“ prüfen, falls du keine Details nach außen geben willst.
+* Falls du `LazyVim` oder `NvChad` nutzt: einfach als zusätzliches Plugin einbinden, das ist völlig kompatibel.

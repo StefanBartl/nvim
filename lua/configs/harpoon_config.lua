@@ -10,7 +10,6 @@ local root = env.repo_base
 local notes_file = vim.fs.joinpath(root, "Notes", "Notes.md")
 local builtin_file = vim.fs.joinpath(root, "Notes", "CLI-Notes", "CLI-Builtin.md")
 local tools_file = vim.fs.joinpath(root, "Notes", "CLI-Notes", "CLI-Tools.md")
-local mappings_file = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "mappings.lua")
 
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
@@ -21,7 +20,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
       utils.normalize_path(notes_file),
       utils.normalize_path(builtin_file),
       utils.normalize_path(tools_file),
-      utils.normalize_path(mappings_file),
     }
 
     local attempts = 0

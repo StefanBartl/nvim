@@ -4,7 +4,6 @@
 ---@brief ]]
 
 local state = require("custom.myterm.state")
-local label = require("custom.myterm.label")
 
 local function setup()
   vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {

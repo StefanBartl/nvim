@@ -33,11 +33,13 @@ return (function()
     return uv.fs_stat(path) ~= nil
   end
 
+  --[[
   --- Path to local myterm module under this config
   ---@return string
   local function myterm_local_dir()
     return join(vim.fn.stdpath("config"), "lua", "custom", "myterm")
   end
+  ]] --
 
   return {
 
@@ -87,6 +89,7 @@ return (function()
     },
 
     -- myterm.local: Custom terminal interface with layout switching
+    --[[
     {
       name = "myterm.local",
       dir = myterm_local_dir(),
@@ -96,6 +99,7 @@ return (function()
         require("custom.myterm")
       end,
     },
+    ]] --
 
     -- mygrep.nvim: Grep interface with memory, history, favorites
     {
@@ -110,28 +114,5 @@ return (function()
       end,
     },
 
-    -- train.nvim: Daily training plugin (motions, treesitter, etc.)
-    {
-      dir = repo("train.nvim"),
-      cond = exists(repo("train.nvim")),
-      name = "train.nvim",
-      cmd = { "Train", "TrainToday" },
-      config = function()
-        require("nvim-train").setup()
-      end,
-    },
-
-    -- markdown-toc-view.nvim: TOC viewer for Markdown files
-    --[[
-    {
-      dir = repo("markdown-toc-view"),
-      cond = exists(repo("markdown-toc-view")),
-      name = "markdown-toc-view.nvim",
-      ft = { "markdown" },
-      config = function()
-        require("markdown_toc_view").setup()
-      end,
-    },
-    ]] --
   }
 end)()

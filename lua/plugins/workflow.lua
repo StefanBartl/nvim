@@ -13,26 +13,30 @@ return {
     opts = {
       signs = true,
       keywords = {
-        FIX = {
+        FIX   = {
           icon = " ",
           color = "error",
           alt = { "FIXME", "BUG", "FIXIT", "ISSUE" },
         },
-        INFO = { icon = " ", color = "info" },
+        INFO  = { icon = " ", color = "info" },
         DEBUG = { icon = " ", color = "hint" },
-        TODO = { icon = " ", color = "info" },
-        HACK = { icon = " ", color = "warning" },
-        WARN = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
-        PERF = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
-        NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
-        TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
-        EXP  = { icon = "🔬", color = "test", alt = { "EXPERIMENT", "EXPERIMENTAL" } },
-        REF  = { icon = "󰁨 ", color = "hint", alt = { "REFACTOR", "REWRITE", "CLEANUP", "IMPROVE", "RESTRUCTURE" } },
-        ADD  = { icon = " ", color = "info", alt = { "EXT", "NEXT", "FUTURE", "ENHANCE", "HOOK" } },
+        TODO  = { icon = " ", color = "info" },
+        HACK  = { icon = " ", color = "warning" },
+        WARN  = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
+        PERF  = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
+        NOTE  = { icon = " ", color = "hint", alt = { "INFO" } },
+        TEST  = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
+        EXP   = { icon = "🔬", color = "test", alt = { "EXPERIMENT", "EXPERIMENTAL" } },
+        REF   = { icon = "󰁨 ", color = "hint", alt = { "REFACTOR", "REWRITE", "CLEANUP", "IMPROVE", "RESTRUCTURE" } },
+        ADD   = { icon = " ", color = "info", alt = { "EXT", "NEXT", "FUTURE", "ENHANCE", "HOOK" } },
         WATCH = { icon = " ", color = "warning", alt = { "MONITOR", "OBSERVE", "TRACK", "INSPECT", "SURVEILLANCE" } },
       },
     },
   },
 
-}
+  {
+    "wakatime/vim-wakatime",
+    lazy = false,
+  },
 
+}

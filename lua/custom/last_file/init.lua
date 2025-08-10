@@ -1,5 +1,6 @@
 local last_session = require("custom.last_file.last_session")
 
+--[[
 ---@description
 --- Keymap for quickly saving the last file session and quitting all windows forcibly.
 --- Maps <leader><Esc> in normal mode.
@@ -9,6 +10,7 @@ vim.keymap.set("n", "<leader><Esc>", function()
   last_session.save()
   vim.cmd("qa!")
 end, { noremap = true, silent = true, desc = "[Custom] Save last session file + quit all" })
+]] --
 
 ---@description
 --- Defines the custom command `:LastFileSave` to store the last opened file and cursor position.
