@@ -69,7 +69,7 @@ return {
           css = { "prettier" },
           scss = { "prettier" },
           sql = { "sql_formatter" },
-          go = { "gofmt", "goimports", "golines" },
+          go = { "gofmt", "golines" },
         },
         format_on_save = {
           timeout_ms = 5000,

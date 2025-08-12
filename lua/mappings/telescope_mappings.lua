@@ -31,6 +31,8 @@ function M.setup()
   map("n", "<leader>ffa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
     { desc = "[Telescope] Find All Files" })
   map("n", "<leader>th", function() pcall(require("nvchad.themes").open) end, { desc = "[Telescope] NvChad Themes" })
+
+  map("n", "<leader>os", function() require("search").open() end, { desc = "[Telescope] Multi search UI"} )
 end
 
 return M

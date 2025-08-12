@@ -4,6 +4,8 @@
 ---@type LazyPluginSpec[]
 return {
 
+
+--[[
   ---@type LazyPluginSpec
   {
     "MeanderingProgrammer/render-markdown.nvim",
@@ -21,6 +23,7 @@ return {
       })
     end,
   },
+  ]]--
 
   ---@type LazyPluginSpec
   {

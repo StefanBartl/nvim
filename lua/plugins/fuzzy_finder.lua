@@ -28,28 +28,27 @@ return {
     end,
   },
 
-  -- Search.nvim: Tab-based UI wrapper for Telescope
+  -- search.nvim: Telescope UI
   {
     "FabianWirth/search.nvim",
     dependencies = { "nvim-telescope/telescope.nvim" },
     config = function()
-      local builtin = require("telescope.builtin")
+      local search   = require("search")
+      local builtin  = require("telescope.builtin")
+      local all_drives = require("utils.search_all_drives").build_tabs(builtin)  -- <-- NEW
 
-      require("search").setup({
-        mappings = {
-          next = "<Tab>",
-          prev = "<C-p>",
-        },
+      search.setup({
+        mappings = { next = "<Tab>", prev = "<S-Tab>" },
+
         append_tabs = {
           {
             "Commits",
             builtin.git_commits,
-            available = function()
-              return vim.fn.isdirectory(".git") == 1
-            end,
+            available = function() return vim.fn.isdirectory(".git") == 1 end,
           },
         },
-        tabs = {
+
+        tabs = vim.list_extend({
           {
             "Files",
             function(opts)
@@ -61,20 +60,11 @@ return {
               end
             end,
           },
-          {
-            name = "All Files",
-            tele_func = builtin.find_files,
-            tele_opts = { no_ignore = true, hidden = true },
-          },
-          {
-            name = "Grep",
-            tele_func = builtin.live_grep,
-          },
-          {
-            name = "Buffers",
-            tele_func = builtin.buffers,
-          },
-        },
+          { name = "All Files", tele_func = builtin.find_files, tele_opts = { no_ignore = true, hidden = true } },
+          { name = "Grep",      tele_func = builtin.live_grep },
+          { name = "Buffers",   tele_func = builtin.buffers },
+        }, all_drives),
+
         collections = {
           git = {
             initial_tab = 1,

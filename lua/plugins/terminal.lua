@@ -4,6 +4,8 @@
 ---@type LazyPluginSpec[]
 return {
 
+--[[
+
   -- ToggleTerm: Manage terminal layouts in splits, floats, and tabs
   {
     "akinsho/toggleterm.nvim",
@@ -19,5 +21,6 @@ return {
     cmd = "FloatermToggle",
    },
 
+--]]--
 }
 

@@ -43,6 +43,7 @@ return (function()
 
   return {
 
+    --[[
     -- nvim-containers: Manage container engines from Neovim
     {
       dir = repo("nvim-containers"),
@@ -52,6 +53,7 @@ return (function()
         require("containers").setup({})
       end,
     },
+    ]]--
 
     -- nvim-cmdlog: Command history management (remote plugin)
     {
@@ -77,6 +79,8 @@ return (function()
     --   end,
     -- },
 
+    --[[
+
     -- reposcope.nvim: GitHub repo explorer
     {
       dir = repo("reposcope.nvim"),
@@ -87,6 +91,8 @@ return (function()
         require("reposcope.init").setup({})
       end,
     },
+
+    ]]--
 
     -- myterm.local: Custom terminal interface with layout switching
     --[[
