@@ -33,6 +33,7 @@ function M.setup()
     return { on_attach = function() end, on_init = function() return true end }
   end)()
 
+  --[[
   local formatter = (function()
     local ok, mod = pcall(require, "lsp.formatter.init")
     if ok and mod and type(mod.build) == "function" then
@@ -45,6 +46,7 @@ function M.setup()
     local ok, conform_mod = pcall(require, "lsp.formatter.conform")
     if ok and conform_mod and type(conform_mod.setup) == "function" then pcall(conform_mod.setup) end
   end
+]] --
 
   local shared = {
     capabilities = caps,
