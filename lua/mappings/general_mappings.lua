@@ -10,7 +10,11 @@ function M.setup()
     map(mode, "<F1>", "<Nop>", { desc = "[General] Disable F1" })
   end
 
-  map("n", "<leader><Esc>", ":qa!<CR>", { desc = "[General] Force quit all" })
+  map("n", "<leader><Esc>", function()
+    require("custom.last_file.last_session").save()
+     vim.cmd("qa!")
+  end, { desc = "[General] Force quit all" })
+
   map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
   map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
 end

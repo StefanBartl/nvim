@@ -20,6 +20,11 @@ vim.api.nvim_create_user_command("LastFileSave", function()
   last_session.save()
   vim.notify("[last_session] File saved", vim.log.levels.INFO)
 end, { desc = "Save last opened file and cursor position" })
+vim.api.nvim_create_user_command("LFS", function()
+  last_session.save()
+  vim.notify("[last_session] File saved", vim.log.levels.INFO)
+end, { desc = "Save last opened file and cursor position" })
+
 
 ---@description
 --- Defines the custom command `:LastFileRestore` to restore the last opened file and cursor.
