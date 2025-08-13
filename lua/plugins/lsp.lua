@@ -40,6 +40,7 @@ return {
   -- Blink-based completion for LazyDev (optional)
   {
     "saghen/blink.cmp",
+    version = "1.*", -- pin to the latest v1.x tag so prebuilt binaries match
     opts = {
       sources = {
         default = { "lazydev", "lsp", "path", "snippets", "buffer" },
@@ -49,6 +50,12 @@ return {
             module = "lazydev.integrations.blink",
             score_offset = 100,
           },
+        },
+      },
+      fuzzy = {
+        implementation = "prefer_rust",
+        prebuilt_binaries = {
+          force_version = "v1.4.0",
         },
       },
     },
@@ -128,6 +135,7 @@ return {
   },
 
 ]] --
+
 
 
 }
