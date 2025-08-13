@@ -31,7 +31,7 @@ vim.opt.cmdheight = 1
 -- vim.opt.backupdir = vim.fn.stdpath("data") .. "/backup//"
 
 -- vim.opt.swapfile = true
-vim.opt.directory = vim.fn.stdpath("data") .. "/swap//"
+--vim.opt.directory = vim.fn.stdpath("data") .. "/swap//"
 
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo"

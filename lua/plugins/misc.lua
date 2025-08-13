@@ -4,5 +4,6 @@
 ---@type LazyPluginSpec[]
 return {
 
+
 }
 

@@ -7,25 +7,46 @@ return {
   -- Telescope: Main fuzzy finder with extensions
   {
     "nvim-telescope/telescope.nvim",
-    lazy = false,
     dependencies = {
-      "nvim-treesitter/nvim-treesitter",
       "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
       "nvim-telescope/telescope-github.nvim",
     },
     cmd = "Telescope",
+    opts = function(_, opts)
+      opts = opts or {}
+      opts.defaults = vim.tbl_deep_extend("force", opts.defaults or {}, {
+        sorting_strategy = "ascending",
+        layout_config = { prompt_position = "top" },
+        mappings = {},
+      })
+      opts.extensions_list = { "fzf", "gh" }
+      return opts
+    end,
     config = function(_, opts)
-      -- Load cached telescope highlights (if present)
-      dofile(vim.g.base46_cache .. "telescope")
-
       local telescope = require("telescope")
       telescope.setup(opts)
-
-      -- Load extensions declared in `opts.extensions_list`
       for _, ext in ipairs(opts.extensions_list or {}) do
-        telescope.load_extension(ext)
+        pcall(telescope.load_extension, ext)
       end
     end,
+  },
+
+  {
+    "nvim-telescope/telescope-fzf-native.nvim",
+    build = (function()
+      if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+        -- Windows: use CMake build
+        return table.concat({
+          "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release",
+          "cmake --build build --config Release",
+          "cmake --install build --prefix build"
+        }, " && ")
+      else
+        -- POSIX: just use make
+        return "make"
+      end
+    end)(),
   },
 
   -- search.nvim: Telescope UI

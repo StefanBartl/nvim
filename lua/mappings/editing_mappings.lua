@@ -27,6 +27,8 @@ function M.setup()
   -- Move selected lines
   map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "[Text] Move selection up" })
   map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selection down" })
+  map("v", "<A-k>", ":m '<-2<CR>gv=gv", { desc = "[Text] Move selection up" })
+  map("v", "<A-j>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selection down" })
 
   -- Navigation fix for <A-h> in insert
   vim.schedule(function()

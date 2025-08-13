@@ -75,8 +75,8 @@ M.lsp = {
     ["vim.lsp.util.stylize_markdown"] = true,
     ["cmp.entry.get_documentation"] = true, -- requires hrsh7th/nvim-cmp
   },
-  signature = { enabled = true },
-  hover = { enabled = true },
+  signature = { enabled = false },
+  hover = { enabled = false },
 }
 
 -- Cmdline:
@@ -92,49 +92,76 @@ M.cmdline = {
   },
 }
 
--- Routes:
---  Strategy: Keep only "very important" messages in floating views.
---  We skip most generic ui-messages while preserving errors, warnings, and confirm prompts.
 M.routes = {
-  -- 1) Skip all generic msg_show kinds except errors, warnings, and confirm dialogs.
-  --    This aggressively reduces noise from "echo", "written", "search_count", etc.
+  {
+    filter = { event = "msg_show", kind = "emsg", find = "E162" },
+    view = "mini",
+  },
+
+  -- Compact view for several common, uncritical messages.
   {
     filter = {
       event = "msg_show",
-      -- keep only when it's NOT (error OR warning OR confirm)
-      ["not"] = {
-        any = {
-          { error = true },        -- keep errors
-          { warning = true },      -- keep warnings
-          { kind = "confirm" },    -- keep :confirm prompts and similar
-        },
+      any = {
+        --{ find = "; after #%d+" },
+        --{ find = "; before #%d+" },
+        --{ find = "fewer lines" },
+        { find = "written" },
+        { find = "Conflict %[%d+" },
+      --  { find = "Col %d+" },
       },
+    },
+    view = "mini",
+  },
+
+  -- Hide noisy search boundary messages.
+  { filter = { event = "msg_show", find = "search hit BOTTOM" }, opts = { skip = true } },
+  { filter = { event = "msg_show", find = "search hit TOP" },    opts = { skip = true } },
+
+  -- Hide specific Vim error messages (use correct event/kind for emsg).
+  { filter = { event = "msg_show", kind = "emsg", find = "E23" }, opts = { skip = true } },
+  { filter = { event = "msg_show", kind = "emsg", find = "E20" }, opts = { skip = true } },
+  { filter = { event = "msg_show", kind = "emsg", find = "E37" }, opts = { skip = true } },
+  { filter = { event = "msg_show", kind = "emsg", find = "E31" }, opts = { skip = true } },
+
+  -- Hide specific generic texts (no explicit event → matches across sources where applicable).
+  { filter = { find = "No signature help" }, opts = { skip = true } },
+  { filter = { find = "Error detected while processing BufReadPost Autocommands for" }, opts = { skip = true } },
+
+  -- Keep LSP hover minimal (avoid empty popups).
+  { filter = { event = "lsp", kind = "hover" }, opts = { skip_empty = true } },
+
+  -- Reduce LSP progress noise (optional but commonly desired).
+  { filter = { event = "lsp", kind = "progress" }, opts = { skip = true } },
+
+  -- Hide the transient "n/total" search counter in cmdline area.
+  { filter = { event = "msg_show", kind = "search_count" }, opts = { skip = true } },
+
+  -- Filter für "Buffer is not modifiable" Warnungen
+  {
+    filter = {
+      event = "notify",
+      kind = "warn",
+      find = "Buffer is not modifiable",
     },
     opts = { skip = true },
   },
 
-  -- 2) Hide search virtual text like "n/total" counters
+  -- Conservative global noise filter:
+  -- Skip generic msg_show unless it's an error, warning, or confirm dialog.
+  -- Comment out if this is too aggressive for a setup.
   {
-    filter = { event = "msg_show", kind = "search_count" },
+    filter = {
+      event = "msg_show",
+      ["not"] = {
+        any = {
+          { error = true },       -- keep errors
+          { warning = true },     -- keep warnings
+          { kind = "confirm" },   -- keep confirm prompts
+        },
+      },
+    },
     opts = { skip = true },
-  },
-
-  -- 3) Hide "written" messages after :w to reduce noise
-  {
-    filter = { event = "msg_show", kind = "", find = "written" },
-    opts = { skip = true },
-  },
-
-  -- 4) Hide LSP progress notifications (they tend to be chatty)
-  {
-    filter = { event = "lsp", kind = "progress" },
-    opts = { skip = true },
-  },
-
-  -- 5) Example: keep LSP hovers minimal (skip empty)
-  {
-    filter = { event = "lsp", kind = "hover" },
-    opts = { skip_empty = true },
   },
 }
 
