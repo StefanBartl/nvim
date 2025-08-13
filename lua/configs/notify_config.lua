@@ -1,5 +1,7 @@
 ---@module 'configs.notify_config'
 
+vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1a1a1a" })
+
 local ok, notify = pcall(require, "notify")
 if not ok then
 	return
@@ -20,7 +22,7 @@ notify.setup({
 	timeout = 5000,
 	render = "default",
 	stages = "fade",
-  merge_duplicates = true,
+	merge_duplicates = true,
 	on_open = function(win)
 		vim.api.nvim_win_set_config(win, { focusable = false })
 	end,
@@ -29,4 +31,3 @@ notify.setup({
 vim.keymap.set("n", "<Esc>", function()
 	require("notify").dismiss()
 end, { desc = "dismiss notify popup and clear hlsearch" })
-

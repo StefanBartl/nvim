@@ -1,6 +1,6 @@
 ---@module 'lsp.init'
 ---@briefentry LSP entrypoint for a clean, defensive, and modular setup
----@version 1.0
+---@version 1.1
 ---@nodiscard
 local M = {}
 
@@ -33,20 +33,48 @@ function M.setup()
     return { on_attach = function() end, on_init = function() return true end }
   end)()
 
-  --[[
+  -- Build the formatter API with format_on_save = false (default OFF)
   local formatter = (function()
     local ok, mod = pcall(require, "lsp.formatter.init")
     if ok and mod and type(mod.build) == "function" then
-      return mod.build({ format_on_save = true, timeout_ms = 1500 })
+      return mod.build({ format_on_save = false, timeout_ms = 1500 })
     end
-    return { format = function(_) return false end }
+    return {
+      format = function(_) return false end,
+      enable = function() return false end,
+      disable = function() return true end,
+      toggle = function() return false end,
+      is_enabled = function() return false end,
+    }
   end)()
 
   do
     local ok, conform_mod = pcall(require, "lsp.formatter.conform")
     if ok and conform_mod and type(conform_mod.setup) == "function" then pcall(conform_mod.setup) end
   end
-]] --
+
+  vim.g._formatter_api = formatter  -- global reference: cache API for keymaps so they only build once
+
+  -- Expose handy user-commands (no notify, no noise)
+  do
+    pcall(vim.api.nvim_create_user_command, "LspFormat", function(_)
+      -- :LspFormat[!] formats current buffer once; bang is ignored (kept for muscle memory)
+      formatter.format(0)
+    end, { bang = true, desc = "LSP/Conform: format current buffer once (silent)" })
+
+    pcall(vim.api.nvim_create_user_command, "LspFormatToggle", function()
+      local _ = formatter.toggle()
+      -- intentionally no vim.notify; fully silent toggle
+    end, { desc = "LSP/Conform: toggle format-on-save (silent)" })
+
+    pcall(vim.api.nvim_create_user_command, "LspFormatOn", function()
+      formatter.enable()
+    end, { desc = "LSP/Conform: enable format-on-save (silent)" })
+
+    pcall(vim.api.nvim_create_user_command, "LspFormatOff", function()
+      formatter.disable()
+    end, { desc = "LSP/Conform: disable format-on-save (silent)" })
+  end
 
   local shared = {
     capabilities = caps,
@@ -64,3 +92,4 @@ function M.setup()
 end
 
 return M
+

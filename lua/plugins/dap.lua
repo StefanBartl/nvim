@@ -8,6 +8,9 @@ return {
   {
     "mfussenegger/nvim-dap",
     event = "VeryLazy",
+    dependencies = {
+      "jbyuki/one-small-step-for-vimkind",
+    },
     config = function()
       require("debug_adapters.init")
     end,
@@ -18,7 +21,8 @@ return {
     "rcarriga/nvim-dap-ui",
     dependencies = {
       "mfussenegger/nvim-dap",
-      "nvim-neotest/nvim-nio",
+      "nvim-neotest/nvim-nio", -- Async io
+
     },
     config = function()
       local dap, dapui = require("debug_adapters.init"), require("dapui")
@@ -43,6 +47,12 @@ return {
   {
     "igorlfs/nvim-dap-view",
     opts = {},
+  },
+
+  {
+    "theHamsta/nvim-dap-virtual-text",
+    lazy = true,
+    dependencies = { "mfussenegger/nvim-dap" },
   },
 
 }

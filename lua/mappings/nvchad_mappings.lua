@@ -34,8 +34,11 @@ function M.setup()
   -- Comment.nvim
   map("n", "<leader>/", "gcc", { desc = "[Text] Toggle comment", remap = true })
   map("v", "<leader>/", "gc", { desc = "[Text] Toggle comment", remap = true })
+  map("n", "<leader><M-7>", "gcc", { desc = "[Text] Toggle comment linewise", remap = true })
+  map("v", "<leader><M-7>", "gc", { desc = "[Text] Toggle comment linewise", remap = true }) -- TODO:
 
   -- NvimTree
+
   map("n", "<C-q>", "<cmd>NvimTreeToggle<CR>", { desc = "[NvimTree] Toggle" })
 
   -- Terminals

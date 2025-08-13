@@ -1,4 +1,4 @@
----@module 'mappings.utils'
+---@module 'utils.mappings'
 
 local M = {}
 

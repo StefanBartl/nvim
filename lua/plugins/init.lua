@@ -22,6 +22,8 @@ local function load_all_plugins()
     "textobjects",
     "ui",
     "workflow",
+    "neotree",
+    "temp"
   }
 
   ---@type LazyPluginSpec[]
