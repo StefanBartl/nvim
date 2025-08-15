@@ -1,29 +1,18 @@
 -- Plugin: Neo-tree
 -- https://github.com/rafi/vim-config
 
-local has_git = vim.fn.executable('git') == 1
-
-local function get_current_directory(state)
-	local node = state.tree:get_node()
-	if node.type ~= 'directory' or not node:is_expanded() then
-		node = state.tree:get_node(node:get_parent_id())
-	end
-	return node:get_id()
-end
-
 return {
 
 	-----------------------------------------------------------------------------
 	-- File explorer written in Lua
-	-- NOTE: This extends
-	-- $XDG_DATA_HOME/nvim/lazy/LazyVim/lua/lazyvim/plugins/editor.lua
 	'neo-tree.nvim',
 	branch = 'v3.x',
 	dependencies = { 'MunifTanjim/nui.nvim' },
+	lazy = false,
 	-- stylua: ignore
 	keys = {
 		{ '<localleader>e', '<leader>fe', desc = 'Explorer Tree (Root Dir)', remap = true },
-		{ '<localleader>E', '<leader>fE', desc = 'Explorer Tree (cwd)', remap = true },
+		{ '<localleader>E', '<leader>fE', desc = 'Explorer Tree (cwd)',      remap = true },
 		{
 			'<localleader>a',
 			function()
@@ -123,8 +112,8 @@ return {
 					-- Toggle directories or nested items.
 					local node = state.tree:get_node()
 					if
-						node.type == 'directory'
-						or (node:has_children() and not node:is_expanded())
+							node.type == 'directory'
+							or (node:has_children() and not node:is_expanded())
 					then
 						state.commands.toggle_node(state)
 					else
@@ -208,31 +197,6 @@ return {
 					['F'] = 'fuzzy_finder',
 					['<C-c>'] = 'clear_filter',
 
-					-- Find file in path.
-					['gf'] = function(state)
-						LazyVim.pick('files', { cwd = get_current_directory(state) })()
-					end,
-
-					-- Live grep in path.
-					['gr'] = function(state)
-						LazyVim.pick('live_grep', { cwd = get_current_directory(state) })()
-					end,
-
-					-- Search and replace in path.
-					['gz'] = function(state)
-						local prefills = {
-							paths = vim.fn.fnameescape(get_current_directory(state)),
-						}
-						local grug_far = require('grug-far')
-						if not grug_far.has_instance('explorer') then
-							grug_far.open({ instanceName = 'explorer' })
-						else
-							grug_far.open_instance('explorer')
-						end
-						-- Doing it seperately because multiple paths isn't supported when passed
-						-- with prefills update, without clearing search and other fields.
-						grug_far.update_instance_prefills('explorer', prefills, false)
-					end,
 				},
 			},
 

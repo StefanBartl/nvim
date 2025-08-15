@@ -40,16 +40,24 @@ return {
           enable = true,
           set_jumps = true,
           goto_next_start = {
-            ["]m"] = "@function.outer",
+            ["]f"] = "@function.outer",
             ["]c"] = "@class.outer",
             ["]b"] = "@block.outer",
             ["]p"] = "@parameter.inner",
           },
+          goto_next_end = {
+            [']F'] = '@function.outer',
+            [']C'] = '@class.outer',
+          },
           goto_previous_start = {
-            ["[m"] = "@function.outer",
+            ["[f"] = "@function.outer",
             ["[c"] = "@class.outer",
             ["[b"] = "@block.outer",
             ["[p"] = "@parameter.inner",
+          },
+          goto_previous_end = {
+            ['[F'] = '@function.outer',
+            ['[C'] = '@class.outer',
           },
         },
       })

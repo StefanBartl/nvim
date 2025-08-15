@@ -53,7 +53,7 @@ function M.setup()
     if ok and conform_mod and type(conform_mod.setup) == "function" then pcall(conform_mod.setup) end
   end
 
-  vim.g._formatter_api = formatter  -- global reference: cache API for keymaps so they only build once
+  vim.g._formatter_api = formatter -- global reference: cache API for keymaps so they only build once
 
   -- Expose handy user-commands (no notify, no noise)
   do
@@ -74,6 +74,12 @@ function M.setup()
     pcall(vim.api.nvim_create_user_command, "LspFormatOff", function()
       formatter.disable()
     end, { desc = "LSP/Conform: disable format-on-save (silent)" })
+
+    pcall(vim.api.nvim_create_user_command, "LspFormatStatus", function()
+      local state
+      if formatter.is_enabled() then state = "true" else state = "false" end
+      vim.notify("LSP/Conform state: " .. state, 2)
+    end, { desc = "LSP/Conform: show state of formater" })
   end
 
   local shared = {
@@ -92,4 +98,3 @@ function M.setup()
 end
 
 return M
-

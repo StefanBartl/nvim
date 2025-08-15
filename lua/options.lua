@@ -18,10 +18,6 @@ vim.opt.smartindent = true
 vim.opt.hlsearch = true
 -- Show (partial) command in the last line of the screen
 vim.opt.showcmd = true
--- Height of the command line (in screen lines)
-vim.opt.cmdheight = 1
--- Global status line (always visible, shared between windows)
-vim.opt.laststatus = 3
 -- Show effects of search/replace in a split preview
 vim.opt.inccommand = "split"
 -- Case-insensitive search unless pattern contains uppercase letters
@@ -38,33 +34,25 @@ vim.opt.wrap = false
 -- Ignore node_modules when completing filenames
 vim.opt.wildignore:append({ "*/node_modules/*", "*/.git/*", "*/dist/*", "*/build/*" })
 
-
 --vim.opt.cursorline = true                 -- Highlight current line for readability
---vim.opt.cursorlineopt = "number"          -- Only highlight the number column (less visual noise)
---vim.opt.list = true                       -- Visualize whitespace (useful in diffs/reviews)
-
-
+vim.opt.list = true -- Visualize whitespace (useful in diffs/reviews)
 
 -- When splitting a window horizontally, put the new window below
---vim.opt.splitbelow = true
+vim.opt.splitbelow = true
 -- When splitting a window vertically, put the new window to the right
---vim.opt.splitright = true
-
+vim.opt.splitright = true
 
 -- Enable undercurl text styling in supported terminals
 vim.cmd([[let &t_Cs = "\e[4:3m"]]) -- Start undercurl
 vim.cmd([[let &t_Ce = "\e[4:0m"]]) -- End undercurl
-
 
 -- If Neovim is v0.8 or higher, hide the command line when not in use
 if vim.fn.has("nvim-0.8") == 1 then
   vim.opt.cmdheight = 0
 end
 
-
-
 vim.g.copilot_enabled = true
---vim.opt.omnifunc = "v:lua.vim.lsp.omnifunc" -- completion omnifunc
+vim.opt.omnifunc      = "v:lua.vim.lsp.omnifunc" -- completion omnifunc
 vim.opt.fileformats   = "unix,dos,mac"
 
 -- Limit completion popup height to reduce visual clutter.
@@ -133,11 +121,6 @@ vim.opt.diffopt:append({
 -- S: no "search hit BOTTOM/TOP" prompts (this one typically differs from default).
 vim.opt.shortmess:append({ c = true, I = true, W = true, S = true })
 
-
-
-
-
-
 vim.opt.number = true
 vim.o.relativenumber = true
 vim.opt.cursorline = true
@@ -146,9 +129,6 @@ vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldlevel = 99      -- Sets the fold level globally. Folds with level higher than this will be closed.
 vim.opt.foldlevelstart = 99 -- Sets the initial fold level when a buffer is opened. If this is lower than `foldlevel`, deeper folds will be closed at startup.
-
-vim.opt.shiftwidth = 2
-vim.opt.tabstop = 2
 
 vim.opt.signcolumn = "yes"
 vim.opt.cmdheight = 1

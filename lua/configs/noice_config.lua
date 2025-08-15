@@ -165,4 +165,14 @@ M.routes = {
   },
 }
 
+vim.api.nvim_create_user_command("Nall", function()
+   require("noice").cmd("All")
+end, { desc = "" })
+
+
+vim.api.nvim_create_user_command("Nerr", function()
+   require("noice").cmd("Error")
+end, { desc = "" })
+
+
 return M

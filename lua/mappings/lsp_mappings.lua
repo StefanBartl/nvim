@@ -44,6 +44,37 @@ function M.setup()
     vim.diagnostic.setloclist()
     vim.cmd("lopen")
   end, { desc = "[Loclist] Diagnostic loclist (open)" })
+
+  -- === FORMATTING ===
+  --  silent toggles for format-on-save and one-shot format
+  --  No notifications, no echo messages; descriptions for which-key/help
+
+  map("n", "<leader>tf", function()
+    local ok, f = pcall(function() return require("lsp.formatter.init").build end)
+    -- If the module returns a builder, we need the built API;
+    -- Prefer using the instance exposed via lsp.init (shared.formatter) if you have it globally.
+    -- For simplicity, query a cached API if you store it globally, e.g., vim.g._formatter_api
+    if vim.g._formatter_api and type(vim.g._formatter_api.toggle) == "function" then
+      vim.g._formatter_api.toggle()
+      return
+    end
+    -- Fallback: build a temporary API and toggle (stateless across sessions)
+    if type(ok) == "boolean" and f then
+      local api = f({ format_on_save = false, timeout_ms = 1500 })
+      api.toggle()
+    end
+  end, { desc = "[LSP] Toggle format-on-save (silent)", silent = true })
+
+  map("n", "<leader>ff", function()
+    if vim.g._formatter_api and type(vim.g._formatter_api.format) == "function" then
+      vim.g._formatter_api.format(0)
+      return
+    end
+    local ok, build = pcall(require, "lsp.formatter.init")
+    if ok and build and type(build.build) == "function" then
+      build.build({ format_on_save = false, timeout_ms = 1500 }).format(0)
+    end
+  end, { desc = "[LSP] Format current buffer once (silent)", silent = true })
 end
 
 return M

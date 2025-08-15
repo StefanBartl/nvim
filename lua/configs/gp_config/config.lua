@@ -18,6 +18,10 @@ local M = {
   },
 
   agents = {
+		{
+			name = "ChatGPT3-5",
+			disable = true,
+		},
     {
       name = "MiniHigh",
       provider = "openai",
@@ -26,7 +30,16 @@ local M = {
       chat = true,
       command = true,
     },
+    {
+      name = "GTP5",
+      provider = "openai",
+      model = { model = "gpt-5" },
+      system_prompt = "Du bist Senior-Developer und und gehst ganz genau auf Thematiken und erklärst den wissenschaftlichen Kontext.",
+      chat = true,
+      command = false,
+    },
   },
+
 }
 
 -- Load optional hooks without crashing if file is missing
