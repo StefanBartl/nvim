@@ -88,7 +88,7 @@ function M.restore()
         local ok_config, config = pcall(require, "lsp.servers.lua_ls")
         if ok_config then
           vim.lsp.start(config)
-          vim.notify("[last_session] Attached lua_ls to restored buffer", vim.log.levels.INFO)
+          --vim.notify("[last_session] Attached lua_ls to restored buffer", vim.log.levels.INFO)
         end
       end
     end

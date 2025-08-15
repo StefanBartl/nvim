@@ -1,6 +1,8 @@
 ---@module 'configs.notify_config'
 
-vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1a1a1a" })
+require("notify").setup({
+	background_colour = "#1a1a1a",
+})
 
 local ok, notify = pcall(require, "notify")
 if not ok then

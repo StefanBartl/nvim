@@ -2,6 +2,8 @@
 
 local M = {}
 
+--vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1a1a1a" })
+
 M.ui = {
   statusline = {
     --theme = "vscode",
@@ -9,7 +11,7 @@ M.ui = {
 }
 
 M.base46 = {
-  transparency = true,
+  transparency = false,
   --theme = "onedark",
   --theme = "default-dark",
   --theme = "github_dark",
