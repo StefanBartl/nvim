@@ -1,8 +1,8 @@
 ---@module 'plugins.terminal'
 --- Terminal integration using ToggleTerm.
 
----@type LazyPluginSpec[]
-return {
+-- ---@type LazyPluginSpec[]
+-- return {
 
 --[[
 
@@ -20,7 +20,7 @@ return {
     opts = {},
     cmd = "FloatermToggle",
    },
-
 --]]--
-}
+
+--}
 

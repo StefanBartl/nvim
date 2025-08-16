@@ -2,11 +2,9 @@
 
 local M = {}
 
---vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1a1a1a" })
-
 M.ui = {
   statusline = {
-    --theme = "vscode",
+    theme = "vscode",
   },
 }
 
@@ -23,8 +21,8 @@ M.base46 = {
   --theme = "vesper",
   --theme = "eldritch",
   --theme = "hackthebox",
-  --theme = "hackthebox2",
-  --theme = "hacktivist",
+  --theme = "hackthebox2", -- error
+ -- theme = "hacktivist",
 }
 
 if vim.g.is_windows and vim.g.is_pwsh then
@@ -33,5 +31,13 @@ if vim.g.is_windows and vim.g.is_pwsh then
   vim.opt.shellquote = ""
   vim.opt.shellxquote = ""
 end
+
+require("keys").setup {
+    enable_on_startup = true,
+    win_opts = {
+        width = 50,
+        focusable = false,
+    },
+}
 
 return M

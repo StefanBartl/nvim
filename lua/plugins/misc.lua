@@ -8,5 +8,12 @@ return {
   -- !!! needs /usrcmd/urlview_integration to work TODO: integration file should not be in /usercmds
   { "axieax/urlview.nvim" },
 
+ -- https://github.com/jghauser/mkdir.nvim
+  {
+    'jghauser/mkdir.nvim'
+  },
+
+  { 'tamton-aquib/keys.nvim' },
+
 }
 
