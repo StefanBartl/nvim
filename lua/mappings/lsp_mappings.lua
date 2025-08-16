@@ -35,9 +35,9 @@ function M.setup()
   map("n", "]q", ":cnext<CR>", { desc = "[Quickfix]Next in Quickfix List" })
   map("n", "[q", ":cprev<CR>", { desc = "[Quickfix] Prev in Quickfix List" })
 
-  -- Location List
-  map("n", "[l", vim.diagnostic.goto_prev, { desc = "[Loclist] Prev Diagnostic" })
-  map("n", "]l", vim.diagnostic.goto_next, { desc = "[Loclist] Next Diagnostic" })
+map("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end, { desc = "[Diagnostics] Next", silent = true })
+map("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end, { desc = "[Diagnostics] Prev", silent = true })
+
   map("n", "<leader>lf", vim.diagnostic.open_float, { desc = "[Loclist] Diagnostic popup" })
   map("n", "<leader>ls", vim.diagnostic.setloclist, { desc = "[Loclist] Diagnostic loclist" })
   map("n", "<leader>lo", function()
@@ -75,6 +75,7 @@ function M.setup()
       build.build({ format_on_save = false, timeout_ms = 1500 }).format(0)
     end
   end, { desc = "[LSP] Format current buffer once (silent)", silent = true })
+
 end
 
 return M
