@@ -122,6 +122,9 @@ M.routes = {
   { filter = { event = "msg_show", kind = "emsg", find = "E20" }, opts = { skip = true } },
   { filter = { event = "msg_show", kind = "emsg", find = "E37" }, opts = { skip = true } },
   { filter = { event = "msg_show", kind = "emsg", find = "E31" }, opts = { skip = true } },
+  { filter = { event = "msg_show", kind = "emsg", find = "E37" }, opts = { skip = true } },
+  { filter = { event = "msg_show", kind = "emsg", find = "E351" }, opts = { skip = true } },
+  { filter = { event = "msg_show", kind = "emsg", find = "E418" }, opts = { skip = true } },
 
   -- Hide specific generic texts (no explicit event → matches across sources where applicable).
   { filter = { find = "No signature help" }, opts = { skip = true } },

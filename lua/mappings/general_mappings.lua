@@ -18,6 +18,7 @@ function M.setup()
     vim.cmd("qa!")
   end, { desc = "[General] Save lasz file and Force quit all" })
 
+  map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
   map({ "n", "i", "v", "t" }, "<C-s>", function()
     if vim.fn.mode() ~= "n" then
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
@@ -25,6 +26,19 @@ function M.setup()
     vim.cmd("silent! w!")
   end, { desc = "[General] Save file silently" })
 
+  map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
+  map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
+
+  map("n", "+", "<C-a>", { desc = "[Number] Increment" })
+  map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
+  map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
+  map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
+
+  -- Resize window
+  map("n", "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
+  map("n", "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
+  map("n", "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
+  map("n", "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
 
   -- NOTE: Check this out for some time
   -- Improved wrapped-line movement with auto-centering
@@ -50,21 +64,6 @@ function M.setup()
   --  "v:count == 0 ? 'gkzz' : 'kzz'",
   --  { desc = "Up (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
   --)
-
-  map({ "n", "i", "v"  , "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
-  map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
-
-  map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
-  map("n", "+", "<C-a>", { desc = "[Number] Increment" })
-  map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
-  map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
-  map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
-
-  -- Resize window
-  map("n", "<C-w><left>", ":vertical resize -5<CR>", { desc = "[Window] Resize left" })
-  map("n", "<C-w><right>", ":vertical resize +5<CR>", { desc = "[Window] Resize right" })
-  map("n", "<C-w><up>", ":resize +5<CR>", { desc = "[Window] Resize up" })
-  map("n", "<C-w><down>", ":resize -5<CR>", { desc = "[Window] Resize down" })
 end
 
 return M

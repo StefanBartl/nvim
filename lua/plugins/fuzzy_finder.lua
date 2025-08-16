@@ -103,7 +103,7 @@ return {
   -- fzf-lua: Alternative fuzzy finder based on fzf
   {
     "ibhagwan/fzf-lua",
-    lazy = false,
+    lazy = true ,
   },
 
 }
