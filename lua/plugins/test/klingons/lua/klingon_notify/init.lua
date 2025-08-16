@@ -3,12 +3,14 @@
 --- Two display modes:
 ---   1) "float": tiny floating window, closes on any key or timeout
 ---   2) "notify": use nvim-notify if present; fallback to vim.notify
+--- Optional hooks (enable via setup):
+---   - hooks.diagnostics.enabled   : react to DiagnosticChanged/BufEnter
+---   - hooks.notify_wrap.enabled   : wrap vim.notify to speak Klingon
 ---
 --- Public API:
 ---   require('klingon_notify').setup({ ... })
----   require('klingon_notify').shout("success"|"error"|"warn"|"info", "optional extra message")
----
---- User commands are defined in plugin/klingon_notify.lua.
+---   require('klingon_notify').shout("success"|"error"|"warn"|"info", "optional message")
+---   require('klingon_notify').success|error|warn|info("optional message")
 
 local Ui = require("klingon_notify.ui")
 local PhrasePack = require("klingon_notify.phrases")
@@ -21,37 +23,49 @@ local Levels = {
   info    = "info",
 }
 
+---@class KlingonNotifyHookDiagnosticsConfig
+---@field enabled boolean          -- Enable diagnostics hook
+---@field debounce_ms integer      -- Debounce for DiagnosticChanged
+
+---@class KlingonNotifyHookNotifyWrapConfig
+---@field enabled boolean          -- Wrap vim.notify
+---@field forward_original boolean -- Also call original vim.notify
+
+---@class KlingonNotifyHooksConfig
+---@field diagnostics KlingonNotifyHookDiagnosticsConfig
+---@field notify_wrap KlingonNotifyHookNotifyWrapConfig
+
 ---@class KlingonNotifyConfig
----@field mode        "float"|"notify"        -- Which renderer to use
----@field use_icons   boolean                 -- Prefix messages with icons
----@field phrases     KlingonPhrases          -- Overridable phrase table
----@field icons       KlingonIcons            -- Overridable icon table
----@field float       KlingonFloatOpts        -- Options for floating window
----@field map_levels  table<string, integer>  -- Map logical levels to vim.log.levels
----@field title       string                  -- Notify title / float title text
----@field highlight_map table<string, string> -- Map level -> highlight group for float
+---@field mode        "float"|"notify"
+---@field use_icons   boolean
+---@field phrases     KlingonPhrases
+---@field icons       KlingonIcons
+---@field float       KlingonFloatOpts
+---@field map_levels  table<string, integer>
+---@field title       string
+---@field highlight_map table<string, string>
+---@field hooks       KlingonNotifyHooksConfig  -- Optional hooks (diagnostics, notify wrapper)
 
 ---@class KlingonState
 ---@field cfg KlingonNotifyConfig
+---@field hooks_enabled { diag: boolean, notify: boolean }
 
 local M = {}
 
 ---@type KlingonState
 local state = {
   cfg = nil,
+  hooks_enabled = { diag = false, notify = false },
 }
 
 local function ensure_highlights()
-  -- Create/relink highlight groups once. Link to Diagnostic groups if available.
   local function link(from, to)
     vim.api.nvim_set_hl(0, from, { link = to, default = true })
   end
-
-  -- Reasonable defaults across Neovim versions
   link("KlingonNotifySuccess", vim.fn.hlexists("DiagnosticOk") == 1 and "DiagnosticOk" or "DiffAdd")
-  link("KlingonNotifyError", "DiagnosticError")
-  link("KlingonNotifyWarn", "DiagnosticWarn")
-  link("KlingonNotifyInfo", "DiagnosticInfo")
+  link("KlingonNotifyError",   "DiagnosticError")
+  link("KlingonNotifyWarn",    "DiagnosticWarn")
+  link("KlingonNotifyInfo",    "DiagnosticInfo")
 end
 
 --- Merge two (possibly nested) tables with precedence to right-hand side.
@@ -85,10 +99,8 @@ local function default_config()
     icons = pack.icons,
     float = {
       border = "rounded",
-      pad_left = 1,
-      pad_right = 1,
-      pad_top = 0,
-      pad_bottom = 0,
+      pad_left = 1, pad_right = 1,
+      pad_top = 0, pad_bottom = 0,
       zindex = 150,
       timeout_ms = 1500,
       winblend = 10,
@@ -109,7 +121,57 @@ local function default_config()
       warn    = "KlingonNotifyWarn",
       error   = "KlingonNotifyError",
     },
+    hooks = {
+      diagnostics = { enabled = false, debounce_ms = 100 },
+    notify_wrap = {
+      enabled = false,
+      forward_original = false,
+
+      -- NEW:
+      prefix_mode = "none",     -- "none" | "always" | "burst"
+      burst_window_ms = 1200,   -- quiet window for "burst" mode
+      prefix_from_level = true, -- true: phrase depends on level; false: fixed text
+      fixed_prefix = "Qapla'!", -- used if prefix_from_level=false
+    },
+    },
   }
+end
+
+--- Enable/disable hooks according to config.
+local function apply_hooks()
+  local c = state.cfg.hooks or {}
+  -- Diagnostics hook
+  do
+    local ok, mod = pcall(require, "klingon_notify.hooks.diagnostics")
+    if ok and c.diagnostics and c.diagnostics.enabled then
+      if not state.hooks_enabled.diag then
+        state.hooks_enabled.diag = mod.enable({
+          debounce_ms = c.diagnostics.debounce_ms or 100,
+        }) and true or false
+      end
+    else
+      if state.hooks_enabled.diag and ok and mod and type(mod.disable) == "function" then
+        mod.disable()
+      end
+      state.hooks_enabled.diag = false
+    end
+  end
+  -- Notify wrapper
+  do
+    local ok, mod = pcall(require, "klingon_notify.hooks.notify_wrap")
+    if ok and c.notify_wrap and c.notify_wrap.enabled then
+      if not state.hooks_enabled.notify then
+        state.hooks_enabled.notify = mod.enable({
+          forward_original = c.notify_wrap.forward_original or false,
+        }) and true or false
+      end
+    else
+      if state.hooks_enabled.notify and ok and mod and type(mod.disable) == "function" then
+        mod.disable()
+      end
+      state.hooks_enabled.notify = false
+    end
+  end
 end
 
 --- Public setup.
@@ -117,6 +179,7 @@ end
 function M.setup(cfg)
   ensure_highlights()
   state.cfg = deep_merge(default_config(), cfg or {})
+  apply_hooks()
 end
 
 --- Internal: format final text for a given level and optional extra message.
@@ -131,7 +194,6 @@ local function format_lines(level, extra)
   if extra and extra ~= "" then
     text = text .. "  " .. extra
   end
-  -- Small PoC: single line; could be extended to multi-line wrapping.
   ---@type string[]  -- known length list, avoids reallocation & LuaLS issues
   local lines = { [1] = text }
   return lines
@@ -154,7 +216,6 @@ function M.shout(level, extra)
     return
   end
 
-  -- float mode
   local hl = c.highlight_map[level] or "Normal"
   local float_opts = deep_merge(c.float, {
     highlight = hl,
@@ -163,13 +224,13 @@ function M.shout(level, extra)
   Ui.open_float(lines, hl, float_opts)
 end
 
---- Convenience wrappers
 function M.success(extra) M.shout(Levels.success, extra) end
+function M.error(extra)   M.shout(Levels.error,   extra) end
+function M.warn(extra)    M.shout(Levels.warn,    extra) end
+function M.info(extra)    M.shout(Levels.info,    extra) end
 
-function M.error(extra) M.shout(Levels.error, extra) end
-
-function M.warn(extra) M.shout(Levels.warn, extra) end
-
-function M.info(extra) M.shout(Levels.info, extra) end
+function M._get_config()
+  return state.cfg
+end
 
 return M

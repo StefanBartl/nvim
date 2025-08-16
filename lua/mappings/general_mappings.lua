@@ -16,10 +16,9 @@ function M.setup()
   map("n", "<leader><Esc>", function()
     require("custom.last_file.last_session").save()
     vim.cmd("qa!")
-  end, { desc = "[General] Force quit all" })
+  end, { desc = "[General] Save lasz file and Force quit all" })
 
   map({ "n", "i", "v", "t" }, "<C-s>", function()
-    -- Exit insert/terminal mode before saving
     if vim.fn.mode() ~= "n" then
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
     end
@@ -60,15 +59,6 @@ function M.setup()
   map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
   map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
   map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
-
-  -- Zeilenfortsetzung verhindern
-  map("n", "<Leader>o", "o<Esc>^Da", { desc = "[Edit] New line below without continuation" })
-  map("n", "<Leader>O", "O<Esc>^Da", { desc = "[Edit] New line above without continuation" })
-
-  map("n", "te", ":tabedit<CR>", { desc = "[Tab] New tab" })
-
-  map("n", "ss", ":split<CR>", { desc = "[Window] Horizontal split" })
-  map("n", "sv", ":vsplit<CR>", { desc = "[Window] Vertical split" })
 
   -- Resize window
   map("n", "<C-w><left>", ":vertical resize -5<CR>", { desc = "[Window] Resize left" })

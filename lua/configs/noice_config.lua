@@ -149,19 +149,19 @@ M.routes = {
   -- Conservative global noise filter:
   -- Skip generic msg_show unless it's an error, warning, or confirm dialog.
   -- Comment out if this is too aggressive for a setup.
-  {
-    filter = {
-      event = "msg_show",
-      ["not"] = {
-        any = {
-          { error = true },       -- keep errors
-          { warning = true },     -- keep warnings
-          { kind = "confirm" },   -- keep confirm prompts
-        },
-      },
-    },
-    opts = { skip = true },
-  },
+  -- {
+  --   filter = {
+  --     event = "msg_show",
+  --     ["not"] = {
+  --       any = {
+  --         { error = true },       -- keep errors
+  --         { warning = true },     -- keep warnings
+  --         { kind = "confirm" },   -- keep confirm prompts
+  --       },
+  --     },
+  --   },
+  --   opts = { skip = true },
+  -- },
 }
 
 vim.api.nvim_create_user_command("Nall", function()
