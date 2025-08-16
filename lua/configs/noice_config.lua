@@ -75,10 +75,9 @@ M.lsp = {
     ["vim.lsp.util.stylize_markdown"] = true,
     ["cmp.entry.get_documentation"] = true, -- requires hrsh7th/nvim-cmp
   },
-  signature = { enabled = false },
+  signature = { enabled = false},
   hover = { enabled = false },
 }
-
 -- Cmdline:
 --  * Force the classic bottom cmdline instead of the centered popup.
 --  * Ensure search cmdline (/, ?) also uses the bottom cmdline explicitly.
@@ -173,6 +172,5 @@ end, { desc = "" })
 vim.api.nvim_create_user_command("Nerr", function()
    require("noice").cmd("Error")
 end, { desc = "" })
-
 
 return M
