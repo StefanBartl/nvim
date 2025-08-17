@@ -9,6 +9,8 @@ local M = {}
 function M.setup()
   local map = vim.g.__map_helper
 
+  vim.keymap.set("n", "<C-q>", "<cmd>Neotree toggle<CR>", { desc = "[Neo-tree] Toggle" })
+
   for _, mode in ipairs({ "n", "i", "v", "t", "c" }) do
     map(mode, "<F1>", "<Nop>", { desc = "[General] Disable F1" })
   end

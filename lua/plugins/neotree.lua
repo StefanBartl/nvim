@@ -109,7 +109,58 @@ return {
 
         -- open/close
         ['<2-LeftMouse>'] = 'open',
-        ['<CR>'] = 'open_with_window_picker',
+
+
+
+
+
+
+-- Replace your current <CR>, sv, sg mappings with these "safe" variants.
+
+['<CR>'] = function(state)
+  -- directories: wie bisher toggeln
+  local node = state.tree:get_node()
+  if node and (node.type == 'directory' or (node:has_children() and not node:is_expanded())) then
+    state.commands.toggle_node(state)
+    return
+  end
+
+  -- optional: Preview schließen, damit kein extra Fenster existiert
+  pcall(function() require('neo-tree.sources.common.preview').hide() end)
+
+  -- wenn window-picker verfügbar ist, benutze ihn, sonst normal öffnen
+  if pcall(require, 'window-picker') then
+    state.commands.open_with_window_picker(state)
+  else
+    state.commands.open(state)
+  end
+end,
+
+['SV'] = function(state)
+  pcall(function() require('neo-tree.sources.common.preview').hide() end)
+  if pcall(require, 'window-picker') then
+    -- Nur wenn Plugin vorhanden; sonst normal splitten
+    state.commands.split_with_window_picker(state)
+  else
+    state.commands.open_split(state)
+  end
+end,
+
+['SG'] = function(state)
+  pcall(function() require('neo-tree.sources.common.preview').hide() end)
+  if pcall(require, 'window-picker') then
+    state.commands.vsplit_with_window_picker(state)
+  else
+    state.commands.open_vsplit(state)
+  end
+end,
+
+
+
+
+
+
+
         ['l'] = function(state)
           local node = state.tree:get_node()
           if node.type == 'directory' or (node:has_children() and not node:is_expanded()) then
@@ -213,81 +264,20 @@ return {
         },
 
 
-  -- Neo-tree mapping: open selected node in Windows Explorer (Windows-only)
--- Place this inside opts.window.mappings (replace your current ["M"] mapping).
-
--- Replace your ["M"] mapping with this Windows-only variant.
--- It handles both files (Explorer selects the file) and directories.
--- If "explorer.exe /select,<path>" fails (exit!=0), it falls back to
--- "cmd.exe /C start" which at least opens the containing folder.
-
-["M"] = {
-  ---@param state table
-  function(state)
-    if not (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1) then
-      vim.notify("Open in Explorer: Windows only", vim.log.levels.WARN)
-      return
-    end
-
-    --- resolve node path
-    ---@type any
-    local node = state.tree:get_node()
-    local raw = node and (node.path or node:get_id()) or ""
-    if raw == "" then
-      vim.notify("Open in Explorer: no path under cursor", vim.log.levels.WARN)
-      return
-    end
-
-    --- normalize to absolute Windows path (backslashes)
-    local function to_winpath(p)
-      p = vim.fn.fnamemodify(p, ":p")
-      p = p:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1")
-      p = p:gsub("/", "\\")
-      return p
-    end
-
-    local abs = to_winpath(raw)
-    local is_dir = (vim.fn.isdirectory(abs) == 1)
-    local target_dir = is_dir and abs or to_winpath(vim.fn.fnamemodify(abs, ":h"))
-
-    --- build primary + fallback commands
-    --- primary: explorer.exe (with selection for files)
-    --- fallback: cmd.exe /C start "" <dir>
-    local primary
-    if is_dir then
-      primary = { "explorer.exe", target_dir }
-    else
-      primary = { "explorer.exe", "/select," .. abs }
-    end
-    local fallback = { "cmd.exe", "/C", "start", "", target_dir }
-
-    --- run primary, and if it returns non-zero, run fallback
-    local function run_primary_then_fallback()
-      if vim.system then
-        vim.system(primary, { text = true }, function(obj)
-          if obj.code ~= 0 then
-            -- try fallback without complaining first
-            vim.system(fallback, { detach = true }, function(_)
-              -- if fallback also fails, then notify
-              -- (cmd.exe with 'start' usually returns 0 even if Explorer is busy)
-            end)
-          end
-        end)
-      else
-        -- Neovim < 0.10
-        local code = vim.fn.jobstart(primary, { detach = false })
-        -- jobstart returns pid or <=0 on failure; we cannot get exit code reliably here.
-        -- Always attempt the fallback if primary couldn't be started.
-        if code <= 0 then
-          vim.fn.jobstart(fallback, { detach = true })
+    ["M"] = {
+      ---@param state table
+      function(state)
+        -- Windows-Implementierung kapselt alle Details; andere OS können analog
+        -- unter configs/neotree/open_fm/<os>.lua implementiert werden.
+        local ok, win = pcall(require, "configs.neotree.open_fm.win")
+        if not ok then
+          vim.notify("open_fm.win module not found", vim.log.levels.ERROR)
+          return
         end
-      end
-    end
-
-    run_primary_then_fallback()
-  end,
-  desc = "Open in Explorer (Windows)",
-},
+        win.open(state)
+      end,
+      desc = "Open in Explorer (Windows)",
+    },
 
     ['+'] = {
       function(state)

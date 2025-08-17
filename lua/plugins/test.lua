@@ -20,8 +20,6 @@ return {
 
 
 
-
-
   -- KLingons check, capla!
 
 -- C:/Users/bartl/AppData/Local/nvim/lua/plugins/test.lua

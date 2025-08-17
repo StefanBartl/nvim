@@ -34,25 +34,6 @@ function M.setup()
   -- Comment.nvim
   map("n", "<leader>/", "gcc", { desc = "[Text] Toggle comment", remap = true })
   map("v", "<leader>/", "gc", { desc = "[Text] Toggle comment", remap = true })
-  map("n", "<leader><M-7>", "gcc", { desc = "[Text] Toggle comment linewise", remap = true })
-  map("v", "<leader><M-7>", "gc", { desc = "[Text] Toggle comment linewise", remap = true })
-  -- NvimTree
-
-  map("n", "<C-q>", "<cmd>NvimTreeToggle<CR>", { desc = "[NvimTree] Toggle" })
-
-  -- Terminals
-  map({ "n", "t" }, "<A-v>",
-    function()
-      local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "vsp", id = "vtoggleTerm" } end
-    end, { desc = "[Term] Toggle vertical" })
-  map({ "n", "t" }, "<A-h>",
-    function()
-      local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "sp", id = "htoggleTerm" } end
-    end, { desc = "[Term] Toggle horizontal" })
-  map({ "n", "t" }, "<A-i>",
-    function()
-      local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "float", id = "floatTerm" } end
-    end, { desc = "[Term] Toggle floating" })
 end
 
 return M

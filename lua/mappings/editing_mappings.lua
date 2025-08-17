@@ -30,11 +30,12 @@ function M.setup()
   map("n", "<A-Up>", ":m .-2<CR>==", { desc = "[Text] Move line up", noremap = true, silent = true })
   map("n", "<A-Down>", ":m .+1<CR>==", { desc = "[Text] Move line down", noremap = true, silent = true })
 
-  -- Preserve behaviour in visual mode (optional, falls du auch mehrere Zeilen verschieben willst)
   map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "[Text] Move selection up", noremap = true, silent = true })
   map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selection down", noremap = true, silent = true })
   map("v", "<A-k>", ":m '<-2<CR>gv=gv", { desc = "[Text] Move selection up", noremap = true, silent = true })
   map("v", "<A-j>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selection down", noremap = true, silent = true })
+
+-- Indention
   map("v", "<A-Right>", ">gv", { desc = "[Custom] Indent selection right" })
   map("v", "<A-Left>", "<gv", { desc = "[Custom] Indent selection left" })
 

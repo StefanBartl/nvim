@@ -6,14 +6,19 @@ return {
 
   -- https://github.com/axieax/urlview.nvim
   -- !!! needs /usrcmd/urlview_integration to work TODO: integration file should not be in /usercmds
-  { "axieax/urlview.nvim" },
+  { "axieax/urlview.nvim",
+    lazy = true,
+  },
 
  -- https://github.com/jghauser/mkdir.nvim
   {
-    'jghauser/mkdir.nvim'
+    'jghauser/mkdir.nvim',
+    lazy = true,
   },
 
-  { 'tamton-aquib/keys.nvim' },
+  { 'tamton-aquib/keys.nvim',
+    lazy = true,
+  },
 
 }
 

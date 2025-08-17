@@ -61,8 +61,8 @@ return (function()
       lazy = false,
       dependencies = {
         "nvim-lua/plenary.nvim",
-        "nvim-telescope/telescope.nvim",
-        "ibhagwan/fzf-lua",
+    { "nvim-telescope/telescope.nvim" },
+    { "ibhagwan/fzf-lua", optional = true },
       },
       config = function()
         require("cmdlog").setup({
