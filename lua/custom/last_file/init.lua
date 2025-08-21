@@ -10,6 +10,8 @@
 ---@field has_saved_session fun():boolean
 local M = {}
 
+require("custom.last_file.commands")
+
 -- Path to small session file, e.g. ~/.local/share/nvim/last_file.txt
 ---@type string
 local session_file = vim.fn.stdpath("data") .. "/last_file.txt"
@@ -128,39 +130,5 @@ function M.has_saved_session()
   f:close()
   return path ~= nil and vim.fn.filereadable(path) == 1
 end
-
--- ---------------------------------------------------------------------------
--- User commands + auto-restore (moved here so nothing else must require them)
--- ---------------------------------------------------------------------------
-
-vim.api.nvim_create_user_command("LastFileSave", function()
-  M.save()
-  vim.notify("[last_session] File saved", vim.log.levels.INFO)
-end, { desc = "Save last opened file and cursor position" })
-
-vim.api.nvim_create_user_command("LFS", function()
-  M.save()
-  vim.notify("[last_session] File saved", vim.log.levels.INFO)
-end, { desc = "Save last opened file and cursor position" })
-
-vim.api.nvim_create_user_command("LastFileRestore", function()
-  M.restore()
-end, { desc = "Restore last opened file and cursor position" })
-
-vim.api.nvim_create_user_command("LastFileClear", function()
-  M.clear()
-  vim.notify("[last_session] Session cleared", vim.log.levels.INFO)
-end, { desc = "Clear saved last file session" })
-
--- Wait for VeryLazy so lspconfig and its autocommands are registered.
-vim.api.nvim_create_autocmd("User", {
-  pattern = "VeryLazy",
-  once = true,
-  callback = function()
-    if vim.fn.argc() == 0 and M.has_saved_session() then
-      M.restore()
-    end
-  end,
-})
 
 return M
