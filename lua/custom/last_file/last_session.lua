@@ -1,34 +1,26 @@
 ---@module 'custom.last_file.last_session'
----@brief Manual last-session file saving and restoring system
----@description
---- This module allows explicitly saving and restoring the last opened file
---- including the cursor position. Saving is only triggered manually via
---- `:LastFileSave` or `<leader><Esc>` (which force-quits Neovim and saves
---- the session). Restoration can be done manually with `:LastFileRestore`
---- or automatically on startup if a session is available. The saved session
---- can also be cleared after usage or manually via `:LastFileClear`.
+--- Manual last-session file saving and restoring system.
+--- Saves and restores the last opened file including cursor position.
+--- On restore, re-triggers LSP via lspconfig managers instead of calling vim.lsp.start() directly.
 
 ---@class LastSessionModule
 local M = {}
 
--- Session file location (e.g. ~/.local/share/nvim/last_file.txt)
 ---@type string
 local session_file = vim.fn.stdpath("data") .. "/last_file.txt"
 
----Saves the currently active file and cursor position
----Saves current file path and cursor position to session file
+--- Save current buffer path and cursor position to the session file.
+---@return nil
 function M.save()
   local buf = vim.api.nvim_get_current_buf()
   local path = vim.api.nvim_buf_get_name(buf)
 
-  -- Skip if no file path
   if path == "" or vim.fn.filereadable(path) ~= 1 then
     return
   end
 
-  -- Skip invalid or special buffers
-  local buftype = vim.bo[buf].buftype
-  if buftype ~= "" or not vim.bo[buf].buflisted then
+  local bt = vim.bo[buf].buftype
+  if bt ~= "" or not vim.bo[buf].buflisted then
     return
   end
 
@@ -46,7 +38,35 @@ function M.save()
   f:close()
 end
 
----Restores the last saved file and cursor position
+--- Internal: robustly (re)attach LSP using lspconfig managers, if configured.
+--- This avoids calling vim.lsp.start() with incomplete configs.
+---@param bufnr integer
+local function ensure_lsp(bufnr)
+  -- If any client is already attached, nothing to do.
+  if #vim.lsp.get_clients({ bufnr = bufnr }) > 0 then
+    return
+  end
+
+  -- Try lspconfig managers: for every configured server that has a manager,
+  -- ask it to try_add() for this buffer. Managers will no-op if filetype/root_dir doesn't match.
+  local ok_lsp, lspconfig = pcall(require, "lspconfig")
+  if ok_lsp then
+    for name, cfg in pairs(lspconfig) do
+      if type(cfg) == "table" and cfg.manager and type(cfg.manager.try_add) == "function" then
+        pcall(cfg.manager.try_add, bufnr)
+      end
+    end
+  end
+
+  -- As an additional nudge, re-fire the FileType autocommands once lspconfig is loaded.
+  -- lspconfig registers its startup on FileType; refire to be safe.
+  local ft = vim.bo[bufnr].filetype
+  if ft and ft ~= "" then
+    pcall(vim.api.nvim_exec_autocmds, "FileType", { buffer = bufnr })
+  end
+end
+
+--- Restore the last saved file and cursor position and trigger LSP attach via lspconfig.
 ---@return nil
 function M.restore()
   local ok, f = pcall(io.open, session_file, "r")
@@ -71,33 +91,27 @@ function M.restore()
     col = tonumber(c) or 0
   end
 
+  -- Open the file (triggers BufRead autocommands if they are already registered).
   vim.cmd("edit " .. vim.fn.fnameescape(path))
+
+  -- Defer cursor placement and LSP attach to the main loop to ensure window exists.
   vim.schedule(function()
+    local bufnr = vim.api.nvim_get_current_buf()
     pcall(vim.api.nvim_win_set_cursor, 0, { line, col })
 
-    -- Trigger filetype + syntax detection
+    -- Make sure filetype detection has happened
+    -- (usually :edit does this automatically; keep as a safe guard).
     vim.cmd("filetype detect")
-    vim.cmd("syntax enable")
 
-    local ft = vim.bo.filetype
-    if ft ~= "" then
-      vim.cmd("doautocmd FileType " .. ft)
-
-      -- Attach LSP if none is running
-      if #vim.lsp.get_clients({ bufnr = 0 }) == 0 and ft == "lua" then
-        local ok_config, config = pcall(require, "lsp.servers.lua_ls")
-        if ok_config then
-          vim.lsp.start(config)
-          --vim.notify("[last_session] Attached lua_ls to restored buffer", vim.log.levels.INFO)
-        end
-      end
-    end
+    -- Ensure LSP via lspconfig managers instead of vim.lsp.start()
+    ensure_lsp(bufnr)
   end)
 
+  -- Optionally clear after successful restore to make it a one-shot
   M.clear()
 end
 
----Deletes the session file if it exists
+--- Delete the session file if it exists.
 ---@return nil
 function M.clear()
   if vim.fn.filereadable(session_file) == 1 then
@@ -105,14 +119,16 @@ function M.clear()
   end
 end
 
----Checks whether a last session file exists and is valid
+--- Check whether a last session file exists and is valid.
 ---@return boolean
 function M.has_saved_session()
   local f = io.open(session_file, "r")
-  if not f then return false end
+  if not f then
+    return false
+  end
   local path = f:read("*l")
   f:close()
-  return path and vim.fn.filereadable(path) == 1
+  return path and vim.fn.filereadable(path) == 1 or false
 end
 
 return M
