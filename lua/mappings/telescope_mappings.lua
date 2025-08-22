@@ -20,7 +20,6 @@ function M.setup()
 
   map("n", "<leader>fw", "<cmd>Telescope live_grep<CR>", { desc = "[Telescope] Live Grep" })
   map("n", "<leader>fk", "<cmd>Telescope keymaps<CR>", { desc = "[Telescope] Find keymaps" })
-  map("n", "<leader>fc", "<cmd>Telescope keymaps<CR>", { desc = "[Telescope] Find keymaps" })
   map("n", "<leader>fb", "<cmd>Telescope buffers<CR>", { desc = "[Telescope] Buffers" })
   map("n", "<leader>fh", "<cmd>Telescope help_tags<CR>", { desc = "[Telescope] Help" })
   map("n", "<leader>fo", "<cmd>Telescope oldfiles<CR>", { desc = "[Telescope] Oldfiles" })
