@@ -6,9 +6,9 @@ local ACTIVE = {
   "lua_ls",
   "ts_ls",
   "gopls",
-  "clangd",
-  "csharp",
-  "zig",
+  --"clangd",
+  --"csharp",
+  --"zig",
 }
 
 function M.setup_all(shared)

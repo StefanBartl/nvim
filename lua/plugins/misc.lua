@@ -16,9 +16,12 @@ return {
     lazy = true,
   },
 
-  { 'tamton-aquib/keys.nvim',
-    lazy = true,
-  },
+-- WATCH:
+{
+    "NStefan002/screenkey.nvim",
+    lazy = false,
+    version = "*",
+}
 
 }
 
