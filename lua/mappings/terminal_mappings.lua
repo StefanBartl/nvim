@@ -4,8 +4,23 @@ local M = {}
 
 function M.setup()
   local map = vim.g.__map_helper
-  map("t", "<Esc>", "<C-\\><C-n>", { desc = "[Terminals] Exit terminal mode" })
-  map("t", "<C-c>", "<C-\\><C-n>", { desc = "[Terminals] Exit terminal mode" })
+  map("t", "<Esc>", "<C-\\><C-n>", { desc = "[Terminal] Exit terminal mode" })
+  map("t", "<C-c>", "<C-\\><C-n>", { desc = "[Terminal] Exit terminal mode" })
+
+  -- WATCH: NEW
+  -- Window movement
+  map("t", "<C-h>", "<C-\\><C-w>h", { desc = "[Terminal] Left" })
+  map("t", "<C-l>", "<C-\\><C-w>l", { desc = "[Terminal] Right" })
+  map("t", "<C-j>", "<C-\\><C-w>j", { desc = "[Terminal Down" })
+  map("t", "<C-k>", "<C-\\><C-w>k", { desc = "[Terminal] Up" })
+
+
+  -- WATCH: NEW
+  -- Window resize
+  map("t", "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
+  map("t", "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
+  map("t", "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
+  map("t", "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
 
   --- Toggle NvChad UI terminal in a vertical split with ~1/3 screen width.
   --- Works from normal & terminal mode; robustly enforces width after opening.

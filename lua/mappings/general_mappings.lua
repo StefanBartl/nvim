@@ -36,6 +36,12 @@ function M.setup()
   map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
   map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
 
+  -- Window movement
+  map("n", "<C-h>", "<C-w>h", { desc = "[Terminal] Left" })
+  map("n", "<C-l>", "<C-w>l", { desc = "[Terminal] Right" })
+  map("n", "<C-j>", "<C-w>j", { desc = "[Terminal Down" })
+  map("n", "<C-k>", "<C-w>k", { desc = "[Terminal] Up" })
+
   -- Resize window
   map("n", "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
   map("n", "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
