@@ -11,7 +11,7 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 
-local lazy_config = require "config.lazy_config"
+local lazy_config = require "config.lazy"
 
 -- load plugins
 require("lazy").setup({
@@ -39,7 +39,7 @@ require_dir("autocmds")
 require_dir("usrcmds")
 require_dir("lsp")
 require_dir("utils")
+require_dir("mynotes")
 vim.schedule(function()
   require "mappings".setup()
 end)
-require_dir("config")
