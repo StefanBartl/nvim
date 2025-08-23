@@ -1,4 +1,4 @@
----@module 'config.harpoon_config'
+---@module 'config.harpoon'
 --- Harpoon (v2/v1 robust): sanitize persisted list and auto-add target files with context.
 
 ---@class HarpoonCfg

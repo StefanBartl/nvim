@@ -1,4 +1,4 @@
----@module 'config.treesitter_parser'
+---@module 'config.treesitter.parser'
 ---@alias TSParser string
 
 --- Return a list of Tree-sitter parsers to ensure installed

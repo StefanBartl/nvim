@@ -1,4 +1,4 @@
----@module 'config.noice_config'
+---@module 'config.noice'
 --- Noice.nvim UI configuration tuned for a bottom cmdline and minimal noisy messages.
 --- This module moves the cmdline away from the centered popup to the classic bottom position.
 --- It also filters messages aggressively so that only important ones (errors/warnings/confirm)

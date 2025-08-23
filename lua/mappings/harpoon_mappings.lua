@@ -11,7 +11,7 @@ function M.setup()
 
   map("n", "<leader>h", function()
     local list = harpoon:list()
-    list:append()
+    list:add()
   end, { desc = "[HARPOON] Add current file (append)" })
 
   map("n", "<C-e>", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end,

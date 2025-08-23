@@ -108,17 +108,17 @@ return (function()
     ]] --
 
     -- mygrep.nvim: Grep interface with memory, history, favorites
-    {
-      dir = repo("mygrep.nvim"),
-      cond = exists(repo("mygrep.nvim")),
-      name = "mygrep",
-      lazy = false,
-      config = function()
-        require("mygrep").setup({
-          tool_picker_style = "ui",
-        })
-      end,
-    },
+    -- {
+    --   dir = repo("mygrep.nvim"),
+    --   cond = exists(repo("mygrep.nvim")),
+    --   name = "mygrep",
+    --   lazy = false,
+    --   config = function()
+    --     require("mygrep").setup({
+    --       tool_picker_style = "ui",
+    --     })
+    --   end,
+    -- },
 
   }
 end)()

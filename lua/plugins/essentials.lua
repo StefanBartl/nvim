@@ -11,7 +11,7 @@ return {
     dependencies = {},
     opts = function(_, opts)
       -- Use external parser list
-      opts.ensure_installed = require("config.treesitter_parser")
+      opts.ensure_installed = require("config.treesitter.parser")
 
       -- Syntax highlighting and indenting
       opts.highlight = {

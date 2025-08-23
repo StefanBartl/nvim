@@ -22,7 +22,7 @@ function M.setup()
   map("n", "<leader>man", ":FzfLua man_pages<CR>", { desc = "[FzfLua] Man Pages" })
 
   -- Search
-  map("n", "<leader>flg", ":FzfLua live_grep<CR>", { desc = "[FzfLua] Live Grep" })
+  map("n", "<leader><leader>", ":FzfLua live_grep<CR>", { desc = "[FzfLua] Live Grep" })
   map("n", "<leader>fgp", ":FzfLua grep<CR>", { desc = "[FzfLua] Grep" })
   map("n", "<leader>fgb", "<cmd>FzfLua grep_curbuf<CR>", { desc = "[FzfLua] Grep current buffer" })
 
