@@ -15,6 +15,7 @@ local fn = vim.fn
 local api = vim.api
 local uv = vim.uv or vim.loop
 
+---@diagnostic disable
 ---Runs a shell command asynchronously and returns output to callback
 ---@param cmd string
 ---@param on_exit fun(success: boolean, output: string): nil
@@ -45,6 +46,7 @@ local function run_command(cmd, on_exit)
     if data then table.insert(output, data) end
   end)
 end
+---@diagnostic enable
 
 ---Returns full path to tree output file
 ---@return string|nil path
@@ -127,19 +129,19 @@ end
 -- User Commands
 api.nvim_create_user_command("ProjectTreeGet", function()
   M.write_tree(function(ok, msg)
-    api.nvim_notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
+    api.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
   end)
 end, {})
 
 api.nvim_create_user_command("ProjectTreeCopyClipboard", function()
   M.copy_tree_to_clipboard(function(ok, msg)
-    api.nvim_notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
+    api.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
   end)
 end, {})
 
 api.nvim_create_user_command("ProjectFilesCount", function()
   M.count_files(function(ok, msg)
-    api.nvim_notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
+    api.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, {})
   end)
 end, {})
 

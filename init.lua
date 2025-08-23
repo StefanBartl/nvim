@@ -29,17 +29,16 @@ require("lazy").setup({
 --dofile(vim.g.base46_cache .. "default")
 --dofile(vim.g.base46_cache .. "statusline")
 
-
 require "system.env"
 require "options"
 require "custom.last_file.init"
 
-local require_dir = require("lib.require_dir")
-require_dir("autocmds")
-require_dir("usrcmds")
-require_dir("lsp")
-require_dir("utils")
-require_dir("mynotes")
+local require_dir = require "lib.require_dir"
+require_dir "autocmds"
+require_dir "usrcmds"
+require_dir "lsp"
+require_dir "utils"
+require_dir "mynotes"
 vim.schedule(function()
-  require "mappings".setup()
+  require("mappings").setup()
 end)

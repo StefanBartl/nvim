@@ -7,17 +7,8 @@
 ---   4) Current working directory (uv.cwd())
 ---
 --- Neovim: 0.9+ (vim.fs APIs); uses modern LSP API when available (0.10+).
----@version 1.0
 
----@alias Path string
-
----@class ProjectRoot
----@field get fun(bufnr?: integer): Path  -- Compute the project root for a buffer
-
----@diagnostic disable: unused-local
----@private
----@nodiscard
-local M = {} ---@type ProjectRoot
+local M = {}
 
 -- Backward-compatible uv handle
 local uv = vim.uv or vim.loop
@@ -39,7 +30,6 @@ end
 --- Return the directory of the given buffer (or cwd if unnamed).
 ---@param bufnr? integer  -- 0 = current buffer
 ---@return Path           -- always a normalized string path
----@nodiscard
 local function buffer_dir(bufnr)
   bufnr = bufnr or 0
   local name = vim.api.nvim_buf_get_name(bufnr)
@@ -54,7 +44,6 @@ end
 
 --- Iterate LSP clients attached to `bufnr`, preferring the modern API.
 ---@param bufnr? integer
----@return vim.lsp.Client[]  -- Clients attached to the buffer
 local function get_buf_clients(bufnr)
   bufnr = bufnr or 0
   if type(vim.lsp.get_clients) == "function" then
@@ -62,7 +51,7 @@ local function get_buf_clients(bufnr)
     return vim.lsp.get_clients({ bufnr = bufnr })
   end
   -- Neovim < 0.10: fallback via deprecated API, filtered manually
-  local clients = {} ---@type vim.lsp.Client[]
+  local clients = {}
   ---@diagnostic disable-next-line: deprecated
   local all = vim.lsp.get_active_clients and vim.lsp.get_active_clients() or {}
   for _, c in ipairs(all) do
@@ -160,4 +149,5 @@ function M.get(bufnr)
   return norm(get_cwd())
 end
 
+---@cast M ProjectRoot
 return M

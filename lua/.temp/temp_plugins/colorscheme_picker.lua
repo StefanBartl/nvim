@@ -1,27 +1,42 @@
 ---@module 'commands.colorscheme_nvchad'
 --- User commands and pickers to change and persist NvChad colorschemes.
+--- Linux/macOS only; no Windows-specific branches.
 --- Features:
----   * :ColorschemePick           -> Auto picker (Telescope preferred, else fzf-lua)
----   * :ColorschemeTelescope      -> Telescope-based picker with live preview
----   * :ColorschemeFzf            -> fzf-lua-based picker
----   * :ColorschemeSet {name}     -> Directly set & persist theme without picker
---- Persistence:
----   Rewrites ui.theme in chadrc.lua. Robust path lookup:
----     1) vim.g.colorscheme_persist_path (if set)
+---   * :ColorschemePick            -> Auto picker (Telescope preferred, else fzf-lua) with persistence
+---   * :ColorschemeTelescope       -> Telescope-based picker with live preview (persist on confirm)
+---   * :ColorschemeFzf             -> fzf-lua-based picker (persist on confirm; <C-p> for preview)
+---   * :ColorschemeSet {name}      -> Directly apply & persist a theme without a picker
+---   * :ColorschemeList            -> Scratch buffer listing Base46 vs Vim colorschemes
+---   * :ColorschemePickBase46      -> Picker for Base46-only themes (always persistable)
+---   * :ColorschemePickAll         -> Telescope picker for all Vim colorschemes; persists only if Base46 supports the selection
+--- Persistence details:
+---   Rewrites Base46 theme in chadrc.lua with comment/string aware editing.
+---   Robust lookup order:
+---     1) vim.g.colorscheme_persist_path (explicit)
 ---     2) stdpath("config")/lua/chadrc.lua
 ---     3) stdpath("config")/lua/custom/chadrc.lua
----     4) runtimepath scan for lua/chadrc.lua or lua/custom/chadrc.lua
---- Runtime apply:
----   Uses NvChad Base46 if available; falls back to :colorscheme.
+---     4) scan runtimepath for either of the above
+--- Runtime application order:
+---   Prefer NvChad Base46 `load_theme` (if available), then `:colorscheme`.
 
 ---@class CSNvChad
 ---@field _desc string
-local M = {}
--- ---------------------------------------------------------------------------
--- Helpers
--- ---------------------------------------------------------------------------
 
---- Safe require: returns module or nil.
+---@class CSNvChadAPI
+---@field apply_runtime fun(theme: string): boolean
+---@field persist fun(theme: string): boolean
+---@field apply_and_persist fun(theme: string)
+---@field list_colorschemes fun(): string[]
+---@field list_base46_themes fun(): string[], table<string, true>
+---@field is_base46 fun(name: string): boolean
+
+local M = {}
+
+-- ===========================================================================
+-- Small utilities
+-- ===========================================================================
+
+--- Safe require which returns the module or nil.
 ---@param mod string
 ---@return any|nil
 local function srequire(mod)
@@ -30,7 +45,7 @@ local function srequire(mod)
   return nil
 end
 
---- Detect available colorschemes via Vim completion.
+--- Detect available Vim colorschemes via completion.
 ---@return string[]
 local function list_colorschemes()
   ---@type string[]
@@ -38,32 +53,36 @@ local function list_colorschemes()
   table.sort(names)
   return names
 end
+M.list_colorschemes = list_colorschemes
 
---- Apply a theme at runtime using NvChad Base46 if present; otherwise use :colorscheme.
+--- Apply a theme at runtime using Base46 if present; fallback to :colorscheme.
 ---@param theme string
 ---@return boolean applied
 local function apply_runtime(theme)
-  local base46 = srequire("base46")  -- NvChad theming module
+  -- Prefer Base46 (NvChad) when available
+  local base46 = srequire("base46")
   if base46 and type(base46.load_theme) == "function" then
     local ok = pcall(base46.load_theme, theme)
     if ok then
-      -- Keep :colorscheme in sync for plugins that query `vim.g.colors_name`
+      -- Keep :colorscheme in sync for plugins that read vim.g.colors_name
       pcall(vim.cmd.colorscheme, theme)
       return true
     end
   end
+  -- Fallback to plain colorscheme
   local ok = pcall(vim.cmd.colorscheme, theme)
   return ok
 end
+M.apply_runtime = apply_runtime
 
---- Test whether a file exists and is a regular file.
+--- Check if path refers to an existing regular file.
 ---@param p string
 ---@return boolean
 local function is_file(p)
   local uv = vim.uv or vim.loop
   if uv and uv.fs_stat then
     local st = uv.fs_stat(p)
-    return st and st.type == "file" or false
+    return (st and st.type == "file") or false
   end
   local f = io.open(p, "rb")
   if f then f:close(); return true end
@@ -97,30 +116,25 @@ local function find_chadrc_path()
     if is_file(p2) then return p2 end
   end
 
-  -- 4) fallback: nvim_get_runtime_file (broad search)
-  local hits = vim.api.nvim_get_runtime_file("chadrc.lua", true)
-  for _, h in ipairs(hits) do
-    if h:find("/lua/") and is_file(h) then
-      return h
-    end
+  -- 4) broad search
+  for _, h in ipairs(vim.api.nvim_get_runtime_file("chadrc.lua", true)) do
+    if h:find("/lua/") and is_file(h) then return h end
   end
-  local hits2 = vim.api.nvim_get_runtime_file("lua/chadrc.lua", true)
-  for _, h in ipairs(hits2) do
-    if is_file(h) then
-      return h
-    end
+  for _, h in ipairs(vim.api.nvim_get_runtime_file("lua/chadrc.lua", true)) do
+    if is_file(h) then return h end
   end
 
   return nil
 end
 
---- Write text atomically: create a .bak once, then overwrite target.
+--- Write a file atomically (best-effort), keeping a .bak once.
 ---@param path string
 ---@param content string
----@return boolean,string|nil
+---@return boolean ok, string|nil err
 local function write_file_atomic(path, content)
   local uv = vim.uv or vim.loop
   local bak = path .. ".bak"
+
   if uv and uv.fs_access and uv.fs_copyfile then
     if uv.fs_access(path, "R") then
       pcall(uv.fs_copyfile, path, bak)
@@ -130,7 +144,8 @@ local function write_file_atomic(path, content)
     if rf then
       local old = rf:read("*a"); rf:close()
       pcall(function()
-        local wf = io.open(bak, "wb"); if wf then wf:write(old); wf:close() end
+        local wf = io.open(bak, "wb")
+        if wf then wf:write(old); wf:close() end
       end)
     end
   end
@@ -144,161 +159,153 @@ local function write_file_atomic(path, content)
   return true, nil
 end
 
+-- ===========================================================================
+-- Comment/string aware persistence into chadrc.lua
+-- ===========================================================================
 
---- Comment- and string-aware theme persistence for NvChad (base46).
---- Only touches real code (never commented-out lines or block comments).
---- Supports:
----   A) M.base46 = { ..., theme = "...", ... }  -> replace theme
----      or inject theme if missing inside the table
----   B) M.base46.theme = "..."                  -> replace theme
----   C) If a base46 table exists but has no theme key, inject it before "}"
----   D) If no base46 table exists at all, append a minimal block
+-- Avoid name clashes with LuaLS-internal Range types.
+---@class Base46Span
+---@field s integer  -- start index (1-based)
+---@field e integer  -- end index (inclusive)
 
+--- Compute ignored spans (comments/strings) in a Lua source string.
+--- Matches inside these spans must be ignored by the persistence logic.
+---@param txt string
+---@return Base46Span[]
+local function collect_ignored_spans(txt)
+  local ranges = {} ---@type Base46Span[]
+  local i, n = 1, #txt
+
+  ---@param a integer
+  ---@param b integer
+  local function add_span(a, b)
+    ranges[#ranges + 1] = { s = a, e = b }
+  end
+
+  --- Read a long-bracket sequence starting at idx (txt[idx] == '[').
+  --- Returns the span [a,b] or nil if not a valid long bracket.
+  ---@param idx integer
+  ---@return integer|nil a, integer|nil b
+  local function read_long_bracket(idx)
+    local j = idx + 1
+    while j <= n and txt:sub(j, j) == '=' do j = j + 1 end
+    if j <= n and txt:sub(j, j) == '[' then
+      local eq = j - (idx + 1)
+      local close = ']' .. string.rep('=', eq) .. ']'
+      local k = txt:find(close, j + 1, true)
+      if k then
+        return idx, k + #close - 1
+      end
+    end
+    return nil, nil
+  end
+
+  while i <= n do
+    local ch = txt:sub(i, i)
+    local ch2 = (i < n) and txt:sub(i, i + 1) or ""
+
+    -- line/block comments
+    if ch2 == "--" then
+      -- block comment?
+      if i + 2 <= n and txt:sub(i + 2, i + 2) == '[' then
+        local a, b = read_long_bracket(i + 2)
+        if a and b then
+          add_span(i, b)  -- include the leading "--"
+          i = b + 1
+        else
+          local nl = txt:find("\n", i + 2, true) or (n + 1)
+          add_span(i, nl - 1)
+          i = nl
+        end
+      else
+        local nl = txt:find("\n", i + 2, true) or (n + 1)
+        add_span(i, nl - 1)
+        i = nl
+      end
+
+    -- quoted short strings
+    elseif ch == '"' or ch == "'" then
+      local q = ch
+      local j = i + 1
+      while j <= n do
+        local c = txt:sub(j, j)
+        if c == "\\" then
+          j = j + 2
+        elseif c == q then
+          add_span(i, j)
+          j = j + 1
+          break
+        else
+          j = j + 1
+        end
+      end
+      i = j
+
+    -- long bracket string
+    elseif ch == '[' then
+      local a, b = read_long_bracket(i)
+      if a and b then
+        add_span(a, b)
+        i = b + 1
+      else
+        i = i + 1
+      end
+
+    else
+      i = i + 1
+    end
+  end
+
+  table.sort(ranges, function(x, y) return x.s < y.s end)
+  return ranges
+end
+
+--- Check if an index lies inside any ignored span.
+---@param spans Base46Span[]
+---@param idx integer
+---@return boolean
+local function in_ignored(spans, idx)
+  -- Linear scan is fine for small files.
+  for _, r in ipairs(spans) do
+    if idx >= r.s and idx <= r.e then return true end
+  end
+  return false
+end
+
+--- Replace/inject Base46 theme assignments in a chadrc.lua file content.
+--- Strategies:
+---   A) Replace in `M.base46 = { ... theme = "..." ... }`
+---      or inject missing `theme = "<name>"` inside the table.
+---   B) Replace in direct `M.base46.theme = "..."`.
+---   C) If a base46 table exists but has no `theme`, inject before closing `}`.
+---   D) If no base46 at all, append a minimal block.
 ---@param file string
 ---@param theme string
----@return boolean, string|nil
+---@return boolean ok, string|nil err
 local function persist_theme_in_file(file, theme)
-  -- Read file
   local f = io.open(file, "rb")
   if not f then
     return false, "could not open chadrc.lua for reading"
   end
   local s = f:read("*a"); f:close()
 
-  -- -----------------------------------------------------------------------
-  -- Helpers to detect comments/strings and skip matches inside them
-  -- -----------------------------------------------------------------------
-
-  ---@class Range
-  ---@field s integer
-  ---@field e integer
-
-  --- Collect ranges for:
-  ---   * line comments:        -- ... \n
-  ---   * long block comments:  --[=*[ ... ]=*]
-  ---   * quoted strings:       "..." or '...' (handles simple escapes)
-  ---   * long bracket strings: [=*[ ... ]=*]
-  --- Matches in these ranges are ignored.
-  ---@param txt string
-  ---@return Range[]
-  local function collect_ignored_ranges(txt)
-    local ranges = {} ---@type Range[]
-    local i, n = 1, #txt
-
-    local function add_range(a, b)
-      ranges[#ranges + 1] = { s = a, e = b }
-    end
-
-    local function read_long_bracket(idx)
-      -- expects txt:sub(idx, idx) == '['
-      local j = idx + 1
-      while j <= n and txt:sub(j, j) == '=' do j = j + 1 end
-      if j <= n and txt:sub(j, j) == '[' then
-        local eq = j - (idx + 1)
-        local close = ']' .. string.rep('=', eq) .. ']'
-        local k = txt:find(close, j + 1, true)
-        if k then
-          return idx, k + #close - 1
-        end
-      end
-      return nil, nil
-    end
-
-    while i <= n do
-      local ch = txt:sub(i, i)
-      local ch2 = (i < n) and txt:sub(i, i + 1) or ""
-
-      -- line/block comments
-      if ch2 == "--" then
-        -- long block comment?
-        if i + 2 <= n and txt:sub(i + 2, i + 2) == '[' then
-          local a, b = read_long_bracket(i + 2)
-          if a and b then
-            -- include the leading "--"
-            add_range(i, b)
-            i = b + 1
-          else
-            -- plain line comment
-            local nl = txt:find("\n", i + 2, true) or (n + 1)
-            add_range(i, nl - 1)
-            i = nl
-          end
-        else
-          -- plain line comment
-          local nl = txt:find("\n", i + 2, true) or (n + 1)
-          add_range(i, nl - 1)
-          i = nl
-        end
-
-      -- quoted strings
-      elseif ch == '"' or ch == "'" then
-        local q = ch
-        local j = i + 1
-        while j <= n do
-          local c = txt:sub(j, j)
-          if c == "\\" then
-            j = j + 2
-          elseif c == q then
-            add_range(i, j)
-            j = j + 1
-            break
-          else
-            j = j + 1
-          end
-        end
-        i = j
-
-      -- long bracket string
-      elseif ch == '[' then
-        local a, b = read_long_bracket(i)
-        if a and b then
-          add_range(a, b)
-          i = b + 1
-        else
-          i = i + 1
-        end
-
-      else
-        i = i + 1
-      end
-    end
-
-    table.sort(ranges, function(x, y) return x.s < y.s end)
-    return ranges
-  end
-
-  --- Check if index lies in any ignored range
-  ---@param ranges Range[]
-  ---@param idx integer
-  ---@return boolean
-  local function in_ignored(ranges, idx)
-    -- binary search would be nicer; linear is fine for small files
-    for _, r in ipairs(ranges) do
-      if idx >= r.s and idx <= r.e then return true end
-    end
-    return false
-  end
-
-  local ignored = collect_ignored_ranges(s)
+  local ignored = collect_ignored_spans(s)
   local function not_ignored_at(pos) return not in_ignored(ignored, pos) end
 
   local replaced = false
 
-  -- -----------------------------------------------------------------------
-  -- A) Replace / inject inside:  M.base46 = { ... }
-  -- -----------------------------------------------------------------------
+  -- A) Replace/inject inside `M.base46 = %b{}`
   do
     local init = 1
     while true do
-      -- restrict to "M.base46 = %b{}" to avoid unrelated tables named base46
       local a, b = s:find("M%s*%.%s*base46%s*=%s*%b{}", init)
       if not a then break end
       if not_ignored_at(a) then
         local block = s:sub(a, b)
-        -- Replace existing theme key
+        -- Replace existing theme key (capture only opening quote; closing is matched)
         local changed, count = block:gsub(
-          "%f[%w_]theme%s*=%s*(['\"]).-(['\"])",
-          function(q1, _q2) return "theme = " .. q1 .. theme .. q1 end,
+          "%f[%w_]theme%s*=%s*(['\"]).-['\"]",
+          function(q1) return "theme = " .. q1 .. theme .. q1 end,
           1
         )
         if count > 0 then
@@ -306,7 +313,7 @@ local function persist_theme_in_file(file, theme)
           replaced = true
           break
         end
-        -- Inject theme if missing: after opening "{"
+        -- Inject theme if missing: right after opening "{"
         local injected = block:gsub("{%s*", '{ theme = "' .. theme .. '", ', 1)
         if injected ~= block then
           s = s:sub(1, a - 1) .. injected .. s:sub(b + 1)
@@ -318,24 +325,19 @@ local function persist_theme_in_file(file, theme)
     end
   end
 
-  -- -----------------------------------------------------------------------
-  -- B) Replace direct assignment:  M.base46.theme = "..."
-  -- -----------------------------------------------------------------------
+  -- B) Replace in direct assignment: `M.base46.theme = "..."` (outside A)
   if not replaced then
     local init = 1
     while true do
-      -- capture the LHS prefix and the opening quote of RHS
       local a, b, prefix, q = s:find("([%.%w_]-base46%s*%.%s*theme%s*=%s*)(['\"])", init)
       if not a then break end
       if not_ignored_at(a) then
-        -- find the closing quote for the old value
         local j = b + 1
         while j <= #s do
           local c = s:sub(j, j)
           if c == "\\" then
             j = j + 2
           elseif c == q then
-            -- replace full assignment value
             s = s:sub(1, a - 1) .. prefix .. q .. theme .. q .. s:sub(j + 1)
             replaced = true
             break
@@ -349,9 +351,7 @@ local function persist_theme_in_file(file, theme)
     end
   end
 
-  -- -----------------------------------------------------------------------
-  -- C) If a base46 table exists but has no theme, inject before closing "}"
-  -- -----------------------------------------------------------------------
+  -- C) If base46 table exists but without theme, inject before final "}"
   if not replaced then
     local init = 1
     while true do
@@ -360,7 +360,6 @@ local function persist_theme_in_file(file, theme)
       if not_ignored_at(a) then
         local block = s:sub(a, b)
         if not block:match("%f[%w_]theme%s*=") then
-          -- inject right before the final "}"
           local injected = block:gsub("%s*}%s*$", ',\n  theme = "' .. theme .. '"\n}', 1)
           if injected ~= block then
             s = s:sub(1, a - 1) .. injected .. s:sub(b + 1)
@@ -373,9 +372,7 @@ local function persist_theme_in_file(file, theme)
     end
   end
 
-  -- -----------------------------------------------------------------------
   -- D) No base46 at all -> append minimal block
-  -- -----------------------------------------------------------------------
   if not replaced then
     s = s
       .. "\n\n"
@@ -386,7 +383,6 @@ local function persist_theme_in_file(file, theme)
     replaced = true
   end
 
-  -- Write back if changed
   if replaced then
     local ok, err = write_file_atomic(file, s)
     if not ok then
@@ -398,9 +394,7 @@ local function persist_theme_in_file(file, theme)
   end
 end
 
-
-
---- Persist theme by locating chadrc.lua and rewriting ui.theme.
+--- Persist theme by locating chadrc.lua and rewriting Base46 theme.
 ---@param theme string
 ---@return boolean ok
 local function persist_theme(theme)
@@ -416,10 +410,11 @@ local function persist_theme(theme)
   end
   return true
 end
+M.persist = persist_theme
 
 --- Apply + persist with notifications.
 ---@param theme string
-local function apply_and_persist(theme)
+function M.apply_and_persist(theme)
   theme = vim.trim(theme or "")
   if theme == "" then
     vim.notify("[colorscheme] Empty theme name", vim.log.levels.WARN)
@@ -435,11 +430,11 @@ local function apply_and_persist(theme)
   end
 end
 
--- ---------------------------------------------------------------------------
--- Pickers
--- ---------------------------------------------------------------------------
+-- ===========================================================================
+-- Pickers (Telescope / fzf-lua)
+-- ===========================================================================
 
---- Telescope-based picker with live preview and confirm-to-persist.
+--- Telescope-based picker with live preview; persists on confirm.
 local function telescope_picker()
   local builtin = srequire("telescope.builtin")
   local actions = srequire("telescope.actions")
@@ -449,6 +444,7 @@ local function telescope_picker()
     return
   end
 
+  -- Compatibility shim for older Telescope versions
   builtin.colorschemes = builtin.colorschemes or builtin.colorscheme
 
   builtin.colorscheme({
@@ -459,7 +455,7 @@ local function telescope_picker()
         actions.close(prompt_bufnr)
         local name = (entry and (entry.value or entry.text or entry[1])) or nil
         if name then
-          apply_and_persist(name)
+          M.apply_and_persist(name)
         else
           vim.notify("[colorscheme] Could not read selected entry", vim.log.levels.ERROR)
         end
@@ -469,7 +465,7 @@ local function telescope_picker()
   })
 end
 
---- fzf-lua-based picker with confirm-to-persist and optional preview on <C-p>.
+--- fzf-lua picker; persists on <CR>, preview (apply-only) on <C-p>.
 local function fzf_picker()
   local fzf = srequire("fzf-lua")
   if not fzf then
@@ -482,15 +478,11 @@ local function fzf_picker()
     actions = {
       ["default"] = function(selected)
         local theme = (type(selected) == "table") and selected[1] or selected
-        if theme then
-          apply_and_persist(theme)
-        end
+        if theme then M.apply_and_persist(theme) end
       end,
       ["ctrl-p"] = function(selected)
         local theme = (type(selected) == "table") and selected[1] or selected
-        if theme then
-          pcall(apply_runtime, theme)
-        end
+        if theme then pcall(apply_runtime, theme) end
       end,
     },
   })
@@ -499,64 +491,21 @@ end
 --- Auto picker: prefer Telescope, else fzf-lua.
 local function auto_picker()
   if srequire("telescope.builtin") then
-    telescope_picker()
-    return
+    telescope_picker(); return
   end
   if srequire("fzf-lua") then
-    fzf_picker()
-    return
+    fzf_picker(); return
   end
   vim.notify("[colorscheme] No picker found (install telescope.nvim or fzf-lua)", vim.log.levels.WARN)
 end
 
--- ---------------------------------------------------------------------------
--- User Commands
--- ---------------------------------------------------------------------------
-
-vim.api.nvim_create_user_command("ColorschemePick", function()
-  auto_picker()
-end, { desc = "Pick colorscheme (auto picker, persists in chadrc.lua)" })
-
-vim.api.nvim_create_user_command("ColorschemeTelescope", function()
-  telescope_picker()
-end, { desc = "Pick colorscheme via Telescope (persists on confirm)" })
-
-vim.api.nvim_create_user_command("ColorschemeFzf", function()
-  fzf_picker()
-end, { desc = "Pick colorscheme via fzf-lua (persists on confirm)" })
-
-vim.api.nvim_create_user_command("ColorschemeSet", function(opts)
-  ---@type string
-  local theme = opts.args or ""
-  apply_and_persist(theme)
-end, {
-  nargs = 1,
-  complete = function(_, _, _)
-    return list_colorschemes()
-  end,
-  desc = "Set & persist colorscheme directly",
-})
-
-
-
-
-
-
-
-
-
-
---- Additions to your commands.colorscheme_nvchad module
---- Focus: accurately detect Base46 themes vs general Vim colorschemes
---- and provide pickers/commands that only persist if Base46 supports a name.
-
--- ============
--- Discovery
--- ============
+-- ===========================================================================
+-- Base46 theme discovery and guarded pickers
+-- ===========================================================================
 
 --- Find all Base46 theme names by scanning runtime:
 ---  * plugin themes: lua/base46/themes/*.lua
----  * user themes:   lua/themes/*.lua   (as per Base46 docs)
+---  * user themes:   lua/themes/*.lua
 ---@return string[] list, table<string,true> set
 local function list_base46_themes()
   local list ---@type string[]
@@ -584,101 +533,69 @@ local function list_base46_themes()
   table.sort(list)
   return list, set
 end
+M.list_base46_themes = list_base46_themes
 
---- List all Vim-level colorschemes (what Telescope/fzf-lua see by default)
----@return string[]
-local function list_vim_colorschemes()
-  ---@type string[]
-  local names = vim.fn.getcompletion("", "color")
-  table.sort(names)
-  return names
-end
-
---- Compute sets and differences
----@return {b46:string[], b46set:table<string,true>, vimcs:string[], vimset:table<string,true>, vim_only:string[], b46_only:string[]}
-local function get_theme_sets()
-  local b46, b46set = list_base46_themes()
-  local vimcs = list_vim_colorschemes()
-  local vimset = {}
-  for _, n in ipairs(vimcs) do vimset[n] = true end
-
-  local vim_only, b46_only = {}, {}
-  for _, n in ipairs(vimcs) do
-    if not b46set[n] then table.insert(vim_only, n) end
-  end
-  for _, n in ipairs(b46) do
-    if not vimset[n] then table.insert(b46_only, n) end
-  end
-
-  return { b46 = b46, b46set = b46set, vimcs = vimcs, vimset = vimset, vim_only = vim_only, b46_only = b46_only }
-end
-
---- Predicate: is this a Base46-supported theme?
+--- Predicate: does Base46 support this theme?
 ---@param name string
 ---@return boolean
 local function is_base46(name)
   local _, set = list_base46_themes()
   return set[name] == true
 end
+M.is_base46 = is_base46
 
--- ============
--- Pickers
--- ============
-
---- Base46-only picker via Telescope (no live preview to keep it simple & robust)
+--- Telescope picker for Base46-only themes (always persistable).
 local function telescope_picker_base46()
-  local pickers = require("telescope.pickers")
-  local finders  = require("telescope.finders")
-  local conf     = require("telescope.config").values
-  local actions  = require("telescope.actions")
-  local action_state = require("telescope.actions.state")
+  local pickers  = srequire("telescope.pickers")
+  local finders  = srequire("telescope.finders")
+  local confmod  = srequire("telescope.config")
+  local actions  = srequire("telescope.actions")
+  local action_state = srequire("telescope.actions.state")
 
-  local sets = get_theme_sets()
-  local entries = sets.b46
-  if #entries == 0 then
-    vim.notify("[colorscheme] No Base46 themes found in runtime", vim.log.levels.ERROR)
+  if not (pickers and finders and confmod and actions and action_state) then
+    vim.notify("[colorscheme] telescope components not available", vim.log.levels.ERROR)
     return
   end
+
+  local b46 = list_base46_themes
+  local entries = b46
 
   pickers.new({}, {
     prompt_title = "Base46 Themes (persistable)",
     finder = finders.new_table(entries),
-    sorter = conf.generic_sorter({}),
-    previewer = nil, -- omit custom live preview to avoid private API hacks
+    sorter = confmod.values.generic_sorter({}),
+    previewer = nil,
     attach_mappings = function(prompt_bufnr, _)
       actions.select_default:replace(function()
         local entry = action_state.get_selected_entry()
         actions.close(prompt_bufnr)
         local name = entry and (entry[1] or entry.value or entry.text)
-        if name then
-          apply_and_persist(name)
-        end
+        if name then M.apply_and_persist(name) end
       end)
       return true
     end
   }):find()
 end
 
---- Base46-only picker via fzf-lua (optional manual preview on <C-p>)
+--- fzf-lua picker for Base46-only themes; preview on <C-p>.
 local function fzf_picker_base46()
-  local ok, fzf = pcall(require, "fzf-lua")
-  if not ok then
+  local fzf = srequire("fzf-lua")
+  if not fzf then
     vim.notify("[colorscheme] fzf-lua not found", vim.log.levels.WARN)
     return
   end
-  local sets = get_theme_sets()
-  local entries = sets.b46
-  if #entries == 0 then
+  local b46, _ = list_base46_themes()
+  if #b46 == 0 then
     vim.notify("[colorscheme] No Base46 themes found in runtime", vim.log.levels.ERROR)
     return
   end
 
-  fzf.fzf_exec(entries, {
+  fzf.fzf_exec(b46, {
     prompt = "Base46 Themes> ",
     actions = {
       ["default"] = function(selected)
         local name = type(selected) == "table" and selected[1] or selected
-        if name then apply_and_persist(name) end
+        if name then M.apply_and_persist(name) end
       end,
       ["ctrl-p"] = function(selected)
         local name = type(selected) == "table" and selected[1] or selected
@@ -688,23 +605,27 @@ local function fzf_picker_base46()
   })
 end
 
---- Auto Base46 picker: prefer Telescope if present, else fzf-lua
+--- Auto Base46 picker: prefer Telescope, else fzf-lua.
 local function pick_base46()
-  if pcall(require, "telescope.pickers") then
+  if srequire("telescope.pickers") then
     telescope_picker_base46(); return
   end
-  if pcall(require, "fzf-lua") then
+  if srequire("fzf-lua") then
     fzf_picker_base46(); return
   end
   vim.notify("[colorscheme] Install telescope.nvim or fzf-lua for Base46 picker", vim.log.levels.WARN)
 end
 
---- “All colorschemes” picker as before (Telescope builtin), but persist only if Base46 supports the chosen name.
---- Otherwise: apply transiently and warn.
+--- Telescope picker for all Vim colorschemes,
+--- but persist only if Base46 supports the selected name.
 local function telescope_picker_all_with_guard()
-  local builtin = require("telescope.builtin")
-  local actions = require("telescope.actions")
-  local action_state = require("telescope.actions.state")
+  local builtin = srequire("telescope.builtin")
+  local actions = srequire("telescope.actions")
+  local action_state = srequire("telescope.actions.state")
+  if not (builtin and actions and action_state) then
+    vim.notify("[colorscheme] telescope components not available", vim.log.levels.ERROR)
+    return
+  end
 
   builtin.colorscheme({
     enable_preview = true,
@@ -715,9 +636,8 @@ local function telescope_picker_all_with_guard()
         local name = entry and (entry.value or entry.text or entry[1])
         if not name then return end
         if is_base46(name) then
-          apply_and_persist(name)
+          M.apply_and_persist(name)
         else
-          -- apply only; do not persist
           local ok = apply_runtime(name)
           if ok then
             vim.notify(("[colorscheme] Applied non-Base46 theme '%s' (not persisted)"):format(name), vim.log.levels.WARN)
@@ -731,13 +651,43 @@ local function telescope_picker_all_with_guard()
   })
 end
 
--- ============
+-- ===========================================================================
 -- User Commands
--- ============
+-- ===========================================================================
 
---- List Base46 vs Vim colorschemes and their differences in a scratch buffer
+vim.api.nvim_create_user_command("ColorschemePick", function()
+  auto_picker()
+end, { desc = "Pick colorscheme (auto picker, persists in chadrc.lua)" })
+
+vim.api.nvim_create_user_command("ColorschemeTelescope", function()
+  telescope_picker()
+end, { desc = "Pick colorscheme via Telescope (persist on confirm)" })
+
+vim.api.nvim_create_user_command("ColorschemeFzf", function()
+  fzf_picker()
+end, { desc = "Pick colorscheme via fzf-lua (persist on confirm)" })
+
+vim.api.nvim_create_user_command("ColorschemeSet", function(opts)
+  ---@type string
+  local theme = opts.args or ""
+  M.apply_and_persist(theme)
+end, {
+  nargs = 1,
+  complete = function()
+    return list_colorschemes()
+  end,
+  desc = "Set & persist colorscheme directly",
+})
+
 vim.api.nvim_create_user_command("ColorschemeList", function()
-  local sets = get_theme_sets()
+  local b46, b46set = list_base46_themes()
+  local vimcs = list_colorschemes()
+  local vimset = {}
+  for _, n in ipairs(vimcs) do vimset[n] = true end
+
+  local vim_only, b46_only = {}, {}
+  for _, n in ipairs(vimcs) do if not b46set[n] then table.insert(vim_only, n) end end
+  for _, n in ipairs(b46)  do if not vimset[n] then table.insert(b46_only, n) end end
 
   local lines = {} ---@type string[]
   local function add(title, arr)
@@ -746,36 +696,29 @@ vim.api.nvim_create_user_command("ColorschemeList", function()
     table.insert(lines, "")
   end
 
-  add("Base46 themes", sets.b46)
-  add("Vim colorschemes", sets.vimcs)
-  add("Vim-only (not in Base46; preview ok, no persistence)", sets.vim_only)
-  add("Base46-only (not a Vim colorscheme; persist ok, preview via Base46 apply)", sets.b46_only)
+  add("Base46 themes", b46)
+  add("Vim colorschemes", vimcs)
+  add("Vim-only (not in Base46; preview ok, no persistence)", vim_only)
+  add("Base46-only (not a Vim colorscheme; persist ok, preview via Base46 apply)", b46_only)
 
-  -- open scratch
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.bo[buf].modifiable = false
-  vim.bo[buf].bufhidden = "wipe"
-  vim.bo[buf].filetype  = "markdown"
+  vim.bo[buf].bufhidden  = "wipe"
+  vim.bo[buf].filetype   = "markdown"
   vim.api.nvim_set_current_buf(buf)
 end, { desc = "List Base46 vs Vim colorschemes and their differences" })
 
---- Base46-only picker (persistable)
 vim.api.nvim_create_user_command("ColorschemePickBase46", function()
   pick_base46()
 end, { desc = "Pick Base46 theme (persisted)" })
 
---- All colorschemes picker, with Base46-guard on persistence
 vim.api.nvim_create_user_command("ColorschemePickAll", function()
-  if not pcall(require, "telescope.builtin") then
+  if not srequire("telescope.builtin") then
     vim.notify("[colorscheme] Telescope not available for ColorschemePickAll", vim.log.levels.ERROR)
     return
   end
   telescope_picker_all_with_guard()
 end, { desc = "Pick any colorscheme (persist only if Base46 supports it)" })
 
-
-
-
-
-return M
+return M ---@cast M CSNvChadAPI

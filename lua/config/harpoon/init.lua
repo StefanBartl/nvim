@@ -4,6 +4,8 @@
 ---@class HarpoonCfg
 local M = {}
 
+---@diagnostic disable
+
 -- Hard-require harpoon; abort gracefully if missing
 local ok_hp, harpoon = pcall(require, "harpoon")
 if not ok_hp then
@@ -19,10 +21,10 @@ end
 
 local uv = vim.uv or vim.loop
 
---- Resolve to a canonical absolute path (resolve symlinks when possible).
---- Falls back to Path:absolute() if realpath is not available or fails.
----@param p string
----@return string
+-- Resolve to a canonical absolute path (resolve symlinks when possible).
+-- Falls back to Path:absolute() if realpath is not available or fails.
+---@param p String
+---@return String
 local function canon(p)
   if uv and uv.fs_realpath then
     local rp = uv.fs_realpath(p)
@@ -31,13 +33,13 @@ local function canon(p)
   return Path:new(p):absolute()
 end
 
--- Build targets (make sure these exist in deinem Setup)
+-- Here you can preset files for harpoon ui
+-- Build targets (make sure these exist)
 local env     = require("system.env").get()
 local root    = env.repo_base
 local targets = {
-  canon(vim.fs.joinpath(root, "Notes", "Notes.md")),
-  canon(vim.fs.joinpath(root, "Notes", "CLI-Notes", "CLI-Builtin.md")),
-  canon(vim.fs.joinpath(root, "Notes", "CLI-Notes", "CLI-Tools.md")),
+
+  canon(vim.fs.joinpath(root, "Notes", "MyNotes", "CLI-Notes", "CLI-Tools.md")),
 }
 
 --------------------------------------------------------------------------------
@@ -46,14 +48,20 @@ local targets = {
 
 --- Versions-agnostisch setup() ausführen (v2: method-style; manche Builds: function-style).
 local function safe_setup()
-  if type(harpoon.setup) ~= "function" then return end
+  if type(harpoon.setup) ~= "function" then
+    return
+  end
   local okinfo, info = pcall(debug.getinfo, harpoon.setup, "u")
   if okinfo and info and info.nparams and info.nparams >= 2 then
     -- method-style: expects (self, opts?)
-    pcall(function() harpoon:setup({}) end)
+    pcall(function()
+      harpoon:setup {}
+    end)
   else
     -- function-style: expects (opts?)
-    pcall(function() harpoon.setup({}) end)
+    pcall(function()
+      harpoon.setup {}
+    end)
   end
 end
 
@@ -64,13 +72,19 @@ end
 local function get_files_list()
   -- v2: bevorzugt :list()
   if type(harpoon.list) == "function" then
-    local ok, list = pcall(function() return harpoon:list() end)
-    if ok and type(list) == "table" then return list end
+    local ok, list = pcall(function()
+      return harpoon:list()
+    end)
+    if ok and type(list) == "table" then
+      return list
+    end
   end
   -- manche v2-Snapshots: get("files")
   if type(harpoon.get) == "function" then
     local ok, list = pcall(harpoon.get, harpoon, "files")
-    if ok and type(list) == "table" then return list end
+    if ok and type(list) == "table" then
+      return list
+    end
   end
   -- v1-Fallback: Mark/Ui API
   local ok_mark, mark = pcall(require, "harpoon.mark")
@@ -144,9 +158,13 @@ end
 local function append_with_context(list, path)
   local item = { value = path, context = { row = 1, col = 0 } }
   if type(list.append) == "function" then
-    pcall(function() list:append(item) end)
+    pcall(function()
+      list:append(item)
+    end)
   elseif type(list.add) == "function" then
-    pcall(function() list:add(item) end)
+    pcall(function()
+      list:add(item)
+    end)
   else
     -- v1-Fallback (pseudo-Liste)
     table.insert(list.items, item)
@@ -166,7 +184,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
 
     -- 2) auto-add missing targets
     local list = get_files_list()
-    if not list then return end
+    if not list then
+      return
+    end
 
     local have = {}
     for _, it in ipairs(list.items or {}) do

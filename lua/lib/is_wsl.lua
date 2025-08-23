@@ -4,7 +4,6 @@
 --- This module intentionally returns the function itself (not a table),
 --- so it can be re-exported cleanly by `lib.init`.
 
----@nodiscard
 ---@return boolean
 --- Returns true when the current runtime is WSL (either v1 or v2).
 --- Detection strategy (in order):

@@ -1,6 +1,5 @@
 ---@module 'mappings'
 ---@brief Entry point to register all keymaps grouped by topic.
----@nodiscard
 
 local M = {}
 

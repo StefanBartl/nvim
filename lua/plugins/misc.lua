@@ -18,7 +18,8 @@ return {
       local harpoon = require("harpoon")
       ---@diagnostic disable-next-line: redundant-parameter
       pcall(function() harpoon:setup({}) end)
-      require("config.harpoon")
+
+     -- require("config.harpoon") -- set file presets
     end,
   },
 

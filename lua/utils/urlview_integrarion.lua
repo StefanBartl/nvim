@@ -146,6 +146,7 @@ local function open_url(raw_url)
     return
   end
 
+  ---@diagnostic disable-next-line
   run_async(cmd, function(ok, code, _stdout, stderr)
     if not ok then
       local msg = string.format("[urlview] Failed to open URL (exit=%s): %s", tostring(code), tostring(stderr or ""))

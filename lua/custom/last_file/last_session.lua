@@ -51,7 +51,7 @@ local function ensure_lsp(bufnr)
   -- ask it to try_add() for this buffer. Managers will no-op if filetype/root_dir doesn't match.
   local ok_lsp, lspconfig = pcall(require, "lspconfig")
   if ok_lsp then
-    for name, cfg in pairs(lspconfig) do
+    for _, cfg in pairs(lspconfig) do
       if type(cfg) == "table" and cfg.manager and type(cfg.manager.try_add) == "function" then
         pcall(cfg.manager.try_add, bufnr)
       end

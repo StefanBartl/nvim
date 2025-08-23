@@ -7,23 +7,13 @@
 --- - Inspect function upvalues
 --- Includes :DbgEval, :DbgExtmarks, :DbgModules commands and leader keymaps.
 
----@alias MoveDirection '"up"'|'"down"'
-
----@class DebugDumpOpts
----@field loc? string                 -- Source location hint (defaults to caller via get_loc)
----@field title? string               -- Notification title (auto from loc)
----@field level? integer              -- vim.log.levels (defaults to INFO)
----@field method? '"notify"'|'"float"'  -- Where to show output; 'notify' or 'float' (scratch window)
----@field max_notify_lines? integer   -- If lines exceed this and method=='notify', fallback to 'float'
----@field wrap? boolean               -- Wrap long lines in float window
----@field filetype? string            -- Filetype for syntax highlighting (defaults to 'lua')
----@field on_open? fun(win:integer)   -- Optional window hook
-
 local M = {}
 
 ----------------------------------------------------------------------
 -- internals
 ----------------------------------------------------------------------
+
+local unpack = table.unpack or unpack
 
 --- Return a readable caller location "path:line" outside this module/init.
 ---@return string
@@ -50,9 +40,9 @@ end
 ---@return integer win Window id
 local function open_float(lines, opts)
   local buf = vim.api.nvim_create_buf(false, true) -- scratch, nofile
-  vim.api.nvim_buf_set_option(buf, "buftype", "nofile")
-  vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
-  vim.api.nvim_buf_set_option(buf, "swapfile", false)
+  vim.bo[buf].buftype = "nofile"
+  vim.bo[buf].bufhidden = "wipe"
+  vim.bo[buf].swapfile = false
 
   -- Size heuristics
   local width = 0
@@ -107,7 +97,7 @@ local function normalize_values(...)
   if vim.tbl_isempty(value) then
     return nil
   end
-  if vim.tbl_islist(value) and vim.tbl_count(value) <= 1 then
+  if vim.islist(value) and vim.tbl_count(value) <= 1 then
     return value[1]
   end
   return value
@@ -175,12 +165,6 @@ end
 ----------------------------------------------------------------------
 -- extmarks
 ----------------------------------------------------------------------
-
----@class ExtmarkLeakEntry
----@field name string
----@field buf integer
----@field count integer
----@field ft string
 
 --- List extmark counts per (namespace, buffer), sorted descending.
 ---@param opts? {min_count?:integer}
@@ -268,10 +252,6 @@ local function estimate_size(value, visited)
   end
 end
 
----@class ModuleSizeRow
----@field mod string
----@field size number  -- size in MiB (approx)
-
 --- Summarize sizes of loaded modules, grouped by root name.
 ---@param filter? string               -- Lua pattern to include, e.g. "^plugins%."
 ---@param top? integer                 -- only return top N (default: all)
@@ -326,14 +306,6 @@ end
 ----------------------------------------------------------------------
 -- setup: commands, keymaps, autocmds
 ----------------------------------------------------------------------
-
----@class DebugSetupOpts
----@field set_global_dd? boolean     -- if true, defines _G.dd as a thin wrapper around M.dump
----@field create_commands? boolean   -- default true
----@field create_keymaps? boolean    -- default true
----@field create_autocmds? boolean   -- default true
----@field leader? string             -- leader prefix for keymaps (default "<leader>d")
----@field default_method? '"notify"'|'"float"'
 
 ---@param opts? DebugSetupOpts
 function M.setup(opts)

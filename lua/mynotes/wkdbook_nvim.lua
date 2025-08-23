@@ -25,8 +25,7 @@
 ---@field tel_files fun()
 ---@field tel_grep  fun()
 
-local M = {} ---@type WkdNvimApi
-
+local M = {}
 -- Configuration: change title or dir if needed.
 ---@type WkdNvimCfg
 local CFG = {

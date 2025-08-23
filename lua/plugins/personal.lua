@@ -5,33 +5,33 @@
 ---@type LazyPluginSpec[]
 return (function()
   --- Load environment (must be initialized early in init.lua)
-  ---@type { repo_base: string }
-  local env = require("system.env").get()
+  -- ---@type { repo_base: string }
+  -- local env = require("system.env").get()
+  --
+  -- --- Prefer Neovim 0.10's vim.uv, fallback to vim.loop
+  -- local uv = vim.uv or vim.loop
+  --
+  -- --- Join path segments in a platform-agnostic way
+  -- ---@param ... string
+  -- ---@return string
+  -- local function join(...)
+  --   return vim.fs.joinpath(...)
+  -- end
+  --
+  -- --- Build absolute repo path from base + name
+  -- ---@param name string
+  -- ---@return string
+  -- local function repo(name)
+  --   return join(env.repo_base or "", name)
+  -- end
 
-  --- Prefer Neovim 0.10's vim.uv, fallback to vim.loop
-  local uv = vim.uv or vim.loop
-
-  --- Join path segments in a platform-agnostic way
-  ---@param ... string
-  ---@return string
-  local function join(...)
-    return vim.fs.joinpath(...)
-  end
-
-  --- Build absolute repo path from base + name
-  ---@param name string
-  ---@return string
-  local function repo(name)
-    return join(env.repo_base or "", name)
-  end
-
-  --- Check if a path exists on disk
-  ---@param path string|nil
-  ---@return boolean
-  local function exists(path)
-    if type(path) ~= "string" or path == "" then return false end
-    return uv.fs_stat(path) ~= nil
-  end
+  -- --- Check if a path exists on disk
+  -- ---@param path string|nil
+  -- ---@return boolean
+  -- local function exists(path)
+  --   if type(path) ~= "string" or path == "" then return false end
+  --   return uv.fs_stat(path) ~= nil
+  -- end
 
   --[[
   --- Path to local myterm module under this config

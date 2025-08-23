@@ -1,7 +1,5 @@
 ---@module 'lsp.init'
 ---@briefentry LSP entrypoint for a clean, defensive, and modular setup
----@version 1.1
----@nodiscard
 local M = {}
 
 ---@return boolean ok

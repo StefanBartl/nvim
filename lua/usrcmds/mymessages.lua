@@ -15,7 +15,8 @@ local M = {}
 --- This includes capturing Neovim's `:messages`, saving them to a file, and copying to clipboard.
 ---@return nil
 function M.run()
-  local messages = vim.api.nvim_exec("messages", true)
+  local res = vim.api.nvim_exec2("silent messages", { output = true })
+  local messages = res.output or ""
   local log_path = vim.fn.expand("~/temp/mymessages_nvim.log")
   local ok, err = pcall(function()
     -- Ensure the parent directory exists, create it if necessary (mode "p" means parents)

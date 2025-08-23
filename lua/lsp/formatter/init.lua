@@ -1,54 +1,54 @@
 ---@module 'lsp.formatter.init'
----@brief Formatter API with on-save toggle, Conform fallback, and pure-LSP fallback
----@version 1.1
----@nodiscard
+--- Formatter API with on-save toggle, Conform fallback, and pure-LSP fallback.
+--- Linux/macOS only; no Windows-specific branches.
+---@version 1.0.1
 
----@alias Bufnr integer
-
----@class FormatterOptions
----@field format_on_save boolean        -- default off in our setup; can be enabled at build time
----@field timeout_ms integer            -- formatting timeout in ms
-
----@class FormatterApi
----@field format fun(bufnr?:Bufnr):boolean          -- run a one-shot format for the given buffer (or current)
----@field enable fun():boolean                      -- enable format-on-save (creates autocmd)
----@field disable fun():boolean                     -- disable format-on-save (clears autocmd)
----@field toggle fun():boolean                      -- toggle format-on-save and return new state (true = enabled)
----@field is_enabled fun():boolean                  -- current on-save state
+-- Type aliases and public API contracts -------------------------------------
 
 local M = {}
 
----@param opts FormatterOptions
+--- Build a formatter API instance (stateless config + internal state).
+---@param opts? FormatterOptions
 ---@return FormatterApi
 function M.build(opts)
-  -- Defensive defaults; we will pass format_on_save = false from lsp.init
-  opts = opts or { format_on_save = false, timeout_ms = 1500 }
+  -- Defensive defaults
+  opts = opts or {} ---@type FormatterOptions
+  if opts.format_on_save == nil then
+    opts.format_on_save = false
+  end
+  if opts.timeout_ms == nil then
+    opts.timeout_ms = 1500
+  end
 
   local ok_conform, conform = pcall(require, "conform")
   local util_ok, util = pcall(require, "lsp.core.util")
 
-  -- Internal state and augroup handle
+  ---@class FormatterState
+  ---@field enabled boolean
+  ---@field augroup integer
   local STATE = {
     enabled = opts.format_on_save == true,
     augroup = vim.api.nvim_create_augroup("LspFormatOnSave", { clear = true }),
   }
 
   --- Check if any attached LSP client can format the given buffer.
-  ---@param bufnr Bufnr?
+  ---@param bufnr? Bufnr:bd!
+  ---
   ---@return boolean
   local function can_lsp_format(bufnr)
     if not util_ok or type(util.any_client_can_format) ~= "function" then
       return false
     end
-    return util.any_client_can_format(bufnr or 0)
+    bufnr = bufnr or 0 ---@cast bufnr Bufnr
+    return util.any_client_can_format(bufnr)
   end
 
   --- One-shot format with Conform first, then LSP fallback.
-  --- Always silent, returns true on success (no notify).
-  ---@param bufnr Bufnr?
+  --- Always silent, returns true on success.
+  ---@param bufnr? Bufnr
   ---@return boolean
   local function format(bufnr)
-    bufnr = bufnr or 0
+    bufnr = bufnr or 0 ---@cast bufnr Bufnr
 
     -- Skip special buffers
     if vim.bo[bufnr].buftype ~= "" then
@@ -90,7 +90,6 @@ function M.build(opts)
       group = STATE.augroup,
       callback = function(ev)
         -- Purely silent; no notify/popups
-        -- Guard again for special buffers and detached cases
         if vim.bo[ev.buf].buftype ~= "" then
           return
         end
@@ -100,7 +99,7 @@ function M.build(opts)
     })
   end
 
-  --- Enable on-save formatting
+  --- Enable on-save formatting.
   ---@return boolean
   local function enable()
     if STATE.enabled then
@@ -111,7 +110,7 @@ function M.build(opts)
     return true
   end
 
-  --- Disable on-save formatting
+  --- Disable on-save formatting.
   ---@return boolean
   local function disable()
     if not STATE.enabled then
@@ -122,7 +121,7 @@ function M.build(opts)
     return true
   end
 
-  --- Toggle on-save formatting; return new state (true = enabled)
+  --- Toggle on-save formatting; return new state (true = enabled).
   ---@return boolean
   local function toggle()
     STATE.enabled = not STATE.enabled
@@ -152,4 +151,3 @@ function M.build(opts)
 end
 
 return M
-

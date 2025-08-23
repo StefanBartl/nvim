@@ -113,19 +113,19 @@ local M = {}
 -- - Windows: nutze 'cmd.exe /c dir /s /b /a:-d' (liefert Dateien zeilenweise)
 -- - Sonst: fd bevorzugen, sonst rg --files
 ---@return string[]|nil
-local function choose_find_command()
-  local sys = os_name()
-  if sys:find("Windows", 1, true) then
-    return { "cmd.exe", "/c", "dir", "/s", "/b", "/a:-d" }
-  end
-  if vim.fn.executable("fd") == 1 then
-    return { "fd", "--type", "f", "--hidden", "--follow", "--exclude", ".git" }
-  end
-  if vim.fn.executable("rg") == 1 then
-    return { "rg", "--files", "--hidden", "--no-ignore-vcs", "--color", "never" }
-  end
-  return nil
-end
+-- local function choose_find_command()
+--   local sys = os_name()
+--   if sys:find("Windows", 1, true) then
+--     return { "cmd.exe", "/c", "dir", "/s", "/b", "/a:-d" }
+--   end
+--   if vim.fn.executable("fd") == 1 then
+--     return { "fd", "--type", "f", "--hidden", "--follow", "--exclude", ".git" }
+--   end
+--   if vim.fn.executable("rg") == 1 then
+--     return { "rg", "--files", "--hidden", "--no-ignore-vcs", "--color", "never" }
+--   end
+--   return nil
+-- end
 
 
 

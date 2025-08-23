@@ -24,7 +24,6 @@ local function note(msg, level)
 end
 
 --- Normalize directory and ensure it exists.
----@nodiscard
 ---@param path string
 ---@return string|nil norm
 local function norm_dir(path)
@@ -37,7 +36,6 @@ local function norm_dir(path)
   return p
 end
 
----@nodiscard
 ---@return string|nil cwd
 local function cwd_or_nil()
   return norm_dir(CFG.dir)
@@ -107,7 +105,6 @@ end
 
 -- Telescope adapter ----------------------------------------------------------
 
----@nodiscard
 ---@return boolean ok, table|nil builtin
 local function try_telescope()
   local ok, tb = pcall(require, "telescope.builtin")

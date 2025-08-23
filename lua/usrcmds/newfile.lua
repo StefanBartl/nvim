@@ -2,32 +2,8 @@
 --- Create/edit/save files with optional recursive parent directory creation.
 --- Linux/macOS friendly; no external dependencies.
 
----@alias Path string
 
----@class NewFileOpts
----@field recursive boolean       -- create parent directories
----@field overwrite boolean       -- force overwrite if file exists
----@field write_now boolean       -- write immediately after opening/renaming
-
----@class NewFileAPI
----@field ensure_parent fun(path: Path, recursive: boolean): boolean
----@field edit_new fun(path: Path, opts?: NewFileOpts): nil
----@field save_as fun(path: Path, opts?: NewFileOpts): nil
----@field write_to fun(path: Path, opts?: NewFileOpts): nil
-
----@type NewFileAPI
 local M = {}
-
-local uv = vim.uv or vim.loop
-
---- Normalize and split helpers
----@param p Path
----@return Path dir, Path base
-local function split_dir_base(p)
-  local dir = vim.fn.fnamemodify(p, ":h")
-  local base = vim.fn.fnamemodify(p, ":t")
-  return dir, base
-end
 
 --- Ensure parent directory exists.
 ---@param path Path
@@ -72,9 +48,9 @@ function M.save_as(path, opts)
   end
   local bang = opts.overwrite and "!" or ""
   vim.cmd(("saveas%s %s"):format(bang, vim.fn.fnameescape(path)))
-  if not opts.write_now then
-    -- :saveas already wrote; nothing further needed
-  end
+  -- if not opts.write_now then
+  --   -- :saveas already wrote; nothing further needed
+  -- end
 end
 
 --- Write current buffer contents to {path} as a copy (keeps buffer name).
@@ -130,4 +106,6 @@ vim.api.nvim_create_user_command("MkParent", function()
   end
 end, {})
 
+
+---@cast M NewFileAPI
 return M

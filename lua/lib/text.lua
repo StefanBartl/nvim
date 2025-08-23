@@ -14,7 +14,6 @@ local M = {}
 function M.insert_blank_line_above(opts)
   opts = opts or {}
   local keep_on_text = (opts.keep_cursor_on_text ~= false)
-  local do_notify = (opts.notify ~= false)
 
   local buf = vim.api.nvim_get_current_buf()
   local bo = vim.bo[buf]
@@ -30,7 +29,7 @@ function M.insert_blank_line_above(opts)
 
   local row, col = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-based row
 
-  local ok, err = pcall(vim.api.nvim_buf_set_lines, buf, row - 1, row - 1, false, { "" })
+  local ok, _ = pcall(vim.api.nvim_buf_set_lines, buf, row - 1, row - 1, false, { "" })
   if not ok then
     return false, "insert_failed"
   end

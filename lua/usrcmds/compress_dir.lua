@@ -1,4 +1,4 @@
----@module 'usercmds.compress_dir'
+---@module 'usrcmds.compress_dir'
 ---@brief Compresses the current directory and stores a file list in a temp location.
 ---@description
 --- This module provides an asynchronous, safe way to archive the current working
@@ -7,18 +7,17 @@
 ---
 --- - Excludes `.git` directory
 --- - Outputs a file listing and compressed `.tar.gz` archive
---- - Uses `vim.fn.jobstart()` instead of `os.execute`
+--- - Uses vim.system() when available, otherwise falls back to luv
 --- - Notifies only from the user command, not from the module
 
 ---@class CompressDirModule
 local M = {}
 
 local fn = vim.fn
-local uv = vim.uv or vim.loop
 
----Validates and returns a safe target directory for compression output
----@return string|nil tempDir Validated output directory
----@return string|nil errorMsg Error string if invalid
+--- Validate and return a safe target directory for compression output.
+---@return string|nil temp_dir  -- Validated output directory
+---@return string|nil error_msg -- Error string if invalid
 local function _get_target_temp_dir()
   local cwd = fn.getcwd()
   local cwd_name = fn.fnamemodify(cwd, ":t")
@@ -46,49 +45,89 @@ local function _get_target_temp_dir()
   return target, nil
 end
 
----@private
----Runs a shell command asynchronously and invokes a callback on exit
+--- Run a shell command asynchronously and call on_exit(success, output).
+--- Uses vim.system() on Neovim ≥ 0.10; falls nicht verfügbar, fällt auf uv.spawn zurück.
 ---@param cmd string
 ---@param on_exit fun(success: boolean, output: string)
 ---@return nil
 local function _run_shell_async(cmd, on_exit)
+  -- Preferred path: Neovim 0.10+ high-level API
+  if type(vim.system) == "function" then
+    vim.system({ "sh", "-c", cmd }, { text = true }, function(obj)
+      local success = (obj.code == 0)
+      local out = (obj.stdout or "") .. (obj.stderr or "")
+      on_exit(success, out)
+    end)
+    return
+  end
+
+  -- Fallback: luv (Neovim 0.9)
+  local uv = vim.uv or vim.loop
+
+  ---@type uv.uv_pipe_t|nil
   local stdout = uv.new_pipe(false)
+  ---@type uv.uv_pipe_t|nil
   local stderr = uv.new_pipe(false)
+  if not stdout or not stderr then
+    on_exit(false, "Failed to create pipes")
+    return
+  end
+
+  ---@type string[]
   local output = {}
 
+  -- Keep type narrow: process handle or nil. No casts needed.
+  ---@type uv.uv_process_t|nil
   local handle
+
+  -- Only required fields; suppress static false-positive for missing optional fields.
+  ---@diagnostic disable
   handle = uv.spawn("sh", {
     args = { "-c", cmd },
     stdio = { nil, stdout, stderr },
   }, function(code)
-    stdout:close()
-    stderr:close()
-    if handle then handle:close() end
-    local success = code == 0
-    on_exit(success, table.concat(output, "\n"))
+    if stdout and not stdout:is_closing() then
+      stdout:read_stop()
+      stdout:close()
+    end
+    if stderr and not stderr:is_closing() then
+      stderr:read_stop()
+      stderr:close()
+    end
+    if handle and not handle:is_closing() then
+      handle:close()
+    end
+    on_exit(code == 0, table.concat(output, ""))
   end)
 
   stdout:read_start(function(err, data)
-    if err then return end
-    if data then table.insert(output, data) end
+    if err then
+      output[#output + 1] = tostring(err)
+      return
+    end
+    if data then output[#output + 1] = data end
   end)
 
   stderr:read_start(function(err, data)
-    if err then return end
-    if data then table.insert(output, data) end
+    if err then
+      output[#output + 1] = tostring(err)
+      return
+    end
+    if data then output[#output + 1] = data end
   end)
 end
+  ---@diagnostic enable
 
----Compresses the current working directory into a temp folder with file listing
----@param on_complete fun(success: boolean, message: string) Callback with status
+--- Compress the current working directory into a temp folder with file listing.
+---@param on_complete fun(success: boolean, message: string) -- Callback with status
 ---@return nil
 function M.compress_current_directory(on_complete)
   local cwd = fn.getcwd()
   local cwd_name = fn.fnamemodify(cwd, ":t")
 
   local target, dir_err = _get_target_temp_dir()
-  if not target and dir_err then
-    on_complete(false, dir_err)
+  if not target then
+    on_complete(false, dir_err or "Unknown error")
     return
   end
 
@@ -96,10 +135,11 @@ function M.compress_current_directory(on_complete)
   local archive_path = target .. "/" .. cwd_name .. ".tar.gz"
   local parent_dir = fn.fnamemodify(cwd, ":h")
 
+  -- Note: if one wants only files, add: -type f
   local list_cmd = "find " .. fn.shellescape(cwd) .. " -not -path '*/.git/*' > " .. fn.shellescape(list_path)
-  local tar_cmd = "tar --exclude=" .. fn.shellescape(cwd .. "/.git") ..
-      " -czf " .. fn.shellescape(archive_path) ..
-      " -C " .. fn.shellescape(parent_dir) .. " " .. fn.shellescape(cwd_name)
+  local tar_cmd = "tar --exclude=" .. fn.shellescape(cwd .. "/.git")
+    .. " -czf " .. fn.shellescape(archive_path)
+    .. " -C " .. fn.shellescape(parent_dir) .. " " .. fn.shellescape(cwd_name)
 
   _run_shell_async(list_cmd, function(success_list, out1)
     if not success_list then

@@ -108,18 +108,3 @@ vim.opt.swapfile = false
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo"
 
--- Ensure the undo directory exists to avoid runtime warnings on first write.
-do
-  local undodir = vim.opt.undodir:get()
-  if type(undodir) == "string" and undodir ~= "" then
-    vim.fn.mkdir(undodir, "p")
-  end
-end
-
-
------------------------------------------------------------
--- Integrations
------------------------------------------------------------
-
--- Toggle for GitHub Copilot (if the plugin honors this global).
-vim.g.copilot_enabled = true

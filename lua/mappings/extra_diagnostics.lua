@@ -53,7 +53,7 @@ function M.goto_next(severity, opts)
   local o = vim.tbl_extend("force", M.default_opts, opts or {})
   if severity then o.severity = severity end
   -- Use builtin navigator; respects current window/buffer.
-  vim.diagnostic.goto_next(o)
+  vim.diagnostic.jump({count=1, float=true})
 end
 
 --- Jump to previous diagnostic in current buffer, with optional severity filter.
@@ -64,7 +64,7 @@ function M.goto_prev(severity, opts)
   opts = opts or {}
   local o = vim.tbl_extend("force", M.default_opts, opts or {})
   if severity then o.severity = severity end
-  vim.diagnostic.goto_prev(o)
+  vim.diagnostic.jump({count=-1, float=true})
 end
 
 --- Build quickfix from all workspace diagnostics and jump to next entry.

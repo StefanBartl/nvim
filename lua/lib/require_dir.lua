@@ -4,7 +4,6 @@
 --- Exported value is the function itself (not a table), for easy re-export.
 --- Linux/macOS only; uses POSIX-style separators.
 
----@nodiscard
 ---@param dir string  -- Relative to `lua/`, e.g. "autocmds" or "plugins/local"
 ---@return nil
 return function(dir)

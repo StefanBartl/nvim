@@ -6,9 +6,6 @@
 
 ---@version 1.0.0
 
----@class NeoTreeFMWin
----@field open fun(state: table): boolean
----@field _ @private
 local M = {}
 
 ---@private
@@ -57,7 +54,7 @@ end
 ---@param state table -- Neo-tree window state passed by the mapping
 ---@return boolean ok -- true if a launch was attempted; false on early error
 function M.open(state)
-  if not (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1) then
+  if not (vim.fn.has "win32" == 1 or vim.fn.has "win64" == 1) then
     vim.notify("Open in Explorer: Windows only", vim.log.levels.WARN)
     return false
   end
@@ -70,14 +67,14 @@ function M.open(state)
 
   local abs = to_winpath(raw)
   local is_dir = (vim.fn.isdirectory(abs) == 1)
-  local dir    = is_dir and abs or to_winpath(vim.fn.fnamemodify(abs, ":h"))
+  local dir = is_dir and abs or to_winpath(vim.fn.fnamemodify(abs, ":h"))
 
   ---@type string[]
   local primary = is_dir and { "explorer.exe", dir } or { "explorer.exe", "/select," .. abs }
   ---@type string[]
   local fallback = { "cmd.exe", "/C", "start", "", dir }
 
-  run_or_fallback(primary, function(_code, _stderr)
+  run_or_fallback(primary, function(_, _)
     -- Silent fallback; Explorer exit codes are unreliable on some systems
     if vim.system then
       vim.system(fallback, { detach = true }, function(_) end)

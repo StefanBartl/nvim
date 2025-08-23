@@ -7,7 +7,7 @@ local M = {}
 local function has_valid_buf(bufnr)
   if type(bufnr) ~= "number" or bufnr <= 0 then return false end
   if not vim.api.nvim_buf_is_loaded(bufnr) then return false end
-  local bt = vim.api.nvim_buf_get_option(bufnr, "buftype")
+  local bt = vim.bo[bufnr].buftype
   if bt ~= "" and bt ~= "acwrite" then return false end
   return true
 end
