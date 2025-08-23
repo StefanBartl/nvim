@@ -1,4 +1,4 @@
----@module 'utils.text'
+---@module 'lib.text'
 --- Safe text utilities for Neovim buffers (guarded insert operations)
 
 ---@class InsertBlankLineOptions

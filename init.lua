@@ -34,7 +34,7 @@ require "system.env"
 require "options"
 require "custom.last_file.init"
 
-local require_dir = require("utils.require_dir")
+local require_dir = require("lib.require_dir")
 require_dir("autocmds")
 require_dir("usrcmds")
 require_dir("lsp")

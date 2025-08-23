@@ -10,13 +10,13 @@ function M.setup()
   map('x', '<Leader>dd', '""Y""Pgv', { desc = 'Duplicate selection' })
 
   -- Mapping: Insert blank line above (safe)
-  local text = require("utils.text")
-  if type(text) ~= "table" or type(text.insert_blank_line_above) ~= "function" then
-    error("utils.text must return a table with function 'insert_blank_line_above'")
+  local lib = require("lib")
+  if type(lib.insert_blank_line_above) ~= "function" then
+    error("lib must provide function 'insert_blank_line_above'")
   end
 
   vim.keymap.set("n", "<CR>", function()
-    text.insert_blank_line_above({
+    lib.insert_blank_line_above({
       keep_cursor_on_text = true,
       notify = true,
     })
