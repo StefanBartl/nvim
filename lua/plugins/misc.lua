@@ -4,8 +4,25 @@
 ---@type LazyPluginSpec[]
 return {
 
+  -- Harpoon: Efficient file and terminal navigation system
+  -- plugins/misc.lua
+  {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    lazy = false,
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim", -- optional
+    },
+    config = function()
+      local harpoon = require("harpoon")
+      ---@diagnostic disable-next-line: redundant-parameter
+      pcall(function() harpoon:setup({}) end)
+      require("configs.harpoon_config")
+    end,
+  },
+
   -- https://github.com/axieax/urlview.nvim
-  -- !!! needs /usrcmd/urlview_integration to work TODO: integration file should not be in /usercmds
   { "axieax/urlview.nvim",
     lazy = true,
   },
@@ -16,12 +33,16 @@ return {
     lazy = true,
   },
 
--- WATCH:
-{
-    "NStefan002/screenkey.nvim",
+  {
+      "NStefan002/screenkey.nvim",
+      lazy = false,
+      version = "*",
+  },
+
+  {
+    "mg979/vim-visual-multi",
+    branch = "master",
     lazy = false,
-    version = "*",
-}
+  },
 
 }
-
