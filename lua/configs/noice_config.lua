@@ -167,12 +167,12 @@ M.routes = {
   -- },
 }
 
-vim.api.nvim_create_user_command("Nall", function()
+vim.api.nvim_create_user_command("Nal", function()
    require("noice").cmd("All")
 end, { desc = "" })
 
 
-vim.api.nvim_create_user_command("Nerr", function()
+vim.api.nvim_create_user_command("Ner", function()
    require("noice").cmd("Error")
 end, { desc = "" })
 

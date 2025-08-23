@@ -104,6 +104,7 @@ return {
         mode = "document_diagnostics",
         auto_close = true,
         auto_preview = false,
+        focus = true,
       })
     end,
   },

@@ -27,7 +27,7 @@ function M.setup()
   map("n", "<leader>cm", "<cmd>Telescope git_commits<CR>", { desc = "[Telescope] Git Commits" })
   map("n", "<leader>gt", "<cmd>Telescope git_status<CR>", { desc = "[Telescope] Git Status" })
   map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "[Telescope] Find Files" })
-  map("n", "<leader>ffa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
+  map("n", "<leader>fa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
     { desc = "[Telescope] Find All Files" })
 
   map("n", "<leader>os", function() require("search").open() end, { desc = "[Telescope] Multi search UI" })

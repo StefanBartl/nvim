@@ -27,10 +27,6 @@ function M.setup()
   map("n", "]q", "<cmd>cnext<cr>", { desc = "[Trouble] Next Quickfix" })
   map("n", "[l", "<cmd>lprevious<cr>", { desc = "[Trouble] Prev Location" })
   map("n", "]l", "<cmd>lnext<cr>", { desc = "[Trouble] Next Location" })
-
-  -- Telescope integration
-  map("n", "<leader>tf", "<cmd>Trouble telescope_files<cr>", { desc = "[Trouble] Telescope Files" })
-  map("n", "<leader>tt", "<cmd>Trouble telescope<cr>", { desc = "[Trouble] Telescope Results" })
 end
 
 return M
