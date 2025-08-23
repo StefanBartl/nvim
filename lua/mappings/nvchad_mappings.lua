@@ -24,8 +24,6 @@ function M.setup()
   end, { desc = "[General] WhichKey query" })
 
   -- Insert-mode cursor moves
-  map("i", "<C-b>", "<ESC>^i", { desc = "[Text] BOL" })
-  map("i", "<C-e>", "<End>", { desc = "[Text] EOL" })
   map("i", "<C-h>", "<Left>", { desc = "[Text] Left" })
   map("i", "<C-l>", "<Right>", { desc = "[Text] Right" })
   map("i", "<C-j>", "<Down>", { desc = "[Text] Down" })

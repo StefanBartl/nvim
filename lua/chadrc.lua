@@ -4,7 +4,7 @@ local M = {}
 
 M.ui = {
   statusline = {
-    theme = "vscode",
+    theme = "vscode"
   },
 }
 
