@@ -5,7 +5,7 @@ function M.get()
   local caps = vim.lsp.protocol.make_client_capabilities()
 
   do
-    local ok, nvlsp = pcall(require, "nvchad.configs.lspconfig")
+    local ok, nvlsp = pcall(require, "nvchad.config.lspconfig")
     if ok and type(nvlsp.capabilities) == "table" then
       caps = vim.tbl_deep_extend("force", caps, nvlsp.capabilities)
     end
@@ -27,4 +27,3 @@ function M.get()
 end
 
 return M
-

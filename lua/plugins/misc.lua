@@ -18,7 +18,7 @@ return {
       local harpoon = require("harpoon")
       ---@diagnostic disable-next-line: redundant-parameter
       pcall(function() harpoon:setup({}) end)
-      require("configs.harpoon_config")
+      require("config.harpoon_config")
     end,
   },
 

@@ -1,4 +1,4 @@
----@module 'configs.gp.hooks.buffer_new_chat'
+---@module 'config.gp.hooks.buffer_new_chat'
 ---@brief `:BufferGpChatNew` is a dedicated command for `gp.nvim` which
 --- opens a new chat with the entire current buffer as context
 
@@ -11,4 +11,3 @@ return {
     vim.api.nvim_command("%" .. gp.config.cmd_prefix .. "ChatNew")
   end
 }
-

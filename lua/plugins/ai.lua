@@ -15,7 +15,7 @@ return {
     dependencies = { "nvim-lua/plenary.nvim" },
     event = "VeryLazy",
     config = function()
-      local conf = require("configs.gp_config.config")
+      local conf = require("config.gp_config.config")
       require("gp").setup(conf)
     end,
   },

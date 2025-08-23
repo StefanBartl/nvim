@@ -39,7 +39,7 @@ function M.save()
 end
 
 --- Internal: robustly (re)attach LSP using lspconfig managers, if configured.
---- This avoids calling vim.lsp.start() with incomplete configs.
+--- This avoids calling vim.lsp.start() with incomplete config.
 ---@param bufnr integer
 local function ensure_lsp(bufnr)
   -- If any client is already attached, nothing to do.

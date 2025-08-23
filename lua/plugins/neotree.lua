@@ -1,7 +1,7 @@
 ---@module 'plugins.neotree'
 --- Neo-tree plugin spec that imports centralized keymaps.
 
-local KM = require("configs.neotree.keymaps")
+local KM = require("config.neotree.keymaps")
 
 return {
   "neo-tree.nvim",
@@ -41,7 +41,7 @@ return {
       },
     },
 
-    default_component_configs = {
+    default_component_config = {
       indent = { with_expanders = false },
       icon = {
         folder_empty = "",
@@ -93,6 +93,6 @@ return {
 
   config = function(_, opts)
     require("neo-tree").setup(opts)
-    require("configs.neotree.keymaps").setup_autocmds()
+    require("config.neotree.keymaps").setup_autocmds()
   end,
 }

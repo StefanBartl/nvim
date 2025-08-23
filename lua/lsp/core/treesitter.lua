@@ -5,7 +5,7 @@ local M = {}
 
 ---@return nil
 function M.setup()
-  local ok, ts = pcall(require, "nvim-treesitter.configs")
+  local ok, ts = pcall(require, "nvim-treesitter.config")
   if not ok then return end
   ts.setup({
     highlight = { enable = true },

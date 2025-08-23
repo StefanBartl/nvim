@@ -1,4 +1,4 @@
----@module 'configs.gp_config.config'
+---@module 'config.gp_config.config'
 
 ---@type table
 local M = {
@@ -46,7 +46,7 @@ local M = {
 ---@type table
 local extra_hooks = {}
 do
-  local ok, mod = pcall(require, "configs.gp_config.hooks.buffer_new_chat")
+  local ok, mod = pcall(require, "config.gp_config.hooks.buffer_new_chat")
   if ok and type(mod) == "table" then
     extra_hooks = mod
   end

@@ -1,5 +1,5 @@
--- /configs/neotree/open_fm/win.lua
----@module 'configs.neotree.open_fm.win'
+-- /config/neotree/open_fm/win.lua
+---@module 'config.neotree.open_fm.win'
 --- Windows-specific "open in file manager" for Neo-tree.
 --- Selects files in Explorer and opens folders directly.
 --- Designed to be called from a Neo-tree window mapping with `state`.
@@ -90,4 +90,3 @@ function M.open(state)
 end
 
 return M
-

@@ -4,6 +4,8 @@
 --- re-exported by an aggregator (e.g., `require("lib").insert_blank_line_above`).
 --- Linux/macOS only; no Windows-specific branches. TODO:
 
+local unpack = table.unpack or unpack  -- prefer Lua 5.2+, fallback to 5.1
+
 return function(opts)
   opts = opts or {}
   local keep_on_text = (opts.keep_cursor_on_text ~= false)
@@ -32,7 +34,7 @@ return function(opts)
   end
 
   -- 1-based row, 0-based col
-  local row, col = table.unpack(vim.api.nvim_win_get_cursor(0))
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
 
   -- Insert a blank line above the current row.
   local ok = pcall(vim.api.nvim_buf_set_lines, buf, row - 1, row - 1, false, { "" })

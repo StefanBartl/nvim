@@ -16,7 +16,7 @@ function M.build(opts)
   opts = opts or {}
 
   local function on_init(client, _)
-    local ok, nvlsp = pcall(require, "nvchad.configs.lspconfig")
+    local ok, nvlsp = pcall(require, "nvchad.config.lspconfig")
     if ok and type(nvlsp.on_init) == "function" then pcall(nvlsp.on_init, client) end
     return true
   end
@@ -37,7 +37,7 @@ function M.build(opts)
       pcall(require, "lazydev")
     end
 
-    local ok, nvlsp = pcall(require, "nvchad.configs.lspconfig")
+    local ok, nvlsp = pcall(require, "nvchad.config.lspconfig")
     if ok and type(nvlsp.on_attach) == "function" then pcall(nvlsp.on_attach, client, bufnr) end
   end
 

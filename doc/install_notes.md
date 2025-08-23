@@ -14,7 +14,7 @@ sudo apt install universal-ctags
 
 ## DAP
 
-In the folder `nvim\lua\configs\dap\` are paths to executables which are necessary to install to get 'DAP' working
+In the folder `nvim\lua\config\dap\` are paths to executables which are necessary to install to get 'DAP' working
 
 ### `go` (mit `delve`)
 

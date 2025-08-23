@@ -1,4 +1,4 @@
----@module 'configs.lazy_config'
+---@module 'config.lazy_config'
 
 return {
   defaults = { lazy = true },

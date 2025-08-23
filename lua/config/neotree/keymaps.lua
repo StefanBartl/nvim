@@ -1,4 +1,4 @@
----@module 'configs.neotree.keymaps'
+---@module 'config.neotree.keymaps'
 --- Centralized, buffer-local Neo-tree keymaps that override defaults consistently.
 --- Split into:
 ---   1) Window mappings (Neo-tree-only, require `state`)
@@ -185,7 +185,7 @@ function M.window()
 
     ["M"] = {
       function(state)
-        local ok, win = pcall(require, "configs.neotree.open_fm.win")
+        local ok, win = pcall(require, "config.neotree.open_fm.win")
         if not ok then
           vim.notify("open_fm.win module not found", vim.log.levels.ERROR)
           return
