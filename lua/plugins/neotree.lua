@@ -64,15 +64,15 @@ return {
 
     window = {
       width = 30,
-      mappings = KM.window(),            -- zentral aus Modul
+      mappings = KM.window(),
     },
 
     filesystem = {
       bind_to_cwd = false,
-      follow_current_file = { enabled = false },
+      follow_current_file = { enabled = true },
       find_by_full_path_words = true,
       group_empty_dirs = true,
-      use_libuv_file_watcher = true,     -- ggf. bedingt machen, falls has_git
+      use_libuv_file_watcher = true,
       window = { mappings = KM.filesystem() },
       filtered_items = {
         hide_dotfiles = false,

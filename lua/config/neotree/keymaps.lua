@@ -185,14 +185,25 @@ function M.window()
 
     ["M"] = {
       function(state)
-        local ok, win = pcall(require, "config.neotree.open_fm.win")
+        local is_wsl = require "lib.is_wsl"
+
+        local mod
+        if vim.fn.has "win32" == 1 or vim.fn.has "win64" == 1 or is_wsl() then
+          -- Windows nativ oder WSL → Explorer
+          mod = "config.neotree.open_fm.win"
+        else
+          -- macOS oder echtes Linux → Unix-Modul
+          mod = "config.neotree.open_fm.unix"
+        end
+
+        local ok, fm = pcall(require, mod)
         if not ok then
-          vim.notify("open_fm.win module not found", vim.log.levels.ERROR)
+          vim.notify("open_fm module not found: " .. mod, vim.log.levels.ERROR)
           return
         end
-        win.open(state)
+        fm.open(state)
       end,
-      desc = "Open in Explorer (Windows)",
+      desc = "Open in system file manager",
     },
 
     ["+"] = {
