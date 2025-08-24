@@ -9,7 +9,20 @@
 
 ---
 
-sudo apt install universal-ctags
+vim.g.python3_host_prog = vim.fn.expand("~/.local/pipx/venvs/pynvim/bin/python3")
+## Mason
+
+
+`vtlsl`: Typescript lazyvim lsp
+
+## `snacks`
+
+**magick & convert:**
+
+```sh
+sudo apt install imagemaick # oder
+brew install imagemagick
+```
 
 
 ## DAP
