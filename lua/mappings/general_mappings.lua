@@ -3,21 +3,31 @@
 
 -- WHIHKEY
 
-
 local M = {}
 
 function M.setup()
   local map = vim.g.__map_helper
 
-  vim.keymap.set("n", "<C-q>", "<cmd>Neotree toggle<CR>", { desc = "[Neo-tree] Toggle" })
+  -- Toggle Neotree & fcus current buffer's file when opening
+  vim.keymap.set("n", "<C-q>", function()
+    require("neo-tree.command").execute {
+      source = "filesystem", -- ensure filesystem source
+      toggle = true, -- open if closed, close if open
+      reveal = true, -- focus current buffer's file on open
+      -- if the file is outside the current cwd, jump cwd without prompt:
+      reveal_force_cwd = true,
+      -- choose position explicitly ("left", "right", "float", "current")
+      position = "left",
+    }
+  end, { desc = "[Neo-tree] Toggle & Reveal" })
 
-  for _, mode in ipairs({ "n", "i", "v", "t", "c" }) do
+  for _, mode in ipairs { "n", "i", "v", "t", "c" } do
     map(mode, "<F1>", "<Nop>", { desc = "[General] Disable F1" })
   end
 
   map("n", "<leader><Esc>", function()
     require("custom.last_file.last_session").save()
-    vim.cmd("qa!")
+    vim.cmd "qa!"
   end, { desc = "[General] Save lasz file and Force quit all" })
 
   map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
@@ -25,7 +35,7 @@ function M.setup()
     if vim.fn.mode() ~= "n" then
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
     end
-    vim.cmd("silent! w!")
+    vim.cmd "silent! w!"
   end, { desc = "[General] Save file silently" })
 
   map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })

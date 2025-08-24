@@ -27,7 +27,7 @@ function M.setup()
   require("mappings.lsp_mappings").setup()
   require("mappings.trouble_mappings").setup()
   require("mappings.utils_mappings").setup()
-  require("mappings.buffers_mappings").setup()
+  require("mappings.buf_win_tab_mappings").setup()
   require("mappings.git_mappings").setup()
   require("mappings.harpoon_mappings").setup()
   require("mappings.editing_mappings").setup()
@@ -36,9 +36,8 @@ function M.setup()
   require("mappings.custom_mappings").setup()
   require("mappings.nvchad_mappings").setup()
   require("mappings.contextmenu_mappings").setup()
-
-require("mappings.extra_diagnostics").setup()
-  --require("mappings.test_mappings").setup()
+  require("mappings.extra_diagnostics").setup()
+  require("mappings.test_mappings").setup()
 
   vim.g.__map_helper = nil
 end

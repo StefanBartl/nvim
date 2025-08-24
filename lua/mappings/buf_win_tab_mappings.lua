@@ -15,6 +15,10 @@ function M.setup()
     vim.cmd("bd " .. current)
   end, { desc = "[Buffers] Close current, go to next" })
 
+  map({ "n", "v" }, "<M-x>", "<Cmd>close<CR>", { desc = "[Windows] Close window" })
+  map("i", "<M-x>", "<C-o><Cmd>close<CR>", { desc = "[Windows] Close window (insert)" })
+  map("t", "<M-x>", "<C-\\><C-n><Cmd>close<CR>", { desc = "[Windows] Close window (terminal)" })
+
   map("n", "<leader>del", ":lua confirm_delete()<CR>", { desc = "[General] Delete selected file (confirm)" })
   map("n", "<leader>d!!", ":call DeleteFile()<CR>", { desc = "[General] Delete file (no confirm) & close buffer" })
   map("n", "<leader>dd", function()
