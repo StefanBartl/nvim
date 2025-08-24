@@ -25,9 +25,10 @@ require("lazy").setup({
   { import = "plugins" },
 }, lazy_config)
 
--- load theme
---dofile(vim.g.base46_cache .. "default")
---dofile(vim.g.base46_cache .. "statusline")
+-- Apply NvChad Base46 theme caches immediately at startup.
+-- This ensures the colorscheme & statusline palette is active from the first frame.
+pcall(dofile, vim.g.base46_cache .. "defaults")
+pcall(dofile, vim.g.base46_cache .. "statusline")
 
 require "system.env"
 require "options"
