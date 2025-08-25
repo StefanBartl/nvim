@@ -194,17 +194,5 @@ return {
         ["--history"] = vim.fn.stdpath "data" .. "/fzf-history",
       },
     },
-    config = function(_, opts)
-      local fzf = require "fzf-lua"
-      fzf.setup(opts)
-
-      -- Enable per-picker history
-      local hist = require "helpers.fzf.history"
-      hist.setup {
-        dir = vim.fn.stdpath "data" .. "/fzf-history",
-        limit = 3000,
-      }
-      hist.wrap_pickers(fzf)
-    end,
   },
 }
