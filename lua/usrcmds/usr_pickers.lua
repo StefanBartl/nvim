@@ -110,10 +110,8 @@ end
 ---@type UsrPickersConfig
 local DEFAULTS = {
   keys = {
-    -- changed: tel_files -> <leader>telf
     tel_files = "<leader>telf",
     tel_grep  = "<leader>telg",
-    -- changed: fzf_files -> <leader>fzff
     fzf_files = "<leader>fzff",
     fzf_grep  = "<leader>fzfg",
   },
