@@ -16,7 +16,7 @@ return {
       -- SQLite-backed prompt history (smart, per-cwd/picker aware).
       -- Remove these two lines if you prefer a plain text file backend.
       { "nvim-telescope/telescope-smart-history.nvim", lazy = true },
-      { "kkharji/sqlite.lua", lazy = true },
+      { "kkharji/sqlite.lua",                          lazy = true },
       -- === END HISTORY BLOCK =======================================
     },
     cmd = "Telescope",
@@ -115,7 +115,7 @@ return {
       if vim.fn.has "win32" == 1 or vim.fn.has "win64" == 1 then
         -- Windows: use CMake build
         return table.concat({
-          "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release",
+          "cmake -S. -B build -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release",
           "cmake --build build --config Release",
           "cmake --install build --prefix build",
         }, " && ")
@@ -161,8 +161,8 @@ return {
             end,
           },
           { name = "All Files", tele_func = builtin.find_files, tele_opts = { no_ignore = true, hidden = true } },
-          { name = "Grep", tele_func = builtin.live_grep },
-          { name = "Buffers", tele_func = builtin.buffers },
+          { name = "Grep",      tele_func = builtin.live_grep },
+          { name = "Buffers",   tele_func = builtin.buffers },
         }, all_drives),
 
         collections = {
@@ -170,8 +170,8 @@ return {
             initial_tab = 1,
             tabs = {
               { name = "Branches", tele_func = builtin.git_branches },
-              { name = "Commits", tele_func = builtin.git_commits },
-              { name = "Stashes", tele_func = builtin.git_stash },
+              { name = "Commits",  tele_func = builtin.git_commits },
+              { name = "Stashes",  tele_func = builtin.git_stash },
             },
           },
         },

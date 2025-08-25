@@ -1,5 +1,8 @@
 # Notes for install this nvim correctly
 
+`npm install --global yarn`
+
+
 ## CLI -Tools
 
 `lazygit`
