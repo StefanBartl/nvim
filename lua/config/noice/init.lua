@@ -75,9 +75,10 @@ M.lsp = {
     ["vim.lsp.util.stylize_markdown"] = true,
     ["cmp.entry.get_documentation"] = true, -- requires hrsh7th/nvim-cmp
   },
-  signature = { enabled = false},
+  signature = { enabled = true},
   hover = { enabled = false },
 }
+
 -- Cmdline:
 --  * Force the classic bottom cmdline instead of the centered popup.
 --  * Ensure search cmdline (/, ?) also uses the bottom cmdline explicitly.
