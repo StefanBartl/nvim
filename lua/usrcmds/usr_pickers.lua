@@ -20,6 +20,26 @@ local M = {}
 ---@type uv
 local uv = vim.uv or vim.loop
 
+-- Immutable defaults ----------------------------------------------------------
+
+---@type UsrPickersConfig
+local DEFAULTS = {
+  keys = {
+    tel_files = "<leader>telf",
+    tel_grep  = "<leader>telg",
+    fzf_files = "<leader>fzff",
+    fzf_grep  = "<leader>fzfg",
+  },
+  commands = {
+    find_files_telescope = "FindFilesTelescope",
+    grep_telescope       = "GrepTelescope",
+    find_files_fzf       = "FindFilesFzf",
+    grep_fzf             = "GrepFzf",
+  },
+  enable_keymaps = true,
+  notify_level = vim.log.levels.INFO,
+}
+
 -- OS detection & helpers ------------------------------------------------------
 
 ---@type boolean
@@ -104,26 +124,6 @@ local function ensure_trailing_sep(p)
     return p .. "/"
   end
 end
-
--- Immutable defaults ----------------------------------------------------------
-
----@type UsrPickersConfig
-local DEFAULTS = {
-  keys = {
-    tel_files = "<leader>telf",
-    tel_grep  = "<leader>telg",
-    fzf_files = "<leader>fzff",
-    fzf_grep  = "<leader>fzfg",
-  },
-  commands = {
-    find_files_telescope = "FindFilesTelescope",
-    grep_telescope       = "GrepTelescope",
-    find_files_fzf       = "FindFilesFzf",
-    grep_fzf             = "GrepFzf",
-  },
-  enable_keymaps = true,
-  notify_level = vim.log.levels.INFO,
-}
 
 -- Utilities -------------------------------------------------------------------
 
