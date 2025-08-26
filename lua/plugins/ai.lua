@@ -3,17 +3,6 @@
 ---@type LazyPluginSpec[]
 return {
   {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    event = "InsertEnter",
-    config = function()
-      require("copilot").setup({
-        suggestion = { enabled = false },   -- wenn man nur via nvim-cmp integrieren will
-        panel = { enabled = false },
-      })
-    end,
-  },
-  {
     "robitx/gp.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
     event = "VeryLazy",
@@ -22,6 +11,18 @@ return {
       require("gp").setup(conf)
     end,
   },
+
+  -- {
+  --   "zbirenbaum/copilot.lua",
+  --   cmd = "Copilot",
+  --   event = "InsertEnter",
+  --   config = function()
+  --     require("copilot").setup({
+  --       suggestion = { enabled = false },
+  --       panel = { enabled = false },
+  --     })
+  --   end,
+  -- },
 
   -- Optional: Copilot.vim legacy plugin (disabled)
   -- {
