@@ -123,7 +123,7 @@ function M.window()
     ["K"] = { "preview", config = { use_float = true } },
 
     -- helpers: copy paths to system clipboard
-    ["[a"] = {
+    ["[p"] = {
       function(state)
         local node = state.tree:get_node()
         local path = node and (node.path or node:get_id()) or ""
@@ -137,7 +137,7 @@ function M.window()
       desc = "Copy absolute path (+)",
     },
 
-    ["{ab"] = {
+    ["]p"] = {
       function(state)
         local node = state.tree:get_node()
         local path = node and (node.path or node:get_id()) or ""
