@@ -28,7 +28,7 @@ M.presets = {
   bottom_search = true,          -- use a classic bottom cmdline (also affects / and ?)
   -- command_palette = true,     -- keep disabled unless both cmdline & popupmenu should be stacked
   long_message_to_split = true,  -- long messages go to a split
-  inc_rename = false,
+  inc_rename = true,
   lsp_doc_border = false,
 }
 

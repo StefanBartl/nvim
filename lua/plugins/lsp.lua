@@ -109,6 +109,14 @@ return {
     end,
   },
 
+  {
+    "smjonas/inc-rename.nvim",
+    cmd = "IncRename",
+    config = function()
+      require("config.inc_rename")
+    end
+  },
+
   --[[
   {
     "iabdelkareem/csharp.nvim",

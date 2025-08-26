@@ -5,9 +5,8 @@ local M = {}
 function M.setup()
   local map = vim.g.__map_helper
 
-  -- Rename
+  --Buffer wide rename
   map("n", "grn", vim.lsp.buf.rename, { desc = "[LSP] Rename" })
-  map("n", "<leader>rn", vim.lsp.buf.rename, { desc = "[LSP] Rename" })
   map("n", "<leader>nam", function()
     local curr = vim.fn.expand "<cword>"
     local newn = vim.fn.input("Rename '" .. curr .. "' to: ", curr)
