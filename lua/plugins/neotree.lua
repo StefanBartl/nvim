@@ -1,7 +1,7 @@
 ---@module 'plugins.neotree'
 --- Neo-tree plugin spec that imports centralized keymaps.
 
-local KM = require("config.neotree.keymaps")
+local KM = require "config.neotree.keymaps"
 
 return {
   "neo-tree.nvim",
@@ -28,7 +28,7 @@ return {
       {
         event = "file_opened",
         handler = function()
-          require("neo-tree.command").execute({ action = "close" })
+          require("neo-tree.command").execute { action = "close" }
         end,
       },
     },
@@ -48,8 +48,15 @@ return {
       },
       git_status = {
         symbols = {
-          added = "A", deleted = "D", modified = "M", renamed = "R",
-          untracked = "U", ignored = "I", unstaged = "", staged = "S", conflict = "C",
+          added = "A",
+          deleted = "D",
+          modified = "M",
+          renamed = "R",
+          untracked = "U",
+          ignored = "I",
+          unstaged = "",
+          staged = "S",
+          conflict = "C",
         },
       },
     },
@@ -67,13 +74,32 @@ return {
       use_libuv_file_watcher = true,
       window = { mappings = KM.filesystem() },
       filtered_items = {
+
+        -- Everything is visible by default
+        visible = true,
         hide_dotfiles = false,
         hide_gitignored = false,
+
+        -- Hide files marked "hidden" by the filesystem (mainly relevant on Windows),
+        hide_hidden = false,
+        hide_by_pattern = {},
         hide_by_name = {
-          ".git", ".hg", ".svc", ".DS_Store", "thumbs.db", ".sass-cache",
-          "node_modules", ".pytest_cache", ".mypy_cache", "__pycache__",
-          ".stfolder", ".stversions",
+          ".git",
+          ".hg",
+          ".svc",
+          ".DS_Store",
+          "thumbs.db",
+          ".sass-cache",
+          "node_modules",
+          ".pytest_cache",
+          ".mypy_cache",
+          "__pycache__",
+          ".stfolder",
+          ".stversions",
         },
+
+        -- Items listed here are *never* shown, even if `visible = true`.
+        never_show = {},
         never_show_by_pattern = { "vite.config.js.timestamp-*" },
       },
     },
