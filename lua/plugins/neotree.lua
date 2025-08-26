@@ -8,15 +8,7 @@ return {
   branch = "v3.x",
   dependencies = { "MunifTanjim/nui.nvim" },
   lazy = false,
-
-  -- Optional: Framework-spezifische globale Remaps (außerhalb Neo-tree); auskommentiert lassen, wenn unerwünscht.
-  -- keys = {
-  --   { "<localleader>e", "<leader>fe", desc = "Explorer Tree (Root Dir)", remap = true },
-  --   { "<localleader>E", "<leader>fE", desc = "Explorer Tree (cwd)",      remap = true },
-  -- },
-
   opts = {
-    -- Wichtig: Eigene Mappings haben Vorrang; Defaults werden gezielt via "noop" neutralisiert.
     close_if_last_window = true,
     popup_border_style = "rounded",
     sort_case_insensitive = true,
@@ -92,6 +84,7 @@ return {
   },
 
   config = function(_, opts)
+    require("config.neotree.usr_picker").attach(opts)
     require("neo-tree").setup(opts)
     require("config.neotree.keymaps").setup_autocmds()
   end,
