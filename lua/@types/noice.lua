@@ -1,0 +1,3 @@
+---@class NoiceConfig
+---@field [string] table
+---@field debug boolean

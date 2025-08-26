@@ -2,58 +2,22 @@
 --- Personal and local development plugins (myterm, mygrep, cmdlog, etc.)
 --- Uses platform-aware base path from `system_env`:
 
+if not vim.env.MYGITHUB then
+  vim.notify("[PLUGINS PERSONAL] Environment variable 'MYGITHUB' not set. Personal plugins not available.", 4)
+  return {}
+end
+
 ---@type LazyPluginSpec[]
-return (function()
-  --- Load environment (must be initialized early in init.lua)
-  -- ---@type { repo_base: string }
-  -- local env = require("system.env").get()
-  --
-  -- --- Prefer Neovim 0.10's vim.uv, fallback to vim.loop
-  -- local uv = vim.uv or vim.loop
-  --
-  -- --- Join path segments in a platform-agnostic way
-  -- ---@param ... string
-  -- ---@return string
-  -- local function join(...)
-  --   return vim.fs.joinpath(...)
-  -- end
-  --
-  -- --- Build absolute repo path from base + name
-  -- ---@param name string
-  -- ---@return string
-  -- local function repo(name)
-  --   return join(env.repo_base or "", name)
-  -- end
-
-  -- --- Check if a path exists on disk
-  -- ---@param path string|nil
-  -- ---@return boolean
-  -- local function exists(path)
-  --   if type(path) ~= "string" or path == "" then return false end
-  --   return uv.fs_stat(path) ~= nil
-  -- end
-
-  --[[
-  --- Path to local myterm module under this config
-  ---@return string
-  local function myterm_local_dir()
-    return join(vim.fn.stdpath("config"), "lua", "custom", "myterm")
-  end
-  ]] --
-
   return {
 
-    --[[
     -- nvim-containers: Manage container engines from Neovim
     {
-      dir = repo("nvim-containers"),
-      cond = exists(repo("nvim-containers")),
+      dir = vim.fs.joinpath(vim.env.MYGITHUB, "/nvim-containers"),
       event = "VeryLazy",
       config = function()
         require("containers").setup({})
       end,
     },
-    ]]--
 
     -- nvim-cmdlog: Command history management (remote plugin)
     {
@@ -121,4 +85,3 @@ return (function()
     -- },
 
   }
-end)()

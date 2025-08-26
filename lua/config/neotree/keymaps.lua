@@ -115,12 +115,11 @@ function M.window()
     -- create/delete
     ["dd"] = "delete",
     ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
-    ["N"] = { "add_directory", config = { show_path = "relative" } },
+    ["A"] = { "add_directory", config = { show_path = "relative" } },
     -- ["m"] = { "move", config = { show_path = "relative" } },
 
-    -- preview: Tab toggles floating preview, K once
+    -- preview: Tab toggles floating preview
     ["<Tab>"] = { "toggle_preview", config = { use_float = true } },
-    ["K"] = { "preview", config = { use_float = true } },
 
     -- helpers: copy paths to system clipboard
     ["[p"] = {

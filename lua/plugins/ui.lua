@@ -18,25 +18,13 @@ return {
   },
 
   -- Noice: Enhanced command line and LSP UI
+  -- + nvim-notify
   {
     "folke/noice.nvim",
     lazy = false,
-    event = nil,
     opts = require "config.noice",
     dependencies = {
       "MunifTanjim/nui.nvim",
-      {
-        "rcarriga/nvim-notify",
-        main = "notify", -- tells Lazy which module to setup
-        opts = require "config.notify", -- config/notify/init.lua returns a table
-        init = function()
-          -- ensure Neovim uses nvim-notify for vim.notify
-          local ok, notify = pcall(require, "notify")
-          if ok then
-            vim.notify = notify
-          end
-        end,
-      },
     },
   },
 
