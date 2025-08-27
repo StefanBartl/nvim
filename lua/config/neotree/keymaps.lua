@@ -187,11 +187,11 @@ function M.window()
         local is_wsl = require "lib.is_wsl"
 
         local mod
-        if vim.fn.has "win32" == 1 or vim.fn.has "win64" == 1 or is_wsl() then
-          -- Windows nativ oder WSL → Explorer
+        if vim.fn.has "win32" == 1 or vim.fn.has "win64" == 1 then
           mod = "config.neotree.open_fm.win"
+        elseif is_wsl() then
+          mod = "config.neotree.open_fm.wsl"
         else
-          -- macOS oder echtes Linux → Unix-Modul
           mod = "config.neotree.open_fm.unix"
         end
 
