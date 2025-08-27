@@ -7,7 +7,7 @@ local CFG = {
   -- Picker title shown in the UI.
   title = "Notes",
   -- Directory to search. "~" will be expanded. Keep Linux/macOS style.
-  dir = vim.fn.expand "~" .. "/MyGithub/Notes/MyNotes",
+  dir = vim.fn.expand "~" .. "/repos/Notes/MyNotes",
   notify = true,
 }
 

@@ -17,11 +17,11 @@
 
     local repo_base
     if is_win then
-      repo_base = "E:\\MyGithub"
+      repo_base = "E:\\repos"
     elseif is_wsl then
-      repo_base = "/mnt/e/MyGithub"
+      repo_base = "/mnt/e/repos"
     else
-      repo_base = home .. "/MyGithub"
+      repo_base = home .. "/repos"
     end
 
     return {

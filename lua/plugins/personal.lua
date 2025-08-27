@@ -2,48 +2,49 @@
 --- Personal and local development plugins (myterm, mygrep, cmdlog, etc.)
 --- Uses platform-aware base path from `system_env`:
 
-if not vim.env.MYGITHUB then
-  vim.notify("[PLUGINS PERSONAL] Environment variable 'MYGITHUB' not set. Personal plugins not available.", 4)
+if not vim.env.REPOS_DIR then
+  vim.notify("[PLUGINS PERSONAL] Environment variable 'repos' not set. Personal plugins not available.", 4)
   return {}
 end
 
 ---@type LazyPluginSpec[]
-  return {
+return {
 
-    -- nvim-containers: Manage container engines from Neovim
-    {
-      dir = vim.fs.joinpath(vim.env.MYGITHUB, "/nvim-containers"),
-      event = "VeryLazy",
-      config = function()
-        require("containers").setup({})
-      end,
+  {
+    "StefanBartl/nvim-cmdlog",
+    lazy = false,
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      { "nvim-telescope/telescope.nvim" },
+      { "ibhagwan/fzf-lua", optional = true },
     },
+    config = function()
+      require("cmdlog").setup {
+        picker = "telescope",
+      }
+    end,
+  },
 
-    -- nvim-cmdlog: Command history management (remote plugin)
-    {
-      "StefanBartl/nvim-cmdlog",
-      lazy = false,
-      dependencies = {
-        "nvim-lua/plenary.nvim",
-    { "nvim-telescope/telescope.nvim" },
-    { "ibhagwan/fzf-lua", optional = true },
-      },
-      config = function()
-        require("cmdlog").setup({
-          picker = "telescope",
-        })
-      end,
-    },
-    -- Optional: local dev version of cmdlog
-    -- {
-    --   dir = repo("nvim-cmdlog"),
-    --   cond = exists(repo("nvim-cmdlog")),
-    --   config = function()
-    --     require("cmdlog").setup({ picker = "telescope" })
-    --   end,
-    -- },
+  -- nvim-containers: Manage container engines from Neovim
+  -- {
+  --   dir = vim.fs.joinpath(vim.env.REPOS_DIR, "/nvim-containers"),
+  --   event = "VeryLazy",
+  --   config = function()
+  --     require("containers").setup({})
+  --   end,
+  -- },
+  --
+  -- nvim-cmdlog: Command history management (remote plugin)
+  -- Optional: local dev version of cmdlog
+  -- {
+  --   dir = repo("nvim-cmdlog"),
+  --   cond = exists(repo("nvim-cmdlog")),
+  --   config = function()
+  --     require("cmdlog").setup({ picker = "telescope" })
+  --   end,
+  -- },
 
-    --[[
+  --[[
 
     -- reposcope.nvim: GitHub repo explorer
     {
@@ -56,10 +57,11 @@ end
       end,
     },
 
-    ]]--
+    ]]
+  --
 
-    -- myterm.local: Custom terminal interface with layout switching
-    --[[
+  -- myterm.local: Custom terminal interface with layout switching
+  --[[
     {
       name = "myterm.local",
       dir = myterm_local_dir(),
@@ -69,19 +71,19 @@ end
         require("custom.myterm")
       end,
     },
-    ]] --
+    ]]
+  --
 
-    -- mygrep.nvim: Grep interface with memory, history, favorites
-    -- {
-    --   dir = repo("mygrep.nvim"),
-    --   cond = exists(repo("mygrep.nvim")),
-    --   name = "mygrep",
-    --   lazy = false,
-    --   config = function()
-    --     require("mygrep").setup({
-    --       tool_picker_style = "ui",
-    --     })
-    --   end,
-    -- },
-
-  }
+  -- mygrep.nvim: Grep interface with memory, history, favorites
+  -- {
+  --   dir = repo("mygrep.nvim"),
+  --   cond = exists(repo("mygrep.nvim")),
+  --   name = "mygrep",
+  --   lazy = false,
+  --   config = function()
+  --     require("mygrep").setup({
+  --       tool_picker_style = "ui",
+  --     })
+  --   end,
+  -- },
+}

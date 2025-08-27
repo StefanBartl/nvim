@@ -8,7 +8,7 @@ local CFG = {
   -- Picker title shown in the UI.
   title = "WKD Books",
   -- Directory to search. "~" will be expanded. Keep Linux/macOS style.
-  dir = vim.fn.expand "~" .. "/MyGithub/WKDBooks/",
+  dir = vim.fn.expand "~" .. "/repos/WKDBooks/",
   notify = true,
 }
 
