@@ -9,25 +9,26 @@ M.ui = {
 }
 
 M.base46 = {
-   transparency = false,
-  --theme = "default",
-	--theme = "default-dark",
-  --theme = "vim_default",
-  --theme = "github_dark",
-  --theme = "aylin",
-  --theme = "tokyonight",
-  --theme = "solarized_dark",
-  --theme = "scaryforest",
-  --theme = "starlight",
-  --theme = "vesper",
-  --theme = "eldritch",
-  --theme = "gruvchad",
-  --theme = "gruvbox",
-  --theme = "poimandres",
-  --theme = "radium",
-  --theme = "rosepine",
-  --theme = "flouromachine",
+   transparency = true,
+
+		-- theme = "default-light",
+		theme = "vim_default",
+		-- theme = "github_dark",
+		-- theme = "aylin",
+		-- theme = "tokyonight",
+		-- theme = "solarized_dark",
+		-- theme = "scaryforest",
+		-- theme = "starlight",
+		-- theme = "vesper",
+		-- theme = "eldritch",
+		-- theme = "gruvchad",
+		-- theme = "gruvbox",
+		-- theme = "poimandres",
+		-- theme = "radium",
+		-- theme = "rosepine",
+		-- theme = "flouromachine",
 }
+
 
 if vim.g.is_windows and vim.g.is_pwsh then
   vim.opt.shell = "pwsh"

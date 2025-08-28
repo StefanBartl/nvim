@@ -30,8 +30,8 @@ require("lazy").setup({
 pcall(dofile, vim.g.base46_cache .. "syntax")
 pcall(dofile, vim.g.base46_cache .. "defaults")
 pcall(dofile, vim.g.base46_cache .. "statusline")
-require "ui.ibl_shim"
-require "ui.ibl"
+require "ui.ibl_shim" -- fzf colorschenme picker depends on this to work correctly
+require "ui.ibl"  -- fzf colorschenme picker depends on this to work correctly
 require "system.env"
 require "options"
 require "custom.last_file.init"
@@ -45,6 +45,3 @@ require_dir "mynotes"
 vim.schedule(function()
 	require("mappings").setup()
 end)
-
-require("custom.theme_picker")
--- require("custom.vim_like_look")
