@@ -1,8 +1,6 @@
 ---@module 'mappings.general'
 -- General purpose keymaps (F1 disable, save, esc helpers).
 
--- WHIHKEY
-
 local M = {}
 
 function M.setup()
@@ -26,9 +24,8 @@ function M.setup()
   end
 
   map("n", "<leader><Esc>", function()
-    require("custom.last_file.last_session").save()
     vim.cmd "qa!"
-  end, { desc = "[General] Save lasz file and Force quit all" })
+  end, { desc = "[General] Force quit all" })
 
   map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
   map({ "n", "i", "v", "t" }, "<C-s>", function()

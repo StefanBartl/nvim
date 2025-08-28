@@ -11,6 +11,7 @@
 local M = {}
 
 require("custom.last_file.commands")
+require("custom.last_file.keymaps")
 
 -- Path to small session file, e.g. ~/.local/share/nvim/last_file.txt
 ---@type string
