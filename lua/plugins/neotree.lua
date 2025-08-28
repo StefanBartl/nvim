@@ -24,6 +24,16 @@ return {
       },
     },
 
+    -- uncomment this if neotree should close after opening a file
+    -- event_handlers = {
+    --   {
+    --     event = "file_opened",
+    --     handler = function()
+    --       require("neo-tree.command").execute { action = "close" }
+    --     end,
+    --   },
+    -- },
+
     default_component_config = {
       indent = { with_expanders = false },
       icon = {
