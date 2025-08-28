@@ -37,6 +37,7 @@ function M.setup()
   require("mappings.nvchad_mappings").setup()
   require("mappings.contextmenu_mappings").setup()
   require("mappings.extra_diagnostics").setup()
+	require("mappings.open_path_mappings")
   require("mappings.test_mappings").setup()
 
   vim.g.__map_helper = nil
