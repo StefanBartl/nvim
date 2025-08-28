@@ -1,4 +1,4 @@
----@module 'debug_adapters.go'
+---@module 'lsp.debug_adapters.go'
 
 local dap = require("dap")
 

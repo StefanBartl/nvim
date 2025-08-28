@@ -1,4 +1,4 @@
----@module 'debug_adapters.dotnet'
+---@module 'lsp.debug_adapters.dotnet'
 
 local dap = require("dap")
 

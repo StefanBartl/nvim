@@ -1,4 +1,4 @@
----@module 'debug_adapters.node'
+---@module 'lsp.debug_adapters.node'
 
 local dap = require("dap")
 

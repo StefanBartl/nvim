@@ -12,7 +12,7 @@ return {
       "jbyuki/one-small-step-for-vimkind",
     },
     config = function()
-      require("debug_adapters.init")
+      require("lsp.debug_adapters.init")
     end,
   },
 
@@ -25,7 +25,8 @@ return {
 
     },
     config = function()
-      local dap, dapui = require("debug_adapters.init"), require("dapui")
+
+      local dap, dapui = require("lsp.debug_adapters.init"), require("dapui")
 
       dapui.setup()
 
