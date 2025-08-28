@@ -9,7 +9,7 @@ return {
   dependencies = { "MunifTanjim/nui.nvim" },
   lazy = false,
   opts = {
-    close_if_last_window = true,
+    close_if_last_window = false,
     popup_border_style = "rounded",
     sort_case_insensitive = true,
 
@@ -21,15 +21,6 @@ return {
         { source = "filesystem", display_name = "  Files" },
         { source = "buffers", display_name = "  Buffers" },
         { source = "git_status", display_name = " 󰊢 Git" },
-      },
-    },
-
-    event_handlers = {
-      {
-        event = "file_opened",
-        handler = function()
-          require("neo-tree.command").execute { action = "close" }
-        end,
       },
     },
 
