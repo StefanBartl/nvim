@@ -120,6 +120,15 @@ function M.window()
 
     -- preview: Tab toggles floating preview
     ["<Tab>"] = { "toggle_preview", config = { use_float = true } },
+  	-- Page-wise scrolling on PageDown/PageUp
+		["<PageDown>"] = { "scroll_preview", config = { direction = -10 } }, -- page down (~10 lines)
+		["<PageUp>"]   = { "scroll_preview", config = { direction =  10 } }, -- page up   (~10 lines)
+		-- Fine-grained scrolling on <C-f>/<C-b>
+		["<C-f>"] = { "scroll_preview", config = { direction = -1 } },  -- down one line
+		["<C-b>"] = { "scroll_preview", config = { direction =  1 } },  -- up one line
+		-- Optional: bigger steps on Shift+PageDown/Shift+PageUp
+		["<S-PageDown>"] = { "scroll_preview", config = { direction = -30 } },
+		["<S-PageUp>"]   = { "scroll_preview", config = { direction =  30 } },
 
     -- helpers: copy paths to system clipboard
     ["[p"] = {
