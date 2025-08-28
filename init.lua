@@ -46,33 +46,5 @@ vim.schedule(function()
 	require("mappings").setup()
 end)
 
--- Vim like theme
--- require "ui.tty_look"
--- require "ui.vim_default_like"
--- vim.api.nvim_create_autocmd("User", {
---   pattern = "VeryLazy",
---   once = true,
---   callback = function()
---     vim.opt.termguicolors = false
---     pcall(vim.cmd.colorscheme, "vim_default_like")
---   end,
--- })
-
--- if exist, apply persistent theme selecion
--- require("custom.themes_picker").apply_persisted()
--- vim.api.nvim_create_user_command("ThemePicker", function()
---   require("custom.themes_picker").pick()
--- end, {})
--- vim.keymap.set("n", "<leader>tp", function()
---   require("csutom.themes_picker").pick()
--- end, { desc = "Unified theme picker (fzf-lua)" })
---
--- -- optional tuning
--- require("custom.themes_picker").setup({
---   disable_base46_when_colorscheme = true,  -- recommended for mixed operation
---   prompt = "Themes❯ ",
---   height = 0.55,
---   width  = 0.32,
---   preview_window = "nohidden:right:0",
---   -- persist_dir = vim.fn.stdpath("data") .. "/my_theme_prefs",
--- })
+require("custom.theme_picker")
+-- require("custom.vim_like_look")
