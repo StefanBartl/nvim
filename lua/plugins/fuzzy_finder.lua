@@ -76,8 +76,8 @@ return {
             -- Insert-mode keymaps for cycling prompt history
             mappings = {
               i = {
-                ["<C-p>"] = actions.cycle_history_prev,
-                ["<C-n>"] = actions.cycle_history_next,
+                ["<C-b>"] = actions.cycle_history_prev,
+                ["<C-f>"] = actions.cycle_history_next,
               },
             },
           }

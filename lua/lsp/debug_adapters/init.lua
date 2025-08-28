@@ -2,8 +2,8 @@
 
 local M = {}
 
-require("debug_adapters.node")
-require("debug_adapters.go")
-require("debug_adapters.dotnet")
+require("lsp.debug_adapters.node")
+require("lsp.debug_adapters.go")
+require("lsp.debug_adapters.dotnet")
 
 return M

@@ -1,9 +1,8 @@
 ---@module 'options'
 --- Opinionated Neovim options grouped by topic.
---- Loads NvChad defaults first, then applies custom overrides.
 
--- Load NvChad defaults first to ensure a known baseline.
-require("nvchad.options")
+--- Loads NvChad defaults first, then applies custom overrides.
+--require("nvchad.options")
 
 -----------------------------------------------------------
 -- Appearance & UI

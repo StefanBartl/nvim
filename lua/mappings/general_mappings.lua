@@ -9,7 +9,7 @@ function M.setup()
   local map = vim.g.__map_helper
 
   -- Toggle Neotree & fcus current buffer's file when opening
-  vim.keymap.set("n", "<C-q>", function()
+  vim.keymap.set("n", "<C-t>", function()
     require("neo-tree.command").execute {
       source = "filesystem", -- ensure filesystem source
       toggle = true, -- open if closed, close if open
