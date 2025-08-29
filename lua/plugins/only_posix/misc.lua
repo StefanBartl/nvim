@@ -1,15 +1,13 @@
-
+-- plugins.platform.posix.lua
+---@type LazyPluginSpec[]
 return {
--- TODO:
-  -- https://github.com/3rd/image.nvim
-{
+  {
     "3rd/image.nvim",
-    build = false, -- so that it doesn't build the rock https://github.com/3rd/image.nvim/issues/91#issuecomment-2453430239
-    opts = {
-        processor = "magick_cli",
-    }
-}
--- require("image").enable() -
-
-
+    cond = function()
+      local os = (vim.uv or vim.loop).os_uname().sysname
+      local has_magick = vim.fn.executable("magick") == 1 or vim.fn.executable("convert") == 1
+      return os ~= "Windows_NT" and has_magick
+    end,
+    opts = { processor = "magick_cli" },
+  },
 }

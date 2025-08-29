@@ -15,7 +15,7 @@ function M.setup()
       -- if the file is outside the current cwd, jump cwd without prompt:
       reveal_force_cwd = true,
       -- choose position explicitly ("left", "right", "float", "current")
-      position = "left",
+      position = "right",
     }
   end, { desc = "[Neo-tree] Toggle & Reveal" })
 

@@ -35,8 +35,7 @@ end
 
 -- Here you can preset files for harpoon ui
 -- Build targets (make sure these exist)
-local env     = require("system.env").get()
-local root    = env.repo_base
+local root    = vim.env.REPOS_DIR
 local targets = {
 
   canon(vim.fs.joinpath(root, "Notes", "MyNotes", "CLI-Notes", "CLI-Tools.md")),

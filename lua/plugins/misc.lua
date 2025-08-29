@@ -35,13 +35,9 @@ return {
 
   {
     "NStefan002/screenkey.nvim",
-    lazy = false,
+		cmd = "Screenkey",
+    lazy = true,
     version = "*",
   },
 
-  {
-    "mg979/vim-visual-multi",
-    branch = "master",
-    lazy = false,
-  },
 }

@@ -4,8 +4,7 @@
 ---@type LazyPluginSpec[]
 return {
 
-
---[[
+	--[[
   ---@type LazyPluginSpec
   {
     "MeanderingProgrammer/render-markdown.nvim",
@@ -23,16 +22,18 @@ return {
       })
     end,
   },
-  ]]--
+  ]] --
 
-{
-  "iamcco/markdown-preview.nvim",
-  cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-  build = "cd app && yarn install",
-  init = function()
-    vim.g.mkdp_filetypes = { "markdown" }
-  end,
-  ft = { "markdown" },
-},
+	{
+		"iamcco/markdown-preview.nvim",
+		cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+		ft = { "markdown" },
+		build = function() vim.fn["mkdp#util#install"]() end, -- without yarn
+		-- with yarn
+		-- build = "cd app && yarn install",
+		-- init = function()
+		--   vim.g.mkdp_filetypes = { "markdown" }
+		-- end,
+	},
 
 }

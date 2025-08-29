@@ -28,8 +28,9 @@ return {
   -- Diffview: Side-by-side Git diffs
   {
     "sindrets/diffview.nvim",
-    requires = { "nvim-lua/plenary.nvim" },
-    lazy = false,
+    dependencies = { "nvim-lua/plenary.nvim" },
+    cmd = "DiffView",
+		lazy = true,
     config = true,
   },
 

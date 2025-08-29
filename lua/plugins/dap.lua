@@ -26,7 +26,8 @@ return {
     },
     config = function()
 
-      local dap, dapui = require("lsp.debug_adapters.init"), require("dapui")
+      local dap = require("dap")
+			local dapui = require("dapui")
 
       dapui.setup()
 

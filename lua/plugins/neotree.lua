@@ -4,7 +4,7 @@
 local KM = require "config.neotree.keymaps"
 
 return {
-  "neo-tree.nvim",
+  "nvim-neo-tree/neo-tree.nvim",
   branch = "v3.x",
   dependencies = { "MunifTanjim/nui.nvim" },
   lazy = false,
@@ -65,6 +65,7 @@ return {
     window = {
       width = 30,
       mappings = KM.window(),
+			position = "right",
     },
 
     filesystem = {

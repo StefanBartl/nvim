@@ -12,7 +12,7 @@ M.base46 = {
    transparency = true,
 
 		-- theme = "default-light",
-		theme = "vim_default",
+		-- theme = "vim_default",
 		-- theme = "github_dark",
 		-- theme = "aylin",
 		-- theme = "tokyonight",
@@ -29,7 +29,7 @@ M.base46 = {
 		-- theme = "flouromachine",
 }
 
-
+-- depends on /system/env.lua
 if vim.g.is_windows and vim.g.is_pwsh then
   vim.opt.shell = "pwsh"
   vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"

@@ -4,32 +4,39 @@
 ---@type LazyPluginSpec[]
 return {
 
-  -- Better Quickfix UI
-  {
-    "kevinhwang91/nvim-bqf",
-    ft = "qf",
-    opts = {
-      auto_enable = true,
-      auto_resize_height = true,
-    },
-    config = function(_, opts)
-      require("bqf").setup(opts)
-    end,
-  },
+	-- Better Quickfix UI
+	{
+		"kevinhwang91/nvim-bqf",
+		ft = "qf",
+		opts = {
+			auto_enable = true,
+			auto_resize_height = true,
+		},
+		config = function(_, opts)
+			require("bqf").setup(opts)
+		end,
+	},
 
-  -- Noice: Enhanced command line and LSP UI
-  -- + nvim-notify
-  {
-    "folke/noice.nvim",
-    lazy = false,
-    opts = require "config.noice",
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-    },
-  },
+	-- Noice: Enhanced command line and LSP UI
+	-- + nvim-notify
+	{
+		"folke/noice.nvim",
+		lazy = "VeryLazy", -- WATCH:
+		opts = require "config.noice",
+		dependencies = {
+			"MunifTanjim/nui.nvim",
+		},
+	},
 
-  -- Zen Mode: Distraction-free writing
-  {
-    "folke/zen-mode.nvim",
-  },
+	{
+		"mg979/vim-visual-multi",
+		branch = 'master',
+		lazy = true,
+	},
+
+	-- Zen Mode: Distraction-free writing
+	{
+		"folke/zen-mode.nvim",
+		cmd = "ZenMode",
+	},
 }

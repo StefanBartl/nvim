@@ -1,6 +1,5 @@
 ---@module 'plugins.textobjects'
 --- Textobject extensions for motions and selections.
---- Info: Treesitter itself is defined in `essentials.lua`, this file only adds enhancements.
 
 ---@type LazyPluginSpec[]
 return {
@@ -21,18 +20,4 @@ return {
     event = "VeryLazy",
   },
 
-  -- Treesitter-based textobjects (dependent on nvim-treesitter)
-  {
-    "nvim-treesitter/nvim-treesitter-textobjects",
-    lazy = true,
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-  },
-
-  {
-    "nvim-treesitter/nvim-treesitter-context",
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    config = function()
-      require("treesitter-context").setup()
-    end
-  },
 }
