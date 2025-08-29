@@ -5,6 +5,8 @@
 return {
 
 	-- Telescope: Main fuzzy finder with extensions (history wrapped in a single block)
+	-- In your telescope spec (plugins/fuzzy_finder.lua)
+
 	{
 		"nvim-telescope/telescope.nvim",
 		dependencies = {
@@ -12,27 +14,42 @@ return {
 			"nvim-treesitter/nvim-treesitter",
 			"nvim-telescope/telescope-github.nvim",
 
-			-- === HISTORY BLOCK (dependencies, optional but recommended) ===
-			-- SQLite-backed prompt history (smart, per-cwd/picker aware).
-			-- Remove these two lines if you prefer a plain text file backend.
-			{ "nvim-telescope/telescope-smart-history.nvim", lazy = true },
-			{ "kkharji/sqlite.lua",                          lazy = true },
-			-- === END HISTORY BLOCK =======================================
+			-- Install sqlite + smart_history only when it can actually work.
+			-- On Windows default to false; allow opt-in via NVIM_SQLITE_FORCE=1.
+			{
+				"kkharji/sqlite.lua",
+				cond = function()
+					local is_win = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1)
+					if is_win then
+						-- Allow explicit opt-in once you've placed sqlite3.dll correctly.
+						return vim.env.NVIM_SQLITE_FORCE == "1"
+					end
+					return true
+				end,
+			},
+			{
+				"nvim-telescope/telescope-smart-history.nvim",
+				cond = function()
+					local is_win = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1)
+					if is_win and vim.env.NVIM_SQLITE_FORCE ~= "1" then
+						return false
+					end
+					-- If not Windows or explicitly forced, still check that the sqlite module can be required.
+					local ok = pcall(require, "sqlite")
+					return ok
+				end,
+			},
 		},
 		cmd = "Telescope",
 		opts = function(_, opts)
 			opts = opts or {}
 
-			-- Detect sqlite capability once
-			local has_sqlite = pcall(require, "sqlite")
+			-- Robust capability check: require('sqlite') must succeed AND
+			-- (on Windows) be explicitly forced by env var.
+			local is_win = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1)
+			local has_sqlite = (not is_win or vim.env.NVIM_SQLITE_FORCE == "1") and pcall(require, "sqlite")
 
-			-- === HISTORY BLOCK (begin) ===================================
-			---@class TelescopeHistoryBlock
-			---@field backend '"sqlite"'|'"file"'   -- Switch storage backend
-			---@field dir string                    -- Base directory for history files
-			---@field path string                   -- Concrete file path (resolved by ensure())
-			---@field limit integer                 -- Max history items
-			---@field extensions string[]           -- Extensions to load for this backend
+			-- History block with backend fallback
 			local HISTORY = {
 				backend    = has_sqlite and "sqlite" or "file",
 				dir        = vim.fn.stdpath("data") .. "/databases",
@@ -40,9 +57,6 @@ return {
 				limit      = 3000,
 				extensions = {},
 			}
-
-			---Ensure the history path exists and set extension list accordingly.
-			---@return string path
 			function HISTORY.ensure()
 				if HISTORY.backend == "sqlite" then
 					if vim.fn.isdirectory(HISTORY.dir) == 0 then vim.fn.mkdir(HISTORY.dir, "p") end
@@ -57,7 +71,6 @@ return {
 				return HISTORY.path
 			end
 
-			-- Merge defaults exactly once; no call to non-existent HISTORY.defaults()
 			local actions = require("telescope.actions")
 			opts.defaults = vim.tbl_deep_extend("force", opts.defaults or {}, {
 				history = { path = HISTORY.ensure(), limit = HISTORY.limit },
@@ -71,14 +84,13 @@ return {
 				},
 			})
 
-			-- Extensions to load; add history-related ones if sqlite is available
+			-- Only load smart_history if sqlite is truly available
 			opts.extensions_list = { "fzf", "gh" }
 			vim.list_extend(opts.extensions_list, HISTORY.extensions)
-
 			return opts
 		end,
 		config = function(_, opts)
-			local telescope = require "telescope"
+			local telescope = require("telescope")
 			telescope.setup(opts)
 			for _, ext in ipairs(opts.extensions_list or {}) do
 				pcall(telescope.load_extension, ext)
@@ -156,20 +168,30 @@ return {
 		end,
 	},
 
-	-- fzf-lua: Alternative fuzzy finder based on fzf
 	{
-		"ibhagwan/fzf-lua",
-		lazy = true,
-		opts = {
-			keymap = {
-				fzf = {
-					["ctrl-p"] = "next-history",
-					["ctrl-n"] = "prev-history",
-				},
-			},
-			fzf_opts = {
-				["--history"] = vim.fn.stdpath "data" .. "/fzf-history",
+		"nvim-telescope/telescope-file-browser.nvim",
+		dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" },
+		-- optional: lazy-load with Telescope command
+		keys = {
+			{
+				"<leader>.",
+				function()
+					-- ensure telescope is loaded, then load extension and open it
+					local ok, telescope = pcall(require, "telescope")
+					if not ok then
+						vim.notify("telescope.nvim not available", vim.log.levels.WARN)
+						return
+					end
+					pcall(telescope.load_extension, "file_browser")
+					telescope.extensions.file_browser.file_browser()
+				end,
+				desc = "Telescope File Browser"
 			},
 		},
+		config = function()
+			-- safe to call repeatedly; pcall prevents hard errors
+			local ok, telescope = pcall(require, "telescope")
+			if ok then pcall(telescope.load_extension, "file_browser") end
+		end,
 	},
 }
