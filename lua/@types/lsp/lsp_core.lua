@@ -1,4 +1,5 @@
----@module '@types.lsp_core'
+---@meta
+---@module 'lsp.types.lsp_core'
 
 ---@class lsp.Client
 ---@field name string

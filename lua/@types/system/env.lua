@@ -1,3 +1,6 @@
+---@meta
+---@module 'system.types.env'
+
 ---@class SystemEnv
 ---@field is_windows boolean
 ---@field is_macos boolean

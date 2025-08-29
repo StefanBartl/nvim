@@ -1,3 +1,6 @@
+---@meta
+---@module 'usrcmds.types.usr_pickers'
+
 ---@alias DirPath string
 
 ---@class UsrPickersKeymaps

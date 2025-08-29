@@ -1,3 +1,5 @@
+---@meta
+---@module 'lsp.types.lsp_core'
 
 ---@alias Bufnr integer
 

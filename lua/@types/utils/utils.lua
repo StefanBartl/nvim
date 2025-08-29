@@ -1,3 +1,6 @@
+---@meta
+---@module 'utils.types.usr_pickers'
+
 ---@alias MoveDirectionDbg '"up"'|'"down"'
 
 ---@class DebugDumpOpts

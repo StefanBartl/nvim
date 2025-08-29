@@ -1,6 +1,5 @@
 ---@module 'plugins.personal'
 --- Personal and local development plugins (myterm, mygrep, cmdlog, etc.)
---- Uses platform-aware base path from `system_env`:
 
 if not vim.env.REPOS_DIR then
   vim.notify("[PLUGINS PERSONAL] Environment variable 'repos' not set. Personal plugins not available.", 4)

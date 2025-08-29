@@ -1,4 +1,5 @@
----@module '@types.lazy'
+---@meta
+---@module 'plugins.types.lazy'
 --- Type definitions for Lazy.nvim plugin specifications
 
 --- Universal Lazy plugin spec – accepts all keys of any type

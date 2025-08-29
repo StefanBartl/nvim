@@ -15,14 +15,17 @@
     local home = vim.fn.expand("~")
     local pathsep = is_win and "\\" or "/"
 
-    local repo_base
-    if is_win then
-      repo_base = "E:\\repos"
-    elseif is_wsl then
-      repo_base = "/mnt/e/repos"
-    else
-      repo_base = home .. "/repos"
-    end
+    local repo_base = vim.env.MYGITHUB
+
+		-- WATCH:  Check if vim.env.MYGITHUB is correct
+
+    -- if is_win then
+    --   repo_base = "E:\\repos"
+    -- elseif is_wsl then
+    --   repo_base = "/mnt/e/repos"
+    -- else
+    --   repo_base = home .. "/repos"
+    -- end
 
     return {
       is_windows = is_win,
