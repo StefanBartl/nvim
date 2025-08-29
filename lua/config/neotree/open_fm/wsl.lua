@@ -1,8 +1,9 @@
 ---@module 'config.neotree.open_fm.wsl'
---- WSL-specific "open in file manager" for Neo-tree.
---- Converts Linux paths to Windows paths via `wslpath -w`
---- and opens Windows Explorer (file reveal or folder open).
---- Falls back to `cmd.exe /C start` and optionally `wslview`/`xdg-open`.
+--- WSL-specific "open in file manager" for Neo-tree, fixed to avoid double-launch.
+--- Key changes:
+---   - Do not treat non-zero exit codes from explorer.exe as failure (WSL peculiarity).
+---   - Only fall back if spawning the primary command fails altogether.
+
 
 local M ---@type NeoTreeWslFM
 M = { _cfg = { backend = "explorer", silent = true } }
@@ -16,66 +17,67 @@ local function is_wsl()
     local ok2, ans = pcall(mod)
     if ok2 and type(ans) == "boolean" then return ans end
   end
-  -- Fallback detection
-  local has = vim.fn.has
+  -- Fallback: heuristic via kernel release
   local uname = (vim.uv or vim.loop).os_uname().release:lower()
-  return has("wsl") == 1 or uname:find("microsoft", 1, true) ~= nil
+  return vim.fn.has("wsl") == 1 or uname:find("microsoft", 1, true) ~= nil
 end
 
 ---@private
 ---@param s string
 ---@return string
 local function quote_if_needed(s)
-  if s:find("[%s]") then
-    -- Wrap in quotes if spaces exist; Explorer supports quoted path segments
-    return '"' .. s .. '"'
-  end
+  -- Simple quoting to protect spaces; explorer.exe accepts quoted arguments
+  if s:find("[%s]") then return '"' .. s .. '"' end
   return s
 end
 
 ---@private
----@param p UnixPath
----@return WinPath|nil
-local function to_windows_path(p)
-  -- Normalize to absolute, strip quotes to keep system calls clean
-  p = vim.fn.fnamemodify(p, ":p")
+---@param p string
+---@return string
+local function abs_unix(p)
+  -- Normalize to absolute, strip any accidental quotes first
   p = p:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1")
+  return vim.fn.fnamemodify(p, ":p")
+end
 
-  -- Convert using wslpath; reliable on all WSL distros
+---@private
+---@param p string
+---@return string|nil
+local function to_windows_path(p)
+  -- Convert a WSL/Linux path to a Windows path.
+  p = abs_unix(p)
   local out = vim.fn.systemlist({ "wslpath", "-w", p })
   if vim.v.shell_error == 0 and out and out[1] and out[1] ~= "" then
     return out[1]
   end
-
-  -- Fallback: /mnt/c/... → C:\...
+  -- Heuristic for /mnt/<drive>/...
   local drv, rest = p:match("^/mnt/([a-zA-Z])/(.*)")
   if drv and rest then
     return (drv:upper() .. ":\\" .. rest:gsub("/", "\\"))
   end
-
-  -- Last resort: unchanged; some setups may still accept UNC-like paths
-  return p
+  return nil
 end
 
 ---@private
 ---@param argv string[]
----@param on_fail fun(code: integer|nil, stderr: string|nil)
-local function run_detached(argv, on_fail)
+---@return boolean spawned
+local function spawn_detached(argv)
+  -- Fire-and-forget spawn. Returns false only if spawning failed.
   if vim.system then
-    vim.system(argv, { text = true }, function(obj)
-      if obj.code ~= 0 then on_fail(obj.code, obj.stderr) end
-    end)
+    -- Neovim >= 0.10: detach avoids exit-code callbacks entirely
+    local ok = pcall(vim.system, argv, { detach = true })
+    return ok
   else
-    local job = vim.fn.jobstart(argv, { detach = true })
-    if job <= 0 then on_fail(nil, "jobstart failed") end
+    -- Older Neovim: jobstart returns >0 on success
+    local id = vim.fn.jobstart(argv, { detach = true })
+    return id > 0
   end
 end
 
 ---@private
 ---@param state table
----@return string path
+---@return string
 local function get_node_path(state)
-  ---@type any
   local node = state and state.tree and state.tree:get_node() or nil
   return node and (node.path or node:get_id()) or ""
 end
@@ -84,8 +86,9 @@ end
 ---@param cfg WslOpenConfig|nil
 function M.setup(cfg)
   if type(cfg) == "table" then
-    if cfg.backend == "auto" or cfg.backend == "explorer" or cfg.backend == "wslview" then
-      M._cfg.backend = cfg.backend
+    local b = cfg.backend
+    if b == "auto" or b == "explorer" or b == "wslview" then
+      M._cfg.backend = b
     end
     if type(cfg.silent) == "boolean" then
       M._cfg.silent = cfg.silent
@@ -93,14 +96,14 @@ function M.setup(cfg)
   end
 end
 
---- Open the selected node using Windows Explorer from within WSL.
---- Files are revealed with "/select,<path>", folders are opened directly.
----@param state table -- Neo-tree window state passed by the mapping
----@return boolean ok -- true if a launch was attempted; false on early error
+--- Open selected node using Windows Explorer from within WSL.
+--- Files are revealed with '/select,<path>', folders are opened directly.
+---@param state table
+---@return boolean ok
 function M.open(state)
   if not is_wsl() then
     if not M._cfg.silent then
-      vim.notify("Open in File Manager (WSL): WSL only", vim.log.levels.WARN)
+      vim.notify("Open in File Manager (WSL): not a WSL session", vim.log.levels.WARN)
     end
     return false
   end
@@ -119,43 +122,45 @@ function M.open(state)
     return false
   end
 
-  local is_dir = (vim.fn.isdirectory(raw) == 1) -- probe Linux path; works inside WSL
-  local dir_win = is_dir and abs_win or to_windows_path(vim.fn.fnamemodify(raw, ":h"))
+  local is_dir = (vim.fn.isdirectory(abs_unix(raw)) == 1)
+  local dir_win = is_dir and abs_win or to_windows_path(vim.fn.fnamemodify(abs_unix(raw), ":h"))
 
-  -- Primary launcher selection
+  -- Backend selection
   local backend = M._cfg.backend
-  if backend == "auto" then
-    -- Use explorer if available, otherwise try wslview
-    backend = "explorer"
-  end
+  if backend == "auto" then backend = "explorer" end
 
   if backend == "wslview" then
-    -- Optional: wslview opens using Windows default handlers; dirs support varies by version
+    -- wslview opens using Windows default handlers; directory support may vary
     local target = is_dir and (dir_win or abs_win) or abs_win
-    run_detached({ "wslview", target }, function(_, stderr)
-      vim.notify("wslview failed: " .. (stderr or ""), vim.log.levels.WARN)
-    end)
+    local ok = spawn_detached({ "wslview", target })
+    if not ok and not M._cfg.silent then
+      vim.notify("Open in File Manager (WSL): failed to spawn wslview", vim.log.levels.ERROR)
+    end
+    return ok
+  end
+
+  -- Default backend: explorer.exe
+  -- Important: do NOT check exit code (WSL sometimes returns non-zero on success).
+  local primary = is_dir
+    and { "explorer.exe", quote_if_needed(dir_win or abs_win) }
+    or { "explorer.exe", "/select," .. quote_if_needed(abs_win) }
+
+  local spawned = spawn_detached(primary)
+  if spawned then
     return true
   end
 
-  -- Default: explorer.exe
-  local primary = is_dir
-      and { "explorer.exe", quote_if_needed(dir_win or abs_win) }
-      or { "explorer.exe", "/select," .. quote_if_needed(abs_win) }
+  -- Only if spawning failed entirely, try a lightweight one-shot fallback.
+  -- Note: we do NOT use fallback on non-zero exit codes anymore.
+  local fallback = is_dir
+    and { "cmd.exe", "/C", "start", "", quote_if_needed(dir_win or abs_win) }
+    or { "cmd.exe", "/C", "start", "", quote_if_needed(abs_win) }
 
-  local fallback = { "cmd.exe", "/C", "start", "", quote_if_needed(dir_win or abs_win) }
-
-  run_detached(primary, function(_, _)
-    -- Explorer’s exit codes can be flaky; do a best-effort fallback
-    if vim.system then
-      vim.system(fallback, { detach = true }, function(_) end)
-    else
-      vim.fn.jobstart(fallback, { detach = true })
-    end
-  end)
-
-  return true
+  local fb_ok = spawn_detached(fallback)
+  if not fb_ok and not M._cfg.silent then
+    vim.notify("Open in File Manager (WSL): failed to spawn fallback (cmd start)", vim.log.levels.ERROR)
+  end
+  return fb_ok
 end
 
 return M
-
