@@ -65,8 +65,10 @@ return {
     window = {
       width = 30,
       mappings = KM.window(),
-			position = "right",
-    },
+				position = "left",
+			},
+
+		commands = KM.commands(),
 
     filesystem = {
       bind_to_cwd = false,

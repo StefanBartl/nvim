@@ -45,3 +45,7 @@ require_dir "mynotes"
 vim.schedule(function()
 	require("mappings").setup()
 end)
+
+require("utils.open_path").setup()
+
+
