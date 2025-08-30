@@ -116,6 +116,5 @@ return {
   config = function(_, opts)
     require("config.neotree.usr_picker").attach(opts)
     require("neo-tree").setup(opts)
-    require("config.neotree.keymaps").setup_autocmds()
   end,
 }

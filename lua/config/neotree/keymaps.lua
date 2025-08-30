@@ -1,16 +1,16 @@
 ---@module 'config.neotree.keymaps'
 --- Centralized, buffer-local Neo-tree keymaps that override defaults consistently.
---- Split into:
----   1) Window mappings (Neo-tree-only, require `state`)
----   2) Source-specific mappings (filesystem/buffers/git/document_symbols)
----   3) Extra buffer-local bindings applied on `NeoTreeBufferEnter` (e.g. <C-o>)
+--- Adds smart image/PDF preview with opaque backgrounds and PDF page navigation.
+--- This file fixes:
+---   1) Neo-tree mapping shape (no nested `window = { mappings = { ... } }` inside mappings)
+---   2) PDF previews rendered with a non-transparent background (flattened to Normal.bg or fallback)
 ---
---- All mappings are applied only to the Neo-tree buffer and defined late,
---- ensuring they take precedence over plugin defaults.
+--- Requirements:
+---   - Terminal that supports kitty/wezterm image protocol (e.g. WezTerm)
+---   - image_preview.nvim plugin
+---   - ImageMagick (`convert`,`identify`) or Poppler (`pdftoppm`,`pdfinfo`)
 
 local M = {}
-
-local uv = vim.uv or vim.loop
 
 -- ========= Shared helpers (used by both commands and window mappings) =========
 
@@ -51,38 +51,83 @@ local function is_pdf_file(p)
 	return p:sub(-4) == ".pdf"
 end
 
---- Render a specific page of a PDF to a PNG file.
---- Tries ImageMagick 'convert' first, then poppler 'pdftoppm'.
+--- Get editor background color from `Normal` highlight (hex like "#1e1e2e"); fallback if unset.
+---@return string
+local function get_normal_bg_hex()
+	local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = "Normal", link = false })
+	if ok and hl and hl.bg then
+		local r = bit.rshift(bit.band(hl.bg, 0xFF0000), 16)
+		local g = bit.rshift(bit.band(hl.bg, 0x00FF00), 8)
+		local b = bit.band(hl.bg, 0x0000FF)
+		return string.format("#%02x%02x%02x", r, g, b)
+	end
+	return "#111111"
+end
+
+--- Render a specific page of a PDF to a PNG file with an OPAQUE background.
+--- Tries ImageMagick 'convert' first; falls back to Poppler 'pdftoppm' and fixes alpha if possible.
 ---@param pdf_path string
 ---@param page integer  -- zero-based page index
 ---@param out_png string
 ---@return boolean ok, string|nil errmsg
 local function render_pdf_page(pdf_path, page, out_png)
-	-- Prefer ImageMagick
+	local bg = "#ffffff" -- get_normal_bg_hex()
+	local density = "150" -- good readability for text
+
+	-- Preferred: ImageMagick
 	if has_exec("convert") then
-		-- -density 150 for readable text; '[N]' to select page N (0-based)
-		local cmd = { "convert", "-density", "150", ("%s[%d]"):format(pdf_path, page), out_png }
+		-- Order matters: set background, remove alpha, flatten, strip, and force 24-bit PNG (no alpha)
+		local cmd = {
+			"convert",
+			"-density", density,
+			string.format("%s[%d]", pdf_path, page),
+			"-background", bg,
+			"-alpha", "remove",
+			"-alpha", "off",
+			"-flatten",
+			"-strip",
+			string.format("PNG24:%s", out_png),
+		}
 		local _ = vim.fn.system(cmd)
 		if vim.v.shell_error == 0 then return true end
 		return false, "convert failed"
 	end
 
-	-- Fallback: poppler (pdftoppm outputs without extension; we want PNG)
+	-- Fallback: Poppler pdftoppm → PNG (sometimes already opaque; if not, try to fix via convert)
 	if has_exec("pdftoppm") then
 		local base = out_png:gsub("%.png$", "")
 		local cmd = { "pdftoppm", "-png", "-f", tostring(page + 1), "-l", tostring(page + 1), pdf_path, base }
 		local _ = vim.fn.system(cmd)
-		if vim.v.shell_error == 0 and vim.fn.filereadable(base .. ".png") == 1 then
+		local produced = base .. ".png"
+		if vim.v.shell_error ~= 0 or vim.fn.filereadable(produced) ~= 1 then
+			return false, "pdftoppm failed"
+		end
+		if has_exec("convert") then
+			local fix = {
+				"convert",
+				produced,
+				"-background", bg,
+				"-alpha", "remove",
+				"-alpha", "off",
+				"-flatten",
+				"-strip",
+				string.format("PNG24:%s", out_png),
+			}
+			local _2 = vim.fn.system(fix)
+			if vim.v.shell_error == 0 then return true end
+			vim.fn.rename(produced, out_png) -- fallback to whatever pdftoppm produced
+			return true
+		else
+			vim.fn.rename(produced, out_png)
 			return true
 		end
-		return false, "pdftoppm failed"
 	end
 
 	return false, "no renderer (need convert or pdftoppm)"
 end
 
 --- Read total page count for a PDF.
---- Prefers ImageMagick 'identify', falls back to poppler 'pdfinfo'.
+--- Prefers ImageMagick 'identify', falls back to Poppler 'pdfinfo'.
 ---@param pdf_path string
 ---@return integer|nil
 local function read_pdf_page_count(pdf_path)
@@ -98,9 +143,7 @@ local function read_pdf_page_count(pdf_path)
 		local lines = vim.fn.systemlist({ "pdfinfo", pdf_path })
 		if vim.v.shell_error == 0 then
 			for _, line in ipairs(lines) do
-				-- Example: "Pages:          12"
-				local n = line:match("^Pages:%s+(%d+)$")
-				n = tonumber(n)
+				local n = tonumber(line:match("^Pages:%s+(%d+)$"))
 				if n and n > 0 then return n end
 			end
 		end
@@ -115,14 +158,11 @@ end
 ---@param page integer  -- zero-based
 ---@param total integer
 local function set_pdf_statusline(winid, pdf_path, page, total)
-	-- Save previous statusline once per window
 	if vim.w[winid].__pdf_stl_saved == nil then
 		vim.w[winid].__pdf_stl_saved = vim.wo[winid].statusline
 	end
-	-- Keep it simple; left shows file basename; right shows "PDF X/Y".
 	local basename = vim.fn.fnamemodify(pdf_path, ":t")
-	-- "%=" splits left/right; trailing spaces keep a bit of padding.
-	local stl = (" %s %%= PDF %d/%d "):format(basename, page + 1, total)
+	local stl = (" %s %%= PDF %d/%d "):format(basename, page + 1, total) -- "%=" splits left/right
 	vim.wo[winid].statusline = stl
 end
 
@@ -133,8 +173,7 @@ local function clear_pdf_statusline(winid)
 	if prev ~= nil then
 		vim.wo[winid].statusline = prev
 	else
-		-- Empty string => fallback to global 'statusline'
-		vim.wo[winid].statusline = ""
+		vim.wo[winid].statusline = "" -- fallback to global 'statusline'
 	end
 	vim.w[winid].__pdf_stl_saved = nil
 end
@@ -145,45 +184,61 @@ function M.clear_pdf_statusline_for_window(winid)
 	clear_pdf_statusline(winid)
 end
 
----@return string
-local function cwd()
-	return uv.cwd() or vim.fn.getcwd()
-end
-
+--- Safe hide of Neo-tree's floating preview, ignoring errors.
+---@param _ any
 local function hide_preview_safe(_)
 	pcall(function()
 		require("neo-tree.sources.common.preview").hide()
 	end)
 end
 
+-- ========= Window mappings (no nested tables; every key maps to a function/command) =========
+
+---@return table<string, any>
 function M.window()
 	return {
-		-- basic
+		-- basics
 		["q"]             = "close_window",
-		["?"]             = "noop",
-		["g?"]            = "show_help",
+		["?"]             = "show_help",
+		["g?"]            = "noop",
 		["<leader>"]      = "noop",
 
+		-- clear filter, preview and search highlight
 		["<Esc>"]         = function(state)
 			require("neo-tree.sources.filesystem").reset_search(state, true)
 			require("neo-tree.sources.filesystem.lib.filter_external").cancel()
-			pcall(function() require("neo-tree.sources.common.preview").hide() end)
+			hide_preview_safe(state)
 			vim.cmd("nohlsearch")
-			-- also clear any PDF statusline override for this window
 			local winid = state.winid or vim.api.nvim_get_current_win()
 			require("config.neotree.keymaps").clear_pdf_statusline_for_window(winid)
 		end,
 
-		-- open/close (safe variants)
 		["<2-LeftMouse>"] = "open",
 
 		["<CR>"]          = function(state)
 			local node = state.tree:get_node()
+
+			-- 1) expand/collapse directories
 			if node and (node.type == "directory" or (node:has_children() and not node:is_expanded())) then
 				state.commands.toggle_node(state)
 				return
 			end
+
 			hide_preview_safe(state)
+
+			-- 2) PDFs: open via pdf_preview module (own split/buffer)
+			local handled = false
+			do
+				local ok, pp = pcall(require, "config.image_preview.pdf.buffer")
+				if ok and pp and type(pp.open_from_neotree) == "function" then
+					handled = pp.open_from_neotree(state) -- returns true if it opened a PDF preview
+				end
+			end
+			if handled then
+				return
+			end
+
+			-- 3) non-PDFs: normal open (prefer window-picker if present)
 			if pcall(require, "window-picker") then
 				state.commands.open_with_window_picker(state)
 			else
@@ -191,6 +246,7 @@ function M.window()
 			end
 		end,
 
+		-- splits/tabs
 		["SV"]            = function(state)
 			hide_preview_safe(state)
 			if pcall(require, "window-picker") then
@@ -199,7 +255,6 @@ function M.window()
 				state.commands.open_split(state)
 			end
 		end,
-
 		["SG"]            = function(state)
 			hide_preview_safe(state)
 			if pcall(require, "window-picker") then
@@ -222,7 +277,7 @@ function M.window()
 		["z"]             = "close_all_nodes",
 		["<C-r>"]         = "refresh",
 
-		-- splits/tabs
+		-- splits/tabs shorthand
 		["s"]             = "noop",
 		["sv"]            = "open_split",
 		["sg"]            = "open_vsplit",
@@ -230,7 +285,6 @@ function M.window()
 
 		-- source switching
 		["<S-Tab>"]       = "prev_source",
-		-- ["<Tab>"] = "next_source", -- intentionally not used here, reserved for preview
 
 		-- file ops via neo-tree clipboard
 		["c"]             = "copy_to_clipboard",
@@ -242,27 +296,20 @@ function M.window()
 		["dd"]            = "delete",
 		["a"]             = { "add", nowait = true, config = { show_path = "relative" } },
 		["A"]             = { "add_directory", config = { show_path = "relative" } },
-		-- ["m"] = { "move", config = { show_path = "relative" } },
 
-		-- preview: Tab toggles floating preview
+		-- preview toggle + scrolling (Neo-tree preview)
 		["<Tab>"]         = "smart_preview",
-		-- Page-wise scrolling on PageDown/PageUp
-		["<PageDown>"]    = { "scroll_preview", config = { direction = -10 } }, -- page down (~10 lines)
-		["<PageUp>"]      = { "scroll_preview", config = { direction = 10 } }, -- page up   (~10 lines)
-		-- Fine-grained scrolling on <C-f>/<C-b>
-		["<C-f>"]         = { "scroll_preview", config = { direction = -1 } }, -- down one line
-		["<C-b>"]         = { "scroll_preview", config = { direction = 1 } }, -- up one line
-		-- bigger steps on Shift+PageDown/Shift+PageUp
-		-- ["<S-PageDown>"]  = { "scroll_preview", config = { direction = -30 } },
-		-- ["<S-PageUp>"]    = { "scroll_preview", config = { direction = 30 } },
+		["<PageDown>"]    = { "scroll_preview", config = { direction = -10 } },
+		["<PageUp>"]      = { "scroll_preview", config = { direction = 10 } },
+		["<C-f>"]         = { "scroll_preview", config = { direction = -1 } },
+		["<C-b>"]         = { "scroll_preview", config = { direction = 1 } },
 
-		-- PDF scrolling
+		-- PDF page navigation (Shift+PageUp/Down)
 		["<S-PageDown>"]  = "pdf_next_page",
 		["<S-PageUp>"]    = "pdf_prev_page",
 
-
 		-- helpers: copy paths to system clipboard
-		["[p"] = {
+		["[p"]            = {
 			function(state)
 				local node = state.tree:get_node()
 				local path = node and (node.path or node:get_id()) or ""
@@ -276,7 +323,7 @@ function M.window()
 			desc = "Copy absolute path (+)",
 		},
 
-		["]p"] = {
+		["]p"]            = {
 			function(state)
 				local node = state.tree:get_node()
 				local path = node and (node.path or node:get_id()) or ""
@@ -291,8 +338,55 @@ function M.window()
 			desc = "Copy base (dir) path (+)",
 		},
 
+		["]r"]            = {
+			--- Copy the node's relative path to the system clipboard (+).
+			--- Base preference: project root (utils.lv_project_root) → fallback to current working directory.
+			---@param state table
+			function(state)
+				local node = state.tree:get_node()
+				local path = node and (node.path or node:get_id()) or ""
+				if path == "" then
+					vim.notify("no path", vim.log.levels.WARN)
+					return
+				end
+				local base = (vim.uv or vim.loop).cwd() or vim.fn.getcwd()
+				local ok_root, Root = pcall(require, "utils.lv_project_root")
+				if ok_root and type(Root.get) == "function" then
+					base = Root.get(0) or base
+				end
+				local rel = vim.fn.relpath(path, base)
+				vim.fn.setreg("+", rel, "c")
+				vim.notify(("copied: %s"):format(rel), vim.log.levels.INFO)
+			end,
+			desc = "Copy relative path (+) (root→node or cwd→node)",
+		},
+
+		["[r"]            = {
+			--- Copy the node's base directory (relative) to the system clipboard (+).
+			--- Base preference: project root (utils.lv_project_root) → fallback to current working directory.
+			---@param state table
+			function(state)
+				local node = state.tree:get_node()
+				local path = node and (node.path or node:get_id()) or ""
+				if path == "" then
+					vim.notify("no path", vim.log.levels.WARN)
+					return
+				end
+				local dir = (vim.fn.isdirectory(path) == 1) and path or vim.fn.fnamemodify(path, ":h")
+				local base = (vim.uv or vim.loop).cwd() or vim.fn.getcwd()
+				local ok_root, Root = pcall(require, "utils.lv_project_root")
+				if ok_root and type(Root.get) == "function" then
+					base = Root.get(0) or base
+				end
+				local rel = vim.fn.relpath(dir, base)
+				vim.fn.setreg("+", rel, "c")
+				vim.notify(("copied: %s"):format(rel), vim.log.levels.INFO)
+			end,
+			desc = "Copy relative base dir (+) (root→dir or cwd→dir)",
+		},
+
 		-- resize helper
-		["w"]  = function(state)
+		["w"]             = function(state)
 			local normal = state.window.width
 			local large = normal * 1.9
 			local small = math.floor(normal / 1.6)
@@ -306,7 +400,7 @@ function M.window()
 			vim.cmd(new_width .. " wincmd |")
 		end,
 
-		["Y"]  = {
+		["Y"]             = {
 			function(state)
 				local node = state.tree:get_node()
 				local path = node:get_id()
@@ -315,17 +409,16 @@ function M.window()
 			desc = "Copy Path to Clipboard",
 		},
 
-		["O"]  = {
+		["O"]             = {
 			function(state)
 				require("lazy.util").open(state.tree:get_node().path, { system = true })
 			end,
 			desc = "Open with System Application",
 		},
 
-		["M"]  = {
+		["M"]             = {
 			function(state)
 				local is_wsl = require "lib.is_wsl"
-
 				local mod
 				if vim.fn.has "win32" == 1 or vim.fn.has "win64" == 1 then
 					mod = "config.neotree.open_fm.win"
@@ -334,7 +427,6 @@ function M.window()
 				else
 					mod = "config.neotree.open_fm.unix"
 				end
-
 				local ok, fm = pcall(require, mod)
 				if not ok then
 					vim.notify("open_fm module not found: " .. mod, vim.log.levels.ERROR)
@@ -345,7 +437,7 @@ function M.window()
 			desc = "Open in system file manager",
 		},
 
-		["+"]  = {
+		["+"]             = {
 			function(state)
 				local node = state.tree:get_node()
 				local path = node and (node.path or node:get_id()) or ""
@@ -368,7 +460,7 @@ function M.window()
 			desc = "Set Neovim cwd to node and focus Neo-tree there",
 		},
 
-		["-"]  = {
+		["-"]             = {
 			function(state)
 				local current_root = state.path
 				if not current_root or current_root == "" then
@@ -399,7 +491,7 @@ function M.window()
 			desc = "Up one level: set cwd to parent and focus Neo-tree there",
 		},
 
-		["G"]  = {
+		["grep"]          = {
 			function(state)
 				require("config.neotree.fzf_grep_picker").live_grep_node_dir(state)
 			end,
@@ -408,7 +500,7 @@ function M.window()
 	}
 end
 
--- ========= Commands exposed to Neo-tree =========
+-- ========= Commands exposed to Neo-tree (register via opts.commands = KM.commands()) =========
 
 --- Commands table for Neo-tree's `opts.commands`.
 ---@return table<string, fun(state: table)>
@@ -425,14 +517,12 @@ function M.commands()
 			local winid = state.winid or vim.api.nvim_get_current_win()
 
 			if node and node.type == "file" and is_image_file(path) then
-				-- Image: directly preview and clear any PDF statusline from previous previews
 				clear_pdf_statusline(winid)
 				require("image_preview").PreviewImage(path)
 				return
 			end
 
 			if node and node.type == "file" and is_pdf_file(path) then
-				-- Initialize per-buffer PDF state if missing
 				if not vim.b.pdf_page_count or not vim.b.pdf_src or vim.b.pdf_src ~= path then
 					vim.b.pdf_src = path
 					vim.b.pdf_page = 0
@@ -447,7 +537,6 @@ function M.commands()
 					return
 				end
 
-				-- Show image and update statusline
 				require("image_preview").PreviewImage(png)
 				set_pdf_statusline(winid, path, vim.b.pdf_page, vim.b.pdf_page_count)
 				return
@@ -474,7 +563,6 @@ function M.commands()
 			local total = vim.b.pdf_page_count or read_pdf_page_count(node.path) or 1
 			local nextp = math.min((vim.b.pdf_page or 0) + 1, total - 1)
 			if nextp == (vim.b.pdf_page or 0) then
-				-- Already at last page; still refresh statusline to be explicit.
 				set_pdf_statusline(winid, node.path, nextp, total)
 				return
 			end
@@ -498,7 +586,6 @@ function M.commands()
 			local total = vim.b.pdf_page_count or read_pdf_page_count(node.path) or 1
 			local prevp = math.max((vim.b.pdf_page or 0) - 1, 0)
 			if prevp == (vim.b.pdf_page or 0) then
-				-- Already at first page; still refresh statusline to be explicit.
 				set_pdf_statusline(winid, node.path, prevp, total)
 				return
 			end
@@ -514,74 +601,40 @@ function M.commands()
 	}
 end
 
+-- ========= Source-specific extra mappings (unchanged) =========
+
+---@return table<string, any>
 function M.filesystem()
 	return {
-		["d"] = "noop",
-		["/"] = "noop",
-		["f"] = "filter_on_submit",
-		["F"] = "fuzzy_finder",
+		["d"]     = "noop",
+		["/"]     = "noop",
+		["f"]     = "filter_on_submit",
+		["F"]     = "fuzzy_finder",
 		["<C-c>"] = "clear_filter",
 	}
 end
 
+---@return table<string, any>
 function M.buffers()
 	return {
 		["dd"] = "buffer_delete",
 	}
 end
 
+---@return table<string, any>
 function M.git_status()
 	return {
-		["d"] = "noop",
+		["d"]  = "noop",
 		["dd"] = "delete",
 	}
 end
 
+---@return table<string, any>
 function M.document_symbols()
 	return {
 		["/"] = "noop",
 		["F"] = "filter",
 	}
-end
-
--- Extra buffer-local bindings applied after Neo-tree buffer is ready.
--- These use `neo-tree.command` and do not require `state`.
-function M.setup_autocmds()
-	vim.api.nvim_create_autocmd("User", {
-		pattern = "NeoTreeBufferEnter",
-		callback = function(ev)
-			local bufnr = ev.buf
-			local ok_cmd, neo_cmd = pcall(require, "neo-tree.command")
-			if not ok_cmd then
-				return
-			end
-
-			local Root = require "utils.lv_project_root"
-
-			local function reveal_at_root()
-				neo_cmd.execute { source = "filesystem", dir = Root.get(0), reveal = true }
-			end
-			local function reveal_at_cwd()
-				neo_cmd.execute { source = "filesystem", dir = cwd(), reveal = true }
-			end
-
-			-- Only in Neo-tree buffer; defined late → override plugin’s binds if duplicated.
-			vim.keymap.set("n", "<C-o>", reveal_at_root, {
-				buffer = bufnr,
-				silent = true,
-				nowait = true,
-				desc = "Neo-tree: Reveal at project root",
-			})
-
-			-- GUIs may support <C-S-o>; terminals often don't.
-			vim.keymap.set("n", "<C-S-o>", reveal_at_cwd, {
-				buffer = bufnr,
-				silent = true,
-				nowait = true,
-				desc = "Neo-tree: Reveal at cwd",
-			})
-		end,
-	})
 end
 
 return M
