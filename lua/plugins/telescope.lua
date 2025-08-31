@@ -171,12 +171,12 @@ return {
 	{
 		"nvim-telescope/telescope-file-browser.nvim",
 		dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" },
-		-- optional: lazy-load with Telescope command
+
 		keys = {
 			{
 				"<leader>.",
 				function()
-					-- ensure telescope is loaded, then load extension and open it
+					-- Load extension on demand and open with our defaults from setup()
 					local ok, telescope = pcall(require, "telescope")
 					if not ok then
 						vim.notify("telescope.nvim not available", vim.log.levels.WARN)
@@ -185,13 +185,35 @@ return {
 					pcall(telescope.load_extension, "file_browser")
 					telescope.extensions.file_browser.file_browser()
 				end,
-				desc = "Telescope File Browser"
+				desc = "Telescope File Browser (focus current buffer file)",
 			},
 		},
+
 		config = function()
-			-- safe to call repeatedly; pcall prevents hard errors
 			local ok, telescope = pcall(require, "telescope")
-			if ok then pcall(telescope.load_extension, "file_browser") end
+			if not ok then return end
+
+			telescope.setup({
+				extensions = {
+					file_browser = {
+						-- Start im Verzeichnis der aktuellen Datei (wird automatisch expandiert)
+						path = "%:p:h",
+						-- Folder-Browser soll ebenfalls vom 'path' starten (nicht vom CWD)
+						cwd_to_path = true,
+						-- Aktuelle Datei im Browser selektieren/hervorheben (falls erreichbar)
+						select_buffer = true,
+						hidden = true,           -- Dotfiles anzeigen
+						-- respect_gitignore = true -- Gitignore respektieren
+						no_ignore = true, -- alles anzeigen
+						follow_symlinks = true,
+						display_stat = { date = true, size = true, mode = false },
+						use_fd = true, -- perfomance durch fd
+						git_status = true,
+					},
+				},
+			})
+
+			pcall(telescope.load_extension, "file_browser")
 		end,
-	},
+	}
 }
