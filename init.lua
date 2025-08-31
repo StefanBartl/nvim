@@ -35,7 +35,7 @@ require "ui.ibl"  -- fzf colorschenme picker depends on this to work correctly
 require "system.env"
 require "options"
 -- require "options_experimental"
--- require "hl_options"
+require "hl_options"
 require "custom.last_file.init"
 
 local require_dir = require "lib.require_dir"
