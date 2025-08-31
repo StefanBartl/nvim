@@ -3,16 +3,20 @@
 --- Renders pages to PNG via ImageMagick (convert/identify) or Poppler (pdftoppm/pdfinfo).
 --- Displays a window-local statusline "PDF X/Y" and provides paging keymaps.
 --- Fixes:
----   * Ensure buffer is modifiable when writing initial lines
----   * Force opaque white background for rasterized pages (no alpha)
+---   * Honors open_mode ("vsplit" | "split" | "tab") and optional focus behavior
+---   * Uses pdfinfo (preferred) for reliable page count, fallback to identify
+---   * Opaque white background (PNG24) for all rendered pages
+---   * Buffer is briefly modifiable while writing, then locked
+---   * Adds alternative paging keys if PageUp/PageDown are intercepted by terminal
 
 ---@class PdfPreviewConfig
 ---@field open_mode '"vsplit"'|'"split"'|'"tab"'
+---@field focus boolean                       -- if true, focus the new PDF window; default false
 ---@field density integer
 ---@field notify boolean
 ---@field clear_on_leave boolean
 ---@field backend '"image_preview"'
----@field bg_hex string|nil                -- optional, default "#ffffff"
+---@field bg_hex string|nil                   -- default "#ffffff"
 
 local M = {}
 
@@ -49,17 +53,10 @@ local function is_pdf(path)
   return endswith(path, ".pdf")
 end
 
---- Read total page count of a PDF (identify → pdfinfo).
+--- Read total page count; prefer pdfinfo, then identify.
 ---@param pdf string
 ---@return integer|nil
 local function read_page_count(pdf)
-  if has_exec("identify") then
-    local out = vim.fn.systemlist({ "identify", "-format", "%n", pdf })
-    if vim.v.shell_error == 0 and out[1] then
-      local n = tonumber(out[1])
-      if n and n > 0 then return n end
-    end
-  end
   if has_exec("pdfinfo") then
     local lines = vim.fn.systemlist({ "pdfinfo", pdf })
     if vim.v.shell_error == 0 then
@@ -69,19 +66,24 @@ local function read_page_count(pdf)
       end
     end
   end
+  if has_exec("identify") then
+    local out = vim.fn.systemlist({ "identify", "-format", "%n", pdf })
+    if vim.v.shell_error == 0 and out[1] then
+      local n = tonumber(out[1])
+      if n and n > 0 then return n end
+    end
+  end
   return nil
 end
 
---- Force-white background helper.
+--- Force-white background helper (configurable).
 ---@param cfg PdfPreviewConfig
 ---@return string
 local function get_bg_hex(cfg)
-  -- Always white unless overridden via cfg.bg_hex
   return (cfg and cfg.bg_hex) or "#ffffff"
 end
 
 --- Render one page (0-based) to a PNG with opaque background.
---- Tries ImageMagick first; falls back to Poppler and fixes alpha via convert if present.
 ---@param pdf string
 ---@param page integer
 ---@param out_png string
@@ -92,7 +94,7 @@ local function render_page(pdf, page, out_png, density, cfg)
   local bg = get_bg_hex(cfg)
 
   if has_exec("convert") then
-    -- Important: order of operations to drop alpha and flatten onto white
+    -- Force opaque white background; 24-bit PNG (no alpha)
     local cmd = {
       "convert",
       "-density", tostring(density),
@@ -102,7 +104,7 @@ local function render_page(pdf, page, out_png, density, cfg)
       "-alpha", "off",
       "-flatten",
       "-strip",
-      ("PNG24:%s"):format(out_png), -- 24-bit, no alpha
+      ("PNG24:%s"):format(out_png),
     }
     local _ = vim.fn.system(cmd)
     if vim.v.shell_error == 0 then return true end
@@ -130,7 +132,7 @@ local function render_page(pdf, page, out_png, density, cfg)
       }
       local _2 = vim.fn.system(fix)
       if vim.v.shell_error == 0 then return true end
-      vim.fn.rename(produced, out_png) -- fallback to pdftoppm output
+      vim.fn.rename(produced, out_png)
       return true
     else
       vim.fn.rename(produced, out_png)
@@ -181,22 +183,24 @@ end
 ---@param cfg PdfPreviewConfig
 ---@return integer win
 local function open_window(cfg)
-  local cur = vim.api.nvim_get_current_win()
+  local origin = vim.api.nvim_get_current_win()
   if cfg.open_mode == "split" then
     vim.cmd("belowright split")
   elseif cfg.open_mode == "tab" then
     vim.cmd("tabnew")
   else
-    vim.cmd("vertical rightbelow split")
+    vim.cmd("vsplit")       -- vertical split
+    vim.cmd("wincmd L")     -- put it at the far right (optional; remove if undesired)
   end
   local win = vim.api.nvim_get_current_win()
-  -- Return focus to original after creating split
-  vim.api.nvim_set_current_win(cur)
+  if not cfg.focus then
+    vim.api.nvim_set_current_win(origin)  -- keep focus where it was (e.g. Neo-tree)
+  end
   return win
 end
 
 --- Initialize scratch buffer in a window and return bufnr.
---- Fix: set modifiable=true while writing initial content, then lock again.
+--- Buffer is briefly modifiable to write an initial line, then locked.
 ---@param win integer
 ---@return integer bufnr
 local function init_scratch_buffer(win)
@@ -206,9 +210,9 @@ local function init_scratch_buffer(win)
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].filetype = "pdfpreview"
-  vim.bo[bufnr].modifiable = true         -- allow writing the initial line
+  vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "[PDF preview]" })
-  vim.bo[bufnr].modifiable = false        -- lock it again
+  vim.bo[bufnr].modifiable = false
   return bufnr
 end
 
@@ -231,11 +235,13 @@ local function render_and_show(st, notify, cfg)
     vim.notify("image_preview.nvim not found", vim.log.levels.ERROR)
     return
   end
-  -- Pin cursor to (1,1) for a stable overlay origin
+
+  -- Render overlay inside the PDF window, but do not steal focus globally.
   vim.api.nvim_win_call(st.win, function()
     pcall(vim.api.nvim_win_set_cursor, st.win, { 1, 1 })
     ip.PreviewImage(st.png)
   end)
+
   set_win_statusline(st.win, st.src, st.page, st.pages)
   if notify then
     vim.notify(("Page %d/%d"):format(st.page + 1, st.pages), vim.log.levels.INFO, { title = "PDF Preview" })
@@ -247,6 +253,7 @@ end
 ---@param cfg PdfPreviewConfig
 local function attach_buf_keymaps(st, cfg)
   local opts = { buffer = st.bufnr, nowait = true, silent = true }
+  -- Primary keys
   vim.keymap.set("n", "<PageDown>", function()
     if st.page < st.pages - 1 then
       st.page = st.page + 1
@@ -263,6 +270,20 @@ local function attach_buf_keymaps(st, cfg)
       set_win_statusline(st.win, st.src, st.page, st.pages)
     end
   end, opts)
+  -- Alternatives in case terminal intercepts PageUp/Down
+  vim.keymap.set("n", "]p", function()
+    if st.page < st.pages - 1 then
+      st.page = st.page + 1
+      render_and_show(st, cfg.notify, cfg)
+    end
+  end, opts)
+  vim.keymap.set("n", "[p", function()
+    if st.page > 0 then
+      st.page = st.page - 1
+      render_and_show(st, cfg.notify, cfg)
+    end
+  end, opts)
+
   vim.keymap.set("n", "q", function()
     if cfg.clear_on_leave then
       restore_win_statusline(st.win)
@@ -281,11 +302,12 @@ end
 ---@type PdfPreviewConfig
 local default_cfg = {
   open_mode = "vsplit",
+  focus = false,
   density = 150,
   notify = true,
   clear_on_leave = true,
   backend = "image_preview",
-  bg_hex = "#ffffff",  -- force pure white background by default
+  bg_hex = "#ffffff",
 }
 
 ---@param cfg PdfPreviewConfig|nil
@@ -305,14 +327,14 @@ function M.setup(cfg)
     local win = vim.api.nvim_get_current_win()
     local buf = vim.api.nvim_win_get_buf(win)
     if vim.bo[buf].filetype ~= "pdfpreview" then return end
-    vim.api.nvim_feedkeys(vim.keycode("<PageDown>"), "n", false)
+    vim.api.nvim_feedkeys(vim.keycode("]p"), "n", false)
   end, {})
 
   vim.api.nvim_create_user_command("PdfPrevPage", function()
     local win = vim.api.nvim_get_current_win()
     local buf = vim.api.nvim_win_get_buf(win)
     if vim.bo[buf].filetype ~= "pdfpreview" then return end
-    vim.api.nvim_feedkeys(vim.keycode("<PageUp>"), "n", false)
+    vim.api.nvim_feedkeys(vim.keycode("[p"), "n", false)
   end, {})
 end
 
@@ -332,6 +354,7 @@ function M.open(path)
   local win = open_window(cfg)
   local buf = init_scratch_buffer(win)
   local pages = read_page_count(path) or 1
+
   ---@type PdfBufState
   local st = {
     src = path,

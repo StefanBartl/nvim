@@ -34,6 +34,8 @@ require "ui.ibl_shim" -- fzf colorschenme picker depends on this to work correct
 require "ui.ibl"  -- fzf colorschenme picker depends on this to work correctly
 require "system.env"
 require "options"
+-- require "options_experimental"
+-- require "hl_options"
 require "custom.last_file.init"
 
 local require_dir = require "lib.require_dir"
@@ -47,5 +49,9 @@ vim.schedule(function()
 end)
 
 require("utils.open_path").setup()
-
+require("config.image_preview.pdf.buffer").setup({
+  open_mode = "vsplit",   -- "split" | "vsplit" | "tab"
+  focus = false,          -- Fokus nicht stehlen (true = Cursor in PDF-Fenster)
+  bg_hex = "#ffffff",     -- fixer weißer Hintergrund
+})
 
