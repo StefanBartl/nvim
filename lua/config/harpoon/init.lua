@@ -1,5 +1,7 @@
 ---@module 'config.harpoon'
---- Harpoon (v2/v1 robust): sanitize persisted list and auto-add target files with context.
+--- Harpoon bootstrap with robust path normalization & deduplication.
+--- This version prefers the Harpoon v2 API (list:add), falls back to append for older builds,
+--- and provides a v1-compatible pseudo list. It prevents duplicate inserts across sessions.
 
 ---@class HarpoonCfg
 local M = {}
@@ -20,113 +22,132 @@ if not ok_path then
 end
 
 local uv = vim.uv or vim.loop
+local IS_WIN = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
 
--- Resolve to a canonical absolute path (resolve symlinks when possible).
--- Falls back to Path:absolute() if realpath is not available or fails.
----@param p String
----@return String
+--------------------------------------------------------------------------------
+-- Path helpers
+--------------------------------------------------------------------------------
+
+---Return a canonical absolute path (resolve symlinks when possible).
+---@param p string
+---@return string
 local function canon(p)
   if uv and uv.fs_realpath then
     local rp = uv.fs_realpath(p)
-    if type(rp) == "string" and rp ~= "" then return rp end
+    if type(rp) == "string" and rp ~= "" then
+      return rp
+    end
   end
   return Path:new(p):absolute()
 end
 
--- Here you can preset files for harpoon ui
--- Build targets (make sure these exist)
-local root    = vim.env.REPOS_DIR
-local targets = {
+---Normalize a path to a stable comparison key across OS/filesystems.
+---@param p string
+---@return string
+local function normkey(p)
+  local abs = canon(p)
+  if IS_WIN then
+    abs = abs:gsub("/", "\\"):lower()           -- case-insensitive FS, unify "\"
+  else
+    abs = abs:gsub("\\", "/")                   -- cosmetic unification on Unix
+  end
+  return abs
+end
 
-  canon(vim.fs.joinpath(root, "Notes", "MyNotes", "CLI-Notes", "CLI-Tools.md")),
-}
+---Check if path is an existing regular file.
+---@param p string
+---@return boolean
+local function is_file(p)
+  local st = uv and uv.fs_stat and uv.fs_stat(p) or nil
+  return (st and st.type == "file") and true or false
+end
 
 --------------------------------------------------------------------------------
--- Versions-agnostische Adapter
+-- Harpoon accessors (v2 preferred, v1 fallback)
 --------------------------------------------------------------------------------
 
---- Versions-agnostisch setup() ausführen (v2: method-style; manche Builds: function-style).
+---Setup harpoon (support method- and function-style signatures).
 local function safe_setup()
   if type(harpoon.setup) ~= "function" then
     return
   end
   local okinfo, info = pcall(debug.getinfo, harpoon.setup, "u")
   if okinfo and info and info.nparams and info.nparams >= 2 then
-    -- method-style: expects (self, opts?)
-    pcall(function()
-      harpoon:setup {}
-    end)
+    pcall(function() harpoon:setup({}) end)
   else
-    -- function-style: expects (opts?)
-    pcall(function()
-      harpoon.setup {}
-    end)
+    pcall(function() harpoon.setup({}) end)
   end
 end
 
---- Hole die "files"-Liste in möglichst vielen Varianten.
---- v2: harpoon:list()  oder harpoon.get("files")
---- v1-Fallback: baue eine pseudo-Liste aus harpoon.mark.get_marked_files()
----@return table|nil list
+---Obtain the default files list with broad compatibility.
+---@return table|nil
 local function get_files_list()
-  -- v2: bevorzugt :list()
+  -- v2 preferred: list()
   if type(harpoon.list) == "function" then
-    local ok, list = pcall(function()
-      return harpoon:list()
-    end)
+    local ok, list = pcall(function() return harpoon:list() end)
     if ok and type(list) == "table" then
       return list
     end
   end
-  -- manche v2-Snapshots: get("files")
+  -- some v2 snapshots: get("files")
   if type(harpoon.get) == "function" then
     local ok, list = pcall(harpoon.get, harpoon, "files")
     if ok and type(list) == "table" then
       return list
     end
   end
-  -- v1-Fallback: Mark/Ui API
+  -- v1 fallback: synthesize a list via harpoon.mark
   local ok_mark, mark = pcall(require, "harpoon.mark")
   if ok_mark and type(mark.get_marked_files) == "function" then
-    local items = {}
+    local items = {} ---@type { value: string, context: {row: integer, col: integer} }[]
     local ok_files, files = pcall(mark.get_marked_files)
     if ok_files and type(files) == "table" then
       for _, path in ipairs(files) do
-        table.insert(items, { value = path, context = { row = 1, col = 0 } })
+        items[#items + 1] = { value = path, context = { row = 1, col = 0 } }
       end
     end
-    -- pseudo-Liste mit minimalen Methoden, die wir brauchen
+    -- Provide v2-like methods: prefer :add; keep :append as a thin wrapper (no deprecation).
     return {
       items = items,
-      append = function(self, item)
+      ---@param self table
+      ---@param item { value: string, context: {row: integer, col: integer} }
+      add = function(self, item)
         if type(item) == "table" and type(item.value) == "string" then
           pcall(mark.add_file, item.value)
           table.insert(self.items, item)
         end
       end,
-      save = function() end, -- v1 speichert implizit
+      ---@param self table
+      ---@param item table
+      append = function(self, item) self:add(item) end,
+      save = function() end, -- v1 persists implicitly
     }
   end
   return nil
 end
 
---------------------------------------------------------------------------------
--- Normalisierung & Utilities
---------------------------------------------------------------------------------
-
---- Stelle sicher, dass jedes Item { value=..., context={row,col} } hat.
----@return boolean changed
-local function sanitize_default_list()
-  local list = get_files_list()
-  if not list then
-    vim.notify("[harpoon] no list API available (version mismatch)", vim.log.levels.WARN)
-    return false
+---Persist list changes where possible.
+---@param list table
+local function save_list(list)
+  if type(harpoon.save) == "function" then
+    pcall(harpoon.save, harpoon)
+  elseif type(list.save) == "function" then
+    pcall(list.save, list)
   end
+end
 
+--------------------------------------------------------------------------------
+-- Sanitize & dedup
+--------------------------------------------------------------------------------
+
+---Ensure each item is a normalized table and value is canonical absolute.
+---@param list table
+---@return boolean changed
+local function sanitize_in_place(list)
   local changed = false
   for i, it in ipairs(list.items or {}) do
     if type(it) == "string" then
-      list.items[i] = { value = it, context = { row = 1, col = 0 } }
+      list.items[i] = { value = canon(it), context = { row = 1, col = 0 } }
       changed = true
     elseif type(it) == "table" then
       if it.value == nil and it.path then
@@ -137,75 +158,154 @@ local function sanitize_default_list()
         it.context = { row = 1, col = 0 }
         changed = true
       end
-    end
-  end
-
-  if changed then
-    -- v2: harpoon.save(self?) oder list:save()
-    if type(harpoon.save) == "function" then
-      pcall(harpoon.save, harpoon)
-    elseif type(list.save) == "function" then
-      pcall(list.save, list)
+      if type(it.value) == "string" then
+        local c = canon(it.value)
+        if c ~= it.value then
+          it.value = c
+          changed = true
+        end
+      end
     end
   end
   return changed
 end
 
---- Append mit Kontext, API-agnostisch.
+---Remove duplicates based on normalized keys (keep first occurrence).
+---@param list table
+---@return boolean changed
+local function dedup_in_place(list)
+  local seen = {}
+  local new_items = {}
+  local changed = false
+
+  for _, it in ipairs(list.items or {}) do
+    local v = (type(it) == "table") and it.value or it
+    if type(v) == "string" then
+      local key = normkey(v)
+      if not seen[key] then
+        seen[key] = true
+        if type(it) == "table" then
+          new_items[#new_items + 1] = it
+        else
+          new_items[#new_items + 1] = { value = canon(v), context = { row = 1, col = 0 } }
+          changed = true
+        end
+      else
+        changed = true
+      end
+    end
+  end
+
+  if changed then
+    list.items = new_items
+  end
+  return changed
+end
+
+---Add one path with context, preferring v2's :add to avoid deprecation.
 ---@param list table
 ---@param path string
-local function append_with_context(list, path)
-  local item = { value = path, context = { row = 1, col = 0 } }
-  if type(list.append) == "function" then
-    pcall(function()
-      list:append(item)
-    end)
-  elseif type(list.add) == "function" then
-    pcall(function()
-      list:add(item)
-    end)
+local function add_with_context(list, path)
+  local item = { value = canon(path), context = { row = 1, col = 0 } }
+  if type(list.add) == "function" then
+    -- v2 (preferred)
+    pcall(function() list:add(item) end)
+  elseif type(list.append) == "function" then
+    -- older builds: still available; no deprecation in our pseudo v1 adapter
+    pcall(function() list:append(item) end)
   else
-    -- v1-Fallback (pseudo-Liste)
+    -- last resort (pure table)
     table.insert(list.items, item)
   end
 end
 
 --------------------------------------------------------------------------------
--- Autocmd: On VimEnter
+-- Targets
 --------------------------------------------------------------------------------
 
+---@type string[][]
+local target_specs = {
+  { "Notes", "MyNotes", "Notes.md"   },
+  { "Notes", "MyNotes", "Neovim.md"  },
+  { "Notes", "MyNotes", "Wezterm.md" },
+}
+
+---Resolve target specs to absolute canonical paths using REPOS_DIR.
+---@return string[]
+local function resolve_targets()
+  local root = vim.env.REPOS_DIR
+  if type(root) ~= "string" or root == "" then
+    vim.notify("[harpoon] REPOS_DIR not set; skip auto targets", vim.log.levels.WARN)
+    return {}
+  end
+  ---@type string[]
+  local out = {}
+  for i = 1, #target_specs do
+    local spec = target_specs[i]
+    out[#out + 1] = canon(vim.fs.joinpath(root, unpack(spec)))
+  end
+  return out
+end
+
+--------------------------------------------------------------------------------
+-- Autocmd (guarded in augroup)
+--------------------------------------------------------------------------------
+
+local aug = vim.api.nvim_create_augroup("HarpoonBootstrap", { clear = true })
+
 vim.api.nvim_create_autocmd("VimEnter", {
+  group = aug,
   callback = function()
     safe_setup()
 
-    -- 1) sanitize existing items (verhindert nil-context Fehler)
-    sanitize_default_list()
-
-    -- 2) auto-add missing targets
     local list = get_files_list()
     if not list then
+      vim.notify("[harpoon] no list API available (version mismatch)", vim.log.levels.WARN)
       return
     end
 
+    local c1 = sanitize_in_place(list)
+    local c2 = dedup_in_place(list)
+
     local have = {}
     for _, it in ipairs(list.items or {}) do
-      local val = (type(it) == "table") and it.value or it
-      if type(val) == "string" then
-        have[val] = true
+      local v = (type(it) == "table") and it.value or it
+      if type(v) == "string" then
+        have[normkey(v)] = true
       end
     end
-    for _, p in ipairs(targets) do
-      if type(p) == "string" and p ~= "" and not have[p] then
-        append_with_context(list, p)
+
+    local targets = resolve_targets()
+    local added = false
+    for i = 1, #targets do
+      local p = targets[i]
+      local k = normkey(p)
+      if not have[k] and is_file(p) then
+        add_with_context(list, p)               -- uses :add when available
+        have[k] = true
+        added = true
       end
+    end
+
+    if c1 or c2 or added then
+      save_list(list)
     end
   end,
 })
 
--- Optional: Command zum manuellen Normalisieren
 vim.api.nvim_create_user_command("HarpoonSanitize", function()
-  local changed = sanitize_default_list()
-  vim.notify(("[harpoon] sanitize: %s"):format(changed and "changed" or "no change"), vim.log.levels.INFO)
-end, { desc = "Normalize Harpoon items (add context/convert strings)" })
+  local list = get_files_list()
+  if not list then
+    vim.notify("[harpoon] no list API available", vim.log.levels.WARN)
+    return
+  end
+  local c1 = sanitize_in_place(list)
+  local c2 = dedup_in_place(list)
+  if c1 or c2 then
+    save_list(list)
+  end
+  vim.notify(("[harpoon] sanitize: %s"):format((c1 or c2) and "changed" or "no change"), vim.log.levels.INFO)
+end, { desc = "Normalize + deduplicate Harpoon items" })
 
 return M
+

@@ -20,7 +20,7 @@ return {
         harpoon:setup {}
       end)
 
-      -- require("config.harpoon") -- set file presets
+      require("config.harpoon") -- set file presets
     end,
   },
 
