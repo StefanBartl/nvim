@@ -71,7 +71,7 @@ return {
 		commands = KM.commands(),
 
     filesystem = {
-      bind_to_cwd = false,
+      bind_to_cwd = true,
       follow_current_file = { enabled = true },
       find_by_full_path_words = true,
       group_empty_dirs = true,
@@ -116,5 +116,12 @@ return {
   config = function(_, opts)
     require("config.neotree.usr_picker").attach(opts)
     require("neo-tree").setup(opts)
+    require("config.neotree.cwd_sync").setup({
+    debounce_ms = 80,
+    keep_focus = true,
+    also_set_nvim_cwd = false,       -- set to true if global :cd should follow too
+    open_if_closed = false,          -- set to true to auto-open Neo-tree on first sync
+    use_project_root = true,
+  })
   end,
 }
