@@ -20,12 +20,12 @@ function M.setup()
   map("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "[LSP] Code Action" })
 
   -- Goto & symbols
-  map("n", "grr", vim.lsp.buf.references, { desc = "[LSP] References" })
-  map("n", "gri", vim.lsp.buf.implementation, { desc = "[LSP] Implementations" })
-  map("n", "gO", vim.lsp.buf.document_symbol, { desc = "[LSP] Document Symbols" })
-  map("n", "gd", vim.lsp.buf.definition, { desc = "[LSP] Go to Definition" })
-  map("n", "gD", vim.lsp.buf.declaration, { desc = "[LSP] Go to Declaration" })
-  map("n", "gt", vim.lsp.buf.type_definition, { desc = "[LSP] Type Definition" })
+  map("n", "lsr", vim.lsp.buf.references, { desc = "[LSP] References" })
+  map("n", "lsi", vim.lsp.buf.implementation, { desc = "[LSP] Implementations" })
+  map("n", "lss", vim.lsp.buf.document_symbol, { desc = "[LSP] Document Symbols" })
+  map("n", "lsd", vim.lsp.buf.definition, { desc = "[LSP] Go to Definition" })
+  map("n", "lsD", vim.lsp.buf.declaration, { desc = "[LSP] Go to Declaration" })
+  map("n", "lst", vim.lsp.buf.type_definition, { desc = "[LSP] Type Definition" })
 
   -- Format
   map("n", "gq", function()

@@ -4,7 +4,6 @@
 return {
 
   -- Harpoon: Efficient file and terminal navigation system
-  -- plugins/misc.lua
   {
     "ThePrimeagen/harpoon",
     branch = "harpoon2",

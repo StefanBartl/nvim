@@ -32,7 +32,7 @@ local CFG = {
   -- Picker title shown in the UI.
   title = "WKD Book · Neovim",
   -- Directory to search. "~" will be expanded. Keep Linux/macOS style.
-  dir = vim.fn.expand "~" .. "/repos/WKDBooks/Development/wkdbook-Neovim",
+  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-Neovim"),
   notify = true,
 }
 
