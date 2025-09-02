@@ -1,0 +1,157 @@
+---@alias Str string    -- generic string alias to ease documentation
+---@alias Bool boolean  -- generic boolean alias for feature switches
+---@alias Int integer   -- generic integer alias for sizes/thresholds
+
+--- Declarative highlight palette used by this module. Each field represents a
+--- named highlight group to be created/applied. Values are plain tables using
+--- standard highlight keys (`fg`, `bg`, `bold`, `underline`, `italic`, etc.).
+--- The module will define/override these groups and reference them where needed.
+---@class ExpColors
+---@field CursorNormal   table  -- Cursor style/HL for Normal mode (e.g., block)
+---@field CursorInsert   table  -- Cursor style/HL for Insert mode (e.g., bar)
+---@field CursorVisual   table  -- Cursor style/HL for Visual/Select mode
+---@field CursorReplace  table  -- Cursor style/HL for Replace/Operator-Pending
+---@field CursorLineN    table  -- Background tint for CursorLine in Normal mode
+---@field CursorLineI    table  -- Background tint for CursorLine in Insert mode
+---@field CursorLineV    table  -- Background tint for CursorLine in Visual mode
+---@field CursorLineR    table  -- Background tint for CursorLine in Replace mode
+---@field CursorLineNr   table  -- Line number style for the active line
+---@field LineNrDim      table  -- De-emphasized style for inactive line numbers
+---@field IndentScope    table  -- Background/underline for the current code block
+---@field YankFlash      table  -- Short-lived flash after yank (copy) operations
+---@field PutFlash       table  -- Short-lived flash after put (paste) operations
+---@field SignColError   table  -- SignColumn tint when worst diag is ERROR
+---@field SignColWarn    table  -- SignColumn tint when worst diag is WARN
+---@field SignColInfo    table  -- SignColumn tint when worst diag is INFO
+---@field SignColHint    table  -- SignColumn tint when worst diag is HINT
+---@field SignColNeutral table  -- SignColumn neutral/default background
+---@field TermNormal     table  -- Terminal buffer base background (termguicolors)
+---@field TermCursorLine table  -- Terminal buffer CursorLine background
+---@field CursorWord     table  -- Style for the “word under cursor” matches
+---@field MatchParen     table  -- Style for matching parenthesis under cursor
+
+--- Prevent breadcrumbs from appearing in transient UI
+--- windows where space is scarce or a winbar would be visually distracting.
+---@class WinbarSkipRules
+---@field only_normal_buffers boolean  -- if true, skip when buftype ~= "" (terminal/prompt/help/etc.)
+---@field skip_floating boolean        -- if true, skip in floating windows (win_config.relative ~= "")
+---@field min_height integer           -- minimal window height required to render a winbar safely
+---@field buftypes string[]            -- explicit buftype blacklist (fast check)
+---@field filetypes string[]           -- explicit filetype blacklist (fast check)
+---@field name_patterns string[]       -- Lua patterns matched against absolute buffer name (fallback)
+
+--- Prevent block highlighting in UI buffers where an
+--- overlay would be distracting or mis-sized (popups, prompts, tiny windows).
+---@class IndentScopeSkipRules
+---@field only_normal_buffers boolean  -- if true, skip when buftype is not a normal file (recommended)
+---@field skip_floating boolean        -- skip in floating windows (win_config.relative ~= "")
+---@field buftypes string[]            -- explicit buftype blacklist
+---@field filetypes string[]           -- explicit filetype blacklist
+---@field name_patterns string[]       -- Lua patterns matched against absolute buffer name
+
+--- Global configuration structure for this module. All fields have sensible
+--- defaults and can be overridden via a user-facing setup() or direct edits.
+---@class OptionsExperimentalConfig
+---@field enable_indent_scope boolean
+--- When true, highlight the syntactic/indentation block around the cursor line.
+--- Typical effect: a subtle background (or underline) from the first line of the
+--- current block to its last line. Uses a range highlight/extmarks and respects
+--- skip-rules (filetype/buftype/floating windows, minimal height). The end line
+--- is included fully (no off-by-one at column 0). Good for quick structural
+--- orientation in nested code.
+---
+---@field enable_breadcrumbs boolean
+--- When true, show a compact breadcrumb/path in the window's winbar (top bar).
+--- Typical content: project-relative file path + optional symbol/function path.
+--- Only applied to “normal” editing windows; skipped for popups, prompts, tiny
+--- windows, Telescope/fzf/neo-tree, etc., to avoid layout conflicts (E36).
+---
+---@field enable_yank_flash boolean
+--- When true, briefly highlight the region that has just been yanked (copied).
+--- This uses a short-lived namespace highlight so one immediately sees “what”
+--- was yanked. Non-intrusive; no remaps required. Works in normal/visual mode.
+---
+---@field enable_put_flash boolean
+--- When true, briefly highlight the region that was just pasted (put).
+--- If used together with `map_put_flash = true`, the module remaps `p`/`P`
+--- (non-recursive) to emit a post-paste flash reliably. If remapping is not
+--- desired, keep `enable_put_flash = true` but set `map_put_flash = false` and
+--- trigger the flash via your own mappings/handlers.
+---
+---@field map_put_flash boolean
+--- When true, install non-recursive mappings for `p` and `P` that:
+---   1) perform the original put exactly once (preserving registers/motions), and
+---   2) trigger the post-paste flash.
+--- This improves reliability across edge cases (linewise vs charwise puts,
+--- visual-replace puts, clipboard/register variations). Disable if it conflicts
+--- with custom mappings or plugins that also override `p`/`P`.
+---
+---@field enable_signcolumn_tint boolean
+--- When true, apply a subtle tint to the signcolumn and (optionally) dim the
+--- inactive window’s signcolumn. Purpose: reduce visual noise from diagnostics
+--- and git signs while still keeping them readable; helps focus the active pane.
+---
+---@field enable_terminal_palette boolean
+--- When true, ensure a consistent terminal color palette within Neovim.
+--- Typical actions: set `termguicolors`, define/normalize `g:terminal_color_*`
+--- mapping based on the active colorscheme, and align terminal/TTY hues with
+--- UI highlights so terminal buffers integrate visually with the editor.
+---
+---@field enable_insert_submode_colors boolean
+--- When true, adapt UI accents based on the current editing submode (e.g.
+--- Insert, Replace, Command-line, Visual). Typical actions: adjust `guicursor`,
+--- apply mode-specific highlight groups, or set window-local tints on mode
+--- switches. The goal is to provide immediate, color-coded mode feedback.
+---
+---@field enable_current_word boolean
+--- When true, highlight the “current word” under the cursor and (optionally)
+--- its other exact matches within the viewport. Intended as a low-noise aid for
+--- local navigation and quick rename contexts, not a full search substitute.
+--- Implementations typically avoid huge files and skip special buffers by
+--- honoring the same skip-rules as the indent-scope feature.
+---
+---@field enable_diff_peek Bool
+--- When true, provide a lightweight “peek” of nearby git diff hunks (added/changed/removed lines)
+--- without leaving the current buffer. This feature is opportunistic: if `gitsigns.nvim` is
+--- available, it uses its APIs to fetch/preview hunks; otherwise it stays inert with zero overhead.
+--- Typical behavior:
+---   • Show a small, on-demand preview of the hunk under/near the cursor (e.g., via a command or keymap).
+---   • Render is non-destructive (no writes), usually via virtual lines or a transient floating window.
+---   • Respects the same skip rules as other UI features (floating/picker buffers, tiny windows).
+--- Performance & safety:
+---   • Throttled in very large files (see `large_file_kb`).
+---   • Falls back gracefully if no git repository or no signs are present, avoiding errors or delays.
+---
+---@field large_file_kb Int
+--- File size threshold (in KiB) for adaptive degradation. When the current buffer exceeds this
+--- size, the module reduces or disables costlier effects to keep editing responsive. Typical
+--- degradations include: fewer or no multi-line range scans (indent-scope), skipping whole-buffer
+--- match scans (current-word), or limiting LSP/treesitter-dependent breadcrumbs. Details:
+---   • 0 or negative disables degradation entirely (not recommended for huge files).
+---   • Applied per buffer; small buffers continue to receive full visuals.
+---   • Size is determined from file stats when available; fallbacks may approximate.
+---
+---@field breadcrumbs_max_len Int
+--- Maximum rendered length of the breadcrumb string in the winbar. If the composed path/symbol
+--- trail exceeds this length, it is middle-ellipsized (e.g., `proj/.../module.lua ⟩ func`), keeping
+--- the most informative ends visible while preventing layout issues in narrow windows. Guidance:
+---   • Set to a modest value to avoid `E36: Not enough room` in tiny/popup UIs (they are skipped,
+---     but conservative sizing still helps).
+---   • 0 or negative disables truncation (not advised unless your windows are wide and stable).
+---
+---@field colors ExpColors
+--- Declarative highlight palette for all visuals in this module. Each key corresponds to a named
+--- highlight group the module will create/update. Values are plain tables using standard highlight
+--- keys (`fg`, `bg`, `bold`, `italic`, `underline`, etc.). Notes:
+---   • Palette is applied after the active colorscheme, so it can adapt/override scheme defaults.
+---   • Omitted keys inherit from the colorscheme; specify only what you need to tweak.
+---   • Safe to change at runtime; updates re-apply highlight groups idempotently.
+---   • Keep contrast subtle for always-on visuals (e.g., `IndentScope`, `LineNrDim`) to avoid fatigue.
+---
+---@field winbar_skip WinbarSkipRules
+--- Prevent breadcrumbs from appearing in transient UI
+--- windows where space is scarce or a winbar would be visually distracting.
+---
+---@field indent_scope_skip IndentScopeSkipRules
+--- Prevent block highlighting in UI buffers where an
+--- overlay would be distracting or mis-sized (popups, prompts, tiny windows).

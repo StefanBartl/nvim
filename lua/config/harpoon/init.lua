@@ -47,9 +47,9 @@ end
 local function normkey(p)
   local abs = canon(p)
   if IS_WIN then
-    abs = abs:gsub("/", "\\"):lower()           -- case-insensitive FS, unify "\"
+    abs = abs:gsub("/", "\\"):lower() -- case-insensitive FS, unify "\"
   else
-    abs = abs:gsub("\\", "/")                   -- cosmetic unification on Unix
+    abs = abs:gsub("\\", "/")         -- cosmetic unification on Unix
   end
   return abs
 end
@@ -225,8 +225,8 @@ end
 
 ---@type string[][]
 local target_specs = {
-  { "Notes", "MyNotes", "Notes.md"   },
-  { "Notes", "MyNotes", "Neovim.md"  },
+  { "Notes", "MyNotes", "Notes.md" },
+  { "Notes", "Neovim", "Neovim.md" },
   { "Notes", "MyNotes", "Wezterm.md" },
 }
 
@@ -281,7 +281,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
       local p = targets[i]
       local k = normkey(p)
       if not have[k] and is_file(p) then
-        add_with_context(list, p)               -- uses :add when available
+        add_with_context(list, p) -- uses :add when available
         have[k] = true
         added = true
       end
@@ -308,4 +308,3 @@ vim.api.nvim_create_user_command("HarpoonSanitize", function()
 end, { desc = "Normalize + deduplicate Harpoon items" })
 
 return M
-

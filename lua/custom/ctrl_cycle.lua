@@ -21,11 +21,8 @@ local DEFAULTS = {
     { "active",     "inactive"    },
     { "visible",    "hidden"      },
     { "show",       "hide"        },
-    { "allow",      "deny"        },
     { "accept",     "reject"      },
-    { "grant",      "revoke"      },
     { "include",    "exclude"     },
-    { "public",     "private"     },
     { "open",       "closed"      },
     { "lock",       "unlock"      },
     { "locked",     "unlocked"    },
@@ -35,8 +32,6 @@ local DEFAULTS = {
     { "pause",      "resume"      },
     { "mute",       "unmute"      },
     { "muted",      "unmuted"     },
-    { "debug",      "release"     },
-    { "readwrite",  "readonly"    },  -- ohne Bindestrich, kompatibel mit \k\+
 
     -- Richtungen/Sortierordnungen
     { "up",         "down"        },
@@ -45,24 +40,24 @@ local DEFAULTS = {
     { "asc",        "desc"        },
 
     -- Deutsch (gängige Schalterwörter)
-    { "wahr",       "falsch"      },
-    { "ja",         "nein"        },
-    { "an",         "aus"         },
-    { "ein",        "aus"         },
-    { "aktiv",      "inaktiv"     },
-    { "sichtbar",   "unsichtbar"  },
-    { "offen",      "geschlossen" },
-    { "stumm",      "laut"        },
-
+    -- { "wahr",       "falsch"      },
+    -- { "ja",         "nein"        },
+    -- { "an",         "aus"         },
+    -- { "ein",        "aus"         },
+    -- { "aktiv",      "inaktiv"     },
+    -- { "sichtbar",   "unsichtbar"  },
+    -- { "offen",      "geschlossen" },
+    -- { "stumm",      "laut"        },
+    --
     ----------------------------------------------------------------
     -- Multi-state cycles (wrap-around)
     ----------------------------------------------------------------
-    { "dev", "stage", "prod" },
-    { "alpha", "beta", "rc", "stable" },
-    { "low", "medium", "high" },
-    { "small", "medium", "large", "xlarge" },
-    { "todo", "doing", "done" },
-    { "draft", "review", "final" },
+    -- { "dev", "stage", "prod" },
+    -- { "alpha", "beta", "rc", "stable" },
+    -- { "low", "medium", "high" },
+    -- { "small", "medium", "large", "xlarge" },
+    -- { "todo", "doing", "done" },
+    -- { "draft", "review", "final" },
   },
   map = true,
 }
