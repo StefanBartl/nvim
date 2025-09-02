@@ -140,7 +140,7 @@ winbar_skip = {
     -- notifications/tool UIs
     "noice", "notify", "lazy", "mason", "LspInfo",
     -- git UIs
-    "fugitive", "fugitiveblame", "NeogitStatus", "octo", "git", "gitcommit",
+    "fugitive", "fugitiveblame", "NeogitStatus", "octo", "git", "gitcommit", "lazygit",
     -- dap UIs
     "dapui_scopes","dapui_breakpoints","dapui_stacks","dapui_watches","dap-repl","dapui_console",
     -- misc
@@ -190,7 +190,7 @@ winbar_skip = {
 			"lazy", "mason", "LspInfo",
 
 			-- Git UIs
-			"fugitive", "fugitiveblame", "NeogitStatus", "octo", "git", "gitcommit",
+			"fugitive", "fugitiveblame", "NeogitStatus", "octo", "git", "gitcommit", "lazygit",
 
 			-- DAP UIs
 			"dapui_scopes", "dapui_breakpoints", "dapui_stacks",
@@ -199,7 +199,7 @@ winbar_skip = {
 			-- Misc helpers
 			"help", "man", "qf", "checkhealth", "undotree", "which-key",
 			"spectre_panel", "spectre_replace", "neo-term",
-			"minipick", "mini.files",
+			"minipick", "mini.files"
 		},
 
 		-- Path/name patterns (Lua-Patterns), for Spezialfälle:
