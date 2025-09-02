@@ -1,21 +1,7 @@
 ---@module 'options'
 --- Opinionated Neovim options grouped by topic.
 
---- Loads NvChad defaults first, then applies custom overrides.
---require("nvchad.options")
-
-local browser_path = ""
-if vim.g.is_windows then
-	browser_path = vim.fs.joinpath('C:', 'Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe')
-elseif vim.g.is_wsl then
-	browser_path = vim.fs.joinpath('mnt', 'c', 'Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe')
-elseif vim.g.is_linux then
-   browser_path = vim.fs.joinpath('') -- WATCH: If youre on Linux OS put path there
-else
-	vim.notify("[Options] Failure with env.is_* fpr mkdp_browser.", 4)
-end
-
-vim.g.mkdp_browserV = browser_path
+--require("nvchad.options") --- Loads NvChad defaults first, then applies custom overrides.
 
 -----------------------------------------------------------
 -- Appearance & UI
@@ -94,10 +80,10 @@ vim.opt.ttimeoutlen = 10
 
 -- Skip heavy/irrelevant directories during filename completion.
 vim.opt.wildignore:append({
-  "*/node_modules/*",
-  "*/.git/*",
-  "*/dist/*",
-  "*/build/*",
+	"*/node_modules/*",
+	"*/.git/*",
+	"*/dist/*",
+	"*/build/*",
 })
 
 
@@ -119,4 +105,3 @@ vim.opt.swapfile = false
 -- Enable persistent undo and store it under the cache path.
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo"
-
