@@ -99,9 +99,8 @@ end
 				---@type string[]|string
 				library = build_library(),
 			},
-			telemetry = {
-				enable = false,
-			}
+			telemetry = { enable = false, },
+			hint = { enable = true },
 		},
 	}
 

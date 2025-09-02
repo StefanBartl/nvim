@@ -34,9 +34,11 @@ require "ui.ibl_shim" -- fzf colorschenme picker depends on this to work correct
 require "ui.ibl"  -- fzf colorschenme picker depends on this to work correctly
 require "system.env"
 require "options"
--- require "options_experimental"
+require "options_experimental"
 require "hl_options"
+require("utils.open_path").setup() -- 'autocmds.lua_require' depends on open_path functionality, load it before autocmds
 require "custom.last_file.init"
+require("custom.ctrl_bool_toggle").setup()
 
 local require_dir = require "lib.require_dir"
 require_dir "autocmds"
@@ -48,7 +50,6 @@ vim.schedule(function()
 	require("mappings").setup()
 end)
 
-require("utils.open_path").setup()
 require("config.image_preview.pdf.buffer").setup({
   open_mode = "vsplit",   -- "split" | "vsplit" | "tab"
   focus = false,          -- Fokus nicht stehlen (true = Cursor in PDF-Fenster)

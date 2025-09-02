@@ -52,8 +52,11 @@ local function is_pdf_file(p)
 end
 
 --- Get editor background color from `Normal` highlight (hex like "#1e1e2e"); fallback if unset.
+---@param opt? "white"|"black"
 ---@return string
-local function get_normal_bg_hex()
+local function get_normal_bg_hex(opt)
+	if opt == "white" then return "#ffffff" end
+	if opt == "black" then return "#111111" end
 	local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = "Normal", link = false })
 	if ok and hl and hl.bg then
 		local r = bit.rshift(bit.band(hl.bg, 0xFF0000), 16)
@@ -71,7 +74,7 @@ end
 ---@param out_png string
 ---@return boolean ok, string|nil errmsg
 local function render_pdf_page(pdf_path, page, out_png)
-	local bg = "#ffffff" -- get_normal_bg_hex()
+	local bg = get_normal_bg_hex("white")
 	local density = "150" -- good readability for text
 
 	-- Preferred: ImageMagick
@@ -113,7 +116,7 @@ local function render_pdf_page(pdf_path, page, out_png)
 				"-strip",
 				string.format("PNG24:%s", out_png),
 			}
-			local _2 = vim.fn.system(fix)
+			local _ = vim.fn.system(fix)
 			if vim.v.shell_error == 0 then return true end
 			vim.fn.rename(produced, out_png) -- fallback to whatever pdftoppm produced
 			return true
