@@ -4,59 +4,15 @@
 --- only on stock Neovim APIs; it optionally integrates with common plugins
 --- (Treesitter, gitsigns) when available.
 ---
---- Place at: lua/options_experimental.lua
---- Load from (e.g.) lua/options.lua:  require("options_experimental")
-
----@alias Str string
----@alias Bool boolean
----@alias Int integer
-
----@enum DiagLevel
-local DiagLevel = {
-	ERROR = vim.diagnostic.severity.ERROR, -- 1
-	WARN  = vim.diagnostic.severity.WARN, -- 2
-	INFO  = vim.diagnostic.severity.INFO, -- 3
-	HINT  = vim.diagnostic.severity.HINT, -- 4
-}
-
----@class ExpColors
----@field CursorNormal   table
----@field CursorInsert   table
----@field CursorVisual   table
----@field CursorReplace  table
----@field CursorLineN    table
----@field CursorLineI    table
----@field CursorLineV    table
----@field CursorLineR    table
----@field CursorLineNr   table
----@field LineNrDim      table
----@field IndentScope    table
----@field YankFlash      table
----@field PutFlash       table
----@field SignColError   table
----@field SignColWarn    table
----@field SignColInfo    table
----@field SignColHint    table
----@field SignColNeutral table
----@field TermNormal     table
----@field TermCursorLine table
----@field CursorWord     table
----@field MatchParen     table
-
----@class ExpOptions
----@field enable_indent_scope Bool
----@field enable_breadcrumbs Bool
----@field enable_yank_flash Bool
----@field enable_put_flash Bool
----@field map_put_flash Bool
----@field enable_signcolumn_tint Bool
----@field enable_terminal_palette Bool
----@field enable_insert_submode_colors Bool
----@field enable_current_word Bool
----@field enable_diff_peek Bool
----@field colors ExpColors
----@field large_file_kb Int
----@field breadcrumbs_max_len Int
+--- Each feature flag below enables an isolated UI/UX capability. Disabling a
+--- feature will cleanly revert its effects (e.g., clearing extmarks, removing
+--- winbar text, or undoing temporary highlights). All toggles are safe to
+--- change at runtime (e.g., via user commands).
+---
+--- Placement:   lua/options_experimental.lua
+--- Initialize:  require("options_experimental")  -- from your options/init file
+---
+--- Type informations for LSP ('lua_ls' / 'emmylua') ar moved to `nvim/lua/types/options_experimental`
 
 local M = {}
 
@@ -64,41 +20,82 @@ local M = {}
 -- Configuration
 -- ----------------------------------------------------------------------
 
----@type ExpOptions
+--- Central feature toggles and visual palette for the module.
+--- You can override individual fields before calling any setup/apply function.
+---@type OptionsExperimentalConfig
 M._cfg = {
-	enable_indent_scope = false,  -- BUG: Visual marking ist dann nicht mehr erkennbar
-	enable_breadcrumbs = true,    -- NOTE: sollte nicht top sangezeigt werden, sondern in der statusline
+	-- Structural block highlighting around the cursor line.
+	-- Note: if disabled, the visual block guidance is not shown. If a bug was
+	-- previously present, consider re-enabling after applying the range fix.
+	enable_indent_scope = false,
+
+	-- Show compact breadcrumbs (project-relative path + optional symbol path)
+	-- in the window winbar for normal editing windows. Popup/picker/floating UIs
+	-- are skipped to avoid layout conflicts (e.g., E36: Not enough room).
+	enable_breadcrumbs = true,
+
+	-- Briefly flash the region that was just yanked (copied).
 	enable_yank_flash = true,
+
+	-- Briefly flash the region that was just pasted (put).
 	enable_put_flash = true,
-	map_put_flash = true, -- post-paste flash by remapping p/P (non-recursive)
+
+	-- Install safe, non-recursive mappings for `p`/`P` to guarantee the paste
+	-- flash even across linewise/charwise variations and visual replace puts.
+	map_put_flash = true,
+
+	-- Apply a subtle SignColumn tint based on the worst diagnostic severity in
+	-- the current buffer to reduce visual noise and focus attention consistently.
 	enable_signcolumn_tint = true,
+
+	-- Ensure terminal buffers (with termguicolors) visually align with the UI.
+	-- Typically normalizes g:terminal_color_* and CursorLine in terminal windows.
 	enable_terminal_palette = true,
+
+	-- Adapt selected highlights (e.g., CursorLine background, guicursor tweaks)
+	-- in response to mode changes (Insert/Replace/Visual/etc.) for quick feedback.
 	enable_insert_submode_colors = true,
+
+	-- Highlight the “current word” under the cursor and (optionally) its exact
+	-- matches in the visible viewport. Intended as a low-noise local aid.
 	enable_current_word = true,
-	enable_diff_peek = true, -- integrates with gitsigns if present TEST: works?ölasö
-	large_file_kb = 5000,    -- throttle expensive visuals above this size
-	breadcrumbs_max_len = 80, -- max length of winbar line before truncation
+
+	-- If gitsigns is present, provide a lightweight “peek” of the nearest hunk
+	-- (e.g., when holding a modifier or via a command). This remains inert if
+	-- gitsigns is not installed.
+	enable_diff_peek = true,
+
+	-- File-size threshold (in KiB) above which expensive visuals are throttled or
+	-- disabled to keep editing responsive for large files.
+	large_file_kb = 5000,
+
+	-- Maximum length for the winbar breadcrumb string. When exceeded, the middle
+	-- of the path is ellipsized to keep the most relevant ends visible.
+	breadcrumbs_max_len = 80,
+
+	-- Declarative highlight palette. Colors/styles can be freely adjusted to
+	-- match your colorscheme; unspecified keys fall back to defaults.
 	colors = {
-		-- Cursor per mode (used via 'guicursor' custom groups)
+		-- Cursor per mode (used through custom groups referenced by 'guicursor')
 		CursorNormal   = { bg = "#ffcc00", fg = "#1e1e1e" }, -- normal: amber block
 		CursorInsert   = { bg = "#5fd7ff", fg = "#1e1e1e" }, -- insert: cyan bar
 		CursorVisual   = { bg = "#ff5f87", fg = "#1e1e1e" }, -- visual: pink block
 		CursorReplace  = { bg = "#ff0000", fg = "#1e1e1e" }, -- replace: red underline
 
-		-- CursorLine per mode (window-mapped via winhighlight on ModeChanged)
+		-- CursorLine per mode (applied via winhighlight on ModeChanged)
 		CursorLineN    = { bg = "#2a2e36" },
 		CursorLineI    = { bg = "#24313a" },
 		CursorLineV    = { bg = "#322b3a" },
 		CursorLineR    = { bg = "#3a2323" },
 
-		-- Line numbers: active vs dim
+		-- Line numbers
 		CursorLineNr   = { fg = "#ffd75f", bold = true },
 		LineNrDim      = { fg = "#5a6374" },
 
-		-- Indent scope (current block)
+		-- Indent scope (current block) background/underline
 		IndentScope    = { bg = "#2f3440" },
 
-		-- Flash regions
+		-- Short-lived flash regions
 		YankFlash      = { bg = "#3e5f2a" },
 		PutFlash       = { bg = "#2a4d6b" },
 
@@ -109,57 +106,47 @@ M._cfg = {
 		SignColHint    = { bg = "#1f2f2a" },
 		SignColNeutral = { bg = "NONE" },
 
-		-- Terminal palette
+		-- Terminal palette (buffer-local)
 		TermNormal     = { bg = "#151a1f" },
 		TermCursorLine = { bg = "#20262d" },
 
-		-- Current word and matchparen
-		CursorWord     = { underline = true }, -- underline only (no bg)
+		-- Current word and matching parenthesis
+		CursorWord     = { underline = true }, -- underline-only, no background
 		MatchParen     = { bg = "#3b4048", bold = true },
 	},
 
----@class SkipRules
----@field only_normal_buffers boolean
----@field skip_floating boolean
----@field min_height integer
----@field buftypes string[]
----@field filetypes string[]
----@field name_patterns string[]
-winbar_skip = {
-  only_normal_buffers = true,    -- skip if buftype ~= "" (term/prompt/help/etc.)
-  skip_floating       = true,    -- skip floating windows
-  min_height          = 2,       -- need space for content + winbar
-  buftypes            = { "nofile", "prompt", "terminal", "quickfix", "help", "acwrite" },
-  filetypes           = {
-    -- pickers/dashboards
-    "TelescopePrompt", "TelescopeResults", "fzf", "fzf-lua", "snacks_picker", "alpha", "dashboard", "starter",
-    -- explorers/sidebars
-    "neo-tree", "neo-tree-popup", "NvimTree", "oil",
-    -- outlines/troubles
-    "aerial", "Outline", "trouble", "Trouble",
-    -- notifications/tool UIs
-    "noice", "notify", "lazy", "mason", "LspInfo",
-    -- git UIs
-    "fugitive", "fugitiveblame", "NeogitStatus", "octo", "git", "gitcommit", "lazygit",
-    -- dap UIs
-    "dapui_scopes","dapui_breakpoints","dapui_stacks","dapui_watches","dap-repl","dapui_console",
-    -- misc
-    "help", "man", "qf", "checkhealth", "undotree", "which-key", "spectre_panel", "spectre_replace",
-  },
-  name_patterns       = { "^oil://", "^term://", "^man://",
-                          ".*[\\/]neo%-tree[\\/].*", ".*[\\/]NvimTree[\\/].*", ".*[\\/]lazy[\\/].*", ".*[\\/]mason[\\/].*" },
-},
+	---@type WinbarSkipRules
+	winbar_skip = {
+		only_normal_buffers = true, -- skip if buftype ~= "" (term/prompt/help/etc.)
+		skip_floating       = true, -- skip floating windows
+		min_height          = 2,    -- need space for content + winbar
+		buftypes            = { "nofile", "prompt", "terminal", "quickfix", "help", "acwrite" },
+		filetypes           = {
+			-- pickers/dashboards
+			"TelescopePrompt", "TelescopeResults", "fzf", "fzf-lua", "snacks_picker", "alpha", "dashboard", "starter",
+			-- explorers/sidebars
+			"neo-tree", "neo-tree-popup", "NvimTree", "oil",
+			-- outlines/troubles
+			"aerial", "Outline", "trouble", "Trouble",
+			-- notifications/tool UIs
+			"noice", "notify", "lazy", "mason", "LspInfo",
+			-- git UIs
+			"fugitive", "fugitiveblame", "NeogitStatus", "octo", "git", "gitcommit", "lazygit",
+			-- dap UIs
+			"dapui_scopes", "dapui_breakpoints", "dapui_stacks", "dapui_watches", "dap-repl", "dapui_console",
+			-- misc
+			"help", "man", "qf", "checkhealth", "undotree", "which-key", "spectre_panel", "spectre_replace",
+		},
+		name_patterns       = {
+			"^oil://", "^term://", "^man://",
+			".*[\\/]neo%-tree[\\/].*", ".*[\\/]NvimTree[\\/].*", ".*[\\/]lazy[\\/].*", ".*[\\/]mason[\\/].*",
+		},
+	},
 
-	-- Skip rules for indent-scope highlight (blacklist)
-	---@class IndentScopeSkip
-	---@field only_normal_buffers boolean   -- if true, skip when buftype is not a normal file (recommended)
-	---@field skip_floating boolean         -- skip in floating windows (win_config.relative ~= "")
-	---@field buftypes string[]             -- explicit buftype blacklist
-	---@field filetypes string[]            -- explicit filetype blacklist
-	---@field name_patterns string[]        -- Lua patterns matched against absolute buffer name
+	---@type IndentScopeSkipRules
 	indent_scope_skip = {
-		-- Safety: only apply to "normal" buffers (buftype == "" or nil).
-		-- This alone already excludes die meisten Plugin-UI-Fenster.
+		-- Safety: only apply to "normal" buffers (buftype == "" or nil). This alone
+		-- already excludes most plugin UIs and transient helper buffers.
 		only_normal_buffers = true,
 
 		-- Do not highlight in floating windows (popup UIs, prompts, etc.).
@@ -170,8 +157,8 @@ winbar_skip = {
 			"nofile", "prompt", "terminal", "quickfix", "help", "acwrite",
 		},
 
-		-- Curated list of popular UI/Picker/Sidebar/Panel filetypes.
-		-- Feel free to prune if zu aggressiv; das sind „sichere“ Defaults.
+		-- Curated list of popular UI/Picker/Sidebar/Panel filetypes. Prune this if
+		-- too aggressive; the defaults are intentionally conservative.
 		filetypes = {
 			-- File explorers
 			"neo-tree", "neo-tree-popup", "NvimTree", "oil",
@@ -199,19 +186,18 @@ winbar_skip = {
 			-- Misc helpers
 			"help", "man", "qf", "checkhealth", "undotree", "which-key",
 			"spectre_panel", "spectre_replace", "neo-term",
-			"minipick", "mini.files"
+			"minipick", "mini.files",
 		},
 
-		-- Path/name patterns (Lua-Patterns), for Spezialfälle:
-		--  - works across OS (use [\\/] for slash on Win/Mac/Linux)
-		--  - covers scheme-like names (oil://, term://, man://, etc.)
+		-- Path/name patterns (Lua patterns) for special cases:
+		--  * works across OS (use [\\/] to match slash on Windows/macOS/Linux)
+		--  * covers scheme-like names (oil://, term://, man://, etc.)
 		name_patterns = {
 			"^oil://", "^term://", "^man://",
 			".*[\\/]neo%-tree[\\/].*", ".*[\\/]NvimTree[\\/].*",
 			".*[\\/]lazy[\\/].*", ".*[\\/]mason[\\/].*",
 		},
-	}
-
+	},
 }
 
 -- ----------------------------------------------------------------------
@@ -285,79 +271,45 @@ end
 --- @param val string|nil
 --- @return boolean
 local function _in_list(lst, val)
-  if not lst or not val or val == "" then return false end
-  for _, x in ipairs(lst) do
-    if x == val then return true end
-  end
-  return false
+	if not lst or not val or val == "" then return false end
+	for _, x in ipairs(lst) do
+		if x == val then return true end
+	end
+	return false
 end
 
 --- Decide if winbar should be skipped for current window/buffer.
 --- @param bufnr integer
 --- @return boolean
 local function winbar_should_skip(bufnr)
-  local cfg = M._cfg.winbar_skip
-  if not cfg then return false end
+	local cfg = M._cfg.winbar_skip
+	if not cfg then return false end
 
-  local wc = vim.api.nvim_win_get_config(0)
-  if cfg.skip_floating and wc and wc.relative and wc.relative ~= "" then
-    return true
-  end
+	local wc = vim.api.nvim_win_get_config(0)
+	if cfg.skip_floating and wc and wc.relative and wc.relative ~= "" then
+		return true
+	end
 
-  local height = vim.api.nvim_win_get_height(0)
-  if cfg.min_height and height < cfg.min_height then
-    return true
-  end
+	local height = vim.api.nvim_win_get_height(0)
+	if cfg.min_height and height < cfg.min_height then
+		return true
+	end
 
-  local bt = vim.api.nvim_get_option_value("buftype",  { buf = bufnr })
-  local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
+	local bt = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
+	local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
 
-  if cfg.only_normal_buffers and bt and bt ~= "" then return true end
-  if _in_list(cfg.buftypes, bt) or _in_list(cfg.filetypes, ft) then return true end
+	if cfg.only_normal_buffers and bt and bt ~= "" then return true end
+	if _in_list(cfg.buftypes, bt) or _in_list(cfg.filetypes, ft) then return true end
 
-  local name = vim.api.nvim_buf_get_name(bufnr)
-  if name and name ~= "" then
-    for _, pat in ipairs(cfg.name_patterns or {}) do
-      local ok, matched = pcall(function() return name:match(pat) ~= nil end)
-      if ok and matched then return true end
-    end
-  end
+	local name = vim.api.nvim_buf_get_name(bufnr)
+	if name and name ~= "" then
+		for _, pat in ipairs(cfg.name_patterns or {}) do
+			local ok, matched = pcall(function() return name:match(pat) ~= nil end)
+			if ok and matched then return true end
+		end
+	end
 
-  return false
-end
-
---- Decide if indent-scope should be skipped for current window/buffer.
---- @param bufnr integer
---- @return boolean
-local function indent_scope_should_skip(bufnr)
-  local cfg = M._cfg.indent_scope_skip
-  if not cfg then return false end
-
-  local wc = vim.api.nvim_win_get_config(0)
-  if cfg.skip_floating and wc and wc.relative and wc.relative ~= "" then
-    return true
-  end
-
-  local height = vim.api.nvim_win_get_height(0)
-  if cfg.min_height and height < cfg.min_height then
-    return true
-  end
-
-  local bt = vim.api.nvim_get_option_value("buftype",  { buf = bufnr })
-  local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-
-  if cfg.only_normal_buffers and bt and bt ~= "" then return true end
-  if _in_list(cfg.buftypes, bt) or _in_list(cfg.filetypes, ft) then return true end
-
-  local name = vim.api.nvim_buf_get_name(bufnr)
-  if name and name ~= "" then
-    for _, pat in ipairs(cfg.name_patterns or {}) do
-      local ok, matched = pcall(function() return name:match(pat) ~= nil end)
-      if ok and matched then return true end
-    end
-  end
-
-  return false
+	return false
 end
 
 -- ----------------------------------------------------------------------
@@ -736,12 +688,12 @@ end
 
 ---@private
 local function update_winbar()
-  if not M._cfg.enable_breadcrumbs then return end
-  if winbar_should_skip(0) then
-    -- ensure we don't leave stale winbar text in UIs/prompts/floats
-    vim.wo.winbar = ""
-    return
-  end
+	if not M._cfg.enable_breadcrumbs then return end
+	if winbar_should_skip(0) then
+		-- ensure we don't leave stale winbar text in UIs/prompts/floats
+		vim.wo.winbar = ""
+		return
+	end
 	local path = vim.api.nvim_buf_get_name(0)
 	local rel = repo_relative(path)
 	local ctx = lsp_current_function() or ts_symbol_path()
@@ -836,10 +788,10 @@ local function apply_signcolumn_tint()
 	end
 	local worst = worst_diag_severity(diags)
 	local map = {
-		[DiagLevel.ERROR] = "SignColError",
-		[DiagLevel.WARN]  = "SignColWarn",
-		[DiagLevel.INFO]  = "SignColInfo",
-		[DiagLevel.HINT]  = "SignColHint",
+		[vim.diagnostic.severity.ERROR] = "SignColError",
+		[vim.diagnostic.severity.WARN]  = "SignColWarn",
+		[vim.diagnostic.severity.INFO]  = "SignColInfo",
+		[vim.diagnostic.severity.HINT]  = "SignColHint",
 	}
 	local grp = map[worst] or "SignColNeutral"
 	local wh = vim.wo.winhighlight
@@ -960,25 +912,25 @@ end
 ---@private
 
 local function setup_view_updates()
-  local grp = vim.api.nvim_create_augroup("ExpViewUpdates", { clear = true })
-  vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
-    group = grp,
-    callback = function()
-      vim.schedule(function()
-        update_winbar()
-        update_indent_scope()
-      end)
-    end,
-    desc = "Update winbar and indent scope on movement/scroll (scheduled)",
-  })
-  vim.api.nvim_create_autocmd("ColorScheme", {
-    group = grp,
-    callback = function()
-      apply_base_highlights()
-      set_active_window_line_tint(vim.fn.mode(1):sub(1, 1))
-    end,
-    desc = "Reapply experimental highlights after colorscheme changes",
-  })
+	local grp = vim.api.nvim_create_augroup("ExpViewUpdates", { clear = true })
+	vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
+		group = grp,
+		callback = function()
+			vim.schedule(function()
+				update_winbar()
+				update_indent_scope()
+			end)
+		end,
+		desc = "Update winbar and indent scope on movement/scroll (scheduled)",
+	})
+	vim.api.nvim_create_autocmd("ColorScheme", {
+		group = grp,
+		callback = function()
+			apply_base_highlights()
+			set_active_window_line_tint(vim.fn.mode(1):sub(1, 1))
+		end,
+		desc = "Reapply experimental highlights after colorscheme changes",
+	})
 end
 
 
@@ -1000,7 +952,7 @@ end
 -- Public API
 -- ----------------------------------------------------------------------
 
----@param opts ExpOptions|nil
+---@param opts OptionsExperimentalConfig|nil
 ---@return nil
 function M.setup(opts)
 	if opts then
