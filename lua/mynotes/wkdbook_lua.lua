@@ -1,4 +1,3 @@
-
 ---@module 'mynotes.wkdbook_lua'
 
 local M = {}
@@ -158,11 +157,11 @@ end
 
 -- User commands --------------------------------------------------------------
 
-pcall(vim.api.nvim_create_user_command, "MyLuaFiles", function()
+pcall(vim.api.nvim_create_user_command, "WkdLuaFiles", function()
   M.fzf_files()
 end, { desc = "WKD Neovim (fzf-lua): Find files with preview in configured directory" })
 
-pcall(vim.api.nvim_create_user_command, "MyLuaGrep", function()
+pcall(vim.api.nvim_create_user_command, "WkdLuaGrep", function()
   M.fzf_grep()
 end, { desc = "WKD Neovim (fzf-lua): Live grep with preview in configured directory" })
 

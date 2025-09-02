@@ -9,7 +9,6 @@
 ---     <leader>tf  -> Telescope find files
 ---     <leader>tg  -> Telescope live grep
 --- Linux/macOS only; no Windows-specific branches.
----@version 1.1.0
 
 local M = {}
 -- Configuration: change title or dir if needed.
@@ -18,7 +17,7 @@ local CFG = {
   -- Picker title shown in the UI.
   title = "WKD Book · Neovim",
   -- Directory to search. "~" will be expanded. Keep Linux/macOS style.
-  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-Neovim"),
+  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/Notes/MyNotes/NVIM_Ref_Notes"),
   notify = true,
 }
 
@@ -29,7 +28,7 @@ local CFG = {
 ---@param level integer
 local function note(msg, level)
   if CFG.notify ~= false then
-    vim.notify("[wkdbook-nvim] " .. msg, level)
+    vim.notify("[neovim-ref-notes] " .. msg, level)
   end
 end
 
@@ -168,21 +167,21 @@ end
 
 -- User commands --------------------------------------------------------------
 
-pcall(vim.api.nvim_create_user_command, "NeovimWKDFiles", function()
+pcall(vim.api.nvim_create_user_command, "NeovimReferenceFiles", function()
   M.fzf_files()
-end, { desc = "WKD Neovim (fzf-lua): Find files with preview in configured directory" })
+end, { desc = "Neovim-Reference-Notes (fzf-lua): Find files with preview in configured directory" })
 
-pcall(vim.api.nvim_create_user_command, "NeovimWKDGrep", function()
+pcall(vim.api.nvim_create_user_command, "NeovimReferenceGrep", function()
   M.fzf_grep()
-end, { desc = "WKD Neovim (fzf-lua): Live grep with preview in configured directory" })
+end, { desc = "Neovim-Reference-Notes (fzf-lua): Live grep with preview in configured directory" })
 
 -- pcall(vim.api.nvim_create_user_command, "MyNvimTelFiles", function()
 --   M.tel_files()
--- end, { desc = "WKD Neovim (Telescope): Find files with preview in configured directory" })
+-- end, { desc = "Neovim-Reference-Notes (Telescope): Find files with preview in configured directory" })
 --
 -- pcall(vim.api.nvim_create_user_command, "MyNvimTelGrep", function()
 --   M.tel_grep()
--- end, { desc = "WKD Neovim (Telescope): Live grep with preview in configured directory" })
+-- end, { desc = "Neovim-Reference-Notes (Telescope): Live grep with preview in configured directory" })
 
 -- Keymaps (normal mode) ------------------------------------------------------
 
