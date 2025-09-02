@@ -4,17 +4,18 @@
 --- Loads NvChad defaults first, then applies custom overrides.
 --require("nvchad.options")
 
-local env = require("system.env")
 local browser_path = ""
-if env.is_win then
+if vim.g.is_windows then
 	browser_path = vim.fs.joinpath('C:', 'Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe')
-elseif env.is_wsl then
+elseif vim.g.is_wsl then
 	browser_path = vim.fs.joinpath('mnt', 'c', 'Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe')
-elseif env.is_linux then
+elseif vim.g.is_linux then
    browser_path = vim.fs.joinpath('') -- WATCH: If youre on Linux OS put path there
+else
+	vim.notify("[Options] Failure with env.is_* fpr mkdp_browser.", 4)
 end
 
-vim.g.mkdp_browser = browser_path
+vim.g.mkdp_browserV = browser_path
 
 -----------------------------------------------------------
 -- Appearance & UI
