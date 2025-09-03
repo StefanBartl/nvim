@@ -1,6 +1,5 @@
 ---@module 'config.noice'
 
--- ---@type NoiceConfig  NOTE: finish wenn config gefunden wurde
 local M = {
 	cmdline = {},
 	lsp = {},

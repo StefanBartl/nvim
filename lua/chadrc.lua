@@ -2,9 +2,7 @@
 
 local M = {}
 
-
--- Helpers for statusline
-local utl = require "ui.custom_stl_module"
+local utl = require "ui.custom_stl_module" -- Helpers for statusline
 
 M.ui = {
 	statusline = {
@@ -38,8 +36,7 @@ M.ui = {
 M.base46 = {
 	transparency = true,
 
-	-- theme = "default-light",
-	theme = "vim_default",
+ theme = "vim_default",
 	-- theme = "github_dark",
 	-- theme = "aylin",
 	-- theme = "tokyonight",

@@ -55,30 +55,30 @@ function M.setup()
   map("n", "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
   map("n", "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
 
-  -- NOTE: Check this out for some time
+  -- WATCH:
   -- Improved wrapped-line movement with auto-centering
   -- After movement, center the cursor (zz) for better visibility
   -- If no count is given: move by screen line (gj/gk)
   -- If a count is given: move by physical line (j/k)
-  --map({ "n", "x" }, "j",
-  --  "v:count == 0 ? 'gjzz' : 'jzz'",
-  --  { desc = "Down (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
-  --)
-  --
-  --map({ "n", "x" }, "<Down>",
-  --  "v:count == 0 ? 'gjzz' : 'jzz'",
-  --  { desc = "Down (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
-  --)
-  --
-  --map({ "n", "x" }, "k",
-  --  "v:count == 0 ? 'gkzz' : 'kzz'",
-  --  { desc = "Up (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
-  --)
-  --
-  --map({ "n", "x" }, "<Up>",
-  --  "v:count == 0 ? 'gkzz' : 'kzz'",
-  --  { desc = "Up (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
-  --)
+  map({ "n", "x" }, "j",
+   "v:count == 0 ? 'gjzz' : 'jzz'",
+   { desc = "Down (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
+  )
+
+  map({ "n", "x" }, "<Down>",
+   "v:count == 0 ? 'gjzz' : 'jzz'",
+   { desc = "Down (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
+  )
+
+  map({ "n", "x" }, "k",
+   "v:count == 0 ? 'gkzz' : 'kzz'",
+   { desc = "Up (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
+  )
+
+  map({ "n", "x" }, "<Up>",
+   "v:count == 0 ? 'gkzz' : 'kzz'",
+   { desc = "Up (smart: wrapped-line aware, centers after move)", expr = true, silent = true }
+  )
 end
 
 return M

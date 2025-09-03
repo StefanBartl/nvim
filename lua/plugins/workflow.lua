@@ -4,10 +4,10 @@
 ---@type LazyPluginSpec[]
 return {
 
-  -- TODO Comments: Highlights TODO, FIX, HACK, etc. with signcolumn and Telescope support
+  -- Highlights TODO, FIX, HACK, etc. with signcolumn and Telescope support
   {
     "folke/todo-comments.nvim",
-    event = "BufReadPost",
+    lazy = false,
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       signs = true,
