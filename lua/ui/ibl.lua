@@ -1,7 +1,6 @@
 ---@module 'ui.ibl'
 --- Modern ibl setup with resilient highlights for any colorscheme.
 
----@class PluginsIbl
 local ok_ibl, ibl = pcall(require, "ibl")
 if not ok_ibl then
   return

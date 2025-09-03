@@ -53,7 +53,7 @@ function H.token_under_cursor()
   if p ~= "" then
     -- Check for :line[:col] suffix directly in the buffer text after the token
     local ln = vim.api.nvim_get_current_line()
-    local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+    local _ = vim.api.nvim_win_get_cursor(0)[2] + 1
     local _, e = ln:find(vim.pesc(p), 1, false)
     if e then
       local rest = ln:sub(e + 1)

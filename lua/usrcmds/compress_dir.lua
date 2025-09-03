@@ -64,6 +64,7 @@ local function _run_shell_async(cmd, on_exit)
   -- Fallback: luv (Neovim 0.9)
   local uv = vim.uv or vim.loop
 
+	---@diagnostic disable
   ---@type uv.uv_pipe_t|nil
   local stdout = uv.new_pipe(false)
   ---@type uv.uv_pipe_t|nil

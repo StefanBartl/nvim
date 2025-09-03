@@ -130,7 +130,7 @@ local function render_page(pdf, page, out_png, density, cfg)
         "-strip",
         ("PNG24:%s"):format(out_png),
       }
-      local _2 = vim.fn.system(fix)
+      local _ = vim.fn.system(fix)
       if vim.v.shell_error == 0 then return true end
       vim.fn.rename(produced, out_png)
       return true

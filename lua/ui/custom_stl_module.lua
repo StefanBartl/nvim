@@ -299,6 +299,7 @@ local function mode_band_bg_hex()
   -- On recent Neovim versions, `link=false` returns resolved attrs
   local hl = vim.api.nvim_get_hl(0, { name = group, link = false }) or {}
   -- Different versions may expose "bg" or "background"
+	---@diagnostic disable-next-line
   return int_to_hex(hl.bg or hl.background)
 end
 

@@ -116,7 +116,8 @@ return {
   config = function(_, opts)
     require("config.neotree.usr_picker").attach(opts)
     require("neo-tree").setup(opts)
-    require("config.neotree.cwd_sync").setup({
+    ---@diagnostic disable-next-line
+		require("config.neotree.cwd_sync").setup({
     debounce_ms = 80,
     keep_focus = true,
     also_set_nvim_cwd = false,       -- set to true if global :cd should follow too
