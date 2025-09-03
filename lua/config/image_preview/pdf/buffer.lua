@@ -12,10 +12,10 @@
 ---@class PdfPreviewConfig
 ---@field open_mode '"vsplit"'|'"split"'|'"tab"'
 ---@field focus boolean                       -- if true, focus the new PDF window; default false
----@field density integer
----@field notify boolean
----@field clear_on_leave boolean
----@field backend '"image_preview"'
+---@field density? integer
+---@field notify? boolean
+---@field clear_on_leave? boolean
+---@field backend? '"image_preview"'
 ---@field bg_hex string|nil                   -- default "#ffffff"
 
 local M = {}

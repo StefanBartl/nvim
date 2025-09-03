@@ -32,7 +32,7 @@ M._cfg = {
 	-- Show compact breadcrumbs (project-relative path + optional symbol path)
 	-- in the window winbar for normal editing windows. Popup/picker/floating UIs
 	-- are skipped to avoid layout conflicts (e.g., E36: Not enough room).
-	enable_breadcrumbs = true,
+	enable_breadcrumbs = false,
 
 	-- Briefly flash the region that was just yanked (copied).
 	enable_yank_flash = true,
@@ -71,7 +71,7 @@ M._cfg = {
 
 	-- Maximum length for the winbar breadcrumb string. When exceeded, the middle
 	-- of the path is ellipsized to keep the most relevant ends visible.
-	breadcrumbs_max_len = 80,
+	breadcrumbs_max_len = 120,
 
 	-- Declarative highlight palette. Colors/styles can be freely adjusted to
 	-- match your colorscheme; unspecified keys fall back to defaults.

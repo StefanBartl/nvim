@@ -27,7 +27,7 @@ function M.check()
 end
 
 vim.api.nvim_create_user_command("LspDoctor", function()
-  require("custom.lspdoctor").check()
+  require("usrcmds.lspdoctor").check()
 end, {})
 
 return M

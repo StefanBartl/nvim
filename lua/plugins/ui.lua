@@ -17,11 +17,11 @@ return {
 		end,
 	},
 
-	-- Noice: Enhanced command line and LSP UI
+	-- Noice Enhanced command line and LSP UI
 	-- + nvim-notify
 	{
 		"folke/noice.nvim",
-		lazy = "VeryLazy", -- WATCH:
+		lazy = false, -- WATCH:
 		opts = require "config.noice",
 		dependencies = {
 			"MunifTanjim/nui.nvim",

@@ -10,7 +10,7 @@ local function map(modes, lhs, rhs, opts)
   vim.keymap.set(modes, lhs, rhs, opts)
 end
 
-map("n", "<leader>ss", function()
+map("n", "<leader>wq", function()
 	require("custom.last_file.last_session").save()
 	vim.cmd "qa!"
 end, { desc = "[General] Save last file and Force quit all" })

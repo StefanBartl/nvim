@@ -34,7 +34,7 @@ function M.setup()
 
   -- Diagnostics
   -- Quickfix-List
-  map("n", "<leader>qs", vim.diagnostic.setqflist, { desc = "[Quickfix] To Quickfix List" })
+  map("n", "<leader>tq", vim.diagnostic.setqflist, { desc = "[Quickfix] To Quickfix List" })
   map("n", "]q", ":cnext<CR>", { desc = "[Quickfix]Next in Quickfix List" })
   map("n", "[q", ":cprev<CR>", { desc = "[Quickfix] Prev in Quickfix List" })
 
