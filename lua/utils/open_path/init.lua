@@ -30,18 +30,18 @@ function M.setup(opts)
 
   if CONFIG.set_default_keymaps then
     -- opb   -> open in current window (buffer)
-    vim.keymap.set("n", "opb", function()
+    vim.keymap.set("n", "Gpb", function()
       TargetEdit.open(CONFIG.require_existing, CONFIG.notify)
     end, { desc = "open_path: open file under cursor (edit)" })
 
     -- opv  -> open in new split (vertical by default)
-    vim.keymap.set("n", "opv", function()
+    vim.keymap.set("n", "Gpv", function()
       local o = CONFIG.split == "horizontal" and "horizontal" or "vertical"
       TargetWin.open(o, CONFIG.require_existing, CONFIG.notify)
     end, { desc = "open_path: open file under cursor (split)" })
 
     -- opt  -> open in new tab
-    vim.keymap.set("n", "opt", function()
+    vim.keymap.set("n", "Gpt", function()
       TargetTab.open(CONFIG.require_existing, CONFIG.notify)
     end, { desc = "open_path: open file under cursor (tab)" })
   end

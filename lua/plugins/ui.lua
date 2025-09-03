@@ -18,10 +18,10 @@ return {
 	},
 
 	-- Noice Enhanced command line and LSP UI
-	-- + nvim-notify
 	{
 		"folke/noice.nvim",
-		lazy = false, -- WATCH:
+		event = "VeryLazy",
+		cmd = { "Noice", "NoiceAll", "NoiceHistory", "NoiceDismiss", "NoiceError" },
 		opts = require "config.noice",
 		dependencies = {
 			"MunifTanjim/nui.nvim",

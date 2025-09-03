@@ -3,7 +3,7 @@
 --- in the system default browser. Supports Windows (native), WSL, Linux, and macOS.
 --- Provides a custom urlview action "open_in_browser" that can be set as default_action.
 
---- NOTE:
+--- Note:
 ---   * Requires urlview.nvim installed and loaded
 ---   * For WSL, "wslview" (from package "wslu") is recommended
 ---   * Uses `vim.system` if available (Neovim 0.10+), else falls back to `vim.fn.jobstart`

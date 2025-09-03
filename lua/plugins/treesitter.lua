@@ -12,7 +12,7 @@ return {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",                         -- keep parsers up to date
     event = { "BufReadPost", "BufNewFile" },    -- load on first useful file
-    -- NOTE: do not configure textobjects here
+    -- Note: do not configure textobjects here
     opts = function(_, opts)
       -- Safely pull external parser list; fall back to empty if missing
       local ok, parser_list = pcall(require, "config.treesitter.parser")
