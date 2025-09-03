@@ -1,98 +1,180 @@
---BUG:
-
 ---@module 'usrcmds.mymessages'
---- Capture, persist, copy, and re-display the output of :messages.
+--- Cross-platform capture of :messages with robust path+clipboard handling.
+--- Writes under $REPOS_DIR/mymessages or stdpath("state")/mymessages if REPOS_DIR is unset.
+
 
 ---@class MyMessages
----@field run fun(): nil
+---@field run fun(opts?: { debug?: boolean }): nil
 
 local M = {}
 
--- Trim trailing whitespace/newlines for nicer files/clipboard.
+-- small helpers ---------------------------------------------------------------
+
 ---@param s string
 ---@return string
 local function rstrip(s)
   return (s:gsub("%s*$", ""))
 end
 
--- Write string to file, creating parent dir if needed.
+---@param bin string
+---@return boolean
+local function has_exec(bin)
+  return vim.fn.executable(bin) == 1
+end
+
+---@return { is_mac:boolean, is_win:boolean, is_wsl:boolean, is_wayland:boolean, is_x11:boolean }
+local function detect_platform()
+  local uname = (vim.uv or vim.loop).os_uname()
+  local sys   = (uname.sysname or ""):lower()
+  local rel   = (uname.release or ""):lower()
+  local is_mac = sys:find("darwin", 1, true) ~= nil
+  local is_win = sys:find("windows", 1, true) ~= nil or package.config:sub(1,1) == "\\"
+  local is_wsl = (vim.fn.has("wsl") == 1) or rel:find("microsoft", 1, true) ~= nil
+  local is_wayland = (vim.env.WAYLAND_DISPLAY or "") ~= ""
+  local is_x11     = (vim.env.DISPLAY or "") ~= ""
+  return { is_mac = is_mac, is_win = is_win, is_wsl = is_wsl, is_wayland = is_wayland, is_x11 = is_x11 }
+end
+
+---@param cmd string[]
+---@param input? string
+---@return boolean,string|nil
+local function run_command(cmd, input)
+  if vim.system then
+    local res = vim.system(cmd, { text = true, stdin = input }):wait()
+    if res.code == 0 then return true, nil end
+    return false, (res.stderr ~= "" and res.stderr) or ("exit code "..res.code)
+  else
+    local out = vim.fn.system(cmd, input or "")
+    return vim.v.shell_error == 0, out
+  end
+end
+
 ---@param path string
 ---@param content string
----@return boolean, string|nil
+---@return boolean,string|nil
 local function write_file(path, content)
   local dir = vim.fn.fnamemodify(path, ":h")
-  if dir == "" then
-    return false, "Invalid directory for path: " .. path
-  end
+  if dir == "" then return false, "Invalid directory for path: "..path end
   local ok_mkdir, err_mkdir = pcall(vim.fn.mkdir, dir, "p")
-  if not ok_mkdir then
-    return false, "Could not create directory: " .. tostring(err_mkdir)
-  end
-  local file, err = io.open(path, "w")
-  if not file then
-    return false, "Could not open file: " .. (err or path)
-  end
-  if content ~= "" and not content:match("\n$") then
-    content = content .. "\n"
-  end
-  file:write(content)
-  file:close()
+  if not ok_mkdir then return false, "mkdir failed: "..tostring(err_mkdir) end
+  local f, err = io.open(path, "w")
+  if not f then return false, "open failed: "..(err or path) end
+  if content ~= "" and not content:match("\n$") then content = content .. "\n" end
+  f:write(content)
+  f:close()
   return true, nil
 end
 
--- Robustly capture :messages via :redir into a global variable.
----@return string
-local function capture_messages_redir()
-  -- Clear previous capture
-  vim.g.__mymessages_capture = nil
-
-  -- Use :redir to capture exactly what :messages prints
-  -- No :silent here; we want the full text in the redir buffer.
-  vim.api.nvim_exec2([[
-    try
-      redir => g:__mymessages_capture
-      messages
-    finally
-      redir END
-    endtry
-  ]], { output = false })
-
-  local s = vim.g.__mymessages_capture
-  if type(s) ~= "string" then
-    return ""
+---@param text string
+---@param debug boolean
+---@return boolean
+local function copy_to_clipboard(text, debug)
+  -- primary path
+  local ok = pcall(vim.fn.setreg, "+", text)
+  if ok then
+    if debug then vim.notify("MyMessages: setreg('+') ok (system provider may still be required)", vim.log.levels.DEBUG) end
+    return true
   end
-  return s
+
+  local P = detect_platform()
+
+  if P.is_mac and has_exec("pbcopy") then
+    local ok2, err = run_command({ "pbcopy" }, text)
+    if ok2 then return true end
+    if debug then vim.notify("pbcopy failed: "..tostring(err), vim.log.levels.DEBUG) end
+  end
+
+  if P.is_wsl or P.is_win then
+    if has_exec("clip.exe") then
+      local ok2, err = run_command({ "clip.exe" }, text)
+      if ok2 then return true end
+      if debug then vim.notify("clip.exe failed: "..tostring(err), vim.log.levels.DEBUG) end
+    end
+    local clip_abs = "/mnt/c/Windows/System32/clip.exe"
+    if not has_exec("clip.exe") and vim.fn.filereadable(clip_abs) == 1 then
+      local ok2, err = run_command({ clip_abs }, text)
+      if ok2 then return true end
+      if debug then vim.notify("abs clip.exe failed: "..tostring(err), vim.log.levels.DEBUG) end
+    end
+  end
+
+  if P.is_wayland and has_exec("wl-copy") then
+    local ok2, err = run_command({ "wl-copy" }, text)
+    if ok2 then return true end
+    if debug then vim.notify("wl-copy failed: "..tostring(err), vim.log.levels.DEBUG) end
+  end
+
+  if P.is_x11 then
+    if has_exec("xclip") then
+      local ok2, err = run_command({ "xclip", "-selection", "clipboard" }, text)
+      if ok2 then return true end
+      if debug then vim.notify("xclip failed: "..tostring(err), vim.log.levels.DEBUG) end
+    end
+    if has_exec("xsel") then
+      local ok2, err = run_command({ "xsel", "--clipboard", "--input" }, text)
+      if ok2 then return true end
+      if debug then vim.notify("xsel failed: "..tostring(err), vim.log.levels.DEBUG) end
+    end
+  end
+
+  return false
 end
 
---- Execute the export: capture, write file, copy to +, then show messages.
----@return nil
-function M.run()
-  -- 1) Capture
-  local messages = rstrip(capture_messages_redir())
+-- path resolution -------------------------------------------------------------
 
-  -- 2) Persist
-  local log_path = vim.fn.expand("~/temp/mymessages_nvim.log")
-  local ok_write, err = write_file(log_path, messages)
+---@return string dir, string logfile
+local function resolve_paths()
+  local base = (vim.env.REPOS_DIR and vim.env.REPOS_DIR ~= "" and vim.env.REPOS_DIR)
+    or vim.fn.stdpath("state")
+  if vim.fs and vim.fs.normalize then base = vim.fs.normalize(base) end
+
+  local join = (vim.fs and vim.fs.joinpath) or function(...) return table.concat({ ... }, "/") end
+  local dir = join(base, "mymessages")
+  local logfile = join(dir, ("messages-%s.log"):format(os.date("%Y%m%d-%H%M%S")))
+  return dir, logfile
+end
+
+-- main API -------------------------------------------------------------------
+
+---@param opts? { debug?: boolean }
+function M.run(opts)
+  opts = opts or {}
+  local debug = opts.debug == true
+
+  local dir, logfile = resolve_paths()
+  if debug then
+    vim.notify(("MyMessages: dir=%s\nlog=%s"):format(dir, logfile), vim.log.levels.DEBUG)
+  end
+
+  -- 1) capture
+  local ok_exec, res = pcall(vim.api.nvim_exec2, "messages", { output = true })
+  local messages = ok_exec and rstrip(res.output or "") or ""
+  if debug then vim.notify(("MyMessages: captured %d bytes"):format(#messages), vim.log.levels.DEBUG) end
+
+  -- 2) write file
+  local ok_write, err = write_file(logfile, messages)
   if not ok_write then
-    vim.notify("MyMessages: failed to write log: " .. (err or ""), vim.log.levels.ERROR)
+    vim.notify("MyMessages: write failed: "..tostring(err), vim.log.levels.ERROR)
+  else
+    vim.notify("MyMessages: saved to "..logfile, vim.log.levels.INFO)
   end
 
-  -- 3) Copy to system clipboard register '+'
-  -- Hinweis: Unter Linux benötigt man einen Clipboard-Provider (Wayland: wl-clipboard, X11: xclip/xsel).
-  local ok_reg, reg_err = pcall(vim.fn.setreg, "+", messages)
-  if not ok_reg then
-    vim.notify("MyMessages: failed to set + register: " .. tostring(reg_err), vim.log.levels.WARN)
+  -- 3) clipboard
+  local ok_clip = copy_to_clipboard(messages, debug)
+  if not ok_clip then
+    vim.notify("MyMessages: clipboard not available. Install a provider (pbcopy/wl-copy/xclip/xsel/clip.exe).", vim.log.levels.WARN)
+  elseif debug then
+    vim.notify("MyMessages: clipboard copy ok", vim.log.levels.DEBUG)
   end
 
-  -- 4) Display again (for the on-screen view)
+  -- 4) re-display
   vim.cmd("messages")
 end
 
--- :MyMessages user command
-vim.api.nvim_create_user_command("MyMessages", function()
-  M.run()
-end, {
-  desc = "Capture :messages, save to file, and copy to clipboard",
-})
+vim.api.nvim_create_user_command("MyMessages", function() M.run({ debug = false }) end,
+  { desc = "Capture :messages, save to file, copy to clipboard" })
+
+vim.api.nvim_create_user_command("MyMessagesDebug", function() M.run({ debug = true }) end,
+  { desc = "Capture :messages with debug notifications" })
 
 return M
