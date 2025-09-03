@@ -56,3 +56,4 @@ require("config.image_preview.pdf.buffer").setup({
   bg_hex = "#ffffff",     -- fixer weißer Hintergrund
 })
 
+require("custom.smart_edit").setup({ set_cr = true })
