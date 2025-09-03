@@ -611,104 +611,156 @@ end
 -- ----------------------------------------------------------------------
 -- Breadcrumbs in winbar (repo-relative path + symbol context if possible)
 -- ----------------------------------------------------------------------
+--   • Extracts concise symbol names (identifiers) instead of raw node text
+--   • Removes the generic “block” fallback to avoid noisy snippets
+--   • Keeps LSP fallback (b:lsp_current_function)
+--   • Escapes % for winbar (winbar uses statusline-format strings)
+
+---@private
+---@return string|nil
+local function ts_identifier_of(node)
+  -- 1) Named field "name" (common across many grammars)
+  local named = node:field("name")
+  if named and named[1] then
+    local t = vim.treesitter.get_node_text(named[1], 0)
+    if t and #t > 0 then return t end
+  end
+
+  -- 2) Shallow search for identifier-like node types
+  local want = {
+    "identifier", "property_identifier", "field_identifier",
+    "type_identifier", "name",
+  }
+  local function in_list(x)
+    for _, w in ipairs(want) do if x == w then return true end end
+    return false
+  end
+
+  local function first_ident(n, depth)
+    depth = depth or 0
+    if depth > 2 then return nil end -- keep search shallow
+    if in_list(n:type()) then
+      local t = vim.treesitter.get_node_text(n, 0)
+      if t and #t > 0 then return t end
+    end
+    local cnt = n:child_count()
+    for i = 0, cnt - 1 do
+      local r = first_ident(n:child(i), depth + 1)
+      if r then return r end
+    end
+    return nil
+  end
+
+  local t = first_ident(node, 0)
+  if t and #t > 0 then return t end
+
+  -- 3) Last resort: skim the first line for a likely name token
+  local raw = (vim.treesitter.get_node_text(node, 0) or ""):gsub("^%s+", ""):gsub("\n.*", "")
+  local guess = raw:match("^%w+%s+([%w_]+)%s*%(")
+             or raw:match("^%w+%s+([%w_]+)%s*[={:]")
+             or raw:match("^([%w_%.:]+)%s*%(")
+             or raw:match("^([%w_%.:]+)")
+  if guess and #guess > 0 then return guess end
+  return nil
+end
 
 ---@private
 ---@return string|nil
 local function ts_symbol_path()
-	-- Require Treesitter core + convenience utils; bail out gracefully if missing
-	local ok_ts, tsmod = pcall(require, "vim.treesitter")
-	if not ok_ts or not tsmod then return nil end
-	local ok_utils, tsu = pcall(require, "nvim-treesitter.ts_utils")
-	if not ok_utils then return nil end
+  -- Require Treesitter core + convenience utils; bail out gracefully if missing
+  local ok_ts, tsmod = pcall(require, "vim.treesitter")
+  if not ok_ts or not tsmod then return nil end
+  local ok_utils, tsu = pcall(require, "nvim-treesitter.ts_utils")
+  if not ok_utils then return nil end
 
-	---@type TSNode|nil
-	local node = tsu.get_node_at_cursor()
-	if not node then return nil end
-	---@cast node TSNode  -- narrow: from TSNode|nil to TSNode
+  ---@type TSNode|nil
+  local node = tsu.get_node_at_cursor()
+  if not node then return nil end
+  ---@cast node TSNode
 
-	---@type string[]
-	local wanted = {
-		"function_declaration",
-		"function_definition",
-		"method_declaration",
-		"method_definition",
-		"class_declaration",
-		"class_specifier",
-		"struct_specifier",
-		"interface_declaration",
-		"module_declaration",
-		"namespace_definition",
-		"impl_item", -- Rust
-		"block",   -- last resort
-	}
+  -- Keep only semantic, named constructs; no generic “block”
+  local keep = {
+    function_declaration   = true,
+    function_definition    = true,
+    method_declaration     = true,
+    method_definition      = true,
+    class_declaration      = true,
+    class_specifier        = true,
+    struct_specifier       = true,
+    interface_declaration  = true,
+    module_declaration     = true,
+    namespace_definition   = true,
+    impl_item              = true, -- Rust
+  }
 
-	---@type string[]
-	local names = {}
+  ---@type string[]
+  local names = {}
 
-	--- Keep `u` optional because `:parent()` returns TSNode?
-	---@type TSNode?
-	local u = node
-	while u do
-		local t = u:type()
+  ---@type TSNode?
+  local u = node
+  while u do
+    local t = u:type()
+    if keep[t] then
+      local ident = ts_identifier_of(u)
+      if ident and #ident > 0 then
+        -- Normalize function/method appearance: append "()" if it looks like a callable
+        if t:find("function") or t:find("method") then
+          if not ident:find("%)$") then ident = ident:gsub("%s+$", "") .. "()" end
+        end
+        table.insert(names, 1, ident)
+      end
+    end
+    local parent = u:parent()
+    if not parent or parent == u then break end
+    u = parent
+  end
 
-		-- membership test
-		local keep = false
-		for _, w in ipairs(wanted) do
-			if t == w then
-				keep = true; break
-			end
-		end
-
-		if keep then
-			-- `get_node_text` expects a non-nil node; `u` is TSNode? but inside this branch it is non-nil
-			---@cast u TSNode
-			local text = vim.treesitter.get_node_text(u, 0) or ""
-			text = text:gsub("\n.*", ""):gsub("^%s+", "")
-			text = text:gsub("%b()", "()")
-			text = text:gsub("{.*", "{…}")
-			if #text > 0 then table.insert(names, 1, text) end
-		end
-
-		-- advance; parent may be nil
-		local parent = u:parent()
-		if not parent or parent == u then break end
-		u = parent
-	end
-
-	if #names == 0 then return nil end
-	return table.concat(names, " → ")
+  if #names == 0 then return nil end
+  return table.concat(names, " → ")
 end
 
 ---@private
 local function lsp_current_function()
-	local s = vim.b.lsp_current_function
-	if type(s) == "string" and #s > 0 then return s end
-	return nil
+  local s = vim.b.lsp_current_function
+  if type(s) == "string" and #s > 0 then return s end
+  return nil
+end
+
+---@private
+---@param s string
+---@return string
+local function stl_escape(s)
+  -- winbar uses statusline-format; escape % to avoid format parsing
+  return (s:gsub("%%", "%%%%"))
 end
 
 ---@private
 local function update_winbar()
-	if not M._cfg.enable_breadcrumbs then return end
-	if winbar_should_skip(0) then
-		-- ensure we don't leave stale winbar text in UIs/prompts/floats
-		vim.wo.winbar = ""
-		return
-	end
-	local path = vim.api.nvim_buf_get_name(0)
-	local rel = repo_relative(path)
-	local ctx = lsp_current_function() or ts_symbol_path()
+  if not M._cfg.enable_breadcrumbs then return end
+  if winbar_should_skip(0) then
+    -- ensure we don't leave stale winbar text in UIs/prompts/floats
+    vim.wo.winbar = ""
+    return
+  end
 
-	---@type string[]
-	local parts
-	if ctx and #ctx > 0 then
-		parts = { rel, " ⟩ ", ctx }
-	else
-		parts = { rel }
-	end
+  local path = vim.api.nvim_buf_get_name(0)
+  local rel = repo_relative(path)
 
-	local line = table.concat(parts, "")
-	line = ellipsize_middle(line, M._cfg.breadcrumbs_max_len)
-	vim.wo.winbar = " " .. line
+  -- LSP hint first; if not present, use Treesitter symbol chain
+  local ctx = lsp_current_function() or ts_symbol_path()
+
+  ---@type string[]
+  local parts
+  if ctx and #ctx > 0 then
+    parts = { rel, " ⟩ ", ctx }
+  else
+    parts = { rel }
+  end
+
+  local line = table.concat(parts, "")
+  line = ellipsize_middle(line, M._cfg.breadcrumbs_max_len)
+  line = stl_escape(line)              -- protect % sequences
+  vim.wo.winbar = " " .. line
 end
 
 -- ----------------------------------------------------------------------
