@@ -71,7 +71,7 @@ function M.setup()
     end
   end, { desc = "[LSP] Toggle format-on-save (silent)", silent = true })
 
-  map("n", "<leader>fmt", function()
+  map("n", "<leader>ft", function()
     if vim.g._formatter_api and type(vim.g._formatter_api.format) == "function" then
       vim.g._formatter_api.format(0)
       return
