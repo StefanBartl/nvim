@@ -15,11 +15,15 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 
 -- Always show the sign column to avoid layout shifts.
-vim.opt.signcolumn = "yes"
+-- vim.opt.signcolumn = "yes"
+vim.opt.signcolumn = "number"
 
--- Do not soft-wrap long lines.
-vim.opt.wrap = false
-
+-- vim.opt.wrap = false-- soft-wrap long lines
+vim.wo.wrap = true               -- wrap long lines visually (no hard line breaks)
+vim.wo.linebreak = true          -- wrap at word boundaries as per 'breakat'
+-- vim.wo.breakindent = true        -- indent wrapped screen lines
+-- vim.wo.breakindentopt = "shift:2,sbr" -- add +2 spaces and use 'showbreak'
+-- vim.o.showbreak = "↳ "           -- prefix shown on continuation screen lines
 
 -----------------------------------------------------------
 -- Clipboard
