@@ -34,9 +34,9 @@ M.ui = {
 }
 
 M.base46 = {
-	transparency = true,
+	transparency = false,
 
- theme = "vim_default",
+   -- theme = "vim_default",
 	-- theme = "github_dark",
 	-- theme = "aylin",
 	-- theme = "tokyonight",
@@ -46,7 +46,7 @@ M.base46 = {
 	-- theme = "vesper",
 	-- theme = "eldritch",
 	-- theme = "gruvchad",
-	-- theme = "gruvbox",
+	theme = "gruvbox",
 	-- theme = "poimandres",
 	-- theme = "radium",
 	-- theme = "rosepine",

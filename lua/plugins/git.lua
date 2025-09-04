@@ -29,8 +29,8 @@ return {
   {
     "sindrets/diffview.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
-    cmd = "DiffView",
-		lazy = true,
+    cmd = "DiffviewOpen",
+		-- lazy = true,
     config = true,
   },
 
