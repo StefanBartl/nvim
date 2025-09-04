@@ -36,6 +36,8 @@ function M.setup()
 			vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
 		end
 	end, { desc = "[Buffers] Delete all lines (confirm)" })
+
+ map("n", "<leader>zm", function () require("utils.window_zoom").zoom_toggle() end, { desc = "[Window] Toggle window zoom" })
 end
 
 return M
