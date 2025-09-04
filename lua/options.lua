@@ -109,3 +109,4 @@ vim.opt.swapfile = false
 -- Enable persistent undo and store it under the cache path.
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo"
+

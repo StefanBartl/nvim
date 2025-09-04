@@ -1,4 +1,3 @@
-
 ---@module 'hl_options'
 --- Enhanced, window-scoped cursor highlighting and related Neovim options.
 --- Drop this into lua/options.lua (or equivalent) and require it early in your config.
@@ -18,9 +17,9 @@
 ---@field min_colored_file_kb integer  -- disable column highlight for files bigger than this
 
 ---@type CursorHighlightConfig
-local CursorHL = {
+local cfg = {
   enable_line = true,
-  enable_column = false,            -- set true if a vertical guide helps you
+  enable_column = true,            -- set true if a vertical guide helps you
   color_persist = true,
   map_cursor_to_hl = true,
   min_colored_file_kb = 4096,       -- skip cursorcolumn on very large files
@@ -35,7 +34,7 @@ local CursorHL = {
 --- Apply highlight groups safely.
 ---@return nil
 local function apply_highlights()
-  for name, spec in pairs(CursorHL.colors) do
+  for name, spec in pairs(cfg.colors) do
     -- Use 0 (global) so it's independent from the current window
     vim.api.nvim_set_hl(0, name, spec)
   end
@@ -44,19 +43,19 @@ end
 --- Decide whether to enable cursorcolumn for the current buffer based on file size.
 ---@return boolean
 local function should_enable_column()
-  if not CursorHL.enable_column then return false end
+  if not cfg.enable_column then return false end
   local name = vim.api.nvim_buf_get_name(0)
   if name == "" then return true end
   local stat_ok, stat = pcall((vim.uv or vim.loop).fs_stat, name)
   if not stat_ok or not stat or not stat.size then return true end
   local kb = math.floor(stat.size / 1024)
-  return kb <= CursorHL.min_colored_file_kb
+  return kb <= cfg.min_colored_file_kb
 end
 
 --- Activate strong cursor highlight in the current window.
 ---@return nil
 local function activate_window_hl()
-  if CursorHL.enable_line then
+  if cfg.enable_line then
     vim.wo.cursorline = true
     -- both = line background + CursorLineNr highlight
     vim.wo.cursorlineopt = "both"
@@ -86,12 +85,12 @@ local function deactivate_window_hl()
 end
 
 -- Core options (global defaults)
-vim.opt.cursorline = CursorHL.enable_line
+vim.opt.cursorline = cfg.enable_line
 vim.opt.cursorlineopt = "both"
-vim.opt.cursorcolumn = CursorHL.enable_column
+vim.opt.cursorcolumn = cfg.enable_column
 
 -- Make the “Cursor” HL visible for the terminal/GUI cursor (where supported)
-if CursorHL.map_cursor_to_hl then
+if cfg.map_cursor_to_hl then
   vim.opt.guicursor = table.concat({
     "n-v-c:block-Cursor",
     "i-ci-ve:ver25-Cursor",
@@ -102,8 +101,8 @@ end
 
 -- Apply initial colors; keep them persistent across colorscheme changes
 apply_highlights()
-if CursorHL.color_persist then
-  local grp = vim.api.nvim_create_augroup("CursorHL_ColorPersist", { clear = true })
+if cfg.color_persist then
+  local grp = vim.api.nvim_create_augroup("cfg_ColorPersist", { clear = true })
   vim.api.nvim_create_autocmd("ColorScheme", {
     group = grp,
     callback = apply_highlights,
@@ -112,7 +111,7 @@ if CursorHL.color_persist then
 end
 
 -- Window-scoped behavior: only highlight strongly in the active window
-local grp_win = vim.api.nvim_create_augroup("CursorHL_PerWindow", { clear = true })
+local grp_win = vim.api.nvim_create_augroup("cfg_PerWindow", { clear = true })
 vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
   group = grp_win,
   callback = activate_window_hl,
