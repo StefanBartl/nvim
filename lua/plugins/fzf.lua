@@ -29,8 +29,8 @@ return {
 			return {
 				keymap = {
 					fzf = {
-						["ctrl-p"] = "next-history",
-						["ctrl-n"] = "prev-history",
+						["ctrl-n"] = "next-history",
+						["ctrl-p"] = "prev-history",
 					},
 				},
 				fzf_opts = {

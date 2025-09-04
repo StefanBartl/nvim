@@ -19,21 +19,24 @@ return {
 			{
 				"kkharji/sqlite.lua",
 				cond = function()
+					local is_installed = (vim.fn.executable("sqlite3") == 1)
+					if not is_installed then
+						return false
+					end
 					local is_win = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1)
 					if is_win then
-						-- Allow explicit opt-in once you've placed sqlite3.dll correctly.
-						return vim.env.NVIM_SQLITE_FORCE == "1"
+						vim.g.sqlite_clib_path = [[C:\tools\sqlite\sqlite3.dll]]
+						return true
 					end
-					return true
 				end,
 			},
 			{
 				"nvim-telescope/telescope-smart-history.nvim",
 				cond = function()
-					local is_win = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1)
-					if is_win and vim.env.NVIM_SQLITE_FORCE ~= "1" then
-						return false
-					end
+					-- local is_win = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1)
+					-- if is_win  and vim.env.NVIM_SQLITE_FORCE ~= "1" then
+					-- 	return false
+					-- end
 					-- If not Windows or explicitly forced, still check that the sqlite module can be required.
 					local ok = pcall(require, "sqlite")
 					return ok
@@ -43,11 +46,8 @@ return {
 		cmd = "Telescope",
 		opts = function(_, opts)
 			opts = opts or {}
-
 			-- Robust capability check: require('sqlite') must succeed AND
-			-- (on Windows) be explicitly forced by env var.
-			local is_win = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1)
-			local has_sqlite = (not is_win or vim.env.NVIM_SQLITE_FORCE == "1") and pcall(require, "sqlite")
+			local has_sqlite = pcall(require, "sqlite")
 
 			-- History block with backend fallback
 			local HISTORY = {
