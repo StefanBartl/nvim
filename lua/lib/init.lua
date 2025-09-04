@@ -4,7 +4,7 @@
 local M = {
   -- Re-export functions returned by their respective modules.
   is_wsl = require("lib.is_wsl"),
-  insert_blank_line_above = require("lib.insert_blank_line_above"),
+  text = require("lib.text"),
   require_dir = require("lib.require_dir"),
 }
 
