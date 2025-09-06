@@ -1,0 +1,232 @@
+---@module 'myoptions.types.highlight'
+---
+--- (Detailed) Annotations for Options configuration.
+--- All descriptions assume the integration provided by:
+---   myoptions/Highlight_Cfg (visual/UX features) and
+
+---@class MyOptionsBreadcrumbsCtx
+--- TODO: Ausformulieren
+---@field prefer_owner_in_literals boolean           -- In Objekt-/Tabellen-Literalen Owner vor Symbol
+---@field prefer_owner_on_member_access boolean      -- Bei member/dot/attribute Owner vor Symbol
+---@field dedupe_containers boolean                  -- Doppelte Containerteile zusammenfalten
+---
+--- Bevorzuge LSP-Hinweis (b:lsp_current_function) als ersten Provider.
+--- Liefert meist nur die aktuelle Funktion/Methode.
+---@field prefer_lsp_function boolean
+---
+--- Nutze Tree-sitter, um eine Symbolkette zu erzeugen (z. B. Klasse → Methode()).
+--- Wenn true, ist dies die wichtigste Quelle für „echte“ Semantik ohne LSP.
+---@field use_treesitter_symbol boolean
+---
+--- Versuche zusätzlich, einen Container/Owner zu ermitteln (z. B. M, pkg.mod, Class),
+--- und präge ihn in die Symbolkette ein (z. B. Class.method()).
+---@field use_container_chain boolean
+---
+--- Wenn nach allen „Haupt“-Quellen (LSP/Tree-sitter) noch KEIN Kontext gefunden wurde,
+--- versuche heuristisch, ein „nützliches“ Objekt/Owner unter dem Cursor zu ermitteln
+--- (z. B. linke Seite einer Member-Expression, Table-Name in Lua).
+---@field fallback_object_when_empty boolean
+---
+--- Falls nach allen obigen Versuchen noch immer nichts vorhanden ist,
+--- erlaube als allerletzten Fallback das schlichte Wort unter dem Cursor.
+---@field fallback_word_when_empty boolean
+---
+--- Aktiviere sprachspezifische Provider (Lua/JS/TS/Python/…).
+--- Diese liefern u. a. den „Owner“ von Member-Ausdrücken oder die Klasse um eine Methode.
+---@field use_lang_specific boolean
+---
+--- Join-String zwischen Container und Symbol (z. B. ".", "::", " · ").
+---@field container_join string
+---
+--- Maximale Anzahl Container-Segmente, die gesammelt werden (Kette bleibt kompakt).
+---@field container_max_depth integer
+---
+--- Reihenfolge der Kontext-Provider. Erlaubte Namen:
+---   "lsp_func", "ts_symbol", "container", "lang_extra", "word"
+--- Diese Reihenfolge wird nach und nach abgearbeitet, bis ein Kontext gefunden ist;
+--- „container“ modifiziert/ergänzt i. d. R. das Symbol aus ts_symbol.
+---@field providers_order string[]
+
+
+---@class HighlightCfg
+---
+--- Enables CursorLine in windows while active; mapped via `winhighlight` to the appropriate
+--- group (`CursorLine` or the per-mode variants). Changes:
+---   * Sets `vim.opt.cursorline` globally on startup; window-local on enter/leave.
+---   * Interacts with `enable_insert_submode_colors` to select `CursorLineN/I/V/R`.
+--- Side-effects: increased clarity of the active line; very low performance cost.
+---@field enable_line boolean
+---
+--- Enables a vertical `cursorcolumn` guide (window-local) to help align code.
+--- Changes:
+---   * Toggles `vim.wo.cursorcolumn` when entering windows or after text changes.
+---   * Respects `min_colored_file_kb` to avoid cost in large files.
+--- Side-effects: slight redraw cost on very large files; mitigated by size guard.
+---@field enable_column boolean
+---
+--- Reapplies all custom highlight groups after a colorscheme change.
+--- Changes:
+---   * Registers a `ColorScheme` autocmd that calls the highlighter again.
+--- Side-effects: guarantees your custom faces survive `:colorscheme` switches.
+---@field color_persist boolean
+---
+--- Maps the GUI/TUI cursor shape and face to dedicated highlight groups via `guicursor`.
+--- Changes:
+---   * If true, `:set guicursor` uses `Cursor` (single) or per-mode (`CursorNormal/Insert/Visual/Replace`)
+---     depending on `enable_insert_submode_colors`.
+---   * If false, restores default `guicursor`.
+--- Side-effects: can be overridden by UIs; falls back gracefully if unsupported.
+---@field map_cursor_to_hl boolean
+---
+--- Size threshold (KiB) above which `cursorcolumn` and similar column-tinted visuals are suppressed.
+--- Changes:
+---   * Checked on window activation and text events; if file exceeds this, `cursorcolumn` is disabled.
+--- Side-effects: none; improves responsiveness on large files.
+---@field min_colored_file_kb integer
+---
+--- Flashes the region that was just yanked using `vim.highlight.on_yank(...)` with `YankFlash`.
+--- Changes:
+---   * Adds an autocmd on `TextYankPost`.
+--- Side-effects: purely visual; no register changes; compatible with macros.
+---@field enable_yank_flash boolean
+---
+--- Flashes the region that was just pasted (put). Requires either temporary region inference
+--- via marks `[` and `]` or custom mappings.
+--- Changes:
+---   * When enabled with `map_put_flash`, maps `p`/`P` to replay paste and then flash the changed region.
+--- Side-effects: overrides default `p`/`P` mappings (non-recursive); ensure no conflicting mappings exist.
+---@field enable_put_flash boolean
+---
+--- Installs the safe `p`/`P` mappings needed by `enable_put_flash`.
+--- Changes:
+---   * Adds local-normal-mode keymaps that feedkeys the original behavior and then flash.
+--- Side-effects: may interfere with other plugins remapping paste; disable if undesired.
+---@field map_put_flash boolean
+---
+--- Tints the SignColumn based on worst diagnostic severity in the current buffer.
+--- Changes:
+---   * On `DiagnosticChanged`/`BufEnter`, computes worst severity and sets `winhighlight`’s `SignColumn:SignCol*`.
+--- Side-effects: SignColumn background changes dynamically; signs remain unaffected.
+---@field enable_signcolumn_tint boolean
+---
+--- Harmonizes terminal buffer visuals with your theme and cursorline.
+--- Changes:
+---   * On `TermOpen`, sets `winhighlight` to use `TermNormal`/`TermCursorLine`, enables window-local cursorline.
+--- Side-effects: terminal windows gain a consistent background and cursorline tint.
+---@field enable_terminal_palette boolean
+---
+--- Applies per-mode CursorLine tints and optional per-mode cursor faces.
+--- Changes:
+---   * On `ModeChanged`, maps active window’s `winhighlight` to `CursorLineN/I/V/R`.
+---   * Works with `map_cursor_to_hl` to select per-mode cursor faces via `guicursor`.
+--- Side-effects: subtle background shifts when switching modes; improves mode awareness.
+---@field enable_insert_submode_colors boolean
+---
+--- Underlines the “current word under cursor” outside Insert mode using `matchadd("CursorWord", pattern)`.
+--- Changes:
+---   * Adds minimal autocmds on `CursorMoved`, clears on `InsertEnter/BufLeave/WinLeave`.
+--- Side-effects: reduces need for full-document highlights; low overhead.
+---@field enable_current_word boolean
+---
+--- Binds `gh` to preview the nearest Git hunk using `gitsigns.nvim` if present.
+--- Changes:
+---   * If `gitsigns` exists: `gh` shows an inline/float hunk preview.
+---   * Otherwise: `gh` politely notifies that gitsigns is required.
+--- Side-effects: adds one normal-mode mapping.
+---@field enable_diff_peek boolean
+---
+--- Global guard for “expensive” visuals (e.g., indent-scope). Measured in KiB.
+--- Changes:
+---   * If current buffer exceeds this, heavier features skip work to remain responsive.
+--- Side-effects: features may appear disabled for very large files by design.
+---@field large_file_kb integer
+---
+--- Enables breadcrumbs in the window winbar (repo-relative path + optional symbol trail).
+--- What it shows:
+---   • Left: repo-relative file path (or "~"-shortened when no git root is found).
+---   • Right (optional): concise symbol context (prefers `b:lsp_current_function`, falls back to a Tree-sitter chain).
+--- Separator:
+---   • Uses `breadcrumbs_separator` verbatim if non-empty; otherwise tries `breadcrumbs_nerd_hex` (hex codepoint via `nr2char`).
+---   • If the Nerd glyph is unavailable or wider than one cell, falls back to " ⟶ " on wide terminals or " › " on narrow ones.
+--- Updates / triggers:
+---   • Re-renders on BufEnter, CursorMoved, WinScrolled, and on `:colorscheme`.
+---   • Also re-renders when changing any of: `enable_breadcrumbs`, `breadcrumbs_separator`, `breadcrumbs_nerd_hex`, `breadcrumbs_max_len`.
+--- Interactions:
+---   • Suppressed per `winbar_skip` (floating windows, special buftypes/filetypes, minimum window height).
+---   • Middle-ellipsized if longer than `breadcrumbs_max_len`; "%" is escaped for statusline formatting.
+--- Performance:
+---   • Low overhead (string building only); scoped to the current window.
+--- Caveats:
+---   • May conflict with other plugins modifying `winbar` (last writer wins).
+---   • Symbol detection depends on LSP/Tree-sitter availability and grammar coverage.
+---@field enable_breadcrumbs boolean
+---
+--- Winbar breadcrumb separator used verbatim (exact string is rendered as-is).
+--- Recommended to include leading/trailing spaces for readability, e.g. " ⟩ " or " › ".
+--- Interactions:
+---   * Has priority over `breadcrumbs_nerd_hex` (if this is a non-empty string, the Nerd-Font path is ignored).
+---   * Escaping of '%' is handled later in the winbar renderer; no extra escaping needed here.
+--- Changes:
+---   * Updating this value re-renders the winbar immediately.
+--- Side-effects:
+---   * None; purely cosmetic. Very low overhead.
+---@field breadcrumbs_separator string|nil
+---
+--- Preferred Nerd Font glyph for the breadcrumb separator, as hexadecimal codepoint, e.g. "F0058".
+--- Resolution:
+---   * Converted via `nr2char()`; accepted only if `strdisplaywidth(glyph) == 1` (avoids layout drift).
+---   * If not available or too wide, falls back automatically to a Unicode arrow:
+---       wide terminals (columns ≥ 100): " ⟶ "
+---       narrow terminals:               " › "
+--- Interactions:
+---   * Ignored when `breadcrumbs_separator` is a non-empty string.
+--- Changes:
+---   * Updating this value re-renders the winbar immediately.
+--- Side-effects:
+---   * None; cosmetic only. Relies on user font setup for Nerd Font coverage.
+---@field breadcrumbs_nerd_hex string|nil
+---
+---@field breadcrumbs_ctx MyOptionsBreadcrumbsCtx
+---
+--- Highlights the current indent-scoped block across the visible viewport.
+--- Changes:
+---   * Computes a contiguous region around the cursor with equal-or-greater indentation
+---     and highlights full lines using the `IndentScope` face.
+--- Side-effects: low-to-moderate cost on extremely wide/long windows; skipped via `indent_scope_skip`
+---                and `large_file_kb`.
+---@field enable_indent_scope boolean
+---
+--- Maximum characters allowed in the composed breadcrumbs string before middle-ellipsis is applied.
+--- Changes:
+---   * Affects only `winbar` rendering when `enable_breadcrumbs = true`.
+--- Side-effects: none; purely aesthetic truncation.
+---@field breadcrumbs_max_len integer
+---
+--- The full color/face palette used by all features (see MyOptionsHighlightColors).
+--- Changes:
+---   * Reapplied on colorscheme changes if `color_persist = true`.
+--- Side-effects: none; centralizes theming in one place.
+---@field colors HighlightColors
+---
+--- Skip rules for when to suppress breadcrumbs in `winbar`. Expected shape:
+---   {
+---     only_normal_buffers = boolean, -- if true, skip when `buftype ~= ""`
+---     skip_floating       = boolean, -- if true, skip floating windows
+---     min_height          = integer, -- skip when window height below this
+---     buftypes            = string[],-- explicit buftype blacklist
+---     filetypes           = string[],-- explicit filetype blacklist
+---     name_patterns       = string[] -- Lua patterns matched against buffer name/path
+---   }
+--- Changes:
+---   * Controls whether `winbar` is blanked for specific windows/buffers.
+--- Side-effects: none; helps avoid clutter in sidebars/pickers/dashboards.
+---@field winbar_skip table
+---
+--- Skip rules for indent-scope highlighting. Same shape as `winbar_skip`.
+--- Changes:
+---   * Determines if block highlighting is skipped for certain UI buffers/floats/sizes.
+--- Side-effects: prevents visual conflicts with plugin UIs and ephemeral buffers.
+---@field indent_scope_skip table
+
+---@class ModeChangedEvent
+---@field match string  -- "<old>:<new>"
