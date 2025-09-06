@@ -1,23 +1,13 @@
----@module 'mynotes.neovim_ref_notes'
---- Focused pickers for a single "WKD Book: Neovim" directory using fzf-lua and Telescope.
---- On require, this module defines 4 user commands and 4 keymaps:
----   Commands:
----     :WkdNvimFzfFiles, :WkdNvimFzfGrep, :WkdNvimTelFiles, :WkdNvimTelGrep
----   Keymaps (normal mode):
----     <leader>nf  -> fzf-lua find files
----     <leader>ng  -> fzf-lua live grep
----     <leader>tf  -> Telescope find files
----     <leader>tg  -> Telescope live grep
---- Linux/macOS only; no Windows-specific branches.
+--@module 'mynotes.checklists'
 
 local M = {}
+
 -- Configuration: change title or dir if needed.
----@type WkdNvimCfg
 local CFG = {
   -- Picker title shown in the UI.
-  title = "WKD Book · Neovim",
+  title = "Checklists",
   -- Directory to search. "~" will be expanded. Keep Linux/macOS style.
-  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/Notes/MyNotes/NVIM_Ref_Notes"),
+  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/Notes/MyNotes/Checklists"),
   notify = true,
 }
 
@@ -28,7 +18,7 @@ local CFG = {
 ---@param level integer
 local function note(msg, level)
   if CFG.notify ~= false then
-    vim.notify("[neovim-ref-notes] " .. msg, level)
+    vim.notify("[Checklists " .. msg, level)
   end
 end
 
@@ -167,27 +157,27 @@ end
 
 -- User commands --------------------------------------------------------------
 
-pcall(vim.api.nvim_create_user_command, "NeovimReferenceFiles", function()
+pcall(vim.api.nvim_create_user_command, "ChecklistsFiles", function()
   M.fzf_files()
-end, { desc = "Neovim-Reference-Notes (fzf-lua): Find files with preview in configured directory" })
+end, { desc = "Checklists (fzf-lua): Find files with preview in configured directory" })
 
-pcall(vim.api.nvim_create_user_command, "NeovimReferenceGrep", function()
+pcall(vim.api.nvim_create_user_command, "ChecklistsGrep", function()
   M.fzf_grep()
-end, { desc = "Neovim-Reference-Notes (fzf-lua): Live grep with preview in configured directory" })
+end, { desc = "Checklists (fzf-lua): Live grep with preview in configured directory" })
 
 -- pcall(vim.api.nvim_create_user_command, "MyNvimTelFiles", function()
 --   M.tel_files()
--- end, { desc = "Neovim-Reference-Notes (Telescope): Find files with preview in configured directory" })
+-- end, { desc = "WKD Neovim (Telescope): Find files with preview in configured directory" })
 --
 -- pcall(vim.api.nvim_create_user_command, "MyNvimTelGrep", function()
 --   M.tel_grep()
--- end, { desc = "Neovim-Reference-Notes (Telescope): Live grep with preview in configured directory" })
+-- end, { desc = "WKD Neovim (Telescope): Live grep with preview in configured directory" })
 
 -- Keymaps (normal mode) ------------------------------------------------------
 
 -- In case of reloads, vim.keymap.set will replace mappings with the same lhs/buffer.
--- vim.keymap.set("n", "<leader>nf", M.fzf_files, { desc = "WKD Neovim: fzf files" })
--- vim.keymap.set("n", "<leader>ng", M.fzf_grep, { desc = "WKD Neovim: fzf grep" })
+vim.keymap.set("n", "<leader>chf", M.fzf_files, { desc = "Checklists: fzf files" })
+vim.keymap.set("n", "<leader>chg", M.fzf_grep, { desc = "Checklists: fzf grep" })
 -- vim.keymap.set("n", "<leader>tf", M.tel_files, { desc = "WKD Neovim: telescope files" })
 -- vim.keymap.set("n", "<leader>tg", M.tel_grep, { desc = "WKD Neovim: telescope grep" })
 

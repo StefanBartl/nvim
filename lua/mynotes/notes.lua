@@ -1,4 +1,4 @@
---@module 'mynotes.wkdbooks'
+--@module 'mynotes.notes'
 
 local M = {}
 

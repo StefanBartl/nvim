@@ -1,6 +1,21 @@
 ---@module 'plugins.fuzzy_finder'
 --- Fuzzy finding tools based on Telescope, fzf-lua, and optional tabbed UI (search.nvim)
 
+---@return boolean  -- Ensure a strict boolean in all code paths
+local function has_sqlite_cli()
+	-- Note: kkharji/sqlite.lua benötigt die Shared Library (libsqlite3),
+	-- nicht zwingend das CLI. Das CLI ist hier nur eine pragmatische Heuristik.
+	return (vim.fn.executable("sqlite3") == 1)
+end
+
+---@param p string
+---@return boolean
+local function file_exists(p)
+	-- Use vim.uv when available (Neovim 0.10+), fallback to vim.loop
+	local uv = vim.uv or vim.loop
+	return uv.fs_stat(p) ~= nil
+end
+
 ---@type LazyPluginSpec[]
 return {
 
@@ -18,17 +33,49 @@ return {
 			-- On Windows default to false; allow opt-in via NVIM_SQLITE_FORCE=1.
 			{
 				"kkharji/sqlite.lua",
+				---@return boolean
 				cond = function()
-					local is_installed = (vim.fn.executable("sqlite3") == 1)
-					if not is_installed then
+					-- Quick exit: wenn gar kein sqlite vorhanden ist, Plugin überspringen
+					if not has_sqlite_cli() then
 						return false
 					end
+
 					local is_win = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1)
 					if is_win then
-						vim.g.sqlite_clib_path = [[C:\tools\sqlite\sqlite3.dll]]
-						return true
+						-- Try a small set of common locations for sqlite3.dll
+						---@type string[]
+						local candidates = {
+							[[C:\tools\sqlite\sqlite3.dll]],
+							[[C:\Windows\System32\sqlite3.dll]],
+							[[C:\Windows\SysWOW64\sqlite3.dll]],
+							[[C:\Program Files\SQLite\sqlite3.dll]],
+							[[C:\Program Files (x86)\SQLite\sqlite3.dll]],
+							[[C:\msys64\ucrt64\bin\sqlite3.dll]],
+							[[C:\msys64\mingw64\bin\sqlite3.dll]],
+						}
+
+						-- Respect an already configured path (e.g., from user env/init.lua)
+						if type(vim.g.sqlite_clib_path) == "string" and file_exists(vim.g.sqlite_clib_path) then
+							return true
+						end
+
+						for _, dll in ipairs(candidates) do
+							if file_exists(dll) then
+								vim.g.sqlite_clib_path = dll
+								return true
+							end
+						end
+
+						-- DLL nicht gefunden → Plugin nicht laden
+						return false
 					end
-				end,
+
+					-- Unix/macOS: Shared Library ist i. d. R. systemweit vorhanden und per cpath ladbar
+					-- (libsqlite3.so / .dylib). Falls in seltenen Fällen nicht: CLI-Heuristik kann
+					-- ein "true" liefern, die Library aber dennoch fehlen. Dann frühzeitig im Setup
+					-- des abhängigen Plugins pcall(require, "sqlite") prüfen.
+					return true
+				end
 			},
 			{
 				"nvim-telescope/telescope-smart-history.nvim",
@@ -202,7 +249,7 @@ return {
 						cwd_to_path = true,
 						-- Aktuelle Datei im Browser selektieren/hervorheben (falls erreichbar)
 						select_buffer = true,
-						hidden = true,           -- Dotfiles anzeigen
+						hidden = true, -- Dotfiles anzeigen
 						-- respect_gitignore = true -- Gitignore respektieren
 						no_ignore = true, -- alles anzeigen
 						follow_symlinks = true,

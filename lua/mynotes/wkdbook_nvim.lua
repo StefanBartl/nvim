@@ -1,4 +1,4 @@
----@module 'mynotes.wkdbook_nvim'
+---@module 'mynotes.notes'
 --- Focused pickers for a single "WKD Book: Neovim" directory using fzf-lua and Telescope.
 --- On require, this module defines 4 user commands and 4 keymaps:
 ---   Commands:

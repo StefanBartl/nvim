@@ -19,17 +19,36 @@ return {
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			-- do NOT hard-depend on telescope if you also support fzf-lua
-      -- load whichever backend on demand in your code
+			-- load whichever backend on demand in your code
 			-- { "nvim-telescope/telescope.nvim" },
 			-- { "ibhagwan/fzf-lua",             optional = true },
 		},
 		config = function()
 			require("cmdlog").setup {
-		  -- defer backend require until actually used
-      picker = "telescope", -- or "fzf-lua"; choose default, load lazily in code
+				-- defer backend require until actually used
+				picker = "telescope", -- or "fzf-lua"; choose default, load lazily in code
 			}
 		end,
 	},
+
+	{
+		dir = [[E:\repos\objtrack]], -- Repo-Root mit lua/ darunter
+		name = "objtrack",
+		main = "objtrack",           -- lädt lua/objtrack/init.lua als Haupteinstieg
+		lazy = false,                -- fürs Debuggen: hart beim Start laden
+		config = function()
+			require("objtrack").setup({
+				view_mode = "float",
+				prefer_telescope = true,
+				auto_rescan = false,
+				border = "rounded",
+				max_preview_lines = 5000,
+				blacklist_filetypes = { "help", "TelescopePrompt", "neo-tree", "lazy" },
+				keymaps = { pick = "<leader>op", rescan = "<leader>os" },
+			})
+		end,
+	},
+
 
 	-- nvim-containers: Manage container engines from Neovim
 	-- {

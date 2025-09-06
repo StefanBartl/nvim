@@ -2,7 +2,8 @@
 
 local M = {}
 
-local utl = require "ui.custom_stl_module" -- Helpers for statusline
+
+local utl = require "ui.custom_stl_module" -- Helpers for statusline TODO: breadcrumbs implementieren
 
 M.ui = {
 	statusline = {
@@ -40,7 +41,7 @@ M.base46 = {
   -- theme = "vim_default",
 	-- theme = "github_dark",
 	-- theme = "aylin",
-	theme = "tokyonight",
+	theme = "onedark",
 	--theme = "onedark",
 	-- theme = "solarized_dark",
 	-- theme = "scaryforest",
