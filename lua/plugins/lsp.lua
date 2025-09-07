@@ -71,6 +71,7 @@ return {
 			---@diagnostic disable-next-line: redundant-parameter
 			conform.setup({
 				formatters_by_ft = {
+					markdown = { "prettierd", "prettier", "mdformat" },
 					javascript = { "prettier" },
 					typescript = { "prettier" },
 					json = { "prettier" },
