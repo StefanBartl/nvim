@@ -11,14 +11,14 @@ function M.setup()
 	vim.keymap.set("n", "<C-r>", "g+", { desc = "Redo (branch-aware)" })
 	-- Optional: add a symmetric branch-aware undo on 'U'
 	vim.keymap.set("n", "U", "g-", { desc = "Undo older state (branch-aware)" })
--- insert below current line on <leader><CR>
-vim.keymap.set("n", "<leader><CR>", "o<Esc>k", { desc = "Insert blank line below" })
-vim.keymap.set("n", "<CR>", "0i<CR><Esc>k", { desc = "Insert blank line below" })
+
+	-- insert below current line on <leader><CR>
+	vim.keymap.set("n", "<leader><CR>", "o<Esc>k", { desc = "Insert blank line below" })
+	vim.keymap.set("n", "<CR>", "0i<CR><Esc>k", { desc = "Insert blank line below" })
 
 	-- Duplicate lines without affecting PRIMARY and CLIPBOARD selections.
 	map('n', '<Leader>dd', 'm`""Y""P``', { desc = 'Duplicate line' })
 	map('x', '<Leader>dd', '""Y""Pgv', { desc = 'Duplicate selection' })
-
 
 	-- Move selected lines
 	-- Move current line up/down in normal mode

@@ -199,85 +199,126 @@ end
 -- Debug command
 --------------------------------------------------------------------------------
 
---- Register a debug user command for inspecting breadcrumb context providers.
---- The command prints per-provider outputs, active flags, and the final chosen context.
----
---- Parameters:
----   opts.names.debug  (optional)  Custom command name, default: "MyHighlightDebugCtx"
----   opts.mod          (optional)  Module exposing provider functions
----   opts.sepfn        (optional)  Function returning the effective breadcrumb separator
----
---- Defaults:
----   If 'opts' is nil, sensible defaults are used.
----   If 'opts.names' or 'opts.names.debug' is nil, "MyHighlightDebugCtx" is used.
----   If 'opts.mod' is nil, require("myoptions.Highlight_Cfg.breadcrumbs.ctx") is used.
----   If 'opts.sepfn' is nil, a minimal internal resolver is used.
----
---- Notes:
----   • The module 'opts.mod' is expected to expose the provider functions listed in
----     'MyBreadcrumbsCtxModule' below (all optional; missing ones are handled gracefully).
----   • The separator function should return a short, single-cell string if possible.
----
----
+--- Registriert den Debug-Command für Breadcrumb-Kontexte.
+--- Aufruf (Beispiel):
+---   require('myoptions.commands').register_highlight_debug_command()
+--- oder mit Optionen:
+---   require('myoptions.commands').register_highlight_debug_command({
+---     names = { debug = "MyHlDbg" },
+---     sepfn = function() return " ⟶ " end,
+---   })
 ---@param opts MyHighlightDebugOpts|nil
 ---@return nil
 function M.register_highlight_debug_command(opts)
   opts = opts or {}
-  local names = opts.names or {}
+  local names      = opts.names or {}
   local name_debug = names.debug or "MyHighlightDebugCtx"
+
+  -- Kontext-Modul (Provider) laden oder vom Aufrufer injiziert bekommen
   local mod = opts.mod or require("myoptions.Highlight_Cfg.breadcrumbs.ctx")
 
-  -- Optional separator resolver hook
-  local get_sep = opts.sepfn or function()
-    -- Fall back to simple logic if your project uses a dedicated separator resolver:
+  -- Optionaler Separator-Resolver
+  local function default_sepfn()
     local hc = C.cfg.highlight
     local s = hc.breadcrumbs_separator
-    if type(s) == "string" and s ~= "" then return s end
-    -- Minimal Nerd-Font fallback (single-cell check omitted for brevity)
+    if type(s) == "string" and s ~= "" then
+      return s
+    end
     local hex = hc.breadcrumbs_nerd_hex
     if type(hex) == "string" and hex ~= "" then
       local n = tonumber(hex, 16)
-      if n then return " " .. vim.fn.nr2char(n) .. " " end
+      if n then
+        -- bewusst kompakt; Einzelzellen-Prüfung kann projektseitig ergänzt werden
+        return " " .. vim.fn.nr2char(n) .. " "
+      end
     end
     return (vim.o.columns >= 100) and " ⟶ " or " › "
   end
+  local get_sep = opts.sepfn or default_sepfn
+
+  -- Sicherer Wrapper, damit einzelne Provider-Aufrufe nicht die Anzeige sprengen
+  local function safe_call(f)
+    local ok, val = pcall(f)
+    if ok then
+      return val
+    else
+      return "<error: " .. tostring(val) .. ">"
+    end
+  end
 
   vim.api.nvim_create_user_command(name_debug, function()
-    local hc = C.cfg.highlight
-    local ctx = hc.breadcrumbs_ctx or {}
+    local hc   = C.cfg.highlight
+    local bctx = hc.breadcrumbs_ctx or {}
 
-    -- Probe providers individually (guard each call)
-    local function safe(f)
-      local ok, val = pcall(f)
-      return ok and val or ("<error: " .. tostring(val) .. ">")
+    -- Einzelne Provider abfragen (so vorhanden)
+    local has   = function(x) return type(x) == "function" end
+    local p     = {}
+
+    p.lsp_func   = has(mod._ctx_lsp_func)       and safe_call(mod._ctx_lsp_func)       or "<n/a>"
+    p.ts_symbol  = has(mod._ctx_ts_symbol)      and safe_call(mod._ctx_ts_symbol)      or "<n/a>"
+    p.lang_extra = has(mod._ctx_lang_extra)     and safe_call(mod._ctx_lang_extra)     or "<n/a>"
+    p.word       = has(mod._ctx_word_fallback)  and safe_call(mod._ctx_word_fallback)  or "<n/a>"
+
+    -- Basis-Token (unter Cursor) – nur wenn angeboten
+    local base = has(mod._ctx_base_token) and safe_call(mod._ctx_base_token) or "<n/a>"
+
+    -- Container-Augmenter separat inspizieren: bevorzugt TS-Symbol, sonst Base
+    local container_input
+    if type(p.ts_symbol) == "string" and p.ts_symbol ~= "<n/a>" then
+      container_input = p.ts_symbol
+    elseif type(base) == "string" and base ~= "<n/a>" then
+      container_input = base
     end
+    p.container = (has(mod._ctx_with_container) and container_input)
+      and safe_call(function() return mod._ctx_with_container(container_input) end)
+      or "<n/a>"
 
-    local p = {}
-    p.lsp_func   = (mod._ctx_lsp_func     and safe(mod._ctx_lsp_func))     or "<n/a>"
-    p.ts_symbol  = (mod._ctx_ts_symbol    and safe(mod._ctx_ts_symbol))    or "<n/a>"
-    -- container augments a base symbol; feed ts_symbol into it for inspection
-    p.container  = (mod._ctx_with_container and safe(function() return mod._ctx_with_container(p.ts_symbol ~= "<n/a>" and p.ts_symbol or nil) end)) or "<n/a>"
-    p.lang_extra = (mod._ctx_lang_extra   and safe(mod._ctx_lang_extra))   or "<n/a>"
-    p.word       = (mod._ctx_word_fallback and safe(mod._ctx_word_fallback)) or "<n/a>"
+    -- Finalen Kontext nach der echten Orchestrierung bestimmen
+    local chosen = has(mod._build_context) and safe_call(mod._build_context) or "<n/a>"
 
-    local chosen = (mod._build_context and safe(mod._build_context)) or "<n/a>"
+    -- Zusätzlich: wie sähe die Winbar-Zeile aus?
+    local rel = (function(path)
+      if path == "" then return "[No Name]" end
+      local dir    = vim.fn.fnamemodify(path, ":h")
+      local gitdir = vim.fs.find(".git", { upward = true, path = dir })[1]
+      if gitdir then
+        local root = vim.fn.fnamemodify(gitdir, ":h")
+        local relp = vim.fn.fnamemodify(path, (":~:%s"):format(root))
+        if relp == path then return vim.fn.fnamemodify(path, ":t") end
+        relp = relp:gsub("^%./", ""):gsub("^/", "")
+        return relp
+      else
+        return vim.fn.fnamemodify(path, ":~:.")
+      end
+    end)(vim.api.nvim_buf_get_name(0))
 
-    local info = {
+    local sep = get_sep()
+    local line = (type(chosen) == "string" and chosen ~= "" and chosen ~= "<n/a>")
+      and (rel .. sep .. chosen) or rel
+
+    -- Ausgabe
+    local lines = {
       "Breadcrumbs Debug",
       ("file: %s"):format(vim.api.nvim_buf_get_name(0)),
-      ("separator: %s"):format(get_sep()),
-      ("providers_order: %s"):format(vim.inspect(ctx.providers_order or {})),
+      ("separator: %s"):format(sep),
+      ("providers_order: %s"):format(vim.inspect(bctx.providers_order or {})),
       "flags:",
-      ("  prefer_lsp_function        = %s"):format(tostring(ctx.prefer_lsp_function)),
-      ("  use_treesitter_symbol      = %s"):format(tostring(ctx.use_treesitter_symbol)),
-      ("  use_container_chain        = %s"):format(tostring(ctx.use_container_chain)),
-      ("  fallback_object_when_empty = %s"):format(tostring(ctx.fallback_object_when_empty)),
-      ("  fallback_word_when_empty   = %s"):format(tostring(ctx.fallback_word_when_empty)),
-      ("  use_lang_specific          = %s"):format(tostring(ctx.use_lang_specific)),
-      ("  container_join             = %s"):format(tostring(ctx.container_join)),
-      ("  container_max_depth        = %s"):format(tostring(ctx.container_max_depth)),
+      ("  prefer_lsp_function            = %s"):format(tostring(bctx.prefer_lsp_function)),
+      ("  use_treesitter_symbol          = %s"):format(tostring(bctx.use_treesitter_symbol)),
+      ("  use_container_chain            = %s"):format(tostring(bctx.use_container_chain)),
+      ("  use_lang_specific              = %s"):format(tostring(bctx.use_lang_specific)),
+      ("  fallback_object_when_empty     = %s"):format(tostring(bctx.fallback_object_when_empty)),
+      ("  fallback_word_when_empty       = %s"):format(tostring(bctx.fallback_word_when_empty)),
+      ("  prefer_owner_in_literals       = %s"):format(tostring(bctx.prefer_owner_in_literals)),
+      ("  prefer_owner_on_member_access  = %s"):format(tostring(bctx.prefer_owner_on_member_access)),
+      ("  dedupe_containers              = %s"):format(tostring(bctx.dedupe_containers)),
+      ("  container_join                 = %s"):format(tostring(bctx.container_join)),
+      ("  container_max_depth            = %s"):format(tostring(bctx.container_max_depth)),
+      ("  breadcrumbs_separator          = %s"):format(tostring(hc.breadcrumbs_separator)),
+      ("  breadcrumbs_nerd_hex           = %s"):format(tostring(hc.breadcrumbs_nerd_hex)),
       "",
       "provider results:",
+      ("  base       → %s"):format(vim.inspect(base)),
       ("  lsp_func   → %s"):format(vim.inspect(p.lsp_func)),
       ("  ts_symbol  → %s"):format(vim.inspect(p.ts_symbol)),
       ("  container  → %s"):format(vim.inspect(p.container)),
@@ -285,9 +326,10 @@ function M.register_highlight_debug_command(opts)
       ("  word       → %s"):format(vim.inspect(p.word)),
       "",
       ("chosen: %s"):format(vim.inspect(chosen)),
+      ("preview line: %s"):format(line),
     }
-    vim.notify(table.concat(info, "\n"), vim.log.levels.INFO)
+
+    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
   end, { desc = "Debug breadcrumb context providers" })
 end
-
 return M

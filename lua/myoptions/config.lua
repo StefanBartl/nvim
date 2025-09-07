@@ -33,7 +33,7 @@ M.cfg = {
 		enable_diff_peek = true,           -- Weist 'gh' zum Gitsigns-Hunk-Preview zu (falls vorhanden); sonst Hinweis.
 		large_file_kb = 5000,              -- Globale Schranke (KiB) für „teuerere“ Effekte (z. B. Indent-Scope), um Performance zu wahren.
 
-		enable_breadcrumbs = true,         -- Aktiviert kompakte Breadcrumbs in der winbar (Repo-relativer Pfad + optional Symbolkette).
+		enable_breadcrumbs = false,         -- Aktiviert kompakte Breadcrumbs in der winbar (Repo-relativer Pfad + optional Symbolkette).
 		breadcrumbs_max_len = 120,         -- Maximale Länge der Breadcrumb-Zeile; Mittelteil wird bei Überschreitung ellipsisiert.
 		breadcrumbs_separator = nil,       -- If set, used verbatim as separator (with surrounding spaces as given). Example: " ⟩ " or " | "
 		breadcrumbs_nerd_hex = "f0058",    -- If set (and breadcrumbs_separator is nil), try Nerd Font glyph by hex codepoint. -- Example: "f0058" (case-insensitive). Falls back automatisch auf Unicode-Pfeile.

@@ -34,8 +34,8 @@ return {
 	{
 		dir = [[E:\repos\objtrack]], -- Repo-Root mit lua/ darunter
 		name = "objtrack",
-		main = "objtrack",           -- lädt lua/objtrack/init.lua als Haupteinstieg
-		lazy = false,                -- fürs Debuggen: hart beim Start laden
+		main = "objtrack",         -- lädt lua/objtrack/init.lua als Haupteinstieg
+		lazy = false,              -- fürs Debuggen: hart beim Start laden
 		config = function()
 			require("objtrack").setup({
 				view_mode = "float",

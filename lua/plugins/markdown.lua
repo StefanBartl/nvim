@@ -4,25 +4,16 @@
 ---@type LazyPluginSpec[]
 return {
 
-	--[[
-  ---@type LazyPluginSpec
-  {
-    "MeanderingProgrammer/render-markdown.nvim",
-    ft = { "markdown" },
-    opts = {
-      theme = "dark", -- optional
-    },
-    config = function(_, opts)
-      require("render-markdown").setup(opts)
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = "markdown",
-        callback = function()
-          require("render-markdown").enable()
-        end,
-      })
-    end,
-  },
-  ]] --
+	---@type LazyPluginSpec
+	{
+		"MeanderingProgrammer/render-markdown.nvim",
+		ft = { "markdown" },
+		cmd = { "RenderMarkdown" },
+		opts = {
+			enabled = false,
+			theme = "dark",
+		},
+	},
 
 	{
 		"iamcco/markdown-preview.nvim",
@@ -32,7 +23,7 @@ return {
 		-- with yarn (only method tha work in Windows)
 		build = "cd app && yarn install",
 		init = function()
-		  vim.g.mkdp_filetypes = { "markdown" }
+			vim.g.mkdp_filetypes = { "markdown" }
 		end,
 		config = function()
 			require("config.markdown_preview").setup()

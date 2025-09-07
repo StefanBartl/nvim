@@ -31,7 +31,7 @@ pcall(dofile, vim.g.base46_cache .. "syntax")
 pcall(dofile, vim.g.base46_cache .. "defaults")
 pcall(dofile, vim.g.base46_cache .. "statusline")
 require "ui.ibl_shim" -- fzf colorschenme picker depends on this to work correctly
-require "ui.ibl"  -- fzf colorschenme picker depends on this to work correctly
+require "ui.ibl"      -- fzf colorschenme picker depends on this to work correctly
 require "system.env"
 require "options"
 require('myoptions').enable({ highlights = true, options = true })
@@ -49,9 +49,9 @@ vim.schedule(function()
 	require("mappings").setup()
 end)
 require("config.image_preview.pdf.buffer").setup({
-  open_mode = "vsplit",   -- "split" | "vsplit" | "tab"
-  focus = false,          -- Fokus nicht stehlen (true = Cursor in PDF-Fenster)
-  bg_hex = "#ffffff",     -- fixer weißer Hintergrund
+	open_mode = "vsplit", -- "split" | "vsplit" | "tab"
+	focus = false,        -- Fokus nicht stehlen (true = Cursor in PDF-Fenster)
+	bg_hex = "#ffffff",   -- fixer weißer Hintergrund
 })
 require("custom.smart_edit").setup({ set_cr = true })
 -- require("config.noice.signature_focus_guard").setup() -- WATCH: Noice pr

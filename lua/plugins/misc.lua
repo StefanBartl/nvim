@@ -23,20 +23,10 @@ return {
     end,
   },
 
-  -- https://github.com/axieax/urlview.nvim
   { "axieax/urlview.nvim", lazy = true },
 
-  -- https://github.com/jghauser/mkdir.nvim
   {
     "jghauser/mkdir.nvim",
     lazy = true,
   },
-
-  {
-    "NStefan002/screenkey.nvim",
-		cmd = "Screenkey",
-    lazy = true,
-    version = "*",
-  },
-
 }

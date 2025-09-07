@@ -10,8 +10,8 @@
 
 local C         = require("myoptions.config")
 local cfg       = C.cfg.highlight
-local Ctx       = require("myoptions.Highlight_Cfg.breadcrumbs.ctx")
 local PathCache = require("myoptions.Highlight_Cfg.path_cache")
+local ctx_ok, ctxmod = pcall(require, "myoptions.Highlight_Cfg.breadcrumbs.ctx")
 
 -- Namespaces & groups
 local NS_INDENT = vim.api.nvim_create_namespace("myopt_IndentScope")
@@ -52,6 +52,19 @@ local function nerd_sep_or_fallback(hex)
 	local wide = (tonumber(vim.o.columns) or 0) >= 100
 	return wide and " ⟶ " or " › "
 end
+
+-- Example: resolve effective separator from config
+---@return string
+local function _effective_sep()
+  local hc = require("myoptions.config").cfg.highlight
+  -- Direct string wins
+  if type(hc.breadcrumbs_separator) == "string" and hc.breadcrumbs_separator ~= "" then
+    return hc.breadcrumbs_separator
+  end
+  -- Prefer Nerd Font hex if set, with width check
+  return nerd_sep_or_fallback(hc.breadcrumbs_nerd_hex)
+end
+
 
 --- Resolve the separator according to config.
 ---@return string
@@ -194,23 +207,100 @@ local function winbar_should_skip(bufnr)
 	return false
 end
 
+-- Optional TS/LSP fallbacks used only when the ctx module is unavailable
+---@return string|nil
+local function _lsp_current_function()
+  -- very cheap: many LSPs set this buffer variable
+  local s = vim.b.lsp_current_function
+  if type(s) == "string" and #s > 0 then return s end
+  return nil
+end
+
+---@return string|nil
+local function _ts_symbol_path_fallback()
+  -- tiny, safe fallback; not as smart as the ctx module, but avoids globals
+  local ok_utils, tsu = pcall(require, "nvim-treesitter.ts_utils")
+  if not ok_utils then return nil end
+  local node = tsu.get_node_at_cursor()
+  if not node then return nil end
+
+  local function txt(n)
+    local ok, s = pcall(vim.treesitter.get_node_text, n, 0)
+    return ok and (s or "") or ""
+  end
+
+  local keep = {
+    function_declaration   = true, function_definition   = true,
+    method_declaration     = true, method_definition     = true,
+    class_declaration      = true, class_specifier       = true,
+    struct_specifier       = true, interface_declaration = true,
+    module_declaration     = true, namespace_definition  = true,
+    impl_item              = true,
+  }
+
+  local function ident_of(n)
+    local named = n:field("name"); if named and named[1] then
+      local s = txt(named[1]); if s ~= "" then return s end
+    end
+    local want = { identifier=true, property_identifier=true, field_identifier=true, type_identifier=true, name=true }
+    local function first_ident(m, d)
+      d = d or 0; if d > 2 then return nil end
+      if want[m:type()] then local s = txt(m); if s ~= "" then return s end end
+      local cnt = m:child_count()
+      for i = 0, cnt - 1 do
+        local r = first_ident(m:child(i), d + 1)
+        if r then return r end
+      end
+      return nil
+    end
+    local s = first_ident(n, 0)
+    if s and #s > 0 then return s end
+    local raw = (txt(n):gsub("^%s+", ""):gsub("\n.*", ""))
+    return raw:match("^%w+%s+([%w_]+)%s*%(")
+        or raw:match("^%w+%s+([%w_]+)%s*[={:]")
+        or raw:match("^([%w_%.:]+)%s*%(")
+        or raw:match("^([%w_%.:]+)")
+  end
+
+  local names, u = {}, node
+  while u do
+    if keep[u:type()] then
+      local id = ident_of(u)
+      if id and #id > 0 then
+        if u:type():find("function") or u:type():find("method") then
+          if not id:find("%)$") then id = id:gsub("%s+$", "") .. "()" end
+        end
+        table.insert(names, 1, id)
+      end
+    end
+    local p = u:parent(); if not p or p == u then break end
+    u = p
+  end
+  if #names == 0 then return nil end
+  return table.concat(names, " → ")
+end
+
+
 ---@return nil
 local function update_winbar()
-	if not cfg.enable_breadcrumbs then
-		vim.wo.winbar = ""; return
-	end
-	if winbar_should_skip(0) then
-		vim.wo.winbar = ""; return
-	end
-	local path    = vim.api.nvim_buf_get_name(0)
-	local rel     = PathCache.repo_relative_cached(path, 0) -- <- cached variant
+  if not cfg.enable_breadcrumbs then vim.wo.winbar = ""; return end
+  if winbar_should_skip(0) then vim.wo.winbar = ""; return end
 
-	local ctx     = Ctx._build_context()
+  local path = vim.api.nvim_buf_get_name(0)
+  local rel  = PathCache.repo_relative_cached(path)
 
-	local sep     = get_breadcrumb_separator()
-	local parts   = (ctx and #ctx > 0) and { rel, sep, ctx } or { rel }
-	local line    = stl_escape(ellipsize_middle(table.concat(parts, ""), cfg.breadcrumbs_max_len or 120))
-	vim.wo.winbar = " " .. line
+  -- prefer the modular context builder; fallback to tiny LSP/TS helpers
+  local ctx = nil
+  if ctx_ok and ctxmod and type(ctxmod._build_context) == "function" then
+    ctx = ctxmod._build_context()
+  else
+    ctx = _lsp_current_function() or _ts_symbol_path_fallback()
+  end
+
+  local sep = _effective_sep()  -- deine existierende Separator-Funktion
+  local line = (ctx and #ctx > 0) and (rel .. sep .. ctx) or rel
+  line = stl_escape(ellipsize_middle(line, cfg.breadcrumbs_max_len or 120))
+  vim.wo.winbar = " " .. line
 end
 
 -- Indent-scope highlight (viewport-limited)
