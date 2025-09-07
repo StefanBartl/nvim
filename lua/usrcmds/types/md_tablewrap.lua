@@ -1,0 +1,171 @@
+---@module 'usrcmds.md_tablewrap'
+
+---@class MDTableWrapConfig
+--- Configuration for Markdown table reflow/wrapping.
+--- The formatter computes a per-table "content area" width and distributes it across columns.
+--- Content area per row is derived from:
+---   text_area_width
+---   - indent_before_first_pipe
+---   - outer_left
+---   - outer_right
+---   - (ncols + 1)   -- all vertical '|' pipes
+---   - 2 * inner_pad * ncols
+--- Resulting content cells are then allocated to columns either "naturally" (auto_width=true)
+--- or evenly (auto_width=false), and finally wrapped per cell using UTF-8 safe word/char breaks.
+---
+---@field inner_pad integer
+--- Number of spaces added INSIDE every cell on both sides (left and right).
+--- This is a per-side padding; i.e., each column's emitted visual width equals:
+---   content_width + 2 * inner_pad
+--- Constraints:
+---   * Must be >= 0 (values <0 are clamped to 0).
+---   * Typical values: 0 or 1. Defaults to 1.
+--- Effects:
+---   * Larger values reduce the remaining horizontal budget for actual content.
+---   * Affects separator row generation (minimum dashes still honored).
+---
+---@field outer_left integer
+--- Reserved columns to the left of the table's first '|' within the window's text area.
+--- This does NOT insert spaces; it simply reduces the horizontal budget when computing widths.
+--- Use this to keep a small left margin for visual breathing room near the right edge.
+--- Constraints:
+---   * Must be >= 0 (values <0 are clamped to 0).
+---   * Defaults to 3.
+---
+---@field outer_right integer
+--- Reserved columns to the right of the table within the window's text area.
+--- Like `outer_left`, this reduces budget but does not emit spaces.
+--- Useful when the rightmost table border should not collide with the window edge.
+--- Constraints:
+---   * Must be >= 0 (values <0 are clamped to 0).
+---   * Defaults to 3.
+---
+---@field auto_width boolean
+--- Column width assignment strategy:
+---   true  -> "Natural widths": measure the maximum display width per column
+---            across header+body, then clamp by min/max and fit into the
+---            available content budget (proportional shrink if needed).
+---   false -> "Equal widths": split the total content budget evenly across columns,
+---            then clamp by min/max; proportional shrink if the sum still exceeds budget.
+--- Interactions:
+---   * `min_col_width` acts as a target lower bound (hard if sum of minima fits).
+---   * `max_col_width` caps any column regardless of mode.
+--- Defaults to true.
+---
+---@field max_col_width integer|nil
+--- Optional upper bound (in display columns) per column's CONTENT width.
+--- Application:
+---   * In auto mode, measured natural widths are first raised to the minimum,
+---     then capped by this maximum.
+---   * In equal mode, the equal split is then capped.
+--- Fitting:
+---   * If the sum after capping still exceeds the content budget, proportional shrink applies.
+--- Values:
+---   * >= 1 to enable; nil/false to disable (no upper cap).
+--- Defaults to nil (disabled).
+--- Caveat:
+---   * Picking a very small max can force excessive wrapping; ensure `max_col_width >= min_col_width`.
+---
+---@field min_col_width integer|nil
+--- Preferred minimum CONTENT width per column (in display columns).
+--- Semantics:
+---   * If ncols * min_col_width <= content_budget:
+---       Each column is enforced to be at least `min_col_width` (hard lower bound).
+---   * Else (the sum of minima does not fit):
+---       The formatter proportionally shrinks columns below this minimum as needed,
+---       but never below 1, to make the table fit the current window.
+--- Values:
+---   * >= 1 to enable; nil/false treated as 1 internally (practical lower bound for fit).
+--- Defaults to 15.
+--- Notes:
+---   * Earlier wrapping in narrow columns is expected to honor the minimum where feasible.
+---
+---@field wrap_all_default boolean
+--- Default scope for :MDTableWrap:
+---   false -> operate only on the table under the cursor (current table).
+---   true  -> operate on ALL tables in the current buffer.
+--- Commands typically provide both variants; this flag selects the default behavior.
+--- Defaults to false.
+--- Rationale:
+---   * Per-file bulk formatting can be convenient before commits.
+---   * Per-table keeps smaller edits local during writing.
+---
+---@field on_save_enabled boolean
+--- If true, automatically reflows ALL tables in Markdown buffers on save.
+--- Trigger:
+---   * BufWritePre for filetype=markdown.
+--- Mode:
+---   * Uses "detect" mode (only reflow when overflow is found) to minimize changes.
+--- Considerations:
+---   * May be toggled via a dedicated user command in the plugin.
+---   * If your buffer contains intentionally hand-aligned tables, consider keeping this off.
+--- Defaults to false.
+
+
+---@alias MDMode '"detect"'|'"force"'
+--- Mode selector for reflow behavior.
+--- "detect": Only reflow if an overflow is detected for the (current/all) table(s).
+---           This minimizes changes and is suited for on-save hooks.
+--- "force" : Always reflow, regardless of current width/overflow state.
+---           Useful after major edits or when you want deterministic formatting.
+
+---@class MDWrapBounds
+--- Inclusive bounds and indentation info for a contiguous Markdown table block.
+--- All indices are 1-based and refer to the current buffer.
+---@field start_lnum integer
+--- First line number (1-based, inclusive) of the table block that will be reformatted.
+--- The block is found by expanding up from the cursor until a non-table-like line appears.
+---@field end_lnum integer
+--- Last line number (1-based, inclusive) of the same table block.
+--- The block is extended downward while subsequent lines remain table-like.
+---@field indent_col integer
+--- Display-width (in screen columns) of the text before the first '|' on the first table line.
+--- This reflects the visual indentation measured via strdisplaywidth(); it is used to compute
+--- the available horizontal budget, but it is not altered when emitting the reformatted table.
+---@field indent_str string
+--- The exact prefix string before the first '|' on the first table line (may contain tabs/spaces).
+--- This original prefix is preserved verbatim and re-applied to every emitted table line
+--- so that the table keeps its original indentation string, independent from indent_col.
+
+---@class MDColumnAlign
+--- Alignment flags for a single column, derived from the header separator (e.g. ":---:", "--:", ":--").
+--- If both flags are false, left alignment is used by default.
+--- If both flags are true, a centered layout is used.
+---@field left boolean
+--- True if the separator starts with ":", indicating left alignment (or part of centered).
+---@field right boolean
+--- True if the separator ends with ":", indicating right alignment (or part of centered).
+
+---@class MDTableParse
+--- Parsed representation of a Markdown table block without surrounding indent.
+--- The separator line (---, :---:, --:, etc.) is not included in body rows.
+---@field header string[]|nil
+--- Optional header row cells (one row), if a header separator was found above the body.
+--- The number of cells is normalized to ncols by padding missing cells with empty strings.
+---@field body string[][]
+--- Body rows (zero or more). Each inner array represents one logical row (before wrapping).
+--- Every row is normalized to exactly ncols cells; missing cells are empty strings.
+---@field has_separator boolean
+--- True if a valid Markdown header separator line was detected within the block.
+--- This influences how header/alignments are derived and how the separator is re-emitted.
+---@field aligns MDColumnAlign[]
+--- One alignment descriptor per column (length equals ncols). Derived from the separator line;
+--- if no separator exists, defaults to left alignment for all columns.
+---@field ncols integer
+--- Total number of columns for the table. Computed as the maximum number of cells
+--- observed across header/body rows after splitting and normalization.
+
+---@class MDWrapPlan
+--- Final width and padding plan for formatting.
+--- All widths refer to CONTENT width per column (i.e., excluding inner padding).
+---@field col_widths integer[]
+--- Array of per-column content widths (length equals ncols), after applying:
+---   * available content budget (window text area minus margins, pipes, inner padding),
+---   * mode (auto vs. equal width),
+---   * min/max column constraints,
+---   * proportional shrink if needed.
+--- Each entry is >= 1 to ensure at least a single display column per content cell.
+---@field padding integer
+--- Inner padding (spaces) applied on both sides inside each cell (per side).
+--- The emitted visual width per column equals: col_widths[i] + 2 * padding.
+
