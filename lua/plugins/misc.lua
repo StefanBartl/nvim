@@ -23,7 +23,14 @@ return {
     end,
   },
 
-  { "axieax/urlview.nvim", lazy = true },
+  {
+		"axieax/urlview.nvim",
+		lazy = true,
+		cmd = { "UrlView" },
+		config = function()
+			require("config.urlview.open_in_browser_integration").setup()
+		end,
+	},
 
   {
     "jghauser/mkdir.nvim",

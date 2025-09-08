@@ -1,4 +1,4 @@
----@module 'urlview_integration'
+---@module 'config.urlview.open_in_browser_integration'
 --- Cross-platform integration for urlview.nvim to open selected URLs
 --- in the system default browser. Supports Windows (native), WSL, Linux, and macOS.
 --- Provides a custom urlview action "open_in_browser" that can be set as default_action.
@@ -193,6 +193,10 @@ function M.setup(opts)
   -- Optional: set Telescope as default picker if available
   if opts.default_picker == nil and pcall(require, "telescope") then
     opts.default_picker = "telescope"
+  end
+
+  if opts.default_picker == nil and pcall(require, "fzf-lua") then
+    opts.default_picker = "fzf-lua"
   end
 
   urlview.setup(opts)
