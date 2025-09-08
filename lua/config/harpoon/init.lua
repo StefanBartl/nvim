@@ -244,7 +244,9 @@ local function resolve_targets()
     local spec = target_specs[i]
     out[#out + 1] = canon(vim.fs.joinpath(root, unpack(spec)))
   end
-  return out
+
+  out[#out + 1] = canon(vim.fs.joinpath(vim.fn.stdpath('config'), "lua", "mynotes/", "spickzettel.md"))
+	return out
 end
 
 --------------------------------------------------------------------------------

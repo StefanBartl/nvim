@@ -7,7 +7,7 @@ function M.setup()
 
   --Buffer wide rename
   map("n", "grn", vim.lsp.buf.rename, { desc = "[LSP] Rename" })
-  map("n", "<leader>nam", function()
+  map("n", "<leader>name", function()
     local curr = vim.fn.expand "<cword>"
     local newn = vim.fn.input("Rename '" .. curr .. "' to: ", curr)
     if newn ~= "" and newn ~= curr then

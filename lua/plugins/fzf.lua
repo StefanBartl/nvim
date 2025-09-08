@@ -28,6 +28,7 @@ return {
 
 			return {
 				keymap = {
+					-- preview window scroll with shift up/down
 					fzf = {
 						["ctrl-n"] = "next-history",
 						["ctrl-p"] = "prev-history",

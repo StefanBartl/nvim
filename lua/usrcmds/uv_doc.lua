@@ -498,6 +498,7 @@ end
 ---@param cmdline? string  -- full command-line (unused)
 ---@param cursorpos? integer -- cursor position (unused)
 ---@return string[]        -- list of completion candidates
+---@diagnostic disable-next-line: unused-local
 function M.complete(arglead, cmdline, cursorpos)
   -- Try the parsed libuv index first
   local all = (function()

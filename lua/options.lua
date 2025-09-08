@@ -25,6 +25,8 @@ vim.wo.linebreak = true          -- wrap at word boundaries as per 'breakat'
 -- vim.wo.breakindentopt = "shift:2,sbr" -- add +2 spaces and use 'showbreak'
 -- vim.o.showbreak = "↳ "           -- prefix shown on continuation screen lines
 
+vim.opt.laststatus = 3 -- ensures 'one' continuous statusline
+
 -----------------------------------------------------------
 -- Clipboard
 -----------------------------------------------------------

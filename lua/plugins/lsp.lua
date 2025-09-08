@@ -20,6 +20,8 @@ return {
 		opts = {
 			library = {
 				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+				{ path = "lazydev.nvim/types" },
+				{ path = "luvit-meta/library", words = { "vim%.uv", "uv", "vim%.loop" } },
 				{ "nvim-dap-ui" },
 			},
 		},

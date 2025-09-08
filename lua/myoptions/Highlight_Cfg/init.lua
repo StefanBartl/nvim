@@ -16,8 +16,6 @@ local ctx_ok, ctxmod = pcall(require, "myoptions.Highlight_Cfg.breadcrumbs.ctx")
 -- Namespaces & groups
 local NS_INDENT = vim.api.nvim_create_namespace("myopt_IndentScope")
 local NS_FLASH  = vim.api.nvim_create_namespace("myopt_Flash")
-local NS_CWORD  = vim.api.nvim_create_namespace("myopt_CWord")
-
 local AUG_COLOR = vim.api.nvim_create_augroup("myopt_ColorPersist", { clear = true })
 local AUG_WIN   = vim.api.nvim_create_augroup("myopt_PerWindow", { clear = true })
 local AUG_MODE  = vim.api.nvim_create_augroup("myopt_Mode", { clear = true })
@@ -436,11 +434,11 @@ local function flash_changed_region(group, ms)
 		vim.api.nvim_buf_set_extmark(buf, ns, sr, sc, { end_row = er, end_col = ec, hl_group = hl, priority = prio or 90 })
 	end
 	hl_range(bufnr, NS_FLASH, group, srow, math.max(scol, 0), erow, math.max(ecol, 0), 90)
+	---@type uv
 	local uv = vim.uv or vim.loop
 	local timer = uv.new_timer(); if not timer then return end
-	---@diagnostic disable-next-line
+	---@cast timer uv.uv_timer_t
 	timer:start(ms, 0, function()
-		---@diagnostic disable-next-line
 		timer:stop(); timer:close()
 		vim.schedule(function()
 			if vim.api.nvim_buf_is_loaded(bufnr) then
@@ -618,7 +616,7 @@ local function ensure_current_word_autocmd()
     })
   else
     -- feature disabled: ensure the window-local match is removed
-    local ok = pcall(function()
+    local _ = pcall(function()
       if vim.w._myopt_cword_id then
         vim.fn.matchdelete(vim.w._myopt_cword_id)
         vim.w._myopt_cword_id = nil
