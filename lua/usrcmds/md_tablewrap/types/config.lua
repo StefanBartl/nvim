@@ -1,0 +1,11 @@
+---@module 'usrcmds.md_tablewrap.types.config'
+
+---@class MDTableWrapConfig
+---@field inner_pad integer        -- ≥ 0, per-side padding inside each cell
+---@field outer_left integer       -- ≥ 0, reserved columns left of table
+---@field outer_right integer      -- ≥ 0, reserved columns right of table
+---@field auto_width boolean       -- true: natural widths; false: equal split
+---@field max_col_width integer|nil-- ≥ 1 or nil; optional upper bound per column
+---@field min_col_width integer|nil-- ≥ 1; preferred lower bound per column (default 15)
+---@field wrap_all_default boolean -- :MDTableWrap scope: false=current table, true=all
+---@field on_save_enabled boolean  -- if true, BufWritePre markdown → reflow all (detect)
