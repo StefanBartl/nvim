@@ -55,3 +55,15 @@ require("config.image_preview.pdf.buffer").setup({
 })
 require("custom.smart_edit").setup({ set_cr = true })
 -- require("config.noice.signature_focus_guard").setup() -- WATCH: Noice pr
+
+require("usrcmds.md_tablewrap").setup({
+  inner_pad        = 1,
+  outer_left       = 3,
+  outer_right      = 3,
+  auto_width       = true,
+	width_mode    = "minflex",
+  max_col_width    = nil,
+  min_col_width    = 6,
+  wrap_all_default = false,
+  on_save_enabled  = false,
+})
