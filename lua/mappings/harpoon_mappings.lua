@@ -7,7 +7,33 @@ local M = {}
 function M.setup()
   local map = vim.g.__map_helper
   local harpoon = require("harpoon")
-  harpoon:setup({})
+  if not harpoon then
+    vim.notify("[harpoon] not installed", vim.log.levels.WARN)
+    return
+  end
+	  -- Safe setup: enable immediate persistence on every change.
+  -- In Harpoon v2, this writes to storage on add/remove/toggle operations.
+  pcall(function()
+    -- Both method-style and function-style setup are supported in the wild.
+    if type(harpoon.setup) == "function" then
+      local info = debug.getinfo(harpoon.setup, "u")
+      if info and info.nparams and info.nparams >= 2 then
+        harpoon:setup({
+          settings = {
+            save_on_change = true,
+            save_on_toggle = true,
+          },
+        })
+      else
+        harpoon.setup({
+          settings = {
+            save_on_change = true,
+            save_on_toggle = true,
+          },
+        })
+      end
+    end
+  end)
 
   map("n", "<leader>h", function()
     local list = harpoon:list()
