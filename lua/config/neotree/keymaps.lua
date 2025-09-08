@@ -67,66 +67,65 @@ local function get_normal_bg_hex(opt)
 	return "#111111"
 end
 
---- Render a specific page of a PDF to a PNG file with an OPAQUE background.
---- Tries ImageMagick 'convert' first; falls back to Poppler 'pdftoppm' and fixes alpha if possible.
+--- Render a specific page of a PDF to PNG with an OPAQUE background.
 ---@param pdf_path string
----@param page integer  -- zero-based page index
+---@param page integer  -- zero-based
 ---@param out_png string
 ---@return boolean ok, string|nil errmsg
 local function render_pdf_page(pdf_path, page, out_png)
-	local bg = get_normal_bg_hex("white")
-	local density = "150" -- good readability for text
+  -- English comments: prefer Poppler naming base-<page>.png and use proper concatenation.
+  local bg = get_normal_bg_hex("white")
+  local density = "150"
 
-	-- Preferred: ImageMagick
-	if has_exec("convert") then
-		-- Order matters: set background, remove alpha, flatten, strip, and force 24-bit PNG (no alpha)
-		local cmd = {
-			"convert",
-			"-density", density,
-			string.format("%s[%d]", pdf_path, page),
-			"-background", bg,
-			"-alpha", "remove",
-			"-alpha", "off",
-			"-flatten",
-			"-strip",
-			string.format("PNG24:%s", out_png),
-		}
-		local _ = vim.fn.system(cmd)
-		if vim.v.shell_error == 0 then return true end
-		return false, "convert failed"
-	end
+  -- Decide ImageMagick binary (Windows uses 'magick')
+  local function convert_bin()
+    local os = vim.loop.os_uname().sysname
+    if os == "Windows_NT" and has_exec("magick") then return "magick" end
+    return has_exec("convert") and "convert" or nil
+  end
 
-	-- Fallback: Poppler pdftoppm → PNG (sometimes already opaque; if not, try to fix via convert)
-	if has_exec("pdftoppm") then
-		local base = out_png:gsub("%.png$", "")
-		local cmd = { "pdftoppm", "-png", "-f", tostring(page + 1), "-l", tostring(page + 1), pdf_path, base }
-		local _ = vim.fn.system(cmd)
-		local produced = base .. ".png"
-		if vim.v.shell_error ~= 0 or vim.fn.filereadable(produced) ~= 1 then
-			return false, "pdftoppm failed"
-		end
-		if has_exec("convert") then
-			local fix = {
-				"convert",
-				produced,
-				"-background", bg,
-				"-alpha", "remove",
-				"-alpha", "off",
-				"-flatten",
-				"-strip",
-				string.format("PNG24:%s", out_png),
-			}
-			local _ = vim.fn.system(fix)
-			if vim.v.shell_error == 0 then return true end
-			vim.fn.rename(produced, out_png) -- fallback to whatever pdftoppm produced
-			return true
-		else
-			vim.fn.rename(produced, out_png)
-			return true
-		end
-	end
+  -- Try ImageMagick first (works cross-platform if 'magick' is used on Windows)
+  local conv = convert_bin()
+  if conv then
+    local cmd = {
+      conv,
+      "-density", density,
+      string.format("%s[%d]", pdf_path, page), -- 0-based page index for IM
+      "-background", bg, "-alpha", "remove", "-alpha", "off",
+      "-flatten", "-strip",
+      string.format("PNG24:%s", out_png),
+    }
+    local _ = vim.fn.system(cmd)
+    if vim.v.shell_error == 0 then return true end
+  end
 
-	return false, "no renderer (need convert or pdftoppm)"
+  -- Fallback: Poppler
+  if has_exec("pdftoppm") then
+    local base = out_png:gsub("%.png$", "")
+    local cmd = { "pdftoppm", "-png", "-f", tostring(page + 1), "-l", tostring(page + 1), pdf_path, base }
+    local _ = vim.fn.system(cmd)
+    -- pdftoppm names output as "<base>-<pagenum>.png"
+    local produced = string.format("%s-%d.png", base, page + 1)
+    if vim.v.shell_error ~= 0 or vim.fn.filereadable(produced) ~= 1 then
+      return false, "pdftoppm failed"
+    end
+    if conv then
+      local fix = {
+        conv, produced,
+        "-background", bg, "-alpha", "remove", "-alpha", "off",
+        "-flatten", "-strip", string.format("PNG24:%s", out_png),
+      }
+      local _ = vim.fn.system(fix)
+      if vim.v.shell_error == 0 then return true end
+      vim.fn.rename(produced, out_png) -- fall back to pdftoppm result
+      return true
+    else
+      vim.fn.rename(produced, out_png)
+      return true
+    end
+  end
+
+  return false, conv and "convert failed" or "no renderer (need convert/magick or pdftoppm)"
 end
 
 --- Read total page count for a PDF.
