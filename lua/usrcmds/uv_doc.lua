@@ -1,4 +1,4 @@
----@module 'uvdoc'
+---@module 'uv_doc'
 --- libuv doc fetcher with robust index parsing, fuzzy list UI, and "insert here".
 --- This module targets https://docs.libuv.org/en/v1.x/ and extracts functions by the
 --- Sphinx anchor ids (#c.uv_*), not by link labels. It provides:
@@ -242,7 +242,7 @@ end
 ---@param on_enter fun(name:string)
 local function open_list(names, title, on_enter)
 	local buf = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
+	vim.bo[buf].bufhidden = "wipe"
 	vim.api.nvim_buf_set_name(buf, "libuv-index://" .. (title:gsub("%s+", "_")))
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, names)
 	vim.bo[buf].filetype   = "uvdoc-list"
@@ -328,7 +328,7 @@ local function render_doc(uvname, src_url, sig, body)
 	lines[#lines + 1] = src_url
 
 	local buf = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
+	vim.bo[buf].bufhidden = "wipe"
 	vim.api.nvim_buf_set_name(buf, "libuv-doc://" .. uvname)
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 	vim.bo[buf].filetype = "markdown"
@@ -488,6 +488,69 @@ function M.here(name)
 	end
 end
 
+--------------------
+-- Completion
+--------------------
+
+--- Command-line completion for :UVDoc, :UVDocHere, :UVDocList
+--- Returns a list of "uv_*" names. Falls back to introspection if index is unavailable.
+---@param arglead string  -- current token being completed
+---@param cmdline? string  -- full command-line (unused)
+---@param cursorpos? integer -- cursor position (unused)
+---@return string[]        -- list of completion candidates
+function M.complete(arglead, cmdline, cursorpos)
+  -- Try the parsed libuv index first
+  local all = (function()
+    local names = ensure_index_cache()
+    if names and #names > 0 then return names end
+
+    -- Fallback: introspect vim.uv/vim.loop and synthesize "uv_*" names
+    local uv = vim.uv or vim.loop
+    if type(uv) ~= "table" then return {} end
+    local tmp = {} ---@type table<string, boolean>
+    for k, v in pairs(uv) do
+      if type(v) == "function" then
+        -- Map Lua-binding names to C API-ish "uv_*" names
+        -- Examples: "timer_start" -> "uv_timer_start", "new_timer" -> "uv_timer_init"
+        local c
+        if k == "cwd" then
+          c = "uv_cwd"
+        elseif k == "chdir" then
+          c = "uv_chdir"
+        else
+          local t = k:match("^new_(%w+)$")
+          if t then c = "uv_" .. t .. "_init" else c = "uv_" .. k end
+        end
+        tmp[c] = true
+      end
+    end
+    local lst = {} ---@type string[]
+    for name, _ in pairs(tmp) do lst[#lst + 1] = name end
+    table.sort(lst)
+    return lst
+  end)()
+
+  -- Filter by current arglead (case-insensitive substring)
+  local q = tostring(arglead or "")
+  q = q:gsub("^vim%.uv%.", "")  -- tolerate "vim.uv." prefix while typing
+  local needle = q:lower()
+  if needle == "" then
+    return all
+  end
+
+  local out = {} ---@type string[]
+  for _, n in ipairs(all) do
+    if n:lower():find(needle, 1, true) then
+      out[#out + 1] = n
+    end
+  end
+  return out
+end
+
+--------------------
+-- Setup & Cache
+--------------------
+
 --- Clear in-session caches (genindex + function list).
 function M.cache_clear()
 	GENINDEX_HTML = nil
@@ -506,15 +569,23 @@ end
 
 M.setup({ open = "float" })
 
+local function UVDocComplete(arglead, cmdline, cursorpos)
+  return M.complete(arglead, cmdline, cursorpos)
+end
+
 -- Open docs for an exact or fuzzy name (falls back to a list if ambiguous)
 vim.api.nvim_create_user_command("UVDoc", function(cmd)
 	if #cmd.args > 0 then M.doc(cmd.args) else M.doc() end
-end, { nargs = "?", desc = "Show libuv C signature+summary (fuzzy supported)" })
+end, {
+  nargs = "?",
+  desc = "Show libuv doc (exact or fuzzy)",
+  complete = UVDocComplete,
+})
 
 -- Line-based list UI, optionally filtered (e.g. :UVDocList loop)
 vim.api.nvim_create_user_command("UVDocList", function(cmd)
 	M.list(#cmd.args > 0 and cmd.args or nil)
-end, { nargs = "?", desc = "List libuv functions and open with <CR>" })
+end, { nargs = "?", desc = "List libuv functions and open with <CR>", complete = UVDocComplete })
 
 -- Full index picker (alias to UVDocList without filter)
 vim.api.nvim_create_user_command("UVDocPick", function()
@@ -524,13 +595,20 @@ end, { desc = "Pick a libuv function from the full index" })
 -- Insert only the C function signature at cursor (fuzzy allowed)
 vim.api.nvim_create_user_command("UVDocHere", function(cmd)
 	M.here(#cmd.args > 0 and cmd.args or nil)
-end, { nargs = "?", desc = "Insert libuv C signature at cursor" })
+end, { nargs = "?", desc = "Insert libuv C signature at cursor", complete = UVDocComplete })
 
 vim.api.nvim_create_user_command("UVDocCacheClear", function()
 	M.cache_clear()
 end, { desc = "Clear uvdoc caches" })
 
 -- After placing lua/uvdoc.lua in your runtimepath:
+--
+-- Helper to attach Lua completion from the module
+-- local function UVDocComplete(arglead, cmdline, cursorpos)
+--   local ok, m = pcall(require, "uvdoc")
+--   if not ok or type(m.complete) ~= "function" then return {} end
+--   return m.complete(arglead, cmdline, cursorpos)
+-- end
 -- local ok, uvdoc = pcall(require, "uvdoc")
 -- if ok then
 --   uvdoc.setup({ open = "float" })
