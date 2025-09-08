@@ -1,0 +1,103 @@
+---@module 'myoptions.types.cword_occurences'
+--- Typed documentation for the configuration of "current-word occurrences" rendering.
+--- It highlights or underlines all occurrences of <cword> in the current buffer,
+--- excluding the one under the active window’s cursor (window-local exclusion).
+--- Implementation details (for reference only):
+--- - Buffer-local extmarks are used to render ranges.
+--- - Viewport-only scanning and a large-file guard protect performance.
+--- - Case behavior is controlled via a dedicated, deterministic regex builder.
+---
+---@source myoptions/Highlight_Cfg/cword_occurrences.lua
+
+
+--[[
+Notes for LuaLS / tooling:
+- This file is types-only; it is safe to `require` from anywhere. No runtime effects.
+- The module path intentionally follows the caller’s current spelling
+  ('cword_occurences' vs. 'cword_occurrences'). Keep both in sync at call sites.
+]]
+
+---@alias CwordRender
+---| '"highlight"'   # Use a conventional highlight group (foreground/background).
+---| '"underline"'   # Use a plain underline (uses `sp` color if supported).
+---| '"undercurl"'   # Use an undercurl (uses `sp` color if supported).
+---| '"underdouble"' # Use a double underline (UI support dependent).
+---| '"underdotted"' # Use a dotted underline (UI support dependent).
+---| '"underdashed"' # Use a dashed underline (UI support dependent).
+
+---@alias CwordMarking
+---| '"leadingchar"' # Emphasize only the first byte/character of each match.
+---| '"word"'        # Emphasize the full match (entire word).
+---| '"tailchar"'    # Emphasize only the last byte/character of each match.
+---| '"firstN"'      # Emphasize the first N bytes/characters of each match (see `firstN`).
+
+---@class CwordOccurrencesCfg
+---@field render CwordRender
+--- Selects the rendering mode. For `"highlight"`, colors come from `hl`/`hl_lead`.
+--- For underline-like modes, implementation synthesizes HL groups with the chosen style.
+--- Recommendation:
+--- - For high-contrast themes, prefer `"leadingchar"` + an underline to reduce visual noise.
+--- - For code search/reading sessions, `"word"` + `"undercurl"` can be effective.
+---
+---@field underline_color string|nil
+--- Hex color (e.g., "#5FB0FC") used as `sp` (special) for underline-like modes.
+--- Behavior:
+--- - If the UI supports colored underline/undercurl, this color is used.
+--- - If not supported, the underline uses the theme’s default decoration color.
+--- Ignored when `render == "highlight"`.
+---
+---@field hl string
+--- Highlight group used for full-word ranges when `render == "highlight"`.
+--- Provide a legible but unobtrusive style (e.g., dim background or subtle foreground).
+---
+---@field hl_lead string|nil
+--- Optional highlight group used for partial ranges (leading/tail/firstN) when
+--- `render == "highlight"`. If `nil`, `hl` is reused.
+---
+---@field enabled boolean
+--- Master switch. When `false`, autocommands/timers should be disabled and any
+--- existing extmarks cleared on next refresh.
+---
+---@field marking CwordMarking
+--- Chooses which slice of each occurrence to emphasize. For `"firstN"`, see `firstN`.
+--- Byte semantics:
+--- - The implementation operates in byte columns (`matchstrpos`), aligned with extmarks.
+---
+---@field firstN integer
+--- Number of leading bytes to render when `marking == "firstN"`.
+--- Values ≤ 0 produce no slice; values beyond the match length are clamped.
+---
+---@field viewport_only boolean
+--- When `true`, only the visible window lines (`line("w0")..line("w$")`) are scanned.
+--- Recommended default: `true` for responsiveness on large files.
+---
+---@field min_len integer
+--- Minimum `<cword>` length (in bytes) required to trigger rendering.
+--- Typical values: `2` or `3`. `<cword>` respects `'iskeyword'`.
+---
+---@field smart_case boolean
+--- Smart case for the internal Vim regex:
+--- - `true`: ignorecase (`\c`) unless `<cword>` contains uppercase → case-sensitive (`\C`).
+--- - `false`: always case-sensitive (`\C`).
+---
+---@field in_insert boolean
+--- Show decorations during Insert mode:
+--- - `false` (recommended): clear on `InsertEnter`; update again in normal mode.
+--- - `true`: keep updating while typing (slightly higher CPU).
+---
+---@field priority integer
+--- Extmark priority. Higher values take precedence over other highlights.
+---
+---@field debounce_ms integer
+--- Debounce window for movement/edit events. `0` = immediate updates.
+---
+---@field large_file_kb integer|nil
+--- Optional override for the large-file guard (KiB). `nil` → inherit a global threshold.
+
+-- Optional: public shape of the feature module (for better tooling on require()).
+---@class CwordOccurrencesModule
+---@field refresh fun():nil
+--- Rebuild decorations immediately for the active window/buffer.
+---
+---@field enable fun():nil
+--- Ensure autocommands/timers are installed and perform an initial paint.

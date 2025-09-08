@@ -5,10 +5,80 @@
 ---   myoptions/Highlight_Cfg (visual/UX features) and
 
 ---@class MyOptionsBreadcrumbsCtx
---- TODO: Ausformulieren
----@field prefer_owner_in_literals boolean           -- In Objekt-/Tabellen-Literalen Owner vor Symbol
----@field prefer_owner_on_member_access boolean      -- Bei member/dot/attribute Owner vor Symbol
----@field dedupe_containers boolean                  -- Doppelte Containerteile zusammenfalten
+---
+---@field prefer_owner_in_literals boolean
+--- Prefer showing the literal’s “owner” (the binding that holds the object/table literal)
+--- directly before the symbol when the cursor is inside a literal property.
+--- Purpose:
+---   - When editing keys/methods inside object/table literals, breadcrumbs often only show
+---     the property name (e.g., `run`). Setting this to `true` prefixes the nearest owner,
+---     yielding `M.run` or `obj.save`, which is usually more informative.
+--- Scope:
+---   - Lua: table constructors (`local M = { run = function() end }`) and nested tables
+---     (`local M = { Util = { run = function() end } }`).
+---   - JS/TS: object literals (`const obj = { save() {} }`, `let x = { util: { run() {} } }`).
+---   - Other languages: only if a language-specific provider can resolve the binding name.
+--- Resolution rules:
+---   - If the literal is assigned to an identifier (e.g., `M = {...}`), that identifier is
+---     considered the owner (`M`).
+---   - For nested literals, the chain is preserved (`M.Util.run`) when combined with
+---     `use_container_chain`.
+---   - If no identifiable owner exists (e.g., an anonymous literal returned inline),
+---     this option has no effect for that node.
+--- Interaction:
+---   - Requires either `use_treesitter_symbol` or `use_lang_specific` to resolve structure.
+---   - Works best with `use_container_chain = true` so that owner segments are collected.
+---   - Honors `container_join` for the final visual separator (e.g., `"."`, `"::"`).
+--- Defaults & tips:
+---   - Recommended default: `true`.
+---   - If breadcrumbs become too verbose, combine with `container_max_depth` to keep them compact.
+---
+---@field prefer_owner_on_member_access boolean
+--- Prefer showing the immediate owner segment in front of the accessed member for classic
+--- member/dot/attribute access expressions (e.g., `obj.foo`, `obj:bar()`).
+--- Purpose:
+---   - Some UIs emphasize only the terminal symbol (`foo`, `bar`). With this flag set to `true`,
+---     the breadcrumb head becomes `obj.foo` / `obj:bar`, which disambiguates same-named methods
+---     across different receivers.
+--- Scope:
+---   - Lua: `tbl.key`, `obj:method()` (owner = `tbl`/`obj`, symbol = `key`/`method`).
+---   - JS/TS: `obj.prop`, `ns.util.run()` (owner = `obj`/`ns.util`, symbol = `prop`/`run`).
+---   - Python: `obj.attr`, `pkg.mod.func` (owner = `obj`/`pkg.mod`, symbol = `attr`/`func`).
+--- Behavior:
+---   - Ensures the last two segments are ordered as `<owner><join><symbol>` when resolvable.
+---   - Does not reorder the entire chain; it only guarantees the owner immediately precedes
+---     the symbol segment.
+--- Interaction:
+---   - Complements `use_treesitter_symbol`/`use_lang_specific` which extract structure.
+---   - Combines with `use_container_chain = true` to display multi-segment owners
+---     (e.g., `pkg.mod.func`).
+---   - Uses `container_join` for joining (e.g., `"."` or `" :: "`).
+---   - With `dedupe_containers = true`, adjacent duplicates introduced by provider merging are collapsed.
+--- Defaults & tips:
+---   - Recommended default: `true` for codebases with repeated method names (e.g., `render`, `save`).
+---
+---@field dedupe_containers boolean
+--- Collapse adjacent duplicate container segments in the assembled container chain to keep
+--- breadcrumbs concise and avoid provider-induced repetition.
+--- Problem addressed:
+---   - When multiple providers contribute overlapping container info (e.g., TS symbol +
+---     language-specific “owner” + heuristic container), the chain can contain duplicates such as
+---     `M.M.util.run` or `Class.Class.method`.
+--- Behavior:
+---   - A single, stable pass removes only *adjacent* duplicates while preserving order:
+---       `M.M.util.run`     -> `M.util.run`
+---       `pkg.mod.mod.func` -> `pkg.mod.func`
+---       `A.B.A.B.fn`       -> unchanged (non-adjacent duplicates are left intact)
+---   - Comparison is case-sensitive by default; segments must be string-equal to dedupe.
+---   - The terminal symbol (function/property name) is never removed.
+--- Interaction:
+---   - Runs after provider merge but before `container_max_depth` truncation to ensure that
+---     deduplication doesn’t bias depth counting.
+---   - Pairs well with `prefer_owner_in_literals` and `prefer_owner_on_member_access`, as those may
+---     introduce brief, redundant segments when multiple sources agree.
+--- Defaults & tips:
+---   - Recommended default: `true`.
+---   - If you rely on deliberate duplication for emphasis, set this to `false`.
 ---
 --- Bevorzuge LSP-Hinweis (b:lsp_current_function) als ersten Provider.
 --- Liefert meist nur die aktuelle Funktion/Methode.
@@ -230,3 +300,4 @@
 
 ---@class ModeChangedEvent
 ---@field match string  -- "<old>:<new>"
+
