@@ -527,31 +527,106 @@ local function ensure_term_palette_autocmd()
 end
 
 -- Current-word underline
+---@module 'myopts.current_word'
+--- Window-local underline for the word under the cursor using matchaddpos()
+
+--- wenn config erwünscht comments weiter unten in funktion implementieren um cg
+-- ---@class CWordConfig
+-- ---@field enable_current_word boolean      -- master switch
+-- ---@field min_len integer                  -- minimum word length to underline
+-- ---@field hl string                        -- highlight group to use (will be created if missing)
+-- ---@field priority integer                 -- match priority
+--
+-- local cfg = cfg or { enable_current_word = true, min_len = 2, hl = "CursorWord", priority = 10 }
+
+-- ---@type integer
+-- local AUG_CWORD = AUG_CWORD or vim.api.nvim_create_augroup("MyCurrentWord", { clear = true })
+
 ---@return nil
 local function ensure_current_word_autocmd()
-	vim.api.nvim_clear_autocmds({ group = AUG_CWORD })
-	local function clear_match()
-		if vim.w._myopt_cword_id then
-			pcall(vim.fn.matchdelete, vim.w._myopt_cword_id); vim.w._myopt_cword_id = nil
-		end
-		vim.api.nvim_buf_clear_namespace(0, NS_CWORD, 0, -1)
-	end
-	if cfg.enable_current_word then
-		local function update()
-			clear_match()
-			if vim.fn.mode():find("i") then return end
-			local w = vim.fn.expand("<cword>"); if #w < 2 then return end
-			local pat = "\\V\\<" .. vim.fn.escape(w, "\\") .. "\\>"
-			vim.w._myopt_cword_id = vim.fn.matchadd("CursorWord", pat)
-		end
-		vim.api.nvim_create_autocmd({ "CursorMoved" },
-			{ group = AUG_CWORD, callback = update, desc = "Underline current word" })
-		vim.api.nvim_create_autocmd({ "InsertEnter", "BufLeave", "WinLeave" },
-			{ group = AUG_CWORD, callback = clear_match, desc = "Clear current-word underline" })
-	else
-		clear_match()
-	end
+  -- clear any previous autocommands for this group
+  vim.api.nvim_clear_autocmds({ group = AUG_CWORD })
+
+  --- Clear the previous window-local match, if any.
+  ---@return nil
+  local function clear_match()
+    -- match ids are window-local; store on vim.w
+    if vim.w._myopt_cword_id then
+      pcall(vim.fn.matchdelete, vim.w._myopt_cword_id)
+      vim.w._myopt_cword_id = nil
+    end
+  end
+
+  if cfg.enable_current_word then
+    --- Update the underline for the current word at the cursor.
+    --- This is window-local and affects only the single occurrence that contains the cursor.
+    ---@return nil
+    local function update()
+      clear_match()
+
+      -- do nothing in insert mode (cheap check)
+      if vim.fn.mode():find("i") then return end
+
+      local word = vim.fn.expand("<cword>")
+      if #word < 2 then return end -- (cfg.min_len or 2)  if min word len ist wanted
+
+      -- current cursor position: lnum is 1-based, cbyte is 0-based (byte index)
+      local pos = vim.api.nvim_win_get_cursor(0)
+      local lnum, cbyte = pos[1], pos[2]
+      local line = vim.api.nvim_get_current_line()
+
+      -- build a very nomagic, word-boundary-anchored pattern for this exact word
+      local pat = "\\V\\<" .. vim.fn.escape(word, "\\") .. "\\>"
+
+      -- iterate matches on the current line and pick the one that contains the cursor byte index
+      local start = 0                ---@type integer
+      local s_at, e_at = nil, nil    ---@type integer?, integer?
+      while true do
+        -- matchstrpos() returns: {matched_text, start_byte, end_byte}; start_byte = -1 if not found
+        local _, s, e = unpack(vim.fn.matchstrpos(line, pat, start))
+        if s == -1 then break end
+        if s <= cbyte and cbyte < e then
+          s_at, e_at = s, e
+          break
+        end
+        start = s + 1
+      end
+      if not s_at then return end
+
+      local col1 = s_at + 1                 -- convert to 1-based column for matchaddpos()
+      local len  = e_at - s_at
+
+      local hl = "CursorWord" -- cfg: or cfg.hl_word
+      if vim.fn.hlexists(hl) == 0 then
+        vim.api.nvim_set_hl(0, hl, { underline = true })
+      end
+
+      -- add a single-position, window-local match
+      vim.w._myopt_cword_id = vim.fn.matchaddpos(hl, { { lnum, col1, len } }, 10) -- cfg: cfg.priority or 10  (10 is priority)
+    end
+
+    vim.api.nvim_create_autocmd({ "CursorMoved" }, {
+      group = AUG_CWORD,
+      callback = update,
+      desc = "Underline current word (window-local)",
+    })
+
+    vim.api.nvim_create_autocmd({ "InsertEnter", "BufLeave", "WinLeave" }, {
+      group = AUG_CWORD,
+      callback = clear_match,
+      desc = "Clear current-word underline",
+    })
+  else
+    -- feature disabled: ensure the window-local match is removed
+    local ok = pcall(function()
+      if vim.w._myopt_cword_id then
+        vim.fn.matchdelete(vim.w._myopt_cword_id)
+        vim.w._myopt_cword_id = nil
+      end
+    end)
+  end
 end
+
 
 --- Resolve new mode robustly without triggering LuaLS "undefined-field" warnings.
 --- This avoids direct field access like `vim.v.event.new_mode` by using rawget/pcall.
