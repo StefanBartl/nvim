@@ -3,27 +3,31 @@
 ---@type LazyPluginSpec[]
 return {
 
-  -- Harpoon: Efficient file and terminal navigation system
-  {
-    "ThePrimeagen/harpoon",
-    branch = "harpoon2",
-    lazy = false,
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-telescope/telescope.nvim", -- optional
-    },
-    config = function()
-      local harpoon = require "harpoon"
-      ---@diagnostic disable-next-line: redundant-parameter
-      pcall(function()
-        harpoon:setup {}
-      end)
+	-- Harpoon: Efficient file and terminal navigation system
+	{
+		"ThePrimeagen/harpoon",
+		branch = "harpoon2",
+		lazy = false,
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"ibhagwan/fzf-lua",               -- optional, recommended for the <C-h> FZF menu
+			"nvim-telescope/telescope.nvim",  -- optional, not required by the hardening layer
+		},
+		config = function()
+			require("config.harpoon.hardening").setup()
+			require("config.harpoon.persist_paths").setup({
+				target_specs = {
+					{ "$REPOS_DIR", "Notes",     "MyNotes",   "Notes.md" },
+					{ "$REPOS_DIR", "Notes",     "Neovim",    "Neovim.md" },
+					{ "$REPOS_DIR", "Notes",     "MyNotes",   "Wezterm.md" },
+					{ "$NVIM_HOME", "lua",       "mynotes",   "spickzettel.md" },
+				}
+			}
+			)
+		end,
+	},
 
-      require("config.harpoon") -- set file presets
-    end,
-  },
-
-  {
+	{
 		"axieax/urlview.nvim",
 		lazy = true,
 		cmd = { "UrlView" },
@@ -32,8 +36,8 @@ return {
 		end,
 	},
 
-  {
-    "jghauser/mkdir.nvim",
-    lazy = true,
-  },
+	{
+		"jghauser/mkdir.nvim",
+		lazy = true,
+	},
 }
