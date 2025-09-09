@@ -24,6 +24,7 @@ return {
 				}
 			}
 			)
+			require("config.harpoon.preview").install_alt_number_maps()
 		end,
 	},
 
