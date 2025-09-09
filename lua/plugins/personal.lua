@@ -31,24 +31,40 @@ return {
 		end,
 	},
 
+	-- {
+	-- 	dir = [[E:\repos\objtrack]], -- Repo-Root mit lua/ darunter
+	-- 	name = "objtrack",
+	-- 	main = "objtrack",         -- lädt lua/objtrack/init.lua als Haupteinstieg
+	-- 	lazy = false,              -- fürs Debuggen: hart beim Start laden
+	-- 	config = function()
+	-- 		require("objtrack").setup({
+	-- 			view_mode = "float",
+	-- 			prefer_telescope = true,
+	-- 			auto_rescan = false,
+	-- 			border = "rounded",
+	-- 			max_preview_lines = 5000,
+	-- 			blacklist_filetypes = { "help", "TelescopePrompt", "neo-tree", "lazy" },
+	-- 			keymaps = { pick = "<leader>op", rescan = "<leader>os" },
+	-- 		})
+	-- 	end,
+	-- },
+
 	{
-		dir = [[E:\repos\objtrack]], -- Repo-Root mit lua/ darunter
-		name = "objtrack",
-		main = "objtrack",         -- lädt lua/objtrack/init.lua als Haupteinstieg
-		lazy = false,              -- fürs Debuggen: hart beim Start laden
+		dir = vim.env.REPOS_DIR .. "/replacer",
+		lazy = false,
 		config = function()
-			require("objtrack").setup({
-				view_mode = "float",
-				prefer_telescope = true,
-				auto_rescan = false,
-				border = "rounded",
-				max_preview_lines = 5000,
-				blacklist_filetypes = { "help", "TelescopePrompt", "neo-tree", "lazy" },
-				keymaps = { pick = "<leader>op", rescan = "<leader>os" },
+			require("replacer").setup({
+				hidden = true,
+				exclude_git_dir = true,
+				preview_context = 3,
+				literal = true, -- set false for regex mode
+				smart_case = true,
+				fzf = {
+					winopts = { width = 0.85, height = 0.70 },
+				},
 			})
 		end,
 	},
-
 
 	-- nvim-containers: Manage container engines from Neovim
 	-- {

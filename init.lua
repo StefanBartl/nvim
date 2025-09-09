@@ -49,9 +49,13 @@ vim.schedule(function()
 	require("mappings").setup()
 end)
 require("config.image_preview.pdf.buffer").setup({
-	open_mode = "vsplit", -- "split" | "vsplit" | "tab"
-	focus = false,        -- Fokus nicht stehlen (true = Cursor in PDF-Fenster)
-	bg_hex = "#ffffff",   -- fixer weißer Hintergrund
+  open_mode = "vsplit",
+  focus = false,          -- keep focus in Neo-tree/editor
+  density = 144,          -- 72..600
+  notify = true,
+  clear_on_leave = true,
+  bg_hex = "#ffffff",
+  cleanup_png = false,    -- set to true to delete PNG on close
 })
 require("custom.smart_edit").setup({ set_cr = true })
 -- require("config.noice.signature_focus_guard").setup() -- WATCH: Noice pr
