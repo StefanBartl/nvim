@@ -15,28 +15,49 @@ M.cfg = {
 
 	---@type HighlightCfg
 	highlight = {
-		enable_line = true,                -- Aktiviert CursorLine im aktiven Fenster (per winhighlight); sehr geringe Kosten.
-		enable_column = true,              -- Aktiviert eine vertikale Cursorspalte (cursorcolumn); wird bei großen Dateien ggf. unterdrückt.
-		color_persist = true,              -- Reappliziert alle Custom-Highlight-Gruppen nach :colorscheme (ColorScheme-Autocmd).
-		map_cursor_to_hl = true,           -- Mappt 'guicursor' auf eigene HL-Gruppen (Cursor / CursorNormal/Insert/…); fällt robust zurück.
-		min_colored_file_kb = 4096,        -- Dateigrößenschwelle (KiB) ab der 'cursorcolumn' und ähnliche Spalteneffekte deaktiviert werden.
+		enable_line = true,                       -- Aktiviert CursorLine im aktiven Fenster (per winhighlight); sehr geringe Kosten.
+		enable_column = true,                     -- Aktiviert eine vertikale Cursorspalte (cursorcolumn); wird bei großen Dateien ggf. unterdrückt.
+		color_persist = true,                     -- Reappliziert alle Custom-Highlight-Gruppen nach :colorscheme (ColorScheme-Autocmd).
+		map_cursor_to_hl = true,                  -- Mappt 'guicursor' auf eigene HL-Gruppen (Cursor / CursorNormal/Insert/…); fällt robust zurück.
+		min_colored_file_kb = 4096,               -- Dateigrößenschwelle (KiB) ab der 'cursorcolumn' und ähnliche Spalteneffekte deaktiviert werden.
 
-		enable_indent_scope = false,       -- Hebt den umgebenden Einrückungsblock im sichtbaren Viewport hervor (vollzeilig).
+		enable_indent_scope = false,              -- Hebt den umgebenden Einrückungsblock im sichtbaren Viewport hervor (vollzeilig).
 
-		enable_yank_flash = true,          -- Kurzer Flash des yanked Bereichs (TextYankPost) mit Gruppe 'YankFlash'; nur visuelles Feedback.
-		enable_put_flash = true,           -- Kurzer Flash des gerade eingefügten Bereichs; nutzt '['/']'-Marks nach dem Put.
-		map_put_flash = true,              -- Installiert sichere p/P-Mappings, um Put-Flash zuverlässig zu triggern (non-recursive).
-		enable_signcolumn_tint = true,     -- Tönt die SignColumn je nach schlimmster Diagnostic-Severity; Zeichen selbst bleiben unverändert.
-		enable_terminal_palette = true,    -- Vereinheitlicht Terminal-Fenster (TermOpen) via winhighlight: Normal→TermNormal, CursorLine→TermCursorLine.
-		enable_insert_submode_colors = true, -- Tönt CursorLine je Modus (N/I/V/R) und optional per-mode Cursor-Gesichter (guicursor).
-		enable_current_word = true,        -- Unterstreicht das aktuelle Wort (außer in Insert) mittels matchadd("CursorWord", …).
-		enable_diff_peek = true,           -- Weist 'gh' zum Gitsigns-Hunk-Preview zu (falls vorhanden); sonst Hinweis.
-		large_file_kb = 5000,              -- Globale Schranke (KiB) für „teuerere“ Effekte (z. B. Indent-Scope), um Performance zu wahren.
+		enable_yank_flash = true,                 -- Kurzer Flash des yanked Bereichs (TextYankPost) mit Gruppe 'YankFlash'; nur visuelles Feedback.
+		enable_put_flash = true,                  -- Kurzer Flash des gerade eingefügten Bereichs; nutzt '['/']'-Marks nach dem Put.
+		map_put_flash = true,                     -- Installiert sichere p/P-Mappings, um Put-Flash zuverlässig zu triggern (non-recursive).
+		enable_signcolumn_tint = true,            -- Tönt die SignColumn je nach schlimmster Diagnostic-Severity; Zeichen selbst bleiben unverändert.
+		enable_terminal_palette = true,           -- Vereinheitlicht Terminal-Fenster (TermOpen) via winhighlight: Normal→TermNormal, CursorLine→TermCursorLine.
+		enable_insert_submode_colors = true,      -- Tönt CursorLine je Modus (N/I/V/R) und optional per-mode Cursor-Gesichter (guicursor).
 
-		enable_breadcrumbs = false,         -- Aktiviert kompakte Breadcrumbs in der winbar (Repo-relativer Pfad + optional Symbolkette).
-		breadcrumbs_max_len = 120,         -- Maximale Länge der Breadcrumb-Zeile; Mittelteil wird bei Überschreitung ellipsisiert.
-		breadcrumbs_separator = nil,       -- If set, used verbatim as separator (with surrounding spaces as given). Example: " ⟩ " or " | "
-		breadcrumbs_nerd_hex = "f0058",    -- If set (and breadcrumbs_separator is nil), try Nerd Font glyph by hex codepoint. -- Example: "f0058" (case-insensitive). Falls back automatisch auf Unicode-Pfeile.
+		enable_current_word = true,               -- Unterstreicht das aktuelle Wort (außer in Insert) mittels matchadd("CursorWord", …).
+		cword_occurrences = {
+			enabled               = true,           -- Master switch for painting occurrences.
+			render                = "underdotted",    -- Rendering mode: "highlight" or one of the underline variants.
+			underline_color       = "#5FB0FC",    -- Special color (`sp`) for underline-like modes (ignored for "highlight"). f.e. "#5FB0FC"
+			force_plain_underline = true,           -- Always include plain underline as safety fallback on weak UIs.
+			marking               = "leadingchar",         -- Slice to render: "leadingchar"|"word"|"tailchar"|"firstN".
+			firstN                = 1,              -- Number of leading bytes when marking == "firstN".
+			viewport_only         = true,           -- Restrict scanning to the visible window lines for performance.
+			min_len               = 2,              -- Minimum <cword> length to trigger decoration (in bytes).
+			smart_case            = true,           -- Use \c unless <cword> contains uppercase, then \C (strict case).
+			in_insert             = false,          -- Keep decorations active during Insert mode (more CPU) if true.
+			hl                    = "CwordOccur",   -- Highlight group for full-word slices when render == "highlight".
+			hl_lead               = "CwordOccurLead", -- Highlight group for partial slices (lead/tail/firstN) when "highlight".
+			hl_attr               = { bg = "#334155" }, -- Fallback attrs for `hl` if the group is missing or empty.
+			hl_lead_attr          = { bg = "#475569" }, -- Fallback attrs for `hl_lead` if the group is missing or empty.
+			priority              = 9,              -- Extmark priority relative to other highlights.
+			debounce_ms           = 40,             -- Debounce interval for repaint after movement/edits.
+			large_file_kb         = nil,            -- Optional per-feature guard threshold (KiB); nil → inherit global.
+		},
+
+		enable_diff_peek = true,      -- Weist 'gh' zum Gitsigns-Hunk-Preview zu (falls vorhanden); sonst Hinweis.
+		large_file_kb = 5000,         -- Globale Schranke (KiB) für „teuerere“ Effekte (z. B. Indent-Scope), um Performance zu wahren.
+
+		enable_breadcrumbs = false,   -- Aktiviert kompakte Breadcrumbs in der winbar (Repo-relativer Pfad + optional Symbolkette).
+		breadcrumbs_max_len = 120,    -- Maximale Länge der Breadcrumb-Zeile; Mittelteil wird bei Überschreitung ellipsisiert.
+		breadcrumbs_separator = nil,  -- If set, used verbatim as separator (with surrounding spaces as given). Example: " ⟩ " or " | "
+		breadcrumbs_nerd_hex = "f0058", -- If set (and breadcrumbs_separator is nil), try Nerd Font glyph by hex codepoint. -- Example: "f0058" (case-insensitive). Falls back automatisch auf Unicode-Pfeile.
 
 		breadcrumbs_ctx = {
 			prefer_owner_in_literals      = true,                                                        -- In Objekt-/Tabellen-Literalen Owner statt Funktionssymbol bevorzugen
@@ -60,10 +81,10 @@ M.cfg = {
 		---@type HighlightColors
 		colors = {
 			-- Cursor line/column base tints
-			CursorLine     = { bg = "#2a2e36" },          -- Base tint for the cursor line when no per-mode tint is active
-			CursorColumn   = { bg = "#2a2e36" },          -- Subtle vertical guide under the cursor column
+			CursorLine     = { bg = "#2a2e36" },           -- Base tint for the cursor line when no per-mode tint is active
+			CursorColumn   = { bg = "#2a2e36" },           -- Subtle vertical guide under the cursor column
 			CursorLineNr   = { fg = "#ffd75f", bold = true }, -- Emphasized line number for the cursor line (focus anchor)
-			LineNrDim      = { fg = "#5a6374" },          -- Dimmed line numbers for side windows / non-focus contexts
+			LineNrDim      = { fg = "#5a6374" },           -- Dimmed line numbers for side windows / non-focus contexts
 
 			-- Per-mode CursorLine variants (used by winhighlight on ModeChanged)
 			CursorLineN    = { bg = "#2a2e36" }, -- CursorLine tint for Normal mode
@@ -94,7 +115,7 @@ M.cfg = {
 			TermCursorLine = { bg = "#20262d" }, -- CursorLine in terminal windows for alignment
 
 			-- Current-word underline and matchparen face
-			CursorWord     = { underline = true },        -- Underline-only for the word under cursor (low noise)
+			CursorWord     = { underline = true },         -- Underline-only for the word under cursor (low noise)
 			MatchParen     = { bg = "#3b4048", bold = true }, -- Face used by the optional matchparen blink
 
 			-- Indent scope block highlight (viewport-limited block around current indent)

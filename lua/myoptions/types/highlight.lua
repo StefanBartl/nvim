@@ -198,6 +198,8 @@
 --- Side-effects: reduces need for full-document highlights; low overhead.
 ---@field enable_current_word boolean
 ---
+---@field cword_occurrences CwordOccurrencesCfg
+---
 --- Binds `gh` to preview the nearest Git hunk using `gitsigns.nvim` if present.
 --- Changes:
 ---   * If `gitsigns` exists: `gh` shows an inline/float hunk preview.

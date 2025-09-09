@@ -1,19 +1,17 @@
+---@meta
 ---@module 'myoptions.types.cword_occurences'
 --- Typed documentation for the configuration of "current-word occurrences" rendering.
 --- It highlights or underlines all occurrences of <cword> in the current buffer,
 --- excluding the one under the active window’s cursor (window-local exclusion).
---- Implementation details (for reference only):
+--- Implementation hints (for reference only):
 --- - Buffer-local extmarks are used to render ranges.
 --- - Viewport-only scanning and a large-file guard protect performance.
---- - Case behavior is controlled via a dedicated, deterministic regex builder.
----
+--- - Case behavior is controlled via a deterministic regex builder.
 ---@source myoptions/Highlight_Cfg/cword_occurrences.lua
 
-
---[[
-Notes for LuaLS / tooling:
+--[[ Notes for LuaLS / tooling:
 - This file is types-only; it is safe to `require` from anywhere. No runtime effects.
-- The module path intentionally follows the caller’s current spelling
+- The module path intentionally mirrors the caller’s current spelling
   ('cword_occurences' vs. 'cword_occurrences'). Keep both in sync at call sites.
 ]]
 
@@ -31,10 +29,42 @@ Notes for LuaLS / tooling:
 ---| '"tailchar"'    # Emphasize only the last byte/character of each match.
 ---| '"firstN"'      # Emphasize the first N bytes/characters of each match (see `firstN`).
 
+---@class CwordHlAttr
+---@field fg string|nil
+--- Foreground color (hex like "#aabbcc").
+---@field bg string|nil
+--- Background color (hex like "#112233").
+---@field sp string|nil
+--- Special color for underline/undercurl (hex), used as `sp` where supported.
+---@field bold boolean|nil
+--- Render text in bold.
+---@field italic boolean|nil
+--- Render text in italic.
+---@field underline boolean|nil
+--- Plain underline decoration.
+---@field undercurl boolean|nil
+--- Curly underline decoration.
+---@field underdouble boolean|nil
+--- Double underline decoration (UI support dependent).
+---@field underdotted boolean|nil
+--- Dotted underline decoration (UI support dependent).
+---@field underdashed boolean|nil
+--- Dashed underline decoration (UI support dependent).
+---@field strikethrough boolean|nil
+--- Strike-through decoration.
+---@field reverse boolean|nil
+--- Reverse video effect.
+---@field standout boolean|nil
+--- Standout effect (UI dependent).
+---@field nocombine boolean|nil
+--- Do not combine with other highlights (rarely needed).
+---@field link string|nil
+--- Link to another highlight group (mutually exclusive with other attrs).
+
 ---@class CwordOccurrencesCfg
 ---@field render CwordRender
 --- Selects the rendering mode. For `"highlight"`, colors come from `hl`/`hl_lead`.
---- For underline-like modes, implementation synthesizes HL groups with the chosen style.
+--- For underline-like modes, the implementation synthesizes HL groups with the chosen style.
 --- Recommendation:
 --- - For high-contrast themes, prefer `"leadingchar"` + an underline to reduce visual noise.
 --- - For code search/reading sessions, `"word"` + `"undercurl"` can be effective.
@@ -42,9 +72,13 @@ Notes for LuaLS / tooling:
 ---@field underline_color string|nil
 --- Hex color (e.g., "#5FB0FC") used as `sp` (special) for underline-like modes.
 --- Behavior:
---- - If the UI supports colored underline/undercurl, this color is used.
+--- - If the UI supports colored underline/undercurl, this color is applied.
 --- - If not supported, the underline uses the theme’s default decoration color.
 --- Ignored when `render == "highlight"`.
+---
+---@field force_plain_underline boolean|nil
+--- When `true` (recommended), always include a plain underline as a safety net for UIs
+--- that cannot render advanced underline styles; has no effect for `render="highlight"`.
 ---
 ---@field hl string
 --- Highlight group used for full-word ranges when `render == "highlight"`.
@@ -54,9 +88,17 @@ Notes for LuaLS / tooling:
 --- Optional highlight group used for partial ranges (leading/tail/firstN) when
 --- `render == "highlight"`. If `nil`, `hl` is reused.
 ---
+---@field hl_attr CwordHlAttr|nil
+--- Fallback face for `hl` when `render == "highlight"` and the group does not exist
+--- or is empty; applied via `nvim_set_hl()` after colorscheme load.
+---
+---@field hl_lead_attr CwordHlAttr|nil
+--- Fallback face for `hl_lead` when `render == "highlight"` and the group does not exist
+--- or is empty; if `nil`, `hl_attr` semantics may be reused by the implementation.
+---
 ---@field enabled boolean
---- Master switch. When `false`, autocommands/timers should be disabled and any
---- existing extmarks cleared on next refresh.
+--- Master switch. When `false`, autocommands/timers are disabled and existing extmarks
+--- are cleared on the next refresh.
 ---
 ---@field marking CwordMarking
 --- Chooses which slice of each occurrence to emphasize. For `"firstN"`, see `firstN`.
@@ -87,17 +129,18 @@ Notes for LuaLS / tooling:
 ---
 ---@field priority integer
 --- Extmark priority. Higher values take precedence over other highlights.
+--- Typical range: 5–50; keep below diagnostics to avoid masking important signals.
 ---
 ---@field debounce_ms integer
 --- Debounce window for movement/edit events. `0` = immediate updates.
+--- Values between 20–60 ms are a good compromise for smooth scrolling.
 ---
 ---@field large_file_kb integer|nil
 --- Optional override for the large-file guard (KiB). `nil` → inherit a global threshold.
+--- Use very large values to effectively disable the guard for this feature (not recommended).
 
--- Optional: public shape of the feature module (for better tooling on require()).
 ---@class CwordOccurrencesModule
 ---@field refresh fun():nil
 --- Rebuild decorations immediately for the active window/buffer.
----
 ---@field enable fun():nil
 --- Ensure autocommands/timers are installed and perform an initial paint.

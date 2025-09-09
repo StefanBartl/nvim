@@ -12,7 +12,7 @@ local C              = require("myoptions.config")
 local cfg            = C.cfg.highlight
 local PathCache      = require("myoptions.Highlight_Cfg.path_cache")
 local ctx_ok, ctxmod = pcall(require, "myoptions.Highlight_Cfg.breadcrumbs.ctx")
-local CwordOcc       = require("myoptions.Highlight_Cfg.word_occurences")
+local CwordOcc       = require("myoptions.Highlight_Cfg.cword_occurences")
 
 -- Namespaces & groups
 local NS_INDENT      = vim.api.nvim_create_namespace("myopt_IndentScope")

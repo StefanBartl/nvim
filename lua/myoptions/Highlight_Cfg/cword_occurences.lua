@@ -1,16 +1,15 @@
 ---@module 'myoptions.Highlight_Cfg.cword_occurrences'
 --- Highlight all occurrences of <cword> in the buffer except the one under the cursor.
---- Now supports an underline-based rendering mode (underline/undercurl/underdouble/underdotted/underdashed).
---- Ranges (leadingchar/word/tailchar/firstN) are preserved; only rendering changes.
----
---- Public API:
----   require('myoptions.Highlight_Cfg.cword_occurrences').enable()
----   require('myoptions.Highlight_Cfg.cword_occurrences').refresh()
+--- Supports "highlight" and underline-family (underline/undercurl/underdouble/underdotted/underdashed).
+--- Slices: leadingchar | word | tailchar | firstN
 
 local M = {}
 
 local C = require("myoptions.config") ---@module 'myoptions.config'
-local cfg = C.cfg and C.cfg.highlight or {}
+
+-- Keep a typed handle to highlight-namespace config to avoid undefined-field warnings.
+---@type HighlightCfg
+local H = (C and C.cfg and C.cfg.highlight) or {}
 
 -- Dedicated namespace and autocmd group
 local NS  = vim.api.nvim_create_namespace("myopt_CwordOccur")
@@ -19,18 +18,14 @@ local AUG = vim.api.nvim_create_augroup("myopt_CwordOccur", { clear = true })
 -- Internal render-style cache (created highlight groups)
 local HLCACHE = {} ---@type table<string, boolean>
 
--- Debounce timer
----@type uv.uv_timer_t|nil
+-- Debounce timer (luv can return `userdata` in some typings)
+---@type userdata|uv.uv_timer_t|nil
 local timer = nil
 
--- Light cache to avoid unnecessary recomputation
----@type CwordInternalCache
-local cache = { last_word = nil, last_tick = nil, last_srow = nil, last_erow = nil }
-
 --- Shorthand to access effective feature config.
----@return table
+---@return CwordOccurrencesCfg
 local function CC()
-  return (C.cfg and C.cfg.highlight and C.cfg.highlight.cword_occurrences) or {}
+  return H.cword_occurrences or {} ---@type CwordOccurrencesCfg
 end
 
 --- Large-file guard based on global or local limits.
@@ -43,7 +38,7 @@ local function is_large_file_guard()
   if not ok or not st or not st.size then return false end
   local kb = math.floor((st.size or 0) / 1024)
   local local_lim = CC().large_file_kb
-  local global_lim = cfg.large_file_kb or 5000
+  local global_lim = H.large_file_kb or 5000
   local lim = type(local_lim) == "number" and local_lim or global_lim
   return kb > lim
 end
@@ -65,7 +60,6 @@ local function clear_all()
 end
 
 --- Apply an underline-like style table according to render mode.
---- Returns a valid attr table for nvim_set_hl. Unknown styles gracefully fall back to 'underline'.
 ---@param render string
 ---@param sp string|nil
 ---@return table
@@ -83,14 +77,21 @@ local function ul_style_for(render, sp)
     style.underline = true
   end
   if sp and type(sp) == "string" and sp ~= "" then
-    style.sp = sp -- special (underline/curl color if supported by UI)
+    style.sp = sp
   end
   return style
 end
 
---- Ensure (and cache) the actual highlight groups used for placement, depending on render mode.
---- For render="highlight" we reuse configured groups (hl/hl_lead).
---- For underline-modes we synthesize ephemeral groups (and keep them stable per mode).
+--- Check if a highlight group exists (after following links).
+---@param name string
+---@return boolean
+local function hl_exists(name)
+  if type(name) ~= "string" or name == "" then return false end
+  local ok, info = pcall(vim.api.nvim_get_hl, 0, { name = name, link = false })
+  return ok and type(info) == "table" and next(info) ~= nil
+end
+
+--- Ensure (and cache) the actual highlight groups used for placement.
 ---@return string, string  -- word_group, lead_group
 local function ensure_groups()
   local render = CC().render or "highlight"
@@ -98,35 +99,42 @@ local function ensure_groups()
   if render == "highlight" then
     local g_word = CC().hl or "CwordOccur"
     local g_lead = CC().hl_lead or g_word
+    local a_word = CC().hl_attr or { bg = "#3a3f4a" }
+    local a_lead = CC().hl_lead_attr or { bg = "#5a6070" }
+
+    if not HLCACHE[g_word] then
+      if not hl_exists(g_word) then pcall(vim.api.nvim_set_hl, 0, g_word, a_word) end
+      HLCACHE[g_word] = true
+    end
+    if not HLCACHE[g_lead] then
+      if not hl_exists(g_lead) then pcall(vim.api.nvim_set_hl, 0, g_lead, a_lead) end
+      HLCACHE[g_lead] = true
+    end
     return g_word, g_lead
   end
 
-  -- Underline-* styles: generate deterministic names and create once
-  local base = "CwordOccur__U_" .. tostring(render)
+  -- Underline-* styles
+  local base   = "CwordOccur__U_" .. tostring(render)
   local g_word = base .. "_WORD"
   local g_lead = base .. "_LEAD"
-  local sp = CC().underline_color
+  local sp     = CC().underline_color
+  local force  = CC().force_plain_underline ~= false
 
   if not HLCACHE[g_word] then
-    local ok = pcall(vim.api.nvim_set_hl, 0, g_word, ul_style_for(render, sp))
-    if not ok then
-      -- Fallback to plain underline on older UIs
-      pcall(vim.api.nvim_set_hl, 0, g_word, ul_style_for("underline", sp))
-    end
+    local ok = pcall(vim.api.nvim_set_hl, 0, g_word, vim.tbl_extend("force", ul_style_for(render, sp), force and { underline = true } or {}))
+    if not ok then pcall(vim.api.nvim_set_hl, 0, g_word, { underline = true }) end
     HLCACHE[g_word] = true
   end
   if not HLCACHE[g_lead] then
-    local ok = pcall(vim.api.nvim_set_hl, 0, g_lead, ul_style_for(render, sp))
-    if not ok then
-      pcall(vim.api.nvim_set_hl, 0, g_lead, ul_style_for("underline", sp))
-    end
+    local ok = pcall(vim.api.nvim_set_hl, 0, g_lead, vim.tbl_extend("force", ul_style_for(render, sp), force and { underline = true } or {}))
+    if not ok then pcall(vim.api.nvim_set_hl, 0, g_lead, { underline = true }) end
     HLCACHE[g_lead] = true
   end
 
   return g_word, g_lead
 end
 
---- Low-level range add using extmarks.
+--- Low-level range add using extmarks; use 'combine' for robust overlay.
 ---@param l0 integer
 ---@param c0 integer
 ---@param c1 integer
@@ -139,13 +147,14 @@ local function add_range(l0, c0, c1, is_lead)
   local hl = is_lead and g_lead or g_word
 
   vim.api.nvim_buf_set_extmark(0, NS, l0, c0, {
-    end_row  = l0,
-    end_col  = c1,
-    hl_group = hl,
-    priority = pr,
-    hl_eol   = false,
-    strict   = false,
-    right_gravity = false,
+    end_row           = l0,
+    end_col           = c1,
+    hl_group          = hl,
+    priority          = pr,
+    hl_eol            = false,
+    strict            = false,
+    hl_mode           = "combine",
+    right_gravity     = false,
     end_right_gravity = true,
   })
 end
@@ -156,11 +165,11 @@ end
 ---@param erow integer
 ---@return nil
 local function place_occurrences(pat, srow, erow)
-  local marking = (CC().marking or "leadingchar") ---@type CwordMarking
-  local firstN  = CC().firstN or 2
+  local marking   = (CC().marking or "leadingchar") ---@type CwordMarking
+  local firstN    = CC().firstN or 2
 
-  local cur = vim.api.nvim_win_get_cursor(0)
-  local cur_l0 = (cur[1] - 1)
+  local cur       = vim.api.nvim_win_get_cursor(0)
+  local cur_l0    = (cur[1] - 1)
   local cur_cbyte = cur[2]
 
   for l0 = srow, erow do
@@ -217,11 +226,23 @@ local function update_now()
   if type(word) ~= "string" or #word < (CC().min_len or 2) then return end
 
   local srow, erow = scan_window()
-  local tick = vim.api.nvim_buf_get_changedtick(0)
-  cache.last_word, cache.last_tick, cache.last_srow, cache.last_erow = word, tick, srow, erow
+  -- Optionally reuse cache here (removed to avoid unused-local warnings).
 
   local pat = build_pattern(word, CC().smart_case ~= false)
   place_occurrences(pat, srow, erow)
+end
+
+--- Ensure a uv timer (typed) and return it.
+---@return uv.uv_timer_t
+local function ensure_timer()
+  local uv = vim.uv or vim.loop
+  if not timer then
+    ---@diagnostic disable-next-line
+    timer = uv.new_timer()
+  end
+  local t = timer
+  ---@cast t uv.uv_timer_t
+  return t
 end
 
 --- Debounced repaint entry.
@@ -232,23 +253,18 @@ local function update_debounced()
     update_now()
     return
   end
-  local uv = vim.uv or vim.loop
-  if not timer then
-    timer = uv.new_timer()
-  end
-  timer:stop()
-  timer:start(ms, 0, function()
-    timer:stop()
+  local t = ensure_timer()
+  t:stop()
+  t:start(ms, 0, function()
+    t:stop()
     vim.schedule(update_now)
   end)
 end
 
----@return nil
 function M.refresh()
   update_now()
 end
 
----@return nil
 function M.enable()
   vim.api.nvim_clear_autocmds({ group = AUG })
 
