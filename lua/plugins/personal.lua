@@ -50,20 +50,24 @@ return {
 	-- },
 
 	{
-		dir = vim.env.REPOS_DIR .. "/replacer",
-		lazy = false,
-		config = function()
-			require("replacer").setup({
-				hidden = true,
-				exclude_git_dir = true,
-				preview_context = 3,
-				literal = true, -- set false for regex mode
-				smart_case = true,
-				fzf = {
-					winopts = { width = 0.85, height = 0.70 },
-				},
-			})
-		end,
+		-- dir = vim.fn.expand(vim.env.REPOS_DIR .. '/replacer'),
+		"StefanBartl/replacer",
+		lazy = true,
+		cmd = "Replace",
+		name = "replacer.nvim",
+		main = "replacer",
+		opts = {
+			engine = "fzf",                       -- "fzf" | "telescope"
+			write_changes = true,                 -- true: sofort speichern, false: nur Buffer modifizieren
+			confirm_all = true,                   -- vor "All" bestätigen
+			preview_context = 3,
+			hidden = true,
+			exclude_git_dir = true,
+			literal = true,
+			smart_case = true,
+			fzf = { winopts = { width = 0.85, height = 0.70 } },
+			telescope = { layout_config = { width = 0.85, height = 0.70 } },
+		},
 	},
 
 	-- nvim-containers: Manage container engines from Neovim
