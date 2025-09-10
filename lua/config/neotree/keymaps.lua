@@ -204,7 +204,7 @@ function M.window()
 		["?"]             = "show_help",
 		["g?"]            = "noop",
 		["<leader>"]      = "noop",
-
+    ["P"] = "image_wezterm",
 		-- clear filter, preview and search highlight
 		["<Esc>"]         = function(state)
 			require("neo-tree.sources.filesystem").reset_search(state, true)
@@ -513,6 +513,12 @@ end
 ---@return table<string, fun(state: table)>
 function M.commands()
 	return {
+		image_wezterm = function(state)
+        local node = state.tree:get_node()
+        if node.type == "file" then
+          require("image_preview").PreviewImage(node.path)
+        end
+      end,
 		--- Smart preview:
 		--- * Images → show via image_preview.nvim (WezTerm inline)
 		--- * PDFs   → render current page and show; expose per-window page state
