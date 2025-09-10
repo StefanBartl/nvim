@@ -57,8 +57,6 @@ require("config.image_preview.pdf.buffer").setup({
   cleanup_png = false,    -- set to true to delete PNG on close
 })
 require("custom.smart_edit").setup({ set_cr = true })
--- require("config.noice.signature_focus_guard").setup() -- WATCH: Noice pr
-
 require("usrcmds.md_tablewrap").setup({
   inner_pad        = 1,
   outer_left       = 3,

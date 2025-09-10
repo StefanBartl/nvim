@@ -67,12 +67,6 @@ return {
     },
   },
 
-
-
-
-
-
-
 		default_component_config = {
 			indent = { with_expanders = false },
 			icon = {
@@ -171,6 +165,7 @@ return {
 				-- or pragmatic name (mapped to hex internally; ok for quick tests)
 				-- file = "red",
 			},
+
 		})
 		---@diagnostic disable-next-line
 		require("config.neotree.cwd_sync").setup({
