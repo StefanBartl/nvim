@@ -36,7 +36,6 @@ require "system.env"
 require "options"
 require('myoptions').enable({ highlights = true, options = true })
 -- require "hl_options"
-require("utils.open_path").setup() -- 'autocmds.lua_require' depends on open_path functionality, load it before autocmds
 require "custom.last_file.init"
 require("custom.ctrl_cycle")
 local require_dir = require "lib.require_dir"
