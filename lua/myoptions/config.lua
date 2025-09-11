@@ -60,6 +60,10 @@ M.cfg = {
 		breadcrumbs_nerd_hex = "f0058", -- If set (and breadcrumbs_separator is nil), try Nerd Font glyph by hex codepoint. -- Example: "f0058" (case-insensitive). Falls back automatisch auf Unicode-Pfeile.
 
 		breadcrumbs_ctx = {
+			lua_table_root = {
+  enable = true,
+  mode = "only",
+},
 			prefer_owner_in_literals      = true,                                                        -- In Objekt-/Tabellen-Literalen Owner statt Funktionssymbol bevorzugen
 			prefer_owner_on_member_access = true,                                                        -- Bei member access (a.b, obj:method) Owner bevorzugen
 			dedupe_containers             = true,                                                        -- Doppelte Containerteile entfernen ("M.M" -> "M")

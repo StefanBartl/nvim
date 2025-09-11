@@ -4,8 +4,13 @@
 --- All descriptions assume the integration provided by:
 ---   myoptions/Highlight_Cfg (visual/UX features) and
 
+---@class lua_table_root_opt
+---@field enable? boolean
+---@field mode? string
+
 ---@class MyOptionsBreadcrumbsCtx
 ---
+---@field lua_table_root lua_table_root_opt
 ---@field prefer_owner_in_literals boolean
 --- Prefer showing the literal’s “owner” (the binding that holds the object/table literal)
 --- directly before the symbol when the cursor is inside a literal property.

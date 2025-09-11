@@ -4,22 +4,6 @@
 ---@type LazyPluginSpec[]
 return {
 
-	{ -- WATCH: Check on wsl / on ubuntu if it works.
-		"3rd/image.nvim",
-		opts = {
-			backend = "kitty",
-			processor = "magick_cli",
-			integrations = {
-				markdown = {
-					enabled = true,
-					clear_in_insert_mode = true,           -- clears all images in insert mode
-					only_render_image_at_cursor = true,    -- defaults to false; only renders the image by the cursor
-					only_render_image_at_cursor_mode = "popup", -- "popup" or "inline", defaults to "popup"
-				},
-			}
-		},
-	},
-
 	{
 		'adelarsq/image_preview.nvim',
 		event = 'VeryLazy',
@@ -81,41 +65,4 @@ return {
 			})
 		end,
 	},
-
-	-- Neogit: Magit-like UI, integrates well with Diffview
-	{
-		"NeogitOrg/neogit",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			"sindrets/diffview.nvim", -- optional but recommended
-		},
-		cmd = "Neogit",
-		keys = {
-			{ "<leader>gg", "<cmd>Neogit kind=split<cr>", desc = "Neogit (split)" },
-		},
-		opts = {
-			kind = "split",
-			integrations = { diffview = true }, -- use Diffview for diffs
-		},
-	},
-
-	-- Fugitive: lightweight, CLI-oriented Git inside Neovim
-	-- :Git, :Gstatus (via :Git), :Gdiffsplit, :Gblame, :Gbrowse (mit rhubarb)
-	{
-		"tpope/vim-fugitive",
-		event = "VeryLazy", -- or load on Git buffers: "BufReadPost"
-		keys = {
-			-- Diff current file vs HEAD
-			{ "<leader>gd", "<cmd>Gdiffsplit<cr>", desc = "Git diff split" },
-			-- Blame
-			{ "<leader>gb", "<cmd>Git blame<cr>",  desc = "Git blame" },
-		},
-	},
-	{
-		-- Optional: :Gbrowse to open current file/selection in hosting provider
-		"tpope/vim-rhubarb",
-		event = "VeryLazy",
-		dependencies = { "tpope/vim-fugitive" },
-	},
-
 }

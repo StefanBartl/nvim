@@ -1,22 +1,28 @@
 ---@module 'chadrc.lua'
 
 local M = {}
-
-
-local utl = require "ui.custom_stl_module" -- Helpers for statusline TODO: breadcrumbs implementieren
+local utl = require "ui.custom_stl_module"
+local ctx = require("myoptions.Highlight_Cfg.breadcrumbs.ctx")
 
 M.ui = {
 	statusline = {
 		theme = "vscode_colored",
-
 		order = { "mode", "git", "%=", "breadcrumbs", "%=", "diagnostics", "lsp", "cursor", "cwd" },
 		modules = {
 			breadcrumbs = function()
-				local s = utl.stl_strip_hl(utl.render_breadcrumbs())
-				s = (s:gsub("^%s*(.-)%s*$", "%1"))
+				local C = require("myoptions.config")
+				C.cfg.highlight.breadcrumbs_ctx.lua_table_root = { enable = true, mode = "only" }
+				local s = ctx.statusline_module({
+					include_path = true,
+					sep = " ⟶ ",
+					path_resolver = require("ui.custom_stl_module").repo_relative,
+				})
+				local function to_str(x) return (type(x) == "function") and x() or x end  -- AUDIT:
+				s = to_str(s)
+				if s == "" then return "" end
+
 				return utl.hl_open(utl.mode_band_group()) .. s
 			end,
-
 			diagnostics = function()
 				local s = require("nvchad.stl.utils").diagnostics()
 				return utl.hl_wrap(utl.mode_band_group(), utl.stl_strip_hl(s))
@@ -36,9 +42,9 @@ M.ui = {
 
 M.base46 = {
 	transparency = false,
-  theme_toggle = { "tokyonight", "onedark" },
+	theme_toggle = { "tokyonight", "onedark" },
 
-  -- theme = "vim_default",
+	-- theme = "vim_default",
 	-- theme = "github_dark",
 	-- theme = "aylin",
 	theme = "onedark",

@@ -125,8 +125,15 @@ return {
 				layout_config = { prompt_position = "top" },
 				mappings = {
 					i = {
-						["<C-p>"] = actions.cycle_history_prev,
-						["<C-n>"] = actions.cycle_history_next,
+						["<C-p>"]    = actions.cycle_history_prev,
+						["<C-n>"]    = actions.cycle_history_next,
+						["<S-Up>"]   = actions.preview_scrolling_up,
+						["<S-Down>"] = actions.preview_scrolling_down,
+					},
+
+					n = {
+						["<S-Up>"]   = actions.preview_scrolling_up,
+						["<S-Down>"] = actions.preview_scrolling_down,
 					},
 				},
 			})

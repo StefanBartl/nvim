@@ -614,6 +614,155 @@ local function _build_context()
 end
 
 --------------------------------------------------------------------------------
+-- Public: build a plain statusline segment
+--------------------------------------------------------------------------------
+
+--- Build a statusline-safe breadcrumbs string (no HL escapes, no padding).
+--- Format:   [path][SEP][context]
+--- Examples: "src/foo/bar.lua › M.run()"  |  "lua/my/mod.lua"  |  "M.run()"
+
+
+
+---@alias BreadcrumbsEllipsisMode '"middle"'|'"end"'
+
+---@class BreadcrumbsStlOptions
+---@field include_path boolean|nil                         -- also show project-relative path (default: true)
+---@field include_icon boolean|nil                         -- prepend devicon (via ui.custom_stl_module) (default: true)
+---@field sep string|nil                                   -- separator between path and ctx (default: " › ")
+---@field max_width integer|nil                            -- ellipsize to N chars (default: floor(0.5 * &columns), min 30)
+---@field ellipsis BreadcrumbsEllipsisMode|nil             -- ellipsize strategy (default: "middle")
+---@field path_resolver fun(abs_path:string):string|nil    -- optional resolver for project-relative path; fallback to ":~:."
+---@field band_highlight boolean|nil                       -- wrap with current mode band HL (default: true)
+
+--------------------------------------------------------------------------------
+-- Small helpers (statusline-safe)
+--------------------------------------------------------------------------------
+
+--- Escape `%` so user text cannot break statusline sequences.
+---@param s string
+---@return string
+local function _stl_escape(s)
+  return (tostring(s or ""):gsub("%%", "%%%%"))
+end
+
+--- Ellipsize in the middle (ASCII-oriented; good enough for code symbols).
+---@param s string
+---@param max integer
+---@return string
+local function _ellipsize_middle(s, max)
+  if #s <= max then return s end
+  local head = math.floor((max - 1) / 2)
+  local tail = max - head - 1
+  return string.sub(s, 1, head) .. "…" .. string.sub(s, #s - tail + 1, #s)
+end
+
+--- Ellipsize at the end.
+---@param s string
+---@param max integer
+---@return string
+local function _ellipsize_end(s, max)
+  if #s <= max then return s end
+  return string.sub(s, 1, max - 1) .. "…"
+end
+
+--- Default "project-relative" path resolver: :~:. (home/cwd relative), tail if empty.
+---@param abs string
+---@return string
+local function _default_repo_relative(abs)
+  if abs == "" then return "[No Name]" end
+  return vim.fn.fnamemodify(abs, ":~:.")
+end
+
+
+
+---@param opts BreadcrumbsStlOptions|nil
+---@return string
+function Statusline_segment(opts)
+  opts = opts or {}
+  local include_path   = opts.include_path
+  if include_path == nil then include_path = true end
+  local sep            = (opts.sep ~= nil and opts.sep ~= "") and opts.sep or " › "
+  local ellipsis       = opts.ellipsis or "middle"
+
+  -- 1) Resolve buffer path and context
+  local bufnr = vim.api.nvim_get_current_buf()
+  local abs   = vim.api.nvim_buf_get_name(bufnr) or ""
+  local ctx   = _build_context() or ""
+
+  -- 2) Optionally compute project-relative path
+  local rel = ""
+  if include_path then
+    local rel_fn = type(opts.path_resolver) == "function" and opts.path_resolver or _default_repo_relative
+    rel = tostring(rel_fn(abs) or "")
+  end
+
+  -- 3) Compose: avoid dangling separators
+  local parts = { [2] = "" } ---@type string[]  -- pre-size to avoid realloc warnings
+  local i = 1
+  if include_path and rel ~= "" then
+    parts[i] = rel ; i = i + 1
+    if ctx ~= "" then parts[i] = sep ; i = i + 1 end
+  end
+  if ctx ~= "" then parts[i] = ctx ; i = i + 1 end
+  local line = table.concat(parts, "", 1, i - 1)
+
+  -- 4) Ellipsize (window-aware default)
+  local default_max = math.max(30, math.floor(vim.o.columns * 0.5))
+  local maxw        = tonumber(opts.max_width or default_max) or default_max
+  if maxw > 0 and #line > maxw then
+    line = (ellipsis == "end") and _ellipsize_end(line, maxw) or _ellipsize_middle(line, maxw)
+  end
+
+  -- 5) Escape `%` for statusline and trim
+  line = _stl_escape((line:gsub("^%s*(.-)%s*$", "%1")))
+  return line
+end
+
+--------------------------------------------------------------------------------
+-- Public: adapter factory for NvChad/Lualine-like statuslines
+--------------------------------------------------------------------------------
+
+--- Create a closure that can be plugged into `M.ui.statusline.modules.<name>`.
+--- The closure:
+---   • builds the plain segment via `statusline_segment(opts)`
+---   • optionally prepends a devicon (if `ui.custom_stl_module` is available)
+---   • optionally wraps the text with the current mode-band highlight
+--- No leading/trailing spaces are added; a single space is inserted between icon and text.
+---@async
+---@param opts BreadcrumbsStlOptions|nil
+---@return fun():string
+function Statusline_module(opts)
+  opts = opts or {}
+  local want_icon = (opts.include_icon ~= false)
+  local want_band = (opts.band_highlight ~= false)
+
+  return function()
+    -- Build plain text
+    local seg = Statusline_segment(opts)
+    if seg == "" then return "" end
+
+    -- Try to use your UI helper (icon + band highlight)
+    local ok, utl = pcall(require, "ui.custom_stl_module")
+
+    -- Optional: prepend devicon segment
+    local out = seg
+    if want_icon and ok and type(utl.file_icon_segment) == "function" then
+      local icon = utl.file_icon_segment()           -- already wrapped in its own HL group
+      if icon and icon ~= "" then
+        out = icon .. " " .. out                     -- one space between icon and text
+      end
+    end
+
+    -- Optional: wrap with mode-band HL so the center module matches the band
+    if want_band and ok and type(utl.mode_band_group) == "function" and type(utl.hl_open) == "function" then
+      out = utl.hl_open(utl.mode_band_group()) .. out
+    end
+
+    return out
+  end
+end
+
+--------------------------------------------------------------------------------
 -- Export
 --------------------------------------------------------------------------------
 
@@ -625,6 +774,8 @@ local M = {
 	_ctx_with_container = _ctx_with_container,
 	_ctx_word_fallback  = _ctx_word_fallback,
 	_build_context      = _build_context,
+
+	statusline_module = Statusline_module,
 }
 
 return M

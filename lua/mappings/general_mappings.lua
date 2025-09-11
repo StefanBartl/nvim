@@ -4,56 +4,60 @@
 local M = {}
 
 function M.setup()
-  local map = vim.g.__map_helper
+	local map = vim.g.__map_helper
 
-  -- Toggle Neotree & fcus current buffer's file when opening
-  vim.keymap.set("n", "<C-t>", function()
-    require("neo-tree.command").execute {
-      source = "filesystem", -- ensure filesystem source
-      toggle = true, -- open if closed, close if open
-      reveal = true, -- focus current buffer's file on open
-      -- if the file is outside the current cwd, jump cwd without prompt:
-      reveal_force_cwd = true,
-      -- choose position explicitly ("left", "right", "float", "current")
-      position = "left",
-    }
-  end, { desc = "[Neo-tree] Toggle & Reveal" })
+	map("n", "<lt>m", "<cmd>messages<cr>", {
+		desc = "[General] Open :messages",
+		nowait = true,
+		silent = true,
+	})
 
-  for _, mode in ipairs { "n", "i", "v", "t", "c" } do
-    map(mode, "<F1>", "<Nop>", { desc = "[General] Disable F1" })
-  end
+	-- Toggle Neotree & focus current buffer's file when opening
+	map("n", "<C-t>", function()
+		require("neo-tree.command").execute {
+			source = "filesystem", -- ensure filesystem source
+			toggle = true,      -- open if closed, close if open
+			reveal = true,      -- focus current buffer's file on open
+			reveal_force_cwd = true, -- if the file is outside the current cwd, jump cwd without prompt
+			position = "left", -- "left", "right", "float", "current"
+		}
+	end, { desc = "[Neo-tree] Toggle & Reveal" })
 
-  map("n", "<leader><Esc>", function()
-    vim.cmd "qa!"
-  end, { desc = "[General] Force quit all" })
+	for _, mode in ipairs { "n", "i", "v", "t", "c" } do
+		map(mode, "<F1>", "<Nop>", { desc = "[General] Disable F1" })
+	end
 
-  map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
-  map({ "n", "i", "v", "t" }, "<C-s>", function()
-    if vim.fn.mode() ~= "n" then
-      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-    end
-    vim.cmd "silent! w!"
-  end, { desc = "[General] Save file silently" })
+	map("n", "<leader><Esc>", function()
+		vim.cmd "qa!"
+	end, { desc = "[General] Force quit all" })
 
-  map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
-  map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
+	map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
+	map({ "n", "i", "v", "t" }, "<C-s>", function()
+		if vim.fn.mode() ~= "n" then
+			vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+		end
+		vim.cmd "silent! w!"
+	end, { desc = "[General] Save file silently" })
 
-  map("n", "+", "<C-a>", { desc = "[Number] Increment" })
-  map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
-  map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
-  map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
+	map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
+	map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
 
-  -- Window movement
-  map("n", "<C-h>", "<C-w>h", { desc = "[Terminal] Left" })
-  map("n", "<C-l>", "<C-w>l", { desc = "[Terminal] Right" })
-  map("n", "<C-j>", "<C-w>j", { desc = "[Terminal Down" })
-  map("n", "<C-k>", "<C-w>k", { desc = "[Terminal] Up" })
+	map("n", "+", "<C-a>", { desc = "[Number] Increment" })
+	map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
+	map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
+	map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
 
-  -- Resize window
-  map("n", "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
-  map("n", "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
-  map("n", "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
-  map("n", "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
+	-- Window movement
+	map("n", "<C-h>", "<C-w>h", { desc = "[Terminal] Left" })
+	map("n", "<C-l>", "<C-w>l", { desc = "[Terminal] Right" })
+	map("n", "<C-j>", "<C-w>j", { desc = "[Terminal Down" })
+	map("n", "<C-k>", "<C-w>k", { desc = "[Terminal] Up" })
+
+	-- Resize window
+	map("n", "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
+	map("n", "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
+	map("n", "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
+	map("n", "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
 end
 
 return M
