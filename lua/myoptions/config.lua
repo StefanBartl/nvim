@@ -33,7 +33,7 @@ M.cfg = {
 		enable_current_word = true,               -- Unterstreicht das aktuelle Wort (außer in Insert) mittels matchadd("CursorWord", …).
 		cword_occurrences = {
 			enabled               = true,           -- Master switch for painting occurrences.
-			render                = "underdotted",    -- Rendering mode: "highlight" or one of the underline variants.
+			render                = "highlight",    -- Rendering mode: "highlight" or one of the underline variants.
 			underline_color       = "#5FB0FC",    -- Special color (`sp`) for underline-like modes (ignored for "highlight"). f.e. "#5FB0FC"
 			force_plain_underline = true,           -- Always include plain underline as safety fallback on weak UIs.
 			marking               = "leadingchar",         -- Slice to render: "leadingchar"|"word"|"tailchar"|"firstN".
@@ -41,6 +41,8 @@ M.cfg = {
 			viewport_only         = true,           -- Restrict scanning to the visible window lines for performance.
 			min_len               = 2,              -- Minimum <cword> length to trigger decoration (in bytes).
 			smart_case            = true,           -- Use \c unless <cword> contains uppercase, then \C (strict case).
+			case_mode             = "sensitive",
+			match_kind						= "exact",
 			in_insert             = false,          -- Keep decorations active during Insert mode (more CPU) if true.
 			hl                    = "CwordOccur",   -- Highlight group for full-word slices when render == "highlight".
 			hl_lead               = "CwordOccurLead", -- Highlight group for partial slices (lead/tail/firstN) when "highlight".

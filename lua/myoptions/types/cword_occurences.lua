@@ -29,6 +29,9 @@
 ---| '"tailchar"'    # Emphasize only the last byte/character of each match.
 ---| '"firstN"'      # Emphasize the first N bytes/characters of each match (see `firstN`).
 
+---@alias CwordCaseMode  "smart"|"sensitive"|"insensitive"  -- Smart: lowercase → \c, has uppercase → \C
+---@alias CwordMatchKind "exact"|"substring"                 -- Exact: use \<\> boundaries; Substring: no boundaries
+
 ---@class CwordHlAttr
 ---@field fg string|nil
 --- Foreground color (hex like "#aabbcc").
@@ -121,6 +124,19 @@
 --- Smart case for the internal Vim regex:
 --- - `true`: ignorecase (`\c`) unless `<cword>` contains uppercase → case-sensitive (`\C`).
 --- - `false`: always case-sensitive (`\C`).
+---
+---@field case_mode CwordCaseMode|nil
+--- Case handling for the internal Vim regex:
+--- - "smart": use ignorecase (`\c`) unless `<cword>` contains uppercase → switch to case-sensitive (`\C`).
+--- - "sensitive": always case-sensitive (`\C`).
+--- - "insensitive": always case-insensitive (`\c`).
+--- Backward compatibility: If unset, falls back to `smart_case` semantics (`true`/`nil` → "smart", `false` → "sensitive"). If both are set, `case_mode` takes precedence.
+---
+---@field match_kind CwordMatchKind|nil
+--- Match strategy for occurrences:
+--- - "exact": use word boundaries `\<` and `\>`; respects `'iskeyword'` for tokenization.
+--- - "substring": no boundaries; matches literal substrings inside tokens (may highlight partial identifiers).
+--- Defaults to "exact". Combining with `marking = "leadingchar"|"tailchar"|"firstN"` affects only the visual slice, not the match logic.
 ---
 ---@field in_insert boolean
 --- Show decorations during Insert mode:
