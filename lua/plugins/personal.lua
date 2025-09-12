@@ -10,8 +10,9 @@ end
 return {
 
 	{
-		"StefanBartl/nvim-cmdlog",
-		-- lazy = false,
+		-- "StefanBartl/nvim-cmdlog",
+		dir = vim.env.REPOS_DIR .. "/nvim-cmdlog",
+		lazy = false,
 		cmd = { "CmdlogOpen", "CmdlogSearch" }, -- or map keys
 		-- keys = {
 		-- 	{ "<leader>cl", "<cmd>CmdlogOpen<cr>", desc = "Cmdlog: Open" },

@@ -1,4 +1,4 @@
----@module 'mappings.buffers'
+---@module 'mappings.buf_win_tab_mappings'
 
 local M = {}
 
@@ -15,12 +15,19 @@ function M.setup()
 		vim.cmd("bd " .. current)
 	end, { desc = "[Buffers] Close current, go to next" })
 
-	map({ "n", "v" }, "<M-x>", "<Cmd>close<CR>", { desc = "[Windows] Close window" })
-	map("i", "<M-x>", "<C-o><Cmd>close<CR>", { desc = "[Windows] Close window (insert)" })
-	map("t", "<M-x>", "<C-\\><C-n><Cmd>close<CR>", { desc = "[Windows] Close window (terminal)" })
+	-- ---------------------------------------------------------------------------
+	-- Windows
+	-- ---------------------------------------------------------------------------
+
+	map({ "n", "v" }, "<C-q>", "<Cmd>close<CR>", { desc = "[Windows] Close window" })
+	map("i", "<C-q>", "<C-o><Cmd>close<CR>", { desc = "[Windows] Close window (insert)" })
+	map("t", "<C-q>", "<C-\\><C-n><Cmd>close<CR>", { desc = "[Windows] Close window (terminal)" })
+	map("n", "<leader><Esc>", function()
+		vim.cmd "qa!"
+	end, { desc = "[Wimdows] Force quit all" })
 
 	-- ---------------------------------------------------------------------------
-	-- Tab navigation
+	-- Tabs
 	-- ---------------------------------------------------------------------------
 
 	-- map("n", "<leader>tn", "<cmd>tabnext<CR>", { desc = "[Tabs] Next tab" })

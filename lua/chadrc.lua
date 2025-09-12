@@ -42,13 +42,13 @@ M.ui = {
 
 M.base46 = {
 	transparency = false,
-	theme_toggle = { "tokyonight", "onedark" },
+	theme_toggle = { "tokyonight", "onenord" },
 
 	-- theme = "vim_default",
 	-- theme = "github_dark",
 	-- theme = "aylin",
-	theme = "onedark",
-	--theme = "onedark",
+	theme = "onenord",
+	--theme = "onenord",
 	-- theme = "solarized_dark",
 	-- theme = "scaryforest",
 	-- theme = "starlight",

@@ -6,8 +6,14 @@ local M = {}
 function M.setup()
 	local map = vim.g.__map_helper
 
-	map("n", "<lt>m", "<cmd>messages<cr>", {
-		desc = "[General] Open :messages",
+	-- Open :messages and jump to the bottom using a scheduled normal-command
+	vim.keymap.set("n", "<lt>m", function()
+		vim.cmd("messages")
+		vim.schedule(function()
+			vim.cmd("normal! G")
+		end)
+	end, {
+		desc = "[General] Open :messages at bottom (scheduled)",
 		nowait = true,
 		silent = true,
 	})
@@ -16,20 +22,16 @@ function M.setup()
 	map("n", "<C-t>", function()
 		require("neo-tree.command").execute {
 			source = "filesystem", -- ensure filesystem source
-			toggle = true,      -- open if closed, close if open
-			reveal = true,      -- focus current buffer's file on open
+			toggle = true,        -- open if closed, close if open
+			reveal = true,        -- focus current buffer's file on open
 			reveal_force_cwd = true, -- if the file is outside the current cwd, jump cwd without prompt
-			position = "left", -- "left", "right", "float", "current"
+			position = "left",    -- "left", "right", "float", "current"
 		}
 	end, { desc = "[Neo-tree] Toggle & Reveal" })
 
 	for _, mode in ipairs { "n", "i", "v", "t", "c" } do
 		map(mode, "<F1>", "<Nop>", { desc = "[General] Disable F1" })
 	end
-
-	map("n", "<leader><Esc>", function()
-		vim.cmd "qa!"
-	end, { desc = "[General] Force quit all" })
 
 	map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
 	map({ "n", "i", "v", "t" }, "<C-s>", function()
