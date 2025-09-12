@@ -27,6 +27,10 @@
 
 local M = {}
 
+local fn = vim.fn
+local api = vim.api
+local levels = vim.levels
+
 local C = require("myoptions.config")
 
 --- Safely (re)define a user command by removing any previous definition.
@@ -34,8 +38,8 @@ local C = require("myoptions.config")
 --- @param rhs  fun(opts:{fargs:string[], bang:boolean})
 --- @param opts table
 local function define_cmd(name, rhs, opts)
-	pcall(vim.api.nvim_del_user_command, name)
-	vim.api.nvim_create_user_command(name, rhs, opts or {})
+	pcall(api.nvim_del_user_command, name)
+	api.nvim_create_user_command(name, rhs, opts or {})
 end
 
 --- Resolve a dot-path on a table (read-only).
@@ -81,7 +85,7 @@ function M.register_highlight_commands(spec)
 	define_cmd(names.set, function(opts)
 		local args = opts.fargs
 		if #args == 0 then
-			vim.notify(("Usage: :%s {keypath} {value}"):format(names.set), vim.log.levels.INFO)
+			vim.notify(("Usage: :%s {keypath} {value}"):format(names.set), levels.INFO)
 			return
 		end
 		local key = args[1]
@@ -91,7 +95,7 @@ function M.register_highlight_commands(spec)
 
 		local ok, err = C.set("highlight", key, value, toggle)
 		if not ok then
-			vim.notify(names.set .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+			vim.notify(names.set .. ": " .. (err or "unknown error"), levels.ERROR)
 			return
 		end
 
@@ -100,22 +104,22 @@ function M.register_highlight_commands(spec)
 		end
 
 		local msg = toggle and ("toggled " .. key) or (key .. " = " .. vim.inspect(value))
-		vim.notify(("%s: %s"):format(names.set, msg), vim.log.levels.INFO)
+		vim.notify(("%s: %s"):format(names.set, msg), levels.INFO)
 	end, { bang = true, nargs = "+", complete = make_complete("highlight") })
 
 	-- :MyHlShow
 	define_cmd(names.show, function(opts)
 		local key = opts.fargs[1]
 		if not key then
-			vim.notify(vim.inspect(spec.show_table), vim.log.levels.INFO)
+			vim.notify(vim.inspect(spec.show_table), levels.INFO)
 			return
 		end
 		local node = get_by_path(spec.show_table, key)
 		if node == nil then
-			vim.notify(names.show .. (": unknown key '%s'"):format(key), vim.log.levels.WARN)
+			vim.notify(names.show .. (": unknown key '%s'"):format(key), levels.WARN)
 			return
 		end
-		vim.notify(("%s = %s"):format(key, vim.inspect(node)), vim.log.levels.INFO)
+		vim.notify(("%s = %s"):format(key, vim.inspect(node)), levels.INFO)
 	end, { nargs = "?" })
 
 	-- :MyHlList
@@ -124,7 +128,7 @@ function M.register_highlight_commands(spec)
 		for _, k in ipairs(C.keys("highlight")) do
 			lines[#lines + 1] = "  " .. k
 		end
-		vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+		vim.notify(table.concat(lines, "\n"), levels.INFO)
 	end, {})
 end
 
@@ -147,7 +151,7 @@ function M.register_options_commands(spec)
 	define_cmd(names.set, function(opts)
 		local args = opts.fargs
 		if #args == 0 then
-			vim.notify("Usage: :" .. names.set .. " {keypath} {value}", vim.log.levels.INFO)
+			vim.notify("Usage: :" .. names.set .. " {keypath} {value}", levels.INFO)
 			return
 		end
 		local key = args[1]
@@ -157,7 +161,7 @@ function M.register_options_commands(spec)
 
 		local ok, err = C.set("options", key, value, toggle)
 		if not ok then
-			vim.notify(names.set .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+			vim.notify(names.set .. ": " .. (err or "unknown error"), levels.ERROR)
 			return
 		end
 
@@ -166,22 +170,22 @@ function M.register_options_commands(spec)
 		end
 
 		local msg = toggle and ("toggled " .. key) or (key .. " = " .. vim.inspect(value))
-		vim.notify(names.set .. ": " .. msg, vim.log.levels.INFO)
+		vim.notify(names.set .. ": " .. msg, levels.INFO)
 	end, { bang = true, nargs = "+", complete = make_complete("options") })
 
 	-- :MyOptShow
 	define_cmd(names.show, function(opts)
 		local key = opts.fargs[1]
 		if not key then
-			vim.notify(vim.inspect(spec.show_table), vim.log.levels.INFO)
+			vim.notify(vim.inspect(spec.show_table), levels.INFO)
 			return
 		end
 		local node = get_by_path(spec.show_table, key)
 		if node == nil then
-			vim.notify(("%s: unknown key '%s'"):format(names.show, key), vim.log.levels.WARN)
+			vim.notify(("%s: unknown key '%s'"):format(names.show, key), levels.WARN)
 	return
 		end
-		vim.notify(("%s = %s"):format(key, vim.inspect(node)), vim.log.levels.INFO)
+		vim.notify(("%s = %s"):format(key, vim.inspect(node)), levels.INFO)
 	end, { nargs = "?" })
 
 	-- :MyOptList
@@ -190,7 +194,7 @@ function M.register_options_commands(spec)
 		for _, k in ipairs(C.keys("options")) do
 			lines[#lines + 1] = "  " .. k
 		end
-		vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+		vim.notify(table.concat(lines, "\n"), levels.INFO)
 	end, {})
 end
 
@@ -229,7 +233,7 @@ function M.register_highlight_debug_command(opts)
       local n = tonumber(hex, 16)
       if n then
         -- bewusst kompakt; Einzelzellen-Prüfung kann projektseitig ergänzt werden
-        return " " .. vim.fn.nr2char(n) .. " "
+        return " " .. fn.nr2char(n) .. " "
       end
     end
     return (vim.o.columns >= 100) and " ⟶ " or " › "
@@ -246,7 +250,7 @@ function M.register_highlight_debug_command(opts)
     end
   end
 
-  vim.api.nvim_create_user_command(name_debug, function()
+  api.nvim_create_user_command(name_debug, function()
     local hc   = C.cfg.highlight
     local bctx = hc.breadcrumbs_ctx or {}
 
@@ -279,18 +283,18 @@ function M.register_highlight_debug_command(opts)
     -- Zusätzlich: wie sähe die Winbar-Zeile aus?
     local rel = (function(path)
       if path == "" then return "[No Name]" end
-      local dir    = vim.fn.fnamemodify(path, ":h")
+      local dir    = fn.fnamemodify(path, ":h")
       local gitdir = vim.fs.find(".git", { upward = true, path = dir })[1]
       if gitdir then
-        local root = vim.fn.fnamemodify(gitdir, ":h")
-        local relp = vim.fn.fnamemodify(path, (":~:%s"):format(root))
-        if relp == path then return vim.fn.fnamemodify(path, ":t") end
+        local root = fn.fnamemodify(gitdir, ":h")
+        local relp = fn.fnamemodify(path, (":~:%s"):format(root))
+        if relp == path then return fn.fnamemodify(path, ":t") end
         relp = relp:gsub("^%./", ""):gsub("^/", "")
         return relp
       else
-        return vim.fn.fnamemodify(path, ":~:.")
+        return fn.fnamemodify(path, ":~:.")
       end
-    end)(vim.api.nvim_buf_get_name(0))
+    end)(api.nvim_buf_get_name(0))
 
     local sep = get_sep()
     local line = (type(chosen) == "string" and chosen ~= "" and chosen ~= "<n/a>")
@@ -299,7 +303,7 @@ function M.register_highlight_debug_command(opts)
     -- Ausgabe
     local lines = {
       "Breadcrumbs Debug",
-      ("file: %s"):format(vim.api.nvim_buf_get_name(0)),
+      ("file: %s"):format(api.nvim_buf_get_name(0)),
       ("separator: %s"):format(sep),
       ("providers_order: %s"):format(vim.inspect(bctx.providers_order or {})),
       "flags:",
@@ -329,7 +333,7 @@ function M.register_highlight_debug_command(opts)
       ("preview line: %s"):format(line),
     }
 
-    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+    vim.notify(table.concat(lines, "\n"), levels.INFO)
   end, { desc = "Debug breadcrumb context providers" })
 end
 return M

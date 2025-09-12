@@ -2,35 +2,36 @@
 --- Opinionated Neovim options grouped by topic.
 
 --require("nvchad.options") --- Loads NvChad defaults first, then applies custom overrides.
-
+local opt = vim.opt
+local wo = vim.wo
 -----------------------------------------------------------
 -- Appearance & UI
 -----------------------------------------------------------
 
 -- Enable truecolor support in compatible terminals.
-vim.opt.termguicolors = true
+opt.termguicolors = true
 
 -- Line numbers: absolute + relative for efficient motions.
-vim.opt.number = true
-vim.opt.relativenumber = true
+opt.number = true
+opt.relativenumber = true
 
 -- Always show the sign column to avoid layout shifts.
-vim.opt.signcolumn = "yes" -- "number" / "auto"
+opt.signcolumn = "yes" -- "number" / "auto"
 
-vim.wo.wrap = true               -- wrap long lines visually (no hard line breaks)
-vim.wo.linebreak = true          -- wrap at word boundaries as per 'breakat'
-vim.wo.breakindent = true        -- indent wrapped screen lines
-vim.wo.breakindentopt = "shift:2,sbr" -- add +2 spaces and use 'showbreak'
+wo.wrap = true               -- wrap long lines visually (no hard line breaks)
+wo.linebreak = true          -- wrap at word boundaries as per 'breakat'
+wo.breakindent = true        -- indent wrapped screen lines
+wo.breakindentopt = "shift:2,sbr" -- add +2 spaces and use 'showbreak'
 vim.o.showbreak = "⤷ "	            -- prefix shown on continuation screen lines
 
-vim.opt.laststatus = 3 -- ensures 'one' continuous statusline
+opt.laststatus = 3 -- ensures 'one' continuous statusline
 
 -----------------------------------------------------------
 -- Clipboard
 -----------------------------------------------------------
 
 -- Integrate with the system clipboard by default.
-vim.opt.clipboard = "unnamedplus"
+opt.clipboard = "unnamedplus"
 
 
 -----------------------------------------------------------
@@ -38,13 +39,13 @@ vim.opt.clipboard = "unnamedplus"
 -----------------------------------------------------------
 
 -- Basic and smart indentation helpers.
-vim.opt.autoindent = true
-vim.opt.smartindent = true
+opt.autoindent = true
+opt.smartindent = true
 
 -- Indentation width and tab behavior (project default).
-vim.opt.shiftwidth = 2
-vim.opt.tabstop = 2
-vim.opt.smarttab = true
+opt.shiftwidth = 2
+opt.tabstop = 2
+opt.smarttab = true
 
 
 -----------------------------------------------------------
@@ -52,8 +53,8 @@ vim.opt.smarttab = true
 -----------------------------------------------------------
 
 -- Case-insensitive search unless the pattern contains uppercase.
-vim.opt.ignorecase = true
-vim.opt.smartcase = true
+opt.ignorecase = true
+opt.smartcase = true
 
 
 -----------------------------------------------------------
@@ -61,10 +62,10 @@ vim.opt.smartcase = true
 -----------------------------------------------------------
 
 -- Use Treesitter's fold expression; keep folds open by default.
-vim.opt.foldmethod = "expr"
-vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-vim.opt.foldlevel = 99
-vim.opt.foldlevelstart = 99
+opt.foldmethod = "expr"
+opt.foldexpr = "nvim_treesitter#foldexpr()"
+opt.foldlevel = 99
+opt.foldlevelstart = 99
 
 
 -----------------------------------------------------------
@@ -72,10 +73,10 @@ vim.opt.foldlevelstart = 99
 -----------------------------------------------------------
 
 -- Make CursorHold-driven UIs react faster (diagnostics, git signs, etc.).
-vim.opt.updatetime = 200
+opt.updatetime = 200
 
 -- Make <Esc> feel instant; keep a small timeout for terminal keycodes.
-vim.opt.ttimeoutlen = 10
+opt.ttimeoutlen = 10
 
 
 -----------------------------------------------------------
@@ -83,7 +84,7 @@ vim.opt.ttimeoutlen = 10
 -----------------------------------------------------------
 
 -- Skip heavy/irrelevant directories during filename completion.
-vim.opt.wildignore:append({
+opt.wildignore:append({
 	"*/node_modules/*",
 	"*/.git/*",
 	"*/dist/*",
@@ -96,17 +97,17 @@ vim.opt.wildignore:append({
 -----------------------------------------------------------
 
 -- Do not create backup/writebackup files (use VCS instead).
-vim.opt.backup = false
-vim.opt.writebackup = false
+opt.backup = false
+opt.writebackup = false
 -- Example: dedicated backup directory:
--- vim.opt.backupdir = vim.fn.stdpath("data") .. "/backup//"
+-- opt.backupdir = vim.fn.stdpath("data") .. "/backup//"
 
 -- Disable swap files to reduce disk churn on large repos.
-vim.opt.swapfile = false
+opt.swapfile = false
 -- Example: dedicated swap directory:
--- vim.opt.directory = vim.fn.stdpath("data") .. "/swap//"
+-- opt.directory = vim.fn.stdpath("data") .. "/swap//"
 
 -- Enable persistent undo and store it under the cache path.
-vim.opt.undofile = true
-vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo"
+opt.undofile = true
+opt.undodir = vim.fn.stdpath("cache") .. "/undo"
 

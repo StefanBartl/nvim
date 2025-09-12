@@ -7,8 +7,11 @@
 
 local M = {}
 
+local fn = vim.fn
+local api = vim.api
+
 -- Namespace augroup for cache refresh
-local AUG_PATHCACHE = vim.api.nvim_create_augroup("myopt_PathCache", { clear = true })
+local AUG_PATHCACHE = api.nvim_create_augroup("myopt_PathCache", { clear = true })
 
 --- Compute the repo root for a given directory by searching for ".git" upwards.
 --- Returns: absolute root dir (string) or nil when no .git is found.
@@ -19,7 +22,7 @@ local function compute_repo_root(dir)
   local gitdir = vim.fs.find(".git", { upward = true, path = dir })[1]
   if not gitdir then return nil end
   -- gitdir may be ".../<root>/.git" (file or directory); root is its parent
-  return vim.fn.fnamemodify(gitdir, ":h")
+  return fn.fnamemodify(gitdir, ":h")
 end
 
 --- Compute a repo-relative or "~"-shortened path without touching buffer cache.
@@ -27,19 +30,19 @@ end
 ---@return string
 local function compute_repo_relative(path)
   if path == "" then return "[No Name]" end
-  local dir = vim.fn.fnamemodify(path, ":h")
+  local dir = fn.fnamemodify(path, ":h")
   local root = compute_repo_root(dir)
   if root then
     -- Build a relative path to the root (with home/relative fallback kept)
-    local rel = vim.fn.fnamemodify(path, (":~:%s"):format(root))
+    local rel = fn.fnamemodify(path, (":~:%s"):format(root))
     if rel == path then
       -- Path did not change after substitution (edge case: different device, UNC, etc.)
-      return vim.fn.fnamemodify(path, ":t")
+      return fn.fnamemodify(path, ":t")
     end
     rel = rel:gsub("^%./", ""):gsub("^/", "")
     return rel
   else
-    return vim.fn.fnamemodify(path, ":~:.")
+    return fn.fnamemodify(path, ":~:.")
   end
 end
 
@@ -49,8 +52,8 @@ end
 ---@return nil
 function M.refresh_buffer_cache(bufnr)
   bufnr = bufnr or 0
-  if not vim.api.nvim_buf_is_valid(bufnr) then return end
-  local path = vim.api.nvim_buf_get_name(bufnr)
+  if not api.nvim_buf_is_valid(bufnr) then return end
+  local path = api.nvim_buf_get_name(bufnr)
   if path == "" then
     vim.b[bufnr].myopt_repo_root     = nil
     vim.b[bufnr].myopt_repo_rel      = "[No Name]"
@@ -58,7 +61,7 @@ function M.refresh_buffer_cache(bufnr)
     vim.b[bufnr].myopt_repo_rel_cwd  = vim.loop.cwd()
     return
   end
-  local dir  = vim.fn.fnamemodify(path, ":h")
+  local dir  = fn.fnamemodify(path, ":h")
   local root = compute_repo_root(dir)
   vim.b[bufnr].myopt_repo_root     = root
   vim.b[bufnr].myopt_repo_rel      = compute_repo_relative(path)
@@ -89,15 +92,15 @@ end
 ---   * DirChanged: project root moves (e.g., :cd, :tcd)
 ---@return nil
 function M.ensure_autocmds()
-  vim.api.nvim_clear_autocmds({ group = AUG_PATHCACHE })
-  vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost" }, {
+  api.nvim_clear_autocmds({ group = AUG_PATHCACHE })
+  api.nvim_create_autocmd({ "BufEnter", "BufFilePost" }, {
     group = AUG_PATHCACHE,
     callback = function(args)
       M.refresh_buffer_cache(args.buf)
     end,
     desc = "Prime repo path cache per buffer",
   })
-  vim.api.nvim_create_autocmd("DirChanged", {
+  api.nvim_create_autocmd("DirChanged", {
     group = AUG_PATHCACHE,
     callback = function()
       -- CWD changed: refresh current buffer cache

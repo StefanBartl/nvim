@@ -6,35 +6,37 @@
 ---   * optional subtle matchparen blink (enable_matchparen, matchtime_tenths)
 ---   * user commands :MyOptSet / :MyOptShow / :MyOptList
 
+local opt = vim.opt
+local api = vim.api
 local C = require("myoptions.config")
 local ocfg = C.cfg.options
 local hcfg = C.cfg.highlight
 
-local AUG_OPTS = vim.api.nvim_create_augroup("myopt_Options", { clear = true })
+local AUG_OPTS = api.nvim_create_augroup("myopt_Options", { clear = true })
 
 ---@return nil
 local function apply_matchparen()
 	if ocfg.enable_matchparen then
-		vim.opt.showmatch = true
-		vim.opt.matchtime = tonumber(ocfg.matchtime_tenths or 2) or 2
+		opt.showmatch = true
+		opt.matchtime = tonumber(ocfg.matchtime_tenths or 2) or 2
 	else
 		-- Disable subtly: showmatch off, reset matchtime to default (2 tenths)
-		vim.opt.showmatch = false
-		vim.opt.matchtime = 2
+		opt.showmatch = false
+		opt.matchtime = 2
 	end
 end
 
 ---@return nil
 local function apply_cursorline_defaults()
-	vim.opt.cursorline    = hcfg.enable_line
-	vim.opt.cursorlineopt = "both"
-	vim.opt.cursorcolumn  = hcfg.enable_column
+	opt.cursorline    = hcfg.enable_line
+	opt.cursorlineopt = "both"
+	opt.cursorcolumn  = hcfg.enable_column
 end
 
 ---@return nil
 local function apply_guicursor()
 	if not hcfg.map_cursor_to_hl then
-		vim.opt.guicursor = "" -- default
+		opt.guicursor = "" -- default
 		return
 	end
 	if hcfg.enable_insert_submode_colors then
@@ -45,7 +47,7 @@ local function apply_guicursor()
 			"o:hor50-CursorNormal",
 			"v-ve:block-CursorVisual",
 		}, ",")
-		local ok = pcall(vim.api.nvim_set_option_value, "guicursor", preferred, { scope = "global" })
+		local ok = pcall(api.nvim_set_option_value, "guicursor", preferred, { scope = "global" })
 		if ok then return end
 	end
 	local fallback = table.concat({
@@ -54,7 +56,7 @@ local function apply_guicursor()
 		"r-cr:hor20-Cursor",
 		"o:hor50-Cursor",
 	}, ",")
-	local ok2 = pcall(vim.api.nvim_set_option_value, "guicursor", fallback, { scope = "global" })
+	local ok2 = pcall(api.nvim_set_option_value, "guicursor", fallback, { scope = "global" })
 	if ok2 then return end
 	vim.cmd("set guicursor&")
 end
@@ -81,8 +83,8 @@ local function enable()
 	apply_guicursor()
 
 	-- Re-apply on colorscheme too (to keep guicursor sane if scheme touches it)
-	vim.api.nvim_clear_autocmds({ group = AUG_OPTS })
-	vim.api.nvim_create_autocmd("ColorScheme", {
+	api.nvim_clear_autocmds({ group = AUG_OPTS })
+	api.nvim_create_autocmd("ColorScheme", {
 		group = AUG_OPTS,
 		callback = function()
 			apply_cursorline_defaults(); apply_guicursor(); apply_matchparen()
