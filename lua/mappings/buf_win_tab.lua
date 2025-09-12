@@ -1,9 +1,13 @@
----@module 'mappings.buf_win_tab_mappings'
+---@module 'mappings.buf_win_tab'
 
 local M = {}
 
 function M.setup()
 	local map = vim.g.__map_helper
+
+	-- ---------------------------------------------------------------------------
+	--  Buffers
+	-- ---------------------------------------------------------------------------
 
 	map("n", "<leader>bn", "<cmd>enew<CR>", { desc = "[Buffers] New" })
 	map("n", "<tab>", function() require("nvchad.tabufline").next() end, { desc = "[Buffers] Next" })
@@ -19,12 +23,26 @@ function M.setup()
 	-- Windows
 	-- ---------------------------------------------------------------------------
 
-	map({ "n", "v" }, "<C-q>", "<Cmd>close<CR>", { desc = "[Windows] Close window" })
-	map("i", "<C-q>", "<C-o><Cmd>close<CR>", { desc = "[Windows] Close window (insert)" })
-	map("t", "<C-q>", "<C-\\><C-n><Cmd>close<CR>", { desc = "[Windows] Close window (terminal)" })
 	map("n", "<leader><Esc>", function()
 		vim.cmd "qa!"
 	end, { desc = "[Wimdows] Force quit all" })
+
+	-- Window closing
+	map({ "n", "v" }, "<C-q>", "<Cmd>close<CR>", { desc = "[Windows] Close window" })
+	map("i", "<C-q>", "<C-o><Cmd>close<CR>", { desc = "[Windows] Close window (insert)" })
+	map("t", "<C-q>", "<C-\\><C-n><Cmd>close<CR>", { desc = "[Windows] Close window (terminal)" })
+
+	-- Window movement
+	map("n", "<C-h>", "<C-w>h", { desc = "[Window] Jump left" })
+	map("n", "<C-l>", "<C-w>l", { desc = "[Window] Jump right" })
+	map("n", "<C-j>", "<C-w>j", { desc = "[Window] Jump down" })
+	map("n", "<C-k>", "<C-w>k", { desc = "[Window] Jump up" })
+
+	-- Resize window
+	map({ "n", "v", "i", "t" }, "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
+	map({ "n", "v", "i", "t" }, "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
+	map({ "n", "v", "i", "t" }, "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
+	map({ "n", "v", "i", "t" }, "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
 
 	-- ---------------------------------------------------------------------------
 	-- Tabs
@@ -35,16 +53,6 @@ function M.setup()
 	-- map("n", "<leader>tc", "<cmd>tabnew<CR>", { desc = "[Tabs] New tab" })
 	-- map("n", "<leader>tx", "<cmd>tabclose<CR>", { desc = "[Tabs] Close tab" })
 
-
-	map("n", "<leader>del", ":lua confirm_delete()<CR>", { desc = "[General] Delete selected file (confirm)" })
-	map("n", "<leader>d!!", ":call DeleteFile()<CR>", { desc = "[General] Delete file (no confirm) & close buffer" })
-	map("n", "<leader>dd", function()
-		if vim.fn.confirm("Delete all lines in buffer?", "&Yes\n&No", 2) == 1 then
-			vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
-		end
-	end, { desc = "[Buffers] Delete all lines (confirm)" })
-
- map("n", "<leader>zm", function () require("utils.window_zoom").zoom_toggle() end, { desc = "[Window] Toggle window zoom" })
 end
 
 return M

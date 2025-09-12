@@ -8,8 +8,6 @@ function M.setup()
   -- General
   map("n", "<Esc>", "<cmd>noh<CR>", { desc = "[General] Clear highlights" })
   map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
-  map("n", "<leader>tln", "<cmd>set nu!<CR>", { desc = "[General] Toggle number" })
-  map("n", "<leader>trn", "<cmd>set rnu!<CR>", { desc = "[General] Toggle relativenumber" })
   map("n", "<leader>ch", "<cmd>NvCheatsheet<CR>", { desc = "[General] NvCheatsheet" })
 
   -- Format via Conform (fallback handled in LSP attach)

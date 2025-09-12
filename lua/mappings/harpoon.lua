@@ -35,7 +35,7 @@ function M.setup()
     end
   end)
 
-  map("n", "<leader>h", function()
+  map("n", "<M-h>", function()
     local list = harpoon:list()
     list:add()
   end, { desc = "[HARPOON] Add current file (append)" })

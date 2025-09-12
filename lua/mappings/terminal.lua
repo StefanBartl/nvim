@@ -13,13 +13,12 @@ function M.setup()
   map("t", "<C-j>", "<C-\\><C-w>j", { desc = "[Terminal Down" })
   map("t", "<C-k>", "<C-\\><C-w>k", { desc = "[Terminal] Up" })
 
-  -- Window resize
-  map("t", "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
-  map("t", "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
-  map("t", "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
-  map("t", "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
+	map({ "n", "t" }, "<A-h>",
+		function()
+			local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "float", id = "floatTerm" } end
+		end, { desc = "[Term] Toggle floating" })
 
-  --- Toggle NvChad UI terminal in a vertical split with ~1/3 screen width.
+	--- Toggle NvChad UI terminal in a vertical split with ~1/3 screen width.
   --- Works from normal & terminal mode; robustly enforces width after opening.
   ---@type fun():nil
   local function toggle_vterm_one_third()
@@ -42,17 +41,13 @@ function M.setup()
       pcall(vim.api.nvim_win_set_width, win, cols)
     end)
   end
-  vim.keymap.set({ "n", "t" }, "<A-v>", toggle_vterm_one_third,
-    { desc = "[Term] Toggle vertical (1/3 width)" })
 
-  map({ "n", "t" }, "<A-h>",
-    function()
-      local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "sp", id = "htoggleTerm" } end
-    end, { desc = "[Term] Toggle horizontal" })
-  map({ "n", "t" }, "<A-i>",
-    function()
-      local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "float", id = "floatTerm" } end
-    end, { desc = "[Term] Toggle floating" })
+	-- map({ "n", "t" }, "<A-v>", toggle_vterm_one_third,
+	--    { desc = "[Term] Toggle vertical (1/3 width)" })
+  -- map({ "n", "t" }, "<A-h>",
+  --   function()
+  --     local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "sp", id = "htoggleTerm" } end
+  --   end, { desc = "[Term] Toggle horizontal" })
 end
 
 return M

@@ -1,5 +1,4 @@
 ---@module 'mappings.general'
--- General purpose keymaps (F1 disable, save, esc helpers).
 
 local M = {}
 
@@ -48,18 +47,6 @@ function M.setup()
 	map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
 	map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
 	map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
-
-	-- Window movement
-	map("n", "<C-h>", "<C-w>h", { desc = "[Terminal] Left" })
-	map("n", "<C-l>", "<C-w>l", { desc = "[Terminal] Right" })
-	map("n", "<C-j>", "<C-w>j", { desc = "[Terminal Down" })
-	map("n", "<C-k>", "<C-w>k", { desc = "[Terminal] Up" })
-
-	-- Resize window
-	map("n", "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
-	map("n", "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
-	map("n", "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
-	map("n", "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
 end
 
 return M
