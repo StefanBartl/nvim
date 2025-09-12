@@ -1,4 +1,6 @@
 ---@module 'lsp.languages.typescript'
+
+-- AUDIT:
 ---@class LangTsQoL
 
 -- Local structural typings for LuaLS (avoid dependency on external doc names)

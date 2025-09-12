@@ -6,6 +6,7 @@ local ACTIVE = {
   "lua_ls",
   "ts_ls",
   "gopls",
+	"marksman",
   --"clangd",
   --"csharp",
   --"zig",
