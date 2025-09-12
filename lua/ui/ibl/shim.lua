@@ -1,4 +1,4 @@
----@module 'ui.ibl_shim'
+---@module 'ui.ibl.shim'
 --- Create back-compat highlight groups before ibl runs on ColorScheme.
 
 local aug = vim.api.nvim_create_augroup("ibl_compat_shims", { clear = true })
