@@ -34,7 +34,7 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 require "system.env"
 require "options"
 require "custom"
-require('myoptions').enable({ highlights = true, options = true })
+require('myoptions').enable({ highlights = true, options = false })
 
 -- require "ui.ibl_shim" -- fzf colorschenme picker depends on this to work correctly
 -- require "ui.ibl"      -- fzf colorschenme picker depends on this to work correctly
