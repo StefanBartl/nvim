@@ -1,5 +1,5 @@
 ---@module 'custom'
----@brief Registry for 'custom' module
+-- Initialize module for 'custom'
 
 require "custom.last_file.init"
 require "custom.ctrl_cycle"

@@ -31,47 +31,15 @@ pcall(dofile, vim.g.base46_cache .. "syntax")
 pcall(dofile, vim.g.base46_cache .. "defaults")
 pcall(dofile, vim.g.base46_cache .. "statusline")
 
-require "system.env"
-require "options"
+require "autocmds"
 require "custom"
-require('myoptions').enable({ highlights = true, options = false })
-
--- require "ui.ibl_shim" -- fzf colorschenme picker depends on this to work correctly
--- require "ui.ibl"      -- fzf colorschenme picker depends on this to work correctly
-local require_dir = require "lib.require_dir"
-
-require_dir "autocmds"
-
-require_dir "usrcmds"
-require("usrcmds.md_tablewrap").setup({
-  inner_pad        = 1,
-  outer_left       = 3,
-  outer_right      = 3,
-  auto_width       = true,
-	width_mode    = "minflex",
-  max_col_width    = nil,
-  min_col_width    = 6,
-  wrap_all_default = false,
-  on_save_enabled  = false,
-})
-
-require_dir "lsp"
-
-require_dir "utils"
-
-require_dir "mynotes"
+require("lsp").setup()
+require "mynotes"
+require "options"
+require('myoptions').setup({ highlights = true, options = false })
+require "system.env"
+require "usrcmds"
 
 vim.schedule(function()
 	require("mappings").setup()
 end)
-
-require("config.image_preview.pdf.buffer").setup({
-  open_mode = "vsplit",
-  focus = false,          -- keep focus in Neo-tree/editor
-  density = 144,          -- 72..600
-  notify = true,
-  clear_on_leave = true,
-  bg_hex = "#ffffff",
-  cleanup_png = false,    -- set to true to delete PNG on close
-})
-

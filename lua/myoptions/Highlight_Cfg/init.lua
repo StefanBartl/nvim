@@ -144,7 +144,6 @@ end
 local function set_active_window_line_tint(mode)
   -- Do nothing for terminals/UI buffers
   if current_win_is_skippable() then return end
-
   -- Normalize mode to first char and cache per window to avoid ping-pong writes
   local win = vim.api.nvim_get_current_win()
   local m = (mode or vim.fn.mode(1)):sub(1, 1)

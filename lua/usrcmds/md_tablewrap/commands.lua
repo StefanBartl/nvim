@@ -71,8 +71,8 @@ local function setup(user_opts)
 
 	-- Core reflow command: scope depends on wrap_all_default
 	api.nvim_create_user_command("MDTableWrap", function(opts)
+    if not CFG then return end
 		local mode = opts.bang and "force" or "detect"
-
 		---@diagnostic disable-next-line
 		if CFG.wrap_all_default then
 			local ok2, changed, e = core.reformat_all(mode, api.nvim_get_current_buf(), CFG)

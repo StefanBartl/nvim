@@ -14,7 +14,7 @@ local safe   = require("utils.safe_call")
 local pkey   = require("config.harpoon.utils.fs_project_key")
 local sani   = require("config.harpoon.utils.sanitize")
 local label  = require("config.harpoon.utils.path_label")
-local ui_fzf = require("config.harpoon.ui.menu_fzf")
+local _ = require("config.harpoon.ui.menu_fzf")
 local dbg    = require("config.harpoon.debug")
 
 ---@param harpoon HarpoonApi

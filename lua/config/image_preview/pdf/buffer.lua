@@ -282,8 +282,8 @@ local function init_scratch_buffer(win)
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].filetype = "pdfpreview"
   vim.bo[bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "[PDF preview]" }) ---@type string[]
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "[PDF preview]" })
+	vim.bo[bufnr].modifiable = false
   return bufnr
 end
 

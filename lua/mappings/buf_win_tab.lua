@@ -44,6 +44,8 @@ function M.setup()
 	map({ "n", "v", "i", "t" }, "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
 	map({ "n", "v", "i", "t" }, "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
 
+  map("n", "<leader>zm", function() require("utils.window_zoom").zoom_toggle() end, { desc = "[Window] Zoom toggle."})
+
 	-- ---------------------------------------------------------------------------
 	-- Tabs
 	-- ---------------------------------------------------------------------------

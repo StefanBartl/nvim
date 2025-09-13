@@ -1,5 +1,6 @@
----@module 'lsp.init'
----@briefentry LSP entrypoint for a clean, defensive, and modular setup
+---@module 'lsp'
+-- Initialize module for 'lsp'
+
 local M = {}
 
 ---@return boolean ok
