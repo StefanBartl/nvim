@@ -28,9 +28,9 @@ function M.setup()
 	end, { desc = "[Wimdows] Force quit all" })
 
 	-- Window closing
-	map({ "n", "v" }, "<C-q>", "<Cmd>close<CR>", { desc = "[Windows] Close window" })
-	map("i", "<C-q>", "<C-o><Cmd>close<CR>", { desc = "[Windows] Close window (insert)" })
-	map("t", "<C-q>", "<C-\\><C-n><Cmd>close<CR>", { desc = "[Windows] Close window (terminal)" })
+	map({ "n", "v" }, "<leader>q", "<Cmd>close!<CR>", { desc = "[Windows] Close window" })
+	map("i", "<leader>q", "<C-o><Cmd>close<CR>", { desc = "[Windows] Close window (insert)" })
+	map("t", "<leader>q", "<C-\\><C-n><Cmd>close<CR>", { desc = "[Windows] Close window (terminal)" })
 
 	-- Window movement
 	map("n", "<C-h>", "<C-w>h", { desc = "[Window] Jump left" })
