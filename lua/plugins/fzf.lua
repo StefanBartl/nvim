@@ -30,11 +30,11 @@ return {
 
       return {
         keymap = {
-        builtin = {
-          true,
-          ["<PageDown>"] = "preview-page-down",
-          ["<PageUp>"]   = "preview-page-up",
-        },
+          builtin = {
+            true,
+            ["<PageDown>"] = "preview-page-down",
+            ["<PageUp>"] = "preview-page-up",
+          },
           fzf = {
             ["ctrl-n"] = "next-history",
             ["ctrl-p"] = "prev-history",
@@ -45,28 +45,18 @@ return {
         },
         --  ("query -- *.md !**/node_modules/**")
         grep = {
-          -- erzwingt rg auch für `grep` (nicht nur `live_grep`)
-          cmd = "rg --vimgrep",
-
-          -- GNU grep Fallback: .git ausschließen
-          grep_opts = "--binary-files=without-match --line-number --recursive --color=auto --perl-regexp --exclude-dir=.git -e",
-
-          -- ripgrep: .git explizit ausschließen (robust gegen RG-Config/--hidden)
-          -- POSIX-Shell: single quotes, Windows/Pwsh: double quotes (siehe Hinweis unten)
-          rg_opts = "--column --line-number --no-heading --color=always --smart-case --max-columns=4096 --glob '!**/.git/**' -e",
-
-          -- Globs sind aktiv, Flag für Globs bleibt wie gehabt
+          -- make flags explicit to avoid fzf-lua auto-adding them
+          cmd = "rg --vimgrep --column --line-number --no-heading --color=always --smart-case --max-columns=4096",
+          -- keep -e in rg_opts so queries werden korrekt angefügt
+          rg_opts = "-e",
           rg_glob = true,
-          glob_flag = "--iglob", -- oder "--glob" wenn Groß/Kleinschreibung exakt sein soll
-
-          hidden = false, -- keine versteckten Dateien durchsuchen
-          follow = false,
-          no_ignore = false, -- .gitignore respektieren
-          -- …
+          glob_flag = "--iglob",
           actions = {
-            ["ctrl-g"] = { actions.grep_lgrep }, -- toggle grep <-> live_grep
-            ["ctrl-r"] = { actions.toggle_ignore }, -- .gitignore respektieren/ignorieren
+            ["ctrl-g"] = { actions.grep_lgrep },
+            ["ctrl-r"] = { actions.toggle_ignore },
           },
+          -- optional: also hide info lines entirely
+          silent = true,
         },
         -- Producer-side defaults for file pickers (fd). Prompt still filters client-side.
         files = {
