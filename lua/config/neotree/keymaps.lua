@@ -469,33 +469,9 @@ function M.window()
 
 		["-"]             = {
 			function(state)
-				local current_root = state.path
-				if not current_root or current_root == "" then
-					local node = state.tree:get_node()
-					local path = node and (node.path or node:get_id()) or ""
-					if path == "" then
-						vim.notify("no path under cursor", vim.log.levels.WARN)
-						return
-					end
-					current_root = (vim.fn.isdirectory(path) == 1) and path or vim.fn.fnamemodify(path, ":h")
-				end
-				local parent = vim.fn.fnamemodify(current_root, ":h")
-				if parent == current_root or parent == "" then
-					vim.notify("already at top-level directory", vim.log.levels.WARN)
-					return
-				end
-				local ok, err = pcall(vim.api.nvim_set_current_dir, parent)
-				if not ok then
-					vim.notify(("cd failed: %s"):format(tostring(err)), vim.log.levels.ERROR)
-					return
-				end
-				local ok_cmd, cmd = pcall(require, "neo-tree.command")
-				if ok_cmd and cmd then
-					cmd.execute { source = "filesystem", dir = parent, reveal = true }
-				end
-				vim.notify(("cwd → %s"):format(parent), vim.log.levels.INFO)
+				require("config.neotree.updir").up_one_level(state)
 			end,
-			desc = "Up one level: set cwd to parent and focus Neo-tree there",
+			desc = "Up one level (in-place) and adjust CWD",
 		},
 
 		["grep"]          = {
