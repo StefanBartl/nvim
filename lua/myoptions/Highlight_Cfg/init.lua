@@ -30,7 +30,6 @@ local last_mode_by_win = {} ---@type table<integer,string>
 
 local buffer_is_ui_like = require ("myoptions.skip").std_skip
 
-
 --- Convert a hex codepoint string (e.g. "F0056") to a UTF-8 char using Neovim API.
 --- Returns "" on invalid input.
 ---@param hex string|nil
@@ -207,7 +206,7 @@ end
 
 ---@return boolean
 local function should_enable_column()
-  if not cfg.enable_column then
+  if not buffer_is_ui_like() or not cfg.enable_column then
     return false
   end
   local name = vim.api.nvim_buf_get_name(0)
@@ -222,14 +221,100 @@ local function should_enable_column()
   return kb <= (cfg.min_colored_file_kb or 4096)
 end
 
+
+---@alias HlPair {from:string, to:string}
+
+--- Trim ASCII whitespace (space, tab, CR, LF)
+---@param s string
+---@return string
+local function _trim(s)
+  return (s or ""):gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+--- Parse a winhighlight CSV into pairs, ignoring invalid items.
+---@param wh string|nil
+---@return HlPair[]
+local function parse_winhighlight(wh)
+  local res ---@type HlPair[]
+  res = {}
+  for item in tostring(wh or ""):gmatch("[^,]+") do
+    local t = _trim(item)
+    -- Only accept strictly word/underscore tokens on both sides: FROM:TO
+    local a, b = t:match("^([%w_]+):([%w_]+)$")
+    if a and b then
+      res[#res + 1] = { from = a, to = b }
+    end
+    -- Anything not matching is silently dropped to avoid E5248.
+  end
+  return res
+end
+
+--- Serialize pairs back to a valid winhighlight CSV.
+---@param pairs HlPair[]
+---@return string
+local function serialize_winhighlight(pairs)
+  local out ---@type string[]
+  out = {}
+  for _, p in ipairs(pairs) do
+    -- Re-validate defensively
+    if p.from:match("^[%w_]+$") and p.to:match("^[%w_]+$") then
+      out[#out + 1] = p.from .. ":" .. p.to
+    end
+  end
+  return table.concat(out, ",")
+end
+
+--- Replace or remove a single mapping key in winhighlight.
+--- If `to` is nil => remove mapping with `from`.
+--- If `to` is non-nil => set/replace `from:to`.
+---@param wh string|nil
+---@param from string
+---@param to string|nil
+---@return string
+local function set_winhighlight_pair(wh, from, to)
+  local pairs = parse_winhighlight(wh)
+  local out ---@type HlPair[]
+  out = {}
+  for _, p in ipairs(pairs) do
+    if p.from ~= from then
+      out[#out + 1] = p
+    end
+  end
+  if to ~= nil then
+    out[#out + 1] = { from = from, to = to }
+  end
+  return serialize_winhighlight(out)
+end
+
 ---@return nil
 local function activate_window_hl()
   local m = (vim.fn.mode(1) or "n"):sub(1, 1)
-  if should_enable_column() then
-    vim.wo.cursorcolumn = true
-  else
+
+  if buffer_is_ui_like(0) then
+    -- 1) Disable the feature itself
     vim.wo.cursorcolumn = false
+    -- 2) Neutralize mapping safely (no stray commas/spaces)
+    vim.wo.winhighlight = set_winhighlight_pair(vim.wo.winhighlight, "CursorColumn", "Normal")
+    -- 3) Keep your existing line tint logic
+    set_active_window_line_tint(m)
+    return
   end
+
+  vim.wo.cursorcolumn = should_enable_column()
+
+  -- Keep/replace the mapping in normal buffers as needed.
+  -- If one wants to drop it entirely when disabled:
+  --   when off: remove the pair; when on: set it
+  if vim.wo.cursorcolumn then
+    vim.wo.winhighlight = set_winhighlight_pair(vim.wo.winhighlight, "CursorColumn", "CursorColumn")
+    -- If you want a custom HL group for the column, replace "CursorColumn" on the right side accordingly.
+  else
+    -- Either neutralize to Normal or remove entirely; both are safe.
+    -- Removing keeps winhighlight minimal:
+    -- vim.wo.winhighlight = set_winhighlight_pair(vim.wo.winhighlight, "CursorColumn", nil)
+    vim.wo.winhighlight = set_winhighlight_pair(vim.wo.winhighlight, "CursorColumn", "Normal")
+  end
+
   set_active_window_line_tint(m)
 end
 
@@ -588,10 +673,11 @@ local function flash_changed_region(group, ms)
   if not timer then
     return
   end
-  ---@cast timer uv.uv_timer_t
-  timer:start(ms, 0, function()
+---@diagnostic disable
+	timer:start(ms, 0, function()
     timer:stop()
     timer:close()
+		---@diagnostic enable
     vim.schedule(function()
       if vim.api.nvim_buf_is_loaded(bufnr) then
         vim.api.nvim_buf_clear_namespace(bufnr, NS_FLASH, 0, -1)
