@@ -5,8 +5,8 @@ vim.g.mapleader = " "
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
 
 if not vim.uv.fs_stat(lazypath) then
-	local repo = "https://github.com/folke/lazy.nvim.git"
-	vim.fn.system { "giat", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath }
+  local repo = "https://github.com/folke/lazy.nvim.git"
+  vim.fn.system { "giat", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath }
 end
 
 vim.opt.rtp:prepend(lazypath)
@@ -15,14 +15,14 @@ local lazy_config = require "config.lazy"
 
 -- load plugins
 require("lazy").setup({
-	{
-		"NvChad/NvChad",
-		lazy = false,
-		branch = "v2.5",
-		import = "nvchad.plugins",
-	},
+  {
+    "NvChad/NvChad",
+    lazy = false,
+    branch = "v2.5",
+    import = "nvchad.plugins",
+  },
 
-	{ import = "plugins" },
+  { import = "plugins" },
 }, lazy_config)
 
 -- Apply NvChad Base46 theme caches immediately at startup.
@@ -36,10 +36,10 @@ require "custom"
 require("lsp").setup()
 require "mynotes"
 require "options"
-require('myoptions').setup({ highlights = true, options = false })
+require("myoptions").setup { highlights = true, options = false }
 require "system.env"
 require "usrcmds"
 
 vim.schedule(function()
-	require("mappings").setup()
+  require("mappings").setup()
 end)

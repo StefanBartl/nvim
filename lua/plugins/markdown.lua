@@ -10,7 +10,7 @@ return {
     ft = { "markdown" },
     cmd = { "RenderMarkdown" },
     opts = {
-      enabled = true,
+      enabled = false,
       theme = "dark",
     },
   },
