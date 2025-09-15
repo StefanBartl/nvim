@@ -1,33 +1,23 @@
 ---@module 'mappings.dbg_messages'
---- Ensure bottom-of-buffer for :messages and Noice views, including the very first open.
---- This module exposes a single public setup() function and keeps all helpers private.
---- It provides configurable retry/delay timings and optional keymap registration.
---- Configuration and dependencies (e.g. keymap setter) can be injected for testability.
----
---- Design goals:
----   - Strong guards for buffer/window handles in async callbacks
----   - No global state; autocmd group is created inside setup()
----   - Configurable delays/retries instead of magic numbers
----   - Fully annotated API for LuaLS/EmmyLua users
+--- Ensure bottom-of-buffer for :messages and Noice views without disturbing editor windows.
+--- Avoids races by always addressing concrete window ids (never win=0 in async callbacks).
 
----@version 1.1.0
-
----@alias Win integer           # Neovim window id
----@alias Buf integer           # Neovim buffer id
+---@alias Win integer
+---@alias Buf integer
 
 ---@class DbgMessagesKeymaps
----@field enable boolean        # Register default keymaps or not
----@field map fun(mode:string,lhs:string,rhs:fun(),opts:table)  # Injection point; defaults to vim.keymap.set
+---@field enable boolean
+---@field map fun(mode:string,lhs:string,rhs:fun(),opts:table)
 
 ---@class DbgMessagesAutocmds
----@field enable boolean        # Create FileType/BufWinEnter autocmds
----@field group_name string     # Name of the autocmd group
+---@field enable boolean
+---@field group_name string
 
 ---@class DbgMessagesTimings
----@field delay_messages_ms integer   # Initial nudge for :messages window
----@field delay_noice_ms integer      # Initial nudge for Noice windows
----@field retry_delay_ms integer      # Delay between ensure_bottom retries
----@field attempts integer            # Max number of retries
+---@field delay_messages_ms integer
+---@field delay_noice_ms integer
+---@field retry_delay_ms integer
+---@field attempts integer
 
 ---@class DbgMessagesSetup
 ---@field keymaps DbgMessagesKeymaps|nil
@@ -36,42 +26,40 @@
 
 local M = {}
 
--- ============================================================================
--- Private helpers
--- ============================================================================
-
--- Forward declarations keep private helpers local and readable
+-- Forward decls
 ---@private
 ---@param win Win
 ---@return boolean
 ---@diagnostic disable-next-line
-local function at_bottom(win) return false end
+local function at_bottom(win)
+  return false
+end
 
 ---@private
 ---@param win Win
 ---@param row integer
 ---@return boolean
 ---@diagnostic disable-next-line
-local function safe_win_set_cursor(win, row) return false end
+local function safe_win_set_cursor(win, row)
+  return false
+end
 
 ---@private
 ---@param buf Buf
 ---@return boolean
 ---@diagnostic disable-next-line
-local function is_target_view(buf) return false end
+local function is_target_view(buf)
+  return false
+end
 
 ---@private
----@param win Win|0|nil
+---@param win Win
 ---@param attempts integer
 ---@param retry_delay integer
----@return nil
 ---@diagnostic disable-next-line
 local function ensure_bottom(win, attempts, retry_delay) end
 
 -- Check if window cursor already sits at the last line
----@private
----@param win Win
----@return boolean
 function at_bottom(win)
   if not (win and vim.api.nvim_win_is_valid(win)) then
     return true
@@ -85,11 +73,7 @@ function at_bottom(win)
   return row >= last
 end
 
--- Set cursor to a target row safely; protects against invalid handles
----@private
----@param win Win
----@param row integer
----@return boolean
+-- Set cursor to target row in a specific window
 function safe_win_set_cursor(win, row)
   if not (win and vim.api.nvim_win_is_valid(win)) then
     return false
@@ -98,39 +82,39 @@ function safe_win_set_cursor(win, row)
   if not ok_buf or not (buf and vim.api.nvim_buf_is_valid(buf)) then
     return false
   end
-  return pcall(vim.api.nvim_win_set_cursor, win, { row, 0 })
+  return pcall(vim.api.nvim_win_set_cursor, win, { math.max(1, row), 0 })
 end
 
--- Identify :messages or Noice buffers by filetype/name; hardened with pcall
----@private
----@param buf Buf
----@return boolean
+-- Identify messages/noice buffers strictly by filetype (avoid filename heuristics)
 function is_target_view(buf)
   if not (buf and vim.api.nvim_buf_is_valid(buf)) then
     return false
   end
-  local ok_ft, ft = pcall(function() return vim.bo[buf].filetype end)
-  if ok_ft and (ft == "messages" or ft == "noice") then
+  local ok_ft, ft = pcall(function()
+    return vim.bo[buf].filetype
+  end)
+  if not ok_ft then
+    return false
+  end
+  if ft == "messages" then
     return true
   end
-  local name = (vim.api.nvim_buf_get_name(buf) or ""):lower()
-  return name:find("messages", 1, true) ~= nil or name:find("noice", 1, true) ~= nil
+  if ft == "noice" then
+    local ok_bt, bt = pcall(function()
+      return vim.bo[buf].buftype
+    end)
+    return ok_bt and (bt == "nofile" or bt == "")
+  end
+  return false
 end
 
--- Move cursor to bottom with a few retries to tolerate late content arrival
----@private
----@param win Win|0|nil  # 0 = current window
----@param attempts integer
----@param retry_delay integer
----@return nil
+-- Move cursor to bottom with retries for late content
 function ensure_bottom(win, attempts, retry_delay)
-  win = win or 0
-  attempts = attempts or 1
-  retry_delay = retry_delay or 60
-
-  if attempts <= 0 or not vim.api.nvim_win_is_valid(win) then
+  if not (win and vim.api.nvim_win_is_valid(win)) then
     return
   end
+  attempts = attempts or 1
+  retry_delay = retry_delay or 60
 
   local ok_buf, buf = pcall(vim.api.nvim_win_get_buf, win)
   if not ok_buf or not (buf and vim.api.nvim_buf_is_valid(buf)) then
@@ -140,24 +124,20 @@ function ensure_bottom(win, attempts, retry_delay)
   local last = math.max(1, vim.api.nvim_buf_line_count(buf))
   safe_win_set_cursor(win, last)
 
-  if not at_bottom(win) then
+  if attempts > 1 and not at_bottom(win) then
     vim.defer_fn(function()
-      ensure_bottom(win, attempts - 1, retry_delay)
+      if win and vim.api.nvim_win_is_valid(win) then
+        ensure_bottom(win, attempts - 1, retry_delay)
+      end
     end, retry_delay)
   end
 end
 
--- ============================================================================
--- Public API
--- ============================================================================
-
---- Configure module and (optionally) register keymaps and autocmds.
+--- Configure module and register keymaps/autocmds
 ---@param cfg DbgMessagesSetup|nil
----@return nil
 function M.setup(cfg)
   cfg = cfg or {}
 
-  -- Timings (defaults mirror the working values from earlier iterations)
   local timings = vim.tbl_extend("force", {
     delay_messages_ms = 30,
     delay_noice_ms = 50,
@@ -165,43 +145,48 @@ function M.setup(cfg)
     attempts = 3,
   }, cfg.timings or {}) ---@as DbgMessagesTimings
 
-  -- Keymap injection/fallback
   local km = vim.tbl_extend("force", {
     enable = true,
     map = vim.keymap and vim.keymap.set or function() end,
   }, cfg.keymaps or {}) ---@as DbgMessagesKeymaps
 
-  -- Autocmd control
   local ac = vim.tbl_extend("force", {
     enable = true,
     group_name = "AutoBottomMessagesNoice",
   }, cfg.autocmds or {}) ---@as DbgMessagesAutocmds
 
-  -- Register keymaps (optional)
   if km.enable then
     km.map("n", "<lt>m", function()
-      vim.cmd("messages")
+      vim.cmd "messages"
+      local win = vim.api.nvim_get_current_win() -- capture new window
       vim.defer_fn(function()
-        ensure_bottom(0, timings.attempts, timings.retry_delay_ms)
+        if vim.api.nvim_win_is_valid(win) then
+          ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
+        end
       end, timings.delay_messages_ms)
     end, { desc = "[General] Open :messages at bottom", nowait = true, silent = true })
 
     km.map("n", "<lt>n", function()
-      vim.cmd("Noice all")
+      vim.cmd "Noice all"
+      local win = vim.api.nvim_get_current_win()
       vim.defer_fn(function()
-        ensure_bottom(0, timings.attempts, timings.retry_delay_ms)
+        if vim.api.nvim_win_is_valid(win) then
+          ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
+        end
       end, timings.delay_noice_ms)
     end, { desc = "[Noice] All (auto-bottom)", silent = true })
 
     km.map("n", "<lt>e", function()
-      vim.cmd("Noice errors")
+      vim.cmd "Noice errors"
+      local win = vim.api.nvim_get_current_win()
       vim.defer_fn(function()
-        ensure_bottom(0, timings.attempts, timings.retry_delay_ms)
+        if vim.api.nvim_win_is_valid(win) then
+          ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
+        end
       end, timings.delay_noice_ms)
     end, { desc = "[Noice] Errors (auto-bottom)", silent = true })
   end
 
-  -- Create autocmds (optional)
   if ac.enable then
     local AUG = vim.api.nvim_create_augroup(ac.group_name, { clear = true })
 
@@ -223,14 +208,20 @@ function M.setup(cfg)
       group = AUG,
       desc = "Fallback auto-bottom for :messages/Noice on BufWinEnter",
       callback = function(ev)
-        if is_target_view(ev.buf) then
-          vim.schedule(function()
-            ensure_bottom(0, timings.attempts, timings.retry_delay_ms)
-          end)
+        if not is_target_view(ev.buf) then
+          return
         end
+        ---@diagnostic disable-next-line
+        local win = ev.win or vim.api.nvim_get_current_win()
+        vim.schedule(function()
+          if vim.api.nvim_win_is_valid(win) then
+            ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
+          end
+        end)
       end,
     })
   end
 end
+
 
 return M
