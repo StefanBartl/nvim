@@ -50,10 +50,10 @@ function M.setup()
 	-- Tabs
 	-- ---------------------------------------------------------------------------
 
-	-- map("n", "<leader>tn", "<cmd>tabnext<CR>", { desc = "[Tabs] Next tab" })
-	-- map("n", "<leader>tp", "<cmd>tabprevious<CR>", { desc = "[Tabs] Previous tab" })
-	-- map("n", "<leader>tc", "<cmd>tabnew<CR>", { desc = "[Tabs] New tab" })
-	-- map("n", "<leader>tx", "<cmd>tabclose<CR>", { desc = "[Tabs] Close tab" })
+	map("n", "<leader>tn", "<cmd>tabnext<CR>", { desc = "[Tabs] Next tab" })
+	map("n", "<leader>tp", "<cmd>tabprevious<CR>", { desc = "[Tabs] Previous tab" })
+	map("n", "<leader>tc", "<cmd>tabnew<CR>", { desc = "[Tabs] New tab" })
+	map("n", "<leader>tx", "<cmd>tabclose<CR>", { desc = "[Tabs] Close tab" })
 
 end
 
