@@ -3,50 +3,22 @@
 local M = {}
 
 function M.setup()
-	local map = vim.g.__map_helper
+  local map = vim.g.__map_helper
+  map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
+  map({ "n", "i", "v", "t" }, "<C-s>", function()
+    if vim.fn.mode() ~= "n" then
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+    end
+    vim.cmd "silent! w!"
+  end, { desc = "[General] Save file silently" })
 
-	-- Open :messages and jump to the bottom using a scheduled normal-command
-	vim.keymap.set("n", "<lt>m", function()
-		vim.cmd("messages")
-		vim.schedule(function()
-			vim.cmd("normal! G")
-		end)
-	end, {
-		desc = "[General] Open :messages at bottom (scheduled)",
-		nowait = true,
-		silent = true,
-	})
+  map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
+  map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
 
-	-- Toggle Neotree & focus current buffer's file when opening
-	map("n", "<C-t>", function()
-		require("neo-tree.command").execute {
-			source = "filesystem", -- ensure filesystem source
-			toggle = true,        -- open if closed, close if open
-			reveal = true,        -- focus current buffer's file on open
-			reveal_force_cwd = true, -- if the file is outside the current cwd, jump cwd without prompt
-			position = "left",    -- "left", "right", "float", "current"
-		}
-	end, { desc = "[Neo-tree] Toggle & Reveal" })
-
-	for _, mode in ipairs { "n", "i", "v", "t", "c" } do
-		map(mode, "<F1>", "<Nop>", { desc = "[General] Disable F1" })
-	end
-
-	map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
-	map({ "n", "i", "v", "t" }, "<C-s>", function()
-		if vim.fn.mode() ~= "n" then
-			vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-		end
-		vim.cmd "silent! w!"
-	end, { desc = "[General] Save file silently" })
-
-	map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" })
-	map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
-
-	map("n", "+", "<C-a>", { desc = "[Number] Increment" })
-	map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
-	map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
-	map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
+  map("n", "+", "<C-a>", { desc = "[Number] Increment" })
+  map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
+  map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
+  map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
 end
 
 return M

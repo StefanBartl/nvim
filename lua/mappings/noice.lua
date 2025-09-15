@@ -19,9 +19,6 @@ function M.setup()
 	map({ "n", "i" }, "<A-x>", function()
 		if ok1 then noice.cmd("dismiss") end
 	end, { desc = "[Noice] Dismiss UI" })
-
-	map("n", "<lt>n", "<cmd>Noice all<cr>", { silent = true, desc = "[Noice] All" })
-	map("n", "<lt>e", "<cmd>Noice errors<cr>", { silent = true, desc = "[Noice] Errors" })
 end
 
-return M
+	return M

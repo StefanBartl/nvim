@@ -10,6 +10,8 @@ local C = require("myoptions.config")
 local ocfg = C.cfg.options
 local hcfg = C.cfg.highlight
 
+local buffer_is_ui_like = require ("myoptions.skip").std_skip
+
 local AUG_OPTS = vim.api.nvim_create_augroup("myopt_Options", { clear = true })
 
 ---@return nil
