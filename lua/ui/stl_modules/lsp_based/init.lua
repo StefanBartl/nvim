@@ -1,21 +1,16 @@
 ---@module 'ui.stl_modules.lsp_based'
 --- LSP-first breadcrumbs for NvChad statusline (async + cached), with Treesitter fallback.
---- Safe for statusline rendering: never uses synchronous LSP calls in the render path.
---- Public:
+
 ---   local mod = require('ui.stl_modules.lsp_based')
 ---   local band = mod.mode_band_group()
 ---   return mod.hl_open(band) .. mod.render_breadcrumbs_inherit_lspfirst(band)
 
+--- ROADMAP:
+--- Table einbinden
+
 local M = {}
 
----@class LspCfg
----@field debounce_ms? integer
----@field update_events? string[]
----@field center_width_frac? number
----@field center_width_min? number
----@field path_max_frac? number
----@field path_max_chars? number|nil
-	---@field path_min_room? number
+---@type LspCfg
 M.cfg = {
 	debounce_ms = 250,
 	update_events = { "BufEnter", "CursorHold", "CursorHoldI", "InsertLeave", "TextChanged", "LspAttach" },
@@ -23,9 +18,13 @@ M.cfg = {
   center_width_min  = 20,    -- Mindestbreite für den Mittelteil
   path_max_frac     = 0.60,  -- maximaler Anteil des Mittelteil-Ziels, der für den Pfad reserviert wird
   path_max_chars    = 45,   -- optional harte Obergrenze (Zeichen) NUR für den Pfad; nil = deaktiviert
-  path_min_room     = 8,     -- unterhalb dieses Platzes kein komponentenweises Kürzen, sondern Fallback
+  path_min_room     = 30,     -- unterhalb dieses Platzes kein komponentenweises Kürzen, sondern Fallback
+  path_mode = "absolute",        -- "auto"|"repo"|"cwd"|"absolute"|"home"
+  path_home_tilde = true,    -- show "~" for $HOME in absolute/home modes
 }
 ---@diagnostic enable
+
+local Paths = require("ui.stl_modules.lsp_based.paths")
 
 --------------------------------------------------------------------------------
 -- Statusline helpers
@@ -83,6 +82,10 @@ function M.mode_band_group()
   local m = vim.api.nvim_get_mode().mode
   local name = (utils.modes[m] and utils.modes[m][2]) or "Normal"
   return "St_" .. name .. "mode"
+end
+
+local function _display_path_for_buf(bufnr)
+  return Paths.display_path({ path_mode = M.cfg.path_mode, path_home_tilde = M.cfg.path_home_tilde }, bufnr)
 end
 
 --------------------------------------------------------------------------------
@@ -903,8 +906,7 @@ local SEP_HEX = "f0058"
 function M.render_breadcrumbs_lspfirst()
   local utils = require "nvchad.stl.utils"
   local bufnr = utils.stbufnr()
-  local path  = vim.api.nvim_buf_get_name(bufnr) or ""
-  local rel   = M.repo_relative(path)
+  local rel   = _display_path_for_buf(bufnr)
   local ctx   = M.symbol_context_smart()
   local icon  = M.file_icon_segment()
   local sep   = (function() return (" " .. (cp(SEP_HEX) ~= "" and vim.fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›")) .. " ") end)()
@@ -917,8 +919,7 @@ end
 function M.render_breadcrumbs_inherit_lspfirst(band_group)
   local utils = require "nvchad.stl.utils"
   local bufnr = utils.stbufnr()
-  local path  = vim.api.nvim_buf_get_name(bufnr) or ""
-  local rel   = M.repo_relative(path)
+  local rel   = _display_path_for_buf(bufnr)
   local ctx   = M.symbol_context_smart()
   local icon  = M.file_icon_segment_inherit(band_group)
   local sep   = (function() return (" " .. (cp(SEP_HEX) ~= "" and vim.fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›")) .. " ") end)()
