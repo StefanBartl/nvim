@@ -4,6 +4,7 @@
 --require("nvchad.options") --- Loads NvChad defaults first, then applies custom overrides.
 local opt = vim.opt
 local wo = vim.wo
+
 -----------------------------------------------------------
 -- Appearance & UI
 -----------------------------------------------------------
@@ -66,6 +67,13 @@ opt.foldmethod = "expr"
 opt.foldexpr = "nvim_treesitter#foldexpr()"
 opt.foldlevel = 99
 opt.foldlevelstart = 99
+
+-- Folding via custom foldexpr (H1/H2–H6, Frontmatter-Achtung)
+vim.opt_local.foldmethod = "expr"
+vim.opt_local.foldexpr = "v:lua.require'utils.markdown'.foldexpr(v:lnum)"
+vim.opt_local.foldenable = true
+vim.opt_local.foldlevel = 99
+vim.opt_local.foldlevelstart = 99
 
 
 -----------------------------------------------------------
