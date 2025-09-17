@@ -23,6 +23,7 @@ return {
 				INFO    = { icon = " ", color = "info" },
 				DEBUG   = { icon = " ", color = "hint" },
 				TODO    = { icon = " ", color = "info" },
+				ROADMAP    = { icon = " ", color = "info" },
 				AUDIT= {
 					icon = " ",
 					color = "audit",
@@ -53,4 +54,9 @@ return {
     lazy = true,
     version = "*",
   },
+
+	{
+		"uga-rosa/translate.nvim",
+		lazy = false,
+	},
 }

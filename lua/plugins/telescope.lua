@@ -1,4 +1,4 @@
----@module 'plugins.fuzzy_finder'
+---@module 'plugins.telescope'
 --- Fuzzy finding tools based on Telescope, fzf-lua, and optional tabbed UI (search.nvim)
 
 ---@return boolean  -- Ensure a strict boolean in all code paths
@@ -7,6 +7,7 @@ local function has_sqlite_cli()
 	-- nicht zwingend das CLI. Das CLI ist hier nur eine pragmatische Heuristik.
 	return (vim.fn.executable("sqlite3") == 1)
 end
+
 
 ---@param p string
 ---@return boolean
@@ -220,6 +221,7 @@ return {
 				},
 			}
 		end,
+
 	},
 
 	{
@@ -263,6 +265,7 @@ return {
 						display_stat = { date = true, size = true, mode = false },
 						use_fd = true, -- perfomance durch fd
 						git_status = true,
+						prompt_path = true,          -- zeigt den aktuellen 'path' im Prompt an
 					},
 				},
 			})

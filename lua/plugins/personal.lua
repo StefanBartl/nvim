@@ -27,8 +27,8 @@ return {
 		config = function()
 			require("cmdlog").setup {
 				-- defer backend require until actually used
-				picker = "telescope", -- or "fzf-lua"; choose default, load lazily in code
-				-- picker = "fzf-lua",
+				-- picker = "telescope", -- or "fzf-lua"; choose default, load lazily in code
+				picker = "fzf-lua",
 			}
 		end,
 	},

@@ -96,9 +96,8 @@ return {
 		},
 
 		window = {
-			width = 30,
+			width = 25,
 			mappings = KM.window(),
-			position = "left",
 		},
 
 		commands = KM.commands(),

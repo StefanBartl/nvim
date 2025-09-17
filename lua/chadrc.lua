@@ -9,7 +9,9 @@ M.ui = {
     order = { "mode", "git", "%=", "breadcrumbs", "%=", "diagnostics", "lsp", "cursor", "cwd" },
     modules = {
       breadcrumbs = function()
-        local mod = require("ui.stl_modules.lsp_based")
+-- es zeigt bnicht immer den realtiven pfad and
+				-- und auch nur den filename anstatt den pfad
+				local mod = require("ui.stl_modules.lsp_based")
         local band = mod.mode_band_group()
         -- Band öffnen, Inherit-Variante rendern, NICHT schließen:
         return mod.hl_open(band) .. mod.render_breadcrumbs_inherit_lspfirst(band)

@@ -166,9 +166,6 @@ function M.run(opts)
   elseif debug then
     vim.notify("MyMessages: clipboard copy ok", vim.log.levels.DEBUG)
   end
-
-  -- 4) re-display
-  vim.cmd("messages")
 end
 
 vim.api.nvim_create_user_command("MyMessages", function() M.run({ debug = false }) end,
