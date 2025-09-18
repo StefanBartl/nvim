@@ -16,6 +16,29 @@ local sani   = require("config.harpoon.utils.sanitize")
 local label  = require("config.harpoon.utils.path_label")
 local _ = require("config.harpoon.ui.menu_fzf")
 local dbg    = require("config.harpoon.debug")
+local uv = vim.uv or vim.loop
+
+local function make_debounced_saver(harpoon, ms)
+  local t = uv.new_timer()
+  local pending = false
+  ms = ms or 200
+  return function()
+    pending = true
+    t:stop()
+    t:start(ms, 0, function()
+      if not pending then return end
+      pending = false
+      vim.schedule(function()
+        local list = harpoon:list()
+        if type(harpoon.save) == "function" then
+          pcall(harpoon.save, harpoon)
+        elseif list and type(list.save) == "function" then
+          pcall(list.save, list)
+        end
+      end)
+    end)
+  end
+end
 
 ---@param harpoon HarpoonApi
 ---@return nil
