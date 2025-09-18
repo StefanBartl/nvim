@@ -1,3 +1,4 @@
+-- lsp/languages/markdown.lua
 ---@module 'lsp.languages.markdown'
 ---@class LangMdQoL
 
@@ -8,22 +9,26 @@ function M.enable()
   local api = vim.api
   local grp = api.nvim_create_augroup("LangMarkdownQoL", { clear = true })
 
-  -- Always use UTF-8 (no BOM) for Markdown/MDX buffers + gentle text defaults.
   api.nvim_create_autocmd("FileType", {
     group = grp,
-    pattern = { "markdown", "md" },
+    pattern = { "markdown", "mdx" },
     callback = function(ev)
       if not (ev and ev.buf) then return end
 
-      -- Encoding: avoid mojibake when formatters return UTF-8.
-      vim.bo[ev.buf].fileencoding = "utf-8"
-      vim.bo[ev.buf].bomb = false
+      local bo = vim.bo[ev.buf]
+      local bt = bo.buftype or ""
 
-      -- Soft text defaults (no hard reflow on save).
-      vim.bo[ev.buf].textwidth = 0
-      vim.bo[ev.buf].formatoptions = "jnql"
+      local is_normal_file = (bt == "")
+      local can_recode = is_normal_file and bo.modifiable
 
-      -- <leader>fm -> format current buffer (prefer Conform, fallback to LSP).
+      if can_recode then
+        bo.fileencoding = "utf-8"
+        bo.bomb = false
+      end
+
+      bo.textwidth = 0
+      bo.formatoptions = "jnql"
+
       pcall(vim.keymap.set, "n", "<leader>fm", function()
         local ok, conform = pcall(require, "conform")
         if ok and type(conform.format) == "function" then
@@ -33,10 +38,9 @@ function M.enable()
         end
       end, { buffer = ev.buf, silent = true, desc = "Format markdown buffer" })
     end,
-    desc = "Markdown QoL: UTF-8, soft-wrap, and safe formatting keymap",
+    desc = "Markdown QoL: UTF-8 (nur bei modifizierbar), Soft-Defaults, Format-Keymap",
   })
 
-  -- :MdFormat -> prefer mdformat for .md, prettier for .mdx (same logic as your current setup).
   pcall(api.nvim_create_user_command, "MdFormat", function()
     local ft = vim.bo.filetype
     local ok, conform = pcall(require, "conform")
@@ -48,7 +52,6 @@ function M.enable()
     conform.format({ formatters = fmt, timeout_ms = 2000, lsp_fallback = false })
   end, { desc = "Format Markdown (prefer mdformat for .md)" })
 
-  -- :MdFormatPrettier -> force prettier
   pcall(api.nvim_create_user_command, "MdFormatPrettier", function()
     local ok, conform = pcall(require, "conform")
     if ok and type(conform.format) == "function" then
