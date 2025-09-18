@@ -111,96 +111,49 @@ function M.setup()
   end, { desc = "Show formatter chain & availability for current buffer" })
 
   -- AUDIT: 'lspconfig'-builtin comands
-	pcall(create_user_command, "LspInfo", ":checkhealth vim.lsp", { desc = "Alias to `:checkhealth vim.lsp`" })
-  pcall(create_user_command, "LspLog", function()
-    vim.cmd(string.format("tabnew %s", vim.lsp.log.get_filename()))
-  end, {
-    desc = "Opens the Nvim LSP client log.",
-  })
-  pcall(nvim_create_user_command, "LspStart", function(info)
-    local server_name = string.len(info.args) > 0 and info.args or nil
-    if server_name then
-      local config = require("lspconfig.configs")[server_name]
-      if config then
-        config.launch()
-        return
+
+  local function _active_servers()
+    local ok, reg = pcall(require, "lsp.core.registry")
+    if not ok or type(reg) ~= "table" then
+      return {}
+    end
+    return { "lua_ls", "ts_ls", "gopls", "marksman" }
+  end
+
+  local function _buf_clients(bufnr)
+    return vim.lsp.get_clients({ bufnr = bufnr or 0 })
+  end
+
+  pcall(vim.api.nvim_create_user_command, "LspStartHere", function()
+    for _, name in ipairs(_active_servers()) do
+      pcall(vim.lsp.enable, name) -- (neu) native API
+    end
+  end, { desc = "Start/attach configured LSP servers for current buffer (vim.lsp)" })
+
+  pcall(vim.api.nvim_create_user_command, "LspStopHere", function()
+    local ids = {}
+    for _, c in ipairs(_buf_clients(0)) do
+      ids[#ids + 1] = c.id
+    end
+    if #ids > 0 then
+      vim.lsp.stop_client(ids, true)
+    end
+  end, { desc = "Stop LSP clients attached to current buffer" })
+
+  pcall(vim.api.nvim_create_user_command, "LspRestartHere", function()
+    local ids = {}
+    for _, c in ipairs(_buf_clients(0)) do
+      ids[#ids + 1] = c.id
+    end
+    if #ids > 0 then
+      vim.lsp.stop_client(ids, true)
+    end
+    vim.defer_fn(function()
+      for _, name in ipairs(_active_servers()) do
+        pcall(vim.lsp.enable, name)
       end
-    end
-
-    local matching_configs = util.get_config_by_ft(vim.bo.filetype)
-    for _, config in ipairs(matching_configs) do
-      config.launch()
-    end
-  end, {
-    desc = "Manually launches a language server",
-    nargs = "?",
-    complete = lsp_complete_configured_servers,
-  })
-  pcall(nvim_create_user_command, "LspRestart", function(info)
-    local detach_clients = {}
-    for _, client in ipairs(get_clients_from_cmd_args(info.args)) do
-      -- Can remove diagnostic disabling when changing to client:stop() in nvim 0.11+
-      --- @diagnostic disable: missing-parameter
-      client.stop()
-      if vim.tbl_count(client.attached_buffers) > 0 then
-        detach_clients[client.name] = { client, lsp.get_buffers_by_client_id(client.id) }
-      end
-    end
-    local timer = assert(vim.uv.new_timer())
-    timer:start(
-      500,
-      100,
-      vim.schedule_wrap(function()
-        for client_name, tuple in pairs(detach_clients) do
-          if require("lspconfig.configs")[client_name] then
-            local client, attached_buffers = unpack(tuple)
-            if client.is_stopped() then
-              for _, buf in pairs(attached_buffers) do
-                require("lspconfig.configs")[client_name].launch(buf)
-              end
-              detach_clients[client_name] = nil
-            end
-          end
-        end
-
-        if next(detach_clients) == nil and not timer:is_closing() then
-          timer:close()
-        end
-      end)
-    )
-  end, {
-    desc = "Manually restart the given language client(s)",
-    nargs = "?",
-    complete = lsp_get_active_clients,
-  })
-  pcall(nvim_create_user_command, "LspStop", function(info)
-    ---@type string
-    local args = info.args
-    local force = false
-    args = args:gsub("%+%+force", function()
-      force = true
-      return ""
-    end)
-
-    local clients = {}
-
-    -- default to stopping all servers on current buffer
-    if #args == 0 then
-      clients = vim.lsp.get_clients({ bufnr = vim.api.nvim_get_current_buf() })
-    else
-      clients = get_clients_from_cmd_args(args)
-    end
-
-    for _, client in ipairs(clients) do
-      -- Can remove diagnostic disabling when changing to client:stop(force) in nvim 0.11+
-      --- @diagnostic disable: param-type-mismatch
-      client.stop(force)
-    end
-  end, {
-    desc = "Manually stops the given language client(s)",
-    nargs = "?",
-    complete = lsp_get_active_clients,
-  })
+    end, 50)
+  end, { desc = "Restart LSP for current buffer (vim.lsp)" })
 
   local shared = {
     capabilities = caps,
