@@ -330,11 +330,4 @@ function M.debug_library()
   return build_library(strict_root())
 end
 
-local res = M.debug_library()
-local i = 1
-do
-	print(res[i] .. "\n")
-	i =  i + 1
-end
-
 return M
