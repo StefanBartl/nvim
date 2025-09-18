@@ -1,6 +1,9 @@
 ---@module 'lsp.core.capabilities'
+--- Build client capabilities from multiple completion stacks (cmp, blink, NvChad).
+
 local M = {}
 
+---@return table
 function M.get()
   local caps = vim.lsp.protocol.make_client_capabilities()
 
@@ -24,6 +27,16 @@ function M.get()
   end
 
   return caps
+end
+
+---@nodiscard
+---@return nil
+function M.apply_globally()
+  -- Merge these caps into every named config as a base ("*")
+  local caps = M.get()
+  if type(vim.lsp.config) == "table" then
+    vim.lsp.config("*", { capabilities = caps })
+  end
 end
 
 return M

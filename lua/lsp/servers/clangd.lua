@@ -1,21 +1,27 @@
 ---@module 'lsp.servers.clangd'
----@class ClangdServer
+--- clangd via native LSP config/enable.
 
+---@class ClangdServer
 local M = {}
 
----@param shared table
+---@param shared {capabilities?:table,on_attach?:fun(client,bufnr),on_init?:fun(client,init_result):boolean}|nil
+---@param opts { enable?: boolean }|nil
 ---@return nil
-function M.setup(shared)
-  if type(shared) ~= "table" then return end
-  local ok, lspconfig = pcall(require, "lspconfig")
-  if not ok then return end
+function M.setup(shared, opts)
+  shared = shared or {}
+  opts = opts or {}
 
-  lspconfig.clangd.setup({
-    capabilities = shared.capabilities,
-    on_attach = shared.on_attach,
-    on_init = shared.on_init,
-    cmd = { "clangd" },
-  })
+  if type(vim.lsp.config) == "table" then
+    vim.lsp.config("clangd", {
+      cmd = { "clangd" },
+      filetypes = { "c", "cpp", "objc", "objcpp" },
+      root_markers = { "compile_commands.json", ".git" },
+      capabilities = shared.capabilities,
+      on_attach = shared.on_attach,
+      on_init = shared.on_init,
+    })
+    if opts.enable ~= false then pcall(vim.lsp.enable, "clangd") end
+  end
 end
 
 return M

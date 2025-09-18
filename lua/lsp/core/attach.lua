@@ -1,4 +1,5 @@
 ---@module 'lsp.core.attach'
+--- Build on_init/on_attach handlers; no dependency on lspconfig.
 
 local M = {}
 
@@ -12,6 +13,8 @@ local function has_valid_buf(bufnr)
   return true
 end
 
+---@param opts { use_workspace_diagnostics?: boolean, use_lazydev?: boolean }|nil
+---@return { on_attach: fun(client,bufnr), on_init: fun(client,init_result):boolean }
 function M.build(opts)
   opts = opts or {}
 

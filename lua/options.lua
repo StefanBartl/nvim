@@ -5,14 +5,6 @@
 local opt = vim.opt
 local wo = vim.wo
 
--- AUDIT:
-vim.diagnostic.config({
-  update_in_insert = false,          -- do not reflow diagnostics while typing
-  severity_sort = true,              -- sort by severity (improves sign/virttext order)
-  virtual_text = { spacing = 2, prefix = "●" }, -- keep inline hints compact
-  float = { border = "rounded", source = "if_many" }, -- nicer hover for diagnostics
-})
-
 -----------------------------------------------------------
 -- Appearance & UI
 -----------------------------------------------------------

@@ -4,13 +4,6 @@
 ---@type LazyPluginSpec[]
 return {
 
-  -- Core LSP configuration
-  {
-    "neovim/nvim-lspconfig",
-    event = { "BufReadPre", "BufNewFile" },
-    config = function() require("lsp").setup() end,
-  },
-
   -- LazyDev: Completion and docs for Lua `require` modules
   {
     "folke/lazydev.nvim",

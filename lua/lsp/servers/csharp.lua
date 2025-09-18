@@ -1,6 +1,7 @@
 ---@module 'lsp.servers.csharp'
----@class CsharpServer
+--- Omnisharp via native LSP config/enable (Neovim ≥ 0.11).
 
+---@class CsharpServer
 local M = {}
 
 ---@return string|nil
@@ -19,12 +20,12 @@ local function find_omnisharp()
   return nil
 end
 
----@param shared table
+---@param shared {capabilities?:table,on_attach?:fun(client,bufnr),on_init?:fun(client,init_result):boolean}|nil
+---@param opts { enable?: boolean }|nil
 ---@return nil
-function M.setup(shared)
-  if type(shared) ~= "table" then return end
-  local ok, lspconfig = pcall(require, "lspconfig")
-  if not ok then return end
+function M.setup(shared, opts)
+  shared = shared or {}
+  opts = opts or {}
 
   local cmd = find_omnisharp()
   if not cmd then
@@ -32,14 +33,20 @@ function M.setup(shared)
     return
   end
 
-  lspconfig.omnisharp.setup({
-    capabilities = shared.capabilities,
-    on_attach = shared.on_attach,
-    on_init = shared.on_init,
-    cmd = { cmd },
-    enable_roslyn_analyzers = true,
-    organize_imports_on_format = true,
-  })
+  -- Define config
+  if type(vim.lsp.config) == "table" then
+    vim.lsp.config("omnisharp", {
+      cmd = { cmd },
+      filetypes = { "cs" },
+      capabilities = shared.capabilities,
+      on_attach = shared.on_attach,
+      on_init = shared.on_init,
+      enable_roslyn_analyzers = true,
+      organize_imports_on_format = true,
+      root_markers = { ".git", ".sln", ".csproj" },
+    })
+    if opts.enable ~= false then pcall(vim.lsp.enable, "omnisharp") end
+  end
 end
 
 return M
