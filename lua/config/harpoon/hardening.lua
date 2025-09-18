@@ -12,15 +12,6 @@
 
 local M = {}
 
----@class HarpoonHardeningOpts
----@field debounce_ms integer|nil        -- default: 200
----@field autocmd_events string[]|nil    -- default: { "BufLeave", "FocusLost" }
-
----@class HarpoonHardeningState
----@field timer uv.uv_timer_t|nil        -- reusable libuv timer handle
----@field debounce_ms integer            -- current debounce interval (ms)
----@field pending boolean                -- whether there is pending work
-
 ---@type uv uv
 local uv = vim.uv or vim.loop
 local api = vim.api

@@ -5,6 +5,8 @@
 local M = {}
 
 local label = require("config.harpoon.utils.path_label")
+local bo = vim.bo
+local nvim_buf_set_lines = vim.api.nvim_buf_set_lines
 local nvim_create_user_command = vim.api.nvim_create_user_command
 
 ---@return string[]
@@ -37,9 +39,9 @@ function M.setup_cmd()
     local out = collect_lines()
     vim.cmd("new")
     nvim_buf_set_lines(0, 0, -1, false, out)
-    vim.bo.buftype = "nofile"
-    vim.bo.bufhidden = "wipe"
-    vim.bo.swapfile = false
+    bo.buftype = "nofile"
+    bo.bufhidden = "wipe"
+    bo.swapfile = false
     vim.bo.modifiable = false
   end, {})
 

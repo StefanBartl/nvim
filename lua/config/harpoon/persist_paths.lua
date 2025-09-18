@@ -10,12 +10,9 @@
 
 local M = {}
 
+local Norm = require("config.harpoon.utils.normkey")
 local uv = vim.uv or vim.loop
-
--- Optional, but useful for robust absolute fallback
 local ok_path, Path = pcall(require, "plenary.path")
-
--- Sanitize/Dedup helpers from the hardening utils
 local sani = require("config.harpoon.utils.sanitize")
 
 --------------------------------------------------------------------------------
@@ -26,7 +23,9 @@ local sani = require("config.harpoon.utils.sanitize")
 ---@param p string
 ---@return string
 local function canon(p)
-  if type(p) ~= "string" or p == "" then return "" end
+  if type(p) ~= "string" or p == "" then
+    return ""
+  end
   if uv and uv.fs_realpath then
     local rp = uv.fs_realpath(p)
     if type(rp) == "string" and rp ~= "" then
@@ -38,18 +37,6 @@ local function canon(p)
   end
   -- Fallback: normalize relative → absolute-ish
   return vim.fs.normalize(p)
-end
-
----Normalize a path to a stable comparison key (used for dedup/have-map).
----@param p string
----@return string
-local function normkey(p)
-  local abs = canon(p)
-  abs = abs:gsub("\\", "/")
-  if abs:match("^%a:/") then
-    abs = abs:sub(1,1):upper() .. abs:sub(2)
-  end
-  return abs
 end
 
 ---Check if path is an existing regular file.
@@ -65,14 +52,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@type string[][]
-M.target_specs = {
-  -- Examples mirroring your previous init:
-  { "$REPOS_DIR", "Notes", "MyNotes", "Notes.md" },
-  { "$REPOS_DIR", "Notes", "Neovim", "Neovim.md" },
-  { "$REPOS_DIR", "Notes", "MyNotes", "Wezterm.md" },
-  -- Additionally ensure your spickzettel.md from $XDG_CONFIG_HOME/nvim:
-  { "$NVIM_HOME", "lua", "mynotes", "spickzettel.md" },
-}
+M.target_specs = {}
 
 ---@param sym string
 ---@return string
@@ -92,11 +72,11 @@ end
 local function join_spec(segs)
   local parts = {} ---@type string[]
   -- Pre-allocate to avoid reallocations for known length
-  parts[#parts+1] = expand_var(segs[1] or "")
+  parts[#parts + 1] = expand_var(segs[1] or "")
   for i = 2, #segs do
-    parts[#parts+1] = segs[i]
+    parts[#parts + 1] = segs[i]
   end
-	local unpack = table.unpack or unpack
+  local unpack = table.unpack or unpack
   return vim.fs.joinpath(unpack(parts))
 end
 
@@ -120,9 +100,13 @@ end
 local function add_with_context(list, path)
   local item = { value = canon(path), context = { row = 1, col = 0 } }
   if type(list.add) == "function" then
-    pcall(function() list:add(item) end)
+    pcall(function()
+      list:add(item)
+    end)
   elseif type(list.append) == "function" then
-    pcall(function() list:append(item) end)
+    pcall(function()
+      list:append(item)
+    end)
   else
     -- Last resort (pure table)
     list.items = list.items or {}
@@ -130,26 +114,29 @@ local function add_with_context(list, path)
   end
 end
 
----Perform the actual injection (idempotent within a session).
+---Perform the actual injection
 ---@return boolean changed
 function M.inject_now()
   local ok_hp, harpoon = pcall(require, "harpoon")
-  if not ok_hp then return false end
+  if not ok_hp then
+    return false
+  end
 
   local list = harpoon:list()
-  if type(list) ~= "table" then return false end
+  if type(list) ~= "table" then
+    return false
+  end
 
   -- Ensure list shape and remove legacy duplicates
   sani.sanitize_items_in_place(list)
 
-  -- Build 'have' set
   local have = {} ---@type table<string, boolean>
   if type(list.items) == "table" then
     for i = 1, #list.items do
       local it = list.items[i]
       local v = (type(it) == "table") and it.value or it
       if type(v) == "string" then
-        have[normkey(v)] = true
+        have[Norm.normkey(v)] = true
       end
     end
   end
@@ -159,7 +146,7 @@ function M.inject_now()
   for i = 1, #targets do
     local p = targets[i]
     if p ~= "" and is_file(p) then
-      local k = normkey(p)
+      local k = Norm.normkey(p, { realpath = true })
       if not have[k] then
         add_with_context(list, p)
         have[k] = true
@@ -172,7 +159,9 @@ function M.inject_now()
   local removed = (sani.dedup_in_place_safe(list) or 0) > 0
 
   if added or removed then
+    ---@diagnostic disable-next-line
     if type(harpoon.save) == "function" then
+      ---@diagnostic disable-next-line
       pcall(harpoon.save, harpoon)
     elseif type(list.save) == "function" then
       pcall(list.save, list)
@@ -194,24 +183,20 @@ function M.setup(opts)
     M.target_specs = opts.target_specs
   end
 
-  -- Run once on startup, deferred a tick to avoid early load races.
   local grp = vim.api.nvim_create_augroup("HarpoonPersistPaths", { clear = true })
   vim.api.nvim_create_autocmd("VimEnter", {
     group = grp,
     callback = function()
-      vim.schedule(function() M.inject_now() end)
+      vim.schedule(function()
+        M.inject_now()
+      end)
     end,
   })
 
-  -- Manual re-run helper (e.g. after editing target_specs on the fly)
   vim.api.nvim_create_user_command("HarpoonPersistPathsReload", function()
     local changed = M.inject_now()
-    vim.notify(
-      string.format("[harpoon] persistpaths: %s", changed and "changed" or "no change"),
-      vim.log.levels.INFO
-    )
+    vim.notify(string.format("[harpoon] persistpaths: %s", changed and "changed" or "no change"), vim.log.levels.INFO)
   end, { desc = "Re-inject persistent Harpoon paths" })
 end
 
 return M
-

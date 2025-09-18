@@ -1,4 +1,5 @@
 ---@module 'config.harpoon.preview'
+--- Memory-safe preview with a single reusable scratch buffer/window.
 --- Preview-open Harpoon entries in a full-screen floating window.
 --- - Triggered via Alt+<number> (Alt+1..Alt+9)
 --- - Opens a read-only, non-modifiable preview that fills the editor
@@ -16,160 +17,162 @@ local M = {}
 
 local uv = vim.uv or vim.loop
 
---- Read a file fully into a Lua table of lines.
----@param path string
----@return string[]|nil
-local function read_file_lines(path)
-  local fd = uv.fs_open(path, "r", 420)
-  if not fd then return nil end
-  local st = uv.fs_fstat(fd)
-  if not st then uv.fs_close(fd); return nil end
-  local data = uv.fs_read(fd, st.size, 0)
-  uv.fs_close(fd)
-  if type(data) ~= "string" then return nil end
-  local lines = {} ---@type string[]
-  -- Split while keeping simple semantics; Neovim handles final EOL display fine.
-  for s in data:gmatch("([^\r\n]*)\r?\n?") do
-    lines[#lines + 1] = s
-  end
-  -- Drop the trailing empty capture from the pattern if present
-  if #lines > 0 and lines[#lines] == "" then
-    table.remove(lines, #lines)
-  end
-  return lines
-end
+local MAX_BYTES = 1.5 * 1024 * 1024  -- ~1.5MB cap for full read
+local MAX_LINES = 4000               -- head lines when file is large
 
---- Resolve last cursor position for a file using the shada '" mark.
---- This does not open a window; it loads the buffer hidden and queries the mark.
----@param path string
----@return integer, integer
-local function last_cursor_from_shada(path)
-  local bufnr = vim.fn.bufadd(path)
-  pcall(vim.fn.bufload, bufnr)
-  local row, col = 1, 0
-  pcall(function()
-    vim.api.nvim_buf_call(bufnr, function()
-      local pos = vim.fn.getpos([[""]]) -- returns {bufnum, lnum, col, off}
-      if type(pos) == "table" and pos[2] and pos[3] then
-        if pos[2] > 0 then row = pos[2] end
-        if pos[3] >= 0 then col = pos[3] - 1 end -- getpos col is 1-based
-      end
-    end)
-  end)
-  return row, col
-end
+local STATE = {
+  buf = nil,  -- scratch buffer id
+  win = nil,  -- preview window id
+}
 
---- Fallback to Harpoon context if available.
----@param it table|string
----@return integer, integer
-local function cursor_from_item_context(it)
-  if type(it) == "table" and type(it.context) == "table" then
-    local r = tonumber(it.context.row) or 1
-    local c = tonumber(it.context.col) or 0
-    if r < 1 then r = 1 end
-    if c < 0 then c = 0 end
-    return r, c
+local function resolve_layout()
+  -- Try to reuse an existing project helper:
+  local ok, layouts = pcall(require, "config.harpoon.preview_layout")
+  if ok and type(layouts.fullscreen_float) == "function" then
+    return layouts.fullscreen_float()
   end
-  return 1, 0
-end
 
---- Compute full-screen floating window dimensions.
----@return table
-local function fullscreen_float()
-  local columns = vim.o.columns
-  local lines   = vim.o.lines
-  local cmdh    = vim.o.cmdheight
-  -- Reserve command-line + statusline spaces
-  local width   = columns
-  local height  = lines - cmdh - 1
+	local w = math.floor(vim.o.columns * 0.7)
+  local h = math.floor(vim.o.lines * 0.7)
   return {
     relative = "editor",
-    style    = "minimal",
-    row      = 0,
-    col      = 0,
-    width    = math.max(1, width),
-    height   = math.max(1, height),
-    border   = "none",
-    zindex   = 150,
+    style = "minimal",
+    border = "rounded",
+    width = math.max(40, w),
+    height = math.max(8, h),
+    row = math.floor((vim.o.lines - h) / 2),
+    col = math.floor((vim.o.columns - w) / 2),
   }
 end
 
---- Open a preview window for a given file path and position.
+--- Read file lines efficiently with size/line cap.
 ---@param path string
----@param row integer
----@param col integer
-local function open_preview_for(path, row, col)
+---@return string[]|nil
+local function read_file_lines(path)
+  if type(path) ~= "string" or path == "" then return nil end
+
+  local fd = uv.fs_open(path, "r", 420)  -- 0644
+  if not fd then return nil end
+  local st = uv.fs_fstat(fd)
+  uv.fs_close(fd)
+  if not st then return nil end
+
+  -- Large file → head-only via readfile (far fewer temp strings)
+  if st.size and st.size > MAX_BYTES then
+    local ok, lines = pcall(vim.fn.readfile, path, "", MAX_LINES)
+    return ok and lines or nil
+  end
+
+  -- Small enough → read whole file, then split once
+  local fd2 = uv.fs_open(path, "r", 420)
+  if not fd2 then return nil end
+  local data = uv.fs_read(fd2, st.size, 0)
+  uv.fs_close(fd2)
+  if type(data) ~= "string" then return nil end
+
+  -- Use regex split to honour CRLF
+  return vim.split(data, "\r?\n", { plain = false })
+end
+
+--- Ensure a single reusable scratch buffer and window.
+---@return integer buf, integer win
+local function ensure_preview_window()
+  if STATE.win and vim.api.nvim_win_is_valid(STATE.win)
+     and STATE.buf and vim.api.nvim_buf_is_valid(STATE.buf) then
+    return STATE.buf, STATE.win
+  end
+
+  -- (Re)create buffer + window
+  if not (STATE.buf and vim.api.nvim_buf_is_valid(STATE.buf)) then
+    STATE.buf = vim.api.nvim_create_buf(false, true) -- scratch, listed=false
+    vim.bo[STATE.buf].buftype = "nofile"
+    vim.bo[STATE.buf].swapfile = false
+    vim.bo[STATE.buf].bufhidden = "wipe"
+  end
+
+  local cfg = resolve_layout()
+  STATE.win = vim.api.nvim_open_win(STATE.buf, true, cfg)
+  vim.wo[STATE.win].wrap = true
+  vim.wo[STATE.win].cursorline = true
+
+  -- Identify buffer for external autocmd guards
+  vim.b[STATE.buf]._harpoon_preview = true
+
+  pcall(vim.keymap.set, "n", "q", function()
+    if STATE.win and vim.api.nvim_win_is_valid(STATE.win) then
+      vim.api.nvim_win_close(STATE.win, true)
+    end
+  end, { buffer = STATE.buf, nowait = true, silent = true, desc = "Close Harpoon preview" } )
+
+  return STATE.buf, STATE.win
+end
+
+--- Public: open file preview and optionally place the cursor.
+---@param path string
+---@param row integer|nil  -- 1-based
+---@param col integer|nil  -- 0-based
+function M.open_preview_for(path, row, col)
   local lines = read_file_lines(path)
   if not lines then
-    vim.notify("[harpoon-preview] cannot read file: " .. path, vim.log.levels.WARN)
+    vim.notify("[harpoon preview] cannot read file: " .. tostring(path), vim.log.levels.WARN)
     return
   end
 
-  -- Create an unlisted scratch buffer, fill it, and set filetype for highlighting.
-  local buf = vim.api.nvim_create_buf(false, true) -- listed=false, scratch=true
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.bo[buf].buftype  = "nofile"
-  vim.bo[buf].bufhidden= "wipe"
-  vim.bo[buf].swapfile = false
-  vim.bo[buf].modifiable = false    -- prevent edits
-  vim.bo[buf].readonly   = true     -- show as read-only
+  -- Clamp cursor safely
+  local total = #lines
+  row = (type(row) == "number" and row or 1)
+  col = (type(col) == "number" and col or 0)
+  if row < 1 then row = 1 end
+  if row > total then row = total end
+  if col < 0 then col = 0 end
 
-  -- Detect and apply filetype from filename
+  local buf, win = ensure_preview_window()
+
+  -- Write content while modifiable, set filetype before freezing
+  vim.bo[buf].modifiable = true
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+
   local ft = vim.filetype.match({ filename = path }) or ""
   if ft ~= "" then
     vim.bo[buf].filetype = ft
   end
 
-  -- Open full-screen floating window
-  local win = vim.api.nvim_open_win(buf, true, fullscreen_float())
-  -- Reasonable window-local options for a preview feel
-  vim.wo[win].wrap       = false
-  vim.wo[win].number     = true
-  vim.wo[win].relativenumber = false
-  vim.wo[win].cursorline = true
-  vim.wo[win].signcolumn = "no"
-  vim.wo[win].foldenable = false
-  vim.wo[win].winhighlight = "Normal:Normal,FloatBorder:Normal"
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].readonly = true
 
-  -- Position cursor
-  pcall(vim.api.nvim_win_set_cursor, win, { row, col })
-
-  -- Map 'q' in this buffer to close the preview window
-  vim.keymap.set("n", "q", function()
-    if vim.api.nvim_win_is_valid(win) then
-      vim.api.nvim_win_close(win, true)
-    end
-  end, { buffer = buf, nowait = true, silent = true })
+  -- Try to place the cursor; ignore if window vanished mid-flight
+  if vim.api.nvim_win_is_valid(win) then
+    pcall(vim.api.nvim_win_set_cursor, win, { row, col })
+  end
 end
 
---- Open Harpoon item at index in preview mode.
----@param idx integer
-local function open_index(idx)
-  local ok, harpoon = pcall(require, "harpoon")
-  if not ok then return end
-  local list = harpoon:list()
-  if type(list) ~= "table" or type(list.items) ~= "table" then return end
-  local it = list.items[idx]
-  if not it then return end
-  local path = (type(it) == "table") and it.value or tostring(it)
-  if type(path) ~= "string" or path == "" then return end
-
-  -- Determine cursor: prefer last position from shada, fallback to harpoon context
-  local row, col = last_cursor_from_shada(path)
-  if row == 1 and col == 0 then
-    local r2, c2 = cursor_from_item_context(it)
-    row, col = r2, c2
+function M.open_index(entry)
+  if type(entry) == "number" then
+    -- resolve harpoon item by index and tail-call ourselves
+    local ok, harpoon = pcall(require, "harpoon")
+    if not ok then return end
+    local list = harpoon:list()
+    if type(list) ~= "table" or type(list.items) ~= "table" then return end
+    local it = list.items[entry]
+    if not it then
+      vim.notify(("[harpoon-preview] no item at index %d"):format(entry), vim.log.levels.INFO)
+      return
+    end
+    return M.open_index(it)
   end
 
-  open_preview_for(path, row, col)
+  if type(entry) == "table" and type(entry.value) == "string" then
+    M.open_preview_for(entry.value, entry.row or 1, entry.col or 0)
+  elseif type(entry) == "string" then
+    M.open_preview_for(entry, 1, 0)
+  end
 end
 
 --- Install Alt+1..Alt+9 mappings.
----@return nil
 function M.install_alt_number_maps()
   for i = 1, 9 do
     local lhs = ("<M-%d>"):format(i)
-    vim.keymap.set("n", lhs, function() open_index(i) end, {
+    vim.keymap.set("n", lhs, function() M.open_index(i) end, {
       desc = ("Harpoon preview %d (full-screen, 'q' to close)"):format(i),
       silent = true,
     })
@@ -177,4 +180,3 @@ function M.install_alt_number_maps()
 end
 
 return M
-
