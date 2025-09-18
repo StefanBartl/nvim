@@ -10,17 +10,22 @@ function M.setup(shared)
   local ok, lspconfig = pcall(require, "lspconfig")
   if not ok then return end
 
-  lspconfig.gopls.setup({
+  -- AUDIT:
+  lspconfig.gopls.setup {
     capabilities = shared.capabilities,
     on_attach = shared.on_attach,
     on_init = shared.on_init,
     settings = {
       gopls = {
-        analyses = { unusedparams = true },
+        usePlaceholders = true,
         staticcheck = true,
+        gofumpt = true,
+        analyses = { unusedparams = true, shadow = true },
+        memoryMode = "DegradeClosed",
+        directoryFilters = { "-**/node_modules", "-**/dist", "-**/.git" },
       },
     },
-  })
+  }
 end
 
 return M

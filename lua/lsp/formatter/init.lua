@@ -1,7 +1,7 @@
 ---@module 'lsp.formatter.init'
---- Formatter API with on-save toggle, Conform fallback, and pure-LSP fallback.
+--- Formatter API with on-save toggle, Conform-first strategy, and view preservation.
 --- Linux/macOS only; no Windows-specific branches.
----@version 1.0.1
+---@version 1.1.0
 
 -- Type aliases and public API contracts -------------------------------------
 
@@ -22,6 +22,7 @@ function M.build(opts)
 
   local ok_conform, conform = pcall(require, "conform")
   local util_ok, util = pcall(require, "lsp.core.util")
+  local ok_confmod, confmod = pcall(require, "lsp.formatter.conform")
 
   ---@class FormatterState
   ---@field enabled boolean
@@ -32,54 +33,103 @@ function M.build(opts)
   }
 
   --- Check if any attached LSP client can format the given buffer.
-  ---@param bufnr? Bufnr:bd!
-  ---
+  ---@param bufnr? integer
   ---@return boolean
   local function can_lsp_format(bufnr)
     if not util_ok or type(util.any_client_can_format) ~= "function" then
       return false
     end
-    bufnr = bufnr or 0 ---@cast bufnr Bufnr
+    bufnr = bufnr or 0
     return util.any_client_can_format(bufnr)
   end
 
+  -- Collect per-window views for all windows currently showing bufnr.
+  ---@param bufnr integer
+  ---@return table<integer, table>
+  local function collect_views(bufnr)
+    local views = {} ---@type table<integer, table>
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == bufnr then
+        local ok, view = pcall(vim.api.nvim_win_call, win, function()
+          return vim.fn.winsaveview()
+        end)
+        if ok and type(view) == "table" then
+          views[win] = view
+        end
+      end
+    end
+    return views
+  end
+
+  -- Restore previously collected views if windows are still valid.
+  ---@param views_by_win table<integer, table>
+  ---@return nil
+  local function restore_views(views_by_win)
+    for win, view in pairs(views_by_win) do
+      if vim.api.nvim_win_is_valid(win) then
+        pcall(vim.api.nvim_win_call, win, function()
+          pcall(vim.fn.winrestview, view)
+        end)
+      end
+    end
+  end
+
   --- One-shot format with Conform first, then LSP fallback.
-  --- Always silent, returns true on success.
-  ---@param bufnr? Bufnr
+  --- Preserves multi-window views deterministically (synchronous formatting).
+  ---@param bufnr? integer
   ---@return boolean
   local function format(bufnr)
-    bufnr = bufnr or 0 ---@cast bufnr Bufnr
+    bufnr = bufnr or 0
 
-    -- Skip special buffers
+    -- Skip special buffers early
     if vim.bo[bufnr].buftype ~= "" then
       return false
     end
 
-    -- Try Conform if available
-    if ok_conform and type(conform.format) == "function" then
+    -- Snapshot all window views showing this buffer
+    local views = collect_views(bufnr)
+
+    -- Prefer dedicated Conform helper if available (synchronous + restore)
+    if ok_confmod and type(confmod.format_preserve_view) == "function" then
+      local ok_run = confmod.format_preserve_view(bufnr, { timeout_ms = opts.timeout_ms, lsp_fallback = can_lsp_format(bufnr) })
+      -- Views already restored by helper; return early on success
+      if ok_run then
+        return true
+      end
+      -- If helper failed, fall through to LSP with our own restore below
+    elseif ok_conform and type(conform.format) == "function" then
+      -- Run Conform synchronously here and restore views locally
       local ok_run = pcall(conform.format, {
         bufnr = bufnr,
+        async = false,          -- critical for deterministic restore
         timeout_ms = opts.timeout_ms,
         lsp_fallback = can_lsp_format(bufnr),
       })
+      restore_views(views)
       if ok_run then
         return true
       end
       -- Fall through to LSP if Conform failed
     end
 
+    -- LSP fallback (synchronous) with view restore
     if can_lsp_format(bufnr) then
       local ok_lsp = pcall(vim.lsp.buf.format, {
         bufnr = bufnr,
+        async = false,          -- ensure edits are applied before restoring
         timeout_ms = opts.timeout_ms,
       })
+      restore_views(views)
       return ok_lsp == true
     end
 
+    -- Nothing formatted
+    restore_views(views) -- harmless if views are identical
     return false
   end
 
   --- Create the BufWritePre autocmd if enabled; otherwise do nothing.
+  --- Uses synchronous formatting to keep view restore deterministic within the write chain.
   local function create_autocmd_if_enabled()
     -- Clear any previous autocmds in our group first (idempotent)
     pcall(vim.api.nvim_clear_autocmds, { group = STATE.augroup })
@@ -89,13 +139,13 @@ function M.build(opts)
     vim.api.nvim_create_autocmd("BufWritePre", {
       group = STATE.augroup,
       callback = function(ev)
-        -- Purely silent; no notify/popups
         if vim.bo[ev.buf].buftype ~= "" then
           return
         end
+        -- Silent one-shot format with view preservation
         format(ev.buf)
       end,
-      desc = "LSP/Conform: format current buffer on save (toggleable)",
+      desc = "LSP/Conform: format current buffer on save (toggleable, preserves views)",
     })
   end
 

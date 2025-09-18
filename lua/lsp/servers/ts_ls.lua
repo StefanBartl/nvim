@@ -14,7 +14,15 @@ function M.setup(shared)
     capabilities = shared.capabilities,
     on_attach = shared.on_attach,
     on_init = shared.on_init,
-    settings = {},
+    settings = {
+      javascript = { preferences = { includeCompletionsForModuleExports = true } },
+      typescript = {
+        preferences = {
+          includeInlayParameterNameHints = "literals",
+          includeInlayFunctionLikeReturnTypeHints = true,
+        },
+      },
+    },
   })
 end
 
