@@ -31,7 +31,9 @@ return {
 	{
 		"mg979/vim-visual-multi",
 		branch = 'master',
-		lazy = false,
+		keys = {
+			{ "<C-n>", mode = { "n", "x" } },
+		},
 	},
 
 	-- Zen Mode: Distraction-free writing

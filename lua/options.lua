@@ -5,6 +5,14 @@
 local opt = vim.opt
 local wo = vim.wo
 
+-- AUDIT:
+vim.diagnostic.config({
+  update_in_insert = false,          -- do not reflow diagnostics while typing
+  severity_sort = true,              -- sort by severity (improves sign/virttext order)
+  virtual_text = { spacing = 2, prefix = "●" }, -- keep inline hints compact
+  float = { border = "rounded", source = "if_many" }, -- nicer hover for diagnostics
+})
+
 -----------------------------------------------------------
 -- Appearance & UI
 -----------------------------------------------------------
@@ -68,15 +76,24 @@ opt.foldexpr = "nvim_treesitter#foldexpr()"
 opt.foldlevel = 99
 opt.foldlevelstart = 99
 
--- Folding via custom foldexpr (H1/H2–H6, Frontmatter-Achtung)
-vim.opt_local.foldmethod = "expr"
-vim.opt_local.foldexpr = "v:lua.require'utils.markdown'.foldexpr(v:lnum)"
-vim.opt_local.foldenable = true
-vim.opt_local.foldlevel = 99
-vim.opt_local.foldlevelstart = 99
+-- Markdown-specific folding via utils.markdown.foldexpr only for markdown buffers
+do
+  local grp = vim.api.nvim_create_augroup("MarkdownLocalFolds", { clear = true })
+  vim.api.nvim_create_autocmd("FileType", {
+    group = grp,
+    pattern = { "markdown" },
+    callback = function()
+      vim.opt_local.foldmethod = "expr"
+      vim.opt_local.foldexpr = "v:lua.require'utils.markdown'.foldexpr(v:lnum)"
+      vim.opt_local.foldenable = true
+      vim.opt_local.foldlevel = 99
+      vim.opt_local.foldlevelstart = 99
+    end,
+    desc = "Enable lightweight markdown-specific folding only for markdown buffers",
+  })
+end
 
-
------------------------------------------------------------
+----------------------------------------------------------
 -- Performance & Input Latency
 -----------------------------------------------------------
 
