@@ -7,9 +7,6 @@
 --- Implementation notes:
 ---   - Avoid leading spaces in :normal commands (they act like "move right")
 ---   - Prefer API calls for line insertion/deletion to be 100% precise and side-effect free
---- @version 0.2.0
---- @package
---- @meta
 
 ---@class SmartEdit
 local M = {}
@@ -52,9 +49,10 @@ end
 function M.setup(opts)
   opts = opts or {}
   if opts.map_cr == nil then opts.map_cr = true end
+   local map = vim.g.__map_helper
 
   -- Normal-mode <Del>: smart delete (global)
-  vim.keymap.set("n", "<Del>", M.smart_del, { desc = "Smart delete (<Del>)" })
+  map("n", "<Del>", M.smart_del, { desc = "Smart delete (<Del>)" })
 end
 
 return M

@@ -226,8 +226,10 @@ local function build_library(root)
     if is_dir(cfg_types)  then table.insert(lib, cfg_types)  end
   end
 
+
   --- 3) Discover project-local types/@types (prefer scanning under <root>/lua)
   if root and is_dir(root) then
+		-- ADD: all files named 'types', 'aliases', 'classes',..
     local lua_root = join({ root, "lua" })
     local scan_base = is_dir(lua_root) and lua_root or root
     local found = find_type_dirs(scan_base, { max_results = 200, max_depth = 12 })
@@ -267,7 +269,7 @@ function M.setup(shared)
   local settings = {
     Lua = {
       runtime = { version = "LuaJIT" }, -- Neovim uses LuaJIT
-      hint = { enable = true },         -- Inlay hints (optional; keep if you like them)
+      hint = { enable = true },
       diagnostics = {
         -- Declare common Neovim globals to avoid 'undefined global' warnings.
         globals = { "vim", "vim.uv", "vim.loop", "vim.fn", "vim.inspect" },
@@ -326,6 +328,13 @@ end
 ---@return string[]
 function M.debug_library()
   return build_library(strict_root())
+end
+
+local res = M.debug_library()
+local i = 1
+do
+	print(res[i] .. "\n")
+	i =  i + 1
 end
 
 return M

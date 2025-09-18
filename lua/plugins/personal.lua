@@ -27,8 +27,8 @@ return {
 		config = function()
 			require("cmdlog").setup {
 				-- defer backend require until actually used
-				-- picker = "telescope", -- or "fzf-lua"; choose default, load lazily in code
-				picker = "fzf-lua",
+				picker = "telescope", -- or "fzf-lua"; choose default, load lazily in code
+				-- picker = "fzf-lua",
 			}
 		end,
 	},
@@ -72,7 +72,6 @@ return {
 		},
 	},
 
-
 	{
 		dir = vim.env.REPOS_DIR .. "/gopath.nvim", -- or "wkdsteve/gopath.nvim"
 		opts = {
@@ -110,6 +109,19 @@ return {
 		},
 	},
 
+	{
+		-- dir = vim.fn.expand(vim.env.REPOS_DIR .. "/mdlinks"),
+		"StefanBartl/mdlinks",
+		ft = "markdown",
+		config = function()
+			require("mdlinks.config").setup({
+				debug         = true,
+				open_url_cmd  = { "cmd.exe", "/c", "start", "" },
+				open_cmd      = { "cmd.exe", "/c", "start", "" },
+				anchor_levels = { 1, 2, 3, 4, 5, 6 }, -- ATX levels to match
+			})
+		end,
+	},
 
 	-- nvim-containers: Manage container engines from Neovim
 	-- {
