@@ -1,8 +1,9 @@
 ---@module 'lsp'
 -- Native LSP bootstrap for Neovim ≥ 0.11.
--- Idempotent setup; no dependency on 'nvim-lspconfig'.
 
 local M = {}
+
+local create_user_command = vim.api.nvim_create_user_command
 
 ---@type boolean
 M._initialized = false
@@ -11,7 +12,6 @@ M._initialized = false
 function M.setup()
   if M._initialized then return true end
 
-  -- Optional: core handlers/diagnostics/treesitter hooks (keine harten Abhängigkeiten)
   do
     local ok_h, handlers = pcall(require, "lsp.core.handlers")
     if ok_h and handlers and type(handlers.setup) == "function" then pcall(handlers.setup) end
@@ -25,21 +25,12 @@ function M.setup()
     if ok_ts and treesitter and type(treesitter.setup) == "function" then pcall(treesitter.setup) end
   end
 
-  -- Capabilities (global oder per Server)
-  -- Variante A: einmal global anwenden, dann muss man sie nicht pro Server setzen.
-  pcall(function()
-    local caps_mod = require("lsp.core.capabilities")
-    if type(caps_mod.apply_globally) == "function" then caps_mod.apply_globally() end
-  end)
-
-  -- Variante B (falls A nicht gewünscht): lokale Caps weiterhin ermitteln
   local caps = (function()
     local ok, mod = pcall(require, "lsp.core.capabilities")
     if ok and mod and type(mod.get) == "function" then return mod.get() end
     return vim.lsp.protocol.make_client_capabilities()
   end)()
 
-  -- on_attach/on_init kombinieren
   local attach_api = (function()
     local ok, mod = pcall(require, "lsp.core.attach")
     if ok and mod and type(mod.build) == "function" then
@@ -48,7 +39,6 @@ function M.setup()
     return { on_attach = function() end, on_init = function() return true end }
   end)()
 
-  -- Formatter-Infrastruktur (Conform + Toggle-API)
   local formatter = (function()
     local ok, mod = pcall(require, "lsp.formatter.init")
     if ok and mod and type(mod.build) == "function" then
@@ -68,57 +58,52 @@ function M.setup()
   end
   vim.g._formatter_api = formatter
 
-  -- User-Commands (leise)
-  pcall(vim.api.nvim_create_user_command, "LspFormat", function(_) formatter.format(0) end,
+  pcall(create_user_command, "LspFormat", function(_) formatter.format(0) end,
     { bang = true, desc = "LSP/Conform: format current buffer once (silent)" })
-  pcall(vim.api.nvim_create_user_command, "LspFormatToggle", function() formatter.toggle() end,
+  pcall(create_user_command, "LspFormatToggle", function() formatter.toggle() end,
     { desc = "LSP/Conform: toggle format-on-save (silent)" })
-  pcall(vim.api.nvim_create_user_command, "LspFormatOn", function() formatter.enable() end,
+  pcall(create_user_command, "LspFormatOn", function() formatter.enable() end,
     { desc = "LSP/Conform: enable format-on-save (silent)" })
-  pcall(vim.api.nvim_create_user_command, "LspFormatOff", function() formatter.disable() end,
+  pcall(create_user_command, "LspFormatOff", function() formatter.disable() end,
     { desc = "LSP/Conform: disable format-on-save (silent)" })
-  pcall(vim.api.nvim_create_user_command, "LspFormatStatus", function()
+  pcall(create_user_command, "LspFormatStatus", function()
     local state = formatter.is_enabled() and "true" or "false"
     vim.notify("LSP/Conform state: " .. state, vim.log.levels.INFO)
   end, { desc = "LSP/Conform: show state of formater" })
-  pcall(vim.api.nvim_create_user_command, "LspFormatWhich", function()
+  pcall(create_user_command, "LspFormatWhich", function()
     local ok, mod = pcall(require, "lsp.formatter.conform")
     if ok and type(mod.which) == "function" then mod.which(0)
     else vim.notify("Conform helper unavailable", vim.log.levels.WARN) end
   end, { desc = "Show formatter chain & availability for current buffer" })
 
-  -- Gemeinsame Parameter an Server-Setup weiterreichen (falls per-Server benötigt)
+	pcall(create_user_command, 'LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
+	pcall(create_user_command, 'LspLog', function() vim.cmd(string.format('tabnew %s', vim.lsp.log.get_filename())) end, {
+		desc = 'Opens the Nvim LSP client log.',
+	})
+
   local shared = {
-    capabilities = caps,               -- wird ignoriert, wenn global angewandt
+    capabilities = caps,
     on_attach = attach_api.on_attach,
     on_init = attach_api.on_init,
     formatter = formatter,
   }
 
-  -- Registrieren aller Server (native API); Aktivierung zentral steuern
   local ok_reg, registry = pcall(require, "lsp.core.registry")
   if not ok_reg or not registry or type(registry.setup_all) ~= "function" then
     vim.notify("LSP registry missing; skipping server setup", vim.log.levels.WARN)
     return false
   end
 
-  -- Optional: feature flags o. Ä. vorab setzen
   do
     local ok, langs = pcall(require, "lsp.languages")
     if ok and langs and type(langs.enable_all) == "function" then pcall(langs.enable_all) end
   end
 
-  -- Erwartetes Verhalten von registry.setup_all:
-  --   * registriert Server via vim.lsp.config('name', {...})
-  --   * gibt Liste der Namen zurück, die nun aktiviert werden sollen
   local names = registry.setup_all(shared)
-
-  -- Zentral aktivieren (einmalig). Wenn registry selbst schon aktiviert, ist dies idempotent.
   if type(names) == "table" and #names > 0 then
     pcall(vim.lsp.enable, names)
   end
 
-  -- Diagnostics zentral hier setzen (einmalig), nicht in options.lua
   vim.diagnostic.config({
     update_in_insert = false,
     severity_sort = true,

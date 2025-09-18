@@ -13,18 +13,18 @@ quote_style = "AutoPreferDouble"  # AutoPreferDouble, AutoPreferSingle, ForceDou
 
 # Omit parentheses when Lua allows it (single string/table argument calls).
 # Alternatives: "Always", "NoSingleString", "NoSingleTable", "Input".
-call_parentheses = "None"
+#call_parentheses = "None"
 
 # # Keep simple statements multi-line unless explicitly opting in below.
-collapse_simple_statement = "Always" # Never, FunctionOnly, ConditionalOnly, Always
+#collapse_simple_statement = "Always" # Never, FunctionOnly, ConditionalOnly, Always
 
 # # Do not insert spaces between function names and opening parens.
-space_after_function_names = "Never"
+#äspace_after_function_names = "Never"
 
 # # Do not preserve leading/trailing blank lines around blocks by default.
 # block_newline_gaps = "Never"
 
 # # Optional: enable require sorting for consistent import blocks.
-[sort_requires]
-enabled = true
+#[sort_requires]
+#enabled = true
 
