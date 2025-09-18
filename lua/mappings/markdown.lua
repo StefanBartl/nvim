@@ -40,6 +40,7 @@ function M.setup()
     map("x", "**", _toggle_visual_bold, { desc = "Markdown: Toggle ** around visual selection" })
   end
 
+
   -- Heading/folding/navigation
   map("n", "zf", function() md_utils.toggle_fold_under_cursor() end, { desc = "[Markdown] Toggle fold under cursor" })
   map({ "n", "v" }, "mk", function() md_utils.goto_prev_heading() end, { desc = "[Markdown] Prev heading (H2+)" })
@@ -47,9 +48,11 @@ function M.setup()
   map("n", "zu", function() md_utils.unfold_all_then_center() end, { desc = "[Markdown] Unfold all (and center)" })
   map("n", "zi",  function() md_utils.fold_prev_heading_then_center() end, { desc = "[Markdown] Fold previous heading" })
   map("n", "zk", function() md_utils.fold_markdown_headings({ 6, 5, 4, 3, 2 }) end, { desc = "[Markdown] Fold H2+" })
-  map("n", "<leader>mhI", function() md_utils.shift_headings(1, { min_level = 2 }) end, { desc = "[Markdown] Increase heading levels (H2+)" })
-  map("n", "<leader>mhD", function() md_utils.shift_headings(-1, { min_level = 2 }) end, { desc = "[Markdown] Decrease heading levels (H2+)" })
-  map("n", "<leader>mtt", function () md_utils.update_markdown_toc("## Contents", "### Table of contents") end, { desc = "[Markdown] Update TOC (markdown-toc)" })
+	map("n", "<leader>mtt", function () md_utils.update_markdown_toc("## Contents", "### Table of contents") end, { desc = "[Markdown] Update TOC (markdown-toc)" })
+	local md_head = require("utils.markdown_headings") -- AUDIT:
+	md_head.setup_keymaps()
+  -- map("n", "<leader>mhI", function() md_utils.shift_headings(1, { min_level = 2 }) end, { desc = "[Markdown] Increase heading levels (H2+)" })
+  -- map("n", "<leader>mhD", function() md_utils.shift_headings(-1, { min_level = 2 }) end, { desc = "[Markdown] Decrease heading levels (H2+)" })
 end
 
 return M
