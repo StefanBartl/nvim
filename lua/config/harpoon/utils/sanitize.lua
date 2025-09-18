@@ -1,4 +1,4 @@
---@module 'utils.harpoon_sanitize'
+---@module 'config.harpoon.utils.sanitize'
 -- Sanitize and deduplicate without replacing the internal items table.
 
 local M = {}

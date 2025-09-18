@@ -102,10 +102,10 @@ end
 
 ---@return string[]
 local function resolve_targets()
-  local out = {} ---@type string[]
-  for i = 1, #M.target_specs do
-    local p = canon(join_spec(M.target_specs[i]))
-    out[#out+1] = p
+  local n = #M.target_specs
+  local out = { [n] = "" }
+  for i = 1, n do
+    out[i] = canon(join_spec(M.target_specs[i]))
   end
   return out
 end

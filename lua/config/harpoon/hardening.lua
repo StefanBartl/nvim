@@ -1,150 +1,186 @@
 ---@module 'config.harpoon.hardening'
---- One-time Harpoon v2 setup with:
---- - Stable project key (Git root -> cwd)
---- - Autosave on UI close and common editor events
---- - Safe sanitize + dedup (no full table replacement)
---- - Cross-platform UI labels (drive/partition aware)
---- - Optional FZF menu bound on <C-h> (fallback to quick menu)
+--- Debounced persistence + safe UI wrapping for harpoon (v2-friendly).
+--- - Debounces save() to collapse bursty writes
+--- - Wraps ui.toggle_quick_menu once to trigger saves after menu actions
+--- - Installs autocmds and flushes on :qa
 ---
---- This module is Linux/macOS-first but also supports Windows (drive letters, UNC).
+--- Usage:
+---   require('config.harpoon.hardening').setup({
+---     debounce_ms = 200,
+---     autocmd_events = { "BufLeave", "FocusLost" },
+---   })
 
-local M      = {}
+local M = {}
 
-local safe   = require("utils.safe_call")
-local pkey   = require("config.harpoon.utils.fs_project_key")
-local sani   = require("config.harpoon.utils.sanitize")
-local label  = require("config.harpoon.utils.path_label")
-local _ = require("config.harpoon.ui.menu_fzf")
-local dbg    = require("config.harpoon.debug")
+---@class HarpoonHardeningOpts
+---@field debounce_ms integer|nil        -- default: 200
+---@field autocmd_events string[]|nil    -- default: { "BufLeave", "FocusLost" }
+
+---@class HarpoonHardeningState
+---@field timer uv.uv_timer_t|nil        -- reusable libuv timer handle
+---@field debounce_ms integer            -- current debounce interval (ms)
+---@field pending boolean                -- whether there is pending work
+
+---@type uv uv
 local uv = vim.uv or vim.loop
+local api = vim.api
+local nvim_create_autocmd = api.nvim_create_autocmd
 
-local function make_debounced_saver(harpoon, ms)
-  local t = uv.new_timer()
-  local pending = false
-  ms = ms or 200
-  return function()
-    pending = true
-    t:stop()
-    t:start(ms, 0, function()
-      if not pending then return end
-      pending = false
-      vim.schedule(function()
-        local list = harpoon:list()
-        if type(harpoon.save) == "function" then
-          pcall(harpoon.save, harpoon)
-        elseif list and type(list.save) == "function" then
-          pcall(list.save, list)
-        end
-      end)
+-- Internal state (local to avoid polluting globals)
+local STATE = { ---@type HarpoonHardeningState
+  wrapped_ui = false,
+  timer = nil,
+  pending = false,
+  debounce_ms = 200,
+  augroup = nil,
+}
+
+---@return any|nil harpoon
+local function _try_require_harpoon()
+  local ok, mod = pcall(require, "harpoon")
+  return ok and mod or nil
+end
+
+---@return any|nil ui
+local function _try_require_ui()
+  local ok, ui = pcall(require, "harpoon.ui")
+  return ok and ui or nil
+end
+
+--- Best-effort save across API (harpoon v2 or list.save fallbacks).
+---@return boolean ok
+local function _save_now()
+  local harpoon = _try_require_harpoon()
+  if not harpoon then
+    return false
+  end
+
+  -- Shape A: top-level :save()
+  if type(harpoon.save) == "function" then
+    local ok = pcall(harpoon.save, harpoon)
+    return ok
+  end
+
+  -- Shape B: list():save()
+  local list = (type(harpoon.list) == "function") and harpoon:list() or nil
+  if list and type(list.save) == "function" then
+    local ok = pcall(list.save, list)
+    return ok
+  end
+
+  return false
+end
+
+--- Create or reuse a single uv timer for debouncing
+---@param ms integer
+local function _ensure_timer(ms)
+  if STATE.timer and not STATE.timer:is_closing() then
+    STATE.debounce_ms = ms
+    return
+  end
+  ---@diagnostic disable-next-line
+  STATE.timer = uv.new_timer()
+  STATE.debounce_ms = ms
+end
+
+--- Schedule a debounced save
+local function _debounced_save()
+  if not STATE.timer then
+    _ensure_timer(STATE.debounce_ms)
+  end
+  STATE.pending = true
+  STATE.timer:stop()
+  STATE.timer:start(STATE.debounce_ms, 0, function()
+    if not STATE.pending then
+      return
+    end
+    STATE.pending = false
+    vim.schedule(function()
+      _save_now()
     end)
+  end)
+end
+
+--- Flush pending debounced save immediately (used on VimLeavePre).
+local function _flush_now()
+  if STATE.timer and not STATE.timer:is_closing() then
+    STATE.timer:stop()
+  end
+  if STATE.pending then
+    STATE.pending = false
+    _save_now()
   end
 end
 
----@param harpoon HarpoonApi
----@return nil
-local function install_autosave(harpoon)
-	-- Save when quick-menu toggles
-	local ok_ui, ui = pcall(require, "harpoon.ui")
-	if ok_ui and type(ui) == "table" and type(ui.toggle_quick_menu) == "function" then
-		local orig = ui.toggle_quick_menu
-		ui.toggle_quick_menu = function(...)
-			local ret = { orig(...) }
-			vim.schedule(function()
-				local list = harpoon:list()
-				if type(harpoon.save) == "function" then
-					pcall(harpoon.save, harpoon)
-				elseif list and type(list.save) == "function" then
-					pcall(list.save, list)
-				end
-			end)
-			local unpack = table.unpack or unpack
-			return unpack(ret)
-		end
-	end
+--- Wrap ui.toggle_quick_menu once, to trigger save around menu use.
+local function _ensure_ui_wrap()
+  if STATE.wrapped_ui then
+    return
+  end
 
-	-- Cheap persistence on editor events (debounced by scheduler tick)
-	local grp = vim.api.nvim_create_augroup("HarpoonAutosave", { clear = true })
-	vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost" }, {
-		group = grp,
-		callback = function()
-			vim.schedule(function()
-				-- Reuse the upvalue 'harpoon' captured from the outer function.
-				if not harpoon then return end
-				local list = harpoon:list()
-				if type(harpoon.save) == "function" then
-					pcall(harpoon.save, harpoon)
-				elseif list and type(list.save) == "function" then
-					pcall(list.save, list)
-				end
-			end)
-		end,
-	})
+  local ui = _try_require_ui()
+  if not ui or type(ui.toggle_quick_menu) ~= "function" then
+    return
+  end
+
+  local orig = ui.toggle_quick_menu
+  ui.toggle_quick_menu = function(...)
+    local ret = { pcall(orig, ...) }
+    -- Trigger debounced save regardless of menu result.
+    _debounced_save()
+    local ok = ret[1]
+    if not ok then
+      vim.notify("[harpoon hardening] ui.toggle_quick_menu failed: " .. tostring(ret[2]), vim.log.levels.WARN)
+      return
+    end
+    return select(2, unpack(ret))
+  end
+
+  STATE.wrapped_ui = true
 end
 
----@param provider "fzf"|"telescope"
----@return nil
-local function install_keymaps(provider)
-	vim.keymap.set("n", "<C-h>", function()
-		require("config.harpoon.ui").open({ provider = provider or "fzf" })
-	end, { desc = "Harpoon menu (short labels)" })
+--- Install idempotent autocmds for saving on user activity.
+---@param events string[]
+local function _install_autocmds(events)
+  if STATE.augroup then
+    pcall(api.nvim_del_augroup_by_id, STATE.augroup)
+    STATE.augroup = nil
+  end
+
+  STATE.augroup = api.nvim_create_augroup("HarpoonHardening", { clear = true })
+
+  -- Debounced save on common "user done something with buffer" cues
+  nvim_create_autocmd(events, {
+    group = STATE.augroup,
+    callback = function()
+      _debounced_save()
+    end,
+    desc = "Harpoon debounced save",
+  })
+
+  -- Flush on exit to avoid losing last pending write
+  nvim_create_autocmd("VimLeavePre", {
+    group = STATE.augroup,
+    callback = function()
+      _flush_now()
+    end,
+    desc = "Harpoon flush pending save",
+  })
 end
 
----@param harpoon HarpoonApi
+---@param opts HarpoonHardeningOpts|nil
 ---@return nil
-local function sanitize_and_dedup_once(harpoon)
-	vim.schedule(function()
-		local list = harpoon:list()
-		sani.sanitize_items_in_place(list)
-		sani.dedup_in_place_safe(list)
-		if type(harpoon.save) == "function" then
-			pcall(harpoon.save, harpoon)
-		elseif list and type(list.save) == "function" then
-			pcall(list.save, list)
-		end
-	end)
-end
+function M.setup(opts)
+  opts = opts or {}
+  local debounce_ms = (type(opts.debounce_ms) == "number" and opts.debounce_ms > 0) and opts.debounce_ms or 200
+  local events = (type(opts.autocmd_events) == "table" and #opts.autocmd_events > 0) and opts.autocmd_events
+    or { "BufLeave", "FocusLost" }
 
---- Robust formatter: accepts both table items and plain strings.
----@param item table|string
----@return string
-local function display_label(item)
-	-- Harpoon v2 items are usually tables: { value = string, context = {...} }
-	local v = (type(item) == "table") and item.value or item
-	if type(v) ~= "string" then
-		v = tostring(v or "")
-	end
-	-- Reuse cross-platform shortening (keeps drive/UNC/home root visible)
-	return label.to_label(v)
-end
-
----@return nil
-function M.setup()
-	local ok, harpoon = pcall(require, "harpoon")
-	if not ok then return end
-
-	-- Single setup with stable project key + customized display for the quick menu
-	safe.safe_call(function()
-		harpoon:setup({
-			settings = {
-				save_on_toggle = true,
-				sync_on_ui_close = true,
-				key = pkey.project_key, -- Git root -> cwd
-			},
-			-- Ensure Harpoon's own quick menu shows shortened path labels consistently
-			default = {
-				display = display_label,
-			},
-			-- Optional menu tweaks can go here, e.g. width/height if supported by your snapshot:
-			-- menu = { width = math.max(60, math.floor(vim.o.columns * 0.6)) },
-		})
-	end)
-
-	install_autosave(harpoon)
-	install_keymaps("fzf")         -- Standard
-	-- install_keymaps("telescope")
-	dbg.setup_cmd()
-
-	sanitize_and_dedup_once(harpoon)
+  -- If harpoon is not installed, still register autocmds;
+  -- no-ops until harpoon becomes available.
+  _ensure_timer(debounce_ms)
+  _ensure_ui_wrap()
+  _install_autocmds(events)
 end
 
 return M

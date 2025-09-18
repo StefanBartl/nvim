@@ -21,22 +21,24 @@ end
 ---@return nil
 function M.open()
   local ok, harpoon = pcall(require, "harpoon")
-  if not ok then return end
+  if not ok then
+    return
+  end
 
   local list = harpoon:list()
-  if not (list and type(list.items) == "table") then return end
+  if not (list and type(list.items) == "table") then
+    return
+  end
 
   if has_fzf_lua() then
     local fzf = require("fzf-lua")
-    local entries ---@type string[]
-    entries = {}
-
-    -- Build lines with a stable "label\0path" payload to avoid parsing collisions
-    for i = 1, #list.items do
-      local it = list.items[i]
+    local items = list.items
+    local n = #items
+    local entries = { [n] = "" }
+    for i = 1, n do
+      local it = items[i]
       local v = (type(it) == "table") and it.value or tostring(it)
-      local lbl = label.to_label(v)
-      entries[#entries+1] = string.format("%s\0%s", lbl, v)
+      entries[i] = string.format("%s\0%s", label.to_label(v), v)
     end
 
     fzf.fzf_exec(entries, {
@@ -46,7 +48,10 @@ function M.open()
         ["--delimiter"] = "\\x00",
         ["--ansi"] = "1",
         ["--expect"] = table.concat({
-          "enter", "ctrl-v", "ctrl-x", "ctrl-t",
+          "enter",
+          "ctrl-v",
+          "ctrl-x",
+          "ctrl-t",
         }, ","),
       },
       preview = function(item)
@@ -62,22 +67,30 @@ function M.open()
         ["default"] = function(selected)
           local line = selected[1] or ""
           local p = line:match("\0(.*)$")
-          if p then open_file(p) end
+          if p then
+            open_file(p)
+          end
         end,
-        ["ctrl-x"] = function(selected)  -- split
+        ["ctrl-x"] = function(selected) -- split
           local line = selected[1] or ""
           local p = line:match("\0(.*)$")
-          if p then vim.cmd("split " .. vim.fn.fnameescape(p)) end
+          if p then
+            vim.cmd("split " .. vim.fn.fnameescape(p))
+          end
         end,
-        ["ctrl-v"] = function(selected)  -- vsplit
+        ["ctrl-v"] = function(selected) -- vsplit
           local line = selected[1] or ""
           local p = line:match("\0(.*)$")
-          if p then vim.cmd("vsplit " .. vim.fn.fnameescape(p)) end
+          if p then
+            vim.cmd("vsplit " .. vim.fn.fnameescape(p))
+          end
         end,
-        ["ctrl-t"] = function(selected)  -- tab
+        ["ctrl-t"] = function(selected) -- tab
           local line = selected[1] or ""
           local p = line:match("\0(.*)$")
-          if p then vim.cmd("tabedit " .. vim.fn.fnameescape(p)) end
+          if p then
+            vim.cmd("tabedit " .. vim.fn.fnameescape(p))
+          end
         end,
       },
     })
@@ -91,4 +104,3 @@ function M.open()
 end
 
 return M
-

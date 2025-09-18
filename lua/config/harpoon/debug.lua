@@ -5,6 +5,7 @@
 local M = {}
 
 local label = require("config.harpoon.utils.path_label")
+local nvim_create_user_command = vim.api.nvim_create_user_command
 
 ---@return string[]
 local function collect_lines()
@@ -13,18 +14,18 @@ local function collect_lines()
 
   local ok, harpoon = pcall(require, "harpoon")
   if not ok then
-    lines[#lines+1] = "[harpoon] not available"
+    lines[#lines + 1] = "[harpoon] not available"
     return lines
   end
 
   local list = harpoon:list()
-  lines[#lines+1] = string.format("Items: %d", type(list.items) == "table" and #list.items or 0)
+  lines[#lines + 1] = string.format("Items: %d", type(list.items) == "table" and #list.items or 0)
 
   if type(list.items) == "table" then
     for i = 1, #list.items do
       local it = list.items[i]
       local v = type(it) == "table" and it.value or tostring(it)
-      lines[#lines+1] = string.format("%3d  %s", i, label.to_label(v))
+      lines[#lines + 1] = string.format("%3d  %s", i, label.to_label(v))
     end
   end
   return lines
@@ -32,16 +33,19 @@ end
 
 ---@return nil
 function M.setup_cmd()
-  vim.api.nvim_create_user_command("HarpoonDebug", function()
+  nvim_create_user_command("HarpoonDebug", function()
     local out = collect_lines()
     vim.cmd("new")
-    vim.api.nvim_buf_set_lines(0, 0, -1, false, out)
+    nvim_buf_set_lines(0, 0, -1, false, out)
     vim.bo.buftype = "nofile"
     vim.bo.bufhidden = "wipe"
     vim.bo.swapfile = false
     vim.bo.modifiable = false
   end, {})
+
+  nvim_create_user_command("CheckHealthHarpoon", function()
+    require("config.harpoon.health").check()
+  end, {})
 end
 
 return M
-
