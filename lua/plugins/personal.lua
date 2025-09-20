@@ -27,8 +27,8 @@ return {
     config = function()
       require("cmdlog").setup({
         -- defer backend require until actually used
-        picker = "telescope", -- or "fzf-lua"; choose default, load lazily in code
-        -- picker = "fzf-lua",
+        picker = "telescope",
+        -- picker = "fzf",
       })
     end,
   },
@@ -60,27 +60,13 @@ return {
       "ibhagwan/fzf-lua", -- für engine="fzf"
       -- "nvim-telescope/telescope.nvim", -- für engine="telescope"
     },
-    config = function()
-      require("replacer").setup({
-        engine = "fzf", -- oder "telescope"
-        default_scope = "%", -- "%", "cwd", ".", oder Pfad
-        write_changes = true, -- sofort auf Disk schreiben
-        confirm_all = true, -- Bestätigung bei ALL-Operationen (<C-a>, :Replace!)
-        confirm_wide_scope = false, -- Soft-Guard, wenn Scope ≠ "%"
-        preview_context = 3,
-        hidden = true,
-        exclude_git_dir = true,
-        literal = true, -- Default Suchmodus (Flags überschreiben per Run)
-        smart_case = true,
-
-        -- Picker-spezifische UI
-        fzf = { winopts = { width = 0.85, height = 0.70 } },
-        telescope = { layout_config = { width = 0.85, height = 0.70 } },
-      })
-
-      -- :Replace registrieren (ruft intern replacer.run)
-      require("replacer.command").register(require("replacer").run)
-    end,
+		config = function()
+    require("replacer").setup({
+      engine = "fzf",
+      -- engine = "telescope",
+      default_scope = "%",
+    })
+  end
   },
 
   {

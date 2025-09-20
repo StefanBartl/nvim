@@ -32,7 +32,7 @@ M.cfg = {
 
     enable_current_word = true, -- Unterstreicht das aktuelle Wort (außer in Insert) mittels matchadd("CursorWord", …).
     cword_occurrences = {
-      enabled = false, -- Master switch for painting occurrences.
+      enabled = true, -- Master switch for painting occurrences.
       render = "underdashed", -- Rendering mode: "highlight" or one of the underline variants.
       underline_color = "#5FB0FC", -- Special color (`sp`) for underline-like modes (ignored for "highlight"). f.e. "#5FB0FC"
       force_plain_underline = true, -- Always include plain underline as safety fallback on weak UIs.
