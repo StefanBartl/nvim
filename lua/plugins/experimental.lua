@@ -65,20 +65,4 @@ return {
       })
     end,
   },
-
-  {
-    "folke/snacks.nvim",
-    priority = 1000,
-    lazy = false,
-    opts = {
-      bigfile = { enabled = true },
-      dashboard = { enabled = true },
-      picker = { enabled = false },
-      dim = { enabled = true },
-      profiler = { enabled = true },
-      quickfile = { enabled = true },
-      scope = { enabled = true },
-      scroll = { enabled = false },
-    },
-  },
 }
