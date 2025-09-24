@@ -432,7 +432,7 @@ function M.window()
 				elseif is_wsl() then
 					mod = "config.neotree.open_fm.wsl"
 				else
-					mod = "config.neotree.open_fm.unix"
+					mod = "config.neotree.open_fm.unix_ubuntu"
 				end
 				local ok, fm = pcall(require, mod)
 				if not ok then
