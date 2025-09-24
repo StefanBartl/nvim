@@ -25,6 +25,8 @@ return {
 		opts = require "config.noice",
 		dependencies = {
 			"MunifTanjim/nui.nvim",
+			 "folke/snacks.nvim",
+			 "rcarriga/nvim-notify",
 		},
 	},
 

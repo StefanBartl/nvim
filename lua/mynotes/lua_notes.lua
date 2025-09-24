@@ -7,7 +7,7 @@ local CFG = {
   -- Picker title shown in the UI.
   title = "LuaNotes",
   -- Directory to search. "~" will be expanded. Keep Linux/macOS style.
-  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/Notes/Mynotes/LuaNotes"),
+  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/Notes/MyNotes/LuaNotes"),
   notify = true,
 }
 
