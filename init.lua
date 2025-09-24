@@ -44,3 +44,7 @@ require "sessions"
 vim.schedule(function()
   require("mappings").setup()
 end)
+
+pcall(function()
+  require("pathprobe").setup_keymaps()
+end)
