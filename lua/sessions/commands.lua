@@ -23,6 +23,17 @@ local function define_commands()
     end
   end, { nargs = "?", desc = "Save session to file" })
 
+  -- Save with timestamp
+  vim.api.nvim_create_user_command("SessionSaveTimestamp", function()
+    local stamp = os.date("sess-%Y%m%d-%H%M%S")
+    local ok, res = pcall(vim.cmd("SessionSave " .. stamp))
+    if ok then
+      vim.notify("Session saved with timestamp: " .. (res or "?"))
+    else
+      vim.notify("Session saving with timestamp failed: " .. (res or "?"), vim.log.levels.ERROR)
+    end
+  end, { nargs = "?", desc = "Save session with timestamp to file" })
+
   -- Load
   vim.api.nvim_create_user_command("SessionLoad", function(cmd)
     local arg = (cmd and cmd.args or "")
@@ -64,13 +75,13 @@ local function define_keymaps()
   local map = function(mode, lhs, rhs, desc)
     vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
   end
-  map("n", "<leader>ss", function() vim.cmd("SessionSave") end, "Session Save")
-  map("n", "<leader>sl", function() vim.cmd("SessionLoad") end, "Session Load")
-  map("n", "<leader>sn", function()
-    local name = os.date("sess-%Y%m%d-%H%M%S")
-    vim.cmd("SessionSave " .. name)
+	map("n", "<leader>ssa", function() vim.cmd("SessionSave") end, "Session Save")
+  map("n", "<leader>slo", function() vim.cmd("SessionLoad") end, "Session Load")
+  map("n", "<leader>sst", function()
+    local stamp = os.date("sess-%Y%m%d-%H%M%S")
+    vim.cmd("SessionSave " .. stamp)
   end, "Session Save (timestamp)")
-  map("n", "<leader>sh", function() vim.cmd("SessionList") end, "Session List")
+  map("n", "<leader>sli", function() vim.cmd("SessionList") end, "Session List")
 end
 
 ---@return nil
@@ -78,17 +89,17 @@ local function define_autocmds()
   local aug = vim.api.nvim_create_augroup("PortableSessions", { clear = true })
 
   -- Autoload last session when starting without file args
-  vim.api.nvim_create_autocmd("VimEnter", {
-    group = aug,
-    callback = function()
-      if vim.fn.argc(-1) == 0 then
-        local ok, _ = require("sessions.core").load(nil)
-        if ok then vim.notify("Session autoloaded") end
-      end
-    end,
-    desc = "Portable sessions startup hook",
-    once = true,
-  })
+  -- vim.api.nvim_create_autocmd("VimEnter", {
+  --   group = aug,
+  --   callback = function()
+  --     if vim.fn.argc(-1) == 0 then
+  --       local ok, _ = require("sessions.core").load(nil)
+  --       if ok then vim.notify("Session autoloaded") end
+  --     end
+  --   end,
+  --   desc = "Portable sessions startup hook",
+  --   once = true,
+  -- })
 
   -- Autosave default session on exit
   vim.api.nvim_create_autocmd("VimLeavePre", {
