@@ -39,6 +39,7 @@ require "options"
 require("myoptions").setup { highlights = true, options = false }
 require "system.env"
 require "usrcmds"
+require "sessions"
 
 vim.schedule(function()
   require("mappings").setup()

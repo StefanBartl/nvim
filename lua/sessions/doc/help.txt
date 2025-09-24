@@ -1,0 +1,128 @@
+*sessions.txt*  Portable Neovim sessions with built-ins only          *sessions*
+
+Einleitung                                                     *sessions-intro*
+Dieses Paket implementiert das Speichern/Laden von Sessions ausschließlich mit
+Neovim-Bordmitteln (:mksession/:source). Ziel: portable, robuste Sessions über
+mehrere Geräte ohne externe Abhängigkeiten oder separate Repositories.
+
+Inhalt                                                           *sessions-contents*
+  1. Installation                 |sessions-install|
+  2. Konfiguration                |sessions-config|
+  3. Befehle und Keymaps          |sessions-commands|
+  4. Autoload/Autosave            |sessions-auto|
+  5. Portabilität und Pfade       |sessions-paths|
+  6. Blacklist und Sicherheit     |sessions-security|
+  7. Troubleshooting/FAQ          |sessions-troubleshooting|
+  8. API                          |sessions-api|
+
+1. Installation                                               *sessions-install*
+Dateien ablegen unter:
+  lua/sessions/init.lua
+  lua/sessions/config.lua
+  lua/sessions/core.lua
+  lua/sessions/commands.lua
+  lua/sessions/types/types.lua
+
+In der Neovim-Config laden:
+  :lua require("sessions")
+
+2. Konfiguration                                              *sessions-config*
+Alle Optionen liegen in |sessions-config.lua| (Modul "sessions.config").
+
+Wesentliche Felder:
+  root            stdpath("config") .. "/sessions"
+  default_name    "last"
+  sessionoptions  "buffers,curdir,tabpages,winsize,help,folds"
+  blacklist.buftypes   ["quickfix","nofile","prompt"]
+  blacklist.filetypes  ["gitcommit","gitrebase"]
+  blacklist.paths      ["/tmp/","/private/tmp/"]
+
+Hinweise:
+• Minimalistische |'sessionoptions'| für Stabilität über mehrere Geräte.
+• „terminal“, „globals“, „localoptions“ bewusst ausgelassen.
+• Blacklist verhindert Persistenz von flüchtigen Zuständen.
+
+3. Befehle und Keymaps                                      *sessions-commands*
+Befehle:
+  :SessionSave [name]       Speichert die aktuelle Session.
+  :SessionLoad [name]       Lädt die angegebene (oder default_name) Session.
+  :SessionList              Listet alle vorhandenen Sessions (absolute Pfade).
+
+Keymaps (Normal-Mode):
+  <leader>ss  → :SessionSave
+  <leader>sl  → :SessionLoad
+  <leader>sn  → :SessionSave mit Zeitstempel (sess-YYYYMMDD-HHMMSS)
+  <leader>sh  → :SessionList
+
+Completion:
+  :SessionLoad <Tab>        Vervollständigt vorhandene Sessionnamen.
+
+4. Autoload/Autosave                                             *sessions-auto*
+Autoload:
+  Beim Start ohne Datei-Argumente wird automatisch versucht, die
+  |sessions-config| default_name Session zu laden.
+
+Autosave:
+  Vor dem Beenden wird automatisch die default_name Session gespeichert.
+
+5. Portabilität und Pfade                                      *sessions-paths*
+Speicherort:
+  stdpath("config")/sessions  → pro Benutzer/Gerät konsistent strukturiert.
+
+Dateinamen:
+  NAME.vim                    → logisch benannter Session-Snapshot.
+
+Hinweise:
+• Projektpfade sollten auf allen Geräten ähnlich strukturiert sein, sonst zeigen
+  wiederhergestellte Fenster ggf. ins Leere.
+• Wer strikt pro Host trennen möchte, kann default_name dynamisch setzen:
+    :lua require("sessions.config").cfg.default_name = vim.loop.os_gethostname()
+
+6. Blacklist und Sicherheit                                  *sessions-security*
+Blacklist greift vor dem Speichern:
+  buftypes:   quickfix, nofile, prompt
+  filetypes:  gitcommit, gitrebase
+  paths:      /tmp/, /private/tmp/
+
+Sicherheit:
+• Keine globals/localoptions persistieren; vermeidet Leaks und Host-Divergenzen.
+• Terminal-Persistenz nur aktivieren, wenn Shell-Umgebungen identisch sind:
+  sessionoptions += "terminal"  (nicht Default)
+
+7. Troubleshooting/FAQ                                 *sessions-troubleshooting*
+Q: :SessionLoad meldet „no such session“.
+A: Datei existiert nicht in |sessions-paths|. Mit :SessionList prüfen oder neu speichern.
+
+Q: Nach LSP/Plugin-Änderungen falsches Layout.
+A: Neue Session speichern (anderen Namen wählen) und alten Zustand verwerfen.
+
+Q: Unerwünschte Fenster (z. B. Help/Quickfix) werden persistiert.
+A: Blacklist in |sessions-config| erweitern (buftypes/filetypes/paths).
+
+Q: Terminal-Fenster verhalten sich anders auf Geräten.
+A: „terminal“ aus 'sessionoptions' entfernen (Default), oder identische Shell-Konfigurationen herstellen.
+
+8. API                                                          *sessions-api*
+Lua-API (für andere Module):
+  local S = require("sessions")
+  S.save(name?)  → (ok:boolean, path_or_err:string|nil)
+  S.load(name?)  → (ok:boolean, path_or_err:string|nil)
+  S.list()       → {"/abs/path/to/foo.vim", ...}
+
+Implementierungsübersicht:
+  sessions.core
+    save(name?)     Guards, Blacklist, :mksession!
+    load(name?)     Existence-Check, :source
+    list()          Auflistung und Sortierung
+  sessions.config   Zentrale Optionen und Blacklists
+  sessions.commands User-Commands, Keymaps, Autocmds
+  sessions.types    Gemeinsame Typdefinitionen
+
+Modeline/Tags:
+  Hilfe aufrufen mit:
+    :help sessions
+    :help sessions-commands
+    :help sessions-config
+
+vim:tw=78:ts=8:ft=help:norl:
+
