@@ -23,7 +23,9 @@ end
 ---@return string
 local function resolve(cmd)
   local exepath = vim.fn.exepath(cmd)
-  if exepath ~= nil and exepath ~= "" then return exepath end
+  if exepath ~= nil and exepath ~= "" then
+    return exepath
+  end
   local uv = vim.uv or vim.loop
   local home = (uv.os_homedir and uv.os_homedir()) or os.getenv("HOME") or os.getenv("USERPROFILE") or ""
   ---@type string[]
@@ -90,12 +92,15 @@ function M.format_preserve_view(bufnr, opts)
   end
   local views = collect_views(bufnr)
   -- Force synchronous run; after edits, restore views deterministically.
-  local ok = pcall(conform.format, vim.tbl_extend("force", {
-    bufnr = bufnr,
-    async = false,          -- critical for deterministic restore
-    timeout_ms = 1200,
-    lsp_fallback = true,
-  }, opts or {}))
+  local ok = pcall(
+    conform.format,
+    vim.tbl_extend("force", {
+      bufnr = bufnr,
+      async = false, -- critical for deterministic restore
+      timeout_ms = 1200,
+      lsp_fallback = true,
+    }, opts or {})
+  )
   restore_views(views)
   return ok == true
 end
@@ -103,7 +108,9 @@ end
 ---@return nil
 function M.setup()
   local ok, conform = pcall(require, "conform")
-  if not ok then return end
+  if not ok then
+    return
+  end
 
   ensure_mason_in_path()
 
@@ -123,6 +130,10 @@ function M.setup()
       cpp = { "clang_format" },
       cs = { "csharpier" },
       markdown = { "mdformat", "prettierd", "prettier" },
+      sh = { "shfmt", "shellharden" }, -- shfmt first (idempotent), shellharden optional
+      bash = { "shfmt", "shellharden" },
+      zsh = { "shfmt" }, -- shellharden may warn on zsh-isms; keep optional
+      ksh = { "shfmt" },
     },
 
     -- Explicit commands so Conform can find the executables reliably
@@ -140,6 +151,19 @@ function M.setup()
         command = resolve("prettier"),
         prepend_args = { "--stdin-filepath", "$FILENAME" },
       },
+
+      shfmt = {
+        command = resolve("shfmt"),
+        -- -i 2 (indent=2), -ci (switch-case indent), -sr (space redirect), -bn (binary ops on new line)
+        args = { "-i", "2", "-ci", "-sr", "-bn" },
+        stdin = true,
+      },
+      shellharden = {
+        command = resolve("shellharden"),
+        -- Reads stdin and writes stdout; acts as a safe rewriter/formatter
+        args = { "--transform", "-" },
+        stdin = true,
+      },
     },
 
     notify_on_error = true,
@@ -154,8 +178,8 @@ function M.which(bufnr)
   local ft = vim.bo[bufnr].filetype
   ---@type string[]
   local chain = (ft == "markdown") and { "mdformat", "prettierd", "prettier" }
-      or (ft == "markdown.mdx") and { "prettierd", "prettier" }
-      or {}
+    or (ft == "markdown.mdx") and { "prettierd", "prettier" }
+    or {}
   if #chain == 0 then
     vim.notify("No formatter chain known for filetype=" .. tostring(ft), vim.log.levels.INFO)
     return

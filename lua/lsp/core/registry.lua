@@ -3,6 +3,7 @@
 local M = {}
 
 local ACTIVE = {
+	"bashls",
   "lua_ls",
   "ts_ls",
   "gopls",
