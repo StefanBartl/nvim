@@ -15,7 +15,7 @@ local fn = vim.fn
 ---@type SessionsCfg
 M.cfg = {
   -- Store sessions alongside the user's Neovim config (portable, user-requested).
-  root = fn.stdpath("config") .. "/sessions",
+  root = fn.stdpath("config") .. "/lua/sessions/storage",
   -- Default file name (without .vim) used for autosave/autoload.
   default_name = "last",
   -- Keep options minimal and deterministic; exclude volatile per-window "localoptions".
