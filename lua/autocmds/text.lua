@@ -41,11 +41,3 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   end,
 })
 
---- Automatically open images with the default image viewer on read
-vim.api.nvim_create_autocmd("BufReadPost", {
-  group = "text_autocmds",
-  pattern = { "*.jpg", "*.jpeg", "*.png" },
-  callback = function()
-    vim.fn.system("open " .. vim.fn.expand("%"))
-  end,
-})

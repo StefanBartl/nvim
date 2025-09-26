@@ -2,6 +2,7 @@
 
 - `:edit #`: springe zum letzten buffer
 - `goto smth` in branches verwenden
+- `vert res +10`
 
 ## 1. Operator + Textobjekt (präzise und schnell)
 
