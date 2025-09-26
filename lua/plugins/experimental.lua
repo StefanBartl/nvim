@@ -4,14 +4,6 @@
 ---@type LazyPluginSpec[]
 return {
 
-  {
-    "adelarsq/image_preview.nvim",
-    event = "VeryLazy",
-    config = function()
-      require("image_preview").setup()
-    end,
-  },
-
   -- Automatic list continuation and formatting for neovim, powered by lua (NOT only for markdown)
   {
     "gaoDean/autolist.nvim",

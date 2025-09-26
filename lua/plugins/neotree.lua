@@ -34,39 +34,6 @@ return {
 		--   },
 		-- },
 
-
- event_handlers = {
-    {
-      event = "file_open_requested",
-      ---@param args table  -- neo-tree passes state, and often node/path
-      handler = function(args)
-        -- Optional: if you have a preview to hide in Neo-tree's preview pane
-        -- pcall(hide_preview_safe, args.state)
-
-        -- Resolve the path from event payload (path > node.path > node:get_id())
-        local path = args and args.path
-        if not path and args and args.node then
-          path = args.node.path
-            or (type(args.node.get_id) == "function" and args.node:get_id())
-        end
-        path = type(path) == "string" and path or ""
-
-        -- Only intercept PDFs
-        if path:lower():sub(-4) ~= ".pdf" then
-          return -- let Neo-tree proceed with its normal open
-        end
-
-        local ok, pdf = pcall(require, "config.image_preview.pdf.buffer")
-        if not ok or type(pdf.open) ~= "function" then
-          return -- module missing → fall back to normal open
-        end
-
-        pdf.open(path)     -- show PDF in your dedicated split/buffer
-        return { handled = true } -- prevent default open (keeps Neo-tree as-is)
-      end,
-    },
-  },
-
 		default_component_config = {
 			indent = { with_expanders = false },
 			icon = {
