@@ -36,7 +36,7 @@ local function define_commands()
 
   -- Load
   vim.api.nvim_create_user_command("SessionLoad", function(cmd)
-    local arg = (cmd and cmd.args or "")
+    local arg = (cmd and cmd.args or "last")
     local ok, res = require("sessions.core").load(arg ~= "" and arg or nil)
     if ok then
       vim.notify("Session loaded: " .. (res or "?"))
