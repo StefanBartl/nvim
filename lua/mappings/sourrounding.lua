@@ -1,8 +1,25 @@
 ---@module 'mappings.surround'
---- Visual-mode double-tap mappings to surround the current selection.
+--- Visual-mode mappings to surround the current selection.
+--- This version binds the bracket pairs to single-tap sequences:
+---   []  -> surround with [ ... ]
+---   ()  -> surround with ( ... )
+---   {}  -> surround with { ... }
+--- The legacy double-tap triggers [[, ((, {{ are no longer used to avoid conflicts
+--- (e.g., markdown section jumps on [[).
+
+---@class SurroundConfig
+---@field single_quote  boolean|nil  -- enable '' for quotes
+---@field double_quotes boolean|nil  -- enable "" for quotes
+---@field backticks     boolean|nil  -- enable `` for backticks
+---@field parens        boolean|nil  -- enable () for parentheses
+---@field brackets      boolean|nil  -- enable [] for brackets
+---@field braces        boolean|nil  -- enable {} for braces
+---@field desc_prefix   string|nil   -- map description prefix
+---@field mapfun        fun(mode:string,lhs:string,rhs:function,opts:table)|nil  -- optional custom map helper
 
 local M = {}
 
+---@type SurroundConfig
 M.cfg = {
   single_quote  = true,
   double_quotes = true,
@@ -29,6 +46,12 @@ end
 ---@return nil
 local function surround_with(ch)
   -- Perform: c {open} <C-o>P {close} <Esc>
+  -- Explanation:
+  --   c           change selection (keeps selection contents in unnamed register)
+  --   {open}      insert opening delimiter
+  --   <C-o>P      temporarily switch to Normal, paste the replaced text BEFORE cursor
+  --   {close}     insert closing delimiter after the pasted text
+  --   <Esc>       leave insert mode
   feed("c" .. ch .. [[<C-o>P]] .. ch .. [[<Esc>]])
 end
 
@@ -37,13 +60,15 @@ end
 ---@param close string -- e.g. ")", "]", "}"
 ---@return nil
 local function surround_pair(open, close)
-  -- Perform: c {open} <C-o>P {close} <Esc>
+  -- Same approach as surround_with(), but for asymmetric pairs.
   feed("c" .. open .. [[<C-o>P]] .. close .. [[<Esc>]])
 end
 
+--- Define a Visual-mode mapping with optional project-specific helper.
 ---@param lhs string
 ---@param cb fun()
 ---@param desc string
+---@return nil
 local function xmap(lhs, cb, desc)
   -- Optional project-specific helper:
   local map = M.cfg.mapfun or vim.g.__map_helper or vim.keymap.set
@@ -51,6 +76,8 @@ local function xmap(lhs, cb, desc)
 end
 
 --- Apply user overrides into M.cfg.
+---@param opts table|nil
+---@return nil
 local function apply_opts(opts)
   if type(opts) ~= "table" then return end
   for k, v in pairs(opts) do
@@ -75,20 +102,22 @@ local function define_mappings()
     xmap("``", function() surround_with("`") end, pfx .. "backticks (`)")
   end
 
+  -- Updated: use single-tap pairs instead of legacy double-tap triggers
   if M.cfg.parens ~= false then
-    xmap("((", function() surround_pair("(", ")") end, pfx .. "()")
+    xmap("()", function() surround_pair("(", ")") end, pfx .. "()")
   end
 
   if M.cfg.brackets ~= false then
-    xmap("[[", function() surround_pair("[", "]") end, pfx .. "[]")
+    xmap("[]", function() surround_pair("[", "]") end, pfx .. "[]")
   end
 
   if M.cfg.braces ~= false then
-    xmap("{{", function() surround_pair("{", "}") end, pfx .. "{}")
+    xmap("{}", function() surround_pair("{", "}") end, pfx .. "{}")
   end
 end
 
 --- Public setup entrypoint.
+---@param opts SurroundConfig|nil
 ---@return nil
 function M.setup(opts)
   apply_opts(opts)
