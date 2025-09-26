@@ -109,7 +109,6 @@ function M.window()
 		["A"]             = { "add_directory", config = { show_path = "relative" } },
 
 		-- preview toggle + scrolling (Neo-tree preview)
-		["<Tab>"]         = "smart_preview",
 		["<PageDown>"]    = { "scroll_preview", config = { direction = -10 } },
 		["<PageUp>"]      = { "scroll_preview", config = { direction = 10 } },
 		["<C-f>"]         = { "scroll_preview", config = { direction = -1 } },
