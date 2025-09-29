@@ -1,0 +1,24 @@
+---@meta
+---@module 'lsp.lspdoctor.types'
+
+---@class LspDoctorOptions
+---@field use_notify? boolean Render via vim.notify instead of print (default: false)
+---@field list_limit? integer Max items per section in quick mode (default: 10)
+---@field show_capabilities? boolean Include per-client capability table in deep mode (default: true)
+---@field show_workspace? boolean Include workspace folders and root_dir checks (default: true)
+---@field show_tools? boolean Check for common external tools (default: true)
+---@field show_conflicts? boolean Detect potential provider conflicts (formatting, diagnostics) (default: true)
+---@field formatter_priority? string[] Preferred order of formatting providers (default: {})
+---@field semantic_tokens_timeout? integer Timeout (ms) for semantic tokens probe (default: 300)
+---@field scratch_filetype string? Filetype for scratch export buffer (default: 'markdown')
+
+---@class LspDoctorSection
+---@field title string
+---@field lines string[]
+
+---@class LspDoctorReport
+---@field mode '"quick"'|'"deep"'
+---@field ok boolean
+---@field summary string
+---@field sections LspDoctorSection[]
+---@field extras table<string, any> -- extended machine-readable info for tooling
