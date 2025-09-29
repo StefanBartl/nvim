@@ -3,6 +3,8 @@
 - `:edit #`: springe zum letzten buffer
 - `goto smth` in branches verwenden
 - `vert res +10`
+- `checkhealth vim.lsp` statt `LspInfo`
+
 
 ## 1. Operator + Textobjekt (präzise und schnell)
 
