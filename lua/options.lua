@@ -76,7 +76,7 @@ do
     pattern = { "markdown" },
     callback = function()
       vim.opt_local.foldmethod = "expr"
-      vim.opt_local.foldexpr = "v:lua.require'utils.markdown'.foldexpr(v:lnum)"
+      vim.opt_local.foldexpr = "v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)"
       vim.opt_local.foldenable = true
       vim.opt_local.foldlevel = 99
       vim.opt_local.foldlevelstart = 99
