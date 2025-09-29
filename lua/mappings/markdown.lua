@@ -3,14 +3,38 @@
 --- heading/folding helpers from utility modules. Robust against missing globals.
 
 ---@class MdMappingsCfg
----@field keep_inner_selection boolean  -- true: reselect inner text; false: reselect outer incl. markers
----@field restrict_to_markdown boolean  -- true: only operate in markdown buffers
----@field map_double_asterisk boolean   -- true: in Visual mode, "**" toggles bold
+---@field keep_inner_selection? boolean  -- true: reselect inner text; false: reselect outer incl. markers
+---@field restrict_to_markdown? boolean  -- true: only operate in markdown buffers
+---@field map_double_asterisk? boolean   -- true: in Visual mode, "**" toggles bold
 
 local M = {}
 
+local api = vim.api
 local md_mappings_utils = require("mappings.utils.markdown")
 local md_utils = require("utils.markdown")
+
+
+--- Attach per-buffer markdown integrations.
+---@param bufnr integer
+local function on_markdown(bufnr)
+  local ok, mdh = pcall(require, "utils.markdown_headings")
+  if ok then
+    mdh.setup_keymaps(bufnr)
+  end
+end
+
+--- Public setup: create a single autocommand for markdown buffers.
+local function MD_Headings_Setup()
+  local aug = api.nvim_create_augroup("UtilsMarkdownSetup", { clear = true })
+  api.nvim_create_autocmd("FileType", {
+    group = aug,
+    pattern = { "markdown" },
+    callback = function(ev)
+      on_markdown(ev.buf)
+    end,
+    desc = "Attach markdown utilities (keymaps, etc.)",
+  })
+end
 
 ---@type MdMappingsCfg
 M.cfg = {
@@ -49,10 +73,8 @@ function M.setup()
   map("n", "zi",  function() md_utils.fold_prev_heading_then_center() end, { desc = "[Markdown] Fold previous heading" })
   map("n", "zk", function() md_utils.fold_markdown_headings({ 6, 5, 4, 3, 2 }) end, { desc = "[Markdown] Fold H2+" })
 	map("n", "<leader>mtt", function () md_utils.update_markdown_toc("## Contents", "### Table of contents") end, { desc = "[Markdown] Update TOC (markdown-toc)" })
-	local md_head = require("utils.markdown_headings") -- AUDIT:
-	md_head.setup_keymaps()
-  -- map("n", "<leader>mhI", function() md_utils.shift_headings(1, { min_level = 2 }) end, { desc = "[Markdown] Increase heading levels (H2+)" })
-  -- map("n", "<leader>mhD", function() md_utils.shift_headings(-1, { min_level = 2 }) end, { desc = "[Markdown] Decrease heading levels (H2+)" })
+
+  MD_Headings_Setup()
 end
 
 return M

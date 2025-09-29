@@ -20,6 +20,7 @@ local api, fn, cmd = vim.api, vim.fn, vim.cmd
 ---@field min_level HeadingLevel|nil Minimum level to consider (default: 2)
 ---@field max_level HeadingLevel|nil Maximum level to consider (default: 6)
 ---@field restrict_to_visual boolean|nil If true, only operate on visual selection (auto-detected by default)
+---@field range_override integer[]|nil -- optional {srow, erow} 1-based inclusive line range to force
 
 --------------------------------------------------------------------------------
 -- Internal helpers (private)
@@ -103,42 +104,6 @@ local function setext_level(cur, nxt)
   if nxt:match("^%s*==+%s*$") then return 1 end
   if nxt:match("^%s*%-%-+%s*$") then return 2 end
   return nil
-end
-
---- Get current visual selection range as (start_lnum, end_lnum) or nil.
---- Works only if mode is visual-line/char; otherwise returns nil.
---- @return Lnum|nil, Lnum|nil
-local function get_visual_range()
-  local mode = api.nvim_get_mode().mode
-  if mode ~= "v" and mode ~= "V" and mode ~= "\22" then return nil, nil end -- char/line/block
-  local srow = fn.getpos("v")[2]
-  local erow = fn.getpos(".")[2]
-  if type(srow) ~= "number" or type(erow) ~= "number" then return nil, nil end
-  if srow > erow then srow, erow = erow, srow end
-  return srow, erow
-end
-
---- Iterate over lines [start_lnum, end_lnum] (inclusive) from current buffer.
---- @param start_lnum Lnum
---- @param end_lnum Lnum
---- @return string[] lines
-local function get_lines_range(start_lnum, end_lnum)
-  -- Buffer API uses 0-based indices; ensure clamp.
-  local s = math.max(0, start_lnum - 1)
-  local e = math.max(s, end_lnum) -- exclusive end (1-based)
-  return api.nvim_buf_get_lines(0, s, e, false)
-end
-
---- Safely set lines over a range.
---- @param start_lnum Lnum
---- @param end_lnum Lnum
---- @param lines string[]
---- @return boolean ok
-local function set_lines_range(start_lnum, end_lnum, lines)
-  local s = math.max(0, start_lnum - 1)
-  local e = math.max(s, end_lnum)
-  local ok = pcall(api.nvim_buf_set_lines, 0, s, e, false, lines)
-  return ok
 end
 
 --- Build a Lua pattern to match exactly a given heading level.
@@ -281,74 +246,6 @@ function M.fold_markdown_headings(levels)
 
   clear_hlsearch()
   restore_view(view)
-end
-
---------------------------------------------------------------------------------
--- Heading level shifting
---------------------------------------------------------------------------------
-
---- Shift heading levels by a delta (e.g., +1 or -1).
---- By default operates on the entire buffer; if visual selection is active, restricts to it.
---- Frontmatter is preserved; H1 can be protected by min_level=2 (default).
---- @param delta ShiftDelta Positive to increase, negative to decrease
---- @param opts ShiftOpts|nil Optional constraints (min_level/max_level)
---- @return nil
-function M.shift_headings(delta, opts)
-  if type(delta) ~= "number" or delta == 0 then return end
-  local buf = current_buf_valid()
-  if not buf then return end
-
-  opts = opts or {}
-  local min_level = (type(opts.min_level) == "number" and opts.min_level) or 2
-  local max_level = (type(opts.max_level) == "number" and opts.max_level) or 6
-
-  local srow, erow = get_visual_range()
-  if not srow or not erow then
-    srow, erow = 1, fn.line("$")
-  end
-
-  local fm_end = frontmatter_end(buf)
-  local view = save_view()
-
-  local lines = get_lines_range(srow, erow)
-  local out = { [#lines] = "" } ---@type string[]  -- pre-allocate to reduce reallocations
-
-  for i = 1, #lines do
-    local lnum = srow + i - 1
-    local line = lines[i]
-    -- Preserve fence markers
-    if line:match("^%s*```") or line:match("^%s*~~~") then
-      out[i] = line
-    else
-      local lvl = atx_level(line)
-      -- Skip setext here; we only shift ATX headings to avoid ambiguity.
-      if lvl and lvl >= min_level and lvl <= max_level then
-        local new_lvl = lvl + delta
-        if new_lvl < 1 then new_lvl = 1 end
-        if new_lvl > 6 then new_lvl = 6 end
-
-        -- Protect the very first H1 after frontmatter if min_level > 1
-        if new_lvl == 1 and min_level > 1 then
-          if not (lnum == 1 or (fm_end > 0 and lnum == fm_end + 1)) then
-            new_lvl = 2
-          end
-        end
-
-        local _, rest = line:match("^(%s*#+)(%s+.*)$")
-        if rest then
-          out[i] = string.rep("#", new_lvl) .. rest
-        else
-          out[i] = line
-        end
-      else
-        out[i] = line
-      end
-    end
-  end
-
-  set_lines_range(srow, erow, out)
-  restore_view(view)
-  clear_hlsearch()
 end
 
 --------------------------------------------------------------------------------
