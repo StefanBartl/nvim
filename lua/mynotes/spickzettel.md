@@ -13,6 +13,9 @@
 `:writetor[!] {path} `      -> write copy, create parents; with ! force overwrite
 `:MkParent`                 -> ensure parent dir for the current buffer name
 
+## Custom mappings
+`<A-m>`                     -> Öffnet 'find files or grep' selector
+
 ## 1. Operator + Textobjekt (präzise und schnell)
 
    * ciw → „change inner word“: ändert nur das Wort, Satzzeichen bleiben.

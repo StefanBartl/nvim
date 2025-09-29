@@ -113,7 +113,7 @@ return {
 	},
 
 	config = function(_, opts)
-		require("config.neotree.usr_picker").attach(opts)
+		require("config.neotree.custom_actions.find_or_grep_menu").attach(opts)
 		require("config.neotree.current_hl").attach(opts) -- ① vor setup(): Komponenten-Wrapper injizieren
 		require("neo-tree").setup(opts)
 		---@diagnostic disable-next-line

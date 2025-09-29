@@ -1,64 +1,73 @@
----@module 'config.neotree.usr_picker'
---- Alt-m → choose {find_files|live_grep} in a tiny fzf-lua menu, then run on node's directory.
+---@module 'config.neotree.user_actions.find_or_grep_menu'
+--- <M-m> → choose {find_files|live_grep} in a tiny fzf-lua menu, then run on node's directory.
 
 ---@class NeoTreeUsrPicker
 local M = {}
 
 function M.attach(opts)
+  -- Require fzf-lua once; fall back gracefully if missing
   local ok_fzf, fzf = pcall(require, "fzf-lua")
 
+  -- Ensure nested tables exist on opts
   opts.filesystem = opts.filesystem or {}
   opts.filesystem.window = opts.filesystem.window or {}
   opts.filesystem.window.mappings = opts.filesystem.window.mappings or {}
 
-  --- Resolve directory from current node; file → parent dir; dir → itself; fallback → cwd.
-  --- @param state table
-  --- @return string
+  --- Resolve a directory based on the Neo-tree state.
+  --- Files -> parent directory; Directories -> themselves; No node -> current working directory.
+  ---@param state table
+  ---@return string
   local function resolve_dir(state)
     local node = state and state.tree and state.tree:get_node() or nil
     if not node then
+      -- Prefer libuv cwd; fall back to Vim's cwd for older setups
       return vim.loop.cwd() or vim.fn.getcwd()
     end
     local path = node:get_id()
     if node.type == "file" then
+      -- Convert file path to its parent directory
       return vim.fn.fnamemodify(path, ":p:h")
     end
+    -- Node is a directory; use it directly
     return path
   end
 
-  --- Run fzf-lua action with cwd=dir.
-  --- @param action '"find_files"'|'"live_grep"'
-  --- @param dir string
+  --- Run a specific fzf-lua action rooted at a given directory.
+  ---@param action '"find_files"'|'"live_grep"'
+  ---@param dir string
   local function run_fzf(action, dir)
     if not ok_fzf then
       vim.notify("fzf-lua not available", vim.log.levels.ERROR)
       return
     end
     if action == "find_files" then
+      -- Use fd under the hood; include hidden files, follow symlinks, skip .git
       fzf.files({
         cwd = dir,
         fd_opts = "--hidden --follow --exclude .git",
       })
     elseif action == "live_grep" then
+      -- Use ripgrep; include hidden files, exclude .git via glob
       fzf.live_grep({
         cwd = dir,
         rg_opts = "--hidden --glob !.git",
       })
+    else
+      vim.notify("Unknown action: " .. tostring(action), vim.log.levels.WARN)
     end
   end
 
-  --- Show a tiny fzf menu instead of vim.ui.select. Uses tab delimiter for neat columns.
-  --- @param dir string
+  --- Present a tiny fzf menu to pick the action, with a clean first-column-only list.
+  --- Falls back to a confirm dialog when fzf-lua is unavailable.
+  ---@param dir string
   local function fzf_menu(dir)
     if not ok_fzf then
-      -- Fallback: simple confirm dialog
       local idx = vim.fn.confirm("fzf-lua action", "&find_files\n&live_grep", 1)
       local choice = (idx == 1 and "find_files") or (idx == 2 and "live_grep") or nil
       if choice then run_fzf(choice, dir) end
       return
     end
 
-    -- Each line: "<value>\t<description>"
     ---@type string[]
     local lines = {
       "find_files\tBrowse files (fd, hidden, no .git)",
@@ -66,16 +75,10 @@ function M.attach(opts)
     }
 
     fzf.fzf_exec(lines, {
+      -- Prompt and UI
       prompt = "Action> ",
-      -- Hide the description in the final value; show only the first column in list
-      fzf_opts = {
-        ["--delimiter"] = "\t",
-        ["--with-nth"] = "1",
-        ["--prompt"] = "Action> ",
-        ["--no-multi"] = "",
-      },
       winopts = {
-        width = 0.40,   -- tune as desired
+        width = 0.40,
         height = 0.25,
         row = 0.30,
         col = 0.50,
@@ -83,21 +86,30 @@ function M.attach(opts)
         title_pos = "center",
         border = "rounded",
       },
+      -- Show only the first tab-separated column
+      fzf_opts = {
+        ["--delimiter"] = "\t",
+        ["--with-nth"] = "1",
+        ["--prompt"] = "Action> ",
+        ["--no-multi"] = "",
+      },
       actions = {
         ---@param selected string[]  -- first item contains "value\tdescription"
         default = function(selected)
           if not selected or not selected[1] then return end
-          local value = selected[1]:match("^[^\t]+") -- extract before the first tab
+          local value = selected[1]:match("^[^\t]+")
           run_fzf(value, dir)
         end,
       },
     })
   end
 
-  opts.filesystem.window.mappings["<leader>P"] = function(state)
+  -- Map Alt-m inside Neo-tree's filesystem window
+  opts.filesystem.window.mappings["<M-m>"] = function(state)
     local dir = resolve_dir(state)
     fzf_menu(dir)
   end
 end
 
 return M
+
