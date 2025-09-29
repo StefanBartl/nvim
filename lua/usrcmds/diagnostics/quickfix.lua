@@ -1,18 +1,6 @@
----@module 'usrcmds.diagnostics.qf'
+---@module 'usrcmds.diagnostics.quickfix'
 --- Push workspace/buffer diagnostics to quickfix or location list.
 --- Compatible with Neovim 0.10 (two-arg setloclist) and 0.11+ (single-arg).
-
----@class DiagnosticsQfOpts
---- Optional: open quickfix/loclist window immediately.
----@field open? boolean
---- Optional: numeric severity (vim.diagnostic.severity.*) or string ("error","warn","info","hint","all")
----@field severity? integer|string
---- Optional: target buffer; nil = all buffers (workspace) for quickfix, or current buffer for loclist.
----@field bufnr? integer
---- Optional: namespace filter; nil = all namespaces.
----@field namespace? integer
---- Optional: window id for loclist; defaults to 0 (current window).
----@field win_id? integer
 
 ---@class DiagnosticsQf
 local M = {}
@@ -51,7 +39,7 @@ end
 
 --- Internal helper: call setloclist with correct arity across Neovim versions.
 --- On 0.10: setloclist(winid, opts)
---- On 0.11+: setloclist(opts)
+--- On ssss0.11+: setloclist(opts)
 --- @param opts table
 --- @return nil
 local function call_setloclist(opts)
@@ -111,11 +99,11 @@ function M.to_loc(opts)
 	call_setloclist(locopts)
 end
 
---- Define user commands (idempotent).
+--- Define user commands
 --- :DiagQF [severity]    → workspace → quickfix
 --- :DiagLoc [severity]   → current buffer → loclist
 --- @return nil
-function M.setup_commands()
+function M.enable_commands()
 	if vim.g._diagnostics_qf_cmds == 1 then return end
 	vim.g._diagnostics_qf_cmds = 1
 
@@ -139,7 +127,14 @@ function M.setup_commands()
 	})
 end
 
-function M.setup_keymaps(map)
+--- Define keyxmaps
+--- <leader>wq  → workspace → quickfix
+--- <leader>wl  → current buffer → loclist
+--- @return nil
+function M.enable_keymaps(map)
+	if not map then
+		map = vim.keymap.set
+	end
 	map("n", "<leader>wq", function()
 		M.to_qf({ open = true })
 	end, { desc = "Diagnostics → Quickfix (workspace)" })
@@ -147,6 +142,17 @@ function M.setup_keymaps(map)
 	map("n", "<leader>wl", function()
 		M.to_loc({ open = true, win_id = 0 })
 	end, { desc = "Diagnostics → Loclist (buffer)" })
+end
+
+--- Define user commands and keymaüps
+--- :DiagQF [severity]    → workspace → quickfix
+--- :DiagLoc [severity]   → current buffer → loclist
+--- <leader>wq            → workspace → quickfix
+--- <leader>wl            → current buffer → loclist
+--- @return nil
+function M.enable_usercmds_and_keymaps()
+  M.enable_commands()
+	M.enable_keymaps()
 end
 
 return M

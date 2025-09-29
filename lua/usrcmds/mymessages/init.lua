@@ -2,13 +2,9 @@
 --- Cross-platform capture of :messages with robust path+clipboard handling.
 --- Writes under $REPOS_DIR/mymessages or stdpath("state")/mymessages if REPOS_DIR is unset.
 
-
----@class MyMessages
----@field run fun(opts?: { debug?: boolean }): nil
-
 local M = {}
 
--- small helpers ---------------------------------------------------------------
+--- small helpers ---------------------------------------------------------------
 
 ---@param s string
 ---@return string
@@ -168,10 +164,15 @@ function M.run(opts)
   end
 end
 
-vim.api.nvim_create_user_command("MyMessages", function() M.run({ debug = false }) end,
-  { desc = "Capture :messages, save to file, copy to clipboard" })
 
-vim.api.nvim_create_user_command("MyMessagesDebug", function() M.run({ debug = true }) end,
-  { desc = "Capture :messages with debug notifications" })
+--- Setup user commands
+---@return nil
+function M.enable_usercmds()
+  vim.api.nvim_create_user_command("MyMessages", function() M.run({ debug = false }) end,
+    { desc = "Capture :messages, save to file, copy to clipboard" })
+
+  vim.api.nvim_create_user_command("MyMessagesDebug", function() M.run({ debug = true }) end,
+    { desc = "Capture :messages with debug notifications" })
+end
 
 return M

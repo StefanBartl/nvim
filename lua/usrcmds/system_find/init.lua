@@ -10,13 +10,13 @@
 ---   `log /var/log`
 ---   `rc .conf /etc`
 ---
---- The command will be translated to an `fd`-Command and showed with Telescope..
+--- The command will be translated to an `fd`-Command and showed with Telescope...
 
 local M = {}
 
 ---Starts systemwide File-Search mit `fd`
 ---@return nil
-function M.system_find()
+local function System_find()
   local builtin = require("telescope.builtin")
   local input_opts = { prompt = "Suchbegriff(e) (Name .ext Pfad...): " }
 
@@ -71,11 +71,15 @@ function M.system_find()
   end)
 end
 
-vim.api.nvim_create_user_command("FindOnSystem", function()
-  require("custom.system_find").system_find()
-end, {
-  desc = "Systemweite Dateisuche (fd + telescope)",
-  nargs = "*",
-})
+--- Setup 'system_find'-Usercommand
+---@return nil
+function M.enable_usercmds()
+	vim.api.nvim_create_user_command("FindOnSystem", function()
+		System_find()
+	end, {
+		desc = "Systemweite Dateisuche (fd + telescope)",
+		nargs = "*",
+	})
+end
 
 return M

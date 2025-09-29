@@ -19,10 +19,7 @@
 
 local M = {}
 
----@class UVDocConfig
----@field open? "float"|"split"        -- How to display the doc window
----@field max_bytes? integer           -- Max HTTP response size (bytes)
----@field user_agent? string|nil       -- Optional curl User-Agent header value
+---@type UVDocConfig
 local DEFAULTS ---@type UVDocConfig
 DEFAULTS = {
   open = "float",
@@ -650,7 +647,7 @@ function M.complete(arglead, cmdline, cursorpos)
 end
 
 --------------------
--- Setup & Cache
+-- Cache
 --------------------
 
 --- Clear in-session caches (genindex + symbol list).
@@ -660,42 +657,39 @@ function M.cache_clear()
   vim.notify("[uvdoc] cache cleared", vim.log.levels.INFO)
 end
 
----@param opts UVDocConfig|nil
-function M.setup(opts)
-  CFG = vim.tbl_deep_extend("force", CFG, opts or {})
-end
-
 --------------------
 -- Initialization
 --------------------
-
-M.setup({ open = "float" })
 
 local function UVDocComplete(arglead, cmdline, cursorpos)
   return M.complete(arglead, cmdline, cursorpos)
 end
 
--- Open docs for an exact or fuzzy name (falls back to a list if ambiguous)
-vim.api.nvim_create_user_command("UVDoc", function(cmd)
-  if #cmd.args > 0 then M.doc(cmd.args) else M.doc() end
-end, {
-  nargs = "?",
-  desc = "Show libuv doc (exact or fuzzy)",
-  complete = UVDocComplete,
-})
+--- Setup 'uv_dov'-Usercommands
+---@return nil
+function M.enable_usercmd()
+	-- Open docs for an exact or fuzzy name (falls back to a list if ambiguous)
+	vim.api.nvim_create_user_command("UVDoc", function(cmd)
+		if #cmd.args > 0 then M.doc(cmd.args) else M.doc() end
+	end, {
+		nargs = "?",
+		desc = "Show libuv doc (exact or fuzzy)",
+		complete = UVDocComplete,
+	})
 
--- Single picker command retained (UVDocList). UVDocPick removed as redundant.
-vim.api.nvim_create_user_command("UVDocList", function(cmd)
-  M.list(#cmd.args > 0 and cmd.args or nil)
-end, { nargs = "?", desc = "List libuv symbols and open with <CR>", complete = UVDocComplete })
+	-- Single picker command retained (UVDocList). UVDocPick removed as redundant.
+	vim.api.nvim_create_user_command("UVDocList", function(cmd)
+		M.list(#cmd.args > 0 and cmd.args or nil)
+	end, { nargs = "?", desc = "List libuv symbols and open with <CR>", complete = UVDocComplete })
 
--- Insert only the C signature/type at cursor (fuzzy allowed)
-vim.api.nvim_create_user_command("UVDocHere", function(cmd)
-  M.here(#cmd.args > 0 and cmd.args or nil)
-end, { nargs = "?", desc = "Insert libuv C signature or type at cursor", complete = UVDocComplete })
+	-- Insert only the C signature/type at cursor (fuzzy allowed)
+	vim.api.nvim_create_user_command("UVDocHere", function(cmd)
+		M.here(#cmd.args > 0 and cmd.args or nil)
+	end, { nargs = "?", desc = "Insert libuv C signature or type at cursor", complete = UVDocComplete })
 
-vim.api.nvim_create_user_command("UVDocCacheClear", function()
-  M.cache_clear()
-end, { desc = "Clear uvdoc caches" })
+	vim.api.nvim_create_user_command("UVDocCacheClear", function()
+		M.cache_clear()
+	end, { desc = "Clear uvdoc caches" })
+end
 
 return M
