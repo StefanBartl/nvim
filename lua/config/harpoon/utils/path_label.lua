@@ -19,6 +19,7 @@ local uv = vim.uv or vim.loop
 
 ---@return string
 local function homedir()
+		---@diagnostic disable-next-line os_homedir exists in uv library
   return (uv.os_homedir and uv.os_homedir()) or vim.fn.expand("~")
 end
 
@@ -74,6 +75,7 @@ function M.to_label(path)
   end
 
   -- Realpath if possible for dedup friendliness; fallback to given path
+	---@diagnostic disable-next-line fs_realpath exists in uv library
   local rp = (uv.fs_realpath and uv.fs_realpath(path)) or path
   local p = to_display_sep(rp)
 

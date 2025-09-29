@@ -111,15 +111,17 @@ local function debounce(fn, ms)
 	return function()
 		if S.timer then
 			pcall(vim.uv.timer_stop, S.timer)
+			---@diagnostic disable-next-line close exists in uv library
 			pcall(vim.uv.close, S.timer)
 			S.timer = nil
 		end
 
 		---@type uv
-	  local uv = vim.uv or vim.loop
+		local uv = vim.uv or vim.loop
 		local t = uv.new_timer()
 		S.timer = t
-    ---@cast t uv.uv_timer_t
+		---@cast t uv.uv_timer_t
+		---@diagnostic disable-next-line start exists in uv library
 		t:start(ms, 0, function()
 			vim.schedule(function()
 				if S.timer == t then S.timer = nil end

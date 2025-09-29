@@ -45,6 +45,7 @@ function P.path_absolute(path_or_buf)
   -- Expand to absolute path first; :p handles ~/ and relative buffers
   local abs = vim.fn.fnamemodify(path, ":p")
   -- Try realpath to resolve symlinks; fall back to abs if it fails
+	---@diagnostic disable-next-line fs_realpath exists in uv library
   local ok, real = pcall(vim.uv.fs_realpath, abs)
   local canon = ok and real or abs
 	---@diagnostic disable-next-line uv library

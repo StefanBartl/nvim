@@ -104,10 +104,6 @@ local function expand_proportionally(widths, remainder, weights, cap)
 	return widths
 end
 
----@param s string
----@return integer
-local function dispw(s) return strdisplaywidth(s) end
-
 ---@param line string
 ---@return boolean
 local function is_table_like(line)

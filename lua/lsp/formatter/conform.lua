@@ -27,6 +27,7 @@ local function resolve(cmd)
     return exepath
   end
   local uv = vim.uv or vim.loop
+		---@diagnostic disable-next-line os_homedir exists in uv library
   local home = (uv.os_homedir and uv.os_homedir()) or os.getenv("HOME") or os.getenv("USERPROFILE") or ""
   ---@type string[]
   local candidates = {

@@ -40,6 +40,22 @@
 
 ---@type table
 return {
+
+	-- disable nvchad dashboard to prevent crash with custom snacks dashboard
+  {
+    "nvchad/ui",
+    optional = true,
+    ---@param _ any
+    ---@param opts table
+    opts = function(_, opts)
+      opts = opts or {}
+      opts.nvdash = opts.nvdash or {}
+      opts.nvdash.load_on_startup = false
+      opts.nvdash.enabled = false
+      return opts
+    end,
+  },
+
 	{
 		"folke/snacks.nvim",
 		event = "VeryLazy", -- defer until UI is ready; quickfile still accelerates single-file cold open

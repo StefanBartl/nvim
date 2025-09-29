@@ -314,10 +314,10 @@ function M.setup(shared, opts)
             end
           end
 
+           -- AUDIT:
           if new_root and is_dir(new_root) then
             local lua_root = join({ new_root, "lua" })
             local scan_base = is_dir(lua_root) and lua_root or new_root
-            -- optional: deine find_type_dirs(...) hier wiederverwenden, wenn du willst
           end
 
           new_config.settings.Lua.workspace.library = lib

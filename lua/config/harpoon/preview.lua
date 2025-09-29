@@ -53,6 +53,7 @@ local function read_file_lines(path)
 
   local fd = uv.fs_open(path, "r", 420)  -- 0644
   if not fd then return nil end
+	---@diagnostic disable-next-line fs_stat exists in uv library
   local st = uv.fs_fstat(fd)
   uv.fs_close(fd)
   if not st then return nil end
