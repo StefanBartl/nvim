@@ -1,4 +1,4 @@
----@module 'utils.normalize'
+---@module 'lib.normalize'
 --- A small, dependency-free normalization toolkit for plugin configs.
 --- Focus:
 ---   * Strict typing at the boundary (apply_* never writes nil into typed fields).

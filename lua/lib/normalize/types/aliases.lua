@@ -1,5 +1,5 @@
 ---@meta
----@module 'utils.normalize.aliases'
+---@module 'lib.normalize.aliases'
 
 ---@alias FnValidator fun(value:any):boolean        -- return true if value passes validation
 ---@alias FnMapper    fun(value:any):any            -- map value -> normalized value

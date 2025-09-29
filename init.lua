@@ -43,4 +43,4 @@ vim.schedule(function()
   require("mappings").setup()
 end)
 require "sessions"
-
+require("utils.help_sync").setup()

@@ -188,6 +188,10 @@ function M.create_keymaps()
   -- Workspace-wide (across buffers) via quickfix with !
   map("n", "<leader>dN", ":DiagNext! ", { desc = "[LSP] Workspace next diagnostic (!)", silent = false })
   map("n", "<leader>dP", ":DiagPrev! ", { desc = "[LSP] Workspace prev diagnostic (!)", silent = false })
+
+  -- AUDIT: besseren platz finden
+	local dqf = require("usrcmds.diagnostics.quickfix")
+	dqf.enable_keymaps(vim.g.__map_helper and vim.g.__map_helper or vim.keymap.set)
 end
 
 --- Public setup to be called from plugin init.
@@ -195,9 +199,6 @@ end
 function M.setup()
   M.create_user_commands()
   M.create_keymaps()
-
-  local dqf = require("usrcmds.diagnostics.qf")
-  dqf.setup_keymaps(vim.g.__map_helper and vim.g.__map_helper or vim.keymap.set)
 end
 
 return M

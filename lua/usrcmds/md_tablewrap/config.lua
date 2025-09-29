@@ -5,7 +5,7 @@
 
 local M = {}
 
-local normalize = require("utils.normalize") -- AUDIT: row 66 and 78
+local normalize = require("lib.normalize")
 
 ---@type MDTableWrapConfig
 local DEFAULTS = {
@@ -20,114 +20,71 @@ local DEFAULTS = {
 	on_save_enabled  = false,
 }
 
----@param name string
----@param v any
----@param min integer
----@param allow_nil boolean
----@return boolean ok, integer|nil val, string|nil err
-local function as_int(name, v, min, allow_nil)
-	if v == nil then
-		if allow_nil then return true, nil, nil end
-		return false, nil, name .. " is required"
-	end
-	if type(v) ~= "number" or v ~= math.floor(v) then
-		return false, nil, name .. " must be an integer"
-	end
-	if v < min then
-		return false, nil, string.format("%s must be ≥ %d", name, min)
-	end
-	return true, v, nil
-end
-
----@param name string
----@param v any
----@return boolean ok, boolean|nil val, string|nil err
-local function as_bool(name, v)
-	if type(v) ~= "boolean" then
-		return false, nil, name .. " must be a boolean"
-	end
-	return true, v, nil
-end
 
 ---@param user table|nil
 ---@return boolean ok, MDTableWrapConfig|nil cfg, string|nil err
 function M.normalize(user)
-	if user == nil then
-		-- Return a deep copy of defaults
-		return true, vim.deepcopy(DEFAULTS), nil
-	end
-	if type(user) ~= "table" then
-		return false, nil, "options must be a table"
-	end
-	local cfg = vim.deepcopy(DEFAULTS)
+  if user == nil then
+    return true, vim.deepcopy(DEFAULTS), nil
+  end
+  if type(user) ~= "table" then
+    return false, nil, "options must be a table"
+  end
 
-	if user.inner_pad ~= nil then
-		local ok, val, err = as_int("inner_pad", user.inner_pad, 0, false); if not ok then return false, nil, err end
-		cfg.inner_pad = val
-	end
-	if user.outer_left ~= nil then
-		local ok, val, err = as_int("outer_left", user.outer_left, 0, false); if not ok then return false, nil, err end
-		cfg.outer_left = val
-	end
-	if user.outer_right ~= nil then
-		local ok, val, err = as_int("outer_right", user.outer_right, 0, false); if not ok then return false, nil, err end
-		cfg.outer_right = val
-	end
-	if user.auto_width ~= nil then
-		local ok, val, err = as_bool("auto_width", user.auto_width); if not ok then return false, nil, err end
-		cfg.auto_width = val
-	end
-	if user.width_mode ~= nil then
-		if type(user.width_mode) ~= "string" then
-			return false, nil, "width_mode must be a string"
-		end
-		local m = user.width_mode
-		if m ~= "auto" and m ~= "equal" and m ~= "minflex" then
-			return false, nil, "width_mode must be one of: auto|equal|minflex"
-		end
-		cfg.width_mode = m
-		cfg.auto_width = (m == "auto")
-	end
+  local cfg = vim.deepcopy(DEFAULTS)
 
-	-- legacy auto_width still supported if width_mode not set explicitly
-	if user.width_mode == nil and user.auto_width ~= nil then
-		local okb, val, err = as_bool("auto_width", user.auto_width); if not okb then return false, nil, err end
-		cfg.auto_width = val
-		cfg.width_mode = val and "auto" or "equal"
-	end
-	if user.max_col_width ~= nil then
-		if user.max_col_width == false then
-			cfg.max_col_width = nil
-		else
-			local ok, val, err = as_int("max_col_width", user.max_col_width, 1, true); if not ok then return false, nil, err end
-			cfg.max_col_width = val
-		end
-	end
-	if user.min_col_width ~= nil then
-		local ok, val, err = as_int("min_col_width", user.min_col_width, 1, false); if not ok then return false, nil, err end
-		cfg.min_col_width = val
-	end
-	if user.wrap_all_default ~= nil then
-		local ok, val, err = as_bool("wrap_all_default", user.wrap_all_default); if not ok then return false, nil, err end
-		cfg.wrap_all_default = val
-	end
-	if user.on_save_enabled ~= nil then
-		local ok, val, err = as_bool("on_save_enabled", user.on_save_enabled); if not ok then return false, nil, err end
-		cfg.on_save_enabled = val
-	end
+  -- integers
+  if user.inner_pad ~= nil      then normalize.apply_nonneg_int(cfg, "inner_pad",  user.inner_pad)      end
+  if user.outer_left ~= nil     then normalize.apply_nonneg_int(cfg, "outer_left", user.outer_left)     end
+  if user.outer_right ~= nil    then normalize.apply_nonneg_int(cfg, "outer_right", user.outer_right)   end
+  if user.min_col_width ~= nil  then normalize.apply_pos_int(cfg,    "min_col_width", user.min_col_width) end
 
-	-- Sanity: max ≥ min if both set (not strict requirement, just warn via return err)
-	if cfg.max_col_width and cfg.min_col_width and cfg.max_col_width < cfg.min_col_width then
-		-- Swap to keep invariants reasonable
-		cfg.max_col_width = cfg.min_col_width
-	end
+  -- booleans
+  if user.auto_width ~= nil       then normalize.apply_bool(cfg, "auto_width",       user.auto_width)       end
+  if user.wrap_all_default ~= nil then normalize.apply_bool(cfg, "wrap_all_default", user.wrap_all_default) end
+  if user.on_save_enabled ~= nil  then normalize.apply_bool(cfg, "on_save_enabled",  user.on_save_enabled)  end
 
-	return true, cfg, nil
+  -- width_mode (beeinflusst auto_width)
+  if user.width_mode ~= nil then
+    if type(user.width_mode) ~= "string" then
+      return false, nil, "width_mode must be a string"
+    end
+    local m = user.width_mode
+    if m ~= "auto" and m ~= "equal" and m ~= "minflex" then
+      return false, nil, "width_mode must be one of: auto|equal|minflex"
+    end
+    cfg.width_mode = m
+    cfg.auto_width = (m == "auto")
+  end
+
+  -- legacy: auto_width ohne width_mode setzt width_mode implizit
+  if user.width_mode == nil and user.auto_width ~= nil then
+    -- N.apply_bool hat schon in cfg geschrieben; lese konsistent aus cfg
+    cfg.width_mode = cfg.auto_width and "auto" or "equal"
+  end
+
+  -- max_col_width erlaubt nil (abschalten) oder eine positive Zahl;
+  -- zusätzlich kompatibel zu false → „unset“
+  if user.max_col_width ~= nil then
+    if user.max_col_width == false then
+      cfg.max_col_width = nil
+    else
+      -- schreibt nur bei gültigem int; bleibt sonst beim bisherigen Wert
+      normalize.apply_pos_int(cfg, "max_col_width", user.max_col_width)
+    end
+  end
+
+  -- Sanity: max ≥ min, falls beide gesetzt
+  if cfg.max_col_width and cfg.min_col_width and cfg.max_col_width < cfg.min_col_width then
+    cfg.max_col_width = cfg.min_col_width
+  end
+
+  return true, cfg, nil
 end
 
----@return MDTableWrapConfig defaults_copy
+---@return MDTableWrapConfig
 function M.defaults()
-	return vim.deepcopy(DEFAULTS)
+  return vim.deepcopy(DEFAULTS)
 end
 
 return M

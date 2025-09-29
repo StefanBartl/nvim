@@ -2,15 +2,15 @@
 ---@module 'config.neotree.types'
 
 ---@class NeoTreeCwdSyncConfig
----@field debounce_ms integer        # Debounce for event storms (milliseconds)
----@field keep_focus boolean         # Restore previous window after syncing
----@field also_set_nvim_cwd boolean  # Also run :cd to the derived directory
----@field open_if_closed boolean     # Open Neo-tree if no window is open
----@field use_project_root boolean   # Try utils.lv_project_root first
----@field project_root_fallback_to_bufdir boolean # Fallback to buffer dir if project root is nil
+---@field debounce_ms integer                -- Debounce window for bursts of BufEnter/WinEnter/TabEnter
+---@field keep_focus boolean                 -- After syncing, restore focus to the previously active window
+---@field also_set_nvim_cwd boolean          -- Optionally keep :pwd in lockstep with Neo-tree's root
+---@field open_if_closed boolean             -- If no Neo-tree window exists in the current tab, open one
+---@field use_project_root boolean           -- Prefer project root (e.g., via repo root) over buffer directory
+---@field project_root_fallback_to_bufdir boolean -- Fallback to buffer directory if no project root found
+---@field force_position_left boolean        -- If a filesystem view exists in this tab but isn't "left", normalize it to "left"
 
 ---@class NeoTreeCwdSyncState
----@field timer uv.uv_timer_t|nil    # libuv timer handle or nil
----@field pending boolean|nil
+---@field timer uv.uv_timer_t|nil
+---@field pending boolean
 ---@field last_dir string|nil
-

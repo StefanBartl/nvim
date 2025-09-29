@@ -1,3 +1,4 @@
+--- AUDIT: notwenig und wenn ja, safe call? oder eigener folder und init?
 ---@module 'lib'
 --- Aggregator module that re-exports single-function utilities under one namespace.
 
