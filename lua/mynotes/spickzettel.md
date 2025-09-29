@@ -12,9 +12,13 @@
 `:SaveAsR[!] {path}`        -> save-as, create parents; with ! force overwrite
 `:writetor[!] {path} `      -> write copy, create parents; with ! force overwrite
 `:MkParent`                 -> ensure parent dir for the current buffer name
+`FindFiles{Telescope/Fzf}`  -> Find files in Telescope or Fzf
+`Grep{Telescope/Fzf}`       -> Grep in Telescope or Fzf
 
 ## Custom mappings
+
 `<A-m>`                     -> Öffnet 'find files or grep' selector
+`telf /telg / fzff / fzfg`  -> {find files or grep} in custom dir with {telescope or fzf}
 
 ## 1. Operator + Textobjekt (präzise und schnell)
 
