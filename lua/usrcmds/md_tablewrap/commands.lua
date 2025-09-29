@@ -153,7 +153,7 @@ local function setup(user_opts)
 
 	api.nvim_create_user_command("MDTableWidthCycle", function()
 		local order = { auto = "equal", equal = "minflex", minflex = "auto" }
-		set_mode(order[CFG.width_mode] or "auto")
+		set_mode(order[CFG.width_mode] and order[CFG.width_mode] or "auto")
 	end, { desc = "Cycle width_mode: auto → equal → minflex → auto." })
 
 	-- Setters for min/max width
@@ -164,7 +164,7 @@ local function setup(user_opts)
 			tostring(CFG.auto_width),
 			CFG.max_col_width and tostring(CFG.max_col_width) or "nil",
 			CFG.min_col_width and tostring(CFG.min_col_width) or "nil",
-			CFG.inner_pad, CFG.outer_left, CFG.outer_right,
+			CFG.inner_pad and CFG.inner_pad or 0, CFG.outer_left and CFG.outer_left or 0, CFG.outer_right and CFG.outer_right or 0,
 			tostring(CFG.wrap_all_default), tostring(CFG.on_save_enabled)
 		)
 		vim.notify("MDTableWrap: " .. m, vim.log.levels.INFO, { title = "MDTableWrap" })

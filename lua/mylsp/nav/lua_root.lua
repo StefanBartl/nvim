@@ -211,6 +211,7 @@ end
 --- @return string
 local function _lhs_text(n)
   local t = n:type()
+	---@diagnostic disable-next-line Annotations specify that at most 1 return value(s) are required, found 1 to 2 returned here instead.
   if t == "identifier" then return _txt(n):gsub("%s+", "") end
   if t == "dot_index_expression" or t == "method_index_expression" or t == "index_expression" then
     local raw = _txt(n):gsub("%s+", "")
@@ -221,7 +222,9 @@ local function _lhs_text(n)
       :gsub(":", ".")
     return raw
   end
-  return _txt(n):gsub("%s+", "")
+
+	---@diagnostic disable-next-line Annotations specify that at most 1 return value(s) are required, found 1 to 2 returned here instead.
+	return _txt(n):gsub("%s+", "")
 end
 
 --- Find the best matching table-constructor assignment for a chain within a buffer.

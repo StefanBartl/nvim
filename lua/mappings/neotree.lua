@@ -4,18 +4,6 @@
 ---   AltGr+c → "¢", AltGr+f → "đ", AltGr+l → "ł"
 --- Diese werden zusätzlich zu <A-c>/<A-f>/<A-l> gemappt.
 
-local M = {}
-
----@alias NeoTreePosition "left"|"right"|"float"|"current"
-
----@enum NeoTreePositionEnum
-local NeoTreePositionEnum = {
-  left = "left",
-  right = "right",
-  float = "float",
-  current = "current",
-}
-
 ---@class NeoTreeBaseOpts
 ---@field source string
 ---@field toggle boolean
@@ -27,6 +15,18 @@ local NeoTreePositionEnum = {
 ---@field lhs string
 ---@field pos NeoTreePosition
 ---@field desc string
+
+local M = {}
+
+---@alias NeoTreePosition "left"|"right"|"float"|"current"
+
+---@enum NeoTreePositionEnum
+local NeoTreePositionEnum = {
+  left = "left",
+  right = "right",
+  float = "float",
+  current = "current",
+}
 
 ---Convenience wrapper for vim.keymap.set with sane defaults.
 ---@param modes string|string[]
@@ -45,12 +45,11 @@ end
 
 ---@type NeoTreeCfg
 M.cfg = {
-  -- Vorgefüllte Aliasse basierend auf deiner Beobachtung:
-  --   c = ¢, f = đ, l = ł
   extra_lhs = {
     ["<A-c>"] = { "¢" },
     ["<A-f>"] = { "đ" },
     ["<A-l>"] = { "ł" },
+    ["<A-r>"] = { "¶" },
   },
 }
 
@@ -73,6 +72,7 @@ local specs = {
   { lhs = "<A-c>", pos = "current", desc = "[Neo-tree] Toggle & Reveal (current)" },
   { lhs = "<A-f>", pos = "float",   desc = "[Neo-tree] Toggle & Reveal (float)"   },
   { lhs = "<A-l>", pos = "left",    desc = "[Neo-tree] Toggle & Reveal (left)"    },
+  { lhs = "<A-r>", pos = "right",    desc = "[Neo-tree] Toggle & Reveal (right)"    },
 }
 
 ---@nodiscard

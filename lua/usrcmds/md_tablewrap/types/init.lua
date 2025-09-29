@@ -13,6 +13,9 @@
 --- Resulting content cells are then allocated to columns either "naturally" (auto_width=true)
 --- or evenly (auto_width=false), and finally wrapped per cell using UTF-8 safe word/char breaks.
 ---
+---@field width_mode "auto" | "equal" | "minflex"
+---
+---
 ---@field inner_pad integer
 --- Number of spaces added INSIDE every cell on both sides (left and right).
 --- This is a per-side padding; i.e., each column's emitted visual width equals:

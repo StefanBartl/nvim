@@ -1,19 +1,21 @@
 ---@module 'utils.search_all_drives'
----@version 1.2
+--- Build Telescope tabs for cross-drive searches (grep + files).
+--- Design:
+---   • Drive/mount discovery with caching.
+---   • POSIX, Windows, WSL supported.
+---   • Grep-Tabs via ripgrep; Files-Tab via a robust, imported finder argv.
+---   • No global side effects; UI concerns (vim.notify) only in tele_func.
 
----@class SearchMounts
----@field cache string[]|nil
+---@type SearchMounts
 local Mounts = { cache = nil }
 
 ---@param s string|nil
 ---@return string
 local function trim(s)
-  -- gsub returns (new_string, count); the assignment keeps only the first value.
   local r = (s or ""):gsub("^%s+", "")
   r = r:gsub("%s+$", "")
   return r
 end
-
 
 local function is_wsl()
   if vim.env.WSLENV ~= nil then return true end
@@ -29,7 +31,7 @@ local function os_name()
   return u and (u.sysname or "") or ""
 end
 
--- Windows: gib Wurzeln als "C:\", "D:\" … zurück (Backslashes beibehalten!)
+-- Windows: return roots like "C:\", "D:\" … (keep backslashes for `dir`)
 ---@return string[]
 local function windows_roots()
   local roots = {}
@@ -39,7 +41,7 @@ local function windows_roots()
     for line in ps:lines() do
       local r = trim(line):gsub("\\+$", "\\")
       if r ~= "" and vim.fn.isdirectory(r) == 1 then
-        table.insert(roots, r) -- wichtig: Backslashes behalten für 'dir'
+        table.insert(roots, r)
       end
     end
     ps:close()
@@ -57,7 +59,7 @@ local function windows_roots()
   return roots
 end
 
--- POSIX/WSL wie gehabt
+-- POSIX/WSL
 ---@return string[]
 local function posix_roots()
   local dirs = {}
@@ -109,30 +111,11 @@ end
 
 local M = {}
 
--- Wähle ein robustes find_command:
--- - Windows: nutze 'cmd.exe /c dir /s /b /a:-d' (liefert Dateien zeilenweise)
--- - Sonst: fd bevorzugen, sonst rg --files
----@return string[]|nil
--- local function choose_find_command()
---   local sys = os_name()
---   if sys:find("Windows", 1, true) then
---     return { "cmd.exe", "/c", "dir", "/s", "/b", "/a:-d" }
---   end
---   if vim.fn.executable("fd") == 1 then
---     return { "fd", "--type", "f", "--hidden", "--follow", "--exclude", ".git" }
---   end
---   if vim.fn.executable("rg") == 1 then
---     return { "rg", "--files", "--hidden", "--no-ignore-vcs", "--color", "never" }
---   end
---   return nil
--- end
-
-
-
--- In utils/search_all_drives.lua ergänzen/ändern
 ---@param builtin table
 ---@return table[]
 function M.build_tabs(builtin)
+  local findchooser = require("utils.search_all_drives.select_find_command")
+
   local function all_roots()
     local dirs = Mounts.get_all()
     if #dirs == 0 then
@@ -153,8 +136,34 @@ function M.build_tabs(builtin)
   }
 
   return {
+    {
+      name = "All Drives Files",
+      tele_func = function()
+        local dirs = all_roots(); if not dirs then return end
 
-    -- Regex (wie bisher)
+        local ok, argv, err = findchooser.choose_find_command({
+          include_hidden   = true,
+          follow_symlinks  = true,
+          exclude_vcs      = true,
+        })
+        if not ok or not argv then
+          vim.notify(err or "No suitable file-lister found.", vim.log.levels.ERROR)
+          return
+        end
+
+        local cmd = vim.deepcopy(argv)
+        for i = 1, #dirs do
+          cmd[#cmd + 1] = dirs[i]
+        end
+
+        builtin.find_files({
+          find_command = cmd,
+          hidden       = true,
+          no_ignore    = true,
+        })
+      end,
+    },
+
     {
       name = "All Drives Grep (regex)",
       tele_func = function()
@@ -166,14 +175,12 @@ function M.build_tabs(builtin)
         builtin.live_grep({
           search_dirs     = dirs,
           additional_args = function()
-            -- Regex + smart-case + hidden + no-ignore + Excludes
             return vim.list_extend({ "--hidden", "--no-ignore-vcs", "-S" }, common_excludes)
           end,
         })
       end,
     },
 
-    -- Literal-Matches (kein Regex): ideal für einfache Begriffe wie 'install'
     {
       name = "All Drives Grep (literal)",
       tele_func = function()
@@ -185,14 +192,12 @@ function M.build_tabs(builtin)
         builtin.live_grep({
           search_dirs     = dirs,
           additional_args = function()
-            -- -F = fixed strings, -S = smart-case
             return vim.list_extend({ "--hidden", "--no-ignore-vcs", "-F", "-S" }, common_excludes)
           end,
         })
       end,
     },
 
-    -- Ganze Wörter (z. B. nur 'install' als Wort, nicht 'reinstalling')
     {
       name = "All Drives Grep (word)",
       tele_func = function()
@@ -204,7 +209,6 @@ function M.build_tabs(builtin)
         builtin.live_grep({
           search_dirs     = dirs,
           additional_args = function()
-            -- -w = word, -S = smart-case
             return vim.list_extend({ "--hidden", "--no-ignore-vcs", "-w", "-S" }, common_excludes)
           end,
         })
@@ -214,4 +218,3 @@ function M.build_tabs(builtin)
 end
 
 return M
-

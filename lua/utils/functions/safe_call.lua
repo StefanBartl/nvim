@@ -2,12 +2,9 @@
 --- Robust wrappers around pcall/xpcall with structured return values.
 --- No UI side-effects here; callers decide how to handle errors.
 
-local M = {}
+-- AUDIT: safe calls in config should use this module
 
----@class SafeCallResult
----@field ok boolean
----@field result any
----@field err string|nil
+local M = {}
 
 ---@param fn fun(...): any
 ---@param ... any

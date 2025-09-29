@@ -5,6 +5,8 @@
 
 local M = {}
 
+local normalize = require("utils.normalize") -- AUDIT: row 66 and 78
+
 ---@type MDTableWrapConfig
 local DEFAULTS = {
 	inner_pad        = 1,

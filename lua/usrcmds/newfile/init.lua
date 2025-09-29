@@ -1,7 +1,13 @@
 ---@module 'utils.newfile'
 --- Create/edit/save files with optional recursive parent directory creation.
---- Linux/macOS friendly; no external dependencies.
+--- Linux/macOS friendly; no external dependencies. AUDIT: Windows?
 
+-- User commands:
+-- :NewFile {path}           -> set buffer name, create parents, do NOT write by default
+-- :NewFileWrite {path}      -> like NewFile, but also :write immediately
+-- :SaveAsR[!] {path}        -> save-as, create parents; with ! force overwrite
+-- :WriteToR[!] {path}       -> write copy, create parents; with ! force overwrite
+-- :MkParent                 -> ensure parent dir for the current buffer name
 
 local M = {}
 
@@ -65,13 +71,6 @@ function M.write_to(path, opts)
   local bang = opts.overwrite and "!" or ""
   vim.cmd(("write%s %s"):format(bang, vim.fn.fnameescape(path)))
 end
-
--- User commands:
--- :NewFile {path}           -> set buffer name, create parents, do NOT write by default
--- :NewFileWrite {path}      -> like NewFile, but also :write immediately
--- :SaveAsR[!] {path}        -> save-as, create parents; with ! force overwrite
--- :WriteToR[!] {path}       -> write copy, create parents; with ! force overwrite
--- :MkParent                 -> ensure parent dir for the current buffer name
 
 vim.api.nvim_create_user_command("NewFile", function(opts_)
  local path = vim.fn.expand(opts_.args)

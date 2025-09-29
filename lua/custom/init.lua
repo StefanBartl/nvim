@@ -1,4 +1,10 @@
 ---@module 'custom'
--- Initialize module for 'custom'
+-- Initialize modules for 'custom'
 
-require "custom.ctrl_cycle" -- AUDIT:
+pcall(function()
+  require "custom.ctrl_cycle" -- AUDIT:
+end)
+
+pcall(function()
+  require("pathprobe").setup_keymaps()
+end)

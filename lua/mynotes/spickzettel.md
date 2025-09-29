@@ -5,6 +5,13 @@
 - `vert res +10`
 - `checkhealth vim.lsp` statt `LspInfo`
 
+## Custom Usrcommands
+
+`:NewFile {path}`           -> set buffer name, create parents, do NOT write by default
+`:NewFileWrite {path}`      -> like NewFile, but also :write immediately
+`:SaveAsR[!] {path}`        -> save-as, create parents; with ! force overwrite
+`:writetor[!] {path} `      -> write copy, create parents; with ! force overwrite
+`:MkParent`                 -> ensure parent dir for the current buffer name
 
 ## 1. Operator + Textobjekt (präzise und schnell)
 

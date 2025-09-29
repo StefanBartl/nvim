@@ -26,7 +26,8 @@ end
 ---@param shared {capabilities?:table,on_attach?:fun(client,bufnr),on_init?:fun(client,init_result):boolean}|nil
 ---@param opts { enable?: boolean }|nil
 ---@return nil
-function M.setup(shared, opts)
+---@diagnostic disable-next-line duplicate field
+function M.enable(shared, opts)
   shared = shared or {}
   opts = opts or {}
 

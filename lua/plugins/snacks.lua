@@ -83,7 +83,6 @@ return {
 				-- We keep those and add our own section in between keys and startup.
 				dashboard = {
 					enabled = true,
-					---@type snacks.dashboard.Section
 					sections = {
 						{ section = "header" }, -- default
 						{ section = "keys", gap = 1, padding = 1 }, -- default
@@ -116,9 +115,11 @@ return {
 
 				--- Create a dashboard section that lists sessions from stdpath('config')/lua/sessions/storage.
 				--- Sorting by mtime desc; items use {icon,title,desc,action} as per dashboard types.
-				---@param item snacks.dashboard.Item
+				---@diagnostic disable snacks.dashboard/[item/section] exists
+				---@param _ snacks.dashboard.Item # item (unused)
 				---@return snacks.dashboard.Section|nil
-				local function my_sessions_section(item)
+				---@diagnostic enable
+				local function my_sessions_section(_)
 					-- English comments inside code by request:
 					-- Cheap dependencies / locals
 					local uv = vim.uv or vim.loop
@@ -256,8 +257,8 @@ return {
 			maps[2]    = { "<leader>uD", function() safe_call("debug", "toggle") end, desc = "Snacks Debug: Toggle Overlay" }
 			maps[3]    = { "<leader>uf", function() safe_call("dim", "toggle") end, desc = "Snacks Dim: Toggle Focus Scope" }
 
-			maps[4]    = { "<leader>pp", function() safe_call("profiler", "start") end, desc = "Snacks Profiler: Start" }
-			maps[5]    = { "<leader>pP", function() safe_call("profiler", "stop") end, desc = "Snacks Profiler: Stop" }
+			maps[4]    = { "<leader>ps", function() safe_call("profiler", "start") end, desc = "Snacks Profiler: Start" }
+			maps[5]    = { "<leader>pS", function() safe_call("profiler", "stop") end, desc = "Snacks Profiler: Stop" }
 			maps[6]    = { "<leader>pr", function() safe_call("profiler", "report") end, desc = "Snacks Profiler: Report" }
 
 			maps[7]    = { "<leader>uq", function() safe_call("quickfile", "disable") end, desc =

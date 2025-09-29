@@ -31,20 +31,16 @@ pcall(dofile, vim.g.base46_cache .. "syntax")
 pcall(dofile, vim.g.base46_cache .. "defaults")
 pcall(dofile, vim.g.base46_cache .. "statusline")
 
-require "autocmds"
-require "custom"
-require("lsp").setup()
-require "mynotes"
+require "system.env"
 require "options"
 require("myoptions").setup { highlights = true, options = false }
-require "system.env"
+require("lsp").setup()
+require "custom"
+require "mynotes"
+require "autocmds"
 require "usrcmds"
-require "sessions"
-
 vim.schedule(function()
   require("mappings").setup()
 end)
+require "sessions"
 
-pcall(function()
-  require("pathprobe").setup_keymaps()
-end)

@@ -1,14 +1,12 @@
 ---@module 'utils.window_zoom'
-
 -- Toggle maximize current window and restore previous layout sizes.
 -- Uses Vim's winrestcmd() to capture/restore the full layout.
 -- Stores per tabpage to avoid cross-tab interference.
 
 local M = {}
 
----@return string
+---@return string # Returns a string of Ex-commands that can restore window sizes
 local function capture_layout()
-  -- Returns a string of Ex-commands that can restore window sizes.
   return vim.fn.winrestcmd()
 end
 
@@ -21,8 +19,7 @@ end
 
 ---@return boolean
 function M.is_zoomed()
-  -- Heuristic: if current window already full width and height
-  -- compared to screen, consider it "zoomed".
+  -- Heuristic: if current window already full width and height compared to screen, consider it "zoomed".
   return vim.fn.winwidth(0) == vim.o.columns or vim.fn.winheight(0) == vim.o.lines
 end
 

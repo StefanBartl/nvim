@@ -169,7 +169,7 @@ end
 --- Uses standard ]d / [d variants and additional leader-based maps.
 ---@return nil
 function M.create_keymaps()
-  local map = vim.keymap.set
+  local map = vim.g.__map_helper and vim.g.__map_helper or vim.keymap.set
 
   -- Current buffer navigation (builtin)
   map({ "n", "x", "o" }, "]d", function() M.goto_next(nil) end, { desc = "[LSP] Next diagnostic" })
@@ -195,6 +195,9 @@ end
 function M.setup()
   M.create_user_commands()
   M.create_keymaps()
+
+  local dqf = require("usrcmds.diagnostics.qf")
+  dqf.setup_keymaps(vim.g.__map_helper and vim.g.__map_helper or vim.keymap.set)
 end
 
 return M

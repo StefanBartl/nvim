@@ -8,16 +8,19 @@
 ---@field col integer  -- 0-based
 
 ---@class HarpoonItem
+---@diagnostic disable-next-line duplicate field
 ---@field value HarpoonValue
+---@diagnostic disable-next-line duplicate field
 ---@field context HarpoonContext|nil
 
 --- Legacy or non-standard item shapes sometimes found in older setups:
 ---@class HarpoonItemLegacy
 ---@field path string|nil         -- legacy field; may be present
----@field value string|nil        -- might be missing; we will normalize
+---@field value string|nil        -- might be missing; normalize it
 ---@field context HarpoonContext|nil
 
 ---@class HarpoonList
+---@diagnostic disable-next-line duplicate field
 ---@field items (HarpoonItem|HarpoonItemLegacy|string)[]  -- allow union
 ---@field remove fun(self: HarpoonList, index: integer)
 ---@field save fun(self: HarpoonList)

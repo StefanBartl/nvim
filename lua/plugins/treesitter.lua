@@ -85,6 +85,7 @@ return {
 				},
 			}
 
+			---@diagnostic disable-next-line Missing required fields modules, sync_install, ensure_installed, ignore_install, auto_install
 			require("nvim-treesitter.configs").setup({ textobjects = textobjects })
 		end,
 	},
