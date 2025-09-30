@@ -1,6 +1,8 @@
 ---@module 'autocmds'
 --- Initialize module for 'autocmds'
 
+---AUDIT: Wie im git abschnitt modularisieren
+
 ------------------------------------------------------
 --- General
 ------------------------------------------------------
@@ -38,50 +40,8 @@ require("autocmds.general").enable({
 --- Git
 ------------------------------------------------------
 
-require("autocmds.git").enable({
-	conflicts_qf = {
-		enable = true, -- On events (default VimEnter), scans for unresolved conflicts and fills the quickfix list.
-		events = { "VimEnter", "FocusGained" },
-		diff_filter = "U",
-		open_qf = true,
-		notify = true,
-		git_cmd = "git",
-	},
-	commit_ft = {
-		enable = true, -- On FileType gitcommit, enables spell, sets textwidth/colorcolumn/formatoptions, optional startinsert.
-		spell = true,
-		textwidth = 72,
-		colorcolumn = "73",
-		formatoptions = "tcqj",
-		start_in_insert = false,
-	},
-	conflict_marks = {
-		enable = true, -- Highlights conflict markers (<<<<<<<, =======, >>>>>>>) in any buffer; clears on window leave.
-		hl_a = "DiffDelete",
-		hl_b = "DiffChange",
-		hl_c = "DiffAdd",
-	},
-	gitsigns_refresh = {
-		enable = true, -- On BufEnter/FocusGained, refreshes gitsigns if available to keep hunks accurate.
-		events = { "BufEnter", "FocusGained" },
-	},
-	blame_on_hold = {
-		enable = false, -- On CursorHold, shows inline blame via gitsigns (skips special buftypes).
-		delay = 3000,
-		virt = true,
-		ignore_buftypes = { "nofile", "prompt" },
-	},
-	line_diff_on_hold = {
-		enable = true,        -- Turn the feature on.
-		delay = 5000,          -- Add 250ms on top of 'updatetime' before showing the inline preview.
-		hl_prev = "Comment",  -- Highlight group for the previous-line preview.
-		virt_priority = 1000, -- Virtual text priority.
-		max_len = 160,        -- Truncate long previous lines for neatness.
-		git_cmd = "git",
-		ignore_buftypes = { "nofile", "prompt", "terminal" },
-	},
-})
-
+local ok_g, git = pcall(require, "autocmds.git")
+if ok_g then git.enable( true ) end
 
 ------------------------------------------------------
 --- Markdown
