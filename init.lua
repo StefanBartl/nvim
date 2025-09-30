@@ -33,14 +33,14 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 
 require "system.env"
 require "options"
-require("myoptions").setup { highlights = true, options = false }
+require("myoptions").setup{ highlights = true, options = true }
 require("lsp").setup()
 require "custom"
 require "mynotes"
 require "autocmds"
 require "usrcmds"
-vim.schedule(function()
-  require("mappings").setup()
-end)
 require "sessions"
 require("utils.help_sync").setup()
+vim.schedule(function()
+	require("mappings").setup()
+end)

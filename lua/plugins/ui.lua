@@ -25,17 +25,23 @@ return {
 		opts = require "config.noice",
 		dependencies = {
 			"MunifTanjim/nui.nvim",
-			 "folke/snacks.nvim",
-			 "rcarriga/nvim-notify",
+			"folke/snacks.nvim",
+			"rcarriga/nvim-notify",
 		},
 	},
 
 	{
 		"mg979/vim-visual-multi",
 		branch = 'master',
-		keys = {
-			{ "<C-n>", mode = { "n", "x" } },
-		},
+		event = "UIEnter", -- or "VeryLazy"
+		init = function()
+			vim.g.VM_default_mappings = 0
+			vim.g.VM_maps = {
+				["Find Under"]         = "<C-n>",
+				["Find Subword Under"] = "<C-n>",
+				["I BS"]               = "", -- disable conflicting insert backspace
+			}
+		end,
 	},
 
 	-- Zen Mode: Distraction-free writing

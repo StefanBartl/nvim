@@ -45,7 +45,7 @@ end
 --- Setup keymaps
 -- <leader>fc : search files in config dir
 ---@return nil
-function M.enable_keymaps()
+local function Enable_keymaps()
   vim.keymap.set("n", "<leader>fc", function()
     Find_in_config()
   end, { desc = "Find file in Neovim config" })
@@ -54,13 +54,13 @@ end
 --- Setup user-commands
 -- :FindConfig :x same as <leader>fc
 ---@return nil
-function M.enable_user_commands()
+local function Enable_usercmds()
   vim.api.nvim_create_user_command("FindConfig", function(params)
     -- Allow optional extra args for power-users (e.g., filtering)
     if params.args ~= "" then
       Find_in_config({ fzf_opts = { ["--query"] = params.args } })
     else
-      M.find_in_config()
+      Find_in_config()
     end
   end, {
     nargs = "?",
@@ -71,10 +71,12 @@ end
 --- Setup both mappings and usercommands from find_config
 -- <leader>fc : search files in config dir
 -- :FindConfig :x same as <leader>fc
+---@param cfg EnableUsercmdsKeymaps
 ---@return nil
-function M.enable_keymaps_and_usercmds()
-  M.enable_keymaps()
-	M.enable_user_commands()
+function M.enable(cfg)
+  if not cfg then return end
+  if cfg.keymaps then Enable_usercmds() end
+	if cfg.usercmds then Enable_keymaps() end
 end
 
 return M

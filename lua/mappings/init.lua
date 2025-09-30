@@ -3,22 +3,10 @@
 
 local M = {}
 
----Convenience wrapper for vim.keymap.set with sane defaults.
----@param modes string|string[]
----@param lhs string
----@param rhs string|function
----@param opts table|nil
-local function map(modes, lhs, rhs, opts)
-  opts = opts or {}
-  if opts.noremap == nil then opts.noremap = true end
-  if opts.silent == nil then opts.silent = true end
-  vim.keymap.set(modes, lhs, rhs, opts)
-end
-
 ---Setup all mapping modules
 ---@return nil
 function M.setup()
-  vim.g.__map_helper = map
+  vim.g.__map_helper = require("lib.map")
 
 	require("mappings.buf_win_tab").setup()
 	require("mappings.custom").setup()

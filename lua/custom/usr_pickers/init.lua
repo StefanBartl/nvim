@@ -19,6 +19,10 @@ local M = {}
 -- Reusable libuv handle (Neovim 0.10+: vim.uv; older: vim.loop)
 ---@type uv
 local uv = vim.uv or vim.loop
+local nvim_create_user_command = vim.api.nvim_create_user_command
+local notify = vim.notify
+local env = vim.env
+local map = require("lib.map")
 
 -- Immutable defaults ----------------------------------------------------------
 
@@ -36,7 +40,6 @@ local DEFAULTS = {
     find_files_fzf       = "FindFilesFzf",
     grep_fzf             = "GrepFzf",
   },
-  enable_keymaps = true,
   notify_level = vim.log.levels.INFO,
 }
 
@@ -49,14 +52,14 @@ local IS_WINDOWS = (vim.loop.os_uname().sysname or ""):match("Windows") ~= nil
 --- On Windows prefer HOME, then USERPROFILE, then HOMEDRIVE+HOMEPATH.
 --- @return string|nil
 local function home_dir()
-  if vim.env.HOME and vim.env.HOME ~= "" then
-    return vim.env.HOME
+  if env.HOME and env.HOME ~= "" then
+    return env.HOME
   end
   if IS_WINDOWS then
-    if vim.env.USERPROFILE and vim.env.USERPROFILE ~= "" then
-      return vim.env.USERPROFILE
+    if env.USERPROFILE and env.USERPROFILE ~= "" then
+      return env.USERPROFILE
     end
-    local hd, hp = vim.env.HOMEDRIVE, vim.env.HOMEPATH
+    local hd, hp = env.HOMEDRIVE, env.HOMEPATH
     if hd and hp and hd ~= "" and hp ~= "" then
       return hd .. hp
     end
@@ -187,7 +190,7 @@ local function parse_dirs(args)
     if dir then
       result[#result + 1] = dir
     else
-      vim.notify(err or ("Invalid path: " .. token), vim.log.levels.WARN)
+      notify(err or ("Invalid path: " .. token), vim.log.levels.WARN)
     end
   end
   return result
@@ -242,20 +245,11 @@ local function prompt_dir(context)
 
   local st = uv.fs_stat(candidate)
   if not (st and st.type == "directory") then
-    vim.notify(("Not a directory: %s"):format(candidate), vim.log.levels.WARN)
+    notify(("Not a directory: %s"):format(candidate), vim.log.levels.WARN)
     return nil
   end
 
   return candidate
-end
-
---- Idempotent user-command (re)definition.
---- @param name string
---- @param fn fun(opts:{args:string, fargs:string[]})
---- @param opts table
-local function define_user_command(name, fn, opts)
-  pcall(vim.api.nvim_del_user_command, name)
-  vim.api.nvim_create_user_command(name, fn, opts)
 end
 
 -- Telescope wrappers ----------------------------------------------------------
@@ -264,7 +258,7 @@ end
 --- @param dir DirPath
 local function telescope_files(dir)
   local builtin = safe_require("telescope.builtin", function()
-    vim.notify("Telescope is not installed or failed to load", vim.log.levels.WARN)
+    notify("Telescope is not installed or failed to load", vim.log.levels.WARN)
   end)
   if not builtin then return end
 
@@ -280,7 +274,7 @@ end
 --- @param dirs string[]
 local function telescope_live_grep(dirs)
   local builtin = safe_require("telescope.builtin", function()
-    vim.notify("Telescope is not installed or failed to load", vim.log.levels.WARN)
+    notify("Telescope is not installed or failed to load", vim.log.levels.WARN)
   end)
   if not builtin then return end
 
@@ -308,7 +302,7 @@ end
 --- @param dir DirPath
 local function fzf_files(dir)
   local fzf = safe_require("fzf-lua", function()
-    vim.notify("fzf-lua is not installed or failed to load", vim.log.levels.WARN)
+    notify("fzf-lua is not installed or failed to load", vim.log.levels.WARN)
   end)
   if not fzf then return end
 
@@ -323,7 +317,7 @@ end
 --- @param dir DirPath
 local function fzf_live_grep(dir)
   local fzf = safe_require("fzf-lua", function()
-    vim.notify("fzf-lua is not installed or failed to load", vim.log.levels.WARN)
+    notify("fzf-lua is not installed or failed to load", vim.log.levels.WARN)
   end)
   if not fzf then return end
 
@@ -373,72 +367,86 @@ local function cmd_grep_fzf(opts)
   fzf_live_grep(dirs[1])
 end
 
--- Public API ------------------------------------------------------------------
+--  API ------------------------------------------------------------------
 
---- Setup the module. Registers user commands and keymaps (idempotent).
+--- Registers user commands
 --- @param cfg? UsrPickersConfig
 --- @return nil
-function M.setup(cfg)
+local function Enable_usercmds(cfg)
   ---@type UsrPickersConfig
   local C = vim.tbl_deep_extend("force", DEFAULTS, cfg or {})
 
-  define_user_command(C.commands.find_files_telescope, cmd_find_files_telescope, {
+  nvim_create_user_command(C.commands.find_files_telescope, cmd_find_files_telescope, {
     nargs = "?",
     complete = "dir",
     desc = "Telescope find_files with optional cwd",
   })
 
-  define_user_command(C.commands.grep_telescope, cmd_grep_telescope, {
+  nvim_create_user_command(C.commands.grep_telescope, cmd_grep_telescope, {
     nargs = "*",
     complete = "dir",
     desc = "Telescope live_grep with optional multiple directories",
   })
 
-  define_user_command(C.commands.find_files_fzf, cmd_find_files_fzf, {
+  nvim_create_user_command(C.commands.find_files_fzf, cmd_find_files_fzf, {
     nargs = "?",
     complete = "dir",
     desc = "fzf-lua: files under optional cwd",
   })
 
-  define_user_command(C.commands.grep_fzf, cmd_grep_fzf, {
+  nvim_create_user_command(C.commands.grep_fzf, cmd_grep_fzf, {
     nargs = "?",
     complete = "dir",
     desc = "fzf-lua: ripgrep under optional cwd",
   })
+end
 
-  if C.enable_keymaps then
+--- Registers keymaps
+--- @param cfg? UsrPickersConfig
+--- @return nil
+local function Enable_keymaps(cfg)
+  ---@type UsrPickersConfig
+  local C = vim.tbl_deep_extend("force", DEFAULTS, cfg or {})
+
     local tel_files_key = C.keys.tel_files   -- <leader>telf
     local tel_grep_key  = C.keys.tel_grep    -- <leader>telg
     local fzf_files_key = C.keys.fzf_files   -- <leader>fzff
     local fzf_grep_key  = C.keys.fzf_grep    -- <leader>fzfg
 
     -- Telescope → files in chosen directory
-    vim.keymap.set("n", tel_files_key, function()
+    map("n", tel_files_key, function()
       local dir = prompt_dir("Telescope files")
       if dir then telescope_files(dir) end
     end, { desc = "Telescope: files in chosen directory" })
 
     -- Telescope → live_grep in chosen directory
-    vim.keymap.set("n", tel_grep_key, function()
+    map("n", tel_grep_key, function()
       local dir = prompt_dir("Telescope live_grep")
       if dir then telescope_live_grep({ dir }) end
     end, { desc = "Telescope: live_grep in chosen directory" })
 
     -- fzf-lua → files in chosen directory
-    vim.keymap.set("n", fzf_files_key, function()
+    map("n", fzf_files_key, function()
       local dir = prompt_dir("fzf-lua files")
-      if dir tlen fzf_files(dir) end
+      if dir then fzf_files(dir) end
     end, { desc = "fzf-lua: files in chosen directory" })
 
     -- fzf-lua → live_grep in chosen directory
-    vim.keymap.set("n", fzf_grep_key, function()
+    map("n", fzf_grep_key, function()
       local dir = prompt_dir("fzf-lua live_grep")
       if dir then fzf_live_grep(dir) end
     end, { desc = "fzf-lua: live_grep in chosen directory" })
-  end
 end
 
--- Set up once on first require
-M.setup()
+
+--- Setup the module. Registers user commands and keymaps
+--- @param cfg? UsrPickersConfig
+--- @param enable_opts? EnableConfig
+--- @return nil
+function M.enable(cfg, enable_opts)
+	if not enable_opts then return end
+	if enable_opts.usercmds then Enable_usercmds(cfg) end
+	if enable_opts.keymaps then Enable_keymaps(cfg) end
+end
 
 return M

@@ -1,3 +1,4 @@
+---@meta
 ---@module '@types.archive'
 -- Aliases, Classes, etc.. which are currently ---> NOT IN USE <---
 --Remove without doubt if neccesary.

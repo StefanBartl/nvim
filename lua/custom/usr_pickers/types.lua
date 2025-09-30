@@ -14,7 +14,6 @@
 ---@field grep_fzf             string
 
 ---@class UsrPickersConfig
----@field keys UsrPickersKeymaps
----@field commands UsrPickersCommands
----@field enable_keymaps boolean
----@field notify_level integer
+---@field keys? UsrPickersKeymaps
+---@field commands? UsrPickersCommands
+---@field notify_level? integer
