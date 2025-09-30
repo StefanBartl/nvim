@@ -3,6 +3,7 @@
 
 local M = {}
 
+require("custom.markdown.fenced_fix").apply()
 local cfg = require("custom.markdown.config")
 local fold = require("custom.markdown.core.fold")
 local head = require("custom.markdown.core.headings")
