@@ -60,7 +60,23 @@ local function shift_range(bufnr, srow, erow, delta, min_level)
   return changed
 end
 
----@param delta integer
+--- Public: shift a given 1-based line range (operator/whole-buffer use)
+---@param srow integer
+---@param erow integer
+---@param delta integer  -- +1 / -1
+---@return integer changed
+function M.shift_range(srow, erow, delta)
+  if delta ~= 1 and delta ~= -1 then return 0 end
+  if vim.bo.filetype ~= "markdown" then return 0 end
+  local bufnr = api.nvim_get_current_buf()
+  if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then return 0 end
+  local min_level = cfg().protect_h1 and 2 or 1
+  local view = fn.winsaveview()
+  local changed = shift_range(bufnr, srow, erow, delta, min_level)
+  fn.winrestview(view)
+  return changed
+end
+
 ---@return nil
 function M.shift(delta)
   if delta ~= 1 and delta ~= -1 then return end
@@ -77,15 +93,25 @@ function M.shift(delta)
     local cur = api.nvim_win_get_cursor(0)
     srow, erow = cur[1], cur[1]
   end
-
-  local min_level = cfg().protect_h1 and 2 or 1
-  local view = fn.winsaveview()
-  shift_range(bufnr, srow, erow, delta, min_level)
-  fn.winrestview(view)
+  M.shift_range(srow, erow, delta)
 end
 
 function M.increase() M.shift(1) end
 function M.decrease() M.shift(-1) end
 
-return M
+-- Operator-pending helpers (use with g@)
+---@param _ string
+function M._op_increase(_)  -- kept simple for operatorfunc
+  local srow = api.nvim_buf_get_mark(0, "[")[1]
+  local erow = api.nvim_buf_get_mark(0, "]")[1]
+  if srow and erow then M.shift_range(math.min(srow, erow), math.max(srow, erow), 1) end
+end
 
+---@param _ string
+function M._op_decrease(_)
+  local srow = api.nvim_buf_get_mark(0, "[")[1]
+  local erow = api.nvim_buf_get_mark(0, "]")[1]
+  if srow and erow then M.shift_range(math.min(srow, erow), math.max(srow, erow), -1) end
+end
+
+return M

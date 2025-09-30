@@ -11,7 +11,7 @@ local Defaults = {
 	use_zf_override = true,
   enable_autocmds = true,
   enable_keymaps = true,
-	ft_only = false,
+	ft_only = true,
 }
 
 ---@type MarkdownConfig
