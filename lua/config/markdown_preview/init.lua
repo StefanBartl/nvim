@@ -21,6 +21,7 @@ function M.setup()
 		wsl = vim.fs.joinpath('mnt', 'c', 'Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe'),
 		linux = vim.fs.joinpath(''), -- WATCH: If youre on Linux OS put path there
 	}
+
 	if vim.g.is_windows then
 		vim.g.mkdp_browser = browser.win
 	elseif vim.g.is_wsl then

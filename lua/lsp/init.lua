@@ -196,9 +196,31 @@ function M.setup()
 	})
 	require("lsp.lspdoctor").enable_usercmd()
 
+	require('config.mason.ensure_install').enable({
+		lsp = true,
+		dap = false, -- skip DAP batch for now
+		linters = true,
+		formatters = true,
+		overrides = {
+			lsp = {
+				["java-language-server"]   = false,                      -- keep off unless 'mvn' is available
+				["csharp-language-server"] = false,                      -- prefer 'omnisharp' if dotnet exists
+				-- ["omnisharp"]              = require('config.mason.ensure_install').has_dotnet and true or false, -- you can compute booleans beforehand
+			},
+			dap = {
+				["node-debug2-adapter"] = false, -- deprecated; use js-debug-adapter
+			},
+			linters = {
+				["eslint_d"] = true, -- ensure enabled
+			},
+			formatters = {
+				["prettier"] = true, -- ensure enabled
+			},
+		},
+	})
+
 	M._initialized = true
 	return true
 end
 
 return M
-

@@ -180,9 +180,12 @@ local function rebuild()
     if not okc then return false, (M.opts.notify_prefix .. errc), 0 end
   end
 
+	---@diagnostic disable
   local sources = find_help_files(M.opts.search_roots or DEFAULTS.search_roots,
                                   M.opts.docs_dirnames or DEFAULTS.docs_dirnames)
-  if #sources == 0 then
+---@diagnostic enable
+
+	if #sources == 0 then
     -- Still ensure RTP so a later run of :HelpSyncRebuild has the path ready
     ensure_in_rtp(basedir)
     pcall(function() vim.cmd("silent! helptags " .. fn.shellescape(docdir)) end)
