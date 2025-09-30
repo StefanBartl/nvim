@@ -7,7 +7,7 @@ require("custom.usr_pickers").enable({}, { usercmds = true, keymaps = true })
 require("custom.repo_pickers").enable({
   selector = "auto",      -- "auto" | "vim_select" | "telescope" | "fzf"
   engine   = "auto",      -- "auto" | "telescope" | "fzf"
-  expose_engine_cmds = false,  -- wichtig: engine-spezifische Commands NICHT registrieren
+  expose_engine_cmds = false,
   keymaps_lhs = { repo_files = "<leader>rf", repo_grep = "<leader>rg" },
 }, { usercmds = true, keymaps = true })
 

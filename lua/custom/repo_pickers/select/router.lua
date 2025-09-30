@@ -47,10 +47,10 @@ function M.mk_selector(cfg, engine_hint)
       if not sel_fzf.select(c, r, cb) then sel_vim.select(c, r, cb) end
     end
   else
-    -- Unknown engine: try Telescope, then fzf, then fallback
+    -- Unknown engine: try fzf, then Telescope then fallback
     return function(c, r, cb)
+			if sel_fzf.select(c, r, cb) then return end
       if sel_tel.select(c, r, cb) then return end
-      if sel_fzf.select(c, r, cb) then return end
       sel_vim.select(c, r, cb)
     end
   end

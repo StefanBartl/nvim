@@ -13,7 +13,7 @@ local M = {
 }
 
 M.presets = {
-	bottom_search = true,         -- use a classic bottom cmdline (also affects / and ?)
+	bottom_search = true,        -- use a classic bottom cmdline (also affects / and ?)
 	-- command_palette = true,     -- keep disabled unless both cmdline & popupmenu should be stacked
 	long_message_to_split = true, -- long messages go to a split
 	inc_rename = true,
@@ -21,7 +21,11 @@ M.presets = {
 }
 
 M.views = {
+	split = {
+		enter = false,
+	},
 	cmdline_popup = {
+		enter = false,
 		border = {
 			style = "none",
 			padding = { 2, 3 },
@@ -59,10 +63,10 @@ M.lsp = {
 }
 
 M.cmdline = {
-	---@diagnostic disable-next-line: assign-type-mismatch
+	enabled = true,
 	view = "cmdline", -- classic bottom cmdline (not a floating popup)
 	format = {
-		-- Make sure search uses the bottom cmdline too (useful even with the preset)
+		-- Make sure search uses the bottom cmdline too
 		search_down = { view = "cmdline" },
 		search_up = { view = "cmdline" },
 	},
@@ -72,19 +76,26 @@ M.messages = {
 	enabled = true,
 	-- optional: set mini as default for all msg_show (routes can still override)
 	view = "mini",
+	view_search = false,
 }
 
 
 M.notify = {
 	enabled = true, -- ensure vim.notify is captured by Noice
-	view = "mini",  -- render notifications inline (virttext) instead of popups
-	merge = true,   -- coalesce repeated messages
+	view = "mini", -- render notifications inline (virttext) instead of popups
+	merge = true,  -- coalesce repeated messages
 }
 
 M.routes = {
+	{
+		filter = { event = "notify" },
+		view = "mini",
+	},
 
-	{ filter = { event = "notify" },                                                      view = "mini" },
-
+	{
+		view = "mini",
+		filter = { event = "msg_showmode" },
+	},
 	{
 		filter = { event = "msg_show", kind = "emsg", find = "E162" },
 		view = "mini",
