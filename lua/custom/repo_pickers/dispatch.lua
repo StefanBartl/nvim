@@ -3,6 +3,8 @@
 
 local M = {}
 
+local notify = vim.notify
+
 --- Check if a user command exists and whether it allows a single optional argument.
 --- @param cmd string
 --- @return boolean exists, boolean allows_arg
@@ -26,7 +28,7 @@ end
 local function exec_user_cmd(cmd, dir)
   local exists, allows_arg = cmd_capabilities(cmd)
   if not exists then
-    vim.notify(("repo_pickers: command not found: %s"):format(tostring(cmd)), vim.log.levels.ERROR)
+    notify(("repo_pickers: command not found: %s"):format(tostring(cmd)), vim.log.levels.ERROR)
     return
   end
   local ok, err
@@ -40,7 +42,7 @@ local function exec_user_cmd(cmd, dir)
     end)
   end
   if not ok then
-    vim.notify(("repo_pickers: failed to run %s: %s"):format(cmd, tostring(err)), vim.log.levels.ERROR)
+    notify(("repo_pickers: failed to run %s: %s"):format(cmd, tostring(err)), vim.log.levels.ERROR)
   end
 end
 
@@ -80,14 +82,34 @@ end
 --- @return nil
 function M.run_usr_picker(cmd, dir)
   if type(cmd) ~= "string" or cmd == "" then
-    vim.notify("repo_pickers: invalid command name", vim.log.levels.ERROR)
+    notify("repo_pickers: invalid command name", vim.log.levels.ERROR)
     return
   end
   if type(dir) ~= "string" or dir == "" then
-    vim.notify("repo_pickers: invalid directory for picker", vim.log.levels.ERROR)
+    notify("repo_pickers: invalid directory for picker", vim.log.levels.ERROR)
     return
   end
   exec_user_cmd(cmd, dir)
+end
+
+--- Infer the concrete engine ("fzf"|"telescope") that will be used for files.
+--- @param cfg RepoPickersConfig
+--- @return "fzf"|"telescope"
+function M.resolve_engine_for_files(cfg)
+  local cmd = M.resolve_cmd_files(cfg)
+  local names = cfg.usercmd_names or {}
+  if cmd == names.find_files_fzf then return "fzf" end
+  return "telescope"
+end
+
+--- Infer the concrete engine ("fzf"|"telescope") that will be used for grep.
+--- @param cfg RepoPickersConfig
+--- @return "fzf"|"telescope"
+function M.resolve_engine_for_grep(cfg)
+  local cmd = M.resolve_cmd_grep(cfg)
+  local names = cfg.usercmd_names or {}
+  if cmd == names.grep_fzf then return "fzf" end
+  return "telescope"
 end
 
 return M

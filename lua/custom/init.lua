@@ -8,7 +8,7 @@ require("custom.usr_pickers").enable({}, { usercmds = true, keymaps = true })
 require("custom.repo_pickers").enable({
   -- repos_dir = "/home/steve/repos",
   only_git = true,
-  selector = "vim_select", -- AUDIT: telescope and fzf should jsut select and than move on
+  selector = "fzf",
   engine   = "auto",
   show_relative = true,
   usercmd_names = {

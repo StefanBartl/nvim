@@ -10,9 +10,7 @@
 :RepoFilesTelescope      -> Repo wählen -> Telescope files
 :RepoGrepTelescope       -> Repo wählen -> Telescope live_grep
 ```
----# repo_pickers
-
-Zweck
+## Zweck
 
 * Zentrale, sichere Auswahl eines Repositories unterhalb eines Basisordners und anschließendes Öffnen eines File-Pickers oder Live-Grep.
 * Nutzbar mit Telescope, fzf-lua oder reinem `vim.ui.select` (Fallback), ohne Logikduplikate.
