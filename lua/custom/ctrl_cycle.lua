@@ -3,15 +3,10 @@
 
 ---@class CWCCycles
 ---@field cycles string[][]
----@field map boolean
-
--- Defaults
----@type CWCCycles
----@type CWCCycles
 local DEFAULTS = {
   cycles = {
     ----------------------------------------------------------------
-    -- 2-state toggles (英语/Deutsch gemischt; praxisnah benannt)
+    -- 2-state toggles
     ----------------------------------------------------------------
     { "true",       "false"       },
     { "on",         "off"         },
@@ -33,13 +28,12 @@ local DEFAULTS = {
     { "mute",       "unmute"      },
     { "muted",      "unmuted"     },
 
-    -- Richtungen/Sortierordnungen
     { "up",         "down"        },
     { "left",       "right"       },
     { "in",         "out"         },
     { "asc",        "desc"        },
 
-    -- Deutsch (gängige Schalterwörter)
+    -- Deutsch
     -- { "wahr",       "falsch"      },
     -- { "ja",         "nein"        },
     -- { "an",         "aus"         },
@@ -59,7 +53,6 @@ local DEFAULTS = {
     -- { "todo", "doing", "done" },
     -- { "draft", "review", "final" },
   },
-  map = true,
 }
 
 local M = {}
@@ -194,23 +187,23 @@ end
 --- Public entry: if no cycle, feed native key.
 --- @param dir integer
 --- @param fallback_key string
-function M.apply(dir, fallback_key)
+local function Apply(dir, fallback_key)
   local ok = _try_cycle(dir, DEFAULTS.cycles)
   if not ok then
     _feed_native(fallback_key)
   end
 end
 
--- ---------- auto-maps on require ----------
+local map = require("lib.map")
 
-if DEFAULTS.map then
+function M.enable_keymaps()
   -- use 1 (not +1) because Lua has no unary plus
-  vim.keymap.set("n", "<C-a>", function()
-    M.apply(1, "<C-a>")
+  map("n", "<C-a>", function()
+    Apply(1, "<C-a>")
   end, { silent = true, desc = "Increment number or cycle word forward" })
 
-  vim.keymap.set("n", "<C-x>", function()
-    M.apply(-1, "<C-x>")
+  map("n", "<C-x>", function()
+    Apply(-1, "<C-x>")
   end, { silent = true, desc = "Decrement number or cycle word backward" })
 end
 
