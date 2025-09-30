@@ -3,7 +3,7 @@ let s:so_save = &g:so | let s:siso_save = &g:siso | setg so=0 siso=0 | setl so=-
 let v:this_session=expand("<sfile>:p")
 silent only
 silent tabonly
-cd ~
+cd ~/.config/nvim
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
@@ -13,8 +13,27 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
+badd +62 lua/sessions/commands.lua
+badd +28 ~/.config/nvim/lua/sessions/autocmds.lua
 argglobal
 %argdel
+edit ~/.config/nvim/lua/sessions/autocmds.lua
+argglobal
+balt lua/sessions/commands.lua
+setlocal foldmethod=expr
+setlocal foldexpr=v:lua.vim.treesitter.foldexpr()
+setlocal foldmarker={{{,}}}
+setlocal foldignore=#
+setlocal foldlevel=99
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldenable
+let s:l = 28 - ((27 * winheight(0) + 19) / 39)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 28
+normal! 040|
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf

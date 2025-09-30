@@ -30,7 +30,7 @@ function M.window()
 			hide_preview_safe(state)
 			vim.cmd("nohlsearch")
 		end,
-
+		["<Tab>"]   = "toggle_preview",
 		["<2-LeftMouse>"] = "open",
 
 		["<CR>"]          = function(state)
