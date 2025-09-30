@@ -1,6 +1,5 @@
 ---@module 'custom.repo_pickers'
---- Repository chooser + action launcher (files/grep) that delegates to existing usr_pickers commands.
---- Modules are split for single responsibility, safety and testability.
+--- Tiny facade: keeps active config, resolves selectors, exposes _entry_*.
 
 local cfgmod  = require("custom.repo_pickers.config")
 local reg     = require("custom.repo_pickers.register")
@@ -10,15 +9,26 @@ local dispatch= require("custom.repo_pickers.dispatch")
 
 local M = {}
 
--- Keymap entry wrappers now pick the selector based on the resolved engine.
+--- Internal: build a selector that matches the effective engine unless "vim_select" is forced.
+---@param cfg RepoPickersConfig
+---@param kind "files"|"grep"
+---@return fun(cfg:RepoPickersConfig, repos:RepoDir[], on_choice:fun(dir:RepoDir))
+local function selector_for(cfg, kind)
+  if cfg.selector == "vim_select" then
+    return router.mk_selector(cfg, nil) -- always vim_select
+  end
+  local eng = (kind == "files") and dispatch.resolve_engine_for_files(cfg)
+                              or   dispatch.resolve_engine_for_grep(cfg)
+  return router.mk_selector(cfg, eng)
+end
+
 function M._entry_files()
   local C = M._active_cfg
   if not C then
     vim.notify("repo_pickers: not enabled yet", vim.log.levels.WARN)
     return
   end
-  local eng = dispatch.resolve_engine_for_files(C)
-  actions.repo_files(C, router.mk_selector(C, eng))
+  actions.repo_files(C, selector_for(C, "files"))
 end
 
 function M._entry_grep()
@@ -27,10 +37,13 @@ function M._entry_grep()
     vim.notify("repo_pickers: not enabled yet", vim.log.levels.WARN)
     return
   end
-  local eng = dispatch.resolve_engine_for_grep(C)
-  actions.repo_grep(C, router.mk_selector(C, eng))
+  actions.repo_grep(C, selector_for(C, "grep"))
 end
 
+--- Public enable: registers only RepoFiles/RepoGrep by default.
+---@param user_cfg? RepoPickersConfig
+---@param enable_opts? RepoPickersEnable
+---@return nil
 function M.enable(user_cfg, enable_opts)
   local C = cfgmod.merge(user_cfg)
   if not (C.repos_dir or vim.env.REPOS_DIR) then

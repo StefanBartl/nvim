@@ -1,20 +1,20 @@
 ---@module 'custom.repo_pickers.config'
---- Default options, validation and merge utilities for repo_pickers.
+--- Defaults + merge/sanitize for repo_pickers.
 
 local M = {}
 
---- Internal hard defaults; userland may override via enable(cfg, ...)
 ---@type RepoPickersConfig
 local DEFAULTS = {
   repos_dir = vim.env.REPOS_DIR or nil,
   only_git = true,
-  selector = "fzf",
-  engine = "fzf",
+  selector = "auto",
+  engine   = "auto",
   show_relative = true,
+  expose_engine_cmds = false, -- new: do not expose engine-specific commands by default
   usercmd_names = {
-    find_files_telescope = "RepoFilesTelescope",
+    find_files_telescope = "RepoFindFilesTelescope",
     grep_telescope       = "RepoGrepTelescope",
-    find_files_fzf       = "RepoFilesFzf",
+    find_files_fzf       = "RepoFindFilesFzf",
     grep_fzf             = "RepoGrepFzf",
   },
   keymaps_lhs = {
@@ -23,27 +23,21 @@ local DEFAULTS = {
   },
 }
 
---- Return a deep-copied config with defaults applied and sanitized.
---- This function never throws; invalid fields are ignored conservatively.
---- @param user RepoPickersConfig|nil
---- @return RepoPickersConfig
+--- Merge user config into defaults and sanitize values.
+---@param user RepoPickersConfig|nil
+---@return RepoPickersConfig
 function M.merge(user)
   local u = type(user) == "table" and user or {}
   local out = vim.tbl_deep_extend("force", {}, DEFAULTS, u)
 
-  -- Sanitize selector
   local sel = out.selector
   if sel ~= "auto" and sel ~= "telescope" and sel ~= "fzf" and sel ~= "vim_select" then
     out.selector = "auto"
   end
-
-  -- Sanitize engine
   local eng = out.engine
   if eng ~= "auto" and eng ~= "telescope" and eng ~= "fzf" then
     out.engine = "auto"
   end
-
-  -- Sanitize keymaps: keep nil or non-empty strings
   if out.keymaps_lhs then
     local k = out.keymaps_lhs
     if k.repo_files ~= nil and type(k.repo_files) ~= "string" then k.repo_files = nil end
@@ -52,8 +46,8 @@ function M.merge(user)
     if k.repo_grep  == "" then k.repo_grep  = nil end
   end
 
+  out.expose_engine_cmds = not not out.expose_engine_cmds
   return out
 end
 
 return M
-

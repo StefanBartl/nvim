@@ -4,22 +4,10 @@
 require("custom.find_config").enable({ usercmds = true, keymaps = true  })
 require("custom.pathprobe").enable_keymaps()
 require("custom.usr_pickers").enable({}, { usercmds = true, keymaps = true })
-
 require("custom.repo_pickers").enable({
-  -- repos_dir = "/home/steve/repos",
-  only_git = true,
-  selector = "fzf",
-  engine   = "auto",
-  show_relative = true,
-  usercmd_names = {
-    find_files_telescope = "RepoFilesTelescope",
-    grep_telescope       = "RepoGrepTelescope",
-    find_files_fzf       = "RepoFilesFzf",
-    grep_fzf             = "RepoGrepFzf",
-  },
-  keymaps_lhs = {
-    repo_files = nil,
-    repo_grep  = nil,
-  },
+  selector = "auto",      -- "auto" | "vim_select" | "telescope" | "fzf"
+  engine   = "auto",      -- "auto" | "telescope" | "fzf"
+  expose_engine_cmds = false,  -- wichtig: engine-spezifische Commands NICHT registrieren
+  keymaps_lhs = { repo_files = "<leader>rf", repo_grep = "<leader>rg" },
 }, { usercmds = true, keymaps = true })
 
