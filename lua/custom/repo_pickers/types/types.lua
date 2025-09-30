@@ -1,18 +1,6 @@
----@module 'custom.repo_pickers.types'
---- Central type aliases and rich field documentation for repo_pickers.
-
----@alias RepoDir string
-
----@alias RepoSelector
----| "auto"        # Match selection UI to the effective engine (fzf/Telescope); fallback = vim.ui.select
----| "telescope"   # Force Telescope for selection (fallback = vim.ui.select)
----| "fzf"         # Force fzf-lua for selection (fallback = vim.ui.select)
----| "vim_select"  # Always use vim.ui.select
-
----@alias RepoEngine
----| "auto"       # Prefer fzf-lua actions if available, else Telescope
----| "telescope"  # Force Telescope actions
----| "fzf"        # Force fzf-lua actions
+---@meta
+---@module 'custom.repo_pickers.types.types'
+--- Central types and  fields documentation for repo_pickers.
 
 ---@class RepoPickersUsrCmdNames
 ---@field find_files_telescope? string  -- Default when exposed: "RepoFindFilesTelescope"
@@ -39,4 +27,3 @@
 ---@class RepoPickersEnable
 ---@field usercmds? boolean  -- Register user commands (RepoFiles, RepoGrep; plus engine-specific if enabled)
 ---@field keymaps?  boolean  -- Register keymaps from keymaps_lhs
-return {}
