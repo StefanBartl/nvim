@@ -2,6 +2,7 @@
 -- Initialize module for 'mynotes'
 
 require("mynotes.checklist")
+require("mynotes.cli_notes")
 require("mynotes.neovim_notes")
 require("mynotes.neovim_ref_notes")
 require("mynotes.notes")
