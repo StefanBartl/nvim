@@ -158,14 +158,17 @@ function M.compress_current_directory(on_complete)
   end)
 end
 
--- Custom user command with UI integration (notification layer)
-vim.api.nvim_create_user_command("CompressDir", function()
-  M.compress_current_directory(function(success, msg)
-    local level = success and vim.log.levels.INFO or vim.log.levels.ERROR
-    vim.schedule(function()
-      vim.notify(msg, level)
-    end)
-  end)
-end, {})
+--- Enable 'compress_dir'-Usercommand with UI integration (notification layer)
+---@return nil
+function M.enable_usercmd()
+	vim.api.nvim_create_user_command("CompressDir", function()
+		M.compress_current_directory(function(success, msg)
+			local level = success and vim.log.levels.INFO or vim.log.levels.ERROR
+			vim.schedule(function()
+				vim.notify(msg, level)
+			end)
+		end)
+	end, {})
+end
 
 return M

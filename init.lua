@@ -39,7 +39,7 @@ require "custom"
 require "mynotes"
 require "autocmds"
 require "usrcmds"
-require "sessions"
+require("sessions").enable({ autocommands = true, usercmds = true, keymaps = true })
 require("utils.help_sync").setup()
 vim.schedule(function()
 	require("mappings").setup()

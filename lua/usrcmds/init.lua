@@ -1,7 +1,7 @@
 ---@module 'usrcmds'
 -- Initialize module for 'usrcmds'
 
-require("usrcmds.compress_dir")
+require("usrcmds.compress_dir").enable_usercmd()
 require("usrcmds.filecycle")
 require("usrcmds.misc").enable_usercmds()
 require("usrcmds.project_tree").enable_usercmds()

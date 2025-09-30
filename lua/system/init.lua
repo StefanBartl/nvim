@@ -1,4 +1,4 @@
 ---@module 'system'
--- Initialize module for 'custom'
+-- Initialize module for 'system'
 
-require("system.env")
+require("system.env").compute_env()

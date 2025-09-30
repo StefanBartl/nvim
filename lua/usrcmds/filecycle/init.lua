@@ -230,6 +230,9 @@ local function navigate(dir, mode, opts)
  return open_path(files[target_idx], opts)
 end
 
+
+--- AUDIT: usercmds und keymaps function
+
 --- Setup module options and create user commands & keymaps.
 ---@param user_opts FileCycleConfig|nil
 ---@return nil

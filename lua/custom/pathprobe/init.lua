@@ -389,7 +389,7 @@ end
 
 --- Create default keymaps and user command.
 ---@return nil
-function M.setup_keymaps()
+function M.enable_keymaps()
   -- Normal mode: <leader>pp probes the token under cursor
   api.nvim_set_keymap("n", "<leader>pp",
     [[<cmd>lua require('pathprobe').probe({ open_cmd = "vsplit", ask_on_ambiguous = true })<CR>]],

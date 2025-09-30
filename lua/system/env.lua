@@ -2,11 +2,12 @@
 
 local M = {}
 
+local ENV
 local fn, g = vim.fn, vim.g
 local lib = require("lib")
 
 ---@return SystemEnv
-local function compute_env()
+local function Compute_env()
 	local is_win = (fn.has("win32") == 1) or (fn.has("win64") == 1)
 	local is_mac = fn.has("mac") == 1 or fn.has("macunix") == 1
 	local is_wsl = not is_win and lib.is_wsl()
@@ -36,15 +37,15 @@ local function compute_env()
 	}
 end
 
--- compute once and cache
-local ENV = compute_env()
+-- Compute once and cache -> This function has sideffect: 'ENV' will be computed!
+---@return nil
+function M.compute_env()
+	ENV = Compute_env()
+end
 
 ---@return SystemEnv
 function M.get()
 	return ENV
 end
-
--- Optional: mirror into vim.g for easy access without require()
-
 
 return M

@@ -8,19 +8,11 @@
 ---@class SessionsAPI
 local M = {}
 
--- Import order per project rules:
--- 1) core libs (vim, uv) – implicit
--- 2) debug/notify – here we rely on vim.notify only
--- 3) config and utils
--- 4) state (none required)
--- 5) UI (commands) – defines user commands, maps, autocommands
-
-local ok_cmds, _ = pcall(require, "sessions.commands")
-if not ok_cmds then
-  vim.notify("[sessions] failed to initialize commands", vim.log.levels.ERROR)
-end
-
---- Save a session (wrapper around core.save).
+local autocmds = require("sessions.autocmds")
+local usercmds = require("sessions.usercmds")
+local keymaps = require("sessions.keymaps")
+--- Save a session (wrapper around core.sav
+--- e).
 ---@param name string|nil
 ---@return boolean, string|nil
 function M.save(name)
@@ -38,6 +30,16 @@ end
 ---@return string[]
 function M.list()
   return require("sessions.core").list()
+end
+
+--- Enable Autocommands, Usercommands and Keymaps for sessions
+---@param cfg EnableConfig
+---@return nil
+function M.enable(cfg)
+  if not cfg then return end
+	if cfg.autocommands then autocmds.enable() end
+	if cfg.usercmds then usercmds.enable() end
+	if cfg.keymaps then keymaps.enable() end
 end
 
 return M
