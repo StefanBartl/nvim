@@ -3,7 +3,15 @@
 
 local M = {}
 
-require("custom.markdown.fenced_fix").apply()
+-- AUDIT:
+require("custom.markdown.fenced_fix").setup({
+  -- Falls „noch oranger“ gewünscht ist, Reihenfolge hier anpassen oder direkt "Special" wählen.
+  inline_base_hl = { "DiagnosticWarn", "Special", "Constant", "String" },
+  inline_style = { italic = false, bold = false },
+  delimiter_hl = "Comment",
+}).apply()
+
+
 local cfg = require("custom.markdown.config")
 local fold = require("custom.markdown.core.fold")
 local head = require("custom.markdown.core.headings")
@@ -18,6 +26,7 @@ function M.setup(opts)
   ui_autocmd.setup()
   ui_keymaps.setup()
 end
+
 
 M.foldexpr = fold.foldexpr
 M.goto_prev_heading = head.goto_prev_heading
