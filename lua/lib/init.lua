@@ -7,6 +7,7 @@ local M = {
   is_wsl = require("lib.is_wsl"),
   text = require("lib.text"),
   require_dir = require("lib.require_dir"),
+  os = require("lib.os"),
 }
 
 return M

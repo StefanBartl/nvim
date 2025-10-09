@@ -8,8 +8,12 @@ local create_user_command = vim.api.nvim_create_user_command
 ---@type boolean
 M._initialized = false
 
+---@class MyLspInit
+---@field ensure_installing boolean|nil
+
+---@param cfg MyLspInit
 ---@return boolean ok
-function M.setup()
+function M.setup(cfg)
 	if M._initialized then
 		return true
 	end
@@ -196,28 +200,30 @@ function M.setup()
 	})
 	require("lsp.lspdoctor").enable_usercmd()
 
-	require('config.mason.ensure_install').enable({
-		lsp = true,
-		dap = false, -- skip DAP batch for now
-		linters = true,
-		formatters = true,
-		overrides = {
-			lsp = {
-				["java-language-server"]   = false,                      -- keep off unless 'mvn' is available
-				["csharp-language-server"] = false,                      -- prefer 'omnisharp' if dotnet exists
-				-- ["omnisharp"]              = require('config.mason.ensure_install').has_dotnet and true or false, -- you can compute booleans beforehand
+	if cfg.ensure_installing == true then
+		require('config.mason.ensure_install').enable({
+			lsp = true,
+			dap = false, -- skip DAP batch for now
+			linters = true,
+			formatters = true,
+			overrides = {
+				lsp = {
+					["java-language-server"]   = false, -- keep off unless 'mvn' is available
+					["csharp-language-server"] = false, -- prefer 'omnisharp' if dotnet exists
+					-- ["omnisharp"]              = require('config.mason.ensure_install').has_dotnet and true or false, -- you can compute booleans beforehand
+				},
+				dap = {
+					["node-debug2-adapter"] = false, -- deprecated; use js-debug-adapter
+				},
+				linters = {
+					["eslint_d"] = true, -- ensure enabled
+				},
+				formatters = {
+					["prettier"] = true, -- ensure enabled
+				},
 			},
-			dap = {
-				["node-debug2-adapter"] = false, -- deprecated; use js-debug-adapter
-			},
-			linters = {
-				["eslint_d"] = true, -- ensure enabled
-			},
-			formatters = {
-				["prettier"] = true, -- ensure enabled
-			},
-		},
-	})
+		})
+	end
 
 	M._initialized = true
 	return true

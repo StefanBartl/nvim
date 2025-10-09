@@ -4,6 +4,7 @@
 return {
   {
     "robitx/gp.nvim",
+		lazy = true,
     dependencies = { "nvim-lua/plenary.nvim" },
     event = "VeryLazy",
     config = function()

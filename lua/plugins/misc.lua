@@ -10,8 +10,8 @@ return {
     lazy = false,
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "ibhagwan/fzf-lua", -- optional, recommended for the <C-h> FZF menu
-      "nvim-telescope/telescope.nvim", -- optional, not required by the hardening layer
+      -- "ibhagwan/fzf-lua", -- optional, recommended for the <C-h> FZF menu
+      -- "nvim-telescope/telescope.nvim", -- optional, not required by the hardening layer
     },
     config = function()
       require("config.harpoon.hardening").setup({
