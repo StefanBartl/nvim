@@ -81,10 +81,10 @@ local function apply_keymaps(bufnr)
   -- Headings navigation -------------------------------------------------------
   if ok_head then
     if headings.goto_prev_heading then
-      map({ "n", "x" }, "mk", headings.goto_prev_heading, "[Markdown] Previous heading (H2+)", o)
+      map({ "n", "v", "x" }, "mk", headings.goto_prev_heading, "[Markdown] Previous heading (H2+)", o)
     end
     if headings.goto_next_heading then
-      map({ "n", "x" }, "mj", headings.goto_next_heading, "[Markdown] Next heading (H2+)", o)
+      map({ "n", "v", "x" }, "mj", headings.goto_next_heading, "[Markdown] Next heading (H2+)", o)
     end
   end
 
@@ -124,9 +124,9 @@ local function apply_keymaps(bufnr)
     local opts = with({ silent = true, noremap = true, nowait = true }, o)
 
     -- Line / Visual
-    map({ "n", "x" }, "<leader>mhI", headings.increase,
+    map({ "n", "v", "x" }, "<leader>mhI", headings.increase,
       "[Markdown] Increase heading level(s) (line/selection, H2+)", opts)
-    map({ "n", "x" }, "<leader>mhD", headings.decrease,
+    map({ "n", "v", "x" }, "<leader>mhD", headings.decrease,
       "[Markdown] Decrease heading level(s) (line/selection, H2+)", opts)
 
     -- Operator-pending (usage: <leader>mhi{motion}, <leader>mhd{motion})
