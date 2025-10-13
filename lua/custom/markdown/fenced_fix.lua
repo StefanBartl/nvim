@@ -99,16 +99,16 @@ function M.apply()
       "@markup.fenced_code.block",
     }, "Normal")
 
-    -- Inline code (content) — give it a distinct, orange-ish style.
-    -- We create a dedicated group that derives from a base HL via link, so users can override one place.
     local base = first_existing_hl(o.inline_base_hl) or "Special"
-    safe_set("MarkdownInlineCode", base)  -- link, not copy: remains theme-aware
 
-    -- Optionally enforce lightweight style flags without breaking theme colors:
+    -- Try to fetch the concrete fg/bg of the base. If available, create an explicit
+    -- hl table so we can add style flags (bold/italic). If not available, fall back
+    -- to a simple link so the theme controls color.
     local style = o.inline_style or {}
-    if next(style) ~= nil then
-      local base_hl = get_hl(base) or {}
-      -- Copy fg/bg from base if available and apply style toggles.
+    local base_hl = get_hl(base) or {}
+
+    if (base_hl.fg or base_hl.bg) and next(style) ~= nil then
+      -- base has concrete color info: create an explicit hl preserving colors + styles
       safe_set("MarkdownInlineCode", {
         fg = base_hl.fg,
         bg = base_hl.bg,
@@ -117,7 +117,12 @@ function M.apply()
         underline = style.underline,
         undercurl = style.undercurl,
       })
+    else
+      -- either no concrete colors from base, or no style requested:
+      -- keep a link so theme colors continue to apply (safer).
+      safe_set("MarkdownInlineCode", base)
     end
+
 
     -- Modern captures for inline code content across markdown + markdown_inline
     set_many({
@@ -146,7 +151,9 @@ end
 function M.setup(opts)
   if type(opts) == "table" then
     for k, v in pairs(opts) do M.opts[k] = v end
-  end
+
+	end
+  pcall(M.apply)  -- apply immediately
   return M
 end
 
