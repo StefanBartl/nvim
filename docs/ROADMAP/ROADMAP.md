@@ -1,5 +1,9 @@
 # WKD Neovim Roadmap
 
+## DOCS
+
+1. Docs (README.md, help.txt and eventually ROADMYP.md) for every section.
+
 ## MISC
 
 1. Beim Start wird das klassiche NVIM No Buffer Dashboard geladen, welches dann vom Snacks Dashboard überschreiben wird. Eigentlich sollte das erste nicht sichtbar sein, ich weiß nicht, ob es deswegen sichtbar ist, weil das Snacks Dashboard "länger" als früher (da war das snicht so) zum laden benötigt aufgrund des Custom Snacks Session Dashboard.
