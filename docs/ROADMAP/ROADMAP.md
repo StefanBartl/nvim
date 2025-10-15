@@ -1,8 +1,46 @@
 # WKD Neovim Roadmap
 
+## MIXED
+
+- harpoon verliert persist files wenn ctx switch, command und keymap um persit fiels dynamisch zu injecten
+- leader mhD funktioniert erst, wenn man einmal alles mit C-v markiert hat oder keine Markierung - dann aber nur in der aktuellen headline - dann escaped, und dann leader mhD/I ausführt
+   - markdown mappings/utils/markdown, mappings/marjkdown, utils/markdown und /utils/markdown_headings zusammenholen
+- workspace lsp warnings debuggen
+- AUDIT's anschauen und durchgehen
+- diagnostic disable-next-line usw. auflösen
+- pcall fpr alle require von custom modules
+- lokale funktionen wenn keine externe Referenz! Alle files durchgehen!
+- extra_diagnostice mappings und usrcmds.diagnistcs mergen
+
+---
+
+### new mapping, user_command, autocmd, etc.... ideas
+
+---
+
+### Long run
+
+1. alle `disable-next-line` durchsehen
+2. neues in den main-kanal geben, denn lazyvim ist nicht so super im cmp, bios dahinn...
+3. probieren nvchad rauszunehmen und nochmal mit lazyvim
+4. experimental options:
+   1. modularisieren, utilities ausgliedern usw...
+   1. statusline und winbar breadcrumbs sollten sich ein modul teilen
+5. smart_edit und lib.insert_line_above mergen
+6. typen aus dateien ableiten (custom bool )
+7. alle neuen scripte auf performance checken
+8. Configs eventuell aufteilen auf eigene repo
+9. @metas, @async sicherstellen
+10. mylsp zu lsp mergen bzw. nachdneken, ob diese Aufteilung so Sinn macht (am Ende ist ja beides 'meine LSP-Config')
+11. Überlegen, ob usrcmds nicht eigentlichs usercmds gennant werden sollen
+
+---
+
 ## DOCS
 
 1. Docs (README.md, help.txt and eventually ROADMYP.md) for every section.
+
+---
 
 ## MISC
 
@@ -10,16 +48,22 @@
 
 ---
 
+## Terminals
+
+1. Es sollte, wenn möglich, eine neue Wezterm Instanz als Terminal erstellt werden. In Windows in jeden Fall mindestens Powershell, nur als Fallback eine 'CMD'-Shell
+
+---
+
 ## Sessions
 
-- `last`-file sollte nicht ständig noise in git machen. Eine Lösung wäre, dass `last` eine grundsätzlich nicht im git index upgedatete file ist, sondern immer lokal bleibt, während sessions, die auf anderen Geräten verwendet werden sollen, mit Labels abgespeichert werden.
+- `last`-file sollte nicht ständig noise in `git` machen, dass es geändert wurde. Eine Lösung wäre, dass `last` eine grundsätzlich nicht im git index upgedatete file ist, sondern immer lokal bleibt, während sessions, die auf anderen Geräten verwendet werden sollen, mit Labels abgespeichert werden.
 
 ---
 
 ## Treesitter
 
 1. Mit `%` sollte man auch in Markdown Headings zum Ende des Blocks springen:
-Beispiel: Wenn man mit dem CUrsor in einem `##`-Heading steht und `%` auslöst, dann Sprung an den Ende des Abschnitt auslöst, dann Sprung an den Ende des Abschnitts.
+Beispiel: Wenn man mit dem Cursor in einem `##`-Heading steht und `%` auslöst, dann Sprung an den Ende des Abschnitt auslöst, dann Sprung an den Ende des Abschnitts.
 Es gibt installierte Plugins, die eventuell wichtig sind:
 - `vim-matchup` in `plugins/editing.lua`:
 ```lua
@@ -45,6 +89,12 @@ Es gibt installierte Plugins, die eventuell wichtig sind:
 ---
 
 ## `/custom/markdown`
+
+### Folding
+
+1. `zf` und `za` falten nicht korrekt, wenn weitere Unter-Headings da sind
+
+--
 
 ### Headings
 
@@ -296,7 +346,7 @@ return M
 
 ---
 
-## ToDO Comments
+## `folke/todo-comments`
 
 1. In markdown files sollten die keywords vorghehoben werden
 
