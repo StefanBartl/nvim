@@ -68,6 +68,28 @@ local function define_commands()
       print("- " .. list[i])
     end
   end, { desc = "List available sessions" })
+
+	-- Toggle tracking `/storage/last.vim`-file in git
+	vim.api.nvim_create_user_command("ToggleLastVimTrack", function()
+    local last_vim_file = vim.fn.stdpath("config") .. "/lua/sessions/storage/last.vim"
+
+		local function is_skipped(file)
+			local handle = io.popen("git ls-files -v " .. vim.fn.fnameescape(file))
+			if not handle then return false end
+			local result = handle:read("*a")
+			handle:close()
+			return result:match("^S")
+		end
+
+		local file = last_vim_file
+		if is_skipped(file) then
+			vim.fn.system("git update-index --no-skip-worktree " .. vim.fn.fnameescape(file))
+			print("last.vim is now tracked in git")
+		else
+			vim.fn.system("git update-index --skip-worktree " .. vim.fn.fnameescape(file))
+			print("last.vim marked as skip-worktree")
+		end
+	end, {})
 end
 
 ---@return nil
