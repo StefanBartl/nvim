@@ -7,9 +7,6 @@
 ## MIXED
 
 - Picker, der zuerst alle wkdbooks auflistet zum auswählen, dann die files oder greps picked. Ähnlicjh wie `custom/repopickers`
-- harpoon verliert persist files wenn ctx switch, command und keymap um persit fiels dynamisch zu injecten
-- leader mhD funktioniert erst, wenn man einmal alles mit C-v markiert hat oder keine Markierung - dann aber nur in der aktuellen headline - dann escaped, und dann leader mhD/I ausführt
-   - markdown mappings/utils/markdown, mappings/marjkdown, utils/markdown und /utils/markdown_headings zusammenholen
 - workspace lsp warnings debuggen
 - AUDIT's anschauen und durchgehen
 - diagnostic disable-next-line usw. auflösen
@@ -50,12 +47,6 @@
 ## MISC
 
 1. Beim Start wird das klassiche NVIM No Buffer Dashboard geladen, welches dann vom Snacks Dashboard überschreiben wird. Eigentlich sollte das erste nicht sichtbar sein, ich weiß nicht, ob es deswegen sichtbar ist, weil das Snacks Dashboard "länger" als früher (da war das snicht so) zum laden benötigt aufgrund des Custom Snacks Session Dashboard.
-
----
-
-## Terminals
-
-1. Es sollte, wenn möglich, eine neue Wezterm Instanz als Terminal erstellt werden. In Windows in jeden Fall mindestens Powershell, nur als Fallback eine 'CMD'-Shell
 
 ---
 
