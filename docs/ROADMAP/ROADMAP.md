@@ -59,12 +59,6 @@
 
 ---
 
-## Sessions
-
-- `last`-file sollte nicht ständig noise in `git` machen, dass es geändert wurde. Eine Lösung wäre, dass `last` eine grundsätzlich nicht im git index upgedatete file ist, sondern immer lokal bleibt, während sessions, die auf anderen Geräten verwendet werden sollen, mit Labels abgespeichert werden.
-
----
-
 ## Treesitter
 
 1. Mit `%` sollte man auch in Markdown Headings zum Ende des Blocks springen:
@@ -93,9 +87,3 @@ Es gibt installierte Plugins, die eventuell wichtig sind:
 ```
 ---
 
-
-## `folke/todo-comments`
-
-1. In markdown files sollten die keywords vorghehoben werden
-
----

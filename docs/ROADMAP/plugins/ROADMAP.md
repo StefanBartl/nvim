@@ -17,3 +17,9 @@
     - keymaps/mappings/plugins . struktur ist etwas schwanḿmig?
 
 ---
+
+## `folke/todo-comments`
+
+1. In markdown files sollten die keywords vorghehoben werden
+
+---
