@@ -39,10 +39,10 @@ function M.setup()
 	map("n", "<C-k>", "<C-w>k", { desc = "[Window] Jump up" })
 
 	-- Resize window
-	map({ "n", "v", "i", "t" }, "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
-	map({ "n", "v", "i", "t" }, "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
-	map({ "n", "v", "i", "t" }, "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
-	map({ "n", "v", "i", "t" }, "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
+	map({ "n", "t" }, "<A-Left>", "<cmd>vertical resize -5<CR>", { desc = "[Window] Resize narrower" })
+	map({ "n", "t" }, "<A-Right>", "<cmd>vertical resize +5<CR>", { desc = "[Window] Resize wider" })
+	map({ "n", "t" }, "<A-Up>", "<cmd>resize +5<CR>", { desc = "[Window] Resize taller" })
+	map({ "n", "t" }, "<A-Down>", "<cmd>resize -5<CR>", { desc = "[Window] Resize shorter" })
 
   map("n", "<leader>zm", function() require("utils.window_zoom").zoom_toggle() end, { desc = "[Window] Zoom toggle."})
 
