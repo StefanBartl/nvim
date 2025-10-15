@@ -69,27 +69,37 @@ local function define_commands()
     end
   end, { desc = "List available sessions" })
 
-	-- Toggle tracking `/storage/last.vim`-file in git
-	vim.api.nvim_create_user_command("ToggleLastVimTrack", function()
+  -- Toggle tracking `/storage/last.vim`-file in git
+  vim.api.nvim_create_user_command("ToggleLastVimTrack", function()
     local last_vim_file = vim.fn.stdpath("config") .. "/lua/sessions/storage/last.vim"
 
-		local function is_skipped(file)
-			local handle = io.popen("git ls-files -v " .. vim.fn.fnameescape(file))
-			if not handle then return false end
-			local result = handle:read("*a")
-			handle:close()
-			return result:match("^S")
-		end
+    local function is_skipped(file)
+      local handle = io.popen("git ls-files -v " .. vim.fn.fnameescape(file))
+      if not handle then
+        return false
+      end
+      local result = handle:read("*a")
+      handle:close()
+      return result:match("^S")
+    end
 
-		local file = last_vim_file
-		if is_skipped(file) then
-			vim.fn.system("git update-index --no-skip-worktree " .. vim.fn.fnameescape(file))
-			print("last.vim is now tracked in git")
-		else
-			vim.fn.system("git update-index --skip-worktree " .. vim.fn.fnameescape(file))
-			print("last.vim marked as skip-worktree")
-		end
-	end, {})
+    local file = last_vim_file
+    if is_skipped(file) then
+      local result = vim.fn.system("git update-index --no-skip-worktree " .. vim.fn.fnameescape(file))
+      if vim.v.shell_error ~= 0 then
+        vim.notify("Git command failed: " .. result, vim.log.levels.ERROR)
+      else
+        vim.notify("last.vim is now tracked in git", vim.log.levels.INFO)
+      end
+    else
+      local result = vim.fn.system("git update-index --skip-worktree " .. vim.fn.fnameescape(file))
+      if vim.v.shell_error ~= 0 then
+        vim.notify("Git command failed: " .. result, vim.log.levels.ERROR)
+      else
+        vim.notify("last.vim marked as skip-worktree", vim.log.levels.INFO)
+      end
+    end
+  end, {})
 end
 
 ---@return nil
@@ -97,13 +107,19 @@ local function define_keymaps()
   local map = function(mode, lhs, rhs, desc)
     vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
   end
-	map("n", "<leader>ssa", function() vim.cmd("SessionSave") end, "Session Save")
-  map("n", "<leader>slo", function() vim.cmd("SessionLoad") end, "Session Load")
+  map("n", "<leader>ssa", function()
+    vim.cmd("SessionSave")
+  end, "Session Save")
+  map("n", "<leader>slo", function()
+    vim.cmd("SessionLoad")
+  end, "Session Load")
   map("n", "<leader>sst", function()
     local stamp = os.date("sess-%Y%m%d-%H%M%S")
     vim.cmd("SessionSave " .. stamp)
   end, "Session Save (timestamp)")
-  map("n", "<leader>sli", function() vim.cmd("SessionList") end, "Session List")
+  map("n", "<leader>sli", function()
+    vim.cmd("SessionList")
+  end, "Session List")
 end
 
 ---@return nil
@@ -143,4 +159,3 @@ end
 M.setup()
 
 return M
-
