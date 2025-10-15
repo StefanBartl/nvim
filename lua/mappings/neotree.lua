@@ -18,8 +18,6 @@
 
 local M = {}
 
----@alias NeoTreePosition "left"|"right"|"float"|"current"
-
 ---@enum NeoTreePositionEnum
 local NeoTreePositionEnum = {
   left = "left",
@@ -64,7 +62,7 @@ local base_opts = {
   toggle = true,
   reveal = true,
   reveal_force_cwd = true,
-  position = NeoTreePositionEnum.left,
+	position = NeoTreePositionEnum.float,
 }
 
 ---@type NeoTreeMapSpec[]
