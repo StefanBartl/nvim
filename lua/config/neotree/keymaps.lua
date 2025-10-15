@@ -169,7 +169,7 @@ function M.window()
     ["r"] = "rename",
 
     -- create/delete
-    ["dd"] = "delete",
+		["dd"] = function(state) require("config.neotree.trash").neotree_send_node_to_trash(state) end,	-- deafult: ["dd"] = "delete",
     ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
     ["A"] = { "add_directory", config = { show_path = "relative" } },
 
@@ -322,7 +322,6 @@ function M.window()
           return
         end
 
-        local cwd = vim.loop.cwd()
         local is_dir = vim.fn.isdirectory(path) == 1
         local entries = {}
 

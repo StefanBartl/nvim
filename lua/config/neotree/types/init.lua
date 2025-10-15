@@ -14,3 +14,8 @@
 ---@field timer uv.uv_timer_t|nil
 ---@field pending boolean
 ---@field last_dir string|nil
+
+---@class NeoTreeTrash
+---@field send_to_trash fun(path:string): (boolean, string) send path to system trash, returns ok,message
+---@field neotree_send_node_to_trash fun(state:table): nil neo-tree mapping callback to trash node and refresh view
+
