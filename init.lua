@@ -31,7 +31,7 @@ pcall(dofile, vim.g.base46_cache .. "syntax")
 pcall(dofile, vim.g.base46_cache .. "defaults")
 pcall(dofile, vim.g.base46_cache .. "statusline")
 
-require "system.env"
+require "system.env".compute_env()
 require "options"
 require("myoptions").setup { highlights = true, options = true }
 require("lsp").setup { ensure_installing = false }
