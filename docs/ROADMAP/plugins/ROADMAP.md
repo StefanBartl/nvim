@@ -1,4 +1,4 @@
-# Roadmap for /plugins
+# Roadmap for das `/plugins`-Modul
 
 ## personel
 

@@ -1,7 +1,8 @@
-# pathprobe todo
+# Roadmap für `pathprobe`
 
-- :PathProbe "no range allowed", aber wie dann markieren?
-- default on neuen tab aufmachen
-- README.md erstellen
-- help.txt erstellen
+1. `:PathProbe` "no range allowed", aber wie dann markieren?
+2. default on neuen tab aufmachen
+3. `README.md` erstellen
+4. `help.txt` erstellen
 
+---
