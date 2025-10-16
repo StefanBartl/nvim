@@ -106,5 +106,8 @@ return {
   {
     "uga-rosa/translate.nvim",
     lazy = false,
+    config = function()
+      require("config.translate")
+    end,
   },
 }
