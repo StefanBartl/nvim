@@ -128,3 +128,29 @@ opt.swapfile = false
 opt.undofile = true
 opt.undodir = vim.fn.stdpath("cache") .. "/undo"
 
+
+-----------------------------------------------------------
+-- Terminals
+-----------------------------------------------------------
+
+if vim.fn.has("win32") == 1 then
+  if vim.fn.executable("pwsh") == 1 then
+    vim.o.shell = "pwsh.exe"
+    vim.o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+    vim.o.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    vim.o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    vim.o.shellquote = ""
+    vim.o.shellxquote = ""
+  elseif vim.fn.executable("powershell") == 1 then
+    vim.o.shell = "powershell.exe"
+    vim.o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+    vim.o.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    vim.o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    vim.o.shellquote = ""
+    vim.o.shellxquote = ""
+  end
+else
+  vim.o.shell = vim.fn.executable("zsh") == 1 and "zsh" or "bash"
+  vim.o.shellcmdflag = "-c"
+end
+

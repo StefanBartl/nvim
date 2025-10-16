@@ -1,6 +1,5 @@
 ---@module 'mappings.markdown'
 --- Compatibility shim that wires the unified keymaps into FileType=markdown buffers.
---- It does not define its own mappings anymore.
 
 local M = {}
 

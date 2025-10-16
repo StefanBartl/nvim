@@ -7,12 +7,11 @@
 ## MIXED
 
 - Picker, der zuerst alle wkdbooks auflistet zum auswählen, dann die files oder greps picked. Ähnlicjh wie `custom/repopickers`
-- workspace lsp warnings debuggen
 - AUDIT's anschauen und durchgehen
-- diagnostic disable-next-line usw. auflösen
-- pcall fpr alle require von custom modules
 - lokale funktionen wenn keine externe Referenz! Alle files durchgehen!
-- extra_diagnostice mappings und usrcmds.diagnistcs mergen
+- mappings.custom erstellen, aus der dann markdown, pathprobe, usw aufgerufen werden, anstatt mappings.markdown, mappings.pathprobe usw..
+- custom.diagnostics erstellen, extra_diagnostice mappings und usrcmds.diagnistcs hinein mergen, dann aus mappings.extra_diagnostics und usrcmds.diagnostics aus ausrufen
+- keymaps.lua zu mappings.lua umbennen
 
 ---
 
@@ -22,19 +21,19 @@
 
 ### Long run
 
-1. alle `disable-next-line` durchsehen
-2. neues in den main-kanal geben, denn lazyvim ist nicht so super im cmp, bios dahinn...
+1. workspace lsp warnings debuggen
+    1. alle `disable-next-line` durchsehen
+2. pcall fpr alle require von custom modules
 3. probieren nvchad rauszunehmen und nochmal mit lazyvim
 4. experimental options:
    1. modularisieren, utilities ausgliedern usw...
    1. statusline und winbar breadcrumbs sollten sich ein modul teilen
-5. smart_edit und lib.insert_line_above mergen
-6. typen aus dateien ableiten (custom bool )
-7. alle neuen scripte auf performance checken
-8. Configs eventuell aufteilen auf eigene repo
-9. @metas, @async sicherstellen
-10. mylsp zu lsp mergen bzw. nachdneken, ob diese Aufteilung so Sinn macht (am Ende ist ja beides 'meine LSP-Config')
-11. Überlegen, ob usrcmds nicht eigentlichs usercmds gennant werden sollen
+5. typen aus dateien ableiten (custom bool ) ???
+6. alle neuen scripte auf performance checken
+7. Configs eventuell aufteilen auf eigene repo
+8. @metas, @async sicherstellen
+9. mylsp zu lsp mergen bzw. nachdneken, ob diese Aufteilung so Sinn macht (am Ende ist ja beides 'meine LSP-Config')
+10. Überlegen, ob usrcmds nicht eigentlichs usercmds gennant werden sollen
 
 ---
 
@@ -46,7 +45,7 @@
 
 ## MISC
 
-1. Beim Start wird das klassiche NVIM No Buffer Dashboard geladen, welches dann vom Snacks Dashboard überschreiben wird. Eigentlich sollte das erste nicht sichtbar sein, ich weiß nicht, ob es deswegen sichtbar ist, weil das Snacks Dashboard "länger" als früher (da war das snicht so) zum laden benötigt aufgrund des Custom Snacks Session Dashboard.
+
 
 ---
 

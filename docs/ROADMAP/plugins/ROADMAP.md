@@ -23,3 +23,9 @@
 1. In markdown files sollten die keywords vorghehoben werden
 
 ---
+
+## `harpoon`
+
+1. harpoon verliert persist files wenn ctx switch, command und keymap um persit fiels dynamisch zu injecten
+
+---

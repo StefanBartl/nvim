@@ -58,7 +58,7 @@ return {
 
 	{
 		"folke/snacks.nvim",
-		event = "VeryLazy", -- defer until UI is ready; quickfile still accelerates single-file cold open
+		event = "VimEnter", -- defer until UI is ready; quickfile still accelerates single-file cold open
 
 		---@param _ any
 		---@return SnacksSetup|table

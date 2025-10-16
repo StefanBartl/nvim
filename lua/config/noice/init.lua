@@ -51,6 +51,11 @@ M.views = {
 			winhighlight = { Normal = "Normal", FloatBorder = "DiagnosticInfo" },
 		},
 	},
+
+	mini = {
+    timeout = 2500, -- timeout for entries shown in the mini view (ms). Default historically ~2000.
+    reverse = true,
+  },
 }
 
 M.lsp = {

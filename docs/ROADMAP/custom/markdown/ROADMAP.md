@@ -3,6 +3,8 @@
 ## `/custom/markdown`-Modul
 
 1. inline code in backticks wie `function` wird fast immer nicht gehighlighted
+2. leader mhD funktioniert erst, wenn man einmal alles mit C-v markiert hat oder keine Markierung - dann aber nur in der aktuellen headline - dann escaped, und dann leader mhD/I ausführt
+3. markdown mappings/utils/markdown, mappings/marjkdown, utils/markdown und /utils/markdown_headings zusammenholen
 
 ### Folding
 
