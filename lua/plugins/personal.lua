@@ -60,13 +60,13 @@ return {
       "ibhagwan/fzf-lua", -- für engine="fzf"
       -- "nvim-telescope/telescope.nvim", -- für engine="telescope"
     },
-		config = function()
-    require("replacer").setup({
-      engine = "fzf",
-      -- engine = "telescope",
-      default_scope = "%",
-    })
-  end
+    config = function()
+      require("replacer").setup({
+        engine = "fzf",
+        -- engine = "telescope",
+        default_scope = "%",
+      })
+    end,
   },
 
   {
@@ -217,4 +217,40 @@ return {
   --     })
   --   end,
   -- },
+
+  {
+    -- Pfad anpassen: hier als lokales Modul im config-Repo
+    dir = vim.fn.stdpath("config") .. "/lua/usrcmds/filecycle",
+    name = "filecycle",
+    lazy = true,
+    config = function()
+      require("usrcmds.filecycle").setup({
+        open_target = "current", -- "current"|"split"|"vsplit"|"tab"|"background"
+        keep_focus = true, -- bei Split/Vsplit Fokus im Ursprungsfenster behalten
+        include_hidden = false, -- Dotfiles ignorieren
+        wrap = true, -- am Ende/Anfang umbrechen
+        follow_symlinks = true, -- echte Pfade für Vergleich/Öffnen nutzen
+        root = "buffer_dir", -- "buffer_dir"|"cwd"
+        confirm_on_modified = true, -- :confirm edit bei geänderten Buffern
+        case_insensitive = true, -- alphabetische Sortierung/Matching ohne Groß/Kleinschreibung
+      })
+    end,
+    keys = {
+      {
+        "<leader>nf",
+        function()
+          require("usrcmds.filecycle").open("next")
+        end,
+        desc = "[filecycle] Next file",
+      },
+      {
+        "<leader>pf",
+        function()
+          require("usrcmds.filecycle").open("prev")
+        end,
+        desc = "[filecycle] Previous file",
+      },
+    },
+    cmd = { "NextFile", "PreviousFile" },
+  },
 }

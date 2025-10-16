@@ -113,9 +113,9 @@ local function register_aliases(lhs, pos, desc)
   end
 end
 
---- Einfache Hilfe zum Ermitteln, welcher Key in Neovim tatsächlich ankommt.
---- Aufruf: :lua require('mappings.neotree').capture_key()
---- Danach im Normal-Mode die gewünschte Taste drücken (z. B. AltGr+c).
+-- Simple help for determining which key actually arrives in Neovim. Call:
+-- :lua require('mappings.neotree').capture_key() Then, i
+-- n normal mode, press the desired key (e.g., AltGr+c).
 function M.capture_key()
   vim.notify("[neotree] Press your key now (Normal mode). Capturing next key...", vim.log.levels.INFO)
   local ok, ch = pcall(vim.fn.getcharstr)

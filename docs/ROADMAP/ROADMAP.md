@@ -12,6 +12,8 @@
 - mappings.custom erstellen, aus der dann markdown, pathprobe, usw aufgerufen werden, anstatt mappings.markdown, mappings.pathprobe usw..
 - custom.diagnostics erstellen, extra_diagnostice mappings und usrcmds.diagnistcs hinein mergen, dann aus mappings.extra_diagnostics und usrcmds.diagnostics aus ausrufen
 - keymaps.lua zu mappings.lua umbennen
+-- snacks dashboard überarbeiten
+
 
 ---
 
@@ -39,13 +41,52 @@
 
 ## DOCS
 
-1. Docs (README.md, help.txt and eventually ROADMYP.md) for every section.
+1. Docs (README.md, help.txt and eventually ROADMAP.md) for every section.
+2. `docs/plugins/translate.nvim.md` sollte besser ausgeführt sein
 
 ---
 
 ## MISC
 
+1. `configs/*` nach dem Vorbild `configs/translate` implementieren
 
+```sh
+config/
+└── somePluginCfg/
+    ├── init.lua          -- Orchestrierung aller Submodule
+    ├── smeFunctionality.lua       -- Implementierung von Funktionalitäten
+    ├── usercommands.lua  -- Usercommands wie :somePluginFunctionality
+    ├── keymaps.lua       -- Keymaps für somePlugin
+    └── types/
+        └── *.lua         -- Typdefinitionen
+
+docs/
+└── plugins/
+    └── somePluginCfg/
+        ├── README.md
+        └── help.txt
+```
+
+---
+
+## Terminals
+
+### QOF
+
+1. bclose, also leader bc und wrsch auch leader bx schließen nur das die shell im terminal buffer, überigt bleibt dann ein leerer Buffer den man nochmal schließen muss
+2. `ctrl l` im terminal-mode sollte ein clear ausführen so wie in 'normalen' üblich. chansend funktioniert nicht, Nicht-Beispiel:
+
+    ```lua
+	-- Terminal-Insert-Modus Ctrl-l Mapping
+	vim.keymap.set("t", "<C-l>", function()
+			local term_id = vim.b.terminal_job_id
+			if term_id then
+					-- Windows: cls, sonst clear
+					local cmd = vim.fn.has("win32") == 1 and "cls" or "clear"
+					vim.fn.chansend(term_id, cmd .. "\n")
+			end
+	end, { noremap = true, silent = true })
+    ```
 
 ---
 
