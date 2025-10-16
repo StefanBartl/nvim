@@ -217,16 +217,12 @@ return {
 			--   end
 			-- end
 
-			-- Small discoverability hint (non-intrusive, once).
-			vim.api.nvim_create_autocmd("VimEnter", {
-				once = true,
-				callback = function()
-					vim.defer_fn(function()
-						vim.notify("Snacks ready · dashboard with Sessions loaded", vim.log.levels.DEBUG)
-					end, 50)
-				end,
-				desc = "Snacks init hint",
-			})
+			-- Enable snacks-dashbard qol-autocmds
+			local autocmds_ok, autocmds_err = pcall(require, "config.snacks.dashboard.autocmds")
+			if not autocmds_ok then
+				vim.notify("[snacks.dashboard]: QOL-autocmds not available. " .. autocmds_err, 2)
+			end
+
 		end,
 
 		---@return table[]
