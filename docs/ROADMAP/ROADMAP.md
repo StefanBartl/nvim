@@ -53,13 +53,12 @@
 ```sh
 config/
 └── somePluginCfg/
-    ├── init.lua          -- Orchestrierung aller Submodule
-    ├── smeFunctionality.lua       -- Implementierung von Funktionalitäten
-    ├── usercommands.lua  -- Usercommands wie :somePluginFunctionality
-    ├── keymaps.lua       -- Keymaps für somePlugin
-    └── types/
-        └── *.lua         -- Typdefinitionen
-
+    ├── init.lua              -- Orchestrierung aller Submodule
+    ├── smeFunctionality.lua  -- Implementierung von Funktionalitäten
+    ├── usercommands.lua      -- Usercommands wie :somePluginFunctionality
+    ├── keymaps.lua           -- Keymaps für somePlugin
+    └── types/                -- Typdefinitionen
+        └── *.lua
 docs/
 └── plugins/
     └── somePluginCfg/
