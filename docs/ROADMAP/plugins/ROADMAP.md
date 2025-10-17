@@ -13,7 +13,8 @@
 ## neotree
 
 1. `[t`-ähnliche FUnkton, aber es werden nur die Folder verwendet; eventuell `[f` und `[F`
-2. neotree in Windows: M löst zweimal file explorer aus bzw funktionert meistens nicht
+2. `[t` und `[T` sollte nicht node_modules und .git rekusriv auflisten. außer: die NOde ist genau node_modules oder .git
+3. neotree in Windows: M löst zweimal file explorer aus bzw funktionert meistens nicht
     - keymaps/mappings/plugins . struktur ist etwas schwanḿmig?
 
 ---
