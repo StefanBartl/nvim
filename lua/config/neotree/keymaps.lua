@@ -78,6 +78,100 @@ local function collect_files_recursive(root_path)
   return results
 end
 
+--- Gather file entries for the node under cursor.
+--- If node is a directory, returns recursively-collected files (absolute).
+--- If node is a file, returns a one-element array with that file path.
+---@param state table Neo-tree `state` object
+---@return string[] entries Sequential array of absolute paths (may be empty)
+---@return string node_path Path string of the node (empty string if none)
+local function gather_entries_for_node(state)
+  local node = state and state.tree and state.tree:get_node()
+  if not node then
+    return {}, ""
+  end
+
+  local path = node.path or node:get_id() or ""
+  if path == "" then
+    return {}, ""
+  end
+
+  local entries = {} ---@type string[]
+  local ok, result = pcall(function()
+    if vim.fn.isdirectory(path) == 1 then
+      return collect_files_recursive(path)
+    else
+      return { path }
+    end
+  end)
+
+  if ok and type(result) == "table" then
+    entries = result
+  end
+
+  return entries, path
+end
+
+--- Copy a sequence of entries to the system clipboard with optional transformation.
+--- Options:
+---   relative_to_cwd (boolean): if true, convert each entry to path relative to cwd before normalizing.
+---   preview_limit (number): how many items to include in the notification preview (default: 20)
+local function copy_entries_to_clipboard(entries, opts)
+  opts = opts or {}
+  local relative = opts.relative_to_cwd or false
+  local N = opts.preview_limit and math.max(1, tonumber(opts.preview_limit) or 20) or 20
+
+  -- transform and normalize entries in-place
+  for i = 1, #entries do
+    local p = entries[i]
+    if relative and p ~= "" then
+      p = vim.fn.fnamemodify(p, ":~:.") -- convert to relative-ish path (home + relative)
+    end
+    entries[i] = normalize_path(p)
+  end
+
+  -- set clipboard (system + unnamed) with newline-separated list
+  vim.fn.setreg("+", table.concat(entries, "\n"), "c")
+  vim.fn.setreg('"', table.concat(entries, "\n"), "c")
+
+  -- build preview for notification
+  local preview = {}
+  for i = 1, math.min(#entries, N) do
+    table.insert(preview, entries[i])
+  end
+  local more = ""
+  if #entries > N then
+    more = ("\n... and %d more files"):format(#entries - N)
+  end
+
+  -- choose message depending on relative flag
+  local msg
+  if relative then
+    msg = ("Copied %d files to clipboard (relative to cwd):\n%s%s"):format(#entries, table.concat(preview, "\n"), more)
+  else
+    msg = ("Copied %d files to clipboard:\n%s%s"):format(#entries, table.concat(preview, "\n"), more)
+  end
+
+  vim.notify(msg, vim.log.levels.INFO)
+end
+
+--- High-level helper that gathers entries for the node and copies them to clipboard.
+--- This returns true when something was copied; false + message when nothing to copy.
+---@return boolean copied
+local function copy_node_entries_handler(state, opts)
+  opts = opts or {}
+  local entries, node_path = gather_entries_for_node(state)
+  if not node_path or node_path == "" then
+    vim.notify("No node under cursor", vim.log.levels.WARN)
+    return false
+  end
+  if not entries or #entries == 0 then
+    vim.notify("No files found to copy", vim.log.levels.WARN)
+    return false
+  end
+  copy_entries_to_clipboard(entries, { relative_to_cwd = opts.relative_to_cwd, preview_limit = opts.preview_limit })
+  return true
+end
+
 -- ========= Window mappings (no nested tables; every key maps to a function/command) =========
 
 ---@return table<string, any>
@@ -169,7 +263,9 @@ function M.window()
     ["r"] = "rename",
 
     -- create/delete
-		["dd"] = function(state) require("config.neotree.trash").neotree_send_node_to_trash(state) end,	-- deafult: ["dd"] = "delete",
+    ["dd"] = function(state)
+      require("config.neotree.trash").neotree_send_node_to_trash(state)
+    end, -- deafult: ["dd"] = "delete",
     ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
     ["A"] = { "add_directory", config = { show_path = "relative" } },
 
@@ -256,106 +352,18 @@ function M.window()
       desc = "Copy relative base dir (+) (root→dir or cwd→dir)",
     },
 
-    -- ======== AUDIT: Keymap "[t" (absolute) und "[T" (relative to cwd) =========
     ["[t"] = {
       function(state)
-        local node = state.tree:get_node()
-        if not node then
-          vim.notify("No node under cursor", vim.log.levels.WARN)
-          return
-        end
-
-        local path = node.path or node:get_id()
-        if path == "" then
-          vim.notify("No path under cursor", vim.log.levels.WARN)
-          return
-        end
-
-        local is_dir = vim.fn.isdirectory(path) == 1
-        local entries = {}
-
-        if is_dir then
-          local ok, result = pcall(collect_files_recursive, path)
-          if ok then
-            entries = result
-          end
-        else
-          entries = { path }
-        end
-
-        -- normalize all paths
-        for i = 1, #entries do
-          entries[i] = normalize_path(entries[i])
-        end
-
-        vim.fn.setreg("+", table.concat(entries, "\n"), "c")
-
-        local N = 20
-        local preview = {}
-        for i = 1, math.min(#entries, N) do
-          table.insert(preview, entries[i])
-        end
-        local more = ""
-        if #entries > N then
-          more = ("\n... and %d more files"):format(#entries - N)
-        end
-
-        vim.notify(
-          ("Copied %d files to clipboard:\n%s%s"):format(#entries, table.concat(preview, "\n"), more),
-          vim.log.levels.INFO
-        )
+        -- call the generic handler with relative=false
+        copy_node_entries_handler(state, { relative_to_cwd = false, preview_limit = 20 })
       end,
       desc = "Copy recursive file list (absolute paths) to clipboard (+)",
     },
 
     ["[T"] = {
       function(state)
-        local node = state.tree:get_node()
-        if not node then
-          vim.notify("No node under cursor", vim.log.levels.WARN)
-          return
-        end
-
-        local path = node.path or node:get_id()
-        if path == "" then
-          vim.notify("No path under cursor", vim.log.levels.WARN)
-          return
-        end
-
-        local is_dir = vim.fn.isdirectory(path) == 1
-        local entries = {}
-
-        if is_dir then
-          local ok, result = pcall(collect_files_recursive, path)
-          if ok then
-            entries = result
-          end
-        else
-          entries = { path }
-        end
-
-        -- relativ zu cwd und normalize
-        for i = 1, #entries do
-          local rel = vim.fn.fnamemodify(entries[i], ":~:.") -- relative to cwd
-          entries[i] = normalize_path(rel)
-        end
-
-        vim.fn.setreg("+", table.concat(entries, "\n"), "c")
-
-        local N = 20
-        local preview = {}
-        for i = 1, math.min(#entries, N) do
-          table.insert(preview, entries[i])
-        end
-        local more = ""
-        if #entries > N then
-          more = ("\n... and %d more files"):format(#entries - N)
-        end
-
-        vim.notify(
-          ("Copied %d files to clipboard (relative to cwd):\n%s%s"):format(#entries, table.concat(preview, "\n"), more),
-          vim.log.levels.INFO
-        )
+        -- call the generic handler with relative=true
+        copy_node_entries_handler(state, { relative_to_cwd = true, preview_limit = 20 })
       end,
       desc = "Copy recursive file list (relative to cwd) to clipboard (+)",
     },
