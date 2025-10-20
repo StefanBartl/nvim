@@ -6,6 +6,8 @@
 2. leader mhD funktioniert erst, wenn man einmal alles mit C-v markiert hat oder keine Markierung - dann aber nur in der aktuellen headline - dann escaped, und dann leader mhD/I ausführt
 3. markdown mappings/utils/markdown, mappings/marjkdown, utils/markdown und /utils/markdown_headings zusammenholen
 
+---
+
 ### Folding
 
 1. `zf` und `za` falten nicht korrekt, wenn weitere Unter-Headings da sind
