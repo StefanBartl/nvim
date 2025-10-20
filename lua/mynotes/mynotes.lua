@@ -5,9 +5,9 @@ local M = {}
 -- Configuration: change title or dir if needed.
 local CFG = {
   -- Picker title shown in the UI.
-  title = "Notes",
+  title = "MyNotes",
   -- Directory to search. "~" will be expanded. Keep Linux/macOS style.
-  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/Notes"),
+  dir = vim.fn.expand(vim.env.REPOS_DIR .. "/Notes/MyNotes"),
   notify = true,
 }
 
@@ -18,7 +18,7 @@ local CFG = {
 ---@param level integer
 local function note(msg, level)
   if CFG.notify ~= false then
-    vim.notify("[Notes " .. msg, level)
+    vim.notify("[MyNotes " .. msg, level)
   end
 end
 
@@ -157,11 +157,11 @@ end
 
 -- User commands --------------------------------------------------------------
 
-pcall(vim.api.nvim_create_user_command, "NotesFiles", function()
+pcall(vim.api.nvim_create_user_command, "MyNotesFiles", function()
   M.fzf_files()
 end, { desc = "Notes (fzf-lua): Find files with preview in configured directory" })
 
-pcall(vim.api.nvim_create_user_command, "NotesGrep", function()
+pcall(vim.api.nvim_create_user_command, "MyNotesGrep", function()
   M.fzf_grep()
 end, { desc = "Notes (fzf-lua): Live grep with preview in configured directory" })
 
