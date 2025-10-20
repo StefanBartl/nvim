@@ -4,7 +4,9 @@
 local M = {}
 
 function M.setup()
-  local map = vim.g.__map_helper or function(mode, lhs, rhs, opts) vim.keymap.set(mode, lhs, rhs, opts or {}) end
+  local map = vim.g.__map_helper or function(mode, lhs, rhs, opts)
+    vim.keymap.set(mode, lhs, rhs, opts or {})
+  end
 
   -- Alt-b opens top-level custom menu if present, otherwise default
   map("n", "<A-b>", function()
@@ -24,7 +26,9 @@ function M.setup()
   -- RightMouse: tries to detect NeoTree / NvimTree
   vim.keymap.set({ "n", "v" }, "<RightMouse>", function()
     local ok_utils, utils = pcall(require, "menu.utils")
-    if ok_utils then pcall(utils.delete_old_menus) end
+    if ok_utils then
+      pcall(utils.delete_old_menus)
+    end
 
     -- replay native <RightMouse>
     vim.cmd.exec('"normal! \\<RightMouse>"')
@@ -38,7 +42,9 @@ function M.setup()
     end
 
     local ok_buf, buf = pcall(vim.api.nvim_win_get_buf, winid)
-    if not ok_buf or not buf then buf = vim.api.nvim_get_current_buf() end
+    if not ok_buf or not buf then
+      buf = vim.api.nvim_get_current_buf()
+    end
     local ft = vim.bo[buf].ft or ""
 
     local options = "default"
@@ -47,12 +53,20 @@ function M.setup()
     elseif ft == "NvimTree" or ft:match("^NvimTree") then
       options = "nvimtree"
     else
-      -- if custom registered and we're in a normal buffer prefer custom
-      if vim.g._menu_custom_registered then options = "custom" end
+      if vim.g._menu_custom_registered then
+        options = "custom"
+      end
     end
 
     local ok_menu, menu = pcall(require, "menu")
-    if ok_menu then menu.open(options, { mouse = true }) end
+    if ok_menu then
+      if options == "neo-tree" then
+        local patch = require("config.menu.neotree")
+        menu.open(patch, { mouse = true })
+      else
+        menu.open(options, { mouse = true })
+      end
+    end
   end, {})
 end
 
