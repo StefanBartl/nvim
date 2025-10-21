@@ -114,7 +114,6 @@ local function apply_keymaps(bufnr)
   -- TOC (insert/refresh) ------------------------------------------------------
   if ok_toc and toc.update_markdown_toc then
     map("n", "<leader>toc", function()
-      -- lightweight closure; parameter stays constant
       toc.update_markdown_toc("## Table of content")
     end, "[Markdown] Insert/Refresh TOC", o)
   end

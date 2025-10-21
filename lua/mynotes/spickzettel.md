@@ -81,4 +81,10 @@
    * U → stellt ganze Zeile wieder her.
    * Ctrl-r → stellt rückgängig gemachte Änderungen wieder her (redo).
 
+## 9. nach "oben" / "rechts" usw..
+   * d3k → 3 Zeilen nach oben löschen
+   * c3k → 3 Zeilen nach oben ändern
+   * c3l → 3 chars nach rechts ändern
+   * ...
+
 ---
