@@ -1,5 +1,9 @@
 # WKD Neovim Roadmap
 
+## Important Bugs
+
+1. Custom Snacks Dashboard (CSD):  Manchmal, wenn man eine Datei öffnet, verschwindet das CSD nicht. Ich habe eigentlich eine Markdown Datei geöffnet, aber nur das CSD war weiterhin sichtbar. Weder `bclose` noch `:q` hat das CSD beendet. `set filetype?` hat jedoch `markdown` und nicht `snacks_dashboard` ergeben, was weird ist. Weiters änderte auch `:e test.lua` nichts daran, dass nur dsa CSD sichtba4r war, aber `set filetype?` hat num `lua` ergeben, was darauf hinweißt, dass die Dateien  schon in Buffer geladen wurden, nur das CSD es "unerreichbar" für mich überdeckt. Die einzige Möglichkeit, die ich gefunden habe, ist, `nvim` neu zu starten.
+
 ## Cleanup
 
 1. `init.lua`: Statusline ausgliedern
@@ -12,7 +16,8 @@
 - mappings.custom erstellen, aus der dann markdown, pathprobe, usw aufgerufen werden, anstatt mappings.markdown, mappings.pathprobe usw..
 - custom.diagnostics erstellen, extra_diagnostice mappings und usrcmds.diagnistcs hinein mergen, dann aus mappings.extra_diagnostics und usrcmds.diagnostics aus ausrufen
 - keymaps.lua zu mappings.lua umbennen
--- snacks dashboard überarbeiten
+- snacks dashboard überarbeiten
+- ``- Backticks inline code color in Source code!
 
 
 ---

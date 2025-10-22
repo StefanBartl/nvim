@@ -6,7 +6,8 @@
 
 ## Misc
 
-:1. Wenn `nvim +SessionLoad` ausgeführt wird, dann funktoinert etwas mit der ERkennung der File nicht. Beispiel: Es wird eine Markdown Datei geladen, es wird auch Marksman LSP geladen, aber ich habe keinen Zugriff auf filetype spezialisierte Usercommands oder Keymaps wie zb.: `leader toc`. Man muss zuerste den Buffer schließen und wieder öffnen, damit diese ausgefphrt werden. Ich vermute, dass dies so ist, da bei erneuten öffnen der Datei etwas spezifisches in neovim initialisiert oder zugewiesen  wird, dass bei der momentan `nvim +SessionLoad`-Funktion nicht geschieht. Wichtig: Wenn ich nvim alleine ausfphre und dann `SessionLoad` ausführe, dann gibt es das Problem nicht, d.h. es besteht nur wenn man aus der CLI die Session ladet.
+1. Wenn `nvim +SessionLoad` ausgeführt wird, dann funktoinert etwas mit der ERkennung der File nicht. Beispiel: Es wird eine Markdown Datei geladen, es wird auch Marksman LSP geladen, aber ich habe keinen Zugriff auf filetype spezialisierte Usercommands oder Keymaps wie zb.: `leader toc`. Man muss zuerste den Buffer schließen und wieder öffnen, damit diese ausgefphrt werden. Ich vermute, dass dies so ist, da bei erneuten öffnen der Datei etwas spezifisches in neovim initialisiert oder zugewiesen  wird, dass bei der momentan `nvim +SessionLoad`-Funktion nicht geschieht. Wichtig: Wenn ich nvim alleine ausfphre und dann `SessionLoad` ausführe, dann gibt es das Problem nicht, d.h. es besteht nur wenn man aus der CLI die Session ladet.
+2. OpenInNvim new instance startet zwar eine neue instanz, aber ladet dann nicht das dokument. CWD ist aber korrekt! Und Linux version ist noch nicht implementiert.
 
 
 ## usercommands
