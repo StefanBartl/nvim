@@ -3,6 +3,7 @@
 
 local M = {}
 
+require("custom.markdown.anchor.jump")
 -- AUDIT:
 require("custom.markdown.fenced_fix").setup({
   -- Falls „noch oranger“ gewünscht ist, Reihenfolge hier anpassen oder direkt "Special" wählen.
