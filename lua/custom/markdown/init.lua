@@ -19,6 +19,7 @@ local head = require("custom.markdown.core.headings")
 local wrap = require("custom.markdown.core.wrap")
 local ui_autocmd = require("custom.markdown.ui.autocmd")
 local ui_keymaps = require("custom.markdown.ui.keymaps")
+local ui_usercommands = require("custom.markdown.ui.usercommands")
 
 ---@param opts MarkdownConfig|nil
 ---@return nil
@@ -26,6 +27,7 @@ function M.setup(opts)
   cfg.setup(opts or {})
   ui_autocmd.setup()
   ui_keymaps.setup()
+	ui_usercommands.setup()
 end
 
 

@@ -88,3 +88,19 @@
    * ...
 
 ---
+
+## Markdown
+
+### Link unter Cursor in System app öffnen
+
+```lua
+" Windows:
+:lua vim.fn.jobstart({"cmd.exe", "/c", "start", '""', vim.fn.resolve(vim.fn.expand("%:h") .. "/" .. vim.api.nvim_get_current_line():match("%[.-%]%((.-)%)"))}, {detach=true})
+
+" Oder kürzer mit relativen Pfad direkt:
+:!start ./Figures/Figure_4.7_Performance-Effect-of-Mulitple-Cores.png
+
+" Oder am einfachsten mit expandcmd:
+:lua vim.fn.jobstart({"cmd.exe", "/c", "start", "", "./Figures/Figure_4.7_Performance-Effect-of-Mulitple-Cores.png"}, {detach=true})
+```
+

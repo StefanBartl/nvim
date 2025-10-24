@@ -191,6 +191,38 @@ function M.setup()
       desc = "custom.markdown: ensure maps for future Markdown buffers",
     })
   end
+
+	-- Open image/file under cursor with system application ----------------------
+	map("n", "gx", function()
+		-- Get current line
+		local line = api.nvim_get_current_line()
+		local col = api.nvim_win_get_cursor(0)[2] + 1
+
+		-- Match Markdown image/link syntax: ![alt](path) or [text](path)
+		local path = line:match("%[.-%]%((.-)%)")
+
+		if path then
+			-- Resolve relative path from current file's directory
+			local current_file = api.nvim_buf_get_name(0)
+			local current_dir = vim.fn.fnamemodify(current_file, ":h")
+			local full_path = vim.fn.resolve(current_dir .. "/" .. path)
+
+			-- Open with system default application (Windows)
+			if vim.fn.has("win32") == 1 then
+				vim.fn.jobstart({ "cmd.exe", "/c", "start", '""', full_path }, { detach = true })
+			-- macOS
+			elseif vim.fn.has("mac") == 1 then
+				vim.fn.jobstart({ "open", full_path }, { detach = true })
+			-- Linux
+			else
+				vim.fn.jobstart({ "xdg-open", full_path }, { detach = true })
+			end
+
+			vim.notify("Opening: " .. full_path, vim.log.levels.INFO)
+		else
+			vim.notify("No link found under cursor", vim.log.levels.WARN)
+		end
+	end, "[Markdown] Open image/link with system app", o)
 end
 
 return M
