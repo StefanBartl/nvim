@@ -15,8 +15,17 @@ function M.setup()
 	map("n", "<leader>bc", function() require("nvchad.tabufline").close_buffer() end, { desc = "[Buffers] Close" })
 	map("n", "<leader>bx", function()
 		local current = vim.api.nvim_get_current_buf()
+		-- Check if it's a terminal buffer
+		local buftype = vim.bo[current].buftype
 		vim.cmd("bnext")
-		vim.cmd("bd " .. current)
+		-- Force delete if terminal, normal delete otherwise
+		if buftype == 'terminal' then
+			vim.api.nvim_buf_delete(current, { force = true })
+		else
+			pcall(function()
+				vim.api.nvim_buf_delete(current, { force = false })
+			end)
+		end
 	end, { desc = "[Buffers] Close current, go to next" })
 
 	-- ---------------------------------------------------------------------------
