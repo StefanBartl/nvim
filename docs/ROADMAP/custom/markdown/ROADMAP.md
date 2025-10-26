@@ -2,8 +2,7 @@
 
 ## toc
 
-1. es soll sochergestellt werden, dass wenn ein toc wingefüght wird, eine zeile abstand zur # headline gehalten wird und nach dem toc eine zeile abstand, eine zeile mit --- separator und dann wieder eine zeile abstand. Nicht mehr und nicht weniger.
-2. Bei TOC update wird anstatt das der toc upgedatet wird alle zeilen bis auf die erste headline nur gelöscht -Y> offensichtlicher BUG
+---
 
 ## `/custom/markdown`-Modul
 

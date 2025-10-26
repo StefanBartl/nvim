@@ -67,6 +67,84 @@ local function slugify_gfm(title)
   return s
 end
 
+--- Check if a line is empty or whitespace only
+---@param line string|nil
+---@return boolean
+local function is_empty_line(line)
+  return not line or line:match("^%s*$") ~= nil
+end
+
+--- Clean up spacing around TOC block AFTER insertion: ensure exactly one blank line before and after
+--- This function actively fixes any spacing issues in the actual buffer content
+---@param bufnr number
+---@param toc_header_line number (1-based, line where TOC header is)
+---@param separator_line number (1-based, line where separator --- is)
+local function ensure_proper_spacing(bufnr, toc_header_line, separator_line)
+  local total = vim.api.nvim_buf_line_count(bufnr)
+
+  -- === CLEAN UP BEFORE TOC ===
+  -- We want exactly ONE empty line before the TOC header
+  if toc_header_line > 1 then
+    -- Count how many empty lines are directly before TOC header
+    local empty_before = 0
+    for i = toc_header_line - 1, 1, -1 do
+      local line = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
+      if is_empty_line(line) then
+        empty_before = empty_before + 1
+      else
+        break -- Stop at first non-empty line
+      end
+    end
+
+    if empty_before > 1 then
+      -- Too many empty lines - remove excess
+      local remove_count = empty_before - 1
+      local delete_start = toc_header_line - empty_before
+      local delete_end = toc_header_line - 2
+      vim.api.nvim_buf_set_lines(bufnr, delete_start, delete_end + 1, false, {})
+
+      -- Adjust line numbers after deletion
+      toc_header_line = toc_header_line - remove_count
+      separator_line = separator_line - remove_count
+      total = vim.api.nvim_buf_line_count(bufnr)
+
+    elseif empty_before == 0 and toc_header_line > 1 then
+      -- No empty line before TOC - add one
+      vim.api.nvim_buf_set_lines(bufnr, toc_header_line - 1, toc_header_line - 1, false, { "" })
+
+      -- Adjust line numbers after insertion
+      toc_header_line = toc_header_line + 1
+      separator_line = separator_line + 1
+      total = vim.api.nvim_buf_line_count(bufnr)
+    end
+  end
+
+  -- === CLEAN UP AFTER SEPARATOR ===
+  -- We want exactly ONE empty line after the --- separator
+  if separator_line < total then
+    -- Count how many empty lines are directly after separator
+    local empty_after = 0
+    for i = separator_line + 1, total do
+      local line = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
+      if is_empty_line(line) then
+        empty_after = empty_after + 1
+      else
+        break -- Stop at first non-empty line
+      end
+    end
+
+    if empty_after > 1 then
+      -- Too many empty lines - remove excess
+      local _ = empty_after - 1
+      vim.api.nvim_buf_set_lines(bufnr, separator_line + 1, separator_line + empty_after, false, {})
+
+    elseif empty_after == 0 and separator_line < total then
+      -- No empty line after separator - add one
+      vim.api.nvim_buf_set_lines(bufnr, separator_line, separator_line, false, { "" })
+    end
+  end
+end
+
 --- Update or insert a Markdown Table of Contents.
 --- header_line: the header that marks the TOC block (e.g. "## Table of content").
 --- opts: optional table with fields:
@@ -93,7 +171,7 @@ function M.update_markdown_toc(header_line, opts)
   local total = vim.api.nvim_buf_line_count(bufnr)
 
   -- Find existing TOC block (start and end). Match header_line exactly,
-  -- then remove until the next header of any level (# ...) or EOF.
+  -- then remove until the next header of any level (# ...) or separator line or EOF.
   local existing_start, existing_end
   do
     local re = "^%s*" .. vim.pesc(header_line) .. "%s*$"
@@ -101,11 +179,28 @@ function M.update_markdown_toc(header_line, opts)
       local l = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
       if l and l:match(re) then
         existing_start = i
+        -- Find end: look for separator line (---) or next heading
         for j = i + 1, total do
           local lj = vim.api.nvim_buf_get_lines(bufnr, j - 1, j, false)[1]
-          if not lj or lj:match("^%s*#%s+") then
-            existing_end = j - 1
-            break
+          if lj then
+            if lj:match("^%s*%-%-%-%s*$") then
+              -- Found separator, include it and any following empty lines
+              existing_end = j
+              -- Skip additional empty lines after separator
+              for k = j + 1, total do
+                local lk = vim.api.nvim_buf_get_lines(bufnr, k - 1, k, false)[1]
+                if lk and is_empty_line(lk) then
+                  existing_end = k
+                else
+                  break
+                end
+              end
+              break
+            elseif lj:match("^%s*#%s+") then
+              -- Found next heading, end before it
+              existing_end = j - 1
+              break
+            end
           end
         end
         existing_end = existing_end or total
@@ -114,31 +209,36 @@ function M.update_markdown_toc(header_line, opts)
     end
   end
 
-  if existing_start and existing_end then
-    vim.api.nvim_buf_set_lines(bufnr, existing_start - 1, existing_end, false, {})
-    total = vim.api.nvim_buf_line_count(bufnr)
-  end
-
+  -- Generate TOC content (exclude the TOC header itself and content inside TOC block)
   local toc_lines = {}
   local in_fence = false
-  -- seen_count stores how many times we have produced the base slug so far.
-  -- We use GitHub-style numbering: first => base, second => base-1, third => base-2, ...
+  local in_toc_block = false
   local seen_count = {}
+
+  -- Prepare regex to detect TOC header line
+  local toc_header_pattern = "^%s*" .. vim.pesc(header_line) .. "%s*$"
 
   local scan_start = math.max(1, start_after_fm > 0 and (start_after_fm + 1) or 1)
   for i = scan_start, total do
     local line = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1] or ""
 
+    -- Check if we're entering/exiting TOC block
+    if line:match(toc_header_pattern) then
+      in_toc_block = true
+    elseif in_toc_block and line:match("^%s*%-%-%-%s*$") then
+      -- Found separator, TOC block ends after this
+      in_toc_block = false
+    end
+
     if line:match(FENCE_LINE) then
       in_fence = not in_fence
-    elseif not in_fence then
+    elseif not in_fence and not in_toc_block then
       local hashes, title = line:match("^(%s*#+)%s+(.*%S)")
       if hashes and title then
         local level = #hashes:gsub("%s", "")
         if level >= min_level and level <= max_level then
           local base = slugify_gfm(title)
           if base == "" then
-            -- fallback: use numeric index to avoid empty anchors
             base = "section-" .. tostring(i)
           end
           local count = seen_count[base] or 0
@@ -146,7 +246,6 @@ function M.update_markdown_toc(header_line, opts)
           if count == 0 then
             anchor = base
           else
-            -- GitHub style: second occurrence gets "-1", third gets "-2", ...
             anchor = base .. "-" .. tostring(count)
           end
           seen_count[base] = count + 1
@@ -162,9 +261,19 @@ function M.update_markdown_toc(header_line, opts)
     return
   end
 
-  local insert_at = existing_start or (start_after_fm > 0 and start_after_fm or 1)
+  -- Determine insert position
+  local insert_at
 
-  if not existing_start then
+  if existing_start then
+    -- Update existing TOC: replace entire block
+    insert_at = existing_start
+    vim.api.nvim_buf_set_lines(bufnr, existing_start - 1, existing_end, false, {})
+    total = vim.api.nvim_buf_line_count(bufnr)
+  else
+    -- Insert new TOC
+    insert_at = start_after_fm > 0 and start_after_fm or 1
+
+    -- Find first heading to insert TOC after it
     for i = insert_at, total do
       local l = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
       if l and l:match("^%s*#%s+") then
@@ -174,6 +283,7 @@ function M.update_markdown_toc(header_line, opts)
     end
   end
 
+  -- Build TOC block with trailing empty line
   local block = { header_line, "" }
   for _, l in ipairs(toc_lines) do
     block[#block + 1] = l
@@ -182,7 +292,14 @@ function M.update_markdown_toc(header_line, opts)
   block[#block + 1] = "---"
   block[#block + 1] = ""
 
+  -- Insert TOC block
   vim.api.nvim_buf_set_lines(bufnr, insert_at - 1, insert_at - 1, false, block)
+
+  -- CRITICAL: Clean up spacing AFTER insertion
+  -- Find where TOC header and separator are NOW in the buffer
+  local toc_header_line = insert_at
+  local separator_line = insert_at + #block - 2  -- --- is second-to-last in block
+  ensure_proper_spacing(bufnr, toc_header_line, separator_line)
 end
 
 return M
