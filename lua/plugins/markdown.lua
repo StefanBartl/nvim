@@ -11,7 +11,6 @@ return {
     cmd = { "RenderMarkdown" },
     opts = {
       enabled = false,
-      theme = "dark",
     },
   },
 

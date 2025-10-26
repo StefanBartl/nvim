@@ -34,15 +34,6 @@
 ---@class MasonEnsure
 local M = {}
 
-local api = vim.api
-
--- Lazy require with pcall so this module can load even if mason isn't yet set up.
----@return boolean, table
-local function req(mod)
-  local ok, m = pcall(require, mod)
-  return ok, m
-end
-
 -- =====================================================================================
 -- Aggregated summary session
 -- =====================================================================================
