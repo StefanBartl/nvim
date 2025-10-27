@@ -57,4 +57,18 @@ return {
       })
     end,
   },
+
+  {
+    "ellisonleao/glow.nvim",
+    cmd = "Glow",
+    ft = { "markdown" },
+    config = function()
+      require("glow").setup({
+        glow_path = vim.fn.exepath("glow"), -- auto-detect from PATH
+        border = "shadow",
+        style = "dark",
+        width = 120,
+      })
+    end,
+  },
 }

@@ -4,10 +4,6 @@
 ---   1) auto-starts on focusing any Markdown buffer (if none is open),
 ---   2) always reuses/updates that single preview when switching Markdown buffers,
 ---   3) does nothing when switching to non-Markdown buffers (no close, no update).
----
---- Put this file at: lua/config/markdown_preview.lua
---- Load from Lazy spec with:
----   config = function() require("config.markdown_preview").setup() end
 
 local M = {}
 
@@ -29,7 +25,7 @@ function M.setup()
 	elseif vim.g.is_linux then
 		vim.g.mkdp_browser = browser.linux
 	else
-		vim.notify("[Options] Global env for OS not set (system/env.lua). Browser for Markdows Preview defaulted.", 2)
+		vim.notify("[Plugins.MarkdownPreview] Global env for OS not set (system/env.lua). Browser for Markdows Preview defaulted.", 2)
 	end
 
 	-- 1) Open preview when entering a Markdown buffer (first time only).

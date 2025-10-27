@@ -1,5 +1,25 @@
 # Spickzettel
 
+## Table of content
+
+  - [Custom Usrcommands](#custom-usrcommands)
+  - [Custom mappings](#custom-mappings)
+  - [1. Operator + Textobjekt (präzise und schnell)](#1-operator-textobjekt-przise-und-schnell)
+  - [2. Visual + Textobjekt (explizit markieren)](#2-visual-textobjekt-explizit-markieren)
+  - [3. Bewegung bis zum Trennzeichen (wenn das nächste Zeichen bekannt ist)](#3-bewegung-bis-zum-trennzeichen-wenn-das-nchste-zeichen-bekannt-ist)
+  - [4. Alternative Bewegung statt w in Visual](#4-alternative-bewegung-statt-w-in-visual)
+  - [5. Bewegungen innerhalb einer Zeile](#5-bewegungen-innerhalb-einer-zeile)
+  - [6. Direkt in den Insert-Modus springen (Bewegung + sofort Einfügen)](#6-direkt-in-den-insert-modus-springen-bewegung-sofort-einfgen)
+  - [7. Nützliche Wort- und Satzbewegungen](#7-ntzliche-wort-und-satzbewegungen)
+  - [8. Wiederholen & Korrigieren](#8-wiederholen-korrigieren)
+  - [9. nach "oben" / "rechts" usw..](#9-nach-oben-rechts-usw)
+  - [Markdown](#markdown)
+    - [Link unter Cursor in System app öffnen](#link-unter-cursor-in-system-app-ffnen)
+  - [Powershell](#powershell)
+    - [Installationsort / Binary ausgeben](#installationsort-binary-ausgeben)
+
+---
+
 - `<C-6>` oder `edit #` öffnet letzte datei
 - `:edit #`: springe zum letzten buffer
 - `goto smth` in branches verwenden
@@ -104,3 +124,40 @@
 :lua vim.fn.jobstart({"cmd.exe", "/c", "start", "", "./Figures/Figure_4.7_Performance-Effect-of-Mulitple-Cores.png"}, {detach=true})
 ```
 
+### Alle Zeilen außer headlines löschen
+
+
+```vim
+:g/^[^#]/d
+:g/^\s*[^#]/d
+```
+
+Erklärung:
+- `^\s*` → optional beliebige Whitespaces am Zeilenanfang
+- `[^#]` → erstes **nicht-# Zeichen**
+- `d` → löscht die gesamte Zeile
+
+Wenn man **wirklich alle Zeilen außer Headlines** entfernen will, egal ob leer, nur Leerzeichen oder Text, kann man auch `:v` benutzen:
+
+```vim
+:v/^#/d
+```
+
+- `:v/^#/d` → löscht **alle Zeilen, die nicht mit `#` beginnen**, inklusive leerer oder whitespace-only Zeilen.
+
+## Powershell
+
+### Installationsort / Binary ausgeben
+
+```powershell
+# Methode 1: where (eingebaut in cmd/PowerShell)
+where EXECUTABLE_NAME
+
+# Methode 2: Get-Command (PowerShell)
+(Get-Command EXECUTABLE_NAME).Source
+
+# Methode 3: gcm Alias (PowerShell, kürzer)
+(gcm EXECUTABLE_NAME).Source
+```
+
+---
