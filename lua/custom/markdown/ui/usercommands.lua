@@ -1,37 +1,45 @@
 ---@module 'custom.markdown.ui.usercommands'
+---@description Provide routines to create buffer-local usercommands for Markdown buffers.
 
 local M = {}
 
+local api = vim.api
+local handler = require("custom.markdown.handler")
 
--- --- Public setup ------------------------------------------------------------
-
+--- Create or ensure a buffer-local usercommand named `OpenWithSystemApplication`.
+--- This function is intended to be called from a FileType autocmd and receives the
+--- autocmd event table (args) as provided by nvim_create_autocmd.
+---@param args table
 ---@return nil
-function M.setup()
+function M.apply(args)
+  if type(args) ~= "table" or type(args.buf) ~= "number" then
+    return
+  end
 
-	vim.api.nvim_create_user_command("OpenWithSystemApplication", function()
-		local line = vim.api.nvim_get_current_line()
-		local path = line:match("%[.-%]%((.-)%)")
+  local bufnr = args.buf
+  if not (api.nvim_buf_is_valid(bufnr) and api.nvim_buf_is_loaded(bufnr)) then
+    return
+  end
 
-		if path then
-			local current_file = vim.api.nvim_buf_get_name(0)
-			local current_dir = vim.fn.fnamemodify(current_file, ":h")
-			local full_path = vim.fn.resolve(current_dir .. "/" .. path)
+  -- Avoid creating the same buffer-local command twice.
+  -- nvim_buf_get_commands returns a map of command definitions available to the buffer.
+  local ok, cmds = pcall(api.nvim_buf_get_commands, bufnr, { builtin = false })
+  if ok and cmds and cmds["OpenWithSystemApplication"] then
+    return
+  end
 
-			---AUDIT:USE GLOBAL VARIABLE
-			if vim.fn.has("win32") == 1 then
-				vim.fn.jobstart({ "cmd.exe", "/c", "start", '""', full_path }, { detach = true })
-			elseif vim.fn.has("mac") == 1 then
-				vim.fn.jobstart({ "open", full_path }, { detach = true })
-			else
-				vim.fn.jobstart({ "xdg-open", full_path }, { detach = true })
-			end
-
-			vim.notify("Opening: " .. full_path, vim.log.levels.INFO)
-		else
-			vim.notify("No link found under cursor", vim.log.levels.WARN)
-		end
-	end, { desc = "Open Markdown link/image with system application" })
-
+  pcall(function()
+    api.nvim_buf_create_user_command(bufnr, "OpenWithSystemApplication",
+      function()
+        handler.handle_cursor_action()
+      end,
+      {
+        desc = "[Custom.Markdown] Open image/url/file under cursor with system app",
+        nargs = 0,
+        complete = nil,
+      }
+    )
+  end)
 end
 
 return M

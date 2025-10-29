@@ -3,9 +3,8 @@
 ---AUDIT: Apply performance guidelines
 
 ---Jump to the anchor referenced in a Markdown TOC link
----@nodiscard
 ---@return nil
-local function Jump_to_anchor()
+return function()
   local line = vim.api.nvim_get_current_line()
   -- Extract Markdown link anchor
   local anchor = line:match("%(#([%w%-]+)%)")
@@ -33,25 +32,3 @@ local function Jump_to_anchor()
   end
 end
 
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "markdown", "markdown.mdx", "mdx", "md" },
-  callback = function(args)
-    -- Standard keyboard mapping
-    vim.keymap.set("n", "gh", Jump_to_anchor, {
-      buffer = args.buf,
-      desc = "[Custom.Markdown] Jump to TOC anchor"
-    })
-
-    -- Double-click (recommended)
-    vim.keymap.set("n", "<2-LeftMouse>", Jump_to_anchor, {
-      buffer = args.buf,
-      desc = "[Custom.Markdown] Jump to TOC anchor (double-click)"
-    })
-
-    -- Alternative: Ctrl + Left-click
-    vim.keymap.set("n", "<C-LeftMouse>", Jump_to_anchor, {
-      buffer = args.buf,
-      desc = "[Custom.Markdown] Jump to TOC anchor (Ctrl+click)"
-    })
-  end
-})

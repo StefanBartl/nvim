@@ -1,11 +1,13 @@
 ---@module 'custom.markdown.ui.keymaps'
---- Buffer-local Markdown keymaps (fold, headings, wrap, toc).
---- Safe, idempotent, and config-gated.
+--- Buffer-local Markdown keymaps (fold, headings, wrap, toc, images/links)
+--- Idempotent, performance-friendly, and conflict-free.
 
 local M = {}
-
--- Fast locals
 local api = vim.api
+local jump = require("custom.markdown.anchor.jump")
+local image = require("custom.markdown.handler.image")
+local handler = require("custom.markdown.handler")
+local tableview = require("custom.markdown.tableview")
 
 -- --- Small helpers -----------------------------------------------------------
 
@@ -15,7 +17,6 @@ local api = vim.api
 local function with(base, extra)
   if not extra then return base or {} end
   if not base then
-    -- avoid mutating caller's table
     local out = {}
     for k, v in pairs(extra) do out[k] = v end
     return out
@@ -48,33 +49,21 @@ end
 -- --- Keymap installer --------------------------------------------------------
 
 ---@param bufnr integer|nil
-local function apply_keymaps(bufnr)
-  -- Resolve config once
-  local cfg_get = require("custom.markdown.config").get
-  local cfg = cfg_get()
-
-  -- Optional feature gates (keep behavior stable if keys are absent)
-  local enable_double_asterisk = (cfg.map_double_asterisk ~= false)
-  local use_zf_override        = (cfg.use_zf_override == true)
-
-  -- Load submodules defensively (no hard crash if optional parts are missing)
-  local ok_fold,      fold      = pcall(require, "custom.markdown.core.fold")
-  local ok_prev,      fold_prev = pcall(require, "custom.markdown.core.fold_prev")
-  local ok_lvls,      fold_lvls = pcall(require, "custom.markdown.core.fold_levels")
-  local ok_head,      headings  = pcall(require, "custom.markdown.core.headings")
-  local ok_wrap,      wrap      = pcall(require, "custom.markdown.core.wrap")
-  local ok_toc,       toc       = pcall(require, "custom.markdown.core.toc")
-
-  -- Buffer-targeted options (nil => global maps, else buffer-local)
+function M.apply(bufnr)
+  local cfg = require("custom.markdown.config").get()
+  if bufnr and not is_markdown_buf(bufnr) then return end
   local o = bufnr and { buffer = bufnr } or nil
 
-  -- Guard: only map in Markdown buffers when buffer-local requested
-  if o and not is_markdown_buf(bufnr) then
-    return
-  end
+  -- Load submodules safely
+  local ok_head, headings = pcall(require, "custom.markdown.core.headings")
+  local ok_wrap, wrap = pcall(require, "custom.markdown.core.wrap")
+  local ok_fold, fold = pcall(require, "custom.markdown.core.fold")
+  local ok_prev, fold_prev = pcall(require, "custom.markdown.core.fold_prev")
+  local ok_lvls, fold_lvls = pcall(require, "custom.markdown.core.fold_levels")
+  local ok_toc, toc = pcall(require, "custom.markdown.core.toc")
 
-  -- Wrap (Visual **toggle) ----------------------------------------------------
-  if enable_double_asterisk and ok_wrap and wrap.toggle_visual_bold then
+  -- Wrap visual toggle ** ----------------------------------------------------
+  if ok_wrap and wrap.toggle_visual_bold then
     map("x", "**", wrap.toggle_visual_bold, "[Custom.Markdown] Toggle ** around selection", o)
   end
 
@@ -90,15 +79,13 @@ local function apply_keymaps(bufnr)
 
   -- Folding controls ----------------------------------------------------------
   if ok_fold then
-    map("n", "<localleader>f", fold.toggle_under_cursor,
-      "[Custom.Markdown] Toggle fold under cursor & center", o)
-
-    if use_zf_override then
-      -- keep 'nowait' here to avoid zf waiting for a motion
+    map("n", "<localleader>f", fold.toggle_under_cursor, "[Custom.Markdown] Toggle fold under cursor & center", o)
+    if cfg.use_zf_override then
       map("n", "zf", fold.toggle_under_cursor,
-        "[Custom.Markdown] Toggle fold under cursor & center (override)", with(o and { buffer = o.buffer } or {}, { nowait = true }))
+        "[Custom.Markdown] Toggle fold under cursor & center (override)",
+        with(o or {}, { nowait = true })
+      )
     end
-
     map("n", "zu", fold.unfold_all_center, "[Custom.Markdown] Unfold all & center", o)
   end
 
@@ -107,61 +94,42 @@ local function apply_keymaps(bufnr)
   end
 
   if ok_lvls and fold_lvls.fold_levels then
-    map("n", "zk", function() fold_lvls.fold_levels({ 2, 3, 4, 5, 6 }) end,
-      "[Custom.Markdown] Fold H2+ (keep H1 open)", o)
+    map("n", "zk", function() fold_lvls.fold_levels({2,3,4,5,6}) end, "[Custom.Markdown] Fold H2+ (keep H1 open)", o)
   end
 
-  -- TOC (insert/refresh) ------------------------------------------------------
+  -- TOC insert/refresh --------------------------------------------------------
   if ok_toc and toc.update_markdown_toc then
-    map("n", "<leader>toc", function()
-      toc.update_markdown_toc("## Table of content")
-    end, "[Custom.Markdown] Insert/Refresh TOC", o)
+    map("n", "<leader>toc", function() toc.update_markdown_toc("## Table of content") end,
+      "[Custom.Markdown] Insert/Refresh TOC", o)
   end
 
--- Open image/file under cursor with system application ----------------------
-	map("n", "gx", function()
-		-- Get current line
-		local line = api.nvim_get_current_line()
-		-- local col = api.nvim_win_get_cursor(0)[2] + 1
 
-		-- Match Markdown image/link syntax: ![alt](path) or [text](path)
-		local path = line:match("%[.-%]%((.-)%)")
+-- AUDIT: If/Else implementieren
+-- TOC anchor: Jump to headline ----------------------------------------------
+	map("n", "mj", jump, "[Custom.Markdown] Jump to TOC anchor", o)
 
-		if path then
-			-- Resolve relative path from current file's directory
-			local current_file = api.nvim_buf_get_name(0)
-			local current_dir = vim.fn.fnamemodify(current_file, ":h")
-			local full_path = vim.fn.resolve(current_dir .. "/" .. path)
+-- Open Image ------------------------------------------------------------------
+	map("n", "mi", function() image.open() end, "[Custom.Markdown] Open image under cursor",o)
 
-			---AUDIT: GLOBALE VARIABLEN NUTZEN!
-			-- Open with system default application (Windows)
-			if vim.fn.has("win32") == 1 then
-				vim.fn.jobstart({ "cmd.exe", "/c", "start", '""', full_path }, { detach = true })
-			-- macOS
-			elseif vim.fn.has("mac") == 1 then
-				vim.fn.jobstart({ "open", full_path }, { detach = true })
-			-- Linux
-			else
-				vim.fn.jobstart({ "xdg-open", full_path }, { detach = true })
-			end
+	-- (Mouse-) handler -------------------------------------------------------------
+	-- Double-click and Ctrl+Click for opening with system application: files, images
+	map("n", "mo", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
+	map("n", "<2-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
+	map("n", "<C-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
 
-			vim.notify("Opening: " .. full_path, vim.log.levels.INFO)
-		else
-			vim.notify("No link found under cursor", vim.log.levels.WARN)
-		end
-	end, "[Custom.Markdown] Open image/link with system app", o)
+	-- Table view -------------------------------------------------------------
+	map('n', '<leader>tp', tableview.pick, "[Custom.Markdown] Pick table preview", o)
+  map('n', '<leader>tc', tableview.show_table_at_cursor, "[Custom.Markdown] Preview table at cursor", o)
 
-  -- Headings level shift ------------------------------------------------------
+	-- Headings level shift ------------------------------------------------------
   if ok_head and headings.increase and headings.decrease then
     local opts = with({ silent = true, noremap = true, nowait = true }, o)
 
-    -- Line / Visual
-    map({ "n", "v", "x" }, "<leader>mhI", headings.increase,
-      "[Custom.Markdown] Increase heading level(s) (line/selection, H2+)", opts)
-    map({ "n", "v", "x" }, "<leader>mhD", headings.decrease,
-      "[Custom.Markdown] Decrease heading level(s) (line/selection, H2+)", opts)
+    -- Line / visual
+    map({ "n", "v", "x" }, "<leader>mhI", headings.increase, "[Custom.Markdown] Increase heading level(s)", opts)
+    map({ "n", "v", "x" }, "<leader>mhD", headings.decrease, "[Custom.Markdown] Decrease heading level(s)", opts)
 
-    -- Operator-pending (usage: <leader>mhi{motion}, <leader>mhd{motion})
+    -- Operator-pending
     if headings._op_increase and headings._op_decrease then
       map("n", "<leader>mhi", function()
         vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_increase"
@@ -184,48 +152,14 @@ local function apply_keymaps(bufnr)
       map("n", "<leader>mhIA", function()
         local s, e = whole_buf_lines()
         headings.shift_range(s, e, 1)
-      end, "[Custom.Markdown] Increase ALL headings (buffer, H2+)", opts)
+      end, "[Custom.Markdown] Increase ALL headings (buffer)", opts)
 
       map("n", "<leader>mhDA", function()
         local s, e = whole_buf_lines()
         headings.shift_range(s, e, -1)
-      end, "[Custom.Markdown] Decrease ALL headings (buffer, H2+)", opts)
+      end, "[Custom.Markdown] Decrease ALL headings (buffer)", opts)
     end
   end
 end
-
--- --- Public setup ------------------------------------------------------------
-
-function M.setup()
-  local cfg_get = require("custom.markdown.config").get
-  local cfg = cfg_get()
-  if not cfg.enable_keymaps then return end
-
-  if cfg.ft_only ~= false then
-    -- Strict: only in Markdown buffers (idempotent)
-    local aug = api.nvim_create_augroup("CustomMarkdownKeymaps", { clear = true })
-    api.nvim_create_autocmd("FileType", {
-      group = aug,
-      pattern = { "markdown", "markdown.mdx", "mdx", "md" },
-      callback = function(ev) apply_keymaps(ev.buf) end,
-      desc = "[Custom.Markdown]: Install buffer-local Markdown keymaps",
-    })
-  else
-
-		-- Lax: set once globally + ensure future Markdown buffers also get the maps
-    if not vim.g.__custom_markdown_keymaps_installed then
-      apply_keymaps(nil)
-      vim.g.__custom_markdown_keymaps_installed = true
-    end
-    local aug = api.nvim_create_augroup("CustomMarkdownKeymapsLax", { clear = true })
-    api.nvim_create_autocmd("FileType", {
-      group = aug,
-      pattern = { "markdown", "markdown.mdx", "mdx", "md" },
-      callback = function(ev) apply_keymaps(ev.buf) end,
-      desc = "[Custom.Markdown]: Ensure maps for future Markdown buffers",
-    })
-  end
-
-	end
 
 return M
