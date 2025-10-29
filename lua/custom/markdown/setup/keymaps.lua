@@ -108,14 +108,15 @@ function M.apply(bufnr)
 -- TOC anchor: Jump to headline ----------------------------------------------
 	map("n", "mj", jump, "[Custom.Markdown] Jump to TOC anchor", o)
 
--- Open Image ------------------------------------------------------------------
-	map("n", "mi", function() image.open() end, "[Custom.Markdown] Open image under cursor",o)
 
 	-- (Mouse-) handler -------------------------------------------------------------
 	-- Double-click and Ctrl+Click for opening with system application: files, images
 	map("n", "mo", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
 	map("n", "<2-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
 	map("n", "<C-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
+	-- Open Image ------------------------------------------------------------------
+	map("n", "mi", function() image.open() end, "[Custom.Markdown] Open image under cursor",o)
+
 
 	-- Table view -------------------------------------------------------------
 	map('n', '<leader>tp', tableview.pick, "[Custom.Markdown] Pick table preview", o)

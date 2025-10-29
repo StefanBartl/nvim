@@ -1,5 +1,12 @@
 # Roadmap für die Markdown-Konfiguration
 
+## Iddeen
+
+- Markdown: Tabellen genormed bzw gerendert anzeigen:
+    - Wenn man mit dem cursor innerhalb der tabelle ist in einem floating window oder via MardkwownPreview im Browser (optional mit trigger key oder automatisch)
+    - Usercommand sammelt alle Tabellen des Dokuments, gibt sie in einer select aus und wird dann, je nach option gerendert in einem floating window oder via Markdown Preview im Browser
+ Sollte MarkdownPreview sich nicht dafür eigenen, eventuelle ein eigenes Tool erstellen
+
 ## toc
 
 ---

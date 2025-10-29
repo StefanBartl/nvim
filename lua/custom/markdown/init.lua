@@ -25,13 +25,13 @@ local cfg = require("custom.markdown.config")
 local fold = require("custom.markdown.core.fold")
 local head = require("custom.markdown.core.headings")
 local wrap = require("custom.markdown.core.wrap")
-local ui_autocmd = require("custom.markdown.ui.autocmd")
+local autocmd = require("custom.markdown.setup.autocmd")
 
 ---@param opts MarkdownConfig|nil
 ---@return nil
 function M.setup(opts)
   cfg.setup(opts or {})
-  ui_autocmd.setup()
+  autocmd.setup()
 end
 
 

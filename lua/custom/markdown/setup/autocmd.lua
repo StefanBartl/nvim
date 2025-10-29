@@ -9,9 +9,9 @@ local api = vim.api
 ---@type string[]
 local filetypes = { "markdown", "markdown.mdx", "mdx", "md" }
 
-local keymaps = require("custom.markdown.ui.keymaps")
-local usercommands = require("custom.markdown.ui.usercommands")
 local cfg_mod = require("custom.markdown.config")
+local keymaps = require("custom.markdown.setup.keymaps")
+local usercommands = require("custom.markdown.setup.usercommands")
 
 --- Setup FileType autocmds that install buffer-local keymaps and usercommands.
 ---@return nil
