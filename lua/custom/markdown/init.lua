@@ -12,26 +12,19 @@ require("custom.markdown.fenced_fix").setup({
   delimiter_hl = "Comment",
 }).apply()
 
-
--- AUDIT:
-require("custom.markdown.tableview").setup({
-  prefer_browser = false,
-  auto_on_cursor = false,
-  float_width = 0.6,
-  float_height = 0.35,
-})
-
 local cfg = require("custom.markdown.config")
 local fold = require("custom.markdown.core.fold")
 local head = require("custom.markdown.core.headings")
 local wrap = require("custom.markdown.core.wrap")
 local autocmd = require("custom.markdown.setup.autocmd")
+local tableview =  require("custom.markdown.tableview")
 
 ---@param opts MarkdownConfig|nil
 ---@return nil
 function M.setup(opts)
   cfg.setup(opts or {})
   autocmd.setup()
+	tableview.setup()
 end
 
 
