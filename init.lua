@@ -44,7 +44,8 @@ require("utils.help_sync").setup()
 vim.schedule(function()
   require("mappings").setup()
 end)
-require("utils.help_sync").setup()
+require("utils.column_align").setup()
+
 
 -- ===================================================================================
 -- Start a predictable RPC server at startup on Windows (named pipe).
