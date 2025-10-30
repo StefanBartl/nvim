@@ -4,3 +4,6 @@
 ---@alias HeadingLevel integer
 ---@alias ShiftDelta integer
 
+---@alias Url string
+---@alias BufNr number
+

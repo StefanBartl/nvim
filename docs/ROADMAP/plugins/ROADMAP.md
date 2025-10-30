@@ -32,10 +32,14 @@
 ---
 
 ## nvdash
+
 `df`
+
 ### `menu`
 
-1. custom meni
+1. copy content soll nur das markierte kopieren
+2. copy all implementieren
+3. custom menu struktur:
 
 ```sh
 config/

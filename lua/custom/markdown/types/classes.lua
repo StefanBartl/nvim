@@ -17,3 +17,19 @@
 ---@field shift_increase fun(): nil
 ---@field shift_decrease fun(): nil
 ---@field toggle_visual_bold fun(): nil
+
+---@class handler_module
+---@field handle_cursor_action fun(): nil
+
+---@class custom.markdown.handler.file
+---@field config table
+---@field extract fun(line:string): string|nil
+---@field resolve fun(target:string): string|nil
+---@field is_file_line fun(line:string): boolean
+---@field open fun(line?:string): boolean
+
+---@class custom.markdown.handler.url
+---@field config table
+---@field extract fun(line:string): string|nil
+---@field is_url_line fun(line:string): boolean
+---@field open fun(line?:string): boolean

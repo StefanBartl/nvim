@@ -105,17 +105,14 @@ function M.apply(bufnr)
 
 
 -- AUDIT: If/Else implementieren (dann aber auch 2 options, mj oder im mouse handler oder beides (default))
--- TOC anchor: Jump to headline ----------------------------------------------
-	map("n", "mj", anchor.jump, "[Custom.Markdown] Jump to TOC anchor", o)
 
-
-	-- (Mouse-) handler -------------------------------------------------------------
+	-- (Mouse-) Action-Handler -------------------------------------------------------------
 	-- Double-click and Ctrl+Click for opening with system application: files, images
-	map("n", "mo", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
 	map("n", "<2-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
 	map("n", "<C-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
-	-- Open Image ------------------------------------------------------------------
+	map("n", "ma", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
 	map("n", "mi", function() image.open() end, "[Custom.Markdown] Open image under cursor",o)
+	map("n", "mj", anchor.jump, "[Custom.Markdown] Jump to TOC anchor", o)
 
 
 	-- Table view -------------------------------------------------------------
