@@ -3,7 +3,6 @@
 
 local M = {}
 
-require("custom.markdown.anchor.jump")
 -- AUDIT:
 require("custom.markdown.fenced_fix").setup({
   -- Falls „noch oranger“ gewünscht ist, Reihenfolge hier anpassen oder direkt "Special" wählen.
@@ -18,6 +17,7 @@ local head = require("custom.markdown.core.headings")
 local wrap = require("custom.markdown.core.wrap")
 local autocmd = require("custom.markdown.setup.autocmd")
 local tableview =  require("custom.markdown.tableview")
+local tableview_live =  require("custom.markdown.tableview.live")
 
 ---@param opts MarkdownConfig|nil
 ---@return nil
@@ -25,6 +25,7 @@ function M.setup(opts)
   cfg.setup(opts or {})
   autocmd.setup()
 	tableview.setup()
+	tableview_live.setup_autocmd()
 end
 
 

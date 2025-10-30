@@ -4,7 +4,7 @@
 
 local M = {}
 local api = vim.api
-local jump = require("custom.markdown.anchor.jump")
+local anchor = require("custom.markdown.anchor.jump")
 local image = require("custom.markdown.handler.image")
 local handler = require("custom.markdown.handler")
 local tableview = require("custom.markdown.tableview")
@@ -104,9 +104,9 @@ function M.apply(bufnr)
   end
 
 
--- AUDIT: If/Else implementieren
+-- AUDIT: If/Else implementieren (dann aber auch 2 options, mj oder im mouse handler oder beides (default))
 -- TOC anchor: Jump to headline ----------------------------------------------
-	map("n", "mj", jump, "[Custom.Markdown] Jump to TOC anchor", o)
+	map("n", "mj", anchor.jump, "[Custom.Markdown] Jump to TOC anchor", o)
 
 
 	-- (Mouse-) handler -------------------------------------------------------------
