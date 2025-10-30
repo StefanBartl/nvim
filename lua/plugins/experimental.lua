@@ -61,7 +61,7 @@ return {
   {
     "ellisonleao/glow.nvim",
     cmd = "Glow",
-    ft = { "markdown" },
+    ft = { "markdown", "md" },
     config = function()
       require("glow").setup({
         glow_path = vim.fn.exepath("glow"), -- auto-detect from PATH
@@ -71,4 +71,24 @@ return {
       })
     end,
   },
+
+  {
+    "chrisbra/unicode.vim",
+    -- Optional: lazy loading configuration
+    cmd = {
+      "UnicodeName",
+      "UnicodeSearch",
+      "UnicodeTable",
+      "Digraphs",
+    },
+    keys = {
+      { "ga", desc = "Show Unicode character info" },
+    },
+    -- Optional: configuration function
+    config = function()
+      -- Custom keymaps or settings can be added here
+      -- vim.g.Unicode_no_default_mappings = 1  -- Disable default mappings if needed
+    end,
+  },
+
 }
