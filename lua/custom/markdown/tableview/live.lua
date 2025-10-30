@@ -176,7 +176,6 @@ function M.setup_autocmd()
     end,
     desc = "Regenerate TableView live preview on save",
   })
-  notify("[Custom.Markdown.TableView] Live preview autocommand installed", vim.log.levels.DEBUG)
 end
 
 return M
