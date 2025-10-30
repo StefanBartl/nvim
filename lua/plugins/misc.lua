@@ -24,6 +24,7 @@ return {
           { "$REPOS_DIR", "Notes", "Neovim", "Neovim.md" },
           { "$REPOS_DIR", "Notes", "MyNotes", "Wezterm.md" },
           { "$NVIM_HOME", "lua", "mynotes", "spickzettel.md" },
+					{ "$REPOS_DIR", "Notes", "Neovim", "09_fonts", "unicode", "dev-palette.md"},
         },
       })
       require("config.harpoon.preview").install_alt_number_maps()

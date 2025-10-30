@@ -20,11 +20,18 @@
 
 ---
 
-- `<C-6>` oder `edit #` öffnet letzte datei
-- `:edit #`: springe zum letzten buffer
-- `goto smth` in branches verwenden
-- `vert res +10`
-- `checkhealth vim.lsp` statt `LspInfo`
+<a id="tbl-opcodes"></a>
+
+<figure id="fig-architecture">
+  <img src="images/architecture.png" alt="System Architecture">
+  <figcaption>Abbildung 1: Systemarchitektur mit allen Komponenten</figcaption>
+</figure>
+
+ `<C-6>` oder `edit #` öffnet letzte datei
+ `:edit #`: springe zum letzten buffer
+ `goto smth` in branches verwenden
+ `vert res +10`
+ `checkhealth vim.lsp` statt `LspInfo`
 
 ## Custom Usrcommands
 
@@ -40,6 +47,49 @@
 
 `<A-m>`                     -> Öffnet 'find files or grep' selector
 `telf /telg / fzff / fzfg`  -> {find files or grep} in custom dir with {telescope or fzf}
+'n', '<leader>tp', tableview.pick, "[Custom.Markdown] Pick table preview", o)
+'n', '<leader>tc', tableview.show_table_at_cursor, "[Custom.Markdown] Preview table at cursor", o)
+
+`:ColumnAlignToColumn <target_col> [fill_char]`
+'x', `<leader>cal`,  Align character to column
+
+## Custom Markdown: UserCommands und Mappings
+
+| Typ | Command/Mapping | Beschreibung |
+|-----|-----------------|--------------|
+| UserCommand | ============================ | ============================================================ |
+|             | `:OpenWithSystemApplication` | Image/Url/File unter Cursor mit System-App öffnen |
+|             | `:TableViewToggle`           | Vorschau der Tabelle unter dem Cursor ein-/ausschalten |
+|             | `:TableViewSelect`           | Tabelle aus Liste aller Tabellen im Buffer auswählen und anzeigen |
+|             | `:TableViewClose`            | Persistente Tabellenvorschau schließen |
+|             | `:TableViewOpenBrowser`      | Tabelle unter Cursor als einfaches HTML im Browser öffnen |
+|             | `:TableViewOpenBrowserNice`  | Tabelle unter Cursor als formatiertes HTML im Browser öffnen |
+| Mapping     | ============================ | ============================================================ |
+|             | `<leader>tvt`                | Toggle: Tabellenvorschau unter Cursor ein-/ausschalten |
+|             | `<leader>tvs`                | Select: Tabelle aus Auswahlliste anzeigen |
+|             | `<leader>tvb`                | Browser: Tabelle unter Cursor im Browser öffnen |
+|             | `<leader>tvc`                | Close: TableView-Vorschau schließen |
+|             | `**` (visual)                | Fettformatierung um Auswahl umschalten |
+|             | `mk`                         | Zum vorherigen Heading (H2+) springen |
+|             | `mj`                         | Zum TOC-Anchor unter Cursor springen |
+|             | `<localleader>f` | Fold unter Cursor ein-/ausschalten und zentrieren |
+|             | `zf` | Fold unter Cursor ein-/ausschalten (optional override) |
+|             | `zu` | Alle Folds öffnen und zentrieren |
+|             | `zi` | Vorheriges Heading falten und zentrieren |
+|             | `zk` | Alle H2+ Headings falten (H1 bleibt offen) |
+|             | `<leader>toc` | Table of Content einfügen oder aktualisieren |
+|             | `mo` | Kontextsensitive Aktion: TOC-Navigation/Image/URL/File öffnen |
+|             | `<2-LeftMouse>` | Kontextsensitive Aktion: TOC-Navigation/Image/URL/File öffnen |
+|             | `<C-LeftMouse>` | Kontextsensitive Aktion: TOC-Navigation/Image/URL/File öffnen |
+|             | `mi` | Bild unter Cursor mit System-Viewer öffnen |
+|             | `<leader>tp` | Tabelle aus Auswahlliste anzeigen |
+|             | `<leader>tc` | Tabellenvorschau unter Cursor anzeigen |
+|             | `<leader>mhI` | Heading-Level erhöhen (Zeile/Visual/Motion) |
+|             | `<leader>mhD` | Heading-Level verringern (Zeile/Visual/Motion) |
+|             | `<leader>mhi` | Heading-Level erhöhen (Operator-Pending-Mode) |
+|             | `<leader>mhd` | Heading-Level verringern (Operator-Pending-Mode) |
+|             | `<leader>mhIA` | Alle Headings im Buffer um eine Ebene erhöhen |
+|             | `<leader>mhDA` | Alle Headings im Buffer um eine Ebene verringern |
 
 ## 1. Operator + Textobjekt (präzise und schnell)
 
@@ -110,6 +160,66 @@
 ---
 
 ## Markdown
+
+### Syntax
+
+#### Anker
+
+HTML figure-Element:
+
+```md
+<figure id="fig-architecture">
+  <img src="images/architecture.png" alt="System Architecture">
+  <figcaption>Abbildung 1: Systemarchitektur mit allen Komponenten</figcaption>
+</figure>
+
+<!-- Verwendung im Text -->
+Wie in [Abbildung 1](#fig-architecture) dargestellt...
+```
+
+---
+
+#### Tabellen referenzieren
+
+Tabellen werden ähnlich wie Abbildungen behandelt, sollten aber ein eigenes Präfix verwenden.
+
+#### Einfache Tabellen-Referenz
+
+```md
+<a id="tbl-opcodes"></a>
+
+| Opcode | Mnemonic | Beschreibung |
+|--------|----------|--------------|
+| 0x00   | NOP      | No Operation |
+| 0x01   | MOV      | Move Data    |
+| 0x02   | ADD      | Addition     |
+
+**Tabelle 3.1:** Übersicht der CPU-Opcodes
+
+<!-- Verwendung -->
+Die Opcodes ([Tab. 3.1](#tbl-opcodes)) zeigen die Basisoperationen.
+```
+
+#### Tabelle mit HTML-Wrapper
+
+```md
+<div id="tbl-memory-layout">
+
+| Segment | Start    | Ende     | Größe |
+|---------|----------|----------|-------|
+| .text   | 0x400000 | 0x400FFF | 4KB   |
+| .data   | 0x600000 | 0x600FFF | 4KB   |
+| .bss    | 0x601000 | 0x601FFF | 4KB   |
+
+**Tabelle 4.2:** Memory Layout der einzelnen Segmente
+
+</div>
+
+<!-- Verwendung -->
+Das Layout ([siehe Tabelle 4.2](#tbl-memory-layout)) zeigt die Segmentierung.
+```
+
+---
 
 ### Link unter Cursor in System app öffnen
 
