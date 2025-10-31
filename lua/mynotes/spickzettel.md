@@ -22,11 +22,6 @@
 
 <div id="#...">, <section id="#...">, <a href="#...">, <img src="#...">,
 
-<figure style="text-align:center; id="fig-tbl-">
-  <img src="" alt="">
-  <figcaption></figcaption>
-</figure>
-
  `<C-6>` oder `edit #` öffnet letzte datei
  `:edit #`: springe zum letzten buffer
  `goto smth` in branches verwenden

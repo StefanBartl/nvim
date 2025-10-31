@@ -18,7 +18,7 @@ local function insert_html_formula_table_template()
 
   -- Define the template lines
   local template = {
-    '<figure id="tbl-formula-">',
+    '<figure id="#tbl-formula-">',
     '  <table style="border-collapse: collapse; width: 100%;">',
     '    <caption><strong>Formeln:</strong> </caption>',
     '    <thead>',

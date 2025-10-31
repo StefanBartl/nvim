@@ -18,7 +18,7 @@ local function insert_html_code_template()
 
   -- Define the template lines
   local template = {
-    '<figure id="code-">',
+    '<figure id="#code-">',
     '  <pre><code class="">',
     '',
     '  </code></pre>',

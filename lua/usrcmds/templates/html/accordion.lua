@@ -18,7 +18,7 @@ local function insert_html_accordion_template()
 
   -- Define the template lines
   local template = {
-    '<details id="accordion-" style="border: 1px solid #ddd; border-radius: 4px; padding: 0.5em 1em; margin: 0.5em 0;">',
+    '<details id="#accordion-" style="border: 1px solid #ddd; border-radius: 4px; padding: 0.5em 1em; margin: 0.5em 0;">',
     '  <summary style="cursor: pointer; font-weight: bold; user-select: none;">',
     '    ',
     '  </summary>',

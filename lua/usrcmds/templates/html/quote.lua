@@ -18,7 +18,7 @@ local function insert_html_quote_template()
 
   -- Define the template lines
   local template = {
-    '<figure id="quote-">',
+    '<figure id="#quote-">',
     '  <blockquote style="border-left: 4px solid #ddd; padding-left: 1em; margin: 1em 0; font-style: italic;">',
     '    ',
     '  </blockquote>',

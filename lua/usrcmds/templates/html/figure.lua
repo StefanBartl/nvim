@@ -18,7 +18,7 @@ local function insert_html_figure_template()
 
   -- Define the template lines
   local template = {
-    '<figure style="text-align:center;" id="fig-tbl-">',
+    '<figure style="text-align:center;" id="#fig-tbl-">',
     '  <img src="" alt="">',
     '  <figcaption></figcaption>',
     '</figure>',

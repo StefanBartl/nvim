@@ -18,7 +18,7 @@ local function insert_html_aside_template()
 
   -- Define the template lines
   local template = {
-    '<aside id="aside-" style="border-left: 3px solid #ddd; padding-left: 1em; margin: 1em 0;">',
+    '<aside id="#aside-" style="border-left: 3px solid #ddd; padding-left: 1em; margin: 1em 0;">',
     '  <strong>Note:</strong> ',
     '</aside>',
   }

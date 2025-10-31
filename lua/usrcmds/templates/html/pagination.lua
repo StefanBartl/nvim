@@ -18,7 +18,7 @@ local function insert_html_pagination_template()
 
   -- Define the template lines
   local template = {
-    '<nav id="pagination-" style="text-align: center; margin: 2em 0;">',
+    '<nav id="#pagination-" style="text-align: center; margin: 2em 0;">',
     '  <a href="#" style="padding: 0.5em 1em; margin: 0 0.2em; border: 1px solid #ddd; text-decoration: none;">← Previous</a>',
     '  <a href="#" style="padding: 0.5em 1em; margin: 0 0.2em; border: 1px solid #ddd; text-decoration: none;">Next →</a>',
     '</nav>',
