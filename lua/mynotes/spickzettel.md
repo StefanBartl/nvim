@@ -20,11 +20,11 @@
 
 ---
 
-<a id="tbl-opcodes"></a>
+<div id="#...">, <section id="#...">, <a href="#...">, <img src="#...">,
 
-<figure id="fig-architecture">
-  <img src="images/architecture.png" alt="System Architecture">
-  <figcaption>Abbildung 1: Systemarchitektur mit allen Komponenten</figcaption>
+<figure style="text-align:center; id="fig-tbl-">
+  <img src="" alt="">
+  <figcaption></figcaption>
 </figure>
 
  `<C-6>` oder `edit #` öffnet letzte datei

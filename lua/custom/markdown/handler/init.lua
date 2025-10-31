@@ -11,7 +11,7 @@ local file   = require("custom.markdown.handler.file")
 local anchor = require("custom.markdown.anchor.jump")
 local is_inside_toc_block = require("custom.markdown.anchor.is_inside_toc_block")
 local is_html_anchor_line = require("custom.markdown.anchor.is_html_anchor_line")
-
+--AUDIT: EXTERN JUMPS
 
 --- Handle action under cursor.
 --- Priority: TOC/Anchor navigation > HTML anchors > Image > URL > File
