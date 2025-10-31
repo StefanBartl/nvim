@@ -2,12 +2,13 @@
 --- Buffer-local Markdown keymaps (fold, headings, wrap, toc, images/links)
 --- Idempotent, performance-friendly, and conflict-free.
 
+--- AUDIT: SEPARIEREN anstatt eine große fiole.
+
 local M = {}
 local api = vim.api
 local anchor = require("custom.markdown.anchor.jump")
 local image = require("custom.markdown.handler.image")
 local handler = require("custom.markdown.handler")
-local tableview = require("custom.markdown.tableview")
 
 -- --- Small helpers -----------------------------------------------------------
 
@@ -15,13 +16,19 @@ local tableview = require("custom.markdown.tableview")
 ---@param extra table|nil
 ---@return table
 local function with(base, extra)
-  if not extra then return base or {} end
+  if not extra then
+    return base or {}
+  end
   if not base then
     local out = {}
-    for k, v in pairs(extra) do out[k] = v end
+    for k, v in pairs(extra) do
+      out[k] = v
+    end
     return out
   end
-  for k, v in pairs(extra) do base[k] = v end
+  for k, v in pairs(extra) do
+    base[k] = v
+  end
   return base
 end
 
@@ -31,9 +38,39 @@ end
 ---@param desc string
 ---@param opts table|nil
 local function map(modes, lhs, rhs, desc, opts)
+  -- If rhs is nil, skip and log which mapping would have been set.
+  if rhs == nil then
+    vim.notify(
+      string.format(
+        "[Custom.Markdown] SKIP mapping %s -> nil (modes=%s) ; desc=%s",
+        tostring(lhs),
+        vim.inspect(modes),
+        tostring(desc)
+      ),
+      vim.log.levels.WARN
+    )
+    return
+  end
+
   local o = { noremap = true, silent = true, desc = desc }
-  if opts then o = with(o, opts) end
-  vim.keymap.set(modes, lhs, rhs, o)
+  if opts then
+    for k, v in pairs(opts) do
+      o[k] = v
+    end
+  end
+
+  local ok, err = pcall(vim.keymap.set, modes, lhs, rhs, o)
+  if not ok then
+    vim.notify(
+      string.format(
+        "[Custom.Markdown] FAILED to set mapping %s (modes=%s): %s",
+        tostring(lhs),
+        vim.inspect(modes),
+        tostring(err)
+      ),
+      vim.log.levels.ERROR
+    )
+  end
 end
 
 ---@param bufnr integer|nil
@@ -51,7 +88,9 @@ end
 ---@param bufnr integer|nil
 function M.apply(bufnr)
   local cfg = require("custom.markdown.config").get()
-  if bufnr and not is_markdown_buf(bufnr) then return end
+  if bufnr and not is_markdown_buf(bufnr) then
+    return
+  end
   local o = bufnr and { buffer = bufnr } or nil
 
   -- Load submodules safely
@@ -81,7 +120,10 @@ function M.apply(bufnr)
   if ok_fold then
     map("n", "<localleader>f", fold.toggle_under_cursor, "[Custom.Markdown] Toggle fold under cursor & center", o)
     if cfg.use_zf_override then
-      map("n", "zf", fold.toggle_under_cursor,
+      map(
+        "n",
+        "zf",
+        fold.toggle_under_cursor,
         "[Custom.Markdown] Toggle fold under cursor & center (override)",
         with(o or {}, { nowait = true })
       )
@@ -94,69 +136,69 @@ function M.apply(bufnr)
   end
 
   if ok_lvls and fold_lvls.fold_levels then
-    map("n", "zk", function() fold_lvls.fold_levels({2,3,4,5,6}) end, "[Custom.Markdown] Fold H2+ (keep H1 open)", o)
+    map("n", "zk", function()
+      fold_lvls.fold_levels({ 2, 3, 4, 5, 6 })
+    end, "[Custom.Markdown] Fold H2+ (keep H1 open)", o)
   end
 
   -- TOC insert/refresh --------------------------------------------------------
   if ok_toc and toc.update_markdown_toc then
-    map("n", "<leader>toc", function() toc.update_markdown_toc("## Table of content") end,
-      "[Custom.Markdown] Insert/Refresh TOC", o)
+    map("n", "<leader>toc", function()
+      toc.update_markdown_toc("## Table of content")
+    end, "[Custom.Markdown] Insert/Refresh TOC", o)
   end
 
+  -- AUDIT: If/Else implementieren (dann aber auch 2 options, mj oder im mouse handler oder beides (default))
 
--- AUDIT: If/Else implementieren (dann aber auch 2 options, mj oder im mouse handler oder beides (default))
+  -- (Mouse-) Action-Handler -------------------------------------------------------------
+  -- Double-click and Ctrl+Click for opening with system application: files, images
+  map("n", "<2-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
+  map("n", "<C-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
+  map("n", "ma", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
+  map("n", "mi", function()
+    image.open()
+  end, "[Custom.Markdown] Open image under cursor", o)
+  map("n", "mj", anchor.jump, "[Custom.Markdown] Jump to TOC anchor", o)
 
-	-- (Mouse-) Action-Handler -------------------------------------------------------------
-	-- Double-click and Ctrl+Click for opening with system application: files, images
-	map("n", "<2-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
-	map("n", "<C-LeftMouse>", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
-	map("n", "ma", handler.handle_cursor_action, "[Custom.Markdown] Handle cursor action (TOC/Image/Link)", o)
-	map("n", "mi", function() image.open() end, "[Custom.Markdown] Open image under cursor",o)
-	map("n", "mj", anchor.jump, "[Custom.Markdown] Jump to TOC anchor", o)
-
-
-	-- Table view -------------------------------------------------------------
-	map('n', '<leader>tp', tableview.pick, "[Custom.Markdown] Pick table preview", o)
-  map('n', '<leader>tc', tableview.show_table_at_cursor, "[Custom.Markdown] Preview table at cursor", o)
-
-	-- Headings level shift ------------------------------------------------------
+  -- Headings level shift ------------------------------------------------------
   if ok_head and headings.increase and headings.decrease then
     local opts = with({ silent = true, noremap = true, nowait = true }, o)
 
     -- Line / visual
-    map({ "n", "v", "x" }, "<leader>mhI", headings.increase, "[Custom.Markdown] Increase heading level(s)", opts)
-    map({ "n", "v", "x" }, "<leader>mhD", headings.decrease, "[Custom.Markdown] Decrease heading level(s)", opts)
+    map({ "n", "v", "x" }, "<leader>mhi", headings.increase, "[Custom.Markdown] Increase heading level(s)", opts)
+    map({ "n", "v", "x" }, "<leader>mhd", headings.decrease, "[Custom.Markdown] Decrease heading level(s)", opts)
 
-    -- Operator-pending
+    -- Whole buffer
+		if ok_head and type(headings.shift_range) == "function" then
+			local function whole_buf_lines()
+				local b = bufnr or api.nvim_get_current_buf()
+				return 1, api.nvim_buf_line_count(b)
+			end
+
+			map("n", "<leader>mhI", function()
+				local s, e = whole_buf_lines()
+				headings.shift_range(s, e, 1)
+			end, "[Custom.Markdown] Increase ALL headings (buffer)", opts)
+
+			map("n", "<leader>mhD", function()
+				local s, e = whole_buf_lines()
+				headings.shift_range(s, e, -1)
+			end, "[Custom.Markdown] Decrease ALL headings (buffer)", opts)
+		end
+
+		-- Operator-pending
     if headings._op_increase and headings._op_decrease then
-      map("n", "<leader>mhi", function()
+      map("n", "<leader>mha", function()
         vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_increase"
         return "g@"
       end, "[Custom.Markdown] Increase headings (operator-pending)", with({ expr = true }, opts))
 
-      map("n", "<leader>mhd", function()
+      map("n", "<leader>mhx", function()
         vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_decrease"
         return "g@"
       end, "[Custom.Markdown] Decrease headings (operator-pending)", with({ expr = true }, opts))
     end
 
-    -- Whole-buffer helpers
-    if headings.shift_range then
-      local function whole_buf_lines()
-        local b = bufnr or api.nvim_get_current_buf()
-        return 1, api.nvim_buf_line_count(b)
-      end
-
-      map("n", "<leader>mhIA", function()
-        local s, e = whole_buf_lines()
-        headings.shift_range(s, e, 1)
-      end, "[Custom.Markdown] Increase ALL headings (buffer)", opts)
-
-      map("n", "<leader>mhDA", function()
-        local s, e = whole_buf_lines()
-        headings.shift_range(s, e, -1)
-      end, "[Custom.Markdown] Decrease ALL headings (buffer)", opts)
-    end
   end
 end
 

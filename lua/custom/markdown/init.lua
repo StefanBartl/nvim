@@ -3,14 +3,6 @@
 
 local M = {}
 
--- AUDIT:
-require("custom.markdown.fenced_fix").setup({
-  -- Falls „noch oranger“ gewünscht ist, Reihenfolge hier anpassen oder direkt "Special" wählen.
-  inline_base_hl = { "DiagnosticWarn", "Special", "Constant", "String" },
-  inline_style = { italic = false, bold = false },
-  delimiter_hl = "Comment",
-}).apply()
-
 local cfg = require("custom.markdown.config")
 local fold = require("custom.markdown.core.fold")
 local head = require("custom.markdown.core.headings")
@@ -35,6 +27,15 @@ M.goto_next_heading = head.goto_next_heading
 M.shift_increase = head.increase
 M.shift_decrease = head.decrease
 M.toggle_visual_bold = wrap.toggle_visual_bold
+
+-- AUDIT:
+---@diagnostic disable-next-line
+require("custom.markdown.fenced_fix").setup({
+  -- Falls „noch oranger“ gewünscht ist, Reihenfolge hier anpassen oder direkt "Special" wählen.
+  inline_base_hl = { "DiagnosticWarn", "Special", "Constant", "String" },
+  inline_style = { italic = false, bold = false },
+  delimiter_hl = "Comment",
+}).apply()
 
 ---@type MarkdownPublicAPI
 return M
