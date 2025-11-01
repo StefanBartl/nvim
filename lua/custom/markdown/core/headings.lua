@@ -93,6 +93,64 @@ local function shift_range(bufnr, srow, erow, delta, min_level)
   return changed
 end
 
+-- ====================================================================
+-- Wrapper für Whole-Buffer oder aktuelle Auswahl
+-- ====================================================================
+
+---@param delta integer +1 / -1
+local function shift_selection(delta)
+  if delta ~= 1 and delta ~= -1 then return end
+  if vim.bo.filetype ~= "markdown" then return end
+  local bufnr = vim.api.nvim_get_current_buf()
+  if not (vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_buf_is_valid(bufnr)) then return end
+
+  local srow, erow
+  local mode = (vim.api.nvim_get_mode() or {}).mode or "n"
+
+  if mode:match("^[vV\022]") then
+    -- Visual selection: sichere Markierung
+    local ok_s, start_mark = pcall(vim.api.nvim_buf_get_mark, bufnr, "<")
+    local ok_e, end_mark   = pcall(vim.api.nvim_buf_get_mark, bufnr, ">")
+    if ok_s and ok_e then
+      srow = start_mark[1]
+      erow = end_mark[1]
+    end
+  end
+
+  -- fallback: aktuelle Zeile
+  srow = srow or vim.api.nvim_win_get_cursor(0)[1]
+  erow = erow or srow
+
+  local changed = require("custom.markdown.core.headings").shift_range(srow, erow, delta)
+
+  -- Wenn tatsächlich etwas geändert wurde, Ansicht wiederherstellen
+  if changed > 0 then
+    vim.fn.winrestview(vim.fn.winsaveview())
+  end
+end
+
+-- ====================================================================
+-- Exportierte Funktionen für Mappings
+-- ====================================================================
+
+local headings = require("custom.markdown.core.headings")
+
+function headings.increase() shift_selection(1) end
+function headings.decrease() shift_selection(-1) end
+
+-- Whole-buffer helpers
+function headings.increase_all()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local lines = vim.api.nvim_buf_line_count(bufnr)
+  headings.shift_range(1, lines, 1)
+end
+
+function headings.decrease_all()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local lines = vim.api.nvim_buf_line_count(bufnr)
+  headings.shift_range(1, lines, -1)
+end
+
 -- ============================================================================
 -- Public: shift_range wrapper with guards
 -- ============================================================================
@@ -110,10 +168,14 @@ function M.shift_range(srow, erow, delta)
   if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then return 0 end
   local min_level = cfg().protect_h1 and 2 or 1
 
-  -- Preserve view (cursor, topline, etc.) while making buffer edits.
+  -- Preserve view only if something actually changes
   local view = fn.winsaveview()
   local changed = shift_range(bufnr, srow, erow, delta, min_level)
-  fn.winrestview(view)
+
+  if changed > 0 then
+    fn.winrestview(view)
+  end
+
   return changed
 end
 
