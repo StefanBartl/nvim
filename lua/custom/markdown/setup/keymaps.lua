@@ -164,9 +164,28 @@ function M.apply(bufnr)
   if ok_head and headings.increase and headings.decrease then
     local opts = with({ silent = true, noremap = true, nowait = true }, o)
 
-    -- Line / visual
-    map({ "n", "v", "x" }, "<leader>mhi", headings.increase, "[Custom.Markdown] Increase heading level(s)", opts)
-    map({ "n", "v", "x" }, "<leader>mhd", headings.decrease, "[Custom.Markdown] Decrease heading level(s)", opts)
+    -- Line
+		map("n", "<leader>mhi", function()
+				local cur = vim.api.nvim_win_get_cursor(0)
+				headings.shift_range(cur[1], cur[1], 1)
+		end, "[Custom.Markdown] Increase heading in line (buffer)", opts)
+
+		map("n", "<leader>mhd", function()
+				local cur = vim.api.nvim_win_get_cursor(0)
+				headings.shift_range(cur[1], cur[1], -1)
+		end, "[Custom.Markdown] Decrease heading in line (buffer)", opts)
+
+		-- Visual mode
+		map("v", "<leader>mhi", function()
+			vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_increase"
+			return "g@"
+		end, "[Custom.Markdown] Increase headings in selection (buffer)", opts)
+
+		map("v", "<leader>mhd", function()
+			vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_decrease"
+			return "g@"
+		end, "[Custom.Markdown] Decrease ALL headings in selection (buffer)", opts)
+
 
     -- Whole buffer
 		if ok_head and type(headings.shift_range) == "function" then

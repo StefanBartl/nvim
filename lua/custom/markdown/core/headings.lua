@@ -98,7 +98,7 @@ end
 -- ====================================================================
 
 ---@param delta integer +1 / -1
-local function shift_selection(delta)
+function M.shift_selection(delta)
   if delta ~= 1 and delta ~= -1 then return end
   if vim.bo.filetype ~= "markdown" then return end
   local bufnr = vim.api.nvim_get_current_buf()
@@ -129,27 +129,6 @@ local function shift_selection(delta)
   end
 end
 
--- ====================================================================
--- Exportierte Funktionen für Mappings
--- ====================================================================
-
-local headings = require("custom.markdown.core.headings")
-
-function headings.increase() shift_selection(1) end
-function headings.decrease() shift_selection(-1) end
-
--- Whole-buffer helpers
-function headings.increase_all()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local lines = vim.api.nvim_buf_line_count(bufnr)
-  headings.shift_range(1, lines, 1)
-end
-
-function headings.decrease_all()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local lines = vim.api.nvim_buf_line_count(bufnr)
-  headings.shift_range(1, lines, -1)
-end
 
 -- ============================================================================
 -- Public: shift_range wrapper with guards
