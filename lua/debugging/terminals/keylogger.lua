@@ -1,4 +1,4 @@
----@module 'lib.debug.terminals.keylogger'
+---@module 'debugging.terminals.keylogger'
 -- Terminal-Keylogger für Neovim
 -- Startet und stoppt Keylogging über User-Commands.
 -- Alle gedrückten Keys im Terminal-Modus werden über vim.notify angezeigt.

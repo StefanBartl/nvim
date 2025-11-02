@@ -1,4 +1,4 @@
----@module 'markdown.inline_debug_fixed'
+---@module 'debugging.markdown.inline_debug_fixed'
 --- Module: markdown.inline_debug_fixed
 --- Description: Robust collector for diagnostic information about inline-code highlighting
 --- in Markdown buffers. Writes a timestamped log to /tmp and provides a user command.

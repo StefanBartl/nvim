@@ -1,4 +1,4 @@
----@module 'lib.debug.autocmds.list_autocmds'
+---@module 'debugging.autocmds.list_autocmds'
 --- Module for debugging autocommands in Neovim
 
 ---List all autocommands matching a specific event and pattern
