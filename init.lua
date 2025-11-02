@@ -35,6 +35,7 @@ require("myoptions").setup { highlights = true, options = true }
 require("lsp").setup { ensure_installing = false }
 require "autocmds"
 require "custom"
+require("lib.debug").setup()
 require "mynotes"
 require "usrcmds"
 require("utils.column_align").setup()
