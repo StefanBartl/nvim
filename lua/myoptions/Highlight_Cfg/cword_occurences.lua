@@ -268,41 +268,42 @@ local function scan_window()
 	return 0, last
 end
 
+
 --- Immediate repaint (clears first).
 ---@return nil
 local function update_now()
-	clear_all()
+    clear_all()
 
-	if buffer_is_ui_like(0) then
-		return
-	end
-	if not CC().enabled then
-		return
-	end
-	if is_large_file_guard() then
-		return
-	end
+    if buffer_is_ui_like(0) then
+        return
+    end
+    if not CC().enabled then
+        return
+    end
+    if is_large_file_guard() then
+        return
+    end
 
-	if not CC().in_insert then
-		local m = vim.fn.mode(1)
-		if m:find "i" then
-			return
-		end
-	end
+    if not CC().in_insert then
+        local m = vim.fn.mode(1)
+        if m:find "i" then
+            return
+        end
+    end
 
-	local word = vim.fn.expand "<cword>"
-	if type(word) ~= "string" or #word < (CC().min_len or 2) then
-		return
-	end
+    -- Safely get current word
+    local ok, word = pcall(vim.fn.expand, "<cword>")
+    if not ok or type(word) ~= "string" or #word < (CC().min_len or 2) then
+        return
+    end
 
-	local srow, erow = scan_window()
-	-- Optionally reuse cache here (removed to avoid unused-local warnings).
+    local srow, erow = scan_window()
+    -- Optionally reuse cache here (removed to avoid unused-local warnings).
 
-	-- Resolve case and match behavior; defaults keep prior behavior ("smart" + exact)
-	local case_mode = resolve_case_mode() ---@type CwordCaseMode
-	local match_kind = (CC().match_kind == "substring") and "substring" or "exact" ---@type CwordMatchKind
-	local pat = build_pattern(word, case_mode, match_kind)
-	place_occurrences(pat, srow, erow)
+    local case_mode = resolve_case_mode() ---@type CwordCaseMode
+    local match_kind = (CC().match_kind == "substring") and "substring" or "exact" ---@type CwordMatchKind
+    local pat = build_pattern(word, case_mode, match_kind)
+    place_occurrences(pat, srow, erow)
 end
 
 --- Ensure a uv timer (typed) and return it.

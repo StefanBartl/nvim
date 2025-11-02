@@ -5,11 +5,23 @@
 ---   2) always reuses/updates that single preview when switching Markdown buffers,
 ---   3) does nothing when switching to non-Markdown buffers (no close, no update).
 
+--- Controlled autoswitch / auto-refresh setup for iamcco/markdown-preview.nvim.
+--- - Auto-refresh preview only after user starts it.
+--- - Does not auto-start on first Markdown buffer.
+--- - Updates preview when switching buffers, stops or toggles update correctly.
+
+
 local M = {}
+
+---@type boolean
+-- Whether preview should auto-refresh on buffer switch
+M._preview_active = false
 
 --- Apply minimal, behavior-focused globals.
 --- No OS/browser detection here; rely on system default browser.
-function M.setup()
+---@param opts table|nil Optional configuration overrides
+function M.setup(opts)
+  opts = opts or {}
 
 	--- specify browser to open preview page
 	local browser = {
@@ -41,7 +53,7 @@ function M.setup()
 
 	-- 4) When the single preview is open, auto-refresh its contents whenever
 	--    the current Markdown buffer changes (on buffer switches).
-	vim.g.mkdp_combine_preview_auto_refresh = 1
+  vim.g.mkdp_combine_preview_auto_refresh = 1
 
 	-- Optional (keep defaults for everything else). Example theme:
 	-- vim.g.mkdp_theme = "dark"
@@ -59,6 +71,39 @@ function M.setup()
     end,
   })
   --]]
+
+ -- Define wrapper commands to manage global flag
+  vim.api.nvim_create_user_command("MarkdownPreviewWrapper", function()
+    M._preview_active = true
+    vim.cmd("silent! MarkdownPreview")
+  end, { bang = true, nargs = 0 })
+
+  vim.api.nvim_create_user_command("MarkdownPreviewStopWrapper", function()
+    M._preview_active = false
+    vim.cmd("silent! MarkdownPreviewStop")
+  end, { bang = true, nargs = 0 })
+
+  vim.api.nvim_create_user_command("MarkdownPreviewToggleWrapper", function()
+    M._preview_active = not M._preview_active
+    vim.cmd("silent! MarkdownPreviewToggle")
+  end, { bang = true, nargs = 0 })
+
+  -- Auto-refresh on buffer switch only if _preview_active is true
+  local aug = vim.api.nvim_create_augroup("MkdpConditionalRefresh", { clear = true })
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = aug,
+    pattern = "*.md",
+    callback = function()
+      if M._preview_active and vim.fn.exists(":MarkdownPreview") == 2 then
+				print("mdp: is true" )
+        vim.cmd("silent! MarkdownPreview")
+      end
+
+				print("mdp: is false" )
+		end,
+  })
+
+
 end
 
 return M
