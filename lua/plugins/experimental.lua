@@ -18,17 +18,29 @@ return {
       -- 1) Basic setup
       require("autolist").setup()
 
-      -- 2) Your keymaps (unchanged)
-      vim.keymap.set("i", "<tab>", "<cmd>AutolistTab<cr>")
-      vim.keymap.set("i", "<s-tab>", "<cmd>AutolistShiftTab<cr>")
-      vim.keymap.set("i", "<CR>", "<CR><cmd>AutolistNewBullet<cr>")
-      vim.keymap.set("n", "o", "o<cmd>AutolistNewBullet<cr>")
-      vim.keymap.set("n", "O", "O<cmd>AutolistNewBulletBefore<cr>")
-      vim.keymap.set("n", "<C-c", "<cmd>AutolistRecalculate<cr>")
-      vim.keymap.set("n", "<leader>cn", require("autolist").cycle_next_dr, { expr = true })
-      vim.keymap.set("n", "<leader>cp", require("autolist").cycle_prev_dr, { expr = true })
+      -- 2) Your keymaps
+			local map = require("lib.map")
+			map("i", "<tab>", "<cmd>AutolistTab<cr>", { desc = "[Autolist] Indent list item" })
+			map("i", "<s-tab>", "<cmd>AutolistShiftTab<cr>", { desc = "[Autolist] Unindent list item" })
+			map("i", "<CR>", "<CR><cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet on next line" })
+			map("n", "o", "o<cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet below" })
+			map("n", "O", "O<cmd>AutolistNewBulletBefore<cr>", { desc = "[Autolist] New bullet above" })
+			map("n", "<C-c>", "<cmd>AutolistRecalculate<cr>", { desc = "[Autolist] Recalculate ordered list" })
+			map("n", "<leader>cn", require("autolist").cycle_next_dr, { desc = "[Autolist] Cycle list type forward", expr = true })
+			map("n", "<leader>cp", require("autolist").cycle_prev_dr, { desc = "[Autolist] Cycle list type backward", expr = true })
+			map("n", "<CR>", function()
+				local line = vim.api.nvim_get_current_line()
 
-      -- 3) Auto-renumber before saving supported filetypes
+				if line:match("%[[ x]%]") then
+					vim.cmd("AutolistToggleCheckbox")
+				else
+					-- Original mapping: 0i<CR><Esc>k
+					local keys = vim.api.nvim_replace_termcodes("0i<CR><Esc>k", true, false, true)
+					vim.api.nvim_feedkeys(keys, "n", false)
+				end
+			end, { desc = "[Autolist] Toggle checkbox or insert blank line" })
+
+			-- 3) Auto-renumber before saving supported filetypes
       ---@class AutolistAutoRecalcOpts
       ---@field group_name string  -- augroup name
       local opts = { group_name = "AutolistAutoRecalc" }
@@ -63,6 +75,7 @@ return {
     cmd = "Glow",
     ft = { "markdown", "md" },
     config = function()
+			---@diagnostic disable-next-line "incomplete setup"
       require("glow").setup({
         glow_path = vim.fn.exepath("glow"), -- auto-detect from PATH
         border = "shadow",
