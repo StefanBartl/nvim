@@ -4,6 +4,7 @@
 
   - [Custom Usrcommands](#custom-usrcommands)
   - [Custom mappings](#custom-mappings)
+  - [Custom Markdown: UserCommands und Mappings](#custom-markdown-usercommands-und-mappings)
   - [1. Operator + Textobjekt (präzise und schnell)](#1-operator-textobjekt-przise-und-schnell)
   - [2. Visual + Textobjekt (explizit markieren)](#2-visual-textobjekt-explizit-markieren)
   - [3. Bewegung bis zum Trennzeichen (wenn das nächste Zeichen bekannt ist)](#3-bewegung-bis-zum-trennzeichen-wenn-das-nchste-zeichen-bekannt-ist)
@@ -14,7 +15,15 @@
   - [8. Wiederholen & Korrigieren](#8-wiederholen-korrigieren)
   - [9. nach "oben" / "rechts" usw..](#9-nach-oben-rechts-usw)
   - [Markdown](#markdown)
+    - [Syntax](#syntax)
+      - [Anker](#anker)
+      - [Tabellen referenzieren](#tabellen-referenzieren)
+      - [Einfache Tabellen-Referenz](#einfache-tabellen-referenz)
+      - [Tabelle mit HTML-Wrapper](#tabelle-mit-html-wrapper)
     - [Link unter Cursor in System app öffnen](#link-unter-cursor-in-system-app-ffnen)
+    - [Alle Zeilen außer headlines löschen](#alle-zeilen-auer-headlines-lschen)
+  - [Terminal](#terminal)
+    - [Steuersequenzen](#steuersequenzen)
   - [Powershell](#powershell)
     - [Installationsort / Binary ausgeben](#installationsort-binary-ausgeben)
 

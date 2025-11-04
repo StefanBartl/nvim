@@ -1,6 +1,8 @@
 ---@module 'config.neotree.keymaps'
 --- Centralized, buffer-local Neo-tree keymaps that override defaults consistently.
 
+--- AUDIT: Consult /docs/ROADMAP/plugins/neotree/mappings for improvement
+
 local M = {}
 
 -- ========= Shared helpers (used by both commands and window mappings) =========
@@ -29,7 +31,7 @@ end
 --- List of folder names to ignore during recursive collection.
 --- Just the folder name, not the full path.
 ---@type string[]
-local ignored_dirs = { ".git", ".github", ".husky", "node_modules", "dist", "build" }
+local ignored_dirs = { ".git", ".github", ".husky", "node_modules", "dist", "build", "doc", "docs" }
 
 --- Helper to check if a folder name is in the ignore list.
 ---@param name string Folder name

@@ -25,7 +25,7 @@ return {
 			map("i", "<CR>", "<CR><cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet on next line" })
 			map("n", "o", "o<cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet below" })
 			map("n", "O", "O<cmd>AutolistNewBulletBefore<cr>", { desc = "[Autolist] New bullet above" })
-			map("n", "<C-c>", "<cmd>AutolistRecalculate<cr>", { desc = "[Autolist] Recalculate ordered list" })
+			map("n", "<C-r>", "<cmd>AutolistRecalculate<cr>", { desc = "[Autolist] Recalculate ordered list" })
 			map("n", "<leader>cn", require("autolist").cycle_next_dr, { desc = "[Autolist] Cycle list type forward", expr = true })
 			map("n", "<leader>cp", require("autolist").cycle_prev_dr, { desc = "[Autolist] Cycle list type backward", expr = true })
 			map("n", "<CR>", function()
