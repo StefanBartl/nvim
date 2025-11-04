@@ -26,43 +26,52 @@ end
 
 -- ========= Helper: collect file tree for a given path (recursive, platform-agnostic) =========
 
+--- List of folder names to ignore during recursive collection.
+--- Just the folder name, not the full path.
+---@type string[]
+local ignored_dirs = { ".git", ".github", ".husky", "node_modules", "dist", "build" }
+
+--- Helper to check if a folder name is in the ignore list.
+---@param name string Folder name
+---@return boolean
+local function is_ignored_dir(name)
+  for _, ignored in ipairs(ignored_dirs) do
+    if name == ignored then
+      return true
+    end
+  end
+  return false
+end
+
 --- Recursively collect all files (regular files) under `root_path`.
 --- Returns an array (sequential table) of absolute file paths.
 --- Uses luv (vim.loop) for fast, dependency-free traversal.
 ---@param root_path string Root absolute path (file or directory)
 ---@return string[] list Sequential array of absolute file paths
 local function collect_files_recursive(root_path)
-  -- Ensure we always return a sequential table to avoid reallocations and LuaLS type warnings.
   local results = {}
-
-  -- luv iterator for directories
   local uv = vim.loop
-
-  -- Walk function (stack-based to avoid too-deep recursion)
   local stack = { root_path }
+
   while #stack > 0 do
-    local path = table.remove(stack) -- pop
+    local path = table.remove(stack)
     local stat = uv.fs_stat(path)
+
     if stat then
       if stat.type == "file" then
-        -- It's a file: append absolute path
         table.insert(results, path)
       elseif stat.type == "directory" then
-        -- It's a directory: iterate its entries
         local req, err = uv.fs_scandir(path)
         if req then
           while true do
             local name, _ = uv.fs_scandir_next(req)
-            if not name then
-              break
+            if not name then break end
+            if not is_ignored_dir(name) then
+              local child = path .. (path:sub(-1) == "/" and "" or "/") .. name
+              table.insert(stack, child)
             end
-            local child = path .. (path:sub(-1) == "/" and "" or "/") .. name
-            -- Push child on stack; if file it will be handled next loop iteration
-            table.insert(stack, child)
           end
         else
-          -- Could be permission issue; skip but log low-level debug
-          -- Do not throw; continue collecting what is possible
           vim.notify(
             ("collect_files_recursive: scandir failed for %s: %s"):format(path, tostring(err)),
             vim.log.levels.DEBUG
@@ -70,14 +79,12 @@ local function collect_files_recursive(root_path)
         end
       end
     else
-      -- path doesn't exist or stat failed; skip
       vim.notify(("collect_files_recursive: fs_stat failed for %s"):format(path), vim.log.levels.DEBUG)
     end
   end
 
   return results
 end
-
 --- Gather file entries for the node under cursor.
 --- If node is a directory, returns recursively-collected files (absolute).
 --- If node is a file, returns a one-element array with that file path.
