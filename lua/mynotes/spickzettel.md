@@ -250,6 +250,80 @@ Wenn man **wirklich alle Zeilen außer Headlines** entfernen will, egal ob leer,
 
 - `:v/^#/d` → löscht **alle Zeilen, die nicht mit `#` beginnen**, inklusive leerer oder whitespace-only Zeilen.
 
+## Terminal
+
+* Einen `Ctrl+C`-Like an das Terminal senden (wenn Terminal ein Buffer ist):
+
+  ```vim
+  :lua vim.api.nvim_chan_send(vim.b.terminal_job_id, "\003")
+  ```
+
+  Das sendet das Byte \x03 (ETX) — entspricht Ctrl+C — an den Terminal-Job.
+
+* Terminal-Job sauber stoppen (empfohlen):
+
+  ```vim
+  :lua vim.fn.jobstop(vim.b.terminal_job_id)
+  ```
+
+
+  ```vim
+   Terminierte den aktuellen Prozess (Ctrl+C)
+  vim.api.nvim_chan_send(vim.b.terminal_job_id, "\003")
+  ```
+
+  ```vim
+  -- Sendet Enter
+  vim.api.nvim_chan_send(vim.b.terminal_job_id, "\r")
+  ```
+
+  ```vim
+  -- Sendet Ctrl+D (EOF)
+  vim.api.nvim_chan_send(vim.b.terminal_job_id, "\004")
+  ```
+
+  ```vim
+  -- Sendet Text und Enter
+  vim.api.nvim_chan_send(vim.b.terminal_job_id, "echo 'Hello'\r")
+  ```
+
+---
+
+### Steuersequenzen
+
+```vim
+vim.api.nvim_chan_send(vim.b.terminal_job_id, "ls\n") -- Sendet den Text "ls\n" an das aktive Terminal
+vim.api.nvim_chan_send(vim.b.terminal_job_id, "\003")
+```
+
+| Escape | Oktal | Hex  | ASCII | Bedeutung                      |
+| ------ | ----- | ---- | ----- | ------------------------------ |
+| `\000` | 000   | 0x00 | NUL   | Null Byte                      |
+| `\003` | 003   | 0x03 | ETX   | End of Text (Ctrl+C)           |
+| `\004` | 004   | 0x04 | EOT   | End of Transmission (Ctrl+D)   |
+| `\010` | 010   | 0x08 | BS    | Backspace                      |
+| `\011` | 011   | 0x09 | TAB   | Tabulator                      |
+| `\012` | 012   | 0x0A | LF    | Line Feed (Enter)              |
+| `\015` | 015   | 0x0D | CR    | Carriage Return (Enter/Return) |
+| `\033` | 033   | 0x1B | ESC   | Escape                         |
+
+| Zeichen | Oktal | Tastenkombination | Bedeutung                 |
+| ------- | ----- | ----------------- | ------------------------- |
+| `\001`  | 001   | Ctrl+A            | Move cursor to line start |
+| `\002`  | 002   | Ctrl+B            | Move cursor left          |
+| `\003`  | 003   | Ctrl+C            | Interrupt / SIGINT        |
+| `\004`  | 004   | Ctrl+D            | EOF / Exit input          |
+| `\005`  | 005   | Ctrl+E            | Move cursor to line end   |
+| `\006`  | 006   | Ctrl+F            | Move cursor right         |
+| `\007`  | 007   | Ctrl+G            | Bell (Beep)               |
+| `\010`  | 010   | Ctrl+H            | Backspace                 |
+| `\011`  | 011   | Ctrl+I            | Tab                       |
+| `\012`  | 012   | Ctrl+J            | Line Feed (Enter)         |
+| `\015`  | 015   | Ctrl+M            | Carriage Return           |
+| `\033`  | 033   | ESC               | Escape key                |
+
+---
+
 ## Powershell
 
 ### Installationsort / Binary ausgeben
