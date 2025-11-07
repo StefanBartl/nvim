@@ -164,6 +164,7 @@ local function find_type_dirs(root, opts)
 
 	local PRUNE = {
 		[".git"] = true,
+		[".github"] = true,
 		[".hg"] = true,
 		[".svn"] = true,
 		["node_modules"] = true,

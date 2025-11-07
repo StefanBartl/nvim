@@ -203,7 +203,7 @@ function M.setup(cfg)
 	if cfg.ensure_installing == true then
 		require('config.mason.ensure_install').enable({
 			lsp = true,
-			dap = false, -- skip DAP batch for now
+			dap = true,
 			linters = true,
 			formatters = true,
 			overrides = {

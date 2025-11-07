@@ -130,46 +130,7 @@ function M.enable(cfg)
     })
   end
 
-  -- 3) Show dashboard when the last buffer is closed (BufDelete)
-  if cfg.nvdash.enable then
-    local grp = augroup((cfg.group_name or "custom_autocmds") .. "_nvdash")
-    vim.api.nvim_create_autocmd("BufDelete", {
-      group = grp,
-      callback = function()
-        -- Strategy:
-        --   a) Determine the set of "tracked" buffers in the current tab (vim.t.bufs if available).
-        --   b) Fall back to scanning all buffers and filtering by 'buflisted' if needed.
-        local function listed_bufs()
-          local ids = {}
-          local function push(id)
-            if vim.api.nvim_buf_is_valid(id) and vim.bo[id].buflisted then
-              ids[#ids + 1] = id
-            end
-          end
-          -- Prefer tab-local tracking if present (used by some UIs); otherwise scan all bufs.
-          if type(vim.t.bufs) == "table" then
-            for _, id in ipairs(vim.t.bufs) do push(id) end
-          else
-            for _, id in ipairs(vim.api.nvim_list_bufs()) do push(id) end
-          end
-          return ids
-        end
-
-        local ids = cfg.nvdash.is_listed_only and listed_bufs() or vim.api.nvim_list_bufs()
-        -- Consider "last buffer" as: exactly one remaining and it is unnamed (no file).
-        if #ids == 1 then
-          local name = vim.api.nvim_buf_get_name(ids[1])
-          if name == "" then
-            -- Open the dashboard command silently; ignore errors if the command is absent.
-            pcall(vim.cmd, cfg.nvdash.cmd)
-          end
-        end
-      end,
-      desc = "Open dashboard when the last listed buffer is closed",
-    })
-  end
-
-  -- 4) Cursorline only in the active window
+  -- 3) Cursorline only in the active window
   if cfg.cursorline.enable then
     local grp_show = augroup((cfg.group_name or "custom_autocmds") .. "_cursorline_show")
     vim.api.nvim_create_autocmd(cfg.cursorline.show_events, {
@@ -193,7 +154,7 @@ function M.enable(cfg)
     })
   end
 
-  -- 5) Jump to last location when reopening a file (BufReadPost)
+  -- 4) Jump to last location when reopening a file (BufReadPost)
   if cfg.last_loc.enable then
     local grp = augroup((cfg.group_name or "custom_autocmds") .. "_last_loc")
     vim.api.nvim_create_autocmd("BufReadPost", {

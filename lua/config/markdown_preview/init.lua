@@ -95,11 +95,8 @@ function M.setup(opts)
     pattern = "*.md",
     callback = function()
       if M._preview_active and vim.fn.exists(":MarkdownPreview") == 2 then
-				print("mdp: is true" )
         vim.cmd("silent! MarkdownPreview")
       end
-
-				print("mdp: is false" )
 		end,
   })
 

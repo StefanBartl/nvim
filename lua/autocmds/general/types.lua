@@ -23,16 +23,10 @@
 ---@field skip_remote boolean             -- Skip remote/URL-style buffers (e.g. scheme://)
 ---@field detect_remote_pattern? string    -- Lua pattern to detect remote buffers (default: "^%w%w+:[\\/][\\/]")
 
----@class GeneralAutoCmdNvdashCfg
----@field enable boolean                  -- Show dashboard when the last listed buffer is deleted
----@field cmd string                      -- Command to open the dashboard (default: "Nvdash")
----@field is_listed_only boolean          -- Only consider listed buffers when counting
-
 ---@class GeneralAutoCmdConfig
 ---@field group_name? string               -- Basename for augroups created by this module
----@field auto_mkdir GeneralAutoCmdAutoMkdirCfg  -- Configure auto mkdir on save
----@field kitty GeneralAutoCmdKittySpacingCfg    -- Configure kitty terminal spacing
----@field nvdash GeneralAutoCmdNvdashCfg         -- Configure dashboard-on-last-buffer-close behavior
----@field cursorline GeneralGeneralAutoCmdCursorlineCfgcwd -- Configure active-window-only cursorline
----@field last_loc GeneralAutoCmdJumpLastLocCfg  -- Configure jump-to-last-location on open
+---@field auto_mkdir GeneralAutoCmdAutoMkdirCfg?  -- Configure auto mkdir on save
+---@field kitty GeneralAutoCmdKittySpacingCfg?    -- Configure kitty terminal spacing
+---@field cursorline GeneralGeneralAutoCmdCursorlineCfgcwd? -- Configure active-window-only cursorline
+---@field last_loc GeneralAutoCmdJumpLastLocCfg?  -- Configure jump-to-last-location on open
 

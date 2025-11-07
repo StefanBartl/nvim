@@ -19,7 +19,7 @@ return {
       -- vim.g.mdview_server_port = 43219
       -- minimal setup placeholder (future: require('mdview').setup({...}))
       if pcall(require, "mdview") then
-        -- keep default config for now
+         require("mdview").setup()
       else
         vim.notify("mdview.nvim: module not found after loading plugin files", vim.log.levels.ERROR)
       end
@@ -80,6 +80,7 @@ return {
       -- "nvim-telescope/telescope.nvim", -- für engine="telescope"
     },
     config = function()
+			---@diagnostic disable-next-line
       require("replacer").setup({
         engine = "fzf",
         -- engine = "telescope",

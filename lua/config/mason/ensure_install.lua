@@ -47,32 +47,42 @@ local M = {}
 
 local SESSION ---@type MasonEnsureSession
 SESSION = {
-  open      = false,
-  pending   = 0,
-  results   = {
-    failed  = { lsp = {}, dap = {}, linters = {}, formatters = {}, other = {} },
+  open = false,
+  pending = 0,
+  results = {
+    failed = { lsp = {}, dap = {}, linters = {}, formatters = {}, other = {} },
     skipped = { lsp = {}, dap = {}, linters = {}, formatters = {}, other = {} },
     unknown = { lsp = {}, dap = {}, linters = {}, formatters = {}, other = {} },
   },
   installed = { lsp = {}, dap = {}, linters = {}, formatters = {}, other = {} },
-  already   = { lsp = {}, dap = {}, linters = {}, formatters = {}, other = {} },
+  already = { lsp = {}, dap = {}, linters = {}, formatters = {}, other = {} },
 }
 
 --- Begin a new aggregation session (idempotent).
 local function session_begin()
-  if SESSION.open then return end
+  if SESSION.open then
+    return
+  end
   SESSION.open = true
   SESSION.pending = 0
   for k, buckets in pairs(SESSION.results) do
-    for cat, _ in pairs(buckets) do SESSION.results[k][cat] = {} end
+    for cat, _ in pairs(buckets) do
+      SESSION.results[k][cat] = {}
+    end
   end
-  for cat, _ in pairs(SESSION.installed) do SESSION.installed[cat] = {} end
-  for cat, _ in pairs(SESSION.already) do SESSION.already[cat] = {} end
+  for cat, _ in pairs(SESSION.installed) do
+    SESSION.installed[cat] = {}
+  end
+  for cat, _ in pairs(SESSION.already) do
+    SESSION.already[cat] = {}
+  end
 end
 
 --- Render and show the final summary (only when all pending tasks finished).
 local function flush_summary_if_done()
-  if not SESSION.open or SESSION.pending > 0 then return end
+  if not SESSION.open or SESSION.pending > 0 then
+    return
+  end
 
   local lines = { "[mason.ensure] Summary" }
 
@@ -105,7 +115,9 @@ local function flush_summary_if_done()
     end
   end
 
-  vim.schedule(function() vim.notify(msg, level) end)
+  vim.schedule(function()
+    vim.notify(msg, level)
+  end)
   SESSION.open = false
 end
 
@@ -120,114 +132,114 @@ end
 
 ---@type MasonEnsureMap
 local LSP_DEFAULTS = {
-  ["java-language-server"]            = false,
-  ["csharp-language-server"]          = false,
-  ["zls"]                             = true,
-  ["vue-language-server"]             = true,
-  ["yaml-language-server"]            = true,
-  ["vim-language-server"]             = true,
-  ["ts_query_ls"]                     = true,
-  ["sqlls"]                           = true,
-  ["systemd-language-server"]         = true,
-  ["svelte-language-server"]          = true,
-  ["svlangserver"]                    = true,
-  ["pbls"]                            = true,
-  ["python-lsp-server"]               = true,
-  ["powershell-editor-services"]      = true,
-  ["perlnavigator"]                   = false,
-  ["phpactor"]                        = true,
-  ["omnisharp-mono"]                  = false,
-  ["nginx-language-server"]           = true,
-  ["markdown-oxide"]                  = true,
-  ["m68k-lsp-server"]                 = true,
-  ["htmx-lsp"]                        = true,
-  ["lua-language-server"]             = true,
-  ["jsonld-lsp"]                      = true,
-  ["graphql-language-service-cli"]    = true,
-  ["html-lsp"]                        = true,
-  ["hoon-language-server"]            = true,
-  ["gopls"]                           = true,
-  ["golangci-lint-langserver"]        = true,
-  ["asm-lsp"]                         = true,
+  ["java-language-server"] = false,
+  ["csharp-language-server"] = false,
+  ["zls"] = true,
+  ["vue-language-server"] = true,
+  ["yaml-language-server"] = true,
+  ["vim-language-server"] = true,
+  ["ts_query_ls"] = true,
+  ["sqlls"] = true,
+  ["systemd-language-server"] = true,
+  ["svelte-language-server"] = true,
+  ["svlangserver"] = true,
+  ["pbls"] = true,
+  ["python-lsp-server"] = true,
+  ["powershell-editor-services"] = true,
+  ["perlnavigator"] = false,
+  ["phpactor"] = true,
+  ["omnisharp-mono"] = false,
+  ["nginx-language-server"] = true,
+  ["markdown-oxide"] = true,
+  ["m68k-lsp-server"] = true,
+  ["htmx-lsp"] = true,
+  ["lua-language-server"] = true,
+  ["jsonld-lsp"] = true,
+  ["graphql-language-service-cli"] = true,
+  ["html-lsp"] = true,
+  ["hoon-language-server"] = true,
+  ["gopls"] = true,
+  ["golangci-lint-langserver"] = true,
+  ["asm-lsp"] = true,
   ["docker-compose-language-service"] = true,
-  ["dockerfile-language-server"]      = true,
-  ["docker-language-server"]          = true,
-  ["sqls"]                            = true,
-  ["cmake-language-server"]           = true,
-  ["ast-grep"]                        = true,
-  ["typescript-language-server"]      = true,
-  ["tailwindcss-language-server"]     = true,
-  ["bash-language-server"]            = true,
-  ["css-lsp"]                         = true,
-  ["eslint-lsp"]                      = true,
-  ["json-lsp"]                        = true,
-  ["marksman"]                        = true,
+  ["dockerfile-language-server"] = true,
+  ["docker-language-server"] = true,
+  ["sqls"] = true,
+  ["cmake-language-server"] = true,
+  ["ast-grep"] = true,
+  ["typescript-language-server"] = true,
+  ["tailwindcss-language-server"] = true,
+  ["bash-language-server"] = true,
+  ["css-lsp"] = true,
+  ["eslint-lsp"] = true,
+  ["json-lsp"] = true,
+  ["marksman"] = true,
 }
 
 ---@type MasonEnsureMap
 local DAP_DEFAULTS = {
-  ["node-debug2-adapter"]   = false,
-  ["java-language-server"]  = false,
-  ["php-debug-adapter"]     = true,
-  ["netcoredbg"]            = true,
-  ["js-debug-adapter"]      = true,
-  ["java-test"]             = true,
-  ["java-debug-adapter"]    = true,
+  ["node-debug2-adapter"] = false,
+  ["java-language-server"] = false,
+  ["php-debug-adapter"] = true,
+  ["netcoredbg"] = true,
+  ["js-debug-adapter"] = true,
+  ["java-test"] = true,
+  ["java-debug-adapter"] = true,
   ["firefox-debug-adapter"] = true,
-  ["go-debug-adapter"]      = true,
-  ["bash-debug-adapter"]    = true,
+  ["go-debug-adapter"] = true,
+  ["bash-debug-adapter"] = true,
 }
 
 ---@type MasonEnsureMap
 local LINTER_DEFAULTS = {
-  ["yamllint"]          = true,
-  ["systemdlint"]       = true,
-  ["swiftlint"]         = true,
-  ["sqlfluff"]          = true,
-  ["pymarkdownlnt"]     = true,
-  ["phpcs"]             = true,
-  ["phpmd"]             = true,
-  ["markuplint"]        = true,
+  ["yamllint"] = true,
+  ["systemdlint"] = true,
+  ["swiftlint"] = true,
+  ["sqlfluff"] = true,
+  ["pymarkdownlnt"] = true,
+  ["phpcs"] = true,
+  ["phpmd"] = true,
+  ["markuplint"] = true,
   ["markdownlint-cli2"] = true,
-  ["luacheck"]          = true,
-  ["jsonlint"]          = true,
-  ["htmlhint"]          = true,
-  ["golangci-lint"]     = true,
-  ["eslint_d"]          = true,
-  ["cmakelint"]         = true,
-  ["cmakelang"]         = true,
-  ["ast-grep"]          = true,
-  ["markdownlint"]      = true,
+  ["luacheck"] = true,
+  ["jsonlint"] = true,
+  ["htmlhint"] = true,
+  ["golangci-lint"] = true,
+  ["eslint_d"] = true,
+  ["cmakelint"] = true,
+  ["cmakelang"] = true,
+  ["ast-grep"] = true,
+  ["markdownlint"] = true,
 }
 
 ---@type MasonEnsureMap
 local FORMATTER_DEFAULTS = {
-  ["luaformatter"]           = true,
-  ["yamlfix"]                = true,
-  ["yamlfmt"]                = true,
-  ["xmlformatter"]           = true,
-  ["sqlfmt"]                 = true,
-  ["rustfmt"]                = true,
-  ["php-cs-fixer"]           = true,
-  ["pgformatter"]            = false,
-  ["ormolu"]                 = false,
-  ["phpcbf"]                 = false,
+  ["luaformatter"] = true,
+  ["yamlfix"] = true,
+  ["yamlfmt"] = true,
+  ["xmlformatter"] = true,
+  ["sqlfmt"] = true,
+  ["rustfmt"] = true,
+  ["php-cs-fixer"] = true,
+  ["pgformatter"] = false,
+  ["ormolu"] = false,
+  ["phpcbf"] = false,
   ["nginx-config-formatter"] = true,
-  ["markdownlint-cli2"]      = true,
-  ["htmlbeautifier"]         = false,
-  ["gotests"]                = true,
-  ["golines"]                = true,
-  ["goimports"]              = true,
-  ["goimports-reviser"]      = true,
-  ["gofumpt"]                = true,
-  ["cmakelang"]              = true,
-  ["ast-grep"]               = true,
-  ["asmfmt"]                 = true,
-  ["prettier"]               = true,
-  ["sql-formatter"]          = true,
-  ["markdown-toc"]           = true,
-  ["markdownlint"]           = true,
-  ["mdformat"]               = true,
+  ["markdownlint-cli2"] = true,
+  ["htmlbeautifier"] = false,
+  ["gotests"] = true,
+  ["golines"] = true,
+  ["goimports"] = true,
+  ["goimports-reviser"] = true,
+  ["gofumpt"] = true,
+  ["cmakelang"] = true,
+  ["ast-grep"] = true,
+  ["asmfmt"] = true,
+  ["prettier"] = true,
+  ["sql-formatter"] = true,
+  ["markdown-toc"] = true,
+  ["markdownlint"] = true,
+  ["mdformat"] = true,
 }
 
 -- =====================================================================================
@@ -286,7 +298,9 @@ local function ensure_tools(tools, log_prefix, seen)
 
   -- derive category from log_prefix suffix: ".lsp" | ".dap" | ".linters" | ".formatters"
   local category = (log_prefix:match("%.([^.]+)$") or "other")
-  if not SESSION.results.failed[category] then category = "other" end
+  if not SESSION.results.failed[category] then
+    category = "other"
+  end
 
   -- shared de-dup set
   seen = seen or {}
@@ -295,8 +309,12 @@ local function ensure_tools(tools, log_prefix, seen)
   pcall(registry.refresh, function() end)
 
   for name, want in pairs(tools) do
-    if not want then goto continue end
-    if seen[name] then goto continue end
+    if not want then
+      goto continue
+    end
+    if seen[name] then
+      goto continue
+    end
     seen[name] = true
 
     -- gate by system deps
@@ -357,7 +375,9 @@ end
 ---@param overrides MasonEnsureMap|nil
 ---@return MasonEnsureMap
 local function merge(defaults, overrides)
-  if not overrides then return vim.deepcopy(defaults) end
+  if not overrides then
+    return vim.deepcopy(defaults)
+  end
   local out = vim.deepcopy(defaults)
   for k, v in pairs(overrides) do
     out[k] = not not v
@@ -377,9 +397,13 @@ end
 --- @param seen table<string, boolean>|nil
 function M.enable_lsp(overrides, log_prefix, seen)
   local outer = SESSION.open
-  if not outer then session_begin() end
+  if not outer then
+    session_begin()
+  end
   ensure_tools(merge(LSP_DEFAULTS, overrides), (log_prefix or "mason.ensure") .. ".lsp", seen)
-  if not outer then session_end() end
+  if not outer then
+    session_end()
+  end
 end
 
 --- Ensure all configured DAP adapters exist.
@@ -388,9 +412,13 @@ end
 --- @param seen table<string, boolean>|nil
 function M.enable_dap(overrides, log_prefix, seen)
   local outer = SESSION.open
-  if not outer then session_begin() end
+  if not outer then
+    session_begin()
+  end
   ensure_tools(merge(DAP_DEFAULTS, overrides), (log_prefix or "mason.ensure") .. ".dap", seen)
-  if not outer then session_end() end
+  if not outer then
+    session_end()
+  end
 end
 
 --- Ensure all configured linters exist.
@@ -399,9 +427,13 @@ end
 --- @param seen table<string, boolean>|nil
 function M.enable_linters(overrides, log_prefix, seen)
   local outer = SESSION.open
-  if not outer then session_begin() end
+  if not outer then
+    session_begin()
+  end
   ensure_tools(merge(LINTER_DEFAULTS, overrides), (log_prefix or "mason.ensure") .. ".linters", seen)
-  if not outer then session_end() end
+  if not outer then
+    session_end()
+  end
 end
 
 --- Ensure all configured formatters exist.
@@ -410,9 +442,13 @@ end
 --- @param seen table<string, boolean>|nil
 function M.enable_formatters(overrides, log_prefix, seen)
   local outer = SESSION.open
-  if not outer then session_begin() end
+  if not outer then
+    session_begin()
+  end
   ensure_tools(merge(FORMATTER_DEFAULTS, overrides), (log_prefix or "mason.ensure") .. ".formatters", seen)
-  if not outer then session_end() end
+  if not outer then
+    session_end()
+  end
 end
 
 -- =====================================================================================
@@ -422,13 +458,13 @@ end
 --- High-level orchestrator with shared de-duplication set and aggregated summary.
 --- @param cfg { lsp?:boolean, dap?:boolean, linters?:boolean, formatters?:boolean, log_prefix?:string, overrides?:{lsp?:MasonEnsureMap, dap?:MasonEnsureMap, linters?:MasonEnsureMap, formatters?:MasonEnsureMap} }|nil
 function M.enable(cfg)
-  cfg                   = cfg or {}
-  local do_lsp          = (cfg.lsp ~= false)
-  local do_dap          = (cfg.dap ~= false)
-  local do_linters      = (cfg.linters ~= false)
-  local do_formatters   = (cfg.formatters ~= false)
-  local prefix          = cfg.log_prefix or "mason.ensure"
-  local ov              = cfg.overrides or {}
+  cfg = cfg or {}
+  local do_lsp = (cfg.lsp ~= false)
+  local do_dap = (cfg.dap ~= false)
+  local do_linters = (cfg.linters ~= false)
+  local do_formatters = (cfg.formatters ~= false)
+  local prefix = cfg.log_prefix or "mason.ensure"
+  local ov = cfg.overrides or {}
 
   -- Bootstrap Mason once.
   local ok_mason, mason = pcall(require, "mason")
@@ -441,10 +477,18 @@ function M.enable(cfg)
 
   -- one aggregated session
   session_begin()
-  if do_lsp then M.enable_lsp(ov.lsp, prefix, seen) end
-  if do_dap then M.enable_dap(ov.dap, prefix, seen) end
-  if do_linters then M.enable_linters(ov.linters, prefix, seen) end
-  if do_formatters then M.enable_formatters(ov.formatters, prefix, seen) end
+  if do_lsp then
+    M.enable_lsp(ov.lsp, prefix, seen)
+  end
+  if do_dap then
+    M.enable_dap(ov.dap, prefix, seen)
+  end
+  if do_linters then
+    M.enable_linters(ov.linters, prefix, seen)
+  end
+  if do_formatters then
+    M.enable_formatters(ov.formatters, prefix, seen)
+  end
   session_end()
 end
 

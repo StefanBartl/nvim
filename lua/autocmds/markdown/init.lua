@@ -21,7 +21,9 @@ end
 ---@param pat any
 ---@return string|string[]
 local function norm_pattern(pat)
-  if pat == nil then return "markdown" end
+  if pat == nil then
+    return "markdown"
+  end
   return pat
 end
 
@@ -66,9 +68,15 @@ end
 ---@param s string
 ---@return boolean
 local function is_url_like(s)
-  if s:match("^https?://") or s:match("^file://") then return true end
-  if s:match("^www%.") then return true end
-  if s:match("^[A-Za-z0-9%-_]+%.[A-Za-z]+") then return true end
+  if s:match("^https?://") or s:match("^file://") then
+    return true
+  end
+  if s:match("^www%.") then
+    return true
+  end
+  if s:match("^[A-Za-z0-9%-_]+%.[A-Za-z]+") then
+    return true
+  end
   return false
 end
 
@@ -88,8 +96,8 @@ local Defaults = {
     debug = false,
     pattern = "markdown",
     enable_windows_opener = false, -- keep Linux/macOS default per project policy
-    open_cmd_mac = nil,            -- e.g., { "open", "<url>" }
-    open_cmd_unix = nil,           -- e.g., { "xdg-open", "<url>" }
+    open_cmd_mac = nil, -- e.g., { "open", "<url>" }
+    open_cmd_unix = nil, -- e.g., { "xdg-open", "<url>" }
   },
 }
 
@@ -232,9 +240,18 @@ function M.enable(cfg)
           path = path:gsub("\\", "/")
           log("Normalized: ", path)
 
+          -- Lua module resolution: convert mdview.huhu -> mdview/huhu.lua
+          -- Works like require("mdview.huhu") would
+          if path:match("^[%a_][%w_]*%.") then
+            path = path:gsub("%.", "/") .. ".lua"
+            log("Lua module path converted: ", path)
+          end
+
           -- Case 3: URL-like target
           if is_url_like(path) then
-            if path:match("^www%.") or (not path:match("^%w[%w+.-]*:") and path:match("^[A-Za-z0-9%-_]+%.[A-Za-z]+")) then
+            if
+              path:match("^www%.") or (not path:match("^%w[%w+.-]*:") and path:match("^[A-Za-z0-9%-_]+%.[A-Za-z]+"))
+            then
               path = "http://" .. path
               log("HTTP auto-prefix: ", path)
             end

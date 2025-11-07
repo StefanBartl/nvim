@@ -26,6 +26,7 @@
     - [Steuersequenzen](#steuersequenzen)
   - [Powershell](#powershell)
     - [Installationsort / Binary ausgeben](#installationsort-binary-ausgeben)
+  - [Schnelle Befehle in Neovim, um Browser manuell zu öffnen](#schnelle-befehle-in-neovim-um-browser-manuell-zu-ffnen)
 
 ---
 
@@ -37,7 +38,8 @@
  `vert res +10`
  `checkhealth vim.lsp` statt `LspInfo`
 
-## Custom Usrcommands
+`leader gd` - Diffsplit
+
 
 `:NewFile {path}`           -> set buffer name, create parents, do NOT write by default
 `:NewFileWrite {path}`      -> like NewFile, but also :write immediately
@@ -162,6 +164,25 @@
    * ...
 
 ---
+
+## Lua Language Server Annotationen
+
+Beispiel Funktionssignatur:
+
+- `--@return`
+    - mehrere return Werte möglich
+    - immer return Wert angeben
+- `---@param`
+    - Parameter extrahieren als eigene Klassen wenn möglich
+    - Mit `#` detailierter Beschreibungen trennen
+
+```lua
+---@param exe string # Absolute path or candidate name of the browser executable
+---@param url string # URL to open
+---@return string[] args # Command-line arguments to pass to the executable
+---@return string|nil tmp_profile # Path to temporary profile/directory (if created)
+return function (exe, url)
+```
 
 ## Markdown
 
@@ -346,6 +367,19 @@ where EXECUTABLE_NAME
 
 # Methode 3: gcm Alias (PowerShell, kürzer)
 (gcm EXECUTABLE_NAME).Source
+```
+
+## Browser manuell zu öffnen
+
+```lua
+-- macOS:
+:lua vim.fn.jobstart({"open", "http://localhost:43219"})
+
+-- Linux:
+:lua vim.fn.jobstart({"xdg-open", "http://localhost:43219"})
+
+-- Windows (cmd):
+:lua vim.fn.jobstart({"cmd", "/c", "start", "", "http://localhost:43219"})
 ```
 
 ---

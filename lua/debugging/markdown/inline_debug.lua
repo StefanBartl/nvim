@@ -14,6 +14,8 @@
 ---@return MarkdownInlineDebugFixed
 local M = {}
 
+local debugfolder = vim.fn.stdpath("config") .. "/debuglog/markdown_inline"
+
 --------------------------------------------------------------------------------
 -- get_timestamp
 --------------------------------------------------------------------------------
@@ -324,9 +326,9 @@ function M.gather()
   table.insert(log_lines, M.results.buffer.lines_sample or "")
 
 	-- Ensures the timestamp `ts` is inserted correctly into the filename
-	local out_path = vim.fn.stdpath("config") .. "/debuglog/markdown_inline_debug_" .. ts .. ".log"
+	local out_path = debugfolder .. "_debuglog_" .. ts .. ".log"
 	--create the "debuglog" directory if it doesn't exist
-	vim.fn.mkdir(vim.fn.stdpath("config") .. "/debuglog", "p")
+	vim.fn.mkdir(debugfolder)
   M.out_path = out_path
 
   -- write file robustly and return clear error on failure

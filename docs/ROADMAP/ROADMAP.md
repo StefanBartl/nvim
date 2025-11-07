@@ -2,7 +2,78 @@
 
 ## Important Bugs
 
-1. Custom Snacks Dashboard (CSD):  Manchmal, wenn man eine Datei öffnet, verschwindet das CSD nicht. Ich habe eigentlich eine Markdown Datei geöffnet, aber nur das CSD war weiterhin sichtbar. Weder `bclose` noch `:q` hat das CSD beendet. `set filetype?` hat jedoch `markdown` und nicht `snacks_dashboard` ergeben, was weird ist. Weiters änderte auch `:e test.lua` nichts daran, dass nur dsa CSD sichtba4r war, aber `set filetype?` hat num `lua` ergeben, was darauf hinweißt, dass die Dateien  schon in Buffer geladen wurden, nur das CSD es "unerreichbar" für mich überdeckt. Die einzige Möglichkeit, die ich gefunden habe, ist, `nvim` neu zu starten.
+- WARNING `vim.lsp.buf.hover` is not configured to be handled by **Noice**
+
+Python 3 provider (optional) ~
+- `g:python3_host_prog` is not set. Searching for python3 in the environment.
+- Executable: C:\Python313\python3.EXE
+- Python version: 3.13.7
+- pynvim version: 0.6.0
+- OK Latest pynvim is installed.
+
+
+==============================================================================
+vim.deprecated:                       require("vim.deprecated.health").check()
+
+ ~
+- WARNING vim.validate is deprecated. Feature will be removed in Nvim 1.0
+  - ADVICE:
+    - use vim.validate(name, value, validator, optional_or_msg) instead.
+    - stack traceback:
+        C:/Users/bartl/AppData/Local/nvim-data/lazy/gitsigns.nvim/lua/gitsigns/system/compat.lua:298
+        [C]:-1
+        C:/Users/bartl/AppData/Local/nvim-data/lazy/gitsigns.nvim/lua/gitsigns/async.lua:311
+        C:/Users/bartl/AppData/Local/nvim-data/lazy/gitsigns.nvim/lua/gitsigns/async.lua:321
+
+Snacks ~
+ WARNING setup called *after* `VimEnter`
+ WARNING `snacks.nvim` should not be lazy-loaded. Add `lazy=false` to the plugin spec
+ WARNING `snacks.nvim` should have a priority of 1000 or higher. Add `priority=1000` to the plugin spec
+
+
+Snacks.explorer ~
+ WARNING setup {disabled}
+ OK 'powershell' `In Zeile:1 Zeichen:3`
+ OK System trash command found
+
+Snacks.image ~
+- WARNING setup {disabled}
+- OK 'wezterm' `wezterm 20240203-110809-5046fc22`
+- ERROR Tool not found: 'magick'
+- ERROR `magick` is required to convert images. Only PNG files will be displayed.
+- OK `wezterm` detected and supported
+- WARNING `wezterm` does not support placeholders. Fallback rendering will be used
+- WARNING Inline images are disabled
+- OK Terminal Dimensions:
+  - {size}: `1539` x `684` pixels
+  - {scale}: `1.13`
+  - {cell}: `9` x `18` pixels
+- OK 'gs' `10.05.1`
+- OK PDF files are supported
+- ERROR None of the tools found: 'tectonic', 'pdflatex'
+- WARNING `tectonic` or `pdflatex` is required to render LaTeX math expressions
+- ERROR Tool not found: 'mmdc'
+- WARNING `mmdc` is required to render Mermaid diagrams
+- OK your terminal supports the kitty graphics protocol
+
+Snacks.input ~
+- WARNING setup {disabled}
+
+Snacks.lazygit ~
+- OK {lazygit} installed
+
+Snacks.notifier ~
+- WARNING setup {disabled}
+- ERROR is not ready
+
+Snacks.picker ~
+- WARNING setup {disabled}
+- WARNING `vim.ui.select` for `Snacks.picker` is not enabled
+
+
+- Custom Snacks Dashboard (CSD):  Manchmal, wenn man eine Datei öffnet, verschwindet das CSD nicht. Ich habe eigentlich eine Markdown Datei geöffnet, aber nur das CSD war weiterhin sichtbar. Weder `bclose` noch `:q` hat das CSD beendet. `set filetype?` hat jedoch `markdown` und nicht `snacks_dashboard` ergeben, was weird ist. Weiters änderte auch `:e test.lua` nichts daran, dass nur dsa CSD sichtba4r war, aber `set filetype?` hat num `lua` ergeben, was darauf hinweißt, dass die Dateien  schon in Buffer geladen wurden, nur das CSD es "unerreichbar" für mich überdeckt. Die einzige Möglichkeit, die ich gefunden habe, ist, `nvim` neu zu starten.
+- `gf` funktioenrt nicht in lua, wenn der pfad zb `lua.mdview.huhu` idt und man aber `require("mdview.huhu")` hat
+
 
 ## Cleanup
 
