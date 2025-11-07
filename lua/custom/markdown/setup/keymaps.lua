@@ -1,4 +1,4 @@
----@module 'custom.markdown.ui.keymaps'
+---@module 'custom.markdown.setup.keymaps'
 --- Buffer-local Markdown keymaps (fold, headings, wrap, toc, images/links)
 --- Idempotent, performance-friendly, and conflict-free.
 
@@ -194,6 +194,7 @@ function M.apply(bufnr)
 				return 1, api.nvim_buf_line_count(b)
 			end
 
+		-- FIX: First-Level Headling (`#`) wird übersrpungen
 			map("n", "<leader>mhI", function()
 				local s, e = whole_buf_lines()
 				headings.shift_range(s, e, 1)

@@ -1,4 +1,4 @@
----@module 'custom.markdown.ui.health'
+---@module 'custom.markdown.setup.health'
 
 local M = {}
 
@@ -32,7 +32,9 @@ function M.check()
     "custom.markdown.core.wrap",
     "custom.markdown.core.selection",
     "custom.markdown.core.toc",
-    "custom.markdown.ui.keymaps",
+		"custom.markdown.setup.autocmds",
+    "custom.markdown.setup.keymaps",
+    "custom.markdown.setup.usercmds",
   }
 
   for _, m in ipairs(mods) do

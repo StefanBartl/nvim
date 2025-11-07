@@ -1,4 +1,4 @@
----@module 'custom.markdown.ui.usercommands'
+---@module 'custom.markdown.setup.usercmds'
 ---@description Provide routines to create buffer-local usercommands for Markdown buffers.
 
 local M = {}

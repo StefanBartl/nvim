@@ -1,4 +1,4 @@
----@module 'custom.markdown.ui.autocmd'
+---@module 'custom.markdown.setup.autocmds'
 ---@description Lightweight FileType hook (extensible). Installs buffer-local keymaps and usercommands for Markdown filetypes.
 ---AUDIT: Format ist übel
 local M = {}
@@ -65,7 +65,7 @@ function M.setup()
       end
 
       local ok, err = pcall(function()
-        require("custom.markdown.setup.usercommands").apply(ev)
+        require("custom.markdown.setup.usercmds").apply(ev)
       end)
       if not ok then
         vim.notify(

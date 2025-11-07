@@ -165,7 +165,7 @@ function M.stop()
 end
 
 -- Public: install autocmd
-function M.setup_autocmd()
+function M.setup_autocmds()
   local aug = api.nvim_create_augroup("CustomMarkdownTableViewLive", { clear = true })
   api.nvim_create_autocmd("BufWritePost", {
     group = aug,

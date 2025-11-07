@@ -7,7 +7,7 @@ local cfg = require("custom.markdown.config")
 local fold = require("custom.markdown.core.fold")
 local head = require("custom.markdown.core.headings")
 local wrap = require("custom.markdown.core.wrap")
-local autocmd = require("custom.markdown.setup.autocmd")
+local autocmds = require("custom.markdown.setup.autocmds")
 local tableview =  require("custom.markdown.tableview")
 local tableview_live =  require("custom.markdown.tableview.live")
 
@@ -15,9 +15,9 @@ local tableview_live =  require("custom.markdown.tableview.live")
 ---@return nil
 function M.setup(opts)
   cfg.setup(opts or {})
-  autocmd.setup()
+  autocmds.setup()
 	tableview.setup()
-	tableview_live.setup_autocmd()
+	tableview_live.setup_autocmds()
 end
 
 
