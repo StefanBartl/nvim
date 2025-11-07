@@ -18,7 +18,7 @@ function M.setup()
   map("n", "<leader>tfk", "<cmd>Telescope keymaps<CR>", { desc = "[Telescope] Find keymaps" })
   map("n", "<leader>tbu", "<cmd>Telescope buffers<CR>", { desc = "[Telescope] Buffers" })
   map("n", "<leader>thelp", "<cmd>Telescope help_tags<CR>", { desc = "[Telescope] Help" })
-  map("n", "<leader>told", "<cmd>Telescope oldfiles<CR>", { desc = "[Telescope] Oldfiles" })
+  map("n", "<leader>old", "<cmd>Telescope oldfiles<CR>", { desc = "[Telescope] Oldfiles" })
   map("n", "<leader>tcb", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "[Telescope] In Buffer" })
   map("n", "<leader>tff", "<cmd>Telescope find_files<cr>", { desc = "[Telescope] Find Files" })
   map("n", "<leader>tfa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",

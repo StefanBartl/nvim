@@ -41,7 +41,14 @@ return {
           },
         },
         fzf_opts = {
-          ["--history"] = vim.fn.stdpath "data" .. "/fzf-history",
+          -- enable ANSI colors (useful with bat/rg)
+          ["--ansi"] = "",
+          ["--cycle"] = "", -- enable wrap/cycle behaviour so up from first => goes to last
+          ["--history"] = vim.fn.stdpath("data") .. "/fzf-history",
+          -- use a compact inline info line
+          ["--info"] = "inline",
+          -- allow multi-select (useful with ctrl-a / ctrl-d bindings)
+          ["--multi"] = "",
         },
         --  ("query -- *.md !**/node_modules/**")
         grep = {

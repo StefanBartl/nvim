@@ -23,7 +23,6 @@ function M.setup()
   map("n", "<leader>fb", "<cmd>FzfLua grep_curbuf<CR>", { desc = "[FzfLua] Grep current buffer" })
 
   map("n", "<leader>ff", ":FzfLua files<CR>", { desc = "[FzfLua] Files" })
-  map("n", "<leader>old", ":FzfLua oldfiles<CR>", { desc = "[FzfLua] Oldfiles" })
 end
 
 return M
