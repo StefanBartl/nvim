@@ -13,8 +13,30 @@ function Build_fd_opts()
     "f",
     "--hidden",
     "--exclude",
+    ".dist",
+    "--exclude",
     ".git",
-  }
+    "--exclude",
+    ".github",
+    "--exclude",
+    "node_modules",
+    "--exclude",
+    "package.lock.json",
+    "--exclude",
+    "yarn.lock",
+    "--exclude",
+    "pnpm-lock.yaml",
+    "--exclude",
+    ".build",
+    "--exclude",
+    "out",
+    "--exclude",
+    "obj",
+    "--exclude",
+    ".tmp",
+    "--exclude",
+    ".vscode",
+	}
   return table.concat(parts, " ")
 end
 
@@ -55,7 +77,7 @@ return {
           -- make flags explicit to avoid fzf-lua auto-adding them
           cmd = "rg --vimgrep --column --line-number --no-heading --color=always --smart-case --max-columns=4096",
           -- keep -e in rg_opts so queries werden korrekt angefügt
-          rg_opts = "-e",
+          rg_opts = "-e --glob '!.git/' --glob '!node_modules/' --glob '!.github/' --glob '!dist/' --glob '!package.lock.json'",
           rg_glob = true,
           glob_flag = "--iglob",
           actions = {

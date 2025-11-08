@@ -39,24 +39,50 @@ return {
       -- History backend: prefer sqlite smart_history if available, else text fallback
       local HISTORY = {
         limit = 250, ---@type integer
-        path = nil   ---@type string|nil
+        path = nil, ---@type string|nil
       }
 
       local using_sqlite = has_sqlite()
       if using_sqlite then
         local dir = vim.fn.stdpath("state") .. "/telescope"
-        if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, "p") end
+        if vim.fn.isdirectory(dir) == 0 then
+          vim.fn.mkdir(dir, "p")
+        end
         HISTORY.path = dir .. "/history.sqlite3"
       else
         local dir = vim.fn.stdpath("data") .. "/picker-history"
-        if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, "p") end
+        if vim.fn.isdirectory(dir) == 0 then
+          vim.fn.mkdir(dir, "p")
+        end
         HISTORY.path = dir .. "/_global.txt"
       end
 
       -- Defaults: small but effective perf tweaks (ascending + prompt on top)
-			local picker_cycle = require("config.telescope.picker_cycle")
+      local picker_cycle = require("config.telescope.picker_cycle")
       local actions = require("telescope.actions")
       opts.defaults = vim.tbl_deep_extend("force", opts.defaults or {}, {
+        file_ignore_patterns = {
+          "node_modules",
+          "package%.lock.json",
+          "yarn.lock",
+          "pnpm%-lock.yaml",
+          "dist",
+          "build",
+          "out",
+          "target",
+          "bin",
+          "obj",
+          "%.git",
+          "%.github",
+          ".vscode",
+          ".idea",
+          "__pycache__",
+          "%.class",
+          "%.pyc",
+          "%.log",
+          "%.tmp",
+          "%.cache",
+        },
         history = { path = HISTORY.path, limit = HISTORY.limit },
         sorting_strategy = "ascending",
         layout_config = { prompt_position = "top" },
@@ -79,7 +105,7 @@ return {
       -- Configure extensions in one place to avoid multiple telescope.setup() calls
       opts.extensions = vim.tbl_deep_extend("force", opts.extensions or {}, {
         file_browser = {
-          path = "%:p:h",    -- start at current file's directory
+          path = "%:p:h", -- start at current file's directory
           cwd_to_path = true,
           select_buffer = true,
           hidden = true,
@@ -97,7 +123,9 @@ return {
       -- Choose which extensions to load when Telescope initializes
       ---@type string[]
       local exts = { "fzf" }
-      if using_sqlite then table.insert(exts, "smart_history") end
+      if using_sqlite then
+        table.insert(exts, "smart_history")
+      end
       opts.extensions_list = exts
 
       return opts
@@ -187,7 +215,9 @@ return {
     config = function()
       local ok1, search = pcall(require, "search")
       local ok2, builtin = pcall(require, "telescope.builtin")
-      if not (ok1 and ok2) then return end
+      if not (ok1 and ok2) then
+        return
+      end
 
       search.setup({
         mappings = { next = "<Tab>", prev = "<S-Tab>" },
@@ -204,16 +234,16 @@ return {
             end,
           },
           { name = "All Files", tele_func = builtin.find_files, tele_opts = { no_ignore = true, hidden = true } },
-          { name = "Grep",      tele_func = builtin.live_grep },
-          { name = "Buffers",   tele_func = builtin.buffers },
+          { name = "Grep", tele_func = builtin.live_grep },
+          { name = "Buffers", tele_func = builtin.buffers },
         },
         collections = {
           git = {
             initial_tab = 1,
             tabs = {
               { name = "Branches", tele_func = builtin.git_branches },
-              { name = "Commits",  tele_func = builtin.git_commits },
-              { name = "Stashes",  tele_func = builtin.git_stash },
+              { name = "Commits", tele_func = builtin.git_commits },
+              { name = "Stashes", tele_func = builtin.git_stash },
             },
           },
         },
