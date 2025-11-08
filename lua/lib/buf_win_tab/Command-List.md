@@ -16,6 +16,7 @@ buf_win_tab/
 ├─ buffer_utils
 │  ├─ DEFAULT_EXCLUDE_FILETYPES : string[]
 │  ├─ count_listed_buffers() -> integer
+│  ├─ get_buffer_info(bufnr) -> table
 │  ├─ count_real_listed_buffers(exclude_filetypes?: string[]) -> integer
 │  ├─ list_all_buffers_info() -> table[]
 │  ├─ list_listed_buffers_info() -> table[]
@@ -59,6 +60,7 @@ buf_win_tab/
 | --------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `DEFAULT_EXCLUDE_FILETYPES` | `string[]`                                  | Standardliste von Filetypes/Buffer-Namen, die beim Zählen „echter“ Benutzer-Buffers ausgeschlossen werden. |
 | `count_listed_buffers`      | `() -> integer`                             | Zählt alle gelisteten Buffer.                                                                              |
+| `get_buffer_info`           | `() -> table`                               | Gibt Metadaten zu einem Buffer zurück.                                                                              |
 | `count_real_listed_buffers` | `(exclude_filetypes?: string[]) -> integer` | Zählt gelistete Buffer unter Ausschluss von Plugin-/ephemeren Buffers.                                     |
 | `list_all_buffers_info`     | `() -> table[]`                             | Gibt ein Array mit Metadaten für alle Buffer zurück.                                                       |
 | `list_listed_buffers_info`  | `() -> table[]`                             | Gibt ein Array mit Metadaten für alle gelisteten Buffer zurück.                                            |

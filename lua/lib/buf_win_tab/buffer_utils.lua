@@ -70,7 +70,7 @@ end
 -- Return a table with metadata for a single buffer id.
 ---@param bufnr number
 ---@return table
-local function get_buffer_info(bufnr)
+function M.get_buffer_info(bufnr)
   -- Use pcall for APIs that may error on unloaded/invalid buffers
   local ok_name, name = pcall(vim.api.nvim_buf_get_name, bufnr)
   if not ok_name then name = "" end
@@ -109,7 +109,7 @@ function M.list_all_buffers_info()
   local bufs = vim.api.nvim_list_bufs()
   local out = {}
   for i = 1, #bufs do
-    local info = get_buffer_info(bufs[i])
+    local info = M.get_buffer_info(bufs[i])
     table.insert(out, info)
   end
   return out

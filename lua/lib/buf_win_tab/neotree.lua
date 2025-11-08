@@ -1,7 +1,7 @@
 ---@module 'lib.buf_win_tab.neotree'
 --- Utility library for inspecting and neotree
 
-local buflib = require("lib.buf_win_tab.windows_utils")
+local buflib = require("lib.buf_win_tab.buffer_utils")
 
 local M = {}
 
@@ -80,7 +80,7 @@ function M.setup_autotree_on_last_close(opts)
 
   -- callback for BufDelete / BufWipeout
   local function cb()
-    local remaining = M.count_real_listed_buffers(exclude_filetypes)
+    local remaining = buflib.count_real_listed_buffers(exclude_filetypes)
     -- Debugging line; can be commented out or left as low-level debug.
     vim.notify("Remaining real listed buffers: " .. tostring(remaining), vim.log.levels.DEBUG)
     if remaining == 0 then
@@ -104,7 +104,7 @@ end
 -- Determine whether the "only" listed buffers are non-file buffers (e.g. netrw, Neotree, undotree).
 ---@return boolean
 function M.only_nonfile_listed_buffers()
-  local listed_info = buflib.getbufinfo({ buflisted = 1 })
+  local listed_info = buflib.get_buffer_info({ buflisted = 1 })
   if #listed_info == 0 then
     return true
   end
