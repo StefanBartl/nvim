@@ -1,7 +1,8 @@
 ---@module 'autocmds'
 --- Initialize module for 'autocmds'
 
----AUDIT: Wie im git abschnitt modularisieren
+-- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren
+-- require("autocmds.open_neotree").open_neotree_if_last_buffer()
 
 ------------------------------------------------------
 --- General
@@ -18,11 +19,6 @@ require("autocmds.general").enable({
 	auto_mkdir = {
 		enable = true, -- Creates missing parent directories on BufWritePre, optionally skipping URL/remote-like paths.
 		skip_remote = true,
-	},
-	nvdash = {
-		enable = true, -- When the last listed buffer in the current tab closes, executes the given dashboard command.
-		cmd = "Nvdash",
-		is_listed_only = true,
 	},
 	cursorline = {
 		enable = false, -- Toggles the local 'cursorline' option on focus/normal events and hides it on insert/leave events.

@@ -37,9 +37,8 @@
  `goto smth` in branches verwenden
  `vert res +10`
  `checkhealth vim.lsp` statt `LspInfo`
-
-`leader gd` - Diffsplit
-
+ `leader gd` - Diffsplit
+ `S-c` - löschen vom Cursor bis ans Ender der Zeile
 
 `:NewFile {path}`           -> set buffer name, create parents, do NOT write by default
 `:NewFileWrite {path}`      -> like NewFile, but also :write immediately

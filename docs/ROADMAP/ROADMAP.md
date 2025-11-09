@@ -71,6 +71,9 @@ Snacks.picker ~
 - WARNING `vim.ui.select` for `Snacks.picker` is not enabled
 
 
+- Telescope und FZF-Lua:
+   - aktive zeilen weiß als Hintergrund probieren, zumindest aber eine kotrastreichere Option
+   - In der Nähe der Prompt sollen nicht die Anzahl der Treffer angegeben werden, sondern auch, welches gerade selected ist, zb 32/74
 - Custom Snacks Dashboard (CSD):  Manchmal, wenn man eine Datei öffnet, verschwindet das CSD nicht. Ich habe eigentlich eine Markdown Datei geöffnet, aber nur das CSD war weiterhin sichtbar. Weder `bclose` noch `:q` hat das CSD beendet. `set filetype?` hat jedoch `markdown` und nicht `snacks_dashboard` ergeben, was weird ist. Weiters änderte auch `:e test.lua` nichts daran, dass nur dsa CSD sichtba4r war, aber `set filetype?` hat num `lua` ergeben, was darauf hinweißt, dass die Dateien  schon in Buffer geladen wurden, nur das CSD es "unerreichbar" für mich überdeckt. Die einzige Möglichkeit, die ich gefunden habe, ist, `nvim` neu zu starten.
 - `gf` funktioenrt nicht in lua, wenn der pfad zb `lua.mdview.huhu` idt und man aber `require("mdview.huhu")` hat
 

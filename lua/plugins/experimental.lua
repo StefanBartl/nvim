@@ -19,28 +19,38 @@ return {
       require("autolist").setup()
 
       -- 2) Your keymaps
-			local map = require("lib.map")
-			map("i", "<tab>", "<cmd>AutolistTab<cr>", { desc = "[Autolist] Indent list item" })
-			map("i", "<s-tab>", "<cmd>AutolistShiftTab<cr>", { desc = "[Autolist] Unindent list item" })
-			map("i", "<CR>", "<CR><cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet on next line" })
-			map("n", "o", "o<cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet below" })
-			map("n", "O", "O<cmd>AutolistNewBulletBefore<cr>", { desc = "[Autolist] New bullet above" })
-			map("n", "<leader>rc", "<cmd>AutolistRecalculate<cr>", { desc = "[Autolist] Recalculate ordered list" })
-			map("n", "<leader>cn", require("autolist").cycle_next_dr, { desc = "[Autolist] Cycle list type forward", expr = true })
-			map("n", "<leader>cp", require("autolist").cycle_prev_dr, { desc = "[Autolist] Cycle list type backward", expr = true })
-			map("n", "<CR>", function()
-				local line = vim.api.nvim_get_current_line()
+      local map = require("lib.map")
+      map("i", "<tab>", "<cmd>AutolistTab<cr>", { desc = "[Autolist] Indent list item" })
+      map("i", "<s-tab>", "<cmd>AutolistShiftTab<cr>", { desc = "[Autolist] Unindent list item" })
+      map("i", "<CR>", "<CR><cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet on next line" })
+      map("n", "o", "o<cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet below" })
+      map("n", "O", "O<cmd>AutolistNewBulletBefore<cr>", { desc = "[Autolist] New bullet above" })
+      map("n", "<leader>rc", "<cmd>AutolistRecalculate<cr>", { desc = "[Autolist] Recalculate ordered list" })
+      map(
+        "n",
+        "<leader>cn",
+        require("autolist").cycle_next_dr,
+        { desc = "[Autolist] Cycle list type forward", expr = true }
+      )
+      map(
+        "n",
+        "<leader>cp",
+        require("autolist").cycle_prev_dr,
+        { desc = "[Autolist] Cycle list type backward", expr = true }
+      )
+      map("n", "<CR>", function()
+        local line = vim.api.nvim_get_current_line()
 
-				if line:match("%[[ x]%]") then
-					vim.cmd("AutolistToggleCheckbox")
-				else
-					-- Original mapping: 0i<CR><Esc>k
-					local keys = vim.api.nvim_replace_termcodes("0i<CR><Esc>k", true, false, true)
-					vim.api.nvim_feedkeys(keys, "n", false)
-				end
-			end, { desc = "[Autolist] Toggle checkbox or insert blank line" })
+        if line:match("%[[ x]%]") then
+          vim.cmd("AutolistToggleCheckbox")
+        else
+          -- Original mapping: 0i<CR><Esc>k
+          local keys = vim.api.nvim_replace_termcodes("0i<CR><Esc>k", true, false, true)
+          vim.api.nvim_feedkeys(keys, "n", false)
+        end
+      end, { desc = "[Autolist] Toggle checkbox or insert blank line" })
 
-			-- 3) Auto-renumber before saving supported filetypes
+      -- 3) Auto-renumber before saving supported filetypes
       ---@class AutolistAutoRecalcOpts
       ---@field group_name string  -- augroup name
       local opts = { group_name = "AutolistAutoRecalc" }
@@ -75,7 +85,7 @@ return {
     cmd = "Glow",
     ft = { "markdown", "md" },
     config = function()
-			---@diagnostic disable-next-line "incomplete setup"
+      ---@diagnostic disable-next-line "incomplete setup"
       require("glow").setup({
         glow_path = vim.fn.exepath("glow"), -- auto-detect from PATH
         border = "shadow",
@@ -104,4 +114,45 @@ return {
     end,
   },
 
+  {
+    "antosha417/nvim-lsp-file-operations",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      -- Uncomment whichever supported plugin(s) you use
+      -- "nvim-tree/nvim-tree.lua",
+      "nvim-neo-tree/neo-tree.nvim",
+      -- "simonmclean/triptych.nvim"
+    },
+    config = function()
+      local lsp_file_ops = require("lsp-file-operations")
+      lsp_file_ops.setup()
+
+      -- Initialize global LSP capabilities
+      local default_capabilities = vim.lsp.protocol.make_client_capabilities()
+      -- Merge in the capabilities provided by nvim-lsp-file-operations
+      local file_ops_capabilities = require("lsp-file-operations").default_capabilities()
+      -- Deep merge both tables
+      local merged_capabilities = vim.tbl_deep_extend("force", default_capabilities, file_ops_capabilities)
+      -- Store the merged capabilities in the global vim.lsp config
+      vim.lsp.protocol.make_client_capabilities = function()
+        return merged_capabilities
+      end
+
+      vim.api.nvim_create_user_command("LspFileOpsRename", function()
+        lsp_file_ops.rename()
+      end, { desc = "Rename current file via LSP" })
+
+      vim.api.nvim_create_user_command("LspFileOpsRemove", function()
+        lsp_file_ops.remove()
+      end, { desc = "Delete current file via LSP" })
+
+      vim.api.nvim_create_user_command("LspFileOpsCreate", function()
+        lsp_file_ops.create()
+      end, { desc = "Create new file via LSP" })
+
+      vim.api.nvim_create_user_command("LspFileOpsMove", function()
+        lsp_file_ops.move()
+      end, { desc = "Move current file via LSP" })
+    end,
+  },
 }
