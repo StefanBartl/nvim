@@ -1,56 +1,63 @@
 ---@module 'config.snacks.custom_dashboard.init'
 --- Public entrypoint for the modular custom Snacks dashboard.
---- This module wires submodules (autocmds, sessions, sections, commands, utils)
---- and exposes a single `setup()` function that performs safe initialization.
---- All heavy-lifting is delegated to submodules to keep responsibilities small.
+--- Ensures sections are registered before calling snacks.setup(opts).
 
 local M = {}
+M.module_tag = "[snacks.custom_dashboard]: "
 
---- Safe require wrapper for subsystems; returns (ok, module_or_error)
----@param name string
----@return boolean, any
+-- prefer lib.safe_require.safe_require if available; fallback to simple pcall wrapper
+local ok_lib, lib = pcall(require, "lib.safe_require")
 local function safe_require(name)
+  if ok_lib and type(lib.safe_require) == "function" then
+    local ok, res = lib.safe_require(name)
+    return ok, res
+  end
   local ok, mod = pcall(require, name)
   if not ok then
-    vim.notify(string.format("[custom_dashboard] failed to require %s: %s", name, tostring(mod)), vim.log.levels.WARN)
-    return false, nil
+    return false, mod
   end
   return true, mod
 end
 
---- Initialize submodules in a robust order:
---- utils -> sessions -> sections -> commands -> autocmds
---- This order respects dependency direction: low-level helpers first.
----@return boolean, string|nil
-function M.setup()
-  -- load utils (required)
+--- Setup function called from the plugin spec.
+--- @param snacks table -- the snacks module object
+--- @param opts table|nil
+--- @return boolean, string|nil
+function M.setup(snacks, opts)
+  if type(snacks) ~= "table" then
+    return false, "invalid snacks module"
+  end
+
   local ok_utils, utils = safe_require("config.snacks.custom_dashboard.utils")
   if not ok_utils then
     return false, "utils missing"
   end
 
-  -- load sessions (depends on utils)
+  -- sessions module optional but register sections early
   local ok_sess, sessions = safe_require("config.snacks.custom_dashboard.sessions")
   if not ok_sess then
-    -- sessions are optional: still continue but warn
-    vim.notify("[custom_dashboard] sessions module not available; Sessions section will be empty", vim.log.levels.INFO)
+    vim.notify(M.module_tag .. "sessions module not available; Sessions section will show placeholder", vim.log.levels.INFO)
   end
 
-  -- load sections (reads sessions, utils)
+  -- sections must register the custom section before snacks.setup
   local ok_secs, sections = safe_require("config.snacks.custom_dashboard.sections")
   if not ok_secs then
     return false, "sections missing"
   end
 
-  -- load commands (optional)
+  -- non-blocking: commands, autocmds, mappings
   safe_require("config.snacks.custom_dashboard.commands")
-
-  -- load autocmds (optional, QOL)
   safe_require("config.snacks.custom_dashboard.autocmds")
+  safe_require("config.snacks.custom_dashboard.mappings")
 
-  -- expose API for external usage (if needed)
+  -- finally call snacks.setup; the section is already registered by sections.lua
+  local ok_setup, err = pcall(snacks.setup, opts or {})
+  if not ok_setup then
+    return false, tostring(err)
+  end
+
   M.utils = utils
-  M.sessions = sessions
+  M.sessions = (ok_sess and sessions) and sessions or nil
   M.sections = sections
 
   return true

@@ -9,12 +9,6 @@
 --- - Bigfile is enabled to protect UI responsiveness on large files.
 --- - Keymaps use a safe dispatcher to avoid runtime errors when submodules change.
 ---
---- Design notes (rules applied):
---- - Errors guarded via pcall; UI-layer notify only.  -- safety
---- - Single Responsibility: one plugin configured here. -- modularity
---- - No globals; locals only.                           -- cleanliness
---- - Import order: core(vim) → plugin(require) → helpers.
----
 --- Dashboard API reference:
 --- - Custom sections are added by assigning functions to `require('snacks.dashboard').sections[NAME]`
 ---   and then referencing them with `{ section = NAME }` in `opts.dashboard.sections`.  -- matches docs/types
@@ -41,7 +35,7 @@
 ---@type table
 return {
 
-	-- disable nvchad dashboard to prevent crash with custom snacks dashboard
+  -- disable nvchad dashboard to prevent crash with custom snacks dashboard
   {
     "nvchad/ui",
     optional = true,
@@ -56,217 +50,83 @@ return {
     end,
   },
 
-	{
-		"folke/snacks.nvim",
-		event = "VimEnter", -- defer until UI is ready; quickfile still accelerates single-file cold open
+  {
+    "folke/snacks.nvim",
+    event = "VimEnter", -- defer until UI is ready; quickfile still accelerates single-file cold open
 
-		---@param _ any
-		---@return SnacksSetup|table
-		opts = function(_)
-			--- keep configuration isolated; never mutate shared tables
-			---@type SnacksSetup
-			local cfg = {
-				debug     = { enabled = true },
-				dim       = { enabled = true },
-				profiler  = { enabled = false }, -- enable only when profiling to avoid overhead
-				quickfile = { enabled = true },
-				scope     = { enabled = true },
-				scratch   = { enabled = true },
-				toggle    = { enabled = true },
-				words     = { enabled = true },
+    ---@param _ any
+    ---@return SnacksSetup|table
+    opts = function(_)
+      --- keep configuration isolated; never mutate shared tables
+      ---@type SnacksSetup
+      local cfg = {
+        debug = { enabled = true },
+        dim = { enabled = true },
+        profiler = { enabled = false }, -- enable only when profiling to avoid overhead
+        quickfile = { enabled = true },
+        scope = { enabled = true },
+        scratch = { enabled = true },
+        toggle = { enabled = true },
+        words = { enabled = true },
 
-				-- Safeguard for very large files
-				bigfile   = { enabled = true },
+        -- Safeguard for very large files
+        bigfile = { enabled = true },
 
-				-- Dashboard: replicate defaults and insert our custom "sessions" section.
-				-- According to Snacks docs, defaults are: header, keys, startup.
-				-- We keep those and add our own section in between keys and startup.
-				dashboard = {
-					enabled = true,
-					sections = {
-						{ section = "header" }, -- default
-						{ section = "keys", gap = 1, padding = 1 }, -- default
-						{ title = "Sessions", icon = "󰆓 ", section = "my_sessions", indent = 2, padding = 1 }, -- custom
-						{ section = "startup" }, -- default
-					},
-				},
+        -- Dashboard: replicate defaults and insert our custom "sessions" section.
+        -- According to Snacks docs, defaults are: header, keys, startup.
+        -- We keep those and add our own section in between keys and startup.
+        dashboard = {
+          enabled = true,
+          sections = {
+            { section = "header" }, -- default
+            { section = "keys", gap = 1, padding = 1 }, -- default
+            { title = "Sessions", icon = "󰆓 ", section = "my_sessions", indent = 2, padding = 1 }, -- custom
+            { section = "startup" }, -- default
+          },
+        },
 
-				-- Keep Snacks' own picker disabled to avoid redundancy with Telescope/fzf-lua
-				picker    = { enabled = false },
-			}
-			return cfg
-		end,
-
-		---@param _ any
-		---@param opts SnacksSetup
-		config = function(_, opts)
-			-- Defensive setup with pcall; UI-layer notify is acceptable per rules.
-			local ok, snacks = pcall(require, "snacks")
-			if not ok then
-				vim.notify("[snacks] not available", vim.log.levels.WARN)
-				return
-			end
-
-			-- Define our custom dashboard section BEFORE setup, so the resolver can find it.
-			-- This follows Snacks' documented model: sections are looked up by name and called with (item).
-			do
-				--- Sessions storage root (must match your sessions module)
-				local SESS_ROOT = (vim.fn.stdpath("config") .. "/lua/sessions/storage")
-
-				--- Create a dashboard section that lists sessions from stdpath('config')/lua/sessions/storage.
-				--- Sorting by mtime desc; items use {icon,title,desc,action} as per dashboard types.
-				---@diagnostic disable snacks.dashboard/[item/section] exists
-				---@param _ snacks.dashboard.Item # item (unused)
-				---@return snacks.dashboard.Section|nil
-				---@diagnostic enable
-				local function my_sessions_section(_)
-					-- English comments inside code by request:
-					-- Cheap dependencies / locals
-					local uv = vim.uv or vim.loop
-					local fn = vim.fn
-					-- If directory does not exist, return nil to keep the section empty.
-					local st = uv.fs_stat(SESS_ROOT)
-    if not (st and st.type == "directory") then
-      return {
-        { icon = " ", title = "No sessions found", action = function() end, hidden = false },
+        -- Keep Snacks' own picker disabled to avoid redundancy with Telescope/fzf-lua
+        picker = { enabled = false },
       }
-    end
+      return cfg
+    end,
 
-					-- Enumerate session files (fast path: glob); accept any files to be robust.
-					---@type string[]
-					local files = fn.glob(SESS_ROOT .. "/*", false, true)
+    ---@param _ any
+    ---@param opts SnacksSetup
+    config = function(_, opts)
+      -- Defensive require for snacks itself
+      local ok_snacks, snacks = pcall(require, "snacks")
+      if not ok_snacks then
+        vim.notify("[snacks] not available", vim.log.levels.WARN)
+        return
+      end
 
-					-- If empty, keep the section but show a subtle placeholder.
-					if #files == 0 then
-						return {
-							{
-								icon = " ",
-								title = "No sessions found",
-								desc = fn.fnamemodify(SESS_ROOT, ":~"),
-								hidden = false,
-								action = function() end, -- no-op
-							},
-						}
-					end
+      -- Attempt to load the modular custom dashboard entrypoint.
+      -- If it's not present, fall back to the old direct setup path.
+      local ok_cd, cd = pcall(require, "config.snacks.custom_dashboard.init")
+      if not ok_cd or type(cd.setup) ~= "function" then
+        -- Fallback: old direct setup if custom_dashboard module missing
+        local ok_setup, err = pcall(snacks.setup, opts)
+        if not ok_setup then
+          vim.notify("[snacks] setup() failed (fallback): " .. tostring(err), vim.log.levels.ERROR)
+        end
+        return
+      end
 
-					-- Build index + mtimes for sort
-					local n = #files
-					---@type integer[]  -- indices
-					local ix = { [n] = 0 }
-					---@type integer[]  -- mtimes
-					local mt = { [n] = 0 }
-					for i = 1, n do
-						ix[i] = i
-						local s = uv.fs_stat(files[i])
-						mt[i] = (s and s.mtime and s.mtime.sec) or 0
-					end
-					table.sort(ix, function(a, b) return mt[a] > mt[b] end)
+      -- Call the custom dashboard setup, passing snacks and opts.
+      -- The custom module will ensure sections are registered BEFORE snacks.setup().
+      local ok, err = pcall(cd.setup, snacks, opts)
+      if not ok then
+        vim.notify("[snacks.custom_dashboard] setup failed: " .. tostring(err), vim.log.levels.ERROR)
+      end
+    end,
 
-					-- Emit items in sorted order; preallocate result
-					---@type snacks.dashboard.Item[]
-					local items = { [n] = false } --- pre-size table (values will be overwritten)
-					for k = 1, n do
-						local p = files[ix[k]]
-						local name = fn.fnamemodify(p, ":t:r")
-						items[k] = {
-							icon = " ",
-							title = name,
-							-- Action calls your sessions plugin's load(name)
-							action = function()
-								local okS, S = pcall(require, "sessions")
-								local load = okS and S and S.load
-								if type(load) ~= "function" then
-									vim.notify("[sessions] load() not available", vim.log.levels.ERROR)
-									return
-								end
-								local ok2, err2 = load(name)
-								if not ok2 then
-									vim.notify("[sessions] load failed: " .. tostring(err2), vim.log.levels.ERROR)
-								end
-							end,
-						}
-					end
-					return items
-				end
-
-				-- Register the custom section under a distinct name.
-				local ok_dash, dash = pcall(require, "snacks.dashboard")
-				if ok_dash and type(dash) == "table" then
-					dash.sections = dash.sections or {}
-					-- Only assign if not already present to avoid duplicate redefinitions on reload.
-					if type(dash.sections.my_sessions) ~= "function" then
-						dash.sections.my_sessions = my_sessions_section
-					end
-				end
-			end
-
-			-- Explicit setup: only modules marked enabled will activate.
-			local ok_setup, err = pcall(snacks.setup, opts)
-			if not ok_setup then
-				vim.notify("[snacks] setup() failed: " .. tostring(err), vim.log.levels.ERROR)
-				return
-			end
-
-			-- Optional: ensure the dashboard opens (useful on reload).
-			-- One can comment this out if auto-opening is not desired.
-			-- do
-			--   local ok_dash, dash = pcall(require, "snacks.dashboard")
-			--   if ok_dash and type(dash.open) == "function" then
-			--     -- Defer a tick to let Lazy finish; tiny overhead.
-			--     vim.defer_fn(function() pcall(dash.open) end, 10)
-			--   end
-			-- end
-
-			-- Enable snacks-dashbard qol-autocmds
-			local autocmds_ok, autocmds_err = pcall(require, "config.snacks.dashboard.autocmds")
-			if not autocmds_ok then
-				vim.notify("[snacks.dashboard]: QOL-autocmds not available. " .. autocmds_err, 2)
-			end
-
-		end,
-
-		---@return table[]
-		keys = function()
-			-- Safe dispatcher to insulate from upstream API changes.
-			---@param mod string
-			---@param fn string
-			---@param ... any
-			---@return boolean ok
-			local function safe_call(mod, fn, ...)
-				local ok_mod, M = pcall(require, "snacks." .. mod)
-				if not ok_mod or type(M[fn]) ~= "function" then
-					vim.notify(string.format("[snacks] missing %s.%s()", mod, fn), vim.log.levels.WARN)
-					return false
-				end
-				local ok_fn, err = pcall(M[fn], ...)
-				if not ok_fn then
-					vim.notify(string.format("[snacks] %s.%s(): %s", mod, fn, tostring(err)), vim.log.levels.ERROR)
-					return false
-				end
-				return true
-			end
-
-			---@type (string|function|table)[]
-			local maps = { [11] = false }
-
-			maps[1]    = { "<leader>ud", function() safe_call("debug", "open") end, desc = "Snacks Debug: Open Inspector" }
-			maps[2]    = { "<leader>uD", function() safe_call("debug", "toggle") end, desc = "Snacks Debug: Toggle Overlay" }
-			maps[3]    = { "<leader>uf", function() safe_call("dim", "toggle") end, desc = "Snacks Dim: Toggle Focus Scope" }
-
-			maps[4]    = { "<leader>ps", function() safe_call("profiler", "start") end, desc = "Snacks Profiler: Start" }
-			maps[5]    = { "<leader>pS", function() safe_call("profiler", "stop") end, desc = "Snacks Profiler: Stop" }
-			maps[6]    = { "<leader>pr", function() safe_call("profiler", "report") end, desc = "Snacks Profiler: Report" }
-
-			maps[7]    = { "<leader>uq", function() safe_call("quickfile", "disable") end, desc =
-			"Snacks Quickfile: Disable (session)" }
-
-			maps[8]    = { "]s", function() safe_call("scope", "jump_next") end, desc = "Snacks Scope: Next" }
-			maps[9]    = { "[s", function() safe_call("scope", "jump_prev") end, desc = "Snacks Scope: Prev" }
-
-			maps[10]   = { "<leader>ns", function() safe_call("scratch", "open") end, desc = "Snacks Scratch: Open" }
-			maps[11]   = { "<leader>nS", function() safe_call("scratch", "new") end, desc = "Snacks Scratch: New" }
-
-			return maps
-		end,
-	},
+    keys = function()
+      local ok, maps = pcall(require, "config.snacks.custom_dashboard.mappings")
+      if ok and type(maps.keys) == "function" then
+        return maps.keys()
+      end
+      return {}
+    end,
+  },
 }

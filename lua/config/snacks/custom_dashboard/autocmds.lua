@@ -1,73 +1,74 @@
 ---@module 'config.snacks.custom_dashboard.autocmds'
---- Autocmd registrations for the custom dashboard.
---- Uses utils for safety checks and avoids opening dashboard over special/read-only buffers.
---- Defensive: failures are notified but non-fatal.
+--- Defensive autocmds for the custom dashboard.
+--- - VimEnter: ensure dashboard opens once at startup (guaranteed).
+--- - BufWinEnter: defensive opener for truly empty buffers later in the session.
 
 local api = vim.api
-local nvim_create_autocmd = api.nvim_create_autocmd
 local desc_tag = "[snacks.custom_dashboard]: "
 
-local utils_ok, utils = pcall(require, "config.snacks.custom_dashboard.utils")
-if not utils_ok then
-  vim.notify("[custom_dashboard] utils not available; skipping autocmds", vim.log.levels.WARN)
+local ok_utils, utils = pcall(require, "config.snacks.custom_dashboard.utils")
+if not ok_utils then
+  vim.notify(desc_tag .. "utils not available; skipping autocmds", vim.log.levels.WARN)
   return {}
 end
 
 -- One-time discoverability hint (non-intrusive)
-nvim_create_autocmd("VimEnter", {
+api.nvim_create_autocmd("VimEnter", {
   once = true,
   callback = function()
-    local ok_dash, dash = pcall(require, "snacks.dashboard")
-    if ok_dash and type(dash.open) == "function" then
-      vim.defer_fn(function()
+    -- Try to register and open the dashboard after a short delay to let startup finish.
+    vim.defer_fn(function()
+      local ok_dash, dash = pcall(require, "snacks.dashboard")
+      if ok_dash and type(dash.open) == "function" then
         pcall(dash.open)
-      end, 50)
-    end
+      end
+    end, 50)
   end,
+  desc = desc_tag .. "startup open",
 })
 
-
---- Decide whether it's safe to open the dashboard in the current window.
---- The heuristics intentionally conservative to avoid hijacking transient buffers.
+--- Conservative check used for BufWinEnter (not used for VimEnter open)
 local function safe_to_open_dashboard()
-  local bufnr = vim.api.nvim_get_current_buf()
-  if not vim.api.nvim_buf_is_valid(bufnr) then return false end
+  local bufnr = api.nvim_get_current_buf()
+  if not api.nvim_buf_is_valid(bufnr) then
+    return false
+  end
 
-  -- allow empty or unlisted buffers
-  local name = vim.api.nvim_buf_get_name(bufnr) or ""
-  local listed = vim.api.nvim_buf_get_option(bufnr, "buflisted")
-  local ft = vim.api.nvim_buf_get_option(bufnr, "filetype") or ""
-  local bt = vim.api.nvim_buf_get_option(bufnr, "buftype") or ""
+  -- avoid obvious special buffers (help, checkhealth, terminal, etc.)
+  if utils.is_special_buf(bufnr) then
+    return false
+  end
 
-  local forbidden = { help=true, qf=true, checkhealth=true, terminal=true, packer=true, TelescopePrompt=true }
-  if forbidden[ft] or forbidden[bt] then return false end
+  -- allow if empty buffer OR unlisted buffer
+  local listed = pcall(api.nvim_get_option_value, "buflisted", { buf = bufnr })
+  if type(listed) == "table" then listed = listed[2] end
+  if listed == nil then listed = true end
 
-  -- relax: open on empty OR unlisted buffer
-  local empty = vim.api.nvim_buf_line_count(bufnr) == 1 and vim.api.nvim_buf_get_lines(bufnr,0,1,true)[1] == ""
-  if not empty and listed then return false end
+  local empty = utils.is_empty_buffer(bufnr)
+  if not empty and listed then
+    return false
+  end
 
-  -- optional: only if single window
-  if vim.fn.winnr('$') ~= 1 then return false end
+  -- prefer single-window situations
+  if vim.fn.winnr('$') ~= 1 then
+    return false
+  end
 
   return true
 end
 
-nvim_create_autocmd({ "BufWinEnter" }, {
+api.nvim_create_autocmd({ "BufWinEnter" }, {
   callback = function()
     local ok_dash, dash = pcall(require, "snacks.dashboard")
-    if not ok_dash or type(dash.open) ~= "function" then
-      return
-    end
+    if not ok_dash or type(dash.open) ~= "function" then return end
 
-    -- Defer to let transient buffers finish initialization, then re-check handles.
     vim.defer_fn(function()
-      -- re-validate safe condition (handles may have changed)
       if safe_to_open_dashboard() then
         pcall(dash.open)
       end
     end, 30)
   end,
-  desc = desc_tag .. "open dashboard defensively on truly empty startup buffers",
+  desc = desc_tag .. "defensive open on empty buffers",
 })
 
 return {}
