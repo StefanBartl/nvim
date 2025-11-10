@@ -1,8 +1,13 @@
 ---@module 'autocmds'
 --- Initialize module for 'autocmds'
 
--- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren
+--FIX: Moudlarisere die submodule in eigene module
+
+-- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren:
+
 -- require("autocmds.open_neotree").open_neotree_if_last_buffer()
+
+require("autocmds.auto-center-fexplorer").setup()
 
 ------------------------------------------------------
 --- General
