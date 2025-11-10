@@ -20,8 +20,6 @@ local M = { opts = DEFAULTS }
 -- Local aliases (clarity over micro perf)
 local api, fn, uv = vim.api, vim.fn, (vim.uv or vim.loop)
 
----@alias FilePath string
-
 --- Resolve a canonical path for comparison/opening.
 --- Uses fs_realpath when allowed, otherwise returns absolute path.
 ---@param p FilePath
@@ -29,6 +27,7 @@ local api, fn, uv = vim.api, vim.fn, (vim.uv or vim.loop)
 ---@return FilePath
 local function canon(p, follow)
 	if follow and uv and uv.fs_realpath then
+		---@diagnostic disable-next-line lib.uv
 		local rp = uv.fs_realpath(p)
 		if type(rp) == "string" and rp ~= "" then return rp end
 	end

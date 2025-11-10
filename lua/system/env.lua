@@ -1,12 +1,14 @@
 ---@module 'system.env'
 
+--ADD: SytemEnv type
+-- Compute_env return type = -@return SystemEnv
+
 local M = {}
 
 local ENV
 local fn, g = vim.fn, vim.g
 local lib = require("lib")
 
----@return SystemEnv
 local function Compute_env()
 	local is_win = (fn.has("win32") == 1) or (fn.has("win64") == 1)
 	local is_mac = fn.has("mac") == 1 or fn.has("macunix") == 1

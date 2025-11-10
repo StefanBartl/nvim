@@ -388,7 +388,7 @@ end
 local function compute_plan(indent_col, parsed, cfg)
 	local pad = cfg.inner_pad
 	local ok, content_total, err = compute_content_total(0, indent_col, parsed.ncols, pad, cfg)
-	if not ok then return false, nil, err end
+	if not ok or not content_total then return false, nil, err end
 
 	-- helper: need without expansion (min + header + longest token; no cap)
 	local function need_without_expansion()
@@ -696,7 +696,7 @@ local function reformat_current(mode, cfg)
 	end
 	local cur = api.nvim_win_get_cursor(win)
 	local okb, bounds, berr = find_table_bounds(buf, cur[1])
-	if not okb then return false, berr end
+	if not okb or not bounds then return false, berr end
 
 	if mode ~= "force" then
 		local oko, overflow = table_has_overflow(buf, bounds, cfg)
@@ -714,7 +714,7 @@ end
 local function reformat_all(mode, buf, cfg)
 	if not api.nvim_buf_is_valid(buf) then return false, nil, "invalid buffer" end
 	local okb, list, berr = find_all_table_bounds(buf)
-	if not okb then return false, nil, berr end
+	if not okb or not list then return false, nil, berr end
 	if #list == 0 then return true, 0, nil end
 
 	table.sort(list, function(a, b) return a.start_lnum > b.start_lnum end)

@@ -2,6 +2,7 @@
 ---@module '@types.aliases'
 
 ---@alias Path string
+---@alias FilePath string
 
 ---@alias TriBool boolean|nil
 --- Tri-state boolean:

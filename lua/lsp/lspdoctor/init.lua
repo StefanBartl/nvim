@@ -121,7 +121,7 @@ end
 -- Extended checks -------------------------------------------------------------
 
 -- Offset-encoding mismatch across clients (e.g., "utf-8" vs "utf-16")
----@param clients_by_name table<string, lsp.Client>
+---@param clients_by_name table<string, vim.lsp.Client>
 ---@return string[] unique_encs, string[] mismatches
 local function check_offset_encoding(clients_by_name)
   local set, order = {}, {}

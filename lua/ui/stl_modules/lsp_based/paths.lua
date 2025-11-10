@@ -8,8 +8,8 @@ local P = {}
 -- Configuration is injected/linked from lsp_based; keep defaults here for safety.
 ---@type LspStlPathCfg
 P.cfg = {
-  path_mode = "auto",         -- "auto"|"repo"|"cwd"|"absolute"
-  path_home_tilde = true,     -- replace $HOME prefix by "~"
+  path_mode = "auto", -- "auto"|"repo"|"cwd"|"absolute"
+  path_home_tilde = true, -- replace $HOME prefix by "~"
 }
 
 --- Normalize separators, collapse redundancies, unify drive letter case (best-effort).
@@ -24,7 +24,9 @@ local function norm_sep(s)
   -- Normalize trailing "/." → "/"
   s = s:gsub("/%./", "/")
   -- Drive letter unify case (Windows only; benign elsewhere)
-  s = s:gsub("^([A-Za-z]):/", function(d) return string.upper(d) .. ":/" end)
+  s = s:gsub("^([A-Za-z]):/", function(d)
+    return string.upper(d) .. ":/"
+  end)
   return s
 end
 
@@ -35,20 +37,24 @@ end
 function P.path_absolute(path_or_buf)
   local path = ""
   if type(path_or_buf) == "number" then
-    if not vim.api.nvim_buf_is_loaded(path_or_buf) then return "" end
+    if not vim.api.nvim_buf_is_loaded(path_or_buf) then
+      return ""
+    end
     path = vim.api.nvim_buf_get_name(path_or_buf) or ""
   else
     path = tostring(path_or_buf or "")
   end
-  if path == "" then return "" end
+  if path == "" then
+    return ""
+  end
 
   -- Expand to absolute path first; :p handles ~/ and relative buffers
   local abs = vim.fn.fnamemodify(path, ":p")
   -- Try realpath to resolve symlinks; fall back to abs if it fails
-	---@diagnostic disable-next-line fs_realpath exists in uv library
+  ---@diagnostic disable-next-line fs_realpath exists in uv library
   local ok, real = pcall(vim.uv.fs_realpath, abs)
   local canon = ok and real or abs
-	---@diagnostic disable-next-line uv library
+  ---@diagnostic disable-next-line uv library
   return norm_sep(canon)
 end
 
@@ -68,7 +74,9 @@ local function find_git_root(path)
       froot = vim.fn.fnamemodify(git_hit, ":h")
     end
   end
-  if not froot or froot == "" then return nil end
+  if not froot or froot == "" then
+    return nil
+  end
 
   -- Worktree case: if ".git" is a file, read gitdir pointer and go up to worktree top-level
   local git_path = norm_sep(froot .. "/.git")
@@ -92,12 +100,19 @@ end
 ---@param s string
 ---@return string
 local function home_tilde(s)
-  if not P.cfg.path_home_tilde then return s end
+  if not P.cfg.path_home_tilde then
+    return s
+  end
+  ---@diagnostic disable-next-line lib.uv
   local home = norm_sep(vim.loop.os_homedir() or "")
   if home ~= "" and s:sub(1, #home) == home then
     local rest = s:sub(#home + 1)
-    if rest == "" then return "~" end
-    if rest:sub(1, 1) == "/" then rest = rest:sub(2) end
+    if rest == "" then
+      return "~"
+    end
+    if rest:sub(1, 1) == "/" then
+      rest = rest:sub(2)
+    end
     return "~/" .. rest
   end
   return s
@@ -113,14 +128,16 @@ local function rel_from(base, path)
   path = norm_sep(path)
   -- Case-insensitive drive prefixes on Windows
   if base:match("^[A-Za-z]:/") and path:match("^[A-Za-z]:/") then
-    if base:sub(1,1) ~= path:sub(1,1) then
+    if base:sub(1, 1) ~= path:sub(1, 1) then
       return path -- different drives → cannot relativize
     end
   end
   if path:sub(1, #base) == base then
     local rest = path:sub(#base + 1)
-    if rest == "" then return "." end
-    return (rest:sub(1,1) == "/") and rest:sub(2) or rest
+    if rest == "" then
+      return "."
+    end
+    return (rest:sub(1, 1) == "/") and rest:sub(2) or rest
   end
   return path
 end
@@ -131,14 +148,18 @@ end
 ---@return string
 function P.path_relative(mode, path)
   local abs = P.path_absolute(path)
-  if abs == "" then return "[No Name]" end
+  if abs == "" then
+    return "[No Name]"
+  end
 
   if mode == "repo" then
     local root = find_git_root(abs)
     if root and #root > 0 then
       local rel = rel_from(root, abs)
       -- Make sure we don't display a bare "."; keep at least filename
-      if rel == "." then return vim.fn.fnamemodify(abs, ":t") end
+      if rel == "." then
+        return vim.fn.fnamemodify(abs, ":t")
+      end
       return rel
     end
     -- No repo → fall through to home or cwd according to taste; here: home
@@ -158,11 +179,17 @@ end
 ---@return string
 function P.display_path(cfg, path_or_buf)
   if type(cfg) == "table" then
-    if cfg.path_mode then P.cfg.path_mode = cfg.path_mode end
-    if cfg.path_home_tilde ~= nil then P.cfg.path_home_tilde = not not cfg.path_home_tilde end
+    if cfg.path_mode then
+      P.cfg.path_mode = cfg.path_mode
+    end
+    if cfg.path_home_tilde ~= nil then
+      P.cfg.path_home_tilde = not not cfg.path_home_tilde
+    end
   end
   local abs = P.path_absolute(path_or_buf)
-  if abs == "" then return "[No Name]" end
+  if abs == "" then
+    return "[No Name]"
+  end
 
   local mode = P.cfg.path_mode or "auto"
   if mode == "absolute" then
@@ -180,10 +207,11 @@ function P.display_path(cfg, path_or_buf)
     end
     local cwd = norm_sep(vim.fn.getcwd())
     local rel = rel_from(cwd, abs)
-    if rel ~= abs then return rel end
+    if rel ~= abs then
+      return rel
+    end
     return home_tilde(abs)
   end
 end
 
 return P
-

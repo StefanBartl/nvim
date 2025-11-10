@@ -74,7 +74,7 @@ function M.setup()
   --   :ColumnAlignInteractive
   -- Prompts for target column and optional fill character (delegates to align_interactive).
   if ok_col and type(column_align.align_interactive) == "function" then
-    create_command("ColumnAlignInteractive", function(_args)
+    create_command("ColumnAlignInteractive", function(_)
       -- simply delegate to the interactive function
       column_align.align_interactive()
     end, { nargs = 0, desc = "Prompt for target column and fill char, align selected character" })

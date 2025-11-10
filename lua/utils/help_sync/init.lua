@@ -1,3 +1,4 @@
+
 ---@module 'utils.help_sync'
 --- Aggregate scattered Vim help files from any "docs/" directory within your config
 --- into a single "doc/" directory on the runtimepath, then run :helptags so they
@@ -21,7 +22,18 @@ local M = {}
 local api, fn, uv = vim.api, vim.fn, (vim.uv or vim.loop)
 
 -- Defaults --------------------------------------------------------------------
+
+---@class HelpSyncConfig
+---@field search_roots table|function
+---@field docs_dirnames string[]
+---@field aggregator_ns string
+---@field prefer_symlink boolean
+---@field clear_before_build boolean
+---@field rebuild_on_start boolean
+---@field notify_prefix string
+
 local DEFAULTS ---@type HelpSyncConfig
+
 DEFAULTS = {
   search_roots = (function()
     local cfg = fn.stdpath("config")

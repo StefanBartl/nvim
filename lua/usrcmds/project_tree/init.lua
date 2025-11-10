@@ -38,8 +38,6 @@ local M = {}
 
 local fn = vim.fn
 local oslib = require("lib").os
--- Detect availability of vim.system (Neovim >= 0.10)
-local HAS_SYSTEM = (vim.system ~= nil)
 
 -- Defaults --------------------------------------------------------------------
 

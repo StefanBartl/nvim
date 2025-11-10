@@ -154,9 +154,8 @@ end
 local function mode_band_bg_hex()
   local group = M.mode_band_group()
   local hl = vim.api.nvim_get_hl(0, { name = group, link = false }) or {}
-  ---@diagnostic disable undefined-field
-  return int_to_hex(hl.bg or hl.background)
-  ---@diagnostic enable
+  ---@diagnostic disable-next-line undefined-field
+  return int_to_hex(hl.bg)
 end
 
 ---@nodiscard

@@ -13,6 +13,7 @@ local cfg = C.cfg.highlight
 local PathCache = require "myoptions.Highlight_Cfg.path_cache"
 local ctx_ok, ctxmod = pcall(require, "myoptions.Highlight_Cfg.breadcrumbs.ctx")
 local CwordOcc = require "myoptions.Highlight_Cfg.cword_occurences"
+local _trim = require("lib._trim")
 
 -- Namespaces & groups
 local NS_INDENT = vim.api.nvim_create_namespace "myopt_IndentScope"
@@ -223,13 +224,6 @@ end
 
 
 ---@alias HlPair {from:string, to:string}
-
---- Trim ASCII whitespace (space, tab, CR, LF)
----@param s string
----@return string
-local function _trim(s)
-  return (s or ""):gsub("^%s+", ""):gsub("%s+$", "")
-end
 
 --- Parse a winhighlight CSV into pairs, ignoring invalid items.
 ---@param wh string|nil

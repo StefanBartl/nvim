@@ -188,6 +188,7 @@ local function find_type_dirs(root, opts)
 			local it = uv.fs_scandir(node.path)
 			if it then
 				while true do
+					---@diagnostic disable-next-line lib.uv
 					local name, kind = uv.fs_scandir_next(it)
 					if not name then
 						break
