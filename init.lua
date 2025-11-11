@@ -29,15 +29,15 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- ===================================================================================
 -- Load modules
 -- ===================================================================================
-require "system.env".compute_env()
-require "options"
+require("system.env").compute_env()
+require("options")
 require("myoptions").setup { highlights = true, options = true }
 require("lsp").setup { ensure_installing = false }
-require "autocmds"
-require "custom"
+require("autocmds")
+require("custom")
 require("debugging").setup()
-require "mynotes"
-require "usrcmds"
+require("mynotes")
+require("usrcmds")
 require("utils.column_align").setup()
 require("sessions").enable { autocommands = true, usercmds = true, keymaps = true }
 require("utils.help_sync").setup()

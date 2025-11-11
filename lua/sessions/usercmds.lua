@@ -83,16 +83,16 @@ local notify = vim.notify
     if is_skipped(file) then
       local result = vim.fn.system("git update-index --no-skip-worktree " .. vim.fn.fnameescape(file))
       if vim.v.shell_error ~= 0 then
-        vim.notify("Git command failed: " .. result, vim.log.levels.ERROR)
+        notify("Git command failed: " .. result, vim.log.levels.ERROR)
       else
-        vim.notify("last.vim is now tracked in git", vim.log.levels.INFO)
+        notify("last.vim is now tracked in git", vim.log.levels.INFO)
       end
     else
       local result = vim.fn.system("git update-index --skip-worktree " .. vim.fn.fnameescape(file))
       if vim.v.shell_error ~= 0 then
-        vim.notify("Git command failed: " .. result, vim.log.levels.ERROR)
+        notify("Git command failed: " .. result, vim.log.levels.ERROR)
       else
-        vim.notify("last.vim marked as skip-worktree", vim.log.levels.INFO)
+        notify("last.vim marked as skip-worktree", vim.log.levels.INFO)
       end
     end
   end, {})

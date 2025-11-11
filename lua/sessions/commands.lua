@@ -7,41 +7,45 @@
 --- - Autoload last session on empty start; autosave on exit
 --- The module avoids global state and validates all external calls, following the checklists.
 
+local api, fn, notify, cmd, levels = vim.api, vim.fn, vim.notify, vim.cmd, vim.log.levels
+
 ---@class SessionsCommands
 local M = {}
+
+local desc_tag = "[sessions] "
 
 ---@return nil
 local function define_commands()
   -- Save
-  vim.api.nvim_create_user_command("SessionSave", function(cmd)
-    local arg = (cmd and cmd.args or "")
+  api.nvim_create_user_command("SessionSave", function(_cmd)
+    local arg = (_cmd and _cmd.args or "")
     local ok, res = require("sessions.core").save(arg ~= "" and arg or nil)
     if ok then
-      vim.notify("Session saved: " .. (res or "?"))
+      notify("Session saved: " .. (res or "?"))
     else
-      vim.notify("Session save failed: " .. (res or "?"), vim.log.levels.ERROR)
+      notify("Session save failed: " .. (res or "?"), levels.ERROR)
     end
-  end, { nargs = "?", desc = "Save session to file" })
+  end, { nargs = "?", desc = desc_tag .. "Save session to file" })
 
   -- Save with timestamp
-  vim.api.nvim_create_user_command("SessionSaveTimestamp", function()
+  api.nvim_create_user_command("SessionSaveTimestamp", function()
     local stamp = os.date("sess-%Y%m%d-%H%M%S")
-    local ok, res = pcall(vim.cmd("SessionSave " .. stamp))
+    local ok, res = pcall(cmd("SessionSave " .. stamp))
     if ok then
-      vim.notify("Session saved with timestamp: " .. (res or "?"))
+      notify("Session saved with timestamp: " .. (res or "?"))
     else
-      vim.notify("Session saving with timestamp failed: " .. (res or "?"), vim.log.levels.ERROR)
+      notify("Session saving with timestamp failed: " .. (res or "?"), levels.ERROR)
     end
-  end, { nargs = "?", desc = "Save session with timestamp to file" })
+  end, { nargs = "?", desc = desc_tag .. "Save session with timestamp to file" })
 
   -- Load
-  vim.api.nvim_create_user_command("SessionLoad", function(cmd)
-    local arg = (cmd and cmd.args or "last")
+  api.nvim_create_user_command("SessionLoad", function(_cmd)
+    local arg = (_cmd and _cmd.args or "last")
     local ok, res = require("sessions.core").load(arg ~= "" and arg or nil)
     if ok then
-      vim.notify("Session loaded: " .. (res or "?"))
+      notify("Session loaded: " .. (res or "?"))
     else
-      vim.notify("Session load failed: " .. (res or "?"), vim.log.levels.ERROR)
+      notify("Session load failed: " .. (res or "?"), levels.ERROR)
     end
   end, {
     nargs = "?",
@@ -50,15 +54,15 @@ local function define_commands()
       ---@type string[]
       local out = { [#list] = "" }
       for i = 1, #list do
-        out[i] = vim.fn.fnamemodify(list[i], ":t:r")
+        out[i] = fn.fnamemodify(list[i], ":t:r")
       end
       return out
     end,
-    desc = "Load session from file",
+    desc = desc_tag .. "Load session from file",
   })
 
   -- List
-  vim.api.nvim_create_user_command("SessionList", function()
+  api.nvim_create_user_command("SessionList", function()
     local list = require("sessions.core").list()
     if #list == 0 then
       print("No sessions.")
@@ -67,14 +71,14 @@ local function define_commands()
     for i = 1, #list do
       print("- " .. list[i])
     end
-  end, { desc = "List available sessions" })
+  end, { desc = desc_tag .. "List available sessions" })
 
   -- Toggle tracking `/storage/last.vim`-file in git
-  vim.api.nvim_create_user_command("ToggleLastVimTrack", function()
-    local last_vim_file = vim.fn.stdpath("config") .. "/lua/sessions/storage/last.vim"
+  api.nvim_create_user_command("ToggleLastVimTrack", function()
+    local last_vim_file = fn.stdpath("config") .. "/lua/sessions/storage/last.vim"
 
     local function is_skipped(file)
-      local handle = io.popen("git ls-files -v " .. vim.fn.fnameescape(file))
+      local handle = io.popen("git ls-files -v " .. fn.fnameescape(file))
       if not handle then
         return false
       end
@@ -85,18 +89,18 @@ local function define_commands()
 
     local file = last_vim_file
     if is_skipped(file) then
-      local result = vim.fn.system("git update-index --no-skip-worktree " .. vim.fn.fnameescape(file))
+      local result = fn.system("git update-index --no-skip-worktree " .. vim.fn.fnameescape(file))
       if vim.v.shell_error ~= 0 then
-        vim.notify("Git command failed: " .. result, vim.log.levels.ERROR)
+        notify("Git command failed: " .. result, levels.ERROR)
       else
-        vim.notify("last.vim is now tracked in git", vim.log.levels.INFO)
+        notify("last.vim is now tracked in git", levels.INFO)
       end
     else
-      local result = vim.fn.system("git update-index --skip-worktree " .. vim.fn.fnameescape(file))
+      local result = fn.system("git update-index --skip-worktree " .. vim.fn.fnameescape(file))
       if vim.v.shell_error ~= 0 then
-        vim.notify("Git command failed: " .. result, vim.log.levels.ERROR)
+        notify("Git command failed: " .. result, levels.ERROR)
       else
-        vim.notify("last.vim marked as skip-worktree", vim.log.levels.INFO)
+        notify("last.vim marked as skip-worktree", levels.INFO)
       end
     end
   end, {})
@@ -108,44 +112,44 @@ local function define_keymaps()
     vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
   end
   map("n", "<leader>ssa", function()
-    vim.cmd("SessionSave")
+    cmd("SessionSave")
   end, "Session Save")
   map("n", "<leader>slo", function()
-    vim.cmd("SessionLoad")
+    cmd("SessionLoad")
   end, "Session Load")
   map("n", "<leader>sst", function()
     local stamp = os.date("sess-%Y%m%d-%H%M%S")
-    vim.cmd("SessionSave " .. stamp)
+    cmd("SessionSave " .. stamp)
   end, "Session Save (timestamp)")
   map("n", "<leader>sli", function()
-    vim.cmd("SessionList")
+    cmd("SessionList")
   end, "Session List")
 end
 
 ---@return nil
 local function define_autocmds()
-  local aug = vim.api.nvim_create_augroup("PortableSessions", { clear = true })
+  local aug = api.nvim_create_augroup("PortableSessions", { clear = true })
 
   -- Autoload last session when starting without file args
-  -- vim.api.nvim_create_autocmd("VimEnter", {
+  -- api.nvim_create_autocmd("VimEnter", {
   --   group = aug,
   --   callback = function()
-  --     if vim.fn.argc(-1) == 0 then
+  --     if fn.argc(-1) == 0 then
   --       local ok, _ = require("sessions.core").load(nil)
-  --       if ok then vim.notify("Session autoloaded") end
+  --       if ok then notify("Session autoloaded") end
   --     end
   --   end,
-  --   desc = "Portable sessions startup hook",
+  --   desc = desc_tag .. "Portable sessions startup hook",
   --   once = true,
   -- })
 
   -- Autosave default session on exit
-  vim.api.nvim_create_autocmd("VimLeavePre", {
+  api.nvim_create_autocmd("VimLeavePre", {
     group = aug,
     callback = function()
       require("sessions.core").save(nil)
     end,
-    desc = "Portable sessions shutdown hook",
+    desc = desc_tag .. "Portable sessions shutdown hook",
   })
 end
 

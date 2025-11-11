@@ -1,6 +1,8 @@
 ---@module 'ui.custom_stl_module
 --- Module with helper function for custom nvchad/ui/statusline
 
+local fn, api = vim.fn, vim.api
+
 local M = {}
 
 -------------------------------------
@@ -15,7 +17,7 @@ local function cp(hex)
   -- Defensive: tonumber(..., 16) may return nil on invalid input
   local n = tonumber(hex, 16)
   if not n then return "" end
-  return vim.fn.nr2char(n)
+  return fn.nr2char(n)
 end
 
 --- Choose the breadcrumb separator: prefer the given Nerd Font codepoint,
@@ -25,7 +27,7 @@ end
 local function nerd_sep_or_fallback(hex)
   local g = cp(hex)
   -- Only accept if it renders as a single display cell (prevents centering drift)
-  if g ~= "" and vim.fn.strdisplaywidth(g) == 1 then
+  if g ~= "" and fn.strdisplaywidth(g) == 1 then
     return " " .. g .. " "
   end
   -- Fallbacks with broad font coverage
@@ -60,16 +62,16 @@ end
 --- @return string
 function M.repo_relative(path)
 	if path == "" then return "[No Name]" end
-	local dir = vim.fn.fnamemodify(path, ":h")
+	local dir = fn.fnamemodify(path, ":h")
 	local gitdir = vim.fs.find(".git", { upward = true, path = dir })[1]
 	if gitdir then
-		local root = vim.fn.fnamemodify(gitdir, ":h")
-		local rel = vim.fn.fnamemodify(path, (":~:%s"):format(root))
-		if rel == path then return vim.fn.fnamemodify(path, ":t") end
+		local root = fn.fnamemodify(gitdir, ":h")
+		local rel = fn.fnamemodify(path, (":~:%s"):format(root))
+		if rel == path then return fn.fnamemodify(path, ":t") end
 		rel = rel:gsub("^%./", ""):gsub("^/", "")
 		return rel
 	else
-		return vim.fn.fnamemodify(path, ":~:.")
+		return fn.fnamemodify(path, ":~:.")
 	end
 end
 
@@ -167,7 +169,7 @@ end
 function M.render_breadcrumbs()
 	local utils = require "nvchad.stl.utils"
 	local bufnr = utils.stbufnr()
-	local path = vim.api.nvim_buf_get_name(bufnr)
+	local path = api.nvim_buf_get_name(bufnr)
 	if path == "" then return "" end
 
 	local rel = M.repo_relative(path)
@@ -216,7 +218,7 @@ end
 -- Use this to wrap other modules so they visually match the mode/git band.
 function M.mode_band_group()
 	local utils = require("nvchad.stl.utils")
-	local m = vim.api.nvim_get_mode().mode
+	local m = api.nvim_get_mode().mode
 	local name = (utils.modes[m] and utils.modes[m][2]) or "Normal"
 	return "St_" .. name .. "mode"
 end
@@ -242,7 +244,7 @@ local function ensure_icon_hl(fg, band_bg)
 
   if M.__icon_hl.fg ~= fg or M.__icon_hl.bg ~= band_bg then
     -- Define or update the highlight; nil is allowed and means "inherit"
-    vim.api.nvim_set_hl(0, M.__icon_hl.name, { fg = fg, bg = band_bg })
+    api.nvim_set_hl(0, M.__icon_hl.name, { fg = fg, bg = band_bg })
     M.__icon_hl.fg = fg
     M.__icon_hl.bg = band_bg
   end
@@ -256,7 +258,7 @@ end
 ---@return string|nil color           -- hex foreground (e.g. "#aabbcc") or nil
 local function devicon_for_path(path)
   local ok, devicons = pcall(require, "nvim-web-devicons")
-  local filename = (path == "" or path == nil) and "[No Name]" or vim.fn.fnamemodify(path, ":t")
+  local filename = (path == "" or path == nil) and "[No Name]" or fn.fnamemodify(path, ":t")
   local ext = filename:match("^.+%.(.+)$") or ""
 
   if not ok then
@@ -297,7 +299,7 @@ end
 local function mode_band_bg_hex()
   local group = M.mode_band_group()
   -- On recent Neovim versions, `link=false` returns resolved attrs
-  local hl = vim.api.nvim_get_hl(0, { name = group, link = false }) or {}
+  local hl = api.nvim_get_hl(0, { name = group, link = false }) or {}
   -- Different versions may expose "bg" or "background"
 	---@diagnostic disable-next-line
   return int_to_hex(hl.bg or hl.background)
@@ -309,7 +311,7 @@ end
 function M.file_icon_segment()
   local utils = require "nvchad.stl.utils"
   local bufnr = utils.stbufnr()
-  local path = vim.api.nvim_buf_get_name(bufnr) or ""
+  local path = api.nvim_buf_get_name(bufnr) or ""
 
   local icon, fg = devicon_for_path(path)
   local bg = mode_band_bg_hex()

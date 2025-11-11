@@ -3,6 +3,8 @@
 --- This file provides absolute and relative path resolution with proper
 --- normalization, Git root detection (incl. worktrees), and home/cwd shortening.
 
+local api, fn, fs, uv = vim.api, vim.fn, vim.fs, vim.uv or vim.loop
+
 local P = {}
 
 -- Configuration is injected/linked from lsp_based; keep defaults here for safety.
@@ -37,10 +39,10 @@ end
 function P.path_absolute(path_or_buf)
   local path = ""
   if type(path_or_buf) == "number" then
-    if not vim.api.nvim_buf_is_loaded(path_or_buf) then
+    if not api.nvim_buf_is_loaded(path_or_buf) then
       return ""
     end
-    path = vim.api.nvim_buf_get_name(path_or_buf) or ""
+    path = api.nvim_buf_get_name(path_or_buf) or ""
   else
     path = tostring(path_or_buf or "")
   end
@@ -49,10 +51,10 @@ function P.path_absolute(path_or_buf)
   end
 
   -- Expand to absolute path first; :p handles ~/ and relative buffers
-  local abs = vim.fn.fnamemodify(path, ":p")
+  local abs = fn.fnamemodify(path, ":p")
   -- Try realpath to resolve symlinks; fall back to abs if it fails
   ---@diagnostic disable-next-line fs_realpath exists in uv library
-  local ok, real = pcall(vim.uv.fs_realpath, abs)
+  local ok, real = pcall(uv.fs_realpath, abs)
   local canon = ok and real or abs
   ---@diagnostic disable-next-line uv library
   return norm_sep(canon)
@@ -63,15 +65,15 @@ end
 ---@param path string
 ---@return string|nil
 local function find_git_root(path)
-  local dir = vim.fn.fnamemodify(path, ":h")
+  local dir = fn.fnamemodify(path, ":h")
   -- Use the new root helper (Neovim 0.10+); fallback to fs.find
   local froot = nil
-  if vim.fs.root then
-    froot = vim.fs.root(dir, ".git")
+  if fs.root then
+    froot = fs.root(dir, ".git")
   else
-    local git_hit = (vim.fs.find(".git", { upward = true, path = dir }) or {})[1]
+    local git_hit = (fs.find(".git", { upward = true, path = dir }) or {})[1]
     if git_hit then
-      froot = vim.fn.fnamemodify(git_hit, ":h")
+      froot = fn.fnamemodify(git_hit, ":h")
     end
   end
   if not froot or froot == "" then
@@ -80,12 +82,12 @@ local function find_git_root(path)
 
   -- Worktree case: if ".git" is a file, read gitdir pointer and go up to worktree top-level
   local git_path = norm_sep(froot .. "/.git")
-  local stat = vim.uv.fs_stat(git_path)
+  local stat = uv.fs_stat(git_path)
   if stat and stat.type == "file" then
-    local fd = vim.uv.fs_open(git_path, "r", 438) -- 0666
+    local fd = uv.fs_open(git_path, "r", 438) -- 0666
     if fd then
-      local content = vim.uv.fs_read(fd, stat.size or 4096, 0) or ""
-      vim.uv.fs_close(fd)
+      local content = uv.fs_read(fd, stat.size or 4096, 0) or ""
+      uv.fs_close(fd)
       local gitdir = content:match("gitdir:%s*(.-)%s*$")
       if gitdir and #gitdir > 0 then
         -- For worktrees, the project root is the directory containing the .git file
@@ -158,14 +160,14 @@ function P.path_relative(mode, path)
       local rel = rel_from(root, abs)
       -- Make sure we don't display a bare "."; keep at least filename
       if rel == "." then
-        return vim.fn.fnamemodify(abs, ":t")
+        return fn.fnamemodify(abs, ":t")
       end
       return rel
     end
     -- No repo → fall through to home or cwd according to taste; here: home
     return home_tilde(rel_from(vim.loop.os_homedir() or "", abs))
   elseif mode == "cwd" then
-    local cwd = norm_sep(vim.fn.getcwd())
+    local cwd = norm_sep(fn.getcwd())
     return rel_from(cwd, abs)
   else -- "home"
     return home_tilde(abs)
@@ -205,7 +207,7 @@ function P.display_path(cfg, path_or_buf)
     if root then
       return rel_from(root, abs)
     end
-    local cwd = norm_sep(vim.fn.getcwd())
+    local cwd = norm_sep(fn.getcwd())
     local rel = rel_from(cwd, abs)
     if rel ~= abs then
       return rel

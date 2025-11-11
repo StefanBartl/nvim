@@ -5,6 +5,8 @@
 --- Guards all Neovim API calls (per safety checklist) and avoids serializing ephemeral state
 --- via blacklists. Returns explicit booleans plus result/error strings to keep UI layers clean.
 
+local fn, bo = vim.fn, vim.bo
+
 ---@class SessionsCore
 local M = {}
 
@@ -21,7 +23,7 @@ end
 ---@return nil
 local function ensure_dir(dir)
   if not is_dir(dir) then
-    vim.fn.mkdir(dir, "p")
+    fn.mkdir(dir, "p")
   end
 end
 
@@ -60,8 +62,8 @@ local function wipe_blacklisted_buffers()
   for i = 1, #list do
     local b = list[i]
     if vim.api.nvim_buf_is_loaded(b) then
-      local bt = vim.bo[b].buftype
-      local ft = vim.bo[b].filetype
+      local bt = bo[b].buftype
+      local ft = bo[b].filetype
       local name = vim.api.nvim_buf_get_name(b)
       local bl = require("sessions.config").cfg.blacklist
       local bad = (bt ~= "" and vim.tbl_contains(bl.buftypes, bt))
@@ -92,7 +94,7 @@ end
 ---@return boolean, string|nil
 function M.load(name)
   local si = resolve_session(name)
-  if vim.fn.filereadable(si.path) == 0 then
+  if fn.filereadable(si.path) == 0 then
     return false, "no such session: " .. si.path
   end
   apply_sessionoptions()
@@ -105,7 +107,7 @@ end
 function M.list()
   local cfg = require("sessions.config").cfg
   if not is_dir(cfg.root) then return {} end
-  local files = vim.fn.globpath(cfg.root, "*.vim", false, true)
+  local files = fn.globpath(cfg.root, "*.vim", false, true)
   table.sort(files)
   return files
 end

@@ -8,6 +8,8 @@
 --- ROADMAP:
 --- Table einbinden
 
+local fn, api = vim.fn, vim.api
+
 local M = {}
 
 ---@type LspCfg
@@ -79,7 +81,7 @@ end
 ---@return string
 function M.mode_band_group()
   local utils = require "nvchad.stl.utils"
-  local m = vim.api.nvim_get_mode().mode
+  local m = api.nvim_get_mode().mode
   local name = (utils.modes[m] and utils.modes[m][2]) or "Normal"
   return "St_" .. name .. "mode"
 end
@@ -100,7 +102,7 @@ local function cp(hex)
   if not n then
     return ""
   end
-  return vim.fn.nr2char(n)
+  return fn.nr2char(n)
 end
 
 -- ---@nodiscard
@@ -108,7 +110,7 @@ end
 -- ---@return string
 -- local function nerd_sep_or_fallback(hex)
 --   local g = cp(hex)
---   if g ~= "" and vim.fn.strdisplaywidth(g) == 1 then
+--   if g ~= "" and fn.strdisplaywidth(g) == 1 then
 --     return " " .. g .. " "
 --   end
 --   return (vim.o.columns >= 100) and " ⟶ " or " › "
@@ -125,18 +127,18 @@ function M.repo_relative(path)
   if path == "" then
     return "[No Name]"
   end
-  local dir = vim.fn.fnamemodify(path, ":h")
+  local dir = fn.fnamemodify(path, ":h")
   local gitdir = (vim.fs.find(".git", { upward = true, path = dir }) or {})[1]
   if gitdir then
-    local root = vim.fn.fnamemodify(gitdir, ":h")
-    local rel = vim.fn.fnamemodify(path, (":~:%s"):format(root))
+    local root = fn.fnamemodify(gitdir, ":h")
+    local rel = fn.fnamemodify(path, (":~:%s"):format(root))
     if rel == path then
-      return vim.fn.fnamemodify(path, ":t")
+      return fn.fnamemodify(path, ":t")
     end
     rel = rel:gsub("^%./", ""):gsub("^/", "")
     return rel
   end
-  return vim.fn.fnamemodify(path, ":~:.")
+  return fn.fnamemodify(path, ":~:.")
 end
 
 ---@nodiscard
@@ -153,7 +155,7 @@ end
 ---@return string|nil
 local function mode_band_bg_hex()
   local group = M.mode_band_group()
-  local hl = vim.api.nvim_get_hl(0, { name = group, link = false }) or {}
+  local hl = api.nvim_get_hl(0, { name = group, link = false }) or {}
   ---@diagnostic disable-next-line undefined-field
   return int_to_hex(hl.bg)
 end
@@ -166,7 +168,7 @@ local function ensure_icon_hl(fg, band_bg)
   ---@type FileIconHLCache
   M.__icon_hl = M.__icon_hl or { name = "St_FileIcon", fg = nil, bg = nil }
   if M.__icon_hl.fg ~= fg or M.__icon_hl.bg ~= band_bg then
-    vim.api.nvim_set_hl(0, M.__icon_hl.name, { fg = fg, bg = band_bg })
+    api.nvim_set_hl(0, M.__icon_hl.name, { fg = fg, bg = band_bg })
     M.__icon_hl.fg = fg
     M.__icon_hl.bg = band_bg
   end
@@ -178,7 +180,7 @@ end
 ---@return string icon, string|nil color
 local function devicon_for_path(path)
   local ok, devicons = pcall(require, "nvim-web-devicons")
-  local filename = (path == "" or path == nil) and "[No Name]" or vim.fn.fnamemodify(path, ":t")
+  local filename = (path == "" or path == nil) and "[No Name]" or fn.fnamemodify(path, ":t")
   local ext = filename:match "^.+%.(.+)$" or ""
   if not ok then
     return "󰈙", nil
@@ -206,7 +208,7 @@ end
 function M.file_icon_segment()
   local utils = require "nvchad.stl.utils"
   local bufnr = utils.stbufnr()
-  local path = vim.api.nvim_buf_get_name(bufnr) or ""
+  local path = api.nvim_buf_get_name(bufnr) or ""
   local icon, fg = devicon_for_path(path)
   local bg = mode_band_bg_hex()
   local group = ensure_icon_hl(fg, bg)
@@ -219,7 +221,7 @@ end
 function M.file_icon_segment_inherit(band_group)
   local utils = require "nvchad.stl.utils"
   local bufnr = utils.stbufnr()
-  local path = vim.api.nvim_buf_get_name(bufnr) or ""
+  local path = api.nvim_buf_get_name(bufnr) or ""
   local icon, fg = devicon_for_path(path)
   local bg = mode_band_bg_hex()
   local group = ensure_icon_hl(fg, bg)
@@ -685,7 +687,7 @@ end
 
 ---@param bufnr integer
 local function request_doc_symbols_async(bufnr)
-  if not vim.api.nvim_buf_is_loaded(bufnr) then
+  if not api.nvim_buf_is_loaded(bufnr) then
     return
   end
   local lsp = vim.lsp
@@ -756,14 +758,14 @@ end
 
 do
   if not rawget(M, "__au_lsp_breadcrumbs") then
-    local aug = vim.api.nvim_create_augroup("LspBreadcrumbsAsync", { clear = true })
+    local aug = api.nvim_create_augroup("LspBreadcrumbsAsync", { clear = true })
     for _, ev in ipairs(M.cfg.update_events) do
-      vim.api.nvim_create_autocmd(ev, {
+      api.nvim_create_autocmd(ev, {
         group = aug,
         callback = function(args)
           local bufnr = args.buf or 0
           if bufnr <= 0 then
-            bufnr = vim.api.nvim_get_current_buf()
+            bufnr = api.nvim_get_current_buf()
           end
           ensure_doc_symbols_in_bg(bufnr)
         end,
@@ -798,7 +800,7 @@ function M.symbol_context_lsp()
     return nil
   end
 
-  local cur = vim.api.nvim_win_get_cursor(0) -- 1-based
+  local cur = api.nvim_win_get_cursor(0) -- 1-based
   local l0, c0 = cur[1] - 1, cur[2]
   local keep_kinds = DEFAULT_KEEP_KINDS
 
@@ -909,7 +911,7 @@ function M.render_breadcrumbs_lspfirst()
   local rel   = _display_path_for_buf(bufnr)
   local ctx   = M.symbol_context_smart()
   local icon  = M.file_icon_segment()
-  local sep   = (function() return (" " .. (cp(SEP_HEX) ~= "" and vim.fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›")) .. " ") end)()
+  local sep   = (function() return (" " .. (cp(SEP_HEX) ~= "" and fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›")) .. " ") end)()
 
   local line = M.compact_breadcrumb_line(rel, ctx, sep, nil)
   line = M.stl_escape(line)
@@ -922,7 +924,7 @@ function M.render_breadcrumbs_inherit_lspfirst(band_group)
   local rel   = _display_path_for_buf(bufnr)
   local ctx   = M.symbol_context_smart()
   local icon  = M.file_icon_segment_inherit(band_group)
-  local sep   = (function() return (" " .. (cp(SEP_HEX) ~= "" and vim.fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›")) .. " ") end)()
+  local sep   = (function() return (" " .. (cp(SEP_HEX) ~= "" and fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›")) .. " ") end)()
 
   local line = M.compact_breadcrumb_line(rel, ctx, sep, nil)
   line = M.stl_escape(line)
