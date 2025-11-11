@@ -1,6 +1,8 @@
 ---@module 'lsp.servers.gopls'
 --- Go language server via native LSP config/enable.
 
+local lsp = vim.lsp
+
 ---@class GoplsServer
 local M = {}
 
@@ -12,7 +14,7 @@ function M.setup(shared, opts)
   opts = opts or {}
 
   if type(vim.lsp.config) == "table" then
-    vim.lsp.config("gopls", {
+    lsp.config("gopls", {
       cmd = { "gopls" },
       filetypes = { "go", "gomod", "gosum" },
       root_markers = { "go.work", "go.mod", ".git" },
@@ -30,7 +32,7 @@ function M.setup(shared, opts)
         },
       },
     })
-    if opts.enable ~= false then pcall(vim.lsp.enable, "gopls") end
+    if opts.enable ~= false then pcall(lsp.enable, "gopls") end
   end
 end
 

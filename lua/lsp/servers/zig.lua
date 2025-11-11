@@ -1,6 +1,8 @@
 ---@module 'lsp.servers.zig'
 --- zls via native LSP config/enable (Neovim ≥ 0.11).
 
+local lsp = vim.lsp
+
 ---@class ZigServer
 local M = {}
 
@@ -12,7 +14,7 @@ function M.setup(shared, opts)
   opts = opts or {}
 
   if type(vim.lsp.config) == "table" then
-    vim.lsp.config("zls", {
+    lsp.config("zls", {
       cmd = { "zls" },
       filetypes = { "zig", "zir" },
       root_markers = { "build.zig", "zls.json", ".git" },
@@ -20,7 +22,7 @@ function M.setup(shared, opts)
       on_attach = shared.on_attach,
       on_init = shared.on_init,
     })
-    if opts.enable ~= false then pcall(vim.lsp.enable, "zls") end
+    if opts.enable ~= false then pcall(lsp.enable, "zls") end
   end
 end
 

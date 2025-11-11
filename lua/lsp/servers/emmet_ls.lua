@@ -1,6 +1,8 @@
 ---@module 'lsp.servers.emmet_ls'
 --- Emmet LSP for fast HTML/CSS abbreviation completions.
 
+local lsp = vim.lsp
+
 ---@class EmmetServer
 local M = {}
 
@@ -11,8 +13,8 @@ function M.setup(shared, opts)
   shared = shared or {}
   opts = opts or {}
 
-  if type(vim.lsp.config) == "table" then
-    vim.lsp.config("emmet_ls", {
+  if type(lsp.config) == "table" then
+    lsp.config("emmet_ls", {
       cmd = { "emmet-ls", "--stdio" }, -- ensure 'emmet-ls' is installed
       filetypes = { "html", "htmldjango", "css", "scss", "javascript", "typescript", "javascriptreact", "typescriptreact" },
       root_markers = { ".git", "package.json" },

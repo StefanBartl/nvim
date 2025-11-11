@@ -3,6 +3,10 @@
 --- This module tries multiple candidate executables and falls back to Mason's bin folder.
 --- It disables server formatting by default to avoid conflicts with external formatters.
 
+local loop = vim.loop
+local fn = vim.fn
+local lsp = vim.lsp
+
 ---@class HtmlServer
 local M = {}
 
@@ -23,23 +27,23 @@ function M.setup(shared, opts)
   -- Try to resolve an executable either via exepath or Mason bin dir
   local function resolve_exec(name)
     if not name or name == "" then return nil end
-    local path = vim.fn.exepath(name)
+    local path = fn.exepath(name)
     if path and path ~= "" then
       return path
     end
 
     -- mason bin fallback
-    local mason_bin = vim.fn.stdpath("data") .. "/mason/bin/"
+    local mason_bin = fn.stdpath("data") .. "/mason/bin/"
     -- on windows, mason creates .CMD shims; test possible suffixes
     if package.config:sub(1, 1) == "\\" then
-      if vim.loop.fs_stat(mason_bin .. name .. ".cmd") then
+      if loop.fs_stat(mason_bin .. name .. ".cmd") then
         return mason_bin .. name .. ".cmd"
       end
-      if vim.loop.fs_stat(mason_bin .. name .. ".exe") then
+      if loop.fs_stat(mason_bin .. name .. ".exe") then
         return mason_bin .. name .. ".exe"
       end
     end
-    if vim.loop.fs_stat(mason_bin .. name) then
+    if loop.fs_stat(mason_bin .. name) then
       return mason_bin .. name
     end
     return nil
@@ -62,14 +66,14 @@ function M.setup(shared, opts)
     cmd = candidates
   end
 
-  if type(vim.lsp.config) ~= "table" then
+  if type(lsp.config) ~= "table" then
     return
   end
 
   ---@type string[]
   local filetypes = { "html", "htmldjango", "djangohtml", "eruby" }
 
-  vim.lsp.config("html", {
+  lsp.config("html", {
     cmd = cmd,
     filetypes = filetypes,
     root_markers = { "index.html", ".git", "package.json", "vite.config.js" },
@@ -93,7 +97,7 @@ function M.setup(shared, opts)
   })
 
   if opts.enable ~= false then
-    pcall(vim.lsp.enable, "html")
+    pcall(lsp.enable, "html")
   end
 end
 

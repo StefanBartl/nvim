@@ -4,6 +4,8 @@
 ---@class TsLsServer
 local M = {}
 
+local lsp = vim.lsp
+
 ---@param shared {capabilities?:table,on_attach?:fun(client,bufnr),on_init?:fun(client,init_result):boolean}|nil
 ---@param opts { enable?: boolean }|nil
 ---@return nil
@@ -11,14 +13,16 @@ function M.setup(shared, opts)
   shared = shared or {}
   opts = opts or {}
 
-  if type(vim.lsp.config) == "table" then
-    vim.lsp.config("ts_ls", {
+  if type(lsp.config) == "table" then
+    lsp.config("ts_ls", {
       cmd = { "typescript-language-server", "--stdio" },
       filetypes = { "typescript", "typescriptreact", "tsx", "javascript", "javascriptreact" },
       root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
       capabilities = shared.capabilities,
       on_attach = function(client, bufnr)
-        if type(shared.on_attach) == "function" then shared.on_attach(client, bufnr) end
+        if type(shared.on_attach) == "function" then
+          shared.on_attach(client, bufnr)
+        end
         -- Per-buffer diagnostic tuning can be set globally elsewhere via vim.diagnostic.config
       end,
       on_init = shared.on_init,
@@ -32,7 +36,9 @@ function M.setup(shared, opts)
         },
       },
     })
-    if opts.enable ~= false then pcall(vim.lsp.enable, "ts_ls") end
+    if opts.enable ~= false then
+      pcall(lsp.enable, "ts_ls")
+    end
   end
 end
 
