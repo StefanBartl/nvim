@@ -2,8 +2,12 @@
 --- Opinionated Neovim options grouped by topic.
 
 --require("nvchad.options") --- Loads NvChad defaults first, then applies custom overrides.
+local o = vim.o
 local opt = vim.opt
 local wo = vim.wo
+local fn = vim.fn
+local opt_local = vim.opt_local
+local api = vim.api
 
 -----------------------------------------------------------
 -- Appearance & UI
@@ -70,16 +74,16 @@ opt.foldlevelstart = 99
 
 -- Markdown-specific folding via utils.markdown.foldexpr only for markdown buffers
 do
-  local grp = vim.api.nvim_create_augroup("MarkdownLocalFolds", { clear = true })
-  vim.api.nvim_create_autocmd("FileType", {
+  local grp = api.nvim_create_augroup("MarkdownLocalFolds", { clear = true })
+  api.nvim_create_autocmd("FileType", {
     group = grp,
     pattern = { "markdown" },
     callback = function()
-      vim.opt_local.foldmethod = "expr"
-      vim.opt_local.foldexpr = "v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)"
-      vim.opt_local.foldenable = true
-      vim.opt_local.foldlevel = 99
-      vim.opt_local.foldlevelstart = 99
+      opt_local.foldmethod = "expr"
+      opt_local.foldexpr = "v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)"
+      opt_local.foldenable = true
+      opt_local.foldlevel = 99
+      opt_local.foldlevelstart = 99
     end,
     desc = "Enable lightweight markdown-specific folding only for markdown buffers",
   })
@@ -117,40 +121,40 @@ opt.wildignore:append({
 opt.backup = false
 opt.writebackup = false
 -- Example: dedicated backup directory:
--- opt.backupdir = vim.fn.stdpath("data") .. "/backup//"
+-- opt.backupdir = fn.stdpath("data") .. "/backup//"
 
 -- Disable swap files to reduce disk churn on large repos.
 opt.swapfile = false
 -- Example: dedicated swap directory:
--- opt.directory = vim.fn.stdpath("data") .. "/swap//"
+-- opt.directory = fn.stdpath("data") .. "/swap//"
 
 -- Enable persistent undo and store it under the cache path.
 opt.undofile = true
-opt.undodir = vim.fn.stdpath("cache") .. "/undo"
+opt.undodir = fn.stdpath("cache") .. "/undo"
 
 
 -----------------------------------------------------------
 -- Terminals
 -----------------------------------------------------------
 
-if vim.fn.has("win32") == 1 then
-  if vim.fn.executable("pwsh") == 1 then
-    vim.o.shell = "pwsh.exe"
-    vim.o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
-    vim.o.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    vim.o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    vim.o.shellquote = ""
-    vim.o.shellxquote = ""
-  elseif vim.fn.executable("powershell") == 1 then
-    vim.o.shell = "powershell.exe"
-    vim.o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
-    vim.o.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    vim.o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    vim.o.shellquote = ""
-    vim.o.shellxquote = ""
+if fn.has("win32") == 1 then
+  if fn.executable("pwsh") == 1 then
+    o.shell = "pwsh.exe"
+    o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+    o.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    o.shellquote = ""
+    o.shellxquote = ""
+  elseif fn.executable("powershell") == 1 then
+    o.shell = "powershell.exe"
+    o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+    o.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    o.shellquote = ""
+    o.shellxquote = ""
   end
 else
-  vim.o.shell = vim.fn.executable("zsh") == 1 and "zsh" or "bash"
-  vim.o.shellcmdflag = "-c"
+  o.shell = fn.executable("zsh") == 1 and "zsh" or "bash"
+  o.shellcmdflag = "-c"
 end
 
