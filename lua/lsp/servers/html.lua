@@ -1,0 +1,100 @@
+---@module 'lsp.servers.html'
+--- Robust HTML language server definition with Mason/Windows fallbacks.
+--- This module tries multiple candidate executables and falls back to Mason's bin folder.
+--- It disables server formatting by default to avoid conflicts with external formatters.
+
+---@class HtmlServer
+local M = {}
+
+---@param shared table|nil  -- { capabilities?:table, on_attach?:fun(client,bufnr), on_init?:fun(client,init_result):boolean }
+---@param opts table|nil    -- { enable?: boolean, cmd?: string[] }
+---@return nil
+function M.setup(shared, opts)
+  shared = shared or {}
+  opts = opts or {}
+
+  ---@type string[]
+  local candidates = opts.cmd or {
+    "vscode-html-language-server",
+    "html-languageserver",
+    "html-lsp",
+  }
+
+  -- Try to resolve an executable either via exepath or Mason bin dir
+  local function resolve_exec(name)
+    if not name or name == "" then return nil end
+    local path = vim.fn.exepath(name)
+    if path and path ~= "" then
+      return path
+    end
+
+    -- mason bin fallback
+    local mason_bin = vim.fn.stdpath("data") .. "/mason/bin/"
+    -- on windows, mason creates .CMD shims; test possible suffixes
+    if package.config:sub(1, 1) == "\\" then
+      if vim.loop.fs_stat(mason_bin .. name .. ".cmd") then
+        return mason_bin .. name .. ".cmd"
+      end
+      if vim.loop.fs_stat(mason_bin .. name .. ".exe") then
+        return mason_bin .. name .. ".exe"
+      end
+    end
+    if vim.loop.fs_stat(mason_bin .. name) then
+      return mason_bin .. name
+    end
+    return nil
+  end
+
+  local exe = nil
+  for i = 1, #candidates do
+    local p = resolve_exec(candidates[i])
+    if p then
+      exe = p
+      break
+    end
+  end
+
+  local cmd = nil
+  if exe then
+    cmd = { exe, "--stdio" }
+  else
+    -- keep candidate list to surface meaningful error if nothing found
+    cmd = candidates
+  end
+
+  if type(vim.lsp.config) ~= "table" then
+    return
+  end
+
+  ---@type string[]
+  local filetypes = { "html", "htmldjango", "djangohtml", "eruby" }
+
+  vim.lsp.config("html", {
+    cmd = cmd,
+    filetypes = filetypes,
+    root_markers = { "index.html", ".git", "package.json", "vite.config.js" },
+    capabilities = shared.capabilities,
+    on_attach = function(client, bufnr)
+      if type(shared.on_attach) == "function" then
+        pcall(shared.on_attach, client, bufnr)
+      end
+      -- Prefer external formatters (prettier/conform). Avoid LSP formatting conflicts.
+      if client and client.server_capabilities and client.server_capabilities.documentFormattingProvider then
+        client.server_capabilities.documentFormattingProvider = false
+      end
+    end,
+    on_init = shared.on_init,
+    settings = {
+      html = {
+        suggest = { html5 = true },
+        format = { enable = false },
+      },
+    },
+  })
+
+  if opts.enable ~= false then
+    pcall(vim.lsp.enable, "html")
+  end
+end
+
+return M

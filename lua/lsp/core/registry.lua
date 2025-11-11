@@ -8,6 +8,8 @@ local ACTIVE = {
   "ts_ls",
   "gopls",
 	"marksman",
+	"emmet_ls",
+	"html",
   --"clangd",
   --"csharp",
   --"zig",
