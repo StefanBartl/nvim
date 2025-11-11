@@ -2,11 +2,14 @@
 ---@module 'lsp.languages.markdown'
 ---@class LangMdQoL
 
+local api = vim.api
+local lsp = vim.lsp
+local desc_tag = "[lsp] "
+
 local M = {}
 
 ---@return nil
 function M.enable()
-  local api = vim.api
   local grp = api.nvim_create_augroup("LangMarkdownQoL", { clear = true })
 
   api.nvim_create_autocmd("FileType", {
@@ -34,32 +37,32 @@ function M.enable()
         if ok and type(conform.format) == "function" then
           conform.format({ bufnr = ev.buf, timeout_ms = 2000, lsp_fallback = false })
         else
-          vim.lsp.buf.format({ bufnr = ev.buf, timeout_ms = 2000 })
+          lsp.buf.format({ bufnr = ev.buf, timeout_ms = 2000 })
         end
-      end, { buffer = ev.buf, silent = true, desc = "Format markdown buffer" })
+      end, { buffer = ev.buf, silent = true, desc = desc_tag .. "Format markdown buffer" })
     end,
-    desc = "Markdown QoL: UTF-8 (nur bei modifizierbar), Soft-Defaults, Format-Keymap",
+    desc = desc_tag .. "Markdown QoL: UTF-8 (nur bei modifizierbar), Soft-Defaults, Format-Keymap",
   })
 
   pcall(api.nvim_create_user_command, "MdFormat", function()
     local ft = vim.bo.filetype
     local ok, conform = pcall(require, "conform")
     if not ok or type(conform.format) ~= "function" then
-      vim.lsp.buf.format({ timeout_ms = 2000 })
+      lsp.buf.format({ timeout_ms = 2000 })
       return
     end
     local fmt = (ft == "markdown") and { "mdformat", "prettierd", "prettier" } or { "prettierd", "prettier" }
     conform.format({ formatters = fmt, timeout_ms = 2000, lsp_fallback = false })
-  end, { desc = "Format Markdown (prefer mdformat for .md)" })
+  end, { desc = desc_tag .. "Format Markdown (prefer mdformat for .md)" })
 
   pcall(api.nvim_create_user_command, "MdFormatPrettier", function()
     local ok, conform = pcall(require, "conform")
     if ok and type(conform.format) == "function" then
       conform.format({ formatters = { "prettierd", "prettier" }, timeout_ms = 2000, lsp_fallback = false })
     else
-      vim.lsp.buf.format({ timeout_ms = 2000 })
+      lsp.buf.format({ timeout_ms = 2000 })
     end
-  end, { desc = "Format via Prettier" })
+  end, { desc = desc_tag .. "Format via Prettier" })
 end
 
 return M

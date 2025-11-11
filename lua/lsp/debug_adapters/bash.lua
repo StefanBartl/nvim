@@ -2,16 +2,17 @@
 --- Bash debugging via bash-debug-adapter (DAP).
 --- Requires: Mason 'bash-debug-adapter'.
 
-local dap = require("dap")
+local adapters = require("dap").adapters
+local configurations = require("dap").configurations
 
 -- Adapter definition (node-based adapter started by Mason)
-dap.adapters.bashdb = {
+adapters.bashdb = {
   type = "executable",
   command = vim.fn.exepath("bash-debug-adapter"),
   args = {},
 }
 
-dap.configurations.sh = {
+configurations.sh = {
   {
     type = "bashdb",
     request = "launch",
@@ -29,6 +30,6 @@ dap.configurations.sh = {
 }
 
 -- Reuse same config for bash/zsh/ksh by aliasing
-dap.configurations.bash = dap.configurations.sh
-dap.configurations.zsh  = dap.configurations.sh
-dap.configurations.ksh  = dap.configurations.sh
+configurations.bash = configurations.sh
+configurations.zsh  = configurations.sh
+configurations.ksh  = configurations.sh

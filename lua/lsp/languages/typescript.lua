@@ -1,21 +1,7 @@
 ---@module 'lsp.languages.typescript'
 
--- AUDIT:
----@class LangTsQoL
-
--- Local structural typings for LuaLS (avoid dependency on external doc names)
-
----@class LspClient
----@field name? string
----@field server_capabilities { codeActionProvider?: boolean|{ codeActionKinds?: string[] } }|nil
----@field offset_encoding? string
----@field supports_method fun(self: LspClient, method: string): boolean
----@field request fun(self: LspClient, method: string, params: table, handler: fun(...: any), bufnr: integer)
-
----@class CodeActionParams
----@field textDocument { uri: string }
----@field range { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }
----@field context { only?: string[], diagnostics?: table[] }
+local lsp = vim.lsp
+local api = vim.api
 
 local M = {}
 
@@ -46,7 +32,7 @@ end
 ---@param bufnr integer
 ---@return boolean applied
 local function organize_imports_sync(bufnr)
-  local clients = vim.lsp.get_clients { bufnr = bufnr }
+  local clients = lsp.get_clients { bufnr = bufnr }
   if #clients == 0 then
     return false
   end
@@ -67,8 +53,8 @@ local function organize_imports_sync(bufnr)
 
   local enc = eligible[1].offset_encoding or "utf-16"
 
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
-  local td = vim.lsp.util.make_text_document_params(bufnr)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  local td = lsp.util.make_text_document_params(bufnr)
 
   ---@type CodeActionParams
   local params = {
@@ -80,7 +66,7 @@ local function organize_imports_sync(bufnr)
     context = { only = { "source.organizeImports" }, diagnostics = {} },
   }
 
-  local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 1000)
+  local results = lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 1000)
   if not results then
     return false
   end
@@ -112,8 +98,8 @@ end
 
 ---@return nil
 function M.enable()
-  local grp = vim.api.nvim_create_augroup("LangTs", { clear = true })
-  vim.api.nvim_create_autocmd("BufWritePre", {
+  local grp = api.nvim_create_augroup("LangTs", { clear = true })
+  api.nvim_create_autocmd("BufWritePre", {
     group = grp,
     pattern = { "*.ts", "*.tsx", "*.js", "*.jsx" },
     callback = function(ev)

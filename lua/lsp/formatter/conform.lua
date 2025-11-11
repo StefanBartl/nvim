@@ -3,6 +3,11 @@
 --- Adds a helper to format while preserving all window views that display the buffer.
 --- Linux/macOS focused; works when Conform is available.
 
+local api = vim.api
+local fn = vim.fn
+local env = vim.env
+local uv = vim.uv or vim.loop
+
 ---@class ConformPolicy
 local M = {}
 
@@ -10,10 +15,10 @@ local M = {}
 -- Keeps the user's PATH untouched beyond prepending a single path once.
 local function ensure_mason_in_path()
   local sep = (package.config:sub(1, 1) == "\\") and ";" or ":"
-  local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
-  local PATH = vim.env.PATH or ""
+  local mason_bin = fn.stdpath("data") .. "/mason/bin"
+  local PATH = env.PATH or ""
   if not string.find(PATH, mason_bin, 1, true) then
-    vim.env.PATH = mason_bin .. sep .. PATH
+    env.PATH = mason_bin .. sep .. PATH
   end
 end
 
@@ -22,23 +27,22 @@ end
 ---@param cmd string
 ---@return string
 local function resolve(cmd)
-  local exepath = vim.fn.exepath(cmd)
+  local exepath = fn.exepath(cmd)
   if exepath ~= nil and exepath ~= "" then
     return exepath
   end
-  local uv = vim.uv or vim.loop
 		---@diagnostic disable-next-line os_homedir exists in uv library
   local home = (uv.os_homedir and uv.os_homedir()) or os.getenv("HOME") or os.getenv("USERPROFILE") or ""
   ---@type string[]
   local candidates = {
-    vim.fn.stdpath("data") .. "/mason/bin/" .. cmd .. (package.config:sub(1, 1) == "\\" and ".cmd" or ""),
+    fn.stdpath("data") .. "/mason/bin/" .. cmd .. (package.config:sub(1, 1) == "\\" and ".cmd" or ""),
     home .. "/.local/bin/" .. cmd,
     home .. "/.pyenv/shims/" .. cmd,
     home .. "/AppData/Roaming/Python/Scripts/" .. cmd .. ".exe",
   }
   for i = 1, #candidates do
     local p = candidates[i]
-    if type(p) == "string" and p ~= "" and ((uv.fs_stat and uv.fs_stat(p)) or vim.fn.filereadable(p) == 1) then
+    if type(p) == "string" and p ~= "" and ((uv.fs_stat and uv.fs_stat(p)) or fn.filereadable(p) == 1) then
       return p
     end
   end
@@ -50,11 +54,11 @@ end
 ---@return table<integer, table> views_by_win
 local function collect_views(bufnr)
   local views = {} ---@type table<integer, table>
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == bufnr then
+  for _, win in ipairs(api.nvim_list_wins()) do
+    if api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == bufnr then
       -- winsaveview() is per-current-window; use nvim_win_call to scope it.
-      local ok, view = pcall(vim.api.nvim_win_call, win, function()
-        return vim.fn.winsaveview()
+      local ok, view = pcall(api.nvim_win_call, win, function()
+        return fn.winsaveview()
       end)
       if ok and type(view) == "table" then
         views[win] = view
@@ -69,9 +73,9 @@ end
 ---@return nil
 local function restore_views(views_by_win)
   for win, view in pairs(views_by_win) do
-    if vim.api.nvim_win_is_valid(win) then
-      pcall(vim.api.nvim_win_call, win, function()
-        pcall(vim.fn.winrestview, view)
+    if api.nvim_win_is_valid(win) then
+      pcall(api.nvim_win_call, win, function()
+        pcall(fn.winrestview, view)
       end)
     end
   end
@@ -191,7 +195,7 @@ function M.which(bufnr)
     local cmd = (name == "mdformat" and resolve("mdformat"))
       or (name == "prettierd" and resolve("prettierd"))
       or resolve("prettier")
-    local found = vim.fn.exepath(cmd) or ""
+    local found = fn.exepath(cmd) or ""
     local ok = (found ~= "")
     lines[#lines + 1] =
       string.format(" - %s: %s%s", name, (ok and found or cmd), ok and " (available)" or " (NOT FOUND)")

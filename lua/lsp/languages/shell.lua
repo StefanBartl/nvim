@@ -3,6 +3,8 @@
 --- Requires bash-language-server in PATH (Mason: bash-language-server).
 --- Diagnostics are powered by shellcheck when available.
 
+local lsp = vim.lsp
+
 ---@class BashLsServer
 local M = {}
 
@@ -31,14 +33,14 @@ function M.enable(shared, opts)
   shared = shared or {}
   opts = opts or {}
 
-  if type(vim.lsp.config) ~= "table" then
+  if type(lsp.config) ~= "table" then
     vim.notify("vim.lsp.config is unavailable; cannot configure bashls", vim.log.levels.WARN)
     return
   end
 
   -- bashls understands POSIX sh and bash; for zsh, completion/diagnostics are useful
   -- but not 100% semantisch exakt. Das ist ein pragmatischer Kompromiss.
-  vim.lsp.config("bashls", {
+  lsp.config("bashls", {
     cmd = { "bash-language-server", "start" },
     filetypes = { "sh", "bash", "zsh", "ksh" },
     root_markers = { ".git", "shell.nix" },
@@ -48,7 +50,7 @@ function M.enable(shared, opts)
     settings = settings(),
   })
 
-  if opts.enable ~= false then pcall(vim.lsp.enable, "bashls") end
+  if opts.enable ~= false then pcall(lsp.enable, "bashls") end
 end
 
 return M

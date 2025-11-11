@@ -1,6 +1,11 @@
 ---@module 'lsp.core.registry'
 
+local notify = vim.notify
+local levels = vim.log.levels
+
 local M = {}
+
+local desc_tag = "[lsp.registry] "
 
 local ACTIVE = {
 	"bashls",
@@ -21,11 +26,11 @@ function M.setup_all(shared)
     local mod = "lsp.servers." .. name
     local ok, srv = pcall(require, mod)
     if not ok or type(srv) ~= "table" or type(srv.setup) ~= "function" then
-      vim.notify(("LSP: server module '%s' unavailable"):format(name), vim.log.levels.INFO)
+      notify((desc_tag .. "server module '%s' unavailable"):format(name), levels.INFO)
     else
       local ok_setup, err = pcall(srv.setup, shared)
       if not ok_setup then
-        vim.notify(("LSP: setup failed for '%s': %s"):format(name, err or "?"), vim.log.levels.WARN)
+        notify((desc_tag .. "setup failed for '%s': %s"):format(name, err or "?"), levels.WARN)
       end
     end
   end

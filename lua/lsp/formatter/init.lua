@@ -1,9 +1,8 @@
 ---@module 'lsp.formatter.init'
 --- Formatter API with on-save toggle, Conform-first strategy, and view preservation.
 --- Linux/macOS only; no Windows-specific branches.
----@version 1.1.0
 
--- Type aliases and public API contracts -------------------------------------
+local api = vim.api
 
 local M = {}
 
@@ -24,12 +23,10 @@ function M.build(opts)
   local util_ok, util = pcall(require, "lsp.core.util")
   local ok_confmod, confmod = pcall(require, "lsp.formatter.conform")
 
-  ---@class FormatterState
-  ---@field enabled boolean
-  ---@field augroup integer
+  ---@type FormatterState
   local STATE = {
     enabled = opts.format_on_save == true,
-    augroup = vim.api.nvim_create_augroup("LspFormatOnSave", { clear = true }),
+    augroup = api.nvim_create_augroup("LspFormatOnSave", { clear = true }),
   }
 
   --- Check if any attached LSP client can format the given buffer.
@@ -48,9 +45,9 @@ function M.build(opts)
   ---@return table<integer, table>
   local function collect_views(bufnr)
     local views = {} ---@type table<integer, table>
-    for _, win in ipairs(vim.api.nvim_list_wins()) do
-      if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == bufnr then
-        local ok, view = pcall(vim.api.nvim_win_call, win, function()
+    for _, win in ipairs(api.nvim_list_wins()) do
+      if api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == bufnr then
+        local ok, view = pcall(api.nvim_win_call, win, function()
           return vim.fn.winsaveview()
         end)
         if ok and type(view) == "table" then
@@ -66,8 +63,8 @@ function M.build(opts)
   ---@return nil
   local function restore_views(views_by_win)
     for win, view in pairs(views_by_win) do
-      if vim.api.nvim_win_is_valid(win) then
-        pcall(vim.api.nvim_win_call, win, function()
+      if api.nvim_win_is_valid(win) then
+        pcall(api.nvim_win_call, win, function()
           pcall(vim.fn.winrestview, view)
         end)
       end
@@ -132,11 +129,11 @@ function M.build(opts)
   --- Uses synchronous formatting to keep view restore deterministic within the write chain.
   local function create_autocmd_if_enabled()
     -- Clear any previous autocmds in our group first (idempotent)
-    pcall(vim.api.nvim_clear_autocmds, { group = STATE.augroup })
+    pcall(api.nvim_clear_autocmds, { group = STATE.augroup })
     if not STATE.enabled then
       return
     end
-    vim.api.nvim_create_autocmd("BufWritePre", {
+    api.nvim_create_autocmd("BufWritePre", {
       group = STATE.augroup,
       callback = function(ev)
         if vim.bo[ev.buf].buftype ~= "" then
@@ -167,7 +164,7 @@ function M.build(opts)
       return true
     end
     STATE.enabled = false
-    pcall(vim.api.nvim_clear_autocmds, { group = STATE.augroup })
+    pcall(api.nvim_clear_autocmds, { group = STATE.augroup })
     return true
   end
 
@@ -178,7 +175,7 @@ function M.build(opts)
     if STATE.enabled then
       create_autocmd_if_enabled()
     else
-      pcall(vim.api.nvim_clear_autocmds, { group = STATE.augroup })
+      pcall(api.nvim_clear_autocmds, { group = STATE.augroup })
     end
     return STATE.enabled
   end
