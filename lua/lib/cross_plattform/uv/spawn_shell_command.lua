@@ -16,16 +16,17 @@ return function (cmd, args, opts)
   if vim.fn.has("win32") == 1 then
     shell = "cmd.exe"
     shell_flag = "/c"
-    full_cmd = table.concat(vim.tbl_flatten({ cmd, args }), " ")
+    full_cmd = table.concat(vim.iter({ cmd, args }):flatten(), " ")
     args = { shell_flag, full_cmd }
   else
     shell = "/bin/sh"
     shell_flag = "-c"
-    full_cmd = table.concat(vim.tbl_flatten({ cmd, args }), " ")
+    full_cmd = table.concat(vim.iter({ cmd, args }):flatten(), " ")
     args = { shell_flag, full_cmd }
   end
 
   local handle
+	---@diagnostic disable-next-line lib.uv
   handle = uv.spawn(shell, {
     args = args,
     stdio = opts.stdio or { nil, 1, 2 }, -- default: inherit stdout/stderr
@@ -35,6 +36,7 @@ return function (cmd, args, opts)
     else
       print(("Command exited with code %d, signal %s"):format(code, tostring(signal)))
     end
+	---@diagnostic disable-next-line lib.uv
     handle:close()
   end)
 

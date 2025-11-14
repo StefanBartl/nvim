@@ -77,6 +77,7 @@ local function split_target_and_fragment(s)
   if s:match("^<.+>$") then s = s:sub(2, -2) end
   s = trim(s)
   -- sometimes title-like syntax "file.md 'title'" may appear; keep only token before space
+  if not s then return nil end
   local token = s:match("^(%S+)")
   if not token then token = s end
   local before, frag = token:match("^(.-)#(.-)$")

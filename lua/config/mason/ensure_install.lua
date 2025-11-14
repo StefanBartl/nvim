@@ -29,9 +29,6 @@
 ---     },
 ---   })
 
----@alias MasonEnsureMap table<string, boolean>
-
----@class MasonEnsure
 local M = {}
 
 -- =====================================================================================

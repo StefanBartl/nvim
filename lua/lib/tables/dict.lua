@@ -1,6 +1,8 @@
 ---@module 'lib.tables.dict'
 --- Helpers for dictionary-like tables (non-array).
 
+---@diagnostic disable
+
 ---@class TablesDict
 local M = {}
 

@@ -1,6 +1,7 @@
 ---@module 'lib.tables.set'
 --- Simple generic Set<T> implemented as table<T, true> with helper functions.
---- English comments inside code.
+
+---@diagnostic disable
 
 ---@class TablesSet
 local M = {}

@@ -3,6 +3,7 @@
 --- Works on all platforms including Windows; no external dependencies.
 
 ---FIX: LSP
+---@diagnostic disable
 
 local M = {}
 

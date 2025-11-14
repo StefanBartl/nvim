@@ -1,6 +1,8 @@
 ---@module 'lib.tables.safe'
 --- Safe, defensive mutators and iteration guards for tables.
 
+---@diagnostic disable
+
 ---@class LibTablesSafe
 local S = {}
 

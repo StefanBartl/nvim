@@ -165,6 +165,7 @@ function P.path_relative(mode, path)
       return rel
     end
     -- No repo → fall through to home or cwd according to taste; here: home
+	---@diagnostic disable-next-line lib.uv
     return home_tilde(rel_from(vim.loop.os_homedir() or "", abs))
   elseif mode == "cwd" then
     local cwd = norm_sep(fn.getcwd())

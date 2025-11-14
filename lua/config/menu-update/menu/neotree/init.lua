@@ -96,8 +96,8 @@ local function is_entry_applicable(entry, state)
 end
 
 ---@param entry custom_neotree_entry
----@param state table
----@param window_map table
+---@param state table|nil
+---@param window_map table|nil
 ---@return table|nil
 local function build_entry(entry, state, window_map)
   if entry == nil then return nil end

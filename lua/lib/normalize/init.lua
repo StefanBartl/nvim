@@ -543,10 +543,9 @@ end
 ---@param tbl table
 ---@param key string
 ---@param val any
----@param min_arity integer|nil
----@param max_arity integer|nil
+---@param _ integer|nil
 ---@return boolean
-function M.apply_fun(tbl, key, val, min_arity, max_arity)
+function M.apply_fun(tbl, key, val, _, _)
   if type(val) ~= "function" then return false end
   -- Lua does not expose arity reliably; keep placeholders for future checks.
   tbl[key] = val
@@ -586,7 +585,8 @@ function M.apply_schema(state, opts, schema)
       if opts[k] ~= nil then
         local ok = field.apply(state, k, opts[k])
         if not ok then
-          -- keep default; do not write nil into typed fields
+					-- keep default; do not write nil into typed fields
+					ok = ok
         end
       end
     end

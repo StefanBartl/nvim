@@ -2,6 +2,7 @@
 --- Utility library for inspecting and reacting to Neovim buffers.
 
 ---FIX: LSP
+---@diagnostic disable
 
 local M = {}
 

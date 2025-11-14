@@ -24,10 +24,10 @@ local function safe_to_open_dashboard()
   -- current buffer/window info
   local bufnr = vim.api.nvim_get_current_buf()
   local bufname = vim.api.nvim_buf_get_name(bufnr) or ""
-  local filetype = vim.api.nvim_buf_get_option(bufnr, "filetype") or ""
-  local buftype = vim.api.nvim_buf_get_option(bufnr, "buftype") or ""
-  local modifiable = vim.api.nvim_buf_get_option(bufnr, "modifiable")
-  local buflisted = vim.api.nvim_buf_get_option(bufnr, "buflisted")
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) or ""
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) or ""
+  local modifiable = vim.api.nvim_get_option_value("modifiable", { buf = bufnr })
+  local buflisted = vim.api.nvim_get_option_value("buflisted", { buf = bufnr })
 
   -- Exclude special buftypes and filetypes that are typically not user-edit buffers.
   local forbidden_filetypes = {

@@ -9,7 +9,7 @@ local api = vim.api
 ---@param cfg GitAutoCmdsCommitFtCfg
 ---@param _shared table
 ---@return nil
-function M.enable(cfg, _shared)
+function M.enable(cfg, _)
   if not (cfg and cfg.enable) then return end
 
   api.nvim_create_autocmd("FileType", {

@@ -5,8 +5,6 @@
 
 -- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren:
 
--- require("autocmds.open_neotree").open_neotree_if_last_buffer()
-
 require("autocmds.auto-center-fexplorer").setup()
 
 ------------------------------------------------------

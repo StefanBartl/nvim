@@ -82,8 +82,8 @@ local function extract_url_from_line(line)
   local md = line:match("%[.-%]%((.-)%)")
   if md and md ~= "" then
     md = trim(md)
-    if md:match("^<.+>$") then md = md:sub(2, -2) end
-    if is_explicit_url(md) then
+    if md and md:match("^<.+>$") then md = md:sub(2, -2) end
+    if md and is_explicit_url(md) then
       return md
     end
     -- If markdown link target is not a http(s) URL, treat as non-URL (return nil)

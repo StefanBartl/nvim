@@ -1,6 +1,8 @@
 ---@module 'lib.tables.types.aliases'
 --- Central alias definitions for shared typing across modules.
 
+---@diagnostic disable
+
 ---@generic T
 ---@alias Array<T> T[]
 

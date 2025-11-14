@@ -45,7 +45,6 @@ local uv = (vim and (vim.uv or vim.loop)) or nil
 ---@field wsl_to_win fun(path: string): string                       -- no-op on non-WSL
 ---@field win_to_wsl fun(path: string): string                       -- no-op on non-WSL
 
-local M ---@class OsModule
 M = {}
 
 -- Reuse your existing single-function detector.
@@ -276,9 +275,9 @@ function M.copy_to_clipboard(text)
 
   -- 3) Linux: xclip / wl-copy (best effort)
   if M.is_linux() and not M.is_wsl() then
-    local r1 = M.run_blocking("xclip -selection clipboard", text)
+    local r1 = M.run_blocking("xclip -selection clipboard " .. text)
     if r1.code == 0 then return true end
-    local r2 = M.run_blocking("wl-copy", text)
+    local r2 = M.run_blocking("wl-copy " .. text)
     if r2.code == 0 then return true end
   end
 

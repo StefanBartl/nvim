@@ -184,7 +184,7 @@ end
 
 -- Semantic tokens refresh probe (non-blocking, short timeout)
 ---@param bufnr integer
----@param clients_by_name table<string, lsp.Client>
+---@param clients_by_name table<string, vim.lsp.Client>
 ---@return string[] lines
 local function probe_semantic_tokens(bufnr, clients_by_name)
   local lines = {}

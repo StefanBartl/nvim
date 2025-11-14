@@ -2,35 +2,35 @@
 --- High-performance helpers for Array<T> (contiguous 1..n lists).
 --- All functions avoid reallocation when possible and pre-size outputs.
 
+---@diagnostic disable
+
 ---@class TablesArray
 local M = {}
 
-local unpack = table.unpack or unpack
-
 --- Return length using # (assumes dense array).
----@generic T
----@param xs T[]
+---@class Array<T>: { [integer]: T }
+---@param xs Array<T>
 ---@return integer
 function M.len(xs)
   return #xs
 end
 
 --- Create a shallow copy of a dense array.
----@generic T
----@param xs T[]
----@return T[]
+---@class Array<T>: { [integer]: T }
+---@param xs Array<T>
+---@return Array<T>
 function M.clone(xs)
   local n = #xs
-  ---@type T[]
+  ---@type Array<T>
   local out = { [n] = xs[n] } -- pre-size; value will be overwritten below
   for i = 1, n do out[i] = xs[i] end
   return out
 end
 
 --- Map over a dense array with preallocation.
----@generic T, R
----@param xs T[]
----@param f fun(v: T, i: integer, xs: T[]): R
+---@class Array<T>: { [integer]: T }
+---@param xs Array<T>
+---@param f fun(v: T, i: integer, xs: Array<T>): R
 ---@return R[]
 function M.map(xs, f)
   local n = #xs
@@ -41,13 +41,13 @@ function M.map(xs, f)
 end
 
 --- Filter a dense array. Prealloc then compact in one pass.
----@generic T
----@param xs T[]
----@param pred fun(v: T, i: integer, xs: T[]): boolean
----@return T[]
+---@class Array<T>: { [integer]: T }
+---@param xs Array<T>
+---@param pred fun(v: T, i: integer, xs: Array<T>): boolean
+---@return Array<T>
 function M.filter(xs, pred)
   local n = #xs
-  ---@type T[]
+  ---@type Array<T>
   local out = { [n] = xs[n] }
   local m = 0
   for i = 1, n do
@@ -62,8 +62,8 @@ function M.filter(xs, pred)
 end
 
 --- Reduce with explicit initial accumulator.
----@generic T, A
----@param xs T[]
+---@class Array<T>: { [integer]: T }
+---@param xs Array<T>
 ---@param f fun(acc: A, v: T, i: integer): A
 ---@param init A
 ---@return A
@@ -74,15 +74,15 @@ function M.reduce(xs, f, init)
 end
 
 --- Partition into {pass, fail} according to predicate.
----@generic T
----@param xs T[]
----@param pred fun(v: T, i: integer, xs: T[]): boolean
----@return T[] pass, T[] fail
+---@class Array<T>: { [integer]: T }
+---@param xs Array<T>
+---@param pred fun(v: T, i: integer, xs: Array<T>): boolean
+---@return Array<T> pass, Array<T> fail
 function M.partition(xs, pred)
   local n = #xs
-  ---@type T[]
+  ---@type Array<T>
   local pass = { [n] = xs[n] }
-  ---@type T[]
+  ---@type Array<T>
   local fail = { [n] = xs[n] }
   local p, q = 0, 0
   for i = 1, n do
@@ -95,13 +95,13 @@ function M.partition(xs, pred)
 end
 
 --- Flatten one level of nested arrays.
----@generic T
----@param xss T[][]
----@return T[]
+---@class Array<T>: { [integer]: T }
+---@param xss Array<T>[]
+---@return Array<T>
 function M.flatten(xss)
   local total = 0
   for i = 1, #xss do total = total + #xss[i] end
-  ---@type T[]
+  ---@type Array<T>
   local out = { [total] = false }
   local k = 0
   for i = 1, #xss do
@@ -115,13 +115,13 @@ function M.flatten(xss)
 end
 
 --- Unique by equality (O(n) with set if primitives).
----@generic T
----@param xs T[]
----@return T[]
+---@class Array<T>: { [integer]: T }
+---@param xs Array<T>
+---@return Array<T>
 function M.unique(xs)
   local seen = {}
   local n = #xs
-  ---@type T[]
+  ---@type Array<T>
   local out = { [n] = xs[n] }
   local k = 0
   for i = 1, n do
@@ -157,10 +157,10 @@ function M.pluck(xs, key)
 end
 
 --- Sort copy (stable-ish for small arrays); does not mutate input.
----@generic T
----@param xs T[]
+---@class Array<T>: { [integer]: T }
+---@param xs Array<T>
 ---@param cmp fun(a: T, b: T): boolean
----@return T[]
+---@return Array<T>
 function M.sorted(xs, cmp)
   local out = M.clone(xs)
   table.sort(out, cmp)

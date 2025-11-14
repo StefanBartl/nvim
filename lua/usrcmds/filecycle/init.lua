@@ -26,6 +26,7 @@ local api, fn, uv = vim.api, vim.fn, (vim.uv or vim.loop)
 ---@param follow boolean
 ---@return FilePath
 local function canon(p, follow)
+	---@diagnostic disable-next-line lib.uv
 	if follow and uv and uv.fs_realpath then
 		---@diagnostic disable-next-line lib.uv
 		local rp = uv.fs_realpath(p)

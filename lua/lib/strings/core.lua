@@ -89,7 +89,7 @@ end
 
 ---@nodiscard
 ---@param s string
----@return string
+---@return string|nil
 function S.normalize_ws(s)
   return (s:gsub("%s+", " ")):gsub("^%s+", ""):gsub("%s+$", "")
 end
@@ -212,7 +212,8 @@ function S.dedent(s)
     local _, spaces = line:find("^[ ]*")
     local count = spaces and #spaces or 0
     if line:find("%S") then
-      min = (min == nil) and count or math.min(min, count)
+	---@diagnostic disable-next-line
+			min = (min == nil) and count or math.min(min, count)
     end
   end
   if not min or min == 0 then return s end

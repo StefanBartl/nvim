@@ -124,8 +124,10 @@ return function (opts)
           vim.notify("System clipboard is empty", vim.log.levels.INFO)
           return
         end
+
+				if type(text) ~= "string" then return end
         -- Insert at cursor position preserving as much context as possible
-        local lines = vim.split(text, "\n", true)
+        local lines = vim.split(text, "\n", { plain = true })
         -- nvim_put arguments: lines, type, after, follow
         vim.api.nvim_put(lines, "l", true, true)
       end,
@@ -151,7 +153,7 @@ return function (opts)
         local state_ok, state = pcall(require, "menu.state")
         local old_buf = (state_ok and state.old_data and state.old_data.buf) and state.old_data.buf or vim.api.nvim_get_current_buf()
         local old_bufname = vim.api.nvim_buf_get_name(old_buf)
-        local old_buf_dir = vim.fn.fnamemodify(old_bufname ~= "" and old_bufname or vim.loop.cwd(), ":h")
+        local old_buf_dir = vim.fn.fnamemodify(old_bufname ~= "" and old_bufname or vim.loop.cwd() or "./", ":h")
 
         local thecmd = "cd " .. old_buf_dir
 
@@ -164,7 +166,7 @@ return function (opts)
         end
 
         vim.cmd "enew"
-        vim.fn.termopen { vim.o.shell, "-c", thecmd .. " ; " .. vim.o.shell }
+        vim.fn.jobstart({ vim.o.shell, vim.o.shellcmdflag, thecmd .. " ; " .. vim.o.shell }, { term = true })
       end,
     })
   end

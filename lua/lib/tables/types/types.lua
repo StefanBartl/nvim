@@ -1,6 +1,8 @@
 ---@meta
 ---@module 'utils.tables.types'
 
+---@diagnostic disable
+
 ---@class ResultOk<T>
 ---@field ok true
 ---@field value T

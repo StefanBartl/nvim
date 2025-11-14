@@ -135,7 +135,9 @@ local function link_or_copy(src, dst, prefer_symlink)
     end
   end
 
+	---@diagnostic disable-next-line lib.uv
   if prefer_symlink and uv.fs_symlink then
+	---@diagnostic disable-next-line lib.uv
     local ok_ln, _ = uv.fs_symlink(src, dst)
     if ok_ln then return true, nil end
     -- fallback to copy
@@ -262,6 +264,5 @@ function M.rebuild()
   return rebuild()
 end
 
----@type HelpSyncModule
 return M
 

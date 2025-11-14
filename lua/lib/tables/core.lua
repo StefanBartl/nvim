@@ -5,6 +5,8 @@
 ---   * No globals; defensive parameter checks.
 ---   * EmmyLua-typed for strong LuaLS hints.
 
+---@diagnostic disable
+
 ---@class LibTablesCore
 local M = {}
 

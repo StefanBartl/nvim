@@ -16,6 +16,8 @@
 --   local out = dedup(input) -- out -> { "/home/user/b", "/home/user/project" } (depending on normalize behavior)
 --   ```
 
+---@diagnostic disable
+
 local norm = vim.fs.normalize
 
 ---@param entries string[] list of path strings to deduplicate

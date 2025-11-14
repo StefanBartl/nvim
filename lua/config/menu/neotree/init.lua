@@ -168,10 +168,5 @@ function M.load()
   return M.build()
 end
 
--- AUDIT:
--- Expose the built menu table directly for compatibility with code that expects the module to be a list.
--- This mirrors prior behavior (module returning the table itself).
-local ok, _ = pcall(function() end) -- noop to keep pattern consistent; no-op
-
 ---@type menu_neotree_module
 return M.load()

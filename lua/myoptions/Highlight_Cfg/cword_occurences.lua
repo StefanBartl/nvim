@@ -21,6 +21,8 @@ local HLCACHE = {} ---@type table<string, boolean>
 local buffer_is_ui_like = require("myoptions.skip").std_skip
 
 -- Debounce timer (luv can return `userdata` in some typings)
+
+	---@diagnostic disable-next-line lib.uv
 ---@type userdata|uv.uv_timer_t|nil
 local timer = nil
 

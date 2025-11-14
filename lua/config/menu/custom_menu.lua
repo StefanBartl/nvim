@@ -17,14 +17,16 @@ local defaults = {
 
 -- Merge helper
 local function merge_table(dst, src)
-  for k, v in pairs(src or {}) do dst[k] = v end
+  for k, v in pairs(src or {}) do
+    dst[k] = v
+  end
   return dst
 end
 
 -- Build the final menu table by composing the default menu and optional nested menus.
 -- This returns a menu table compatible with the menu system used in your config (i.e. it
 -- returns the content that would normally live in menus/<name>.lua).
-return function (opts)
+return function(opts)
   opts = merge_table(merge_table({}, defaults), opts or {})
 
   local ok_default, default_menu = pcall(require, "menus.default")
@@ -35,20 +37,22 @@ return function (opts)
 
   -- Load nested modules if available; if not available we'll still reference their name
   local ok_lsp, lsp_module = pcall(require, "menus.lsp")
-	if not ok_lsp then
-		vim.notify("[nvzone.menu.custom]: lsp_mopdule not loaded. " .. lsp_module, 2)
-	end
+  if not ok_lsp then
+    vim.notify("[nvzone.menu.custom]: lsp_mopdule not loaded. " .. lsp_module, 2)
+  end
   local ok_gs, gitsigns_module = pcall(require, "menus.gitsigns")
-	if not ok_gs then
-		vim.notify("[nvzone.menu.custom]: gitsigns_mopdule not loaded. " .. gitsigns_module, 2)
-	end
+  if not ok_gs then
+    vim.notify("[nvzone.menu.custom]: gitsigns_mopdule not loaded. " .. gitsigns_module, 2)
+  end
 
-	-- Compose new entries (we will clone default_menu and then patch)
+  -- Compose new entries (we will clone default_menu and then patch)
   local menu = {}
 
   -- Helper to shallow-copy list-like table
   local function append_list(dst, src)
-    for _, v in ipairs(src or {}) do table.insert(dst, v) end
+    for _, v in ipairs(src or {}) do
+      table.insert(dst, v)
+    end
   end
 
   -- Start from default_menu contents where present
@@ -65,7 +69,7 @@ return function (opts)
       cmd = function()
         local ok, conform = pcall(require, "conform")
         if ok then
-          conform.format { lsp_fallback = true }
+          conform.format({ lsp_fallback = true })
         else
           pcall(vim.lsp.buf.format)
         end
@@ -99,8 +103,8 @@ return function (opts)
     table.insert(composed, {
       name = "Edit Config",
       cmd = function()
-        vim.cmd "tabnew"
-        local conf = vim.fn.stdpath "config"
+        vim.cmd("tabnew")
+        local conf = vim.fn.stdpath("config")
         vim.cmd("tcd " .. conf .. " | e init.lua")
       end,
       rtxt = "ed",
@@ -124,8 +128,12 @@ return function (opts)
           vim.notify("System clipboard is empty", vim.log.levels.INFO)
           return
         end
+
+        if type(text) ~= "string" then
+          return
+        end
         -- Insert at cursor position preserving as much context as possible
-        local lines = vim.split(text, "\n", true)
+        local lines = vim.split(text, "\n", { plain = true })
         -- nvim_put arguments: lines, type, after, follow
         vim.api.nvim_put(lines, "l", true, true)
       end,
@@ -149,22 +157,26 @@ return function (opts)
       hl = "ExRed",
       cmd = function()
         local state_ok, state = pcall(require, "menu.state")
-        local old_buf = (state_ok and state.old_data and state.old_data.buf) and state.old_data.buf or vim.api.nvim_get_current_buf()
+        local old_buf = (state_ok and state.old_data and state.old_data.buf) and state.old_data.buf
+          or vim.api.nvim_get_current_buf()
         local old_bufname = vim.api.nvim_buf_get_name(old_buf)
-        local old_buf_dir = vim.fn.fnamemodify(old_bufname ~= "" and old_bufname or vim.loop.cwd(), ":h")
+        local old_buf_dir = vim.fn.fnamemodify(old_bufname ~= "" and old_bufname or vim.loop.cwd() or "./", ":h")
 
         local thecmd = "cd " .. old_buf_dir
 
         if vim.g.base46_cache then
           local ok_term, nvterm = pcall(require, "nvchad.term")
           if ok_term and nvterm and nvterm.new then
-            nvterm.new { cmd = thecmd, pos = "sp" }
+            nvterm.new({ cmd = thecmd, pos = "sp" })
             return
           end
         end
 
-        vim.cmd "enew"
-        vim.fn.termopen { vim.o.shell, "-c", thecmd .. " ; " .. vim.o.shell }
+        vim.cmd("enew")
+        vim.fn.jobstart(
+          { vim.o.shell, vim.o.shellcmdflag, thecmd .. " ; " .. vim.o.shell },
+          { term = true }
+        )
       end,
     })
   end
@@ -176,7 +188,9 @@ return function (opts)
       name = "  Color Picker",
       cmd = function()
         local ok, huefy = pcall(require, "minty.huefy")
-        if ok and huefy and huefy.open then pcall(huefy.open) end
+        if ok and huefy and huefy.open then
+          pcall(huefy.open)
+        end
       end,
     })
   end
