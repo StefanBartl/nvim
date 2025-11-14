@@ -30,9 +30,6 @@ function M.setup()
 	require("mappings.terminal").setup()
 	require("mappings.trouble").setup()
 
-	require("mappings.lsp_signature").setup()
-
-
 	-- require("mappings.view_scroll").map_default_keys('<C-d>', '<C-u>')
 
 	vim.g.__map_helper = nil

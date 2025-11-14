@@ -9,9 +9,9 @@ local is_subpath = require("lib.filesystem.is_subpath")
 --- Determine a strict root directory from a filename or use sensible fallbacks.
 --- Steps:
 --- 1. Determine a starting directory: directory of fname or CWD.
---- 2. If a VCS root (git/hg/svn) is found upward, return it.
---- 3. If certain Lua/tool config markers are found upward, return the marker's dirname.
---- 4. If the start dir is under Neovim's stdpath("config"), return that config path.
+--- 2. If the start dir is under Neovim's stdpath("config"), return that config path.
+--- 3. If a VCS root (git/hg/svn) is found upward, return it.
+--- 4. If certain Lua/tool config markers are found upward, return the marker's dirname.
 --- 5. Otherwise return the start dir itself.
 --- @param fname string|nil filename or filepath; can be empty string
 --- @return string|nil root directory or nil when no directory could be determined
@@ -19,13 +19,18 @@ local function strict_root_from(fname)
   -- starte an der Verzeichnis-Komponente der Datei; Fallback: CWD
   local dir = (type(fname) == "string" and fname ~= "" and vim.fs.dirname(vim.fs.normalize(fname)))
     or ((vim.uv or vim.loop).cwd and (vim.uv or vim.loop).cwd())
-    or vim.fn.getcwd()
+    or vim.fn.getcw()
 
-  if not dir or dir == "" then
-    return nil
-  end
+	local stdconfig = vim.fn.stdpath("config")
+	if is_subpath(dir, stdconfig) then
+		return stdconfig
+	end
 
-  local vcs_root = vim.fs.root(dir, { ".git", ".hg", ".svn" })
+	if not dir or dir == "" then
+		return nil
+	end
+
+	local vcs_root = vim.fs.root(dir, { ".git", ".hg", ".svn" })
   if vcs_root then
     return vcs_root
   end
@@ -36,11 +41,6 @@ local function strict_root_from(fname)
   )
   if lua_markers and lua_markers[1] then
     return vim.fs.dirname(lua_markers[1])
-  end
-
-  local stdconfig = vim.fn.stdpath("config")
-  if is_subpath(dir, stdconfig) then
-    return stdconfig
   end
 
   return dir

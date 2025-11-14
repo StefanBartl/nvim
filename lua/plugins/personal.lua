@@ -82,7 +82,7 @@ return {
     config = function()
 			---@diagnostic disable-next-line
       require("replacer").setup({
-        engine = "fzf",
+        engine = "telescope",
         -- engine = "telescope",
         default_scope = "%",
       })

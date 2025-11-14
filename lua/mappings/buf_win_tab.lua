@@ -9,9 +9,12 @@ function M.setup()
 	--  Buffers
 	-- ---------------------------------------------------------------------------
 
+	-- map("n", "<tab>", function() require("nvchad.tabufline").next() end, { desc = "[Buffers] Next" })
+	-- map("n", "<S-tab>", function() require("nvchad.tabufline").prev() end, { desc = "[Buffers] Prev" })
+	map("n", "<tab>", function() require("custom.tabufline").next() end, { desc = "[Buffers] Next" })
+	map("n", "<s-tab>", function() require("custom.tabufline").prev() end, { desc = "[Buffers] Prev" })
+
 	map("n", "<leader>bn", "<cmd>enew<CR>", { desc = "[Buffers] New" })
-	map("n", "<tab>", function() require("nvchad.tabufline").next() end, { desc = "[Buffers] Next" })
-	map("n", "<S-tab>", function() require("nvchad.tabufline").prev() end, { desc = "[Buffers] Prev" })
 	map("n", "<leader>bc", function() require("nvchad.tabufline").close_buffer() end, { desc = "[Buffers] Close" })
 	map("n", "<leader>bx", function()
 		local current = vim.api.nvim_get_current_buf()

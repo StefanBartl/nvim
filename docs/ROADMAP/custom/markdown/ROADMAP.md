@@ -1,6 +1,6 @@
 # Roadmap für die Markdown-Konfiguration
 
-## Iddeen
+## Ideen
 
 - Markdown: Tabellen genormed bzw gerendert anzeigen:
     - Wenn man mit dem cursor innerhalb der tabelle ist in einem floating window oder via MardkwownPreview im Browser (optional mit trigger key oder automatisch)
