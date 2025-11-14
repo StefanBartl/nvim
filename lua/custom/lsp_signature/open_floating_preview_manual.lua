@@ -1,5 +1,6 @@
 ---@module 'custom.lsp_signature.open_floating_preview_manual'
 local api = vim.api
+local state = require("custom.lsp_signature.state")
 
 ---@param lines string[]
 return function(lines)
@@ -29,9 +30,9 @@ return function(lines)
   -- Scratch Buffer erzeugen
   local bufnr = api.nvim_create_buf(false, true)
   api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  api.nvim_buf_set_option(bufnr, "modifiable", false)
-  api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
-  api.nvim_buf_set_option(bufnr, "filetype", "lsp_signature")
+  api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  api.nvim_set_option_value("filetype", "lsp_signature", { buf = bufnr })
 
   -- Floating Window erzeugen
   local opts = {
@@ -46,21 +47,27 @@ return function(lines)
   }
   local winid = api.nvim_open_win(bufnr, true, opts)
 
-  -- <Esc> schließen
-  api.nvim_buf_set_keymap(bufnr, "n", "<Esc>", "<Cmd>close<CR>", { noremap = true, silent = true })
+  -- Buffer-local mappings to close the popup and clear state.
+  -- They call the state.close() function to ensure module state is consistent.
+  local map_opts = { nowait = true, noremap = true, silent = true }
+  api.nvim_buf_set_keymap(bufnr, "n", "<Esc>", "<Cmd>lua require('custom.lsp_signature.state').close()<CR>", map_opts)
+  api.nvim_buf_set_keymap(bufnr, "n", "q", "<Cmd>lua require('custom.lsp_signature.state').close()<CR>", map_opts)
 
-  -- Auto-close Events
+  -- Additionally, support 'q' in visual mode inside popup for convenience
+  api.nvim_buf_set_keymap(bufnr, "v", "q", "<Cmd>lua require('custom.lsp_signature.state').close()<CR>", map_opts)
+
+  -- Create an augroup to ensure cleanup if window is closed externally
   local group_name = "LspSignaturePopup_" .. tostring(winid)
   local aug_id = api.nvim_create_augroup(group_name, { clear = true })
   api.nvim_create_autocmd(
-    { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "InsertEnter", "WinScrolled" },
+    { "BufWipeout", "BufHidden", "BufLeave" },
     {
       group = aug_id,
       once = true,
+      buffer = bufnr,
       callback = function()
-        if api.nvim_win_is_valid(winid) then
-          pcall(api.nvim_win_close, winid, true)
-        end
+        -- ensure state cleared if popup buffer goes away
+        pcall(state.close)
         pcall(api.nvim_del_augroup_by_id, aug_id)
       end,
     }

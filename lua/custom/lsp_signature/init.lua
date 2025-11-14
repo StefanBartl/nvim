@@ -8,23 +8,13 @@
 local M = {}
 
 local schedule = vim.schedule
-local request_and_show = require("custom.lsp_signature.request_and_show")
--- local request_and_show = require("custom.lsp_signature.request_and_show_manual")
+--local request_and_show = require("custom.lsp_signature.request_and_show")
+local request_and_show = require("custom.lsp_signature.request_and_show_manual")
 
 
 function M.setup()
-  -- Fallback-Keymap-Funktion
-  local map = vim.g.__map_helper or function(modes, lhs, rhs, opts)
-    vim.keymap.set(modes, lhs, rhs, opts)
-  end
-
-  -- <C-b> Toggle in Insert- und Normalmodus
-  map({"i", "n"}, "<C-b>", function()
-    -- Optional: Notification für Debugging
-    -- vim.notify("LSP Signature Toggle", vim.log.levels.INFO)
-
+  vim.keymap.set({"i", "n"}, "<C-b>", function()
     schedule(function()
-      -- ruft das neue request_and_show auf
       request_and_show()
     end)
   end, {desc = "[LSP] Show signature or hover (floating toggle)", silent = true, noremap = true})

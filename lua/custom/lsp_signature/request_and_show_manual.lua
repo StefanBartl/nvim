@@ -4,6 +4,7 @@ local schedule = vim.schedule
 local open_floating_preview = require("custom.lsp_signature.open_floating_preview_manual")
 local format_signature_help = require("custom.lsp_signature.format_signature_help")
 local format_hover = require("custom.lsp_signature.format_hover")
+local state = require("custom.lsp_signature.state")
 
 -- Highlight-Gruppen für Parameter
 local param_highlight_groups = {
@@ -17,37 +18,34 @@ for i, grp in ipairs(param_highlight_groups) do
 end
 vim.cmd("highlight LspSignatureActiveParam guifg=#ffffff guibg=#005f87 gui=bold")
 
--- Toggle-Popup
-local current_popup = {buf = nil, win = nil}
 local ns_id = api.nvim_create_namespace("LspSignatureParams")
 
+--- Show or toggle popup for current buffer.
 ---@param bufnr integer|nil?
 ---@param callback fun(bufnr:integer, winid:integer)?
 return function(bufnr, callback)
   bufnr = bufnr or api.nvim_get_current_buf()
 
-  -- Popup bereits offen -> schließen
-  if current_popup.win and api.nvim_win_is_valid(current_popup.win) then
-    pcall(api.nvim_win_close, current_popup.win, true)
-    current_popup.buf = nil
-    current_popup.win = nil
+  -- If popup already tracked and valid -> close it
+  if state.current.win and api.nvim_win_is_valid(state.current.win) then
+    state.close()
     return
   end
 
-  local clients = vim.lsp.get_clients({bufnr=bufnr})
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
   if not clients or vim.tbl_isempty(clients) then return end
+
   local params = vim.lsp.util.make_position_params(0, "utf-8")
   local mode = vim.fn.mode()
 
-  local function show_hover(c)
+  local function show_hover(client)
     local handler = function(_, result)
       if not result then return end
       local lines = format_hover(result)
       if lines then
         schedule(function()
           local buf, win = open_floating_preview(lines)
-          current_popup.buf = buf
-          current_popup.win = win
+          state.set(buf, win)
           if mode == "n" and win and api.nvim_win_is_valid(win) then
             api.nvim_set_current_win(win)
           end
@@ -55,11 +53,11 @@ return function(bufnr, callback)
         end)
       end
     end
-    pcall(c.request, c, "textDocument/hover", params, handler, bufnr)
+    pcall(client.request, client, "textDocument/hover", params, handler, bufnr)
   end
 
   for _, client in pairs(clients) do
-    if client.server_capabilities.signatureHelpProvider then
+    if client.server_capabilities and client.server_capabilities.signatureHelpProvider then
       local handler = function(_, result)
         if not result then
           schedule(function() show_hover(client) end)
@@ -74,11 +72,10 @@ return function(bufnr, callback)
 
         schedule(function()
           local buf, win = open_floating_preview(lines)
-          current_popup.buf = buf
-          current_popup.win = win
+          state.set(buf, win)
 
-          -- Parameter-Highlighting
-          local sig = result.signatures[result.activeSignature and result.activeSignature+1 or 1]
+          -- Parameter highlighting (all params + active)
+          local sig = result.signatures[result.activeSignature and result.activeSignature + 1 or 1]
           if sig and sig.parameters then
             for i, param in ipairs(sig.parameters) do
               local start_col, end_col
@@ -91,16 +88,15 @@ return function(bufnr, callback)
                 end_col = e
               end
               if start_col and end_col and buf then
-                local group = (i == (sig.activeParameter or 0)+1) and "LspSignatureActiveParam"
-                             or param_highlight_groups[(i-1) % #param_highlight_groups + 1]
+                local group = (i == (sig.activeParameter or 0) + 1) and "LspSignatureActiveParam"
+                              or param_highlight_groups[(i - 1) % #param_highlight_groups + 1]
                 vim.hl.range(buf, ns_id, group,
-                             {0, start_col-1}, {0, end_col},
-                             {inclusive=false})
+                             {0, start_col - 1}, {0, end_col},
+                             {inclusive = false})
               end
             end
           end
 
-          -- Fokus auf Popup im Normalmodus
           if mode == "n" and win and api.nvim_win_is_valid(win) then
             api.nvim_set_current_win(win)
           end
@@ -113,6 +109,6 @@ return function(bufnr, callback)
     end
   end
 
-  -- Kein SignatureHelp -> Hover-Fallback
+  -- Fallback: hover on first client
   show_hover(clients[1])
 end
