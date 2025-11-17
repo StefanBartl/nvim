@@ -1,5 +1,7 @@
 # WKD Neovim Roadmap
 
+- Alle mappings, autovmds und usercommdand funktonen von `setup()` auf `attach()` umschreiben
+
 ## Important Bugs
 
 - WARNING `vim.lsp.buf.hover` is not configured to be handled by **Noice**

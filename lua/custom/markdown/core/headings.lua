@@ -1,11 +1,7 @@
 ---@module 'custom.markdown.core.headings'
 --- ATX heading navigation + level shifting. Pure logic, view preserved.
----
---- This module exposes functions to navigate and change ATX heading levels
---- in Markdown buffers. It is defensive: it skips fenced code blocks and
---- preserves window view. The implementation favors robustness of mode
---- detection and mark handling to avoid intermittent failures when invoked
---- from visual mappings or operator-pending mappings.
+--- Provides a single exported `M.shift_range` that accepts arbitrary integer
+--- deltas (positive => increase, negative => decrease).
 ---@class MarkdownHeadings
 local M = {}
 
@@ -42,30 +38,25 @@ end
 ---@param min_level integer
 ---@return string, boolean
 local function shift_heading_line(line, delta, min_level)
-  if line == "" or line:match("^%s*$") then return line, false end
+  if line == "" or line:match("^%s*$") then
+    return line, false
+  end
   -- Capture leading indent + hashes, require at least one space between hashes and text.
   local hashes, rest = line:match("^(%s*#+)%s+(.*)$")
-  if not hashes then return line, false end
+  if not hashes then
+    return line, false
+  end
   local indent = hashes:match("^%s*") or ""
   local level = #hashes - #indent
   local new = math.max(min_level, math.min(6, level + delta))
-  if new == level then return line, false end
+  if new == level then
+    return line, false
+  end
   return string.format("%s%s %s", indent, string.rep("#", new), rest), true
 end
 
--- ============================================================================
--- Core: shift a buffer range
--- ============================================================================
-
---- Shift headings within a 1-based inclusive range [srow, erow].
---- Skips fenced code blocks (``` or ~~~).
----@param bufnr integer
----@param srow integer
----@param erow integer
----@param delta integer
----@param min_level integer
----@return integer changed  -- number of lines changed
-local function shift_range(bufnr, srow, erow, delta, min_level)
+-- Core buffer range shifter: internal implementation (unchanged)
+local function shift_range_internal(bufnr, srow, erow, delta, min_level)
   -- nvim_buf_get_lines: start is 0-based inclusive, end is 0-based exclusive.
   local lines = api.nvim_buf_get_lines(bufnr, srow - 1, erow, false)
   local changed = 0
@@ -75,7 +66,6 @@ local function shift_range(bufnr, srow, erow, delta, min_level)
     local line = lines[i]
     local fence = line:match(fence_pat)
     if fence then
-      -- Toggle fence state; does not try to match exact fence length or language.
       in_fence = not in_fence
     end
     if not in_fence then
@@ -87,69 +77,45 @@ local function shift_range(bufnr, srow, erow, delta, min_level)
     end
   end
   if changed > 0 then
-    -- Replace the original range only when something changed (keeps undo tidy).
     api.nvim_buf_set_lines(bufnr, srow - 1, erow, false, lines)
   end
   return changed
 end
 
--- ====================================================================
--- Wrapper für Whole-Buffer oder aktuelle Auswahl
--- ====================================================================
-
----@param delta integer +1 / -1
-function M.shift_selection(delta)
-  if delta ~= 1 and delta ~= -1 then return end
-  if vim.bo.filetype ~= "markdown" then return end
-  local bufnr = vim.api.nvim_get_current_buf()
-  if not (vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_buf_is_valid(bufnr)) then return end
-
-  local srow, erow
-  local mode = (vim.api.nvim_get_mode() or {}).mode or "n"
-
-  if mode:match("^[vV\022]") then
-    -- Visual selection: sichere Markierung
-    local ok_s, start_mark = pcall(vim.api.nvim_buf_get_mark, bufnr, "<")
-    local ok_e, end_mark   = pcall(vim.api.nvim_buf_get_mark, bufnr, ">")
-    if ok_s and ok_e then
-      srow = start_mark[1]
-      erow = end_mark[1]
-    end
-  end
-
-  -- fallback: aktuelle Zeile
-  srow = srow or vim.api.nvim_win_get_cursor(0)[1]
-  erow = erow or srow
-
-  local changed = require("custom.markdown.core.headings").shift_range(srow, erow, delta)
-
-  -- Wenn tatsächlich etwas geändert wurde, Ansicht wiederherstellen
-  if changed > 0 then
-    vim.fn.winrestview(vim.fn.winsaveview())
-  end
-end
-
-
--- ============================================================================
--- Public: shift_range wrapper with guards
--- ============================================================================
-
 --- Public: shift a given 1-based line range (operator/whole-buffer use).
+--- Accepts any integer `delta` (positive => increase, negative => decrease).
 --- Returns number of changed lines (0..).
 ---@param srow integer
 ---@param erow integer
----@param delta integer  -- +1 / -1
+---@param delta integer
 ---@return integer changed
 function M.shift_range(srow, erow, delta)
-  if delta ~= 1 and delta ~= -1 then return 0 end
-  if vim.bo.filetype ~= "markdown" then return 0 end
+  -- validate args
+  if type(srow) ~= "number" or type(erow) ~= "number" then
+    return 0
+  end
+  if srow < 1 or erow < srow then
+    return 0
+  end
+  if type(delta) ~= "number" or delta == 0 then
+    return 0
+  end
+
+  -- guard filetype and buffer validity
+  if vim.bo.filetype ~= "markdown" then
+    return 0
+  end
   local bufnr = api.nvim_get_current_buf()
-  if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then return 0 end
+  if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then
+    return 0
+  end
+
+  -- determine minimal allowed heading level (H1 protection)
   local min_level = cfg().protect_h1 and 2 or 1
 
-  -- Preserve view only if something actually changes
+  -- preserve view only if something changes
   local view = fn.winsaveview()
-  local changed = shift_range(bufnr, srow, erow, delta, min_level)
+  local changed = shift_range_internal(bufnr, srow, erow, delta, min_level)
 
   if changed > 0 then
     fn.winrestview(view)
@@ -158,70 +124,70 @@ function M.shift_range(srow, erow, delta)
   return changed
 end
 
--- ============================================================================
--- Public: shift based on current mode (line or visual selection)
--- ============================================================================
-
---- Shift current line or visual selection by delta.
---- Visual detection uses nvim_get_mode() which is more stable than mode(1).
+-- Wrapper für Whole-Buffer oder aktuelle Auswahl (fix save/restore order + accept arbitrary delta)
 ---@param delta integer
----@return nil
-function M.shift(delta)
-  if delta ~= 1 and delta ~= -1 then return end
-  if vim.bo.filetype ~= "markdown" then return end
+function M.shift_selection(delta)
+  if type(delta) ~= "number" or delta == 0 then
+    return
+  end
+  if vim.bo.filetype ~= "markdown" then
+    return
+  end
   local bufnr = api.nvim_get_current_buf()
-  if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then return end
+  if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then
+    return
+  end
 
   local srow, erow
+  local mode = (vim.api.nvim_get_mode() or {}).mode or "n"
 
-  -- Use nvim_get_mode().mode which returns a simple string like 'n', 'v', 'V', or '^V'
-  -- This avoids subtle variants returned by mode(1) that can break a strict pattern.
-  local current_mode = (api.nvim_get_mode() or {}).mode or fn.mode()
-  if tostring(current_mode):match("^[vV\022]") then
-    -- Try to read visual marks '< and '>
-    local ok, ms = pcall(api.nvim_buf_get_mark, 0, "<")
-    local ok2, me = pcall(api.nvim_buf_get_mark, 0, ">")
-    if ok and ok2 and type(ms) == "table" and type(me) == "table" and ms[1] > 0 and me[1] > 0 then
-      srow = math.min(ms[1], me[1])
-      erow = math.max(ms[1], me[1])
-    else
-      -- Fallback: if marks are not available, use current cursor line.
-      local cur = api.nvim_win_get_cursor(0)
-      srow, erow = cur[1], cur[1]
+  if mode:match("^[vV\022]") then
+    local ok_s, start_mark = pcall(vim.api.nvim_buf_get_mark, bufnr, "<")
+    local ok_e, end_mark = pcall(vim.api.nvim_buf_get_mark, bufnr, ">")
+    if ok_s and ok_e and start_mark and end_mark then
+      srow = start_mark[1]
+      erow = end_mark[1]
     end
-  else
-    local cur = api.nvim_win_get_cursor(0)
-    srow, erow = cur[1], cur[1]
   end
 
-  M.shift_range(srow, erow, delta)
+  srow = srow or api.nvim_win_get_cursor(0)[1]
+  erow = erow or srow
+
+  -- use unified export
+  local changed = M.shift_range(srow, erow, delta)
+
+  if changed > 0 then
+    -- nothing additional required: M.shift_range already restored view when changed
+  end
 end
 
-function M.increase() M.shift(1) end
-function M.decrease() M.shift(-1) end
+-- Operator helpers: read optional repeat count from buffer-local var
+local function op_get_repeat()
+  local n = vim.b._markdown_heading_op_count
+  if type(n) ~= "number" or n < 1 then
+    return 1
+  end
+  vim.b._markdown_heading_op_count = nil
+  return n
+end
 
--- ============================================================================
--- Operator-pending helpers (use with g@); these remain unchanged except for
--- defensive guards.
--- ============================================================================
-
---- Operator-pending increase helper; simple and kept small for operatorfunc.
 ---@param _ string
 function M._op_increase(_)
+  local n = op_get_repeat()
   local srow = api.nvim_buf_get_mark(0, "[")[1]
   local erow = api.nvim_buf_get_mark(0, "]")[1]
   if srow and erow and srow > 0 and erow > 0 then
-    M.shift_range(math.min(srow, erow), math.max(srow, erow), 1)
+    M.shift_range(math.min(srow, erow), math.max(srow, erow), n)
   end
 end
 
---- Operator-pending decrease helper; simple and kept small for operatorfunc.
 ---@param _ string
 function M._op_decrease(_)
+  local n = op_get_repeat()
   local srow = api.nvim_buf_get_mark(0, "[")[1]
   local erow = api.nvim_buf_get_mark(0, "]")[1]
   if srow and erow and srow > 0 and erow > 0 then
-    M.shift_range(math.min(srow, erow), math.max(srow, erow), -1)
+    M.shift_range(math.min(srow, erow), math.max(srow, erow), -n)
   end
 end
 
