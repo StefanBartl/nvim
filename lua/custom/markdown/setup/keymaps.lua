@@ -164,49 +164,60 @@ function M.apply(bufnr)
   if ok_head and headings.increase and headings.decrease then
     local opts = with({ silent = true, noremap = true, nowait = true }, o)
 
+    -- Helper: safe wrapper to get whole buffer line range
+    local function whole_buf_lines_safe()
+      -- Always take the current buffer at execution time to avoid captured `bufnr` bugs.
+      local b = api.nvim_get_current_buf()
+      -- Return 1-based inclusive start and end line numbers.
+      return 1, api.nvim_buf_line_count(b)
+    end
+
+    -- Count helper: returns a positive integer (1 if no count was given).
+    local function get_count_or_one()
+      -- vim.v.count1 yields 1 if no count prefix was provided, which is convenient.
+      return vim.v.count1
+    end
+
     -- Line
-		map("n", "<leader>mhi", function()
-				local cur = vim.api.nvim_win_get_cursor(0)
-				headings.shift_range(cur[1], cur[1], 1)
-		end, "[Custom.Markdown] Increase heading in line (buffer)", opts)
+    map("n", "<leader>mhi", function()
+      local cur = vim.api.nvim_win_get_cursor(0)
+      headings.shift_range(cur[1], cur[1], 1)
+    end, "[Custom.Markdown] Increase heading in line (buffer)", opts)
 
-		map("n", "<leader>mhd", function()
-				local cur = vim.api.nvim_win_get_cursor(0)
-				headings.shift_range(cur[1], cur[1], -1)
-		end, "[Custom.Markdown] Decrease heading in line (buffer)", opts)
+    map("n", "<leader>mhd", function()
+      local cur = vim.api.nvim_win_get_cursor(0)
+      headings.shift_range(cur[1], cur[1], -1)
+    end, "[Custom.Markdown] Decrease heading in line (buffer)", opts)
 
-		-- Visual mode
-		map("v", "<leader>mhi", function()
-			vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_increase"
-			return "g@"
-		end, "[Custom.Markdown] Increase headings in selection (buffer)", opts)
+    -- Visual mode
+    map("v", "<leader>mhi", function()
+      vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_increase"
+      return "g@"
+    end, "[Custom.Markdown] Increase headings in selection (buffer)", opts)
 
-		map("v", "<leader>mhd", function()
-			vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_decrease"
-			return "g@"
-		end, "[Custom.Markdown] Decrease ALL headings in selection (buffer)", opts)
+    map("v", "<leader>mhd", function()
+      vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_decrease"
+      return "g@"
+    end, "[Custom.Markdown] Decrease ALL headings in selection (buffer)", opts)
 
 
-    -- Whole buffer
-		if ok_head and type(headings.shift_range) == "function" then
-			local function whole_buf_lines()
-				local b = bufnr or api.nvim_get_current_buf()
-				return 1, api.nvim_buf_line_count(b)
-			end
 
-		-- FIX: First-Level Headling (`#`) wird übersrpungen
-			map("n", "<leader>mhI", function()
-				local s, e = whole_buf_lines()
-				headings.shift_range(s, e, 1)
-			end, "[Custom.Markdown] Increase ALL headings (buffer)", opts)
+    -- Whole-buffer mappings (count-aware: `2<leader>mhI` to increase all by 2)
+    if ok_head and type(headings.shift_range) == "function" then
+      map("n", "<leader>mhI", function()
+        local s, e = whole_buf_lines_safe()
+        local n = get_count_or_one()
+        require("custom.markdown.core.headings").shift_range(s, e, n)
+      end, "[Custom.Markdown] Increase ALL headings (buffer, count-aware)", opts)
 
-			map("n", "<leader>mhD", function()
-				local s, e = whole_buf_lines()
-				headings.shift_range(s, e, -1)
-			end, "[Custom.Markdown] Decrease ALL headings (buffer)", opts)
-		end
+      map("n", "<leader>mhD", function()
+        local s, e = whole_buf_lines_safe()
+        local n = get_count_or_one()
+        require("custom.markdown.core.headings").shift_range(s, e, -n)
+      end, "[Custom.Markdown] Decrease ALL headings (buffer, count-aware)", opts)
+    end
 
-		-- Operator-pending
+    -- Operator-pending
     if headings._op_increase and headings._op_decrease then
       map("n", "<leader>mha", function()
         vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_increase"
@@ -218,7 +229,6 @@ function M.apply(bufnr)
         return "g@"
       end, "[Custom.Markdown] Decrease headings (operator-pending)", with({ expr = true }, opts))
     end
-
   end
 end
 
