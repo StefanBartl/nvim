@@ -52,7 +52,8 @@ return {
 
   {
     "folke/snacks.nvim",
-    event = "VimEnter", -- defer until UI is ready; quickfile still accelerates single-file cold open
+    event = "VimEnter", --FIX: Wenn lazy false, dann muss man das dashboard mit q schließen, weil es überdeckt
+		-- lazy = false,
 
     ---@param _ any
     ---@return SnacksSetup|table
@@ -68,6 +69,8 @@ return {
         scratch = { enabled = true },
         toggle = { enabled = true },
         words = { enabled = true },
+
+				image = { enabled = true },  -- AUDIT:
 
         -- Safeguard for very large files
         bigfile = { enabled = true },

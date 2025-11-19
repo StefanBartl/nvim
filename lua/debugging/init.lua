@@ -8,6 +8,7 @@ function M.setup()
 	require("debugging.markdown").attach { inline_debug_fixed = false }
 	require("debugging.terminals").attach { keylogger = false }
 	require("debugging.usercmds").attach()
+	require("debugging.indent_helpers")
 end
 
 return M

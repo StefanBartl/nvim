@@ -39,7 +39,7 @@ function M.prettier_format(bufnr)
   end
 
   if api.nvim_buf_get_option(bufnr, "modified") then
-    api.nvim_buf_call(bufnr, function() vim.cmd("write") end)
+    api.nvim_buf_call(bufnr, function() vim.cmd("write!") end)
   end
 
   local args = { bin, "--write", filename }

@@ -66,6 +66,8 @@ function M.setup()
 	map("n", "<leader>tp", "<cmd>tabprevious<CR>", { desc = "[Tabs] Previous tab" })
 	map("n", "<leader>tc", "<cmd>tabnew<CR>", { desc = "[Tabs] New tab" })
 	map("n", "<leader>tx", "<cmd>tabclose<CR>", { desc = "[Tabs] Close tab" })
+	map("n", "<leader>tr", function() require("nvchad.tabufline").move_buf(1) end, { desc = "[Tab] Move tab right" })
+	map("n", "<leader>tl", function() require("nvchad.tabufline").move_buf(-1) end, { desc = "[Tab] Move tab left" })
 
 end
 

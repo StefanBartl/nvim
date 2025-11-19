@@ -47,9 +47,11 @@ opt.clipboard = "unnamedplus"
 opt.autoindent = true
 opt.smartindent = true
 
--- Indentation width and tab behavior (project default).
-opt.shiftwidth = 2
-opt.tabstop = 2
+-- Indentation width and tab behavior
+vim.o.expandtab = true        -- use spaces
+opt.shiftwidth = 4
+opt.tabstop = 4
+opt.softtabstop = 4
 opt.smarttab = true
 
 

@@ -58,6 +58,8 @@
 `:ColumnAlignToColumn <target_col> [fill_char]`
 'x', `<leader>cal`,  Align character to column
 
+`gm`: Folge Urls im Browser
+
 ## Custom Markdown: UserCommands und Mappings
 
 | Typ | Command/Mapping | Beschreibung |

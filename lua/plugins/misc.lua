@@ -17,14 +17,14 @@ return {
       require("config.harpoon.hardening").setup({
         debounce_ms = 200, -- tweak if remote FS
         autocmd_events = { "BufLeave", "FocusLost" }, -- extend if nötig: "FocusGained", "WinLeave" etc.
-			})
+      })
       require("config.harpoon.persist_paths").setup({
         target_specs = {
           { "$REPOS_DIR", "Notes", "MyNotes", "Notes.md" },
           { "$REPOS_DIR", "Notes", "Neovim", "Neovim.md" },
-          { "$REPOS_DIR", "Notes", "MyNotes", "Wezterm.md" },
+          { "$REPOS_DIR", "Notes", "MyNotes", "MyNotes", "Checklists_Web", "Spickzettel", "Typescript.md" },
           { "$NVIM_HOME", "lua", "mynotes", "spickzettel.md" },
-					{ "$REPOS_DIR", "Notes", "Neovim", "09_fonts", "unicode", "dev-palette.md"},
+          { "$REPOS_DIR", "Notes", "Neovim", "09_fonts", "unicode", "dev-palette.md" },
         },
       })
       require("config.harpoon.preview").install_alt_number_maps()

@@ -57,7 +57,7 @@ function M.eslint_fix(bufnr)
 
     -- Write buffer before running eslint
     if api.nvim_buf_get_option(bufnr, "modified") then
-        api.nvim_buf_call(bufnr, function() vim.cmd("write") end)
+        api.nvim_buf_call(bufnr, function() vim.cmd("write!") end)
     end
 
     -- Ermittle Projekt-Root und setze als cwd

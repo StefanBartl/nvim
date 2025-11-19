@@ -155,4 +155,12 @@ return {
       end, { desc = "Move current file via LSP" })
     end,
   },
+
+  {
+    "nvim-mini/mini.icons",
+    version = "*",
+    config = function()
+      require("mini.icons").setup()
+    end,
+  },
 }
