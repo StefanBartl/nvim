@@ -59,10 +59,10 @@ return {
   {
     "stevearc/conform.nvim",
     config = function()
-      local conform = require "conform"
+      local conform = require("conform")
 
       ---@diagnostic disable-next-line: redundant-parameter
-      conform.setup {
+      conform.setup({
         notify_on_error = false,
         format_on_save = { timeout_ms = 1200, lsp_fallback = true },
         formatters_by_ft = {
@@ -76,7 +76,7 @@ return {
           go = { "gofumpt", "goimports" }, -- keep golines opt-in
           markdown = { "prettierd", "mdformat", "prettier" },
         },
-      }
+      })
     end,
   },
 
@@ -93,19 +93,21 @@ return {
     version = "*",
     lazy = false,
     config = function()
-      require("trouble").setup {
+      require("trouble").setup({
         mode = "document_diagnostics",
         auto_close = true,
         auto_preview = false,
         focus = true,
-      }
+      })
     end,
   },
 
   {
     "smjonas/inc-rename.nvim",
     cmd = "IncRename",
-    config = function() require "config.inc_rename" end,
+    config = function()
+      require("config.inc_rename")
+    end,
   },
 
   --[[
@@ -136,5 +138,20 @@ return {
   },
 
 ]]
-  --
+
+    -- :TSToolsOrganizeImports - sorts and removes unused imports
+    -- :TSToolsSortImports - sorts imports
+    -- :TSToolsRemoveUnusedImports - removes unused imports
+    -- :TSToolsRemoveUnused - removes all unused statements
+    -- :TSToolsAddMissingImports - adds imports for all statements that lack one and can be imported
+    -- :TSToolsFixAll - fixes all fixable errors
+    -- :TSToolsGoToSourceDefinition - goes to source definition (available since TS v4.7)
+    -- :TSToolsRenameFile - allow to rename current file and apply changes to connected files
+    -- :TSToolsFileReferences - find files that reference the current file (available since TS v4.2)
+  {
+    "pmizio/typescript-tools.nvim",
+    dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
+    opts = {},
+  },
+
 }
