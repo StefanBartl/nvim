@@ -111,10 +111,10 @@ function M.apply(bufnr)
   -- Headings navigation -------------------------------------------------------
   if ok_head then
     if headings.goto_prev_heading then
-      map({ "n", "v", "x" }, "mk", headings.goto_prev_heading, "[Custom.Markdown] Previous heading (H2+)", o)
+      map({ "n", "v", "x" }, "<C-p>", headings.goto_prev_heading, "[Custom.Markdown] Previous heading (H2+)", o)
     end
     if headings.goto_next_heading then
-      map({ "n", "v", "x" }, "mj", headings.goto_next_heading, "[Custom.Markdown] Next heading (H2+)", o)
+      map({ "n", "v", "x" }, "<C-f>", headings.goto_next_heading, "[Custom.Markdown] Next heading (H2+)", o)
     end
   end
 
