@@ -10,8 +10,7 @@ local function lr(mod)
   return require("lib.strings." .. mod)
 end
 
-M.core       = lr("core")
-M.patterns   = lr("patterns")
+M.core = lr("core")
+M.patterns = lr("patterns")
 
 return M
-

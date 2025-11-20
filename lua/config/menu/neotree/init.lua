@@ -64,7 +64,9 @@ end
 ---@return table
 local function normalize_orig_menu(orig)
   local out = {}
-  if type(orig) ~= "table" then return out end
+  if type(orig) ~= "table" then
+    return out
+  end
 
   local is_list = false
   for k, _ in pairs(orig) do
@@ -75,9 +77,13 @@ local function normalize_orig_menu(orig)
   end
 
   if is_list then
-    for _, v in ipairs(orig) do table.insert(out, v) end
+    for _, v in ipairs(orig) do
+      table.insert(out, v)
+    end
   else
-    for _, v in pairs(orig) do table.insert(out, v) end
+    for _, v in pairs(orig) do
+      table.insert(out, v)
+    end
   end
 
   return out
@@ -104,7 +110,9 @@ end
 function M.build()
   -- 1) original neo-tree menu
   local ok_orig, orig_menu = safe_require("menus.neo-tree")
-  if not ok_orig then orig_menu = {} end
+  if not ok_orig then
+    orig_menu = {}
+  end
   local menu = normalize_orig_menu(orig_menu)
 
   -- 2) load the mappings module and window_map
@@ -122,8 +130,12 @@ function M.build()
 
   -- 4) helper to append a menu entry when handler exists
   local function maybe_add_entry(entry)
-    if type(entry) ~= "table" or not entry.key or not entry.enabled then return end
-    if not window_map then return end
+    if type(entry) ~= "table" or not entry.key or not entry.enabled then
+      return
+    end
+    if not window_map then
+      return
+    end
 
     local handler = window_map[entry.key]
     if handler == nil then
@@ -137,9 +149,9 @@ function M.build()
 
     table.insert(menu, {
       name = name,
-      cmd  = build_neotree_cmd_wrapper(handler),
+      cmd = build_neotree_cmd_wrapper(handler),
       rtxt = entry.rtxt or tostring(entry.key),
-      hl   = entry.hl,
+      hl = entry.hl,
     })
   end
 
@@ -152,7 +164,9 @@ function M.build()
     end
   end
 
-  if any_added then table.insert(menu, { name = "separator" }) end
+  if any_added then
+    table.insert(menu, { name = "separator" })
+  end
 
   for _, e in ipairs(entries) do
     maybe_add_entry(e)

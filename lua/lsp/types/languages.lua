@@ -11,4 +11,3 @@
 ---@field textDocument { uri: string }
 ---@field range { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }
 ---@field context { only?: string[], diagnostics?: table[] }
-

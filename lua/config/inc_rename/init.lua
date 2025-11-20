@@ -109,7 +109,8 @@ local function write_uri_buffers(uris)
     if not seen[uri] then
       seen[uri] = true
       local bufnr = vim.uri_to_bufnr(uri) -- loads buffer if not loaded yet
-      if vim.api.nvim_buf_is_loaded(bufnr)
+      if
+        vim.api.nvim_buf_is_loaded(bufnr)
         and vim.bo[bufnr].modifiable
         and vim.bo[bufnr].buftype == ""
         and vim.bo[bufnr].modified

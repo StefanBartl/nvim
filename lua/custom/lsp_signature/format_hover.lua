@@ -5,7 +5,7 @@ local split_lines = require("custom.lsp_signature.split_lines")
 -- Format a signatureHelp result into a list of strings for display.
 --@param result table
 --@return string[]|nil
-return function (result)
+return function(result)
   if not result then
     return nil
   end
@@ -52,4 +52,3 @@ return function (result)
 
   return lines
 end
-

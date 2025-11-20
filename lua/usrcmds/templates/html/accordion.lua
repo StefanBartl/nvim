@@ -20,12 +20,12 @@ local function insert_html_accordion_template()
   local template = {
     '<details id="#accordion-" style="border: 1px solid #ddd; border-radius: 4px; padding: 0.5em 1em; margin: 0.5em 0;">',
     '  <summary style="cursor: pointer; font-weight: bold; user-select: none;">',
-    '    ',
-    '  </summary>',
+    "    ",
+    "  </summary>",
     '  <div style="margin-top: 1em;">',
-    '    ',
-    '  </div>',
-    '</details>',
+    "    ",
+    "  </div>",
+    "</details>",
   }
 
   -- Insert the template at cursor position
@@ -37,10 +37,10 @@ local function insert_html_accordion_template()
   api.nvim_win_set_cursor(0, { row + 1, id_col })
 
   -- Enter insert mode for immediate editing
-  vim.cmd('startinsert')
+  vim.cmd("startinsert")
 end
 
 --- Register the user command
-api.nvim_create_user_command('HTMLAccordionTemplate', insert_html_accordion_template, {
-  desc = 'Insert HTML accordion item template at cursor position',
+api.nvim_create_user_command("HTMLAccordionTemplate", insert_html_accordion_template, {
+  desc = "Insert HTML accordion item template at cursor position",
 })

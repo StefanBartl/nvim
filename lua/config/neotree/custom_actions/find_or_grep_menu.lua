@@ -64,7 +64,9 @@ function M.attach(opts)
     if not ok_fzf then
       local idx = vim.fn.confirm("fzf-lua action", "&find_files\n&live_grep", 1)
       local choice = (idx == 1 and "find_files") or (idx == 2 and "live_grep") or nil
-      if choice then run_fzf(choice, dir) end
+      if choice then
+        run_fzf(choice, dir)
+      end
       return
     end
 
@@ -96,7 +98,9 @@ function M.attach(opts)
       actions = {
         ---@param selected string[]  -- first item contains "value\tdescription"
         default = function(selected)
-          if not selected or not selected[1] then return end
+          if not selected or not selected[1] then
+            return
+          end
           local value = selected[1]:match("^[^\t]+")
           run_fzf(value, dir)
         end,
@@ -112,4 +116,3 @@ function M.attach(opts)
 end
 
 return M
-

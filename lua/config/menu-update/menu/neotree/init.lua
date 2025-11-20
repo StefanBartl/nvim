@@ -18,7 +18,9 @@ M.DEFAULT_ICON = ""
 ---@return boolean, any
 local function safe_require(modname)
   local ok, res = pcall(require, modname)
-  if not ok then return false, res end
+  if not ok then
+    return false, res
+  end
   return true, res
 end
 
@@ -66,8 +68,12 @@ end
 ---@param state table
 ---@return boolean
 local function is_entry_applicable(entry, state)
-  if entry == nil then return false end
-  if entry.enabled == false then return false end
+  if entry == nil then
+    return false
+  end
+  if entry.enabled == false then
+    return false
+  end
 
   local node_type_required = entry.node_type or "any"
 
@@ -100,7 +106,9 @@ end
 ---@param window_map table|nil
 ---@return table|nil
 local function build_entry(entry, state, window_map)
-  if entry == nil then return nil end
+  if entry == nil then
+    return nil
+  end
 
   -- 1) Section mit Items
   if entry.items ~= nil and type(entry.items) == "table" then
@@ -119,32 +127,40 @@ local function build_entry(entry, state, window_map)
       section = true,
       name = entry.name or entry.label or "Group",
       hl = entry.hl,
-      items = visible_items
+      items = visible_items,
     }
   end
 
   -- 2) Einzelner Eintrag
   if entry.key ~= nil and window_map ~= nil then
     local handler = window_map[entry.key]
-    if handler == nil then return nil end
+    if handler == nil then
+      return nil
+    end
 
     -- Sicherstellen, dass menu_state.old_data existiert
     if menu_state.old_data == nil then
       menu_state.old_data = {
         buf = api.nvim_get_current_buf(),
         win = api.nvim_get_current_win(),
-        cursor = api.nvim_win_get_cursor(0)
+        cursor = api.nvim_win_get_cursor(0),
       }
     end
 
     -- Befehl definieren
     local cmd_fn = function()
       local ok_mgr, manager = safe_require("neo-tree.sources.manager")
-      if not ok_mgr then return end
-      if type(manager) ~= "table" or type(manager.get_state_for_window) ~= "function" then return end
+      if not ok_mgr then
+        return
+      end
+      if type(manager) ~= "table" or type(manager.get_state_for_window) ~= "function" then
+        return
+      end
 
       local neo_state = manager.get_state_for_window()
-      if neo_state == nil then return end
+      if neo_state == nil then
+        return
+      end
 
       if is_entry_applicable(entry, neo_state) then
         build_neotree_cmd_wrapper(handler)(neo_state)
@@ -157,7 +173,7 @@ local function build_entry(entry, state, window_map)
       name = entry.label or ("Neo-tree: " .. tostring(entry.key)),
       cmd = wrap_with_close(cmd_fn),
       rtxt = entry.rtxt or tostring(entry.key),
-      hl = entry.hl
+      hl = entry.hl,
     }
   end
 
@@ -167,7 +183,9 @@ end
 function M.build()
   -- 1) Original-Menu laden
   local ok_orig, orig_menu = safe_require("menus.neo-tree")
-  if not ok_orig then orig_menu = {} end
+  if not ok_orig then
+    orig_menu = {}
+  end
   local menu = {}
   if type(orig_menu) == "table" then
     for i = 1, #orig_menu do

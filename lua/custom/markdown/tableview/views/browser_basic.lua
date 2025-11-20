@@ -8,7 +8,9 @@ local parser = require("custom.markdown.tableview.parser")
 ---@param s string
 ---@return string
 local function html_escape(s)
-  if s == nil then return "" end
+  if s == nil then
+    return ""
+  end
   -- simple replacement for &, <, >, " and '
   s = s:gsub("&", "&amp;")
   s = s:gsub("<", "&lt;")

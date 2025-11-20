@@ -17,7 +17,9 @@ local M = {}
 ---@return boolean ok
 function M.ensure_parent(path, recursive)
   local dir = vim.fn.fnamemodify(path, ":p:h")
-  if dir == "" then return false end
+  if dir == "" then
+    return false
+  end
   local flag = recursive and "p" or ""
   -- mkdir() returns 1 on success, 0 on failure (already exists → success=1)
   local ok = (vim.fn.mkdir(dir, flag) == 1) or (vim.fn.isdirectory(dir) == 1)
@@ -75,38 +77,38 @@ end
 --- Setup 'newfile'-Usercommands
 ---@return nil
 function M.enable_usercmds()
-	vim.api.nvim_create_user_command("NewFile", function(opts_)
-	 local path = vim.fn.expand(opts_.args)
-		M.edit_new(path, { recursive = true, write_now = false, overwrite = false })
-	end, { nargs = 1, complete = "file" })
+  vim.api.nvim_create_user_command("NewFile", function(opts_)
+    local path = vim.fn.expand(opts_.args)
+    M.edit_new(path, { recursive = true, write_now = false, overwrite = false })
+  end, { nargs = 1, complete = "file" })
 
-	vim.api.nvim_create_user_command("NewFileWrite", function(opts_)
-		local path = vim.fn.expand(opts_.args)
-		M.edit_new(path, { recursive = true, write_now = true, overwrite = false })
-	end, { nargs = 1, complete = "file" })
+  vim.api.nvim_create_user_command("NewFileWrite", function(opts_)
+    local path = vim.fn.expand(opts_.args)
+    M.edit_new(path, { recursive = true, write_now = true, overwrite = false })
+  end, { nargs = 1, complete = "file" })
 
-	vim.api.nvim_create_user_command("SaveAsR", function(opts_)
-		local path = vim.fn.expand(opts_.args)
-		M.save_as(path, { recursive = true, overwrite = opts_.bang, write_now = true })
-	end, { nargs = 1, bang = true, complete = "file" })
+  vim.api.nvim_create_user_command("SaveAsR", function(opts_)
+    local path = vim.fn.expand(opts_.args)
+    M.save_as(path, { recursive = true, overwrite = opts_.bang, write_now = true })
+  end, { nargs = 1, bang = true, complete = "file" })
 
-	vim.api.nvim_create_user_command("WriteToR", function(opts_)
-		local path = vim.fn.expand(opts_.args)
-		M.write_to(path, { recursive = true, overwrite = opts_.bang, write_now = true })
-	end, { nargs = 1, bang = true, complete = "file" })
+  vim.api.nvim_create_user_command("WriteToR", function(opts_)
+    local path = vim.fn.expand(opts_.args)
+    M.write_to(path, { recursive = true, overwrite = opts_.bang, write_now = true })
+  end, { nargs = 1, bang = true, complete = "file" })
 
-	vim.api.nvim_create_user_command("MkParent", function()
-		local name = vim.api.nvim_buf_get_name(0)
-		if name == "" then
-			vim.notify("buffer has no name; use :file {path} first", vim.log.levels.WARN)
-			return
-		end
-		if M.ensure_parent(name, true) then
-			vim.notify("ensured parent: " .. vim.fn.fnamemodify(name, ":p:h"), vim.log.levels.INFO)
-		else
-			vim.notify("mkdir failed for: " .. name, vim.log.levels.ERROR)
-		end
-	end, {})
+  vim.api.nvim_create_user_command("MkParent", function()
+    local name = vim.api.nvim_buf_get_name(0)
+    if name == "" then
+      vim.notify("buffer has no name; use :file {path} first", vim.log.levels.WARN)
+      return
+    end
+    if M.ensure_parent(name, true) then
+      vim.notify("ensured parent: " .. vim.fn.fnamemodify(name, ":p:h"), vim.log.levels.INFO)
+    else
+      vim.notify("mkdir failed for: " .. name, vim.log.levels.ERROR)
+    end
+  end, {})
 end
 
 return M ---@cast M NewFileAPI

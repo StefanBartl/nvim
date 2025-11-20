@@ -13,10 +13,10 @@ local function settings()
     bashIde = {
       -- If shellcheck is present, bashls will use it automatically;
       -- below paths are optional overrides to be explicit and robust.
-      shellcheckPath = vim.fn.exepath("shellcheck"),  -- empty string if not found
+      shellcheckPath = vim.fn.exepath("shellcheck"), -- empty string if not found
       -- When 'explainshell' is running locally, you can set:
       -- explainshellEndpoint = "http://localhost:5000",
-      trace = { server = "off" },                    -- "off" | "messages" | "verbose"
+      trace = { server = "off" }, -- "off" | "messages" | "verbose"
       includeAllWorkspaceSymbols = true,
       globPattern = "*@(.sh|.inc|.bash|.zsh|.ksh|.mksh)",
     },
@@ -48,7 +48,9 @@ function M.setup(shared, opts)
     settings = settings(),
   })
 
-  if opts.enable ~= false then pcall(vim.lsp.enable, "bashls") end
+  if opts.enable ~= false then
+    pcall(vim.lsp.enable, "bashls")
+  end
 end
 
 return M

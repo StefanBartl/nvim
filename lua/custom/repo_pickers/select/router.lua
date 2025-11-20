@@ -22,39 +22,52 @@ function M.mk_selector(cfg, engine_hint)
 
   -- Force vim.ui.select
   if sel == "vim_select" then
-    return function(c, r, cb) sel_vim.select(c, r, cb) end
+    return function(c, r, cb)
+      sel_vim.select(c, r, cb)
+    end
   end
 
   -- Force specific UI regardless of engine (allowed, but not recommended)
   if sel == "telescope" then
     return function(c, r, cb)
-      if not sel_tel.select(c, r, cb) then sel_vim.select(c, r, cb) end
+      if not sel_tel.select(c, r, cb) then
+        sel_vim.select(c, r, cb)
+      end
     end
   end
   if sel == "fzf" then
     return function(c, r, cb)
-      if not sel_fzf.select(c, r, cb) then sel_vim.select(c, r, cb) end
+      if not sel_fzf.select(c, r, cb) then
+        sel_vim.select(c, r, cb)
+      end
     end
   end
 
   -- auto / match_engine / anything else: follow the engine hint
   if engine_hint == "telescope" then
     return function(c, r, cb)
-      if not sel_tel.select(c, r, cb) then sel_vim.select(c, r, cb) end
+      if not sel_tel.select(c, r, cb) then
+        sel_vim.select(c, r, cb)
+      end
     end
   elseif engine_hint == "fzf" then
     return function(c, r, cb)
-      if not sel_fzf.select(c, r, cb) then sel_vim.select(c, r, cb) end
+      if not sel_fzf.select(c, r, cb) then
+        sel_vim.select(c, r, cb)
+      end
     end
   else
     -- Unknown engine: try fzf, then Telescope then fallback
     return function(c, r, cb)
-			if sel_fzf.select(c, r, cb) then return end
-      if sel_tel.select(c, r, cb) then return end
+      if sel_fzf.select(c, r, cb) then
+        return
+      end
+      if sel_tel.select(c, r, cb) then
+        return
+      end
       sel_vim.select(c, r, cb)
     end
   end
 end
 
 return M
-

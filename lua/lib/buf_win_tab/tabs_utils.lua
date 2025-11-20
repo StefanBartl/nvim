@@ -81,7 +81,12 @@ function M.print_tabs(tabs)
     -- Optionally print buffer names per tab for more detail
     local names = {}
     for _, b in ipairs(t.bufs) do
-      table.insert(names, vim.fn.fnamemodify(vim.api.nvim_buf_get_name(b), ":~:.") ~= "" and vim.fn.fnamemodify(vim.api.nvim_buf_get_name(b), ":~:.") or "[no-name]")
+      table.insert(
+        names,
+        vim.fn.fnamemodify(vim.api.nvim_buf_get_name(b), ":~:.") ~= ""
+            and vim.fn.fnamemodify(vim.api.nvim_buf_get_name(b), ":~:.")
+          or "[no-name]"
+      )
     end
     vim.notify("  bufs: " .. table.concat(names, ", "), vim.log.levels.DEBUG)
   end

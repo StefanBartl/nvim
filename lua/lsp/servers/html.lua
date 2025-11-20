@@ -26,7 +26,9 @@ function M.setup(shared, opts)
 
   -- Try to resolve an executable either via exepath or Mason bin dir
   local function resolve_exec(name)
-    if not name or name == "" then return nil end
+    if not name or name == "" then
+      return nil
+    end
     local path = fn.exepath(name)
     if path and path ~= "" then
       return path

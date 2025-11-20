@@ -83,7 +83,6 @@ function M.apply(ev)
   create_user_command(bufnr, "TableViewOpenBrowserNice", function()
     browser_view_niceified(bufnr)
   end, { desc = "[Costum.Markdown.TableView] Open table under cursor in browser (nice HTML)", nargs = 0 })
-
 end
 
 return M

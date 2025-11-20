@@ -37,9 +37,13 @@ function M.is_special_buf(bufnr)
   end
   -- buffer-local option accessor (stable API)
   local ok, ft = pcall(api.nvim_get_option_value, "filetype", { buf = bufnr })
-  if not ok then ft = "" end
-  local ok2, bt = pcall(api.nvim_get_option_value, "buftype", {  buf = bufnr })
-  if not ok2 then bt = "" end
+  if not ok then
+    ft = ""
+  end
+  local ok2, bt = pcall(api.nvim_get_option_value, "buftype", { buf = bufnr })
+  if not ok2 then
+    bt = ""
+  end
 
   local blacklist = {
     help = true,
@@ -64,7 +68,9 @@ function M.is_modifiable(bufnr)
     return false
   end
   local ok, val = pcall(api.nvim_get_option_value, "modifiable", { buf = bufnr })
-  if not ok then return false end
+  if not ok then
+    return false
+  end
   return val
 end
 

@@ -101,9 +101,15 @@ end
 --- Return canonical OS name.
 ---@return OSName
 function M.name()
-  if M.is_wsl() then return "wsl" end
-  if M.is_windows() then return "windows" end
-  if M.is_macos() then return "macos" end
+  if M.is_wsl() then
+    return "wsl"
+  end
+  if M.is_windows() then
+    return "windows"
+  end
+  if M.is_macos() then
+    return "macos"
+  end
   return "linux"
 end
 
@@ -142,7 +148,9 @@ end
 ---@param p string
 ---@return string
 function M.wsl_to_win(p)
-  if not M.is_wsl() then return p end
+  if not M.is_wsl() then
+    return p
+  end
   local res = M.run_blocking("wslpath -w " .. vim.fn.shellescape(p))
   if res.code == 0 and res.stdout and #res.stdout > 0 then
     return (res.stdout:gsub("%s+$", ""))
@@ -154,7 +162,9 @@ end
 ---@param p string
 ---@return string
 function M.win_to_wsl(p)
-  if not M.is_wsl() then return p end
+  if not M.is_wsl() then
+    return p
+  end
   local res = M.run_blocking("wslpath -u " .. vim.fn.shellescape(p))
   if res.code == 0 and res.stdout and #res.stdout > 0 then
     return (res.stdout:gsub("%s+$", ""))
@@ -197,7 +207,11 @@ end
 ---@return OsShell
 function M.shell()
   if M.is_windows() and not M.is_wsl() then
-    return { prog = "powershell", args = { "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command" }, is_powershell = true }
+    return {
+      prog = "powershell",
+      args = { "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command" },
+      is_powershell = true,
+    }
   end
   return { prog = "sh", args = { "-lc" }, is_powershell = false }
 end
@@ -224,8 +238,16 @@ function M.run(cmd, cb)
   local jid = vim.fn.jobstart(full, {
     stdout_buffered = true,
     stderr_buffered = true,
-    on_stdout = function(_, data) if data then stdout = data end end,
-    on_stderr = function(_, data) if data then stderr = data end end,
+    on_stdout = function(_, data)
+      if data then
+        stdout = data
+      end
+    end,
+    on_stderr = function(_, data)
+      if data then
+        stderr = data
+      end
+    end,
     on_exit = function(_, code, signal)
       cb(code == 0, pack(code, signal, table.concat(stdout, "\n"), table.concat(stderr, "\n")))
     end,
@@ -252,8 +274,7 @@ function M.run_blocking(cmd)
     code = code,
     signal = 0,
     stdout = ok and table.concat(out, "\n") or "",
-    stderr = ok and "" or
-        "systemlist failed"
+    stderr = ok and "" or "systemlist failed",
   }
 end
 
@@ -265,20 +286,28 @@ end
 function M.copy_to_clipboard(text)
   -- 1) Try Neovim register (+)
   local ok = pcall(vim.fn.setreg, "+", text)
-  if ok then return true end
+  if ok then
+    return true
+  end
 
   -- 2) macOS pbcopy
   if M.is_macos() then
     local res = M.run_blocking("pbcopy")
-    if res.code == 0 then return true end
+    if res.code == 0 then
+      return true
+    end
   end
 
   -- 3) Linux: xclip / wl-copy (best effort)
   if M.is_linux() and not M.is_wsl() then
     local r1 = M.run_blocking("xclip -selection clipboard " .. text)
-    if r1.code == 0 then return true end
+    if r1.code == 0 then
+      return true
+    end
     local r2 = M.run_blocking("wl-copy " .. text)
-    if r2.code == 0 then return true end
+    if r2.code == 0 then
+      return true
+    end
   end
 
   -- 4) Windows native PowerShell

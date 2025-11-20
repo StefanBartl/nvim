@@ -41,8 +41,12 @@ local function safe_to_open_dashboard()
 
   -- allow if empty buffer OR unlisted buffer
   local listed = pcall(api.nvim_get_option_value, "buflisted", { buf = bufnr })
-  if type(listed) == "table" then listed = listed[2] end
-  if listed == nil then listed = true end
+  if type(listed) == "table" then
+    listed = listed[2]
+  end
+  if listed == nil then
+    listed = true
+  end
 
   local empty = utils.is_empty_buffer(bufnr)
   if not empty and listed then
@@ -50,7 +54,7 @@ local function safe_to_open_dashboard()
   end
 
   -- prefer single-window situations
-  if vim.fn.winnr('$') ~= 1 then
+  if vim.fn.winnr("$") ~= 1 then
     return false
   end
 
@@ -60,7 +64,9 @@ end
 api.nvim_create_autocmd({ "BufWinEnter" }, {
   callback = function()
     local ok_dash, dash = pcall(require, "snacks.dashboard")
-    if not ok_dash or type(dash.open) ~= "function" then return end
+    if not ok_dash or type(dash.open) ~= "function" then
+      return
+    end
 
     vim.defer_fn(function()
       if safe_to_open_dashboard() then

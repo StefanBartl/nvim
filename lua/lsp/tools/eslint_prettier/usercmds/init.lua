@@ -33,12 +33,16 @@ function M.attach(ctx)
   api.nvim_create_user_command("LintAndFormat", function()
     local bufnr = api.nvim_get_current_buf()
     local root = core(bufnr)
-    if check.has_eslint(root) then eslint_fix.eslint_fix(bufnr) end
-    if check.has_prettier(root) then prettier_fmt.prettier_format(bufnr) end
+    if check.has_eslint(root) then
+      eslint_fix.eslint_fix(bufnr)
+    end
+    if check.has_prettier(root) then
+      prettier_fmt.prettier_format(bufnr)
+    end
   end, { desc = "Run eslint_d --fix then prettier --write on current file" })
 
   api.nvim_create_user_command("ToggleLintFormatOnSave", function()
-    ctx._enabled = not not (not not ctx._enabled) -- placeholder if ctx is external
+    ctx._enabled = not not not not ctx._enabled -- placeholder if ctx is external
     -- better: toggle global in main module; user can call require('lsp.tools.eslint_prettier')._enabled = false
     vim.notify("Toggle autorun: use plugin.setup to change default programmatically", vim.log.levels.INFO)
   end, { desc = "Toggle automatic lint+format on save (toggle via API)" })

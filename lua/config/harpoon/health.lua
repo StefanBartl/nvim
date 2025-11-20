@@ -13,12 +13,24 @@ function M.check()
   end
 
   local ok_plenary = pcall(require, "plenary.path")
-  if not ok_plenary then health.warn("plenary not found (optional)") else vim.health.ok("plenary ok") end
+  if not ok_plenary then
+    health.warn("plenary not found (optional)")
+  else
+    vim.health.ok("plenary ok")
+  end
 
   local ok_fzf = pcall(require, "fzf-lua")
-  if ok_fzf then health.ok("fzf-lua found (optional)") else vim.health.warn("fzf-lua missing (optional)") end
+  if ok_fzf then
+    health.ok("fzf-lua found (optional)")
+  else
+    vim.health.warn("fzf-lua missing (optional)")
+  end
   local ok_tel = pcall(require, "telescope")
-  if ok_tel then health.ok("telescope found (optional)") else vim.health.warn("telescope missing (optional)") end
+  if ok_tel then
+    health.ok("telescope found (optional)")
+  else
+    vim.health.warn("telescope missing (optional)")
+  end
 
   -- Simple write test for harpoon storage (best-effort)
   local ok, harpoon = pcall(require, "harpoon")
@@ -33,4 +45,3 @@ function M.check()
 end
 
 return M
-

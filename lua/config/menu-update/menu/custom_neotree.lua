@@ -131,7 +131,7 @@ local function load()
       end
     end
 
-		-- Whitelisted keys
+    -- Whitelisted keys
     maybe_add("[t", "󰈙 Copy recursive file list (absolute paths) to clipboard (+)", "[t]")
     maybe_add("[T", "󰈙 Copy recursive file list (relative to cwd) to clipboard (+)", "[T]")
     maybe_add("O", " Open with System Application", "O")

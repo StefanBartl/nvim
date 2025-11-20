@@ -57,11 +57,11 @@ local function spawn_project_command(cmd, opts)
   else
     -- Unix: use /bin/sh for consistency with shell features
     shell = "/bin/sh"
-   shell_args = { "-c", full_cmd }
+    shell_args = { "-c", full_cmd }
   end
 
   -- Spawn the process asynchronously
-	---@diagnostic disable-next-line lib.uv
+  ---@diagnostic disable-next-line lib.uv
   local handle = uv.spawn(shell, {
     args = shell_args,
     cwd = cwd,
@@ -74,11 +74,11 @@ local function spawn_project_command(cmd, opts)
         print(("Command '%s' exited with code %d, signal %s"):format(full_cmd, code, tostring(signal)))
       end)
     end
-	---@diagnostic disable-next-line lib.uv
+    ---@diagnostic disable-next-line lib.uv
     handle:close()
   end)
 
-	---@diagnostic disable-next-line lib.uv
+  ---@diagnostic disable-next-line lib.uv
   return handle
 end
 
@@ -86,5 +86,5 @@ end
 -- spawn_project_command("npm run dev", { cwd = "/path/to/project", on_exit = function(code) print(code) end })
 -- spawn_project_command("echo", { args = { "Hello World" } })
 return {
-  spawn_project_command = spawn_project_command
+  spawn_project_command = spawn_project_command,
 }

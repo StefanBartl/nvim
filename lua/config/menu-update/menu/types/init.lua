@@ -5,7 +5,6 @@
 -- ---@field build fun(): table
 -- ---@field load fun(): table
 
-
 -- ---@class custom_neotree_entry
 -- ---@field key string|nil
 -- ---@field enabled boolean|nil
@@ -17,4 +16,3 @@
 -- ---@field node_type "'any'"|"'file'"|"'folder'"|nil
 -- ---@field name string|nil
 -- ---@field items custom_neotree_entry[]|nil
-

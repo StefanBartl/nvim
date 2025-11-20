@@ -23,7 +23,6 @@
 ---@field filetype? string            -- Filetype for syntax highlighting (defaults to 'lua')
 ---@field on_open? fun(win:integer)   -- Optional window hook
 
-
 ---@class ExtmarkLeakEntry
 ---@field name string
 ---@field buf integer

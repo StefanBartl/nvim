@@ -1,7 +1,7 @@
 -- Utility: ensure directory for a given path exists; returns true on success.
 -- Uses vim.fn.mkdir with "p" flag to create parents; returns boolean.
 
-return function (path)
+return function(path)
   if not path or path == "" then
     return false, "empty path"
   end

@@ -8,7 +8,9 @@ local S = {}
 ---@param s any
 ---@return string
 function S.trim(s)
-  if type(s) ~= "string" then return "" end
+  if type(s) ~= "string" then
+    return ""
+  end
   return (s:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
@@ -41,17 +43,19 @@ end
 ---@param sep string
 ---@return string[]
 function S.split(s, sep)
-  if sep == "" then return { s } end
+  if sep == "" then
+    return { s }
+  end
   ---@type string[]
   local out = {}
   local i = 1
   while true do
     local a, b = s:find(sep, i, true)
     if not a then
-      out[#out+1] = s:sub(i)
+      out[#out + 1] = s:sub(i)
       break
     end
-    out[#out+1] = s:sub(i, a - 1)
+    out[#out + 1] = s:sub(i, a - 1)
     i = b + 1
   end
   return out
@@ -71,17 +75,19 @@ end
 ---@param to string
 ---@return string
 function S.replace_all(s, from, to)
-  if from == "" then return s end
+  if from == "" then
+    return s
+  end
   local res = {}
   local i = 1
   while true do
     local a, b = s:find(from, i, true)
     if not a then
-      res[#res+1] = s:sub(i)
+      res[#res + 1] = s:sub(i)
       break
     end
-    res[#res+1] = s:sub(i, a - 1)
-    res[#res+1] = to
+    res[#res + 1] = s:sub(i, a - 1)
+    res[#res + 1] = to
     i = b + 1
   end
   return table.concat(res)
@@ -98,16 +104,20 @@ end
 ---@param s string
 ---@return string
 function S.capitalize(s)
-  if s == "" then return s end
-  return s:sub(1,1):upper() .. s:sub(2)
+  if s == "" then
+    return s
+  end
+  return s:sub(1, 1):upper() .. s:sub(2)
 end
 
 ---@nodiscard
 ---@param s string
 ---@return string
 function S.uncapitalize(s)
-  if s == "" then return s end
-  return s:sub(1,1):lower() .. s:sub(2)
+  if s == "" then
+    return s
+  end
+  return s:sub(1, 1):lower() .. s:sub(2)
 end
 
 ---@nodiscard
@@ -126,8 +136,8 @@ end
 ---@return string
 function S.kebab_case(s)
   local t = s
-  t = (t:gsub("%f[%w]%u", "-%1"))  -- FooBar -> Foo-Bar
-  t = (t:gsub("[%s_]+", "-"))       -- space/underscore -> dash
+  t = (t:gsub("%f[%w]%u", "-%1")) -- FooBar -> Foo-Bar
+  t = (t:gsub("[%s_]+", "-")) -- space/underscore -> dash
   t = t:lower()
   t = (t:gsub("%-+", "-"))
   t = (t:gsub("^%-", "")):gsub("%-$", "")
@@ -153,13 +163,15 @@ end
 function S.camel_case(s)
   local words = {}
   for w in s:gmatch("[^%s%-%_]+") do
-    words[#words+1] = w:lower()
+    words[#words + 1] = w:lower()
   end
-  if #words == 0 then return "" end
+  if #words == 0 then
+    return ""
+  end
   local head = words[1]
   for i = 2, #words do
     local w = words[i]
-    head = head .. w:sub(1,1):upper() .. w:sub(2)
+    head = head .. w:sub(1, 1):upper() .. w:sub(2)
   end
   return head
 end
@@ -169,7 +181,9 @@ end
 ---@param width integer
 ---@return string
 function S.pad_start(s, width)
-  if #s >= width then return s end
+  if #s >= width then
+    return s
+  end
   return string.rep(" ", width - #s) .. s
 end
 
@@ -178,7 +192,9 @@ end
 ---@param width integer
 ---@return string
 function S.pad_end(s, width)
-  if #s >= width then return s end
+  if #s >= width then
+    return s
+  end
   return s .. string.rep(" ", width - #s)
 end
 
@@ -187,7 +203,9 @@ end
 ---@param width integer
 ---@return string
 function S.pad_center(s, width)
-  if #s >= width then return s end
+  if #s >= width then
+    return s
+  end
   local total = width - #s
   local left = math.floor(total / 2)
   local right = total - left
@@ -212,11 +230,13 @@ function S.dedent(s)
     local _, spaces = line:find("^[ ]*")
     local count = spaces and #spaces or 0
     if line:find("%S") then
-	---@diagnostic disable-next-line
-			min = (min == nil) and count or math.min(min, count)
+      ---@diagnostic disable-next-line
+      min = (min == nil) and count or math.min(min, count)
     end
   end
-  if not min or min == 0 then return s end
+  if not min or min == 0 then
+    return s
+  end
   return (s:gsub("\n[ ]{" .. min .. "}", "\n"):gsub("^[ ]{" .. min .. "}", ""))
 end
 
@@ -224,9 +244,10 @@ end
 ---@param s any
 ---@return boolean
 function S.is_empty_or_space(s)
-  if type(s) ~= "string" then return true end
+  if type(s) ~= "string" then
+    return true
+  end
   return s:find("%S") == nil
 end
 
 return S
-

@@ -1,7 +1,6 @@
 ---@meta
 ---@module 'config.mason.types'
 
-
 ---@class MasonEnsureCategory
 ---@alias MasonEnsureMap table<string, boolean>
 
@@ -12,5 +11,3 @@
 ---@field formatters boolean|nil     -- Enable formatter tool ensures (default: true)
 ---@field overrides { lsp?: MasonEnsureMap, dap?: MasonEnsureMap, linters?: MasonEnsureMap, formatters?: MasonEnsureMap }|nil
 ---@field log_prefix string|nil      -- Optional log prefix (default: "mason.ensure")
-
-

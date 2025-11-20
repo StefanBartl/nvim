@@ -21,22 +21,24 @@ function M.setup()
     virtual_text = true,
 
     -- Modern sign configuration (no deprecated sign_define)
-    signs = use_modern_signs and {
-      -- You can use Nerd Font icons or simple ASCII
-      text = {
-        ERROR = "■",
-        WARN  = "■",
-        INFO  = "□",
-        HINT  = "·",
-      },
-      -- Optional: highlight groups; omit to use defaults
-      -- numhl = {
-      --   ERROR = "DiagnosticSignError",
-      --   WARN  = "DiagnosticSignWarn",
-      --   INFO  = "DiagnosticSignInfo",
-      --   HINT  = "DiagnosticSignHint",
-      -- },
-    } or true, -- keep signs enabled on older Neovim; icons set below via sign_define
+    signs = use_modern_signs
+        and {
+          -- You can use Nerd Font icons or simple ASCII
+          text = {
+            ERROR = "■",
+            WARN = "■",
+            INFO = "□",
+            HINT = "·",
+          },
+          -- Optional: highlight groups; omit to use defaults
+          -- numhl = {
+          --   ERROR = "DiagnosticSignError",
+          --   WARN  = "DiagnosticSignWarn",
+          --   INFO  = "DiagnosticSignInfo",
+          --   HINT  = "DiagnosticSignHint",
+          -- },
+        }
+      or true, -- keep signs enabled on older Neovim; icons set below via sign_define
 
     float = {
       focusable = true,

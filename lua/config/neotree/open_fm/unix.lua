@@ -47,7 +47,7 @@ end
 ---@param state table -- Neo-tree window state passed by the mapping
 ---@return boolean ok -- true if a launch was attempted; false on early error
 function M.open(state)
-  if not (vim.fn.has "unix" == 1 or vim.fn.has "mac" == 1) then
+  if not (vim.fn.has("unix") == 1 or vim.fn.has("mac") == 1) then
     vim.notify("Open in File Manager: Unix only", vim.log.levels.WARN)
     return false
   end
@@ -61,7 +61,7 @@ function M.open(state)
   local abs = to_unixpath(raw)
 
   local cmd
-  if vim.fn.has "mac" == 1 then
+  if vim.fn.has("mac") == 1 then
     cmd = { "open", abs }
   else
     cmd = { "xdg-open", abs }

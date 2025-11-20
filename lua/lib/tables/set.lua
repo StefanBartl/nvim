@@ -12,7 +12,9 @@ local M = {}
 ---@return table<T, true>
 function M.from_array(xs)
   local s = {} ---@type table<T, true>
-  for i = 1, #xs do s[xs[i]] = true end
+  for i = 1, #xs do
+    s[xs[i]] = true
+  end
   return s
 end
 
@@ -22,11 +24,16 @@ end
 ---@return T[]
 function M.to_array(s)
   local n = 0
-  for _ in pairs(s) do n = n + 1 end
+  for _ in pairs(s) do
+    n = n + 1
+  end
   ---@type T[]
   local out = { [n] = false }
   local i = 0
-  for k in pairs(s) do i = i + 1; out[i] = k end
+  for k in pairs(s) do
+    i = i + 1
+    out[i] = k
+  end
   return out
 end
 
@@ -43,7 +50,9 @@ end
 ---@param s table<T, true>
 ---@param xs T[]
 function M.add_all(s, xs)
-  for i = 1, #xs do s[xs[i]] = true end
+  for i = 1, #xs do
+    s[xs[i]] = true
+  end
 end
 
 --- Remove a value from the set.
@@ -59,14 +68,18 @@ end
 ---@param s table<T, true>
 ---@param xs T[]
 function M.remove_all(s, xs)
-  for i = 1, #xs do s[xs[i]] = nil end
+  for i = 1, #xs do
+    s[xs[i]] = nil
+  end
 end
 
 --- Clear a set in-place.
 ---@generic T
 ---@param s table<T, true>
 function M.clear(s)
-  for k in pairs(s) do s[k] = nil end
+  for k in pairs(s) do
+    s[k] = nil
+  end
 end
 
 --- Check membership.
@@ -84,7 +97,9 @@ end
 ---@return integer
 function M.size(s)
   local n = 0
-  for _ in pairs(s) do n = n + 1 end
+  for _ in pairs(s) do
+    n = n + 1
+  end
   return n
 end
 
@@ -94,7 +109,9 @@ end
 ---@return table<T, true>
 function M.copy(s)
   local out = {} ---@type table<T, true>
-  for k in pairs(s) do out[k] = true end
+  for k in pairs(s) do
+    out[k] = true
+  end
   return out
 end
 
@@ -104,7 +121,9 @@ end
 ---@return table<K, true>
 function M.from_keys(t)
   local out = {} ---@type table<K, true>
-  for k, _ in pairs(t) do out[k] = true end
+  for k, _ in pairs(t) do
+    out[k] = true
+  end
   return out
 end
 
@@ -115,8 +134,12 @@ end
 ---@return table<T, true>
 function M.union(a, b)
   local out = {} ---@type table<T, true>
-  for k in pairs(a) do out[k] = true end
-  for k in pairs(b) do out[k] = true end
+  for k in pairs(a) do
+    out[k] = true
+  end
+  for k in pairs(b) do
+    out[k] = true
+  end
   return out
 end
 
@@ -130,9 +153,17 @@ function M.intersection(a, b)
   -- Iterate smaller set for performance
   local sa, sb = M.size(a), M.size(b)
   if sa <= sb then
-    for k in pairs(a) do if b[k] then out[k] = true end end
+    for k in pairs(a) do
+      if b[k] then
+        out[k] = true
+      end
+    end
   else
-    for k in pairs(b) do if a[k] then out[k] = true end end
+    for k in pairs(b) do
+      if a[k] then
+        out[k] = true
+      end
+    end
   end
   return out
 end
@@ -144,7 +175,11 @@ end
 ---@return table<T, true>
 function M.difference(a, b)
   local out = {} ---@type table<T, true>
-  for k in pairs(a) do if not b[k] then out[k] = true end end
+  for k in pairs(a) do
+    if not b[k] then
+      out[k] = true
+    end
+  end
   return out
 end
 
@@ -155,8 +190,16 @@ end
 ---@return table<T, true>
 function M.symmetric_difference(a, b)
   local out = {} ---@type table<T, true>
-  for k in pairs(a) do if not b[k] then out[k] = true end end
-  for k in pairs(b) do if not a[k] then out[k] = true end end
+  for k in pairs(a) do
+    if not b[k] then
+      out[k] = true
+    end
+  end
+  for k in pairs(b) do
+    if not a[k] then
+      out[k] = true
+    end
+  end
   return out
 end
 
@@ -166,7 +209,11 @@ end
 ---@param b table<T, true>
 ---@return boolean
 function M.is_subset(a, b)
-  for k in pairs(a) do if not b[k] then return false end end
+  for k in pairs(a) do
+    if not b[k] then
+      return false
+    end
+  end
   return true
 end
 
@@ -176,7 +223,11 @@ end
 ---@param b table<T, true>
 ---@return boolean
 function M.is_superset(a, b)
-  for k in pairs(b) do if not a[k] then return false end end
+  for k in pairs(b) do
+    if not a[k] then
+      return false
+    end
+  end
   return true
 end
 
@@ -187,8 +238,14 @@ end
 ---@return boolean
 function M.equals(a, b)
   local sa, sb = M.size(a), M.size(b)
-  if sa ~= sb then return false end
-  for k in pairs(a) do if not b[k] then return false end end
+  if sa ~= sb then
+    return false
+  end
+  for k in pairs(a) do
+    if not b[k] then
+      return false
+    end
+  end
   return true
 end
 
@@ -199,7 +256,11 @@ end
 ---@return table<T, true>
 function M.filter(s, pred)
   local out = {} ---@type table<T, true>
-  for k in pairs(s) do if pred(k) then out[k] = true end end
+  for k in pairs(s) do
+    if pred(k) then
+      out[k] = true
+    end
+  end
   return out
 end
 
@@ -211,7 +272,9 @@ end
 ---@return table<U, true>
 function M.map(s, fn)
   local out = {} ---@type table<U, true>
-  for k in pairs(s) do out[fn(k)] = true end
+  for k in pairs(s) do
+    out[fn(k)] = true
+  end
   return out
 end
 

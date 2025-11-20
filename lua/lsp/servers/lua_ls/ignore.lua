@@ -39,11 +39,13 @@ M._names = {
 --- @param s string
 --- @return string
 local function normalize_for_platform(s)
-  if type(s) ~= "string" then return s end
+  if type(s) ~= "string" then
+    return s
+  end
   -- keep this minimal: trim trailing slashes and collapse repeated separators
   s = s:gsub("[/\\]+$", "") -- strip trailing separators
   -- Optionally lower-case on Windows for case-insensitive comparisons.
-  if package.config:sub(1,1) == "\\" then
+  if package.config:sub(1, 1) == "\\" then
     s = s:lower()
   end
   return s
@@ -53,7 +55,9 @@ end
 --- @return string[]
 function M.names()
   local out = {}
-  for i = 1, #M._names do out[i] = M._names[i] end
+  for i = 1, #M._names do
+    out[i] = M._names[i]
+  end
   return out
 end
 

@@ -20,10 +20,10 @@ local function insert_html_code_template()
   local template = {
     '<figure id="#code-">',
     '  <pre><code class="">',
-    '',
-    '  </code></pre>',
-    '  <figcaption><strong>Listing:</strong> </figcaption>',
-    '</figure>',
+    "",
+    "  </code></pre>",
+    "  <figcaption><strong>Listing:</strong> </figcaption>",
+    "</figure>",
   }
 
   -- Insert the template at cursor position
@@ -35,10 +35,10 @@ local function insert_html_code_template()
   api.nvim_win_set_cursor(0, { row + 1, id_col })
 
   -- Enter insert mode for immediate editing
-  vim.cmd('startinsert')
+  vim.cmd("startinsert")
 end
 
 --- Register the user command
-api.nvim_create_user_command('HTMLCodeTemplate', insert_html_code_template, {
-  desc = 'Insert HTML code listing template at cursor position',
+api.nvim_create_user_command("HTMLCodeTemplate", insert_html_code_template, {
+  desc = "Insert HTML code listing template at cursor position",
 })

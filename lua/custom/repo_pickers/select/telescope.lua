@@ -11,7 +11,10 @@ local M = {}
 --- @param on_choice fun(dir:RepoDir)
 --- @return boolean handled
 function M.select(cfg, repos, on_choice)
-  local function sreq(name) local ok, mod = pcall(require, name); return ok and mod or nil end
+  local function sreq(name)
+    local ok, mod = pcall(require, name)
+    return ok and mod or nil
+  end
 
   local pickers = sreq("telescope.pickers")
   local finders = sreq("telescope.finders")
@@ -25,27 +28,30 @@ function M.select(cfg, repos, on_choice)
 
   ---@type string[]
   local labels = { [#repos] = "" }
-  for i = 1, #repos do labels[i] = fs.label_of(cfg, repos[i]) end
+  for i = 1, #repos do
+    labels[i] = fs.label_of(cfg, repos[i])
+  end
 
-  pickers.new({}, {
-    prompt_title = "Repositories",
-    finder = finders.new_table({ results = labels }),
-    sorter = conf.values.generic_sorter({}),
-    attach_mappings = function(_, _)
-      actions.select_default:replace(function(bufnr)
-        actions.close(bufnr)
-        local selection = action_state.get_selected_entry()
-        local idx = selection and selection.index
-        if type(idx) == "number" and repos[idx] then
-          on_choice(repos[idx])
-        end
-      end)
-      return true
-    end,
-  }):find()
+  pickers
+    .new({}, {
+      prompt_title = "Repositories",
+      finder = finders.new_table({ results = labels }),
+      sorter = conf.values.generic_sorter({}),
+      attach_mappings = function(_, _)
+        actions.select_default:replace(function(bufnr)
+          actions.close(bufnr)
+          local selection = action_state.get_selected_entry()
+          local idx = selection and selection.index
+          if type(idx) == "number" and repos[idx] then
+            on_choice(repos[idx])
+          end
+        end)
+        return true
+      end,
+    })
+    :find()
 
   return true
 end
 
 return M
-

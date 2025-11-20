@@ -34,7 +34,9 @@ local function starts_with_any(s, list)
   -- Fast prefix check; avoids patterns on hot path
   for i = 1, #list do
     local pref = list[i]
-    if pref ~= nil and s:sub(1, #pref) == pref then return true end
+    if pref ~= nil and s:sub(1, #pref) == pref then
+      return true
+    end
   end
   return false
 end
@@ -86,7 +88,9 @@ function M.save(name)
   wipe_blacklisted_buffers()
   local si = resolve_session(name)
   local ok, err = pcall(vim.cmd.mksession, { args = { si.path }, bang = true })
-  if not ok then return false, err end
+  if not ok then
+    return false, err
+  end
   return true, si.path
 end
 
@@ -99,18 +103,21 @@ function M.load(name)
   end
   apply_sessionoptions()
   local ok, err = pcall(vim.cmd.source, si.path)
-  if not ok then return false, err end
+  if not ok then
+    return false, err
+  end
   return true, si.path
 end
 
 ---@return string[]
 function M.list()
   local cfg = require("sessions.config").cfg
-  if not is_dir(cfg.root) then return {} end
+  if not is_dir(cfg.root) then
+    return {}
+  end
   local files = fn.globpath(cfg.root, "*.vim", false, true)
   table.sort(files)
   return files
 end
 
 return M
-

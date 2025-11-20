@@ -10,16 +10,16 @@ local M = {
   -- or partial substrings. Example: "^Link to non%-existent link" will match
   -- messages starting with that text.
   suppressed_message_patterns = {
-    "^Link to non%-existent link",          -- suppress "Link to non-existent link definition ..."
-    "^Ambiguous link to heading",           -- suppress "Ambiguous link to heading '...' "
+    "^Link to non%-existent link", -- suppress "Link to non-existent link definition ..."
+    "^Ambiguous link to heading", -- suppress "Ambiguous link to heading '...' "
     -- Add further patterns
   },
 
   -- list of substrings (plain string matching) for quick filters
   -- Useful when the diagnostic message contains variable parts (IDs, headings).
   suppressed_message_substrings = {
-    "TOC",                   -- suppress messages that mention TOC (table of contents)
-    "table of contents",     -- case-sensitive; add lower/upper variants if needed
+    "TOC", -- suppress messages that mention TOC (table of contents)
+    "table of contents", -- case-sensitive; add lower/upper variants if needed
     -- Add more substrings
   },
 

@@ -10,7 +10,7 @@ dap.adapters["pwa-node"] = {
     command = "node",
     args = {
       vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js",
-      "${port}"
+      "${port}",
     },
   },
 }
@@ -24,6 +24,6 @@ for _, language in ipairs({ "javascript", "typescript" }) do
       program = "${file}",
       cwd = "${workspaceFolder}",
       runtimeExecutable = "node",
-    }
+    },
   }
 end

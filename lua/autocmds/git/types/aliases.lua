@@ -42,4 +42,3 @@
 ---| '"CursorHoldI"'
 ---| '"CursorMoved"'
 ---| '"InsertEnter"'
-

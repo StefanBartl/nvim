@@ -22,7 +22,9 @@ function M.setup(shared, opts)
       on_attach = shared.on_attach,
       on_init = shared.on_init,
     })
-    if opts.enable ~= false then pcall(lsp.enable, "zls") end
+    if opts.enable ~= false then
+      pcall(lsp.enable, "zls")
+    end
   end
 end
 

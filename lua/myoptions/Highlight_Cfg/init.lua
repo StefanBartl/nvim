@@ -8,16 +8,16 @@
 ---   * Optional Gitsigns hunk peek on `gh`
 --- It exposes :MyHlSet / :MyHlShow / :MyHlList for runtime changes.
 
-local C = require "myoptions.config"
+local C = require("myoptions.config")
 local cfg = C.cfg.highlight
-local PathCache = require "myoptions.Highlight_Cfg.path_cache"
+local PathCache = require("myoptions.Highlight_Cfg.path_cache")
 local ctx_ok, ctxmod = pcall(require, "myoptions.Highlight_Cfg.breadcrumbs.ctx")
-local CwordOcc = require "myoptions.Highlight_Cfg.cword_occurences"
+local CwordOcc = require("myoptions.Highlight_Cfg.cword_occurences")
 local _trim = require("lib._trim")
 
 -- Namespaces & groups
-local NS_INDENT = vim.api.nvim_create_namespace "myopt_IndentScope"
-local NS_FLASH = vim.api.nvim_create_namespace "myopt_Flash"
+local NS_INDENT = vim.api.nvim_create_namespace("myopt_IndentScope")
+local NS_FLASH = vim.api.nvim_create_namespace("myopt_Flash")
 local AUG_COLOR = vim.api.nvim_create_augroup("myopt_ColorPersist", { clear = true })
 local AUG_WIN = vim.api.nvim_create_augroup("myopt_PerWindow", { clear = true })
 local AUG_MODE = vim.api.nvim_create_augroup("myopt_Mode", { clear = true })
@@ -29,7 +29,7 @@ local AUG_VIEW = vim.api.nvim_create_augroup("myopt_ViewUpdates", { clear = true
 
 local last_mode_by_win = {} ---@type table<integer,string>
 
-local buffer_is_ui_like = require ("myoptions.skip").std_skip
+local buffer_is_ui_like = require("myoptions.skip").std_skip
 
 --- Convert a hex codepoint string (e.g. "F0056") to a UTF-8 char using Neovim API.
 --- Returns "" on invalid input.
@@ -222,7 +222,6 @@ local function should_enable_column()
   return kb <= (cfg.min_colored_file_kb or 4096)
 end
 
-
 ---@alias HlPair {from:string, to:string}
 
 --- Parse a winhighlight CSV into pairs, ignoring invalid items.
@@ -404,7 +403,7 @@ local function _ts_symbol_path_fallback()
   }
 
   local function ident_of(n)
-    local named = n:field "name"
+    local named = n:field("name")
     if named and named[1] then
       local s = txt(named[1])
       if s ~= "" then
@@ -438,10 +437,10 @@ local function _ts_symbol_path_fallback()
       return s
     end
     local raw = (txt(n):gsub("^%s+", ""):gsub("\n.*", ""))
-    return raw:match "^%w+%s+([%w_]+)%s*%("
-      or raw:match "^%w+%s+([%w_]+)%s*[={:]"
-      or raw:match "^([%w_%.:]+)%s*%("
-      or raw:match "^([%w_%.:]+)"
+    return raw:match("^%w+%s+([%w_]+)%s*%(")
+      or raw:match("^%w+%s+([%w_]+)%s*[={:]")
+      or raw:match("^([%w_%.:]+)%s*%(")
+      or raw:match("^([%w_%.:]+)")
   end
 
   local names, u = {}, node
@@ -449,8 +448,8 @@ local function _ts_symbol_path_fallback()
     if keep[u:type()] then
       local id = ident_of(u)
       if id and #id > 0 then
-        if u:type():find "function" or u:type():find "method" then
-          if not id:find "%)$" then
+        if u:type():find("function") or u:type():find("method") then
+          if not id:find("%)$") then
             id = id:gsub("%s+$", "") .. "()"
           end
         end
@@ -582,8 +581,8 @@ local function update_indent_scope()
   end
   local cur = vim.api.nvim_win_get_cursor(0)
   local row = cur[1]
-  local topl = vim.fn.line "w0"
-  local botl = vim.fn.line "w$"
+  local topl = vim.fn.line("w0")
+  local botl = vim.fn.line("w$")
   local lines = vim.api.nvim_buf_get_lines(bufnr, topl - 1, botl, false)
   local ts = vim.bo.tabstop
 
@@ -605,14 +604,14 @@ local function update_indent_scope()
 
   local curline = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1] or ""
   local curindent = indent_of(curline)
-  if curline:match "^%s*$" then
+  if curline:match("^%s*$") then
     vim.api.nvim_buf_clear_namespace(bufnr, NS_INDENT, 0, -1)
     return
   end
 
   local function line_indent_at(i)
     local s = lines[i] or ""
-    if s:match "^%s*$" then
+    if s:match("^%s*$") then
       return -1
     end
     return indent_of(s)
@@ -667,11 +666,11 @@ local function flash_changed_region(group, ms)
   if not timer then
     return
   end
----@diagnostic disable
-	timer:start(ms, 0, function()
+  ---@diagnostic disable
+  timer:start(ms, 0, function()
     timer:stop()
     timer:close()
-		---@diagnostic enable
+    ---@diagnostic enable
     vim.schedule(function()
       if vim.api.nvim_buf_is_loaded(bufnr) then
         vim.api.nvim_buf_clear_namespace(bufnr, NS_FLASH, 0, -1)
@@ -682,17 +681,17 @@ end
 
 ---@return nil
 local function ensure_yank_put_flash()
-  vim.api.nvim_clear_autocmds { group = AUG_FLASH }
+  vim.api.nvim_clear_autocmds({ group = AUG_FLASH })
   if cfg.enable_yank_flash then
     vim.api.nvim_create_autocmd("TextYankPost", {
       group = AUG_FLASH,
       callback = function()
-        vim.highlight.on_yank { higroup = "YankFlash", timeout = 150, on_visual = true }
+        vim.highlight.on_yank({ higroup = "YankFlash", timeout = 150, on_visual = true })
       end,
       desc = "Flash yanked text region",
     })
   end
-  for _, lhs in ipairs { "p", "P" } do
+  for _, lhs in ipairs({ "p", "P" }) do
     pcall(vim.keymap.del, "n", lhs)
   end
   if cfg.enable_put_flash and cfg.map_put_flash then
@@ -704,11 +703,11 @@ local function ensure_yank_put_flash()
         end)
       end
     end
-    vim.keymap.set("n", "p", paste_and_flash "p", { noremap = true, silent = true, desc = "Paste (flash region)" })
+    vim.keymap.set("n", "p", paste_and_flash("p"), { noremap = true, silent = true, desc = "Paste (flash region)" })
     vim.keymap.set(
       "n",
       "P",
-      paste_and_flash "P",
+      paste_and_flash("P"),
       { noremap = true, silent = true, desc = "Paste before (flash region)" }
     )
   end
@@ -747,7 +746,7 @@ end
 
 ---@return nil
 local function ensure_diag_tint_autocmd()
-  vim.api.nvim_clear_autocmds { group = AUG_DIAG }
+  vim.api.nvim_clear_autocmds({ group = AUG_DIAG })
   if cfg.enable_signcolumn_tint then
     vim.api.nvim_create_autocmd({ "DiagnosticChanged", "BufEnter" }, {
       group = AUG_DIAG,
@@ -764,7 +763,7 @@ end
 -- Terminal palette
 ---@return nil
 local function ensure_term_palette_autocmd()
-  vim.api.nvim_clear_autocmds { group = AUG_TERM }
+  vim.api.nvim_clear_autocmds({ group = AUG_TERM })
   if cfg.enable_terminal_palette then
     vim.api.nvim_create_autocmd("TermOpen", {
       group = AUG_TERM,
@@ -781,7 +780,7 @@ end
 ---@return nil
 local function ensure_current_word_autocmd()
   -- clear any previous autocommands for this group
-  vim.api.nvim_clear_autocmds { group = AUG_CWORD }
+  vim.api.nvim_clear_autocmds({ group = AUG_CWORD })
 
   --- Clear the previous window-local match, if any.
   ---@return nil
@@ -801,7 +800,7 @@ local function ensure_current_word_autocmd()
       clear_match()
 
       -- do nothing in insert mode (cheap check)
-      if vim.fn.mode():find "i" then
+      if vim.fn.mode():find("i") then
         return
       end
 
@@ -810,7 +809,7 @@ local function ensure_current_word_autocmd()
         return
       end
 
-      local word = vim.fn.expand "<cword>"
+      local word = vim.fn.expand("<cword>")
       if #word < 2 then
         return
       end -- (cfg.min_len or 2)  if min word len ist wanted
@@ -900,7 +899,7 @@ local function _resolve_new_mode(ev)
 
   -- Step 2: parse from ev.match ("old:new")
   if not nm and ev and type(ev.match) == "string" then
-    nm = ev.match:match ":(.+)$"
+    nm = ev.match:match(":(.+)$")
   end
 
   -- Step 3: fallback to current mode
@@ -913,7 +912,7 @@ end
 -- Mode changes + view updates + color persist
 ---@return nil
 local function ensure_mode_changed_autocmd()
-  vim.api.nvim_clear_autocmds { group = AUG_MODE }
+  vim.api.nvim_clear_autocmds({ group = AUG_MODE })
 
   if cfg.enable_insert_submode_colors then
     vim.api.nvim_create_autocmd("ModeChanged", {
@@ -953,7 +952,7 @@ end
 
 ---@return nil
 local function ensure_color_persist_autocmd()
-  vim.api.nvim_clear_autocmds { group = AUG_COLOR }
+  vim.api.nvim_clear_autocmds({ group = AUG_COLOR })
   if cfg.color_persist then
     vim.api.nvim_create_autocmd("ColorScheme", {
       group = AUG_COLOR,
@@ -970,7 +969,7 @@ end
 
 ---@return nil
 local function ensure_view_updates()
-  vim.api.nvim_clear_autocmds { group = AUG_VIEW }
+  vim.api.nvim_clear_autocmds({ group = AUG_VIEW })
   vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
     group = AUG_VIEW,
     callback = function()
@@ -1010,7 +1009,7 @@ end
 ---@param key string
 ---@return nil
 local function after_set(key)
-  if key:match "^colors%." then
+  if key:match("^colors%.") then
     apply_highlights()
     activate_window_hl()
     return
@@ -1051,12 +1050,12 @@ local function after_set(key)
     update_winbar()
     return
   end
-  if key:match "^cword_occurrences%." then
+  if key:match("^cword_occurrences%.") then
     CwordOcc.refresh()
     return
   end
   if
-    key:match "^breadcrumbs_ctx%."
+    key:match("^breadcrumbs_ctx%.")
     or key == "breadcrumbs_separator"
     or key == "breadcrumbs_nerd_hex"
     or key == "breadcrumbs_max_len"
@@ -1095,7 +1094,7 @@ local function enable()
   PathCache.ensure_autocmds()
 
   -- Activate base window mapping
-  vim.api.nvim_clear_autocmds { group = AUG_WIN }
+  vim.api.nvim_clear_autocmds({ group = AUG_WIN })
   vim.api.nvim_create_autocmd(
     { "WinEnter", "BufWinEnter" },
     { group = AUG_WIN, callback = activate_window_hl, desc = "Activate highlights for active window" }
@@ -1118,17 +1117,17 @@ local function enable()
   C.on_after_set("highlight", after_set)
 
   -- Register commands
-  require("myoptions.commands").register_highlight_commands {
+  require("myoptions.commands").register_highlight_commands({
     after_set = after_set,
     show_table = cfg,
     names = { set = "MyHighlightSet", show = "MyHighlightShow", list = "MyHighlightList" },
-  }
+  })
 
-  require("myoptions.commands").register_highlight_debug_command {
-    mod = require "myoptions.Highlight_Cfg.breadcrumbs.ctx",
+  require("myoptions.commands").register_highlight_debug_command({
+    mod = require("myoptions.Highlight_Cfg.breadcrumbs.ctx"),
     sepfn = get_breadcrumb_separator,
     names = { debug = "MyHighlightDebugCtx" },
-  }
+  })
 end
 
 return { enable = enable }

@@ -14,7 +14,9 @@ local S = { timer = nil, pending = false, last_dir = nil }
 ---@return NeoTreePosition|nil
 local function current_fs_position()
   local ok_mgr, manager = pcall(require, "neo-tree.sources.manager")
-  if not ok_mgr then return nil end
+  if not ok_mgr then
+    return nil
+  end
   local st = manager.get_state and manager.get_state("filesystem") or nil
   return (st and st.window and st.window.position) or nil
 end
@@ -37,11 +39,17 @@ end
 ---@param buf integer
 ---@return boolean
 local function is_real_file_buffer(buf)
-  if buf == 0 then buf = vim.api.nvim_get_current_buf() end
+  if buf == 0 then
+    buf = vim.api.nvim_get_current_buf()
+  end
   local bt = vim.bo[buf].buftype
-  if bt ~= "" then return false end                    -- skip terminal/help/quickfix/etc.
+  if bt ~= "" then
+    return false
+  end -- skip terminal/help/quickfix/etc.
   local name = vim.api.nvim_buf_get_name(buf)
-  if not name or name == "" then return false end      -- [No Name]
+  if not name or name == "" then
+    return false
+  end -- [No Name]
   -- Accept readable files and directory-like buffers (edge-cases such as netrw)
   return vim.fn.filereadable(name) == 1 or vim.fn.isdirectory(name) == 1
 end
@@ -70,7 +78,9 @@ end
 ---@return string|nil path
 local function derive_dir_and_path(buf, use_project_root, fallback_to_bufdir)
   local path = vim.api.nvim_buf_get_name(buf)
-  if not path or path == "" then return nil, nil end
+  if not path or path == "" then
+    return nil, nil
+  end
 
   local dir ---@type string|nil
 
@@ -133,7 +143,7 @@ local function sync_now(cfg)
     pcall(cmd.execute, {
       action = "show",
       source = "filesystem",
-      position = "left",   -- enforce left position
+      position = "left", -- enforce left position
       dir = dir,
       reveal = true,
       reveal_file = path,
@@ -191,7 +201,7 @@ function M.setup(user_cfg)
     open_if_closed = false,
     use_project_root = true,
     project_root_fallback_to_bufdir = true,
-    force_position_left = true,   -- normalize existing filesystem view to "left" if different
+    force_position_left = true, -- normalize existing filesystem view to "left" if different
   }, user_cfg or {})
 
   local aug = vim.api.nvim_create_augroup("NeoTreeCwdSync", { clear = true })

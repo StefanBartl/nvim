@@ -13,12 +13,14 @@ function M.setup()
   map("t", "<C-j>", "<C-\\><C-w>j", { desc = "[Terminal Down" })
   map("t", "<C-k>", "<C-\\><C-w>k", { desc = "[Terminal] Up" })
 
-	map({ "n", "t" }, "<A-h>",
-		function()
-			local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "float", id = "floatTerm" } end
-		end, { desc = "[Term] Toggle floating" })
+  map({ "n", "t" }, "<A-h>", function()
+    local ok, nt = pcall(require, "nvchad.term")
+    if ok then
+      nt.toggle({ pos = "float", id = "floatTerm" })
+    end
+  end, { desc = "[Term] Toggle floating" })
 
-	--- Toggle NvChad UI terminal in a vertical split with ~1/3 screen width.
+  --- Toggle NvChad UI terminal in a vertical split with ~1/3 screen width.
   --- Works from normal & terminal mode; robustly enforces width after opening.
   ---@type fun():nil
   -- local function toggle_vterm_one_third()
@@ -42,8 +44,8 @@ function M.setup()
   --   end)
   -- end
 
-	-- map({ "n", "t" }, "<A-v>", toggle_vterm_one_third,
-	--    { desc = "[Term] Toggle vertical (1/3 width)" })
+  -- map({ "n", "t" }, "<A-v>", toggle_vterm_one_third,
+  --    { desc = "[Term] Toggle vertical (1/3 width)" })
   -- map({ "n", "t" }, "<A-h>",
   --   function()
   --     local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "sp", id = "htoggleTerm" } end

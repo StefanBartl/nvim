@@ -30,15 +30,15 @@ local map = require("lib.map")
 local DEFAULTS = {
   keys = {
     tel_files = "<leader>telf",
-    tel_grep  = "<leader>telg",
+    tel_grep = "<leader>telg",
     fzf_files = "<leader>fzff",
-    fzf_grep  = "<leader>fzfg",
+    fzf_grep = "<leader>fzfg",
   },
   commands = {
     find_files_telescope = "FindFilesTelescope",
-    grep_telescope       = "GrepTelescope",
-    find_files_fzf       = "FindFilesFzf",
-    grep_fzf             = "GrepFzf",
+    grep_telescope = "GrepTelescope",
+    find_files_fzf = "FindFilesFzf",
+    grep_fzf = "GrepFzf",
   },
   notify_level = vim.log.levels.INFO,
 }
@@ -93,8 +93,12 @@ local function is_absolute(p)
   if not IS_WINDOWS then
     return p:sub(1, 1) == "/"
   end
-  if p:match("^%a:[/\\]") then return true end          -- C:\ or C:/
-  if p:match("^\\\\") or p:match("^//") then return true end -- UNC \\ or //
+  if p:match("^%a:[/\\]") then
+    return true
+  end -- C:\ or C:/
+  if p:match("^\\\\") or p:match("^//") then
+    return true
+  end -- UNC \\ or //
   return false
 end
 
@@ -119,11 +123,15 @@ end
 --- @return string
 local function ensure_trailing_sep(p)
   if IS_WINDOWS then
-    if p:match("[/\\]$") then return p end
+    if p:match("[/\\]$") then
+      return p
+    end
     local preferred = p:find("\\", 1, true) and "\\" or "/"
     return p .. preferred
   else
-    if p:sub(-1) == "/" then return p end
+    if p:sub(-1) == "/" then
+      return p
+    end
     return p .. "/"
   end
 end
@@ -136,8 +144,12 @@ end
 --- @return any|nil
 local function safe_require(name, on_fail)
   local ok, mod = pcall(require, name)
-  if ok then return mod end
-  if on_fail then on_fail() end
+  if ok then
+    return mod
+  end
+  if on_fail then
+    on_fail()
+  end
   return nil
 end
 
@@ -260,7 +272,9 @@ local function telescope_files(dir)
   local builtin = safe_require("telescope.builtin", function()
     notify("Telescope is not installed or failed to load", vim.log.levels.WARN)
   end)
-  if not builtin then return end
+  if not builtin then
+    return
+  end
 
   builtin.find_files({
     cwd = dir,
@@ -276,7 +290,9 @@ local function telescope_live_grep(dirs)
   local builtin = safe_require("telescope.builtin", function()
     notify("Telescope is not installed or failed to load", vim.log.levels.WARN)
   end)
-  if not builtin then return end
+  if not builtin then
+    return
+  end
 
   local extra = function()
     -- Include hidden files but skip .git directory (ripgrep)
@@ -304,7 +320,9 @@ local function fzf_files(dir)
   local fzf = safe_require("fzf-lua", function()
     notify("fzf-lua is not installed or failed to load", vim.log.levels.WARN)
   end)
-  if not fzf then return end
+  if not fzf then
+    return
+  end
 
   fzf.files({
     cwd = dir,
@@ -319,7 +337,9 @@ local function fzf_live_grep(dir)
   local fzf = safe_require("fzf-lua", function()
     notify("fzf-lua is not installed or failed to load", vim.log.levels.WARN)
   end)
-  if not fzf then return end
+  if not fzf then
+    return
+  end
 
   -- Use modern API: live_grep (glob parsing enabled by default).
   fzf.live_grep({
@@ -331,8 +351,10 @@ local function fzf_live_grep(dir)
       "--color=never",
       "--smart-case",
       "--hidden",
-      "--glob", "!.git/*",
-      "--glob", "!**/.git/**",
+      "--glob",
+      "!.git/*",
+      "--glob",
+      "!**/.git/**",
     }, " "),
   })
 end
@@ -408,45 +430,58 @@ local function Enable_keymaps(cfg)
   ---@type UsrPickersConfig
   local C = vim.tbl_deep_extend("force", DEFAULTS, cfg or {})
 
-    local tel_files_key = C.keys.tel_files   -- <leader>telf
-    local tel_grep_key  = C.keys.tel_grep    -- <leader>telg
-    local fzf_files_key = C.keys.fzf_files   -- <leader>fzff
-    local fzf_grep_key  = C.keys.fzf_grep    -- <leader>fzfg
+  local tel_files_key = C.keys.tel_files -- <leader>telf
+  local tel_grep_key = C.keys.tel_grep -- <leader>telg
+  local fzf_files_key = C.keys.fzf_files -- <leader>fzff
+  local fzf_grep_key = C.keys.fzf_grep -- <leader>fzfg
 
-    -- Telescope → files in chosen directory
-    map("n", tel_files_key, function()
-      local dir = prompt_dir("Telescope files")
-      if dir then telescope_files(dir) end
-    end, { desc = "Telescope: files in chosen directory" })
+  -- Telescope → files in chosen directory
+  map("n", tel_files_key, function()
+    local dir = prompt_dir("Telescope files")
+    if dir then
+      telescope_files(dir)
+    end
+  end, { desc = "Telescope: files in chosen directory" })
 
-    -- Telescope → live_grep in chosen directory
-    map("n", tel_grep_key, function()
-      local dir = prompt_dir("Telescope live_grep")
-      if dir then telescope_live_grep({ dir }) end
-    end, { desc = "Telescope: live_grep in chosen directory" })
+  -- Telescope → live_grep in chosen directory
+  map("n", tel_grep_key, function()
+    local dir = prompt_dir("Telescope live_grep")
+    if dir then
+      telescope_live_grep({ dir })
+    end
+  end, { desc = "Telescope: live_grep in chosen directory" })
 
-    -- fzf-lua → files in chosen directory
-    map("n", fzf_files_key, function()
-      local dir = prompt_dir("fzf-lua files")
-      if dir then fzf_files(dir) end
-    end, { desc = "fzf-lua: files in chosen directory" })
+  -- fzf-lua → files in chosen directory
+  map("n", fzf_files_key, function()
+    local dir = prompt_dir("fzf-lua files")
+    if dir then
+      fzf_files(dir)
+    end
+  end, { desc = "fzf-lua: files in chosen directory" })
 
-    -- fzf-lua → live_grep in chosen directory
-    map("n", fzf_grep_key, function()
-      local dir = prompt_dir("fzf-lua live_grep")
-      if dir then fzf_live_grep(dir) end
-    end, { desc = "fzf-lua: live_grep in chosen directory" })
+  -- fzf-lua → live_grep in chosen directory
+  map("n", fzf_grep_key, function()
+    local dir = prompt_dir("fzf-lua live_grep")
+    if dir then
+      fzf_live_grep(dir)
+    end
+  end, { desc = "fzf-lua: live_grep in chosen directory" })
 end
-
 
 --- Setup the module. Registers user commands and keymaps
 --- @param cfg? UsrPickersConfig
 --- @param enable_opts? EnableConfig
 --- @return nil
 function M.enable(cfg, enable_opts)
-	if not enable_opts then return end
-	if enable_opts.usercmds then Enable_usercmds(cfg) end
-	if enable_opts.keymaps then Enable_keymaps(cfg) end
+  if not enable_opts then
+    return
+  end
+  if enable_opts.usercmds then
+    Enable_usercmds(cfg)
+  end
+  if enable_opts.keymaps then
+    Enable_keymaps(cfg)
+  end
 end
 
 return M

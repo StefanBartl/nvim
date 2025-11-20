@@ -24,7 +24,9 @@ end
 local function stat_kind(p)
   local uv = vim.uv or vim.loop
   local st = uv.fs_stat(p)
-  if not st then return false, false end
+  if not st then
+    return false, false
+  end
   return st.type == "directory", st.type == "file"
 end
 
@@ -33,7 +35,7 @@ end
 ---@return string path
 local function get_node_path(state)
   local node = state and state.tree and state.tree:get_node() or nil
-  return node and (node.path or (node.get_id and node:get_id()) ) or ""
+  return node and (node.path or (node.get_id and node:get_id())) or ""
 end
 
 -- Linux DBus (org.freedesktop.FileManager1) -----------------------------------
@@ -53,7 +55,8 @@ local function try_dbus_showitems(path, on_fail)
   -- file:/// escaping: use vim.fn.fnameescape only for shell, not URI; simple gsub below.
   local uri = "file://" .. path:gsub(" ", "%%20")
   local argv = {
-    "dbus-send", "--session",
+    "dbus-send",
+    "--session",
     "--dest=org.freedesktop.FileManager1",
     "--type=method_call",
     "/org/freedesktop/FileManager1",
@@ -68,11 +71,15 @@ local function try_dbus_showitems(path, on_fail)
 
   if vim.system then
     vim.system(argv, { text = true }, function(obj)
-      if obj.code ~= 0 then on_fail() end
+      if obj.code ~= 0 then
+        on_fail()
+      end
     end)
   else
     local ok = vim.fn.jobstart(argv, { detach = true })
-    if ok <= 0 then on_fail() end
+    if ok <= 0 then
+      on_fail()
+    end
   end
 end
 
@@ -84,10 +91,10 @@ local function manager_select_cmd(path)
   -- Ordered by common desktops; pick first available.
   local candidates = {
     { "nautilus", "--select", path },
-    { "nemo",     "--select", path },
-    { "dolphin",  "--select", path },
-    { "thunar",   "--select", path },
-    { "pcmanfm",  path }, -- no --select; opens the file (may open editor); we will adjust below.
+    { "nemo", "--select", path },
+    { "dolphin", "--select", path },
+    { "thunar", "--select", path },
+    { "pcmanfm", path }, -- no --select; opens the file (may open editor); we will adjust below.
   }
   for _, cmd in ipairs(candidates) do
     if vim.fn.executable(cmd[1]) == 1 then
@@ -108,11 +115,15 @@ end
 local function run_detached(argv, on_fail)
   if vim.system then
     vim.system(argv, { text = true }, function(obj)
-      if obj.code ~= 0 then on_fail() end
+      if obj.code ~= 0 then
+        on_fail()
+      end
     end)
   else
     local ok = vim.fn.jobstart(argv, { detach = true })
-    if ok <= 0 then on_fail() end
+    if ok <= 0 then
+      on_fail()
+    end
   end
 end
 
@@ -155,7 +166,9 @@ function M.open(state)
           end)
         end
       end)
-      if tried_manager then return true end
+      if tried_manager then
+        return true
+      end
       -- Final fallback: open containing directory via gio/xdg-open
       local dir = vim.fn.fnamemodify(abs, ":p:h")
       local argv = vim.fn.executable("gio") == 1 and { "gio", "open", dir } or { "xdg-open", dir }

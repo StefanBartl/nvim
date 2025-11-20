@@ -4,21 +4,33 @@ local state = require("custom.lsp_signature.state")
 
 ---@param lines string[]
 return function(lines)
-  if not lines or vim.tbl_isempty(lines) then return nil end
+  if not lines or vim.tbl_isempty(lines) then
+    return nil
+  end
 
   -- Trim leading/trailing empty lines
-  while #lines > 0 and lines[1] == "" do table.remove(lines, 1) end
-  while #lines > 0 and lines[#lines] == "" do table.remove(lines, #lines) end
-  if #lines == 0 then return nil end
+  while #lines > 0 and lines[1] == "" do
+    table.remove(lines, 1)
+  end
+  while #lines > 0 and lines[#lines] == "" do
+    table.remove(lines, #lines)
+  end
+  if #lines == 0 then
+    return nil
+  end
 
   -- Berechne Breite
   local width = 0
   for _, ln in ipairs(lines) do
     local w = vim.fn.strwidth(ln)
-    if w > width then width = w end
+    if w > width then
+      width = w
+    end
   end
   local max_width = math.floor(vim.o.columns * 0.6)
-  if width > max_width then width = max_width end
+  if width > max_width then
+    width = max_width
+  end
 
   local height = #lines
   local row = 1
@@ -59,19 +71,16 @@ return function(lines)
   -- Create an augroup to ensure cleanup if window is closed externally
   local group_name = "LspSignaturePopup_" .. tostring(winid)
   local aug_id = api.nvim_create_augroup(group_name, { clear = true })
-  api.nvim_create_autocmd(
-    { "BufWipeout", "BufHidden", "BufLeave" },
-    {
-      group = aug_id,
-      once = true,
-      buffer = bufnr,
-      callback = function()
-        -- ensure state cleared if popup buffer goes away
-        pcall(state.close)
-        pcall(api.nvim_del_augroup_by_id, aug_id)
-      end,
-    }
-  )
+  api.nvim_create_autocmd({ "BufWipeout", "BufHidden", "BufLeave" }, {
+    group = aug_id,
+    once = true,
+    buffer = bufnr,
+    callback = function()
+      -- ensure state cleared if popup buffer goes away
+      pcall(state.close)
+      pcall(api.nvim_del_augroup_by_id, aug_id)
+    end,
+  })
 
   return bufnr, winid
 end

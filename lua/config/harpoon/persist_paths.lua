@@ -28,7 +28,7 @@ local function canon(p)
   end
   ---@diagnostic disable-next-line fs_realpath exists in uv library
   if uv and uv.fs_realpath then
-		---@diagnostic disable-next-line fs_realpath exists in uv library
+    ---@diagnostic disable-next-line fs_realpath exists in uv library
     local rp = uv.fs_realpath(p)
     if type(rp) == "string" and rp ~= "" then
       return rp
@@ -62,7 +62,7 @@ local function expand_var(sym)
   if sym == "$REPOS_DIR" then
     return vim.env.REPOS_DIR or ""
   elseif sym == "$HOME" then
-		---@diagnostic disable-next-line os_homedir exists in uv library
+    ---@diagnostic disable-next-line os_homedir exists in uv library
     return (uv.os_homedir and uv.os_homedir()) or vim.fn.expand("~")
   elseif sym == "$NVIM_HOME" then
     return vim.fn.stdpath("config")

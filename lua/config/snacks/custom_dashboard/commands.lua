@@ -28,8 +28,8 @@ function M.setup_commands()
       return
     end
     -- Only open when safe according to utilities
-		local bufnr = vim.api.nvim_get_current_buf()
-		if not utils.is_special_buf(bufnr) and utils.is_modifiable(bufnr) and utils.is_empty_buffer(bufnr) then
+    local bufnr = vim.api.nvim_get_current_buf()
+    if not utils.is_special_buf(bufnr) and utils.is_modifiable(bufnr) and utils.is_empty_buffer(bufnr) then
       pcall(dash.open)
     else
       notify("[custom_dashboard] unsafe to open dashboard in current buffer", vim.log.levels.INFO)

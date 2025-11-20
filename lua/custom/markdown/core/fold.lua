@@ -13,7 +13,7 @@ function M.foldexpr(lnum)
   local atx = line:match("^%s*(#+)%s+")
   if atx then
     local a = #atx
-    return ">" .. a   -- simplified: no special-casing for H1
+    return ">" .. a -- simplified: no special-casing for H1
   end
 
   -- Setext H2 underline (---)

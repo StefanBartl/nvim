@@ -12,7 +12,7 @@ end
 dap.adapters.coreclr = {
   type = "executable",
   command = "C:/tools/DebugAdapterProtocol/netcoredbg/netcoredbg.exe",
-  args = { "--interpreter=vscode" }
+  args = { "--interpreter=vscode" },
 }
 
 dap.configurations.cs = {
@@ -21,7 +21,7 @@ dap.configurations.cs = {
     name = "Launch - netcoredbg",
     request = "launch",
     program = function()
-      return vim.fn.input('Path to DLL: ', vim.fn.getcwd() .. '\\bin\\Debug\\net9.0\\', 'file')
-    end
-  }
+      return vim.fn.input("Path to DLL: ", vim.fn.getcwd() .. "\\bin\\Debug\\net9.0\\", "file")
+    end,
+  },
 }

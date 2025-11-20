@@ -8,7 +8,7 @@
 local function list_autocmds(event, pattern)
   pattern = pattern or "*"
 
-	-- Get all autocommands for the specified event
+  -- Get all autocommands for the specified event
   local autocmds = vim.api.nvim_get_autocmds({
     event = event,
     pattern = pattern,

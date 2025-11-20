@@ -14,7 +14,7 @@ local param_highlight_groups = {
   "LspSignatureParam4",
 }
 for i, grp in ipairs(param_highlight_groups) do
-  vim.cmd(string.format("highlight %s guifg=#%06x gui=bold", grp, 0xff8800 + (i-1)*0x003300))
+  vim.cmd(string.format("highlight %s guifg=#%06x gui=bold", grp, 0xff8800 + (i - 1) * 0x003300))
 end
 vim.cmd("highlight LspSignatureActiveParam guifg=#ffffff guibg=#005f87 gui=bold")
 
@@ -33,14 +33,18 @@ return function(bufnr, callback)
   end
 
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
-  if not clients or vim.tbl_isempty(clients) then return end
+  if not clients or vim.tbl_isempty(clients) then
+    return
+  end
 
   local params = vim.lsp.util.make_position_params(0, "utf-8")
   local mode = vim.fn.mode()
 
   local function show_hover(client)
     local handler = function(_, result)
-      if not result then return end
+      if not result then
+        return
+      end
       local lines = format_hover(result)
       if lines then
         schedule(function()
@@ -49,7 +53,9 @@ return function(bufnr, callback)
           if mode == "n" and win and api.nvim_win_is_valid(win) then
             api.nvim_set_current_win(win)
           end
-          if callback and buf and win then callback(buf, win) end
+          if callback and buf and win then
+            callback(buf, win)
+          end
         end)
       end
     end
@@ -60,13 +66,17 @@ return function(bufnr, callback)
     if client.server_capabilities and client.server_capabilities.signatureHelpProvider then
       local handler = function(_, result)
         if not result then
-          schedule(function() show_hover(client) end)
+          schedule(function()
+            show_hover(client)
+          end)
           return
         end
 
         local lines = format_signature_help(result)
         if not lines then
-          schedule(function() show_hover(client) end)
+          schedule(function()
+            show_hover(client)
+          end)
           return
         end
 
@@ -89,10 +99,8 @@ return function(bufnr, callback)
               end
               if start_col and end_col and buf then
                 local group = (i == (sig.activeParameter or 0) + 1) and "LspSignatureActiveParam"
-                              or param_highlight_groups[(i - 1) % #param_highlight_groups + 1]
-                vim.hl.range(buf, ns_id, group,
-                             {0, start_col - 1}, {0, end_col},
-                             {inclusive = false})
+                  or param_highlight_groups[(i - 1) % #param_highlight_groups + 1]
+                vim.hl.range(buf, ns_id, group, { 0, start_col - 1 }, { 0, end_col }, { inclusive = false })
               end
             end
           end
@@ -100,7 +108,9 @@ return function(bufnr, callback)
           if mode == "n" and win and api.nvim_win_is_valid(win) then
             api.nvim_set_current_win(win)
           end
-          if callback and buf and win then callback(buf, win) end
+          if callback and buf and win then
+            callback(buf, win)
+          end
         end)
       end
 

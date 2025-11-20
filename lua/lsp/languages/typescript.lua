@@ -10,7 +10,7 @@ local M = {}
 ---@param kind string
 ---@return boolean
 local function client_supports_code_action_kind(client, kind)
-  if not (client and client.supports_method and client:supports_method "textDocument/codeAction") then
+  if not (client and client.supports_method and client:supports_method("textDocument/codeAction")) then
     return false
   end
   local caps = client.server_capabilities or {}
@@ -32,7 +32,7 @@ end
 ---@param bufnr integer
 ---@return boolean applied
 local function organize_imports_sync(bufnr)
-  local clients = lsp.get_clients { bufnr = bufnr }
+  local clients = lsp.get_clients({ bufnr = bufnr })
   if #clients == 0 then
     return false
   end
@@ -40,7 +40,6 @@ local function organize_imports_sync(bufnr)
   ---@type LspClient[]
   local eligible = {}
   for _, c in ipairs(clients) do
-
     ---@diagnostic disable-next-line
     if client_supports_code_action_kind(c, "source.organizeImports") then
       ---@diagnostic disable-next-line
@@ -83,7 +82,7 @@ local function organize_imports_sync(bufnr)
         local cmd = action.command
         if cmd then
           for _, c in ipairs(eligible) do
-            if c.supports_method and c:supports_method "workspace/executeCommand" then
+            if c.supports_method and c:supports_method("workspace/executeCommand") then
               c:request("workspace/executeCommand", cmd, function() end, bufnr)
               applied = true
             end

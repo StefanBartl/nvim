@@ -6,7 +6,7 @@
 ---@param opts table Optional table:
 ---           stdio: uv.spawn stdio table
 ---           on_exit: callback(code, signal)
-return function (cmd, args, opts)
+return function(cmd, args, opts)
   args = args or {}
   opts = opts or {}
 
@@ -26,7 +26,7 @@ return function (cmd, args, opts)
   end
 
   local handle
-	---@diagnostic disable-next-line lib.uv
+  ---@diagnostic disable-next-line lib.uv
   handle = uv.spawn(shell, {
     args = args,
     stdio = opts.stdio or { nil, 1, 2 }, -- default: inherit stdout/stderr
@@ -36,7 +36,7 @@ return function (cmd, args, opts)
     else
       print(("Command exited with code %d, signal %s"):format(code, tostring(signal)))
     end
-	---@diagnostic disable-next-line lib.uv
+    ---@diagnostic disable-next-line lib.uv
     handle:close()
   end)
 

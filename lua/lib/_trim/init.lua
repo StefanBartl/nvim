@@ -3,7 +3,7 @@
 
 ---@param s string
 ---@return string
-return function (s)
+return function(s)
   -- Use a single pattern capture to return the trimmed string.
   return (s or ""):match("^%s*(.-)%s*$")
 end

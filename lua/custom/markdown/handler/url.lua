@@ -7,7 +7,7 @@ local M = {}
 
 ---@type table
 M.config = {
-  html_scan_radius = 12,         -- lines to scan around cursor for HTML anchors
+  html_scan_radius = 12, -- lines to scan around cursor for HTML anchors
   cmd_unix = "xdg-open",
   cmd_macos = "open",
   cmd_windows = "cmd",
@@ -21,7 +21,9 @@ local uv = vim.loop
 ---@param s string
 ---@return string|nil
 local function trim(s)
-  if not s then return nil end
+  if not s then
+    return nil
+  end
   return s:match("^%s*(.-)%s*$")
 end
 
@@ -29,7 +31,9 @@ end
 ---@param target string
 ---@return boolean
 local function is_explicit_url(target)
-  if not target then return false end
+  if not target then
+    return false
+  end
   return target:match("^https?://") ~= nil
 end
 
@@ -41,17 +45,20 @@ end
 ---@return string|nil
 local function find_href_in_buffer_near_cursor(bufnr, curline, radius)
   radius = radius or M.config.html_scan_radius
-  if not bufnr or not curline then return nil end
+  if not bufnr or not curline then
+    return nil
+  end
 
   local start_line = math.max(1, curline - radius)
   local end_line = curline + radius
   local ok, lines = pcall(api.nvim_buf_get_lines, bufnr, start_line - 1, end_line, false)
-  if not ok or not lines then return nil end
+  if not ok or not lines then
+    return nil
+  end
 
   -- quick single-line matches first
   for _, l in ipairs(lines) do
-    local href = l:match('<a[^>]-href%s*=%s*"(.-)"')
-              or l:match("<a[^>]-href%s*=%s*'(.-)'")
+    local href = l:match('<a[^>]-href%s*=%s*"(.-)"') or l:match("<a[^>]-href%s*=%s*'(.-)'")
     if href and href ~= "" then
       return trim(href)
     end
@@ -59,8 +66,7 @@ local function find_href_in_buffer_near_cursor(bufnr, curline, radius)
 
   -- fallback: joined multi-line match (covers tags split across lines)
   local joined = table.concat(lines, "\n")
-  local href = joined:match('<a.-href%s*=%s*"(.-)"')
-            or joined:match("<a.-href%s*=%s*'(.-)'")
+  local href = joined:match('<a.-href%s*=%s*"(.-)"') or joined:match("<a.-href%s*=%s*'(.-)'")
   if href and href ~= "" then
     return trim(href)
   end
@@ -76,13 +82,17 @@ end
 ---@param line string
 ---@return Url|nil
 local function extract_url_from_line(line)
-  if not line or line == "" then return nil end
+  if not line or line == "" then
+    return nil
+  end
 
   -- Prefer markdown link syntax first: [text](url)
   local md = line:match("%[.-%]%((.-)%)")
   if md and md ~= "" then
     md = trim(md)
-    if md and md:match("^<.+>$") then md = md:sub(2, -2) end
+    if md and md:match("^<.+>$") then
+      md = md:sub(2, -2)
+    end
     if md and is_explicit_url(md) then
       return md
     end
@@ -100,15 +110,16 @@ local function extract_url_from_line(line)
   end
 
   -- Then check for simple HTML anchor on the same line
-  local href = line:match('<a[^>]-href%s*=%s*"(.-)"')
-            or line:match("<a[^>]-href%s*=%s*'(.-)'")
+  local href = line:match('<a[^>]-href%s*=%s*"(.-)"') or line:match("<a[^>]-href%s*=%s*'(.-)'")
   if href and href ~= "" and is_explicit_url(href) then
     return trim(href)
   end
 
   -- No match on the line; attempt to locate an <a href="..."> nearby in the buffer.
   local ok, bufnr = pcall(api.nvim_get_current_buf)
-  if not ok or not bufnr then return nil end
+  if not ok or not bufnr then
+    return nil
+  end
 
   local ok2, cursor = pcall(api.nvim_win_get_cursor, 0)
   local curline = (ok2 and cursor and cursor[1]) or 1
@@ -126,7 +137,9 @@ end
 ---@param url string
 ---@return boolean
 local function open_with_system_viewer(url)
-  if not url or url == "" then return false end
+  if not url or url == "" then
+    return false
+  end
 
   -- For URLs, do not shellescape fully (leave as argument) to avoid breaking certain shells;
   -- however for Windows start via cmd we need quoting semantics. Use shell string approach

@@ -34,9 +34,13 @@ end
 ---@param levels_to_fold integer[]|nil
 ---@return nil
 function M.fold_levels(levels_to_fold)
-  if vim.bo.filetype ~= "markdown" then return end
+  if vim.bo.filetype ~= "markdown" then
+    return
+  end
   local buf = api.nvim_get_current_buf()
-  if not (buf and api.nvim_buf_is_valid(buf)) then return end
+  if not (buf and api.nvim_buf_is_valid(buf)) then
+    return
+  end
 
   -- Ensure expr folding is active (non-invasive; respects existing expr).
   vim.opt_local.foldmethod = "expr"
@@ -59,4 +63,3 @@ function M.fold_h2_plus()
 end
 
 return M
-

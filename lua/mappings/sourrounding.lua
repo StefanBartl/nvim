@@ -21,13 +21,13 @@ local M = {}
 
 ---@type SurroundConfig
 M.cfg = {
-  single_quote  = true,
+  single_quote = true,
   double_quotes = true,
-  backticks     = true,
-  parens        = true,
-  brackets      = true,
-  braces        = true,
-  desc_prefix   = "Surround selection with ",
+  backticks = true,
+  parens = true,
+  brackets = true,
+  braces = true,
+  desc_prefix = "Surround selection with ",
 }
 
 --- Safely feed a key sequence with termcode translation in Visual context.
@@ -79,7 +79,9 @@ end
 ---@param opts table|nil
 ---@return nil
 local function apply_opts(opts)
-  if type(opts) ~= "table" then return end
+  if type(opts) ~= "table" then
+    return
+  end
   for k, v in pairs(opts) do
     M.cfg[k] = v
   end
@@ -91,28 +93,40 @@ local function define_mappings()
   local pfx = M.cfg.desc_prefix or "Surround selection with "
 
   if M.cfg.double_quotes ~= false then
-    xmap('""', function() surround_with('"') end, pfx .. 'double quotes (")')
+    xmap('""', function()
+      surround_with('"')
+    end, pfx .. 'double quotes (")')
   end
 
   if M.cfg.single_quote ~= false then
-    xmap("''", function() surround_with("'") end, pfx .. "single quotes (')")
+    xmap("''", function()
+      surround_with("'")
+    end, pfx .. "single quotes (')")
   end
 
   if M.cfg.backticks ~= false then
-    xmap("``", function() surround_with("`") end, pfx .. "backticks (`)")
+    xmap("``", function()
+      surround_with("`")
+    end, pfx .. "backticks (`)")
   end
 
   -- Updated: use single-tap pairs instead of legacy double-tap triggers
   if M.cfg.parens ~= false then
-    xmap("()", function() surround_pair("(", ")") end, pfx .. "()")
+    xmap("()", function()
+      surround_pair("(", ")")
+    end, pfx .. "()")
   end
 
   if M.cfg.brackets ~= false then
-    xmap("[]", function() surround_pair("[", "]") end, pfx .. "[]")
+    xmap("[]", function()
+      surround_pair("[", "]")
+    end, pfx .. "[]")
   end
 
   if M.cfg.braces ~= false then
-    xmap("{}", function() surround_pair("{", "}") end, pfx .. "{}")
+    xmap("{}", function()
+      surround_pair("{", "}")
+    end, pfx .. "{}")
   end
 end
 

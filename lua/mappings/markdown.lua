@@ -8,9 +8,8 @@ function M.setup(opts)
   md.setup(vim.tbl_deep_extend("force", {
     enable_autocmds = true,
     enable_keymaps = true,
-		ft_only = true,
+    ft_only = true,
   }, opts or {}))
-
 end
 
 ---@type MarkdownConfig

@@ -53,7 +53,7 @@ return {
   {
     "folke/snacks.nvim",
     event = "VimEnter", --FIX: Wenn lazy false, dann muss man das dashboard mit q schließen, weil es überdeckt
-		-- lazy = false,
+    -- lazy = false,
 
     ---@param _ any
     ---@return SnacksSetup|table
@@ -70,7 +70,7 @@ return {
         toggle = { enabled = true },
         words = { enabled = true },
 
-				image = { enabled = true },  -- AUDIT:
+        -- image = { enabled = true },  -- AUDIT:
 
         -- Safeguard for very large files
         bigfile = { enabled = true },

@@ -13,7 +13,9 @@ local api, fn, cmd = vim.api, vim.fn, vim.cmd
 local function goto_prev_heading_any()
   -- Search previous ATX heading "##+ <text>"
   local found = fn.search("^#\\+\\s\\+\\S", "bWs") -- backward, wrap, no errors
-  if found > 0 then return true end
+  if found > 0 then
+    return true
+  end
   -- If not found, try a Setext H2 (line above a "---" underline)
   local cur = fn.line(".")
   for lnum = cur - 1, 2, -1 do
@@ -31,9 +33,13 @@ end
 --- Idempotent and safe in non-markdown buffers (early return).
 ---@return nil
 function M.fold_prev_heading_then_center()
-  if vim.bo.filetype ~= "markdown" then return end
+  if vim.bo.filetype ~= "markdown" then
+    return
+  end
   local buf = api.nvim_get_current_buf()
-  if not (buf and api.nvim_buf_is_valid(buf)) then return end
+  if not (buf and api.nvim_buf_is_valid(buf)) then
+    return
+  end
 
   local view = fn.winsaveview()
   local moved = goto_prev_heading_any()
@@ -49,4 +55,3 @@ function M.fold_prev_heading_then_center()
 end
 
 return M
-

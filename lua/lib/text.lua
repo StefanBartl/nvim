@@ -36,7 +36,9 @@ function M.insert_blank_line_above(opts)
 
   local new_row = keep_on_text and (row + 1) or row
   local line_len = #vim.api.nvim_get_current_line()
-  if col > line_len then col = line_len end
+  if col > line_len then
+    col = line_len
+  end
   pcall(vim.api.nvim_win_set_cursor, 0, { new_row, col })
 
   return true

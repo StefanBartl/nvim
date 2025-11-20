@@ -12,9 +12,11 @@ function M.setup(opts)
   local debug = opts.debug or false
 
   -- Only attempt the Windows named-pipe behavior on Windows-like OS
-  local is_windows = package.config:sub(1,1) == "\\"  -- simple platform check
+  local is_windows = package.config:sub(1, 1) == "\\" -- simple platform check
   if not is_windows then
-    if debug then vim.notify("[system.rpc] skipping: not Windows", vim.log.levels.DEBUG) end
+    if debug then
+      vim.notify("[system.rpc] skipping: not Windows", vim.log.levels.DEBUG)
+    end
     return
   end
 
@@ -22,10 +24,14 @@ function M.setup(opts)
   local pipe = ([[\\.\pipe\nvim-%s]]):format(uname)
 
   local function dbg(msg)
-    if debug then vim.notify("[system.rpc] " .. msg, vim.log.levels.DEBUG) end
+    if debug then
+      vim.notify("[system.rpc] " .. msg, vim.log.levels.DEBUG)
+    end
   end
   local function warn(msg)
-    if debug then vim.notify("[system.rpc] " .. msg, vim.log.levels.WARN) end
+    if debug then
+      vim.notify("[system.rpc] " .. msg, vim.log.levels.WARN)
+    end
   end
 
   pcall(function()

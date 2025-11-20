@@ -42,8 +42,8 @@ local function normalize_dir(dir)
     return dir, nil
   end
   return nil,
-    "Usage: :Size <left|right|up|down> [amount]\n" ..
-    "Hint: amount must be a positive integer (defaults to configured step)."
+    "Usage: :Size <left|right|up|down> [amount]\n"
+      .. "Hint: amount must be a positive integer (defaults to configured step)."
 end
 
 --- Execute the actual resize based on direction and step.
@@ -60,13 +60,13 @@ local function do_resize(dir, step)
 
   -- Map direction to command; keep semantics transparent and documented.
   if dir == "left" then
-    vim.cmd("vertical resize -" .. step)  -- decrease width
+    vim.cmd("vertical resize -" .. step) -- decrease width
   elseif dir == "right" then
-    vim.cmd("vertical resize +" .. step)  -- increase width
+    vim.cmd("vertical resize +" .. step) -- increase width
   elseif dir == "up" then
-    vim.cmd("resize +" .. step)           -- increase height
+    vim.cmd("resize +" .. step) -- increase height
   elseif dir == "down" then
-    vim.cmd("resize -" .. step)           -- decrease height
+    vim.cmd("resize -" .. step) -- decrease height
   end
   return true
 end
@@ -93,7 +93,7 @@ function M.enable_usercmd()
       vim.notify("[Size] resize failed", vim.log.levels.WARN)
     end
   end, {
-    nargs = "+",  -- require at least the direction; amount is optional but we keep '+' to avoid ambiguity
+    nargs = "+", -- require at least the direction; amount is optional but we keep '+' to avoid ambiguity
     complete = function(arg_lead, cmd_line, _)
       -- Completion for the first argument; simple numeric hints for the second.
       local toks = vim.split(cmd_line, "%s+", { trimempty = true })
@@ -102,7 +102,9 @@ function M.enable_usercmd()
         local dirs = { "left", "right", "up", "down" }
         local out = {}
         for _, v in ipairs(dirs) do
-          if v:find("^" .. vim.pesc(arg_lead)) then table.insert(out, v) end
+          if v:find("^" .. vim.pesc(arg_lead)) then
+            table.insert(out, v)
+          end
         end
         return out
       else
@@ -110,7 +112,9 @@ function M.enable_usercmd()
         local nums = { "1", "2", "3", "5", "10" }
         local out = {}
         for _, v in ipairs(nums) do
-          if v:find("^" .. vim.pesc(arg_lead)) then table.insert(out, v) end
+          if v:find("^" .. vim.pesc(arg_lead)) then
+            table.insert(out, v)
+          end
         end
         return out
       end

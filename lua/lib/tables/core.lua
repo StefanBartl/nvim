@@ -22,15 +22,21 @@ end
 ---@return boolean
 function M.is_array(t)
   -- Heuristic: consecutive integer keys starting at 1 with #t matching
-  if type(t) ~= "table" then return false end
+  if type(t) ~= "table" then
+    return false
+  end
   local n = #t
   for i = 1, n do
-    if t[i] == nil then return false end
+    if t[i] == nil then
+      return false
+    end
   end
   -- allow mixed tables -> reject when extra non-integer keys exist
   for k, _ in pairs(t) do
     if type(k) ~= "number" or k < 1 or k % 1 ~= 0 then
-      if k > n then return false end
+      if k > n then
+        return false
+      end
     end
   end
   return true
@@ -42,7 +48,9 @@ end
 ---@return T
 function M.shallow_copy(t)
   local out = {}
-  for k, v in pairs(t) do out[k] = v end
+  for k, v in pairs(t) do
+    out[k] = v
+  end
   ---@cast out T
   return out
 end
@@ -53,8 +61,12 @@ end
 ---@return T
 function M.deep_copy(t)
   local function _copy(v, seen)
-    if type(v) ~= "table" then return v end
-    if seen[v] then return seen[v] end
+    if type(v) ~= "table" then
+      return v
+    end
+    if seen[v] then
+      return seen[v]
+    end
     local r = {}
     seen[v] = r
     for k, x in pairs(v) do
@@ -76,7 +88,9 @@ function M.keys(t)
   ---@type string[]
   local out = {}
   for k, _ in pairs(t) do
-    if type(k) == "string" then out[#out+1] = k end
+    if type(k) == "string" then
+      out[#out + 1] = k
+    end
   end
   return out
 end
@@ -87,7 +101,9 @@ end
 function M.values(t)
   ---@type any[]
   local out = {}
-  for _, v in pairs(t) do out[#out+1] = v end
+  for _, v in pairs(t) do
+    out[#out + 1] = v
+  end
   return out
 end
 
@@ -98,7 +114,9 @@ function M.invert_set(list)
   local set = {} ---@type table<string, true>
   for i = 1, #list do
     local s = list[i]
-    if type(s) == "string" then set[s] = true end
+    if type(s) == "string" then
+      set[s] = true
+    end
   end
   return set
 end
@@ -122,7 +140,9 @@ end
 ---@return table
 function M.omit(t, omit_keys)
   local out = M.shallow_copy(t)
-  for i = 1, #omit_keys do out[omit_keys[i]] = nil end
+  for i = 1, #omit_keys do
+    out[omit_keys[i]] = nil
+  end
   return out
 end
 
@@ -131,7 +151,9 @@ end
 ---@param src table
 ---@return table
 function M.merge_shallow(dst, src)
-  for k, v in pairs(src) do dst[k] = v end
+  for k, v in pairs(src) do
+    dst[k] = v
+  end
   return dst
 end
 
@@ -161,7 +183,7 @@ function M.dedup_list(list)
     local v = list[i]
     if not seen[v] then
       seen[v] = true
-      out[#out+1] = v
+      out[#out + 1] = v
     end
   end
   return out
@@ -177,12 +199,20 @@ function M.slice(list, i, j)
   local n = #list
   local a = (i < 0) and (n + i + 1) or i
   local b = j and ((j < 0) and (n + j + 1) or j) or n
-  if a < 1 then a = 1 end
-  if b > n then b = n end
-  if a > b then return {} end
+  if a < 1 then
+    a = 1
+  end
+  if b > n then
+    b = n
+  end
+  if a > b then
+    return {}
+  end
   ---@type T[]
   local out = { [b - a + 1] = false }
-  for k = a, b do out[k - a + 1] = list[k] end
+  for k = a, b do
+    out[k - a + 1] = list[k]
+  end
   return out
 end
 
@@ -192,8 +222,12 @@ end
 ---@param v T
 ---@return boolean
 function M.unique_push(list, v)
-  for i = 1, #list do if list[i] == v then return false end end
-  list[#list+1] = v
+  for i = 1, #list do
+    if list[i] == v then
+      return false
+    end
+  end
+  list[#list + 1] = v
   return true
 end
 
@@ -209,7 +243,9 @@ function M.binary_search(list, cmp, x)
   while lo <= hi do
     local mid = math.floor((lo + hi) / 2)
     local v = list[mid]
-    if v == x then return mid, true end
+    if v == x then
+      return mid, true
+    end
     if cmp(v, x) then
       lo = mid + 1
     else
@@ -230,8 +266,11 @@ function M.group_by(list, key)
     local it = list[i]
     local k = key(it)
     local g = out[k]
-    if g == nil then g = {}; out[k] = g end
-    g[#g+1] = it
+    if g == nil then
+      g = {}
+      out[k] = g
+    end
+    g[#g + 1] = it
   end
   return out
 end
@@ -249,7 +288,11 @@ function M.partition(list, pred)
   local fail = {}
   for i = 1, #list do
     local it = list[i]
-    if pred(it) then pass[#pass+1] = it else fail[#fail+1] = it end
+    if pred(it) then
+      pass[#pass + 1] = it
+    else
+      fail[#fail + 1] = it
+    end
   end
   return pass, fail
 end
@@ -269,4 +312,3 @@ function M.count_by(list, key)
 end
 
 return M
-

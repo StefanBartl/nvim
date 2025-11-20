@@ -21,10 +21,11 @@ local function System_find()
   local input_opts = { prompt = "Suchbegriff(e) (Name .ext Pfad...): " }
 
   vim.ui.input(input_opts, function(input)
-    if not input or input == "" then return end
+    if not input or input == "" then
+      return
+    end
 
-    local fd_exec = vim.fn.executable("fd") == 1 and "fd"
-        or (vim.fn.executable("fdfind") == 1 and "fdfind" or nil)
+    local fd_exec = vim.fn.executable("fd") == 1 and "fd" or (vim.fn.executable("fdfind") == 1 and "fdfind" or nil)
     if not fd_exec then
       vim.notify("Weder 'fd' noch 'fdfind' gefunden", vim.log.levels.ERROR)
       return
@@ -74,12 +75,12 @@ end
 --- Setup 'system_find'-Usercommand
 ---@return nil
 function M.enable_usercmds()
-	vim.api.nvim_create_user_command("FindOnSystem", function()
-		System_find()
-	end, {
-		desc = "Systemweite Dateisuche (fd + telescope)",
-		nargs = "*",
-	})
+  vim.api.nvim_create_user_command("FindOnSystem", function()
+    System_find()
+  end, {
+    desc = "Systemweite Dateisuche (fd + telescope)",
+    nargs = "*",
+  })
 end
 
 return M

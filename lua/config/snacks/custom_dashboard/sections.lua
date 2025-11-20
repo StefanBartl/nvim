@@ -21,14 +21,26 @@ local function my_sessions_section(_)
   -- If sessions module not available, show placeholder
   if not ok_sessions or type(sessions.list_sessions) ~= "function" then
     return {
-      { icon = " ", title = "Sessions not available", desc = "sessions module missing", action = function() end, hidden = false },
+      {
+        icon = " ",
+        title = "Sessions not available",
+        desc = "sessions module missing",
+        action = function() end,
+        hidden = false,
+      },
     }
   end
 
   local files = sessions.list_sessions()
   if not files or #files == 0 then
     return {
-      { icon = " ", title = "No sessions found", desc = fn.fnamemodify(sessions.get_root() or "", ":~"), action = function() end, hidden = false },
+      {
+        icon = " ",
+        title = "No sessions found",
+        desc = fn.fnamemodify(sessions.get_root() or "", ":~"),
+        action = function() end,
+        hidden = false,
+      },
     }
   end
 
@@ -42,7 +54,9 @@ local function my_sessions_section(_)
       title = name,
       action = (function(n)
         return function()
-          local ok, res = pcall(function() return sessions.load(n) end)
+          local ok, res = pcall(function()
+            return sessions.load(n)
+          end)
           if not ok then
             vim.notify("[custom_dashboard] session load failed: " .. tostring(res), vim.log.levels.ERROR)
           end

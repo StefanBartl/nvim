@@ -5,11 +5,11 @@
 
 ---@type TranslateLanguage[]
 local languages = {
-    { code = "EN", name = "English" },
-    { code = "DE", name = "German" },
-    { code = "FR", name = "French" },
-    { code = "ZH", name = "Chinese" },
-    { code = "JA", name = "Japanese" },
+  { code = "EN", name = "English" },
+  { code = "DE", name = "German" },
+  { code = "FR", name = "French" },
+  { code = "ZH", name = "Chinese" },
+  { code = "JA", name = "Japanese" },
 }
 
 return languages

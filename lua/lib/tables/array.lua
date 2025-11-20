@@ -23,7 +23,9 @@ function M.clone(xs)
   local n = #xs
   ---@type Array<T>
   local out = { [n] = xs[n] } -- pre-size; value will be overwritten below
-  for i = 1, n do out[i] = xs[i] end
+  for i = 1, n do
+    out[i] = xs[i]
+  end
   return out
 end
 
@@ -36,7 +38,9 @@ function M.map(xs, f)
   local n = #xs
   ---@type R[]
   local out = { [n] = false }
-  for i = 1, n do out[i] = f(xs[i], i, xs) end
+  for i = 1, n do
+    out[i] = f(xs[i], i, xs)
+  end
   return out
 end
 
@@ -57,7 +61,9 @@ function M.filter(xs, pred)
       out[m] = v
     end
   end
-  for j = m + 1, n do out[j] = nil end
+  for j = m + 1, n do
+    out[j] = nil
+  end
   return out
 end
 
@@ -69,7 +75,9 @@ end
 ---@return A
 function M.reduce(xs, f, init)
   local acc = init
-  for i = 1, #xs do acc = f(acc, xs[i], i) end
+  for i = 1, #xs do
+    acc = f(acc, xs[i], i)
+  end
   return acc
 end
 
@@ -87,10 +95,20 @@ function M.partition(xs, pred)
   local p, q = 0, 0
   for i = 1, n do
     local v = xs[i]
-    if pred(v, i, xs) then p = p + 1; pass[p] = v else q = q + 1; fail[q] = v end
+    if pred(v, i, xs) then
+      p = p + 1
+      pass[p] = v
+    else
+      q = q + 1
+      fail[q] = v
+    end
   end
-  for i = p + 1, n do pass[i] = nil end
-  for i = q + 1, n do fail[i] = nil end
+  for i = p + 1, n do
+    pass[i] = nil
+  end
+  for i = q + 1, n do
+    fail[i] = nil
+  end
   return pass, fail
 end
 
@@ -100,7 +118,9 @@ end
 ---@return Array<T>
 function M.flatten(xss)
   local total = 0
-  for i = 1, #xss do total = total + #xss[i] end
+  for i = 1, #xss do
+    total = total + #xss[i]
+  end
   ---@type Array<T>
   local out = { [total] = false }
   local k = 0
@@ -132,7 +152,9 @@ function M.unique(xs)
       out[k] = v
     end
   end
-  for j = k + 1, n do out[j] = nil end
+  for j = k + 1, n do
+    out[j] = nil
+  end
   return out
 end
 
@@ -152,7 +174,9 @@ function M.pluck(xs, key)
       out[k] = v
     end
   end
-  for j = k + 1, n do out[j] = nil end
+  for j = k + 1, n do
+    out[j] = nil
+  end
   return out
 end
 
@@ -168,4 +192,3 @@ function M.sorted(xs, cmp)
 end
 
 return M
-

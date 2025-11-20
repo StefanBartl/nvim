@@ -17,12 +17,12 @@ local M = {}
 
 local uv = vim.uv or vim.loop
 
-local MAX_BYTES = 1.5 * 1024 * 1024  -- ~1.5MB cap for full read
-local MAX_LINES = 4000               -- head lines when file is large
+local MAX_BYTES = 1.5 * 1024 * 1024 -- ~1.5MB cap for full read
+local MAX_LINES = 4000 -- head lines when file is large
 
 local STATE = {
-  buf = nil,  -- scratch buffer id
-  win = nil,  -- preview window id
+  buf = nil, -- scratch buffer id
+  win = nil, -- preview window id
 }
 
 local function resolve_layout()
@@ -32,7 +32,7 @@ local function resolve_layout()
     return layouts.fullscreen_float()
   end
 
-	local w = math.floor(vim.o.columns * 0.7)
+  local w = math.floor(vim.o.columns * 0.7)
   local h = math.floor(vim.o.lines * 0.7)
   return {
     relative = "editor",
@@ -49,14 +49,20 @@ end
 ---@param path string
 ---@return string[]|nil
 local function read_file_lines(path)
-  if type(path) ~= "string" or path == "" then return nil end
+  if type(path) ~= "string" or path == "" then
+    return nil
+  end
 
-  local fd = uv.fs_open(path, "r", 420)  -- 0644
-  if not fd then return nil end
-	---@diagnostic disable-next-line fs_stat exists in uv library
+  local fd = uv.fs_open(path, "r", 420) -- 0644
+  if not fd then
+    return nil
+  end
+  ---@diagnostic disable-next-line fs_stat exists in uv library
   local st = uv.fs_fstat(fd)
   uv.fs_close(fd)
-  if not st then return nil end
+  if not st then
+    return nil
+  end
 
   -- Large file → head-only via readfile (far fewer temp strings)
   if st.size and st.size > MAX_BYTES then
@@ -66,10 +72,14 @@ local function read_file_lines(path)
 
   -- Small enough → read whole file, then split once
   local fd2 = uv.fs_open(path, "r", 420)
-  if not fd2 then return nil end
+  if not fd2 then
+    return nil
+  end
   local data = uv.fs_read(fd2, st.size, 0)
   uv.fs_close(fd2)
-  if type(data) ~= "string" then return nil end
+  if type(data) ~= "string" then
+    return nil
+  end
 
   -- Use regex split to honour CRLF
   return vim.split(data, "\r?\n", { plain = false })
@@ -78,8 +88,7 @@ end
 --- Ensure a single reusable scratch buffer and window.
 ---@return integer buf, integer win
 local function ensure_preview_window()
-  if STATE.win and vim.api.nvim_win_is_valid(STATE.win)
-     and STATE.buf and vim.api.nvim_buf_is_valid(STATE.buf) then
+  if STATE.win and vim.api.nvim_win_is_valid(STATE.win) and STATE.buf and vim.api.nvim_buf_is_valid(STATE.buf) then
     return STATE.buf, STATE.win
   end
 
@@ -103,7 +112,7 @@ local function ensure_preview_window()
     if STATE.win and vim.api.nvim_win_is_valid(STATE.win) then
       vim.api.nvim_win_close(STATE.win, true)
     end
-  end, { buffer = STATE.buf, nowait = true, silent = true, desc = "Close Harpoon preview" } )
+  end, { buffer = STATE.buf, nowait = true, silent = true, desc = "Close Harpoon preview" })
 
   return STATE.buf, STATE.win
 end
@@ -123,9 +132,15 @@ function M.open_preview_for(path, row, col)
   local total = #lines
   row = (type(row) == "number" and row or 1)
   col = (type(col) == "number" and col or 0)
-  if row < 1 then row = 1 end
-  if row > total then row = total end
-  if col < 0 then col = 0 end
+  if row < 1 then
+    row = 1
+  end
+  if row > total then
+    row = total
+  end
+  if col < 0 then
+    col = 0
+  end
 
   local buf, win = ensure_preview_window()
 
@@ -151,9 +166,13 @@ function M.open_index(entry)
   if type(entry) == "number" then
     -- resolve harpoon item by index and tail-call ourselves
     local ok, harpoon = pcall(require, "harpoon")
-    if not ok then return end
+    if not ok then
+      return
+    end
     local list = harpoon:list()
-    if type(list) ~= "table" or type(list.items) ~= "table" then return end
+    if type(list) ~= "table" or type(list.items) ~= "table" then
+      return
+    end
     local it = list.items[entry]
     if not it then
       vim.notify(("[harpoon-preview] no item at index %d"):format(entry), vim.log.levels.INFO)
@@ -173,7 +192,9 @@ end
 function M.install_alt_number_maps()
   for i = 1, 9 do
     local lhs = ("<M-%d>"):format(i)
-    vim.keymap.set("n", lhs, function() M.open_index(i) end, {
+    vim.keymap.set("n", lhs, function()
+      M.open_index(i)
+    end, {
       desc = ("Harpoon preview %d (full-screen, 'q' to close)"):format(i),
       silent = true,
     })

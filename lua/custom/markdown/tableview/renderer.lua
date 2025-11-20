@@ -19,7 +19,7 @@ local state = {
 ---@type table
 local default_opts = {
   floating = true,
-  width = nil,           -- absolute or fraction logic applied later
+  width = nil, -- absolute or fraction logic applied later
   height = nil,
   max_width_frac = 0.85,
   max_height_frac = 0.75,
@@ -38,9 +38,13 @@ local default_opts = {
 ---@return table
 local function merge(a, b)
   local out = {}
-  for k, v in pairs(a) do out[k] = v end
+  for k, v in pairs(a) do
+    out[k] = v
+  end
   if b then
-    for k, v in pairs(b) do out[k] = v end
+    for k, v in pairs(b) do
+      out[k] = v
+    end
   end
   return out
 end
@@ -96,7 +100,9 @@ end
 local function align_cell(text, width, align)
   align = align or "left"
   local len = #text
-  if width <= len then return text end
+  if width <= len then
+    return text
+  end
   local pad = width - len
   if align == "left" then
     return text .. string.rep(" ", pad)
@@ -129,7 +135,9 @@ end
 ---@return string[] lines
 local function build_lines_from_markdowntable(mt)
   local matrix = table_to_matrix(mt)
-  if #matrix == 0 then return {} end
+  if #matrix == 0 then
+    return {}
+  end
 
   local widths = compute_col_widths(matrix)
 
@@ -237,7 +245,6 @@ local function ensure_view(opts)
   return state.buf, state.win
 end
 
-
 --- Clear namespace highlights in view buffer
 ---@param buf number
 local function clear_highlights(buf)
@@ -254,11 +261,13 @@ function M.render_markdowntable(mt, opts)
 
   if opts.floating then
     local buf, _ = ensure_view(opts)
-    if not (buf and api.nvim_buf_is_valid(buf)) then return end
+    if not (buf and api.nvim_buf_is_valid(buf)) then
+      return
+    end
 
     -- write content (use proper nvim_buf_set_option instead of api.bo[...] access)
     set_buf_opt(state.buf, "modifiable", true)
-		api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     set_buf_opt(state.buf, "modifiable", false)
 
     -- Apply simple highlights: header line (0) and separator (1)

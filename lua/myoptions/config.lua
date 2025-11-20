@@ -358,7 +358,7 @@ local function parse_value(s)
     return ""
   end
   local trimmed = s:gsub("^%s+", ""):gsub("%s+$", "")
-  local unq = trimmed:match '^"(.*)"$' or trimmed:match "^'(.*)'$"
+  local unq = trimmed:match('^"(.*)"$') or trimmed:match("^'(.*)'$")
   if unq then
     return unq
   end

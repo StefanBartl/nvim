@@ -33,8 +33,12 @@ local NeoTreePositionEnum = {
 ---@param opts table|nil
 local function map(modes, lhs, rhs, opts)
   opts = opts or {}
-  if opts.noremap == nil then opts.noremap = true end
-  if opts.silent == nil then opts.silent = true end
+  if opts.noremap == nil then
+    opts.noremap = true
+  end
+  if opts.silent == nil then
+    opts.silent = true
+  end
   vim.keymap.set(modes, lhs, rhs, opts)
 end
 
@@ -62,15 +66,15 @@ local base_opts = {
   toggle = true,
   reveal = true,
   reveal_force_cwd = true,
-	position = NeoTreePositionEnum.float,
+  position = NeoTreePositionEnum.float,
 }
 
 ---@type NeoTreeMapSpec[]
 local specs = {
   { lhs = "<A-c>", pos = "current", desc = "[Neo-tree] Toggle & Reveal (current)" },
-  { lhs = "<A-f>", pos = "float",   desc = "[Neo-tree] Toggle & Reveal (float)"   },
-  { lhs = "<A-l>", pos = "left",    desc = "[Neo-tree] Toggle & Reveal (left)"    },
-  { lhs = "<A-r>", pos = "right",    desc = "[Neo-tree] Toggle & Reveal (right)"    },
+  { lhs = "<A-f>", pos = "float", desc = "[Neo-tree] Toggle & Reveal (float)" },
+  { lhs = "<A-l>", pos = "left", desc = "[Neo-tree] Toggle & Reveal (left)" },
+  { lhs = "<A-r>", pos = "right", desc = "[Neo-tree] Toggle & Reveal (right)" },
 }
 
 ---@nodiscard
@@ -135,7 +139,9 @@ function M.setup(opts)
       M.cfg.extra_lhs = vim.tbl_deep_extend("force", M.cfg.extra_lhs or {}, opts.extra_lhs)
       opts.extra_lhs = nil
     end
-    for k, v in pairs(opts) do M.cfg[k] = v end
+    for k, v in pairs(opts) do
+      M.cfg[k] = v
+    end
   end
 
   for i = 1, #specs do

@@ -9,5 +9,5 @@ return {
   BufferChatNew = function(gp, _)
     -- Simulate range command: `:%GpChatNew`
     vim.api.nvim_command("%" .. gp.config.cmd_prefix .. "ChatNew")
-  end
+  end,
 }

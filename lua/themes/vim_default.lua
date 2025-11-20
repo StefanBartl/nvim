@@ -11,40 +11,40 @@ local M = {}
 
 -- Base30: UI + plugin accents (picked to be subtle and close to terminal defaults)
 M.base_30 = {
-  black           = "#000000", -- bg
-  darker_black    = "#000000",
-  black2          = "#0a0a0a",
-  one_bg          = "#111111",
-  one_bg2         = "#171717",
-  one_bg3         = "#1c1c1c",
-  grey            = "#6c6c6c",
-  grey_fg         = "#7a7a7a",
-  grey_fg2        = "#8a8a8a",
-  light_grey      = "#999999",
-  white           = "#c0c0c0", -- fg-ish
-  brighter_white  = "#d0d0d0",
+  black = "#000000", -- bg
+  darker_black = "#000000",
+  black2 = "#0a0a0a",
+  one_bg = "#111111",
+  one_bg2 = "#171717",
+  one_bg3 = "#1c1c1c",
+  grey = "#6c6c6c",
+  grey_fg = "#7a7a7a",
+  grey_fg2 = "#8a8a8a",
+  light_grey = "#999999",
+  white = "#c0c0c0", -- fg-ish
+  brighter_white = "#d0d0d0",
 
   -- Subdued ANSI-like accents
-  red             = "#ff5f5f",
-  baby_pink       = "#ff8787",
-  pink            = "#ff87af",
-  green           = "#87d787",
-  vibrant_green   = "#a8e0a8",
-  blue            = "#87afff",
-  nord_blue       = "#7aa2f7",
-  yellow          = "#ffd75f",
-  sun             = "#ffd787",
-  purple          = "#af87ff",
-  dark_purple     = "#9f7fff",
-  teal            = "#5fd7af",
-  orange          = "#ffaf5f",
-  cyan            = "#5fd7ff",
+  red = "#ff5f5f",
+  baby_pink = "#ff8787",
+  pink = "#ff87af",
+  green = "#87d787",
+  vibrant_green = "#a8e0a8",
+  blue = "#87afff",
+  nord_blue = "#7aa2f7",
+  yellow = "#ffd75f",
+  sun = "#ffd787",
+  purple = "#af87ff",
+  dark_purple = "#9f7fff",
+  teal = "#5fd7af",
+  orange = "#ffaf5f",
+  cyan = "#5fd7ff",
 
-  statusline_bg   = "#0f0f0f",
-  lightbg         = "#151515",
-  pmenu_bg        = "#1a1a1a",
-  folder_bg       = "#87afff",
-  line            = "#1a1a1a",
+  statusline_bg = "#0f0f0f",
+  lightbg = "#151515",
+  pmenu_bg = "#1a1a1a",
+  folder_bg = "#87afff",
+  line = "#1a1a1a",
 }
 
 -- Base16: core fg/bg + syntax base (kept near a terminalish scheme)
@@ -70,4 +70,3 @@ M.base_16 = {
 M.type = "dark"
 
 return M
-

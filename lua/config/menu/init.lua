@@ -10,12 +10,14 @@ function M.setup(opts)
   opts = opts or {}
   local menu_table = custom_menu(opts)
 
- -- AUDIT: Warum sollte man das genau machen ?
+  -- AUDIT: Warum sollte man das genau machen ?
 
-	-- Register so require("menus.custom_menu") returns the table; menu.open normally does require("menus.<name>")
+  -- Register so require("menus.custom_menu") returns the table; menu.open normally does require("menus.<name>")
   package.loaded["menus.custom"] = menu_table
   -- Also set to preload for compatibility
-  package.preload["menus.custom"] = function() return menu_table end
+  package.preload["menus.custom"] = function()
+    return menu_table
+  end
 
   -- Provide a convenient global flag so other modules can detect we installed a custom menu (menu/mapppings)
   vim.g._menu_custom_registered = true

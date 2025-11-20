@@ -24,7 +24,9 @@ local function map(modes, lhs, rhs, desc, opts)
       -- If buffer is present but not a number, drop it to avoid nvim error
       local safe_opts = {}
       for k, v in pairs(opts) do
-        if k ~= "buffer" then safe_opts[k] = v end
+        if k ~= "buffer" then
+          safe_opts[k] = v
+        end
       end
       o = with(o, safe_opts)
     else
@@ -88,22 +90,30 @@ function M.setup()
   --   :ColumnAlignToColumn 40 _
   -- This command expects the user to have a visual selection of a single character.
   if ok_col and type(column_align.align_to_column) == "function" then
-    create_command("ColumnAlignToColumn", function(cmd_args)
-      local args = cmd_args.fargs or {}
-      if #args < 1 then
-        error("missing required argument: <target_col>")
-      end
-      local target_col = tonumber(args[1])
-      if not target_col or target_col < 1 then
-        error("invalid target_col: must be a positive integer")
-      end
-      local fill_char = args[2] or " "
-      if type(fill_char) ~= "string" or #fill_char ~= 1 then
-        error("fill_char must be exactly one character")
-      end
-      -- call core function
-      column_align.align_to_column(target_col, fill_char)
-    end, { nargs = "*", complete = nil, desc = "Align selected character to target column: ColumnAlignToColumn <col> [fill]" })
+    create_command(
+      "ColumnAlignToColumn",
+      function(cmd_args)
+        local args = cmd_args.fargs or {}
+        if #args < 1 then
+          error("missing required argument: <target_col>")
+        end
+        local target_col = tonumber(args[1])
+        if not target_col or target_col < 1 then
+          error("invalid target_col: must be a positive integer")
+        end
+        local fill_char = args[2] or " "
+        if type(fill_char) ~= "string" or #fill_char ~= 1 then
+          error("fill_char must be exactly one character")
+        end
+        -- call core function
+        column_align.align_to_column(target_col, fill_char)
+      end,
+      {
+        nargs = "*",
+        complete = nil,
+        desc = "Align selected character to target column: ColumnAlignToColumn <col> [fill]",
+      }
+    )
   end
 end
 

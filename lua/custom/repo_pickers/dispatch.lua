@@ -8,10 +8,16 @@ local M = {}
 ---@return "fzf"|"telescope"
 function M.resolve_engine_for_files(cfg)
   local eng = cfg.engine or "auto"
-  if eng == "fzf"       then return "fzf" end
-  if eng == "telescope" then return "telescope" end
+  if eng == "fzf" then
+    return "fzf"
+  end
+  if eng == "telescope" then
+    return "telescope"
+  end
   -- auto: prefer fzf if available
-  if pcall(require, "fzf-lua") then return "fzf" end
+  if pcall(require, "fzf-lua") then
+    return "fzf"
+  end
   return "telescope"
 end
 
@@ -20,9 +26,15 @@ end
 ---@return "fzf"|"telescope"
 function M.resolve_engine_for_grep(cfg)
   local eng = cfg.engine or "auto"
-  if eng == "fzf"       then return "fzf" end
-  if eng == "telescope" then return "telescope" end
-  if pcall(require, "fzf-lua") then return "fzf" end
+  if eng == "fzf" then
+    return "fzf"
+  end
+  if eng == "telescope" then
+    return "telescope"
+  end
+  if pcall(require, "fzf-lua") then
+    return "fzf"
+  end
   return "telescope"
 end
 

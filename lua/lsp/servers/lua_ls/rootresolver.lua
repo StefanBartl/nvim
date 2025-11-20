@@ -21,16 +21,16 @@ local function strict_root_from(fname)
     or ((vim.uv or vim.loop).cwd and (vim.uv or vim.loop).cwd())
     or vim.fn.getcw()
 
-	local stdconfig = vim.fn.stdpath("config")
-	if is_subpath(dir, stdconfig) then
-		return stdconfig
-	end
+  local stdconfig = vim.fn.stdpath("config")
+  if is_subpath(dir, stdconfig) then
+    return stdconfig
+  end
 
-	if not dir or dir == "" then
-		return nil
-	end
+  if not dir or dir == "" then
+    return nil
+  end
 
-	local vcs_root = vim.fs.root(dir, { ".git", ".hg", ".svn" })
+  local vcs_root = vim.fs.root(dir, { ".git", ".hg", ".svn" })
   if vcs_root then
     return vcs_root
   end

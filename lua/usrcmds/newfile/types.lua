@@ -10,4 +10,3 @@
 ---@field edit_new fun(path: Path, opts?: NewFileOpts): nil
 ---@field save_as fun(path: Path, opts?: NewFileOpts): nil
 ---@field write_to fun(path: Path, opts?: NewFileOpts): nil
-

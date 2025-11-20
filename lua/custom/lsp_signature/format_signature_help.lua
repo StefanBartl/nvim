@@ -5,10 +5,14 @@ local split_lines = require("custom.lsp_signature.split_lines")
 --- Returns lines + optional highlight info for active parameter
 ---@param result table
 return function(result)
-  if not result then return nil end
+  if not result then
+    return nil
+  end
 
   local sigs = result.signatures or (result.value and result.value.signatures)
-  if not sigs or #sigs == 0 then return nil end
+  if not sigs or #sigs == 0 then
+    return nil
+  end
 
   local active = result.activeSignature
   if result.value and type(result.value.activeSignature) == "number" then
@@ -16,7 +20,9 @@ return function(result)
   end
   local idx = (type(active) == "number") and (active + 1) or 1
   local sig = sigs[idx] or sigs[1]
-  if not sig then return nil end
+  if not sig then
+    return nil
+  end
 
   local label = sig.label or ""
   local lines = split_lines(label)

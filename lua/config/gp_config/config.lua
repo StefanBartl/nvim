@@ -18,10 +18,10 @@ local M = {
   },
 
   agents = {
-		{
-			name = "ChatGPT3-5",
-			disable = true,
-		},
+    {
+      name = "ChatGPT3-5",
+      disable = true,
+    },
     {
       name = "MiniHigh",
       provider = "openai",
@@ -39,7 +39,6 @@ local M = {
       command = false,
     },
   },
-
 }
 
 -- Load optional hooks without crashing if file is missing

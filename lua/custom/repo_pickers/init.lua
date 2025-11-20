@@ -1,11 +1,11 @@
 ---@module 'custom.repo_pickers'
 --- Tiny facade: keeps active config, resolves selectors, exposes _entry_*.
 
-local cfgmod  = require("custom.repo_pickers.config")
-local reg     = require("custom.repo_pickers.register")
+local cfgmod = require("custom.repo_pickers.config")
+local reg = require("custom.repo_pickers.register")
 local actions = require("custom.repo_pickers.actions")
-local router  = require("custom.repo_pickers.select.router")
-local dispatch= require("custom.repo_pickers.dispatch")
+local router = require("custom.repo_pickers.select.router")
+local dispatch = require("custom.repo_pickers.dispatch")
 
 local M = {}
 
@@ -17,8 +17,7 @@ local function selector_for(cfg, kind)
   if cfg.selector == "vim_select" then
     return router.mk_selector(cfg, nil) -- always vim_select
   end
-  local eng = (kind == "files") and dispatch.resolve_engine_for_files(cfg)
-                              or   dispatch.resolve_engine_for_grep(cfg)
+  local eng = (kind == "files") and dispatch.resolve_engine_for_files(cfg) or dispatch.resolve_engine_for_grep(cfg)
   return router.mk_selector(cfg, eng)
 end
 

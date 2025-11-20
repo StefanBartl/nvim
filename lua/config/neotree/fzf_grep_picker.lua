@@ -83,8 +83,7 @@ local function to_windows_path_if_needed(dir)
   end
 
   -- Already Windows style?
-  if dir:match("^[A-Za-z]:[\\/]")
-     or dir:match("^\\\\[^\\]+\\[^\\]+") then
+  if dir:match("^[A-Za-z]:[\\/]") or dir:match("^\\\\[^\\]+\\[^\\]+") then
     return dir
   end
 

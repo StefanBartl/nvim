@@ -25,4 +25,3 @@ function M.select(cfg, repos, on_choice)
 end
 
 return M
-

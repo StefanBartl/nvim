@@ -18,7 +18,7 @@ local DEFAULT_CFG = {
 
 ---@param cfg RootResolverCfg|nil
 ---@return fun(arg:string|integer, cb?:fun(root:string)):string
-return function (cfg)
+return function(cfg)
   cfg = vim.tbl_deep_extend("force", {}, DEFAULT_CFG, cfg or {})
 
   --- Polymorphic resolver function
@@ -64,4 +64,3 @@ return function (cfg)
     return root
   end
 end
-

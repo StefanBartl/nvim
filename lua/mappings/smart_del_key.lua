@@ -29,7 +29,9 @@ local function delete_current_line_api()
   -- Keep cursor on the same visual line index if possible
   -- After deletion, the next line has now this index; column resets to 0
   local max_row = vim.api.nvim_buf_line_count(bufnr)
-  if row > max_row then row = max_row end
+  if row > max_row then
+    row = max_row
+  end
   vim.api.nvim_win_set_cursor(0, { row, 0 })
 end
 
@@ -48,8 +50,10 @@ end
 --- @param opts? { map_cr?: boolean } map <CR> globally (default: true)
 function M.setup(opts)
   opts = opts or {}
-  if opts.map_cr == nil then opts.map_cr = true end
-   local map = vim.g.__map_helper
+  if opts.map_cr == nil then
+    opts.map_cr = true
+  end
+  local map = vim.g.__map_helper
 
   -- Normal-mode <Del>: smart delete (global)
   map("n", "<Del>", M.smart_del, { desc = "Smart delete (<Del>)" })

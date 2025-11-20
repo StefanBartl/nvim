@@ -88,7 +88,7 @@ local function norm(p)
       is_abs = true
       drive_prefix = "\\\\"
       p = p:sub(3)
-    elseif p:sub(1,1) == "\\" then
+    elseif p:sub(1, 1) == "\\" then
       -- Leading single backslash - treat as absolute-ish
       is_abs = true
       p = p:sub(2)

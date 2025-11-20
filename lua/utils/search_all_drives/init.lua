@@ -18,10 +18,14 @@ local function trim(s)
 end
 
 local function is_wsl()
-  if vim.env.WSLENV ~= nil then return true end
+  if vim.env.WSLENV ~= nil then
+    return true
+  end
   if vim.fn.filereadable("/proc/version") == 1 then
     local l = (vim.fn.readfile("/proc/version")[1] or ""):lower()
-    if l:find("microsoft", 1, true) then return true end
+    if l:find("microsoft", 1, true) then
+      return true
+    end
   end
   return false
 end
@@ -36,7 +40,9 @@ end
 local function windows_roots()
   local roots = {}
 
-  local ps = io.popen([[powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-PSDrive -PSProvider FileSystem | Select -ExpandProperty Root"]])
+  local ps = io.popen(
+    [[powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-PSDrive -PSProvider FileSystem | Select -ExpandProperty Root"]]
+  )
   if ps then
     for line in ps:lines() do
       local r = trim(line):gsub("\\+$", "\\")
@@ -94,7 +100,9 @@ end
 
 ---@return string[]
 function Mounts.get_all()
-  if Mounts.cache then return Mounts.cache end
+  if Mounts.cache then
+    return Mounts.cache
+  end
   local sys = os_name()
   local roots = sys:find("Windows", 1, true) and windows_roots() or posix_roots()
 
@@ -126,25 +134,35 @@ function M.build_tabs(builtin)
   end
 
   local common_excludes = {
-    "-g", "!.git/",
-    "-g", "!node_modules/",
-    "-g", "!dist/",
-    "-g", "!build/",
-    "-g", "!target/",
-    "-g", "!vendor/",
-    "-g", "!.cache/",
+    "-g",
+    "!.git/",
+    "-g",
+    "!node_modules/",
+    "-g",
+    "!dist/",
+    "-g",
+    "!build/",
+    "-g",
+    "!target/",
+    "-g",
+    "!vendor/",
+    "-g",
+    "!.cache/",
   }
 
   return {
     {
       name = "All Drives Files",
       tele_func = function()
-        local dirs = all_roots(); if not dirs then return end
+        local dirs = all_roots()
+        if not dirs then
+          return
+        end
 
         local ok, argv, err = findchooser.choose_find_command({
-          include_hidden   = true,
-          follow_symlinks  = true,
-          exclude_vcs      = true,
+          include_hidden = true,
+          follow_symlinks = true,
+          exclude_vcs = true,
         })
         if not ok or not argv then
           vim.notify(err or "No suitable file-lister found.", vim.log.levels.ERROR)
@@ -158,8 +176,8 @@ function M.build_tabs(builtin)
 
         builtin.find_files({
           find_command = cmd,
-          hidden       = true,
-          no_ignore    = true,
+          hidden = true,
+          no_ignore = true,
         })
       end,
     },
@@ -167,13 +185,16 @@ function M.build_tabs(builtin)
     {
       name = "All Drives Grep (regex)",
       tele_func = function()
-        local dirs = all_roots(); if not dirs then return end
+        local dirs = all_roots()
+        if not dirs then
+          return
+        end
         if vim.fn.executable("rg") ~= 1 then
           vim.notify("'ripgrep' (rg) not found in PATH. Install it to use live_grep.", vim.log.levels.ERROR)
           return
         end
         builtin.live_grep({
-          search_dirs     = dirs,
+          search_dirs = dirs,
           additional_args = function()
             return vim.list_extend({ "--hidden", "--no-ignore-vcs", "-S" }, common_excludes)
           end,
@@ -184,13 +205,16 @@ function M.build_tabs(builtin)
     {
       name = "All Drives Grep (literal)",
       tele_func = function()
-        local dirs = all_roots(); if not dirs then return end
+        local dirs = all_roots()
+        if not dirs then
+          return
+        end
         if vim.fn.executable("rg") ~= 1 then
           vim.notify("'ripgrep' (rg) not found in PATH. Install it to use live_grep.", vim.log.levels.ERROR)
           return
         end
         builtin.live_grep({
-          search_dirs     = dirs,
+          search_dirs = dirs,
           additional_args = function()
             return vim.list_extend({ "--hidden", "--no-ignore-vcs", "-F", "-S" }, common_excludes)
           end,
@@ -201,13 +225,16 @@ function M.build_tabs(builtin)
     {
       name = "All Drives Grep (word)",
       tele_func = function()
-        local dirs = all_roots(); if not dirs then return end
+        local dirs = all_roots()
+        if not dirs then
+          return
+        end
         if vim.fn.executable("rg") ~= 1 then
           vim.notify("'ripgrep' (rg) not found in PATH. Install it to use live_grep.", vim.log.levels.ERROR)
           return
         end
         builtin.live_grep({
-          search_dirs     = dirs,
+          search_dirs = dirs,
           additional_args = function()
             return vim.list_extend({ "--hidden", "--no-ignore-vcs", "-w", "-S" }, common_excludes)
           end,

@@ -5,7 +5,7 @@ local M = {}
 ---@return nil
 function M.attach(modules)
   if modules.inline_debug_fixed and modules.inline_debug_fixed == true then
-  	require("debugging.markdown.inline_debug")
+    require("debugging.markdown.inline_debug")
   end
 end
 

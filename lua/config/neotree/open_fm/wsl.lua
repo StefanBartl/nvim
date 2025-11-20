@@ -4,7 +4,6 @@
 ---   - Do not treat non-zero exit codes from explorer.exe as failure (WSL peculiarity).
 ---   - Only fall back if spawning the primary command fails altogether.
 
-
 local M ---@type NeoTreeWslFM
 M = { _cfg = { backend = "explorer", silent = true } }
 
@@ -15,7 +14,9 @@ local function is_wsl()
   local ok, mod = pcall(require, "lib.is_wsl")
   if ok and type(mod) == "function" then
     local ok2, ans = pcall(mod)
-    if ok2 and type(ans) == "boolean" then return ans end
+    if ok2 and type(ans) == "boolean" then
+      return ans
+    end
   end
   -- Fallback: heuristic via kernel release
   local uname = (vim.uv or vim.loop).os_uname().release:lower()
@@ -27,7 +28,9 @@ end
 ---@return string
 local function quote_if_needed(s)
   -- Simple quoting to protect spaces; explorer.exe accepts quoted arguments
-  if s:find("[%s]") then return '"' .. s .. '"' end
+  if s:find("[%s]") then
+    return '"' .. s .. '"'
+  end
   return s
 end
 
@@ -127,7 +130,9 @@ function M.open(state)
 
   -- Backend selection
   local backend = M._cfg.backend
-  if backend == "auto" then backend = "explorer" end
+  if backend == "auto" then
+    backend = "explorer"
+  end
 
   if backend == "wslview" then
     -- wslview opens using Windows default handlers; directory support may vary
@@ -141,8 +146,7 @@ function M.open(state)
 
   -- Default backend: explorer.exe
   -- Important: do NOT check exit code (WSL sometimes returns non-zero on success).
-  local primary = is_dir
-    and { "explorer.exe", quote_if_needed(dir_win or abs_win) }
+  local primary = is_dir and { "explorer.exe", quote_if_needed(dir_win or abs_win) }
     or { "explorer.exe", "/select," .. quote_if_needed(abs_win) }
 
   local spawned = spawn_detached(primary)
@@ -152,8 +156,7 @@ function M.open(state)
 
   -- Only if spawning failed entirely, try a lightweight one-shot fallback.
   -- Note: we do NOT use fallback on non-zero exit codes anymore.
-  local fallback = is_dir
-    and { "cmd.exe", "/C", "start", "", quote_if_needed(dir_win or abs_win) }
+  local fallback = is_dir and { "cmd.exe", "/C", "start", "", quote_if_needed(dir_win or abs_win) }
     or { "cmd.exe", "/C", "start", "", quote_if_needed(abs_win) }
 
   local fb_ok = spawn_detached(fallback)

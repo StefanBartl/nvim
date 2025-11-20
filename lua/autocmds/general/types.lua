@@ -29,4 +29,3 @@
 ---@field kitty GeneralAutoCmdKittySpacingCfg?    -- Configure kitty terminal spacing
 ---@field cursorline GeneralGeneralAutoCmdCursorlineCfgcwd? -- Configure active-window-only cursorline
 ---@field last_loc GeneralAutoCmdJumpLastLocCfg?  -- Configure jump-to-last-location on open
-

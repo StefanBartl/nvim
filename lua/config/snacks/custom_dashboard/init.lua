@@ -36,7 +36,10 @@ function M.setup(snacks, opts)
   -- sessions module optional but register sections early
   local ok_sess, sessions = safe_require("config.snacks.custom_dashboard.sessions")
   if not ok_sess then
-    vim.notify(M.module_tag .. "sessions module not available; Sessions section will show placeholder", vim.log.levels.INFO)
+    vim.notify(
+      M.module_tag .. "sessions module not available; Sessions section will show placeholder",
+      vim.log.levels.INFO
+    )
   end
 
   -- sections must register the custom section before snacks.setup

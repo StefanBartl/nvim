@@ -11,7 +11,9 @@ local markers = { "package.json", ".git", ".eslintrc", ".prettierrc" }
 local function find_root(bufnr)
   bufnr = bufnr or api.nvim_get_current_buf()
   local bufname = api.nvim_buf_get_name(bufnr)
-  if bufname == "" then return nil end
+  if bufname == "" then
+    return nil
+  end
   local start_dir = fn.fnamemodify(bufname, ":p:h")
   if vim.fs and vim.fs.find then
     for _, m in ipairs(markers) do
@@ -31,7 +33,9 @@ local function find_root(bufnr)
         end
       end
       local parent = fn.fnamemodify(dir, ":h")
-      if parent == dir then break end
+      if parent == dir then
+        break
+      end
       dir = parent
     end
   end

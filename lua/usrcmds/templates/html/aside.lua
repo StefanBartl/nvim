@@ -19,8 +19,8 @@ local function insert_html_aside_template()
   -- Define the template lines
   local template = {
     '<aside id="#aside-" style="border-left: 3px solid #ddd; padding-left: 1em; margin: 1em 0;">',
-    '  <strong>Note:</strong> ',
-    '</aside>',
+    "  <strong>Note:</strong> ",
+    "</aside>",
   }
 
   -- Insert the template at cursor position
@@ -32,10 +32,10 @@ local function insert_html_aside_template()
   api.nvim_win_set_cursor(0, { row + 1, id_col })
 
   -- Enter insert mode for immediate editing
-  vim.cmd('startinsert')
+  vim.cmd("startinsert")
 end
 
 --- Register the user command
-api.nvim_create_user_command('HTMLAsideTemplate', insert_html_aside_template, {
-  desc = 'Insert HTML aside template at cursor position',
+api.nvim_create_user_command("HTMLAsideTemplate", insert_html_aside_template, {
+  desc = "Insert HTML aside template at cursor position",
 })

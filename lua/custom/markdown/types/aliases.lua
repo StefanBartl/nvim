@@ -6,4 +6,3 @@
 
 ---@alias Url string
 ---@alias BufNr number
-

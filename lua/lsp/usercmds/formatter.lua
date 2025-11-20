@@ -8,35 +8,35 @@ local desc_tag = "[lsp_conform] "
 
 ---@return nil
 function M.attach(formatter)
-	pcall(nvim_create_user_command, "LspFormat", function(_)
-		formatter.format(0)
-	end, { bang = true, desc = desc_tag .. "format current buffer once (silent)" })
+  pcall(nvim_create_user_command, "LspFormat", function(_)
+    formatter.format(0)
+  end, { bang = true, desc = desc_tag .. "format current buffer once (silent)" })
 
-	pcall(nvim_create_user_command, "LspFormatToggle", function()
-		formatter.toggle()
-	end, { desc = desc_tag .. "toggle format-on-save (silent)" })
+  pcall(nvim_create_user_command, "LspFormatToggle", function()
+    formatter.toggle()
+  end, { desc = desc_tag .. "toggle format-on-save (silent)" })
 
-	pcall(nvim_create_user_command, "LspFormatOn", function()
-		formatter.enable()
-	end, { desc = desc_tag .. "enable format-on-save (silent)" })
+  pcall(nvim_create_user_command, "LspFormatOn", function()
+    formatter.enable()
+  end, { desc = desc_tag .. "enable format-on-save (silent)" })
 
-	pcall(nvim_create_user_command, "LspFormatOff", function()
-		formatter.disable()
-	end, { desc = desc_tag .. "disable format-on-save (silent)" })
+  pcall(nvim_create_user_command, "LspFormatOff", function()
+    formatter.disable()
+  end, { desc = desc_tag .. "disable format-on-save (silent)" })
 
-	pcall(nvim_create_user_command, "LspFormatStatus", function()
-		local state = formatter.is_enabled() and "true" or "false"
-		vim.notify("LSP/Conform state: " .. state, vim.log.levels.INFO)
-	end, { desc = desc_tag .. "show state of formater" })
+  pcall(nvim_create_user_command, "LspFormatStatus", function()
+    local state = formatter.is_enabled() and "true" or "false"
+    vim.notify("LSP/Conform state: " .. state, vim.log.levels.INFO)
+  end, { desc = desc_tag .. "show state of formater" })
 
-	pcall(nvim_create_user_command, "LspFormatWhich", function()
-		local ok, mod = pcall(require, "lsp.formatter.conform")
-		if ok and type(mod.which) == "function" then
-			mod.which(0)
-		else
-			vim.notify("Conform helper unavailable", vim.log.levels.WARN)
-		end
-	end, { desc = "Show formatter chain & availability for current buffer" })
+  pcall(nvim_create_user_command, "LspFormatWhich", function()
+    local ok, mod = pcall(require, "lsp.formatter.conform")
+    if ok and type(mod.which) == "function" then
+      mod.which(0)
+    else
+      vim.notify("Conform helper unavailable", vim.log.levels.WARN)
+    end
+  end, { desc = "Show formatter chain & availability for current buffer" })
 end
 
 return M

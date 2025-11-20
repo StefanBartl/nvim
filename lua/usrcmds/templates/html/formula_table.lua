@@ -20,23 +20,23 @@ local function insert_html_formula_table_template()
   local template = {
     '<figure id="#tbl-formula-">',
     '  <table style="border-collapse: collapse; width: 100%;">',
-    '    <caption><strong>Formeln:</strong> </caption>',
-    '    <thead>',
-    '      <tr>',
+    "    <caption><strong>Formeln:</strong> </caption>",
+    "    <thead>",
+    "      <tr>",
     '        <th style="border: 1px solid #ddd; padding: 8px;">Name</th>',
     '        <th style="border: 1px solid #ddd; padding: 8px;">Formula</th>',
     '        <th style="border: 1px solid #ddd; padding: 8px;">Variables</th>',
-    '      </tr>',
-    '    </thead>',
-    '    <tbody>',
-    '      <tr>',
+    "      </tr>",
+    "    </thead>",
+    "    <tbody>",
+    "      <tr>",
     '        <td style="border: 1px solid #ddd; padding: 8px;"></td>',
     '        <td style="border: 1px solid #ddd; padding: 8px;">$  $</td>',
     '        <td style="border: 1px solid #ddd; padding: 8px;"></td>',
-    '      </tr>',
-    '    </tbody>',
-    '  </table>',
-    '</figure>',
+    "      </tr>",
+    "    </tbody>",
+    "  </table>",
+    "</figure>",
   }
 
   -- Insert the template at cursor position
@@ -48,10 +48,10 @@ local function insert_html_formula_table_template()
   api.nvim_win_set_cursor(0, { row + 1, id_col })
 
   -- Enter insert mode for immediate editing
-  vim.cmd('startinsert')
+  vim.cmd("startinsert")
 end
 
 --- Register the user command
-api.nvim_create_user_command('HTMLFormulaTableTemplate', insert_html_formula_table_template, {
-  desc = 'Insert HTML formula table template at cursor position',
+api.nvim_create_user_command("HTMLFormulaTableTemplate", insert_html_formula_table_template, {
+  desc = "Insert HTML formula table template at cursor position",
 })

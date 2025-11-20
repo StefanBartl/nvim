@@ -9,17 +9,16 @@ local normalize = require("lib.normalize")
 
 ---@type MDTableWrapConfig
 local DEFAULTS = {
-	inner_pad        = 1,
-	outer_left       = 3,
-	outer_right      = 3,
-	auto_width       = true,     -- legacy switch (kept for compatibility)
-	width_mode       = "minflex", -- "auto" | "equal" | "minflex"
-	max_col_width    = nil,
-	min_col_width    = 8,
-	wrap_all_default = false,
-	on_save_enabled  = false,
+  inner_pad = 1,
+  outer_left = 3,
+  outer_right = 3,
+  auto_width = true, -- legacy switch (kept for compatibility)
+  width_mode = "equal", -- "auto" | "equal" | "minflex"
+  max_col_width = nil,
+  min_col_width = 8,
+  wrap_all_default = false,
+  on_save_enabled = false,
 }
-
 
 ---@param user table|nil
 ---@return boolean ok, MDTableWrapConfig|nil cfg, string|nil err
@@ -34,15 +33,29 @@ function M.normalize(user)
   local cfg = vim.deepcopy(DEFAULTS)
 
   -- integers
-  if user.inner_pad ~= nil      then normalize.apply_nonneg_int(cfg, "inner_pad",  user.inner_pad)      end
-  if user.outer_left ~= nil     then normalize.apply_nonneg_int(cfg, "outer_left", user.outer_left)     end
-  if user.outer_right ~= nil    then normalize.apply_nonneg_int(cfg, "outer_right", user.outer_right)   end
-  if user.min_col_width ~= nil  then normalize.apply_pos_int(cfg,    "min_col_width", user.min_col_width) end
+  if user.inner_pad ~= nil then
+    normalize.apply_nonneg_int(cfg, "inner_pad", user.inner_pad)
+  end
+  if user.outer_left ~= nil then
+    normalize.apply_nonneg_int(cfg, "outer_left", user.outer_left)
+  end
+  if user.outer_right ~= nil then
+    normalize.apply_nonneg_int(cfg, "outer_right", user.outer_right)
+  end
+  if user.min_col_width ~= nil then
+    normalize.apply_pos_int(cfg, "min_col_width", user.min_col_width)
+  end
 
   -- booleans
-  if user.auto_width ~= nil       then normalize.apply_bool(cfg, "auto_width",       user.auto_width)       end
-  if user.wrap_all_default ~= nil then normalize.apply_bool(cfg, "wrap_all_default", user.wrap_all_default) end
-  if user.on_save_enabled ~= nil  then normalize.apply_bool(cfg, "on_save_enabled",  user.on_save_enabled)  end
+  if user.auto_width ~= nil then
+    normalize.apply_bool(cfg, "auto_width", user.auto_width)
+  end
+  if user.wrap_all_default ~= nil then
+    normalize.apply_bool(cfg, "wrap_all_default", user.wrap_all_default)
+  end
+  if user.on_save_enabled ~= nil then
+    normalize.apply_bool(cfg, "on_save_enabled", user.on_save_enabled)
+  end
 
   -- width_mode (beeinflusst auto_width)
   if user.width_mode ~= nil then

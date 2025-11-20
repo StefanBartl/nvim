@@ -88,7 +88,8 @@ function M.build(opts)
 
     -- Prefer dedicated Conform helper if available (synchronous + restore)
     if ok_confmod and type(confmod.format_preserve_view) == "function" then
-      local ok_run = confmod.format_preserve_view(bufnr, { timeout_ms = opts.timeout_ms, lsp_fallback = can_lsp_format(bufnr) })
+      local ok_run =
+        confmod.format_preserve_view(bufnr, { timeout_ms = opts.timeout_ms, lsp_fallback = can_lsp_format(bufnr) })
       -- Views already restored by helper; return early on success
       if ok_run then
         return true
@@ -98,7 +99,7 @@ function M.build(opts)
       -- Run Conform synchronously here and restore views locally
       local ok_run = pcall(conform.format, {
         bufnr = bufnr,
-        async = false,          -- critical for deterministic restore
+        async = false, -- critical for deterministic restore
         timeout_ms = opts.timeout_ms,
         lsp_fallback = can_lsp_format(bufnr),
       })
@@ -113,7 +114,7 @@ function M.build(opts)
     if can_lsp_format(bufnr) then
       local ok_lsp = pcall(vim.lsp.buf.format, {
         bufnr = bufnr,
-        async = false,          -- ensure edits are applied before restoring
+        async = false, -- ensure edits are applied before restoring
         timeout_ms = opts.timeout_ms,
       })
       restore_views(views)

@@ -40,7 +40,10 @@ return function(dir)
         if type(mod) == "table" and type(mod.setup) == "function" then
           local ok_setup, err = pcall(mod.setup, {})
           if not ok_setup then
-            vim.notify("[lib.require_dir] Setup error in " .. module_name .. ": " .. tostring(err), vim.log.levels.ERROR)
+            vim.notify(
+              "[lib.require_dir] Setup error in " .. module_name .. ": " .. tostring(err),
+              vim.log.levels.ERROR
+            )
           end
         end
       end

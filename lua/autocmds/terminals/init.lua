@@ -34,7 +34,9 @@ end
 ---@param fallback string[]
 ---@return string[]
 local function norm_events(ev, fallback)
-  if type(ev) == "table" and #ev > 0 then return ev end
+  if type(ev) == "table" and #ev > 0 then
+    return ev
+  end
   return fallback
 end
 

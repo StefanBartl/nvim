@@ -5,7 +5,7 @@
 local api = vim.api
 
 ---@return boolean
-return function ()
+return function()
   local bufnr = api.nvim_get_current_buf()
   local cursor_line = api.nvim_win_get_cursor(0)[1]
   local total = api.nvim_buf_line_count(bufnr)
@@ -24,7 +24,9 @@ return function ()
     end
   end
 
-  if not toc_start then return false end
+  if not toc_start then
+    return false
+  end
 
   -- Search forwards from TOC start for separator or next heading
   for i = toc_start + 1, total do

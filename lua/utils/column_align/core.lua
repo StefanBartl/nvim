@@ -36,8 +36,8 @@ function M.align_to_column(target_col, fill_char)
   end
 
   local line_nr = start_pos[1]
-  local start_col = start_pos[2] + 1  -- Convert to 1-based
-  local end_col = end_pos[2] + 1      -- Convert to 1-based
+  local start_col = start_pos[2] + 1 -- Convert to 1-based
+  local end_col = end_pos[2] + 1 -- Convert to 1-based
 
   -- Require exactly one character selected (start_col == end_col)
   if start_col ~= end_col then
@@ -48,14 +48,19 @@ function M.align_to_column(target_col, fill_char)
   -- Get current line text
   local lines = api.nvim_buf_get_lines(0, line_nr - 1, line_nr, false)
   local line = lines and lines[1]
-  if not line then return end
+  if not line then
+    return
+  end
 
   -- Fetch the selected character (works for byte-indexed strings)
   local selected_char = line:sub(start_col, start_col)
 
   -- Validate target column strictly greater than current position
   if type(target_col) ~= "number" or target_col <= start_col then
-    vim.notify(" [Utils.ColumnAlign] Column align: Target column must be greater than current position", vim.log.levels.ERROR)
+    vim.notify(
+      " [Utils.ColumnAlign] Column align: Target column must be greater than current position",
+      vim.log.levels.ERROR
+    )
     return
   end
 
@@ -85,7 +90,9 @@ end
 function M.align_interactive()
   -- Prompt for target column (string -> number)
   local target_input = vim.fn.input("Target column: ")
-  if target_input == "" then return end
+  if target_input == "" then
+    return
+  end
 
   local target_col = tonumber(target_input)
   if not target_col or target_col < 1 then

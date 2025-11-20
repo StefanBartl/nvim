@@ -16,16 +16,28 @@ function M.setup(shared, opts)
   if type(lsp.config) == "table" then
     lsp.config("emmet_ls", {
       cmd = { "emmet-ls", "--stdio" }, -- ensure 'emmet-ls' is installed
-      filetypes = { "html", "htmldjango", "css", "scss", "javascript", "typescript", "javascriptreact", "typescriptreact" },
+      filetypes = {
+        "html",
+        "htmldjango",
+        "css",
+        "scss",
+        "javascript",
+        "typescript",
+        "javascriptreact",
+        "typescriptreact",
+      },
       root_markers = { ".git", "package.json" },
       capabilities = shared.capabilities,
       on_attach = function(client, bufnr)
-        if type(shared.on_attach) == "function" then pcall(shared.on_attach, client, bufnr) end
+        if type(shared.on_attach) == "function" then
+          pcall(shared.on_attach, client, bufnr)
+        end
       end,
-      settings = {
-      },
+      settings = {},
     })
-    if opts.enable ~= false then pcall(vim.lsp.enable, "emmet_ls") end
+    if opts.enable ~= false then
+      pcall(vim.lsp.enable, "emmet_ls")
+    end
   end
 end
 

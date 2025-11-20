@@ -157,7 +157,7 @@ function M.setup(cfg)
 
   if km.enable then
     km.map("n", "<lt>m", function()
-      vim.cmd "messages"
+      vim.cmd("messages")
       local win = vim.api.nvim_get_current_win() -- capture new window
       vim.defer_fn(function()
         if vim.api.nvim_win_is_valid(win) then
@@ -167,7 +167,7 @@ function M.setup(cfg)
     end, { desc = "[General] Open :messages at bottom", nowait = true, silent = true })
 
     km.map("n", "<lt>n", function()
-      vim.cmd "Noice all"
+      vim.cmd("Noice all")
       local win = vim.api.nvim_get_current_win()
       vim.defer_fn(function()
         if vim.api.nvim_win_is_valid(win) then
@@ -177,7 +177,7 @@ function M.setup(cfg)
     end, { desc = "[Noice] All (auto-bottom)", silent = true })
 
     km.map("n", "<lt>e", function()
-      vim.cmd "Noice errors"
+      vim.cmd("Noice errors")
       local win = vim.api.nvim_get_current_win()
       vim.defer_fn(function()
         if vim.api.nvim_win_is_valid(win) then
@@ -222,6 +222,5 @@ function M.setup(cfg)
     })
   end
 end
-
 
 return M

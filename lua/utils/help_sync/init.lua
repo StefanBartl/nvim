@@ -1,4 +1,3 @@
-
 ---@module 'utils.help_sync'
 --- Aggregate scattered Vim help files from any "docs/" directory within your config
 --- into a single "doc/" directory on the runtimepath, then run :helptags so they
@@ -39,7 +38,7 @@ DEFAULTS = {
     local cfg = fn.stdpath("config")
     return { cfg, (cfg .. "/lua") }
   end)(),
-  docs_dirnames = { "docs" },  -- add "doc" here if you also stash files there
+  docs_dirnames = { "docs" }, -- add "doc" here if you also stash files there
   aggregator_ns = "local",
   prefer_symlink = true,
   clear_before_build = true,
@@ -55,19 +54,24 @@ M.opts = DEFAULTS
 ---@param dir FilePath
 ---@return boolean ok, string? err
 local function ensure_dir(dir)
-  if fn.isdirectory(dir) == 1 then return true, nil end
+  if fn.isdirectory(dir) == 1 then
+    return true, nil
+  end
   local ok, err = pcall(fn.mkdir, dir, "p")
-  if not ok then return false, "mkdir failed: " .. tostring(err) end
-  if fn.isdirectory(dir) ~= 1 then return false, "mkdir returned non-directory" end
+  if not ok then
+    return false, "mkdir failed: " .. tostring(err)
+  end
+  if fn.isdirectory(dir) ~= 1 then
+    return false, "mkdir returned non-directory"
+  end
   return true, nil
 end
 
 --- Return aggregator base and its "doc" directory under an XDG-compliant state path.
 ---@return FilePath docdir, FilePath basedir
 local function aggregator_docdir()
-  local state = os.getenv("XDG_STATE_HOME")
-      and (os.getenv("XDG_STATE_HOME") .. "/nvim/help-sync")
-      or (os.getenv("HOME") .. "/.local/state/nvim/help-sync")
+  local state = os.getenv("XDG_STATE_HOME") and (os.getenv("XDG_STATE_HOME") .. "/nvim/help-sync")
+    or (os.getenv("HOME") .. "/.local/state/nvim/help-sync")
   local base = state .. "/" .. (M.opts.aggregator_ns or DEFAULTS.aggregator_ns)
   return (base .. "/doc"), base
 end
@@ -94,7 +98,9 @@ local function find_help_files(roots, docs_names)
   local results = {}
   -- Build a quick lookup for docs directory names
   local lookup = {}
-  for _, d in ipairs(docs_names) do lookup[d] = true end
+  for _, d in ipairs(docs_names) do
+    lookup[d] = true
+  end
 
   for _, root in ipairs(roots) do
     -- Walk every entry
@@ -129,25 +135,38 @@ local function link_or_copy(src, dst, prefer_symlink)
   if st then
     if st.type == "link" or st.type == "file" then
       local ok_rm, err_rm = uv.fs_unlink(dst)
-      if not ok_rm then return false, "unlink failed: " .. tostring(err_rm) end
+      if not ok_rm then
+        return false, "unlink failed: " .. tostring(err_rm)
+      end
     else
       return false, "destination exists and is not file/link"
     end
   end
 
-	---@diagnostic disable-next-line lib.uv
+  ---@diagnostic disable-next-line lib.uv
   if prefer_symlink and uv.fs_symlink then
-	---@diagnostic disable-next-line lib.uv
+    ---@diagnostic disable-next-line lib.uv
     local ok_ln, _ = uv.fs_symlink(src, dst)
-    if ok_ln then return true, nil end
+    if ok_ln then
+      return true, nil
+    end
     -- fallback to copy
   end
 
   -- Copy via Lua I/O
-  local fin = io.open(src, "rb"); if not fin then return false, "open source failed" end
-  local data = fin:read("*a"); fin:close()
-  local fout = io.open(dst, "wb"); if not fout then return false, "open dest failed" end
-  fout:write(data or ""); fout:flush(); fout:close()
+  local fin = io.open(src, "rb")
+  if not fin then
+    return false, "open source failed"
+  end
+  local data = fin:read("*a")
+  fin:close()
+  local fout = io.open(dst, "wb")
+  if not fout then
+    return false, "open dest failed"
+  end
+  fout:write(data or "")
+  fout:flush()
+  fout:close()
   return true, nil
 end
 
@@ -166,12 +185,16 @@ end
 ---@param docdir FilePath
 ---@return boolean ok, string? err
 local function clear_docdir(docdir)
-  if fn.isdirectory(docdir) ~= 1 then return true, nil end
+  if fn.isdirectory(docdir) ~= 1 then
+    return true, nil
+  end
   for name, typ in vim.fs.dir(docdir) do
     local full = docdir .. "/" .. name
     if typ == "file" or typ == "link" then
       local ok, err = uv.fs_unlink(full)
-      if not ok then return false, "failed to unlink: " .. tostring(err) end
+      if not ok then
+        return false, "failed to unlink: " .. tostring(err)
+      end
     end
   end
   return true, nil
@@ -182,27 +205,33 @@ end
 local function rebuild()
   local docdir, basedir = aggregator_docdir()
 
-  local okb, errb = ensure_dir(basedir); if not okb then
+  local okb, errb = ensure_dir(basedir)
+  if not okb then
     return false, (M.opts.notify_prefix .. errb), 0
   end
-  local okd, errd = ensure_dir(docdir); if not okd then
+  local okd, errd = ensure_dir(docdir)
+  if not okd then
     return false, (M.opts.notify_prefix .. errd), 0
   end
 
   if M.opts.clear_before_build ~= false then
     local okc, errc = clear_docdir(docdir)
-    if not okc then return false, (M.opts.notify_prefix .. errc), 0 end
+    if not okc then
+      return false, (M.opts.notify_prefix .. errc), 0
+    end
   end
 
-	---@diagnostic disable
-  local sources = find_help_files(M.opts.search_roots or DEFAULTS.search_roots,
-                                  M.opts.docs_dirnames or DEFAULTS.docs_dirnames)
----@diagnostic enable
+  ---@diagnostic disable
+  local sources =
+    find_help_files(M.opts.search_roots or DEFAULTS.search_roots, M.opts.docs_dirnames or DEFAULTS.docs_dirnames)
+  ---@diagnostic enable
 
-	if #sources == 0 then
+  if #sources == 0 then
     -- Still ensure RTP so a later run of :HelpSyncRebuild has the path ready
     ensure_in_rtp(basedir)
-    pcall(function() vim.cmd("silent! helptags " .. fn.shellescape(docdir)) end)
+    pcall(function()
+      vim.cmd("silent! helptags " .. fn.shellescape(docdir))
+    end)
     return true, (M.opts.notify_prefix .. "no docs found"), 0
   end
 
@@ -218,7 +247,9 @@ local function rebuild()
   end
 
   ensure_in_rtp(basedir)
-  pcall(function() vim.cmd("silent! helptags " .. fn.shellescape(docdir)) end)
+  pcall(function()
+    vim.cmd("silent! helptags " .. fn.shellescape(docdir))
+  end)
 
   return true, (M.opts.notify_prefix .. ("indexed %d help files"):format(created)), created
 end
@@ -265,4 +296,3 @@ function M.rebuild()
 end
 
 return M
-

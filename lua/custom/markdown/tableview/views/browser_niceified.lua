@@ -11,7 +11,9 @@ local parser = require("custom.markdown.tableview.parser")
 ---@param s string?
 ---@return string
 local function html_escape(s)
-  if s == nil then return "" end
+  if s == nil then
+    return ""
+  end
   s = tostring(s)
   s = s:gsub("&", "&amp;")
   s = s:gsub("<", "&lt;")
@@ -28,9 +30,13 @@ end
 ---@return string html
 local function build_html(chosen, source)
   local buf = {}
-  local function w(s) table.insert(buf, s) end
+  local function w(s)
+    table.insert(buf, s)
+  end
 
-  w("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>")
+  w(
+    "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+  )
   w("<title>TableView — Preview</title>")
   -- CSS: nicer table appearance
   w([[
@@ -129,7 +135,9 @@ return function(bufnr)
 
   -- Build a human-readable source caption: "col <start_line>; H1, H2, H3"
   local headers = {}
-  for _, c in ipairs(chosen.header.cells or {}) do table.insert(headers, c.content or "") end
+  for _, c in ipairs(chosen.header.cells or {}) do
+    table.insert(headers, c.content or "")
+  end
   local source = string.format("col %d; %s", chosen.start_line or 0, table.concat(headers, ", "))
 
   local html = build_html(chosen, source)

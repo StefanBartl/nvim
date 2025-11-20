@@ -3,4 +3,3 @@
 
 ---@class MyMessages
 ---@field run fun(opts?: { debug?: boolean }): nil
-

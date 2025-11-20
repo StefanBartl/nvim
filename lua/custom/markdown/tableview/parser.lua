@@ -15,7 +15,9 @@ local M = {}
 ---@param s string?
 ---@return string
 local function trim(s)
-  if not s then return "" end
+  if not s then
+    return ""
+  end
   return s:match("^%s*(.-)%s*$")
 end
 
@@ -23,7 +25,9 @@ end
 ---@param token string?
 ---@return string "left"|"center"|"right"
 local function parse_alignment(token)
-  if not token then return "left" end
+  if not token then
+    return "left"
+  end
   token = trim(token)
   if token:match("^:%-+:$") then
     return "center"
@@ -56,11 +60,15 @@ end
 ---@param line string
 ---@return boolean
 local function is_separator_row(line)
-  if not line then return false end
+  if not line then
+    return false
+  end
   -- Remove leading/trailing whitespace for check
   local s = trim(line)
   -- Must contain at least one '-' and may contain ':' and '|' and whitespace
-  if not s:match("-") then return false end
+  if not s:match("-") then
+    return false
+  end
   -- Keep it permissive but avoid matching other content: only these chars allowed
   return s:match("^|?%s*[:%-|%s]+%s*|?$") ~= nil
 end
@@ -72,7 +80,9 @@ end
 ---@param start_line integer
 ---@return MarkdownTable|nil
 function M.parse_table(lines, start_line)
-  if not lines or #lines < 2 then return nil end
+  if not lines or #lines < 2 then
+    return nil
+  end
 
   local header_line = lines[1]
   local sep_line = lines[2]
@@ -86,7 +96,7 @@ function M.parse_table(lines, start_line)
     alignments = {},
     rows = {},
     start_line = start_line,
-    end_line = start_line
+    end_line = start_line,
   }
 
   -- parse header
@@ -105,7 +115,9 @@ function M.parse_table(lines, start_line)
   -- parse data rows (lines starting with pipe or that appear consistent)
   for idx = 3, #lines do
     local l = lines[idx]
-    if not l then break end
+    if not l then
+      break
+    end
     -- Accept rows that look like table rows: contain at least one pipe or non-empty after trimming
     if l:match("|") then
       local row_cells = parse_row(l)
@@ -126,7 +138,9 @@ end
 function M.get_tables(bufnr)
   bufnr = bufnr or 0
   local ok, lines = pcall(vim.api.nvim_buf_get_lines, bufnr, 0, -1, false)
-  if not ok or not lines then return {} end
+  if not ok or not lines then
+    return {}
+  end
 
   local tables = {}
   local i = 1

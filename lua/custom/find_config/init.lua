@@ -57,12 +57,14 @@ local function Find_in_config(opts)
   local cwd = get_nvim_config_dir()
   -- Merge provided opts on top of sensible defaults
   local merged = vim.tbl_extend("force", {
-    cwd = cwd,                  -- root search at the config directory
-    prompt = "Config Files❯ ",  -- clearer prompt
+    cwd = cwd, -- root search at the config directory
+    prompt = "Config Files❯ ", -- clearer prompt
   }, opts or {})
 
   -- Call fzf-lua.files with defensive error handling
-  local ok_call, err = pcall(function() fzf.files(merged) end)
+  local ok_call, err = pcall(function()
+    fzf.files(merged)
+  end)
   if not ok_call then
     vim.notify("fzf-lua.files failed: " .. tostring(err), vim.log.levels.ERROR)
   end
@@ -83,13 +85,15 @@ local function Grep_in_config(opts)
   local cwd = get_nvim_config_dir()
   -- Merge provided opts on top of sensible defaults
   local merged = vim.tbl_extend("force", {
-    cwd = cwd,                  -- run ripgrep from the config directory
-    prompt = "Grep Config❯ ",   -- clearer prompt for grepping
+    cwd = cwd, -- run ripgrep from the config directory
+    prompt = "Grep Config❯ ", -- clearer prompt for grepping
     -- additional sensible defaults could be placed here
   }, opts or {})
 
   -- Call fzf-lua.live_grep with defensive error handling
-  local ok_call, err = pcall(function() fzf.live_grep(merged) end)
+  local ok_call, err = pcall(function()
+    fzf.live_grep(merged)
+  end)
   if not ok_call then
     vim.notify("fzf-lua.live_grep failed: " .. tostring(err), vim.log.levels.ERROR)
   end
@@ -150,11 +154,17 @@ end
 ---@param cfg table|nil configuration toggles
 ---@return nil
 function M.enable(cfg)
-  if not cfg then return end
+  if not cfg then
+    return
+  end
   -- If keymaps requested, enable both find and grep keymaps
-  if cfg.keymaps then Enable_keymaps() end
+  if cfg.keymaps then
+    Enable_keymaps()
+  end
   -- If usercommands requested, enable both FindConfig and GrepConfig
-  if cfg.usercmds then Enable_usercmds() end
+  if cfg.usercmds then
+    Enable_usercmds()
+  end
 end
 
 -- Expose helpers for advanced usage

@@ -16,9 +16,11 @@ local M = {}
 function M.memoize(fn, cap, keyer)
   local lru = LRU.new(cap or 128)
   return function(...)
-    local key = keyer and keyer(...) or table.concat({ ... }, "\31")  -- unit separator
+    local key = keyer and keyer(...) or table.concat({ ... }, "\31") -- unit separator
     local hit = lru:get(key)
-    if hit ~= nil then return hit end
+    if hit ~= nil then
+      return hit
+    end
     local val = fn(...)
     lru:put(key, val)
     return val
@@ -26,4 +28,3 @@ function M.memoize(fn, cap, keyer)
 end
 
 return M
-

@@ -27,7 +27,7 @@ end
 
 ---@class CursorProgressCtl
 ---@field mode CursorProgressMode
-local CursorCtl = { mode = "row_progress"  }
+local CursorCtl = { mode = "row_progress" }
 
 --- Set mode explicitly (no-op on invalid input).
 --- @param m string
@@ -44,7 +44,10 @@ function CursorCtl.toggle_mode()
   local order = { "classic", "row_progress", "col_progress", "rows_cols_progress", "off" }
   local idx = 1
   for i, v in ipairs(order) do
-    if v == CursorCtl.mode then idx = i break end
+    if v == CursorCtl.mode then
+      idx = i
+      break
+    end
   end
   idx = (idx % #order) + 1
   CursorCtl.mode = order[idx]
@@ -71,11 +74,19 @@ end
 --- @param pct integer
 --- @return string
 local function pct_bar(pct)
-  if pct < 0 then pct = 0 elseif pct > 100 then pct = 100 end
-  local bars = { "▁","▂","▃","▄","▅","▆","▇","█" }
+  if pct < 0 then
+    pct = 0
+  elseif pct > 100 then
+    pct = 100
+  end
+  local bars = { "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█" }
   local step = 100 / #bars
-  local idx  = math.floor(pct / step) + 1
-  if idx < 1 then idx = 1 elseif idx > #bars then idx = #bars end
+  local idx = math.floor(pct / step) + 1
+  if idx < 1 then
+    idx = 1
+  elseif idx > #bars then
+    idx = #bars
+  end
   return bars[idx]
 end
 
@@ -85,14 +96,20 @@ end
 --- @return integer|nil
 local function compute_row_pct()
   local ok_cur, cursor = pcall(vim.api.nvim_win_get_cursor, 0)
-  local ok_cnt, total  = pcall(vim.api.nvim_buf_line_count, 0)
+  local ok_cnt, total = pcall(vim.api.nvim_buf_line_count, 0)
   if not ok_cur or not ok_cnt or not cursor or not total or total < 1 then
     return nil
   end
   local line = cursor[1]
-  if total == 1 then return 100 end
+  if total == 1 then
+    return 100
+  end
   local pct = math.floor(((line - 1) / (total - 1)) * 100 + 0.5)
-  if pct < 0 then pct = 0 elseif pct > 100 then pct = 100 end
+  if pct < 0 then
+    pct = 0
+  elseif pct > 100 then
+    pct = 100
+  end
   return pct
 end
 
@@ -103,7 +120,9 @@ end
 local function compute_col_pct()
   -- Safe cursor retrieval
   local ok_cur, _ = pcall(vim.api.nvim_win_get_cursor, 0)
-  if not ok_cur then return nil end
+  if not ok_cur then
+    return nil
+  end
 
   -- virtcol('.') is 1-based visual column at cursor; virtcol('$') is last visual col on the line
   local ok_curvc, cur_vc = pcall(vim.fn.virtcol, ".")
@@ -119,10 +138,13 @@ local function compute_col_pct()
 
   -- Normalize to [0,100], using 0-based numerator (cur_vc - 1) vs (end_vc - 1)
   local pct = math.floor(((cur_vc - 1) / (end_vc - 1)) * 100 + 0.5)
-  if pct < 0 then pct = 0 elseif pct > 100 then pct = 100 end
+  if pct < 0 then
+    pct = 0
+  elseif pct > 100 then
+    pct = 100
+  end
   return pct
 end
-
 
 -- 5) Renderers for progress text ----------------------------------------------
 
@@ -161,7 +183,9 @@ M.ui = {
       --- @return string
       breadcrumbs = function()
         local ok, mod = pcall(require, "ui.stl_modules.lsp_based")
-        if not ok or not mod then return "" end
+        if not ok or not mod then
+          return ""
+        end
         local band = mod.mode_band_group()
         return mod.hl_open(band) .. mod.render_breadcrumbs_inherit_lspfirst(band)
       end,
@@ -170,7 +194,9 @@ M.ui = {
       --- @return string
       diagnostics = function()
         local okU, U = pcall(require, "nvchad.stl.utils")
-        if not okU then return "" end
+        if not okU then
+          return ""
+        end
         local s = U.diagnostics()
         return utl.hl_wrap(utl.mode_band_group(), utl.stl_strip_hl(s))
       end,
@@ -179,7 +205,9 @@ M.ui = {
       --- @return string
       lsp = function()
         local okU, U = pcall(require, "nvchad.stl.utils")
-        if not okU then return "" end
+        if not okU then
+          return ""
+        end
         local s = U.lsp()
         return utl.hl_wrap(utl.mode_band_group(), utl.stl_strip_hl(s))
       end,

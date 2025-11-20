@@ -96,7 +96,6 @@
 ---
 ---@field IndentScope    table  -- full-line bg for active indentation block
 
-
 ---@class OptionsCfg
 ---
 --- Enables subtle matchparen “blink” of matching pairs.
@@ -111,6 +110,3 @@
 ---   * Applied to `vim.opt.matchtime`; e.g., `2` ≙ ~200ms.
 --- Side-effects: longer values increase visibility but may feel intrusive.
 ---@field matchtime_tenths integer
-
-
-

@@ -19,7 +19,6 @@ function M.setup_reference_hl()
   vim.api.nvim_set_hl(0, "LspReferenceWrite", { fg = "#FFFFFF", bg = "#3a2b2b", bold = true })
 end
 
-
 ---@return nil
 function M.enable()
   local grp = api.nvim_create_augroup("LangMarkdownQoL", { clear = true })
@@ -28,7 +27,9 @@ function M.enable()
     group = grp,
     pattern = { "markdown", "mdx" },
     callback = function(ev)
-      if not (ev and ev.buf) then return end
+      if not (ev and ev.buf) then
+        return
+      end
 
       local bo = vim.bo[ev.buf]
       local bt = bo.buftype or ""
@@ -44,7 +45,7 @@ function M.enable()
       bo.textwidth = 0
       bo.formatoptions = "jnql"
 
-			M.setup_reference_hl()
+      M.setup_reference_hl()
 
       pcall(vim.keymap.set, "n", "<leader>fm", function()
         local ok, conform = pcall(require, "conform")

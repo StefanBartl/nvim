@@ -11,18 +11,18 @@ local M = {}
 M.severity_map = {
   -- Map common variants (lowercase, uppercase) to the numeric severity constants.
   error = vim.diagnostic.severity.ERROR,
-  err   = vim.diagnostic.severity.ERROR,
-  e     = vim.diagnostic.severity.ERROR,
+  err = vim.diagnostic.severity.ERROR,
+  e = vim.diagnostic.severity.ERROR,
 
-  warn  = vim.diagnostic.severity.WARN,
+  warn = vim.diagnostic.severity.WARN,
   warning = vim.diagnostic.severity.WARN,
-  w     = vim.diagnostic.severity.WARN,
+  w = vim.diagnostic.severity.WARN,
 
-  info  = vim.diagnostic.severity.INFO,
-  i     = vim.diagnostic.severity.INFO,
+  info = vim.diagnostic.severity.INFO,
+  i = vim.diagnostic.severity.INFO,
 
-  hint  = vim.diagnostic.severity.HINT,
-  h     = vim.diagnostic.severity.HINT,
+  hint = vim.diagnostic.severity.HINT,
+  h = vim.diagnostic.severity.HINT,
 }
 
 ---@type table
@@ -40,7 +40,9 @@ M.default_opts = {
 ---@param s string|nil
 ---@return integer|nil
 local function parse_severity(s)
-  if type(s) ~= "string" then return nil end
+  if type(s) ~= "string" then
+    return nil
+  end
   return M.severity_map[string.lower(s)]
 end
 
@@ -51,9 +53,11 @@ end
 function M.goto_next(severity, opts)
   opts = opts or {}
   local o = vim.tbl_extend("force", M.default_opts, opts or {})
-  if severity then o.severity = severity end
+  if severity then
+    o.severity = severity
+  end
   -- Use builtin navigator; respects current window/buffer.
-  vim.diagnostic.jump({count=1, float=true})
+  vim.diagnostic.jump({ count = 1, float = true })
 end
 
 --- Jump to previous diagnostic in current buffer, with optional severity filter.
@@ -63,8 +67,10 @@ end
 function M.goto_prev(severity, opts)
   opts = opts or {}
   local o = vim.tbl_extend("force", M.default_opts, opts or {})
-  if severity then o.severity = severity end
-  vim.diagnostic.jump({count=-1, float=true})
+  if severity then
+    o.severity = severity
+  end
+  vim.diagnostic.jump({ count = -1, float = true })
 end
 
 --- Build quickfix from all workspace diagnostics and jump to next entry.
@@ -80,13 +86,13 @@ function M.workspace_next(severity)
   for i, d in ipairs(all) do
     qf[i] = {
       bufnr = d.bufnr,
-      lnum  = d.lnum + 1,
-      col   = d.col + 1,
-      text  = (d.source and ("[" .. d.source .. "] ") or "") .. (d.message or ""),
-      type  = (d.severity == vim.diagnostic.severity.ERROR and "E")
-           or (d.severity == vim.diagnostic.severity.WARN  and "W")
-           or (d.severity == vim.diagnostic.severity.INFO  and "I")
-           or "H",
+      lnum = d.lnum + 1,
+      col = d.col + 1,
+      text = (d.source and ("[" .. d.source .. "] ") or "") .. (d.message or ""),
+      type = (d.severity == vim.diagnostic.severity.ERROR and "E")
+        or (d.severity == vim.diagnostic.severity.WARN and "W")
+        or (d.severity == vim.diagnostic.severity.INFO and "I")
+        or "H",
     }
   end
   vim.fn.setqflist({}, "r", { title = "Workspace Diagnostics", items = qf })
@@ -130,10 +136,14 @@ function M.create_user_commands()
       -- Offer severity completions after the command word.
       local items = { "error", "warn", "info", "hint" }
       local _, _, prefix = string.find(line, "%s+(%w*)$")
-      if not prefix or prefix == "" then return items end
+      if not prefix or prefix == "" then
+        return items
+      end
       local out = {}
       for _, it in ipairs(items) do
-        if vim.startswith(it, prefix) then table.insert(out, it) end
+        if vim.startswith(it, prefix) then
+          table.insert(out, it)
+        end
       end
       return out
     end,
@@ -154,10 +164,14 @@ function M.create_user_commands()
     complete = function(_, line)
       local items = { "error", "warn", "info", "hint" }
       local _, _, prefix = string.find(line, "%s+(%w*)$")
-      if not prefix or prefix == "" then return items end
+      if not prefix or prefix == "" then
+        return items
+      end
       local out = {}
       for _, it in ipairs(items) do
-        if vim.startswith(it, prefix) then table.insert(out, it) end
+        if vim.startswith(it, prefix) then
+          table.insert(out, it)
+        end
       end
       return out
     end,
@@ -172,14 +186,26 @@ function M.create_keymaps()
   local map = vim.g.__map_helper and vim.g.__map_helper or vim.keymap.set
 
   -- Current buffer navigation (builtin)
-  map({ "n", "x", "o" }, "]d", function() M.goto_next(nil) end, { desc = "[LSP] Next diagnostic" })
-  map({ "n", "x", "o" }, "[d", function() M.goto_prev(nil) end, { desc = "[LSP] Prev diagnostic" })
+  map({ "n", "x", "o" }, "]d", function()
+    M.goto_next(nil)
+  end, { desc = "[LSP] Next diagnostic" })
+  map({ "n", "x", "o" }, "[d", function()
+    M.goto_prev(nil)
+  end, { desc = "[LSP] Prev diagnostic" })
 
   -- Severity-filtered quick access
-  map({ "n", "x", "o" }, "]e", function() M.goto_next(vim.diagnostic.severity.ERROR) end, { desc = "[LSP] Next error" })
-  map({ "n", "x", "o" }, "[e", function() M.goto_prev(vim.diagnostic.severity.ERROR) end, { desc = "[LSP] Prev error" })
-  map({ "n", "x", "o" }, "]w", function() M.goto_next(vim.diagnostic.severity.WARN) end,  { desc = "[LSP] Next warning" })
-  map({ "n", "x", "o" }, "[w", function() M.goto_prev(vim.diagnostic.severity.WARN) end,  { desc = "[LSP] Prev warning" })
+  map({ "n", "x", "o" }, "]e", function()
+    M.goto_next(vim.diagnostic.severity.ERROR)
+  end, { desc = "[LSP] Next error" })
+  map({ "n", "x", "o" }, "[e", function()
+    M.goto_prev(vim.diagnostic.severity.ERROR)
+  end, { desc = "[LSP] Prev error" })
+  map({ "n", "x", "o" }, "]w", function()
+    M.goto_next(vim.diagnostic.severity.WARN)
+  end, { desc = "[LSP] Next warning" })
+  map({ "n", "x", "o" }, "[w", function()
+    M.goto_prev(vim.diagnostic.severity.WARN)
+  end, { desc = "[LSP] Prev warning" })
 
   -- Leader-based mappings calling the user commands (show severity completion)
   map("n", "<leader>dn", ":DiagNext ", { desc = "[LSP] :DiagNext (type severity, Tab-complete)", silent = false })
@@ -190,8 +216,8 @@ function M.create_keymaps()
   map("n", "<leader>dP", ":DiagPrev! ", { desc = "[LSP] Workspace prev diagnostic (!)", silent = false })
 
   -- AUDIT: besseren platz finden
-	local dqf = require("usrcmds.diagnostics.quickfix")
-	dqf.enable_keymaps(vim.g.__map_helper and vim.g.__map_helper or vim.keymap.set)
+  local dqf = require("usrcmds.diagnostics.quickfix")
+  dqf.enable_keymaps(vim.g.__map_helper and vim.g.__map_helper or vim.keymap.set)
 end
 
 --- Public setup to be called from plugin init.
@@ -202,4 +228,3 @@ function M.setup()
 end
 
 return M
-

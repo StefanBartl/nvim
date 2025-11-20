@@ -8,18 +8,18 @@ local DEFAULTS = {
   repos_dir = vim.env.REPOS_DIR or nil,
   only_git = true,
   selector = "auto",
-  engine   = "auto",
+  engine = "auto",
   show_relative = true,
   expose_engine_cmds = false, -- new: do not expose engine-specific commands by default
   usercmd_names = {
     find_files_telescope = "RepoFindFilesTelescope",
-    grep_telescope       = "RepoGrepTelescope",
-    find_files_fzf       = "RepoFindFilesFzf",
-    grep_fzf             = "RepoGrepFzf",
+    grep_telescope = "RepoGrepTelescope",
+    find_files_fzf = "RepoFindFilesFzf",
+    grep_fzf = "RepoGrepFzf",
   },
   keymaps_lhs = {
     repo_files = nil,
-    repo_grep  = nil,
+    repo_grep = nil,
   },
 }
 
@@ -40,10 +40,18 @@ function M.merge(user)
   end
   if out.keymaps_lhs then
     local k = out.keymaps_lhs
-    if k.repo_files ~= nil and type(k.repo_files) ~= "string" then k.repo_files = nil end
-    if k.repo_grep  ~= nil and type(k.repo_grep)  ~= "string" then k.repo_grep  = nil end
-    if k.repo_files == "" then k.repo_files = nil end
-    if k.repo_grep  == "" then k.repo_grep  = nil end
+    if k.repo_files ~= nil and type(k.repo_files) ~= "string" then
+      k.repo_files = nil
+    end
+    if k.repo_grep ~= nil and type(k.repo_grep) ~= "string" then
+      k.repo_grep = nil
+    end
+    if k.repo_files == "" then
+      k.repo_files = nil
+    end
+    if k.repo_grep == "" then
+      k.repo_grep = nil
+    end
   end
 
   out.expose_engine_cmds = not not out.expose_engine_cmds

@@ -85,19 +85,21 @@ function M.cmd(args)
       vim.notify("No Mason LSPs installed", vim.log.levels.WARN)
       return
     end
-    telescope.pickers.new({}, {
-      prompt_title = "Start LSP",
-      finder = telescope.finders.new_table({ results = lsps }),
-      sorter = telescope.config.generic_sorter({}),
-      attach_mappings = function(prompt_bufnr)
-        telescope.actions.select_default:replace(function()
-          local selection = telescope.actions.get_selected_entry(prompt_bufnr)
-          telescope.actions.close(prompt_bufnr)
-          start_lsp(selection[1])
-        end)
-        return true
-      end,
-    }):find()
+    telescope.pickers
+      .new({}, {
+        prompt_title = "Start LSP",
+        finder = telescope.finders.new_table({ results = lsps }),
+        sorter = telescope.config.generic_sorter({}),
+        attach_mappings = function(prompt_bufnr)
+          telescope.actions.select_default:replace(function()
+            local selection = telescope.actions.get_selected_entry(prompt_bufnr)
+            telescope.actions.close(prompt_bufnr)
+            start_lsp(selection[1])
+          end)
+          return true
+        end,
+      })
+      :find()
   else
     -- Direct start via string
     start_lsp(lsp_name)

@@ -24,4 +24,3 @@
 
 ---@class GroupedTable<K, V>
 ---@field [K] V[]
-

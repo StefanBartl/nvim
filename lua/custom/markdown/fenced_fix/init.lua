@@ -63,7 +63,9 @@ end
 ---@return table? hl
 local function get_hl(name)
   local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = name, link = true })
-  if ok and type(hl) == "table" then return hl end
+  if ok and type(hl) == "table" then
+    return hl
+  end
   return nil
 end
 
@@ -71,7 +73,9 @@ end
 ---@return string? first
 local function first_existing_hl(candidates)
   for _, n in ipairs(candidates) do
-    if get_hl(n) then return n end
+    if get_hl(n) then
+      return n
+    end
   end
   return nil
 end
@@ -85,8 +89,8 @@ function M.apply()
 
   if o.enable_legacy then
     -- Builtin 'syntax/markdown.vim' groups (regex-based)
-    safe_clear("markdownCode")                         -- avoid blanket single-color blocks
-    safe_set("markdownCodeDelimiter", o.delimiter_hl)  -- subtle backticks in legacy mode
+    safe_clear("markdownCode") -- avoid blanket single-color blocks
+    safe_set("markdownCodeDelimiter", o.delimiter_hl) -- subtle backticks in legacy mode
   end
 
   if o.enable_ts then
@@ -123,7 +127,6 @@ function M.apply()
       safe_set("MarkdownInlineCode", base)
     end
 
-
     -- Modern captures for inline code content across markdown + markdown_inline
     set_many({
       "@markup.raw.inline",
@@ -150,22 +153,24 @@ end
 ---@return UIMarkdownFencedFix
 function M.setup(opts)
   if type(opts) == "table" then
-    for k, v in pairs(opts) do M.opts[k] = v end
-
-	end
-  pcall(M.apply)  -- apply immediately
+    for k, v in pairs(opts) do
+      M.opts[k] = v
+    end
+  end
+  pcall(M.apply) -- apply immediately
   return M
 end
 
 -- Auto re-apply on ColorScheme so themes cannot override our intent.
 vim.api.nvim_create_autocmd("ColorScheme", {
   group = vim.api.nvim_create_augroup("MarkdownFencedFix", { clear = true }),
-  callback = function() pcall(M.apply) end,
+  callback = function()
+    pcall(M.apply)
+  end,
   desc = "Re-apply fenced fix and inline code styling after colorscheme changes",
 })
 
 return M
-
 
 -- AUDIT:
 
@@ -202,4 +207,3 @@ return M
 -- end
 --
 -- return M
-

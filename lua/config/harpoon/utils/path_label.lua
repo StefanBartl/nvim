@@ -19,7 +19,7 @@ local uv = vim.uv or vim.loop
 
 ---@return string
 local function homedir()
-		---@diagnostic disable-next-line os_homedir exists in uv library
+  ---@diagnostic disable-next-line os_homedir exists in uv library
   return (uv.os_homedir and uv.os_homedir()) or vim.fn.expand("~")
 end
 
@@ -33,7 +33,7 @@ end
 ---@return boolean
 local function is_unc(p)
   -- UNC: starts with // or \\
- return p:match("^//") ~= nil
+  return p:match("^//") ~= nil
 end
 
 --@param p string
@@ -50,7 +50,6 @@ local function split_unc_root(p)
   return root, rest
 end
 
-
 ---@param p string
 ---@return boolean
 local function is_windows_drive(p)
@@ -61,7 +60,7 @@ end
 ---@return string, string
 local function split_drive_root(p)
   -- C:/dir/file -> root="C:", rest="dir/file"
-  local drive = p:sub(1,2):upper()
+  local drive = p:sub(1, 2):upper()
   local rest = p:sub(3)
   rest = rest:gsub("^[/\\]+", "")
   return drive, rest
@@ -75,7 +74,7 @@ function M.to_label(path)
   end
 
   -- Realpath if possible for dedup friendliness; fallback to given path
-	---@diagnostic disable-next-line fs_realpath exists in uv library
+  ---@diagnostic disable-next-line fs_realpath exists in uv library
   local rp = (uv.fs_realpath and uv.fs_realpath(path)) or path
   local p = to_display_sep(rp)
 
@@ -86,20 +85,20 @@ function M.to_label(path)
     root, rest = split_unc_root(p)
   elseif is_windows_drive(p) then
     root, rest = split_drive_root(p)
-    root = root .. "/"  -- display as "C:/"
+    root = root .. "/" -- display as "C:/"
   elseif p:sub(1, #home + 1) == (home .. "/") then
     root, rest = "~", p:sub(#home + 2) -- "~/<rest>"
     root = root .. "/"
   elseif p == home then
     -- Exactly home: show "~"
     return "~"
-  elseif p:sub(1,1) == "/" then
+  elseif p:sub(1, 1) == "/" then
     -- Unix-like absolute
     root, rest = "/", p:sub(2)
   else
     -- Relative path: normalize against cwd to still produce an absolute-like label
     local cwd = to_display_sep((uv.cwd and uv.cwd()) or vim.fn.getcwd())
-    if p:sub(1,1) ~= "/" and not is_windows_drive(p) and not is_unc(p) then
+    if p:sub(1, 1) ~= "/" and not is_windows_drive(p) and not is_unc(p) then
       p = cwd .. "/" .. p
     end
     return M.to_label(p) -- recurse once
@@ -111,7 +110,9 @@ function M.to_label(path)
 
   if parent == "" then
     -- No parent directory left: "<root><file>"
-    if root == "//" then return "//" .. file end
+    if root == "//" then
+      return "//" .. file
+    end
     return root .. file
   end
 
@@ -120,4 +121,3 @@ function M.to_label(path)
 end
 
 return M
-

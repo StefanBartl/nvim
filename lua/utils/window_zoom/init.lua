@@ -30,8 +30,8 @@ function M.zoom_toggle()
   if vim.t._zoom_restore == nil then
     -- Save current layout and maximize the active window
     vim.t._zoom_restore = capture_layout()
-    vim.cmd("wincmd |")  -- full width
-    vim.cmd("wincmd _")  -- full height
+    vim.cmd("wincmd |") -- full width
+    vim.cmd("wincmd _") -- full height
   else
     -- Restore previous layout and clear marker
     restore_layout(vim.t._zoom_restore)

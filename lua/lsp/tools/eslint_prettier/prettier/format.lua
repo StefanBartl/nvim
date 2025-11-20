@@ -11,13 +11,29 @@ local function run_cmd_collect(argv, opts)
     stdout_buffered = true,
     stderr_buffered = true,
     on_stdout = function(_, data)
-      if data then for _, l in ipairs(data) do if l ~= "" then table.insert(stdout, l) end end end
+      if data then
+        for _, l in ipairs(data) do
+          if l ~= "" then
+            table.insert(stdout, l)
+          end
+        end
+      end
     end,
     on_stderr = function(_, data)
-      if data then for _, l in ipairs(data) do if l ~= "" then table.insert(stderr, l) end end end
+      if data then
+        for _, l in ipairs(data) do
+          if l ~= "" then
+            table.insert(stderr, l)
+          end
+        end
+      end
     end,
     on_exit = function(_, code)
-      if opts.on_exit then vim.schedule(function() opts.on_exit(code, stdout, stderr) end) end
+      if opts.on_exit then
+        vim.schedule(function()
+          opts.on_exit(code, stdout, stderr)
+        end)
+      end
     end,
   })
   return jid
@@ -39,7 +55,9 @@ function M.prettier_format(bufnr)
   end
 
   if api.nvim_buf_get_option(bufnr, "modified") then
-    api.nvim_buf_call(bufnr, function() vim.cmd("write!") end)
+    api.nvim_buf_call(bufnr, function()
+      vim.cmd("write!")
+    end)
   end
 
   local args = { bin, "--write", filename }

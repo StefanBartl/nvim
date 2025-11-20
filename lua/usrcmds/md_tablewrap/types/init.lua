@@ -104,7 +104,6 @@
 ---   * If your buffer contains intentionally hand-aligned tables, consider keeping this off.
 --- Defaults to false.
 
-
 ---@alias MDMode '"detect"'|'"force"'
 --- Mode selector for reflow behavior.
 --- "detect": Only reflow if an overflow is detected for the (current/all) table(s).
@@ -171,4 +170,3 @@
 ---@field padding integer
 --- Inner padding (spaces) applied on both sides inside each cell (per side).
 --- The emitted visual width per column equals: col_widths[i] + 2 * padding.
-

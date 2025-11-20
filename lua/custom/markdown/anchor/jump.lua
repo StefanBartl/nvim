@@ -30,23 +30,33 @@ end
 ---@param line string
 ---@return string|nil
 local function extract_anchor(line)
-  if not line or line == "" then return nil end
+  if not line or line == "" then
+    return nil
+  end
 
   -- 1. Markdown link / image link
   local md = line:match("%(#([^)]+)%)")
-  if md then return md end
+  if md then
+    return md
+  end
 
   -- 2. HTML <img src="#...">
-  local img = line:match('<img[^>]-src%s*=%s*["\']#(.-)["\']')
-  if img then return img end
+  local img = line:match("<img[^>]-src%s*=%s*[\"']#(.-)[\"']")
+  if img then
+    return img
+  end
 
   -- 3. HTML <a href="#...">
-  local ahref = line:match('<a[^>]-href%s*=%s*["\']#(.-)["\']')
-  if ahref then return ahref end
+  local ahref = line:match("<a[^>]-href%s*=%s*[\"']#(.-)[\"']")
+  if ahref then
+    return ahref
+  end
 
   -- 4. HTML element with id="#..."
-  local idtag = line:match('<%w+[^>]-id%s*=%s*["\']#(.-)["\']')
-  if idtag then return idtag end
+  local idtag = line:match("<%w+[^>]-id%s*=%s*[\"']#(.-)[\"']")
+  if idtag then
+    return idtag
+  end
 
   return nil
 end
@@ -56,7 +66,9 @@ end
 ---@param anchor string
 ---@return boolean success
 local function jump_to_anchor(anchor)
-  if not anchor or anchor == "" then return false end
+  if not anchor or anchor == "" then
+    return false
+  end
 
   local bufnr = api.nvim_get_current_buf()
   local total = api.nvim_buf_line_count(bufnr)
@@ -74,7 +86,9 @@ local function jump_to_anchor(anchor)
       local hashes, title = line:match("^(%s*#+)%s+(.*%S)")
       if hashes and title then
         local base = slugify_gfm(title)
-        if base == "" then base = "section-"..i end
+        if base == "" then
+          base = "section-" .. i
+        end
 
         local count = seen_count[base] or 0
         local current_anchor
@@ -86,7 +100,7 @@ local function jump_to_anchor(anchor)
         seen_count[base] = count + 1
 
         if current_anchor == anchor then
-          api.nvim_win_set_cursor(0, {i, 0})
+          api.nvim_win_set_cursor(0, { i, 0 })
           vim.cmd("normal! zz")
           return true
         end

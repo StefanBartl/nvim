@@ -17,7 +17,9 @@ local function find_omnisharp()
     local ok_pkg, pkg = pcall(mason_registry.get_package, "omnisharp")
     if ok_pkg and pkg and pkg.is_installed and pkg:is_installed() then
       local exe = pkg:get_install_path() .. "/omnisharp"
-      if executable(exe) == 1 then return exe end
+      if executable(exe) == 1 then
+        return exe
+      end
     end
   end
   return nil
@@ -48,7 +50,9 @@ function M.setup(shared, opts)
       organize_imports_on_format = true,
       root_markers = { ".git", ".sln", ".csproj" },
     })
-    if opts.enable ~= false then pcall(lsp.enable, "omnisharp") end
+    if opts.enable ~= false then
+      pcall(lsp.enable, "omnisharp")
+    end
   end
 end
 

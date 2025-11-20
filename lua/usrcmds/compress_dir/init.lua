@@ -64,7 +64,7 @@ local function _run_shell_async(cmd, on_exit)
   -- Fallback: luv (Neovim 0.9)
   local uv = vim.uv or vim.loop
 
-	---@diagnostic disable
+  ---@diagnostic disable
   ---@type uv.uv_pipe_t|nil
   local stdout = uv.new_pipe(false)
   ---@type uv.uv_pipe_t|nil
@@ -106,7 +106,9 @@ local function _run_shell_async(cmd, on_exit)
       output[#output + 1] = tostring(err)
       return
     end
-    if data then output[#output + 1] = data end
+    if data then
+      output[#output + 1] = data
+    end
   end)
 
   stderr:read_start(function(err, data)
@@ -114,10 +116,12 @@ local function _run_shell_async(cmd, on_exit)
       output[#output + 1] = tostring(err)
       return
     end
-    if data then output[#output + 1] = data end
+    if data then
+      output[#output + 1] = data
+    end
   end)
 end
-  ---@diagnostic enable
+---@diagnostic enable
 
 --- Compress the current working directory into a temp folder with file listing.
 ---@param on_complete fun(success: boolean, message: string) -- Callback with status
@@ -138,9 +142,14 @@ function M.compress_current_directory(on_complete)
 
   -- Note: if one wants only files, add: -type f
   local list_cmd = "find " .. fn.shellescape(cwd) .. " -not -path '*/.git/*' > " .. fn.shellescape(list_path)
-  local tar_cmd = "tar --exclude=" .. fn.shellescape(cwd .. "/.git")
-    .. " -czf " .. fn.shellescape(archive_path)
-    .. " -C " .. fn.shellescape(parent_dir) .. " " .. fn.shellescape(cwd_name)
+  local tar_cmd = "tar --exclude="
+    .. fn.shellescape(cwd .. "/.git")
+    .. " -czf "
+    .. fn.shellescape(archive_path)
+    .. " -C "
+    .. fn.shellescape(parent_dir)
+    .. " "
+    .. fn.shellescape(cwd_name)
 
   _run_shell_async(list_cmd, function(success_list, out1)
     if not success_list then
@@ -161,14 +170,14 @@ end
 --- Enable 'compress_dir'-Usercommand with UI integration (notification layer)
 ---@return nil
 function M.enable_usercmd()
-	vim.api.nvim_create_user_command("CompressDir", function()
-		M.compress_current_directory(function(success, msg)
-			local level = success and vim.log.levels.INFO or vim.log.levels.ERROR
-			vim.schedule(function()
-				vim.notify(msg, level)
-			end)
-		end)
-	end, {})
+  vim.api.nvim_create_user_command("CompressDir", function()
+    M.compress_current_directory(function(success, msg)
+      local level = success and vim.log.levels.INFO or vim.log.levels.ERROR
+      vim.schedule(function()
+        vim.notify(msg, level)
+      end)
+    end)
+  end, {})
 end
 
 return M

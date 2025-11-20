@@ -6,7 +6,9 @@ local has_telescope, _ = pcall(require, "telescope")
 if not has_telescope then
   return {
     setup = function() end,
-    pick = function() vim.notify("telescope.nvim not found", vim.log.levels.WARN) end,
+    pick = function()
+      vim.notify("telescope.nvim not found", vim.log.levels.WARN)
+    end,
   }
 end
 
@@ -89,43 +91,51 @@ function M.pick(query)
       end,
     })
 
-    pickers.new({}, {
-      prompt_title = "Workspace Symbols: " .. query,
-      finder = finder,
-      previewer = previewers.new_buffer_previewer({
-        define_preview = function(self, entry, _)
-          if not entry or not entry.value then return end
-          local fname = entry.filename
-          local lnum = entry.lnum
-          local ok, content = pcall(fn.readfile, fname)
-          if not ok or not content then return end
-          local start_line = math.max(1, lnum - 3)
-          local end_line = math.min(#content, lnum + 3)
-          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, vim.list_slice(content, start_line, end_line))
-          pcall(vim.api.nvim_set_option_value, "filetype", vim.bo.filetype, { self.state.bufnr })
+    pickers
+      .new({}, {
+        prompt_title = "Workspace Symbols: " .. query,
+        finder = finder,
+        previewer = previewers.new_buffer_previewer({
+          define_preview = function(self, entry, _)
+            if not entry or not entry.value then
+              return
+            end
+            local fname = entry.filename
+            local lnum = entry.lnum
+            local ok, content = pcall(fn.readfile, fname)
+            if not ok or not content then
+              return
+            end
+            local start_line = math.max(1, lnum - 3)
+            local end_line = math.min(#content, lnum + 3)
+            vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, vim.list_slice(content, start_line, end_line))
+            pcall(vim.api.nvim_set_option_value, "filetype", vim.bo.filetype, { self.state.bufnr })
+          end,
+        }),
+        sorter = conf.generic_sorter({}),
+        attach_mappings = function(prompt_bufnr, map)
+          local actions = require("telescope.actions")
+          local action_state = require("telescope.actions.state")
+          local open = function()
+            local selection = action_state.get_selected_entry()
+            if not selection then
+              return
+            end
+            local val = selection.value or selection
+            local loc = val.location or val
+            local fname = (loc.uri and vim.uri_to_fname(loc.uri)) or (loc.targetUri and vim.uri_to_fname(loc.targetUri))
+            local range = loc.range or loc.targetSelectionRange or loc.targetRange
+            local lnum = (range and range.start and (range.start.line or 0) + 1) or 1
+            actions.close(prompt_bufnr)
+            vim.cmd("vsplit " .. fn.fnameescape(fname))
+            vim.cmd(tostring(lnum))
+          end
+          map("i", "<CR>", open)
+          map("n", "<CR>", open)
+          return true
         end,
-      }),
-      sorter = conf.generic_sorter({}),
-      attach_mappings = function(prompt_bufnr, map)
-        local actions = require("telescope.actions")
-        local action_state = require("telescope.actions.state")
-        local open = function()
-          local selection = action_state.get_selected_entry()
-          if not selection then return end
-          local val = selection.value or selection
-          local loc = val.location or val
-          local fname = (loc.uri and vim.uri_to_fname(loc.uri)) or (loc.targetUri and vim.uri_to_fname(loc.targetUri))
-          local range = loc.range or loc.targetSelectionRange or loc.targetRange
-          local lnum = (range and range.start and (range.start.line or 0) + 1) or 1
-          actions.close(prompt_bufnr)
-          vim.cmd("vsplit " .. fn.fnameescape(fname))
-          vim.cmd(tostring(lnum))
-        end
-        map("i", "<CR>", open)
-        map("n", "<CR>", open)
-        return true
-      end,
-    }):find()
+      })
+      :find()
   end)
 end
 

@@ -12,12 +12,18 @@ local function telescope_wrap_move(prompt_bufnr, direction)
   local action_state = require("telescope.actions.state")
 
   -- default fallbacks: move selection normally
-  local fallback_next = function() actions.move_selection_next(prompt_bufnr) end
-  local fallback_prev = function() actions.move_selection_previous(prompt_bufnr) end
+  local fallback_next = function()
+    actions.move_selection_next(prompt_bufnr)
+  end
+  local fallback_prev = function()
+    actions.move_selection_previous(prompt_bufnr)
+  end
 
   local ok, picker = pcall(action_state.get_current_picker, prompt_bufnr)
   if not ok or not picker then
-    if direction == "next" then return fallback_next() end
+    if direction == "next" then
+      return fallback_next()
+    end
     return fallback_prev()
   end
 
@@ -37,7 +43,9 @@ local function telescope_wrap_move(prompt_bufnr, direction)
   end)
   if not ok_count or not total or total == 0 then
     -- cannot determine total; use fallback
-    if direction == "next" then return fallback_next() end
+    if direction == "next" then
+      return fallback_next()
+    end
     return fallback_prev()
   end
 
@@ -54,7 +62,9 @@ local function telescope_wrap_move(prompt_bufnr, direction)
     return nil
   end)
   if not ok_row or not row then
-    if direction == "next" then return fallback_next() end
+    if direction == "next" then
+      return fallback_next()
+    end
     return fallback_prev()
   end
 
@@ -74,7 +84,9 @@ local function telescope_wrap_move(prompt_bufnr, direction)
           error("no set_selection API")
         end
       end)
-      if not ok_set then fallback_next() end
+      if not ok_set then
+        fallback_next()
+      end
     else
       fallback_next()
     end
@@ -90,7 +102,9 @@ local function telescope_wrap_move(prompt_bufnr, direction)
           error("no set_selection API")
         end
       end)
-      if not ok_set then fallback_prev() end
+      if not ok_set then
+        fallback_prev()
+      end
     else
       fallback_prev()
     end

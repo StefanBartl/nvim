@@ -8,8 +8,8 @@ dap.adapters.go = {
   port = "${port}", -- dynamic runtime replacement
   executable = {
     command = "dlv",
-    args = { "dap", "-l", "127.0.0.1:${port}" }
-  }
+    args = { "dap", "-l", "127.0.0.1:${port}" },
+  },
 }
 
 dap.configurations.go = {
@@ -17,6 +17,6 @@ dap.configurations.go = {
     type = "go",
     name = "Launch file (go via delve)",
     request = "launch",
-    program = "${file}"
-  }
+    program = "${file}",
+  },
 }

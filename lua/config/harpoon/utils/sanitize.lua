@@ -8,7 +8,9 @@ local Norm = require("config.harpoon.utils.normkey")
 ---@param list HarpoonList
 ---@return nil
 function M.sanitize_items_in_place(list)
-  if type(list) ~= "table" or type(list.items) ~= "table" then return end
+  if type(list) ~= "table" or type(list.items) ~= "table" then
+    return
+  end
 
   for i = 1, #list.items do
     local it = list.items[i]
@@ -39,7 +41,9 @@ end
 ---@param list HarpoonList
 ---@return integer removed_count
 function M.dedup_in_place_safe(list)
-  if type(list) ~= "table" or type(list.items) ~= "table" then return 0 end
+  if type(list) ~= "table" or type(list.items) ~= "table" then
+    return 0
+  end
   local seen = {} ---@type table<string, boolean>
   local to_remove = {} ---@type integer[]
 
@@ -49,18 +53,22 @@ function M.dedup_in_place_safe(list)
     if type(v) == "string" then
       local k = Norm.normkey(v)
       if seen[k] then
-        to_remove[#to_remove+1] = i
+        to_remove[#to_remove + 1] = i
       else
         seen[k] = true
       end
     end
   end
 
-  if #to_remove == 0 then return 0 end
+  if #to_remove == 0 then
+    return 0
+  end
   for idx = #to_remove, 1, -1 do
     local j = to_remove[idx]
     if type(list.remove) == "function" then
-      pcall(function() list:remove(j) end)
+      pcall(function()
+        list:remove(j)
+      end)
     else
       table.remove(list.items, j)
     end

@@ -5,7 +5,6 @@
 --- ======================================
 ---@alias TableViewOptions {floating?: boolean, width?: number, height?: number, bufname?: string}
 
-
 --- ======================================
 --- parser.lua ---------------------------
 --- ======================================
@@ -21,4 +20,3 @@
 ---@field rows MarkdownTableRow[]
 ---@field start_line integer
 ---@field end_line integer
-

@@ -10,13 +10,12 @@ local function lr(mod)
   return require("lib.tables." .. mod)
 end
 
-M.array      = lr("array")
-M.core       = lr("core")
-M.dict       = lr("dict")
-M.set        = lr("set")
+M.array = lr("array")
+M.core = lr("core")
+M.dict = lr("dict")
+M.set = lr("set")
 M.functional = lr("functional")
-M.deep       = lr("safe")
-M.iterate    = lr("set")
+M.deep = lr("safe")
+M.iterate = lr("set")
 
 return M
-

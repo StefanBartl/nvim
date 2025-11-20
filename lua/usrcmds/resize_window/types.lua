@@ -8,4 +8,3 @@
 ---@field opts ResizeWindowConfig
 ---@field enable_usercmd function
 ---@field setup function
-

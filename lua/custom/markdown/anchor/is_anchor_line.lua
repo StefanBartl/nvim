@@ -8,8 +8,10 @@
 
 ---@param line string
 ---@return boolean
-return function (line)
-  if not line or line == "" then return false end
+return function(line)
+  if not line or line == "" then
+    return false
+  end
 
   -- Markdown link: [text](#anchor)
   -- Markdown image link: ![alt](#anchor)
@@ -31,4 +33,3 @@ return function (line)
 
   return false
 end
-

@@ -67,7 +67,9 @@ function M.list_all_buffers_info()
       listed = (b.listed == 1 or b.buflisted == 1) and true or false,
       loaded = b.loaded == 1 or false,
       changed = b.changed == 1 or false,
-      filetype = (b.variables and b.variables.ft) or vim.api.nvim_get_option_value("filetype", { buf = b.bufnr or -1 }) or "",
+      filetype = (b.variables and b.variables.ft)
+        or vim.api.nvim_get_option_value("filetype", { buf = b.bufnr or -1 })
+        or "",
       buftype = b.buftype or vim.api.nvim_get_option_value("buftype", { buf = b.bufnr or -1 }) or "",
       modified = vim.api.nvim_get_option_value("modified", { buf = b.bufnr or -1 }),
       size = b.size or 0,
@@ -120,9 +122,9 @@ function M.get_current_buffer_info()
     bufnr = bufnr,
     name = name ~= "" and name or ("[No Name:" .. tostring(bufnr) .. "]"),
     listed = vim.fn.buflisted(bufnr) == 1,
-    filetype = vim.api.nvim_get_option_value( "filetype", { buf = bufnr }),
-    buftype = vim.api.nvim_get_option_value( "buftype", { buf = bufnr }),
-    modified = vim.api.nvim_get_option_value( "modified", { buf = bufnr }),
+    filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }),
+    buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }),
+    modified = vim.api.nvim_get_option_value("modified", { buf = bufnr }),
   }
   return info
 end

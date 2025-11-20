@@ -15,9 +15,13 @@ local AUG_PATHCACHE = vim.api.nvim_create_augroup("myopt_PathCache", { clear = t
 ---@param dir string
 ---@return string|nil
 local function compute_repo_root(dir)
-  if not dir or dir == "" then return nil end
+  if not dir or dir == "" then
+    return nil
+  end
   local gitdir = vim.fs.find(".git", { upward = true, path = dir })[1]
-  if not gitdir then return nil end
+  if not gitdir then
+    return nil
+  end
   -- gitdir may be ".../<root>/.git" (file or directory); root is its parent
   return vim.fn.fnamemodify(gitdir, ":h")
 end
@@ -26,7 +30,9 @@ end
 ---@param path string
 ---@return string
 local function compute_repo_relative(path)
-  if path == "" then return "[No Name]" end
+  if path == "" then
+    return "[No Name]"
+  end
   local dir = vim.fn.fnamemodify(path, ":h")
   local root = compute_repo_root(dir)
   if root then
@@ -49,21 +55,23 @@ end
 ---@return nil
 function M.refresh_buffer_cache(bufnr)
   bufnr = bufnr or 0
-  if not vim.api.nvim_buf_is_valid(bufnr) then return end
-  local path = vim.api.nvim_buf_get_name(bufnr)
-  if path == "" then
-    vim.b[bufnr].myopt_repo_root     = nil
-    vim.b[bufnr].myopt_repo_rel      = "[No Name]"
-    vim.b[bufnr].myopt_repo_rel_path = ""
-    vim.b[bufnr].myopt_repo_rel_cwd  = vim.loop.cwd()
+  if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
-  local dir  = vim.fn.fnamemodify(path, ":h")
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  if path == "" then
+    vim.b[bufnr].myopt_repo_root = nil
+    vim.b[bufnr].myopt_repo_rel = "[No Name]"
+    vim.b[bufnr].myopt_repo_rel_path = ""
+    vim.b[bufnr].myopt_repo_rel_cwd = vim.loop.cwd()
+    return
+  end
+  local dir = vim.fn.fnamemodify(path, ":h")
   local root = compute_repo_root(dir)
-  vim.b[bufnr].myopt_repo_root     = root
-  vim.b[bufnr].myopt_repo_rel      = compute_repo_relative(path)
+  vim.b[bufnr].myopt_repo_root = root
+  vim.b[bufnr].myopt_repo_rel = compute_repo_relative(path)
   vim.b[bufnr].myopt_repo_rel_path = path
-  vim.b[bufnr].myopt_repo_rel_cwd  = vim.loop.cwd()
+  vim.b[bufnr].myopt_repo_rel_cwd = vim.loop.cwd()
 end
 
 --- Get repo-relative path from cache; recompute lazily on mismatch.
@@ -74,9 +82,7 @@ function M.repo_relative_cached(path, bufnr)
   bufnr = bufnr or 0
   local b = vim.b[bufnr]
   -- Recompute if path changed, cwd changed (rare but relevant), or cache missing.
-  if b.myopt_repo_rel
-     and b.myopt_repo_rel_path == path
-     and b.myopt_repo_rel_cwd == vim.loop.cwd() then
+  if b.myopt_repo_rel and b.myopt_repo_rel_path == path and b.myopt_repo_rel_cwd == vim.loop.cwd() then
     return b.myopt_repo_rel
   end
   M.refresh_buffer_cache(bufnr)
@@ -108,4 +114,3 @@ function M.ensure_autocmds()
 end
 
 return M
-

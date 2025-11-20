@@ -10,7 +10,6 @@
 --- - Does not auto-start on first Markdown buffer.
 --- - Updates preview when switching buffers, stops or toggles update correctly.
 
-
 local M = {}
 
 ---@type boolean
@@ -23,44 +22,47 @@ M._preview_active = false
 function M.setup(opts)
   opts = opts or {}
 
-	--- specify browser to open preview page
-	local browser = {
-		win = vim.fs.joinpath('C:', 'Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-		wsl = vim.fs.joinpath('mnt', 'c', 'Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-		linux = vim.fs.joinpath(''), -- BUG: WATCH: AUDIT: If youre on Linux OS put path there
-	}
+  --- specify browser to open preview page
+  local browser = {
+    win = vim.fs.joinpath("C:", "Program Files", "Google", "Chrome", "Application", "chrome.exe"),
+    wsl = vim.fs.joinpath("mnt", "c", "Program Files", "Google", "Chrome", "Application", "chrome.exe"),
+    linux = vim.fs.joinpath(""), -- BUG: WATCH: AUDIT: If youre on Linux OS put path there
+  }
 
-	if vim.g.is_windows then
-		vim.g.mkdp_browser = browser.win
-	elseif vim.g.is_wsl then
-		vim.g.mkdp_browser = browser.wsl
-	elseif vim.g.is_linux then
-		vim.g.mkdp_browser = browser.linux
-	else
-		vim.notify("[Plugins.MarkdownPreview] Global env for OS not set (system/env.lua). Browser for Markdows Preview defaulted.", 2)
-	end
+  if vim.g.is_windows then
+    vim.g.mkdp_browser = browser.win
+  elseif vim.g.is_wsl then
+    vim.g.mkdp_browser = browser.wsl
+  elseif vim.g.is_linux then
+    vim.g.mkdp_browser = browser.linux
+  else
+    vim.notify(
+      "[Plugins.MarkdownPreview] Global env for OS not set (system/env.lua). Browser for Markdows Preview defaulted.",
+      2
+    )
+  end
 
-	-- 1) Open preview when entering a Markdown buffer (first time only).
-	--    The plugin’s autocommand handles this.
-	vim.g.mkdp_auto_start = 1
+  -- 1) Open preview when entering a Markdown buffer (first time only).
+  --    The plugin’s autocommand handles this.
+  vim.g.mkdp_auto_start = 1
 
-	-- 2) Never auto-close when leaving a Markdown buffer.
-	--    This keeps the preview alive while visiting other buffers.
-	vim.g.mkdp_auto_close = 0
+  -- 2) Never auto-close when leaving a Markdown buffer.
+  --    This keeps the preview alive while visiting other buffers.
+  vim.g.mkdp_auto_close = 0
 
-	-- 3) Always reuse a single preview window across Markdown buffers.
-	vim.g.mkdp_combine_preview = 1
+  -- 3) Always reuse a single preview window across Markdown buffers.
+  vim.g.mkdp_combine_preview = 1
 
-	-- 4) When the single preview is open, auto-refresh its contents whenever
-	--    the current Markdown buffer changes (on buffer switches).
+  -- 4) When the single preview is open, auto-refresh its contents whenever
+  --    the current Markdown buffer changes (on buffer switches).
   vim.g.mkdp_combine_preview_auto_refresh = 1
 
-	-- Optional (keep defaults for everything else). Example theme:
-	-- vim.g.mkdp_theme = "dark"
+  -- Optional (keep defaults for everything else). Example theme:
+  -- vim.g.mkdp_theme = "dark"
 
-	-- Optional fallback (only if someone observes that mkdp_auto_start
-	-- does not trigger on their setup). In most setups this is NOT needed.
-	--[[
+  -- Optional fallback (only if someone observes that mkdp_auto_start
+  -- does not trigger on their setup). In most setups this is NOT needed.
+  --[[
   local aug = vim.api.nvim_create_augroup("MkdpAutoStartFallback", { clear = true })
   vim.api.nvim_create_autocmd("BufEnter", {
     group = aug,
@@ -72,7 +74,7 @@ function M.setup(opts)
   })
   --]]
 
- -- Define wrapper commands to manage global flag
+  -- Define wrapper commands to manage global flag
   vim.api.nvim_create_user_command("MarkdownPreviewWrapper", function()
     M._preview_active = true
     vim.cmd("silent! MarkdownPreview")
@@ -97,10 +99,8 @@ function M.setup(opts)
       if M._preview_active and vim.fn.exists(":MarkdownPreview") == 2 then
         vim.cmd("silent! MarkdownPreview")
       end
-		end,
+    end,
   })
-
-
 end
 
 return M

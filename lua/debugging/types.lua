@@ -8,4 +8,3 @@
 
 ---@class terminals_modules
 ---@field keylogger boolean
-

@@ -26,7 +26,9 @@ local fn, api, fs = vim.fn, vim.api, vim.fs
 ---@param p string
 ---@return boolean
 local function is_dir(p)
-  if type(p) ~= "string" or p == "" then return false end
+  if type(p) ~= "string" or p == "" then
+    return false
+  end
   local st = uv.fs_stat(p)
   return st and st.type == "directory" or false
 end
@@ -35,9 +37,13 @@ end
 ---@param p string
 ---@return string
 local function normalize(p)
-  if type(p) ~= "string" then return "" end
+  if type(p) ~= "string" then
+    return ""
+  end
   local ok, res = pcall(function()
-    if fs and fs.normalize then return fs.normalize(p) end
+    if fs and fs.normalize then
+      return fs.normalize(p)
+    end
     return p
   end)
   return ok and res or p
@@ -48,7 +54,7 @@ end
 ---@param b string
 ---@return string
 local function join(a, b)
-  return (fs and fs.joinpath and fs.joinpath(a, b)) or (a:gsub("/+$","") .. "/" .. b:gsub("^/+",""))
+  return (fs and fs.joinpath and fs.joinpath(a, b)) or (a:gsub("/+$", "") .. "/" .. b:gsub("^/+", ""))
 end
 
 --- Return directory of a path.
@@ -80,13 +86,21 @@ end
 ---@param tail string  -- suffix like "neo-tree/ui/renderer.lua"
 ---@return boolean
 local function path_ends_with(abs, tail)
-  if type(abs) ~= "string" or type(tail) ~= "string" then return false end
-  abs, tail = abs:gsub("\\","/"), tail:gsub("\\","/")
-  if #tail > #abs then return false end
+  if type(abs) ~= "string" or type(tail) ~= "string" then
+    return false
+  end
+  abs, tail = abs:gsub("\\", "/"), tail:gsub("\\", "/")
+  if #tail > #abs then
+    return false
+  end
   -- Ensure we match on segment boundary, i.e. ".../tail" or exact equal
-  if abs:sub(-#tail) ~= tail then return false end
-  if #abs == #tail then return true end
-  local prev = abs:sub(#abs-#tail, #abs-#tail)
+  if abs:sub(-#tail) ~= tail then
+    return false
+  end
+  if #abs == #tail then
+    return true
+  end
+  local prev = abs:sub(#abs - #tail, #abs - #tail)
   return prev == "/"
 end
 
@@ -102,14 +116,14 @@ local function split_line_col(s)
   s = s:gsub("[%)%]%.,;:]+$", "")
 
   -- Full "path:line:col"
-  local a,b, l, c = s:find("^(.-):(%d+):(%d+)$")
+  local a, b, l, c = s:find("^(.-):(%d+):(%d+)$")
   if a then
     local base = s:sub(1, a and (b - #(":" .. l .. ":" .. c)) or #s)
     return base, tonumber(l), tonumber(c)
   end
 
   -- Simple "path:line"
-  local a2,b2, l2 = s:find("^(.-):(%d+)$")
+  local a2, b2, l2 = s:find("^(.-):(%d+)$")
   if a2 then
     local base = s:sub(1, a2 and (b2 - #(":" .. l2)) or #s)
     return base, tonumber(l2), nil
@@ -122,15 +136,17 @@ end
 ---@param s string
 ---@return string
 local function sanitize_token(s)
-  if type(s) ~= "string" then return "" end
+  if type(s) ~= "string" then
+    return ""
+  end
   -- Replace Windows slashes just in case; drop quotes and ellipses
-  s = s:gsub("\\","/"):gsub("[\"'`]+",""):gsub("^%.*%/*","")
+  s = s:gsub("\\", "/"):gsub("[\"'`]+", ""):gsub("^%.*%/*", "")
   -- Drop leading drive letters like "C:/" remnants (not used on POSIX, but harmless)
-  s = s:gsub("^%u:/","")
+  s = s:gsub("^%u:/", "")
   -- Keep only path-ish characters
-  s = s:gsub("[^%w%._%-%/]+","/")
+  s = s:gsub("[^%w%._%-%/]+", "/")
   -- Collapse duplicate slashes
-  s = s:gsub("/+","/")
+  s = s:gsub("/+", "/")
   return s
 end
 
@@ -154,7 +170,9 @@ end
 local function suffix_candidates(tail, max_components)
   local segs = split_segments(tail)
   local n = #segs
-  if n == 0 then return {} end
+  if n == 0 then
+    return {}
+  end
   local maxc = math.max(1, math.min(max_components, n))
   local out = {}
   for k = maxc, 1, -1 do
@@ -169,12 +187,18 @@ end
 ---@param dir string
 ---@return string|nil
 local function git_root(dir)
-  if not is_dir(dir) then return nil end
+  if not is_dir(dir) then
+    return nil
+  end
   local ok, proc = pcall(vim.system, { "git", "-C", dir, "rev-parse", "--show-toplevel" }, { text = true })
-  if not ok or not proc then return nil end
+  if not ok or not proc then
+    return nil
+  end
   local res = proc:wait()
-  if res.code ~= 0 or not res.stdout or res.stdout == "" then return nil end
-  local root = res.stdout:gsub("%s+$","")
+  if res.code ~= 0 or not res.stdout or res.stdout == "" then
+    return nil
+  end
+  local root = res.stdout:gsub("%s+$", "")
   return is_dir(root) and root or nil
 end
 
@@ -188,13 +212,25 @@ local function guess_roots()
   local cfg = fn.stdpath("config")
   local data = fn.stdpath("data")
   local cache = fn.stdpath("cache")
-  if bufdir and is_dir(bufdir) then roots[#roots + 1] = bufdir end
-  if cwd and is_dir(cwd) then roots[#roots + 1] = cwd end
+  if bufdir and is_dir(bufdir) then
+    roots[#roots + 1] = bufdir
+  end
+  if cwd and is_dir(cwd) then
+    roots[#roots + 1] = cwd
+  end
   local g = (bufdir and git_root(bufdir)) or (cwd and git_root(cwd)) or nil
-  if g then roots[#roots + 1] = g end
-  if is_dir(cfg) then roots[#roots + 1] = cfg end
-  if is_dir(data) then roots[#roots + 1] = data end
-  if is_dir(cache) then roots[#roots + 1] = cache end
+  if g then
+    roots[#roots + 1] = g
+  end
+  if is_dir(cfg) then
+    roots[#roots + 1] = cfg
+  end
+  if is_dir(data) then
+    roots[#roots + 1] = data
+  end
+  if is_dir(cache) then
+    roots[#roots + 1] = cache
+  end
   return dedup(roots)
 end
 
@@ -217,7 +253,9 @@ local function find_by_tail(tail, roots, limit)
       for _, p in ipairs(hits) do
         results[#results + 1] = normalize(p)
         total = total + 1
-        if total >= max_hits then return results end
+        if total >= max_hits then
+          return results
+        end
       end
     end
   end
@@ -245,16 +283,20 @@ end
 ---@param col integer|nil
 ---@return boolean
 local function open_and_jump(path, open_cmd, line, col)
-  if type(path) ~= "string" or path == "" then return false end
+  if type(path) ~= "string" or path == "" then
+    return false
+  end
   local cmd = open_cmd or "vsplit"
-  if cmd ~= "vsplit" and cmd ~= "split" and cmd ~= "edit" then cmd = "vsplit" end
+  if cmd ~= "vsplit" and cmd ~= "split" and cmd ~= "edit" then
+    cmd = "vsplit"
+  end
 
   -- Use +{lnum} in the ex command so the cursor lands at the line before autocmds can move it.
   -- keepalt to preserve jumplist metadata; fnameescape for safety.
   if line and line > 0 then
-    vim.cmd(string.format('keepalt %s +%d %s', cmd, line, vim.fn.fnameescape(path)))
+    vim.cmd(string.format("keepalt %s +%d %s", cmd, line, vim.fn.fnameescape(path)))
   else
-    vim.cmd(string.format('keepalt %s %s', cmd, vim.fn.fnameescape(path)))
+    vim.cmd(string.format("keepalt %s %s", cmd, vim.fn.fnameescape(path)))
   end
 
   -- If a column is provided, set it asynchronously after the buffer is fully displayed.
@@ -277,11 +319,15 @@ end
 ---@return string|nil
 local function get_visual_selection_line()
   local mode = api.nvim_get_mode().mode
-  if mode ~= "v" and mode ~= "V" and mode ~= "\022" then return nil end -- char, line, block
+  if mode ~= "v" and mode ~= "V" and mode ~= "\022" then
+    return nil
+  end -- char, line, block
   -- Get marks '< and '>
   local srow, scol = unpack(api.nvim_buf_get_mark(0, "<"))
   local erow, ecol = unpack(api.nvim_buf_get_mark(0, ">"))
-  if srow == 0 or erow == 0 then return nil end
+  if srow == 0 or erow == 0 then
+    return nil
+  end
   if srow ~= erow then
     -- Prefer the line under the cursor if multi-line; paths are usually single-line in messages
     local line = api.nvim_get_current_line()
@@ -290,9 +336,11 @@ local function get_visual_selection_line()
   local line = api.nvim_buf_get_lines(0, srow - 1, srow, false)[1] or ""
   local i = math.min(scol + 1, #line + 1)
   local j = math.min(ecol + 1, #line + 1)
-  if j < i then i, j = j, i end
+  if j < i then
+    i, j = j, i
+  end
   local slice = line:sub(i, j)
-  slice = slice:gsub("^%s+",""):gsub("%s+$","")
+  slice = slice:gsub("^%s+", ""):gsub("%s+$", "")
   return slice ~= "" and slice or nil
 end
 
@@ -300,7 +348,9 @@ end
 ---@return string|nil
 local function get_normal_token()
   local tok = fn.expand("<cfile>")
-  if type(tok) == "string" and tok ~= "" then return tok end
+  if type(tok) == "string" and tok ~= "" then
+    return tok
+  end
   tok = fn.expand("<cword>")
   return (type(tok) == "string" and tok ~= "") and tok or nil
 end
@@ -321,7 +371,10 @@ function M.probe(opts)
   -- 1) Extract token
   local raw = get_visual_selection_line() or get_normal_token()
   if not raw then
-    vim.notify("[pathprobe] No path-like token found. Select a path segment or place cursor on it.", vim.log.levels.WARN)
+    vim.notify(
+      "[pathprobe] No path-like token found. Select a path segment or place cursor on it.",
+      vim.log.levels.WARN
+    )
     return false
   end
 
@@ -348,7 +401,9 @@ function M.probe(opts)
   local all_matches = {}
   for _, suf in ipairs(candidates) do
     local found = find_by_tail(suf, roots, 150)
-    for _, p in ipairs(found) do all_matches[#all_matches + 1] = p end
+    for _, p in ipairs(found) do
+      all_matches[#all_matches + 1] = p
+    end
     if #found == 1 then
       return open_and_jump(found[1], open_cmd, line, col)
     elseif #found > 1 then
@@ -377,7 +432,7 @@ function M.probe(opts)
         rel = "./" .. item:sub(#r0 + 2)
       end
       return rel
-    end
+    end,
   }, function(choice)
     if choice then
       open_and_jump(choice, open_cmd, line, col)
@@ -391,14 +446,20 @@ end
 ---@return nil
 function M.enable_keymaps()
   -- Normal mode: <leader>pp probes the token under cursor
-  api.nvim_set_keymap("n", "<leader>pp",
+  api.nvim_set_keymap(
+    "n",
+    "<leader>pp",
     [[<cmd>lua require('pathprobe').probe({ open_cmd = "vsplit", ask_on_ambiguous = true })<CR>]],
-    { noremap = true, silent = true, desc = "PathProbe: resolve truncated path tail and open" })
+    { noremap = true, silent = true, desc = "PathProbe: resolve truncated path tail and open" }
+  )
 
   -- Visual mode: <leader>pp probes the selection
-  api.nvim_set_keymap("v", "<leader>pp",
+  api.nvim_set_keymap(
+    "v",
+    "<leader>pp",
     [[:<C-U>lua require('pathprobe').probe({ open_cmd = "vsplit", ask_on_ambiguous = true })<CR>]],
-    { noremap = true, silent = true, desc = "PathProbe: resolve selected truncated path tail and open" })
+    { noremap = true, silent = true, desc = "PathProbe: resolve selected truncated path tail and open" }
+  )
 
   -- Optional command: :PathProbe[!] reads selection if visual, else <cfile>.
   -- :PathProbe! uses :split instead of :vsplit
@@ -409,4 +470,3 @@ function M.enable_keymaps()
 end
 
 return M
-

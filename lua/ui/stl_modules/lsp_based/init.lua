@@ -14,15 +14,15 @@ local M = {}
 
 ---@type LspCfg
 M.cfg = {
-	debounce_ms = 250,
-	update_events = { "BufEnter", "CursorHold", "CursorHoldI", "InsertLeave", "TextChanged", "LspAttach" },
-  center_width_frac = 0.50,  -- Anteil der Editorbreite, der dem Mittelteil als Ziel dient
-  center_width_min  = 20,    -- Mindestbreite für den Mittelteil
-  path_max_frac     = 0.60,  -- maximaler Anteil des Mittelteil-Ziels, der für den Pfad reserviert wird
-  path_max_chars    = 45,   -- optional harte Obergrenze (Zeichen) NUR für den Pfad; nil = deaktiviert
-  path_min_room     = 30,     -- unterhalb dieses Platzes kein komponentenweises Kürzen, sondern Fallback
-  path_mode = "absolute",        -- "auto"|"repo"|"cwd"|"absolute"|"home"
-  path_home_tilde = true,    -- show "~" for $HOME in absolute/home modes
+  debounce_ms = 250,
+  update_events = { "BufEnter", "CursorHold", "CursorHoldI", "InsertLeave", "TextChanged", "LspAttach" },
+  center_width_frac = 0.50, -- Anteil der Editorbreite, der dem Mittelteil als Ziel dient
+  center_width_min = 20, -- Mindestbreite für den Mittelteil
+  path_max_frac = 0.60, -- maximaler Anteil des Mittelteil-Ziels, der für den Pfad reserviert wird
+  path_max_chars = 45, -- optional harte Obergrenze (Zeichen) NUR für den Pfad; nil = deaktiviert
+  path_min_room = 30, -- unterhalb dieses Platzes kein komponentenweises Kürzen, sondern Fallback
+  path_mode = "absolute", -- "auto"|"repo"|"cwd"|"absolute"|"home"
+  path_home_tilde = true, -- show "~" for $HOME in absolute/home modes
 }
 ---@diagnostic enable
 
@@ -80,7 +80,7 @@ end
 ---@nodiscard
 ---@return string
 function M.mode_band_group()
-  local utils = require "nvchad.stl.utils"
+  local utils = require("nvchad.stl.utils")
   local m = api.nvim_get_mode().mode
   local name = (utils.modes[m] and utils.modes[m][2]) or "Normal"
   return "St_" .. name .. "mode"
@@ -181,7 +181,7 @@ end
 local function devicon_for_path(path)
   local ok, devicons = pcall(require, "nvim-web-devicons")
   local filename = (path == "" or path == nil) and "[No Name]" or fn.fnamemodify(path, ":t")
-  local ext = filename:match "^.+%.(.+)$" or ""
+  local ext = filename:match("^.+%.(.+)$") or ""
   if not ok then
     return "󰈙", nil
   end
@@ -206,7 +206,7 @@ end
 ---@nodiscard
 ---@return string
 function M.file_icon_segment()
-  local utils = require "nvchad.stl.utils"
+  local utils = require("nvchad.stl.utils")
   local bufnr = utils.stbufnr()
   local path = api.nvim_buf_get_name(bufnr) or ""
   local icon, fg = devicon_for_path(path)
@@ -219,7 +219,7 @@ end
 ---@param band_group string
 ---@return string
 function M.file_icon_segment_inherit(band_group)
-  local utils = require "nvchad.stl.utils"
+  local utils = require("nvchad.stl.utils")
   local bufnr = utils.stbufnr()
   local path = api.nvim_buf_get_name(bufnr) or ""
   local icon, fg = devicon_for_path(path)
@@ -253,7 +253,7 @@ function M.ellipsize_path_components(path, max)
     p = p:gsub("\\", "/")
 
     -- Windows drive root (normalized): "C:/"
-    local drive = rest:match "^([A-Za-z]:)/"
+    local drive = rest:match("^([A-Za-z]:)/")
     if drive then
       prefix = drive .. "/"
       -- drop the leading "C:/"
@@ -284,7 +284,7 @@ function M.ellipsize_path_components(path, max)
   -- Split remaining into components (ignore empty)
   ---@type string[]
   local parts = {}
-  for seg in rest:gmatch "[^/]+" do
+  for seg in rest:gmatch("[^/]+") do
     parts[#parts + 1] = seg
   end
 
@@ -360,7 +360,7 @@ function M.compact_breadcrumb_line(rel, ctx, sep, total_maxw)
   local target = total_maxw
   if not target or target <= 0 then
     local frac = M.cfg.center_width_frac or 0.50
-    local minw = M.cfg.center_width_min  or 30
+    local minw = M.cfg.center_width_min or 30
     target = math.max(minw, math.floor(vim.o.columns * frac))
   end
 
@@ -461,7 +461,7 @@ function M.symbol_context_ts()
   ---@return string|nil
   local function ts_identifier_of(n)
     -- 1) Direktes, benanntes Feld
-    local named = n:field "name"
+    local named = n:field("name")
     if named and named[1] then
       local t = vim.treesitter.get_node_text(named[1], 0)
       if t and #t > 0 then
@@ -516,7 +516,7 @@ function M.symbol_context_ts()
     -- Whitespace entfernen, auf die letzte Kette nahe Cursor zielen
     local s = raw:gsub("%s+", "")
     -- Kandidaten: foo.bar.baz  |  obj:method  |  foo["bar"].baz
-    local chain = s:match "([%w_%.:]+)%s*$" or s:match "([%w_]+%b[][%w_%.%[%]]*)%s*$"
+    local chain = s:match("([%w_%.:]+)%s*$") or s:match("([%w_]+%b[][%w_%.%[%]]*)%s*$")
     if chain and #chain > 0 then
       -- Klammern am Ende entfernen, damit "method()" → "method" (später optional "()" anfügen)
       chain = chain:gsub("%(%s*%)$", "")
@@ -524,10 +524,10 @@ function M.symbol_context_ts()
     end
 
     -- Generische Fallbacks
-    local guess = raw:match "^%w+%s+([%w_]+)%s*%("
-      or raw:match "^%w+%s+([%w_]+)%s*[={:]"
-      or raw:match "^([%w_%.:]+)%s*%("
-      or raw:match "^([%w_%.:]+)"
+    local guess = raw:match("^%w+%s+([%w_]+)%s*%(")
+      or raw:match("^%w+%s+([%w_]+)%s*[={:]")
+      or raw:match("^([%w_%.:]+)%s*%(")
+      or raw:match("^([%w_%.:]+)")
     return guess
   end
 
@@ -546,8 +546,8 @@ function M.symbol_context_ts()
       -- ident = ident and ident:gsub("^.+[%.:]", "") or ident
       if ident and #ident > 0 then
         -- Funktions-/Methoden-Knoten optisch als Aufruf darstellen
-        if t:find "function" or t:find "method" or t:find "call" then
-          if not ident:find "%)$" then
+        if t:find("function") or t:find("method") or t:find("call") then
+          if not ident:find("%)$") then
             ident = ident .. "()"
           end
         end
@@ -629,8 +629,6 @@ local DEFAULT_KEEP_KINDS = {
 ---@type table<integer, LspDocSymCache>
 M.__lsp_doc_cache = M.__lsp_doc_cache or {}
 
-
-
 ---@nodiscard
 ---@param bufnr integer
 ---@return integer
@@ -664,7 +662,7 @@ end
 local function symbol_display_name(sym)
   local name = sym.name or ""
   if sym.detail and #sym.detail > 0 then
-    local short = sym.detail:match "([%w_%.:]+)%s*%(" or sym.detail:match "([%w_%.:]+)$"
+    local short = sym.detail:match("([%w_%.:]+)%s*%(") or sym.detail:match("([%w_%.:]+)$")
     if short and #short > 0 and #short < (#name + 3) then
       name = short
     end
@@ -678,7 +676,7 @@ end
 ---@return string
 local function maybe_callish(kind, name)
   if (kind == LspKind.Function) or (kind == LspKind.Method) or (kind == LspKind.Constructor) then
-    if not name:find "%)$" then
+    if not name:find("%)$") then
       return name .. "()"
     end
   end
@@ -714,7 +712,7 @@ local function request_doc_symbols_async(bufnr)
     -- Statusline neu zeichnen, außerhalb fast-event
     local function redraw()
       pcall(function()
-        vim.cmd "redrawstatus"
+        vim.cmd("redrawstatus")
       end)
     end
     if vim.in_fast_event() then
@@ -726,7 +724,7 @@ local function request_doc_symbols_async(bufnr)
 
   -- Anfrage an alle passenden Clients; erste erfolgreiche Antwort genügt.
   local requested = false
-  for _, client in ipairs(lsp.get_clients { bufnr = bufnr }) do
+  for _, client in ipairs(lsp.get_clients({ bufnr = bufnr })) do
     local caps = client.server_capabilities or {}
     if caps.documentSymbolProvider then
       requested = true
@@ -790,7 +788,7 @@ end
 ---@nodiscard
 ---@return string|nil
 function M.symbol_context_lsp()
-  local utils = require "nvchad.stl.utils"
+  local utils = require("nvchad.stl.utils")
   local bufnr = utils.stbufnr()
   -- Niemals im Renderpfad synchron anfragen: nur Cache lesen.
   local items, hierarchical = get_cached_doc_symbols(bufnr)
@@ -906,12 +904,18 @@ end
 local SEP_HEX = "f0058"
 
 function M.render_breadcrumbs_lspfirst()
-  local utils = require "nvchad.stl.utils"
+  local utils = require("nvchad.stl.utils")
   local bufnr = utils.stbufnr()
-  local rel   = _display_path_for_buf(bufnr)
-  local ctx   = M.symbol_context_smart()
-  local icon  = M.file_icon_segment()
-  local sep   = (function() return (" " .. (cp(SEP_HEX) ~= "" and fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›")) .. " ") end)()
+  local rel = _display_path_for_buf(bufnr)
+  local ctx = M.symbol_context_smart()
+  local icon = M.file_icon_segment()
+  local sep = (function()
+    return (
+      " "
+      .. (cp(SEP_HEX) ~= "" and fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›"))
+      .. " "
+    )
+  end)()
 
   local line = M.compact_breadcrumb_line(rel, ctx, sep, nil)
   line = M.stl_escape(line)
@@ -919,16 +923,22 @@ function M.render_breadcrumbs_lspfirst()
 end
 
 function M.render_breadcrumbs_inherit_lspfirst(band_group)
-  local utils = require "nvchad.stl.utils"
+  local utils = require("nvchad.stl.utils")
   local bufnr = utils.stbufnr()
-  local rel   = _display_path_for_buf(bufnr)
-  local ctx   = M.symbol_context_smart()
-  local icon  = M.file_icon_segment_inherit(band_group)
-  local sep   = (function() return (" " .. (cp(SEP_HEX) ~= "" and fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›")) .. " ") end)()
+  local rel = _display_path_for_buf(bufnr)
+  local ctx = M.symbol_context_smart()
+  local icon = M.file_icon_segment_inherit(band_group)
+  local sep = (function()
+    return (
+      " "
+      .. (cp(SEP_HEX) ~= "" and fn.strdisplaywidth(cp(SEP_HEX)) == 1 and cp(SEP_HEX) or ((vim.o.columns >= 100) and "⟶" or "›"))
+      .. " "
+    )
+  end)()
 
   local line = M.compact_breadcrumb_line(rel, ctx, sep, nil)
   line = M.stl_escape(line)
-  return icon .. " " .. line  -- wichtig: keine %* hier (inherit)
+  return icon .. " " .. line -- wichtig: keine %* hier (inherit)
 end
 
 return M

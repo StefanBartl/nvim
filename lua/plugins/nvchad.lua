@@ -8,18 +8,19 @@ return {
   config = function()
     local ok_init, menu_init = pcall(require, "config.menu.init")
     if ok_init and menu_init and menu_init.setup then
-      menu_init.setup {
+      menu_init.setup({
         enable_format = true,
         enable_code_actions = true,
         enable_lsp_section = true,
         enable_git_section = true,
         enable_paste = true,
-      }
-			local ok_km, km = pcall(require, "config.menu.mappings")
-			if ok_km and km and km.setup then pcall(km.setup) end
+      })
+      local ok_km, km = pcall(require, "config.menu.mappings")
+      if ok_km and km and km.setup then
+        pcall(km.setup)
+      end
     else
       vim.notify("config.menu.init not available; custom menu not registered", vim.log.levels.WARN)
     end
-
   end,
 }

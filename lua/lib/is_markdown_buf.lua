@@ -4,7 +4,7 @@
 
 ---@param bufnr_arg integer|nil Optional buffer number to check; if nil the current buffer is used.
 ---@return integer|nil buffer number if the buffer is a markdown buffer and valid, otherwise nil
-return function (bufnr_arg)
+return function(bufnr_arg)
   local bufnr = bufnr_arg or vim.api.nvim_get_current_buf()
   if not (vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_buf_is_valid(bufnr)) then
     return nil

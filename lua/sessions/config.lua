@@ -33,9 +33,9 @@ M.cfg = {
   }, ","),
 
   blacklist = {
-    buftypes = { "quickfix", "nofile", "prompt" },  -- ephemeral / UI noise
-    filetypes = { "gitcommit", "gitrebase" },       -- volatile across hosts
-    paths = { "/tmp/", "/private/tmp/" },           -- Linux/macOS temp
+    buftypes = { "quickfix", "nofile", "prompt" }, -- ephemeral / UI noise
+    filetypes = { "gitcommit", "gitrebase" }, -- volatile across hosts
+    paths = { "/tmp/", "/private/tmp/" }, -- Linux/macOS temp
   },
 }
 

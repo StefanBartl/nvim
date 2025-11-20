@@ -47,7 +47,15 @@ function M.setup()
         require("custom.markdown.setup.keymaps").apply(buf)
       end)
       if not ok then
-        vim.notify(string.format("[Custom.Markdown] failed to attach keymaps for buffer %d (filetype='%s'): %s", buf, ft, tostring(err)), vim.log.levels.WARN)
+        vim.notify(
+          string.format(
+            "[Custom.Markdown] failed to attach keymaps for buffer %d (filetype='%s'): %s",
+            buf,
+            ft,
+            tostring(err)
+          ),
+          vim.log.levels.WARN
+        )
       end
     end,
     desc = "[Custom.Markdown] Install buffer-local Markdown keymaps (robust matcher)",

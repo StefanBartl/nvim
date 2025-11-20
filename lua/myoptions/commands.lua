@@ -34,8 +34,8 @@ local C = require("myoptions.config")
 --- @param rhs  fun(opts:{fargs:string[], bang:boolean})
 --- @param opts table
 local function define_cmd(name, rhs, opts)
-	pcall(vim.api.nvim_del_user_command, name)
-	vim.api.nvim_create_user_command(name, rhs, opts or {})
+  pcall(vim.api.nvim_del_user_command, name)
+  vim.api.nvim_create_user_command(name, rhs, opts or {})
 end
 
 --- Resolve a dot-path on a table (read-only).
@@ -43,23 +43,27 @@ end
 --- @param path string
 --- @return any value_or_nil
 local function get_by_path(root, path)
-	local node = root
-	for seg in string.gmatch(path, "[^%.]+") do
-		if type(node) ~= "table" then return nil end
-	node = node[seg]
-	end
-	return node
+  local node = root
+  for seg in string.gmatch(path, "[^%.]+") do
+    if type(node) ~= "table" then
+      return nil
+    end
+    node = node[seg]
+  end
+  return node
 end
 
 --- Build a completion function for a namespace.
 --- @param ns '"highlight"'|'"options"'
 --- @return fun(ArgLead:string, CmdLine:string, CursorPos:integer):string[]
 local function make_complete(ns)
-	return function(ArgLead, _, _)
-		local keys = C.keys(ns)
-		local pat = "^" .. vim.pesc(ArgLead)
-		return vim.tbl_filter(function(k) return k:find(pat) ~= nil end, keys)
-	end
+  return function(ArgLead, _, _)
+    local keys = C.keys(ns)
+    local pat = "^" .. vim.pesc(ArgLead)
+    return vim.tbl_filter(function(k)
+      return k:find(pat) ~= nil
+    end, keys)
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -73,59 +77,59 @@ end
 ---   :MyHlList                 | Lists all configurable highlight keys (dot-paths)
 --- @param spec MyCommandsHLSpec
 function M.register_highlight_commands(spec)
-	assert(type(spec) == "table", "register_highlight_commands: spec required")
-	assert(type(spec.show_table) == "table", "register_highlight_commands: spec.show_table must be a table")
-	local names = vim.tbl_extend("force", { set = "MyHlSet", show = "MyHlShow", list = "MyHlList" }, spec.names or {})
+  assert(type(spec) == "table", "register_highlight_commands: spec required")
+  assert(type(spec.show_table) == "table", "register_highlight_commands: spec.show_table must be a table")
+  local names = vim.tbl_extend("force", { set = "MyHlSet", show = "MyHlShow", list = "MyHlList" }, spec.names or {})
 
-	-- :MyHlSet
-	define_cmd(names.set, function(opts)
-		local args = opts.fargs
-		if #args == 0 then
-			vim.notify(("Usage: :%s {keypath} {value}"):format(names.set), vim.log.levels.INFO)
-			return
-		end
-		local key = args[1]
-		local value_str = table.concat(vim.list_slice(args, 2), " ")
-		local toggle = (opts.bang == true) and (value_str == nil or value_str == "")
-		local value = C.parse(value_str)
+  -- :MyHlSet
+  define_cmd(names.set, function(opts)
+    local args = opts.fargs
+    if #args == 0 then
+      vim.notify(("Usage: :%s {keypath} {value}"):format(names.set), vim.log.levels.INFO)
+      return
+    end
+    local key = args[1]
+    local value_str = table.concat(vim.list_slice(args, 2), " ")
+    local toggle = (opts.bang == true) and (value_str == nil or value_str == "")
+    local value = C.parse(value_str)
 
-		local ok, err = C.set("highlight", key, value, toggle)
-		if not ok then
-			vim.notify(names.set .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
-			return
-		end
+    local ok, err = C.set("highlight", key, value, toggle)
+    if not ok then
+      vim.notify(names.set .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+      return
+    end
 
-		if type(spec.after_set) == "function" then
-			pcall(spec.after_set, key)
-		end
+    if type(spec.after_set) == "function" then
+      pcall(spec.after_set, key)
+    end
 
-		local msg = toggle and ("toggled " .. key) or (key .. " = " .. vim.inspect(value))
-		vim.notify(("%s: %s"):format(names.set, msg), vim.log.levels.INFO)
-	end, { bang = true, nargs = "+", complete = make_complete("highlight") })
+    local msg = toggle and ("toggled " .. key) or (key .. " = " .. vim.inspect(value))
+    vim.notify(("%s: %s"):format(names.set, msg), vim.log.levels.INFO)
+  end, { bang = true, nargs = "+", complete = make_complete("highlight") })
 
-	-- :MyHlShow
-	define_cmd(names.show, function(opts)
-		local key = opts.fargs[1]
-		if not key then
-			vim.notify(vim.inspect(spec.show_table), vim.log.levels.INFO)
-			return
-		end
-		local node = get_by_path(spec.show_table, key)
-		if node == nil then
-			vim.notify(names.show .. (": unknown key '%s'"):format(key), vim.log.levels.WARN)
-			return
-		end
-		vim.notify(("%s = %s"):format(key, vim.inspect(node)), vim.log.levels.INFO)
-	end, { nargs = "?" })
+  -- :MyHlShow
+  define_cmd(names.show, function(opts)
+    local key = opts.fargs[1]
+    if not key then
+      vim.notify(vim.inspect(spec.show_table), vim.log.levels.INFO)
+      return
+    end
+    local node = get_by_path(spec.show_table, key)
+    if node == nil then
+      vim.notify(names.show .. (": unknown key '%s'"):format(key), vim.log.levels.WARN)
+      return
+    end
+    vim.notify(("%s = %s"):format(key, vim.inspect(node)), vim.log.levels.INFO)
+  end, { nargs = "?" })
 
-	-- :MyHlList
-	define_cmd(names.list, function()
-		local lines = { "Highlight keys:" }
-		for _, k in ipairs(C.keys("highlight")) do
-			lines[#lines + 1] = "  " .. k
-		end
-		vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
-	end, {})
+  -- :MyHlList
+  define_cmd(names.list, function()
+    local lines = { "Highlight keys:" }
+    for _, k in ipairs(C.keys("highlight")) do
+      lines[#lines + 1] = "  " .. k
+    end
+    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  end, {})
 end
 
 --------------------------------------------------------------------------------
@@ -139,61 +143,60 @@ end
 ---   :MyOptList                | Lists all configurable option keys (dot-paths)
 --- @param spec MyCommandsOptSpec
 function M.register_options_commands(spec)
-	assert(type(spec) == "table", "register_options_commands: spec required")
-	assert(type(spec.show_table) == "table", "register_options_commands: spec.show_table must be a table")
-	local names = vim.tbl_extend("force", { set = "MyOptSet", show = "MyOptShow", list = "MyOptList" }, spec.names or {})
+  assert(type(spec) == "table", "register_options_commands: spec required")
+  assert(type(spec.show_table) == "table", "register_options_commands: spec.show_table must be a table")
+  local names = vim.tbl_extend("force", { set = "MyOptSet", show = "MyOptShow", list = "MyOptList" }, spec.names or {})
 
-	-- :MyOptSet
-	define_cmd(names.set, function(opts)
-		local args = opts.fargs
-		if #args == 0 then
-			vim.notify("Usage: :" .. names.set .. " {keypath} {value}", vim.log.levels.INFO)
-			return
-		end
-		local key = args[1]
-		local value_str = table.concat(vim.list_slice(args, 2), " ")
-		local toggle = (opts.bang == true) and (value_str == nil or value_str == "")
-		local value = C.parse(value_str)
+  -- :MyOptSet
+  define_cmd(names.set, function(opts)
+    local args = opts.fargs
+    if #args == 0 then
+      vim.notify("Usage: :" .. names.set .. " {keypath} {value}", vim.log.levels.INFO)
+      return
+    end
+    local key = args[1]
+    local value_str = table.concat(vim.list_slice(args, 2), " ")
+    local toggle = (opts.bang == true) and (value_str == nil or value_str == "")
+    local value = C.parse(value_str)
 
-		local ok, err = C.set("options", key, value, toggle)
-		if not ok then
-			vim.notify(names.set .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
-			return
-		end
+    local ok, err = C.set("options", key, value, toggle)
+    if not ok then
+      vim.notify(names.set .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+      return
+    end
 
-		if type(spec.after_set) == "function" then
-			pcall(spec.after_set, key)
-		end
+    if type(spec.after_set) == "function" then
+      pcall(spec.after_set, key)
+    end
 
-		local msg = toggle and ("toggled " .. key) or (key .. " = " .. vim.inspect(value))
-		vim.notify(names.set .. ": " .. msg, vim.log.levels.INFO)
-	end, { bang = true, nargs = "+", complete = make_complete("options") })
+    local msg = toggle and ("toggled " .. key) or (key .. " = " .. vim.inspect(value))
+    vim.notify(names.set .. ": " .. msg, vim.log.levels.INFO)
+  end, { bang = true, nargs = "+", complete = make_complete("options") })
 
-	-- :MyOptShow
-	define_cmd(names.show, function(opts)
-		local key = opts.fargs[1]
-		if not key then
-			vim.notify(vim.inspect(spec.show_table), vim.log.levels.INFO)
-			return
-		end
-		local node = get_by_path(spec.show_table, key)
-		if node == nil then
-			vim.notify(("%s: unknown key '%s'"):format(names.show, key), vim.log.levels.WARN)
-	return
-		end
-		vim.notify(("%s = %s"):format(key, vim.inspect(node)), vim.log.levels.INFO)
-	end, { nargs = "?" })
+  -- :MyOptShow
+  define_cmd(names.show, function(opts)
+    local key = opts.fargs[1]
+    if not key then
+      vim.notify(vim.inspect(spec.show_table), vim.log.levels.INFO)
+      return
+    end
+    local node = get_by_path(spec.show_table, key)
+    if node == nil then
+      vim.notify(("%s: unknown key '%s'"):format(names.show, key), vim.log.levels.WARN)
+      return
+    end
+    vim.notify(("%s = %s"):format(key, vim.inspect(node)), vim.log.levels.INFO)
+  end, { nargs = "?" })
 
-	-- :MyOptList
-	define_cmd(names.list, function()
-		local lines = { "Options keys:" }
-		for _, k in ipairs(C.keys("options")) do
-			lines[#lines + 1] = "  " .. k
-		end
-		vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
-	end, {})
+  -- :MyOptList
+  define_cmd(names.list, function()
+    local lines = { "Options keys:" }
+    for _, k in ipairs(C.keys("options")) do
+      lines[#lines + 1] = "  " .. k
+    end
+    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  end, {})
 end
-
 
 --------------------------------------------------------------------------------
 -- Debug command
@@ -211,7 +214,7 @@ end
 ---@return nil
 function M.register_highlight_debug_command(opts)
   opts = opts or {}
-  local names      = opts.names or {}
+  local names = opts.names or {}
   local name_debug = names.debug or "MyHighlightDebugCtx"
 
   -- Kontext-Modul (Provider) laden oder vom Aufrufer injiziert bekommen
@@ -247,17 +250,19 @@ function M.register_highlight_debug_command(opts)
   end
 
   vim.api.nvim_create_user_command(name_debug, function()
-    local hc   = C.cfg.highlight
+    local hc = C.cfg.highlight
     local bctx = hc.breadcrumbs_ctx or {}
 
     -- Einzelne Provider abfragen (so vorhanden)
-    local has   = function(x) return type(x) == "function" end
-    local p     = {}
+    local has = function(x)
+      return type(x) == "function"
+    end
+    local p = {}
 
-    p.lsp_func   = has(mod._ctx_lsp_func)       and safe_call(mod._ctx_lsp_func)       or "<n/a>"
-    p.ts_symbol  = has(mod._ctx_ts_symbol)      and safe_call(mod._ctx_ts_symbol)      or "<n/a>"
-    p.lang_extra = has(mod._ctx_lang_extra)     and safe_call(mod._ctx_lang_extra)     or "<n/a>"
-    p.word       = has(mod._ctx_word_fallback)  and safe_call(mod._ctx_word_fallback)  or "<n/a>"
+    p.lsp_func = has(mod._ctx_lsp_func) and safe_call(mod._ctx_lsp_func) or "<n/a>"
+    p.ts_symbol = has(mod._ctx_ts_symbol) and safe_call(mod._ctx_ts_symbol) or "<n/a>"
+    p.lang_extra = has(mod._ctx_lang_extra) and safe_call(mod._ctx_lang_extra) or "<n/a>"
+    p.word = has(mod._ctx_word_fallback) and safe_call(mod._ctx_word_fallback) or "<n/a>"
 
     -- Basis-Token (unter Cursor) – nur wenn angeboten
     local base = has(mod._ctx_base_token) and safe_call(mod._ctx_base_token) or "<n/a>"
@@ -270,7 +275,9 @@ function M.register_highlight_debug_command(opts)
       container_input = base
     end
     p.container = (has(mod._ctx_with_container) and container_input)
-      and safe_call(function() return mod._ctx_with_container(container_input) end)
+        and safe_call(function()
+          return mod._ctx_with_container(container_input)
+        end)
       or "<n/a>"
 
     -- Finalen Kontext nach der echten Orchestrierung bestimmen
@@ -278,13 +285,17 @@ function M.register_highlight_debug_command(opts)
 
     -- Zusätzlich: wie sähe die Winbar-Zeile aus?
     local rel = (function(path)
-      if path == "" then return "[No Name]" end
-      local dir    = vim.fn.fnamemodify(path, ":h")
+      if path == "" then
+        return "[No Name]"
+      end
+      local dir = vim.fn.fnamemodify(path, ":h")
       local gitdir = vim.fs.find(".git", { upward = true, path = dir })[1]
       if gitdir then
         local root = vim.fn.fnamemodify(gitdir, ":h")
         local relp = vim.fn.fnamemodify(path, (":~:%s"):format(root))
-        if relp == path then return vim.fn.fnamemodify(path, ":t") end
+        if relp == path then
+          return vim.fn.fnamemodify(path, ":t")
+        end
         relp = relp:gsub("^%./", ""):gsub("^/", "")
         return relp
       else
@@ -293,8 +304,7 @@ function M.register_highlight_debug_command(opts)
     end)(vim.api.nvim_buf_get_name(0))
 
     local sep = get_sep()
-    local line = (type(chosen) == "string" and chosen ~= "" and chosen ~= "<n/a>")
-      and (rel .. sep .. chosen) or rel
+    local line = (type(chosen) == "string" and chosen ~= "" and chosen ~= "<n/a>") and (rel .. sep .. chosen) or rel
 
     -- Ausgabe
     local lines = {

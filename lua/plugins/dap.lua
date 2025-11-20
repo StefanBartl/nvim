@@ -22,12 +22,10 @@ return {
     dependencies = {
       "mfussenegger/nvim-dap",
       "nvim-neotest/nvim-nio", -- Async io
-
     },
     config = function()
-
       local dap = require("dap")
-			local dapui = require("dapui")
+      local dapui = require("dapui")
 
       dapui.setup()
 
@@ -56,5 +54,4 @@ return {
     lazy = true,
     dependencies = { "mfussenegger/nvim-dap" },
   },
-
 }

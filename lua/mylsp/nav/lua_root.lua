@@ -51,7 +51,9 @@ local M = {}
 --- @param n TSNode|nil
 --- @return string
 local function _txt(n)
-  if not n then return "" end
+  if not n then
+    return ""
+  end
   local ok, s = pcall(vim.treesitter.get_node_text, n, 0)
   return (ok and s) or ""
 end
@@ -78,9 +80,13 @@ end
 --- @return TSNode|nil
 local function _root_node(bufnr)
   local ok_parsers, parsers = pcall(require, "nvim-treesitter.parsers")
-  if not ok_parsers then return nil end
+  if not ok_parsers then
+    return nil
+  end
   local parser = parsers.get_parser(bufnr, "lua")
-  if not parser then return nil end
+  if not parser then
+    return nil
+  end
   local tree = parser:parse()[1]
   return tree and tree:root() or nil
 end
@@ -92,9 +98,13 @@ end
 local function _ancestor_in(n, set)
   local u = n
   while u do
-    if set[u:type()] then return u end
+    if set[u:type()] then
+      return u
+    end
     local p = u:parent()
-    if not p or p == u then break end
+    if not p or p == u then
+      break
+    end
     u = p
   end
   return nil
@@ -124,7 +134,9 @@ end
 --- @return LuaMemberChain|nil
 local function _extract_chain(bufnr, row1, col0)
   local node = _node_at(bufnr, row1, col0)
-  if not node then return nil end
+  if not node then
+    return nil
+  end
 
   if node:type() == "field" then
     local tbl = _ancestor_in(node, { table_constructor = true })
@@ -135,7 +147,10 @@ local function _extract_chain(bufnr, row1, col0)
           local right = a:field("right") or a:field("values") or {}
           local match_rhs = false
           for _, rv in ipairs(right) do
-            if rv == tbl then match_rhs = true; break end
+            if rv == tbl then
+              match_rhs = true
+              break
+            end
           end
           if match_rhs then
             local left = a:field("left") or a:field("variables") or {}
@@ -144,13 +159,21 @@ local function _extract_chain(bufnr, row1, col0)
               local raw = _txt(lhs):gsub("%s+", "")
               local segs ---@type string[]
               segs = {}
-              for part in raw:gmatch("[A-Za-z_][A-Za-z0-9_]*") do table.insert(segs, part) end
-              if #segs > 0 then return { segments = segs } end
+              for part in raw:gmatch("[A-Za-z_][A-Za-z0-9_]*") do
+                table.insert(segs, part)
+              end
+              if #segs > 0 then
+                return { segments = segs }
+              end
             end
             break
           end
         end
-        local p = a:parent(); if not p or p == a then break end; a = p
+        local p = a:parent()
+        if not p or p == a then
+          break
+        end
+        a = p
       end
     end
   end
@@ -164,10 +187,14 @@ local function _extract_chain(bufnr, row1, col0)
   local u = node
   while u and not want[u:type()] do
     local p = u:parent()
-    if not p or p == u then break end
+    if not p or p == u then
+      break
+    end
     u = p
   end
-  if not u or not want[u:type()] then return nil end
+  if not u or not want[u:type()] then
+    return nil
+  end
 
   local segs ---@type string[]
   segs = {}
@@ -179,10 +206,12 @@ local function _extract_chain(bufnr, row1, col0)
       break
     elseif ut == "dot_index_expression" or ut == "method_index_expression" then
       local field = (u:field("field") or {})[1]
-      local tbl   = (u:field("table") or {})[1]
+      local tbl = (u:field("table") or {})[1]
       if field then
         local k = _txt(field)
-        if k ~= "" then table.insert(segs, 1, k) end
+        if k ~= "" then
+          table.insert(segs, 1, k)
+        end
       end
       u = tbl
     elseif ut == "index_expression" then
@@ -190,7 +219,9 @@ local function _extract_chain(bufnr, row1, col0)
       local tbl = (u:field("table") or {})[1]
       if idx then
         local k = _strip_index_key(_txt(idx))
-        if k ~= "" then table.insert(segs, 1, k) end
+        if k ~= "" then
+          table.insert(segs, 1, k)
+        end
       end
       u = tbl
     else
@@ -198,7 +229,9 @@ local function _extract_chain(bufnr, row1, col0)
     end
   end
 
-  if #segs == 0 then return nil end
+  if #segs == 0 then
+    return nil
+  end
   return { segments = segs }
 end
 
@@ -211,20 +244,26 @@ end
 --- @return string
 local function _lhs_text(n)
   local t = n:type()
-	---@diagnostic disable-next-line Annotations specify that at most 1 return value(s) are required, found 1 to 2 returned here instead.
-  if t == "identifier" then return _txt(n):gsub("%s+", "") end
+  ---@diagnostic disable-next-line Annotations specify that at most 1 return value(s) are required, found 1 to 2 returned here instead.
+  if t == "identifier" then
+    return _txt(n):gsub("%s+", "")
+  end
   if t == "dot_index_expression" or t == "method_index_expression" or t == "index_expression" then
     local raw = _txt(n):gsub("%s+", "")
     raw = raw
-      :gsub("%[(%b'')%]", function(q) return "." .. q:sub(2, -2) end)
-      :gsub("%[(%b\"\")%]", function(q) return "." .. q:sub(2, -2) end)
+      :gsub("%[(%b'')%]", function(q)
+        return "." .. q:sub(2, -2)
+      end)
+      :gsub('%[(%b"")%]', function(q)
+        return "." .. q:sub(2, -2)
+      end)
       :gsub("%[([A-Za-z_][A-Za-z0-9_]*)%]", ".%1")
       :gsub(":", ".")
     return raw
   end
 
-	---@diagnostic disable-next-line Annotations specify that at most 1 return value(s) are required, found 1 to 2 returned here instead.
-	return _txt(n):gsub("%s+", "")
+  ---@diagnostic disable-next-line Annotations specify that at most 1 return value(s) are required, found 1 to 2 returned here instead.
+  return _txt(n):gsub("%s+", "")
 end
 
 --- Find the best matching table-constructor assignment for a chain within a buffer.
@@ -233,7 +272,9 @@ end
 --- @return LuaOriginLocation|nil
 local function _find_table_assignment_in_buffer(bufnr, chain)
   local root = _root_node(bufnr)
-  if not root then return nil end
+  if not root then
+    return nil
+  end
 
   local best_loc ---@type LuaOriginLocation|nil
   local best_len = 0
@@ -250,13 +291,20 @@ local function _find_table_assignment_in_buffer(bufnr, chain)
   local function consider_assignment(node)
     local left = node:field("left") or node:field("variables") or {}
     local right = node:field("right") or node:field("values") or {}
-    if #left == 0 or #right == 0 then return end
+    if #left == 0 or #right == 0 then
+      return
+    end
 
     local rhs_tbl = nil
     for _, rv in ipairs(right) do
-      if rv:type() == "table_constructor" then rhs_tbl = rv; break end
+      if rv:type() == "table_constructor" then
+        rhs_tbl = rv
+        break
+      end
     end
-    if not rhs_tbl then return end
+    if not rhs_tbl then
+      return
+    end
 
     for _, lv in ipairs(left) do
       local lhs = _lhs_text(lv)
@@ -279,15 +327,21 @@ local function _find_table_assignment_in_buffer(bufnr, chain)
   end
 
   local function dfs(n)
-    if not n then return end
+    if not n then
+      return
+    end
     local nt = n:type()
     if nt == "assignment" or nt == "local_statement" then
       consider_assignment(n)
     end
-    if best_len == #chain.segments - 1 then return end
+    if best_len == #chain.segments - 1 then
+      return
+    end
     for i = 0, n:child_count() - 1 do
       dfs(n:child(i))
-      if best_len == #chain.segments - 1 then return end
+      if best_len == #chain.segments - 1 then
+        return
+      end
     end
   end
 
@@ -300,12 +354,17 @@ end
 --- @param head string
 --- @return string|nil
 local function _find_require_for_head(bufnr, head)
-  local root = _root_node(bufnr); if not root then return nil end
+  local root = _root_node(bufnr)
+  if not root then
+    return nil
+  end
 
   local function lhs_contains_head(node)
     local left = node:field("left") or node:field("variables") or {}
     for _, lv in ipairs(left) do
-      if _lhs_text(lv) == head then return true end
+      if _lhs_text(lv) == head then
+        return true
+      end
     end
     return false
   end
@@ -315,8 +374,10 @@ local function _find_require_for_head(bufnr, head)
     for _, rv in ipairs(right) do
       if rv:type() == "function_call" then
         local raw = _txt(rv)
-        local mod = raw:match("^require%((%b'')%)") or raw:match("^require%((%b\"\")%)")
-        if mod then return mod:sub(2, -2) end
+        local mod = raw:match("^require%((%b'')%)") or raw:match('^require%((%b"")%)')
+        if mod then
+          return mod:sub(2, -2)
+        end
       end
     end
     return nil
@@ -325,17 +386,24 @@ local function _find_require_for_head(bufnr, head)
   local found ---@type string|nil
 
   local function dfs(n)
-    if not n or found then return end
+    if not n or found then
+      return
+    end
     local nt = n:type()
     if nt == "assignment" or nt == "local_statement" then
       if lhs_contains_head(n) then
         local mod = rhs_is_require(n)
-        if mod then found = mod; return end
+        if mod then
+          found = mod
+          return
+        end
       end
     end
     for i = 0, n:child_count() - 1 do
       dfs(n:child(i))
-      if found then return end
+      if found then
+        return
+      end
     end
   end
 
@@ -353,9 +421,13 @@ end
 local function _resolve_module_path(mod)
   local rel = mod:gsub("%.", "/")
   local cands = vim.api.nvim_get_runtime_file("lua/" .. rel .. ".lua", true)
-  if #cands > 0 then return cands[1] end
+  if #cands > 0 then
+    return cands[1]
+  end
   local cands2 = vim.api.nvim_get_runtime_file("lua/" .. rel .. "/init.lua", true)
-  if #cands2 > 0 then return cands2[1] end
+  if #cands2 > 0 then
+    return cands2[1]
+  end
   local path = package.searchpath(mod, package.path)
   return path
 end
@@ -364,9 +436,13 @@ end
 --- @param path string
 --- @return integer|nil
 local function _buf_for_path(path)
-  if not path or path == "" then return nil end
+  if not path or path == "" then
+    return nil
+  end
   local buf = vim.fn.bufadd(path)
-  if buf <= 0 then return nil end
+  if buf <= 0 then
+    return nil
+  end
   vim.fn.bufload(buf)
   return buf
 end
@@ -375,10 +451,15 @@ end
 --- @param bufnr integer
 --- @return LuaOriginLocation|nil
 local function _find_module_root_table(bufnr)
-  local root = _root_node(bufnr); if not root then return nil end
+  local root = _root_node(bufnr)
+  if not root then
+    return nil
+  end
 
   local function find_return_table(n)
-    if not n then return nil end
+    if not n then
+      return nil
+    end
     if n:type() == "return_statement" then
       local args = n:field("arguments") or {}
       for _, a in ipairs(args) do
@@ -397,17 +478,23 @@ local function _find_module_root_table(bufnr)
     end
     for i = 0, n:child_count() - 1 do
       local loc = find_return_table(n:child(i))
-      if loc then return loc end
+      if loc then
+        return loc
+      end
     end
     return nil
   end
 
   local loc = find_return_table(root)
-  if loc then return loc end
+  if loc then
+    return loc
+  end
 
   local best ---@type LuaOriginLocation|nil
   local function dfs(n)
-    if not n then return end
+    if not n then
+      return
+    end
     if n:type() == "assignment" or n:type() == "local_statement" then
       local right = n:field("right") or n:field("values") or {}
       for _, rv in ipairs(right) do
@@ -426,7 +513,9 @@ local function _find_module_root_table(bufnr)
       end
     end
     for i = 0, n:child_count() - 1 do
-      if best then return end
+      if best then
+        return
+      end
       dfs(n:child(i))
     end
   end
@@ -464,12 +553,16 @@ function M.find_root_location(bufnr, row1, col0)
     row1, col0 = r, c
   end
 
-  if vim.bo[bufnr].filetype ~= "lua" then return nil end
+  if vim.bo[bufnr].filetype ~= "lua" then
+    return nil
+  end
   local chain = _extract_chain(bufnr, row1, col0)
   if not chain or not chain.segments or #chain.segments == 0 then
     local node = _node_at(bufnr, row1, col0)
     local tbl = node and _ancestor_in(node, { table_constructor = true })
-    if not tbl then return nil end
+    if not tbl then
+      return nil
+    end
     local a = tbl
     while a do
       if a:type() == "assignment" or a:type() == "local_statement" then
@@ -477,17 +570,29 @@ function M.find_root_location(bufnr, row1, col0)
         local lhs = left[1] and _lhs_text(left[1]) or ""
         local segs ---@type string[]
         segs = {}
-        for part in lhs:gmatch("[A-Za-z_][A-Za-z0-9_]*") do table.insert(segs, part) end
-        if #segs > 0 then chain = { segments = segs } end
+        for part in lhs:gmatch("[A-Za-z_][A-Za-z0-9_]*") do
+          table.insert(segs, part)
+        end
+        if #segs > 0 then
+          chain = { segments = segs }
+        end
         break
       end
-      local p = a:parent(); if not p or p == a then break end; a = p
+      local p = a:parent()
+      if not p or p == a then
+        break
+      end
+      a = p
     end
-    if not chain then return nil end
+    if not chain then
+      return nil
+    end
   end
 
   local loc = _find_table_assignment_in_buffer(bufnr, chain)
-  if loc then return loc end
+  if loc then
+    return loc
+  end
 
   local head = chain.segments[1]
   local mod = _find_require_for_head(bufnr, head)
@@ -496,7 +601,9 @@ function M.find_root_location(bufnr, row1, col0)
     local tbuf = path and _buf_for_path(path) or nil
     if tbuf then
       local mloc = _find_module_root_table(tbuf)
-      if mloc then return mloc end
+      if mloc then
+        return mloc
+      end
     end
   end
 
@@ -510,7 +617,9 @@ function M.goto_root_at_cursor(opts)
   opts = opts or {}
   local loc = M.find_root_location()
   if not loc then
-    if opts.echo ~= false then vim.notify("No Lua table root found", vim.log.levels.INFO) end
+    if opts.echo ~= false then
+      vim.notify("No Lua table root found", vim.log.levels.INFO)
+    end
     return false
   end
 
@@ -518,8 +627,12 @@ function M.goto_root_at_cursor(opts)
     vim.api.nvim_set_current_buf(loc.buf)
   end
   vim.api.nvim_win_set_cursor(0, { loc.start_row, loc.start_col })
-  if opts.open_folds ~= false then vim.cmd("silent! normal! zv") end
-  if opts.center then vim.cmd("silent! normal! zz") end
+  if opts.open_folds ~= false then
+    vim.cmd("silent! normal! zv")
+  end
+  if opts.center then
+    vim.cmd("silent! normal! zz")
+  end
 
   if opts.echo ~= false then
     local msg = ("%s:%d:%d"):format(loc.path ~= "" and loc.path or "[No Name]", loc.start_row, loc.start_col + 1)
@@ -568,9 +681,12 @@ if ... == nil then
       local root = tree:root()
 
       --- Use a TS query to find the identifier node named "enable_line".
-      local query = vim.treesitter.query.parse("lua", [[
+      local query = vim.treesitter.query.parse(
+        "lua",
+        [[
         (identifier) @id
-      ]])
+      ]]
+      )
 
       ---@type integer|nil, integer|nil
       local row1, col0 = nil, nil
@@ -590,13 +706,17 @@ if ... == nil then
       else
         local ok_call, loc = pcall(M.find_root_location, buf, row1, col0)
         if ok_call and loc then
-          print(string.format(
-            "[find_root_location] %s:%d:%d..%d:%d (buf=%d)",
-            (loc.path ~= "" and loc.path or "[No Name]"),
-            loc.start_row, (loc.start_col or 0) + 1,
-            loc.end_row,   (loc.end_col   or 0) + 1,
-            loc.buf
-          ))
+          print(
+            string.format(
+              "[find_root_location] %s:%d:%d..%d:%d (buf=%d)",
+              (loc.path ~= "" and loc.path or "[No Name]"),
+              loc.start_row,
+              (loc.start_col or 0) + 1,
+              loc.end_row,
+              (loc.end_col or 0) + 1,
+              loc.buf
+            )
+          )
         else
           print("[find_root_location] nil")
         end

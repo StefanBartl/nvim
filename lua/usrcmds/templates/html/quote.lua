@@ -20,10 +20,10 @@ local function insert_html_quote_template()
   local template = {
     '<figure id="#quote-">',
     '  <blockquote style="border-left: 4px solid #ddd; padding-left: 1em; margin: 1em 0; font-style: italic;">',
-    '    ',
-    '  </blockquote>',
+    "    ",
+    "  </blockquote>",
     '  <figcaption style="text-align: right;">— </figcaption>',
-    '</figure>',
+    "</figure>",
   }
 
   -- Insert the template at cursor position
@@ -35,10 +35,10 @@ local function insert_html_quote_template()
   api.nvim_win_set_cursor(0, { row + 1, id_col })
 
   -- Enter insert mode for immediate editing
-  vim.cmd('startinsert')
+  vim.cmd("startinsert")
 end
 
 --- Register the user command
-api.nvim_create_user_command('HTMLQuoteTemplate', insert_html_quote_template, {
-  desc = 'Insert HTML quote with citation template at cursor position',
+api.nvim_create_user_command("HTMLQuoteTemplate", insert_html_quote_template, {
+  desc = "Insert HTML quote with citation template at cursor position",
 })

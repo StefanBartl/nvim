@@ -15,14 +15,15 @@ local M = {}
 
 local uv = vim and (vim.uv or vim.loop) or nil
 
-
 -- Small helpers ---------------------------------------------------------------
 
 --- Trim leading/trailing ASCII whitespace.
 ---@param s any
 ---@return string
 local function trim(s)
-  if type(s) ~= "string" then return "" end
+  if type(s) ~= "string" then
+    return ""
+  end
   return (s:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
@@ -32,8 +33,12 @@ end
 ---@param max number|nil
 ---@return number
 local function clamp(n, min, max)
-  if min and n < min then n = min end
-  if max and n > max then n = max end
+  if min and n < min then
+    n = min
+  end
+  if max and n > max then
+    n = max
+  end
   return n
 end
 
@@ -44,7 +49,9 @@ end
 local function coalesce(...)
   local args = { ... }
   for i = 1, #args do
-    if args[i] ~= nil then return args[i] end
+    if args[i] ~= nil then
+      return args[i]
+    end
   end
   return nil
 end
@@ -54,7 +61,7 @@ end
 ---@return StringList
 local function dedup_strings(list)
   local seen = {} ---@type table<string, boolean>
-  local out = {}  ---@type StringList
+  local out = {} ---@type StringList
   for i = 1, #list do
     local v = list[i]
     if type(v) == "string" then
@@ -71,13 +78,17 @@ end
 ---@param p any
 ---@return string
 local function normalize_path(p)
-  if type(p) ~= "string" or p == "" then return "" end
+  if type(p) ~= "string" or p == "" then
+    return ""
+  end
   if vim and vim.fs and vim.fs.normalize then
     return vim.fs.normalize(p)
   end
   -- Fallback: collapse consecutive slashes and strip trailing slash (except root)
   local s = p:gsub("[/\\]+", "/")
-  if #s > 1 and s:sub(-1) == "/" then s = s:sub(1, -2) end
+  if #s > 1 and s:sub(-1) == "/" then
+    s = s:sub(1, -2)
+  end
   return s
 end
 
@@ -85,7 +96,9 @@ end
 ---@param p string
 ---@return string
 local function path_kind(p)
-  if not uv or p == "" then return "" end
+  if not uv or p == "" then
+    return ""
+  end
   local st = uv.fs_stat(p)
   return (st and st.type) or ""
 end
@@ -98,16 +111,26 @@ end
 ---@return boolean|nil
 function M.to_bool(v)
   local t = type(v)
-  if t == "boolean" then return v end
+  if t == "boolean" then
+    return v
+  end
   if t == "number" then
-    if v == 0 then return false end
-    if v == 1 then return true end
+    if v == 0 then
+      return false
+    end
+    if v == 1 then
+      return true
+    end
     return nil
   end
   if t == "string" then
     local s = v:lower()
-    if s == "true" or s == "yes" or s == "on" or s == "1" then return true end
-    if s == "false" or s == "no" or s == "off" or s == "0" then return false end
+    if s == "true" or s == "yes" or s == "on" or s == "1" then
+      return true
+    end
+    if s == "false" or s == "no" or s == "off" or s == "0" then
+      return false
+    end
   end
   return nil
 end
@@ -119,7 +142,9 @@ end
 ---@return integer|nil
 function M.to_int(v, min, max)
   local n = tonumber(v)
-  if not n then return nil end
+  if not n then
+    return nil
+  end
   n = math.floor(n + 0) -- truncate toward zero
   ---@cast n integer
   if min or max then
@@ -136,7 +161,9 @@ end
 ---@return number|nil
 function M.to_float(v, min, max, precision)
   local n = tonumber(v)
-  if not n then return nil end
+  if not n then
+    return nil
+  end
   if min or max then
     n = clamp(n, min, max)
   end
@@ -153,9 +180,13 @@ end
 ---@param do_trim boolean|nil
 ---@return string|nil
 function M.to_string(v, allow_empty, do_trim)
-  if type(v) ~= "string" then return nil end
+  if type(v) ~= "string" then
+    return nil
+  end
   local s = do_trim and trim(v) or v
-  if not allow_empty and s == "" then return nil end
+  if not allow_empty and s == "" then
+    return nil
+  end
   return s
 end
 
@@ -165,7 +196,9 @@ end
 ---@param case_insensitive boolean|nil
 ---@return string|nil
 function M.to_enum(v, allowed, case_insensitive)
-  if type(v) ~= "string" then return nil end
+  if type(v) ~= "string" then
+    return nil
+  end
   local s = v
   if case_insensitive ~= false then
     s = s:lower()
@@ -199,13 +232,17 @@ function M.to_string_list(v, opts)
   if type(v) == "string" then
     for token in v:gmatch("[^" .. sep .. "]+") do
       local s = opts.trim and trim(token) or token
-      if s ~= "" then out[#out + 1] = s end
+      if s ~= "" then
+        out[#out + 1] = s
+      end
     end
   elseif type(v) == "table" then
     for i = 1, #v do
       if type(v[i]) == "string" then
         local s = opts.trim and trim(v[i]) or v[i]
-        if s ~= "" then out[#out + 1] = s end
+        if s ~= "" then
+          out[#out + 1] = s
+        end
       end
     end
   else
@@ -234,21 +271,31 @@ function M.to_argv(v)
     return #out > 0 and out or nil
   elseif type(v) == "string" then
     local s = trim(v)
-    if s == "" then return nil end
+    if s == "" then
+      return nil
+    end
     local out = {} ---@type StringList
     local i, len = 1, #s
     while i <= len do
-      while i <= len and s:sub(i, i):match("%s") do i = i + 1 end
-      if i > len then break end
+      while i <= len and s:sub(i, i):match("%s") do
+        i = i + 1
+      end
+      if i > len then
+        break
+      end
       local ch = s:sub(i, i)
       if ch == '"' then
         local j = i + 1
-        while j <= len and s:sub(j, j) ~= '"' do j = j + 1 end
+        while j <= len and s:sub(j, j) ~= '"' do
+          j = j + 1
+        end
         out[#out + 1] = s:sub(i + 1, j - 1)
         i = j + 1
       else
         local j = i
-        while j <= len and not s:sub(j, j):match("%s") do j = j + 1 end
+        while j <= len and not s:sub(j, j):match("%s") do
+          j = j + 1
+        end
         out[#out + 1] = s:sub(i, j - 1)
         i = j
       end
@@ -263,14 +310,28 @@ end
 ---@param v any
 ---@return integer|nil
 function M.to_diagnostic_severity(v)
-  if type(v) == "number" then return v end
-  if type(v) ~= "string" then return nil end
+  if type(v) == "number" then
+    return v
+  end
+  if type(v) ~= "string" then
+    return nil
+  end
   local s = v:lower()
-  if s == "" or s == "all" then return nil end
-  if s == "error" or s == "err" then return vim.diagnostic.severity.ERROR end
-  if s == "warn" or s == "warning" then return vim.diagnostic.severity.WARN end
-  if s == "info" then return vim.diagnostic.severity.INFO end
-  if s == "hint" then return vim.diagnostic.severity.HINT end
+  if s == "" or s == "all" then
+    return nil
+  end
+  if s == "error" or s == "err" then
+    return vim.diagnostic.severity.ERROR
+  end
+  if s == "warn" or s == "warning" then
+    return vim.diagnostic.severity.WARN
+  end
+  if s == "info" then
+    return vim.diagnostic.severity.INFO
+  end
+  if s == "hint" then
+    return vim.diagnostic.severity.HINT
+  end
   return nil
 end
 
@@ -279,15 +340,31 @@ end
 ---@param v any
 ---@return integer|nil
 function M.to_log_level(v)
-  if type(v) == "number" then return v end
-  if type(v) ~= "string" then return nil end
+  if type(v) == "number" then
+    return v
+  end
+  if type(v) ~= "string" then
+    return nil
+  end
   local s = v:lower()
-  if s == "trace" then return vim.log.levels.TRACE end
-  if s == "debug" then return vim.log.levels.DEBUG end
-  if s == "info"  then return vim.log.levels.INFO  end
-  if s == "warn"  then return vim.log.levels.WARN  end
-  if s == "error" then return vim.log.levels.ERROR end
-  if s == "off"   then return nil end
+  if s == "trace" then
+    return vim.log.levels.TRACE
+  end
+  if s == "debug" then
+    return vim.log.levels.DEBUG
+  end
+  if s == "info" then
+    return vim.log.levels.INFO
+  end
+  if s == "warn" then
+    return vim.log.levels.WARN
+  end
+  if s == "error" then
+    return vim.log.levels.ERROR
+  end
+  if s == "off" then
+    return nil
+  end
   return nil
 end
 
@@ -299,12 +376,18 @@ end
 ---@return string|nil
 function M.to_path(v, type_filter, must_exist)
   local s = M.to_string(v, false, true)
-  if not s then return nil end
+  if not s then
+    return nil
+  end
   s = normalize_path(s)
   if must_exist then
     local kind = path_kind(s)
-    if kind == "" then return nil end
-    if type_filter and kind ~= type_filter then return nil end
+    if kind == "" then
+      return nil
+    end
+    if type_filter and kind ~= type_filter then
+      return nil
+    end
   end
   return s
 end
@@ -333,7 +416,9 @@ end
 ---@return string|nil err        -- non-empty error message on failure; nil on success
 function M.as_int(name, v, min, allow_nil)
   if v == nil then
-    if allow_nil then return true, nil, nil end
+    if allow_nil then
+      return true, nil, nil
+    end
     return false, nil, name .. " is required"
   end
   if type(v) ~= "number" or v ~= math.floor(v) then
@@ -381,7 +466,9 @@ end
 ---@return boolean
 function M.apply_int(tbl, key, val, min, max)
   local n = M.to_int(val, min, max)
-  if n == nil then return false end
+  if n == nil then
+    return false
+  end
   ---@cast n integer
   tbl[key] = n
   return true
@@ -415,7 +502,9 @@ end
 ---@return boolean
 function M.apply_float(tbl, key, val, min, max, precision)
   local n = M.to_float(val, min, max, precision)
-  if n == nil then return false end
+  if n == nil then
+    return false
+  end
   tbl[key] = n
   return true
 end
@@ -440,7 +529,9 @@ end
 ---@return boolean
 function M.apply_bool_loose(tbl, key, val)
   local b = M.to_bool(val)
-  if b == nil then return false end
+  if b == nil then
+    return false
+  end
   tbl[key] = b
   return true
 end
@@ -454,7 +545,9 @@ end
 ---@return boolean
 function M.apply_string(tbl, key, val, allow_empty, do_trim)
   local s = M.to_string(val, allow_empty, do_trim)
-  if not s then return false end
+  if not s then
+    return false
+  end
   tbl[key] = s
   return true
 end
@@ -468,7 +561,9 @@ end
 ---@return boolean
 function M.apply_enum(tbl, key, val, allowed, case_insensitive)
   local s = M.to_enum(val, allowed, case_insensitive)
-  if not s then return false end
+  if not s then
+    return false
+  end
   tbl[key] = s
   return true
 end
@@ -481,7 +576,9 @@ end
 ---@return boolean
 function M.apply_string_list(tbl, key, val, opts)
   local list = M.to_string_list(val, opts)
-  if not list or #list == 0 then return false end
+  if not list or #list == 0 then
+    return false
+  end
   tbl[key] = list
   return true
 end
@@ -493,7 +590,9 @@ end
 ---@return boolean
 function M.apply_argv(tbl, key, val)
   local argv = M.to_argv(val)
-  if not argv or #argv == 0 then return false end
+  if not argv or #argv == 0 then
+    return false
+  end
   tbl[key] = argv
   return true
 end
@@ -507,7 +606,9 @@ end
 ---@return boolean
 function M.apply_path(tbl, key, val, type_filter, must_exist)
   local p = M.to_path(val, type_filter, must_exist)
-  if not p then return false end
+  if not p then
+    return false
+  end
   tbl[key] = p
   return true
 end
@@ -534,7 +635,9 @@ end
 ---@return boolean
 function M.apply_log_level(tbl, key, val)
   local lvl = M.to_log_level(val)
-  if lvl == nil then return false end
+  if lvl == nil then
+    return false
+  end
   tbl[key] = lvl
   return true
 end
@@ -546,7 +649,9 @@ end
 ---@param _ integer|nil
 ---@return boolean
 function M.apply_fun(tbl, key, val, _, _)
-  if type(val) ~= "function" then return false end
+  if type(val) ~= "function" then
+    return false
+  end
   -- Lua does not expose arity reliably; keep placeholders for future checks.
   tbl[key] = val
   return true
@@ -585,8 +690,8 @@ function M.apply_schema(state, opts, schema)
       if opts[k] ~= nil then
         local ok = field.apply(state, k, opts[k])
         if not ok then
-					-- keep default; do not write nil into typed fields
-					ok = ok
+          -- keep default; do not write nil into typed fields
+          ok = ok
         end
       end
     end

@@ -78,7 +78,9 @@ local function send_to_trash(path)
       local home = uv.os_homedir()
       local trashdir = home .. "/.local/share/Trash/files"
       if not uv.fs_stat(trashdir) then
-        local okc, errc = pcall(function() vim.fn.mkdir(trashdir, "p") end)
+        local okc, errc = pcall(function()
+          vim.fn.mkdir(trashdir, "p")
+        end)
         if not okc then
           ok, msg = false, "failed to create trash dir: " .. tostring(errc)
         end
@@ -98,15 +100,15 @@ local function send_to_trash(path)
   else
     -- Windows: use PowerShell + Microsoft.VisualBasic.FileIO to send to Recycle Bin
     local ps_script = string.format(
-      "Add-Type -AssemblyName Microsoft.VisualBasic; " ..
-      "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%s,'OnlyErrorDialogs','SendToRecycleBin')",
+      "Add-Type -AssemblyName Microsoft.VisualBasic; "
+        .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%s,'OnlyErrorDialogs','SendToRecycleBin')",
       esc
     )
     local stat = uv.fs_stat(path)
     if stat and stat.type == "directory" then
       ps_script = string.format(
-        "Add-Type -AssemblyName Microsoft.VisualBasic; " ..
-        "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(%s,'OnlyErrorDialogs','SendToRecycleBin')",
+        "Add-Type -AssemblyName Microsoft.VisualBasic; "
+          .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(%s,'OnlyErrorDialogs','SendToRecycleBin')",
         esc
       )
     end

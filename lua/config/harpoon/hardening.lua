@@ -65,7 +65,7 @@ end
 --- Create or reuse a single uv timer for debouncing
 ---@param ms integer
 local function _ensure_timer(ms)
-		---@diagnostic disable-next-line is_closing exists in uv library
+  ---@diagnostic disable-next-line is_closing exists in uv library
   if STATE.timer and not STATE.timer:is_closing() then
     STATE.debounce_ms = ms
     return
@@ -81,10 +81,10 @@ local function _debounced_save()
     _ensure_timer(STATE.debounce_ms)
   end
   STATE.pending = true
-	---@diagnostic disable-next-line stop exists in uv library
+  ---@diagnostic disable-next-line stop exists in uv library
   STATE.timer:stop()
-	---@diagnostic disable-next-line start exists in uv library
-	STATE.timer:start(STATE.debounce_ms, 0, function()
+  ---@diagnostic disable-next-line start exists in uv library
+  STATE.timer:start(STATE.debounce_ms, 0, function()
     if not STATE.pending then
       return
     end

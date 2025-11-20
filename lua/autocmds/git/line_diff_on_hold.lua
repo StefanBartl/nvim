@@ -15,21 +15,35 @@ local ok_helpers, H = pcall(require, "autocmds.git.helpers")
 ---@param max_len integer
 ---@return string
 local function truncate(s, max_len)
-  if ok_helpers and H and H.truncate then return H.truncate(s, max_len) end
-  if type(s) ~= "string" then return "" end
+  if ok_helpers and H and H.truncate then
+    return H.truncate(s, max_len)
+  end
+  if type(s) ~= "string" then
+    return ""
+  end
   local n = math.max(0, tonumber(max_len or 0) or 0)
-  if #s <= n then return s end
-  if n <= 2 then return s:sub(1, n) end
+  if #s <= n then
+    return s
+  end
+  if n <= 2 then
+    return s:sub(1, n)
+  end
   return s:sub(1, n - 2) .. " …"
 end
 
 ---@param first string|nil
 ---@return string|nil
 local function parse_blame_sha(first)
-  if ok_helpers and H and H.parse_blame_sha then return H.parse_blame_sha(first) end
-  if type(first) ~= "string" or first == "" then return nil end
+  if ok_helpers and H and H.parse_blame_sha then
+    return H.parse_blame_sha(first)
+  end
+  if type(first) ~= "string" or first == "" then
+    return nil
+  end
   local sha = first:match("^([0-9a-f]+)")
-  if not sha then return nil end
+  if not sha then
+    return nil
+  end
   return (#sha >= 7 and #sha <= 40) and sha or nil
 end
 
@@ -44,9 +58,15 @@ end
 local function normalize_mode()
   -- Using fn.mode(1) because it reports operator-pending/visual variants.
   local m = fn.mode(1)
-  if m == "i" then return "i" end
-  if m == "n" or m == "no" then return "n" end
-  if m == "v" or m == "V" or m == "\022" then return "v" end
+  if m == "i" then
+    return "i"
+  end
+  if m == "n" or m == "no" then
+    return "n"
+  end
+  if m == "v" or m == "V" or m == "\022" then
+    return "v"
+  end
   return nil
 end
 
@@ -60,9 +80,13 @@ local function mode_allowed(modes)
   end
   local want = {}
   if type(modes) == "string" then
-    for c in modes:gmatch(".") do want[c] = true end
+    for c in modes:gmatch(".") do
+      want[c] = true
+    end
   else
-    for _, c in ipairs(modes) do want[c] = true end
+    for _, c in ipairs(modes) do
+      want[c] = true
+    end
   end
   local cur = normalize_mode()
   return cur ~= nil and want[cur] == true
@@ -81,15 +105,19 @@ end
 ---@param lnum integer
 ---@return string|nil
 local function get_previous_line(git_cmd, file, lnum)
-  local blame = fn.systemlist(string.format(
-    [[%s blame -L %d,%d --porcelain -- %s]],
-    git_cmd, lnum, lnum, fn.fnameescape(file)
-  ))
-  if type(blame) ~= "table" or #blame == 0 then return nil end
+  local blame =
+    fn.systemlist(string.format([[%s blame -L %d,%d --porcelain -- %s]], git_cmd, lnum, lnum, fn.fnameescape(file)))
+  if type(blame) ~= "table" or #blame == 0 then
+    return nil
+  end
   local sha = parse_blame_sha(blame[1])
-  if not sha then return nil end
+  if not sha then
+    return nil
+  end
   local blob = fn.systemlist(string.format([[%s show %s:%s]], git_cmd, sha, fn.fnameescape(file)))
-  if type(blob) ~= "table" or #blob == 0 or lnum > #blob then return nil end
+  if type(blob) ~= "table" or #blob == 0 or lnum > #blob then
+    return nil
+  end
   return blob[lnum]
 end
 
@@ -109,15 +137,25 @@ local function effective_events(modes, events_override)
     has_i = modes:find("i", 1, true) ~= nil
   else
     for _, c in ipairs(modes) do
-      if c == "n" then has_n = true
-      elseif c == "v" then has_v = true
-      elseif c == "i" then has_i = true end
+      if c == "n" then
+        has_n = true
+      elseif c == "v" then
+        has_v = true
+      elseif c == "i" then
+        has_i = true
+      end
     end
   end
   local ev = {}
-  if has_n or has_v then ev[#ev+1] = "CursorHold" end
-  if has_i then ev[#ev+1] = "CursorHoldI" end
-  if #ev == 0 then ev = { "CursorHold" } end
+  if has_n or has_v then
+    ev[#ev + 1] = "CursorHold"
+  end
+  if has_i then
+    ev[#ev + 1] = "CursorHoldI"
+  end
+  if #ev == 0 then
+    ev = { "CursorHold" }
+  end
   return ev
 end
 
@@ -125,11 +163,13 @@ end
 ---@param shared table
 ---@return nil
 function M.enable(cfg, shared)
-  if not (cfg and cfg.enable) then return end
+  if not (cfg and cfg.enable) then
+    return
+  end
 
   local prefer_inline = (cfg.prefer_inline ~= false)
-  local restore_view  = (cfg.restore_view ~= false)
-  local throttle_ms   = tonumber(cfg.throttle_ms or 800) or 800
+  local restore_view = (cfg.restore_view ~= false)
+  local throttle_ms = tonumber(cfg.throttle_ms or 800) or 800
 
   -- Per-window throttle and generation (to invalidate delayed runs on mode changes)
   local last_fire_ms_by_win = {}
@@ -146,33 +186,51 @@ function M.enable(cfg, shared)
     group = shared.augroup("line_diff_on_hold"),
     callback = function()
       -- Early, cheap gate at event time
-      if not mode_allowed(cfg.modes) then return end
+      if not mode_allowed(cfg.modes) then
+        return
+      end
 
       local win = api.nvim_get_current_win()
       local now_ms = math.floor((uv.hrtime() or 0) / 1e6)
       local last_ms = last_fire_ms_by_win[win] or 0
-      if (now_ms - last_ms) < throttle_ms then return end
+      if (now_ms - last_ms) < throttle_ms then
+        return
+      end
       last_fire_ms_by_win[win] = now_ms
 
       local buf = api.nvim_get_current_buf()
-      if not shared.normal_buf_allowed(cfg.ignore_buftypes) then return end
-      if cfg.require_clean_buffer and vim.bo[buf].modified then return end
+      if not shared.normal_buf_allowed(cfg.ignore_buftypes) then
+        return
+      end
+      if cfg.require_clean_buffer and vim.bo[buf].modified then
+        return
+      end
 
       local git = cfg.git_cmd or "git"
-      if not shared.in_git_repo(git) then return end
+      if not shared.in_git_repo(git) then
+        return
+      end
 
       local file = api.nvim_buf_get_name(buf)
-      if file == "" then return end
-      if cfg.only_tracked and not is_tracked(git, file) then return end
+      if file == "" then
+        return
+      end
+      if cfg.only_tracked and not is_tracked(git, file) then
+        return
+      end
 
       -- Snapshot a generation token for this schedule
       local my_gen = bump_gen(win)
 
       local function run()
         -- Re-check mode right before any rendering (fixes delayed runs in wrong mode)
-        if not mode_allowed(cfg.modes) then return end
+        if not mode_allowed(cfg.modes) then
+          return
+        end
         -- Invalidate stale scheduled runs (mode changed since schedule)
-        if gen_by_win[win] ~= my_gen then return end
+        if gen_by_win[win] ~= my_gen then
+          return
+        end
 
         shared.clear_line_diff(buf)
 
@@ -181,7 +239,7 @@ function M.enable(cfg, shared)
           local ok_gs, gs = pcall(require, "gitsigns")
           if ok_gs and gs.preview_hunk_inline then
             local view = fn.winsaveview()
-            local cur  = api.nvim_win_get_cursor(0)
+            local cur = api.nvim_win_get_cursor(0)
             local ok_inline = pcall(gs.preview_hunk_inline)
             if ok_inline then
               if restore_view then
@@ -194,7 +252,9 @@ function M.enable(cfg, shared)
                 group = shared.augroup("line_diff_on_hold_cleanup"),
                 buffer = buf,
                 once = true,
-                callback = function() shared.clear_line_diff(buf) end,
+                callback = function()
+                  shared.clear_line_diff(buf)
+                end,
                 desc = "Git: clear inline diff preview on next move",
               })
               return
@@ -205,10 +265,12 @@ function M.enable(cfg, shared)
         -- Fallback: previous committed content as EOL/right-aligned virtual text
         local lnum = get_lnum()
         local prev = get_previous_line(git, file, lnum)
-        if not prev or prev == "" then return end
+        if not prev or prev == "" then
+          return
+        end
 
         local virt = truncate(prev, tonumber(cfg.max_len or 160) or 160)
-        local pos  = (cfg.right_align and "right_align") or "eol"
+        local pos = (cfg.right_align and "right_align") or "eol"
         local pref = (cfg.prefix ~= nil) and tostring(cfg.prefix) or "previous: "
 
         api.nvim_buf_set_extmark(buf, shared.NS_LINE_DIFF, lnum - 1, 0, {
@@ -221,13 +283,19 @@ function M.enable(cfg, shared)
           group = shared.augroup("line_diff_on_hold_cleanup"),
           buffer = buf,
           once = true,
-          callback = function() shared.clear_line_diff(buf) end,
+          callback = function()
+            shared.clear_line_diff(buf)
+          end,
           desc = "Git: clear previous-line preview on next move",
         })
       end
 
       local extra = tonumber(cfg.delay or 0) or 0
-      if extra > 0 then vim.defer_fn(run, extra) else run() end
+      if extra > 0 then
+        vim.defer_fn(run, extra)
+      else
+        run()
+      end
     end,
     desc = "Git: show line diff/previous content on CursorHold/InsertHold (mode-aware, strict)",
   })
@@ -240,7 +308,7 @@ function M.enable(cfg, shared)
       local buf = api.nvim_get_current_buf()
       if not mode_allowed(cfg.modes) then
         shared.clear_line_diff(buf)
-        bump_gen(win)  -- invalidate any scheduled, not-yet-run callbacks
+        bump_gen(win) -- invalidate any scheduled, not-yet-run callbacks
       end
     end,
     desc = "Git: clear/abort line diff when leaving allowed modes",

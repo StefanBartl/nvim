@@ -20,4 +20,3 @@
 ---@field numbers TermAutoCmdsNumbersCfg
 ---@field kitty TermAutoCmdsKittyCfg
 ---@field auto_insert TermAutoCmdsAutoInsertCfg
-

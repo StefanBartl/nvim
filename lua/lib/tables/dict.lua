@@ -12,7 +12,9 @@ local M = {}
 ---@return table<K, V>
 function M.clone(t)
   local out = {}
-  for k, v in pairs(t) do out[k] = v end
+  for k, v in pairs(t) do
+    out[k] = v
+  end
   return out
 end
 
@@ -25,7 +27,9 @@ function M.pick(t, keys)
   local out = {}
   for i = 1, #keys do
     local k = keys[i]
-    if t[k] ~= nil then out[k] = t[k] end
+    if t[k] ~= nil then
+      out[k] = t[k]
+    end
   end
   return out
 end
@@ -37,7 +41,9 @@ end
 ---@return table<K, V>
 function M.omit(t, keys)
   local out = M.clone(t)
-  for i = 1, #keys do out[keys[i]] = nil end
+  for i = 1, #keys do
+    out[keys[i]] = nil
+  end
   return out
 end
 
@@ -48,7 +54,9 @@ end
 ---@return table<K, V>
 function M.merge(a, b)
   local out = M.clone(a)
-  for k, v in pairs(b) do out[k] = v end
+  for k, v in pairs(b) do
+    out[k] = v
+  end
   return out
 end
 
@@ -58,11 +66,16 @@ end
 ---@return K[]
 function M.keys(t)
   local n = 0
-  for _ in pairs(t) do n = n + 1 end
+  for _ in pairs(t) do
+    n = n + 1
+  end
   ---@type K[]
   local out = { [n] = false }
   local i = 0
-  for k in pairs(t) do i = i + 1; out[i] = k end
+  for k in pairs(t) do
+    i = i + 1
+    out[i] = k
+  end
   return out
 end
 
@@ -72,11 +85,16 @@ end
 ---@return V[]
 function M.values(t)
   local n = 0
-  for _ in pairs(t) do n = n + 1 end
+  for _ in pairs(t) do
+    n = n + 1
+  end
   ---@type V[]
   local out = { [n] = false }
   local i = 0
-  for _, v in pairs(t) do i = i + 1; out[i] = v end
+  for _, v in pairs(t) do
+    i = i + 1
+    out[i] = v
+  end
   return out
 end
 
@@ -100,4 +118,3 @@ function M.group_by(xs, keyfn)
 end
 
 return M
-

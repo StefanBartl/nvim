@@ -7,4 +7,3 @@
 ---@field bufnr? integer           # target buffer; nil = all buffers (workspace) for quickfix, or current buffer for loclist.
 ---@field namespace? integer       # namespace filter; nil = all namespaces.
 ---@field win_id? integer          # window id for loclist; defaults to 0 (current window).
-

@@ -22,12 +22,20 @@ local function make_handler()
   --- @param code any
   --- @return string
   local function code_to_string(code)
-    if code == nil then return "" end
-    if type(code) == "string" then return code end
-    if type(code) == "number" then return tostring(code) end
+    if code == nil then
+      return ""
+    end
+    if type(code) == "string" then
+      return code
+    end
+    if type(code) == "number" then
+      return tostring(code)
+    end
     -- some servers put complex code objects; try to stringify
     local ok, s = pcall(vim.inspect, code)
-    if ok and type(s) == "string" then return s end
+    if ok and type(s) == "string" then
+      return s
+    end
     return ""
   end
 
@@ -36,12 +44,18 @@ local function make_handler()
   --- @param patterns string[]
   --- @return boolean
   local function matches_any_pattern(msg, patterns)
-    if not patterns or type(patterns) ~= "table" then return false end
+    if not patterns or type(patterns) ~= "table" then
+      return false
+    end
     for _, patt in ipairs(patterns) do
       if type(patt) == "string" and patt ~= "" then
         -- pcall to guard against bad patterns
-        local ok, res = pcall(function() return msg:match(patt) end)
-        if ok and res then return true end
+        local ok, res = pcall(function()
+          return msg:match(patt)
+        end)
+        if ok and res then
+          return true
+        end
       end
     end
     return false
@@ -52,7 +66,9 @@ local function make_handler()
   --- @param substrings string[]
   --- @return boolean
   local function contains_any_substring(msg, substrings)
-    if not substrings or type(substrings) ~= "table" then return false end
+    if not substrings or type(substrings) ~= "table" then
+      return false
+    end
     for _, sub in ipairs(substrings) do
       if type(sub) == "string" and sub ~= "" and msg:find(sub, 1, true) then
         return true
@@ -66,16 +82,24 @@ local function make_handler()
   --- @param list table
   --- @return boolean
   local function code_in_list(diag_code, list)
-    if not list or type(list) ~= "table" then return false end
+    if not list or type(list) ~= "table" then
+      return false
+    end
     local sdiag = code_to_string(diag_code)
     for _, v in ipairs(list) do
       if type(v) == "number" then
-        if tonumber(sdiag) == v then return true end
+        if tonumber(sdiag) == v then
+          return true
+        end
       elseif type(v) == "string" then
-        if sdiag == v then return true end
+        if sdiag == v then
+          return true
+        end
       else
         -- fallback stringify compare
-        if sdiag == tostring(v) then return true end
+        if sdiag == tostring(v) then
+          return true
+        end
       end
     end
     return false
@@ -85,7 +109,9 @@ local function make_handler()
   --- @param diagnostics table[] diagnostics array from server
   --- @return table[] filtered diagnostics
   local function filter_diagnostics(diagnostics)
-    if not diagnostics or type(diagnostics) ~= "table" then return diagnostics end
+    if not diagnostics or type(diagnostics) ~= "table" then
+      return diagnostics
+    end
     local out = {}
     for i = 1, #diagnostics do
       local d = diagnostics[i]
@@ -96,19 +122,27 @@ local function make_handler()
 
       -- 1) explicit missing-doc-link legacy pattern (kept for backward compat)
       if cfg.suppress_missing_doc_links and cfg.missing_doc_links_pattern and cfg.missing_doc_links_pattern ~= "" then
-        if pcall(function() return msg:match(cfg.missing_doc_links_pattern) end) then
-          if msg:match(cfg.missing_doc_links_pattern) then suppressed = true end
+        if pcall(function()
+          return msg:match(cfg.missing_doc_links_pattern)
+        end) then
+          if msg:match(cfg.missing_doc_links_pattern) then
+            suppressed = true
+          end
         end
       end
 
       -- 2) general Lua pattern list
       if not suppressed and cfg.suppressed_message_patterns then
-        if matches_any_pattern(msg, cfg.suppressed_message_patterns) then suppressed = true end
+        if matches_any_pattern(msg, cfg.suppressed_message_patterns) then
+          suppressed = true
+        end
       end
 
       -- 3) plain substring matches (fast, case-sensitive)
       if not suppressed and cfg.suppressed_message_substrings then
-        if contains_any_substring(msg, cfg.suppressed_message_substrings) then suppressed = true end
+        if contains_any_substring(msg, cfg.suppressed_message_substrings) then
+          suppressed = true
+        end
       end
 
       -- 4) TOC heuristic (case-insensitive match of 'toc' or 'table of contents')
@@ -121,7 +155,9 @@ local function make_handler()
 
       -- 5) diagnostic code based suppression
       if not suppressed and cfg.suppressed_codes then
-        if code_in_list(diag_code, cfg.suppressed_codes) then suppressed = true end
+        if code_in_list(diag_code, cfg.suppressed_codes) then
+          suppressed = true
+        end
       end
 
       -- If not suppressed, keep diagnostic

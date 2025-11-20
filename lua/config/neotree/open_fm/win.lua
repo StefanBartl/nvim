@@ -51,7 +51,7 @@ end
 ---@param state table -- Neo-tree window state passed by the mapping
 ---@return boolean ok -- true if a launch was attempted; false on early error
 function M.open(state)
-  if not (vim.fn.has "win32" == 1 or vim.fn.has "win64" == 1) then
+  if not (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1) then
     vim.notify("Open in Explorer: Windows only", vim.log.levels.WARN)
     return false
   end

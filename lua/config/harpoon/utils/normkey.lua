@@ -14,12 +14,14 @@ local uv = vim.uv or vim.loop
 ---@param opts NormKeyOpts|nil
 ---@return string
 function M.normkey(p, opts)
-  if type(p) ~= "string" or p == "" then return "" end
+  if type(p) ~= "string" or p == "" then
+    return ""
+  end
   opts = opts or {}
-  local use_real = (opts.realpath ~= false)  -- default true
+  local use_real = (opts.realpath ~= false) -- default true
 
   -- Expand tilde if present
-	---@diagnostic disable-next-line os_homedir exists in uv library
+  ---@diagnostic disable-next-line os_homedir exists in uv library
   local home = (uv.os_homedir and uv.os_homedir()) or os.getenv("HOME")
   if home then
     p = p:gsub("^~", home)
@@ -30,7 +32,9 @@ function M.normkey(p, opts)
   ---@diagnostic disable-next-line fs_realpath exists in uv library
   if use_real and uv.fs_realpath then
     local rp = uv.fs_realpath(p)
-    if rp then out = rp end
+    if rp then
+      out = rp
+    end
   else
     -- normalize keeps relative parts tidy; not as strong as realpath
     out = vim.fs.normalize(p)
@@ -40,7 +44,9 @@ function M.normkey(p, opts)
   out = out:gsub("\\", "/")
 
   -- Uppercase drive letter on Windows
-  out = out:gsub("^([A-Za-z]):", function(d) return string.upper(d) .. ":" end)
+  out = out:gsub("^([A-Za-z]):", function(d)
+    return string.upper(d) .. ":"
+  end)
 
   -- Collapse duplicate slashes, but keep UNC prefix (//server/share)
   if not out:match("^//") then
@@ -51,4 +57,3 @@ function M.normkey(p, opts)
 end
 
 return M
-

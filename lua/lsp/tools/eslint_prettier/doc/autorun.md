@@ -24,8 +24,8 @@ Diese Datei erklärt das Verhalten des automatischen Ausführens von `eslint_d` 
   - `:ToggleLintFormatOnSave` — toggelt global.
 - Falls man die automatische Ausführung pro Session programmatisch ändern will:
   ```lua
-  -- English comments: disable autorun for current session
+  -- disable autorun for current session
   require("lsp.tools.eslint_prettier")._enabled = false
 
-  -- English comments: enable autorun for current session
+  -- enable autorun for current session
   require("lsp.tools.eslint_prettier")._enabled = true

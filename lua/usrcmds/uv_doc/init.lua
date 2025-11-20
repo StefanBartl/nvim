@@ -33,10 +33,10 @@ local CFG = vim.deepcopy(DEFAULTS)
 -- Session caches -------------------------------------------------------------
 
 ---@type string|nil
-local GENINDEX_HTML = nil   --- aggregated genindex HTML (may include multiple pages)
+local GENINDEX_HTML = nil --- aggregated genindex HTML (may include multiple pages)
 
 ---@type string[]|nil
-local INDEX_SYMBOLS = nil   --- all "uv_*" ids (functions and types) extracted from genindex
+local INDEX_SYMBOLS = nil --- all "uv_*" ids (functions and types) extracted from genindex
 
 -- Constant base URL (stable series to match Neovim bindings)
 local BASE = "https://docs.libuv.org/en/v1.x/"
@@ -74,7 +74,9 @@ end
 ---      concatenate everything to a single HTML blob.
 ---@return string|nil
 local function get_genindex()
-  if GENINDEX_HTML then return GENINDEX_HTML end
+  if GENINDEX_HTML then
+    return GENINDEX_HTML
+  end
 
   -- 1) Try single aggregated page first
   do
@@ -151,9 +153,13 @@ end
 --- Ensure we have the list of uv_* ids in memory.
 ---@return string[]|nil
 local function ensure_index_cache()
-  if INDEX_SYMBOLS then return INDEX_SYMBOLS end
+  if INDEX_SYMBOLS then
+    return INDEX_SYMBOLS
+  end
   local html = get_genindex()
-  if not html then return nil end
+  if not html then
+    return nil
+  end
   local names = parse_symbols_from_index(html)
   if #names == 0 then
     vim.notify("[uvdoc] genindex parsed but no uv_* anchors found", vim.log.levels.WARN)
@@ -172,13 +178,21 @@ local function normalize_to_uv(name)
   n = n:gsub("^vim%.loop%.", "")
   n = n:gsub(":", "_")
 
-  if n == "cwd" then return "uv_cwd" end
-  if n == "chdir" then return "uv_chdir" end
+  if n == "cwd" then
+    return "uv_cwd"
+  end
+  if n == "chdir" then
+    return "uv_chdir"
+  end
 
   local t = n:match("^new_(%w+)$")
-  if t then return "uv_" .. t .. "_init" end
+  if t then
+    return "uv_" .. t .. "_init"
+  end
 
-  if not n:match("^uv_") then n = "uv_" .. n end
+  if not n:match("^uv_") then
+    n = "uv_" .. n
+  end
   return n
 end
 
@@ -192,12 +206,16 @@ local function find_uv_href(idx_html, uvname)
   -- Double-quoted href
   local pat1 = 'href="([^"]-%.html#' .. vim.pesc(id) .. ')"'
   local href = idx_html:match(pat1)
-  if href then return href end
+  if href then
+    return href
+  end
 
   -- Single-quoted href (fallback)
   local pat2 = "href='([^']-%.html#" .. vim.pesc(id) .. ")'"
   href = idx_html:match(pat2)
-  if href then return href end
+  if href then
+    return href
+  end
 
   return nil
 end
@@ -207,7 +225,9 @@ end
 ---@return string
 local function html_href_to_rst(html_href)
   local page = html_href:match("^([^#]+)%.html")
-  if not page then return "_sources/index.rst.txt" end
+  if not page then
+    return "_sources/index.rst.txt"
+  end
   return "_sources/" .. page .. ".rst.txt"
 end
 
@@ -235,7 +255,9 @@ local function extract_c_function(rst, uvname)
   ---@type string[]
   local lines = {}
   for L in body_chunk:gmatch("([^\n]*)\n?") do
-    if L == nil then break end
+    if L == nil then
+      break
+    end
     local s = (L or ""):gsub("^%s+", "")
     lines[#lines + 1] = s
   end
@@ -264,7 +286,9 @@ local function extract_c_type(rst, uvname)
   ---@type string[]
   local lines = {}
   for L in body_chunk:gmatch("([^\n]*)\n?") do
-    if L == nil then break end
+    if L == nil then
+      break
+    end
     local s = (L or ""):gsub("^%s+", "")
     lines[#lines + 1] = s
   end
@@ -284,28 +308,30 @@ end
 ---@return string[] list
 local function candidates_for(query)
   local all = ensure_index_cache() or {}
-  if not query or query == "" then return all end
+  if not query or query == "" then
+    return all
+  end
 
   local q = query
   q = q:gsub("^vim%.uv%.", "")
   q = q:gsub("^uv_", "")
 
   local prefix_map = {
-    loop     = "uv_loop_",
-    fs       = "uv_fs_",
+    loop = "uv_loop_",
+    fs = "uv_fs_",
     fs_event = "uv_fs_event_",
-    fs_poll  = "uv_fs_poll_",
-    tcp      = "uv_tcp_",
-    udp      = "uv_udp_",
-    pipe     = "uv_pipe_",
-    tty      = "uv_tty_",
-    signal   = "uv_signal_",
-    timer    = "uv_timer_",
-    poll     = "uv_poll_",
-    work     = "uv_work_",
-    dl       = "uv_dl",   -- both uv_dlopen, uv_dlclose, ...
-    process  = "uv_",     -- broad: spawn/kill, etc.
-    stream   = "uv_stream_",
+    fs_poll = "uv_fs_poll_",
+    tcp = "uv_tcp_",
+    udp = "uv_udp_",
+    pipe = "uv_pipe_",
+    tty = "uv_tty_",
+    signal = "uv_signal_",
+    timer = "uv_timer_",
+    poll = "uv_poll_",
+    work = "uv_work_",
+    dl = "uv_dl", -- both uv_dlopen, uv_dlclose, ...
+    process = "uv_", -- broad: spawn/kill, etc.
+    stream = "uv_stream_",
   }
 
   local pref = prefix_map[q]
@@ -338,15 +364,15 @@ local function open_list(names, title, on_enter)
   vim.bo[buf].bufhidden = "wipe"
   vim.api.nvim_buf_set_name(buf, "libuv-index://" .. (title:gsub("%s+", "_")))
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, names)
-  vim.bo[buf].filetype   = "uvdoc-list"
+  vim.bo[buf].filetype = "uvdoc-list"
   vim.bo[buf].modifiable = false
 
-  local width            = math.floor(vim.o.columns * 0.5)
-  local height           = math.min(math.max(#names, 4) + 2, math.floor(vim.o.lines * 0.7))
-  local row              = math.floor((vim.o.lines - height) / 2 - 1)
-  local col              = math.floor((vim.o.columns - width) / 2)
+  local width = math.floor(vim.o.columns * 0.5)
+  local height = math.min(math.max(#names, 4) + 2, math.floor(vim.o.lines * 0.7))
+  local row = math.floor((vim.o.lines - height) / 2 - 1)
+  local col = math.floor((vim.o.columns - width) / 2)
 
-  local win              = vim.api.nvim_open_win(buf, true, {
+  local win = vim.api.nvim_open_win(buf, true, {
     relative = "editor",
     width = width,
     height = height,
@@ -374,10 +400,12 @@ local function open_list(names, title, on_enter)
     end
   end, { buffer = buf, nowait = true, silent = true })
 
-  vim.keymap.set("n", "q", function() vim.api.nvim_win_close(win, true) end,
-    { buffer = buf, nowait = true, silent = true })
-  vim.keymap.set("n", "<Esc>", function() vim.api.nvim_win_close(win, true) end,
-    { buffer = buf, nowait = true, silent = true })
+  vim.keymap.set("n", "q", function()
+    vim.api.nvim_win_close(win, true)
+  end, { buffer = buf, nowait = true, silent = true })
+  vim.keymap.set("n", "<Esc>", function()
+    vim.api.nvim_win_close(win, true)
+  end, { buffer = buf, nowait = true, silent = true })
 
   -- yank current name
   vim.keymap.set("n", "y", function()
@@ -430,10 +458,10 @@ local function render_doc(uvname, src_url, sig, body)
     vim.cmd("botright new")
     vim.api.nvim_win_set_buf(0, buf)
   else
-    local width  = math.floor(vim.o.columns * 0.62)
+    local width = math.floor(vim.o.columns * 0.62)
     local height = math.floor(vim.o.lines * 0.70)
-    local row    = math.floor((vim.o.lines - height) / 2 - 1)
-    local col    = math.floor((vim.o.columns - width) / 2)
+    local row = math.floor((vim.o.lines - height) / 2 - 1)
+    local col = math.floor((vim.o.columns - width) / 2)
     vim.api.nvim_open_win(buf, true, {
       relative = "editor",
       width = width,
@@ -462,7 +490,7 @@ local function fetch_and_show(uvname)
     return
   end
   local html_url = BASE .. href
-  local rst_url  = BASE .. html_href_to_rst(href)
+  local rst_url = BASE .. html_href_to_rst(href)
 
   local rst, err = http_get(rst_url)
   if not rst then
@@ -496,7 +524,7 @@ local function fetch_and_insert_signature(uvname)
     vim.notify(string.format("[uvdoc] not found in index: %s", uvname), vim.log.levels.WARN)
     return
   end
-  local rst_url  = BASE .. html_href_to_rst(href)
+  local rst_url = BASE .. html_href_to_rst(href)
   local rst, err = http_get(rst_url)
   if not rst then
     vim.notify("[uvdoc] failed to fetch RST: " .. (err or "unknown"), vim.log.levels.WARN)
@@ -527,9 +555,7 @@ function M.doc(name)
   end
 
   -- Exact?
-  local looks_exact = raw:match("^uv_%w+$")
-      or raw:match("^vim%.uv%.%w+$")
-      or raw:match("^vim%.loop%.%w+$")
+  local looks_exact = raw:match("^uv_%w+$") or raw:match("^vim%.uv%.%w+$") or raw:match("^vim%.loop%.%w+$")
 
   if looks_exact then
     fetch_and_show(normalize_to_uv(raw))
@@ -543,7 +569,9 @@ function M.doc(name)
   elseif #cands == 1 then
     fetch_and_show(cands[1])
   else
-    open_list(cands, "libuv: " .. raw, function(sel) fetch_and_show(sel) end)
+    open_list(cands, "libuv: " .. raw, function(sel)
+      fetch_and_show(sel)
+    end)
   end
 end
 
@@ -568,9 +596,7 @@ function M.here(name)
     vim.notify("[uvdoc] no name given", vim.log.levels.WARN)
     return
   end
-  local looks_exact = raw:match("^uv_%w+$")
-      or raw:match("^vim%.uv%.%w+$")
-      or raw:match("^vim%.loop%.%w+$")
+  local looks_exact = raw:match("^uv_%w+$") or raw:match("^vim%.uv%.%w+$") or raw:match("^vim%.loop%.%w+$")
 
   if looks_exact then
     fetch_and_insert_signature(normalize_to_uv(raw))
@@ -603,11 +629,15 @@ function M.complete(arglead, cmdline, cursorpos)
   -- Try the parsed libuv index first
   local all = (function()
     local names = ensure_index_cache()
-    if names and #names > 0 then return names end
+    if names and #names > 0 then
+      return names
+    end
 
     -- Fallback: introspect vim.uv/vim.loop and synthesize "uv_*" names
     local uv = vim.uv or vim.loop
-    if type(uv) ~= "table" then return {} end
+    if type(uv) ~= "table" then
+      return {}
+    end
     local tmp = {} ---@type table<string, boolean>
     for k, v in pairs(uv) do
       if type(v) == "function" then
@@ -618,20 +648,28 @@ function M.complete(arglead, cmdline, cursorpos)
           c = "uv_chdir"
         else
           local t = k:match("^new_(%w+)$")
-          if t then c = "uv_" .. t .. "_init" else c = "uv_" .. k end
+          if t then
+            c = "uv_" .. t .. "_init"
+          else
+            c = "uv_" .. k
+          end
         end
-        if c then tmp[c] = true end
+        if c then
+          tmp[c] = true
+        end
       end
     end
     local lst = {} ---@type string[]
-    for name, _ in pairs(tmp) do lst[#lst + 1] = name end
+    for name, _ in pairs(tmp) do
+      lst[#lst + 1] = name
+    end
     table.sort(lst)
     return lst
   end)()
 
   -- Filter by current arglead (case-insensitive substring)
   local q = tostring(arglead or "")
-  q = q:gsub("^vim%.uv%.", "")  -- tolerate "vim.uv." prefix while typing
+  q = q:gsub("^vim%.uv%.", "") -- tolerate "vim.uv." prefix while typing
   local needle = q:lower()
   if needle == "" then
     return all
@@ -668,28 +706,32 @@ end
 --- Setup 'uv_dov'-Usercommands
 ---@return nil
 function M.enable_usercmd()
-	-- Open docs for an exact or fuzzy name (falls back to a list if ambiguous)
-	vim.api.nvim_create_user_command("UVDoc", function(cmd)
-		if #cmd.args > 0 then M.doc(cmd.args) else M.doc() end
-	end, {
-		nargs = "?",
-		desc = "Show libuv doc (exact or fuzzy)",
-		complete = UVDocComplete,
-	})
+  -- Open docs for an exact or fuzzy name (falls back to a list if ambiguous)
+  vim.api.nvim_create_user_command("UVDoc", function(cmd)
+    if #cmd.args > 0 then
+      M.doc(cmd.args)
+    else
+      M.doc()
+    end
+  end, {
+    nargs = "?",
+    desc = "Show libuv doc (exact or fuzzy)",
+    complete = UVDocComplete,
+  })
 
-	-- Single picker command retained (UVDocList). UVDocPick removed as redundant.
-	vim.api.nvim_create_user_command("UVDocList", function(cmd)
-		M.list(#cmd.args > 0 and cmd.args or nil)
-	end, { nargs = "?", desc = "List libuv symbols and open with <CR>", complete = UVDocComplete })
+  -- Single picker command retained (UVDocList). UVDocPick removed as redundant.
+  vim.api.nvim_create_user_command("UVDocList", function(cmd)
+    M.list(#cmd.args > 0 and cmd.args or nil)
+  end, { nargs = "?", desc = "List libuv symbols and open with <CR>", complete = UVDocComplete })
 
-	-- Insert only the C signature/type at cursor (fuzzy allowed)
-	vim.api.nvim_create_user_command("UVDocHere", function(cmd)
-		M.here(#cmd.args > 0 and cmd.args or nil)
-	end, { nargs = "?", desc = "Insert libuv C signature or type at cursor", complete = UVDocComplete })
+  -- Insert only the C signature/type at cursor (fuzzy allowed)
+  vim.api.nvim_create_user_command("UVDocHere", function(cmd)
+    M.here(#cmd.args > 0 and cmd.args or nil)
+  end, { nargs = "?", desc = "Insert libuv C signature or type at cursor", complete = UVDocComplete })
 
-	vim.api.nvim_create_user_command("UVDocCacheClear", function()
-		M.cache_clear()
-	end, { desc = "Clear uvdoc caches" })
+  vim.api.nvim_create_user_command("UVDocCacheClear", function()
+    M.cache_clear()
+  end, { desc = "Clear uvdoc caches" })
 end
 
 return M

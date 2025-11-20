@@ -23,11 +23,11 @@ opt.relativenumber = true
 -- Always show the sign column to avoid layout shifts.
 opt.signcolumn = "yes" -- "number" / "auto"
 
-wo.wrap = true               -- wrap long lines visually (no hard line breaks)
-wo.linebreak = true          -- wrap at word boundaries as per 'breakat'
-wo.breakindent = true        -- indent wrapped screen lines
+wo.wrap = true -- wrap long lines visually (no hard line breaks)
+wo.linebreak = true -- wrap at word boundaries as per 'breakat'
+wo.breakindent = true -- indent wrapped screen lines
 wo.breakindentopt = "shift:2,sbr" -- add +2 spaces and use 'showbreak'
-vim.o.showbreak = "⤷ "	            -- prefix shown on continuation screen lines
+vim.o.showbreak = "⤷ " -- prefix shown on continuation screen lines
 
 opt.laststatus = 3 -- ensures 'one' continuous statusline
 
@@ -38,7 +38,6 @@ opt.laststatus = 3 -- ensures 'one' continuous statusline
 -- Integrate with the system clipboard by default.
 opt.clipboard = "unnamedplus"
 
-
 -----------------------------------------------------------
 -- Editing & Indentation
 -----------------------------------------------------------
@@ -48,12 +47,11 @@ opt.autoindent = true
 opt.smartindent = true
 
 -- Indentation width and tab behavior
-vim.o.expandtab = true        -- use spaces
+vim.o.expandtab = true -- use spaces
 opt.shiftwidth = 4
 opt.tabstop = 4
 opt.softtabstop = 4
 opt.smarttab = true
-
 
 -----------------------------------------------------------
 -- Search
@@ -62,7 +60,6 @@ opt.smarttab = true
 -- Case-insensitive search unless the pattern contains uppercase.
 opt.ignorecase = true
 opt.smartcase = true
-
 
 -----------------------------------------------------------
 -- Folding (Treesitter-based)
@@ -101,19 +98,17 @@ opt.updatetime = 200
 -- Make <Esc> feel instant; keep a small timeout for terminal keycodes.
 opt.ttimeoutlen = 10
 
-
 -----------------------------------------------------------
 -- Completion & File Globs
 -----------------------------------------------------------
 
 -- Skip heavy/irrelevant directories during filename completion.
 opt.wildignore:append({
-	"*/node_modules/*",
-	"*/.git/*",
-	"*/dist/*",
-	"*/build/*",
+  "*/node_modules/*",
+  "*/.git/*",
+  "*/dist/*",
+  "*/build/*",
 })
-
 
 -----------------------------------------------------------
 -- Files & Persistence
@@ -133,7 +128,6 @@ opt.swapfile = false
 -- Enable persistent undo and store it under the cache path.
 opt.undofile = true
 opt.undodir = fn.stdpath("cache") .. "/undo"
-
 
 -----------------------------------------------------------
 -- Terminals
@@ -159,4 +153,3 @@ else
   o.shell = fn.executable("zsh") == 1 and "zsh" or "bash"
   o.shellcmdflag = "-c"
 end
-

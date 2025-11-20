@@ -69,7 +69,7 @@ local M = {}
 ---@param anchor string|nil anchor fragment (without '#')
 ---@return boolean ok, string|nil err
 local function validate_and_resolve(rel_path, anchor)
-  -- English comments: resolve to absolute path and validate against project root
+  -- resolve to absolute path and validate against project root
   -- This helper returns (true, abs_path) on success or (false, errmsg) on failure.
   local abs = vim.fn.fnamemodify(rel_path or "", ":p")
   local project_root = vim.g.mkdp_bridge_project_root or vim.loop.cwd()
@@ -87,7 +87,7 @@ local function validate_and_resolve(rel_path, anchor)
 end
 
 --- Open target file and optional anchor, then ensure preview is in the desired state.
---- English comments: main entrypoint used by server to handle GET /open.
+--- main entrypoint used by server to handle GET /open.
 ---@param rel_path string
 ---@param anchor string|nil
 function M.open_file(rel_path, anchor)

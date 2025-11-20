@@ -36,11 +36,18 @@ end
 ---@param cfg EnableConfig
 ---@return nil
 function M.enable(cfg)
-  if not cfg then return end
-	if cfg.autocommands then autocmds.enable() end
-	if cfg.usercmds then usercmds.enable() end
-	if cfg.keymaps then keymaps.enable() end
+  if not cfg then
+    return
+  end
+  if cfg.autocommands then
+    autocmds.enable()
+  end
+  if cfg.usercmds then
+    usercmds.enable()
+  end
+  if cfg.keymaps then
+    keymaps.enable()
+  end
 end
 
 return M
-

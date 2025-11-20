@@ -19,7 +19,9 @@ end
 ---@return integer|nil finish
 function P.find_plain(s, needle)
   local a, b = s:find(needle, 1, true)
-  if a then return a, b end
+  if a then
+    return a, b
+  end
   return nil, nil
 end
 
@@ -29,16 +31,18 @@ end
 ---@param to string
 ---@return string
 function P.replace_plain(s, from, to)
-  if from == "" then return s end
+  if from == "" then
+    return s
+  end
   local res, i = {}, 1
   while true do
     local a, b = s:find(from, i, true)
     if not a then
-      res[#res+1] = s:sub(i)
+      res[#res + 1] = s:sub(i)
       break
     end
-    res[#res+1] = s:sub(i, a - 1)
-    res[#res+1] = to
+    res[#res + 1] = s:sub(i, a - 1)
+    res[#res + 1] = to
     i = b + 1
   end
   return table.concat(res)
@@ -54,4 +58,3 @@ function P.surround(s, left, right)
 end
 
 return P
-

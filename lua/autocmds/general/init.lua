@@ -33,7 +33,9 @@ local function kitty_set_spacing(padding, margin)
   -- `silent !kitty @ set-spacing padding=<n> margin=<n>` will adjust spacing for the current OS window.
   -- Using `vim.cmd` to avoid job control complexity; it’s synchronous but negligible here.
   local cmd = string.format(":silent !kitty @ set-spacing padding=%d margin=%d", padding, margin)
-  pcall(function() vim.cmd(cmd) end)
+  pcall(function()
+    vim.cmd(cmd)
+  end)
 end
 
 -- Defaults --------------------------------------------------------------------
@@ -50,17 +52,17 @@ local Defaults = {
   },
 
   kitty = {
-    enable = false,         -- Disabled by default; only meaningful inside Kitty
+    enable = false, -- Disabled by default; only meaningful inside Kitty
     enter_padding = 0,
-    enter_margin  = 0,
+    enter_margin = 0,
     leave_padding = 20,
-    leave_margin  = 10,
+    leave_margin = 10,
   },
 
   nvdash = {
     enable = true,
     cmd = "Nvdash",
-    is_listed_only = true,  -- Consider only listed buffers when deciding "last buffer"
+    is_listed_only = true, -- Consider only listed buffers when deciding "last buffer"
   },
 
   cursorline = {

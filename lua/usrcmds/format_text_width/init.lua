@@ -11,7 +11,7 @@ local M = {}
 
 -- Wrap a sequence of words into lines not exceeding `width`. The first line gets
 -- `first_prefix` prepended; continuation lines get `cont_prefix`.
--- English comments: This routine attempts simple greedy wrapping without hyphenation.
+-- This routine attempts simple greedy wrapping without hyphenation.
 local function wrap_words(words, width, first_prefix, cont_prefix)
   local out = {}
   local cur = first_prefix or ""
@@ -50,7 +50,7 @@ local function wrap_words(words, width, first_prefix, cont_prefix)
 end
 
 -- Flatten paragraph lines into words (preserve punctuation).
--- English comments: simple whitespace tokenization.
+-- simple whitespace tokenization.
 local function paragraph_to_words(par_lines)
   local words = {}
   for _, ln in ipairs(par_lines) do
@@ -63,7 +63,7 @@ end
 
 -- Detect indentation / bullet leader for a paragraph's first line.
 -- Returns (first_prefix, cont_prefix)
--- English comments: first_prefix is kept at start of wrapped first line; cont_prefix
+-- first_prefix is kept at start of wrapped first line; cont_prefix
 -- is prepended to continuation lines to align text after bullets/indent.
 local function detect_prefixes(first_line)
   local indent = first_line:match("^(%s*)") or ""
@@ -78,7 +78,7 @@ local function detect_prefixes(first_line)
 end
 
 -- Internal: reflow a list of lines (representing a contiguous region)
--- English comments: returns new list of lines with paragraphs wrapped to `width`.
+-- returns new list of lines with paragraphs wrapped to `width`.
 local function reflow_lines_region(lines, width)
   local out = {}
   local paragraph = {}
@@ -138,7 +138,7 @@ local function reflow_lines_region(lines, width)
 end
 
 -- Reflow the whole buffer to `width`. Keeps exact blank-line runs across the file.
--- English comments: this replaces the entire buffer contents atomically.
+-- this replaces the entire buffer contents atomically.
 function M.reflow_buffer(bufnr, width)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   width = tonumber(width) or 0
@@ -152,7 +152,7 @@ function M.reflow_buffer(bufnr, width)
 end
 
 -- Reflow only the range [start_line, end_line] (1-based, inclusive).
--- English comments: only lines inside the given range are inspected and replaced;
+-- only lines inside the given range are inspected and replaced;
 -- blank lines and paragraphs inside the range are preserved exactly as before except
 -- for wrapping. Surrounding context outside the range is untouched.
 function M.reflow_range(bufnr, start_line, end_line, width)
@@ -173,7 +173,7 @@ function M.reflow_range(bufnr, start_line, end_line, width)
 end
 
 -- Create the original whole-buffer command `:SetTextWidth`
--- English comments: keeps existing behaviour for full-file reflow.
+-- keeps existing behaviour for full-file reflow.
 function M.setup_user_command()
   vim.api.nvim_create_user_command("SetTextWidth", function(opts)
     local arg = opts.args

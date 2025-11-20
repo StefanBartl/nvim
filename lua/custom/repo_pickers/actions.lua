@@ -1,7 +1,7 @@
 ---@module 'custom.repo_pickers.actions'
 --- High-level actions: select repo using the configured selector-routing, then run fzf/Telescope.
 
-local fs       = require("custom.repo_pickers.fs")
+local fs = require("custom.repo_pickers.fs")
 local dispatch = require("custom.repo_pickers.dispatch")
 
 local M = {}

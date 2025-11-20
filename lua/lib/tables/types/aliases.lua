@@ -25,4 +25,3 @@
 ---@alias Folder<A,R> fun(acc:R, value:A, index:integer):R
 
 ---@alias PathKind "file"|"directory"|""  -- empty string for non-existent
-

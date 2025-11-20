@@ -76,7 +76,9 @@ function M.scan_repos(root, only_git)
 
   while true do
     local name, ftype = uv.fs_scandir_next(req)
-    if not name then break end
+    if not name then
+      break
+    end
     if ftype == "directory" then
       local full = M.join(root, name)
       if (not only_git) or M.has_git(full) then
@@ -115,4 +117,3 @@ function M.label_of(cfg, repo)
 end
 
 return M
-

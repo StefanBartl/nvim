@@ -26,7 +26,9 @@ local uv = vim.loop
 ---@param s string
 ---@return string|nil
 local function trim(s)
-  if not s then return nil end
+  if not s then
+    return nil
+  end
   return s:match("^%s*(.-)%s*$")
 end
 
@@ -41,19 +43,22 @@ end
 local function find_img_src_in_buffer_near_cursor(bufnr, curline, radius)
   -- defensive defaults
   radius = radius or 8
-  if not bufnr or not curline then return nil end
+  if not bufnr or not curline then
+    return nil
+  end
 
   local start_line = math.max(1, curline - radius)
   local end_line = curline + radius
   local ok, lines = pcall(api.nvim_buf_get_lines, bufnr, start_line - 1, end_line, false)
-  if not ok or not lines then return nil end
+  if not ok or not lines then
+    return nil
+  end
 
   -- join lines into a single string with newlines to allow matching across line breaks,
   -- but also attempt single-line matches first for speed.
   for _, l in ipairs(lines) do
     -- quick single-line match for <img ... src="..."> or src='...'
-    local single = l:match('<img[^>]-src%s*=%s*"(.-)"')
-                 or l:match("<img[^>]-src%s*=%s*'(.-)'")
+    local single = l:match('<img[^>]-src%s*=%s*"(.-)"') or l:match("<img[^>]-src%s*=%s*'(.-)'")
     if single and single ~= "" then
       return trim(single)
     end
@@ -62,15 +67,13 @@ local function find_img_src_in_buffer_near_cursor(bufnr, curline, radius)
   -- fallback: multi-line search by concatenating the window and searching for the first <img ...> tag
   local joined = table.concat(lines, "\n")
   -- try to find src attr with double or single quotes, allowing any attributes/newlines before src
-  local src = joined:match('<img.-src%s*=%s*"(.-)"')
-           or joined:match("<img.-src%s*=%s*'(.-)'")
+  local src = joined:match('<img.-src%s*=%s*"(.-)"') or joined:match("<img.-src%s*=%s*'(.-)'")
   if src and src ~= "" then
     return trim(src)
   end
 
   -- also consider <source src="..."> inside <picture> or <figure> patterns
-  local source_src = joined:match('<source.-src%s*=%s*"(.-)"')
-                  or joined:match("<source.-src%s*=%s*'(.-)'")
+  local source_src = joined:match('<source.-src%s*=%s*"(.-)"') or joined:match("<source.-src%s*=%s*'(.-)'")
   if source_src and source_src ~= "" then
     return trim(source_src)
   end
@@ -87,7 +90,9 @@ end
 ---@param line string
 ---@return string|nil
 local function extract_image_target_from_line(line)
-  if not line or line == "" then return nil end
+  if not line or line == "" then
+    return nil
+  end
 
   -- prefer explicit markdown image syntax first: ![alt](path) or ![alt](<path with spaces>)
   -- capture everything inside the parentheses
@@ -100,14 +105,15 @@ local function extract_image_target_from_line(line)
   -- If markdown-style target found, normalize and return
   if t and t ~= "" then
     t = trim(t)
-    if t and t:match("^<.+>$") then t = t:sub(2, -2) end
+    if t and t:match("^<.+>$") then
+      t = t:sub(2, -2)
+    end
     return t
   end
 
   -- No markdown image/link found on the line. Check for inline HTML <img ... src="...">
   -- Attempt single-line <img> capture (double or single quoted src)
-  local img_src = line:match('<img[^>]-src%s*=%s*"(.-)"')
-               or line:match("<img[^>]-src%s*=%s*'(.-)'")
+  local img_src = line:match('<img[^>]-src%s*=%s*"(.-)"') or line:match("<img[^>]-src%s*=%s*'(.-)'")
   if img_src and img_src ~= "" then
     return trim(img_src)
   end
@@ -154,8 +160,12 @@ end
 ---@param target string
 ---@return string|nil
 local function resolve_target_to_path(target)
-  if not target then return nil end
-  if is_url(target) then return target end
+  if not target then
+    return nil
+  end
+  if is_url(target) then
+    return target
+  end
 
   -- expand environment variables and ~
   local expanded = vim.fn.expand(target)
@@ -180,7 +190,9 @@ end
 ---@param path string
 ---@return boolean
 local function open_with_system_viewer(path)
-  if not path or path == "" then return false end
+  if not path or path == "" then
+    return false
+  end
 
   local esc = vim.fn.shellescape(path)
   local sysname = (uv.os_uname() and uv.os_uname().sysname) or ""

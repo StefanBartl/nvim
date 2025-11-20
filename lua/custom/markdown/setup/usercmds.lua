@@ -29,16 +29,13 @@ function M.apply(args)
   end
 
   pcall(function()
-    api.nvim_buf_create_user_command(bufnr, "OpenWithSystemApplication",
-      function()
-        handler.handle_cursor_action()
-      end,
-      {
-        desc = "[Custom.Markdown] Open image/url/file under cursor with system app",
-        nargs = 0,
-        complete = nil,
-      }
-    )
+    api.nvim_buf_create_user_command(bufnr, "OpenWithSystemApplication", function()
+      handler.handle_cursor_action()
+    end, {
+      desc = "[Custom.Markdown] Open image/url/file under cursor with system app",
+      nargs = 0,
+      complete = nil,
+    })
   end)
 end
 

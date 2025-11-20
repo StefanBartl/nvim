@@ -34,6 +34,6 @@ return function(msg, hl, is_error)
   end
 
   -- Add the message to history (true). Return the message id to the caller.
-	---@diagnostic disable-next-line # return value 1 has a type of `string|integer`, returning value of type `nil`
+  ---@diagnostic disable-next-line # return value 1 has a type of `string|integer`, returning value of type `nil`
   return vim.api.nvim_echo(chunks, true, opts)
 end

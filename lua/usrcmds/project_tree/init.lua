@@ -33,7 +33,6 @@
 --   outdir = "/var/tmp/my-nvim-state/project-tree",
 -- })
 
-
 local M = {}
 
 local fn = vim.fn
@@ -59,10 +58,16 @@ M.opts = DEFAULTS
 ---@param dir FilePath
 ---@return boolean ok, string? err
 local function ensure_dir(dir)
-  if fn.isdirectory(dir) == 1 then return true, nil end
+  if fn.isdirectory(dir) == 1 then
+    return true, nil
+  end
   local ok, err = pcall(fn.mkdir, dir, "p")
-  if not ok then return false, "mkdir failed: " .. tostring(err) end
-  if fn.isdirectory(dir) ~= 1 then return false, "mkdir returned non-directory" end
+  if not ok then
+    return false, "mkdir failed: " .. tostring(err)
+  end
+  if fn.isdirectory(dir) ~= 1 then
+    return false, "mkdir returned non-directory"
+  end
   return true, nil
 end
 
@@ -70,9 +75,13 @@ end
 ---@return string? cwd, string? proj, string? err
 local function current_project()
   local cwd = fn.getcwd()
-  if type(cwd) ~= "string" or cwd == "" then return nil, nil, "invalid working directory" end
+  if type(cwd) ~= "string" or cwd == "" then
+    return nil, nil, "invalid working directory"
+  end
   local proj = fn.fnamemodify(cwd, ":t")
-  if type(proj) ~= "string" or proj == "" then return nil, nil, "failed to derive project name" end
+  if type(proj) ~= "string" or proj == "" then
+    return nil, nil, "failed to derive project name"
+  end
   return cwd, proj, nil
 end
 
@@ -107,8 +116,8 @@ local function build_tree_cmd(cwd, exclude)
   for i = 1, #exclude do
     local g = exclude[i]
     g = g:gsub("([%^%$%(%)%%%.%[%]%+%-%?])", "%%%1") -- escape regex meta
-    g = g:gsub("%*", ".*")                           -- glob * → .*
-    g = g:gsub("/", "[\\\\/]")                       -- accept / or \
+    g = g:gsub("%*", ".*") -- glob * → .*
+    g = g:gsub("/", "[\\\\/]") -- accept / or \
     regexes[#regexes + 1] = g
   end
 
@@ -120,7 +129,7 @@ local function build_tree_cmd(cwd, exclude)
   ps[#ps + 1] = "$ErrorActionPreference='Stop'"
   ps[#ps + 1] = "$cwd=[IO.Path]::GetFullPath(" .. ps_quote(cwd) .. ")"
   ps[#ps + 1] =
-  "$files=Get-ChildItem -LiteralPath $cwd -Recurse -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName"
+    "$files=Get-ChildItem -LiteralPath $cwd -Recurse -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName"
   if #regexes > 0 then
     ps[#ps + 1] = "$rx=@(" .. table.concat(vim.tbl_map(ps_quote, regexes), ",") .. ")"
     ps[#ps + 1] = "$files=$files|Where-Object{ $l=$_; foreach($r in $rx){ if($l -match $r){return $false} }; $true }"
@@ -205,8 +214,8 @@ function M.setup(cfg)
     outdir = cfg.outdir or DEFAULTS.outdir,
     outfile_fmt = cfg.outfile_fmt or DEFAULTS.outfile_fmt,
     notify_prefix = cfg.notify_prefix or DEFAULTS.notify_prefix,
-    use_system_clipboard = (cfg.use_system_clipboard ~= nil) and cfg.use_system_clipboard or
-        DEFAULTS.use_system_clipboard,
+    use_system_clipboard = (cfg.use_system_clipboard ~= nil) and cfg.use_system_clipboard
+      or DEFAULTS.use_system_clipboard,
   }
   M.opts = o
 

@@ -25,7 +25,6 @@
 ---@field toggle fun(): boolean                -- Toggle on-save formatting; returns new state
 ---@field is_enabled fun(): boolean            -- Query on-save formatting state
 
-  ---@class FormatterState
-  ---@field enabled boolean
-  ---@field augroup integer
-
+---@class FormatterState
+---@field enabled boolean
+---@field augroup integer

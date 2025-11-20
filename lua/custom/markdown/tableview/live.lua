@@ -48,10 +48,14 @@ end
 local function write_preview_files(table, tmpdir)
   local tmpfile = tmpdir .. "/table.html"
   local fh, err = io.open(tmpfile, "w")
-  if not fh then return false, err end
+  if not fh then
+    return false, err
+  end
 
   local function html_escape(s)
-    if not s then return "" end
+    if not s then
+      return ""
+    end
     s = s:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
     s = s:gsub('"', "&quot;"):gsub("'", "&#39;")
     return s
@@ -150,7 +154,10 @@ function M.regenerate(bufnr)
     write_preview_files(chosen, tmpdir)
   elseif state.ts_file and vim.fn.filereadable(state.ts_file) == 1 then
     local tsfh = io.open(state.ts_file, "w")
-    if tsfh then tsfh:write(tostring(os.time())); tsfh:close() end
+    if tsfh then
+      tsfh:write(tostring(os.time()))
+      tsfh:close()
+    end
   end
 end
 
@@ -171,7 +178,9 @@ function M.setup_autocmds()
     group = aug,
     pattern = { "*.md", "*.markdown", "*.mdx" },
     callback = function(ev)
-      if not state.running then return end
+      if not state.running then
+        return
+      end
       M.regenerate(ev.buf)
     end,
     desc = "Regenerate TableView live preview on save",

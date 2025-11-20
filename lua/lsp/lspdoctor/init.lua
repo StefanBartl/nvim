@@ -38,7 +38,7 @@ local Defaults = {
   show_workspace = true,
   show_tools = true,
   show_conflicts = true,
-  formatter_priority = {},       -- e.g. { "null-ls", "eslint", "lua_ls" }
+  formatter_priority = {}, -- e.g. { "null-ls", "eslint", "lua_ls" }
   semantic_tokens_timeout = 300, -- ms
   scratch_filetype = "markdown",
 }
@@ -67,8 +67,12 @@ end
 local function take(t, n)
   local out = {}
   local len = math.min(#t, n)
-  for i = 1, len do out[i] = t[i] end
-  if #t > n then out[#out + 1] = ("…(+%d more)"):format(#t - n) end
+  for i = 1, len do
+    out[i] = t[i]
+  end
+  if #t > n then
+    out[#out + 1] = ("…(+%d more)"):format(#t - n)
+  end
   return out
 end
 
@@ -76,7 +80,11 @@ end
 ---@param value string
 ---@return boolean
 local function contains(list, value)
-  for _, v in ipairs(list) do if v == value then return true end end
+  for _, v in ipairs(list) do
+    if v == value then
+      return true
+    end
+  end
   return false
 end
 
@@ -109,10 +117,14 @@ local function collect_diagnostics(bufnr)
   local items = diag.get(bufnr) or {}
   for _, d in ipairs(items) do
     local s = d.severity
-    if s == vim.diagnostic.severity.ERROR then counts.ERROR = counts.ERROR + 1
-    elseif s == vim.diagnostic.severity.WARN then counts.WARN = counts.WARN + 1
-    elseif s == vim.diagnostic.severity.INFO then counts.INFO = counts.INFO + 1
-    elseif s == vim.diagnostic.severity.HINT then counts.HINT = counts.HINT + 1
+    if s == vim.diagnostic.severity.ERROR then
+      counts.ERROR = counts.ERROR + 1
+    elseif s == vim.diagnostic.severity.WARN then
+      counts.WARN = counts.WARN + 1
+    elseif s == vim.diagnostic.severity.INFO then
+      counts.INFO = counts.INFO + 1
+    elseif s == vim.diagnostic.severity.HINT then
+      counts.HINT = counts.HINT + 1
     end
   end
   return counts, #items
@@ -127,10 +139,14 @@ local function check_offset_encoding(clients_by_name)
   local set, order = {}, {}
   for name, c in pairs(clients_by_name) do
     local enc = (c.offset_encoding or "utf-16") -- server default in upstream; be explicit
-    if not set[enc] then set[enc] = {} end
+    if not set[enc] then
+      set[enc] = {}
+    end
     table.insert(set[enc], name)
   end
-  for enc, _ in pairs(set) do order[#order + 1] = enc end
+  for enc, _ in pairs(set) do
+    order[#order + 1] = enc
+  end
   table.sort(order)
   local mismatches = {}
   if #order > 1 then
@@ -177,8 +193,10 @@ local function check_lens_inlay(bufnr, clients_by_name)
     inlay_enabled = ok_enabled and (enabled == true)
   end
 
-  table.insert(lines, ("  inlay_hint API available: %s; enabled_now: %s")
-    :format(yesno(has_inlay_api), yesno(inlay_enabled == true)))
+  table.insert(
+    lines,
+    ("  inlay_hint API available: %s; enabled_now: %s"):format(yesno(has_inlay_api), yesno(inlay_enabled == true))
+  )
   return lines
 end
 
@@ -244,7 +262,9 @@ local function detect_conflicts(clients_by_name)
   local fmt, diagp = {}, {}
   for name, c in pairs(clients_by_name) do
     local caps = c.server_capabilities or {}
-    if caps.documentFormattingProvider == true then fmt[#fmt + 1] = name end
+    if caps.documentFormattingProvider == true then
+      fmt[#fmt + 1] = name
+    end
     if caps.diagnosticProvider or caps.publishDiagnosticsProvider then
       diagp[#diagp + 1] = name
     end
@@ -294,12 +314,20 @@ end
 ---@return string[] lines
 local function check_tools()
   local tools = {
-    "rg", "fd", "jq", "eslint", "prettier", "stylua", "lua-language-server",
+    "rg",
+    "fd",
+    "jq",
+    "eslint",
+    "prettier",
+    "stylua",
+    "lua-language-server",
   }
   local missing = {}
   for _, t in ipairs(tools) do
     local ok = uv.fs_stat(fn.exepath(t))
-    if not ok then missing[#missing + 1] = t end
+    if not ok then
+      missing[#missing + 1] = t
+    end
   end
   if #missing == 0 then
     return { "All common tools present" }
@@ -330,9 +358,15 @@ local function collect(mode, bufnr)
 
   local s_diags = {
     title = "Diagnostics (current buffer)",
-    lines = { ("Total=%d  [ERROR=%d, WARN=%d, INFO=%d, HINT=%d]"):format(
-      total, counts.ERROR, counts.WARN, counts.INFO, counts.HINT
-    ) },
+    lines = {
+      ("Total=%d  [ERROR=%d, WARN=%d, INFO=%d, HINT=%d]"):format(
+        total,
+        counts.ERROR,
+        counts.WARN,
+        counts.INFO,
+        counts.HINT
+      ),
+    },
   }
 
   table.insert(rep.sections, s_clients)
@@ -352,11 +386,12 @@ local function collect(mode, bufnr)
     local encs, mismatches = check_offset_encoding(clients_by_name)
     rep.extras.offset_encodings = encs
     if #encs > 0 then
-      local lines = (#mismatches > 0)
-        and vim.list_extend({ "Mismatch detected across clients:" }, mismatches)
-         or { "All clients share the same offset encoding: " .. encs[1] }
+      local lines = (#mismatches > 0) and vim.list_extend({ "Mismatch detected across clients:" }, mismatches)
+        or { "All clients share the same offset encoding: " .. encs[1] }
       table.insert(rep.sections, { title = "Offset encodings", lines = lines })
-      if #encs > 1 then rep.ok = false end
+      if #encs > 1 then
+        rep.ok = false
+      end
     end
   end
 
@@ -370,8 +405,10 @@ local function collect(mode, bufnr)
       lines = {
         "Candidates: " .. (#all == 0 and "(none)" or table.concat(all, ", ")),
         "Winner: " .. (winner or "(none)"),
-        "Policy: " .. reason .. (#(Opts.formatter_priority or {}) > 0
-            and (" (" .. table.concat(Opts.formatter_priority, " > ") .. ")") or ""),
+        "Policy: " .. reason .. (#(Opts.formatter_priority or {}) > 0 and (" (" .. table.concat(
+          Opts.formatter_priority,
+          " > "
+        ) .. ")") or ""),
       },
     })
   end
@@ -392,7 +429,9 @@ local function collect(mode, bufnr)
         end
         if #ws > 0 then
           table.insert(lines, "  workspace_folders:")
-          for _, w in ipairs(ws) do table.insert(lines, ("    - %s"):format(w)) end
+          for _, w in ipairs(ws) do
+            table.insert(lines, ("    - %s"):format(w))
+          end
         else
           table.insert(lines, "  workspace_folders: (none)")
         end
@@ -465,8 +504,14 @@ local function collect(mode, bufnr)
     rep.ok = false
     rep.summary = "No LSP client attached; diagnostics empty."
   else
-    rep.summary = ("Clients=%d; Diagnostics=%d (E=%d W=%d I=%d H=%d)")
-      :format(#names, total, counts.ERROR, counts.WARN, counts.INFO, counts.HINT)
+    rep.summary = ("Clients=%d; Diagnostics=%d (E=%d W=%d I=%d H=%d)"):format(
+      #names,
+      total,
+      counts.ERROR,
+      counts.WARN,
+      counts.INFO,
+      counts.HINT
+    )
   end
 
   return rep
@@ -487,8 +532,10 @@ local function render(rep)
   out(("LSP Doctor (%s) – %s"):format(rep.mode, rep.ok and "ok" or "issues"))
   out(rep.summary)
   for _, sec in ipairs(rep.sections) do
-    out(("== %s =="%sec))
-    for _, l in ipairs(sec.lines) do out(l) end
+    out(("== %s ==" % sec))
+    for _, l in ipairs(sec.lines) do
+      out(l)
+    end
   end
 end
 
@@ -513,7 +560,9 @@ local function render_to_scratch(rep)
   lines[#lines + 1] = ""
   for _, sec in ipairs(rep.sections) do
     lines[#lines + 1] = ("## %s"):format(sec.title)
-    for _, l in ipairs(sec.lines) do lines[#lines + 1] = l end
+    for _, l in ipairs(sec.lines) do
+      lines[#lines + 1] = l
+    end
     lines[#lines + 1] = ""
   end
 
@@ -522,9 +571,9 @@ local function render_to_scratch(rep)
 
   -- Minimal helpful mappings (buffer-local)
   local opts = { nowait = true, noremap = true, silent = true, buffer = scratch }
-  vim.keymap.set("n", "q", "<cmd>bd!<CR>", opts)               -- close
-  vim.keymap.set("n", "y", "ggyG", opts)                       -- yank all
-  vim.keymap.set("n", "gw", function()                         -- write to a timestamped file under :echo stdpath('cache')
+  vim.keymap.set("n", "q", "<cmd>bd!<CR>", opts) -- close
+  vim.keymap.set("n", "y", "ggyG", opts) -- yank all
+  vim.keymap.set("n", "gw", function() -- write to a timestamped file under :echo stdpath('cache')
     local path = fn.stdpath("cache") .. "/lspdoctor_" .. os.date("%Y%m%d_%H%M%S") .. ".md"
     api.nvim_command("silent keepalt keepjumps write! " .. fn.fnameescape(path))
     vim.notify("Wrote report to: " .. path, vim.log.levels.INFO, { title = "LSP Doctor" })
@@ -538,10 +587,18 @@ end
 ---@return nil
 local function render_health()
   -- Minimal health-like style, no hard coupling to :checkhealth
-  local function health_hdr(name) print(("\nhealth#%s#check"):format(name)) end
-  local function health_ok(msg) print("OK: " .. msg) end
-  local function health_warn(msg) print("WARNING: " .. msg) end
-  local function health_err(msg) print("ERROR: " .. msg) end
+  local function health_hdr(name)
+    print(("\nhealth#%s#check"):format(name))
+  end
+  local function health_ok(msg)
+    print("OK: " .. msg)
+  end
+  local function health_warn(msg)
+    print("WARNING: " .. msg)
+  end
+  local function health_err(msg)
+    print("ERROR: " .. msg)
+  end
 
   local bufnr = 0
   local clients_by_name, names = collect_clients(bufnr)
@@ -566,7 +623,9 @@ local function render_health()
     health_ok(("Offset encoding unified: %s"):format(encs[1] or "n/a"))
   else
     health_warn("Offset encoding mismatch across clients:")
-    for _, l in ipairs(mismatch_lines) do print("  - " .. l) end
+    for _, l in ipairs(mismatch_lines) do
+      print("  - " .. l)
+    end
   end
 
   local winner, candidates = pick_formatter(clients_by_name)
@@ -592,7 +651,9 @@ end
 function M.setup(opts)
   if opts ~= nil then
     for k, v in pairs(opts) do
-      if Defaults[k] ~= nil then Opts[k] = v end
+      if Defaults[k] ~= nil then
+        Opts[k] = v
+      end
     end
   end
 end
@@ -642,9 +703,11 @@ function M.enable_usercmd()
       vim.notify("Unknown argument: " .. arg .. " (use: export|health)", vim.log.levels.WARN, { title = "LSP Doctor" })
     end
   end, {
-    bang = true,    -- :LspDoctor! => deep
-    nargs = "?",    -- optional subcommand
-    complete = function() return { "export", "health" } end,
+    bang = true, -- :LspDoctor! => deep
+    nargs = "?", -- optional subcommand
+    complete = function()
+      return { "export", "health" }
+    end,
     desc = "LSP Doctor (add ! for deep, subcommands: export|health)",
   })
 end

@@ -5,7 +5,7 @@ local M = {}
 ---@return nil
 function M.attach(modules)
   if modules.keylogger and modules.keylogger == true then
-  	require("debugging.terminals.keylogger")
+    require("debugging.terminals.keylogger")
   end
 end
 

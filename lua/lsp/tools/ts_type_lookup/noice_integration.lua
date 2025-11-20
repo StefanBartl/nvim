@@ -15,10 +15,14 @@ local M = {}
 ---@return boolean
 local function is_noice_buf(bufnr)
   local ok, ft = pcall(api.nvim_get_option_value, "filetype", { buf = bufnr })
-  if ok and ft and ft ~= "" and ft == "noice" then return true end
+  if ok and ft and ft ~= "" and ft == "noice" then
+    return true
+  end
   -- additional heuristic: buffer name contains "Noice" or is a floating preview (optional)
   local name = api.nvim_buf_get_name(bufnr) or ""
-  if name:match("Noice") then return true end
+  if name:match("Noice") then
+    return true
+  end
   return false
 end
 
@@ -28,8 +32,20 @@ local function install_maps(bufnr)
   -- do not override existing maps if already set
   local opts = { nowait = true, noremap = true, silent = true }
   -- open in vsplit: use the word under cursor in the noice buffer
-  api.nvim_buf_set_keymap(bufnr, "n", "o", "<cmd>lua require('lsp.tools.ts_type_lookup.cmds').go_to_type_definition_for(vim.fn.expand('<cword>'))<CR>", opts)
-  api.nvim_buf_set_keymap(bufnr, "n", "p", "<cmd>lua require('lsp.tools.ts_type_lookup.cmds').peek_type_definition_for(vim.fn.expand('<cword>'))<CR>", opts)
+  api.nvim_buf_set_keymap(
+    bufnr,
+    "n",
+    "o",
+    "<cmd>lua require('lsp.tools.ts_type_lookup.cmds').go_to_type_definition_for(vim.fn.expand('<cword>'))<CR>",
+    opts
+  )
+  api.nvim_buf_set_keymap(
+    bufnr,
+    "n",
+    "p",
+    "<cmd>lua require('lsp.tools.ts_type_lookup.cmds').peek_type_definition_for(vim.fn.expand('<cword>'))<CR>",
+    opts
+  )
   api.nvim_buf_set_keymap(bufnr, "n", "q", "<cmd>close<CR>", opts)
 end
 
@@ -48,11 +64,13 @@ api.nvim_create_autocmd("BufWinEnter", {
 --- Manual function to attach maps to current buffer
 function M.attach_to_current()
   local bufnr = api.nvim_get_current_buf()
-  if is_noice_buf(bufnr) then install_maps(bufnr) end
+  if is_noice_buf(bufnr) then
+    install_maps(bufnr)
+  end
 end
 
 api.nvim_create_user_command("TypeDefAttachNoiceKeys", function()
-	M.attach_to_current()
+  M.attach_to_current()
 end, { desc = "Attach type lookup keymaps to current Noice buffer" })
 
 return M

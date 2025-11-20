@@ -15,7 +15,9 @@ local F = {}
 function F.map(list, fn)
   ---@type U[]
   local out = { [#list] = false }
-  for i = 1, #list do out[i] = fn(list[i], i) end
+  for i = 1, #list do
+    out[i] = fn(list[i], i)
+  end
   return out
 end
 
@@ -29,7 +31,9 @@ function F.filter(list, pred)
   local out = {}
   for i = 1, #list do
     local it = list[i]
-    if pred(it, i) then out[#out+1] = it end
+    if pred(it, i) then
+      out[#out + 1] = it
+    end
   end
   return out
 end
@@ -42,7 +46,9 @@ end
 ---@return U
 function F.reduce(list, init, fn)
   local acc = init
-  for i = 1, #list do acc = fn(acc, list[i], i) end
+  for i = 1, #list do
+    acc = fn(acc, list[i], i)
+  end
   return acc
 end
 
@@ -54,7 +60,9 @@ end
 function F.find(list, pred)
   for i = 1, #list do
     local it = list[i]
-    if pred(it, i) then return it end
+    if pred(it, i) then
+      return it
+    end
   end
   return nil
 end
@@ -65,7 +73,11 @@ end
 ---@param pred fun(item:T):boolean
 ---@return boolean
 function F.any(list, pred)
-  for i = 1, #list do if pred(list[i]) then return true end end
+  for i = 1, #list do
+    if pred(list[i]) then
+      return true
+    end
+  end
   return false
 end
 
@@ -75,7 +87,11 @@ end
 ---@param pred fun(item:T):boolean
 ---@return boolean
 function F.all(list, pred)
-  for i = 1, #list do if not pred(list[i]) then return false end end
+  for i = 1, #list do
+    if not pred(list[i]) then
+      return false
+    end
+  end
   return true
 end
 
@@ -90,11 +106,12 @@ function F.flat_map(list, fn)
   for i = 1, #list do
     local r = fn(list[i])
     if type(r) == "table" then
-      for j = 1, #r do out[#out+1] = r[j] end
+      for j = 1, #r do
+        out[#out + 1] = r[j]
+      end
     end
   end
   return out
 end
 
 return F
-

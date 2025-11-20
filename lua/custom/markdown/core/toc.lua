@@ -135,7 +135,9 @@ local function ensure_proper_spacing(bufnr, toc_header_line, separator_line)
   -- Ensure there is exactly one empty line immediately before separator.
   if separator_line > 1 then
     local before_sep = separator_line - 1
-    local empty_before_sep = is_empty_line(vim.api.nvim_buf_get_lines(bufnr, before_sep - 1, before_sep, false)[1]) and 1 or 0
+    local empty_before_sep = is_empty_line(vim.api.nvim_buf_get_lines(bufnr, before_sep - 1, before_sep, false)[1])
+        and 1
+      or 0
 
     -- Count additional empties directly before that
     local extra = 0
@@ -201,8 +203,12 @@ function M.update_markdown_toc(header_line, opts)
   opts = opts or {}
   local min_level = opts.min_level or DEFAULT_MIN_LEVEL
   local max_level = opts.max_level or DEFAULT_MAX_LEVEL
-  if min_level < 1 then min_level = 1 end
-  if max_level > 6 then max_level = 6 end
+  if min_level < 1 then
+    min_level = 1
+  end
+  if max_level > 6 then
+    max_level = 6
+  end
   if min_level > max_level then
     local t = min_level
     min_level = max_level

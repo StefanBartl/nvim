@@ -20,28 +20,46 @@ Lru.__index = Lru
 ---@param self Lru
 ---@param node LruNode
 function Lru:_move_front(node)
-  if self.head == node then return end
+  if self.head == node then
+    return
+  end
   -- unlink
-  if node.prev then node.prev.next = node.next end
-  if node.next then node.next.prev = node.prev end
-  if self.tail == node then self.tail = node.prev end
+  if node.prev then
+    node.prev.next = node.next
+  end
+  if node.next then
+    node.next.prev = node.prev
+  end
+  if self.tail == node then
+    self.tail = node.prev
+  end
   -- link at head
   node.prev = nil
   node.next = self.head
-  if self.head then self.head.prev = node end
+  if self.head then
+    self.head.prev = node
+  end
   self.head = node
-  if not self.tail then self.tail = node end
+  if not self.tail then
+    self.tail = node
+  end
 end
 
 --- Evict LRU (tail) node.
 ---@param self Lru
 function Lru:_evict()
   local node = self.tail
-  if not node then return end
+  if not node then
+    return
+  end
   self.map[node.key] = nil
-  if node.prev then node.prev.next = nil end
+  if node.prev then
+    node.prev.next = nil
+  end
   self.tail = node.prev
-  if self.head == node then self.head = nil end
+  if self.head == node then
+    self.head = nil
+  end
   self.size = self.size - 1
 end
 
@@ -51,7 +69,9 @@ end
 ---@return any|nil
 function Lru:get(key)
   local node = self.map[key]
-  if not node then return nil end
+  if not node then
+    return nil
+  end
   self:_move_front(node)
   return node.value
 end
@@ -71,7 +91,9 @@ function Lru:put(key, value)
   self.map[key] = node
   self.size = self.size + 1
   self:_move_front(node)
-  if self.size > self.cap then self:_evict() end
+  if self.size > self.cap then
+    self:_evict()
+  end
 end
 
 --- New LRU with capacity >= 1.
@@ -82,4 +104,3 @@ local function new_lru(cap)
 end
 
 return { new = new_lru }
-

@@ -67,7 +67,9 @@ local function collect_files_recursive(root_path)
         if req then
           while true do
             local name, _ = uv.fs_scandir_next(req)
-            if not name then break end
+            if not name then
+              break
+            end
             if not is_ignored_dir(name) then
               local child = path .. (path:sub(-1) == "/" and "" or "/") .. name
               table.insert(stack, child)

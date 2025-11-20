@@ -29,7 +29,6 @@ local function get_timestamp()
   return tostring(os.date("%Y%m%d-%H%M%S", now_sec))
 end
 
-
 --- Safe pcall wrapper that returns (ok:boolean, result_or_err:string)
 ---@param fn function
 ---@return boolean, any|string
@@ -67,7 +66,7 @@ local function get_highlight(name)
   -- prefer modern API; guard with type check to avoid calling missing/old APIs
   if type(vim.api.nvim_get_hl) ~= "function" then
     -- older Neovim without modern API: return a descriptive error string instead of calling deprecated functions
-    return ("<error: vim.api.nvim_get_hl not available on this Neovim build>")
+    return "<error: vim.api.nvim_get_hl not available on this Neovim build>"
   end
 
   local ok, res = pcall(function()
@@ -113,16 +112,22 @@ end
 ---@return table
 local function collect_treesitter_info(bufnr)
   local info = {}
-  local ok_parsers, parsers = safe_call(function() return require("nvim-treesitter.parsers") end)
+  local ok_parsers, parsers = safe_call(function()
+    return require("nvim-treesitter.parsers")
+  end)
   info.filetype = vim.bo[bufnr].filetype
   if not ok_parsers then
     info.parsers_available = false
     info.parsers_error = parsers
     return info
   end
-  local ok_has, has = safe_call(function() return parsers.has_parser(info.filetype) end)
+  local ok_has, has = safe_call(function()
+    return parsers.has_parser(info.filetype)
+  end)
   info.has_parser = ok_has and has or false
-  local ok_getp, getp = safe_call(function() return parsers.get_parser(bufnr) end)
+  local ok_getp, getp = safe_call(function()
+    return parsers.get_parser(bufnr)
+  end)
   info.parser_attached = ok_getp and (getp ~= nil) or false
   return info
 end
@@ -251,7 +256,13 @@ end
 local function collect_loaded_modules()
   local mods = {}
   for k, _ in pairs(package.loaded) do
-    if k:match("[Mm]arkdown") or k:match("[Hh]ighlight") or k:match("snacks") or k:match("fenced") or k:match("treesitter") then
+    if
+      k:match("[Mm]arkdown")
+      or k:match("[Hh]ighlight")
+      or k:match("snacks")
+      or k:match("fenced")
+      or k:match("treesitter")
+    then
       table.insert(mods, k)
     end
   end
@@ -289,7 +300,9 @@ function M.gather()
   M.results.loaded_modules = collect_loaded_modules()
 
   local syntax_on = false
-  pcall(function() syntax_on = vim.fn.exists("syntax_on") == 1 end)
+  pcall(function()
+    syntax_on = vim.fn.exists("syntax_on") == 1
+  end)
   M.results.syntax_on = syntax_on
 
   local link_probe = {}
@@ -325,10 +338,10 @@ function M.gather()
   table.insert(log_lines, "=== SAMPLE TOP LINES OF BUFFER ===")
   table.insert(log_lines, M.results.buffer.lines_sample or "")
 
-	-- Ensures the timestamp `ts` is inserted correctly into the filename
-	local out_path = debugfolder .. "_debuglog_" .. ts .. ".log"
-	--create the "debuglog" directory if it doesn't exist
-	vim.fn.mkdir(debugfolder)
+  -- Ensures the timestamp `ts` is inserted correctly into the filename
+  local out_path = debugfolder .. "_debuglog_" .. ts .. ".log"
+  --create the "debuglog" directory if it doesn't exist
+  vim.fn.mkdir(debugfolder)
   M.out_path = out_path
 
   -- write file robustly and return clear error on failure

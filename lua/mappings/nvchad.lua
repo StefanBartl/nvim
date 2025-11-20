@@ -12,13 +12,16 @@ function M.setup()
 
   -- Format via Conform (fallback handled in LSP attach)
   map({ "n", "x" }, "<leader>fm", function()
-    local ok, conform = pcall(require, "conform"); if ok then conform.format { lsp_fallback = true } end
+    local ok, conform = pcall(require, "conform")
+    if ok then
+      conform.format({ lsp_fallback = true })
+    end
   end, { desc = "[General] Format file" })
 
   -- Which-key
   map("n", "<leader>wK", "<cmd>WhichKey <CR>", { desc = "[General] WhichKey (all)" })
   map("n", "<leader>wk", function()
-    vim.cmd("WhichKey " .. vim.fn.input "WhichKey: ")
+    vim.cmd("WhichKey " .. vim.fn.input("WhichKey: "))
   end, { desc = "[General] WhichKey query" })
 
   -- Insert-mode cursor moves

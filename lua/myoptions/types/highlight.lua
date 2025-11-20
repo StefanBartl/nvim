@@ -122,7 +122,6 @@
 --- „container“ modifiziert/ergänzt i. d. R. das Symbol aus ts_symbol.
 ---@field providers_order string[]
 
-
 ---@class HighlightCfg
 ---
 --- Enables CursorLine in windows while active; mapped via `winhighlight` to the appropriate
@@ -307,4 +306,3 @@
 
 ---@class ModeChangedEvent
 ---@field match string  -- "<old>:<new>"
-

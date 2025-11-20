@@ -1,17 +1,17 @@
 -- ===================================================================================
 -- bootstrap lazy and all plugins
 -- ===================================================================================
-vim.g.base46_cache = vim.fn.stdpath "data" .. "/base46/"
+vim.g.base46_cache = vim.fn.stdpath("data") .. "/base46/"
 vim.g.mapleader = " "
-local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
   local repo = "https://github.com/folke/lazy.nvim.git"
-  vim.fn.system { "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath }
+  vim.fn.system({ "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath })
 end
 
 vim.opt.rtp:prepend(lazypath)
 
-local lazy_config = require "config.lazy"
+local lazy_config = require("config.lazy")
 require("lazy").setup({
   {
     "NvChad/NvChad",
@@ -31,8 +31,8 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- ===================================================================================
 require("system.env").compute_env()
 require("options")
-require("myoptions").setup { highlights = true, options = true }
-require("lsp").setup { ensure_installing = false }
+require("myoptions").setup({ highlights = true, options = true })
+require("lsp").setup({ ensure_installing = false })
 require("autocmds")
 require("custom")
 require("debugging").setup()

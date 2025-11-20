@@ -11,7 +11,9 @@ local S = {}
 ---@param list T[]|nil
 ---@return T[]
 function S.ensure_list(list)
-  if type(list) == "table" then return list end
+  if type(list) == "table" then
+    return list
+  end
   return {}
 end
 
@@ -19,7 +21,9 @@ end
 ---@param t table|nil
 ---@return table
 function S.ensure_table(t)
-  if type(t) == "table" then return t end
+  if type(t) == "table" then
+    return t
+  end
   return {}
 end
 
@@ -27,7 +31,7 @@ end
 ---@param v any
 ---@return integer new_len
 function S.push(list, v)
-  list[#list+1] = v
+  list[#list + 1] = v
   return #list
 end
 
@@ -35,7 +39,9 @@ end
 ---@return any|nil v
 function S.pop(list)
   local n = #list
-  if n == 0 then return nil end
+  if n == 0 then
+    return nil
+  end
   local v = list[n]
   list[n] = nil
   return v
@@ -47,8 +53,12 @@ end
 ---@return boolean
 function S.insert_at(list, idx, v)
   local n = #list
-  if idx < 1 or idx > n+1 then return false end
-  for i = n, idx, -1 do list[i+1] = list[i] end
+  if idx < 1 or idx > n + 1 then
+    return false
+  end
+  for i = n, idx, -1 do
+    list[i + 1] = list[i]
+  end
   list[idx] = v
   return true
 end
@@ -58,8 +68,12 @@ end
 ---@return boolean
 function S.remove_at(list, idx)
   local n = #list
-  if idx < 1 or idx > n then return false end
-  for i = idx, n - 1 do list[i] = list[i+1] end
+  if idx < 1 or idx > n then
+    return false
+  end
+  for i = idx, n - 1 do
+    list[i] = list[i + 1]
+  end
   list[n] = nil
   return true
 end
@@ -69,7 +83,9 @@ end
 ---@return table snapshot
 function S.snapshot_shallow(t)
   local out = {}
-  for k, v in pairs(t) do out[k] = v end
+  for k, v in pairs(t) do
+    out[k] = v
+  end
   return out
 end
 
@@ -82,9 +98,10 @@ function S.safe_ipairs(list)
   local i = 0
   return function()
     i = i + 1
-    if i <= n then return i, list[i] end
+    if i <= n then
+      return i, list[i]
+    end
   end
 end
 
 return S
-

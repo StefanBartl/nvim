@@ -85,7 +85,9 @@ local function lsp_roots(bufnr)
     roots[#roots + 1] = r
   end
 
-  table.sort(roots, function(a, b) return #a > #b end) -- longest first
+  table.sort(roots, function(a, b)
+    return #a > #b
+  end) -- longest first
   return roots
 end
 
@@ -113,7 +115,9 @@ end
 local function is_within(child, root)
   child = norm(child)
   root = norm(root)
-  if child == root then return true end
+  if child == root then
+    return true
+  end
   if not root:match("[/\\]$") then
     root = root .. "/"
   end

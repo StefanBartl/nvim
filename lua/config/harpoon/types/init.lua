@@ -30,7 +30,6 @@
 ---@field save fun(self: HarpoonApi)
 ---@field setup fun(self: HarpoonApi, opts: table)
 
-
 ---@class HarpoonPersistPathsOpts
 ---@field target_specs string[][]|nil  -- list of path segments per target; first segment can be a variable like "$REPOS_DIR" or "$HOME"
 
@@ -67,4 +66,3 @@
 
 ---@class NormKeyOpts
 ---@field realpath boolean|nil  -- default true (use fs_realpath if available)
-

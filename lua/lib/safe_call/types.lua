@@ -9,4 +9,3 @@
 ---@field ok boolean
 ---@field result any
 ---@field err string|nil
-

@@ -6,7 +6,9 @@ local M = {}
 ---@return nil
 function M.setup()
   local filter_ok, filter = pcall(require, "lsp.core.filter")
-  if not filter_ok then return end
+  if not filter_ok then
+    return
+  end
 
   local orig = vim.lsp.handlers["textDocument/publishDiagnostics"]
 

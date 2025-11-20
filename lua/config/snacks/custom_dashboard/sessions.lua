@@ -16,10 +16,10 @@ local M = {
   -- root will be initialized lazily
   root = "",
   cache = {
-    files = nil,     -- cached file list (array of full paths)
-    mtimes = nil,    -- table of mtimes keyed by path
-    ts = 0,          -- timestamp (os.time) when cache was populated
-    ttl = 1,         -- seconds to keep cache valid (short by default)
+    files = nil, -- cached file list (array of full paths)
+    mtimes = nil, -- table of mtimes keyed by path
+    ts = 0, -- timestamp (os.time) when cache was populated
+    ttl = 1, -- seconds to keep cache valid (short by default)
   },
 }
 
@@ -30,7 +30,7 @@ function M.get_root()
     return M.root
   end
 
-	local path = fn.stdpath("config") .. "/lua/sessions/storage"
+  local path = fn.stdpath("config") .. "/lua/sessions/storage"
   M.root = path
   return M.root
 end
@@ -68,7 +68,9 @@ function M.list_sessions()
     local s = uv.fs_stat(files[i])
     mt[i] = (s and s.mtime and s.mtime.sec) or 0
   end
-  table.sort(ix, function(a, b) return mt[a] > mt[b] end)
+  table.sort(ix, function(a, b)
+    return mt[a] > mt[b]
+  end)
 
   -- preallocate
   local out = { [n] = false }

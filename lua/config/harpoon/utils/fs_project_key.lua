@@ -21,7 +21,7 @@ local function normalize_abs(path)
   if p:match("^%a:[/\\]") then
     -- Windows drive: uppercase drive letter for stable key
     p = p:gsub("\\", "/")
-    p = (p:sub(1,1):upper() .. p:sub(2))
+    p = (p:sub(1, 1):upper() .. p:sub(2))
   else
     p = p:gsub("\\", "/")
   end
@@ -41,4 +41,3 @@ function M.project_key()
 end
 
 return M
-

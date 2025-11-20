@@ -5,24 +5,24 @@ local M = {}
 --- Setup 'misc'-Usercommands
 ---@return nil
 function M.enable_usercmds()
-	vim.api.nvim_create_user_command("CopyFilepathToClipboard", function()
-		vim.fn.setreg("+", vim.fn.expand("%:p"))
-		print("Copied path to clipboard")
-	end, {
-		desc = "Copy file path to clipboard",
-	})
+  vim.api.nvim_create_user_command("CopyFilepathToClipboard", function()
+    vim.fn.setreg("+", vim.fn.expand("%:p"))
+    print("Copied path to clipboard")
+  end, {
+    desc = "Copy file path to clipboard",
+  })
 
-	vim.api.nvim_create_user_command("BufferClear", function()
-		vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
-	end, {
-		desc = "Clear all lines in the current buffer",
-	})
+  vim.api.nvim_create_user_command("BufferClear", function()
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
+  end, {
+    desc = "Clear all lines in the current buffer",
+  })
 
-	vim.api.nvim_create_user_command("ZenIng", function()
-		require("zen-mode").toggle({ window = { width = .85 } })
-	end, {
-		desc = "Topggle Zen Mode",
-	})
+  vim.api.nvim_create_user_command("ZenIng", function()
+    require("zen-mode").toggle({ window = { width = 0.85 } })
+  end, {
+    desc = "Topggle Zen Mode",
+  })
 end
 
 return M

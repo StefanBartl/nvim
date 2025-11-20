@@ -8,10 +8,10 @@ local Defaults = {
   map_double_asterisk = true,
   keep_inner_selection = true,
   protect_h1 = false,
-	use_zf_override = true,
+  use_zf_override = true,
   enable_autocmds = true,
   enable_keymaps = true,
-	ft_only = true,
+  ft_only = true,
 }
 
 ---@type MarkdownConfig
@@ -20,9 +20,13 @@ local State = vim.deepcopy(Defaults)
 ---@param opts table
 ---@return nil
 function M.setup(opts)
-  if type(opts) ~= "table" then return end
+  if type(opts) ~= "table" then
+    return
+  end
   for k, v in pairs(opts) do
-    if Defaults[k] ~= nil then State[k] = v end
+    if Defaults[k] ~= nil then
+      State[k] = v
+    end
   end
 end
 
@@ -32,4 +36,3 @@ function M.get()
 end
 
 return M
-

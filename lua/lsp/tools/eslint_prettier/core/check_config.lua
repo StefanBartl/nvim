@@ -26,7 +26,9 @@ local M = {}
 
 local function file_contains(path, pattern)
   local ok, lines = pcall(fn.readfile, path)
-  if not ok or not lines then return false end
+  if not ok or not lines then
+    return false
+  end
   local txt = table.concat(lines, "\n")
   return txt:match(pattern) ~= nil
 end
@@ -34,7 +36,9 @@ end
 ---@param root string
 ---@param patterns string[]
 local function has_any_config(root, patterns)
-  if not root then return false end
+  if not root then
+    return false
+  end
   for _, p in ipairs(patterns) do
     local path = root .. "/" .. p
     if fn.filereadable(path) == 1 then
@@ -53,7 +57,11 @@ local function has_any_config(root, patterns)
   return false
 end
 
-function M.has_eslint(root) return has_any_config(root, eslint_patterns) end
-function M.has_prettier(root) return has_any_config(root, prettier_patterns) end
+function M.has_eslint(root)
+  return has_any_config(root, eslint_patterns)
+end
+function M.has_prettier(root)
+  return has_any_config(root, prettier_patterns)
+end
 
 return M

@@ -55,7 +55,9 @@ end
 ---@return table
 function M.reload_pattern(prefix)
   local p = normalize(prefix)
-  if p == "" then return {} end
+  if p == "" then
+    return {}
+  end
   local results = {}
 
   -- Collect keys first
@@ -160,10 +162,9 @@ function M.create_user_command()
   })
 end
 
-
 ---@return nil
 function M.enable()
-   M.create_user_command()
+  M.create_user_command()
 end
 
 ---@package

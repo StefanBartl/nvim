@@ -11,13 +11,12 @@ local schedule = vim.schedule
 --local request_and_show = require("custom.lsp_signature.request_and_show")
 local request_and_show = require("custom.lsp_signature.request_and_show_manual")
 
-
 function M.setup()
-  vim.keymap.set({"i", "n"}, "<C-b>", function()
+  vim.keymap.set({ "i", "n" }, "<C-b>", function()
     schedule(function()
       request_and_show()
     end)
-  end, {desc = "[LSP] Show signature or hover (floating toggle)", silent = true, noremap = true})
+  end, { desc = "[LSP] Show signature or hover (floating toggle)", silent = true, noremap = true })
 end
 
 return M

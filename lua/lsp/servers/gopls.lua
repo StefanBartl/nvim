@@ -32,7 +32,9 @@ function M.setup(shared, opts)
         },
       },
     })
-    if opts.enable ~= false then pcall(lsp.enable, "gopls") end
+    if opts.enable ~= false then
+      pcall(lsp.enable, "gopls")
+    end
   end
 end
 

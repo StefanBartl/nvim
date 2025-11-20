@@ -7,7 +7,7 @@ local nvim_create_user_command = vim.api.nvim_create_user_command
 local notify = vim.notify
 
 ---@return nil
- function M.enable()
+function M.enable()
   -- Save
   nvim_create_user_command("SessionSave", function(cmd)
     local arg = (cmd and cmd.args or "")
@@ -65,7 +65,7 @@ local notify = vim.notify
     end
   end, { desc = "List available sessions" })
 
-	  -- Toggle tracking `/storage/last.vim`-file in git
+  -- Toggle tracking `/storage/last.vim`-file in git
   vim.api.nvim_create_user_command("ToggleLastVimTrack", function()
     local last_vim_file = vim.fn.stdpath("config") .. "/lua/sessions/storage/last.vim"
 
@@ -99,4 +99,3 @@ local notify = vim.notify
 end
 
 return M
-

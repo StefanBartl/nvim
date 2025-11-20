@@ -5,9 +5,9 @@
 local M = {}
 
 local api = vim.api
-local image  = require("custom.markdown.handler.image")
-local url    = require("custom.markdown.handler.url")
-local file   = require("custom.markdown.handler.file")
+local image = require("custom.markdown.handler.image")
+local url = require("custom.markdown.handler.url")
+local file = require("custom.markdown.handler.file")
 local anchor = require("custom.markdown.anchor.jump")
 local is_inside_toc_block = require("custom.markdown.anchor.is_inside_toc_block")
 local is_html_anchor_line = require("custom.markdown.anchor.is_html_anchor_line")
@@ -17,7 +17,9 @@ local uv = vim.loop
 
 -- Slugify a heading text similar to many Markdown generators (lower, remove punctuation, spaces -> -)
 local function slugify(s)
-  if not s then return "" end
+  if not s then
+    return ""
+  end
   local t = s:lower()
   -- remove curly id suffix if present (we'll handle separately)
   t = t:gsub("%s*{#.-}$", "")
@@ -37,7 +39,9 @@ local function escape_lua_pattern(s)
 end
 
 local function strip_leading_hash(s)
-  if not s then return s end
+  if not s then
+    return s
+  end
   return s:gsub("^%s*#%s*", "")
 end
 
@@ -50,7 +54,9 @@ end
 --  4) multi-line chunks (handles id inside style or on next line)
 --  5) permissive fallback where fragment appears near HTML tokens
 local function search_and_jump_to_fragment(fragment)
-  if not fragment or fragment == "" then return false end
+  if not fragment or fragment == "" then
+    return false
+  end
 
   -- normalize fragment: remove any leading '#'
   local frag = strip_leading_hash(fragment)
@@ -69,18 +75,20 @@ local function search_and_jump_to_fragment(fragment)
     if line:match(fence_pattern) then
       in_fence = not in_fence
     end
-    if in_fence then goto continue_line end
+    if in_fence then
+      goto continue_line
+    end
 
     -- id attribute: allow id="frag" OR id="#frag" OR id=frag (unquoted)
     local id_pattern = "id%s*=%s*['\"]?#?" .. frag_esc .. "['\"]?"
     if line:match(id_pattern) then
-      api.nvim_win_set_cursor(0, {i, 0})
+      api.nvim_win_set_cursor(0, { i, 0 })
       return true
     end
 
     -- {#fragment} pattern (allow multiple leading # on the curly syntax)
-    if line:match("{#*"..frag_esc.."}") then
-      api.nvim_win_set_cursor(0, {i, 0})
+    if line:match("{#*" .. frag_esc .. "}") then
+      api.nvim_win_set_cursor(0, { i, 0 })
       return true
     end
 
@@ -88,15 +96,17 @@ local function search_and_jump_to_fragment(fragment)
     local hashes, title = line:match("^(%s*#+)%s+(.*%S)")
     if hashes and title then
       local base = slugify(title)
-      if base == "" then base = "section-"..i end
+      if base == "" then
+        base = "section-" .. i
+      end
       if base == frag then
-        api.nvim_win_set_cursor(0, {i, 0})
+        api.nvim_win_set_cursor(0, { i, 0 })
         vim.cmd("normal! zz")
         return true
       end
       -- also consider GitHub duplicate suffixes: base-1, base-2, ...
       if frag:match("^" .. escape_lua_pattern(base) .. "%-?%d*$") then
-        api.nvim_win_set_cursor(0, {i, 0})
+        api.nvim_win_set_cursor(0, { i, 0 })
         vim.cmd("normal! zz")
         return true
       end
@@ -114,13 +124,16 @@ local function search_and_jump_to_fragment(fragment)
     if ok and chunk_lines then
       local chunk = table.concat(chunk_lines, " ")
       -- check id inside chunk (allow optional leading # in attribute)
-      if chunk:match("id%s*=%s*['\"]?#?"..frag_esc.."['\"]?") or chunk:match("{#*"..frag_esc.."}") then
-        api.nvim_win_set_cursor(0, {i, 0})
+      if chunk:match("id%s*=%s*['\"]?#?" .. frag_esc .. "['\"]?") or chunk:match("{#*" .. frag_esc .. "}") then
+        api.nvim_win_set_cursor(0, { i, 0 })
         return true
       end
       -- if chunk contains relevant tags and the fragment token appears nearby, jump
-      if (chunk:lower():match("<figure") or chunk:lower():match("<img") or chunk:lower():match("<figcaption")) and chunk:match(frag_esc) then
-        api.nvim_win_set_cursor(0, {i, 0})
+      if
+        (chunk:lower():match("<figure") or chunk:lower():match("<img") or chunk:lower():match("<figcaption"))
+        and chunk:match(frag_esc)
+      then
+        api.nvim_win_set_cursor(0, { i, 0 })
         return true
       end
     end
@@ -130,8 +143,16 @@ local function search_and_jump_to_fragment(fragment)
   for i = 1, total do
     local line = api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1] or ""
     if line:match(frag_esc) then
-      if line:match("id") or line:match("style") or line:match("figure") or line:match("img") or line:match("figcaption") or line:match("src") or line:match("alt") then
-        api.nvim_win_set_cursor(0, {i, 0})
+      if
+        line:match("id")
+        or line:match("style")
+        or line:match("figure")
+        or line:match("img")
+        or line:match("figcaption")
+        or line:match("src")
+        or line:match("alt")
+      then
+        api.nvim_win_set_cursor(0, { i, 0 })
         return true
       end
     end
@@ -142,9 +163,13 @@ end
 
 -- Resolve target path relative to current buffer (like image/file handlers)
 local function resolve_target_path(target)
-  if not target then return nil end
+  if not target then
+    return nil
+  end
   -- If it's a URL (http(s)), return as-is
-  if target:match("^https?://") then return target end
+  if target:match("^https?://") then
+    return target
+  end
   local expanded = vim.fn.expand(target)
   if not expanded:match("^/") and not expanded:match("^%a:[/\\]") then
     local bufdir = vim.fn.expand("%:p:h")
@@ -161,7 +186,9 @@ end
 
 -- Try to open a file in the current window (edit). Returns true if file opened.
 local function open_file_in_current_window(path)
-  if not path or path == "" then return false end
+  if not path or path == "" then
+    return false
+  end
   -- If it's a URL, defer to url handler
   if path:match("^https?://") then
     return url.open(path)
@@ -203,14 +230,20 @@ function M.handle_cursor_action()
     local fragment = ext.fragment
     local resolved = resolve_target_path(target)
     if not resolved then
-      vim.notify("[Custom.Markdown] External anchor: could not resolve target: " .. tostring(target), vim.log.levels.WARN)
+      vim.notify(
+        "[Custom.Markdown] External anchor: could not resolve target: " .. tostring(target),
+        vim.log.levels.WARN
+      )
     else
       local ok = open_file_in_current_window(resolved)
       if ok then
         if fragment and fragment ~= "" then
           local jumped = search_and_jump_to_fragment(fragment)
           if not jumped then
-            vim.notify("[Custom.Markdown] External anchor: opened file but anchor '"..fragment.."' not found", vim.log.levels.INFO)
+            vim.notify(
+              "[Custom.Markdown] External anchor: opened file but anchor '" .. fragment .. "' not found",
+              vim.log.levels.INFO
+            )
           end
         end
         return

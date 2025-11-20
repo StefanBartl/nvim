@@ -32,8 +32,14 @@ end
 local function workspace_symbol(bufnr, query, cb)
   local params = { query = query }
   lsp.buf_request(bufnr, "workspace/symbol", params, function(err, result)
-    if err then cb(nil, err); return end
-    if not result or vim.tbl_isempty(result) then cb(nil, "no results"); return end
+    if err then
+      cb(nil, err)
+      return
+    end
+    if not result or vim.tbl_isempty(result) then
+      cb(nil, "no results")
+      return
+    end
     cb(result, nil)
   end)
 end
@@ -43,7 +49,7 @@ end
 ---@return string, number, number, number, number
 local function loc_to_path_range(item)
   local uri = item.uri or item.targetUri or (item.location and (item.location.uri or item.location.targetUri))
-  local range = item.range or item.targetSelectionRange or item.targetRange or (item.location and (item.location.range))
+  local range = item.range or item.targetSelectionRange or item.targetRange or (item.location and item.location.range)
   local fname = uri and vim.uri_to_fname(uri) or nil
   local srow = (range and range.start and range.start.line or 0) + 1
   local scol = (range and range.start and range.start.character or 0) + 1
@@ -56,9 +62,13 @@ end
 ---@param fname string
 ---@param line number
 local function open_in_vsplit(fname, line)
-  if not fname then return end
+  if not fname then
+    return
+  end
   vim.cmd("vsplit " .. fn.fnameescape(fname))
-  if line and line > 0 then vim.cmd(tostring(line)) end
+  if line and line > 0 then
+    vim.cmd(tostring(line))
+  end
 end
 
 --- Public: try to go to a type definition for `symbol` using workspace/symbol then open found location
@@ -112,14 +122,24 @@ function M.peek_type_definition_for(symbol)
       return
     end
     local fname, srow, _, erow = loc_to_path_range(loc)
-    if not fname then return end
+    if not fname then
+      return
+    end
     local ok, content = pcall(fn.readfile, fname)
-    if not ok or not content then vim.notify("Could not read " .. fname, vim.log.levels.WARN); return end
+    if not ok or not content then
+      vim.notify("Could not read " .. fname, vim.log.levels.WARN)
+      return
+    end
     local start_line = math.max(1, srow - 2)
     local end_line = math.min(#content, erow + 2)
     local lines = {}
-    table.insert(lines, ("[peek] %s:%d  — press 'o' to open in split, 'q' to close"):format(fn.fnamemodify(fname, ":."), srow))
-    for i = start_line, end_line do table.insert(lines, content[i]) end
+    table.insert(
+      lines,
+      ("[peek] %s:%d  — press 'o' to open in split, 'q' to close"):format(fn.fnamemodify(fname, ":."), srow)
+    )
+    for i = start_line, end_line do
+      table.insert(lines, content[i])
+    end
     local buf = api.nvim_create_buf(false, true)
     api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     local width = math.min(120, math.max(60, math.floor(vim.o.columns * 0.6)))
@@ -135,7 +155,13 @@ function M.peek_type_definition_for(symbol)
     }
     api.nvim_open_win(buf, true, opts)
     -- map 'o' in preview to open actual location in vsplit
-    api.nvim_buf_set_keymap(buf, "n", "o", ("<cmd>lua require('tools.ts_type_lookup_cmds')._open_loc_in_split(%q,%d)<CR>"):format(fname, srow), { nowait = true, noremap = true, silent = true })
+    api.nvim_buf_set_keymap(
+      buf,
+      "n",
+      "o",
+      ("<cmd>lua require('tools.ts_type_lookup_cmds')._open_loc_in_split(%q,%d)<CR>"):format(fname, srow),
+      { nowait = true, noremap = true, silent = true }
+    )
     api.nvim_buf_set_keymap(buf, "n", "q", "<cmd>close<CR>", { nowait = true, noremap = true, silent = true })
   end)
 end
@@ -170,10 +196,10 @@ function M.find_in_node_modules(symbol)
       vim.notify("Could not parse rg result", vim.log.levels.ERROR)
       return
     end
-		local safe_lnum = tonumber(lnum)
-		if safe_lnum ~= nil then
-			open_in_vsplit(path, safe_lnum)
-		end
+    local safe_lnum = tonumber(lnum)
+    if safe_lnum ~= nil then
+      open_in_vsplit(path, safe_lnum)
+    end
   else
     vim.notify("ripgrep (rg) not found; install rg or rely on LSP", vim.log.levels.WARN)
   end

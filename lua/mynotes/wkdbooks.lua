@@ -1,4 +1,3 @@
-
 ---@module 'mynotes.wkdbooks'
 
 local M = {}
@@ -43,7 +42,7 @@ end
 
 --- Check presence of ripgrep; warn if missing (both engines rely on it).
 local function assert_rg()
-  if vim.fn.executable "rg" ~= 1 then
+  if vim.fn.executable("rg") ~= 1 then
     note("ripgrep (rg) not found in PATH; live grep will not work.", vim.log.levels.ERROR)
     return false
   end
@@ -74,10 +73,10 @@ function M.fzf_files()
     return
   end
   -- Preview is on by default in fzf-lua; prompt config via `prompt`.
-  fzf.files {
+  fzf.files({
     cwd = cwd,
     prompt = CFG.title .. " > ",
-  }
+  })
 end
 
 --- fzf-lua: live grep with preview.
@@ -94,13 +93,13 @@ function M.fzf_grep()
   if not ok or not fzf then
     return
   end
-  fzf.live_grep {
+  fzf.live_grep({
     cwd = cwd,
     prompt = CFG.title .. " > ",
     -- Optional hints:
     -- file_ignore_patterns = { "node_modules", "%.git/", "build/" },
     -- rg_opts = "--hidden --glob '!.git' --line-number --column --smart-case",
-  }
+  })
 end
 
 -- Telescope adapter ----------------------------------------------------------
@@ -125,12 +124,12 @@ function M.tel_files()
   if not ok or not tb then
     return
   end
-  tb.find_files {
+  tb.find_files({
     cwd = cwd,
     prompt_title = CFG.title,
     previewer = true,
     hidden = true, -- also show dotfiles
-  }
+  })
 end
 
 --- Telescope: live grep with preview, fixed cwd and title.
@@ -146,11 +145,11 @@ function M.tel_grep()
   if not ok or not tb then
     return
   end
-  tb.live_grep {
+  tb.live_grep({
     cwd = cwd,
     prompt_title = CFG.title,
     previewer = true,
-  }
+  })
 end
 
 -- User commands --------------------------------------------------------------

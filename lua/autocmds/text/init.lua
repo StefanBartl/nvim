@@ -45,7 +45,9 @@ end
 ---@param pat any
 ---@return string|string[]
 local function norm_pattern(pat)
-  if pat == nil then return "*" end
+  if pat == nil then
+    return "*"
+  end
   return pat
 end
 
@@ -94,13 +96,15 @@ function M.enable(cfg)
       pattern = norm_pattern(cfg.trim_trailing.pattern),
       callback = function(ev)
         local buf = ev.buf
-        if not should_process(
-          buf,
-          cfg.trim_trailing.ignore_filetypes,
-          cfg.trim_trailing.ignore_buftypes,
-          cfg.trim_trailing.only_modifiable,
-          cfg.trim_trailing.only_normal_bufs
-        ) then
+        if
+          not should_process(
+            buf,
+            cfg.trim_trailing.ignore_filetypes,
+            cfg.trim_trailing.ignore_buftypes,
+            cfg.trim_trailing.only_modifiable,
+            cfg.trim_trailing.only_normal_bufs
+          )
+        then
           return
         end
         -- Use a buffer-local :substitute that ignores errors (`e` flag) and is silent.
@@ -121,13 +125,15 @@ function M.enable(cfg)
       pattern = norm_pattern(cfg.trim_blank.pattern),
       callback = function(ev)
         local buf = ev.buf
-        if not should_process(
-          buf,
-          cfg.trim_blank.ignore_filetypes,
-          cfg.trim_blank.ignore_buftypes,
-          cfg.trim_blank.only_modifiable,
-          cfg.trim_blank.only_normal_bufs
-        ) then
+        if
+          not should_process(
+            buf,
+            cfg.trim_blank.ignore_filetypes,
+            cfg.trim_blank.ignore_buftypes,
+            cfg.trim_blank.only_modifiable,
+            cfg.trim_blank.only_normal_bufs
+          )
+        then
           return
         end
         local row, col
@@ -165,7 +171,9 @@ function M.enable(cfg)
         local min_line = cfg.last_loc.min_line or 1
         if target_line >= min_line and target_line <= last_line then
           -- Use pcall to avoid errors in special windows.
-          pcall(function() vim.cmd([[normal! g`"]]) end)
+          pcall(function()
+            vim.cmd([[normal! g`"]])
+          end)
         end
       end,
       desc = "Restore last cursor position after reading a buffer",

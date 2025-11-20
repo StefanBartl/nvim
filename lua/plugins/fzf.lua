@@ -36,7 +36,7 @@ function Build_fd_opts()
     ".tmp",
     "--exclude",
     ".vscode",
-	}
+  }
   return table.concat(parts, " ")
 end
 

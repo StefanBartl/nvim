@@ -173,10 +173,7 @@ return function(opts)
         end
 
         vim.cmd("enew")
-        vim.fn.jobstart(
-          { vim.o.shell, vim.o.shellcmdflag, thecmd .. " ; " .. vim.o.shell },
-          { term = true }
-        )
+        vim.fn.jobstart({ vim.o.shell, vim.o.shellcmdflag, thecmd .. " ; " .. vim.o.shell }, { term = true })
       end,
     })
   end

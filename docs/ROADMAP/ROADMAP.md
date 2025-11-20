@@ -73,6 +73,10 @@ Snacks.picker ~
 - WARNING `vim.ui.select` for `Snacks.picker` is not enabled
 
 
+- MARKDOWN LSP:
+- Wenn in einer Markdown File ein Codeblock ist und man fomratiert, dann sollte der Codeblock in der Sprache mit dem passenden FOrmatter formatiert werden, nicht mit marksman
+
+
 - Telescope und FZF-Lua:
    - aktive zeilen weiß als Hintergrund probieren, zumindest aber eine kotrastreichere Option
    - In der Nähe der Prompt sollen nicht die Anzahl der Treffer angegeben werden, sondern auch, welches gerade selected ist, zb 32/74

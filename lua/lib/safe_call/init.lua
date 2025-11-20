@@ -11,7 +11,9 @@ local M = {}
 ---@return boolean, any, string|nil
 local function raw_safe(fn, ...)
   local ok, res = pcall(fn, ...)
-  if ok then return true, res, nil end
+  if ok then
+    return true, res, nil
+  end
   return false, nil, tostring(res)
 end
 

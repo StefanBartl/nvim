@@ -8,20 +8,22 @@ local M = {}
 local desc_tag = "[lsp.registry] "
 
 local ACTIVE = {
-	"bashls",
+  "bashls",
   "lua_ls",
   "ts_ls",
   "gopls",
-	"marksman",
-	-- "emmet_ls",
-	"html",
+  "marksman",
+  -- "emmet_ls",
+  "html",
   --"clangd",
   --"csharp",
   --"zig",
 }
 
 function M.setup_all(shared)
-  if type(shared) ~= "table" then return false end
+  if type(shared) ~= "table" then
+    return false
+  end
   for _, name in ipairs(ACTIVE) do
     local mod = "lsp.servers." .. name
     local ok, srv = pcall(require, mod)

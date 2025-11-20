@@ -31,7 +31,12 @@ local function safe_to_open_dashboard()
 
   -- Exclude special buftypes and filetypes that are typically not user-edit buffers.
   local forbidden_filetypes = {
-    help = true, qf = true, checkhealth = true, terminal = true, packer = true, ["TelescopePrompt"] = true
+    help = true,
+    qf = true,
+    checkhealth = true,
+    terminal = true,
+    packer = true,
+    ["TelescopePrompt"] = true,
   }
   if forbidden_filetypes[filetype] or forbidden_filetypes[buftype] then
     return false
@@ -48,7 +53,7 @@ local function safe_to_open_dashboard()
   end
 
   -- Require that we are in the single-window startup scenario to avoid mid-session hijack.
-  if vim.fn.winnr('$') ~= 1 then
+  if vim.fn.winnr("$") ~= 1 then
     return false
   end
 
@@ -60,7 +65,7 @@ local function safe_to_open_dashboard()
   return true
 end
 
-nvim_create_autocmd({"BufWinEnter"}, {
+nvim_create_autocmd({ "BufWinEnter" }, {
   callback = function()
     local ok_dash, dash = pcall(require, "snacks.dashboard")
     if not ok_dash or type(dash.open) ~= "function" then

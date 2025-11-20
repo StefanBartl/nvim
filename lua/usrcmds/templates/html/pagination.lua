@@ -21,7 +21,7 @@ local function insert_html_pagination_template()
     '<nav id="#pagination-" style="text-align: center; margin: 2em 0;">',
     '  <a href="#" style="padding: 0.5em 1em; margin: 0 0.2em; border: 1px solid #ddd; text-decoration: none;">← Previous</a>',
     '  <a href="#" style="padding: 0.5em 1em; margin: 0 0.2em; border: 1px solid #ddd; text-decoration: none;">Next →</a>',
-    '</nav>',
+    "</nav>",
   }
 
   -- Insert the template at cursor position
@@ -33,10 +33,10 @@ local function insert_html_pagination_template()
   api.nvim_win_set_cursor(0, { row + 1, id_col })
 
   -- Enter insert mode for immediate editing
-  vim.cmd('startinsert')
+  vim.cmd("startinsert")
 end
 
 --- Register the user command
-api.nvim_create_user_command('HTMLPaginationTemplate', insert_html_pagination_template, {
-  desc = 'Insert HTML pagination template at cursor position',
+api.nvim_create_user_command("HTMLPaginationTemplate", insert_html_pagination_template, {
+  desc = "Insert HTML pagination template at cursor position",
 })

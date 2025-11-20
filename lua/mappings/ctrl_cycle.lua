@@ -8,30 +8,30 @@ local DEFAULTS = {
     ----------------------------------------------------------------
     -- 2-state toggles
     ----------------------------------------------------------------
-    { "true",       "false"       },
-    { "on",         "off"         },
-    { "yes",        "no"          },
-    { "enabled",    "disabled"    },
-    { "enable",     "disable"     },
-    { "active",     "inactive"    },
-    { "visible",    "hidden"      },
-    { "show",       "hide"        },
-    { "accept",     "reject"      },
-    { "include",    "exclude"     },
-    { "open",       "closed"      },
-    { "lock",       "unlock"      },
-    { "locked",     "unlocked"    },
-    { "connected",  "disconnected"},
-    { "attach",     "detach"      },
-    { "start",      "stop"        },
-    { "pause",      "resume"      },
-    { "mute",       "unmute"      },
-    { "muted",      "unmuted"     },
+    { "true", "false" },
+    { "on", "off" },
+    { "yes", "no" },
+    { "enabled", "disabled" },
+    { "enable", "disable" },
+    { "active", "inactive" },
+    { "visible", "hidden" },
+    { "show", "hide" },
+    { "accept", "reject" },
+    { "include", "exclude" },
+    { "open", "closed" },
+    { "lock", "unlock" },
+    { "locked", "unlocked" },
+    { "connected", "disconnected" },
+    { "attach", "detach" },
+    { "start", "stop" },
+    { "pause", "resume" },
+    { "mute", "unmute" },
+    { "muted", "unmuted" },
 
-    { "up",         "down"        },
-    { "left",       "right"       },
-    { "in",         "out"         },
-    { "asc",        "desc"        },
+    { "up", "down" },
+    { "left", "right" },
+    { "in", "out" },
+    { "asc", "desc" },
 
     -- Deutsch
     -- { "wahr",       "falsch"      },
@@ -46,7 +46,7 @@ local DEFAULTS = {
     ----------------------------------------------------------------
     -- Multi-state cycles (wrap-around)
     ----------------------------------------------------------------
-    { ".",       "/",        "\\" },
+    { ".", "/", "\\" },
     -- { "dev", "stage", "prod" },
     -- { "alpha", "beta", "rc", "stable" },
     -- { "low", "medium", "high" },
@@ -63,9 +63,15 @@ local M = {}
 --- Check buffer writability.
 --- @return boolean
 local function _buf_writable()
-  if vim.bo.buftype ~= "" then return false end
-  if not vim.bo.modifiable then return false end
-  if vim.bo.readonly then return false end
+  if vim.bo.buftype ~= "" then
+    return false
+  end
+  if not vim.bo.modifiable then
+    return false
+  end
+  if vim.bo.readonly then
+    return false
+  end
   return true
 end
 
@@ -79,14 +85,18 @@ end
 --- @return integer|nil s, integer|nil e, string|nil txt
 local function _cword_span()
   local line = vim.api.nvim_get_current_line()
-  local col  = vim.api.nvim_win_get_cursor(0)[2] -- 0-based byte col
+  local col = vim.api.nvim_win_get_cursor(0)[2] -- 0-based byte col
   local pat = [[\k\+]]
   local start_at = 0
   while true do
     local m = vim.fn.matchstrpos(line, pat, start_at) -- {match,start,end}
     local txt, s, e = m[1], m[2], m[3]
-    if s == -1 then return nil, nil, nil end
-    if col >= s and col < e then return s, e, txt end
+    if s == -1 then
+      return nil, nil, nil
+    end
+    if col >= s and col < e then
+      return s, e, txt
+    end
     start_at = e
   end
 end
@@ -95,10 +105,18 @@ end
 --- @param s string|nil
 --- @return boolean
 local function _is_numeric_like(s)
-  if not s or s == "" then return false end
-  if s:match("^[-+]?%d+$")       then return true end
-  if s:match("^[-+]?%d+%.%d+$")  then return true end
-  if s:match("^0[xX][%da-fA-F]+$") then return true end
+  if not s or s == "" then
+    return false
+  end
+  if s:match("^[-+]?%d+$") then
+    return true
+  end
+  if s:match("^[-+]?%d+%.%d+$") then
+    return true
+  end
+  if s:match("^0[xX][%da-fA-F]+$") then
+    return true
+  end
   return false
 end
 
@@ -106,11 +124,19 @@ end
 --- @param s string
 --- @return "lower"|"upper"|"capital"|"mixed"
 local function _case_shape(s)
-  if s == "" then return "lower" end
-  local first, rest = s:sub(1,1), s:sub(2)
-  if s == s:lower() then return "lower" end
-  if s == s:upper() then return "upper" end
-  if first == first:upper() and rest == rest:lower() then return "capital" end
+  if s == "" then
+    return "lower"
+  end
+  local first, rest = s:sub(1, 1), s:sub(2)
+  if s == s:lower() then
+    return "lower"
+  end
+  if s == s:upper() then
+    return "upper"
+  end
+  if first == first:upper() and rest == rest:lower() then
+    return "capital"
+  end
   return "mixed"
 end
 
@@ -122,7 +148,7 @@ local function _apply_shape(repl, shape)
   if shape == "upper" then
     return repl:upper()
   elseif shape == "capital" then
-    return repl:sub(1,1):upper() .. repl:sub(2):lower()
+    return repl:sub(1, 1):upper() .. repl:sub(2):lower()
   elseif shape == "mixed" then
     return repl
   else
@@ -137,7 +163,9 @@ end
 --- @return integer
 local function _wrap_index(arr, idx, dir)
   local n = #arr
-  if n == 0 then return 1 end
+  if n == 0 then
+    return 1
+  end
   return ((idx - 1 + dir) % n) + 1
 end
 
@@ -148,10 +176,14 @@ end
 --- @param cycles string[][]
 --- @return boolean
 local function _try_cycle(dir, cycles)
-  if not _buf_writable() then return false end
+  if not _buf_writable() then
+    return false
+  end
 
   local s, e, txt = _cword_span()
-  if not s then return false end
+  if not s then
+    return false
+  end
   ---@cast s integer
   ---@cast e integer
   ---@cast txt string
@@ -172,13 +204,17 @@ local function _try_cycle(dir, cycles)
         break
       end
     end
-    if found_arr then break end
+    if found_arr then
+      break
+    end
   end
-  if not found_arr then return false end
+  if not found_arr then
+    return false
+  end
 
-  local new_idx   = _wrap_index(found_arr, found_idx, dir)
+  local new_idx = _wrap_index(found_arr, found_idx, dir)
   local new_lower = found_arr[new_idx]:lower()
-  local new_txt   = _apply_shape(new_lower, shape)
+  local new_txt = _apply_shape(new_lower, shape)
 
   local row0 = vim.api.nvim_win_get_cursor(0)[1] - 1
   vim.api.nvim_buf_set_text(0, row0, s, row0, e, { new_txt })

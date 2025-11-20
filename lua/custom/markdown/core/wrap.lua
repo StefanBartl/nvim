@@ -37,7 +37,8 @@ local function wrap_with_asterisks(count)
   vim.api.nvim_feedkeys(seq, "nx", false)
 
   if cfg().keep_inner_selection then
-    local adjust = vim.api.nvim_replace_termcodes("o" .. string.rep("l", count) .. "o" .. string.rep("h", count), true, false, true)
+    local adjust =
+      vim.api.nvim_replace_termcodes("o" .. string.rep("l", count) .. "o" .. string.rep("h", count), true, false, true)
     vim.api.nvim_feedkeys(adjust, "nx", false)
   end
 end

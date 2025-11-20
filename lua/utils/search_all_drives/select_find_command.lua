@@ -20,12 +20,16 @@ local M = {}
 
 -- Local aliases kept minimal; no globals leaked.
 local uv = vim and (vim.uv or vim.loop) or nil
-local fn_executable = (vim and vim.fn and vim.fn.executable) or function() return 0 end
+local fn_executable = (vim and vim.fn and vim.fn.executable) or function()
+  return 0
+end
 
 --- Lightweight OS check (pure; no I/O).
 ---@return boolean
 local function is_windows()
-  if not uv or not uv.os_uname then return false end
+  if not uv or not uv.os_uname then
+    return false
+  end
   local sys = uv.os_uname().sysname or ""
   -- Matches "Windows_NT" on modern systems
   return sys:find("Windows", 1, true) ~= nil
@@ -36,7 +40,9 @@ end
 ---@return boolean
 local function has_exec(name)
   -- vim.fn.executable returns 1 when found, 0 otherwise
-  if type(name) ~= "string" or name == "" then return false end
+  if type(name) ~= "string" or name == "" then
+    return false
+  end
   return fn_executable(name) == 1
 end
 
@@ -46,15 +52,16 @@ end
 local function argv_fd(opts)
   opts = opts or {}
   -- Comments explain flag mapping; order is stable for reproducibility.
-  local argv = { "fd", "--type", "f" }           -- only files
-  if opts.include_hidden ~= false then           -- default true: behave like ripgrep --hidden
+  local argv = { "fd", "--type", "f" } -- only files
+  if opts.include_hidden ~= false then -- default true: behave like ripgrep --hidden
     argv[#argv + 1] = "--hidden"
   end
   if opts.follow_symlinks == true then
     argv[#argv + 1] = "--follow"
   end
-  if opts.exclude_vcs ~= false then              -- default true: skip .git by default
-    argv[#argv + 1] = "--exclude"; argv[#argv + 1] = ".git"
+  if opts.exclude_vcs ~= false then -- default true: skip .git by default
+    argv[#argv + 1] = "--exclude"
+    argv[#argv + 1] = ".git"
   end
   return argv
 end
@@ -132,4 +139,3 @@ function M.choose_find_command(opts)
 end
 
 return M
-

@@ -10,15 +10,15 @@ local M = {}
 -- a buffer counts as a "real" user buffer.
 ---@type string[]
 M.DEFAULT_EXCLUDE_FILETYPES = {
-  "neo-tree",        -- neo-tree.nvim / Neotree
-  "NvimTree",        -- older nvim-tree identifiers
-  "qf",              -- quickfix
+  "neo-tree", -- neo-tree.nvim / Neotree
+  "NvimTree", -- older nvim-tree identifiers
+  "qf", -- quickfix
   "TelescopePrompt", -- telescope prompt
-  "alpha",           -- dashboard/alpha
-  "startify",        -- startify
-  "packer",          -- plugin manager UI
-  "help",            -- help buffers
-  "notify",          -- notify windows
+  "alpha", -- dashboard/alpha
+  "startify", -- startify
+  "packer", -- plugin manager UI
+  "help", -- help buffers
+  "notify", -- notify windows
 }
 
 -- Local helpers and types -----------------------------------------------------
@@ -74,15 +74,25 @@ end
 function M.get_buffer_info(bufnr)
   -- Use pcall for APIs that may error on unloaded/invalid buffers
   local ok_name, name = pcall(vim.api.nvim_buf_get_name, bufnr)
-  if not ok_name then name = "" end
+  if not ok_name then
+    name = ""
+  end
   local ok_ft, ft = pcall(vim.api.nvim_buf_get_option, bufnr, "filetype")
-  if not ok_ft then ft = "" end
+  if not ok_ft then
+    ft = ""
+  end
   local ok_listed, buflisted = pcall(vim.fn.buflisted, bufnr)
-  if not ok_listed then buflisted = 0 end
+  if not ok_listed then
+    buflisted = 0
+  end
   local ok_mod, modified = pcall(vim.api.nvim_buf_get_option, bufnr, "modified")
-  if not ok_mod then modified = false end
+  if not ok_mod then
+    modified = false
+  end
   local ok_lines, line_count = pcall(vim.api.nvim_buf_line_count, bufnr)
-  if not ok_lines then line_count = 0 end
+  if not ok_lines then
+    line_count = 0
+  end
 
   -- collect windows that currently display this buffer
   local wins = {}
@@ -163,7 +173,7 @@ end
 function M.print_buffers_table(buftable)
   local s = M.format_buffers_table(buftable)
   -- ensure trailing newline
-  vim.api.nvim_echo({ { s .. "\n" }}, true, { err = false })
+  vim.api.nvim_echo({ { s .. "\n" } }, true, { err = false })
 end
 
 -- High-level collector that gathers listed buffers, all buffers, counts and a formatted summary.

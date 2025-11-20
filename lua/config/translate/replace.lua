@@ -8,7 +8,7 @@ local M = {}
 ---@param end_line number
 ---@param target_lang string
 M.replace_range = function(start_line, end_line, target_lang)
-    vim.cmd(string.format("%d,%dTranslate %s -output=replace", start_line, end_line, target_lang))
+  vim.cmd(string.format("%d,%dTranslate %s -output=replace", start_line, end_line, target_lang))
 end
 
 return M

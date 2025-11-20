@@ -57,7 +57,7 @@ Man erhält Usercommands zum manuellen Ausführen und einen optionalen Autostart
 ## Neovim: Einbindung (init.lua)
 
 ```lua
--- English comments: Ensure plugin files are located under 'lua/lsp/tools/eslint_prettier'.
+-- Ensure plugin files are located under 'lua/lsp/tools/eslint_prettier'.
 -- Then call setup from your Neovim config.
 
 require("lsp.tools.eslint_prettier").setup({

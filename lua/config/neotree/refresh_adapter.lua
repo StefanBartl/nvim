@@ -34,10 +34,11 @@ function M.refresh(state, callback)
   end
   local src = resolve_source_name(state, "filesystem")
   -- Pass (string, function|nil) exactly as the API expects
-  if type(callback) ~= "function" then callback = nil end
+  if type(callback) ~= "function" then
+    callback = nil
+  end
   manager.refresh(src, callback)
   return true
 end
 
 return M
-

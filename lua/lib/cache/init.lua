@@ -10,9 +10,7 @@ local function lr(mod)
   return require("lib.cache." .. mod)
 end
 
-M.lru     = lr("lru")
-M.memo    = lr("memo")
+M.lru = lr("lru")
+M.memo = lr("memo")
 
 return M
-
-
