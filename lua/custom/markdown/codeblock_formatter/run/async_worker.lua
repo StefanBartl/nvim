@@ -3,7 +3,7 @@
 --- This version adds an early notification that prints detected languages,
 --- and separates the "apply replacements" logic into a helper to make future
 --- modularization easier.
---- keep logic synchronous/async as before; this file remains
+--- : keep logic synchronous/async as before; this file remains
 --- the main worker until further split into smaller modules.
 local M = {}
 
