@@ -64,7 +64,18 @@ M.lsp = {
     ["vim.lsp.util.stylize_markdown"] = true,
     ["cmp.entry.get_documentation"] = true, -- requires hrsh7th/nvim-cmp
   },
-  hover = { enabled = false },
+  hover = {
+    enabled = true,
+    silent = false, -- set to true to not show a message if hover is not available
+    view = nil, -- when nil, use defaults from documentation
+  },
+  signature = {
+    enabled = false,
+    auto_open = {
+      enabled = false,
+    },
+    view = nil, -- when nil, use defaults from documentation
+  },
 }
 
 M.cmdline = {
