@@ -30,6 +30,24 @@ return {
     end,
   },
 
+  {
+    "nvimdev/lspsaga.nvim",
+    config = function()
+      require("lspsaga").setup({
+        lightbulb = {
+          enabled = false,
+        },
+        rename = {
+          enable = false,
+        },
+      })
+    end,
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter", -- optional
+      "nvim-tree/nvim-web-devicons", -- optional
+    },
+  },
+
   -- Blink-based completion for LazyDev (optional)
   -- {
   --   "saghen/blink.cmp",
@@ -38,7 +56,7 @@ return {
   --     sources = {
   --       default = { "lazydev", "lsp", "path", "snippets", "buffer" },
   --       providers = {
-  --         lazydev = {
+  --        lazydev = {
   --           name = "LazyDev",
   --           module = "lazydev.integrations.blink",
   --           score_offset = 100,

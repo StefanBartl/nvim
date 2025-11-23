@@ -4,7 +4,6 @@ column_width = 120
 # Use LF line endings (recommended on macOS/Linux and for cross-platform repos).
 line_endings = "Unix"
 
-# Two-space indentation is a common choice in Neovim configs.
 indent_type = "Spaces"
 indent_width = 2
 

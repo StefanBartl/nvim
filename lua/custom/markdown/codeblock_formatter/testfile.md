@@ -43,7 +43,7 @@ const fs = require('fs-extra');
 const klaw = require('klaw');
 const path = require('path');
 const INPUT = path.join(__dirname, '..', 'data', 'input');
-const stream = klaw(INPUT);
+
 stream.on('data', (item) => {
 const filePath = item.path;
 const timeCreated = item.stats.birthtime.toUTCString();

@@ -63,5 +63,4 @@ require("lsp.tools.eslint_prettier").setup({
   enable_on_setup = true, -- initial autorun state
 })
 
--- require("lsp.tools.ts_type_lookup").setup()
 require("lsp.tools.ts_type_lookup").setup()

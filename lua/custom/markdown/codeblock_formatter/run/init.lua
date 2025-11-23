@@ -44,7 +44,7 @@ local function debug(msg)
 end
 
 -- small spawn_or_fallback helper: try uv.spawn if available, otherwise sync systemlist.
--- English comments: This is a pragmatic fallback used when format_single_block needs to
+-- This is a pragmatic fallback used when format_single_block needs to
 -- run a CLI formatter; it accepts (cmd, args, tmp_path, writes_file, cb).
 local function spawn_or_fallback(cmd, args, tmp_path, writes_file, cb)
   cb = cb or function() end

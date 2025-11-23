@@ -1,12 +1,13 @@
 ---@module 'custom.markdown.codeblock_formatter.find_blocks'
 --- Functions to find fenced codeblocks using Tree-sitter with a regex fallback.
 --- Exposes `find_blocks_in_range(bufnr, srow, erow, supported_set, aliases, cfg)`.
---- returns list of blocks { start_row, end_row, lang, fence_start, fence_end }.
+--- Returns list of blocks { start_row, end_row, lang, fence_start, fence_end }.
 local M = {}
 
 local api = vim.api
 local ts = vim.treesitter
 
+-- Tree-sitter based finder: returns content-only 1-based ranges.
 local function find_with_treesitter(bufnr)
   local ok, parser = pcall(ts.get_parser, bufnr, "markdown")
   if not ok or not parser then
@@ -21,29 +22,38 @@ local function find_with_treesitter(bufnr)
   if not query_ok or not query then
     return nil, "no_query"
   end
+
   local out = {}
   for _, node, _ in query:iter_captures(root, bufnr, 0, -1) do
     if node and node:type() == "fenced_code_block" then
+      -- node:range returns 0-based start_row, start_col, end_row, end_col
       local s_row, _, e_row, _ = node:range()
+      -- Read the whole block including fences (0-based indices)
       local lines = api.nvim_buf_get_lines(bufnr, s_row, e_row + 1, false)
       if #lines >= 1 then
         local first = lines[1]
-        local fence_lang = first:match("^%s*```%s*([%w_%-%+%#]+)%s*$") -- accept more chars
+        -- accept common chars for language id (letters, digits, -, _, +, #)
+        local fence_lang = first:match("^%s*```%s*([%w_%-%+%#]+)%s*$")
+        -- compute content-only indices (0-based)
         local content_start = s_row + 1
         local content_end = e_row - 1
-        table.insert(out, {
-          start_row = content_start + 1,
-          end_row = content_end + 1,
-          lang = fence_lang and fence_lang:lower() or nil,
-          fence_start = s_row + 1,
-          fence_end = e_row + 1,
-        })
+        if content_start <= content_end then
+          table.insert(out, {
+            -- convert to 1-based inclusive content range
+            start_row = content_start + 1,
+            end_row = content_end + 1,
+            lang = fence_lang and fence_lang:lower() or nil,
+            fence_start = s_row + 1, -- 1-based fence line index
+            fence_end = e_row + 1,   -- 1-based fence line index
+          })
+        end
       end
     end
   end
   return out
 end
 
+-- Regex fallback finder: returns content-only 1-based ranges.
 local function find_with_regex(bufnr, srow, erow)
   srow = srow or 1
   erow = erow or api.nvim_buf_line_count(bufnr)
@@ -54,20 +64,24 @@ local function find_with_regex(bufnr, srow, erow)
     local ln = lines[i]
     local lang = ln:match("^%s*```%s*([%w_%-%+%#]+)%s*$")
     if lang then
-      local start_fence = srow + i - 1
+      local start_fence = srow + i - 1 -- 1-based fence line index
       local j = i + 1
       while j <= #lines and not lines[j]:match("^%s*```%s*$") do
         j = j + 1
       end
       if j <= #lines then
-        local end_fence = srow + j - 1
-        table.insert(res, {
-          start_row = start_fence + 1,
-          end_row = end_fence - 1,
-          lang = lang:lower(),
-          fence_start = start_fence,
-          fence_end = end_fence,
-        })
+        local end_fence = srow + j - 1 -- 1-based fence line index
+        local content_start = start_fence + 1
+        local content_end = end_fence - 1
+        if content_start <= content_end then
+          table.insert(res, {
+            start_row = content_start,
+            end_row = content_end,
+            lang = lang:lower(),
+            fence_start = start_fence,
+            fence_end = end_fence,
+          })
+        end
         i = j + 1
       else
         break
@@ -100,12 +114,12 @@ function M.find_blocks_in_range(bufnr, srow, erow, supported_set, aliases, cfg)
   end
 
   local out = {}
+  found = found or {}
   for _, b in ipairs(found) do
     if b.lang then
       local canonical = aliases[b.lang] or aliases[b.lang:lower()] or b.lang:lower()
-      -- if alias maps to canonical that exists in supported_set, accept
       if supported_set[canonical] then
-        -- clamp to requested range
+        -- clamp to requested range (content-only indexes are already 1-based)
         local s = math.max(b.start_row, srow)
         local e = math.min(b.end_row, erow)
         if s <= e then

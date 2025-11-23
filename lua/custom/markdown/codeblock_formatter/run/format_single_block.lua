@@ -2,75 +2,38 @@
 --- Format a single fenced code block taken from a Markdown buffer.
 --- Workflow:
 ---   1. extract block text from source buffer
----   2. write a temp file (for CLI formatters)
----   3. create an ephemeral buffer for LSP formatting attempts
----   4. try formatting via attached LSP clients (client request -> apply_text_edits)
----   5. if no LSP edits: run CLI formatter via provided `spawn_or_fallback`
----   6. cleanup and callback with (err, formatted_text) where formatted_text is a string
----
---- Exports: returns a function with signature
----   (bufnr: integer, block: table, fmt_cfg: table, spawn_or_fallback: function, cb: function) -> nil
---- Notes:
----   - `fmt_cfg.build_cmd(tmp_path)` is expected to return (cmd:string, args:table, writes_file:boolean)
----   - This module validates and normalizes build_cmd returns to avoid Lua multiple-return pitfalls.
----   - All comments in this file are in English as requested for generated code.
+---   2. strip possible fence lines (defensive)
+---   3. write a temp file (for CLI formatters)
+---   4. create an ephemeral buffer for LSP formatting attempts
+---   5. try formatting via attached LSP clients (client request -> apply_text_edits)
+---   6. if no LSP edits: run CLI formatter via provided `run_cli_fallback`
+---   7. cleanup and callback with (err, formatted_text)
+local run_cli_fallback = require("custom.markdown.codeblock_formatter.run.run_cli_fallback")
 local helper = require("custom.markdown.codeblock_formatter.helper")
 local write_temp_file = helper.write_temp_file
 local remove_tmp = helper.remove_tmp
-
---- Normalize the return values of fmt_cfg.build_cmd(tmp).
---- Ensures cmd is string, args is table, writes_file is boolean.
---- Returns cmd, args, writes_file, err_string
-local local_normalize_build_cmd = function(fmt_cfg, tmp)
-  local ok, a, b, c = pcall(fmt_cfg.build_cmd, tmp)
-  if not ok then
-    return nil, nil, nil, "build_cmd raised error: " .. tostring(a)
-  end
-  local cmd = a
-  local args = b
-  local writes_file = c
-
-  if type(cmd) ~= "string" then
-    return nil, nil, nil, "build_cmd did not return command string"
-  end
-  if type(args) ~= "table" then
-    args = {}
-  end
-  if type(writes_file) ~= "boolean" then
-    writes_file = true
-  end
-  return cmd, args, writes_file, nil
-end
-
---- Helper: call spawn_or_fallback using normalized build_cmd and ensure callback semantics.
---- Accepts fmt_cfg, tmp_path, tb (temp buffer - may be nil), block, spawn_or_fallback, cb
-local run_cli_fallback = function(fmt_cfg, tmp_path, tb, block, spawn_or_fallback, cb)
-  local cmd, args, writes_file, merr = local_normalize_build_cmd(fmt_cfg, tmp_path)
-  if not cmd then
-    -- report error and return via callback
-    vim.schedule(function()
-      vim.notify(("md-codefmt: invalid build_cmd for %s: %s"):format(tostring(block.lang), tostring(merr)), vim.log.levels.WARN, { title = "md-codefmt" })
-    end)
-    if tmp_path then remove_tmp(tmp_path) end
-    if tb then pcall(vim.api.nvim_buf_delete, tb, { force = true }) end
-    cb("invalid_build_cmd", nil)
-    return
-  end
-
-  -- call the provided spawn_or_fallback executor
-  spawn_or_fallback(cmd, args, tmp_path, writes_file, function(err, out)
-    if tmp_path then remove_tmp(tmp_path) end
-    if tb then pcall(vim.api.nvim_buf_delete, tb, { force = true }) end
-    cb(err, out)
-  end)
-end
+local strip_fences = helper.strip_fences
+local notify = vim.notify
+local api = vim.api
 
 return function(bufnr, block, fmt_cfg, spawn_or_fallback, cb)
   cb = cb or function() end
 
-  -- extract original block lines
-  local orig_lines = vim.api.nvim_buf_get_lines(bufnr, block.start_row - 1, block.end_row, false)
+  -- extract original block lines (1-based indices provided by finder)
+  local orig_lines = api.nvim_buf_get_lines(bufnr, block.start_row - 1, block.end_row, false)
+
+  -- defensive: strip fence lines if finder accidentally included them
+  orig_lines = strip_fences(orig_lines)
+
+  -- build text for formatting
   local orig_text = table.concat(orig_lines, "\n")
+
+  -- debug dump of the extracted text (keep concise)
+  notify("md-codefmt: extracted block preview (" .. tostring(block.lang) .. "):", vim.log.levels.DEBUG)
+  if #orig_lines > 0 then
+    local preview = table.concat({ orig_lines[1], (orig_lines[2] or ""), (orig_lines[3] or ""), "", "", "EOB:", (orig_lines[#orig_lines - 1] or ""), (orig_lines[#orig_lines] or "") }, "\n")
+    notify(preview, vim.log.levels.DEBUG)
+  end
 
   -- write temporary file for CLI formatters
   local tmp_path, tmp_err = write_temp_file(orig_text, fmt_cfg.ext)
@@ -80,7 +43,7 @@ return function(bufnr, block, fmt_cfg, spawn_or_fallback, cb)
   end
 
   vim.schedule(function()
-    vim.notify(("md-codefmt: tmp file for block -> %s"):format(tostring(tmp_path)), vim.log.levels.DEBUG, { title = "md-codefmt" })
+    notify(("md-codefmt: tmp file for block -> %s"):format(tostring(tmp_path)), vim.log.levels.DEBUG, { title = "md-codefmt" })
   end)
 
   -- ephemeral buffer creation + filetype mapping
@@ -93,18 +56,19 @@ return function(bufnr, block, fmt_cfg, spawn_or_fallback, cb)
     lua = "lua",
   }
   local ft = ft_alias[block.lang] or block.lang
-  local tb = vim.api.nvim_create_buf(false, true)
+  local tb = api.nvim_create_buf(false, true)
   if not tb then
     -- If ephemeral buffer cannot be created, fallback immediately to CLI
+    notify("[md-codefmt] ephemeral buffer cannot be created, fallback to CLI", vim.log.levels.WARN)
     run_cli_fallback(fmt_cfg, tmp_path, nil, block, spawn_or_fallback, cb)
     return
   end
 
-  -- populate buffer and set filetype/options
-  vim.api.nvim_buf_set_lines(tb, 0, -1, false, vim.split(orig_text, "\n", { plain = true }))
-  vim.api.nvim_set_option_value("filetype", ft, { buf = tb })
-  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = tb })
-  vim.api.nvim_set_option_value("modifiable", true, { buf = tb })
+  -- populate buffer using stripped lines and set filetype/options
+  api.nvim_buf_set_lines(tb, 0, -1, false, orig_lines)
+  api.nvim_set_option_value("filetype", ft, { buf = tb })
+  api.nvim_set_option_value("bufhidden", "wipe", { buf = tb })
+  api.nvim_set_option_value("modifiable", true, { buf = tb })
 
   -- discover active LSP clients and query support for formatting for this buffer
   local active_clients = vim.lsp.get_clients()
@@ -125,13 +89,14 @@ return function(bufnr, block, fmt_cfg, spawn_or_fallback, cb)
 
   if #candidates == 0 then
     -- no LSP formatter available -> CLI fallback
+    notify("[md-codefmt] no LSP formatter available -> CLI fallback", vim.log.levels.DEBUG)
     run_cli_fallback(fmt_cfg, tmp_path, tb, block, spawn_or_fallback, cb)
     return
   end
 
   -- prepare formatting params
-  local tabSize = vim.api.nvim_get_option_value("shiftwidth", { buf = tb }) or vim.api.nvim_get_option_value("tabstop", { buf = tb }) or 2
-  local insertSpaces = vim.api.nvim_get_option_value("expandtab", { buf = tb })
+  local tabSize = api.nvim_get_option_value("shiftwidth", { buf = tb }) or api.nvim_get_option_value("tabstop", { buf = tb }) or 2
+  local insertSpaces = api.nvim_get_option_value("expandtab", { buf = tb })
   local params = {
     textDocument = vim.lsp.util.make_text_document_params(tb),
     options = { tabSize = tabSize, insertSpaces = insertSpaces },
@@ -143,7 +108,6 @@ return function(bufnr, block, fmt_cfg, spawn_or_fallback, cb)
 
   for _, client in ipairs(candidates) do
     -- send the request directly to the specific client and pass tb as bufnr
-    -- client.request(method, params, handler, bufnr)
     client.request("textDocument/formatting", params, function(err, result)
       vim.schedule(function()
         pending = pending - 1
@@ -158,27 +122,28 @@ return function(bufnr, block, fmt_cfg, spawn_or_fallback, cb)
         end
 
         if err then
-          vim.notify(("md-codefmt: client error %s"):format(tostring(err)), vim.log.levels.DEBUG, { title = "md-codefmt" })
+          notify(("md-codefmt: client error %s"):format(tostring(err)), vim.log.levels.DEBUG, { title = "md-codefmt" })
         elseif result and result ~= vim.NIL and #result > 0 then
           local ok, apperr = pcall(vim.lsp.util.apply_text_edits, result, tb, (client and (client.offset_encoding or "utf-16")) or "utf-16")
           if ok then
             applied = true
-            local formatted_lines = vim.api.nvim_buf_get_lines(tb, 0, -1, false)
+            local formatted_lines = api.nvim_buf_get_lines(tb, 0, -1, false)
             local formatted_text = table.concat(formatted_lines, "\n")
             -- cleanup temp file and buffer
             remove_tmp(tmp_path)
-            pcall(vim.api.nvim_buf_delete, tb, { force = true })
+            pcall(api.nvim_buf_delete, tb, { force = true })
             cb(nil, formatted_text)
-            return
+        return
           else
-            vim.notify(("md-codefmt: apply_text_edits failed: %s"):format(tostring(apperr)), vim.log.levels.DEBUG, { title = "md-codefmt" })
+            notify(("md-codefmt: apply_text_edits failed: %s"):format(tostring(apperr)), vim.log.levels.DEBUG, { title = "md-codefmt" })
           end
         else
-          vim.notify(("md-codefmt: client returned no edits for %s"):format(tostring(block.lang)), vim.log.levels.DEBUG, { title = "md-codefmt" })
+          notify(("md-codefmt: client returned no edits for %s"):format(tostring(block.lang)), vim.log.levels.DEBUG, { title = "md-codefmt" })
         end
 
         if pending == 0 and not applied then
           -- none of the LSP clients produced edits -> fallback to CLI
+          notify("[md-codefmt] none of the LSP clients produced edits -> fallback to CLI", vim.log.levels.DEBUG)
           run_cli_fallback(fmt_cfg, tmp_path, tb, block, spawn_or_fallback, cb)
         end
       end)
