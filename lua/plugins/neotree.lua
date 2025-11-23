@@ -1,7 +1,12 @@
 ---@module 'plugins.neotree'
 --- Neo-tree plugin spec that imports centralized keymaps.
 
-local KM = require("config.neotree.keymaps")
+local KEYMAPS = require("config.neotree.keymaps")
+local BUFFERS = require("config.neotree.keymaps.buffers")
+local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
+local FILESYSTEM = require("config.neotree.keymaps.filesystem")
+local GIT_STATUS = require("config.neotree.keymaps.git_status")
+local COMMANDS = require("config.neotree.commands")
 
 return {
   "nvim-neo-tree/neo-tree.nvim",
@@ -64,10 +69,10 @@ return {
 
     window = {
       width = 25,
-      mappings = KM.window(),
+      mappings = KEYMAPS,
     },
 
-    commands = KM.commands(),
+    commands = COMMANDS,
 
     filesystem = {
       bind_to_cwd = true,
@@ -75,7 +80,7 @@ return {
       find_by_full_path_words = true,
       group_empty_dirs = true,
       use_libuv_file_watcher = true,
-      window = { mappings = KM.filesystem() },
+      window = { mappings = FILESYSTEM },
       filtered_items = {
 
         -- Everything is visible by default
@@ -107,9 +112,9 @@ return {
       },
     },
 
-    buffers = { window = { mappings = KM.buffers() } },
-    git_status = { window = { mappings = KM.git_status() } },
-    document_symbols = { follow_cursor = true, window = { mappings = KM.document_symbols() } },
+    buffers = { window = { mappings = BUFFERS } },
+    git_status = { window = { mappings = GIT_STATUS } },
+    document_symbols = { follow_cursor = true, window = { mappings = DOCUMENT_SYMBOLS } },
   },
 
   config = function(_, opts)
