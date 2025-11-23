@@ -108,7 +108,7 @@ return {
 
         -- Items listed here are *never* shown, even if `visible = true`.
         never_show = {},
-        never_show_by_pattern = { "vite.config.js.timestamp-*" },
+        never_show_by_pattern = {},
       },
     },
 
@@ -127,14 +127,8 @@ return {
       -- debounce = 50,
       -- use_git_status_colors = false,
       colors = {
-        -- simple hex
         file = "green",
-        -- link to an existing highlight group (keeps your theme semantics)
-        -- parent = { link = "Directory" },
-        -- or full hl table with styles
         parent = { fg = "darkgreen", underline = false },
-        -- or pragmatic name (mapped to hex internally; ok for quick tests)
-        -- file = "red",
       },
     })
     ---@diagnostic disable-next-line
@@ -142,8 +136,9 @@ return {
       debounce_ms = 80,
       keep_focus = true,
       also_set_nvim_cwd = false, -- set to true if global :cd should follow too
-      open_if_closed = false, -- set to true to auto-open Neo-tree on first sync
+      open_if_closed = false,    -- set to true to auto-open Neo-tree on first sync
       use_project_root = true,
     })
+     require("config.neotree.open").attach_opener_mappings()
   end,
 }

@@ -1,20 +1,8 @@
----@module 'mappings.neotree'
---- DRY keymap setup for Neo-tree positions (left/right/float/current) plus F1 disable across modes.
---- Ergänzt: feste AltGr-Aliasse für DE-Layout auf XKB:
----   AltGr+c → "¢", AltGr+f → "đ", AltGr+l → "ł"
---- Diese werden zusätzlich zu <A-c>/<A-f>/<A-l> gemappt.
+---@module 'config.neotree.open'
+-- Keymap setup for Neo-tree positions (left/right/float/current)
+-- Fixed AltGr-Aliassse for DE-Layout
 
----@class NeoTreeBaseOpts
----@field source string
----@field toggle boolean
----@field reveal boolean
----@field reveal_force_cwd boolean
----@field position NeoTreePosition
-
----@class NeoTreeMapSpec
----@field lhs string
----@field pos NeoTreePosition
----@field desc string
+local map = require("lib.map")
 
 local M = {}
 
@@ -26,25 +14,6 @@ local NeoTreePositionEnum = {
   current = "current",
 }
 
----Convenience wrapper for vim.keymap.set with sane defaults.
----@param modes string|string[]
----@param lhs string
----@param rhs string|function
----@param opts table|nil
-local function map(modes, lhs, rhs, opts)
-  opts = opts or {}
-  if opts.noremap == nil then
-    opts.noremap = true
-  end
-  if opts.silent == nil then
-    opts.silent = true
-  end
-  vim.keymap.set(modes, lhs, rhs, opts)
-end
-
----@class NeoTreeCfg
----@field extra_lhs table<string,string[]>|nil  -- zusätzliche LHS je Hauptbinding, z. B. { ["<A-c>"] = {"¢"} }
-
 ---@type NeoTreeCfg
 M.cfg = {
   extra_lhs = {
@@ -54,11 +23,6 @@ M.cfg = {
     ["<A-r>"] = { "¶" },
   },
 }
-
-local ok_nt, NeoCmd = pcall(require, "neo-tree.command")
-if not ok_nt then
-  return
-end
 
 ---@type NeoTreeBaseOpts
 local base_opts = {
@@ -79,8 +43,13 @@ local specs = {
 
 ---@nodiscard
 ---@param position NeoTreePosition
----@return fun():nil
+---@return fun()|nil
 local function make_neotree_opener(position)
+  local ok_nt, NeoCmd = pcall(require, "neo-tree.command")
+  if not ok_nt then
+    vim.notify("[neotree.open] neo-tree.command not available", 2)
+    return
+  end
   if not NeoTreePositionEnum[position] then
     position = NeoTreePositionEnum.left
   end
@@ -91,14 +60,15 @@ local function make_neotree_opener(position)
 end
 
 --- Registriert ein Binding für mehrere Varianten:
---- 1) Primär (z. B. <A-c>)
---- 2) <M-…>-Alias (falls Terminal Alt als Meta sendet)
---- 3) Benutzerdefinierte extra_lhs (für AltGr/Terminal-Sonderzeichen)
+--   1) Primär (z. B. <A-c>)
+--   2) <M-…>-Alias (falls Terminal Alt als Meta sendet)
+--   3) Benutzerdefinierte extra_lhs (für AltGr/Terminal-Sonderzeichen)
 ---@param lhs string
 ---@param pos NeoTreePosition
 ---@param desc string
 local function register_aliases(lhs, pos, desc)
   local cb = make_neotree_opener(pos)
+  if not cb then return end
 
   -- 1) Primär
   map("n", lhs, cb, { desc = desc, silent = true })
@@ -109,7 +79,7 @@ local function register_aliases(lhs, pos, desc)
     pcall(map, "n", m_lhs, cb, { desc = desc .. " (Meta alias)", silent = true })
   end
 
-  -- 3) Benutzerdefinierte Extra-LHS (AltGr/Terminals)
+  -- 3) Userdefined Extra-LHS (AltGr/Terminals)
   if M.cfg.extra_lhs and M.cfg.extra_lhs[lhs] then
     for _, alt in ipairs(M.cfg.extra_lhs[lhs]) do
       pcall(map, "n", alt, cb, { desc = desc .. " (alias)", silent = true })
@@ -117,21 +87,8 @@ local function register_aliases(lhs, pos, desc)
   end
 end
 
--- Simple help for determining which key actually arrives in Neovim. Call:
--- :lua require('mappings.neotree').capture_key() Then, i
--- n normal mode, press the desired key (e.g., AltGr+c).
-function M.capture_key()
-  vim.notify("[neotree] Press your key now (Normal mode). Capturing next key...", vim.log.levels.INFO)
-  local ok, ch = pcall(vim.fn.getcharstr)
-  if not ok then
-    vim.notify("[neotree] Capture aborted.", vim.log.levels.WARN)
-    return
-  end
-  vim.notify(string.format("[neotree] Received key: %q", ch), vim.log.levels.INFO)
-end
-
 ---@param opts NeoTreeCfg|nil
-function M.setup(opts)
+function M.attach_opener_mappings(opts)
   if type(opts) == "table" then
     -- Allow overriding/merging defaults
     if opts.extra_lhs then
@@ -147,11 +104,6 @@ function M.setup(opts)
   for i = 1, #specs do
     local m = specs[i] ---@type NeoTreeMapSpec
     register_aliases(m.lhs, m.pos, m.desc)
-  end
-
-  local f1_modes = { "n", "i", "v", "t", "c" }
-  for i = 1, #f1_modes do
-    map(f1_modes[i], "<F1>", "<Nop>", { desc = "[General] Disable F1", silent = true })
   end
 end
 
