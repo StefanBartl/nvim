@@ -6,13 +6,10 @@
 
 ## Bugs
 
-1. neotree in Windows: M löst zweimal file explorer aus bzw funktionert meistens nicht
-    - keymaps/mappings/plugins . struktur ist etwas schwanḿmig?
+1. neotree in Windows: M löst zweimal file explorer aus bzw funktionert meistens nicht FIXED: AUDIT:
 
----
+-
 
 ## neue Mappings
 
-1. `[t`-ähnliche FUnkton, aber es werden nur die Folder verwendet; eventuell `[f` und `[F`
-
----
+--

@@ -1,9 +1,8 @@
 ---@module 'config.neotree.keymaps'
 --- Centralized, buffer-local Neo-tree keymaps that override defaults consistently.
 
---- AUDIT: Consult /docs/ROADMAP/plugins/neotree/mappings for improvement
-
 local copy_node_entries_handler = require("config.neotree.helper.copy_node_entries_handler")
+local copy_node_folders_handler = require("config.neotree.helper.copy_node_folders_handler")
 
 -- Safe hide of Neo-tree's floating preview, ignoring errors.
 ---@param _ any
@@ -164,9 +163,22 @@ return {
     desc = "Copy relative base dir (+) (root→dir or cwd→dir)",
   },
 
+  ["[f"] = {
+    function(state)
+      copy_node_folders_handler(state, { relative_to_cwd = false, preview_limit = 20 })
+    end,
+    desc = "Copy recursive folder list (absolute paths) to clipboard (+)",
+  },
+
+  ["[F"] = {
+    function(state)
+      copy_node_folders_handler(state, { relative_to_cwd = true, preview_limit = 20 })
+    end,
+    desc = "Copy recursive folder list (relative to cwd) to clipboard (+)",
+  },
+
   ["[t"] = {
     function(state)
-      -- call the generic handler with relative=false
       copy_node_entries_handler(state, { relative_to_cwd = false, preview_limit = 20 })
     end,
     desc = "Copy recursive file list (absolute paths) to clipboard (+)",
@@ -174,7 +186,6 @@ return {
 
   ["[T"] = {
     function(state)
-      -- call the generic handler with relative=true
       copy_node_entries_handler(state, { relative_to_cwd = true, preview_limit = 20 })
     end,
     desc = "Copy recursive file list (relative to cwd) to clipboard (+)",
