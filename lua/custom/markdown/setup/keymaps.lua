@@ -180,20 +180,20 @@ function M.apply(bufnr)
   end
 
   -- Line mappings (count-aware)
-  map("n", "<leader>mhi", function()
+  map("n", "<C-Right>", function()
     local n = get_count_or_one()
     local cur = api.nvim_win_get_cursor(0)
     headings.shift_range(cur[1], cur[1], n)
   end, "[Custom.Markdown] Increase heading in line (count-aware)", opts)
 
-  map("n", "<leader>mhd", function()
+  map("n", "<C-Left>", function()
     local n = get_count_or_one()
     local cur = api.nvim_win_get_cursor(0)
     headings.shift_range(cur[1], cur[1], -n)
   end, "[Custom.Markdown] Decrease heading in line (count-aware)", opts)
 
   -- Visual mappings: process visual marks directly (supports count prefix)
-  map("v", "<leader>mhi", function()
+  map("v", "<C-Right>", function()
     local n = get_count_or_one()
     local ok1, ms = pcall(api.nvim_buf_get_mark, 0, "<")
     local ok2, me = pcall(api.nvim_buf_get_mark, 0, ">")
@@ -206,7 +206,7 @@ function M.apply(bufnr)
     return ""
   end, "[Custom.Markdown] Increase headings in selection (count-aware)", opts)
 
-  map("v", "<leader>mhd", function()
+  map("v", "<C-Left>", function()
     local n = get_count_or_one()
     local ok1, ms = pcall(api.nvim_buf_get_mark, 0, "<")
     local ok2, me = pcall(api.nvim_buf_get_mark, 0, ">")
@@ -219,13 +219,13 @@ function M.apply(bufnr)
   end, "[Custom.Markdown] Decrease headings in selection (count-aware)", opts)
 
   -- Whole-buffer mappings (count-aware)
-  map("n", "<leader>mhI", function()
+  map("n", "<S-Right>", function()
     local s, e = whole_buf_lines_safe()
     local n = get_count_or_one()
     headings.shift_range(s, e, n)
   end, "[Custom.Markdown] Increase ALL headings (buffer, count-aware)", opts)
 
-  map("n", "<leader>mhD", function()
+  map("n", "<S-Left>", function()
     local s, e = whole_buf_lines_safe()
     local n = get_count_or_one()
     headings.shift_range(s, e, -n)
@@ -233,13 +233,13 @@ function M.apply(bufnr)
 
   -- Operator-pending mappings: set buffer-local repeat before invoking g@
   if headings._op_increase and headings._op_decrease then
-    map("n", "<leader>mha", function()
+    map("n", "<leader>mhi", function()
       vim.b._markdown_heading_op_count = get_count_or_one()
       vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_increase"
       return "g@"
     end, "[Custom.Markdown] Increase headings (operator-pending, count-aware)", with({ expr = true }, opts))
 
-    map("n", "<leader>mhx", function()
+    map("n", "<leader>mhd", function()
       vim.b._markdown_heading_op_count = get_count_or_one()
       vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_decrease"
       return "g@"

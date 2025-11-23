@@ -7,7 +7,7 @@
     - Usercommand sammelt alle Tabellen des Dokuments, gibt sie in einer select aus und wird dann, je nach option gerendert in einem floating window oder via Markdown Preview im Browser
  Sollte MarkdownPreview sich nicht dafür eigenen, eventuelle ein eigenes Tool erstellen
 
- Sprin gen mit `#` oder `*` zur nöchsten/vorigen Headline im v und V, Modus
+- Springen mit `#` oder `*` zur nöchsten/vorigen Headline im v und V, Modus
 
 ## toc
 
