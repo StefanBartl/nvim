@@ -1,31 +1,8 @@
 # WKD Neovim Roadmap
 
-- Alle mappings, autovmds und usercommdand funktonen von `setup()` auf `attach()` umschreiben
+- Alle mappings, autovmds und usercommand funktionen beiu Gelegenheit von `setup()` auf `attach()` umschreiben
 
 ## Important Bugs
-
-- WARNING `vim.lsp.buf.hover` is not configured to be handled by **Noice**
-
-Python 3 provider (optional) ~
-- `g:python3_host_prog` is not set. Searching for python3 in the environment.
-- Executable: C:\Python313\python3.EXE
-- Python version: 3.13.7
-- pynvim version: 0.6.0
-- OK Latest pynvim is installed.
-
-
-==============================================================================
-vim.deprecated:                       require("vim.deprecated.health").check()
-
- ~
-- WARNING vim.validate is deprecated. Feature will be removed in Nvim 1.0
-  - ADVICE:
-    - use vim.validate(name, value, validator, optional_or_msg) instead.
-    - stack traceback:
-        C:/Users/bartl/AppData/Local/nvim-data/lazy/gitsigns.nvim/lua/gitsigns/system/compat.lua:298
-        [C]:-1
-        C:/Users/bartl/AppData/Local/nvim-data/lazy/gitsigns.nvim/lua/gitsigns/async.lua:311
-        C:/Users/bartl/AppData/Local/nvim-data/lazy/gitsigns.nvim/lua/gitsigns/async.lua:321
 
 Snacks ~
  WARNING setup called *after* `VimEnter`

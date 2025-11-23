@@ -131,7 +131,7 @@ function M.enable_commands()
   end
   vim.g._diagnostics_qf_cmds = 1
 
-  vim.api.nvim_create_user_command("DiagQF", function(ctx)
+  vim.api.nvim_create_user_command("DiagWQF", function(ctx)
     -- ctx.args is "" when omitted → maps to nil severity
     M.to_qf({ severity = ctx.args })
   end, {
@@ -151,7 +151,7 @@ function M.enable_commands()
   })
 end
 
---- Define keyxmaps
+--- Define keymaps
 --- <leader>wq  → workspace → quickfix
 --- <leader>wl  → current buffer → loclist
 --- @return nil
@@ -163,12 +163,12 @@ function M.enable_keymaps(map)
     M.to_qf({ open = true })
   end, { desc = "Diagnostics → Quickfix (workspace)" })
 
-  map("n", "<leader>wl", function()
+  map("n", "<leader>lq", function()
     M.to_loc({ open = true, win_id = 0 })
   end, { desc = "Diagnostics → Loclist (buffer)" })
 end
 
---- Define user commands and keymaüps
+--- Define user commands and keymaps
 --- :DiagQF [severity]    → workspace → quickfix
 --- :DiagLoc [severity]   → current buffer → loclist
 --- <leader>wq            → workspace → quickfix
