@@ -37,20 +37,17 @@
 ## Funktionsweise
 
 1. **Keymap/Toggle**:
-
    * `<C-b>` öffnet das Floating-Popup.
    * Popup bleibt offen, Insertmodus wird beibehalten.
    * `<C-b>` erneut schließt das Popup.
    * `<Esc>` innerhalb des Popups schließt das Fenster sofort.
 
 2. **LSP-Integration**:
-
    * Verwendet `textDocument/signatureHelp` bevorzugt.
    * Falls Signaturen nicht verfügbar sind, wird `textDocument/hover` abgefragt.
    * Berücksichtigt moderne Neovim-APIs (`client.server_capabilities`) für LSP-Feature-Erkennung.
 
-3. **Floating-Popup**:
-
+1. **Floating-Popup**:
    * Fokusierbares Fenster, kann für Scrollen oder Kopieren verwendet werden.
    * Maximale Breite: 60% der Bildschirmbreite.
    * Automatisches Positionieren über oder unter dem Cursor, abhängig vom verfügbaren Platz.
@@ -78,7 +75,7 @@ highlight LspSignatureParam4 guifg=#ff0088 gui=bold
 highlight LspSignatureActiveParam guifg=#ffffff guibg=#005f87 gui=bold
 ```
 
----
+-
 
 ## Einbindung ins Projekt
 
@@ -96,7 +93,6 @@ require("mappings.lsp_signature").setup()
 * LSP-Signaturen werden via `format_signature_help.lua` in **String-Arrays** zerlegt.
 * Dokumentation (`sig.documentation`) wird an die Signatur angehängt.
 * Label-Parsing für Parameter:
-
   * Entweder **0-basierte Spalten** `[start, end]` vom LSP.
   * Oder **String-Matching** für LSPs, die keine Positionsangaben liefern.
 
@@ -172,7 +168,7 @@ Mit dieser Struktur kann man **beliebige Signaturen und Typinformationen** in da
 4. **Weitere Signaturen einbinden**: Lookup-Tabellen oder automatische Parsers (z. B. aus Docstrings oder Header-Files).
 5. **Insertmodus**: Popup ist focusable, man kann scrollen oder kopieren, Insertmodus bleibt erhalten.
 
----
+-
 
 ## Erweiterungsmöglichkeiten
 

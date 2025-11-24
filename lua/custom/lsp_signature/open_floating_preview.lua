@@ -1,6 +1,6 @@
 ---@module 'custom.lsp_signature.open_floating_preview'
+
 local api = vim.api
-local lsp_util = vim.lsp.util
 local state = require("custom.lsp_signature.state")
 
 ---@param lines string[]
@@ -20,19 +20,45 @@ return function(lines)
     return nil
   end
 
-  -- Filetype für LSP-Syntax / Highlights
-  local filetype = "markdown"
+  -- Berechne Breite
+  local width = 0
+  for _, ln in ipairs(lines) do
+    local w = vim.fn.strwidth(ln)
+    if w > width then
+      width = w
+    end
+  end
+  local max_width = math.floor(vim.o.columns * 0.6)
+  if width > max_width then
+    width = max_width
+  end
 
-  -- Optionen für das Floating Window
+  local height = #lines
+  local row = 1
+  local cursor_win_row = vim.fn.winline()
+  if vim.o.lines - cursor_win_row < (#lines + 4) then
+    row = -(#lines + 1)
+  end
+
+  -- Scratch Buffer erzeugen
+  local bufnr = api.nvim_create_buf(false, true)
+  api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  api.nvim_set_option_value("filetype", "lsp_signature", { buf = bufnr })
+
+  -- Floating Window erzeugen
   local opts = {
-    focusable = true, -- Fokus erlaubt Scroll/Copy
-    border = "rounded", -- gerundeter Rahmen
-    max_width = math.floor(vim.o.columns * 0.6),
+    relative = "cursor",
+    row = row,
+    col = 0,
+    width = width,
+    height = height,
+    focusable = true,
+    style = "minimal",
+    border = "rounded",
   }
-
-  -- Öffne das Floating Window über LSP util (korrekt modifiable)
-  local bufnr, winid = lsp_util.open_floating_preview(lines, filetype, opts)
-  api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  local winid = api.nvim_open_win(bufnr, true, opts)
 
   -- Buffer-local mappings to close the popup and clear state.
   -- They call the state.close() function to ensure module state is consistent.
