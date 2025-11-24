@@ -24,6 +24,8 @@ function M.setup()
   map("n", "lst", vim.lsp.buf.type_definition, { desc = "[LSP] Type Definition" })
   map("n", "lsa", vim.lsp.buf.code_action, { desc = "[LSP] Code Action" })
 
+  map("n", "grt", vim.lsp.buf.type_definition, { desc = "[LSP] Type Definition" })
+
   -----------------------------------------------
   -- Format
   -----------------------------------------------

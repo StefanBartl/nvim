@@ -163,9 +163,9 @@ return {
   },
 
   {
-    -- dir = vim.fn.expand(vim.env.REPOS_DIR .. "/mdlinks"),
-    "StefanBartl/mdlinks",
-    ft = "markdown",
+    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/mdlinks"),
+    -- "StefanBartl/mdlinks",
+    ft = "*",
     config = function()
       require("mdlinks.config").setup({
         debug = true,

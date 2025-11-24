@@ -12,5 +12,6 @@ end
 
 M.core = lr("core")
 M.patterns = lr("patterns")
+M.links = lr("links")
 
 return M
