@@ -26,6 +26,7 @@ function M.setup()
 
   map("n", "grt", vim.lsp.buf.type_definition, { desc = "[LSP] Type Definition" })
 
+  map("i", "<M-s>", vim.lsp.buf.signature_help, { desc = "[LSP] Remapping of vim.lsp.buf.signature_help()"})
   -----------------------------------------------
   -- Format
   -----------------------------------------------

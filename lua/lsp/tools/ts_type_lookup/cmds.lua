@@ -65,8 +65,10 @@ local function open_in_vsplit(fname, line)
   if not fname then
     return
   end
+  -- Escape filename to avoid issues with spaces/special chars.
   vim.cmd("vsplit " .. fn.fnameescape(fname))
   if line and line > 0 then
+    -- Move cursor to requested line after opening
     vim.cmd(tostring(line))
   end
 end
@@ -155,11 +157,12 @@ function M.peek_type_definition_for(symbol)
     }
     api.nvim_open_win(buf, true, opts)
     -- map 'o' in preview to open actual location in vsplit
+    -- NOTE: use the correct module path here to call the internal helper.
     api.nvim_buf_set_keymap(
       buf,
       "n",
       "o",
-      ("<cmd>lua require('tools.ts_type_lookup_cmds')._open_loc_in_split(%q,%d)<CR>"):format(fname, srow),
+      ("<cmd>lua require('lsp.tools.ts_type_lookup.cmds')._open_loc_in_split(%q,%d)<CR>"):format(fname, srow),
       { nowait = true, noremap = true, silent = true }
     )
     api.nvim_buf_set_keymap(buf, "n", "q", "<cmd>close<CR>", { nowait = true, noremap = true, silent = true })
@@ -185,20 +188,69 @@ function M.find_in_node_modules(symbol)
   end
   if fn.executable("rg") == 1 then
     local cmd = { "rg", "--no-ignore", "-n", "--hidden", "-S", symbol, node_dir }
+    -- Run ripgrep and collect lines
     local result = fn.systemlist(cmd)
     if vim.v.shell_error ~= 0 or vim.tbl_isempty(result) then
       vim.notify("No results for '" .. symbol .. "' in node_modules", vim.log.levels.INFO)
       return
     end
     local first = result[1]
-    local path, lnum = first:match("^([^:]+):(%d+):")
+
+    -- Robust parsing:
+    -- Reason:
+    --  * On Windows absolute paths contain ":" (e.g., "C:\path\to\file.ts"), so naive patterns
+    --    that stop at the first ":" will fail and only capture "C".
+    --  * rg output format is typically "path:line:col:match" or "path:line:match".
+    -- Approach:
+    --  * Split on ":" and treat the last two fields as line and possibly column.
+    --  * Reconstruct path from the remaining leading fields. This preserves colons inside paths.
+    local parts = vim.split(first, ":", { plain = true })
+    local path, lnum
+
+    if #parts >= 3 then
+      -- Most common case: path:line:col:...  -> line is at index #parts-2
+      -- Or: path:line:match -> line is at index #parts-1 (but column absent)
+      -- We prioritize extracting the line number from #parts-2 if it is numeric,
+      -- otherwise from #parts-1.
+      local maybe_line = tonumber(parts[#parts - 2])
+      if maybe_line then
+        lnum = maybe_line
+        path = table.concat(parts, ":", 1, #parts - 2)
+      else
+        local maybe_line2 = tonumber(parts[#parts - 1])
+        if maybe_line2 then
+          lnum = maybe_line2
+          path = table.concat(parts, ":", 1, #parts - 1)
+        end
+      end
+    elseif #parts == 2 then
+      -- Simple case: path:line
+      path = parts[1]
+      lnum = tonumber(parts[2])
+    end
+
+    if not path or not lnum then
+      -- Last-resort fallback: try a greedy Lua pattern that captures everything before the last ":<digits>:" or last ":<digits>"
+      local p, ln = first:match("^(.*):(%d+):") -- greedy capture should handle drive-colon paths
+      if not p then
+        p, ln = first:match("^(.*):(%d+)$")
+      end
+      if p and ln then
+        path = p
+        lnum = tonumber(ln)
+      end
+    end
+
     if not path then
-      vim.notify("Could not parse rg result", vim.log.levels.ERROR)
+      vim.notify("Could not parse rg result: " .. first, vim.log.levels.ERROR)
       return
     end
+
     local safe_lnum = tonumber(lnum)
     if safe_lnum ~= nil then
       open_in_vsplit(path, safe_lnum)
+    else
+      vim.notify("Could not parse line number from rg result: " .. first, vim.log.levels.ERROR)
     end
   else
     vim.notify("ripgrep (rg) not found; install rg or rely on LSP", vim.log.levels.WARN)
