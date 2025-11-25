@@ -75,7 +75,7 @@ return function(bufnr, callback)
           return
         end
 
-        local lines = format_signature_help(result)
+        local lines, active_hl = format_signature_help(result)
         if not lines or #lines == 0 then
           schedule(function()
             notify(
@@ -88,15 +88,65 @@ return function(bufnr, callback)
         end
 
         schedule(function()
-          local buf, win = open_floating_preview(lines)
+          -- build footer from current client buffer path (shortened by util.helper if you like)
+          local footer = nil
+          -- choose display path for the signature origin (prefer client root or file path)
+          local origin = client.workspace_folders and client.workspace_folders[1] and client.workspace_folders[1].uri
+          if origin then
+            footer = vim.uri_to_fname(origin)
+          else
+            -- fallback to buffer name
+            footer = vim.api.nvim_buf_get_name(bufnr)
+          end
+
+          local buf, win = open_floating_preview(lines, { footer = footer, focus = (mode == "n") })
+          if not buf or not win then
+            notify("[lsp_signature] buf or win is nil", 4)
+            return
+          end
+
           state.set(buf, win)
+
+          -- apply active parameter highlighting if hl present
+          if active_hl and buf then
+            -- local groups = param_hl.group_names()
+            local ns = ns_id or param_hl.setup()
+            local start_col = active_hl.col_start or 1
+            local end_col = active_hl.col_end or start_col
+            pcall(
+              vim.hl.range,
+              buf,
+              ns,
+              "LspSignatureActiveParam",
+              { active_hl.line - 1, start_col - 1 },
+              { active_hl.line - 1, end_col },
+              { inclusive = false }
+            )
+          end
 
           -- Parameter highlighting (all params + active)
           local sig = result.signatures[result.activeSignature and result.activeSignature + 1 or 1]
           if sig and sig.parameters then
+            -- apply highlighting for signature
+            -- after opening preview buffer (buf) and if we have active parameter hl info:
             local groups = param_hl.group_names()
-            local _ns = ns_id or param_hl.setup()
+            local ns = ns_id or param_hl.setup()
+            if active_hl and buf then
+              local start_col = active_hl.col_start or 1
+              local end_col = active_hl.col_end or start_col
+              -- highlight the active param
+              pcall(
+                vim.hl.range,
+                buf,
+                ns,
+                "LspSignatureActiveParam",
+                { active_hl.line - 1, start_col - 1 },
+                { active_hl.line - 1, end_col },
+                { inclusive = false }
+              )
+            end
 
+            -- Also highlight other parameters if you have their ranges:
             for i, param in ipairs(sig.parameters) do
               local start_col, end_col
               if type(param.label) == "table" and #param.label == 2 then

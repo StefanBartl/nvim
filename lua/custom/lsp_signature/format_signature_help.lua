@@ -1,14 +1,31 @@
 ---@module 'custom.lsp_signature.format_signature_help'
 local split_lines = require("custom.lsp_signature.split_lines")
 
---- Format signatureHelp result into lines for floating window
---- Returns lines + optional highlight info for active parameter
----@param result table
+-- Strip common comment prefixes for many languages from a single line.
+-- This is heuristic: handles //, /* */, #, --, % and leading whitespace.
+---@param line string
+---@return string
+local function strip_comment_prefix(line)
+  if not line then
+    return line
+  end
+  -- trim leading whitespace
+  local s = line:gsub("^%s+", "")
+  -- patterns for common prefixes
+  s = s:gsub("^//%s*", "")
+  s = s:gsub("^%-%-%s*", "")
+  s = s:gsub("^#%s*", "")
+  s = s:gsub("^%%s*", "") -- lua/comment %
+  -- block-comment start like /* ... */ -> remove leading /* and trailing */
+  s = s:gsub("^/%*%s*", "")
+  s = s:gsub("%s*%*/%s*$", "")
+  return s
+end
+
 return function(result)
   if not result then
     return nil
   end
-
   local sigs = result.signatures or (result.value and result.value.signatures)
   if not sigs or #sigs == 0 then
     return nil
@@ -25,14 +42,17 @@ return function(result)
   end
 
   local label = sig.label or ""
-  local lines = split_lines(label)
+  -- split label into lines and strip comment prefixes from each line (helpful when servers include comment markers)
+  local lines = {}
+  for _, ln in ipairs(split_lines(label)) do
+    table.insert(lines, strip_comment_prefix(ln))
+  end
 
-  -- Compute active parameter highlight
+  -- compute active parameter hl info if available
   local hl = nil
   if sig.parameters and sig.activeParameter then
-    local param = sig.parameters[sig.activeParameter + 1] -- 0-based
+    local param = sig.parameters[sig.activeParameter + 1]
     if param and param.label then
-      -- param.label can be string or [start, end]
       if type(param.label) == "table" and #param.label == 2 then
         hl = { line = 1, col_start = param.label[1] + 1, col_end = param.label[2] }
       elseif type(param.label) == "string" then
@@ -44,7 +64,7 @@ return function(result)
     end
   end
 
-  -- Append documentation if exists
+  -- append documentation (strip comment prefixes per line)
   if sig.documentation then
     local doc_text = ""
     if type(sig.documentation) == "string" then
@@ -55,7 +75,7 @@ return function(result)
     if doc_text ~= "" then
       table.insert(lines, "")
       for _, ln in ipairs(split_lines(doc_text)) do
-        table.insert(lines, ln)
+        table.insert(lines, strip_comment_prefix(ln))
       end
     end
   end
