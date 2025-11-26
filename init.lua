@@ -64,3 +64,9 @@ require("lsp.tools.eslint_prettier").setup({
 })
 
 require("lsp.tools.ts_type_lookup").setup()
+
+require("lsp.tools.deprecated_help").setup(
+--     {
+--         keymap = "<leader>ls",
+--     }
+)
