@@ -57,8 +57,6 @@ return {
         HISTORY.path = dir .. "/_global.txt"
       end
 
-      -- Defaults: small but effective perf tweaks (ascending + prompt on top)
-      local picker_cycle = require("config.telescope.picker_cycle")
       local actions = require("telescope.actions")
       opts.defaults = vim.tbl_deep_extend("force", opts.defaults or {}, {
         file_ignore_patterns = {
@@ -99,7 +97,6 @@ return {
           },
         },
 
-        attach_mappings = picker_cycle.telescope_attach_mappings(),
       })
 
       -- Configure extensions in one place to avoid multiple telescope.setup() calls
