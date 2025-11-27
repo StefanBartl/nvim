@@ -96,7 +96,6 @@ return {
             ["<PageDown>"] = actions.preview_scrolling_down,
           },
         },
-
       })
 
       -- Configure extensions in one place to avoid multiple telescope.setup() calls
@@ -135,6 +134,13 @@ return {
       for _, ext in ipairs(opts.extensions_list or {}) do
         pcall(telescope.load_extension, ext)
       end
+
+      local attach_all = require("config.telescope.attach_selected_index")
+      local selected_index = require("config.telescope.selected_index")
+
+      -- Setup the automatic wrapping of all builtins.
+      -- Pass the factory that returns the attach_mappings function.
+      attach_all.setup(selected_index.attach_mappings_with_selected_index)
     end,
   },
 
