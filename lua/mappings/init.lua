@@ -28,6 +28,7 @@ function M.setup()
   require("mappings.telescope").setup()
   require("mappings.terminal").setup()
   require("mappings.trouble").setup()
+  require("mappings.window_orientation").setup()
 
   -- require("mappings.view_scroll").map_default_keys('<C-d>', '<C-u>')
 
