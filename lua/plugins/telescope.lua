@@ -135,7 +135,7 @@ return {
         pcall(telescope.load_extension, ext)
       end
 
-      local attach_all = require("config.telescope.attach_selected_index")
+      local attach_all = require("config.telescope.selected_index.attach")
       local selected_index = require("config.telescope.selected_index")
 
       -- Setup the automatic wrapping of all builtins.

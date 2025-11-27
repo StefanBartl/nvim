@@ -1,12 +1,12 @@
----@module 'config.telescope.attach_selected_index'
+---@module 'config.telescope.selected_index.attach'
 --- Small helper that automatically attaches the selected-index virtual-text
 --- overlay to all Telescope builtin pickers by wrapping their functions.
 --- Place this file in `lua/config/telescope/attach_selected_index.lua`
 --- and require it from the plugin configuration (see usage below).
----
+
 local M = {}
 
--- ensure we only wrap once per function
+-- ensure only wrap once per function
 local wrapped_builtins = {}
 
 -- Merge two attach_mappings functions into one.
