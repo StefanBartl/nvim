@@ -13,3 +13,4 @@ require("custom.repo_pickers").enable({
   keymaps_lhs = { repo_files = "<leader>rf", repo_grep = "<leader>rg" },
 }, { usercmds = true, keymaps = true })
 require("custom.usr_pickers").enable({}, { usercmds = true, keymaps = true })
+require("custom.pathfinder").setup{}
