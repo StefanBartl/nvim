@@ -46,7 +46,7 @@ function M.attach_mappings_with_selected_index()
     vim.schedule(function()
       update_selected_index()
     end)
-    vim.defer_fn(function() update_selected_index() end, 150)
+    vim.defer_fn(function() update_selected_index() end, 40)
     vim.defer_fn(function() update_selected_index() end, 500)
 
     -- Common movement keys in insert and normal modes

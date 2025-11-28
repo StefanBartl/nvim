@@ -83,9 +83,9 @@ function M.make_update_selected_index(deps)
       index = compute_index and compute_index(p, row) or (row + 1)
     end
 
-
     if index and index > 0 then
-        require("config.telescope.selected_index.place_index")(results_bufnr, ns, row, 0, "overlay")
+      require("config.telescope.selected_index.display.virt_text")(results_bufnr, ns, row, index, "right_align")
+      -- require("config.telescope.selected_index.display.virt_lines")(results_bufnr, ns, row, index, false)
     end
   end
 end

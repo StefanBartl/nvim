@@ -135,12 +135,12 @@ return {
         pcall(telescope.load_extension, ext)
       end
 
-      local attach_all = require("config.telescope.selected_index.attach")
-      local selected_index = require("config.telescope.selected_index")
-
-      -- Setup the automatic wrapping of all builtins.
-      -- Pass the factory that returns the attach_mappings function.
-      attach_all.setup(selected_index.attach_mappings_with_selected_index)
+      -- local attach_all = require("config.telescope.selected_index.attach")
+      -- local selected_index = require("config.telescope.selected_index")
+      --
+      -- -- Setup the automatic wrapping of all builtins.
+      -- -- Pass the factory that returns the attach_mappings function.
+      -- attach_all.setup(selected_index.attach_mappings_with_selected_index)
     end,
   },
 

@@ -1,5 +1,7 @@
----@module 'config.telescope.selected_files.place_index'
---- Use virt_text with eol or right_align to avoid overlaying start of line.
+---@module 'config.telescope.selected_files.display.virt_text'
+--- Use virt_text with 'overlay', 'eol' or 'right_align'
+-- Problem:
+-- 'overlay' zeichnet die Nummerierung über die ersten chars der aktuellen Zeile
 
 ---@param results_bufnr number
 ---@param ns number

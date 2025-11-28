@@ -9,6 +9,7 @@ function M.setup()
   vim.g.__map_helper = require("lib.map")
 
   require("mappings.buf_win_tab").setup()
+  require("mappings.buffer_jump").setup()
   require("mappings.custom").setup()
   require("mappings.ctrl_cycle").setup()
   require("mappings.dbg_messages").setup()
