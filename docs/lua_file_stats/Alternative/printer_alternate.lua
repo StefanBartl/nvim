@@ -1,6 +1,6 @@
 ---@module 'lua_file_stats.printer_alternate'
 ---Alternative printer for lua_file_stats.
----English comments: exposes the same API as the original printer module so it can be
+---exposes the same API as the original printer module so it can be
 ---required as `lua_file_stats.printer_alternate` and used interchangeably from cli.lua.
 ---This printer emits four-line/word columns (Total/Comments/Annotations/Whitespace for Numbers mode;
 ---Code/Comments/Annotations/Whitespace for Percent mode). Supports percent_mode = "both" | "percent" | "numbers".

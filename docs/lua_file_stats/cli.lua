@@ -11,7 +11,7 @@ script_dir = script_dir:gsub("\\", "/")
 local parent_dir = script_dir .. "../"
 parent_dir = parent_dir:gsub("\\", "/")
 
--- English comments:
+-- 
 -- We add patterns so that:
 -- 1) require("lua_file_stats.compute") --> parent_dir .. "?.lua"  (-> "docs/lua_file_stats/compute.lua")
 -- 2) require("lua_file_stats.compute") --> parent_dir .. "?/init.lua" (if module is a folder with init.lua)
@@ -22,8 +22,7 @@ package.path = parent_dir .. "?.lua;" .. parent_dir .. "?/init.lua;" .. script_d
 local compute = require("lua_file_stats.compute")
 local analyzer = require("lua_file_stats.analyzer")
 local scanner = require("lua_file_stats.scanner")
-local printer = require("lua_file_stats.printer_alternate")
--- local printer = require("lua_file_stats.printer")
+local printer = require("lua_file_stats.printer")
 
 local M = {}
 

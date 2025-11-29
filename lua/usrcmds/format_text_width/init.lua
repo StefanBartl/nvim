@@ -202,7 +202,7 @@ function M.setup_user_command()
 end
 
 -- Create the range / visual command `:SetTextWidthRange`
--- English comments:
+-- 
 --   - This command accepts a range (e.g. `:10,20SetTextWidthRange 50`) and will only
 --     reflow that line interval.
 --   - It is intended to be used with a visual selection as `:'<,'>SetTextWidthRange 50`.
