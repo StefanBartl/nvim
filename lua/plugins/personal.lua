@@ -11,11 +11,8 @@ return {
 
   {
     "StefanBartl/telescope-selected-index",
-   -- dir = vim.env.REPOS_DIR .. "/telescope-selected-index",
-   event = "VeryLazy",
-    config = function(_, opts)
-      require("telescope_selected_index").setup(opts)
-    end,
+    -- dir = vim.env.REPOS_DIR .. "/telescope-selected-index",
+    event = "VeryLazy",
   },
 
   {
