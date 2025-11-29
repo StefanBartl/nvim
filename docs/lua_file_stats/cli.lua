@@ -1,95 +1,124 @@
 ---@module 'lua_file_stats.cli'
--- CLI entry point. This script can be executed with `lua path/to/cli.lua [root_dir] [flags]`.
--- It wires up modules, parses arguments and runs scan/print.
+---CLI entry point for lua_file_stats project.
+---entrypoint wires scanner/printer; cli is top-level and no other module requires it.
 
--- Ensure module path includes the sibling 'lua_file_stats' directory (the modules live there).
+-- compute script_dir (where this file lives)
 local source = debug.getinfo(1, "S").source
 local script_dir = source:match("^@?(.*[\\/])") or "./"
--- Add possible module search paths (folder and subfolder).
-package.path = script_dir .. "?.lua;" .. script_dir .. "lua_file_stats/?.lua;" .. package.path
+script_dir = script_dir:gsub("\\", "/")
 
-local utils = require("lua_file_stats.utils")
+-- module root is parent (docs/)
+local parent_dir = script_dir .. "../"
+parent_dir = parent_dir:gsub("\\", "/")
+
+-- English comments:
+-- We add patterns so that:
+-- 1) require("lua_file_stats.compute") --> parent_dir .. "?.lua"  (-> "docs/lua_file_stats/compute.lua")
+-- 2) require("lua_file_stats.compute") --> parent_dir .. "?/init.lua" (if module is a folder with init.lua)
+-- 3) also add script_dir fallback for requires like require("compute") if needed
+package.path = parent_dir .. "?.lua;" .. parent_dir .. "?/init.lua;" .. script_dir .. "?.lua;" .. package.path
+
+-- require modules (scanner/printer are independent and do not require cli)
 local compute = require("lua_file_stats.compute")
 local analyzer = require("lua_file_stats.analyzer")
 local scanner = require("lua_file_stats.scanner")
-local printer = require("lua_file_stats.printer")
+local printer = require("lua_file_stats.printer_alternate")
+-- local printer = require("lua_file_stats.printer")
 
--- default globals / config
-local total_stats = {
-    total_files = 0, total_lines = 0, lines_without_comments = 0, comment_lines = 0,
-    lines_without_annotations = 0, annotation_lines = 0,
-    total_words = 0, words_in_comments = 0, words_in_annotations = 0,
-    words_without_comments = 0, words_without_annotations = 0
+local M = {}
+
+-- Aggregates for results
+M.folder_summary = {}
+M.total_stats = {
+    total_files = 0,
+    total_lines = 0,
+    lines_without_comments = 0,
+    comment_lines = 0,
+    lines_without_annotations = 0,
+    annotation_lines = 0,
+    blank_lines = 0,
+    total_words = 0,
+    words_in_comments = 0,
+    words_in_annotations = 0,
+    words_without_comments = 0,
+    words_without_annotations = 0,
+    words_in_blank = 0
 }
 
-local folder_summary = {}
-local percent_mode = "both"
-local fields_to_print = { "files", "folders", "summary" }
-local single_file_path = nil
-local col_width = 7
-local reverse_order = false
+-- Output mode settings (default: both numbers and percents)
+M.percent_mode = "both" -- "both" | "percent" | "numbers"
+M.fields_to_print = { "files", "folders", "summary" } -- which tables to print by default
+M.single_file_path = nil
+
+-- Top-N settings and top-only flags
+M.top_n = 25
+M.top_n_specified = false
+M.only_top_files_lines = false
+M.only_top_files_words = false
+M.only_top_folders_lines = false
+M.only_top_folders_words = false
+
+local unpack = table.unpack or unpack
 
 -- Parse args (simple)
 local args = { unpack(arg) } -- CLI args
 local root_dir = "."
 for _, a in ipairs(args) do
-    if a == "--reverse" then reverse_order = true
-    elseif a == "--percent-only" or a == "--percentage-only" then percent_mode = "percent"
-    elseif a == "--numbers-only" then percent_mode = "numbers"
+    if a == "--reverse" then M.reverse_order = true
+    elseif a == "--percent-only" or a == "--percentage-only" then M.percent_mode = "percent"
+    elseif a == "--numbers-only" then M.percent_mode = "numbers"
     elseif a:match("^%-%-fields=") then
-        fields_to_print = {}
+        M.fields_to_print = {}
         local val = a:sub(10)
-        for f in val:gmatch("([^,]+)") do table.insert(fields_to_print, f) end
+        for f in val:gmatch("([^,]+)") do table.insert(M.fields_to_print, f) end
     elseif a:match("^%-%-file=") then
-        single_file_path = a:sub(9)
+        M.single_file_path = a:sub(9)
     elseif a:match("^%-%-colwidth=") then
-        col_width = tonumber(a:sub(12)) or col_width
+        M.col_width = tonumber(a:sub(12)) or M.col_width
+    elseif a:match("^%-%-top=") then
+        M.top_n = tonumber(a:sub(7)) or M.top_n
+        M.top_n_specified = true
     elseif not a:match("^%-") then
         root_dir = a
     end
 end
 
--- Provide format_value function based on percent_mode
-local function format_value(number, perc)
-    if percent_mode == "both" then
-        return string.format("%d (%.1f%%)", utils.safe_number(number), utils.safe_number(perc))
-    elseif percent_mode == "percent" then
-        return string.format("%.1f%%", utils.safe_number(perc))
-    else
-        return string.format("%d", utils.safe_number(number))
-    end
+-- Column formatting defaults
+M.col_width = M.col_width or 7
+for _, a in ipairs(arg) do
+    if a:match("^%-%-colwidth=") then M.col_width = tonumber(a:sub(12)) or M.col_width end
 end
 
--- expose printer config
-printer.col_width = col_width
-
--- If single file mode: analyze only that file and print file table (no folder/total)
-if single_file_path then
-    local stats = analyzer.analyze_file(single_file_path)
-    folder_summary = { ["."] = { files = { { rel_file = single_file_path, stats = stats } }, file_count = 1 } }
-    printer.print_file_stats(folder_summary, format_value, col_width, 60)
+-- Single-file quick path
+if M.single_file_path then
+    local stats = analyzer.analyze_file(M.single_file_path)
+    local folder_summary = { ["."] = { files = { { rel_file = M.single_file_path, stats = stats } }, file_count = 1 } }
+    local cfg = { col_width = M.col_width, percent_mode = M.percent_mode, fields_to_print = M.fields_to_print, top_n = M.top_n }
+    printer.print_file_stats(folder_summary, stats, cfg)
     printer.print_text_summary(stats)
     os.exit(0)
 end
 
 -- Normal multi-file flow
-folder_summary = scanner.scan_dir(root_dir, total_stats)
+M.folder_summary = scanner.scan_dir(root_dir, M.total_stats) or {}
 
-if reverse_order then
-    printer.print_total_summary(total_stats, format_value, col_width)
-    printer.print_folder_summary(folder_summary, format_value, col_width, 40)
-    printer.print_file_stats(folder_summary, format_value, col_width, 60)
+local cfg = { col_width = M.col_width, percent_mode = M.percent_mode, fields_to_print = M.fields_to_print, top_n = M.top_n }
+
+if M.reverse_order then
+    printer.print_total_summary(M.total_stats, cfg)
+    printer.print_folder_summary(M.folder_summary, M.total_stats, cfg)
+    printer.print_file_stats(M.folder_summary, M.total_stats, cfg)
 else
-    printer.print_file_stats(folder_summary, format_value, col_width, 60)
-    printer.print_folder_summary(folder_summary, format_value, col_width, 40)
-    printer.print_total_summary(total_stats, format_value, col_width)
+    printer.print_file_stats(M.folder_summary, M.total_stats, cfg)
+    printer.print_folder_summary(M.folder_summary, M.total_stats, cfg)
+    printer.print_total_summary(M.total_stats, cfg)
 end
 
-printer.print_text_summary(total_stats)
+printer.print_text_summary(M.total_stats)
 
 return {
     -- exported for potential programmatic use
-    scan = function(dir) return scanner.scan_dir(dir, total_stats) end,
+    scan = function(dir) return scanner.scan_dir(dir, M.total_stats) end,
     analyze = analyzer.analyze_file,
     compute = compute.compute_percentages,
     print = printer

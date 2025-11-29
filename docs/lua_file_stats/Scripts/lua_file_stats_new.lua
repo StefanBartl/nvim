@@ -1,4 +1,4 @@
----@module 'lua_file_stats'
+---@module 'lua_file_stats_new'
 -- Lua script: relative paths, inline/block comment handling, annotations,
 -- ASCII tables with optional percent display, text summary, top-N lists, and folder-sorted views.
 -- English comments inside code.
