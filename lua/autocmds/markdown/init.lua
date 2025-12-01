@@ -8,13 +8,15 @@
 ---@class MdAutoCmds
 local M = {}
 
+local api = vim.api
+
 -- Helpers ---------------------------------------------------------------------
 
 --- Create/clear a namespaced augroup.
 ---@param name string
 ---@return integer
 local function augroup(name)
-  return vim.api.nvim_create_augroup("markdown_autocmds_" .. name, { clear = true })
+  return api.nvim_create_augroup("markdown_autocmds_" .. name, { clear = true })
 end
 
 --- Normalize a FileType autocmd pattern field.
@@ -101,6 +103,194 @@ local Defaults = {
   },
 }
 
+--------------------------------------------------------------------------------
+-- Case functions for modular "gf" resolution
+--------------------------------------------------------------------------------
+
+--- Case 0: gopath resolver (new first case)
+--- Tries to resolve using gopath. If it succeeds, it should open the target itself.
+--- Returns true on success, false on failure.
+---@param cfg table
+---@return boolean
+---@diagnostic disable-next-line unused-param
+local function resolve_gopath_case(cfg)
+  local ok, _ = pcall(function()
+    return require("gopath").commands.resolve_and_open("edit")
+  end)
+  if not ok then
+    return false
+  end
+  -- Assume success if the function does not error.
+  return true
+end
+
+--- Case 1: Inline link [text](destination)
+---@param node TSNode
+---@param bufnr integer
+---@param ts_utils table
+---@param log fun(msg:string,val?:any)
+---@return boolean,string|nil
+local function resolve_inline_link_case(node, bufnr, ts_utils, log)
+  ts_utils = ts_utils
+  local function find_parent(n, types)
+    while n and not vim.tbl_contains(types, n:type()) do
+      n = n:parent()
+    end
+    return n
+  end
+
+  local dest = find_parent(node, { "link_destination" })
+  if dest and dest:type() == "link_destination" then
+    local path = ts_text(dest, bufnr)
+    log("Inline link: ", path)
+    return true, path
+  end
+  return false, nil
+end
+
+--- Case 2: Reference link [label] with definition [label]: dest
+---@param node TSNode
+---@param bufnr integer
+---@param ts_utils table
+---@param log fun(msg:string,val?:any)
+---@return boolean,string|nil
+local function resolve_reference_link_case(node, bufnr, ts_utils, log)
+    ts_utils = ts_utils
+  local function find_parent(n, types)
+    while n and not vim.tbl_contains(types, n:type()) do
+      n = n:parent()
+    end
+    return n
+  end
+
+  local ref = find_parent(node, { "link_reference" })
+  if not ref then
+    return false, nil
+  end
+
+  local label = ts_text(ref, bufnr) or ""
+  label = label:gsub("^%[", ""):gsub("%]$", "")
+  log("Reference label: ", label)
+
+  local total = api.nvim_buf_line_count(bufnr)
+  for lnum = 1, total do
+    local line = api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]
+    if line then
+      local pat = "^%[" .. vim.pesc(label) .. "%]%s*:%s*(.+)$"
+      local m = line:match(pat)
+      if m then
+        log("Reference target: ", m)
+        return true, m
+      end
+    end
+  end
+
+  return false, nil
+end
+
+--- Case 3: URL-like target
+---@param path string
+---@param cfg table
+---@param log fun(msg:string,val?:any)
+---@return boolean
+local function resolve_url_case(path, cfg, log)
+  if not is_url_like(path) then
+    return false
+  end
+
+  if path:match("^www%.") or (not path:match("^%w[%w+.-]*:") and path:match("^[A-Za-z0-9%-_]+%.[A-Za-z]+")) then
+    path = "http://" .. path
+    log("HTTP auto-prefix: ", path)
+  end
+
+  if open_url(path, cfg.goto_file) then
+    return true
+  end
+
+  return false
+end
+
+--- Case 4: Local filesystem path
+---@param path string
+---@param log fun(msg:string,val?:any)
+---@return boolean
+local function resolve_local_file_case(path, log)
+  local cwd = vim.fn.expand("%:p:h")
+  log("CWD: ", cwd)
+
+  -- If relative path
+  if not path:match("^/") and not path:match("^[A-Za-z]:[\\/]") then
+    path = cwd .. "/" .. path
+    log("Combined relative: ", path)
+  end
+
+  local target = vim.fn.fnamemodify(path, ":p")
+  log("Absolute: ", target)
+
+  vim.cmd("edit " .. vim.fn.fnameescape(target))
+  return true
+end
+
+--------------------------------------------------------------------------------
+-- Case dispatcher
+--------------------------------------------------------------------------------
+
+--- Try all gf-cases in sequence.
+--- Returns true if any case succeeded; false otherwise.
+---@param node TSNode|nil
+---@param bufnr integer
+---@param ts_utils table
+---@param cfg table
+---@return boolean
+local function resolve_markdown_gf_cases(node, bufnr, ts_utils, cfg)
+  local function log(msg, val)
+    if cfg.goto_file.debug then
+      vim.notify(msg .. (val ~= nil and tostring(val) or ""), vim.log.levels.INFO, { title = "markdown-gf" })
+    end
+  end
+
+  -- Case 0: gopath
+  if resolve_gopath_case(cfg) then
+    return true
+  end
+
+  -- No node? Fallback immediately
+  if not node then
+    return false
+  end
+
+  -- Case 1: Inline link
+  local ok_inline, path = resolve_inline_link_case(node, bufnr, ts_utils, log)
+  if ok_inline and path then
+    -- module conversion
+    path = path:gsub("\\", "/")
+    if path:match("^[%a_][%w_]*%.") then
+      path = path:gsub("%.", "/") .. ".lua"
+    end
+    -- try URL case
+    if resolve_url_case(path, cfg, log) then
+      return true
+    end
+    -- fallback to file
+    return resolve_local_file_case(path, log)
+  end
+
+  -- Case 2: Reference link
+  local ok_ref, ref_path = resolve_reference_link_case(node, bufnr, ts_utils, log)
+  if ok_ref and ref_path then
+    local path2 = ref_path:gsub("\\", "/")
+    if path2:match("^[%a_][%w_]*%.") then
+      path2 = path2:gsub("%.", "/") .. ".lua"
+    end
+    if resolve_url_case(path2, cfg, log) then
+      return true
+    end
+    return resolve_local_file_case(path2, log)
+  end
+
+  return false
+end
+
 -- Public API ------------------------------------------------------------------
 
 --- Enable Markdown-related autocommands per feature.
@@ -112,12 +302,12 @@ function M.enable(cfg)
   -- 1) Buffer-local wrap mapping ---------------------------------------------
   -- Description: Registers a buffer-local normal-mode mapping to wrap <cword> as [word]()
   if cfg.wrap_key.enable then
-    vim.api.nvim_create_autocmd("FileType", {
+    api.nvim_create_autocmd("FileType", {
       group = augroup("wrap_key"),
       pattern = norm_pattern(cfg.wrap_key.pattern),
       callback = function()
         ---@type integer
-        local buf = vim.api.nvim_get_current_buf()
+        local buf = api.nvim_get_current_buf()
         if cfg.wrap_key.only_modifiable ~= false and not vim.bo[buf].modifiable then
           vim.notify("Markdown wrap: buffer is not modifiable", vim.log.levels.WARN)
           return
@@ -140,14 +330,14 @@ function M.enable(cfg)
             return
           end
           ---@type integer, integer
-          local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+          local row, col = unpack(api.nvim_win_get_cursor(0))
 
           -- Atomic textual change via change-inner-word motion.
           vim.cmd("normal! ciw[" .. word .. "]()")
 
           -- Place cursor inside parentheses: [word](|)
           local new_col = col + 2 + #word + 1
-          vim.api.nvim_win_set_cursor(0, { row, new_col })
+          api.nvim_win_set_cursor(0, { row, new_col })
         end
 
         vim.keymap.set("n", key, handler, {
@@ -162,13 +352,13 @@ function M.enable(cfg)
   end
 
   -- 2) Markdown-aware gf override --------------------------------------------
-  -- Description: Overrides "gf" to follow inline/reference links or open URLs; falls back to default "gf" when unresolved.
+  -- Description: Overrides "gf" to call "gopath", than follow inline/reference links or open URLs; falls back to default "gf" when unresolved.
   if cfg.goto_file.enable then
-    vim.api.nvim_create_autocmd("FileType", {
+    api.nvim_create_autocmd("FileType", {
       group = augroup("goto_file"),
       pattern = norm_pattern(cfg.goto_file.pattern),
       callback = function()
-        -- Validate Treesitter availability; otherwise, keep default behavior.
+        -- require TS only once
         local ok_ts = pcall(require, "nvim-treesitter.ts_utils")
         if not ok_ts then
           return
@@ -177,105 +367,17 @@ function M.enable(cfg)
 
         vim.keymap.set("n", "gf", function()
           local node = ts_utils.get_node_at_cursor()
-          if not node then
-            return vim.cmd("normal! gf")
+          local bufnr = api.nvim_get_current_buf()
+
+          -- Try all cases
+          local success = resolve_markdown_gf_cases(node, bufnr, ts_utils, cfg)
+
+          -- If nothing matched → fallback to builtin gf
+          if not success then
+            vim.cmd("normal! gf")
           end
-
-          local bufnr = vim.api.nvim_get_current_buf()
-          local path ---@type string|nil
-
-          local function log(msg, val)
-            if cfg.goto_file.debug then
-              local text = msg .. (val ~= nil and tostring(val) or "")
-              vim.notify(text, vim.log.levels.INFO, { title = "markdown-gf" })
-            end
-          end
-
-          -- Walk up to a parent node of given types.
-          ---@param n TSNode|nil
-          ---@param types string[]
-          ---@return TSNode|nil
-          local function find_parent(n, types)
-            while n and not vim.tbl_contains(types, n:type()) do
-              n = n:parent()
-            end
-            return n
-          end
-
-          -- Case 1: Inline link [text](dest)
-          do
-            local dest = find_parent(node, { "link_destination" })
-            if dest and dest:type() == "link_destination" then
-              path = ts_text(dest, bufnr)
-              log("Inline link: ", path)
-            end
-          end
-
-          -- Case 2: Reference link [label] with definition [label]: dest
-          if not path then
-            local ref = find_parent(node, { "link_reference" })
-            if ref then
-              local label = ts_text(ref, bufnr) or ""
-              label = label:gsub("^%[", ""):gsub("%]$", "")
-              log("Reference label: ", label)
-              local line_count = vim.api.nvim_buf_line_count(bufnr)
-              for lnum = 1, line_count do
-                local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]
-                local pat = "^%[" .. vim.pesc(label) .. "%]%s*:%s*(.+)$"
-                local m = line and line:match(pat) or nil
-                if m then
-                  path = m
-                  log("Reference target: ", path)
-                  break
-                end
-              end
-            end
-          end
-
-          if not path or path == "" then
-            return vim.cmd("normal! gf")
-          end
-
-          -- Normalize slashes (portable)
-          path = path:gsub("\\", "/")
-          log("Normalized: ", path)
-
-          -- Lua module resolution: convert mdview.huhu -> mdview/huhu.lua
-          -- Works like require("mdview.huhu") would
-          if path:match("^[%a_][%w_]*%.") then
-            path = path:gsub("%.", "/") .. ".lua"
-            log("Lua module path converted: ", path)
-          end
-
-          -- Case 3: URL-like target
-          if is_url_like(path) then
-            if
-              path:match("^www%.") or (not path:match("^%w[%w+.-]*:") and path:match("^[A-Za-z0-9%-_]+%.[A-Za-z]+"))
-            then
-              path = "http://" .. path
-              log("HTTP auto-prefix: ", path)
-            end
-            if open_url(path, cfg.goto_file) then
-              return
-            end
-          end
-
-          -- Case 4: Local file (relative to current buffer)
-          local cwd = vim.fn.expand("%:p:h")
-          log("CWD: ", cwd)
-
-          if not path:match("^/") and not path:match("^[A-Za-z]:[\\/]") then
-            path = cwd .. "/" .. path
-            log("Combined relative: ", path)
-          end
-
-          local target = vim.fn.fnamemodify(path, ":p")
-          log("Absolute: ", target)
-
-          vim.cmd("edit " .. vim.fn.fnameescape(target))
-        end, { buffer = true, desc = "Markdown-aware gf (TS+URLs+fallback)" })
+        end, { buffer = true, desc = "Markdown-aware gf with modular resolver" })
       end,
-      desc = "Markdown: override gf to follow links/URLs with fallback",
     })
   end
 end

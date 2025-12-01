@@ -82,7 +82,7 @@ return function(lines, opts)
     focusable = opts.focus == true,
     style = "minimal",
     border = "rounded",
-    title = opts.title,
+    title = opts.title or "",
     title_pos = "center",
   }
 

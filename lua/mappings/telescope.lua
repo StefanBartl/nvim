@@ -18,16 +18,18 @@ function M.setup()
     tb.grep_string({ search = vim.fn.input("Grep > ") })
   end, { desc = "[Telescope] Grep" })
 
-  map("n", "<leader>tlg", "<cmd>Telescope live_grep<CR>", { desc = "[Telescope] Live Grep" })
-  map("n", "<leader>tfk", "<cmd>Telescope keymaps<CR>", { desc = "[Telescope] Find keymaps" })
-  map("n", "<leader>tbu", "<cmd>Telescope buffers<CR>", { desc = "[Telescope] Buffers" })
-  map("n", "<leader>thelp", "<cmd>Telescope help_tags<CR>", { desc = "[Telescope] Help" })
+  map("n", "<leader><leader>", "<cmd>Telescope live_grep<CR>", { desc = "[Telescope] Live Grep" })
+  map("n", "<leader>fk", "<cmd>Telescope keymaps<CR>", { desc = "[Telescope] Find keymaps" })
+  map("n", "<leader>bu", "<cmd>Telescope buffers<CR>", { desc = "[Telescope] Buffers" })
+  map("n", "<leader>com", "<cmd>Telescope comands<CR>", { desc = "[Telescope] Commands" })
+  map("n", "<leader>com", "<cmd>Telescope colorscheme<CR>", { desc = "[Telescope] Colorscheme" })
+  map("n", "<leader>help", "<cmd>Telescope help_tags<CR>", { desc = "[Telescope] Help" })
   map("n", "<leader>old", "<cmd>Telescope oldfiles<CR>", { desc = "[Telescope] Oldfiles" })
-  map("n", "<leader>tcb", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "[Telescope] In Buffer" })
-  map("n", "<leader>tff", "<cmd>Telescope find_files<cr>", { desc = "[Telescope] Find Files" })
+  map("n", "<leader>cb", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "[Telescope] In Buffer" })
+  map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "[Telescope] Find Files" })
   map(
     "n",
-    "<leader>tfa",
+    "<leader>fa",
     "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
     { desc = "[Telescope] Find All Files" }
   )
