@@ -53,6 +53,7 @@ require("autocmds.markdown").enable({
   },
   goto_file = {
     enable = true,
+    debug = true,
   },
 })
 

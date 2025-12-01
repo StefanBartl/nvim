@@ -1,7 +1,8 @@
 ---@module 'autocmds.markdown.gofile_cases.p0_gopath'
 --- Case 0: Attempt to resolve using user's gopath helper.
 --- Contract: exports `call(node, bufnr, cfg, ts_utils, logger)` -> boolean [, path]
---- Return true if the case handled opening; false otherwise.
+--- Return true if the case handled opening; false, path if path was found but not opened.
+
 local M = {}
 
 --- Safe helper: get canonical buffer name for comparison
@@ -17,14 +18,25 @@ local function _current_bufname()
   return name
 end
 
+--- Check if file exists at given path
+---@param path string
+---@return boolean
+local function _file_exists(path)
+  if not path or path == "" then
+    return false
+  end
+  local stat = vim.loop.fs_stat(path)
+  return stat ~= nil and stat.type == "file"
+end
+
 --- Try to resolve via gopath.resolve and open with synchronous open implementation.
---- This avoids relying on gopath.commands.resolve_and_open returning a truthy value.
 --- @param node TSNode|nil
 --- @param bufnr integer
 --- @param cfg table
 --- @param ts_utils table
 --- @param logger table
---- @return boolean
+--- @return boolean success True if file was opened
+--- @return string|nil path Path if found but not opened
 function M.call(node, bufnr, cfg, ts_utils, logger)
   -- LSP requirement for 'unused-params'
   cfg = cfg
@@ -43,7 +55,6 @@ function M.call(node, bufnr, cfg, ts_utils, logger)
   -- Attempt to call resolver directly so we can inspect result
   local ok_resolve, res, err = pcall(function()
     local resolve = require("gopath.resolve")
-    -- call with default opts (same as gopath.commands)
     return resolve.resolve_at_cursor({})
   end)
 
@@ -62,7 +73,7 @@ function M.call(node, bufnr, cfg, ts_utils, logger)
     return false
   end
 
-  -- If res.path is present and starts with ~, expand it (vim.fn.expand handles ~ and env vars).
+  -- If res.path is present and starts with ~, expand it
   if type(res.path) == "string" and res.path:match("^~[/\\]") then
     local expanded = vim.fn.expand(res.path)
     if expanded and expanded ~= "" then
@@ -85,7 +96,16 @@ function M.call(node, bufnr, cfg, ts_utils, logger)
     return false
   end
 
-  -- Use the synchronous open implementation for 'edit' (mirrors gopath.open.edit.open)
+  -- Check if file exists BEFORE attempting to open
+  if not _file_exists(res.path) then
+    if logger and logger.debug then
+      logger.debug("p0_gopath: resolved path does not exist, returning path for dispatcher", { path = res.path })
+    end
+    -- Return path for dispatcher to handle (e.g., alternate resolution)
+    return false, res.path
+  end
+
+  -- Use the synchronous open implementation for 'edit'
   local ok_open, open_err = pcall(function()
     local opener = require("gopath.open.edit")
     opener.open(res)
@@ -95,7 +115,7 @@ function M.call(node, bufnr, cfg, ts_utils, logger)
     if logger and logger.warn then
       logger.warn("p0_gopath: open raised an error", { err = open_err, result = res })
     end
-    return false
+    return false, res.path
   end
 
   -- Snapshot after call
@@ -109,20 +129,11 @@ function M.call(node, bufnr, cfg, ts_utils, logger)
     return true
   end
 
-  -- If no buffer switch, still treat as handled if path exists on disk (best-effort)
-  local stat_ok, st = pcall(vim.loop.fs_stat, res.path)
-  if stat_ok and st then
-    if logger and logger.info then
-      logger.info("p0_gopath: opened file (no buffer switch detected but file exists)", { path = res.path })
-    end
-    return true
+  -- If we reach here, file exists but buffer didn't change (unusual case)
+  if logger and logger.info then
+    logger.info("p0_gopath: file opened (no buffer switch detected)", { path = res.path })
   end
-
-  -- Not handled
-  if logger and logger.debug then
-    logger.debug("p0_gopath: did not handle input after open attempt", { before = before, after = after, path = res.path })
-  end
-  return false
+  return true
 end
 
 return M

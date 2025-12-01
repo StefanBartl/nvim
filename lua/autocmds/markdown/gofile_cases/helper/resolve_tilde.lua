@@ -6,8 +6,10 @@
 ---  3. Return the first found absolute path or nil if nothing could be resolved.
 --- Notes:
 ---  - This helper uses shell utilities when available; it falls back gracefully if they are not present.
+---  - Cross-platform compatible (Linux, macOS, Windows)
 ---  - Caller should provide a logger table to receive debug/info/warn messages.
 --- @return string|nil resolved_absolute_path
+
 local uv = vim.loop
 
 local function _file_exists(p)
@@ -18,23 +20,39 @@ local function _file_exists(p)
   return st ~= nil
 end
 
+--- Detect if running on Windows
+---@return boolean
+local function _is_windows()
+  return vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+end
+
+--- Build null device path for stderr redirect (cross-platform)
+---@return string
+local function _null_device()
+  return _is_windows() and "NUL" or "/dev/null"
+end
+
+--- Execute command and capture output (cross-platform safe)
+---@param cmd string
+---@return string[]|nil
 local function _run_cmd_capture(cmd)
-  -- Use vim.fn.systemlist which is portable across platforms supported by Neovim.
-  -- Return nil on errors or empty results.
-  local ok = pcall(vim.fn.systemlist, cmd)
-  if not ok then
+  local ok, out = pcall(vim.fn.systemlist, cmd)
+  if not ok or not out or #out == 0 then
     return nil
   end
-  local out = vim.fn.systemlist(cmd)
-  if not out or #out == 0 then
-    return nil
+  -- Filter out empty lines
+  local filtered = {}
+  for _, line in ipairs(out) do
+    if line and line ~= "" then
+      table.insert(filtered, line)
+    end
   end
-  return out
+  return #filtered > 0 and filtered or nil
 end
 
 local function _find_with_fd(name, home, logger)
-  -- prefer fd if available: fd -HI --hidden --type f -g <pattern>
-  local cmd = string.format('fd -HI --type f -g "%s" %s 2>/dev/null', name, vim.fn.shellescape(home))
+  local null = _null_device()
+  local cmd = string.format('fd -HI --type f -g "%s" "%s" 2>%s', name, home, null)
   if logger and logger.debug then
     logger.debug("resolve_tilde: trying fd", { cmd = cmd })
   end
@@ -42,9 +60,8 @@ local function _find_with_fd(name, home, logger)
 end
 
 local function _find_with_rg(name, home, logger)
-  -- ripgrep has --files and globbing -- use a simple find-like approach
-  -- We try: rg --hidden --files -g <name> <home>
-  local cmd = string.format('rg --hidden --files -g "%s" %s 2>/dev/null', name, vim.fn.shellescape(home))
+  local null = _null_device()
+  local cmd = string.format('rg --hidden --files -g "%s" "%s" 2>%s', name, home, null)
   if logger and logger.debug then
     logger.debug("resolve_tilde: trying rg", { cmd = cmd })
   end
@@ -52,12 +69,25 @@ local function _find_with_rg(name, home, logger)
 end
 
 local function _find_with_find(name, home, logger)
-  -- POSIX find fallback; may be slow on large home dirs.
-  local cmd = string.format('find %s -type f -name "%s" 2>/dev/null', vim.fn.shellescape(home), name)
-  if logger and logger.debug then
-    logger.debug("resolve_tilde: trying find", { cmd = cmd })
+  local null = _null_device()
+  local cmd
+  if _is_windows() then
+    -- Windows: use `where` or PowerShell Get-ChildItem
+    -- Simple fallback: use vim.fn.glob which works cross-platform
+    if logger and logger.debug then
+      logger.debug("resolve_tilde: using vim.fn.glob on Windows", { name = name, home = home })
+    end
+    local pattern = home .. "/**/" .. name
+    local results = vim.fn.glob(pattern, false, true)
+    return results and #results > 0 and results or nil
+  else
+    -- Unix: use find command
+    cmd = string.format('find "%s" -type f -name "%s" 2>%s', home, name, null)
+    if logger and logger.debug then
+      logger.debug("resolve_tilde: trying find", { cmd = cmd })
+    end
+    return _run_cmd_capture(cmd)
   end
-  return _run_cmd_capture(cmd)
 end
 
 --- Main resolve function
@@ -74,6 +104,7 @@ local function resolve_tilde(path, logger)
     return nil
   end
 
+  ---@diagnostic disable-next-line lib.uv
   local home = uv.os_homedir()
   if not home or home == "" then
     if logger and logger.warn then
@@ -82,8 +113,10 @@ local function resolve_tilde(path, logger)
     return nil
   end
 
-  -- Expand ~ to HOME
-  local expanded = path:gsub("^~", home)
+  -- Expand ~ to HOME (handle both / and \ separators)
+  local separator = path:match("^~([/\\])")
+  local expanded = home .. separator .. path:sub(3)
+
   if _file_exists(expanded) then
     if logger and logger.info then
       logger.info("resolve_tilde: expanded path exists", { original = path, expanded = expanded })
@@ -104,7 +137,7 @@ local function resolve_tilde(path, logger)
     return nil
   end
 
-  -- Try fd -> rg -> find
+  -- Try fd -> rg -> find/glob
   local probes = {
     _find_with_fd,
     _find_with_rg,
@@ -114,18 +147,13 @@ local function resolve_tilde(path, logger)
   for _, probe in ipairs(probes) do
     local res = probe(name, home, logger)
     if res and #res > 0 then
-      -- Prefer the first result that is under the expanded parent path (best-effort)
+      -- Return first valid result
       for _, candidate in ipairs(res) do
-        if type(candidate) == "string" and candidate ~= "" then
-          -- If candidate is relative, convert to absolute (system cmds return absolute usually).
-          local cand = candidate
-          -- Validate existence
-          if _file_exists(cand) then
-            if logger and logger.info then
-              logger.info("resolve_tilde: search found candidate", { candidate = cand })
-            end
-            return cand
+        if type(candidate) == "string" and candidate ~= "" and _file_exists(candidate) then
+          if logger and logger.info then
+            logger.info("resolve_tilde: search found candidate", { candidate = candidate })
           end
+          return candidate
         end
       end
     end
