@@ -12,6 +12,18 @@ local function hide_preview_safe(_)
   end)
 end
 
+Open_replace_logger = {
+  info = function(msg, ctx)
+    vim.notify("[neotree] " .. msg .. (ctx and (" " .. vim.inspect(ctx)) or ""), vim.log.levels.INFO)
+  end,
+  warn = function(msg, ctx)
+    vim.notify("[neotree] " .. msg .. (ctx and (" " .. vim.inspect(ctx)) or ""), vim.log.levels.WARN)
+  end,
+  debug = function(msg, ctx)
+    vim.notify("[neotree] [DEBUG] " .. (msg or "") .. (ctx and (" " .. vim.inspect(ctx)) or ""), vim.log.levels.DEBUG)
+  end,
+}
+
 -- ========= Window mappings (no nested tables; every key maps to a function/command) =========
 
 ---@return table<string, any>
@@ -53,6 +65,12 @@ return {
   ["<S-CR>"] = "open_badd",
   -- Fallback, falls <S-CR> im Terminal nicht erkannt wird:
   ["gb"] = "open_badd",
+
+  -- replace buffer and focus
+  ["<S-o>"] = function(state)
+    require("config.neotree.open_replace")(state, { focus = true, auto_close = true })
+    -- require("config.neotree.open_replace")(state, { focus = true, auto_close = true, logger = Open_replace_logger })
+  end,
 
   ["C"] = "close_node",
   ["z"] = "close_all_nodes",
