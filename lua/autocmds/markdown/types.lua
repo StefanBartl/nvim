@@ -19,3 +19,9 @@
 ---@class MdAutoCmdsCfg
 ---@field wrap_key MdAutoCmdsWrapKeyCfg
 ---@field goto_file MdAutoCmdsGotoFileCfg
+
+---@class TSNode
+--- Minimal TSNode shape for EmmyLua/LuaLS diagnostics.
+---@field type fun(self: TSNode): string
+---@field parent fun(self: TSNode): TSNode|nil
+

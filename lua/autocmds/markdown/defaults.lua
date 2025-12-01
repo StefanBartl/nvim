@@ -13,7 +13,7 @@ M.defaults = {
   },
   goto_file = {
     enable = true,
-    debug = false,
+    debug = true,
     pattern = "markdown",
     enable_windows_opener = false, -- keep Linux/macOS default per project policy
     open_cmd_mac = nil, -- e.g., { "open", "<url>" }

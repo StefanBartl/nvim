@@ -1,10 +1,10 @@
 ---@module 'autocmds'
 --- Initialize module for 'autocmds'
 
---FIX: Moudlarisere die submodule in eigene module
+--FIX: Modularisere die submodule in eigene module
+--FIX: Default's implementieren und h ier dann nur die notwendigstsen setzen
 
 -- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren:
-
 require("autocmds.auto-center-fexplorer").setup()
 
 ------------------------------------------------------
@@ -49,19 +49,10 @@ end
 
 require("autocmds.markdown").enable({
   wrap_key = {
-    enable = true, -- Registers a buffer-local mapping in Markdown buffers that atomically wraps <cword> as [word]().
-    key = "<leader>[",
-    description = "Wrap current word in Markdown link syntax",
-    pattern = "markdown",
-    only_modifiable = true,
+    enable = true,
   },
   goto_file = {
-    enable = true, -- Overrides "gf" in Markdown: follows inline/reference links, opens URLs, resolves relative paths; otherwise falls back.
-    debug = false, -- If true: emits step-by-step resolution messages via vim.notify.
-    pattern = "markdown",
-    enable_windows_opener = false, -- Default: Linux/macOS only; optionally enable a Windows opener.
-    -- open_cmd_mac  = { "open", "<url>" },
-    -- open_cmd_unix = { "xdg-open", "<url>" },
+    enable = true,
   },
 })
 
