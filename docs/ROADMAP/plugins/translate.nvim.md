@@ -12,3 +12,9 @@ Setup:
 3. Use <leader>tr in visual mode to translate selection to English
 
 ---
+
+## --nocode
+
+Hat keine messbare Auswirkung. Ob un nocode oder nicht verwendet wird, die Formatierung in Codeblöcken wird verändert. Das sollte nicht sein.
+- Herausfinden, warum ohne `nocode` Codeschnipsel und Codeblöcke nicht übersetzt werden. Wahrscheinlich, da ein KI dafür verwendet wird.
+- `nocode` fixen, sodass die Formatierung nicht verändert wird.

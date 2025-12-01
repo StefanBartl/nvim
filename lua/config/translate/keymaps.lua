@@ -4,4 +4,4 @@
 local map = require("lib.map")
 local desc_tag = "[translate.nvim]: "
 
-map("v", "<leader>tr", ":TranslateReplace EN<CR>", { desc = desc_tag .. "Visual mode keymap for quick translation" })
+map("v", "<leader>tr", ":TranslateReplace DE<CR>", { desc = desc_tag .. "Visual mode keymap for quick translation" })
