@@ -4,41 +4,11 @@
 --- Guards are included to avoid side effects in unsupported contexts.
 local M = {}
 
+local api = vim.api
+local helpers = require("autocmds.general.helpers")
+
 -- Compatibility shim for libuv
 local uv = vim.uv or vim.loop
-
--- Internal: create an augroup with `clear=true` to keep things idempotent.
----@param name string
----@return integer
-local function augroup(name)
-  return vim.api.nvim_create_augroup(name, { clear = true })
-end
-
--- Internal: detect whether we are inside Kitty (Linux/macOS).
--- The presence of KITTY_LISTEN_ON or TERM="xterm-kitty" is a strong signal.
----@return boolean
-local function in_kitty()
-  local env = vim.env
-  return (env.KITTY_LISTEN_ON and #env.KITTY_LISTEN_ON > 0) or (env.TERM == "xterm-kitty")
-end
-
--- Internal: run a Kitty remote control command safely and silently.
----@param padding integer
----@param margin integer
-local function kitty_set_spacing(padding, margin)
-  -- The `kitty @` RC client is part of Kitty installs; only run if we are in Kitty.
-  if not in_kitty() then
-    return
-  end
-  -- `silent !kitty @ set-spacing padding=<n> margin=<n>` will adjust spacing for the current OS window.
-  -- Using `vim.cmd` to avoid job control complexity; it’s synchronous but negligible here.
-  local cmd = string.format(":silent !kitty @ set-spacing padding=%d margin=%d", padding, margin)
-  pcall(function()
-    vim.cmd(cmd)
-  end)
-end
-
--- Defaults --------------------------------------------------------------------
 
 ---@type GeneralAutoCmdConfig
 local Defaults = {
@@ -80,14 +50,6 @@ local Defaults = {
 
 -- Public API ------------------------------------------------------------------
 
---- Enable the configured set of autocmds. Safe to call multiple times; augroups are recreated.
---- One can disable individual features by setting `enable=false` in the corresponding section.
---- Example:
----   require("custom.autocmds").enable({
----     kitty = { enable = true, enter_padding = 0, enter_margin = 0, leave_padding = 16, leave_margin = 8 },
----     auto_mkdir = { enable = true },
----     nvdash = { enable = false },
----   })
 ---@param cfg GeneralAutoCmdConfig|nil
 ---@return nil
 function M.enable(cfg)
@@ -95,8 +57,8 @@ function M.enable(cfg)
 
   -- 1) Auto-create directory on save (BufWritePre)
   if cfg.auto_mkdir.enable then
-    local grp = augroup((cfg.group_name or "custom_autocmds") .. "_auto_mkdir")
-    vim.api.nvim_create_autocmd("BufWritePre", {
+    local grp = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_auto_mkdir")
+    api.nvim_create_autocmd("BufWritePre", {
       group = grp,
       callback = function(event)
         -- Optional: skip URL-like or remote buffers (e.g., "ssh://host/path", "http://…")
@@ -115,18 +77,18 @@ function M.enable(cfg)
 
   -- 2) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
   if cfg.kitty.enable then
-    local grp = augroup((cfg.group_name or "custom_autocmds") .. "_kitty_spacing")
-    vim.api.nvim_create_autocmd("VimEnter", {
+    local grp = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_kitty_spacing")
+    api.nvim_create_autocmd("VimEnter", {
       group = grp,
       callback = function()
-        kitty_set_spacing(cfg.kitty.enter_padding, cfg.kitty.enter_margin)
+        helpers.kitty_set_spacing(cfg.kitty.enter_padding, cfg.kitty.enter_margin)
       end,
       desc = "Kitty: reduce spacing for the current window on VimEnter",
     })
-    vim.api.nvim_create_autocmd("VimLeavePre", {
+    api.nvim_create_autocmd("VimLeavePre", {
       group = grp,
       callback = function()
-        kitty_set_spacing(cfg.kitty.leave_padding, cfg.kitty.leave_margin)
+        helpers.kitty_set_spacing(cfg.kitty.leave_padding, cfg.kitty.leave_margin)
       end,
       desc = "Kitty: restore spacing for the current window on VimLeavePre",
     })
@@ -134,8 +96,8 @@ function M.enable(cfg)
 
   -- 3) Cursorline only in the active window
   if cfg.cursorline.enable then
-    local grp_show = augroup((cfg.group_name or "custom_autocmds") .. "_cursorline_show")
-    vim.api.nvim_create_autocmd(cfg.cursorline.show_events, {
+    local grp_show = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_cursorline_show")
+    api.nvim_create_autocmd(cfg.cursorline.show_events, {
       group = grp_show,
       callback = function(event)
         -- Only enable cursorline for "normal" buffers (empty buftype).
@@ -146,8 +108,8 @@ function M.enable(cfg)
       desc = "Enable cursorline in the active window on relevant events",
     })
 
-    local grp_hide = augroup((cfg.group_name or "custom_autocmds") .. "_cursorline_hide")
-    vim.api.nvim_create_autocmd(cfg.cursorline.hide_events, {
+    local grp_hide = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_cursorline_hide")
+    api.nvim_create_autocmd(cfg.cursorline.hide_events, {
       group = grp_hide,
       callback = function()
         vim.opt_local.cursorline = false
@@ -158,8 +120,8 @@ function M.enable(cfg)
 
   -- 4) Jump to last location when reopening a file (BufReadPost)
   if cfg.last_loc.enable then
-    local grp = augroup((cfg.group_name or "custom_autocmds") .. "_last_loc")
-    vim.api.nvim_create_autocmd("BufReadPost", {
+    local grp = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_last_loc")
+    api.nvim_create_autocmd("BufReadPost", {
       group = grp,
       callback = function(event)
         local buf = event.buf
@@ -174,11 +136,11 @@ function M.enable(cfg)
         vim.b[buf].__custom_last_loc_done = true
 
         -- Retrieve the last-position mark (default: `"`).
-        local mark = vim.api.nvim_buf_get_mark(buf, cfg.last_loc.mark)
-        local lcount = vim.api.nvim_buf_line_count(buf)
+        local mark = api.nvim_buf_get_mark(buf, cfg.last_loc.mark)
+        local lcount = api.nvim_buf_line_count(buf)
         if mark[1] > 0 and mark[1] <= lcount then
           -- pcall to avoid throwing if the window is in a nonstandard state.
-          pcall(vim.api.nvim_win_set_cursor, 0, mark)
+          pcall(api.nvim_win_set_cursor, 0, mark)
         end
       end,
       desc = "Jump to the last cursor position on file open",

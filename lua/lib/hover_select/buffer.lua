@@ -1,5 +1,5 @@
----@module 'hover-select.buffer'
----@description Buffer creation and content management for hover-select
+---@module 'lib.hover_select.buffer'
+---@description Buffer creation and content management for lib.hover_select
 
 local M = {}
 
@@ -13,12 +13,12 @@ function M.create(items, buf_options)
   -- Create new unlisted buffer
   local bufnr = api.nvim_create_buf(false, true)
   if bufnr == 0 then
-    vim.notify("hover-select: failed to create buffer", vim.log.levels.ERROR)
+    vim.notify("lib.hover_select: failed to create buffer", vim.log.levels.ERROR)
     return nil
   end
 
   -- Set buffer content (requires modifiable=true temporarily)
-  api.nvim_set_option_value("modifiable", true, { bufnr = bufnr })
+  api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   api.nvim_buf_set_lines(bufnr, 0, -1, false, items)
 
   -- Apply user-provided buffer options
@@ -26,7 +26,7 @@ function M.create(items, buf_options)
     local success, err = pcall(api.nvim_set_option_value, option, value)
     if not success then
       vim.notify(
-        string.format("hover-select: failed to set buffer option '%s': %s", option, err),
+        string.format("lib.hover_select: failed to set buffer option '%s': %s", option, err),
         vim.log.levels.WARN
       )
     end
@@ -46,13 +46,13 @@ function M.update_content(bufnr, items)
 
   -- Temporarily enable modifications
   local was_modifiable = api.nvim_get_option_value("modifiable", { bufnr = bufnr })
-  api.nvim_set_option_value("modifiable", true, { bufnr = bufnr })
+  api.nvim_set_option_value("modifiable", true, { buf = bufnr })
 
   -- Update content
   local success = pcall(api.nvim_buf_set_lines, bufnr, 0, -1, false, items)
 
   -- Restore modifiable state
-  api.nvim_set_option_value("modifiable", was_modifiable, { bufnr = bufnr })
+  api.nvim_set_option_value("modifiable", was_modifiable, { buf = bufnr })
 
   return success
 end

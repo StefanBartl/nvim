@@ -1,5 +1,5 @@
----@module 'hover-select.navigation'
----@description Navigation and keymap setup for hover-select buffer
+---@module 'lib.hover_select.navigation'
+---@description Navigation and keymap setup for lib.hover_select buffer
 
 local M = {}
 
@@ -23,12 +23,12 @@ function M.setup(bufnr, on_select)
 
   -- Close with Escape or q
   set_km("n", "<Esc>", function()
-    local hover_select = require("hover-select")
+    local hover_select = require("lib.hover_select")
     hover_select.close()
   end, opts)
 
   set_km("n", "q", function()
-    local hover_select = require("hover-select")
+    local hover_select = require("lib.hover_select")
     hover_select.close()
   end, opts)
 end

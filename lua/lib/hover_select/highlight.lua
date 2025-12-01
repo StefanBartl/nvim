@@ -1,5 +1,5 @@
----@module 'hover-select.highlight'
---n Highlight management for hover-select cursor line
+---@module 'lib.hover_select.highlight'
+--n Highlight management for lib.hover_select cursor line
 
 local M = {}
 

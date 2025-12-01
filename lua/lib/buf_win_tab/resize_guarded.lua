@@ -2,6 +2,7 @@
 --- Provides a helper to create window-resize mappings that are disabled
 --- for specific buffer filetypes or buffer names. Useful for terminals,
 --- floating windows, or plugin-specific buffers like lazygit.
+--- If a buffer is excluded, the keypress is passed through unmodified (so terminals / lazygit still receive keys).
 
 --[[ Usage:
 -- local resize_guarded = require("lib.buf_win_tab.resize_guarded")
@@ -17,13 +18,11 @@
 -- * `exclude_names`: checks against `vim.api.nvim_buf_get_name(buf)` using a Lua pattern. -- * The module generates a clean, reusable function for all mappings.
 --]]
 
-
 local api = vim.api
 
----@param cmd string Command to execute for resizing, e.g., "vertical resize -5"
----@param exclude_filetypes? string[] List of buffer filetypes to ignore (optional)
----@param exclude_names? string[] List of buffer name patterns (Lua patterns) to ignore (optional)
----@return fun(): nil Function suitable for mapping in `vim.keymap.set`
+---@param cmd string Command to execute (e.g., "vertical resize -5")
+---@param exclude_filetypes? string[] List of filetypes to exclude
+---@param exclude_names? string[] List of Lua patterns to match buffer names to exclude
 local function create(cmd, exclude_filetypes, exclude_names)
   exclude_filetypes = exclude_filetypes or {}
   exclude_names = exclude_names or {}
@@ -33,25 +32,25 @@ local function create(cmd, exclude_filetypes, exclude_names)
     local ft = vim.bo[buf].filetype or ""
     local name = api.nvim_buf_get_name(buf) or ""
 
-    -- Skip if the buffer's filetype is in the excluded list
-    for _, v in ipairs(exclude_filetypes) do
-      if ft == v then
+    -- Check filetype exclusions
+    for _, ftype in ipairs(exclude_filetypes) do
+      if ft == ftype then
+        -- Excluded: do nothing, pass through the keypress
         return
       end
     end
 
-    -- Skip if the buffer's name matches any excluded pattern
+    -- Check buffer name exclusions
     for _, pat in ipairs(exclude_names) do
       if name:match(pat) then
+        -- Excluded: do nothing, pass through the keypress
         return
       end
     end
 
-    -- Execute the resize command
+    -- Valid buffer: execute the resize command
     vim.cmd(cmd)
   end
 end
 
-return {
-  create = create,
-}
+return { create = create }

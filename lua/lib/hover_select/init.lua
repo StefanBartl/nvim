@@ -1,14 +1,14 @@
----@module 'hover-select'
+---@module 'lib.hover_select'
 ---@description Main module for creating interactive hover selection windows
 ---with line-wise navigation and custom selection callbacks
 
 local M = {}
 
-local config = require("hover-select.config")
-local buffer = require("hover-select.buffer")
-local window = require("hover-select.window")
-local navigation = require("hover-select.navigation")
-local highlight = require("hover-select.highlight")
+local config = require("lib.hover_select.config")
+local buffer = require("lib.hover_select.buffer")
+local window = require("lib.hover_select.window")
+local navigation = require("lib.hover_select.navigation")
+local highlight = require("lib.hover_select.highlight")
 local notify = vim.notify
 local api = vim.api
 
@@ -26,12 +26,12 @@ local state = {
 function M.open(opts)
   -- Validate required parameters
   if not opts or not opts.items or #opts.items == 0 then
-    notify("hover-select: items list is required and must not be empty", vim.log.levels.ERROR)
+    notify("lib.hover_select: items list is required and must not be empty", vim.log.levels.ERROR)
     return nil, nil
   end
 
   if not opts.on_select or type(opts.on_select) ~= "function" then
-    notify("hover-select: on_select callback is required", vim.log.levels.ERROR)
+    notify("lib.hover_select: on_select callback is required", vim.log.levels.ERROR)
     return nil, nil
   end
 
@@ -115,7 +115,7 @@ function M._handle_selection()
   -- Get selected item
   local selected_item = state.items[line_idx]
   if not selected_item then
-    notify("hover-select: invalid selection", vim.log.levels.WARN)
+    notify("lib.hover_select: invalid selection", vim.log.levels.WARN)
     M.close()
     return
   end

@@ -13,8 +13,10 @@ Setup:
 
 ---
 
-## --nocode
+## Bugs
 
-Hat keine messbare Auswirkung. Ob un nocode oder nicht verwendet wird, die Formatierung in Codeblöcken wird verändert. Das sollte nicht sein.
+### --nocode
+
+Hat keine messbare Auswirkung. Ob nun nocode oder nicht verwendet wird, die Formatierung in Codeblöcken wird verändert. Das sollte nicht sein.
 - Herausfinden, warum ohne `nocode` Codeschnipsel und Codeblöcke nicht übersetzt werden. Wahrscheinlich, da ein KI dafür verwendet wird.
-- `nocode` fixen, sodass die Formatierung nicht verändert wird.
+- `nocode` fixen, sodass die Formatierung nicht verändert wird. ==> Manchmal wird der letzte char einer zeile in die nächste geschoben
