@@ -12,6 +12,7 @@ local Defaults = {
   enable_autocmds = true,
   enable_keymaps = true,
   ft_only = true,
+  ensure_headline_spacing = true, -- ensure whitespace + separator before H2+ headlines
 }
 
 ---@type MarkdownConfig

@@ -8,6 +8,7 @@
 ---@field enable_autocmds? boolean
 ---@field enable_keymaps? boolean
 ---@field ft_only? boolean
+---@field ensure_headline_spacing? boolean
 
 ---@class MarkdownPublicAPI
 ---@field setup fun(opts: MarkdownConfig|nil)
