@@ -1,6 +1,7 @@
 # WKD Neovim Roadmap
 
 - Alle mappings, autovmds und usercommand funktionen beiu Gelegenheit von `setup()` auf `attach()` umschreiben
+- `pcall` doppelungen rauscoden
 
 ## Important Bugs
 

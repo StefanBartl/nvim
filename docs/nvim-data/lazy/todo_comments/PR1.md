@@ -69,6 +69,39 @@ Drei mögliche Behebungsstrategien (nach Priorität und Aufwand)
  end
 ```
 
+Funktion Neu:
+
+```lua
+---@param buf number
+---@param ns number
+---@param hl string
+---@param line number
+---@param from number
+---@param to number
+local function add_highlight(buf, ns, hl, line, from, to)
+  -- Defensive bounds checks: ensure from/to are within the actual line length.
+  local ok, text = pcall(vim.api.nvim_buf_get_lines, buf, line, line + 1, false)
+  if not ok or type(text) ~= "table" or text[1] == nil then
+    return
+  end
+  local line_text = text[1]
+  local max_col = #line_text
+  if type(from) ~= "number" or type(to) ~= "number" then
+    return
+  end
+  from = math.max(0, from)
+  to = math.min(max_col, to)
+  if from > to then
+    return
+  end
+  vim.api.nvim_buf_set_extmark(buf, ns, line, from, {
+    end_col = to,
+    hl_group = hl,
+    priority = 500,
+  })
+end
+```
+
 ---
 
 ## 2. Sofort-Workaround in der eigenen Konfiguration (monkeypatch) — empfohlen als kurzfristige Lösung

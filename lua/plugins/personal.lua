@@ -96,75 +96,34 @@ return {
   },
 
   {
-    dir = vim.env.REPOS_DIR .. "/gopath.nvim", -- or "wkdsteve/gopath.nvim"
+    dir = vim.env.REPOS_DIR .. "/gopath.nvim",
     opts = {
-      -- Modi: "builtin" | "treesitter" | "lsp" | "hybrid"
       mode = "hybrid",
-
-      -- Provider-Reihenfolge für "hybrid":
-      -- 1) Treesitter-Pass (inkl. value_origin ⇒ springt zur Initialisierung)
-      -- 2) LSP-Definition
-      -- 3) Builtin (cfile, require-Pfad)
       order = { "treesitter", "lsp", "builtin" },
-
-      -- LSP Sync Timeout in ms (kurz halten, um UI nie zu blocken)
       lsp_timeout_ms = 200,
 
-      -- Sprachen: wenn `resolvers` fehlt/nil -> es werden ALLE Resolver für die Sprache genutzt.
       languages = {
-        lua = {
-          enable = true,
-          -- resolvers = nil,  -- nil = alle (require_path, binding_index, alias_index, chain,
-          --        value_origin, symbol_locator)
-        },
-        -- Beispiel für spätere Sprachen:
-        -- typescript = { enable = true, resolvers = nil },
+        lua = { enable = true },
       },
-    },
-    cmd = { "GopathResolve", "GopathOpen", "GopathCopy", "GopathDebugUnderCursor" },
-    keys = {
-      {
-        "gP",
-        function()
-          require("gopath").commands.resolve_and_open("edit")
-        end,
-        desc = "gopath: open here",
+
+      alternate = {
+        enable = true,
+        similarity_threshold = 75,
       },
-      {
-        "g|",
-        function()
-          require("gopath").commands.resolve_and_open("window")
-        end,
-        desc = "gopath: open in split",
+
+      external = {
+        enable = true,
       },
-      {
-        "g\\",
-        function()
-          vim.cmd("GopathOpen window_vsplit")
-        end,
-        desc = "gopath: open in vsplit",
-      },
-      {
-        "g}",
-        function()
-          require("gopath").commands.resolve_and_open("tab")
-        end,
-        desc = "gopath: open in tab",
-      },
-      {
-        "gY",
-        function()
-          vim.cmd("GopathCopy")
-        end,
-        desc = "gopath: copy path:line:col",
-      },
-      {
-        "g?",
-        function()
-          vim.cmd("GopathDebugUnderCursor")
-        end,
-        desc = "gopath: debug under cursor",
-      },
+
+      -- Optional: Custom mappings (leave defaults)
+      -- mappings = {
+      --   open_here = "gP",
+      --   -- Set to false to disable specific mapping
+      --   debug = false,
+      -- },
+
+      -- Optional: Disable commands
+      -- commands = false,
     },
   },
 

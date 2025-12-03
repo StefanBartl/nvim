@@ -1,6 +1,11 @@
 --@module 'plugins.fzf'
 --- Fuzzy finding tools based on Telescope, fzf-lua, and optional tabbed UI (search.nvim)
 
+local path_shorten = require("lib.filesystem.path_shorten")
+local function adapt_max_len()
+  return math.max(20, math.floor((vim.o.columns or 80) * 0.6))
+end
+
 --- Build fd options string.
 ---@return string  -- fd options ready for fzf-lua
 ---@private
@@ -90,6 +95,12 @@ return {
         -- Producer-side defaults for file pickers (fd). Prompt still filters client-side.
         files = {
           fd_opts = Build_fd_opts(),
+                    --- FIX: Funktioniert nicht
+          entry_maker = function(entry)
+            local max_len = adapt_max_len()
+            entry.path = path_shorten(entry.path or entry, max_len)
+            return entry
+          end,
         },
       }
     end,

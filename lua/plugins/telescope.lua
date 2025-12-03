@@ -1,5 +1,22 @@
 ---@module 'plugins.telescope'
 
+-- AUDIT: In der datei kann man performance mäßig einiges machen
+
+--- ==== path shortening imports & helper ====
+local files_path_shorten = require("lib.filesystem.path_shorten")
+
+-- Helper to compute effective max length based on window width and column reserved for other columns.
+-- opts is the picker-specific opts passed by Telescope; window width can be taken from opts.max_width or v:winwidth(0)
+local function adapt_max_len(_opts, default)
+  -- _opts may contain preview_width or other fields; use winwidth if available
+  if type(_opts) == "table" and _opts.winwidth and type(_opts.winwidth) == "number" then
+    return math.max(10, _opts.winwidth - 10)
+  end
+  -- fallback to default
+  return default or 60
+end
+
+--- ==== history import ====
 ---@return boolean
 local function has_sqlite()
   -- Prefer hard check: only true if the Lua module is loadable (shared lib present)
@@ -59,6 +76,14 @@ return {
 
       local actions = require("telescope.actions")
       opts.defaults = vim.tbl_deep_extend("force", opts.defaults or {}, {
+
+        -- -- Use a function for path_display to apply our shortening for all pickers that show paths
+        path_display = function(_opts, path)
+          -- Determine a reasonable max length. When Telescope passes opts, it may include `winwidth`.
+          local max_len = adapt_max_len(_opts, 60)
+          return files_path_shorten(path, max_len)
+        end,
+
         file_ignore_patterns = {
           "node_modules",
           "package%.lock.json",
@@ -141,7 +166,7 @@ return {
       -- -- Setup the automatic wrapping of all builtins.
       -- -- Pass the factory that returns the attach_mappings function.
       -- attach_all.setup(selected_index.attach_mappings_with_selected_index)
-    end,
+        end
   },
 
   ------------------------------------------------------------------------------
