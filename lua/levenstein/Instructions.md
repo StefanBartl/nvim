@@ -1,5 +1,42 @@
 # levenstein visual module - instructions
 
+## Dateien: ausführliche Version (Deutsch/Englisch + visual.lua)
+
+Die folgenden drei Dateien ersetzen die bisherigen Sprachdateien und das Hauptskript. `lang_en.lua` und `lang_de.lua` enthalten ausführliche, mehrteilige Texte (Definition, Algorithmus, Matrix-Erklärung, Beispiel-Aufschlüsselung, Schlussfolgerungen). `visual.lua` lädt die gewünschte Sprache (default Englisch, `--de` für Deutsch), berechnet und druckt Matrizen, Alignment und zusätzlich eine ausführliche, didaktische Besprechung für das angezeigte Beispiel. Alle Lua-Kommentare sind in Englisch; Module starten mit vollständiger EmmyLua-Annotation.
+
+## Hinweise zur Verwendung und Tests
+
+ Dateien in Pfad `levenstein/` ablegen:
+
+  * `levenstein/lang_en.lua`
+  * `levenstein/lang_de.lua`
+  * `levenstein/visual.lua`
+* Aufruf (Standard Englisch):
+
+  * `lua levenstein/visual.lua "kitten" "sitting"`
+* Aufruf (Deutsch):
+
+  * `lua levenstein/visual.lua "kitten" "sitting" --de`
+* Bei direktem Ausführen zeigt das Skript:
+
+  * die numerische DP-Matrix,
+  * die Operationsmatrix,
+  * den Backtrace / Alignment,
+  * die numerische Distanz und
+  * eine ausführliche, schrittweise Erklärung, die Definition, Algorithmusbeschreibung und pädagogische Hinweise enthält.
+
+## Anmerkungen zur Lesbarkeit und Erweiterbarkeit
+
+* Die Sprachdateien sind bewusst ausführlich gestaltet; sie können später durch `levenstein/lang_fr.lua` o.ä. ergänzt werden.
+* Die Diskussionstexte sind so formuliert, dass sie für die meisten Beispiele passen—der Template-Abschnitt füllt einige konkrete Zellen-Werte ein und erklärt sie.
+* Wenn gewünscht, kann das Skript erweitert werden, um:
+
+  * mehrere alternative Backtraces bei Gleichständen auszugeben,
+  * farbige Terminalausgabe in UTF-8-Terminals (optional),
+  * HTML- oder Markdown-Export der Matrizen für Lehrmaterialien.
+
+---
+
 ## Table of content
 
   - [Was man im Terminal sieht und wie man es interpretiert](#was-man-im-terminal-sieht-und-wie-man-es-interpretiert)
