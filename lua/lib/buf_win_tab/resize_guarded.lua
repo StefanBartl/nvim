@@ -1,34 +1,31 @@
 ---@module 'lib.buf_win_tab.resize_guarded'
---- Guarded resize helper.
---- Provides resize mappings that are skipped for specific buffers,
---- while still forwarding the original keypress to the terminal or plugin buffer.
+--- Guarded resize helper that allows window resize shortcuts in normal editors
+--- while preserving keypresses in terminals and special plugin buffers.
 ---
 --- Usage:
 --- local resize_guarded = require("lib.buf_win_tab.resize_guarded")
 --- local exclude_filetypes = { "terminal" }
 --- local exclude_names = { ".*lazygit.*" }
 --- vim.keymap.set({ "n", "t" }, "<S-h>", resize_guarded.create("vertical resize -5", exclude_filetypes, exclude_names, "<S-h>"), { desc = "[Window] Resize narrower" })
---- ...
 ---
---- Behaviour:
+--- Behavior:
 --- - If current buffer matches an exclusion (filetype or name pattern),
----   the module will forward the original keypress to the buffer (so terminals receive it).
---- - Otherwise the module executes the provided resize command.
---- - The `lhs` argument is used to derive the forwarded sequence when excluded.
----   If omitted, the module will attempt a best-effort fallback (common SHIFT mappings).
+---   forwards the original keypress to the buffer (terminals/plugins receive it).
+--- - Otherwise executes the provided resize command.
+--- - The `lhs` argument is REQUIRED to derive the correct key to forward.
 ---
---- Notes:
---- - Code comments are in English per project style.
---- - API: create(cmd, exclude_filetypes?, exclude_names?, lhs?)
+--- API: create(cmd, exclude_filetypes?, exclude_names?, lhs)
 ---   returns a function suitable for `vim.keymap.set` callbacks.
 
 local api = vim.api
 local replace_termcodes = vim.api.nvim_replace_termcodes
 local feedkeys = vim.api.nvim_feedkeys
 
---- Map of common lhs -> fallback sequence when forwarding to terminal.
---- Expand if needed for more keys.
----@type table<string,string>
+local M = {}
+
+--- Map of common lhs -> fallback sequence for terminal forwarding.
+--- These map shift-modified keys to their uppercase equivalents.
+---@type table<string, string>
 local COMMON_FALLBACK = {
   ["<S-h>"] = "H",
   ["<S-j>"] = "J",
@@ -38,76 +35,99 @@ local COMMON_FALLBACK = {
   ["<S-Down>"] = "<S-Down>",
   ["<S-Left>"] = "<S-Left>",
   ["<S-Right>"] = "<S-Right>",
-  -- add more mappings if required
 }
 
---- Derive a fallback key sequence from lhs.
---- If lhs is "<S-x>" where x is a single char, return the uppercase char.
---- Otherwise consult COMMON_FALLBACK. If nothing matches, return nil.
----@param lhs string|nil
----@return string|nil
+--- Derive the key sequence to forward from the mapping's lhs.
+--- Converts shift-modified keys (e.g., <S-h>) to their terminal representation (e.g., "H").
+---@param lhs string|nil The left-hand side of the mapping (e.g., "<S-h>")
+---@return string|nil fallback_seq The sequence to send to the terminal, or nil if derivation fails
 local function derive_fallback(lhs)
-  if type(lhs) ~= "string" then
+  -- Validate input parameter
+  if type(lhs) ~= "string" or lhs == "" then
     return nil
   end
 
-  -- direct common table lookup
+  -- First check: lookup in predefined common mappings table
   local v = COMMON_FALLBACK[lhs]
   if v then
     return v
   end
 
-  -- pattern: <S-x> where x is a single character
+  -- Second check: pattern match for <S-x> where x is a single character
+  -- Example: "<S-a>" -> "A"
   local single = lhs:match("^<S%-(.)>$")
   if single and #single == 1 then
     return single:upper()
   end
 
-  -- pattern: <S-(.+)> with longer token, return as-is to be fed as termcodes
+  -- Third check: pattern match for <S-token> with multi-character token
+  -- Example: "<S-Up>" -> "<S-Up>" (to be processed by replace_termcodes)
   local token = lhs:match("^<S%-(.+)>$")
   if token and #token > 1 then
-    -- recompose as <S-...> so termcode replacement can handle
     return "<S-" .. token .. ">"
   end
 
+  -- No matching pattern found
   return nil
 end
 
---- Forward the original key to the active buffer/terminal.
---- Uses nvim_replace_termcodes + nvim_feedkeys to emulate user input.
----@param seq string
+--- Forward a key sequence to the active buffer/terminal.
+--- Uses nvim_replace_termcodes to convert special key notation,
+--- then nvim_feedkeys to inject the keys as if typed by the user.
+---@param seq string The key sequence to forward (e.g., "H" or "<S-Up>")
 local function forward_key(seq)
+  -- Validate input sequence
   if not seq or seq == "" then
     return
   end
-  -- seq may be a plain character like "H" or a termcode like "<S-Left>".
+
+  -- Convert special key notation (like <S-Up>) to internal keycodes
+  -- Parameters: string, from_part, do_lt, special
   local keys = replace_termcodes(seq, true, false, true)
-  -- 'm' flag to remap? use 'n' (no remap) to avoid recursion; false for escape_ks
+
+  -- Feed keys to Neovim
+  -- Flags: 'n' = no remap (prevents recursive mapping triggers)
+  -- escape_ks: false (keys are already escaped by replace_termcodes)
   feedkeys(keys, "n", false)
 end
 
---- Create a guarded resize mapping callback.
---- @param cmd string Command to execute (e.g., "vertical resize -5")
---- @param exclude_filetypes? string[] List of filetypes to exclude
---- @param exclude_names? string[] List of Lua patterns to match buffer names to exclude
---- @param lhs? string Original mapping lhs (e.g. "<S-h>") used to derive forwarded key
---- @return fun()|nil
-local function create(cmd, exclude_filetypes, exclude_names, lhs)
+--- Create a guarded resize mapping callback function.
+--- This function checks if the current buffer should be excluded,
+--- and either forwards the key or executes the resize command.
+---@param cmd string The resize command to execute (e.g., "vertical resize -5")
+---@param exclude_filetypes string[]|nil List of filetypes to exclude from resize
+---@param exclude_names string[]|nil List of Lua patterns matching buffer names to exclude
+---@param lhs string The original mapping lhs (e.g., "<S-h>") - REQUIRED for key forwarding
+---@return function callback Function compatible with vim.keymap.set
+function M.create(cmd, exclude_filetypes, exclude_names, lhs)
+  -- Set default values for optional parameters
   exclude_filetypes = exclude_filetypes or {}
   exclude_names = exclude_names or {}
 
-  -- Precompute fallback sequence if possible
+  -- Derive the fallback key sequence once at mapping creation time
+  -- This is more efficient than computing it on every keypress
   local fallback_seq = derive_fallback(lhs)
 
+  -- Warn if lhs was provided but fallback derivation failed
+  if lhs and not fallback_seq then
+    vim.notify(
+      string.format("[resize_guarded] Warning: Could not derive fallback for lhs '%s'", lhs),
+      vim.log.levels.WARN,
+      { title = "resize_guarded" }
+    )
+  end
+
+  -- Return the callback function that will be executed on keypress
   return function()
+    -- Get current buffer information
     local buf = api.nvim_get_current_buf()
     local ft = vim.bo[buf].filetype or ""
     local name = api.nvim_buf_get_name(buf) or ""
 
-    -- If buffer filetype is excluded -> forward key and do nothing
+    -- Check if buffer filetype is in exclusion list
     for _, ftype in ipairs(exclude_filetypes) do
       if ft == ftype then
-        -- Forward fallback or nothing
+        -- Buffer is excluded: forward the original key
         if fallback_seq then
           forward_key(fallback_seq)
         end
@@ -115,9 +135,10 @@ local function create(cmd, exclude_filetypes, exclude_names, lhs)
       end
     end
 
-    -- If buffer name matches any excluded pattern -> forward key and do nothing
+    -- Check if buffer name matches any exclusion pattern
     for _, pat in ipairs(exclude_names) do
       if name:match(pat) then
+        -- Buffer is excluded: forward the original key
         if fallback_seq then
           forward_key(fallback_seq)
         end
@@ -125,11 +146,17 @@ local function create(cmd, exclude_filetypes, exclude_names, lhs)
       end
     end
 
-    -- Otherwise perform the resize command
-    pcall(function() vim.cmd(cmd) end)
+    -- Buffer is not excluded: execute the resize command
+    -- Use pcall to catch any errors from vim.cmd
+    local ok, err = pcall(function() vim.cmd(cmd) end)
+    if not ok then
+      vim.notify(
+        string.format("[resize_guarded] Resize command failed: %s", err),
+        vim.log.levels.ERROR,
+        { title = "resize_guarded" }
+      )
+    end
   end
 end
 
-return {
-  create = create,
-}
+return M

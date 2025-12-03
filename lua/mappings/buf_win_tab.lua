@@ -56,34 +56,36 @@ function M.setup()
   map("n", "<C-j>", "<C-w>j", { desc = "[Window] Jump down" })
   map("n", "<C-k>", "<C-w>k", { desc = "[Window] Jump up" })
 
-
-  -- FIX: Resize guarded blockt Großbuchstaben
   local resize_guarded = require("lib.buf_win_tab.resize_guarded")
   local exclude_filetypes = { "terminal" }
   local exclude_names = { ".*lazygit.*" }
 
+  -- WICHTIG: Der vierte Parameter (lhs) muss übergeben werden!
   vim.keymap.set(
     { "n", "t" },
     "<S-h>",
-    resize_guarded.create("vertical resize -5", exclude_filetypes, exclude_names),
+    resize_guarded.create("vertical resize -5", exclude_filetypes, exclude_names, "<S-h>"),
     { desc = "[Window] Resize narrower" }
   )
+
   vim.keymap.set(
     { "n", "t" },
     "<S-l>",
-    resize_guarded.create("vertical resize +5", exclude_filetypes, exclude_names),
+    resize_guarded.create("vertical resize +5", exclude_filetypes, exclude_names, "<S-l>"),
     { desc = "[Window] Resize wider" }
   )
+
   vim.keymap.set(
     { "n", "t" },
     "<S-k>",
-    resize_guarded.create("resize +5", exclude_filetypes, exclude_names),
+    resize_guarded.create("resize +5", exclude_filetypes, exclude_names, "<S-k>"),
     { desc = "[Window] Resize taller" }
   )
+
   vim.keymap.set(
     { "n", "t" },
     "<S-j>",
-    resize_guarded.create("resize -5", exclude_filetypes, exclude_names),
+    resize_guarded.create("resize -5", exclude_filetypes, exclude_names, "<S-j>"),
     { desc = "[Window] Resize shorter" }
   )
 
