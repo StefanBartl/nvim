@@ -29,15 +29,82 @@ return {
       },
     },
 
-    -- uncomment this if neotree should close after opening a file
-    -- event_handlers = {
-    --   {
-    --     event = "file_opened",
-    --     handler = function()
-    --       require("neo-tree.command").execute { action = "close" }
-    --     end,
-    --   },
-    -- },
+    event_handlers = {
+      -- uncomment this if neotree should close after opening a file
+      -- {
+      --   event = "file_opened",
+      --   handler = function()
+      --     require("neo-tree.command").execute { action = "close" }
+      --   end,
+      -- },
+      {
+        event = "neo_tree_window_before_open",
+        handler = function(args)
+          if args and args.position == "right" then
+            args.position = "left"
+          end
+        end,
+      },
+
+      -- AFTER open: Falls trotzdem rechts → schließen und links öffnen
+      {
+        event = "neo_tree_window_after_open",
+        handler = function(args)
+          -- Defensive checks
+          if not args or not args.winid then
+            return
+          end
+          if not vim.api.nvim_win_is_valid(args.winid) then
+            return
+          end
+
+          local ok_pos, win_pos = pcall(vim.api.nvim_win_get_position, args.winid)
+          if not ok_pos then
+            return
+          end
+
+          local ok_width, win_width = pcall(vim.api.nvim_win_get_width, args.winid)
+          if not ok_width then
+            return
+          end
+
+          local screen_width = vim.o.columns
+
+          -- Check if window is on the right side
+          if (win_pos[2] + win_width) >= (screen_width - 5) then
+            vim.schedule(function()
+              -- Extract source from tabnr (args contains this)
+              local source = "filesystem"
+
+              -- Try to get source from window's buffer
+              if vim.api.nvim_win_is_valid(args.winid) then
+                local bufnr = vim.api.nvim_win_get_buf(args.winid)
+                local bufname = vim.api.nvim_buf_get_name(bufnr)
+                local match = bufname:match("neo%-tree://([^/]+)")
+                if match then
+                  source = match
+                end
+              end
+
+              -- Close window
+              pcall(vim.api.nvim_win_close, args.winid, true)
+
+              -- Reopen on left
+              local ok_cmd, neo_cmd = pcall(require, "neo-tree.command")
+              if ok_cmd then
+                vim.defer_fn(function()
+                  neo_cmd.execute({
+                    source = source,
+                    position = "left",
+                    action = "show",
+                  })
+                end, 100)
+              end
+            end)
+          end
+        end,
+      },
+    },
 
     default_component_config = {
       indent = { with_expanders = false },
@@ -80,7 +147,7 @@ return {
       find_by_full_path_words = true,
       group_empty_dirs = true,
       use_libuv_file_watcher = true,
-      window = { mappings = FILESYSTEM },
+      window = { position = "left", mappings = FILESYSTEM },
       filtered_items = {
 
         -- Everything is visible by default
@@ -136,9 +203,10 @@ return {
       debounce_ms = 80,
       keep_focus = true,
       also_set_nvim_cwd = false, -- set to true if global :cd should follow too
-      open_if_closed = false,    -- set to true to auto-open Neo-tree on first sync
+      open_if_closed = false, -- set to true to auto-open Neo-tree on first sync
       use_project_root = true,
     })
-     require("config.neotree.open").attach_opener_mappings()
+    require("config.neotree.open").attach_opener_mappings()
+    require("config.neotree.prevent_open_right").setup()
   end,
 }
