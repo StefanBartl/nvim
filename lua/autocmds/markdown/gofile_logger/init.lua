@@ -9,6 +9,7 @@
 return function (cfg)
   -- Decide whether debug-level notifications are enabled.
   local debug_enabled = cfg and cfg.goto_file and cfg.goto_file.debug
+  debug_enabled = false -- AUDIT: warum wird geloggt wenn man in defaults und init false hat und hier exrta false setzen muss?
 
   local function notify_with_level(prefix, level, msg, ctx)
     -- Compose message and safely serialize context (avoid heavy inspect in non-debug).

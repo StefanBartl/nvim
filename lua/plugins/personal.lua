@@ -97,33 +97,43 @@ return {
 
   {
     dir = vim.env.REPOS_DIR .. "/gopath.nvim",
+    -- "StefanBartl/gopath.nvim",
+    event = "VeryLazy",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter", -- Optional but recommended
+    },
     opts = {
-      mode = "hybrid",
-      order = { "treesitter", "lsp", "builtin" },
-      lsp_timeout_ms = 200,
+      mode = "hybrid", -- "hybrid" | "lsp" | "treesitter" | "builtin"
 
-      languages = {
-        lua = { enable = true },
-      },
-
+      -- Fuzzy alternate resolution
       alternate = {
         enable = true,
-        similarity_threshold = 75,
+        similarity_threshold = 75, -- 0-100
       },
 
+      -- External file opening
       external = {
         enable = true,
       },
 
-      -- Optional: Custom mappings (leave defaults)
+      -- -- Custom keymaps (optional - defaults shown)
       -- mappings = {
-      --   open_here = "gP",
-      --   -- Set to false to disable specific mapping
-      --   debug = false,
+      --   open_here = "gP", -- Open in current window
+      --   open_split = "g|", -- Open in horizontal split
+      --   open_vsplit = "g\\", -- Open in vertical split
+      --   open_tab = "g}", -- Open in new tab
+      --   copy_location = "gY", -- Copy path:line:col
+      --   debug = "g?", -- Debug resolution
+      --   -- Set any to false to disable
       -- },
-
-      -- Optional: Disable commands
-      -- commands = false,
+      --
+      -- -- User commands (optional)
+      -- commands = {
+      --   resolve = true, -- :GopathResolve
+      --   open = true, -- :GopathOpen [edit|window|vsplit|tab]
+      --   copy = true, -- :GopathCopy
+      --   debug = true, -- :GopathDebug
+      -- },
     },
   },
 

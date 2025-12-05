@@ -1,7 +1,7 @@
 ---@module 'config.neotree.open_replace'
 
 -- FIX: Ohne auto_close funktionert es nicht korrekt, weil neotree sich nach dem ausfphren des Mappings ungewollt rechts öffnet
-
+-- FIX: öffnet anscheinen ein vertikal split statt im current window
 local api = vim.api
 local fn = vim.fn
 
