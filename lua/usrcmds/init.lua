@@ -3,6 +3,7 @@
 
 require("usrcmds.compress_dir").enable_usercmd()
 require("usrcmds.filecycle")
+require("usrcmds.filter_lines").enable()
 require("usrcmds.format_text_width")
 require("usrcmds.misc").enable_usercmds()
 require("usrcmds.project_tree").enable_usercmds()
