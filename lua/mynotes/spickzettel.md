@@ -2,18 +2,26 @@
 
 ## Table of content
 
-  - [Custom Usrcommands](#custom-usrcommands)
-  - [Custom mappings](#custom-mappings)
+  - [jumps/marks](#jumpsmarks)
+    - [Sprungnavigation](#sprungnavigation)
+    - [Marks: Setzen & Springen](#marks-setzen-springen)
+    - [Wichtige Spezial-Marks](#wichtige-spezial-marks)
+  - [Mappings](#mappings)
+    - [Custom](#custom)
+    - [Builtin](#builtin)
+      - [Filesystem](#filesystem)
   - [Custom Markdown: UserCommands und Mappings](#custom-markdown-usercommands-und-mappings)
-  - [1. Operator + Textobjekt (präzise und schnell)](#1-operator-textobjekt-przise-und-schnell)
-  - [2. Visual + Textobjekt (explizit markieren)](#2-visual-textobjekt-explizit-markieren)
-  - [3. Bewegung bis zum Trennzeichen (wenn das nächste Zeichen bekannt ist)](#3-bewegung-bis-zum-trennzeichen-wenn-das-nchste-zeichen-bekannt-ist)
-  - [4. Alternative Bewegung statt w in Visual](#4-alternative-bewegung-statt-w-in-visual)
-  - [5. Bewegungen innerhalb einer Zeile](#5-bewegungen-innerhalb-einer-zeile)
-  - [6. Direkt in den Insert-Modus springen (Bewegung + sofort Einfügen)](#6-direkt-in-den-insert-modus-springen-bewegung-sofort-einfgen)
-  - [7. Nützliche Wort- und Satzbewegungen](#7-ntzliche-wort-und-satzbewegungen)
-  - [8. Wiederholen & Korrigieren](#8-wiederholen-korrigieren)
-  - [9. nach "oben" / "rechts" usw..](#9-nach-oben-rechts-usw)
+  - [Vimmotions](#vimmotions)
+    - [1. Operator + Textobjekt (präzise und schnell)](#1-operator-textobjekt-przise-und-schnell)
+    - [2. Visual + Textobjekt (explizit markieren)](#2-visual-textobjekt-explizit-markieren)
+    - [3. Bewegung bis zum Trennzeichen (wenn das nächste Zeichen bekannt ist)](#3-bewegung-bis-zum-trennzeichen-wenn-das-nchste-zeichen-bekannt-ist)
+    - [4. Alternative Bewegung statt w in Visual](#4-alternative-bewegung-statt-w-in-visual)
+    - [5. Bewegungen innerhalb einer Zeile](#5-bewegungen-innerhalb-einer-zeile)
+    - [6. Direkt in den Insert-Modus springen (Bewegung + sofort Einfügen)](#6-direkt-in-den-insert-modus-springen-bewegung-sofort-einfgen)
+    - [7. Nützliche Wort- und Satzbewegungen](#7-ntzliche-wort-und-satzbewegungen)
+    - [8. Wiederholen & Korrigieren](#8-wiederholen-korrigieren)
+    - [9. nach "oben" / "rechts" usw..](#9-nach-oben-rechts-usw)
+  - [Lua Language Server Annotationen](#lua-language-server-annotationen)
   - [Markdown](#markdown)
     - [Syntax](#syntax)
       - [Anker](#anker)
@@ -26,29 +34,60 @@
     - [Steuersequenzen](#steuersequenzen)
   - [Powershell](#powershell)
     - [Installationsort / Binary ausgeben](#installationsort-binary-ausgeben)
-  - [Schnelle Befehle in Neovim, um Browser manuell zu öffnen](#schnelle-befehle-in-neovim-um-browser-manuell-zu-ffnen)
+  - [Browser manuell zu öffnen](#browser-manuell-zu-ffnen)
+  - [`vim.lsp`](#vimlsp)
 
 ---
 
 <div id="#...">, <section id="#...">, <a href="#...">, <img src="#...">,
 
  `<C-6>` oder `edit #` öffnet letzte datei
- `:edit #`: springe zum letzten buffer
  `goto smth` in branches verwenden
- `vert res +10`
- `checkhealth vim.lsp` statt `LspInfo`
  `leader gd` - Diffsplit
  `S-c` - löschen vom Cursor bis ans Ender der Zeile
 
-`:NewFile {path}`           -> set buffer name, create parents, do NOT write by default
-`:NewFileWrite {path}`      -> like NewFile, but also :write immediately
-`:SaveAsR[!] {path}`        -> save-as, create parents; with ! force overwrite
-`:writetor[!] {path} `      -> write copy, create parents; with ! force overwrite
-`:MkParent`                 -> ensure parent dir for the current buffer name
-`FindFiles{Telescope/Fzf}`  -> Find files in Telescope or Fzf
-`Grep{Telescope/Fzf}`       -> Grep in Telescope or Fzf
+## jumps/marks
 
-## Custom mappings
+- Suche und Jump-Liste: `/`, `?`, `n`, `N` erzeugen Jump-Einträge; `f`/`t` nicht.
+
+### Sprungnavigation
+
+| Taste/Command    | Erklärung                                           |
+| -----------------| ----------------------------------------------------|
+|  `\`\``          | Wechsel zwischen den zwei letzten Kontextpositionen |
+| `CTRL-O`         | Älter in der Jump-Liste                             |
+| `CTRL-I (<Tab>)` | Neuer in der Jump-Liste                             |
+| `:jumps`         | Jump-Liste anzeigen                                 |
+| `g;`             | Ältere Änderung (Change-Liste, pufferlokal)         |
+| `g,`             | Neuere Änderung (Change-Liste, pufferlokal)         |
+| `:changes`       | Change-Liste anzeigen                               |
+
+### Marks: Setzen & Springen
+
+| Command    | Erklärung |
+| ---------- | ----------------------------------------------------------|
+| `ma`       | Setzt Marke a (pufferlokal)                               |
+| `\`a`      | Springt spaltengenau zu Marke a                           |
+| `'a`       | Springt zum Zeilenanfang der Zeile mit Marke a            |
+| `mA`       | Setzt globale Marke A (Datei + Position)                  |
+| `\`A / 'A` | Springt zu globaler Marke A (bei Bedarf mit Dateiwechsel) |
+
+### Wichtige Spezial-Marks
+
+| Mark      | Bedeutung                                                  |
+| --------  | -----------------------------------------------------------|
+| `''`      | Position vor letztem Sprung (Kontext)                      |
+| `"`       | Letzte Cursorposition beim vorherigen Edit derselben Datei |
+| `[ / ]`   | Beginn / Ende der letzten Änderung                         |
+| `'< ' >`  | Beginn / Ende der letzten visuellen Auswahl                |
+| `\`.`     | Position der letzten Änderung (präzise Spalte)             |
+| `\`^`     | Letzte Insert-Startposition                                |
+
+---
+
+## Mappings
+
+### Custom
 
 `<A-m>`                     -> Öffnet 'find files or grep' selector
 `telf /telg / fzff / fzfg`  -> {find files or grep} in custom dir with {telescope or fzf}
@@ -59,6 +98,16 @@
 'x', `<leader>cal`,  Align character to column
 
 `gm`: Folge Urls im Browser
+
+### Builtin
+
+#### Filesystem
+
+`:NewFile {path}`           -> set buffer name, create parents, do NOT write by default
+`:NewFileWrite {path}`      -> like NewFile, but also :write immediately
+`:SaveAsR[!] {path}`        -> save-as, create parents; with ! force overwrite
+`:writetor[!] {path} `      -> write copy, create parents; with ! force overwrite
+`:MkParent`                 -> ensure parent dir for the current buffer name
 
 ## Custom Markdown: UserCommands und Mappings
 
@@ -98,21 +147,30 @@
 |             | `<leader>mhIA` | Alle Headings im Buffer um eine Ebene erhöhen |
 |             | `<leader>mhDA` | Alle Headings im Buffer um eine Ebene verringern |
 
-## 1. Operator + Textobjekt (präzise und schnell)
+### Plugins
+
+**Zen Mode:**
+`:ZenMode`, `:close` or `:quit`
+
+---
+
+## Vimmotions
+
+### 1. Operator + Textobjekt (präzise und schnell)
 
    * ciw → „change inner word“: ändert nur das Wort, Satzzeichen bleiben.
    * caw → „change a word“: wie oben, nimmt nachfolgendes Leerzeichen mit.
    * ci" / ci' / ci( / ci[ → „change inside …“: Inhalt zwischen Anführungszeichen/Klammern ändern.
    * ca" / ca' / ca( / ca[ → wie oben, inklusive der Klammern/Anführungszeichen selbst.
 
-## 2. Visual + Textobjekt (explizit markieren)
+### 2. Visual + Textobjekt (explizit markieren)
 
    * viw gefolgt von c → markiert nur das Wort, kein Komma.
    * vaw gefolgt von c → wie oben, plus nachfolgendes Leerzeichen.
    * vi" / vi' / vi( / vi[ → markiert nur den inneren Inhalt von Anführungszeichen/Klammern.
    * va" / va' / va( / va[ → markiert inkl. Anführungszeichen/Klammern selbst.
 
-## 3. Bewegung bis zum Trennzeichen (wenn das nächste Zeichen bekannt ist)
+### 3. Bewegung bis zum Trennzeichen (wenn das nächste Zeichen bekannt ist)
 
    * ct, → „change till ,“: ändert bis vor das Komma, Komma bleibt erhalten.
    * dt, / yt, → analog für delete/yank ohne das Komma.
@@ -120,20 +178,20 @@
    * t, → springt bis vor das nächste Komma.
    * ; / , → wiederholt f/t in Vorwärts- / Rückwärtsrichtung.
 
-## 4. Alternative Bewegung statt w in Visual
+### 4. Alternative Bewegung statt w in Visual
 
    * ve statt vw → „bis Wortende“ statt „zum nächsten Wortanfang“; so wird das Komma nicht mit ausgewählt.
    * vE → bis Wortende (großes E = WORD, inkl. Bindestriche etc. als ein Block).
    * vb / vB → markiert rückwärts bis Wort- / WORD-Anfang.
 
-## 5. Bewegungen innerhalb einer Zeile
+### 5. Bewegungen innerhalb einer Zeile
 
    * ^ → zum ersten Nicht-Leerzeichen der Zeile.
    * 0 → zum absoluten Zeilenanfang.
    * $ → zum Zeilenende.
    * g_ → zum letzten Nicht-Leerzeichen der Zeile.
 
-## 6. Direkt in den Insert-Modus springen (Bewegung + sofort Einfügen)
+### 6. Direkt in den Insert-Modus springen (Bewegung + sofort Einfügen)
 
    * ea → springt ans Ende des aktuellen Wortes und startet Insert dahinter.
    * eA → wie ea, aber WORD (inkl. Bindestriche etc.).
@@ -144,21 +202,21 @@
    * o → öffnet eine neue Zeile unterhalb und wechselt in Insert.
    * O → öffnet eine neue Zeile oberhalb und wechselt in Insert.
 
-## 7. Nützliche Wort- und Satzbewegungen
+### 7. Nützliche Wort- und Satzbewegungen
 
    * w / W → vorwärts zum Anfang des nächsten Wortes / WORDs.
    * e / E → vorwärts zum Ende des aktuellen Wortes / WORDs.
    * b / B → rückwärts zum Anfang des aktuellen Wortes / WORDs.
    * ge / gE → rückwärts zum Ende des vorherigen Wortes / WORDs.
 
-## 8. Wiederholen & Korrigieren
+### 8. Wiederholen & Korrigieren
 
    * . → wiederholt die letzte Änderung.
    * u → macht letzte Änderung rückgängig.
    * U → stellt ganze Zeile wieder her.
    * Ctrl-r → stellt rückgängig gemachte Änderungen wieder her (redo).
 
-## 9. nach "oben" / "rechts" usw..
+### 9. nach "oben" / "rechts" usw..
    * d3k → 3 Zeilen nach oben löschen
    * c3k → 3 Zeilen nach oben ändern
    * c3l → 3 chars nach rechts ändern
@@ -386,6 +444,8 @@ where EXECUTABLE_NAME
 ---
 
 ## `vim.lsp`
+
+ `checkhealth vim.lsp` statt `LspInfo`
 
 These GLOBAL keymaps are created unconditionally when Nvim starts:
  - `gra` (Normal and Visual mode) is mapped to `vim.lsp.buf.code_action()`

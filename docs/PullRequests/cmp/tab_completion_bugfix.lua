@@ -1,3 +1,4 @@
+---File: nvim-data\lazy\nvim-cmp\lua\cmp\config\mapping.lua
 ---@module 'config.cmp.tab_completion_bugfix'
 --- This module addresses an Insert-mode Tab issue caused by nvim-cmp.
 ---
@@ -44,6 +45,8 @@
 --- - Use `:verbose imap <Tab>` to check which mapping is active.
 --- - Make sure no other plugin (snippets, completion, keymaps) remaps <Tab> afterwards.
 
+---@diagnostic disable
+
 local cmp = require("cmp")
 
 -- Function to insert a real Tab character if completion menu is not visible
@@ -63,3 +66,44 @@ cmp.setup({
     ["<Tab>"] = cmp.mapping(insert_real_tab, { "i", "s" }),
   }),
 })
+
+
+
+--- ==== Teil 1:
+
+mapping.preset.insert = function(override)       --- Zeile 36
+  return merge_keymaps(override or {}, {
+    ['<Tab>'] = {                                --- NEU
+      i = function()
+        local cmp = require('cmp')
+        if cmp.visible() then
+          cmp.select_next_item()
+        else
+          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-V><Tab>', true, false, true), 'n', false)
+        end
+      end,
+      s = function()
+        local cmp = require('cmp')
+        if cmp.visible() then
+          cmp.select_next_item()
+        else
+          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-V><Tab>', true, false, true), 'n', false)
+        end
+      end,
+    },
+    ['<Down>'] = {                              --- Zeile 58
+      i = mapping.select_next_item({ behavior = types.cmp.SelectBehavior.Select }),
+    },
+
+--- ==== Teil 2:
+
+    ['<Tab>'] = {                                --- Zeile 105
+      c = function()
+        local cmp = require('cmp')
+        if cmp.visible() then
+          cmp.select_next_item()
+        else
+          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-V><Tab>', true, false, true), 'n', false) --- NEU, statt cmp.complete()
+        end
+      end,
+    },                                           --- Zeile 114

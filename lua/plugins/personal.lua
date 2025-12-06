@@ -8,6 +8,20 @@ end
 
 ---@type LazyPluginSpec[]
 return {
+  {
+    -- Verwendung
+    -- <leader>;    → Reveal current file
+    -- 2<leader>;   → Reveal with 2 parent levels up
+    -- <leader>:    → Open at cwd
+    -- Im Picker: s → split mode, 05 → öffnet Index 05 im split
+    "StefanBartl/filetreepicker.nvim",
+    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/filetreepicker.nvim"),
+    event = "VeryLazy",
+    dependencies = { "nvim-neo-tree/neo-tree.nvim" },
+    config = function()
+      require("filetreepicker").setup({})
+    end,
+  },
 
   {
     "StefanBartl/telescope-selected-index",

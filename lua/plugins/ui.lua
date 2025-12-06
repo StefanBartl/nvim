@@ -3,8 +3,14 @@
 
 ---@type LazyPluginSpec[]
 return {
+  {
+    "nvim-mini/mini.icons",
+    version = "*",
+    config = function()
+      require("mini.icons").setup()
+    end,
+  },
 
-  -- Better Quickfix UI
   {
     "kevinhwang91/nvim-bqf",
     ft = "qf",
@@ -17,7 +23,6 @@ return {
     end,
   },
 
-  -- Noice Enhanced command line and LSP UI
   {
     "folke/noice.nvim",
     event = "VeryLazy",
@@ -44,7 +49,6 @@ return {
     end,
   },
 
-  -- Zen Mode: Distraction-free writing
   {
     "folke/zen-mode.nvim",
     cmd = "ZenMode",

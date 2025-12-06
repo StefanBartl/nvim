@@ -110,15 +110,15 @@ end
 
 ---@return nil
 function M.attach()
-  vim.api.nvim_create_user_command("LspStart", function(args)
-    M.cmd(args)
-  end, {
-    nargs = "?",
-    complete = function()
-      return get_installed_lsps()
-    end,
-    desc = "Start a Mason-installed LSP or via name",
-  })
+  -- vim.api.nvim_create_user_command("LspStart", function(args)
+  --   M.cmd(args)
+  -- end, {
+  --   nargs = "?",
+  --   complete = function()
+  --     return get_installed_lsps()
+  --   end,
+  --   desc = "Start a Mason-installed LSP or via name",
+  -- })
 
   pcall(nvim_create_user_command, "LspStartHere", function()
     for _, name in ipairs(_active_servers()) do

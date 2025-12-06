@@ -29,6 +29,11 @@
 
 ### Headings
 
+- `<C-Right>` Bugs im v Modus:
+    - Funktnionert nicht auf das erste mal, mann muss dann nochmal auswähen und erneut maping ausführen
+    - Wenn man danach einen anderen Bereich markiert und das mapping ausführt, wird dieser nicht verändert, sondern  wieder der erste.
+    - Linewise v Funktnionert gar nicht (ist aber kein großes Problem, sofern der normale v mode funktionieren würde.)
+
 1. Increase & Decrease funktioniert im normal, visual und visual block modus, aber nicht im visual line.
 2. Wenn der Cursor in der Zeile eines Headings ist, so wird dieses momentan von der üblichen Headline-Color zur normalen COlor des Textes geändert. Besser wäre, wenn das Heading, ein der der Cursor gerade ist, sichtbarer Dargestellt wird. Entweder: Headline mit Hintergrundfarbe hervorheben, Headlinetext so belassen (füür Kontrast) oder Textfarbe der Headline ändern, so dass si sichtbarer ist oder beides, also Textfarbe ändern + Hntergrundfarbe platzieren.
 
