@@ -17,7 +17,6 @@
 ---@field open_cmd_unix string[]|nil     -- Override opener argv for Linux/Unix; default { "xdg-open", "<url>" }.
 
 ---@class MdAutoCmdsCfg
----@field wrap_key MdAutoCmdsWrapKeyCfg
 ---@field goto_file MdAutoCmdsGotoFileCfg
 
 ---@class TSNode

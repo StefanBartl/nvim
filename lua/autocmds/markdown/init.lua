@@ -46,47 +46,7 @@ function M.enable(cfg)
     vim.notify("md-gf: debug enabled, config loaded", vim.log.levels.INFO, { title = "md-gf" })
   end
 
-  -- 1) Buffer-local wrap mapping (unchanged)
-  if cfg.wrap_key.enable then
-    api.nvim_create_autocmd("FileType", {
-      group = augroup("wrap_key"),
-      pattern = norm_pattern(cfg.wrap_key.pattern),
-      callback = function()
-        local buf = api.nvim_get_current_buf()
-        if cfg.wrap_key.only_modifiable ~= false and not vim.bo[buf].modifiable then
-          vim.notify("Markdown wrap: buffer is not modifiable", vim.log.levels.WARN)
-          return
-        end
-
-        local key = cfg.wrap_key.key
-        local description = cfg.wrap_key.description
-
-        local handler = function()
-          if vim.bo.filetype ~= "markdown" then
-            return
-          end
-          local word = vim.fn.expand("<cword>")
-          if not word or word == "" then
-            return
-          end
-          local row, col = unpack(api.nvim_win_get_cursor(0))
-          vim.cmd("normal! ciw[" .. word .. "]()")
-          local new_col = col + 2 + #word + 1
-          api.nvim_win_set_cursor(0, { row, new_col })
-        end
-
-        vim.keymap.set("n", key or "<leader>[", handler, {
-          desc = description,
-          buffer = buf,
-          noremap = true,
-          silent = true,
-        })
-      end,
-      desc = "Markdown: buffer-local keymap to wrap <cword> as [word]()",
-    })
-  end
-
-  -- 2) Markdown-aware gf override with modular cases
+  -- 1) Markdown-aware gf override with modular cases
   if cfg.goto_file.enable then
     api.nvim_create_autocmd("FileType", {
       group = augroup("goto_file"),

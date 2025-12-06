@@ -48,9 +48,6 @@ end
 ------------------------------------------------------
 
 require("autocmds.markdown").enable({
-  wrap_key = {
-    enable = true,
-  },
   goto_file = {
     enable = true,
     debug = false,

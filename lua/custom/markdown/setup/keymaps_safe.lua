@@ -95,29 +95,33 @@ function M.apply(bufnr)
   end
   local o = bufnr and { buffer = bufnr } or nil
 
-  local headings = require "custom.markdown.core.headings"
-  local wrap = require "custom.markdown.core.wrap"
-  local fold = require "custom.markdown.core.fold"
-  local fold_prev = require "custom.markdown.core.fold_prev"
-  local fold_lvls = require "custom.markdown.core.fold_levels"
-  local toc = require "custom.markdown.core.toc"
-  local wrap_link = require "custom.markdown.core.wrap_link"
+  -- Load submodules safely
+  local ok_head, headings = pcall(require, "custom.markdown.core.headings")
+  local ok_wrap, wrap = pcall(require, "custom.markdown.core.wrap")
+  local ok_fold, fold = pcall(require, "custom.markdown.core.fold")
+  local ok_prev, fold_prev = pcall(require, "custom.markdown.core.fold_prev")
+  local ok_lvls, fold_lvls = pcall(require, "custom.markdown.core.fold_levels")
+  local ok_toc, toc = pcall(require, "custom.markdown.core.toc")
+  local wrap_link = require("custom.markdown.core.wrap_link")
   wrap_link.attach(bufnr)
 
   -- Wrap visual toggle ** ----------------------------------------------------
-  if wrap.toggle_visual_bold then
+  if ok_wrap and wrap.toggle_visual_bold then
     map("x", "**", wrap.toggle_visual_bold, "[Custom.Markdown] Toggle ** around selection", o)
   end
 
   -- Headings navigation -------------------------------------------------------
+  if ok_head then
     if headings.goto_prev_heading then
       map({ "n", "v", "x" }, "<C-p>", headings.goto_prev_heading, "[Custom.Markdown] Previous heading (H2+)", o)
     end
     if headings.goto_next_heading then
       map({ "n", "v", "x" }, "<C-f>", headings.goto_next_heading, "[Custom.Markdown] Next heading (H2+)", o)
     end
+  end
 
   -- Folding controls ----------------------------------------------------------
+  if ok_fold then
     map("n", "<localleader>f", fold.toggle_under_cursor, "[Custom.Markdown] Toggle fold under cursor & center", o)
     if cfg.use_zf_override then
       map(
@@ -129,19 +133,20 @@ function M.apply(bufnr)
       )
     end
     map("n", "zu", fold.unfold_all_center, "[Custom.Markdown] Unfold all & center", o)
+  end
 
-  if fold_prev.fold_prev_heading_then_center then
+  if ok_prev and fold_prev.fold_prev_heading_then_center then
     map("n", "zi", fold_prev.fold_prev_heading_then_center, "[Custom.Markdown] Fold previous heading & center", o)
   end
 
-  if fold_lvls.fold_levels then
+  if ok_lvls and fold_lvls.fold_levels then
     map("n", "zk", function()
       fold_lvls.fold_levels({ 2, 3, 4, 5, 6 })
     end, "[Custom.Markdown] Fold H2+ (keep H1 open)", o)
   end
 
   -- TOC insert/refresh --------------------------------------------------------
-  if toc.update_markdown_toc then
+  if ok_toc and toc.update_markdown_toc then
     map("n", "<leader>toc", function()
       toc.update_markdown_toc("## Table of content")
     end, "[Custom.Markdown] Insert/Refresh TOC", o)
@@ -228,6 +233,20 @@ function M.apply(bufnr)
     headings.shift_range(s, e, -n)
   end, "[Custom.Markdown] Decrease ALL headings (buffer, count-aware)", opts)
 
+  -- Operator-pending mappings: set buffer-local repeat before invoking g@
+  if headings._op_increase and headings._op_decrease then
+    map("n", "<leader>mhi", function()
+      vim.b._markdown_heading_op_count = get_count_or_one()
+      vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_increase"
+      return "g@"
+    end, "[Custom.Markdown] Increase headings (operator-pending, count-aware)", with({ expr = true }, opts))
+
+    map("n", "<leader>mhd", function()
+      vim.b._markdown_heading_op_count = get_count_or_one()
+      vim.go.operatorfunc = "v:lua.require'custom.markdown.core.headings'._op_decrease"
+      return "g@"
+    end, "[Custom.Markdown] Decrease headings (operator-pending, count-aware)", with({ expr = true }, opts))
+  end
 end
 
 return M

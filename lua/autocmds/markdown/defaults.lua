@@ -2,13 +2,6 @@
 
 ---@type MdAutoCmdsCfg
 local defaults = {
-  wrap_key = {
-    enable = true,
-    key = "<leader>[",
-    description = "Wrap current word in Markdown link syntax",
-    pattern = "*",
-    only_modifiable = true,
-  },
   goto_file = {
     enable = true,
     debug = false,
