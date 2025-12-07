@@ -8,6 +8,8 @@
  Sollte MarkdownPreview sich nicht dafür eigenen, eventuelle ein eigenes Tool erstellen
 
 - Springen mit `#` oder `*` zur nöchsten/vorigen Headline im v und V, Modus
+-  Wenn in einer Markdown File ein Codeblock ist und man fomratiert, dann sollte der Codeblock in der Sprache mit dem passenden Formatter formatiert werden, nicht mit marksman
+- ``- Backticks inline code color in Source code!
 
 ## toc
 
@@ -15,9 +17,8 @@
 
 ## `/custom/markdown`-Modul
 
-1. inline code in backticks wie `function` wird fast immer nicht gehighlighted
-2. leader mhD funktioniert erst, wenn man einmal alles mit C-v markiert hat oder keine Markierung - dann aber nur in der aktuellen headline - dann escaped, und dann leader mhD/I ausführt
-3. markdown mappings/utils/markdown, mappings/marjkdown, utils/markdown und /utils/markdown_headings zusammenholen
+1. leader mhD funktioniert erst, wenn man einmal alles mit C-v markiert hat oder keine Markierung - dann aber nur in der aktuellen headline - dann escaped, und dann leader mhD/I ausführt
+2. markdown mappings/utils/markdown, mappings/marjkdown, utils/markdown und /utils/markdown_headings zusammenholen
 
 ---
 

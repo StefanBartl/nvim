@@ -166,7 +166,18 @@ return {
       -- -- Setup the automatic wrapping of all builtins.
       -- -- Pass the factory that returns the attach_mappings function.
       -- attach_all.setup(selected_index.attach_mappings_with_selected_index)
-        end
+
+      -- Set highlight for selection (GUI + terminal)
+      vim.api.nvim_set_hl(0, "TelescopeSelection", {
+        fg = "#ffffff", -- gui foreground
+        bg = "#1abc9c", -- gui background
+        -- bg = "#2ac3de", -- gui background
+        -- bg = "#bb9af7", -- gui background
+        bold = true,
+        ctermfg = 15, -- terminal fg (optional)
+        ctermbg = 24, -- terminal bg (optional)
+      })
+    end,
   },
 
   ------------------------------------------------------------------------------

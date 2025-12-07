@@ -5,8 +5,10 @@
 ---@param lhs string
 ---@param rhs string|function
 ---@param opts table|nil
-return function(modes, lhs, rhs, opts)
+---@param desc string?
+return function(modes, lhs, rhs, opts, desc)
   opts = opts or {}
+  opts.desc = desc or ""
   if opts.noremap == nil then
     opts.noremap = true
   end
