@@ -34,17 +34,33 @@ function M.setup(shared, opts)
             checkThirdParty = false,
             ignoreDir = ignore.as_luals_patterns(),
             useGitIgnore = true,
-            maxPreload = 1500,
-            preloadFileSize = 200,
-            -- library per Root (siehe on_new_config unten)
+            maxPreload = 3000,
+            preloadFileSize = 500,
+            -- library is built per-root in on_new_config below
           },
           telemetry = { enable = false },
         },
       },
       on_new_config = function(new_config, new_root)
         if new_config and new_config.settings and new_config.settings.Lua then
+          -- build_library should return per-root project libraries
           local build_library = require("lsp.servers.lua_ls.build_library")
-          new_config.settings.Lua.workspace.library = build_library(new_root)
+          local per_root_lib = build_library(new_root) or {}
+
+          -- include Neovim runtime files so server recognises vim.* APIs (merge tables)
+          local runtime_lib = vim.api.nvim_get_runtime_file("", true) or {}
+
+          -- Convert runtime list to table keyed by path for server library shape
+          -- library expects a map path -> true or to include file list; merge defensively
+          local merged = {}
+          for _, p in ipairs(runtime_lib) do
+            merged[p] = true
+          end
+          for k, v in pairs(per_root_lib) do
+            merged[k] = v
+          end
+
+          new_config.settings.Lua.workspace.library = merged
         end
       end,
     })
