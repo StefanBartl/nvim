@@ -20,6 +20,14 @@ function M.setup()
     end
   end, { desc = "[Term] Toggle floating" })
 
+  map("t", "<C-l>", function()
+    local term_id = vim.b.terminal_job_id
+    if term_id then
+      local cmd = vim.fn.has("win32") == 1 and "cls" or "clear"
+      vim.fn.chansend(term_id, { cmd, "" } )
+    end
+  end, { desc = "[term] terminal-insert-mode ctrl-l (clear) mapping" })
+
   --- Toggle NvChad UI terminal in a vertical split with ~1/3 screen width.
   --- Works from normal & terminal mode; robustly enforces width after opening.
   ---@type fun():nil

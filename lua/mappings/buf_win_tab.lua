@@ -2,6 +2,9 @@
 
 local M = {}
 
+local terminal_lib = require("lib.terminals")
+local is_terminal_buf, delete_terminal_buf = terminal_lib.is_terminal_buf, terminal_lib.delete_terminal_buf
+
 function M.setup()
   local map = vim.g.__map_helper
 
@@ -24,16 +27,10 @@ function M.setup()
   end, { desc = "[Buffers] Close" })
   map("n", "<leader>bx", function()
     local current = vim.api.nvim_get_current_buf()
-    -- Check if it's a terminal buffer
-    local buftype = vim.bo[current].buftype
-    vim.cmd("bnext")
-    -- Force delete if terminal, normal delete otherwise
-    if buftype == "terminal" then
-      vim.api.nvim_buf_delete(current, { force = true })
+    if is_terminal_buf(current) then
+      delete_terminal_buf(current)
     else
-      pcall(function()
         vim.api.nvim_buf_delete(current, { force = false })
-      end)
     end
   end, { desc = "[Buffers] Close current, go to next" })
 
