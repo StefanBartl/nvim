@@ -3,9 +3,13 @@
 
 ---@return table<string, any>
 return {
-    ["d"] = "noop",
-    ["/"] = "noop",
-    ["f"] = "filter_on_submit",
-    ["F"] = "fuzzy_finder",
-    ["<C-c>"] = "clear_filter",
+  ["d"] = "noop",
+  ["/"] = "noop",
+  ["f"] = "filter_on_submit",
+  ["F"] = "fuzzy_finder",
+  ["<C-c>"] = "clear_filter",
+
+  ["i"] = "run_command",
+  ["tf"] = "telescope_find",
+  ["tg"] = "telescope_grep",
 }

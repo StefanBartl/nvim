@@ -2,6 +2,9 @@
 -- Commands exposed to Neo-tree
 -- register via opts.commands = commands.attach()
 
+local getTelescopeOpts = require("config.neotree.commands.get_telescope_opts")
+local diff_files_mod = require("config.neotree.commands.diff_files")
+
 --- Commands table for Neo-tree's `opts.commands`.
 ---@return table<string, fun(state: table)>
 return {
@@ -62,4 +65,29 @@ return {
       end
     end)
   end,
+
+  ---Similar to the '.' command in nvim-tree. Primes the ":" command with the full path of the chosen node.
+  ---@param state table
+  run_command = function(state)
+    local node = state.tree:get_node()
+    local path = node:get_id()
+    vim.api.nvim_input(": " .. path .. "<Home>")
+  end,
+
+  -- Find with telescope
+  -- Find/grep for a file under the current node using Telescope and select it.
+  telescope_find = function(state)
+    local node = state.tree:get_node()
+    local path = node:get_id()
+    require("telescope.builtin").find_files(getTelescopeOpts(state, path))
+  end,
+  telescope_grep = function(state)
+    local node = state.tree:get_node()
+    local path = node:get_id()
+    require("telescope.builtin").live_grep(getTelescopeOpts(state, path))
+  end,
+
+  -- Diff files
+  -- You can mark two files to diff them.
+  diff_files = diff_files_mod,
 }

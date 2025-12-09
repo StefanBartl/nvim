@@ -81,6 +81,7 @@ return {
   ["sv"] = "open_split",
   ["sg"] = "open_vsplit",
   ["st"] = "open_tabnew",
+  ["t"] = "noop", -- set to noop ; default t = tabnew; needed for telescope mappings tf and tg
 
   -- source switching
   ["<S-Tab>"] = "prev_source",
@@ -297,4 +298,6 @@ return {
     end,
     desc = "fzf-lua: live_grep in node directory (Windows/WSL/macOS/Linux)",
   },
+
+  ["D"] = "diff_files",
 }
