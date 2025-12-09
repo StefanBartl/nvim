@@ -1,4 +1,4 @@
----@module 'autocmds.markdown.gofile_cases.helper.treesitter'
+---@module 'autocmds.general.gofile_cases.helper.treesitter'
 
 local M = {}
 

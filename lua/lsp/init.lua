@@ -158,6 +158,21 @@ function M.setup(cfg)
     })
   end
 
+  --- ==== CUSTOM ENABLE  LSP TOOLS ====
+
+  require("lsp.tools.eslint_prettier").setup({
+    -- optional: provide custom binaries if Mason is not in the default location
+    -- binaries = {
+    --   eslint = "C:\\Users\\me\\AppData\\Local\\nvim-data\\mason\\bin\\eslint_d.cmd",
+    --   prettier = "C:\\Users\\me\\AppData\\Local\\nvim-data\\mason\\bin\\prettier.cmd"
+    -- },
+    filetypes = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
+    enable_on_setup = true, -- initial autorun state
+  })
+
+  require("lsp.tools.ts_type_lookup").setup()
+  require("lsp.tools.deprecated_help").setup()
+
   M._initialized = true
   return true
 end

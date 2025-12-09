@@ -7,53 +7,21 @@ local M = {}
 local api = vim.api
 local helpers = require("autocmds.general.helpers")
 
+-- Dispatcher & Wiring --------------------------------------------------------
+local gofile_loader = require("autocmds.general.gofile_cases")
+local logger_mod = require("autocmds.general.gofile_logger")
+
 -- Compatibility shim for libuv
 local uv = vim.uv or vim.loop
 
----@type GeneralAutoCmdConfig
-local Defaults = {
-  group_name = "custom_autocmds",
-
-  auto_mkdir = {
-    enable = true,
-    skip_remote = true,
-    -- Matches e.g. "xx://", "ssh://", "http://", "file://", on both slash styles
-    detect_remote_pattern = "^%w%w+:[\\/][\\/]",
-  },
-
-  kitty = {
-    enable = false, -- Disabled by default; only meaningful inside Kitty
-    enter_padding = 0,
-    enter_margin = 0,
-    leave_padding = 20,
-    leave_margin = 10,
-  },
-
-  nvdash = {
-    enable = true,
-    cmd = "Nvdash",
-    is_listed_only = true, -- Consider only listed buffers when deciding "last buffer"
-  },
-
-  cursorline = {
-    enable = true,
-    show_events = { "InsertLeave", "WinEnter" },
-    hide_events = { "InsertEnter", "WinLeave" },
-  },
-
-  last_loc = {
-    enable = true,
-    exclude = { "gitcommit", "commit", "gitrebase" },
-    mark = '"',
-  },
-}
+local DEFAULTS = require("autocmds.general.defaults")
 
 -- Public API ------------------------------------------------------------------
 
 ---@param cfg GeneralAutoCmdConfig|nil
 ---@return nil
 function M.enable(cfg)
-  cfg = vim.tbl_deep_extend("force", vim.deepcopy(Defaults), cfg or {})
+  cfg = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS), cfg or {})
 
   -- 1) Auto-create directory on save (BufWritePre)
   if cfg.auto_mkdir.enable then
@@ -75,7 +43,8 @@ function M.enable(cfg)
     })
   end
 
-  -- 2) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
+
+    -- 2) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
   if cfg.kitty.enable then
     local grp = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_kitty_spacing")
     api.nvim_create_autocmd("VimEnter", {
@@ -146,6 +115,47 @@ function M.enable(cfg)
       desc = "Jump to the last cursor position on file open",
     })
   end
+
+  -- 5) gf override with modular cases
+  if cfg.goto_file.enable then
+    api.nvim_create_autocmd("FileType", {
+      group = helpers.augroup("goto_file"),
+      pattern = helpers.snorm_pattern(cfg.goto_file.pattern),
+      callback = function()
+        -- Validate Treesitter availability; otherwise, keep default behavior.
+        local ok_ts = pcall(require, "nvim-treesitter.ts_utils")
+        if not ok_ts then
+          return
+        end
+        local ts_utils = require("nvim-treesitter.ts_utils")
+
+        -- Preload ordered case modules
+        local cases = gofile_loader.load_ordered_cases(cfg)
+        local logger = logger_mod(cfg)
+
+        vim.keymap.set("n", "gf", function()
+          local dispatch_cases = require("autocmds.general.gofile_case_dispatcher")
+          local node = ts_utils.get_node_at_cursor()
+          local bufnr = api.nvim_get_current_buf()
+
+          logger.debug("enable: gf invoked", {
+            buf = bufnr,
+            node_type = (node and pcall(function()
+              return node:type()
+            end) and node:type()),
+          })
+
+          local handled = dispatch_cases(node, bufnr, ts_utils, cfg, cases)
+          if not handled then
+            logger.info("enable: falling back to builtin gf")
+            vim.cmd("normal! gf")
+          end
+        end, { buffer = true, desc = "Markdown-aware gf with modular resolver" })
+      end,
+      desc = "Markdown: override gf to follow links/URLs with fallback",
+    })
+  end
+
 end
 
 return M

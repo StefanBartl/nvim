@@ -1,4 +1,4 @@
----@module 'autocmds.markdown.gofile_logger'
+---@module 'autocmds.general.gofile_logger'
 --- Central logger for markdown gofile dispatcher.
 --- This module provides a small logger API that respects cfg.goto_file.debug.
 

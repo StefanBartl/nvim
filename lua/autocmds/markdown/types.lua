@@ -8,19 +8,5 @@
 ---@field pattern string|string[]|nil    -- FileType pattern(s) to attach on; defaults to "markdown".
 ---@field only_modifiable boolean|nil    -- Skip mapping if buffer is not modifiable; default true.
 
----@class MdAutoCmdsGotoFileCfg
----@field enable boolean                 -- Enable Markdown-aware "gf" override for links/URLs.
----@field debug boolean                  -- Emit verbose debug via vim.notify while resolving links.
----@field pattern string|string[]|nil    -- FileType pattern(s) to attach on; defaults to "markdown".
----@field enable_windows_opener boolean  -- Allow Windows opener branch (default false; Linux/macOS preferred).
----@field open_cmd_mac string[]|nil      -- Override opener argv for macOS; default { "open", "<url>" }.
----@field open_cmd_unix string[]|nil     -- Override opener argv for Linux/Unix; default { "xdg-open", "<url>" }.
-
 ---@class MdAutoCmdsCfg
----@field goto_file MdAutoCmdsGotoFileCfg
-
----@class TSNode
---- Minimal TSNode shape for EmmyLua/LuaLS diagnostics.
----@field type fun(self: TSNode): string
----@field parent fun(self: TSNode): TSNode|nil
 

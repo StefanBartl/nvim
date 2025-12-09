@@ -174,15 +174,12 @@ end
 
 --- Create the user command :ReloadCurrentModule
 --- The command is created if the module is required (so require('dev.reload_current') runs this).
-function M.setup()
+function M.enable()
   vim.api.nvim_create_user_command("ReloadCurrentModule", function()
     reload_current_buffer_module()
   end, {
     desc = "[usrcmds] Reload the Lua module corresponding to the file in the current buffer (best-effort).",
   })
 end
-
--- Auto-run setup to register the command when module is required.
-M.setup()
 
 return M

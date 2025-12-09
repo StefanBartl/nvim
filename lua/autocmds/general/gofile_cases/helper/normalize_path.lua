@@ -1,8 +1,5 @@
 ---@module 'autocmds.markdown.gofile_cases.helper.normalize_path'
 --- Helper: normalize a path string for downstream processing.
-
--- AUDIT: lib?
-
 --- Tasks:
 ---  - convert backslashes to forward slashes
 ---  - expand module-like dotted names to file paths (eg. `mod.sub` -> `mod/sub.lua`) when appropriate

@@ -1,4 +1,4 @@
----@module 'autocmds.markdown.gofile_cases.p4_local'
+---@module 'autocmds.general.gofile_cases.p4_local'
 --- Case 4: Treat path as a local file relative to buffer or absolute.
 --- Opens the file via :edit and returns true ONLY if file exists.
 

@@ -1,4 +1,4 @@
----@module 'autocmds.markdown.gofile_cases.helper.resolve_tilde'
+---@module 'autocmds.general.gofile_cases.helper.resolve_tilde'
 --- Helper: resolve leading ~ in a path.
 --- Behavior:
 ---  1. If path starts with "~/", expand to user's home directory and return if the file exists.

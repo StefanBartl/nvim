@@ -1,4 +1,4 @@
----@module 'autocmds.markdown.gofile_cases'
+---@module 'autocmds.general.gofile_cases'
 --- Loader/registry for gofile_cases.
 --- Exposes a function `load_ordered_cases(cfg)` which returns an ordered list of case modules.
 local M = {}
@@ -6,11 +6,11 @@ local M = {}
 --- Deterministic list of module names in the intended invocation order.
 --- @type string[]
 local ORDER = {
-  "autocmds.markdown.gofile_cases.p0_gopath",
-  "autocmds.markdown.gofile_cases.p1_inline",
-  "autocmds.markdown.gofile_cases.p2_reference",
-  "autocmds.markdown.gofile_cases.p3_url",
-  "autocmds.markdown.gofile_cases.p4_local",
+  "autocmds.general.gofile_cases.p0_gopath",
+  "autocmds.general.gofile_cases.p1_inline",
+  "autocmds.general.gofile_cases.p2_reference",
+  "autocmds.general.gofile_cases.p3_url",
+  "autocmds.general.gofile_cases.p4_local",
 }
 
 --- Load modules from ORDER; modules must export `.call` function.

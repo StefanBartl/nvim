@@ -1,8 +1,5 @@
 ---@module 'system.env'
 
---ADD: SytemEnv type
--- Compute_env return type = -@return SystemEnv
-
 local M = {}
 
 local ENV

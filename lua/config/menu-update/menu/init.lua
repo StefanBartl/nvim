@@ -10,8 +10,6 @@ function M.setup(opts)
   opts = opts or {}
   local menu_table = custom_menu(opts)
 
-  -- AUDIT: Warum sollte man das genau ncohmal so machen ?
-  --
   -- Register so require("menus.custom_menu") returns the table; menu.open normally does require("menus.<name>")
   package.loaded["menus.custom"] = menu_table
 

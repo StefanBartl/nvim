@@ -1,8 +1,8 @@
----@modules 'autocmds.markdown.gofile_case_dispatcher'
+---@modules 'autocmds.general.gofile_case_dispatcher'
 
-local logger_mod = require("autocmds.markdown.gofile_logger")
-local resolve_tilde_helper = require("autocmds.markdown.gofile_cases.helper.resolve_tilde")
-local normalize_helper = require("autocmds.markdown.gofile_cases.helper.normalize_path")
+local logger_mod = require("autocmds.general.gofile_logger")
+local resolve_tilde_helper = require("autocmds.general.gofile_cases.helper.resolve_tilde")
+local normalize_helper = require("autocmds.general.gofile_cases.helper.normalize_path")
 
 --- Central dispatcher: iterate ordered cases; allow cases to either:
 ---  - return true (handled), or
@@ -82,7 +82,7 @@ return function(node, bufnr, ts_utils, cfg, cases)
       last_attempted_path = normalized
 
       -- Try URL handler module first
-      local url_mod = require("autocmds.markdown.gofile_cases.p3_url")
+      local url_mod = require("autocmds.general.gofile_cases.p3_url")
       local opened = url_mod.call(node, bufnr, cfg, ts_utils, logger, normalized)
       if opened then
         logger.info("dispatcher: url opened via url module", { path = normalized })
@@ -90,7 +90,7 @@ return function(node, bufnr, ts_utils, cfg, cases)
       end
 
       -- Try local file module (now returns false if file doesn't exist)
-      local local_mod = require("autocmds.markdown.gofile_cases.p4_local")
+      local local_mod = require("autocmds.general.gofile_cases.p4_local")
       local handled = local_mod.call(node, bufnr, cfg, ts_utils, logger, normalized)
       if handled then
         logger.info("dispatcher: local file opened successfully", { path = normalized })
@@ -132,7 +132,7 @@ return function(node, bufnr, ts_utils, cfg, cases)
       logger.debug("dispatcher: cfile resolved to", { path = last_attempted_path })
 
       -- Try to open if exists
-      local local_mod = require("autocmds.markdown.gofile_cases.p4_local")
+      local local_mod = require("autocmds.general.gofile_cases.p4_local")
       local handled = local_mod.call(node, bufnr, cfg, ts_utils, logger, normalized)
       if handled then
         logger.info("dispatcher: cfile opened successfully", { path = last_attempted_path })
@@ -146,7 +146,7 @@ return function(node, bufnr, ts_utils, cfg, cases)
   -- If we have a path that failed to resolve, try alternate resolution
   if last_attempted_path then
     logger.info("dispatcher: attempting alternate resolution", { path = last_attempted_path })
-    local alternate_mod = require("autocmds.markdown.gofile_alternate")
+    local alternate_mod = require("autocmds.general.gofile_alternate")
     local alternate_handled = alternate_mod(last_attempted_path, cfg, logger)
     if alternate_handled then
       logger.info("dispatcher: alternate resolution succeeded")

@@ -1,9 +1,9 @@
----@module 'autocmds.markdown.gofile_cases.p1_inline'
+---@module 'autocmds.general.gofile_cases.p1_inline'
 --- Case 1: Resolve inline link destinations, e.g. [text](dest).
 --- Returns boolean, path (path returned if not opened directly).
 local M = {}
 
-local find_parent = require("autocmds.markdown.gofile_cases.helper.find_parent")
+local find_parent = require("autocmds.general.gofile_cases.helper.find_parent")
 local ts_text = function(node, bufnr)
   local ok, text = pcall(vim.treesitter.get_node_text, node, bufnr)
   return ok and text or nil

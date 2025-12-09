@@ -1,4 +1,4 @@
----@module 'autocmds.markdown.gofile_cases.p3_url'
+---@module 'autocmds.general.gofile_cases.p3_url'
 --- Case 3: Handle URL-like targets. Attempts to open via system opener.
 --- Returns true if opened, false otherwise.
 local M = {}

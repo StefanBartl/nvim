@@ -1,4 +1,4 @@
----@module 'autocmds.markdown.gofile_cases.p0_gopath'
+---@module 'autocmds.general.gofile_cases.p0_gopath'
 --- Case 0: Attempt to resolve using user's gopath helper.
 --- Contract: exports `call(node, bufnr, cfg, ts_utils, logger)` -> boolean [, path]
 --- Return true if the case handled opening; false, path if path was found but not opened.

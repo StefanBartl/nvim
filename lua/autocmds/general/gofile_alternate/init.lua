@@ -1,4 +1,4 @@
----@module 'autocmds.markdown.gofile_alternate'
+---@module 'autocmds.general.gofile_alternate'
 --- Alternate file resolution with fuzzy matching and interactive selection.
 --- This module is invoked when the primary gofile resolution fails to find an exact match.
 --- It attempts to locate similar files in the target directory and presents them via hover-select.

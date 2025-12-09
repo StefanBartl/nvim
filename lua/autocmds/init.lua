@@ -32,6 +32,10 @@ require("autocmds.general").enable({
     enable = false, -- On BufReadPost, jumps back to the last cursor position unless the filetype is excluded.
     exclude = { "gitcommit", "commit", "gitrebase" },
   },
+  goto_file = {
+    enable = true,
+    debug = false,
+  },
 })
 
 ------------------------------------------------------
@@ -47,12 +51,7 @@ end
 --- Markdown
 ------------------------------------------------------
 
-require("autocmds.markdown").enable({
-  goto_file = {
-    enable = true,
-    debug = false,
-  },
-})
+-- require("autocmds.markdown").enable()
 
 ------------------------------------------------------
 --- Terminals

@@ -2,8 +2,6 @@
 --- Robust wrappers around pcall/xpcall with structured return values.
 --- No UI side-effects here; callers decide how to handle errors.
 
--- AUDIT: safe calls in config should use this module
-
 local M = {}
 
 ---@param fn fun(...): any

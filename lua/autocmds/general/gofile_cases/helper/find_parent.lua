@@ -1,7 +1,7 @@
----@module 'autocmds.markdown.gofile_cases.helper.find_parent'
+---@module 'autocmds.general.gofile_cases.helper.find_parent'
 --- Helper: climb the treesitter AST to find the first parent node whose type is in `types`.
 --- Returns the found node or nil.
---- Usage: local node = require('autocmds.markdown.gofile_cases.helper.find_parent')(start_node, { "link_destination" })
+--- Usage: local node = require('autocmds.general.gofile_cases.helper.find_parent')(start_node, { "link_destination" })
 
 ---@param node TSNode|nil
 ---@param types string[] list of node type names to match

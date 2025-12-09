@@ -1,9 +1,9 @@
----@module 'autocmds.markdown.gofile_cases.p2_reference'
+---@module 'autocmds.general.gofile_cases.p2_reference'
 --- Case 2: Resolve reference-style links [label] and find definition lines in the same buffer.
 --- Returns boolean, path
 local M = {}
 
-local find_parent = require("autocmds.markdown.gofile_cases.helper.find_parent")
+local find_parent = require("autocmds.general.gofile_cases.helper.find_parent")
 local ts_text = function(node, bufnr)
   local ok, text = pcall(vim.treesitter.get_node_text, node, bufnr)
   return ok and text or nil

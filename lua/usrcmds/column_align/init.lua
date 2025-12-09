@@ -1,9 +1,7 @@
 ---@module 'utils.column_align'
 --- Align visually selected character to a target column with a fill character.
 --- This module sets up the keymap and user commands that call the core implementation.
----@author
----@version 1.1
----@license MIT
+
 ---@class utils.column_align
 local M = {}
 
@@ -48,7 +46,7 @@ function M.setup()
   local o = (type(bufnr) == "number") and { buffer = bufnr } or nil
 
   -- Column alignment (visual mode) --------------------------------------------
-  local ok_col, column_align = pcall(require, "utils.column_align.core")
+  local ok_col, column_align = pcall(require, "usrcmds.column_align.core")
   if ok_col and column_align and type(column_align.align_interactive) == "function" then
     map("x", "<leader>ac", column_align.align_interactive, "[Utils.ColumnAlign] Align character to column", o)
   end

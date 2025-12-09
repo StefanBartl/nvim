@@ -23,9 +23,18 @@
 ---@field skip_remote boolean             -- Skip remote/URL-style buffers (e.g. scheme://)
 ---@field detect_remote_pattern? string    -- Lua pattern to detect remote buffers (default: "^%w%w+:[\\/][\\/]")
 
+---@class MdAutoCmdsGotoFileCfg
+---@field enable boolean                 -- Enable Markdown-aware "gf" override for links/URLs.
+---@field debug boolean?                  -- Emit verbose debug via vim.notify while resolving links.
+---@field pattern string|string[]|nil?    -- FileType pattern(s) to attach on; defaults to "markdown".
+---@field enable_windows_opener boolean?  -- Allow Windows opener branch (default false; Linux/macOS preferred).
+---@field open_cmd_mac string[]|nil?     -- Override opener argv for macOS; default { "open", "<url>" }.
+---@field open_cmd_unix string[]|nil?     -- Override opener argv for Linux/Unix; default { "xdg-open", "<url>" }.
+
 ---@class GeneralAutoCmdConfig
 ---@field group_name? string               -- Basename for augroups created by this module
 ---@field auto_mkdir GeneralAutoCmdAutoMkdirCfg?  -- Configure auto mkdir on save
 ---@field kitty GeneralAutoCmdKittySpacingCfg?    -- Configure kitty terminal spacing
 ---@field cursorline GeneralGeneralAutoCmdCursorlineCfgcwd? -- Configure active-window-only cursorline
 ---@field last_loc GeneralAutoCmdJumpLastLocCfg?  -- Configure jump-to-last-location on open
+---@field goto_file MdAutoCmdsGotoFileCfg

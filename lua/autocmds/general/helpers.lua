@@ -2,12 +2,7 @@
 
 local M = {}
 
--- Internal: create an augroup with `clear=true` to keep things idempotent.
----@param name string
----@return integer
-function M.augroup(name)
-  return vim.api.nvim_create_augroup(name, { clear = true })
-end
+local api = vim.api
 
 -- Internal: detect whether we are inside Kitty (Linux/macOS).
 -- The presence of KITTY_LISTEN_ON or TERM="xterm-kitty" is a strong signal.
@@ -32,5 +27,24 @@ function M.kitty_set_spacing(padding, margin)
     vim.cmd(cmd)
   end)
 end
+
+
+--- Create/clear a namespaced augroup.
+--- @param name string
+--- @return integer
+function M.augroup(name)
+  return api.nvim_create_augroup("general_autocmds_" .. name, { clear = true })
+end
+
+--- Normalize a FileType autocmd pattern field.
+--- @param pat any
+--- @return string|string[]
+function M.snorm_pattern(pat)
+  if pat == nil then
+    return "markdown"
+  end
+  return pat
+end
+
 
 return M

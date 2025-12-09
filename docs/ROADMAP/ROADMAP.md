@@ -7,7 +7,7 @@
 
 ## ideas
 
-- lua annotationen auskomenteren geht nicht, weil --- zu - gemacht wird
+- lua annotationen auskommentieren geht nicht, weil --- zu - gemacht wird
 - :messages aktualisert sich nicht, wenn man neue einträge reinbekomt
 - Picker, der zuerst alle wkdbooks auflistet zum auswählen, dann die files oder greps picked. Ähnlicjh wie `custom/repopickers`
 
