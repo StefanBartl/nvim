@@ -129,6 +129,7 @@ end
 
 ---@type MasonEnsureMap
 local LSP_DEFAULTS = {
+  ["copilot-language-server"] = true,
   ["java-language-server"] = false,
   ["csharp-language-server"] = false,
   ["zls"] = true,

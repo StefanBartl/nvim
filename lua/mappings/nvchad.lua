@@ -6,7 +6,17 @@ function M.setup()
   local map = vim.g.__map_helper
 
   -- General
-  map("n", "<Esc>", "<cmd>noh<CR>", { desc = "[General] Clear highlights" })
+  map("n", "<Esc>", function()
+    local ok, nes = pcall(require, "copilot-lsp.nes")
+    if ok and nes and nes.clear then
+      local cleared = nes.clear()
+      if not cleared then
+        vim.cmd("noh")
+      end
+    else
+      vim.cmd("noh")
+    end
+  end, { desc = "Clear copilot NES overlays or nohl" })
   map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
   map("n", "<leader>ch", "<cmd>NvCheatsheet<CR>", { desc = "[General] NvCheatsheet" })
 

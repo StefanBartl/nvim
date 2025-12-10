@@ -27,11 +27,14 @@ return {
         name = "lazydev",
         group_index = 0,
       })
+
+    require("config.copilot.cmp")
     end,
   },
 
   {
     "nvimdev/lspsaga.nvim",
+    event = "LspAttach",
     config = function()
       require("lspsaga").setup({
         lightbulb = {

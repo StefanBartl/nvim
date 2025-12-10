@@ -4,7 +4,7 @@ local M = {}
 
 function M.setup()
   local map = vim.g.__map_helper
-  map("n", "<C-z>", "gg<S-v>G", { desc = "[General] Select all" })
+  map("n", "<C-a>", "gg<S-v>G", { desc = "[General] Select all" })
   -- map({ "n", "i", "v", "t" }, "<C-s>", function()
   --   if vim.fn.mode() ~= "n" then
   --     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
