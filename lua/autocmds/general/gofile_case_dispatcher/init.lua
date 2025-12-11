@@ -18,8 +18,9 @@ local normalize_helper = require("autocmds.general.gofile_cases.helper.normalize
 return function(node, bufnr, ts_utils, cfg, cases)
   local logger = logger_mod(cfg)
 
-  vim.notify("DISPATCHER: Starting with " .. #cases .. " cases", vim.log.levels.INFO)
+  -- vim.notify("DISPATCHER: Starting with " .. #cases .. " cases", vim.log.levels.INFO)
 
+--[[
   logger.debug("dispatcher:start", {
     bufnr = bufnr,
     node_type = (node and pcall(function()
@@ -27,26 +28,27 @@ return function(node, bufnr, ts_utils, cfg, cases)
     end) and node:type()),
     cases_count = #cases,
   })
+]]--
 
   -- Track the last attempted path for alternate resolution
   local last_attempted_path = nil
 
   for idx, case_mod in ipairs(cases) do
     local name = case_mod._NAME or ("case#" .. idx)
-    logger.debug("dispatcher:invoke", { idx = idx, name = name })
+---    logger.debug("dispatcher:invoke", { idx = idx, name = name })
 
     local ok, first_ret, second_ret = pcall(function()
       return case_mod.call(node, bufnr, cfg, ts_utils, logger)
     end)
 
     if not ok then
-      logger.warn(("dispatcher: case %s errored"):format(name), { err = first_ret })
+      -- logger.warn(("dispatcher: case %s errored"):format(name), { err = first_ret })
       goto continue
     end
 
     -- If case returned true directly (handled)
     if first_ret == true then
-      logger.info(("dispatcher: case %s handled the input"):format(name), { name = name })
+      -- logger.info(("dispatcher: case %s handled the input"):format(name), { name = name })
       return true
     end
 
@@ -59,21 +61,21 @@ return function(node, bufnr, ts_utils, cfg, cases)
     end
 
     if returned_path then
-      logger.debug("dispatcher: case returned path", { name = name, path = returned_path })
+      -- logger.debug("dispatcher: case returned path", { name = name, path = returned_path })
 
       -- Store original path for alternate resolution
       last_attempted_path = returned_path
 
       -- If path begins with "~/", attempt resolution/expansion before further handling.
       if returned_path:match("^~[/\\]") then
-        logger.debug("dispatcher: path starts with ~/, attempting resolve_tilde", { path = returned_path })
+    ---    logger.debug("dispatcher: path starts with ~/, attempting resolve_tilde", { path = returned_path })
         local resolved = resolve_tilde_helper(returned_path, logger)
         if resolved then
-          logger.info("dispatcher: resolve_tilde succeeded", { original = returned_path, resolved = resolved })
+      ---    logger.info("dispatcher: resolve_tilde succeeded", { original = returned_path, resolved = resolved })
           returned_path = resolved
           last_attempted_path = resolved
         else
-          logger.debug("dispatcher: resolve_tilde failed, will continue with original path", { original = returned_path })
+      ---    logger.debug("dispatcher: resolve_tilde failed, will continue with original path", { original = returned_path })
         end
       end
 
@@ -85,7 +87,7 @@ return function(node, bufnr, ts_utils, cfg, cases)
       local url_mod = require("autocmds.general.gofile_cases.p3_url")
       local opened = url_mod.call(node, bufnr, cfg, ts_utils, logger, normalized)
       if opened then
-        logger.info("dispatcher: url opened via url module", { path = normalized })
+    ---    logger.info("dispatcher: url opened via url module", { path = normalized })
         return true
       end
 
@@ -93,7 +95,7 @@ return function(node, bufnr, ts_utils, cfg, cases)
       local local_mod = require("autocmds.general.gofile_cases.p4_local")
       local handled = local_mod.call(node, bufnr, cfg, ts_utils, logger, normalized)
       if handled then
-        logger.info("dispatcher: local file opened successfully", { path = normalized })
+    ---    logger.info("dispatcher: local file opened successfully", { path = normalized })
         return true
       end
 
@@ -105,11 +107,11 @@ return function(node, bufnr, ts_utils, cfg, cases)
         last_attempted_path = vim.fn.fnamemodify(normalized, ":p")
       end
 
-      logger.debug("dispatcher: file not found, stored path for alternate", { path = last_attempted_path })
+  ---    logger.debug("dispatcher: file not found, stored path for alternate", { path = last_attempted_path })
     end
 
     -- Not handled, continue
-    logger.debug(("dispatcher: case %s did not handle input"):format(name), { name = name })
+---    logger.debug(("dispatcher: case %s did not handle input"):format(name), { name = name })
     ::continue::
   end
 
@@ -117,7 +119,7 @@ return function(node, bufnr, ts_utils, cfg, cases)
   if not last_attempted_path then
     local cfile = vim.fn.expand("<cfile>")
     if cfile and cfile ~= "" then
-      logger.info("dispatcher: no case matched, using <cfile> fallback", { cfile = cfile })
+  ---    logger.info("dispatcher: no case matched, using <cfile> fallback", { cfile = cfile })
 
       -- Normalize and resolve cfile
       local normalized = normalize_helper(cfile)
@@ -129,13 +131,13 @@ return function(node, bufnr, ts_utils, cfg, cases)
         last_attempted_path = vim.fn.fnamemodify(normalized, ":p")
       end
 
-      logger.debug("dispatcher: cfile resolved to", { path = last_attempted_path })
+  ---    logger.debug("dispatcher: cfile resolved to", { path = last_attempted_path })
 
       -- Try to open if exists
       local local_mod = require("autocmds.general.gofile_cases.p4_local")
       local handled = local_mod.call(node, bufnr, cfg, ts_utils, logger, normalized)
       if handled then
-        logger.info("dispatcher: cfile opened successfully", { path = last_attempted_path })
+    ---    logger.info("dispatcher: cfile opened successfully", { path = last_attempted_path })
         return true
       end
 
@@ -145,15 +147,17 @@ return function(node, bufnr, ts_utils, cfg, cases)
 
   -- If we have a path that failed to resolve, try alternate resolution
   if last_attempted_path then
-    logger.info("dispatcher: attempting alternate resolution", { path = last_attempted_path })
+---    logger.info("dispatcher: attempting alternate resolution", { path = last_attempted_path })
     local alternate_mod = require("autocmds.general.gofile_alternate")
     local alternate_handled = alternate_mod(last_attempted_path, cfg, logger)
     if alternate_handled then
-      logger.info("dispatcher: alternate resolution succeeded")
+  ---    logger.info("dispatcher: alternate resolution succeeded")
       return true
     end
   end
 
-  logger.debug("dispatcher: no case matched and no alternate found")
+---  logger.debug("dispatcher: no case matched and no alternate found")
   return false
+
+
 end

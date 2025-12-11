@@ -14,7 +14,7 @@
 ---@return MarkdownInlineDebugFixed
 local M = {}
 
-local debugfolder = vim.fn.stdpath("config") .. "/debuglog/markdown_inline"
+local debugfolder = vim.fn.stdpath("data") .. "/debuglog/markdown_inline"
 
 --------------------------------------------------------------------------------
 -- get_timestamp
