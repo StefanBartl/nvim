@@ -52,8 +52,8 @@ return {
 
   {
     "folke/snacks.nvim",
-    event = "VimEnter", --FIX: Wenn lazy false, dann muss man das dashboard mit q schließen, weil es überdeckt
-    -- lazy = false,
+    -- event = "VimEnter", -- custom dashboard neesds to load early
+    lazy = false,
 
     ---@param _ any
     ---@return SnacksSetup|table
@@ -70,16 +70,16 @@ return {
         toggle = { enabled = true },
         words = { enabled = true },
 
-        -- image = { enabled = true },  -- AUDIT:
+        image = { enabled = false },
 
         -- Safeguard for very large files
-        bigfile = { enabled = true },
+        bigfile = { enabled = false },
 
         -- Dashboard: replicate defaults and insert our custom "sessions" section.
         -- According to Snacks docs, defaults are: header, keys, startup.
         -- We keep those and add our own section in between keys and startup.
         dashboard = {
-          enabled = true,
+          enabled = false,
           sections = {
             { section = "header" }, -- default
             { section = "keys", gap = 1, padding = 1 }, -- default
@@ -94,42 +94,42 @@ return {
       return cfg
     end,
 
-    ---@param _ any
-    ---@param opts SnacksSetup
-    config = function(_, opts)
-      -- Defensive require for snacks itself
-      local ok_snacks, snacks = pcall(require, "snacks")
-      if not ok_snacks then
-        vim.notify("[snacks] not available", vim.log.levels.WARN)
-        return
-      end
-
-      -- Attempt to load the modular custom dashboard entrypoint.
-      -- If it's not present, fall back to the old direct setup path.
-      local ok_cd, cd = pcall(require, "config.snacks.custom_dashboard.init")
-      if not ok_cd or type(cd.setup) ~= "function" then
-        -- Fallback: old direct setup if custom_dashboard module missing
-        local ok_setup, err = pcall(snacks.setup, opts)
-        if not ok_setup then
-          vim.notify("[snacks] setup() failed (fallback): " .. tostring(err), vim.log.levels.ERROR)
-        end
-        return
-      end
-
-      -- Call the custom dashboard setup, passing snacks and opts.
-      -- The custom module will ensure sections are registered BEFORE snacks.setup().
-      local ok, err = pcall(cd.setup, snacks, opts)
-      if not ok then
-        vim.notify("[snacks.custom_dashboard] setup failed: " .. tostring(err), vim.log.levels.ERROR)
-      end
-    end,
-
-    keys = function()
-      local ok, maps = pcall(require, "config.snacks.custom_dashboard.mappings")
-      if ok and type(maps.keys) == "function" then
-        return maps.keys()
-      end
-      return {}
-    end,
+    -- ---@param _ any
+    -- ---@param opts SnacksSetup
+    -- config = function(_, opts)
+    --   -- Defensive require for snacks itself
+    --   local ok_snacks, snacks = pcall(require, "snacks")
+    --   if not ok_snacks then
+    --     vim.notify("[snacks] not available", vim.log.levels.WARN)
+    --     return
+    --   end
+    --
+    --   -- Attempt to load the modular custom dashboard entrypoint.
+    --   -- If it's not present, fall back to the old direct setup path.
+    --   local ok_cd, cd = pcall(require, "config.snacks.custom_dashboard.init")
+    --   if not ok_cd or type(cd.setup) ~= "function" then
+    --     -- Fallback: old direct setup if custom_dashboard module missing
+    --     local ok_setup, err = pcall(snacks.setup, opts)
+    --     if not ok_setup then
+    --       vim.notify("[snacks] setup() failed (fallback): " .. tostring(err), vim.log.levels.ERROR)
+    --     end
+    --     return
+    --   end
+    --
+    --   -- Call the custom dashboard setup, passing snacks and opts.
+    --   -- The custom module will ensure sections are registered BEFORE snacks.setup().
+    --   local ok, err = pcall(cd.setup, snacks, opts)
+    --   if not ok then
+    --     vim.notify("[snacks.custom_dashboard] setup failed: " .. tostring(err), vim.log.levels.ERROR)
+    --   end
+    -- end,
+    --
+    -- keys = function()
+    --   local ok, maps = pcall(require, "config.snacks.custom_dashboard.mappings")
+    --   if ok and type(maps.keys) == "function" then
+    --     return maps.keys()
+    --   end
+    --   return {}
+    -- end,
   },
 }

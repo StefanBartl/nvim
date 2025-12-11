@@ -20,24 +20,24 @@ return {
     init = function()
       vim.g.copilot_nes_debounce = 500
       vim.lsp.enable("copilot_ls")
-vim.keymap.set("n", "<Tab>", function()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local state = vim.b[bufnr] and vim.b[bufnr].nes_state
-  local nes_ok, nes = pcall(require, "copilot-lsp.nes")
-  if nes_ok and state then
-    -- Try to walk to start or apply and walk to end.
-    local ok1 = nes.walk_cursor_start_edit()
-    if not ok1 then
-      if nes.apply_pending_nes() then
-        nes.walk_cursor_end_edit()
-      end
-    end
-    return nil
-  else
-    -- fallback: return normal <C-i> behaviour in Normal mode
-    return "<C-i>"
-  end
-end, { expr = true, desc = "Accept Copilot NES suggestion (safe)" })
+      vim.keymap.set("n", "<Tab>", function()
+        local bufnr = vim.api.nvim_get_current_buf()
+        local state = vim.b[bufnr] and vim.b[bufnr].nes_state
+        local nes_ok, nes = pcall(require, "copilot-lsp.nes")
+        if nes_ok and state then
+          -- Try to walk to start or apply and walk to end.
+          local ok1 = nes.walk_cursor_start_edit()
+          if not ok1 then
+            if nes.apply_pending_nes() then
+              nes.walk_cursor_end_edit()
+            end
+          end
+          return nil
+        else
+          -- fallback: return normal <C-i> behaviour in Normal mode
+          return "<C-i>"
+        end
+      end, { expr = true, desc = "Accept Copilot NES suggestion (safe)" })
     end,
   },
 
@@ -67,6 +67,13 @@ end, { expr = true, desc = "Accept Copilot NES suggestion (safe)" })
           },
         },
       })
+
+      vim.keymap.set(
+        { "i", "n" },
+        "<M-x>", -- Alt+s
+        [[<Cmd>lua require("copilot.suggestion").next()<CR>]],
+        { noremap = true, silent = true }
+      )
     end,
   },
 

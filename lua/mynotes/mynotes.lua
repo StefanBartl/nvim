@@ -1,4 +1,4 @@
---@module 'mynotes.notes'
+---@module 'mynotes.notes'
 
 local M = {}
 

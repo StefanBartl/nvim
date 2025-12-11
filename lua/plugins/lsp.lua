@@ -28,7 +28,7 @@ return {
         group_index = 0,
       })
 
-    require("config.copilot.cmp")
+      require("config.copilot.cmp")
     end,
   },
 
@@ -37,10 +37,24 @@ return {
     event = "LspAttach",
     config = function()
       require("lspsaga").setup({
+        beacon = {
+          enable = false,
+        },
+        breadcrumb = {
+          enable = true,
+          show_file = true,
+          folder_level = 1,
+        },
+        hover = {
+          enable = false,
+        },
         lightbulb = {
           enabled = false,
         },
         rename = {
+          enable = false,
+        },
+        term_toggle = {
           enable = false,
         },
       })

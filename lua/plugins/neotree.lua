@@ -20,6 +20,7 @@ return {
 
     source_selector = {
       winbar = false,
+      statusline = false,
       show_scrolled_off_parent_node = true,
       padding = { left = 1, right = 0 },
       sources = {
