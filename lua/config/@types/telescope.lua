@@ -16,3 +16,9 @@
 --- Extension-specific configuration for telescope extensions table.
 --- Only populated when sqlite backend is active.
 ---@field smart_history? {limit: integer} Config for smart_history extension
+
+---@class HistoryState
+---@field backend "sqlite"|"file"|"none"
+---@field path string|nil
+---@field limit integer
+

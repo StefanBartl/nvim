@@ -15,24 +15,7 @@ local M = {}
 
 --- Raw list of directory names commonly ignored.
 --- @type string[]
-M._names = {
-  ".git",
-  ".github",
-  ".hg",
-  ".svn",
-  "node_modules",
-  ".pnpm-store",
-  ".venv",
-  ".direnv",
-  ".mypy_cache",
-  ".cache",
-  "__pycache__",
-  "build",
-  "dist",
-  "target",
-  "zig-cache",
-  "zig-out",
-}
+M._names = require("lib.filesystem.ignore.list").as_luals_patterns()
 
 --- Platform-normalize a name for consistent comparisons (no filesystem IO).
 --- On Windows this could lower-case or normalize slashes if desired.

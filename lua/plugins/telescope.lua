@@ -1,86 +1,66 @@
 ---@module 'plugins.telescope'
+---@brief Telescope plugin configuration with modular history backend support.
 
--- AUDIT: In der datei kann man performance mäßig einiges machen
-
---- ==== path shortening imports & helper ====
 local files_path_shorten = require("lib.filesystem.path_shorten")
 
--- Helper to compute effective max length based on window width and column reserved for other columns.
--- opts is the picker-specific opts passed by Telescope; window width can be taken from opts.max_width or v:winwidth(0)
-local function adapt_max_len(_opts, default)
-  -- _opts may contain preview_width or other fields; use winwidth if available
-  if type(_opts) == "table" and _opts.winwidth and type(_opts.winwidth) == "number" then
-    return math.max(10, _opts.winwidth - 10)
+--- Computes effective maximum path length based on window dimensions
+---@param picker_opts table Picker-specific options from Telescope
+---@param default_len integer Default length if window width cannot be determined
+---@return integer max_len Maximum display length for paths
+---@private
+local function adapt_max_len(picker_opts, default_len)
+  if type(picker_opts) == "table" and type(picker_opts.winwidth) == "number" then
+    return math.max(10, picker_opts.winwidth - 10)
   end
-  -- fallback to default
-  return default or 60
-end
-
---- ==== history import ====
----@return boolean
-local function has_sqlite()
-  -- Prefer hard check: only true if the Lua module is loadable (shared lib present)
-  local ok = pcall(require, "sqlite")
-  return ok
+  return default_len or 60
 end
 
 return {
-
   ------------------------------------------------------------------------------
   -- Telescope core
   ------------------------------------------------------------------------------
   {
     "nvim-telescope/telescope.nvim",
-    cmd = "Telescope", -- ensures lazy load on :Telescope
+    cmd = "Telescope",
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter", -- not loaded at startup; only when telescope loads
+      "nvim-treesitter/nvim-treesitter",
 
-      -- Optional: smart_history (only if sqlite is really available)
+      -- Optional SQLite backend (only loaded if actually usable)
       {
         "kkharji/sqlite.lua",
-        cond = has_sqlite,
+        cond = function()
+          local ok = pcall(require, "sqlite")
+          return ok
+        end,
       },
       {
         "nvim-telescope/telescope-smart-history.nvim",
-        cond = has_sqlite,
+        cond = function()
+          local ok_sqlite = pcall(require, "sqlite")
+          local ok_ext = pcall(require, "telescope-smart-history")
+          return ok_sqlite and ok_ext
+        end,
       },
 
-      -- Optional GH extension: do not auto-load to avoid extra cost
+      -- Optional GitHub extension
       { "nvim-telescope/telescope-github.nvim", lazy = true },
     },
 
     opts = function(_, opts)
       opts = opts or {}
 
-      -- History backend: prefer sqlite smart_history if available, else text fallback
-      local HISTORY = {
-        limit = 250, ---@type integer
-        path = nil, ---@type string|nil
-      }
-
-      local using_sqlite = has_sqlite()
-      if using_sqlite then
-        local dir = vim.fn.stdpath("state") .. "/telescope"
-        if vim.fn.isdirectory(dir) == 0 then
-          vim.fn.mkdir(dir, "p")
-        end
-        HISTORY.path = dir .. "/history.sqlite3"
-      else
-        local dir = vim.fn.stdpath("data") .. "/picker-history"
-        if vim.fn.isdirectory(dir) == 0 then
-          vim.fn.mkdir(dir, "p")
-        end
-        HISTORY.path = dir .. "/_global.txt"
-      end
+      -- Initialize history backend (SQLite or file-based fallback)
+      local history = require("config.telescope.history")
+      local history_config = history.setup()
 
       local actions = require("telescope.actions")
-      opts.defaults = vim.tbl_deep_extend("force", opts.defaults or {}, {
 
-        -- -- Use a function for path_display to apply our shortening for all pickers that show paths
-        path_display = function(_opts, path)
-          -- Determine a reasonable max length. When Telescope passes opts, it may include `winwidth`.
-          local max_len = adapt_max_len(_opts, 60)
+      -- Configure defaults
+      opts.defaults = vim.tbl_deep_extend("force", opts.defaults or {}, {
+        -- Path display with intelligent shortening
+        path_display = function(picker_opts, path)
+          local max_len = adapt_max_len(picker_opts, 60)
           return files_path_shorten(path, max_len)
         end,
 
@@ -106,10 +86,15 @@ return {
           "%.tmp",
           "%.cache",
         },
-        history = { path = HISTORY.path, limit = HISTORY.limit },
+
+        -- History backend configuration (empty if unavailable)
+        history = history_config,
+
         sorting_strategy = "ascending",
         layout_config = { prompt_position = "top" },
-        mappings = {
+
+        -- History navigation mappings (only if backend available)
+        mappings = history.is_available() and {
           i = {
             ["<C-p>"] = actions.cycle_history_prev,
             ["<C-n>"] = actions.cycle_history_next,
@@ -120,13 +105,23 @@ return {
             ["<PageUp>"] = actions.preview_scrolling_up,
             ["<PageDown>"] = actions.preview_scrolling_down,
           },
+        } or {
+          -- Fallback mappings without history
+          i = {
+            ["<PageUp>"] = actions.preview_scrolling_up,
+            ["<PageDown>"] = actions.preview_scrolling_down,
+          },
+          n = {
+            ["<PageUp>"] = actions.preview_scrolling_up,
+            ["<PageDown>"] = actions.preview_scrolling_down,
+          },
         },
       })
 
-      -- Configure extensions in one place to avoid multiple telescope.setup() calls
+      -- Configure extensions
       opts.extensions = vim.tbl_deep_extend("force", opts.extensions or {}, {
         file_browser = {
-          path = "%:p:h", -- start at current file's directory
+          path = "%:p:h",
           cwd_to_path = true,
           select_buffer = true,
           hidden = true,
@@ -137,51 +132,53 @@ return {
           git_status = true,
           prompt_path = true,
         },
-
-        smart_history = using_sqlite and { limit = HISTORY.limit } or nil,
       })
 
-      -- Choose which extensions to load when Telescope initializes
-      ---@type string[]
-      local exts = { "fzf" }
-      if using_sqlite then
-        table.insert(exts, "smart_history")
+      -- Merge backend-specific extension config
+      local ext_config = history.get_extension_config()
+      if ext_config then
+        opts.extensions = vim.tbl_deep_extend("force", opts.extensions, ext_config)
       end
-      opts.extensions_list = exts
+
+      -- Base extensions (always loaded)
+      local extensions = { "fzf" }
+
+      -- Add history extension if available
+      vim.list_extend(extensions, history.get_extensions())
+
+      opts.extensions_list = extensions
 
       return opts
     end,
 
-    -- One clean setup() and extension loading
     config = function(_, opts)
       local telescope = require("telescope")
       telescope.setup(opts)
+
+      -- Load extensions safely
       for _, ext in ipairs(opts.extensions_list or {}) do
-        pcall(telescope.load_extension, ext)
+        local ok, err = pcall(telescope.load_extension, ext)
+        if not ok then
+          vim.notify(
+            string.format("Failed to load telescope extension '%s': %s", ext, err),
+            vim.log.levels.WARN
+          )
+        end
       end
 
-      -- local attach_all = require("config.telescope.selected_index.attach")
-      -- local selected_index = require("config.telescope.selected_index")
-      --
-      -- -- Setup the automatic wrapping of all builtins.
-      -- -- Pass the factory that returns the attach_mappings function.
-      -- attach_all.setup(selected_index.attach_mappings_with_selected_index)
-
-      -- Set highlight for selection (GUI + terminal)
+      -- Set highlight for selection
       vim.api.nvim_set_hl(0, "TelescopeSelection", {
-        fg = "#ffffff", -- gui foreground
-        bg = "#1abc9c", -- gui background
-        -- bg = "#2ac3de", -- gui background
-        -- bg = "#bb9af7", -- gui background
+        fg = "#ffffff",
+        bg = "#1abc9c",
         bold = true,
-        ctermfg = 15, -- terminal fg (optional)
-        ctermbg = 24, -- terminal bg (optional)
+        ctermfg = 15,
+        ctermbg = 24,
       })
     end,
   },
 
   ------------------------------------------------------------------------------
-  -- fzf-native: compiled sorter (loaded only when telescope loads its extension)
+  -- fzf-native: compiled sorter
   ------------------------------------------------------------------------------
   {
     "nvim-telescope/telescope-fzf-native.nvim",
@@ -237,7 +234,7 @@ return {
   },
 
   ------------------------------------------------------------------------------
-  -- search.nvim (Tabbed UI wrapper around Telescope)
+  -- search.nvim (Tabbed UI wrapper)
   ------------------------------------------------------------------------------
   {
     "FabianWirth/search.nvim",
@@ -263,16 +260,20 @@ return {
         tabs = {
           {
             "Files",
-            function(opts)
-              opts = opts or {}
+            function(tab_opts)
+              tab_opts = tab_opts or {}
               if vim.fn.isdirectory(".git") == 1 then
-                builtin.git_files(opts)
+                builtin.git_files(tab_opts)
               else
-                builtin.find_files(opts)
+                builtin.find_files(tab_opts)
               end
             end,
           },
-          { name = "All Files", tele_func = builtin.find_files, tele_opts = { no_ignore = true, hidden = true } },
+          {
+            name = "All Files",
+            tele_func = builtin.find_files,
+            tele_opts = { no_ignore = true, hidden = true },
+          },
           { name = "Grep", tele_func = builtin.live_grep },
           { name = "Buffers", tele_func = builtin.buffers },
         },
