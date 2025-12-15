@@ -12,21 +12,11 @@ return {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
 
-      -- Optional SQLite backend (only loaded if actually usable)
-      {
-        "kkharji/sqlite.lua",
-        cond = function()
-          local ok = pcall(require, "sqlite")
-          return ok
-        end,
-      },
       {
         "nvim-telescope/telescope-smart-history.nvim",
-        cond = function()
-          local ok_sqlite = pcall(require, "sqlite")
-          local ok_ext = pcall(require, "telescope-smart-history")
-          return ok_sqlite and ok_ext
-        end,
+        dependencies = {
+          "3rd/sqlite.nvim",
+        },
       },
 
       -- Optional GitHub extension

@@ -4,13 +4,13 @@
 
 local M = {}
 
-local ok, history = pcall(require, "telescope._extensions.smart_history")
-local actions = require("telescope.actions")
+local ok, _ = pcall(require, "telescope._extensions.smart_history")
 
 --- Return mappings for insert and normal mode based on history availability
---- @return table
-function M.get()
-  if ok and history.is_available() then
+---@param actions table The actions table from telescope
+---@return table
+function M.get(actions)
+  if ok then
     return {
       i = {
         ["<C-p>"] = actions.cycle_history_prev,

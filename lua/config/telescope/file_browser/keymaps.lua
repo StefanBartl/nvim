@@ -4,19 +4,19 @@
 
 local M = {}
 
----@param fb_actions table The actions table from telescope file_browser extension
+---@param actions table The actions table from telescope plugin
 ---@return table
-function M.get(fb_actions)
-  if type(fb_actions) ~= "table" then
+function M.get(actions)
+  if type(actions) ~= "table" then
     return {}
   end
 
   return {
     i = {
-      ["?"] = fb_actions.which_key,
+      ["?"] = actions.which_key,
     },
     n = {
-      ["?"] = fb_actions.which_key,
+      ["?"] = actions.which_key,
     },
   }
 end

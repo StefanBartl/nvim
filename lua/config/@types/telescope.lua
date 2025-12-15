@@ -18,7 +18,8 @@
 ---@field smart_history? {limit: integer} Config for smart_history extension
 
 ---@class HistoryState
----@field backend "sqlite"|"file"|"none"
----@field path string|nil
+---@field backend '"sqlite"'|'"file"'|'"none"'
+---@field path string
 ---@field limit integer
+---@field extensions string[]
 
