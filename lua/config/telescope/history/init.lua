@@ -70,10 +70,10 @@ function M.setup()
     setup_file()
   end
 
-  notify(
-    string.format("Telescope history: Using %s backend at %s", state.backend, state.path),
-    levels.INFO
-  )
+  -- notify(
+  --   string.format("Telescope history: Using %s backend at %s", state.backend, state.path),
+  --   levels.INFO
+  -- )
 
   return {
     path = state.path,

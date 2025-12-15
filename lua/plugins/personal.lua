@@ -8,26 +8,47 @@ end
 
 ---@type LazyPluginSpec[]
 return {
+
   {
-    -- Verwendung
-    -- <leader>;    → Reveal current file
-    -- 2<leader>;   → Reveal with 2 parent levels up
-    -- <leader>:    → Open at cwd
-    -- Im Picker: s → split mode, 05 → öffnet Index 05 im split
-    "StefanBartl/filetreepicker.nvim",
-    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/filetreepicker.nvim"),
-    event = "VeryLazy",
-    dependencies = { "nvim-neo-tree/neo-tree.nvim" },
+    -- "StefanBartl/color_my_ascii.nvim",
+    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/color_my_ascii.nvim"),
+    ft = "markdown",
     config = function()
-      require("filetreepicker").setup({})
+      require("color_my_ascii").setup({
+        debug_enabled = true,
+        scheme = "default",
+
+        enable_keywords = true,
+        enable_language_detection = true,
+        language_detection_threshold = 2,
+        enable_function_names = true,
+        enable_bracket_highlighting = true,
+        treat_empty_fence_as_ascii = true,
+        enable_inline_code = true,
+      })
     end,
   },
 
-  {
-    "StefanBartl/telescope-selected-index",
-    -- dir = vim.env.REPOS_DIR .. "/telescope-selected-index",
-    event = "VeryLazy",
-  },
+  -- {
+  --   -- Verwendung
+  --   -- <leader>;    → Reveal current file
+  --   -- 2<leader>;   → Reveal with 2 parent levels up
+  --   -- <leader>:    → Open at cwd
+  --   -- Im Picker: s → split mode, 05 → öffnet Index 05 im split
+  --   "StefanBartl/filetreepicker.nvim",
+  --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/filetreepicker.nvim"),
+  --   event = "VeryLazy",
+  --   dependencies = { "nvim-neo-tree/neo-tree.nvim" },
+  --   config = function()
+  --     require("filetreepicker").setup({})
+  --   end,
+  -- },
+
+  -- {
+  --   "StefanBartl/telescope-selected-index",
+  --   -- dir = vim.env.REPOS_DIR .. "/telescope-selected-index",
+  --   event = "VeryLazy",
+  -- },
 
   -- {
   --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/mdview.nvim"),
@@ -226,40 +247,4 @@ return {
   --     })
   --   end,
   -- },
-
-  {
-    -- Pfad anpassen: hier als lokales Modul im config-Repo
-    dir = vim.fn.stdpath("config") .. "/lua/usrcmds/filecycle",
-    name = "filecycle",
-    lazy = true,
-    config = function()
-      require("usrcmds.filecycle").setup({
-        open_target = "current", -- "current"|"split"|"vsplit"|"tab"|"background"
-        keep_focus = true, -- bei Split/Vsplit Fokus im Ursprungsfenster behalten
-        include_hidden = false, -- Dotfiles ignorieren
-        wrap = true, -- am Ende/Anfang umbrechen
-        follow_symlinks = true, -- echte Pfade für Vergleich/Öffnen nutzen
-        root = "buffer_dir", -- "buffer_dir"|"cwd"
-        confirm_on_modified = true, -- :confirm edit bei geänderten Buffern
-        case_insensitive = true, -- alphabetische Sortierung/Matching ohne Groß/Kleinschreibung
-      })
-    end,
-    keys = {
-      {
-        "<leader>nf",
-        function()
-          require("usrcmds.filecycle").open("next")
-        end,
-        desc = "[filecycle] Next file",
-      },
-      {
-        "<leader>pf",
-        function()
-          require("usrcmds.filecycle").open("prev")
-        end,
-        desc = "[filecycle] Previous file",
-      },
-    },
-    cmd = { "NextFile", "PreviousFile" },
-  },
 }

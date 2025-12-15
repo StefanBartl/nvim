@@ -21,7 +21,7 @@ return {
     },
   },
 
-  -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
+  -- -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
   {
     "lewis6991/gitsigns.nvim",
     event = { "BufReadPre", "BufNewFile" },

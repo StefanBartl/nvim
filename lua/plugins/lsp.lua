@@ -3,17 +3,44 @@
 
 ---@type LazyPluginSpec[]
 return {
+  {
+    "antosha417/nvim-lsp-file-operations",
+    event = "VeryLazy",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      -- Uncomment whichever supported plugin(s) you use
+      -- "nvim-tree/nvim-tree.lua",
+      "nvim-neo-tree/neo-tree.nvim",
+      -- "simonmclean/triptych.nvim"
+    },
+    config = function()
+      require("lsp-file-operations").setup()
+    end,
+  },
 
-  -- LazyDev: Completion and docs for Lua `require` modules
+    -- LazyDev: Completion and docs for Lua `require` modules
   {
     "folke/lazydev.nvim",
     ft = "lua",
+    dependencies = {
+      {
+        "DrKJeff16/wezterm-types",
+        lazy = true,
+        version = false, -- Get the latest version
+      },
+    },
+
     opts = {
       library = {
-        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+        { path = "${3rd}/luv/library", words = { "vim%.uv", "uv", "vim%.loop" } },
         { path = "lazydev.nvim/types" },
         { path = "luvit-meta/library", words = { "vim%.uv", "uv", "vim%.loop" } },
+        { path = "plenary.nvim/types", mods = { "plenary" } },
+        { path = "telescope.nvim/types", mods = { "telescope" } },
         { "nvim-dap-ui" },
+        { path = "wezterm-types", mods = { "wezterm" } },
+        { path = "LazyVim", words = { "LazyVim" } },
+        { path = "nvim-treesitter", mods = { "vim.treesitter" } },
       },
     },
   },

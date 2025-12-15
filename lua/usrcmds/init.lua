@@ -3,7 +3,16 @@
 
 require("usrcmds.column_align").setup()
 require("usrcmds.compress_dir").enable_usercmd()
-require("usrcmds.filecycle")
+require("usrcmds.filecycle").setup({
+  open_target = "current",    -- "current"|"split"|"vsplit"|"tab"|"background"
+  keep_focus = true,          -- bei Split/Vsplit Fokus im Ursprungsfenster behalten
+  include_hidden = false,     -- Dotfiles ignorieren
+  wrap = true,                -- am Ende/Anfang umbrechen
+  follow_symlinks = true,     -- echte Pfade für Vergleich/Öffnen nutzen
+  root = "buffer_dir",        -- "buffer_dir"|"cwd"
+  confirm_on_modified = true, -- :confirm edit bei geänderten Buffern
+  case_insensitive = true,    -- alphabetische Sortierung/Matching ohne Groß/Kleinschreibung
+})
 require("usrcmds.filter_lines").enable()
 require("usrcmds.format_text_width")
 require("usrcmds.insertfilepath").enable()
