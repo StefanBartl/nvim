@@ -101,6 +101,8 @@
 
 ### Builtin
 
+`:vert diffsplit #` - zum beenden `:diffoffs`
+
 #### Filesystem
 
 `:NewFile {path}`           -> set buffer name, create parents, do NOT write by default

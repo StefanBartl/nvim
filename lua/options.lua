@@ -129,6 +129,41 @@ opt.swapfile = false
 opt.undofile = true
 opt.undodir = fn.stdpath("cache") .. "/undo"
 
+
+-----------------------------------------------------------
+-- Diff profile selector
+-----------------------------------------------------------
+
+local set_diff_profile = require("utils.diff_profiles.selector")
+
+-- options:
+-- 'minimal': default minimal diff options
+-- 'context': more context lines
+-- 'review': best for code reviews
+-- 'strict': strict diffing, no context lines
+
+-- Default diff profile
+set_diff_profile("review")
+
+--[[
+  Recommended accompanying window options (optional): 'OptionSet' autocmd
+    Typical errors that this solution avoids:
+      - Mixing old and new diffopt values
+      - (set diffopt =... in Lua, error-prone)
+      - inline strings without validation
+      - profile switching without a reset
+]]--
+
+vim.api.nvim_create_autocmd("OptionSet", {
+  pattern = "diff",
+  callback = function()
+    if vim.wo.diff then
+      vim.wo.wrap = false
+      vim.wo.cursorbind = false
+    end
+  end,
+})
+
 -----------------------------------------------------------
 -- Terminals
 -----------------------------------------------------------

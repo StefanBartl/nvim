@@ -17,7 +17,6 @@ return {
       require("color_my_ascii").setup({
         debug_enabled = true,
         scheme = "default",
-
         enable_keywords = true,
         enable_language_detection = true,
         language_detection_threshold = 2,
