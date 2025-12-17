@@ -45,6 +45,9 @@ return {
 
   ["<CR>"] = function(state)
     local node = state.tree:get_node()
+    if not node then
+      return
+    end
 
     -- 1) expand/collapse directories
     if node and (node.type == "directory" or (node:has_children() and not node:is_expanded())) then

@@ -6,7 +6,7 @@ register.register(
   "WKDBook Neovim",
   {
     title = "WKDBook Neovim",
-    dir = vim.env.REPOS_DIR .. "/WKDBook/Development/wkdbook-Neovim",
+    dir = vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-Neovim",
   },
   {
     files = "WkdNeovimFiles",

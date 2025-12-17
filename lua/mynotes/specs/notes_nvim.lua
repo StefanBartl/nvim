@@ -9,8 +9,8 @@ register.register(
     dir = vim.env.REPOS_DIR .. "/Notes/MyNotes/Neovim",
   },
   {
-    files = "LuaNotesFiles",
-    grep  = "LuaNotesGrep",
+    files = "NvimNotesFiles",
+    grep  = "NvimNotesGrep",
   },
   {
     files = "<leader>nvf",

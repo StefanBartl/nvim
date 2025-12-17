@@ -32,12 +32,12 @@ return {
 
     event_handlers = {
       --- ====  neotree should close after opening a file ====
-      {
-        event = "file_opened",
-        handler = function()
-          require("neo-tree.command").execute({ action = "close" })
-        end,
-      },
+      -- {
+      --   event = "file_opened",
+      --   handler = function()
+      --     require("neo-tree.command").execute({ action = "close" })
+      --   end,
+      -- },
 
       --- ==== hide cursor in neotree window, only see the full line highlight ====
       {

@@ -6,7 +6,7 @@ register.register(
   "WKDBook Lua",
   {
     title = "WKDBook Lua",
-    dir = vim.env.REPOS_DIR .. "/WKDBook/Development/wkdbook-Lua",
+    dir = vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-Lua",
   },
   {
     files = "WkdLuaFiles",

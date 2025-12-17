@@ -6,7 +6,7 @@ register.register(
   "WKDBook",
   {
     title = "WKDBook",
-    dir = vim.env.REPOS_DIR .. "/WKDBook",
+    dir = vim.env.REPOS_DIR .. "/WKDBooks",
   },
   {
     files = "WkdFiles",
