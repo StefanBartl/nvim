@@ -21,7 +21,7 @@ return {
     },
   },
 
-  -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
+  -- -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
   {
     "lewis6991/gitsigns.nvim",
     event = { "BufReadPre", "BufNewFile" },
@@ -32,7 +32,13 @@ return {
   {
     "sindrets/diffview.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
-    cmd = "DiffviewOpen",
+  cmd = {
+    "DiffviewOpen",
+    "DiffviewClose",
+    "DiffviewToggleFiles",
+    "DiffviewFocusFiles",
+    "DiffviewFileHistory",
+  },
     -- lazy = true,
     config = true,
   },

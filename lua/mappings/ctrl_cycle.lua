@@ -235,7 +235,7 @@ function M.setup()
   local map = vim.g.__map_helper
 
   -- use 1 (not +1) because Lua has no unary plus
-  map("n", "<C-a>", function()
+  map("n", "<C-y>", function()
     Apply(1, "<C-a>")
   end, { silent = true, desc = "Increment number or cycle word forward" })
 

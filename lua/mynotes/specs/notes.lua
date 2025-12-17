@@ -1,0 +1,19 @@
+---@module 'mynotes.specs.notes'
+
+local register = require("mynotes.register")
+
+register.register(
+  "Notes",
+  {
+    title = "Notes",
+    dir = vim.env.REPOS_DIR .. "/Notes/MyNotes",
+  },
+  {
+    files = "NotesFiles",
+    grep  = "NotesGrep",
+  },
+  {
+    files = "<leader>mnf",
+    grep  = "<leader>mng",
+  }
+)

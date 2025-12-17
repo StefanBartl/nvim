@@ -32,12 +32,12 @@ return {
 
     event_handlers = {
       --- ====  neotree should close after opening a file ====
-      {
-        event = "file_opened",
-        handler = function()
-          require("neo-tree.command").execute({ action = "close" })
-        end,
-      },
+      -- {
+      --   event = "file_opened",
+      --   handler = function()
+      --     require("neo-tree.command").execute({ action = "close" })
+      --   end,
+      -- },
 
       --- ==== hide cursor in neotree window, only see the full line highlight ====
       {
@@ -106,20 +106,7 @@ return {
         -- Hide files marked "hidden" by the filesystem (mainly relevant on Windows),
         hide_hidden = false,
         hide_by_pattern = {},
-        hide_by_name = {
-          ".git",
-          ".hg",
-          ".svc",
-          ".DS_Store",
-          "thumbs.db",
-          ".sass-cache",
-          "node_modules",
-          ".pytest_cache",
-          ".mypy_cache",
-          "__pycache__",
-          ".stfolder",
-          ".stversions",
-        },
+        hide_by_name = require("lib.filesystem.ignore.list").as_neotree_names(),
 
         -- Items listed here are *never* shown, even if `visible = true`.
         never_show = {},

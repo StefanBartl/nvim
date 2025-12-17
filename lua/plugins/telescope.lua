@@ -1,187 +1,35 @@
 ---@module 'plugins.telescope'
-
--- AUDIT: In der datei kann man performance mäßig einiges machen
-
---- ==== path shortening imports & helper ====
-local files_path_shorten = require("lib.filesystem.path_shorten")
-
--- Helper to compute effective max length based on window width and column reserved for other columns.
--- opts is the picker-specific opts passed by Telescope; window width can be taken from opts.max_width or v:winwidth(0)
-local function adapt_max_len(_opts, default)
-  -- _opts may contain preview_width or other fields; use winwidth if available
-  if type(_opts) == "table" and _opts.winwidth and type(_opts.winwidth) == "number" then
-    return math.max(10, _opts.winwidth - 10)
-  end
-  -- fallback to default
-  return default or 60
-end
-
---- ==== history import ====
----@return boolean
-local function has_sqlite()
-  -- Prefer hard check: only true if the Lua module is loadable (shared lib present)
-  local ok = pcall(require, "sqlite")
-  return ok
-end
+---@brief Telescope plugin configuration with modular history backend support.
 
 return {
-
   ------------------------------------------------------------------------------
   -- Telescope core
   ------------------------------------------------------------------------------
   {
     "nvim-telescope/telescope.nvim",
-    cmd = "Telescope", -- ensures lazy load on :Telescope
+    cmd = "Telescope",
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter", -- not loaded at startup; only when telescope loads
+      "nvim-treesitter/nvim-treesitter",
 
-      -- Optional: smart_history (only if sqlite is really available)
-      {
-        "kkharji/sqlite.lua",
-        cond = has_sqlite,
-      },
       {
         "nvim-telescope/telescope-smart-history.nvim",
-        cond = has_sqlite,
+        dependencies = {
+          "3rd/sqlite.nvim",
+        },
       },
 
-      -- Optional GH extension: do not auto-load to avoid extra cost
+      -- Optional GitHub extension
       { "nvim-telescope/telescope-github.nvim", lazy = true },
     },
 
     opts = function(_, opts)
-      opts = opts or {}
-
-      -- History backend: prefer sqlite smart_history if available, else text fallback
-      local HISTORY = {
-        limit = 250, ---@type integer
-        path = nil, ---@type string|nil
-      }
-
-      local using_sqlite = has_sqlite()
-      if using_sqlite then
-        local dir = vim.fn.stdpath("state") .. "/telescope"
-        if vim.fn.isdirectory(dir) == 0 then
-          vim.fn.mkdir(dir, "p")
-        end
-        HISTORY.path = dir .. "/history.sqlite3"
-      else
-        local dir = vim.fn.stdpath("data") .. "/picker-history"
-        if vim.fn.isdirectory(dir) == 0 then
-          vim.fn.mkdir(dir, "p")
-        end
-        HISTORY.path = dir .. "/_global.txt"
-      end
-
-      local actions = require("telescope.actions")
-      opts.defaults = vim.tbl_deep_extend("force", opts.defaults or {}, {
-
-        -- -- Use a function for path_display to apply our shortening for all pickers that show paths
-        path_display = function(_opts, path)
-          -- Determine a reasonable max length. When Telescope passes opts, it may include `winwidth`.
-          local max_len = adapt_max_len(_opts, 60)
-          return files_path_shorten(path, max_len)
-        end,
-
-        file_ignore_patterns = {
-          "node_modules",
-          "package%.lock.json",
-          "yarn.lock",
-          "pnpm%-lock.yaml",
-          "dist",
-          "build",
-          "out",
-          "target",
-          "bin",
-          "obj",
-          "%.git",
-          "%.github",
-          ".vscode",
-          ".idea",
-          "__pycache__",
-          "%.class",
-          "%.pyc",
-          "%.log",
-          "%.tmp",
-          "%.cache",
-        },
-        history = { path = HISTORY.path, limit = HISTORY.limit },
-        sorting_strategy = "ascending",
-        layout_config = { prompt_position = "top" },
-        mappings = {
-          i = {
-            ["<C-p>"] = actions.cycle_history_prev,
-            ["<C-n>"] = actions.cycle_history_next,
-            ["<PageUp>"] = actions.preview_scrolling_up,
-            ["<PageDown>"] = actions.preview_scrolling_down,
-          },
-          n = {
-            ["<PageUp>"] = actions.preview_scrolling_up,
-            ["<PageDown>"] = actions.preview_scrolling_down,
-          },
-        },
-      })
-
-      -- Configure extensions in one place to avoid multiple telescope.setup() calls
-      opts.extensions = vim.tbl_deep_extend("force", opts.extensions or {}, {
-        file_browser = {
-          path = "%:p:h", -- start at current file's directory
-          cwd_to_path = true,
-          select_buffer = true,
-          hidden = true,
-          respect_gitignore = false,
-          follow_symlinks = true,
-          display_stat = { date = true, size = true, mode = false },
-          use_fd = true,
-          git_status = true,
-          prompt_path = true,
-        },
-
-        smart_history = using_sqlite and { limit = HISTORY.limit } or nil,
-      })
-
-      -- Choose which extensions to load when Telescope initializes
-      ---@type string[]
-      local exts = { "fzf" }
-      if using_sqlite then
-        table.insert(exts, "smart_history")
-      end
-      opts.extensions_list = exts
-
-      return opts
-    end,
-
-    -- One clean setup() and extension loading
-    config = function(_, opts)
-      local telescope = require("telescope")
-      telescope.setup(opts)
-      for _, ext in ipairs(opts.extensions_list or {}) do
-        pcall(telescope.load_extension, ext)
-      end
-
-      -- local attach_all = require("config.telescope.selected_index.attach")
-      -- local selected_index = require("config.telescope.selected_index")
-      --
-      -- -- Setup the automatic wrapping of all builtins.
-      -- -- Pass the factory that returns the attach_mappings function.
-      -- attach_all.setup(selected_index.attach_mappings_with_selected_index)
-
-      -- Set highlight for selection (GUI + terminal)
-      vim.api.nvim_set_hl(0, "TelescopeSelection", {
-        fg = "#ffffff", -- gui foreground
-        bg = "#1abc9c", -- gui background
-        -- bg = "#2ac3de", -- gui background
-        -- bg = "#bb9af7", -- gui background
-        bold = true,
-        ctermfg = 15, -- terminal fg (optional)
-        ctermbg = 24, -- terminal bg (optional)
-      })
+      return require("config.telescope").setup(opts)
     end,
   },
 
   ------------------------------------------------------------------------------
-  -- fzf-native: compiled sorter (loaded only when telescope loads its extension)
+  -- fzf-native: compiled sorter
   ------------------------------------------------------------------------------
   {
     "nvim-telescope/telescope-fzf-native.nvim",
@@ -204,40 +52,15 @@ return {
   ------------------------------------------------------------------------------
   {
     "nvim-telescope/telescope-file-browser.nvim",
-    dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" },
-    keys = {
-      {
-        "<leader>,",
-        function()
-          local ok, telescope = pcall(require, "telescope")
-          if not ok then
-            vim.notify("telescope.nvim not available", vim.log.levels.WARN)
-            return
-          end
-          pcall(telescope.load_extension, "file_browser")
-          telescope.extensions.file_browser.file_browser()
-        end,
-        desc = "File Browser (at current file)",
-      },
-      {
-        "<leader>.",
-        function()
-          local ok, telescope = pcall(require, "telescope")
-          if not ok then
-            vim.notify("telescope.nvim not available", vim.log.levels.WARN)
-            return
-          end
-          pcall(telescope.load_extension, "file_browser")
-          telescope.extensions.file_browser.file_browser({ path = vim.loop.cwd() })
-        end,
-        desc = "File Browser (at CWD)",
-      },
+    dependencies = {
+      "nvim-telescope/telescope.nvim",
+      "nvim-lua/plenary.nvim",
     },
     lazy = true,
   },
 
   ------------------------------------------------------------------------------
-  -- search.nvim (Tabbed UI wrapper around Telescope)
+  -- search.nvim (Tabbed UI wrapper)
   ------------------------------------------------------------------------------
   {
     "FabianWirth/search.nvim",
@@ -252,41 +75,7 @@ return {
       },
     },
     config = function()
-      local ok1, search = pcall(require, "search")
-      local ok2, builtin = pcall(require, "telescope.builtin")
-      if not (ok1 and ok2) then
-        return
-      end
-
-      search.setup({
-        mappings = { next = "<Tab>", prev = "<S-Tab>" },
-        tabs = {
-          {
-            "Files",
-            function(opts)
-              opts = opts or {}
-              if vim.fn.isdirectory(".git") == 1 then
-                builtin.git_files(opts)
-              else
-                builtin.find_files(opts)
-              end
-            end,
-          },
-          { name = "All Files", tele_func = builtin.find_files, tele_opts = { no_ignore = true, hidden = true } },
-          { name = "Grep", tele_func = builtin.live_grep },
-          { name = "Buffers", tele_func = builtin.buffers },
-        },
-        collections = {
-          git = {
-            initial_tab = 1,
-            tabs = {
-              { name = "Branches", tele_func = builtin.git_branches },
-              { name = "Commits", tele_func = builtin.git_commits },
-              { name = "Stashes", tele_func = builtin.git_stash },
-            },
-          },
-        },
-      })
+      require("config.search").setup()
     end,
   },
 }

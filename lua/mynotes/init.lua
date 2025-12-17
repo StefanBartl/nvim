@@ -1,12 +1,10 @@
 ---@module 'mynotes'
--- Initialize module for 'mynotes'
+--- Entry point for all note collections.
 
-require("mynotes.checklist")
-require("mynotes.cli_notes")
-require("mynotes.neovim_notes")
-require("mynotes.neovim_ref_notes")
-require("mynotes.notes")
-require("mynotes.lua_notes")
-require("mynotes.wkdbook_lua")
-require("mynotes.wkdbook_nvim")
-require("mynotes.wkdbooks")
+require("mynotes.specs.checklists")
+require("mynotes.specs.notes")
+require("mynotes.specs.notes_lua")
+require("mynotes.specs.notes_nvim")
+require("mynotes.specs.wkdbook")
+require("mynotes.specs.wkdbook_lua")
+require("mynotes.specs.wkdbook_nvim")

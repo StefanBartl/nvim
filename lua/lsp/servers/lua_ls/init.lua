@@ -31,7 +31,7 @@ function M.setup(shared, opts)
           completion = { callSnippet = "Replace", workspaceWord = false },
           semantic = { enable = false },
           workspace = {
-            checkThirdParty = false,
+            checkThirdParty = true,
             ignoreDir = ignore.as_luals_patterns(),
             useGitIgnore = true,
             maxPreload = 3000,
