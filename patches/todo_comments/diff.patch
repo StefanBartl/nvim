@@ -1,5 +1,5 @@
-﻿--- C:\Users\Bernhard\AppData\Local\nvim\patches\todo_comments\old.lua	2025-12-18 01:34:12.000000000 +0100
-+++ C:\Users\Bernhard\AppData\Local\nvim-data\todo-comments.nvim\lua\todo-comments\highlight.lua	2025-12-18 01:29:46.000000000 +0100
+﻿--- C:\Users\bartl\AppData\Local\nvim-data\lazy\todo-comments.nvim\lua\todo-comments\highlight.lua	2025-12-20 05:12:26.000000000 +0100
++++ C:\Users\bartl\AppData\Local\nvim\patches\todo_comments\FIXED.lua	2025-12-20 05:12:52.000000000 +0100
 @@ -1,36 +1,14 @@
 --- FIX: dddddd
 --- TODO: foobar
@@ -37,7 +37,7 @@
  ---@type uv.uv_timer_t?
  M.timer = assert(vim.uv.new_timer())
  
-@@ -88,12 +66,27 @@
+@@ -88,11 +66,27 @@
  ---@param ns number
  ---@param hl string
  ---@param line number
@@ -64,4 +64,3 @@
      hl_group = hl,
      priority = 500,
    })
- end

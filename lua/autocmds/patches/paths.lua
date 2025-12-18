@@ -8,7 +8,7 @@
 --- - Optional: priority, strip level, enabled flag
 
 -- Path helpers for cross-platform compatibility
---- C:\Users\Bernhard\AppData\Local\nvim-data
+--- C:\Users\bartl\AppData\Local\nvim-data
 local data = vim.fn.stdpath("data") --[[@as string]]
 local config = vim.fn.stdpath("config") --[[@as string]]
 
@@ -92,15 +92,15 @@ local registry = {
   -- =================================================================
   -- nvim-cmp
   -- =================================================================
-  {
-    key = "nvim-cmp-config-mapping",
-    repo = "nvim-cmp",
-    priority = 50,
-    enabled = true,
-    strip = 0,
-    patch = patches .. "/nvim-cmp/diff.patch",
-    target = target_path("nvim-cmp", "lua/cmp/config/mapping.lua"),
-  },
+  -- {
+  --   key = "nvim-cmp-config-mapping",
+  --   repo = "nvim-cmp",
+  --   priority = 50,
+  --   enabled = true,
+  --   strip = 0,
+  --   patch = patches .. "/nvim-cmp/diff.patch",
+  --   target = target_path("nvim-cmp", "lua/cmp/config/mapping.lua"),
+  -- },
 
   -- =================================================================
   -- todo-comments.nvim

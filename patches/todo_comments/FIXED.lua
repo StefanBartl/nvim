@@ -84,6 +84,7 @@ local function add_highlight(buf, ns, hl, line, from, to)
   if from > to then
     return
   end
+
   vim.api.nvim_buf_set_extmark(buf, ns, line, from, {
     end_col = to,
     hl_group = hl,

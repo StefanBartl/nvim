@@ -11,6 +11,8 @@
 
 local M = {}
 
+local notify, levels, schedule = vim.notify, vim.log.levels, vim.schedule
+
 -- Lazy-load submodules
 local apply, status, logger, utils, validate
 
@@ -59,6 +61,7 @@ function M.setup(opts)
       verbose = config.verbose,
     },
   })
+
 end
 
 --- Get patch registry
@@ -142,23 +145,15 @@ local function show_summary(results)
   end
 
   if failed > 0 then
-    vim.schedule(function()
-      vim.notify(
-        string.format(
-          "[patches] %d applied, %d failed, %d skipped",
-          succeeded,
-          failed,
-          skipped
-        ),
-        vim.log.levels.WARN
+    schedule(function()
+      notify(
+        string.format("[patches] %d applied, %d failed, %d skipped", succeeded, failed, skipped),
+        levels.WARN
       )
     end)
   elseif succeeded > 0 then
-    vim.schedule(function()
-      vim.notify(
-        string.format("[patches] %d applied successfully", succeeded),
-        vim.log.levels.INFO
-      )
+    schedule(function()
+      notify(string.format("[patches] %d applied successfully", succeeded), levels.INFO)
     end)
   end
 end
@@ -271,11 +266,11 @@ function M.show_logs_buffer()
   local log_path = logger.get_log_path()
 
   if not utils.file_exists(log_path) then
-    vim.notify("[patches] No log file found", vim.log.levels.WARN)
+    notify("[patches] No log file found", levels.WARN)
     return
   end
 
-  vim.schedule(function()
+  schedule(function()
     vim.cmd("vsplit " .. vim.fn.fnameescape(log_path))
     vim.bo.filetype = "json"
     vim.bo.readonly = true
@@ -286,11 +281,8 @@ end
 ---@deprecated Use apply_all_async instead
 ---@return nil
 function M.apply_all()
-  vim.schedule(function()
-    vim.notify(
-      "[patches] apply_all() is deprecated, use apply_all_async() instead",
-      vim.log.levels.WARN
-    )
+  schedule(function()
+    notify("[patches] apply_all() is deprecated, use apply_all_async() instead", levels.WARN)
   end)
   M.apply_all_async()
 end
@@ -300,11 +292,8 @@ end
 ---@param opts { repos?: string[], keys?: string[] }
 ---@return nil
 function M.apply(opts)
-  vim.schedule(function()
-    vim.notify(
-      "[patches] apply() is deprecated, use apply_async() instead",
-      vim.log.levels.WARN
-    )
+  schedule(function()
+    notify("[patches] apply() is deprecated, use apply_async() instead", levels.WARN)
   end)
   M.apply_async(opts)
 end
@@ -315,21 +304,39 @@ M.setup()
 -- Integration with Lazy.nvim
 local group = vim.api.nvim_create_augroup("LocalPluginPatches", { clear = true })
 
+-- Debounce-Timer für LazyUpdate
+local lazy_update_timer = nil
+local LAZY_UPDATE_DEBOUNCE_MS = 1000
+
 vim.api.nvim_create_autocmd("User", {
   group = group,
   pattern = "LazyUpdate",
   callback = function()
     logger.info("LazyUpdate detected, scheduling patch application")
 
-    vim.defer_fn(function()
-      M.apply_all_async(function(results)
-        logger.info("LazyUpdate patch application complete", {
-          total = #results,
-        })
+    -- Cancel existing timer if present
+    if lazy_update_timer then
+      lazy_update_timer:stop()
+      lazy_update_timer:close()
+    end
+
+    -- Create new debounced timer
+    lazy_update_timer = vim.loop.new_timer()
+    lazy_update_timer:start(LAZY_UPDATE_DEBOUNCE_MS, 0, function()
+      lazy_update_timer:stop()
+      lazy_update_timer:close()
+      lazy_update_timer = nil
+
+      schedule(function()
+        M.apply_all_async(function(results)
+          logger.info("LazyUpdate patch application complete", {
+            total = #results,
+          })
+        end)
       end)
-    end, config.lazy_update_delay_ms)
+    end)
   end,
-  desc = "Auto-apply patches after Lazy.nvim update",
+  desc = "Auto-apply patches after Lazy.nvim update (debounced)",
 })
 
 return M

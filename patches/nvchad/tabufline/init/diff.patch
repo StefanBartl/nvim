@@ -1,5 +1,5 @@
-﻿--- C:\Users\Bernhard\AppData\Local\nvim\patches\nvchad\tabufline\init\old.lua	2025-12-18 01:23:27.000000000 +0100
-+++ C:\Users\Bernhard\AppData\Local\nvim-data\ui\lua\nvchad\tabufline\init.lua	2025-12-11 16:11:34.000000000 +0100
+--- C:\Users\bartl\AppData\Local\nvim\patches\nvchad\tabufline\init\old.lua	2025-12-18 01:23:27.000000000 +0100
++++ C:\Users\bartl\AppData\Local\nvim-data\ui\lua\nvchad\tabufline\init.lua	2025-12-11 16:11:34.000000000 +0100
 @@ -1,46 +1,75 @@
 +---@module 'nvchad.tabufline.init'
 +--- Tabufline buffer management for NvChad

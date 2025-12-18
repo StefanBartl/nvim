@@ -47,4 +47,4 @@
 ```
 
 ---
-DiffFile -S C:\Users\Bernhard\AppData\Local\nvim\patches\noice\lsp\signature_FIXED.lua -T C:\Users\Bernhard\AppData\Local\nvim-data\lazy\noice.nvim\lua\noice\lsp\signature.lua -O C:\Users\Bernhard\AppData\Local\nvim\patches\noice\lsp\noice-lsp-signature-replace.patch_USR -u -s
+DiffFile -S C:\Users\bartl\AppData\Local\nvim\patches\noice\lsp\signature_FIXED.lua -T C:\Users\Bernhard\AppData\Local\nvim-data\lazy\noice.nvim\lua\noice\lsp\signature.lua -O C:\Users\Bernhard\AppData\Local\nvim\patches\noice\lsp\noice-lsp-signature-replace.patch_USR -u -s

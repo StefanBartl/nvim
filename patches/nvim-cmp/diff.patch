@@ -1,5 +1,5 @@
-﻿--- C:\Users\Bernhard\AppData\Local\nvim\patches\nvim-cmp\old.lua	2025-12-18 01:07:01.000000000 +0100
-+++ C:\Users\Bernhard\AppData\Local\nvim-data\nvim-cmp\lua\cmp\config\mapping.lua 2025-12-18 01:03:19.000000000 +0100
+--- C:\Users\bartl\AppData\Local\nvim\patches\nvim-cmp\old.lua	2025-12-18 01:07:01.000000000 +0100
++++ C:\Users\bartl\AppData\Local\nvim-data\nvim-cmp\lua\cmp\config\mapping.lua 2025-12-18 01:03:19.000000000 +0100
 @@ -32,12 +32,30 @@
  ---Mapping preset configuration.
  mapping.preset = {}

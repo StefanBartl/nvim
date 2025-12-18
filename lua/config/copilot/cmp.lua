@@ -10,7 +10,7 @@ function M.setup()
     return
   end
 
-  -- English comments: hide Copilot suggestions while cmp menu is open.
+  -- hide Copilot suggestions while cmp menu is open.
   cmp.event:on("menu_opened", function()
     vim.b.copilot_suggestion_hidden = true
   end)

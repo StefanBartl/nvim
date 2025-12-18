@@ -74,6 +74,13 @@ local function apply_patch_async(entry, callback)
 
   -- Full validation with already-applied check
   validate.validate_full(entry, function(validation)
+    logger.debug("Validation result", {
+      key = entry.key,
+      valid = validation.valid,
+      already_applied = validation.already_applied,
+      error = validation.error,
+    })
+
     if not validation.valid then
       callback({
         key = entry.key,
@@ -130,41 +137,22 @@ local function apply_patch_async(entry, callback)
       })
     end
 
-    local cmd = {
-      "patch",
-      "--forward",
-      "--batch",
-      "-p" .. strip_to_use,
-      "-i", patch_file_to_use,
-      entry.target,
-    }
-
-    logger.debug("Applying patch", {
-      key = entry.key,
-      repo = repo,
-      command = table.concat(cmd, " "),
-    })
-
-
----@class uv.pipe_t: userdata
----@field read_start fun(self: uv.pipe_t, callback: fun(err:any, data:string?))
----@field close fun(self: uv.pipe_t)
----@field is_closing fun(self: uv.pipe_t): boolean
-
+    ---@class uv.pipe_t: userdata
+    ---@field read_start fun(self: uv.pipe_t, callback: fun(err:any, data:string?))
+    ---@field close fun(self: uv.pipe_t)
+    ---@field is_closing fun(self: uv.pipe_t): boolean
 
     local stdout = uv.new_pipe(false)
     ---@cast stdout userdata|uv.uv_stream_t
     local stderr = uv.new_pipe(false)
     ---@cast stderr userdata|uv.uv_stream_t
 
-
-
     local stdout_chunks = {}
     local stderr_chunks = {}
 
     ---@type userdata|uv.uv_timer_t|nil
     local timeout_timer = uv.new_timer()
-        ---@cast timeout_timer uv.uv_timer_t
+    ---@cast timeout_timer uv.uv_timer_t
     local timed_out = false
     local process_handle = nil
 
@@ -178,6 +166,70 @@ local function apply_patch_async(entry, callback)
       end)
     end
 
+    -- Validate patch command exists --
+    local patch_cmd = "patch"
+    if vim.fn.executable(patch_cmd) ~= 1 then
+      callback({
+        key = entry.key,
+        repo = repo,
+        enabled = true,
+        success = false,
+        status = "failed",
+        message = "patch command not found in PATH",
+        timestamp = utils.get_timestamp(),
+        duration_ms = uv.now() - start_time,
+      })
+      return
+    end
+
+    -- Ensure all paths exist and are absolute
+    local patch_file_abs = vim.fn.fnamemodify(patch_file_to_use, ":p")
+    local target_file_abs = vim.fn.fnamemodify(entry.target, ":p")
+
+    if not utils.file_exists(patch_file_abs) then
+      callback({
+        key = entry.key,
+        repo = repo,
+        enabled = true,
+        success = false,
+        status = "failed",
+        message = string.format("Patch file not accessible: %s", patch_file_abs),
+        timestamp = utils.get_timestamp(),
+        duration_ms = uv.now() - start_time,
+      })
+      return
+    end
+
+    if not utils.file_exists(target_file_abs) then
+      callback({
+        key = entry.key,
+        repo = repo,
+        enabled = true,
+        success = false,
+        status = "failed",
+        message = string.format("Target file not accessible: %s", target_file_abs),
+        timestamp = utils.get_timestamp(),
+        duration_ms = uv.now() - start_time,
+      })
+      return
+    end
+
+    -- Build command with absolute paths
+    local cmd = {
+      patch_cmd,
+      "--forward",
+      "--batch",
+      "-p" .. strip_to_use,
+      "-i",
+      patch_file_abs,
+      target_file_abs,
+    }
+
+    logger.debug("Applying patch", {
+      key = entry.key,
+      repo = repo,
+      command = table.concat(cmd, " "),
+    })
     -- Spawn patch process
     process_handle = uv.spawn("patch", {
       args = vim.list_slice(cmd, 2),
