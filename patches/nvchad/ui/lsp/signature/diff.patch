@@ -1,0 +1,41 @@
+﻿--- C:\Users\Bernhard\AppData\Local\nvim\patches\nvchad\ui\lsp\signature\old.lua	2025-12-18 01:20:44.000000000 +0100
++++ C:\Users\Bernhard\AppData\Local\nvim\patches\nvchad\ui\lsp\signature\FIXED.lua	2025-12-11 16:11:34.000000000 +0100
+@@ -13,22 +13,40 @@
+     end
+   end
+ end
+ 
+ M.setup = function(client, bufnr)
++	-- Validate buffer: if it's not valid, don't try to create/clear autocommands.
++  if not bufnr or not api.nvim_buf_is_valid(bufnr) then
++    return
++  end
++  -- Make sure the server actually supports signature help and has trigger characters.
++  local sig = client and client.server_capabilities and client.server_capabilities.signatureHelpProvider
++  local triggerChars = sig and sig.triggerCharacters
++  if not triggerChars or type(triggerChars) ~= "table" then return end
+   local group = api.nvim_create_augroup("LspSignature", { clear = false })
+-  api.nvim_clear_autocmds { group = group, buffer = bufnr }
++	--- Custom pcall to avoid call if buf went invalid between checks
++  pcall(api.nvim_clear_autocmds, { group = group, buffer = bufnr })
+ 
+-  local triggerChars = client.server_capabilities.signatureHelpProvider.triggerCharacters
++  triggerChars = client.server_capabilities.signatureHelpProvider.triggerCharacters
+ 
+   api.nvim_create_autocmd("TextChangedI", {
+     group = group,
+     buffer = bufnr,
+     callback = function()
++		  --- Custom: buffer/window might be gone when callback runs
++      if not api.nvim_buf_is_valid(bufnr) then
++        pcall(api.nvim_clear_autocmds, { group = group, buffer = bufnr })
++        return
++      end
+       if check_triggeredChars(triggerChars) then
+         vim.lsp.buf.signature_help { focus = false, silent = true, max_height = 7, border = "single" }
+       end
+     end,
+   })
+ end
+ 
+ return M

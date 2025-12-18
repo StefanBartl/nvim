@@ -1,0 +1,1 @@
+C:\Users\Bernhard\AppData\Local\nvim-data\lazy\noice.nvim\lua\noice\lsp\signature.lua
