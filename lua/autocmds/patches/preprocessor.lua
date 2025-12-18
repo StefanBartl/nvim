@@ -64,6 +64,7 @@ function M.normalize_diff(content, target)
 
   return normalized_content, changed
 end
+
 --- Create a temporary normalized patch file
 ---@param patch_path string Original patch file path
 ---@param target string Target file path

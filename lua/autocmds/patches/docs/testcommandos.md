@@ -12,3 +12,12 @@
 
 " Logs anschauen (DEBUG-Meldungen zur Normalisierung)
 :lua require("autocmds.patches").show_logs_buffer()
+
+" Prüfe Status VOR clear
+:lua vim.print(require("autocmds.patches.status").get_all())
+
+" Clear
+:PatchClear
+
+" Prüfe Status NACH clear
+:lua vim.print(require("autocmds.patches.status").get_all())

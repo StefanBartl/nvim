@@ -1,4 +1,4 @@
-﻿--- C:\Users\Bernhard\AppData\Local\nvim\patches\gitsigns\system\compat\old.lua	2025-12-18 01:11:45.000000000 +0100
+--- C:\Users\Bernhard\AppData\Local\nvim\patches\gitsigns\system\compat\old.lua	2025-12-18 01:11:45.000000000 +0100
 +++ C:\Users\Bernhard\AppData\Local\nvim-data\lazy\gitsigns.nvim\lua\gitsigns\system\compat.lua 2025-12-11 16:11:34.000000000 +0100
 @@ -291,18 +291,25 @@
  ---

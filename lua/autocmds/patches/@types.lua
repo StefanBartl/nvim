@@ -135,33 +135,27 @@
 --- Maximum number of concurrent patch operations.
 --- Higher values = faster processing but more resource usage.
 --- Default: 3.
----@field max_concurrency integer
+---@field max_concurrency? integer
 ---
 --- Timeout per patch operation in milliseconds.
 --- Default: 30000 (30 seconds).
----@field timeout_ms integer
+---@field timeout_ms? integer
 ---
 --- Whether to enable verbose logging (DEBUG level).
 --- Default: false.
----@field verbose boolean
+---@field verbose? boolean
 ---
 --- Whether to show notifications for patch results.
 --- Default: true (only for failures and final summary).
----@field notify boolean
+---@field notify? boolean
 ---
 --- Delay after LazyUpdate event before applying patches (ms).
 --- Gives Lazy.nvim time to finish file operations.
 --- Default: 500.
----@field lazy_update_delay_ms integer
+---@field lazy_update_delay_ms? integer
 
 -- #####################################################################
 -- Logging
-
----@alias LogLevel
----| "DEBUG"   # Detailed trace information
----| "INFO"    # Informational messages
----| "WARN"    # Warning messages
----| "ERROR"   # Error messages
 
 ---@class LogEntry
 --- Log level.

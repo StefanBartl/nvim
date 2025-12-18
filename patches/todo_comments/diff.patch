@@ -1,4 +1,4 @@
-﻿--- C:\Users\Bernhard\AppData\Local\nvim\patches\todo_comments\old.lua	2025-12-18 01:34:12.000000000 +0100
+--- C:\Users\Bernhard\AppData\Local\nvim\patches\todo_comments\old.lua	2025-12-18 01:34:12.000000000 +0100
 +++ C:\Users\Bernhard\AppData\Local\nvim-data\todo-comments.nvim\lua\todo-comments\highlight.lua	2025-12-18 01:29:46.000000000 +0100
 @@ -1,36 +1,14 @@
 --- FIX: dddddd

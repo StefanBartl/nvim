@@ -4,6 +4,9 @@
 
 Dieses System ermöglicht es, lokale Fixes für Neovim-Plugins nach jedem `Lazy update` automatisch und **nicht-blockierend** erneut anzuwenden.
 
+patch muss installiert sein:
+    - Windows: scoop install patch
+
 ---
 
 ## Table of content

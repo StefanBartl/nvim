@@ -59,6 +59,7 @@ function M.setup(opts)
       verbose = config.verbose,
     },
   })
+
 end
 
 --- Get patch registry
@@ -144,21 +145,13 @@ local function show_summary(results)
   if failed > 0 then
     vim.schedule(function()
       vim.notify(
-        string.format(
-          "[patches] %d applied, %d failed, %d skipped",
-          succeeded,
-          failed,
-          skipped
-        ),
+        string.format("[patches] %d applied, %d failed, %d skipped", succeeded, failed, skipped),
         vim.log.levels.WARN
       )
     end)
   elseif succeeded > 0 then
     vim.schedule(function()
-      vim.notify(
-        string.format("[patches] %d applied successfully", succeeded),
-        vim.log.levels.INFO
-      )
+      vim.notify(string.format("[patches] %d applied successfully", succeeded), vim.log.levels.INFO)
     end)
   end
 end
@@ -287,10 +280,7 @@ end
 ---@return nil
 function M.apply_all()
   vim.schedule(function()
-    vim.notify(
-      "[patches] apply_all() is deprecated, use apply_all_async() instead",
-      vim.log.levels.WARN
-    )
+    vim.notify("[patches] apply_all() is deprecated, use apply_all_async() instead", vim.log.levels.WARN)
   end)
   M.apply_all_async()
 end
@@ -301,10 +291,7 @@ end
 ---@return nil
 function M.apply(opts)
   vim.schedule(function()
-    vim.notify(
-      "[patches] apply() is deprecated, use apply_async() instead",
-      vim.log.levels.WARN
-    )
+    vim.notify("[patches] apply() is deprecated, use apply_async() instead", vim.log.levels.WARN)
   end)
   M.apply_async(opts)
 end

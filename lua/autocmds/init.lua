@@ -7,7 +7,24 @@
 -- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren:
 require("autocmds.auto-center-fexplorer").setup()
 
-require("autocmds.patches")
+
+-- Teste einen einzelnen Patch mit vollem Logging
+require("autocmds.patches").setup({ verbose = true })
+require("autocmds.patches.usercommands").setup()
+require("autocmds.patches").apply_all_async()
+
+  -- Integration with Lazy.nvim
+  -- local group = vim.api.nvim_create_augroup("LocalPluginPatches", { clear = true })
+-- require("autocmds.patches").apply_async({
+--   keys = { "gitsigns-system-compat" },
+--   callback = function(results)
+--     print("\n=== RESULT ===")
+--     print(vim.inspect(results[1]))
+--   end
+-- })
+
+
+-- require("autocmds.patches")
 -- local function measure_patch_time()
 --   local start = vim.loop.now()
 --
@@ -36,29 +53,29 @@ require("autocmds.patches")
 -- vim.keymap.set("n", "<leader>pat", measure_patch_time, {
 --   desc = "Measure patch application time",
 -- })
-vim.api.nvim_create_autocmd("User", {
-  pattern = "LazyUpdate",
-  callback = function()
-    vim.notify("Patching started...", 2)
-    -- Warte auf System-Patches (500ms + 100ms Buffer)
-    vim.defer_fn(function()
-      local status = require("autocmds.patches").get_status({
-        status_filter = { "failed" },
-      })
-
-      if #status > 0 then
-        vim.notify(
-          string.format(
-            "⚠️  %d patches failed after LazyUpdate. Check :lua require('autocmds.patches').show_logs_buffer()",
-            #status
-          ),
-          vim.log.levels.WARN
-        )
-      end
-    end, 600)
-  end,
-  desc = "Check patch status after LazyUpdate",
-})
+-- vim.api.nvim_create_autocmd("User", {
+--   pattern = "LazyUpdate",
+--   callback = function()
+--     vim.notify("Patching started...", 2)
+--     -- Warte auf System-Patches (500ms + 100ms Buffer)
+--     vim.defer_fn(function()
+--       local status = require("autocmds.patches").get_status({
+--         status_filter = { "failed" },
+--       })
+--
+--       if #status > 0 then
+--         vim.notify(
+--           string.format(
+--             "⚠️  %d patches failed after LazyUpdate. Check :lua require('autocmds.patches').show_logs_buffer()",
+--             #status
+--           ),
+--           vim.log.levels.WARN
+--         )
+--       end
+--     end, 600)
+--   end,
+--   desc = "Check patch status after LazyUpdate",
+-- })
 
 ------------------------------------------------------
 --- General

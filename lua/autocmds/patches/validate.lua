@@ -17,6 +17,10 @@ local uv = vim.loop
 local function validate_patch_file(entry)
   -- Check file exists
   if not utils.file_exists(entry.patch) then
+    logger.error("Patch file not found", {
+      key = entry.key,
+      path = entry.patch
+    })
     return {
       valid = false,
       error = string.format("Patch file not found: %s", entry.patch),
@@ -26,10 +30,23 @@ local function validate_patch_file(entry)
   -- Check file is readable
   local content, err = utils.read_file(entry.patch)
   if not content then
+    logger.error("Cannot read patch file", {
+      key = entry.key,
+      error = err
+    })
     return {
       valid = false,
       error = string.format("Cannot read patch file: %s", err or "unknown"),
     }
+  end
+
+  -- Remove UTF-8 BOM if present (Windows editors often add this)
+  if content:sub(1, 3) == "\239\187\191" then
+    content = content:sub(4)
+    logger.warn("Removed UTF-8 BOM from patch file", {
+      key = entry.key,
+      path = entry.patch
+    })
   end
 
   -- Basic syntax check: must contain unified diff markers
@@ -40,11 +57,24 @@ local function validate_patch_file(entry)
     or content:match("^%-%-%-[%s]+[A-Za-z]:\\") ~= nil
 
   if not (has_diff_header or has_unix_marker or has_windows_marker) then
+    logger.error("Invalid patch format", {
+      key = entry.key,
+      has_diff_header = has_diff_header,
+      has_unix_marker = has_unix_marker,
+      has_windows_marker = has_windows_marker,
+      first_100_chars = content:sub(1, 100)
+    })
     return {
       valid = false,
       error = "Patch file does not appear to be a valid unified diff",
     }
   end
+
+  logger.debug("Patch file validated", {
+    key = entry.key,
+    size = #content,
+    format = has_windows_marker and "windows" or (has_diff_header and "git" or "unified")
+  })
 
   return { valid = true }
 end

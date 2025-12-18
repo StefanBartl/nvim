@@ -92,15 +92,15 @@ local registry = {
   -- =================================================================
   -- nvim-cmp
   -- =================================================================
-  {
-    key = "nvim-cmp-config-mapping",
-    repo = "nvim-cmp",
-    priority = 50,
-    enabled = true,
-    strip = 0,
-    patch = patches .. "/nvim-cmp/diff.patch",
-    target = target_path("nvim-cmp", "lua/cmp/config/mapping.lua"),
-  },
+  -- {
+  --   key = "nvim-cmp-config-mapping",
+  --   repo = "nvim-cmp",
+  --   priority = 50,
+  --   enabled = true,
+  --   strip = 0,
+  --   patch = patches .. "/nvim-cmp/diff.patch",
+  --   target = target_path("nvim-cmp", "lua/cmp/config/mapping.lua"),
+  -- },
 
   -- =================================================================
   -- todo-comments.nvim

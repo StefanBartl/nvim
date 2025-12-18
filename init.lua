@@ -17,11 +17,12 @@ require("lazy").setup({
     "NvChad/NvChad",
     lazy = false,
     branch = "v2.5",
-    import = "nvchad.plugins",
   },
-
+  { import = "nvchad.plugins" },
+  { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },
 }, lazy_config)
+
 pcall(dofile, vim.g.base46_cache .. "syntax")
 pcall(dofile, vim.g.base46_cache .. "defaults")
 pcall(dofile, vim.g.base46_cache .. "statusline")

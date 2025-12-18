@@ -72,8 +72,16 @@ local function apply_patch_async(entry, callback)
     return
   end
 
-  -- Full validation with already-applied check
+-- Full validation with already-applied check
+   -- Full validation with already-applied check
   validate.validate_full(entry, function(validation)
+    logger.debug("Validation result", {
+      key = entry.key,
+      valid = validation.valid,
+      already_applied = validation.already_applied,
+      error = validation.error
+    })
+
     if not validation.valid then
       callback({
         key = entry.key,
