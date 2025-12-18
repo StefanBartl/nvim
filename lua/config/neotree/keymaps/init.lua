@@ -3,6 +3,12 @@
 
 local copy_node_entries_handler = require("config.neotree.helper.copy_node_entries_handler")
 local copy_node_folders_handler = require("config.neotree.helper.copy_node_folders_handler")
+local rel_path_to_require = require("config.neotree.helper.rel_path_to_require")
+local relpath = require("lib.filesystem.relpath")
+local fn = vim.fn
+local cmd = vim.cmd
+local notify = vim.notify
+local levels = vim.log.levels
 
 -- Safe hide of Neo-tree's floating preview, ignoring errors.
 ---@param _ any
@@ -14,13 +20,13 @@ end
 
 Open_replace_logger = {
   info = function(msg, ctx)
-    vim.notify("[neotree] " .. msg .. (ctx and (" " .. vim.inspect(ctx)) or ""), vim.log.levels.INFO)
+    notify("[neotree] " .. msg .. (ctx and (" " .. vim.inspect(ctx)) or ""), levels.INFO)
   end,
   warn = function(msg, ctx)
-    vim.notify("[neotree] " .. msg .. (ctx and (" " .. vim.inspect(ctx)) or ""), vim.log.levels.WARN)
+    notify("[neotree] " .. msg .. (ctx and (" " .. vim.inspect(ctx)) or ""), levels.WARN)
   end,
   debug = function(msg, ctx)
-    vim.notify("[neotree] [DEBUG] " .. (msg or "") .. (ctx and (" " .. vim.inspect(ctx)) or ""), vim.log.levels.DEBUG)
+    notify("[neotree] [DEBUG] " .. (msg or "") .. (ctx and (" " .. vim.inspect(ctx)) or ""), levels.DEBUG)
   end,
 }
 
@@ -38,7 +44,7 @@ return {
     require("neo-tree.sources.filesystem").reset_search(state, true)
     require("neo-tree.sources.filesystem.lib.filter_external").cancel()
     hide_preview_safe(state)
-    vim.cmd("nohlsearch")
+    cmd("nohlsearch")
   end,
   ["<Tab>"] = "toggle_preview",
   ["<2-LeftMouse>"] = "open",
@@ -114,11 +120,11 @@ return {
       local node = state.tree:get_node()
       local path = node and (node.path or node:get_id()) or ""
       if path == "" then
-        vim.notify("no path", vim.log.levels.WARN)
+        notify("no path", levels.WARN)
         return
       end
-      vim.fn.setreg("+", path, "c")
-      vim.notify(("copied: %s"):format(path), vim.log.levels.INFO)
+      fn.setreg("+", path, "c")
+      notify(("copied: %s"):format(path), levels.INFO)
     end,
     desc = "Copy absolute path (+)",
   },
@@ -128,12 +134,12 @@ return {
       local node = state.tree:get_node()
       local path = node and (node.path or node:get_id()) or ""
       if path == "" then
-        vim.notify("no path", vim.log.levels.WARN)
+        notify("no path", levels.WARN)
         return
       end
-      local base = vim.fn.isdirectory(path) == 1 and path or vim.fn.fnamemodify(path, ":h")
-      vim.fn.setreg("+", base, "c")
-      vim.notify(("copied: %s"):format(base), vim.log.levels.INFO)
+      local base = fn.isdirectory(path) == 1 and path or fn.fnamemodify(path, ":h")
+      fn.setreg("+", base, "c")
+      notify(("copied: %s"):format(base), levels.INFO)
     end,
     desc = "Copy base (dir) path (+)",
   },
@@ -144,19 +150,13 @@ return {
     ---@param state table
     function(state)
       local node = state.tree:get_node()
-      local path = node and (node.path or node:get_id()) or ""
-      if path == "" then
-        vim.notify("no path", vim.log.levels.WARN)
+      local path, msg = path_helper(node, "relative", { base_dir = false })
+      if not path then
+        notify(msg, levels.WARN)
         return
       end
-      local base = (vim.uv or vim.loop).cwd() or vim.fn.getcwd()
-      local ok_root, Root = pcall(require, "utils.lv_project_root")
-      if ok_root and type(Root.get) == "function" then
-        base = Root.get(0) or base
-      end
-      local rel = vim.fn.relpath(path, base)
-      vim.fn.setreg("+", rel, "c")
-      vim.notify(("copied: %s"):format(rel), vim.log.levels.INFO)
+      fn.setreg("+", path, "c")
+      notify(("Copied relative path: %s"):format(path), levels.INFO)
     end,
     desc = "Copy relative path (+) (root→node or cwd→node)",
   },
@@ -167,20 +167,13 @@ return {
     ---@param state table
     function(state)
       local node = state.tree:get_node()
-      local path = node and (node.path or node:get_id()) or ""
-      if path == "" then
-        vim.notify("no path", vim.log.levels.WARN)
+      local path, msg = path_helper(node, "relative", { base_dir = true })
+      if not path then
+        notify(msg, levels.WARN)
         return
       end
-      local dir = (vim.fn.isdirectory(path) == 1) and path or vim.fn.fnamemodify(path, ":h")
-      local base = (vim.uv or vim.loop).cwd() or vim.fn.getcwd()
-      local ok_root, Root = pcall(require, "utils.lv_project_root")
-      if ok_root and type(Root.get) == "function" then
-        base = Root.get(0) or base
-      end
-      local rel = vim.fn.relpath(dir, base)
-      vim.fn.setreg("+", rel, "c")
-      vim.notify(("copied: %s"):format(rel), vim.log.levels.INFO)
+      fn.setreg("+", path, "c")
+      notify(("Copied relative base dir: %s"):format(path), levels.INFO)
     end,
     desc = "Copy relative base dir (+) (root→dir or cwd→dir)",
   },
@@ -213,6 +206,18 @@ return {
     desc = "Copy recursive file list (relative to cwd) to clipboard (+)",
   },
 
+  ["[l"] = {
+    function(state)
+      local node = state.tree:get_node()
+      if node then
+        rel_path_to_require.copy_as_require(node, { relative = true })
+      else
+        vim.notify("No node under cursor", vim.log.levels.WARN)
+      end
+    end,
+    desc = "Copy Lua require() string(s) for current node (file or folder) to clipboard",
+  },
+
   -- resize helper
   ["w"] = function(state)
     local normal = state.window.width
@@ -225,14 +230,14 @@ return {
     elseif cur_width == normal then
       new_width = large
     end
-    vim.cmd(new_width .. " wincmd |")
+    cmd(new_width .. " wincmd |")
   end,
 
   ["Y"] = {
     function(state)
       local node = state.tree:get_node()
       local path = node:get_id()
-      vim.fn.setreg("+", path, "c")
+      fn.setreg("+", path, "c")
     end,
     desc = "Copy Path to Clipboard",
   },
@@ -248,7 +253,7 @@ return {
     function(state)
       local is_wsl = require("lib.is_wsl")
       local mod
-      if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+      if fn.has("win32") == 1 or fn.has("win64") == 1 then
         mod = "config.neotree.open_fm.win"
       elseif is_wsl() then
         mod = "config.neotree.open_fm.wsl"
@@ -257,7 +262,7 @@ return {
       end
       local ok, fm = pcall(require, mod)
       if not ok then
-        vim.notify("open_fm module not found: " .. mod, vim.log.levels.ERROR)
+        notify("open_fm module not found: " .. mod, levels.ERROR)
         return
       end
       fm.open(state)
@@ -270,20 +275,20 @@ return {
       local node = state.tree:get_node()
       local path = node and (node.path or node:get_id()) or ""
       if path == "" then
-        vim.notify("no path under cursor", vim.log.levels.WARN)
+        notify("no path under cursor", levels.WARN)
         return
       end
-      local dir = (vim.fn.isdirectory(path) == 1) and path or vim.fn.fnamemodify(path, ":h")
+      local dir = (fn.isdirectory(path) == 1) and path or fn.fnamemodify(path, ":h")
       local ok, err = pcall(vim.api.nvim_set_current_dir, dir)
       if not ok then
-        vim.notify(("cd failed: %s"):format(tostring(err)), vim.log.levels.ERROR)
+        notify(("cd failed: %s"):format(tostring(err)), levels.ERROR)
         return
       end
       local ok_cmd, _ = pcall(require, "neo-tree.command")
       if ok_cmd then
         require("neo-tree.command").execute({ source = "filesystem", dir = dir, reveal = true })
       end
-      vim.notify(("cwd → %s"):format(dir), vim.log.levels.INFO)
+      notify(("cwd → %s"):format(dir), levels.INFO)
     end,
     desc = "Set Neovim cwd to node and focus Neo-tree there",
   },

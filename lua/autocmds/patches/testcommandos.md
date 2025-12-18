@@ -1,6 +1,9 @@
 " Status leeren (für Fresh-Start)
 :lua require("autocmds.patches").clear_status()
 
+" 2. Verbose-Mode aktivieren
+ :lua require("autocmds.patches").setup({ verbose = true })
+
 " Alle Patches anwenden (mit neuer Normalisierung)
 :lua require("autocmds.patches").apply_all_async()
 

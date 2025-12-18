@@ -1,5 +1,5 @@
 ﻿--- C:\Users\Bernhard\AppData\Local\nvim\patches\noice\lsp\old.lua	2025-12-18 02:33:15.000000000 +0100
-+++ C:\Users\Bernhard\AppData\Local\nvim\patches\noice\lsp\FIXED.lua	2025-12-17 22:39:12.000000000 +0100
++++ C:\Users\Bernhard\AppData\Local\nvim-data\lazy\noic.nvim\lua\noice\lsp\signature.lua	2025-12-17 22:39:12.000000000 +0100
 @@ -38,38 +38,28 @@
    trigger_character = 2,
    content_change = 3,

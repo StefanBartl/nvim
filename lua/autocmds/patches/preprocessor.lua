@@ -25,12 +25,7 @@ end
 ---@return string normalized_content
 ---@return boolean was_normalized
 function M.normalize_diff(content, target)
-  if not has_windows_paths(content) then
-    -- Already in standard format (probably)
-    return content, false
-  end
-
-  logger.debug("Normalizing Windows-style diff headers", { target = target })
+  logger.debug("Normalizing diff headers", { target = target })
 
   -- Get just the filename from target
   local target_filename = target:match("([^/\\]+)$")
@@ -61,14 +56,14 @@ function M.normalize_diff(content, target)
   local normalized_content = table.concat(normalized_lines, "\n")
 
   if changed then
-    logger.debug("Diff headers simplified", {
+    logger.debug("Diff headers normalized to target filename", {
       target_filename = target_filename,
+      original_had_paths = has_windows_paths(content),
     })
   end
 
   return normalized_content, changed
 end
-
 --- Create a temporary normalized patch file
 ---@param patch_path string Original patch file path
 ---@param target string Target file path

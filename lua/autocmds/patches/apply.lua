@@ -182,13 +182,6 @@ local function apply_patch_async(entry, callback)
     process_handle = uv.spawn("patch", {
       args = vim.list_slice(cmd, 2),
       stdio = { nil, stdout, stderr },
-      env = {},
-  cwd = "",
-  uid = "",
-  gid = "",
-  verbatim = false,
-  detached = false,
-  hide = false,
     }, function(code, _)
       -- Stop timeout timer
       if timeout_timer and not timeout_timer:is_closing() then

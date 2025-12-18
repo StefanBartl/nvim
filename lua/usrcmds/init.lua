@@ -3,6 +3,7 @@
 
 require("usrcmds.column_align").setup()
 require("usrcmds.compress_dir").enable_usercmd()
+require("usrcmds.diff_util").enable()
 require("usrcmds.filecycle").setup({
   open_target = "current",    -- "current"|"split"|"vsplit"|"tab"|"background"
   keep_focus = true,          -- bei Split/Vsplit Fokus im Ursprungsfenster behalten
