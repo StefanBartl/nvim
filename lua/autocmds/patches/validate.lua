@@ -104,13 +104,6 @@ local function check_already_applied_async(entry, callback)
   uv.spawn("patch", {
     args = vim.list_slice(cmd, 2),
     stdio = { nil, stdout, stderr },
-    env = {},
-    cwd = "",
-    uid = "",
-    gid = "",
-    verbatim = false,
-    detached = false,
-    hide = false,
   }, function(code, _)
     if stdout and not stdout:is_closing() then
       stdout:close()
