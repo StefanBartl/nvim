@@ -6,7 +6,7 @@ register.register(
   "Notes",
   {
     title = "Notes",
-    dir = vim.env.REPOS_DIR .. "/Notes/MyNotes",
+    dir = vim.env.REPOS_DIR .. "/Notes",
   },
   {
     files = "NotesFiles",
