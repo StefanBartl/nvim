@@ -7,6 +7,7 @@ local M = {}
 
 ---@return nil
 function M.enable()
+---FIX: Daduch verzögert sich das normale Esc sehr. Nur anwenden wenn ein weg gefunden wird, das nur im diff modus zu registrieren
   vim.keymap.set("n", "<Esc><Esc>", function()
     -- Diff mode is window-local
     if vim.wo.diff then

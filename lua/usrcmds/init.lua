@@ -29,4 +29,4 @@ require("usrcmds.templates").setup()
 require("usrcmds.uv_doc").enable_usercmd()
 require("usrcmds.diagnostics.quickfix").enable_usercmds_and_keymaps()
 
-require("usrcmds.diff").enable({ enable_all = true })
+require("usrcmds.diff").enable({ diff_origin = true })
