@@ -4,11 +4,9 @@
 local copy_node_entries_handler = require("config.neotree.helper.copy_node_entries_handler")
 local copy_node_folders_handler = require("config.neotree.helper.copy_node_folders_handler")
 local rel_path_to_require = require("config.neotree.helper.rel_path_to_require")
-local relpath = require("lib.filesystem.relpath")
-local fn = vim.fn
-local cmd = vim.cmd
-local notify = vim.notify
-local levels = vim.log.levels
+local fn, cmd = vim.fn, vim.cmd
+local notify, levels = vim.notify, vim.log.levels
+local desc_tag = "[neotree.keymaps.custom] "
 
 -- Safe hide of Neo-tree's floating preview, ignoring errors.
 ---@param _ any
@@ -114,6 +112,13 @@ return {
   ["<C-f>"] = { "scroll_preview", config = { direction = -1 } },
   ["<C-b>"] = { "scroll_preview", config = { direction = 1 } },
 
+  ["I"] = {
+    function(state)
+      require("config.neotree.helper.node_informations").show_from_neotree(state)
+    end,
+    desc = desc_tag .. "Show file or directory information (hover)",
+  },
+
   -- copy paths to system clipboard
   ["[p"] = {
     function(state)
@@ -126,7 +131,7 @@ return {
       fn.setreg("+", path, "c")
       notify(("copied: %s"):format(path), levels.INFO)
     end,
-    desc = "Copy absolute path (+)",
+    desc = desc_tag .. "Copy absolute path (+)",
   },
 
   ["]p"] = {
@@ -141,7 +146,7 @@ return {
       fn.setreg("+", base, "c")
       notify(("copied: %s"):format(base), levels.INFO)
     end,
-    desc = "Copy base (dir) path (+)",
+    desc = desc_tag .. "Copy base (dir) path (+)",
   },
 
   ["]r"] = {
@@ -158,7 +163,7 @@ return {
       fn.setreg("+", path, "c")
       notify(("Copied relative path: %s"):format(path), levels.INFO)
     end,
-    desc = "Copy relative path (+) (root→node or cwd→node)",
+    desc = desc_tag .. "Copy relative path (+) (root→node or cwd→node)",
   },
 
   ["[r"] = {
@@ -175,35 +180,35 @@ return {
       fn.setreg("+", path, "c")
       notify(("Copied relative base dir: %s"):format(path), levels.INFO)
     end,
-    desc = "Copy relative base dir (+) (root→dir or cwd→dir)",
+    desc = desc_tag .. "Copy relative base dir (+) (root→dir or cwd→dir)",
   },
 
   ["[f"] = {
     function(state)
       copy_node_folders_handler(state, { relative_to_cwd = false, preview_limit = 20 })
     end,
-    desc = "Copy recursive folder list (absolute paths) to clipboard (+)",
+    desc = desc_tag .. "Copy recursive folder list (absolute paths) to clipboard (+)",
   },
 
   ["[F"] = {
     function(state)
       copy_node_folders_handler(state, { relative_to_cwd = true, preview_limit = 20 })
     end,
-    desc = "Copy recursive folder list (relative to cwd) to clipboard (+)",
+    desc = desc_tag .. "Copy recursive folder list (relative to cwd) to clipboard (+)",
   },
 
   ["[t"] = {
     function(state)
       copy_node_entries_handler(state, { relative_to_cwd = false, preview_limit = 20 })
     end,
-    desc = "Copy recursive file list (absolute paths) to clipboard (+)",
+    desc = desc_tag .. "Copy recursive file list (absolute paths) to clipboard (+)",
   },
 
   ["[T"] = {
     function(state)
       copy_node_entries_handler(state, { relative_to_cwd = true, preview_limit = 20 })
     end,
-    desc = "Copy recursive file list (relative to cwd) to clipboard (+)",
+    desc = desc_tag .. "Copy recursive file list (relative to cwd) to clipboard (+)",
   },
 
   ["[l"] = {
@@ -215,7 +220,7 @@ return {
         vim.notify("No node under cursor", vim.log.levels.WARN)
       end
     end,
-    desc = "Copy Lua require() string(s) for current node (file or folder) to clipboard",
+    desc = desc_tag .. "Copy Lua require() string(s) for current node (file or folder) to clipboard",
   },
 
   -- resize helper
@@ -239,14 +244,14 @@ return {
       local path = node:get_id()
       fn.setreg("+", path, "c")
     end,
-    desc = "Copy Path to Clipboard",
+    desc = desc_tag .. "Copy Path to Clipboard",
   },
 
   ["O"] = {
     function(state)
       require("lazy.util").open(state.tree:get_node().path, { system = true })
     end,
-    desc = "Open with System Application",
+    desc = desc_tag .. "Open with System Application",
   },
 
   ["M"] = {
@@ -267,7 +272,7 @@ return {
       end
       fm.open(state)
     end,
-    desc = "Open in system file manager",
+    desc = desc_tag .. "Open in system file manager",
   },
 
   ["+"] = {
@@ -290,21 +295,21 @@ return {
       end
       notify(("cwd → %s"):format(dir), levels.INFO)
     end,
-    desc = "Set Neovim cwd to node and focus Neo-tree there",
+    desc = desc_tag .. "Set Neovim cwd to node and focus Neo-tree there",
   },
 
   ["-"] = {
     function(state)
       require("config.neotree.updir").up_one_level(state)
     end,
-    desc = "Up one level (in-place) and adjust CWD",
+    desc = desc_tag .. "Up one level (in-place) and adjust CWD",
   },
 
   ["grep"] = {
     function(state)
       require("config.neotree.fzf_grep_picker").live_grep_node_dir(state)
     end,
-    desc = "fzf-lua: live_grep in node directory (Windows/WSL/macOS/Linux)",
+    desc = desc_tag .. "fzf-lua: live_grep in node directory (Windows/WSL/macOS/Linux)",
   },
 
   ["D"] = "diff_files",
