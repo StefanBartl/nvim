@@ -13,47 +13,67 @@ return {
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/github_stats.nvim"),
     lazy = false,
     config = function()
-      require("github_stats").setup()
-    end,
-  },
-
-  {
-    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/monkeypatch.nvim"),
-    config = function()
-      require("monkeypatch").setup({
-        -- Strategy execution order (first to last)
-        strategy_order = { "diff", "semantic" },
-
-        -- Which strategies are enabled
-        enabled_strategies = {
-          diff = true,
-          semantic = true,
-          treesitter = false, -- Experimental
+      require("github_stats").setup({
+        repos = {
+          "StefanBartl/color_my_ascii.nvim",
+          "StefanBartl/github_stats.nvim",
+          "StefanBartl/gopath.nvim",
+          "StefanBartl/mdlinks",
+          "StefanBartl/mdview.nvim",
+          "StefanBartl/monkeypatch.nvim",
+          "StefanBartl/mygrep.nvim",
+          "StefanBartl/nvim-cmdlog",
+          "StefanBartl/nvim-containers",
+          "StefanBartl/replacer",
+          "StefanBartl/telescope-selected-index",
         },
+        -- token_source = "file",
+        -- token_file = "~/.github_token",
 
-        -- Parallel patch operations
-        max_concurrency = 3,
-
-        -- Per-patch timeout
-        timeout_ms = 30000,
-
-        -- Show notifications
-        notify = true,
-
-        -- Debug logging
-        verbose = false,
-
-        -- Delay after LazyUpdate event
-        lazy_update_delay_ms = 1000,
-
-        -- Diff fuzz factor (0-3)
-        diff_fuzz_factor = 2,
-
-        -- Semantic mode: strict (reject on hash mismatch) or permissive (warn)
-        semantic_strict = true,
+        -- config_dir = "~/my-github-stats",
+        -- data_dir = "c:/Users/bartl/AppData/Local/nvim-data/github_stats_daten",
       })
     end,
   },
+
+  -- {
+  --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/monkeypatch.nvim"),
+  --   lazy = false,
+  --   config = function()
+  --     require("monkeypatch").setup({
+  --       -- Strategy execution order (first to last)
+  --       strategy_order = { "diff", "semantic" },
+  --
+  --       -- Which strategies are enabled
+  --       enabled_strategies = {
+  --         diff = true,
+  --         semantic = true,
+  --         treesitter = false, -- Experimental
+  --       },
+  --
+  --       -- Parallel patch operations
+  --       max_concurrency = 3,
+  --
+  --       -- Per-patch timeout
+  --       timeout_ms = 30000,
+  --
+  --       -- Show notifications
+  --       notify = true,
+  --
+  --       -- Debug logging
+  --       verbose = false,
+  --
+  --       -- Delay after LazyUpdate event
+  --       lazy_update_delay_ms = 1000,
+  --
+  --       -- Diff fuzz factor (0-3)
+  --       diff_fuzz_factor = 2,
+  --
+  --       -- Semantic mode: strict (reject on hash mismatch) or permissive (warn)
+  --       semantic_strict = true,
+  --     })
+  --   end,
+  -- },
 
   {
     -- "StefanBartl/color_my_ascii.nvim",
@@ -61,7 +81,8 @@ return {
     ft = "markdown",
     config = function()
       require("color_my_ascii").setup({
-        debug_enabled = true,
+        debug_enabled = false,
+        debug_verbose = false,
         scheme = "default",
         enable_keywords = true,
         enable_language_detection = true,
@@ -115,8 +136,8 @@ return {
   -- },
 
   {
-    "StefanBartl/nvim-cmdlog",
-    -- dir = vim.env.REPOS_DIR .. "/nvim-cmdlog",
+    -- "StefanBartl/nvim-cmdlog",
+    dir = vim.env.REPOS_DIR .. "/nvim-cmdlog",
     lazy = false,
     cmd = { "CmdlogOpen", "CmdlogSearch" }, -- or map keys
     -- keys = {
@@ -146,9 +167,7 @@ return {
       -- wähle je nach Engine:
       "ibhagwan/fzf-lua", -- für engine="fzf"
       -- "nvim-telescope/telescope.nvim", -- für engine="telescope"
-
-
-        },
+    },
     config = function()
       ---@diagnostic disable-next-line
       require("replacer").setup({

@@ -2,6 +2,7 @@
 
 ## MIXED
 
+- `custom.functions` verwenden, um funktionen, die sowohl mappings als auch usercommands begründen.
 - lsp.tools behandeln
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 

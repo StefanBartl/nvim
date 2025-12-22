@@ -10,8 +10,6 @@ local uv = vim.loop
 ---@param path string
 ---@return string
 local function escape_shell_arg(path)
-  -- English comment: escape path for shell commands. For Windows we use single-quoted PowerShell arg,
-  -- for POSIX we escape single quotes using the standard trick.
   if uv.os_uname().sysname == "Windows_NT" then
     return "'" .. path:gsub("'", "''") .. "'"
   else
@@ -20,12 +18,9 @@ local function escape_shell_arg(path)
 end
 
 --- Send given file/directory path to system Trash using available backend.
---- Tries gio, trash, trash-put, kioclient5, macOS osascript, Windows PowerShell, then local ~/.local/share/Trash/files fallback.
 ---@param path string
 ---@return boolean, string
 local function send_to_trash(path)
-  -- English comment: detect platform and available trash utility, then invoke it.
-  -- This implementation uses a single exit point (ok, msg) to avoid unreachable-code diagnostics.
   local sys = uv.os_uname().sysname
   local esc = escape_shell_arg(path)
 
@@ -39,66 +34,34 @@ local function send_to_trash(path)
   if sys ~= "Windows_NT" then
     if has_exe("gio") then
       local out = vim.fn.system({ "gio", "trash", path })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      ok, msg = vim.v.shell_error == 0, out
     elseif has_exe("trash") then
       local out = vim.fn.system({ "trash", path })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      ok, msg = vim.v.shell_error == 0, out
     elseif has_exe("trash-put") then
       local out = vim.fn.system({ "trash-put", path })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      ok, msg = vim.v.shell_error == 0, out
     elseif has_exe("kioclient5") then
       local out = vim.fn.system({ "kioclient5", "move", path, "trash:/" })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      ok, msg = vim.v.shell_error == 0, out
     elseif sys == "Darwin" and has_exe("osascript") then
       local applescript = string.format('tell application "Finder" to delete POSIX file %s', esc)
       local out = vim.fn.system({ "osascript", "-e", applescript })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      ok, msg = vim.v.shell_error == 0, out
     else
-      -- Fallback: move to ~/.local/share/Trash/files (best-effort)
       local home = uv.os_homedir()
       local trashdir = home .. "/.local/share/Trash/files"
       if not uv.fs_stat(trashdir) then
-        local okc, errc = pcall(function()
-          vim.fn.mkdir(trashdir, "p")
-        end)
+        local okc, errc = pcall(vim.fn.mkdir, trashdir, "p")
         if not okc then
-          ok, msg = false, "failed to create trash dir: " .. tostring(errc)
+          return false, "failed to create trash dir: " .. tostring(errc)
         end
       end
-      if ok == false and msg:match("^failed to create") then
-        -- keep the error from mkdir
-      else
-        local dest = trashdir .. "/" .. vim.fn.fnamemodify(path, ":t")
-        local ok_mv, err_mv = os.rename(path, dest)
-        if ok_mv then
-          ok, msg = true, "moved to " .. dest
-        else
-          ok, msg = false, tostring(err_mv)
-        end
-      end
+      local dest = trashdir .. "/" .. vim.fn.fnamemodify(path, ":t")
+      local ok_mv, err_mv = os.rename(path, dest)
+      ok, msg = ok_mv, ok_mv and ("moved to " .. dest) or tostring(err_mv)
     end
   else
-    -- Windows: use PowerShell + Microsoft.VisualBasic.FileIO to send to Recycle Bin
     local ps_script = string.format(
       "Add-Type -AssemblyName Microsoft.VisualBasic; "
         .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%s,'OnlyErrorDialogs','SendToRecycleBin')",
@@ -113,27 +76,22 @@ local function send_to_trash(path)
       )
     end
     local out = vim.fn.system({ "powershell", "-NoProfile", "-Command", ps_script })
-    if vim.v.shell_error == 0 then
-      ok, msg = true, out
-    else
-      ok, msg = false, out
-    end
+    ok, msg = vim.v.shell_error == 0, out
   end
 
   return ok, msg
 end
 
 --- Neo-tree mapping callback: move selected node to Trash and refresh the Neo-tree view.
---- Uses the neo-tree commands refresh API: require("neo-tree.sources.filesystem.commands").refresh(state)
 ---@param state table
 ---@return nil
 local function neotree_send_node_to_trash(state)
-  -- English comment: node retrieval for neo-tree state object
-  local node = state.tree and state.tree:get_node() or nil
+  local node = state.tree and state.tree:get_node()
   if not node then
     vim.notify("No node under cursor", vim.log.levels.WARN)
     return
   end
+
   local path = node.path or node.uri or node:get_id()
   if not path then
     vim.notify("Node has no path", vim.log.levels.ERROR)
@@ -148,30 +106,45 @@ local function neotree_send_node_to_trash(state)
   end
 
   local ok, msg = send_to_trash(path)
+
   if ok then
     vim.notify("Moved to Trash: " .. path, vim.log.levels.INFO)
-    -- Correct refresh call: obtain the proper state object for the filesystem source
-    -- and call the commands.refresh(state) provided by neo-tree.
+
+    -- safe refresh
     local manager = require("neo-tree.sources.manager")
-    local fs_state = manager.get_state(state.name) or manager.get_state("filesystem")
-    if fs_state then
-      -- call the filesystem commands refresh function
-      local fs_commands = require("neo-tree.sources.filesystem.commands")
-      if type(fs_commands.refresh) == "function" then
-        fs_commands.refresh(fs_state)
+    local success, fs_state = pcall(manager.get_state, state.name)
+
+    -- ensure fs_state is always a valid table of type neotree.State
+    if not success or type(fs_state) ~= "table" then
+      local ok2, fs_state2 = pcall(manager.get_state, "filesystem")
+      if ok2 and type(fs_state2) == "table" then
+        fs_state = fs_state2
       else
-        -- fallback: try manager-level refresh if present
-        if type(manager.refresh) == "function" then
-          manager.refresh("filesystem")
-        end
+        -- fallback: minimaler, leerer State, damit Typ passt
+        ---@diagnostic disable-next-line: missing-fields
+        fs_state = { tree = { refresh = function() end }, name = "filesystem" }
       end
     end
-  else
+
+    -- if not success or type(fs_state) ~= "table" then
+    --   local ok2, fs_state2 = pcall(manager.get_state, "filesystem")
+    --   fs_state = ok2 and type(fs_state2) == "table" and fs_state2 or nil
+    -- end
+    --
+    -- if fs_state then
+    --   local fs_commands = require("neo-tree.sources.filesystem.commands")
+    --   if type(fs_commands.refresh) == "function" then
+    --     pcall(fs_commands.refresh, fs_state)
+    --   else
+    --     pcall(manager.refresh, "filesystem")
+    --   end
+    -- end
+
+    else
     vim.notify("Failed to move to Trash: " .. tostring(msg), vim.log.levels.ERROR)
   end
 end
 
--- Export functions. Make sure 'return' is at the very end so no unreachable-code diagnostics occur.
 M.send_to_trash = send_to_trash
 M.neotree_send_node_to_trash = neotree_send_node_to_trash
 

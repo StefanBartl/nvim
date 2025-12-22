@@ -50,3 +50,6 @@ end)
 -- This allows `nvr --server \\.\pipe\nvim-<USERNAME>` to always target this instance.
 -- ===================================================================================
 require("system.rpc_pipe").setup({ debug = false })
+
+
+-- require("config.patches")

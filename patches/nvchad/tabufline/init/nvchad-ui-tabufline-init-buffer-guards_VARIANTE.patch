@@ -1,0 +1,41 @@
+diff --git a/lua/nvchad/tabufline/init.lua b/lua/nvchad/tabufline/init.lua
+index upstream..patched 100644
+--- a/lua/nvchad/tabufline/init.lua
++++ b/lua/nvchad/tabufline/init.lua
+@@
+ M.close_buffer = function(bufnr)
+   bufnr = bufnr or cur_buf()
++
++  -- Guard: buffer may be invalid but still tracked
++  if not api.nvim_buf_is_valid(bufnr) then
++    local index = buf_index(bufnr)
++    if index then
++      table.remove(vim.t.bufs, index)
++      vim.cmd "redrawtabline"
++    end
++    return
++  end
+@@
+     elseif curBufIndex and #vim.t.bufs > 1 then
+       local newBufIndex = curBufIndex == #vim.t.bufs and -1 or 1
+-      vim.cmd("b" .. vim.t.bufs[curBufIndex + newBufIndex])
++      local targetBuf = vim.t.bufs[curBufIndex + newBufIndex]
++
++      if api.nvim_buf_is_valid(targetBuf) then
++        vim.cmd("b" .. targetBuf)
++      else
++        for _, buf in ipairs(vim.t.bufs) do
++          if buf ~= bufnr and api.nvim_buf_is_valid(buf) then
++            vim.cmd("b" .. buf)
++            break
++          end
++        end
++      end
+@@
+     elseif not vim.bo.buflisted then
+       local tmpbufnr = vim.t.bufs[1]
+-      if tmpbufnr then
++      if tmpbufnr and api.nvim_buf_is_valid(tmpbufnr) then
+         local winid = vim.fn.bufwinid(tmpbufnr)
+         winid = winid ~= -1 and winid or 0
+         api.nvim_set_current_win(winid)

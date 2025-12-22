@@ -1,0 +1,48 @@
+diff --git a/lua/nvchad/lsp/signature.lua b/lua/nvchad/lsp/signature.lua
+index 9c2a1a4..patched 100644
+--- a/lua/nvchad/lsp/signature.lua
++++ b/lua/nvchad/lsp/signature.lua
+@@
+ M.setup = function(client, bufnr)
+   local group = api.nvim_create_augroup("LspSignature", { clear = false })
+-  if vim.api.nvim_buf_is_valid(bufnr) then
++  -- Validate buffer early
++  if not bufnr or not api.nvim_buf_is_valid(bufnr) then
++    return
++  end
++
++  -- Validate signature help capability
++  local sig = client
++    and client.server_capabilities
++    and client.server_capabilities.signatureHelpProvider
++
++  local triggerChars = sig and sig.triggerCharacters
++  if not triggerChars or type(triggerChars) ~= "table" then
++    return
++  end
+ 
+-	api.nvim_clear_autocmds { group = group, buffer = bufnr }
++  -- Clear existing autocmds defensively
++  pcall(api.nvim_clear_autocmds, { group = group, buffer = bufnr })
+ 
+-  local triggerChars = client.server_capabilities.signatureHelpProvider.triggerCharacters
+-
+   api.nvim_create_autocmd("TextChangedI", {
+     group = group,
+     buffer = bufnr,
+     callback = function()
++      -- Buffer may have become invalid before callback execution
++      if not api.nvim_buf_is_valid(bufnr) then
++        pcall(api.nvim_clear_autocmds, { group = group, buffer = bufnr })
++        return
++      end
++
+       if check_triggeredChars(triggerChars) then
+         vim.lsp.buf.signature_help { focus = false, silent = true, max_height = 7, border = "single" }
+       end
+     end,
+   })
+-	else
+-		return
+-	end
+ end

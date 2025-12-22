@@ -22,7 +22,7 @@ function M.attach(ctx)
       if not ctx._enabled then
         return
       end
-      local ft = api.nvim_buf_get_option(ev.buf, "filetype")
+      local ft = api.nvim_get_option_value("filetype", { buf = ev.buf })
       local allowed = false
       for _, v in ipairs(filetypes) do
         if v == ft then
