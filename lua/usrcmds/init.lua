@@ -1,6 +1,8 @@
 ---@module 'usrcmds'
 -- Initialize module for 'usrcmds'
 
+require("usrcmds.lua_module_annotation").enable()
+
 require("usrcmds.column_align").setup()
 require("usrcmds.compress_dir").enable_usercmd()
 require("usrcmds.filecycle").setup({
