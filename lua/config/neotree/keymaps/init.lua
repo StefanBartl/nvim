@@ -4,6 +4,9 @@
 local copy_node_entries_handler = require("config.neotree.helper.copy_node_entries_handler")
 local copy_node_folders_handler = require("config.neotree.helper.copy_node_folders_handler")
 local rel_path_to_require = require("config.neotree.helper.rel_path_to_require")
+local path_helper = require("config.neotree.helper.node_to_path")
+local save_adjacent = require("config.neotree.helper.save_adjacent_buffer")
+local save_node = require("config.neotree.helper.save_node_buffer")
 local fn, cmd = vim.fn, vim.cmd
 local notify, levels = vim.notify, vim.log.levels
 local desc_tag = "[neotree.keymaps.custom] "
@@ -82,7 +85,18 @@ return {
   ["C"] = "close_node",
   ["z"] = "close_all_nodes",
   ["<C-r>"] = "refresh",
-
+  ["<C-s>"] = {
+    function(_)
+      save_adjacent()
+    end,
+    desc = desc_tag .. "force-save last normal buffer (w!)",
+  },
+  ["<M-s>"] = {
+    function(_)
+      save_node()
+    end,
+    desc = desc_tag .. "force-save buffer matching node under cursor (w!)",
+  },
   -- splits/tabs shorthand
   ["s"] = "noop",
   ["sv"] = "open_split",
