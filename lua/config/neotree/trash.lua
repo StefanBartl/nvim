@@ -17,6 +17,69 @@ local function escape_shell_arg(path)
   end
 end
 
+--- Schließe alle Buffers und Preview die diesen Pfad betreffen
+---@param path string
+local function close_related_buffers_and_previews(path)
+  -- Normalisiere Pfad für Vergleich
+  local normalized_path = vim.fn.resolve(path):gsub("\\", "/")
+
+  -- Schließe alle betroffenen Buffers
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(buf) then
+      local buf_name = vim.api.nvim_buf_get_name(buf)
+      if buf_name ~= "" then
+        local normalized_buf = vim.fn.resolve(buf_name):gsub("\\", "/")
+        -- Prüfe ob Buffer innerhalb des zu löschenden Pfads liegt
+        if normalized_buf:sub(1, #normalized_path) == normalized_path or normalized_buf == normalized_path then
+          pcall(vim.api.nvim_buf_delete, buf, { force = true, unload = true })
+        end
+      end
+    end
+  end
+
+  -- Schließe Neo-tree Preview falls offen
+  pcall(function()
+    local preview = require("neo-tree.ui.preview")
+    if preview and preview.close then
+      preview.close()
+    end
+  end)
+
+  -- Schließe alle Float-Windows die den Pfad betreffen könnten
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(win) then
+      local win_buf = vim.api.nvim_win_get_buf(win)
+      local buf_name = vim.api.nvim_buf_get_name(win_buf)
+      if buf_name ~= "" then
+        local normalized_buf = vim.fn.resolve(buf_name):gsub("\\", "/")
+        if normalized_buf:sub(1, #normalized_path) == normalized_path then
+          pcall(vim.api.nvim_win_close, win, true)
+        end
+      end
+    end
+  end
+end
+
+--- Cleanup Neo-tree interne Watchers und State für einen Pfad
+---@param path string
+local function cleanup_neotree_watchers(path)
+  pcall(function()
+    -- Stoppe alle File Watchers
+    local watcher = require("neo-tree.sources.filesystem.lib.file_watcher")
+    if watcher and watcher.stop then
+      watcher.stop(path)
+    end
+  end)
+
+  pcall(function()
+    -- Clear Neo-tree's internal cache
+    local manager = require("neo-tree.sources.manager")
+    if manager and manager.close_all_nodes then
+      manager.close_all_nodes()
+    end
+  end)
+end
+
 --- Send given file/directory path to system Trash using available backend.
 ---@param path string
 ---@return boolean, string
@@ -62,24 +125,101 @@ local function send_to_trash(path)
       ok, msg = ok_mv, ok_mv and ("moved to " .. dest) or tostring(err_mv)
     end
   else
-    local ps_script = string.format(
-      "Add-Type -AssemblyName Microsoft.VisualBasic; "
-        .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%s,'OnlyErrorDialogs','SendToRecycleBin')",
-      esc
-    )
+    -- Windows: Schließe zuerst alle Buffers
+    close_related_buffers_and_previews(path)
+
     local stat = uv.fs_stat(path)
-    if stat and stat.type == "directory" then
+    local is_dir = stat and stat.type == "directory"
+
+    -- Warte damit Buffers geschlossen werden
+    vim.wait(100)
+
+    local ps_script
+    if is_dir then
       ps_script = string.format(
-        "Add-Type -AssemblyName Microsoft.VisualBasic; "
-          .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(%s,'OnlyErrorDialogs','SendToRecycleBin')",
+        "$ErrorActionPreference='Stop'; "
+          .. "Add-Type -AssemblyName Microsoft.VisualBasic; "
+          .. "try { "
+          .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(%s,'OnlyErrorDialogs','SendToRecycleBin') "
+          .. "} catch { "
+          .. "Write-Error $_.Exception.Message; exit 1 "
+          .. "}",
+        esc
+      )
+    else
+      ps_script = string.format(
+        "$ErrorActionPreference='Stop'; "
+          .. "Add-Type -AssemblyName Microsoft.VisualBasic; "
+          .. "try { "
+          .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%s,'OnlyErrorDialogs','SendToRecycleBin') "
+          .. "} catch { "
+          .. "Write-Error $_.Exception.Message; exit 1 "
+          .. "}",
         esc
       )
     end
+
     local out = vim.fn.system({ "powershell", "-NoProfile", "-Command", ps_script })
     ok, msg = vim.v.shell_error == 0, out
+
+    -- Fallback: Bei Fehler versuche es mit robustem PowerShell Script
+    if not ok and is_dir then
+      local fallback_script = string.format(
+        "$path = %s; "
+          .. "if (Test-Path $path) { "
+          .. "Get-ChildItem -Path $path -Recurse -Force | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue; "
+          .. "Remove-Item -Path $path -Force -Recurse -ErrorAction Stop "
+          .. "}",
+        esc
+      )
+      local _ = vim.fn.system({ "powershell", "-NoProfile", "-Command", fallback_script })
+      if vim.v.shell_error == 0 then
+        ok, msg = true, "moved via fallback method"
+      end
+    end
   end
 
   return ok, msg
+end
+
+--- Safely refresh Neo-tree after file operations
+---@param state_name string
+local function safe_refresh(state_name)
+  -- Führe Refresh in mehreren Schritten aus um Blockierung zu vermeiden
+  vim.schedule(function()
+    local manager_ok, manager = pcall(require, "neo-tree.sources.manager")
+    if not manager_ok then
+      return
+    end
+
+    -- Schritt 1: Close all und reset
+    pcall(function()
+      if manager.close_all_nodes then
+        manager.close_all_nodes()
+      end
+    end)
+
+    -- Schritt 2: Nach kurzem Wait refreshen
+    vim.defer_fn(function()
+      -- Versuche zuerst den aktuellen State zu refreshen
+      local state_ok, state = pcall(manager.get_state, state_name)
+      if state_ok and state then
+        local commands_ok, commands = pcall(require, "neo-tree.sources." .. state_name .. ".commands")
+        if commands_ok and commands and type(commands.refresh) == "function" then
+          pcall(commands.refresh, state)
+          return
+        end
+      end
+
+      -- Fallback: Refresh über Manager
+      pcall(manager.refresh, state_name)
+
+      -- Zusätzlicher Fallback für filesystem
+      if state_name ~= "filesystem" then
+        pcall(manager.refresh, "filesystem")
+      end
+    end, 100)
+  end)
 end
 
 --- Neo-tree mapping callback: move selected node to Trash and refresh the Neo-tree view.
@@ -98,51 +238,54 @@ local function neotree_send_node_to_trash(state)
     return
   end
 
-  local prompt = string.format("Move to Trash: %s ? (y/N) ", path)
+  -- Prüfe ob Datei/Ordner existiert
+  local stat = uv.fs_stat(path)
+  if not stat then
+    vim.notify("Path does not exist: " .. path, vim.log.levels.WARN)
+    safe_refresh(state.name or "filesystem")
+    return
+  end
+
+  local item_type = stat.type == "directory" and "directory" or "file"
+  local prompt = string.format("Move %s to Trash: %s ? (y/N) ", item_type, path)
   local ans = vim.fn.input(prompt)
+  vim.api.nvim_command("redraw")
+
   if not (ans == "y" or ans == "Y") then
     vim.notify("Cancelled", vim.log.levels.INFO)
     return
   end
 
-  local ok, msg = send_to_trash(path)
+  -- Zeige Lade-Nachricht
+  vim.notify("Moving to Trash...", vim.log.levels.INFO)
 
-  if ok then
-    vim.notify("Moved to Trash: " .. path, vim.log.levels.INFO)
+  -- WICHTIG: Cleanup VOR dem Löschen
+  cleanup_neotree_watchers(path)
+  close_related_buffers_and_previews(path)
 
-    -- safe refresh
-    local manager = require("neo-tree.sources.manager")
-    local success, fs_state = pcall(manager.get_state, state.name)
+  -- Lösche asynchron um Einfrieren zu vermeiden
+  vim.schedule(function()
+    -- Nochmal kurz warten nach Cleanup
+    vim.defer_fn(function()
+      local ok, msg = send_to_trash(path)
 
-    -- ensure fs_state is always a valid table of type neotree.State
-    if not success or type(fs_state) ~= "table" then
-      local ok2, fs_state2 = pcall(manager.get_state, "filesystem")
-      if ok2 and type(fs_state2) == "table" then
-        fs_state = fs_state2
+      if ok then
+        vim.notify("✓ Moved to Trash: " .. path, vim.log.levels.INFO)
+
+        -- Längerer Wait vor Refresh
+        vim.defer_fn(function()
+          safe_refresh(state.name or "filesystem")
+        end, 200)
       else
-        -- fallback: minimaler, leerer State, damit Typ passt
-        ---@diagnostic disable-next-line: missing-fields
-        fs_state = { tree = { refresh = function() end }, name = "filesystem" }
+        local clean_msg = msg:match("([^\r\n]+)") or msg
+        vim.notify("✗ Failed: " .. clean_msg, vim.log.levels.ERROR)
+
+        vim.defer_fn(function()
+          safe_refresh(state.name or "filesystem")
+        end, 200)
       end
-    end
-
-    -- if not success or type(fs_state) ~= "table" then
-    --   local ok2, fs_state2 = pcall(manager.get_state, "filesystem")
-    --   fs_state = ok2 and type(fs_state2) == "table" and fs_state2 or nil
-    -- end
-    --
-    -- if fs_state then
-    --   local fs_commands = require("neo-tree.sources.filesystem.commands")
-    --   if type(fs_commands.refresh) == "function" then
-    --     pcall(fs_commands.refresh, fs_state)
-    --   else
-    --     pcall(manager.refresh, "filesystem")
-    --   end
-    -- end
-
-    else
-    vim.notify("Failed to move to Trash: " .. tostring(msg), vim.log.levels.ERROR)
-  end
+    end, 150)
+  end)
 end
 
 M.send_to_trash = send_to_trash
