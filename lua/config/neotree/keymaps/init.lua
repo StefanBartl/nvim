@@ -84,7 +84,7 @@ return {
 
   ["C"] = "close_node",
   ["z"] = "close_all_nodes",
-  ["<C-r>"] = "refresh",
+  ["R"] = "refresh",
   ["<C-s>"] = {
     function(_)
       save_adjacent()
@@ -112,6 +112,8 @@ return {
   ["x"] = "cut_to_clipboard",
   ["p"] = "paste_from_clipboard",
   ["r"] = "rename",
+
+  ["D"] = "diff_files",
 
   -- create/delete
   ["dd"] = function(state)
@@ -325,6 +327,4 @@ return {
     end,
     desc = desc_tag .. "fzf-lua: live_grep in node directory (Windows/WSL/macOS/Linux)",
   },
-
-  ["D"] = "diff_files",
 }

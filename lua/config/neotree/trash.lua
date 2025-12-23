@@ -222,67 +222,104 @@ local function safe_refresh(state_name)
   end)
 end
 
+--- Collect nodes to trash:
+--- - marked nodes if present
+--- - otherwise the node under cursor
+---@param state table
+---@return table[] nodes
+local function get_nodes_to_trash(state)
+  local tree = state.tree
+  if not tree then
+    return {}
+  end
+
+  local marked = tree.get_marked_nodes and tree:get_marked_nodes() or {}
+
+  if marked and #marked > 0 then
+    return marked
+  end
+
+  local node = tree:get_node()
+  if node then
+    return { node }
+  end
+
+  return {}
+end
+
 --- Neo-tree mapping callback: move selected node to Trash and refresh the Neo-tree view.
 ---@param state table
 ---@return nil
 local function neotree_send_node_to_trash(state)
-  local node = state.tree and state.tree:get_node()
-  if not node then
-    vim.notify("No node under cursor", vim.log.levels.WARN)
+  local nodes = get_nodes_to_trash(state)
+
+  if #nodes == 0 then
+    vim.notify("No nodes selected", vim.log.levels.WARN)
     return
   end
 
-  local path = node.path or node.uri or node:get_id()
-  if not path then
-    vim.notify("Node has no path", vim.log.levels.ERROR)
+  -- Sammle Pfade
+  ---@type string[]
+  local paths = {}
+  for i = 1, #nodes do
+    local node = nodes[i]
+    local path = node.path or node.uri or node:get_id()
+    if path then
+      paths[#paths + 1] = path
+    end
+  end
+
+  if #paths == 0 then
+    vim.notify("No valid paths found", vim.log.levels.ERROR)
     return
   end
 
-  -- Prüfe ob Datei/Ordner existiert
-  local stat = uv.fs_stat(path)
-  if not stat then
-    vim.notify("Path does not exist: " .. path, vim.log.levels.WARN)
-    safe_refresh(state.name or "filesystem")
-    return
+  -- Bestätigungsdialog (Batch-aware)
+  local prompt
+  if #paths == 1 then
+    prompt = string.format("Move to Trash: %s ? (y/N) ", paths[1])
+  else
+    prompt = string.format("Move %d items to Trash? (y/N) ", #paths)
   end
 
-  local item_type = stat.type == "directory" and "directory" or "file"
-  local prompt = string.format("Move %s to Trash: %s ? (y/N) ", item_type, path)
   local ans = vim.fn.input(prompt)
   vim.api.nvim_command("redraw")
 
-  if not (ans == "y" or ans == "Y") then
+  if ans ~= "y" and ans ~= "Y" then
     vim.notify("Cancelled", vim.log.levels.INFO)
     return
   end
 
-  -- Zeige Lade-Nachricht
   vim.notify("Moving to Trash...", vim.log.levels.INFO)
 
-  -- WICHTIG: Cleanup VOR dem Löschen
-  cleanup_neotree_watchers(path)
-  close_related_buffers_and_previews(path)
+  -- Cleanup vorab
+  for i = 1, #paths do
+    local path = paths[i]
+    cleanup_neotree_watchers(path)
+    close_related_buffers_and_previews(path)
+  end
 
-  -- Lösche asynchron um Einfrieren zu vermeiden
+  -- Asynchron batchweise löschen
   vim.schedule(function()
-    -- Nochmal kurz warten nach Cleanup
     vim.defer_fn(function()
-      local ok, msg = send_to_trash(path)
+      local failed = false
 
-      if ok then
-        vim.notify("✓ Moved to Trash: " .. path, vim.log.levels.INFO)
+      for i = 1, #paths do
+        local path = paths[i]
+        local ok, msg = send_to_trash(path)
+        if not ok then
+          failed = true
+          local clean_msg = msg:match("([^\r\n]+)") or msg
+          vim.notify("✗ Failed: " .. clean_msg, vim.log.levels.ERROR)
+        end
+      end
 
-        -- Längerer Wait vor Refresh
-        vim.defer_fn(function()
-          safe_refresh(state.name or "filesystem")
-        end, 200)
-      else
-        local clean_msg = msg:match("([^\r\n]+)") or msg
-        vim.notify("✗ Failed: " .. clean_msg, vim.log.levels.ERROR)
+      vim.defer_fn(function()
+        safe_refresh(state.name or "filesystem")
+      end, 200)
 
-        vim.defer_fn(function()
-          safe_refresh(state.name or "filesystem")
-        end, 200)
+      if not failed then
+        vim.notify("✓ Moved to Trash (" .. #paths .. " items)", vim.log.levels.INFO)
       end
     end, 150)
   end)
