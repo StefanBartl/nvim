@@ -30,29 +30,56 @@ end
 -- Core: shift a single heading line
 -- ============================================================================
 
---- Shift a single line that matches an ATX heading.
---- Returns the new line and a boolean whether a change happened.
---- Non-heading lines are returned unchanged with false.
+--- Shift a single line with extended semantics:
+--- - If no heading exists and delta > 0: insert "# " in front of the line
+--- - If heading level == 1 and delta < 0: remove heading completely
+--- - Otherwise: increase/decrease heading level within bounds
+---
+--- Returns the new line and a boolean indicating whether a change happened.
 ---@param line string
 ---@param delta integer
 ---@param min_level integer
 ---@return string, boolean
 local function shift_heading_line(line, delta, min_level)
+  -- Ignore empty or whitespace-only lines
   if line == "" or line:match("^%s*$") then
     return line, false
   end
-  -- Capture leading indent + hashes, require at least one space between hashes and text.
+
+  -- Try to match an ATX heading: indent + hashes + space + text
   local hashes, rest = line:match("^(%s*#+)%s+(.*)$")
+
+  -- Case 1: no heading exists
   if not hashes then
+    -- Only react to positive delta (increase)
+    if delta > 0 then
+      -- Prepend a level-1 heading
+      return "# " .. line, true
+    end
     return line, false
   end
+
+  -- Extract indent and current level
   local indent = hashes:match("^%s*") or ""
   local level = #hashes - #indent
-  local new = math.max(min_level, math.min(6, level + delta))
-  if new == level then
+
+  -- Case 2: level-1 heading and decrease => remove heading entirely
+  if level == 1 and delta < 0 then
+    return rest, true
+  end
+
+  -- Case 3: normal level shift
+  local new_level = math.max(min_level, math.min(6, level + delta))
+  if new_level == level then
     return line, false
   end
-  return string.format("%s%s %s", indent, string.rep("#", new), rest), true
+
+  return string.format(
+    "%s%s %s",
+    indent,
+    string.rep("#", new_level),
+    rest
+  ), true
 end
 
 -- Core buffer range shifter: internal implementation (unchanged)
