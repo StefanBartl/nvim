@@ -5,7 +5,6 @@ local M = {}
 
 local api = vim.api
 local rendering = require("custom.recommender.rendering")
-local km_set = vim.keymap.set
 
 ---Check if a window is a normal, editable window
 ---@param winid integer
@@ -104,33 +103,33 @@ function M.attach(bufnr, state)
   local opts = { buffer = bufnr, silent = true, nowait = true }
 
   -- Navigation
-  km_set("n", "j", function()
+  vim.keymap.set("n", "j", function()
     move(3)
   end, opts)
 
-  km_set("n", "k", function()
+  vim.keymap.set("n", "k", function()
     move(-3)
   end, opts)
 
-  km_set("n", "<Down>", function()
+  vim.keymap.set("n", "<Down>", function()
     move(3)
   end, opts)
 
-  km_set("n", "<Up>", function()
+  vim.keymap.set("n", "<Up>", function()
     move(-3)
   end, opts)
 
   -- Close
-  km_set("n", "q", function()
+  vim.keymap.set("n", "q", function()
     rendering.close()
   end, opts)
 
-  km_set("n", "<ESC>", function()
+  vim.keymap.set("n", "<ESC>", function()
     rendering.close()
   end, opts)
 
   -- Select and insert
-  km_set("n", "<CR>", function()
+  vim.keymap.set("n", "<CR>", function()
     if not rendering.is_open() then
       return
     end
@@ -143,8 +142,9 @@ function M.attach(bufnr, state)
       return
     end
 
-    -- Store the alias text
+    -- Store the alias text and chain info
     local alias_text = item.alias
+    local chain = item.chain
 
     -- Find target window before closing
     local target_win = find_target_window()
@@ -164,7 +164,22 @@ function M.attach(bufnr, state)
         local current_buf = api.nvim_get_current_buf()
 
         if api.nvim_buf_get_option(current_buf, "modifiable") then
-          api.nvim_put({ alias_text }, "l", true, true)
+          -- Insert at current line, not after (third parameter = false)
+          api.nvim_put({ alias_text }, "l", false, true)
+
+          -- If replace mode is enabled, execute replace command
+          if state.replace_mode then
+            -- Extract variable name from alias (e.g., "api" from "local api = vim.api")
+            local var_name = alias_text:match("local%s+([%w_]+)%s*=")
+            if var_name and vim.fn.exists(":Replace") == 2 then
+              -- Execute replace command: :Replace vim.api api %
+              vim.schedule(function()
+                local replace_cmd = string.format("Replace %s %s %%", chain, var_name)
+                vim.cmd(replace_cmd)
+                vim.notify(string.format("Replaced '%s' with '%s'", chain, var_name), vim.log.levels.INFO)
+              end)
+            end
+          end
         else
           vim.notify("Cannot insert: buffer is not modifiable", vim.log.levels.WARN)
         end
@@ -173,7 +188,7 @@ function M.attach(bufnr, state)
   end, opts)
 
   -- Ignore entry
-  km_set("n", "<BS>", function()
+  vim.keymap.set("n", "<BS>", function()
     if not rendering.is_open() then
       return
     end
@@ -202,7 +217,7 @@ function M.attach(bufnr, state)
   end, opts)
 
   -- Un-ignore all
-  km_set("n", "U", function()
+  vim.keymap.set("n", "U", function()
     if not rendering.is_open() then
       return
     end
@@ -227,12 +242,12 @@ function M.attach(bufnr, state)
   end, opts)
 
   -- Help
-  km_set("n", "?", function()
+  vim.keymap.set("n", "?", function()
     local help_text = {
       "Recommender Help:",
       "",
       "j/k, ↓/↑  - Navigate",
-      "Enter     - Insert alias",
+      "Enter     - Insert alias" .. (state.replace_mode and " + auto-replace" or ""),
       "Backspace - Ignore entry",
       "U         - Un-ignore all",
       "q/Esc     - Close",

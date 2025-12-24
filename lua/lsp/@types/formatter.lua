@@ -28,3 +28,5 @@
 ---@class FormatterState
 ---@field enabled boolean
 ---@field augroup integer
+
+return {}

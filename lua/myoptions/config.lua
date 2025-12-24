@@ -8,9 +8,11 @@
 ---   :MyOptSet {key} {value}  -- operates within cfg.options
 --- Key completion is provided and values are parsed as bool/number/string automatically.
 
+require("myoptions.@types.highlight")
+
 local M = {}
 
----@type Config
+---@type MyOptionsConfig
 M.cfg = {
 
   ---@type HighlightCfg

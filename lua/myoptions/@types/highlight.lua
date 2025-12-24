@@ -307,3 +307,5 @@
 
 ---@class ModeChangedEvent
 ---@field match string  -- "<old>:<new>"
+
+return {}

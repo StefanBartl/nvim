@@ -104,12 +104,6 @@ return {
     cmd("nohlsearch")
   end,
 
-  -- ===== Alternative marking key (m is common in file managers) =============
-
-  ["m"] = function(state)
-    commands.mark.toggle_mark(state)
-  end,
-
   -- =================== Save Buffer And Nodes =========================
 
   ["<C-s>"] = {

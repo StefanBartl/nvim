@@ -161,6 +161,8 @@ return function(bufnr, callback)
               if start_col and end_col and buf then
                 local group = (i == (sig.activeParameter or 0) + 1) and "LspSignatureActiveParam"
                   or groups[(i - 1) % #groups + 1]
+                  ---@type integer
+                  local _ns = vim.api.nvim_create_namespace("my_signature_ns")
                 pcall(vim.hl.range, buf, _ns, group, { 0, start_col - 1 }, { 0, end_col }, { inclusive = false })
               end
             end

@@ -43,7 +43,7 @@ local function restore_windows(original_path, item_name)
   end
 
   -- Normalize path for Windows
-  local normalized_path = original_path:gsub("/", "\\")
+  -- local normalized_path = original_path:gsub("/", "\\")
 
   -- PowerShell script that searches by filename in Recycle Bin
   -- This is more reliable than searching by original path

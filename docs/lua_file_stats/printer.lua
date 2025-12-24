@@ -49,6 +49,7 @@ end
 ---@param folder_summary table
 ---@param _total_stats table
 ---@param cfg table
+---@diagnostic disable-next-line: unused-local
 function M.print_file_stats(folder_summary, _total_stats, cfg)
     cfg = cfg or {}
     local col_width = cfg.col_width or 7
@@ -124,9 +125,10 @@ end
 
 -- Print folder summary
 ---@param folder_summary table
----@param total_stats table
+---@param _total_stats table
 ---@param cfg table
-function M.print_folder_summary(folder_summary, total_stats, cfg)
+---@diagnostic disable-next-line: unused-local
+function M.print_folder_summary(folder_summary, _total_stats, cfg)
     cfg = cfg or {}
     local col_width = cfg.col_width or 7
     local percent_mode = cfg.percent_mode or "both"

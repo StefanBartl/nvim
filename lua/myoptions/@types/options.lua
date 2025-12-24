@@ -111,3 +111,5 @@
 ---   * Applied to `vim.opt.matchtime`; e.g., `2` ≙ ~200ms.
 --- Side-effects: longer values increase visibility but may feel intrusive.
 ---@field matchtime_tenths integer
+
+return {}

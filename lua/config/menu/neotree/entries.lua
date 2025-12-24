@@ -3,6 +3,8 @@
 --- Each key from config.neotree.keymaps.window() is represented here with
 --- an optional icon, human-readable label, and toggle for enabling/disabling.
 
+require("config.@types.menu")
+
 ---@type custom_neotree_entry[]
 local entries = {
   -- basics

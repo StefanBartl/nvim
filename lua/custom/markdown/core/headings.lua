@@ -181,11 +181,7 @@ function M.shift_selection(delta)
   erow = erow or srow
 
   -- use unified export
-  local changed = M.shift_range(srow, erow, delta)
-
-  if changed > 0 then
-    -- nothing additional required: M.shift_range already restored view when changed
-  end
+  M.shift_range(srow, erow, delta)
 end
 
 -- Operator helpers: read optional repeat count from buffer-local var

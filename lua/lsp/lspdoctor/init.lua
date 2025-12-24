@@ -24,6 +24,8 @@
 
 local M = {}
 
+require("lsp.lspdoctor.@types")
+
 -- Local aliases (cheap and clear)
 local api, lsp, diag = vim.api, vim.lsp, vim.diagnostic
 local uv = vim.uv or vim.loop
@@ -91,7 +93,7 @@ end
 -- Collection ------------------------------------------------------------------
 
 ---@param bufnr integer
----@return table<string, lsp.Client> clients_by_name, string[] names
+---@return table<string, LspClient> clients_by_name, string[] names
 local function collect_clients(bufnr)
   if type(bufnr) ~= "number" or not api.nvim_buf_is_valid(bufnr) then
     return {}, {}
@@ -133,7 +135,7 @@ end
 -- Extended checks -------------------------------------------------------------
 
 -- Offset-encoding mismatch across clients (e.g., "utf-8" vs "utf-16")
----@param clients_by_name table<string, vim.lsp.Client>
+---@param clients_by_name table<string, LspClient>
 ---@return string[] unique_encs, string[] mismatches
 local function check_offset_encoding(clients_by_name)
   local set, order = {}, {}
@@ -159,7 +161,7 @@ end
 
 -- CodeLens/InlayHints status (supported + enabled)
 ---@param bufnr integer
----@param clients_by_name table<string, lsp.Client>
+---@param clients_by_name table<string, LspClient>
 ---@return string[] lines
 local function check_lens_inlay(bufnr, clients_by_name)
   local lines = {}
@@ -167,6 +169,7 @@ local function check_lens_inlay(bufnr, clients_by_name)
   local any_inlay = false
 
   for name, c in pairs(clients_by_name) do
+    ---@cast c LspClient
     local caps = c.server_capabilities or {}
     local cl = yesno(caps.codeLensProvider ~= nil)
     local ih = yesno(caps.inlayHintProvider ~= nil)
@@ -200,9 +203,7 @@ local function check_lens_inlay(bufnr, clients_by_name)
   return lines
 end
 
--- Semantic tokens refresh probe (non-blocking, short timeout)
----@param bufnr integer
----@param clients_by_name table<string, vim.lsp.Client>
+---@param clients_by_name table<string, LspClient>  -- importiert aus lsp.@types
 ---@return string[] lines
 local function probe_semantic_tokens(bufnr, clients_by_name)
   local lines = {}
@@ -210,7 +211,6 @@ local function probe_semantic_tokens(bufnr, clients_by_name)
   local params = lsp.util.make_text_document_params(bufnr)
   local deadline = uv.now() + (Opts.semantic_tokens_timeout or 300)
 
-  -- Iterate all clients that support semanticTokens
   for name, c in pairs(clients_by_name) do
     local caps = c.server_capabilities or {}
     if caps.semanticTokensProvider ~= nil then
@@ -218,9 +218,8 @@ local function probe_semantic_tokens(bufnr, clients_by_name)
       local responded = false
       local msg = ("  %s: sent=%s responded=%s"):format(name, "no", "no")
 
-      -- Protect request sending
       local ok_req, _ = pcall(function()
-        c.request(method, params, function(err, _)
+        c:request(method, params, function(err, _)
           responded = true
           if err then
             msg = ("  %s: sent=yes responded=error (%s)"):format(name, tostring(err.message or err))
@@ -228,16 +227,14 @@ local function probe_semantic_tokens(bufnr, clients_by_name)
             msg = ("  %s: sent=yes responded=ok"):format(name)
           end
         end, bufnr)
+
         ok_sent = true
       end)
 
       if not ok_req then
         msg = ("  %s: sent=error (request failed to start)"):format(name)
       else
-        -- Lightweight wait loop up to timeout (does not block UI events)
-        -- Note: we yield to the loop by scheduling and sleeping minimally.
         while not responded and uv.now() < deadline do
-          -- Let the loop progress; tiny sleep to avoid busy loop
           uv.sleep(5)
         end
         if ok_sent and not responded then
@@ -255,7 +252,7 @@ local function probe_semantic_tokens(bufnr, clients_by_name)
 end
 
 -- Provider conflicts (formatting/diagnostics)
----@param clients_by_name table<string, lsp.Client>
+---@param clients_by_name table<string, LspClient>
 ---@return string[] conflicts
 local function detect_conflicts(clients_by_name)
   local conflicts = {}
@@ -282,7 +279,7 @@ end
 
 -- Formatter policy winner -----------------------------------------------------
 
----@param clients_by_name table<string, lsp.Client>
+---@param clients_by_name table<string, LspClient>
 ---@return string|nil winner, string[] candidates_sorted, string reason
 local function pick_formatter(clients_by_name)
   local candidates = {}

@@ -1,7 +1,7 @@
 ---@module 'plugins.workflow'
 --- Tools for organizing development workflow (TODOs, annotations, reminders).
 
-local KEYWORDS = require("config.todo_comments.keywords")
+-- local KEYWORDS = require("config.todo_comments.keywords")
 
 ---@type LazyPluginSpec[]
 return {

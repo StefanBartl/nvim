@@ -19,7 +19,7 @@ local function validate_patch_file(entry)
   if not utils.file_exists(entry.patch) then
     logger.error("Patch file not found", {
       key = entry.key,
-      path = entry.patch
+      path = entry.patch,
     })
     return {
       valid = false,
@@ -32,7 +32,7 @@ local function validate_patch_file(entry)
   if not content then
     logger.error("Cannot read patch file", {
       key = entry.key,
-      error = err
+      error = err,
     })
     return {
       valid = false,
@@ -45,7 +45,7 @@ local function validate_patch_file(entry)
     content = content:sub(4)
     logger.warn("Removed UTF-8 BOM from patch file", {
       key = entry.key,
-      path = entry.patch
+      path = entry.patch,
     })
   end
 
@@ -62,7 +62,7 @@ local function validate_patch_file(entry)
       has_diff_header = has_diff_header,
       has_unix_marker = has_unix_marker,
       has_windows_marker = has_windows_marker,
-      first_100_chars = content:sub(1, 100)
+      first_100_chars = content:sub(1, 100),
     })
     return {
       valid = false,
@@ -73,7 +73,7 @@ local function validate_patch_file(entry)
   logger.debug("Patch file validated", {
     key = entry.key,
     size = #content,
-    format = has_windows_marker and "windows" or (has_diff_header and "git" or "unified")
+    format = has_windows_marker and "windows" or (has_diff_header and "git" or "unified"),
   })
 
   return { valid = true }
@@ -122,9 +122,9 @@ local function check_already_applied_async(entry, callback)
     entry.target,
   }
 
-  ---@type userdata|uv.uv_stream_t|nil
+  ---@type uv.uv_handle_t
   local stdout = uv.new_pipe(false)
-  ---@type userdata|uv.uv_stream_t|nil
+  ---@type uv.uv_handle_t
   local stderr = uv.new_pipe(false)
 
   local stdout_data = {}
@@ -161,6 +161,7 @@ local function check_already_applied_async(entry, callback)
 
   -- Read stdout/stderr (we discard them for dry-run)
   if stdout then
+    ---@cast stdout uv.uv_pipe_t
     stdout:read_start(function(_, data)
       if data then
         table.insert(stdout_data, data)
@@ -169,6 +170,7 @@ local function check_already_applied_async(entry, callback)
   end
 
   if stderr then
+    ---@cast stderr uv.uv_pipe_t
     stderr:read_start(function(_, data)
       if data then
         table.insert(stderr_data, data)

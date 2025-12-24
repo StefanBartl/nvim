@@ -1,5 +1,7 @@
 ---@module 'autocmds.markdown.helpers'
 
+require("@tyoes.tsnode")
+
 local M = {}
 
 --- Create/clear a namespaced augroup.

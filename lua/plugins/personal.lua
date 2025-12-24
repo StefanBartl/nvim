@@ -25,6 +25,7 @@ return {
           "StefanBartl/nvim-cmdlog",
           "StefanBartl/nvim-containers",
           "StefanBartl/replacer",
+          "StefanBartl/reposcope.nvim",
           "StefanBartl/telescope-selected-index",
         },
         -- token_source = "file",
@@ -160,8 +161,8 @@ return {
   },
 
   {
-    -- dir = vim.fn.expand(vim.env.REPOS_DIR .. "/replacer"),
-    "StefanBartl/replacer",
+    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/replacer"),
+    -- "StefanBartl/replacer",
     cmd = { "Replace" },
     dependencies = {
       -- wähle je nach Engine:

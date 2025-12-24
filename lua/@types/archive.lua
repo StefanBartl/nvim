@@ -32,3 +32,5 @@
 ---@class ModuleSizeRow
 ---@field mod string
 ---@field size number  -- size in MiB (approx)
+
+return {}

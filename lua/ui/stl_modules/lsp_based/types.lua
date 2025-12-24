@@ -43,3 +43,5 @@
 ---@field path_min_room? number
 ---@field path_mode PathMode_t
 ---@field path_home_tilde Path_home_tilde_t
+
+return {}

@@ -1,6 +1,6 @@
-# Recommender
+# Neovim Recommender Plugin
 
-Ein Neovim-Usercommand, das wiederholte Lua-Chains analysiert und lokale Alias-Vorschläge macht.
+Ein Neovim-Plugin, das wiederholte Lua-Chains analysiert und lokale Alias-Vorschläge macht.
 
 ## Features
 
@@ -43,7 +43,25 @@ Ein Neovim-Usercommand, das wiederholte Lua-Chains analysiert und lokale Alias-V
 
 " Beides kombiniert
 :Recommender treesitter 4
+
+" Mit Replace-Mode (-r): Nach Einfügen automatisch ersetzen
+:Recommender -r
+:Recommender -r regex 3
+:Recommender --replace treesitter 5
 ```
+
+### Replace-Mode Feature
+
+Mit dem `-r` oder `--replace` Flag wird nach dem Einfügen eines Alias automatisch der `:Replace` Command ausgeführt:
+
+**Beispiel-Workflow:**
+1. Buffer enthält mehrfach `vim.api.nvim_create_buffer(...)`
+2. `:Recommender -r` ausführen
+3. `local api = vim.api` mit Enter einfügen
+4. **Automatisch wird ausgeführt:** `:Replace vim.api api %`
+5. Alle Vorkommen von `vim.api` werden durch `api` ersetzt
+
+**Voraussetzung:** Das `:Replace` Command muss verfügbar sein.
 
 ### Keybindings im Float-Window
 
@@ -159,3 +177,10 @@ require("custom.recommender").setup({
 - Installiere den Lua-Parser: `:TSInstall lua`
 - Verwende alternativ den `regex`-Analyzer
 
+## Lizenz
+
+MIT
+
+## Autor
+
+Dein Name

@@ -1,6 +1,8 @@
 ---@module 'config.menu.neotree.entries'
 --- Entries table für Neo-tree context menu mit node_type Filter ("any", "file", "folder").
 
+require("config.@types.menu")
+
 ---@type custom_neotree_entry[]
 local entries = {
   -- Basic navigation

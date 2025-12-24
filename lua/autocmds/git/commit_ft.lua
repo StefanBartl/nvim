@@ -9,7 +9,8 @@ local api = vim.api
 ---@param cfg GitAutoCmdsCommitFtCfg
 ---@param _shared table
 ---@return nil
-function M.enable(cfg, _)
+---@diagnostic disable-next-line: unused-local
+function M.enable(cfg, _shared)
   if not (cfg and cfg.enable) then
     return
   end

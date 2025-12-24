@@ -137,15 +137,10 @@ local function apply_patch_async(entry, callback)
       })
     end
 
-    ---@class uv.pipe_t: userdata
-    ---@field read_start fun(self: uv.pipe_t, callback: fun(err:any, data:string?))
-    ---@field close fun(self: uv.pipe_t)
-    ---@field is_closing fun(self: uv.pipe_t): boolean
-
+    ---@type uv.uv_pipe_t|nil
     local stdout = uv.new_pipe(false)
-    ---@cast stdout userdata|uv.uv_stream_t
+    ---@type uv.uv_pipe_t|nil
     local stderr = uv.new_pipe(false)
-    ---@cast stderr userdata|uv.uv_stream_t
 
     local stdout_chunks = {}
     local stderr_chunks = {}

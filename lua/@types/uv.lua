@@ -23,3 +23,11 @@ function uv.fs_opendir(path, entries) end
 --- @return string? err_name
 --- @overload fun(path: string, callback: fun(err: string?, stat: uv.fs_stat.result?)): uv.uv_fs_t
 function uv.fs_lstat(path) end
+
+---@class uv.pipe_t: userdata
+---@field read_start fun(self: uv.pipe_t, callback: fun(err:any, data:string?))
+---@field close fun(self: uv.pipe_t)
+---@field is_closing fun(self: uv.pipe_t): boolean
+
+return {}
+

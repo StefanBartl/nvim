@@ -14,14 +14,6 @@ local function is_h2_or_more(line)
   return line:match("^##+%s") ~= nil
 end
 
---- Check if a line is any heading (including H1)
----@param line string The line to check
----@return boolean true if line starts with # followed by whitespace
-local function is_heading(line)
-  -- Match lines starting with any number of hashes followed by whitespace
-  return line:match("^#+%s") ~= nil
-end
-
 --- Find the next H2+ heading after the given index
 ---@param lines string[] All buffer lines
 ---@param start_idx integer 1-based index to start searching from
