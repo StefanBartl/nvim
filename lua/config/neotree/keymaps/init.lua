@@ -188,7 +188,7 @@ return {
     desc = desc_tag .. "Open with System Application",
   },
 
-  ["<S-f>"] = {
+  ["L"] = {
     function(state)
       local mod
       if fn.has("win32") == 1 or fn.has("win64") == 1 then

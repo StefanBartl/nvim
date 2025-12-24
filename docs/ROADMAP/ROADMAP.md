@@ -2,9 +2,12 @@
 
 ## MIXED
 
-- `custom.functions` verwenden, um funktionen, die sowohl mappings als auch usercommands begründen.
-- lsp.tools behandeln
-- [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
+- Neotree mappings so schreiben, dass auch nvimtree/netrw möglich wäre
+    . DAs bedeutet auch, dass alle lib funktionen inerhalb der filtree filesystem ist, danmit keine dependencies entstehen
+I    . Die meisten helper sollten eigenltich als commands implementiert werden
+ `custom.functions` verwenden, um funktionen, die sowohl mappings als auch usercommands begründen.
+ lsp.tools behandeln
+ [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 
 ## ideas
 
