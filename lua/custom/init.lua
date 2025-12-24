@@ -1,6 +1,7 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
+require("custom.function_index").setup()
 require("custom.recommender").setup()
 
 require("custom.find_config").enable({ usercmds = true, keymaps = true })

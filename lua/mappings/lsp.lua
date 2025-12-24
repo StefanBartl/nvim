@@ -31,7 +31,7 @@ function M.setup()
   -- Format
   -----------------------------------------------
 
-  map("n", "<leader>tf", function()
+  map("n", "<leader>tft", function()
     -- Prefer a cached/shared API if present
     if vim.g._formatter_api and type(vim.g._formatter_api.toggle) == "function" then
       vim.g._formatter_api.toggle()

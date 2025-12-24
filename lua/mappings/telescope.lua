@@ -11,7 +11,6 @@ local M = {}
 function M.setup()
   local map = vim.g.__map_helper
 
-
   map("n", "<leader>ts", ":Telescope<CR>", { desc = "[Telescope] UI" })
   map("n", "<leader>tg", function()
     local ok, tb = pcall(require, "telescope.builtin")
@@ -31,11 +30,37 @@ function M.setup()
   map("n", "<leader>cb", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "[Telescope] In Buffer" })
   map("n", "<leader>ff", "<cmd>Telescope find_files<CR>", { desc = "[Telescope] Find Files" })
 
-  map("n", "<leader>fa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>", { desc = "[Telescope] Find All Files" })
+  map(
+    "n",
+    "<leader>fa",
+    "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
+    { desc = "[Telescope] Find All Files" }
+  )
+
+  map("n", "<leader>ttf", function()
+    -- Require telescope.builtin lazily to avoid startup overhead
+    local ok, builtin = pcall(require, "telescope.builtin")
+    if not ok then
+      vim.notify("telescope.nvim not available", vim.log.levels.ERROR)
+      return
+    end
+
+    builtin.treesitter({
+      -- Pre-fill the Telescope prompt
+      default_text = "function",
+
+      -- Optional: start in normal mode disabled so filtering is active immediately
+      initial_mode = "insert",
+    })
+  end, {
+    noremap = true,
+    silent = true,
+    desc = "[Telescope] Treesitter (prefilled: function)",
+  })
 
   ---==== Telescope file browser extension mappings =====---
 
-    map("n", "<leader>,", function()
+  map("n", "<leader>,", function()
     local ok, telescope = pcall(require, "telescope")
     if not ok then
       return
@@ -56,7 +81,6 @@ function M.setup()
       path = vim.loop.cwd(),
     })
   end, { desc = "[Telescope] File Browser (at CWD)" })
-
 end
 
 return M
