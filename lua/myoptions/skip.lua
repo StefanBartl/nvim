@@ -7,7 +7,7 @@
 -- local matchers = M.build_matchers(C.cfg.skip)
 -- local function buffer_is_ui_like(bufnr) return M.buffer_is_ui_like(matchers, bufnr) end
 
-require("lua.myoptions.@types.skip")
+require("myoptions.@types.skip")
 
 local M = {}
 

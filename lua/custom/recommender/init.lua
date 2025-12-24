@@ -1,11 +1,15 @@
 ---@module 'custom.recommender'
 ---Public API
 
-local M = {}
-
 local rendering = require("custom.recommender.rendering")
 local keymaps = require("custom.recommender.keymaps")
 local custom_aliases = require("custom.recommender.custom_aliases")
+
+local M = {}
+
+local api = vim.api
+local notify, levels = vim.notify, vim.log.levels
+local km_set = vim.keymap.set
 
 local analyzers = {
   regex = require("custom.recommender.regex"),
@@ -30,7 +34,7 @@ local ignore_by_buf = {}
 function M.setup(opts)
   opts = vim.tbl_extend("force", default_opts, opts or {})
 
-  vim.api.nvim_create_user_command("Recommender", function(cmd)
+  api.nvim_create_user_command("Recommender", function(cmd)
     -- Parse arguments
     local args = vim.split(vim.trim(cmd.args or ""), "%s+")
 
@@ -55,7 +59,7 @@ function M.setup(opts)
       return
     end
 
-    local bufnr = vim.api.nvim_get_current_buf()
+    local bufnr = api.nvim_get_current_buf()
     ignore_by_buf[bufnr] = ignore_by_buf[bufnr] or {}
 
     local state = {}
@@ -69,12 +73,12 @@ function M.setup(opts)
       local ok, err = pcall(function()
         -- Ensure we analyze the source buffer, not the float
         local all
-        if state.source_bufnr and vim.api.nvim_buf_is_valid(state.source_bufnr) then
-          vim.api.nvim_buf_call(state.source_bufnr, function()
+        if state.source_bufnr and api.nvim_buf_is_valid(state.source_bufnr) then
+          api.nvim_buf_call(state.source_bufnr, function()
             all = analyzers[analyzer].analyze(threshold, state.custom_aliases)
           end)
         else
-          vim.notify("Source buffer is no longer valid", vim.log.levels.WARN)
+          notify("Source buffer is no longer valid", levels.WARN)
           rendering.close()
           return
         end
@@ -88,7 +92,7 @@ function M.setup(opts)
         end
 
         if #state.visible == 0 then
-          vim.notify("No suggestions found (threshold: " .. threshold .. ")", vim.log.levels.INFO)
+          notify("No suggestions found (threshold: " .. threshold .. ")", levels.INFO)
           rendering.close()
           return
         end
@@ -102,13 +106,13 @@ function M.setup(opts)
         rendering.open(state.visible, title, current_index)
 
         -- Attach keymaps after window is opened
-        if rendering.float_buf and vim.api.nvim_buf_is_valid(rendering.float_buf) then
+        if rendering.float_buf and api.nvim_buf_is_valid(rendering.float_buf) then
           keymaps.attach(rendering.float_buf, state)
         end
       end)
 
       if not ok then
-        vim.notify("Recommender error: " .. tostring(err), vim.log.levels.ERROR)
+        notify("Recommender error: " .. tostring(err), levels.ERROR)
         rendering.close()
       end
     end
@@ -121,30 +125,30 @@ function M.setup(opts)
   })
 
   -- Optional: Keymap für schnellen Zugriff
-  vim.keymap.set("n", "<leader>lr", "<cmd>Recommender<cr>", {
+  km_set("n", "<leader>lr", "<cmd>Recommender<cr>", {
     desc = "Lua Recommender",
     silent = true,
   })
 
   -- Mit Replace-Mode
-  vim.keymap.set("n", "<leader>lR", "<cmd>Recommender -r<cr>", {
+  km_set("n", "<leader>lR", "<cmd>Recommender -r<cr>", {
     desc = "Lua Recommender (Replace Mode)",
     silent = true,
   })
 
   -- Alternative: Mit verschiedenen Analyzern
-  vim.keymap.set("n", "<leader>lrr", "<cmd>Recommender regex<cr>", {
+  km_set("n", "<leader>lrr", "<cmd>Recommender regex<cr>", {
     desc = "Recommender (Regex)",
     silent = true,
   })
 
-  vim.keymap.set("n", "<leader>lrt", "<cmd>Recommender treesitter<cr>", {
+  km_set("n", "<leader>lrt", "<cmd>Recommender treesitter<cr>", {
     desc = "Recommender (Treesitter)",
     silent = true,
   })
 
   -- Mit höherem Threshold für große Dateien
-  vim.keymap.set("n", "<leader>lrh", "<cmd>Recommender regex 5<cr>", {
+  km_set("n", "<leader>lrh", "<cmd>Recommender regex 5<cr>", {
     desc = "Recommender (High Threshold)",
     silent = true,
   })

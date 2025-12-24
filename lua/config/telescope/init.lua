@@ -12,6 +12,7 @@ local history = require("config.telescope.history")
 local history_keymaps = require("config.telescope.history.keymaps")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
 local hl_selection = require("config.telescope.ui.hl_selection")
+local bg = require("config.telescope.open_background")
 
 local notify = vim.notify
 local levels = vim.log.levels
@@ -33,10 +34,8 @@ function M.defaults()
   local hist_config = history.setup()
 
   -- Merge history and file browser keymaps
-  local km = vim.tbl_deep_extend("force",
-    history.is_available() and history_keymaps.get(actions) or {},
-    fb_keymaps.get(actions)
-  )
+  local km =
+    vim.tbl_deep_extend("force", history_keymaps.get(actions) or {}, fb_keymaps.get(actions), bg.get_mappings())
 
   return {
     path_display = function(picker_opts, path)
@@ -104,10 +103,7 @@ function M.setup(opts)
   for _, ext in ipairs(opts.extensions_list or {}) do
     local ok, err = pcall(telescope.load_extension, ext)
     if not ok then
-      notify(
-        string.format("Failed to load telescope extension '%s': %s", ext, err),
-        levels.WARN
-      )
+      notify(string.format("Failed to load telescope extension '%s': %s", ext, err), levels.WARN)
     end
   end
 
