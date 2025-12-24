@@ -8,7 +8,7 @@
 --- - Optional: priority, strip level, enabled flag
 
 -- Path helpers for cross-platform compatibility
---- C:\Users\Bernhard\AppData\Local\nvim-data
+--- C:\Users\bartl\AppData\Local\nvim-data
 local data = vim.fn.stdpath("data") --[[@as string]]
 local config = vim.fn.stdpath("config") --[[@as string]]
 

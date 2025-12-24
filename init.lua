@@ -32,7 +32,7 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- ===================================================================================
 require("system.env").compute_env()
 require("options")
-require("myoptions").setup({ highlights = true, options = true })
+require("myoptions").setup({ highlights = false, options = true })
 require("lsp").setup({ ensure_installing = false })
 require("autocmds")
 require("custom")
@@ -50,3 +50,6 @@ end)
 -- This allows `nvr --server \\.\pipe\nvim-<USERNAME>` to always target this instance.
 -- ===================================================================================
 require("system.rpc_pipe").setup({ debug = false })
+
+
+-- require("config.patches")

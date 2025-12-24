@@ -1,7 +1,7 @@
 ---@module 'config.treesitter.parser'
 
 --- Return a list of Tree-sitter parsers to ensure installed
----@return TSParser[]
+---@return string[]
 return {
   "bash",
   "c",

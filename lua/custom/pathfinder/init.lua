@@ -5,7 +5,7 @@
 local M = {}
 
 -- require submodules
-local notifier = require("custom.pathfinder.notifier")
+-- local notifier = require("custom.pathfinder.notifier")
 local commands = require("custom.pathfinder.commands")
 
 --- Default configuration. Users may override via setup(opts).

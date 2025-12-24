@@ -23,3 +23,5 @@
 ---@class SessionInfo
 ---@field name SessionName
 ---@field path SessionsPath
+
+return {}

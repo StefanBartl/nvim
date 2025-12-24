@@ -45,6 +45,7 @@ local function wrap_publish_diagnostics(opts)
     return
   end
 
+  ---@diagnostic disable-next-line
   vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
     if not result or not result.diagnostics then
       return orig(err, result, ctx, config)

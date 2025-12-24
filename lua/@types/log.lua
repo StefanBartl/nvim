@@ -18,3 +18,5 @@
 ---| 5 # OFF
 
 ---@alias LogLevel LogLevelNumber|LogLevelString
+
+return {}

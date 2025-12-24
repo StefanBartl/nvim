@@ -1,6 +1,9 @@
 ---@module 'autocmds.general.gofile_cases.p3_url'
 --- Case 3: Handle URL-like targets. Attempts to open via system opener.
 --- Returns true if opened, false otherwise.
+
+require("@tyoes.tsnode")
+
 local M = {}
 
 local function is_url_like(s)

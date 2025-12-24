@@ -160,3 +160,5 @@
 --- Rebuild decorations immediately for the active window/buffer.
 ---@field enable fun():nil
 --- Ensure autocommands/timers are installed and perform an initial paint.
+
+return {}

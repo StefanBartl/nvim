@@ -2,6 +2,7 @@
 
 local M = {}
 
+local move_buf_tab = require("custom.functions.buf_win_tabs.move_buffer_to_tab").move_current_buffer_to_new_tab
 local terminal_lib = require("lib.terminals")
 local is_terminal_buf, delete_terminal_buf = terminal_lib.is_terminal_buf, terminal_lib.delete_terminal_buf
 
@@ -191,10 +192,11 @@ function M.setup()
   map("n", "<leader>tx", "<cmd>tabclose<CR>", { desc = "[Tabs] Close tab" })
   map("n", "<leader>tr", function()
     require("nvchad.tabufline").move_buf(1)
-  end, { desc = "[Tab] Move tab right" })
+  end, { desc = "[Tabs] Move tab right" })
   map("n", "<leader>tl", function()
     require("nvchad.tabufline").move_buf(-1)
-  end, { desc = "[Tab] Move tab left" })
+  end, { desc = "[Tabs] Move tab left" })
+  map("n", "<leader>tt", move_buf_tab, { desc = "[Tabs] Move current buffer to new tab" })
 end
 
 return M

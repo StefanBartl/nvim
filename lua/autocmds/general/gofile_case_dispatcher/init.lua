@@ -1,4 +1,6 @@
----@modules 'autocmds.general.gofile_case_dispatcher'
+---@module 'autocmds.general.gofile_case_dispatcher'
+
+require("@types.tsnode")
 
 local logger_mod = require("autocmds.general.gofile_logger")
 local resolve_tilde_helper = require("autocmds.general.gofile_cases.helper.resolve_tilde")
@@ -34,7 +36,7 @@ return function(node, bufnr, ts_utils, cfg, cases)
   local last_attempted_path = nil
 
   for idx, case_mod in ipairs(cases) do
-    local name = case_mod._NAME or ("case#" .. idx)
+    local _ = case_mod._NAME or ("case#" .. idx)
 ---    logger.debug("dispatcher:invoke", { idx = idx, name = name })
 
     local ok, first_ret, second_ret = pcall(function()

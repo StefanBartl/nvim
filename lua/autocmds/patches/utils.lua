@@ -206,4 +206,29 @@ function M.ensure_dir(dirpath)
   return true
 end
 
+function M.measure_patch_time()
+  local start = vim.loop.now()
+
+  require("autocmds.patches").apply_all_async(function(results)
+    local duration = vim.loop.now() - start
+
+    local total = #results
+    local succeeded = vim.tbl_count(vim.tbl_filter(function(r)
+      return r.success
+    end, results))
+
+    vim.notify(
+      string.format(
+        "Patches applied: %d/%d in %.2fs (avg: %.2fs per patch)",
+        succeeded,
+        total,
+        duration / 1000,
+        duration / 1000 / math.max(1, total)
+      ),
+      vim.log.levels.INFO
+    )
+  end)
+end
+
+
 return M

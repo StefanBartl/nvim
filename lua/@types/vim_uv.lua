@@ -108,3 +108,5 @@ function uv.os_getpid() end
 function uv.cwd() end
 
 vim.uv = uv
+
+return {}

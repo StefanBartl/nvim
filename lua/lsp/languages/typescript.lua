@@ -1,9 +1,11 @@
 ---@module 'lsp.languages.typescript'
 
-local lsp = vim.lsp
-local api = vim.api
+require("lua.myoptions.@types")
 
 local M = {}
+
+local lsp = vim.lsp
+local api = vim.api
 
 --- Check whether a client supports a given CodeActionKind.
 ---@param client LspClient

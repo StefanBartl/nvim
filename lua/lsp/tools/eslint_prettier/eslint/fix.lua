@@ -64,7 +64,7 @@ function M.eslint_fix(bufnr)
   end
 
   -- Write buffer before running eslint
-  if api.nvim_buf_get_option(bufnr, "modified") then
+  if api.nvim_get_option_value("modified", { buf = bufnr }) then
     api.nvim_buf_call(bufnr, function()
       vim.cmd("write!")
     end)

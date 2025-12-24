@@ -46,7 +46,7 @@ end
 
 --- Normalize Location or LocationLink -> fname, srow, scol, erow, ecol
 ---@param item table
----@return string, number, number, number, number
+---@return string|nil, number, number, number, number
 local function loc_to_path_range(item)
   local uri = item.uri or item.targetUri or (item.location and (item.location.uri or item.location.targetUri))
   local range = item.range or item.targetSelectionRange or item.targetRange or (item.location and item.location.range)

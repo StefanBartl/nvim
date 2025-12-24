@@ -1,6 +1,9 @@
 ---@module 'autocmds.general.gofile_cases.p1_inline'
 --- Case 1: Resolve inline link destinations, e.g. [text](dest).
 --- Returns boolean, path (path returned if not opened directly).
+
+require("@tyoes.tsnode")
+
 local M = {}
 
 local find_parent = require("autocmds.general.gofile_cases.helper.find_parent")

@@ -12,6 +12,7 @@ function M.setup()
 
   local orig = vim.lsp.handlers["textDocument/publishDiagnostics"]
 
+  ---@diagnostic disable-next-line
   vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, conf)
     if result and type(result.diagnostics) == "table" then
       -- shallow copy to avoid mutating LSP payload

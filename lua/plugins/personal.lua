@@ -10,12 +10,80 @@ end
 return {
 
   {
+    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/github_stats.nvim"),
+    lazy = false,
+    config = function()
+      require("github_stats").setup({
+        repos = {
+          "StefanBartl/color_my_ascii.nvim",
+          "StefanBartl/github_stats.nvim",
+          "StefanBartl/gopath.nvim",
+          "StefanBartl/mdlinks",
+          "StefanBartl/mdview.nvim",
+          "StefanBartl/monkeypatch.nvim",
+          "StefanBartl/mygrep.nvim",
+          "StefanBartl/nvim-cmdlog",
+          "StefanBartl/nvim-containers",
+          "StefanBartl/replacer",
+          "StefanBartl/reposcope.nvim",
+          "StefanBartl/telescope-selected-index",
+        },
+        -- token_source = "file",
+        -- token_file = "~/.github_token",
+
+        -- config_dir = "~/my-github-stats",
+        -- data_dir = "c:/Users/bartl/AppData/Local/nvim-data/github_stats_daten",
+      })
+    end,
+  },
+
+  -- {
+  --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/monkeypatch.nvim"),
+  --   lazy = false,
+  --   config = function()
+  --     require("monkeypatch").setup({
+  --       -- Strategy execution order (first to last)
+  --       strategy_order = { "diff", "semantic" },
+  --
+  --       -- Which strategies are enabled
+  --       enabled_strategies = {
+  --         diff = true,
+  --         semantic = true,
+  --         treesitter = false, -- Experimental
+  --       },
+  --
+  --       -- Parallel patch operations
+  --       max_concurrency = 3,
+  --
+  --       -- Per-patch timeout
+  --       timeout_ms = 30000,
+  --
+  --       -- Show notifications
+  --       notify = true,
+  --
+  --       -- Debug logging
+  --       verbose = false,
+  --
+  --       -- Delay after LazyUpdate event
+  --       lazy_update_delay_ms = 1000,
+  --
+  --       -- Diff fuzz factor (0-3)
+  --       diff_fuzz_factor = 2,
+  --
+  --       -- Semantic mode: strict (reject on hash mismatch) or permissive (warn)
+  --       semantic_strict = true,
+  --     })
+  --   end,
+  -- },
+
+  {
     -- "StefanBartl/color_my_ascii.nvim",
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/color_my_ascii.nvim"),
     ft = "markdown",
     config = function()
       require("color_my_ascii").setup({
-        debug_enabled = true,
+        debug_enabled = false,
+        debug_verbose = false,
         scheme = "default",
         enable_keywords = true,
         enable_language_detection = true,
@@ -92,24 +160,6 @@ return {
     end,
   },
 
-  -- {
-  -- 	dir = [[E:\repos\objtrack]], -- Repo-Root mit lua/ darunter
-  -- 	name = "objtrack",
-  -- 	main = "objtrack",         -- lädt lua/objtrack/init.lua als Haupteinstieg
-  -- 	lazy = false,              -- fürs Debuggen: hart beim Start laden
-  -- 	config = function()
-  -- 		require("objtrack").setup({
-  -- 			view_mode = "float",
-  -- 			prefer_telescope = true,
-  -- 			auto_rescan = false,
-  -- 			border = "rounded",
-  -- 			max_preview_lines = 5000,
-  -- 			blacklist_filetypes = { "help", "TelescopePrompt", "neo-tree", "lazy" },
-  -- 			keymaps = { pick = "<leader>op", rescan = "<leader>os" },
-  -- 		})
-  -- 	end,
-  -- },
-
   {
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/replacer"),
     -- "StefanBartl/replacer",
@@ -130,8 +180,8 @@ return {
   },
 
   {
-    dir = vim.env.REPOS_DIR .. "/gopath.nvim",
-    -- "StefanBartl/gopath.nvim",
+    -- dir = vim.env.REPOS_DIR .. "/gopath.nvim",
+    "StefanBartl/gopath.nvim",
     event = "VeryLazy",
     dependencies = {
       "nvim-treesitter/nvim-treesitter", -- Optional but recommended
@@ -172,8 +222,8 @@ return {
   },
 
   {
-    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/mdlinks"),
-    -- "StefanBartl/mdlinks",
+    -- dir = vim.fn.expand(vim.env.REPOS_DIR .. "/mdlinks"),
+    "StefanBartl/mdlinks",
     ft = "*",
     config = function()
       require("mdlinks.config").setup({
@@ -217,20 +267,6 @@ return {
       end,
     },
 
-    ]]
-  --
-
-  -- myterm.local: Custom terminal interface with layout switching
-  --[[
-    {
-      name = "myterm.local",
-      dir = myterm_local_dir(),
-      cond = exists(myterm_local_dir()),
-      lazy = false,
-      config = function()
-        require("custom.myterm")
-      end,
-    },
     ]]
   --
 

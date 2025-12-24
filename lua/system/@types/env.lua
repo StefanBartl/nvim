@@ -10,3 +10,5 @@
 ---@field repo_base string
 ---@field pathsep string
 ---@field home string
+
+return {}

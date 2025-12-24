@@ -31,8 +31,11 @@
 ---@field _ctx_lang_extra fun():string|nil                   -- Language-specific fallback/owner
 ---@field _ctx_word_fallback fun():string|nil                -- <cword> fallback (non-insert mode)
 ---@field _build_context fun():string|nil                    -- Full provider pipeline (final)
+---@field _ctx_base_token fun():string|nil
 
 ---@class MyHighlightDebugOpts
 ---@field names MyHighlightDebugNames|nil         -- Optional names table (command overrides)
 ---@field mod   MyBreadcrumbsCtxModule|nil        -- Optional module exposing providers
 ---@field sepfn fun():string|nil                  -- Optional separator resolver (returns string)
+
+return {}

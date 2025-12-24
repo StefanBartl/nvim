@@ -3,6 +3,8 @@
 --- Returns the found node or nil.
 --- Usage: local node = require('autocmds.general.gofile_cases.helper.find_parent')(start_node, { "link_destination" })
 
+require("@tyoes.tsnode")
+
 ---@param node TSNode|nil
 ---@param types string[] list of node type names to match
 ---@return TSNode|nil

@@ -20,11 +20,9 @@ return {
       })
       require("config.harpoon.persist_paths").setup({
         target_specs = {
+          { "$REPOS_DIR", "Notes", "spickzettel.md" },
           { "$REPOS_DIR", "Notes", "MyNotes", "Notes.md" },
-          { "$REPOS_DIR", "Notes", "MyNotes", "Neovim", "Neovim.md" },
           { "$REPOS_DIR", "Notes", "MyNotes", "Checklists", "Lua", "Arch&Coding-Regeln.md" },
-          { "$NVIM_HOME", "docs", "spickzettel.md" },
-          { "$REPOS_DIR", "Notes", "MyNotes", "Neovim", "09_fonts", "unicode", "dev-palette.md" },
         },
       })
       require("config.harpoon.preview").install_alt_number_maps()

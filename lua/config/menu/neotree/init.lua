@@ -5,6 +5,8 @@
 --- that are both enabled in the entries list and implemented in
 --- config.neotree.keymaps().window().
 
+require("config.@types.menu")
+
 local M = {}
 
 --- Default icon used when an entry does not specify one.

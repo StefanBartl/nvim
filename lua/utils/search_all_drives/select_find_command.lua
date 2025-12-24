@@ -20,9 +20,6 @@ local M = {}
 
 -- Local aliases kept minimal; no globals leaked.
 local uv = vim and (vim.uv or vim.loop) or nil
-local fn_executable = (vim and vim.fn and vim.fn.executable) or function()
-  return 0
-end
 
 --- Lightweight OS check (pure; no I/O).
 ---@return boolean
@@ -43,7 +40,7 @@ local function has_exec(name)
   if type(name) ~= "string" or name == "" then
     return false
   end
-  return fn_executable(name) == 1
+  return vim.fn.executable(name) == 1
 end
 
 --- Build argv for fd with sensible defaults.

@@ -7,6 +7,8 @@
 --- - Blacklists for buffers/filetypes/paths to avoid serializing ephemeral state
 --- All values are intentionally explicit to reduce surprises across machines.
 
+require("sessions.@types")
+
 ---@class SessionsConfigModule
 local M = {}
 

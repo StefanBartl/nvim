@@ -54,7 +54,7 @@ function M.prettier_format(bufnr)
     return
   end
 
-  if api.nvim_buf_get_option(bufnr, "modified") then
+  if api.nvim_get_option_value("modified", { buf = bufnr }) then
     api.nvim_buf_call(bufnr, function()
       vim.cmd("write!")
     end)

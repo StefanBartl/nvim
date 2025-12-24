@@ -19,7 +19,7 @@ function M.setup(opts)
   local enable_opt = (opts.options ~= nil) and opts.options or false
 
   if enable_hl then
-    -- require("myoptions.Highlight_Cfg").enable()
+    require("myoptions.Highlight_Cfg").enable()
   end
   if enable_opt then
     require("myoptions.Options_Cfg").enable()

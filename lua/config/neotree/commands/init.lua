@@ -4,6 +4,10 @@
 
 local getTelescopeOpts = require("config.neotree.commands.get_telescope_opts")
 local diff_files_mod = require("config.neotree.commands.diff_files")
+local mark_mod = require("config.neotree.commands.mark")
+
+local api, fn = vim.api, vim.fn
+local notify = vim.notify
 
 --- Commands table for Neo-tree's `opts.commands`.
 ---@return table<string, fun(state: table)>
@@ -26,19 +30,19 @@ return {
 
     local path = node.path or node:get_id()
     if not path or path == "" then
-      vim.notify("No path under cursor", vim.log.levels.WARN)
+      notify("No path under cursor", vim.log.levels.WARN)
       return
     end
 
     -- Add buffer silently and load it so it shows up in buffer pickers immediately
-    local bufnr = vim.fn.bufadd(path) -- creates buffer if needed, does not display it
-    pcall(vim.fn.bufload, bufnr) -- read file into the buffer
+    local bufnr = fn.bufadd(path) -- creates buffer if needed, does not display it
+    pcall(fn.bufload, bufnr) -- read file into the buffer
     pcall(function()
       vim.bo[bufnr].buflisted = true
     end)
 
     -- Optional: small notification (can be removed)
-    vim.notify(("Buffered: %s"):format(vim.fn.fnamemodify(path, ":t")), vim.log.levels.INFO)
+    notify(("Buffered: %s"):format(fn.fnamemodify(path, ":t")), vim.log.levels.INFO)
   end,
 
   --- Open file in a window but immediately jump focus back to Neo-tree.
@@ -49,19 +53,21 @@ return {
     if not node then
       return
     end
+
+    local cmds = state.commands
     if node.type ~= "file" then
-      state.commands.toggle_node(state)
+      cmds.toggle_node(state)
       return
     end
-    local win = state.winid or vim.api.nvim_get_current_win()
+    local win = state.winid or api.nvim_get_current_win()
     if pcall(require, "window-picker") then
-      state.commands.open_with_window_picker(state)
+      cmds.open_with_window_picker(state)
     else
-      state.commands.open(state)
+      cmds.open(state)
     end
     vim.schedule(function()
-      if vim.api.nvim_win_is_valid(win) then
-        vim.api.nvim_set_current_win(win) -- return focus to Neo-tree window
+      if api.nvim_win_is_valid(win) then
+        api.nvim_set_current_win(win) -- return focus to Neo-tree window
       end
     end)
   end,
@@ -71,7 +77,7 @@ return {
   run_command = function(state)
     local node = state.tree:get_node()
     local path = node:get_id()
-    vim.api.nvim_input(": " .. path .. "<Home>")
+    api.nvim_input(": " .. path .. "<Home>")
   end,
 
   -- Find with telescope
@@ -90,4 +96,6 @@ return {
   -- Diff files
   -- You can mark two files to diff them.
   diff_files = diff_files_mod,
+
+  mark = mark_mod,
 }

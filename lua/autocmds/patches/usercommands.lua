@@ -8,9 +8,11 @@ local patches = require("autocmds.patches")
 
 local M = {}
 
+local fn = vim.fn
 local create_usercommand = vim.api.nvim_create_user_command
-local notify =  vim.notify
-local levels = vim.log.levels
+local notify, levels = vim.notify, vim.log.levels
+local str_format = string.format
+local tbl_insert, tbl_concat = table.insert, table.concat
 
 --- Register all user commands
 ---@return nil
@@ -29,14 +31,11 @@ function M.setup()
       -- Apply specific patch by key
       patches.apply_async({ keys = { args[2] } })
     else
-      notify(
-        "Usage: PatchApply [repo <name>|key <name>]",
-        levels.ERROR
-      )
+      notify("Usage: PatchApply [repo <name>|key <name>]", levels.ERROR)
     end
   end, {
     nargs = "*",
-    desc = "Apply patches (all, by repo, or by key)",
+    desc = "[autocmds.patches] Apply patches (all, by repo, or by key)",
     complete = function(_, cmd_line, _)
       local args = vim.split(cmd_line, " ", { trimempty = true })
 
@@ -54,11 +53,20 @@ function M.setup()
       elseif #args >= 2 and args[2] == "key" then
         -- List all keys
         local patch_list = patches.list()
-        return vim.tbl_map(function(p) return p.key end, patch_list)
+        return vim.tbl_map(function(p)
+          return p.key
+        end, patch_list)
       end
 
       return {}
     end,
+  })
+
+  -- Command for applying all patches
+  create_usercommand("PatchApplyAll", function()
+    require("autocmds.patches").apply_all_async()
+  end, {
+    desc = "[autocmds.patches] Apply all patches asynchronously",
   })
 
   -- Show patch status
@@ -83,51 +91,43 @@ function M.setup()
     for _, entry in ipairs(status) do
       local icon = icons[entry.status] or "❓"
       local msg = entry.message and (" - " .. entry.message) or ""
-      table.insert(
-        lines,
-        string.format(
-          "%s [%s] %s%s",
-          icon,
-          entry.repo,
-          entry.key,
-          msg
-        )
-      )
+      tbl_insert(lines, str_format("%s [%s] %s%s", icon, entry.repo, entry.key, msg))
     end
 
-    notify(table.concat(lines, "\n"), levels.INFO)
+    notify(tbl_concat(lines, "\n"), levels.INFO)
   end, {
     nargs = 0,
-    desc = "Show patch status for all registered patches",
+    desc = "[autocmds.patches] Show patch status for all registered patches",
   })
 
   -- Validate patches
   create_usercommand("PatchValidate", function()
     notify("Validating patches...", levels.INFO)
     patches.validate_all(function(results)
-      local valid = vim.tbl_filter(function(r) return r.valid end, results)
-      local invalid = vim.tbl_filter(function(r) return not r.valid end, results)
+      local valid = vim.tbl_filter(function(r)
+        return r.valid
+      end, results)
+      local invalid = vim.tbl_filter(function(r)
+        return not r.valid
+      end, results)
 
       if #invalid == 0 then
-        notify(
-          string.format("All %d patches are valid ✅", #results),
-          levels.INFO
-        )
+        notify(str_format("All %d patches are valid ✅", #results), levels.INFO)
       else
         local lines = {
-          string.format("Validation: %d valid, %d invalid", #valid, #invalid),
+          str_format("Validation: %d valid, %d invalid", #valid, #invalid),
           "",
-          "Invalid patches:"
+          "Invalid patches:",
         }
         for _, r in ipairs(invalid) do
-          table.insert(lines, string.format("  ❌ %s: %s", r.key, r.error))
+          tbl_insert(lines, str_format("  ❌ %s: %s", r.key, r.error))
         end
-        notify(table.concat(lines, "\n"), levels.WARN)
+        notify(tbl_concat(lines, "\n"), levels.WARN)
       end
     end)
   end, {
     nargs = 0,
-    desc = "Validate all patch files (dry-run)",
+    desc = "[autocmds.patches] Validate all patch files (dry-run)",
   })
 
   -- Clear status cache
@@ -139,7 +139,7 @@ function M.setup()
     end
   end, {
     nargs = 0,
-    desc = "Clear patch status cache",
+    desc = "[autocmds.patches] Clear patch status cache",
   })
 
   -- Show logs
@@ -147,7 +147,7 @@ function M.setup()
     patches.show_logs_buffer()
   end, {
     nargs = 0,
-    desc = "Open patch logs in a new buffer",
+    desc = "[autocmds.patches] Open patch logs in a new buffer",
   })
 
   -- List registered patches
@@ -163,36 +163,29 @@ function M.setup()
     for _, entry in ipairs(patch_list) do
       local enabled = entry.enabled ~= false and "✓" or "✗"
       local priority = entry.priority or 0
-      table.insert(
+      tbl_insert(
         lines,
-        string.format(
-          "%s [%s] %s (priority: %d)",
-          enabled,
-          entry.repo or "unknown",
-          entry.key,
-          priority
-        )
+        str_format("%s [%s] %s (priority: %d)", enabled, entry.repo or "unknown", entry.key, priority)
       )
     end
 
-    notify(table.concat(lines, "\n"), levels.INFO)
+    notify(tbl_concat(lines, "\n"), levels.INFO)
   end, {
     nargs = 0,
-    desc = "List all registered patches",
+    desc = "[autocmds.patches] List all registered patches",
   })
 
   -- Enable verbose mode
   create_usercommand("PatchVerbose", function(opts)
     local enable = opts.args ~= "off"
     patches.setup({ verbose = enable })
-    notify(
-      string.format("Verbose logging %s", enable and "enabled" or "disabled"),
-      levels.INFO
-    )
+    notify(str_format("Verbose logging %s", enable and "enabled" or "disabled"), levels.INFO)
   end, {
     nargs = "?",
-    complete = function() return { "on", "off" } end,
-    desc = "Enable/disable verbose logging (PatchVerbose [on|off])",
+    complete = function()
+      return { "on", "off" }
+    end,
+    desc = "[autocmds.patches] Enable/disable verbose logging (PatchVerbose [on|off])",
   })
 
   -- System check
@@ -203,91 +196,91 @@ function M.setup()
     local err_icon = "❌"
 
     -- Check if patch command exists
-    local patch_path = vim.fn.exepath("patch")
+    local patch_path = fn.exepath("patch")
     local has_patch = patch_path ~= ""
 
     local lines = { "System Check:", "" }
 
     if has_patch then
-      table.insert(lines, string.format("%s patch command found: %s", ok_icon, patch_path))
+      tbl_insert(lines, str_format("%s patch command found: %s", ok_icon, patch_path))
 
       -- Get version
-      local version = vim.fn.system("patch --version"):match("patch ([%d%.]+)")
+      local version = fn.system("patch --version"):match("patch ([%d%.]+)")
       if version then
-        table.insert(lines, string.format("   Version: %s", version))
+        tbl_insert(lines, str_format("   Version: %s", version))
       end
     else
-      table.insert(lines, string.format("%s patch command NOT found", err_icon))
-      table.insert(issues, "patch")
+      tbl_insert(lines, str_format("%s patch command NOT found", err_icon))
+      tbl_insert(issues, "patch")
     end
 
     -- Check registry
     local patch_list = patches.list()
-    table.insert(lines, "")
-    table.insert(lines, string.format("%s %d patches registered", ok_icon, #patch_list))
+    tbl_insert(lines, "")
+    tbl_insert(lines, str_format("%s %d patches registered", ok_icon, #patch_list))
 
     -- Check patch files exist
     local missing_patches = 0
     local missing_targets = 0
 
     for _, entry in ipairs(patch_list) do
-      if vim.fn.filereadable(entry.patch) ~= 1 then
+      if fn.filereadable(entry.patch) ~= 1 then
         missing_patches = missing_patches + 1
       end
-      if vim.fn.filereadable(entry.target) ~= 1 then
+      if fn.filereadable(entry.target) ~= 1 then
         missing_targets = missing_targets + 1
       end
     end
 
     if missing_patches > 0 then
-      table.insert(lines, string.format("%s %d patch files missing", warn_icon, missing_patches))
-      table.insert(issues, "missing_patches")
+      tbl_insert(lines, str_format("%s %d patch files missing", warn_icon, missing_patches))
+      tbl_insert(issues, "missing_patches")
     else
-      table.insert(lines, string.format("%s All patch files present", ok_icon))
+      tbl_insert(lines, str_format("%s All patch files present", ok_icon))
     end
 
     if missing_targets > 0 then
-      table.insert(lines, string.format("%s %d target files missing", warn_icon, missing_targets))
-      table.insert(issues, "missing_targets")
+      tbl_insert(lines, str_format("%s %d target files missing", warn_icon, missing_targets))
+      tbl_insert(issues, "missing_targets")
     else
-      table.insert(lines, string.format("%s All target files present", ok_icon))
+      tbl_insert(lines, str_format("%s All target files present", ok_icon))
     end
 
     -- Show recommendations
     if #issues > 0 then
-      table.insert(lines, "")
-      table.insert(lines, "Recommendations:")
+      tbl_insert(lines, "")
+      tbl_insert(lines, "Recommendations:")
 
       if vim.tbl_contains(issues, "patch") then
-        table.insert(lines, "")
-        table.insert(lines, "  Install patch command:")
-        if vim.fn.has("win32") == 1 then
-          table.insert(lines, "    • Git for Windows: includes patch.exe in usr/bin")
-          table.insert(lines, "    • Scoop: scoop install patch")
-          table.insert(lines, "    • Chocolatey: choco install patch")
+        tbl_insert(lines, "")
+        tbl_insert(lines, "  Install patch command:")
+        if fn.has("win32") == 1 then
+          tbl_insert(lines, "    • Git for Windows: includes patch.exe in usr/bin")
+          tbl_insert(lines, "    • Scoop: scoop install patch")
+          tbl_insert(lines, "    • Chocolatey: choco install patch")
         else
-          table.insert(lines, "    • Linux: sudo apt install patch")
-          table.insert(lines, "    • macOS: brew install gpatch")
+          tbl_insert(lines, "    • Linux: sudo apt install patch")
+          tbl_insert(lines, "    • macOS: brew install gpatch")
         end
       end
 
       if vim.tbl_contains(issues, "missing_patches") then
-        table.insert(lines, "")
-        table.insert(lines, "  Some patch files are missing. Check paths in paths.lua")
+        tbl_insert(lines, "")
+        tbl_insert(lines, "  Some patch files are missing. Check paths in paths.lua")
       end
 
       if vim.tbl_contains(issues, "missing_targets") then
-        table.insert(lines, "")
-        table.insert(lines, "  Some target files are missing. Install missing plugins:")
-        table.insert(lines, "    :Lazy sync")
+        tbl_insert(lines, "")
+        tbl_insert(lines, "  Some target files are missing. Install missing plugins:")
+        tbl_insert(lines, "    :Lazy sync")
       end
     end
 
     local level = #issues > 0 and levels.WARN or levels.INFO
-    notify(table.concat(lines, "\n"), level)
+    notify(tbl_concat(lines, "\n"), level)
   end, {
     nargs = 0,
-    desc = "Check system requirements for patch system",
+    desc = "[autocmds.patches] Check system requirements for patch system",
   })
 
   -- Show help
@@ -311,11 +304,72 @@ function M.setup()
       "",
       "For more info: :help patches",
     }
-    notify(table.concat(lines, "\n"), levels.INFO)
+    notify(tbl_concat(lines, "\n"), levels.INFO)
   end, {
     nargs = 0,
-    desc = "Show patch command help",
+    desc = "[autocmds.patches] Show patch command help",
   })
 end
+
+--- Fix line endings in patch files
+create_usercommand("PatchFixLineEndings", function(_)
+  local utils = require("autocmds.patches.utils")
+  local logger = require("autocmds.patches.logger")
+
+  local patches_dir = fn.stdpath("config") .. "/patches"
+  local files = fn.glob(patches_dir .. "/**/*.patch", false, true)
+
+  local fixed_count = 0
+  local failed_count = 0
+
+  for _, file in ipairs(files) do
+    local content, err = utils.read_file(file)
+    if not content then
+      logger.error("Failed to read", { file = file, error = err })
+      failed_count = failed_count + 1
+      goto continue
+    end
+
+    -- Normalize line endings
+    local normalized = content:gsub("\r\n", "\n"):gsub("\r", "\n")
+
+    -- Remove trailing whitespace from lines
+    local lines = {}
+    for line in normalized:gmatch("([^\n]*)\n?") do
+      tbl_insert(lines, line:gsub("%s+$", ""))
+    end
+    normalized = tbl_concat(lines, "\n")
+
+    -- Ensure single trailing newline
+    normalized = normalized:gsub("\n+$", "") .. "\n"
+
+    -- Only write if changed
+    if normalized ~= content then
+      local ok, write_err = utils.write_file(file, normalized)
+      if ok then
+        fixed_count = fixed_count + 1
+        logger.info("Fixed line endings", { file = file })
+      else
+        logger.error("Failed to write", { file = file, error = write_err })
+        failed_count = failed_count + 1
+      end
+    end
+
+    ::continue::
+  end
+
+  notify(
+    str_format("[patches] Fixed %d files, %d failed", fixed_count, failed_count),
+    fixed_count > 0 and levels.INFO or levels.WARN
+  )
+end, {
+  desc = "Fix line endings in all patch files",
+})
+
+create_usercommand("PatchMeasureApplyAll", function()
+  require("autocmds.potches.utils").measure_patch_time()
+end, {
+  desc = "[autocmds.patches] Measure patch application time",
+})
 
 return M

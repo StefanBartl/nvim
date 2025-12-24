@@ -1,6 +1,9 @@
 ---@module 'autocmds.general.gofile_cases.p2_reference'
 --- Case 2: Resolve reference-style links [label] and find definition lines in the same buffer.
 --- Returns boolean, path
+
+require("@tyoes.tsnode")
+
 local M = {}
 
 local find_parent = require("autocmds.general.gofile_cases.helper.find_parent")

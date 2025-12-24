@@ -7,8 +7,8 @@
 Deine Diff-Dateien verwenden **Windows-absolute-Pfade** in den Header-Zeilen:
 
 ```diff
---- C:\Users\Bernhard\AppData\Local\nvim\patches\noice\lsp\old.lua
-+++ C:\Users\Bernhard\AppData\Local\nvim\patches\noice\lsp\FIXED.lua
+--- C:\Users\bartl\AppData\Local\nvim\patches\noice\lsp\old.lua
++++ C:\Users\bartl\AppData\Local\nvim\patches\noice\lsp\FIXED.lua
 @@ -38,38 +38,28 @@
 ```
 
@@ -141,7 +141,7 @@ In `paths.lua`:
 cd C:\Users\Bernhard\.local\share\nvim\lazy\noice.nvim
 
 # Dry-Run
-patch --dry-run -p0 -i C:\Users\Bernhard\AppData\Local\nvim\patches\noice\lsp\signature\diff.patch lua\noice\lsp\signature.lua
+patch --dry-run -p0 -i C:\Users\bartl\AppData\Local\nvim\patches\noice\lsp\signature\diff.patch lua\noice\lsp\signature.lua
 ```
 
 **Erwartetes Ergebnis bei Erfolg:**

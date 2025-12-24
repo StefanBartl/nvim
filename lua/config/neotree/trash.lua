@@ -4,14 +4,18 @@
 
 local M = {}
 
-local uv = vim.loop
+local api, uv = vim.api, vim.loop
+local fn = vim.fn
+local resolve, system = fn.resolve, fn.system
+local defer_fn = vim.defer_fn
+local notify, levels = vim.notify, vim.log.levels
+local sh_error = vim.v.shell_error
+local str_format = string.format
 
 --- Escape shell argument in a platform-appropriate way.
 ---@param path string
 ---@return string
 local function escape_shell_arg(path)
-  -- English comment: escape path for shell commands. For Windows we use single-quoted PowerShell arg,
-  -- for POSIX we escape single quotes using the standard trick.
   if uv.os_uname().sysname == "Windows_NT" then
     return "'" .. path:gsub("'", "''") .. "'"
   else
@@ -19,18 +23,78 @@ local function escape_shell_arg(path)
   end
 end
 
+--- Schließe alle Buffers und Preview die diesen Pfad betreffen
+---@param path string
+local function close_related_buffers_and_previews(path)
+  -- Normalisiere Pfad für Vergleich
+  local normalized_path = resolve(path):gsub("\\", "/")
+
+  -- Schließe alle betroffenen Buffers
+  for _, buf in ipairs(api.nvim_list_bufs()) do
+    if api.nvim_buf_is_valid(buf) then
+      local buf_name = api.nvim_buf_get_name(buf)
+      if buf_name ~= "" then
+        local normalized_buf = resolve(buf_name):gsub("\\", "/")
+        -- Prüfe ob Buffer innerhalb des zu löschenden Pfads liegt
+        if normalized_buf:sub(1, #normalized_path) == normalized_path or normalized_buf == normalized_path then
+          pcall(api.nvim_buf_delete, buf, { force = true, unload = true })
+        end
+      end
+    end
+  end
+
+  -- Schließe Neo-tree Preview falls offen
+  pcall(function()
+    local preview = require("neo-tree.ui.preview")
+    if preview and preview.close then
+      preview.close()
+    end
+  end)
+
+  -- Schließe alle Float-Windows die den Pfad betreffen könnten
+  for _, win in ipairs(api.nvim_list_wins()) do
+    if api.nvim_win_is_valid(win) then
+      local win_buf = api.nvim_win_get_buf(win)
+      local buf_name = api.nvim_buf_get_name(win_buf)
+      if buf_name ~= "" then
+        local normalized_buf = resolve(buf_name):gsub("\\", "/")
+        if normalized_buf:sub(1, #normalized_path) == normalized_path then
+          pcall(api.nvim_win_close, win, true)
+        end
+      end
+    end
+  end
+end
+
+--- Cleanup Neo-tree interne Watchers und State für einen Pfad
+---@param path string
+local function cleanup_neotree_watchers(path)
+  pcall(function()
+    -- Stoppe alle File Watchers
+    local watcher = require("neo-tree.sources.filesystem.lib.file_watcher")
+    if watcher and watcher.stop then
+      watcher.stop(path)
+    end
+  end)
+
+  pcall(function()
+    -- Clear Neo-tree's internal cache
+    local manager = require("neo-tree.sources.manager")
+    if manager and manager.close_all_nodes then
+      manager.close_all_nodes()
+    end
+  end)
+end
+
 --- Send given file/directory path to system Trash using available backend.
---- Tries gio, trash, trash-put, kioclient5, macOS osascript, Windows PowerShell, then local ~/.local/share/Trash/files fallback.
 ---@param path string
 ---@return boolean, string
 local function send_to_trash(path)
-  -- English comment: detect platform and available trash utility, then invoke it.
-  -- This implementation uses a single exit point (ok, msg) to avoid unreachable-code diagnostics.
   local sys = uv.os_uname().sysname
   local esc = escape_shell_arg(path)
 
   local function has_exe(name)
-    return vim.fn.executable(name) == 1
+    return fn.executable(name) == 1
   end
 
   local ok = false
@@ -38,140 +102,271 @@ local function send_to_trash(path)
 
   if sys ~= "Windows_NT" then
     if has_exe("gio") then
-      local out = vim.fn.system({ "gio", "trash", path })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      local out = system({ "gio", "trash", path })
+      ok, msg = sh_error == 0, out
     elseif has_exe("trash") then
-      local out = vim.fn.system({ "trash", path })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      local out = system({ "trash", path })
+      ok, msg = sh_error == 0, out
     elseif has_exe("trash-put") then
-      local out = vim.fn.system({ "trash-put", path })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      local out = system({ "trash-put", path })
+      ok, msg = sh_error == 0, out
     elseif has_exe("kioclient5") then
-      local out = vim.fn.system({ "kioclient5", "move", path, "trash:/" })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      local out = system({ "kioclient5", "move", path, "trash:/" })
+      ok, msg = sh_error == 0, out
     elseif sys == "Darwin" and has_exe("osascript") then
-      local applescript = string.format('tell application "Finder" to delete POSIX file %s', esc)
-      local out = vim.fn.system({ "osascript", "-e", applescript })
-      if vim.v.shell_error == 0 then
-        ok, msg = true, out
-      else
-        ok, msg = false, out
-      end
+      local applescript = str_format('tell application "Finder" to delete POSIX file %s', esc)
+      local out = system({ "osascript", "-e", applescript })
+      ok, msg = sh_error == 0, out
     else
-      -- Fallback: move to ~/.local/share/Trash/files (best-effort)
       local home = uv.os_homedir()
       local trashdir = home .. "/.local/share/Trash/files"
       if not uv.fs_stat(trashdir) then
-        local okc, errc = pcall(function()
-          vim.fn.mkdir(trashdir, "p")
-        end)
+        local okc, errc = pcall(fn.mkdir, trashdir, "p")
         if not okc then
-          ok, msg = false, "failed to create trash dir: " .. tostring(errc)
+          return false, "failed to create trash dir: " .. tostring(errc)
         end
       end
-      if ok == false and msg:match("^failed to create") then
-        -- keep the error from mkdir
-      else
-        local dest = trashdir .. "/" .. vim.fn.fnamemodify(path, ":t")
-        local ok_mv, err_mv = os.rename(path, dest)
-        if ok_mv then
-          ok, msg = true, "moved to " .. dest
-        else
-          ok, msg = false, tostring(err_mv)
-        end
-      end
+      local dest = trashdir .. "/" .. fn.fnamemodify(path, ":t")
+      local ok_mv, err_mv = os.rename(path, dest)
+      ok, msg = ok_mv, ok_mv and ("moved to " .. dest) or tostring(err_mv)
     end
   else
-    -- Windows: use PowerShell + Microsoft.VisualBasic.FileIO to send to Recycle Bin
-    local ps_script = string.format(
-      "Add-Type -AssemblyName Microsoft.VisualBasic; "
-        .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%s,'OnlyErrorDialogs','SendToRecycleBin')",
-      esc
-    )
+    -- Windows: Schließe zuerst alle Buffers
+    close_related_buffers_and_previews(path)
+
     local stat = uv.fs_stat(path)
-    if stat and stat.type == "directory" then
-      ps_script = string.format(
-        "Add-Type -AssemblyName Microsoft.VisualBasic; "
-          .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(%s,'OnlyErrorDialogs','SendToRecycleBin')",
+    local is_dir = stat and stat.type == "directory"
+
+    -- Warte damit Buffers geschlossen werden
+    vim.wait(100)
+
+    local ps_script
+    if is_dir then
+      ps_script = str_format(
+        "$ErrorActionPreference='Stop'; "
+          .. "Add-Type -AssemblyName Microsoft.VisualBasic; "
+          .. "try { "
+          .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(%s,'OnlyErrorDialogs','SendToRecycleBin') "
+          .. "} catch { "
+          .. "Write-Error $_.Exception.Message; exit 1 "
+          .. "}",
+        esc
+      )
+    else
+      ps_script = str_format(
+        "$ErrorActionPreference='Stop'; "
+          .. "Add-Type -AssemblyName Microsoft.VisualBasic; "
+          .. "try { "
+          .. "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%s,'OnlyErrorDialogs','SendToRecycleBin') "
+          .. "} catch { "
+          .. "Write-Error $_.Exception.Message; exit 1 "
+          .. "}",
         esc
       )
     end
-    local out = vim.fn.system({ "powershell", "-NoProfile", "-Command", ps_script })
-    if vim.v.shell_error == 0 then
-      ok, msg = true, out
-    else
-      ok, msg = false, out
+
+    local out = system({ "powershell", "-NoProfile", "-Command", ps_script })
+    ok, msg = sh_error == 0, out
+
+    -- Fallback: Bei Fehler versuche es mit robustem PowerShell Script
+    if not ok and is_dir then
+      local fallback_script = str_format(
+        "$path = %s; "
+          .. "if (Test-Path $path) { "
+          .. "Get-ChildItem -Path $path -Recurse -Force | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue; "
+          .. "Remove-Item -Path $path -Force -Recurse -ErrorAction Stop "
+          .. "}",
+        esc
+      )
+      local _ = system({ "powershell", "-NoProfile", "-Command", fallback_script })
+      if sh_error == 0 then
+        ok, msg = true, "moved via fallback method"
+      end
     end
   end
 
   return ok, msg
 end
 
+--- Safely refresh Neo-tree after file operations
+---@param state_name string
+local function safe_refresh(state_name)
+  -- Führe Refresh in mehreren Schritten aus um Blockierung zu vermeiden
+  vim.schedule(function()
+    local manager_ok, manager = pcall(require, "neo-tree.sources.manager")
+    if not manager_ok then
+      return
+    end
+
+    -- Schritt 1: Close all und reset
+    pcall(function()
+      if manager.close_all_nodes then
+        manager.close_all_nodes()
+      end
+    end)
+
+    -- Schritt 2: Nach kurzem Wait refreshen
+    defer_fn(function()
+      -- Versuche zuerst den aktuellen State zu refreshen
+      local state_ok, state = pcall(manager.get_state, state_name)
+      if state_ok and state then
+        local commands_ok, commands = pcall(require, "neo-tree.sources." .. state_name .. ".commands")
+        if commands_ok and commands and type(commands.refresh) == "function" then
+          pcall(commands.refresh, state)
+          return
+        end
+      end
+
+      -- Fallback: Refresh über Manager
+      pcall(manager.refresh, state_name)
+
+      -- Zusätzlicher Fallback für filesystem
+      if state_name ~= "filesystem" then
+        pcall(manager.refresh, "filesystem")
+      end
+    end, 100)
+  end)
+end
+
+--- Collect nodes to trash:
+--- - marked nodes if present
+--- - otherwise the node under cursor
+---@param state table
+---@return table[] nodes
+local function get_nodes_to_trash(state)
+  local tree = state.tree
+  if not tree then
+    return {}
+  end
+
+  -- Get marked nodes from state
+  local marks = state.explicitly_marked_node_ids or {}
+  local marked_nodes = {}
+
+  -- Collect all marked nodes
+  for node_id, _ in pairs(marks) do
+    local node = tree:get_node(node_id)
+    if node then
+      table.insert(marked_nodes, node)
+    end
+  end
+
+  if #marked_nodes > 0 then
+    return marked_nodes
+  end
+
+  -- Fallback to current node
+  local node = tree:get_node()
+  if node then
+    return { node }
+  end
+
+  return {}
+end
+
 --- Neo-tree mapping callback: move selected node to Trash and refresh the Neo-tree view.
---- Uses the neo-tree commands refresh API: require("neo-tree.sources.filesystem.commands").refresh(state)
 ---@param state table
 ---@return nil
 local function neotree_send_node_to_trash(state)
-  -- English comment: node retrieval for neo-tree state object
-  local node = state.tree and state.tree:get_node() or nil
-  if not node then
-    vim.notify("No node under cursor", vim.log.levels.WARN)
-    return
-  end
-  local path = node.path or node.uri or node:get_id()
-  if not path then
-    vim.notify("Node has no path", vim.log.levels.ERROR)
+  local nodes = get_nodes_to_trash(state)
+
+  if #nodes == 0 then
+    notify("No nodes selected", levels.WARN)
     return
   end
 
-  local prompt = string.format("Move to Trash: %s ? (y/N) ", path)
-  local ans = vim.fn.input(prompt)
-  if not (ans == "y" or ans == "Y") then
-    vim.notify("Cancelled", vim.log.levels.INFO)
+  -- Sammle Pfade
+  ---@type string[]
+  local paths = {}
+  ---@type string[]
+  local names = {}
+  for i = 1, #nodes do
+    local node = nodes[i]
+    local path = node.path or node.uri or node:get_id()
+    if path then
+      paths[#paths + 1] = path
+      names[#names + 1] = node.name or fn.fnamemodify(path, ":t")
+    end
+  end
+
+  if #paths == 0 then
+    notify("No valid paths found", levels.ERROR)
     return
   end
 
-  local ok, msg = send_to_trash(path)
-  if ok then
-    vim.notify("Moved to Trash: " .. path, vim.log.levels.INFO)
-    -- Correct refresh call: obtain the proper state object for the filesystem source
-    -- and call the commands.refresh(state) provided by neo-tree.
-    local manager = require("neo-tree.sources.manager")
-    local fs_state = manager.get_state(state.name) or manager.get_state("filesystem")
-    if fs_state then
-      -- call the filesystem commands refresh function
-      local fs_commands = require("neo-tree.sources.filesystem.commands")
-      if type(fs_commands.refresh) == "function" then
-        fs_commands.refresh(fs_state)
-      else
-        -- fallback: try manager-level refresh if present
-        if type(manager.refresh) == "function" then
-          manager.refresh("filesystem")
+  -- Bestätigungsdialog (Batch-aware)
+  local prompt
+  if #paths == 1 then
+    prompt = str_format("Move to Trash: %s ? (y/N) ", names[1])
+  else
+    prompt = str_format("Move %d items to Trash? (y/N) ", #paths)
+  end
+
+  local ans = fn.input(prompt)
+  api.nvim_command("redraw")
+
+  if ans ~= "y" and ans ~= "Y" then
+    notify("Cancelled", levels.INFO)
+    return
+  end
+
+  notify("Moving to Trash...", levels.INFO)
+
+  -- Cleanup vorab
+  for i = 1, #paths do
+    local path = paths[i]
+    cleanup_neotree_watchers(path)
+    close_related_buffers_and_previews(path)
+  end
+
+  -- Asynchron batchweise löschen
+  vim.schedule(function()
+    defer_fn(function()
+      local failed = false
+      local success_count = 0
+
+      for i = 1, #paths do
+        local path = paths[i]
+        local ok, msg = send_to_trash(path)
+        if ok then
+          success_count = success_count + 1
+          -- Add to undo history
+          local undo_ok, undo_module = pcall(require, "config.neotree.undo")
+          if undo_ok and undo_module.add_to_history then
+            undo_module.add_to_history(path, names[i])
+          end
+        else
+          failed = true
+          local clean_msg = msg:match("([^\r\n]+)") or msg
+          notify("✗ Failed: " .. clean_msg, levels.ERROR)
         end
       end
-    end
-  else
-    vim.notify("Failed to move to Trash: " .. tostring(msg), vim.log.levels.ERROR)
-  end
+
+      -- Clear marks after successful trash
+      if success_count > 0 and state.explicitly_marked_node_ids then
+        state.explicitly_marked_node_ids = {}
+        -- Refresh renderer to update visuals
+        pcall(function()
+          local renderer = require("neo-tree.ui.renderer")
+          renderer.redraw(state)
+        end)
+      end
+
+      defer_fn(function()
+        safe_refresh(state.name or "filesystem")
+      end, 200)
+
+      if success_count > 0 then
+        local msg = str_format("✓ Moved to Trash (%d items)", success_count)
+        if failed then
+          msg = msg .. " - some items failed"
+        end
+        notify(msg, levels.INFO)
+      end
+    end, 150)
+  end)
 end
 
--- Export functions. Make sure 'return' is at the very end so no unreachable-code diagnostics occur.
 M.send_to_trash = send_to_trash
 M.neotree_send_node_to_trash = neotree_send_node_to_trash
 

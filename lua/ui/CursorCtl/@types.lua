@@ -7,3 +7,5 @@
 --   "rows_cols_progress" → classic cursor + both row and column progress
 --   "off"                → hide cursor+progress segment entirely
 ---@alias CursorProgressMode '"classic"'|'"row_progress"'|'"col_progress"'|'"rows_cols_progress"'|'"off"'
+
+return {}

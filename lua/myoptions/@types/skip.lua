@@ -8,3 +8,6 @@
 ---@class SkipMatchers
 ---@field ftset table<string, true>    -- O(1) lookup set for filetypes
 ---@field npats string[]               -- raw Lua patterns for buffer name
+
+return {}
+

@@ -60,12 +60,25 @@ return {
         folder_empty = "",
         folder_empty_open = "",
         default = "",
+
+        -- AUDIT: REQUIRED?? FOR TRASH MARKING
+        folder_closed = "",
+        folder_open = "",
+        highlight = "NeoTreeFileIcon",
       },
-      modified = { symbol = "•" },
+      modified = {
+        -- symbol = "•",
+        -- REQUIRED FOR TRASH MARKING
+        symbol = "[+]",
+        highlight = "NeoTreeModified",
+      },
       name = {
         trailing_slash = true,
-        highlight_opened_files = true,
         use_git_status_colors = false,
+        -- Add custom highlighting for marked files (required for trash marking, but wsa there before)
+        highlight_opened_files = true,
+        -- REQUIRED FOR TRASH MARKING
+        highlight = "NeoTreeFileName",
       },
       git_status = {
         symbols = {
@@ -73,12 +86,50 @@ return {
           deleted = "D",
           modified = "M",
           renamed = "R",
-          untracked = "U",
-          ignored = "I",
-          unstaged = "",
-          staged = "S",
+          -- untracked = "U",
+          -- ignored = "I",
+          unstaged = "✗",
+          staged = "✓",
+          untracked = "★", -- 'untracked' style is used for marked files in trash
+          ignored = "◌",
           conflict = "C",
         },
+      },
+    },
+
+    -- Add custom renderer for marked files (trash)
+    renderers = {
+      directory = {
+        { "indent" },
+        { "icon" },
+        { "current_filter" },
+        { "name" },
+        { "git_status", highlight = "NeoTreeDimText" },
+        { "diagnostics" },
+        { "clipboard" },
+      },
+      file = {
+        { "indent" },
+        { "icon" },
+        { "name", use_git_status_colors = true },
+        { "git_status", highlight = "NeoTreeDimText" },
+        { "diagnostics" },
+        -- Add custom component for marks
+        {
+          -- Custom mark indicator component
+          function(_, node, state)
+            local marks = state.explicitly_marked_node_ids or {}
+            local node_id = node:get_id()
+            if marks[node_id] then
+              return {
+                text = " ✓", -- or use " ★" or " ●"
+                highlight = "NeoTreeGitStaged", -- green highlight
+              }
+            end
+            return {}
+          end,
+        },
+        { "clipboard" },
       },
     },
 

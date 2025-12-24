@@ -5,6 +5,8 @@
 --- Guards all Neovim API calls (per safety checklist) and avoids serializing ephemeral state
 --- via blacklists. Returns explicit booleans plus result/error strings to keep UI layers clean.
 
+require("sessions.@types")
+
 local fn, bo = vim.fn, vim.bo
 
 ---@class SessionsCore

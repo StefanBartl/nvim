@@ -10,6 +10,7 @@ function M.wrap(opts)
   local orig = vim.lsp.handlers["textDocument/publishDiagnostics"]
   if not orig then return end
 
+  ---@diagnostic disable-next-line
   vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
     if not result or not result.diagnostics then return orig(err, result, ctx, config) end
 

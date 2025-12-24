@@ -3,6 +3,8 @@
 --- Contract: exports `call(node, bufnr, cfg, ts_utils, logger)` -> boolean [, path]
 --- Return true if the case handled opening; false, path if path was found but not opened.
 
+require("@tyoes.tsnode")
+
 local M = {}
 
 --- Safe helper: get canonical buffer name for comparison
