@@ -37,27 +37,6 @@ function M.setup()
     { desc = "[Telescope] Find All Files" }
   )
 
-  map("n", "<leader>ttf", function()
-    -- Require telescope.builtin lazily to avoid startup overhead
-    local ok, builtin = pcall(require, "telescope.builtin")
-    if not ok then
-      vim.notify("telescope.nvim not available", vim.log.levels.ERROR)
-      return
-    end
-
-    builtin.treesitter({
-      -- Pre-fill the Telescope prompt
-      default_text = "function",
-
-      -- Optional: start in normal mode disabled so filtering is active immediately
-      initial_mode = "insert",
-    })
-  end, {
-    noremap = true,
-    silent = true,
-    desc = "[Telescope] Treesitter (prefilled: function)",
-  })
-
   ---==== Telescope file browser extension mappings =====---
 
   map("n", "<leader>,", function()

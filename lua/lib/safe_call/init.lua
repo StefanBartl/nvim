@@ -1,6 +1,7 @@
 ---@module 'utils.safe_call'
 --- Robust wrappers around pcall/xpcall with structured return values.
 --- No UI side-effects here; callers decide how to handle errors.
+require("@types.safe")
 
 local M = {}
 
