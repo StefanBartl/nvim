@@ -19,6 +19,7 @@
 
 1. leader mhD funktioniert erst, wenn man einmal alles mit C-v markiert hat oder keine Markierung - dann aber nur in der aktuellen headline - dann escaped, und dann leader mhD/I ausführt
 2. markdown mappings/utils/markdown, mappings/marjkdown, utils/markdown und /utils/markdown_headings zusammenholen
+3. heading angeben in leader toc: 3 leader toc gibt maxcimal die dittee levcel headings an, nur leaderrr toc alle level
 
 ---
 

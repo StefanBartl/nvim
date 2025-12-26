@@ -1,3 +1,4 @@
+---@meta
 ---@module '@types.safe'
 
 --- Standardized result from safe_call() wrapper.

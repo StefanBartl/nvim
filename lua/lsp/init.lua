@@ -172,7 +172,7 @@ function M.setup(cfg)
 
   require("lsp.tools.ts_type_lookup").setup()
   require("lsp.tools.deprecated_help").setup()
-  require("lsp.diagnostics.quickfix").enable_usercmds_and_keymaps()
+  require("lsp.diagnostics").setup()
 
   M._initialized = true
   return true

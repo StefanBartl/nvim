@@ -1,3 +1,4 @@
+---@meta
 ---@module '@types.tsnode'
 
 ---@alias byte integer # A byte value in range 0..255

@@ -1,7 +1,8 @@
-# clean code und performance bezogene önderungen
+# clean code und performance bezogene Änderungen
 
 1. local funktionen statt exporieren wenn keine externe Referenz! Alle files durchgehen!
 2. explizit coden -> `return nil` statt `return` als Beispiel
+3. namespace von typen explizit einschränken
 
 ## Cleanup
 
