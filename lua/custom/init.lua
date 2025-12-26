@@ -40,7 +40,6 @@ require("custom.function_index").setup({
   },
 })
 
-
 require("custom.find_config").enable({ usercmds = true, keymaps = true })
 require("custom.lsp_signature").setup()
 require("custom.markdown").setup()

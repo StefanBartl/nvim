@@ -5,7 +5,6 @@
 --- Validates dependencies, configuration, and cache status.
 
 local M = {}
-
 local health = vim.health or require("health")
 
 --- Check if ripgrep is installed and has PCRE2 support

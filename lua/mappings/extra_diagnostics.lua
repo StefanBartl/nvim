@@ -2,7 +2,7 @@
 --- Small helpers for navigating LSP diagnostics (next/prev) with keymaps and user commands.
 --- Provides filtering by severity and optional workspace-wide navigation via quickfix.
 
----@class DiagNav
+---@class Mappings.diagnostics.DiagNav
 ---@field severity_map table<string, integer>  -- Maps strings like "error" to vim.diagnostic.severity.ERROR
 ---@field default_opts table                   -- Default opts passed to vim.diagnostic.goto_next/prev
 local M = {}
@@ -214,10 +214,6 @@ function M.create_keymaps()
   -- Workspace-wide (across buffers) via quickfix with !
   map("n", "<leader>dN", ":DiagNext! ", { desc = "[LSP] Workspace next diagnostic (!)", silent = false })
   map("n", "<leader>dP", ":DiagPrev! ", { desc = "[LSP] Workspace prev diagnostic (!)", silent = false })
-
-  -- AUDIT: besseren platz finden
-  local dqf = require("usrcmds.diagnostics.quickfix")
-  dqf.enable_keymaps(vim.g.__map_helper and vim.g.__map_helper or vim.keymap.set)
 end
 
 --- Public setup to be called from plugin init.

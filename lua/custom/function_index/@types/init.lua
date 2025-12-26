@@ -1,6 +1,7 @@
 ---@module 'custom.function_index.@types'
 ---@brief Type definitions for the function_index module
 ---@description
+require("lua.lib.require_dir")("custom.function_index.@types", "")
 
 --- Represents an async operation (used with vim.loop).
 ---@class AsyncJob

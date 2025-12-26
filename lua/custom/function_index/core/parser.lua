@@ -185,16 +185,6 @@ local function detect_language(filename)
   return ext_to_lang[ext:lower()]
 end
 
----@class FunctionEntry
----@field filename string
----@field lnum integer
----@field col integer
----@field text string
----@field func_name string
----@field func_type string
----@field language string
----@field signature string
-
 --- Parse ripgrep output lines into function entries
 ---@param lines string[] # Output from ripgrep
 ---@param enabled_languages table<string, boolean>

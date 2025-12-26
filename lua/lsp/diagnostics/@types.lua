@@ -1,7 +1,7 @@
 ---@meta
----@module 'usrcmds.diagnostics.@types'
+---@module 'lsp.diagnostics.@types'
 
----@class DiagnosticsQfOpts
+---@class Lsp.Diagnostics.QfOpts
 ---@field open? boolean            # open quickfix/loclist window immediately.
 ---@field severity? integer|string # umeric severity (vim.diagnostic.severity.*) or string ("error","warn","info","hint","all")
 ---@field bufnr? integer           # target buffer; nil = all buffers (workspace) for quickfix, or current buffer for loclist.
