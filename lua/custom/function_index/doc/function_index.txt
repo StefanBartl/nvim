@@ -1,0 +1,386 @@
+4. CONFIGURATION                                 *function-index-configuration*
+
+Function Index can be configured during setup:~
+>lua
+    require("custom.function_index").setup({
+      -- Enable user commands (:FunctionIndex, :FunctionIndexTelescope, etc.)
+      enable_user_commands = true,
+
+      -- Enable default keymaps
+      enable_keymaps = false,
+
+      -- Default search scope: "cwd" or "buffer"
+      default_scope = "cwd",
+
+      -- Customize keymaps (only used if enable_keymaps = true)
+      keymaps = {
+        telescope = "<leader>pf",  -- Telescope picker
+        fzf = "<leader>fF",        -- fzf-lua picker
+      },
+    })
+<
+
+Default Configuration:~
+>lua
+    {
+      enable_user_commands = true,
+      enable_keymaps = false,
+      default_scope = "cwd",
+      keymaps = {
+        telescope = "<leader>pf",
+        fzf = "<leader>fF",
+      },
+    }
+*function_index.txt*  Multi-language function indexer for Neovim
+
+==============================================================================
+CONTENTS                                              *function-index-contents*
+
+    1. Introduction ..................... |function-index-introduction|
+    2. Requirements ..................... |function-index-requirements|
+    3. Installation ..................... |function-index-installation|
+    4. Configuration .................... |function-index-configuration|
+    5. Usage ............................ |function-index-usage|
+    6. Commands ......................... |function-index-commands|
+    7. Keymaps .......................... |function-index-keymaps|
+    8. Supported Languages .............. |function-index-languages|
+    9. Function Types ................... |function-index-types|
+    10. Customization ................... |function-index-customization|
+    11. Troubleshooting ................. |function-index-troubleshooting|
+    12. License ......................... |function-index-license|
+
+==============================================================================
+1. INTRODUCTION                                   *function-index-introduction*
+
+Function Index is a Neovim plugin that builds a searchable index of all
+function definitions in your current working directory. It uses ripgrep (rg)
+to efficiently scan files without loading them as buffers or relying on LSP.
+
+Key Features:~
+  • Multi-language support (Lua, Python, JS/TS, Go, Rust, C/C++, Java, Shell)
+  • Fast searching using ripgrep
+  • Integration with Telescope and fzf-lua
+  • Function type detection (Local, Module, Anonymous)
+  • Preview toggle support
+  • No LSP or buffer loading required
+
+==============================================================================
+2. REQUIREMENTS                                   *function-index-requirements*
+
+Required:~
+  • Neovim >= 0.8.0
+  • ripgrep (rg) - https://github.com/BurntSushi/ripgrep
+
+Optional:~
+  • telescope.nvim - https://github.com/nvim-telescope/telescope.nvim
+  • fzf-lua - https://github.com/ibhagwan/fzf-lua
+
+At least one of Telescope or fzf-lua is required for the picker interface.
+
+==============================================================================
+3. INSTALLATION                                   *function-index-installation*
+
+Using lazy.nvim:~
+>lua
+    {
+      "yourname/function_index.nvim",
+      dependencies = {
+        "nvim-telescope/telescope.nvim", -- or "ibhagwan/fzf-lua"
+      },
+      config = function()
+        require("custom.function_index").setup({
+          enable_user_commands = true,
+          enable_keymaps = false,  -- Set to true to enable default keymaps
+          keymaps = {
+            telescope = "<leader>pf",
+            fzf = "<leader>fF",
+          },
+        })
+      end,
+    }
+<
+
+Using packer.nvim:~
+>lua
+    use {
+      "yourname/function_index.nvim",
+      requires = {
+        "nvim-telescope/telescope.nvim", -- or "ibhagwan/fzf-lua"
+      },
+      config = function()
+        require("custom.function_index").setup()
+      end
+    }
+<
+
+==============================================================================
+4. CONFIGURATION                                 *function-index-configuration*
+
+Function Index can be configured during setup:~
+>lua
+    require("custom.function_index").setup({
+      -- Enable user commands (:FunctionIndex, :FunctionIndexTelescope, etc.)
+      enable_user_commands = true,
+
+      -- Enable default keymaps
+      enable_keymaps = false,
+
+      -- Customize keymaps (only used if enable_keymaps = true)
+      keymaps = {
+        telescope = "<leader>pf",  -- Telescope picker
+        fzf = "<leader>fF",        -- fzf-lua picker
+      },
+    })
+<
+
+Default Configuration:~
+>lua
+    {
+      enable_user_commands = true,
+      enable_keymaps = false,
+      keymaps = {
+        telescope = "<leader>pf",
+        fzf = "<leader>fF",
+      },
+    }
+<
+
+==============================================================================
+5. USAGE                                                 *function-index-usage*
+
+Basic Usage:~
+
+1. Navigate to your project directory in Neovim
+2. Run one of the commands (see |function-index-commands|)
+3. Search/filter functions using fuzzy matching
+4. Press <CR> to jump to the selected function definition
+5. Press <C-p> (Telescope) or <F2> (fzf-lua) to toggle preview
+
+The picker will show all function definitions in the current working
+directory and subdirectories, formatted as:
+>
+    path/to/file.lua:42  [M] my_function_name
+    path/to/file.py:15   [L] helper_function
+    path/to/file.js:88   [A] callback
+<
+
+Format:~
+  • First part: File path and line number
+  • [Letter]: Function type (see |function-index-types|)
+  • Last part: Function name
+
+==============================================================================
+6. COMMANDS                                           *function-index-commands*
+
+All commands support optional scope arguments:
+  • No argument: Uses default_scope from configuration (default: "cwd")
+  • `%`: Search only in current buffer
+  • `cwd`: Search in entire current working directory
+
+                                                             *:FunctionIndex*
+:FunctionIndex [scope]
+    Opens the function picker using Telescope (if available) or fzf-lua as
+    fallback. This is the recommended command for most users.
+
+    Examples:~
+      :FunctionIndex          " Use default scope (cwd)
+      :FunctionIndex %        " Current buffer only
+      :FunctionIndex cwd      " Entire CWD
+
+                                                    *:FunctionIndexTelescope*
+:FunctionIndexTelescope [scope]
+    Explicitly opens the Telescope picker for function definitions.
+    Requires telescope.nvim to be installed.
+
+    Examples:~
+      :FunctionIndexTelescope     " Use default scope
+      :FunctionIndexTelescope %   " Current buffer only
+      :FunctionIndexTelescope cwd " Entire CWD
+
+                                                       *:FunctionIndexFzfLua*
+:FunctionIndexFzfLua [scope]
+    Explicitly opens the fzf-lua picker for function definitions.
+    Requires fzf-lua to be installed.
+
+    Examples:~
+      :FunctionIndexFzfLua     " Use default scope
+      :FunctionIndexFzfLua %   " Current buffer only
+      :FunctionIndexFzfLua cwd " Entire CWD
+
+==============================================================================
+7. KEYMAPS                                               *function-index-keymaps*
+
+Default keymaps are disabled by default. Enable them in configuration:~
+>lua
+    require("custom.function_index").setup({
+      enable_keymaps = true,
+      keymaps = {
+        telescope = "<leader>pf",  -- Telescope picker
+        fzf = "<leader>fF",        -- fzf-lua picker
+      },
+    })
+<
+
+You can also define custom keymaps manually:~
+>lua
+    vim.keymap.set("n", "<leader>ff", function()
+      require("custom.function_index").telescope_functions_index()
+    end, { desc = "Find functions" })
+<
+
+Picker Controls:~
+
+Telescope:~
+  • <CR>  - Jump to function definition
+  • <C-p> - Toggle preview window
+  • <C-c> - Close picker
+  • All standard Telescope keybindings work
+
+fzf-lua:~
+  • <CR>  - Jump to function definition
+  • <F2>  - Toggle preview window
+  • <Esc> - Close picker
+  • All standard fzf keybindings work
+
+==============================================================================
+8. SUPPORTED LANGUAGES                               *function-index-languages*
+
+Function Index supports the following languages:
+
+  Language          Extensions                  Example Pattern~
+  --------          ----------                  ---------------
+  Lua               .lua                        function name()
+  Python            .py                         def name():
+  JavaScript        .js, .jsx, .mjs             function name()
+  TypeScript        .ts, .tsx                   function name()
+  Go                .go                         func name()
+  Rust              .rs                         fn name()
+  C                 .c, .h                      int name() {
+  C++               .cpp, .cc, .hpp             void name() {
+  Java              .java                       public void name()
+  Shell             .sh, .bash, .zsh            name() {
+
+Note: Each language has specific regex patterns to detect various function
+definition styles (async, arrow functions, methods, etc.).
+
+==============================================================================
+9. FUNCTION TYPES                                       *function-index-types*
+
+Functions are categorized by type, indicated by a single letter:
+
+  [L] - Local Function~
+      Functions with limited scope (e.g., `local function` in Lua,
+      indented `def` in Python, `const` in JavaScript).
+
+  [M] - Module Function~
+      Public or module-level functions that are exported or accessible
+      from outside the current file (e.g., global functions, public methods).
+
+  [A] - Anonymous Function~
+      Functions without explicit names, typically assigned to variables
+      or used as callbacks (e.g., arrow functions, function expressions).
+
+Examples:~
+
+Lua:~
+>lua
+    local function helper()        -- [L]
+    function M.public_function()   -- [M]
+    local callback = function()    -- [A]
+<
+
+Python:~
+>python
+    def module_function():         # [M]
+        def nested():              # [L]
+<
+
+JavaScript:~
+>javascript
+    function publicFunc() {}       // [M]
+    const helper = () => {}        // [A]
+    const util = function() {}     // [A]
+<
+
+==============================================================================
+10. CUSTOMIZATION                                 *function-index-customization*
+
+Advanced Ripgrep Options:~
+
+If you need to exclude certain directories or files, you can create a
+`.rgignore` file in your project root or use `$RIPGREP_CONFIG_PATH`.
+
+Example `.rgignore`:~
+>
+    node_modules/
+    dist/
+    build/
+    *.min.js
+    vendor/
+<
+
+Custom Language Support:~
+
+Currently, language patterns are hardcoded. Future versions may allow
+custom language definitions through configuration.
+
+==============================================================================
+11. TROUBLESHOOTING                             *function-index-troubleshooting*
+
+Problem: No results found~
+  • Verify ripgrep is installed: `rg --version`
+  • Check that you're in the correct directory
+  • Ensure your files have supported extensions
+  • Check for `.rgignore` files excluding your code
+
+Problem: Wrong function types detected~
+  • Function type detection uses heuristics and may not be 100% accurate
+  • Complex function declarations might be misclassified
+  • This is a known limitation of regex-based detection
+
+Problem: Slow performance~
+  • Function Index should be very fast for most projects
+  • Extremely large codebases (100k+ files) may take a few seconds
+  • Consider adding `.rgignore` to exclude generated files
+
+Problem: Preview not working~
+  • Ensure your picker (Telescope/fzf-lua) is properly configured
+  • Preview requires files to be readable with correct permissions
+  • Binary files won't preview properly
+
+Debug Mode:~
+>lua
+    -- Enable debug notifications
+    vim.notify("Test ripgrep", vim.log.levels.INFO)
+
+    -- Test ripgrep manually
+    vim.fn.system("rg --version")
+<
+
+==============================================================================
+12. LICENSE                                           *function-index-license*
+
+Function Index is released under the MIT License.
+
+Copyright (c) 2025
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

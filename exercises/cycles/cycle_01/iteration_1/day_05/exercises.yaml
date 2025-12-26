@@ -1,0 +1,66 @@
+day_id: "day_05"
+program_id: "B2_powershell_grep"
+iteration: 1
+platform: "powershell"
+
+setup:
+  files:
+    - name: "data.txt"
+      content: |
+        error: disk full
+        info: started
+        warning: low memory
+        error: network failure
+
+exercises:
+  - id: "ex_05_01_select_string"
+    title: "Select-String Basic"
+    duration: "5min"
+    difficulty: 2
+    points_max: 100
+    tags: ["powershell", "select-string", "search"]
+
+    task:
+      description: |
+        Finde alle Zeilen mit "error" in data.txt
+        Nutze Select-String
+
+    solution:
+      primary: 'Select-String -Pattern "error" data.txt'
+
+      alternatives:
+        - "Get-Content data.txt | Select-String 'error'"
+        - 'Select-String -Path data.txt -Pattern "error"'
+
+    validation:
+      type: "command_contains"
+      command: 'Select-String -Pattern "error" data.txt'
+      must_contain: ["error"]
+
+  - id: "ex_05_02_not_match"
+    title: "NotMatch (invertiert)"
+    duration: "5min"
+    difficulty: 2
+    points_max: 100
+
+    task:
+      description: |
+        Finde Zeilen OHNE "error"
+        Nutze -NotMatch Parameter
+
+    solution:
+      primary: 'Select-String -Pattern "error" -NotMatch data.txt'
+
+  - id: "ex_05_03_regex"
+    title: "Regex mit Select-String"
+    duration: "5min"
+    difficulty: 3
+    points_max: 150
+
+    task:
+      description: |
+        Finde Zeilen mit "warn" ODER "error"
+        Nutze Regex: "warn|error"
+
+    solution:
+      primary: 'Select-String -Pattern "warn|error" data.txt'

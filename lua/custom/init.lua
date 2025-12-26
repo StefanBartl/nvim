@@ -4,6 +4,13 @@
 require("custom.function_index").setup()
 require("custom.recommender").setup()
 require("custom.function_index").setup({
+  enable_user_commands = true,
+  -- enable_keymaps = false,
+  -- keymaps = {
+  --   telescope = "<leader>pf",
+  --   fzf = "<leader>fF",
+  -- },
+
   cache = {
     enabled = true,                    -- Enable persistent cache
     dir = vim.fn.stdpath("cache") .. "/function_index",

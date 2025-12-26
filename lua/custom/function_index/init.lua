@@ -1,298 +1,316 @@
 ---@module 'custom.function_index'
----@brief Multi-language function indexer for Neovim
+---@brief Builds a list of all function definitions across multiple languages
 ---@description
---- A high-performance function indexer that uses ripgrep to build
---- a searchable index of function definitions across the entire CWD.
---- Supports multiple languages, persistent caching, and integrates
---- with Telescope and fzf-lua.
----
---- Key features:
---- - No LSP/Tree-sitter dependency
---- - Fast indexing with ripgrep + PCRE2
---- - Persistent cache with incremental updates
---- - Pre-filled search queries (clipboard, cursor word)
---- - Multi-language support (Lua, Python, JS, Go, Rust, C/C++, etc.)
----
---- @see custom.function_index.core.indexer
---- @see custom.function_index.ui.telescope_picker
---- @see custom.function_index.ui.fzf_picker
+--- Uses ripgrep to find function definitions without loading files as buffers
+--- or relying on LSP. Supports Lua, Python, JavaScript/TypeScript, Go, Rust,
+--- C/C++, Java, and Shell scripts.
 
 local M = {}
 
-local cache_mod = require("custom.function_index.core.cache")
-local indexer_mod = require("custom.function_index.core.indexer")
-local telescope_picker = require("custom.function_index.ui.telescope_picker")
-local fzf_picker = require("custom.function_index.ui.fzf_picker")
-
---- Default configuration
----@type table
+---@type FunctionIndexConfig
 local default_config = {
-  cache = {
-    enabled = true,
-    dir = vim.fn.stdpath("cache") .. "/function_index",
-    ttl_seconds = 3600, -- 1 hour
-  },
-  indexing = {
-    auto_rebuild_on_save = false,
-    exclude_patterns = {
-      "node_modules/",
-      ".git/",
-      "build/",
-      "dist/",
-      "target/",
-      "__pycache__/",
-      "*.min.js",
-      "*.min.css",
-    },
-    max_file_size_kb = 1024, -- 1 MB
-    follow_symlinks = false,
-  },
-  languages = {
-    lua = true,
-    python = true,
-    javascript = true,
-    typescript = true,
-    go = true,
-    rust = true,
-    c = true,
-    cpp = true,
-    java = false,
-    ruby = false,
-    php = false,
-  },
-  ui = {
-    show_language_icons = true,
-    show_function_types = true,
-    group_by_file = false,
-    default_picker = "telescope", -- "telescope" or "fzf"
+  enable_user_commands = true,
+  enable_keymaps = false,
+  default_scope = "cwd",
+  keymaps = {
+    telescope = "<leader>pf",
+    fzf = "<leader>fF",
   },
 }
 
---- Active configuration (merged with user options)
----@type table
+---@type FunctionIndexConfig
 local config = vim.deepcopy(default_config)
 
---- Validate user configuration
----@param user_config table
----@return boolean # true if valid
----@return string|nil # Error message if invalid
-local function validate_config(user_config)
-  if type(user_config) ~= "table" then
-    return false, "Configuration must be a table"
-  end
+---Language-specific regex patterns for function detection
+---@type table<string, string>
+local PATTERNS = {
+  lua = [[^\s*(local\s+)?function\s+[A-Za-z_][A-Za-z0-9_]*\s*\(|^\s*[A-Za-z0-9_.]+\s*=\s*function\s*\(]],
+  python = [[^\s*def\s+[A-Za-z_][A-Za-z0-9_]*\s*\(|^\s*async\s+def\s+[A-Za-z_][A-Za-z0-9_]*\s*\(]],
+  javascript = [[^\s*(async\s+)?function\s+[A-Za-z_$][A-Za-z0-9_$]*\s*\(|^\s*[A-Za-z_$][A-Za-z0-9_$]*\s*[:=]\s*(async\s+)?\([^)]*\)\s*=>|^\s*const\s+[A-Za-z_$][A-Za-z0-9_$]*\s*=\s*(async\s+)?function\s*\(]],
+  typescript = [[^\s*(async\s+)?function\s+[A-Za-z_$][A-Za-z0-9_$]*\s*\(|^\s*[A-Za-z_$][A-Za-z0-9_$]*\s*[:=]\s*(async\s+)?\([^)]*\)\s*=>|^\s*const\s+[A-Za-z_$][A-Za-z0-9_$]*\s*=\s*(async\s+)?function\s*\(]],
+  go = [[^\s*func\s+(\([^)]+\)\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(]],
+  rust = [[^\s*(pub\s+)?(async\s+)?fn\s+[A-Za-z_][A-Za-z0-9_]*\s*(<[^>]+>)?\s*\(]],
+  c = [[^\s*(static\s+|inline\s+|extern\s+)*[A-Za-z_][A-Za-z0-9_*\s]+\s+[A-Za-z_][A-Za-z0-9_]*\s*\([^;]*\)\s*\{]],
+  cpp = [[^\s*(static\s+|inline\s+|virtual\s+|explicit\s+|constexpr\s+)*[A-Za-z_][A-Za-z0-9_*&<>\s:]+\s+[A-Za-z_][A-Za-z0-9_]*\s*\([^;]*\)\s*(const\s*)?\{]],
+  java = [[^\s*(public|private|protected)?\s*(static\s+)?(final\s+)?[A-Za-z_<>]+\s+[A-Za-z_][A-Za-z0-9_]*\s*\(]],
+  shell = [[^\s*(function\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(\s*\)\s*\{]],
+}
 
-  -- Validate cache.ttl_seconds
-  if user_config.cache and user_config.cache.ttl_seconds then
-    if type(user_config.cache.ttl_seconds) ~= "number" or user_config.cache.ttl_seconds < 0 then
-      return false, "cache.ttl_seconds must be a non-negative number"
+---File extensions for each language
+---@type table<string, string[]>
+local FILE_PATTERNS = {
+  lua = { "*.lua" },
+  python = { "*.py" },
+  javascript = { "*.js", "*.jsx", "*.mjs" },
+  typescript = { "*.ts", "*.tsx" },
+  go = { "*.go" },
+  rust = { "*.rs" },
+  c = { "*.c", "*.h" },
+  cpp = { "*.cpp", "*.cc", "*.cxx", "*.hpp", "*.hh", "*.hxx" },
+  java = { "*.java" },
+  shell = { "*.sh", "*.bash", "*.zsh" },
+}
+
+---Detect function type (Local, Module, Anonymous) from text
+---@param text string The function definition line
+---@param lang string The language identifier
+---@return string Single letter: L (Local), M (Module), A (Anonymous)
+local function detect_function_type(text, lang)
+  if lang == "lua" then
+    if text:match("^%s*local%s+function") then
+      return "L"
+    elseif text:match("^%s*function%s+[A-Z]") or text:match("^%s*[A-Z][A-Za-z0-9_]*%.") then
+      return "M"
+    elseif text:match("=%s*function%s*%(") then
+      return "A"
+    end
+  elseif lang == "python" then
+    if text:match("^%s+def%s") then
+      return "L"
+    elseif text:match("^def%s") then
+      return "M"
+    end
+  elseif lang == "javascript" or lang == "typescript" then
+    if text:match("const%s") or text:match("let%s") or text:match("var%s") then
+      return "L"
+    elseif text:match("=>") then
+      return "A"
     end
   end
-
-  -- Validate indexing.max_file_size_kb
-  if user_config.indexing and user_config.indexing.max_file_size_kb then
-    if type(user_config.indexing.max_file_size_kb) ~= "number" or user_config.indexing.max_file_size_kb < 0 then
-      return false, "indexing.max_file_size_kb must be a non-negative number"
-    end
-  end
-
-  -- Validate ui.default_picker
-  if user_config.ui and user_config.ui.default_picker then
-    if user_config.ui.default_picker ~= "telescope" and user_config.ui.default_picker ~= "fzf" then
-      return false, "ui.default_picker must be 'telescope' or 'fzf'"
-    end
-  end
-
-  return true, nil
+  return "M"
 end
 
---- Setup function (entry point)
----@param user_config table|nil # User configuration
-function M.setup(user_config)
-  user_config = user_config or {}
+---Extract function name from definition text
+---@param text string The function definition line
+---@param lang string The language identifier
+---@return string The function name or "[anonymous]"
+local function extract_function_name(text, lang)
+  local name = nil
 
-  -- Validate configuration
-  local valid, err = validate_config(user_config)
-  if not valid then
-    vim.notify("Invalid function_index configuration: " .. err, vim.log.levels.ERROR)
+  if lang == "lua" then
+    name = text:match("function%s+([A-Za-z_][A-Za-z0-9_%.:]*)%s*%(")
+      or text:match("([A-Za-z_][A-Za-z0-9_%.:]*)%s*=%s*function")
+  elseif lang == "python" then
+    name = text:match("def%s+([A-Za-z_][A-Za-z0-9_]*)%s*%(")
+  elseif lang == "javascript" or lang == "typescript" then
+    name = text:match("function%s+([A-Za-z_$][A-Za-z0-9_$]*)%s*%(")
+      or text:match("([A-Za-z_$][A-Za-z0-9_$]*)%s*[:=]%s*%(")
+      or text:match("const%s+([A-Za-z_$][A-Za-z0-9_$]*)%s*=")
+  elseif lang == "go" then
+    name = text:match("func%s+%([^)]+%)%s+([A-Za-z_][A-Za-z0-9_]*)%s*%(")
+      or text:match("func%s+([A-Za-z_][A-Za-z0-9_]*)%s*%(")
+  elseif lang == "rust" then
+    name = text:match("fn%s+([A-Za-z_][A-Za-z0-9_]*)%s*[<(]")
+  elseif lang == "c" or lang == "cpp" then
+    name = text:match("%s([A-Za-z_][A-Za-z0-9_]*)%s*%(")
+  elseif lang == "java" then
+    name = text:match("%s+([A-Za-z_][A-Za-z0-9_]*)%s*%(")
+  elseif lang == "shell" then
+    name = text:match("function%s+([A-Za-z_][A-Za-z0-9_]*)%s*%(")
+      or text:match("([A-Za-z_][A-Za-z0-9_]*)%s*%(%)%s*{")
+  end
+
+  return name or "[anonymous]"
+end
+
+---Collect all function definitions with specified scope
+---@param scope "cwd"|"buffer" Search scope
+---@return table[] Array of {filename, lnum, col, text, lang, type, name}
+local function collect_functions(scope)
+  local all_patterns = {}
+  local lang_lookup = {}
+
+  for lang, pattern in pairs(PATTERNS) do
+    table.insert(all_patterns, pattern)
+    for _, ext_pattern in ipairs(FILE_PATTERNS[lang]) do
+      lang_lookup[ext_pattern] = lang
+    end
+  end
+
+  local combined_pattern = table.concat(all_patterns, "|")
+
+  local globs = {}
+  for _, patterns in pairs(FILE_PATTERNS) do
+    for _, pat in ipairs(patterns) do
+      table.insert(globs, "--glob")
+      table.insert(globs, pat)
+    end
+  end
+
+  local cmd = vim.list_extend({
+    "rg",
+    "--vimgrep",
+    "--no-heading",
+    "--pcre2",
+  }, globs)
+
+  table.insert(cmd, combined_pattern)
+
+  -- Determine search path based on scope
+  if scope == "buffer" then
+    local current_file = vim.api.nvim_buf_get_name(0)
+    if current_file == "" then
+      vim.notify("Current buffer has no file", vim.log.levels.WARN)
+      return {}
+    end
+    table.insert(cmd, current_file)
+  else
+    table.insert(cmd, ".")
+  end
+
+  local lines = vim.fn.systemlist(cmd)
+  if vim.v.shell_error ~= 0 then
+    return {}
+  end
+
+  ---@type table[]
+  local results = {}
+
+  for _, line in ipairs(lines) do
+    local file, lnum, col, text = line:match("([^:]+):(%d+):(%d+):(.*)")
+
+    if file then
+      local ext = file:match("%.([^%.]+)$")
+      local lang = "unknown"
+
+      for pattern, l in pairs(lang_lookup) do
+        if pattern:match("%*%.(.+)") == ext then
+          lang = l
+          break
+        end
+      end
+
+      local trimmed_text = vim.trim(text)
+      local func_type = detect_function_type(trimmed_text, lang)
+      local func_name = extract_function_name(trimmed_text, lang)
+
+      results[#results + 1] = {
+        filename = file,
+        lnum = tonumber(lnum),
+        col = tonumber(col),
+        text = trimmed_text,
+        lang = lang,
+        type = func_type,
+        name = func_name,
+      }
+    end
+  end
+
+  return results
+end
+
+---Telescope picker for function index
+---@param scope "cwd"|"buffer"|nil Search scope (defaults to config.default_scope)
+function M.telescope_functions_index(scope)
+  scope = scope or config.default_scope
+
+  local ok, pickers = pcall(require, "telescope.pickers")
+  if not ok then
+    vim.notify("Telescope is not installed", vim.log.levels.ERROR)
     return
   end
 
-  -- Merge with defaults
-  config = vim.tbl_deep_extend("force", default_config, user_config)
+  local finders = require("telescope.finders")
+  local conf = require("telescope.config").values
+  local actions = require("telescope.actions")
+  local action_state = require("telescope.actions.state")
+  local action_layout = require("telescope.actions.layout")
 
-  -- Create user commands
-  vim.api.nvim_create_user_command("FunctionIndexTelescope", function()
-    telescope_picker.pick(config)
-  end, {
-    desc = "Open function index with Telescope",
-  })
+  local entries = collect_functions(scope)
 
-  vim.api.nvim_create_user_command("FunctionIndexFzfLua", function()
-    fzf_picker.pick(config)
-  end, {
-    desc = "Open function index with fzf-lua",
-  })
+  local title = scope == "buffer" and "Function Index (Current Buffer)" or "Function Index (CWD)"
 
-  vim.api.nvim_create_user_command("FunctionIndexRebuild", function()
-    local _, msg = indexer_mod.rebuild_index(config)
-    if msg then
-      vim.notify(msg, vim.log.levels.INFO)
-    end
-  end, {
-    desc = "Force rebuild function index cache",
-  })
+  pickers
+    .new({}, {
+      prompt_title = title,
+      finder = finders.new_table({
+        results = entries,
+        entry_maker = function(e)
+          -- Format: path:row  [L/M/A] function_name
+          local display = string.format("%s:%d  [%s] %s", e.filename, e.lnum, e.type, e.name)
 
-  vim.api.nvim_create_user_command("FunctionIndexClearCache", function()
-    local ok, _ = cache_mod.clear(config)
-    if ok then
-      vim.notify("Cache cleared successfully", vim.log.levels.INFO)
-    else
-      vim.notify("Failed to clear cache: " .. tostring(err), vim.log.levels.ERROR)
-    end
-  end, {
-    desc = "Clear function index cache",
-  })
+          return {
+            value = e,
+            display = display,
+            ordinal = e.name .. " " .. e.filename,
+            filename = e.filename,
+            lnum = e.lnum,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      attach_mappings = function(prompt_bufnr, map)
+        -- Toggle preview with <C-p>
+        map("i", "<C-p>", action_layout.toggle_preview)
+        map("n", "<C-p>", action_layout.toggle_preview)
 
-  vim.api.nvim_create_user_command("FunctionIndexStats", function()
-    local stats = cache_mod.get_stats(config)
-    if stats then
-      local lines = {
-        "Function Index Cache Statistics:",
-        "",
-        "Version: " .. stats.version,
-        "Indexed at: " .. os.date("%Y-%m-%d %H:%M:%S", stats.indexed_at),
-        "Working directory: " .. stats.cwd,
-        "File count: " .. stats.file_count,
-        "Function count: " .. stats.entry_count,
-        "Cache size: " .. string.format("%.2f KB", stats.cache_size_bytes / 1024),
-        "Cache path: " .. stats.cache_path,
-      }
-      vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
-    else
-      vim.notify("No cache found", vim.log.levels.WARN)
-    end
-  end, {
-    desc = "Show function index cache statistics",
-  })
+        actions.select_default:replace(function()
+          local sel = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
+          vim.cmd("edit " .. sel.filename)
+          vim.api.nvim_win_set_cursor(0, { sel.lnum, 0 })
+        end)
 
-  -- Debug command to test ripgrep
-  vim.api.nvim_create_user_command("FunctionIndexDebug", function()
-    local patterns_mod = require("custom.function_index.core.patterns")
-    local patterns = patterns_mod.get_patterns(config.languages)
-
-    vim.notify("Enabled languages: " .. vim.inspect(vim.tbl_keys(vim.tbl_filter(function(v)
-      return v
-    end, config.languages))), vim.log.levels.INFO)
-
-    vim.notify("Found " .. #patterns .. " patterns", vim.log.levels.INFO)
-
-    -- Test a simple Lua pattern
-    local test_cmd = {
-      "rg",
-      "--vimgrep",
-      "--pcre2",
-      "--glob", "*.lua",
-      [[^\s*function\s+]],
-      "."
-    }
-
-    vim.notify("Test command: " .. table.concat(test_cmd, " "), vim.log.levels.INFO)
-
-    local lines = vim.fn.systemlist(test_cmd)
-    vim.notify("Test found " .. #lines .. " matches", vim.log.levels.INFO)
-
-    if #lines > 0 then
-      vim.notify("Sample match: " .. lines[1], vim.log.levels.INFO)
-    end
-  end, {
-    desc = "Debug function index setup",
-  })
-
-  -- Optional: Auto-rebuild on save
-  if config.indexing.auto_rebuild_on_save then
-    vim.api.nvim_create_autocmd("BufWritePost", {
-      pattern = "*",
-      callback = function()
-        -- Debounce: only rebuild after 2 seconds of inactivity
-        vim.defer_fn(function()
-          indexer_mod.rebuild_index(config)
-        end, 2000)
+        return true
       end,
     })
+    :find()
+end
+
+---FzfLua picker for function index
+---@param scope "cwd"|"buffer"|nil Search scope (defaults to config.default_scope)
+function M.fzf_functions_index(scope)
+  scope = scope or config.default_scope
+
+  local ok, fzf = pcall(require, "fzf-lua")
+  if not ok then
+    vim.notify("fzf-lua is not installed", vim.log.levels.ERROR)
+    return
   end
-end
 
---- Get current configuration
----@return table
-function M.get_config()
-  return config
-end
+  local entries = collect_functions(scope)
 
---- Open picker (uses default from config)
-function M.pick()
-  if config.ui.default_picker == "fzf" then
-    fzf_picker.pick(config)
-  else
-    telescope_picker.pick(config)
+  local lines = {}
+  for _, e in ipairs(entries) do
+    -- Format: path:row  [L/M/A] function_name
+    lines[#lines + 1] = string.format("%s:%d  [%s] %s", e.filename, e.lnum, e.type, e.name)
   end
+
+  local prompt_title = scope == "buffer" and "Functions (Buffer)> " or "Functions (CWD)> "
+
+  fzf.fzf_exec(lines, {
+    prompt = prompt_title,
+    previewer = "builtin",
+    actions = {
+      ["default"] = function(sel)
+        local file, lnum = sel[1]:match("([^:]+):(%d+)")
+        if file and lnum then
+          vim.cmd("edit " .. file)
+          vim.api.nvim_win_set_cursor(0, { tonumber(lnum), 0 })
+        end
+      end,
+      ["ctrl-p"] = function()
+        -- FzfLua handles preview toggle internally with <F2>
+        vim.notify("Use <F2> to toggle preview in fzf-lua", vim.log.levels.INFO)
+      end,
+    },
+    winopts = {
+      preview = {
+        default = "builtin",
+      },
+    },
+  })
 end
 
---- Open Telescope picker
-function M.pick_telescope()
-  telescope_picker.pick(config)
-end
+---Setup function index with optional configuration
+---@param opts FunctionIndexConfig|nil Optional configuration
+function M.setup(opts)
+  config = vim.tbl_deep_extend("force", default_config, opts or {})
 
---- Open fzf-lua picker
-function M.pick_fzf()
-  fzf_picker.pick(config)
-end
-
---- Open picker with word under cursor
-function M.pick_cword()
-  if config.ui.default_picker == "fzf" then
-    fzf_picker.pick_with_cword(config)
-  else
-    telescope_picker.pick_with_cword(config)
+  -- Load user actions
+  if config.enable_user_commands or config.enable_keymaps then
+    require("custom.function_index.user_actions").setup(config)
   end
-end
-
---- Open picker with clipboard content
-function M.pick_clipboard()
-  if config.ui.default_picker == "fzf" then
-    fzf_picker.pick_with_clipboard(config)
-  else
-    telescope_picker.pick_with_clipboard(config)
-  end
-end
-
---- Open picker with custom query
----@param query string # Search query
-function M.pick_with_query(query)
-  if config.ui.default_picker == "fzf" then
-    fzf_picker.pick_with_query(config, query)
-  else
-    telescope_picker.pick_with_query(config, query)
-  end
-end
-
---- Rebuild index (force)
----@return table[]
----@return string|nil # Status message
-function M.rebuild_index()
-  return indexer_mod.rebuild_index(config)
-end
-
---- Clear cache
----@return boolean # Success
----@return string|nil # Error message
-function M.clear_cache()
-  return cache_mod.clear(config)
-end
-
---- Get cache statistics
----@return table|nil # Stats or nil
-function M.get_cache_stats()
-  return cache_mod.get_stats(config)
 end
 
 return M

@@ -1,0 +1,296 @@
+day_id: "day_02"
+program_id: "A2_grep"
+iteration: 1
+platform: "linux"
+
+setup:
+  files:
+    - name: "data.txt"
+      content: |
+        error: disk full
+        info: started
+        warning: low memory
+        error: network failure
+        debug: connection established
+        info: processing complete
+
+exercises:
+  # ===================================================================
+  # Exercise 1: Einfache Suche
+  # ===================================================================
+  - id: "ex_02_01_simple_search"
+    title: "Text suchen mit grep"
+    duration: "5min"
+    difficulty: 1
+    points_max: 100
+    tags: ["grep", "search", "basics"]
+
+    task:
+      description: |
+        Finde alle Zeilen in data.txt die "error" enthalten
+
+        Nutze den grep-Befehl
+
+      expected_result: |
+        error: disk full
+        error: network failure
+
+    solution:
+      primary: "grep error data.txt"
+
+      alternatives:
+        - 'grep "error" data.txt'
+        - "cat data.txt | grep error"
+        - "grep 'error' data.txt"
+
+    validation:
+      type: "command_output"
+      command: "grep error data.txt"
+      expected: |
+        error: disk full
+        error: network failure
+
+    scoring:
+      correct: 100
+      time_bonus:
+        "20": 20
+        "40": 10
+      hint_penalty:
+        "1": -10
+        "2": -20
+        "3": -30
+        viewed_solution: -50
+
+    hints:
+      - level: 1
+        cost: 10
+        type: "concept"
+        text: |
+          grep durchsucht Dateien nach Textmustern.
+          Syntax: grep MUSTER DATEI
+
+      - level: 2
+        cost: 20
+        type: "syntax"
+        text: |
+          Der Befehl ist:
+          grep error data.txt
+
+          Oder mit Quotes:
+          grep "error" data.txt
+
+      - level: 3
+        cost: 30
+        type: "solution"
+        text: |
+          Lösung:
+          grep error data.txt
+
+    feedback:
+      success:
+        perfect: |
+          ✅ Perfekt! Grundlegendes grep verstanden.
+
+          grep findet Zeilen, die ein Muster enthalten.
+          Nützliche Optionen:
+          • -i : Groß-/Kleinschreibung ignorieren
+          • -n : Zeilennummern anzeigen
+          • -v : invertieren (Zeilen OHNE Muster)
+          • -c : nur Anzahl zählen
+
+  # ===================================================================
+  # Exercise 2: Invertierte Suche
+  # ===================================================================
+  - id: "ex_02_02_inverted"
+    title: "Invertierte Suche (-v)"
+    duration: "5min"
+    difficulty: 2
+    points_max: 100
+    tags: ["grep", "invert", "flag"]
+
+    task:
+      description: |
+        Finde alle Zeilen die NICHT "error" enthalten
+
+        Nutze das Flag -v (invert match)
+
+      expected_result: |
+        info: started
+        warning: low memory
+        debug: connection established
+        info: processing complete
+
+    solution:
+      primary: "grep -v error data.txt"
+
+      alternatives:
+        - 'grep -v "error" data.txt'
+        - "cat data.txt | grep -v error"
+
+    validation:
+      type: "command_output"
+      command: "grep -v error data.txt"
+      expected: |
+        info: started
+        warning: low memory
+        debug: connection established
+        info: processing complete
+
+    scoring:
+      correct: 100
+      time_bonus:
+        "30": 20
+        "60": 10
+      hint_penalty:
+        "1": -10
+        "2": -20
+        "3": -30
+        viewed_solution: -50
+
+    hints:
+      - level: 1
+        cost: 10
+        type: "concept"
+        text: |
+          Das Flag -v invertiert die Suche.
+          Es zeigt Zeilen die NICHT dem Muster entsprechen.
+
+      - level: 2
+        cost: 20
+        type: "syntax"
+        text: |
+          Der Befehl ist:
+          grep -v MUSTER DATEI
+
+          Also:
+          grep -v error data.txt
+
+      - level: 3
+        cost: 30
+        type: "solution"
+        text: |
+          Lösung:
+          grep -v error data.txt
+
+    feedback:
+      success:
+        perfect: |
+          🎯 Exzellent! -v Flag gemeistert.
+
+          -v (invert) ist nützlich um:
+          • Log-Dateien zu filtern (z.B. ohne "debug")
+          • Bestimmte Zeilen auszuschließen
+          • Komplexe Filter zu bauen
+
+          Beispiel:
+          grep -v "debug\|info" log.txt
+          → Zeigt weder debug noch info
+
+  # ===================================================================
+  # Exercise 3: Zeilennummern und Regex
+  # ===================================================================
+  - id: "ex_02_03_line_numbers_regex"
+    title: "Zeilennummern und Regex"
+    duration: "5min"
+    difficulty: 3
+    points_max: 150
+    tags: ["grep", "regex", "line-numbers", "advanced"]
+
+    task:
+      description: |
+        Finde alle Zeilen die "warn" ODER "error" enthalten
+        Zeige dabei die Zeilennummern an
+
+        Nutze:
+        • -n für Zeilennummern
+        • Regex mit | für ODER (als 'warn\|error')
+
+      expected_result: |
+        1:error: disk full
+        3:warning: low memory
+        4:error: network failure
+
+    solution:
+      primary: "grep -n 'warn\\|error' data.txt"
+
+      alternatives:
+        - 'grep -nE "warn|error" data.txt'
+        - "grep -n -E 'warn|error' data.txt"
+        - 'grep -n "error\|warn" data.txt'
+
+    validation:
+      type: "command_output"
+      command: "grep -n 'warn\\|error' data.txt"
+      expected: |
+        1:error: disk full
+        3:warning: low memory
+        4:error: network failure
+
+    scoring:
+      correct: 150
+      time_bonus:
+        "45": 25
+        "90": 15
+      hint_penalty:
+        "1": -15
+        "2": -30
+        "3": -45
+        viewed_solution: -75
+
+    hints:
+      - level: 1
+        cost: 15
+        type: "concept"
+        text: |
+          Du brauchst:
+          1. -n für Zeilennummern
+          2. Regex mit \| für ODER (in Basic Regex)
+             oder -E mit | (Extended Regex)
+
+      - level: 2
+        cost: 30
+        type: "syntax"
+        text: |
+          Zwei Möglichkeiten:
+
+          1. Basic Regex (escaped |):
+             grep -n 'warn\|error' data.txt
+
+          2. Extended Regex (-E):
+             grep -nE 'warn|error' data.txt
+
+      - level: 3
+        cost: 45
+        type: "solution"
+        text: |
+          Lösung:
+          grep -n 'warn\|error' data.txt
+
+          Alternativ mit -E:
+          grep -nE 'warn|error' data.txt
+
+    feedback:
+      success:
+        perfect: |
+          🏆 Hervorragend! Regex und Flags kombiniert!
+
+          Wichtige Regex-Konzepte:
+          • Basic Regex: \| für ODER (escaped)
+          • Extended Regex (-E): | für ODER (unescaped)
+          • -E erlaubt: +, ?, |, (), {} ohne escaping
+
+          Weitere nützliche Flags:
+          • -A N : N Zeilen NACH Match
+          • -B N : N Zeilen VOR Match
+          • -C N : N Zeilen um Match herum
+
+          Beispiel:
+          grep -n -C 1 'error' log.txt
+          → Zeigt error + 1 Zeile davor/danach
+
+        with_hints: |
+          ✅ Geschafft! Regex ist tricky.
+
+          Merke:
+          • Basic: 'a\|b' (escaped)
+          • Extended: 'a|b' mit -E

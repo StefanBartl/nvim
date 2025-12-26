@@ -8,6 +8,15 @@ end
 
 ---@type LazyPluginSpec[]
 return {
+  {
+    -- 'StefanBartl/learn-cli.nvim',
+    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/learn-cli.nvim"),
+    lazy = false,
+    config = function()
+      require("learn_cli").setup({
+      })
+    end,
+  },
 
   {
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/github_stats.nvim"),
@@ -180,8 +189,8 @@ return {
   },
 
   {
-    -- dir = vim.env.REPOS_DIR .. "/gopath.nvim",
-    "StefanBartl/gopath.nvim",
+    dir = vim.env.REPOS_DIR .. "/gopath.nvim",
+    -- "StefanBartl/gopath.nvim",
     event = "VeryLazy",
     dependencies = {
       "nvim-treesitter/nvim-treesitter", -- Optional but recommended
@@ -201,15 +210,16 @@ return {
       },
 
       -- -- Custom keymaps (optional - defaults shown)
-      -- mappings = {
-      --   open_here = "gP", -- Open in current window
-      --   open_split = "g|", -- Open in horizontal split
-      --   open_vsplit = "g\\", -- Open in vertical split
-      --   open_tab = "g}", -- Open in new tab
-      --   copy_location = "gY", -- Copy path:line:col
-      --   debug = "g?", -- Debug resolution
-      --   -- Set any to false to disable
-      -- },
+      mappings = {
+        open_here = { "gP", "<2-LeftMouse>" },
+        --   open_here = "gP", -- Open in current window
+        --   open_split = "g|", -- Open in horizontal split
+        --   open_vsplit = "g\\", -- Open in vertical split
+        --   open_tab = "g}", -- Open in new tab
+        --   copy_location = "gY", -- Copy path:line:col
+        --   debug = "g?", -- Debug resolution
+        --   -- Set any to false to disable
+      },
       --
       -- -- User commands (optional)
       -- commands = {

@@ -3,6 +3,7 @@
 ---@description
 require("lua.lib.require_dir")("custom.function_index.@types", "")
 
+
 --- Represents an async operation (used with vim.loop).
 ---@class AsyncJob
 ---@field handle userdata|nil      # libuv handle (process, timer, etc.)

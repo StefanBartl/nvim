@@ -43,8 +43,7 @@ function M.enable(cfg)
     })
   end
 
-
-    -- 2) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
+  -- 2) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
   if cfg.kitty.enable then
     local grp = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_kitty_spacing")
     api.nvim_create_autocmd("VimEnter", {
@@ -127,35 +126,48 @@ function M.enable(cfg)
         if not ok_ts then
           return
         end
-        local ts_utils = require("nvim-treesitter.ts_utils")
 
         -- Preload ordered case modules
         local cases = gofile_loader.load_ordered_cases(cfg)
         local logger = logger_mod(cfg)
 
-        vim.keymap.set("n", "gf", function()
+        local function gf_dispatch()
           local dispatch_cases = require("autocmds.general.gofile_case_dispatcher")
-          local node = ts_utils.get_node_at_cursor()
-          local bufnr = api.nvim_get_current_buf()
+          local ts_utils = require("nvim-treesitter.ts_utils")
 
-          logger.debug("enable: gf invoked", {
+          local bufnr = api.nvim_get_current_buf()
+          local node = ts_utils.get_node_at_cursor()
+
+          logger.debug("gf invoked", {
             buf = bufnr,
-            node_type = (node and pcall(function()
-              return node:type()
-            end) and node:type()),
+            node_type = node and node:type() or nil,
           })
 
-          local handled = dispatch_cases(node, bufnr, ts_utils, cfg, cases)
-          if not handled then
-            logger.info("enable: falling back to builtin gf")
-            vim.cmd("normal! gf")
+          local handled = false
+          if dispatch_cases then
+            handled = dispatch_cases(node, bufnr, ts_utils, cfg, cases)
           end
-        end, { buffer = true, desc = "Markdown-aware gf with modular resolver" })
+
+          if not handled then
+            logger.info("falling back to builtin gf")
+            vim.cmd.normal({ args = { "gf" }, bang = true })
+          end
+        end
+
+        local lhs_list =  {"gf"}
+
+        for _, lhs in ipairs(lhs_list) do
+          vim.keymap.set("n", lhs, gf_dispatch, {
+            buffer = 0,
+            noremap = true,
+            silent = true,
+            desc = "Markdown-aware gf with modular resolver",
+          })
+        end
       end,
       desc = "Markdown: override gf to follow links/URLs with fallback",
     })
   end
-
 end
 
 return M

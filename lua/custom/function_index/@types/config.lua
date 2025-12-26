@@ -40,9 +40,9 @@ require("lua.lib.require_dir")("custom.function_index.@types", "")
 --- Root configuration object for the function_index module.
 --- Passed to setup() and merged with defaults.
 ---@class FunctionIndexConfig
----@field cache CacheConfig
----@field indexing IndexingConfig
----@field languages LanguageConfig
----@field ui UIConfig
+---@field enable_user_commands boolean Enable :FunctionIndex* commands
+---@field enable_keymaps boolean Enable default keymaps
+---@field keymaps table<string, string> Keymap definitions
+---@field default_scope "cwd"|"buffer" Default search scope
 
 return {}
