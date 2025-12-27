@@ -1,6 +1,5 @@
 ---@module 'custom.repo_pickers'
 --- Tiny facade: keeps active config, resolves selectors, exposes _entry_*.
-require("lib.require_dir")("custom.repo_pickers.@types")
 
 local cfgmod = require("custom.repo_pickers.config")
 local reg = require("custom.repo_pickers.register")

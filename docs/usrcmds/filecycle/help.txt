@@ -156,7 +156,7 @@ API (LUA)                                                         *filecycle-api
 >
 
 --- Initialize or override defaults.
---- @param cfg FileCycleConfig|nil
+--- @param cfg FileCycle.Config|nil
 require("usrcmds.filecycle").setup({
 wrap = true,
 case_insensitive = true,
@@ -169,7 +169,7 @@ case_insensitive = true,
 
 --- Programmatic navigation with optional per-call overrides.
 --- @param mode '"next"'|'"prev"'
---- @param overrides FileCycleConfig|nil
+--- @param overrides FileCycle.Config|nil
 require("usrcmds.filecycle").open("next")
 require("usrcmds.filecycle").open("prev", { open_target = "split", keep_focus = true })
 <
@@ -179,7 +179,7 @@ Type reference (LuaLS/Emmy, expressed separately in code):
 >
 
 ---@alias FilePath string
----@class FileCycleConfig
+---@class FileCycle.Config
 ---@field open_target         "current"|"split"|"vsplit"|"tab"|"background"
 ---@field keep_focus          boolean
 ---@field include_hidden      boolean

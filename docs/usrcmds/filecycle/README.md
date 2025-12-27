@@ -151,7 +151,7 @@ require("usrcmds.filecycle").open("next", { include_hidden = true, wrap = false 
 ```lua
 ---@alias FilePath string
 
----@class FileCycleConfig
+---@class FileCycle.Config
 ---@field open_target        "current"|"split"|"vsplit"|"tab"|"background"
 ---@field keep_focus         boolean
 ---@field include_hidden     boolean
@@ -161,8 +161,8 @@ require("usrcmds.filecycle").open("next", { include_hidden = true, wrap = false 
 ---@field confirm_on_modified boolean
 ---@field case_insensitive   boolean
 
----@class FileCycleState
----@field opts FileCycleConfig
+---@class FileCycle.State
+---@field opts FileCycle.Config
 ```
 
 ---
