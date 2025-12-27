@@ -27,6 +27,7 @@ function M.setup()
   require("mappings.sourrounding").setup()
   require("mappings.telescope").setup()
   require("mappings.terminal").setup()
+  require("mappings.toggle_comment").setup()
   require("mappings.trouble").setup()
   require("mappings.window_orientation").setup()
 
