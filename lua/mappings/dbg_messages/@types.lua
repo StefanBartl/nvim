@@ -1,7 +1,13 @@
+---@meta
 ---@module 'mappings.dbg_messages.@types'
 
 ---@alias DbgMsgs.Win integer
 ---@alias DbgMsgs.Buf integer
+
+---@class DbgMsgs.WindowRegistry
+---@field messages integer|nil
+---@field noice_all integer|nil
+---@field noice_errors integer|nil
 
 ---@class DbgMsgs.Keymaps
 ---@field enable boolean

@@ -1,17 +1,259 @@
 ---@module 'mappings.dbg_messages'
---- Ensure bottom-of-buffer for :messages and Noice views without disturbing editor windows.
---- Avoids races by always addressing concrete window ids (never win=0 in async callbacks).
+---Deterministic handling for :messages and Noice log views.
+---Guarantees:
+---  - explicit window/buffer identification via tags
+---  - focus + cursor always at last line
+---  - safe refresh on WinEnter / BufWinEnter
+---  - automatic refresh on new content (via TextChanged for messages buffer)
+---  - no reliance on current window (win=0)
+---  - modular, extensible architecture
+require("mappings.dbg_messages.@types")
 
-local utils = require("lua.mappings.dbg_messages.utils")
+local capture = require("lib.buf_win_tab.capture")
+local utils = require("mappings.dbg_messages.utils")
 
 local M = {}
 
 local api = vim.api
-local nvim_get_current_win, nvim_win_is_valid = api.nvim_get_current_win, api.nvim_win_is_valid
-local defer_fn = vim.defer_fn
-local ensure_bottom = utils.ensure_bottom
 
---- Configure module and register keymaps/autocmds
+--------------------------------------------------------------------------------
+-- State tracking
+--------------------------------------------------------------------------------
+
+---@type DbgMsgs.WindowRegistry
+---@diagnostic disable-next-line: unused-local
+local WINDOWS = {
+  messages = nil,
+  noice_all = nil,
+  noice_errors = nil,
+}
+
+--------------------------------------------------------------------------------
+-- Core primitives
+--------------------------------------------------------------------------------
+
+---@param win integer
+---@param attempts integer
+---@param retry_delay integer
+local function focus_and_bottom(win, attempts, retry_delay)
+  if not api.nvim_win_is_valid(win) then
+    return
+  end
+
+  -- Deterministic focus
+  api.nvim_set_current_win(win)
+
+  local buf = api.nvim_win_get_buf(win)
+  local last = api.nvim_buf_line_count(buf)
+
+  -- Logical cursor position
+  pcall(api.nvim_win_set_cursor, win, { last, 0 })
+
+  -- Visual scroll (required for log buffers)
+  vim.cmd("normal! G")
+
+  -- Async-safe retry (content may grow)
+  utils.ensure_bottom(win, attempts, retry_delay)
+end
+
+---@param tag string
+---@return integer|nil
+local function find_window_by_tag(tag)
+  for _, win in ipairs(api.nvim_list_wins()) do
+    if api.nvim_win_is_valid(win) and vim.w[win].custom_tag == tag then
+      return win
+    end
+  end
+  return nil
+end
+
+---@param win integer
+---@return string|nil
+local function get_window_tag(win)
+  if not api.nvim_win_is_valid(win) then
+    return nil
+  end
+  return vim.w[win] and vim.w[win].custom_tag or nil
+end
+
+--------------------------------------------------------------------------------
+-- Command execution with window reuse
+--------------------------------------------------------------------------------
+
+---@param tag string
+---@param cmd string
+---@param attempts integer
+---@param retry_delay integer
+local function execute_and_refresh(tag, cmd, attempts, retry_delay)
+  local existing_win = find_window_by_tag(tag)
+
+  if existing_win and api.nvim_win_is_valid(existing_win) then
+    -- Reuse existing window: focus, execute command, scroll to bottom
+    api.nvim_set_current_win(existing_win)
+    vim.cmd(cmd)
+    vim.defer_fn(function()
+      if api.nvim_win_is_valid(existing_win) then
+        focus_and_bottom(existing_win, attempts, retry_delay)
+      end
+    end, 50)
+    return
+  end
+
+  -- Create new window via capture
+  capture.capture(cmd, {
+    timeout = 500,
+    tag = { buf = tag, win = tag },
+  }, function(result)
+    for _, win in ipairs(result.wins or {}) do
+      if api.nvim_win_is_valid(win) then
+        ---@diagnostic disable-next-line: unused-local
+        WINDOWS[tag] = win
+        focus_and_bottom(win, attempts, retry_delay)
+      end
+    end
+  end)
+end
+
+--------------------------------------------------------------------------------
+-- Refresh logic for existing windows
+--------------------------------------------------------------------------------
+
+---@param win integer
+---@param tag string
+---@param attempts integer
+---@param retry_delay integer
+local function refresh_log_view(win, tag, attempts, retry_delay)
+  if not api.nvim_win_is_valid(win) then
+    return
+  end
+
+  -- Re-emit content (messages are snapshots, not live views)
+  if tag == "messages" then
+    vim.cmd("messages")
+  elseif tag == "noice_all" then
+    vim.cmd("Noice all")
+  elseif tag == "noice_errors" then
+    vim.cmd("Noice errors")
+  else
+    return
+  end
+
+  focus_and_bottom(win, attempts, retry_delay)
+end
+
+--------------------------------------------------------------------------------
+-- Setup helpers
+--------------------------------------------------------------------------------
+
+---@param timings DbgMsgs.Timings
+---@param km DbgMsgs.Keymaps
+local function setup_keymaps(timings, km)
+  km.map("n", "<lt>m", function()
+    execute_and_refresh("messages", "messages", timings.attempts, timings.retry_delay_ms)
+  end, {
+    desc = "[General] Open :messages (deterministic, auto-bottom)",
+    nowait = true,
+    silent = true,
+  })
+
+  km.map("n", "<lt>n", function()
+    execute_and_refresh("noice_all", "Noice all", timings.attempts, timings.retry_delay_ms)
+  end, {
+    desc = "[Noice] All (deterministic, auto-bottom)",
+    silent = true,
+  })
+
+  km.map("n", "<lt>e", function()
+    execute_and_refresh("noice_errors", "Noice errors", timings.attempts, timings.retry_delay_ms)
+  end, {
+    desc = "[Noice] Errors (deterministic, auto-bottom)",
+    silent = true,
+  })
+end
+
+---@param timings DbgMsgs.Timings
+---@param ac DbgMsgs.Autocmds
+local function setup_autocmds(timings, ac)
+  local AUG = api.nvim_create_augroup(ac.group_name, { clear = true })
+
+  -- Refresh when entering tagged log windows
+  api.nvim_create_autocmd("WinEnter", {
+    group = AUG,
+    desc = "Refresh tagged log window on WinEnter",
+    callback = function()
+      local win = api.nvim_get_current_win()
+      local tag = get_window_tag(win)
+      if not tag then
+        return
+      end
+
+      vim.defer_fn(function()
+        if api.nvim_win_is_valid(win) and api.nvim_get_current_win() == win then
+          refresh_log_view(win, tag, timings.attempts, timings.retry_delay_ms)
+        end
+      end, 30)
+    end,
+  })
+
+  -- Fallback for newly attached windows
+  api.nvim_create_autocmd("BufWinEnter", {
+    group = AUG,
+    desc = "Refresh tagged log window on BufWinEnter",
+    callback = function(ev)
+      local win = vim.fn.bufwinid(ev.buf)
+      if win == -1 then
+        return
+      end
+
+      local tag = get_window_tag(win)
+      if not tag then
+        return
+      end
+
+      vim.defer_fn(function()
+        if api.nvim_win_is_valid(win) then
+          refresh_log_view(win, tag, timings.attempts, timings.retry_delay_ms)
+        end
+      end, 30)
+    end,
+  })
+
+  -- Hook for capture module
+  api.nvim_create_autocmd("User", {
+    group = AUG,
+    pattern = "BufWinCapture",
+    desc = "Ensure cursor at bottom after capture",
+    callback = function(ev)
+      for _, win in ipairs(ev.data and ev.data.wins or {}) do
+        if api.nvim_win_is_valid(win) then
+          utils.ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
+        end
+      end
+    end,
+  })
+
+  -- Auto-refresh messages window when :messages updates
+  api.nvim_create_autocmd("CmdlineLeave", {
+    group = AUG,
+    pattern = "*",
+    desc = "Auto-refresh messages window after command",
+    callback = function()
+      local messages_win = find_window_by_tag("messages")
+      if messages_win and api.nvim_win_is_valid(messages_win) then
+        vim.defer_fn(function()
+          if api.nvim_win_is_valid(messages_win) then
+            refresh_log_view(messages_win, "messages", timings.attempts, timings.retry_delay_ms)
+          end
+        end, 100)
+      end
+    end,
+  })
+end
+
+--------------------------------------------------------------------------------
+-- Public setup
+--------------------------------------------------------------------------------
+
 ---@param cfg DbgMsgs.Setup|nil
 function M.setup(cfg)
   cfg = cfg or {}
@@ -34,91 +276,11 @@ function M.setup(cfg)
   }, cfg.autocmds or {}) ---@as DbgMsgs.Autocmds
 
   if km.enable then
-    km.map("n", "<lt>m", function()
-      vim.cmd("messages")
-      -- SOFORT ins Fenster springen
-      local win = nvim_get_current_win()
-      local buf = api.nvim_win_get_buf(win)
-      local last = api.nvim_buf_line_count(buf)
-
-      -- Cursor SOFORT ans Ende setzen
-      pcall(api.nvim_win_set_cursor, win, { last, 0 })
-
-      -- Zusätzlich mit defer_fn für Inhalte, die später kommen
-      defer_fn(function()
-        if nvim_win_is_valid(win) then
-          ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
-        end
-      end, timings.delay_messages_ms)
-    end, { desc = "[General] Open :messages at bottom", nowait = true, silent = true })
-
-    km.map("n", "<lt>n", function()
-      vim.cmd("Noice all")
-      -- SOFORT ins Fenster springen
-      local win = nvim_get_current_win()
-      local buf = api.nvim_win_get_buf(win)
-      local last = api.nvim_buf_line_count(buf)
-
-      -- Cursor SOFORT ans Ende setzen
-      pcall(api.nvim_win_set_cursor, win, { last, 0 })
-
-    defer_fn(function()
-        if nvim_win_is_valid(win) then
-          ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
-        end
-      end, timings.delay_noice_ms)
-    end, { desc = "[Noice] All (auto-bottom)", silent = true })
-
-    km.map("n", "<lt>e", function()
-      vim.cmd("Noice errors")
-      -- SOFORT ins Fenster springen
-      local win = nvim_get_current_win()
-      local buf = api.nvim_win_get_buf(win)
-      local last = api.nvim_buf_line_count(buf)
-
-      -- Cursor SOFORT ans Ende setzen
-      pcall(api.nvim_win_set_cursor, win, { last, 0 })
-
-      defer_fn(function()
-        if nvim_win_is_valid(win) then
-          ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
-        end
-      end, timings.delay_noice_ms)
-    end, { desc = "[Noice] Errors (auto-bottom)", silent = true })
+    setup_keymaps(timings, km)
   end
 
   if ac.enable then
-    local AUG = api.nvim_create_augroup(ac.group_name, { clear = true })
-
-    api.nvim_create_autocmd("FileType", {
-      group = AUG,
-      pattern = { "messages", "noice" },
-      desc = "Auto-bottom when :messages/Noice filetype is set",
-      callback = function(ev)
-        defer_fn(function()
-          local wins = vim.fn.win_findbuf(ev.buf) ---@type integer[]
-          for i = 1, #wins do
-            ensure_bottom(wins[i], timings.attempts, timings.retry_delay_ms)
-          end
-        end, 30)
-      end,
-    })
-
-    api.nvim_create_autocmd("BufWinEnter", {
-      group = AUG,
-      desc = "Fallback auto-bottom for :messages/Noice on BufWinEnter",
-      callback = function(ev)
-        if not utils.is_target_view(ev.buf) then
-          return
-        end
-        local win = ev.win or nvim_get_current_win()
-        vim.schedule(function()
-          if nvim_win_is_valid(win) then
-            ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
-          end
-        end)
-      end,
-    })
+    setup_autocmds(timings, ac)
   end
 end
 

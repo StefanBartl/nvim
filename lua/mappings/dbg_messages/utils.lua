@@ -1,4 +1,5 @@
 ---@module 'mappings.dbg_messages.utils'
+require("mappings.dbg_messages.@types")
 
 local api = vim.api
 local nvim_buf_is_valid = api.nvim_buf_is_valid
@@ -35,7 +36,7 @@ end
 ---@param attempts integer
 ---@param retry_delay integer
 ---@diagnostic disable-next-line
-local function ensure_bottom(win, attempts, retry_delay) end
+local function _ensure_bottom(win, attempts, retry_delay) end
 
 -- Check if window cursor already sits at the last line
 function at_bottom(win)
@@ -105,11 +106,11 @@ function M.ensure_bottom(win, attempts, retry_delay)
   if attempts > 1 and not at_bottom(win) then
     vim.defer_fn(function()
       if win and nvim_win_is_valid(win) then
-        ensure_bottom(win, attempts - 1, retry_delay)
+        _ensure_bottom(win, attempts - 1, retry_delay)
       end
     end, retry_delay)
   end
 end
 
 
-return {}
+return M
