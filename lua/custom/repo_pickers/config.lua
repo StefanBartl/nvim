@@ -1,11 +1,14 @@
 ---@module 'custom.repo_pickers.config'
 --- Defaults + merge/sanitize for repo_pickers.
+require("custom.repo_pickers.@types.types")
 
 local M = {}
 
----@type RepoPickersConfig
+---@type RepoPickers.Config
 local DEFAULTS = {
   repos_dir = vim.env.REPOS_DIR or nil,
+  wkdbooks_dir = vim.env.REPOS_DIR .. "/WKDBooks",
+  wkdbook_prefix = "wkdbook-",
   only_git = true,
   selector = "auto",
   engine = "auto",
@@ -24,8 +27,8 @@ local DEFAULTS = {
 }
 
 --- Merge user config into defaults and sanitize values.
----@param user RepoPickersConfig|nil
----@return RepoPickersConfig
+---@param user RepoPickers.Config|nil
+---@return RepoPickers.Config
 function M.merge(user)
   local u = type(user) == "table" and user or {}
   local out = vim.tbl_deep_extend("force", {}, DEFAULTS, u)

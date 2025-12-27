@@ -6,9 +6,9 @@ local fs = require("custom.repo_pickers.fs")
 local M = {}
 
 --- Try to open a Telescope picker. Returns false if Telescope is unavailable.
---- @param cfg RepoPickersConfig
---- @param repos RepoDir[]
---- @param on_choice fun(dir:RepoDir)
+--- @param cfg RepoPickers.Config
+--- @param repos RepoPickers.RepoDir[]
+--- @param on_choice fun(dir:RepoPickers.RepoDir)
 --- @return boolean handled
 function M.select(cfg, repos, on_choice)
   local function sreq(name)
@@ -44,6 +44,55 @@ function M.select(cfg, repos, on_choice)
           local idx = selection and selection.index
           if type(idx) == "number" and repos[idx] then
             on_choice(repos[idx])
+          end
+        end)
+        return true
+      end,
+    })
+    :find()
+
+  return true
+end
+
+--- Try to open a Telescope picker for wkdbooks. Returns false if Telescope is unavailable.
+--- @param cfg RepoPickers.Config
+--- @param wkdbooks RepoPickers.RepoDir[]
+--- @param on_choice fun(dir:RepoPickers.RepoDir)
+--- @return boolean handled
+function M.select_wkdbook(cfg, wkdbooks, on_choice)
+  local function sreq(name)
+    local ok, mod = pcall(require, name)
+    return ok and mod or nil
+  end
+
+  local pickers = sreq("telescope.pickers")
+  local finders = sreq("telescope.finders")
+  local conf = sreq("telescope.config")
+  local actions = sreq("telescope.actions")
+  local action_state = sreq("telescope.actions.state")
+
+  if not (pickers and finders and conf and actions and action_state) then
+    return false
+  end
+
+  ---@type string[]
+  local labels = { [#wkdbooks] = "" }
+  for i = 1, #wkdbooks do
+    labels[i] = fs.label_of_wkdbook(cfg, wkdbooks[i])
+  end
+
+  pickers
+    .new({}, {
+      prompt_title = "WkdBooks",
+      finder = finders.new_table({ results = labels }),
+      sorter = conf.values.generic_sorter({}),
+      attach_mappings = function(_, _)
+        actions.select_default:replace(function(bufnr)
+          actions.close(bufnr)
+          local selection = action_state.get_selected_entry()
+          local idx = selection and selection.index
+          if type(idx) == "number" and wkdbooks[idx] then
+            on_choice(wkdbooks[idx])
           end
         end)
         return true

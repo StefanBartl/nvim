@@ -11,8 +11,6 @@ I    . Die meisten helper sollten eigenltich als commands implementiert werden
 
 ## ideas
 
-- Picker, der zuerst alle wkdbooks auflistet zum auswählen, dann die files oder greps picked. Ähnlicjh wie `custom/repopickers`
-
 ## Long run
 
 1. workspace lsp warnings debuggen

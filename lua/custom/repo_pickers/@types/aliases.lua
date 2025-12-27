@@ -2,15 +2,17 @@
 ---@module 'custom.repo_pickers.types.aliases'
 --- Central type aliases for repo_pickers.
 
----@alias RepoDir string
+---@alias RepoPickers.RepoDir string
 
----@alias RepoSelector
+---@alias RepoPickers.RepoSelector
 ---| "auto"        # Match selection UI to the effective engine (fzf/Telescope); fallback = vim.ui.select
 ---| "telescope"   # Force Telescope for selection (fallback = vim.ui.select)
 ---| "fzf"         # Force fzf-lua for selection (fallback = vim.ui.select)
 ---| "vim_select"  # Always use vim.ui.select
 
----@alias RepoEngine
+---@alias RepoPickers.RepoEngine
 ---| "auto"       # Prefer fzf-lua actions if available, else Telescope
 ---| "telescope"  # Force Telescope actions
 ---| "fzf"        # Force fzf-lua actions
+
+return {}

@@ -1,10 +1,11 @@
 ---@module 'custom.repo_pickers.dispatch'
 --- Engine resolution and direct execution helpers (no need for engine-specific user commands).
+require("custom.repo_pickers.@types.types")
 
 local M = {}
 
 --- Resolve the effective engine ("fzf"|"telescope") for files based on config and installed plugins.
----@param cfg RepoPickersConfig
+---@param cfg RepoPickers.Config
 ---@return "fzf"|"telescope"
 function M.resolve_engine_for_files(cfg)
   local eng = cfg.engine or "auto"
@@ -22,7 +23,7 @@ function M.resolve_engine_for_files(cfg)
 end
 
 --- Resolve the effective engine ("fzf"|"telescope") for grep based on config and installed plugins.
----@param cfg RepoPickersConfig
+---@param cfg RepoPickers.Config
 ---@return "fzf"|"telescope"
 function M.resolve_engine_for_grep(cfg)
   local eng = cfg.engine or "auto"
@@ -40,7 +41,7 @@ end
 
 --- Run a "files" picker for a given engine and directory.
 ---@param engine "fzf"|"telescope"
----@param dir RepoDir
+---@param dir RepoPickers.RepoDir
 ---@return nil
 function M.run_files_by_engine(engine, dir)
   if engine == "fzf" then
@@ -62,7 +63,7 @@ end
 
 --- Run a "live_grep" picker for a given engine and directory.
 ---@param engine "fzf"|"telescope"
----@param dir RepoDir
+---@param dir RepoPickers.RepoDir
 ---@return nil
 function M.run_grep_by_engine(engine, dir)
   if engine == "fzf" then

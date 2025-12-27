@@ -1,5 +1,19 @@
 # Beispielkonfiguartionen repo pickers
 
+```lua
+-- In der Neovim-Konfiguration
+require("custom.repo_pickers").enable({
+  selector = "auto",
+  engine = "auto",
+  wkdbooks_dir = vim.env.REPOS_DIR .. "/WKDBooks",  -- optional, default ist automatisch
+  wkdbook_prefix = "wkdbook-",  -- optional, default
+  keymaps_lhs = {
+    wkdbook_find = "<leader>wf",
+    wkdbook_grep = "<leader>wg",
+  },
+}, { usercmds = true, keymaps = true })
+```
+
 ## nur :RepoFiles/:RepoGrep aktiv
 
 ```lua

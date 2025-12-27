@@ -1,5 +1,6 @@
 ---@module 'custom.repo_pickers.fs'
 --- Filesystem helpers: path ops, repo scanning, and display label formatting.
+require("custom.repo_pickers.@types.types")
 
 local M = {}
 
@@ -44,7 +45,7 @@ function M.is_dir(p)
 end
 
 --- Return true if path contains a `.git` entry (dir or file; supports worktrees).
---- @param dir RepoDir
+--- @param dir RepoPickers.RepoDir
 --- @return boolean
 function M.has_git(dir)
   local git_path = M.join(dir, ".git")
@@ -56,7 +57,7 @@ end
 --- Returns sorted absolute paths.
 --- @param root string
 --- @param only_git boolean
---- @return RepoDir[]|nil, string?  -- nil,err on failure
+--- @return RepoPickers.RepoDir[]|nil, string?  -- nil,err on failure
 function M.scan_repos(root, only_git)
   if type(root) ~= "string" or root == "" then
     return nil, "Missing repos_dir (set $REPOS_DIR or pass config.repos_dir)"
@@ -71,7 +72,7 @@ function M.scan_repos(root, only_git)
     return nil, ("Failed to scan directory: %s"):format(root)
   end
 
-  ---@type RepoDir[]
+  ---@type RepoPickers.RepoDir[]
   local out = {} -- unknown length; dynamic growth is fine here
 
   while true do
@@ -98,8 +99,8 @@ end
 
 --- Compute a presentation label for a repo path.
 --- When `show_relative` is enabled and `repos_dir` is a prefix, return a relative label; else basename.
---- @param cfg RepoPickersConfig
---- @param repo RepoDir
+--- @param cfg RepoPickers.Config
+--- @param repo RepoPickers.RepoDir
 --- @return string
 function M.label_of(cfg, repo)
   if not cfg.show_relative then
@@ -114,6 +115,83 @@ function M.label_of(cfg, repo)
     end
   end
   return repo:match("([^/\\]+)[/\\]?$") or repo
+end
+
+--- Recursively scan all subdirectories of `root` that match the given prefix.
+--- Returns sorted absolute paths.
+--- @param root string
+--- @param prefix string
+--- @param max_depth? integer  -- Maximum recursion depth (default: 10)
+--- @return RepoPickers.RepoDir[]|nil, string?  -- nil,err on failure
+function M.scan_wkdbooks(root, prefix, max_depth)
+  if type(root) ~= "string" or root == "" then
+    return nil, "Missing wkdbooks_dir (set $REPOS_DIR or pass config.wkdbooks_dir)"
+  end
+  root = M.normalize(root)
+  if not M.is_dir(root) then
+    return nil, ("wkdbooks_dir is not a directory: %s"):format(root)
+  end
+
+  max_depth = max_depth or 10
+  local prefix_lower = prefix:lower()
+
+  ---@type RepoDir[]
+  local out = {}
+
+  --- Recursive helper to scan directories
+  ---@param dir string
+  ---@param depth integer
+  local function scan_recursive(dir, depth)
+    if depth > max_depth then
+      return
+    end
+
+    local req = uv.fs_scandir(dir)
+    if not req then
+      return
+    end
+
+    while true do
+      local name, ftype = uv.fs_scandir_next(req)
+      if not name then
+        break
+      end
+
+      if ftype == "directory" then
+        local full = M.join(dir, name)
+
+        -- Check if directory name starts with prefix (case-insensitive)
+        if name:lower():sub(1, #prefix_lower) == prefix_lower then
+          out[#out + 1] = full
+        end
+
+        -- Continue scanning subdirectories recursively
+        scan_recursive(full, depth + 1)
+      end
+    end
+  end
+
+  scan_recursive(root, 0)
+
+  -- Sort by directory basename (case-insensitive)
+  table.sort(out, function(a, b)
+    local aa = a:match("([^/\\]+)[/\\]?$") or a
+    local bb = b:match("([^/\\]+)[/\\]?$") or b
+    return aa:lower() < bb:lower()
+  end)
+
+  return out, nil
+end
+
+--- Compute a presentation label for a wkdbook path.
+--- Always returns only the directory basename (e.g., "wkdbook-Git" instead of "SoftwareDokumentationen/wkdbook-Git").
+--- @param cfg RepoPickers.Config
+--- @param wkdbook RepoPickers.RepoDir
+--- @return string
+---@diagnostic disable-next-line: unused-local
+function M.label_of_wkdbook(cfg, wkdbook)
+  -- Always return just the basename for wkdbooks
+  return wkdbook:match("([^/\\]+)[/\\]?$") or wkdbook
 end
 
 return M

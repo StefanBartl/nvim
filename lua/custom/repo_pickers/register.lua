@@ -1,25 +1,41 @@
 ---@module 'custom.repo_pickers.register'
 --- Registration of public user commands and optional engine-specific extras.
+require("custom.repo_pickers.@types.types")
 
 local actions = require("custom.repo_pickers.actions")
 local router = require("custom.repo_pickers.select.router")
+
 local M = {}
+
+local api = vim.api
+local notify, levels = vim.notify, vim.log.levels
 
 --- Register the minimal public API: RepoFiles / RepoGrep.
 --- Optionally, if cfg.expose_engine_cmds is true, also register engine-specific commands.
----@param cfg RepoPickersConfig
+---@param cfg RepoPickers.Config
 ---@return nil
 function M.usercmds(cfg)
   -- Minimal public interface (always registered)
-  vim.api.nvim_create_user_command("RepoFiles", function()
+  api.nvim_create_user_command("RepoFiles", function()
     local sel = router.mk_selector(cfg, nil) -- router chooses based on cfg.selector and engine hint inside actions
     actions.repo_files(cfg, sel)
   end, { desc = "Select repository → files (engine per config)" })
 
-  vim.api.nvim_create_user_command("RepoGrep", function()
+  api.nvim_create_user_command("RepoGrep", function()
     local sel = router.mk_selector(cfg, nil)
     actions.repo_grep(cfg, sel)
   end, { desc = "Select repository → live_grep (engine per config)" })
+
+  -- WkdBook commands
+  api.nvim_create_user_command("WkdBookFind", function()
+    local sel = router.mk_wkdbook_selector(cfg, nil)
+    actions.wkdbook_find(cfg, sel)
+  end, { desc = "Select WkdBook → files (engine per config)" })
+
+  api.nvim_create_user_command("WkdBookGrep", function()
+    local sel = router.mk_wkdbook_selector(cfg, nil)
+    actions.wkdbook_grep(cfg, sel)
+  end, { desc = "Select WkdBook → live_grep (engine per config)" })
 
   -- Engine-specific commands are disabled by default; opt-in via expose_engine_cmds=true
   if not cfg.expose_engine_cmds then
@@ -32,11 +48,11 @@ function M.usercmds(cfg)
     return ok and mod or nil
   end
 
-  vim.api.nvim_create_user_command("RepoFindFilesFzf", function(opts)
+  api.nvim_create_user_command("RepoFindFilesFzf", function(opts)
     local dir = opts and opts.fargs and opts.fargs[1] or nil
     local fzf = sreq("fzf-lua")
     if not fzf then
-      vim.notify("repo_pickers: fzf-lua not available", vim.log.levels.ERROR)
+      notify("repo_pickers: fzf-lua not available", levels.ERROR)
       return
     end
     if dir and dir ~= "" then
@@ -47,11 +63,11 @@ function M.usercmds(cfg)
     end
   end, { desc = "[EXPOSED] fzf-lua: files (optional <dir>)", nargs = "?" })
 
-  vim.api.nvim_create_user_command("RepoGrepFzf", function(opts)
+  api.nvim_create_user_command("RepoGrepFzf", function(opts)
     local dir = opts and opts.fargs and opts.fargs[1] or nil
     local fzf = sreq("fzf-lua")
     if not fzf then
-      vim.notify("repo_pickers: fzf-lua not available", vim.log.levels.ERROR)
+      notify("repo_pickers: fzf-lua not available", levels.ERROR)
       return
     end
     if dir and dir ~= "" then
@@ -62,11 +78,11 @@ function M.usercmds(cfg)
     end
   end, { desc = "[EXPOSED] fzf-lua: live_grep (optional <dir>)", nargs = "?" })
 
-  vim.api.nvim_create_user_command("RepoFindFilesTelescope", function(opts)
+  api.nvim_create_user_command("RepoFindFilesTelescope", function(opts)
     local dir = opts and opts.fargs and opts.fargs[1] or nil
     local tb = sreq("telescope.builtin")
     if not tb then
-      vim.notify("repo_pickers: telescope.builtin not available", vim.log.levels.ERROR)
+      notify("repo_pickers: telescope.builtin not available", levels.ERROR)
       return
     end
     if dir and dir ~= "" then
@@ -77,11 +93,11 @@ function M.usercmds(cfg)
     end
   end, { desc = "[EXPOSED] Telescope: find_files (optional <dir>)", nargs = "?" })
 
-  vim.api.nvim_create_user_command("RepoGrepTelescope", function(opts)
+  api.nvim_create_user_command("RepoGrepTelescope", function(opts)
     local dir = opts and opts.fargs and opts.fargs[1] or nil
     local tb = sreq("telescope.builtin")
     if not tb then
-      vim.notify("repo_pickers: telescope.builtin not available", vim.log.levels.ERROR)
+      notify("repo_pickers: telescope.builtin not available", levels.ERROR)
       return
     end
     if dir and dir ~= "" then
@@ -93,15 +109,15 @@ function M.usercmds(cfg)
   end, { desc = "[EXPOSED] Telescope: live_grep (optional <dir>)", nargs = "?" })
 
   -- Optional short aliases; also gated by expose_engine_cmds
-  vim.api.nvim_create_user_command("RepoFilesFzf", function(opts)
-    vim.api.nvim_cmd({ cmd = "RepoFindFilesFzf", args = opts.fargs or {} }, {})
+  api.nvim_create_user_command("RepoFilesFzf", function(opts)
+    api.nvim_cmd({ cmd = "RepoFindFilesFzf", args = opts.fargs or {} }, {})
   end, { desc = "[ALIAS] RepoFindFilesFzf", nargs = "?" })
-  vim.api.nvim_create_user_command("RepoFilesTelescope", function(opts)
-    vim.api.nvim_cmd({ cmd = "RepoFindFilesTelescope", args = opts.fargs or {} }, {})
+  api.nvim_create_user_command("RepoFilesTelescope", function(opts)
+    api.nvim_cmd({ cmd = "RepoFindFilesTelescope", args = opts.fargs or {} }, {})
   end, { desc = "[ALIAS] RepoFindFilesTelescope", nargs = "?" })
 end
 
----@param cfg RepoPickersConfig
+---@param cfg RepoPickers.Config
 ---@return nil
 function M.keymaps(cfg)
   local k = cfg.keymaps_lhs

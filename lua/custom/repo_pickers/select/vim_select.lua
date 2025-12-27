@@ -6,9 +6,9 @@ local fs = require("custom.repo_pickers.fs")
 local M = {}
 
 --- Present items via vim.ui.select and return chosen directory to callback.
---- @param cfg RepoPickersConfig
---- @param repos RepoDir[]
---- @param on_choice fun(dir:RepoDir)
+--- @param cfg RepoPickers.Config
+--- @param repos RepoPickers.RepoDir[]
+--- @param on_choice fun(dir:RepoPickers.RepoDir)
 --- @return nil
 function M.select(cfg, repos, on_choice)
   ---@type string[]
