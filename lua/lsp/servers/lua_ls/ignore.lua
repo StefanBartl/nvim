@@ -8,36 +8,48 @@
 --- 2. `as_set()` -> table<string, boolean> : a set keyed by basename for O(1) membership tests.
 --- 3. `as_luals_patterns()` -> string[] : converted glob patterns suitable for `Lua.workspace.ignoreDir`.
 --- 4. `normalize_for_platform(str)` helper to normalize separators / case if needed.
+---
 --- Notes:
 --- - Comments in code are in English as requested.
 --- - This module does textual normalization only; it does not perform IO.
+
 local M = {}
 
 --- Raw list of directory names commonly ignored.
+--- These are loaded from a centralized ignore list module.
 --- @type string[]
 M._names = require("lib.filesystem.ignore.list").as_luals_patterns()
 
 --- Platform-normalize a name for consistent comparisons (no filesystem IO).
---- On Windows this could lower-case or normalize slashes if desired.
---- @param s string
---- @return string
+--- On Windows this lower-cases strings for case-insensitive comparison.
+--- On Unix-like systems, names are compared case-sensitively.
+--- Also strips trailing slashes and collapses repeated separators.
+--- @param s string String to normalize
+--- @return string Normalized string
 local function normalize_for_platform(s)
+  -- Guard against non-string input
   if type(s) ~= "string" then
     return s
   end
-  -- keep this minimal: trim trailing slashes and collapse repeated separators
-  s = s:gsub("[/\\]+$", "") -- strip trailing separators
-  -- Optionally lower-case on Windows for case-insensitive comparisons.
+
+  -- Remove trailing path separators (both / and \)
+  s = s:gsub("[/\\]+$", "")
+
+  -- On Windows, lower-case for case-insensitive comparison
+  -- package.config:sub(1,1) returns '\' on Windows, '/' on Unix
   if package.config:sub(1, 1) == "\\" then
     s = s:lower()
   end
+
   return s
 end
 
 --- Return a copy of the base names list.
---- @return string[]
+--- Creates a new array so callers can't accidentally mutate the internal list.
+--- @return string[] Array of ignore directory names
 function M.names()
   local out = {}
+  -- Copy each entry to a new table
   for i = 1, #M._names do
     out[i] = M._names[i]
   end
@@ -45,10 +57,12 @@ function M.names()
 end
 
 --- Return a set keyed by normalized basename for fast membership checks.
+--- This enables O(1) lookups like: if ignore_set["node_modules"] then ... end
 --- Example: set["node_modules"] == true
---- @return table<string, boolean>
+--- @return table<string, boolean> Set of ignore directory names
 function M.as_set()
   local t = {}
+  -- Convert each name to normalized form and add to set
   for _, n in ipairs(M._names) do
     t[normalize_for_platform(n)] = true
   end
@@ -57,17 +71,26 @@ end
 
 --- Convert base names into glob patterns for lua_ls workspace.ignoreDir.
 --- lua_ls expects patterns like "**/node_modules" to ignore any nested occurrences.
---- We produce two patterns per name to be robust: "**/name" and "name" (root-level).
---- @return string[]
+--- We produce two patterns per name for robustness:
+---   1. "**/name" - matches the directory at any depth
+---   2. "name" - matches the directory at root level
+--- This ensures both root-level and nested directories are ignored.
+--- @return string[] Array of glob patterns for lua_ls
 function M.as_luals_patterns()
   local out = {}
+
+  -- Convert each ignore name to lua_ls glob patterns
   for _, n in ipairs(M._names) do
     local norm = normalize_for_platform(n)
-    -- ignore at any depth
+
+    -- Pattern 1: Ignore at any depth in the project
     out[#out + 1] = "**/" .. norm
-    -- also explicit root-level entry (some configs use root-relative)
+
+    -- Pattern 2: Also explicitly ignore at root level
+    -- Some configurations interpret patterns root-relatively
     out[#out + 1] = norm
   end
+
   return out
 end
 

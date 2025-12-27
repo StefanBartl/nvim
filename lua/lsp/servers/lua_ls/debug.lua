@@ -1,9 +1,10 @@
 ---@module 'lsp.servers.lua_ls.debug'
 --- Utilities for debugging LuaLS setup: root detection and workspace library inspection.
 
+-- Use the appropriate async I/O library (vim.uv preferred, vim.loop fallback)
 local uv = vim.uv or vim.loop
 
--- filesystem helpers
+-- Import filesystem helper utilities
 local is_subpath = require("lib.filesystem.is_subpath")
 local find_upward_dir = require("lib.filesystem.find_upward_dir")
 
@@ -14,50 +15,61 @@ local M = {}
 -- ROOT RESOLUTION
 -- ===================================================================
 
----@param start_dir? string
----@return string|nil
+---@param start_dir? string Starting directory path (optional)
+---@return string|nil Detected root directory or nil if none found
 local function strict_root(start_dir)
-  -- start_dir fallback to current working directory
+  -- Determine starting directory: use provided dir or fall back to current working directory
   local dir = start_dir or (uv.cwd and uv.cwd()) or vim.fn.getcwd()
+
+  -- Bail early if no valid directory could be determined
   if not dir or dir == "" then
     return nil
   end
 
-  -- check VCS roots
+  -- Step 1: Check for version control system roots (.git, .hg, .svn)
+  -- These are strong indicators of a project boundary
   local vcs_root = find_upward_dir({ ".git", ".hg", ".svn" }, dir)
   if vcs_root then
     return vcs_root
   end
 
-  -- check Lua project markers
+  -- Step 2: Check for Lua-specific project markers
+  -- These config files typically sit at the project root
   local lua_markers = find_upward_dir({ ".luarc.json", ".neoconf.json", "selene.toml", "stylua.toml" }, dir)
   if lua_markers then
     return lua_markers
   end
 
-  -- fallback to standard Neovim config directory if applicable
+  -- Step 3: Check if we're inside Neovim's config directory
+  -- This is common when editing init.lua or plugin files
   local stdconfig = vim.fn.stdpath("config")
   if is_subpath(dir, stdconfig) then
     return stdconfig
   end
 
-  -- fallback to provided start_dir
+  -- Step 4: Fallback to the starting directory itself
+  -- This ensures single-file editing still works
   return dir
 end
 
---- Get root for current buffer
----@param bufnr? integer
----@return string|nil
+--- Get root directory for a specific buffer
+---@param bufnr? integer Buffer number (optional, defaults to current buffer)
+---@return string|nil Root directory path or nil
 function M.root_for_buf(bufnr)
   local fname = ""
+
+  -- Get the filename for the specified buffer
   if type(bufnr) == "number" then
     fname = vim.api.nvim_buf_get_name(bufnr) or ""
   end
+
+  -- Extract directory from filename, or use nil to trigger CWD fallback
   return strict_root(fname ~= "" and vim.fs.dirname(fname) or nil)
 end
 
+--- Debug helper: Get the root for the current working directory
 ---@nodiscard
----@return string|nil
+---@return string|nil Root directory path
 function M.debug_root()
   return strict_root()
 end
@@ -66,18 +78,24 @@ end
 -- WORKSPACE LIBRARY
 -- ===================================================================
 
---- Build workspace library for given root
----@param root? string
----@return string[]
+--- Build workspace library paths for a given root directory
+--- This shows which directories lua_ls will scan for type definitions
+---@param root? string Root directory (optional, defaults to detected root)
+---@return string[] Array of library paths
 function M.debug_library(root)
+  -- Use provided root or detect from CWD
   root = root or strict_root()
   if not root then
     return {}
   end
+
+  -- Try to load the build_library module (may not exist in all configs)
   local ok, build_library = pcall(require, "lsp.servers.lua_ls.build_library")
   if not ok or type(build_library) ~= "function" then
     return {}
   end
+
+  -- Call build_library with the root to get project-specific libraries
   return build_library(root)
 end
 
@@ -85,12 +103,16 @@ end
 -- UTILITIES
 -- ===================================================================
 
---- Print current debug info to Neovim message area
----@param bufnr? integer
+--- Print comprehensive debug information to Neovim's message area
+--- Useful for troubleshooting lua_ls configuration issues
+---@param bufnr? integer Buffer number (optional)
 ---@return nil
 function M.print_debug_info(bufnr)
+  -- Get root and library paths for the specified buffer
   local root = M.root_for_buf(bufnr)
   local lib = M.debug_library(root)
+
+  -- Output formatted debug information
   vim.notify("LuaLS Debug Info:", vim.log.levels.INFO)
   vim.notify("Root: " .. tostring(root), vim.log.levels.INFO)
   vim.notify("Library paths: " .. table.concat(lib, ", "), vim.log.levels.INFO)
