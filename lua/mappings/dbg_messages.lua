@@ -158,7 +158,15 @@ function M.setup(cfg)
   if km.enable then
     km.map("n", "<lt>m", function()
       vim.cmd("messages")
-      local win = vim.api.nvim_get_current_win() -- capture new window
+      -- SOFORT ins Fenster springen
+      local win = vim.api.nvim_get_current_win()
+      local buf = vim.api.nvim_win_get_buf(win)
+      local last = vim.api.nvim_buf_line_count(buf)
+
+      -- Cursor SOFORT ans Ende setzen
+      pcall(vim.api.nvim_win_set_cursor, win, { last, 0 })
+
+      -- Zusätzlich mit defer_fn für Inhalte, die später kommen
       vim.defer_fn(function()
         if vim.api.nvim_win_is_valid(win) then
           ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
@@ -168,7 +176,14 @@ function M.setup(cfg)
 
     km.map("n", "<lt>n", function()
       vim.cmd("Noice all")
+      -- SOFORT ins Fenster springen
       local win = vim.api.nvim_get_current_win()
+      local buf = vim.api.nvim_win_get_buf(win)
+      local last = vim.api.nvim_buf_line_count(buf)
+
+      -- Cursor SOFORT ans Ende setzen
+      pcall(vim.api.nvim_win_set_cursor, win, { last, 0 })
+
       vim.defer_fn(function()
         if vim.api.nvim_win_is_valid(win) then
           ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
@@ -178,7 +193,14 @@ function M.setup(cfg)
 
     km.map("n", "<lt>e", function()
       vim.cmd("Noice errors")
+      -- SOFORT ins Fenster springen
       local win = vim.api.nvim_get_current_win()
+      local buf = vim.api.nvim_win_get_buf(win)
+      local last = vim.api.nvim_buf_line_count(buf)
+
+      -- Cursor SOFORT ans Ende setzen
+      pcall(vim.api.nvim_win_set_cursor, win, { last, 0 })
+
       vim.defer_fn(function()
         if vim.api.nvim_win_is_valid(win) then
           ensure_bottom(win, timings.attempts, timings.retry_delay_ms)
