@@ -1,8 +1,9 @@
----@module 'usrcmds.filecycle.keymaps'
-
-local M = {}
+---@module 'custom.filecycle.keymaps'
+require("lua.custom.filecycle.@types")
 
 local map = require("lib.map")
+
+local M = {}
 
 function M.attach()
   map({ "n", "i" }, "<leader>nf", function()

@@ -1,6 +1,7 @@
----@module 'usrcmds.filecycle'
+---@module 'custom.filecycle'
 --- Navigate to the next/previous file in the current buffer's directory.
 --- This module provides user commands and keymaps to "load into the current window".
+require("custom.filecycle.@types")
 
 local DEFAULTS = {
   open_target = "current",
@@ -13,8 +14,7 @@ local DEFAULTS = {
   case_insensitive = true,
 }
 
----@class FileCycleState
----@field opts FileCycleConfig
+---@type FileCycle.State
 local M = { opts = DEFAULTS }
 
 -- Local aliases (clarity over micro perf)
@@ -38,7 +38,7 @@ local function canon(p, follow)
 end
 
 --- Return current directory to scan according to config.
----@param opts FileCycleConfig
+---@param opts FileCycle.Config
 ---@return FilePath|nil, string|nil
 local function get_root_dir(opts)
   local target = opts.root
@@ -64,7 +64,7 @@ end
 --- Predicate: keep this directory entry?
 ---@param name string  -- filename (not path)
 ---@param is_file boolean
----@param opts FileCycleConfig
+---@param opts FileCycle.Config
 ---@return boolean
 local function keep_entry(name, is_file, opts)
   if not is_file then
@@ -78,7 +78,7 @@ end
 
 --- List regular files in a directory (non-recursive), filtered & sorted.
 ---@param dir FilePath
----@param opts FileCycleConfig
+---@param opts FileCycle.Config
 ---@return string[] files  -- absolute, canonicalized paths
 local function list_files(dir, opts)
   ---@type string[]
@@ -125,7 +125,7 @@ end
 
 --- Open a path according to `opts.open_target`
 ---@param path string
----@param opts FileCycleConfig
+---@param opts FileCycle.Config
 ---@return boolean ok
 local function open_path(path, opts)
   if type(path) ~= "string" or path == "" then
@@ -204,7 +204,7 @@ end
 --- Compute next/previous path and open it.
 ---@param dir FilePath
 ---@param mode "next"|"prev"
----@param opts FileCycleConfig
+---@param opts FileCycle.Config
 ---@return boolean ok
 local function navigate(dir, mode, opts)
   local files = list_files(dir, opts)
@@ -267,12 +267,12 @@ end
 --- AUDIT: usercmds und keymaps function
 
 --- Setup module options and create user commands & keymaps.
----@param user_opts FileCycleConfig|nil
+---@param user_opts FileCycle.Config|nil
 ---@return nil
 function M.setup(user_opts)
   user_opts = user_opts or {}
   -- Merge options (shallow copy)
-  local o = {} ---@type FileCycleConfig
+  local o = {} ---@type FileCycle.Config
   o.open_target = (user_opts.open_target ~= nil) and user_opts.open_target or DEFAULTS.open_target
   o.keep_focus = (user_opts.keep_focus ~= nil) and user_opts.keep_focus or DEFAULTS.keep_focus
   o.include_hidden = (user_opts.include_hidden ~= nil) and user_opts.include_hidden or DEFAULTS.include_hidden
@@ -341,7 +341,7 @@ end
 
 --- Programmatic API: open next/prev with explicit options (optional).
 ---@param mode "next"|"prev"
----@param opts FileCycleConfig|nil
+---@param opts FileCycle.Config|nil
 ---@return boolean ok
 function M.open(mode, opts)
   local o = opts and vim.tbl_deep_extend("force", M.opts, opts) or M.opts

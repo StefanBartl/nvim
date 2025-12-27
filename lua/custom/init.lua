@@ -47,6 +47,17 @@ require("custom.function_index").setup({
   },
 })
 
+require("custom.filecycle").setup({
+  open_target = "current",    -- "current"|"split"|"vsplit"|"tab"|"background"
+  keep_focus = true,          -- bei Split/Vsplit Fokus im Ursprungsfenster behalten
+  include_hidden = false,     -- Dotfiles ignorieren
+  wrap = true,                -- am Ende/Anfang umbrechen
+  follow_symlinks = true,     -- echte Pfade für Vergleich/Öffnen nutzen
+  root = "buffer_dir",        -- "buffer_dir"|"cwd"
+  confirm_on_modified = true, -- :confirm edit bei geänderten Buffern
+  case_insensitive = true,    -- alphabetische Sortierung/Matching ohne Groß/Kleinschreibung
+})
+
 require("custom.find_config").enable({ usercmds = true, keymaps = true })
 require("custom.lsp_signature").setup()
 require("custom.markdown").setup()
