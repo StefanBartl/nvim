@@ -71,6 +71,18 @@ local function emit_event(result)
   })
 end
 
+--- Safely stop and close a uv timer exactly once
+---@param t uv.uv_timer_t
+local function safe_close_timer(t)
+  -- stop() is always safe and idempotent
+  t:stop()
+
+  -- close() must only be called once
+  if not uv.is_closing(t) then
+    t:close()
+  end
+end
+
 ---Public API: capture buffers and windows created by an Ex command
 ---@param cmd string
 ---@param opts BufWinCapture.Opts|nil
@@ -109,8 +121,7 @@ function M.capture(cmd, opts, cb)
     local new_bufs = delta(bufs_before, bufs_after)
 
     if #new_wins > 0 or #new_bufs > 0 then
-      timer:stop()
-      timer:close()
+      safe_close_timer(timer)
 
       local result = {
         wins = new_wins,
@@ -125,15 +136,13 @@ function M.capture(cmd, opts, cb)
 
       if cb then
         cb(result)
-        return
       end
 
       return
     end
 
     if uv.now() - start >= timeout then
-      timer:stop()
-      timer:close()
+      safe_close_timer(timer)
 
       local result = {
         wins = {},
