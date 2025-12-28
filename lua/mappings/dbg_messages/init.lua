@@ -4,7 +4,7 @@
 ---  - explicit window/buffer identification via tags
 ---  - focus + cursor always at last line
 ---  - safe refresh on WinEnter / BufWinEnter
----  - automatic refresh on new content (via TextChanged for messages buffer)
+---  - automatic refresh on new content
 ---  - no reliance on current window (win=0)
 ---  - modular, extensible architecture
 require("mappings.dbg_messages.@types")
@@ -36,14 +36,36 @@ local WINDOWS = {
 ---@param attempts integer
 ---@param retry_delay integer
 local function focus_and_bottom(win, attempts, retry_delay)
+  -- CRITICAL: Validate window exists and is valid
+  if not (win and api.nvim_win_is_valid(win)) then
+    return
+  end
+
+  -- Verify window is still a content window (not border/title)
+  local ok_config, config = pcall(api.nvim_win_get_config, win)
+  if not ok_config then
+    return
+  end
+
+  -- Skip if this is a border/title window
+  if config.relative == "win" or config.width <= 1 or config.height <= 1 then
+    return
+  end
+
+  -- Ensure deterministic focus and cursor visibility
+  utils.make_focusable(win)
+  utils.force_focus(win)
+
+  -- Additional validation after focus attempt
   if not api.nvim_win_is_valid(win) then
     return
   end
 
-  -- Deterministic focus
-  api.nvim_set_current_win(win)
+  local ok_buf, buf = pcall(api.nvim_win_get_buf, win)
+  if not ok_buf or not api.nvim_buf_is_valid(buf) then
+    return
+  end
 
-  local buf = api.nvim_win_get_buf(win)
   local last = api.nvim_buf_line_count(buf)
 
   -- Logical cursor position
@@ -60,8 +82,16 @@ end
 ---@return integer|nil
 local function find_window_by_tag(tag)
   for _, win in ipairs(api.nvim_list_wins()) do
-    if api.nvim_win_is_valid(win) and vim.w[win].custom_tag == tag then
-      return win
+    if api.nvim_win_is_valid(win) then
+      local win_tag = vim.w[win] and vim.w[win].custom_tag or nil
+
+      if win_tag == tag then
+        -- Additional check: ensure it's a content window
+        local ok_config, config = pcall(api.nvim_win_get_config, win)
+        if ok_config and config.relative ~= "win" and config.width > 1 and config.height > 1 then
+          return win
+        end
+      end
     end
   end
   return nil
@@ -88,8 +118,9 @@ local function execute_and_refresh(tag, cmd, attempts, retry_delay)
   local existing_win = find_window_by_tag(tag)
 
   if existing_win and api.nvim_win_is_valid(existing_win) then
-    -- Reuse existing window: focus, execute command, scroll to bottom
-    api.nvim_set_current_win(existing_win)
+    -- Reuse existing window: make focusable, focus, execute command, scroll to bottom
+    utils.make_focusable(existing_win)
+    utils.force_focus(existing_win)
     vim.cmd(cmd)
     vim.defer_fn(function()
       if api.nvim_win_is_valid(existing_win) then
@@ -108,12 +139,20 @@ local function execute_and_refresh(tag, cmd, attempts, retry_delay)
       if api.nvim_win_is_valid(win) then
         ---@diagnostic disable-next-line: unused-local
         WINDOWS[tag] = win
-        focus_and_bottom(win, attempts, retry_delay)
+
+        -- CRITICAL: Make window focusable immediately after creation
+        utils.make_focusable(win)
+
+        -- Add explicit delay to ensure UI stabilization
+        vim.defer_fn(function()
+          if api.nvim_win_is_valid(win) then
+            focus_and_bottom(win, attempts, retry_delay)
+          end
+        end, 30)
       end
     end
   end)
 end
-
 --------------------------------------------------------------------------------
 -- Refresh logic for existing windows
 --------------------------------------------------------------------------------

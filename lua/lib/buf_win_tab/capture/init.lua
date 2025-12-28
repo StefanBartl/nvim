@@ -41,6 +41,36 @@ local function delta(before, after)
   return out
 end
 
+---Filter windows to only include focusable, valid content windows
+---@param wins integer[]
+---@return integer[]
+local function filter_focusable_windows(wins)
+  local focusable = {}
+
+  for _, win in ipairs(wins) do
+    if api.nvim_win_is_valid(win) then
+      local ok_config, config = pcall(api.nvim_win_get_config, win)
+
+      if ok_config then
+        -- Only include windows that are:
+        -- 1. Not border/title windows (relative ~= "win")
+        -- 2. Have actual content (width > 1, height > 1)
+        -- 3. Not hidden
+        local is_content_win = config.relative ~= "win"
+          and config.width > 1
+          and config.height > 1
+          and not config.hide
+
+        if is_content_win then
+          focusable[#focusable + 1] = win
+        end
+      end
+    end
+  end
+
+  return focusable
+end
+
 ---Apply tags to buffers and windows
 ---@param result BufWinCapture.Results
 ---@param tag BufWinCapture.Tag|nil
@@ -120,6 +150,9 @@ function M.capture(cmd, opts, cb)
     local new_wins = delta(wins_before, wins_after)
     local new_bufs = delta(bufs_before, bufs_after)
 
+    -- CRITICAL: Filter to only focusable content windows
+    new_wins = filter_focusable_windows(new_wins)
+
     if #new_wins > 0 or #new_bufs > 0 then
       safe_close_timer(timer)
 
@@ -175,6 +208,9 @@ function M.capture(cmd, opts, cb)
 
     local new_wins = delta(wins_before, wins_after)
     local new_bufs = delta(bufs_before, bufs_after)
+
+    -- CRITICAL: Filter to only focusable content windows
+    new_wins = filter_focusable_windows(new_wins)
 
     if #new_wins > 0 or #new_bufs > 0 then
       local result = {
