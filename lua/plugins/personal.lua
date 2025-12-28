@@ -8,13 +8,44 @@ end
 
 ---@type LazyPluginSpec[]
 return {
+
+  {
+    -- "StefanBartl/neotree-fs-refactor",
+    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/neotree-fs-refactor.nvim"),
+    lazy = false,
+    config = function()
+      require("neotree_fs_refactor").setup({
+        enable_lsp = true,
+        enable_fallback = true,
+        preview_changes = true,
+        notify_level = "debug", -- More verbose for development
+
+        ignore_patterns = {
+          ".git",
+          "*.so",
+          "*.dll",
+          ".luacache",
+        },
+
+        file_type_filters = { "lua" },
+
+        fallback = {
+          enabled = true,
+          tool = "ripgrep",
+          case_sensitive = true,
+          whole_word = true,
+          confidence_threshold = "medium",
+        },
+      })
+    end,
+  },
+
   {
     -- 'StefanBartl/learn-cli.nvim',
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/learn-cli.nvim"),
     lazy = false,
     config = function()
-      require("learn_cli").setup({
-      })
+      require("learn_cli").setup({})
     end,
   },
 
