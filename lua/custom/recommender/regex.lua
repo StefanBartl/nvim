@@ -1,6 +1,8 @@
 ---@module 'custom.recommender.regex'
 ---Regex-based chain analyzer
 
+local blacklist_module = require("custom.recommender.blacklist")
+
 local M = {}
 
 ---Extract chains from a line
@@ -32,8 +34,9 @@ end
 ---Analyze buffer and return suggestions
 ---@param threshold integer
 ---@param custom_aliases? table<string, string>
+---@param blacklist? string[]
 ---@return table[]
-function M.analyze(threshold, custom_aliases)
+function M.analyze(threshold, custom_aliases, blacklist)
   local api = vim.api
   local counts = {}
   local lines = api.nvim_buf_get_lines(0, 0, -1, false)
@@ -41,7 +44,10 @@ function M.analyze(threshold, custom_aliases)
   -- Count occurrences
   for _, line in ipairs(lines) do
     for _, chain in ipairs(M.extract_chains(line)) do
-      counts[chain] = (counts[chain] or 0) + 1
+      -- Skip if blacklisted
+      if not blacklist_module.is_blacklisted(chain, blacklist or {}) then
+        counts[chain] = (counts[chain] or 0) + 1
+      end
     end
   end
 

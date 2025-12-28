@@ -19,10 +19,8 @@ return {
   ["table.remove"] = "tbl_remove",
 
   -- String functions
-  ["string.format"] = "fmt",
-  ["string.match"] = "match",
-  ["string.gsub"] = "gsub",
-  ["string.find"] = "find",
+  ["string.format"] = "str_fmt",
+  ["string.match"] = "str_match",
 
   -- Math functions
   ["math.floor"] = "floor",

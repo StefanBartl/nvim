@@ -4,6 +4,7 @@
 local rendering = require("custom.recommender.rendering")
 local keymaps = require("custom.recommender.keymaps")
 local custom_aliases = require("custom.recommender.custom_aliases")
+local blacklist_module = require("custom.recommender.blacklist")
 
 local M = {}
 
@@ -20,12 +21,14 @@ local analyzers = {
 ---@field analyzer? "regex"|"treesitter"
 ---@field threshold? number
 ---@field custom_aliases? table<string, string>
+---@field blacklist? string[]
 
 ---@type Recommender.opts
 local default_opts = {
   analyzer = "regex",
   threshold = 3,
   custom_aliases = custom_aliases,
+  blacklist = blacklist_module.default,
 }
 
 local ignore_by_buf = {}
@@ -65,6 +68,7 @@ function M.setup(opts)
     local state = {}
     state.ignored = ignore_by_buf[bufnr]
     state.custom_aliases = opts.custom_aliases or {}
+    state.blacklist = opts.blacklist or {}
     state.source_bufnr = bufnr -- Store the source buffer
     state.replace_mode = replace_mode -- Store replace mode flag
 
@@ -75,7 +79,7 @@ function M.setup(opts)
         local all
         if state.source_bufnr and api.nvim_buf_is_valid(state.source_bufnr) then
           api.nvim_buf_call(state.source_bufnr, function()
-            all = analyzers[analyzer].analyze(threshold, state.custom_aliases)
+            all = analyzers[analyzer].analyze(threshold, state.custom_aliases, state.blacklist)
           end)
         else
           notify("Source buffer is no longer valid", levels.WARN)

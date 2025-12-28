@@ -2,6 +2,30 @@
 
 Ein Neovim-Plugin, das wiederholte Lua-Chains analysiert und lokale Alias-Vorschläge macht.
 
+## Table of content
+
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Verwendung](#verwendung)
+    - [Command](#command)
+    - [Replace-Mode Feature](#replace-mode-feature)
+    - [Keybindings im Float-Window](#keybindings-im-float-window)
+  - [Beispiel](#beispiel)
+  - [Konfiguration](#konfiguration)
+    - [Analyzer](#analyzer)
+    - [Custom Aliases](#custom-aliases)
+    - [Blacklist](#blacklist)
+    - [Threshold](#threshold)
+  - [Workflow-Beispiel](#workflow-beispiel)
+  - [Praxisbeispiel: Blacklist vs. Custom Aliases](#praxisbeispiel-blacklist-vs-custom-aliases)
+  - [Troubleshooting](#troubleshooting)
+    - [Plugin friert ein](#plugin-friert-ein)
+    - [Keine Vorschläge](#keine-vorschlge)
+    - [Chains werden nicht vorgeschlagen](#chains-werden-nicht-vorgeschlagen)
+    - [Treesitter funktioniert nicht](#treesitter-funktioniert-nicht)
+
+---
+
 ## Features
 
 - 🔍 Findet wiederholte Chains wie `vim.api`, `table.insert`, etc.
@@ -9,7 +33,10 @@ Ein Neovim-Plugin, das wiederholte Lua-Chains analysiert und lokale Alias-Vorsch
 - 🎯 Interaktives Float-Window mit Navigation
 - 💾 Persistente Ignore-Liste pro Buffer
 - ⚙️ Anpassbare Custom-Aliases
+- 🚫 Blacklist für unerwünschte Chains
 - 🎨 Cursorline-Highlighting
+
+---
 
 ## Installation
 
@@ -24,8 +51,16 @@ Ein Neovim-Plugin, das wiederholte Lua-Chains analysiert und lokale Alias-Vorsch
         ["vim.api"] = "api",
         ["vim.fn"] = "fn",
       },
+      blacklist = {
+        -- Chains, die NIE vorgeschlagen werden sollen
+        -- "vim.fn",            -- Blockiert alle vim.fn.* chains
+        -- "table.insert",      -- Blockiert table.insert
+        -- "string.format",     -- Blockiert string.format
+      },
     })
 ```
+
+---
 
 ## Verwendung
 
@@ -50,6 +85,8 @@ Ein Neovim-Plugin, das wiederholte Lua-Chains analysiert und lokale Alias-Vorsch
 :Recommender --replace treesitter 5
 ```
 
+---
+
 ### Replace-Mode Feature
 
 Mit dem `-r` oder `--replace` Flag wird nach dem Einfügen eines Alias automatisch der `:Replace` Command ausgeführt:
@@ -63,6 +100,8 @@ Mit dem `-r` oder `--replace` Flag wird nach dem Einfügen eines Alias automatis
 
 **Voraussetzung:** Das `:Replace` Command muss verfügbar sein.
 
+---
+
 ### Keybindings im Float-Window
 
 | Key | Aktion |
@@ -74,6 +113,8 @@ Mit dem `-r` oder `--replace` Flag wird nach dem Einfügen eines Alias automatis
 | `U` | Alle ignorierten zurücksetzen |
 | `q` / `Esc` | Schließen |
 | `?` | Hilfe anzeigen |
+
+---
 
 ## Beispiel
 
@@ -108,6 +149,8 @@ api.nvim_buf_set_lines(...)
 api.nvim_win_set_cursor(...)
 ```
 
+---
+
 ## Konfiguration
 
 ### Analyzer
@@ -121,6 +164,8 @@ api.nvim_win_set_cursor(...)
 - Präziser
 - Erfordert Treesitter-Parser für Lua
 - Etwas langsamer
+
+---
 
 ### Custom Aliases
 
@@ -142,6 +187,41 @@ require("custom.recommender").setup({
 })
 ```
 
+---
+
+### Blacklist
+
+Die Blacklist arbeitet mit **Präfix-Matching**. Wenn du einen Eintrag hinzufügst, werden alle Chains, die damit beginnen, ausgeschlossen:
+
+```lua
+require("custom.recommender").setup({
+  blacklist = {
+    -- Blockiert ALLE vim.api.* chains (vim.api.nvim_buf_get_lines, etc.)
+    "vim.api",
+
+    -- Blockiert ALLE vim.fn.* chains
+    "vim.fn",
+
+    -- Blockiert nur exakt diese Chain
+    "table.insert",
+
+    -- Blockiert alle string.* chains
+    "string",
+  },
+})
+```
+
+**Wichtig:**
+- `"vim.api"` blockiert auch `vim.api.nvim_buf_get_lines`, `vim.api.nvim_create_buffer`, etc.
+- Für exakte Matches: verwende die vollständige Chain
+- Die Blacklist hat Vorrang vor allen anderen Einstellungen
+
+**Unterschied zu Custom Aliases:**
+- **Custom Aliases:** Definieren den gewünschten Alias-Namen
+- **Blacklist:** Verhindert, dass Chains überhaupt vorgeschlagen werden
+
+---
+
 ### Threshold
 
 Der Threshold bestimmt, wie oft eine Chain mindestens vorkommen muss:
@@ -152,6 +232,8 @@ require("custom.recommender").setup({
 })
 ```
 
+---
+
 ## Workflow-Beispiel
 
 1. Öffne eine Lua-Datei mit vielen wiederholten Chains
@@ -161,6 +243,40 @@ require("custom.recommender").setup({
 5. Drücke `Backspace`, um Einträge zu ignorieren, die du nicht willst
 6. Drücke `U`, um alle Ignorierungen zurückzusetzen
 
+---
+
+## Praxisbeispiel: Blacklist vs. Custom Aliases
+
+```lua
+-- Datei mit folgenden Chains:
+-- vim.api.nvim_create_buffer (5x)
+-- vim.api.nvim_buf_set_lines (4x)
+-- vim.fn.expand (3x)
+-- table.insert (6x)
+
+require("custom.recommender").setup({
+  threshold = 3,
+
+  -- Custom Aliases: Wie sollen sie heißen?
+  custom_aliases = {
+    ["table.insert"] = "tbl_insert",  -- Falls vorgeschlagen, nutze diesen Namen
+  },
+
+  -- Blacklist: Was soll NIE vorgeschlagen werden?
+  blacklist = {
+    "vim.fn",  -- Blockiert alle vim.fn.* chains
+  },
+})
+
+-- Resultat nach :Recommender:
+-- ✓ vim.api.nvim_create_buffer (5 hits)
+-- ✓ vim.api.nvim_buf_set_lines (4 hits)
+-- ✗ vim.fn.expand (3 hits) -- Blockiert durch Blacklist!
+-- ✓ table.insert (6 hits) -- Mit custom alias "tbl_insert"
+```
+
+---
+
 ## Troubleshooting
 
 ### Plugin friert ein
@@ -168,19 +284,24 @@ require("custom.recommender").setup({
 - Versuche den `regex`-Analyzer statt `treesitter`
 - Erhöhe den Threshold
 
+---
+
 ### Keine Vorschläge
 - Prüfe, ob der Threshold zu hoch ist
 - Stelle sicher, dass tatsächlich wiederholte Chains existieren
+- **NEU:** Prüfe deine Blacklist - vielleicht werden die Chains blockiert
 - Versuche beide Analyzer
+
+---
+
+### Chains werden nicht vorgeschlagen
+- Prüfe die Blacklist: Werden sie durch einen Präfix-Eintrag blockiert?
+- Beispiel: `"vim"` in der Blacklist blockiert ALLE vim.* chains
+
+---
 
 ### Treesitter funktioniert nicht
 - Installiere den Lua-Parser: `:TSInstall lua`
 - Verwende alternativ den `regex`-Analyzer
 
-## Lizenz
-
-MIT
-
-## Autor
-
-Dein Name
+--

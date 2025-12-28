@@ -1,9 +1,10 @@
 ---@module 'custom.recommender.treesitter'
 ---Safe Treesitter-based analyzer for Lua
 
-local M = {}
-
 local ts = vim.treesitter
+local blacklist_module = require("custom.recommender.blacklist")
+
+local M = {}
 
 ---Get text from node
 ---@param node userdata
@@ -16,8 +17,9 @@ end
 
 ---Collect all chains from buffer using treesitter
 ---@param bufnr integer
+---@param blacklist? string[]
 ---@return string[]
-local function collect_chains(bufnr)
+local function collect_chains(bufnr, blacklist)
   local ok, parser = pcall(ts.get_parser, bufnr, "lua")
   if not ok or not parser then
     return {}
@@ -36,11 +38,15 @@ local function collect_chains(bufnr)
   local chains = {}
 
   -- Query for field expressions and method calls
-  local query_ok, query = pcall(ts.query.parse, "lua", [[
+  local query_ok, query = pcall(
+    ts.query.parse,
+    "lua",
+    [[
     (field_expression) @field
     (call_expression
       function: (field_expression) @call)
-  ]])
+  ]]
+  )
 
   if not query_ok then
     return {}
@@ -48,9 +54,13 @@ local function collect_chains(bufnr)
 
   for _, match in query:iter_matches(root, bufnr) do
     for _, node in pairs(match) do
+      ---@cast node TSNode
       local value = text(node, src)
       if value and value:match("^[%w_]+%.[%w_]+") then
-        table.insert(chains, value)
+        -- Skip if blacklisted
+        if not blacklist_module.is_blacklisted(value, blacklist or {}) then
+          table.insert(chains, value)
+        end
       end
     end
   end
@@ -90,15 +100,16 @@ end
 ---Analyze buffer and return suggestions
 ---@param threshold integer
 ---@param custom_aliases? table<string, string>
+---@param blacklist? string[]
 ---@return table[]
-function M.analyze(threshold, custom_aliases)
+function M.analyze(threshold, custom_aliases, blacklist)
   threshold = threshold or 3
 
   local bufnr = vim.api.nvim_get_current_buf()
   local counts = {}
 
-  -- Count occurrences
-  for _, chain in ipairs(collect_chains(bufnr)) do
+  -- Count occurrences (blacklist is already checked in collect_chains)
+  for _, chain in ipairs(collect_chains(bufnr, blacklist)) do
     counts[chain] = (counts[chain] or 0) + 1
   end
 
