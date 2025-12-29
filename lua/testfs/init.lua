@@ -1,5 +1,5 @@
 ---@module 'testfs'
-
+---@diagnostic disable
 --[[
 lua\testfs\zwei.lua
 lua\testfs\util\init.lua

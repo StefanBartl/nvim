@@ -1,6 +1,8 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
+require("custom.lua_project_file_stats").setup()
+
 require("custom.function_index").setup()
 require("custom.recommender").setup()
 require("custom.function_index").setup({

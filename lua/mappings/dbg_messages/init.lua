@@ -29,38 +29,6 @@ local WINDOWS = {
 }
 
 --------------------------------------------------------------------------------
--- Noice helpers
---------------------------------------------------------------------------------
-
----Check if Noice has any error messages available
----@return boolean
-local function has_noice_errors()
-  local ok, noice = pcall(require, "noice")
-  if not ok or not noice then
-    return false
-  end
-
-  -- Try to get Noice's message manager
-  local ok_manager, manager = pcall(function()
-    return require("noice.message.manager")
-  end)
-
-  if not ok_manager or not manager then
-    return false
-  end
-
-  -- Check if there are any error-level messages
-  local messages = manager.get() or {}
-  for _, msg in ipairs(messages) do
-    if msg.level and (msg.level == vim.log.levels.ERROR or msg.level == "error") then
-      return true
-    end
-  end
-
-  return false
-end
-
---------------------------------------------------------------------------------
 -- Core primitives
 --------------------------------------------------------------------------------
 
@@ -147,12 +115,6 @@ end
 ---@param attempts integer
 ---@param retry_delay integer
 local function execute_and_refresh(tag, cmd, attempts, retry_delay)
-  -- Pre-validation: Check if Noice errors window would close immediately
-  if tag == "noice_errors" and not has_noice_errors() then
-    vim.notify("No errors available", vim.log.levels.INFO)
-    return
-  end
-
   local existing_win = find_window_by_tag(tag)
 
   if existing_win and api.nvim_win_is_valid(existing_win) then
@@ -173,7 +135,16 @@ local function execute_and_refresh(tag, cmd, attempts, retry_delay)
     timeout = 500,
     tag = { buf = tag, win = tag },
   }, function(result)
-    for _, win in ipairs(result.wins or {}) do
+    -- Check if any windows were actually captured
+    if not result.wins or #result.wins == 0 then
+      -- Window was opened but closed immediately (e.g., no errors in Noice)
+      if tag == "noice_errors" then
+        vim.notify("No errors available", vim.log.levels.INFO)
+      end
+      return
+    end
+
+    for _, win in ipairs(result.wins) do
       if api.nvim_win_is_valid(win) then
         ---@diagnostic disable-next-line: unused-local
         WINDOWS[tag] = win
@@ -183,9 +154,15 @@ local function execute_and_refresh(tag, cmd, attempts, retry_delay)
 
         -- Add explicit delay to ensure UI stabilization
         vim.defer_fn(function()
-          if api.nvim_win_is_valid(win) then
-            focus_and_bottom(win, attempts, retry_delay)
+          -- Re-validate: Noice might have closed the window in the meantime
+          if not api.nvim_win_is_valid(win) then
+            if tag == "noice_errors" then
+              vim.notify("No errors available", vim.log.levels.INFO)
+            end
+            return
           end
+
+          focus_and_bottom(win, attempts, retry_delay)
         end, 30)
       end
     end
@@ -212,11 +189,6 @@ local function refresh_log_view(win, tag, attempts, retry_delay)
     return
   end
 
-  -- Pre-validation for noice_errors
-  if tag == "noice_errors" and not has_noice_errors() then
-    return
-  end
-
   -- Re-emit content (messages are snapshots, not live views)
   if tag == "messages" then
     vim.cmd("messages")
@@ -228,7 +200,17 @@ local function refresh_log_view(win, tag, attempts, retry_delay)
     return
   end
 
-  focus_and_bottom(win, attempts, retry_delay)
+  -- Verify window still exists after command execution
+  -- (Noice errors might close if no errors)
+  vim.defer_fn(function()
+    if not api.nvim_win_is_valid(win) then
+      if tag == "noice_errors" then
+        vim.notify("No errors available", vim.log.levels.INFO)
+      end
+      return
+    end
+    focus_and_bottom(win, attempts, retry_delay)
+  end, 50)
 end
 
 --------------------------------------------------------------------------------
@@ -254,7 +236,7 @@ local function setup_keymaps(timings, km)
   })
 
   km.map("n", "<lt>e", function()
-    execute_and_refresh("noice_errors", "Noice errors", timings.attempts, timings.retry_delay_ms)
+    vim.cmd("Noice errors")
   end, {
     desc = "[Noice] Errors (deterministic, auto-bottom)",
     silent = true,

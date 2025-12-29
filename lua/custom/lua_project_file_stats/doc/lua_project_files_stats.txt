@@ -1,0 +1,275 @@
+*lua_project_file_stats.txt*   Lua Project File Statistics Analyzer
+
+==============================================================================
+CONTENTS                                    *lua-project-file-stats-contents*
+
+    1. Introduction ................. |lua-project-file-stats-intro|
+    2. Setup ........................ |lua-project-file-stats-setup|
+    3. Commands ..................... |lua-project-file-stats-commands|
+    4. Options ...................... |lua-project-file-stats-options|
+    5. Output ....................... |lua-project-file-stats-output|
+    6. Examples ..................... |lua-project-file-stats-examples|
+    7. Configuration ................ |lua-project-file-stats-config|
+
+==============================================================================
+1. INTRODUCTION                              *lua-project-file-stats-intro*
+
+Lua Project File Statistics is a comprehensive analysis tool for Lua
+codebases. It provides detailed metrics on:
+
+- Lines of code (with/without comments)
+- Annotation coverage (LuaLS @-tags)
+- Word counts in code and documentation
+- Folder-level ratios and deviations
+- Top-N lists for largest files
+
+Features:
+- Async execution (non-blocking)
+- Multiple display modes (numbers/percentages)
+- File output for CI/CD integration
+- CLI compatibility
+
+==============================================================================
+2. SETUP                                     *lua-project-file-stats-setup*
+
+Add to your Neovim configuration:
+>lua
+    require("custom.lua_project_file_stats").setup()
+<
+
+With lazy.nvim:
+>lua
+    {
+      dir = "path/to/custom/lua_project_file_stats",
+      config = function()
+        require("custom.lua_project_file_stats").setup()
+      end,
+      cmd = {
+        "LuaFileStats",
+        "LuaFileStatsQuick",
+        "LuaFileStatsRatios",
+        "LuaFileStatsCurrentFile",
+      },
+    }
+<
+
+==============================================================================
+3. COMMANDS                                *lua-project-file-stats-commands*
+
+                                                            *:LuaFileStats*
+:LuaFileStats [options] [path]
+
+    Main command with full configurability. Accepts flags and optional
+    directory path. Executes asynchronously by default.
+
+    Examples:
+        :LuaFileStats
+        :LuaFileStats ~/projects/myapp
+        :LuaFileStats --ratios --deviations
+        :LuaFileStats --output=/tmp/report.txt
+
+                                                       *:LuaFileStatsQuick*
+:LuaFileStatsQuick [path]
+
+    Quick summary with numbers only. Shows total summary table.
+    Useful for fast project overview.
+
+    Examples:
+        :LuaFileStatsQuick
+        :LuaFileStatsQuick ~/projects/myapp
+
+                                                      *:LuaFileStatsRatios*
+:LuaFileStatsRatios [path]
+
+    Detailed ratio analysis with deviations from global average.
+    Shows folder and summary tables with ratio metrics.
+
+    Examples:
+        :LuaFileStatsRatios
+        :LuaFileStatsRatios ~/projects/myapp
+
+                                                 *:LuaFileStatsCurrentFile*
+:LuaFileStatsCurrentFile
+
+    Analyze the current buffer only. Shows detailed statistics for
+    the current Lua file.
+
+    Example:
+        :LuaFileStatsCurrentFile
+
+==============================================================================
+4. OPTIONS                                  *lua-project-file-stats-options*
+
+Display Modes~
+
+    --percent-only              Show only percentages
+    --numbers-only              Show only absolute numbers
+    (default)                   Show both numbers and percentages
+
+Content Selection~
+
+    --fields=LIST               Comma-separated list: files, folders, summary
+                                Example: --fields=folders,summary
+
+    --ratios                    Show ratio analysis with metrics
+    --deviations                Show deviations from global average
+    --reverse                   Reverse output order (summary first)
+
+Top-N Lists~
+
+    --topn=N                    Number of items in top lists (default: 25)
+    --top-files-lines-only      Show ONLY top files by lines
+    --top-files-words-only      Show ONLY top files by words
+
+Single File Mode~
+
+    --file=PATH                 Analyze single file
+                                Example: --file=%:p (current file)
+
+Output~
+
+    --output=FILE               Save output to file
+                                Example: --output=/tmp/stats.txt
+
+    --colwidth=N                Table column width (default: 7)
+
+Execution Control~
+
+    --sync                      Disable async execution (blocking)
+
+==============================================================================
+5. OUTPUT                                    *lua-project-file-stats-output*
+
+Table Columns~
+
+Lines (L1-L5):
+    L1    Code without comments
+    L2    Comment lines (including annotations)
+    L3    Code without annotations
+    L4    Annotation lines (@-tags)
+    L5    Whitespace/blank lines
+
+Words (W1-W5):
+    W1    Words in code
+    W2    Words in code without annotations
+    W3    Words in comments
+    W4    Words in annotations
+    W5    Words in blank lines
+
+Ratio Metrics~
+
+When --ratios is enabled:
+
+    Comm%     Comment ratio (15-30% typical)
+    Anno%     Annotation ratio (5-12% typical)
+    Doc%      Documentation ratio (20-40% typical)
+    Code%     Code ratio (55-75% typical)
+    L/File    Average lines per file (80-200 typical)
+    A/C       Annotation/Comment ratio (0.20-0.50 typical)
+
+Deviation Display~
+
+When --deviations is enabled, Delta column shows difference from global
+average:
+
+    +5.8%     Folder exceeds average by 5.8%
+    -1.3%     Folder is below average by 1.3%
+
+Typical Output Structure~
+>
+    === File Statistics ===
+    | File                        | L1  | L2  | L3  | L4  | L5  | ...
+    | src/init.lua                | 150 | 50  | 150 | 20  | 10  | ...
+
+    === Folder Summary ===
+    | Folder         | Files | L1   | L2  | L3   | L4  | L5  | ...
+    | src/           | 12    | 1800 | 600 | 1800 | 240 | 120 | ...
+
+    === Total Summary ===
+    | Files | L1   | L2  | L3   | L4  | L5  | ...
+    | 12    | 1800 | 600 | 1800 | 240 | 120 | ...
+<
+
+==============================================================================
+6. EXAMPLES                                *lua-project-file-stats-examples*
+
+Quick Project Overview~
+>vim
+    :LuaFileStatsQuick
+<
+    Shows total summary with absolute numbers.
+
+Find Documentation Gaps~
+>vim
+    :LuaFileStats --ratios --deviations --fields=folders,summary
+<
+    Identifies folders with low documentation ratios.
+
+Identify Refactoring Candidates~
+>vim
+    :LuaFileStats --top-files-lines-only --topn=20
+<
+    Lists 20 largest files that may benefit from splitting.
+
+Current File Analysis~
+>vim
+    :LuaFileStatsCurrentFile
+<
+    Detailed statistics for current buffer.
+
+Export for CI/CD~
+>vim
+    :LuaFileStats --numbers-only --fields=summary --output=/tmp/ci.txt
+<
+    Machine-readable report for automation.
+
+Code Review Preparation~
+>vim
+    :LuaFileStatsRatios ~/projects/myapp
+<
+    Complete analysis for team discussion.
+
+==============================================================================
+7. CONFIGURATION                            *lua-project-file-stats-config*
+
+Ignored Directories~
+
+Default ignored directories:
+    .git
+    debuglog
+    docs
+    node_modules
+    .cache
+
+To modify, edit `utils.lua`:
+>lua
+    M.IGNORE_DIRS = { ".git", "debuglog", "docs" }
+<
+
+Performance~
+
+File scanning is async by default. For synchronous execution:
+>vim
+    :LuaFileStats --sync
+<
+
+Typical performance:
+    Small projects (<100 files):    <1 second
+    Medium projects (100-500):      1-3 seconds
+    Large projects (>500 files):    3-10 seconds
+
+Module Structure~
+
+    init.lua              Main entry point
+    @types.lua            Type definitions
+    utils.lua             Core utilities
+    prints.lua            Output formatting
+    usercommands.lua      Neovim commands
+
+Error Handling~
+
+All I/O operations use pcall for robust error handling. Errors are
+reported via vim.notify with appropriate log levels.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
