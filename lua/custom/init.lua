@@ -14,20 +14,20 @@ require("custom.function_index").setup({
   -- },
 
   cache = {
-    enabled = true,                    -- Enable persistent cache
+    enabled = true, -- Enable persistent cache
     dir = vim.fn.stdpath("cache") .. "/function_index",
-    ttl_seconds = 3600,                -- Cache validity duration
+    ttl_seconds = 3600, -- Cache validity duration
   },
 
   indexing = {
-    auto_rebuild_on_save = false,      -- Rebuild when files change
-    exclude_patterns = {               -- Patterns to ignore
+    auto_rebuild_on_save = false, -- Rebuild when files change
+    exclude_patterns = { -- Patterns to ignore
       "node_modules/",
       ".git/",
       "build/",
       "dist/",
     },
-    max_file_size_kb = 1024,           -- Skip files larger than this
+    max_file_size_kb = 1024, -- Skip files larger than this
   },
 
   languages = {
@@ -43,21 +43,23 @@ require("custom.function_index").setup({
 
   ui = {
     show_language_icons = true,
-    show_function_types = true,         -- local, method, exported, etc.
-    group_by_file = false,              -- Group entries by file
-    default_picker = "telescope",       -- "telescope" or "fzf"
+    show_function_types = true, -- local, method, exported, etc.
+    group_by_file = false, -- Group entries by file
+    default_picker = "telescope", -- "telescope" or "fzf"
   },
 })
 
 require("custom.filecycle").setup({
-  open_target = "current",    -- "current"|"split"|"vsplit"|"tab"|"background"
-  keep_focus = true,          -- bei Split/Vsplit Fokus im Ursprungsfenster behalten
-  include_hidden = false,     -- Dotfiles ignorieren
-  wrap = true,                -- am Ende/Anfang umbrechen
-  follow_symlinks = true,     -- echte Pfade für Vergleich/Öffnen nutzen
-  root = "buffer_dir",        -- "buffer_dir"|"cwd"
+  open_target = "current", -- "current"|"split"|"vsplit"|"tab"|"background"
+  keep_focus = true, -- bei Split/Vsplit Fokus im Ursprungsfenster behalten
+  include_hidden = false, -- Dotfiles ignorieren
+  wrap = true, -- am Ende/Anfang umbrechen
+  follow_symlinks = true, -- echte Pfade für Vergleich/Öffnen nutzen
+  root = "buffer_dir", -- "buffer_dir"|"cwd"
   confirm_on_modified = true, -- :confirm edit bei geänderten Buffern
-  case_insensitive = true,    -- alphabetische Sortierung/Matching ohne Groß/Kleinschreibung
+  case_insensitive = true, -- alphabetische Sortierung/Matching ohne Groß/Kleinschreibung
+  keymaps = true,
+  usercommands = true,
 })
 
 require("custom.find_config").enable({ usercmds = true, keymaps = true })
@@ -72,8 +74,7 @@ require("custom.repo_pickers").enable({
   keymaps_lhs = { repo_files = "<leader>rf", repo_grep = "<leader>rg" },
 }, { usercmds = true, keymaps = true })
 require("custom.usr_pickers").enable({}, { usercmds = true, keymaps = true })
-require("custom.pathfinder").setup{}
+require("custom.pathfinder").setup({})
 local line_marker = require("custom.line_marker")
 line_marker.enable_commands()
 line_marker.enable_mappings()
-
