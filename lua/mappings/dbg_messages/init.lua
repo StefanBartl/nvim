@@ -29,6 +29,38 @@ local WINDOWS = {
 }
 
 --------------------------------------------------------------------------------
+-- Noice helpers
+--------------------------------------------------------------------------------
+
+---Check if Noice has any error messages available
+---@return boolean
+local function has_noice_errors()
+  local ok, noice = pcall(require, "noice")
+  if not ok or not noice then
+    return false
+  end
+
+  -- Try to get Noice's message manager
+  local ok_manager, manager = pcall(function()
+    return require("noice.message.manager")
+  end)
+
+  if not ok_manager or not manager then
+    return false
+  end
+
+  -- Check if there are any error-level messages
+  local messages = manager.get() or {}
+  for _, msg in ipairs(messages) do
+    if msg.level and (msg.level == vim.log.levels.ERROR or msg.level == "error") then
+      return true
+    end
+  end
+
+  return false
+end
+
+--------------------------------------------------------------------------------
 -- Core primitives
 --------------------------------------------------------------------------------
 
@@ -115,6 +147,12 @@ end
 ---@param attempts integer
 ---@param retry_delay integer
 local function execute_and_refresh(tag, cmd, attempts, retry_delay)
+  -- Pre-validation: Check if Noice errors window would close immediately
+  if tag == "noice_errors" and not has_noice_errors() then
+    vim.notify("No errors available", vim.log.levels.INFO)
+    return
+  end
+
   local existing_win = find_window_by_tag(tag)
 
   if existing_win and api.nvim_win_is_valid(existing_win) then
@@ -153,6 +191,7 @@ local function execute_and_refresh(tag, cmd, attempts, retry_delay)
     end
   end)
 end
+
 --------------------------------------------------------------------------------
 -- Refresh logic for existing windows
 --------------------------------------------------------------------------------
@@ -162,7 +201,19 @@ end
 ---@param attempts integer
 ---@param retry_delay integer
 local function refresh_log_view(win, tag, attempts, retry_delay)
-  if not api.nvim_win_is_valid(win) then
+  -- CRITICAL: Validate window
+  if not (win and api.nvim_win_is_valid(win)) then
+    return
+  end
+
+  -- Verify it's a content window
+  local ok_config, config = pcall(api.nvim_win_get_config, win)
+  if not ok_config or config.relative == "win" or config.width <= 1 or config.height <= 1 then
+    return
+  end
+
+  -- Pre-validation for noice_errors
+  if tag == "noice_errors" and not has_noice_errors() then
     return
   end
 

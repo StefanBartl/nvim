@@ -1,6 +1,7 @@
 ---@module 'usrcmds'
 -- Initialize module for 'usrcmds'
 
+require("usrcmds.refactor_notify").setup()
 
 require("usrcmds.column_align").setup()
 require("usrcmds.compress_dir").enable_usercmd()

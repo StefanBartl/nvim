@@ -7,7 +7,7 @@ local blacklist_module = require("custom.recommender.blacklist")
 local M = {}
 
 ---Get text from node
----@param node userdata
+---@param node TSNode
 ---@param src string
 ---@return string|nil
 local function text(node, src)

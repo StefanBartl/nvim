@@ -14,28 +14,27 @@ return {
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/neotree-fs-refactor.nvim"),
     lazy = false,
     config = function()
-      require("neotree_fs_refactor").setup({
-        enable_lsp = true,
-        enable_fallback = true,
-        preview_changes = true,
-        notify_level = "debug", -- More verbose for development
+      -- require("neotree-fs-refactor").setup()
+      require("neotree-fs-refactor").setup({
+        enabled = true,
+        auto_save = true, -- Enable auto-save for testing
+        notify_on_refactor = true,
 
-        ignore_patterns = {
-          ".git",
-          "*.so",
-          "*.dll",
-          ".luacache",
+        -- Use minimal ignore patterns for testing
+        ignore_patterns = require("lib.fs.ignore.list").as_luals_patterns(),
+
+        -- Enable all file types
+        file_types = {
+          lua = true,
+          typescript = true,
+          javascript = true,
+          typescriptreact = true,
+          javascriptreact = true,
+          python = true,
         },
 
-        file_type_filters = { "lua" },
-
-        fallback = {
-          enabled = true,
-          tool = "ripgrep",
-          case_sensitive = true,
-          whole_word = true,
-          confidence_threshold = "medium",
-        },
+        max_file_size = 10 * 1024 * 1024, -- 10MB for testing
+        debounce_ms = 10, -- Shorter debounce for faster testing
       })
     end,
   },

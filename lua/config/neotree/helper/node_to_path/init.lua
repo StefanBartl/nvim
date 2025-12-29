@@ -3,7 +3,7 @@
 --- Can return absolute paths, relative paths (to project root or cwd), or base directories
 
 local fn = vim.fn
-local relpath = require("lib.filesystem.relpath")
+local relpath = require("lib.fs.relpath")
 
 ---@alias mode 'absolute' | 'relative'
 

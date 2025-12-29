@@ -135,7 +135,7 @@ function M.scan_wkdbooks(root, prefix, max_depth)
   max_depth = max_depth or 10
   local prefix_lower = prefix:lower()
 
-  ---@type RepoDir[]
+  ---@type  RepoPickers.RepoDir[]
   local out = {}
 
   --- Recursive helper to scan directories

@@ -345,11 +345,16 @@ end
 ---@return boolean ok
 function M.open(mode, opts)
   local o = opts and vim.tbl_deep_extend("force", M.opts, opts) or M.opts
+  if not o then
+    vim.notify("[NextPrev] Config is nil", vim.log.levels.WARN)
+    return false
+  end
   local dir, err = get_root_dir(o)
   if not dir then
     vim.notify("[NextPrev] " .. (err or "no directory"), vim.log.levels.WARN)
     return false
   end
+
   return navigate(dir, mode, o)
 end
 

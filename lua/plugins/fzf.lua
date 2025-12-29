@@ -1,7 +1,7 @@
 --@module 'plugins.fzf'
 --- Fuzzy finding tools based on Telescope, fzf-lua, and optional tabbed UI (search.nvim)
 
-local path_shorten = require("lib.filesystem.path_shorten")
+local path_shorten = require("lib.fs.path_shorten")
 local function adapt_max_len()
   return math.max(20, math.floor((vim.o.columns or 80) * 0.6))
 end

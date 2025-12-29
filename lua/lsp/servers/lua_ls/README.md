@@ -188,9 +188,9 @@ Library paths: /home/user/.config/nvim, /home/user/projects/my-plugin/types, ...
 ### 2. Abhängigkeiten
 
 Stelle sicher, dass diese Helper-Module existieren:
-- `lib.filesystem.is_subpath`
-- `lib.filesystem.find_upward_dir`
-- `lib.filesystem.ignore.list`
+- `lib.fs.is_subpath`
+- `lib.fs.find_upward_dir`
+- `lib.fs.ignore.list`
 
 ### 3. LSP Setup
 
@@ -256,7 +256,7 @@ library["${3rd}/lfs/library"] = true
 
 ### Ignore-Liste erweitern
 
-In `lib.filesystem.ignore.list`:
+In `lib.fs.ignore.list`:
 ```lua
 return {
   "node_modules",

@@ -1,5 +1,9 @@
 # WKD Neovim Roadmap
 
+## Watch
+
+- `<C-s>`: Manchmal springt es beim speichern in etwa in die Mitte oder ans Ende oder einen anderen Punk der file
+
 ## MIXED
 
 - Neotree mappings so schreiben, dass auch nvimtree/netrw möglich wäre

@@ -12,6 +12,8 @@
 ---@field case_insensitive? boolean
 
 ---@class FileCycle.State
----@field opts FileCycle.Config
+---@field opts? FileCycle.Config
+---@field setup? fun(user_opts: FileCycle.Config|nil)): nil
+---@field open? fun(mode: string, opts: FileCycle.Config): boolean
 
 return {}

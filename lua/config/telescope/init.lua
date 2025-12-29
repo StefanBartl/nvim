@@ -6,8 +6,8 @@
 local M = {}
 
 local actions = require("telescope.actions")
-local files_path_shorten = require("lib.filesystem.path_shorten")
-local ignore_list = require("lib.filesystem.ignore.list")
+local files_path_shorten = require("lib.fs.path_shorten")
+local ignore_list = require("lib.fs.ignore.list")
 local history = require("config.telescope.history")
 local history_keymaps = require("config.telescope.history.keymaps")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")

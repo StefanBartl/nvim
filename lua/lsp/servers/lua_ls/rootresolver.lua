@@ -5,7 +5,7 @@
 ---  - make_root_dir_resolver() : return a polymorphic resolver usable by LSP configs
 
 -- Import filesystem helper to check if a path is contained within another
-local is_subpath = require("lib.filesystem.is_subpath")
+local is_subpath = require("lib.fs.is_subpath")
 
 --- Determine a strict root directory from a filename or use sensible fallbacks.
 ---

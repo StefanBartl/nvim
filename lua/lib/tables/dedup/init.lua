@@ -1,4 +1,4 @@
----@module 'lib.filesystem.dedup'
+---@module 'lib.fs.dedup'
 -- Deduplicate a list of filesystem paths while preserving the original order.
 ---@brief
 -- This module exports a single function that:
@@ -11,7 +11,7 @@
 --
 -- Examples:
 --   ```lua
---   local dedup = require("lib.filesystem.dedup")
+--   local dedup = require("lib.fs.dedup")
 --   local input = { "./a/../b", "/home/user/project", "/home/user/project/" }
 --   local out = dedup(input) -- out -> { "/home/user/b", "/home/user/project" } (depending on normalize behavior)
 --   ```

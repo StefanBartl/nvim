@@ -12,7 +12,6 @@ local updir = require("config.neotree.updir")
 local node_informations = require("config.neotree.helper.node_informations")
 local is_wsl = require("lib.is_wsl")
 local open_replace = require("config.neotree.open_replace")
-local src_filesystem = require("neo-tree.sources.filesystem")
 local commands = require("config.neotree.commands")
 local trash = require("config.neotree.trash")
 local hide_preview_safe = require("config.neotree.helper.hide_preview_safe")
@@ -98,7 +97,7 @@ return {
   -- ========= clear filter, preview and search highlight ==============
 
   ["<Esc>"] = function(state)
-    src_filesystem.reset_search(state, true)
+    require("neo-tree.sources.filesystem").reset_search(state, true)
     require("neo-tree.sources.filesystem.lib.filter_external").cancel()
     hide_preview_safe(state)
     cmd("nohlsearch")

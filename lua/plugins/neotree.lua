@@ -157,7 +157,7 @@ return {
         -- Hide files marked "hidden" by the filesystem (mainly relevant on Windows),
         hide_hidden = false,
         hide_by_pattern = {},
-        hide_by_name = require("lib.filesystem.ignore.list").as_neotree_names(),
+        hide_by_name = require("lib.fs.ignore.list").as_neotree_names(),
 
         -- Items listed here are *never* shown, even if `visible = true`.
         never_show = {},

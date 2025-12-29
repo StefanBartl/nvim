@@ -5,8 +5,8 @@
 local uv = vim.uv or vim.loop
 
 -- Import filesystem helper utilities
-local is_subpath = require("lib.filesystem.is_subpath")
-local find_upward_dir = require("lib.filesystem.find_upward_dir")
+local is_subpath = require("lib.fs.is_subpath")
+local find_upward_dir = require("lib.fs.find_upward_dir")
 
 ---@class LuaLsDebug
 local M = {}

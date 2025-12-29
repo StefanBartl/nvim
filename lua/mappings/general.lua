@@ -12,7 +12,11 @@ function M.setup()
   --   vim.cmd "silent! w!"
   -- end, { desc = "[General] Save file silently" })
 
-  map({ "n", "i", "v", "t" }, "<C-s>", "<cmd>w<CR>", { desc = "[General] Save file" }) -- C-s in insert mode is lsp.signature_help()
+  map({ "n", "i", "v", "t" }, "<C-s>", function()
+    local pos = vim.api.nvim_win_get_cursor(0)
+    vim.cmd("write")
+    vim.api.nvim_win_set_cursor(0, pos)
+  end, { desc = "[General] Save file" })
   map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
 
   map("n", "+", "<C-y>", { desc = "[Number] Increment" }) -- AUDIT: EIgenes increment ? cycle...
