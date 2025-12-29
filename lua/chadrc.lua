@@ -5,7 +5,7 @@ local base_cfg = require("ui.base_config")
 
 -- ==== Load Core statusline if custom fails --------------------------------------------------
 local ok_util, utl = pcall(require, "ui.stl_modules.lsp_based")
-local custom_stl = false
+local custom_stl = true
 
 if not custom_stl then
   if not ok_util then

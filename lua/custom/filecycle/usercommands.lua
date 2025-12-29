@@ -1,5 +1,5 @@
 ---@module 'custom.filecycle.usercommands'
-require("lua.custom.filecycle.@types")
+require("custom.filecycle.@types")
 
 local api = vim.api
 local notify = require("lib.notify").create("[filecycle]")

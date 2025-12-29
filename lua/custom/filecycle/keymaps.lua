@@ -1,5 +1,5 @@
 ---@module 'custom.filecycle.keymaps'
-require("lua.custom.filecycle.@types")
+require("custom.filecycle.@types")
 
 local core = require("custom.filecycle.core")
 local map = require("lib.map")

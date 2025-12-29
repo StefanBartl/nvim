@@ -39,14 +39,14 @@ return {
     end,
   },
 
-  {
-    -- 'StefanBartl/learn-cli.nvim',
-    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/learn-cli.nvim"),
-    lazy = false,
-    config = function()
-      require("learn_cli").setup({})
-    end,
-  },
+  -- {
+  --   -- 'StefanBartl/learn-cli.nvim',
+  --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/learn-cli.nvim"),
+  --   lazy = false,
+  --   config = function()
+  --     require("learn_cli").setup({})
+  --   end,
+  -- },
 
   {
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/github_stats.nvim"),
@@ -276,23 +276,13 @@ return {
   },
 
   -- nvim-containers: Manage container engines from Neovim
-  -- {
-  --   dir = vim.fs.joinpath(vim.env.REPOS_DIR, "/nvim-containers"),
-  --   event = "VeryLazy",
-  --   config = function()
-  --     require("containers").setup({})
-  --   end,
-  -- },
-  --
-  -- nvim-cmdlog: Command history management (remote plugin)
-  -- Optional: local dev version of cmdlog
-  -- {
-  --   dir = repo("nvim-cmdlog"),
-  --   cond = exists(repo("nvim-cmdlog")),
-  --   config = function()
-  --     require("cmdlog").setup({ picker = "telescope" })
-  --   end,
-  -- },
+  {
+    dir = vim.fs.joinpath(vim.env.REPOS_DIR, "/nvim-containers"),
+    event = "VeryLazy",
+    config = function()
+      require("containers").setup({})
+    end,
+  },
 
   --[[
 
