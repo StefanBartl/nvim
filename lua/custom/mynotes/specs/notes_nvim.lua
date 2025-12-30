@@ -1,6 +1,6 @@
 ---@module 'mynotes.specs.notes_neovim'
 
-local register = require("mynotes.register")
+local register = require("custom.mynotes.register")
 
 register.register(
   "Neovim Notes",

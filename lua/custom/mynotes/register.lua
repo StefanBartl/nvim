@@ -1,7 +1,7 @@
 ---@module 'mynotes.register'
 --- Declarative registration of commands and keymaps for note collections.
 
-local core = require("mynotes.core")
+local core = require("custom.mynotes.core")
 
 local M = {}
 

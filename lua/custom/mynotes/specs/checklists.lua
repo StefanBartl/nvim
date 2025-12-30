@@ -1,6 +1,6 @@
 ---@module 'mynotes.specs.checklists'
 
-local register = require("mynotes.register")
+local register = require("custom.mynotes.register")
 
 register.register(
   "Checklists",

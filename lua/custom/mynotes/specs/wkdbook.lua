@@ -1,6 +1,6 @@
 ---@module 'mynotes.specs.wkdbook'
 
-local register = require("mynotes.register")
+local register = require("custom.mynotes.register")
 
 register.register(
   "WKDBook",
