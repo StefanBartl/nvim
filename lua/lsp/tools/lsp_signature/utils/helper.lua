@@ -1,4 +1,4 @@
----@module 'custom.lsp_signature.utils.helper'
+---@module 'lsp.tools.lsp_signature.utils.helper'
 
 local M = {}
 

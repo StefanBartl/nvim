@@ -1,19 +1,19 @@
----@module 'custom.lsp_signature.highlights.parameters'
+---@module 'lsp.tools.lsp_signature.highlights.parameters'
 --- Manage and configure highlight groups used for LSP signature parameter emphasis.
 --- This module exposes a `setup(opts)` function which creates the groups and returns
 --- the namespace id (ns) to be used for range highlighting.
 ---
 --- Usage:
----   local hl = require("custom.lsp_signature.highlights.parameters")
+---   local hl = require("lsp.tools.lsp_signature.highlights.parameters")
 ---   local ns = hl.setup({ -- optional overrides })
 --- The function is idempotent and can be called multiple times (reconfigures).
 
 local M = {}
 
-local helper = require("custom.lsp_signature.utils.helper")
+local helper = require("lsp.tools.lsp_signature.utils.helper")
 
 --- default options for highlights
----@type ParamHighlightOpts
+---@type Lsp.Tools.SignatureTool.ParamHighlightOpts
 local defaults = {
   base_fg = 0xFF8800,            -- base color for param group 1 (hex number)
   step = 0x003300,               -- added to base for subsequent groups
@@ -32,7 +32,7 @@ local ns_id = nil
 
 --- (Re)create highlight groups according to options.
 --- Returns namespace id to be used with vim.hl.range.
----@param opts ParamHighlightOpts|nil
+---@param opts Lsp.Tools.SignatureTool.ParamHighlightOpts|nil
 ---@return integer ns
 function M.setup(opts)
   opts = opts or {}

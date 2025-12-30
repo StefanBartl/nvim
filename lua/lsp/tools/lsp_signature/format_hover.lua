@@ -1,6 +1,6 @@
----@module 'custom.lsp_signature.format_hover'
+---@module 'lsp.tools.lsp_signature.format_hover'
 
-local split_lines = require("custom.lsp_signature.split_lines")
+local split_lines = require("lsp.tools.lsp_signature.split_lines")
 
 -- Format a signatureHelp result into a list of strings for display.
 --@param result table

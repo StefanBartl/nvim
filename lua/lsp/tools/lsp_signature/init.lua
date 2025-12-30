@@ -8,7 +8,7 @@
 local M = {}
 
 local schedule = vim.schedule
-local request_and_show = require("custom.lsp_signature.request_and_show")
+local request_and_show = require("lsp.tools.lsp_signature.request_and_show")
 
 function M.setup()
   vim.keymap.set({ "i", "n" }, "<C-b>", function()

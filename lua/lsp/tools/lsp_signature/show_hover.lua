@@ -1,4 +1,4 @@
----@module 'custom.lsp_signature.show_hover'
+---@module 'lsp.tools.lsp_signature.show_hover'
 --- Request hover from one or multiple LSP clients and display it in a floating preview.
 --- Accepts either a single client object or a list (array) of clients.
 --- If given multiple clients, it queries them in order and shows the first hover result
@@ -8,9 +8,9 @@
 --- Return value: boolean indicating that at least one request was scheduled (not that a preview was necessarily shown).
 local M = {}
 
-local open_floating_preview = require("custom.lsp_signature.open_floating_preview")
-local format_hover = require("custom.lsp_signature.format_hover")
-local state = require("custom.lsp_signature.state")
+local open_floating_preview = require("lsp.tools.lsp_signature.open_floating_preview")
+local format_hover = require("lsp.tools.lsp_signature.format_hover")
+local state = require("lsp.tools.lsp_signature.state")
 local api = vim.api
 local schedule = vim.schedule
 

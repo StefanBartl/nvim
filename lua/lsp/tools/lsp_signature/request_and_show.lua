@@ -1,4 +1,4 @@
----@module 'custom.lsp_signature.request_and_show'
+---@module 'lsp.tools.lsp_signature.request_and_show'
 --- Request signatureHelp for the current position and show it in a floating preview.
 --- When signatureHelp is not available or produces no displayable lines, this module
 --- falls back to querying hover across all clients (via the modular show_hover helper).
@@ -9,13 +9,13 @@
 --- launching fallback providers when hover already produced a floating preview.
 local api = vim.api
 local schedule = vim.schedule
-local open_floating_preview = require("custom.lsp_signature.open_floating_preview")
-local format_signature_help = require("custom.lsp_signature.format_signature_help")
-local state = require("custom.lsp_signature.state")
+local open_floating_preview = require("lsp.tools.lsp_signature.open_floating_preview")
+local format_signature_help = require("lsp.tools.lsp_signature.format_signature_help")
+local state = require("lsp.tools.lsp_signature.state")
 
-local param_hl = require("custom.lsp_signature.highlights.parameters")
-local hover_helper = require("custom.lsp_signature.show_hover")
-local fallback_providers = require("custom.lsp_signature.fallback_providers")
+local param_hl = require("lsp.tools.lsp_signature.highlights.parameters")
+local hover_helper = require("lsp.tools.lsp_signature.show_hover")
+local fallback_providers = require("lsp.tools.lsp_signature.fallback_providers")
 
 local notify = vim.notify
 

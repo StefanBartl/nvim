@@ -107,9 +107,9 @@ return function(lines, opts)
 
   -- buffer-local mappings to close the popup and clear state
   local map_opts = { nowait = true, noremap = true, silent = true }
-  api.nvim_buf_set_keymap(bufnr, "n", "<Esc>", "<Cmd>lua require('custom.lsp_signature.state').close()<CR>", map_opts)
-  api.nvim_buf_set_keymap(bufnr, "n", "q", "<Cmd>lua require('custom.lsp_signature.state').close()<CR>", map_opts)
-  api.nvim_buf_set_keymap(bufnr, "v", "q", "<Cmd>lua require('custom.lsp_signature.state').close()<CR>", map_opts)
+  api.nvim_buf_set_keymap(bufnr, "n", "<Esc>", "<Cmd>lua require('lsp.tools.lsp_signature.state').close()<CR>", map_opts)
+  api.nvim_buf_set_keymap(bufnr, "n", "q", "<Cmd>lua require('lsp.tools.lsp_signature.state').close()<CR>", map_opts)
+  api.nvim_buf_set_keymap(bufnr, "v", "q", "<Cmd>lua require('lsp.tools.lsp_signature.state').close()<CR>", map_opts)
 
   local group_name = "LspSignaturePopup_" .. tostring(winid)
   local aug_id = api.nvim_create_augroup(group_name, { clear = true })
@@ -118,7 +118,7 @@ return function(lines, opts)
     once = true,
     buffer = bufnr,
     callback = function()
-      pcall(require("custom.lsp_signature.state").close)
+      pcall(require("lsp.tools.lsp_signature.state").close)
       pcall(api.nvim_del_augroup_by_id, aug_id)
     end,
   })

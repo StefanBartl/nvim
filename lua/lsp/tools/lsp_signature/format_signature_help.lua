@@ -1,5 +1,5 @@
----@module 'custom.lsp_signature.format_signature_help'
-local split_lines = require("custom.lsp_signature.split_lines")
+---@module 'lsp.tools.lsp_signature.format_signature_help'
+local split_lines = require("lsp.tools.lsp_signature.split_lines")
 
 -- Strip common comment prefixes for many languages from a single line.
 -- This is heuristic: handles //, /* */, #, --, % and leading whitespace.

@@ -1,4 +1,4 @@
----@module 'custom.lsp_signature.split_lines'
+---@module 'lsp.tools.lsp_signature.split_lines'
 
 -- Safely split a string into lines.
 --@param s string

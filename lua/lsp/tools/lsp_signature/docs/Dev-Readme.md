@@ -216,7 +216,7 @@ nvim-lsp-signature-demo/
 ### Beispiel `after/plugin/lsp_signature.lua`
 
 ```lua
-local lsp_sig = require("custom.lsp_signature")
+local lsp_sig = require("lsp.tools.lsp_signature")
 lsp_sig.setup()
 
 -- Optional: zusätzliche Signaturen für Rust, Go, TypeScript, libuv

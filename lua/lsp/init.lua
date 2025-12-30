@@ -170,6 +170,7 @@ function M.setup(cfg)
     enable_on_setup = true, -- initial autorun state
   })
 
+  require("lsp.tools.lsp_signature").setup()
   require("lsp.tools.ts_type_lookup").setup()
   require("lsp.tools.deprecated_help").setup()
   require("lsp.diagnostics").setup()

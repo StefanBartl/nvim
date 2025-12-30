@@ -1,4 +1,4 @@
----@module 'custom.lsp_signature.fallback_providers'
+---@module 'lsp.tools.lsp_signature.fallback_providers'
 --- Query alternative LSP providers when signatureHelp and hover return nothing.
 --- Tries a sequence of LSP methods (typeDefinition, implementation, references)
 --- and formats the first non-empty result into a list of lines suitable for
@@ -13,9 +13,9 @@
 ---   - providers: string[]|nil  -- override default provider list
 local M = {}
 
-local open_floating_preview = require("custom.lsp_signature.open_floating_preview")
-local state = require("custom.lsp_signature.state")
-local helper = require("custom.lsp_signature.utils.helper")
+local open_floating_preview = require("lsp.tools.lsp_signature.open_floating_preview")
+local state = require("lsp.tools.lsp_signature.state")
+local helper = require("lsp.tools.lsp_signature.utils.helper")
 local api = vim.api
 local schedule = vim.schedule
 local uri_to_fname = vim.uri_to_fname

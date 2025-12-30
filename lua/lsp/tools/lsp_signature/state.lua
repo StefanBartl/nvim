@@ -1,4 +1,4 @@
----@module 'custom.lsp_signature.state'
+---@module 'lsp.tools.lsp_signature.state'
 --- Holds popup state and provides a safe close function.
 --- Consumers should require this module and use set/get/close.
 local M = {}

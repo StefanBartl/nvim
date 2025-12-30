@@ -63,7 +63,6 @@ require("custom.filecycle").setup({
 })
 
 require("custom.find_config").enable({ usercmds = true, keymaps = true })
-require("custom.lsp_signature").setup()
 require("custom.markdown").setup()
 require("custom.pathprobe").enable_keymaps()
 require("custom.reload").enable()
