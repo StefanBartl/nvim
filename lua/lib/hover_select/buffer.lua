@@ -23,7 +23,7 @@ function M.create(items, buf_options)
 
   -- Apply user-provided buffer options
   for option, value in pairs(buf_options) do
-    local success, err = pcall(api.nvim_set_option_value, option, value)
+    local success, err = pcall(api.nvim_set_option_value, option, value, { buf = bufnr })
     if not success then
       vim.notify(
         string.format("lib.hover_select: failed to set buffer option '%s': %s", option, err),
