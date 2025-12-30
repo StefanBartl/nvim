@@ -1,27 +1,14 @@
 ---@module 'usrcmds.migrate.notify.parser'
----@brief Robust, statement-safe detection for vim.notify calls
+---@brief Simple regex-based detection (like working monofile)
 ---@description
---- Design goals (based on the previously working regex implementation):
----   - never rewrite partial expressions
----   - never touch already-migrated notify.<level> calls
----   - treat a vim.notify call as a *statement*, not as a node fragment
----   - multiline safety via balanced parentheses
----
---- IMPORTANT:
---- This parser intentionally does NOT try to be “clever”.
---- It only matches calls that are syntactically complete and top-level.
---- This mirrors the behaviour of the old working implementation.
+--- Uses string patterns instead of treesitter for simplicity and reliability.
+--- Matches complete vim.notify statements via balanced parentheses.
 
 require("usrcmds.migrate.notify.@types")
 
 local M = {}
 
 local api = vim.api
-local ts = vim.treesitter
-
---------------------------------------------------------------------------------
--- Constants
---------------------------------------------------------------------------------
 
 ---@type table<string, string>
 local LEVEL_MAP = {
@@ -33,117 +20,133 @@ local LEVEL_MAP = {
 }
 
 --------------------------------------------------------------------------------
--- Helpers
+-- Pattern matching helpers
 --------------------------------------------------------------------------------
 
----Check whether a call target is exactly vim.notify
----@param node TSNode
----@param bufnr integer
+---Check if line contains vim.notify start
+---@param line string
 ---@return boolean
-local function is_vim_notify(node, bufnr)
-  local name = node:field("name")[1]
-  if not name then
-    return false
-  end
-
-  local text = ts.get_node_text(name, bufnr)
-  return text == "vim.notify"
+local function is_notify_line(line)
+  -- Match vim.notify( but NOT notify.level(
+  return line:match("vim%.notify%s*%(") ~= nil
+    and not line:match("notify%.[a-z]+%s*%(")
 end
 
----Reject notify.<level>(...) – already migrated
----@param node TSNode
----@param bufnr integer
----@return boolean
-local function is_already_migrated(node, bufnr)
-  local name = node:field("name")[1]
-  if not name then
-    return false
+---Find closing parenthesis for multiline call
+---@param lines string[]
+---@param start_idx integer
+---@return integer|nil end_idx
+local function find_call_end(lines, start_idx)
+  local paren_count = 0
+  local start_line = lines[start_idx]
+
+  -- Count parentheses in first line
+  for char in start_line:gmatch(".") do
+    if char == "(" then
+      paren_count = paren_count + 1
+    elseif char == ")" then
+      paren_count = paren_count - 1
+      if paren_count == 0 then
+        return start_idx  -- Single line
+      end
+    end
   end
 
-  local text = ts.get_node_text(name, bufnr)
-  return text:match("^notify%.%w+$") ~= nil
-end
-
----Extract vim.log.levels.<LEVEL>
----@param node TSNode
----@param bufnr integer
----@return string|nil
-local function extract_level(node, bufnr)
-  if node:type() ~= "dot_index_expression" then
-    return nil
-  end
-
-  local text = ts.get_node_text(node, bufnr)
-  local level = text:match("vim%.log%.levels%.([A-Z]+)$")
-
-  if level and LEVEL_MAP[level] then
-    return level
+  -- Search following lines
+  for i = start_idx + 1, #lines do
+    local line = lines[i]
+    for char in line:gmatch(".") do
+      if char == "(" then
+        paren_count = paren_count + 1
+      elseif char == ")" then
+        paren_count = paren_count - 1
+        if paren_count == 0 then
+          return i
+        end
+      end
+    end
   end
 
   return nil
 end
 
 --------------------------------------------------------------------------------
--- Argument parsing
+-- Single line migration
 --------------------------------------------------------------------------------
 
----Parse arguments in a strict, positional way
----@param call TSNode
----@param bufnr integer
----@return string message, string level, string|nil opts
-local function parse_args(call, bufnr)
-  local args = call:field("arguments")[1]
-  if not args then
-    return nil
+---Migrate single line vim.notify
+---@param line string
+---@return string|nil migrated, string|nil level
+local function migrate_single_line(line)
+  -- Pattern: vim.notify( content , vim.log.levels.LEVEL )
+  -- Use greedy match to get everything up to the last vim.log.levels
+  local indent, content, level, rest = line:match(
+    "^(%s*)vim%.notify%s*%((.-),%s*vim%.log%.levels%.(%u+)%s*%)(.*)$"
+  )
+
+  if not content or not level or not LEVEL_MAP[level] then
+    return nil, nil
   end
 
-  local named = {}
-  for child in args:iter_children() do
-    if child:named() then
-      table.insert(named, child)
-    end
-  end
+  -- Clean content (trim whitespace)
+  content = content:match("^%s*(.-)%s*$")
 
-  if #named < 2 then
-    return nil
-  end
+  -- Build replacement
+  local method = LEVEL_MAP[level]
+  local migrated = string.format('%snotify.%s(%s)%s', indent, method, content, rest)
 
-  local msg = ts.get_node_text(named[1], bufnr)
-  local level = extract_level(named[2], bufnr)
-  if not level then
-    return nil
-  end
-
-  local opts = nil
-  if #named >= 3 then
-    opts = ts.get_node_text(named[3], bufnr)
-  end
-
-  return msg, level, opts
+  return migrated, level
 end
 
 --------------------------------------------------------------------------------
--- Replacement builder
+-- Multiline migration
 --------------------------------------------------------------------------------
 
----@param msg string
----@param level string
----@param opts string|nil
----@return string
-local function build_replacement(msg, level, opts)
-  local method = LEVEL_MAP[level]
+---Migrate multiline vim.notify
+---@param lines string[]
+---@return string|nil migrated, string|nil level
+local function migrate_multiline(lines)
+  -- Combine lines
+  local combined = table.concat(lines, "\n")
 
-  if opts then
-    return string.format("notify.%s(%s, %s)", method, msg, opts)
+  -- Extract indent from first line
+  local indent = lines[1]:match("^(%s*)") or ""
+
+  -- Normalize whitespace for pattern matching (but keep structure)
+  -- Replace all whitespace sequences (including newlines) with single space
+  local normalized = combined:gsub("%s+", " "):gsub("^%s+", "")
+
+  -- Pattern: vim.notify( content , vim.log.levels.LEVEL )
+  -- Match and capture everything, then verify it ends with )
+  local prefix, content, level, suffix = normalized:match(
+    "^(vim%.notify%s*%()(.-),%s*(vim%.log%.levels%.%u+)%s*(%)).*$"
+  )
+
+  if not content or not level then
+    return nil, nil
   end
 
-  return string.format("notify.%s(%s)", method, msg)
+  -- Extract just the level name
+  local level_name = level:match("vim%.log%.levels%.(%u+)")
+  if not level_name or not LEVEL_MAP[level_name] then
+    return nil, nil
+  end
+
+  -- Clean content (trim)
+  content = content:match("^%s*(.-)%s*$")
+
+  -- Build replacement (single line with original indent)
+  local method = LEVEL_MAP[level_name]
+  local migrated = string.format('%snotify.%s(%s)', indent, method, content)
+
+  return migrated, level_name
 end
 
 --------------------------------------------------------------------------------
 -- Scanner
 --------------------------------------------------------------------------------
 
+---Scan buffer and return all matches
 ---@param bufnr integer
 ---@return MigrateNotify.Match[]
 function M.scan_buffer(bufnr)
@@ -155,44 +158,55 @@ function M.scan_buffer(bufnr)
     return {}
   end
 
-  local parser = ts.get_parser(bufnr, "lua")
-  if not parser then
-    return {}
-  end
-
-  local tree = parser:parse()[1]
-  if not tree then
-    return {}
-  end
-
-  local root = tree:root()
+  local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local matches = {}
+  local i = 1
 
-  local function visit(node)
-    if node:type() == "function_call" then
-      if not is_already_migrated(node, bufnr) and is_vim_notify(node, bufnr) then
-        local msg, level, opts = parse_args(node, bufnr)
-        if msg and level then
-          local sr, sc, er, ec = node:range()
-          table.insert(matches, {
-            line = sr + 1,
-            col = sc,
-            end_line = er + 1,
-            end_col = ec,
-            original = ts.get_node_text(node, bufnr),
-            replacement = build_replacement(msg, level, opts),
-            log_level = level,
-          })
+  while i <= #lines do
+    local line = lines[i]
+
+    if is_notify_line(line) then
+      local end_idx = find_call_end(lines, i)
+
+      if end_idx then
+        if end_idx == i then
+          -- Single line
+          local migrated, level = migrate_single_line(line)
+          if migrated then
+            table.insert(matches, {
+              line = i,
+              end_line = i,
+              original = line,
+              replacement = migrated,
+              log_level = level,
+            })
+          end
+        else
+          -- Multiline
+          local call_lines = {}
+          for j = i, end_idx do
+            table.insert(call_lines, lines[j])
+          end
+
+          local migrated, level = migrate_multiline(call_lines)
+          if migrated then
+            table.insert(matches, {
+              line = i,
+              end_line = end_idx,
+              original = table.concat(call_lines, "\n"),
+              replacement = migrated,
+              log_level = level,
+            })
+          end
+
+          i = end_idx  -- Skip processed lines
         end
       end
     end
 
-    for child in node:iter_children() do
-      visit(child)
-    end
+    i = i + 1
   end
 
-  visit(root)
   return matches
 end
 

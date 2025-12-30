@@ -1,10 +1,8 @@
 ---@module 'usrcmds.migrate.notify'
----@brief Migrate vim.notify to lib.notify.
+---@brief Migrate vim.notify to lib.notify (simple regex approach)
 ---@description
---- Refactored to use common migration infrastructure.
---- Supports: line, range, buffer (%), cwd modes.
---- Uses Treesitter for accurate pattern detection.
-
+--- Simplified approach using regex patterns instead of treesitter.
+--- More robust and easier to debug.
 
 local command = require("usrcmds.migrate.common.command")
 local picker = require("usrcmds.migrate.common.picker")
@@ -16,10 +14,34 @@ local M = {}
 
 local api = vim.api
 local tbl_insert = table.insert
+local notify = require("lib.notify").create("[migrate.notify]")
 
----Convert parser matches to common match format
+--------------------------------------------------------------------------------
+-- Exclusion logic
+--------------------------------------------------------------------------------
+
+---Check if file should be excluded
+---@param filepath string
+---@return boolean
+local function should_exclude(filepath)
+  -- Normalize path separators
+  local normalized = filepath:gsub("\\", "/")
+
+  -- Exclude migrate module itself
+  if normalized:match("/usrcmds/migrate/") then
+    return true
+  end
+
+  return false
+end
+
+--------------------------------------------------------------------------------
+-- Conversion helpers
+--------------------------------------------------------------------------------
+
+---Convert parser matches to common format
 ---@param bufnr integer
----@param parser_matches table[]
+---@param parser_matches MigrateNotify.Match[]
 ---@return MigrateCommon.Match[]
 local function to_common_matches(bufnr, parser_matches)
   local matches = {}
@@ -35,8 +57,6 @@ local function to_common_matches(bufnr, parser_matches)
       source = "buf",
       extra = {
         end_line = pm.end_line,
-        col = pm.col,
-        end_col = pm.end_col,
         log_level = pm.log_level,
       },
     })
@@ -45,20 +65,31 @@ local function to_common_matches(bufnr, parser_matches)
   return matches
 end
 
----Scan buffer range for matches
+--------------------------------------------------------------------------------
+-- Scan functions
+--------------------------------------------------------------------------------
+
+---Scan buffer range
 ---@param bufnr integer
----@param line1 integer 1-based start
----@param line2 integer 1-based end
+---@param line1 integer
+---@param line2 integer
 ---@return MigrateCommon.Match[]
 local function scan_range(bufnr, line1, line2)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}
   end
 
-  local all_matches = parser.scan_buffer(bufnr)
+  -- Check exclusion
+  local fname = api.nvim_buf_get_name(bufnr)
+  if fname ~= "" and should_exclude(fname) then
+    notify.warn("Skipping migrate module file")
+    return {}
+  end
 
-  -- Filter to range
+  -- Get all matches then filter to range
+  local all_matches = parser.scan_buffer(bufnr)
   local range_matches = {}
+
   for _, match in ipairs(all_matches) do
     if match.line >= line1 and match.line <= line2 then
       tbl_insert(range_matches, match)
@@ -76,11 +107,18 @@ local function scan_buffer(bufnr)
     return {}
   end
 
+  -- Check exclusion
+  local fname = api.nvim_buf_get_name(bufnr)
+  if fname ~= "" and should_exclude(fname) then
+    notify.warn("Skipping migrate module file")
+    return {}
+  end
+
   local matches = parser.scan_buffer(bufnr)
   return to_common_matches(bufnr, matches)
 end
 
----Scan cwd (all Lua files)
+---Scan cwd (excluding migrate module)
 ---@return MigrateCommon.Match[]
 local function scan_cwd()
   local cwd = vim.fn.getcwd()
@@ -91,73 +129,105 @@ local function scan_cwd()
   end
 
   local all_matches = {}
+  local excluded_count = 0
 
   for _, filepath in ipairs(files) do
-    local bufnr = buffer_ops.ensure_buffer(filepath)
-    if bufnr then
-      local file_matches = parser.scan_buffer(bufnr)
+    if should_exclude(filepath) then
+      excluded_count = excluded_count + 1
+    else
+      local bufnr = buffer_ops.ensure_buffer(filepath)
+      if bufnr then
+        local file_matches = parser.scan_buffer(bufnr)
 
-      for _, match in ipairs(file_matches) do
-        tbl_insert(all_matches, {
-          bufnr = bufnr,
-          fname = filepath,
-          lnum = match.line,
-          text = match.original,
-          migrated = match.replacement,
-          source = "file",
-          extra = {
-            end_line = match.end_line,
-            col = match.col,
-            end_col = match.end_col,
-            log_level = match.log_level,
-          },
-        })
+        for _, match in ipairs(file_matches) do
+          tbl_insert(all_matches, {
+            bufnr = bufnr,
+            fname = filepath,
+            lnum = match.line,
+            text = match.original,
+            migrated = match.replacement,
+            source = "file",
+            extra = {
+              end_line = match.end_line,
+              log_level = match.log_level,
+            },
+          })
+        end
       end
     end
+  end
+
+  if excluded_count > 0 then
+    notify.info(string.format("Excluded %d migrate module file(s)", excluded_count))
   end
 
   return all_matches
 end
 
----Apply migrations
+--------------------------------------------------------------------------------
+-- Application
+--------------------------------------------------------------------------------
+
+---Apply migrations (descending order)
 ---@param matches MigrateCommon.Match[]
 local function apply_matches(matches)
   -- Group by buffer
   local by_buffer = {}
   for _, match in ipairs(matches) do
     local bufnr = match.bufnr
-    if bufnr and not by_buffer[bufnr] then
-      by_buffer[bufnr] = {}
+    if bufnr then
+      if not by_buffer[bufnr] then
+        by_buffer[bufnr] = {}
+      end
+      tbl_insert(by_buffer[bufnr], match)
     end
-    tbl_insert(by_buffer[bufnr], match)
   end
 
   -- Apply per buffer
   for bufnr, buf_matches in pairs(by_buffer) do
     buffer_ops.create_undo_point(bufnr)
-    refactor.inject_import(bufnr)
 
-    -- Sort descending by end_line
+    -- Inject import first (this adds 2 lines at top)
+    local import_added = refactor.inject_import(bufnr)
+
+    -- Adjust line numbers if import was added
+    if import_added then
+      for _, match in ipairs(buf_matches) do
+        match.lnum = match.lnum + 2
+        match.extra.end_line = match.extra.end_line + 2
+      end
+    end
+
+    -- Sort DESCENDING by end_line to avoid offset issues
     table.sort(buf_matches, function(a, b)
       return a.extra.end_line > b.extra.end_line
     end)
 
+    -- Apply each match
+    local success_count = 0
     for _, match in ipairs(buf_matches) do
-      -- Reconstruct parser match format
       local parser_match = {
         line = match.lnum,
         end_line = match.extra.end_line,
-        col = match.extra.col,
-        end_col = match.extra.end_col,
         replacement = match.migrated,
       }
 
-      refactor.apply_match(bufnr, parser_match)
+      if refactor.apply_match(bufnr, parser_match) then
+        success_count = success_count + 1
+      end
+    end
+
+    if success_count > 0 then
+      notify.info(string.format("Applied %d/%d migration(s)", success_count, #buf_matches))
     end
   end
 end
 
----Show picker with matches
+--------------------------------------------------------------------------------
+-- Picker
+--------------------------------------------------------------------------------
+
+---Show picker
 ---@param matches MigrateCommon.Match[]
 local function show_picker_impl(matches)
   picker.show(matches, {
@@ -192,15 +262,14 @@ local function show_picker_impl(matches)
 
     on_apply = function(selections)
       apply_matches(selections)
-      vim.notify(
-        string.format("Applied %d migration(s)", #selections),
-        vim.log.levels.INFO
-      )
     end,
   })
 end
 
---- Enable command
+--------------------------------------------------------------------------------
+-- Registration
+--------------------------------------------------------------------------------
+
 function M.enable()
   command.register({
     name = "MigrateNotify",
