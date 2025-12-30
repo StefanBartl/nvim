@@ -17,3 +17,5 @@
 ---@field winid integer|nil Window ID
 ---@field items string[] Original items list
 ---@field on_select function|nil Selection callback
+
+return {}
