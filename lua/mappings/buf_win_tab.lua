@@ -146,7 +146,17 @@ function M.setup()
   map("n", "<C-k>", "<C-w>k", { desc = "[Window] Jump up" })
 
   local resize_guarded = require("lib.buf_win_tab.resize_guarded")
-  local exclude_filetypes = { "terminal" }
+  local exclude_filetypes = {
+    "terminal",
+    "TelescopePrompt",
+    "TelescopeResults",
+    "fzf",
+    "neo-tree",
+    "NvimTree",
+    "oil",
+    "Trouble",
+    "qf", -- quickfix window
+  }
   local exclude_names = { ".*lazygit.*" }
 
   -- WICHTIG: Der vierte Parameter (lhs) muss übergeben werden!

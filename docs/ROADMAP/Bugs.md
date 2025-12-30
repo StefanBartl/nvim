@@ -2,8 +2,11 @@
 
 ## Important Bugs
 
-- telescope <S-l> verchiebt fenstergröße
 - markdown-headlines: v-line increment/decrement funktioniert nicht (zuverlässig)
+
+### LSP
+
+- Die @types und types dateien werden nicht gut erkannt. Besser mal mit types.lua probeiren, aber das sollte eigentlich keinen Unterschied machen
 
 ## dbg_messages
 
