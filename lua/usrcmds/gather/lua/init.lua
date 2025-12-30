@@ -1,43 +1,92 @@
 ---@module 'usrcmds.gather.lua'
----@description Entry point for Lua gather commands using hover selection
+---@description Entry point for Lua gather commands with buffer and cwd modes
+
+require("usrcmds.gather.@types")
 
 local hover_select = require("lib.hover_select")
-local notify = vim.notify
 
 local M = {}
 
----@type table<string, fun(): nil>
+--- Gatherers for each symbol type
+---@type table<UsrCmds.Gather.Lua.GatherType, table>
 local gatherers = {
-  functions = function()
-    require("usrcmds.gather.lua.functions").run()
-  end,
-  tables = function()
-    require("usrcmds.gather.lua.tables").run()
-  end,
-  strings = function()
-    require("usrcmds.gather.lua.strings").run()
-  end,
+  functions = require("usrcmds.gather.lua.functions"),
+  tables = require("usrcmds.gather.lua.tables"),
+  strings = require("usrcmds.gather.lua.strings"),
 }
 
----Open hover selection and dispatch to the selected gatherer
-function M.run()
+--- Run gatherer in buffer mode (current buffer only)
+---@param gather_type UsrCmds.Gather.Lua.GatherType
+local function run_buffer_mode(gather_type)
+  local gatherer = gatherers[gather_type]
+
+  if not gatherer or not gatherer.run then
+    vim.notify("Unknown gather type: " .. gather_type, vim.log.levels.ERROR)
+    return
+  end
+
+  gatherer.run()
+end
+
+--- Run gatherer in cwd mode (all Lua files in working directory)
+---@param gather_type UsrCmds.Gather.Lua.GatherType
+local function run_cwd_mode(gather_type)
+  local gatherer = gatherers[gather_type]
+
+  if not gatherer or not gatherer.scan_buffer then
+    vim.notify("Gatherer does not support cwd mode: " .. gather_type, vim.log.levels.ERROR)
+    return
+  end
+
+  -- Find all Lua files
+  local scanner = require("usrcmds.gather.lua.scanner")
+  local files = scanner.find_lua_files()
+
+  if #files == 0 then
+    vim.notify("No Lua files found in cwd", vim.log.levels.WARN)
+    return
+  end
+
+  vim.notify("Scanning " .. #files .. " files...", vim.log.levels.INFO)
+
+  -- Scan all files
+  local file_matches = scanner.scan_files(files, gatherer.scan_buffer)
+
+  if #file_matches == 0 then
+    vim.notify("No " .. gather_type .. " found in cwd", vim.log.levels.WARN)
+    return
+  end
+
+  -- Show picker
+  local picker = require("usrcmds.gather.lua.picker")
+  picker.show_picker(file_matches, gather_type)
+end
+
+--- Open hover selection to choose gather type and mode
+---@param mode UsrCmds.Gather.Lua.ScanMode
+function M.run(mode)
+  mode = mode or "buffer"
+
   hover_select.open({
-    title = "Lua gather",
+    title = "Lua gather (" .. mode .. ")",
     items = {
       "functions",
       "tables",
       "strings",
     },
     on_select = function(selected)
-      local handler = gatherers[selected]
-      if not handler then
-        notify("Unknown gather target: " .. selected, vim.log.levels.ERROR)
-        return
+      ---@type UsrCmds.Gather.Lua.GatherType
+      local gather_type = selected
+
+      if mode == "buffer" then
+        run_buffer_mode(gather_type)
+      elseif mode == "cwd" then
+        run_cwd_mode(gather_type)
+      else
+        vim.notify("Unknown mode: " .. mode, vim.log.levels.ERROR)
       end
-      handler()
     end,
   })
 end
 
 return M
-
