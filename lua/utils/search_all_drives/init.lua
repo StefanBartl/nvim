@@ -6,6 +6,8 @@
 ---   • Grep-Tabs via ripgrep; Files-Tab via a robust, imported finder argv.
 ---   • No global side effects; UI concerns (vim.notify) only in tele_func.
 
+local notify = require("lib.notify").create("[Utils.Search all Drives] ")
+
 ---@type SearchMounts
 local Mounts = { cache = nil }
 
@@ -127,7 +129,7 @@ function M.build_tabs(builtin)
   local function all_roots()
     local dirs = Mounts.get_all()
     if #dirs == 0 then
-      vim.notify("No drives/mount points found.", vim.log.levels.WARN)
+      notify.warn("No drives/mount points found.")
       return nil
     end
     return dirs
@@ -165,7 +167,7 @@ function M.build_tabs(builtin)
           exclude_vcs = true,
         })
         if not ok or not argv then
-          vim.notify(err or "No suitable file-lister found.", vim.log.levels.ERROR)
+          notify.error(err or "No suitable file-lister found.")
           return
         end
 
@@ -190,7 +192,7 @@ function M.build_tabs(builtin)
           return
         end
         if vim.fn.executable("rg") ~= 1 then
-          vim.notify("'ripgrep' (rg) not found in PATH. Install it to use live_grep.", vim.log.levels.ERROR)
+          notify.error("'ripgrep' (rg) not found in PATH. Install it to use live_grep.")
           return
         end
         builtin.live_grep({
@@ -210,7 +212,7 @@ function M.build_tabs(builtin)
           return
         end
         if vim.fn.executable("rg") ~= 1 then
-          vim.notify("'ripgrep' (rg) not found in PATH. Install it to use live_grep.", vim.log.levels.ERROR)
+          notify.error("'ripgrep' (rg) not found in PATH. Install it to use live_grep.")
           return
         end
         builtin.live_grep({
@@ -230,7 +232,7 @@ function M.build_tabs(builtin)
           return
         end
         if vim.fn.executable("rg") ~= 1 then
-          vim.notify("'ripgrep' (rg) not found in PATH. Install it to use live_grep.", vim.log.levels.ERROR)
+          notify.error("'ripgrep' (rg) not found in PATH. Install it to use live_grep.")
           return
         end
         builtin.live_grep({

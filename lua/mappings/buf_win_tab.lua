@@ -96,10 +96,6 @@ function M.setup()
     move_next_n(cnt)
   end, { desc = "[Buffers] Next" })
 
-  -- map("n", "<s-tab>", function()
-  --   require("custom.tabufline").prev()
-  -- end, { desc = "[Buffers] Prev" })
-
   -- <S-Tab> -> previous buffer, supports count (e.g. 2<S-Tab> moves 2 buffers back)
   map("n", "<S-Tab>", function()
     local cnt = get_count()

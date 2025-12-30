@@ -25,9 +25,10 @@
 --- * Completion is dynamic via myoptions.config keys().
 --- * Values are parsed as boolean/number/string via myoptions.config.parse().
 
-local M = {}
-
 local C = require("myoptions.config")
+local notify = require("lib.notify").create("[MyOptions.Commands]")
+
+local M = {}
 
 --- Safely (re)define a user command by removing any previous definition.
 --- @param name string
@@ -85,7 +86,7 @@ function M.register_highlight_commands(spec)
   define_cmd(names.set, function(opts)
     local args = opts.fargs
     if #args == 0 then
-      vim.notify(("Usage: :%s {keypath} {value}"):format(names.set), vim.log.levels.INFO)
+      notify.info(("Usage: :%s {keypath} {value}"):format(names.set))
       return
     end
     local key = args[1]
@@ -95,7 +96,7 @@ function M.register_highlight_commands(spec)
 
     local ok, err = C.set("highlight", key, value, toggle)
     if not ok then
-      vim.notify(names.set .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+      notify.error(names.set .. ": " .. (err or "unknown error"))
       return
     end
 
@@ -104,22 +105,22 @@ function M.register_highlight_commands(spec)
     end
 
     local msg = toggle and ("toggled " .. key) or (key .. " = " .. vim.inspect(value))
-    vim.notify(("%s: %s"):format(names.set, msg), vim.log.levels.INFO)
+    notify.info(("%s: %s"):format(names.set, msg))
   end, { bang = true, nargs = "+", complete = make_complete("highlight") })
 
   -- :MyHlShow
   define_cmd(names.show, function(opts)
     local key = opts.fargs[1]
     if not key then
-      vim.notify(vim.inspect(spec.show_table), vim.log.levels.INFO)
+      notify.info(vim.inspect(spec.show_table))
       return
     end
     local node = get_by_path(spec.show_table, key)
     if node == nil then
-      vim.notify(names.show .. (": unknown key '%s'"):format(key), vim.log.levels.WARN)
+      notify.warn(names.show .. (": unknown key '%s'"):format(key))
       return
     end
-    vim.notify(("%s = %s"):format(key, vim.inspect(node)), vim.log.levels.INFO)
+    notify.info(("%s = %s"):format(key, vim.inspect(node)))
   end, { nargs = "?" })
 
   -- :MyHlList
@@ -128,7 +129,7 @@ function M.register_highlight_commands(spec)
     for _, k in ipairs(C.keys("highlight")) do
       lines[#lines + 1] = "  " .. k
     end
-    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+    notify.info(table.concat(lines, "\n"))
   end, {})
 end
 
@@ -151,7 +152,7 @@ function M.register_options_commands(spec)
   define_cmd(names.set, function(opts)
     local args = opts.fargs
     if #args == 0 then
-      vim.notify("Usage: :" .. names.set .. " {keypath} {value}", vim.log.levels.INFO)
+      notify.info("Usage: :" .. names.set .. " {keypath} {value}")
       return
     end
     local key = args[1]
@@ -161,7 +162,7 @@ function M.register_options_commands(spec)
 
     local ok, err = C.set("options", key, value, toggle)
     if not ok then
-      vim.notify(names.set .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+      notify.error(names.set .. ": " .. (err or "unknown error"))
       return
     end
 
@@ -170,22 +171,22 @@ function M.register_options_commands(spec)
     end
 
     local msg = toggle and ("toggled " .. key) or (key .. " = " .. vim.inspect(value))
-    vim.notify(names.set .. ": " .. msg, vim.log.levels.INFO)
+    notify.info(names.set .. ": " .. msg)
   end, { bang = true, nargs = "+", complete = make_complete("options") })
 
   -- :MyOptShow
   define_cmd(names.show, function(opts)
     local key = opts.fargs[1]
     if not key then
-      vim.notify(vim.inspect(spec.show_table), vim.log.levels.INFO)
+      notify.info(vim.inspect(spec.show_table))
       return
     end
     local node = get_by_path(spec.show_table, key)
     if node == nil then
-      vim.notify(("%s: unknown key '%s'"):format(names.show, key), vim.log.levels.WARN)
+      notify.warn(("%s: unknown key '%s'"):format(names.show, key))
       return
     end
-    vim.notify(("%s = %s"):format(key, vim.inspect(node)), vim.log.levels.INFO)
+    notify.info(("%s = %s"):format(key, vim.inspect(node)))
   end, { nargs = "?" })
 
   -- :MyOptList
@@ -194,7 +195,7 @@ function M.register_options_commands(spec)
     for _, k in ipairs(C.keys("options")) do
       lines[#lines + 1] = "  " .. k
     end
-    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+    notify.info(table.concat(lines, "\n"))
   end, {})
 end
 
@@ -339,7 +340,7 @@ function M.register_highlight_debug_command(opts)
       ("preview line: %s"):format(line),
     }
 
-    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+    notify.info(table.concat(lines, "\n"))
   end, { desc = "Debug breadcrumb context providers" })
 end
 return M
