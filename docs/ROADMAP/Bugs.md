@@ -2,6 +2,10 @@
 
 ## Important Bugs
 
+
+- Neotree: beim öffnen fällt er oft auf das cwd root zurück, dann muss mian wieder nach vor "gehen" mit node opens um dort hinzukommen wo man ist. Spezielafall: wen man neotree schließ, dann wieder ffnet ist es wieder iene ebene näher am der richtigen ebene, dan nwieder schlißen und öffnen und er springt wieder eine eben näher zu dem file in der man ist.
+
+
 - MDTablewrap
 
  dbg_messages: noice error: Error executing vim.schedule lua callback: ...tl/AppData/Local/nvim/lua/mappings/dbg_messages/init.lua:46: Invalid window id: 1007

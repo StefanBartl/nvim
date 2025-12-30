@@ -1,4 +1,4 @@
----@module 'usrcmds.opt_migrator'
+---@module 'usrcmds.migrate.opt'
 -- Telescope-enabled UI for selecting occurrences of deprecated
 -- buf/win option API calls and migrating them to the unified
 -- nvim_get_option_value / nvim_set_option_value form.
@@ -29,14 +29,6 @@ local action_state = require("telescope.actions.state")
 local previewers = require("telescope.previewers")
 local entry_display = require("telescope.pickers.entry_display")
 local conf = require("telescope.config").values
-
----@class OptMigratorMatch
----@field bufnr number|nil Buffer number (only for buffer-local matches)
----@field fname string|nil File name (absolute path for file matches)
----@field lnum number Line number (1-indexed)
----@field text string Original line text
----@field migrated string Migrated line text
----@field source "buf"|"file" Source type: buffer or file
 
 local M = {}
 
@@ -113,7 +105,7 @@ end
 
 ---Collect all deprecated option API calls in a given buffer.
 ---@param bufnr number Buffer number to scan
----@return OptMigratorMatch[] matches List of matches found
+---@return MigrateOpt.Match[] matches List of matches found
 local function collect_matches_in_buffer(bufnr)
   local out = {}
 
@@ -150,7 +142,7 @@ end
 
 ---Collect all deprecated option API calls in the current working directory
 ---using ripgrep (rg). Requires rg to be installed and available in PATH.
----@return OptMigratorMatch[] matches List of matches found
+---@return MigrateOpt.Match[] matches List of matches found
 local function collect_matches_in_cwd()
   local out = {}
 
@@ -221,7 +213,7 @@ local function apply_migration(selection)
 end
 
 ---Build Telescope entry objects from a list of matches.
----@param matches OptMigratorMatch[] List of matches
+---@param matches MigrateOpt.Match[] List of matches
 ---@return table[] entries Telescope-compatible entry objects
 local function build_entries(matches)
   -- Define the display layout: location | text
@@ -258,7 +250,7 @@ end
 
 ---Show Telescope picker for selecting and migrating entries.
 ---If only a single match exists, applies migration directly without picker.
----@param matches OptMigratorMatch[] List of matches to display
+---@param matches MigrateOpt.Match[] List of matches to display
 local function show_picker(matches)
   -- If only one match, apply immediately without picker
   if #matches == 1 then
@@ -330,7 +322,7 @@ end
 ---  - "%": scan and pick from current buffer
 ---  - "cwd": scan and pick from entire working directory
 function M.enable()
-  api.nvim_create_user_command("OptMigrateSelect", function(opts)
+  api.nvim_create_user_command("MigrateOptSelect", function(opts)
     local arg = opts.args or ""
     local bufnr = api.nvim_get_current_buf()
 

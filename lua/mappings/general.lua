@@ -12,11 +12,17 @@ function M.setup()
   --   vim.cmd "silent! w!"
   -- end, { desc = "[General] Save file silently" })
 
-  map({ "n", "i", "v", "t" }, "<C-s>", function()
+  map({ "n", "v", "t" }, "<C-s>", function()
     local pos = vim.api.nvim_win_get_cursor(0)
     vim.cmd("write")
     vim.api.nvim_win_set_cursor(0, pos)
   end, { desc = "[General] Save file" })
+  map("i", "<C-s>", function()                       --- explicit because of vim.lsp.buf.signature_help()
+    local pos = vim.api.nvim_win_get_cursor(0)
+    vim.cmd("write")
+    vim.api.nvim_win_set_cursor(0, pos)
+  end, { desc = "[General] Save file", noremap = true })
+
   map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
 
   map("n", "+", "<C-y>", { desc = "[Number] Increment" }) -- AUDIT: EIgenes increment ? cycle...
