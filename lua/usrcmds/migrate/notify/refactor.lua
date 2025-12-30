@@ -41,7 +41,7 @@ function M.inject_import(bufnr)
     0,
     0,
     false,
-    { 'local notify = require("lib.notify")', "" }
+    { 'local notify = require("lib.notify").create("")', "" }
   )
 
   return true

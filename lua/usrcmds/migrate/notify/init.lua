@@ -4,7 +4,6 @@
 --- Simplified approach using regex patterns instead of treesitter.
 --- More robust and easier to debug.
 
-local command = require("usrcmds.migrate.common.command")
 local picker = require("usrcmds.migrate.common.picker")
 local buffer_ops = require("usrcmds.migrate.common.buffer")
 local parser = require("usrcmds.migrate.notify.parser")
@@ -170,7 +169,8 @@ end
 
 ---Apply migrations (descending order)
 ---@param matches MigrateCommon.Match[]
-local function apply_matches(matches)
+---@param use_create boolean|nil Use .create("") import syntax
+local function apply_matches(matches, use_create)
   -- Group by buffer
   local by_buffer = {}
   for _, match in ipairs(matches) do
@@ -188,7 +188,7 @@ local function apply_matches(matches)
     buffer_ops.create_undo_point(bufnr)
 
     -- Inject import first (this adds 2 lines at top)
-    local import_added = refactor.inject_import(bufnr)
+    local import_added = refactor.inject_import(bufnr, use_create or false)
 
     -- Adjust line numbers if import was added
     if import_added then
@@ -229,7 +229,8 @@ end
 
 ---Show picker
 ---@param matches MigrateCommon.Match[]
-local function show_picker_impl(matches)
+---@param use_create boolean|nil
+local function show_picker_impl(matches, use_create)
   picker.show(matches, {
     title = "Migrate vim.notify → lib.notify",
     single_apply = false,
@@ -261,7 +262,7 @@ local function show_picker_impl(matches)
     end,
 
     on_apply = function(selections)
-      apply_matches(selections)
+      apply_matches(selections, use_create)
     end,
   })
 end
@@ -271,13 +272,87 @@ end
 --------------------------------------------------------------------------------
 
 function M.enable()
-  command.register({
-    name = "MigrateNotify",
-    scan_range = scan_range,
-    scan_buffer = scan_buffer,
-    scan_cwd = scan_cwd,
-    apply_matches = apply_matches,
-    show_picker = show_picker_impl,
+  -- Register with extended command handling
+  api.nvim_create_user_command("MigrateNotify", function(cmd_opts)
+    local args = vim.split(cmd_opts.args, "%s+")
+    local mode_arg = nil
+    local use_create = false
+
+    -- Parse arguments
+    for _, arg in ipairs(args) do
+      if arg == "--create" then
+        use_create = true
+      elseif arg == "%" or arg == "cwd" then
+        mode_arg = arg
+      end
+    end
+
+    local bufnr = api.nvim_get_current_buf()
+
+    -- Handle range mode
+    if cmd_opts.range > 0 then
+      local matches = scan_range(bufnr, cmd_opts.line1, cmd_opts.line2)
+
+      if #matches == 0 then
+        notify.warn("No matches in range")
+        return
+      end
+
+      apply_matches(matches, use_create)
+      notify.info(string.format("Applied %d migration(s) in range", #matches))
+      return
+    end
+
+    -- Handle argument-based modes
+    if not mode_arg then
+      -- Current line mode
+      local cursor = api.nvim_win_get_cursor(0)
+      local matches = scan_range(bufnr, cursor[1], cursor[1])
+
+      if #matches == 0 then
+        notify.warn("No matches on current line")
+        return
+      end
+
+      apply_matches(matches, use_create)
+      notify.info(string.format("Applied %d migration(s) on line %d", #matches, cursor[1]))
+
+    elseif mode_arg == "%" then
+      -- Buffer mode with picker
+      local matches = scan_buffer(bufnr)
+
+      if #matches == 0 then
+        notify.warn("No matches in buffer")
+        return
+      end
+
+      show_picker_impl(matches, use_create)
+
+    elseif mode_arg == "cwd" then
+      -- CWD mode with picker
+      local matches = scan_cwd()
+
+      if #matches == 0 then
+        notify.warn("No matches in cwd")
+        return
+      end
+
+      show_picker_impl(matches, use_create)
+    end
+  end, {
+    nargs = "*",
+    range = true,
+    desc = "Migrate vim.notify → lib.notify (use --create for .create() import)",
+    complete = function(arg_lead, cmd_line, cursor_pos)
+      local options = { "%", "cwd", "--create" }
+      local matches = {}
+      for _, opt in ipairs(options) do
+        if opt:find(arg_lead, 1, true) == 1 then
+          table.insert(matches, opt)
+        end
+      end
+      return matches
+    end,
   })
 end
 

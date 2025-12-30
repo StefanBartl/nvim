@@ -1,7 +1,5 @@
 ---@module 'lsp.usercmds'
 --- LSP UserCommands mit Autocompletion
-
--- CRITICAL: Load vim.lsp types
 require("@types.lsp")
 
 local nvim_create_user_command = vim.api.nvim_create_user_command
@@ -9,7 +7,8 @@ local lsp = vim.lsp
 
 local M = {}
 
-local desc_tag = "[lsp] "
+local desc_tag = "[LSP.Usercommands] "
+local notify = require("lib.notify").create(desc_tag)
 
 -- =============================================================================
 -- HELPER FUNCTIONS
@@ -111,23 +110,20 @@ local function start_lsp(name, bufnr)
   bufnr = bufnr or 0
 
   if not name or name == "" then
-    vim.notify("No LSP name provided", vim.log.levels.WARN)
+    notify.warn("No LSP name provided")
     return false
   end
 
   -- Check if already running
   if is_server_running(name, bufnr) then
-    vim.notify(
-      string.format("LSP '%s' already running", name),
-      vim.log.levels.INFO
-    )
+    notify.info(string.format("LSP '%s' already running", name))
     return true
   end
 
   -- Try native API first
   local ok = pcall(lsp.enable, name)
   if ok then
-    vim.notify(string.format("Started LSP: %s", name), vim.log.levels.INFO)
+    notify.info(string.format("Started LSP: %s", name))
     return true
   end
 
@@ -135,14 +131,11 @@ local function start_lsp(name, bufnr)
   local ok_config, lspconfig = pcall(require, "lspconfig")
   if ok_config and lspconfig[name] then
     pcall(lspconfig[name].launch)
-    vim.notify(string.format("Started LSP: %s (via lspconfig)", name), vim.log.levels.INFO)
+    notify.info(string.format("Started LSP: %s (via lspconfig)", name))
     return true
   end
 
-  vim.notify(
-    string.format("Failed to start LSP: %s", name),
-    vim.log.levels.ERROR
-  )
+  notify.error(string.format("Failed to start LSP: %s", name))
   return false
 end
 
@@ -245,10 +238,7 @@ function M.attach()
       local servers = get_servers_for_buffer(0)
       if #servers == 0 then
         local ft = vim.bo[0].filetype
-        vim.notify(
-          string.format("No LSP configured for filetype '%s'", ft or "none"),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format("No LSP configured for filetype '%s'", ft or "none"))
         return
       end
 
@@ -259,10 +249,7 @@ function M.attach()
         end
       end
 
-      vim.notify(
-        string.format("Started %d/%d LSP server(s)", started, #servers),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("Started %d/%d LSP server(s)", started, #servers))
     end
   end, {
     nargs = "?",
@@ -281,19 +268,13 @@ function M.attach()
         if c.name == args.args then
           lsp.stop_client(c.id, true)
           found = true
-          vim.notify(
-            string.format("Stopped LSP: %s", args.args),
-            vim.log.levels.INFO
-          )
+          notify.info(string.format("Stopped LSP: %s", args.args))
           break
         end
       end
 
       if not found then
-        vim.notify(
-          string.format("LSP '%s' not running", args.args),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format("LSP '%s' not running", args.args))
       end
     else
       -- Stop all servers
@@ -304,12 +285,9 @@ function M.attach()
 
       if #ids > 0 then
         lsp.stop_client(ids, true)
-        vim.notify(
-          string.format("Stopped %d LSP client(s)", #ids),
-          vim.log.levels.INFO
-        )
+        notify.info(string.format("Stopped %d LSP client(s)", #ids))
       else
-        vim.notify("No LSP clients running", vim.log.levels.INFO)
+        notify.info("No LSP clients running")
       end
     end
   end, {
@@ -324,7 +302,7 @@ function M.attach()
     local clients = _buf_clients(bufnr)
 
     if #clients == 0 then
-      vim.notify("No LSP clients to restart", vim.log.levels.INFO)
+      notify.info("No LSP clients to restart")
       return
     end
 
@@ -338,19 +316,13 @@ function M.attach()
           vim.defer_fn(function()
             start_lsp(args.args, bufnr)
           end, 100)
-          vim.notify(
-            string.format("Restarting LSP: %s", args.args),
-            vim.log.levels.INFO
-          )
+          notify.info(string.format("Restarting LSP: %s", args.args))
           break
         end
       end
 
       if not found then
-        vim.notify(
-          string.format("LSP '%s' not running", args.args),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format("LSP '%s' not running", args.args))
       end
     else
       -- Restart all servers
@@ -372,10 +344,7 @@ function M.attach()
         end
       end, 100)
 
-      vim.notify(
-        string.format("Restarting %d LSP server(s)...", #server_names),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("Restarting %d LSP server(s)...", #server_names))
     end
   end, {
     nargs = "?",

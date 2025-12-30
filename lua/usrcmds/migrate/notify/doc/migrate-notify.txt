@@ -1,0 +1,289 @@
+*migrate-notify.txt*  Migrate vim.notify to lib.notify
+
+==============================================================================
+CONTENTS                                              *migrate-notify-contents*
+
+    1. Einführung ...................... |migrate-notify-intro|
+    2. Installation .................... |migrate-notify-install|
+    3. Verwendung ...................... |migrate-notify-usage|
+    4. Kommandos ....................... |migrate-notify-commands|
+    5. Beispiele ....................... |migrate-notify-examples|
+    6. Technische Details .............. |migrate-notify-technical|
+    7. Troubleshooting ................. |migrate-notify-troubleshooting|
+
+==============================================================================
+1. EINFÜHRUNG                                            *migrate-notify-intro*
+
+Das migrate.notify Modul automatisiert die Migration von Standard-Neovim
+`vim.notify()` Aufrufen zur moderneren `lib.notify` API.
+
+VORHER: >lua
+    vim.notify("Operation successful", vim.log.levels.INFO)
+    vim.notify(
+      string.format("Loaded %d items", count),
+      vim.log.levels.WARN
+    )
+<
+
+NACHHER: >lua
+    notify.info("Operation successful")
+    notify.warn(string.format("Loaded %d items", count))
+<
+
+FEATURES:
+  • Automatische Pattern-Erkennung (single/multiline)
+  • Telescope-basierte Auswahl-UI
+  • Batch-Migration für ganze Verzeichnisse
+  • Import-Injection (mit optional .create() Syntax)
+  • Multi-Select Support
+  • Preview vor Anwendung
+
+==============================================================================
+2. INSTALLATION                                       *migrate-notify-install*
+
+Füge in deiner Neovim-Konfiguration hinzu: >lua
+
+    -- In init.lua oder plugin setup
+    require("usrcmds.migrate.notify").enable()
+<
+
+Das registriert das `:MigrateNotify` Command.
+
+ABHÄNGIGKEITEN:
+  • telescope.nvim (für Picker-UI)
+  • lib.notify (Ziel-Library)
+
+==============================================================================
+3. VERWENDUNG                                           *migrate-notify-usage*
+
+BASIC WORKFLOW:
+
+1. Öffne File mit vim.notify() Aufrufen
+2. Führe `:MigrateNotify %` aus
+3. Wähle in Telescope die zu migrierenden Stellen
+4. Drücke <CR> oder <S-A> zum Anwenden
+
+MODI:
+
+Current Line Mode~
+    Cursor auf Zeile mit vim.notify() → `:MigrateNotify`
+    Wendet Migration sofort an (kein Picker)
+
+Range Mode~
+    Visual selection → `:MigrateNotify`
+    Migriert alle Matches im markierten Bereich
+
+Buffer Mode~
+    `:MigrateNotify %`
+    Öffnet Telescope-Picker mit allen Matches im Buffer
+
+CWD Mode~
+    `:MigrateNotify cwd`
+    Scannt rekursiv alle *.lua Files im aktuellen Verzeichnis
+
+==============================================================================
+4. KOMMANDOS                                         *migrate-notify-commands*
+
+                                                            *:MigrateNotify*
+:MigrateNotify [args]
+    Migriert vim.notify zu lib.notify
+
+    ARGUMENTE:
+
+    Keine Argumente         Migriert aktuelle Zeile
+    %                       Migriert ganzen Buffer (mit Picker)
+    cwd                     Migriert alle Lua-Files in CWD (mit Picker)
+    --create                Verwendet .create("") Import-Syntax
+
+    BEISPIELE: >vim
+    :MigrateNotify                    " Aktuelle Zeile
+    :MigrateNotify %                  " Buffer mit Picker
+    :MigrateNotify cwd                " Alle Files in CWD
+    :MigrateNotify % --create         " Buffer mit .create() import
+    :MigrateNotify cwd --create       " CWD mit .create() import
+    :'<,'>MigrateNotify              " Visual selection
+<
+
+PICKER KEYBINDINGS:
+
+    <CR>        Wendet ausgewählte Migration(en) an
+    <Tab>       Multi-Select Toggle
+    <S-A>       Wendet ALLE Matches an (Batch)
+    <C-c>       Abbrechen
+
+==============================================================================
+5. BEISPIELE                                         *migrate-notify-examples*
+
+SINGLE-LINE MIGRATION~
+>lua
+    -- Vorher:
+    vim.notify("Task completed", vim.log.levels.INFO)
+
+    -- Nachher:
+    notify.info("Task completed")
+<
+
+MULTI-LINE MIGRATION~
+>lua
+    -- Vorher:
+    vim.notify(
+      string.format("Processing %d/%d files", current, total),
+      vim.log.levels.WARN
+    )
+
+    -- Nachher:
+    notify.warn(string.format("Processing %d/%d files", current, total))
+<
+
+MIT OPTIONALEM DRITTEN ARGUMENT~
+>lua
+    -- Vorher:
+    vim.notify("Error occurred", vim.log.levels.ERROR, {
+      title = "My Plugin"
+    })
+
+    -- Nachher:
+    notify.error("Error occurred", {
+      title = "My Plugin"
+    })
+<
+
+VERSCHIEDENE LOG-LEVELS~
+>lua
+    vim.notify("Trace message", vim.log.levels.TRACE)   → notify.trace(...)
+    vim.notify("Debug info", vim.log.levels.DEBUG)      → notify.debug(...)
+    vim.notify("Information", vim.log.levels.INFO)      → notify.info(...)
+    vim.notify("Warning!", vim.log.levels.WARN)         → notify.warn(...)
+    vim.notify("Fatal error", vim.log.levels.ERROR)     → notify.error(...)
+<
+
+IMPORT INJECTION~
+
+Standard Import: >lua
+    -- Wird automatisch eingefügt an Zeile 1:
+    local notify = require("lib.notify")
+<
+
+Mit --create Flag: >lua
+    -- Wird an erster Nicht-Kommentar-Zeile eingefügt:
+    local notify = require("lib.notify").create("")
+
+    -- Oder mit Modul-Namen:
+    local notify = require("lib.notify").create("[mymodule]")
+<
+
+==============================================================================
+6. TECHNISCHE DETAILS                               *migrate-notify-technical*
+
+PATTERN DETECTION~
+
+Das Modul verwendet Regex-basierte Pattern-Erkennung (nicht Treesitter):
+
+1. Findet `vim.notify(` Start-Pattern
+2. Zählt Klammern bis zur schließenden `)`
+3. Extrahiert Message, Level und optionale Opts
+4. Baut Replacement-String
+
+WARUM REGEX STATT TREESITTER?
+
+Treesitter-basierte Ansätze hatten Probleme mit:
+  • Byte-Offset vs String-Index Konvertierung
+  • Exclusive vs Inclusive Ranges
+  • Partial-String Replacements
+
+Regex ist für diesen Use-Case einfacher und robuster.
+
+EXCLUSION PATTERN~
+
+Das Modul überspringt automatisch Files in `/usrcmds/migrate/` um
+Self-Migration zu verhindern.
+
+INDEX-KONVERTIERUNG~
+
+Kritisch für korrekte Line-Replacements: >lua
+
+    -- Parser liefert 1-based (wie Vim)
+    match.line = 5        -- Zeile 5
+    match.end_line = 7    -- bis Zeile 7 (inclusive)
+
+    -- nvim_buf_set_lines erwartet 0-based, exclusive end
+    local start_idx = match.line - 1    -- 4
+    local end_idx = match.end_line      -- 7 (nicht -1!)
+
+    -- Ersetzt Buffer-Indices [4,5,6] = Vim-Zeilen [5,6,7]
+<
+
+DESCENDING ORDER~
+
+Matches werden absteigend nach end_line sortiert und angewandt.
+Dies verhindert Offset-Korruption durch vorige Replacements.
+
+IMPORT OFFSET COMPENSATION~
+
+Wenn ein Import eingefügt wird (2 Zeilen), werden alle Match-Positionen
+um +2 adjustiert.
+
+==============================================================================
+7. TROUBLESHOOTING                           *migrate-notify-troubleshooting*
+
+PROBLEM: "No matches found"~
+
+  URSACHEN:
+    • File ist nicht vom Typ 'lua'
+    • Pattern ist bereits migriert (notify.info statt vim.notify)
+    • Syntaxfehler in vim.notify Aufruf
+
+  LÖSUNG:
+    Prüfe mit `:set filetype?` und inspiziere Pattern manuell
+
+PROBLEM: "Failed to apply at lines X-Y"~
+
+  URSACHEN:
+    • Buffer wurde zwischenzeitlich modifiziert
+    • Ungültige Buffer-Nummer
+
+  LÖSUNG:
+    Wiederhole Operation oder checke Buffer-Status
+
+PROBLEM: Import wird mehrfach eingefügt~
+
+  URSACHEN:
+    • Import-Detection Pattern stimmt nicht
+    • File hat ungewöhnliche Import-Syntax
+
+  LÖSUNG:
+    Stelle sicher dass Import genau so aussieht: >lua
+    local notify = require("lib.notify")
+    -- oder
+    local notify = require("lib.notify").create("...")
+<
+
+PROBLEM: Falsche Zeilen werden ersetzt~
+
+  URSACHEN:
+    • Import-Offset wurde nicht adjustiert
+    • Descending-Order Sortierung fehlt
+
+  LÖSUNG:
+    Bug Report - sollte nicht vorkommen in aktueller Version
+
+PROBLEM: Pattern in Strings wird migriert~
+
+  BEISPIEL: >lua
+    local example = 'vim.notify("test", vim.log.levels.INFO)'
+<
+
+  LÖSUNG:
+    Dies ist ein bekanntes Limitation. Das Pattern erkennt nicht ob
+    vim.notify in einem String steht. Workaround: Manuell rückgängig
+    machen nach Migration.
+
+PROBLEM: CWD-Scan findet zu viele Files~
+
+  LÖSUNG:
+    Das Modul scannt rekursiv ALLE *.lua Files. Wenn du bestimmte
+    Verzeichnisse ausschließen willst, musst du Buffer-Mode (%)
+    verwenden und Files einzeln bearbeiten.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
