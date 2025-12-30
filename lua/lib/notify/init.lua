@@ -1,12 +1,13 @@
 ---@module 'lib.notify'
 ---Generic notification factory for Neovim configs
 ---Allows per-module prefix configuration while mirroring vim.notify semantics
+require("lib.notify.@types")
 
 local M = {}
 
 ---Create a prefixed notify helper
 ---@param prefix string Notification prefix, e.g. "[neotree-fs-refactor]"
----@return table notify Helper object with notify/info/warn/error/debug functions
+---@return Lib.Notify.Notifier
 function M.create(prefix)
   -- Normalize prefix once
   if type(prefix) ~= "string" then
@@ -17,6 +18,7 @@ function M.create(prefix)
     prefix = prefix .. " "
   end
 
+  ---@type Lib.Notify.Notifier
   local notifier = {}
 
   ---Core notify function
@@ -62,4 +64,3 @@ function M.create(prefix)
 end
 
 return M
-

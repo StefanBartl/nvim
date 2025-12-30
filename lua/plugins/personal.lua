@@ -6,6 +6,8 @@ if not vim.env.REPOS_DIR then
   return {}
 end
 
+local plugins_folder = vim.fn.stdpath("config") .. "/lua/plugins"
+
 ---@type LazyPluginSpec[]
 return {
 
@@ -44,37 +46,39 @@ return {
   --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/learn-cli.nvim"),
   --   lazy = false,
   --   config = function()
-  --     require("learn_cli").setup({})
+  --     require("learn_cli").setup({
+  --       exercises_dir = plugins_folder .. "learn-cli.nvim/exercises", FIX:
+  --     })
   --   end,
   -- },
-
-  {
-    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/github_stats.nvim"),
-    lazy = false,
-    config = function()
-      require("github_stats").setup({
-        repos = {
-          "StefanBartl/color_my_ascii.nvim",
-          "StefanBartl/github_stats.nvim",
-          "StefanBartl/gopath.nvim",
-          "StefanBartl/mdlinks",
-          "StefanBartl/mdview.nvim",
-          "StefanBartl/monkeypatch.nvim",
-          "StefanBartl/mygrep.nvim",
-          "StefanBartl/nvim-cmdlog",
-          "StefanBartl/nvim-containers",
-          "StefanBartl/replacer",
-          "StefanBartl/reposcope.nvim",
-          "StefanBartl/telescope-selected-index",
-        },
-        -- token_source = "file",
-        -- token_file = "~/.github_token",
-
-        -- config_dir = "~/my-github-stats",
-        -- data_dir = "c:/Users/bartl/AppData/Local/nvim-data/github_stats_daten",
-      })
-    end,
-  },
+  --
+  -- {
+  --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/github_stats.nvim"),
+  --   lazy = false,
+  --   config = function()
+  --     require("github_stats").setup({
+  --       repos = {
+  --         "StefanBartl/color_my_ascii.nvim",
+  --         "StefanBartl/github_stats.nvim",
+  --         "StefanBartl/gopath.nvim",
+  --         "StefanBartl/mdlinks",
+  --         "StefanBartl/mdview.nvim",
+  --         "StefanBartl/monkeypatch.nvim",
+  --         "StefanBartl/mygrep.nvim",
+  --         "StefanBartl/nvim-cmdlog",
+  --         "StefanBartl/nvim-containers",
+  --         "StefanBartl/replacer",
+  --         "StefanBartl/reposcope.nvim",
+  --         "StefanBartl/telescope-selected-index",
+  --       },
+  --       -- token_source = "file",
+  --       -- token_file = "~/.github_token",
+  --
+  --       config_dir = plugins_folder .. "/my-github-stats", FIX:
+  --       data_dir = plugins_folder .. "/my-github-stats", FIX:
+  --     })
+  --   end,
+  -- },
 
   -- {
   --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/monkeypatch.nvim"),

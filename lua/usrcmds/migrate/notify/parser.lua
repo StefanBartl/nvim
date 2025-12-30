@@ -1,128 +1,149 @@
 ---@module 'usrcmds.migrate.notify.parser'
----@brief Treesitter-based pattern detection for vim.notify calls.
+---@brief Robust, statement-safe detection for vim.notify calls
 ---@description
---- Detects all variants of vim.notify invocations in Lua buffers:
----   - Direct: vim.notify("msg", vim.log.levels.INFO)
----   - Aliased: local notify = vim.notify; notify("msg", levels.WARN)
----   - Multiline formatting with arbitrary whitespace
+--- Design goals (based on the previously working regex implementation):
+---   - never rewrite partial expressions
+---   - never touch already-migrated notify.<level> calls
+---   - treat a vim.notify call as a *statement*, not as a node fragment
+---   - multiline safety via balanced parentheses
 ---
---- Returns structured matches with exact byte positions for replacement.
+--- IMPORTANT:
+--- This parser intentionally does NOT try to be “clever”.
+--- It only matches calls that are syntactically complete and top-level.
+--- This mirrors the behaviour of the old working implementation.
 
 require("usrcmds.migrate.notify.@types")
 
 local M = {}
 
-local api, treesitter, levels = vim.api, vim.treesitter, vim.log.levels
+local api = vim.api
+local ts = vim.treesitter
 
---- Map log level constants to method names
----@type table<integer, string>
-local LEVEL_TO_METHOD = {
-  [levels.TRACE] = "trace",
-  [levels.DEBUG] = "debug",
-  [levels.INFO] = "info",
-  [levels.WARN] = "warn",
-  [levels.ERROR] = "error",
-  [levels.OFF] = "off",
+--------------------------------------------------------------------------------
+-- Constants
+--------------------------------------------------------------------------------
+
+---@type table<string, string>
+local LEVEL_MAP = {
+  TRACE = "trace",
+  DEBUG = "debug",
+  INFO  = "info",
+  WARN  = "warn",
+  ERROR = "error",
 }
 
---- Extract log level from vim.log.levels.* node
+--------------------------------------------------------------------------------
+-- Helpers
+--------------------------------------------------------------------------------
+
+---Check whether a call target is exactly vim.notify
 ---@param node TSNode
 ---@param bufnr integer
----@return string|nil level
-local function extract_log_level(node, bufnr)
+---@return boolean
+local function is_vim_notify(node, bufnr)
+  local name = node:field("name")[1]
+  if not name then
+    return false
+  end
+
+  local text = ts.get_node_text(name, bufnr)
+  return text == "vim.notify"
+end
+
+---Reject notify.<level>(...) – already migrated
+---@param node TSNode
+---@param bufnr integer
+---@return boolean
+local function is_already_migrated(node, bufnr)
+  local name = node:field("name")[1]
+  if not name then
+    return false
+  end
+
+  local text = ts.get_node_text(name, bufnr)
+  return text:match("^notify%.%w+$") ~= nil
+end
+
+---Extract vim.log.levels.<LEVEL>
+---@param node TSNode
+---@param bufnr integer
+---@return string|nil
+local function extract_level(node, bufnr)
   if node:type() ~= "dot_index_expression" then
     return nil
   end
 
-  local text = treesitter.get_node_text(node, bufnr)
+  local text = ts.get_node_text(node, bufnr)
+  local level = text:match("vim%.log%.levels%.([A-Z]+)$")
 
-  -- Match patterns: vim.log.levels.INFO, levels.INFO
-  local level = text:match("%.(%u+)$")
-  if not level then
-    return nil
-  end
-
-  -- Validate against known levels
-  for _, method in pairs(LEVEL_TO_METHOD) do
-    if method == level:lower() then
-      return level
-    end
+  if level and LEVEL_MAP[level] then
+    return level
   end
 
   return nil
 end
 
---- Parse function call arguments
----@param call_node TSNode
+--------------------------------------------------------------------------------
+-- Argument parsing
+--------------------------------------------------------------------------------
+
+---Parse arguments in a strict, positional way
+---@param call TSNode
 ---@param bufnr integer
----@return string|nil message, string|nil level
-local function parse_arguments(call_node, bufnr)
-  local args_node = call_node:field("arguments")[1]
-  if not args_node then
-    return nil, nil
+---@return string message, string level, string|nil opts
+local function parse_args(call, bufnr)
+  local args = call:field("arguments")[1]
+  if not args then
+    return nil
   end
 
-  local children = {}
-  ---@diagnostic disable-next-line: undefined-field
-  for child in args_node:iter_children() do
+  local named = {}
+  for child in args:iter_children() do
     if child:named() then
-      table.insert(children, child)
+      table.insert(named, child)
     end
   end
 
-  if #children < 1 then
-    return nil, nil
+  if #named < 2 then
+    return nil
   end
 
-  -- First argument: message (string literal or variable)
-  local msg_node = children[1]
-  local message = treesitter.get_node_text(msg_node, bufnr)
-
-  -- Second argument: log level (optional)
-  local level = nil
-  if #children >= 2 then
-    level = extract_log_level(children[2], bufnr)
+  local msg = ts.get_node_text(named[1], bufnr)
+  local level = extract_level(named[2], bufnr)
+  if not level then
+    return nil
   end
 
-  return message, level
+  local opts = nil
+  if #named >= 3 then
+    opts = ts.get_node_text(named[3], bufnr)
+  end
+
+  return msg, level, opts
 end
 
---- Check if function call is vim.notify or aliased variant
----@param call_node TSNode
----@param bufnr integer
----@return boolean is_notify, string|nil alias
-local function is_notify_call(call_node, bufnr)
-  local func_node = call_node:field("name")[1]
-  if not func_node then
-    return false, nil
+--------------------------------------------------------------------------------
+-- Replacement builder
+--------------------------------------------------------------------------------
+
+---@param msg string
+---@param level string
+---@param opts string|nil
+---@return string
+local function build_replacement(msg, level, opts)
+  local method = LEVEL_MAP[level]
+
+  if opts then
+    return string.format("notify.%s(%s, %s)", method, msg, opts)
   end
 
-  local func_text = treesitter.get_node_text(func_node, bufnr)
-
-  -- Direct: vim.notify
-  if func_text == "vim.notify" then
-    return true, nil
-  end
-
-  -- Aliased: notify (requires scope analysis)
-  -- Simplified: check if identifier matches common aliases
-  if func_text:match("^notify$") or func_text:match("^vim_notify$") then
-    return true, func_text
-  end
-
-  return false, nil
+  return string.format("notify.%s(%s)", method, msg)
 end
 
---- Build replacement string
----@param message string
----@param level string|nil
----@return string replacement
-local function build_replacement(message, level)
-  local method = level and level:lower() or "info"
-  return string.format("notify.%s(%s)", method, message)
-end
+--------------------------------------------------------------------------------
+-- Scanner
+--------------------------------------------------------------------------------
 
---- Scan buffer for vim.notify patterns
 ---@param bufnr integer
 ---@return MigrateNotify.Match[]
 function M.scan_buffer(bufnr)
@@ -130,12 +151,11 @@ function M.scan_buffer(bufnr)
     return {}
   end
 
-  local ft = vim.bo[bufnr].filetype
-  if ft ~= "lua" then
+  if vim.bo[bufnr].filetype ~= "lua" then
     return {}
   end
 
-  local parser = treesitter.get_parser(bufnr, "lua")
+  local parser = ts.get_parser(bufnr, "lua")
   if not parser then
     return {}
   end
@@ -148,65 +168,32 @@ function M.scan_buffer(bufnr)
   local root = tree:root()
   local matches = {}
 
-  --- Recursive traversal
-  ---@param node TSNode
   local function visit(node)
     if node:type() == "function_call" then
-      local is_notify, _ = is_notify_call(node, bufnr)
-
-      if is_notify then
-        local message, level = parse_arguments(node, bufnr)
-
-        if message then
-          ---@diagnostic disable-next-line: undefined-field
-          local start_row, start_col, end_row, end_col = node:range()
-          local original = treesitter.get_node_text(node, bufnr)
-
+      if not is_already_migrated(node, bufnr) and is_vim_notify(node, bufnr) then
+        local msg, level, opts = parse_args(node, bufnr)
+        if msg and level then
+          local sr, sc, er, ec = node:range()
           table.insert(matches, {
-            line = start_row + 1, -- Convert to 1-based
-            col = start_col,
-            end_line = end_row + 1, -- Track end line for multiline
-            end_col = end_col,
-            original = original,
-            replacement = build_replacement(message, level),
-            log_level = level or "INFO",
+            line = sr + 1,
+            col = sc,
+            end_line = er + 1,
+            end_col = ec,
+            original = ts.get_node_text(node, bufnr),
+            replacement = build_replacement(msg, level, opts),
+            log_level = level,
           })
         end
       end
     end
 
-    ---@diagnostic disable-next-line
     for child in node:iter_children() do
       visit(child)
     end
   end
 
   visit(root)
-
   return matches
-end
-
---- Scan multiple files
----@param paths string[]
----@return MigrateNotify.FileMatches[]
-function M.scan_files(paths)
-  local results = {}
-
-  for _, path in ipairs(paths) do
-    local bufnr = vim.fn.bufadd(path)
-    vim.fn.bufload(bufnr)
-
-    local matches = M.scan_buffer(bufnr)
-
-    if #matches > 0 then
-      table.insert(results, {
-        path = path,
-        matches = matches,
-      })
-    end
-  end
-
-  return results
 end
 
 return M

@@ -87,9 +87,29 @@
 ---@field buf_request_sync fun(bufnr: integer, method: string, params: table, timeout_ms?: integer): table<integer, {err: table?, result: any}>? Send synchronous request
 ---@field buf_request_all fun(bufnr: integer, method: string, params: table, handler: function): table<integer, integer> Send request to all clients
 
+-- vim.lsp.buf format options
+---@class vim.lsp.buf.format.Opts
+---@field timeout_ms? integer Timeout in milliseconds
+---@field bufnr? integer Buffer number to format
+---@field filter? fun(client: vim.lsp.Client): boolean Filter function for clients
+---@field async? boolean Format asynchronously
+---@field id? integer Format with specific client ID
+---@field name? string Format with specific client name
+---@field range? table Format specific range
+
+---@class vim.lsp.buf.code_action.Opts
+---@field context? table Code action context
+---@field filter? fun(action: table): boolean Filter function
+---@field apply? boolean Apply first action automatically
+---@field range? table Specific range
+
+---@class vim.lsp.buf.rename.Opts
+---@field filter? fun(client: vim.lsp.Client): boolean Filter function
+---@field name? string New name (if not provided, will prompt)
+
 -- vim.lsp.buf functions
 ---@class vim.lsp.buf
----@field format fun(opts?: {timeout_ms?: integer, bufnr?: integer, filter?: fun(client: vim.lsp.Client): boolean, async?: boolean, id?: integer, name?: string, range?: table}) Format buffer
+---@field format fun(opts?: vim.lsp.buf.format.Opts) Format buffer
 ---@field hover fun() Show hover information
 ---@field signature_help fun() Show signature help
 ---@field definition fun(opts?: table) Go to definition
@@ -99,8 +119,8 @@
 ---@field references fun(context?: table, opts?: table) Show references
 ---@field document_symbol fun(opts?: table) Show document symbols
 ---@field workspace_symbol fun(query?: string, opts?: table) Show workspace symbols
----@field code_action fun(opts?: table) Show code actions
----@field rename fun(new_name?: string, opts?: table) Rename symbol
+---@field code_action fun(opts?: vim.lsp.buf.code_action.Opts) Show code actions
+---@field rename fun(new_name?: string, opts?: vim.lsp.buf.rename.Opts) Rename symbol
 ---@field incoming_calls fun() Show incoming calls
 ---@field outgoing_calls fun() Show outgoing calls
 

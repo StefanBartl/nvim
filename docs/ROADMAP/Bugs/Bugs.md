@@ -2,6 +2,8 @@
 
 ## Important Bugs
 
+- relpacer: string als argument funktioniert nicht
+
 ### LSP
 
 --- AUDIT: Ist bereits implementiert.
@@ -18,7 +20,7 @@ Falls Typen nicht gefunden werden weiterhin besteht, stelle sicher dass:
 
 --- AUDIT: Bereits implementiert...
 
-#### EPERM
+#### EPERM --> Scxheint zu funken.
 
 Dieser eror ist super nerviog, denn er friert mein nvim ein:
 
@@ -28,7 +30,7 @@ Dieser eror ist super nerviog, denn er friert mein nvim ein:
   Error  05:56:21 notify.error [Neo-tree ERROR] file_event_callback:  EPERM
   Error  05:56:21 notify.error [Neo-tree ERROR] file_event_callback:  EPERM
 ```
-### Nach einem renaming eines Folders:
+### Nach einem renaming eines Folders: Sche
 
 
 ```vim
@@ -37,7 +39,11 @@ Dieser eror ist super nerviog, denn er friert mein nvim ein:
 ```
 
 
-### situation, in der Neotree als buffer angezeigt wird (im tab (tabufline) sichtbar als buffer) ist...
+### situation, in der Neotree als buffer angezeigt wird (im tab (tabufline) sichtbar als buffer) ist.:
+
+--> Es wird nun eine korrekte messages ausgegebn:
+           Warn  20:06:34 notify.warn [Neo-tree WARN] Could not find appropriate window for preview
+aber der rror kommt trotzdem noch...
 
 .. und man dann ein preview ausführen möchte:
 
@@ -59,7 +65,7 @@ stack traceback:
 
 ---
 
-### Neotree: beim öffnen fällt er oft auf das cwd root zurück...
+### Neotree: beim öffnen fällt er oft auf das cwd root zurück... DAS IST noch immer da
 
 ...dann muss mian wieder nach vor "gehen" mit node opens um dort hinzukommen wo man ist. Spezielafall: wen man neotree schließ, dann wieder ffnet ist es wieder iene ebene näher am der richtigen ebene, dan nwieder schlißen und öffnen und er springt wieder eine eben näher zu dem file in der man ist.
 

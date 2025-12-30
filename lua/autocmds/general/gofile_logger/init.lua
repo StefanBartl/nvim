@@ -1,12 +1,14 @@
 ---@module 'autocmds.general.gofile_logger'
 --- Central logger for markdown gofile dispatcher.
 --- This module provides a small logger API that respects cfg.goto_file.debug.
+--- AUDIT: lib.notify anstatt diuesen logger ???
+local notify = require("lib.notify").create("[autocmds.general.gofile_logger]")
 
 --- Create a logger bound to a specific config.
 --- Returns a table with methods: info, debug, warn, error.
 --- @param cfg table
 --- @return table
-return function (cfg)
+return function(cfg)
   -- Decide whether debug-level notifications are enabled.
   local debug_enabled = cfg and cfg.goto_file and cfg.goto_file.debug
   debug_enabled = false -- AUDIT: warum wird geloggt wenn man in defaults und init false hat und hier exrta false setzen muss?
@@ -21,7 +23,16 @@ return function (cfg)
         out = out .. " | " .. s
       end
     end
-    vim.notify(out, level, { title = "md-gf" })
+
+    if level == vim.log.levels.info then
+      notify.info(out)
+    elseif level == vim.log.levels.debug then
+      notify.debug(out)
+    elseif level == vim.log.levels.warn then
+      notify.warn(out)
+    else
+      notify.error(out)
+    end
   end
 
   return {

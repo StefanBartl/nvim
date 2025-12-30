@@ -27,7 +27,7 @@ function M.load_ordered_cases(cfg)
       table.insert(mods, m)
     else
       if cfg and cfg.goto_file and cfg.goto_file.debug then
-        vim.notify(("md-gf: failed to load module '%s'"):format(name), vim.log.levels.WARN, { title = "md-gf" })
+        vim.notify(("md-gf: failed to load module '%s'"):format(name), vim.log.levels.WARN)
       end
     end
   end

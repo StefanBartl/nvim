@@ -6,7 +6,7 @@ local api = vim.api
 
 local config = require("usrcmds.md_tablewrap.config")
 local core = require("usrcmds.md_tablewrap.core")
-local notify = vim.notify
+local notify = require("lib.notify").create("MDTableWrap")
 local desc_tag = "[MDTableWrap] "
 
 ---@type MDTableWrapConfig
@@ -42,12 +42,12 @@ local function ensure_autocmds()
 
       local ok, changed, err = core.reformat_all("detect", buf, CFG)
       if not ok then
-        notify("MDTableWrap (on-save): " .. (err or "unknown error"), vim.log.levels.ERROR)
+        notify.error("MDTableWrap (on-save): " .. (err or "unknown error"))
         return
       end
       if changed and changed > 0 then
         vim.b[buf].md_tablewrap_last_tick = api.nvim_buf_get_changedtick(buf)
-        notify(string.format("%s formatted %d table(s) on save.", desc_tag, changed), vim.log.levels.INFO)
+        notify.info(string.format("%s formatted %d table(s) on save.", desc_tag, changed))
       end
     end,
     desc = desc_tag .. "reflow all tables on save (Markdown only, detect mode).",
@@ -59,7 +59,7 @@ end
 local function setup(user_opts)
   local ok, cfg_or_err, err = config.normalize(user_opts)
   if not ok then
-    notify(desc_tag .. " invalid configuration: " .. (err or "unknown"), vim.log.levels.ERROR)
+    notify.error(desc_tag .. " invalid configuration: " .. (err or "unknown"))
     CFG = config.defaults()
   else
     ---@diagnostic disable-next-line
@@ -69,13 +69,13 @@ local function setup(user_opts)
   -- helper to set mode safely
   local function set_mode(mode)
     if mode ~= "auto" and mode ~= "equal" and mode ~= "minflex" then
-      notify(desc_tag .. " invalid mode " .. tostring(mode), vim.log.levels.ERROR)
+      notify.error(desc_tag .. " invalid mode " .. tostring(mode))
       return
     end
     ---@diagnostic disable-next-line
     CFG.width_mode = mode
     CFG.auto_width = (mode == "auto") -- keep legacy flag coherent
-    notify(desc_tag .. " width_mode = " .. mode, vim.log.levels.INFO)
+    notify.info(desc_tag .. " width_mode = " .. mode)
   end
 
   ensure_autocmds()
@@ -90,28 +90,29 @@ local function setup(user_opts)
     if CFG.wrap_all_default then
       local ok2, changed, e = core.reformat_all(mode, api.nvim_get_current_buf(), CFG)
       if not ok2 then
-        notify(desc_tag .. " " .. (e or "failed"), vim.log.levels.ERROR)
+        notify.error(desc_tag .. " " .. (e or "failed"))
         return
       end
       if changed and changed > 0 then
-        notify(string.format("%sformatted %d table(s).", desc_tag, changed), vim.log.levels.INFO)
+        notify.info(string.format("%sformatted %d table(s).", desc_tag, changed))
       else
-        notify(desc_tag .. " nothing to format.", vim.log.levels.INFO)
+        notify.info(desc_tag .. " nothing to format.")
       end
     else
       local ok2, e = core.reformat_current(mode, CFG)
       if not ok2 then
         if e == "not on a table line" and mode ~= "force" then
-          notify(desc_tag .. " place cursor inside a Markdown table.", vim.log.levels.WARN)
+          notify.warn(desc_tag .. " place cursor inside a Markdown table.")
         else
-          notify(desc_tag .. " " .. (e or "failed"), vim.log.levels.ERROR)
+          notify.error(desc_tag .. " " .. (e or "failed"))
         end
         return
       end
-      notify(desc_tag .. " table formatted.", vim.log.levels.INFO)
+      notify.info(desc_tag .. " table formatted.")
     end
   end, {
-    desc = desc_tag .. "Reflow Markdown tables (scope depends on wrap_all_default). Use ! to force.",
+
+            desc = desc_tag .. "Reflow Markdown tables (scope depends on wrap_all_default). Use ! to force.",
     bang = true,
   })
 
@@ -120,28 +121,28 @@ local function setup(user_opts)
     ---@diagnostic disable-next-line
     local ok2, changed, e = core.reformat_all(mode, api.nvim_get_current_buf(), CFG)
     if not ok2 then
-      notify(desc_tag .. " " .. (e or "failed"), vim.log.levels.ERROR)
+      notify.error(desc_tag .. " " .. (e or "failed"))
       return
     end
     if changed and changed > 0 then
-      notify(string.format("%sformatted %d table(s).", desc_tag, changed), vim.log.levels.INFO)
+      notify.info(string.format("%sformatted %d table(s).", desc_tag, changed))
     else
-      notify(desc_tag .. " nothing to format.", vim.log.levels.INFO)
+      notify.info(desc_tag .. " nothing to format.")
     end
   end, { desc = desc_tag .. "Reflow all Markdown tables in the current buffer. Use ! to force.", bang = true })
 
   api.nvim_create_user_command("MDTableWrapAllToggle", function()
     if not CFG then
-      notify(desc_tag .. "CFG not available", 4)
+      notify.info(desc_tag .. "CFG not available")
       return
     end
     CFG.wrap_all_default = not CFG.wrap_all_default
-    notify(desc_tag .. " wrap_all_default = " .. tostring(CFG.wrap_all_default), vim.log.levels.INFO)
+    notify.info(desc_tag .. " wrap_all_default = " .. tostring(CFG.wrap_all_default))
   end, { desc = desc_tag .. "Toggle default scope for :MDTableWrap between current table and all tables." })
 
   api.nvim_create_user_command("MDTableOnSaveToggle", function()
     if not CFG then
-      notify(desc_tag .. "CFG not available", 4)
+      notify.info(desc_tag .. "CFG not available")
       return
     end
     CFG.on_save_enabled = not CFG.on_save_enabled
@@ -208,7 +209,7 @@ local function setup(user_opts)
       tostring(CFG.wrap_all_default),
       tostring(CFG.on_save_enabled)
     )
-    notify(desc_tag .. " " .. m, vim.log.levels.INFO, { title = "MDTableWrap" })
+    notify(desc_tag .. " " .. m, vim.log.levels.INFO)
   end, { desc = desc_tag .. "Show current width and behavior settings." })
 
   api.nvim_create_user_command("MDTableSetMinWidth", function(opts)
@@ -234,7 +235,7 @@ local function setup(user_opts)
   -- Info
   api.nvim_create_user_command("MDTableWidthInfo", function()
     if not CFG then
-      notify(desc_tag .. "CFG not available", 4)
+      notify.info(desc_tag .. "CFG not available")
       return
     end
     local m = string.format(
@@ -248,7 +249,7 @@ local function setup(user_opts)
       tostring(CFG.wrap_all_default),
       tostring(CFG.on_save_enabled)
     )
-    notify(desc_tag .. " " .. m, vim.log.levels.INFO, { title = "MDTableWrap" })
+    notify.info(desc_tag .. " " .. m)
   end, { desc = desc_tag .. "Show current width and behavior settings." })
 end
 

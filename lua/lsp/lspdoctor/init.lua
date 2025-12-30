@@ -21,12 +21,12 @@
 ---   require('usrcmds.lspdoctor').run('deep')               -- returns report
 ---   require('usrcmds.lspdoctor').export('quick', 0)        -- opens scratch
 ---   require('usrcmds.lspdoctor').health()                  -- prints health
+require("lsp.lspdoctor.@types")
+
+local notify = require("lib.notify").create("[lspdoctor]")
 
 local M = {}
 
-require("lsp.lspdoctor.@types")
-
--- Local aliases (cheap and clear)
 local api, lsp, diag = vim.api, vim.lsp, vim.diagnostic
 local uv = vim.uv or vim.loop
 local fn = vim.fn
@@ -519,9 +519,9 @@ end
 ---@param rep LspDoctorReport
 ---@return nil
 local function render(rep)
-  local function out(line, level)
+  local function out(line, _)
     if Opts.use_notify then
-      vim.notify(line, level or vim.log.levels.INFO, { title = "LSP Doctor" })
+      notify.info(line)
     else
       print(line)
     end
@@ -573,7 +573,7 @@ local function render_to_scratch(rep)
   vim.keymap.set("n", "gw", function() -- write to a timestamped file under :echo stdpath('cache')
     local path = fn.stdpath("cache") .. "/lspdoctor_" .. os.date("%Y%m%d_%H%M%S") .. ".md"
     api.nvim_command("silent keepalt keepjumps write! " .. fn.fnameescape(path))
-    vim.notify("Wrote report to: " .. path, vim.log.levels.INFO, { title = "LSP Doctor" })
+    notify.info("Wrote report to: " .. path)
   end, opts)
 
   return scratch
@@ -697,7 +697,7 @@ function M.enable_usercmd()
     elseif arg == "health" then
       M.health()
     else
-      vim.notify("Unknown argument: " .. arg .. " (use: export|health)", vim.log.levels.WARN, { title = "LSP Doctor" })
+      notify.warn("Unknown argument: " .. arg .. " (use: export|health)")
     end
   end, {
     bang = true, -- :LspDoctor! => deep
@@ -705,7 +705,7 @@ function M.enable_usercmd()
     complete = function()
       return { "export", "health" }
     end,
-    desc = "LSP Doctor (add ! for deep, subcommands: export|health)",
+    desc = "[LSP Doctor] (add ! for deep, subcommands: export|health)",
   })
 end
 
