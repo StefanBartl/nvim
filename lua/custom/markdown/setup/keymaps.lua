@@ -95,13 +95,13 @@ function M.apply(bufnr)
   end
   local o = bufnr and { buffer = bufnr } or nil
 
-  local headings = require "custom.markdown.core.headings"
-  local wrap = require "custom.markdown.core.wrap"
-  local fold = require "custom.markdown.core.fold"
-  local fold_prev = require "custom.markdown.core.fold_prev"
-  local fold_lvls = require "custom.markdown.core.fold_levels"
-  local toc = require "custom.markdown.core.toc"
-  local wrap_link = require "custom.markdown.core.wrap_link"
+  local headings = require("custom.markdown.core.headings")
+  local wrap = require("custom.markdown.core.wrap")
+  local fold = require("custom.markdown.core.fold")
+  local fold_prev = require("custom.markdown.core.fold_prev")
+  local fold_lvls = require("custom.markdown.core.fold_levels")
+  local toc = require("custom.markdown.core.toc")
+  local wrap_link = require("custom.markdown.core.wrap_link")
   wrap_link.attach(bufnr)
 
   -- Wrap visual toggle ** ----------------------------------------------------
@@ -110,25 +110,26 @@ function M.apply(bufnr)
   end
 
   -- Headings navigation -------------------------------------------------------
-    if headings.goto_prev_heading then
-      map({ "n", "v", "x" }, "<C-p>", headings.goto_prev_heading, "[Custom.Markdown] Previous heading (H2+)", o)
-    end
-    if headings.goto_next_heading then
-      map({ "n", "v", "x" }, "<C-f>", headings.goto_next_heading, "[Custom.Markdown] Next heading (H2+)", o)
-    end
-
+  if headings.goto_prev_heading then
+    map({ "n", "v", "x" }, "<C-p>", headings.goto_prev_heading, "[Custom.Markdown] Previous heading (H2+)", o)
+    map("n", "[[", headings.goto_prev_heading, "[Custom.Markdown] Previous heading", o)
+  end
+  if headings.goto_next_heading then
+    map({ "n", "v", "x" }, "<C-f>", headings.goto_next_heading, "[Custom.Markdown] Next heading (H2+)", o)
+    map("n", "]]", headings.goto_next_heading, "[Custom.Markdown] Next heading", o)
+  end
   -- Folding controls ----------------------------------------------------------
-    map("n", "<localleader>f", fold.toggle_under_cursor, "[Custom.Markdown] Toggle fold under cursor & center", o)
-    if cfg.use_zf_override then
-      map(
-        "n",
-        "zf",
-        fold.toggle_under_cursor,
-        "[Custom.Markdown] Toggle fold under cursor & center (override)",
-        with(o or {}, { nowait = true })
-      )
-    end
-    map("n", "zu", fold.unfold_all_center, "[Custom.Markdown] Unfold all & center", o)
+  map("n", "<localleader>f", fold.toggle_under_cursor, "[Custom.Markdown] Toggle fold under cursor & center", o)
+  if cfg.use_zf_override then
+    map(
+      "n",
+      "zf",
+      fold.toggle_under_cursor,
+      "[Custom.Markdown] Toggle fold under cursor & center (override)",
+      with(o or {}, { nowait = true })
+    )
+  end
+  map("n", "zu", fold.unfold_all_center, "[Custom.Markdown] Unfold all & center", o)
 
   if fold_prev.fold_prev_heading_then_center then
     map("n", "zi", fold_prev.fold_prev_heading_then_center, "[Custom.Markdown] Fold previous heading & center", o)
@@ -189,30 +190,24 @@ function M.apply(bufnr)
     headings.shift_range(cur[1], cur[1], -n)
   end, "[Custom.Markdown] Decrease heading in line (count-aware)", opts)
 
-  -- Visual mappings: process visual marks directly (supports count prefix)
+  -- Visual mappings: process visual marks after exiting visual mode
   map("v", "<C-Right>", function()
     local n = get_count_or_one()
-    local ok1, ms = pcall(api.nvim_buf_get_mark, 0, "<")
-    local ok2, me = pcall(api.nvim_buf_get_mark, 0, ">")
-    if ok1 and ok2 and ms and me and ms[1] > 0 and me[1] > 0 then
-      local s = math.min(ms[1], me[1])
-      local e = math.max(ms[1], me[1])
-      headings.shift_range(s, e, n)
-    end
-    -- exiting visual mode: return empty string because mapping is non-expr
-    return ""
+    headings.shift_visual_selection(n)
   end, "[Custom.Markdown] Increase headings in selection (count-aware)", opts)
 
   map("v", "<C-Left>", function()
     local n = get_count_or_one()
-    local ok1, ms = pcall(api.nvim_buf_get_mark, 0, "<")
-    local ok2, me = pcall(api.nvim_buf_get_mark, 0, ">")
-    if ok1 and ok2 and ms and me and ms[1] > 0 and me[1] > 0 then
-      local s = math.min(ms[1], me[1])
-      local e = math.max(ms[1], me[1])
-      headings.shift_range(s, e, -n)
-    end
-    return ""
+    headings.shift_visual_selection(-n)
+  end, "[Custom.Markdown] Decrease headings in selection (count-aware)", opts)
+
+  -- Visual-Line mappings: process visual marks after exiting visual mode
+  map("x", "<C-Right>", function()
+    headings.shift_visual_selection(get_count_or_one())
+  end, "[Custom.Markdown] Increase headings in selection (count-aware)", opts)
+
+  map("x", "<C-Left>", function()
+    headings.shift_visual_selection(-get_count_or_one())
   end, "[Custom.Markdown] Decrease headings in selection (count-aware)", opts)
 
   -- Whole-buffer mappings (count-aware)
@@ -227,7 +222,6 @@ function M.apply(bufnr)
     local n = get_count_or_one()
     headings.shift_range(s, e, -n)
   end, "[Custom.Markdown] Decrease ALL headings (buffer, count-aware)", opts)
-
 end
 
 return M

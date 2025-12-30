@@ -74,12 +74,7 @@ local function shift_heading_line(line, delta, min_level)
     return line, false
   end
 
-  return string.format(
-    "%s%s %s",
-    indent,
-    string.rep("#", new_level),
-    rest
-  ), true
+  return string.format("%s%s %s", indent, string.rep("#", new_level), rest), true
 end
 
 -- Core buffer range shifter: internal implementation (unchanged)
@@ -181,6 +176,25 @@ function M.shift_selection(delta)
   erow = erow or srow
 
   -- use unified export
+  M.shift_range(srow, erow, delta)
+end
+
+--- Process current visual selection (to be called from visual mode mapping)
+--- Handles visual mode exit and mark retrieval internally
+---@param delta integer
+---@return nil
+function M.shift_visual_selection(delta)
+  -- CRITICAL: Capture BEFORE exiting visual mode!
+  local start_line = vim.fn.line("v")  -- start of visual
+  local end_line = vim.fn.line(".")    -- cursor (end)
+
+  local srow = math.min(start_line, end_line)
+  local erow = math.max(start_line, end_line)
+
+  -- NOW exit visual mode
+  vim.cmd('normal! \\<Esc>')
+
+  -- Process the captured range
   M.shift_range(srow, erow, delta)
 end
 
