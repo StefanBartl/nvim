@@ -45,7 +45,7 @@ function M.setup(shared, opts)
         Lua = {
           -- Configure Lua runtime environment
           runtime = {
-            version = "LuaJIT" -- Use LuaJIT for Neovim
+            version = "LuaJIT", -- Use LuaJIT for Neovim
           },
 
           -- Enable inlay hints for better code insight
@@ -56,11 +56,11 @@ function M.setup(shared, opts)
             globals = {
               -- Neovim API globals
               "vim",
-              "vim.uv",      -- Async I/O library
-              "vim.loop",    -- Legacy name for vim.uv
-              "vim.fn",      -- Vimscript function access
+              "vim.uv", -- Async I/O library
+              "vim.loop", -- Legacy name for vim.uv
+              "vim.fn", -- Vimscript function access
               "vim.inspect", -- Table inspection
-              "vim",         -- Duplicate entry for safety
+              "vim", -- Duplicate entry for safety
 
               -- Testing framework globals (busted/plenary)
               "describe",
@@ -78,8 +78,8 @@ function M.setup(shared, opts)
 
           -- Configure completion behavior
           completion = {
-            callSnippet = "Replace",  -- Replace function signature when completing
-            workspaceWord = false     -- Don't suggest words from entire workspace
+            callSnippet = "Replace", -- Replace function signature when completing
+            workspaceWord = false, -- Don't suggest words from entire workspace
           },
 
           -- Disable semantic token highlighting (use TreeSitter instead)
@@ -87,7 +87,7 @@ function M.setup(shared, opts)
 
           -- Workspace scanning and library configuration
           workspace = {
-            checkThirdParty = true,  -- Check for third-party libraries
+            checkThirdParty = true, -- Check for third-party libraries
 
             -- Use our centralized ignore patterns to skip noisy directories
             ignoreDir = ignore.as_luals_patterns(),
@@ -96,8 +96,8 @@ function M.setup(shared, opts)
             useGitIgnore = true,
 
             -- Limit workspace scanning to prevent performance issues
-            maxPreload = 3000,       -- Maximum number of files to preload
-            preloadFileSize = 500,   -- Maximum file size in KB
+            maxPreload = 3000, -- Maximum number of files to preload
+            preloadFileSize = 500, -- Maximum file size in KB
 
             -- library will be populated dynamically per root in on_new_config
           },
@@ -144,6 +144,8 @@ function M.setup(shared, opts)
       pcall(vim.lsp.enable, "lua_ls")
     end
   end
+
+  require("lsp.servers.lua_ls.reload").setup()
 end
 
 return M

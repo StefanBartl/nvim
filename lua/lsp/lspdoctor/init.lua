@@ -93,7 +93,7 @@ end
 -- Collection ------------------------------------------------------------------
 
 ---@param bufnr integer
----@return table<string, LspClient> clients_by_name, string[] names
+---@return table<string, LspMod.Client> clients_by_name, string[] names
 local function collect_clients(bufnr)
   if type(bufnr) ~= "number" or not api.nvim_buf_is_valid(bufnr) then
     return {}, {}
@@ -135,7 +135,7 @@ end
 -- Extended checks -------------------------------------------------------------
 
 -- Offset-encoding mismatch across clients (e.g., "utf-8" vs "utf-16")
----@param clients_by_name table<string, LspClient>
+---@param clients_by_name table<string, LspMod.Client>
 ---@return string[] unique_encs, string[] mismatches
 local function check_offset_encoding(clients_by_name)
   local set, order = {}, {}
@@ -161,7 +161,7 @@ end
 
 -- CodeLens/InlayHints status (supported + enabled)
 ---@param bufnr integer
----@param clients_by_name table<string, LspClient>
+---@param clients_by_name table<string, LspMod.Client>
 ---@return string[] lines
 local function check_lens_inlay(bufnr, clients_by_name)
   local lines = {}
@@ -169,7 +169,7 @@ local function check_lens_inlay(bufnr, clients_by_name)
   local any_inlay = false
 
   for name, c in pairs(clients_by_name) do
-    ---@cast c LspClient
+    ---@cast c LspMod.Client
     local caps = c.server_capabilities or {}
     local cl = yesno(caps.codeLensProvider ~= nil)
     local ih = yesno(caps.inlayHintProvider ~= nil)
@@ -203,7 +203,7 @@ local function check_lens_inlay(bufnr, clients_by_name)
   return lines
 end
 
----@param clients_by_name table<string, LspClient>  -- importiert aus lsp.@types
+---@param clients_by_name table<string, LspMod.Client>  -- importiert aus lsp.@types
 ---@return string[] lines
 local function probe_semantic_tokens(bufnr, clients_by_name)
   local lines = {}
@@ -252,7 +252,7 @@ local function probe_semantic_tokens(bufnr, clients_by_name)
 end
 
 -- Provider conflicts (formatting/diagnostics)
----@param clients_by_name table<string, LspClient>
+---@param clients_by_name table<string, LspMod.Client>
 ---@return string[] conflicts
 local function detect_conflicts(clients_by_name)
   local conflicts = {}
@@ -279,7 +279,7 @@ end
 
 -- Formatter policy winner -----------------------------------------------------
 
----@param clients_by_name table<string, LspClient>
+---@param clients_by_name table<string, LspMod.Client>
 ---@return string|nil winner, string[] candidates_sorted, string reason
 local function pick_formatter(clients_by_name)
   local candidates = {}

@@ -6,7 +6,7 @@ local M = {}
 ---@type boolean
 M._initialized = false
 
----@param cfg MyLspInit
+---@param cfg LspMod.Init
 ---@return boolean ok
 function M.setup(cfg)
   if M._initialized then
@@ -124,15 +124,6 @@ function M.setup(cfg)
     float = { border = "rounded", source = "if_many" },
   })
 
-  require("lsp.lspdoctor").setup({
-    use_notify = false,
-    list_limit = 8,
-    formatter_priority = { "eslint", "null-ls", "lua_ls" },
-    semantic_tokens_timeout = 300,
-    scratch_filetype = "markdown",
-  })
-  require("lsp.lspdoctor").enable_usercmd()
-
   if cfg.ensure_installing == true then
     require("config.mason.ensure_install").enable({
       lsp = true,
@@ -159,6 +150,14 @@ function M.setup(cfg)
   end
 
   --- ==== CUSTOM ENABLE  LSP TOOLS ====
+  require("lsp.lspdoctor").setup({
+    use_notify = false,
+    list_limit = 8,
+    formatter_priority = { "eslint", "null-ls", "lua_ls" },
+    semantic_tokens_timeout = 300,
+    scratch_filetype = "markdown",
+  })
+  require("lsp.lspdoctor").enable_usercmd()
 
   require("lsp.tools.eslint_prettier").setup({
     -- optional: provide custom binaries if Mason is not in the default location

@@ -6,6 +6,8 @@
 
 ## MIXED
 
+- lsp.tools.lsp_signature_tool -> /doc/lsp_signature_tool.txt erstellebn
+- mynotes in custom schieben
 - Neotree mappings so schreiben, dass auch nvimtree/netrw möglich wäre
     . DAs bedeutet auch, dass alle lib funktionen inerhalb der filtree filesystem ist, danmit keine dependencies entstehen
 I    . Die meisten helper sollten eigenltich als commands implementiert werden
