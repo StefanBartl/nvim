@@ -13,6 +13,8 @@ I    . Die meisten helper sollten eigenltich als commands implementiert werden
  lsp.tools behandeln
  [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 
+- lua\usrcmds\mymessages\init.lua zu dbg_messges verenheitlichen
+
 ## ideas
 
 ## Long run

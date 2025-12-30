@@ -153,12 +153,24 @@ end
 
 --- Format matches for display in scratch buffer
 ---@param matches UsrCmds.Gather.Lua.Match[]
+---@param mode UsrCmds.Gather.Lua.ScanMode
 ---@return string[]
-local function format_matches(matches)
+local function format_matches(matches, mode)
   local lines = {}
 
   for _, match in ipairs(matches) do
-    table.insert(lines, match.name)
+    local line_str
+
+    if mode == "cwd" and match.file then
+      -- CWD mode: relative_path:line:col: name
+      local rel_path = vim.fn.fnamemodify(match.file, ":~:.")
+      line_str = string.format("%s:%d:%d: %s", rel_path, match.line, match.col, match.name)
+    else
+      -- Buffer mode: line:col: name
+      line_str = string.format("%d:%d: %s", match.line, match.col, match.name)
+    end
+
+    table.insert(lines, line_str)
   end
 
   return lines
@@ -185,7 +197,7 @@ function M.run()
   end
 
   local ui = require("usrcmds.gather.lua.ui")
-  local lines = format_matches(result.matches)
+  local lines = format_matches(result.matches, "buffer")
   ui.open_scratch(lines, "Functions (" .. #result.matches .. ")")
 end
 

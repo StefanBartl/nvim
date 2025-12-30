@@ -1,6 +1,18 @@
 ---@meta
 ---@module 'usrcmds.gather.@types'
 
+---@class UsrCmds.Gather.Config
+---@field lua boolean  # Enable Lua gathering commands
+
+-- ==================================================================
+-- lua
+
+---@class UsrCmds.Gather.Lua.ScanStats
+---@field total_files integer      # Total Lua files found
+---@field total_dirs integer        # Total directories containing Lua files
+---@field total_lines integer       # Estimated total lines of code
+---@field estimated_time_sec number # Estimated scan time in seconds
+
 ---@alias UsrCmds.Gather.Lua.ScanMode "buffer"|"cwd"  # Scan current buffer only or scan all Lua files in current working directory
 
 ---@class UsrCmds.Gather.Lua.Match
@@ -19,8 +31,5 @@
 ---@field errors string[]
 
 ---@alias UsrCmds.Gather.Lua.GatherType "functions"|"tables"|"strings"
-
----@class UsrCmds.Gather.Config
----@field lua boolean  # Enable Lua gathering commands
 
 return {}

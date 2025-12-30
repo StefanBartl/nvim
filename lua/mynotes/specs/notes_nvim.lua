@@ -13,7 +13,7 @@ register.register(
     grep  = "NvimNotesGrep",
   },
   {
-    files = "<leader>nvf",
-    grep  = "<leader>nvg",
+    files = "<leader>mvf",
+    grep  = "<leader>mvg",
   }
 )

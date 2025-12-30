@@ -5,12 +5,6 @@ local hover_select = require("lib.hover_select")
 
 local M = {}
 
----@class UsrCmds.Gather.Lua.ScanStats
----@field total_files integer      # Total Lua files found
----@field total_dirs integer        # Total directories containing Lua files
----@field total_lines integer       # Estimated total lines of code
----@field estimated_time_sec number # Estimated scan time in seconds
-
 --- Count lines in a file efficiently
 ---@param filepath string
 ---@return integer lines

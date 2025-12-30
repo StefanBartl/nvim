@@ -16,8 +16,8 @@ return {
     config = function()
       -- require("neotree-fs-refactor").setup()
       require("neotree-fs-refactor").setup({
-        enabled = true,
-        auto_save = true, -- Enable auto-save for testing
+        enabled = false,
+        auto_save = true, -- Enble auto-save for testing
         notify_on_refactor = true,
 
         -- Use minimal ignore patterns for testing

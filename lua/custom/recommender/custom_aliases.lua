@@ -29,4 +29,5 @@ return {
   ["math.min"] = "min",
 
   ["os.date"] = "os_date",
+  ["os.execute"] = "os_execute",
 }

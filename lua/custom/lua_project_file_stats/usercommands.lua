@@ -228,7 +228,7 @@ function M.setup()
   })
 
   -- Notify successful setup
-  notify.info("LuaFileStats commands registered")
+  -- notify.info("LuaFileStats commands registered")
 end
 
 return M

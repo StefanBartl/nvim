@@ -51,11 +51,6 @@ M.views = {
       winhighlight = { Normal = "Normal", FloatBorder = "DiagnosticInfo" },
     },
   },
-
-  mini = {
-    timeout = 2500, -- timeout for entries shown in the mini view (ms). Default historically ~2000.
-    reverse = true,
-  },
 }
 
 M.lsp = {
@@ -82,23 +77,32 @@ M.cmdline = {
   enabled = true,
   view = "cmdline", -- classic bottom cmdline (not a floating popup)
   format = {
-    -- Make sure search uses the bottom cmdline too
     search_down = { view = "cmdline" },
     search_up = { view = "cmdline" },
   },
 }
 
+--- all normal `:echo`, `:echomsg` or system-side messages
 M.messages = {
   enabled = true,
-  -- optional: set mini as default for all msg_show (routes can still override)
   view = "mini",
   view_search = false,
 }
 
+-- all notifications triggered via vim.notify()
 M.notify = {
   enabled = true, -- ensure vim.notify is captured by Noice
-  view = "mini", -- render notifications inline (virttext) instead of popups
+  view = "popup",
   merge = true, -- coalesce repeated messages
+}
+
+M.views.mini = {
+  timeout = 4000,
+  reverse = true,
+}
+
+M.views.notify = {
+  timeout = 4000,
 }
 
 M.routes = {
@@ -170,13 +174,5 @@ M.routes = {
     opts = { skip = true },
   },
 }
-
-vim.api.nvim_create_user_command("Nal", function()
-  require("noice").cmd("all")
-end, { desc = "" })
-
-vim.api.nvim_create_user_command("Ner", function()
-  require("noice").cmd("errors")
-end, { desc = "[Noice] Shows the error messages in a split. Last errors on top." })
 
 return M

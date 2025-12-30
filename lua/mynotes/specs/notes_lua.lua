@@ -13,7 +13,7 @@ register.register(
     grep  = "LuaNotesGrep",
   },
   {
-    files = "<leader>nlf",
-    grep  = "<leader>nlg",
+    files = "<leader>mlf",
+    grep  = "<leader>mlg",
   }
 )

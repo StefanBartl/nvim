@@ -16,3 +16,12 @@ local notify = require("lib.notify")
 notify.info("Refactor started")
 notify.warn("Some paths could not be updated")
 notify.error("LSP rename failed")
+
+
+local state = {
+  win = nil
+}
+
+local function temp ()
+    state.win = {}
+end

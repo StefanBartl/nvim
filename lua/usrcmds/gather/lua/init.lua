@@ -62,9 +62,30 @@ local function run_cwd_mode(gather_type)
       return
     end
 
-    -- Show picker
-    local picker = require("usrcmds.gather.lua.picker")
-    picker.show_picker(file_matches, gather_type)
+    -- Flatten all matches from all files
+    local all_matches = scanner.flatten_matches(file_matches)
+
+    -- Format for display (with file paths, line, col)
+    local lines = {}
+    for _, match in ipairs(all_matches) do
+      if match.file then
+        local rel_path = vim.fn.fnamemodify(match.file, ":~:.")
+        local line_str = string.format("%s:%d:%d: %s", rel_path, match.line, match.col, match.name)
+        table.insert(lines, line_str)
+      end
+    end
+
+    -- Show in scratch buffer
+    local ui = require("usrcmds.gather.lua.ui")
+    local title = string.format("%s (CWD: %d matches)",
+      gather_type:gsub("^%l", string.upper),
+      #all_matches)
+    ui.open_scratch(lines, title)
+
+    vim.notify(
+      string.format("Found %d %s across %d files", #all_matches, gather_type, #file_matches),
+      vim.log.levels.INFO
+    )
   end, function()
     -- User cancelled - do nothing
   end)
@@ -83,7 +104,6 @@ function M.run(mode)
       "strings",
     },
     on_select = function(selected)
-
       ---@type UsrCmds.Gather.Lua.GatherType
       local gather_type = selected
 
