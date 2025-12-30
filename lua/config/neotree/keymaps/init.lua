@@ -30,7 +30,7 @@ return {
   ["?"] = "show_help",
   ["g?"] = "noop",
   ["<leader>"] = "noop",
-  ["<Tab>"] = "toggle_preview",
+  -- ["<Tab>"] = "toggle_preview",
   ["<2-LeftMouse>"] = "open",
 
   -- background buffer add (no focus change, Neo-tree stays)
@@ -79,6 +79,24 @@ return {
       return
     end
 
+    -- ADDED: Check if we're in a valid Neo-tree window
+    local current_win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_win_get_buf(current_win)
+    local is_neotree_win = vim.bo[buf].filetype == "neo-tree"
+
+    if not is_neotree_win then
+      vim.notify("Neo-tree: Not in a Neo-tree window", vim.log.levels.WARN)
+      return
+    end
+
+    -- ADDED: Safe preview cleanup
+    pcall(function()
+      local preview = require("neo-tree.sources.common.preview")
+      if preview and preview.hide then
+        preview.hide()
+      end
+    end)
+
     -- 1) expand/collapse directories
     if node and (node.type == "directory" or (node:has_children() and not node:is_expanded())) then
       state.commands.toggle_node(state)
@@ -86,11 +104,42 @@ return {
     end
 
     -- 2) normal open (prefer window-picker if present)
-    hide_preview_safe(state)
     if pcall(require, "window-picker") then
-      state.commands.open_with_window_picker(state)
+      -- ADDED: Protect window-picker call
+      local ok = pcall(state.commands.open_with_window_picker, state)
+      if not ok then
+        pcall(state.commands.open, state)
+      end
     else
-      state.commands.open(state)
+      pcall(state.commands.open, state)
+    end
+  end,
+
+  -- ====================== Preview Node   ==========================
+
+  ["<Tab>"] = function(state)
+    -- Validate window context
+    local current_win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_win_get_buf(current_win)
+
+    if vim.bo[buf].filetype ~= "neo-tree" then
+      vim.notify("Neo-tree: Preview only works in Neo-tree window", vim.log.levels.WARN)
+      return
+    end
+
+    -- Safe toggle with error handling
+    local ok, _ = pcall(function()
+      state.commands.toggle_preview(state)
+    end)
+
+    if not ok then
+      -- Fallback: try to hide preview
+      pcall(function()
+        local preview = require("neo-tree.sources.common.preview")
+        if preview and preview.hide then
+          preview.hide()
+        end
+      end)
     end
   end,
 
@@ -263,7 +312,7 @@ return {
 
   -- Mark all files in directory - using <leader>ma (m = mark, a = all)
   ["<S-m>"] = function(state)
-      commands.mark.mark_all_in_directory(state)
+    commands.mark.mark_all_in_directory(state)
   end,
 
   -- Clear all marks - using <leader>mc (m = mark, c = clear)
@@ -320,7 +369,7 @@ return {
     desc = desc_tag .. "Copy base (dir) path (+)",
   },
 
-    --- FIX: This is not relative, but absolute
+  --- FIX: This is not relative, but absolute
   ["]r"] = {
     --- Copy the node's relative path to the system clipboard (+).
     --- Base preference: project root (utils.lv_project_root) → fallback to current working directory.

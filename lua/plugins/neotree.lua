@@ -186,11 +186,13 @@ return {
     })
     ---@diagnostic disable-next-line
     require("config.neotree.cwd_sync").setup({
-      debounce_ms = 80,
+      debounce_ms = 150,
       keep_focus = true,
       also_set_nvim_cwd = false, -- set to true if global :cd should follow too
       open_if_closed = false, -- set to true to auto-open Neo-tree on first sync
       use_project_root = true,
+      project_root_fallback_to_bufdir = true,
+      force_position_left = true, -- Keep this, but now with smarter logic
     })
 
     require("config.neotree.open").attach_opener_mappings()

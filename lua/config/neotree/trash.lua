@@ -69,19 +69,28 @@ end
 --- Cleanup Neo-tree interne Watchers und State für einen Pfad
 ---@param path string
 local function cleanup_neotree_watchers(path)
+  -- Stop ALL filesystem watchers before deletion
   pcall(function()
-    -- Stoppe alle File Watchers
     local watcher = require("neo-tree.sources.filesystem.lib.file_watcher")
-    if watcher and watcher.stop then
+    if watcher and watcher.stop_all then
+      watcher.stop_all()
+    elseif watcher and watcher.stop then
       watcher.stop(path)
+      -- Stop parent watchers too
+      local parent = vim.fn.fnamemodify(path, ":h")
+      watcher.stop(parent)
     end
   end)
 
+  -- Clear manager state BEFORE deletion
   pcall(function()
-    -- Clear Neo-tree's internal cache
     local manager = require("neo-tree.sources.manager")
     if manager and manager.close_all_nodes then
       manager.close_all_nodes()
+    end
+    -- Force clear internal state
+    if manager and manager._state then
+      manager._state = {}
     end
   end)
 end
@@ -191,41 +200,46 @@ end
 --- Safely refresh Neo-tree after file operations
 ---@param state_name string
 local function safe_refresh(state_name)
-  -- Führe Refresh in mehreren Schritten aus um Blockierung zu vermeiden
-  vim.schedule(function()
+  -- Longer delay to ensure file operations complete
+  vim.defer_fn(function()
     local manager_ok, manager = pcall(require, "neo-tree.sources.manager")
     if not manager_ok then
       return
     end
 
-    -- Schritt 1: Close all und reset
+    -- Complete cleanup first
     pcall(function()
       if manager.close_all_nodes then
         manager.close_all_nodes()
       end
     end)
 
-    -- Schritt 2: Nach kurzem Wait refreshen
-    defer_fn(function()
-      -- Versuche zuerst den aktuellen State zu refreshen
+    -- Wait for filesystem to settle
+    vim.defer_fn(function()
       local state_ok, state = pcall(manager.get_state, state_name)
       if state_ok and state then
+        -- Suppress EPERM errors during refresh
+        local old_notify = vim.notify
+        vim.notify = function(msg, level)
+          if not (type(msg) == "string" and msg:match("EPERM")) then
+            old_notify(msg, level)
+          end
+        end
+
         local commands_ok, commands = pcall(require, "neo-tree.sources." .. state_name .. ".commands")
         if commands_ok and commands and type(commands.refresh) == "function" then
           pcall(commands.refresh, state)
-          return
+        else
+          pcall(manager.refresh, state_name)
         end
-      end
 
-      -- Fallback: Refresh über Manager
-      pcall(manager.refresh, state_name)
-
-      -- Zusätzlicher Fallback für filesystem
-      if state_name ~= "filesystem" then
-        pcall(manager.refresh, "filesystem")
+        -- Restore notify after 1 second
+        vim.defer_fn(function()
+          vim.notify = old_notify
+        end, 1000)
       end
-    end, 100)
-  end)
+    end, 300)
+  end, 100)
 end
 
 --- Collect nodes to trash:

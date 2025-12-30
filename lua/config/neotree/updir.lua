@@ -8,6 +8,13 @@ local M = {}
 ---@param state table  -- neo-tree internal state for the current window
 ---@return nil
 function M.up_one_level(state)
+   -- Mark as user navigation to prevent auto-sync
+  local ok_sync, sync_state = pcall(require, "config.neotree.cwd_sync")
+  if ok_sync and sync_state and sync_state.S then
+    sync_state.S.user_navigated = true
+    sync_state.S.last_user_action = vim.loop.now()
+  end
+
   -- Resolve current root (falls state.path noch nicht gesetzt ist, vom Cursor ableiten)
   local current_root = state.path
   if not current_root or current_root == "" then
@@ -64,27 +71,14 @@ function M.up_one_level(state)
     end
   end
 
-  -- Optional: refresh the view to ensure UI is up-to-date
-  local ok_mgr, manager = pcall(require, "neo-tree.sources.manager")
-  if ok_mgr and manager and manager.refresh then
-    -- manager.refresh(state)
-    -- Variate 1:
-    -- instead of: manager.refresh(state)
-    -- choose an explicit source name, or derive it from state
-    -- local src = (type(state) == "table" and (state.name or state.source or state.source_name)) or "filesystem"
-    -- manager.refresh(src)
-    --
-    -- VAriante 2:
-    local ok_mod, refresher = pcall(require, "config.neotree.refresh_adapter")
-    if ok_mod then
-      -- pass the state you already have; helper extrahiert den Namen
-      refresher.refresh(state)
-    else
-      -- minimal direct fix ohne Helper
-      if ok_mgr and manager and type(manager.refresh) == "function" then
-        local src = (type(state) == "table" and (state.name or state.source or state.source_name)) or "filesystem"
-        manager.refresh(src)
-      end
+  local ok_mod, refresher = pcall(require, "config.neotree.refresh_adapter")
+  if ok_mod then
+    refresher.refresh(state)
+  else
+    local ok_mgr, manager = pcall(require, "neo-tree.sources.manager")
+    if ok_mgr and manager and type(manager.refresh) == "function" then
+      local src = (type(state) == "table" and (state.name or state.source or state.source_name)) or "filesystem"
+      manager.refresh(src)
     end
   end
 

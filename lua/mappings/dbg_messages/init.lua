@@ -320,6 +320,46 @@ local function setup_autocmds(timings, ac)
       end
     end,
   })
+
+  --------------------------------------------------------------------------------
+  -- Close dbg windows with q / <Esc>
+  api.nvim_create_autocmd("FileType", {
+    group = AUG,
+    desc = "Close dbg message/noice windows with q or <Esc>",
+    callback = function(ev)
+      local buf = ev.buf
+      if not api.nvim_buf_is_valid(buf) then
+        return
+      end
+
+      -- Only apply to messages / noice buffers
+      if not require("mappings.dbg_messages.utils").is_target_view(buf) then
+        return
+      end
+
+      local function close_dbg_window()
+        local win = vim.fn.bufwinid(buf)
+        if win ~= -1 and api.nvim_win_is_valid(win) then
+          api.nvim_win_close(win, true)
+        end
+      end
+
+      -- Buffer-local mappings to avoid global side effects
+      vim.keymap.set("n", "q", close_dbg_window, {
+        buffer = buf,
+        nowait = true,
+        silent = true,
+        desc = "Close dbg window",
+      })
+
+      vim.keymap.set("n", "<Esc>", close_dbg_window, {
+        buffer = buf,
+        nowait = true,
+        silent = true,
+        desc = "Close dbg window",
+      })
+    end,
+  })
 end
 
 --------------------------------------------------------------------------------

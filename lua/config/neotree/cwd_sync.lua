@@ -7,7 +7,13 @@
 local M = {}
 
 ---@type NeoTreeCwdSyncState
-local S = { timer = nil, pending = false, last_dir = nil }
+local S = {
+  timer = nil,
+  pending = false,
+  last_dir = nil,
+  user_navigated = false,  -- ADDED: Track manual navigation
+  last_user_action = 0,    -- ADDED: Timestamp of last user action
+}
 
 --- Query the current filesystem source window position, if any.
 ---@nodiscard
@@ -102,8 +108,12 @@ end
 ---@param cfg NeoTreeCwdSyncConfig
 local function sync_now(cfg)
   local neo_win = find_neotree_win_in_current_tab()
+
+  if neo_win and not vim.api.nvim_win_is_valid(neo_win) then
+    neo_win = nil
+  end
+
   if not neo_win and not cfg.open_if_closed then
-    -- No filesystem view in this tab and opening is disabled → nothing to do.
     return
   end
 
@@ -117,12 +127,10 @@ local function sync_now(cfg)
     return
   end
 
-  -- Avoid redundant updates if the directory hasn't changed.
   if S.last_dir == dir then
     return
   end
 
-  -- Optionally keep Neovim's CWD in sync as well (best-effort).
   if cfg.also_set_nvim_cwd then
     pcall(vim.api.nvim_set_current_dir, dir)
   end
@@ -132,42 +140,83 @@ local function sync_now(cfg)
     return
   end
 
-  -- Remember current window to restore focus afterwards (non-intrusive UX).
   local prev_win = vim.api.nvim_get_current_win()
 
-  -- If there is already a filesystem view and it's not on the left, normalize it to "left".
-  -- This prevents accidental "right" panes from lingering (e.g., due to mappings or layout toggles).
+  if not vim.api.nvim_win_is_valid(prev_win) then
+    prev_win = nil
+  end
+
   local pos = current_fs_position()
-  if pos and cfg.force_position_left and pos ~= "left" then
-    -- Use action="show" with explicit position="left" to relocate without stealing focus permanently.
-    pcall(cmd.execute, {
+
+  -- MODIFIED: Only normalize position if explicitly wrong AND we have a window
+  if neo_win and pos and cfg.force_position_left and pos ~= "left" then
+    -- ADDED: Check if there's actually a Neo-tree window on the right
+    local has_right_neo = false
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      if win ~= neo_win and vim.api.nvim_win_is_valid(win) then
+        local buf = vim.api.nvim_win_get_buf(win)
+        if vim.bo[buf].filetype == "neo-tree" then
+          local win_pos = vim.api.nvim_win_get_position(win)
+          local cur_win_pos = vim.api.nvim_win_get_position(neo_win)
+          if win_pos[2] > cur_win_pos[2] then
+            has_right_neo = true
+            break
+          end
+        end
+      end
+    end
+
+    -- ADDED: Only relocate if there's actually a problematic right window
+    if has_right_neo then
+      local ok = pcall(function()
+        -- Close the right one first
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+          if win ~= neo_win and vim.api.nvim_win_is_valid(win) then
+            local buf = vim.api.nvim_win_get_buf(win)
+            if vim.bo[buf].filetype == "neo-tree" then
+              pcall(vim.api.nvim_win_close, win, true)
+            end
+          end
+        end
+
+        -- Then ensure left position
+        cmd.execute({
+          action = "show",
+          source = "filesystem",
+          position = "left",
+          dir = dir,
+          reveal = true,
+          reveal_file = path,
+        })
+      end)
+
+      if ok then
+        S.last_dir = dir
+      end
+
+      if cfg.keep_focus and prev_win and vim.api.nvim_win_is_valid(prev_win) then
+        pcall(vim.api.nvim_set_current_win, prev_win)
+      end
+      return
+    end
+  end
+
+  -- Normal path: just reveal without repositioning
+  local ok = pcall(function()
+    cmd.execute({
       action = "show",
       source = "filesystem",
-      position = "left", -- enforce left position
       dir = dir,
       reveal = true,
       reveal_file = path,
     })
-    S.last_dir = dir
-    if cfg.keep_focus and vim.api.nvim_win_is_valid(prev_win) then
-      pcall(vim.api.nvim_set_current_win, prev_win)
-    end
-    return
-  end
+  end)
 
-  -- Default path: show/update filesystem view in place (do not specify position so existing layout remains).
-  local ok = pcall(cmd.execute, {
-    action = "show",
-    source = "filesystem",
-    dir = dir,
-    reveal = true,
-    reveal_file = path,
-  })
   if ok then
     S.last_dir = dir
   end
 
-  if cfg.keep_focus and vim.api.nvim_win_is_valid(prev_win) then
+  if cfg.keep_focus and prev_win and vim.api.nvim_win_is_valid(prev_win) then
     pcall(vim.api.nvim_set_current_win, prev_win)
   end
 end
@@ -175,15 +224,21 @@ end
 --- Debounced scheduling facade around sync_now().
 ---@param cfg NeoTreeCwdSyncConfig
 local function schedule_sync(cfg)
-  ---@type uv.uv_timer_t
   local timer = get_timer()
-  ---@diagnostic disable-next-line: undefined-field  -- provided by libuv
   timer:stop()
-  -- One-shot timer to debounce frequent events (BufEnter/WinEnter/TabEnter).
-  ---@diagnostic disable-next-line: undefined-field
+
+  -- Don't sync if user just navigated manually
+  local time_since_action = vim.loop.now() - S.last_user_action
+  if S.user_navigated and time_since_action < 2000 then
+    return
+  end
+
   timer:start(cfg.debounce_ms, 0, function()
-    -- Hop back into the main loop to avoid UI reentrancy pitfalls.
     vim.schedule(function()
+      -- Reset flag after delay
+      if vim.loop.now() - S.last_user_action > 2000 then
+        S.user_navigated = false
+      end
       sync_now(cfg)
     end)
   end)
