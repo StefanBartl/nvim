@@ -160,68 +160,82 @@ function M.apply(bufnr)
   end, "[Custom.Markdown] Open image under cursor", o)
   map("n", "mj", anchor.jump, "[Custom.Markdown] Jump to TOC anchor", o)
 
-  -- Headings level shift ------------------------------------------------------
+  -- ============================================================================
+  -- Heading Level Shift - FIXED Visual Mode
+  -- ============================================================================
+
   local opts = with({ silent = true, noremap = true, nowait = true }, o)
 
-  -- Helper: safe wrapper to get whole buffer line range
+  -- Helper: get whole buffer line range
   local function whole_buf_lines_safe()
-    -- Always take the current buffer at execution time to avoid captured `bufnr` bugs.
     local b = api.nvim_get_current_buf()
-    -- Return 1-based inclusive start and end line numbers.
     return 1, api.nvim_buf_line_count(b)
   end
 
-  -- Count helper: returns a positive integer (1 if no count was given).
+  -- Helper: get count (defaults to 1)
   local function get_count_or_one()
-    -- vim.v.count1 yields 1 if no count prefix was provided, which is convenient.
     return vim.v.count1
   end
 
-  -- Line mappings (count-aware)
+  -- --------------------------------------------------------------------------
+  -- NORMAL MODE: Single line (allows creating headings)
+  -- --------------------------------------------------------------------------
+
   map("n", "<C-Right>", function()
     local n = get_count_or_one()
     local cur = api.nvim_win_get_cursor(0)
     headings.shift_range(cur[1], cur[1], n)
-  end, "[Custom.Markdown] Increase heading in line (count-aware)", opts)
+  end, "[Custom.Markdown] Increase heading (or create if none)", opts)
 
   map("n", "<C-Left>", function()
     local n = get_count_or_one()
     local cur = api.nvim_win_get_cursor(0)
     headings.shift_range(cur[1], cur[1], -n)
-  end, "[Custom.Markdown] Decrease heading in line (count-aware)", opts)
+  end, "[Custom.Markdown] Decrease heading (or remove if H1)", opts)
 
-  -- Visual mappings: process visual marks after exiting visual mode
+  -- --------------------------------------------------------------------------
+  -- VISUAL MODE: Selection (only modifies existing headings)
+  -- --------------------------------------------------------------------------
+
   map("v", "<C-Right>", function()
     local n = get_count_or_one()
     headings.shift_visual_selection(n)
-  end, "[Custom.Markdown] Increase headings in selection (count-aware)", opts)
+  end, "[Custom.Markdown] Increase existing headings in selection", opts)
 
   map("v", "<C-Left>", function()
     local n = get_count_or_one()
     headings.shift_visual_selection(-n)
-  end, "[Custom.Markdown] Decrease headings in selection (count-aware)", opts)
+  end, "[Custom.Markdown] Decrease existing headings in selection", opts)
 
-  -- Visual-Line mappings: process visual marks after exiting visual mode
+  -- --------------------------------------------------------------------------
+  -- VISUAL-LINE MODE: Selection (only modifies existing headings)
+  -- --------------------------------------------------------------------------
+
   map("x", "<C-Right>", function()
-    headings.shift_visual_selection(get_count_or_one())
-  end, "[Custom.Markdown] Increase headings in selection (count-aware)", opts)
+    local n = get_count_or_one()
+    headings.shift_visual_selection(n)
+  end, "[Custom.Markdown] Increase existing headings in selection", opts)
 
   map("x", "<C-Left>", function()
-    headings.shift_visual_selection(-get_count_or_one())
-  end, "[Custom.Markdown] Decrease headings in selection (count-aware)", opts)
+    local n = get_count_or_one()
+    headings.shift_visual_selection(-n)
+  end, "[Custom.Markdown] Decrease existing headings in selection", opts)
 
-  -- Whole-buffer mappings (count-aware)
+  -- --------------------------------------------------------------------------
+  -- WHOLE BUFFER: All headings (allows creating headings)
+  -- --------------------------------------------------------------------------
+
   map("n", "<S-Right>", function()
     local s, e = whole_buf_lines_safe()
     local n = get_count_or_one()
     headings.shift_range(s, e, n)
-  end, "[Custom.Markdown] Increase ALL headings (buffer, count-aware)", opts)
+  end, "[Custom.Markdown] Increase ALL headings in buffer", opts)
 
   map("n", "<S-Left>", function()
     local s, e = whole_buf_lines_safe()
     local n = get_count_or_one()
     headings.shift_range(s, e, -n)
-  end, "[Custom.Markdown] Decrease ALL headings (buffer, count-aware)", opts)
+  end, "[Custom.Markdown] Decrease ALL headings in buffer", opts)
 end
 
 return M

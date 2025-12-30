@@ -13,13 +13,13 @@
 --- @field newText string
 
 --- TextDocument identifier with version
---- @class LspVersionedTextDocumentIdentifier
+--- @class LspVersionedLspMod.TextDocumentIdentifier
 --- @field uri string
 --- @field version integer|nil
 
 --- A change to a single text document
 --- @class LspTextDocumentEdit
---- @field textDocument LspVersionedTextDocumentIdentifier
+--- @field textDocument LspVersionedLspMod.TextDocumentIdentifier
 --- @field edits LspTextEdit[]
 
 --- File operations in WorkspaceEdit (rename/create/delete)

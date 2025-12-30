@@ -1,7 +1,6 @@
 ---@module 'custom.markdown.core.headings'
 --- ATX heading navigation + level shifting. Pure logic, view preserved.
---- Provides a single exported `M.shift_range` that accepts arbitrary integer
---- deltas (positive => increase, negative => decrease).
+--- FIXED: Visual mode only modifies existing headings
 ---@class MarkdownHeadings
 local M = {}
 
@@ -14,33 +13,45 @@ local cfg = require("custom.markdown.config").get
 
 ---@return nil
 function M.goto_prev_heading()
-  -- Search backward for a heading starting with at least "## ".
   fn.search("^##\\+\\s\\+.*$", "bWs")
   cmd("nohlsearch")
 end
 
 ---@return nil
 function M.goto_next_heading()
-  -- Search forward for a heading starting with at least "## ".
   fn.search("^##\\+\\s\\+.*$", "Ws")
   cmd("nohlsearch")
 end
 
 -- ============================================================================
--- Core: shift a single heading line
+-- Helper: Check if line is a heading
 -- ============================================================================
 
---- Shift a single line with extended semantics:
---- - If no heading exists and delta > 0: insert "# " in front of the line
---- - If heading level == 1 and delta < 0: remove heading completely
---- - Otherwise: increase/decrease heading level within bounds
----
---- Returns the new line and a boolean indicating whether a change happened.
 ---@param line string
----@param delta integer
----@param min_level integer
----@return string, boolean
-local function shift_heading_line(line, delta, min_level)
+---@return boolean
+---@diagnostic disable-next-line: unused-local, unused-function
+local function is_heading(line)
+  return line:match("^%s*#+%s+") ~= nil
+end
+
+-- ============================================================================
+-- Core: shift a single heading line WITH context awareness
+-- ============================================================================
+
+--- Shift a single line with context-aware semantics:
+--- - In multi-line context (visual mode): ONLY process existing headings
+--- - In single-line context (normal mode): allow creating new headings
+---
+--- Parameters:
+--- @param line string The line to process
+--- @param delta integer Positive = increase level, negative = decrease level
+--- @param min_level integer Minimum allowed heading level (usually 1 or 2)
+--- @param allow_creation boolean If true, non-headings can become headings (normal mode)
+---
+--- Returns:
+--- @return string new_line The modified line
+--- @return boolean changed Whether the line was actually modified
+local function shift_heading_line(line, delta, min_level, allow_creation)
   -- Ignore empty or whitespace-only lines
   if line == "" or line:match("^%s*$") then
     return line, false
@@ -51,11 +62,12 @@ local function shift_heading_line(line, delta, min_level)
 
   -- Case 1: no heading exists
   if not hashes then
-    -- Only react to positive delta (increase)
-    if delta > 0 then
+    -- CRITICAL FIX: Only create new headings in single-line context
+    if delta > 0 and allow_creation then
       -- Prepend a level-1 heading
       return "# " .. line, true
     end
+    -- In multi-line context (visual mode), skip non-headings
     return line, false
   end
 
@@ -74,16 +86,33 @@ local function shift_heading_line(line, delta, min_level)
     return line, false
   end
 
-  return string.format("%s%s %s", indent, string.rep("#", new_level), rest), true
+  return string.format(
+    "%s%s %s",
+    indent,
+    string.rep("#", new_level),
+    rest
+  ), true
 end
 
--- Core buffer range shifter: internal implementation (unchanged)
-local function shift_range_internal(bufnr, srow, erow, delta, min_level)
-  -- nvim_buf_get_lines: start is 0-based inclusive, end is 0-based exclusive.
+-- ============================================================================
+-- Core buffer range shifter with context awareness
+-- ============================================================================
+
+--- Internal implementation with allow_creation parameter
+--- @param bufnr integer Buffer number
+--- @param srow integer Start row (1-based)
+--- @param erow integer End row (1-based)
+--- @param delta integer Shift amount
+--- @param min_level integer Minimum heading level
+--- @param allow_creation boolean Allow creating headings from non-headings
+--- @return integer changed Number of lines changed
+local function shift_range_internal(bufnr, srow, erow, delta, min_level, allow_creation)
+  -- nvim_buf_get_lines: start is 0-based inclusive, end is 0-based exclusive
   local lines = api.nvim_buf_get_lines(bufnr, srow - 1, erow, false)
   local changed = 0
   local in_fence = false
   local fence_pat = "^%s*([`~]{3,})"
+
   for i = 1, #lines do
     local line = lines[i]
     local fence = line:match(fence_pat)
@@ -91,28 +120,33 @@ local function shift_range_internal(bufnr, srow, erow, delta, min_level)
       in_fence = not in_fence
     end
     if not in_fence then
-      local out, did = shift_heading_line(line, delta, min_level)
+      local out, did = shift_heading_line(line, delta, min_level, allow_creation)
       if did then
         lines[i] = out
         changed = changed + 1
       end
     end
   end
+
   if changed > 0 then
     api.nvim_buf_set_lines(bufnr, srow - 1, erow, false, lines)
   end
+
   return changed
 end
 
---- Public: shift a given 1-based line range (operator/whole-buffer use).
---- Accepts any integer `delta` (positive => increase, negative => decrease).
---- Returns number of changed lines (0..).
----@param srow integer
----@param erow integer
----@param delta integer
----@return integer changed
+-- ============================================================================
+-- Public API: shift_range (for operator/programmatic use)
+-- ============================================================================
+
+--- Shift a given 1-based line range
+--- Automatically determines context: single-line allows creation, multi-line doesn't
+--- @param srow integer Start row (1-based)
+--- @param erow integer End row (1-based)
+--- @param delta integer Shift amount (positive = increase, negative = decrease)
+--- @return integer changed Number of lines changed
 function M.shift_range(srow, erow, delta)
-  -- validate args
+  -- Validate args
   if type(srow) ~= "number" or type(erow) ~= "number" then
     return 0
   end
@@ -123,7 +157,7 @@ function M.shift_range(srow, erow, delta)
     return 0
   end
 
-  -- guard filetype and buffer validity
+  -- Guard filetype and buffer validity
   if vim.bo.filetype ~= "markdown" then
     return 0
   end
@@ -132,12 +166,17 @@ function M.shift_range(srow, erow, delta)
     return 0
   end
 
-  -- determine minimal allowed heading level (H1 protection)
+  -- Determine minimal allowed heading level (H1 protection)
   local min_level = cfg().protect_h1 and 2 or 1
 
-  -- preserve view only if something changes
+  -- CRITICAL: Determine if we should allow creating new headings
+  -- Only in single-line context (normal mode on one line)
+  local is_single_line = (srow == erow)
+  local allow_creation = is_single_line
+
+  -- Preserve view only if something changes
   local view = fn.winsaveview()
-  local changed = shift_range_internal(bufnr, srow, erow, delta, min_level)
+  local changed = shift_range_internal(bufnr, srow, erow, delta, min_level, allow_creation)
 
   if changed > 0 then
     fn.winrestview(view)
@@ -146,8 +185,48 @@ function M.shift_range(srow, erow, delta)
   return changed
 end
 
--- Wrapper für Whole-Buffer oder aktuelle Auswahl (fix save/restore order + accept arbitrary delta)
----@param delta integer
+-- ============================================================================
+-- Visual Mode specific function (explicit multi-line context)
+-- ============================================================================
+
+--- Process current visual selection
+--- NEVER creates new headings, only processes existing ones
+--- @param delta integer Shift amount
+--- @return nil
+function M.shift_visual_selection(delta)
+  if type(delta) ~= "number" or delta == 0 then
+    return
+  end
+  if vim.bo.filetype ~= "markdown" then
+    return
+  end
+  local bufnr = api.nvim_get_current_buf()
+  if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then
+    return
+  end
+
+  -- Capture selection BEFORE exiting visual mode
+  local start_line = vim.fn.line("v")
+  local end_line = vim.fn.line(".")
+  local srow = math.min(start_line, end_line)
+  local erow = math.max(start_line, end_line)
+
+  -- Exit visual mode
+  vim.cmd('normal! \\<Esc>')
+
+  -- Process the captured range
+  -- Use shift_range which now automatically handles multi-line context
+  if srow > 0 and erow > 0 then
+    M.shift_range(srow, erow, delta)
+  end
+end
+
+-- ============================================================================
+-- Wrapper for selection (DEPRECATED - use shift_range or shift_visual_selection)
+-- ============================================================================
+
+--- Shift current selection or line
+--- @param delta integer
 function M.shift_selection(delta)
   if type(delta) ~= "number" or delta == 0 then
     return
@@ -175,30 +254,14 @@ function M.shift_selection(delta)
   srow = srow or api.nvim_win_get_cursor(0)[1]
   erow = erow or srow
 
-  -- use unified export
+  -- Use unified export with automatic context detection
   M.shift_range(srow, erow, delta)
 end
 
---- Process current visual selection (to be called from visual mode mapping)
---- Handles visual mode exit and mark retrieval internally
----@param delta integer
----@return nil
-function M.shift_visual_selection(delta)
-  -- CRITICAL: Capture BEFORE exiting visual mode!
-  local start_line = vim.fn.line("v")  -- start of visual
-  local end_line = vim.fn.line(".")    -- cursor (end)
+-- ============================================================================
+-- Operator helpers (UNCHANGED)
+-- ============================================================================
 
-  local srow = math.min(start_line, end_line)
-  local erow = math.max(start_line, end_line)
-
-  -- NOW exit visual mode
-  vim.cmd('normal! \\<Esc>')
-
-  -- Process the captured range
-  M.shift_range(srow, erow, delta)
-end
-
--- Operator helpers: read optional repeat count from buffer-local var
 local function op_get_repeat()
   local n = vim.b._markdown_heading_op_count
   if type(n) ~= "number" or n < 1 then
@@ -227,5 +290,81 @@ function M._op_decrease(_)
     M.shift_range(math.min(srow, erow), math.max(srow, erow), -n)
   end
 end
+
+-- ============================================================================
+-- ALTERNATIVE: Noch explizitere Trennung
+-- ============================================================================
+
+-- Noch deutlichere Unterscheidung zwischen Single-Line und Multi-Line bezüglich "wer darf 0 headline zu level 1 headline aufwerten"
+
+-- --- Shift single line (normal mode) - allows creating headings
+-- --- @param row integer Line number (1-based)
+-- --- @param delta integer
+-- --- @return integer changed
+-- function M.shift_single_line(row, delta)
+  -- if type(row) ~= "number" or row < 1 then
+    -- return 0
+  -- end
+  -- if type(delta) ~= "number" or delta == 0 then
+    -- return 0
+  -- end
+  -- if vim.bo.filetype ~= "markdown" then
+    -- return 0
+  -- end
+
+  -- local bufnr = api.nvim_get_current_buf()
+  -- if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then
+    -- return 0
+  -- end
+
+  -- local min_level = cfg().protect_h1 and 2 or 1
+  -- local view = fn.winsaveview()
+
+  -- EXPLICITLY allow creation in single-line mode
+  -- local changed = shift_range_internal(bufnr, row, row, delta, min_level, true)
+
+  -- if changed > 0 then
+    -- fn.winrestview(view)
+  -- end
+
+  -- return changed
+-- end
+
+-- --- Shift multiple lines (visual mode) - NEVER creates headings
+-- --- @param srow integer Start row (1-based)
+-- --- @param erow integer End row (1-based)
+-- --- @param delta integer
+-- --- @return integer changed
+-- function M.shift_multi_line(srow, erow, delta)
+  -- if type(srow) ~= "number" or type(erow) ~= "number" then
+    -- return 0
+  -- end
+  -- if srow < 1 or erow < srow then
+    -- return 0
+  -- end
+  -- if type(delta) ~= "number" or delta == 0 then
+    -- return 0
+  -- end
+  -- if vim.bo.filetype ~= "markdown" then
+    -- return 0
+  -- end
+
+  -- local bufnr = api.nvim_get_current_buf()
+  -- if not (api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_is_valid(bufnr)) then
+    -- return 0
+  -- end
+
+  -- local min_level = cfg().protect_h1 and 2 or 1
+  -- local view = fn.winsaveview()
+
+--  EXPLICITLY disallow creation in multi-line mode
+  -- local changed = shift_range_internal(bufnr, srow, erow, delta, min_level, false)
+
+  -- if changed > 0 then
+    -- fn.winrestview(view)
+  -- end
+
+  -- return changed
+-- end
 
 return M

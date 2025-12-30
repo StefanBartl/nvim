@@ -23,6 +23,14 @@ function M.setup()
   map("n", "<leader>fb", "<cmd>FzfLua grep_curbuf<CR>", { desc = "[FzfLua] Grep current buffer" })
 
   map("n", "<leader>fzf", ":FzfLua files<CR>", { desc = "[FzfLua] Files" })
+
+  map("n", "<leader>ftf", ":FzfLua treesitter<CR>", { desc = "[FzfLua] Search Tree-sitter symbols" })
+
+  map("n", "<leader>fws", function()
+    require("fzf-lua").lsp_workspace_symbols()
+  end, {
+    desc = "[FzfLua] Search workspace symbols (LSP)",
+  })
 end
 
 return M
