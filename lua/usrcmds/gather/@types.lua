@@ -18,10 +18,7 @@
 ---@field matches UsrCmds.Gather.Lua.Match[]
 ---@field errors string[]
 
----@class UsrCmds.Gather.Lua.GatherType
----| "functions"
----| "tables"
----| "strings"
+---@alias UsrCmds.Gather.Lua.GatherType "functions"|"tables"|"strings"
 
 ---@class UsrCmds.Gather.Config
 ---@field lua boolean  # Enable Lua gathering commands

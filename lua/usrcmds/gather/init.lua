@@ -17,23 +17,19 @@ function M.setup(opts)
       local arg = cmd_opts.args:match("%S+")
 
       ---@type UsrCmds.Gather.Lua.ScanMode
-      local mode = "buffer"
+      local mode = "buffer"  -- Default is buffer mode
 
       if arg == "cwd" then
         mode = "cwd"
-      elseif arg == "%" or arg == "buffer" or arg == "" then
-        mode = "buffer"
-      else
-        vim.notify("Invalid argument. Use: [empty], %, buffer, or cwd", vim.log.levels.ERROR)
-        return
+      -- All other cases (%, buffer, or empty) default to buffer mode
       end
 
       require("usrcmds.gather.lua").run(mode)
     end, {
       nargs = "?",
-      desc = "Gather Lua symbols (functions, tables, strings)",
+      desc = "Gather Lua symbols (functions, tables, strings). Default: buffer mode. Use 'cwd' for project-wide",
       complete = function()
-        return { "%", "buffer", "cwd" }
+        return { "%", "cwd" }
       end,
     })
   end

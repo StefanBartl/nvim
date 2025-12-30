@@ -47,19 +47,27 @@ local function run_cwd_mode(gather_type)
     return
   end
 
-  vim.notify("Scanning " .. #files .. " files...", vim.log.levels.INFO)
+  -- Show confirmation dialog with statistics
+  local confirm = require("usrcmds.gather.lua.confirm")
 
-  -- Scan all files
-  local file_matches = scanner.scan_files(files, gatherer.scan_buffer)
+  confirm.show_confirmation(files, function()
+    -- User confirmed - proceed with scan
+    vim.notify("Scanning " .. #files .. " files...", vim.log.levels.INFO)
 
-  if #file_matches == 0 then
-    vim.notify("No " .. gather_type .. " found in cwd", vim.log.levels.WARN)
-    return
-  end
+    -- Scan all files
+    local file_matches = scanner.scan_files(files, gatherer.scan_buffer)
 
-  -- Show picker
-  local picker = require("usrcmds.gather.lua.picker")
-  picker.show_picker(file_matches, gather_type)
+    if #file_matches == 0 then
+      vim.notify("No " .. gather_type .. " found in cwd", vim.log.levels.WARN)
+      return
+    end
+
+    -- Show picker
+    local picker = require("usrcmds.gather.lua.picker")
+    picker.show_picker(file_matches, gather_type)
+  end, function()
+    -- User cancelled - do nothing
+  end)
 end
 
 --- Open hover selection to choose gather type and mode
@@ -75,6 +83,7 @@ function M.run(mode)
       "strings",
     },
     on_select = function(selected)
+
       ---@type UsrCmds.Gather.Lua.GatherType
       local gather_type = selected
 

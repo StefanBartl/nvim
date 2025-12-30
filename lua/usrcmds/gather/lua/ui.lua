@@ -40,6 +40,7 @@ function M.open_scratch(lines, title)
   }
 
   for option, value in pairs(buf_opts) do
+    -- CRITICAL: nvim_set_option_value requires 3 arguments (option, value, opts)
     pcall(api.nvim_set_option_value, option, value, { buf = bufnr })
   end
 

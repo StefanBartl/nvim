@@ -42,63 +42,106 @@ function M.scan_buffer(bufnr)
 
   local root = trees[1]:root()
 
-  -- Comprehensive query covering all function definition patterns
-  local query_ok, query = pcall(ts.query.parse, "lua", [[
-    ; Top-level function declarations: function name()
-    (function_declaration
-      name: (identifier) @func)
-
-    ; Local function declarations: local function name()
-    (local_function
-      name: (identifier) @func)
-
-    ; Module/table method assignments: M.func = function()
-    (assignment_statement
-      (variable_list
-        (dot_index_expression
-          field: (identifier) @func))
-      (expression_list
-        (function_definition)))
-
-    ; Simple variable assignments: local func = function()
-    (assignment_statement
-      (variable_list
-        (identifier) @func)
-      (expression_list
-        (function_definition)))
-
-    ; Table field functions: { func = function() }
-    (field
-      name: (identifier) @func
-      value: (function_definition))
-  ]])
-
-  if not query_ok or not query then
-    table.insert(errors, "Failed to compile Tree-sitter query")
-    return { matches = matches, errors = errors }
-  end
-
   -- Track seen functions to avoid duplicates
   local seen = {}
 
-  -- Iterate over captures
-  for _, node in query:iter_captures(root, bufnr) do
-    local name = ts.get_node_text(node, bufnr)
+  -- Recursive function to traverse the syntax tree
+  local function visit(node)
+    local node_type = node:type()
 
-    if name and name ~= "" and not seen[name] then
-      seen[name] = true
+    -- Pattern 1: function declarations (function name() / local function name())
+    if node_type == "function_declaration" then
+      local name_nodes = node:field("name")
+      if name_nodes and #name_nodes > 0 then
+        local name = ts.get_node_text(name_nodes[1], bufnr)
+        if name and not seen[name] then
+          seen[name] = true
+          local row, col = name_nodes[1]:range()
+          table.insert(matches, {
+            name = name,
+            line = row + 1,
+            col = col,
+            file = nil,
+            context = nil,
+          })
+        end
+      end
+    end
 
-      local row, col = node:range()
+    -- Pattern 2: assignments with function_definition
+    if node_type == "assignment_statement" then
+      local var_list = node:field("left")
+      local expr_list = node:field("right")
 
-      table.insert(matches, {
-        name = name,
-        line = row + 1,  -- Convert to 1-based
-        col = col,
-        file = nil,
-        context = nil,
-      })
+      if var_list and expr_list and #var_list > 0 and #expr_list > 0 then
+        local var_node = var_list[1]
+        local expr_node = expr_list[1]
+
+        -- Check if right side is a function_definition
+        if expr_node:type() == "function_definition" then
+          local name = nil
+          local row, col = 0, 0
+
+          -- Extract name based on left side type
+          if var_node:type() == "identifier" then
+            -- Simple: func = function()
+            name = ts.get_node_text(var_node, bufnr)
+            row, col = var_node:range()
+
+          elseif var_node:type() == "dot_index_expression" then
+            -- Dot notation: M.func = function()
+            local field_nodes = var_node:field("field")
+            if field_nodes and #field_nodes > 0 then
+              name = ts.get_node_text(field_nodes[1], bufnr)
+              row, col = field_nodes[1]:range()
+            end
+          end
+
+          if name and not seen[name] then
+            seen[name] = true
+            table.insert(matches, {
+              name = name,
+              line = row + 1,
+              col = col,
+              file = nil,
+              context = nil,
+            })
+          end
+        end
+      end
+    end
+
+    -- Pattern 3: table fields with function values
+    if node_type == "field" then
+      local name_nodes = node:field("name")
+      local value_nodes = node:field("value")
+
+      if name_nodes and value_nodes and #name_nodes > 0 and #value_nodes > 0 then
+        if value_nodes[1]:type() == "function_definition" then
+          local name = ts.get_node_text(name_nodes[1], bufnr)
+          if name and not seen[name] then
+            seen[name] = true
+            local row, col = name_nodes[1]:range()
+            table.insert(matches, {
+              name = name,
+              line = row + 1,
+              col = col,
+              file = nil,
+              context = nil,
+            })
+          end
+        end
+      end
+    end
+
+    -- Recursively visit children
+    for child in node:iter_children() do
+      visit(child)
     end
   end
+
+  -- Start traversal
+  visit(root)
 
   -- Sort by name
   table.sort(matches, function(a, b)
