@@ -12,13 +12,16 @@ require("usrcmds.migrate.notify.@types")
 
 local M = {}
 
-local api = vim.api
+local api, cmd = vim.api, vim.cmd
+local nvim_buf_get_lines, nvim_buf_set_lines = api.nvim_buf_get_lines, api.nvim_buf_set_lines
+local tbl_insert = table.insert
+local str_fmt = string.format
 
 --- Check if buffer already imports lib.notify
 ---@param bufnr integer
 ---@return boolean has_import
 local function has_notify_import(bufnr)
-  local lines = api.nvim_buf_get_lines(bufnr, 0, 50, false)
+  local lines = nvim_buf_get_lines(bufnr, 0, 50, false)
 
   for _, line in ipairs(lines) do
     if line:match('require%s*%(?%s*["\']lib%.notify["\']%s*%)') then
@@ -36,7 +39,7 @@ function M.inject_import(bufnr)
     return
   end
 
-  local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local lines = nvim_buf_get_lines(bufnr, 0, -1, false)
   local insert_line = 0
 
   -- Find first non-comment, non-blank line after module header
@@ -49,7 +52,7 @@ function M.inject_import(bufnr)
   end
 
   local import = 'local notify = require("lib.notify")'
-  api.nvim_buf_set_lines(bufnr, insert_line, insert_line, false, { import, "" })
+  nvim_buf_set_lines(bufnr, insert_line, insert_line, false, { import, "" })
 end
 
 --- Apply single match replacement (public API)
@@ -66,7 +69,7 @@ function M.apply_match(bufnr, match)
 
   -- Handle multiline: replace entire range
   if start_line ~= end_line then
-    local lines = api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
+    local lines = nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
 
     if #lines == 0 then
       return false
@@ -78,7 +81,7 @@ function M.apply_match(bufnr, match)
     local before = first_line:sub(1, match.col)
     local new_line = before .. match.replacement
 
-    api.nvim_buf_set_lines(bufnr, start_line, end_line + 1, false, { new_line })
+    nvim_buf_set_lines(bufnr, start_line, end_line + 1, false, { new_line })
     return true
   end
 
@@ -94,7 +97,7 @@ function M.apply_match(bufnr, match)
   local after = original_line:sub(match.end_col + 1)
   local new_line = before .. match.replacement .. after
 
-  api.nvim_buf_set_lines(bufnr, start_line, start_line + 1, false, { new_line })
+  nvim_buf_set_lines(bufnr, start_line, start_line + 1, false, { new_line })
 
   return true
 end
@@ -113,7 +116,7 @@ function M.refactor_line(bufnr)
   local line_matches = {}
   for _, match in ipairs(matches) do
     if match.line == current_line then
-      table.insert(line_matches, match)
+      tbl_insert(line_matches, match)
     end
   end
 
@@ -126,7 +129,7 @@ function M.refactor_line(bufnr)
   end
 
   -- Create undo point
-  vim.cmd("undojoin")
+  cmd("undojoin")
 
   M.inject_import(bufnr)
 
@@ -137,7 +140,7 @@ function M.refactor_line(bufnr)
     if M.apply_match(bufnr, match) then
       modified = modified + 1
     else
-      table.insert(errors, string.format("Failed to apply match at line %d", match.line))
+      tbl_insert(errors, str_fmt("Failed to apply match at line %d", match.line))
     end
   end
 
@@ -164,7 +167,7 @@ function M.refactor_buffer(bufnr)
   end
 
   -- Create undo point
-  vim.cmd("undojoin")
+  cmd("undojoin")
 
   M.inject_import(bufnr)
 
@@ -181,7 +184,7 @@ function M.refactor_buffer(bufnr)
     if M.apply_match(bufnr, match) then
       modified = modified + 1
     else
-      table.insert(errors, string.format("Failed at line %d", match.line))
+      tbl_insert(errors, str_fmt("Failed at line %d", match.line))
     end
   end
 
@@ -204,7 +207,7 @@ function M.refactor_selections(selections)
 
     -- Create undo point per file
     api.nvim_buf_call(bufnr, function()
-      vim.cmd("undojoin")
+      cmd("undojoin")
     end)
 
     M.inject_import(bufnr)
@@ -221,7 +224,7 @@ function M.refactor_selections(selections)
       if M.apply_match(bufnr, match) then
         modified = modified + 1
       else
-        table.insert(errors, string.format("Line %d", match.line))
+        tbl_insert(errors, str_fmt("Line %d", match.line))
       end
     end
 

@@ -1,145 +1,214 @@
 ---@module 'usrcmds.migrate.notify'
----@brief Main entry point for notify migration commands.
+---@brief Migrate vim.notify to lib.notify.
 ---@description
---- Provides three operation modes:
----   1. :MigrateNotify         → refactor current line
----   2. :MigrateNotify %       → refactor buffer (Telescope picker)
----   3. :MigrateNotify cwd     → refactor cwd (Telescope picker)
----
---- Architecture:
----   - parser: Treesitter-based pattern detection
----   - refactor: Atomic buffer modifications
----   - telescope: Interactive selection UI
+--- Refactored to use common migration infrastructure.
+--- Supports: line, range, buffer (%), cwd modes.
+--- Uses Treesitter for accurate pattern detection.
+
+
+local command = require("usrcmds.migrate.common.command")
+local picker = require("usrcmds.migrate.common.picker")
+local buffer_ops = require("usrcmds.migrate.common.buffer")
+local parser = require("usrcmds.migrate.notify.parser")
+local refactor = require("usrcmds.migrate.notify.refactor")
 
 local M = {}
 
 local api = vim.api
+local tbl_insert = table.insert
 
---- Refactor current line or range
----@param line1 integer Start line (1-based)
----@param line2 integer End line (1-based)
-local function migrate_line_or_range(line1, line2)
-  local bufnr = api.nvim_get_current_buf()
-  local parser = require("usrcmds.migrate.notify.parser")
+---Convert parser matches to common match format
+---@param bufnr integer
+---@param parser_matches table[]
+---@return MigrateCommon.Match[]
+local function to_common_matches(bufnr, parser_matches)
+  local matches = {}
+  local fname = api.nvim_buf_get_name(bufnr)
 
-  local matches = parser.scan_buffer(bufnr)
+  for _, pm in ipairs(parser_matches) do
+    tbl_insert(matches, {
+      bufnr = bufnr,
+      fname = fname ~= "" and fname or nil,
+      lnum = pm.line,
+      text = pm.original,
+      migrated = pm.replacement,
+      source = "buf",
+      extra = {
+        end_line = pm.end_line,
+        col = pm.col,
+        end_col = pm.end_col,
+        log_level = pm.log_level,
+      },
+    })
+  end
 
-  -- Filter matches within range
+  return matches
+end
+
+---Scan buffer range for matches
+---@param bufnr integer
+---@param line1 integer 1-based start
+---@param line2 integer 1-based end
+---@return MigrateCommon.Match[]
+local function scan_range(bufnr, line1, line2)
+  if not api.nvim_buf_is_valid(bufnr) then
+    return {}
+  end
+
+  local all_matches = parser.scan_buffer(bufnr)
+
+  -- Filter to range
   local range_matches = {}
-  for _, match in ipairs(matches) do
+  for _, match in ipairs(all_matches) do
     if match.line >= line1 and match.line <= line2 then
-      table.insert(range_matches, match)
+      tbl_insert(range_matches, match)
     end
   end
 
-  if #range_matches == 0 then
-    vim.notify("No vim.notify patterns found in range", vim.log.levels.WARN)
-    return
-  end
-
-  -- Apply directly without picker for line/range mode
-  local refactor = require("usrcmds.migrate.notify.refactor")
-
-  -- Create undo point
-  vim.cmd("undojoin")
-
-  refactor.inject_import(bufnr)
-
-  -- Sort descending
-  table.sort(range_matches, function(a, b)
-    return a.end_line > b.end_line
-  end)
-
-  local modified = 0
-  for _, match in ipairs(range_matches) do
-    if refactor.apply_match(bufnr, match) then
-      modified = modified + 1
-    end
-  end
-
-  vim.notify(
-    string.format("Refactored %d match(es) in range", modified),
-    vim.log.levels.INFO
-  )
+  return to_common_matches(bufnr, range_matches)
 end
 
---- Refactor current buffer with Telescope
-local function migrate_buffer()
-  local bufnr = api.nvim_get_current_buf()
-  local parser = require("usrcmds.migrate.notify.parser")
+---Scan entire buffer
+---@param bufnr integer
+---@return MigrateCommon.Match[]
+local function scan_buffer(bufnr)
+  if not api.nvim_buf_is_valid(bufnr) then
+    return {}
+  end
 
   local matches = parser.scan_buffer(bufnr)
-
-  if #matches == 0 then
-    vim.notify("No vim.notify patterns found in buffer", vim.log.levels.WARN)
-    return
-  end
-
-  local path = api.nvim_buf_get_name(bufnr)
-  local file_matches = {
-    {
-      path = path,
-      matches = matches,
-    },
-  }
-
-  local telescope = require("usrcmds.migrate.notify.telescope")
-  telescope.show_picker(file_matches)
+  return to_common_matches(bufnr, matches)
 end
 
---- Refactor all Lua files in cwd
-local function migrate_cwd()
+---Scan cwd (all Lua files)
+---@return MigrateCommon.Match[]
+local function scan_cwd()
   local cwd = vim.fn.getcwd()
-
-  -- Find all Lua files
-  local files = vim.fn.globpath(cwd, "**/*.lua", false, true)
+  local files = buffer_ops.find_lua_files(cwd)
 
   if #files == 0 then
-    vim.notify("No Lua files found in cwd", vim.log.levels.WARN)
-    return
+    return {}
   end
 
-  local parser = require("usrcmds.migrate.notify.parser")
-  local file_matches = parser.scan_files(files)
+  local all_matches = {}
 
-  if #file_matches == 0 then
-    vim.notify("No vim.notify patterns found in cwd", vim.log.levels.WARN)
-    return
+  for _, filepath in ipairs(files) do
+    local bufnr = buffer_ops.ensure_buffer(filepath)
+    if bufnr then
+      local file_matches = parser.scan_buffer(bufnr)
+
+      for _, match in ipairs(file_matches) do
+        tbl_insert(all_matches, {
+          bufnr = bufnr,
+          fname = filepath,
+          lnum = match.line,
+          text = match.original,
+          migrated = match.replacement,
+          source = "file",
+          extra = {
+            end_line = match.end_line,
+            col = match.col,
+            end_col = match.end_col,
+            log_level = match.log_level,
+          },
+        })
+      end
+    end
   end
 
-  local telescope = require("usrcmds.migrate.notify.telescope")
-  telescope.show_picker(file_matches)
+  return all_matches
 end
 
---- Setup user commands
-function M.enable()
-  api.nvim_create_user_command("MigrateNotify", function(opts)
-    local arg = opts.args:match("%S+")
-
-    -- Handle range mode (visual selection or :1,5MigrateNotify)
-    if opts.range > 0 then
-      migrate_line_or_range(opts.line1, opts.line2)
-      return
+---Apply migrations
+---@param matches MigrateCommon.Match[]
+local function apply_matches(matches)
+  -- Group by buffer
+  local by_buffer = {}
+  for _, match in ipairs(matches) do
+    local bufnr = match.bufnr
+    if bufnr and not by_buffer[bufnr] then
+      by_buffer[bufnr] = {}
     end
+    tbl_insert(by_buffer[bufnr], match)
+  end
 
-    if not arg or arg == "" then
-      -- Single line mode (current line)
-      local cursor = api.nvim_win_get_cursor(0)
-      migrate_line_or_range(cursor[1], cursor[1])
-    elseif arg == "%" then
-      migrate_buffer()
-    elseif arg == "cwd" then
-      migrate_cwd()
-    else
-      vim.notify("Invalid argument. Use: [empty], %, or cwd", vim.log.levels.ERROR)
+  -- Apply per buffer
+  for bufnr, buf_matches in pairs(by_buffer) do
+    buffer_ops.create_undo_point(bufnr)
+    refactor.inject_import(bufnr)
+
+    -- Sort descending by end_line
+    table.sort(buf_matches, function(a, b)
+      return a.extra.end_line > b.extra.end_line
+    end)
+
+    for _, match in ipairs(buf_matches) do
+      -- Reconstruct parser match format
+      local parser_match = {
+        line = match.lnum,
+        end_line = match.extra.end_line,
+        col = match.extra.col,
+        end_col = match.extra.end_col,
+        replacement = match.migrated,
+      }
+
+      refactor.apply_match(bufnr, parser_match)
     end
-  end, {
-    nargs = "?",
-    range = true, -- Enable range support
-    desc = "Migrate vim.notify to lib.notify",
-    complete = function()
-      return { "%", "cwd" }
+  end
+end
+
+---Show picker with matches
+---@param matches MigrateCommon.Match[]
+local function show_picker_impl(matches)
+  picker.show(matches, {
+    title = "Migrate vim.notify → lib.notify",
+    single_apply = false,
+
+    format_entry = function(match)
+      local filename = match.fname
+        and vim.fn.fnamemodify(match.fname, ":t")
+        or ("buf:" .. match.bufnr)
+
+      local level = match.extra and match.extra.log_level or "INFO"
+
+      return string.format(
+        "%s:%d  [%s]  %s",
+        filename,
+        match.lnum,
+        level:lower(),
+        match.text:sub(1, 50)
+      )
     end,
+
+    format_preview = function(match)
+      return {
+        "-- Before:",
+        match.text,
+        "",
+        "-- After:",
+        match.migrated,
+      }
+    end,
+
+    on_apply = function(selections)
+      apply_matches(selections)
+      vim.notify(
+        string.format("Applied %d migration(s)", #selections),
+        vim.log.levels.INFO
+      )
+    end,
+  })
+end
+
+--- Enable command
+function M.enable()
+  command.register({
+    name = "MigrateNotify",
+    scan_range = scan_range,
+    scan_buffer = scan_buffer,
+    scan_cwd = scan_cwd,
+    apply_matches = apply_matches,
+    show_picker = show_picker_impl,
   })
 end
 

@@ -4,9 +4,12 @@
 --- Provides a reusable picker implementation for all migration types.
 --- Handles:
 ---   - Entry display with custom formatters
----   - Multi-select support
+---   - Multi-select support (<Tab>)
 ---   - Preview with syntax highlighting
 ---   - Apply callback hooks
+---   - Batch apply with <S-A>
+
+require("usrcmds.migrate.common.@types")
 
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
@@ -15,23 +18,19 @@ local action_state = require("telescope.actions.state")
 local previewers = require("telescope.previewers")
 local entry_display = require("telescope.pickers.entry_display")
 local conf = require("telescope.config").values
+local notify =require("lib.notify")
 
 local M = {}
 
----@class MigrateCommon.PickerOpts
----@field title string                       # Picker prompt title
----@field format_entry fun(match: table): string # Format match for display
----@field format_preview fun(match: table): string[] # Generate preview lines
----@field on_apply fun(selections: table[]) # Callback for applying migrations
----@field single_apply boolean|nil          # Apply single match immediately
+local api = vim.api
 
 --- Show generic migration picker
----@param matches table[] List of matches (any structure)
+---@param matches MigrateCommon.Match[]
 ---@param opts MigrateCommon.PickerOpts
 function M.show(matches, opts)
-  -- Handle empty matches
-  if #matches == 0 then
-    vim.notify("No matches found", vim.log.levels.INFO)
+  -- Validate matches
+  if not matches or #matches == 0 then
+    notify.info("No matches found")
     return
   end
 
@@ -43,10 +42,10 @@ function M.show(matches, opts)
 
   -- Build entry displayer
   local displayer = entry_display.create({
-    separator = " ",
+    separator = " │ ",
     items = {
-      { width = 40 },        -- Location
-      { remaining = true },  -- Content
+      { width = 35 },        -- Location (file:line or buf:line)
+      { remaining = true },  -- Content preview
     },
   })
 
@@ -55,13 +54,17 @@ function M.show(matches, opts)
   for _, match in ipairs(matches) do
     local display_text = opts.format_entry(match)
 
+    -- Extract location and content parts
+    local location = display_text:match("^(.-)  ") or display_text:sub(1, 35)
+    local content = display_text:match("  (.+)$") or ""
+
     table.insert(entries, {
       value = match,
       ordinal = display_text,
       display = function()
         return displayer({
-          { display_text:sub(1, 40), "Comment" },
-          { display_text:sub(41), "Normal" }
+          { location, "Comment" },
+          { content, "Normal" }
         })
       end,
     })
@@ -77,16 +80,30 @@ function M.show(matches, opts)
     }),
 
     previewer = previewers.new_buffer_previewer({
-      title = "Preview",
+      title = "Migrated Preview",
       define_preview = function(self, entry)
         local lines = opts.format_preview(entry.value)
-        vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-        vim.api.nvim_set_option_value("filetype", "lua", { buf = self.state.bufnr })
+        api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+
+        -- Set filetype for syntax highlighting
+        api.nvim_set_option_value("filetype", "lua", { buf = self.state.bufnr })
+
+        -- Highlight the migrated line
+        if #lines > 0 then
+          api.nvim_buf_add_highlight(
+            self.state.bufnr,
+            -1,
+            "DiffAdd",
+            0,
+            0,
+            -1
+          )
+        end
       end,
     }),
 
     sorter = conf.generic_sorter({}),
-    selection_caret = "* ",
+    selection_caret = "▶ ",
 
     attach_mappings = function(prompt_bufnr)
       --- Apply to selected or multi-selected entries
@@ -106,14 +123,25 @@ function M.show(matches, opts)
           table.insert(matches_to_apply, entry.value)
         end
 
-        opts.on_apply(matches_to_apply)
+        -- Call apply callback
+        local ok, err = pcall(opts.on_apply, matches_to_apply)
+        if not ok then
+          notify.error("Migration failed: " .. tostring(err))
+        end
+      end
+
+      --- Apply all matches (batch mode)
+      local function apply_all()
+        actions.close(prompt_bufnr)
+
+        local ok, err = pcall(opts.on_apply, matches)
+        if not ok then
+          notify.error("Batch migration failed: " .. tostring(err))
+        end
       end
 
       vim.keymap.set({ "i", "n" }, "<CR>", apply, { buffer = prompt_bufnr })
-      vim.keymap.set({ "i", "n" }, "<S-A>", function()
-        actions.close(prompt_bufnr)
-        opts.on_apply(matches)
-      end, { buffer = prompt_bufnr })
+      vim.keymap.set({ "i", "n" }, "<S-A>", apply_all, { buffer = prompt_bufnr })
 
       return true
     end,

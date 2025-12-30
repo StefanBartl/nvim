@@ -54,6 +54,8 @@ stack traceback:
 
 ...dann muss mian wieder nach vor "gehen" mit node opens um dort hinzukommen wo man ist. Spezielafall: wen man neotree schließ, dann wieder ffnet ist es wieder iene ebene näher am der richtigen ebene, dan nwieder schlißen und öffnen und er springt wieder eine eben näher zu dem file in der man ist.
 
+- Weiteres beispiel: ich habe eine datei tief im cwd offen. ich gehe in neotree updir zum ordner meiner file, setze dies damit auf cwd. springe nun mit dem cursor in den buffer und neotree cwd fällt auf den projekt root zurück. Lösung eventuell -> cwd nur dann neu setzen bei reveal, wenn man updir ist. geht man downdir wird es cwd sowies neu gesetzt und wenn nicht, dann muss bei downdir maximal der parent ofolder als cwd gesetzt werden. als probieren mit: reveal nur mit updir
+
 ---
 
 #### neotreee manchmal auch ohne usrcmd schließt sich der linke neotree und öffnet sich der rechte

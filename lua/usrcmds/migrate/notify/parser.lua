@@ -12,17 +12,17 @@ require("usrcmds.migrate.notify.@types")
 
 local M = {}
 
-local api = vim.api
+local api, treesitter, levels = vim.api, vim.treesitter, vim.log.levels
 
 --- Map log level constants to method names
 ---@type table<integer, string>
 local LEVEL_TO_METHOD = {
-  [vim.log.levels.TRACE] = "trace",
-  [vim.log.levels.DEBUG] = "debug",
-  [vim.log.levels.INFO] = "info",
-  [vim.log.levels.WARN] = "warn",
-  [vim.log.levels.ERROR] = "error",
-  [vim.log.levels.OFF] = "off",
+  [levels.TRACE] = "trace",
+  [levels.DEBUG] = "debug",
+  [levels.INFO] = "info",
+  [levels.WARN] = "warn",
+  [levels.ERROR] = "error",
+  [levels.OFF] = "off",
 }
 
 --- Extract log level from vim.log.levels.* node
@@ -34,7 +34,7 @@ local function extract_log_level(node, bufnr)
     return nil
   end
 
-  local text = vim.treesitter.get_node_text(node, bufnr)
+  local text = treesitter.get_node_text(node, bufnr)
 
   -- Match patterns: vim.log.levels.INFO, levels.INFO
   local level = text:match("%.(%u+)$")
@@ -76,7 +76,7 @@ local function parse_arguments(call_node, bufnr)
 
   -- First argument: message (string literal or variable)
   local msg_node = children[1]
-  local message = vim.treesitter.get_node_text(msg_node, bufnr)
+  local message = treesitter.get_node_text(msg_node, bufnr)
 
   -- Second argument: log level (optional)
   local level = nil
@@ -97,7 +97,7 @@ local function is_notify_call(call_node, bufnr)
     return false, nil
   end
 
-  local func_text = vim.treesitter.get_node_text(func_node, bufnr)
+  local func_text = treesitter.get_node_text(func_node, bufnr)
 
   -- Direct: vim.notify
   if func_text == "vim.notify" then
@@ -135,7 +135,7 @@ function M.scan_buffer(bufnr)
     return {}
   end
 
-  local parser = vim.treesitter.get_parser(bufnr, "lua")
+  local parser = treesitter.get_parser(bufnr, "lua")
   if not parser then
     return {}
   end
@@ -160,7 +160,7 @@ function M.scan_buffer(bufnr)
         if message then
           ---@diagnostic disable-next-line: undefined-field
           local start_row, start_col, end_row, end_col = node:range()
-          local original = vim.treesitter.get_node_text(node, bufnr)
+          local original = treesitter.get_node_text(node, bufnr)
 
           table.insert(matches, {
             line = start_row + 1, -- Convert to 1-based
