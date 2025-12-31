@@ -19,7 +19,6 @@ local undo = require("config.neotree.undo")
 
 local fn, cmd = vim.fn, vim.cmd
 local notify, levels = vim.notify, vim.log.levels
-local desc_tag = "[neotree.keymaps.custom] "
 
 -- ========= Window mappings (no nested tables; every key maps to a function/command) =========
 
@@ -158,14 +157,14 @@ return {
     function(_)
       save_adjacent()
     end,
-    desc = desc_tag .. "force-save last normal buffer (w!)",
+    desc = "force-save last normal buffer (w!)",
   },
 
   ["<M-s>"] = {
     function(_)
       save_node()
     end,
-    desc = desc_tag .. "force-save buffer matching node under cursor (w!)",
+    desc = "force-save buffer matching node under cursor (w!)",
   },
 
   -- ================ Replace Buffer And Focus ==========================
@@ -189,30 +188,34 @@ return {
 
   -- ======================   MISC   =================================
 
+  ["<"] = "noop",
+
   ["D"] = "diff_files",
 
   ["I"] = {
     function(state)
       node_informations.show_from_neotree(state)
     end,
-    desc = desc_tag .. "Show file or directory information (hover)",
+    desc = "Show file or directory information (hover)",
   },
 
   -- resize helper
-  -- FIX: add description tag
-  ["w"] = function(state)
-    local normal = state.window.width
-    local large = normal * 1.9
-    local small = math.floor(normal / 1.6)
-    local cur_width = state.win_width
-    local new_width = normal
-    if cur_width > normal then
-      new_width = small
-    elseif cur_width == normal then
-      new_width = large
-    end
-    cmd(new_width .. " wincmd |")
-  end,
+  ["w"] = {
+    function(state)
+      local normal = state.window.width
+      local large = normal * 1.9
+      local small = math.floor(normal / 1.6)
+      local cur_width = state.win_width
+      local new_width = normal
+      if cur_width > normal then
+        new_width = small
+      elseif cur_width == normal then
+        new_width = large
+      end
+      cmd(new_width .. " wincmd |")
+    end,
+    desc = "Resize the neotree window",
+  },
 
   ["Y"] = {
     function(state)
@@ -220,14 +223,14 @@ return {
       local path = node:get_id()
       fn.setreg("+", path, "c")
     end,
-    desc = desc_tag .. "Copy Path to Clipboard",
+    desc = "Copy Path to Clipboard",
   },
 
   ["O"] = {
     function(state)
       require("lazy.util").open(state.tree:get_node().path, { system = true })
     end,
-    desc = desc_tag .. "Open with System Application",
+    desc = "Open with System Application",
   },
 
   ["L"] = {
@@ -247,7 +250,7 @@ return {
       end
       fm.open(state)
     end,
-    desc = desc_tag .. "Open in system file manager",
+    desc = "Open in system file manager",
   },
 
   ["[l"] = {
@@ -259,14 +262,14 @@ return {
         vim.notify("No node under cursor", vim.log.levels.WARN)
       end
     end,
-    desc = desc_tag .. "Copy Lua require() string(s) for current node (file or folder) to clipboard",
+    desc = "Copy Lua require() string(s) for current node (file or folder) to clipboard",
   },
 
   ["grep"] = {
     function(state)
       fzf_grep_picker.live_grep_node_dir(state)
     end,
-    desc = desc_tag .. "fzf-lua: live_grep in node directory (Windows/WSL/macOS/Linux)",
+    desc = "fzf-lua: live_grep in node directory (Windows/WSL/macOS/Linux)",
   },
 
   -- ================= Traverse Updir/Downdir  ==========================
@@ -291,51 +294,63 @@ return {
       end
       notify(("cwd → %s"):format(dir), levels.INFO)
     end,
-    desc = desc_tag .. "Set Neovim cwd to node and focus Neo-tree there",
+    desc = "Set Neovim cwd to node and focus Neo-tree there",
   },
 
   ["-"] = {
     function(state)
       updir.up_one_level(state)
     end,
-    desc = desc_tag .. "Up one level (in-place) and adjust CWD",
+    desc = "Up one level (in-place) and adjust CWD",
   },
 
   -- ================= Mark Operations (Fixed) =========================
   -- Note: <C-c> and <C-a> are problematic in Neovim terminals
   -- Using <leader>m prefix for mark operations instead
 
-  -- Mark/Unmark single file
-  ["m"] = function(state)
-    commands.mark.toggle_mark(state)
-  end,
+  ["m"] = {
+    function(state)
+      commands.mark.toggle_mark(state)
+    end,
+    desc = "Mark/Unmark single file",
+  },
 
-  -- Mark all files in directory - using <leader>ma (m = mark, a = all)
-  ["<S-m>"] = function(state)
-    commands.mark.mark_all_in_directory(state)
-  end,
+  ["<S-m>"] = {
+    function(state)
+      commands.mark.mark_all_in_directory(state)
+    end,
+    desc = "Mark all files in directory",
+  },
 
-  -- Clear all marks - using <leader>mc (m = mark, c = clear)
-  ["<leader>mc"] = function(state)
-    commands.mark.clear_all_marks(state)
-  end,
+  ["<leader>mc"] = {
+    function(state)
+      commands.mark.clear_all_marks(state)
+    end,
+    desc = "Clear all marks",
+  },
 
   -- ================= Trash Operations =========================
 
-  -- Delete marked files or file under cursor
-  ["dd"] = function(state)
-    trash.neotree_send_node_to_trash(state)
-  end,
+  ["dd"] = {
+    function(state)
+      trash.neotree_send_node_to_trash(state)
+    end,
+    desc = "Delete marked files or file under cursor",
+  },
 
-  -- Undo last trash (Shift+U)
-  ["U"] = function(state)
-    undo.neotree_undo_trash(state)
-  end,
+  ["U"] = {
+    function(state)
+      undo.neotree_undo_trash(state)
+    end,
+    desc = "Undo last trash",
+  },
 
-  -- Show trash history (optional)
-  ["<leader>th"] = function(_)
-    undo.show_history()
-  end,
+  ["<leader>th"] = {
+    function(_)
+      undo.show_history()
+    end,
+    desc = "Show trash history (optional)",
+  },
 
   -- ================ Path & File Lists Operations ===================
 
@@ -351,7 +366,7 @@ return {
       fn.setreg("+", path, "c")
       notify(("copied: %s"):format(path), levels.INFO)
     end,
-    desc = desc_tag .. "Copy absolute path (+)",
+    desc = "Copy absolute path (+)",
   },
 
   ["]p"] = {
@@ -366,7 +381,7 @@ return {
       fn.setreg("+", base, "c")
       notify(("copied: %s"):format(base), levels.INFO)
     end,
-    desc = desc_tag .. "Copy base (dir) path (+)",
+    desc = "Copy base (dir) path (+)",
   },
 
   --- FIX: This is not relative, but absolute
@@ -384,7 +399,7 @@ return {
       fn.setreg("+", path, "c")
       notify(("Copied relative path: %s"):format(path), levels.INFO)
     end,
-    desc = desc_tag .. "Copy relative path (+) (root→node or cwd→node)",
+    desc = "Copy relative path (+) (root→node or cwd→node)",
   },
 
   ["[r"] = {
@@ -401,34 +416,34 @@ return {
       fn.setreg("+", path, "c")
       notify(("Copied relative base dir: %s"):format(path), levels.INFO)
     end,
-    desc = desc_tag .. "Copy relative base dir (+) (root→dir or cwd→dir)",
+    desc = "Copy relative base dir (+) (root→dir or cwd→dir)",
   },
 
   ["[f"] = {
     function(state)
       copy_node_folders_handler(state, { relative_to_cwd = false, preview_limit = 20 })
     end,
-    desc = desc_tag .. "Copy recursive folder list (absolute paths) to clipboard (+)",
+    desc = "Copy recursive folder list (absolute paths) to clipboard (+)",
   },
 
   ["[F"] = {
     function(state)
       copy_node_folders_handler(state, { relative_to_cwd = true, preview_limit = 20 })
     end,
-    desc = desc_tag .. "Copy recursive folder list (relative to cwd) to clipboard (+)",
+    desc = "Copy recursive folder list (relative to cwd) to clipboard (+)",
   },
 
   ["[t"] = {
     function(state)
       copy_node_entries_handler(state, { relative_to_cwd = false, preview_limit = 20 })
     end,
-    desc = desc_tag .. "Copy recursive file list (absolute paths) to clipboard (+)",
+    desc = "Copy recursive file list (absolute paths) to clipboard (+)",
   },
 
   ["[T"] = {
     function(state)
       copy_node_entries_handler(state, { relative_to_cwd = true, preview_limit = 20 })
     end,
-    desc = desc_tag .. "Copy recursive file list (relative to cwd) to clipboard (+)",
+    desc = "Copy recursive file list (relative to cwd) to clipboard (+)",
   },
 }
