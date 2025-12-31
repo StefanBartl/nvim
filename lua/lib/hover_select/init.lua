@@ -1,6 +1,6 @@
 ---@module 'lib.hover_select'
 ---@description Main module for creating interactive hover selection windows
----with line-wise navigation and custom selection callbacks
+---with line-wise navigation, multi-selection, and custom selection callbacks
 
 local M = {}
 
@@ -17,10 +17,13 @@ local state = {
   winid = nil,
   items = {},
   on_select = nil,
+  multi_select = false,
+  selections = {},
+  ns_id = api.nvim_create_namespace("hover_select"),
 }
 
 ---Open a new hover selection window with the given items
----@param opts HoverSelectOptions Configuration options
+---@param opts Lib.HoverSelect.Options Configuration options
 ---@return integer|nil bufnr Buffer number, or nil on failure
 ---@return integer|nil winid Window ID, or nil on failure
 function M.open(opts)
@@ -37,64 +40,6 @@ function M.open(opts)
 
   -- Close any existing instance
   M.close()
-
-
--- Debug helper to check if Tab mappings are working
--- Run this after opening hover_select
-
-local function debug_hover_select_mappings()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local bufname = vim.api.nvim_buf_get_name(bufnr)
-
-  print("=== Hover Select Debug ===")
-  print("Buffer number:", bufnr)
-  print("Buffer name:", bufname)
-  print("Buffer valid:", vim.api.nvim_buf_is_valid(bufnr))
-  print("Window ID:", vim.api.nvim_get_current_win())
-
-  -- Check normal mode mappings
-  print("\n=== Normal Mode Mappings ===")
-  local n_maps = vim.api.nvim_buf_get_keymap(bufnr, 'n')
-
-  for _, map in ipairs(n_maps) do
-    if map.lhs == "<Tab>" or map.lhs == "<S-Tab>" then
-      print(string.format("%s -> %s (buffer: %s)",
-        map.lhs,
-        map.rhs or "function",
-        map.buffer and "yes" or "no"
-      ))
-    end
-  end
-
-  -- Test Tab mapping directly
-  print("\n=== Direct Test ===")
-  local ok, result = pcall(function()
-    local winid = vim.api.nvim_get_current_win()
-    local cursor_before = vim.api.nvim_win_get_cursor(winid)
-    print("Cursor before:", vim.inspect(cursor_before))
-
-    -- Simulate Tab press
-    vim.api.nvim_feedkeys(
-      vim.api.nvim_replace_termcodes("<Tab>", true, false, true),
-      'n',
-      false
-    )
-
-    vim.defer_fn(function()
-      local cursor_after = vim.api.nvim_win_get_cursor(winid)
-      print("Cursor after:", vim.inspect(cursor_after))
-    end, 100)
-  end)
-
-  if not ok then
-    print("Error:", result)
-  end
-end
-
--- Create user command for easy debugging
-vim.api.nvim_create_user_command('HoverSelectDebug', debug_hover_select_mappings, {})
-
-print("Debug helper loaded. Open hover_select and run :HoverSelectDebug")
 
   -- Extract configuration options
   local use_tab_navigation = opts.use_tab_navigation or false
@@ -119,8 +64,20 @@ print("Debug helper loaded. Open hover_select and run :HoverSelectDebug")
     items_count = #opts.items,
   }
 
-  -- Create floating window (pass items for auto-width calculation)
-  local winid = window.create(bufnr, win_config, merged_win_opts, opts.items, auto_width)
+  -- Create floating window (pass items for auto-width calculation if window.create supports it)
+  local winid
+  if type(window.create) == "function" then
+    -- Check if window.create accepts additional parameters
+    local create_params = debug.getinfo(window.create, "u").nparams
+    if create_params >= 5 then
+      winid = window.create(bufnr, win_config, merged_win_opts, opts.items, auto_width)
+    else
+      winid = window.create(bufnr, win_config, merged_win_opts)
+    end
+  else
+    winid = window.create(bufnr, win_config, merged_win_opts)
+  end
+
   if not winid then
     api.nvim_buf_delete(bufnr, { force = true })
     return nil, nil
@@ -131,14 +88,47 @@ print("Debug helper loaded. Open hover_select and run :HoverSelectDebug")
   state.winid = winid
   state.items = opts.items
   state.on_select = opts.on_select
+  state.multi_select = opts.multi_select or false
+  state.selections = {}
 
   -- Setup highlight for current line
   highlight.setup(winid)
 
-  -- Setup navigation keymaps (with optional Tab navigation)
+  -- Setup navigation keymaps
+  local on_toggle = nil
+
+  -- Multi-select mode: Tab toggles selection
+  if state.multi_select then
+    on_toggle = function()
+      M._toggle_selection()
+    end
+  -- Legacy use_tab_navigation mode: Tab for navigation (deprecated in favor of j/k)
+  elseif use_tab_navigation then
+    -- Note: use_tab_navigation is deprecated. Use j/k for navigation.
+    -- This is kept for backward compatibility.
+    on_toggle = function()
+      -- Simple navigation without toggle
+      local winid_local = api.nvim_get_current_win()
+      if not api.nvim_win_is_valid(winid_local) then
+        return
+      end
+
+      local buf = api.nvim_win_get_buf(winid_local)
+      local cursor = api.nvim_win_get_cursor(winid_local)
+      local line_count = api.nvim_buf_line_count(buf)
+
+      local next_line = cursor[1] + 1
+      if next_line > line_count then
+        next_line = 1
+      end
+
+      api.nvim_win_set_cursor(winid_local, { next_line, 0 })
+    end
+  end
+
   navigation.setup(bufnr, function()
     M._handle_selection()
-  end, use_tab_navigation)
+  end, on_toggle)
 
   -- Set cursor to first line
   api.nvim_win_set_cursor(winid, { 1, 0 })
@@ -153,6 +143,8 @@ function M.close()
   end
 
   if state.bufnr and api.nvim_buf_is_valid(state.bufnr) then
+    -- Clear highlights before deleting
+    highlight.clear_marks(state.bufnr, state.ns_id)
     api.nvim_buf_delete(state.bufnr, { force = true })
   end
 
@@ -161,9 +153,57 @@ function M.close()
   state.winid = nil
   state.items = {}
   state.on_select = nil
+  state.multi_select = false
+  state.selections = {}
 end
 
----Handle selection of current line
+---Toggle selection for current line (multi-select mode)
+---@private
+function M._toggle_selection()
+  if not state.winid or not api.nvim_win_is_valid(state.winid) then
+    return
+  end
+
+  if not state.bufnr or not api.nvim_buf_is_valid(state.bufnr) then
+    return
+  end
+
+  -- Get current cursor position
+  local cursor = api.nvim_win_get_cursor(state.winid)
+  local line_idx = cursor[1]
+
+  -- Toggle selection
+  state.selections[line_idx] = not state.selections[line_idx]
+
+  -- Update highlights
+  M._update_selection_highlights()
+end
+
+---Update visual highlights for all selected lines
+---@private
+function M._update_selection_highlights()
+  if not state.bufnr or not api.nvim_buf_is_valid(state.bufnr) then
+    return
+  end
+
+  -- Clear existing marks
+  highlight.clear_marks(state.bufnr, state.ns_id)
+
+  -- Collect selected line numbers
+  local selected_lines = {}
+  for line_idx, selected in pairs(state.selections) do
+    if selected then
+      table.insert(selected_lines, line_idx)
+    end
+  end
+
+  -- Mark selected lines
+  if #selected_lines > 0 then
+    highlight.mark_selected(state.bufnr, state.ns_id, selected_lines)
+  end
+end
+
+---Handle selection of current line or multiple lines
 ---@private
 function M._handle_selection()
   if not state.winid or not api.nvim_win_is_valid(state.winid) then
@@ -174,23 +214,70 @@ function M._handle_selection()
   local cursor = api.nvim_win_get_cursor(state.winid)
   local line_idx = cursor[1]
 
-  -- Get selected item
-  local selected_item = state.items[line_idx]
-  if not selected_item then
-    notify("lib.hover_select: invalid selection", vim.log.levels.WARN)
-    M.close()
-    return
-  end
-
   -- Store callback before closing (window close might clear state)
   local callback = state.on_select
+  local multi_mode = state.multi_select
 
-  -- Close window and buffer
-  M.close()
+  if multi_mode then
+    -- Multi-select mode: return all selected items (or current if none selected)
+    local selected_items = {}
+    local selected_indices = {}
 
-  -- Execute callback
-  if callback then
-    callback(selected_item, line_idx)
+    -- Check if any items are selected
+    local has_selections = false
+    for _, selected in pairs(state.selections) do
+      if selected then
+        has_selections = true
+        break
+      end
+    end
+
+    if has_selections then
+      -- Return all selected items (sorted by index)
+      local sorted_indices = {}
+      for idx, selected in pairs(state.selections) do
+        if selected and state.items[idx] then
+          table.insert(sorted_indices, idx)
+        end
+      end
+      table.sort(sorted_indices)
+
+      for _, idx in ipairs(sorted_indices) do
+        table.insert(selected_items, state.items[idx])
+        table.insert(selected_indices, idx)
+      end
+    else
+      -- No selections: return current line
+      if state.items[line_idx] then
+        table.insert(selected_items, state.items[line_idx])
+        table.insert(selected_indices, line_idx)
+      end
+    end
+
+    -- Close window and buffer
+    M.close()
+
+    -- Execute callback with arrays
+    if callback and #selected_items > 0 then
+      callback(selected_items, selected_indices)
+    end
+
+  else
+    -- Single-select mode: return current item
+    local selected_item = state.items[line_idx]
+    if not selected_item then
+      notify("lib.hover_select: invalid selection", vim.log.levels.WARN)
+      M.close()
+      return
+    end
+
+    -- Close window and buffer
+    M.close()
+
+    -- Execute callback
+    if callback then
+      callback(selected_item, line_idx)
+    end
   end
 end
 
@@ -199,7 +286,5 @@ end
 function M.is_open()
   return state.winid ~= nil and api.nvim_win_is_valid(state.winid)
 end
-
-
 
 return M

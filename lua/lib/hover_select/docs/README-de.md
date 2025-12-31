@@ -32,6 +32,109 @@ Nicht jede Auswahl in Neovim erfordert ein umfangreiches Framework wie Telescope
 
 ---
 
+### Mehrfachauswahl
+
+#### Überblick
+
+hover-select unterstützt nun Mehrfachauswahl über Tastenkombinationen. Benutzer können mehrere Einträge markieren, bevor sie die Auswahl bestätigen.
+
+#### Aktivierung der Mehrfachauswahl
+
+Setze `multi_select = true` in der Optionen-Tabelle:
+
+```lua
+hover_select.open({
+  items = { "Eintrag 1", "Eintrag 2", "Eintrag 3" },
+  multi_select = true,
+  on_select = function(selected, indices)
+    -- selected: Array der ausgewählten Einträge
+    -- indices: Array der zugehörigen Zeilennummern (1-basiert)
+    vim.notify("Ausgewählt: " .. table.concat(selected, ", "))
+  end,
+})
+```
+
+#### Tastenbelegung (Mehrfachauswahl-Modus)
+
+| Taste | Aktion |
+|-------|--------|
+| `<Tab>` | Aktuelle Zeile markieren/demarkieren |
+| `<S-Tab>` | Aktuelle Zeile markieren und Cursor nach oben |
+| `<CR>` | Auswahl bestätigen (alle markierten Einträge oder aktuelle Zeile) |
+| `<Esc>` / `q` | Schließen ohne Auswahl |
+
+#### Änderungen an der Callback-Signatur
+
+**Einzelauswahl-Modus** (Standard):
+```lua
+on_select = function(selected, index)
+  -- selected: string (einzelner Eintrag)
+  -- index: integer (1-basierte Zeilennummer)
+end
+```
+
+**Mehrfachauswahl-Modus** (`multi_select = true`):
+```lua
+on_select = function(selected, indices)
+  -- selected: string[] (Array von Einträgen)
+  -- indices: integer[] (Array von Zeilennummern)
+end
+```
+
+**Hinweis**: Wenn keine Einträge explizit mit Tab markiert wurden, gibt Enter die aktuelle Zeile als Array mit einem Element zurück.
+
+#### Visuelle Rückmeldung
+
+- **Cursor-Zeile**: Hervorgehoben mit `HoverSelectCursor` (verknüpft mit `PmenuSel`)
+- **Markierte Zeilen**: Hervorgehoben mit `HoverSelectSelected` (verknüpft mit `Visual`)
+
+#### Beispiel-Anwendungsfälle
+
+**1. Dateiauswahl für Stapelverarbeitung**
+```lua
+local dateien = { "datei1.lua", "datei2.lua", "datei3.lua" }
+
+hover_select.open({
+  title = "Dateien zum Formatieren auswählen",
+  items = dateien,
+  multi_select = true,
+  on_select = function(ausgewaehlte_dateien)
+    for _, datei in ipairs(ausgewaehlte_dateien) do
+      formatiere_datei(datei)
+    end
+  end,
+})
+```
+
+**2. Integration mit Symbol-Gathering**
+```lua
+-- Nach dem Sammeln von Funktionen aus mehreren Dateien
+hover_select.open({
+  title = "Zu Funktionen navigieren",
+  items = funktionsliste,
+  multi_select = true,
+  on_select = function(auswahl, indices)
+    -- Alle ausgewählten Funktionen in Tabs öffnen
+    for i, func in ipairs(auswahl) do
+      oeffne_in_tab(func, indices[i])
+    end
+  end,
+})
+```
+
+#### Testen
+
+Test-Suite ausführen:
+```lua
+require("lib.hover_select.test_multiselect").test_multi_select()
+```
+
+Verfügbare Test-Funktionen:
+- `test_single_select()` - Einzelauswahl-Modus
+- `test_multi_select()` - Basis-Mehrfachauswahl
+- `test_multi_select_long()` - Lange Liste (20 Einträge)
+- `test_file_list()` - Realistisches Dateiauswahl-Beispiel
+
 ## Modulaufbau
 
 Das Modul ist in mehrere logisch getrennte Teile gegliedert:
@@ -60,10 +163,10 @@ Das Modul ist in mehrere logisch getrennte Teile gegliedert:
 
 Über EmmyLua-Annotationen werden unter anderem folgende Typen bereitgestellt:
 
-* HoverSelectOptions
+* Lib.HoverSelect.Options
   Konfigurationsstruktur für Items, Callback und UI-Optionen
 
-* HoverSelectState
+* Lib.HoverSelect.State
   Interner Zustand mit Buffer-, Window-Referenzen und Item-Liste
 
 Diese Typen verbessern die Arbeit mit LuaLS deutlich.

@@ -29,7 +29,7 @@ local function on_select(selected, index)
 end
 
 -- Complete hover-select options table
----@type HoverSelectOptions
+---@type Lib.HoverSelect.Options
 local opts = {
   -- List of items to display (one per line)
   items = items,

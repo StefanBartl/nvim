@@ -91,6 +91,108 @@ Lines wrap at window boundary, compact window size.
 
 ---
 
+### Multi-Selection Feature
+
+#### Overview
+
+hover-select now supports multi-line selection via keyboard shortcuts. This allows users to select multiple items before confirming the selection.
+
+#### Enabling Multi-Selection
+
+Pass `multi_select = true` in the options table:
+
+```lua
+hover_select.open({
+  items = { "Item 1", "Item 2", "Item 3" },
+  multi_select = true,
+  on_select = function(selected, indices)
+    -- selected: array of selected items
+    -- indices: array of corresponding line numbers (1-based)
+    vim.notify("Selected: " .. table.concat(selected, ", "))
+  end,
+})
+```
+
+#### Keybindings (Multi-Select Mode)
+
+| Key | Action |
+|-----|--------|
+| `<Tab>` | Toggle selection for current line |
+| `<S-Tab>` | Toggle selection and move cursor up |
+| `<CR>` | Confirm selection (all marked items, or current line if none marked) |
+| `<Esc>` / `q` | Close without selection |
+
+#### Callback Signature Changes
+
+**Single-select mode** (default):
+```lua
+on_select = function(selected, index)
+  -- selected: string (single item)
+  -- index: integer (1-based line number)
+end
+```
+
+**Multi-select mode** (`multi_select = true`):
+```lua
+on_select = function(selected, indices)
+  -- selected: string[] (array of items)
+  -- indices: integer[] (array of line numbers)
+end
+```
+
+**Note**: If no items are explicitly selected with Tab, pressing Enter returns the current line as a single-element array.
+
+#### Visual Feedback
+
+- **Cursor line**: Highlighted with `HoverSelectCursor` (linked to `PmenuSel`)
+- **Selected lines**: Highlighted with `HoverSelectSelected` (linked to `Visual`)
+
+#### Example Use Cases
+
+**1. File Selection for Batch Processing**
+```lua
+local files = { "file1.lua", "file2.lua", "file3.lua" }
+
+hover_select.open({
+  title = "Select files to format",
+  items = files,
+  multi_select = true,
+  on_select = function(selected_files)
+    for _, file in ipairs(selected_files) do
+      format_file(file)
+    end
+  end,
+})
+```
+
+**2. Symbol Gathering Integration**
+```lua
+-- After gathering functions from multiple files
+hover_select.open({
+  title = "Navigate to functions",
+  items = function_list,
+  multi_select = true,
+  on_select = function(selections, indices)
+    -- Open all selected function locations in tabs
+    for i, func in ipairs(selections) do
+      open_in_tab(func, indices[i])
+    end
+  end,
+})
+```
+
+#### Testing
+
+Run the test suite:
+```lua
+require("lib.hover_select.test_multiselect").test_multi_select()
+```
+
+Available test functions:
+- `test_single_select()` - Single-select mode
+- `test_multi_select()` - Basic multi-select
+- `test_multi_select_long()` - Long list (20 items)
+- `test_file_list()` - Realistic file selection example
 ## Architecture
 
 The module is split into small, well-defined components:
@@ -119,10 +221,10 @@ The module is split into small, well-defined components:
 
 The module ships with EmmyLua annotations intended for LuaLS, including:
 
-* **HoverSelectOptions**
+* **Lib.HoverSelect.Options**
   Configuration object for items, callbacks, buffer options, window options, layout, Tab navigation, and auto-width
 
-* **HoverSelectState**
+* **Lib.HoverSelect.State**
   Internal state holding buffer and window references as well as the active item list
 
 These definitions significantly improve autocompletion and static analysis.
@@ -163,7 +265,7 @@ All options can be overridden or extended by passing custom tables, which are me
 ### Complete Options Table
 
 ```lua
----@class HoverSelectOptions
+---@class Lib.HoverSelect.Options
 {
   items = { "Option 1", "Option 2" },  -- Required
   on_select = function(item, idx) end, -- Required

@@ -4,6 +4,7 @@
 local M = {}
 
 local api = vim.api
+local nvim_set_option_value = api.nvim_set_option_value
 
 ---Create a new buffer with the given items
 ---@param items string[] List of items to display
@@ -18,12 +19,12 @@ function M.create(items, buf_options)
   end
 
   -- Set buffer content (requires modifiable=true temporarily)
-  api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  nvim_set_option_value("modifiable", true, { buf = bufnr })
   api.nvim_buf_set_lines(bufnr, 0, -1, false, items)
 
   -- Apply user-provided buffer options
   for option, value in pairs(buf_options) do
-    local success, err = pcall(api.nvim_set_option_value, option, value, { buf = bufnr })
+    local success, err = pcall(nvim_set_option_value, option, value, { buf = bufnr })
     if not success then
       vim.notify(
         string.format("lib.hover_select: failed to set buffer option '%s': %s", option, err),
@@ -46,13 +47,13 @@ function M.update_content(bufnr, items)
 
   -- Temporarily enable modifications
   local was_modifiable = api.nvim_get_option_value("modifiable", { bufnr = bufnr })
-  api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  nvim_set_option_value("modifiable", true, { buf = bufnr })
 
   -- Update content
   local success = pcall(api.nvim_buf_set_lines, bufnr, 0, -1, false, items)
 
   -- Restore modifiable state
-  api.nvim_set_option_value("modifiable", was_modifiable, { buf = bufnr })
+  nvim_set_option_value("modifiable", was_modifiable, { buf = bufnr })
 
   return success
 end
