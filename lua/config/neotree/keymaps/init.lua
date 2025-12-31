@@ -50,8 +50,8 @@ return {
 
   -- source switching
   ["<"] = "noop", -- this is default next source
-  ["\""] = "next_source",
-  ["!"] = "prev_source",
+  ["!"] = "next_source",
+  ["\""] = "prev_source",
 
   -- file ops via neo-tree clipboard
   ["c"] = "copy_to_clipboard",

@@ -17,8 +17,8 @@ local ts = vim.treesitter
 local LEVEL_MAP = {
   TRACE = "trace",
   DEBUG = "debug",
-  INFO  = "info",
-  WARN  = "warn",
+  INFO = "info",
+  WARN = "warn",
   ERROR = "error",
 }
 
@@ -47,7 +47,44 @@ local function is_vim_notify(node, bufnr)
     return false
   end
 
+  -- FIX: Word boundary check - ensure it's not part of a larger token
+  -- Get the character immediately before the match
+  local start_row, start_col = name:start()
+  if start_col > 0 then
+    local line = api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1]
+    local prev_char = line:sub(start_col, start_col)
+
+    -- If previous character is alphanumeric or underscore, it's part of another token
+    -- Example: "if" followed by "vim.notify" would have " " before it, which is fine
+    -- But "ifvim.notify" would have "f" before "v", which we reject
+    if prev_char:match("[%w_]") then
+      return false
+    end
+  end
+
   return true
+end
+
+---Check if position is at a word boundary (nicht mitten in einem Token)
+---@param bufnr integer
+---@param row integer 0-based
+---@param col integer 0-based
+---@return boolean
+local function is_word_boundary(bufnr, row, col)
+  if col == 0 then
+    return true -- Start der Zeile ist immer OK
+  end
+
+  local line = api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1]
+  if not line then
+    return false
+  end
+
+  -- Prüfe Character vor der Position
+  local prev_char = line:sub(col, col)
+
+  -- Wenn prev_char alphanumerisch oder underscore ist, ist es Teil eines Tokens
+  return not prev_char:match("[%w_]")
 end
 
 ---Extract vim.log.levels.<LEVEL>
@@ -127,6 +164,21 @@ end
 --------------------------------------------------------------------------------
 -- Scanner
 --------------------------------------------------------------------------------
+-- Füge diese Fallback-Funktion hinzu:
+local function scan_buffer_with_regex(bufnr)
+  local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local matches = {}
+
+  for _, line in ipairs(lines) do
+    -- Word boundary: nicht-alphanumerisch oder Start der Zeile vor "vim"
+    if line:match("[^%w_]vim%.notify%s*%(") or line:match("^vim%.notify%s*%(") then
+      -- Dann normale multiline detection wie gehabt
+      -- (hier würde der existierende multiline-Code aus dem working monofile folgen)
+    end
+  end
+
+  return matches
+end
 
 ---@param bufnr integer
 ---@return MigrateNotify.Match[]
@@ -160,13 +212,23 @@ function M.scan_buffer(bufnr)
         if msg and level then
           local sr, sc, er, ec = node:range()
 
+          if not is_word_boundary(bufnr, sr, sc) then
+            return -- Skip wenn mitten in Token
+          end
+
+          -- FIX: Hole die komplette Node als Text für bessere Fehlertoleranz
+          local original = ts.get_node_text(node, bufnr)
+
+          -- Baue Replacement neu auf (nicht aus original, sondern frisch)
+          local replacement = build_replacement(msg, level, opts)
+
           table.insert(matches, {
-            line = sr + 1,        -- 1-based
-            col = sc,             -- 0-based (start)
-            end_line = er + 1,    -- 1-based
-            end_col = ec,         -- 0-based (exclusive end from TS)
-            original = ts.get_node_text(node, bufnr),
-            replacement = build_replacement(msg, level, opts),
+            line = sr + 1, -- 1-based
+            col = sc, -- 0-based (start)
+            end_line = er + 1, -- 1-based
+            end_col = ec, -- 0-based (exclusive end from TS)
+            original = original,
+            replacement = replacement,
             log_level = level,
           })
         end

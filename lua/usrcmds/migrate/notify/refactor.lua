@@ -116,40 +116,46 @@ function M.apply_match(bufnr, match)
 
   local start_line = match.line - 1      -- Convert to 0-based
   local end_line = match.end_line - 1    -- Convert to 0-based
-  local start_col = match.col            -- Already 0-based
-  local end_col = match.end_col          -- Already 0-based (exclusive from TS)
 
-  -- Get all affected lines
-  local lines = api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
-
-  if #lines == 0 then
+  -- FIX: Vereinfachte Logik - ersetze immer den kompletten Zeilenbereich
+  -- Hole die erste Zeile um das Indent zu bestimmen
+  local first_line = api.nvim_buf_get_lines(bufnr, start_line, start_line + 1, false)[1]
+  if not first_line then
     return false
   end
 
+  -- Extrahiere Indent von erster Zeile
+  local indent = first_line:match("^(%s*)")
+
+  -- Bei single-line: prüfe ob Text vor/nach dem Match existiert
   if start_line == end_line then
-    -- Single line replacement (like the working version)
-    local line = lines[1]
-    local before = line:sub(1, start_col)
-    local after = line:sub(end_col + 1)  -- +1 because Lua strings are 1-based
+    local start_col = match.col
+    local end_col = match.end_col
+
+    local before = first_line:sub(1, start_col)
+    local after = first_line:sub(end_col + 1)
+
+    -- Baue neue Zeile mit Replacement
     local new_line = before .. match.replacement .. after
 
     api.nvim_buf_set_lines(bufnr, start_line, start_line + 1, false, { new_line })
   else
-    -- Multiline: collapse to single line (like working refactor_multiline)
-    local first_line = lines[1]
-    local last_line = lines[#lines]
+    -- Multiline: Hole erste und letzte Zeile für before/after
+    local last_line = api.nvim_buf_get_lines(bufnr, end_line, end_line + 1, false)[1]
+    if not last_line then
+      return false
+    end
 
-    -- Extract indent from first line
-    local indent = first_line:match("^(%s*)")
+    local start_col = match.col
+    local end_col = match.end_col
 
-    -- Get content before and after the match
     local before = first_line:sub(1, start_col)
     local after = last_line:sub(end_col + 1)
 
-    -- Build single replacement line with proper indent
-    local new_line = before .. match.replacement .. after
+    -- Collapse zu single line mit korrekt indent
+    local new_line = indent .. before:gsub("^%s*", "") .. match.replacement .. after
 
-    -- Replace entire multiline range with single line
+    -- Ersetze gesamten Bereich mit einer Zeile
     api.nvim_buf_set_lines(bufnr, start_line, end_line + 1, false, { new_line })
   end
 
