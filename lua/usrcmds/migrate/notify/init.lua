@@ -343,6 +343,7 @@ function M.enable()
     nargs = "*",
     range = true,
     desc = "Migrate vim.notify → lib.notify (use --create for .create() import)",
+    ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead, cmd_line, cursor_pos)
       local options = { "%", "cwd", "--create" }
       local matches = {}

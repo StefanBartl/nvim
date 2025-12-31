@@ -7,37 +7,91 @@ local config = require("lib.hover_select.config")
 local notify = vim.notify
 local api = vim.api
 
+---Calculate longest line width in items
+---@param items string[] List of items
+---@return integer width Width in display columns
+local function calculate_max_line_width(items)
+  local max_width = 0
+
+  for _, line in ipairs(items) do
+    -- Use vim.fn.strdisplaywidth for accurate display width (handles multibyte chars)
+    local width = vim.fn.strdisplaywidth(line)
+    if width > max_width then
+      max_width = width
+    end
+  end
+
+  return max_width
+end
+
 ---Calculate optimal window dimensions based on content
+---@param items string[] Items to display (needed for auto-width calculation)
 ---@param items_count integer Number of items to display
 ---@param width integer|nil User-specified width
 ---@param height integer|nil User-specified height
+---@param auto_width boolean|"wrap"|nil Auto-sizing mode
 ---@return integer width Calculated width
 ---@return integer height Calculated height
-local function calculate_dimensions(items_count, width, height)
+---@return boolean wrap Whether to enable line wrapping
+local function calculate_dimensions(items, items_count, width, height, auto_width)
   local dims = config.dimensions
+  local wrap = false
 
   -- Calculate height
   local calc_height = height or items_count
   calc_height = math.max(dims.min_height, math.min(calc_height, dims.max_height))
 
-  -- Calculate width (auto-size if not specified)
-  local calc_width = width or (dims.min_width + dims.padding)
-  calc_width = math.max(dims.min_width, math.min(calc_width, dims.max_width))
+  -- Calculate width based on auto_width setting
+  local calc_width
 
-  return calc_width, calc_height
+  if auto_width == "wrap" then
+    -- Wrap mode: use minimum width and enable wrapping
+    calc_width = width or dims.min_width
+    calc_width = math.max(dims.min_width, calc_width)
+    wrap = true
+
+  elseif auto_width == true then
+    -- Auto-width mode: size to longest line
+    local content_width = calculate_max_line_width(items)
+
+    -- Add padding for border
+    content_width = content_width + dims.padding
+
+    -- Get editor width as maximum
+    local editor_width = vim.o.columns
+    local max_usable_width = editor_width - 4  -- Leave some margin
+
+    -- Use user width if specified, otherwise use content width
+    calc_width = width or content_width
+
+    -- Clamp between min and max
+    calc_width = math.max(dims.min_width, calc_width)
+    calc_width = math.min(calc_width, math.min(dims.max_width, max_usable_width))
+
+  else
+    -- Fixed width mode (default)
+    calc_width = width or (dims.min_width + dims.padding)
+    calc_width = math.max(dims.min_width, math.min(calc_width, dims.max_width))
+  end
+
+  return calc_width, calc_height, wrap
 end
 
 ---Create floating window with the given configuration
 ---@param bufnr integer Buffer to display in window
 ---@param win_config table Window configuration options
 ---@param win_options table<string, any> Window-local options to apply
+---@param items string[] Items being displayed (for auto-width calculation)
+---@param auto_width boolean|"wrap"|nil Auto-sizing mode
 ---@return integer|nil winid Window ID, or nil on failure
-function M.create(bufnr, win_config, win_options)
+function M.create(bufnr, win_config, win_options, items, auto_width)
   -- Calculate dimensions
-  local width, height = calculate_dimensions(
+  local width, height, wrap = calculate_dimensions(
+    items,
     win_config.items_count or 0,
     win_config.width,
-    win_config.height
+    win_config.height,
+    auto_width
   )
 
   -- Build window configuration
@@ -57,9 +111,14 @@ function M.create(bufnr, win_config, win_options)
     return nil
   end
 
+  -- Override wrap setting if auto_width is "wrap"
+  if wrap then
+    win_options = vim.tbl_extend("force", win_options, { wrap = true })
+  end
+
   -- Apply window-local options
   for option, value in pairs(win_options) do
-    local success, err = pcall(api.nvim_set_option_value, option, value, { win = winid } )
+    local success, err = pcall(api.nvim_set_option_value, option, value, { win = winid })
     if not success then
       notify(
         string.format("lib.hover_select: failed to set window option '%s': %s", option, err),

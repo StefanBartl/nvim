@@ -77,9 +77,7 @@ local function run_cwd_mode(gather_type)
 
     -- Show in scratch buffer
     local ui = require("usrcmds.gather.lua.ui")
-    local title = string.format("%s (CWD: %d matches)",
-      gather_type:gsub("^%l", string.upper),
-      #all_matches)
+    local title = string.format("%s (CWD: %d matches)", gather_type:gsub("^%l", string.upper), #all_matches)
     ui.open_scratch(lines, title)
 
     vim.notify(
@@ -103,6 +101,9 @@ function M.run(mode)
       "tables",
       "strings",
     },
+    use_tab_navigation = true, -- Enable Tab/Shift-Tab
+    auto_width = true,  -- Window sizes to longest line
+
     on_select = function(selected)
       ---@type UsrCmds.Gather.Lua.GatherType
       local gather_type = selected

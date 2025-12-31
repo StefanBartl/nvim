@@ -6,6 +6,7 @@
 
 ## MIXED
 
+- hover select tab selection multi select
 - lsp.tools.lsp_signature_tool -> /doc/lsp_signature_tool.txt erstellebn
 - mynotes in custom schieben
 - Neotree mappings so schreiben, dass auch nvimtree/netrw möglich wäre
