@@ -1,8 +1,11 @@
 ---@module 'usrcmds.migrate.notify.refactor'
----@brief Simple whole-line replacement (like working monofile)
+---@brief Apply notify migrations with proper line/multiline handling
 ---@description
---- No complex offset calculations - just replace complete lines.
---- This is robust and matches the working regex version.
+--- Based on working monofile regex implementation.
+--- Key principles:
+---   - Single-line: replace inline portion
+---   - Multi-line: combine to single line with proper indent
+---   - Use string operations (like the working version)
 
 require("usrcmds.migrate.notify.@types")
 
@@ -14,80 +17,143 @@ local api = vim.api
 -- Import handling
 --------------------------------------------------------------------------------
 
+---Check if buffer has notify import
 ---@param bufnr integer
----@return boolean
-local function has_import(bufnr)
+---@return boolean has_simple, boolean has_create
+local function check_import(bufnr)
   local lines = api.nvim_buf_get_lines(bufnr, 0, 50, false)
 
+  local has_simple = false
+  local has_create = false
+
   for _, line in ipairs(lines) do
+    -- Check for simple: require("lib.notify")
     if line:match('require%s*%(%s*["\']lib%.notify["\']%s*%)') then
-      return true
+      has_simple = true
+    end
+    -- Check for create: require("lib.notify").create(...)
+    if line:match('require%s*%(%s*["\']lib%.notify["\']%s*%)%.create%s*%(') then
+      has_create = true
     end
   end
 
-  return false
+  return has_simple, has_create
 end
 
----Inject import at top of file
+---Find first non-comment line
 ---@param bufnr integer
----@return boolean added True if import was added
-function M.inject_import(bufnr)
-  if has_import(bufnr) then
-    return false
+---@return integer line_idx 0-based index
+local function find_first_code_line(bufnr)
+  local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  for i, line in ipairs(lines) do
+    local trimmed = line:match("^%s*(.-)%s*$")
+    -- Skip empty lines and comments
+    if trimmed ~= "" and not trimmed:match("^%-%-") then
+      return i - 1  -- Return 0-based index
+    end
   end
 
-  api.nvim_buf_set_lines(
-    bufnr,
-    0,
-    0,
-    false,
-    { 'local notify = require("lib.notify").create("")', "" }
-  )
-
-  return true
+  return 0  -- Default to top
 end
 
+---Inject import at appropriate position
+---@param bufnr integer
+---@param use_create boolean If true, use .create("") syntax
+---@return boolean added True if import was added
+function M.inject_import(bufnr, use_create)
+  local has_simple, has_create = check_import(bufnr)
+
+  -- If .create() is required but only simple import exists, upgrade it
+  if use_create then
+    if has_create then
+      return false  -- Already has .create()
+    end
+
+    -- Find first non-comment line
+    local insert_pos = find_first_code_line(bufnr)
+
+    api.nvim_buf_set_lines(
+      bufnr,
+      insert_pos,
+      insert_pos,
+      false,
+      { 'local notify = require("lib.notify").create("")', "" }
+    )
+
+    return true
+  else
+    -- Simple import
+    if has_simple then
+      return false  -- Already has import
+    end
+
+    api.nvim_buf_set_lines(
+      bufnr,
+      0,
+      0,
+      false,
+      { 'local notify = require("lib.notify")', "" }
+    )
+
+    return true
+  end
+end
+
+
 --------------------------------------------------------------------------------
--- Simple line replacement
+-- Application (based on working monofile logic)
 --------------------------------------------------------------------------------
 
----Apply match by replacing complete line range
+---Apply single match replacement
 ---@param bufnr integer
----@param match MigrateNotify.Match (line and end_line are 1-based)
+---@param match MigrateNotify.Match
 ---@return boolean success
 function M.apply_match(bufnr, match)
   if not api.nvim_buf_is_valid(bufnr) then
     return false
   end
 
-  -- Parser gives us 1-based line numbers
-  -- nvim_buf_set_lines wants 0-based indices where end is exclusive
-  --
-  -- Example: Replace lines 5-7 (1-based, inclusive)
-  -- -> nvim_buf_set_lines(bufnr, 4, 7, ...)
-  --    This replaces lines [4,5,6] (0-based) = lines [5,6,7] (1-based)
+  local start_line = match.line - 1      -- Convert to 0-based
+  local end_line = match.end_line - 1    -- Convert to 0-based
+  local start_col = match.col            -- Already 0-based
+  local end_col = match.end_col          -- Already 0-based (exclusive from TS)
 
-  local start_idx = match.line - 1         -- 1-based -> 0-based
-  local end_idx = match.end_line           -- 1-based inclusive -> 0-based exclusive
+  -- Get all affected lines
+  local lines = api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
 
-  -- Replace line range with single replacement
-  local ok, err = pcall(
-    api.nvim_buf_set_lines,
-    bufnr,
-    start_idx,
-    end_idx,
-    false,
-    { match.replacement }
-  )
-
-  if not ok then
-    vim.notify(
-      string.format("Failed at lines %d-%d: %s", match.line, match.end_line, tostring(err)),
-      vim.log.levels.ERROR
-    )
+  if #lines == 0 then
+    return false
   end
 
-  return ok
+  if start_line == end_line then
+    -- Single line replacement (like the working version)
+    local line = lines[1]
+    local before = line:sub(1, start_col)
+    local after = line:sub(end_col + 1)  -- +1 because Lua strings are 1-based
+    local new_line = before .. match.replacement .. after
+
+    api.nvim_buf_set_lines(bufnr, start_line, start_line + 1, false, { new_line })
+  else
+    -- Multiline: collapse to single line (like working refactor_multiline)
+    local first_line = lines[1]
+    local last_line = lines[#lines]
+
+    -- Extract indent from first line
+    local indent = first_line:match("^(%s*)")
+
+    -- Get content before and after the match
+    local before = first_line:sub(1, start_col)
+    local after = last_line:sub(end_col + 1)
+
+    -- Build single replacement line with proper indent
+    local new_line = before .. match.replacement .. after
+
+    -- Replace entire multiline range with single line
+    api.nvim_buf_set_lines(bufnr, start_line, end_line + 1, false, { new_line })
+  end
+
+  return true
 end
 
 return M

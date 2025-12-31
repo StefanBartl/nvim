@@ -101,8 +101,8 @@ function M.run(mode)
       "tables",
       "strings",
     },
-    use_tab_navigation = true, -- Enable Tab/Shift-Tab
-    auto_width = true,  -- Window sizes to longest line
+    use_tab_navigation = true,
+    auto_width = true,
 
     on_select = function(selected)
       ---@type UsrCmds.Gather.Lua.GatherType
