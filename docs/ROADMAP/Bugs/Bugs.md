@@ -1,8 +1,8 @@
 # FIX: bugs
+❌  🟨  ✅
+   ?   
 
 ## Important Bugs
-
-- relpacer: string als argument funktioniert nicht
 
 ### LSP
 
@@ -15,69 +15,6 @@ Falls Typen nicht gefunden werden weiterhin besteht, stelle sicher dass:
 - Die @types und types dateien werden nicht gut erkannt. Besser mal mit types.lua probeiren, aber das sollte eigentlich keinen Unterschied machen
 
 ---
-
-### neotree
-
---- AUDIT: Bereits implementiert...
-
-#### EPERM --> Scxheint zu funken.
-
-Dieser eror ist super nerviog, denn er friert mein nvim ein:
-
-```vim
-05:56:16 msg_show.echomsg    y Moving to Trash...
-05:56:18 msg_show.echomsg ✓ Moved to Trash (1 items)
-  Error  05:56:21 notify.error [Neo-tree ERROR] file_event_callback:  EPERM
-  Error  05:56:21 notify.error [Neo-tree ERROR] file_event_callback:  EPERM
-```
-### Nach einem renaming eines Folders: Sche
-
-
-```vim
-  Error  06:08:10 notify.error [Neo-tree ERROR] debounce  neo-tree-follow  error:  ...Data/Local/nvim-data/lazy/nui.nvim/lua/nui/tree/init.lua:261: Invalid 'window': Expected Lua number
-  Error  06:08:10 notify.error [Neo-tree ERROR] debounce  filesystem_navigate  error:  ...Data/Local/nvim-data/lazy/nui.nvim/lua/nui/tree/init.lua:261: Invalid 'window': Expected Lua number
-```
-
-
-### situation, in der Neotree als buffer angezeigt wird (im tab (tabufline) sichtbar als buffer) ist.:
-
---> Es wird nun eine korrekte messages ausgegebn:
-           Warn  20:06:34 notify.warn [Neo-tree WARN] Could not find appropriate window for preview
-aber der rror kommt trotzdem noch...
-
-.. und man dann ein preview ausführen möchte:
-
-```vim
-  Error  06:14:01 msg_show.emsg E5108: Error executing lua: ...zy/neo-tree.nvim/lua/neo-tree/sources/common/preview.lua:181: attempt to index field 'truth' (a nil value)
-stack traceback:
-...zy/neo-tree.nvim/lua/neo-tree/sources/common/preview.lua:181: in function 'revert'
-...zy/neo-tree.nvim/lua/neo-tree/sources/common/preview.lua:482: in function 'hide'
-...y/neo-tree.nvim/lua/neo-tree/sources/common/commands.lua:733: in function 'revert_preview'
-...y/neo-tree.nvim/lua/neo-tree/sources/common/commands.lua:810: in function 'open'
-...y/neo-tree.nvim/lua/neo-tree/sources/common/commands.lua:841: in function 'open_with_cmd'
-...y/neo-tree.nvim/lua/neo-tree/sources/common/commands.lua:849: in function 'open'
-...o-tree.nvim/lua/neo-tree/sources/filesystem/commands.lua:209: in function 'open'
-...d/AppData/Local/nvim/lua/config/neotree/keymaps/init.lua:93: in function <...d/AppData/Local/nvim/lua/config/neotree/keymaps/init.lua:76>
-```
-
-1. Auch wenn man mit enter öffnen möchte wird der selbe Fehler ausgegeben!
-2. Auch wenn man dann `:Neotree` ausführt, kann man keine node mehr damit öffnen, es wird immer der obige Fehler ausgegeben.
-
----
-
-### Neotree: beim öffnen fällt er oft auf das cwd root zurück... DAS IST noch immer da
-
-...dann muss mian wieder nach vor "gehen" mit node opens um dort hinzukommen wo man ist. Spezielafall: wen man neotree schließ, dann wieder ffnet ist es wieder iene ebene näher am der richtigen ebene, dan nwieder schlißen und öffnen und er springt wieder eine eben näher zu dem file in der man ist.
-
-- Weiteres beispiel: ich habe eine datei tief im cwd offen. ich gehe in neotree updir zum ordner meiner file, setze dies damit auf cwd. springe nun mit dem cursor in den buffer und neotree cwd fällt auf den projekt root zurück. Lösung eventuell -> cwd nur dann neu setzen bei reveal, wenn man updir ist. geht man downdir wird es cwd sowies neu gesetzt und wenn nicht, dann muss bei downdir maximal der parent ofolder als cwd gesetzt werden. als probieren mit: reveal nur mit updir
-
----
-
-### neotreee manchmal auch ohne usrcmd schließt sich der linke neotree und öffnet sich der rechte
-
-ich have default das neotree link ist. manchmal aber, ohne dass ich ws mache mit dem neotree sondern ich springe von einemm in eina nderes window, und auf einmal schließt der lnke neptree und es öffnet sich rechts
-
--
 
 ## neotree-fs-refactor
 

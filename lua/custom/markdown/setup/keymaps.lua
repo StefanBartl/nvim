@@ -106,7 +106,7 @@ function M.apply(bufnr)
 
   -- Wrap visual toggle ** ----------------------------------------------------
   if wrap.toggle_visual_bold then
-    map("x", "**", wrap.toggle_visual_bold, "[Custom.Markdown] Toggle ** around selection", o)
+    map("v", "**", wrap.toggle_visual_bold, "[Custom.Markdown] Toggle ** around selection", o)
   end
 
   -- Headings navigation -------------------------------------------------------
