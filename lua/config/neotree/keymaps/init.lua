@@ -49,7 +49,9 @@ return {
   ["t"] = "noop", -- set to noop ; default t = tabnew; needed for telescope mappings tf and tg
 
   -- source switching
-  ["<S-Tab>"] = "prev_source",
+  ["<"] = "noop", -- this is default next source
+  ["\""] = "next_source",
+  ["!"] = "prev_source",
 
   -- file ops via neo-tree clipboard
   ["c"] = "copy_to_clipboard",
@@ -72,75 +74,81 @@ return {
 
   -- ==================  Expand / Collapse nodes   =====================
 
-  ["<CR>"] = function(state)
-    local node = state.tree:get_node()
-    if not node then
-      return
-    end
-
-    -- ADDED: Check if we're in a valid Neo-tree window
-    local current_win = vim.api.nvim_get_current_win()
-    local buf = vim.api.nvim_win_get_buf(current_win)
-    local is_neotree_win = vim.bo[buf].filetype == "neo-tree"
-
-    if not is_neotree_win then
-      vim.notify("Neo-tree: Not in a Neo-tree window", vim.log.levels.WARN)
-      return
-    end
-
-    -- ADDED: Safe preview cleanup
-    pcall(function()
-      local preview = require("neo-tree.sources.common.preview")
-      if preview and preview.hide then
-        preview.hide()
+  ["<CR>"] = {
+    function(state)
+      local node = state.tree:get_node()
+      if not node then
+        return
       end
-    end)
 
-    -- 1) expand/collapse directories
-    if node and (node.type == "directory" or (node:has_children() and not node:is_expanded())) then
-      state.commands.toggle_node(state)
-      return
-    end
+      -- Check if we're in a valid Neo-tree window
+      local current_win = vim.api.nvim_get_current_win()
+      local buf = vim.api.nvim_win_get_buf(current_win)
+      local is_neotree_win = vim.bo[buf].filetype == "neo-tree"
 
-    -- 2) normal open (prefer window-picker if present)
-    if pcall(require, "window-picker") then
-      -- ADDED: Protect window-picker call
-      local ok = pcall(state.commands.open_with_window_picker, state)
-      if not ok then
-        pcall(state.commands.open, state)
+      if not is_neotree_win then
+        vim.notify("Neo-tree: Not in a Neo-tree window", vim.log.levels.WARN)
+        return
       end
-    else
-      pcall(state.commands.open, state)
-    end
-  end,
 
-  -- ====================== Preview Node   ==========================
-
-  ["<Tab>"] = function(state)
-    -- Validate window context
-    local current_win = vim.api.nvim_get_current_win()
-    local buf = vim.api.nvim_win_get_buf(current_win)
-
-    if vim.bo[buf].filetype ~= "neo-tree" then
-      vim.notify("Neo-tree: Preview only works in Neo-tree window", vim.log.levels.WARN)
-      return
-    end
-
-    -- Safe toggle with error handling
-    local ok, _ = pcall(function()
-      state.commands.toggle_preview(state)
-    end)
-
-    if not ok then
-      -- Fallback: try to hide preview
+      -- Safe preview cleanup
       pcall(function()
         local preview = require("neo-tree.sources.common.preview")
         if preview and preview.hide then
           preview.hide()
         end
       end)
-    end
-  end,
+
+      -- 1) expand/collapse directories
+      if node and (node.type == "directory" or (node:has_children() and not node:is_expanded())) then
+        state.commands.toggle_node(state)
+        return
+      end
+
+      -- 2) normal open (prefer window-picker if present)
+      if pcall(require, "window-picker") then
+        -- ADDED: Protect window-picker call
+        local ok = pcall(state.commands.open_with_window_picker, state)
+        if not ok then
+          pcall(state.commands.open, state)
+        end
+      else
+        pcall(state.commands.open, state)
+      end
+    end,
+    desc = "Safe expand / collapse nodes and open files",
+  },
+
+  -- ====================== Preview Node   ==========================
+
+  ["<Tab>"] = {
+    function(state)
+      -- Validate window context
+      local current_win = vim.api.nvim_get_current_win()
+      local buf = vim.api.nvim_win_get_buf(current_win)
+
+      if vim.bo[buf].filetype ~= "neo-tree" then
+        vim.notify("Neo-tree: Preview only works in Neo-tree window", vim.log.levels.WARN)
+        return
+      end
+
+      -- Safe toggle with error handling
+      local ok, _ = pcall(function()
+        state.commands.toggle_preview(state)
+      end)
+
+      if not ok then
+        -- Fallback: try to hide preview
+        pcall(function()
+          local preview = require("neo-tree.sources.common.preview")
+          if preview and preview.hide then
+            preview.hide()
+          end
+        end)
+      end
+    end,
+    desc = "Preview Mode",
+  },
 
   -- ========= clear filter, preview and search highlight ==============
 
@@ -187,8 +195,6 @@ return {
   end,
 
   -- ======================   MISC   =================================
-
-  ["<"] = "noop",
 
   ["D"] = "diff_files",
 
