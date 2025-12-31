@@ -1,6 +1,6 @@
 ---@module 'custom.filecycle'
 --- Navigate to the next/previous file in the current buffer's directory.
---- This module provides user commands and keymaps to "load into the current window".
+--- This module provides user commands and keymaps with count support.
 require("custom.filecycle.@types")
 
 local DEFAULTS = {
@@ -15,7 +15,7 @@ local DEFAULTS = {
 }
 
 ---@type FileCycle.State
-local M = { opts = DEFAULTS }
+local M = { opts = DEFAULTS, DEFAULTS = DEFAULTS }
 
 --- Setup module options and create user commands & keymaps.
 ---@param user_opts FileCycle.Config|nil
@@ -37,32 +37,35 @@ function M.setup(user_opts)
   o.usercommands = (user_opts.usercommands ~= nil) and user_opts.usercommands or DEFAULTS.usercommands
   M.opts = o
 
-    if M.opts.keymaps then
-        require("custom.filecycle.keymaps").attach(M.opts)
-    end
+  if M.opts.keymaps then
+    require("custom.filecycle.keymaps").attach(M.opts)
+  end
 
-    if M.opts.usercommands then
-        require("custom.filecycle.usercommands").enable(M.opts)
-    end
+  if M.opts.usercommands then
+    require("custom.filecycle.usercommands").enable(M.opts)
+  end
 end
 
---- Programmatic API: open next/prev with explicit options (optional).
----@param mode "next"|"prev"
+--- Programmatic API: open next/prev with explicit options and count.
+---@param mode FileCycle.Direction
 ---@param opts FileCycle.Config|nil
+---@param count integer? Number of steps (default: 1)
 ---@return boolean ok
-function M.open(mode, opts)
+function M.open(mode, opts, count)
   local o = opts and vim.tbl_deep_extend("force", M.opts, opts) or M.opts
   if not o then
     vim.notify("[NextPrev] Config is nil", vim.log.levels.WARN)
     return false
   end
-  local dir, err = M.get_root_dir(o)
+
+  local core = require("custom.filecycle.core")
+  local dir, err = core.get_root_dir(o)
   if not dir then
     vim.notify("[NextPrev] " .. (err or "no directory"), vim.log.levels.WARN)
     return false
   end
 
-  return M.navigate(dir, mode, o)
+  return core.navigate(dir, mode, o, count)
 end
 
 return M

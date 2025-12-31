@@ -4,13 +4,12 @@ require("custom.filecycle.@types")
 local fc = require("custom.filecycle")
 local notify = require("lib.notify").create("[filecycle]")
 
-local M  = {}
+local M = {}
 
 local api, fn, uv = vim.api, vim.fn, (vim.uv or vim.loop)
 local cmd = vim.cmd
 local fnamemodify = fn.fnamemodify
 local DEFAULTS = fc.DEFAULTS
-
 
 --- Resolve a canonical path for comparison/opening.
 --- Uses fs_realpath when allowed, otherwise returns absolute path.
@@ -18,9 +17,9 @@ local DEFAULTS = fc.DEFAULTS
 ---@param follow boolean
 ---@return FilePath
 local function canon(p, follow)
-  ---@diagnostic disable-next-line lib.uv
+  ---@diagnostic disable-next-line: undefined-field
   if follow and uv and uv.fs_realpath then
-    ---@diagnostic disable-next-line lib.uv
+    ---@diagnostic disable-next-line: undefined-field
     local rp = uv.fs_realpath(p)
     if type(rp) == "string" and rp ~= "" then
       return rp
@@ -174,10 +173,8 @@ local function open_path(path, opts)
       notify.error(("[NextPrev] tabedit failed: %s"):format(tostring(err)))
       return false
     end
-    -- keep_focus is intentionally ignored for tabs
     return true
   elseif target == "background" then
-    -- Add buffer silently without changing windows
     local ok_add, b = pcall(fn.bufadd, path)
     if not ok_add then
       return false
@@ -193,12 +190,26 @@ local function open_path(path, opts)
   end
 end
 
+--- Validate and clamp count to [1, #files]
+---@param count integer? User-provided count (may be nil, 0, or negative)
+---@return integer clamped_count Always >= 1
+local function validate_count(count)
+  if type(count) ~= "number" or count < 1 then
+    return 1
+  end
+  return math.floor(count)
+end
+
 --- Compute next/previous path and open it.
 ---@param dir FilePath
----@param mode "next"|"prev"
+---@param mode FileCycle.Direction
 ---@param opts FileCycle.Config
+---@param count integer? Number of steps (default: 1)
 ---@return boolean ok
-function M.navigate(dir, mode, opts)
+function M.navigate(dir, mode, opts, count)
+  -- Validate count early
+  count = validate_count(count)
+
   local files = list_files(dir, opts)
   if #files == 0 then
     notify.warn("[NextPrev] no files in directory")
@@ -214,8 +225,9 @@ function M.navigate(dir, mode, opts)
   local key = canon(cur, opts.follow_symlinks)
   local ci = opts.case_insensitive or DEFAULTS.case_insensitive
   local idx = index_of(files, key, ci)
+
   if not idx then
-    -- If current file is not in the filtered list, choose the closest by name and continue.
+    -- If current file is not in the filtered list, insert and find index
     table.insert(files, key)
     table.sort(files, function(a, b)
       return (ci and a:lower() or a) < (ci and b:lower() or b)
@@ -233,23 +245,31 @@ function M.navigate(dir, mode, opts)
     return false
   end
 
+  -- Calculate target index with count
   local target_idx
+  local n = #files
+
   if mode == "next" then
-    if idx < #files then
-      target_idx = idx + 1
-    elseif opts.wrap then
-      target_idx = 1
+    target_idx = idx + count
+    if opts.wrap then
+      -- Wrap around: ((idx - 1 + count) % n) + 1
+      target_idx = ((idx - 1 + count) % n) + 1
+    elseif target_idx > n then
+      target_idx = nil
     end
-  else
-    if idx > 1 then
-      target_idx = idx - 1
-    elseif opts.wrap then
-      target_idx = #files
+  else -- prev
+    target_idx = idx - count
+    if opts.wrap then
+      -- Wrap around: ((idx - 1 - count) % n) + 1
+      -- Lua modulo handles negatives correctly
+      target_idx = ((idx - 1 - count) % n) + 1
+    elseif target_idx < 1 then
+      target_idx = nil
     end
   end
 
   if not target_idx then
-    notify.info("[NextPrev] boundary reached (wrap disabled)")
+    notify.info(("[NextPrev] boundary reached (wrap disabled, count=%d)"):format(count))
     return false
   end
 
