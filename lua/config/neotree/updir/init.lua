@@ -2,20 +2,17 @@
 --- Up-one-level mapping for Neo-tree that works correctly in float/current/sidebars.
 --- It updates the tree root in-place and adjusts the CWD (window-local for float/current).
 
----@class NeoTreeUpdir
 local M = {}
 
----@param state table  -- neo-tree internal state for the current window
+---@param state table
 ---@return nil
 function M.up_one_level(state)
-   -- Mark as user navigation to prevent auto-sync
-  local ok_sync, sync_state = pcall(require, "config.neotree.cwd_sync")
-  if ok_sync and sync_state and sync_state.S then
-    sync_state.S.user_navigated = true
-    sync_state.S.last_user_action = vim.loop.now()
+  -- ✅ Signalisiere: User navigiert manuell
+  local ok_sync, sync = pcall(require, "config.neotree.cwd_sync")
+  if ok_sync and sync.pause_sync then
+    sync.pause_sync(3000) -- Pause 3s
   end
 
-  -- Resolve current root (falls state.path noch nicht gesetzt ist, vom Cursor ableiten)
   local current_root = state.path
   if not current_root or current_root == "" then
     local node = state.tree:get_node()
@@ -24,44 +21,36 @@ function M.up_one_level(state)
       vim.notify("no path under cursor", vim.log.levels.WARN)
       return
     end
-    -- If a file is focused, use its directory; if a directory, use it directly
     current_root = (vim.fn.isdirectory(path) == 1) and path or vim.fn.fnamemodify(path, ":h")
   end
 
-  -- Compute parent
   local parent = vim.fn.fnamemodify(current_root, ":h")
   if parent == current_root or parent == "" then
     vim.notify("already at top-level directory", vim.log.levels.WARN)
     return
   end
 
-  -- Determine where Neo-tree is shown to pick reasonable CWD semantics
   local position = (state.window and state.window.position) or "left"
-
-  -- Use window-local CWD for float/current to avoid surprising global cd side effects
   local cd_cmd = (position == "current" or position == "float") and "lcd" or "cd"
   local esc = vim.fn.fnameescape(parent)
 
-  -- Set CWD (pcall to avoid hard errors)
   local ok_cd, cd_err = pcall(function()
     vim.cmd(string.format("%s %s", cd_cmd, esc))
   end)
+
   if not ok_cd then
     vim.notify(("cwd change failed: %s"):format(tostring(cd_err)), vim.log.levels.ERROR)
     return
   end
 
-  -- In-place root change without spawning a new Neo-tree window
-  -- Prefer the built-in navigate_up if available; otherwise set_root explicitly.
+  -- ✅ Merke alte Position für Wiederauswahl
+  local old_path = current_root
+
   if state.commands and state.commands.navigate_up then
-    -- navigate_up() uses state.path to go one level up; since we also changed CWD,
-    -- both stay aligned. This operates entirely in the current Neo-tree instance.
     state.commands.navigate_up(state)
   elseif state.commands and state.commands.set_root then
-    -- Fallback: set the root to the computed parent directly
     state.commands.set_root(state, parent)
   else
-    -- Last resort: refresh via manager with the target path
     local ok_mgr, manager = pcall(require, "neo-tree.sources.manager")
     if ok_mgr then
       manager.navigate(state, parent)
@@ -71,15 +60,29 @@ function M.up_one_level(state)
     end
   end
 
+  -- ✅ Selektiere alte Position nach kurzer Verzögerung
+  vim.defer_fn(function()
+    local tree = state.tree
+    if not tree then
+      return
+    end
+
+    local parent_node = tree:get_node()
+    if parent_node and parent_node.children then
+      for _, child in ipairs(parent_node.children) do
+        local child_path = child.path or child:get_id()
+        if child_path == old_path then
+          -- Focus the old directory in parent
+          pcall(tree.set_selection, tree, child:get_id())
+          break
+        end
+      end
+    end
+  end, 100)
+
   local ok_mod, refresher = pcall(require, "config.neotree.refresh_adapter")
   if ok_mod then
     refresher.refresh(state)
-  else
-    local ok_mgr, manager = pcall(require, "neo-tree.sources.manager")
-    if ok_mgr and manager and type(manager.refresh) == "function" then
-      local src = (type(state) == "table" and (state.name or state.source or state.source_name)) or "filesystem"
-      manager.refresh(src)
-    end
   end
 
   vim.notify(("cwd → %s"):format(parent), vim.log.levels.INFO)

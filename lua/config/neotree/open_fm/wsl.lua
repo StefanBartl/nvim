@@ -4,7 +4,7 @@
 ---   - Do not treat non-zero exit codes from explorer.exe as failure (WSL peculiarity).
 ---   - Only fall back if spawning the primary command fails altogether.
 
-local M ---@type NeoTreeWslFM
+local M ---@type Cfg.NeoTree.Wsl.FM
 M = { _cfg = { backend = "explorer", silent = true } }
 
 ---@private
@@ -86,7 +86,7 @@ local function get_node_path(state)
 end
 
 ---@nodiscard
----@param cfg WslOpenConfig|nil
+---@param cfg Cfg.NeoTree.Wsl.OpenConfig|nil
 function M.setup(cfg)
   if type(cfg) == "table" then
     local b = cfg.backend
