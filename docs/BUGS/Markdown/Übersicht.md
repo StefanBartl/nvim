@@ -1,23 +1,17 @@
 # Custom Markdown Bug Index
 
+## Table of content
+
+  - [CRITICAL Bugs](#critical-bugs)
+  - [IMPORTANT Bugs](#important-bugs)
+  - [NORMAL Bugs](#normal-bugs)
+  - [Long view](#long-view)
+  - [Notes](#notes)
+  - [Legende](#legende)
+
+---
+
 ## CRITICAL Bugs
-
-Titel:
-Modul:
-Kurzbeschreibung: `<leader>[` löst folgenen Fehler aus:
-Status:
-Reproduzierbar:
-Plattform:
-Detaildokument:
-Fehlermeldung:
-
-```vim
-  Error  17:55:34 msg_show.emsg E5108: [Error]() executing lua: ...a/Local/nvim/lua/custom/markdown/core/wrap_link/init.lua:123: Invalid 'end_col': out of range
-stack traceback:
-[C]: in function 'nvim_buf_set_text'
-...a/Local/nvim/lua/custom/markdown/core/wrap_link/init.lua:123: in function <...a/Local/nvim/lua/custom/markdown/core/wrap_link/init.lua:98>
-```
-
 
 ---
 
@@ -38,14 +32,7 @@ stack traceback:
 
 ## Notes
 
-### Module Metadaten
-
-Projekt: ________
-Stand: YYYY-MM-DD
-
-
-
-### Legende
+## Legende
 
 Severity:
 * CRITICAL – blockiert Editor oder führt zu Datenverlust
@@ -56,6 +43,7 @@ Severity:
 Status:
 * OPEN – bekannt, ungelöst
 * WIP – Analyse oder Fix in Arbeit
+* AUDIT: Fix angewendet, in Beobachtung
 * FIXED – gelöst, wartet auf Cleanup
 * WONTFIX – bewusst nicht gelöst
 * UPSTREAM – Bug liegt in externem Plugin
@@ -76,4 +64,6 @@ Fehlermeldung?:
 ```vim
 
 ```
+
 ---
+

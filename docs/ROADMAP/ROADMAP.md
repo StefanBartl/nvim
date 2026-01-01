@@ -20,7 +20,7 @@
 
 - `/docs` schöner formatieren , Rechtschreibung usw...
 
-- neotest lernen
+- neotest [lernen]()
 
 - `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 
@@ -30,7 +30,7 @@
 
 ## neotree
 
-- Neotree mappings so schreiben, dass auch nvimtree/netrw möglich wäre
+- [Neotree]() mappings so schreiben, dass auch nvimtree/netrw möglich wäre
     . DAs bedeutet auch, dass alle lib funktionen inerhalb der filtree filesystem ist, danmit keine dependencies entstehen
     . Die meisten helper sollten eigenltich als commands implementiert werden
 

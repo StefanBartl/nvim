@@ -2,32 +2,23 @@
 
 ## Table of content
 
-  - [CRITICAL Bugs](#critical-bugs)
   - [IMPORTANT Bugs](#important-bugs)
+    - [1. EPERM Error friert [Neovim](./BUG-002.md) ein](#1-eperm-error-friert-neovimbug-002md-ein)
+    - [2. Invalid window Error nach Renaming](#2-invalid-window-error-nach-renaming)
   - [NORMAL Bugs](#normal-bugs)
+    - [1. Neo-tree fällt auf CWD root zurück](#1-neo-tree-fllt-auf-cwd-root-zurck)
+    - [2. Linker Neo-tree schließt und öffnet rechts](#2-linker-neo-tree-schliet-und-ffnet-rechts)
   - [Long view](#long-view)
   - [Notes](#notes)
-    - [Module Metadaten](#module-metadaten)
     - [Legende](#legende)
     - [Template](#template)
 
 ---
 
-## CRITICAL Bugs
-
-Titel: Preview Error (truth field nil)
-Modul: neo-tree.nvim – sources/common/preview.lua
-Kurzbeschreibung: Preview- und Open-Operationen brechen vollständig ab, wenn Neo-tree das einzige oder letzte valide Window ist.
-Status: WIP
-Reproduzierbar: ja, unter bestimmten Window-Layouts
-Plattform: alle
-Detaildokument: [BUG-003](./BUG-003.md)
-
----
-
 ## IMPORTANT Bugs
 
-Titel: EPERM Error friert [Neovim](./BUG-002.md) ein
+### 1. EPERM Error friert [Neovim](./BUG-002.md) ein
+
 Modul: neo-tree.nvim – filesystem, fs_watch
 Kurzbeschreibung: Dateioperationen triggern File-Watcher in inkonsistentem Zustand, was zu EPERM-Fehlern, Hängern und Spam-Notifications führt.
 Status: WIP
@@ -37,7 +28,8 @@ Detaildokument: BUG-001](./BUG-002.md)
 
 ---
 
-Titel: Invalid window Error nach Renaming
+### 2. Invalid window Error nach Renaming
+
 Modul: neo-tree.nvim / nui.nvim – tree, debounce
 Kurzbeschreibung: Ungültige Window-Handles werden nach Rename weiterverwendet und führen zu Runtime-Errors.
 Status: FIXED
@@ -49,17 +41,19 @@ Detaildokument: [BUG-002](./BUG-002.md)
 
 ## NORMAL Bugs
 
-Titel: Neo-tree fällt auf CWD root zurück
+### 1. Neo-tree fällt auf CWD root zurück
+
 Modul: neo-tree.nvim – filesystem follow / reveal
 Kurzbeschreibung: Automatisches Follow überschreibt manuelle Navigation und setzt den Tree auf Root oder CWD zurück.
-Status: OPEN
+Status: AUDIT
 Reproduzierbar: häufig
 Plattform: alle
 Detaildokument: [BUG-004](./BUG-004.md)
 
 ---
 
-Titel: Linker Neo-tree schließt und öffnet rechts
+### 2. Linker Neo-tree schließt und öffnet rechts
+
 Modul: neo-tree.nvim – UI / window placement
 Kurzbeschreibung: Neo-tree verliert seine linke Dock-Position und wird rechts neu geöffnet.
 Status: OPEN
@@ -80,13 +74,6 @@ Detaildokument: [BUG-005](./BUG-005.md)
 
 ## Notes
 
-### Module Metadaten
-
-Projekt: neo-tree.nvim
-Stand: 2025-12-31
-
----
-
 ### Legende
 
 Severity:
@@ -100,6 +87,7 @@ Status:
 
 * OPEN – bekannt, ungelöst
 * WIP – Analyse oder Fix in Arbeit
+* AUDIT: Fix angewendet, in Beobachtung
 * FIXED – gelöst, wartet auf Cleanup
 * WONTFIX – bewusst nicht gelöst
 * UPSTREAM – Bug liegt in externem Plugin

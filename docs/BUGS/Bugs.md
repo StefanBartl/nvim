@@ -11,19 +11,16 @@
 
 ## Important Bugs
 
-### LSP
+### LSP - AUDIT: Ist bereits implementiert.
 
---- AUDIT: Ist bereits implementiert.
-Falls Typen nicht gefunden werden weiterhin besteht, stelle sicher dass:
-- Alle `@types/*.lua` Dateien mit `return {}` enden
-- Der @types Ordner in `lua/lsp/@types/` liegt
-- `find_type_dirs.lua` diesen Ordner findet
+ - Die @types und types dateien werden nicht gut erkannt.
+    ---> Besser mal mit types.lua probeiren, aber das sollte eigentlich keinen Unterschied machen
 
-- Die @types und types dateien werden nicht gut erkannt. Besser mal mit types.lua probeiren, aber das sollte eigentlich keinen Unterschied machen
+--
 
----
+## Eigene Plugins
 
-## neotree-fs-refactor
+### neotree-fs-refactor
 
 05:32:36 msg_show [neotree-fs-refactor] Event handlers registered
 [neotree-fs-refactor] [neotree-fs-refactor] Plugin loaded successfully

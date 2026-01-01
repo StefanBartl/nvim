@@ -8,15 +8,10 @@
 --- 4. Visual mode selection:
 ---    * If selection is URL/path: Wrap with `()` and prepend `[]`, cursor inside `[]`
 ---    * Otherwise: Wrap with `[]`, append `()`, cursor inside `()`
----
---- All operations work directly on the buffer without autocommands.
 
 local M = {}
-local map = require("lib.map")
 local api = vim.api
-local nvim_buf_set_text = api.nvim_buf_set_text
-local nvim_win_set_cursor = api.nvim_win_set_cursor
-local nvim_buf_get_mark = api.nvim_buf_get_mark
+local nvim_buf_set_text, nvim_win_set_cursor = api.nvim_buf_set_text, api.nvim_win_set_cursor
 
 ---@param bufnr integer Buffer number
 ---@return boolean True if buffer is markdown filetype
@@ -38,7 +33,7 @@ local function is_url_or_path(text)
   return false
 end
 
----@param bufnr integer|nil Buffer number
+---@param bufnr integer Buffer number
 function M.attach(bufnr)
   if not bufnr or not is_markdown_buf(bufnr) then
     return
@@ -51,18 +46,18 @@ function M.attach(bufnr)
     local row, col = unpack(api.nvim_win_get_cursor(0))
     local line = api.nvim_get_current_line()
 
-    -- Get word under cursor using native Vim word boundaries
+    -- FIX: Use proper word character class instead of %S
     local word_start = col
     local word_end = col
 
     -- Find start of word (move left while on word character)
-    while word_start > 0 and line:sub(word_start, word_start):match("%S") do
+    while word_start > 0 and line:sub(word_start, word_start):match("[%w_./:\\-]") do
       word_start = word_start - 1
     end
     word_start = word_start + 1
 
     -- Find end of word (move right while on word character)
-    while word_end <= #line and line:sub(word_end + 1, word_end + 1):match("%S") do
+    while word_end < #line and line:sub(word_end + 1, word_end + 1):match("[%w_./:\\-]") do
       word_end = word_end + 1
     end
 
@@ -70,7 +65,6 @@ function M.attach(bufnr)
 
     -- Case 1: Empty space or no word under cursor
     if word == "" or word:match("^%s*$") then
-      -- Insert []() and position cursor inside []
       nvim_buf_set_text(bufnr, row - 1, col, row - 1, col, { "[]()" })
       nvim_win_set_cursor(0, { row, col + 1 })
       return
@@ -78,50 +72,99 @@ function M.attach(bufnr)
 
     -- Case 2: URL or file path under cursor
     if is_url_or_path(word) then
-      -- Wrap with () and prepend [], cursor inside []
       local wrapped = "[](" .. word .. ")"
       nvim_buf_set_text(bufnr, row - 1, word_start - 1, row - 1, word_end, { wrapped })
-      -- Position cursor inside []
       nvim_win_set_cursor(0, { row, word_start })
       return
     end
 
     -- Case 3: Plain text under cursor
-    -- Wrap with [], append (), cursor inside ()
     local wrapped = "[" .. word .. "]()"
     nvim_buf_set_text(bufnr, row - 1, word_start - 1, row - 1, word_end, { wrapped })
-    -- Position cursor inside ()
     nvim_win_set_cursor(0, { row, word_start + #word + 2 })
   end
 
   --- Handler for <leader>[ mapping in visual mode
   local function wrap_handler_visual()
-    -- Get visual selection boundaries BEFORE exiting visual mode
-    -- Use marks '< and '> which are set by visual mode
-    local start_mark = nvim_buf_get_mark(bufnr, "<")
-    local end_mark = nvim_buf_get_mark(bufnr, ">")
+    -- CRITICAL FIX: We MUST read the actual selection from the mode state,
+    -- NOT from marks, because marks are only updated AFTER visual mode exits.
+    -- Use vim.fn.getpos('v') and current cursor to get live selection bounds.
 
-    local start_row = start_mark[1] - 1  -- Convert to 0-indexed
-    local start_col = start_mark[2]      -- Already 0-indexed
-    local end_row = end_mark[1] - 1      -- Convert to 0-indexed
-    local end_col = end_mark[2]          -- Already 0-indexed
+    local mode = vim.fn.mode()
+    if not mode:match('[vV\22]') then
+      vim.notify("[wrap_link] Not in visual mode", vim.log.levels.ERROR)
+      return
+    end
 
-    -- Get the selected text
-    local lines = api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col + 1, {})
+    -- Get live selection bounds (these are 1-based)
+    local cursor = api.nvim_win_get_cursor(0)
+    local v_start = vim.fn.getpos('v')
 
-    -- Exit visual mode
-    api.nvim_feedkeys(api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+    -- Determine selection bounds (handle reverse selection)
+    local start_row, end_row, start_col, end_col
+    if v_start[2] < cursor[1] or (v_start[2] == cursor[1] and v_start[3] <= cursor[2] + 1) then
+      -- Normal direction: v_start is beginning
+      start_row = v_start[2] - 1  -- Convert to 0-indexed
+      start_col = v_start[3] - 1  -- Convert to 0-indexed
+      end_row = cursor[1] - 1     -- Convert to 0-indexed
+      end_col = cursor[2]         -- Already 0-indexed from nvim_win_get_cursor
+    else
+      -- Reverse selection: cursor is beginning
+      start_row = cursor[1] - 1
+      start_col = cursor[2]
+      end_row = v_start[2] - 1
+      end_col = v_start[3] - 1
+    end
+
+    -- For charwise visual mode, end_col points to the last selected character
+    -- We need to make it exclusive (one past) for nvim_buf_set_text
+    local end_col_exclusive = end_col + 1
+
+    -- Validate indices
+    local line_count = api.nvim_buf_line_count(bufnr)
+    if start_row >= line_count or end_row >= line_count or start_row < 0 or end_row < 0 then
+      vim.notify("[wrap_link] Invalid selection range", vim.log.levels.ERROR)
+      return
+    end
+
+    -- Get line lengths to validate column positions
+    local start_line = api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1]
+    local end_line = api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, false)[1]
+
+    if not start_line or not end_line then
+      vim.notify("[wrap_link] Could not read selection lines", vim.log.levels.ERROR)
+      return
+    end
+
+    -- Clamp column positions to valid range
+    start_col = math.max(0, math.min(start_col, #start_line))
+    end_col_exclusive = math.max(start_col + 1, math.min(end_col_exclusive, #end_line + 1))
+
+    -- Get the selected text BEFORE exiting visual mode
+    local ok, lines = pcall(api.nvim_buf_get_text, bufnr, start_row, start_col, end_row, end_col_exclusive, {})
+    if not ok or not lines then
+      vim.notify("[wrap_link] Could not extract selection text: " .. tostring(lines), vim.log.levels.ERROR)
+      return
+    end
+
+    -- NOW exit visual mode (after all data is captured)
+    vim.cmd('normal! \\<Esc>')
+
+    -- Small delay to ensure mode change is complete
+    vim.schedule(function()
 
     -- Join lines if multi-line selection
     local text = table.concat(lines, "\n")
 
-    -- Trim whitespace for better analysis
+    -- Trim whitespace for analysis
     local trimmed_text = text:match("^%s*(.-)%s*$") or ""
 
     if trimmed_text == "" then
       -- Empty selection, just insert []()
-      nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col + 1, { "[]()" })
-      nvim_win_set_cursor(0, { start_row + 1, start_col + 1 })
+      local ok_set = pcall(api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col_exclusive, { "[]()" })
+      if ok_set then
+        api.nvim_win_set_cursor(0, { start_row + 1, start_col + 1 })
+      end
       return
     end
 
@@ -138,29 +181,34 @@ function M.attach(bufnr)
     if word_count == 1 and not trimmed_text:match("\n") then
       if is_url_or_path(trimmed_text) then
         -- Case: Single word URL or file path
-        -- Wrap with () and prepend [], cursor inside []
         wrapped = "[](" .. trimmed_text .. ")"
         cursor_offset = 1  -- Position cursor inside []
       else
         -- Case: Single plain word
-        -- Wrap with [], append (), cursor inside ()
         wrapped = "[" .. trimmed_text .. "]()"
         cursor_offset = #trimmed_text + 2  -- Position cursor inside ()
       end
     else
       -- Multiple words or multiline: always treat as plain text
-      -- Wrap with [], append (), cursor inside ()
       wrapped = "[" .. trimmed_text .. "]()"
       cursor_offset = #trimmed_text + 2  -- Position cursor inside ()
     end
 
     -- Replace the selected text with wrapped version
-    nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col + 1, { wrapped })
-    nvim_win_set_cursor(0, { start_row + 1, start_col + cursor_offset })
+    local ok_set = pcall(api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col_exclusive, { wrapped })
+    if ok_set then
+      api.nvim_win_set_cursor(0, { start_row + 1, start_col + cursor_offset })
+    else
+      vim.notify("[wrap_link] Failed to replace text", vim.log.levels.ERROR)
+    end
+    end)  -- end of vim.schedule
   end
 
-  map("n", "<leader>[", wrap_handler_normal, opts, "[Custom.Markdown] Wrap word, URL, or path in link")
-  map("v", "<leader>[", wrap_handler_visual, opts, "[Custom.Markdown] Wrap selection in link")
+  -- Register keymaps
+  vim.keymap.set("n", "<leader>[", wrap_handler_normal,
+    vim.tbl_extend("force", opts, { desc = "[Custom.Markdown] Wrap word/URL in link" }))
+  vim.keymap.set("v", "<leader>[", wrap_handler_visual,
+    vim.tbl_extend("force", opts, { desc = "[Custom.Markdown] Wrap selection in link" }))
 end
 
 return M

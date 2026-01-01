@@ -40,15 +40,15 @@ Severity:
 Status:
 * OPEN – bekannt, ungelöst
 * WIP – Analyse oder Fix in Arbeit
+* AUDIT: Fix angewendet, in Beobachtung
 * FIXED – gelöst, wartet auf Cleanup
 * WONTFIX – bewusst nicht gelöst
 * UPSTREAM – Bug liegt in externem Plugin
 
 ---
 
-### Template
+###  __TITEL__ (Template)
 
-Titel:
 Modul:
 Kurzbeschreibung:
 Status:

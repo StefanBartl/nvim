@@ -10,7 +10,7 @@
 ## Syntax
 
 1. [lib lazy](.\lua\lib\lazy\README.md) implementieren
-2. local funktionen statt exporieren wenn keine externe Referenz! Alle files durchgehen!
+2. local funktionen statt exporieren wenn keine externe Referenz! Alle files durchgehen! `recommender -r`
 3. explizit coden -> `return nil` statt `return` als Beispiel
 4. namespace von typen explizit einschränken
 
