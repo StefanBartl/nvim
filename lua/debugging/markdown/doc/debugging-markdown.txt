@@ -1,0 +1,277 @@
+*debugging-markdown.txt*  Markdown syntax debugging tools
+
+==============================================================================
+CONTENTS                                         *debugging-markdown-contents*
+
+    1. Introduction .................. |debugging-markdown-introduction|
+    2. Commands ...................... |debugging-markdown-commands|
+    3. Log Format .................... |debugging-markdown-log-format|
+    4. Use Cases ..................... |debugging-markdown-use-cases|
+    5. API ........................... |debugging-markdown-api|
+    6. Common Fixes .................. |debugging-markdown-fixes|
+    7. Troubleshooting ............... |debugging-markdown-troubleshooting|
+
+==============================================================================
+1. INTRODUCTION                              *debugging-markdown-introduction*
+
+The markdown module provides tools for debugging Markdown syntax highlighting
+issues, particularly inline code and fenced blocks.
+
+Common problems:
+    • Inline code not highlighted: `code`
+    • Fenced blocks wrong colors
+    • Tree-sitter vs Vim syntax conflicts
+    • Colorscheme missing definitions
+    • LSP semantic tokens override
+
+==============================================================================
+2. COMMANDS                                    *debugging-markdown-commands*
+
+:MarkdownInlineDebugFixed                  *:MarkdownInlineDebugFixed*
+    Gather comprehensive diagnostic information about Markdown
+    highlighting and write to timestamped log file.
+
+    Output location:
+        stdpath("data")/debuglog/markdown_inline/debuglog_TIMESTAMP.log
+
+    Information collected:
+        • Neovim version
+        • Colorscheme
+        • Terminal colors
+        • Buffer info (filetype, syntax, buftype)
+        • Sample content (first 50 lines)
+        • Highlight groups (markdownCode, @markup.raw.inline, etc.)
+        • Tree-sitter parser status
+        • LSP clients
+        • Autocommands
+        • Loaded Markdown modules
+
+    Example: >
+        :MarkdownInlineDebugFixed
+        " [INFO] markdown.inline_debug: wrote debug log to ...
+<
+
+==============================================================================
+3. LOG FORMAT                                *debugging-markdown-log-format*
+
+Header:~
+    Markdown Inline Highlight Debug - TIMESTAMP
+
+ENVIRONMENT:~
+    • Neovim version
+    • Colorscheme name
+    • termguicolors setting
+    • Background (dark/light)
+    • runtimepath
+
+BUFFER:~
+    • Buffer number
+    • File name
+    • Filetype
+    • Syntax setting
+    • Buftype
+    • Modified/readonly status
+    • Line count
+    • Sample lines (first 50)
+
+HIGHLIGHTS:~
+    Selected groups with their definitions:
+        markdownCode
+        markdownCodeDelimiter
+        MarkdownInlineCode
+        @markup.raw.inline
+        @markup.raw.block
+        @markup.raw.inline.markdown_inline
+        @text.literal.markdown_inline
+        @punctuation.delimiter.markdown
+        Comment, String, Normal
+
+TREESITTER:~
+    • Filetype
+    • Parser available?
+    • Parser attached?
+    • Parsers module loaded?
+
+LSP:~
+    • Client list
+    • Client names
+    • Attached buffers
+    • Server capabilities
+
+AUTOCMDS:~
+    • MarkdownFencedFix group commands
+
+MODULES:~
+    • Loaded modules matching: markdown, highlight, snacks, fenced,
+      treesitter
+
+SYNTAX:~
+    • vim.g.syntax_on status
+
+==============================================================================
+4. USE CASES                                  *debugging-markdown-use-cases*
+
+Diagnose highlight issues:~
+>vim
+    :MarkdownInlineDebugFixed
+
+    " Check log for:
+    " - Highlight definitions present?
+    " - Tree-sitter parser attached?
+    " - Conflicting autocommands?
+<
+
+Compare colorschemes:~
+>vim
+    :colorscheme gruvbox
+    :MarkdownInlineDebugFixed
+
+    :colorscheme catppuccin
+    :MarkdownInlineDebugFixed
+
+    " Compare logs to see highlight differences
+<
+
+Debug tree-sitter:~
+>vim
+    :MarkdownInlineDebugFixed
+
+    " Look for in log:
+    " has_parser = true
+    " parser_attached = true
+<
+
+LSP conflict detection:~
+>vim
+    :MarkdownInlineDebugFixed
+
+    " Check LSP section for semantic tokens
+<
+
+==============================================================================
+5. API                                              *debugging-markdown-api*
+
+M.gather()                                     *debugging-markdown.gather()*
+    Collect diagnostic information and write log.
+
+    Returns:~
+        boolean ok, string|nil error_or_path
+
+    Example: >lua
+        local M = require("debugging.markdown.inline_debug")
+        local ok, path = M.gather()
+        if ok then
+          print("Log written to: " .. path)
+        end
+<
+
+M.open_log()                                 *debugging-markdown.open_log()*
+    Open generated log file in new tab.
+
+    Returns:~
+        boolean ok, string|nil error_or_path
+
+    Example: >lua
+        local M = require("debugging.markdown.inline_debug")
+        M.gather()
+        M.open_log()  -- Opens log in new tab
+<
+
+Module state:~
+>lua
+    local M = require("debugging.markdown.inline_debug")
+
+    print(M.out_path)   -- Path to last log
+    print(M.timestamp)  -- Timestamp of last run
+    print(M.bufnr)      -- Buffer that was analyzed
+    print(vim.inspect(M.results))  -- Full diagnostic data
+<
+
+==============================================================================
+6. COMMON FIXES                                *debugging-markdown-fixes*
+
+Use tree-sitter highlights:~
+>vim
+    :TSEnable highlight
+<
+
+Disable conflicting syntax:~
+>lua
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "markdown",
+      callback = function()
+        vim.opt_local.syntax = "off"
+      end,
+    })
+<
+
+Define missing highlight groups:~
+>lua
+    vim.api.nvim_set_hl(0, "markdownCode", {
+      bg = "#3c3836",
+      fg = "#83a598",
+    })
+
+    vim.api.nvim_set_hl(0, "@markup.raw.inline.markdown_inline", {
+      link = "markdownCode",
+    })
+<
+
+Disable LSP semantic tokens:~
+>lua
+    require("lspconfig").marksman.setup({
+      on_attach = function(client, bufnr)
+        client.server_capabilities.semanticTokensProvider = nil
+      end,
+    })
+<
+
+Force tree-sitter indent:~
+>lua
+    require("debugging.nvim_options.indent_helpers")
+      .prefer_treesitter_indent()
+<
+
+==============================================================================
+7. TROUBLESHOOTING                    *debugging-markdown-troubleshooting*
+
+Log file not created~
+
+Symptom: "failed to write log file" error
+
+Cause: Permission issues or invalid path
+
+Solution: >lua
+    local dir = vim.fn.stdpath("data") .. "/debuglog/markdown_inline"
+    vim.fn.mkdir(dir, "p")
+<
+
+Highlight shows error~
+
+Symptom: Highlight value shows "<error: ...>"
+
+Cause: Highlight group doesn't exist
+
+This is informational - the group isn't defined.
+
+Tree-sitter not detected~
+
+Symptom: parsers_available = false
+
+Cause: nvim-treesitter not installed
+
+Solution: >vim
+    :Lazy install nvim-treesitter
+    :TSInstall markdown markdown_inline
+<
+
+LSP section empty~
+
+Symptom: clients = {}
+
+Cause: No LSP attached to buffer
+
+This is normal if you don't use Markdown LSP.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

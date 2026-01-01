@@ -1,0 +1,319 @@
+*debugging.txt*  Comprehensive debugging utilities for Neovim
+
+Author:  Stefan Bartl
+License: MIT
+
+==============================================================================
+CONTENTS                                                   *debugging-contents*
+
+    1. Introduction ........................... |debugging-introduction|
+    2. Setup .................................. |debugging-setup|
+    3. Modules ................................ |debugging-modules|
+    4. Commands ............................... |debugging-commands|
+    5. Keymaps ................................ |debugging-keymaps|
+    6. Configuration .......................... |debugging-config|
+    7. Health Check ........................... |debugging-health|
+    8. Troubleshooting ........................ |debugging-troubleshooting|
+
+==============================================================================
+1. INTRODUCTION                                        *debugging-introduction*
+
+The `debugging` module provides a unified suite of tools for inspecting,
+logging, and debugging Neovim's internal state. All modules follow strict
+architectural guidelines with type safety, cross-platform compatibility,
+and graceful degradation.
+
+Key Features:~
+    • Unified debug views (`:messages`, Noice)
+    • Window/Buffer/Tab inspection
+    • Variable dumping utilities
+    • Terminal keylogging
+    • Markdown highlight debugging
+    • Cursor state inspection
+    • Autocommand inspection
+
+==============================================================================
+2. SETUP                                                      *debugging-setup*
+
+Minimal setup:~
+>lua
+    require("debugging").setup()
+<
+
+Full configuration:~
+>lua
+    require("debugging").setup({
+      views = {
+        keymaps = {
+          enable = true,
+          prefix = "<leader>d",
+        },
+        autocmds = {
+          enable = true,
+          auto_refresh = true,
+        },
+      },
+      usercmds = true,
+    })
+<
+
+==============================================================================
+3. MODULES                                                  *debugging-modules*
+
+The debugging system is organized into modular components:
+
+views~                                                     |debugging-views.txt|
+    Unified debug views for `:messages` and Noice with window management,
+    auto-refresh, and clipboard integration.
+
+usercmds~                                             |debugging-usercmds.txt|
+    Report commands for buffer, tab, and window inspection.
+
+vardump~                                               |debugging-vardump.txt|
+    Lua variable inspection utility for deep table traversal.
+
+terminals~                                           |debugging-terminals.txt|
+    Terminal debugging tools including keylogger.
+
+nvim_options~                                   |debugging-nvim-options.txt|
+    Helpers for inspecting and toggling Neovim options.
+
+markdown~                                             |debugging-markdown.txt|
+    Tools for debugging Markdown syntax highlighting issues.
+
+cursor~                                                 |debugging-cursor.txt|
+    Cursor state inspection utilities.
+
+autocmds~                                             |debugging-autocmds.txt|
+    Autocommand listing and inspection.
+
+==============================================================================
+4. COMMANDS                                              *debugging-commands*
+
+Views Commands~                                     *debugging-views-commands*
+
+:DebugMessagesShow                                      *:DebugMessagesShow*
+    Open messages window with deterministic focus and auto-bottom cursor.
+
+:DebugMessagesCapture                                *:DebugMessagesCapture*
+    Capture `:messages` output to timestamped file and clipboard.
+
+    File location: `$REPOS_DIR/debug_views/` or `stdpath("state")/debug_views/`
+
+:DebugWindowsClear                                      *:DebugWindowsClear*
+    Close all debug windows (messages, noice_all, noice_errors).
+
+User Commands~                                   *debugging-usercmds-commands*
+
+:BufReport                                                      *:BufReport*
+    Print comprehensive buffer report to `:messages`.
+
+    Includes: buffer list, filetypes, buffer types, loaded status.
+
+:TabReport                                                      *:TabReport*
+    Print tab report to `:messages`.
+
+    Includes: tab list, windows per tab, current tab highlight.
+
+:WinReport [{winid}]                                            *:WinReport*
+    Print window report to `:messages`.
+
+    Without argument: reports current window
+    With argument: reports specified window ID
+
+    Example: >
+        :WinReport        " Current window
+        :WinReport 1000   " Window ID 1000
+<
+
+Legacy Commands~                                 *debugging-legacy-commands*
+
+:ListAutocmds {event} [pattern]                            *:ListAutocmds*
+    List all autocommands for a specific event.
+
+    Example: >
+        :ListAutocmds BufAdd
+        :ListAutocmds BufEnter *.lua
+<
+
+:MarkdownInlineDebugFixed                        *:MarkdownInlineDebugFixed*
+    Gather diagnostic information about inline-code highlighting in
+    Markdown buffers. Writes timestamped log to debug directory.
+
+:TerminalKeyLoggerStart                            *:TerminalKeyLoggerStart*
+    Start logging all keypresses in current terminal buffer.
+
+:TerminalKeyLoggerStop                              *:TerminalKeyLoggerStop*
+    Stop terminal keylogging.
+
+==============================================================================
+5. KEYMAPS                                                *debugging-keymaps*
+
+Default Prefix: `<leader>d`~
+
+The views module provides default keymaps for quick access:
+
+<leader>dm                                              *<leader>dm*
+    Open messages view with auto-bottom cursor
+
+<leader>dn                                              *<leader>dn*
+    Open Noice all messages
+
+<leader>de                                              *<leader>de*
+    Open Noice errors only
+
+<leader>dc                                              *<leader>dc*
+    Capture messages to file + clipboard
+
+<leader>dx                                              *<leader>dx*
+    Clear all debug windows
+
+Custom Prefix~
+
+To change the keymap prefix: >lua
+    require("debugging").setup({
+      views = {
+        keymaps = {
+          prefix = "<leader>dbg",
+        },
+      },
+    })
+<
+
+Disable Keymaps~
+>lua
+    require("debugging").setup({
+      views = {
+        keymaps = {
+          enable = false,
+        },
+      },
+    })
+<
+
+==============================================================================
+6. CONFIGURATION                                          *debugging-config*
+
+Full Configuration Schema~
+>lua
+    require("debugging").setup({
+      -- Unified debug views
+      views = {
+        keymaps = {
+          enable = true,              -- Enable keymaps
+          prefix = "<leader>d",       -- Keymap prefix
+        },
+        autocmds = {
+          enable = true,              -- Enable autocommands
+          group_name = "DebugViewsAuto",
+          auto_refresh = true,        -- Auto-refresh on WinEnter
+        },
+        timings = {
+          delay_messages_ms = 30,     -- Delay before showing messages
+          delay_noice_ms = 50,        -- Delay before showing Noice
+          retry_delay_ms = 60,        -- Retry delay for cursor-at-bottom
+          attempts = 3,               -- Max retry attempts
+        },
+      },
+
+      -- User commands (BufReport, TabReport, WinReport)
+      usercmds = true,
+
+      -- Legacy modules
+      autocmds = {
+        list_autocmds = false,        -- Enable :ListAutocmds
+      },
+      markdown = {
+        inline_debug_fixed = false,   -- Enable markdown debugging
+      },
+      terminals = {
+        keylogger = false,            -- Enable terminal keylogger
+      },
+    })
+<
+
+Default Values~
+
+All configuration is optional. Defaults:
+    • views.keymaps.enable: true
+    • views.keymaps.prefix: "<leader>d"
+    • views.autocmds.enable: true
+    • views.autocmds.auto_refresh: true
+    • views.timings.attempts: 3
+    • usercmds: true
+
+==============================================================================
+7. HEALTH CHECK                                            *debugging-health*
+
+Run health check:~
+>vim
+    :checkhealth debugging
+<
+
+The health check verifies:
+
+Clipboard Providers~
+    • macOS: pbcopy
+    • Wayland: wl-copy
+    • X11: xclip, xsel
+    • WSL/Windows: clip.exe
+
+Library Dependencies~
+    • lib.buf_win_tab.capture (optional, for enhanced window capture)
+    • lib.buf_win_tab.windows_utils (required for :BufReport)
+    • lib.buf_win_tab.tabs_utils (required for :TabReport)
+
+Write Permissions~
+    • Checks if stdpath("state")/debug_views is writable
+
+==============================================================================
+8. TROUBLESHOOTING                              *debugging-troubleshooting*
+
+Clipboard not working~
+
+Symptom: `:DebugMessagesCapture` shows clipboard warning
+
+Solution: Install a clipboard provider:
+    • macOS: pbcopy (built-in)
+    • Wayland: `sudo apt install wl-clipboard`
+    • X11: `sudo apt install xclip` or `xsel`
+    • WSL: clip.exe (built-in)
+
+Window not focusing~
+
+Symptom: Debug window opens but cursor not visible
+
+Solution: Ensure window is focusable:
+>lua
+    local win = vim.api.nvim_get_current_win()
+    local config = vim.api.nvim_win_get_config(win)
+    config.focusable = true
+    vim.api.nvim_win_set_config(win, config)
+<
+
+Views not refreshing~
+
+Symptom: Messages window shows stale content
+
+Solution: Enable auto-refresh in config:
+>lua
+    require("debugging").setup({
+      views = {
+        autocmds = { auto_refresh = true },
+      },
+    })
+<
+
+BufReport/TabReport not available~
+
+Symptom: Commands not found
+
+Solution: Check if lib.buf_win_tab.* is installed:
+>vim
+    :checkhealth debugging
+<
+
+If libraries are missing, only :WinReport will be available.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

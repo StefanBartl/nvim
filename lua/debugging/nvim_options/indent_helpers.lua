@@ -1,4 +1,4 @@
----@module 'debugging.indent_helpers'
+---@module 'debugging.nvim_options.indent_helpers'
 --Helpers to inspect and toggle indentation providers in Neovim.
 -- Usage:
 -- :lua require("debugging.indent_helpers").print_indent_options()

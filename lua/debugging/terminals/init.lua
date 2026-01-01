@@ -1,10 +1,12 @@
 ---@module 'debugging.terminals'
 
 local M = {}
----@param modules terminals_modules
+---@param opts terminals_modules
 ---@return nil
-function M.attach(modules)
-  if modules.keylogger and modules.keylogger == true then
+function M.attach(opts)
+  opts = opts or {}
+
+  if opts.keylogger and opts.keylogger == true then
     require("debugging.terminals.keylogger")
   end
 end

@@ -1,0 +1,341 @@
+*debugging-usercmds.txt*  Buffer, tab, and window inspection commands
+
+==============================================================================
+CONTENTS                                       *debugging-usercmds-contents*
+
+    1. Introduction ................. |debugging-usercmds-introduction|
+    2. Commands ..................... |debugging-usercmds-commands|
+    3. Output Reference ............. |debugging-usercmds-output|
+    4. Use Cases .................... |debugging-usercmds-use-cases|
+    5. Integration .................. |debugging-usercmds-integration|
+    6. Troubleshooting .............. |debugging-usercmds-troubleshooting|
+
+==============================================================================
+1. INTRODUCTION                            *debugging-usercmds-introduction*
+
+The usercmds module provides inspection commands for buffers, tabs, and
+windows with comprehensive reporting. All commands print detailed diagnostic
+information to |:messages|.
+
+==============================================================================
+2. COMMANDS                                    *debugging-usercmds-commands*
+
+:BufReport                                                      *:BufReport*
+    Print comprehensive buffer report to :messages.
+
+    Information included:
+        • Buffer ID
+        • Buffer name (file path)
+        • Filetype
+        • Buftype (normal, terminal, quickfix, etc.)
+        • Loaded status
+        • Modified status
+        • Listed status
+
+    Example output: >
+        === Buffer Report ===
+        [1] init.lua
+          Filetype: lua
+          Buftype:
+          Loaded: true
+          Modified: false
+
+        [2] [No Name]
+          Filetype:
+          Buftype: nofile
+          Loaded: true
+          Modified: true
+<
+
+    Dependencies:~
+        Requires: lib.buf_win_tab.windows_utils
+
+        If library not available, command will not be registered.
+        Check with: >
+            :checkhealth debugging
+<
+
+:TabReport                                                      *:TabReport*
+    Print tab report to :messages.
+
+    Information included:
+        • Tab numbers
+        • Windows per tab
+        • Current tab indicator
+        • Window IDs per tab
+
+    Example output: >
+        === Tab Report ===
+        Tab 1 (current)
+          Windows: 1000, 1001, 1002
+
+        Tab 2
+          Windows: 1003
+<
+
+    Dependencies:~
+        Requires: lib.buf_win_tab.tabs_utils
+
+        If library not available, command will not be registered.
+
+:WinReport [{winid}]                                            *:WinReport*
+    Print detailed window report to :messages.
+
+    Parameters:~
+        {winid}  Optional. Window ID to inspect.
+                 If omitted, uses current window.
+
+    Information included:
+        • Window ID
+        • Buffer ID and name
+        • Cursor position
+        • Window options (number, wrap, cursorline, etc.)
+        • Window variables (custom tags, state)
+        • Window configuration (floating, size, z-index)
+
+    Example output: >
+        === Window Report: 1000 ===
+        Valid: true
+        Buffer: 5
+          Name: /path/to/file.lua
+          Filetype: lua
+          Buftype:
+        Cursor: [10, 5]
+        Window Options:
+          number: true
+          wrap: false
+          cursorline: true
+          winbar:
+        Window Variables:
+          custom_tag: messages
+        Window Config:
+          Relative: editor
+          Width: full
+          Height: full
+          Focusable: true
+<
+
+    Examples: >
+        :WinReport              " Current window
+        :WinReport 1000         " Window ID 1000
+<
+
+    Dependencies:~
+        None. Always available (self-contained).
+
+==============================================================================
+3. OUTPUT REFERENCE                            *debugging-usercmds-output*
+
+Buffer Report Fields:~
+
+    Buffer ID:    Numeric buffer identifier
+    Buffer name:  File path or [No Name]
+    Filetype:     Value of 'filetype' option
+    Buftype:      Type of buffer (see |buftype|)
+                  "" (empty) = normal file
+                  "nofile"   = no associated file
+                  "terminal" = terminal buffer
+                  "quickfix" = quickfix/location list
+    Loaded:       Whether buffer is loaded into memory
+    Modified:     Whether buffer has unsaved changes
+    Listed:       Whether buffer appears in buffer list
+
+Tab Report Fields:~
+
+    Tab number:       Numeric tab identifier
+    (current):        Indicator for current tab
+    Windows:          List of window IDs in tab
+
+Window Report Fields:~
+
+    Window ID:        Numeric window identifier
+    Valid:            Result of nvim_win_is_valid()
+    Buffer:           Buffer displayed in window
+    Buffer Name:      File path or buffer name
+    Filetype:         Buffer's filetype
+    Buftype:          Buffer's type
+    Cursor:           Cursor position {row, col} (1-indexed)
+
+    Window Options:   Common window-local options
+        number:           Line numbers enabled
+        relativenumber:   Relative line numbers
+        wrap:             Line wrapping enabled
+        cursorline:       Highlight cursor line
+        winbar:           Window toolbar content
+        statusline:       Status line content
+        signcolumn:       Sign column visibility
+        foldcolumn:       Fold column width
+
+    Window Variables: Custom window-local variables
+        custom_tag:       Tag set by debugging.views
+        (others):         User-defined variables
+
+    Window Config:    Window configuration (see |nvim_win_get_config()|)
+        Relative:         Positioning (editor/win/cursor)
+        Width:            Window width
+        Height:           Window height
+        Focusable:        Whether window can receive focus
+        Z-Index:          Stacking order (floating windows)
+
+==============================================================================
+4. USE CASES                                    *debugging-usercmds-use-cases*
+
+Debug buffer issues:~
+>vim
+    :BufReport
+
+    " Check:
+    " - Are all expected buffers loaded?
+    " - Correct filetypes set?
+    " - Any unexpected buffers?
+<
+
+Debug tab layout:~
+>vim
+    :TabReport
+
+    " Check:
+    " - How many tabs open?
+    " - Which windows in each tab?
+    " - Current tab correct?
+<
+
+Debug window focus:~
+>vim
+    :WinReport
+
+    " Check:
+    " - Correct buffer displayed?
+    " - Cursor position as expected?
+    " - Window focusable?
+<
+
+Inspect floating windows:~
+>vim
+    :WinReport
+
+    " Look for:
+    " Window Config:
+    "   Relative: win
+    "   Z-Index: 50
+<
+
+Find tagged windows:~
+>vim
+    :WinReport
+
+    " Look for:
+    " Window Variables:
+    "   custom_tag: messages
+
+    " Tags set by debugging.views module
+<
+
+Debug all windows:~
+>vim
+    " Get all window IDs
+    :lua print(vim.inspect(vim.api.nvim_list_wins()))
+
+    " Report each window
+    :WinReport 1000
+    :WinReport 1001
+    :WinReport 1002
+<
+
+==============================================================================
+5. INTEGRATION                              *debugging-usercmds-integration*
+
+With debugging.views:~
+
+    Window reports integrate with window tagging:
+>vim
+    " Open messages view
+    :DebugMessagesShow
+
+    " Check window details
+    :WinReport
+    " Output shows:
+    " Window Variables:
+    "   custom_tag: messages
+<
+
+Programmatic access:~
+>lua
+    -- Check if command available
+    local ok = pcall(vim.cmd, "WinReport")
+
+    -- Get report data directly
+    local report = require("debugging.usercmds").collect_win_report(1000)
+    print(vim.inspect(report.raw))
+<
+
+In autocommands:~
+>lua
+    vim.api.nvim_create_autocmd("WinEnter", {
+      callback = function()
+        vim.cmd("WinReport")
+      end,
+    })
+<
+
+With keymaps:~
+>lua
+    vim.keymap.set("n", "<leader>db", ":BufReport<CR>")
+    vim.keymap.set("n", "<leader>dt", ":TabReport<CR>")
+    vim.keymap.set("n", "<leader>dw", ":WinReport<CR>")
+<
+
+==============================================================================
+6. TROUBLESHOOTING                      *debugging-usercmds-troubleshooting*
+
+Command not found~
+
+Symptom: E492: Not an editor command: BufReport
+
+Cause: Optional dependencies missing
+
+Solution: >vim
+    " Check health
+    :checkhealth debugging
+
+    " If lib.buf_win_tab.* missing:
+    " Only :WinReport will be available
+<
+
+Invalid window ID~
+
+Symptom: "Invalid window ID: X" error
+
+Cause: Window no longer exists
+
+Solution: >vim
+    " List valid windows
+    :lua print(vim.inspect(vim.api.nvim_list_wins()))
+
+    " Use valid window ID
+    :WinReport 1000
+<
+
+Window variables empty~
+
+Symptom: "Window Variables:" section empty
+
+Cause: Window has no custom variables
+
+This is normal. Not all windows have custom variables.
+Only specific modules (like debugging.views) set them.
+
+ERROR in output~
+
+Symptom: Fields show "ERROR"
+
+Cause: API call failed (window/buffer invalid)
+
+Solution: >vim
+    " Check if window/buffer exists
+    :lua print(vim.api.nvim_win_is_valid(1000))
+    :lua print(vim.api.nvim_buf_is_valid(5))
+<
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

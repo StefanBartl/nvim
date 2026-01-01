@@ -1,0 +1,218 @@
+*debugging-autocmds.txt*  Autocommand inspection utilities
+
+==============================================================================
+CONTENTS                                       *debugging-autocmds-contents*
+
+    1. Introduction ................. |debugging-autocmds-introduction|
+    2. Commands ..................... |debugging-autocmds-commands|
+    3. Output Reference ............. |debugging-autocmds-output|
+    4. Common Events ................ |debugging-autocmds-events|
+    5. Use Cases .................... |debugging-autocmds-use-cases|
+    6. Troubleshooting .............. |debugging-autocmds-troubleshooting|
+
+==============================================================================
+1. INTRODUCTION                            *debugging-autocmds-introduction*
+
+The autocmds module provides utilities for inspecting and listing autocommands.
+Useful for debugging event-driven behavior, finding conflicts, and verifying
+plugin registration.
+
+==============================================================================
+2. COMMANDS                                    *debugging-autocmds-commands*
+
+:ListAutocmds {event} [pattern]                           *:ListAutocmds*
+    List all autocommands matching a specific event and pattern.
+
+    Parameters:
+        {event}    Required. Autocommand event (e.g. "BufEnter")
+        [pattern]  Optional. File pattern (default: "*")
+
+    Examples: >
+        :ListAutocmds BufAdd
+        :ListAutocmds BufEnter *.lua
+        :ListAutocmds FileType markdown
+<
+
+    Output format:
+        === Autocommands for {event} {pattern} ===
+
+        [1] Group: {group_name}
+            Event: {event}
+            Pattern: {pattern}
+            Buffer: {buffer|N/A}
+            Command: {command}
+            Callback: <function>
+            Description: {desc}
+
+==============================================================================
+3. OUTPUT REFERENCE                            *debugging-autocmds-output*
+
+Group:~
+    Name of autocommand group.
+    "default" if no group specified.
+
+    Example:
+        Group: LspAttach
+
+Event:~
+    The autocommand event that triggers this command.
+
+    Example:
+        Event: BufEnter
+
+Pattern:~
+    File pattern that must match.
+    "N/A" if no pattern specified.
+
+    Example:
+        Pattern: *.lua
+
+Buffer:~
+    Buffer-specific autocommand (if set).
+    "N/A" for global autocommands.
+
+    Example:
+        Buffer: 5
+
+Command vs Callback:~
+    Command:  Vim command string
+        Command: TSBufEnable highlight
+
+    Callback: Lua function
+        Callback: <function>
+
+    Note: Function details not shown. Use debug.getinfo() for inspection.
+
+Description:~
+    User-provided description from registration.
+
+    Example:
+        Description: Attach LSP to Lua files
+
+==============================================================================
+4. COMMON EVENTS                                *debugging-autocmds-events*
+
+Buffer Events:~
+    BufAdd          Buffer added to buffer list
+    BufEnter        Entering a buffer
+    BufLeave        Leaving a buffer
+    BufReadPost     After reading file
+    BufWritePre     Before writing buffer
+    BufWritePost    After writing buffer
+    BufDelete       Before deleting buffer
+    BufWipeout      Before wiping buffer
+
+Window Events:~
+    WinEnter        Entering a window
+    WinLeave        Leaving a window
+    WinNew          New window created
+    WinClosed       Window closed
+
+FileType Events:~
+    FileType        Filetype set
+    Syntax          Syntax set
+
+LSP Events:~
+    LspAttach       LSP client attached
+    LspDetach       LSP client detached
+
+User Events:~
+    User            User-defined events
+
+    Examples:
+        User LspAttach
+        User BufWinCapture
+
+==============================================================================
+5. USE CASES                                    *debugging-autocmds-use-cases*
+
+Debug event firing:~
+>vim
+    :ListAutocmds BufEnter
+
+    " Shows all BufEnter autocommands
+    " Identifies conflicts or missing handlers
+<
+
+Find filetype-specific commands:~
+>vim
+    :ListAutocmds FileType lua
+    :ListAutocmds FileType markdown
+<
+
+Debug pattern matching:~
+>vim
+    :ListAutocmds BufReadPost *.md
+    :ListAutocmds BufWritePre *
+<
+
+Identify group conflicts:~
+>vim
+    :ListAutocmds BufWritePre
+
+    " Check for multiple groups handling same event
+<
+
+Verify plugin registration:~
+>vim
+    :ListAutocmds User
+
+    " Look for plugin-specific User events
+<
+
+Integration with views module:~
+>vim
+    :ListAutocmds WinEnter
+
+    " Look for:
+    " Group: DebugViewsAuto
+    " Description: Auto-refresh debug views
+<
+
+==============================================================================
+6. TROUBLESHOOTING                      *debugging-autocmds-troubleshooting*
+
+No autocommands found~
+
+Symptom: "No autocommands found for event..."
+
+Cause: Event name incorrect or none registered
+
+Solution: >vim
+    " List all possible events
+    :help autocmd-events
+
+    " Try broader pattern
+    :ListAutocmds BufEnter
+<
+
+Too many results~
+
+Symptom: Output overwhelming
+
+Solution: Use more specific pattern >vim
+    " Instead of:
+    :ListAutocmds BufEnter
+
+    " Try:
+    :ListAutocmds BufEnter *.lua
+    :ListAutocmds BufEnter */specific/path/*
+<
+
+Callback details missing~
+
+Symptom: Shows "<function>" but want more info
+
+Cause: Callback is Lua function, not command
+
+Solution: Inspect with debug tools >lua
+    local autocmds = vim.api.nvim_get_autocmds({ event = "BufEnter" })
+    for _, cmd in ipairs(autocmds) do
+      if cmd.callback then
+        print(debug.getinfo(cmd.callback))
+      end
+    end
+<
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

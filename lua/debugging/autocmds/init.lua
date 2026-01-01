@@ -2,10 +2,12 @@
 
 local M = {}
 
----@param modules autocmds_modules
+---@param opts autocmds_modules
 ---@return nil
-function M.attach(modules)
-  if modules.list_autocmds and modules.list_autocmds == true then
+function M.enable(opts)
+  opts = opts or {}
+
+  if opts.list_autocmds and opts.list_autocmds == true then
     require("debugging.autocmds.list_autocmds")
   end
 end
