@@ -1,11 +1,9 @@
 ---@module 'usrcmds.migrate.notify'
----@brief Migrate vim.notify to lib.notify.
+---@brief Migrate vim.notify to lib.notify (simple regex approach)
 ---@description
---- Fixed version that properly handles:
----   - Single and multiline calls
----   - Descending application order
----   - Import injection
----   - No self-migration
+--- Simplified approach using regex patterns instead of treesitter.
+--- More robust and easier to debug.
+--- ALWAYS uses .create("") import syntax.
 
 local command = require("usrcmds.migrate.common.command")
 local picker = require("usrcmds.migrate.common.picker")
@@ -19,9 +17,25 @@ local api = vim.api
 local tbl_insert = table.insert
 local notify = require("lib.notify").create("[migrate.notify]")
 
----Convert parser matches to common match format
+--------------------------------------------------------------------------------
+-- Exclusion logic
+--------------------------------------------------------------------------------
+
+---Check if file should be excluded
+---@param filepath string
+---@return boolean
+local function should_exclude(filepath)
+  local normalized = filepath:gsub("\\", "/")
+  return normalized:match("/usrcmds/migrate/") ~= nil
+end
+
+--------------------------------------------------------------------------------
+-- Conversion helpers
+--------------------------------------------------------------------------------
+
+---Convert parser matches to common format
 ---@param bufnr integer
----@param parser_matches table[]
+---@param parser_matches MigrateNotify.Match[]
 ---@return MigrateCommon.Match[]
 local function to_common_matches(bufnr, parser_matches)
   local matches = {}
@@ -47,20 +61,29 @@ local function to_common_matches(bufnr, parser_matches)
   return matches
 end
 
----Scan buffer range for matches
+--------------------------------------------------------------------------------
+-- Scan functions
+--------------------------------------------------------------------------------
+
+---Scan buffer range
 ---@param bufnr integer
----@param line1 integer 1-based start
----@param line2 integer 1-based end
+---@param line1 integer
+---@param line2 integer
 ---@return MigrateCommon.Match[]
 local function scan_range(bufnr, line1, line2)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}
   end
 
-  local all_matches = parser.scan_buffer(bufnr)
+  local fname = api.nvim_buf_get_name(bufnr)
+  if fname ~= "" and should_exclude(fname) then
+    notify.warn("Skipping migrate module file")
+    return {}
+  end
 
-  -- Filter to range
+  local all_matches = parser.scan_buffer(bufnr)
   local range_matches = {}
+
   for _, match in ipairs(all_matches) do
     if match.line >= line1 and match.line <= line2 then
       tbl_insert(range_matches, match)
@@ -78,11 +101,17 @@ local function scan_buffer(bufnr)
     return {}
   end
 
+  local fname = api.nvim_buf_get_name(bufnr)
+  if fname ~= "" and should_exclude(fname) then
+    notify.warn("Skipping migrate module file")
+    return {}
+  end
+
   local matches = parser.scan_buffer(bufnr)
   return to_common_matches(bufnr, matches)
 end
 
----Scan cwd (all Lua files)
+---Scan cwd (excluding migrate module)
 ---@return MigrateCommon.Match[]
 local function scan_cwd()
   local cwd = vim.fn.getcwd()
@@ -93,35 +122,48 @@ local function scan_cwd()
   end
 
   local all_matches = {}
+  local excluded_count = 0
 
   for _, filepath in ipairs(files) do
-    local bufnr = buffer_ops.ensure_buffer(filepath)
-    if bufnr then
-      local file_matches = parser.scan_buffer(bufnr)
+    if should_exclude(filepath) then
+      excluded_count = excluded_count + 1
+    else
+      local bufnr = buffer_ops.ensure_buffer(filepath)
+      if bufnr then
+        local file_matches = parser.scan_buffer(bufnr)
 
-      for _, match in ipairs(file_matches) do
-        tbl_insert(all_matches, {
-          bufnr = bufnr,
-          fname = filepath,
-          lnum = match.line,
-          text = match.original,
-          migrated = match.replacement,
-          source = "file",
-          extra = {
-            end_line = match.end_line,
-            col = match.col,
-            end_col = match.end_col,
-            log_level = match.log_level,
-          },
-        })
+        for _, match in ipairs(file_matches) do
+          tbl_insert(all_matches, {
+            bufnr = bufnr,
+            fname = filepath,
+            lnum = match.line,
+            text = match.original,
+            migrated = match.replacement,
+            source = "file",
+            extra = {
+              end_line = match.end_line,
+              col = match.col,
+              end_col = match.end_col,
+              log_level = match.log_level,
+            },
+          })
+        end
       end
     end
+  end
+
+  if excluded_count > 0 then
+    notify.info(string.format("Excluded %d migrate module file(s)", excluded_count))
   end
 
   return all_matches
 end
 
----Apply migrations in descending order
+--------------------------------------------------------------------------------
+-- Application
+--------------------------------------------------------------------------------
+
+---Apply migrations (descending order)
 ---@param matches MigrateCommon.Match[]
 local function apply_matches(matches)
   -- Group by buffer
@@ -140,18 +182,23 @@ local function apply_matches(matches)
   for bufnr, buf_matches in pairs(by_buffer) do
     buffer_ops.create_undo_point(bufnr)
 
-    -- Inject import FIRST (before any replacements)
-    refactor.inject_import(bufnr)
+    -- Inject import first (ALWAYS uses .create(""))
+    local import_added = refactor.inject_import(bufnr)
 
-    -- Sort DESCENDING by end_line to prevent offset issues
-    table.sort(buf_matches, function(a, b)
-      if a.extra.end_line == b.extra.end_line then
-        return a.extra.end_col > b.extra.end_col
+    -- Adjust line numbers if import was added
+    if import_added then
+      for _, match in ipairs(buf_matches) do
+        match.lnum = match.lnum + 2
+        match.extra.end_line = match.extra.end_line + 2
       end
+    end
+
+    -- Sort DESCENDING by end_line to avoid offset issues
+    table.sort(buf_matches, function(a, b)
       return a.extra.end_line > b.extra.end_line
     end)
 
-    -- Apply in descending order
+    -- Apply each match
     local success_count = 0
     for _, match in ipairs(buf_matches) do
       local parser_match = {
@@ -164,18 +211,20 @@ local function apply_matches(matches)
 
       if refactor.apply_match(bufnr, parser_match) then
         success_count = success_count + 1
-      else
-        notify.warn(string.format("Failed to apply at line %d", match.lnum))
       end
     end
 
     if success_count > 0 then
-      notify.info(string.format("Applied %d migration(s) in buffer", success_count))
+      notify.info(string.format("Applied %d/%d migration(s)", success_count, #buf_matches))
     end
   end
 end
 
----Show picker with matches
+--------------------------------------------------------------------------------
+-- Picker
+--------------------------------------------------------------------------------
+
+---Show picker
 ---@param matches MigrateCommon.Match[]
 local function show_picker_impl(matches)
   picker.show(matches, {
@@ -214,7 +263,10 @@ local function show_picker_impl(matches)
   })
 end
 
---- Enable command
+--------------------------------------------------------------------------------
+-- Registration
+--------------------------------------------------------------------------------
+
 function M.enable()
   command.register({
     name = "MigrateNotify",
@@ -223,6 +275,26 @@ function M.enable()
     scan_cwd = scan_cwd,
     apply_matches = apply_matches,
     show_picker = show_picker_impl,
+
+    -- Custom completion function
+    ---@diagnostic disable-next-line: unused-local
+    complete = function(arg_lead, cmd_line, cursor_pos)
+      local completions = { "%", "cwd" }
+
+      -- Filter based on what user has typed
+      if arg_lead == "" then
+        return completions
+      end
+
+      local matches = {}
+      for _, comp in ipairs(completions) do
+        if comp:find(arg_lead, 1, true) == 1 then
+          table.insert(matches, comp)
+        end
+      end
+
+      return matches
+    end,
   })
 end
 

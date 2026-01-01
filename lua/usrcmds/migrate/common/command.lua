@@ -6,6 +6,7 @@
 ---   - Range mode (visual selection or explicit :1,5Command)
 ---   - Buffer mode (% argument)
 ---   - CWD mode (cwd argument)
+---   - Custom completion function per module
 --- Each migration type provides callbacks for scanning and applying.
 
 require("usrcmds.migrate.common.@types")
@@ -84,7 +85,8 @@ function M.register(opts)
     nargs = "?",
     range = true,
     desc = str_fmt("Migration tool: %s", opts.name),
-    complete = function()
+    complete = opts.complete or function()
+      -- Default completion
       return { "%", "cwd" }
     end,
   })

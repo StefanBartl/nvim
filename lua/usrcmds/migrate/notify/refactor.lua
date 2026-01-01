@@ -1,11 +1,11 @@
 ---@module 'usrcmds.migrate.notify.refactor'
 ---@brief Apply notify migrations with proper line/multiline handling
 ---@description
---- Based on working monofile regex implementation.
---- Key principles:
----   - Single-line: replace inline portion
----   - Multi-line: combine to single line with proper indent
----   - Use string operations (like the working version)
+--- FIXED VERSION - Critical fixes:
+---   1. Correct index conversion (parser gives 1-based, API needs 0-based)
+---   2. Single-line: use string.sub for partial replacement
+---   3. Multi-line: proper line joining with indent preservation
+---   4. NO newlines in replacement strings for nvim_buf_set_lines
 
 require("usrcmds.migrate.notify.@types")
 
@@ -17,27 +17,30 @@ local api = vim.api
 -- Import handling
 --------------------------------------------------------------------------------
 
----Check if buffer has notify import
+---Check what kind of import exists
 ---@param bufnr integer
----@return boolean has_simple, boolean has_create
+---@return boolean has_simple, boolean has_create, integer|nil import_line
 local function check_import(bufnr)
   local lines = api.nvim_buf_get_lines(bufnr, 0, 50, false)
 
   local has_simple = false
   local has_create = false
+  local import_line = nil
 
-  for _, line in ipairs(lines) do
-    -- Check for simple: require("lib.notify")
-    if line:match('require%s*%(%s*["\']lib%.notify["\']%s*%)') then
+  for i, line in ipairs(lines) do
+    -- Check for require("lib.notify")
+    if line:match('local%s+notify%s*=%s*require%s*%(%s*["\']lib%.notify["\']%s*%)') then
       has_simple = true
-    end
-    -- Check for create: require("lib.notify").create(...)
-    if line:match('require%s*%(%s*["\']lib%.notify["\']%s*%)%.create%s*%(') then
-      has_create = true
+      import_line = i
+
+      -- Check if it also has .create()
+      if line:match('%.create%s*%(') then
+        has_create = true
+      end
     end
   end
 
-  return has_simple, has_create
+  return has_simple, has_create, import_line
 end
 
 ---Find first non-comment line
@@ -48,61 +51,54 @@ local function find_first_code_line(bufnr)
 
   for i, line in ipairs(lines) do
     local trimmed = line:match("^%s*(.-)%s*$")
-    -- Skip empty lines and comments
     if trimmed ~= "" and not trimmed:match("^%-%-") then
-      return i - 1  -- Return 0-based index
+      return i - 1
     end
   end
 
-  return 0  -- Default to top
+  return 0
 end
 
----Inject import at appropriate position
+---Inject or upgrade import - ALWAYS uses .create("")
 ---@param bufnr integer
----@param use_create boolean If true, use .create("") syntax
----@return boolean added True if import was added
-function M.inject_import(bufnr, use_create)
-  local has_simple, has_create = check_import(bufnr)
+---@return boolean added True if import was added or modified
+function M.inject_import(bufnr)
+  local has_simple, has_create, import_line = check_import(bufnr)
 
-  -- If .create() is required but only simple import exists, upgrade it
-  if use_create then
-    if has_create then
-      return false  -- Already has .create()
-    end
+  -- If we already have .create(), nothing to do
+  if has_create then
+    return false
+  end
 
-    -- Find first non-comment line
-    local insert_pos = find_first_code_line(bufnr)
+  -- If we have simple import, upgrade it to .create()
+  if has_simple and import_line then
+    local lines = api.nvim_buf_get_lines(bufnr, import_line - 1, import_line, false)
+    local old_line = lines[1]
 
-    api.nvim_buf_set_lines(
-      bufnr,
-      insert_pos,
-      insert_pos,
-      false,
-      { 'local notify = require("lib.notify").create("")', "" }
+    -- Replace the line to add .create("")
+    local new_line = old_line:gsub(
+      '(local%s+notify%s*=%s*require%s*%(%s*["\']lib%.notify["\']%s*%))',
+      '%1.create("")'
     )
 
-    return true
-  else
-    -- Simple import
-    if has_simple then
-      return false  -- Already has import
-    end
-
-    api.nvim_buf_set_lines(
-      bufnr,
-      0,
-      0,
-      false,
-      { 'local notify = require("lib.notify")', "" }
-    )
-
+    api.nvim_buf_set_lines(bufnr, import_line - 1, import_line, false, { new_line })
     return true
   end
-end
 
+  -- No import exists, add .create() version
+  local insert_pos = find_first_code_line(bufnr)
+  api.nvim_buf_set_lines(
+    bufnr,
+    insert_pos,
+    insert_pos,
+    false,
+    { 'local notify = require("lib.notify").create("")', "" }
+  )
+  return true
+end
 
 --------------------------------------------------------------------------------
--- Application (based on working monofile logic)
+-- Application (FIXED VERSION)
 --------------------------------------------------------------------------------
 
 ---Apply single match replacement
@@ -114,49 +110,66 @@ function M.apply_match(bufnr, match)
     return false
   end
 
-  local start_line = match.line - 1      -- Convert to 0-based
-  local end_line = match.end_line - 1    -- Convert to 0-based
+  -- Parser gibt 1-based line numbers (wie Vim)
+  -- col/end_col sind 0-based byte offsets
+  local start_line = match.line       -- 1-based (Vim-style)
+  local end_line = match.end_line     -- 1-based (Vim-style)
+  local start_col = match.col         -- 0-based byte offset
+  local end_col = match.end_col       -- 0-based byte offset (exclusive!)
 
-  -- FIX: Vereinfachte Logik - ersetze immer den kompletten Zeilenbereich
-  -- Hole die erste Zeile um das Indent zu bestimmen
-  local first_line = api.nvim_buf_get_lines(bufnr, start_line, start_line + 1, false)[1]
-  if not first_line then
+  -- Convert to 0-based for API
+  local start_idx = start_line - 1
+  local end_idx = end_line            -- NICHT -1! API erwartet exclusive end
+
+  -- Get affected lines
+  local lines = api.nvim_buf_get_lines(bufnr, start_idx, end_idx, false)
+
+  if #lines == 0 then
     return false
   end
 
-  -- Extrahiere Indent von erster Zeile
-  local indent = first_line:match("^(%s*)")
+  -- CRITICAL: Replacement darf KEINE newlines enthalten!
+  -- nvim_buf_set_lines erwartet array of strings, jeder string = eine Zeile
+  local replacement = match.replacement:gsub("\n", " ")  -- Newlines → spaces
 
-  -- Bei single-line: prüfe ob Text vor/nach dem Match existiert
   if start_line == end_line then
-    local start_col = match.col
-    local end_col = match.end_col
+    -- ===================================================================
+    -- SINGLE-LINE REPLACEMENT
+    -- ===================================================================
+    local line = lines[1]
 
-    local before = first_line:sub(1, start_col)
-    local after = first_line:sub(end_col + 1)
+    -- Lua strings sind 1-based!
+    -- start_col ist 0-based → +1 für Lua
+    -- end_col ist exclusive → direkt nutzen als "bis hier" (nicht +1!)
+    local before = line:sub(1, start_col)           -- Von Anfang bis start (exklusive)
+    local after = line:sub(end_col + 1)             -- Von end (exclusive) bis Ende
 
-    -- Baue neue Zeile mit Replacement
-    local new_line = before .. match.replacement .. after
+    local new_line = before .. replacement .. after
 
-    api.nvim_buf_set_lines(bufnr, start_line, start_line + 1, false, { new_line })
+    -- Setze die EINE Zeile
+    api.nvim_buf_set_lines(bufnr, start_idx, start_idx + 1, false, { new_line })
+
   else
-    -- Multiline: Hole erste und letzte Zeile für before/after
-    local last_line = api.nvim_buf_get_lines(bufnr, end_line, end_line + 1, false)[1]
-    if not last_line then
-      return false
-    end
+    -- ===================================================================
+    -- MULTI-LINE REPLACEMENT
+    -- ===================================================================
+    local first_line = lines[1]
+    local last_line = lines[#lines]
 
-    local start_col = match.col
-    local end_col = match.end_col
+    -- Indent von erster Zeile extrahieren
+    local indent = first_line:match("^(%s*)")
 
+    -- Before-Teil: alles vor start_col in erster Zeile
     local before = first_line:sub(1, start_col)
+
+    -- After-Teil: alles nach end_col in letzter Zeile
     local after = last_line:sub(end_col + 1)
 
-    -- Collapse zu single line mit korrekt indent
-    local new_line = indent .. before:gsub("^%s*", "") .. match.replacement .. after
+    -- Baue EINE Zeile mit korrektem Indent
+    local new_line = before .. replacement .. after
 
-    -- Ersetze gesamten Bereich mit einer Zeile
-    api.nvim_buf_set_lines(bufnr, start_line, end_line + 1, false, { new_line })
+    -- Ersetze ALLE betroffenen Zeilen mit EINER neuen Zeile
+    api.nvim_buf_set_lines(bufnr, start_idx, end_idx, false, { new_line })
   end
 
   return true
