@@ -9,6 +9,8 @@
 ---@field grep_in_config fun(opts:FindConfigOptions)
 ---@field enable fun(cfg: table)
 
+local notify = require("lib.notify").create("")
+
 local M = {}
 
 --- Get the Neovim config directory in a portable way.
@@ -50,7 +52,7 @@ local function Find_in_config(opts)
   ---@diagnostic disable-next-line: different-requires
   local ok, fzf = pcall(require, "fzf-lua")
   if not ok or not fzf or type(fzf.files) ~= "function" then
-    vim.notify("fzf-lua not found or does not expose 'files' function", vim.log.levels.ERROR)
+    notify.error("fzf-lua not found or does not expose 'files' function")
     return
   end
 
@@ -66,7 +68,7 @@ local function Find_in_config(opts)
     fzf.files(merged)
   end)
   if not ok_call then
-    vim.notify("fzf-lua.files failed: " .. tostring(err), vim.log.levels.ERROR)
+    notify.error("fzf-lua.files failed: " .. tostring(err))
   end
 end
 
@@ -78,7 +80,7 @@ local function Grep_in_config(opts)
   ---@diagnostic disable-next-line: different-requires
   local ok, fzf = pcall(require, "fzf-lua")
   if not ok or not fzf or type(fzf.live_grep) ~= "function" then
-    vim.notify("fzf-lua not found or does not expose 'live_grep' function", vim.log.levels.ERROR)
+    notify.error("fzf-lua not found or does not expose 'live_grep' function")
     return
   end
 
@@ -95,7 +97,7 @@ local function Grep_in_config(opts)
     fzf.live_grep(merged)
   end)
   if not ok_call then
-    vim.notify("fzf-lua.live_grep failed: " .. tostring(err), vim.log.levels.ERROR)
+    notify.error("fzf-lua.live_grep failed: " .. tostring(err))
   end
 end
 

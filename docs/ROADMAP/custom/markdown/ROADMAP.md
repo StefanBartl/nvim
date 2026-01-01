@@ -1,5 +1,18 @@
 # Roadmap für die Markdown-Konfiguration
 
+## Table of content
+
+  - [Ideen](#ideen)
+  - [wrap](#wrap)
+  - [toc](#toc)
+  - [`/custom/markdown`-Modul](#custommarkdown-modul)
+    - [Folding](#folding)
+    - [Headings](#headings)
+    - [`/custom/markdown` als 'single source of truth' für Markdown config etablieren](#custommarkdown-als-single-source-of-truth-fr-markdown-config-etablieren)
+      - [`/autocmds/markdown` mit `/custom/markdown/ui/autocmds/` zusammenführen](#autocmdsmarkdown-mit-custommarkdownuiautocmds-zusammenfhren)
+
+---
+
 ## Ideen
 
 - Markdown: Tabellen genormed bzw gerendert anzeigen:
@@ -7,9 +20,16 @@
     - Usercommand sammelt alle Tabellen des Dokuments, gibt sie in einer select aus und wird dann, je nach option gerendert in einem floating window oder via Markdown Preview im Browser
  Sollte MarkdownPreview sich nicht dafür eigenen, eventuelle ein eigenes Tool erstellen
 
-- Springen mit `#` oder `*` zur nöchsten/vorigen Headline im v und V, Modus
 -  Wenn in einer Markdown File ein Codeblock ist und man fomratiert, dann sollte der Codeblock in der Sprache mit dem passenden Formatter formatiert werden, nicht mit marksman
 - ``- Backticks inline code color in Source code!
+
+## wrap
+
+1. curso position nach wrap: momentan ist es so, dass wenn zb
+AUDIT
+gewrapped wird, dann wird nach dem erten wrap der curso auf dem D stehen und vonm ersten asteriks bis zum D ist alles markiert.. um nun wieder das mapping auf das gleich char  auszuführen müste ich esacpe, dann awieder auf das A gehen und das wort markieren. besser wäre es, wenn nach dem wrap exakt der gleiche bereich markiert ist, wie bei der ausführung amrkiertr gewesen ist. dannn könnte man gleich wieder unwrappen. ich nehmne an , dasss es deswegen ist, weil ja am begin zwei asteriks eingefüpgt werden, daher rutscht das wort sozusagen zwei chars nach rechts.
+
+2. momentan wird gleich in den fett mode wrapped. es gebe aber auch noch kursv, also ein asteriks links und rechts. es wäre super, wenn man das so machen könnte, dass: einmal mapping -> von normal in kursiv, ein weiteres mal -> fett, ein drittes mal -> wieder unwrapped. bezüglich punkt 1 müsse man natürlich beachten, das beim ersten mal dann nur ein asterik links komt umfd daher um ein s verscoben wird verschoeben wird
 
 ## toc
 
