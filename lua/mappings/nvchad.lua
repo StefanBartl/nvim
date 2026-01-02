@@ -24,6 +24,7 @@ function M.setup()
   map({ "n", "x" }, "<leader>fm", function()
     local ok, conform = pcall(require, "conform")
     if ok then
+      ---@diagnostic disable-next-line: undefined-field
       conform.format({ lsp_fallback = true })
     end
   end, { desc = "[General] Format file" })

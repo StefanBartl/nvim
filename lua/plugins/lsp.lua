@@ -155,7 +155,7 @@ return {
     version = "*",
     lazy = false,
     config = function()
-      require("trouble").setup({
+      require("trouble.config").setup({
         mode = "document_diagnostics",
         auto_close = true,
         auto_preview = false,

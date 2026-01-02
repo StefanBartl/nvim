@@ -12,7 +12,7 @@ local function create_adapter()
     return vitest({
       vitestCommand = "npx vitest",
       env = { CI = "true" },
-      cwd = function(path)
+      cwd = function(_)
         return vim.fn.getcwd()
       end,
     })
@@ -25,7 +25,7 @@ local function create_adapter()
       jestCommand = "npm test --",
       jestConfigFile = "jest.config.js",
       env = { CI = "true" },
-      cwd = function(path)
+      cwd = function(_)
         return vim.fn.getcwd()
       end,
     })

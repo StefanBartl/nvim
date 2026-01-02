@@ -65,7 +65,7 @@ return {
       "nvim-treesitter/nvim-treesitter",
 
       -- Neo-tree integration
-      "olimorris/neotest-neo-tree-source.nvim",
+      "TimCreasman/neo-tree-tests-source.nvim",
 
       -- Language adapters (lazy-loaded per filetype)
       { "nvim-neotest/neotest-plenary", ft = "lua" },

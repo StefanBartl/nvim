@@ -29,6 +29,7 @@ end
 local function get_timer()
   local uv = vim.uv or vim.loop
   if not S.timer then
+    ---@type userdata|uv.uv_timer_t|nil
     S.timer = uv.new_timer()
   end
   return S.timer
@@ -53,7 +54,7 @@ local function find_neotree_win_in_current_tab()
   return nil
 end
 
-local function derive_dir_and_path(buf, use_project_root, fallback_to_bufdir)
+local function derive_dir_and_path(buf, use_project_root, _)
   local ctx = utils.get_buffer_context(buf)
   if not ctx then
     return nil, nil
@@ -150,6 +151,10 @@ local function schedule_sync(cfg)
   S.sync_scheduled = true
 
   local timer = get_timer()
+   if not timer then
+     vim.notify("timer is nil")
+     return nil
+   end
   timer:stop()
 
   -- Check pause before scheduling

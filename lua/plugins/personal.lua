@@ -6,7 +6,7 @@ if not vim.env.REPOS_DIR then
   return {}
 end
 
-local plugins_folder = vim.fn.stdpath("config") .. "/lua/plugins"
+-- local plugins_folder = vim.fn.stdpath("config") .. "/lua/plugins"
 
 ---@type LazyPluginSpec[]
 return {
@@ -206,7 +206,7 @@ return {
   {
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/replacer"),
     -- "StefanBartl/replacer",
-    cmd = { "Replace" },
+    cmd = { "Replace", "" },
     dependencies = {
       -- wähle je nach Engine:
       "ibhagwan/fzf-lua", -- für engine="fzf"

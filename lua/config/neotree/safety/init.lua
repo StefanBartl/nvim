@@ -58,7 +58,7 @@ function M.safe_operation(operation_fn, operation_name, paths)
   local backups = {}
   if operation_name == "delete" or operation_name == "move" then
     for _, path in ipairs(paths) do
-      local backup_path, err = M.backup.create_backup(path, operation_name)
+      local backup_path, _ = M.backup.create_backup(path, operation_name)
       if backup_path then
         table.insert(backups, backup_path)
       end

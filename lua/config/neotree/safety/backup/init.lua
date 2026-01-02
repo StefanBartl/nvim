@@ -224,7 +224,7 @@ function M.show_backup_ui()
 
   vim.ui.select(items, {
     prompt = "Select backup to restore:",
-  }, function(choice, idx)
+  }, function(_, idx)
     if not idx then return end
 
     local entry = backup_history[idx]

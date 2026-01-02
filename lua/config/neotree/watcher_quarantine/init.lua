@@ -117,37 +117,62 @@ function M._auto_exit_quarantine()
   M._unpatch_error_handler()
 end
 
+-- FIX: Eventuell neuen error handler schreiben, der aber nicht vim.notify überschreibt
 ---Patch Neo-tree's error handler to suppress EPERM during quarantine
----@private
-function M._patch_error_handler()
-  -- Store original notify (only once)
-  if not S.original_notify then
-    S.original_notify = vim.notify
-  end
+-- ---@private
+-- function M._patch_error_handler()
+--   -- Store original notify (only once)
+--   if not S.original_notify then
+--     S.original_notify = vim.notify
+--   end
+--
+--   -- Guard: Prevent double-patching
+--   if vim.notify == M._notify_patch then
+--     return
+--   end
+--
+--   -- Define patch function (stored for unpatch check)
+--   M._notify_patch = function(msg, level, opts)
+--     -- DEFENSE 1: Validate msg before string operations
+--     if type(msg) ~= "string" or msg == "" then
+--       -- Pass through non-string or empty messages
+--       return S.original_notify(msg, level, opts)
+--     end
+--
+--     -- DEFENSE 2: Only filter when suppression active
+--     if not S.error_suppressed then
+--       return S.original_notify(msg, level, opts)
+--     end
+--
+--     -- DEFENSE 3: Use plain-text search (faster, safer)
+--     local patterns = { "EPERM", "permission denied", "Operation not permitted" }
+--     for _, pattern in ipairs(patterns) do
+--       if msg:find(pattern, 1, true) then  -- Plain search
+--         return -- Suppress matching errors
+--       end
+--     end
+--
+--     -- DEFENSE 4: Safe call with pcall
+--     local ok, err = pcall(S.original_notify, msg, level, opts)
+--     if not ok then
+--       -- Fallback: Print to stderr if notify fails
+--       io.stderr:write("[notify error] " .. tostring(err) .. "\n")
+--     end
+--   end
+--
+--   -- Apply patch
+--   vim.notify = M._notify_patch
+-- end
 
-  -- Patch notify to filter EPERM
-  vim.notify = function(msg, level, opts)
-    -- Suppress EPERM errors during quarantine
-    if S.error_suppressed and type(msg) == "string" then
-      -- Match various EPERM formats
-      if msg:match("EPERM") or msg:match("permission denied") or msg:match("Operation not permitted") then
-        return -- Suppress
-      end
-    end
-
-    -- Call original for non-EPERM messages
-    S.original_notify(msg, level, opts)
-  end
-end
-
----Restore original error handler
----@private
-function M._unpatch_error_handler()
-  if S.original_notify then
-    vim.notify = S.original_notify
-    S.original_notify = nil
-  end
-end
+-- ---Restore original error handler
+-- ---@private
+-- function M._unpatch_error_handler()
+  -- if S.original_notify then
+    -- vim.notify = S.original_notify
+    -- S.original_notify = nil
+    -- M._notify_patch = nil
+  -- end
+-- end
 
 ---Safe refresh with quarantine awareness
 ---Waits for quarantine to end before refreshing Neo-tree
