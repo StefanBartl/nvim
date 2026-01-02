@@ -5,12 +5,12 @@
 ---@field parent string|table
 
 ---@class NeoTreeCurrentHLConfig
----@field file_hl string
----@field dir_hl string
----@field debounce integer
----@field use_git_status_colors boolean
----@field enable boolean
----@field colors NeoTreeCurrentHLColors|nil
+---@field file_hl? string
+---@field dir_hl? string
+---@field debounce? integer
+---@field use_git_status_colors? boolean
+---@field enable? boolean
+---@field colors? NeoTreeCurrentHLColors|nil
 
 ---@class NeoTreeCurrentHLState
 ---@field current_file string|nil

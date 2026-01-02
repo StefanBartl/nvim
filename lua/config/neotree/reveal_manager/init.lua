@@ -52,6 +52,7 @@ function M.reveal_buffer(buf, position)
     return false
   end
 
+  ---@cast ctx Cfg.NeoTree.RevealContext
   ctx.position = position
 
   -- Check if already revealed recently
@@ -71,4 +72,3 @@ function M.clear()
 end
 
 return M
-
