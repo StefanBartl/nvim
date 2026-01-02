@@ -3,107 +3,152 @@
 ---If no directory is provided, vim.env.REPOS_DIR is used.
 ---Non-git directories are skipped automatically.
 ---Errors are collected and reported at the end.
+--
+---Asynchronously update all git repositories inside a directory.
+---Uses non-blocking vim.system calls and a sequential job queue.
+
+local notify = require("lib.notify").create("[usrcmds.update_repos] ")
+local error, info = notify.error, notify.info
 
 local M = {}
 
----Run a shell command and return success flag and output.
----@param cmd string[]
----@param cwd string
----@return boolean success
----@return string output
-local function run_command(cmd, cwd)
-  -- Execute a command using vim.system (Neovim >= 0.10)
-  local result = vim.system(cmd, { cwd = cwd, text = true }):wait()
-
-  if result.code ~= 0 then
-    return false, result.stderr or result.stdout or "unknown error"
-  end
-
-  return true, result.stdout or ""
-end
+local loop, fn, env = vim.loop, vim.fn, vim.env
+local system, fnamemodify = vim.system, fn.fnamemodify
 
 ---Check whether a directory is a git repository.
 ---@param path string
 ---@return boolean
 local function is_git_repo(path)
-  local git_dir = path .. "/.git"
-  local stat = vim.loop.fs_stat(git_dir)
+  local stat = loop.fs_stat(path .. "/.git")
   return stat ~= nil and stat.type == "directory"
 end
 
----Resolve repository base directory.
+---Resolve base directory.
 ---@param override string|nil
 ---@return string|nil
 local function resolve_base_dir(override)
   if override and override ~= "" then
-    return vim.fn.fnamemodify(override, ":p")
+    return fnamemodify(override, ":p")
   end
 
-  if vim.env.REPOS_DIR and vim.env.REPOS_DIR ~= "" then
-    return vim.fn.fnamemodify(vim.env.REPOS_DIR, ":p")
+  if env.REPOS_DIR and env.REPOS_DIR ~= "" then
+    return fnamemodify(env.REPOS_DIR, ":p")
   end
 
   return nil
 end
 
----Update all repositories in the resolved directory.
----@param path string|nil
-local function update_all(path)
-  local base_dir = resolve_base_dir(path)
-
-  if not base_dir then
-    vim.notify("No repository directory provided and REPOS_DIR is not set", vim.log.levels.ERROR)
-    return
-  end
-
-  local stat = vim.loop.fs_stat(base_dir)
-  if not stat or stat.type ~= "directory" then
-    vim.notify("Repository directory is not accessible: " .. base_dir, vim.log.levels.ERROR)
-    return
-  end
-
-  local handle = vim.loop.fs_scandir(base_dir)
-  if not handle then
-    vim.notify("Failed to scan directory: " .. base_dir, vim.log.levels.ERROR)
-    return
-  end
-
+---Collect all git repositories inside a directory.
+---@param base_dir string
+---@return string[]
+local function collect_repos(base_dir)
   ---@type string[]
-  local errors = {}
+  local repos = {}
+
+  local handle = loop.fs_scandir(base_dir)
+  if not handle then
+    return repos
+  end
 
   while true do
-    local name, typ = vim.loop.fs_scandir_next(handle)
+    local name, typ = loop.fs_scandir_next(handle)
     if not name then
       break
     end
 
     if typ == "directory" then
-      local repo_path = base_dir .. "/" .. name
-
-      if is_git_repo(repo_path) then
-        local ok_fetch, fetch_out = run_command({ "git", "fetch", "--all", "--prune" }, repo_path)
-
-        if not ok_fetch then
-          errors[#errors + 1] = name .. ": fetch failed\n" .. fetch_out
-          goto continue
-        end
-
-        local ok_pull, pull_out = run_command({ "git", "pull", "--ff-only" }, repo_path)
-
-        if not ok_pull then
-          errors[#errors + 1] = name .. ": pull failed\n" .. pull_out
-        end
+      local path = base_dir .. "/" .. name
+      if is_git_repo(path) then
+        repos[#repos + 1] = path
       end
     end
-
-    ::continue::
   end
 
-  if #errors > 0 then
-    vim.notify("Repository update finished with errors:\n\n" .. table.concat(errors, "\n\n"), vim.log.levels.ERROR)
-  else
-    vim.notify("All repositories updated successfully", vim.log.levels.INFO)
+  return repos
+end
+
+---Run git fetch and pull for a single repository.
+---@param repo string
+---@param on_done fun(success: boolean, err: string|nil)
+local function update_repo(repo, on_done)
+  system(
+    { "git", "fetch", "--all", "--prune" },
+    { cwd = repo, text = true },
+    function(fetch_res)
+      if fetch_res.code ~= 0 then
+        on_done(false, fetch_res.stderr or "git fetch failed")
+        return
+      end
+
+      system(
+        { "git", "pull", "--ff-only" },
+        { cwd = repo, text = true },
+        function(pull_res)
+          if pull_res.code ~= 0 then
+            on_done(false, pull_res.stderr or "git pull failed")
+            return
+          end
+
+          on_done(true, nil)
+        end
+      )
+    end
+  )
+end
+
+---Update all repositories asynchronously.
+---@param path string|nil
+local function update_all(path)
+  local base_dir = resolve_base_dir(path)
+
+  if not base_dir then
+    error("No repository directory provided and REPOS_DIR is not set")
+    return
   end
+
+  local stat = loop.fs_stat(base_dir)
+  if not stat or stat.type ~= "directory" then
+    error("Repository directory is not accessible: " .. base_dir)
+    return
+  end
+
+  local repos = collect_repos(base_dir)
+
+  if #repos == 0 then
+    info("No git repositories found in " .. base_dir)
+    return
+  end
+
+  ---@type string[]
+  local errors = {}
+  local index = 1
+
+  local function run_next()
+    local repo = repos[index]
+    if not repo then
+      vim.schedule(function()
+        if #errors > 0 then
+          error("Repository update finished with errors:\n\n" .. table.concat(errors, "\n\n"))
+        else
+          info("All repositories updated successfully")
+        end
+      end)
+      return
+    end
+
+    update_repo(repo, function(success, err)
+      if not success then
+        errors[#errors + 1] =
+          fnamemodify(repo, ":t") .. ": " .. (err or "unknown error")
+      end
+
+      index = index + 1
+      run_next()
+    end)
+  end
+
+  info("Updating repositories asynchronously...")
+  run_next()
 end
 
 ---@return nil
