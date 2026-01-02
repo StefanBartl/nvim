@@ -10,19 +10,24 @@
 ## Syntax
 
 1. [lib lazy](.\lua\lib\lazy\README.md) implementieren
-2. local funktionen statt exporieren wenn keine externe Referenz! Alle files durchgehen! `recommender -r`
-3. explizit coden -> `return nil` statt `return` als Beispiel
-4. namespace von typen explizit einschränken
+2. local funktionen statt exportieren, sofern keine externe Referenz! Alle files durchgehen!
+3. namespace von typen explizit einschränken: `recommender -r` nutzen
+4. notify-lib implementieren.
+5. explizit coden -> `return nil` statt `return` als Beispiel
+6. Wenn möglich auf `local M` verzichten und einen benannten Export table erstellen
 
 ---
 
 ## Cleanup
 
 1. `init.lua`: Statusline ausgliedern
-2. mappings.custom erstellen, aus der dann markdown, pathprobe, usw aufgerufen werden, anstatt mappings.markdown, mappings.pathprobe usw..
-3. custom.diagnostics erstellen, extra_diagnostice mappings und usrcmds.diagnistcs hinein mergen, dann aus mappings.extra_diagnostics und usrcmds.diagnostics aus ausrufen
-4. Überlegen, ob usrcmds nicht eigentlichs usercmds gennant werden sollen
-5. Alle mappings, autocmds und usercommand funktionen bei Gelegenheit von `setup()` auf `enable()/attach()` umschreiben
-6. `pcall` doppelungen rauscoden
+2. custom.diagnostics erstellen, extra_diagnostice mappings und usrcmds.diagnistcs hinein mergen, dann aus mappings.extra_diagnostics und usrcmds.diagnostics aus ausrufen
+3. Überlegen, ob usrcmds nicht eigentlichs usercmds gennant werden sollen
+4. Alle mappings, autocmds und usercommand funktionen bei Gelegenheit von `setup()` auf `enable()/attach()` umschreiben
+5. `pcall` doppelungen rauscoden
+
+### `mappings.`
+
+1. mappings.custom erstellen, aus der dann markdown, pathprobe, usw aufgerufen werden, anstatt mappings.markdown, mappings.pathprobe usw..
 
 ---

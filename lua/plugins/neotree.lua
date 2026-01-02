@@ -8,6 +8,7 @@ local FILESYSTEM = require("config.neotree.keymaps.filesystem")
 local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local TESTS = require("config.neotree.keymaps.tests")
 local COMMANDS = require("config.neotree.commands")
+local ICONS = require("config.neotree.sources.icons")
 
 return {
 
@@ -29,20 +30,43 @@ return {
       local has_netman = pcall(require, "netman")
       local has_neotest_source = pcall(require, "neo-tree-tests-source")
 
-      -- Build source selector list
+      -- configuration knobs
+      local icon_family = "nerd" -- common | nerd | codicons
+      local icon_variant = "v1" -- v1 | v2
+      local name_length = "long" -- long | short
+
+      ---@type table[]
       local sources = {
-        { source = "filesystem", display_name = "  Files" },
-        { source = "buffers", display_name = "  Buffers" },
-        { source = "git_status", display_name = " 󰊢 Git" },
-        { source = "document_symbols", display_name = "  Symbols" },
+        {
+          source = "filesystem",
+          display_name = ICONS.format(icon_family, icon_variant, "filesystem", name_length),
+        },
+        {
+          source = "buffers",
+          display_name = ICONS.format(icon_family, icon_variant, "buffers", name_length),
+        },
+        {
+          source = "git_status",
+          display_name = ICONS.format(icon_family, icon_variant, "git_status", name_length),
+        },
+        {
+          source = "document_symbols",
+          display_name = ICONS.format(icon_family, icon_variant, "document_symbols", name_length),
+        },
       }
 
       if has_netman then
-        sources[#sources + 1] = { source = "netman.ui.neo-tree", display_name = "  Network" }
+        sources[#sources + 1] = {
+          source = "netman.ui.neo-tree",
+          display_name = ICONS.format(icon_family, icon_variant, "netman", name_length),
+        }
       end
 
       if has_neotest_source then
-        sources[#sources + 1] = { source = "tests", display_name = "  Tests" }
+        sources[#sources + 1] = {
+          source = "tests",
+          display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
+        }
       end
 
       return {
@@ -51,10 +75,10 @@ return {
         sort_case_insensitive = true,
 
         source_selector = {
-          winbar = false,
+          winbar = true,
           statusline = false,
           show_scrolled_off_parent_node = true,
-          padding = { left = 1, right = 0 },
+          padding = { left = 1, right = 1 },
           sources = sources,
         },
 
