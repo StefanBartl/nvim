@@ -17,14 +17,14 @@
 
 ## IMPORTANT Bugs
 
-### 1. EPERM Error friert [Neovim](./BUG-002.md) ein
+### 1. EPERM Error friert Neovim ein
 
 Modul: neo-tree.nvim – filesystem, fs_watch
 Kurzbeschreibung: Dateioperationen triggern File-Watcher in inkonsistentem Zustand, was zu EPERM-Fehlern, Hängern und Spam-Notifications führt.
 Status: WIP
 Reproduzierbar: häufig
 Plattform: Windows
-Detaildokument: BUG-001](./BUG-002.md)
+Detaildokument:  [BUG-001](./BUG-001.md), [Analyse](./BUG-001-Analyse.md)
 
 ---
 

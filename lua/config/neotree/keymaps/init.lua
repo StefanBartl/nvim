@@ -16,6 +16,7 @@ local commands = require("config.neotree.commands")
 local trash = require("config.neotree.trash")
 local hide_preview_safe = require("config.neotree.helper.hide_preview_safe")
 local undo = require("config.neotree.undo")
+local watcher_quarantine = require("config.neotree.watcher_quarantine")
 
 local fn, cmd = vim.fn, vim.cmd
 local notify, levels = vim.notify, vim.log.levels
@@ -51,7 +52,7 @@ return {
   -- source switching
   ["<"] = "noop", -- this is default next source
   ["!"] = "next_source",
-  ["\""] = "prev_source",
+  ['"'] = "prev_source",
 
   -- file ops via neo-tree clipboard
   ["c"] = "copy_to_clipboard",
@@ -157,6 +158,11 @@ return {
     require("neo-tree.sources.filesystem.lib.filter_external").cancel()
     hide_preview_safe(state)
     cmd("nohlsearch")
+
+    -- Exit quarantine if active
+    if watcher_quarantine.is_quarantined() then
+      watcher_quarantine.exit_quarantine()
+    end
   end,
 
   -- =================== Save Buffer And Nodes =========================

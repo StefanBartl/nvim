@@ -25,7 +25,7 @@ function M.setup(opts)
 
   -- User commands (BufReport, TabReport, WinReport)
   if opts.usercmds ~= false or opts.all == true then
-    require("debugging.usercmds").enable()
+    require("debugging.usercmds").enable({ all = true })
   end
 end
 

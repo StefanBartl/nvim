@@ -2,13 +2,16 @@
 --- Neo-tree integration: move selected file/folder to system Trash and refresh neo-tree view.
 --- Provides send_to_trash(path) and neotree_send_node_to_trash(state) exported functions.
 
+local notify = require("lib.notify").create("[neotree.trash]")
+local watcher_quarantine = require("config.neotree.watcher_quarantine")
+-- local safety = require("config.neotree.safety")
+
 local M = {}
 
 local api, uv = vim.api, vim.loop
 local fn = vim.fn
 local resolve, system = fn.resolve, fn.system
 local defer_fn = vim.defer_fn
-local notify, levels = vim.notify, vim.log.levels
 local sh_error = vim.v.shell_error
 local str_format = string.format
 
@@ -64,35 +67,6 @@ local function close_related_buffers_and_previews(path)
       end
     end
   end
-end
-
---- Cleanup Neo-tree interne Watchers und State für einen Pfad
----@param path string
-local function cleanup_neotree_watchers(path)
-  -- Stop ALL filesystem watchers before deletion
-  pcall(function()
-    local watcher = require("neo-tree.sources.filesystem.lib.file_watcher")
-    if watcher and watcher.stop_all then
-      watcher.stop_all()
-    elseif watcher and watcher.stop then
-      watcher.stop(path)
-      -- Stop parent watchers too
-      local parent = vim.fn.fnamemodify(path, ":h")
-      watcher.stop(parent)
-    end
-  end)
-
-  -- Clear manager state BEFORE deletion
-  pcall(function()
-    local manager = require("neo-tree.sources.manager")
-    if manager and manager.close_all_nodes then
-      manager.close_all_nodes()
-    end
-    -- Force clear internal state
-    if manager and manager._state then
-      manager._state = {}
-    end
-  end)
 end
 
 --- Send given file/directory path to system Trash using available backend.
@@ -197,49 +171,12 @@ local function send_to_trash(path)
   return ok, msg
 end
 
---- Safely refresh Neo-tree after file operations
+---Safely refresh Neo-tree after file operations
+---Uses quarantine-aware refresh to avoid EPERM
 ---@param state_name string
 local function safe_refresh(state_name)
-  -- Longer delay to ensure file operations complete
-  vim.defer_fn(function()
-    local manager_ok, manager = pcall(require, "neo-tree.sources.manager")
-    if not manager_ok then
-      return
-    end
-
-    -- Complete cleanup first
-    pcall(function()
-      if manager.close_all_nodes then
-        manager.close_all_nodes()
-      end
-    end)
-
-    -- Wait for filesystem to settle
-    vim.defer_fn(function()
-      local state_ok, state = pcall(manager.get_state, state_name)
-      if state_ok and state then
-        -- Suppress EPERM errors during refresh
-        local old_notify = vim.notify
-        vim.notify = function(msg, level)
-          if not (type(msg) == "string" and msg:match("EPERM")) then
-            old_notify(msg, level)
-          end
-        end
-
-        local commands_ok, commands = pcall(require, "neo-tree.sources." .. state_name .. ".commands")
-        if commands_ok and commands and type(commands.refresh) == "function" then
-          pcall(commands.refresh, state)
-        else
-          pcall(manager.refresh, state_name)
-        end
-
-        -- Restore notify after 1 second
-        vim.defer_fn(function()
-          vim.notify = old_notify
-        end, 1000)
-      end
-    end, 300)
-  end, 100)
+  -- Use quarantine-aware refresh (waits for quarantine to end)
+  watcher_quarantine.safe_refresh(state_name)
 end
 
 --- Collect nodes to trash:
@@ -278,18 +215,18 @@ local function get_nodes_to_trash(state)
   return {}
 end
 
---- Neo-tree mapping callback: move selected node to Trash and refresh the Neo-tree view.
+---Neo-tree mapping callback: move selected node to Trash and refresh the Neo-tree view.
 ---@param state table
 ---@return nil
 local function neotree_send_node_to_trash(state)
   local nodes = get_nodes_to_trash(state)
 
   if #nodes == 0 then
-    notify("No nodes selected", levels.WARN)
+    notify.warn("No nodes selected")
     return
   end
 
-  -- Sammle Pfade
+  -- Collect paths
   ---@type string[]
   local paths = {}
   ---@type string[]
@@ -304,11 +241,11 @@ local function neotree_send_node_to_trash(state)
   end
 
   if #paths == 0 then
-    notify("No valid paths found", levels.ERROR)
+    notify.info("No valid paths found")
     return
   end
 
-  -- Bestätigungsdialog (Batch-aware)
+  -- Confirmation dialog
   local prompt
   if #paths == 1 then
     prompt = str_format("Move to Trash: %s ? (y/N) ", names[1])
@@ -320,20 +257,26 @@ local function neotree_send_node_to_trash(state)
   api.nvim_command("redraw")
 
   if ans ~= "y" and ans ~= "Y" then
-    notify("Cancelled", levels.INFO)
+    notify.info("Cancelled")
     return
   end
 
-  notify("Moving to Trash...", levels.INFO)
+  notify.info("Moving to Trash...")
 
-  -- Cleanup vorab
+  -- ENTER QUARANTINE FIRST
+  -- This stops watchers AND suppresses EPERM for 2 seconds
+  watcher_quarantine.enter_quarantine(2000, paths)
+
+  -- Cleanup: close buffers and previews
   for i = 1, #paths do
     local path = paths[i]
-    cleanup_neotree_watchers(path)
     close_related_buffers_and_previews(path)
   end
 
-  -- Asynchron batchweise löschen
+  -- Wait for buffers to close
+  vim.wait(100)
+
+  -- Asynchronous batch delete
   vim.schedule(function()
     defer_fn(function()
       local failed = false
@@ -344,6 +287,7 @@ local function neotree_send_node_to_trash(state)
         local ok, msg = send_to_trash(path)
         if ok then
           success_count = success_count + 1
+
           -- Add to undo history
           local undo_ok, undo_module = pcall(require, "config.neotree.undo")
           if undo_ok and undo_module.add_to_history then
@@ -352,20 +296,20 @@ local function neotree_send_node_to_trash(state)
         else
           failed = true
           local clean_msg = msg:match("([^\r\n]+)") or msg
-          notify("✗ Failed: " .. clean_msg, levels.ERROR)
+          notify.error("✗ Failed: " .. clean_msg)
         end
       end
 
       -- Clear marks after successful trash
       if success_count > 0 and state.explicitly_marked_node_ids then
         state.explicitly_marked_node_ids = {}
-        -- Refresh renderer to update visuals
         pcall(function()
           local renderer = require("neo-tree.ui.renderer")
           renderer.redraw(state)
         end)
       end
 
+      -- SAFE REFRESH (waits for quarantine to end automatically)
       defer_fn(function()
         safe_refresh(state.name or "filesystem")
       end, 200)
@@ -375,8 +319,10 @@ local function neotree_send_node_to_trash(state)
         if failed then
           msg = msg .. " - some items failed"
         end
-        notify(msg, levels.INFO)
+        notify.info(msg)
       end
+
+      -- Quarantine expires automatically after 2s
     end, 150)
   end)
 end
