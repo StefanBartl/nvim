@@ -129,7 +129,7 @@ end
 
 local M = {}
 
----@class WatcherQuarantineState
+---@class Cfg.NeoTree.WatcherQuarantine.State
 ---@field in_quarantine boolean
 ---@field quarantine_until number Timestamp (vim.loop.now())
 ---@field suspended_paths table<string, number> Paths in quarantine

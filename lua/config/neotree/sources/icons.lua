@@ -3,26 +3,9 @@
 ---Supports multiple icon families, variants, and name lengths.
 ---This module does NOT decide which sources are enabled; it only formats them.
 
----@class NeoTreeSourceIcon
----@field icon string        -- Icon glyph (can be empty for common/text mode)
----@field long string        -- Long display name
----@field short string       -- Short display name
-
----@class NeoTreeIconVariant
----@field filesystem NeoTreeSourceIcon
----@field buffers NeoTreeSourceIcon
----@field git_status NeoTreeSourceIcon
----@field document_symbols NeoTreeSourceIcon
----@field netman NeoTreeSourceIcon
----@field tests NeoTreeSourceIcon
-
----@class NeoTreeIconSet
----@field v1 NeoTreeIconVariant
----@field v2 NeoTreeIconVariant
-
 local M = {}
 
----@type table<string, NeoTreeIconSet>
+---@type table<string, Cfg.NeoTree.Sources.IconSet>
 local ICONS = {
 
     common = {

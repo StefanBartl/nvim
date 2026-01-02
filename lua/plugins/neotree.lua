@@ -26,7 +26,6 @@ return {
     lazy = false,
 
     opts = function()
-      -- Detect available sources
       local has_netman = pcall(require, "netman")
       local has_neotest_source = pcall(require, "neo-tree-tests-source")
 
@@ -195,11 +194,26 @@ return {
         git_status = { window = { mappings = GIT_STATUS } },
         document_symbols = {
           follow_cursor = true,
-          window = { mappings = DOCUMENT_SYMBOLS },
+          client_filters = "first", -- Use first available LSP client
+          renderers = {
+            root = {
+              { "indent" },
+              { "icon", default = "C" },
+              { "name", zindex = 10 },
+            },
+            symbol = {
+              { "indent", with_expanders = true },
+              { "kind_icon", default = "?" },
+              { "container", content = { "name", "kind_name" } },
+            },
+          },
+          window = { mappings = DOCUMENT_SYMBOLS, position = "left" },
         },
 
         -- tests source configuration
-        tests = has_neotest_source and TESTS or nil,
+        tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
+          window = { mappings = TESTS },
+        }) or nil,
 
         -- Netman source configuration
         netman = has_netman and {

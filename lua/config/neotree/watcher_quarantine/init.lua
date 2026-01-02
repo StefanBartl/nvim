@@ -10,14 +10,7 @@
 
 local M = {}
 
----@class WatcherQuarantineState
----@field in_quarantine boolean Global quarantine active
----@field quarantine_until number Timestamp when quarantine ends (vim.loop.now())
----@field suspended_paths table<string, number> Per-path quarantine timestamps
----@field error_suppressed boolean EPERM suppression active
----@field original_notify function|nil Backup of original vim.notify
-
----@type WatcherQuarantineState
+---@type Cfg.NeoTree.WatcherQuarantine.State
 local S = {
   in_quarantine = false,
   quarantine_until = 0,
@@ -94,7 +87,7 @@ function M.enter_quarantine(duration_ms, paths)
   end)
 
   -- Patch error handler to suppress EPERM
-  M._patch_error_handler()
+  -- M._patch_error_handler()
 end
 
 ---Exit quarantine early (if operation completed faster than expected)
@@ -104,7 +97,7 @@ function M.exit_quarantine()
   S.error_suppressed = false
   S.suspended_paths = {}
 
-  M._unpatch_error_handler()
+  -- M._unpatch_error_handler()
 end
 
 ---Auto-exit when quarantine expires naturally
@@ -114,7 +107,7 @@ function M._auto_exit_quarantine()
   S.error_suppressed = false
   S.suspended_paths = {}
 
-  M._unpatch_error_handler()
+  -- M._unpatch_error_handler()
 end
 
 -- FIX: Eventuell neuen error handler schreiben, der aber nicht vim.notify überschreibt
