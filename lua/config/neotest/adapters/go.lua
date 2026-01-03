@@ -15,37 +15,33 @@ local function create_adapter()
     },
     args = { "-v", "-race", "-count=1", "-timeout=60s" },
     runner = "go",
-    -- Explizite Test-File-Erkennung
-    is_test_file = function(file_path)
-      return vim.endswith(file_path, "_test.go")
-    end,
-    -- NEU: Root-Finding für Workspace
+    -- Root finder
     root_dir = function(fname)
-      return require("lspconfig.util").root_pattern("go.mod", ".git")(fname)
+      local util = require("lspconfig.util")
+      -- Suche go.mod im PARENT-Verzeichnis
+      local root = util.root_pattern("go.mod")(fname)
+      if root then
+        return root
+      end
+      -- Fallback: Git-Root
+      return util.root_pattern(".git")(fname)
     end,
   })
 end
 
 M.adapter = create_adapter()
 
-M.test_patterns = {
-  "_test%.go$",
-}
+M.test_patterns = { "_test%.go$" }
 
 function M.is_test_file(filepath)
   if not filepath or filepath == "" then
     return false
   end
-
   return filepath:match("_test%.go$") ~= nil
 end
 
 function M.get_test_patterns()
-  return {
-    "^Test",
-    "^Benchmark",
-    "^Example",
-  }
+  return { "^Test", "^Benchmark", "^Example" }
 end
 
 return M

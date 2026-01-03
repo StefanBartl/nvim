@@ -108,6 +108,10 @@ return {
       "NeotestOutputPanelToggle",
       "NeotestStop",
       "NeotestWatchToggle",
+
+    "NeotestDebugAdapters",
+    "NeotestDebugTree",
+
     },
     keys = {
       "<leader>ntt",
@@ -119,6 +123,44 @@ return {
       "<leader>ntO",
       "<leader>ntS",
       "<leader>ntw",
+      {
+        "<leader>ntr",
+        function()
+          local neotest = require("neotest")
+
+          -- Clear all state
+          if neotest.state then
+            pcall(neotest.state.clear)
+          end
+
+          -- Force rediscover
+          vim.notify("Forcing test discovery...", vim.log.levels.INFO)
+
+          vim.defer_fn(function()
+            local tree = neotest.state.positions()
+            if tree then
+              vim.notify("Tests found: " .. vim.tbl_count(tree), vim.log.levels.INFO)
+            else
+              vim.notify("No tests discovered", vim.log.levels.WARN)
+            end
+          end, 1000)
+        end,
+        desc = "Refresh test discovery",
+      },
+
+      -- ✅ NEU: Debug adapter info
+      {
+        "<leader>ntD",
+        function()
+          local adapters = require("neotest").state.adapter_ids()
+          local msg = "Loaded adapters:\n"
+          for id, _ in pairs(adapters or {}) do
+            msg = msg .. "  - " .. id .. "\n"
+          end
+          vim.notify(msg, vim.log.levels.INFO)
+        end,
+        desc = "Show loaded adapters",
+      },
     },
 
     lazy = true,
@@ -197,6 +239,58 @@ return {
     config = function(_, opts)
       local neotest = require("neotest")
       neotest.setup(opts)
+
+      vim.api.nvim_create_user_command("NeotestDebugAdapters", function()
+        -- local ok, neotest = pcall(require, "neotest")
+        -- if not ok then
+        --   vim.notify("Neotest not loaded", vim.log.levels.ERROR)
+        --   return
+        -- end
+
+        local config = neotest.config
+        if not config or not config.adapters then
+          vim.notify("No adapters configured", vim.log.levels.WARN)
+          return
+        end
+
+        local lines = { "=== Neotest Adapters ===" }
+        for i, adapter in ipairs(config.adapters) do
+          local name = type(adapter) == "table" and adapter.name or tostring(adapter)
+          table.insert(lines, string.format("[%d] %s", i, name))
+        end
+
+        vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+      end, {})
+
+      vim.api.nvim_create_user_command("NeotestDebugTree", function()
+        -- local ok, neotest = pcall(require, "neotest")
+        -- if not ok then
+        --   vim.notify("Neotest not loaded", vim.log.levels.ERROR)
+        --   return
+        -- end
+
+        local tree = neotest.state.positions()
+        if not tree then
+          vim.notify("No test tree available", vim.log.levels.WARN)
+          return
+        end
+
+        -- Dump tree structure
+        local lines = { "=== Test Tree ===" }
+        local function dump(node, indent)
+          indent = indent or 0
+          local prefix = string.rep("  ", indent)
+          table.insert(lines, prefix .. "- " .. (node.name or "?"))
+          if node.children then
+            for _, child in ipairs(node.children) do
+              dump(child, indent + 1)
+            end
+          end
+        end
+        dump(tree)
+
+        vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+      end, {})
 
       require("config.neotest.commands").setup()
       require("config.neotest.keymaps").setup()
