@@ -1,8 +1,8 @@
----@module 'utils.column_align'
+---@module 'custom.column_align'
 --- Align visually selected character to a target column with a fill character.
 --- This module sets up the keymap and user commands that call the core implementation.
 
----@class utils.column_align
+---@class custom.column_align
 local M = {}
 
 ---@type fun(base: table|nil, extra: table|nil): table
@@ -48,14 +48,14 @@ function M.setup()
   -- Column alignment (visual mode) --------------------------------------------
   local ok_col, column_align = pcall(require, "usrcmds.column_align.core")
   if ok_col and column_align and type(column_align.align_interactive) == "function" then
-    map("x", "<leader>ac", column_align.align_interactive, "[Utils.ColumnAlign] Align character to column", o)
+    map("x", "<leader>ac", column_align.align_interactive, "[custom.ColumnAlign] Align character to column", o)
   end
 
   -- Define user command wrappers ------------------------------------------------
   -- Helper: create a command with given name and function; use buffer-local options if bufnr present.
   local function create_command(name, cmd_fn, cmd_opts)
     cmd_opts = cmd_opts or {}
-    cmd_opts.desc = cmd_opts.desc or ("[Utils.ColumnAlign] " .. name)
+    cmd_opts.desc = cmd_opts.desc or ("[custom.ColumnAlign] " .. name)
     -- If buf number exists and is valid, set buffer option to that number (safe)
     if type(bufnr) == "number" then
       cmd_opts.buffer = bufnr
@@ -64,7 +64,7 @@ function M.setup()
     vim.api.nvim_create_user_command(name, function(cmd_args)
       local ok, err = pcall(cmd_fn, cmd_args)
       if not ok then
-        vim.notify("[Utils.ColumnAlign] Command '" .. name .. "' failed: " .. tostring(err), vim.log.levels.ERROR)
+        vim.notify("[custom.ColumnAlign] Command '" .. name .. "' failed: " .. tostring(err), vim.log.levels.ERROR)
       end
     end, cmd_opts)
   end
@@ -108,7 +108,7 @@ function M.setup()
       end,
       {
         nargs = "*",
-        complete = nil,
+        range = true,
         desc = "Align selected character to target column: ColumnAlignToColumn <col> [fill]",
       }
     )

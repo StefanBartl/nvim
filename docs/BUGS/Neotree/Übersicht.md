@@ -20,6 +20,10 @@
 - errorm meldung stimmt nicht:
   Error  22:40:54 notify.error [neotree.trash] Operation denied: path is open in buffer: C:\Users\bartl\AppData\Local\nvim\lua\config\neotree\sources\dynamic.lua
 
+- document_symbols taucht nicht
+:lua print(vim.inspect(require("neo-tree").config.sources))
+:lua print(vim.inspect(require("neo-tree").config.document_symbols))
+
 ### 1. EPERM Error friert Neovim ein
 
 Modul: neo-tree.nvim – filesystem, fs_watch

@@ -1,12 +1,15 @@
 ---@module 'usrcmds'
 -- Initialize module for 'usrcmds'
 
+require("usrcmds.format_table").setup({
+  header_align = "center",
+  entry_align = "center",
+})
 require("usrcmds.gather").setup({ lua = true })
 -- Ziel ist diese beiden durch migrate zu ersetzen
 require("usrcmds.migrate.opt").enable()
 require("usrcmds.migrate.notify").enable()
 
-require("usrcmds.column_align").setup()
 require("usrcmds.compress_dir").enable_usercmd()
 require("usrcmds.diff").enable({ diff_origin = true })
 require("usrcmds.fileinfo").enable()

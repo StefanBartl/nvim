@@ -11,6 +11,8 @@
 
 ## Important Bugs
 
+- Neotree soll keine iegne statusline haben
+
 ### LSP - AUDIT: Ist bereits implementiert.
 
  - Die @types und types dateien werden nicht gut erkannt.

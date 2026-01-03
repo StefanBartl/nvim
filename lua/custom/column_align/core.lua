@@ -1,10 +1,6 @@
----@module 'utils.column_align.core'
+---@module 'custom.column_align.core'
 --- Logic implementation for column alignment.
 --- Provides `align_to_column` and `align_interactive`.
-
----@class column_align_module
----@field align_to_column fun(target_col: number, fill_char: string|nil): nil
----@field align_interactive fun(): nil
 
 local M = {}
 
@@ -17,11 +13,18 @@ local api = vim.api
 ---@param fill_char string|nil Fill character (default: space)
 ---@return nil
 function M.align_to_column(target_col, fill_char)
+  -- Ensure the command is executed from an active visual selection
+  local mode = vim.fn.mode()
+  if mode ~= "v" and mode ~= "V" and mode ~= "\22" then
+    vim.notify(" [custom.ColumnAlign] Column align: Command must be executed from visual mode", vim.log.levels.ERROR)
+    return
+  end
+
   fill_char = fill_char or " "
 
   -- Validate fill_char is a single character (byte-wise)
   if type(fill_char) ~= "string" or #fill_char ~= 1 then
-    vim.notify(" [Utils.ColumnAlign] Column align: Fill character must be exactly one character", vim.log.levels.ERROR)
+    vim.notify(" [custom.ColumnAlign] Column align: Fill character must be exactly one character", vim.log.levels.ERROR)
     return
   end
 
@@ -31,7 +34,7 @@ function M.align_to_column(target_col, fill_char)
 
   -- Ensure selection is on a single line
   if start_pos[1] ~= end_pos[1] then
-    vim.notify(" [Utils.ColumnAlign] Column align: Selection must be on a single line", vim.log.levels.ERROR)
+    vim.notify(" [custom.ColumnAlign] Column align: Selection must be on a single line", vim.log.levels.ERROR)
     return
   end
 
@@ -41,7 +44,7 @@ function M.align_to_column(target_col, fill_char)
 
   -- Require exactly one character selected (start_col == end_col)
   if start_col ~= end_col then
-    vim.notify(" [Utils.ColumnAlign] Column align: Select exactly one character", vim.log.levels.ERROR)
+    vim.notify(" [custom.ColumnAlign] Column align: Select exactly one character", vim.log.levels.ERROR)
     return
   end
 
@@ -58,7 +61,7 @@ function M.align_to_column(target_col, fill_char)
   -- Validate target column strictly greater than current position
   if type(target_col) ~= "number" or target_col <= start_col then
     vim.notify(
-      " [Utils.ColumnAlign] Column align: Target column must be greater than current position",
+      " [custom.ColumnAlign] Column align: Target column must be greater than current position",
       vim.log.levels.ERROR
     )
     return
@@ -67,7 +70,7 @@ function M.align_to_column(target_col, fill_char)
   -- Calculate fill length (number of fill_char to insert between before and selected_char)
   local fill_length = target_col - start_col
   if fill_length < 1 then
-    vim.notify(" [Utils.ColumnAlign] Column align: Computed fill length invalid", vim.log.levels.ERROR)
+    vim.notify(" [custom.ColumnAlign] Column align: Computed fill length invalid", vim.log.levels.ERROR)
     return
   end
 
@@ -96,7 +99,7 @@ function M.align_interactive()
 
   local target_col = tonumber(target_input)
   if not target_col or target_col < 1 then
-    vim.notify(" [Utils.ColumnAlign] Column align: Invalid column number", vim.log.levels.ERROR)
+    vim.notify(" [custom.ColumnAlign] Column align: Invalid column number", vim.log.levels.ERROR)
     return
   end
 
@@ -107,4 +110,5 @@ function M.align_interactive()
   M.align_to_column(target_col, fill_char)
 end
 
+---@type Custom.ColAlign
 return M

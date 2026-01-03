@@ -26,13 +26,26 @@
 
 - lsp.tools behandeln
 
+
+### format sammelmodul
+
+Vercshiedene formatierungs usercommands und keymaps sammeln, zb.:
+- `custom.align_colum`:
+    * Unterstützung für Multibyte-Zeichen
+    * Ausrichtung mehrerer markierter Zeichen
+    * Wiederholung der letzten Zielspalte
+    * Presets pro Dateityp
+    * Integration in Operator-Mappings
+    * Multiselect: also mit ctrl-v mehrere start punkt markieren bzw.: echte markierungen und dort werden dann auf einmal alle ausgefphrt
+
 ---
 
 ## neotree
 
+- enter setzt das au den ordner in der die file ist. kann auch ein M-CR sein oder ähnlich
 - [Neotree]() mappings so schreiben, dass auch nvimtree/netrw möglich wäre
     . DAs bedeutet auch, dass alle lib funktionen inerhalb der filtree filesystem ist, danmit keine dependencies entstehen
-    . Die meisten helper sollten eigenltich als commands implementiert werden
+    I. Die meisten helper sollten eigenltich als commands implementiert werden
 
 ---
 

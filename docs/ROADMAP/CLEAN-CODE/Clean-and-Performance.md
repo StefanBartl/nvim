@@ -15,6 +15,8 @@
 4. notify-lib implementieren.
 5. explizit coden -> `return nil` statt `return` als Beispiel
 6. Wenn möglich auf `local M` verzichten und einen benannten Export table erstellen
+7. alle Module die etwas exportieren das exportierende Table typisieren
+8. Typisierung UsrCmds, Cfg. ...
 
 ---
 
