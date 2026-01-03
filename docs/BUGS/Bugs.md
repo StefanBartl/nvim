@@ -12,6 +12,7 @@
 ## Important Bugs
 
 - Neotree soll keine iegne statusline haben
+- Makros funktionieren nicht
 
 ### LSP - AUDIT: Ist bereits implementiert.
 
