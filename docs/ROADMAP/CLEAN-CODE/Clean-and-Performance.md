@@ -17,6 +17,9 @@
 6. Wenn möglich auf `local M` verzichten und einen benannten Export table erstellen
 7. alle Module die etwas exportieren das exportierende Table typisieren
 8. Typisierung UsrCmds, Cfg. ...
+9. Externe PLugins die usercommands und/oder mappings haben, diese in die `/config/**` verschieben und über die plugin init laden. Am besten ein gemeinsames config/**/actions.lua für Commands, Keymaps und Menüs. [Actions](MyNotes\Neovim\40_Optimierung\Actions_Mappings-Commands-Menu.md)
+
+actions.lua, commands.lua, keymaps.lua
 
 ---
 

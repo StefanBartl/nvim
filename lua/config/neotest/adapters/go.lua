@@ -3,8 +3,6 @@
 
 local M = {}
 
---- Initialize Go test adapter
----@return table|nil adapter Neotest adapter instance or nil on failure
 local function create_adapter()
   local ok, neotest_go = pcall(require, "neotest-go")
   if not ok then
@@ -17,20 +15,23 @@ local function create_adapter()
     },
     args = { "-v", "-race", "-count=1", "-timeout=60s" },
     runner = "go",
+    -- Explizite Test-File-Erkennung
+    is_test_file = function(file_path)
+      return vim.endswith(file_path, "_test.go")
+    end,
+    -- NEU: Root-Finding für Workspace
+    root_dir = function(fname)
+      return require("lspconfig.util").root_pattern("go.mod", ".git")(fname)
+    end,
   })
 end
 
----@type table|nil
 M.adapter = create_adapter()
 
----@type string[]
 M.test_patterns = {
   "_test%.go$",
 }
 
---- Check if file is a Go test file
----@param filepath string
----@return boolean
 function M.is_test_file(filepath)
   if not filepath or filepath == "" then
     return false
@@ -39,8 +40,6 @@ function M.is_test_file(filepath)
   return filepath:match("_test%.go$") ~= nil
 end
 
---- Get test function patterns for Go
----@return string[]
 function M.get_test_patterns()
   return {
     "^Test",

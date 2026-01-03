@@ -54,6 +54,26 @@ local function build_adapters()
   return adapters
 end
 
+local function build_consumers()
+  local consumers = {}
+
+  local ok, tests_source = pcall(require, "neo-tree.sources.tests")
+  if ok and tests_source then
+    if type(tests_source.setup) == "function" then
+      consumers.neotree = tests_source.setup
+    elseif type(tests_source) == "function" then
+      consumers.neotree = tests_source
+    else
+      -- Fallback: wrap in function
+      consumers.neotree = function(_)
+        return tests_source
+      end
+    end
+  end
+
+  return consumers
+end
+
 ---@type LazyPluginSpec[]
 return {
   {
@@ -77,81 +97,35 @@ return {
       { "marilari88/neotest-vitest", ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" } },
     },
 
-    lazy = true,
-
+    cmd = {
+      "NeotestActions",
+      "NeotestRunNearest",
+      "NeotestRunFile",
+      "NeotestRunAll",
+      "NeotestDebugNearest",
+      "NeotestSummaryToggle",
+      "NeotestOutput",
+      "NeotestOutputPanelToggle",
+      "NeotestStop",
+      "NeotestWatchToggle",
+    },
     keys = {
-      {
-        "<leader>ntt",
-        function()
-          require("neotest").run.run()
-        end,
-        desc = "Run nearest test",
-      },
-      {
-        "<leader>ntf",
-        function()
-          require("neotest").run.run(vim.fn.expand("%"))
-        end,
-        desc = "Run file tests",
-      },
-      {
-        "<leader>nta",
-        function()
-          require("neotest").run.run(vim.fn.getcwd())
-        end,
-        desc = "Run all tests",
-      },
-      {
-        "<leader>ntd",
-        function()
-          require("neotest").run.run({ strategy = "dap" })
-        end,
-        desc = "Debug nearest test",
-      },
-      {
-        "<leader>nts",
-        function()
-          require("neotest").summary.toggle()
-        end,
-        desc = "Toggle summary",
-      },
-      {
-        "<leader>nto",
-        function()
-          require("neotest").output.open({ enter = true })
-        end,
-        desc = "Show output",
-      },
-      {
-        "<leader>ntO",
-        function()
-          require("neotest").output_panel.toggle()
-        end,
-        desc = "Toggle output panel",
-      },
-      {
-        "<leader>ntS",
-        function()
-          require("neotest").run.stop()
-        end,
-        desc = "Stop test",
-      },
-      {
-        "<leader>ntw",
-        function()
-          require("neotest").watch.toggle()
-        end,
-        desc = "Toggle watch mode",
-      },
+      "<leader>ntt",
+      "<leader>ntf",
+      "<leader>nta",
+      "<leader>ntd",
+      "<leader>nts",
+      "<leader>nto",
+      "<leader>ntO",
+      "<leader>ntS",
+      "<leader>ntw",
     },
 
+    lazy = true,
     opts = function()
       return {
         adapters = build_adapters(),
-
-        consumers = {
-          neotree = require("neo-tree.sources.tests"),
-        },
+        consumers = build_consumers(),
 
         status = {
           enabled = true,
@@ -223,6 +197,10 @@ return {
     config = function(_, opts)
       local neotest = require("neotest")
       neotest.setup(opts)
+
+      require("config.neotest.commands").setup()
+      require("config.neotest.keymaps").setup()
+      require("config.neotest.whichkey").setup()
 
       -- Setup language-specific configurations
       local ok_core, core_cfg = pcall(require, "config.neotest.core")

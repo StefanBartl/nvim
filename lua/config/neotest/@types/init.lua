@@ -25,4 +25,9 @@
 ---@field suite? boolean Run entire test suite
 ---@field extra_args? string[] Additional command-line arguments
 
+---@class Cfg.Neotest.Action
+---@field name string
+---@field desc string
+---@field fn function
+
 return {}

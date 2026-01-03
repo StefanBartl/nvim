@@ -21,6 +21,14 @@
 
 --
 
+## bugs
+
+- `recommender -r`
+    1. Preview funktioniert, aber zeigt falsche Zeilen an.
+    2. Außerdem kein highlight.
+
+---
+
 ## Eigene Plugins
 
 ### neotree-fs-refactor

@@ -3,25 +3,18 @@
 
 local M = {}
 
---- Detect Python test framework
----@return string framework "pytest", "unittest", or "nose"
 local function detect_framework()
-  -- Check for pytest
   if vim.fn.executable("pytest") == 1 then
     return "pytest"
   end
 
-  -- Check for nose2
   if vim.fn.executable("nose2") == 1 then
     return "nose"
   end
 
-  -- Default to unittest (built-in)
   return "unittest"
 end
 
---- Initialize Python test adapter
----@return table|nil adapter Neotest adapter instance or nil on failure
 local function create_adapter()
   local ok, neotest_python = pcall(require, "neotest-python")
   if not ok then
@@ -36,21 +29,20 @@ local function create_adapter()
     python = "python3",
     args = framework == "pytest" and { "-v", "-s", "--log-level=DEBUG" } or {},
     pytest_discover_instances = true,
+    -- Explizite Test-Discovery
+    is_test_file = function(file_path)
+      return file_path:match("test_.*%.py$") or file_path:match(".*_test%.py$")
+    end,
   })
 end
 
----@type table|nil
 M.adapter = create_adapter()
 
----@type string[]
 M.test_patterns = {
   "test_.*%.py$",
   ".*_test%.py$",
 }
 
---- Check if file is a Python test file
----@param filepath string
----@return boolean
 function M.is_test_file(filepath)
   if not filepath or filepath == "" then
     return false
@@ -65,8 +57,6 @@ function M.is_test_file(filepath)
   return false
 end
 
---- Get Python test patterns
----@return string[]
 function M.get_test_patterns()
   return {
     "^def test_",

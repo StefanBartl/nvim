@@ -27,6 +27,17 @@
 - lsp.tools behandeln
 
 
+## Neotest
+
+-- `config.neotest.commands`
+    - ein zentrales :Neotest-Command mit Subcommands bauen
+    - Telescope-Integration (:Telescope neotest)
+    - Neo-tree Actions direkt auf diese Commands mappen
+ein einziges :Neotest Dispatcher-Command bauen
+oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
+
+- `config.neotest.neotree` einbinden in neotree
+
 ### format sammelmodul
 
 Vercshiedene formatierungs usercommands und keymaps sammeln, zb.:

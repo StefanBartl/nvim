@@ -7,8 +7,10 @@ local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
 local FILESYSTEM = require("config.neotree.keymaps.filesystem")
 local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local TESTS = require("config.neotree.keymaps.tests")
+local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local COMMANDS = require("config.neotree.commands")
 local ICONS = require("config.neotree.sources.icons")
+local neotest_neotree = require("config.neotest.neotree")
 
 return {
 
@@ -19,9 +21,9 @@ return {
       "MunifTanjim/nui.nvim",
 
       -- Optional sources
-      { "miversen33/netman.nvim", optional = true },
-      { "TimCreasman/neo-tree-tests-source.nvim", optional = true },
-      { "neo-tree.sources.diagnostics", optional = true },
+      { "miversen33/netman.nvim" },
+      { "TimCreasman/neo-tree-tests-source.nvim" },
+      { "mrbjarksen/neo-tree-diagnostics.nvim" },
     },
 
     lazy = false,
@@ -41,9 +43,21 @@ return {
         "buffers",
         "git_status",
         "document_symbols",
-        "diagnostics",
       }
 
+      if has_diagnostics then
+        enabled_sources[#enabled_sources + 1] = "diagnostics"
+      end
+
+      if has_netman then
+        enabled_sources[#enabled_sources + 1] = "netman.ui.neo-tree"
+      end
+
+      if has_neotest_source then
+        enabled_sources[#enabled_sources + 1] = "tests"
+      end
+
+      -- Build sources for source_selector
       ---@type table[]
       local sources = {
         {
@@ -155,7 +169,20 @@ return {
             { "current_filter" },
             { "name" },
             { "git_status", highlight = "NeoTreeDimText" },
-            has_diagnostics and { "diagnostics" } or nil,
+            diagnostics = has_diagnostics and {
+              symbols = {
+                hint = "",
+                info = "",
+                warn = "",
+                error = "",
+              },
+              highlights = {
+                hint = "DiagnosticSignHint",
+                info = "DiagnosticSignInfo",
+                warn = "DiagnosticSignWarn",
+                error = "DiagnosticSignError",
+              },
+            } or nil,
             { "clipboard" },
           },
           file = {
@@ -240,13 +267,33 @@ return {
           },
         },
 
-        diagnostics = has_diagnostics and {
-          window = { position = "left", mappings = {} },
-          renderers = {
-            directory = { { "indent" }, { "icon" }, { "name" } },
-            file = { { "indent" }, { "icon" }, { "name" } },
-          },
-        } or nil,
+        diagnostics = has_diagnostics
+            and {
+              auto_preview = {
+                enabled = false,
+                preview_config = {},
+                event = "neo_tree_buffer_enter",
+              },
+              bind_to_cwd = true,
+              diag_sort_function = "severity",
+              follow_current_file = {
+                enabled = true,
+                always_focus_file = false,
+              },
+              group_dirs_and_files = true,
+              group_empty_dirs = true,
+              show_unloaded = true, -- Zeigt auch Diagnostics von nicht geladenen Buffern
+              refresh = {
+                delay = 100,
+                event = "vim_diagnostic_changed", -- Aktualisiert bei Änderungen
+                max_items = 10000,
+              },
+              window = {
+                position = "left",
+                mappings = DIAGNOSTICS,
+              },
+            }
+          or nil,
 
         -- tests source configuration
         tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
