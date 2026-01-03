@@ -12,6 +12,8 @@
 ---@field relative? string Window positioning ('cursor', 'win', 'editor')
 ---@field width? integer Window width (default: auto-calculated)
 ---@field height? integer Window height (default: auto-calculated)
+---@field use_tab_navigation? boolean
+---@field auto_width? boolean
 
 ---@class Lib.HoverSelect.State
 ---@field bufnr integer|nil Buffer number

@@ -21,6 +21,7 @@ return {
       -- Optional sources
       { "miversen33/netman.nvim", optional = true },
       { "TimCreasman/neo-tree-tests-source.nvim", optional = true },
+      { "neo-tree.sources.diagnostics", optional = true },
     },
 
     lazy = false,
@@ -28,11 +29,20 @@ return {
     opts = function()
       local has_netman = pcall(require, "netman")
       local has_neotest_source = pcall(require, "neo-tree-tests-source")
+      local has_diagnostics = pcall(require, "neo-tree.sources.diagnostics")
 
       -- configuration knobs
       local icon_family = "nerd" -- common | nerd | codicons
       local icon_variant = "v1" -- v1 | v2
       local name_length = "long" -- long | short
+
+      local enabled_sources = {
+        "filesystem",
+        "buffers",
+        "git_status",
+        "document_symbols",
+        "diagnostics",
+      }
 
       ---@type table[]
       local sources = {
@@ -68,11 +78,15 @@ return {
         }
       end
 
-      return {
-        close_if_last_window = false,
-        popup_border_style = "rounded",
-        sort_case_insensitive = true,
+      if has_diagnostics then
+        sources[#sources + 1] = {
+          source = "diagnostics",
+          display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
+        }
+      end
 
+      return {
+        sources = enabled_sources,
         source_selector = {
           winbar = true,
           statusline = false,
@@ -80,6 +94,9 @@ return {
           padding = { left = 1, right = 1 },
           sources = sources,
         },
+        close_if_last_window = false,
+        popup_border_style = "rounded",
+        sort_case_insensitive = true,
 
         event_handlers = {
           {
@@ -138,7 +155,7 @@ return {
             { "current_filter" },
             { "name" },
             { "git_status", highlight = "NeoTreeDimText" },
-            { "diagnostics" },
+            has_diagnostics and { "diagnostics" } or nil,
             { "clipboard" },
           },
           file = {
@@ -146,7 +163,7 @@ return {
             { "icon" },
             { "name", use_git_status_colors = true },
             { "git_status", highlight = "NeoTreeDimText" },
-            { "diagnostics" },
+            has_diagnostics and { "diagnostics" } or nil,
             {
               function(_, node, state)
                 local marks = state.explicitly_marked_node_ids or {}
@@ -194,7 +211,9 @@ return {
         git_status = { window = { mappings = GIT_STATUS } },
         document_symbols = {
           follow_cursor = true,
-          client_filters = "first", -- Use first available LSP client
+          client_filters = "first",
+
+          -- Proper renderers for document_symbols
           renderers = {
             root = {
               { "indent" },
@@ -204,11 +223,30 @@ return {
             symbol = {
               { "indent", with_expanders = true },
               { "kind_icon", default = "?" },
-              { "container", content = { "name", "kind_name" } },
+              {
+                "container",
+                content = {
+                  { "name", zindex = 10 },
+                  { "kind_name", zindex = 20, align = "right" },
+                },
+              },
             },
           },
-          window = { mappings = DOCUMENT_SYMBOLS, position = "left" },
+
+          -- Document symbols has NO filesystem mappings!
+          window = {
+            mappings = DOCUMENT_SYMBOLS, -- Only document_symbols mappings
+            position = "left",
+          },
         },
+
+        diagnostics = has_diagnostics and {
+          window = { position = "left", mappings = {} },
+          renderers = {
+            directory = { { "indent" }, { "icon" }, { "name" } },
+            file = { { "indent" }, { "icon" }, { "name" } },
+          },
+        } or nil,
 
         -- tests source configuration
         tests = has_neotest_source and vim.tbl_extend("force", TESTS, {

@@ -80,15 +80,69 @@ return {
     lazy = true,
 
     keys = {
-      { "<leader>ntt", function() require("neotest").run.run() end, desc = "Run nearest test" },
-      { "<leader>ntf", function() require("neotest").run.run(vim.fn.expand("%")) end, desc = "Run file tests" },
-      { "<leader>nta", function() require("neotest").run.run(vim.fn.getcwd()) end, desc = "Run all tests" },
-      { "<leader>ntd", function() require("neotest").run.run({ strategy = "dap" }) end, desc = "Debug nearest test" },
-      { "<leader>nts", function() require("neotest").summary.toggle() end, desc = "Toggle summary" },
-      { "<leader>nto", function() require("neotest").output.open({ enter = true }) end, desc = "Show output" },
-      { "<leader>ntO", function() require("neotest").output_panel.toggle() end, desc = "Toggle output panel" },
-      { "<leader>ntS", function() require("neotest").run.stop() end, desc = "Stop test" },
-      { "<leader>ntw", function() require("neotest").watch.toggle() end, desc = "Toggle watch mode" },
+      {
+        "<leader>ntt",
+        function()
+          require("neotest").run.run()
+        end,
+        desc = "Run nearest test",
+      },
+      {
+        "<leader>ntf",
+        function()
+          require("neotest").run.run(vim.fn.expand("%"))
+        end,
+        desc = "Run file tests",
+      },
+      {
+        "<leader>nta",
+        function()
+          require("neotest").run.run(vim.fn.getcwd())
+        end,
+        desc = "Run all tests",
+      },
+      {
+        "<leader>ntd",
+        function()
+          require("neotest").run.run({ strategy = "dap" })
+        end,
+        desc = "Debug nearest test",
+      },
+      {
+        "<leader>nts",
+        function()
+          require("neotest").summary.toggle()
+        end,
+        desc = "Toggle summary",
+      },
+      {
+        "<leader>nto",
+        function()
+          require("neotest").output.open({ enter = true })
+        end,
+        desc = "Show output",
+      },
+      {
+        "<leader>ntO",
+        function()
+          require("neotest").output_panel.toggle()
+        end,
+        desc = "Toggle output panel",
+      },
+      {
+        "<leader>ntS",
+        function()
+          require("neotest").run.stop()
+        end,
+        desc = "Stop test",
+      },
+      {
+        "<leader>ntw",
+        function()
+          require("neotest").watch.toggle()
+        end,
+        desc = "Toggle watch mode",
+      },
     },
 
     opts = function()

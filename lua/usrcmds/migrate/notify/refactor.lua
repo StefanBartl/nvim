@@ -157,7 +157,7 @@ function M.apply_match(bufnr, match)
     local last_line = lines[#lines]
 
     -- Indent von erster Zeile extrahieren
-    local indent = first_line:match("^(%s*)")
+    -- local indent = first_line:match("^(%s*)")
 
     -- Before-Teil: alles vor start_col in erster Zeile
     local before = first_line:sub(1, start_col)

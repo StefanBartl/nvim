@@ -67,7 +67,7 @@ function M.test_multi_select_long()
     items = items,
     multi_select = true,
     height = 15,
-    on_select = function(selected, indices)
+    on_select = function(selected, _)
       vim.notify(
         string.format("Selected %d items: %s", #selected, table.concat(selected, ", ")),
         vim.log.levels.INFO
@@ -116,7 +116,7 @@ function M.test_file_list()
     title = "Select files to process",
     items = files,
     multi_select = true,
-    on_select = function(selected, indices)
+    on_select = function(selected, _)
       local msg = { "Processing files:" }
       for _, file in ipairs(selected) do
         table.insert(msg, "  • " .. file)

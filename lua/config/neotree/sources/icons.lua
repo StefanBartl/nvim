@@ -16,6 +16,7 @@ local ICONS = {
             document_symbols = { icon = "[SYM]", long = "Document Symbols", short = "SYM" },
             netman           = { icon = "[NET]", long = "Network",          short = "NET" },
             tests            = { icon = "[TST]", long = "Test Cases",       short = "TST" },
+            diagnostics      = { icon = "[DIAG]", long = "Diagnostics",      short = "DIAG" },
         },
         v2 = {
             filesystem       = { icon = "[F]", long = "File System",      short = "F" },
@@ -24,6 +25,7 @@ local ICONS = {
             document_symbols = { icon = "[D]", long = "Document Symbols", short = "D" },
             netman           = { icon = "[N]", long = "Network",          short = "N" },
             tests            = { icon = "[T]", long = "Test Cases",       short = "T" },
+            diagnostics      = { icon = "[Dx]", long = "Diagnostics",      short = "Dx" },
         },
     },
 
@@ -35,6 +37,7 @@ local ICONS = {
             document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
             netman           = { icon = "", long = "Network",          short = "Net" },
             tests            = { icon = "⏱", long = "Test Cases",       short = "Tst" },
+            diagnostics      = { icon = "", long = "Diagnostics",      short = "Diag" },
         },
         v2 = {
             filesystem       = { icon = "", long = "File System",      short = "FS" },
@@ -43,6 +46,7 @@ local ICONS = {
             document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
             netman           = { icon = "", long = "Network",          short = "Net" },
             tests            = { icon = "", long = "Test Cases",       short = "Tst" },
+            diagnostics      = { icon = "", long = "Diagnostics",      short = "Diag" },
         },
     },
 
@@ -54,6 +58,7 @@ local ICONS = {
             document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
             netman           = { icon = "", long = "Network",          short = "Net" },
             tests            = { icon = "", long = "Test Cases",       short = "Tst" },
+            diagnostics      = { icon = "", long = "Diagnostics",      short = "Diag" },
         },
         v2 = {
             filesystem       = { icon = "", long = "File System",      short = "FS" },
@@ -62,6 +67,7 @@ local ICONS = {
             document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
             netman           = { icon = "", long = "Network",          short = "Net" },
             tests            = { icon = "", long = "Test Cases",       short = "Tst" },
+            diagnostics      = { icon = "", long = "Diagnostics",      short = "Diag" },
         },
     },
 }

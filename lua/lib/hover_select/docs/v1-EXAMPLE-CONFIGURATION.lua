@@ -4,6 +4,7 @@
 -- This file demonstrates how a plugin or module could configure and
 -- create a hover-select UI with custom options. It is not part of the
 -- core implementation and serves documentation purposes only.
+require("lib.hover_select.@types")
 
 -- Import the main hover-select module
 local hover_select = require("lib.hover_select")
