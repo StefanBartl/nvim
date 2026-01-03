@@ -1,7 +1,9 @@
-# _______ Bug Index
+# Neotest Bug Index
 
 
 ## CRITICAL Bugs
+
+- Neotest Anwendung nicht möglich
 
 --
 

@@ -1,21 +1,43 @@
 ---@module 'system.rpc_pipe'
--- Start a predictable named-pipe RPC server on Windows and export NVIM_LISTEN_ADDRESS.
--- Usage: require("system.rpc").setup({ debug = true })
+---@brief Start a predictable named-pipe RPC server on Windows with neotest compatibility
 
 local M = {}
 
 --- Try to start a Windows named-pipe RPC server and export NVIM_LISTEN_ADDRESS.
--- @param opts table|nil
---   opts.debug = true -> emit vim.notify debug/warn messages
+---@param opts table|nil
+---  opts.debug = true -> emit vim.notify debug/warn messages
+---  opts.allow_override = true -> allow NVIM_LISTEN_ADDRESS to be overridden by env
 function M.setup(opts)
   opts = opts or {}
   local debug = opts.debug or false
+  local allow_override = opts.allow_override ~= false -- ✅ Default: true
 
   -- Only attempt the Windows named-pipe behavior on Windows-like OS
-  local is_windows = package.config:sub(1, 1) == "\\" -- simple platform check
+  local is_windows = package.config:sub(1, 1) == "\\"
   if not is_windows then
     if debug then
       vim.notify("[system.rpc] skipping: not Windows", vim.log.levels.DEBUG)
+    end
+    return
+  end
+
+  -- ✅ CRITICAL: Check if we're in a test environment
+  local is_test_env = vim.env.NEOTEST_RUNNING == "1"
+    or vim.env.PLENARY_TEST_TIMEOUT ~= nil
+    or vim.v.progname:match("nvim%-test")
+
+  if is_test_env and debug then
+    vim.notify("[system.rpc] detected test environment, skipping RPC setup", vim.log.levels.DEBUG)
+    return
+  end
+
+  -- ✅ If NVIM_LISTEN_ADDRESS is already set and override is allowed, respect it
+  if allow_override and vim.env.NVIM_LISTEN_ADDRESS then
+    if debug then
+      vim.notify(
+        "[system.rpc] NVIM_LISTEN_ADDRESS already set: " .. vim.env.NVIM_LISTEN_ADDRESS,
+        vim.log.levels.DEBUG
+      )
     end
     return
   end
@@ -28,6 +50,7 @@ function M.setup(opts)
       vim.notify("[system.rpc] " .. msg, vim.log.levels.DEBUG)
     end
   end
+
   local function warn(msg)
     if debug then
       vim.notify("[system.rpc] " .. msg, vim.log.levels.WARN)
@@ -35,14 +58,13 @@ function M.setup(opts)
   end
 
   pcall(function()
-    -- ensure serverstart() exists
     if vim.fn.exists("*serverstart") == 1 then
       dbg("attempting serverstart for pipe: " .. pipe)
       local ok = vim.fn.serverstart(pipe)
-      -- serverstart returns 0 on error; success returns the address (string)
+
       if ok == 0 then
-        -- intentionally silent in normal mode; warn only in debug mode
         warn("serverstart returned 0 (could not start pipe). Falling back silently.")
+        return
       else
         dbg("serverstart succeeded; address: " .. tostring(ok))
       end
@@ -51,9 +73,28 @@ function M.setup(opts)
     end
   end)
 
-  -- Export the env var for child processes (and for tools reading NVIM_LISTEN_ADDRESS)
-  vim.env.NVIM_LISTEN_ADDRESS = pipe
-  dbg("exported NVIM_LISTEN_ADDRESS=" .. pipe)
+  -- ✅ Only set if not in test environment
+  if not is_test_env then
+    vim.env.NVIM_LISTEN_ADDRESS = pipe
+    dbg("exported NVIM_LISTEN_ADDRESS=" .. pipe)
+  end
+end
+
+--- Check if RPC pipe is active
+---@return boolean
+function M.is_active()
+  return vim.env.NVIM_LISTEN_ADDRESS ~= nil
+end
+
+--- Get current RPC address
+---@return string|nil
+function M.get_address()
+  return vim.env.NVIM_LISTEN_ADDRESS
+end
+
+--- Clear RPC address (useful for tests)
+function M.clear()
+  vim.env.NVIM_LISTEN_ADDRESS = nil
 end
 
 return M
