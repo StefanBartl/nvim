@@ -39,12 +39,26 @@ local function get_installed_lsps()
   if not ok then
     return {}
   end
+
   local lsps = {}
   for _, pkg in ipairs(registry.get_installed_packages()) do
-    if pkg:is_installed() and pkg:is_lsp() then
-      table.insert(lsps, pkg.name)
+    if pkg:is_installed() then
+      -- Prüfen, ob Kategorie "LSP" enthalten ist
+      local categories = pkg.spec.categories or {}
+      local is_lsp = false
+      for _, cat in ipairs(categories) do
+        if cat == "LSP" then
+          is_lsp = true
+          break
+        end
+      end
+
+      if is_lsp then
+        table.insert(lsps, pkg.name)
+      end
     end
   end
+
   table.sort(lsps)
   return lsps
 end
