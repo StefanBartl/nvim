@@ -4,6 +4,7 @@
 ## CRITICAL Bugs
 
 - Neotest Anwendung nicht möglich
+- Neotest ist nicht in Neotre sources
 
 --
 

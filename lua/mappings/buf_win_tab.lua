@@ -6,6 +6,7 @@ local move_buf_tab = require("custom.functions.buf_win_tabs.move_buffer_to_tab")
 local terminal_lib = require("lib.terminals")
 local is_terminal_buf, delete_terminal_buf = terminal_lib.is_terminal_buf, terminal_lib.delete_terminal_buf
 
+--FIX: Funktionen ausgliedern nach custom tabufline
 --- Helper to get the effective count (defaults to 1)
 --- @return integer
 local function get_count()
@@ -155,29 +156,28 @@ function M.setup()
   }
   local exclude_names = { ".*lazygit.*" }
 
-  -- WICHTIG: Der vierte Parameter (lhs) muss übergeben werden!
-  vim.keymap.set(
+  map(
     { "n", "t" },
     "<S-h>",
     resize_guarded.create("vertical resize -5", exclude_filetypes, exclude_names, "<S-h>"),
     { desc = "[Window] Resize narrower" }
   )
 
-  vim.keymap.set(
+  map(
     { "n", "t" },
     "<S-l>",
     resize_guarded.create("vertical resize +5", exclude_filetypes, exclude_names, "<S-l>"),
     { desc = "[Window] Resize wider" }
   )
 
-  vim.keymap.set(
+  map(
     { "n", "t" },
     "<S-k>",
     resize_guarded.create("resize +5", exclude_filetypes, exclude_names, "<S-k>"),
     { desc = "[Window] Resize taller" }
   )
 
-  vim.keymap.set(
+  map(
     { "n", "t" },
     "<S-j>",
     resize_guarded.create("resize -5", exclude_filetypes, exclude_names, "<S-j>"),

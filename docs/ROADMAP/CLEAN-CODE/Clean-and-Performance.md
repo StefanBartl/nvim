@@ -30,6 +30,8 @@ actions.lua, commands.lua, keymaps.lua
 3. Überlegen, ob usrcmds nicht eigentlichs usercmds gennant werden sollen
 4. Alle mappings, autocmds und usercommand funktionen bei Gelegenheit von `setup()` auf `enable()/attach()` umschreiben
 5. `pcall` doppelungen rauscoden
+6. `mappings.*` map durch `lib.map` tauschen
+7. `ui.stl_module` auf custom statusline ändern und modularisieren
 
 ### `mappings.`
 
