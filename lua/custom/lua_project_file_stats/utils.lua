@@ -129,15 +129,15 @@ function M.compute_percentages(stats)
   local total_words = stats.total_words or 0
 
   return M.percent(stats.lines_without_comments or 0, total_lines),
-         M.percent(stats.comment_lines or 0, total_lines),
-         M.percent(stats.lines_without_annotations or 0, total_lines),
-         M.percent(stats.annotation_lines or 0, total_lines),
-         M.percent(stats.blank_lines or 0, total_lines),
-         M.percent(stats.words_without_comments or 0, total_words),
-         M.percent(stats.words_without_annotations or 0, total_words),
-         M.percent(stats.words_in_comments or 0, total_words),
-         M.percent(stats.words_in_annotations or 0, total_words),
-         M.percent(stats.words_in_blank or 0, total_words)
+    M.percent(stats.comment_lines or 0, total_lines),
+    M.percent(stats.lines_without_annotations or 0, total_lines),
+    M.percent(stats.annotation_lines or 0, total_lines),
+    M.percent(stats.blank_lines or 0, total_lines),
+    M.percent(stats.words_without_comments or 0, total_words),
+    M.percent(stats.words_without_annotations or 0, total_words),
+    M.percent(stats.words_in_comments or 0, total_words),
+    M.percent(stats.words_in_annotations or 0, total_words),
+    M.percent(stats.words_in_blank or 0, total_words)
 end
 
 ---Compute ratios for stats
@@ -319,6 +319,29 @@ function M.create_empty_stats()
     words_without_comments = 0,
     words_without_annotations = 0,
     words_in_blank = 0,
+  }
+end
+
+---Create empty FolderStats
+---@return LuaProjectFileStats.FolderStats
+function M.create_empty_folder_stats()
+  return {
+    total_lines = 0,
+    lines_without_comments = 0,
+    comment_lines = 0,
+    lines_without_annotations = 0,
+    annotation_lines = 0,
+    blank_lines = 0,
+    total_words = 0,
+    words_in_comments = 0,
+    words_in_annotations = 0,
+    words_without_comments = 0,
+    words_without_annotations = 0,
+    words_in_blank = 0,
+
+    file_count = 0,
+    ---@type LuaProjectFileStats.FileInfo[]
+    files = {},
   }
 end
 

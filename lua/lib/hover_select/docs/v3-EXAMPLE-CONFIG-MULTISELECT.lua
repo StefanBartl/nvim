@@ -38,6 +38,8 @@ local function example_multi_select()
     title = "Select tasks to complete (Tab to mark)",
     items = tasks,
     multi_select = true,
+    ---@param selected string[]
+    ---@param indices string[]
     on_select = function(selected, indices)
       -- Handle array results
       if #selected == 1 then
@@ -70,11 +72,11 @@ local function example_file_batch_processing()
     multi_select = true,
     width = 50,
     height = 8,
-    ---@diagnostic disable-next-line: unused-local
-    on_select = function(selected_files, indices)
+    ---@param selected_files string[]
+    on_select = function(selected_files, _)
       -- Simulate batch processing
       local results = {}
-      for i, file in ipairs(selected_files) do
+      for _, file in ipairs(selected_files) do
         table.insert(results, string.format("✓ Formatted %s", file))
       end
 
@@ -105,7 +107,8 @@ local function example_gather_integration()
     title = "Navigate to functions (multi-select)",
     items = function_results,
     multi_select = true,
-    on_select = function(selections, indices)
+    ---@param selections string[]
+    on_select = function(selections, _)
       -- Parse and navigate to each selected function
       for _, selection in ipairs(selections) do
         local line_num = selection:match("^(%d+):")
@@ -138,7 +141,8 @@ local function example_dynamic_behavior()
     title = "Git Operations",
     items = operations,
     multi_select = true,
-    on_select = function(selected, indices)
+    ---@param selected string[]
+    on_select = function(selected, _)
       if #selected == 1 then
         -- Single operation: execute immediately
         vim.notify("Executing: " .. selected[1], vim.log.levels.INFO)

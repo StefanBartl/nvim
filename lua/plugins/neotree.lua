@@ -10,7 +10,7 @@ local TESTS = require("config.neotree.keymaps.tests")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local COMMANDS = require("config.neotree.commands")
 local ICONS = require("config.neotree.sources.icons")
-local neotest_neotree = require("config.neotest.neotree")
+-- local neotest_neotree = require("config.neotest.neotree")
 
 return {
 

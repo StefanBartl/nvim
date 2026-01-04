@@ -106,7 +106,13 @@ function M.run(mode)
 
     on_select = function(selected)
       ---@type UsrCmds.Gather.Lua.GatherType
-      local gather_type = selected
+      local gather_type
+
+      if type(selected) == "table" then
+        gather_type = selected[1]
+      else
+        gather_type = selected
+      end
 
       if mode == "buffer" then
         run_buffer_mode(gather_type)

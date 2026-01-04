@@ -3,7 +3,6 @@
 local neotest = require("neotest")
 local map = require("lib.map")
 local notify = require("lib.notify").create("[neotest.debug] ")
-local info, warn = notify.info, notify.warn
 
 local M = {}
 
@@ -16,13 +15,13 @@ function M.keymaps()
     if neotest.state then
       pcall(neotest.state.clear)
     end
-    info("Forcing test discovery...")
+    notify.info("Forcing test discovery...")
     vim.defer_fn(function()
       local tree = neotest.state.positions()
       if tree then
-        info("Tests found: " .. vim.tbl_count(tree))
+        notify.info("Tests found: " .. vim.tbl_count(tree))
       else
-        warn("No tests discovered")
+        notify.warn("No tests discovered")
       end
     end, 1000)
   end, {
@@ -36,7 +35,7 @@ function M.keymaps()
       local name = type(adapter) == "table" and adapter.name or tostring(adapter)
       msg = msg .. str_fmt("[%d] %s\n", i, name)
     end
-    info(msg)
+    notify.info(msg)
   end, {
     desc = "Show loaded adapters",
   })
@@ -46,7 +45,7 @@ end
 function M.usercommands()
   nvim_create_user_command("NeotestDebugAdapters", function()
     if not neotest.config or not neotest.config.adapters then
-      warn("No adapters configured")
+      notify.warn("No adapters configured")
       return
     end
 
@@ -56,13 +55,13 @@ function M.usercommands()
       table.insert(lines, str_fmt("[%d] %s", i, name))
     end
 
-    info(table.concat(lines, "\n"))
+    notify.info(table.concat(lines, "\n"))
   end, { desc = "[NeoTest Debug] Show adapter status" })
 
   nvim_create_user_command("NeotestDebugTree", function()
     local tree = neotest.state.positions()
     if not tree then
-      warn("No test tree available")
+      notify.warn("No test tree available")
       return
     end
 
@@ -79,7 +78,7 @@ function M.usercommands()
     end
     dump(tree)
 
-    info(table.concat(lines, "\n"))
+    notify.info(table.concat(lines, "\n"))
   end, { desc = "[NeoTest Debug] Show test tree" })
 end
 

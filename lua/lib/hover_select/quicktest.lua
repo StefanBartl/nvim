@@ -28,6 +28,8 @@ local function test_multi()
       "Item 5",
     },
     multi_select = true,  -- Enable multi-select
+    ---@param selected string[]
+    ---@param indices string[]
     on_select = function(selected, indices)
       -- selected is array, indices is array
       print(string.format("Selected %d items:", #selected))

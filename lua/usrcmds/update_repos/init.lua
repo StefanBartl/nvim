@@ -8,7 +8,6 @@
 ---Uses non-blocking vim.system calls and a sequential job queue.
 
 local notify = require("lib.notify").create("[usrcmds.update_repos] ")
-local error, info = notify.error, notify.info
 
 local M = {}
 
@@ -102,20 +101,20 @@ local function update_all(path)
   local base_dir = resolve_base_dir(path)
 
   if not base_dir then
-    error("No repository directory provided and REPOS_DIR is not set")
+    notify.error("No repository directory provided and REPOS_DIR is not set")
     return
   end
 
   local stat = loop.fs_stat(base_dir)
   if not stat or stat.type ~= "directory" then
-    error("Repository directory is not accessible: " .. base_dir)
+    notify.error("Repository directory is not accessible: " .. base_dir)
     return
   end
 
   local repos = collect_repos(base_dir)
 
   if #repos == 0 then
-    info("No git repositories found in " .. base_dir)
+    notify.info("No git repositories found in " .. base_dir)
     return
   end
 
@@ -128,9 +127,9 @@ local function update_all(path)
     if not repo then
       vim.schedule(function()
         if #errors > 0 then
-          error("Repository update finished with errors:\n\n" .. table.concat(errors, "\n\n"))
+          notify.error("Repository update finished with errors:\n\n" .. table.concat(errors, "\n\n"))
         else
-          info("All repositories updated successfully")
+          notify.info("All repositories updated successfully")
         end
       end)
       return
@@ -147,7 +146,7 @@ local function update_all(path)
     end)
   end
 
-  info("Updating repositories asynchronously...")
+  notify.info("Updating repositories asynchronously...")
   run_next()
 end
 

@@ -11,13 +11,11 @@
 
 ## Important Bugs
 
-- Neotree soll keine iegne statusline haben
-- Makros funktionieren nicht
-
 ### LSP - AUDIT: Ist bereits implementiert.
 
  - Die @types und types dateien werden nicht gut erkannt.
     ---> Besser mal mit types.lua probeiren, aber das sollte eigentlich keinen Unterschied machen
+- LspStartHere und LspRestartHere funktioeren nicht
 
 --
 

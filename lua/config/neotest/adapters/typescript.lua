@@ -29,6 +29,7 @@ end
 ---Check if project uses Vitest
 ---@param pkg_path string
 ---@return boolean
+---@diagnostic disable-next-line: unused-function, unused-local
 local function uses_vitest(pkg_path)
   local ok, content = pcall(vim.fn.readfile, pkg_path)
   if not ok or not content then
@@ -53,7 +54,7 @@ local function create_adapter()
         end
         return vim.fn.getcwd()
       end,
-      filter_dir = function(name, rel_path, root)
+      filter_dir = function(name, _, _)
         return name ~= "node_modules"
       end,
     })

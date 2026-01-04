@@ -96,7 +96,7 @@ function M.mk_wkdbook_selector(cfg, engine_hint)
       if vim_has_wkdbook then
         sel_vim.select_wkdbook(c, w, cb)
       else
-        sel_vim.select(c, w, cb, "Select WkdBook")
+        sel_vim.select(c, w, cb)
       end
     end
   end
@@ -108,13 +108,13 @@ function M.mk_wkdbook_selector(cfg, engine_hint)
       if tel_has_wkdbook then
         handled = sel_tel.select_wkdbook(c, w, cb)
       else
-        handled = sel_tel.select(c, w, cb, "WkdBooks")
+        handled = sel_tel.select(c, w, cb)
       end
       if not handled then
         if vim_has_wkdbook then
           sel_vim.select_wkdbook(c, w, cb)
         else
-          sel_vim.select(c, w, cb, "Select WkdBook")
+          sel_vim.select(c, w, cb)
         end
       end
     end
@@ -125,13 +125,13 @@ function M.mk_wkdbook_selector(cfg, engine_hint)
       if fzf_has_wkdbook then
         handled = sel_fzf.select_wkdbook(c, w, cb)
       else
-        handled = sel_fzf.select(c, w, cb, "WkdBooks> ")
+        handled = sel_fzf.select(c, w, cb)
       end
       if not handled then
         if vim_has_wkdbook then
           sel_vim.select_wkdbook(c, w, cb)
         else
-          sel_vim.select(c, w, cb, "Select WkdBook")
+          sel_vim.select(c, w, cb)
         end
       end
     end
@@ -144,13 +144,13 @@ function M.mk_wkdbook_selector(cfg, engine_hint)
       if tel_has_wkdbook then
         handled = sel_tel.select_wkdbook(c, w, cb)
       else
-        handled = sel_tel.select(c, w, cb, "WkdBooks")
+        handled = sel_tel.select(c, w, cb)
       end
       if not handled then
         if vim_has_wkdbook then
           sel_vim.select_wkdbook(c, w, cb)
         else
-          sel_vim.select(c, w, cb, "Select WkdBook")
+          sel_vim.select(c, w, cb)
         end
       end
     end
@@ -160,13 +160,13 @@ function M.mk_wkdbook_selector(cfg, engine_hint)
       if fzf_has_wkdbook then
         handled = sel_fzf.select_wkdbook(c, w, cb)
       else
-        handled = sel_fzf.select(c, w, cb, "WkdBooks> ")
+        handled = sel_fzf.select(c, w, cb)
       end
       if not handled then
         if vim_has_wkdbook then
           sel_vim.select_wkdbook(c, w, cb)
         else
-          sel_vim.select(c, w, cb, "Select WkdBook")
+          sel_vim.select(c, w, cb)
         end
       end
     end
@@ -177,7 +177,7 @@ function M.mk_wkdbook_selector(cfg, engine_hint)
       if fzf_has_wkdbook then
         handled = sel_fzf.select_wkdbook(c, w, cb)
       else
-        handled = sel_fzf.select(c, w, cb, "WkdBooks> ")
+        handled = sel_fzf.select(c, w, cb)
       end
       if handled then
         return
@@ -185,7 +185,7 @@ function M.mk_wkdbook_selector(cfg, engine_hint)
       if tel_has_wkdbook then
         handled = sel_tel.select_wkdbook(c, w, cb)
       else
-        handled = sel_tel.select(c, w, cb, "WkdBooks")
+        handled = sel_tel.select(c, w, cb)
       end
       if handled then
         return
@@ -193,7 +193,7 @@ function M.mk_wkdbook_selector(cfg, engine_hint)
       if vim_has_wkdbook then
         sel_vim.select_wkdbook(c, w, cb)
       else
-        sel_vim.select(c, w, cb, "Select WkdBook")
+        sel_vim.select(c, w, cb)
       end
     end
   end

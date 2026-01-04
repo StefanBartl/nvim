@@ -203,6 +203,7 @@ end
 ---@param scope "cwd"|"buffer"|nil Search scope (defaults to config.default_scope)
 function M.telescope_functions_index(scope)
   scope = scope or config.default_scope
+  ---@cast scope "cwd"|"buffer"
 
   local ok, pickers = pcall(require, "telescope.pickers")
   if not ok then
@@ -261,6 +262,7 @@ end
 ---@param scope "cwd"|"buffer"|nil Search scope (defaults to config.default_scope)
 function M.fzf_functions_index(scope)
   scope = scope or config.default_scope
+  ---@cast scope "cwd"|"buffer"
 
   local ok, fzf = pcall(require, "fzf-lua")
   if not ok then

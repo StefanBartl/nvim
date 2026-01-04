@@ -122,9 +122,9 @@ local function check_already_applied_async(entry, callback)
     entry.target,
   }
 
-  ---@type uv.uv_handle_t
+  ---@type uv.uv_pipe_t
   local stdout = uv.new_pipe(false)
-  ---@type uv.uv_handle_t
+  ---@type uv.uv_pipe_t
   local stderr = uv.new_pipe(false)
 
   local stdout_data = {}

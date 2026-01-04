@@ -336,7 +336,7 @@ create_usercommand("PatchFixLineEndings", function(_)
     -- Remove trailing whitespace from lines
     local lines = {}
     for line in normalized:gmatch("([^\n]*)\n?") do
-      tbl_insert(lines, line:gsub("%s+$", ""))
+      tbl_insert(lines, (line:gsub("%s+$", "")))
     end
     normalized = tbl_concat(lines, "\n")
 

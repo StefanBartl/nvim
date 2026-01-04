@@ -118,6 +118,7 @@ function M.show_confirmation(files, on_confirm, on_cancel)
         "✗ No, cancel operation",
       },
       on_select = function(selected)
+        ---@cast selected string
         if selected:match("^✓") then
           vim.notify("Starting CWD scan...", vim.log.levels.INFO)
           on_confirm()

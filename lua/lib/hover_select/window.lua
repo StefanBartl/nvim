@@ -25,14 +25,14 @@ local function calculate_max_line_width(items)
 end
 
 ---Calculate optimal window dimensions based on content
----@param items string[] Items to display (needed for auto-width calculation)
----@param items_count integer Number of items to display
----@param width integer|nil User-specified width
----@param height integer|nil User-specified height
----@param auto_width boolean|"wrap"|nil Auto-sizing mode
----@return integer width Calculated width
----@return integer height Calculated height
----@return boolean wrap Whether to enable line wrapping
+---@param items string[]|nil Items to display (needed for auto-width calculation)
+---@param items_count integer
+---@param width integer|nil
+---@param height integer|nil
+---@param auto_width boolean|"wrap"|nil
+---@return integer width
+---@return integer height
+---@return boolean wrap
 local function calculate_dimensions(items, items_count, width, height, auto_width)
   local dims = config.dimensions
   local wrap = false
@@ -50,7 +50,7 @@ local function calculate_dimensions(items, items_count, width, height, auto_widt
     calc_width = math.max(dims.min_width, calc_width)
     wrap = true
 
-  elseif auto_width == true then
+  elseif auto_width == true and items ~= nil then
     -- Auto-width mode: size to longest line
     local content_width = calculate_max_line_width(items)
 
@@ -77,13 +77,14 @@ local function calculate_dimensions(items, items_count, width, height, auto_widt
   return calc_width, calc_height, wrap
 end
 
----Create floating window with the given configuration
----@param bufnr integer Buffer to display in window
----@param win_config table Window configuration options
----@param win_options table<string, any> Window-local options to apply
----@param items string[] Items being displayed (for auto-width calculation)
----@param auto_width boolean|"wrap"|nil Auto-sizing mode
----@return integer|nil winid Window ID, or nil on failure
+---@overload fun(bufnr: integer, win_config: table, win_options: table<string, any>): integer|nil
+---@overload fun(bufnr: integer, win_config: table, win_options: table<string, any>, items: string[], auto_width: boolean|"wrap"|nil): integer|nil
+---@param bufnr integer
+---@param win_config table
+---@param win_options table<string, any>
+---@param items string[]|nil
+---@param auto_width boolean|"wrap"|nil
+---@return integer|nil winid
 function M.create(bufnr, win_config, win_options, items, auto_width)
   -- Calculate dimensions
   local width, height, wrap = calculate_dimensions(

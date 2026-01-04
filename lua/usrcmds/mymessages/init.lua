@@ -18,9 +18,13 @@ local function has_exec(bin)
   return vim.fn.executable(bin) == 1
 end
 
----@return { is_mac:boolean, is_win:boolean, is_wsl:boolean, is_wayland:boolean, is_x11:boolean }
+---@return { is_mac:boolean, is_win:boolean, is_wsl:boolean, is_wayland:boolean, is_x11:boolean }|nil
 local function detect_platform()
   local uname = (vim.uv or vim.loop).os_uname()
+  if not uname then
+    vim.notify("[usrcmds.mymessages] uname is nil")
+    return nil
+  end
   local sys = (uname.sysname or ""):lower()
   local rel = (uname.release or ""):lower()
   local is_mac = sys:find("darwin", 1, true) ~= nil
@@ -73,7 +77,7 @@ end
 
 ---@param text string
 ---@param debug boolean
----@return boolean
+---@return boolean|nil
 local function copy_to_clipboard(text, debug)
   -- primary path
   local ok = pcall(vim.fn.setreg, "+", text)
@@ -85,6 +89,10 @@ local function copy_to_clipboard(text, debug)
   end
 
   local P = detect_platform()
+  if not P then
+    vim.notify("[usrcmds.mymessages] P is nil")
+    return nil
+  end
 
   if P.is_mac and has_exec("pbcopy") then
     local ok2, err = run_command({ "pbcopy" }, text)

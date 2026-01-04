@@ -18,12 +18,9 @@ function M.test_single_select()
   hover_select.open({
     title = "Single Select Test",
     items = items,
-    multi_select = false,  -- Explicit single-select
+    multi_select = false, -- Explicit single-select
     on_select = function(selected, index)
-      vim.notify(
-        string.format("Selected: %s (index: %d)", selected, index),
-        vim.log.levels.INFO
-      )
+      vim.notify(string.format("Selected: %s (index: %d)", selected, index), vim.log.levels.INFO)
     end,
   })
 end
@@ -43,6 +40,8 @@ function M.test_multi_select()
     title = "Multi Select Test (Tab to toggle)",
     items = items,
     multi_select = true,
+    ---@param selected string[]
+    ---@param indices string[]
     on_select = function(selected, indices)
       -- Handle array results
       local msg_lines = { "Selected items:" }
@@ -67,11 +66,9 @@ function M.test_multi_select_long()
     items = items,
     multi_select = true,
     height = 15,
+    ---@param selected string[]
     on_select = function(selected, _)
-      vim.notify(
-        string.format("Selected %d items: %s", #selected, table.concat(selected, ", ")),
-        vim.log.levels.INFO
-      )
+      vim.notify(string.format("Selected %d items: %s", #selected, table.concat(selected, ", ")), vim.log.levels.INFO)
     end,
   })
 end
@@ -90,11 +87,7 @@ function M.test_multi_select_no_selection()
     multi_select = true,
     on_select = function(selected, indices)
       vim.notify(
-        string.format(
-          "No Tab pressed - auto-selected current line:\n  [%d] %s",
-          indices[1],
-          selected[1]
-        ),
+        string.format("No Tab pressed - auto-selected current line:\n  [%d] %s", indices[1], selected[1]),
         vim.log.levels.INFO
       )
     end,
@@ -116,6 +109,7 @@ function M.test_file_list()
     title = "Select files to process",
     items = files,
     multi_select = true,
+    ---@param selected string[]
     on_select = function(selected, _)
       local msg = { "Processing files:" }
       for _, file in ipairs(selected) do

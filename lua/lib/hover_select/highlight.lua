@@ -4,7 +4,6 @@
 local M = {}
 
 local api = vim.api
-local nvim_set_hl = api.nvim_set_hl
 
 ---Setup highlight group for current line
 ---@param winid integer Window ID

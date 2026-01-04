@@ -4,17 +4,9 @@
 --- Works with both legacy regex groups and modern Tree-sitter captures.
 --- Re-applies safely on ColorScheme changes.
 
----@version 1.1.0
 ---@class UIMarkdownFencedFix
----@field opts UIMarkdownFencedFixOpts
+---@field opts Custom.MD.FencedFix.Opts
 local M = {}
-
----@class UIMarkdownFencedFixOpts
----@field inline_base_hl string[]  -- preference order for "orange-ish" look
----@field inline_style? { bold?: boolean, italic?: boolean, underline?: boolean, undercurl?: boolean }
----@field delimiter_hl string      -- subtle look for backtick delimiters
----@field enable_legacy boolean    -- also touch legacy regex groups
----@field enable_ts boolean        -- touch Tree-sitter highlight groups
 
 -- Defaults aim for "orange-ish" via DiagnosticWarn, with robust fallbacks.
 M.opts = {
@@ -149,7 +141,7 @@ function M.apply()
 end
 
 --- Configure options (call once before .apply()).
----@param opts UIMarkdownFencedFixOpts
+---@param opts Custom.MD.FencedFix.Opts
 ---@return UIMarkdownFencedFix
 function M.setup(opts)
   if type(opts) == "table" then

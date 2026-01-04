@@ -102,7 +102,11 @@ function M.apply(bufnr)
   local fold_lvls = require("custom.markdown.core.fold_levels")
   local toc = require("custom.markdown.core.toc")
   local wrap_link = require("custom.markdown.core.wrap_link")
-  wrap_link.attach(bufnr)
+
+  -- Wrap word with markdown link template []() ** ----------------------------------------------------
+  if wrap_link.attach and bufnr then
+    wrap_link.attach(bufnr)
+  end
 
   -- Wrap visual toggle ** ----------------------------------------------------
   if wrap.toggle_visual_bold then

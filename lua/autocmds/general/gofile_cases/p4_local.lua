@@ -15,7 +15,7 @@ local function file_exists(path)
   return stat ~= nil and stat.type == "file"
 end
 
---- @param node userdata|nil
+--- @param node TSNode|nil
 --- @param bufnr integer
 --- @param cfg table
 --- @param ts_utils table

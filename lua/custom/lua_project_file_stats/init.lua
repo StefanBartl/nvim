@@ -83,9 +83,7 @@ local function scan_dir(root_dir, state)
       local folder = rel_file:match("(.+)/") or "."
 
       if not state.folder_summary[folder] then
-        state.folder_summary[folder] = utils.create_empty_stats()
-        state.folder_summary[folder].file_count = 0
-        state.folder_summary[folder].files = {}
+        state.folder_summary[folder] = utils.create_empty_folder_stats()
       end
 
       local f = state.folder_summary[folder]
@@ -117,21 +115,27 @@ function M.analyze(config)
     if stats then
       prints.output("\n=== Single File Statistics ===", state)
       prints.output(str_fmt("File: %s", utils.relative_path(config.single_file_path, state.cwd)), state)
-      prints.output(str_fmt(
-        "Lines: %d (Code: %d, Comments: %d, Annotations: %d, Blank: %d)",
-        stats.total_lines,
-        stats.lines_without_comments,
-        stats.comment_lines,
-        stats.annotation_lines,
-        stats.blank_lines
-      ), state)
-      prints.output(str_fmt(
-        "Words: %d (Code: %d, Comments: %d, Annotations: %d)",
-        stats.total_words,
-        stats.words_without_comments,
-        stats.words_in_comments,
-        stats.words_in_annotations
-      ), state)
+      prints.output(
+        str_fmt(
+          "Lines: %d (Code: %d, Comments: %d, Annotations: %d, Blank: %d)",
+          stats.total_lines,
+          stats.lines_without_comments,
+          stats.comment_lines,
+          stats.annotation_lines,
+          stats.blank_lines
+        ),
+        state
+      )
+      prints.output(
+        str_fmt(
+          "Words: %d (Code: %d, Comments: %d, Annotations: %d)",
+          stats.total_words,
+          stats.words_without_comments,
+          stats.words_in_comments,
+          stats.words_in_annotations
+        ),
+        state
+      )
     else
       prints.output("Error: Could not analyze file: " .. config.single_file_path, state)
     end
@@ -195,21 +199,27 @@ function M.analyze(config)
     -- Final text summary
     prints.output("\n=== Text Summary ===", state)
     prints.output(str_fmt("Analyzed files: %d", state.total_stats.total_files), state)
-    prints.output(str_fmt(
-      "Lines: Total=%d, Code=%d, Comments=%d, Annotations=%d, Blank=%d",
-      state.total_stats.total_lines,
-      state.total_stats.lines_without_comments,
-      state.total_stats.comment_lines,
-      state.total_stats.annotation_lines,
-      state.total_stats.blank_lines
-    ), state)
-    prints.output(str_fmt(
-      "Words: Total=%d, Code=%d, Comments=%d, Annotations=%d",
-      state.total_stats.total_words,
-      state.total_stats.words_without_comments,
-      state.total_stats.words_in_comments,
-      state.total_stats.words_in_annotations
-    ), state)
+    prints.output(
+      str_fmt(
+        "Lines: Total=%d, Code=%d, Comments=%d, Annotations=%d, Blank=%d",
+        state.total_stats.total_lines,
+        state.total_stats.lines_without_comments,
+        state.total_stats.comment_lines,
+        state.total_stats.annotation_lines,
+        state.total_stats.blank_lines
+      ),
+      state
+    )
+    prints.output(
+      str_fmt(
+        "Words: Total=%d, Code=%d, Comments=%d, Annotations=%d",
+        state.total_stats.total_words,
+        state.total_stats.words_without_comments,
+        state.total_stats.words_in_comments,
+        state.total_stats.words_in_annotations
+      ),
+      state
+    )
   end
 
   -- Write output file if requested
