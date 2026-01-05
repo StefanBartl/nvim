@@ -21,11 +21,6 @@
 
 ## bugs
 
-- `recommender -r`
-    3. Da zuerst die neue local variable eingefügt und dann replacer ausgeführt wird, taucht die neue local immer im replacer results auf. das kann man leicht verhindern, indem zuerst replacer ausgeführt wird und als abschluss - nur wenn auch wirklich ein replace durchgeführt wurde (wenn möglich) - dann erst die neue local einfügen.
-    4. Preview funktioniert, aber zeigt falsche Zeilen an.
-    5. Außerdem kein highlight.
-
 ---
 
 ## Eigene Plugins

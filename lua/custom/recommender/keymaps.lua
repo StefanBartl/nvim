@@ -1,13 +1,13 @@
 ---@module 'custom.recommender.keymaps'
 ---Navigation and actions
 
+local notify = require("lib.notify").create("[custom.recommender] ")
 local rendering = require("custom.recommender.rendering")
-local autocmds = require("custom.recommender.autocmds")
 
 local M = {}
 
-local api = vim.api
-local km_set = vim.keymap.set
+local api, cmd = vim.api, vim.cmd
+local km_set, schedule = vim.keymap.set, vim.schedule
 
 ---Check if a window is a normal, editable window
 ---@param winid integer
@@ -134,6 +134,7 @@ function M.attach(bufnr, state)
       return
     end
 
+    -- Berechne die Index-Zeile im Float
     local idx = math.floor((rendering.cursor_index - 2) / 3) + 1
     local item = state.visible[idx]
     if not item then
@@ -143,42 +144,54 @@ function M.attach(bufnr, state)
     local alias_text = item.alias
     local chain = item.chain
 
+    -- Finde das Ziel-Fenster für das Einfügen
     local target_win = find_target_window()
     if not target_win then
-      vim.notify("Could not find a suitable window for insertion", vim.log.levels.WARN)
+      notify.warn("Could not find a suitable window for insertion")
       return
     end
 
-    -- save pending state
+    -- Pending State speichern (für möglichen Insert)
     state._pending_insert = {
       win = target_win,
       text = alias_text,
     }
 
-    if state.replace_mode then
-      autocmds.register_replace_finish(state)
-    end
-
+    -- Schließe den Recommender-Float
     rendering.close()
 
-    vim.schedule(function()
+    schedule(function()
       if not api.nvim_win_is_valid(target_win) then
         return
       end
-
       api.nvim_set_current_win(target_win)
-
-      -- Editor stabilisieren (ersetzt das frühere nvim_put)
-      vim.cmd("normal! \27") -- sicher Normal-Mode
-      vim.cmd("redraw")
+      cmd("normal! \27") -- sicher Normal-Mode
+      cmd("redraw")
 
       if state.replace_mode then
+        -- Snapshot vom Buffer erstellen, um später Veränderungen zu erkennen
+        local buf = api.nvim_win_get_buf(target_win)
+        local snapshot = api.nvim_buf_get_lines(buf, 0, -1, false)
+
+        -- Registriere temporäres Autocmd über die ausgelagerte Funktion
+        require("custom.recommender.autocmds").register_replace_finish(target_win, snapshot, alias_text)
+
+        -- Erstelle den Variablennamen aus dem Alias (z.B. "api" aus "local api = vim.api")
         local var_name = alias_text:match("^%s*local%s+([%w_]+)") or alias_text:match("^%s*([%w_]+)%s*=")
 
+        -- Führe Replace aus, falls gültig
         if var_name and vim.fn.exists(":Replace") == 2 then
-          local cmd = string.format("Replace %s %s %%", chain, var_name)
-          vim.cmd(cmd)
+          local _cmd = string.format("Replace %s %s %%", chain, var_name)
+          cmd(_cmd)
+        else
+          -- Replace nicht verfügbar → Alias sofort einfügen
+          api.nvim_put({ alias_text }, "l", false, true)
+          state._pending_insert = nil
         end
+      else
+        -- Replace-Modus nicht aktiv → Alias sofort einfügen
+        api.nvim_put({ alias_text }, "l", false, true)
+        state._pending_insert = nil
       end
     end)
   end, opts)
@@ -199,14 +212,14 @@ function M.attach(bufnr, state)
       -- Refresh from the source buffer context
       local source_bufnr = state.source_bufnr
       if source_bufnr and api.nvim_buf_is_valid(source_bufnr) then
-        vim.schedule(function()
+        schedule(function()
           -- Temporarily switch to source buffer for analysis
           api.nvim_buf_call(source_bufnr, function()
             state.refresh()
           end)
         end)
       else
-        vim.notify("Source buffer no longer valid", vim.log.levels.WARN)
+        notify.warn("Source buffer no longer valid")
         rendering.close()
       end
     end
@@ -226,13 +239,13 @@ function M.attach(bufnr, state)
     -- Refresh from the source buffer context
     local source_bufnr = state.source_bufnr
     if source_bufnr and api.nvim_buf_is_valid(source_bufnr) then
-      vim.schedule(function()
+      schedule(function()
         api.nvim_buf_call(source_bufnr, function()
           state.refresh()
         end)
       end)
     else
-      vim.notify("Source buffer no longer valid", vim.log.levels.WARN)
+      notify.warn("Source buffer no longer valid")
       rendering.close()
     end
   end, opts)
@@ -248,7 +261,7 @@ function M.attach(bufnr, state)
       "U         - Un-ignore all",
       "q/Esc     - Close",
     }
-    vim.notify(table.concat(help_text, "\n"), vim.log.levels.INFO)
+    notify.info(table.concat(help_text, "\n"))
   end, opts)
 end
 
