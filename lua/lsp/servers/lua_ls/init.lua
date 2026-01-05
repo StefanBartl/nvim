@@ -96,8 +96,12 @@ function M.setup(shared, opts)
             useGitIgnore = true,
 
             -- Limit workspace scanning to prevent performance issues
-            maxPreload = 3000, -- Maximum number of files to preload
-            preloadFileSize = 500, -- Maximum file size in KB
+            -- maxPreload = 3000, -- Maximum number of files to preload
+            -- preloadFileSize = 500, -- Maximum file size in KB
+
+            -- CRITICAL: Increase preload limits for type files
+            maxPreload = 5000,        -- Increased from 3000
+            preloadFileSize = 1000,   -- Increased from 500 (KB)
 
             -- library will be populated dynamically per root in on_new_config
           },

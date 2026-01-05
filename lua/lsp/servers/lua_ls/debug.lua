@@ -105,17 +105,50 @@ end
 
 --- Print comprehensive debug information to Neovim's message area
 --- Useful for troubleshooting lua_ls configuration issues
----@param bufnr? integer Buffer number (optional)
+---@param bufnr? integer
 ---@return nil
 function M.print_debug_info(bufnr)
-  -- Get root and library paths for the specified buffer
   local root = M.root_for_buf(bufnr)
-  local lib = M.debug_library(root)
 
-  -- Output formatted debug information
-  vim.notify("LuaLS Debug Info:", vim.log.levels.INFO)
-  vim.notify("Root: " .. tostring(root), vim.log.levels.INFO)
-  vim.notify("Library paths: " .. table.concat(lib, ", "), vim.log.levels.INFO)
+  if not root then
+    vim.notify("No root directory detected", vim.log.levels.WARN)
+    return
+  end
+
+  -- Get full library including type files
+  local ok, build_library = pcall(require, "lsp.servers.lua_ls.build_library")
+  if not ok then
+    vim.notify("Could not load build_library", vim.log.levels.ERROR)
+    return
+  end
+
+  local library = build_library(root)
+
+  -- Separate directories and files for clarity
+  local dirs = {}
+  local files = {}
+
+  for path, _ in pairs(library) do
+    local stat = (vim.uv or vim.loop).fs_stat(path)
+    if stat then
+      if stat.type == "directory" then
+        dirs[#dirs + 1] = path
+      elseif stat.type == "file" then
+        files[#files + 1] = path
+      end
+    end
+  end
+
+  vim.notify("=== LuaLS Debug Info ===", vim.log.levels.INFO)
+  vim.notify("Root: " .. root, vim.log.levels.INFO)
+  vim.notify("\nType Directories (" .. #dirs .. "):", vim.log.levels.INFO)
+  for _, dir in ipairs(dirs) do
+    vim.notify("  " .. dir, vim.log.levels.INFO)
+  end
+  vim.notify("\nType Files (" .. #files .. "):", vim.log.levels.INFO)
+  for _, file in ipairs(files) do
+    vim.notify("  " .. file, vim.log.levels.INFO)
+  end
 end
 
 return M

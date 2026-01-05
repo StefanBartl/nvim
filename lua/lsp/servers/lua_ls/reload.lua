@@ -61,6 +61,13 @@ function M.setup()
   end, {
     desc = "[lua_ls] Reload workspace library (useful when @types not detected)"
   })
+
+  vim.api.nvim_create_user_command("LuaLsInspectLibrary", function()
+    local debug = require("lsp.servers.lua_ls.debug")
+    debug.print_debug_info(vim.api.nvim_get_current_buf())
+  end, {
+    desc = "[lua_ls] Inspect current workspace library configuration"
+  })
 end
 
 return M

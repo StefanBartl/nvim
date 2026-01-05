@@ -1,14 +1,9 @@
 ---@module 'lsp.servers.lua_ls.build_library'
---- Build workspace library paths for lua_ls based on project root.
---- Now includes all @types directories in project structure
+--- Build workspace library paths for lua_ls with comprehensive type discovery
 
-local find_type_dirs = require("lsp.servers.lua_ls.find_type_dirs")
-
---- Build a table of library paths for a given project root.
---- Format: { [path] = true, [path2] = true, ... }
----
+--- Build library table including directories AND standalone type files.
 --- @param root string Project root directory
---- @return table<string, boolean> Map of library paths to include
+--- @return table<string, boolean> Map of library paths
 return function(root)
   if not root or type(root) ~= "string" or root == "" then
     return {}
@@ -17,28 +12,46 @@ return function(root)
   local library = {}
 
   -- ===================================================================
-  -- THIRD-PARTY LIBRARIES (${3rd}/...)
+  -- THIRD-PARTY LIBRARIES
   -- ===================================================================
   library["${3rd}/luv/library"] = true
   library["${3rd}/busted/library"] = true
 
   -- ===================================================================
-  -- PROJECT-SPECIFIC TYPE DIRECTORIES
+  -- PROJECT TYPE DIRECTORIES AND FILES
   -- ===================================================================
-  -- CRITICAL: Include ALL @types and types directories in project
-  local type_dirs = find_type_dirs(root, {
-    max_results = 200,  -- Increased from 100
-    max_depth = 15      -- Increased from 10
-  })
+  -- Safe loading of find_type_dirs with fallback
+  local type_paths = {}
+  local ok, find_type_dirs = pcall(require, "lsp.servers.lua_ls.find_type_dirs")
 
-  for _, dir in ipairs(type_dirs) do
-    library[dir] = true
+  if ok and type(find_type_dirs) == "function" then
+    local success, result = pcall(find_type_dirs, root, {
+      max_results = 200,
+      max_depth = 15,
+      include_files = true
+    })
+
+    if success and type(result) == "table" then
+      type_paths = result
+    else
+      -- Fallback: Try without include_files option (old API)
+      success, result = pcall(find_type_dirs, root, {
+        max_results = 200,
+        max_depth = 15
+      })
+      if success and type(result) == "table" then
+        type_paths = result
+      end
+    end
+  end
+
+  for _, path in ipairs(type_paths) do
+    library[path] = true
   end
 
   -- ===================================================================
-  -- EXPLICIT @TYPES PATTERN SEARCH
+  -- EXPLICIT PATTERN SEARCH
   -- ===================================================================
-  -- Additional explicit search for common patterns that might be missed
   local explicit_patterns = {
     root .. "/lua/@types",
     root .. "/lua/types",
@@ -54,16 +67,33 @@ return function(root)
   end
 
   -- ===================================================================
+  -- ROOT-LEVEL TYPE FILES
+  -- ===================================================================
+  -- Explicitly check for type files at common locations
+  local root_type_files = {
+    root .. "/lua/@types.lua",
+    root .. "/lua/types.lua",
+    root .. "/@types.lua",
+    root .. "/types.lua",
+  }
+
+  for _, file_path in ipairs(root_type_files) do
+    local stat = (vim.uv or vim.loop).fs_stat(file_path)
+    if stat and stat.type == "file" then
+      library[file_path] = true
+    end
+  end
+
+  -- ===================================================================
   -- NEOVIM RUNTIME PATHS
   -- ===================================================================
-  -- Include ALL Neovim runtime paths for vim.* API recognition
   local runtime_paths = vim.api.nvim_get_runtime_file("", true) or {}
   for _, path in ipairs(runtime_paths) do
     library[path] = true
   end
 
   -- ===================================================================
-  -- LUAROCKS DIRECTORIES
+  -- LUAROCKS
   -- ===================================================================
   local home = vim.fn.expand("~")
   local luarocks_paths = {
@@ -81,7 +111,7 @@ return function(root)
   end
 
   -- ===================================================================
-  -- PROJECT-LOCAL DEPENDENCIES
+  -- LOCAL DEPENDENCIES
   -- ===================================================================
   local local_dep_dirs = {
     root .. "/lua_modules/share/lua/5.1",

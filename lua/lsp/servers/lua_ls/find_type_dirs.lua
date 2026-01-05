@@ -1,29 +1,37 @@
 ---@module 'lsp.servers.lua_ls.find_type_dirs'
---- Find directories named "types" / "@types" with ENHANCED detection
---- This module performs a breadth-first search through the project
+--- Enhanced type directory and file discovery for lua_ls
+--- Finds both:
+---   1. Directories named "types" or "@types"
+---   2. Individual files named "@types.lua" or "types.lua" outside those directories
 
 local uv = vim.loop or vim.uv
 local norm = vim.fs.normalize
 
---- Return string[] of discovered "types" dirs under root.
---- @param root string Root directory to start scanning from
---- @param opts { max_results?: integer, max_depth?: integer }|nil Optional configuration
---- @return string[] Array of discovered type directory paths
+--- Discover type directories AND standalone type files under root.
+--- @param root string Root directory to scan
+--- @param opts { max_results?: integer, max_depth?: integer, include_files?: boolean }|nil
+--- @return string[] Array of discovered paths (directories and files)
 return function(root, opts)
   opts = opts or {}
   local MAX_RESULTS = opts.max_results or 200
   local MAX_DEPTH = opts.max_depth or 15
+  local INCLUDE_FILES = opts.include_files ~= false  -- default true
 
-  local ignore_set = require("lsp.servers.lua_ls.ignore").as_set()
+  -- Safe loading of ignore module
+  local ignore_set = {}
+  local ok, ignore = pcall(require, "lsp.servers.lua_ls.ignore")
+  if ok and type(ignore.as_set) == "function" then
+    ignore_set = ignore.as_set()
+  end
 
   local matches = {}
   local stack = { { path = norm(root), depth = 0 } }
-  local seen = {}  -- Prevent duplicates
+  local seen = {}
 
   while #stack > 0 and #matches < MAX_RESULTS do
     local node = table.remove(stack)
 
-    -- Skip if already processed
+    -- Skip already processed paths
     if seen[node.path] then
       goto continue
     end
@@ -45,6 +53,9 @@ return function(root, opts)
             goto inner_continue
           end
 
+          local sep = package.config:sub(1, 1) == "\\" and "\\" or "/"
+          local child = norm(node.path .. sep .. name)
+
           if kind == "directory" then
             local key = package.config:sub(1, 1) == "\\" and name:lower() or name
 
@@ -53,10 +64,7 @@ return function(root, opts)
               goto inner_continue
             end
 
-            local sep = package.config:sub(1, 1) == "\\" and "\\" or "/"
-            local child = norm(node.path .. sep .. name)
-
-            -- CRITICAL: Check multiple patterns for @types
+            -- Check if this is a type directory
             local is_types = false
             if name == "types" or name == "@types" then
               is_types = true
@@ -65,7 +73,7 @@ return function(root, opts)
             end
 
             if is_types then
-              -- Verify it actually contains .lua files (avoid empty directories)
+              -- Verify it actually contains .lua files
               local has_lua = false
               local check_it = uv.fs_scandir(child)
               if check_it then
@@ -102,6 +110,12 @@ return function(root, opts)
 
             -- Add to stack for further exploration
             stack[#stack + 1] = { path = child, depth = node.depth + 1 }
+
+          elseif kind == "file" and INCLUDE_FILES then
+            -- Check for standalone type files
+            if name == "@types.lua" or name == "types.lua" then
+              matches[#matches + 1] = child
+            end
           end
 
           ::inner_continue::
@@ -112,10 +126,10 @@ return function(root, opts)
     ::continue::
   end
 
-  -- DEBUG: Log found directories
+  -- DEBUG: Log found paths if environment variable is set
   if vim.env.DEBUG_LUA_LS and #matches > 0 then
     vim.notify(
-      string.format("find_type_dirs: Found %d type directories", #matches),
+      string.format("find_type_dirs: Found %d paths", #matches),
       vim.log.levels.INFO
     )
   end
