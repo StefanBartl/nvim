@@ -81,14 +81,14 @@ require("debugging").setup()
 
 | Module | Purpose | Documentation |
 |--------|---------|---------------|
-| **views** | Unified debug views (`:messages`, Noice) | [views/README.md](views/README.md) |
-| **usercmds** | Report commands (Buf/Tab/Win) | [usercmds/README.md](usercmds/README.md) |
-| **vardump** | Variable inspection utility | [vardump/README.md](vardump/README.md) |
-| **terminals** | Terminal debugging (keylogger) | [terminals/README.md](terminals/README.md) |
-| **nvim_options** | Neovim option helpers | [nvim_options/README.md](nvim_options/README.md) |
-| **markdown** | Markdown highlight debugging | [markdown/README.md](markdown/README.md) |
-| **cursor** | Cursor state inspection | [cursor/README.md](cursor/README.md) |
-| **autocmds** | Autocommand inspection | [autocmds/README.md](autocmds/README.md) |
+| **views** | Unified debug views (`:messages`, Noice) | [views/README.md](./views/README.md) |
+| **usercmds** | Report commands (Buf/Tab/Win) | [usercmds/README.md](./usercmds/README.md) |
+| **vardump** | Variable inspection utility | [vardump/README.md](./vardump/README.md) |
+| **terminals** | Terminal debugging (keylogger) | [terminals/README.md](./terminals/README.md) |
+| **nvim_options** | Neovim option helpers | [nvim_options/README.md](./nvim_options/README.md) |
+| **markdown** | Markdown highlight debugging | [markdown/README.md](./markdown/README.md) |
+| **cursor** | Cursor state inspection | [cursor/README.md](./cursor/README.md) |
+| **autocmds** | Autocommand inspection | [autocmds/README.md](./autocmds/README.md) |
 
 ---
 

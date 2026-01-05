@@ -1,13 +1,12 @@
 ---@module 'lsp.usercmds'
 --- LSP UserCommands - Main Registry
 --- Delegates to specialized submodules for each command
-require("@types.lsp")
 
 local nvim_create_user_command = vim.api.nvim_create_user_command
 
 local M = {}
 
-local desc_tag = "[lsp.usercmds] "
+local desc_tag = "[LSP.Usercommands] "
 
 -- Lazy-loaded submodules
 local commands = {
@@ -15,6 +14,7 @@ local commands = {
   stop = function() return require("lsp.usercmds.stop") end,
   restart = function() return require("lsp.usercmds.restart") end,
   info = function() return require("lsp.usercmds.info") end,
+  debug = function() return require("lsp.usercmds.debug") end,
 }
 
 local completion = function() return require("lsp.usercmds.completion") end
@@ -59,6 +59,13 @@ function M.attach()
     commands.info().execute()
   end, {
     desc = desc_tag .. "Show LSP information for current buffer"
+  })
+
+  -- LspDebug: Show debug info (completion, configs, etc.)
+  pcall(nvim_create_user_command, "LspDebug", function()
+    commands.debug().execute()
+  end, {
+    desc = desc_tag .. "Show LSP debug information"
   })
 end
 

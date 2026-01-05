@@ -13,33 +13,37 @@ local function get_buffer_clients(bufnr)
   return lsp.get_clients({ bufnr = bufnr or 0 })
 end
 
---- Start LSP server by name (with retry logic)
+--- Start LSP server by name (with retry logic) and ATTACH to buffer
 ---@param name string
----@param bufnr integer|nil
+---@param bufnr integer
 ---@return boolean success
 local function start_lsp(name, bufnr)
-  bufnr = bufnr or 0
-
   if not name or name == "" then
     return false
   end
 
-  -- CRITICAL FIX: vim.lsp.enable expects an ARRAY!
-  local ok = pcall(lsp.enable, {name})  -- ✅ {name} instead of name
-  if ok then
-    return true
+  -- Get LSP config from vim.lsp.config
+  if type(lsp.config) ~= "table" then
+    return false
   end
 
-  -- Fallback: try lspconfig
-  local ok_config, lspconfig = pcall(require, "lspconfig")
-  if ok_config and lspconfig[name] then
-    local ok_launch = pcall(function()
-      lspconfig[name].launch()
-    end)
-    return ok_launch == true
+  local config_list = lsp.config.get and lsp.config.get() or {}
+  local server_config = nil
+
+  for _, cfg in pairs(config_list) do
+    if cfg.name == name then
+      server_config = cfg
+      break
+    end
   end
 
-  return false
+  if not server_config then
+    return false
+  end
+
+  -- Start AND attach to buffer
+  local ok, client_id = pcall(lsp.start, server_config, { bufnr = bufnr })
+  return ok and client_id ~= nil
 end
 
 --- Execute LspRestartHere command

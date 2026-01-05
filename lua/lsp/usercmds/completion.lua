@@ -127,38 +127,50 @@ end
 ---@param cmdline string
 ---@param cursorpos integer
 ---@return string[]
----@diagnostic disable-next-line: unused-local
 function M.complete_start(arglead, cmdline, cursorpos)
-  local bufnr = 0
-  local candidates = {}
-  local seen = {}
+  -- Wrap in pcall to avoid breaking completion on errors
+  local ok, result = pcall(function()
+    local bufnr = 0
+    local candidates = {}
+    local seen = {}
 
-  -- Priority 1: Servers for current filetype (not running)
-  for _, name in ipairs(get_servers_for_filetype(bufnr)) do
-    if not is_server_running(name, bufnr) and not seen[name] then
-      candidates[#candidates + 1] = name
-      seen[name] = true
+    -- Priority 1: Servers for current filetype (not running)
+    local ft_servers = get_servers_for_filetype(bufnr)
+    for _, name in ipairs(ft_servers) do
+      if not is_server_running(name, bufnr) and not seen[name] then
+        candidates[#candidates + 1] = name
+        seen[name] = true
+      end
     end
-  end
 
-  -- Priority 2: Configured servers (not running)
-  for _, name in ipairs(get_configured_servers()) do
-    if not is_server_running(name, bufnr) and not seen[name] then
-      candidates[#candidates + 1] = name
-      seen[name] = true
+    -- Priority 2: Configured servers (not running)
+    local configured = get_configured_servers()
+    for _, name in ipairs(configured) do
+      if not is_server_running(name, bufnr) and not seen[name] then
+        candidates[#candidates + 1] = name
+        seen[name] = true
+      end
     end
-  end
 
-  -- Priority 3: Mason servers (not running)
-  for _, name in ipairs(get_installed_lsps()) do
-    if not is_server_running(name, bufnr) and not seen[name] then
-      candidates[#candidates + 1] = name
-      seen[name] = true
+    -- Priority 3: Mason servers (not running)
+    local installed = get_installed_lsps()
+    for _, name in ipairs(installed) do
+      if not is_server_running(name, bufnr) and not seen[name] then
+        candidates[#candidates + 1] = name
+        seen[name] = true
+      end
     end
-  end
 
-  table.sort(candidates)
-  return filter_by_arglead(candidates, arglead)
+    table.sort(candidates)
+    return filter_by_arglead(candidates, arglead)
+  end)
+
+  if ok then
+    return result
+  else
+    -- Fallback: return empty list instead of breaking
+    return {}
+  end
 end
 
 --- Completion for LspStopHere
@@ -167,7 +179,6 @@ end
 ---@param cmdline string
 ---@param cursorpos integer
 ---@return string[]
----@diagnostic disable-next-line: unused-local
 function M.complete_stop(arglead, cmdline, cursorpos)
   local clients = get_buffer_clients(0)
   local names = {}

@@ -59,13 +59,11 @@ local function is_server_running(server_name, bufnr)
   return false
 end
 
---- Start LSP server by name
+--- Start LSP server by name - triggers the server module which handles everything
 ---@param name string
----@param bufnr integer|nil
+---@param bufnr integer
 ---@return boolean success
 local function start_lsp(name, bufnr)
-  bufnr = bufnr or 0
-
   if not name or name == "" then
     notify.warn("No LSP name provided")
     return false
@@ -77,27 +75,52 @@ local function start_lsp(name, bufnr)
     return true
   end
 
-  -- CRITICAL FIX: vim.lsp.enable expects an ARRAY, not a string!
-  local ok = pcall(lsp.enable, {name})  -- ✅ {name} instead of name
-  if ok then
-    notify.info(string.format("Started LSP: %s", name))
-    return true
+  -- Strategy: Load the server module and let IT call vim.lsp.enable
+  -- This is how it works in init.lua and it DOES work there!
+  local ok_mod, server_mod = pcall(require, "lsp.servers." .. name)
+  if not ok_mod or type(server_mod) ~= "table" or type(server_mod.setup) ~= "function" then
+    notify.error(string.format("Server module 'lsp.servers.%s' not found or invalid", name))
+    return false
   end
 
-  -- Fallback: try lspconfig (for older Neovim or if native API fails)
-  local ok_config, lspconfig = pcall(require, "lspconfig")
-  if ok_config and lspconfig[name] then
-    local ok_launch = pcall(function()
-      lspconfig[name].launch()
-    end)
-    if ok_launch then
-      notify.info(string.format("Started LSP: %s (via lspconfig)", name))
-      return true
+  -- Get shared config (same as init.lua does)
+  local shared = {}
+
+  local ok_caps, caps = pcall(require, "lsp.core.capabilities")
+  if ok_caps and type(caps.get) == "function" then
+    shared.capabilities = caps.get()
+  else
+    shared.capabilities = lsp.protocol.make_client_capabilities()
+  end
+
+  local ok_attach, attach = pcall(require, "lsp.core.attach")
+  if ok_attach and type(attach.build) == "function" then
+    local api = attach.build({ use_workspace_diagnostics = true, use_lazydev = true })
+    shared.on_attach = api.on_attach
+    shared.on_init = api.on_init
+  else
+    shared.on_attach = function() end
+    shared.on_init = function() return true end
+  end
+
+  -- Call setup with enable=true (force enable)
+  local ok_setup = pcall(server_mod.setup, shared, { enable = true })
+
+  if not ok_setup then
+    notify.error(string.format("Failed to setup server '%s'", name))
+    return false
+  end
+
+  -- Give it a moment to attach
+  vim.defer_fn(function()
+    if is_server_running(name, bufnr) then
+      notify.info(string.format("Started & attached LSP: %s", name))
+    else
+      notify.warn(string.format("Server '%s' setup called but not yet attached. Check :LspLog", name))
     end
-  end
+  end, 200)
 
-  notify.error(string.format("Failed to start LSP: %s", name))
-  return false
+  return true
 end
 
 --- Execute LspStartHere command
