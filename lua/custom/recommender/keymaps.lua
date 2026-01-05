@@ -1,10 +1,13 @@
 ---@module 'custom.recommender.keymaps'
 ---Navigation and actions
 
+local rendering = require("custom.recommender.rendering")
+local autocmds = require("custom.recommender.autocmds")
+
 local M = {}
 
 local api = vim.api
-local rendering = require("custom.recommender.rendering")
+local km_set = vim.keymap.set
 
 ---Check if a window is a normal, editable window
 ---@param winid integer
@@ -102,93 +105,86 @@ function M.attach(bufnr, state)
 
   local opts = { buffer = bufnr, silent = true, nowait = true }
 
-  -- Navigation
-  vim.keymap.set("n", "j", function()
+  km_set("n", "j", function()
     move(3)
   end, opts)
 
-  vim.keymap.set("n", "k", function()
+  km_set("n", "k", function()
     move(-3)
   end, opts)
 
-  vim.keymap.set("n", "<Down>", function()
+  km_set("n", "<Down>", function()
     move(3)
   end, opts)
 
-  vim.keymap.set("n", "<Up>", function()
+  km_set("n", "<Up>", function()
     move(-3)
   end, opts)
 
-  -- Close
-  vim.keymap.set("n", "q", function()
+  km_set("n", "q", function()
     rendering.close()
   end, opts)
 
-  vim.keymap.set("n", "<ESC>", function()
+  km_set("n", "<ESC>", function()
     rendering.close()
   end, opts)
 
-  -- Select and insert
-  vim.keymap.set("n", "<CR>", function()
+  km_set("n", "<CR>", function()
     if not rendering.is_open() then
       return
     end
 
-    -- Calculate index from cursor position
     local idx = math.floor((rendering.cursor_index - 2) / 3) + 1
     local item = state.visible[idx]
-
     if not item then
       return
     end
 
-    -- Store the alias text and chain info
     local alias_text = item.alias
     local chain = item.chain
 
-    -- Find target window before closing
     local target_win = find_target_window()
-
     if not target_win then
       vim.notify("Could not find a suitable window for insertion", vim.log.levels.WARN)
       return
     end
 
-    -- Close the float
+    -- save pending state
+    state._pending_insert = {
+      win = target_win,
+      text = alias_text,
+    }
+
+    if state.replace_mode then
+      autocmds.register_replace_finish(state)
+    end
+
     rendering.close()
 
-    -- Insert into the target window
     vim.schedule(function()
-      if api.nvim_win_is_valid(target_win) then
-        api.nvim_set_current_win(target_win)
-        local current_buf = api.nvim_get_current_buf()
+      if not api.nvim_win_is_valid(target_win) then
+        return
+      end
 
-        if api.nvim_buf_get_option(current_buf, "modifiable") then
-          -- Insert at current line, not after (third parameter = false)
-          api.nvim_put({ alias_text }, "l", false, true)
+      api.nvim_set_current_win(target_win)
 
-          -- If replace mode is enabled, execute replace command
-          if state.replace_mode then
-            -- Extract variable name from alias (e.g., "api" from "local api = vim.api")
-            local var_name = alias_text:match("local%s+([%w_]+)%s*=")
-            if var_name and vim.fn.exists(":Replace") == 2 then
-              -- Execute replace command: :Replace vim.api api %
-              vim.schedule(function()
-                local replace_cmd = string.format("Replace %s %s %%", chain, var_name)
-                vim.cmd(replace_cmd)
-                vim.notify(string.format("Replaced '%s' with '%s'", chain, var_name), vim.log.levels.INFO)
-              end)
-            end
-          end
-        else
-          vim.notify("Cannot insert: buffer is not modifiable", vim.log.levels.WARN)
+      -- Editor stabilisieren (ersetzt das frühere nvim_put)
+      vim.cmd("normal! \27") -- sicher Normal-Mode
+      vim.cmd("redraw")
+
+      if state.replace_mode then
+        local var_name = alias_text:match("^%s*local%s+([%w_]+)") or alias_text:match("^%s*([%w_]+)%s*=")
+
+        if var_name and vim.fn.exists(":Replace") == 2 then
+          local cmd = string.format("Replace %s %s %%", chain, var_name)
+          vim.cmd(cmd)
         end
       end
     end)
   end, opts)
 
   -- Ignore entry
-  vim.keymap.set("n", "<BS>", function()
+  km_set("n", "<BS>", function()
     if not rendering.is_open() then
       return
     end
@@ -217,7 +213,7 @@ function M.attach(bufnr, state)
   end, opts)
 
   -- Un-ignore all
-  vim.keymap.set("n", "U", function()
+  km_set("n", "U", function()
     if not rendering.is_open() then
       return
     end
@@ -242,7 +238,7 @@ function M.attach(bufnr, state)
   end, opts)
 
   -- Help
-  vim.keymap.set("n", "?", function()
+  km_set("n", "?", function()
     local help_text = {
       "Recommender Help:",
       "",
