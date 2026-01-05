@@ -15,23 +15,6 @@
 ---   Built-in defaults are `{ {section="header"}, {section="keys", ...}, {section="startup"} }`.  -- we replicate + extend
 ---   Each item supports fields `icon|title|desc|action|key|...`; `action` may be string/func.  -- compatible formats
 
----@class SnacksModuleOpts
----@field enabled boolean
----@field [string] any
-
----@class SnacksSetup
----@field debug SnacksModuleOpts|nil
----@field dim SnacksModuleOpts|nil
----@field profiler SnacksModuleOpts|nil
----@field quickfile SnacksModuleOpts|nil
----@field scope SnacksModuleOpts|nil
----@field scratch SnacksModuleOpts|nil
----@field toggle SnacksModuleOpts|nil
----@field words SnacksModuleOpts|nil
----@field bigfile SnacksModuleOpts|nil
----@field dashboard table|nil
----@field picker SnacksModuleOpts|nil
-
 ---@type table
 return {
 
@@ -56,10 +39,10 @@ return {
     lazy = false,
 
     ---@param _ any
-    ---@return SnacksSetup|table
+    ---@return Plugins.Snacks.Setup|table
     opts = function(_)
       --- keep configuration isolated; never mutate shared tables
-      ---@type SnacksSetup
+      ---@type Plugins.Snacks.Setup
       local cfg = {
         debug = { enabled = true },
         dim = { enabled = true },
@@ -95,7 +78,7 @@ return {
     end,
 
     -- ---@param _ any
-    -- ---@param opts SnacksSetup
+    -- ---@param opts Plugins.Snacks.Setup
     -- config = function(_, opts)
     --   -- Defensive require for snacks itself
     --   local ok_snacks, snacks = pcall(require, "snacks")

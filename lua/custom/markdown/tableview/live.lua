@@ -20,7 +20,7 @@ local DEFAULT_PORT = 4567
 
 -- Helper: choose table under cursor
 ---@param bufnr number
----@return MarkdownTable?|nil
+---@return Custom.Markdown.Table?|nil
 local function choose_table_under_cursor(bufnr)
   local line = api.nvim_win_get_cursor(0)[1]
   local tables = parser.get_tables(bufnr)
@@ -42,7 +42,7 @@ local function ensure_tmpdir_for_buf()
 end
 
 -- Write preview files
----@param table MarkdownTable
+---@param table Custom.Markdown.Table
 ---@param tmpdir string
 ---@return boolean ok, string?|nil err
 local function write_preview_files(table, tmpdir)
@@ -173,7 +173,7 @@ end
 
 -- Public: install autocmd
 function M.setup_autocmds()
-  local aug = api.nvim_create_augroup("CustomMarkdownTableViewLive", { clear = true })
+  local aug = api.nvim_create_augroup("CustomCustom.Markdown.TableViewLive", { clear = true })
   api.nvim_create_autocmd("BufWritePost", {
     group = aug,
     pattern = { "*.md", "*.markdown", "*.mdx" },

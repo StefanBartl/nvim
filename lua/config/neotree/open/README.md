@@ -104,7 +104,7 @@ Registers all Neo-tree opener keymaps.
 
 **Parameter:**
 ```lua
----@param opts NeoTreeCfg|nil
+---@param opts Cfg.NeoTree.Cfg|nil
 ---@field extra_lhs table<string, string[]>  -- Additional key aliases
 ```
 

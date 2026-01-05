@@ -18,7 +18,7 @@ local DEFAULTS = require("autocmds.general.defaults")
 
 -- Public API ------------------------------------------------------------------
 
----@param cfg GeneralAutoCmdConfig|nil
+---@param cfg AutoCmds.General.Cfg|nil
 ---@return nil
 function M.enable(cfg)
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS), cfg or {})

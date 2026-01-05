@@ -1,4 +1,4 @@
----@module 'custom.markdown.handler.file'
+---@module 'Custom.MD.HandlerFile'
 --- Open local file under cursor (robust detection for Markdown links and simple HTML anchors/figures).
 --- Provides helpers for extraction, resolution, existence check and cross-platform opening.
 
@@ -89,7 +89,7 @@ end
 --- If a markdown link is present it is preferred. If no markdown link exists the buffer
 --- is scanned near the cursor for HTML anchors or images and their href/src is returned.
 ---@param line string
----@return Path|Url|nil
+---@return Path|Custom.MD.Url|nil
 local function extract_file_target_from_line(line)
   if not line or line == "" then
     return nil
@@ -143,7 +143,7 @@ end
 
 --- Resolve a target to an absolute path (or return URL unmodified).
 --- If configured, resolve relative paths against buffer directory.
----@param target Path|Url
+---@param target Path|Custom.MD.Url
 ---@return string|nil
 local function resolve_target_to_path(target)
   if not target then

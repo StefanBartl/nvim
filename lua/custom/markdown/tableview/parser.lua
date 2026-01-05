@@ -1,6 +1,6 @@
 ---@module 'custom.markdown.tableview.parser'
 ---@description Parses Markdown pipe-tables into structured Lua tables suitable for rendering.
---- The parser returns a `MarkdownTable` structure:
+--- The parser returns a `Custom.Markdown.Table` structure:
 --- {
 ---   header = { cells = { { content = "H1" }, { content = "H2" } } },
 ---   alignments = { "left", "center", "right" },
@@ -43,7 +43,7 @@ end
 --- Parse a single pipe-separated row into cell objects.
 --- Accepts lines with or without leading/trailing pipes.
 ---@param line string
----@return MarkdownTableCell[]
+---@return Custom.Markdown.TableCell[]
 local function parse_row(line)
   local cells = {}
   -- Remove leading/trailing pipe if present, but allow rows without outer pipes
@@ -78,7 +78,7 @@ end
 --- `start_line` is the 1-based buffer line number corresponding to lines[1].
 ---@param lines string[]
 ---@param start_line integer
----@return MarkdownTable|nil
+---@return Custom.Markdown.Table|nil
 function M.parse_table(lines, start_line)
   if not lines or #lines < 2 then
     return nil
@@ -132,9 +132,9 @@ function M.parse_table(lines, start_line)
 end
 
 --- Scan a buffer for all pipe-style Markdown tables.
---- Returns a list of MarkdownTable structures.
+--- Returns a list of Custom.Markdown.Table structures.
 ---@param bufnr integer|nil
----@return MarkdownTable[] tables
+---@return Custom.Markdown.Table[] tables
 function M.get_tables(bufnr)
   bufnr = bufnr or 0
   local ok, lines = pcall(vim.api.nvim_buf_get_lines, bufnr, 0, -1, false)

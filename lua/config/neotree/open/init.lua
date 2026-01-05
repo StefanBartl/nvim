@@ -7,15 +7,15 @@ local utils = require("config.neotree.utils")
 
 local M = {}
 
----@enum NeoTreePositionEnum
-local NeoTreePositionEnum = {
+---@enum Cfg.NeoTree.PositionEnum
+local PositionEnum = {
   left = "left",
   right = "right",
   float = "float",
   current = "current",
 }
 
----@type NeoTreeCfg
+---@type Cfg.NeoTree.Cfg
 M.cfg = {
   extra_lhs = {
     ["<A-c>"] = { "¢" },
@@ -25,7 +25,7 @@ M.cfg = {
   },
 }
 
----@param position NeoTreePosition
+---@param position Cfg.NeoTree.Position
 ---@return fun()|nil
 local function make_neotree_opener(position)
   local ok_nt, NeoCmd = pcall(require, "neo-tree.command")
@@ -34,8 +34,8 @@ local function make_neotree_opener(position)
     return
   end
 
-  if not NeoTreePositionEnum[position] then
-    position = NeoTreePositionEnum.left
+  if not PositionEnum[position] then
+    position = PositionEnum.left
   end
 
   return function()
@@ -90,7 +90,7 @@ local function register_aliases(lhs, pos, desc)
   end
 end
 
----@param opts NeoTreeCfg|nil
+---@param opts Cfg.NeoTree.Cfg|nil
 function M.attach_opener_mappings(opts)
   if type(opts) == "table" then
     if opts.extra_lhs then

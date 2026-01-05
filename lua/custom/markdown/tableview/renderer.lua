@@ -1,5 +1,5 @@
 ---@module 'custom.markdown.tableview.renderer'
----@description Renderer for MarkdownTable structures. Renders tables into a persistent floating window or into a scratch buffer.
+---@description Renderer for Custom.Markdown.Table structures. Renders tables into a persistent floating window or into a scratch buffer.
 
 local M = {}
 
@@ -49,9 +49,9 @@ local function merge(a, b)
   return out
 end
 
---- Build a matrix of strings from MarkdownTable structure.
+--- Build a matrix of strings from Custom.Markdown.Table structure.
 --- Return: array of rows, each row is array of cell strings.
----@param mt MarkdownTable
+---@param mt Custom.Markdown.Table
 ---@return string[][] matrix where first row is header
 local function table_to_matrix(mt)
   local matrix = {}
@@ -130,8 +130,8 @@ local function format_row_with_alignment(row, widths, alignments)
   return "| " .. table.concat(parts, " | ") .. " |"
 end
 
---- Build lines from MarkdownTable (including separator line)
----@param mt MarkdownTable
+--- Build lines from Custom.Markdown.Table (including separator line)
+---@param mt Custom.Markdown.Table
 ---@return string[] lines
 local function build_lines_from_markdowntable(mt)
   local matrix = table_to_matrix(mt)
@@ -251,8 +251,8 @@ local function clear_highlights(buf)
   pcall(api.nvim_buf_clear_namespace, buf, state.namespace, 0, -1)
 end
 
---- Render a MarkdownTable into the persistent floating view (or into a new scratch buffer if not floating)
----@param mt MarkdownTable
+--- Render a Custom.Markdown.Table into the persistent floating view (or into a new scratch buffer if not floating)
+---@param mt Custom.Markdown.Table
 ---@param opts table|nil
 function M.render_markdowntable(mt, opts)
   opts = merge(default_opts, opts or {})
@@ -320,7 +320,7 @@ function M.close_view()
 end
 
 --- Toggle rendering: if view open, close it; otherwise render the provided table
----@param mt MarkdownTable
+---@param mt Custom.Markdown.Table
 ---@param opts table|nil
 function M.toggle_markdowntable(mt, opts)
   if state.win and api.nvim_win_is_valid(state.win) then

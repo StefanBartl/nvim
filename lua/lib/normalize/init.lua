@@ -660,7 +660,7 @@ end
 -- Schema-driven merge ---------------------------------------------------------
 
 ---@class NormalizerField
----@field apply FnApplier        -- applier(state, key, value) -> boolean
+---@field apply Lib.Normalize.FnApplier        -- applier(state, key, value) -> boolean
 ---@field default any            -- default value written if nothing applied (copied)
 ---@field required boolean|nil   -- if true and value missing, default must cover it; otherwise caller validates
 

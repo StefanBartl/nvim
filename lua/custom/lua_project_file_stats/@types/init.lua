@@ -1,3 +1,4 @@
+---@meta
 ---@module 'custom.lua_project_file_stats.types'
 ---@brief Type definitions for Lua Project File Statistics
 ---@description

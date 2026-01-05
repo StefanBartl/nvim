@@ -11,7 +11,7 @@ local uv = vim.uv or vim.loop
 --- - Uppercases Windows drive letter ("C:/...")
 --- - Collapses duplicate slashes (except UNC prefix)
 ---@param p string
----@param opts NormKeyOpts|nil
+---@param opts Cfg.Harpoon.NormKeyOpts|nil
 ---@return string
 function M.normkey(p, opts)
   if type(p) ~= "string" or p == "" then

@@ -34,7 +34,7 @@ return {
     cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
     ft = { "markdown" },
     -- build = function() vim.fn["mkdp#util#install"]() end, -- without yarn
-    -- with yarn (only method tha work in Windows)
+    -- with yarn (only method that work in Windows)
     build = "cd app && yarn install",
     init = function()
       vim.g.mkdp_filetypes = { "markdown" }

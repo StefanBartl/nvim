@@ -55,5 +55,6 @@
 ---@alias Setter fun(value:any):void
 ---@alias OptionToggle fun(name:VimOptionName, value:TriBool):void
 ---@alias EventCallback fun(event:string, args:table):void
+---@alias Url string
 
 return {}

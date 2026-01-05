@@ -3,7 +3,7 @@
 
 local M = {}
 
----@type MarkdownConfig
+---@type Custom.MD.Config
 local Defaults = {
   map_double_asterisk = true,
   keep_inner_selection = true,
@@ -15,7 +15,7 @@ local Defaults = {
   ensure_headline_spacing = true, -- ensure whitespace + separator before H2+ headlines
 }
 
----@type MarkdownConfig
+---@type Custom.MD.Config
 local State = vim.deepcopy(Defaults)
 
 ---@param opts table
@@ -31,7 +31,7 @@ function M.setup(opts)
   end
 end
 
----@return MarkdownConfig
+---@return Custom.MD.Config
 function M.get()
   return State
 end

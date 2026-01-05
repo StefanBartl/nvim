@@ -6,7 +6,7 @@ local utils = require("config.neotree.utils")
 
 local M = {}
 
----@type NeoTreeCwdSyncState
+---@type Cfg.NeoTree.CwdSyncState
 local S = {
   timer = nil,
   pending = false,

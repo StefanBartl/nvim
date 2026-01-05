@@ -503,7 +503,7 @@ function M.show_stats()
     "Commands:",
     "  :NeoTreeBackupList     - Browse and restore backups",
     "  :NeoTreeDryRunToggle   - Toggle test mode",
-    "  :NeoTreeTrashStats     - Show this message",
+    "  :Cfg.NeoTree.TrashStats     - Show this message",
   }
 
   notify.info(table.concat(stats, "\n"))

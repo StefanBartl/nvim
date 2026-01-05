@@ -4,6 +4,8 @@
 
 local M = {}
 
+---@param opts Custom.TableView.Options
+---@return nil
 function M.setup(opts)
   opts = opts or {}
   require("custom.markdown.tableview.autocmds").setup()

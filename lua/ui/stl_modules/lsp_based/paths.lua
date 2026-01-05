@@ -8,7 +8,7 @@ local api, fn, fs, uv = vim.api, vim.fn, vim.fs, vim.uv or vim.loop
 local P = {}
 
 -- Configuration is injected/linked from lsp_based; keep defaults here for safety.
----@type LspStlPathCfg
+---@type UI.Stl_Modules.LSP_Based.LspStlPathCfg
 P.cfg = {
   path_mode = "auto", -- "auto"|"repo"|"cwd"|"absolute"
   path_home_tilde = true, -- replace $HOME prefix by "~"

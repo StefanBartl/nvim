@@ -1,3 +1,4 @@
+---@meta
 ---@module 'debugging.markdown.@types'
 
 ---@class Dbg.MD.InlineDebug

@@ -18,7 +18,7 @@ local api = vim.api
 local nvim_create_autocmd = api.nvim_create_autocmd
 
 -- Internal state (local to avoid polluting globals)
-local STATE = { ---@type HarpoonHardeningState
+local STATE = { ---@type Cfg.Harpoon.HardeningState
   wrapped_ui = false,
   timer = nil,
   pending = false,
@@ -164,7 +164,7 @@ local function _install_autocmds(events)
   })
 end
 
----@param opts HarpoonHardeningOpts|nil
+---@param opts Cfg.Harpoon.HardeningOpts|nil
 ---@return nil
 function M.setup(opts)
   opts = opts or {}

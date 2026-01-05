@@ -63,7 +63,7 @@ function M.safe_hide_preview()
 end
 
 ---Get current Neo-tree position if open
----@return NeoTreePosition|nil
+---@return Cfg.NeoTree.Position|nil
 function M.get_current_position()
   local ok, manager = pcall(require, "neo-tree.sources.manager")
   if not ok then

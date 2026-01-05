@@ -5,7 +5,7 @@ local M = {}
 
 local Norm = require("config.harpoon.utils.normkey")
 
----@param list HarpoonList
+---@param list Cfg.Harpoon.List
 ---@return nil
 function M.sanitize_items_in_place(list)
   if type(list) ~= "table" or type(list.items) ~= "table" then
@@ -19,7 +19,7 @@ function M.sanitize_items_in_place(list)
     if type(it) == "string" then
       list.items[i] = { value = it, context = { row = 1, col = 0 } }
     elseif type(it) == "table" then
-      ---@cast it HarpoonItemLegacy|HarpoonItem
+      ---@cast it Cfg.Harpoon.ItemLegacy|Cfg.Harpoon.Item
       -- Normalize 'value':
       --  - primary: 'value' if present
       --  - fallback: legacy 'path' (access via rawget to avoid undefined-field diagnostics)
@@ -38,7 +38,7 @@ function M.sanitize_items_in_place(list)
   end
 end
 
----@param list HarpoonList
+---@param list Cfg.Harpoon.List
 ---@return integer removed_count
 function M.dedup_in_place_safe(list)
   if type(list) ~= "table" or type(list.items) ~= "table" then

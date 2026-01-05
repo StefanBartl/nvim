@@ -42,7 +42,7 @@ end
 
 ---Reveal current buffer
 ---@param buf integer|nil
----@param position NeoTreePosition|nil
+---@param position Cfg.NeoTree.Position|nil
 ---@return boolean success
 function M.reveal_buffer(buf, position)
   buf = buf or vim.api.nvim_get_current_buf()

@@ -11,7 +11,7 @@ local autocmds = require("custom.markdown.setup.autocmds")
 local tableview = require("custom.markdown.tableview")
 local tableview_live = require("custom.markdown.tableview.live")
 
----@param opts MarkdownConfig|nil
+---@param opts Custom.MD.Config|nil
 ---@return nil
 function M.setup(opts)
   cfg.setup(opts or {})
@@ -35,5 +35,5 @@ require("custom.markdown.fenced_fix")
   })
   .apply()
 
----@type MarkdownPublicAPI
+---@type Custom.MD.PublicAPI
 return M

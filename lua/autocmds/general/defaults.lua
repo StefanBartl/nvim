@@ -1,6 +1,6 @@
 ---@module 'autocmds.general.defaults'
 
----@type GeneralAutoCmdConfig
+---@type AutoCmds.General.Cfg
 local defaults = {
   group_name = "custom_autocmds",
 

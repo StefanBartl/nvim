@@ -253,6 +253,7 @@ function uv.disable_stdio_inheritance(fd, enable) end
 -- ============================================================================
 
 ---@class uv.fs_stat.result
+---@diagnostic disable
 ---@field dev integer Device ID
 ---@field mode integer Protection mode
 ---@field nlink integer Number of hard links
@@ -270,6 +271,7 @@ function uv.disable_stdio_inheritance(fd, enable) end
 ---@field ctime uv.fs_stat.time Status change time
 ---@field birthtime uv.fs_stat.time Creation time
 ---@field type string File type: "file", "directory", "link", "fifo", "socket", "char", "block", or "unknown"
+---@diagnostic enable
 
 ---@class uv.fs_stat.time
 ---@field sec integer Seconds since epoch

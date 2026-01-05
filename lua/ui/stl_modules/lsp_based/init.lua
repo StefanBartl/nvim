@@ -12,7 +12,7 @@ local fn, api = vim.fn, vim.api
 
 local M = {}
 
----@type LspCfg
+---@type UI.Stl_Modules.LSP_Based.LspCfg
 M.cfg = {
   debounce_ms = 250,
   update_events = { "BufEnter", "CursorHold", "CursorHoldI", "InsertLeave", "TextChanged", "LspAttach" },

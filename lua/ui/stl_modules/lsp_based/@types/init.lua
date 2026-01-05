@@ -1,6 +1,7 @@
+---@meta
 ---@module 'lua.ui.stl_modules.lsp_based.types'
 
----@alias PathMode_t
+---@alias UI.Stl_Modules.LSP_Based.PathMode_t
 --- Controls the reference frame used to render the buffer path.
 --- Behavior details:
 ---| '"auto"' : Try repo root (fast upward scan for ".git"; if worktree, use the worktree top). If no repo,
@@ -15,7 +16,7 @@
 ---   • Symlinks: If uv.fs_realpath succeeds, the canonical target is shown; otherwise the expanded absolute path.
 ---   • Git worktrees: If ".git" is a file containing "gitdir: ...", the enclosing directory is treated as the repo root.
 
----@alias Path_home_tilde_t boolean
+---@alias UI.Stl_Modules.LSP_Based.Path_home_tilde_t boolean
 --- Whether to shorten the user's home directory prefix to "~" in absolute-style outputs.
 --- Applies to:
 ---   • "absolute" and "home" modes directly.
@@ -29,11 +30,11 @@
 ---   • Only applied if the absolute path begins with the user's home directory as returned by uv.os_homedir().
 ---   • On systems without a valid home directory, this option is effectively a no-op.
 
----@class LspStlPathCfg
----@field path_mode PathMode_t
----@field path_home_tilde Path_home_tilde_t
+---@class UI.Stl_Modules.LSP_Based.LspStlPathCfg
+---@field path_mode UI.Stl_Modules.LSP_Based.PathMode_t
+---@field path_home_tilde UI.Stl_Modules.LSP_Based.Path_home_tilde_t
 
----@class LspCfg
+---@class UI.Stl_Modules.LSP_Based.LspCfg
 ---@field debounce_ms? integer
 ---@field update_events? string[]
 ---@field center_width_frac? number
@@ -41,7 +42,7 @@
 ---@field path_max_frac? number
 ---@field path_max_chars? number|nil
 ---@field path_min_room? number
----@field path_mode PathMode_t
----@field path_home_tilde Path_home_tilde_t
+---@field path_mode UI.Stl_Modules.LSP_Based.PathMode_t
+---@field path_home_tilde UI.Stl_Modules.LSP_Based.Path_home_tilde_t
 
 return {}

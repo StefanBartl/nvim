@@ -25,7 +25,7 @@ end
 
 --- Build a small, pleasant HTML document for the table.
 --- Adds thicker borders, header styling, zebra rows, subtle shadow and responsive layout.
----@param chosen MarkdownTable
+---@param chosen Custom.Markdown.Table
 ---@param source string optional textual source / caption
 ---@return string html
 local function build_html(chosen, source)

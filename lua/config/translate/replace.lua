@@ -7,9 +7,6 @@
 ---- Keep the interface small: replace_range(start, end, target_lang, opts)
 local M = {}
 
----@class TranslateReplaceOptions
----@field nocode boolean|nil whether to avoid translating fenced/inline code
-
 local filter = require("config.translate.filter")
 
 ---Replace a given range with translated text.
@@ -19,7 +16,7 @@ local filter = require("config.translate.filter")
 ---@param start_line number 1-based start line (inclusive)
 ---@param end_line number 1-based end line (inclusive)
 ---@param target_lang string target language code (e.g. "DE", "EN")
----@param opts TranslateReplaceOptions|nil
+---@param opts Cfg.Translate.ReplaceOptions|nil
 M.replace_range = function(start_line, end_line, target_lang, opts)
   opts = opts or {}
   local nocode = opts.nocode or false

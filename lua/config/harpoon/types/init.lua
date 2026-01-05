@@ -1,46 +1,45 @@
+---@meta
 ---@module 'types.harpoon'
 -- Add these or adapt your existing type file accordingly.
 
----@alias HarpoonValue string
+---@alias Cfg.Harpoon.Value string
 
----@class HarpoonContext
+---@class Cfg.Harpoon.Context
 ---@field row integer  -- 1-based
 ---@field col integer  -- 0-based
 
----@class HarpoonItem
----@diagnostic disable-next-line duplicate field
----@field value HarpoonValue
----@diagnostic disable-next-line duplicate field
----@field context HarpoonContext|nil
+---@class Cfg.Harpoon.Item
+---@field value Cfg.Harpoon.Value
+---@field context Cfg.Harpoon.Context|nil
 
 --- Legacy or non-standard item shapes sometimes found in older setups:
----@class HarpoonItemLegacy
+---@class Cfg.Harpoon.ItemLegacy
 ---@field path string|nil         -- legacy field; may be present
 ---@field value string|nil        -- might be missing; normalize it
----@field context HarpoonContext|nil
+---@field context Cfg.Harpoon.Context|nil
 
----@class HarpoonList
+---@class Cfg.Harpoon.List
 ---@diagnostic disable-next-line duplicate field
----@field items (HarpoonItem|HarpoonItemLegacy|string)[]  -- allow union
----@field remove fun(self: HarpoonList, index: integer)
----@field save fun(self: HarpoonList)
+---@field items (Cfg.Harpoon.Item|Cfg.Harpoon.ItemLegacy|string)[]  -- allow union
+---@field remove fun(self: Cfg.Harpoon.List, index: integer)
+---@field save fun(self: Cfg.Harpoon.List)
 
----@class HarpoonApi
----@field list fun(self: HarpoonApi): HarpoonList
----@field save fun(self: HarpoonApi)
----@field setup fun(self: HarpoonApi, opts: table)
+---@class Cfg.Harpoon.Api
+---@field list fun(self: Cfg.Harpoon.Api): Cfg.Harpoon.List
+---@field save fun(self: Cfg.Harpoon.Api)
+---@field setup fun(self: Cfg.Harpoon.Api, opts: table)
 
----@class HarpoonPersistPathsOpts
+---@class Cfg.Harpoon.PersistPathsOpts
 ---@field target_specs string[][]|nil  -- list of path segments per target; first segment can be a variable like "$REPOS_DIR" or "$HOME"
 
 ---@type uv uv
 
----@class HarpoonHardeningState
+---@class Cfg.Harpoon.HardeningState
 ---@field timer uv.uv_timer_t|nil        -- reusable libuv timer handle
 ---@field debounce_ms integer            -- current debounce interval (ms)
 ---@field pending boolean                -- whether there is pending work
 
----@class HarpoonHardeningOpts
+---@class Cfg.Harpoon.HardeningOpts
 ---@field debounce_ms integer|nil        -- default: 200
 ---    Coalesce multiple "save" triggers into a single write. Prevents IO bursts
 ---    when you quickly switch buffers, toggle the quick menu, or alt-tab a lot.
@@ -64,5 +63,7 @@
 ---    - More events = more chances to save, but also more timer restarts.
 ---    - You don't need a quit event; a non-debounced final flush runs on VimLeavePre.
 
----@class NormKeyOpts
+---@class Cfg.Harpoon.NormKeyOpts
 ---@field realpath boolean|nil  -- default true (use fs_realpath if available)
+
+return {}

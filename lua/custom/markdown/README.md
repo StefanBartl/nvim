@@ -58,7 +58,7 @@ require("mappings.markdown").setup({
 ## Options
 
 ```lua
----@class MarkdownConfig
+---@class Custom.MD.Config
 ---@field map_double_asterisk boolean  -- visual "**" mapping (default: true)
 ---@field keep_inner_selection boolean -- reselect inner text after wrapping (default: true)
 ---@field protect_h1 boolean           -- never demote below H1 (default: true)

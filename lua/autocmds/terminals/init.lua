@@ -42,7 +42,7 @@ end
 
 -- Defaults --------------------------------------------------------------------
 
----@type TermAutoCmdsCfg
+---@type AutoCmds.Term.Cfg
 local Defaults = {
   numbers = {
     enable = true,
@@ -64,7 +64,7 @@ local Defaults = {
 -- Public API ------------------------------------------------------------------
 
 --- Enable terminal-related autocommands per feature.
----@param cfg TermAutoCmdsCfg|nil
+---@param cfg AutoCmds.Term.Cfg|nil
 ---@return nil
 function M.enable(cfg)
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(Defaults), cfg or {})

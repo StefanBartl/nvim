@@ -1,2 +1,0 @@
----@meta
----@modules 'utils.strings.types'

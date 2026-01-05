@@ -23,7 +23,7 @@
 ---@field buf integer
 ---@field file string
 ---@field dir string
----@field position NeoTreePosition|nil
+---@field position Cfg.NeoTree.Position|nil
 
 -- ===========================
 -- sources

@@ -13,6 +13,18 @@ local function rstrip(s)
   return (s:gsub("%s*$", ""))
 end
 
+---Count lines in a string
+---@param s string
+---@return integer
+local function count_lines(s)
+  if s == "" then return 0 end
+  local count = 0
+  for _ in s:gmatch("[^\n]+") do
+    count = count + 1
+  end
+  return count
+end
+
 ---@param bin string
 ---@return boolean
 local function has_exec(bin)
@@ -162,18 +174,33 @@ function M.capture_messages(opts)
     vim.notify(("DebugViews: dir=%s\nlog=%s"):format(dir, logfile), vim.log.levels.DEBUG)
   end
 
-  local ok_exec, res = pcall(vim.api.nvim_exec2, "messages", { output = true })
-  local messages = ok_exec and rstrip(res.output or "") or ""
-  if debug then
-    vim.notify(("DebugViews: captured %d bytes"):format(#messages), vim.log.levels.DEBUG)
+  -- FIX: Use vim.fn.execute instead of nvim_exec2 to properly capture :messages output
+  local ok_exec, messages = pcall(vim.fn.execute, "messages")
+  if not ok_exec then
+    vim.notify("DebugViews: failed to capture messages: " .. tostring(messages), vim.log.levels.ERROR)
+    return false, nil
   end
+
+  messages = rstrip(messages)
+  local line_count = count_lines(messages)
+
+  if debug then
+    vim.notify(("DebugViews: captured %d bytes, %d lines"):format(#messages, line_count), vim.log.levels.DEBUG)
+  end
+
+  if messages == "" then
+    vim.notify("DebugViews: no messages to capture", vim.log.levels.WARN)
+    return false, ""
+  end
+
+  local success_operations = {}
 
   if save_file then
     local ok_write, err = write_file(logfile, messages)
     if not ok_write then
       vim.notify("DebugViews: write failed: " .. tostring(err), vim.log.levels.ERROR)
     else
-      vim.notify("DebugViews: saved to " .. logfile, vim.log.levels.INFO)
+      table.insert(success_operations, string.format("%d lines saved to file", line_count))
     end
   end
 
@@ -184,13 +211,17 @@ function M.capture_messages(opts)
         "DebugViews: clipboard not available. Install: pbcopy/wl-copy/xclip/xsel/clip.exe",
         vim.log.levels.WARN
       )
-    elseif debug then
-      vim.notify("DebugViews: clipboard copy ok", vim.log.levels.DEBUG)
+    else
+      table.insert(success_operations, string.format("%d lines copied to clipboard", line_count))
     end
+  end
+
+  -- Show combined success notification
+  if #success_operations > 0 then
+    vim.notify("DebugViews: " .. table.concat(success_operations, " | "), vim.log.levels.INFO)
   end
 
   return true, messages
 end
 
 return M
-

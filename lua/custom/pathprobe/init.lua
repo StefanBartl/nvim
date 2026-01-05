@@ -360,7 +360,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Resolve and open from current selection or cursor.
----@param opts PathProbeOpts|nil
+---@param opts Custom.PathProbe.Opts|nil
 ---@return boolean
 function M.probe(opts)
   opts = opts or {}

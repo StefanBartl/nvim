@@ -35,14 +35,7 @@ local M = {}
 -- Aggregated summary session
 -- =====================================================================================
 
----@class MasonEnsureSession
----@field open boolean
----@field pending integer
----@field results table<string, table<string,string[]>>   -- results[kind][category] = { "name (reason)", ... }
----@field installed table<string,string[]>
----@field already table<string,string[]>
-
-local SESSION ---@type MasonEnsureSession
+local SESSION ---@type Cfg.Mason.EnsureSession
 SESSION = {
   open = false,
   pending = 0,
@@ -127,7 +120,7 @@ end
 -- Tool sets (defaults): true = ensure install, false = ignore
 -- =====================================================================================
 
----@type MasonEnsureMap
+---@type Cfg.Mason.EnsureMap
 local LSP_DEFAULTS = {
   ["copilot-language-server"] = true,
   ["java-language-server"] = false,
@@ -174,7 +167,7 @@ local LSP_DEFAULTS = {
   ["marksman"] = true,
 }
 
----@type MasonEnsureMap
+---@type Cfg.Mason.EnsureMap
 local DAP_DEFAULTS = {
   ["node-debug2-adapter"] = false,
   ["java-language-server"] = false,
@@ -188,7 +181,7 @@ local DAP_DEFAULTS = {
   ["bash-debug-adapter"] = true,
 }
 
----@type MasonEnsureMap
+---@type Cfg.Mason.EnsureMap
 local LINTER_DEFAULTS = {
   ["yamllint"] = true,
   ["systemdlint"] = true,
@@ -210,7 +203,7 @@ local LINTER_DEFAULTS = {
   ["markdownlint"] = true,
 }
 
----@type MasonEnsureMap
+---@type Cfg.Mason.EnsureMap
 local FORMATTER_DEFAULTS = {
   ["luaformatter"] = true,
   ["yamlfix"] = true,
@@ -281,7 +274,7 @@ end
 
 --- Internal ensure logic with per-session de-duplication and aggregated summary.
 --- Keeps the public API unchanged.
---- @param tools MasonEnsureMap
+--- @param tools Cfg.Mason.EnsureMap
 --- @param log_prefix string
 --- @param seen table<string, boolean>|nil
 local function ensure_tools(tools, log_prefix, seen)
@@ -369,9 +362,9 @@ local function ensure_tools(tools, log_prefix, seen)
 end
 
 --- Merge user overrides on top of defaults.
----@param defaults MasonEnsureMap
----@param overrides MasonEnsureMap|nil
----@return MasonEnsureMap
+---@param defaults Cfg.Mason.EnsureMap
+---@param overrides Cfg.Mason.EnsureMap|nil
+---@return Cfg.Mason.EnsureMap
 local function merge(defaults, overrides)
   if not overrides then
     return vim.deepcopy(defaults)
@@ -390,7 +383,7 @@ end
 --- Ensure all configured LSP servers exist (installed via mason).
 --- Starts a short session when called standalone; in orchestrated runs the outer
 --- session is used.
---- @param overrides MasonEnsureMap|nil
+--- @param overrides Cfg.Mason.EnsureMap|nil
 --- @param log_prefix string|nil
 --- @param seen table<string, boolean>|nil
 function M.enable_lsp(overrides, log_prefix, seen)
@@ -405,7 +398,7 @@ function M.enable_lsp(overrides, log_prefix, seen)
 end
 
 --- Ensure all configured DAP adapters exist.
---- @param overrides MasonEnsureMap|nil
+--- @param overrides Cfg.Mason.EnsureMap|nil
 --- @param log_prefix string|nil
 --- @param seen table<string, boolean>|nil
 function M.enable_dap(overrides, log_prefix, seen)
@@ -420,7 +413,7 @@ function M.enable_dap(overrides, log_prefix, seen)
 end
 
 --- Ensure all configured linters exist.
---- @param overrides MasonEnsureMap|nil
+--- @param overrides Cfg.Mason.EnsureMap|nil
 --- @param log_prefix string|nil
 --- @param seen table<string, boolean>|nil
 function M.enable_linters(overrides, log_prefix, seen)
@@ -435,7 +428,7 @@ function M.enable_linters(overrides, log_prefix, seen)
 end
 
 --- Ensure all configured formatters exist.
---- @param overrides MasonEnsureMap|nil
+--- @param overrides Cfg.Mason.EnsureMap|nil
 --- @param log_prefix string|nil
 --- @param seen table<string, boolean>|nil
 function M.enable_formatters(overrides, log_prefix, seen)
@@ -454,7 +447,7 @@ end
 -- =====================================================================================
 
 --- High-level orchestrator with shared de-duplication set and aggregated summary.
---- @param cfg { lsp?:boolean, dap?:boolean, linters?:boolean, formatters?:boolean, log_prefix?:string, overrides?:{lsp?:MasonEnsureMap, dap?:MasonEnsureMap, linters?:MasonEnsureMap, formatters?:MasonEnsureMap} }|nil
+--- @param cfg { lsp?:boolean, dap?:boolean, linters?:boolean, formatters?:boolean, log_prefix?:string, overrides?:{lsp?:Cfg.Mason.EnsureMap, dap?:Cfg.Mason.EnsureMap, linters?:Cfg.Mason.EnsureMap, formatters?:Cfg.Mason.EnsureMap} }|nil
 function M.enable(cfg)
   cfg = cfg or {}
   local do_lsp = (cfg.lsp ~= false)

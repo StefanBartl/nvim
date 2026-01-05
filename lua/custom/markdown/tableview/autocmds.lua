@@ -9,7 +9,7 @@ local filetypes = { "markdown", "markdown.mdx", "mdx", "md" }
 --- Setup autocmds (idempotent)
 ---@return nil
 function M.setup()
-  local aug = api.nvim_create_augroup("CustomMarkdownTableView", { clear = true })
+  local aug = api.nvim_create_augroup("CustomCustom.Markdown.TableView", { clear = true })
 
   api.nvim_create_autocmd("FileType", {
     group = aug,

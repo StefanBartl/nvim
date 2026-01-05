@@ -35,6 +35,10 @@
 6. `mappings.*` map durch `lib.map` tauschen
 7. `ui.stl_module` auf custom statusline ändern und modularisieren
 
+### `plugins.`
+
+1. Logik nach `config.` ausgliedern
+
 ### `mappings.`
 
 1. mappings.custom erstellen, aus der dann markdown, pathprobe, usw aufgerufen werden, anstatt mappings.markdown, mappings.pathprobe usw..

@@ -1,4 +1,4 @@
----@module 'custom.markdown.handler.url'
+---@module 'Custom.MD.HandlerUrl'
 --- Open URL under cursor in default browser (robust detection for Markdown links,
 --- inline raw URLs, and simple HTML anchors). Exports helpers for extraction and
 --- cross-platform opening.
@@ -80,7 +80,7 @@ end
 ---  * Inline raw URL: https://example or http://example
 ---  * HTML anchor: <a href="https://example"> (scans surrounding lines if needed)
 ---@param line string
----@return Url|nil
+---@return Custom.MD.Url|nil
 local function extract_url_from_line(line)
   if not line or line == "" then
     return nil

@@ -14,5 +14,5 @@ function M.setup(opts)
   }, opts or {}))
 end
 
----@type MarkdownConfig
+---@type Custom.MD.Config
 return M

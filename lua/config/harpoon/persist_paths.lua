@@ -178,7 +178,7 @@ end
 -- Public API
 --------------------------------------------------------------------------------
 
----@param opts HarpoonPersistPathsOpts|nil
+---@param opts Cfg.Harpoon.PersistPathsOpts|nil
 ---@return nil
 function M.setup(opts)
   opts = opts or {}

@@ -4,7 +4,7 @@ local M = {}
 
 --- In-place "open URL" via system opener.
 ---@param url string
----@param cfg MdAutoCmdsGotoFileCfg
+---@param cfg AutoCmds.General.MD.GotoFile.Cfg
 ---@return boolean opened
 function M.open(url, cfg)
   local opener ---@type string[]|nil
