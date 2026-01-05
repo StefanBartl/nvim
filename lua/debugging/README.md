@@ -331,6 +331,6 @@ MIT
 - `:h debugging` - Main help file
 - `:h debugging-views` - Views module
 - `:h debugging-usercmds` - User commands
-- [vardump/README.md](../vardump/docs/README.md) - Variable inspection
+- [vardump/README.md](../vardumpREADME.md) - Variable inspection
 
 ---

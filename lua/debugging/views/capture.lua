@@ -3,6 +3,10 @@
 
 local M = {}
 
+-- Default capture directory
+---@type string
+M.base_dir = vim.fn.stdpath("config") .. "/docs/debug_views"
+
 ---@param s string
 ---@return string
 local function rstrip(s)
@@ -134,12 +138,12 @@ end
 
 ---@return string dir, string logfile
 local function resolve_paths()
-  local base = (vim.env.REPOS_DIR and vim.env.REPOS_DIR ~= "" and vim.env.REPOS_DIR) or vim.fn.stdpath("state")
+  local base = M.base_dir
   if vim.fs and vim.fs.normalize then
     base = vim.fs.normalize(base)
   end
   local join = (vim.fs and vim.fs.joinpath) or function(...) return table.concat({ ... }, "/") end
-  local dir = join(base, "debug_views")
+  local dir = join(base)
   local logfile = join(dir, ("messages-%s.log"):format(os.date("%Y%m%d-%H%M%S")))
   return dir, logfile
 end

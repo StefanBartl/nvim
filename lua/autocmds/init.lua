@@ -7,21 +7,6 @@
 -- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren:
 require("autocmds.auto-center-fexplorer").setup()
 
-
-require("autocmds.patches").setup({ verbose = true })
-require("autocmds.patches.usercommands").setup()
--- require("autocmds.patches").apply_all_async()
-
-  -- Integration with Lazy.nvim
-  -- local group = vim.api.nvim_create_augroup("LocalPluginPatches", { clear = true })
--- require("autocmds.patches").apply_async({
---   keys = { "gitsigns-system-compat" },
---   callback = function(results)
---     print("\n=== RESULT ===")
---     print(vim.inspect(results[1]))
---   end
--- })
-
 ------------------------------------------------------
 --- General
 ------------------------------------------------------

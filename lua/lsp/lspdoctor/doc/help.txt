@@ -201,7 +201,7 @@ API (LUA)                                                         *lspdoctor-api
 >
 
 --- Configure behavior (call once)
---- @param opts LspDoctorOptions|nil
+--- @param opts Lsp.Doctor.Options|nil
 require("usrcmds.lspdoctor").setup({
 use_notify = false,
 formatter_priority = { "eslint", "null-ls", "lua_ls" },
@@ -215,7 +215,7 @@ formatter_priority = { "eslint", "null-ls", "lua_ls" },
 --- Generate and render a report to the message area.
 --- @param mode '"quick"'|'"deep"'|nil
 --- @param bufnr integer|nil  -- 0 = current
---- @return LspDoctorReport
+--- @return Lsp.Doctor.Report
 local rep = require("usrcmds.lspdoctor").run("quick", 0)
 <
 
@@ -250,7 +250,7 @@ Report type:
 
 >
 
----@class LspDoctorReport
+---@class Lsp.Doctor.Report
 ---@field mode '"quick"'|'"deep"'
 ---@field ok boolean
 ---@field summary string
@@ -290,7 +290,7 @@ A: No. Reports are read-only. Export opens a scratch buffer only.
 
 Q: Can I capture the report programmatically?
 A: Yes. Use export(...) to get a buffer with the full report, or run(...) to
-get a structured LspDoctorReport for tooling.
+get a structured Lsp.Doctor.Report for tooling.
 
 ==============================================================================
 vim:tw=78:ft=help:et:ts=8:sts=2:sw=2

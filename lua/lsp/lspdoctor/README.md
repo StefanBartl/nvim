@@ -213,7 +213,7 @@ require("usrcmds.lspdoctor").setup(opts)
 
 -- Generate and render a report to the message area
 -- mode: "quick" | "deep", bufnr: integer (0 = current)
--- returns: LspDoctorReport
+-- returns: Lsp.Doctor.Report
 require("usrcmds.lspdoctor").run(mode, bufnr)
 
 -- Generate and export a report to a scratch buffer
@@ -227,10 +227,10 @@ require("usrcmds.lspdoctor").health()
 require("usrcmds.lspdoctor").enable_usercmd()
 ```
 
-`LspDoctorReport` (returned by `run`):
+`Lsp.Doctor.Report` (returned by `run`):
 
 ```lua
----@class LspDoctorReport
+---@class Lsp.Doctor.Report
 ---@field mode '"quick"'|'"deep"'
 ---@field ok boolean
 ---@field summary string

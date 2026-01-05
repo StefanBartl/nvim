@@ -313,7 +313,7 @@ Minimal impact - uses async scheduling.
 
 ## See Also
 
-- [Main README](../../docs/README.md)
+- [Main README](../..README.md)
 - `:h debugging-terminals`
 - [Neovim Terminal Mode](https://neovim.io/doc/user/nvim_terminal_emulator.html)
 

@@ -4,12 +4,13 @@ Unified debug views for `:messages` and Noice with window management, auto-refre
 
 ## Features
 
-- ✅ **Deterministic window management** - Tags track windows across sessions
-- ✅ **Auto-bottom cursor** - Always scrolls to latest message
-- ✅ **Cross-platform clipboard** - Supports macOS, Linux, WSL, Windows
-- ✅ **Auto-refresh** - Updates on window enter
-- ✅ **File persistence** - Saves timestamped logs
-- ✅ **Graceful degradation** - Works without optional dependencies
+* **Deterministic window management** – Tags track windows across sessions
+* **Auto-bottom cursor** – Always scrolls to latest message
+* **Cross-platform clipboard** – Supports macOS, Linux, WSL, Windows
+* **Auto-refresh** – Updates on window enter
+* **File persistence** – Saves timestamped logs
+* **Graceful degradation** – Works without optional dependencies
+* **Configurable output dir** – Set dir for capture message files
 
 ---
 
@@ -32,15 +33,15 @@ require("debugging.views").setup()
 
 ### Modules
 
-| File | Purpose |
-|------|---------|
-| `init.lua` | Main setup and coordination |
-| `capture.lua` | Message capture with clipboard |
-| `display.lua` | Window management and refresh |
-| `utils.lua` | Focus, cursor, validation helpers |
-| `keymaps.lua` | Keymap registration |
-| `autocmds.lua` | Auto-refresh on events |
-| `@types.lua` | Type definitions |
+| File           | Purpose                                             |
+| -------------- | --------------------------------------------------- |
+| `init.lua`     | Main setup and coordination                         |
+| `capture.lua`  | Message capture with clipboard and file persistence |
+| `display.lua`  | Window management and refresh                       |
+| `utils.lua`    | Focus, cursor, validation helpers                   |
+| `keymaps.lua`  | Keymap registration                                 |
+| `autocmds.lua` | Auto-refresh on events                              |
+| `@types.lua`   | Type definitions                                    |
 
 ### State Management
 
@@ -54,9 +55,10 @@ local WINDOWS = {
 ```
 
 Windows are tracked via `vim.w[win].custom_tag`:
-- `"messages"` - `:messages` buffer
-- `"noice_all"` - Noice all buffer
-- `"noice_errors"` - Noice errors buffer
+
+* `"messages"` – `:messages` buffer
+* `"noice_all"` – Noice all buffer
+* `"noice_errors"` – Noice errors buffer
 
 ---
 
@@ -69,7 +71,7 @@ require("debugging.views").setup({
   keymaps = {
     enable = true,
     map = vim.keymap.set,
-    prefix = "<leader>d",  -- Prefix for all keymaps
+    prefix = "<lt>",  -- Prefix for all keymaps
   },
   autocmds = {
     enable = true,
@@ -77,11 +79,13 @@ require("debugging.views").setup({
     auto_refresh = true,   -- Refresh on WinEnter/BufWinEnter
   },
   timings = {
-    delay_messages_ms = 30,   -- Initial delay
+    delay_messages_ms = 30,
     delay_noice_ms = 50,
-    retry_delay_ms = 60,      -- Retry delay for cursor-at-bottom
-    attempts = 3,             -- Max retry attempts
+    retry_delay_ms = 60,
+    attempts = 3,
   },
+  capture = true,                      -- enable capture commands
+  output_dir = vim.fn.stdpath("config").."/docs/debug_views", -- optional custom path
 })
 ```
 
@@ -114,12 +118,12 @@ require("debugging.views").setup({
 ### `:DebugMessagesShow`
 
 Opens `:messages` in a dedicated window with:
-- Deterministic focus
-- Cursor at bottom line
-- Auto-refresh on window enter
-- Close with `q` or `<Esc>`
 
-**Example:**
+* Deterministic focus
+* Cursor at bottom line
+* Auto-refresh on window enter
+* Close with `q` or `<Esc>`
+
 ```vim
 :DebugMessagesShow
 ```
@@ -127,15 +131,16 @@ Opens `:messages` in a dedicated window with:
 ### `:DebugMessagesCapture`
 
 Captures `:messages` output and:
+
 1. Saves to timestamped file
 2. Copies to clipboard (cross-platform)
 3. Notifies user of success/failure
 
 **File Location:**
-- `$REPOS_DIR/debug_views/messages-YYYYMMDD-HHMMSS.log`
-- Or: `stdpath("state")/debug_views/messages-YYYYMMDD-HHMMSS.log`
 
-**Example:**
+* Default: `stdpath("config")/docs/debug_views/messages-YYYYMMDD-HHMMSS.log`
+* Optional custom path via `output_dir` in setup
+
 ```vim
 :DebugMessagesCapture
 ```
@@ -144,7 +149,6 @@ Captures `:messages` output and:
 
 Closes all debug windows (messages, noice_all, noice_errors).
 
-**Example:**
 ```vim
 :DebugWindowsClear
 ```
@@ -155,13 +159,13 @@ Closes all debug windows (messages, noice_all, noice_errors).
 
 Default prefix: `<leader>d`
 
-| Key | Action | Command |
-|-----|--------|---------|
-| `<leader>dm` | Messages view | `:DebugMessagesShow` |
-| `<leader>dn` | Noice all | `:Noice all` |
-| `<leader>de` | Noice errors | `:Noice errors` |
-| `<leader>dc` | Capture to file+clipboard | `:DebugMessagesCapture` |
-| `<leader>dx` | Clear all windows | `:DebugWindowsClear` |
+| Key     | Action                    | Command                 |
+| ------- | ------------------------- | ----------------------- |
+| `<lt>m` | Messages view             | `:DebugMessagesShow`    |
+| `<lt>n` | Noice all                 | `:Noice all`            |
+| `<lt>e` | Noice errors              | `:Noice errors`         |
+| `<lt>c` | Capture to file+clipboard | `:DebugMessagesCapture` |
+| `<lt>x` | Clear all windows         | `:DebugWindowsClear`    |
 
 ---
 
@@ -171,37 +175,37 @@ Default prefix: `<leader>d`
 
 Captures `:messages` with options.
 
-**Parameters:**
 ```lua
 opts = {
   debug = false,        -- Show debug notifications
   clipboard = true,     -- Copy to clipboard
   save_file = true,     -- Save to file
-  output_dir = nil,     -- Custom output directory
+  output_dir = nil,     -- Optional directory for capture files
 }
 ```
 
-**Returns:** `boolean success, string|nil content`
+Returns: `boolean success, string|nil content`
 
-**Example:**
+Example:
+
 ```lua
 local capture = require("debugging.views.capture")
-local ok, content = capture.capture_messages({ debug = true })
+local ok, content = capture.capture_messages({ debug = true, output_dir = vim.fn.stdpath("config").."/docs/debug_views_custom" })
 if ok then
   print("Captured " .. #content .. " bytes")
 end
 ```
 
+---
+
 ### `display.execute_and_refresh(tag, cmd, timings)`
 
 Executes command and manages window state.
 
-**Parameters:**
-- `tag` (string): Window tag ("messages", "noice_all", "noice_errors")
-- `cmd` (string): Command to execute (":messages", ":Noice all")
-- `timings` (table): Timing configuration
+* `tag` (string): Window tag ("messages", "noice_all", "noice_errors")
+* `cmd` (string): Command to execute (":messages", ":Noice all")
+* `timings` (table): Timing configuration
 
-**Example:**
 ```lua
 local display = require("debugging.views.display")
 display.execute_and_refresh("messages", "messages", {
@@ -210,16 +214,16 @@ display.execute_and_refresh("messages", "messages", {
 })
 ```
 
+---
+
 ### `utils.focus_and_bottom(win, attempts, retry_delay)`
 
 Focuses window and moves cursor to bottom.
 
-**Parameters:**
-- `win` (integer): Window ID
-- `attempts` (integer): Max retry attempts
-- `retry_delay` (integer): Delay between retries (ms)
+* `win` (integer): Window ID
+* `attempts` (integer): Max retry attempts
+* `retry_delay` (integer): Delay between retries (ms)
 
-**Example:**
 ```lua
 local utils = require("debugging.views.utils")
 utils.focus_and_bottom(1000, 3, 60)
@@ -231,17 +235,18 @@ utils.focus_and_bottom(1000, 3, 60)
 
 ### Clipboard Providers
 
-| Platform | Provider | Installed? |
-|----------|----------|------------|
-| macOS | `pbcopy` | Built-in |
-| Wayland | `wl-copy` | Install: `wl-clipboard` |
-| X11 | `xclip` / `xsel` | Install: `xclip` or `xsel` |
-| WSL | `clip.exe` | Built-in |
-| Windows | `clip.exe` | Built-in |
+| Platform | Provider         | Installed?                 |
+| -------- | ---------------- | -------------------------- |
+| macOS    | `pbcopy`         | Built-in                   |
+| Wayland  | `wl-copy`        | Install: `wl-clipboard`    |
+| X11      | `xclip` / `xsel` | Install: `xclip` or `xsel` |
+| WSL      | `clip.exe`       | Built-in                   |
+| Windows  | `clip.exe`       | Built-in                   |
 
 **Fallback Chain:**
-1. `vim.fn.setreg("+")` (requires system clipboard provider)
-2. Platform-specific command (pbcopy, wl-copy, etc.)
+
+1. `vim.fn.setreg("+")`
+2. Platform-specific command (pbcopy, wl-copy, xclip, xsel, clip.exe)
 3. Warning notification if all fail
 
 ---
@@ -250,9 +255,8 @@ utils.focus_and_bottom(1000, 3, 60)
 
 ### Clipboard not working
 
-**Symptom:** "clipboard not available" warning
+Install OS-specific clipboard provider:
 
-**Solution:**
 ```bash
 # Wayland
 sudo apt install wl-clipboard
@@ -265,9 +269,8 @@ sudo apt install xsel
 
 ### Window not focusing
 
-**Symptom:** Window opens but cursor not visible
+Check if window is focusable:
 
-**Solution:** Check if window is focusable:
 ```lua
 local win = vim.api.nvim_get_current_win()
 local config = vim.api.nvim_win_get_config(win)
@@ -276,9 +279,8 @@ print(config.focusable)  -- Should be true
 
 ### Auto-refresh not working
 
-**Symptom:** Messages window shows stale content
+Enable auto-refresh:
 
-**Solution:** Enable auto-refresh:
 ```lua
 require("debugging.views").setup({
   autocmds = { auto_refresh = true },
@@ -289,28 +291,17 @@ require("debugging.views").setup({
 
 ## Performance
 
-### Optimizations
-
-- **Debouncing**: Refresh events debounced to avoid thrashing
-- **Validation**: Early returns if windows/buffers invalid
-- **Async**: Cursor-at-bottom retries use `vim.defer_fn`
-- **Caching**: Window registry avoids repeated searches
-
-### Benchmarks
-
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Open messages | ~30ms | Includes window creation |
-| Capture to file | ~50ms | Depends on message count |
-| Clipboard copy | ~10ms | Platform-dependent |
-| Auto-refresh | ~60ms | With 3 retry attempts |
+* **Debouncing**: Refresh events debounced to avoid thrashing
+* **Validation**: Early returns if windows/buffers invalid
+* **Async**: Cursor-at-bottom retries use `vim.defer_fn`
+* **Caching**: Window registry avoids repeated searches
 
 ---
 
 ## See Also
 
-- [Main README](../../docs/README.md)
-- `:h debugging-views`
-- [Architecture Guidelines](../../../docs/Arch&Coding-Regeln.md)
+* [Main README](../..README.md)
+* `:h debugging-views`
+* [Architecture Guidelines](../../../docs/Arch&Coding-Regeln.md)
 
 ---

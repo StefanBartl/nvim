@@ -399,7 +399,7 @@ require("lspconfig").marksman.setup({
 
 ## See Also
 
-- [Main README](../../docs/README.md)
+- [Main README](../..README.md)
 - `:h debugging-markdown`
 - `:h 'syntax'`
 - `:h nvim-treesitter`

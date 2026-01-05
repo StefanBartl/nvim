@@ -277,7 +277,7 @@ If lib.buf_win_tab.* is missing, only `:WinReport` is available.
 
 ## See Also
 
-- [Main README](../../docs/README.md)
+- [Main README](../..README.md)
 - `:h debugging-usercmds`
 - [views/README.md](../views/README.md) - For window tagging integration
 

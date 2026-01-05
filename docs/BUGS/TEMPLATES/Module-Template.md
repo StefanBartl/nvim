@@ -22,6 +22,22 @@
 
 ## Notes
 
+###  __TITEL__ (Template)
+
+Modul:
+Kurzbeschreibung:
+Status:
+Reproduzierbar:
+Plattform:
+Detaildokument:
+Fehlermeldung?:
+
+```vim
+
+```
+
+---
+
 ### Legende
 
 Severity:
@@ -40,18 +56,3 @@ Status:
 
 ---
 
-###  __TITEL__ (Template)
-
-Modul:
-Kurzbeschreibung:
-Status:
-Reproduzierbar:
-Plattform:
-Detaildokument:
-Fehlermeldung?:
-
-```vim
-
-```
-
----

@@ -45,7 +45,7 @@ local Defaults = {
   scratch_filetype = "markdown",
 }
 
----@type LspDoctorOptions
+---@type Lsp.Doctor.Options
 local Opts = vim.deepcopy(Defaults)
 
 -- Utils -----------------------------------------------------------------------
@@ -337,7 +337,7 @@ end
 
 ---@param mode '"quick"'|'"deep"'
 ---@param bufnr integer
----@return LspDoctorReport
+---@return Lsp.Doctor.Report
 local function collect(mode, bufnr)
   local rep = { mode = mode, ok = true, summary = "", sections = {}, extras = {} }
 
@@ -516,20 +516,22 @@ end
 
 -- Rendering -------------------------------------------------------------------
 
----@param rep LspDoctorReport
+---@param rep Lsp.Doctor.Report
 ---@return nil
 local function render(rep)
-  local function out(line, _)
+  local function out(line)
     if Opts.use_notify then
       notify.info(line)
     else
       print(line)
     end
   end
+
   out(("LSP Doctor (%s) – %s"):format(rep.mode, rep.ok and "ok" or "issues"))
   out(rep.summary)
+
   for _, sec in ipairs(rep.sections) do
-    out(("== %s ==" % sec))
+    out(("== %s =="):format(sec.title))
     for _, l in ipairs(sec.lines) do
       out(l)
     end
@@ -538,7 +540,7 @@ end
 
 -- Scratch export renderer ------------------------------------------------------
 
----@param rep LspDoctorReport
+---@param rep Lsp.Doctor.Report
 ---@return integer bufnr
 local function render_to_scratch(rep)
   -- Create a scratch buffer in a new split; non-file, no swap, read-only
@@ -643,7 +645,7 @@ end
 -- Public API ------------------------------------------------------------------
 
 ---Configure behavior. Call once in your setup code.
----@param opts LspDoctorOptions|nil
+---@param opts Lsp.Doctor.Options|nil
 ---@return nil
 function M.setup(opts)
   if opts ~= nil then
@@ -658,7 +660,7 @@ end
 ---Run the doctor in the given mode and render to message area (print/notify).
 ---@param mode '"quick"'|'"deep"'|nil
 ---@param bufnr integer|nil
----@return LspDoctorReport
+---@return Lsp.Doctor.Report
 function M.run(mode, bufnr)
   local m = (mode == "deep") and "deep" or "quick"
   local b = (type(bufnr) == "number") and bufnr or 0

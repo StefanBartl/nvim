@@ -47,6 +47,10 @@ function M.setup(opts)
 
   -- Capture Commands nur registrieren, wenn opts.capture vorhanden
   if opts.capture ~= false then
+    if opts.capture and opts.capture.output_dir then
+      capture.base_dir = opts.capture.output_dir
+    end
+
     vim.api.nvim_create_user_command("DebugMessagesCapture", function()
       capture.capture_messages({ debug = false })
     end, { desc = "[Debug] Capture :messages to file+clipboard" })

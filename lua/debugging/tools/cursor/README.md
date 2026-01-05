@@ -360,9 +360,9 @@ vim.api.nvim_create_autocmd("CursorMoved", {
 
 ## See Also
 
-- [Main README](../../docs/README.md)
+- [Main README](../..README.md)
 - `:h debugging-cursor`
-- [views/README.md](../../views/docs/README.md) - Window tagging system
-- [usercmds/README.md](../../usercmds/docs/README.md) - :WinReport command
+- [views/README.md](../../viewsREADME.md) - Window tagging system
+- [usercmds/README.md](../../usercmdsREADME.md) - :WinReport command
 
 ---

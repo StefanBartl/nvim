@@ -30,10 +30,11 @@ require("debugging.views.@types")
 ---@field reports? boolean
 
 ---@class Dbg.Views.Modules
----@field keymaps boolean
----@field autocmds boolean
----@field timings boolean
----@field capture boolean
+---@field keymaps? Dbg.Views.Keymaps
+---@field autocmds? Dbg.Views.Autocmds
+---@field timings? Dbg.Views.Timings
+---@field capture? boolean
+---@field output_dir? string # Only used if capture=true
 
 ---@class Dbg.Setup
 ---@field all? boolean

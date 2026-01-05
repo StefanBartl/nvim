@@ -383,7 +383,7 @@ end
 
 ## See Also
 
-- [Main README](../../docs/README.md)
+- [Main README](../..README.md)
 - `:h debugging-autocmds`
 - `:h autocmd`
 - `:h nvim_get_autocmds()`
