@@ -4,10 +4,10 @@ Cursor state inspection utilities for debugging focus, position, and window stat
 
 ## Features
 
-- ✅ **Comprehensive state** - Window, buffer, cursor, mode inspection
-- ✅ **Safe API calls** - All operations wrapped in pcall
-- ✅ **Window enumeration** - Lists all windows with tags
-- ✅ **Formatted output** - Clear, readable diagnostics
+- **Comprehensive state** - Window, buffer, cursor, mode inspection
+- **Safe API calls** - All operations wrapped in pcall
+- **Window enumeration** - Lists all windows with tags
+- **Formatted output** - Clear, readable diagnostics
 
 ---
 

@@ -5,13 +5,7 @@
 --- This revised version fixes incorrect safe-call semantics, handles deprecated LSP APIs,
 --- and makes file I/O and API access more robust across Neovim versions.
 
----@class MarkdownInlineDebugFixed
----@field out_path string path to written log
----@field bufnr number current buffer number
----@field timestamp string timestamp used for file name
----@field results table collected debug info
-
----@return MarkdownInlineDebugFixed
+---@return Dbg.MD.InlineDebug
 local M = {}
 
 local debugfolder = vim.fn.stdpath("data") .. "/debuglog/markdown_inline"
@@ -272,7 +266,7 @@ end
 
 --- Main gather function; writes log and notifies user.
 ---@return boolean, string|nil  -- ok, errmsg_or_path
-function M.gather()
+local function gather()
   local ts = get_timestamp()
   M.timestamp = ts
   local bufnr = vim.api.nvim_get_current_buf()
@@ -375,9 +369,9 @@ end
 
 --- Open the generated log in a new tab buffer (safe).
 ---@return boolean, string|nil
-function M.open_log()
+local function open_log()
   if not M.out_path then
-    return false, "no log file found; run M.gather() first"
+    return false, "no log file found; run gather() first"
   end
   local ok, res = pcall(function()
     local fname = vim.fn.fnameescape(M.out_path)
@@ -393,19 +387,18 @@ function M.open_log()
 end
 
 -- Create a user command to run the gatherer
-pcall(function()
-  vim.api.nvim_create_user_command("MarkdownInlineDebugFixed", function()
-    local ok, res = M.gather()
+---@return nil
+function M.enable()
+  vim.api.nvim_create_user_command("DebugMarkdownInline", function()
+    local ok, res = gather()
     if not ok then
-      vim.notify(("MarkdownInlineDebugFixed: %s"):format(res), vim.log.levels.ERROR)
+      vim.notify(("Dbg.MD.InlineDebug: %s"):format(res), vim.log.levels.ERROR)
     end
-  end, { desc = "Gather markdown inline-code highlight debug information (fixed)" })
-end)
+  end, { desc = "[debugging.markdown] Gather markdown inline-code highlight debug information" })
 
--- Run immediately when sourced
-local ok_run, res_run = M.gather()
-if not ok_run then
-  vim.notify(("markdown.inline_debug: failed to write log file: %s"):format(res_run), vim.log.levels.ERROR)
+  vim.api.nvim_create_user_command("DebugMarkdownInlineOpenLog", function()
+        open_log()
+  end, { desc = "[debugging.markdown] Open log for markdown inline-code highlight debug information" })
 end
 
 return M

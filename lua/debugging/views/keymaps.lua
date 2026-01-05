@@ -5,8 +5,8 @@ local capture = require("debugging.views.capture")
 
 local M = {}
 
----@param km DebugViews.Keymaps
----@param timings DebugViews.Timings
+---@param km Dbg.Views.Keymaps
+---@param timings Dbg.Views.Timings
 function M.setup(km, timings)
   if not km.enable then
     return

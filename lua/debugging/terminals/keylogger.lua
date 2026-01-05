@@ -29,7 +29,7 @@ local function log_key()
     end
     local ok, key = pcall(vim.fn.getcharstr)
     if ok and key then
-      vim.notify(string.format("[terminal_keylogger] Key pressed: %q", key), vim.log.levels.INFO)
+      vim.notify(string.format("[debugging.terminals.keylogger] Key pressed: %q", key), vim.log.levels.INFO)
     end
     -- wieder rekursiv aufrufen, solange Logging aktiv ist
     if M.logging then
@@ -39,34 +39,36 @@ local function log_key()
 end
 
 -- Startfunktion
-function M.start()
+local function start()
   if M.logging then
-    vim.notify("[terminal_keylogger] Already logging!", vim.log.levels.WARN)
+    vim.notify("[debugging.terminals.keylogger] Already logging!", vim.log.levels.WARN)
     return
   end
   M.logging = true
   M.bufnr = vim.api.nvim_get_current_buf()
-  vim.notify("[terminal_keylogger] Started logging keys in this terminal buffer. Press keys now.", vim.log.levels.INFO)
+  vim.notify("[debugging.terminals.keylogger] Started logging keys in this terminal buffer. Press keys now.", vim.log.levels.INFO)
   log_key()
 end
 
 -- Stopfunktion
-function M.stop()
+local function stop()
   if not M.logging then
-    vim.notify("[terminal_keylogger] Not currently logging!", vim.log.levels.WARN)
+    vim.notify("[debugging.terminals.keylogger] Not currently logging!", vim.log.levels.WARN)
     return
   end
   M.logging = false
-  vim.notify("[terminal_keylogger] Stopped logging keys.", vim.log.levels.INFO)
+  vim.notify("[debugging.terminals.keylogger] Stopped logging keys.", vim.log.levels.INFO)
 end
 
--- User-Commands
-vim.api.nvim_create_user_command("TerminalKeyLoggerStart", function()
-  M.start()
-end, { desc = "Start logging all keys in current terminal buffer" })
+---@return nil
+function M.enable()
+  vim.api.nvim_create_user_command("DebugTerminalKeyLoggerStart", function()
+    start()
+  end, { desc = "[debugging.terminals.keylogger] Start logging all keys in current terminal buffer" })
 
-vim.api.nvim_create_user_command("TerminalKeyLoggerStop", function()
-  M.stop()
-end, { desc = "Stop logging keys in current terminal buffer" })
+  vim.api.nvim_create_user_command("DebugTerminalKeyLoggerStop", function()
+    stop()
+  end, { desc = "[debugging.terminals.keylogger] Stop logging keys in current terminal buffer" })
+end
 
 return M

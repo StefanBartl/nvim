@@ -145,7 +145,7 @@ local function resolve_paths()
 end
 
 ---Capture :messages with optional file save and clipboard
----@param opts DebugViews.CaptureOpts|nil
+---@param opts Dbg.Views.CaptureOpts|nil
 ---@return boolean success, string|nil content
 function M.capture_messages(opts)
   opts = opts or {}

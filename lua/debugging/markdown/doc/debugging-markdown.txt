@@ -27,7 +27,7 @@ Common problems:
 ==============================================================================
 2. COMMANDS                                    *debugging-markdown-commands*
 
-:MarkdownInlineDebugFixed                  *:MarkdownInlineDebugFixed*
+:Dbg.MD.InlineDebug                  *:Dbg.MD.InlineDebug*
     Gather comprehensive diagnostic information about Markdown
     highlighting and write to timestamped log file.
 
@@ -47,7 +47,7 @@ Common problems:
         • Loaded Markdown modules
 
     Example: >
-        :MarkdownInlineDebugFixed
+        :Dbg.MD.InlineDebug
         " [INFO] markdown.inline_debug: wrote debug log to ...
 <
 
@@ -113,7 +113,7 @@ SYNTAX:~
 
 Diagnose highlight issues:~
 >vim
-    :MarkdownInlineDebugFixed
+    :Dbg.MD.InlineDebug
 
     " Check log for:
     " - Highlight definitions present?
@@ -124,17 +124,17 @@ Diagnose highlight issues:~
 Compare colorschemes:~
 >vim
     :colorscheme gruvbox
-    :MarkdownInlineDebugFixed
+    :Dbg.MD.InlineDebug
 
     :colorscheme catppuccin
-    :MarkdownInlineDebugFixed
+    :Dbg.MD.InlineDebug
 
     " Compare logs to see highlight differences
 <
 
 Debug tree-sitter:~
 >vim
-    :MarkdownInlineDebugFixed
+    :Dbg.MD.InlineDebug
 
     " Look for in log:
     " has_parser = true
@@ -143,7 +143,7 @@ Debug tree-sitter:~
 
 LSP conflict detection:~
 >vim
-    :MarkdownInlineDebugFixed
+    :Dbg.MD.InlineDebug
 
     " Check LSP section for semantic tokens
 <

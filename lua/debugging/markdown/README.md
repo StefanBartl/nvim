@@ -8,7 +8,7 @@ Tools for debugging Markdown syntax highlighting issues, with focus on inline co
 - ✅ **Timestamped logs** - All reports saved with timestamps
 - ✅ **Safe API calls** - All operations wrapped in pcall
 - ✅ **Automatic execution** - Runs on module load
-- ✅ **User command** - `:MarkdownInlineDebugFixed`
+- ✅ **User command** - `:Dbg.MD.InlineDebug`
 
 ---
 
@@ -19,7 +19,7 @@ require("debugging.markdown").attach({ inline_debug_fixed = true })
 ```
 
 ```vim
-:MarkdownInlineDebugFixed
+:Dbg.MD.InlineDebug
 ```
 
 **Output Location:**
@@ -52,7 +52,7 @@ This `inline code` should be highlighted.
 
 ## Commands
 
-### `:MarkdownInlineDebugFixed`
+### `:Dbg.MD.InlineDebug`
 
 Gathers diagnostic information and writes to timestamped log file.
 
@@ -70,7 +70,7 @@ Gathers diagnostic information and writes to timestamped log file.
 
 **Usage:**
 ```vim
-:MarkdownInlineDebugFixed
+:Dbg.MD.InlineDebug
 ```
 
 **Output:**
@@ -158,7 +158,7 @@ markdownCode => {
 When inline code doesn't highlight:
 
 ```vim
-:MarkdownInlineDebugFixed
+:Dbg.MD.InlineDebug
 
 " Check log for:
 " - highlight definitions (markdownCode, @markup.raw.inline)
@@ -172,10 +172,10 @@ Test different colorschemes:
 
 ```vim
 :colorscheme gruvbox
-:MarkdownInlineDebugFixed
+:Dbg.MD.InlineDebug
 
 :colorscheme catppuccin
-:MarkdownInlineDebugFixed
+:Dbg.MD.InlineDebug
 
 " Compare logs to see highlight differences
 ```
@@ -185,7 +185,7 @@ Test different colorschemes:
 Check if tree-sitter is working:
 
 ```vim
-:MarkdownInlineDebugFixed
+:Dbg.MD.InlineDebug
 
 " Look for in log:
 " has_parser = true
@@ -197,7 +197,7 @@ Check if tree-sitter is working:
 Find if LSP semantic tokens interfere:
 
 ```vim
-:MarkdownInlineDebugFixed
+:Dbg.MD.InlineDebug
 
 " Check LSP section for:
 " - client name (marksman, etc.)
@@ -263,7 +263,7 @@ M.open_log()  -- Opens log in new tab
 ### Data Collection Flow
 
 ```
-User triggers :MarkdownInlineDebugFixed
+User triggers :Dbg.MD.InlineDebug
     ↓
 gather() collects:
     • Environment (Neovim version, colorscheme)

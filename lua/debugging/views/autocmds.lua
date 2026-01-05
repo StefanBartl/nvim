@@ -6,8 +6,8 @@ local api = vim.api
 
 local M = {}
 
----@param ac DebugViews.Autocmds
----@param timings DebugViews.Timings
+---@param ac Dbg.Views.Autocmds
+---@param timings Dbg.Views.Timings
 function M.setup(ac, timings)
   if not ac.enable then
     return

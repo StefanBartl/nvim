@@ -5,7 +5,7 @@ local api = vim.api
 
 local M = {}
 
----@type DebugViews.WindowRegistry
+---@type Dbg.Views.WindowRegistry
 local WINDOWS = {
   messages = nil,
   noice_all = nil,
@@ -40,7 +40,7 @@ end
 
 ---@param tag string
 ---@param cmd string
----@param timings DebugViews.Timings
+---@param timings Dbg.Views.Timings
 function M.execute_and_refresh(tag, cmd, timings)
   local existing_win = M.find_window_by_tag(tag)
 
@@ -94,7 +94,7 @@ end
 
 ---@param win integer
 ---@param tag string
----@param timings DebugViews.Timings
+---@param timings Dbg.Views.Timings
 function M.refresh_log_view(win, tag, timings)
   if not (win and api.nvim_win_is_valid(win)) then
     return

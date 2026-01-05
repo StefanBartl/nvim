@@ -4,6 +4,8 @@
 
   - [Syntax](#syntax)
   - [Cleanup](#cleanup)
+    - [`mappings.`](#mappings)
+  - [Update documentation](#update-documentation)
 
 ---
 
@@ -19,7 +21,7 @@
 8. Typisierung UsrCmds, Cfg. ...
 9. Externe PLugins die usercommands und/oder mappings haben, diese in die `/config/**` verschieben und über die plugin init laden. Am besten ein gemeinsames config/**/actions.lua für Commands, Keymaps und Menüs. [Actions](MyNotes\Neovim\40_Optimierung\Actions_Mappings-Commands-Menu.md)
 
-actions.lua, commands.lua, keymaps.lua
+10. actions.lua für: commands.lua, keymaps.lua in den Modulen
 
 ---
 
@@ -36,5 +38,12 @@ actions.lua, commands.lua, keymaps.lua
 ### `mappings.`
 
 1. mappings.custom erstellen, aus der dann markdown, pathprobe, usw aufgerufen werden, anstatt mappings.markdown, mappings.pathprobe usw..
+
+---
+
+## Update documentation
+
+1. (Debugging CONFIGURATION-EXAMPLE update)[../../../lua/debugging/docs/CONFIGURATION-EXAMPLE.md]
+2. (Debugging :h update)[../../../lua/debugging/doc/debugging.txt]
 
 ---

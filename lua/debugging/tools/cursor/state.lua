@@ -1,8 +1,9 @@
+
 ---@module 'debugging.cursor.state'
 
 local M = {}
 
-function M.debug_state()
+local function debug_state()
   local api = vim.api
   local current_win = api.nvim_get_current_win()
 
@@ -30,6 +31,16 @@ function M.debug_state()
     local tag = vim.w[w] and vim.w[w].custom_tag or "none"
     print(string.format("Win %d: tag=%s", w, tag))
   end
+end
+
+---@return nil
+function M.enable()
+  vim.api.nvim_create_user_command("DebugToolsCursorState",
+        debug_state,
+        {
+            desc = "[debugging.tools.cursor] Print cursor state"
+        }
+    )
 end
 
 return M

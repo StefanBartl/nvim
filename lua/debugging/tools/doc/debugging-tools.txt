@@ -1,0 +1,104 @@
+*debugging-tools.txt*  Debugging tools for Neovim
+
+Author: Stefan Bartl
+License: MIT
+
+==============================================================================
+CONTENTS                                               *debugging-tools-contents*
+
+    1. Overview .................................... |debugging-tools-overview|
+    2. Vardump ..................................... |debugging-tools-vardump|
+    3. Cursor State ................................ |debugging-tools-cursor|
+    4. Buffer Inspector ........................... |debugging-tools-buffer|
+    5. Commands ................................... |debugging-tools-commands|
+
+==============================================================================
+1. OVERVIEW                                           *debugging-tools-overview*
+
+The `debugging.tools` module provides utilities for inspecting
+Neovim's internal state and variables. Modules include:~
+
+    • vardump       - Recursive variable/table inspection
+    • cursor_state  - Current cursor position tracking and history
+    • buffer_inspector - Inspect buffer properties and contents
+
+These tools are designed to be type-safe, non-intrusive, and
+cross-platform compatible.
+
+==============================================================================
+2. VARDUMP                                            *debugging-tools-vardump*
+
+Dump Lua variables and tables recursively for debugging purposes.
+
+Setup (enable the user command `:VardumpVar`):~
+>lua
+require("debugging").setup({
+  tools = { vardump = true }
+})
+<
+
+Usage:~
+    :VardumpVar some_var       " Dumps the global variable 'some_var'
+    :VardumpVar                " Dumps the variable under cursor
+
+Options:~
+    • Global variables are accessed via `_G`
+    • Tables and metatables are recursively traversed
+    • Functions, threads, and userdata are printed as-is
+
+==============================================================================
+3. CURSOR STATE                                       *debugging-tools-cursor*
+
+Tracks cursor positions and stores state history per buffer.
+
+Enable:~
+>lua
+require("debugging").setup({
+  tools = { cursor_state = true }
+})
+<
+
+Commands:~
+    :CursorStateShow           " Show current buffer cursor history
+    :CursorStateClear          " Clear saved cursor state
+
+Notes:~
+    • Useful for restoring positions or debugging cursor jumps
+    • Integrates with buffer lifecycle hooks
+
+==============================================================================
+4. BUFFER INSPECTOR                                   *debugging-tools-buffer*
+
+Inspect buffer properties, such as options, lines, and types.
+
+Enable:~
+>lua
+require("debugging").setup({
+  tools = { buffer_inspector = true }
+})
+<
+
+Commands:~
+    :BufferInspect [bufnr]     " Inspect buffer info, defaults to current buffer
+
+Features:~
+    • Shows filetype, buffer type, line count
+    • Displays option values like shiftwidth, tabstop, etc.
+
+==============================================================================
+5. COMMANDS                                           *debugging-tools-commands*
+
+:VardumpVar [varname]                                  *:VardumpVar*
+    Dump Lua variable (global or under cursor)
+
+:CursorStateShow                                       *:CursorStateShow*
+    Show cursor history for current buffer
+
+:CursorStateClear                                      *:CursorStateClear*
+    Clear saved cursor positions
+
+:BufferInspect [bufnr]                                 *:BufferInspect*
+    Inspect buffer properties for the given buffer (default current)
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

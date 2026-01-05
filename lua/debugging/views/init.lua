@@ -9,45 +9,62 @@ local autocmds = require("debugging.views.autocmds")
 
 local M = {}
 
----@param cfg DebugViews.Setup|nil
-function M.setup(cfg)
-  cfg = cfg or {}
+---@param opts Dbg.Views.Modules|nil
+function M.setup(opts)
+  opts = opts or {}
 
+  -- Timings defaults
   local timings = vim.tbl_extend("force", {
     delay_messages_ms = 30,
     delay_noice_ms = 50,
     retry_delay_ms = 60,
     attempts = 3,
-  }, cfg.timings or {})
+  }, opts.timings or {})
 
+  -- Keymaps defaults
   local km = vim.tbl_extend("force", {
     enable = true,
     map = vim.keymap and vim.keymap.set or function() end,
-    -- prefix = "<leader>d",
-     prefix = "<lt>",
-  }, cfg.keymaps or {})
+    prefix = "<lt>", -- default prefix, "<leader>d" oder "<lt>"
+  }, opts.keymaps or {})
 
+  -- Autocmds defaults
   local ac = vim.tbl_extend("force", {
     enable = true,
     group_name = "DebugViewsAuto",
     auto_refresh = true,
-  }, cfg.autocmds or {})
+  }, opts.autocmds or {})
 
-  keymaps.setup(km, timings)
-  autocmds.setup(ac, timings)
+  -- Keymaps nur registrieren, wenn aktiviert
+  if km.enable then
+    keymaps.setup(km, timings)
+  end
 
-  vim.api.nvim_create_user_command("DebugMessagesCapture", function()
-    capture.capture_messages({ debug = false })
-  end, { desc = "[Debug] Capture :messages to file+clipboard" })
+  -- Autocmds nur registrieren, wenn aktiviert
+  if ac.enable then
+    autocmds.setup(ac, timings)
+  end
 
-  vim.api.nvim_create_user_command("DebugMessagesShow", function()
-    display.execute_and_refresh("messages", "messages", timings)
-  end, { desc = "[Debug] Show messages window" })
+  -- Capture Commands nur registrieren, wenn opts.capture vorhanden
+  if opts.capture ~= false then
+    vim.api.nvim_create_user_command("DebugMessagesCapture", function()
+      capture.capture_messages({ debug = false })
+    end, { desc = "[Debug] Capture :messages to file+clipboard" })
+  end
 
-  vim.api.nvim_create_user_command("DebugWindowsClear", function()
-    display.clear_all()
-  end, { desc = "[Debug] Clear all debug windows" })
+  -- Display Commands
+  if opts.capture ~= false then
+    vim.api.nvim_create_user_command("DebugMessagesShow", function()
+      display.execute_and_refresh("messages", "messages", timings)
+    end, { desc = "[Debug] Show messages window" })
+  end
+
+  -- Clear windows
+  if opts.capture ~= false then
+    vim.api.nvim_create_user_command("DebugWindowsClear", function()
+      display.clear_all()
+    end, { desc = "[Debug] Clear all debug windows" })
+  end
 end
 
 return M
-

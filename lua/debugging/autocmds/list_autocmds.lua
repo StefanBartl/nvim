@@ -44,11 +44,11 @@ local function list_autocmds(event, pattern)
 end
 
 -- Usage example in command mode
-vim.api.nvim_create_user_command("ListAutocmds", function(opts)
+vim.api.nvim_create_user_command("DebugListAutocmds", function(opts)
   local event = opts.fargs[1] or "BufAdd"
   local pattern = opts.fargs[2]
   list_autocmds(event, pattern)
 end, {
   nargs = "*",
-  desc = "List all autocommands for a specific event and pattern",
+  desc = "[debugging.automcds] List all autocommands for a specific event and pattern",
 })

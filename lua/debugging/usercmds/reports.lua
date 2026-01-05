@@ -10,14 +10,14 @@ local M = {}
 function M.enable()
   vim.api.nvim_create_user_command("BufReport", function()
     buflib.print_summary()
-  end, { desc = "[debugging] Prints a Buffer-Report to :messages" })
+  end, { desc = "[debugging.usercmds.reports] Prints a Buffer-Report to :messages" })
 
   vim.api.nvim_create_user_command("TabReport", function()
     local r = tablib.collect_report()
     for _, l in ipairs(r.textual) do
       vim.notify(l, vim.log.levels.INFO)
     end
-  end, { desc = "[debugging] Prints a Tab-Report to :messages" })
+  end, { desc = "[debugging.usercmds.reports] Prints a Tab-Report to :messages" })
 
   vim.api.nvim_create_user_command("WinReport", function(_opts)
     local winid = nil
@@ -35,7 +35,7 @@ function M.enable()
     end
   end, {
     nargs = "?",
-    desc = "[debugging] Prints a Window-Report to :messages (optional: specify window ID)",
+    desc = "[debugging.usercmds.reports] Prints a Window-Report to :messages (optional: specify window ID)",
   })
 end
 

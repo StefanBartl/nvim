@@ -4,11 +4,11 @@ Autocommand inspection and listing utilities for debugging event-driven behavior
 
 ## Features
 
-- ✅ **List autocommands** - Filter by event and pattern
-- ✅ **Group information** - Shows autocommand groups
-- ✅ **Callback details** - Identifies command vs callback
-- ✅ **Description display** - Shows registered descriptions
-- ✅ **Pattern matching** - Filter by file patterns
+- **List autocommands** - Filter by event and pattern
+- **Group information** - Shows autocommand groups
+- **Callback details** - Identifies command vs callback
+- **Description display** - Shows registered descriptions
+- **Pattern matching** - Filter by file patterns
 
 ---
 

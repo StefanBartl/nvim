@@ -2,14 +2,15 @@
 
 local M = {}
 
----@param opts autocmds_modules
+---@param opts Dbg.Autocmds.Modules|nil
 ---@return nil
-function M.enable(opts)
+function M.setup(opts)
   opts = opts or {}
 
-  if opts.list_autocmds and opts.list_autocmds == true then
+  if opts.list_autocmds == true or opts.all == true then
     require("debugging.autocmds.list_autocmds")
   end
 end
+
 
 return M

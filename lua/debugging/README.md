@@ -164,7 +164,7 @@ require("debugging").setup()
 | Command | Description |
 |---------|-------------|
 | `:ListAutocmds <event> [pattern]` | List autocommands |
-| `:MarkdownInlineDebugFixed` | Debug markdown highlighting |
+| `:Dbg.MD.InlineDebug` | Debug markdown highlighting |
 | `:TerminalKeyLoggerStart` | Start terminal keylogging |
 | `:TerminalKeyLoggerStop` | Stop terminal keylogging |
 
