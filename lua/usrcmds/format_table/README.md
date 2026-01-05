@@ -58,13 +58,10 @@ A Neovim plugin module that formats Markdown tables with configurable alignment 
 
 ```lua
 {
-  "your-plugin",
-  config = function()
-    require("usrcmds.format_table").setup({
-      header_align = "center",  -- "left" | "center" | "right"
-      entry_align = "center",   -- "left" | "center" | "right"
-    })
-  end,
+  require("usrcmds.format_table").setup({
+    header_align = "center",  -- "left" | "center" | "right"
+    entry_align = "center",   -- "left" | "center" | "right"
+  })
 }
 ```
 

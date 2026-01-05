@@ -12,6 +12,8 @@
 
 ## Important
 
+- lua\usrcmds\reload_current_module\init.lua: funktioniert nicht richtig
+
 ## Normal
 
 ### LSP

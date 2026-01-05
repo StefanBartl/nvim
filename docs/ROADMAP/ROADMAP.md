@@ -12,20 +12,15 @@
 
 ## Watch
 
-- `<C-s>`: Manchmal springt es beim speichern in etwa in die Mitte oder ans Ende oder einen anderen Punk der file
-
----
+--
 
 ## MIXED
 
-- `/docs` schöner formatieren , Rechtschreibung usw...
 - neotest [lernen]()
 - `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 - lsp.tools behandeln
-- `custom.markdown`: TOC -> als usercommand mit angabe des level, der in den toc kommt. und mit count: 2 leader toc erstellt enen toc mit max level 2 headings im toc usw...
-- `debugging.performance`: usercommands integrieren
 
----
+--
 
 ## Neotest
 
@@ -35,7 +30,6 @@
     - Neo-tree Actions direkt auf diese Commands mappen
 ein einziges :Neotest Dispatcher-Command bauen
 oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
-
 - `config.neotest.neotree` einbinden in neotree
 
 ### format sammelmodul
@@ -48,8 +42,12 @@ Vercshiedene formatierungs usercommands und keymaps sammeln, zb.:
     * Presets pro Dateityp
     * Integration in Operator-Mappings
     * Multiselect: also mit ctrl-v mehrere start punkt markieren bzw.: echte markierungen und dort werden dann auf einmal alle ausgefphrt
+- `usrcmds.format_table`
+-`usrcmds.filter_lines`
+- `usrcmds.format_text_width`
+- `usrcmds.misc`: :BufferClear
 
----
+--
 
 ## neotree
 
