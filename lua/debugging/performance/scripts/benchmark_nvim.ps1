@@ -1,166 +1,206 @@
 <#
 .SYNOPSIS
-  Automated Neovim startup benchmarking with warmup run
+  Automated Neovim startup benchmarking with statistics
 .DESCRIPTION
-  Runs Neovim in headless mode N times (+ 1 warmup), extracts startup times,
-  calculates statistics (mean, median, min, max, stddev)
-.PARAMETER Runs
-  Number of benchmark iterations (default: 15, excludes warmup)
-.PARAMETER SkipWarmup
-  Skip the initial warmup run (not recommended)
-.EXAMPLE
-  .\benchmark_nvim.ps1 -Runs 20
-  .\benchmark_nvim.ps1 -Runs 10 -SkipWarmup
+  Runs Neovim in headless mode multiple times, parses structured Lua output,
+  aggregates startup, UI enter, memory and plugin timing metrics,
+  and exports CSV + JSON metadata.
 #>
+
 param(
     [int]$Runs = 15,
-    [switch]$SkipWarmup
+    [switch]$SkipWarmup,
+    [switch]$Debug
 )
 
+$ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
+
+# ------------------------------------------------------------
 # Configuration
-$NvimExe = "nvim"
-$LuaScript = "$env:USERPROFILE\AppData\Local\nvim\lua\debugging\performance\scripts\benchmark_startup.lua"
+# ------------------------------------------------------------
 
-# Check if Lua script exists
+$NvimExe   = "nvim"
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LuaScript = Join-Path $ScriptDir "benchmark_startup.lua"
+
+$ResultsDir = Join-Path $ScriptDir "Resultate"
+$CsvDir     = Join-Path $ResultsDir "csv"
+
+@($ResultsDir, $CsvDir) | ForEach-Object {
+    if (-not (Test-Path $_)) {
+        New-Item -ItemType Directory -Path $_ | Out-Null
+    }
+}
+
 if (-not (Test-Path $LuaScript)) {
-    Write-Error "Benchmark script not found: $LuaScript"
-    exit 1
+    throw "Lua benchmark script not found: $LuaScript"
 }
 
-# Check if nvim is available
-try {
-    & $NvimExe --version | Out-Null
-} catch {
-    Write-Error "Neovim not found in PATH"
-    exit 1
-}
+& $NvimExe --version | Out-Null
 
-# Storage for measurements
-$StartupTimes = @()
-$UIEnterTimes = @()
+# ------------------------------------------------------------
+# Storage
+# ------------------------------------------------------------
 
-# Warmup run (unless skipped)
+$StartupTimes   = @()
+$UIEnterTimes   = @()
+$MemoryUsages   = @()
+$PluginCounts   = @()
+$AllSlowPlugins = @()
+
+# ------------------------------------------------------------
+# Warmup
+# ------------------------------------------------------------
+
 if (-not $SkipWarmup) {
-    Write-Host "Running warmup..." -ForegroundColor Cyan
+    Write-Host "Warmup run..."
 
-    $StartupFile = "$env:TEMP\nvim_startuptime_warmup.txt"
-    $env:NVIM_STARTUPTIME_FILE = $StartupFile
+    $WarmupFile = Join-Path $env:TEMP "nvim_startuptime_warmup.txt"
+    $env:NVIM_STARTUPTIME_FILE = $WarmupFile
 
-    $null = & $NvimExe --headless --startuptime $StartupFile `
-                       -c "luafile $LuaScript" 2>&1
+    & $NvimExe --headless --startuptime $WarmupFile `
+        -c "luafile $LuaScript" | Out-Null
 
-    Start-Sleep -Milliseconds 1500
-    Write-Host "Warmup complete`n" -ForegroundColor Green
+    Start-Sleep -Milliseconds 800
 }
 
-Write-Host "Starting $Runs benchmark runs..." -ForegroundColor Cyan
-Write-Host ""
+# ------------------------------------------------------------
+# Benchmark runs
+# ------------------------------------------------------------
 
-# Run benchmarks
 for ($i = 1; $i -le $Runs; $i++) {
-    Write-Host "Run $i/$Runs... " -NoNewline
 
-    # Create temp file for startuptime
-    $StartupFile = "$env:TEMP\nvim_startuptime_$i.txt"
+    Write-Host "Run $i/$Runs..."
+
+    $StartupFile = Join-Path $env:TEMP "nvim_startuptime_$i.txt"
     $env:NVIM_STARTUPTIME_FILE = $StartupFile
 
-    # Run Neovim - FIXED: Use $LuaScript instead of undefined $LuaScriptLazy
+    $ErrorActionPreference = "Continue"
     $Output = & $NvimExe --headless --startuptime $StartupFile `
-                         -c "luafile $LuaScript" 2>&1 |
-              Where-Object { $_ -match '^\d+\.\d+,\d+\.\d+$' }
+        -c "luafile $LuaScript" 2>&1 | ForEach-Object { "$_" }
 
-    if ($Output -match '^([\d.]+),([\d.]+)$') {
-        $Startup = [double]$Matches[1]
-        $UIEnter = [double]$Matches[2]
+    if ($Debug) {
+        $Output | ForEach-Object { Write-Host $_ }
+    }
+
+    # Expected Lua line:
+    # startup,ui_enter,memory,plugin_count,[{name,time},...]
+
+    $TimingLine = $Output | Where-Object {
+        $_ -match '^[\d.]+,[\d.]+,[\d.]+,\d+,.*$'
+    } | Select-Object -First 1
+
+    if (-not $TimingLine) {
+        Write-Host "FAILED" -ForegroundColor Red
+        continue
+    }
+
+    if ($TimingLine -match '^([\d.]+),([\d.]+),([\d.]+),(\d+),(.*)$') {
+
+        $Startup     = [double]$Matches[1]
+        $UIEnter     = [double]$Matches[2]
+        $Memory      = [double]$Matches[3]
+        $PluginCount = [int]$Matches[4]
+        $SlowJson    = $Matches[5]
 
         $StartupTimes += $Startup
         $UIEnterTimes += $UIEnter
+        $MemoryUsages += $Memory
+        $PluginCounts += $PluginCount
 
-        Write-Host "Startup: $($Startup)ms, UI Enter: $($UIEnter)ms" -ForegroundColor Green
-    } else {
-        Write-Host "FAILED (no valid output)" -ForegroundColor Red
+        try {
+            $AllSlowPlugins += ($SlowJson | ConvertFrom-Json)
+        } catch {}
+
+        Write-Host (
+            "Startup={0}ms UI={1}ms Memory={2}KB Plugins={3}" -f
+            $Startup,
+            $UIEnter,
+            ([math]::Round($Memory, 2)),
+            $PluginCount
+        ) -ForegroundColor Green
     }
 
-    # Small delay between runs
-    Start-Sleep -Milliseconds 300
+    Start-Sleep -Milliseconds 200
 }
 
-Write-Host ""
-Write-Host "=== Results ===" -ForegroundColor Cyan
+if ($StartupTimes.Count -eq 0) {
+    throw "No successful benchmark runs"
+}
 
-# Calculate statistics
-function Get-Stats($Data) {
-    if ($Data.Count -eq 0) {
-        return [PSCustomObject]@{
-            Mean = 0; Median = 0; Min = 0; Max = 0; StdDev = 0
-        }
-    }
+# ------------------------------------------------------------
+# Statistics
+# ------------------------------------------------------------
+
+function Get-Stats {
+    param([double[]]$Data)
 
     $Sorted = $Data | Sort-Object
-    $Count = $Sorted.Count
-    $Sum = ($Sorted | Measure-Object -Sum).Sum
-    $Mean = $Sum / $Count
+    $Count  = $Sorted.Count
+    $Mean   = ($Sorted | Measure-Object -Average).Average
+    $Min    = $Sorted[0]
+    $Max    = $Sorted[-1]
 
-    $Median = if ($Count % 2 -eq 1) {
+    $Median = if ($Count % 2) {
         $Sorted[[math]::Floor($Count / 2)]
     } else {
-        ($Sorted[$Count / 2 - 1] + $Sorted[$Count / 2]) / 2
+        ($Sorted[$Count/2 - 1] + $Sorted[$Count/2]) / 2
     }
-
-    $Min = $Sorted[0]
-    $Max = $Sorted[-1]
 
     $Variance = ($Sorted | ForEach-Object {
         [math]::Pow($_ - $Mean, 2)
     } | Measure-Object -Sum).Sum / $Count
-
-    $StdDev = [math]::Sqrt($Variance)
 
     [PSCustomObject]@{
         Mean   = [math]::Round($Mean, 2)
         Median = [math]::Round($Median, 2)
         Min    = [math]::Round($Min, 2)
         Max    = [math]::Round($Max, 2)
-        StdDev = [math]::Round($StdDev, 2)
+        StdDev = [math]::Round([math]::Sqrt($Variance), 2)
     }
 }
 
 $StartupStats = Get-Stats $StartupTimes
 $UIEnterStats = Get-Stats $UIEnterTimes
 
-Write-Host ""
-Write-Host "Startup Time (ms):" -ForegroundColor Yellow
-Write-Host "  Mean:   $($StartupStats.Mean)"
-Write-Host "  Median: $($StartupStats.Median)"
-Write-Host "  Min:    $($StartupStats.Min)"
-Write-Host "  Max:    $($StartupStats.Max)"
-Write-Host "  StdDev: $($StartupStats.StdDev)"
+# ------------------------------------------------------------
+# Output
+# ------------------------------------------------------------
 
 Write-Host ""
-Write-Host "UI Enter Time (ms):" -ForegroundColor Yellow
-Write-Host "  Mean:   $($UIEnterStats.Mean)"
-Write-Host "  Median: $($UIEnterStats.Median)"
-Write-Host "  Min:    $($UIEnterStats.Min)"
-Write-Host "  Max:    $($UIEnterStats.Max)"
-Write-Host "  StdDev: $($UIEnterStats.StdDev)"
+Write-Host "Startup (ms): $($StartupStats | ConvertTo-Json -Compress)"
+Write-Host "UI Enter (ms): $($UIEnterStats | ConvertTo-Json -Compress)"
 
-Write-Host ""
-Write-Host "=== Raw Data ===" -ForegroundColor Cyan
-for ($i = 0; $i -lt $StartupTimes.Count; $i++) {
-    Write-Host "Run $($i+1): Startup=$($StartupTimes[$i])ms, UIEnter=$($UIEnterTimes[$i])ms"
-}
+# ------------------------------------------------------------
+# Export
+# ------------------------------------------------------------
 
-# Export CSV
-$CsvPath = "./Resultate/csv/nvim_benchmark_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
-$CsvData = for ($i = 0; $i -lt $StartupTimes.Count; $i++) {
+$Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+
+$CsvPath = Join-Path $CsvDir "nvim_benchmark_$Timestamp.csv"
+(0..($StartupTimes.Count - 1)) | ForEach-Object {
     [PSCustomObject]@{
-        Run     = $i + 1
-        Startup = $StartupTimes[$i]
-        UIEnter = $UIEnterTimes[$i]
+        Run     = $_ + 1
+        Startup = $StartupTimes[$_]
+        UIEnter = $UIEnterTimes[$_]
+        Memory  = [math]::Round($MemoryUsages[$_], 2)
     }
-}
-$CsvData | Export-Csv -Path $CsvPath -NoTypeInformation
-Write-Host "`nCSV exported: $CsvPath" -ForegroundColor Cyan
+} | Export-Csv -Path $CsvPath -NoTypeInformation
 
-# Cleanup temp files
+$MetaPath = Join-Path $CsvDir "nvim_benchmark_${Timestamp}_meta.json"
+@{
+    timestamp = $Timestamp
+    runs      = $Runs
+    startup   = $StartupStats
+    uienter   = $UIEnterStats
+} | ConvertTo-Json -Depth 5 | Out-File $MetaPath -Encoding utf8
+
+Write-Host "CSV:  $CsvPath"
+Write-Host "Meta: $MetaPath"
+
+# ------------------------------------------------------------
+# Cleanup
+# ------------------------------------------------------------
+
 Remove-Item "$env:TEMP\nvim_startuptime_*.txt" -ErrorAction SilentlyContinue
