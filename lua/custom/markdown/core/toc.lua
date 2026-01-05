@@ -27,7 +27,7 @@
 local M = {}
 
 ---@type number
-local DEFAULT_MIN_LEVEL = 2
+local DEFAULT_MIN_LEVEL = 1
 ---@type number
 local DEFAULT_MAX_LEVEL = 6
 
@@ -200,7 +200,9 @@ end
 ---@return nil
 function M.update_markdown_toc(header_line, opts)
   header_line = header_line or "## Table of content"
+
   opts = opts or {}
+
   local min_level = opts.min_level or DEFAULT_MIN_LEVEL
   local max_level = opts.max_level or DEFAULT_MAX_LEVEL
   if min_level < 1 then
@@ -210,9 +212,7 @@ function M.update_markdown_toc(header_line, opts)
     max_level = 6
   end
   if min_level > max_level then
-    local t = min_level
-    min_level = max_level
-    max_level = t
+    min_level, max_level = max_level, min_level
   end
 
   local bufnr = vim.api.nvim_get_current_buf()
