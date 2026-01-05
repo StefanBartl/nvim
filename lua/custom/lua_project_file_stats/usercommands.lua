@@ -15,20 +15,23 @@ local schedule = vim.schedule
 ---@return LuaProjectFileStats.Config
 local function parse_cmd_args(args)
   local config = {
-    root_dir = vim.loop.cwd(), -- default auf cwd
+    root_dir = vim.loop.cwd(),
     reverse_order = false,
     percent_mode = "both",
-    fields_to_print = { "files", "folders", "summary" },
+    fields_to_print = {},
     single_file_path = nil,
     col_width = 7,
     top_n = 25,
     only_top_files_lines = false,
     only_top_files_words = false,
-    show_ratios = false,
-    show_deviations = false,
+    show_ratios = nil,
+    show_deviations = nil,
     output_file = nil,
     interactive = false,
     async = true,
+    analyze_lua = nil,
+    analyze_misc = nil,
+    show_misc_detailed = nil,
   }
 
   for _, flag in ipairs(args.fargs) do
@@ -42,6 +45,16 @@ local function parse_cmd_args(args)
       config.show_ratios = true
     elseif flag == "--deviations" then
       config.show_deviations = true
+    elseif flag == "--lua-only" then
+      config.analyze_lua = true
+      config.analyze_misc = false
+    elseif flag == "--misc-only" then
+      config.analyze_lua = false
+      config.analyze_misc = true
+    elseif flag == "--no-misc" then
+      config.analyze_misc = false
+    elseif flag == "--misc-detailed" then
+      config.show_misc_detailed = true
     elseif flag:match("^--fields=") then
       local val = flag:sub(10)
       config.fields_to_print = {}
@@ -65,7 +78,7 @@ local function parse_cmd_args(args)
     elseif flag == "-i" or flag == "--interactive" then
       config.interactive = true
     elseif not flag:match("^%-") then
-      config.root_dir = flag -- nur hier überschreiben
+      config.root_dir = flag
     end
   end
 
@@ -96,6 +109,10 @@ local function complete_func(arg_lead, cmd_line, cursor_pos)
     "--top-files-words-only",
     "--output=",
     "--sync",
+    "--lua-only",
+    "--misc-only",
+    "--no-misc",
+    "--misc-detailed",
     "-i",
     "--interactive",
   }
@@ -146,7 +163,7 @@ function M.setup()
     desc = "Analyze Lua project file statistics",
   })
 
-  -- Quick commands for common use cases
+  -- Quick command: numbers-only summary
   nvim_create_user_command("LuaFileStatsQuick", function(args)
     local config = {
       root_dir = args.args ~= "" and args.args or getcwd(),
@@ -163,6 +180,9 @@ function M.setup()
       output_file = nil,
       interactive = false,
       async = true,
+      analyze_lua = true,
+      analyze_misc = true,
+      show_misc_detailed = false,
     }
 
     schedule(function()
@@ -171,9 +191,10 @@ function M.setup()
   end, {
     nargs = "?",
     complete = "dir",
-    desc = "Quick summary of Lua project statistics",
+    desc = "Quick summary of project statistics",
   })
 
+  -- Ratios command: detailed ratio analysis
   nvim_create_user_command("LuaFileStatsRatios", function(args)
     local config = {
       root_dir = args.args ~= "" and args.args or getcwd(),
@@ -190,6 +211,9 @@ function M.setup()
       output_file = nil,
       interactive = false,
       async = true,
+      analyze_lua = true,
+      analyze_misc = false,
+      show_misc_detailed = false,
     }
 
     schedule(function()
@@ -201,6 +225,7 @@ function M.setup()
     desc = "Show ratio analysis with deviations",
   })
 
+  -- Current file command
   nvim_create_user_command("LuaFileStatsCurrentFile", function()
     local config = {
       root_dir = getcwd(),
@@ -217,6 +242,9 @@ function M.setup()
       output_file = nil,
       interactive = false,
       async = true,
+      analyze_lua = true,
+      analyze_misc = false,
+      show_misc_detailed = false,
     }
 
     schedule(function()
@@ -226,8 +254,36 @@ function M.setup()
     desc = "Analyze current Lua file statistics",
   })
 
-  -- Notify successful setup
-  -- notify.info("LuaFileStats commands registered")
+  -- Miscellaneous files only command
+  nvim_create_user_command("LuaFileStatsMisc", function(args)
+    local config = {
+      root_dir = args.args ~= "" and args.args or getcwd(),
+      reverse_order = false,
+      percent_mode = "both",
+      fields_to_print = {},
+      single_file_path = nil,
+      col_width = 7,
+      top_n = 0,
+      only_top_files_lines = false,
+      only_top_files_words = false,
+      show_ratios = false,
+      show_deviations = false,
+      output_file = nil,
+      interactive = false,
+      async = true,
+      analyze_lua = false,
+      analyze_misc = true,
+      show_misc_detailed = true,
+    }
+
+    schedule(function()
+      pcall(main.analyze, config)
+    end)
+  end, {
+    nargs = "?",
+    complete = "dir",
+    desc = "Analyze documentation files (Markdown, TXT, JSON)",
+  })
 end
 
 return M

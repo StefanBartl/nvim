@@ -87,6 +87,7 @@ end
 function M.print_folder_ratios_ascii(show_deviations, state)
   local line = rep("-", 130)
   M.output("\n=== Folder Ratios ===", state)
+  M.output("(Type definition files excluded from ratio analysis)", state)
 
   if show_deviations then
     M.output(str_fmt(
@@ -370,6 +371,7 @@ function M.print_top_n_folders_by_annotation_ratio(n, state)
   end)
 
   M.output(str_fmt("\n=== Top %d Folders by Annotation Ratio ===", n), state)
+  M.output("(Type definition files excluded from this ranking)", state)
   local line = rep("-", 80)
   M.output(line, state)
   M.output(str_fmt("| %3s | %-40s | %8s | %8s |", "No", "Folder", "Anno%", "Lines"), state)
@@ -398,6 +400,9 @@ Documentation Ratio        20% – 40%        Combined comments + annotations fo
 Code Ratio                 55% – 75%        Effective executable logic density.
 Avg Lines per File         80 – 200         Modular structure indicator.
 Annotation/Comment Ratio   0.20 – 0.50      Balance between semantic and technical documentation.
+
+Note: Type definition files (/@types/, /types/, @types.lua, types.lua) are excluded from ratio calculations
+      as they naturally have very high annotation ratios (70-90%) and would skew the results.
 ]], state)
 end
 

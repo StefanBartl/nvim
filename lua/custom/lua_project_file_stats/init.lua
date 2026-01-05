@@ -1,11 +1,51 @@
 ---@module 'custom.lua_project_file_stats'
 ---@brief Main entry point for Lua Project File Statistics
 ---@description
---- Analyzes Lua files for code, comments, annotations, and words.
---- Can be used from Neovim or CLI.
+--- Analyzes Lua files and other project documentation for code quality metrics.
+--- Can be used from Neovim or CLI with flexible configuration.
+
+-- =============================================================================
+-- DEFAULT CONFIGURATION
+-- =============================================================================
+-- Control what gets analyzed and displayed by default.
+-- These settings apply when running without explicit flags.
+-- Modify this table to change default behavior without touching core logic.
+
+---@type LuaProjectFileStats.DefaultConfig
+local DEFAULT_CONFIG = {
+  -- Analysis scope
+  lua_files = true, -- Analyze Lua source files
+  misc_files = true, -- Analyze Markdown, TXT, JSON files
+
+  -- Output sections (Lua files)
+  show_file_tables = true, -- Detailed file-level statistics
+  show_folder_tables = true, -- Folder-level aggregates
+  show_total_summary = true, -- Total summary table
+
+  -- Advanced analysis
+  show_ratios = true, -- Ratio analysis (comment%, annotation%, etc.)
+  show_deviations = true, -- Deviations from global averages
+  show_top_lists = true, -- Top-N lists (largest files/folders)
+
+  -- Non-Lua files
+  show_misc_detailed = true, -- Detailed list of misc files (vs. summary only)
+
+  -- Display settings
+  percent_mode = "both", -- "both" | "percent" | "numbers"
+  reverse_order = true, -- Show summary first (vs. files first)
+    top_n = 50, -- Number of items in top-N lists
+
+  -- Filtering
+  exclude_type_files_from_ratios = true, -- Exclude @types files from ratio analysis
+}
+
+-- =============================================================================
+-- MODULE INITIALIZATION
+-- =============================================================================
 
 local utils = require("custom.lua_project_file_stats.utils")
 local prints = require("custom.lua_project_file_stats.prints")
+local misc_files = require("custom.lua_project_file_stats.misc_files")
 
 local M = {}
 
@@ -27,6 +67,7 @@ local function create_state()
     },
     output_buffer = {},
     cwd = utils.get_cwd(),
+    misc_files = nil,
   }
 end
 
@@ -62,11 +103,12 @@ local function calculate_global_averages(state)
   end
 end
 
----Scan directory and aggregate statistics
+---Scan directory and aggregate Lua file statistics
 ---@param root_dir string
 ---@param state LuaProjectFileStats.State
+---@param exclude_type_files boolean|nil Exclude type definition files from ratio calculations
 ---@return boolean success
-local function scan_dir(root_dir, state)
+local function scan_lua_files(root_dir, state, exclude_type_files)
   local files = utils.get_lua_files(root_dir)
   if not files or #files == 0 then
     return false
@@ -76,7 +118,15 @@ local function scan_dir(root_dir, state)
   state.total_stats = utils.create_empty_stats()
   state.total_stats.total_files = 0
 
+  -- Load misc_files for type checking
+  local misc_check = require("custom.lua_project_file_stats.misc_files")
+
   for _, file in ipairs(files) do
+    -- Skip type files if requested
+    if exclude_type_files and misc_check.is_type_file(file) then
+      goto continue
+    end
+
     local stats = utils.analyze_file(file)
     if stats then
       local rel_file = utils.relative_path(file, state.cwd)
@@ -98,15 +148,53 @@ local function scan_dir(root_dir, state)
       end
       state.total_stats.total_files = state.total_stats.total_files + 1
     end
+
+    ::continue::
   end
 
   calculate_global_averages(state)
   return true
 end
 
+---Apply default configuration to runtime config
+---@param config LuaProjectFileStats.Config
+local function apply_defaults(config)
+  -- Only apply defaults if flags haven't explicitly overridden them
+  if not config.analyze_lua and not config.analyze_misc then
+    config.analyze_lua = DEFAULT_CONFIG.lua_files
+    config.analyze_misc = DEFAULT_CONFIG.misc_files
+  end
+
+  -- Construct fields_to_print from defaults if not explicitly set
+  if #config.fields_to_print == 0 then
+    if DEFAULT_CONFIG.show_file_tables then
+      table.insert(config.fields_to_print, "files")
+    end
+    if DEFAULT_CONFIG.show_folder_tables then
+      table.insert(config.fields_to_print, "folders")
+    end
+    if DEFAULT_CONFIG.show_total_summary then
+      table.insert(config.fields_to_print, "summary")
+    end
+  end
+
+  -- Apply other defaults if not overridden
+  if config.show_ratios == nil then
+    config.show_ratios = DEFAULT_CONFIG.show_ratios
+  end
+  if config.show_deviations == nil then
+    config.show_deviations = DEFAULT_CONFIG.show_deviations
+  end
+  if config.show_misc_detailed == nil then
+    config.show_misc_detailed = DEFAULT_CONFIG.show_misc_detailed
+  end
+end
+
 ---Run analysis with given config
 ---@param config LuaProjectFileStats.Config
 function M.analyze(config)
+  apply_defaults(config)
+
   local state = create_state()
 
   -- Handle single file mode
@@ -142,94 +230,123 @@ function M.analyze(config)
     return
   end
 
-  -- Directory scan
-  local success = scan_dir(config.root_dir, state)
-  if not success then
-    prints.output("Error: Could not scan directory: " .. config.root_dir, state)
-    return
+  -- Directory scan for Lua files
+  local lua_success = false
+  if config.analyze_lua then
+    -- Use exclude_type_files when ratio analysis is enabled
+    local exclude_types = config.show_ratios and DEFAULT_CONFIG.exclude_type_files_from_ratios
+    lua_success = scan_lua_files(config.root_dir, state, exclude_types)
+    if not lua_success then
+      prints.output("Warning: No Lua files found in: " .. config.root_dir, state)
+    end
   end
 
-  prints.output("\n=== Lua File Statistics Report ===", state)
+  -- Directory scan for miscellaneous files
+  if config.analyze_misc then
+    state.misc_files = misc_files.scan_misc_files(config.root_dir, state.cwd)
+  end
+
+  -- Print header
+  prints.output("\n=== Project File Statistics Report ===", state)
   prints.output(str_fmt("Root: %s", config.root_dir), state)
-  prints.output(str_fmt("Files analyzed: %d", state.total_stats.total_files), state)
-  prints.output(str_fmt("Total lines: %d\n", state.total_stats.total_lines), state)
 
   -- Check top-only mode
   local any_top_only = config.only_top_files_lines or config.only_top_files_words
 
   if any_top_only then
-    if config.only_top_files_lines then
+    -- Top-only mode: just print requested top-N lists
+    if config.only_top_files_lines and lua_success then
       prints.print_top_n_files_by_lines(config.top_n, state)
     end
-    if config.only_top_files_words then
+    if config.only_top_files_words and lua_success then
       prints.print_top_n_files_by_words(config.top_n, state)
     end
   else
     -- Normal output
-    if config.reverse_order then
-      prints.print_total_summary(config, state)
+    if lua_success then
+      prints.output(str_fmt("Lua files analyzed: %d", state.total_stats.total_files), state)
+      prints.output(str_fmt("Total Lua lines: %d\n", state.total_stats.total_lines), state)
 
-      if config.show_ratios then
-        prints.print_folder_ratios_ascii(config.show_deviations, state)
-        prints.print_top_n_folders_by_annotation_ratio(config.top_n, state)
-        prints.print_ratio_guidelines(state)
+      if config.reverse_order then
+        -- Summary first
+        prints.print_total_summary(config, state)
+        if config.show_ratios then
+          prints.print_folder_ratios_ascii(config.show_deviations, state)
+          prints.print_top_n_folders_by_annotation_ratio(config.top_n, state)
+          prints.print_ratio_guidelines(state)
+        end
+        prints.print_folder_summary_ascii(config, state)
+        prints.print_file_stats_ascii(config, state)
+      else
+        -- Files first
+        prints.print_file_stats_ascii(config, state)
+        prints.print_folder_summary_ascii(config, state)
+        if config.show_ratios then
+          prints.print_folder_ratios_ascii(config.show_deviations, state)
+          prints.print_top_n_folders_by_annotation_ratio(config.top_n, state)
+          prints.print_ratio_guidelines(state)
+        end
+        prints.print_total_summary(config, state)
       end
 
-      prints.print_folder_summary_ascii(config, state)
-      prints.print_file_stats_ascii(config, state)
-    else
-      prints.print_file_stats_ascii(config, state)
-      prints.print_folder_summary_ascii(config, state)
-
-      if config.show_ratios then
-        prints.print_folder_ratios_ascii(config.show_deviations, state)
-        prints.print_top_n_folders_by_annotation_ratio(config.top_n, state)
-        prints.print_ratio_guidelines(state)
+      -- Top-N lists
+      if DEFAULT_CONFIG.show_top_lists and config.top_n > 0 then
+        prints.print_top_n_files_by_lines(config.top_n, state)
+        prints.print_top_n_files_by_words(config.top_n, state)
       end
 
-      prints.print_total_summary(config, state)
+      -- Text summary
+      prints.output("\n=== Lua Files Summary ===", state)
+      prints.output(str_fmt("Files: %d", state.total_stats.total_files), state)
+      prints.output(
+        str_fmt(
+          "Lines: Total=%d, Code=%d, Comments=%d, Annotations=%d, Blank=%d",
+          state.total_stats.total_lines,
+          state.total_stats.lines_without_comments,
+          state.total_stats.comment_lines,
+          state.total_stats.annotation_lines,
+          state.total_stats.blank_lines
+        ),
+        state
+      )
+      prints.output(
+        str_fmt(
+          "Words: Total=%d, Code=%d, Comments=%d, Annotations=%d",
+          state.total_stats.total_words,
+          state.total_stats.words_without_comments,
+          state.total_stats.words_in_comments,
+          state.total_stats.words_in_annotations
+        ),
+        state
+      )
     end
 
-    -- Top-N lists
-    if config.top_n > 0 then
-      prints.print_top_n_files_by_lines(config.top_n, state)
-      prints.print_top_n_files_by_words(config.top_n, state)
+    -- Print miscellaneous files
+    if config.analyze_misc and state.misc_files then
+      misc_files.print_misc_summary(state.misc_files, state)
+      if config.show_misc_detailed then
+        misc_files.print_misc_files_detailed(state.misc_files, state)
+      end
     end
-
-    -- Final text summary
-    prints.output("\n=== Text Summary ===", state)
-    prints.output(str_fmt("Analyzed files: %d", state.total_stats.total_files), state)
-    prints.output(
-      str_fmt(
-        "Lines: Total=%d, Code=%d, Comments=%d, Annotations=%d, Blank=%d",
-        state.total_stats.total_lines,
-        state.total_stats.lines_without_comments,
-        state.total_stats.comment_lines,
-        state.total_stats.annotation_lines,
-        state.total_stats.blank_lines
-      ),
-      state
-    )
-    prints.output(
-      str_fmt(
-        "Words: Total=%d, Code=%d, Comments=%d, Annotations=%d",
-        state.total_stats.total_words,
-        state.total_stats.words_without_comments,
-        state.total_stats.words_in_comments,
-        state.total_stats.words_in_annotations
-      ),
-      state
-    )
   end
 
-  -- Write output file if requested
-  if config.output_file then
-    local ok, err = prints.write_output_file(config.output_file, state)
-    if ok then
-      print(str_fmt("\n✓ Output written to: %s", config.output_file))
+  -- Write output file if requested or default
+  local output_file = config.output_file
+  if not output_file or output_file == "" then
+    -- Fallback: Neovim standard config path oder temporärer Pfad
+    if utils.is_nvim then
+      output_file = vim.fn.stdpath("config") .. "/luaFileStats.md"
     else
-      print(str_fmt("\n✗ Error writing output: %s", err or "unknown"))
+      local tmpdir = os.getenv("TMP") or os.getenv("TEMP") or "."
+      output_file = tmpdir .. "/luaFileStats.md"
     end
+  end
+
+  local ok, err = prints.write_output_file(output_file, state)
+  if ok then
+    print(str_fmt("\n✓ Output written to: %s", output_file))
+  else
+    print(str_fmt("\n✗ Error writing output: %s", err or "unknown"))
   end
 end
 
@@ -243,24 +360,30 @@ function M.setup()
   usercommands.setup()
 end
 
--- CLI mode detection and execution
+-- =============================================================================
+-- CLI MODE
+-- =============================================================================
+
 if not utils.is_nvim and arg then
   -- Parse CLI arguments
   local config = {
     root_dir = ".",
     reverse_order = false,
-    percent_mode = "both",
-    fields_to_print = { "files", "folders", "summary" },
+    percent_mode = DEFAULT_CONFIG.percent_mode,
+    fields_to_print = {},
     single_file_path = nil,
     col_width = 7,
-    top_n = 25,
+    top_n = DEFAULT_CONFIG.top_n,
     only_top_files_lines = false,
     only_top_files_words = false,
-    show_ratios = false,
-    show_deviations = false,
+    show_ratios = nil,
+    show_deviations = nil,
     output_file = nil,
     interactive = false,
     async = false,
+    analyze_lua = nil,
+    analyze_misc = nil,
+    show_misc_detailed = nil,
   }
 
   for _, a in ipairs(arg) do
@@ -274,6 +397,16 @@ if not utils.is_nvim and arg then
       config.show_ratios = true
     elseif a == "--deviations" then
       config.show_deviations = true
+    elseif a == "--lua-only" then
+      config.analyze_lua = true
+      config.analyze_misc = false
+    elseif a == "--misc-only" then
+      config.analyze_lua = false
+      config.analyze_misc = true
+    elseif a == "--no-misc" then
+      config.analyze_misc = false
+    elseif a == "--misc-detailed" then
+      config.show_misc_detailed = true
     elseif a:match("^--fields=") then
       local val = a:sub(10)
       config.fields_to_print = {}
