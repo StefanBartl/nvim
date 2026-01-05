@@ -33,19 +33,31 @@ end
 function M.defaults()
   local hist_config = history.setup()
 
-  -- Merge history and file browser keymaps
   local km =
-    vim.tbl_deep_extend("force", history_keymaps.get(actions) or {}, fb_keymaps.get(actions), bg.get_mappings())
+    vim.tbl_deep_extend(
+      "force",
+      history_keymaps.get(actions) or {},
+      fb_keymaps.get(actions),
+      bg.get_mappings(),
+      require("config.telescope.keymaps").get(actions)
+    )
 
   return {
     path_display = function(picker_opts, path)
       local max_len = adapt_max_len(picker_opts, 60)
       return files_path_shorten(path, max_len)
     end,
+
     file_ignore_patterns = ignore_list.as_telescope_patterns(),
     history = hist_config,
     sorting_strategy = "ascending",
     layout_config = { prompt_position = "top" },
+
+    -- HIER
+    preview = {
+      wrap = false,
+    },
+
     mappings = km,
   }
 end
