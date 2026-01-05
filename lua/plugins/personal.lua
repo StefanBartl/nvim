@@ -6,7 +6,7 @@ if not vim.env.REPOS_DIR then
   return {}
 end
 
--- local plugins_folder = vim.fn.stdpath("config") .. "/lua/plugins"
+local plugins_folder = vim.fn.stdpath("config") .. "/lua/plugins"
 
 ---@type LazyPluginSpec[]
 return {
@@ -71,11 +71,11 @@ return {
   --         "StefanBartl/reposcope.nvim",
   --         "StefanBartl/telescope-selected-index",
   --       },
-  --       -- token_source = "file",
-  --       -- token_file = "~/.github_token",
+  --       token_source = "file",
+  --       token_file = "~/.github_token",
   --
-  --       config_dir = plugins_folder .. "/my-github-stats", FIX:
-  --       data_dir = plugins_folder .. "/my-github-stats", FIX:
+  --       config_dir = plugins_folder .. "/my-github-stats",  -- FIX:
+  --       data_dir = plugins_folder .. "/my-github-stats", -- FIX:
   --     })
   --   end,
   -- },

@@ -1,4 +1,43 @@
 {
+  "date_presets": {
+    "enabled": true,
+    "custom": [],
+    "builtins": [
+      "today",
+      "yesterday",
+      "last_week",
+      "last_month",
+      "last_quarter",
+      "last_year",
+      "this_week",
+      "this_month",
+      "this_quarter",
+      "this_year"
+    ]
+  },
+  "dashboard": {
+    "time_range": "30d",
+    "auto_open": false,
+    "keybindings": {
+      "cycle_time_range": "t",
+      "cycle_sort": "s",
+      "refresh_selected": "r",
+      "refresh_all": "R",
+      "show_help": "?",
+      "navigate_down": "j",
+      "show_details": "<CR>",
+      "navigate_up": "k",
+      "force_refresh": "f",
+      "quit": "q"
+    },
+    "enabled": true,
+    "sort_by": "clones",
+    "theme": "default",
+    "refresh_interval_seconds": 300,
+    "token_env_var": "GITHUB_TOKEN"
+  },
+  "fetch_interval_hours": 24,
+  "notification_level": "all",
   "repos": [
     "StefanBartl/color_my_ascii.nvim",
     "StefanBartl/github_stats.nvim",
@@ -14,7 +53,5 @@
     "StefanBartl/telescope-selected-index"
   ],
   "token_source": "file",
-  "token_file": "~/.github_token",
-  "fetch_interval_hours": 24,
-  "notification_level": "all"
- }
+  "token_file": "~/.github_token"
+}

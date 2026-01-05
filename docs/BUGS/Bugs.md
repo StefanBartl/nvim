@@ -24,7 +24,7 @@
 
 ## Normal Bugs
 
-- debug view logdateien sind leer
+- [debug view](../../lua/debugging/views/capture.lua): logdateien sind leer
 
 ---
 

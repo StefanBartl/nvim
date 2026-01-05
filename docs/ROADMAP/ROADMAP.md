@@ -23,6 +23,7 @@
 - `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 - lsp.tools behandeln
 - `custom.markdown`: TOC -> als usercommand mit angabe des level, der in den toc kommt. und mit count: 2 leader toc erstellt enen toc mit max level 2 headings im toc usw...
+- `debugging.performance`: usercommands integrieren
 
 ---
 

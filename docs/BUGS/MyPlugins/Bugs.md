@@ -15,6 +15,8 @@
 
 ## CRITICAL Bugs
 
+- GithubStats
+
 --
 
 ## IMPORTANT Bugs
