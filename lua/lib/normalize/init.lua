@@ -57,11 +57,11 @@ local function coalesce(...)
 end
 
 --- Deduplicate a string list while preserving order.
----@param list StringList
----@return StringList
+---@param list Lib.Normalize.StringList
+---@return Lib.Normalize.StringList
 local function dedup_strings(list)
   local seen = {} ---@type table<string, boolean>
-  local out = {} ---@type StringList
+  local out = {} ---@type Lib.Normalize.StringList
   for i = 1, #list do
     local v = list[i]
     if type(v) == "string" then
@@ -192,7 +192,7 @@ end
 
 --- Map a value to an enum entry (case-insensitive by default).
 ---@param v any
----@param allowed StringList
+---@param allowed Lib.Normalize.StringList
 ---@param case_insensitive boolean|nil
 ---@return string|nil
 function M.to_enum(v, allowed, case_insensitive)
@@ -224,11 +224,11 @@ end
 ---   * list of strings → filtered to strings, option to dedup and trim
 ---@param v any
 ---@param opts {sep?:string, trim?:boolean, dedup?:boolean}|nil
----@return StringList|nil
+---@return Lib.Normalize.StringList|nil
 function M.to_string_list(v, opts)
   opts = opts or {}
   local sep = opts.sep or "[%s,]+"
-  local out = {} ---@type StringList
+  local out = {} ---@type Lib.Normalize.StringList
   if type(v) == "string" then
     for token in v:gmatch("[^" .. sep .. "]+") do
       local s = opts.trim and trim(token) or token
@@ -257,10 +257,10 @@ end
 --- Convert a shell-like command (string or argv) into argv (best-effort).
 --- Supports simple double-quoted segments; does not resolve escapes comprehensively.
 ---@param v any
----@return StringList|nil
+---@return Lib.Normalize.StringList|nil
 function M.to_argv(v)
   if type(v) == "table" then
-    local out = {} ---@type StringList
+    local out = {} ---@type Lib.Normalize.StringList
     for i = 1, #v do
       if type(v[i]) == "string" and v[i] ~= "" then
         out[#out + 1] = v[i]
@@ -274,7 +274,7 @@ function M.to_argv(v)
     if s == "" then
       return nil
     end
-    local out = {} ---@type StringList
+    local out = {} ---@type Lib.Normalize.StringList
     local i, len = 1, #s
     while i <= len do
       while i <= len and s:sub(i, i):match("%s") do
@@ -556,7 +556,7 @@ end
 ---@param tbl table
 ---@param key string
 ---@param val any
----@param allowed StringList
+---@param allowed Lib.Normalize.StringList
 ---@param case_insensitive boolean|nil
 ---@return boolean
 function M.apply_enum(tbl, key, val, allowed, case_insensitive)

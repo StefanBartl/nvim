@@ -5,4 +5,4 @@
 ---@alias ShiftDelta integer
 
 ---@alias Url string
----@alias BufNr number
+---@alias Custom.MD.BufNr number

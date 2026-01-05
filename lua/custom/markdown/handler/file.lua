@@ -30,7 +30,7 @@ end
 --- Search for an <a ... href="..."> or <img ... src="..."> pattern in a buffer near the current cursor.
 --- This helper is used when the current line contains HTML wrappers like <figure> and the
 --- actual href/src sits a few lines away. It scans ±radius lines around the cursor.
----@param bufnr BufNr
+---@param bufnr Custom.MD.BufNr
 ---@param curline number
 ---@param radius number
 ---@return string|nil

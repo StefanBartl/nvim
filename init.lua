@@ -97,12 +97,13 @@ require("debugging").setup({
 require("debugging").setup({ all = true })
 
 ]]
-require("debugging").setup({
-  all = false,        -- optional: aktiviert alle Module
-  autocmds = nil,     -- Dbg.Autocmds.Modules|nil
-  markdown = nil,     -- Dbg.Markdown.Modules|nil
-  terminals = nil,    -- Dbg.Terminals.Modules|nil
-  views = nil,        -- Dbg.Views.Setup|nil
-  usercmds = false,    -- boolean|nil
-  tools = nil,        -- Dbg.Tools.Modules|nil
-})
+
+-- require("debugging").setup({
+--   all = false,        -- optional: aktiviert alle Module
+--   autocmds = nil,     -- Dbg.Autocmds.Modules|nil
+--   markdown = nil,     -- Dbg.Markdown.Modules|nil
+--   terminals = nil,    -- Dbg.Terminals.Modules|nil
+--   views = nil,        -- Dbg.Views.Setup|nil
+--   usercmds = false,    -- boolean|nil
+--   tools = nil,        -- Dbg.Tools.Modules|nil
+-- })

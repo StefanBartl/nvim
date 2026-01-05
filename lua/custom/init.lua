@@ -73,7 +73,6 @@ require("custom.repo_pickers").enable({
   expose_engine_cmds = false,
   keymaps_lhs = { repo_files = "<leader>rf", repo_grep = "<leader>rg" },
 }, { usercmds = true, keymaps = true })
-require("custom.usr_pickers").enable({}, { usercmds = true, keymaps = true })
 require("custom.pathfinder").setup({})
 local line_marker = require("custom.line_marker")
 line_marker.enable_commands()
