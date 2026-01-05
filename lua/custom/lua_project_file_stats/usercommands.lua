@@ -15,7 +15,7 @@ local schedule = vim.schedule
 ---@return LuaProjectFileStats.Config
 local function parse_cmd_args(args)
   local config = {
-    root_dir = args.args ~= "" and args.args or getcwd(),
+    root_dir = vim.loop.cwd(), -- default auf cwd
     reverse_order = false,
     percent_mode = "both",
     fields_to_print = { "files", "folders", "summary" },
@@ -31,7 +31,6 @@ local function parse_cmd_args(args)
     async = true,
   }
 
-  -- Parse flags from fargs
   for _, flag in ipairs(args.fargs) do
     if flag == "--reverse" then
       config.reverse_order = true
@@ -66,7 +65,7 @@ local function parse_cmd_args(args)
     elseif flag == "-i" or flag == "--interactive" then
       config.interactive = true
     elseif not flag:match("^%-") then
-      config.root_dir = flag
+      config.root_dir = flag -- nur hier überschreiben
     end
   end
 
