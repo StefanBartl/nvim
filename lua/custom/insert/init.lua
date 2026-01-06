@@ -16,6 +16,7 @@
 -- Legacy modules
 -- require("usrcmds.insertfilepath").enable()
 -- require("usrcmds.lua_module_annotation").enable()
+
 local M = {}
 
 local api = vim.api
@@ -38,7 +39,10 @@ local registry = {
 local function safe_call(fn, ...)
   local ok, result = pcall(fn, ...)
   if not ok then
-    vim.notify(string.format("[custom.insert] Error: %s", tostring(result)), vim.log.levels.ERROR)
+    vim.notify(
+      string.format("[custom.insert] Error: %s", tostring(result)),
+      vim.log.levels.ERROR
+    )
   end
   return ok, result
 end
@@ -49,7 +53,10 @@ end
 ---@return nil
 local function register_subcommand(name, def)
   if registry.subcommands[name] then
-    vim.notify(string.format("[custom.insert] Warning: Subcommand '%s' already registered", name), vim.log.levels.WARN)
+    vim.notify(
+      string.format("[custom.insert] Warning: Subcommand '%s' already registered", name),
+      vim.log.levels.WARN
+    )
     return
   end
 
@@ -202,7 +209,6 @@ local function setup_filepath()
     desc = "Insert file path: filepath [mode] [format] [depth]",
   })
 
-  -- Legacy command
   if config.enable_legacy_commands then
     api.nvim_create_user_command("InsertFilePath", function(cmd_opts)
       local opts = filepath.parse_args(cmd_opts.fargs or {}, cmd_opts.count or 0)
@@ -259,7 +265,6 @@ local function setup_annotation()
     desc = "Insert function annotation block",
   })
 
-  -- Legacy command
   if config.enable_legacy_commands then
     api.nvim_create_user_command("LuaModuleAnnotations", function()
       safe_call(annotation.insert_module_annotation)
@@ -348,7 +353,10 @@ local function setup_boilerplate()
   register_subcommand("boilerplate", {
     handler = function(args)
       if #args == 0 then
-        vim.notify("[custom.insert.boilerplate] Usage: boilerplate <template> [name]", vim.log.levels.ERROR)
+        vim.notify(
+          "[custom.insert.boilerplate] Usage: boilerplate <template> [name]",
+          vim.log.levels.ERROR
+        )
         return
       end
 
@@ -357,17 +365,9 @@ local function setup_boilerplate()
       boilerplate.insert_template(template, name)
     end,
     complete = function(arg_lead, cmdline)
-      -- If completing first arg, show templates
       local _, args = parse_command_line(cmdline)
       if #args <= 1 then
-        local templates = {
-          "lua-module",
-          "lua-class",
-          "lua-function",
-          "nvim-autocmd",
-          "nvim-keymap",
-          "guard-clause",
-        }
+        local templates = require("custom.insert.boilerplate.templates.core").list_templates()
         local matches = {}
         for _, t in ipairs(templates) do
           if vim.startswith(t, arg_lead) then
@@ -391,14 +391,12 @@ function M.setup(opts)
     config = vim.tbl_extend("force", config, opts)
   end
 
-  -- Register all subcommands
   setup_filepath()
   setup_annotation()
   setup_timestamp()
   setup_uuid()
   setup_boilerplate()
 
-  -- Create main :Insert command
   api.nvim_create_user_command("Insert", insert_handler, {
     nargs = "*",
     complete = insert_complete,

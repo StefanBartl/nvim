@@ -7,15 +7,6 @@ local M = {}
 
 local api = vim.api
 
----@alias Custom.Insert.Boilerplate.Template
----| "lua-module"    -- Complete Lua module skeleton
----| "lua-class"     -- Lua class with constructor
----| "lua-function"  -- Annotated function template
----| "nvim-autocmd"  -- Neovim autocommand group
----| "nvim-keymap"   -- Neovim keymap with description
----| "guard-clause"  -- Early return guard pattern
-
----Insert lines at cursor
 ---@param lines string[]
 local function insert_lines_at_cursor(lines)
   local win = api.nvim_get_current_win()

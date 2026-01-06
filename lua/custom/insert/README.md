@@ -57,6 +57,12 @@ require("custom.insert").setup({
 * **Timestamps**: Insert dates and times in multiple formats
 * **UUIDs**: Generate and insert UUIDs in different styles
 * **Boilerplate**: Insert common code templates
+* **HTML-Templates**: 7 HTML-Templates integriert
+* **Interaktive Guard-Clause**: Prompt für Bedingung und Negation
+* **Modulare Struktur**: Templates nach Kategorie getrennt
+* **Metadata-Registry**: Zentrale Verwaltung aller Templates mit Beschreibungen
+* **Flexible Prompts**: System für wiederverwendbare Eingabe-Prompts
+* **Template-Listing**: Funktionen zum Auflisten nach Kategorie
 
 ## Available Subcommands
 
@@ -219,12 +225,29 @@ Insert code templates.
 * `nvim-autocmd`: Neovim autocommand group
 * `nvim-keymap`: Neovim keymap with description
 * `guard-clause`: Early return guard pattern
+* `html`
 
 **Examples:**
 ```vim
+" Lua Templates
 :Insert boilerplate lua-module
 :Insert boilerplate lua-class MyClass
+
+" Neovim Templates
 :Insert boilerplate nvim-autocmd MyGroup
+:Insert boilerplate nvim-keymap
+
+" Guard Clause (interaktiv)
+:Insert boilerplate guard-clause
+
+" HTML Templates
+:Insert boilerplate html-figure my-diagram
+:Insert boilerplate html-code snippet-01
+:Insert boilerplate html-quote einstein-quote
+:Insert boilerplate html-formula-table physics-formulas
+:Insert boilerplate html-aside important-note
+:Insert boilerplate html-pagination nav-controls
+:Insert boilerplate html-accordion faq-item
 ```
 
 ## Configuration
@@ -271,6 +294,20 @@ vim.keymap.set("n", "<leader>it", "<Cmd>Insert timestamp iso<CR>", {
 vim.keymap.set("n", "<leader>iu", "<Cmd>Insert uuid<CR>", {
   desc = "Insert UUID"
 })
+```
+
+---
+
+
+## Completion
+
+Die Completion funktioniert für alle Templates:
+    -
+```vim
+:Insert boilerplate <Tab>
+" Zeigt: lua-module, lua-class, lua-function, nvim-autocmd, nvim-keymap,
+"        guard-clause, html-figure, html-code, html-quote, html-formula-table,
+"        html-aside, html-pagination, html-accordion
 ```
 
 ---
