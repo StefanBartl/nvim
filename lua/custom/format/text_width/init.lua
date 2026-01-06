@@ -1,4 +1,4 @@
----@module 'usrcmds.format_text_width'
+---@module 'custom.format.text_width'
 --- Reflow (wrap) text in a buffer or a specified range.
 --- Exports:
 ---   M.reflow_buffer(bufnr, width)        -- reflow entire buffer
@@ -175,7 +175,7 @@ end
 -- Create the original whole-buffer command `:SetTextWidth`
 -- keeps existing behaviour for full-file reflow.
 function M.setup_user_command()
-  vim.api.nvim_create_user_command("SetTextWidth", function(opts)
+  vim.api.nvim_create_user_command("FormatSetTextWidth", function(opts)
     local arg = opts.args
     if not arg or arg == "" then
       print("Usage: :SetTextWidth {N|max}")
@@ -197,18 +197,18 @@ function M.setup_user_command()
     print("Set textwidth to " .. width .. " and reflowed buffer.")
   end, {
     nargs = 1,
-    desc = "Set buffer-local textwidth and reflow entire buffer. Usage: :SetTextWidth {N|max}",
+    desc = "[custom.format.text_width] Set buffer-local textwidth and reflow entire buffer. Usage: :SetTextWidth {N|max}",
   })
 end
 
 -- Create the range / visual command `:SetTextWidthRange`
--- 
+--
 --   - This command accepts a range (e.g. `:10,20SetTextWidthRange 50`) and will only
 --     reflow that line interval.
 --   - It is intended to be used with a visual selection as `:'<,'>SetTextWidthRange 50`.
 --   - If invoked without an explicit range, it will operate on the current line only.
 function M.setup_range_command()
-  vim.api.nvim_create_user_command("SetTextWidthRange", function(opts)
+  vim.api.nvim_create_user_command("FormatSetTextWidthRange", function(opts)
     local arg = opts.args
     if not arg or arg == "" then
       print("Usage: :SetTextWidthRange {N|max} (use visual selection or give a range)")
@@ -238,7 +238,7 @@ function M.setup_range_command()
   end, {
     nargs = 1,
     range = true,
-    desc = "Set buffer-local textwidth and reflow only the given range (use visual).",
+    desc = "[custom.format.text_width] Set buffer-local textwidth and reflow only the given range (use visual).",
   })
 end
 

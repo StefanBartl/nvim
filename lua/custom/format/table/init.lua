@@ -1,4 +1,4 @@
----@module 'usrcmds.format_table'
+---@module 'custom.format.table'
 ---@brief Markdown table formatter with alignment control
 ---@description
 --- This module provides a user command `:FormatTable` to format Markdown tables
@@ -65,7 +65,7 @@ end
 ---Pad string to target width with alignment
 ---@param str string Content to pad
 ---@param width integer Target display width
----@param align UsrCmds.FmtTbl.Alignment Alignment mode
+---@param align Custom.Fmt.FmtTbl.Alignment Alignment mode
 ---@return string padded
 local function pad_cell(str, width, align)
   local content = trim(str)
@@ -174,7 +174,7 @@ end
 ---Find and parse table at cursor position
 ---@param bufnr integer Buffer number
 ---@param cursor_line integer Cursor line (1-indexed)
----@return UsrCmds.FmtTbl.ParsedTable|nil table, string|nil error
+---@return Custom.Fmt.FmtTbl.ParsedTable|nil table, string|nil error
 local function parse_table_at_cursor(bufnr, cursor_line)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return nil, "Invalid buffer"
@@ -319,7 +319,7 @@ end
 ---Format single row with alignment
 ---@param cells string[] Cell contents
 ---@param widths integer[] Column widths
----@param align UsrCmds.FmtTbl.Alignment UsrCmds.FmtTbl.Alignment mode
+---@param align Custom.Fmt.FmtTbl.Alignment Custom.Fmt.FmtTbl.Alignment mode
 ---@return string formatted_row
 local function format_row(cells, widths, align)
   local formatted = {}
@@ -333,9 +333,9 @@ local function format_row(cells, widths, align)
 end
 
 ---Format entire table
----@param parsed UsrCmds.FmtTbl.ParsedTable Parsed table data
----@param header_align UsrCmds.FmtTbl.Alignment Header alignment
----@param entry_align UsrCmds.FmtTbl.Alignment Entry alignment
+---@param parsed Custom.Fmt.FmtTbl.ParsedTable Parsed table data
+---@param header_align Custom.Fmt.FmtTbl.Alignment Header alignment
+---@param entry_align Custom.Fmt.FmtTbl.Alignment Entry alignment
 ---@return string[] formatted_lines
 local function format_table(parsed, header_align, entry_align)
   local widths = calculate_column_widths(parsed.rows, parsed.col_count)
@@ -361,7 +361,7 @@ end
 
 ---Validate alignment argument
 ---@param arg string User input
----@return UsrCmds.FmtTbl.Alignment|nil alignment, string|nil error
+---@return Custom.Fmt.FmtTbl.Alignment|nil alignment, string|nil error
 local function validate_alignment(arg)
   if type(arg) ~= "string" then
     return nil, "Alignment must be a string"
@@ -452,7 +452,7 @@ end
 -- ============================================================================
 
 ---Setup the module and register command
----@param opts UsrCmds.FmtTbl.Cfg|nil Optional configuration
+---@param opts Custom.Fmt.FmtTbl.Cfg|nil Optional configuration
 function M.setup(opts)
   if opts and type(opts) == "table" then
     if opts.header_align then

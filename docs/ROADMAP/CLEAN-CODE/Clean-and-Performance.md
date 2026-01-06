@@ -50,4 +50,20 @@
 1. (Debugging CONFIGURATION-EXAMPLE update)[../../../lua/debugging/docs/CONFIGURATION-EXAMPLE.md]
 2. (Debugging :h update)[../../../lua/debugging/doc/debugging.txt]
 
+## doc/
+
+- lua\custom\format\column_align\
+- lua\custom\format\filter_lines\a
+- lua\custom\format\table\
+- lua\custom\format\text_width\
+- lua\custom\format\misc\
+
+--
+
+## README
+
+- lua\custom\format\filter_lines\a
+- lua\custom\format\text_width\
+- lua\custom\format\misc\
+
 ---

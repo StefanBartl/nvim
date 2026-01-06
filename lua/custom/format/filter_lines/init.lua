@@ -1,10 +1,10 @@
----@module 'usrcmds.filter_lines'
+---@module 'custom.format.filter_lines'
 --- Provides a user command to keep or remove lines containing specified strings
 --- or sets of strings (OR-groups) in the current buffer.
 --- Usage examples:
----   :FilterLines foo { "bar","baz" }        -- keep lines that contain "foo" AND ( "bar" OR "baz" )
----   :FilterLines --remove foo               -- remove lines that contain "foo"
----   :FilterLines --remove { 'a','b' }       -- remove lines that contain "a" OR "b"
+---   :FormatFilterLines foo { "bar","baz" }        -- keep lines that contain "foo" AND ( "bar" OR "baz" )
+---   :FormatFilterLines --remove foo               -- remove lines that contain "foo"
+---   :FormatFilterLines --remove { 'a','b' }       -- remove lines that contain "a" OR "b"
 local M = {}
 
 -- Helper function to determine if a line matches a condition.
@@ -55,7 +55,7 @@ local function parse_argument(arg)
 end
 
 function M.enable()
-    vim.api.nvim_create_user_command("FilterLines", function(opts)
+    vim.api.nvim_create_user_command("FormatFilterLines", function(opts)
         if #opts.fargs == 0 then
             vim.notify("filter_lines: no arguments provided", vim.log.levels.WARN)
             return
@@ -133,7 +133,7 @@ function M.enable()
     end, {
         nargs = "+",
         complete = nil,
-        desc = "Keep or remove lines containing all specified strings or any from OR-groups (use --remove or -r to remove instead of keep)",
+        desc = "[custom.format.filter_lines] Keep or remove lines containing all specified strings or any from OR-groups (use --remove or -r to remove instead of keep)",
     })
 end
 

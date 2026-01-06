@@ -1,4 +1,4 @@
----@module 'custom.column_align'
+---@module 'custom.format.column_align'
 --- Align visually selected character to a target column with a fill character.
 --- This module sets up the keymap and user commands that call the core implementation.
 
@@ -46,7 +46,7 @@ function M.setup()
   local o = (type(bufnr) == "number") and { buffer = bufnr } or nil
 
   -- Column alignment (visual mode) --------------------------------------------
-  local ok_col, column_align = pcall(require, "usrcmds.column_align.core")
+  local ok_col, column_align = pcall(require, "custom.format.column_align.core")
   if ok_col and column_align and type(column_align.align_interactive) == "function" then
     map("x", "<leader>ac", column_align.align_interactive, "[custom.ColumnAlign] Align character to column", o)
   end
@@ -80,16 +80,16 @@ function M.setup()
     end, { nargs = 0, desc = "Prompt for target column and fill char, align selected character" })
   end
 
-  -- Command: ColumnAlignToColumn
+  -- Command: FormatColumnAlignToColumn
   -- Usage:
-  --   :ColumnAlignToColumn <target_col> [fill_char]
+  --   :FormatColumnAlignToColumn <target_col> [fill_char]
   -- Examples:
-  --   :ColumnAlignToColumn 40
-  --   :ColumnAlignToColumn 40 _
+  --   :FormatColumnAlignToColumn 40
+  --   :FormatColumnAlignToColumn 40 _
   -- This command expects the user to have a visual selection of a single character.
   if ok_col and type(column_align.align_to_column) == "function" then
     create_command(
-      "ColumnAlignToColumn",
+      "FormatColumnAlignToColumn",
       function(cmd_args)
         local args = cmd_args.fargs or {}
         if #args < 1 then

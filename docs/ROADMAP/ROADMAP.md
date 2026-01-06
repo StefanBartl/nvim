@@ -32,25 +32,27 @@ ein einziges :Neotest Dispatcher-Command bauen
 oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
 - `config.neotest.neotree` einbinden in neotree
 
-### format sammelmodul
+### insert commands und mappiunmgs sammeln
 
-Verschiedene formatierungs usercommands und keymaps sammeln, zb.:
- `custom.align_colum`:
-    * Unterstützung für Multibyte-Zeichen
-    * Wiederholung der letzten Zielspalte
-    * Integration in Operator-Mappings
-    * Ausrichtung mehrerer markierter Zeichen
-    * Multiselect: also mit ctrl-v mehrere start punkt markieren bzw.: echte markierungen und dort werden dann auf einmal alle ausgefphrt
- `usrcmds.format_table`
- `usrcmds.filter_lines`
- `usrcmds.format_text_width`
- `usrcmds.misc`: :BufferClear
-
-insert commands und mappiunmgs sammeln:
   - usrcmds.insertfilepath
   - usrcmds.lua_module_annotation
 
+---
+
+### usrcmds.migrate opts und notify mergen
+
 --
+
+## `custom.format.text_width`
+
+1. Limitationen: Hyphenation (geteilt mit -) und komplexe Worttrennungsregeln sind nicht implementiert. Listen- und Bullet-Erkennung ist eine einfache Heuristik: einfache Bullet-Marker wie - , * , + oder 1. werden auf der ersten Zeile beibehalten; Fortsetzungen werden passend eingerückt.
+2. Erweiterungen, die man später leicht hinzufügen kann:
+    - Bessere List- und Codeblock-Erkennung (z. B. Markdown-Codeblöcke ausschließen).
+    - Hyphenation mittels externem Dienst oder Wörterbuch.
+    - ? Buffer-locales Autowrap beim Tippen (z. B. über autocmd BufEnter,BufWinEnter + formatoptions oder textwidth während Insert).
+    - SUPER: Verbinden mit marksman format + der Idee, dass man in codeblöcken lsp callt
+
+---
 
 ## neotree
 

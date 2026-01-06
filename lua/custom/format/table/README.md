@@ -241,7 +241,7 @@ The module provides clear error messages for common issues:
 
 Scans up and down from cursor to find table boundaries, validates structure, and extracts cells.
 
-**Returns**: `UsrCmds.FmtTbl.ParsedTable` object with:
+**Returns**: `Custom.Fmt.FmtTbl.ParsedTable` object with:
 - `start_line`: First line of table (1-indexed)
 - `end_line`: Last line of table
 - `rows`: Array of cell arrays
