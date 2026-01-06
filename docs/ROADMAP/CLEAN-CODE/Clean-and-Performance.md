@@ -11,7 +11,7 @@
 
 ## Syntax
 
-1. [lib lazy](.\lua\lib\lazy\README.md) implementieren
+1. [lib lazy](../../../lua/lib/lazy/README.md) implementieren
 2. local funktionen statt exportieren, sofern keine externe Referenz! Alle files durchgehen!
 3. namespace von typen explizit einschränken: `recommender -r` nutzen
 4. notify-lib implementieren.

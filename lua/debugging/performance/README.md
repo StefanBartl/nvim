@@ -1,322 +1,407 @@
 # Neovim Startup Benchmarking
 
-Automatisierte Benchmarking-Tools zur Messung der Neovim-Startzeit und UI-Enter-Zeit mit statistischer Auswertung.
+Automated benchmarking tools to measure Neovim startup time, UI enter time, memory usage, and plugin performance with statistical analysis.
 
 ## Table of content
 
+- [Neovim Startup Benchmarking](#neovim-startup-benchmarking)
   - [📊 Features](#features)
-  - [📁 Struktur](#struktur)
+  - [📁 Structure](#structure)
   - [🚀 Installation](#installation)
-    - [1. Skripte platzieren](#1-skripte-platzieren)
-    - [2. Skript ausführbar machen (Linux/macOS)](#2-skript-ausfhrbar-machen-linuxmacos)
-  - [💻 Verwendung](#verwendung)
-    - [Windows (PowerShell)](#windows-powershell)
-    - [Linux/macOS (zsh)](#linuxmacos-zsh)
-  - [📈 Beispiel-Output](#beispiel-output)
-  - [📊 Metriken erklärt](#metriken-erklrt)
-    - [Startup Time](#startup-time)
-    - [UI Enter Time](#ui-enter-time)
-    - [Warum ist Run 1 oft langsamer?](#warum-ist-run-1-oft-langsamer)
-  - [🔧 Konfiguration](#konfiguration)
-    - [Lua-Skript anpassen](#lua-skript-anpassen)
-    - [Eigene Metriken hinzufügen](#eigene-metriken-hinzufgen)
+    - [1. Load the Module](#1-load-the-module)
+    - [2. Make Scripts Executable (Linux/macOS)](#2-make-scripts-executable-linuxmacos)
+    - [3. Verify Installation](#3-verify-installation)
+  - [💻 Usage](#usage)
+    - [Commands](#commands)
+    - [Examples](#examples)
+    - [Command-Line Usage](#command-line-usage)
+      - [Windows (PowerShell)](#windows-powershell)
+- [Standard: 15 runs with warmup](#standard-15-runs-with-warmup)
+- [Custom runs](#custom-runs)
+- [With debug output](#with-debug-output)
+- [Without warmup](#without-warmup)
+- [Combined](#combined)
+      - [Linux/macOS (zsh)](#linuxmacos-zsh)
+- [Standard: 15 runs with warmup](#standard-15-runs-with-warmup-1)
+- [Custom runs](#custom-runs-1)
+- [With debug output](#with-debug-output-1)
+- [Without warmup](#without-warmup-1)
+- [Combined](#combined-1)
+  - [📈 Understanding Results](#understanding-results)
+    - [Output Format](#output-format)
+    - [Metrics Explained](#metrics-explained)
+    - [Why is Run 1 Often Slower?](#why-is-run-1-often-slower)
+  - [📊 HTML Reports](#html-reports)
+  - [🔧 Configuration](#configuration)
+    - [Customizing Measurement Logic](#customizing-measurement-logic)
+    - [Adjusting Thresholds](#adjusting-thresholds)
   - [🐛 Troubleshooting](#troubleshooting)
-    - [Problem: Skript bleibt hängen](#problem-skript-bleibt-hngen)
-    - [Problem: "No valid output"](#problem-no-valid-output)
-    - [Problem: UI Enter Time unrealistisch hoch](#problem-ui-enter-time-unrealistisch-hoch)
-    - [Problem: Timeout bei jedem Run](#problem-timeout-bei-jedem-run)
+    - [Problem: Runs Fail with "TIMEOUT"](#problem-runs-fail-with-timeout)
+    - [Problem: HTML Shows All Zeros](#problem-html-shows-all-zeros)
+    - [Problem: Scripts Not Found](#problem-scripts-not-found)
+    - [Problem: Permission Denied (Linux/macOS)](#problem-permission-denied-linuxmacos)
   - [📚 Best Practices](#best-practices)
-    - [Empfohlene Workflow](#empfohlene-workflow)
-    - [Optimierungs-Tipps](#optimierungs-tipps)
-  - [🎯 Zielwerte](#zielwerte)
-  - [📦 CSV-Export](#csv-export)
+    - [Recommended Workflow](#recommended-workflow)
+    - [Optimization Tips](#optimization-tips)
+  - [🎯 Target Values](#target-values)
+  - [📦 Data Export](#data-export)
+    - [CSV Format](#csv-format)
+    - [JSON Metadata](#json-metadata)
+    - [Analysis with Python/Pandas](#analysis-with-pythonpandas)
+- [Load data](#load-data)
+- [Visualize](#visualize)
   - [🤝 Contributing](#contributing)
-  - [🔗 Siehe auch](#siehe-auch)
+  - [🔗 See Also](#see-also)
+  - [📄 License](#license)
 
 ---
 
 ## 📊 Features
 
-- **Automatisierte Messungen**: Führt N Benchmark-Runs automatisch durch
-- **Warmup-Run**: Optional vorgelagerter Warmup-Lauf für stabilere Ergebnisse
-- **Statistische Auswertung**: Berechnet Mean, Median, Min, Max und Standardabweichung
-- **CSV-Export**: Exportiert Rohdaten für weitere Analysen
-- **Timeout-Protection**: Automatisches Killing von hängenden Prozessen
-- **Debug-Modus**: Zeigt detaillierte Neovim-Ausgaben für Troubleshooting
-- **Cross-Platform**: Unterstützt Windows (PowerShell) und Unix (zsh)
+- **Automated Measurements**: Runs N benchmark iterations automatically
+- **Warmup Run**: Optional warmup to stabilize filesystem/plugin caches
+- **Statistical Analysis**: Calculates Mean, Median, Min, Max, and Standard Deviation
+- **CSV Export**: Exports raw data for further analysis
+- **HTML Reports**: Beautiful visual reports with historical comparisons
+- **Memory Tracking**: Monitors memory usage during startup
+- **Plugin Profiling**: Identifies slow-loading plugins (>10ms)
+- **Timeout Protection**: Automatically kills hanging processes
+- **Debug Mode**: Shows detailed Neovim output for troubleshooting
+- **Cross-Platform**: Supports Windows (PowerShell) and Unix (zsh)
 
-## 📁 Struktur
+## 📁 Structure
 
 ```
-debugging/performance/scripts/
-├── benchmark_nvim.ps1              # PowerShell-Skript (Windows)
-├── benchmark_nvim.sh               # zsh-Skript (Linux/macOS)
-├── benchmark_startup.lua           # Lua-Messskript für Neovim
-└── README.md                       # Diese Datei
+lua/debugging/performance/
+├── init.lua                    # Main module with commands
+├── scripts/
+│   ├── benchmark_nvim.ps1      # PowerShell script (Windows)
+│   ├── benchmark_nvim.sh       # zsh script (Linux/macOS)
+│   └── benchmark_startup.lua   # Lua measurement script
+└── results/
+    ├── csv/                    # CSV data + JSON metadata
+    └── html/                   # HTML reports
 ```
 
 ## 🚀 Installation
 
-### 1. Skripte platzieren
+### 1. Load the Module
 
-```bash
-# Linux/macOS
-mkdir -p ~/.config/nvim/lua/debugging/performance/scripts
-cd ~/.config/nvim/lua/debugging/performance/scripts
+In your `init.lua`:
 
-# Windows
-mkdir $env:USERPROFILE\AppData\Local\nvim\lua\debugging\performance\scripts
-cd $env:USERPROFILE\AppData\Local\nvim\lua\debugging\performance\scripts
+```lua
+-- Load performance benchmarking
+require('debugging.performance').setup()
 ```
 
-### 2. Skript ausführbar machen (Linux/macOS)
+### 2. Make Scripts Executable (Linux/macOS)
 
 ```bash
-chmod +x benchmark_nvim.sh
+chmod +x ~/.config/nvim/lua/debugging/performance/scripts/benchmark_nvim.sh
 ```
 
-## 💻 Verwendung
+### 3. Verify Installation
 
-### Windows (PowerShell)
+```vim
+:BenchmarkTest
+```
+
+This will check if all components are properly installed.
+
+## 💻 Usage
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `:BenchmarkRun [n]` | Run benchmark with n iterations (default: 15) |
+| `:BenchmarkRunDebug [n]` | Run benchmark with debug output |
+| `:BenchmarkHtml` | Generate HTML report from existing results |
+| `:BenchmarkTest` | Verify installation and show diagnostics |
+
+### Examples
+
+```vim
+" Standard benchmark with 15 runs
+:BenchmarkRun
+
+" Quick benchmark with 5 runs
+:BenchmarkRun 5
+
+" Debug mode to troubleshoot issues
+:BenchmarkRunDebug 5
+
+" Generate HTML report
+:BenchmarkHtml
+```
+
+### Command-Line Usage
+
+#### Windows (PowerShell)
 
 ```powershell
-# Standard: 15 Runs mit Warmup
+# Standard: 15 runs with warmup
 .\benchmark_nvim.ps1
 
-# Custom Anzahl Runs
+# Custom runs
 .\benchmark_nvim.ps1 -Runs 20
 
-# Mit Debug-Output
+# With debug output
 .\benchmark_nvim.ps1 -Runs 5 -Debug
 
-# Ohne Warmup
+# Without warmup
 .\benchmark_nvim.ps1 -Runs 10 -SkipWarmup
 
-# Kombiniert
+# Combined
 .\benchmark_nvim.ps1 -Runs 5 -Debug -SkipWarmup
 ```
 
-### Linux/macOS (zsh)
+#### Linux/macOS (zsh)
 
 ```bash
-# Standard: 15 Runs mit Warmup
+# Standard: 15 runs with warmup
 ./benchmark_nvim.sh
 
-# Custom Anzahl Runs
+# Custom runs
 ./benchmark_nvim.sh 20
 
-# Mit Debug-Output
+# With debug output
 ./benchmark_nvim.sh 5 --debug
 
-# Ohne Warmup
+# Without warmup
 ./benchmark_nvim.sh 10 --skip-warmup
 
-# Kombiniert
+# Combined
 ./benchmark_nvim.sh 5 --debug --skip-warmup
 ```
 
-## 📈 Beispiel-Output
+## 📈 Understanding Results
+
+### Output Format
 
 ```
-Running warmup...
-Warmup complete
-
-Starting 5 benchmark runs...
-
-Run 1/5... Startup: 1682.73ms, UI Enter: 756.27ms
-Run 2/5... Startup: 639.93ms, UI Enter: 612.80ms
-Run 3/5... Startup: 635.72ms, UI Enter: 608.39ms
-Run 4/5... Startup: 635.77ms, UI Enter: 609.25ms
-Run 5/5... Startup: 625.87ms, UI Enter: 605.24ms
+Run 1/15... Startup=652.75ms UI=1003.34ms Memory=745.53KB Plugins=127
+Run 2/15... Startup=629.43ms UI=1003.62ms Memory=257.90KB Plugins=127
+...
 
 === Results ===
 
 Startup Time (ms):
-  Mean:   844.00
-  Median: 635.77
-  Min:    625.87
-  Max:    1682.73
-  StdDev: 419.39
+  Mean:   631.29
+  Median: 629.43
+  Min:    616.36
+  Max:    652.75
+  StdDev: 9.23
 
 UI Enter Time (ms):
-  Mean:   638.39
-  Median: 609.25
-  Min:    605.24
-  Max:    756.27
-  StdDev: 60.12
+  Mean:   997.97
+  Median: 997.38
+  Min:    986.51
+  Max:    1011.19
+  StdDev: 7.11
 
-=== Raw Data ===
-Run 1: Startup=1682.73ms, UIEnter=756.27ms
-Run 2: Startup=639.93ms, UIEnter=612.80ms
-Run 3: Startup=635.72ms, UIEnter=608.39ms
-Run 4: Startup=635.77ms, UIEnter=609.25ms
-Run 5: Startup=625.87ms, UIEnter=605.24ms
-
-CSV exported: ./nvim_benchmark_20260105_093748.csv
+Memory Usage (KB):
+  Mean:   425.67
+  Median: 398.97
+  Min:    196.41
+  Max:    745.53
+  StdDev: 156.32
 ```
 
-## 📊 Metriken erklärt
+### Metrics Explained
 
-### Startup Time
-Die **Gesamtstartzeit** von Neovim, gemessen vom Start bis zur vollständigen Initialisierung aller Plugins. Dies wird aus der `--startuptime`-Datei extrahiert oder von Lazy.nvim bereitgestellt.
+| Metric | Description | Typical Values |
+|--------|-------------|----------------|
+| **Startup Time** | Total time from launch to full initialization | < 500ms is good |
+| **UI Enter Time** | Time until UI is ready for interaction | Usually higher than startup |
+| **Memory Usage** | Memory allocated during startup | Depends on plugin count |
+| **StdDev** | Consistency of measurements | Lower = more consistent |
 
-**Typische Werte:**
-- ⚡ **< 50ms**: Exzellent (minimale Config, wenige Plugins)
-- ✅ **50-200ms**: Gut (moderate Config)
-- ⚠️ **200-500ms**: Akzeptabel (viele Plugins)
-- 🐌 **> 500ms**: Optimierung empfohlen
+### Why is Run 1 Often Slower?
 
-### UI Enter Time
-Die Zeit bis zum **UIEnter-Event** - wenn Neovim bereit ist, UI-Operationen durchzuführen. Dies ist oft früher als die totale Startup-Zeit, da viele Plugins lazy-loaded werden.
+The first run is typically 2-3x slower because:
+- Filesystem caches are cold
+- Plugins load for the first time
+- Lua bytecode gets compiled
 
-**Interpretation:**
-- Niedrigere UI Enter Time = Schnellere initiale Reaktionsfähigkeit
-- Große Differenz zu Startup Time = Viel lazy-loading (gut für Performance)
+**Solution**: The warmup run mitigates this issue.
 
-### Warum ist Run 1 oft langsamer?
+## 📊 HTML Reports
 
-Der erste Run ist häufig 2-3x langsamer als die folgenden, da:
-- Dateisystem-Caches noch nicht warm sind
-- Plugins zum ersten Mal geladen werden
-- Lua-Bytecode kompiliert wird
+HTML reports provide:
+- Visual statistics cards
+- Historical comparisons with previous benchmarks
+- Slow plugin identification
+- Trend analysis
 
-**Lösung:** Deshalb führen wir einen Warmup-Run durch!
+Generate a report:
 
-## 🔧 Konfiguration
-
-### Lua-Skript anpassen
-
-Das Lua-Skript `benchmark_startup.lua` verwendet mehrere Messmethoden:
-
-1. **Lazy.nvim Stats** (wenn verfügbar)
-2. **--startuptime Datei** (Fallback)
-3. **vim.loop.hrtime()** (für UI Enter Time)
-
-Bei Bedarf kannst du die Priorität ändern oder zusätzliche Metriken hinzufügen.
-
-### Eigene Metriken hinzufügen
-
-```lua
--- In benchmark_startup.lua
-local custom_metric = 0.0
-
--- Deine Messung hier
-pcall(function()
-  -- Beispiel: Plugin-Ladezeit
-  local my_plugin = require("my_plugin")
-  if my_plugin.stats then
-    custom_metric = my_plugin.stats.load_time
-  end
-end)
-
--- Output erweitern
-io.write(string.format("%.2f,%.2f,%.2f\n",
-  startup_time, ui_enter_time, custom_metric))
+```vim
+:BenchmarkHtml
 ```
+
+Then select a CSV file from the picker.
+
+## 🔧 Configuration
+
+### Customizing Measurement Logic
+
+Edit `scripts/benchmark_startup.lua` to:
+- Change measurement methods
+- Add custom metrics
+- Adjust timeout values
+- Modify plugin detection logic
+
+### Adjusting Thresholds
+
+In PowerShell/zsh scripts:
+- `TIMEOUT`: Maximum time per run (default: 5s)
+- `RUNS`: Default number of iterations
+- Slow plugin threshold: Currently hardcoded to 10ms
 
 ## 🐛 Troubleshooting
 
-### Problem: Skript bleibt hängen
+### Problem: Runs Fail with "TIMEOUT"
 
-**Lösung:**
-1. Verwende Debug-Modus: `-Debug` (PowerShell) oder `--debug` (zsh)
-2. Prüfe, ob Neovim plugins auf Input warten
-3. Teste mit minimal config: `nvim --clean`
+**Causes:**
+- Plugins waiting for network/input
+- Infinite loops in configuration
+- Very slow plugins
 
+**Solutions:**
+
+1. **Increase Timeout**:
+   ```vim
+   " In benchmark_nvim.ps1 or .sh
+   TIMEOUT=10  # Increase to 10 seconds
+   ```
+
+2. **Run Debug Mode**:
+   ```vim
+   :BenchmarkRunDebug 3
+   ```
+
+3. **Check Startup Time Manually**:
+   ```bash
+   nvim --startuptime startup.log +quit
+   less startup.log
+   ```
+
+### Problem: HTML Shows All Zeros
+
+**Cause**: CSV parsing issue with decimal separators (comma vs. dot)
+
+**Fixed in**: Latest version handles both formats automatically
+
+**Verification**:
+```vim
+:BenchmarkTest
+" Check if CSV files exist and are readable
+```
+
+### Problem: Scripts Not Found
+
+**Cause**: Incorrect path or module not loaded
+
+**Solution**:
+```lua
+-- In init.lua
+require('debugging.performance').setup()
+```
+
+Then verify:
+```vim
+:BenchmarkTest
+```
+
+### Problem: Permission Denied (Linux/macOS)
+
+**Solution**:
 ```bash
-# Test ohne Config
-nvim --clean --headless -c "lua print('test'); vim.cmd('qa!')"
+chmod +x ~/.config/nvim/lua/debugging/performance/scripts/benchmark_nvim.sh
 ```
-
-### Problem: "No valid output"
-
-**Ursachen:**
-- Lua-Skript-Pfad falsch
-- Lua-Fehler im Skript
-- Neovim-Version zu alt (< 0.5)
-
-**Debug:**
-```powershell
-# Manueller Test (Windows)
-$env:NVIM_STARTUPTIME_FILE="$env:TEMP\test.txt"
-nvim --headless --startuptime "$env:TEMP\test.txt" `
-     -c "luafile $env:USERPROFILE\AppData\Local\nvim\lua\debugging\performance\scripts\benchmark_startup.lua"
-```
-
-```bash
-# Manueller Test (Linux/macOS)
-export NVIM_STARTUPTIME_FILE="/tmp/test.txt"
-nvim --headless --startuptime /tmp/test.txt \
-     -c "luafile ~/.config/nvim/lua/debugging/performance/scripts/benchmark_startup.lua"
-```
-
-### Problem: UI Enter Time unrealistisch hoch
-
-**Ursache:** Alte Version des Lua-Skripts verwendet `reltimefloat()` statt `vim.loop.hrtime()`
-
-**Lösung:** Aktualisiere `benchmark_startup.lua` auf die neueste Version.
-
-### Problem: Timeout bei jedem Run
-
-**Ursachen:**
-- Plugin wartet auf Netzwerk/Input
-- Infinite Loop in Config
-- Sehr langsame Plugins
-
-**Lösung:**
-1. Erhöhe Timeout im Skript (Zeile `TIMEOUT=5` → `TIMEOUT=10`)
-2. Identifiziere langsame Plugins: `nvim --startuptime startup.log`
-3. Deaktiviere verdächtige Plugins temporär
 
 ## 📚 Best Practices
 
-### Empfohlene Workflow
+### Recommended Workflow
 
-1. **Baseline erstellen**
-   ```bash
-   ./benchmark_nvim.sh 20 > baseline.txt
+1. **Establish Baseline**:
+   ```vim
+   :BenchmarkRun 20
+   ```
+   Save this as your reference point.
+
+2. **Make Configuration Changes**:
+   - Install new plugins
+   - Modify settings
+   - Change lazy-loading strategy
+
+3. **Re-Benchmark**:
+   ```vim
+   :BenchmarkRun 20
    ```
 
-2. **Config-Änderungen testen**
-   ```bash
-   # Nach Plugin-Installation/Konfiguration
-   ./benchmark_nvim.sh 20 > after_changes.txt
+4. **Compare Results**:
+   ```vim
+   :BenchmarkHtml
    ```
+   Select the new benchmark to see % differences.
 
-3. **Vergleichen**
-   ```bash
-   diff baseline.txt after_changes.txt
-   ```
+### Optimization Tips
 
-### Optimierungs-Tipps
+- **Enable Lazy Loading**: Use Lazy.nvim's `lazy = true`
+- **Event-Based Loading**: `event = "BufReadPost"` instead of eager loading
+- **Audit Plugins**: Remove unused plugins
+- **Profile Deeply**: Use `nvim --startuptime` for detailed analysis
+- **Check Memory**: High memory usage might indicate leaks
 
-- **Lazy-loading aktivieren**: Nutze Lazy.nvim's `lazy = true`
-- **Event-based loading**: `event = "BufReadPost"` statt eager loading
-- **Plugin-Audit**: Entferne ungenutzte Plugins
-- **Startuptime analysieren**: `nvim --startuptime startup.log` für Details
+## 🎯 Target Values
 
-## 🎯 Zielwerte
+| Scenario | Target Startup | Target Memory |
+|----------|----------------|---------------|
+| Minimal Config | < 50ms | < 10MB |
+| IDE Replacement | < 200ms | < 50MB |
+| Full-Featured | < 500ms | < 100MB |
 
-Je nach Use-Case:
+## 📦 Data Export
 
-| Szenario | Ziel Startup Time |
-|----------|-------------------|
-| Minimal-Config | < 50ms |
-| IDE-Ersatz | < 200ms |
-| Full-Featured | < 500ms |
+### CSV Format
 
-## 📦 CSV-Export
+```csv
+"Run","Startup","UIEnter","Memory"
+"1","652.75","1003.34","745.53"
+"2","629.43","1003.62","257.90"
+...
+```
 
-Die CSV-Dateien enthalten alle Rohdaten und können mit Tools wie Excel, R, Python/Pandas analysiert werden:
+### JSON Metadata
+
+```json
+{
+  "timestamp": "20260105_231325",
+  "runs": 15,
+  "startup": {
+    "mean": 697.47,
+    "median": 672.41,
+    "min": 649.46,
+    "max": 795.59,
+    "stddev": 57.96
+  },
+  "uienter": { ... },
+  "memory": { ... }
+}
+```
+
+### Analysis with Python/Pandas
 
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Daten laden
-df = pd.read_csv('nvim_benchmark_20260105_093748.csv')
+# Load data
+df = pd.read_csv('nvim_benchmark_20260105_231325.csv')
 
-# Visualisieren
+# Visualize
 df.plot(x='Run', y=['Startup', 'UIEnter'], kind='line')
 plt.ylabel('Time (ms)')
 plt.title('Neovim Startup Performance')
@@ -325,16 +410,25 @@ plt.show()
 
 ## 🤝 Contributing
 
-Mögliche Erweiterungen:
+Potential enhancements:
+- [ ] Track plugin initialization order
+- [ ] Memory leak detection
+- [ ] CI/CD integration
+- [ ] Comparison mode for A/B testing
+- [ ] Historical trend graphs
+- [ ] Export to other formats (JSON, SQLite)
 
-- [ ] Memory-Usage-Tracking
-- [ ] Plugin-spezifisches Profiling
-- [ ] HTML-Report-Generator
-- [ ] Vergleichs-Modus für A/B-Tests
-- [ ] CI/CD-Integration
+## 🔗 See Also
 
-## 🔗 Siehe auch
-
+- `:help performance` - This help file
 - [Neovim Startup Time Guide](https://neovim.io/doc/user/starting.html#--startuptime)
 - [Lazy.nvim Performance Tips](https://github.com/folke/lazy.nvim#-performance)
-- [Profiling Neovim Startup](https://neovim.io/doc/user/lua.html#lua-profile)
+- [Profiling Neovim](https://neovim.io/doc/user/lua.html#lua-profile)
+
+## 📄 License
+
+Part of the Neovim configuration. See main repository for license.
+
+---
+
+**Quick Start**: `:BenchmarkRun` → Wait → `:BenchmarkHtml` → Enjoy! 🚀

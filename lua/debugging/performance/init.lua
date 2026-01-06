@@ -12,6 +12,13 @@ local config = {
   default_runs = 15,
 }
 
+-- Pass config paths to shell scripts via environment variables
+local function set_env_paths()
+  vim.env.NVIM_BENCHMARK_RESULTS_DIR = config.results_dir
+  vim.env.NVIM_BENCHMARK_CSV_DIR = config.csv_dir
+  vim.env.NVIM_BENCHMARK_HTML_DIR = config.html_dir
+end
+
 -- Ensure directories exist
 local function ensure_dirs()
   for _, dir in ipairs({ config.results_dir, config.csv_dir, config.html_dir }) do
@@ -33,6 +40,7 @@ function M.run_benchmark(opts)
   local debug = opts.debug or false
 
   ensure_dirs()
+  set_env_paths()  -- Pass paths to shell scripts
 
   local script = get_benchmark_script()
   if vim.fn.filereadable(script) ~= 1 then
@@ -703,14 +711,36 @@ function M.setup()
     vim.notify("🔍 Benchmark Test Results:", vim.log.levels.INFO)
     vim.notify("  Script exists: " .. (vim.fn.filereadable(script) == 1 and "✅" or "❌ " .. script), vim.log.levels.INFO)
     vim.notify("  Lua script exists: " .. (vim.fn.filereadable(lua_script) == 1 and "✅" or "❌ " .. lua_script), vim.log.levels.INFO)
-    vim.notify("  CSV dir exists: " .. (vim.fn.isdirectory(config.csv_dir) == 1 and "✅" or "❌ " .. config.csv_dir), vim.log.levels.INFO)
-    vim.notify("  HTML dir exists: " .. (vim.fn.isdirectory(config.html_dir) == 1 and "✅" or "❌ " .. config.html_dir), vim.log.levels.INFO)
+    vim.notify("  Results dir: " .. (vim.fn.isdirectory(config.results_dir) == 1 and "✅" or "❌") .. " " .. config.results_dir, vim.log.levels.INFO)
+    vim.notify("  CSV dir: " .. (vim.fn.isdirectory(config.csv_dir) == 1 and "✅" or "❌") .. " " .. config.csv_dir, vim.log.levels.INFO)
+    vim.notify("  HTML dir: " .. (vim.fn.isdirectory(config.html_dir) == 1 and "✅" or "❌") .. " " .. config.html_dir, vim.log.levels.INFO)
 
     -- Count existing benchmarks
     local files = get_benchmark_files()
     vim.notify("  Existing benchmarks: " .. #files, vim.log.levels.INFO)
+
+    -- Show environment variables
+    vim.notify("\nEnvironment Variables:", vim.log.levels.INFO)
+    vim.notify("  NVIM_BENCHMARK_RESULTS_DIR: " .. (vim.env.NVIM_BENCHMARK_RESULTS_DIR or "not set"), vim.log.levels.INFO)
+    vim.notify("  NVIM_BENCHMARK_CSV_DIR: " .. (vim.env.NVIM_BENCHMARK_CSV_DIR or "not set"), vim.log.levels.INFO)
+    vim.notify("  NVIM_BENCHMARK_HTML_DIR: " .. (vim.env.NVIM_BENCHMARK_HTML_DIR or "not set"), vim.log.levels.INFO)
   end, {
     desc = "Test benchmark setup and show diagnostics",
+  })
+
+  vim.api.nvim_create_user_command("BenchmarkDebugPaths", function()
+    print("Benchmark Paths:")
+    print("  stdpath(config): " .. vim.fn.stdpath("config"))
+    print("  results_dir: " .. config.results_dir)
+    print("  csv_dir: " .. config.csv_dir)
+    print("  html_dir: " .. config.html_dir)
+    print("\nCSV Files:")
+    local files = get_benchmark_files()
+    for i, file in ipairs(files) do
+      print(string.format("  %d. %s", i, file))
+    end
+  end, {
+    desc = "Show all benchmark paths and files",
   })
 end
 

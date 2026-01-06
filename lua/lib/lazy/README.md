@@ -10,7 +10,10 @@ erst dann zu laden, wenn sie tatsächlich benötigt werden.
 
 ## Table of content
 
+- [lib.lazy – Wiederverwendbares Lazy-Loading für Neovim](#liblazy-wiederverwendbares-lazy-loading-fr-neovim)
   - [Motivation](#motivation)
+    - [Lade- und Cache-Verhalten](#lade-und-cache-verhalten)
+    - [Konsequenzen](#konsequenzen)
   - [API](#api)
     - [lazy.module(name)](#lazymodulename)
     - [lazy.fn(module, function_name)](#lazyfnmodule-function_name)
@@ -39,6 +42,38 @@ Das bedeutet:
 * Startup-Zeit und Speicherverbrauch steigen mit der Config-Größe
 
 `lib.lazy` erlaubt es, dieses Verhalten explizit zu kontrollieren.
+
+### Lade- und Cache-Verhalten
+
+In Lua gilt:
+* `require()` lädt immer das komplette Modul
+* das Modul wird exakt einmal ausgeführt
+* das Rückgabeobjekt wird in `package.loaded[name]` gespeichert
+* alle definierten Funktionen werden erzeugt
+* ungenutzte Funktionen bleiben dennoch im Speicher
+
+Ablauf:
+1. `require("notify")` wird aufgerufen
+2. Lua sucht das Modul anhand von `package.searchers`
+3. die Datei wird vollständig gelesen
+4. der gesamte Top-Level-Code wird ausgeführt
+5. alle Funktionen werden erstellt
+6. das Rückgabeobjekt wird gecacht
+7. zukünftige `require()`-Aufrufe liefern nur die Referenz
+
+Wichtig:
+* Lua kennt kein partielles Laden von Modulen
+* es existiert kein automatisches Tree Shaking
+* selbst wenn nur `warn()` genutzt wird, werden `info()`, `debug()` usw. ebenfalls erzeugt
+
+---
+
+### Konsequenzen
+
+* Seiteneffekte im Top-Level-Code werden immer ausgeführt
+* Initialisierungskosten fallen vollständig beim ersten `require()` an
+* Moduldesign sollte initialisierungsarm sein
+* Lazy Loading muss manuell implementiert werden
 
 ---
 

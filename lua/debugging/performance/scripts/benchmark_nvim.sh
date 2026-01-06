@@ -13,7 +13,6 @@
 # Configuration
 RUNS=15
 NVIM_EXE="nvim"
-LUA_SCRIPT="$HOME/.config/nvim/lua/debugging/performance/scripts/benchmark_startup.lua"
 SKIP_WARMUP=0
 DEBUG=0
 TIMEOUT=5
@@ -45,6 +44,10 @@ for arg in "$@"; do
     esac
 done
 
+# Determine script directory
+SCRIPT_DIR="${0:A:h}"
+LUA_SCRIPT="$SCRIPT_DIR/benchmark_startup.lua"
+
 # Check if Lua script exists
 if [[ ! -f "$LUA_SCRIPT" ]]; then
     echo "${RED}Error: Benchmark script not found: $LUA_SCRIPT${NC}" >&2
@@ -56,6 +59,40 @@ if ! command -v "$NVIM_EXE" &> /dev/null; then
     echo "${RED}Error: Neovim not found in PATH${NC}" >&2
     exit 1
 fi
+
+# Use paths from environment (set by init.lua) or determine from config
+if [[ -n "$NVIM_BENCHMARK_RESULTS_DIR" ]]; then
+    results_dir="$NVIM_BENCHMARK_RESULTS_DIR"
+else
+    # Determine config directory
+    if [[ -n "$XDG_CONFIG_HOME" ]]; then
+        config_dir="$XDG_CONFIG_HOME/nvim"
+    else
+        config_dir="$HOME/.config/nvim"
+    fi
+    results_dir="$config_dir/lua/debugging/performance/results"
+fi
+
+if [[ -n "$NVIM_BENCHMARK_CSV_DIR" ]]; then
+    csv_dir="$NVIM_BENCHMARK_CSV_DIR"
+else
+    csv_dir="$results_dir/csv"
+fi
+
+if [[ -n "$NVIM_BENCHMARK_HTML_DIR" ]]; then
+    html_dir="$NVIM_BENCHMARK_HTML_DIR"
+else
+    html_dir="$results_dir/html"
+fi
+
+# Create directories
+mkdir -p "$results_dir" "$csv_dir" "$html_dir"
+
+echo "${CYAN}Using paths:${NC}"
+echo "${GRAY}  Results: $results_dir${NC}"
+echo "${GRAY}  CSV:     $csv_dir${NC}"
+echo "${GRAY}  HTML:    $html_dir${NC}"
+echo ""
 
 # Storage arrays
 startup_times=()
@@ -75,10 +112,12 @@ if ((SKIP_WARMUP == 0)); then
         -c "luafile $LUA_SCRIPT" > /dev/null 2>&1 || true
 
     sleep 0.5
-    echo "${GREEN}Warmup complete${NC}\n"
+    echo "${GREEN}Warmup complete${NC}"
+    echo ""
 fi
 
-echo "${CYAN}Starting $RUNS benchmark runs...${NC}\n"
+echo "${CYAN}Starting $RUNS benchmark runs...${NC}"
+echo ""
 
 # Run benchmarks
 for i in {1..$RUNS}; do
@@ -90,7 +129,8 @@ for i in {1..$RUNS}; do
 
     # Run Neovim with timeout and capture output
     if ((DEBUG == 1)); then
-        echo "\n${MAGENTA}DEBUG: Running nvim...${NC}"
+        echo ""
+        echo "${MAGENTA}DEBUG: Running nvim...${NC}"
     fi
 
     output=$(timeout ${TIMEOUT}s "$NVIM_EXE" --headless --startuptime "$startupfile" \
@@ -152,7 +192,8 @@ if ((${#startup_times[@]} == 0)); then
     exit 1
 fi
 
-echo "${CYAN}=== Results ===${NC}\n"
+echo "${CYAN}=== Results ===${NC}"
+echo ""
 
 # Calculate statistics
 calculate_stats() {
@@ -222,40 +263,54 @@ echo "  Min:    $startup_min"
 echo "  Max:    $startup_max"
 echo "  StdDev: $startup_stddev"
 
-echo "\n${YELLOW}UI Enter Time (ms):${NC}"
+echo ""
+echo "${YELLOW}UI Enter Time (ms):${NC}"
 echo "  Mean:   $ui_mean"
 echo "  Median: $ui_median"
 echo "  Min:    $ui_min"
 echo "  Max:    $ui_max"
 echo "  StdDev: $ui_stddev"
 
-echo "\n${YELLOW}Memory Usage (KB):${NC}"
+echo ""
+echo "${YELLOW}Memory Usage (KB):${NC}"
 echo "  Mean:   $mem_mean"
 echo "  Median: $mem_median"
 echo "  Min:    $mem_min"
 echo "  Max:    $mem_max"
 echo "  StdDev: $mem_stddev"
 
-echo "\n${CYAN}=== Raw Data ===${NC}"
+echo ""
+echo "${CYAN}=== Raw Data ===${NC}"
 for i in {1..${#startup_times[@]}}; do
     printf "Run %d: Startup=%sms, UIEnter=%sms, Memory=%sKB\n" \
            "$i" "${startup_times[$i]}" "${ui_enter_times[$i]}" "${memory_usages[$i]}"
 done
 
 # Export CSV
+echo ""
 timestamp=$(date +%Y%m%d_%H%M%S)
-results_dir="$HOME/.config/nvim/lua/debugging/performance/results"
-csv_dir="$results_dir/csv"
-mkdir -p "$csv_dir"
-
 csv_file="$csv_dir/nvim_benchmark_${timestamp}.csv"
-echo "\"Run\",\"Startup\",\"UIEnter\",\"Memory\"" > "$csv_file"
+
+echo "${CYAN}Exporting to CSV: $csv_file${NC}"
+
+# Use dot as decimal separator (international format)
+echo '"Run","Startup","UIEnter","Memory"' > "$csv_file"
 for i in {1..${#startup_times[@]}}; do
-    echo "\"$i\",\"${startup_times[$i]}\",\"${ui_enter_times[$i]}\",\"${memory_usages[$i]}\"" >> "$csv_file"
+    # Ensure dot as decimal separator
+    printf '"%d","%s","%s","%s"\n' \
+        "$i" \
+        "${startup_times[$i]}" \
+        "${ui_enter_times[$i]}" \
+        "${memory_usages[$i]}" >> "$csv_file"
 done
+
+echo "${GREEN}CSV exported successfully${NC}"
 
 # Export JSON metadata
 meta_file="$csv_dir/nvim_benchmark_${timestamp}_meta.json"
+
+echo "${CYAN}Exporting metadata: $meta_file${NC}"
+
 cat > "$meta_file" <<EOF
 {
   "timestamp": "$timestamp",
@@ -284,8 +339,15 @@ cat > "$meta_file" <<EOF
 }
 EOF
 
-echo "\n${CYAN}CSV exported: $csv_file${NC}"
-echo "${CYAN}Metadata: $meta_file${NC}"
+echo "${GREEN}Metadata exported successfully${NC}"
+
+echo ""
+echo "${CYAN}Results saved to:${NC}"
+echo "${GRAY}  CSV:  $csv_file${NC}"
+echo "${GRAY}  Meta: $meta_file${NC}"
 
 # Cleanup temp files
 rm -f /tmp/nvim_startuptime_*_$$.txt 2>/dev/null
+
+echo ""
+echo "${GREEN}Benchmark complete! Use :BenchmarkHtml to generate report.${NC}"

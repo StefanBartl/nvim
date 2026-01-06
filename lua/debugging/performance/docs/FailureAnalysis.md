@@ -1,5 +1,53 @@
 # Benchmark Failure Analysis
 
+## Table of content
+
+- [Benchmark Failure Analysis](#benchmark-failure-analysis)
+  - [Problem: 30-50% of Runs Fail](#problem-30-50-of-runs-fail)
+    - [Root Causes](#root-causes)
+      - [1. **Race Conditions in Plugin Initialization**](#1-race-conditions-in-plugin-initialization)
+      - [2. **Insufficient Timeout**](#2-insufficient-timeout)
+- [In benchmark_nvim.ps1](#in-benchmark_nvimps1)
+- [In benchmark_nvim.sh](#in-benchmark_nvimsh)
+      - [3. **Lua Module Caching Issues**](#3-lua-module-caching-issues)
+- [Force fresh nvim instance each time](#force-fresh-nvim-instance-each-time)
+      - [4. **Async Plugin Operations**](#4-async-plugin-operations)
+      - [5. **Output Parsing Failures**](#5-output-parsing-failures)
+- [Match ONLY lines starting with digits](#match-only-lines-starting-with-digits)
+    - [Diagnostic Process](#diagnostic-process)
+      - [Step 1: Identify Failure Pattern](#step-1-identify-failure-pattern)
+      - [Step 2: Isolate Problematic Plugins](#step-2-isolate-problematic-plugins)
+      - [Step 3: Check System Load](#step-3-check-system-load)
+- [Monitor during benchmark](#monitor-during-benchmark)
+- [Check if multiple nvim instances are running](#check-if-multiple-nvim-instances-are-running)
+      - [Step 4: Verify File I/O](#step-4-verify-file-io)
+- [Check if temp files are properly created/deleted](#check-if-temp-files-are-properly-createddeleted)
+    - [Solutions by Failure Rate](#solutions-by-failure-rate)
+      - [< 10% Failure Rate](#10-failure-rate)
+      - [10-30% Failure Rate](#10-30-failure-rate)
+      - [> 30% Failure Rate](#30-failure-rate)
+    - [Improved Benchmark Script (Key Changes)](#improved-benchmark-script-key-changes)
+      - [1. Exponential Backoff](#1-exponential-backoff)
+      - [2. Multiple Measurement Methods](#2-multiple-measurement-methods)
+      - [3. Better Error Reporting](#3-better-error-reporting)
+    - [Monitoring Recommendations](#monitoring-recommendations)
+      - [Before Large-Scale Benchmarking](#before-large-scale-benchmarking)
+- [Clear all caches](#clear-all-caches)
+- [Ensure clean state](#ensure-clean-state)
+- [Verify no background processes](#verify-no-background-processes)
+      - [During Benchmarking](#during-benchmarking)
+- [In another terminal](#in-another-terminal)
+      - [After Benchmarking](#after-benchmarking)
+- [Check for hung processes](#check-for-hung-processes)
+- [Clean up temp files](#clean-up-temp-files)
+    - [When to File a Bug](#when-to-file-a-bug)
+    - [Performance vs. Reliability Trade-offs](#performance-vs-reliability-trade-offs)
+    - [Expected Failure Rates](#expected-failure-rates)
+    - [Final Checklist](#final-checklist)
+    - [Advanced: Custom Benchmark Mode](#advanced-custom-benchmark-mode)
+
+---
+
 ## Problem: 30-50% of Runs Fail
 
 ### Root Causes
@@ -359,6 +407,6 @@ This isolates benchmarking from regular usage.
 
 ---
 
-**Remember**: Perfect reliability (100%) is not achievable in complex systems. Aim for 85-95% success rate with the updated scripts.P
+*Remember**: Perfect reliability (100%) is not achievable in complex systems. Aim for 85-95% success rate with the updated scripts.
 
 ---

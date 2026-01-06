@@ -24,14 +24,38 @@ $NvimExe   = "nvim"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LuaScript = Join-Path $ScriptDir "benchmark_startup.lua"
 
-$ResultsDir = Join-Path $ScriptDir "Resultate"
-$CsvDir     = Join-Path $ResultsDir "csv"
+# Use paths from environment (set by init.lua) or fallback to defaults
+$ResultsDir = if ($env:NVIM_BENCHMARK_RESULTS_DIR) {
+    $env:NVIM_BENCHMARK_RESULTS_DIR
+} else {
+    Join-Path $env:LOCALAPPDATA "nvim\lua\debugging\performance\results"
+}
 
-@($ResultsDir, $CsvDir) | ForEach-Object {
+$CsvDir = if ($env:NVIM_BENCHMARK_CSV_DIR) {
+    $env:NVIM_BENCHMARK_CSV_DIR
+} else {
+    Join-Path $ResultsDir "csv"
+}
+
+$HtmlDir = if ($env:NVIM_BENCHMARK_HTML_DIR) {
+    $env:NVIM_BENCHMARK_HTML_DIR
+} else {
+    Join-Path $ResultsDir "html"
+}
+
+# Create directories if they don't exist
+@($ResultsDir, $CsvDir, $HtmlDir) | ForEach-Object {
     if (-not (Test-Path $_)) {
-        New-Item -ItemType Directory -Path $_ | Out-Null
+        Write-Host "Creating directory: $_" -ForegroundColor Cyan
+        New-Item -ItemType Directory -Path $_ -Force | Out-Null
     }
 }
+
+Write-Host "Using paths:" -ForegroundColor Cyan
+Write-Host "  Results: $ResultsDir" -ForegroundColor Gray
+Write-Host "  CSV:     $CsvDir" -ForegroundColor Gray
+Write-Host "  HTML:    $HtmlDir" -ForegroundColor Gray
+Write-Host ""
 
 if (-not (Test-Path $LuaScript)) {
     throw "Lua benchmark script not found: $LuaScript"
@@ -54,24 +78,29 @@ $AllSlowPlugins = @()
 # ------------------------------------------------------------
 
 if (-not $SkipWarmup) {
-    Write-Host "Warmup run..."
+    Write-Host "Running warmup..." -ForegroundColor Cyan
 
     $WarmupFile = Join-Path $env:TEMP "nvim_startuptime_warmup.txt"
     $env:NVIM_STARTUPTIME_FILE = $WarmupFile
 
     & $NvimExe --headless --startuptime $WarmupFile `
-        -c "luafile $LuaScript" | Out-Null
+        -c "luafile $LuaScript" 2>&1 | Out-Null
 
     Start-Sleep -Milliseconds 800
+    Write-Host "Warmup complete" -ForegroundColor Green
+    Write-Host ""
 }
 
 # ------------------------------------------------------------
 # Benchmark runs
 # ------------------------------------------------------------
 
+Write-Host "Starting $Runs benchmark runs..." -ForegroundColor Cyan
+Write-Host ""
+
 for ($i = 1; $i -le $Runs; $i++) {
 
-    Write-Host "Run $i/$Runs..."
+    Write-Host "Run $i/$Runs... " -NoNewline
 
     $StartupFile = Join-Path $env:TEMP "nvim_startuptime_$i.txt"
     $env:NVIM_STARTUPTIME_FILE = $StartupFile
@@ -79,9 +108,12 @@ for ($i = 1; $i -le $Runs; $i++) {
     $ErrorActionPreference = "Continue"
     $Output = & $NvimExe --headless --startuptime $StartupFile `
         -c "luafile $LuaScript" 2>&1 | ForEach-Object { "$_" }
+    $ErrorActionPreference = "Stop"
 
     if ($Debug) {
-        $Output | ForEach-Object { Write-Host $_ }
+        Write-Host ""
+        $Output | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+        Write-Host ""
     }
 
     # Expected Lua line:
@@ -92,7 +124,10 @@ for ($i = 1; $i -le $Runs; $i++) {
     } | Select-Object -First 1
 
     if (-not $TimingLine) {
-        Write-Host "FAILED" -ForegroundColor Red
+        Write-Host "FAILED (no valid output)" -ForegroundColor Red
+        if (-not $Debug) {
+            Write-Host "  Tip: Run with -Debug to see output" -ForegroundColor Yellow
+        }
         continue
     }
 
@@ -114,16 +149,18 @@ for ($i = 1; $i -le $Runs; $i++) {
         } catch {}
 
         Write-Host (
-            "Startup={0}ms UI={1}ms Memory={2}KB Plugins={3}" -f
+            "Startup={0:F2}ms UI={1:F2}ms Memory={2:F2}KB Plugins={3}" -f
             $Startup,
             $UIEnter,
-            ([math]::Round($Memory, 2)),
+            $Memory,
             $PluginCount
         ) -ForegroundColor Green
     }
 
-    Start-Sleep -Milliseconds 200
+    Start-Sleep -Milliseconds 300
 }
+
+Write-Host ""
 
 if ($StartupTimes.Count -eq 0) {
     throw "No successful benchmark runs"
@@ -135,6 +172,12 @@ if ($StartupTimes.Count -eq 0) {
 
 function Get-Stats {
     param([double[]]$Data)
+
+    if ($Data.Count -eq 0) {
+        return @{
+            Mean = 0; Median = 0; Min = 0; Max = 0; StdDev = 0
+        }
+    }
 
     $Sorted = $Data | Sort-Object
     $Count  = $Sorted.Count
@@ -163,44 +206,121 @@ function Get-Stats {
 
 $StartupStats = Get-Stats $StartupTimes
 $UIEnterStats = Get-Stats $UIEnterTimes
+$MemoryStats  = Get-Stats $MemoryUsages
 
 # ------------------------------------------------------------
 # Output
 # ------------------------------------------------------------
 
+Write-Host "=== Results ===" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Startup (ms): $($StartupStats | ConvertTo-Json -Compress)"
-Write-Host "UI Enter (ms): $($UIEnterStats | ConvertTo-Json -Compress)"
+
+Write-Host "Startup Time (ms):" -ForegroundColor Yellow
+Write-Host "  Mean:   $($StartupStats.Mean)"
+Write-Host "  Median: $($StartupStats.Median)"
+Write-Host "  Min:    $($StartupStats.Min)"
+Write-Host "  Max:    $($StartupStats.Max)"
+Write-Host "  StdDev: $($StartupStats.StdDev)"
+
+Write-Host ""
+Write-Host "UI Enter Time (ms):" -ForegroundColor Yellow
+Write-Host "  Mean:   $($UIEnterStats.Mean)"
+Write-Host "  Median: $($UIEnterStats.Median)"
+Write-Host "  Min:    $($UIEnterStats.Min)"
+Write-Host "  Max:    $($UIEnterStats.Max)"
+Write-Host "  StdDev: $($UIEnterStats.StdDev)"
+
+Write-Host ""
+Write-Host "Memory Usage (KB):" -ForegroundColor Yellow
+Write-Host "  Mean:   $($MemoryStats.Mean)"
+Write-Host "  Median: $($MemoryStats.Median)"
+Write-Host "  Min:    $($MemoryStats.Min)"
+Write-Host "  Max:    $($MemoryStats.Max)"
+Write-Host "  StdDev: $($MemoryStats.StdDev)"
+
+Write-Host ""
+Write-Host "=== Raw Data ===" -ForegroundColor Cyan
+for ($i = 0; $i -lt $StartupTimes.Count; $i++) {
+    Write-Host ("Run {0}: Startup={1:F2}ms, UIEnter={2:F2}ms, Memory={3:F2}KB" -f
+        ($i + 1),
+        $StartupTimes[$i],
+        $UIEnterTimes[$i],
+        $MemoryUsages[$i]
+    )
+}
 
 # ------------------------------------------------------------
 # Export
 # ------------------------------------------------------------
 
+Write-Host ""
+
 $Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 
 $CsvPath = Join-Path $CsvDir "nvim_benchmark_$Timestamp.csv"
-(0..($StartupTimes.Count - 1)) | ForEach-Object {
-    [PSCustomObject]@{
-        Run     = $_ + 1
-        Startup = $StartupTimes[$_]
-        UIEnter = $UIEnterTimes[$_]
-        Memory  = [math]::Round($MemoryUsages[$_], 2)
-    }
-} | Export-Csv -Path $CsvPath -NoTypeInformation
 
+Write-Host "Exporting to CSV: $CsvPath" -ForegroundColor Cyan
+
+# Export CSV with proper formatting (use dot as decimal separator)
+$CsvContent = @()
+$CsvContent += '"Run","Startup","UIEnter","Memory"'
+
+for ($i = 0; $i -lt $StartupTimes.Count; $i++) {
+    $CsvContent += ('"{0}","{1}","{2}","{3}"' -f
+        ($i + 1),
+        ($StartupTimes[$i].ToString("F2", [System.Globalization.CultureInfo]::InvariantCulture)),
+        ($UIEnterTimes[$i].ToString("F2", [System.Globalization.CultureInfo]::InvariantCulture)),
+        ($MemoryUsages[$i].ToString("F2", [System.Globalization.CultureInfo]::InvariantCulture))
+    )
+}
+
+$CsvContent | Out-File -FilePath $CsvPath -Encoding utf8
+
+Write-Host "CSV exported successfully" -ForegroundColor Green
+
+# Export JSON metadata
 $MetaPath = Join-Path $CsvDir "nvim_benchmark_${Timestamp}_meta.json"
+
+Write-Host "Exporting metadata: $MetaPath" -ForegroundColor Cyan
+
 @{
     timestamp = $Timestamp
     runs      = $Runs
-    startup   = $StartupStats
-    uienter   = $UIEnterStats
+    startup   = @{
+        mean   = $StartupStats.Mean
+        median = $StartupStats.Median
+        min    = $StartupStats.Min
+        max    = $StartupStats.Max
+        stddev = $StartupStats.StdDev
+    }
+    uienter   = @{
+        mean   = $UIEnterStats.Mean
+        median = $UIEnterStats.Median
+        min    = $UIEnterStats.Min
+        max    = $UIEnterStats.Max
+        stddev = $UIEnterStats.StdDev
+    }
+    memory    = @{
+        mean   = $MemoryStats.Mean
+        median = $MemoryStats.Median
+        min    = $MemoryStats.Min
+        max    = $MemoryStats.Max
+        stddev = $MemoryStats.StdDev
+    }
 } | ConvertTo-Json -Depth 5 | Out-File $MetaPath -Encoding utf8
 
-Write-Host "CSV:  $CsvPath"
-Write-Host "Meta: $MetaPath"
+Write-Host "Metadata exported successfully" -ForegroundColor Green
+
+Write-Host ""
+Write-Host "Results saved to:" -ForegroundColor Cyan
+Write-Host "  CSV:  $CsvPath" -ForegroundColor Gray
+Write-Host "  Meta: $MetaPath" -ForegroundColor Gray
 
 # ------------------------------------------------------------
 # Cleanup
 # ------------------------------------------------------------
 
 Remove-Item "$env:TEMP\nvim_startuptime_*.txt" -ErrorAction SilentlyContinue
+
+Write-Host ""
+Write-Host "Benchmark complete! Use :BenchmarkHtml to generate report." -ForegroundColor Green
