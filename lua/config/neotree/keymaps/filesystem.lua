@@ -310,7 +310,7 @@ return {
   --- FIX: This is not relative, but absolute
   ["]r"] = {
     --- Copy the node's relative path to the system clipboard (+).
-    --- Base preference: project root (utils.lv_project_root) → fallback to current working directory.
+    --- Base preference: project root (config.neotree.helper.lv_project_root) → fallback to current working directory.
     ---@param state table
     function(state)
       local node = state.tree:get_node()
@@ -327,7 +327,7 @@ return {
 
   ["[r"] = {
     --- Copy the node's base directory (relative) to the system clipboard (+).
-    --- Base preference: project root (utils.lv_project_root) → fallback to current working directory.
+    --- Base preference: project root (config.neotree.helper.lv_project_root) → fallback to current working directory.
     ---@param state table
     function(state)
       local node = state.tree:get_node()

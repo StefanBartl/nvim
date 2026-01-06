@@ -1,5 +1,5 @@
 ---@meta
----@module 'utils.diff_profiles.t@ypes'
+---@module 'myoptions.set_diff_profile.t@ypes'
 
 ---@alias DiffProfile
 ---| '"minimal"'

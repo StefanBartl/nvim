@@ -1,4 +1,4 @@
----@module 'utils.lv_project_root'
+---@module 'config.neotree.helper.lv_project_root'
 --- Resolve a "project root" similarly to LazyVim, but without depending on it.
 --- Priority:
 ---   1) LSP client root_dir for the current buffer (closest/longest path wins)

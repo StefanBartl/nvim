@@ -1,8 +1,8 @@
----@module 'utils.diff_profiles.selector'
+---@module 'mypotions.set_diff_profile.selector'
 -- @description
 -- This module provides functionality to set different diff profiles in Neovim.
 
-local diff_profiles = require("utils.diff_profiles.profiles")
+local diff_profiles = require("myoptions.set_diff_profile.profiles")
 
 ---@param profile DiffProfile
 local function set (profile)

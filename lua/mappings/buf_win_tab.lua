@@ -185,7 +185,7 @@ function M.setup()
   )
 
   map("n", "<leader>zm", function()
-    require("utils.window_zoom").zoom_toggle()
+    require("mappings.utils.window_zoom").zoom_toggle()
   end, { desc = "[Window] Zoom toggle." })
 
   -- ---------------------------------------------------------------------------

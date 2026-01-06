@@ -533,7 +533,7 @@ local function smart_open(position)
   local ctx = utils.get_buffer_context()
   if not ctx then return end
 
-  local Root = require("utils.lv_project_root")
+  local Root = require("config.neotree.helper.lv_project_root")
   local root = Root.get(ctx.buf)
 
   if root then

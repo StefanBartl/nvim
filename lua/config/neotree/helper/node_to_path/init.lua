@@ -32,7 +32,7 @@ return function (node, mode, opts)
     path = fn.fnamemodify(path, ":p")
   elseif mode == "relative" then
     local base = (vim.uv or vim.loop).cwd() or fn.getcwd()
-    local ok_root, Root = pcall(require, "utils.lv_project_root")
+    local ok_root, Root = pcall(require, "config.neotree.helper.lv_project_root")
     if ok_root and type(Root.get) == "function" then
       base = Root.get(0) or base
     end

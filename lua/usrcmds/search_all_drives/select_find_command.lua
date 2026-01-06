@@ -1,4 +1,4 @@
----@module 'utils.search_all_drives.select_find_command'
+---@module 'usrcmds.search_all_drives.select_find_command'
 --- Selects a robust cross-platform "list files" command as argv.
 --- Design goals:
 ---   • Pure function: no side effects, returns (ok, argv|nil, err|nil).

@@ -1,5 +1,5 @@
 ---@meta
----@module 'utils.search_all_drives.@types'
+---@module 'usrcmds.search_all_drives.@types'
 
 ---@class SearchMounts
 ---@field cache string[]|nil

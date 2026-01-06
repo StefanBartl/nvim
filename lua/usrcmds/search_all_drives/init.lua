@@ -1,4 +1,4 @@
----@module 'utils.search_all_drives'
+---@module 'usrcmds.search_all_drives'
 --- Build Telescope tabs for cross-drive searches (grep + files).
 --- Design:
 ---   • Drive/mount discovery with caching.
@@ -6,7 +6,7 @@
 ---   • Grep-Tabs via ripgrep; Files-Tab via a robust, imported finder argv.
 ---   • No global side effects; UI concerns (vim.notify) only in tele_func.
 
-local notify = require("lib.notify").create("[Utils.Search all Drives] ")
+local notify = require("lib.notify").create("[usrcmds.search_all_drives] ")
 
 ---@type SearchMounts
 local Mounts = { cache = nil }
@@ -124,7 +124,7 @@ local M = {}
 ---@param builtin table
 ---@return table[]
 function M.build_tabs(builtin)
-  local findchooser = require("utils.search_all_drives.select_find_command")
+  local findchooser = require("usrcmds.search_all_drives.select_find_command")
 
   local function all_roots()
     local dirs = Mounts.get_all()
@@ -142,7 +142,7 @@ function M.build_tabs(builtin)
     "!node_modules/",
     "-g",
     "!dist/",
-    "-g",
+    a("-g"),
     "!build/",
     "-g",
     "!target/",
@@ -244,6 +244,17 @@ function M.build_tabs(builtin)
       end,
     },
   }
+end
+
+---@return nil
+function M.enable()
+  vim.api.nvim_create_user_command("AllDrives", function()
+    require("usrcmds.search_all_drives.telescope").open()
+  end, { desc = "[usrcmds.search_all_drives] Search files and grep across all drives" })
+
+  vim.api.nvim_create_user_command("AllDrivesFzf", function()
+    require("usrcmds.search_all_drives.fzf").open()
+  end, { desc = "[usrcmds.search_all_drives] Search files and grep across all drives (fzf-lua)" })
 end
 
 return M

@@ -1,4 +1,4 @@
----@module 'utils.diff_profiles.profiles'
+---@module 'mypotions.set_diff_profile.profiles'
 ---@description
 -- This module defines different diff profiles for Neovim.
 
