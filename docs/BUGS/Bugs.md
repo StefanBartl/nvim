@@ -12,7 +12,7 @@
 
 ## Important
 
-- lua\usrcmds\reload_current_module\init.lua: funktioniert nicht richtig
+- lua\usrcmds\search_all_drives\init.lua funktioert nicht richtig
 
 ## Normal
 

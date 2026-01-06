@@ -1,0 +1,348 @@
+*performance.txt*  Neovim startup benchmarking and profiling tools
+
+==============================================================================
+CONTENTS                                                   *performance-contents*
+
+  1. Introduction ..................... |performance-intro|
+  2. Commands ......................... |performance-commands|
+  3. Usage ............................ |performance-usage|
+  4. Understanding Results ............ |performance-results|
+  5. Troubleshooting .................. |performance-troubleshooting|
+  6. Configuration .................... |performance-config|
+  7. Best Practices ................... |performance-best-practices|
+
+==============================================================================
+1. INTRODUCTION                                              *performance-intro*
+
+The performance module provides automated benchmarking tools to measure and
+analyze Neovim's startup performance. It tracks:
+
+  • Startup time (total initialization)
+  • UI enter time (time to interactive UI)
+  • Memory usage (RAM allocated during startup)
+  • Plugin performance (identify slow plugins)
+
+Features:
+  • Statistical analysis (mean, median, min, max, stddev)
+  • CSV export for data analysis
+  • HTML reports with visualizations
+  • Cross-platform (Windows, Linux, macOS)
+  • Automatic warmup runs
+  • Timeout protection
+
+==============================================================================
+2. COMMANDS                                              *performance-commands*
+
+                                                              *:BenchmarkRun*
+:BenchmarkRun [n]
+    Run a benchmark with [n] iterations (default: 15).
+    Opens a terminal split to show live progress.
+    Results are saved to CSV and JSON files.
+
+    Examples: >
+        :BenchmarkRun          " 15 runs
+        :BenchmarkRun 5        " 5 runs
+        :BenchmarkRun 20       " 20 runs
+<
+
+                                                         *:BenchmarkRunDebug*
+:BenchmarkRunDebug [n]
+    Same as |:BenchmarkRun| but with verbose debug output.
+    Useful for troubleshooting failed runs or hanging issues.
+
+    Example: >
+        :BenchmarkRunDebug 3
+<
+
+                                                             *:BenchmarkHtml*
+:BenchmarkHtml
+    Generate an HTML report from existing benchmark results.
+    Opens a file picker to select which benchmark to visualize.
+    The report includes:
+      • Statistics cards
+      • Historical comparisons
+      • Slow plugin identification
+      • Trend analysis
+
+                                                             *:BenchmarkTest*
+:BenchmarkTest
+    Verify the benchmarking setup and show diagnostics.
+    Checks:
+      • Script existence
+      • Directory structure
+      • Existing benchmarks
+      • File permissions
+
+==============================================================================
+3. USAGE                                                    *performance-usage*
+
+Basic Workflow~
+
+1. Establish a baseline:
+>
+    :BenchmarkRun 20
+<
+   This creates a reference point for future comparisons.
+
+2. Make configuration changes (install plugins, modify settings, etc.)
+
+3. Re-benchmark:
+>
+    :BenchmarkRun 20
+<
+
+4. Compare results:
+>
+    :BenchmarkHtml
+<
+   Select the new benchmark to see percentage differences.
+
+Quick Benchmark~
+
+For a quick performance check:
+>
+    :BenchmarkRun 5
+<
+
+Debug Mode~
+
+If runs fail or hang:
+>
+    :BenchmarkRunDebug 3
+<
+
+This shows detailed Neovim output to identify the problem.
+
+==============================================================================
+4. UNDERSTANDING RESULTS                                   *performance-results*
+
+Output Format~
+
+After running a benchmark, you'll see:
+>
+    Run 1/15... Startup=652.75ms UI=1003.34ms Memory=745.53KB Plugins=127
+    Run 2/15... Startup=629.43ms UI=1003.62ms Memory=257.90KB Plugins=127
+    ...
+
+    === Results ===
+
+    Startup Time (ms):
+      Mean:   631.29
+      Median: 629.43
+      Min:    616.36
+      Max:    652.75
+      StdDev: 9.23
+
+    UI Enter Time (ms):
+      Mean:   997.97
+      Median: 997.38
+      Min:    986.51
+      Max:    1011.19
+      StdDev: 7.11
+<
+
+Metrics Explained~
+
+*performance-startup-time*
+Startup Time
+    Total time from nvim launch to full initialization.
+    Includes all plugin loading and configuration execution.
+
+    Target values:
+      • < 50ms   : Excellent (minimal config)
+      • 50-200ms : Good (moderate config)
+      • 200-500ms: Acceptable (many plugins)
+      • > 500ms  : Needs optimization
+
+*performance-ui-enter-time*
+UI Enter Time
+    Time until Neovim's UI is ready for interaction.
+    Often higher than startup time due to lazy-loading.
+
+*performance-memory-usage*
+Memory Usage
+    RAM allocated during startup process.
+    Depends heavily on plugin count and complexity.
+
+*performance-stddev*
+Standard Deviation
+    Measures consistency of measurements.
+    Lower values indicate more reproducible results.
+
+Why is Run 1 Slower?~
+
+The first run is typically 2-3x slower because:
+  • Filesystem caches are cold
+  • Plugins load for the first time
+  • Lua bytecode gets compiled
+  • OS scheduler hasn't optimized yet
+
+Solution: The automatic warmup run mitigates this.
+
+==============================================================================
+5. TROUBLESHOOTING                              *performance-troubleshooting*
+
+Problem: Runs fail with "TIMEOUT"~
+
+Causes:
+  • Plugins waiting for network or user input
+  • Infinite loops in configuration
+  • Very slow plugins (> 5 seconds)
+
+Solutions:
+
+1. Increase timeout in the benchmark script:
+>
+    # In benchmark_nvim.ps1 or .sh
+    TIMEOUT=10  # Increase to 10 seconds
+<
+
+2. Run in debug mode to see what's happening:
+>
+    :BenchmarkRunDebug 3
+<
+
+3. Check startup time manually:
+>
+    nvim --startuptime startup.log +quit
+    less startup.log
+<
+
+Problem: HTML shows all zeros~
+
+This was a bug in older versions (fixed). Verify you have the latest
+version:
+>
+    :BenchmarkTest
+<
+
+If still an issue, check CSV files manually:
+>
+    :edit ~/.config/nvim/lua/debugging/performance/results/csv/
+<
+
+Problem: Scripts not found~
+
+Ensure the module is loaded:
+>
+    -- In init.lua
+    require('debugging.performance').setup()
+<
+
+Then verify:
+>
+    :BenchmarkTest
+<
+
+Problem: Permission denied (Linux/macOS)~
+
+Make scripts executable:
+>
+    chmod +x ~/.config/nvim/lua/debugging/performance/scripts/*.sh
+<
+
+Problem: Many runs fail~
+
+Possible causes:
+  1. Race conditions in plugin initialization
+  2. Network-dependent plugins
+  3. Insufficient timeout
+
+Try:
+  • Increase timeout in script
+  • Disable problematic plugins temporarily
+  • Run fewer iterations: `:BenchmarkRun 5`
+
+==============================================================================
+6. CONFIGURATION                                          *performance-config*
+
+File Locations~
+>
+    ~/.config/nvim/lua/debugging/performance/
+    ├── init.lua                    Main module
+    ├── scripts/
+    │   ├── benchmark_nvim.ps1      Windows script
+    │   ├── benchmark_nvim.sh       Unix script
+    │   └── benchmark_startup.lua   Measurement logic
+    └── results/
+        ├── csv/                    Data files
+        └── html/                   Reports
+<
+
+Customization~
+
+To adjust thresholds or behavior, edit:
+
+1. `scripts/benchmark_startup.lua` - Measurement logic
+2. `scripts/benchmark_nvim.ps1` - Windows automation
+3. `scripts/benchmark_nvim.sh` - Unix automation
+
+Default Settings~
+
+  • Runs per benchmark: 15
+  • Timeout per run: 5 seconds
+  • Slow plugin threshold: 10ms
+  • Warmup: Enabled by default
+
+==============================================================================
+7. BEST PRACTICES                              *performance-best-practices*
+
+Benchmarking Guidelines~
+
+1. Run multiple iterations (15-20) for statistical significance
+2. Always include warmup run (default behavior)
+3. Close other applications during benchmarking
+4. Compare similar conditions (same system state)
+5. Use median rather than mean for stability
+
+Optimization Workflow~
+
+1. Establish baseline:
+>
+    :BenchmarkRun 20
+<
+
+2. Identify slow plugins in HTML report
+
+3. Optimize configuration:
+   • Enable lazy-loading
+   • Use event-based triggers
+   • Remove unused plugins
+
+4. Re-benchmark and compare
+
+5. Repeat until satisfied
+
+Common Optimizations~
+
+Enable Lazy Loading:
+>lua
+    -- In lazy.nvim config
+    {
+      'plugin/name',
+      lazy = true,
+      event = 'BufReadPost',
+    }
+<
+
+Profile Deeply:
+>
+    nvim --startuptime startup.log +quit
+    grep 'sourcing' startup.log | sort -k2 -n
+<
+
+Check Memory Leaks:
+>
+    :BenchmarkRun 5
+<
+Monitor memory values across runs. Increasing memory = potential leak.
+
+Target Performance~
+
+  Scenario           Startup Time    Memory Usage
+  Minimal config     < 50ms          < 10MB
+  IDE replacement    < 200ms         < 50MB
+  Full-featured      < 500ms         < 100MB
+
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:

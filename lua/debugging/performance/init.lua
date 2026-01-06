@@ -121,10 +121,11 @@ local function get_benchmark_files()
   return files
 end
 
--- Parse CSV file
+-- Parse CSV file (FIXED: handles both comma and dot decimal separators)
 local function parse_csv(filepath)
   local file = io.open(filepath, "r")
   if not file then
+    vim.notify("Failed to open CSV: " .. filepath, vim.log.levels.ERROR)
     return nil
   end
 
@@ -135,26 +136,46 @@ local function parse_csv(filepath)
   file:close()
 
   if #lines < 2 then
+    vim.notify("CSV file has insufficient data: " .. filepath, vim.log.levels.WARN)
     return nil
   end
 
   -- Parse data rows (skip header)
   local data = { startup = {}, uienter = {}, memory = {} }
+  local parse_count = 0
+
   for i = 2, #lines do
-    local run, startup, uienter, memory = lines[i]:match('"(%d+)","([%d,]+)","([%d,]+)","([%d,]+)"')
-    if run then
-      -- Convert German decimal format (comma) to dot
-      startup = tonumber(startup:gsub(",", "."))
-      uienter = tonumber(uienter:gsub(",", "."))
-      memory = tonumber(memory:gsub(",", "."))
-      if startup and uienter and memory then
-        table.insert(data.startup, startup)
-        table.insert(data.uienter, uienter)
-        table.insert(data.memory, memory)
+    -- Match both formats: "1","652,75","1003,34","745,53" or "1","652.75","1003.34","745.53"
+    local run, startup, uienter, memory = lines[i]:match('"([^"]+)","([^"]+)","([^"]+)","([^"]+)"')
+
+    if run and startup and uienter then
+      -- Normalize decimal separator: replace comma with dot
+      startup = startup:gsub(",", ".")
+      uienter = uienter:gsub(",", ".")
+      memory = memory and memory:gsub(",", ".") or "0"
+
+      -- Convert to numbers
+      local s = tonumber(startup)
+      local u = tonumber(uienter)
+      local m = tonumber(memory)
+
+      if s and u and m then
+        table.insert(data.startup, s)
+        table.insert(data.uienter, u)
+        table.insert(data.memory, m)
+        parse_count = parse_count + 1
+      else
+        vim.notify(string.format("Failed to parse line %d: %s", i, lines[i]), vim.log.levels.DEBUG)
       end
     end
   end
 
+  if parse_count == 0 then
+    vim.notify("No valid data rows parsed from CSV", vim.log.levels.ERROR)
+    return nil
+  end
+
+  vim.notify(string.format("Successfully parsed %d data rows", parse_count), vim.log.levels.DEBUG)
   return data
 end
 
@@ -208,6 +229,10 @@ function M.generate_html_report(filepath)
   local uienter_stats = calc_stats(data.uienter)
   local memory_stats = calc_stats(data.memory)
 
+  -- Debug output
+  vim.notify(string.format("Stats - Startup: %.2f ms, UI: %.2f ms, Memory: %.2f KB",
+    startup_stats.mean, uienter_stats.mean, memory_stats.mean), vim.log.levels.DEBUG)
+
   -- Try to load metadata for plugin info
   local meta_path = filepath:gsub("%.csv$", "_meta.json")
   local slow_plugins = {}
@@ -230,22 +255,26 @@ function M.generate_html_report(filepath)
   local files = get_benchmark_files()
   local comparisons = {}
   for i = 2, math.min(6, #files) do
-    local prev_data = parse_csv(files[i])
-    if prev_data then
-      local prev_startup = calc_stats(prev_data.startup)
-      local prev_uienter = calc_stats(prev_data.uienter)
-      local prev_memory = calc_stats(prev_data.memory)
+    if files[i] ~= filepath then -- Don't compare with self
+      local prev_data = parse_csv(files[i])
+      if prev_data then
+        local prev_startup = calc_stats(prev_data.startup)
+        local prev_uienter = calc_stats(prev_data.uienter)
+        local prev_memory = calc_stats(prev_data.memory)
 
-      local startup_diff = ((startup_stats.mean - prev_startup.mean) / prev_startup.mean) * 100
-      local uienter_diff = ((uienter_stats.mean - prev_uienter.mean) / prev_uienter.mean) * 100
-      local memory_diff = ((memory_stats.mean - prev_memory.mean) / prev_memory.mean) * 100
+        if prev_startup.mean > 0 and prev_uienter.mean > 0 and prev_memory.mean > 0 then
+          local startup_diff = ((startup_stats.mean - prev_startup.mean) / prev_startup.mean) * 100
+          local uienter_diff = ((uienter_stats.mean - prev_uienter.mean) / prev_uienter.mean) * 100
+          local memory_diff = ((memory_stats.mean - prev_memory.mean) / prev_memory.mean) * 100
 
-      table.insert(comparisons, {
-        file = vim.fn.fnamemodify(files[i], ":t"),
-        startup_diff = startup_diff,
-        uienter_diff = uienter_diff,
-        memory_diff = memory_diff,
-      })
+          table.insert(comparisons, {
+            file = vim.fn.fnamemodify(files[i], ":t"),
+            startup_diff = startup_diff,
+            uienter_diff = uienter_diff,
+            memory_diff = memory_diff,
+          })
+        end
+      end
     end
   end
 
@@ -683,8 +712,6 @@ function M.setup()
   end, {
     desc = "Test benchmark setup and show diagnostics",
   })
-
-  -- vim.notify("Performance benchmarking loaded. Commands: :BenchmarkRun, :BenchmarkTest, :BenchmarkHtml", vim.log.levels.INFO)
 end
 
 return M

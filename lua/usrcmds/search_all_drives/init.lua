@@ -142,7 +142,7 @@ function M.build_tabs(builtin)
     "!node_modules/",
     "-g",
     "!dist/",
-    a("-g"),
+    ("-g"),
     "!build/",
     "-g",
     "!target/",

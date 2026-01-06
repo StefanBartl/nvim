@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #
-# Automated Neovim startup benchmarking with warmup run
+# Automated Neovim startup benchmarking with statistics and memory tracking
 #
 # Usage:
 #   ./benchmark_nvim.sh [runs] [--skip-warmup] [--debug]
@@ -57,48 +57,22 @@ if ! command -v "$NVIM_EXE" &> /dev/null; then
     exit 1
 fi
 
-# Function to run nvim with timeout
-run_nvim_with_timeout() {
-    local startupfile=$1
-    local timeout=$2
-
-    export NVIM_STARTUPTIME_FILE="$startupfile"
-
-    # Run nvim in background and capture PID
-    "$NVIM_EXE" --headless --startuptime "$startupfile" \
-                -c "luafile $LUA_SCRIPT" 2>&1 &
-    local nvim_pid=$!
-
-    # Wait for process with timeout
-    local count=0
-    local max_count=$((timeout * 10))  # Check every 0.1s
-
-    while kill -0 $nvim_pid 2>/dev/null; do
-        sleep 0.1
-        ((count++))
-        if ((count >= max_count)); then
-            # Timeout reached, kill the process
-            kill -9 $nvim_pid 2>/dev/null
-            wait $nvim_pid 2>/dev/null
-            return 124  # Timeout exit code
-        fi
-    done
-
-    # Process finished, get its output
-    wait $nvim_pid
-    return $?
-}
-
 # Storage arrays
 startup_times=()
 ui_enter_times=()
+memory_usages=()
+plugin_counts=()
+all_slow_plugins=()
 
 # Warmup run (unless skipped)
 if ((SKIP_WARMUP == 0)); then
     echo "${CYAN}Running warmup...${NC}"
 
     warmup_file="/tmp/nvim_startuptime_warmup_$$.txt"
-    run_nvim_with_timeout "$warmup_file" 10 > /dev/null 2>&1
+    export NVIM_STARTUPTIME_FILE="$warmup_file"
+
+    timeout ${TIMEOUT}s "$NVIM_EXE" --headless --startuptime "$warmup_file" \
+        -c "luafile $LUA_SCRIPT" > /dev/null 2>&1 || true
 
     sleep 0.5
     echo "${GREEN}Warmup complete${NC}\n"
@@ -114,50 +88,50 @@ for i in {1..$RUNS}; do
     startupfile="/tmp/nvim_startuptime_${i}_$$.txt"
     export NVIM_STARTUPTIME_FILE="$startupfile"
 
-    # Run Neovim with timeout
-    output=$("$NVIM_EXE" --headless --startuptime "$startupfile" \
-                         -c "luafile $LUA_SCRIPT" 2>&1 &)
-    nvim_pid=$!
-
-    # Wait with timeout
-    local count=0
-    while kill -0 $nvim_pid 2>/dev/null && ((count < 50)); do
-        sleep 0.1
-        ((count++))
-    done
-
-    # Check if still running (timeout)
-    if kill -0 $nvim_pid 2>/dev/null; then
-        kill -9 $nvim_pid 2>/dev/null
-        wait $nvim_pid 2>/dev/null
-        echo "${RED}TIMEOUT - killed${NC}"
-        continue
+    # Run Neovim with timeout and capture output
+    if ((DEBUG == 1)); then
+        echo "\n${MAGENTA}DEBUG: Running nvim...${NC}"
     fi
 
-    # Get output
-    wait $nvim_pid
-    output=$("$NVIM_EXE" --headless --startuptime "$startupfile" \
-                         -c "luafile $LUA_SCRIPT" 2>&1)
+    output=$(timeout ${TIMEOUT}s "$NVIM_EXE" --headless --startuptime "$startupfile" \
+        -c "luafile $LUA_SCRIPT" 2>&1)
+    exit_code=$?
 
     if ((DEBUG == 1)); then
-        echo "\n${MAGENTA}DEBUG OUTPUT:${NC}"
+        echo "${MAGENTA}DEBUG OUTPUT:${NC}"
         echo "$output" | while IFS= read -r line; do
             echo "${GRAY}  $line${NC}"
         done
         echo ""
     fi
 
-    # Look for the timing line
-    timing_line=$(echo "$output" | grep -E '^\d+\.\d+,\d+\.\d+$' | head -n1)
+    # Check for timeout
+    if [[ $exit_code -eq 124 ]]; then
+        echo "${RED}TIMEOUT - killed after ${TIMEOUT}s${NC}"
+        continue
+    fi
 
-    if [[ "$timing_line" =~ ^([0-9.]+),([0-9.]+)$ ]]; then
+    # Look for the timing line: startup,ui_enter,memory,plugin_count,[...]
+    timing_line=$(echo "$output" | grep -E '^\d+\.\d+,\d+\.\d+,\d+\.\d+,\d+,' | head -n1)
+
+    if [[ "$timing_line" =~ ^([0-9.]+),([0-9.]+),([0-9.]+),([0-9]+),(.*)$ ]]; then
         startup="${match[1]}"
         ui_enter="${match[2]}"
+        memory="${match[3]}"
+        plugin_count="${match[4]}"
+        slow_json="${match[5]}"
 
         startup_times+=($startup)
         ui_enter_times+=($ui_enter)
+        memory_usages+=($memory)
+        plugin_counts+=($plugin_count)
 
-        echo "${GREEN}Startup: ${startup}ms, UI Enter: ${ui_enter}ms${NC}"
+        # Try to parse slow plugins JSON
+        if [[ -n "$slow_json" ]] && [[ "$slow_json" != "[]" ]]; then
+            all_slow_plugins+=("$slow_json")
+        fi
+
+        echo "${GREEN}Startup=${startup}ms UI=${ui_enter}ms Memory=${memory}KB Plugins=${plugin_count}${NC}"
     else
         echo "${RED}FAILED (no valid output)${NC}"
         if ((DEBUG == 0)); then
@@ -231,13 +205,15 @@ calculate_stats() {
            "$mean" "$median" "$min" "$max" "$stddev"
 }
 
-# Startup stats
+# Calculate stats for all metrics
 read -r startup_mean startup_median startup_min startup_max startup_stddev <<< \
     $(calculate_stats "${startup_times[@]}")
 
-# UI Enter stats
 read -r ui_mean ui_median ui_min ui_max ui_stddev <<< \
     $(calculate_stats "${ui_enter_times[@]}")
+
+read -r mem_mean mem_median mem_min mem_max mem_stddev <<< \
+    $(calculate_stats "${memory_usages[@]}")
 
 echo "${YELLOW}Startup Time (ms):${NC}"
 echo "  Mean:   $startup_mean"
@@ -253,20 +229,63 @@ echo "  Min:    $ui_min"
 echo "  Max:    $ui_max"
 echo "  StdDev: $ui_stddev"
 
+echo "\n${YELLOW}Memory Usage (KB):${NC}"
+echo "  Mean:   $mem_mean"
+echo "  Median: $mem_median"
+echo "  Min:    $mem_min"
+echo "  Max:    $mem_max"
+echo "  StdDev: $mem_stddev"
+
 echo "\n${CYAN}=== Raw Data ===${NC}"
 for i in {1..${#startup_times[@]}}; do
-    printf "Run %d: Startup=%sms, UIEnter=%sms\n" \
-           "$i" "${startup_times[$i]}" "${ui_enter_times[$i]}"
+    printf "Run %d: Startup=%sms, UIEnter=%sms, Memory=%sKB\n" \
+           "$i" "${startup_times[$i]}" "${ui_enter_times[$i]}" "${memory_usages[$i]}"
 done
 
 # Export CSV
-csv_file="./Resultate/csv/nvim_benchmark_$(date +%Y%m%d_%H%M%S).csv"
-echo "Run,Startup,UIEnter" > "$csv_file"
+timestamp=$(date +%Y%m%d_%H%M%S)
+results_dir="$HOME/.config/nvim/lua/debugging/performance/results"
+csv_dir="$results_dir/csv"
+mkdir -p "$csv_dir"
+
+csv_file="$csv_dir/nvim_benchmark_${timestamp}.csv"
+echo "\"Run\",\"Startup\",\"UIEnter\",\"Memory\"" > "$csv_file"
 for i in {1..${#startup_times[@]}}; do
-    echo "$i,${startup_times[$i]},${ui_enter_times[$i]}" >> "$csv_file"
+    echo "\"$i\",\"${startup_times[$i]}\",\"${ui_enter_times[$i]}\",\"${memory_usages[$i]}\"" >> "$csv_file"
 done
 
+# Export JSON metadata
+meta_file="$csv_dir/nvim_benchmark_${timestamp}_meta.json"
+cat > "$meta_file" <<EOF
+{
+  "timestamp": "$timestamp",
+  "runs": $RUNS,
+  "startup": {
+    "mean": $startup_mean,
+    "median": $startup_median,
+    "min": $startup_min,
+    "max": $startup_max,
+    "stddev": $startup_stddev
+  },
+  "uienter": {
+    "mean": $ui_mean,
+    "median": $ui_median,
+    "min": $ui_min,
+    "max": $ui_max,
+    "stddev": $ui_stddev
+  },
+  "memory": {
+    "mean": $mem_mean,
+    "median": $mem_median,
+    "min": $mem_min,
+    "max": $mem_max,
+    "stddev": $mem_stddev
+  }
+}
+EOF
+
 echo "\n${CYAN}CSV exported: $csv_file${NC}"
+echo "${CYAN}Metadata: $meta_file${NC}"
 
 # Cleanup temp files
 rm -f /tmp/nvim_startuptime_*_$$.txt 2>/dev/null
