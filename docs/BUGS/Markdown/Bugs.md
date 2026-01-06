@@ -22,6 +22,8 @@
 
 ## NORMAL Bugs
 
+- `EnsureMarkdownLines` fügt manchmal doppelte `---` hinzu
+
 ---
 
 

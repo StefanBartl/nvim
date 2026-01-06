@@ -1,6 +1,5 @@
----@module 'usrcmds.insertfilepath'
+---@module 'custom.insert.filepath'
 ---User command to insert the current buffer's file path in various formats.
----Put this file at lua/usrcmds/insertfilepath.lua
 ---
 ---Usage examples:
 ---  :InsertFilePath              -- insert path relative to cwd (default, and when no args)
@@ -333,7 +332,7 @@ function M.enable(opts)
       end
       return candidates
     end,
-    desc = "Insert current buffer file path. Modes: cwd|abs. Formats: system|win|unix|lua. Numeric arg selects folder depth (0 = filename).",
+    desc = "[custom.insert.filepath] Insert current buffer file path. Modes: cwd|abs. Formats: system|win|unix|lua. Numeric arg selects folder depth (0 = filename).",
     bang = false,
     count = true,
   })

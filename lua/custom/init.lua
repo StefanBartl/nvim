@@ -1,6 +1,9 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
+require("custom.insert").setup({
+  enable_legacy_commands = true,
+})
 require("custom.format").setup({
   enable_legacy_commands = true, -- AUDIT: Übergangsphase
 })

@@ -1,4 +1,4 @@
----@module 'usrcmds.lua_module_annotation'
+---@module 'custom.insert.lua_module_annotation'
 --- UserCommand zum Einfügen von Emmy Lua @module Annotation
 
 local M = {}
@@ -73,7 +73,7 @@ function M.enable()
   api.nvim_create_user_command("LuaModuleAnnotations", function()
     insert_module_annotation_at_cursor()
   end, {
-    desc = "[usrcmds.LuaModuleAnnotations] Insert @module annotation for current Lua file at cursor position",
+    desc = "[custom.insert.luaModuleAnnotations] Insert @module annotation for current Lua file at cursor position",
   })
 end
 
