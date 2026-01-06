@@ -34,18 +34,21 @@ oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
 
 ### format sammelmodul
 
-Vercshiedene formatierungs usercommands und keymaps sammeln, zb.:
-- `custom.align_colum`:
+Verschiedene formatierungs usercommands und keymaps sammeln, zb.:
+ `custom.align_colum`:
     * Unterstützung für Multibyte-Zeichen
-    * Ausrichtung mehrerer markierter Zeichen
     * Wiederholung der letzten Zielspalte
-    * Presets pro Dateityp
     * Integration in Operator-Mappings
+    * Ausrichtung mehrerer markierter Zeichen
     * Multiselect: also mit ctrl-v mehrere start punkt markieren bzw.: echte markierungen und dort werden dann auf einmal alle ausgefphrt
-- `usrcmds.format_table`
--`usrcmds.filter_lines`
-- `usrcmds.format_text_width`
-- `usrcmds.misc`: :BufferClear
+ `usrcmds.format_table`
+ `usrcmds.filter_lines`
+ `usrcmds.format_text_width`
+ `usrcmds.misc`: :BufferClear
+
+insert commands und mappiunmgs sammeln:
+  - usrcmds.insertfilepath
+  - usrcmds.lua_module_annotation
 
 --
 

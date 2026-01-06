@@ -1,0 +1,785 @@
+**reload.txt*  Smart Lua module reloading for development
+
+==============================================================================
+CONTENTS                                       *reload-contents*
+
+    1. Introduction ................. |reload-introduction|
+    2. Setup ........................ |reload-setup|
+    3. Commands ..................... |reload-commands|
+    4. API .......................... |reload-api|
+    5. Workflow Examples ............ |reload-workflows|
+    6. Troubleshooting .............. |reload-troubleshooting|
+    7. Limitations .................. |reload-limitations|
+
+==============================================================================
+1. INTRODUCTION                            *reload-introduction*
+
+The reload_current_module provides smart Lua module reloading during plugin
+development. It solves the common problem where editing a child module doesn't
+update the parent module that already cached it, requiring a full Neovim restart.
+
+Key features:~
+    • Single module reload
+    • Deep reload (module + submodules)
+    • Reverse reload (module + parents)
+    • Pattern-based reload
+    • Smart dependency tracking
+    • Detailed feedback notifications
+
+Typical use case:~
+    You edit `testmodul/keymaps.lua` which is required by `testmodul/init.lua`.
+    Without this plugin, you'd need to restart Neovim. With it, you can reload
+    both modules in the correct order with `:ReloadCurrentModuleReverse`.
+
+==============================================================================
+2. SETUP                                          *reload-setup*
+
+Minimal setup:~
+>lua
+    require("usercmds.reload_current_module").enable()
+<
+
+This creates all user commands. Place it in your `init.lua` or in a
+development-specific config file.
+
+==============================================================================
+3. COMMANDS                                    *reload-commands*
+
+:ReloadCurrentModule                              *:ReloadCurrentModule*
+    Reload only the module corresponding to the current buffer.
+
+    Use when:~
+        • You changed a standalone module
+        • No parent/child dependencies need updating
+
+    Example: >
+        " Edit lua/utils/string.lua
+        :ReloadCurrentModule
+        " → Reloads utils.string only
+<
+
+:ReloadCurrentModuleDeep                      *:ReloadCurrentModuleDeep*
+    Reload current module and all its submodules.
+
+    Use when:~
+        • You changed a parent module
+        • Want to ensure all children pick up changes
+
+    Example: >
+        " Edit lua/testmodul/init.lua
+        :ReloadCurrentModuleDeep
+        " → Reloads:
+        "   • testmodul
+        "   • testmodul.keymaps
+        "   • testmodul.config
+<
+
+:ReloadCurrentModuleReverse                *:ReloadCurrentModuleReverse*
+    Reload current module and all parent modules.
+
+    Use when:~
+        • You changed a child module
+        • Parent needs to re-import it
+
+    Example: >
+        " Edit lua/testmodul/keymaps.lua
+        :ReloadCurrentModuleReverse
+        " → Reloads:
+        "   • testmodul (parent)
+        "   • testmodul.keymaps (current)
+<
+
+:ReloadCurrentModuleFull                      *:ReloadCurrentModuleFull*
+    Reload current module, all parents, and all submodules.
+
+    Use when:~
+        • Nuclear option: reload everything related
+        • Complex dependency graph
+        • Unsure which reload mode to use
+
+    Example: >
+        " Edit lua/testmodul/foo/bar.lua
+        :ReloadCurrentModuleFull
+        " → Reloads:
+        "   • testmodul (top parent)
+        "   • testmodul.foo (parent)
+        "   • testmodul.foo.bar (current)
+        "   • testmodul.foo.bar.* (children, if any)
+<
+
+:ReloadModulePattern {pattern}                  *:ReloadModulePattern*
+    Reload all loaded modules matching a Lua pattern.
+
+    Use when:~
+        • Want to reload an entire namespace
+        • Doing broad refactoring
+
+    Tab completion:~
+        Press <Tab> after the command to see loaded modules.
+
+    Example: >
+        :ReloadModulePattern ^telescope
+        " → Reloads all telescope.* modules
+
+        :ReloadModulePattern config%.
+        " → Reloads all config.* modules
+<
+
+:ReloadListLoaded [{pattern}]                   *:ReloadListLoaded*
+    List all loaded modules, optionally filtered by pattern.
+
+    Use when:~
+        • Debugging what's loaded
+        • Finding module names for pattern reloading
+
+    Example: >
+        :ReloadListLoaded
+        " → Shows all loaded modules
+
+        :ReloadListLoaded telescope
+        " → Shows only telescope.* modules
+<
+
+==============================================================================
+4. API                                            *reload-api*
+
+reload_current({opts})                     *reload.reload_current()*
+    Programmatically reload the current buffer's module.
+
+    Parameters:~
+        {opts}  (table|nil) Optional configuration:
+            • deep (boolean): Reload submodules (default: false)
+            • reverse (boolean): Reload parents (default: false)
+            • notify (boolean): Show notifications (default: true)
+            • force (boolean): Force reload even if not loaded (default: false)
+
+    Returns:~
+        ReloadResult table with fields:
+            • success (boolean): Overall success
+            • reloaded (string[]): Successfully reloaded modules
+            • failed (table): Failed modules with error messages
+            • skipped (string[]): Modules that weren't loaded
+
+    Example: >lua
+        local reload = require("usercmds.reload_current_module")
+
+        -- Simple reload
+        local result = reload.reload_current()
+
+        -- Deep reload
+        reload.reload_current({ deep = true })
+
+        -- Reverse reload
+        reload.reload_current({ reverse = true })
+
+        -- Silent reload
+        reload.reload_current({ notify = false })
+
+        -- Check result
+        if result.success then
+          print("All good!")
+        else
+          for mod, err in pairs(result.failed) do
+            print(string.format("%s failed: %s", mod, err))
+          end
+        end
+<
+
+reload_pattern({pattern}, {opts})          *reload.reload_pattern()*
+    Reload all modules matching a pattern.
+
+    Parameters:~
+        {pattern}  (string) Lua pattern to match module names
+        {opts}     (table|nil) Same as reload_current()
+
+    Returns:~
+        ReloadResult table
+
+    Example: >lua
+        local reload = require("usercmds.reload_current_module")
+
+        -- Reload all config modules
+        reload.reload_pattern("^config%.")
+
+        -- Silent pattern reload
+        reload.reload_pattern("^telescope", { notify = false })
+<
+
+==============================================================================
+5. WORKFLOW EXAMPLES                          *reload-workflows*
+
+Scenario 1: Editing a child module~
+
+Structure: >
+    testmodul/
+    ├── init.lua      (requires keymaps)
+    └── keymaps.lua   ← Edit this
+<
+
+Workflow:~
+    1. Edit `keymaps.lua` (add new function)
+    2. Run `:ReloadCurrentModuleReverse`
+    3. Both `testmodul.keymaps` and `testmodul` are reloaded
+    4. Changes are immediately active
+
+Why reverse?~
+    The parent (`testmodul`) cached the old version of `keymaps`. Reloading
+    just `keymaps` isn't enough - we need to reload the parent so it
+    re-imports the child.
+
+Scenario 2: Editing a parent module~
+
+Structure: >
+    testmodul/
+    ├── init.lua      ← Edit this
+    ├── config.lua
+    └── keymaps.lua
+<
+
+Workflow:~
+    1. Edit `init.lua` (change setup logic)
+    2. Run `:ReloadCurrentModuleDeep`
+    3. `testmodul` and all `testmodul.*` modules are reloaded
+    4. Changes are immediately active
+
+Why deep?~
+    The children may have stale references to the old parent state. Deep
+    reload ensures everything is fresh.
+
+Scenario 3: Namespace-wide changes~
+
+Structure: >
+    config/
+    ├── init.lua
+    ├── telescope/
+    │   ├── init.lua
+    │   └── keymaps.lua
+    └── lsp/
+        └── init.lua
+<
+
+Workflow:~
+    1. Make changes across multiple files
+    2. Run `:ReloadModulePattern ^config`
+    3. All `config.*` modules are reloaded
+    4. Changes are immediately active
+
+Why pattern?~
+    Faster than reloading files individually. Use for broad refactoring.
+
+==============================================================================
+6. TROUBLESHOOTING                        *reload-troubleshooting*
+
+Module not reloading~
+
+Symptom: Changes not visible after reload
+
+Cause: Module wasn't loaded yet (not in `package.loaded`)
+
+Solution: >lua
+    -- Force reload even if not loaded
+    require('usercmds.reload_current_module').reload_current({
+      force = true
+    })
+<
+
+"Could not determine module name"~
+
+Symptom: Error when trying to reload
+
+Cause: File not in a standard Lua path or no `lua/` directory found
+
+Solution:~
+    • Ensure file is in a `lua/` directory
+    • Check `package.path` includes your directory: >vim
+        :lua print(vim.inspect(vim.split(package.path, ';')))
+<
+
+Parent not reloading child changes~
+
+Symptom: Parent module still uses old child version
+
+Cause: Parent caches child reference
+
+Solution: >vim
+    " Use reverse reload to reload parent after child
+    :ReloadCurrentModuleReverse
+
+    " Or full reload for complex dependencies
+    :ReloadCurrentModuleFull
+<
+
+Syntax error after reload~
+
+Symptom: Module fails to load after reload
+
+Cause: Syntax error in modified file
+
+Solution:~
+    1. Check error message (shown in notification)
+    2. Fix syntax error
+    3. Reload again
+
+Example error: >
+    ✗ Failed to reload 1 module(s):
+      • testmodul.keymaps: unexpected symbol near '='
+<
+
+==============================================================================
+7. LIMITATIONS                            *reload-limitations*
+
+Stateful modules~
+
+Problem:~
+    Modules with persistent state may lose data on reload.
+
+Example: >lua
+    -- Module with state
+    local M = {}
+    local counter = 0  -- Lost on reload!
+
+    function M.increment()
+      counter = counter + 1
+    end
+
+    return M
+<
+
+Solution:~
+    • Use external state storage
+    • Implement state persistence
+    • Design modules to be stateless
+
+Side effects on load~
+
+Problem:~
+    Modules that register autocmds/keymaps on load may duplicate.
+
+Bad example: >lua
+    -- Runs on every reload (creates duplicates)
+    vim.keymap.set('n', '<leader>x', function() end)
+<
+
+Good example: >lua
+    -- Idempotent setup function
+    local M = {}
+
+    function M.setup()
+      -- Clear previous keymaps if needed
+      vim.keymap.set('n', '<leader>x', function() end)
+    end
+
+    return M
+<
+
+Solution:~
+    • Use `setup()` functions
+    • Make setup idempotent
+    • Clear previous state in setup
+
+Native C modules~
+
+Problem:~
+    Cannot reload C modules (`.so`, `.dll`).
+
+Example: >vim
+    :ReloadModulePattern luv  " Won't work, luv is C module
+<
+
+Solution:~
+    Restart Neovim for C module changes.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:reload.txt*  Smart Lua module reloading for development
+
+==============================================================================
+CONTENTS                                       *reload-contents*
+
+    1. Introduction ................. |reload-introduction|
+    2. Setup ........................ |reload-setup|
+    3. Commands ..................... |reload-commands|
+    4. API .......................... |reload-api|
+    5. Workflow Examples ............ |reload-workflows|
+    6. Troubleshooting .............. |reload-troubleshooting|
+    7. Limitations .................. |reload-limitations|
+
+==============================================================================
+1. INTRODUCTION                            *reload-introduction*
+
+The reload_current_module provides smart Lua module reloading during plugin
+development. It solves the common problem where editing a child module doesn't
+update the parent module that already cached it, requiring a full Neovim restart.
+
+Key features:~
+    • Single module reload
+    • Deep reload (module + submodules)
+    • Reverse reload (module + parents)
+    • Pattern-based reload
+    • Smart dependency tracking
+    • Detailed feedback notifications
+
+Typical use case:~
+    You edit `testmodul/keymaps.lua` which is required by `testmodul/init.lua`.
+    Without this plugin, you'd need to restart Neovim. With it, you can reload
+    both modules in the correct order with `:ReloadCurrentModuleReverse`.
+
+==============================================================================
+2. SETUP                                          *reload-setup*
+
+Minimal setup:~
+>lua
+    require("usercmds.reload_current_module").enable()
+<
+
+This creates all user commands. Place it in your `init.lua` or in a
+development-specific config file.
+
+==============================================================================
+3. COMMANDS                                    *reload-commands*
+
+:ReloadCurrentModule                              *:ReloadCurrentModule*
+    Reload only the module corresponding to the current buffer.
+
+    Use when:~
+        • You changed a standalone module
+        • No parent/child dependencies need updating
+
+    Example: >
+        " Edit lua/utils/string.lua
+        :ReloadCurrentModule
+        " → Reloads utils.string only
+<
+
+:ReloadCurrentModuleDeep                      *:ReloadCurrentModuleDeep*
+    Reload current module and all its submodules.
+
+    Use when:~
+        • You changed a parent module
+        • Want to ensure all children pick up changes
+
+    Example: >
+        " Edit lua/testmodul/init.lua
+        :ReloadCurrentModuleDeep
+        " → Reloads:
+        "   • testmodul
+        "   • testmodul.keymaps
+        "   • testmodul.config
+<
+
+:ReloadCurrentModuleReverse                *:ReloadCurrentModuleReverse*
+    Reload current module and all parent modules.
+
+    Use when:~
+        • You changed a child module
+        • Parent needs to re-import it
+
+    Example: >
+        " Edit lua/testmodul/keymaps.lua
+        :ReloadCurrentModuleReverse
+        " → Reloads:
+        "   • testmodul (parent)
+        "   • testmodul.keymaps (current)
+<
+
+:ReloadCurrentModuleFull                      *:ReloadCurrentModuleFull*
+    Reload current module, all parents, and all submodules.
+
+    Use when:~
+        • Nuclear option: reload everything related
+        • Complex dependency graph
+        • Unsure which reload mode to use
+
+    Example: >
+        " Edit lua/testmodul/foo/bar.lua
+        :ReloadCurrentModuleFull
+        " → Reloads:
+        "   • testmodul (top parent)
+        "   • testmodul.foo (parent)
+        "   • testmodul.foo.bar (current)
+        "   • testmodul.foo.bar.* (children, if any)
+<
+
+:ReloadModulePattern {pattern}                  *:ReloadModulePattern*
+    Reload all loaded modules matching a Lua pattern.
+
+    Use when:~
+        • Want to reload an entire namespace
+        • Doing broad refactoring
+
+    Tab completion:~
+        Press <Tab> after the command to see loaded modules.
+
+    Example: >
+        :ReloadModulePattern ^telescope
+        " → Reloads all telescope.* modules
+
+        :ReloadModulePattern config%.
+        " → Reloads all config.* modules
+<
+
+:ReloadListLoaded [{pattern}]                   *:ReloadListLoaded*
+    List all loaded modules, optionally filtered by pattern.
+
+    Use when:~
+        • Debugging what's loaded
+        • Finding module names for pattern reloading
+
+    Example: >
+        :ReloadListLoaded
+        " → Shows all loaded modules
+
+        :ReloadListLoaded telescope
+        " → Shows only telescope.* modules
+<
+
+==============================================================================
+4. API                                            *reload-api*
+
+reload_current({opts})                     *reload.reload_current()*
+    Programmatically reload the current buffer's module.
+
+    Parameters:~
+        {opts}  (table|nil) Optional configuration:
+            • deep (boolean): Reload submodules (default: false)
+            • reverse (boolean): Reload parents (default: false)
+            • notify (boolean): Show notifications (default: true)
+            • force (boolean): Force reload even if not loaded (default: false)
+
+    Returns:~
+        ReloadResult table with fields:
+            • success (boolean): Overall success
+            • reloaded (string[]): Successfully reloaded modules
+            • failed (table): Failed modules with error messages
+            • skipped (string[]): Modules that weren't loaded
+
+    Example: >lua
+        local reload = require("usercmds.reload_current_module")
+
+        -- Simple reload
+        local result = reload.reload_current()
+
+        -- Deep reload
+        reload.reload_current({ deep = true })
+
+        -- Reverse reload
+        reload.reload_current({ reverse = true })
+
+        -- Silent reload
+        reload.reload_current({ notify = false })
+
+        -- Check result
+        if result.success then
+          print("All good!")
+        else
+          for mod, err in pairs(result.failed) do
+            print(string.format("%s failed: %s", mod, err))
+          end
+        end
+<
+
+reload_pattern({pattern}, {opts})          *reload.reload_pattern()*
+    Reload all modules matching a pattern.
+
+    Parameters:~
+        {pattern}  (string) Lua pattern to match module names
+        {opts}     (table|nil) Same as reload_current()
+
+    Returns:~
+        ReloadResult table
+
+    Example: >lua
+        local reload = require("usercmds.reload_current_module")
+
+        -- Reload all config modules
+        reload.reload_pattern("^config%.")
+
+        -- Silent pattern reload
+        reload.reload_pattern("^telescope", { notify = false })
+<
+
+==============================================================================
+5. WORKFLOW EXAMPLES                          *reload-workflows*
+
+Scenario 1: Editing a child module~
+
+Structure: >
+    testmodul/
+    ├── init.lua      (requires keymaps)
+    └── keymaps.lua   ← Edit this
+<
+
+Workflow:~
+    1. Edit `keymaps.lua` (add new function)
+    2. Run `:ReloadCurrentModuleReverse`
+    3. Both `testmodul.keymaps` and `testmodul` are reloaded
+    4. Changes are immediately active
+
+Why reverse?~
+    The parent (`testmodul`) cached the old version of `keymaps`. Reloading
+    just `keymaps` isn't enough - we need to reload the parent so it
+    re-imports the child.
+
+Scenario 2: Editing a parent module~
+
+Structure: >
+    testmodul/
+    ├── init.lua      ← Edit this
+    ├── config.lua
+    └── keymaps.lua
+<
+
+Workflow:~
+    1. Edit `init.lua` (change setup logic)
+    2. Run `:ReloadCurrentModuleDeep`
+    3. `testmodul` and all `testmodul.*` modules are reloaded
+    4. Changes are immediately active
+
+Why deep?~
+    The children may have stale references to the old parent state. Deep
+    reload ensures everything is fresh.
+
+Scenario 3: Namespace-wide changes~
+
+Structure: >
+    config/
+    ├── init.lua
+    ├── telescope/
+    │   ├── init.lua
+    │   └── keymaps.lua
+    └── lsp/
+        └── init.lua
+<
+
+Workflow:~
+    1. Make changes across multiple files
+    2. Run `:ReloadModulePattern ^config`
+    3. All `config.*` modules are reloaded
+    4. Changes are immediately active
+
+Why pattern?~
+    Faster than reloading files individually. Use for broad refactoring.
+
+==============================================================================
+6. TROUBLESHOOTING                        *reload-troubleshooting*
+
+Module not reloading~
+
+Symptom: Changes not visible after reload
+
+Cause: Module wasn't loaded yet (not in `package.loaded`)
+
+Solution: >lua
+    -- Force reload even if not loaded
+    require('usercmds.reload_current_module').reload_current({
+      force = true
+    })
+<
+
+"Could not determine module name"~
+
+Symptom: Error when trying to reload
+
+Cause: File not in a standard Lua path or no `lua/` directory found
+
+Solution:~
+    • Ensure file is in a `lua/` directory
+    • Check `package.path` includes your directory: >vim
+        :lua print(vim.inspect(vim.split(package.path, ';')))
+<
+
+Parent not reloading child changes~
+
+Symptom: Parent module still uses old child version
+
+Cause: Parent caches child reference
+
+Solution: >vim
+    " Use reverse reload to reload parent after child
+    :ReloadCurrentModuleReverse
+
+    " Or full reload for complex dependencies
+    :ReloadCurrentModuleFull
+<
+
+Syntax error after reload~
+
+Symptom: Module fails to load after reload
+
+Cause: Syntax error in modified file
+
+Solution:~
+    1. Check error message (shown in notification)
+    2. Fix syntax error
+    3. Reload again
+
+Example error: >
+    ✗ Failed to reload 1 module(s):
+      • testmodul.keymaps: unexpected symbol near '='
+<
+
+==============================================================================
+7. LIMITATIONS                            *reload-limitations*
+
+Stateful modules~
+
+Problem:~
+    Modules with persistent state may lose data on reload.
+
+Example: >lua
+    -- Module with state
+    local M = {}
+    local counter = 0  -- Lost on reload!
+
+    function M.increment()
+      counter = counter + 1
+    end
+
+    return M
+<
+
+Solution:~
+    • Use external state storage
+    • Implement state persistence
+    • Design modules to be stateless
+
+Side effects on load~
+
+Problem:~
+    Modules that register autocmds/keymaps on load may duplicate.
+
+Bad example: >lua
+    -- Runs on every reload (creates duplicates)
+    vim.keymap.set('n', '<leader>x', function() end)
+<
+
+Good example: >lua
+    -- Idempotent setup function
+    local M = {}
+
+    function M.setup()
+      -- Clear previous keymaps if needed
+      vim.keymap.set('n', '<leader>x', function() end)
+    end
+
+    return M
+<
+
+Solution:~
+    • Use `setup()` functions
+    • Make setup idempotent
+    • Clear previous state in setup
+
+Native C modules~
+
+Problem:~
+    Cannot reload C modules (`.so`, `.dll`).
+
+Example: >vim
+    :ReloadModulePattern luv  " Won't work, luv is C module
+<
+
+Solution:~
+    Restart Neovim for C module changes.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

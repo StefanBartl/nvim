@@ -66,7 +66,6 @@ require("custom.filecycle").setup({
 require("custom.find_config").enable({ usercmds = true, keymaps = true })
 require("custom.markdown").setup()
 require("custom.pathprobe").enable_keymaps()
-require("custom.reload").enable()
 require("custom.repo_pickers").enable({
   selector = "auto", -- "auto" | "vim_select" | "telescope" | "fzf"
   engine = "auto", -- "auto" | "telescope" | "fzf"
