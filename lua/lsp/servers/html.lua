@@ -89,7 +89,20 @@ function M.setup(shared, opts)
         client.server_capabilities.documentFormattingProvider = false
       end
     end,
-    on_init = shared.on_init,
+    on_init = function(client, init_result)
+      -- Register handler for workspace/diagnostic/refresh (html LSP sends this)
+      if client.server_capabilities then
+        vim.lsp.handlers["workspace/diagnostic/refresh"] = function()
+          -- No-op: ignore this request
+          return vim.NIL
+        end
+      end
+
+      if type(shared.on_init) == "function" then
+        return shared.on_init(client, init_result)
+      end
+      return true
+    end,
     settings = {
       html = {
         suggest = { html5 = true },

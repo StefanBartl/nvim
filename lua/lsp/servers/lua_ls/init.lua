@@ -35,7 +35,17 @@ function M.setup(shared, opts)
       capabilities = shared.capabilities,
 
       -- Pass through custom attach handler
-      on_attach = shared.on_attach,
+      on_attach = function(client, bufnr)
+        -- Wrap client to catch malformed requests
+        local ok_err, err_handler = pcall(require, "lsp.servers.lua_ls.error_handler")
+        if ok_err and type(err_handler.wrap_client) == "function" then
+          pcall(err_handler.wrap_client, client)
+        end
+
+        if type(shared.on_attach) == "function" then
+          shared.on_attach(client, bufnr)
+        end
+      end,
 
       -- Pass through initialization handler
       on_init = shared.on_init,
@@ -100,8 +110,8 @@ function M.setup(shared, opts)
             -- preloadFileSize = 500, -- Maximum file size in KB
 
             -- CRITICAL: Increase preload limits for type files
-            maxPreload = 5000,        -- Increased from 3000
-            preloadFileSize = 1000,   -- Increased from 500 (KB)
+            maxPreload = 5000, -- Increased from 3000
+            preloadFileSize = 1000, -- Increased from 500 (KB)
 
             -- library will be populated dynamically per root in on_new_config
           },
@@ -113,32 +123,44 @@ function M.setup(shared, opts)
 
       -- Hook called when a new root directory is detected or config changes
       on_new_config = function(new_config, new_root)
-        -- Ensure we have a valid config structure
-        if new_config and new_config.settings and new_config.settings.Lua then
-          -- Build project-specific library paths
-          local build_library = require("lsp.servers.lua_ls.build_library")
-          local per_root_lib = build_library(new_root) or {}
-
-          -- Get all Neovim runtime paths for vim.* API recognition
-          local runtime_lib = vim.api.nvim_get_runtime_file("", true) or {}
-
-          -- Merge both libraries into a single table
-          -- lua_ls expects library as: { [path] = true, ... }
-          local merged = {}
-
-          -- Add Neovim runtime paths
-          for _, p in ipairs(runtime_lib) do
-            merged[p] = true
-          end
-
-          -- Add project-specific library paths (may override runtime paths)
-          for k, v in pairs(per_root_lib) do
-            merged[k] = v
-          end
-
-          -- Assign merged library to the workspace configuration
-          new_config.settings.Lua.workspace.library = merged
+        -- CRITICAL: Guard against nil config
+        if not new_config then
+          vim.notify("[lua_ls] on_new_config: new_config is nil", vim.log.levels.ERROR)
+          return
         end
+
+        if not new_config.settings then
+          vim.notify("[lua_ls] on_new_config: settings is nil", vim.log.levels.ERROR)
+          return
+        end
+
+        if not new_config.settings.Lua then
+          vim.notify("[lua_ls] on_new_config: settings.Lua is nil", vim.log.levels.ERROR)
+          return
+        end
+
+        -- Build project-specific library paths
+        local build_library = require("lsp.servers.lua_ls.build_library")
+        local per_root_lib = build_library(new_root) or {}
+
+        -- Get all Neovim runtime paths
+        local runtime_lib = vim.api.nvim_get_runtime_file("", true) or {}
+
+        -- Merge libraries
+        local merged = {}
+
+        -- Add Neovim runtime paths
+        for _, p in ipairs(runtime_lib) do
+          merged[p] = true
+        end
+
+        -- Add project-specific library paths
+        for k, v in pairs(per_root_lib) do
+          merged[k] = v
+        end
+
+        -- Assign merged library to workspace configuration
+        new_config.settings.Lua.workspace.library = merged
       end,
     })
 
