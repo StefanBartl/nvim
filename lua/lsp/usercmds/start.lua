@@ -77,20 +77,12 @@ local function start_lsp(name, bufnr)
     return true
   end
 
-  -- Try native API first
-  local ok, err = pcall(lsp.enable, name)
+  -- CRITICAL: Use vim.lsp.enable with array syntax
+  -- vim.lsp.enable expects {client_names} (array), not string
+  local ok, err = pcall(lsp.enable, { name })
 
   if not ok then
     notify.error(string.format("Failed to enable LSP '%s': %s", name, tostring(err)))
-
-    -- Fallback: try lspconfig
-    local ok_config, lspconfig = pcall(require, "lspconfig")
-    if ok_config and lspconfig[name] then
-      pcall(lspconfig[name].launch)
-      notify.info(string.format("Started LSP: %s (via lspconfig fallback)", name))
-      return true
-    end
-
     return false
   end
 
@@ -103,7 +95,7 @@ local function start_lsp(name, bufnr)
       notify.info(string.format("✓ LSP '%s' attached successfully", name))
     else
       notify.warn(string.format(
-        "⚠ LSP '%s' setup completed but not yet attached. Check buffer filetype or :LspLog for errors",
+        "⚠ LSP '%s' setup completed but not yet attached. Try :edit or check :LspLog",
         name
       ))
     end
