@@ -7,8 +7,8 @@
 ---  - optional flags such as --nocode to skip fenced and inline code
 ---- keep parsing small and explicit; delegate translation work to replace module
 local replace = require("config.translate.replace")
-local nvim_create_user_command = vim.api.nvim_create_user_command
-local desc_tag = "[translate.nvim]: "
+
+local M = {}
 
 ---Helper: parse args array to extract language and flags
 ---@param fargs string[] array of command arguments (split by whitespace)
@@ -40,34 +40,38 @@ local function parse_args(fargs)
   return target_lang, nocode
 end
 
-nvim_create_user_command("TranslateReplace", function(opts)
-  -- opts.line1/line2 are the range (1-based)
-  local start_line = opts.line1
-  local end_line = opts.line2
+function M.enable()
+  vim.api.nvim_create_user_command("TranslateReplace", function(opts)
+    -- opts.line1/line2 are the range (1-based)
+    local start_line = opts.line1
+    local end_line = opts.line2
 
-  -- opts.fargs contains split arguments (may include flags)
-  local target_lang, nocode = parse_args(opts.fargs)
+    -- opts.fargs contains split arguments (may include flags)
+    local target_lang, nocode = parse_args(opts.fargs)
 
-  if target_lang == "" then
-    vim.notify("Please specify a target language, e.g., :TranslateReplace EN", vim.log.levels.WARN)
-    return
-  end
-
-  replace.replace_range(start_line, end_line, target_lang, { nocode = nocode })
-end, {
-  nargs = "+", -- at least one argument (language); optionally flags
-  range = true,
-  complete = function(ArgLead)
-    -- provide basic completion for language codes and the --nocode flag
-    local completions = { "EN", "DE", "FR", "ZH", "JA", "--nocode" }
-    -- simple prefix filtering
-    local res = {}
-    for _, v in ipairs(completions) do
-      if v:lower():match("^" .. vim.pesc(ArgLead):lower()) then
-        table.insert(res, v)
-      end
+    if target_lang == "" then
+      vim.notify("Please specify a target language, e.g., :TranslateReplace EN", vim.log.levels.WARN)
+      return
     end
-    return res
-  end,
-  desc = desc_tag .. "Translate selected text and replace it. Use --nocode to skip fenced and inline code.",
-})
+
+    replace.replace_range(start_line, end_line, target_lang, { nocode = nocode })
+  end, {
+    nargs = "+", -- at least one argument (language); optionally flags
+    range = true,
+    complete = function(ArgLead)
+      -- provide basic completion for language codes and the --nocode flag
+      local completions = { "EN", "DE", "FR", "ZH", "JA", "--nocode" }
+      -- simple prefix filtering
+      local res = {}
+      for _, v in ipairs(completions) do
+        if v:lower():match("^" .. vim.pesc(ArgLead):lower()) then
+          table.insert(res, v)
+        end
+      end
+      return res
+    end,
+    desc = "[translate.nvim] Translate selected text and replace it. Use --nocode to skip fenced and inline code.",
+  })
+end
+
+return M

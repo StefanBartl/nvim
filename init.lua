@@ -47,7 +47,7 @@ end)
 -- Start a predictable RPC server at startup on Windows (named pipe).
 -- This allows `nvr --server \\.\pipe\nvim-<USERNAME>` to always target this instance.
 -- ===================================================================================
--- require("system.rpc_pipe").setup({ debug = false })
+require("system.rpc_pipe").setup({ debug = false })
 
 -- ===================================================================================
 --                              Debugging Modul
@@ -99,12 +99,11 @@ require("debugging").setup({ all = true })
 ]]
 
 require("debugging").setup({
+  views = { all = true },        -- Dbg.Views.Setup|nil
   all = false,        -- optional: aktiviert alle Module
   autocmds = nil,     -- Dbg.Autocmds.Modules|nil
   markdown = nil,     -- Dbg.Markdown.Modules|nil
   terminals = nil,    -- Dbg.Terminals.Modules|nil
-  views = { all = true },        -- Dbg.Views.Setup|nil
   usercmds = false,    -- boolean|nil
   tools = nil,        -- Dbg.Tools.Modules|nil
-  performance = true,
 })

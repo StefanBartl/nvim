@@ -1,12 +1,12 @@
 ---@module 'translate.init'
 ---Orchestrates translate.nvim modules
 
--- load dependencies if not if not already done
--- require("translate").setup({
---     default = { command = "deepl_pro" },
---     preset = { output = { replace = true } },
--- })
-
-require("config.translate.replace")
-require("config.translate.usercommands")
-require("config.translate.keymaps")
+require("config.translate.usercommands").enable()
+require("lib.map")(
+    "v",
+    "<leader>tr",
+    ":TranslateReplace DE<CR>",
+    {
+        desc = "[translate.nvim]: Visual mode keymap for quick translation"
+    }
+)

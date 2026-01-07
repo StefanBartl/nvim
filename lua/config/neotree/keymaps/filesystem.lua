@@ -307,7 +307,6 @@ return {
     desc = "Copy base (dir) path (+)",
   },
 
-  --- FIX: This is not relative, but absolute
   ["]r"] = {
     --- Copy the node's relative path to the system clipboard (+).
     --- Base preference: project root (config.neotree.helper.lv_project_root) → fallback to current working directory.

@@ -20,16 +20,13 @@ local M = {}
 ---@param bufnr number Buffer handle
 ---@param start_line number 1-based start line (inclusive)
 ---@param end_line number 1-based end line (inclusive)
--- ---@return { {start:number, ["end"]:number} }[] list of ranges safe to translate FIX: return signatur fixen
+---@return {start: number, ["end"]: number}[] list of ranges safe to translate
 M.get_translatable_line_ranges = function(bufnr, start_line, end_line)
-  -- Validate arguments
   if not bufnr or not start_line or not end_line then
     return {}
   end
 
-  -- fetch lines from buffer (0-indexed for api)
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, end_line, false)
-
   local ranges = {}
   local in_fence = false
   local current_range_start = nil
@@ -37,12 +34,8 @@ M.get_translatable_line_ranges = function(bufnr, start_line, end_line)
 
   for i, line in ipairs(lines) do
     local lineno = start_line + i - 1
-
-    -- detect fenced code block delimiter (``` with optional leading spaces)
     if line:match("^%s*```") then
-      -- toggle fenced state
       in_fence = not in_fence
-      -- encountering fence closes any open translatable range
       if current_range_start then
         current_range_end = lineno - 1
         if current_range_end >= current_range_start then
@@ -54,14 +47,11 @@ M.get_translatable_line_ranges = function(bufnr, start_line, end_line)
       goto continue
     end
 
-    -- skip lines inside fenced code blocks
     if in_fence then
       goto continue
     end
 
-    -- skip lines containing inline backticks (conservative)
     if line:find("`", 1, true) then
-      -- close any open range before skipping this line
       if current_range_start then
         current_range_end = lineno - 1
         if current_range_end >= current_range_start then
@@ -73,7 +63,6 @@ M.get_translatable_line_ranges = function(bufnr, start_line, end_line)
       goto continue
     end
 
-    -- non-code line -> start or extend current range
     if not current_range_start then
       current_range_start = lineno
       current_range_end = lineno
@@ -84,7 +73,6 @@ M.get_translatable_line_ranges = function(bufnr, start_line, end_line)
     ::continue::
   end
 
-  -- close open range at end
   if current_range_start then
     if current_range_end >= current_range_start then
       table.insert(ranges, { start = current_range_start, ["end"] = current_range_end })

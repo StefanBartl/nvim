@@ -28,10 +28,6 @@ function M.setup(opts)
     require("debugging.views").setup(opts.views or { all = true })
   end
 
-  if opts.performance or opts.all == true then
-    require("debugging.performance").setup()
-  end
-
 end
 
 return M
