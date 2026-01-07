@@ -1,0 +1,25 @@
+﻿{
+    "memory":  {
+                   "median":  0,
+                   "stddev":  193.12,
+                   "min":  0,
+                   "mean":  115.73,
+                   "max":  495.92
+               },
+    "timestamp":  "20260107_005523",
+    "uienter":  {
+                    "median":  622.91,
+                    "stddev":  11.57,
+                    "min":  609.25,
+                    "mean":  624.25,
+                    "max":  649.21
+                },
+    "runs":  15,
+    "startup":  {
+                    "median":  658.74,
+                    "stddev":  11.71,
+                    "min":  640.21,
+                    "mean":  658.06,
+                    "max":  686.63
+                }
+}

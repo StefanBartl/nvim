@@ -6,4 +6,9 @@ return {
   {
     "MunifTanjim/nui.nvim",
   },
+
+  {
+    "dstein64/vim-startuptime",
+    lazy = false,
+  },
 }
