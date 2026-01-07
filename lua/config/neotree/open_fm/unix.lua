@@ -4,6 +4,8 @@
 --- using `xdg-open` (Linux) or `open` (macOS).
 --- Designed to be called from a Neo-tree window mapping with `state`.
 
+local node_utils = require("config.neotree.utils.node")
+
 local M = {}
 
 ---@private
@@ -34,15 +36,6 @@ local function run_or_fallback(argv, on_fail)
   end
 end
 
----@private
----@param state table
----@return string path
-local function get_node_path(state)
-  ---@type any
-  local node = state and state.tree and state.tree:get_node() or nil
-  return node and (node.path or node:get_id()) or ""
-end
-
 --- Open the selected node in system file manager (Linux/macOS).
 ---@param state table -- Neo-tree window state passed by the mapping
 ---@return boolean ok -- true if a launch was attempted; false on early error
@@ -52,13 +45,15 @@ function M.open(state)
     return false
   end
 
-  local raw = get_node_path(state)
-  if raw == "" then
+  -- Get current node and resolve path
+  local node = state and state.current_node or nil
+  local path, _ = node_utils.get_path(node)
+  if path == "" then
     vim.notify("Open in File Manager: no path under cursor", vim.log.levels.WARN)
     return false
   end
 
-  local abs = to_unixpath(raw)
+  local abs = to_unixpath(path)
 
   local cmd
   if vim.fn.has("mac") == 1 then

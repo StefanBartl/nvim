@@ -456,7 +456,7 @@ function M.capture_messages(opts)
 
   -- Try all capture methods
   local ok_capture, messages, source = capture_messages_raw(debug)
-  if not ok_capture then
+  if not ok_capture or not messages then
     vim.notify(
       "DebugViews: Failed to capture messages.\n" ..
       (source or "unknown error") .. "\n\n" ..

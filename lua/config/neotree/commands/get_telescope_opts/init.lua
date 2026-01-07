@@ -3,7 +3,7 @@
 --- Handles both directory and file selections, and makes the attach_mapping
 --- resilient against different telescope entry shapes.
 
----@param state table -- neo-tree state table (opaque)
+---@param state Cfg.NeoTree.State -- neo-tree state table (opaque)
 ---@param path string -- path provided by neo-tree (may be a directory or file)
 ---@return table -- telescope picker options
 return function(state, path)

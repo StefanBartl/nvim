@@ -2,6 +2,9 @@
 --- Windows-specific "open in file manager" for Neo-tree.
 --- Hardened: checks for executables, handles WSL detection, ensures proper quoting
 --- and provides improved diagnostics and deterministic fallbacks.
+
+local node_utils = require("config.neotree.utils.node")
+
 local M = {}
 
 ---@private
@@ -63,18 +66,9 @@ local function spawn_detached(argv, opts, cb)
   end
 end
 
----@private
----@param state table
----@return string
-local function get_node_path(state)
-  ---@type any
-  local node = state and state.tree and state.tree:get_node() or nil
-  return node and (node.path or node:get_id()) or ""
-end
-
 --- Attempt to open path in Explorer. Includes diagnostics and robust fallbacks.
 --- Returns boolean: true if an attempt was made (successful spawn or fallback), false on early fatal checks.
----@param state table
+---@param state Cfg.NeoTree.State
 ---@return boolean
 function M.open(state)
   -- quick platform guard: allow only native Windows or WSL cases that can call explorer
@@ -85,12 +79,17 @@ function M.open(state)
     return false
   end
 
-  local raw = get_node_path(state)
+  -- Get the currently focused node
+  local node = state and state.current_node or nil
+
+  -- Use refactored get_path from node_utils
+  local raw, _ = node_utils.get_path(node)
   if raw == "" then
     vim.notify("Open in Explorer: no path under cursor", vim.log.levels.WARN)
     return false
   end
 
+  -- Convert to Windows path
   local abs = to_winpath(raw)
   local is_dir = (vim.fn.isdirectory(abs) == 1)
   local dir = is_dir and abs or to_winpath(vim.fn.fnamemodify(abs, ":h"))

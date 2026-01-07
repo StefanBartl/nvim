@@ -15,10 +15,16 @@
 --- 3. Backup - Creates automatic backup before deletion
 --- 4. Quarantine - Stops watchers to prevent EPERM
 --- 5. Recovery Point - Allows automatic retry on failure
+-- AUDIT: Modularize
+
+-- Safety system integration
+local safety = require("config.neotree.safety")
+local watcher_quarantine = require("config.neotree.watcher_quarantine")
+
+local notify = require("lib.notify").create("[neotree.trash]")
 
 local M = {}
 
--- Core dependencies
 local api, uv = vim.api, vim.loop
 local fn = vim.fn
 local resolve, system = fn.resolve, fn.system
@@ -26,21 +32,7 @@ local defer_fn = vim.defer_fn
 local sh_error = vim.v.shell_error
 local str_format = string.format
 
--- Safety system integration
-local safety = require("config.neotree.safety")
-local watcher_quarantine = require("config.neotree.watcher_quarantine")
-
--- Notification system
-local notify = require("lib.notify").create("[neotree.trash]")
-
----Configuration
----@class TrashConfig
----@field use_safety_system boolean Enable full safety features (default: true)
----@field create_backups boolean Create backups before deletion (default: true)
----@field confirm_dangerous boolean Confirm dangerous operations (default: true)
----@field use_dry_run boolean Respect dry-run mode (default: true)
-
----@type TrashConfig
+---@type Cfg.NeoTree.Trash.Config
 M.config = {
   use_safety_system = true,
   create_backups = true,
@@ -49,7 +41,7 @@ M.config = {
 }
 
 ---Configure trash module
----@param config TrashConfig|nil
+---@param config Cfg.NeoTree.Trash.Config|nil
 function M.setup(config)
   if config then
     M.config = vim.tbl_deep_extend("force", M.config, config)
@@ -251,41 +243,45 @@ local function safe_refresh(state_name)
   watcher_quarantine.safe_refresh(state_name)
 end
 
----Collect nodes to trash (marked nodes or current node)
----@param state table
----@return table[] nodes
+--- Collect nodes to trash (marked nodes or current node)
+---@param state Cfg.NeoTree.State
+---@return table[] nodes Array of nodes (may be empty)
 local function get_nodes_to_trash(state)
-  local tree = state.tree
-  if not tree then
+  if not state then
     return {}
   end
 
-  -- Get marked nodes
   local marks = state.explicitly_marked_node_ids or {}
-  local marked_nodes = {}
+  local nodes = {}
 
+  -- Collect marked nodes first
   for node_id, _ in pairs(marks) do
-    local node = tree:get_node(node_id)
-    if node then
-      table.insert(marked_nodes, node)
+    -- Try to find node by id among current tree's children
+    if state.current_node and state.current_node.children then
+      for _, child in ipairs(state.current_node.children) do
+        if child.id == node_id then
+          table.insert(nodes, child)
+          break
+        end
+      end
     end
   end
 
-  if #marked_nodes > 0 then
-    return marked_nodes
+  -- Return marked nodes if any
+  if #nodes > 0 then
+    return nodes
   end
 
-  -- Fallback to current node
-  local node = tree:get_node()
-  if node then
-    return { node }
+  -- Fallback to current_node
+  if state.current_node then
+    return { state.current_node }
   end
 
   return {}
 end
 
 ---Neo-tree command: move selected nodes to trash with full safety
----@param state table Neo-tree state
+---@param state Cfg.NeoTree.State Neo-tree state
 ---@return nil
 function M.neotree_send_node_to_trash(state)
   local nodes = get_nodes_to_trash(state)

@@ -3,13 +3,7 @@
 
 local M = {}
 
----@class RecoveryPoint
----@field timestamp number
----@field operation string
----@field state table Serializable state snapshot
----@field paths string[]
-
----@type RecoveryPoint[]
+---@type Cfg.NeoTree.Safety.RecoveryPoint[]
 local recovery_points = {}
 local MAX_RECOVERY_POINTS = 10
 
@@ -80,7 +74,7 @@ function M.attempt_recovery(error_info)
 end
 
 ---List recovery points
----@return RecoveryPoint[]
+---@return Cfg.NeoTree.Safety.RecoveryPoint[]
 function M.list_recovery_points()
   return vim.deepcopy(recovery_points)
 end

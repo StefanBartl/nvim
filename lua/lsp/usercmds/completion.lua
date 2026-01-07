@@ -127,6 +127,7 @@ end
 ---@param cmdline string
 ---@param cursorpos integer
 ---@return string[]
+---@diagnostic disable-next-line: unused-local
 function M.complete_start(arglead, cmdline, cursorpos)
   -- Wrap in pcall to avoid breaking completion on errors
   local ok, result = pcall(function()

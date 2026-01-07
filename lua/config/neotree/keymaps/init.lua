@@ -1,25 +1,26 @@
 ---@module 'config.neotree.keymaps'
 --- Centralized, buffer-local Neo-tree keymaps that override defaults consistently.
 
-
-local hide_preview_safe = require("config.neotree.helper.hide_preview_safe")
+local safe_hide_preview = require("config.neotree.utils").safe_hide_preview
 local watcher_quarantine = require("config.neotree.watcher_quarantine")
 
 ---@return table<string, any>
 return {
 
---====================== Window Control =============================
+  ["d"] = "noop", -- set in 'filesystem' to custom trash function
 
-["q"] = "close_window",
-["?"] = "show_help",
-["g?"] = "noop",
+  --====================== Window Control =============================
 
---======= clear filter, preview and search highlight
+  ["q"] = "close_window",
+  ["?"] = "show_help",
+  ["g?"] = "noop",
+
+  --======= clear filter, preview and search highlight
 
   ["<Esc>"] = function(state)
     require("neo-tree.sources.filesystem").reset_search(state, true)
     require("neo-tree.sources.filesystem.lib.filter_external").cancel()
-    hide_preview_safe(state)
+    safe_hide_preview(state)
     vim.cmd("nohlsearch")
 
     -- Exit quarantine if active
@@ -28,19 +29,19 @@ return {
     end
   end,
 
---====================== Source Switching ===========================
+  --====================== Source Switching ===========================
 
-["\""] = "next_source",
-["!"] = "prev_source",
-["<"] = "noop",
+  ['"'] = "next_source",
+  ["!"] = "prev_source",
+  ["<"] = "noop",
 
---====================== Window Management ==========================
+  --====================== Window Management ==========================
 
-    ["R"] = "refresh",
-    ["C"] = "close_node",
-    ["z"] = "close_all_nodes",
+  ["R"] = "refresh",
+  ["C"] = "close_node",
+  ["z"] = "close_all_nodes",
 
---======= resize helper
+  --======= resize helper
 
   ["w"] = {
     function(state)
@@ -59,9 +60,8 @@ return {
     desc = "Resize the neotree window",
   },
 
---====================== Splits/Tabs (filesystem set this) ==========
+  --====================== Splits/Tabs (filesystem set this) ==========
 
-["s"] = "noop",
-["t"] = "noop",
-
+  ["s"] = "noop",
+  ["t"] = "noop",
 }

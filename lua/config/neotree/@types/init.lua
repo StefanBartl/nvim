@@ -62,4 +62,40 @@
 ---@field error_suppressed boolean EPERM suppression active
 ---@field original_notify function|nil Backup of original vim.notify
 
+-- ===========================
+-- safety
+
+---@class Cfg.NeoTree.Safety.RecoveryPoint
+---@field timestamp number
+---@field operation string
+---@field state table Serializable state snapshot
+---@field paths string[]
+
+-- ===========================
+-- trash
+
+---@class Cfg.NeoTree.Trash.Config
+---@field use_safety_system boolean Enable full safety features (default: true)
+---@field create_backups boolean Create backups before deletion (default: true)
+---@field confirm_dangerous boolean Confirm dangerous operations (default: true)
+---@field use_dry_run boolean Respect dry-run mode (default: true)
+
+
+-- ===========================
+-- actions
+
+---@class Cfg.NeoTree.Copy.ClipboardOpt
+---@field relative_to_cwd? boolean Convert paths to relative (default: false)
+---@field preview_limit? integer Max entries to show in notification (default: 10)
+---@field quote_paths? boolean Wrap paths in quotes (default: false)
+---@field format? "list"|"quoted"|"json" Output format (default: "list")
+
+---@class Cfg.NeoTree.Actions.PathToRequireOpts
+---@field relative? boolean Use relative paths (default: false)
+---@field show_preview? boolean Show preview notification (default: true)
+
+---@class Cfg.NeoTree.Actions.NodeInfoState
+---@field active_win integer|nil Current hover window
+---@field active_path string|nil Currently displayed path
+
 return {}

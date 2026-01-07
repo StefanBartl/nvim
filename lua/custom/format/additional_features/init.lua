@@ -98,13 +98,18 @@ end
 local function change_case(text, mode)
   if mode == "upper" then
     return text:upper()
+
   elseif mode == "lower" then
     return text:lower()
+
   elseif mode == "title" then
     -- Title case: capitalize first letter of each word
-    return text:gsub("(%a)([%w_']*)", function(first, rest)
+    local result = text:gsub("(%a)([%w_']*)", function(first, rest)
+      -- Uppercase first character, lowercase the remaining word
       return first:upper() .. rest:lower()
     end)
+    return result
+
   elseif mode == "sentence" then
     -- Sentence case: capitalize first letter after punctuation
     local result = text:lower()
@@ -114,6 +119,7 @@ local function change_case(text, mode)
     end)
     return result
   end
+
   return text
 end
 
@@ -166,6 +172,7 @@ end
 function M.register_subcommands(register_fn)
   -- Trim whitespace
   register_fn("trim", {
+    ---@diagnostic disable-next-line: unused-local
     handler = function(args)
       local count = trim_whitespace()
       vim.notify(
@@ -192,6 +199,7 @@ function M.register_subcommands(register_fn)
       api.nvim_buf_set_lines(buf, 0, -1, false, sorted)
       vim.notify("[custom.format.sort] Buffer sorted", vim.log.levels.INFO)
     end,
+    ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead)
       local opts = { "-r", "--reverse", "-i", "--ignore-case", "-n", "--numeric" }
       local matches = {}
@@ -269,6 +277,7 @@ function M.register_subcommands(register_fn)
         vim.log.levels.INFO
       )
     end,
+    ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead)
       return { "upper", "lower", "title", "sentence" }
     end,

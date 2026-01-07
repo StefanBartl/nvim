@@ -206,7 +206,7 @@ function M.report()
   print("\n📁 PATHS:")
   local capture = require("debugging.views.capture")
   print(string.format("  base_dir: %s", capture.base_dir))
-  local dir, logfile = capture.base_dir, capture.base_dir .. "/test.log"
+  local dir, _ = capture.base_dir, capture.base_dir .. "/test.log"
   print(string.format("  dir exists: %s", vim.fn.isdirectory(dir) == 1 and "✓" or "✗"))
 
   -- Platform

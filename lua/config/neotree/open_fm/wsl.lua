@@ -4,8 +4,16 @@
 ---   - Do not treat non-zero exit codes from explorer.exe as failure (WSL peculiarity).
 ---   - Only fall back if spawning the primary command fails altogether.
 
+local node_utils = require("config.neotree.utils.node")
+
 local M ---@type Cfg.NeoTree.Wsl.FM
-M = { _cfg = { backend = "explorer", silent = true } }
+
+M = {
+    _cfg = {
+        backend = "explorer",
+        silent = true,
+    }
+}
 
 ---@private
 ---@return boolean
@@ -77,13 +85,6 @@ local function spawn_detached(argv)
   end
 end
 
----@private
----@param state table
----@return string
-local function get_node_path(state)
-  local node = state and state.tree and state.tree:get_node() or nil
-  return node and (node.path or node:get_id()) or ""
-end
 
 ---@nodiscard
 ---@param cfg Cfg.NeoTree.Wsl.OpenConfig|nil
@@ -101,7 +102,7 @@ end
 
 --- Open selected node using Windows Explorer from within WSL.
 --- Files are revealed with '/select,<path>', folders are opened directly.
----@param state table
+---@param state Cfg.NeoTree.State
 ---@return boolean ok
 function M.open(state)
   if not is_wsl() then
@@ -111,7 +112,11 @@ function M.open(state)
     return false
   end
 
-  local raw = get_node_path(state)
+  -- Get the current node from the state
+  local node = state and state.current_node or nil
+
+  -- Get path via node_utils.get_path
+  local raw, is_dir = node_utils.get_path(node)
   if raw == "" then
     if not M._cfg.silent then
       vim.notify("Open in File Manager (WSL): no path under cursor", vim.log.levels.WARN)
@@ -119,14 +124,15 @@ function M.open(state)
     return false
   end
 
+  -- Convert path to Windows
   local abs_win = to_windows_path(raw)
   if not abs_win or abs_win == "" then
     vim.notify("Open in File Manager (WSL): path conversion failed", vim.log.levels.ERROR)
     return false
   end
 
-  local is_dir = (vim.fn.isdirectory(abs_unix(raw)) == 1)
-  local dir_win = is_dir and abs_win or to_windows_path(vim.fn.fnamemodify(abs_unix(raw), ":h"))
+  -- Determine directory path (Files -> Parent, Folders -> direct)
+  local dir_win = is_dir and abs_win or to_windows_path(vim.fn.fnamemodify(raw, ":h"))
 
   -- Backend selection
   local backend = M._cfg.backend

@@ -1,31 +1,10 @@
----@module 'config.neotree.helper.save_node_buffer'
+---@module 'config.neotree.actions.save.node_buffer'
 ---Helper to force-save the buffer that corresponds to the neo-tree node under cursor
 ---Only saves if:
 ---  - the node is a file (not a directory)
 ---  - the file is already open in a normal, writable buffer
 
----Checks whether a buffer is a normal, writable file buffer
----@param bufnr integer
----@return boolean
-local function is_normal_file_buffer(bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return false
-  end
-
-  if not vim.bo[bufnr].buflisted then
-    return false
-  end
-
-  if vim.bo[bufnr].buftype ~= "" then
-    return false
-  end
-
-  if vim.api.nvim_buf_get_name(bufnr) == "" then
-    return false
-  end
-
-  return true
-end
+local buffer = require("config.neotree.utils.buffer")
 
 ---Returns the absolute file path of the neo-tree node under cursor
 ---or nil if the cursor is not on a file node
@@ -56,21 +35,19 @@ end
 
 ---Force-save the buffer that matches the neo-tree node under cursor
 ---Does nothing if the file is not already open in a buffer
---- save_buffer_for_node_under_cursor()
 ---@return nil
-return function ()
+return function()
   local target_path = get_node_file_path()
   if not target_path then
     return
   end
 
-  ---@type integer[]
   local buffers = vim.api.nvim_list_bufs()
-
   for i = 1, #buffers do
     local bufnr = buffers[i]
 
-    if is_normal_file_buffer(bufnr) then
+    -- ✅ Korrekt: Nutze buffer.is_valid_file_buffer für Validierung
+    if buffer.is_valid_file_buffer(bufnr) then
       local buf_path = vim.api.nvim_buf_get_name(bufnr)
 
       -- Exact path match
