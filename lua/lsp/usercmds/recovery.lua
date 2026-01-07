@@ -140,54 +140,7 @@ function M.force_restart(name, bufnr)
   return true
 end
 
---- Health check for all configured servers
----@param bufnr integer|nil
----@return table status { name: string, running: boolean, config_exists: boolean }[]
-function M.health_check(bufnr)
-  bufnr = bufnr or 0
-  local results = {}
-
-  -- Get expected servers for filetype
-  local ok, start_mod = pcall(require, "lsp.usercmds.start")
-  if not ok then
-    return results
-  end
-
-  local get_servers = rawget(start_mod, "get_servers_for_buffer")
-  if not get_servers then
-    return results
-  end
-
-  local expected = get_servers(bufnr)
-
-  for _, name in ipairs(expected) do
-    local running = is_running(name, bufnr)
-
-    -- Check if config exists
-    local config_exists = false
-    if type(lsp.config) == "table" and lsp.config.get then
-      local configs = lsp.config.get() or {}
-      for _, cfg in pairs(configs) do
-        if cfg.name == name then
-          config_exists = true
-          break
-        end
-      end
-    end
-
-    table.insert(results, {
-      name = name,
-      running = running,
-      config_exists = config_exists,
-      attempts = state.attempts[name] or 0,
-      last_error = state.last_error[name],
-    })
-  end
-
-  return results
-end
-
---- Auto-recover: start all missing servers for current filetype
+  ---- Auto-recover: start all missing servers for current filetype
 ---@param bufnr integer|nil
 function M.auto_recover(bufnr)
   if not bufnr then

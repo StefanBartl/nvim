@@ -157,6 +157,12 @@ function M.setup(cfg)
     semantic_tokens_timeout = 300,
     scratch_filetype = "markdown",
   })
+  require("lsp.lspdoctor").setup({
+    use_notify = false,
+    auto_open_scratch = true,
+    scratch_threshold = 20,
+    formatter_priority = { "null-ls", "eslint", "lua_ls" },
+  })
   require("lsp.lspdoctor").enable_usercmd()
 
   require("lsp.tools.eslint_prettier").setup({

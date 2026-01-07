@@ -34,7 +34,7 @@ end
 --- Get servers for current buffer's filetype
 ---@param bufnr integer|nil
 ---@return string[]
-local function get_servers_for_buffer(bufnr)
+function M.get_servers_for_buffer(bufnr)
   bufnr = bufnr or 0
   local ft = vim.bo[bufnr].filetype
   if not ft or ft == "" then
@@ -115,7 +115,7 @@ function M.execute(args)
     start_lsp(args.args, bufnr)
   else
     -- Auto-detect based on filetype
-    local servers = get_servers_for_buffer(bufnr)
+    local servers = M.get_servers_for_buffer(bufnr)
     if #servers == 0 then
       local ft = vim.bo[bufnr].filetype
       notify.warn(string.format("No LSP configured for filetype '%s'", ft or "none"))

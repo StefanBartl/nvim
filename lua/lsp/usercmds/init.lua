@@ -23,9 +23,6 @@ local commands = {
   info = function()
     return require("lsp.usercmds.info")
   end,
-  debug = function()
-    return require("lsp.usercmds.debug")
-  end,
 }
 
 local completion = function()
@@ -80,34 +77,6 @@ function M.attach()
     end,
     desc = desc_tag .. "Force-restart LSP with full cleanup",
   })
-
-  -- LspHealth: Show LSP health for current buffer
-  pcall(nvim_create_user_command, "LspHealth", function()
-    local recovery = require("lsp.usercmds.recovery")
-    local health = recovery.health_check(0)
-
-    local lines = { "LSP Health Check", "================", "" }
-
-    for _, status in ipairs(health) do
-      local icon = status.running and "✓" or "✗"
-      local state = status.running and "running" or "not running"
-      table.insert(lines, string.format("%s %s: %s", icon, status.name, state))
-
-      if not status.config_exists then
-        table.insert(lines, "  ⚠ Config not found in vim.lsp.config")
-      end
-
-      if status.attempts and status.attempts > 0 then
-        table.insert(lines, string.format("  Retry attempts: %d", status.attempts))
-      end
-
-      if status.last_error then
-        table.insert(lines, string.format("  Last error: %s", status.last_error))
-      end
-    end
-
-    notify.info(table.concat(lines, "\n"))
-  end, { desc = desc_tag .. "Show LSP health status" })
 
   -- LspStartHere: Start servers (auto-detect or specify)
   pcall(nvim_create_user_command, "LspStartHere", function(args)

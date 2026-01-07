@@ -6,6 +6,27 @@ Linux/macOS focused. Neovim 0.9+ (0.10+ recommended).
 
 ---
 
+## Table of content
+
+- [LSP Doctor](#lsp-doctor)
+  - [Features](#features)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Commands](#commands)
+  - [Usage Examples](#usage-examples)
+  - [Configuration](#configuration)
+  - [What the reports show](#what-the-reports-show)
+  - [Formatter policy](#formatter-policy)
+  - [Offset encoding mismatch](#offset-encoding-mismatch)
+  - [Scratch export](#scratch-export)
+  - [Health-style output](#health-style-output)
+  - [API](#api)
+  - [Troubleshooting](#troubleshooting)
+  - [FAQ](#faq)
+  - [Development](#development)
+
+---
+
 ## Features
 
 * Quick and deep LSP reports (on-demand, non-blocking)
