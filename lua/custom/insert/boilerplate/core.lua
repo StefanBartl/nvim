@@ -1,178 +1,337 @@
 ---@module 'custom.insert.boilerplate.core'
 ---@brief Core implementation for boilerplate/template insertion
----@description
---- Provides functions to insert common code templates.
 
 local M = {}
 
-local api = vim.api
+---@type Custom.Insert.Boilerplate.TemplateRegistry
+local registry = {
+  ["lua-module"] = {
+    category = "lua",
+    description = "Complete Lua module skeleton",
+    prompts = {
+      {
+        name = "name",
+        prompt = "Module name (empty for auto-detect)",
+        default = nil,
+        required = false,
+      },
+    },
+  },
+  ["lua-class"] = {
+    category = "lua",
+    description = "Lua class with constructor",
+    prompts = {
+      {
+        name = "class_name",
+        prompt = "Class name",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+  ["lua-function"] = {
+    category = "lua",
+    description = "Annotated function template",
+    prompts = nil,
+  },
+  ["nvim-autocmd"] = {
+    category = "nvim",
+    description = "Neovim autocommand group",
+    prompts = {
+      {
+        name = "group_name",
+        prompt = "Autocommand group name",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+  ["nvim-keymap"] = {
+    category = "nvim",
+    description = "Neovim keymap with description",
+    prompts = nil,
+  },
+  ["guard-clause"] = {
+    category = "guard",
+    description = "Early return guard pattern (interactive)",
+    prompts = nil,
+  },
+  ["html-figure"] = {
+    category = "html",
+    description = "HTML figure with image and caption",
+    prompts = {
+      {
+        name = "id",
+        prompt = "Figure ID",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+  ["html-code"] = {
+    category = "html",
+    description = "HTML code listing with caption",
+    prompts = {
+      {
+        name = "id",
+        prompt = "Code listing ID",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+  ["html-quote"] = {
+    category = "html",
+    description = "HTML blockquote with citation",
+    prompts = {
+      {
+        name = "id",
+        prompt = "Quote ID",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+  ["html-formula-table"] = {
+    category = "html",
+    description = "HTML table for mathematical formulas",
+    prompts = {
+      {
+        name = "id",
+        prompt = "Table ID",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+  ["html-aside"] = {
+    category = "html",
+    description = "HTML aside/note element",
+    prompts = {
+      {
+        name = "id",
+        prompt = "Aside ID",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+  ["html-pagination"] = {
+    category = "html",
+    description = "HTML pagination navigation",
+    prompts = {
+      {
+        name = "id",
+        prompt = "Pagination ID",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+  ["html-accordion"] = {
+    category = "html",
+    description = "HTML collapsible accordion/details",
+    prompts = {
+      {
+        name = "id",
+        prompt = "Accordion ID",
+        default = nil,
+        required = true,
+      },
+    },
+  },
+}
 
----@param lines string[]
-local function insert_lines_at_cursor(lines)
-  local win = api.nvim_get_current_win()
-  local cursor = api.nvim_win_get_cursor(win)
-  local row = cursor[1] - 1
+---Lazy-load template modules
+---@type table<string, any>
+local template_modules = {}
 
-  api.nvim_buf_set_lines(0, row, row, false, lines)
-  api.nvim_win_set_cursor(win, { row + #lines + 1, 0 })
+---Get or load a template module
+---@param name string Module name
+---@return table|nil module
+local function get_template_module(name)
+  if not template_modules[name] then
+    local ok, mod = pcall(require, "custom.insert.boilerplate.templates." .. name)
+    if ok then
+      template_modules[name] = mod
+    else
+      vim.notify(
+        string.format("[custom.insert.boilerplate] Failed to load template module '%s': %s", name, mod),
+        vim.log.levels.ERROR
+      )
+      return nil
+    end
+  end
+  return template_modules[name]
 end
 
----Get Lua module path for current buffer
----@return string|nil
-local function get_module_path()
-  local filepath = api.nvim_buf_get_name(0)
-  local normalized = filepath:gsub("\\", "/")
-  local lua_idx = normalized:find("/lua/")
-  if not lua_idx then
+---Get template metadata
+---@param template Custom.Insert.Boilerplate.Template
+---@return Custom.Insert.Boilerplate.TemplateMetadata|nil metadata
+function M.get_template_metadata(template)
+  return registry[template]
+end
+
+---List all available templates
+---@return Custom.Insert.Boilerplate.Template[]
+function M.list_templates()
+  local templates = {}
+  for name, _ in pairs(registry) do
+    table.insert(templates, name)
+  end
+  table.sort(templates)
+  return templates
+end
+
+---List templates by category
+---@param category Custom.Insert.Boilerplate.Category
+---@return Custom.Insert.Boilerplate.Template[]
+function M.list_templates_by_category(category)
+  local templates = {}
+  for name, meta in pairs(registry) do
+    if meta.category == category then
+      table.insert(templates, name)
+    end
+  end
+  table.sort(templates)
+  return templates
+end
+
+---Generate template lines
+---@param template Custom.Insert.Boilerplate.Template
+---@param args table<string, string>|nil Pre-filled arguments
+---@return string[]|nil lines
+local function generate_template(template, args)
+  local meta = registry[template]
+  if not meta then
     return nil
   end
 
-  local after_lua = normalized:sub(lua_idx + 5)
-  local without_ext = after_lua:gsub("%.lua$", "")
-  without_ext = without_ext:gsub("/init$", "")
-  return without_ext:gsub("/", ".")
-end
+  -- Get utils module
+  local utils = get_template_module("utils")
+  if not utils then
+    return nil
+  end
 
----Generate template for Lua module
----@param name string|nil Module name (auto-detected if nil)
----@return string[]
-local function template_lua_module(name)
-  name = name or get_module_path() or "module.name"
+  local values = args or {}
 
-  return {
-    string.format("---@module '%s'", name),
-    "---@brief TODO: Add brief description",
-    "---@description",
-    "--- TODO: Add detailed description",
-    "",
-    "local M = {}",
-    "",
-    "---TODO: Add function description",
-    "---@return nil",
-    "function M.setup()",
-    "  -- TODO: Implementation",
-    "end",
-    "",
-    "return M",
-  }
-end
+  -- Process prompts if needed
+  if meta.prompts and not args then
+    values = utils.process_prompts(meta.prompts)
+    if not values then
+      return nil
+    end
+  end
 
----Generate template for Lua class
----@param class_name string
----@return string[]
-local function template_lua_class(class_name)
-  return {
-    string.format("---@class %s", class_name),
-    "---@field private _data table Internal state",
-    string.format("local %s = {}", class_name),
-    string.format("%s.__index = %s", class_name, class_name),
-    "",
-    "---Constructor",
-    "---@param opts table|nil Options",
-    string.format("---@return %s", class_name),
-    string.format("function %s.new(opts)", class_name),
-    "  opts = opts or {}",
-    string.format("  local self = setmetatable({}, %s)", class_name),
-    "  self._data = opts",
-    "  return self",
-    "end",
-    "",
-    string.format("return %s", class_name),
-  }
-end
+  -- Generate template based on category
+  if meta.category == "lua" then
+    local lua_templates = get_template_module("lua")
+    if not lua_templates then
+      return nil
+    end
 
----Generate template for annotated function
----@return string[]
-local function template_lua_function()
-  return {
-    "---TODO: Add description",
-    "---@param arg1 type TODO: Add param description",
-    "---@return type TODO: Add return description",
-    "local function function_name(arg1)",
-    "  -- TODO: Implementation",
-    "end",
-  }
-end
+    if template == "lua-module" then
+      return lua_templates.module(values.name)
+    elseif template == "lua-class" then
+      return lua_templates.class(values.class_name)
+    elseif template == "lua-function" then
+      return lua_templates.func()
+    end
+  elseif meta.category == "nvim" then
+    local nvim_templates = get_template_module("nvim")
+    if not nvim_templates then
+      return nil
+    end
 
----Generate template for Neovim autocommand group
----@param group_name string
----@return string[]
-local function template_nvim_autocmd(group_name)
-  return {
-    string.format('local augroup = vim.api.nvim_create_augroup("%s", { clear = true })', group_name),
-    "",
-    "vim.api.nvim_create_autocmd({ TODO: events }, {",
-    "  group = augroup,",
-    '  pattern = "TODO: pattern",',
-    "  callback = function()",
-    "    -- TODO: Implementation",
-    "  end,",
-    '  desc = "TODO: Description",',
-    "})",
-  }
-end
+    if template == "nvim-autocmd" then
+      return nvim_templates.autocmd(values.group_name)
+    elseif template == "nvim-keymap" then
+      return nvim_templates.keymap()
+    end
+  elseif meta.category == "html" then
+    local html_templates = get_template_module("html")
+    if not html_templates then
+      return nil
+    end
 
----Generate template for Neovim keymap
----@return string[]
-local function template_nvim_keymap()
-  return {
-    'vim.keymap.set("n", "<leader>TODO", function()',
-    "  -- TODO: Implementation",
-    'end, { desc = "TODO: Description" })',
-  }
-end
+    if template == "html-figure" then
+      return html_templates.figure(values.id)
+    elseif template == "html-code" then
+      return html_templates.code(values.id)
+    elseif template == "html-quote" then
+      return html_templates.quote(values.id)
+    elseif template == "html-formula-table" then
+      return html_templates.formula_table(values.id)
+    elseif template == "html-aside" then
+      return html_templates.aside(values.id)
+    elseif template == "html-pagination" then
+      return html_templates.pagination(values.id)
+    elseif template == "html-accordion" then
+      return html_templates.accordion(values.id)
+    end
+  elseif meta.category == "guard" then
+    local guard_templates = get_template_module("guard")
+    if not guard_templates then
+      return nil
+    end
 
----Generate template for guard clause
----@return string[]
-local function template_guard_clause()
-  return {
-    "if not condition then",
-    '  vim.notify("TODO: Error message", vim.log.levels.ERROR)',
-    "  return nil",
-    "end",
-  }
+    if template == "guard-clause" then
+      return guard_templates.guard_interactive()
+    end
+  end
+
+  return nil
 end
 
 ---Insert boilerplate template at cursor
 ---@param template Custom.Insert.Boilerplate.Template
----@param name string|nil Optional name parameter
+---@param name string|nil Optional name parameter (legacy support)
 ---@return boolean success
 function M.insert_template(template, name)
-  local lines
-
-  if template == "lua-module" then
-    lines = template_lua_module(name)
-  elseif template == "lua-class" then
-    if not name or name == "" then
-      name = vim.fn.input("Class name: ")
-      if name == "" then
-        return false
-      end
-    end
-    lines = template_lua_class(name)
-  elseif template == "lua-function" then
-    lines = template_lua_function()
-  elseif template == "nvim-autocmd" then
-    if not name or name == "" then
-      name = vim.fn.input("Autocommand group name: ")
-      if name == "" then
-        return false
-      end
-    end
-    lines = template_nvim_autocmd(name)
-  elseif template == "nvim-keymap" then
-    lines = template_nvim_keymap()
-  elseif template == "guard-clause" then
-    lines = template_guard_clause()
-  else
+  -- Check if template exists
+  if not registry[template] then
+    local available = table.concat(M.list_templates(), ", ")
     vim.notify(
-      "[custom.insert.boilerplate] Unknown template: " .. template,
+      string.format(
+        "[custom.insert.boilerplate] Unknown template: '%s'\nAvailable templates: %s",
+        template,
+        available
+      ),
       vim.log.levels.ERROR
     )
     return false
   end
 
-  insert_lines_at_cursor(lines)
+  local lines
+
+  -- Legacy support: convert name parameter to args table
+  local args = nil
+  if name and name ~= "" then
+    args = {
+      name = name,
+      class_name = name,
+      group_name = name,
+      id = name,
+    }
+  end
+
+  lines = generate_template(template, args)
+
+  if not lines then
+    vim.notify(
+      string.format("[custom.insert.boilerplate] Failed to generate template: %s", template),
+      vim.log.levels.ERROR
+    )
+    return false
+  end
+
+  -- Get utils and insert
+  local utils = get_template_module("utils")
+  if not utils then
+    return false
+  end
+
+  utils.insert_lines_at_cursor(lines)
   return true
 end
 

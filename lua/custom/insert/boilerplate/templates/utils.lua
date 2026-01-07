@@ -64,11 +64,7 @@ function M.process_prompts(prompts)
   local values = {}
 
   for _, spec in ipairs(prompts) do
-    local value = M.prompt_user(
-      spec.prompt .. ": ",
-      spec.default,
-      spec.required
-    )
+    local value = M.prompt_user(spec.prompt .. ": ", spec.default, spec.required)
 
     if not value and spec.required then
       return nil

@@ -1,8 +1,6 @@
 ---@module 'custom.insert.boilerplate.templates.guard'
 ---@brief Guard clause pattern generators
 
-local utils = require("custom.insert.boilerplate.templates.utils")
-
 local M = {}
 
 ---Generate guard clause template
@@ -27,6 +25,8 @@ end
 ---Interactive guard clause generation
 ---@return string[]|nil lines
 function M.guard_interactive()
+  local utils = require("custom.insert.boilerplate.templates.utils")
+
   local prompts = {
     {
       name = "condition",
