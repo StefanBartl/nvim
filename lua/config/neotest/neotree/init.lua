@@ -1,7 +1,7 @@
 ---@module 'config.neotest.neotree'
 --- Neo-tree integration for Neotest actions.
 
---[[ FIX: Einbinden in neotreer (merge mizt filesystem mappings)
+--[[ FIX: Einbinden in neotree (merge mit filesystem mappings)
  Einbindung in Neo-tree
  local neotest_neotree = require("config.neotest.neotree")
 

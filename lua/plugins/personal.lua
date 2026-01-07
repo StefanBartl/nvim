@@ -245,7 +245,7 @@ return {
 
       -- -- Custom keymaps (optional - defaults shown)
       mappings = {
-        open_here = { "gP", "<2-LeftMouse>" },
+        open_here = { "gF", "<2-LeftMouse>" },
         --   open_here = "gP", -- Open in current window
         --   open_split = "g|", -- Open in horizontal split
         --   open_vsplit = "g\\", -- Open in vertical split

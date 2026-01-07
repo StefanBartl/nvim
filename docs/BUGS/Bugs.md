@@ -12,17 +12,11 @@
 
 ## Important
 
-- lua\usrcmds\search_all_drives\init.lua funktioert nicht richtig
+---
 
 ## Normal
 
-### LSP
-
-- Die @types und types dateien werden nicht gut erkannt.
-    - Status: Bereits implementiert
-- LspStartHere und LspRestartHere funktionieren nicht
-
--
+---
 
 ## Normal Bugs
 

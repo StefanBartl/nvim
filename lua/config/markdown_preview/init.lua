@@ -26,7 +26,7 @@ function M.setup(opts)
   local browser = {
     win = vim.fs.joinpath("C:", "Program Files", "Google", "Chrome", "Application", "chrome.exe"),
     wsl = vim.fs.joinpath("mnt", "c", "Program Files", "Google", "Chrome", "Application", "chrome.exe"),
-    linux = vim.fs.joinpath(""), -- BUG: WATCH: AUDIT: If youre on Linux OS put path there
+    linux = vim.fs.joinpath(""),
   }
 
   if vim.g.is_windows then

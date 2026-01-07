@@ -32,8 +32,10 @@ require("autocmds.general").enable({
     enable = false, -- On BufReadPost, jumps back to the last cursor position unless the filetype is excluded.
     exclude = { "gitcommit", "commit", "gitrebase" },
   },
+
+--AUDIT; Wenn das reicht,mm dann entferne den goto_file btranch aus autocmds
   goto_file = {
-    enable = true,
+    enable = false,
     debug = false,
   },
 })

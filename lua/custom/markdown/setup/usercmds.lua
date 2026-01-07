@@ -3,6 +3,7 @@
 --- 1. OpenWithSystemApplication - Opens files/URLs under cursor
 --- 2. EnsureMarkdownHeadlines - Adds separator after H2+ headings
 --- 3. PreviewMarkdownHeadlines - Shows what would change without modifying
+--- AUDIT: Hier wird buffer lokal implemenitert, dass sollte aber bei allen mcustom.markdown Modulen soweisop sein.
 
 local M = {}
 local api = vim.api

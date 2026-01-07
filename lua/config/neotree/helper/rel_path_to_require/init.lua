@@ -1,20 +1,42 @@
 ---@module 'config.neotree.helper.rel_path_to_require'
 --- Converts a Neo-tree node to Lua require() string(s) and copies to clipboard
---- FIX: sollte nicht require('C:.Users.Bernhard.AppData.Local.nvim.lua.config.neotree.fzf_grep_picker') machen sondern require('config.neotree.fzf_grep_picker')
-
 
 local M = {}
 local fn = vim.fn
 local notify = vim.notify
-local path_helper = require("config.neotree.helper.node_to_path")
 
--- Normalize path for require(): remove leading 'lua/', replace slashes with dots, strip .lua and /init
+-- Find the lua directory root for the given path
+---@param path string absolute or relative path
+---@return string|nil lua_root, string|nil relative_to_lua
+local function find_lua_root(path)
+  -- Normalize to absolute path
+  local abs_path = fn.fnamemodify(path, ":p"):gsub("\\", "/")
+
+  -- Try to find 'lua/' in the path
+  local lua_idx = abs_path:find("/lua/")
+  if lua_idx then
+    local lua_root = abs_path:sub(1, lua_idx + 3) -- include '/lua'
+    local rel_path = abs_path:sub(lua_idx + 5) -- after '/lua/'
+    return lua_root, rel_path
+  end
+
+  -- If not found in path, check if we're in config directory
+  local config_dir = fn.stdpath("config"):gsub("\\", "/")
+  if abs_path:sub(1, #config_dir) == config_dir then
+    local lua_root = config_dir .. "/lua"
+    local rel_path = abs_path:sub(#lua_root + 2) -- +2 for the '/'
+    return lua_root, rel_path
+  end
+
+  return nil, nil
+end
+
+-- Normalize path for require(): replace slashes with dots, strip .lua and /init
+---@param path string relative path from lua/ directory
+---@return string module path suitable for require()
 local function path_to_module(path)
   -- normalize separators
   path = path:gsub("\\", "/")
-
-  -- remove leading 'lua/' if present
-  path = path:gsub("^lua/", "")
 
   -- remove .lua extension
   path = path:gsub("%.lua$", "")
@@ -28,29 +50,34 @@ local function path_to_module(path)
   return path
 end
 
--- recursively gather all lua files under a directory
+-- Recursively gather all lua files under a directory
 ---@param dir string absolute path
+---@param lua_root string the lua/ directory root
 ---@return string[] list of module paths suitable for require()
-local function gather_lua_files(dir)
+local function gather_lua_files(dir, lua_root)
   local results = {}
   local entries = fn.readdir(dir)
+
   for _, entry in ipairs(entries) do
-    local full_path = fn.fnamemodify(dir .. "/" .. entry, ":p")
+    local full_path = fn.fnamemodify(dir .. "/" .. entry, ":p"):gsub("\\", "/")
+
     if fn.isdirectory(full_path) == 1 then
-      local child_results = gather_lua_files(full_path)
+      local child_results = gather_lua_files(full_path, lua_root)
       vim.list_extend(results, child_results)
     elseif full_path:match("%.lua$") then
-      local rel_path, _ = path_helper({ path = full_path }, "relative")
-      if rel_path then
+      -- Calculate path relative to lua_root
+      if full_path:sub(1, #lua_root) == lua_root then
+        local rel_path = full_path:sub(#lua_root + 2) -- +2 to skip '/'
         table.insert(results, path_to_module(rel_path))
       end
     end
   end
+
   return results
 end
 
 ---@param node table Neo-tree node
----@param opts table {relative = boolean}
+---@param opts? table unused for now
 function M.copy_as_require(node, opts)
   opts = opts or {}
   if not node then
@@ -58,18 +85,32 @@ function M.copy_as_require(node, opts)
     return
   end
 
-  local path, msg = path_helper(node, "relative", { base_dir = false })
-  if not path then
-    notify(msg or "no path", vim.log.levels.WARN)
+  local path = node.path or node:get_id()
+  if not path or path == "" then
+    notify("Node path is empty", vim.log.levels.WARN)
+    return
+  end
+
+  -- Find lua root directory
+  local lua_root, rel_path = find_lua_root(path)
+  if not lua_root then
+    notify("Could not find lua/ directory in path", vim.log.levels.WARN)
     return
   end
 
   local modules = {}
-  if fn.isdirectory(path) == 1 then
-    -- folder: gather all lua files recursively
-    modules = gather_lua_files(path)
+
+  -- Normalize path
+  local abs_path = fn.fnamemodify(path, ":p"):gsub("\\", "/")
+
+  if fn.isdirectory(abs_path) == 1 then
+    -- Folder: gather all lua files recursively
+    modules = gather_lua_files(abs_path, lua_root)
   else
-    table.insert(modules, path_to_module(path))
+    -- Single file
+    if rel_path then
+      table.insert(modules, path_to_module(rel_path))
+    end
   end
 
   if #modules == 0 then
@@ -81,9 +122,9 @@ function M.copy_as_require(node, opts)
   for _, mod in ipairs(modules) do
     table.insert(require_lines, ("require('%s')"):format(mod))
   end
-
+  local r = table.concat(require_lines, "\n")
   vim.fn.setreg("+", table.concat(require_lines, "\n"))
-  notify(("Copied %d require() string(s) to clipboard"):format(#require_lines), vim.log.levels.INFO)
+  notify(("Copied %d require() string(s) to clipboard: %s"):format(#require_lines, r), vim.log.levels.INFO)
 end
 
 return M

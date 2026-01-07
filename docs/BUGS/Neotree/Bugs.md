@@ -2,12 +2,9 @@
 
 ## Table of content
 
+- [Neo-tree Bug Index](#neo-tree-bug-index)
   - [IMPORTANT Bugs](#important-bugs)
-    - [1. EPERM Error friert [Neovim](./BUG-002.md) ein](#1-eperm-error-friert-neovimbug-002md-ein)
-    - [2. Invalid window Error nach Renaming](#2-invalid-window-error-nach-renaming)
   - [NORMAL Bugs](#normal-bugs)
-    - [1. Neo-tree fällt auf CWD root zurück](#1-neo-tree-fllt-auf-cwd-root-zurck)
-    - [2. Linker Neo-tree schließt und öffnet rechts](#2-linker-neo-tree-schliet-und-ffnet-rechts)
   - [Long view](#long-view)
   - [Notes](#notes)
     - [Legende](#legende)
@@ -20,9 +17,6 @@
 ---
 
 ## NORMAL Bugs
-
-- errorm meldung stimmt nicht:
-  Error  22:40:54 notify.error [neotree.trash] Operation denied: path is open in buffer: C:\Users\bartl\AppData\Local\nvim\lua\config\neotree\sources\dynamic.lua
 
 ---
 
