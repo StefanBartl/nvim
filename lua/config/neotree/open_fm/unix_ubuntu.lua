@@ -4,6 +4,8 @@
 ---        --select flags, then fallback to opening the directory.
 --- macOS: use `open -R` for files (reveal) or `open` for directories.
 
+local node_utils = require("config.neotree.utils.node")
+
 local M = {}
 
 -- Small FS helpers -------------------------------------------------------------
@@ -28,14 +30,6 @@ local function stat_kind(p)
     return false, false
   end
   return st.type == "directory", st.type == "file"
-end
-
----@private
----@param state table
----@return string path
-local function get_node_path(state)
-  local node = state and state.tree and state.tree:get_node() or nil
-  return node and (node.path or (node.get_id and node:get_id())) or ""
 end
 
 -- Linux DBus (org.freedesktop.FileManager1) -----------------------------------
@@ -134,12 +128,14 @@ end
 ---@param state table
 ---@return boolean ok
 function M.open(state)
-  local raw = get_node_path(state)
+  local node = state and state.current_node or nil
+  local raw, _ = node_utils.get_path(node)
   if raw == "" then
     vim.notify("Open in File Manager: no path under cursor", vim.log.levels.WARN)
     return false
   end
 
+  -- Pfad in absolute Unix-Form konvertieren
   local abs = to_abs_unixpath(raw)
   local _, is_file = stat_kind(abs)
 

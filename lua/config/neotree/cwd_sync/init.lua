@@ -2,7 +2,7 @@
 --- Keeps Neo-tree's filesystem root in sync with the active buffer's directory or project root.
 --- Cross-platform (uses vim.uv or vim.loop); non-intrusive (keeps focus by default).
 
-local utils = require("config.neotree.utils")
+local buffer_utils = require('config.neotree.utils.buffer')
 
 local M = {}
 
@@ -11,11 +11,11 @@ local S = {
   timer = nil,
   pending = false,
   last_dir = nil,
-  last_file = nil, -- ✅ NEU: Track auch File
+  last_file = nil,
   user_navigated = false,
   last_user_action = 0,
-  pause_until = 0, -- ✅ NEU: Explizite Pause
-  sync_scheduled = false, -- ✅ NEU: Race-Guard
+  pause_until = 0,
+  sync_scheduled = false,
 }
 
 ---Pause sync for specified duration
@@ -35,12 +35,6 @@ local function get_timer()
   return S.timer
 end
 
-local function is_real_file_buffer(buf)
-  if buf == 0 then
-    buf = vim.api.nvim_get_current_buf()
-  end
-  return utils.is_valid_file_buffer(buf)
-end
 
 local function find_neotree_win_in_current_tab()
   for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -55,7 +49,7 @@ local function find_neotree_win_in_current_tab()
 end
 
 local function derive_dir_and_path(buf, use_project_root, _)
-  local ctx = utils.get_buffer_context(buf)
+  local ctx = buffer_utils.get_buffer_context(buf)
   if not ctx then
     return nil, nil
   end
@@ -76,7 +70,6 @@ local function derive_dir_and_path(buf, use_project_root, _)
 end
 
 local function sync_now(cfg)
-  -- ✅ Respektiere Pause
   if vim.loop.now() < S.pause_until then
     return
   end
@@ -92,7 +85,7 @@ local function sync_now(cfg)
   end
 
   local cur_buf = vim.api.nvim_get_current_buf()
-  if not is_real_file_buffer(cur_buf) then
+  if not buffer_utils.is_valid_file_buffer(cur_buf) then
     return
   end
 
@@ -101,7 +94,6 @@ local function sync_now(cfg)
     return
   end
 
-  -- ✅ Check both dir AND file
   if S.last_dir == dir and S.last_file == path then
     return
   end
@@ -121,7 +113,6 @@ local function sync_now(cfg)
     prev_win = nil
   end
 
-  -- ✅ Always reveal_file
   local ok = pcall(function()
     cmd.execute({
       action = "show",
@@ -129,13 +120,13 @@ local function sync_now(cfg)
       position = "left",
       dir = dir,
       reveal = true,
-      reveal_file = path, -- ✅ WICHTIG!
+      reveal_file = path,
     })
   end)
 
   if ok then
     S.last_dir = dir
-    S.last_file = path -- ✅ NEU
+    S.last_file = path
   end
 
   if cfg.keep_focus and prev_win and vim.api.nvim_win_is_valid(prev_win) then
@@ -144,7 +135,6 @@ local function sync_now(cfg)
 end
 
 local function schedule_sync(cfg)
-  -- ✅ Race-Guard
   if S.sync_scheduled then
     return
   end

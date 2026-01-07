@@ -183,8 +183,7 @@ end
 ---@return nil
 function M.align_to_column(target_col, fill_char)
   -- Validate and normalize inputs
-  target_col = tonumber(target_col)
-  if not target_col or target_col < 1 then
+  if not target_col or type(target_col) ~= "number" or target_col < 1 then
     vim.notify(
       "[custom.format.column_align] Target column must be a positive integer",
       vim.log.levels.ERROR
@@ -217,7 +216,7 @@ function M.align_to_column(target_col, fill_char)
 
   -- Validate selection (works from normal mode after visual selection)
   local valid, err, selection = validate_selection()
-  if not valid then
+  if not valid or not selection then
     vim.notify("[custom.format.column_align] " .. err, vim.log.levels.ERROR)
     return
   end

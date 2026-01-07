@@ -3,6 +3,8 @@
 --- Works on Linux, macOS, Windows, and WSL. If the node is a file, the parent
 --- directory is used; if it is a directory, that directory is used directly.
 
+local node_utils = require("config.neotree.utils.node")
+
 local M = {}
 
 --==============================================================================
@@ -122,24 +124,19 @@ end
 --==============================================================================
 
 --- Open fzf-lua live_grep limited to the directory of the current Neo-tree node.
----@param state table  -- Neo-tree state passed into mapping callbacks
+---@param state Cfg.NeoTree.State  -- Neo-tree state passed into mapping callbacks
 ---@return nil
 function M.live_grep_node_dir(state)
-  -- 1) Get the current node from Neo-tree
-  if not state or not state.tree or not state.tree.get_node then
-    vim.notify("[neo-tree fzf] Invalid state; cannot get node", vim.log.levels.WARN)
-    return
-  end
-  local node = state.tree:get_node()
+  -- 1) Get the current node from Neo-tree state
+  local node = state and state.current_node or nil
   if not node then
     vim.notify("[neo-tree fzf] No node under cursor", vim.log.levels.WARN)
     return
   end
 
-  -- 2) Extract a filesystem path from the node
-  --    For file/directory nodes, node:get_id() resolves to the absolute path.
-  local path = node:get_id()
-  if type(path) ~= "string" or path == "" then
+  -- 2) Extract the filesystem path from the node
+  local path, _ = node_utils.get_path(node)
+  if path == "" then
     vim.notify("[neo-tree fzf] Node has no path", vim.log.levels.WARN)
     return
   end

@@ -12,7 +12,7 @@
 ## Syntax
 
 1. [lib lazy](../../../lua/lib/lazy/README.md) implementieren
-2. local funktionen statt exportieren, sofern keine externe Referenz! Alle files durchgehen!
+2. local funktionen statt exportieren, sofern keine externe Referenz! Alle files durchgehen! Das ist deswegen wichtig, damit man nicht von außen eine FUnktion - zumindest in der Theoprie - requiren und dann neu setzten kann.
 3. namespace von typen explizit einschränken: `recommender -r` nutzen
 4. notify-lib implementieren.
 5. explizit coden -> `return nil` statt `return` als Beispiel
@@ -20,8 +20,8 @@
 7. alle Module die etwas exportieren das exportierende Table typisieren
 8. Typisierung UsrCmds, Cfg. ...
 9. Externe PLugins die usercommands und/oder mappings haben, diese in die `/config/**` verschieben und über die plugin init laden. Am besten ein gemeinsames config/**/actions.lua für Commands, Keymaps und Menüs. [Actions](MyNotes\Neovim\40_Optimierung\Actions_Mappings-Commands-Menu.md)
-
 10. actions.lua für: commands.lua, keymaps.lua in den Modulen
+11. `config.neotree.actions.**`: `M`-Tables typisieren
 
 ---
 

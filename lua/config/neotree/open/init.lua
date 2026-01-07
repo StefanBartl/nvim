@@ -3,7 +3,7 @@
 -- Fixed AltGr-Aliassse for DE-Layout
 
 local map = require("lib.map")
-local utils = require("config.neotree.utils")
+local buffer_utils = require("config.neotree.utils.buffer")
 
 local M = {}
 
@@ -39,8 +39,8 @@ local function make_neotree_opener(position)
   end
 
   return function()
-    -- ✅ Get current buffer context
-    local ctx = utils.get_buffer_context()
+    -- Get current buffer context
+    local ctx = buffer_utils.get_buffer_context()
     local reveal_file = nil
     local dir = nil
 
@@ -49,20 +49,20 @@ local function make_neotree_opener(position)
       dir = ctx.dir
     end
 
-    -- ✅ Build opts with reveal
+    -- Build opts with reveal
     local opts = {
       source = "filesystem",
       toggle = true,
       reveal = true,
-      reveal_file = reveal_file, -- ✅ NEU!
-      reveal_force_cwd = false, -- ✅ Don't force CWD
+      reveal_file = reveal_file,
+      reveal_force_cwd = false,
       position = position,
-      dir = dir, -- ✅ NEU!
+      dir = dir,
     }
 
     NeoCmd.execute(opts)
 
-    -- ✅ Signal to cwd_sync: "User opened manually"
+    -- Signal to cwd_sync: "User opened manually"
     local ok_sync, sync = pcall(require, "config.neotree.cwd_sync")
     if ok_sync and sync.pause_sync then
       sync.pause_sync(2000) -- Pause 2s

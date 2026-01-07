@@ -15,20 +15,30 @@ function M.attach(opts)
 
   --- Resolve a directory based on the Neo-tree state.
   --- Files -> parent directory; Directories -> themselves; No node -> current working directory.
-  ---@param state table
+  ---@param state Cfg.NeoTree.State
   ---@return string
   local function resolve_dir(state)
-    local node = state and state.tree and state.tree:get_node() or nil
+    -- Prefer the currently focused node from the state
+    local node = state and state.current_node or nil
+
+    -- No node selected: fall back to current working directory
     if not node then
-      -- Prefer libuv cwd; fall back to Vim's cwd for older setups
-      return vim.loop.cwd() or vim.fn.getcwd()
+      -- Prefer libuv cwd; fall back to Vim's cwd
+      return vim.uv and vim.uv.cwd() or vim.loop.cwd() or vim.fn.getcwd()
     end
-    local path = node:get_id()
+
+    -- Neo-tree nodes expose the path directly
+    local path = node.path or node.id or ""
+    if path == "" then
+      return vim.fn.getcwd()
+    end
+
+    -- Files resolve to their parent directory
     if node.type == "file" then
-      -- Convert file path to its parent directory
       return vim.fn.fnamemodify(path, ":p:h")
     end
-    -- Node is a directory; use it directly
+
+    -- Directories resolve to themselves
     return path
   end
 

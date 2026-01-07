@@ -15,32 +15,21 @@
 --- 3. Backup - Creates automatic backup before deletion
 --- 4. Quarantine - Stops watchers to prevent EPERM
 --- 5. Recovery Point - Allows automatic retry on failure
-
-local M = {}
-
--- Core dependencies
-local api, uv = vim.api, vim.loop
-local fn = vim.fn
-local resolve, system = fn.resolve, fn.system
-local defer_fn = vim.defer_fn
-local sh_error = vim.v.shell_error
-local str_format = string.format
+-- AUDIT: Modularize
 
 -- Safety system integration
 local safety = require("config.neotree.safety")
 local watcher_quarantine = require("config.neotree.watcher_quarantine")
 
--- Notification system
 local notify = require("lib.notify").create("[neotree.trash]")
 
----Configuration
----@class TrashConfig
----@field use_safety_system boolean Enable full safety features (default: true)
----@field create_backups boolean Create backups before deletion (default: true)
----@field confirm_dangerous boolean Confirm dangerous operations (default: true)
----@field use_dry_run boolean Respect dry-run mode (default: true)
+local M = {}
 
----@type TrashConfig
+local api, uv, fn, sh_error = vim.api, vim.loop, vim.fn, vim.v.shell_error
+local resolve, system, defer_fn = fn.resolve, fn.system, vim.defer_fn
+local str_format = string.format
+
+---@type Cfg.NeoTree.Trash.Config
 M.config = {
   use_safety_system = true,
   create_backups = true,
@@ -49,7 +38,7 @@ M.config = {
 }
 
 ---Configure trash module
----@param config TrashConfig|nil
+---@param config Cfg.NeoTree.Trash.Config|nil
 function M.setup(config)
   if config then
     M.config = vim.tbl_deep_extend("force", M.config, config)
@@ -78,7 +67,10 @@ local function close_related_buffers_and_previews(path)
       local buf_name = api.nvim_buf_get_name(buf)
       if buf_name ~= "" then
         local normalized_buf = resolve(buf_name):gsub("\\", "/")
-        if normalized_buf:sub(1, #normalized_path) == normalized_path or normalized_buf == normalized_path then
+        if
+          normalized_buf:sub(1, #normalized_path) == normalized_path
+          or normalized_buf == normalized_path
+        then
           pcall(api.nvim_buf_delete, buf, { force = true, unload = true })
         end
       end
@@ -251,41 +243,43 @@ local function safe_refresh(state_name)
   watcher_quarantine.safe_refresh(state_name)
 end
 
----Collect nodes to trash (marked nodes or current node)
----@param state table
----@return table[] nodes
+--- Collect nodes to trash (marked nodes or current node)
+---@param state Cfg.NeoTree.State
+---@return table[] nodes Array of nodes (may be empty)
 local function get_nodes_to_trash(state)
-  local tree = state.tree
-  if not tree then
+  if not state or not state.tree then
     return {}
   end
 
-  -- Get marked nodes
   local marks = state.explicitly_marked_node_ids or {}
-  local marked_nodes = {}
+  local nodes = {}
 
+  -- Collect marked nodes first
   for node_id, _ in pairs(marks) do
-    local node = tree:get_node(node_id)
+    --- Uses state.tree:get_node() to properly resolve marked nodes
+    local node = state.tree:get_node(node_id)
     if node then
-      table.insert(marked_nodes, node)
+      table.insert(nodes, node)
     end
   end
 
-  if #marked_nodes > 0 then
-    return marked_nodes
+  -- Return marked nodes if any
+  if #nodes > 0 then
+    return nodes
   end
 
-  -- Fallback to current node
-  local node = tree:get_node()
-  if node then
-    return { node }
+  -- Fallback to current node using proper utility
+  local node_utils = require("config.neotree.utils.node")
+  local current = node_utils.get_current(state)
+  if current then
+    return { current }
   end
 
   return {}
 end
 
 ---Neo-tree command: move selected nodes to trash with full safety
----@param state table Neo-tree state
+---@param state Cfg.NeoTree.State Neo-tree state
 ---@return nil
 function M.neotree_send_node_to_trash(state)
   local nodes = get_nodes_to_trash(state)

@@ -230,7 +230,7 @@ local function show_history()
 end
 
 --- Neo-tree command: undo last trash operation
----@param state table
+---@param state Cfg.NeoTree.State
 ---@return nil
 local function neotree_undo_trash(state)
   if #trash_history == 0 then
