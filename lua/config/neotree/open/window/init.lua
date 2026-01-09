@@ -1,6 +1,5 @@
----@module 'config.neotree.open'
--- Keymap setup for Neo-tree positions (left/right/float/current)
--- Fixed AltGr-Aliassse for DE-Layout
+---@module 'config.neotree.open.window'
+---@brief Keymap-based Neo-tree window opener with reveal support
 
 local map = require("lib.map")
 local buffer_utils = require("config.neotree.utils.buffer")
@@ -30,7 +29,7 @@ M.cfg = {
 local function make_neotree_opener(position)
   local ok_nt, NeoCmd = pcall(require, "neo-tree.command")
   if not ok_nt then
-    vim.notify("[neotree.open] neo-tree.command not available", vim.log.levels.WARN)
+    vim.notify("[neotree.open.window] neo-tree.command not available", vim.log.levels.WARN)
     return
   end
 
@@ -39,7 +38,6 @@ local function make_neotree_opener(position)
   end
 
   return function()
-    -- Get current buffer context
     local ctx = buffer_utils.get_buffer_context()
     local reveal_file = nil
     local dir = nil
@@ -49,7 +47,6 @@ local function make_neotree_opener(position)
       dir = ctx.dir
     end
 
-    -- Build opts with reveal
     local opts = {
       source = "filesystem",
       toggle = true,
@@ -62,10 +59,9 @@ local function make_neotree_opener(position)
 
     NeoCmd.execute(opts)
 
-    -- Signal to cwd_sync: "User opened manually"
     local ok_sync, sync = pcall(require, "config.neotree.cwd_sync")
     if ok_sync and sync.pause_sync then
-      sync.pause_sync(2000) -- Pause 2s
+      sync.pause_sync(2000)
     end
   end
 end

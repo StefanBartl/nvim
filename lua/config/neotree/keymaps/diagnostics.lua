@@ -3,60 +3,77 @@
 
 ---@return table<string, any>
 return {
-  --====================== Navigation =================================
 
-  ["<CR>"] = "open",
-  ["<2-LeftMouse>"] = "open",
+  --====================== Navigation ================================
+
   ["o"] = "open",
 
-  --====================== Splits =====================================
+  ["<CR>"]          = "open",
+  ["<2-LeftMouse>"] = "open",
 
-  ["sv"] = "open_split",
+  --====================== Splits ====================================
+
   ["sg"] = "open_vsplit",
   ["st"] = "open_tabnew",
+  ["sv"] = "open_split",
 
-  --====================== Preview ====================================
+  --====================== Preview ===================================
 
   ["<Tab>"] = "toggle_preview",
 
-  --====================== Refresh ====================================
+  --====================== Refresh ===================================
 
   ["R"] = "refresh",
 
-  --====================== Disable filesystem operations ==============
+  --====================== Disable filesystem operations =============
 
-  ["a"] = "noop",
-  ["A"] = "noop",
-  ["d"] = "noop",
-  ["dd"] = "noop",
-  ["r"] = "noop",
-  ["c"] = "noop",
-  ["x"] = "noop",
-  ["p"] = "noop",
-  ["m"] = "noop",
-  ["<S-m>"] = "noop",
-  ["<leader>mc"] = "noop",
-  ["U"] = "noop",
-  ["<leader>th"] = "noop",
+  -- single-character symbols
   ["+"] = "noop",
   ["-"] = "noop",
+
+  -- single-character letters
+  ["a"] = "noop",
+  ["c"] = "noop",
+  ["d"] = "noop",
+  ["m"] = "noop",
+  ["p"] = "noop",
+  ["r"] = "noop",
+  ["x"] = "noop",
+
+  -- single-character uppercase letters
+  ["A"] = "noop",
+  ["D"] = "noop",
   ["I"] = "noop",
   ["L"] = "noop",
-  ["[l"] = "noop",
-  ["grep"] = "noop",
-  ["D"] = "noop",
-  ["[p"] = "noop",
-  ["]p"] = "noop",
-  ["]r"] = "noop",
-  ["[r"] = "noop",
+  ["M"] = "noop",
+  ["U"] = "noop",
+  ["Y"] = "noop",
+
+  -- multi-character plain tokens
+  ["dd"] = "noop",
+  ["fm"] = "noop",
+  ["gb"] = "noop",
+  ["gr"] = "noop",
+  ["rq"] = "noop",
+  ["sm"] = "noop",
+
+  -- bracket navigation
   ["[f"] = "noop",
   ["[F"] = "noop",
+  ["[p"] = "noop",
+  ["[r"] = "noop",
   ["[t"] = "noop",
-  ["[T"] = "noop",
-  ["Y"] = "noop",
-  ["<S-o>"] = "noop",
+  ["]p"] = "noop",
+  ["]r"] = "noop",
+  ["]t"] = "noop",
+
+  -- control / modifier keys (grouped by base key)
   ["<S-CR>"] = "noop",
-  ["gb"] = "noop",
   ["<C-s>"] = "noop",
   ["<M-s>"] = "noop",
+  ["<S-o>"] = "noop",
+
+  -- leader keys
+  ["<leader>mc"] = "noop",
+  ["<leader>th"] = "noop",
 }

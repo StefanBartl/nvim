@@ -4,63 +4,77 @@
 ---@return table<string, any>
 return {
 
-  --====================== Navigation (document_symbols specific) =====
+  --====================== Navigation ================================
 
-  ["<CR>"] = "jump_to_symbol",
-  ["<2-LeftMouse>"] = "jump_to_symbol",
   ["l"] = "jump_to_symbol",
   ["o"] = "jump_to_symbol",
 
-  --====================== Filter =======================================
+  ["<CR>"]          = "jump_to_symbol",
+  ["<2-LeftMouse>"] = "jump_to_symbol",
+
+  --====================== Filter ====================================
 
   ["F"] = "filter",
   ["f"] = "filter_on_submit",
 
   --====================== Disable ALL filesystem operations ==========
 
-  ["/"] = "noop",
-  ["<C-c>"] = "noop",
-  ["a"] = "noop",
-  ["A"] = "noop",
-  ["d"] = "noop",
-  ["dd"] = "noop",
-  ["r"] = "noop",
-  ["c"] = "noop",
-  ["x"] = "noop",
-  ["p"] = "noop",
-  ["m"] = "noop",
-  ["<S-m>"] = "noop",
-  ["<leader>mc"] = "noop",
-  ["U"] = "noop",
-  ["<leader>th"] = "noop",
+  -- single-character symbols
   ["+"] = "noop",
   ["-"] = "noop",
-  ["I"] = "noop",
-  ["O"] = "noop",
-  ["L"] = "noop",
-  ["[l"] = "noop",
-  ["grep"] = "noop",
+  ["/"] = "noop",
+
+  -- single-character letters
+  ["a"] = "noop",
+  ["c"] = "noop",
+  ["d"] = "noop",
+  ["m"] = "noop",
+  ["p"] = "noop",
+  ["r"] = "noop",
+  ["x"] = "noop",
+
+  -- single-character uppercase letters
+  ["A"] = "noop",
   ["D"] = "noop",
-  ["[p"] = "noop",
-  ["]p"] = "noop",
-  ["]r"] = "noop",
-  ["[r"] = "noop",
+  ["I"] = "noop",
+  ["L"] = "noop",
+  ["M"] = "noop",
+  ["O"] = "noop",
+  ["U"] = "noop",
+  ["Y"] = "noop",
+
+  -- multi-character plain tokens
+  ["dd"] = "noop",
+  ["gb"] = "noop",
+  ["gr"] = "noop",
+  ["rl"] = "noop",
+  ["st"] = "noop",
+  ["sv"] = "noop",
+
+  -- bracket navigation
   ["[f"] = "noop",
   ["[F"] = "noop",
+  ["[p"] = "noop",
+  ["[r"] = "noop",
   ["[t"] = "noop",
-  ["[T"] = "noop",
-  ["Y"] = "noop",
-  ["<S-o>"] = "noop",
+  ["]p"] = "noop",
+  ["]r"] = "noop",
+  ["]t"] = "noop",
+
+  -- control / modifier keys
   ["<S-CR>"] = "noop",
-  ["gb"] = "noop",
+  ["<C-b>"] = "noop",
+  ["<C-c>"] = "noop",
+  ["<C-f>"] = "noop",
   ["<C-s>"] = "noop",
   ["<M-s>"] = "noop",
-  ["<Tab>"] = "noop", -- No preview
+  ["<Tab>"] = "noop",
+
+  -- leader keys
+  ["<leader>mc"] = "noop",
+  ["<leader>th"] = "noop",
+
+  -- named special keys
   ["<PageDown>"] = "noop",
-  ["<PageUp>"] = "noop",
-  ["<C-f>"] = "noop",
-  ["<C-b>"] = "noop",
-  ["sv"] = "noop",
-  ["sg"] = "noop",
-  ["st"] = "noop",
+  ["<PageUp>"]   = "noop",
 }

@@ -1,7 +1,6 @@
----@module 'config.neotree.open_fm.win'
+---@module 'config.neotree.open_filemanager.win'
 --- Windows-specific "open in file manager" for Neo-tree.
---- Hardened: checks for executables, handles WSL detection, ensures proper quoting
---- and provides improved diagnostics and deterministic fallbacks.
+--- FIXED: Uses node_utils.get_current() for consistent node retrieval
 
 local node_utils = require("config.neotree.utils.node")
 
@@ -67,11 +66,11 @@ local function spawn_detached(argv, opts, cb)
 end
 
 --- Attempt to open path in Explorer. Includes diagnostics and robust fallbacks.
---- Returns boolean: true if an attempt was made (successful spawn or fallback), false on early fatal checks.
+--- FIXED: Now uses node_utils.get_current() instead of state.current_node
 ---@param state Cfg.NeoTree.State
 ---@return boolean
 function M.open(state)
-  -- quick platform guard: allow only native Windows or WSL cases that can call explorer
+  -- Quick platform guard: allow only native Windows or WSL cases that can call explorer
   local is_win = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
   local wsl = is_wsl()
   if not (is_win or wsl) then
@@ -79,8 +78,12 @@ function M.open(state)
     return false
   end
 
-  -- Get the currently focused node
-  local node = state and state.current_node or nil
+  -- FIXED: Use node_utils.get_current() for consistent node retrieval
+  local node = node_utils.get_current(state)
+  if not node then
+    vim.notify("Open in Explorer: no node under cursor", vim.log.levels.WARN)
+    return false
+  end
 
   -- Use refactored get_path from node_utils
   local raw, _ = node_utils.get_path(node)
@@ -96,7 +99,7 @@ function M.open(state)
 
   -- If running under WSL, try to convert to Windows path via wslpath -w
   if wsl then
-    -- try to get windows path using wslpath -w; fallback to original
+    -- Try to get windows path using wslpath -w; fallback to original
     local ok, winpath = pcall(function()
       return vim.fn.systemlist({"wslpath", "-w", abs})[1] or ""
     end)
@@ -106,7 +109,7 @@ function M.open(state)
     end
   end
 
-  -- check that explorer/cmd are available when needed
+  -- Check that explorer/cmd are available when needed
   if vim.fn.executable("explorer.exe") == 0 then
     vim.notify("explorer.exe not found in PATH", vim.log.levels.WARN)
   end
@@ -124,18 +127,18 @@ function M.open(state)
   end
 
   -- Fallback: use cmd.exe /C start "" "dir"
-  -- make sure dir is a single argument (quoted if needed by system API)
+  -- Make sure dir is a single argument (quoted if needed by system API)
   local fallback = { "cmd.exe", "/C", "start", "", dir }
 
   spawn_detached(primary, { detach = true }, function(success, code, stderr)
     if success then return end
 
-    -- primary failed: try fallback and report diagnostics
-    local msg = ("explorer primary failed (code=%s, stderr=%s). Trying cmd start fallback"):format(tostring(code), tostring(stderr))
-    vim.notify(msg, vim.log.levels.WARN)
+    -- Primary failed: try fallback and report diagnostics
+    -- local msg = ("explorer primary failed (code=%s, stderr=%s). Trying cmd start fallback"):format(tostring(code), tostring(stderr))
+    -- vim.notify(msg, vim.log.levels.WARN)
     spawn_detached(fallback, { detach = true }, function(s2, c2, e2)
       if not s2 then
-        local err = ("Fallback also failed (code=%s, stderr=%s)").format(tostring(c2), tostring(e2))
+        local err = ("Fallback failed (code=%s, stderr=%s)").format(tostring(c2), tostring(e2))
         vim.notify(err, vim.log.levels.ERROR)
       end
     end)

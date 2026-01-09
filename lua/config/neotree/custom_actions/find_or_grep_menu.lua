@@ -1,5 +1,5 @@
 ---@module 'config.neotree.user_actions.find_or_grep_menu'
---- <M-m> → choose {find_files|live_grep} in a tiny fzf-lua menu, then run on node's directory.
+--- <M-p> → choose {find_files|live_grep} in a tiny fzf-lua menu, then run on node's directory.
 
 ---@class NeoTreeUsrPicker
 local M = {}
@@ -118,11 +118,17 @@ function M.attach(opts)
     })
   end
 
-  -- Map Alt-m inside Neo-tree's filesystem window
-  opts.filesystem.window.mappings["<M-m>"] = function(state)
-    local dir = resolve_dir(state)
-    fzf_menu(dir)
-  end
+  -- Map Alt-p inside Neo-tree's filesystem window
+  opts.filesystem.window.mappings["<M-p>"] = {
+    function(state)
+      -- Resolve the directory from the current Neo-tree state
+      local dir = resolve_dir(state)
+
+      -- Open the fzf-lua action picker (find_files | live_grep)
+      fzf_menu(dir)
+    end,
+    desc = "Open fzf menu (find files or live grep in node directory)",
+  }
 end
 
 return M

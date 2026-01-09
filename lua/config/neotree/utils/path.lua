@@ -135,15 +135,12 @@ function M.from_node(node, mode, opts)
     return M.to_absolute(path)
   elseif mode == "relative" then
     -- Explicit type guard ensures base_dir is string|nil only
-    ---@type string?
-    local base_dir = nil
-
     if type(opts.base_dir) == "string" then
-      base_dir = opts.base_dir
+      ---@diagnostic disable-next-line: cast-local-type,param-type-mismatch
+      return M.to_relative(path, opts.base_dir)
+    else
+      return M.to_relative(path, nil)
     end
-
-    ---@cast base_dir string
-    return M.to_relative(path, base_dir)
   else
     return nil, "Unknown mode: " .. tostring(mode)
   end

@@ -1,8 +1,6 @@
----@module 'config.neotree.open_fm.wsl'
---- WSL-specific "open in file manager" for Neo-tree, fixed to avoid double-launch.
---- Key changes:
----   - Do not treat non-zero exit codes from explorer.exe as failure (WSL peculiarity).
----   - Only fall back if spawning the primary command fails altogether.
+---@module 'config.neotree.open_filemanager.wsl'
+--- WSL-specific "open in file manager" for Neo-tree
+--- FIXED: Uses node_utils.get_current() for consistent node retrieval
 
 local node_utils = require("config.neotree.utils.node")
 
@@ -85,7 +83,6 @@ local function spawn_detached(argv)
   end
 end
 
-
 ---@nodiscard
 ---@param cfg Cfg.NeoTree.Wsl.OpenConfig|nil
 function M.setup(cfg)
@@ -101,7 +98,7 @@ function M.setup(cfg)
 end
 
 --- Open selected node using Windows Explorer from within WSL.
---- Files are revealed with '/select,<path>', folders are opened directly.
+--- FIXED: Now uses node_utils.get_current() instead of state.current_node
 ---@param state Cfg.NeoTree.State
 ---@return boolean ok
 function M.open(state)
@@ -112,8 +109,14 @@ function M.open(state)
     return false
   end
 
-  -- Get the current node from the state
-  local node = state and state.current_node or nil
+  -- FIXED: Use node_utils.get_current() for consistent node retrieval
+  local node = node_utils.get_current(state)
+  if not node then
+    if not M._cfg.silent then
+      vim.notify("Open in File Manager (WSL): no node under cursor", vim.log.levels.WARN)
+    end
+    return false
+  end
 
   -- Get path via node_utils.get_path
   local raw, is_dir = node_utils.get_path(node)
@@ -161,7 +164,6 @@ function M.open(state)
   end
 
   -- Only if spawning failed entirely, try a lightweight one-shot fallback.
-  -- Note: we do NOT use fallback on non-zero exit codes anymore.
   local fallback = is_dir and { "cmd.exe", "/C", "start", "", quote_if_needed(dir_win or abs_win) }
     or { "cmd.exe", "/C", "start", "", quote_if_needed(abs_win) }
 

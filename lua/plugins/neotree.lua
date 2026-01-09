@@ -329,7 +329,7 @@ return {
         project_root_fallback_to_bufdir = true,
         force_position_left = true,
       })
-      require("config.neotree.open").attach_opener_mappings()
+      require("config.neotree.open.window").attach_opener_mappings()
     end,
   },
 }

@@ -76,12 +76,12 @@ function M.collect_folders(root_path)
 end
 
 --- Collect files or folders for a Neo-tree node
---- Now uses node_utils.get_current() instead of state.current_node
+--- FIXED: Now uses node_utils.get_current() instead of state.current_node
 ---@param state Cfg.NeoTree.State Neo-tree state
 ---@param collect_type "files"|"folders"
 ---@return string[] entries, string node_path
 function M.collect_for_node(state, collect_type)
-  -- Use node_utils.get_current() for consistent node retrieval
+  -- FIXED: Use node_utils.get_current() for consistent node retrieval
   local node = node_utils.get_current(state)
   if not node then
     vim.notify("No node under cursor", vim.log.levels.WARN)

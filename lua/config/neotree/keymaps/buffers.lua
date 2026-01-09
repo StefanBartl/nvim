@@ -10,36 +10,46 @@ return {
 
   --====================== Add noop für filesystem-specific ===========
 
-  ["a"] = "noop",
-  ["A"] = "noop",
-  ["r"] = "noop",
-  ["c"] = "noop",
-  ["x"] = "noop",
-  ["p"] = "noop",
-  ["m"] = "noop",
-  ["<S-m>"] = "noop",
-  ["U"] = "noop",
+  -- single-char symbols
   ["+"] = "noop",
   ["-"] = "noop",
-  ["I"] = "noop",
-  ["O"] = "noop",
-  ["L"] = "noop",
-  ["[l"] = "noop",
-  ["grep"] = "noop",
+
+  -- single-char letters (lowercase → uppercase)
+  ["a"] = "noop",
+  ["A"] = "noop",
+  ["c"] = "noop",
   ["D"] = "noop",
+  ["I"] = "noop",
+  ["L"] = "noop",
+  ["M"] = "noop",
+  ["m"] = "noop",
+  ["O"] = "noop",
+  ["p"] = "noop",
+  ["r"] = "noop",
+  ["U"] = "noop",
+  ["x"] = "noop",
+  ["Y"] = "noop",
+
+  -- multi-char plain keys
+  ["fm"] = "noop",
+  ["gb"] = "noop",
+  ["gr"] = "noop",
+  ["rq"] = "noop",
+  ["sm"] = "noop",
+
+  -- bracket-prefixed motions
+  ["[F"] = "noop",
+  ["[f"] = "noop",
   ["[p"] = "noop",
+  ["[r"] = "noop",
+  ["[t"] = "noop",
   ["]p"] = "noop",
   ["]r"] = "noop",
-  ["[r"] = "noop",
-  ["[f"] = "noop",
-  ["[F"] = "noop",
-  ["[t"] = "noop",
-  ["[T"] = "noop",
-  ["Y"] = "noop",
-  ["<S-o>"] = "noop",
-  ["<S-CR>"] = "noop",
-  ["gb"] = "noop",
+  ["]t"] = "noop",
+
+  -- control / modifier keys (grouped)
   ["<C-s>"] = "noop",
   ["<M-s>"] = "noop",
-
+  ["<S-CR>"] = "noop",
 }
+

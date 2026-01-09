@@ -10,8 +10,13 @@ local notify, levels = vim.notify, vim.log.levels
 
 --- Toggle mark on the current node
 ---@param state Cfg.NeoTree.State
+---@param auto_advance? boolean Move cursor down after marking (default: true)
 ---@return nil
-function M.toggle_mark(state)
+function M.toggle_mark(state, auto_advance)
+  if auto_advance == nil then
+    auto_advance = true
+  end
+
   local node = node_utils.get_current(state)
   if not node then
     notify("no node under cursor", levels.WARN)
@@ -34,9 +39,11 @@ function M.toggle_mark(state)
   renderer.redraw(state)
 
   -- Move cursor down for multi-selection convenience
-  vim.schedule(function()
-    vim.cmd("normal! j")
-  end)
+  if auto_advance then
+    vim.schedule(function()
+      vim.cmd("normal! j")
+    end)
+  end
 end
 
 --- Clear all marks
@@ -65,9 +72,31 @@ function M.mark_all_in_directory(state)
     return
   end
 
-  -- Determine parent directory
-  local parent = node.type == "directory" and node or node.parent
+  -- Determine parent directory node
+  local parent
+  if node.type == "directory" then
+    parent = node
+  else
+    -- Find parent directory by traversing up
+    local current = node
+    while current do
+      local parent_id = current:get_parent_id()
+      if not parent_id then
+        break
+      end
+
+      local parent_node = state.tree:get_node(parent_id)
+      if parent_node and parent_node.type == "directory" then
+        parent = parent_node
+        break
+      end
+
+      current = parent_node
+    end
+  end
+
   if not parent or not parent.children then
+    notify("No parent directory found", levels.WARN)
     return
   end
 
@@ -82,7 +111,7 @@ function M.mark_all_in_directory(state)
   end
 
   state.explicitly_marked_node_ids = marks
-  renderer.redraw()
+  renderer.redraw(state)
 
   notify(string.format("Marked %d files", count), levels.INFO)
 end
