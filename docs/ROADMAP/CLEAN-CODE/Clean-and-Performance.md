@@ -34,6 +34,8 @@
 5. `pcall` doppelungen rauscoden
 6. `mappings.*` map durch `lib.map` tauschen
 7. `ui.stl_module` auf custom statusline ändern und modularisieren
+8. `<Plug>` in den Mappings verwenden und dabei erlernen wie an sie erstellt
+9. E:\repos\Notes\MyNotes\Neovim\40_Optimierung\Sauberes-Registrieren-und-Reloaden-von-Events.md
 
 ### `plugins.`
 
@@ -42,6 +44,10 @@
 ### `mappings.`
 
 1. mappings.custom erstellen, aus der dann markdown, pathprobe, usw aufgerufen werden, anstatt mappings.markdown, mappings.pathprobe usw..
+
+---
+
+## Optimierungen
 
 ---
 

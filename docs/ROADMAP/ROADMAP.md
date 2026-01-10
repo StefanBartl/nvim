@@ -19,6 +19,10 @@
 - neotest [lernen]()
 - `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 - lsp.tools behandeln
+- `:Glow`: `custom.markdown` mappings attachen; default 100% der UI ausfüllen - eventuell toggle.
+- `custom,markdown`: `<C-f> / <C-p>` mit [:count] verbinden: `2<C-p>` spingt zum nächsten Level 2 Heading, `4<C-p>` zum letzen Level 4 Heading usw...
+- `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
+- In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
 
 --
 
@@ -32,17 +36,6 @@ ein einziges :Neotest Dispatcher-Command bauen
 oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
 - `config.neotest.neotree` einbinden in neotree
 
-### insert commands und mappiunmgs sammeln
-
-  - usrcmds.insertfilepath
-  - usrcmds.lua_module_annotation
-
----
-
-### usrcmds.migrate opts und notify mergen
-
---
-
 ## `custom.format.text_width`
 
 1. Limitationen: Hyphenation (geteilt mit -) und komplexe Worttrennungsregeln sind nicht implementiert. Listen- und Bullet-Erkennung ist eine einfache Heuristik: einfache Bullet-Marker wie - , * , + oder 1. werden auf der ersten Zeile beibehalten; Fortsetzungen werden passend eingerückt.
@@ -51,15 +44,6 @@ oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
     - Hyphenation mittels externem Dienst oder Wörterbuch.
     - ? Buffer-locales Autowrap beim Tippen (z. B. über autocmd BufEnter,BufWinEnter + formatoptions oder textwidth während Insert).
     - SUPER: Verbinden mit marksman format + der Idee, dass man in codeblöcken lsp callt
-
----
-
-## neotree
-
-- enter setzt das au den ordner in der die file ist. kann auch ein M-CR sein oder ähnlich
-- [Neotree]() mappings so schreiben, dass auch nvimtree/netrw möglich wäre
-    . DAs bedeutet auch, dass alle lib funktionen inerhalb der filtree filesystem ist, danmit keine dependencies entstehen
-    I. Die meisten helper sollten eigenltich als commands implementiert werden
 
 ---
 

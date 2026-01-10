@@ -5,12 +5,13 @@ local M = {}
 function M.setup()
   local map = vim.g.__map_helper
 
-  map("n", "<leader>fcom", ":FzfLua commands<CR>", { desc = "[FzfLua] Search Commands" })
-
   map("n", "<leader>fth", ":FzfLua colorschemes<CR>", { desc = "[FzfLua] Colorschemes" })
   map("n", "<leader>ffk", ":FzfLua keymaps<CR>", { desc = "[FzfLua] Keymaps" })
 
   map("n", "<leader>fgs", ":FzfLua git_status<CR>", { desc = "[FzfLua] Git Status" })
+
+  map("n", "<leader>dos", ":FzfLua lsp_document_symbols<CR>", { desc = "[FzfLua] LSP document symbols" })
+  map("n", "<leader>wos", ":FzfLua lsp_live_workspace_symbols<CR>", { desc = "[FzfLua] LSP live workspace symbols" })
 
   map("n", "<leader>do", ":FzfLua diagnostics_document<CR>", { desc = "[FzfLua] Document Diagnostics" })
   map("n", "<leader>wo", ":FzfLua diagnostics_workspace<CR>", { desc = "[FzfLua] Workspace Diagnostics" })

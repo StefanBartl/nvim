@@ -13,11 +13,11 @@ function M.setup()
   map("n", "<CR>", "0i<CR><Esc>k", { desc = "Insert blank line" })
 
   -- Visual mode paste without overwriting the yank register
-  map("x", "p", '"_dP', {
-    noremap = true,
-    silent = true,
-    desc = "Paste over selection without yanking it",
-  })
+  -- map("x", "p", '"_dP', {
+  --   noremap = true,
+  --   silent = true,
+  --   desc = "Paste over selection without yanking it",
+  -- })
 
   -- Move selected lines (unchanged as requested)
   map("n", "<A-Up>", ":m .-2<CR>==", { desc = "[Text] Move line up", noremap = true, silent = true })

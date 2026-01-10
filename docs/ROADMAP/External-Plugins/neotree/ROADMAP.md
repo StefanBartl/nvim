@@ -7,6 +7,12 @@
 ## Allgemein
 
 1. Modularisieren des `config/neotree`-Folders
+2. Neotree soll rechts öffnen, dann spar ich mir code und dort ist auch mehr platz
+3. neotree: open neotree soll sich die position merken auf der ich das letzt mal ihn zugeamdht habe, wenn ich  ihn das nö ächste mal aufrufe unf J oder R eingebe, dann reveal, ansonsten nicht
+4. keymap setzt das cwd den ordner in der die file ist. kann auch ein M-CR sein oder ähnlich
+5. [Neotree]() mappings so schreiben, dass auch nvimtree/netrw möglich wäre
+    . DAs bedeutet auch, dass alle lib funktionen inerhalb der filtree filesystem ist, danmit keine dependencies entstehen
+    I. Die meisten helper sollten eigenltich als commands implementiert werden
 
 ---
 
