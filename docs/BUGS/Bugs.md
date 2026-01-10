@@ -1,4 +1,4 @@
-# FIX: bugs
+# bugs
 
 ## Table of content
 
@@ -16,9 +16,7 @@
 
 ## Important
 
-1. `config.neotree.keymaps.filetree`: FIX debuggen
-2. In `leader fc` froß un dkleinscheribung deaktivieren. Soll wie in live grep funktieren, nur mit files.
-3. comment funktion bugged, wenn ich
+1. comment funktion bugged, wenn ich
 
 ```lua
   ["<CR>"] = {

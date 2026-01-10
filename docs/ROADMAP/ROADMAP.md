@@ -20,11 +20,10 @@
 - `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 - lsp.tools behandeln
 - `:Glow`: `custom.markdown` mappings attachen; default 100% der UI ausfüllen - eventuell toggle.
-- `custom,markdown`: `<C-f> / <C-p>` mit [:count] verbinden: `2<C-p>` spingt zum nächsten Level 2 Heading, `4<C-p>` zum letzen Level 4 Heading usw...
 - `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
 - In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
 
---
+-
 
 ## Neotest
 
@@ -54,16 +53,12 @@ oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
 ## Long run
 
 - `custom.functions` verwenden, um funktionen, die sowohl mappings als auch usercommands begründen.
-
 - workspace lsp warnings debuggen
     1. alle `disable-next-line` durchsehen
     2. Todo Coments anschauen und durchgehen
-
 - probieren nvchad rauszunehmen und nochmal mit lazyvim
-
 - experimental options:
    1. statusline und winbar breadcrumbs sollten sich ein modul teilen
-
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 
 --

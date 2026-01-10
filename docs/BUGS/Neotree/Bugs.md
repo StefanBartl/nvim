@@ -14,6 +14,14 @@
 
 ## IMPORTANT Bugs
 
+ Eine file, die offen war, im neotree zu löschen löst machmal aus:
+
+```vim
+   Error  16:07:11 notify.error [neotree.trash] Operation denied: path is open in buffer: C:\Users\bartl\AppData\Local\nvim\lua\usrcmds\migrate\notify\refactor.lua
+```
+
+In Neotree sources finde ich diesen buffer aber nicht. Es wäre gut, wenn es möglch wäre, diesen buffer zu finden und das dieser dnn automatisch beim delete vorgang gesclossen wird, damit das delete durchgeführt werden kann.
+
 ---
 
 ## NORMAL Bugs

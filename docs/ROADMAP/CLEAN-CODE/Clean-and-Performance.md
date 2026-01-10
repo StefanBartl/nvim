@@ -55,6 +55,11 @@
 
 1. (Debugging CONFIGURATION-EXAMPLE update)[../../../lua/debugging/docs/CONFIGURATION-EXAMPLE.md]
 2. (Debugging :h update)[../../../lua/debugging/doc/debugging.txt]
+3. `usrcmds\migrate\` doc & docs aktulasieren, dass `require("usrcmds.migrate").setup({ opts = enable, notify = true, })` möglich ist; AUF ENGLISCH
+4. `\usrcmds\migrate\notify` docs und doc aktulasieren, dass ein `:MigrateNotify %/cwd [dest tag]` desc tag übereb wird, der dann in `.create("desc tag")` übergebn wird. AUF ENGLISCH
+
+
+---
 
 ## doc/
 
@@ -68,7 +73,7 @@
 
 ## README
 
-- lua\custom\format\filter_lines\a
+- lua\custom\format\filter_lines\
 - lua\custom\format\text_width\
 - lua\custom\format\misc\
 
