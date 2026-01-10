@@ -7,7 +7,20 @@
         "tests/?.lua"
     ],
     "completion.callSnippet": "Replace",
-    "hint.enable": true,
+    "hint": {
+     "enable": true,
+     "arrayIndex": true,
+     "await": true,
+     "awaitPropagate": true,
+     "paramName": "All",
+     "paramType": true,
+     "semicolon": "All",
+     "setType": true,
+    },
+    "type": {
+        "checkTableShape": true,
+        "inferParamType": true,
+    },
     "type.castNumberToInteger": true,
     "diagnostics.libraryFiles": "Disable",
     "diagnostics.globals": [

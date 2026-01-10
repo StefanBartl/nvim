@@ -107,14 +107,23 @@ M.ui = {
   },
 }
 
+M.ui = {
+  tabufline = {
+    bufwidth = 21,        -- normale Tabs
+    bufwidth_cur = 27,    -- aktueller Tab (größer)
+  },
+}
+
+
+
 -- ==========================
 -- ==== Load UI Settings ====
 
 --- ==== Base46 theme configuration =============
 M.base46 = {
-  transparency = false,
-  theme_toggle = { "tokyonight", "vim_default" },
-  theme = "tokyonight",
+  transparency = true,
+  theme_toggle = { "rosepine", "rosepine" },
+   theme = "rosepine",
 }
 
 --- =============================

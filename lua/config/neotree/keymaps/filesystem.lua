@@ -334,6 +334,27 @@ return {
     desc = "Copy base (dir) path (+)",
   },
 
+  ["[r"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      local node = node_utils.get_current(state)
+      if not node then
+        notify.info("no node under cursor")
+        return
+      end
+
+      local path, msg = path_utils.from_node(node, "relative", { base_dir = true })
+      if not path then
+        notify.info(msg or "Failed to get path")
+        return
+      end
+
+      fn.setreg("+", path, "c")
+      notify.info(("Copied relative directory: %s"):format(path))
+    end,
+    desc = "Copy relative directory path",
+  },
+
   ["]r"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
@@ -385,27 +406,6 @@ return {
       end
     end,
     desc = "Copy recursive file list (relative to cwd) to clipboard (+)",
-  },
-
-  ["[r"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.info("no node under cursor")
-        return
-      end
-
-      local path, msg = path_utils.from_node(node, "relative", { base_dir = true })
-      if not path then
-        notify.info(msg or "Failed to get path")
-        return
-      end
-
-      fn.setreg("+", path, "c")
-      notify.info(("Copied relative directory: %s"):format(path))
-    end,
-    desc = "Copy relative directory path",
   },
 
   ["[F"] = {

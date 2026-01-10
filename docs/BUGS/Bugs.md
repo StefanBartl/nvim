@@ -26,12 +26,13 @@
 
 ---
 
-
 ## Long View
 
 ---
 
 ## Notes
+
+---
 
 ### Legende
 
@@ -71,8 +72,9 @@ Fehlermeldung?:
 
 ---
 
-
 ## Notes
+
+---
 
 ###  __TITEL__ (Template)
 

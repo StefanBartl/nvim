@@ -19,6 +19,8 @@ function M.setup()
   end, { desc = "Clear copilot NES overlays or nohl" })
   map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
   map("n", "<leader>ch", "<cmd>NvCheatsheet<CR>", { desc = "[General] NvCheatsheet" })
+  map("n", "<leader>nvt", function() require("nvchad.themes").open() end, { desc = "[nvchad] Themes switcher" })
+
 
   -- Format via Conform (fallback handled in LSP attach)
   map({ "n", "x" }, "<leader>fm", function()

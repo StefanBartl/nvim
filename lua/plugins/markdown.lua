@@ -15,21 +15,6 @@ return {
   },
 
   {
-    "ellisonleao/glow.nvim",
-    cmd = "Glow",
-    ft = { "markdown", "md" },
-    config = function()
-      ---@diagnostic disable-next-line "incomplete setup"
-      require("glow").setup({
-        glow_path = vim.fn.exepath("glow"), -- auto-detect from PATH
-        border = "shadow",
-        style = "dark",
-        width = 120,
-      })
-    end,
-  },
-
-  {
     "iamcco/markdown-preview.nvim",
     cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
     ft = { "markdown" },

@@ -2,24 +2,25 @@
 
 ## Table of content
 
+- [WKD Neovim Roadmap](#wkd-neovim-roadmap)
   - [Watch](#watch)
   - [MIXED](#mixed)
-  - [neotree](#neotree)
-   - [ideas](#ideas)
+  - [Neotest](#neotest)
+  - [`custom.format.text_width`](#customformattext_width)
+  - [ideas](#ideas)
   - [Long run](#long-run)
 
 ---
 
 ## Watch
 
---
+---
 
 ## MIXED
 
 - neotest [lernen]()
 - `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 - lsp.tools behandeln
-- `:Glow`: `custom.markdown` mappings attachen; default 100% der UI ausfüllen - eventuell toggle.
 - `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
 - In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
 
@@ -61,5 +62,5 @@ oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
    1. statusline und winbar breadcrumbs sollten sich ein modul teilen
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 
---
+---
 
