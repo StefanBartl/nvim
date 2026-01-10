@@ -488,6 +488,15 @@ local function setup_additional_features()
   end
 end
 
+---Setup markdown formatting subcommand
+---@return nil
+local function setup_markdown()
+  local ok, markdown = pcall(require, "custom.format.markdown")
+  if ok then
+    markdown.register_subcommands(register_subcommand)
+  end
+end
+
 ---Setup the format module and register :Format command
 ---@param opts Custom.Format.Config|nil Configuration options
 ---@return nil
@@ -504,6 +513,7 @@ function M.setup(opts)
   setup_filter_lines()
   setup_misc()
   setup_additional_features()
+  setup_markdown()
 
   -- Create main :Format command
   vim.api.nvim_create_user_command("Format", format_handler, {
