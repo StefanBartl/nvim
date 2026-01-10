@@ -1,9 +1,10 @@
 ---@module 'usrcmds.migrate.notify'
----@brief Migrate vim.notify to lib.notify (simple regex approach)
+---@brief Migrate vim.notify to lib.notify (with alias support)
 ---@description
---- Simplified approach using regex patterns instead of treesitter.
---- More robust and easier to debug.
---- ALWAYS uses .create("") import syntax.
+--- Enhanced version that detects both:
+---   - vim.notify() direct calls
+---   - Aliased calls (local notify = vim.notify)
+--- Supports optional module name for .create() syntax
 
 local command = require("usrcmds.migrate.common.command")
 local picker = require("usrcmds.migrate.common.picker")
@@ -160,12 +161,13 @@ local function scan_cwd()
 end
 
 --------------------------------------------------------------------------------
--- Application
+-- Application (with module name support)
 --------------------------------------------------------------------------------
 
----Apply migrations (descending order)
+---Apply migrations with optional module name
 ---@param matches MigrateCommon.Match[]
-local function apply_matches(matches)
+---@param module_name string|nil Optional module name for .create("")
+local function apply_matches(matches, module_name)
   -- Group by buffer
   local by_buffer = {}
   for _, match in ipairs(matches) do
@@ -182,8 +184,8 @@ local function apply_matches(matches)
   for bufnr, buf_matches in pairs(by_buffer) do
     buffer_ops.create_undo_point(bufnr)
 
-    -- Inject import first (ALWAYS uses .create(""))
-    local import_added = refactor.inject_import(bufnr)
+    -- Inject import with optional module name
+    local import_added = refactor.inject_import(bufnr, module_name)
 
     -- Adjust line numbers if import was added
     if import_added then
@@ -193,7 +195,7 @@ local function apply_matches(matches)
       end
     end
 
-    -- Sort DESCENDING by end_line to avoid offset issues
+    -- Sort DESCENDING by end_line
     table.sort(buf_matches, function(a, b)
       return a.extra.end_line > b.extra.end_line
     end)
@@ -218,25 +220,41 @@ local function apply_matches(matches)
       notify.info(string.format("Applied %d/%d migration(s)", success_count, #buf_matches))
     end
   end
+
+  -- Remove aliases if present
+  for bufnr, _ in pairs(by_buffer) do
+    refactor.remove_aliases(bufnr)
+  end
 end
 
 --------------------------------------------------------------------------------
 -- Picker
 --------------------------------------------------------------------------------
 
----Show picker
+---Show picker with module name support
 ---@param matches MigrateCommon.Match[]
-local function show_picker_impl(matches)
+---@param module_name string|nil
+local function show_picker_impl(matches, module_name)
   picker.show(matches, {
     title = "Migrate vim.notify → lib.notify",
     single_apply = false,
 
     format_entry = function(match)
-      local filename = match.fname
-        and vim.fn.fnamemodify(match.fname, ":t")
+      local filename = match.fname and vim.fn.fnamemodify(match.fname, ":t")
         or ("buf:" .. match.bufnr)
 
-      local level = match.extra and match.extra.log_level or "INFO"
+      -- FIXED: Ensure log_level is a string
+      local level = "INFO" -- default
+      if match.extra and match.extra.log_level then
+        -- If it's already a string, use it; if it's somehow a number, convert
+        if type(match.extra.log_level) == "string" then
+          level = match.extra.log_level
+        elseif type(match.extra.log_level) == "number" then
+          -- Shouldn't happen, but handle it defensively
+          local level_map = { "TRACE", "DEBUG", "INFO", "WARN", "ERROR" }
+          level = level_map[match.extra.log_level] or "INFO"
+        end
+      end
 
       return string.format(
         "%s:%d  [%s]  %s",
@@ -258,7 +276,7 @@ local function show_picker_impl(matches)
     end,
 
     on_apply = function(selections)
-      apply_matches(selections)
+      apply_matches(selections, module_name)
     end,
   })
 end
@@ -273,27 +291,122 @@ function M.enable()
     scan_range = scan_range,
     scan_buffer = scan_buffer,
     scan_cwd = scan_cwd,
-    apply_matches = apply_matches,
-    show_picker = show_picker_impl,
 
-    -- Custom completion function
+    -- Wrapper that extracts module name from args
+    apply_matches = function(matches)
+      apply_matches(matches, nil)
+    end,
+
+    -- Wrapper that passes module name to picker
+    show_picker = function(matches)
+      show_picker_impl(matches, nil)
+    end,
+
+    -- Custom completion
     ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead, cmd_line, cursor_pos)
-      local completions = { "%", "cwd" }
+      -- Extract what's already been typed
+      local args = vim.split(cmd_line, "%s+", { trimempty = true })
 
-      -- Filter based on what user has typed
-      if arg_lead == "" then
-        return completions
-      end
-
-      local matches = {}
-      for _, comp in ipairs(completions) do
-        if comp:find(arg_lead, 1, true) == 1 then
-          table.insert(matches, comp)
+      -- First argument: mode (%, cwd)
+      if #args <= 2 then
+        local completions = { "%", "cwd" }
+        if arg_lead == "" then
+          return completions
         end
+
+        local matches = {}
+        for _, comp in ipairs(completions) do
+          if comp:find(arg_lead, 1, true) == 1 then
+            table.insert(matches, comp)
+          end
+        end
+        return matches
       end
 
-      return matches
+      -- Second argument: module name (free text, no completion)
+      return {}
+    end,
+  })
+
+  vim.api.nvim_create_user_command("MigrateNotify", function(cmd_opts)
+    local args_str = cmd_opts.args
+    local parts = vim.split(args_str, "%s+", { trimempty = true })
+
+    local mode = parts[1] or ""
+    local module_name = parts[2] or nil
+
+    -- Store module name in global for access by apply/picker functions
+    _G._migrate_notify_module_name = module_name
+
+    -- Reconstruct args without module name
+    local new_args = mode
+    cmd_opts.args = new_args
+
+    -- Determine action based on mode
+    local bufnr = api.nvim_get_current_buf()
+
+    if cmd_opts.range > 0 then
+      local matches = scan_range(bufnr, cmd_opts.line1, cmd_opts.line2)
+      if #matches == 0 then
+        notify.warn("No matches in range")
+        return
+      end
+      apply_matches(matches, module_name)
+      notify.info(string.format("Applied %d migration(s) in range", #matches))
+    elseif mode == "" then
+      local cursor = api.nvim_win_get_cursor(0)
+      local matches = scan_range(bufnr, cursor[1], cursor[1])
+      if #matches == 0 then
+        notify.warn("No matches on current line")
+        return
+      end
+      apply_matches(matches, module_name)
+      notify.info(string.format("Applied %d migration(s) on line %d", #matches, cursor[1]))
+    elseif mode == "%" then
+      local matches = scan_buffer(bufnr)
+      if #matches == 0 then
+        notify.warn("No matches in buffer")
+        return
+      end
+      show_picker_impl(matches, module_name)
+    elseif mode == "cwd" then
+      local matches = scan_cwd()
+      if #matches == 0 then
+        notify.warn("No matches in cwd")
+        return
+      end
+      show_picker_impl(matches, module_name)
+    else
+      notify.error(string.format("Invalid argument: %s. Use: [empty], %%, or cwd", mode))
+    end
+
+    -- Cleanup
+    _G._migrate_notify_module_name = nil
+  end, {
+    nargs = "*",
+    range = true,
+    desc = "Migrate vim.notify to lib.notify (with optional module name)",
+    ---@diagnostic disable-next-line: unused-local
+    complete = function(arg_lead, cmd_line, cursor_pos)
+      local args = vim.split(cmd_line, "%s+", { trimempty = true })
+
+      if #args <= 2 then
+        local completions = { "%", "cwd" }
+        if arg_lead == "" then
+          return completions
+        end
+
+        local matches = {}
+        for _, comp in ipairs(completions) do
+          if comp:find(arg_lead, 1, true) == 1 then
+            table.insert(matches, comp)
+          end
+        end
+        return matches
+      end
+
+      return {}
     end,
   })
 end

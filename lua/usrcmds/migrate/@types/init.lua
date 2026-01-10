@@ -1,5 +1,12 @@
----@meta
----@module 'usrcmds.migrate.notify.@types'
+---@module 'usrcmds.migrate.@types'
+
+--=== migrate
+
+---@class UsrCmds.Migrate.Config
+---@field opt boolean|nil Enable option API migration (:MigrateOpt)
+---@field notify boolean|nil Enable notify migration (:MigrateNotify)
+
+--=== notify
 
 ---@alias MigrateNotify.LogLevel
 ---| "TRACE"
@@ -30,5 +37,15 @@
 ---@class MigrateNotify.ScanOpts
 ---@field dry_run boolean|nil    # Preview only, no modifications
 ---@field telescope boolean|nil  # Show results in Telescope picker
+
+---== opts
+
+---@class MigrateOpt.Match
+---@field bufnr number|nil Buffer number (only for buffer-local matches)
+---@field fname string|nil File name (absolute path for file matches)
+---@field lnum number Line number (1-indexed)
+---@field text string Original line text
+---@field migrated string Migrated line text
+---@field source "buf"|"file" Source type: buffer or file
 
 return {}
