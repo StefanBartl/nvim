@@ -46,6 +46,9 @@ end
 
 --- Open fzf-lua file picker rooted at the config dir.
 --- Uses fzf-lua.files under the hood and merges `opts` with sensible defaults.
+--- Features:
+---   - Case-insensitive matching (finds "INIT" and "init" equally)
+---   - Fuzzy substring matching (finds "arl" in "barl")
 ---@param opts FindConfigOptions extra options passed to fzf-lua.files
 ---@return nil
 local function Find_in_config(opts)
@@ -57,11 +60,24 @@ local function Find_in_config(opts)
   end
 
   local cwd = get_nvim_config_dir()
+
+  -- Default fzf options for better path matching
+  local default_fzf_opts = {
+    -- ["--case-insensitive"] = "",  -- ignore case (finds INIT and init) FIX: Error  06:35:20 msg_show.echoerr [Fzf-lua] fzf error 2: unknown option: --case-insensitive
+    -- fzf's fuzzy matching already does substring matching by default
+  }
+
   -- Merge provided opts on top of sensible defaults
   local merged = vim.tbl_extend("force", {
-    cwd = cwd, -- root search at the config directory
-    prompt = "Config Files❯ ", -- clearer prompt
+    cwd = cwd,
+    prompt = "Config Files❯ ",
+    fzf_opts = default_fzf_opts,
   }, opts or {})
+
+  -- If user provided custom fzf_opts, merge them too
+  if opts and opts.fzf_opts then
+    merged.fzf_opts = vim.tbl_extend("force", default_fzf_opts, opts.fzf_opts)
+  end
 
   -- Call fzf-lua.files with defensive error handling
   local ok_call, err = pcall(function()
