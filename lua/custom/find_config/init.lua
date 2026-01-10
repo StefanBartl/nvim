@@ -1,12 +1,12 @@
 ---@module 'custom.find_config'
 --- Cross-platform "find in Neovim config" using fzf-lua.
 --- Uses stdpath('config') so it works on Linux/macOS/Windows without branching.
----@alias FindConfigOptions table|nil
+---@alias Custom.FindConfigOptions table|nil
 
 ---@async
----@class FindConfig
----@field find_in_config fun(opts:FindConfigOptions)
----@field grep_in_config fun(opts:FindConfigOptions)
+---@class Custom.FindConfig
+---@field find_in_config fun(opts:Custom.FindConfigOptions)
+---@field grep_in_config fun(opts:Custom.FindConfigOptions)
 ---@field enable fun(cfg: table)
 
 local notify = require("lib.notify").create("")
@@ -49,7 +49,7 @@ end
 --- Features:
 ---   - Case-insensitive matching (finds "INIT" and "init" equally)
 ---   - Fuzzy substring matching (finds "arl" in "barl")
----@param opts FindConfigOptions extra options passed to fzf-lua.files
+---@param opts Custom.FindConfigOptions extra options passed to fzf-lua.files
 ---@return nil
 local function Find_in_config(opts)
   ---@diagnostic disable-next-line: different-requires
@@ -62,9 +62,11 @@ local function Find_in_config(opts)
   local cwd = get_nvim_config_dir()
 
   -- Default fzf options for better path matching
+  -- fzf's fuzzy matching is ALREADY case-insensitive by default
+  -- We can enforce it explicitly via -i flag
   local default_fzf_opts = {
-    -- ["--case-insensitive"] = "",  -- ignore case (finds INIT and init) FIX: Error  06:35:20 msg_show.echoerr [Fzf-lua] fzf error 2: unknown option: --case-insensitive
-    -- fzf's fuzzy matching already does substring matching by default
+    ["-i"] = "",  -- case-insensitive matching (explicit enforcement)
+    -- Alternative: ["--literal"] = "" for exact substring matching
   }
 
   -- Merge provided opts on top of sensible defaults
@@ -90,7 +92,7 @@ end
 
 --- Run a live grep / ripgrep rooted at the config dir.
 --- Uses fzf-lua.live_grep for an interactive search experience.
----@param opts FindConfigOptions extra options passed to fzf-lua.live_grep
+---@param opts Custom.FindConfigOptions extra options passed to fzf-lua.live_grep
 ---@return nil
 local function Grep_in_config(opts)
   ---@diagnostic disable-next-line: different-requires
@@ -101,12 +103,23 @@ local function Grep_in_config(opts)
   end
 
   local cwd = get_nvim_config_dir()
+
+  -- Default fzf options for grep (case-insensitive matching)
+  local default_fzf_opts = {
+    ["-i"] = "",  -- case-insensitive
+  }
+
   -- Merge provided opts on top of sensible defaults
   local merged = vim.tbl_extend("force", {
-    cwd = cwd, -- run ripgrep from the config directory
-    prompt = "Grep Config❯ ", -- clearer prompt for grepping
-    -- additional sensible defaults could be placed here
+    cwd = cwd,
+    prompt = "Grep Config❯ ",
+    fzf_opts = default_fzf_opts,
   }, opts or {})
+
+  -- If user provided custom fzf_opts, merge them
+  if opts and opts.fzf_opts then
+    merged.fzf_opts = vim.tbl_extend("force", default_fzf_opts, opts.fzf_opts)
+  end
 
   -- Call fzf-lua.live_grep with defensive error handling
   local ok_call, err = pcall(function()
@@ -189,4 +202,4 @@ end
 M.Find_in_config = Find_in_config
 M.Grep_in_config = Grep_in_config
 
-return M ---@type FindConfig
+return M ---@type Custom.FindConfig
