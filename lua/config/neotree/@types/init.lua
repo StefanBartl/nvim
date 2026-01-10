@@ -22,6 +22,7 @@ local Cfg = {}
 
 ---@class Cfg.NeoTree.Tree
 ---@field get_node fun(self: Cfg.NeoTree.Tree, id?  : string): Cfg.NeoTree.Node|nil
+---@field get_nodes fun(self: Cfg.NeoTree.Tree, id?  : string): Cfg.NeoTree.Node[]|nil
 ---@field root Cfg.NeoTree.Node|nil
 ---@field set_selection fun(self: Cfg.NeoTree.Tree, node_path: string) | nil
 ---@field children Cfg.NeoTree.Node[] | nil

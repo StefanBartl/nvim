@@ -201,13 +201,20 @@ return {
     desc = "Mark/Unmark single file",
   },
 
-  --FIX: Not working
-  ["M"] = {
+  ["]m"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
       commands.mark.mark_all_in_directory(state)
     end,
     desc = "Mark all files in directory",
+  },
+
+  ["[m"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      commands.mark.unmark_all_in_directory(state)
+    end,
+    desc = "Unmark all files in directory",
   },
 
   ["<leader>mc"] = {
