@@ -1,8 +1,7 @@
 ---@module 'custom.markdown.setup.usercmds'
 --- Create buffer-local usercommands for Markdown buffers:
 --- 1. OpenWithSystemApplication - Opens files/URLs under cursor
---- 2. EnsureMarkdownHeadlines - Adds separator after H2+ headings
---- AUDIT: Hier wird buffer lokal implemenitert, dass sollte aber bei allen mcustom.markdown Modulen soweisop sein.
+--- AUDIT: Hier wird buffer lokal implementiert, dass sollte aber bei allen mcustom.markdown Modulen sowieso bereits sein sein.
 
 local M = {}
 local api = vim.api
