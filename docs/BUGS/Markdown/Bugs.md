@@ -17,22 +17,19 @@
 
 ## IMPORTANT Bugs
 
-
 ---
 
 ## NORMAL Bugs
 
-- `EnsureMarkdownLines` fügt manchmal doppelte `---` hinzu
-
 ---
-
 
 ## Long view
 
 ---
 
-
 ## Notes
+
+---
 
 ## Legende
 

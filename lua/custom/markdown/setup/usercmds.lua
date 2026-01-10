@@ -4,16 +4,16 @@
 --- 2. EnsureMarkdownHeadlines - Adds separator after H2+ headings
 --- 3. PreviewMarkdownHeadlines - Shows what would change without modifying
 --- AUDIT: Hier wird buffer lokal implemenitert, dass sollte aber bei allen mcustom.markdown Modulen soweisop sein.
+---FIX: Nach format refactore, :Format markdown table/headlineSeparatore/usw.
 
 local M = {}
 local api = vim.api
 local handler = require("custom.markdown.handler")
 local cfg = require("custom.markdown.config")
 
--- Attempt to load headline_spacing module
 local ok_hs, hs_mod = pcall(require, "custom.markdown.core.headline_spacing")
 local headline_spacing = nil
-if ok_hs and type(hs_mod) == "table" and type(hs_mod.ensure_buffer) == "function" then
+if ok_hs and type(hs_mod) == "table" and type(hs_mod.apply_headl_separators) == "function" then
   headline_spacing = hs_mod
 end
 
@@ -73,7 +73,7 @@ function M.apply(args)
       api.nvim_buf_create_user_command(bufnr, "EnsureMarkdownHeadlines", function()
         -- Execute with error handling
         local ok_exec, result = pcall(function()
-          return headline_spacing.ensure_buffer(bufnr, { notify = true })
+          return headline_spacing.apply_headl_separators(bufnr, { notify = true })
         end)
 
         -- Show error if execution failed
