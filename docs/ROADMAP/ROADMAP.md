@@ -23,8 +23,9 @@
 - lsp.tools behandeln
 - `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
 - In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
+- new Reload module
 
--
+---
 
 ## Neotest
 
