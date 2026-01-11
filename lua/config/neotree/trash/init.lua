@@ -35,6 +35,7 @@ M.config = {
   create_backups = true,
   confirm_dangerous = true,
   use_dry_run = true,
+  auto_close_buffers = false, -- Automatically close buffers without asking
 }
 
 ---Configure trash module
@@ -278,6 +279,81 @@ local function get_nodes_to_trash(state)
   return {}
 end
 
+---Close buffers safely with optional confirmation
+---@param open_files table[] Array of {path: string, buffers: integer[]}
+---@param auto_close boolean If true, close without asking
+---@return boolean success True if all buffers were closed or user cancelled
+local function close_open_buffers(open_files, auto_close)
+  if #open_files == 0 then
+    return true
+  end
+
+  -- Build detailed message
+  local message_lines = { "The following files are currently open:" }
+  local total_buffers = 0
+
+  for _, file_info in ipairs(open_files) do
+    local filename = vim.fn.fnamemodify(file_info.path, ":t")
+    table.insert(message_lines, string.format("  • %s (in %d buffer%s)",
+      filename,
+      #file_info.buffers,
+      #file_info.buffers > 1 and "s" or ""
+    ))
+    total_buffers = total_buffers + #file_info.buffers
+  end
+
+  table.insert(message_lines, "")
+  table.insert(message_lines, "Close buffer(s) and delete file(s)? (y/N)")
+
+  -- Show prompt unless auto_close is enabled
+  if not auto_close then
+    local prompt = table.concat(message_lines, "\n")
+    local ans = vim.fn.input(prompt .. " ")
+    vim.api.nvim_command("redraw")
+
+    if ans ~= "y" and ans ~= "Y" then
+      notify.info("Operation cancelled by user")
+      return false
+    end
+  end
+
+  -- Close all affected buffers
+  local failed_closes = {}
+
+  for _, file_info in ipairs(open_files) do
+    for _, bufnr in ipairs(file_info.buffers) do
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        local ok = pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+        if not ok then
+          table.insert(failed_closes, {
+            path = file_info.path,
+            buffer = bufnr,
+          })
+        end
+      end
+    end
+  end
+
+  if #failed_closes > 0 then
+    local error_msg = "Failed to close some buffers:\n"
+    for _, fail in ipairs(failed_closes) do
+      error_msg = error_msg .. string.format("  • Buffer %d: %s\n",
+        fail.buffer,
+        vim.fn.fnamemodify(fail.path, ":t")
+      )
+    end
+    notify.error(error_msg)
+    return false
+  end
+
+  notify.info(string.format("Closed %d buffer%s",
+    total_buffers,
+    total_buffers > 1 and "s" or ""
+  ))
+
+  return true
+end
+
 ---Neo-tree command: move selected nodes to trash with full safety
 ---@param state Cfg.NeoTree.State Neo-tree state
 ---@return nil
@@ -311,10 +387,35 @@ function M.neotree_send_node_to_trash(state)
 
   -- === SAFETY LAYER 1: VALIDATION ===
   if M.config.use_safety_system then
-    local valid, reason = safety.validation.validate_operation("delete", paths)
+    local valid, reason, extra_info = safety.validation.validate_operation("delete", paths)
+
     if not valid then
-      notify.error("Operation denied: " .. reason)
-      return
+      -- Check if the issue is open buffers
+      if extra_info and extra_info.open_files then
+        -- Try to close buffers with user confirmation
+        local buffers_closed = close_open_buffers(
+          extra_info.open_files,
+          M.config.auto_close_buffers or false
+        )
+
+        if not buffers_closed then
+          -- User cancelled or buffers couldn't be closed
+          return
+        end
+
+        -- Buffers are closed, re-validate
+        valid, reason, extra_info = safety.validation.validate_operation("delete", paths)
+
+        if not valid then
+          -- Still invalid for other reasons
+          notify.error("Operation denied: " .. reason)
+          return
+        end
+      else
+        -- Other validation error
+        notify.error("Operation denied: " .. reason)
+        return
+      end
     end
   end
 
@@ -346,7 +447,6 @@ function M.neotree_send_node_to_trash(state)
   end
 
   notify.info("Moving to Trash...")
-
   -- === SAFETY LAYER 4: BACKUP ===
   local backups_created = {}
   if M.config.create_backups then

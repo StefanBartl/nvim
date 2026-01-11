@@ -49,6 +49,8 @@
 
 ## Optimierungen
 
+1. `vim.loader()`- in der init.lua umsetzen -> siehe nvim notes
+
 ---
 
 ## Update documentation

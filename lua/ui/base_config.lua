@@ -39,8 +39,8 @@ return {
   },
 
   base46 = {
-    transparency = true,
-    theme_toggle = { "tokyonight", "vim_default" },
-    theme = "onedark",
+    transparency = false,
+    theme_toggle = { "vim_default", "tokyonight" },
+    theme = "vim_default",
   },
 }

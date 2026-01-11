@@ -90,7 +90,7 @@ local Cfg = {}
 ---@field create_backups boolean Create backups before deletion (default: true)
 ---@field confirm_dangerous boolean Confirm dangerous operations (default: true)
 ---@field use_dry_run boolean Respect dry-run mode (default: true)
-
+---@field auto_close_buffers boolean Auto-close open buffers without asking (default: false)
 
 -- ===========================
 -- actions
