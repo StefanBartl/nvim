@@ -1,17 +1,28 @@
--- ===================================================================================
--- bootstrap lazy and all plugins
--- ===================================================================================
-vim.loader.enable()
-vim.g.base46_cache = vim.fn.stdpath("data") .. "/base46/"
-vim.g.mapleader = " "
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.uv.fs_stat(lazypath) then
-  local repo = "https://github.com/folke/lazy.nvim.git"
-  vim.fn.system({ "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath })
+local g, fn = vim.g, vim.fn
+
+g.start_time = vim.loop.hrtime()
+
+-- Enable vim.loader for faster module loading
+local loader_ok = pcall(function()
+    vim.loader.enable()
+end)
+
+if not loader_ok then
+    vim.notify('Using standard Neovim loader (vim.loader failed)', vim.log.levels.INFO)
 end
 
+-- Bootstrap lazy.nvim
+g.base46_cache = fn.stdpath("data") .. "/base46/"
+g.mapleader = " "
+
+local lazypath = fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.uv.fs_stat(lazypath) then
+  local repo = "https://github.com/folke/lazy.ngit"
+  fn.system({ "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath })
+end
 vim.opt.rtp:prepend(lazypath)
 
+-- Setup lazy.nvim with plugins
 local lazy_config = require("config.lazy")
 require("lazy").setup({
   {
@@ -20,17 +31,16 @@ require("lazy").setup({
     branch = "v2.5",
   },
   { import = "nvchad.plugins" },
-  -- { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },
+-- { import = "nvchad.blink.lazyspec" },
 }, lazy_config)
 
-pcall(dofile, vim.g.base46_cache .. "syntax")
-pcall(dofile, vim.g.base46_cache .. "defaults")
-pcall(dofile, vim.g.base46_cache .. "statusline")
+-- Load base46 cache
+pcall(dofile, g.base46_cache .. "syntax")
+pcall(dofile, g.base46_cache .. "defaults")
+pcall(dofile, g.base46_cache .. "statusline")
 
--- ===================================================================================
--- Load modules
--- ===================================================================================
+-- Load core modules
 require("system.env").compute_env()
 require("options")
 require("myoptions").setup({ highlights = false, options = true })
@@ -40,6 +50,8 @@ require("custom")
 require("custom.mynotes")
 require("sessions").enable({ autocommands = true, usercmds = true, keymaps = true })
 require("usrcmds")
+
+-- Load mappings asynchronously
 vim.schedule(function()
   require("mappings").setup()
 end)
@@ -108,3 +120,12 @@ require("debugging").setup({
   usercmds = false,    -- boolean|nil
   tools = nil,        -- Dbg.Tools.Modules|nil
 })
+
+
+-- Show startup time (optional)
+vim.defer_fn(function()
+    if g.start_time then
+        local load_time = (vim.loop.hrtime() - g.start_time) / 1e6
+        vim.notify(string.format('Config loaded in %.2f ms', load_time), vim.log.levels.INFO)
+    end
+end, 0)
