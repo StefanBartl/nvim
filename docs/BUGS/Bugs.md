@@ -1,6 +1,8 @@
 # bugs
 
-ToDo-COmments Patchless - also monkeypatch in nvim config lösbar ?
+1. Failes to copy folder oder file list, mit [f ]f [F ]F warum ?
+
+1. ToDo-COmments Patchless - also monkeypatch in nvim config lösbar ?
 PR schreiben tr
 
    Error  14:23:58 msg_show.lua_error Error executing vim.schedule lua callback: .../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:94: Invalid 'end_col': out of range
