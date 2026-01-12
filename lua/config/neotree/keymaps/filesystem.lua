@@ -1,7 +1,8 @@
 ---@module 'config.neotree.keymaps.filesystem'
--- Filesystem-Source-specific extra mappings (unchanged) ============
+--- Filesystem-Source-specific extra mappings
 
 -- AUDIT: FIX: Neotree keymaps werden relativ oft verwendet. imports hier belassen, in die funktionen refactoren oder mit `lib.lazy`?
+-- hlp function desc
 
 local notify = require("lib.notify").create("[cfg.neotree.keymaps.fs] ")
 
@@ -16,7 +17,6 @@ local save_node_buffer = require("config.neotree.actions.save.node_buffer")
 local save_adjacent_buffer = require("config.neotree.actions.save.adjacent_buffer")
 local fzf_grep_picker = require("config.neotree.fzf_grep_picker")
 local updir = require("config.neotree.updir")
-local is_wsl = require("lib.is_wsl")
 local open_replace = require("config.neotree.open_replace")
 local commands = require("config.neotree.commands")
 local trash = require("config.neotree.trash")
@@ -33,27 +33,23 @@ return {
   ["F"] = "fuzzy_finder",
   ["<C-c>"] = "clear_filter",
 
-  --====================== commands ===================================
+  --====================== Commands ====================================
 
   ["i"] = "run_command",
   ["tf"] = "telescope_find",
   ["tg"] = "telescope_grep",
 
-  --====================== File Operations ============================
-
-  --======= Expand / Collapse nodes
+  --====================== File Operations =============================
 
   ["<CR>"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      -- 1) get  the current node
       local node = node_utils.get_current(state)
       if not node then
         notify.info("no node under cursor")
         return
       end
 
-      -- 2) Check if we're in a valid Neo-tree window
       local current_win = vim.api.nvim_get_current_win()
       local buf = vim.api.nvim_win_get_buf(current_win)
       local is_neotree_win = vim.bo[buf].filetype == "neo-tree"
@@ -62,17 +58,13 @@ return {
         return
       end
 
-      -- 3) Clean up any safe preview (if open)
-      safe_hide_preview(state)
+      safe_hide_preview()
 
-      -- 4) Expand/collapse directories safely
-      -- If the node is a directory or has children and is collapsed, toggle it
       if node.type == "directory" or (node.has_children and not node.is_expanded) then
         state.commands.toggle_node(state)
         return
       end
 
-      -- 5) Normal open: prefer window-picker if present
       if pcall(require, "window-picker") then
         local ok = pcall(state.commands.open_with_window_picker, state)
         if not ok then
@@ -85,19 +77,12 @@ return {
     desc = "Safe expand / collapse nodes and open files",
   },
 
-  --======= basics
-
-  ["<leader>"] = "noop",
-  -- ["<Tab>"] = "toggle_preview",
   ["<2-LeftMouse>"] = "open",
-
-  --======= background buffer add (no focus change, Neo-tree stays)
-
+  ["<leader>"] = "noop",
   ["<S-CR>"] = "open_badd",
-  -- Fallback, if <S-CR> is not recognized in terminals
   ["gb"] = "open_badd",
 
-  --====================== Save Operations ============================
+  --====================== Save Operations =============================
 
   ["<C-s>"] = {
     function(_)
@@ -113,12 +98,11 @@ return {
     desc = "force-save buffer matching node under cursor (w!)",
   },
 
-  --====================== Preview Node ===============================
+  --====================== Preview =====================================
 
   ["<Tab>"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      -- Validate window context
       local current_win = vim.api.nvim_get_current_win()
       local buf = vim.api.nvim_win_get_buf(current_win)
 
@@ -127,13 +111,11 @@ return {
         return
       end
 
-      -- Safe toggle with error handling
       local ok, _ = pcall(function()
         state.commands.toggle_preview(state)
       end)
 
       if not ok then
-        -- Fallback: try to hide preview
         pcall(function()
           local preview = require("neo-tree.sources.common.preview")
           if preview and preview.hide then
@@ -145,55 +127,47 @@ return {
     desc = "Preview Mode",
   },
 
-  --======= preview toggle + scrolling (Neo-tree preview)
-
-  ["<PageDown>"] = { "scroll_preview", config = { direction = -10 } },
-  ["<PageUp>"] = { "scroll_preview", config = { direction = 10 } },
-  ["<C-f>"] = { "scroll_preview", config = { direction = -1 } },
   ["<C-b>"] = { "scroll_preview", config = { direction = 1 } },
+  ["<C-f>"] = { "scroll_preview", config = { direction = -1 } },
+  ["<PageUp>"] = { "scroll_preview", config = { direction = 10 } },
+  ["<PageDown>"] = { "scroll_preview", config = { direction = -10 } },
 
-  --====================== Replace Buffer And Focus ===================
-  -- FIX: in `lua\config\neotree\open_replace\init.lua `
-  ---@param state Cfg.NeoTree.State
-  ["<S-o>"] = function(state)
-    open_replace(state, { focus = true, auto_close = true })
+  --====================== Replace / Focus =============================
 
-    -- Open_replace_logger = {
-    --   info = function(msg, ctx)
-    --     notify("[neotree] " .. msg .. (ctx and (" " .. vim.inspect(ctx)) or ""), levels.INFO)
-    --   end,
-    --   warn = function(msg, ctx)
-    --.info     notify("[neotree] " .. msg .. (ctx and (" " .. vim.inspect(ctx)) or ""))
-    --   end,
-    --   debug = function(msg, ctx)
-    --     notify("[neotree] [DEBUG] " .. (msg or "") .. (ctx and (" " .. vim.inspect(ctx)) or ""), levels.DEBUG)
-    --   end,
-    -- }
-    -- require("config.neotree.open_replace")(state, { focus = true, auto_close = true, logger = Open_replace_logger })
-  end,
+  ["O"] = {
+    function(state)
+      open_replace(state, { focus = true, auto_close = true })
+    end,
+    desc = "Open file and replace current buffer",
+  },
 
-  --====================== splits/tabs shorthand  =====================
+  --====================== Splits / Tabs ===============================
 
-  ["sv"] = "open_split",
   ["sg"] = "open_vsplit",
   ["st"] = "open_tabnew",
+  ["sv"] = "open_split",
 
-  --====================== File Clipboard Operations ==================
+  --====================== Clipboard ===================================
 
   ["c"] = "copy_to_clipboard",
-  ["x"] = "cut_to_clipboard",
   ["p"] = "paste_from_clipboard",
+  ["x"] = "cut_to_clipboard",
 
-  --====================== File Creation/Modification =================
+  --====================== Create / Modify =============================
 
   ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
   ["A"] = { "add_directory", config = { show_path = "relative" } },
+  ["D"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      commands.diff_files(state)
+    end,
+    desc = "Diff files (mark two files, then trigger)",
+  },
   ["r"] = "rename",
-  ["D"] = "diff_files", --FIX: Funktioniert nicht
 
-  --====================== Trash Operations ===========================
+  --====================== Trash =======================================
 
-  --FIX: No nodes selectes wenn nicht markiert ist. Ob es mit mark funkltinert kann noch nicht geprüft, da mark nicht funktoinert.
   ["d"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
@@ -214,29 +188,35 @@ return {
     function(_)
       undo.show_history()
     end,
-    desc = "Show trash history (optional)",
+    desc = "Show trash history",
   },
 
-  --====================== Mark Operations ============================
-  -- Note: <C-c> and <C-a> are problematic in Neovim terminals
-  -- Using <leader>m prefix for mark operations instead
+  --====================== Mark ========================================
 
   --FIX: Gesamte mark operations funktionieret nicht
 
   ["m"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      commands.mark.toggle_mark(state)
+      commands.mark.toggle_mark(state, false) -- cursor stays at node after mmarking it
     end,
     desc = "Mark/Unmark single file",
   },
 
-  ["<S-m>"] = {
+  ["]m"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
       commands.mark.mark_all_in_directory(state)
     end,
     desc = "Mark all files in directory",
+  },
+
+  ["[m"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      commands.mark.unmark_all_in_directory(state)
+    end,
+    desc = "Unmark all files in directory",
   },
 
   ["<leader>mc"] = {
@@ -247,42 +227,36 @@ return {
     desc = "Clear all marks",
   },
 
-  --==================== Navigation: Traverse Updir/Downdir  ========
+  --====================== Navigation ==================================
 
   ["+"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      -- 1) Safely get the current node
       local node = node_utils.get_current(state)
       if not node then
         notify.info("no node under cursor")
         return
       end
 
-      -- 2) Resolve the absolute path and check if it's valid
       local path, is_dir = node_utils.get_path(node)
       if path == "" then
         notify.warn("no path under cursor")
         return
       end
 
-      -- 3) Determine the directory: if the node is a file, use its parent
       local dir = is_dir and path or fn.fnamemodify(path, ":h")
 
-      -- 4) Attempt to change Neovim's cwd safely
       local ok, err = pcall(vim.api.nvim_set_current_dir, dir)
       if not ok then
         notify.error(("cd failed: %s"):format(tostring(err)))
         return
       end
 
-      -- 5) If Neo-tree command module exists, execute focus/reveal on the new dir
       local ok_cmd, neo_cmd = pcall(require, "neo-tree.command")
       if ok_cmd and neo_cmd then
         neo_cmd.execute({ source = "filesystem", dir = dir, reveal = true })
       end
 
-      -- 6) Notify the user of the cwd change
       notify.info(("cwd → %s"):format(dir))
     end,
     desc = "Set Neovim cwd to node and focus Neo-tree there",
@@ -296,7 +270,7 @@ return {
     desc = "Up one level (in-place) and adjust CWD",
   },
 
-  --====================== Path & File Copying & Lists Operations =====
+  --====================== Path / Copy ==================================
 
     --FIX: funktionert nicht
   ["Y"] = {
@@ -310,15 +284,17 @@ return {
 
       local path, _ = node_utils.get_path(node)
       if path == "" then
+        notify.warn("no path")
         return
       end
 
       fn.setreg("+", path, "c")
+      notify.info(("Copied path: %s"):format(path))
     end,
-    desc = "Copy Path to Clipboard",
+    desc = "Copy absolute path to clipboard",
   },
 
-  ["[p"] = {
+  ["[a"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
       local node = node_utils.get_current(state)
@@ -339,7 +315,7 @@ return {
     desc = "Copy absolute path (+)",
   },
 
-  ["]p"] = {
+  ["]a"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
       local node = node_utils.get_current(state)
@@ -361,109 +337,105 @@ return {
     desc = "Copy base (dir) path (+)",
   },
 
-    --FIX: die beiden r funktien machen dasselbe
-  ["]r"] = {
-    --- Copy the node's relative path to the system clipboard (+)
-    --- Base preference: project root → fallback to cwd
+  ["[r"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      -- 1) Safely get current node
       local node = node_utils.get_current(state)
       if not node then
         notify.info("no node under cursor")
         return
       end
 
-      -- 2) Get relative path via path_utils
-      local path, msg = path_utils.from_node(node, "relative", { base_dir = false })
+      local path, msg = path_utils.from_node(node, "relative", { base_dir = true })
       if not path then
-        notify.info(msg)
+        notify.info(msg or "Failed to get path")
         return
       end
 
-      -- 3) Copy to system clipboard
+      fn.setreg("+", path, "c")
+      notify.info(("Copied relative directory: %s"):format(path))
+    end,
+    desc = "Copy relative directory path",
+  },
+
+  ["]r"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      local node = node_utils.get_current(state)
+      if not node then
+        notify.info("no node under cursor")
+        return
+      end
+
+      local path, msg = path_utils.from_node(node, "relative", { base_dir = false })
+      if not path then
+        notify.info(msg or "Failed to get path")
+        return
+      end
+
       fn.setreg("+", path, "c")
       notify.info(("Copied relative path: %s"):format(path))
     end,
-    desc = "Copy relative path (+) (root→node or cwd→node)",
-  },
-
-  ["[r"] = {
-    --- Copy the node's base directory (relative) to system clipboard (+)
-    --- Base preference: project root → fallback to cwd
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      -- 1) Safely get current node
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.info("no node under cursor")
-        return
-      end
-
-      -- 2) Get relative base directory via path_utils
-      local path, msg = path_utils.from_node(node, "relative", { base_dir = true })
-      if not path then
-        notify.info(msg)
-        return
-      end
-
-      -- 3) Copy to system clipboard
-      vim.fn.setreg("+", path, "c")
-      notify.info("Copied relative path: " .. path)
-    end,
-    desc = "Copy relative path",
+    desc = "Copy relative path (file)",
   },
 
   ["[f"] = {
-    --FIX: funktinoert nicht
     ---@param state Cfg.NeoTree.State
     function(state)
-      copy_folders(state, { relative_to_cwd = false, preview_limit = 20 })
-    end,
-    desc = "Copy recursive folder list (absolute paths) to clipboard (+)",
-  },
-
-  ["[F"] = {
-    --FIX: funktinoert nicht
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      copy_folders(state, { relative_to_cwd = true, preview_limit = 20 })
-    end,
-    desc = "Copy recursive folder list (relative to cwd) to clipboard (+)",
-  },
-
-  ["[t"] = {
-    --FIX: funktinoert nicht
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      copy_entries(state, { -- AUDIT: In Modul typisieren oder hier kommentieren
+      local success = copy_entries(state, {
         relative_to_cwd = false,
         preview_limit = 20,
         quote_paths = false,
         format = "list",
       })
+      if not success then
+        notify.warn("Failed to copy file list")
+      end
     end,
     desc = "Copy recursive file list",
   },
 
-  ["[T"] = {
-    --FIX: funktinoert nicht
+  ["]f"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      copy_entries(state, {
+      local success = copy_entries(state, {
         relative_to_cwd = true,
         preview_limit = 20,
         quote_paths = false,
         format = "list",
       })
+      if not success then
+        notify.warn("Failed to copy file list")
+      end
     end,
     desc = "Copy recursive file list (relative to cwd) to clipboard (+)",
   },
 
-  --====================== Special Operations ==========================
+  ["[F"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      local success = copy_folders(state, { relative_to_cwd = false, preview_limit = 20 })
+      if not success then
+        notify.warn("Failed to copy folder list")
+      end
+    end,
+    desc = "Copy recursive folder list (absolute paths) to clipboard (+)",
+  },
+
+  ["]F"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      local success = copy_folders(state, { relative_to_cwd = true, preview_limit = 20 })
+      if not success then
+        notify.warn("Failed to copy folder list")
+      end
+    end,
+    desc = "Copy recursive folder list (relative to cwd) to clipboard (+)",
+  },
+
+  --====================== Info / Special ===============================
 
   ["I"] = {
-    --FIX: funktinoert nicht
     ---@param state Cfg.NeoTree.State
     function(state)
       node_info.show_from_neotree(state)
@@ -471,63 +443,39 @@ return {
     desc = "Show file or directory information (hover)",
   },
 
-  ["O"] = {
-    --FIX: funktinoert nicht
-    ---@param state Cfg.NeoTree.State
+  ["<leader>fm"] = {
     function(state)
-      -- 1) Safely get the current node
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.info("no node under cursor")
-        return
-      end
-
-      -- 2) Resolve the absolute path of the node
-      local path, _ = node_utils.get_path(node)
-      if path == "" then
-        notify.warn("No path under cursor")
-        return
-      end
-
-      -- 3) Open the file using the system's default application
-      require("lazy.util").open(path, { system = true })
-    end,
-    desc = "Open with System Application",
-  },
-
-  ["L"] = {
-    -- FIX: No path under cursor
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      local mod
-      if fn.has("win32") == 1 or fn.has("win64") == 1 then
-        mod = "config.neotree.open_fm.win"
-      elseif is_wsl() then
-        mod = "config.neotree.open_fm.wsl"
-      else
-        mod = "config.neotree.open_fm.unix_ubuntu"
-      end
-      local ok, fm = pcall(require, mod)
+      local ok, filemanager = pcall(require, "config.neotree.open.filemanager")
       if not ok then
-        notify.error("open_fm module not found: " .. mod)
+        notify.error("File manager module not loaded")
         return
       end
-      fm.open(state)
+
+      local success = filemanager.open_from_neotree(state)
+      if not success then
+        notify.warn("Failed to open in file manager")
+      end
     end,
     desc = "Open in system file manager",
   },
 
-  ["[l"] = {
+  -- FIX:Funkltioniert nicht;
+  ["<leader>sm"] = {
+    function(state)
+      require("config.neotree.open.system_app").open_from_neotree(state)
+    end,
+    desc = "Open with System Application",
+  },
+
+  ["rq"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      -- 1) Safely get the current node
       local node = node_utils.get_current(state)
       if not node then
         notify.info("no node under cursor")
         return
       end
 
-      -- 2) Call the utility to copy Lua require() strings
       to_require.copy_as_require(node, {
         relative = true,
         show_preview = true,
@@ -536,7 +484,7 @@ return {
     desc = "Copy Lua require() string(s)",
   },
 
-  ["grep"] = {
+  ["gr"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
       fzf_grep_picker.live_grep_node_dir(state)

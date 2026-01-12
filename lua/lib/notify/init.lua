@@ -1,11 +1,22 @@
 ---@module 'lib.notify'
----Generic notification factory for Neovim configs
----Allows per-module prefix configuration while mirroring vim.notify semantics
+---@description Generic notification factory for Neovim configs
+---
+--- Allows per-module prefix configuration while mirroring vim.notify semantics.
+--- Also provides safe notification methods for fast event contexts.
+---
+--- Usage:
+---   local notify = require("lib.notify").create("[my-plugin]")
+---   notify.info("Operation completed")
+---
+--- Safe usage (from fast events):
+---   local safe = require("lib.notify").safe
+---   safe.schedule("Message from fast context", vim.log.levels.INFO)
+
 require("lib.notify.@types")
 
 local M = {}
 
----Create a prefixed notify helper
+--- Create a prefixed notify helper (standard mode, not scheduled)
 ---@param prefix string Notification prefix, e.g. "[neotree-fs-refactor]"
 ---@return Lib.Notify.Notifier
 function M.create(prefix)
@@ -62,5 +73,8 @@ function M.create(prefix)
 
   return notifier
 end
+
+-- Export safe notification utilities
+M.safe = require("lib.notify.safe")
 
 return M

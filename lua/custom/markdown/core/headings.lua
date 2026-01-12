@@ -8,19 +8,44 @@ local api, fn, cmd = vim.api, vim.fn, vim.cmd
 local cfg = require("custom.markdown.config").get
 
 -- ============================================================================
--- Helper: navigate to previous / next heading (H2+)
+-- Helper: navigate to previous / next heading (H2+) with optional count for level
 -- ============================================================================
-
+---Navigate to previous heading. With count, jumps to heading of that level.
 ---@return nil
 function M.goto_prev_heading()
-  fn.search("^##\\+\\s\\+.*$", "bWs")
-  cmd("nohlsearch")
+  local count = vim.v.count
+  local pattern
+
+  if count > 0 then
+    -- With count: jump to heading of specific level (e.g., 2<C-p> -> ## heading)
+    local hashes = string.rep("#", count)
+    pattern = "^" .. hashes .. "\\s\\+.*$"
+  else
+    -- Without count: jump to any H2+ heading
+    pattern = "^##\\+\\s\\+.*$"
+  end
+
+  vim.fn.search(pattern, "bWs")
+  vim.cmd("nohlsearch")
 end
 
+---Navigate to next heading. With count, jumps to heading of that level.
 ---@return nil
 function M.goto_next_heading()
-  fn.search("^##\\+\\s\\+.*$", "Ws")
-  cmd("nohlsearch")
+  local count = vim.v.count
+  local pattern
+
+  if count > 0 then
+    -- With count: jump to heading of specific level (e.g., 2<C-f> -> ## heading)
+    local hashes = string.rep("#", count)
+    pattern = "^" .. hashes .. "\\s\\+.*$"
+  else
+    -- Without count: jump to any H2+ heading
+    pattern = "^##\\+\\s\\+.*$"
+  end
+
+  vim.fn.search(pattern, "Ws")
+  vim.cmd("nohlsearch")
 end
 
 -- ============================================================================

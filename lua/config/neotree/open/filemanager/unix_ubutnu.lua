@@ -1,8 +1,8 @@
----@module 'config.neotree.open_fm.unix_ubuntu'
+---@module 'config.neotree.open_filemanager.unix_ubuntu'
 --- Open current Neo-tree node in the system file manager with selection support.
---- Linux: prefer org.freedesktop.FileManager1.ShowItems (DBus), then manager-specific
----        --select flags, then fallback to opening the directory.
---- macOS: use `open -R` for files (reveal) or `open` for directories.
+--- FIXED: Uses node_utils.get_current() for consistent node retrieval
+
+local node_utils = require("config.neotree.utils.node")
 
 local node_utils = require("config.neotree.utils.node")
 
@@ -124,11 +124,17 @@ end
 -- Public API -------------------------------------------------------------------
 
 --- Open the selected node in the system file manager (Linux/macOS).
---- On Linux, prefers selecting the file via DBus; on macOS uses `open -R`.
----@param state table
+--- FIXED: Now uses node_utils.get_current() instead of state.current_node
+---@param state Cfg.NeoTree.State
 ---@return boolean ok
 function M.open(state)
-  local node = state and state.current_node or nil
+  -- FIXED: Use node_utils.get_current() for consistent node retrieval
+  local node = node_utils.get_current(state)
+  if not node then
+    vim.notify("Open in File Manager: no node under cursor", vim.log.levels.WARN)
+    return false
+  end
+
   local raw, _ = node_utils.get_path(node)
   if raw == "" then
     vim.notify("Open in File Manager: no path under cursor", vim.log.levels.WARN)

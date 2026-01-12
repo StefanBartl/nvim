@@ -1,9 +1,17 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
+--AUDIT
+require("custom.commands_keymaps").setup({
+  delete_current_file = true,
+})
+
+-- AUDIT
 require("custom.insert").setup({
   enable_legacy_commands = true,
 })
+
+--AUDIT
 require("custom.format").setup({
   enable_legacy_commands = true, -- AUDIT: Übergangsphase
 })

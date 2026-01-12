@@ -41,45 +41,72 @@ function M.validate_path(path)
   return true, nil
 end
 
+---Find buffers that have a specific path open
+---@param path string File path to check
+---@return integer[] buffers Array of buffer numbers
+local function find_buffers_with_path(path)
+  local buffers = {}
+  local normalized_path = vim.fn.resolve(path):gsub("\\", "/")
+
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_buf_is_loaded(buf) then
+      local buf_name = vim.api.nvim_buf_get_name(buf)
+      if buf_name ~= "" then
+        local normalized_buf = vim.fn.resolve(buf_name):gsub("\\", "/")
+        if normalized_buf == normalized_path then
+          table.insert(buffers, buf)
+        end
+      end
+    end
+  end
+
+  return buffers
+end
+
 ---Validate operation is allowed
 ---@param operation string "delete"|"move"|"copy"|"create"
 ---@param paths string[] Paths involved
----@return boolean valid, string|nil reason
+---@return boolean valid, string|nil reason, table|nil extra_info
 function M.validate_operation(operation, paths)
   local allowed_operations = { "delete", "move", "copy", "create", "rename" }
 
   if not vim.tbl_contains(allowed_operations, operation) then
-    return false, "unknown operation: " .. operation
+    return false, "unknown operation: " .. operation, nil
   end
 
   if not paths or #paths == 0 then
-    return false, "no paths provided"
+    return false, "no paths provided", nil
   end
 
   -- Validate each path
   for _, path in ipairs(paths) do
     local valid, reason = M.validate_path(path)
     if not valid then
-      return false, string.format("invalid path '%s': %s", path, reason)
+      return false, string.format("invalid path '%s': %s", path, reason), nil
     end
   end
 
   -- Operation-specific validation
   if operation == "delete" then
     -- Check if any path is currently open in buffer
+    local open_files = {}
+
     for _, path in ipairs(paths) do
-      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.api.nvim_buf_is_valid(buf) then
-          local buf_name = vim.api.nvim_buf_get_name(buf)
-          if buf_name == path then
-            return false, string.format("path is open in buffer: %s", path)
-          end
-        end
+      local buffers = find_buffers_with_path(path)
+      if #buffers > 0 then
+        table.insert(open_files, {
+          path = path,
+          buffers = buffers,
+        })
       end
+    end
+
+    if #open_files > 0 then
+      return false, "paths are open in buffers", { open_files = open_files }
     end
   end
 
-  return true, nil
+  return true, nil, nil
 end
 
 ---Confirm dangerous operation with user

@@ -1,7 +1,7 @@
 ---@module 'custom.markdown.core.headline_spacing'
 --- Ensures proper spacing between H2+ heading sections in Markdown buffers.
---- Adds the pattern [empty line, "---", empty line] between H2+ heading sections
---- that have actual content. Ignores headings inside fenced code blocks.
+--- Adds the pattern [empty line, "---", empty line] between H2+ heading sections.
+--- Ignores headings inside fenced code blocks.
 
 local api = vim.api
 local M = {}
@@ -45,56 +45,48 @@ end
 ---@param lines string[] All buffer lines
 ---@param heading_idx integer 1-based index of the heading line
 ---@param next_heading_idx integer|nil 1-based index of next H2+ heading, or nil if none
----@return integer|nil section_end_idx 1-based index of last content line, or nil if section is empty
+---@return integer section_end_idx 1-based index of last content line, or heading_idx if section is empty
 local function find_section_end(lines, heading_idx, next_heading_idx)
   local search_end = next_heading_idx and (next_heading_idx - 1) or #lines
 
   -- Search backwards from end of section to find last non-empty content line
   for i = search_end, heading_idx + 1, -1 do
     local line = lines[i] or ""
-    -- Found a line with actual content (non-whitespace characters)
-    if line:match("%S") then
+    -- Skip separator pattern lines and empty lines
+    if line ~= "---" and line:match("%S") then
       return i
     end
   end
 
-  -- No content found in section (heading is followed only by empty lines)
-  return nil
+  -- No content found in section - return heading index itself
+  -- This ensures empty sections still get separators
+  return heading_idx
 end
 
 --- Check if the required separator pattern exists after a section end
 --- Pattern must be: empty line, "---", empty line
 ---@param lines string[] All buffer lines
----@param section_end_idx integer 1-based index of last content line
----@param next_heading_idx integer|nil 1-based index of next heading (to avoid false positives)
+---@param section_end_idx integer 1-based index of last content line (or heading if empty)
+---@param next_heading_idx integer 1-based index of next heading
 ---@return boolean has_pattern true if complete and correct pattern exists
 local function has_separator_after(lines, section_end_idx, next_heading_idx)
-  local desired = { "", "---", "" }
-
-  -- Check each line of the pattern
-  for i = 1, 3 do
-    local line_idx = section_end_idx + i
-    local line = lines[line_idx] or ""
-
-    -- Pattern line doesn't match expected value
-    if line ~= desired[i] then
-      return false
-    end
+  -- Expected pattern: [content_line, empty, "---", empty, next_heading]
+  -- So we need exactly 3 lines between section_end and next_heading
+  local gap = next_heading_idx - section_end_idx
+  if gap ~= 4 then
+    return false
   end
 
-  -- If there's a next heading, verify it comes right after the separator
-  if next_heading_idx then
-    local expected_heading_pos = section_end_idx + 4
-    if next_heading_idx ~= expected_heading_pos then
-      return false
-    end
-  end
+  -- Check exact pattern
+  local line1 = lines[section_end_idx + 1] or ""
+  local line2 = lines[section_end_idx + 2] or ""
+  local line3 = lines[section_end_idx + 3] or ""
 
-  return true
+  return line1 == "" and line2 == "---" and line3 == ""
 end
 
 --- Find all H2+ heading sections that need separator pattern
---- Only returns sections with actual content that lack proper separator
+--- Processes all sections including empty ones (headings without content)
 ---@param lines string[] All buffer lines
 ---@return table[] sections Array of {heading_idx, section_end_idx, next_heading_idx} tables
 function M.find_sections_needing_separator(lines)
@@ -116,22 +108,20 @@ function M.find_sections_needing_separator(lines)
       -- Find the next H2+ heading to determine section boundary
       local next_heading = find_next_h2_heading(lines, i)
 
-      -- Find where this heading's content section ends
-      local section_end = find_section_end(lines, i, next_heading)
+      -- Only process if there's a following heading (no separator after last section)
+      if next_heading then
+        -- Find where this heading's content section ends
+        -- (returns heading_idx itself if section is empty)
+        local section_end = find_section_end(lines, i, next_heading)
 
-      -- Only process sections with actual content
-      if section_end then
-        -- Only add separator if there's a next heading (no separator after last section)
-        if next_heading then
-          -- Check if proper separator pattern already exists
-          if not has_separator_after(lines, section_end, next_heading) then
-            -- Add to list of sections needing separator
-            table.insert(result, {
-              heading_idx = i,
-              section_end_idx = section_end,
-              next_heading_idx = next_heading,
-            })
-          end
+        -- Check if proper separator pattern already exists
+        if not has_separator_after(lines, section_end, next_heading) then
+          -- Add to list of sections needing separator
+          table.insert(result, {
+            heading_idx = i,
+            section_end_idx = section_end,
+            next_heading_idx = next_heading,
+          })
         end
       end
     end
@@ -144,7 +134,7 @@ end
 ---@param bufnr integer Buffer number to modify
 ---@param opts table|nil Options: {notify: boolean, dry_run: boolean}
 ---@return integer count Number of sections modified
-function M.ensure_buffer(bufnr, opts)
+function M.apply_headl_separators(bufnr, opts)
   -- Parse options with defaults
   opts = opts or {}
   local notify_enabled = opts.notify ~= false
@@ -188,72 +178,38 @@ function M.ensure_buffer(bufnr, opts)
 
   -- Process sections from top to bottom, adjusting for inserted lines
   for _, section in ipairs(sections) do
-    -- Adjust section_end_idx by cumulative offset from previous insertions
+    -- Adjust indices by cumulative offset from previous insertions
     local adjusted_end = section.section_end_idx + offset
+    local adjusted_next = section.next_heading_idx + offset
 
-    -- Calculate how many lines currently exist between section end and next heading
-    local current_gap = section.next_heading_idx - section.section_end_idx - 1
-
-    -- Determine lines of separator pattern that are missing
-    local to_insert = {}
-
-    -- Check what's already there in the gap
-    local existing_pattern = {}
-    for i = 1, math.min(3, current_gap) do
-      local check_idx = adjusted_end + i
-      existing_pattern[i] = lines[check_idx] or ""
-    end
-
-    -- Build list of missing separator lines
-    for i = 1, 3 do
-      if existing_pattern[i] ~= separator[i] then
-        table.insert(to_insert, separator[i])
-      else
-        -- If this line matches, all subsequent must also match (or we rebuild entire pattern)
-        -- For simplicity: if any line is wrong, insert complete pattern
-        to_insert = vim.deepcopy(separator)
-        break
-      end
-    end
-
-    -- Remove any existing incorrect lines between section end and next heading
-    local lines_to_remove = current_gap
-    if lines_to_remove > 0 then
+    -- Remove ALL lines between section end and next heading
+    local lines_between = adjusted_next - adjusted_end - 1
+    if lines_between > 0 then
       api.nvim_buf_set_lines(
         bufnr,
-        adjusted_end, -- Start removing after last content line
-        adjusted_end + lines_to_remove, -- Remove all lines until next heading
+        adjusted_end, -- Start after last content line
+        adjusted_end + lines_between, -- Remove until next heading
         false,
         {} -- Delete lines
       )
 
-      -- Update local lines array to reflect deletion
-      for _ = 1, lines_to_remove do
-        table.remove(lines, adjusted_end + 1)
-      end
-
-      -- Adjust offset for deleted lines
-      offset = offset - lines_to_remove
+      -- Update offset for deleted lines
+      offset = offset - lines_between
+      -- Recalculate adjusted_next after deletion
+      adjusted_next = section.next_heading_idx + offset
     end
 
-    -- Insert the correct separator pattern
-    if #to_insert > 0 then
-      api.nvim_buf_set_lines(
-        bufnr,
-        adjusted_end, -- Insert after last content line
-        adjusted_end,
-        false,
-        to_insert
-      )
+    -- Insert the correct separator pattern (always exactly 3 lines)
+    api.nvim_buf_set_lines(
+      bufnr,
+      adjusted_end, -- Insert after last content line (or heading if empty)
+      adjusted_end, -- Insert at same position (no replacement)
+      false,
+      separator
+    )
 
-      -- Update local lines array to reflect insertion
-      for j = 1, #to_insert do
-        table.insert(lines, adjusted_end + j, to_insert[j])
-      end
-
-      -- Adjust offset for inserted lines
-      offset = offset + #to_insert
-    end
+    -- Update offset for inserted lines
+    offset = offset + 3
   end
 
   -- Notify user of changes
@@ -266,14 +222,6 @@ function M.ensure_buffer(bufnr, opts)
   end
 
   return #sections
-end
-
---- Preview what would change without modifying buffer
----@param bufnr integer Buffer number to analyze
----@return table[] sections Array of sections that would be modified
-function M.preview(bufnr)
-  local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  return M.find_sections_needing_separator(lines)
 end
 
 return M

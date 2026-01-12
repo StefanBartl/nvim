@@ -1,4 +1,4 @@
-# FIX: bugs
+# bugs
 
 ## Table of content
 
@@ -6,11 +6,13 @@
     - [LSP](#lsp)
   - [neotree-fs-refactor](#neotree-fs-refactor)
 
---
+---
 
 ## Critical Bugs
 
 - github stats
+
+---
 
 ## Important
 
@@ -116,12 +118,13 @@ mit multiline kommentiere, bekomme ich:
 
 ---
 
-
 ## Long View
 
 ---
 
 ## Notes
+
+---
 
 ### Legende
 
@@ -161,8 +164,9 @@ Fehlermeldung?:
 
 ---
 
-
 ## Notes
+
+---
 
 ###  __TITEL__ (Template)
 
@@ -197,4 +201,3 @@ Status:
 * UPSTREAM – Bug liegt in externem Plugin
 
 ---
-

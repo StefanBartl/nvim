@@ -15,6 +15,7 @@
 ---| "case"        -- Change case
 ---| "indent"      -- Fix indentation
 ---| "clear"       -- Clear buffer content
+---| "markdown"    -- Markdown-specific formatting operations
 
 ---@class Custom.Format.SubcommandDef
 ---@field handler fun(args: string[]): nil Function that handles the subcommand
@@ -27,7 +28,6 @@
 ---@field subcommands table<Custom.Format.SubcommandName, Custom.Format.SubcommandDef>
 
 ---@class Custom.Format.Config
----@field enable_legacy_commands boolean Whether to keep old :ColumnAlignToColumn etc. commands
 ---@field default_subcommand Custom.Format.SubcommandName|nil Default subcommand if none given
 
 return {}

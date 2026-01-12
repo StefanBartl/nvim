@@ -1,46 +1,56 @@
 ---@module 'config.neotree.keymaps.git_status'
--- Git-Status-Source-specific extra mappings (unchanged) =========
+-- Git-Status-Source-specific extra mappings
 
 ---@return table<string, any>
 return {
 
-  --====================== Commands ===================================
+  --====================== Commands ==================================
 
-   ["dd"] = "delete",
+  ["dd"] = "delete",
 
-  --====================== Add noop für filesystem-specific ===========
+  --====================== Disable filesystem operations =============
 
-  ["d"] = "noop",
-  ["a"] = "noop",
-  ["A"] = "noop",
-  ["r"] = "noop",
-  ["c"] = "noop",
-  ["x"] = "noop",
-  ["p"] = "noop",
-  ["m"] = "noop",
-  ["<S-m>"] = "noop",
-  ["U"] = "noop",
+  -- single-character symbols
   ["+"] = "noop",
   ["-"] = "noop",
-  ["I"] = "noop",
-  ["O"] = "noop",
-  ["L"] = "noop",
-  ["[l"] = "noop",
-  ["grep"] = "noop",
+
+  -- single-character letters
+  ["a"] = "noop",
+  ["c"] = "noop",
+  ["d"] = "noop",
+  ["m"] = "noop",
+  ["p"] = "noop",
+  ["r"] = "noop",
+  ["x"] = "noop",
+
+  -- single-character uppercase letters
+  ["A"] = "noop",
   ["D"] = "noop",
-  ["[p"] = "noop",
-  ["]p"] = "noop",
-  ["]r"] = "noop",
-  ["[r"] = "noop",
+  ["I"] = "noop",
+  ["L"] = "noop",
+  ["M"] = "noop",
+  ["O"] = "noop",
+  ["U"] = "noop",
+  ["Y"] = "noop",
+
+  -- multi-character plain tokens
+  ["gb"] = "noop",
+  ["gr"] = "noop",
+  ["rq"] = "noop",
+
+  -- bracket navigation
   ["[f"] = "noop",
   ["[F"] = "noop",
+  ["[p"] = "noop",
+  ["[r"] = "noop",
   ["[t"] = "noop",
-  ["[T"] = "noop",
-  ["Y"] = "noop",
-  ["<S-o>"] = "noop",
+  ["]p"] = "noop",
+  ["]r"] = "noop",
+  ["]t"] = "noop",
+
+  -- control / modifier keys (grouped)
+  ["<CR>"]   = "noop",
   ["<S-CR>"] = "noop",
-  ["gb"] = "noop",
   ["<C-s>"] = "noop",
   ["<M-s>"] = "noop",
-
 }

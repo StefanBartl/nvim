@@ -4,10 +4,14 @@
 -- ===========================
 -- open_fm
 
+local Cfg = {}
+
 ---@class Cfg.NeoTree.Wsl.FM
 ---@field _cfg Cfg.NeoTree.Wsl.OpenConfig
 ---@field setup any
 ---@field open any
+---@field nodes table<string, Cfg.NeoTree.Node>
+---@field get_node fun(self: Cfg.NeoTree.Tree, id: string): Cfg.NeoTree.Node|nil
 
 ---@class Cfg.NeoTree.Wsl.OpenConfig
 ---@field backend "explorer"|"wslview"|"auto" # which launcher to use (default: "explorer")
@@ -15,6 +19,13 @@
 
 ---@alias UnixPath string
 ---@alias WinPath string
+
+---@class Cfg.NeoTree.Tree
+---@field get_node fun(self: Cfg.NeoTree.Tree, id?  : string): Cfg.NeoTree.Node|nil
+---@field get_nodes fun(self: Cfg.NeoTree.Tree, id?  : string): Cfg.NeoTree.Node[]|nil
+---@field root Cfg.NeoTree.Node|nil
+---@field set_selection fun(self: Cfg.NeoTree.Tree, node_path: string) | nil
+---@field children Cfg.NeoTree.Node[] | nil
 
 -- ===========================
 -- reveal_manager
@@ -79,7 +90,7 @@
 ---@field create_backups boolean Create backups before deletion (default: true)
 ---@field confirm_dangerous boolean Confirm dangerous operations (default: true)
 ---@field use_dry_run boolean Respect dry-run mode (default: true)
-
+---@field auto_close_buffers boolean Auto-close open buffers without asking (default: false)
 
 -- ===========================
 -- actions
@@ -98,4 +109,4 @@
 ---@field active_win integer|nil Current hover window
 ---@field active_path string|nil Currently displayed path
 
-return {}
+return Cfg

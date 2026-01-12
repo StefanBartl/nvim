@@ -1,20 +1,25 @@
 ---@module 'config.neotree.commands.mark'
 --- Neo-tree marking commands: toggle mark on nodes for batch operations
 
+local notify = require("lib.notify").create("[neotree.commands.mark]")
+
 local renderer = require("config.neotree.helper.renderer")
 local node_utils = require("config.neotree.utils.node")
 
 local M = {}
 
-local notify, levels = vim.notify, vim.log.levels
-
 --- Toggle mark on the current node
 ---@param state Cfg.NeoTree.State
+---@param auto_advance? boolean Move cursor down after marking (default: true)
 ---@return nil
-function M.toggle_mark(state)
+function M.toggle_mark(state, auto_advance)
+  if auto_advance == nil then
+    auto_advance = true
+  end
+
   local node = node_utils.get_current(state)
   if not node then
-    notify("no node under cursor", levels.WARN)
+    notify.warn("no node under cursor")
     return
   end
 
@@ -24,19 +29,21 @@ function M.toggle_mark(state)
 
   if is_marked then
     marks[node_id] = nil
-    notify("✗ Unmarked: " .. (node.name or "<unknown>"), levels.INFO)
+    notify.info("✗ Unmarked: " .. (node.name or "<unknown>"))
   else
     marks[node_id] = true
-    notify("✓ Marked: " .. (node.name or "<unknown>"), levels.INFO)
+    notify.info("✓ Marked: " .. (node.name or "<unknown>"))
   end
 
   state.explicitly_marked_node_ids = marks
   renderer.redraw(state)
 
   -- Move cursor down for multi-selection convenience
-  vim.schedule(function()
-    vim.cmd("normal! j")
-  end)
+  if auto_advance then
+    vim.schedule(function()
+      vim.cmd("normal! j")
+    end)
+  end
 end
 
 --- Clear all marks
@@ -49,9 +56,9 @@ function M.clear_all_marks(state)
     -- Refresh to update visuals
     renderer.redraw(state)
 
-    notify("Cleared all marks", levels.INFO)
+    notify.info("Cleared all marks")
   else
-    notify("No marks to clear", levels.INFO)
+    notify.info("No marks to clear")
   end
 end
 
@@ -59,22 +66,40 @@ end
 ---@param state Cfg.NeoTree.State
 ---@return nil
 function M.mark_all_in_directory(state)
-  local node = node_utils.get_current(state)
-  if not node then
-    notify("no node under cursor", levels.WARN)
+  local tree = state.tree
+  if not tree then
+    notify.warn("No tree available")
     return
   end
 
-  -- Determine parent directory
-  local parent = node.type == "directory" and node or node.parent
-  if not parent or not parent.children then
+  local current_node = tree:get_node()
+  if not current_node then
+    notify.warn("No node under cursor")
     return
   end
 
+  -- Find parent directory
+  local parent = current_node.type == "directory" and current_node
+                 or tree:get_node(current_node:get_parent_id())
+
+  if not parent then
+    notify.warn("No parent directory found")
+    return
+  end
+
+  -- Get children using tree:get_nodes() instead of parent.children
+  local children = tree:get_nodes(parent:get_id())
+
+  if not children or #children == 0 then
+    notify.warn("Directory is empty")
+    return
+  end
+
+  -- Mark all children (files only)
   local marks = state.explicitly_marked_node_ids or {}
   local count = 0
 
-  for _, child in ipairs(parent.children) do
+  for _, child in ipairs(children) do
     if child.type ~= "directory" then
       marks[child.id] = true
       count = count + 1
@@ -82,9 +107,57 @@ function M.mark_all_in_directory(state)
   end
 
   state.explicitly_marked_node_ids = marks
-  renderer.redraw()
+  renderer.redraw(state)
+  notify.info(string.format("Marked %d files", count))
+end
 
-  notify(string.format("Marked %d files", count), levels.INFO)
+--- Unmark all files in the current directory node
+---@param state Cfg.NeoTree.State
+---@return nil
+function M.unmark_all_in_directory(state)
+  local tree = state.tree
+  if not tree then
+    notify.warn("No tree available")
+    return
+  end
+
+  local current_node = tree:get_node()
+  if not current_node then
+    notify.warn("No node under cursor")
+    return
+  end
+
+  -- Find parent directory
+  local parent = current_node.type == "directory" and current_node
+                 or tree:get_node(current_node:get_parent_id())
+
+  if not parent then
+    notify.warn("No parent directory found")
+    return
+  end
+
+  -- Get children using tree:get_nodes()
+  local children = tree:get_nodes(parent:get_id())
+
+  if not children or #children == 0 then
+    notify.warn("Directory is empty")
+    return
+  end
+
+  -- Unmark all children (files only)
+  local marks = state.explicitly_marked_node_ids or {}
+  local count = 0
+
+  for _, child in ipairs(children) do
+    if child.type ~= "directory" and marks[child.id] then
+      marks[child.id] = nil
+      count = count + 1
+    end
+  end
+
+  state.explicitly_marked_node_ids = marks
+  renderer.redraw(state)
+  notify.info(string.format("Unmarked %d files", count))
 end
 
 return M

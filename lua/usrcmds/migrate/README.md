@@ -4,361 +4,317 @@ Modulares Framework für Code-Migrationen in Neovim Lua-Projekten.
 
 ## Table of content
 
-  - [Überblick](#berblick)
-    - [Verfügbare Migrationen](#verfgbare-migrationen)
-  - [Core Konzepte](#core-konzepte)
-    - [1. Common Infrastructure](#1-common-infrastructure)
-    - [2. Migration Module Structure](#2-migration-module-structure)
-  - [Neues Migrations-Modul hinzufügen](#neues-migrations-modul-hinzufgen)
-    - [Schritt 1: Verzeichnis-Struktur](#schritt-1-verzeichnis-struktur)
-    - [Schritt 2: Types definieren (@types.lua)](#schritt-2-types-definieren-typeslua)
-    - [Schritt 3: Core Logic (init.lua)](#schritt-3-core-logic-initlua)
-    - [Schritt 4: Aktivierung](#schritt-4-aktivierung)
-    - [Schritt 5: Dokumentation (doc/mymodule.txt)](#schritt-5-dokumentation-docmymoduletxt)
+- [usrcmds.migrate](#usrcmdsmigrate)
+  - [Quick Start](#quick-start)
+  - [Features](#features)
+    - [notify Migration](#notify-migration)
+    - [opt Migration](#opt-migration)
+  - [Unified Setup API](#unified-setup-api)
+  - [notify Module - Neue Features](#notify-module-neue-features)
+    - [1. Alias-Detection](#1-alias-detection)
+    - [2. Modul-Namen Support](#2-modul-namen-support)
+    - [3. Alias Cleanup](#3-alias-cleanup)
+  - [Architektur](#architektur)
+    - [Module-Struktur](#module-struktur)
+    - [Workflow](#workflow)
   - [Best Practices](#best-practices)
-    - [Pattern Detection](#pattern-detection)
-    - [Line Replacement](#line-replacement)
-    - [Index-Konvertierung](#index-konvertierung)
-    - [Self-Migration Prevention](#self-migration-prevention)
-    - [Import Injection](#import-injection)
+    - [1. Modul-Namen Konvention](#1-modul-namen-konvention)
+    - [2. CWD Migration mit Vorsicht](#2-cwd-migration-mit-vorsicht)
+    - [3. Überprüfung nach Migration](#3-berprfung-nach-migration)
   - [Debugging](#debugging)
     - [Enable Debug Output](#enable-debug-output)
-    - [Test Pattern Matching](#test-pattern-matching)
-    - [Common Issues](#common-issues)
-  - [Testing](#testing)
+    - [Test Alias Detection](#test-alias-detection)
+    - [Check Import](#check-import)
+  - [Migration Checklist](#migration-checklist)
+  - [Troubleshooting](#troubleshooting)
+    - [Problem: Aliases nicht erkannt](#problem-aliases-nicht-erkannt)
+    - [Problem: Falscher Modul-Name](#problem-falscher-modul-name)
+    - [Problem: Doppelte Imports](#problem-doppelte-imports)
+    - [Problem: "No matches found"](#problem-no-matches-found)
   - [Weitere Resourcen](#weitere-resourcen)
 
 ---
 
-## Überblick
-
-Das `usrcmds.migrate` Modul bietet eine wiederverwendbare Infrastruktur für automatisierte Code-Refactorings. Es ermöglicht einheitliche Migration-Tools mit konsistenter UX über verschiedene Migrations-Typen hinweg.
-
-### Verfügbare Migrationen
-
-- **`notify`**: Migriert `vim.notify(msg, vim.log.levels.LEVEL)` → `notify.level(msg)`
-- **`opt`**: Migriert deprecated `nvim_buf/win_get/set_option` → `nvim_get/set_option_value`
-
-## Core Konzepte
-
-### 1. Common Infrastructure
-
-Alle Migration-Module nutzen gemeinsame Komponenten:
-
-**Command Handler** (`common/command.lua`):
-- Einheitliche Command-Syntax über alle Migrationen
-- Unterstützt: line, range, buffer (%), cwd modes
-- Auto-completion für Argumente
-
-**Picker UI** (`common/picker.lua`):
-- Telescope-basierte Auswahl-UI
-- Multi-select Support (`<Tab>`)
-- Preview mit Syntax-Highlighting
-- Batch-Apply (`<S-A>`)
-
-**Buffer Operations** (`common/buffer.lua`):
-- Sichere Line-Replacements
-- File I/O Helpers
-- Undo-Point Management
-- Recursive File Discovery
-
-### 2. Migration Module Structure
-
-Jedes Migration-Modul folgt diesem Pattern:
+## Quick Start
 
 ```lua
-lua/usrcmds/migrate/<name>/
-├── @types.lua      # Module-specific types
-├── init.lua        # Main entry point
-├── parser.lua      # Pattern detection (optional)
-├── refactor.lua    # Apply logic (optional)
-└── doc/
-    └── <name>.txt  # Help documentation
+-- In deiner init.lua
+require("usrcmds.migrate").setup({
+  opt = true,     -- Enable :MigrateOpt
+  notify = true,  -- Enable :MigrateNotify
+})
+
+-- Oder alle aktivieren (Default)
+require("usrcmds.migrate").enable_all()
+
+-- Oder einzeln
+require("usrcmds.migrate.opt").enable()
+require("usrcmds.migrate.notify").enable()
 ```
 
-**Erforderliche Funktionen** in `init.lua`:
+## Features
+
+### notify Migration
+
+Migriert **alle** `vim.notify` Varianten zu `lib.notify`:
+
+**Direkte Aufrufe:**
+```lua
+-- Vorher:
+vim.notify("Operation successful", vim.log.levels.INFO)
+
+-- Nachher:
+notify.info("Operation successful")
+```
+
+**Aliased Aufrufe (NEU):**
+```lua
+-- Vorher:
+local notify, levels = vim.notify, vim.log.levels
+notify("Error occurred", levels.ERROR)
+
+-- Nachher:
+local notify = require("lib.notify").create("")
+notify.error("Error occurred")
+```
+
+**Mit Modul-Namen (NEU):**
+```vim
+:MigrateNotify % neotree.mark
+
+" Generiert:
+local notify = require("lib.notify").create("[neotree.mark]")
+```
+
+**Syntax:**
+```vim
+:MigrateNotify [mode] [module_name]
+
+" Beispiele:
+:MigrateNotify              " Aktuelle Zeile
+:MigrateNotify %            " Buffer (mit Picker)
+:MigrateNotify cwd          " CWD (mit Picker)
+:MigrateNotify % mymodule   " Buffer + .create("[mymodule]")
+:MigrateNotify cwd plugin.ui " CWD + .create("[plugin.ui]")
+```
+
+### opt Migration
+
+Migriert deprecated Option APIs:
 
 ```lua
+-- Vorher:
+local ft = vim.api.nvim_buf_get_option(bufnr, "filetype")
+vim.api.nvim_win_set_option(winid, "number", true)
+
+-- Nachher:
+local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
+vim.api.nvim_set_option_value("number", true, { win = winid })
+```
+
+**Syntax:**
+```vim
+:MigrateOpt [mode]
+
+" Beispiele:
+:MigrateOpt       " Aktuelle Zeile
+:MigrateOpt %     " Buffer (mit Picker)
+:MigrateOpt cwd   " CWD (mit ripgrep)
+```
+
+## Unified Setup API
+
+```lua
+---@class MigrateConfig
+---@field opt boolean|nil Enable option API migration
+---@field notify boolean|nil Enable notify migration
+
+require("usrcmds.migrate").setup({
+  opt = true,
+  notify = true,
+})
+```
+
+**Methoden:**
+
+- `setup(config)` - Setup mit Konfiguration
+- `enable_all()` - Aktiviert alle Module
+- `disable_all()` - Deaktiviert alle Module (entfernt Commands)
+
+## notify Module - Neue Features
+
+### 1. Alias-Detection
+
+Das notify Modul erkennt jetzt automatisch Aliases am Anfang der Datei:
+
+**Pattern 1:** Kombinierte Aliase
+```lua
+local notify, levels = vim.notify, vim.log.levels
+notify("test", levels.INFO)
+-- → notify.info("test")
+```
+
+**Pattern 2:** Einzelne Aliase
+```lua
+local n = vim.notify
+n("test", vim.log.levels.WARN)
+-- → notify.warn("test")
+```
+
+**Pattern 3:** Gemischte Verwendung
+```lua
+local notify = vim.notify
+notify("test", vim.log.levels.ERROR)
+-- → notify.error("test")
+```
+
+### 2. Modul-Namen Support
+
+**Ohne Modul-Namen:**
+```vim
+:MigrateNotify %
+```
+Generiert:
+```lua
+local notify = require("lib.notify").create("")
+```
+
+**Mit Modul-Namen:**
+```vim
+:MigrateNotify % neotree.mark
+```
+Generiert:
+```lua
+local notify = require("lib.notify").create("[neotree.mark]")
+```
+
+**CWD mit Modul-Namen:**
+```vim
+:MigrateNotify cwd my.plugin.core
+```
+Generiert in allen Files:
+```lua
+local notify = require("lib.notify").create("[my.plugin.core]")
+```
+
+### 3. Alias Cleanup
+
+Nach der Migration werden alte Aliases automatisch entfernt:
+
+**Vorher:**
+```lua
+local notify, levels = vim.notify, vim.log.levels
+
 local M = {}
 
--- Scan-Funktionen
-local function scan_range(bufnr, line1, line2)
-  -- Returns: MigrateCommon.Match[]
+function M.test()
+  notify("test", levels.INFO)
 end
-
-local function scan_buffer(bufnr)
-  -- Returns: MigrateCommon.Match[]
-end
-
-local function scan_cwd()
-  -- Returns: MigrateCommon.Match[]
-end
-
--- Apply-Funktion
-local function apply_matches(matches)
-  -- Applies migrations to buffers
-end
-
--- Picker-Funktion
-local function show_picker_impl(matches)
-  -- Shows Telescope picker
-end
-
--- Registration
-function M.enable()
-  command.register({
-    name = "Migrate<Name>",
-    scan_range = scan_range,
-    scan_buffer = scan_buffer,
-    scan_cwd = scan_cwd,
-    apply_matches = apply_matches,
-    show_picker = show_picker_impl,
-  })
-end
-
-return M
 ```
 
-## Neues Migrations-Modul hinzufügen
-
-### Schritt 1: Verzeichnis-Struktur
-
-```bash
-mkdir -p lua/usrcmds/migrate/mymodule/doc
-touch lua/usrcmds/migrate/mymodule/@types.lua
-touch lua/usrcmds/migrate/mymodule/init.lua
-touch lua/usrcmds/migrate/mymodule/doc/mymodule.txt
-```
-
-### Schritt 2: Types definieren (@types.lua)
-
+**Nachher:**
 ```lua
----@meta
----@module 'usrcmds.migrate.mymodule.@types'
-
----@class MigrateMyModule.Match
----@field line integer           # 1-based line number
----@field end_line integer       # 1-based end line
----@field original string        # Original text
----@field replacement string     # Migrated text
----@field extra table|nil        # Module-specific data
-
-return {}
-```
-
-### Schritt 3: Core Logic (init.lua)
-
-```lua
----@module 'usrcmds.migrate.mymodule'
-
-local command = require("usrcmds.migrate.common.command")
-local picker = require("usrcmds.migrate.common.picker")
-local buffer_ops = require("usrcmds.migrate.common.buffer")
+local notify = require("lib.notify").create("")
 
 local M = {}
 
-local api = vim.api
-
--- Conversion helper
-local function to_common_matches(bufnr, module_matches)
-  local matches = {}
-  for _, m in ipairs(module_matches) do
-    table.insert(matches, {
-      bufnr = bufnr,
-      fname = api.nvim_buf_get_name(bufnr),
-      lnum = m.line,
-      text = m.original,
-      migrated = m.replacement,
-      source = "buf",
-      extra = m.extra,
-    })
-  end
-  return matches
+function M.test()
+  notify.info("test")
 end
-
--- Scan functions
-local function scan_range(bufnr, line1, line2)
-  -- Your detection logic here
-  local matches = {}
-  -- ... populate matches
-  return to_common_matches(bufnr, matches)
-end
-
-local function scan_buffer(bufnr)
-  -- Scan entire buffer
-  return scan_range(bufnr, 1, api.nvim_buf_line_count(bufnr))
-end
-
-local function scan_cwd()
-  local files = buffer_ops.find_lua_files(vim.fn.getcwd())
-  local all_matches = {}
-
-  for _, filepath in ipairs(files) do
-    local bufnr = buffer_ops.ensure_buffer(filepath)
-    if bufnr then
-      local matches = scan_buffer(bufnr)
-      vim.list_extend(all_matches, matches)
-    end
-  end
-
-  return all_matches
-end
-
--- Apply migrations
-local function apply_matches(matches)
-  for _, match in ipairs(matches) do
-    buffer_ops.replace_line(match.bufnr, match.lnum, match.migrated)
-  end
-end
-
--- Picker
-local function show_picker_impl(matches)
-  picker.show(matches, {
-    title = "Migrate MyModule",
-    single_apply = false,
-
-    format_entry = function(match)
-      return string.format("%s:%d  %s",
-        vim.fn.fnamemodify(match.fname, ":t"),
-        match.lnum,
-        match.text:sub(1, 60))
-    end,
-
-    format_preview = function(match)
-      return {
-        "-- Before:",
-        match.text,
-        "",
-        "-- After:",
-        match.migrated,
-      }
-    end,
-
-    on_apply = function(selections)
-      apply_matches(selections)
-    end,
-  })
-end
-
--- Enable command
-function M.enable()
-  command.register({
-    name = "MigrateMyModule",
-    scan_range = scan_range,
-    scan_buffer = scan_buffer,
-    scan_cwd = scan_cwd,
-    apply_matches = apply_matches,
-    show_picker = show_picker_impl,
-  })
-end
-
-return M
 ```
 
-### Schritt 4: Aktivierung
+## Architektur
 
-In deiner `init.lua` oder einem Setup-Modul:
+### Module-Struktur
 
-```lua
-require("usrcmds.migrate.mymodule").enable()
+```
+lua/usrcmds/migrate/
+├── init.lua              # Unified setup (NEU)
+├── common/
+│   ├── @types.lua
+│   ├── command.lua       # Command handler
+│   ├── picker.lua        # Telescope UI
+│   └── buffer.lua        # Buffer operations
+├── notify/
+│   ├── @types.lua
+│   ├── init.lua          # Entry point
+│   ├── parser.lua        # Pattern detection (mit Alias-Support)
+│   ├── refactor.lua      # Apply logic (mit Cleanup)
+│   └── doc/
+│       └── migrate-notify.txt
+└── opt/
+    ├── @types.lua
+    ├── init.lua
+    └── doc/
+        └── migrate-opt.txt
 ```
 
-### Schritt 5: Dokumentation (doc/mymodule.txt)
+### Workflow
 
-Siehe Beispiele in `notify.txt` und `opt.txt`.
+```
+User Command (:MigrateNotify % mymodule)
+    ↓
+init.lua: Parse args (mode=%, module_name=mymodule)
+    ↓
+parser.lua:
+  - Detect aliases
+  - Scan for vim.notify + aliased calls
+  - Generate replacements
+    ↓
+picker.lua: Show Telescope UI
+    ↓
+User selects matches
+    ↓
+refactor.lua:
+  - Inject import with module name
+  - Apply replacements (descending order)
+  - Remove old aliases
+    ↓
+Done
+```
 
 ## Best Practices
 
-### Pattern Detection
+### 1. Modul-Namen Konvention
 
-**Option 1: Regex (empfohlen für einfache Patterns)**
-```lua
-local function detect_pattern(line)
-  local match = line:match("old_pattern%((.-)%)")
-  if match then
-    return "new_pattern(" .. match .. ")"
-  end
-end
+Verwende beschreibende Modul-Namen:
+
+```vim
+" Plugin-Komponenten
+:MigrateNotify % myplugin.ui
+:MigrateNotify % myplugin.core
+:MigrateNotify % myplugin.commands
+
+" Nested Modules
+:MigrateNotify % telescope.extensions.myext
+:MigrateNotify % neovim.config.lsp
 ```
 
-**Option 2: Treesitter (für komplexe AST-Operationen)**
-```lua
-local ts = vim.treesitter
-local function detect_with_ts(bufnr)
-  local parser = ts.get_parser(bufnr, "lua")
-  local tree = parser:parse()[1]
-  -- ... traverse tree
-end
+### 2. CWD Migration mit Vorsicht
+
+Bei `cwd` wird **derselbe** Modul-Name für **alle** Files verwendet:
+
+```vim
+:MigrateNotify cwd myplugin
+
+" Alle Files bekommen:
+" local notify = require("lib.notify").create("[myplugin]")
 ```
 
-**Empfehlung**: Beginne mit Regex. Treesitter nur wenn unbedingt nötig (siehe `notify` Modul für Lessons Learned).
+Falls unterschiedliche Modul-Namen nötig sind → Buffer-Mode (`%`) für jedes File einzeln.
 
-### Line Replacement
+### 3. Überprüfung nach Migration
 
-**WICHTIG**: Immer in **descending order** arbeiten!
+Nach Migration prüfen:
 
-```lua
--- Sort DESCENDING by end_line
-table.sort(matches, function(a, b)
-  return a.extra.end_line > b.extra.end_line
-end)
+- [ ] Import korrekt eingefügt
+- [ ] Alte Aliases entfernt
+- [ ] Alle Calls migriert
+- [ ] Keine doppelten Imports
 
--- Then apply
-for _, match in ipairs(matches) do
-  apply_match(match)
-end
-```
-
-**Warum**: Von oben nach unten würden sich Zeilen-Nummern verschieben.
-
-### Index-Konvertierung
-
-```lua
--- Parser: 1-based line numbers (wie Vim)
-local line = 5        -- Zeile 5
-local end_line = 7    -- bis Zeile 7 (inclusive)
-
--- nvim_buf_set_lines: 0-based, exclusive end
-local start_idx = line - 1       -- 4
-local end_idx = end_line         -- 7 (!)
--- Ersetzt indices [4,5,6] = Zeilen [5,6,7]
-```
-
-### Self-Migration Prevention
-
-```lua
-local function should_exclude(filepath)
-  return filepath:match("/usrcmds/migrate/") ~= nil
-end
-
--- In scan_cwd:
-for _, file in ipairs(files) do
-  if not should_exclude(file) then
-    -- scan file
-  end
-end
-```
-
-### Import Injection
-
-Wenn du Imports hinzufügst:
-
-```lua
-local function inject_import(bufnr)
-  api.nvim_buf_set_lines(bufnr, 0, 0, false, {
-    'local mylib = require("mylib")',
-    ""
-  })
-  return true  -- Returns whether import was added
-end
-
--- Adjust line numbers after import!
-if import_added then
-  for _, match in ipairs(matches) do
-    match.lnum = match.lnum + 2
-    match.extra.end_line = match.extra.end_line + 2
-  end
-end
+```vim
+" Quick check
+:grep "vim\.notify\|vim\.log\.levels" %
 ```
 
 ## Debugging
@@ -366,60 +322,74 @@ end
 ### Enable Debug Output
 
 ```lua
--- In your migration module
-local notify = require("lib.notify").create("[migrate.mymodule]")
-
-notify.debug("Processing match at line " .. match.line)
-notify.warn("Failed to parse: " .. line)
+local notify = require("lib.notify").create("[migrate.debug]")
+notify.debug("Match found at line " .. line)
 ```
 
-### Test Pattern Matching
+### Test Alias Detection
 
-```lua
--- Create test file
-local test_content = [[
-  old_pattern("test")
-  another_old_pattern(123)
-]]
-
--- Write to buffer and test
-local bufnr = vim.api.nvim_create_buf(false, true)
-vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(test_content, "\n"))
-
-local matches = scan_buffer(bufnr)
-print(vim.inspect(matches))
+```vim
+:lua local parser = require("usrcmds.migrate.notify.parser")
+:lua local matches = parser.scan_buffer(0)
+:lua print(vim.inspect(matches))
 ```
 
-### Common Issues
+### Check Import
 
-**Problem**: Zeilen werden doppelt eingefügt
-**Lösung**: Check Index-Konvertierung (1-based vs 0-based)
+```vim
+:lua local refactor = require("usrcmds.migrate.notify.refactor")
+:lua print(refactor.check_import(0))
+```
 
-**Problem**: Spätere Matches werden nicht gefunden
-**Lösung**: Sort descending, nicht ascending
+## Migration Checklist
 
-**Problem**: Module migriert sich selbst
-**Lösung**: Implement `should_exclude()`
+Vor Migration:
+- [ ] Backup erstellen (`git commit` oder `:w`)
+- [ ] Buffer-Mode testen bevor CWD
+- [ ] Modul-Namen überlegen
 
-**Problem**: Import verschiebt Zeilen-Nummern
-**Lösung**: Adjust nach Import-Injection
+Nach Migration:
+- [ ] `:checkhealth` laufen lassen
+- [ ] Tests ausführen
+- [ ] Manuelle Stichprobe
+- [ ] Commit mit Message: "chore: migrate to lib.notify"
 
-## Testing
+## Troubleshooting
 
-Teste jede Migration mit:
+### Problem: Aliases nicht erkannt
 
-1. **Single line**: `:MigrateMyModule` auf Zeile mit Pattern
-2. **Range**: Visual select + `:MigrateMyModule`
-3. **Buffer**: `:MigrateMyModule %`
-4. **CWD**: `:MigrateMyModule cwd`
-5. **Multiline**: Pattern über mehrere Zeilen
-6. **Edge cases**: Empty lines, comments, nested patterns
+**Ursache:** Alias nicht am Anfang der Datei (erste 50 Zeilen)
+
+**Lösung:** Aliases an den Anfang verschieben oder manuell migrieren
+
+### Problem: Falscher Modul-Name
+
+**Ursache:** Tippfehler bei `:MigrateNotify % mymodule`
+
+**Lösung:**
+1. Undo (`u`)
+2. Erneut mit korrektem Namen: `:MigrateNotify % correct.name`
+
+### Problem: Doppelte Imports
+
+**Ursache:** Import existierte bereits
+
+**Lösung:** Altes Import manuell löschen und erneut migrieren
+
+### Problem: "No matches found"
+
+**Mögliche Ursachen:**
+- Bereits migriert
+- File ist nicht `filetype=lua`
+- Ungewöhnliche Formatierung
+
+**Lösung:** Manuelle Prüfung mit `:grep vim.notify %`
 
 ## Weitere Resourcen
 
-- `docs/technical.md` - Technische Details zur Implementation
-- `docs/patterns.md` - Pattern-Matching Beispiele
-- `notify/doc/notify.txt` - Beispiel für komplexe Migration
-- `opt/doc/opt.txt` - Beispiel für einfache Migration
+- `docs/technical.md` - Implementierungs-Details
+- `docs/patterns.md` - Pattern-Matching Guide
+- `notify/doc/migrate-notify.txt` - Vollständige Doku
+- `opt/doc/migrate-opt.txt` - opt Module Doku
 
--
+---

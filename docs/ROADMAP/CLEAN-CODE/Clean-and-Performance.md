@@ -34,6 +34,8 @@
 5. `pcall` doppelungen rauscoden
 6. `mappings.*` map durch `lib.map` tauschen
 7. `ui.stl_module` auf custom statusline ändern und modularisieren
+8. `<Plug>` in den Mappings verwenden und dabei erlernen wie an sie erstellt
+9. E:\repos\Notes\MyNotes\Neovim\40_Optimierung\Sauberes-Registrieren-und-Reloaden-von-Events.md
 
 ### `plugins.`
 
@@ -45,10 +47,21 @@
 
 ---
 
+## Optimierungen
+
+1. `vim.loader()`- in der init.lua umsetzen -> siehe nvim notes
+
+---
+
 ## Update documentation
 
 1. (Debugging CONFIGURATION-EXAMPLE update)[../../../lua/debugging/docs/CONFIGURATION-EXAMPLE.md]
 2. (Debugging :h update)[../../../lua/debugging/doc/debugging.txt]
+3. `usrcmds\migrate\` doc & docs aktulasieren, dass `require("usrcmds.migrate").setup({ opts = enable, notify = true, })` möglich ist; AUF ENGLISCH
+4. `\usrcmds\migrate\notify` docs und doc aktulasieren, dass ein `:MigrateNotify %/cwd [dest tag]` desc tag übereb wird, der dann in `.create("desc tag")` übergebn wird. AUF ENGLISCH
+
+
+---
 
 ## doc/
 
@@ -62,7 +75,7 @@
 
 ## README
 
-- lua\custom\format\filter_lines\a
+- lua\custom\format\filter_lines\
 - lua\custom\format\text_width\
 - lua\custom\format\misc\
 

@@ -4,7 +4,6 @@
 local node_utils = require("config.neotree.utils.node")
 local notify = require("lib.notify").create("[neotree.commands.diff_files] ")
 
-
 ---@type string|nil
 local diff_node = nil
 ---@type string|nil
@@ -13,13 +12,9 @@ local diff_name = nil
 --- You can mark two files to diff them.
 ---@param state Cfg.NeoTree.State
 return function(state)
-  -- Get the currently focused Neo-tree node from the state.
-  -- Falls back to nil if state is missing.
-  local node = state and state.current_node or nil
-
-  -- Check if a node exists; if not, log a warning and exit early.
+  local node = node_utils.get_current(state)
   if not node then
-    notify.warn("[neo-tree fzf] No node under cursor")
+    notify.warn("No node under cursor")
     return
   end
 

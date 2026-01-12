@@ -40,7 +40,7 @@ return {
 
   base46 = {
     transparency = false,
-    theme_toggle = { "tokyonight", "vim_default" },
-    theme = "tokyonight",
+    theme_toggle = { "vim_default", "tokyonight" },
+    theme = "vim_default",
   },
 }

@@ -369,14 +369,17 @@ function uv.fs_scandir(path, callback) end
 ---@return string? type
 function uv.fs_scandir_next(req) end
 
---- Opens and initializes a directory stream.
----@param path string
----@param entries? integer Max entries per readdir call (default 1)
----@return uv.luv_dir_t? dir
----@return string? err
----@return string? err_name
----@overload fun(path: string, callback: fun(err?: string, dir?: uv.luv_dir_t), entries?: integer): uv.uv_fs_t
-function uv.fs_opendir(path, entries) end
+--- Opens path as a directory stream. Returns a handle that the user can pass to
+--- `uv.fs_readdir()`. The `entries` parameter defines the maximum number of entries
+--- that should be returned by each call to `uv.fs_readdir()`.
+--- @param path string
+--- @param callback nil (async if provided, sync if `nil`)
+--- @param entries integer?
+--- @return uv.luv_dir_t? dir
+--- @return string? err
+--- @return uv.error_name? err_name
+--- @overload fun(path: string, callback: fun(err: string?, dir: uv.luv_dir_t?), entries: integer?): uv.uv_fs_t
+function uv.fs_opendir(path, callback, entries) end
 
 --- Reads a single directory entry.
 ---@param dir uv.luv_dir_t

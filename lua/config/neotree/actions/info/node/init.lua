@@ -1,9 +1,11 @@
 ---@module 'config.neotree.actions.info.node'
 ---@brief Toggleable hover window with file or directory information for tree nodes
+--- Fixed: Uses node_utils.get_current() for consistent node retrieval
 
 local M = {}
 
 local bitlib = require("bit")
+local node_utils = require("config.neotree.utils.node")
 
 local uv = vim.uv or vim.loop
 local api = vim.api
@@ -111,18 +113,21 @@ local function toggle_hover(path, lines)
 end
 
 --- Show information for the currently selected Neo-tree node
----@param state Cfg.NeoTree.State  # Neo-tree state table
+--- FIXED: Uses node_utils.get_current() instead of direct state access
+---@param state Cfg.NeoTree.State Neo-tree state table
 ---@return nil
 function M.show_from_neotree(state)
-  -- Retrieve the currently focused node from the Neo-tree state
-  local node = state and state.current_node or nil
+  -- FIXED: Use node_utils for consistent node retrieval
+  local node = node_utils.get_current(state)
   if not node then
+    vim.notify("No node under cursor", vim.log.levels.WARN)
     return
   end
 
-  -- Resolve the filesystem path directly from the node
-  local path = node.path or node.id or ""
+  -- Resolve the filesystem path
+  local path, _ = node_utils.get_path(node)
   if path == "" then
+    vim.notify("Node has no path", vim.log.levels.WARN)
     return
   end
 

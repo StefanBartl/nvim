@@ -18,7 +18,7 @@ return {
   --   end,
   -- },
 
-    -- LazyDev: Completion and docs for Lua `require` modules
+  -- LazyDev: Completion and docs for Lua `require` modules
   {
     "folke/lazydev.nvim",
     ft = "lua",
@@ -169,6 +169,26 @@ return {
     cmd = "IncRename",
     config = function()
       require("config.inc_rename")
+    end,
+  },
+
+  {
+    "oribarilan/lensline.nvim",
+    branch = "release/2.x",
+    event = "LspAttach",
+    config = function()
+      require("lensline").setup({
+        profiles = {
+          {
+            name = "minimal",
+            style = {
+              placement = "inline",
+              prefix = "",
+              render = "focused", -- optionally render lenses only for focused function
+            },
+          },
+        },
+      })
     end,
   },
 
