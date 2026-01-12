@@ -1,4 +1,4 @@
----@module 'lib.cache'
+---@module 'lib.memo'
 --- Aggregated export for cache helpers.
 
 local M = {}

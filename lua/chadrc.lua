@@ -112,9 +112,9 @@ M.ui = {
 
 --- ==== Base46 theme configuration =============
 M.base46 = {
-  transparency = true,
+  transparency = false,
   theme_toggle = { "vim_default", "rosepine" },
-   theme = "vim_default",
+   theme = "tokyonight",
 }
 
 --- =============================

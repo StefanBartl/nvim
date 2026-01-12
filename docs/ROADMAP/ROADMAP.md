@@ -16,6 +16,12 @@
 
 ---
 
+## Important
+
+- `lib` konsolidieren, beispiel `lib.cross_plattform` vs. `lib.cross`
+
+---
+
 ## MIXED
 
 - neotest [lernen]()

@@ -6,7 +6,7 @@ return {
   ui = {
     statusline = {
       -- minimale Reihenfolge: immer noch theme-agnostisch
-      order = { "mode", "git", "%=", "cwd", "%=", "diagnostics", "lsp", "cursor", "progress"},
+      order = { "mode", "git", "%=", "cwd", "%=", "diagnostics", "lsp", "cursor", "progress" },
 
       modules = {
         --- @return string
@@ -40,7 +40,7 @@ return {
 
   base46 = {
     transparency = false,
-    theme_toggle = { "vim_default", "tokyonight" },
-    theme = "vim_default",
+    theme_toggle = { "vim_default", "rosepine" },
+    theme = "tokyonight",
   },
 }

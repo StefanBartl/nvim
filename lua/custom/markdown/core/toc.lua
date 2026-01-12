@@ -27,9 +27,9 @@
 local M = {}
 
 ---@type number
-local DEFAULT_MIN_LEVEL = 1
+local DEFAULT_MIN_LEVEL = 2
 ---@type number
-local DEFAULT_MAX_LEVEL = 6
+local DEFAULT_MAX_LEVEL = 4
 
 --- Return true if a line is a YAML frontmatter fence (---).
 ---@param line string|nil

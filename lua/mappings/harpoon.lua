@@ -40,6 +40,7 @@ function M.setup()
   end, { desc = "[HARPOON] Add current file (append)" })
 
   map("n", "<C-e>", function()
+    vim.cmd("HarpoonPersistPathsReload")
     harpoon.ui:toggle_quick_menu(harpoon:list())
   end, { desc = "[HARPOON] Open harpoon window (default)." })
   --

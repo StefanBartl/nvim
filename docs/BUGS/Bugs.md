@@ -1,5 +1,24 @@
 # bugs
 
+ToDo-COmments Patchless - also monkeypatch in nvim config lösbar ?
+PR schreiben tr
+
+   Error  14:23:58 msg_show.lua_error Error executing vim.schedule lua callback: .../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:94: Invalid 'end_col': out of range
+stack traceback:
+	[C]: in function 'nvim_buf_set_extmark'
+	.../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:94: in function 'add_highlight'
+	.../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:246: in function 'highlight'
+	.../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:155: in function 'fn'
+	vim/_editor.lua:366: in function <vim/_editor.lua:365>
+   Error  14:23:59 msg_show.lua_error Error executing vim.schedule lua callback: .../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:94: Invalid 'end_col': out of range
+stack traceback:
+	[C]: in function 'nvim_buf_set_extmark'
+	.../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:94: in function 'add_highlight'
+	.../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:246: in function 'highlight'
+	.../lazy/todo-comments.nvim/lua/todo-comments/highlight.lua:155: in function 'fn'
+	vim/_editor.lua:366: in function <vim/_editor.lua:365>
+
+
 ## Table of content
 
   - [Important Bugs](#important-bugs)
@@ -10,103 +29,13 @@
 
 ## Critical Bugs
 
-- github stats
 
+- github stats
 ---
 
 ## Important
 
-1. comment funktion bugged, wenn ich
-
-```lua
-  ["<CR>"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      -- 1) Safely get the current node
-      local node = state.current_node
-      if not node then
-        return
-      end
-
-      -- 2) Check if we're in a valid Neo-tree window
-      local current_win = vim.api.nvim_get_current_win()
-      local buf = vim.api.nvim_win_get_buf(current_win)
-      local is_neotree_win = vim.bo[buf].filetype == "neo-tree"
-      if not is_neotree_win then
-        vim.notify("Neo-tree: Not in a Neo-tree window", vim.log.levels.WARN)
-        return
-      end
-
-      -- 3) Clean up any safe preview (if open)
-      safe_hide_preview(state)
-
-      -- 4) Expand/collapse directories safely
-      -- If the node is a directory or has children and is collapsed, toggle it
-      if node.type == "directory" or (node.has_children and not node.is_expanded) then
-        state.commands.toggle_node(state)
-        return
-      end
-
-      -- 5) Normal open: prefer window-picker if present
-      if pcall(require, "window-picker") then
-        local ok = pcall(state.commands.open_with_window_picker, state)
-        if not ok then
-          pcall(state.commands.open, state)
-        end
-      else
-        pcall(state.commands.open, state)
-      end
-    end,
-    desc = "Safe expand / collapse nodes and open files",
-  },
-```
-
-mit multiline kommentiere, bekomme ich:
-
-```lua
-  -- ["<CR>"] = {
-    -- ---@param state Cfg.NeoTree.State
-    -- function(state)
-      1) Safely get the current node
-      -- local node = state.current_node
-      -- if not node then
-        -- return
-      -- end
-
-      2) Check if we're in a valid Neo-tree window
-      -- local current_win = vim.api.nvim_get_current_win()
-      -- local buf = vim.api.nvim_win_get_buf(current_win)
-      -- local is_neotree_win = vim.bo[buf].filetype == "neo-tree"
-      -- if not is_neotree_win then
-        -- vim.notify("Neo-tree: Not in a Neo-tree window", vim.log.levels.WARN)
-        -- return
-      -- end
-
-      3) Clean up any safe preview (if open)
-      -- safe_hide_preview(state)
-
-      4) Expand/collapse directories safely
-      If the node is a directory or has children and is collapsed, toggle it
-      -- if node.type == "directory" or (node.has_children and not node.is_expanded) then
-        -- state.commands.toggle_node(state)
-        -- return
-      -- end
-
-      5) Normal open: prefer window-picker if present
-      -- if pcall(require, "window-picker") then
-        -- local ok = pcall(state.commands.open_with_window_picker, state)
-        -- if not ok then
-          -- pcall(state.commands.open, state)
-        -- end
-      -- else
-        -- pcall(state.commands.open, state)
-      -- end
-    -- end,
-    -- desc = "Safe expand / collapse nodes and open files",
-  -- },
-```
-
---> daher die kommentare werden wieder auskoemmtniert, was natürlich nicht korrekt ist
+- toc?
 
 ---
 

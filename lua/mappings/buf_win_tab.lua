@@ -127,7 +127,7 @@ function M.setup()
   -- Windows
   -- ---------------------------------------------------------------------------
 
-  map("n", "<leader><Esc>", function()
+  map("n", "<leader>Q", function()
     vim.cmd("qa!")
   end, { desc = "[Wimdows] Force quit all" })
 

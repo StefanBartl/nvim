@@ -1,4 +1,14 @@
 --- @module 'lib.map'
+-- =========================================================
+-- Keymap helper utilities.
+--
+-- Standardized wrapper around vim.keymap.set with sane
+-- defaults and optional buffer scoping.
+-- =========================================================
+
+--FIX: type of opts einfügen. ist das vim.kemaps.set.Opts?
+
+
 
 ---Convenience wrapper for vim.keymap.set with sane defaults.
 ---@param modes string|string[]
@@ -8,7 +18,15 @@
 ---@param desc string?
 return function(modes, lhs, rhs, opts, desc)
   opts = opts or {}
-  opts.desc = desc or ""
+
+  if type(desc) == "string" then
+    opts.desc = desc
+  end
+
+  if opts.desc == nil then
+    opts.desc = ""
+  end
+
   if opts.noremap == nil then
     opts.noremap = true
   end
