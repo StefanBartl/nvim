@@ -54,6 +54,11 @@ vim.schedule(function()
   require("mappings").setup()
 end)
 
+-- FIX THIS WILL NOT STAY
+require("ui.command").setup()
+
+
+
 -- ===================================================================================
 -- Start a predictable RPC server at startup on Windows (named pipe).
 -- This allows `nvr --server \\.\pipe\nvim-<USERNAME>` to always target this instance.
