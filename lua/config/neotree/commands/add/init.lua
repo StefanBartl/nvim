@@ -2,12 +2,18 @@
 --- Custom file/directory creation with clipboard integration and types support
 ---
 --- Dependencies:
---- - User command `:InsertModule` must be available for @module annotation generation
+--- - lib.lua_ls.insert.module_w_path (for @module annotation insertion)
+--- - lib.lua_ls.get_module_path (for module path calculation)
+--- - lib.buffer.insert_lines_at_cursor (for content insertion)
 
 local M = {}
 
 local api, fn = vim.api, vim.fn
 local notify = vim.notify
+
+---@class Cfg.NeoTree.AddOptions
+---@field insert_clipb? boolean Automatically insert clipboard content (default: false)
+---@field ask_insert_clipb? boolean Ask before inserting clipboard content (default: false)
 
 --- Check if a path ends with a directory separator
 ---@param path string
@@ -32,6 +38,13 @@ local function is_types_target(path)
   end
 
   return false
+end
+
+--- Get file extension
+---@param path string
+---@return string|nil extension (without dot)
+local function get_extension(path)
+  return path:match("%.([^%.]+)$")
 end
 
 --- Get clipboard content
@@ -74,7 +87,6 @@ local function get_types_template_content(file_path)
   end
   file:close()
 
-  -- Template contains {MODULEPATH} placeholder - will be replaced by :InsertModule
   return lines, nil
 end
 
@@ -110,11 +122,34 @@ local function is_buffer_empty(bufnr)
   return true
 end
 
---- Handle types file creation
+--- Insert @module annotation using library module
+---@param file_path string Absolute path to the file
+---@return boolean success
+local function insert_module_annotation(file_path)
+  local bufnr = api.nvim_get_current_buf()
+
+  -- Verify we're in the correct buffer
+  if api.nvim_buf_get_name(bufnr) ~= file_path then
+    notify("Buffer mismatch, cannot insert module annotation", vim.log.levels.ERROR)
+    return false
+  end
+
+  -- Use library module to insert @module annotation
+  local ok, result = pcall(require, "lib.lua_ls.insert.module_w_path")
+  if not ok then
+    notify("Failed to load module annotation library", vim.log.levels.ERROR)
+    return false
+  end
+
+  return result()
+end
+
+--- Handle types file creation for Lua
 ---@param file_path string Absolute path to the created file
 ---@param state table Neo-tree state
+---@param options Cfg.NeoTree.AddOptions
 ---@diagnostic disable-next-line: unused-local
-local function handle_types_file(file_path, state)
+local function handle_lua_types_file(file_path, state, options)
   -- Schedule to ensure file operations complete
   vim.schedule(function()
     -- Open the file in a buffer
@@ -149,12 +184,10 @@ local function handle_types_file(file_path, state)
 
       insert_content_into_buffer(lines)
 
-      -- Call :InsertModule to replace {MODULEPATH} placeholder
-      local has_insert_module = fn.exists(":InsertModule") > 0
-      if has_insert_module then
-        vim.cmd("InsertModule")
-      else
-        notify("Warning: :InsertModule command not found, module path not inserted", vim.log.levels.WARN)
+      -- Insert @module annotation using library
+      local success = insert_module_annotation(file_path)
+      if not success then
+        notify("Warning: Failed to insert @module annotation", vim.log.levels.WARN)
       end
 
       -- Save the buffer
@@ -168,45 +201,76 @@ local function handle_types_file(file_path, state)
   end)
 end
 
---- Handle regular file creation with clipboard content
----@param file_path string Absolute path to the created file
-local function handle_regular_file(file_path)
-  -- Schedule to ensure file operations complete
-  vim.schedule(function()
-    -- Open the file in a buffer
-    vim.cmd("edit " .. fn.fnameescape(file_path))
+--- Ask user if they want to insert clipboard content
+---@param callback fun(should_insert: boolean)
+local function ask_insert_clipboard(callback)
+  local inputs = require("neo-tree.ui.inputs")
 
-    -- Wait for buffer to be ready
-    vim.schedule(function()
-      local bufnr = api.nvim_get_current_buf()
-
-      -- Ensure buffer is modifiable
-      vim.bo[bufnr].modifiable = true
-      vim.bo[bufnr].readonly = false
-
-      -- Get clipboard content
-      local clipboard_content, err = get_clipboard_content()
-      if not clipboard_content then
-        notify(err or "No clipboard content available", vim.log.levels.WARN)
-        return
-      end
-
-      -- Split content into lines and insert
-      local lines = vim.split(clipboard_content, "\n", { plain = true })
-      insert_content_into_buffer(lines)
-
-      -- Save the buffer
-      save_buffer(bufnr)
-
-      notify(("File created with clipboard content: %s"):format(fn.fnamemodify(file_path, ":t")), vim.log.levels.INFO)
-    end)
+  inputs.confirm("Insert clipboard content?", function(confirmed)
+    callback(confirmed == true)
   end)
 end
 
---- Handle directory creation with init.lua
+--- Handle regular file creation with optional clipboard content
+---@param file_path string Absolute path to the created file
+---@param options Cfg.NeoTree.AddOptions
+local function handle_regular_file(file_path, options)
+  -- Determine if we should insert clipboard
+  local function proceed_with_clipboard(should_insert)
+    -- Schedule to ensure file operations complete
+    vim.schedule(function()
+      -- Open the file in a buffer
+      vim.cmd("edit " .. fn.fnameescape(file_path))
+
+      -- Wait for buffer to be ready
+      vim.schedule(function()
+        local bufnr = api.nvim_get_current_buf()
+
+        -- Ensure buffer is modifiable
+        vim.bo[bufnr].modifiable = true
+        vim.bo[bufnr].readonly = false
+
+        if should_insert then
+          -- Get clipboard content
+          local clipboard_content, err = get_clipboard_content()
+          if not clipboard_content then
+            notify(err or "No clipboard content available", vim.log.levels.WARN)
+            return
+          end
+
+          -- Split content into lines and insert
+          local lines = vim.split(clipboard_content, "\n", { plain = true })
+          insert_content_into_buffer(lines)
+
+          -- Save the buffer
+          save_buffer(bufnr)
+
+          notify(("File created with clipboard content: %s"):format(fn.fnamemodify(file_path, ":t")), vim.log.levels.INFO)
+        else
+          notify(("File created: %s"):format(fn.fnamemodify(file_path, ":t")), vim.log.levels.INFO)
+        end
+      end)
+    end)
+  end
+
+  -- Check options to determine behavior
+  if options.insert_clipb then
+    -- Automatically insert clipboard
+    proceed_with_clipboard(true)
+  elseif options.ask_insert_clipb then
+    -- Ask user first
+    ask_insert_clipboard(proceed_with_clipboard)
+  else
+    -- Don't insert clipboard by default
+    proceed_with_clipboard(false)
+  end
+end
+
+--- Handle directory creation with init file
 ---@param dir_path string Path to the directory to create
 ---@param state table Neo-tree state
-local function handle_directory_creation(dir_path, state)
+---@param options Cfg.NeoTree.AddOptions
+local function handle_directory_creation(dir_path, state, options)
   -- Create the directory
   local ok, err = pcall(fn.mkdir, dir_path, "p")
   if not ok then
@@ -214,18 +278,18 @@ local function handle_directory_creation(dir_path, state)
     return
   end
 
-  -- Check if this is a types directory
+  -- Check if this is a types directory (Lua-specific)
   local is_types = is_types_target(dir_path)
 
-  -- Create init.lua path
+  -- Create init.lua path (Lua-specific for now)
   local init_path = fn.resolve(dir_path .. "/init.lua")
 
   if is_types then
-    -- Use types template
-    handle_types_file(init_path, state)
+    -- Use types template (Lua-specific)
+    handle_lua_types_file(init_path, state, options)
   else
     -- Use regular clipboard content
-    handle_regular_file(init_path)
+    handle_regular_file(init_path, options)
   end
 
   -- Refresh Neo-tree after a delay to allow file operations to complete
@@ -238,12 +302,23 @@ end
 
 --- Main command handler for custom add
 ---@param state Cfg.NeoTree.State Neo-tree state
-function M.custom_add(state)
+---@param options? Cfg.NeoTree.AddOptions Options for clipboard insertion
+function M.custom_add(state, options)
+  -- Default options
+  options = vim.tbl_extend("force", {
+    insert_clipb = false,
+    ask_insert_clipb = false,
+  }, options or {})
+
   -- Use Neo-tree's input for getting the path
   local inputs = require("neo-tree.ui.inputs")
 
   -- Get the parent node
   local node = state.tree:get_node()
+  if not node then
+    vim.notify("[cfg.neotree.commands].add node is nil", vim.log.levels.WARN)
+    return nil
+  end
   local parent_path = node.type == "directory" and node.path or node:get_parent_id()
 
   inputs.input("File name:", "", function(input_path)
@@ -256,8 +331,8 @@ function M.custom_add(state)
 
     -- Determine if this is a directory or file
     if ends_with_separator(input_path) then
-      -- Directory creation with init.lua
-      handle_directory_creation(full_path:gsub("[/\\]$", ""), state)
+      -- Directory creation with init file
+      handle_directory_creation(full_path:gsub("[/\\]$", ""), state, options)
     else
       -- File creation
       -- Check if file already exists
@@ -281,11 +356,20 @@ function M.custom_add(state)
         return
       end
 
-      -- Check if this is a types file
-      if is_types_target(full_path) then
-        handle_types_file(full_path, state)
+      -- Check file extension
+      local ext = get_extension(full_path)
+
+      if ext == "lua" then
+        -- Check if this is a types file
+        if is_types_target(full_path) then
+          handle_lua_types_file(full_path, state, options)
+        else
+          handle_regular_file(full_path, options)
+        end
       else
-        handle_regular_file(full_path)
+        -- Non-Lua files - handle regularly
+        -- (Can be extended for other languages here)
+        handle_regular_file(full_path, options)
       end
 
       -- Refresh Neo-tree after a delay

@@ -8,17 +8,23 @@ Erweiterter `add`-Befehl für Neo-tree mit Clipboard-Integration und automatisch
   - [Funktionalität](#funktionalitt)
     - [Normale Dateierstellung](#normale-dateierstellung)
     - [Verzeichniserstellung mit init.lua](#verzeichniserstellung-mit-initlua)
-  - [Spezialbehandlung für Typdefinitionen](#spezialbehandlung-fr-typdefinitionen)
+  - [Clipboard-Optionen](#clipboard-optionen)
+    - [insert_clipb (default: false)](#insert_clipb-default-false)
+    - [ask_insert_clipb (default: false)](#ask_insert_clipb-default-false)
+    - [Kein Clipboard (default)](#kein-clipboard-default)
+  - [Spezialbehandlung für Typdefinitionen (Lua)](#spezialbehandlung-fr-typdefinitionen-lua)
     - [Erkannte Muster](#erkannte-muster)
     - [Template-Verhalten](#template-verhalten)
     - [Bedingungen für Template-Einfügung](#bedingungen-fr-template-einfgung)
   - [Template-Datei](#template-datei)
   - [Dependencies](#dependencies)
-  - [Integration in Neo-tree Config](#integration-in-neo-tree-config)
-    - [1. Command registrieren](#1-command-registrieren)
-    - [2. Keymap aktualisieren](#2-keymap-aktualisieren)
+  - [Erweiterbarkeit für andere Sprachen](#erweiterbarkeit-fr-andere-sprachen)
+    - [Aktuelle Struktur](#aktuelle-struktur)
+    - [Erweiterung für TypeScript/JavaScript](#erweiterung-fr-typescriptjavascript)
+    - [Erweiterung für Python](#erweiterung-fr-python)
+  - [Verwendung](#verwendung)
   - [Fehlerbehebung](#fehlerbehebung)
-    - [`:InsertModule` nicht gefunden](#insertmodule-nicht-gefunden)
+    - [Library-Module nicht gefunden](#library-module-nicht-gefunden)
     - [Clipboard leer](#clipboard-leer)
     - [Buffer nicht leer](#buffer-nicht-leer)
 
@@ -32,13 +38,14 @@ Wenn der eingegebene Name **nicht** mit `/` endet:
 
 1. Datei wird angelegt
 2. Datei wird im Buffer geöffnet
-3. Clipboard-Inhalt wird eingefügt
-4. Datei wird gespeichert
+3. Optional: Clipboard-Inhalt wird eingefügt (abhängig von Optionen)
+4. Optional: Datei wird gespeichert (wenn Clipboard eingefügt wurde)
 
 **Beispiel:**
 ```
 Eingabe: components/Button.tsx
-→ Datei wird erstellt und Clipboard-Inhalt eingefügt
+→ Datei wird erstellt
+→ Je nach Keymap: Clipboard-Inhalt wird eingefügt oder nachgefragt
 ```
 
 ### Verzeichniserstellung mit init.lua
@@ -46,18 +53,55 @@ Eingabe: components/Button.tsx
 Wenn der eingegebene Name **mit** `/` endet:
 
 1. Verzeichnis wird angelegt
-2. `init.lua` wird im neuen Verzeichnis erstellt
-3. Clipboard-Inhalt wird eingefügt
-4. Datei wird gespeichert
+2. `init.lua` wird im neuen Verzeichnis erstellt (Lua-spezifisch)
+3. Optional: Clipboard-Inhalt wird eingefügt
+4. Optional: Datei wird gespeichert
 
 **Beispiel:**
 ```
 Eingabe: lib/utils/
 → Verzeichnis lib/utils/ wird erstellt
-→ lib/utils/init.lua wird erstellt und Clipboard-Inhalt eingefügt
+→ lib/utils/init.lua wird erstellt
+→ Je nach Keymap: Clipboard-Inhalt wird eingefügt
 ```
 
-## Spezialbehandlung für Typdefinitionen
+## Clipboard-Optionen
+
+Das Modul unterstützt verschiedene Clipboard-Verhaltensweisen über Optionen:
+
+### insert_clipb (default: false)
+
+Fügt automatisch den Clipboard-Inhalt ein, ohne zu fragen.
+```lua
+["A"] = {
+  "custom_add",
+  nowait = true,
+  config = { insert_clipb = true }
+}
+```
+
+### ask_insert_clipb (default: false)
+
+Fragt den Benutzer, ob Clipboard-Inhalt eingefügt werden soll.
+```lua
+["<M-a>"] = {
+  "custom_add",
+  nowait = true,
+  config = { ask_insert_clipb = true }
+}
+```
+
+### Kein Clipboard (default)
+
+Ohne Optionen wird kein Clipboard-Inhalt eingefügt.
+```lua
+["a"] = {
+  "custom_add",
+  nowait = true
+}
+```
+
+## Spezialbehandlung für Typdefinitionen (Lua)
 
 Das Modul erkennt automatisch Typdefinitionsdateien und -ordner für `lua_ls`:
 
@@ -76,12 +120,12 @@ Das Modul erkennt automatisch Typdefinitionsdateien und -ordner für `lua_ls`:
 Für erkannte Typdefinitionen wird automatisch folgendes Template eingefügt:
 ```lua
 ---@meta
----@module '{MODULEPATH}'
+---@module 'actual.module.path'
 
 return {}
 ```
 
-**Wichtig:** Die `@module`-Annotation wird durch das vorhandene `:InsertModule`-Kommando generiert.
+**Wichtig:** Die `@module`-Annotation wird durch das Library-Modul `lib.lua_ls.insert.module_w_path` generiert und enthält den tatsächlichen Modulpfad der Datei.
 
 ### Bedingungen für Template-Einfügung
 
@@ -104,72 +148,118 @@ Es enthält:
 return {}
 ```
 
-Der Platzhalter `{MODULEPATH}` wird durch `:InsertModule` ersetzt.
+Der Platzhalter `{MODULEPATH}` wird durch das Library-Modul ersetzt.
 
 ## Dependencies
 
-- **User Command:** `:InsertModule` muss verfügbar sein für die automatische Generierung der `@module`-Annotation
+Dieses Modul benötigt folgende Library-Module:
 
-## Integration in Neo-tree Config
+- `lib.lua_ls.insert.module_w_path` - Fügt `@module` Annotation mit korrektem Pfad ein
+- `lib.lua_ls.get_module_path` - Berechnet den Modulpfad relativ zum `lua/` Verzeichnis
+- `lib.buffer.insert_lines_at_cursor` - Fügt Zeilen am Cursor ein
 
-### 1. Command registrieren
+## Erweiterbarkeit für andere Sprachen
 
-In `lua/config/neotree/commands.lua`:
+Das Modul ist so strukturiert, dass es leicht für andere Programmiersprachen erweitert werden kann:
+
+### Aktuelle Struktur
 ```lua
----@module 'config.neotree.commands'
-local getTelescopeOpts = require("config.neotree.commands.get_telescope_opts")
-local diff_files_mod = require("config.neotree.commands.diff_files")
-local mark_mod = require("config.neotree.commands.mark")
-local node_utils = require("config.neotree.utils.node")
-local add_mod = require("config.neotree.commands.add")  -- NEU
+-- Check file extension
+local ext = get_extension(full_path)
 
-local api, fn = vim.api, vim.fn
-local notify = vim.notify
-
----@return table<string, fun(state: Cfg.NeoTree.State)>
-local function attach()
-  return {
-    open_badd = function(state)
-      -- ... existing code ...
-    end,
-
-    -- NEU: Custom add command
-    custom_add = add_mod.custom_add,
-
-    -- ... weitere commands ...
-  }
+if ext == "lua" then
+  -- Lua-specific handling
+  if is_types_target(full_path) then
+    handle_lua_types_file(full_path, state, options)
+  else
+    handle_regular_file(full_path, options)
+  end
+else
+  -- Non-Lua files - handle regularly
+  -- (Can be extended for other languages here)
+  handle_regular_file(full_path, options)
 end
-
-return {
-  attach = attach
-}
 ```
 
-### 2. Keymap aktualisieren
+### Erweiterung für TypeScript/JavaScript
 
-In `lua/config/neotree/keymaps/filesystem.lua`:
+Man könnte beispielsweise hinzufügen:
 ```lua
--- ALT:
--- ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
-
--- NEU:
-["a"] = { "custom_add", nowait = true },
+elseif ext == "ts" or ext == "tsx" then
+  -- TypeScript-specific handling
+  if is_types_target_ts(full_path) then
+    handle_ts_types_file(full_path, state, options)
+  else
+    handle_regular_file(full_path, options)
+  end
 ```
 
-Die `config = { show_path = "relative" }` Option wird direkt im Command-Modul gesetzt und muss hier nicht mehr angegeben werden.
+### Erweiterung für Python
+```lua
+elseif ext == "py" then
+  -- Python-specific handling
+  if is_types_target_py(full_path) then
+    handle_py_types_file(full_path, state, options)
+  else
+    handle_regular_file(full_path, options)
+  end
+```
+
+## Verwendung
+
+Nach der Integration kann man in Neo-tree wie folgt vorgehen:
+
+**Datei ohne Clipboard erstellen:**
+```
+Taste: a
+Eingabe: components/MyComponent.tsx
+→ Datei wird erstellt, kein Clipboard
+```
+
+**Datei mit Clipboard erstellen:**
+```
+Taste: A (Shift+a)
+Eingabe: components/MyComponent.tsx
+→ Datei wird erstellt, Clipboard automatisch eingefügt
+```
+
+**Datei mit Clipboard-Abfrage:**
+```
+Taste: Alt+a
+Eingabe: components/MyComponent.tsx
+→ Dialog: "Insert clipboard content?"
+→ Je nach Antwort: Clipboard eingefügt oder nicht
+```
+
+**Verzeichnis mit init.lua:**
+```
+Taste: A
+Eingabe: lib/helpers/
+→ lib/helpers/ wird erstellt
+→ lib/helpers/init.lua wird erstellt mit Clipboard-Inhalt
+```
+
+**Types-Datei:**
+```
+Taste: a
+Eingabe: @types.lua
+→ Datei wird mit Template erstellt
+→ @module Annotation wird automatisch mit korrektem Pfad eingefügt
+```
 
 ## Fehlerbehebung
 
-### `:InsertModule` nicht gefunden
+### Library-Module nicht gefunden
 
 Wenn die Warnung erscheint:
 ```
-Warning: :InsertModule command not found, module path not inserted
+Failed to load module annotation library
 ```
 
-Dann fehlt das User Command. Das Template wird trotzdem eingefügt, aber `{MODULEPATH}` wird nicht ersetzt.
-
-**Lösung:** User Command `:InsertModule` implementieren und in der Neovim-Config verfügbar machen.
+Dann fehlen die Library-Module. Stelle sicher, dass folgende Module verfügbar sind:
+- `lib.lua_ls.insert.module_w_path`
+- `lib.lua_ls.get_module_path`
+- `lib.buffer.insert_lines_at_cursor`
 
 ### Clipboard leer
 
@@ -188,5 +278,6 @@ Buffer is not empty, skipping template insertion
 ```
 
 Dies verhindert versehentliches Überschreiben von bestehendem Code.
+
 
 ---
