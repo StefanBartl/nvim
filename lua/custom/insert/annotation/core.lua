@@ -25,6 +25,8 @@ local function get_module_path(filepath)
   return module_path
 end
 
+-- AUDIT: `lib.buffers.insert_lines`?
+
 ---Insert lines at current cursor position
 ---@param lines string[]
 local function insert_lines_at_cursor(lines)

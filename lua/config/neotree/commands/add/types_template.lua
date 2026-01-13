@@ -1,4 +1,3 @@
 ---@meta
----@module '{MODULEPATH}'
 
 return {}

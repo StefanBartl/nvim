@@ -4,7 +4,7 @@
 --- Dependencies:
 --- - lib.lua_ls.insert.module_w_path (for @module annotation insertion)
 --- - lib.lua_ls.get_module_path (for module path calculation)
---- - lib.buffer.insert_lines_at_cursor (for content insertion)
+--- - lib.buffer.insert_lines (for content insertion)
 
 local M = {}
 
@@ -74,7 +74,8 @@ end
 ---@return string[]|nil lines, string|nil error_msg
 ---@diagnostic disable-next-line: unused-local
 local function get_types_template_content(file_path)
-  local template_path = fn.stdpath("config") .. "/lua/config/neotree/commands/add/types_template.lua"
+  local template_path = fn.stdpath("config")
+    .. "/lua/config/neotree/commands/add/types_template.lua"
 
   local lines = {}
   local file = io.open(template_path, "r")
@@ -135,13 +136,13 @@ local function insert_module_annotation(file_path)
   end
 
   -- Use library module to insert @module annotation
-  local ok, result = pcall(require, "lib.lua_ls.insert.module_w_path")
+  local ok, insert_mod = pcall(require, "lib.lua_ls.insert.module_annnotation")
   if not ok then
     notify("Failed to load module annotation library", vim.log.levels.ERROR)
     return false
   end
 
-  return result()
+  return insert_mod({ bufnr = bufnr, row = 1, col = 0 }) or false
 end
 
 --- Handle types file creation for Lua
@@ -196,7 +197,10 @@ local function handle_lua_types_file(file_path, state, options)
       -- Ensure cursor focus is in this buffer
       api.nvim_set_current_buf(bufnr)
 
-      notify(("Types file created: %s"):format(fn.fnamemodify(file_path, ":t")), vim.log.levels.INFO)
+      notify(
+        ("Types file created: %s"):format(fn.fnamemodify(file_path, ":t")),
+        vim.log.levels.INFO
+      )
     end)
   end)
 end
@@ -245,7 +249,10 @@ local function handle_regular_file(file_path, options)
           -- Save the buffer
           save_buffer(bufnr)
 
-          notify(("File created with clipboard content: %s"):format(fn.fnamemodify(file_path, ":t")), vim.log.levels.INFO)
+          notify(
+            ("File created with clipboard content: %s"):format(fn.fnamemodify(file_path, ":t")),
+            vim.log.levels.INFO
+          )
         else
           notify(("File created: %s"):format(fn.fnamemodify(file_path, ":t")), vim.log.levels.INFO)
         end
@@ -380,7 +387,7 @@ function M.custom_add(state, options)
       end)
     end
   end, {}, {
-    show_path = "relative"
+    show_path = "relative",
   })
 end
 

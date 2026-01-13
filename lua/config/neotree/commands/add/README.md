@@ -156,7 +156,7 @@ Dieses Modul benötigt folgende Library-Module:
 
 - `lib.lua_ls.insert.module_w_path` - Fügt `@module` Annotation mit korrektem Pfad ein
 - `lib.lua_ls.get_module_path` - Berechnet den Modulpfad relativ zum `lua/` Verzeichnis
-- `lib.buffer.insert_lines_at_cursor` - Fügt Zeilen am Cursor ein
+- `lib.buffer.insert_lines` - Fügt Zeilen am Cursor ein
 
 ## Erweiterbarkeit für andere Sprachen
 

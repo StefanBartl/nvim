@@ -5,6 +5,8 @@ local M = {}
 
 local api = vim.api
 
+-- FIX: lib.insert_lines
+
 ---Insert lines at current cursor position
 ---@param lines string[]
 ---@return nil
