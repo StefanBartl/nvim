@@ -18,18 +18,28 @@
 
 ## Important
 
+- `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
 - `lib` konsolidieren, beispiel `lib.cross_plattform` vs. `lib.cross`
+- `nf` und `pf` sollen aktuellen buffer erstzen `nF` und `pF` nicht
 
 ---
 
 ## MIXED
 
+- ein usercommand, das alle emojis entfernt im buffer
+- ein neotree, also auch usercommand, mit dme ich ein einde datei erstellen kann und beim erstelklen wird gleich das clipboard hineinkopiert.
 - neotest [lernen]()
 - `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 - lsp.tools behandeln
 - `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
+
 - In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
 - new Reload module
+- usrcmds.ui: Zukünftige Features
+        - [ ] Theme-Previews in Floating Window
+        - [ ] Theme-Export/Import
+        - [ ] Custom Theme-Collections
+        - [ ] Theme-Scheduler (basierend auf Tageszeit)
 
 ---
 

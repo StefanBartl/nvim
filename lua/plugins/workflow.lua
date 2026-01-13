@@ -17,18 +17,18 @@ return {
       },
       keywords = require("config.todo_comments.keywords"),
     },
-    config = function(_, opts)
-      local ok, mod = pcall(require, "config.todo_comments.setup")
-      if ok and type(mod) == "table" and type(mod.setup) == "function" then
-        mod.setup(opts)
-        return
-      end
-      -- fallback: call todo.setup directly
-      local todo_ok, todo = pcall(require, "todo-comments")
-      if todo_ok then
-        todo.setup(opts)
-      end
-    end,
+    -- config = function(_, opts)
+      -- local ok, mod = pcall(require, "config.todo_comments.setup")
+      -- if ok and type(mod) == "table" and type(mod.setup) == "function" then
+        -- mod.setup(opts)
+        -- return
+      -- end
+      -- -- fallback: call todo.setup directly
+      -- local todo_ok, todo = pcall(require, "todo-comments")
+      -- if todo_ok then
+        -- todo.setup(opts)
+      -- end
+    -- end,
   },
 
   {

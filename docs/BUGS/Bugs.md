@@ -31,6 +31,7 @@ stack traceback:
 
 ## Critical Bugs
 
+- `:UI theme` setzen
 - ToDo-Comments
 - github stats
 
@@ -39,6 +40,7 @@ stack traceback:
 ## Important
 
 - toc?
+- `C-c` kopiert zesar die gesamte Datei, aber manchmal, vor allem bei source code, wird die formatierung nicht geahtlen und es wird dann beim einfügen alle in einer wurst ausgegeben. wenn ich mit `y` yanke passiert das nicht, was auf ein Problem mit dem `C-c` kopieren weißt, nicht auf ein Problem mit dem einfügen
 
 ---
 
