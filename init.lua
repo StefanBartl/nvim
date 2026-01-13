@@ -56,7 +56,12 @@ end)
 
 -- FIX THIS WILL NOT STAY
 require("ui.command").setup()
-
+require('wkddap').setup({
+  languages = { 'lua', 'go', 'python', 'javascript' },
+  ui = { enable = true, },
+  keymaps = { enable = false, prefix = '<leader>d' },
+  auto_install = true, -- Mason auto-install
+})
 
 
 -- ===================================================================================
@@ -70,25 +75,25 @@ require("system.rpc_pipe").setup({ debug = false })
 -- ===================================================================================
 --[[                             Kurzübersicht
 Setup:
-  require("debugging").setup({
-      all = false,        -- aktiviert alle Module
-      autocmds = nil,     -- Dbg.Autocmds.Modules|nil
-      markdown = nil,     -- Dbg.Markdown.Modules|nil
-      terminals = nil,    -- Dbg.Terminals.Modules|nil
-      views = nil,        -- Dbg.Views.Setup|nil
-      tools = nil,        -- Dbg.Tools.Modules|nil
-      usercmds = true,    -- :BufReport/:TabReport/:WinReport
-  })
+require("debugging").setup({
+all = false,        -- aktiviert alle Module
+autocmds = nil,     -- Dbg.Autocmds.Modules|nil
+markdown = nil,     -- Dbg.Markdown.Modules|nil
+terminals = nil,    -- Dbg.Terminals.Modules|nil
+views = nil,        -- Dbg.Views.Setup|nil
+tools = nil,        -- Dbg.Tools.Modules|nil
+usercmds = true,    -- :BufReport/:TabReport/:WinReport
+})
 
 Module & Optionen:
 1. Autocmds:
-    all? boolean, list_autocmds? boolean
+all? boolean, list_autocmds? boolean
 2. Markdown:
-    all? boolean, inline_debug_fixed? boolean
+all? boolean, inline_debug_fixed? boolean
 3. Terminals:
-    all? boolean, keylogger? boolean
+all? boolean, keylogger? boolean
 4. Views:
-    keymaps: enable?, map?, prefix? ("<lt>" default)
+keymaps: enable?, map?, prefix? ("<lt>" default)
     autocmds: enable?, group_name?, auto_refresh?
     timings: delay_messages_ms?, delay_noice_ms?, retry_delay_ms?, attempts?
     capture: debug?, clipboard?, save_file?, output_dir?

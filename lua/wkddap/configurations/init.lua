@@ -1,0 +1,52 @@
+---@module 'wkddap.configurations'
+
+local M = {}
+
+--- Load all configurations for specified languages
+---@param languages string[] List of languages
+---@param custom_configs table Custom configuration overrides
+---@return boolean success
+function M.load_all(languages, custom_configs)
+  local config = require("wkddap.config")
+
+  -- If no languages specified, use all supported
+  if not languages or #languages == 0 then
+    local registry = require("wkddap.registry")
+    languages = registry.available_languages()
+  end
+
+  -- Load configuration for each language
+  for _, lang in ipairs(languages) do
+    -- Resolve alias
+    local actual_lang = config.language_aliases[lang] or lang
+
+    local config_module = string.format(("wkddap.configurations.%s"), actual_lang)
+    local ok, mod = pcall(require, config_module)
+
+    if ok and type(mod.load) == "function" then
+      local load_ok, load_err = pcall(mod.load)
+      if not load_ok then
+        vim.notify(
+          string.format("[pdap.configurations] Failed to load %s: %s", lang, load_err or "unknown"),
+          vim.log.levels.WARN
+        )
+      end
+    end
+  end
+
+  -- Apply custom configurations
+  if custom_configs then
+    local dap = require("dap")
+    for lang, configs in pairs(custom_configs) do
+      if dap.configurations[lang] then
+        vim.list_extend(dap.configurations[lang], configs)
+      else
+        dap.configurations[lang] = configs
+      end
+    end
+  end
+
+  return true
+end
+
+return M
