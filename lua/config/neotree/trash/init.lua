@@ -8,14 +8,15 @@
 --- - Batch operation support with marking
 --- - Undo history integration
 --- - Cross-platform trash support (Windows, Linux, macOS)
+--- - Smart buffer/preview/reference closure
 ---
 --- Safety layers applied:
 --- 1. Validation - Checks if path is safe to delete
---- 2. Confirmation - User must confirm dangerous operations
---- 3. Backup - Creates automatic backup before deletion
---- 4. Quarantine - Stops watchers to prevent EPERM
---- 5. Recovery Point - Allows automatic retry on failure
--- AUDIT: Modularize
+--- 2. Buffer/Preview Detection - Finds and closes open references
+--- 3. Confirmation - User must confirm dangerous operations
+--- 4. Backup - Creates automatic backup before deletion
+--- 5. Quarantine - Stops watchers to prevent EPERM
+--- 6. Recovery Point - Allows automatic retry on failure
 
 -- Safety system integration
 local safety = require("config.neotree.safety")
@@ -38,6 +39,8 @@ M.config = {
   create_backups = true,
   confirm_dangerous = true,
   use_dry_run = true,
+  auto_close_buffers = false, -- Ask user before closing
+  debug = false, -- Detailed feedback about closure attempts
 }
 
 ---Configure trash module
@@ -45,6 +48,15 @@ M.config = {
 function M.setup(config)
   if config then
     M.config = vim.tbl_deep_extend("force", M.config, config)
+  end
+end
+
+---Debug notify helper
+---@param msg string
+---@param opts? table
+local function debug_notify(msg, opts)
+  if M.config.debug then
+    notify.info(msg, opts)
   end
 end
 
@@ -59,45 +71,197 @@ local function escape_shell_arg(path)
   end
 end
 
----Close all buffers and previews related to path
+---Find all buffers that reference a path
 ---@param path string
-local function close_related_buffers_and_previews(path)
+---@return integer[] bufnrs Array of buffer numbers
+---@return string[] buf_names Array of buffer display names
+local function find_buffers_with_path(path)
+  local bufnrs = {}
+  local buf_names = {}
   local normalized_path = resolve(path):gsub("\\", "/")
 
-  -- Close affected buffers
   for _, buf in ipairs(api.nvim_list_bufs()) do
-    if api.nvim_buf_is_valid(buf) then
+    if api.nvim_buf_is_valid(buf) and api.nvim_buf_is_loaded(buf) then
       local buf_name = api.nvim_buf_get_name(buf)
       if buf_name ~= "" then
         local normalized_buf = resolve(buf_name):gsub("\\", "/")
-        if normalized_buf:sub(1, #normalized_path) == normalized_path or normalized_buf == normalized_path then
-          pcall(api.nvim_buf_delete, buf, { force = true, unload = true })
+        -- Check exact match or if buffer is child of directory
+        if normalized_buf == normalized_path or normalized_buf:sub(1, #normalized_path) == normalized_path then
+          table.insert(bufnrs, buf)
+          local display_name = fn.fnamemodify(buf_name, ":t")
+          if display_name == "" then
+            display_name = string.format("[Buffer %d]", buf)
+          end
+          table.insert(buf_names, display_name)
         end
       end
     end
   end
 
-  -- Close Neo-tree preview if open
-  pcall(function()
-    local preview = require("neo-tree.ui.preview")
-    if preview and preview.close then
-      preview.close()
-    end
-  end)
+  return bufnrs, buf_names
+end
 
-  -- Close float windows that might show the path
+---Check if Neo-tree preview is showing a path
+---@param path string
+---@return boolean is_open
+---@return string|nil window_info
+local function find_preview_with_path(path)
+  local normalized_path = resolve(path):gsub("\\", "/")
+
+  local preview_ok, preview = pcall(require, "neo-tree.ui.preview")
+  if not preview_ok or not preview then
+    return false, nil
+  end
+
+  -- Check all windows for preview buffers
   for _, win in ipairs(api.nvim_list_wins()) do
     if api.nvim_win_is_valid(win) then
       local win_buf = api.nvim_win_get_buf(win)
       local buf_name = api.nvim_buf_get_name(win_buf)
+
       if buf_name ~= "" then
         local normalized_buf = resolve(buf_name):gsub("\\", "/")
-        if normalized_buf:sub(1, #normalized_path) == normalized_path then
-          pcall(api.nvim_win_close, win, true)
+        if normalized_buf == normalized_path or normalized_buf:sub(1, #normalized_path) == normalized_path then
+          -- Check if this is a preview window
+          local win_config = api.nvim_win_get_config(win)
+          if win_config.relative ~= "" then -- Float window
+            return true, string.format("Preview Window (Win %d)", win)
+          end
         end
       end
     end
   end
+
+  return false, nil
+end
+
+---Close all references to a path (buffers, previews, windows)
+---@param path string
+---@param filename string Display name for messages
+---@param force boolean Close without asking
+---@return boolean success True if all closed or user confirmed
+---@return string[] messages Detail messages about what was closed
+local function close_all_references(path, filename, force)
+  local messages = {}
+  local bufnrs, buf_names = find_buffers_with_path(path)
+  local has_preview, preview_info = find_preview_with_path(path)
+
+  -- Nothing to close
+  if #bufnrs == 0 and not has_preview then
+    return true, {}
+  end
+
+  -- Build detailed message
+  local details = {}
+
+  if #bufnrs > 0 then
+    table.insert(details, string.format("📄 File '%s' is open in %d buffer%s:",
+      filename,
+      #bufnrs,
+      #bufnrs > 1 and "s" or ""
+    ))
+    for i, name in ipairs(buf_names) do
+      table.insert(details, string.format("   [%d] %s", bufnrs[i], name))
+    end
+  end
+
+  if has_preview then
+    table.insert(details, string.format("🔍 File '%s' is shown in:", filename))
+    table.insert(details, "   " .. preview_info)
+  end
+
+  debug_notify(table.concat(details, "\n"))
+
+  -- Ask for confirmation unless auto_close or force
+  if not force and not M.config.auto_close_buffers then
+    table.insert(details, "")
+    table.insert(details, "Close and delete? (y/N)")
+
+    local prompt = table.concat(details, "\n")
+    local ans = fn.input(prompt .. " ")
+    api.nvim_command("redraw")
+
+    if ans ~= "y" and ans ~= "Y" then
+      notify.info("❌ Operation cancelled by user")
+      return false, {}
+    end
+  end
+
+  debug_notify("🔄 Attempting to close references...")
+
+  -- Close buffers
+  local failed_buffers = {}
+  for i, bufnr in ipairs(bufnrs) do
+    if api.nvim_buf_is_valid(bufnr) then
+      local ok = pcall(api.nvim_buf_delete, bufnr, { force = true })
+      if ok then
+        table.insert(messages, string.format("✓ Closed buffer: %s", buf_names[i]))
+        debug_notify(string.format("✓ Closed buffer %d: %s", bufnr, buf_names[i]))
+      else
+        table.insert(failed_buffers, { bufnr = bufnr, name = buf_names[i] })
+        debug_notify(string.format("✗ Failed to close buffer %d: %s", bufnr, buf_names[i]))
+      end
+    end
+  end
+
+  -- Close preview windows
+  if has_preview then
+    local preview_closed = false
+
+    -- Try to close Neo-tree preview
+    pcall(function()
+      local preview = require("neo-tree.ui.preview")
+      if preview and preview.close then
+        preview.close()
+        preview_closed = true
+      end
+    end)
+
+    -- Close any floating windows showing the path
+    for _, win in ipairs(api.nvim_list_wins()) do
+      if api.nvim_win_is_valid(win) then
+        local win_buf = api.nvim_win_get_buf(win)
+        local buf_name = api.nvim_buf_get_name(win_buf)
+        local normalized_buf = resolve(buf_name):gsub("\\", "/")
+        local normalized_path = resolve(path):gsub("\\", "/")
+
+        if normalized_buf == normalized_path or normalized_buf:sub(1, #normalized_path) == normalized_path then
+          local ok = pcall(api.nvim_win_close, win, true)
+          if ok then
+            preview_closed = true
+          end
+        end
+      end
+    end
+
+    if preview_closed then
+      table.insert(messages, "✓ Closed preview window")
+      debug_notify("✓ Closed preview window")
+    else
+      table.insert(messages, "⚠ Could not close preview")
+      debug_notify("⚠ Could not close preview")
+    end
+  end
+
+  -- Report failures
+  if #failed_buffers > 0 then
+    local error_lines = { "❌ Failed to close some buffers:" }
+    for _, fail in ipairs(failed_buffers) do
+      table.insert(error_lines, string.format("   [%d] %s", fail.bufnr, fail.name))
+    end
+    table.insert(error_lines, "")
+    table.insert(error_lines, "Please close manually or restart Neovim")
+
+    notify.error(table.concat(error_lines, "\n"))
+    return false, messages
+  end
+
+  -- Wait for changes to settle
+  if #messages > 0 then
+    vim.wait(100)
+  end
+
+  return true, messages
 end
 
 ---Send file/directory to system trash using platform-specific method
@@ -149,12 +313,8 @@ local function send_to_trash_impl(path)
     end
   else
     -- Windows: PowerShell RecycleBin method
-    close_related_buffers_and_previews(path)
-
     local stat = uv.fs_stat(path)
     local is_dir = stat and stat.type == "directory"
-
-    vim.wait(100)
 
     local ps_script
     if is_dir then
@@ -204,37 +364,73 @@ local function send_to_trash_impl(path)
   return ok, msg
 end
 
---- fix: return value annotaitons
----Send to trash with full safety features
+---Send to trash with full safety features and smart reference closure
 ---@param path string
--- ---@return boolean success
--- ---@return string message
-function M.send_to_trash(path)
+---@param filename string Display name for user messages
+---@return boolean success
+---@return string message
+---@return string[] closure_details Messages about what was closed
+function M.send_to_trash(path, filename)
+  filename = filename or fn.fnamemodify(path, ":t")
+
   if not M.config.use_safety_system then
     -- Direct trash without safety
-    return send_to_trash_impl(path)
+    return send_to_trash_impl(path), "", {}
+  end
+
+  -- Check for open references
+  local bufnrs, _ = find_buffers_with_path(path)
+  local has_preview, _ = find_preview_with_path(path)
+  local closure_messages = {}
+
+  if #bufnrs > 0 or has_preview then
+    debug_notify(string.format("⚠ Cannot delete '%s' - references found", filename))
+
+    -- Try to close all references
+    local closed_ok, close_msgs = close_all_references(path, filename, false)
+    closure_messages = close_msgs
+
+    if not closed_ok then
+      return false, "Could not close all references", closure_messages
+    end
+
+    -- Re-check after closure
+    bufnrs, _ = find_buffers_with_path(path)
+    has_preview, _ = find_preview_with_path(path)
+
+    if #bufnrs > 0 or has_preview then
+      notify.error(string.format(
+        "❌ Still cannot delete '%s'\n" ..
+        "Remaining references:\n" ..
+        "%s\n" ..
+        "Please close manually or restart Neovim",
+        filename,
+        #bufnrs > 0 and string.format("- %d buffer(s)", #bufnrs) or "" ..
+        (has_preview and "\n- Preview window" or "")
+      ))
+      return false, "References still open after closure attempt", closure_messages
+    end
   end
 
   -- Use full safety system
-  return safety.safe_operation(function()
+  local ok, msg = safety.safe_operation(function()
     -- Enter quarantine (EPERM prevention)
     watcher_quarantine.enter_quarantine(2000, { path })
 
-    -- Close related resources
-    close_related_buffers_and_previews(path)
     vim.wait(100)
 
     -- Execute trash operation
-    local ok, msg = send_to_trash_impl(path)
+    local success, err = send_to_trash_impl(path)
 
     -- Safe refresh (waits for quarantine)
-    if ok then
+    if success then
       watcher_quarantine.safe_refresh("filesystem")
     end
 
-    ---@diagnostic disable-next-line
-    return ok, msg
+    return success, err
   end, "delete", { path })
+
+  return ok, msg or "", closure_messages
 end
 
 ---Safely refresh Neo-tree after file operations
@@ -255,13 +451,13 @@ local function get_nodes_to_trash(state)
   local nodes = {}
 
   -- Collect marked nodes first
-  for node_id, _ in pairs(marks) do
-    -- Try to find node by id among current tree's children
-    if state.current_node and state.current_node.children then
-      for _, child in ipairs(state.current_node.children) do
-        if child.id == node_id then
-          table.insert(nodes, child)
-          break
+  if next(marks) then
+    local tree = state.tree
+    if tree then
+      for node_id, _ in pairs(marks) do
+        local node = tree:get_node(node_id)
+        if node then
+          table.insert(nodes, node)
         end
       end
     end
@@ -273,8 +469,11 @@ local function get_nodes_to_trash(state)
   end
 
   -- Fallback to current_node
-  if state.current_node then
-    return { state.current_node }
+  if state.tree then
+    local current = state.tree:get_node()
+    if current then
+      return { current }
+    end
   end
 
   return {}
@@ -357,7 +556,7 @@ function M.neotree_send_node_to_trash(state)
       local backup_path, err = safety.backup.create_backup(path, "trash")
       if backup_path then
         backups_created[path] = backup_path
-        notify.debug(str_format("Backup: %s", backup_path))
+        debug_notify(str_format("📦 Backup: %s", backup_path))
       else
         notify.warn(str_format("Backup failed for %s: %s", names[i], err or "unknown"))
       end
@@ -375,42 +574,46 @@ function M.neotree_send_node_to_trash(state)
   -- === SAFETY LAYER 6: WATCHER QUARANTINE ===
   watcher_quarantine.enter_quarantine(2000, paths)
 
-  -- Close related resources
-  for i = 1, #paths do
-    close_related_buffers_and_previews(paths[i])
-  end
-
-  vim.wait(100)
-
   -- === EXECUTE OPERATIONS ===
   vim.schedule(function()
     defer_fn(function()
       local failed = false
       local success_count = 0
       local failed_items = {}
+      local all_closure_messages = {}
 
       for i = 1, #paths do
         local path = paths[i]
-        local ok, msg = send_to_trash_impl(path)
+        local name = names[i]
+
+        debug_notify(string.format("🗑 Processing: %s", name))
+
+        local ok, msg, closure_msgs = M.send_to_trash(path, name)
+
+        -- Collect closure messages
+        if #closure_msgs > 0 then
+          all_closure_messages[name] = closure_msgs
+        end
 
         if ok then
           success_count = success_count + 1
+          debug_notify(string.format("✓ Deleted: %s", name))
 
           -- Add to undo history
           local undo_ok, undo_module = pcall(require, "config.neotree.undo")
           if undo_ok and undo_module.add_to_history then
-            undo_module.add_to_history(path, names[i])
+            undo_module.add_to_history(path, name)
           end
         else
           failed = true
           table.insert(failed_items, {
             path = path,
-            name = names[i],
+            name = name,
             error = msg,
           })
 
           local clean_msg = msg:match("([^\r\n]+)") or msg
-          notify.error(str_format("✗ Failed: %s - %s", names[i], clean_msg))
+          notify.error(str_format("✗ Failed: %s - %s", name, clean_msg))
 
           -- Attempt recovery if safety enabled
           if M.config.use_safety_system then
@@ -420,9 +623,16 @@ function M.neotree_send_node_to_trash(state)
               message = msg,
             })
             if recovered then
-              notify.info(str_format("Recovery attempted for: %s", names[i]))
+              notify.info(str_format("🔄 Recovery attempted for: %s", name))
             end
           end
+        end
+      end
+
+      -- Show closure summary if debug enabled
+      if M.config.debug and next(all_closure_messages) then
+        for name, msgs in pairs(all_closure_messages) do
+          debug_notify(string.format("📋 Closures for %s:\n  %s", name, table.concat(msgs, "\n  ")))
         end
       end
 
@@ -450,15 +660,15 @@ function M.neotree_send_node_to_trash(state)
 
         -- Show backup info if created
         if M.config.create_backups and next(backups_created) then
-          notify.info(str_format("Backups created: %d", vim.tbl_count(backups_created)))
+          notify.info(str_format("📦 Backups created: %d", vim.tbl_count(backups_created)))
         end
       else
-        notify.error("All operations failed")
+        notify.error("❌ All operations failed")
       end
 
       -- Show recovery hint if failures
       if #failed_items > 0 and M.config.create_backups then
-        notify.info("Tip: Use :NeoTreeBackupList to restore from backups")
+        notify.info("💡 Tip: Use :NeoTreeBackupList to restore from backups")
       end
     end, 150)
   end)
@@ -469,6 +679,12 @@ end
 function M.set_safety_enabled(enabled)
   M.config.use_safety_system = enabled
   notify.info(str_format("Safety system: %s", enabled and "ENABLED" or "DISABLED"))
+end
+
+---Toggle debug mode
+function M.toggle_debug()
+  M.config.debug = not M.config.debug
+  notify.info(str_format("Debug mode: %s", M.config.debug and "ENABLED" or "DISABLED"))
 end
 
 ---Toggle dry-run mode
@@ -490,6 +706,8 @@ function M.show_stats()
     "=== Neo-tree Trash Statistics ===",
     "",
     string.format("Safety System: %s", M.config.use_safety_system and "ENABLED" or "DISABLED"),
+    string.format("Debug Mode: %s", M.config.debug and "ENABLED" or "DISABLED"),
+    string.format("Auto-Close Buffers: %s", M.config.auto_close_buffers and "YES" or "NO (ask)"),
     string.format("Backups: %d", #backups),
     string.format("Recovery Points: %d", #recovery_points),
     string.format("Queue Status: %s", queue_status.processing and "PROCESSING" or "IDLE"),
@@ -499,7 +717,8 @@ function M.show_stats()
     "Commands:",
     "  :NeoTreeBackupList     - Browse and restore backups",
     "  :NeoTreeDryRunToggle   - Toggle test mode",
-    "  :Cfg.NeoTree.TrashStats     - Show this message",
+    "  :NeoTreeDebugToggle    - Toggle detailed feedback",
+    "  :NeoTreeTrashStats     - Show this message",
   }
 
   notify.info(table.concat(stats, "\n"))

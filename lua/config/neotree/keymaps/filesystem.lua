@@ -156,7 +156,7 @@ return {
   --====================== Create / Modify =============================
 
   ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
-  ["A"] = { "add_directory", config = { show_path = "relative" } },
+  ["A"] = { "custom_add", nowait = true }, -- ["A"] = { "add_directory", config = { show_path = "relative" } },
   ["D"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
@@ -346,7 +346,7 @@ return {
         return
       end
 
-      local path, msg = path_utils.from_node(node, "relative", { base_dir = true })
+      local path, msg = path_utils.from_node(node, "relative", { base_dir = vim.loop.cwd() }) -- FIX: hier war base_dir = true
       if not path then
         notify.info(msg or "Failed to get path")
         return
@@ -367,7 +367,7 @@ return {
         return
       end
 
-      local path, msg = path_utils.from_node(node, "relative", { base_dir = false })
+      local path, msg = path_utils.from_node(node, "relative", { base_dir = vim.loop.cwd() }) -- FIX: hier war base_dir = false
       if not path then
         notify.info(msg or "Failed to get path")
         return

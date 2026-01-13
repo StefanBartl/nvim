@@ -32,7 +32,7 @@ function M.setup(config)
 end
 
 ---Wrap operation with full safety (backup + queue + validation)
----@param operation_fn fun() Operation to execute
+---@param operation_fn fun(): boolean?, string|nil? Operation to execute Operation to execute
 ---@param operation_name string
 ---@param paths string[]
 ---@return boolean success, string|nil error

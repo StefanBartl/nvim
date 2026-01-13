@@ -6,12 +6,16 @@ local getTelescopeOpts = require("config.neotree.commands.get_telescope_opts")
 local diff_files_mod = require("config.neotree.commands.diff_files")
 local mark_mod = require("config.neotree.commands.mark")
 local node_utils = require("config.neotree.utils.node")
+local add_mod = require("config.neotree.commands.add")
 
 local api, fn = vim.api, vim.fn
 local notify = vim.notify
 
 ---@return table<string, fun(state: Cfg.NeoTree.State)>
 return {
+    --- Custom add command with clipboard integration
+    custom_add = add_mod.custom_add,
+
   --- Open the selected file into the buffer list without leaving Neo-tree
   open_badd = function(state)
     local node = node_utils.get_current(state)
