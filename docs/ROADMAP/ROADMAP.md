@@ -26,12 +26,13 @@
 
 ## MIXED
 
-- ein usercommand, das alle emojis entfernt im buffer
-- ein neotree, also auch usercommand, mit dme ich ein einde datei erstellen kann und beim erstelklen wird gleich das clipboard hineinkopiert.
-- neotest [lernen]()
-- `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
-- lsp.tools behandeln
-- `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
+1. find_config: fg soll nicht zuerst einen promotpt machen, sondern einfach live grep im config
+2. find config soll path separators unenmofnlvh seion
+3. ein usercommand, das alle emojis entfernt im buffer
+4. neotest [lernen]()
+5. `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
+6. lsp.tools behandeln
+7. `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
 
 - In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
 - new Reload module

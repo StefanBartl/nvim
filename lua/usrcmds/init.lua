@@ -1,6 +1,7 @@
 ---@module 'usrcmds'
 -- Initialize module for 'usrcmds'
 
+require("usrcmds.copy").enable()
 require("usrcmds.gather").setup({ lua = true })
 require("usrcmds.compress_dir").enable_usercmd()
 require("usrcmds.diff").enable({ diff_origin = true })
