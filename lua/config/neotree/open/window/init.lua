@@ -14,7 +14,7 @@ local PositionEnum = {
   current = "current",
 }
 
----@type Cfg.NeoTree.Cfg
+---@type Cfg.NeoTree.Open.Win.xlhs
 M.cfg = {
   extra_lhs = {
     ["<A-c>"] = { "¢" },
@@ -24,41 +24,88 @@ M.cfg = {
   },
 }
 
----@param position Cfg.NeoTree.Position
+---Check if Neo-tree is open and get its position
+---@return string|nil position
+local function get_neotree_position()
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.bo[buf].filetype == "neo-tree" then
+        local ok, state = pcall(require, "neo-tree.sources.manager")
+        if ok and state.get_state then
+          local fs_state = state.get_state("filesystem")
+          if fs_state and fs_state.window then
+            return fs_state.window.position
+          end
+        end
+      end
+    end
+  end
+  return nil
+end
+
+---@param target_position Cfg.NeoTree.Position
 ---@return fun()|nil
-local function make_neotree_opener(position)
+local function make_neotree_opener(target_position)
   local ok_nt, NeoCmd = pcall(require, "neo-tree.command")
   if not ok_nt then
     vim.notify("[neotree.open.window] neo-tree.command not available", vim.log.levels.WARN)
     return
   end
 
-  if not PositionEnum[position] then
-    position = PositionEnum.left
+  if not PositionEnum[target_position] then
+    target_position = PositionEnum.right
   end
 
   return function()
-    local ctx = buffer_utils.get_buffer_context()
-    local reveal_file = nil
-    local dir = nil
+    local current_position = get_neotree_position()
 
-    if ctx then
-      reveal_file = ctx.file
-      dir = ctx.dir
+    local ctx = buffer_utils.get_buffer_context()
+    local reveal_file = ctx and ctx.file or nil
+    local dir = ctx and ctx.dir or nil
+
+    -- Smart switching logic
+    if current_position then
+      if current_position == target_position then
+        -- Same position → toggle (close)
+        NeoCmd.execute({
+          source = "filesystem",
+          toggle = true,
+          position = target_position,
+        })
+      else
+        -- Different position → close old, open new (atomic)
+        NeoCmd.execute({
+          source = "filesystem",
+          action = "close",
+        })
+
+        vim.schedule(function()
+          NeoCmd.execute({
+            source = "filesystem",
+            action = "show",
+            reveal = true,
+            reveal_file = reveal_file,
+            reveal_force_cwd = false,
+            position = target_position,
+            dir = dir,
+          })
+        end)
+      end
+    else
+      -- No Neo-tree open → open new
+      NeoCmd.execute({
+        source = "filesystem",
+        action = "show",
+        reveal = true,
+        reveal_file = reveal_file,
+        reveal_force_cwd = false,
+        position = target_position,
+        dir = dir,
+      })
     end
 
-    local opts = {
-      source = "filesystem",
-      toggle = true,
-      reveal = true,
-      reveal_file = reveal_file,
-      reveal_force_cwd = false,
-      position = position,
-      dir = dir,
-    }
-
-    NeoCmd.execute(opts)
-
+    -- Pause CWD sync to avoid conflicts
     local ok_sync, sync = pcall(require, "config.neotree.cwd_sync")
     if ok_sync and sync.pause_sync then
       sync.pause_sync(2000)
@@ -86,7 +133,7 @@ local function register_aliases(lhs, pos, desc)
   end
 end
 
----@param opts Cfg.NeoTree.Cfg|nil
+---@param opts Cfg.NeoTree.Open.Win.xlhs|nil
 function M.attach_opener_mappings(opts)
   if type(opts) == "table" then
     if opts.extra_lhs then

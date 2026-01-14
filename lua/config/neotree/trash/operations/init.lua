@@ -44,7 +44,7 @@ end
 ---Execute batch deletion
 ---@param paths string[]
 ---@param names string[]
----@param delete_mode "all"|"individual"
+---@param delete_mode Cfg.NeoTree.Trash.Operations.DeleteMode # "all"|"individual"
 ---@param send_fn function(path, name, ask) -> success, msg, cancelled
 ---@return table results {success_count, cancelled_count, failed_items}
 function M.execute_batch(paths, names, delete_mode, send_fn)

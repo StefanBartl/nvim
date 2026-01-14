@@ -38,7 +38,6 @@ function M.setup(config)
 
   -- Pass config to submodules
   buffer_checker.set_config(M.config)
-  confirmation.set_config(M.config)
   operations.set_config(M.config)
 end
 
@@ -209,11 +208,12 @@ function M.neotree_send_node_to_trash(state)
 
   -- Get confirmation mode
   local delete_mode = confirmation.get_confirmation_mode(names)
-
   if delete_mode == "cancel" then
     notify.info("ℹ️ Operation cancelled")
     return
   end
+
+  ---@cast delete_mode Cfg.NeoTree.Trash.Operations.DeleteMode
 
   notify.info("Moving to Trash...")
 

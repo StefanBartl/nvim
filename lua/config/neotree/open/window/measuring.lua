@@ -1,5 +1,5 @@
----@module 'config.neotree.open.window'
----@brief Neo-tree opener with advanced timing statistics, persistence, and project-size correlation
+---@module 'config.neotree.open.window.measuring'
+---@brief Neo-tree opener with advanced timing statistics, persistence, and smart switching
 
 local map = require("lib.map")
 local buffer_utils = require("config.neotree.utils.buffer")
@@ -20,7 +20,7 @@ local PositionEnum = {
   current = "current",
 }
 
----@type Cfg.NeoTree.Cfg
+---@type Cfg.NeoTree.Open.Win.xlhs
 M.cfg = {
   extra_lhs = {
     ["<A-c>"] = { "¢" },
@@ -42,6 +42,7 @@ M.cfg = {
 ---@field cwd_files integer|nil
 ---@field first_session boolean
 ---@field first_cwd boolean
+---@field action_type "open"|"close"|"switch"
 
 local Timing = {
   ---@type NeoTreeTiming.Entry[]
@@ -91,41 +92,11 @@ local function persist_append(entry)
   end
 end
 
--- Pretty-print for a single timing entry
-do
-  ---@param e NeoTreeTiming.Entry
-  local function print_entry(e)
-    local flags = {}
-    if e.first_session then
-      flags[#flags + 1] = "first-session"
-    end
-    if e.first_cwd then
-      flags[#flags + 1] = "first-cwd"
-    end
-
-    local flag_str = #flags > 0 and (" [" .. table.concat(flags, ", ") .. "]") or ""
-
-    print(
-      string.format(
-        "[neo-tree] %-8s pos=%-7s time=%7.3f ms cwd=%s files=%s%s",
-        e.method,
-        e.position,
-        e.duration_ns / 1e6,
-        e.cwd,
-        e.cwd_files and tostring(e.cwd_files) or "?",
-        flag_str
-      )
-    )
-  end
-
-  -- Call this at the end of Timing.record(...)
-  -- print_entry(entry)
-end
-
 ---@param method string
 ---@param position string
 ---@param duration_ns integer
-function Timing.record(method, position, duration_ns)
+---@param action_type "open"|"close"|"switch"
+function Timing.record(method, position, duration_ns, action_type)
   local cwd = uv.cwd() or vim.fn.stdpath("config")
   local cwd_files = count_files_shallow(cwd)
 
@@ -143,6 +114,7 @@ function Timing.record(method, position, duration_ns)
     cwd_files = cwd_files,
     first_session = first_session,
     first_cwd = first_cwd,
+    action_type = action_type,
   }
 
   Timing.entries[#Timing.entries + 1] = entry
@@ -151,7 +123,8 @@ function Timing.record(method, position, duration_ns)
   if print_record == true then
     print(
       string.format(
-        "[neo-tree] %s %s %.3f ms",
+        "[neo-tree] %s %s %s %.3f ms",
+        entry.action_type,
         entry.method,
         entry.position,
         entry.duration_ns / 1e6
@@ -300,46 +273,114 @@ vim.api.nvim_create_user_command("NeoTreeTimingsClear", function()
 end, {})
 
 -- ============================================================================
--- Neo-tree opener with timing
+-- Neo-tree position detection
 -- ============================================================================
 
----@param position Cfg.NeoTree.Position
+---Check if Neo-tree is open and get its position
+---@return string|nil position
+local function get_neotree_position()
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.bo[buf].filetype == "neo-tree" then
+        local ok, state = pcall(require, "neo-tree.sources.manager")
+        if ok and state.get_state then
+          local fs_state = state.get_state("filesystem")
+          if fs_state and fs_state.window then
+            return fs_state.window.position
+          end
+        end
+      end
+    end
+  end
+  return nil
+end
+
+-- ============================================================================
+-- Neo-tree opener with timing and smart switching
+-- ============================================================================
+
+---@param target_position Cfg.NeoTree.Position
 ---@param method string
 ---@return fun()|nil
-local function make_neotree_opener(position, method)
+local function make_neotree_opener(target_position, method)
   local ok_nt, NeoCmd = pcall(require, "neo-tree.command")
   if not ok_nt then
     vim.notify("[neotree.open.window] neo-tree.command not available", vim.log.levels.WARN)
     return
   end
 
-  if not PositionEnum[position] then
-    position = PositionEnum.left
+  if not PositionEnum[target_position] then
+    target_position = PositionEnum.right
   end
 
   return function()
     local start_ns = uv.hrtime()
 
+    -- Get current state
+    local current_position = get_neotree_position()
+
     local ctx = buffer_utils.get_buffer_context()
-    local reveal_file, dir
-    if ctx then
-      reveal_file = ctx.file
-      dir = ctx.dir
+    local reveal_file = ctx and ctx.file or nil
+    local dir = ctx and ctx.dir or nil
+
+    ---@type "open"|"close"|"switch"
+    local action_type = "open"
+
+    -- Smart switching logic
+    if current_position then
+      if current_position == target_position then
+        -- Same position → toggle (close)
+        action_type = "close"
+        NeoCmd.execute({
+          source = "filesystem",
+          toggle = true,
+          position = target_position,
+        })
+      else
+        -- Different position → switch
+        action_type = "switch"
+        NeoCmd.execute({
+          source = "filesystem",
+          action = "close",
+        })
+
+        vim.schedule(function()
+          NeoCmd.execute({
+            source = "filesystem",
+            action = "show",
+            reveal = true,
+            reveal_file = reveal_file,
+            reveal_force_cwd = false,
+            position = target_position,
+            dir = dir,
+          })
+        end)
+      end
+    else
+      -- No Neo-tree open → open new
+      action_type = "open"
+      NeoCmd.execute({
+        source = "filesystem",
+        action = "show",
+        reveal = true,
+        reveal_file = reveal_file,
+        reveal_force_cwd = false,
+        position = target_position,
+        dir = dir,
+      })
     end
 
-    NeoCmd.execute({
-      source = "filesystem",
-      toggle = true,
-      reveal = true,
-      reveal_file = reveal_file,
-      reveal_force_cwd = false,
-      position = position,
-      dir = dir,
-    })
-
+    -- ✅ Record timing
     vim.schedule(function()
-      Timing.record(method, position, uv.hrtime() - start_ns)
+      Timing.record(method, target_position, uv.hrtime() - start_ns, action_type)
     end)
+
+    -- Pause CWD sync to avoid conflicts
+    local ok_sync, sync = pcall(require, "config.neotree.cwd_sync")
+    if ok_sync and sync.pause_sync then
+      sync.pause_sync(2000)
+    end
   end
 end
 
@@ -376,10 +417,10 @@ function M.attach_opener_mappings(opts)
   end
 
   local specs = {
-    { lhs = "<A-c>", pos = "current", desc = "[Neo-tree] Toggle & Reveal (current)" },
-    { lhs = "<A-f>", pos = "float", desc = "[Neo-tree] Toggle & Reveal (float)" },
-    { lhs = "<A-l>", pos = "left", desc = "[Neo-tree] Toggle & Reveal (left)" },
-    { lhs = "<A-r>", pos = "right", desc = "[Neo-tree] Toggle & Reveal (right)" },
+    { lhs = "<A-c>", pos = "current", desc = "[Neo-tree] Toggle/Switch (current)" },
+    { lhs = "<A-f>", pos = "float", desc = "[Neo-tree] Toggle/Switch (float)" },
+    { lhs = "<A-l>", pos = "left", desc = "[Neo-tree] Toggle/Switch (left)" },
+    { lhs = "<A-r>", pos = "right", desc = "[Neo-tree] Toggle/Switch (right)" },
   }
 
   for i = 1, #specs do
