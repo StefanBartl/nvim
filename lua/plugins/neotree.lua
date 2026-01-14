@@ -314,22 +314,7 @@ return {
       require("config.neotree.custom_actions.find_or_grep_menu").attach(opts)
       require("config.neotree.current_hl").attach(opts)
       require("neo-tree").setup(opts)
-      require("config.neotree.current_hl").setup({
-        colors = {
-          file = "green",
-          parent = { fg = "darkgreen", underline = false },
-        },
-      })
-      require("config.neotree.cwd_sync").setup({
-        debounce_ms = 150,
-        keep_focus = true,
-        also_set_nvim_cwd = false,
-        open_if_closed = false,
-        use_project_root = true,
-        project_root_fallback_to_bufdir = true,
-        force_position_left = true,
-      })
-      require("config.neotree.open.window.measuring").attach_opener_mappings()
+      require("config.neotree.config").setup({ trash = true, window_debug = true, current_hl = true, cwd_sync = true, })
     end,
   },
 }

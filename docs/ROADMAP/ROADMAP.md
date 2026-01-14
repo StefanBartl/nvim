@@ -33,7 +33,9 @@
 5. `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
 6. `p` funktion im v oder v-line modus: soll zeilennummer und indent des zu überschreibednen (old) einhalten
 7. in markdown diles wenn man in einer einer auflistung ist  mit <C-S-f> bbzw <C-S-p> zzwsichen den Punkten springen
-8. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
+8. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass...
+    - eine neue file im ordner der trefferfile erstellt
+    - background add und ersetzt aktuellen buffer
 9. usrcmds.ui: Zukünftige Features
         - [ ] Theme-Previews in Floating Window
         - [ ] Theme-Export/Import

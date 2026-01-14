@@ -15,6 +15,8 @@
 
 ## normal
 
+1. trash.init.lua M.config über die config.neotree.config.setup() konfigurierbar machen. (types implementieren)
+
 ### open (m-f, m-l usw..)
 
 1. ein state, der sich merkt, welche nodes gerade geöffnet waren
@@ -25,6 +27,7 @@
 ---
 
 ### marks / trash
+
 
 
 --
