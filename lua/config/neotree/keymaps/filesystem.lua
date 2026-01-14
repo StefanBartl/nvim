@@ -17,7 +17,7 @@ local save_node_buffer = require("config.neotree.actions.save.node_buffer")
 local save_adjacent_buffer = require("config.neotree.actions.save.adjacent_buffer")
 local fzf_grep_picker = require("config.neotree.fzf_grep_picker")
 local updir = require("config.neotree.updir")
-local open_replace = require("config.neotree.open_replace")
+local node_replace_buf = require("config.neotree.actions.node_replace_buf")
 local commands = require("config.neotree.commands")
 local trash = require("config.neotree.trash")
 local undo = require("config.neotree.undo")
@@ -136,7 +136,7 @@ return {
 
   ["O"] = {
     function(state)
-      open_replace(state, { focus = true, auto_close = true })
+      node_replace_buf(state, { focus = true, auto_close = true })
     end,
     desc = "Open file and replace current buffer",
   },
@@ -349,7 +349,7 @@ return {
         return
       end
 
-      local path, msg = path_utils.from_node(node, "relative", { base_dir = vim.loop.cwd() }) -- FIX: hier war base_dir = true
+      local path, msg = path_utils.from_node(node, "relative")
       if not path then
         notify.info(msg or "Failed to get path")
         return
@@ -370,7 +370,7 @@ return {
         return
       end
 
-      local path, msg = path_utils.from_node(node, "relative", { base_dir = vim.loop.cwd() }) -- FIX: hier war base_dir = false
+      local path, msg = path_utils.from_node(node, "relative")
       if not path then
         notify.info(msg or "Failed to get path")
         return
