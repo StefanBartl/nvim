@@ -1,8 +1,5 @@
 ---@module 'config.neotree.open_filemanager.wsl'
 --- WSL-specific "open in file manager" for Neo-tree
---- FIXED: Uses node_utils.get_current() for consistent node retrieval
-
-local node_utils = require("config.neotree.utils.node")
 
 local node_utils = require("config.neotree.utils.node")
 

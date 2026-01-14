@@ -2,9 +2,20 @@
 ---@module 'config.neotree.@types'
 
 -- ===========================
--- open_fm
+-- open.window
 
-local Cfg = {}
+---@alias Cfg.NeoTree.Open.Win.AliasList string[]
+-- List of alternative key strings that should be registered
+-- as aliases for a primary lhs mapping.
+
+---@class Cfg.NeoTree.Open.Win.xlhs
+---@field extra_lhs table<string, Cfg.NeoTree.Open.Win.AliasList>|nil
+-- Mapping of key combinations (e.g. "<A-c>") to a list of
+-- alternative lhs strings. Each list is an array to allow
+-- future extension without reallocations.
+
+-- ===========================
+-- open.filemanager
 
 ---@class Cfg.NeoTree.Wsl.FM
 ---@field _cfg Cfg.NeoTree.Wsl.OpenConfig
@@ -93,6 +104,8 @@ local Cfg = {}
 ---@field auto_close_buffers? boolean Auto-close open buffers without asking (default: false)
 ---@field debug? boolean
 
+---@alias Cfg.NeoTree.Trash.Operations.DeleteMode "all"|"individual"
+
 -- ===========================
 -- actions
 
@@ -110,4 +123,4 @@ local Cfg = {}
 ---@field active_win integer|nil Current hover window
 ---@field active_path string|nil Currently displayed path
 
-return Cfg
+return {}

@@ -1,4 +1,4 @@
----@module 'config.neotree.open_fm.win'
+---@module 'config.neotree.open.filemanager.win'
 --- Windows-specific "open in file manager" for Neo-tree.
 --- Hardened: checks for executables, handles WSL detection, ensures proper quoting
 --- and provides improved diagnostics and deterministic fallbacks.

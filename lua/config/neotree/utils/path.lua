@@ -121,7 +121,7 @@ function M.from_node(node, mode, opts)
   if mode == "absolute" then
     return M.to_absolute(path)
   elseif mode == "relative" then
-    return M.to_relative(path, opts.base_dir)
+    return M.to_relative(path, opts.base_dir or vim.fn.cwd())
   else
     return nil, "Unknown mode: " .. tostring(mode)
   end

@@ -80,31 +80,42 @@ end
 ---@param collect_type "files"|"folders"
 ---@return string[] entries, string node_path
 function M.collect_for_node(state, collect_type)
-  -- 1) Aktuellen Node holen
-  local node = state and state.current_node or nil
+  -- ✅ FIX: Use node_utils instead of state.current_node
+  local node = node_utils.get_current(state)
   if not node then
+    vim.notify("No node under cursor", vim.log.levels.DEBUG)
     return {}, ""
   end
 
-  -- 2) Pfad über node_utils.get_path holen
+  -- ✅ FIX: Use node_utils.get_path for consistent path resolution
   local path, is_dir = node_utils.get_path(node)
   if path == "" then
+    vim.notify("Node has no path", vim.log.levels.DEBUG)
     return {}, ""
   end
 
-  -- 3) Dateien/Folders sammeln
+  -- Collect entries based on node type
   local entries = {}
   local ok, result = pcall(function()
     if is_dir then
       return M.collect_recursive(path, collect_type)
     else
-      -- Single file/folder
-      return { path }
+      -- Single file: return as-is for "files", empty for "folders"
+      if collect_type == "files" then
+        return { path }
+      else
+        return {}
+      end
     end
   end)
 
   if ok and type(result) == "table" then
     entries = result
+  else
+    vim.notify(
+      string.format("Failed to collect %s: %s", collect_type, tostring(result)),
+      vim.log.levels.WARN
+    )
   end
 
   return entries, path
