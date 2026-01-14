@@ -1,5 +1,48 @@
 # `lib.time.diff` – Zeitmessung mit Checkpoint-Tracking
 
+## Table of content
+
+- [`lib.time.diff` – Zeitmessung mit Checkpoint-Tracking](#libtimediff-zeitmessung-mit-checkpoint-tracking)
+  - [Übersicht](#bersicht)
+  - [Statistik-Funktionen](#statistik-funktionen)
+    - [Basisfunktionen](#basisfunktionen)
+    - [Erweiterte Statistiken](#erweiterte-statistiken)
+  - [Differenzberechnung zwischen Intervallen](#differenzberechnung-zwischen-intervallen)
+    - [1. Zwischen zwei Checkpoints (Index)](#1-zwischen-zwei-checkpoints-index)
+    - [2. Checkpoint gegen statistische Werte](#2-checkpoint-gegen-statistische-werte)
+    - [3. Zwischen statistischen Werten](#3-zwischen-statistischen-werten)
+    - [4. Mit rohen Zeitwerten](#4-mit-rohen-zeitwerten)
+    - [Unterstützte Keywords](#untersttzte-keywords)
+  - [Installation](#installation)
+  - [Grundlegende Verwendung](#grundlegende-verwendung)
+    - [1. Timer starten](#1-timer-starten)
+    - [2. Checkpoints setzen](#2-checkpoints-setzen)
+    - [3. Gesamtzeit abrufen](#3-gesamtzeit-abrufen)
+    - [4. Intervalle zwischen Checkpoints](#4-intervalle-zwischen-checkpoints)
+  - [Dynamische Properties für Checkpoints](#dynamische-properties-fr-checkpoints)
+  - [Ausgabe aller Checkpoints](#ausgabe-aller-checkpoints)
+    - [Standard-Format](#standard-format)
+    - [Formatierte Tabelle](#formatierte-tabelle)
+  - [Iterator-Unterstützung](#iterator-untersttzung)
+    - [Einfacher Iterator (nur Zahlenwerte)](#einfacher-iterator-nur-zahlenwerte)
+    - [Iterator mit Custom-Label](#iterator-mit-custom-label)
+    - [Iterator mit Label und Index](#iterator-mit-label-und-index)
+    - [Iterator mit Override-Label](#iterator-mit-override-label)
+  - [Mehrere unabhängige Timer](#mehrere-unabhngige-timer)
+  - [API-Referenz](#api-referenz)
+    - [Methoden](#methoden)
+    - [Dynamische Properties](#dynamische-properties)
+  - [Fehlerbehandlung](#fehlerbehandlung)
+  - [Beispiel: Benchmark einer Funktion](#beispiel-benchmark-einer-funktion)
+  - [Beispiel: Iterator mit Labels](#beispiel-iterator-mit-labels)
+  - [Beispiel: Erweiterte Statistiken](#beispiel-erweiterte-statistiken)
+  - [Beispiel: Performance-Analyse](#beispiel-performance-analyse)
+  - [Technische Details](#technische-details)
+    - [Statistik-Berechnungen](#statistik-berechnungen)
+    - [Variationskoeffizient (CV)](#variationskoeffizient-cv)
+
+---
+
 ## Übersicht
 
 Das `lib.time.diff`-Modul bietet eine einfache, präzise Methode zur Messung von Zeitintervallen in Lua-Code. Es nutzt `vim.uv.hrtime()` für Nanosekundenpräzision (Standard) und ermöglicht mehrere Messpunkte innerhalb eines Zeitraums.
@@ -8,7 +51,115 @@ Jeder Aufruf von `require("lib.time.diff")` erzeugt eine unabhängige Timer-Inst
 
 **Standard-Einheit:** Nanosekunden (ns). Alle Methoden können optional eine andere Einheit (`"ms"`, `"us"`, `"s"`) akzeptieren.
 
+## Statistik-Funktionen
+
+Das Modul bietet umfangreiche Statistiken über die gemessenen Intervalle:
+
+### Basisfunktionen
+
+```lua
+local diff = require("lib.time.diff")
+
+-- Mehrere Checkpoints setzen
+for i = 1, 5 do
+  vim.fn.sleep(math.random(50, 150))
+  diff.check()
+end
+
+-- Schnellstes Intervall
+print("Fastest:", diff.fastest("ms"), "ms")
+
+-- Längstes Intervall
+print("Longest:", diff.longest("ms"), "ms")
+
+-- Durchschnittsintervall
+print("Average:", diff.average("ms"), "ms")
+
+-- Median-Intervall
+print("Median:", diff.median("ms"), "ms")
+```
+
+### Erweiterte Statistiken
+
+```lua
+-- Standardabweichung
+print("StdDev:", diff.stddev("ms"), "ms")
+
+-- Variationskoeffizient (in Prozent)
+print("CV:", diff.cv(), "%")
+```
+
 ---
+
+## Differenzberechnung zwischen Intervallen
+
+Die `calc_diff()`-Funktion ist sehr flexibel und kann verschiedene Arten von Eingaben verarbeiten:
+
+### 1. Zwischen zwei Checkpoints (Index)
+
+```lua
+local diff = require("lib.time.diff")
+
+diff.check()  -- Checkpoint 1
+diff.check()  -- Checkpoint 2
+diff.check()  -- Checkpoint 3
+
+-- Differenz zwischen Checkpoint 1 und 3
+local delta = diff.calc_diff(1, 3, "ms")
+print("Delta:", delta, "ms")
+```
+
+### 2. Checkpoint gegen statistische Werte
+
+```lua
+-- Checkpoint 2 gegen Durchschnitt
+local d1 = diff.calc_diff(2, "average", "ms")
+print("Checkpoint 2 vs Average:", d1, "ms")
+
+-- Checkpoint 1 gegen schnellstes Intervall
+local d2 = diff.calc_diff(1, "fastest", "ms")
+print("Checkpoint 1 vs Fastest:", d2, "ms")
+
+-- Checkpoint 3 gegen längstes Intervall
+local d3 = diff.calc_diff(3, "longest", "ms")
+print("Checkpoint 3 vs Longest:", d3, "ms")
+
+-- Checkpoint 2 gegen Median
+local d4 = diff.calc_diff(2, "median", "ms")
+print("Checkpoint 2 vs Median:", d4, "ms")
+```
+
+### 3. Zwischen statistischen Werten
+
+```lua
+-- Differenz zwischen schnellstem und längstem Intervall
+local range = diff.calc_diff("fastest", "longest", "ms")
+print("Range:", range, "ms")
+
+-- Durchschnitt gegen Median
+local diff_avg_med = diff.calc_diff("average", "median", "ms")
+print("Avg vs Median:", diff_avg_med, "ms")
+```
+
+### 4. Mit rohen Zeitwerten
+
+```lua
+-- Direkter Vergleich mit Zeitwert in Nanosekunden
+local target = 100000000  -- 100ms in ns
+local d5 = diff.calc_diff(1, target, "ms")
+print("Checkpoint 1 vs 100ms:", d5, "ms")
+```
+
+### Unterstützte Keywords
+
+| Keyword       | Aliase          | Bedeutung                |
+|---------------|-----------------|--------------------------|
+| `"average"`   | `"avg"`         | Durchschnittsintervall   |
+| `"fastest"`   | `"min"`         | Schnellstes Intervall    |
+| `"longest"`   | `"max"`         | Längstes Intervall       |
+| `"median"`    | `"med"`         | Median-Intervall         |
+
+**Wichtig:** `calc_diff()` gibt immer den **Betrag** der Differenz zurück (positive Zahl), unabhängig von der Reihenfolge der Argumente.
 
 ## Installation
 
@@ -139,11 +290,11 @@ print(diff2.second) -- nil (nicht vorhanden)
 ```lua
 -- Standard: Nanosekunden
 print(diff.results())
--- Ausgabe: "Check 1: 12345678ns | Check 2: 23456789ns | ... | Total: 45678901ns"
+-- Ausgabe: "Check 1: 12345678ns | Check 2: 23456789ns | ... | Total: 45678901ns | Fastest: 10000000ns | Longest: 15000000ns | Average: 12500000ns | Range: 5000000ns"
 
 -- Explizit Millisekunden
 print(diff.results("ms"))
--- Ausgabe: "Check 1: 12.345ms | Check 2: 23.456ms | ... | Total: 45.678ms"
+-- Ausgabe: "Check 1: 12.345ms | Check 2: 23.456ms | ... | Total: 45.678ms | Fastest: 10.000ms | Longest: 15.000ms | Average: 12.500ms | Range: 5.000ms"
 ```
 
 Oder mit Metatable-Magie:
@@ -169,14 +320,24 @@ Beispielausgabe (Millisekunden):
 
 ```
 ┌────────┬─────────────────┬─────────────────┐
-│ Index  │  Elapsed (ms)  │   Delta (ms)   │
+│ Index  │  Elapsed (ms)   │   Delta (ms)    │
 ├────────┼─────────────────┼─────────────────┤
 │      1 │       12.345    │       12.345    │
 │      2 │       23.456    │       11.111    │
 │      3 │       45.678    │       22.222    │
 ├────────┴─────────────────┴─────────────────┤
 │ Total:     45.678ms                        │
-└──────────────────────────────────────────────┘
+├────────────────────────────────────────────┤
+│ Statistics:                                │
+├────────────────────────────────────────────┤
+│ Fastest Δ:       11.111ms                  │
+│ Longest Δ:       22.222ms                  │
+│ Average Δ:       15.226ms                  │
+│ Median Δ:        12.345ms                  │
+│ Range:           11.111ms                  │
+│ Std Dev:          5.555ms                  │
+│ CV:              36.50%                    │
+└────────────────────────────────────────────┘
 ```
 
 ---
@@ -334,6 +495,11 @@ print("Differenz:", t2 - t1, "ms")
 
 -- Oder mit Properties
 print("Delta:", diff.second - diff.first, "ns")  -- Properties sind in ns!
+
+-- Statistiken
+print("Fastest interval:", diff.fastest("ms"), "ms")
+print("Longest interval:", diff.longest("ms"), "ms")
+print("Average interval:", diff.average("ms"), "ms")
 ```
 
 ## Beispiel: Iterator mit Labels
@@ -361,6 +527,81 @@ while true do
 end
 ```
 
+## Beispiel: Erweiterte Statistiken
+
+```lua
+local diff = require("lib.time.diff")
+
+-- Simuliere variable Ausführungszeiten
+for i = 1, 10 do
+  vim.fn.sleep(math.random(50, 150))
+  diff.check()
+end
+
+-- Detaillierte Statistiken
+print(diff.pretty("ms"))
+
+-- Einzelne Werte abrufen
+print("\nDetaillierte Analyse:")
+print("Fastest:", diff.fastest("ms"), "ms")
+print("Longest:", diff.longest("ms"), "ms")
+print("Average:", diff.average("ms"), "ms")
+print("Median:", diff.median("ms"), "ms")
+print("StdDev:", diff.stddev("ms"), "ms")
+print("CV:", diff.cv(), "%")
+
+-- Differenzen berechnen
+print("\nDifferenzen:")
+print("Range (longest - fastest):", diff.calc_diff("fastest", "longest", "ms"), "ms")
+print("Checkpoint 1 vs Average:", diff.calc_diff(1, "average", "ms"), "ms")
+print("Checkpoint 5 vs Median:", diff.calc_diff(5, "median", "ms"), "ms")
+```
+
+## Beispiel: Performance-Analyse
+
+```lua
+local diff = require("lib.time.diff")
+
+-- Mehrere Operationen benchmarken
+local operations = {
+  "string concatenation",
+  "table insertion",
+  "math operations",
+  "file I/O simulation"
+}
+
+for _, op in ipairs(operations) do
+  -- Simuliere Operation
+  for i = 1, 100000 do
+    math.sqrt(i)
+  end
+  diff.check()
+end
+
+print(diff.pretty("us"))  -- Ausgabe in Mikrosekunden
+
+-- Finde langsamste Operation
+local longest_idx = 1
+local longest_val = diff.get(1)
+for i = 2, #operations do
+  local val = diff.get(i)
+  if val > longest_val then
+    longest_idx = i
+    longest_val = val
+  end
+end
+
+print("\nLangsamste Operation:", operations[longest_idx])
+print("Zeit:", diff.get(longest_idx, "ms"), "ms")
+
+-- Vergleiche mit Durchschnitt
+print("\nAbweichung vom Durchschnitt:")
+for i, op in ipairs(operations) do
+  local dev = diff.calc_diff(i, "average", "ms")
+  print(string.format("%s: %+.3fms", op, dev))
+end
+```
+
 ---
 
 ## Technische Details
@@ -373,9 +614,34 @@ end
 - **Metatable**: Unterstützt `__call` und `__tostring` für direkten Aufruf
 - **Unabhängigkeit**: Jede Instanz hat eigenen Zustand
 - **Dynamische Properties**: Bis zu 10 benannte Checkpoints (`first` bis `tenth`) + `last`
+- **Statistiken**: Min/Max/Avg/Median/StdDev/CV werden aus Intervallen zwischen Checkpoints berechnet
+
+### Statistik-Berechnungen
+
+**Intervalle vs. Checkpoints:**
+- Checkpoints sind kumulative Zeiten seit Start
+- Intervalle sind Differenzen zwischen aufeinanderfolgenden Checkpoints
+- Statistiken beziehen sich auf Intervalle (Deltas)
+
+**Beispiel:**
+```lua
+-- 3 Checkpoints bei 10ms, 25ms, 50ms
+diff.check()  -- Checkpoint 1: 10ms (Intervall 1: 10ms)
+diff.check()  -- Checkpoint 2: 25ms (Intervall 2: 15ms)
+diff.check()  -- Checkpoint 3: 50ms (Intervall 3: 25ms)
+
+-- Statistiken beziehen sich auf Intervalle:
+-- fastest = 10ms (Intervall 1)
+-- longest = 25ms (Intervall 3)
+-- average = (10 + 15 + 25) / 3 = 16.67ms
+```
+
+### Variationskoeffizient (CV)
+
+Der CV gibt die relative Streuung in Prozent an:
+- CV = (Standardabweichung / Mittelwert) × 100
+- Niedrige Werte (< 10%): konsistente Performance
+- Mittlere Werte (10-30%): moderate Variation
+- Hohe Werte (> 30%): stark schwankende Performance
 
 ---
-
-## Lizenz
-
-Dieses Modul ist Teil der `lib.*`-Bibliothek und folgt den Projektrichtlinien.
