@@ -1,8 +1,21 @@
 # neotree- Roadmap & Ideas
 
-## Critical
+## Table of content
+
+- [neotree- Roadmap & Ideas](#neotree-roadmap-ideas)
+  - [Critical](#critical)
+  - [Important](#important)
+  - [normal](#normal)
+    - [open (m-f, m-l usw..)](#open-m-f-m-l-usw)
+    - [marks / trash](#marks-trash)
 
 ---
+
+## Critical
+
+1. Failes to copy folder oder file list, mit [f ]f [F ]F warum ?
+
+--
 
 ## Important
 
@@ -16,6 +29,13 @@
 ## normal
 
 1. trash.init.lua M.config über die config.neotree.config.setup() konfigurierbar machen. (types implementieren)
+ doppelt confirmation beim löschen:
+    beim ersten mal:
+    Move to trash "filename"?
+    un und dann :
+    delete: "absolute  path"
+
+---
 
 ### open (m-f, m-l usw..)
 
@@ -27,7 +47,5 @@
 ---
 
 ### marks / trash
-
-
 
 --

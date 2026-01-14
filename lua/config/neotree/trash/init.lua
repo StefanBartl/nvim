@@ -26,7 +26,7 @@ M.config = {
   confirm_dangerous = true,
   use_dry_run = true,
   auto_close_buffers = true,
-  debug = false,
+  debug = true,
 }
 
 ---Configure trash module
