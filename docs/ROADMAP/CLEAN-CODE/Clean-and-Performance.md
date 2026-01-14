@@ -49,6 +49,7 @@
 4. custom.diagnostics erstellen, extra_diagnostice mappings und usrcmds.diagnistcs hinein mergen, dann aus mappings.extra_diagnostics und usrcmds.diagnostics aus ausrufen
 5. E:\repos\Notes\MyNotes\Neovim\40_Optimierung\Sauberes-Registrieren-und-Reloaden-von-Events.md implementieren
 6. Externe PLugins die usercommands und/oder mappings haben, diese in die `/config/**` verschieben und über die plugin init laden. Am besten ein gemeinsames config/**/actions.lua für Commands, Keymaps und Menüs. [Actions](MyNotes\Neovim\40_Optimierung\Actions_Mappings-Commands-Menu.md)
+7. `config.neotree.trash.init.lua`-nmodularisieren - bzw überhaupt alles :-)
 
 ---
 

@@ -26,17 +26,15 @@
 
 ## MIXED
 
-1. find_config: fg soll nicht zuerst einen promotpt machen, sondern einfach live grep im config
-2. find config soll path separators unenmofnlvh seion
-3. ein usercommand, das alle emojis entfernt im buffer
-4. neotest [lernen]()
-5. `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
-6. lsp.tools behandeln
-7. `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
-
-- In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
-- new Reload module
-- usrcmds.ui: Zukünftige Features
+1. ein usercommand, das alle emojis entfernt im buffer
+2. neotest [lernen]()
+3. `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
+4. lsp.tools behandeln
+5. `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
+6. `p` funktion im v oder v-line modus: soll zeilennummer und indent des zu überschreibednen (old) einhalten
+7. in markdown diles wenn man in einer einer auflistung ist  mit <C-S-f> bbzw <C-S-p> zzwsichen den Punkten springen
+8. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass eine neue file im ordner der trefferfile erstellt-
+9. usrcmds.ui: Zukünftige Features
         - [ ] Theme-Previews in Floating Window
         - [ ] Theme-Export/Import
         - [ ] Custom Theme-Collections

@@ -9,6 +9,9 @@
 ---
 ---@see README-THEMES.md for detailed explanation
 
+-- FIX: Theme laoding not working correctly
+---@see fix.md
+
 local M = {}
 
 -----------------------------------------------------------------------
