@@ -311,10 +311,27 @@ return {
     end,
 
     config = function(_, opts)
-      require("config.neotree.custom_actions.find_or_grep_menu").attach(opts)
+      require("config.neotree.actions.find_or_grep_menu").attach(opts)
       require("config.neotree.current_hl").attach(opts)
       require("neo-tree").setup(opts)
-      require("config.neotree.config").setup({ trash = true, window_debug = true, current_hl = true, cwd_sync = true, })
+      require("config.neotree").setup({
+        trash = {
+          debug = true,
+          auto_close_buffers = true,
+          confirm_dangerous = true,
+        },
+        window_debug = true,
+        current_hl = {
+          colors = {
+            file = "cyan",
+            parent = { fg = "blue" },
+          },
+        },
+        cwd_sync = {
+          debounce_ms = 200,
+          keep_focus = false,
+        },
+      })
     end,
   },
 }
