@@ -156,7 +156,7 @@ return {
   --====================== Create / Modify =============================
 
   ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
-  ["A"] = { "custom_add", nowait = true, config = { ask_insert_clipb = true } },  -- { insert_clipb = true } möglich (ohne confirmation)
+  ["A"] = { "custom_add", nowait = true, config = { insert_clipb = true } },  -- { insert_clipb = true } möglich (ohne confirmation)
     -- default:  (AUDIT: Remove after watch phase)
         -- ["A"] = { "add_directory", config = { show_path = "relative" } },
 
