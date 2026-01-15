@@ -35,7 +35,7 @@ end
 ---@return nil
 local function setup_window_opener(debug)
   if debug then
-    require("config.neotree.open.window.measuring").attach_opener_mappings()
+    require("config.neotree.open.window").attach_opener_mappings({ debug = true })
   else
     require("config.neotree.open.window").attach_opener_mappings()
   end
