@@ -23,26 +23,31 @@
 - `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
 - `lib` konsolidieren, beispiel `lib.cross_plattform` vs. `lib.cross`
 - `nf` und `pf` sollen aktuellen buffer erstzen `nF` und `pF` nicht
+- `M-r` indent sind 4 chars, ich will aber nur 1
 
----
+--
 
 ## MIXED
 
-1. ein usercommand, das alle emojis entfernt im buffer
-2. neotest [lernen]()
-3. `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
-4. lsp.tools behandeln
-5. `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
-6. `p` funktion im v oder v-line modus: soll zeilennummer und indent des zu überschreibednen (old) einhalten
-7. in markdown diles wenn man in einer einer auflistung ist  mit <C-S-f> bbzw <C-S-p> zzwsichen den Punkten springen
-8. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass...
+1. Usercommands so strukturieren:
+    - `:DeleteCurrentFile` zu `:File delete`; `:Fileinfo` zu `File info`; Weiters `File rename;convert;`
+    - ein usercommand, das alle emojis entfernt im buffer: `:Buffer remove emojis` `:Buffer remove empty_lines` `:Buffer translate de` `:Buffer translate_replace en ` `:Buffer insert ...`
+Bug: `:copy path ...` kopiert immer cwd relativ. idealerweiße eines das "immer relativ zum nvim config cwd wennd dad geht. und ein `Copy path module lua/ts/go/...` das gleich ein import daraus macht
+ neotest [lernen]()
+ `lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
+ lsp.tools behandeln
+ `C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
+ `p` funktion im v oder v-line modus: soll zeilennummer und indent des zu überschreibednen (old) einhalten
+ in markdown diles wenn man in einer einer auflistung ist  mit <C-S-f> bbzw <C-S-p> zzwsichen den Punkten springen
+ In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass...
     - eine neue file im ordner der trefferfile erstellt
     - background add und ersetzt aktuellen buffer
-9. usrcmds.ui: Zukünftige Features
+ usrcmds.ui: Zukünftige Features
         - [ ] Theme-Previews in Floating Window
         - [ ] Theme-Export/Import
         - [ ] Custom Theme-Collections
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
+ table of content ebtfernen als option in marksman als code action
 
 ---
 

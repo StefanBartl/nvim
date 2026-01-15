@@ -14,6 +14,18 @@
 -- alternative lhs strings. Each list is an array to allow
 -- future extension without reallocations.
 
+-- open.window.measuring
+
+---@class Cfg.NeoTree.Open.Win.TimingEntry
+---@field method string
+---@field position string
+---@field duration_ns integer
+---@field cwd string
+---@field cwd_files integer|nil
+---@field first_session boolean
+---@field first_cwd boolean
+---@field action_type "left"|"right"|"float"|"current"
+
 -- ===========================
 -- open.filemanager
 

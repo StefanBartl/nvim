@@ -3,67 +3,27 @@
 
 local M = {}
 
----Initialize trash system
----@param config Cfg.NeoTree.Trash.Config|boolean
----@return nil
-local function setup_trash(config)
-  local trash_mod = require("config.neotree.trash")
-
-  -- Default config
-  local default_config = {
+--- Default configuration
+---@type Cfg.NeoTree.InitOpts
+M.defaults = {
+  debug = true,
+  restore_last_position = false,
+  window_debug = true,
+  trash = {
     debug = false,
-    auto_close_buffers = false,
+    auto_close_buffers = true,
     create_backups = true,
     use_safety_system = true,
     confirm_dangerous = true,
     use_dry_run = false,
-  }
-
-  -- Merge user config if table provided
-  if type(config) == "table" then
-    trash_mod.setup(vim.tbl_deep_extend("force", default_config, config))
-  else
-    trash_mod.setup(default_config)
-  end
-
-  -- Register user commands
-  require("config.neotree.trash.commands").setup()
-end
-
----Initialize window opener (with or without debug timing)
----@param debug boolean
----@return nil
-local function setup_window_opener(debug)
-  if debug then
-    require("config.neotree.open.window").attach_opener_mappings({ debug = true })
-  else
-    require("config.neotree.open.window").attach_opener_mappings()
-  end
-end
-
----Initialize current file highlight
----@param config Cfg.NeoTree.CurrentHl.Config|boolean
----@return nil
-local function setup_current_hl(config)
-  local default_config = {
+  },
+  current_hl = {
     colors = {
       file = "green",
       parent = { fg = "darkgreen", underline = false },
     },
-  }
-
-  if type(config) == "table" then
-    require("config.neotree.current_hl").setup(vim.tbl_deep_extend("force", default_config, config))
-  else
-    require("config.neotree.current_hl").setup(default_config)
-  end
-end
-
----Initialize CWD sync
----@param config Cfg.NeoTree.CwdSync.Config|boolean
----@return nil
-local function setup_cwd_sync(config)
-  local default_config = {
+  },
+  cwd_sync = {
     debounce_ms = 150,
     keep_focus = true,
     also_set_nvim_cwd = false,
@@ -71,43 +31,87 @@ local function setup_cwd_sync(config)
     use_project_root = true,
     project_root_fallback_to_bufdir = true,
     force_position_left = true,
-  }
+  },
+}
+
+--- Active configuration (merged with user options)
+---@type Cfg.NeoTree.InitOpts
+M.options = vim.deepcopy(M.defaults)
+
+--- Initialize trash system
+---@param config Cfg.NeoTree.Trash.Config|boolean
+---@return nil
+local function setup_trash(config)
+  local trash_mod = require("config.neotree.trash")
 
   if type(config) == "table" then
-    require("config.neotree.cwd_sync").setup(vim.tbl_deep_extend("force", default_config, config))
-  else
-    require("config.neotree.cwd_sync").setup(default_config)
+    trash_mod.setup(config)
+  elseif config == true then
+    trash_mod.setup(M.defaults.trash)
+  end
+
+  require("config.neotree.trash.commands").setup()
+end
+
+--- Initialize window opener (with or without debug timing)
+---@param debug boolean
+---@return nil
+local function setup_window_opener(debug)
+  require("config.neotree.open.window").attach_opener_mappings({ debug = debug })
+end
+
+--- Initialize current file highlight
+---@param config Cfg.NeoTree.CurrentHl.Config|boolean
+---@return nil
+local function setup_current_hl(config)
+  if type(config) == "table" then
+    require("config.neotree.current_hl").setup(config)
+  elseif config == true then
+    require("config.neotree.current_hl").setup(M.defaults.current_hl)
   end
 end
 
----Main setup function
----@param opts Cfg.NeoTree.InitOpts|nil
+--- Initialize CWD sync
+---@param config Cfg.NeoTree.CwdSync.Config|boolean
+---@return nil
+local function setup_cwd_sync(config)
+  if type(config) == "table" then
+    require("config.neotree.cwd_sync").setup(config)
+  elseif config == true then
+    require("config.neotree.cwd_sync").setup(M.defaults.cwd_sync)
+  end
+end
+
+--- Main setup function
+---@param opts Cfg.NeoTree.InitOpts|nil User configuration options
 ---@return nil
 function M.setup(opts)
-  opts = opts or {}
-
-  -- 1. Trash system
-  if opts.trash then
-    setup_trash(opts.trash)
+  -- Merge user options with defaults
+  if type(opts) == "table" then
+    M.options = vim.tbl_deep_extend("force", M.defaults, opts)
   end
 
-  -- 2. Window opener (debug or normal)
-  setup_window_opener(opts.window_debug or opts.debug or false)
-
-  -- 3. Current file highlight
-  if opts.current_hl then
-    setup_current_hl(opts.current_hl)
+  -- Setup subsystems
+  if M.options.trash then
+    setup_trash(M.options.trash)
   end
 
-  -- 4. CWD sync
-  if opts.cwd_sync then
-    setup_cwd_sync(opts.cwd_sync)
+  setup_window_opener(M.options.window_debug or M.options.debug)
+
+  if M.options.current_hl then
+    setup_current_hl(M.options.current_hl)
   end
 
-  -- 5. checkhealth
-  vim.health.register_reporter("neotree-config", function()
+  if M.options.cwd_sync then
+    setup_cwd_sync(M.options.cwd_sync)
+  end
+
+  -- Register checkhealth
+  vim.api.nvim_create_user_command("NeoTreeCheckHealth", function()
     require("config.neotree.checkhealth").check()
-  end)
+  end, {
+    desc = "Run Neo-tree config health checks",
+  })
 end
 
 return M

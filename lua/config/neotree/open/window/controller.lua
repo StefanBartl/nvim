@@ -8,8 +8,35 @@
 local buffer_utils = require("config.neotree.utils.buffer")
 local state = require("config.neotree.state.windows")
 local float = require("config.neotree.open.window.float")
+-- local reveal = require("config.neotree.open.reveal.controller") -- FIX: unused?
+local tree_state = require("config.neotree.state.tree")
+local cfg = require("config.neotree").options
 
 local M = {}
+
+-- ============================================================================
+-- Window Focus Management
+-- ============================================================================
+
+---Focus the neo-tree window if it exists
+---@return boolean success
+local function focus_neotree_window()
+  -- Find neo-tree window
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == "neo-tree" then
+        pcall(vim.api.nvim_set_current_win, win)
+        return true
+      end
+    end
+  end
+  return false
+end
+
+-- ============================================================================
+-- Constants & Configuration
+-- ============================================================================
 
 ---@enum NeoTreePosition
 local PositionEnum = {
@@ -25,34 +52,105 @@ local valid_positions = {
   right = true,
   float = true,
   current = true,
-}---@type boolean
-local busy = false
+}
 
----@param fn fun()
----@return fun()
-local function guarded(fn)
-  return function()
-    if busy then
-      return
+-- Busy-Guard Configuration
+local BUSY_GUARD_TIMEOUT_MS = 50  -- Configurable timeout
+local BUSY_GUARD_MAX_RETRIES = 3  -- Max retry attempts before force-clear
+
+-- ============================================================================
+-- Busy Guard State
+-- ============================================================================
+
+---@class BusyGuardState
+---@field locked boolean Currently locked
+---@field lock_time number|nil Timestamp when locked (vim.loop.now())
+---@field retry_count number Number of consecutive lock collisions
+local busy_state = {
+  locked = false,
+  lock_time = nil,
+  retry_count = 0,
+}
+
+---@return boolean unlocked
+local function try_acquire_lock()
+  local now = vim.loop.now()
+
+  -- Check if lock expired (timeout-based auto-release)
+  if busy_state.locked and busy_state.lock_time then
+    local elapsed = now - busy_state.lock_time
+    if elapsed > BUSY_GUARD_TIMEOUT_MS then
+      if cfg.debug then
+        vim.notify(
+          string.format("[neo-tree] Lock expired after %dms, auto-releasing", elapsed),
+          vim.log.levels.WARN
+        )
+      end
+      busy_state.locked = false
+      busy_state.lock_time = nil
+      busy_state.retry_count = 0
+    end
+  end
+
+  -- Try to acquire lock
+  if busy_state.locked then
+    busy_state.retry_count = busy_state.retry_count + 1
+
+    -- Force-clear if too many retries (safety valve)
+    if busy_state.retry_count > BUSY_GUARD_MAX_RETRIES then
+      if cfg.debug then
+        vim.notify(
+          "[neo-tree] Max retries exceeded, force-clearing lock",
+          vim.log.levels.ERROR
+        )
+      end
+      busy_state.locked = false
+      busy_state.lock_time = nil
+      busy_state.retry_count = 0
+      return true
     end
 
-    busy = true
-    fn()
-
-    vim.defer_fn(function()
-      busy = false
-    end, 30)
+    return false
   end
+
+  -- Lock acquired
+  busy_state.locked = true
+  busy_state.lock_time = now
+  busy_state.retry_count = 0
+  return true
 end
 
+---@return nil
+local function release_lock()
+  busy_state.locked = false
+  busy_state.lock_time = nil
+  busy_state.retry_count = 0
+end
 
+---Schedule lock release after delay
+---@param delay_ms number
+---@return nil
+local function schedule_release(delay_ms)
+  vim.defer_fn(function()
+    release_lock()
+  end, delay_ms)
+end
 
+-- ============================================================================
+-- Position Validation
+-- ============================================================================
 
 ---@param pos string
 ---@return "left"|"right"|"float"|"current"
 local function normalize_position(pos)
   if valid_positions[pos] then
     return pos
+  end
+  if cfg.debug then
+    vim.notify(
+      string.format("[neo-tree] Invalid position '%s', defaulting to 'right'", pos),
+      vim.log.levels.WARN
+    )
   end
   return PositionEnum.right
 end
@@ -64,93 +162,320 @@ local function decide_action(target_position)
     return "open"
   end
 
-  if state.get_position() == target_position then
+  local current_pos = state.get_position()
+
+  -- Critical: Exact position match for close
+  if current_pos == target_position then
     return "close"
   end
 
   return "switch"
 end
 
+-- ============================================================================
+-- Window Operations (Synchronous where possible)
+-- ============================================================================
+
 ---@param NeoCmd table
 ---@param target_position "left"|"right"|"float"|"current"
 local function open_window(NeoCmd, target_position)
-  if target_position == "float" then
-    float.toggle(NeoCmd)
-    state.set_open("float")
-    return
+  if cfg.restore_last_position then
+    -- ========================================================================
+    -- Restore Mode: Open at last position WITHOUT reveal
+    -- ========================================================================
+    if target_position == "float" then
+      float.toggle(NeoCmd)
+      state.set_open("float", "restore")
+
+      -- Restore tree state after delay
+      vim.defer_fn(function()
+        local ok, manager = pcall(require, "neo-tree.sources.manager")
+        if ok then
+          local neo_state = manager.get_state("filesystem")
+          if neo_state and neo_state.tree then
+            tree_state.restore_state(neo_state.tree)
+          end
+        end
+
+        -- Focus neo-tree window
+        focus_neotree_window()
+      end, 100)
+      return
+    end
+
+    -- Non-float positions: synchronous state update, deferred tree restore
+    state.set_open(target_position, "restore")
+
+    -- Current position needs extra delay for buffer setup
+    local delay = (target_position == "current") and 50 or 10
+
+    vim.defer_fn(function()
+      local ok_exec = pcall(NeoCmd.execute, {
+        source = "filesystem",
+        action = "show",
+        position = target_position,
+        reveal = false, -- Don't reveal current file
+      })
+
+      if not ok_exec then
+        if cfg.debug then
+          vim.notify(
+            string.format("[neo-tree] Failed to open %s in restore mode", target_position),
+            vim.log.levels.ERROR
+          )
+        end
+        state.set_closed("open_failed")
+        return
+      end
+
+      -- Restore tree state
+      vim.defer_fn(function()
+        local ok, manager = pcall(require, "neo-tree.sources.manager")
+        if ok then
+          local neo_state = manager.get_state("filesystem")
+          if neo_state and neo_state.tree then
+            tree_state.restore_state(neo_state.tree)
+          end
+        end
+
+        -- Focus neo-tree window
+        focus_neotree_window()
+      end, 100)
+    end, delay)
+
+  else
+    -- ========================================================================
+    -- Normal Mode: Reveal current file
+    -- ========================================================================
+    if target_position == "float" then
+      float.toggle(NeoCmd)
+      state.set_open("float", "reveal")
+
+      -- Focus float window after toggle
+      vim.defer_fn(focus_neotree_window, 50)
+      return
+    end
+
+    local ctx = buffer_utils.get_buffer_context()
+
+    -- Update state BEFORE async operation
+    state.set_open(target_position, "reveal")
+
+    -- Current position needs extra delay for buffer setup
+    local delay = (target_position == "current") and 50 or 10
+
+    vim.defer_fn(function()
+      local ok_exec = pcall(NeoCmd.execute, {
+        source = "filesystem",
+        action = "show",
+        position = target_position,
+        reveal = true,
+        reveal_file = ctx and ctx.file or nil,
+        reveal_force_cwd = false,
+        dir = ctx and ctx.dir or nil,
+      })
+
+      if not ok_exec then
+        if cfg.debug then
+          vim.notify(
+            string.format("[neo-tree] Failed to open %s in reveal mode", target_position),
+            vim.log.levels.ERROR
+          )
+        end
+        state.set_closed("open_failed")
+        return
+      end
+
+      -- Focus neo-tree window after opening
+      vim.defer_fn(focus_neotree_window, 50)
+    end, delay)
   end
-
-  local ctx = buffer_utils.get_buffer_context()
-
-  NeoCmd.execute({
-    source = "filesystem",
-    action = "show",
-    position = target_position,
-    reveal = true,
-    reveal_file = ctx and ctx.file or nil,
-    reveal_force_cwd = false,
-    dir = ctx and ctx.dir or nil,
-  })
-
-  state.set_open(target_position)
 end
 
 ---@param NeoCmd table
 local function close_window(NeoCmd)
-  if state.get_position() == "float" then
+  local current_pos = state.get_position()
+
+  if cfg.debug then
+    vim.notify(
+      string.format("[neo-tree] Closing position: %s", tostring(current_pos)),
+      vim.log.levels.INFO
+    )
+  end
+
+  -- CRITICAL: Update state to closed IMMEDIATELY to prevent race conditions
+  -- This ensures decide_action() sees correct state even if close fails
+  state.set_closed("closing_" .. tostring(current_pos))
+
+  -- Capture state BEFORE any close operation (while window is still valid)
+  local ok, manager = pcall(require, "neo-tree.sources.manager")
+  if ok then
+    local neo_state = manager.get_state("filesystem")
+    if neo_state and neo_state.tree then
+      pcall(tree_state.capture_state, neo_state)
+    end
+  end
+
+  -- Special handling for 'current' position
+  if current_pos == "current" then
+    -- Find the neo-tree buffer in current window
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].filetype == "neo-tree" then
+      if cfg.debug then
+        vim.notify(
+          string.format("[neo-tree] Force-closing current buffer: %d", bufnr),
+          vim.log.levels.INFO
+        )
+      end
+
+      -- Force-delete buffer immediately (no neo-tree close needed)
+      pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+      return
+    else
+      if cfg.debug then
+        vim.notify(
+          "[neo-tree] Current position set but no valid neo-tree buffer found",
+          vim.log.levels.WARN
+        )
+      end
+      return
+    end
+  end
+
+  -- Float position uses toggle
+  if current_pos == "float" then
     float.toggle(NeoCmd)
-    state.set_closed()
     return
   end
 
-  NeoCmd.execute({
+  -- Standard positions (left/right)
+  local ok_close = pcall(NeoCmd.execute, {
     source = "filesystem",
     action = "close",
   })
 
-  if state.get_position() == "current" then
-    local bufnr = vim.api.nvim_get_current_buf()
-    if vim.bo[bufnr].filetype == "neo-tree" then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
+  if not ok_close and cfg.debug then
+    vim.notify(
+      "[neo-tree] Close command failed for position: " .. tostring(current_pos),
+      vim.log.levels.WARN
+    )
   end
-
-  state.set_closed()
 end
 
 ---@param NeoCmd table
 ---@param target_position "left"|"right"|"float"|"current"
 local function switch_window(NeoCmd, target_position)
+  local current_pos = state.get_position()
+
+  -- CRITICAL: For 'current' position, we need extra delay
+  -- because buffer deletion + new buffer creation need time
+  local delay = (current_pos == "current" or target_position == "current") and 150 or 50
+
+  if cfg.debug then
+    vim.notify(
+      string.format("[neo-tree] Switching from %s to %s (delay: %dms)",
+        tostring(current_pos), target_position, delay),
+      vim.log.levels.INFO
+    )
+  end
+
   close_window(NeoCmd)
 
   vim.defer_fn(function()
+    -- Verify state is consistent before opening
+    if state.is_open() then
+      if cfg.debug then
+        vim.notify(
+          "[neo-tree] State inconsistency detected during switch, forcing closed",
+          vim.log.levels.WARN
+        )
+      end
+      state.set_closed("switch_recovery")
+    end
+
     open_window(NeoCmd, target_position)
-  end, 20)
+  end, delay)
 end
 
+-- ============================================================================
+-- Public API
+-- ============================================================================
+
+---Create an opener function for a specific position
 ---@param target_position string
 ---@return fun()
 function M.make_opener(target_position)
   local ok, NeoCmd = pcall(require, "neo-tree.command")
   if not ok then
-    return function() end
+    return function()
+      vim.notify("[neo-tree] Failed to load neo-tree.command", vim.log.levels.ERROR)
+    end
   end
 
   local pos = normalize_position(target_position)
 
-return guarded(function()
-  local action = decide_action(pos)
+  return function()
+    -- ========================================================================
+    -- Busy Guard: Try to acquire lock
+    -- ========================================================================
+    if not try_acquire_lock() then
+      if cfg.debug then
+        vim.notify(
+          string.format("[neo-tree] Blocked by busy-guard (retry %d/%d)",
+            busy_state.retry_count, BUSY_GUARD_MAX_RETRIES),
+          vim.log.levels.WARN
+        )
+      end
+      return
+    end
 
-  if action == "open" then
-    open_window(NeoCmd, pos)
-  elseif action == "close" then
-    close_window(NeoCmd)
-  else
-    switch_window(NeoCmd, pos)
+    -- ========================================================================
+    -- Execute Action
+    -- ========================================================================
+    if cfg.debug then
+      vim.notify(
+        string.format("[neo-tree] Opener called: target=%s, current=%s",
+          pos, state.get_position() or "nil"),
+        vim.log.levels.INFO
+      )
+    end
+
+    local action = decide_action(pos)
+
+    if cfg.debug then
+      vim.notify(
+        string.format("[neo-tree] Action decided: %s", action),
+        vim.log.levels.INFO
+      )
+    end
+
+    local ok_exec, err = pcall(function()
+      if action == "open" then
+        open_window(NeoCmd, pos)
+      elseif action == "close" then
+        close_window(NeoCmd)
+      else -- switch
+        switch_window(NeoCmd, pos)
+      end
+    end)
+
+    if not ok_exec then
+      vim.notify(
+        string.format("[neo-tree] Execution error: %s", tostring(err)),
+        vim.log.levels.ERROR
+      )
+    end
+
+    -- ========================================================================
+    -- Schedule Lock Release
+    -- ========================================================================
+    schedule_release(BUSY_GUARD_TIMEOUT_MS)
   end
-end)
 end
 
+---Get current controller state
+---@return table {open: boolean, position: string|nil}
 function M.get_state()
   return {
     open = state.is_open(),
@@ -158,5 +483,11 @@ function M.get_state()
   }
 end
 
-return M
+---Force-clear busy guard (for debugging/recovery)
+---@return nil
+function M.clear_busy_guard()
+  release_lock()
+  vim.notify("[neo-tree] Busy guard manually cleared", vim.log.levels.INFO)
+end
 
+return M

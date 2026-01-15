@@ -11,7 +11,7 @@ local fn = vim.fn
 ---@return Cfg.NeoTree.Trash.Operations.DeleteMode|"cancel" # "all"|"individual"|"cancel"
 function M.get_confirmation_mode(names)
   if #names == 1 then
-    local prompt = string.format(("Move to Trash: %s ? (y/N) "):format(), names[1])
+    local prompt = string.format(("Move to Trash: %s ? (y/N) "), names[-1])
     local ans = fn.input(prompt)
     api.nvim_command("redraw")
 

@@ -1,5 +1,7 @@
 # bugs
 
+Neotree chekhealt mach nichts:
+
 ## Table of content
 
   - [Important Bugs](#important-bugs)

@@ -116,13 +116,24 @@ return {
           {
             event = "neo_tree_buffer_enter",
             handler = function()
+              -- Effekt: der Cursor ist im Neo-tree-Fenster unsichtbar, obwohl das Fenster fokussiert ist.
               vim.cmd("highlight! Cursor blend=100")
             end,
           },
           {
             event = "neo_tree_buffer_leave",
             handler = function()
+              -- Effekt: der Cursor erscheint in normalen Buffern wieder wie gewohnt.
               vim.cmd("highlight! Cursor guibg=#5f87af blend=0")
+            end,
+          },
+          {
+            event = "neo_tree_window_after_open",
+            handler = function(args)
+              -- Autofokus-Neo-Baum-Fenster beim Öffnen
+              if args.winid and vim.api.nvim_win_is_valid(args.winid) then
+                pcall(vim.api.nvim_set_current_win, args.winid)
+              end
             end,
           },
         },
@@ -326,10 +337,6 @@ return {
             file = "cyan",
             parent = { fg = "blue" },
           },
-        },
-        cwd_sync = {
-          debounce_ms = 200,
-          keep_focus = false,
         },
       })
     end,

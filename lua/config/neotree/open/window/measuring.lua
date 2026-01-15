@@ -14,18 +14,8 @@ local state_file = state_dir .. "/neotree_timings.json"
 -- Timing / Statistics (session + cwd + persistence)
 -- ============================================================================
 
----@class NeoTreeTiming.Entry
----@field method string
----@field position string
----@field duration_ns integer
----@field cwd string
----@field cwd_files integer|nil
----@field first_session boolean
----@field first_cwd boolean
----@field action_type "left"|"right"|"float"|"current"
-
 local Timing = {
-  ---@type NeoTreeTiming.Entry[]
+  ---@type Cfg.NeoTree.Open.Win.TimingEntry[]
   entries = {},
 }
 
@@ -53,7 +43,7 @@ local function count_files_shallow(path)
   return count
 end
 
----@param entry NeoTreeTiming.Entry
+---@param entry Cfg.NeoTree.Open.Win.TimingEntry
 local function persist_append(entry)
   local data = {}
   local fd = io.open(state_file, "r")
@@ -86,7 +76,7 @@ function Timing.record(method, position, duration_ns, action_type)
   opened_session[position] = true
   opened_per_cwd[cwd] = true
 
-  ---@type NeoTreeTiming.Entry
+  ---@type Cfg.NeoTree.Open.Win.TimingEntry
   local entry = {
     method = method,
     position = position,
@@ -114,7 +104,7 @@ function Timing.record(method, position, duration_ns, action_type)
   end
 end
 
----@param list NeoTreeTiming.Entry[]
+---@param list Cfg.NeoTree.Open.Win.TimingEntry[]
 ---@return table
 local function aggregate(list)
   if #list == 0 then
@@ -148,7 +138,7 @@ local function fmt_ns(ns)
   return string.format("%.3f ms", ns / 1e6)
 end
 
----@param entries NeoTreeTiming.Entry[]
+---@param entries Cfg.NeoTree.Open.Win.TimingEntry[]
 local function bucket_by_project_size(entries)
   local buckets = {
     small = {},
@@ -170,7 +160,7 @@ local function bucket_by_project_size(entries)
   return buckets
 end
 
----@param entries NeoTreeTiming.Entry[]
+---@param entries Cfg.NeoTree.Open.Win.TimingEntry[]
 local function print_stats(title, entries)
   local s = aggregate(entries)
   print(
