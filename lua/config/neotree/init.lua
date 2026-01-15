@@ -103,6 +103,11 @@ function M.setup(opts)
   if opts.cwd_sync then
     setup_cwd_sync(opts.cwd_sync)
   end
+
+  -- 5. checkhealth
+  vim.health.register_reporter("neotree-config", function()
+    require("config.neotree.checkhealth").check()
+  end)
 end
 
 return M
