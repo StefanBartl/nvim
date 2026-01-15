@@ -3,7 +3,9 @@
 ## Table of content
 
 - [WKD Neovim Roadmap](#wkd-neovim-roadmap)
+  - [Table of content](#table-of-content)
   - [Watch](#watch)
+  - [Important](#important)
   - [MIXED](#mixed)
   - [Neotest](#neotest)
   - [`custom.format.text_width`](#customformattext_width)
@@ -81,4 +83,3 @@ oder Neo-tree Kontextmenü-Actions direkt an diese UserCommands binden
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 
 ---
-
