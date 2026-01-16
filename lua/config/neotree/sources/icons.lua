@@ -83,5 +83,28 @@ function M.format(family, variant, key, length)
     return " " .. entry.icon .. " " .. entry[length]
 end
 
+---@type table<string, Cfg.NeoTree.Sources.IconVariant>
+local icon_cache = {}
+
+---Get icon for source (lazy generate)
+---@param source_name string
+---@param family Cfg.NeoTree.IconFamily
+---@param variant Cfg.NeoTree.IconVariant
+---@return string icon
+function M.get_icon(source_name, family, variant)
+  local cache_key = string.format("%s:%s:%s", source_name, family, variant)
+
+  if icon_cache[cache_key] then
+    return icon_cache[cache_key]
+  end
+
+  -- Generate icon on-demand
+  local icon_set = ICONS[family][variant][source_name]
+  local icon = icon_set and icon_set.icon or "?"
+
+  icon_cache[cache_key] = icon
+  return icon
+end
+
 return M
 

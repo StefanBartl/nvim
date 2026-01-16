@@ -9,7 +9,7 @@
 -- Position & Window
 -- ===========================
 
----@alias Cfg.NeoTree.Position "left"|"right"|"float"|"current"
+---@alias Cfg.NeoTree.Position "top"|"bottom"|"left"|"right"|"current"|"float"
 --- Window position for Neo-tree panels
 
 ---@alias Cfg.NeoTree.Backend "explorer"|"wslview"|"auto"
