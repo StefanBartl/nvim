@@ -80,6 +80,7 @@ end
 ---@param config Cfg.NeoTree.CwdSync.Config|boolean
 ---@return nil
 local function setup_cwd_sync(config)
+  if not config or config == false then return end
   if type(config) == "table" then
     require("config.neotree.cwd_sync").setup(config)
   elseif config == true then
@@ -110,8 +111,11 @@ function M.setup(opts)
   end
 
   if M.options.cwd_sync then
-    setup_cwd_sync(M.options.cwd_sync)
+    -- setup_cwd_sync(M.options.cwd_sync)
+    setup_cwd_sync(false) --FIX: TEST ohne
   end
+
+  -- require("config.neotree.autocmds").attach({})
 
   -- Register checkhealth
   vim.api.nvim_create_user_command("NeoTreeCheckHealth", function()

@@ -26,10 +26,43 @@
 
 - @types muss reformiert werden
 - alle ussercommands nach config/neotree/usercommands/init.lua sammeln
+- event handlers sammeln und attachen
 
 ---
 
-### Bei löffnen Fokus aus Neotree window setzen
+### Bei öffnen Fokus aus Neotree window setzen
+
+#### funktionert, aber mit kleinen bug
+
+Folgende Variante funktiert bei allen 4 window positionen. Ein Bug ist aber, wenn man aus dem float window direkt in ein rechtes oder linkes neotree window wechselt, dann geht der fokus nicht mit. Man muss dann erstmal das window wieder schlie0en und neu öffnen um den fokus automaitsch hineon zu bekommen oder mit wincmd hineinwechseln, aber dnan wäre es ja kein auto fokus mehr. In allen anderen Szenarien klappt es. Spannend: wenn m,an in ein float window wechselt und dann direkt in ein current neotrew window, dann kann amn von dort direkt wieder in ein links oder rechtes mit auto fokus wechseln, das scheint es zuirückzusetzen.
+
+```lua
+  -- Nach dem Öffnen Fokus zurück auf vorheriges Fenster setzen (außer bei Float)
+  {
+    event = "neo_tree_window_after_open",
+    handler = function(args)
+      local function is_float(winid)
+        if not vim.api.nvim_win_is_valid(winid) then
+          return false
+        end
+        local cfg = vim.api.nvim_win_get_config(winid)
+        return cfg.relative ~= "" and cfg.relative ~= nil
+      end
+
+      if not args.winid or not vim.api.nvim_win_is_valid(args.winid) then
+        return
+      end
+      if is_float(args.winid) then
+        return
+      end
+      if M._prev_win and vim.api.nvim_win_is_valid(M._prev_win) then
+        vim.schedule(function()
+          vim.api.nvim_set_current_win(M._prev_win)
+        end)
+      end
+    end,
+  },
+```
 
 #### Bereits geteste, hat nicht funktionert
 
@@ -85,6 +118,26 @@ event_handlers = {
 
 ```
 
+##### Autocommands
+
+1. Funktioniert zawr für  Neotree window links, rechts und current, aber es hat die Auswirkung, dass sich das flaot window sofort wieder schließt.
+
+```lua
+  if opts.auto_fokus and opts.auto_fokus == true then
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "neo-tree",
+      callback = function()
+        vim.schedule(function()
+          -- This runs after the buffer and window are fully initialized.
+          vim.cmd("wincmd p")
+          vim.cmd("wincmd w")
+        end)
+      end,
+    })
+  end
+```
+
+Ist also in dieser Versionm so keine Option.
 
 ---
 

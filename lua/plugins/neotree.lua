@@ -111,24 +111,7 @@ return {
         close_if_last_window = false,
         popup_border_style = "rounded",
         sort_case_insensitive = true,
-
-        event_handlers = {
-          {
-            event = "neo_tree_buffer_enter",
-            handler = function()
-              -- Effekt: der Cursor ist im Neo-tree-Fenster unsichtbar, obwohl das Fenster fokussiert ist.
-              vim.cmd("highlight! Cursor blend=100")
-            end,
-          },
-          {
-            event = "neo_tree_buffer_leave",
-            handler = function()
-              -- Effekt: der Cursor erscheint in normalen Buffern wieder wie gewohnt.
-              vim.cmd("highlight! Cursor guibg=#5f87af blend=0")
-            end,
-          },
-        },
-
+        event_handlers = require("config.neotree.event_handlers"),
         default_component_config = {
           indent = { with_expanders = false },
           icon = {
