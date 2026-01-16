@@ -8,7 +8,7 @@ local fn = vim.fn
 
 ---Get confirmation mode for batch operations
 ---@param names string[]
----@return Cfg.NeoTree.Trash.Operations.DeleteMode|"cancel" # "all"|"individual"|"cancel"
+---@return Cfg.NeoTree.DeleteMode|"cancel" # "all"|"individual"|"cancel"
 function M.get_confirmation_mode(names)
   if #names == 1 then
     local prompt = string.format(("Move to Trash: %s ? (y/N) "), names[-1])

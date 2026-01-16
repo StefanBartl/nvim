@@ -6,22 +6,22 @@
 
 local M = {}
 
----@type Cfg.NeoTree.State.Window
+---@type Cfg.NeoTree.Window
 local state = {
   open = false,
   position = nil,
 }
 
----@type fun(from: Cfg.NeoTree.State.Window, to: Cfg.NeoTree.State.Window, action: string)[]
+---@type fun(from: Cfg.NeoTree.Window, to: Cfg.NeoTree.Window, action: string)[]
 local listeners = {}
 
----@type Cfg.NeoTree.State.Window[]
+---@type Cfg.NeoTree.Window[]
 local snapshots = {}
 
 ---@type boolean
 local debug_enabled = false
 
----@return Cfg.NeoTree.State.Window
+---@return Cfg.NeoTree.Window
 local function clone_state()
   return {
     open = state.open,
@@ -29,8 +29,8 @@ local function clone_state()
   }
 end
 
----@param from Cfg.NeoTree.State.Window
----@param to Cfg.NeoTree.State.Window
+---@param from Cfg.NeoTree.Window
+---@param to Cfg.NeoTree.Window
 ---@param action string
 local function emit(from, to, action)
   if debug_enabled then
@@ -70,7 +70,7 @@ function M.set_closed(action)
   emit(from, clone_state(), action or "close")
 end
 
----@param cb fun(from: Cfg.NeoTree.State.Window, to: Cfg.NeoTree.State.Window, action: string)
+---@param cb fun(from: Cfg.NeoTree.Window, to: Cfg.NeoTree.Window, action: string)
 function M.on_transition(cb)
   listeners[#listeners + 1] = cb
 end
@@ -80,7 +80,7 @@ function M.enable_debug(enable)
   debug_enabled = enable == true
 end
 
----@return Cfg.NeoTree.State.Window[]
+---@return Cfg.NeoTree.Window[]
 function M.get_snapshots()
   return snapshots
 end

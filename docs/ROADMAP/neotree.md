@@ -11,11 +11,11 @@
 
 ---
 
-## Critical
+## Watch
 
-1. Failes to copy folder oder file list, mit [f ]f [F ]F warum ?
+1. Ersetztn die `[f]`-Mappings in der Praxis tatsächlich die `[r]`-Mappings?
 
---
+---
 
 ## Important
 
@@ -24,11 +24,16 @@
 
 ## normal
 
-- @types muss reformiert werden
-- alle ussercommands nach config/neotree/usercommands/init.lua sammeln
-- event handlers sammeln und attachen
+1 @types muss reformiert werden
+1. commands und aktionen sammeln
+    - alle usercommands nach config/neotree/usercommands/init.lua sammeln
+    - alle keymaps die mit vim.keymap.set oder einem direkten äqivalent wie nvim_create_keympa oder map (aus lib.map) nach config/neotree/keympaps/init.lua sammeln (es geht in ordnung hier eine neues modul zu schreiben, das aktuelle config/neotree/keymaps eigentlich keympas in sources sind und daher nach confiog/neotree/sources verschoieben werden.
+    - alle autocmds nach config/neotree/automcmds/init.lua sammeln
+    - Für all diese Files im Ordner eine enstprechende README.md auf deustch schreiben
 
----
+1. commands und actions nach keymaps, keymaps nach sources verschieben
+
+--
 
 ### Bei öffnen Fokus auf Neotree window setzen
 
@@ -143,12 +148,11 @@ Ist also in dieser Versionm so keine Option.
 
 ### open (m-f, m-l usw..)
 
-1. Neotree window muss schneller öffnen können, das dauert zu langsam nd wirkt nicht mehr flüssig:
+1. Neotree window muss schneller öffnen können, das dauert zu langsam und wirkt nicht mehr flüssig:
 2. sources einzeln mal deaktivieren, sources messen wir lange der unterschied ist wenn an einzeln wegnimmt
   - --> Im window alles sources deaktivieren bis auf filesyte, dann einen source selector mit zb.: "M-s" machen
-3. open.windows: wenn man eine neotree window offen hat und dann ein anderes öfffnet, macht es erstmal das andere zu ohne das neue zu öffnen. dann muss man nochmal öffnen. also sagen wir neotree win links ist offen, ich drücke M-f dann macht es erstmal win left zu. jetzt muss ich nochmal M-f drücken um das float win zu bekommen. Es osllt eso sein, dass jedes window mapping mapping zuerst prüft ob ein neotree win offn ist., wenn ja, dann schlißeen und das neue öffnen in einem zug.
 
---
+-
 
 ### marks / trash
 

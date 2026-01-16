@@ -1,53 +1,50 @@
 ---@meta
 ---@module 'config.neotree.@types.node'
-
--- =========================================================
--- Neo-tree Node
---
--- Repräsentiert einen Eintrag (Datei, Verzeichnis, virtuell)
--- innerhalb eines Neo-tree-Sources. Auf dieser Struktur
--- werden Methoden wie get_parent_id() aufgerufen.
--- =========================================================
-
-local Cfg = {}
+---@brief Neo-tree node structure definition
+---@description
+--- Represents a single entry (file, directory, virtual) within a Neo-tree source.
+--- This is the core data structure for tree navigation and manipulation.
 
 ---@class Cfg.NeoTree.Node
----@field id string                         -- Unique node identifier (usually absolute path)
----@field get_id string                     -- get unique node identifier (usually absolute path)
----@field path string|nil                   -- Filesystem path if applicable
----@field name string                       -- Display name of the node
----@field type '"file"'|'"directory"'|'"virtual"' -- Node kind
----@field parent_id string|nil              -- ID of the parent node (nil for root)
----@field level integer                     -- Tree depth (root = 0)
----@field loaded boolean                    -- Children loaded flag
----@field is_expanded boolean                  -- Directory expanded flag
----@field children Cfg.NeoTree.Node[]|nil             -- Child node ids (if loaded)
----@field has_children boolean
----@field extra table|nil                   -- Source-specific metadata
----@field tree Cfg.NeoTree.Tree
----@field explicitly_marked_node_ids table<string, boolean>|nil
+---@field id string Unique node identifier (usually absolute path)
+---@field path string|nil Filesystem path if applicable
+---@field name string Display name of the node
+---@field type Cfg.NeoTree.NodeType Node classification
+---@field parent_id string|nil ID of the parent node (nil for root)
+---@field level integer Tree depth (root = 0)
+---@field loaded boolean Whether children have been loaded
+---@field is_expanded boolean|nil Directory expansion state
+---@field has_children boolean|nil Whether node has child entries
+---@field children Cfg.NeoTree.Node[]|nil Child nodes if loaded
+---@field extra table|nil Source-specific metadata
+---@field tree Cfg.NeoTree.Tree Reference to containing tree
+---@field explicitly_marked_node_ids table<string, boolean>|nil Marked nodes for batch operations
 ---@field is_directory boolean
 ---@field get_parent_id boolean
 
----Return the parent node id.
----This is commonly used to navigate upwards in the tree.
----@return string|nil
-function Cfg.NeoTree.Node:get_parent_id() end
+-- ---Return the parent node ID for upward navigation
+-- ---@param self Cfg.NeoTree.Node
+-- ---@return string|nil parent_id
+-- local function get_parent_id(self) end
 
----Return whether the node represents a directory.
----@return boolean
-function Cfg.NeoTree.Node:is_directory() end
+-- ---Check if node represents a directory
+-- ---@param self Cfg.NeoTree.Node
+-- ---@return boolean
+-- local function is_directory(self) end
 
----Return whether the node represents a file.
----@return boolean
-function Cfg.NeoTree.Node:is_file() end
+-- ---Check if node represents a file
+-- ---@param self Cfg.NeoTree.Node
+-- ---@return boolean
+-- local function is_file(self) end
 
----Return a filesystem-safe absolute path, if available.
----@return string|nil
-function Cfg.NeoTree.Node:get_path() end
+-- ---Return filesystem-safe absolute path if available
+-- ---@param self Cfg.NeoTree.Node
+-- ---@return string|nil path
+-- local function get_path(self) end
 
----Return the display label used by the UI.
----@return string
-function Cfg.NeoTree.Node:get_name() end
+-- ---Return display label used by UI
+-- ---@param self Cfg.NeoTree.Node
+-- ---@return string name
+-- local function get_name(self) end
 
-return Cfg
+return {}

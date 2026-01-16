@@ -2,7 +2,6 @@
 --- Filesystem-Source-specific extra mappings
 
 -- AUDIT: FIX: Neotree keymaps werden relativ oft verwendet. imports hier belassen, in die funktionen refactoren oder mit `lib.lazy`?
--- hlp function desc
 
 local notify = require("lib.notify").create("[cfg.neotree.keymaps.fs] ")
 
@@ -12,7 +11,6 @@ local copy_entries = require("config.neotree.actions.copy.entries")
 local copy_folders = require("config.neotree.actions.copy.folders")
 local to_require = require("config.neotree.actions.path.to_require")
 local node_info = require("config.neotree.actions.info.node")
-local path_utils = require("config.neotree.utils.path")
 local save_node_buffer = require("config.neotree.actions.save.node_buffer")
 local save_adjacent_buffer = require("config.neotree.actions.save.adjacent_buffer")
 local fzf_grep_picker = require("config.neotree.fzf_grep_picker")
@@ -157,9 +155,6 @@ return {
 
   ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
   ["A"] = { "custom_add", nowait = true, config = { insert_clipb = true } },  -- { insert_clipb = true } möglich (ohne confirmation)
-    -- default:  (AUDIT: Remove after watch phase)
-        -- ["A"] = { "add_directory", config = { show_path = "relative" } },
-
   ["D"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
@@ -195,8 +190,6 @@ return {
   },
 
   --====================== Mark ========================================
-
-  --FIX: Gesamte mark operations funktionieret nicht
 
   ["m"] = {
     ---@param state Cfg.NeoTree.State
@@ -275,112 +268,113 @@ return {
 
   --====================== Path / Copy ==================================
 
-    --FIX: funktionert nicht
-  ["Y"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.warn("no node under cursor")
-        return
-      end
+    --WATCH: auskommeniterte Mappings tatsöchlich durch `fF][` ersetzt?
 
-      local path, _ = node_utils.get_path(node)
-      if path == "" then
-        notify.warn("no path")
-        return
-      end
+    -- ["Y"] = { --
+    -- ---@param state Cfg.NeoTree.State
+    -- function(state)
+      -- local node = node_utils.get_current(state)
+      -- if not node then
+        -- notify.warn("no node under cursor")
+        -- return
+      -- end
 
-      fn.setreg("+", path, "c")
-      notify.info(("Copied path: %s"):format(path))
-    end,
-    desc = "Copy absolute path to clipboard",
-  },
+      -- local path, _ = node_utils.get_path(node)
+      -- if path == "" then
+        -- notify.warn("no path")
+        -- return
+      -- end
 
-  ["[a"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.info("no node under cursor")
-        return
-      end
+      -- fn.setreg("+", path, "c")
+      -- notify.info(("Copied path: %s"):format(path))
+    -- end,
+    -- desc = "Copy absolute path to clipboard",
+  -- },
 
-      local path, _ = node_utils.get_path(node)
-      if path == "" then
-        notify.info("no path")
-        return
-      end
+  -- ["[a"] = {
+    -- ---@param state Cfg.NeoTree.State
+    -- function(state)
+      -- local node = node_utils.get_current(state)
+      -- if not node then
+        -- notify.info("no node under cursor")
+        -- return
+      -- end
 
-      fn.setreg("+", path, "c")
-      notify.info(("copied: %s"):format(path))
-    end,
-    desc = "Copy absolute path (+)",
-  },
+      -- local path, _ = node_utils.get_path(node)
+      -- if path == "" then
+        -- notify.info("no path")
+        -- return
+      -- end
 
-  ["]a"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.info("no node under cursor")
-        return
-      end
+      -- fn.setreg("+", path, "c")
+      -- notify.info(("copied: %s"):format(path))
+    -- end,
+    -- desc = "Copy absolute path (+)",
+  -- },
 
-      local path, is_dir = node_utils.get_path(node)
-      if path == "" then
-        notify.info("no path")
-        return
-      end
+  -- ["]a"] = {
+    -- ---@param state Cfg.NeoTree.State
+    -- function(state)
+      -- local node = node_utils.get_current(state)
+      -- if not node then
+        -- notify.info("no node under cursor")
+        -- return
+      -- end
 
-      local base = is_dir and path or fn.fnamemodify(path, ":h")
-      fn.setreg("+", base, "c")
-      notify.info(("copied: %s"):format(base))
-    end,
-    desc = "Copy base (dir) path (+)",
-  },
+      -- local path, is_dir = node_utils.get_path(node)
+      -- if path == "" then
+        -- notify.info("no path")
+        -- return
+      -- end
 
-  ["[r"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.info("no node under cursor")
-        return
-      end
+      -- local base = is_dir and path or fn.fnamemodify(path, ":h")
+      -- fn.setreg("+", base, "c")
+      -- notify.info(("copied: %s"):format(base))
+    -- end,
+    -- desc = "Copy base (dir) path (+)",
+  -- },
 
-      local path, msg = path_utils.from_node(node, "relative")
-      if not path then
-        notify.info(msg or "Failed to get path")
-        return
-      end
+  -- ["[r"] = {
+    -- ---@param state Cfg.NeoTree.State
+    -- function(state)
+      -- local node = node_utils.get_current(state)
+      -- if not node then
+        -- notify.info("no node under cursor")
+        -- return
+      -- end
 
-      fn.setreg("+", path, "c")
-      notify.info(("Copied relative directory: %s"):format(path))
-    end,
-    desc = "Copy relative directory path",
-  },
+      -- local path, msg = path_utils.from_node(node, "relative")
+      -- if not path then
+        -- notify.info(msg or "Failed to get path")
+        -- return
+      -- end
 
-  ["]r"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.info("no node under cursor")
-        return
-      end
+      -- fn.setreg("+", path, "c")
+      -- notify.info(("Copied relative directory: %s"):format(path))
+    -- end,
+    -- desc = "Copy relative directory path",
+  -- },
 
-      local path, msg = path_utils.from_node(node, "relative")
-      if not path then
-        notify.info(msg or "Failed to get path")
-        return
-      end
+  -- ["]r"] = {
+    -- ---@param state Cfg.NeoTree.State
+    -- function(state)
+      -- local node = node_utils.get_current(state)
+      -- if not node then
+        -- notify.info("no node under cursor")
+        -- return
+      -- end
 
-      fn.setreg("+", path, "c")
-      notify.info(("Copied relative path: %s"):format(path))
-    end,
-    desc = "Copy relative path (file)",
-  },
+      -- local path, msg = path_utils.from_node(node, "relative")
+      -- if not path then
+        -- notify.info(msg or "Failed to get path")
+        -- return
+      -- end
+
+      -- fn.setreg("+", path, "c")
+      -- notify.info(("Copied relative path: %s"):format(path))
+    -- end,
+    -- desc = "Copy relative path (file)",
+  -- },
 
   ["[f"] = {
     ---@param state Cfg.NeoTree.State
@@ -395,7 +389,7 @@ return {
         notify.warn("Failed to copy file list")
       end
     end,
-    desc = "Copy recursive file list",
+    desc = "Copy absolute file path (file node) or recursive file list (folder node) to clipboard (reg +)",
   },
 
   ["]f"] = {
@@ -411,7 +405,7 @@ return {
         notify.warn("Failed to copy file list")
       end
     end,
-    desc = "Copy recursive file list (relative to cwd) to clipboard (+)",
+    desc = "Copy relative file path (file node) or recursive file list (folder node) to clipboard (reg +) (relative to cwd)",
   },
 
   ["[F"] = {
@@ -422,7 +416,7 @@ return {
         notify.warn("Failed to copy folder list")
       end
     end,
-    desc = "Copy recursive folder list (absolute paths) to clipboard (+)",
+    desc = "Copy absolute folder path (file node) or recursive folder list (folder node) to clipboard (reg +)",
   },
 
   ["]F"] = {
@@ -433,7 +427,7 @@ return {
         notify.warn("Failed to copy folder list")
       end
     end,
-    desc = "Copy recursive folder list (relative to cwd) to clipboard (+)",
+    desc = "Copy relative folder path (file node) or recursive folder list (folder node) to clipboard (reg +) (relative to cwd)",
   },
 
   --====================== Info / Special ===============================

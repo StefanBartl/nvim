@@ -63,8 +63,8 @@ local function force_close_preview()
   -- Method 2: Find float windows manually
   for _, win in ipairs(api.nvim_list_wins()) do
     if api.nvim_win_is_valid(win) then
-      local ok, config = pcall(api.nvim_win_get_config, win)
-      if ok and config.relative ~= "" then
+      local ok, _config = pcall(api.nvim_win_get_config, win)
+      if ok and _config.relative ~= "" then
         local buf = api.nvim_win_get_buf(win)
         local buftype = vim.bo[buf].buftype
 
@@ -206,6 +206,7 @@ end
 ---@param ask_user boolean
 ---@return boolean success
 ---@return boolean user_cancelled
+---@diagnostic disable-next-line: unused-local
 function M.close_references(path, filename, ref_info, ask_user)
   local bufnrs = ref_info.buffers.bufnrs
   local buf_names = ref_info.buffers.names

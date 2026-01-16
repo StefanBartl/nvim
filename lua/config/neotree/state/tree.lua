@@ -3,7 +3,7 @@
 
 local M = {}
 
----@type Cfg.NeoTree.State.Tree
+---@type Cfg.NeoTree.Tree
 local state = {
   node_id = nil,
   expanded = {},

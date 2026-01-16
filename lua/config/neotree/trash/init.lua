@@ -213,7 +213,7 @@ function M.neotree_send_node_to_trash(state)
     return
   end
 
-  ---@cast delete_mode Cfg.NeoTree.Trash.Operations.DeleteMode
+  ---@cast delete_mode Cfg.NeoTree.DeleteMode
 
   notify.info("Moving to Trash...")
 

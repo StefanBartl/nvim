@@ -1,144 +1,60 @@
 ---@meta
 ---@module 'config.neotree.@types'
+---@brief Central type definition index for Neo-tree configuration
+---@description
+--- This module serves as the entry point for all Neo-tree type definitions.
+--- Individual type modules are organized by functional domain:
+---
+--- Core Structures:
+---   - aliases:     Common type aliases and string literal unions
+---   - node:        Tree node structure and methods
+---   - state:       Neo-tree state passed to commands/handlers
+---   - config:      Setup and initialization configuration
+---
+--- Feature Modules:
+---   - actions:     Custom command options (copy, convert, info)
+---   - trash:       Deletion and trash system configuration
+---   - safety:      Backup, recovery, and operation queue
+---   - open:        Window management and positioning
+---   - reveal:      File reveal and navigation context
+---   - cwd_sync:    CWD synchronization state
+---   - highlights:  Current file highlighting
+---   - watcher:     File system watcher quarantine
+---
+--- Integration:
+---   - sources:     Icon and source selector display
+---   - wsl:         WSL file manager integration
+---   - project_root: Project root detection interface
+---
+--- Usage:
+---   All type files use the `Cfg.NeoTree.*` namespace prefix.
+---   Import specific type modules as needed via:
+---   ```lua
+---   ---@type Cfg.NeoTree.State
+---   local state = ...
+---   ```
+---
+--- Organization Principles:
+---   1. One file per functional domain (not per source file)
+---   2. Extract string literal unions as type aliases
+---   3. Minimal forward dependencies between type modules
+---   4. Structural typing for Neo-tree core objects
+---   5. Explicit field documentation with usage notes
 
--- ===========================
--- open.window
-
----@alias Cfg.NeoTree.Open.Win.AliasList string[]
--- List of alternative key strings that should be registered
--- as aliases for a primary lhs mapping.
-
----@class Cfg.NeoTree.Open.Win.xlhs
----@field extra_lhs table<string, Cfg.NeoTree.Open.Win.AliasList>|nil
--- Mapping of key combinations (e.g. "<A-c>") to a list of
--- alternative lhs strings. Each list is an array to allow
--- future extension without reallocations.
-
--- open.window.measuring
-
----@class Cfg.NeoTree.Open.Win.TimingEntry
----@field method string
----@field position string
----@field duration_ns integer
----@field cwd string
----@field cwd_files integer|nil
----@field first_session boolean
----@field first_cwd boolean
----@field action_type Cfg.NeoTree.Position
-
--- ===========================
--- open.filemanager
-
----@class Cfg.NeoTree.Wsl.FM
----@field _cfg Cfg.NeoTree.Wsl.OpenConfig
----@field setup any
----@field open any
----@field nodes table<string, Cfg.NeoTree.Node>
----@field get_node fun(self: Cfg.NeoTree.Tree, id: string): Cfg.NeoTree.Node|nil
-
----@class Cfg.NeoTree.Wsl.OpenConfig
----@field backend "explorer"|"wslview"|"auto" # which launcher to use (default: "explorer")
----@field silent boolean                      # reduce notifications (default: true)
-
----@alias UnixPath string
----@alias WinPath string
-
--- ===========================
--- reveal_manager
-
----@class Cfg.NeoTree.RevealContext
----@field buf integer
----@field file string
----@field dir string
----@field position Cfg.NeoTree.Position|nil
-
--- ===========================
--- sources
-
----@class Cfg.NeoTree.Sources.Icon
----@field icon string        -- Icon glyph (can be empty for common/text mode)
----@field long string        -- Long display name
----@field short string       -- Short display name
-
----@class Cfg.NeoTree.Sources.IconVariant
----@field filesystem Cfg.NeoTree.Sources.Icon
----@field buffers Cfg.NeoTree.Sources.Icon
----@field git_status Cfg.NeoTree.Sources.Icon
----@field document_symbols Cfg.NeoTree.Sources.Icon
----@field netman Cfg.NeoTree.Sources.Icon
----@field tests Cfg.NeoTree.Sources.Icon
-
----@class Cfg.NeoTree.Sources.IconSet
----@field v1 Cfg.NeoTree.Sources.IconVariant
----@field v2 Cfg.NeoTree.Sources.IconVariant
-
----@class Cfg.NeoTree.Sources.DynamicConfig
----@field icon_family '"common"'|'"nerd"'|'"codicons"'
----@field icon_variant '"v1"'|'"v2"'
----@field width_threshold integer
----@field has_netman boolean
----@field has_tests boolean
-
--- ===========================
--- watcher_quarantine
-
----@class Cfg.NeoTree.WatcherQuarantine.State
----@field in_quarantine boolean Global quarantine active
----@field quarantine_until number Timestamp when quarantine ends (vim.loop.now())
----@field suspended_paths table<string, number> Per-path quarantine timestamps
----@field error_suppressed boolean EPERM suppression active
----@field original_notify function|nil Backup of original vim.notify
-
--- ===========================
--- safety
-
----@class Cfg.NeoTree.Safety.RecoveryPoint
----@field timestamp number
----@field operation string
----@field state table Serializable state snapshot
----@field paths string[]
-
--- ===========================
--- trash
-
----@class Cfg.NeoTree.Trash.Config
----@field use_safety_system? boolean Enable full safety features (default: true)
----@field create_backups? boolean Create backups before deletion (default: true)
----@field confirm_dangerous?boolean Confirm dangerous operations (default: true)
----@field use_dry_run? boolean Respect dry-run mode (default: true)
----@field auto_close_buffers? boolean Auto-close open buffers without asking (default: false)
----@field debug? boolean
-
----@alias Cfg.NeoTree.Trash.Operations.DeleteMode "all"|"individual"
-
--- ===========================
--- actions
-
----@class Cfg.NeoTree.Copy.ClipboardOpt
----@field relative_to_cwd? boolean Convert paths to relative (default: false)
----@field preview_limit? integer Max entries to show in notification (default: 10)
----@field quote_paths? boolean Wrap paths in quotes (default: false)
----@field format? "list"|"quoted"|"json" Output format (default: "list")
-
----@class Cfg.NeoTree.Actions.PathToRequireOpts
----@field relative? boolean Use relative paths (default: false)
----@field show_preview? boolean Show preview notification (default: true)
-
----@class Cfg.NeoTree.Actions.NodeInfoState
----@field active_win integer|nil Current hover window
----@field active_path string|nil Currently displayed path
-
--- ===========================
---- CWD synchronization state
-
----@class Cfg.NeoTree.CwdSyncState
----@field timer uv.uv_timer_t|nil
----@field pending boolean
----@field last_dir string|nil
----@field last_file string|nil
----@field user_navigated boolean
----@field last_user_action integer
----@field pause_until integer
----@field sync_scheduled boolean
+require("config.neotree.@types.aliases")
+require("config.neotree.@types.node")
+require("config.neotree.@types.state")
+require("config.neotree.@types.config")
+require("config.neotree.@types.actions")
+require("config.neotree.@types.trash")
+require("config.neotree.@types.safety")
+require("config.neotree.@types.open")
+require("config.neotree.@types.reveal")
+require("config.neotree.@types.cwd_sync")
+require("config.neotree.@types.highlights")
+require("config.neotree.@types.watcher")
+require("config.neotree.@types.sources")
+require("config.neotree.@types.wsl")
+require("config.neotree.@types.project_root")
 
 return {}

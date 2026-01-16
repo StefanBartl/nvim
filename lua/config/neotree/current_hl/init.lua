@@ -108,7 +108,7 @@ local function neotree_visible_in_tab()
   return false
 end
 
----@param cfg NeoTreeCurrentHLConfig
+---@param cfg Cfg.NeoTree.CurrentHl.Config
 local function refresh(cfg)
   if not cfg.enable or not neotree_visible_in_tab() then
     return
@@ -155,7 +155,7 @@ local function debounce(fn, ms)
   end
 end
 
----@param cfg NeoTreeCurrentHLConfig
+---@param cfg Cfg.NeoTree.CurrentHl.Config
 local function define_highlights(cfg)
   local file_default = { fg = "#ff5f5f", bold = true }
   local dir_default = { fg = "#af0000", bold = false }
@@ -189,7 +189,7 @@ local function define_highlights(cfg)
 end
 
 -- Wrap the stock "name" component to inject our highlight
----@param cfg NeoTreeCurrentHLConfig
+---@param cfg Cfg.NeoTree.CurrentHl.Config
 ---@param opts table
 local function attach_component(cfg, opts)
   local components = require("neo-tree.sources.common.components")
