@@ -30,7 +30,7 @@
 
 ---
 
-### Bei öffnen Fokus aus Neotree window setzen
+### Bei öffnen Fokus auf Neotree window setzen
 
 #### funktionert, aber mit kleinen bug
 

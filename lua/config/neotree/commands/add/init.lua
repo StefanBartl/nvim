@@ -11,10 +11,6 @@ local M = {}
 local api, fn = vim.api, vim.fn
 local notify = vim.notify
 
----@class Cfg.NeoTree.AddOptions
----@field insert_clipb? boolean Automatically insert clipboard content (default: false)
----@field ask_insert_clipb? boolean Ask before inserting clipboard content (default: false)
-
 --- Check if a path ends with a directory separator
 ---@param path string
 ---@return boolean
@@ -148,7 +144,7 @@ end
 --- Handle types file creation for Lua
 ---@param file_path string Absolute path to the created file
 ---@param state table Neo-tree state
----@param options Cfg.NeoTree.AddOptions
+---@param options Cfg.NeoTree.Commands.AddOptions
 ---@diagnostic disable-next-line: unused-local
 local function handle_lua_types_file(file_path, state, options)
   -- Schedule to ensure file operations complete
@@ -217,7 +213,7 @@ end
 
 --- Handle regular file creation with optional clipboard content
 ---@param file_path string Absolute path to the created file
----@param options Cfg.NeoTree.AddOptions
+---@param options Cfg.NeoTree.Commands.AddOptions
 local function handle_regular_file(file_path, options)
   -- Determine if we should insert clipboard
   local function proceed_with_clipboard(should_insert)
@@ -276,7 +272,7 @@ end
 --- Handle directory creation with init file
 ---@param dir_path string Path to the directory to create
 ---@param state table Neo-tree state
----@param options Cfg.NeoTree.AddOptions
+---@param options Cfg.NeoTree.Commands.AddOptions
 local function handle_directory_creation(dir_path, state, options)
   -- Create the directory
   local ok, err = pcall(fn.mkdir, dir_path, "p")
@@ -309,7 +305,7 @@ end
 
 --- Main command handler for custom add
 ---@param state Cfg.NeoTree.State Neo-tree state
----@param options? Cfg.NeoTree.AddOptions Options for clipboard insertion
+---@param options? Cfg.NeoTree.Commands.AddOptions Options for clipboard insertion
 function M.custom_add(state, options)
   -- Default options
   options = vim.tbl_extend("force", {

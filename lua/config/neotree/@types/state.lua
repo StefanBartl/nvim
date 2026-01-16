@@ -3,6 +3,14 @@
 
 local Cfg = {}
 
+---@class Cfg.NeoTree.State.Window
+---@field open boolean
+---@field position Cfg.NeoTree.Position|nil
+
+---@class Cfg.NeoTree.State.Tree
+---@field node_id string|nil Last focused node ID
+---@field expanded table<string, true> Set of expanded node IDs
+
 ---@class Cfg.NeoTree.State
 ---@field name string                     # Source name (filesystem, buffers, git_status)
 ---@field path string                     # Current root path

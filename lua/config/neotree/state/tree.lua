@@ -3,11 +3,7 @@
 
 local M = {}
 
----@class NeoTreeTreeState
----@field node_id string|nil Last focused node ID
----@field expanded table<string, true> Set of expanded node IDs
-
----@type NeoTreeTreeState
+---@type Cfg.NeoTree.State.Tree
 local state = {
   node_id = nil,
   expanded = {},

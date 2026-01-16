@@ -6,14 +6,7 @@ local M = {}
 local uv = vim.loop
 local fn = vim.fn
 
----@class BackupEntry
----@field original_path string
----@field backup_path string
----@field timestamp number
----@field operation string "delete"|"move"|"overwrite"
----@field metadata table
-
----@type BackupEntry[]
+---@type Cfg.Neotree.Safety.BackupEntry[]
 local backup_history = {}
 
 local MAX_HISTORY = 50
@@ -160,14 +153,14 @@ function M.restore_backup(backup_path, restore_path)
 end
 
 ---List all backups
----@return BackupEntry[]
+---@return Cfg.Neotree.Safety.BackupEntry[]
 function M.list_backups()
   return vim.deepcopy(backup_history)
 end
 
 ---Get backup for original path
 ---@param original_path string
----@return BackupEntry|nil
+---@return Cfg.Neotree.Safety.BackupEntry|nil
 function M.get_backup_for_path(original_path)
   for _, entry in ipairs(backup_history) do
     if entry.original_path == original_path then

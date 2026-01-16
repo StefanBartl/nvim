@@ -3,12 +3,7 @@
 
 local M = {}
 
----@class QueuedOperation
----@field fn fun() Operation function
----@field name string Operation name for logging
----@field priority integer Priority (lower = higher priority)
-
----@type QueuedOperation[]
+---@type Cfg.NeoTree.Safety.QueuedOperation[]
 local queue = {}
 local processing = false
 local paused = false

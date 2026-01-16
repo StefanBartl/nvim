@@ -27,4 +27,7 @@
 ---@field options Cfg.NeoTree.InitOpts
 ---@field get_default_position fun(): Cfg.NeoTree.Position|"right"
 
+---@class Cfg.NeoTree.AutoCmds
+---@field _? boolean
+
 return {}

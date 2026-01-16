@@ -62,10 +62,7 @@ local BUSY_GUARD_MAX_RETRIES = 3 -- Max retry attempts before force-clear
 -- Busy Guard State
 -- ============================================================================
 
----@class BusyGuardState
----@field locked boolean Currently locked
----@field lock_time number|nil Timestamp when locked (vim.loop.now())
----@field retry_count number Number of consecutive lock collisions
+---@type Cfg.NeoTree.Open.Win.BusyGuardState
 local busy_state = {
   locked = false,
   lock_time = nil,
