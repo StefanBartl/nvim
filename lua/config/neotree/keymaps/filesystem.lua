@@ -215,6 +215,14 @@ return {
     desc = "Unmark all files in directory",
   },
 
+  ["<leader>ms"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      require("config.neotree.commands.mark.show").show_marked_nodes(state)
+    end,
+    desc = "Show all marks",
+  },
+
   ["<leader>mc"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
