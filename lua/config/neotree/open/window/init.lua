@@ -28,7 +28,6 @@ function M.attach_opener_mappings(opts)
 
   if opts.debug then
     opener_factory = require("config.neotree.open.window.measuring").make_opener
-    require("config.neotree.open.window.debug").enable_usercmds()
   else
     opener_factory = require("config.neotree.open.window.controller").make_opener
   end

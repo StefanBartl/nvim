@@ -4,7 +4,7 @@
 local uv = vim.loop
 local controller = require("config.neotree.open.window.controller")
 
-local M = {     }
+local M = {}
 
 local print_record = true
 local state_dir = vim.fn.stdpath("state")

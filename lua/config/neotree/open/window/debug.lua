@@ -4,7 +4,7 @@ local M = {}
 
 ---Force-reset all neo-tree window state
 ---@return nil
-local function force_reset_state()
+function M.force_reset_state()
   local state = require("config.neotree.state.windows")
   local tree_state = require("config.neotree.state.tree")
   local controller = require("config.neotree.open.window.controller")
@@ -30,7 +30,7 @@ end
 
 ---Show current state for debugging
 ---@return nil
-local function show_debug_state()
+function M.show_debug_state()
   local state = require("config.neotree.state.windows")
   local tree_state = require("config.neotree.state.tree")
 
@@ -65,17 +65,6 @@ local function show_debug_state()
   end
 
   vim.print(info)
-end
-
----@return nil
-function M.enable_usercmds()
-  vim.api.nvim_create_user_command("NeoTreeForceReset", force_reset_state, {
-    desc = "[Neo-tree] Force-reset all state and close buffers",
-  })
-
-  vim.api.nvim_create_user_command("NeoTreeDebugState", show_debug_state, {
-    desc = "[Neo-tree] Show current state for debugging",
-  })
 end
 
 return M
