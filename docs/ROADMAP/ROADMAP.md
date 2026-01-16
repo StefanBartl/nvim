@@ -16,24 +16,6 @@
 
 ## Watch
 
-Test:
-wenn man in einem proekt einen ordner @types hat mit merher files wie mark.lua, config.lua usw..., jede dieser datei so istrukturirert ist:
-
----@meta
----@module ''xy
-
----@alias xy....
----@class xy...
-...
-...
-return {}
-
-und man dan eine @types/init.lua hat, die all diese typdasten requried, und mann innerhalbn des projekters dann in den dateien die @types mit requrie("@types") required, ladet dann lua_ls alle die typdefiniton der dateien im @types fiolder autoamtisch?
-oder hat das überhaupt keinen einfluss und es  geht nur umd die gebuildetel ibrary voin lua_ls die konfiguriert ist?
-
-Das könnte man mit dem build_luibrary lsp funkltinen checken!
-
-
 ---
 
 ## Important

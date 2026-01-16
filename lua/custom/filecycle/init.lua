@@ -1,7 +1,6 @@
 ---@module 'custom.filecycle'
 --- Navigate to the next/previous file in the current buffer's directory.
 --- This module provides user commands and keymaps with count support.
-require("custom.filecycle.@types")
 
 local DEFAULTS = {
   open_target = "current",

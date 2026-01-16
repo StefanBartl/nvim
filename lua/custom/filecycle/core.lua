@@ -7,7 +7,6 @@ local notify = require("lib.notify").create("[filecycle]")
 local M = {}
 
 local api, fn, uv = vim.api, vim.fn, (vim.uv or vim.loop)
-local cmd = vim.cmd
 local fnamemodify = fn.fnamemodify
 local DEFAULTS = fc.DEFAULTS
 
@@ -114,7 +113,7 @@ local function index_of(files, current, ci)
   return nil
 end
 
---- Open a path according to `opts.open_target`
+---Open a path according to `opts.open_target`
 ---@param path string
 ---@param opts FileCycle.Config
 ---@return boolean ok
@@ -131,32 +130,79 @@ local function open_path(path, opts)
     return false
   end
 
-  local target = opts.open_target or "current"
+  local target = opts.open_target or "replace"
   local esc = fn.fnameescape(path)
 
-  if target == "current" then
-    local _cmd
-    if opts.confirm_on_modified and vim.bo[bufnr].modified then
-      _cmd = "confirm edit " .. esc
-    else
-      _cmd = "edit " .. esc
-    end
-    local ok, err = pcall(function()
-      cmd(_cmd)
-    end)
+  -- Check for modified buffer if target is "replace" and confirm_on_modified is true
+  if target == "replace" and opts.confirm_on_modified and vim.bo[bufnr].modified then
+    local hover_select = require("lib.hover_select")
+
+    hover_select.open({
+      title = "Buffer has unsaved changes",
+      items = {
+        "Save and open",
+        "Discard changes and open",
+        "Cancel",
+      },
+      on_select = function(selected, _)
+        if selected == "Save and open" then
+          local ok_save = pcall(vim.cmd, "write")
+          if ok_save then
+            -- Replace current buffer content
+            pcall(vim.cmd, "edit " .. esc)
+          else
+            notify.error("[filecycle] Failed to save buffer")
+          end
+        elseif selected == "Discard changes and open" then
+          pcall(vim.cmd, "edit! " .. esc)
+        end
+        -- Cancel: do nothing
+      end,
+    })
+    return true
+  end
+
+  -- Normal flow: no modified buffer or confirm disabled
+  if target == "replace" then
+    -- TRUE REPLACE: Load new file and delete the old buffer
+    -- This ensures the buffer number changes but window stays focused
+    local old_bufnr = bufnr
+    local old_name = api.nvim_buf_get_name(old_bufnr)
+
+    -- Load new file in current window
+    local _cmd = "edit " .. esc
+    local ok, err = pcall(vim.cmd, _cmd)
     if not ok then
-      notify.error(("[NextPrev] open failed: %s"):format(tostring(err)))
+      notify.error(("[filecycle] open failed: %s"):format(tostring(err)))
       return false
     end
+
+    -- Delete the old buffer (if it's different from the new one)
+    local new_bufnr = api.nvim_get_current_buf()
+    if old_bufnr ~= new_bufnr and api.nvim_buf_is_valid(old_bufnr) then
+      -- Use bdelete to remove the old buffer from the buffer list
+      pcall(api.nvim_buf_delete, old_bufnr, { force = false })
+    end
+
     return true
+
+  elseif target == "current" then
+    -- NEW: Open in new buffer, keep old buffer, focus new
+    local old_bufnr = bufnr
+    local ok, err = pcall(vim.cmd, "edit " .. esc)
+    if not ok then
+      notify.error(("[filecycle] open failed: %s"):format(tostring(err)))
+      return false
+    end
+    -- Old buffer still exists in buffer list
+    return true
+
   elseif target == "split" or target == "vsplit" then
     local splitcmd = (target == "split") and "split " or "vsplit "
     local curwin = win
-    local ok, err = pcall(function()
-      cmd(splitcmd .. esc)
-    end)
+    local ok, err = pcall(vim.cmd, splitcmd .. esc)
     if not ok then
-      notify(("[NextPrev] %s failed: %s"):format(target, tostring(err)))
+      notify.error(("[filecycle] %s failed: %s"):format(target, tostring(err)))
       return false
     end
     if opts.keep_focus and api.nvim_win_is_valid(curwin) then
@@ -165,15 +211,15 @@ local function open_path(path, opts)
       end)
     end
     return true
+
   elseif target == "tab" then
-    local ok, err = pcall(function()
-      cmd("tabedit " .. esc)
-    end)
+    local ok, err = pcall(vim.cmd, "tabedit " .. esc)
     if not ok then
-      notify.error(("[NextPrev] tabedit failed: %s"):format(tostring(err)))
+      notify.error(("[filecycle] tabedit failed: %s"):format(tostring(err)))
       return false
     end
     return true
+
   elseif target == "background" then
     local ok_add, b = pcall(fn.bufadd, path)
     if not ok_add then
@@ -184,8 +230,9 @@ local function open_path(path, opts)
       vim.bo[b].buflisted = true
     end)
     return true
+
   else
-    notify.warn(("[NextPrev] unknown open_target: %s"):format(tostring(target)))
+    notify.warn(("[filecycle] unknown open_target: %s"):format(tostring(target)))
     return false
   end
 end

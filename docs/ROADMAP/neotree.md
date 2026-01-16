@@ -31,7 +31,7 @@
 
 ## normal
 
-1. commands und actions nach keymaps, keymaps nach sources verschieben
+1. in commands, usrcmds, kleymaps einen  oprdner /sources machen
 2. Source switcher optinal machen
 
 -

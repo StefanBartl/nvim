@@ -1,7 +1,7 @@
 *filecycle.txt*  Load previous/next file in current directory                     *filecycle*
 
-Module:  usrcmds.filecycle
-Version: 0.1.0
+Module:  custom.filecycle
+Version: 0.2.0
 For:     Neovim 0.9+ (0.10+ recommended)
 
 ==============================================================================
@@ -27,8 +27,13 @@ previous file in the directory of the current buffer. Navigation can optionally
 wrap around at the end/beginning, include hidden files, and canonicalize
 symbolic links to their real paths.
 
-The open target is configurable: current window, (vertical) split, new tab, or
-“background” (load buffer only).
+The open target is configurable:
+• replace: replace current buffer content (default)
+• stay: open in new buffer, keep old buffer, focus new
+• split: horizontal split
+• vsplit: vertical split
+• tab: new tab
+• background: load buffer only (no focus)
 
 No external dependencies. Platform: Linux/macOS.
 
@@ -39,33 +44,37 @@ After setup:
 
 >
 
-:NextFile           " jump to the next file in the directory
-:PreviousFile       " jump to the previous file
+:NextFile           " replace current buffer with next file
+:PreviousFile       " replace current buffer with previous file
 :NextFile!          " force switch without :confirm edit on modified buffers
 :PreviousFile!
+:NextFile stay      " open in new buffer (keep old buffer)
+:PreviousFile stay
 <
 Recommended mappings:
 
 >
 
-nnoremap <leader>nf :NextFile<CR>
+nnoremap <leader>nf :NextFile<CR>        " replace buffer (default)
 nnoremap <leader>pf :PreviousFile<CR>
+nnoremap <leader>nfn :NextFile stay<CR>  " stay mode (new buffer)
+nnoremap <leader>pfn :PreviousFile stay<CR>
 <
 
 ==============================================================================
 INSTALLATION (LAZY.NVIM)                                        *filecycle-install*
 
-Example for a local module under nvim/usrcmds/filecycle:
+Example for a local module under nvim/custom/filecycle:
 
 >
 
 {
-dir = vim.fn.stdpath("config") .. "/nvim/usrcmds/filecycle",
+dir = vim.fn.stdpath("config") .. "/nvim/custom/filecycle",
 name = "filecycle",
 lazy = true,
 config = function()
-require("usrcmds.filecycle").setup({
-open_target = "current",     -- "current"|"split"|"vsplit"|"tab"|"background"
+require("custom.filecycle").setup({
+open_target = "replace",     -- "replace"|"current"|"split"|"vsplit"|"tab"|"background"
 keep_focus = true,
 include_hidden = false,
 wrap = true,
@@ -76,10 +85,14 @@ case_insensitive = true,
 })
 end,
 keys = {
-{ "<leader>nf", function() require("usrcmds.filecycle").open("next") end,
-desc = "[filecycle] Next file" },
-{ "<leader>pf", function() require("usrcmds.filecycle").open("prev") end,
-desc = "[filecycle] Previous file" },
+{ "<leader>nf", function() require("custom.filecycle").open("next") end,
+desc = "[filecycle] Next file (replace)" },
+{ "<leader>pf", function() require("custom.filecycle").open("prev") end,
+desc = "[filecycle] Previous file (replace)" },
+{ "<leader>nfn", function() require("custom.filecycle").open("next", {open_target="current"}) end,
+desc = "[filecycle] Next file (stay)" },
+{ "<leader>pfn", function() require("custom.filecycle").open("prev", {open_target="current"}) end,
+desc = "[filecycle] Previous file (stay)" },
 },
 cmd = { "NextFile", "PreviousFile" },
 }
@@ -90,12 +103,23 @@ COMMANDS                                                      *filecycle-command
 
 *:NextFile*                                         :NextFile  *:NextFile* *:NextFile!*
 Open the next file (alphabetically) using the configured target (see
-|filecycle-config|.open_target). With “!” the option confirm_on_modified
-is temporarily disabled.
+|filecycle-config|.open_target).
+
+Arguments:
+• %          : replace current buffer (default)
+• stay       : open in new buffer, keep old buffer, focus new
+• new/bg/background : load in background buffer
+• split      : open in horizontal split
+• vsplit     : open in vertical split
+• tab        : open in new tab
+
+With "!" the option confirm_on_modified is temporarily disabled.
 
 *:PreviousFile*                               :PreviousFile  *:PreviousFile* *:PreviousFile!*
-Open the previous file. With “!” confirm_on_modified is temporarily
+Open the previous file. With "!" confirm_on_modified is temporarily
 disabled.
+
+Arguments: same as :NextFile
 
 Notes:
 • If the current buffer has no filename, the operation aborts (no directory
@@ -111,14 +135,14 @@ Setup function:
 
 >
 
-require("usrcmds.filecycle").setup({ ... })
+require("custom.filecycle").setup({ ... })
 <
 Options and defaults:
 
 ## Name                 Type                                   Default
 
-open_target          "current"|"split"|"vsplit"|"tab"|
-"background"                          "current"
+open_target          "replace"|"current"|"split"|"vsplit"|
+"tab"|"background"                    "replace"
 
 keep_focus           boolean                               true
 (only for "split"/"vsplit")
@@ -142,11 +166,14 @@ case_insensitive     boolean                               true
 (case-insensitive sort/match)
 
 Details:
-• open_target=background loads the buffer without switching windows
-(bufadd/bufload).
-• keep_focus applies to splits only; focus is restored via vim.schedule().
-• follow_symlinks=false compares “raw” paths; identical files reachable via
-different link paths are then treated as different.
+• open_target="replace": replaces current buffer content (default behavior)
+• open_target="current": opens in new buffer, keeps old buffer in buffer
+list, focuses new buffer (stay mode)
+• open_target="background": loads the buffer without switching windows
+(bufadd/bufload)
+• keep_focus applies to splits only; focus is restored via vim.schedule()
+• follow_symlinks=false compares "raw" paths; identical files reachable via
+different link paths are then treated as different
 
 ==============================================================================
 API (LUA)                                                         *filecycle-api*
@@ -157,7 +184,7 @@ API (LUA)                                                         *filecycle-api
 
 --- Initialize or override defaults.
 --- @param cfg FileCycle.Config|nil
-require("usrcmds.filecycle").setup({
+require("custom.filecycle").setup({
 wrap = true,
 case_insensitive = true,
 })
@@ -170,8 +197,8 @@ case_insensitive = true,
 --- Programmatic navigation with optional per-call overrides.
 --- @param mode '"next"'|'"prev"'
 --- @param overrides FileCycle.Config|nil
-require("usrcmds.filecycle").open("next")
-require("usrcmds.filecycle").open("prev", { open_target = "split", keep_focus = true })
+require("custom.filecycle").open("next")
+require("custom.filecycle").open("prev", { open_target = "split", keep_focus = true })
 <
 
 Type reference (LuaLS/Emmy, expressed separately in code):
@@ -180,7 +207,7 @@ Type reference (LuaLS/Emmy, expressed separately in code):
 
 ---@alias FilePath string
 ---@class FileCycle.Config
----@field open_target         "current"|"split"|"vsplit"|"tab"|"background"
+---@field open_target         "replace"|"current"|"split"|"vsplit"|"tab"|"background"
 ---@field keep_focus          boolean
 ---@field include_hidden      boolean
 ---@field wrap                boolean
@@ -198,56 +225,86 @@ Example:
 >
 
 vim.keymap.set("n", "<leader>nf", function()
-require("usrcmds.filecycle").open("next")
-end, { desc = "[filecycle] Next file in directory", silent = true })
+require("custom.filecycle").open("next")
+end, { desc = "[filecycle] Next file (replace buffer)", silent = true })
 
 vim.keymap.set("n", "<leader>pf", function()
-require("usrcmds.filecycle").open("prev")
-end, { desc = "[filecycle] Previous file in directory", silent = true })
+require("custom.filecycle").open("prev")
+end, { desc = "[filecycle] Previous file (replace buffer)", silent = true })
+
+vim.keymap.set("n", "<leader>nfn", function()
+require("custom.filecycle").open("next", { open_target = "current" })
+end, { desc = "[filecycle] Next file (stay mode)", silent = true })
+
+vim.keymap.set("n", "<leader>pfn", function()
+require("custom.filecycle").open("prev", { open_target = "current" })
+end, { desc = "[filecycle] Previous file (stay mode)", silent = true })
 <
+
+Default keymaps (when keymaps=true in setup):
+
+| Keymap       | Action                                      |
+| ------------ | ------------------------------------------- |
+| <leader>nf   | Next file (replace buffer)                  |
+| <leader>pf   | Previous file (replace buffer)              |
+| <leader>nfn  | Next file (stay mode - new buffer)          |
+| <leader>pfn  | Previous file (stay mode - new buffer)      |
+| <leader>nF   | Next file (background buffer)               |
+| <leader>pF   | Previous file (background buffer)           |
+| <leader>NF   | Next file (vsplit)                          |
+| <leader>PF   | Previous file (vsplit)                      |
 
 ==============================================================================
 BEHAVIOR AND NOTES                                               *filecycle-notes*
 
-• Base directory: root="buffer_dir" uses the current file’s directory;
+• Base directory: root="buffer_dir" uses the current file's directory;
 root="cwd" uses the current working directory.
 • Listing: non-recursive via vim.fs.dir; type fallback via uv.fs_stat on
 older libuv versions.
 • Sorting: alphabetical, optionally case-insensitive.
-• Boundaries: with wrap=false, a “boundary reached” message is shown at
+• Boundaries: with wrap=false, a "boundary reached" message is shown at
 the edges.
 • Background loading: open_target="background" marks the buffer as listed
 without window switches.
+• Replace mode: open_target="replace" (default) replaces current buffer
+content, respecting confirm_on_modified (hover_select dialog if modified).
+• Stay mode: open_target="current" opens in new buffer, keeps old buffer
+in buffer list, focuses new buffer.
 • Safety: confirm_on_modified protects against discarding unsaved changes;
-“!” on commands temporarily disables it.
+"!" on commands temporarily disables it.
 
 ==============================================================================
 TROUBLESHOOTING                                            *filecycle-troubleshoot*
 
 ## Problem                           Cause / remedy
 
-“no files in directory”           Filter excludes everything (e.g. only dotfiles
+"no files in directory"           Filter excludes everything (e.g. only dotfiles
 while include_hidden=false) or directory empty.
 
-“current buffer has no file name” Unnamed buffer; save the file or use
+"current buffer has no file name" Unnamed buffer; save the file or use
 root="cwd".
 
-“boundary reached (wrap disabled)”
+"boundary reached (wrap disabled)"
 wrap=false and edge reached; enable wrap.
 
-“order unexpected”                Check case_insensitive; when true, comparisons
+"order unexpected"                Check case_insensitive; when true, comparisons
 use lowercase.
 
-“same file appears twice”         follow_symlinks=false with multiple link paths;
+"same file appears twice"         follow_symlinks=false with multiple link paths;
 set follow_symlinks=true.
 
 ==============================================================================
 FAQ                                                                  *filecycle-faq*
 
-Q: Why is the current file sometimes “inserted” although it would be filtered?
+Q: Why is the current file sometimes "inserted" although it would be filtered?
 A: To compute stable neighbors, the current file is virtually inserted into
 the sorted list if it would otherwise be missing (e.g. dotfile while
 include_hidden=false).
+
+Q: What's the difference between "replace" and "stay" mode?
+A: "replace" (default) replaces the current buffer content (like :edit),
+keeping only one buffer. "stay" mode opens the new file in a new buffer
+while keeping the old buffer in the buffer list.
 
 Q: Can I sort by extension or size?
 A: Not currently; the module is intentionally minimal (alphabetical only).

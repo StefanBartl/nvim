@@ -50,6 +50,7 @@
 5. E:\repos\Notes\MyNotes\Neovim\40_Optimierung\Sauberes-Registrieren-und-Reloaden-von-Events.md implementieren
 6. Externe PLugins die usercommands und/oder mappings haben, diese in die `/config/**` verschieben und über die plugin init laden. Am besten ein gemeinsames config/**/actions.lua für Commands, Keymaps und Menüs. [Actions](MyNotes\Neovim\40_Optimierung\Actions_Mappings-Commands-Menu.md)
 7. `config.neotree.trash.init.lua`-nmodularisieren - bzw überhaupt alles :-)
+8. es ist wrsch beser, die @types immer im modul root zu belassen und nur overall genutzte imt config root
 
 ---
 
@@ -102,6 +103,7 @@
 - lua\custom\format\table\
 - lua\custom\format\text_width\
 - lua\custom\format\misc\
+- `custom/filecycle/doc` - muss aktualisert werden
 
 --
 
