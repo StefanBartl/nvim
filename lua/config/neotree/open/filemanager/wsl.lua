@@ -3,7 +3,7 @@
 
 local node_utils = require("config.neotree.utils.node")
 
-local M ---@type Cfg.NeoTree.Wsl.FM
+local M ---@type Cfg.NeoTree.Wsl.FileManager
 
 M = {
     _cfg = {

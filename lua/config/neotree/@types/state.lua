@@ -6,14 +6,17 @@
 --- Represents the current view state of a Neo-tree window/source.
 
 ---@class Cfg.NeoTree.Window
----@field position Cfg.NeoTree.Position|nil Window placement
+---@field position? Cfg.NeoTree.Position|nil Window placement
+---@field open? boolean If neotree window is open
 
 ---@class Cfg.NeoTree.Tree
----@field get_node fun(self: Cfg.NeoTree.Tree, id?: string): Cfg.NeoTree.Node|nil
----@field get_nodes fun(self: Cfg.NeoTree.Tree, id?: string): Cfg.NeoTree.Node[]|nil
----@field set_selection fun(self: Cfg.NeoTree.Tree, node_path: string)|nil
----@field root Cfg.NeoTree.Node|nil Root node of the tree
----@field children Cfg.NeoTree.Node[]|nil Direct children of root
+---@field get_node? fun(self: Cfg.NeoTree.Tree, id?: string): Cfg.NeoTree.Node|nil
+---@field get_nodes? fun(self: Cfg.NeoTree.Tree, id?: string): Cfg.NeoTree.Node[]|nil
+---@field set_selection? fun(self: Cfg.NeoTree.Tree, node_path: string)|nil
+---@field root? Cfg.NeoTree.Node|nil Root node of the tree
+---@field children? Cfg.NeoTree.Node[]|nil Direct children of root
+---@field node_id? string|nil
+---@field expanded? table<string, boolean>
 
 ---@class Cfg.NeoTree.State
 ---@field name Cfg.NeoTree.SourceName Source identifier

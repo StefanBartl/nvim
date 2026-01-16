@@ -3,7 +3,7 @@
 local tree = require("config.neotree.utils.tree")
 
 ---@param state Cfg.NeoTree.State # Neotrees table object
----@param opts Cfg.NeoTree.Copy.ClipboardOpt
+---@param opts Cfg.NeoTree.Actions.CopyClipboardOpts
 ---@return boolean
 return function(state, opts)
   local entries, _ = tree.collect_for_node(state, "folders")

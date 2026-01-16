@@ -2,9 +2,7 @@
 
 local M = {}
 
----@param opts Cfg.NeoTree.AutoCmds
-function M.attach(opts)
-  opts = opts or {}
+function M.attach()
 end
 
 return M

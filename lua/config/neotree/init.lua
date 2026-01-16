@@ -7,6 +7,7 @@ local M = {}
 ---@type Cfg.NeoTree.InitOpts
 local defaults = {
   debug = true,
+  busy_guard = false,
   default_position = "right",
   restore_last_position = false,
   window_debug = true,
@@ -40,7 +41,12 @@ M.options = vim.deepcopy(defaults)
 
 ---@return Cfg.NeoTree.Position|"right"
 function M.get_default_position()
-  return M.options.default_position or "right"
+    return M.options.default_position or "right"
+end
+
+---@return boolean
+function M.busy_guard()
+  return M.options.busy_guard
 end
 
 --- Initialize trash system

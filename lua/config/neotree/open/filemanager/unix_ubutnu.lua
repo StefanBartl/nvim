@@ -2,11 +2,9 @@
 --- Open current Neo-tree node in the system file manager with selection support.
 --- FIXED: Uses node_utils.get_current() for consistent node retrieval
 
-local node_utils = require("config.neotree.utils.node")
-
-local node_utils = require("config.neotree.utils.node")
-
 local M = {}
+
+local node_utils = require("config.neotree.utils.node")
 
 -- Small FS helpers -------------------------------------------------------------
 

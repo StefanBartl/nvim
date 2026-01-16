@@ -5,7 +5,7 @@ local M = {}
 
 ---Format entries based on options
 ---@param entries string[]
----@param opts Cfg.NeoTree.Copy.ClipboardOpt
+---@param opts Cfg.NeoTree.Actions.CopyClipboardOpts
 ---@return string formatted
 local function format_entries(entries, opts)
   local lines = {}
@@ -43,7 +43,7 @@ end
 
 ---Create preview message
 ---@param entries string[]
----@param opts Cfg.NeoTree.Copy.ClipboardOpt
+---@param opts Cfg.NeoTree.Actions.CopyClipboardOpts
 ---@return string message
 local function create_preview_message(entries, opts)
   local count = #entries
@@ -67,7 +67,7 @@ end
 
 ---Copy entries to system clipboard
 ---@param entries string[] Absolute paths to copy
----@param opts? Cfg.NeoTree.Copy.ClipboardOpt Options
+---@param opts? Cfg.NeoTree.Actions.CopyClipboardOpts Options
 ---@return boolean success
 function M.copy(entries, opts)
   opts = vim.tbl_extend("force", {
@@ -96,7 +96,7 @@ end
 
 ---Main function (callable as module)
 ---@param entries string[]
----@param opts? Cfg.NeoTree.Copy.ClipboardOpt
+---@param opts? Cfg.NeoTree.Actions.CopyClipboardOpts
 ---@return boolean
 return function(entries, opts)
   return M.copy(entries, opts)
