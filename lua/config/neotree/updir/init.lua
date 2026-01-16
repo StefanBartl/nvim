@@ -45,7 +45,7 @@ function M.up_one_level(state)
   end
 
   -- 3) Determine command based on window type (optional)
-  local position = (state.window and state.window.position) or "left"
+  local position = (state.window and state.window.position) or require("config.neotree").get_default_position()
   local cd_cmd = (position == "current" or position == "float") and "lcd" or "cd"
   local esc = vim.fn.fnameescape(parent)
 

@@ -11,9 +11,6 @@
 
 local Cfg = {}
 
----@class Cfg.NeoTree.Window
----@field position '"left"|"right"|"float"|"current"'
-
 ---@class Cfg.NeoTree.Node
 ---@field id string                         -- Unique node identifier (usually absolute path)
 ---@field get_id string                     -- get unique node identifier (usually absolute path)

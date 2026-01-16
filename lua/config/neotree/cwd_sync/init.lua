@@ -117,7 +117,7 @@ local function sync_now(cfg)
     cmd.execute({
       action = "show",
       source = "filesystem",
-      position = "left",
+      position = require("config.neotree").get_default_position(),
       dir = dir,
       reveal = true,
       reveal_file = path,

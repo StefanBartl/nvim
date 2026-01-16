@@ -217,7 +217,7 @@ local function attach_component(cfg, opts)
   end
 end
 
----@param user_cfg NeoTreeCurrentHLConfig|nil
+---@param user_cfg Cfg.NeoTree.CurrentHl.Config|boolean|nil
 function M.setup(user_cfg)
   local cfg = vim.tbl_deep_extend("force", {
     file_hl = "NeoTreeCurrentFile",

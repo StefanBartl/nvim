@@ -65,7 +65,7 @@ end
 ---@param method string
 ---@param position string
 ---@param duration_ns integer
----@param action_type "left"|"right"|"float"|"current"
+---@param action_type Cfg.NeoTree.Position
 function Timing.record(method, position, duration_ns, action_type)
   local cwd = uv.cwd() or vim.fn.stdpath("config")
   local cwd_files = count_files_shallow(cwd)

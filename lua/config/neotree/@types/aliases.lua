@@ -1,6 +1,6 @@
 ---@meta
 ---@module 'config.neotree.aliases'
 
----@alias Cfg.NeoTree.Position "left"|"right"|"top"|"bottom"|"float"|"current"
+---@alias Cfg.NeoTree.Position "left"|"right"|"float"|"current"
 
 return {}

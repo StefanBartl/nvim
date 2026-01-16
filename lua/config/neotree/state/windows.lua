@@ -8,7 +8,7 @@ local M = {}
 
 ---@class NeoTreeWindowState
 ---@field open boolean
----@field position "left"|"right"|"float"|"current"|nil
+---@field position Cfg.NeoTree.Position|nil
 
 ---@type NeoTreeWindowState
 local state = {
@@ -57,7 +57,7 @@ function M.get_position()
   return state.position
 end
 
----@param pos "left"|"right"|"float"|"current"
+---@param pos Cfg.NeoTree.Position
 ---@param action? string
 function M.set_open(pos, action)
   local from = clone_state()

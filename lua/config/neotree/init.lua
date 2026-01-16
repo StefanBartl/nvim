@@ -5,8 +5,9 @@ local M = {}
 
 --- Default configuration
 ---@type Cfg.NeoTree.InitOpts
-M.defaults = {
+local defaults = {
   debug = true,
+  default_position = "right",
   restore_last_position = false,
   window_debug = true,
   trash = {
@@ -30,16 +31,20 @@ M.defaults = {
     open_if_closed = false,
     use_project_root = true,
     project_root_fallback_to_bufdir = true,
-    force_position_left = true,
   },
 }
 
 --- Active configuration (merged with user options)
 ---@type Cfg.NeoTree.InitOpts
-M.options = vim.deepcopy(M.defaults)
+M.options = vim.deepcopy(defaults)
+
+---@return Cfg.NeoTree.Position|"right"
+function M.get_default_position()
+  return M.options.default_position or "right"
+end
 
 --- Initialize trash system
----@param config Cfg.NeoTree.Trash.Config|boolean
+---@param config Cfg.NeoTree.Trash.Config|boolean|nil
 ---@return nil
 local function setup_trash(config)
   local trash_mod = require("config.neotree.trash")
@@ -47,7 +52,7 @@ local function setup_trash(config)
   if type(config) == "table" then
     trash_mod.setup(config)
   elseif config == true then
-    trash_mod.setup(M.defaults.trash)
+       trash_mod.setup(M.options.trash)
   end
 
   require("config.neotree.trash.commands").setup()
@@ -61,13 +66,13 @@ local function setup_window_opener(debug)
 end
 
 --- Initialize current file highlight
----@param config Cfg.NeoTree.CurrentHl.Config|boolean
+---@param config Cfg.NeoTree.CurrentHl.Config|boolean|nil
 ---@return nil
 local function setup_current_hl(config)
   if type(config) == "table" then
     require("config.neotree.current_hl").setup(config)
   elseif config == true then
-    require("config.neotree.current_hl").setup(M.defaults.current_hl)
+    require("config.neotree.current_hl").setup(M.options.current_hl)
   end
 end
 
@@ -78,7 +83,7 @@ local function setup_cwd_sync(config)
   if type(config) == "table" then
     require("config.neotree.cwd_sync").setup(config)
   elseif config == true then
-    require("config.neotree.cwd_sync").setup(M.defaults.cwd_sync)
+    require("config.neotree.cwd_sync").setup(M.options.cwd_sync)
   end
 end
 
@@ -88,7 +93,7 @@ end
 function M.setup(opts)
   -- Merge user options with defaults
   if type(opts) == "table" then
-    M.options = vim.tbl_deep_extend("force", M.defaults, opts)
+    M.options = vim.tbl_deep_extend("force", vim.deepcopy(defaults), opts)
   end
 
   -- Setup subsystems
@@ -96,7 +101,9 @@ function M.setup(opts)
     setup_trash(M.options.trash)
   end
 
-  setup_window_opener(M.options.window_debug or M.options.debug)
+  setup_window_opener(
+    (M.options.window_debug ~= nil and M.options.window_debug) or M.options.debug or false
+  )
 
   if M.options.current_hl then
     setup_current_hl(M.options.current_hl)
@@ -114,4 +121,5 @@ function M.setup(opts)
   })
 end
 
+---@type Cfg.NeoTree.SetupModule
 return M

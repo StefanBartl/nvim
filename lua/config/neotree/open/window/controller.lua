@@ -38,13 +38,13 @@ end
 -- Constants & Configuration
 -- ============================================================================
 
----@enum NeoTreePosition
-local PositionEnum = {
-  left = "left",
-  right = "right",
-  float = "float",
-  current = "current",
-}
+-- ---@enum NeoTreePosition
+-- local PositionEnum = {
+  -- left = "left",
+  -- right = "right",
+-- float = "float",
+-- current = "current",
+-- }
 
 ---@type table<string, true>
 local valid_positions = {
@@ -55,8 +55,8 @@ local valid_positions = {
 }
 
 -- Busy-Guard Configuration
-local BUSY_GUARD_TIMEOUT_MS = 50  -- Configurable timeout
-local BUSY_GUARD_MAX_RETRIES = 3  -- Max retry attempts before force-clear
+local BUSY_GUARD_TIMEOUT_MS = 50 -- Configurable timeout
+local BUSY_GUARD_MAX_RETRIES = 3 -- Max retry attempts before force-clear
 
 -- ============================================================================
 -- Busy Guard State
@@ -99,10 +99,7 @@ local function try_acquire_lock()
     -- Force-clear if too many retries (safety valve)
     if busy_state.retry_count > BUSY_GUARD_MAX_RETRIES then
       if cfg.debug then
-        vim.notify(
-          "[neo-tree] Max retries exceeded, force-clearing lock",
-          vim.log.levels.ERROR
-        )
+        vim.notify("[neo-tree] Max retries exceeded, force-clearing lock", vim.log.levels.ERROR)
       end
       busy_state.locked = false
       busy_state.lock_time = nil
@@ -140,8 +137,8 @@ end
 -- Position Validation
 -- ============================================================================
 
----@param pos string
----@return "left"|"right"|"float"|"current"
+---@param pos Cfg.Neotree.Position
+---@return Cfg.Neotree.Position
 local function normalize_position(pos)
   if valid_positions[pos] then
     return pos
@@ -152,10 +149,10 @@ local function normalize_position(pos)
       vim.log.levels.WARN
     )
   end
-  return PositionEnum.right
+  return require("config.neotree").get_default_position()
 end
 
----@param target_position string
+---@param target_position Cfg.NeoTree.Position
 ---@return "open"|"close"|"switch"
 local function decide_action(target_position)
   if not state.is_open() then
@@ -177,7 +174,7 @@ end
 -- ============================================================================
 
 ---@param NeoCmd table
----@param target_position "left"|"right"|"float"|"current"
+---@param target_position Cfg.NeoTree.Position
 local function open_window(NeoCmd, target_position)
   if cfg.restore_last_position then
     -- ========================================================================
@@ -242,7 +239,6 @@ local function open_window(NeoCmd, target_position)
         focus_neotree_window()
       end, 100)
     end, delay)
-
   else
     -- ========================================================================
     -- Normal Mode: Reveal current file
@@ -364,7 +360,7 @@ local function close_window(NeoCmd)
 end
 
 ---@param NeoCmd table
----@param target_position "left"|"right"|"float"|"current"
+---@param target_position Cfg.NeoTree.Position
 local function switch_window(NeoCmd, target_position)
   local current_pos = state.get_position()
 
@@ -374,8 +370,12 @@ local function switch_window(NeoCmd, target_position)
 
   if cfg.debug then
     vim.notify(
-      string.format("[neo-tree] Switching from %s to %s (delay: %dms)",
-        tostring(current_pos), target_position, delay),
+      string.format(
+        "[neo-tree] Switching from %s to %s (delay: %dms)",
+        tostring(current_pos),
+        target_position,
+        delay
+      ),
       vim.log.levels.INFO
     )
   end
@@ -403,7 +403,7 @@ end
 -- ============================================================================
 
 ---Create an opener function for a specific position
----@param target_position string
+---@param target_position Cfg.NeoTree.Position
 ---@return fun()
 function M.make_opener(target_position)
   local ok, NeoCmd = pcall(require, "neo-tree.command")
@@ -413,6 +413,7 @@ function M.make_opener(target_position)
     end
   end
 
+  ---@type Cfg.NeoTree.Position
   local pos = normalize_position(target_position)
 
   return function()
@@ -422,8 +423,11 @@ function M.make_opener(target_position)
     if not try_acquire_lock() then
       if cfg.debug then
         vim.notify(
-          string.format("[neo-tree] Blocked by busy-guard (retry %d/%d)",
-            busy_state.retry_count, BUSY_GUARD_MAX_RETRIES),
+          string.format(
+            "[neo-tree] Blocked by busy-guard (retry %d/%d)",
+            busy_state.retry_count,
+            BUSY_GUARD_MAX_RETRIES
+          ),
           vim.log.levels.WARN
         )
       end
@@ -435,8 +439,11 @@ function M.make_opener(target_position)
     -- ========================================================================
     if cfg.debug then
       vim.notify(
-        string.format("[neo-tree] Opener called: target=%s, current=%s",
-          pos, state.get_position() or "nil"),
+        string.format(
+          "[neo-tree] Opener called: target=%s, current=%s",
+          pos,
+          state.get_position() or "nil"
+        ),
         vim.log.levels.INFO
       )
     end
@@ -444,10 +451,7 @@ function M.make_opener(target_position)
     local action = decide_action(pos)
 
     if cfg.debug then
-      vim.notify(
-        string.format("[neo-tree] Action decided: %s", action),
-        vim.log.levels.INFO
-      )
+      vim.notify(string.format("[neo-tree] Action decided: %s", action), vim.log.levels.INFO)
     end
 
     local ok_exec, err = pcall(function()

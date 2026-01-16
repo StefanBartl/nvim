@@ -30,7 +30,7 @@ function M.reveal(ctx)
     cmd.execute({
       action = "show",
       source = "filesystem",
-      position = ctx.position or "left",
+      position = ctx.position or require("config.neotree").get_default_position(),
       dir = ctx.dir,
       reveal = true,
       reveal_file = ctx.file,

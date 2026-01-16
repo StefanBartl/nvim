@@ -30,7 +30,7 @@ M.config = {
 }
 
 ---Configure trash module
----@param config Cfg.NeoTree.Trash.Config|nil
+---@param config Cfg.NeoTree.Trash.Config|boolean|nil
 function M.setup(config)
   if config then
     M.config = vim.tbl_deep_extend("force", M.config, config)

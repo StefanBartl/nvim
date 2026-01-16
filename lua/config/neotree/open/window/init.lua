@@ -40,9 +40,6 @@ function M.attach_opener_mappings(opts)
       silent = true,
     })
   end
-
-  -- Alternative Mappings definieren FIX: wentfernen wenn M-r wieer funkltionert
-  map("n", "<leader>nr", opener_factory("right"), { desc = "[Neo-tree] Toggle window (right)" })
 end
 
 return M

@@ -127,15 +127,6 @@ return {
               vim.cmd("highlight! Cursor guibg=#5f87af blend=0")
             end,
           },
-          {
-            event = "neo_tree_window_after_open",
-            handler = function(args)
-              -- Autofokus-Neo-Baum-Fenster beim Öffnen
-              if args.winid and vim.api.nvim_win_is_valid(args.winid) then
-                pcall(vim.api.nvim_set_current_win, args.winid)
-              end
-            end,
-          },
         },
 
         default_component_config = {
@@ -232,7 +223,7 @@ return {
           find_by_full_path_words = true,
           group_empty_dirs = true,
           use_libuv_file_watcher = true,
-          window = { position = "left", mappings = FILESYSTEM },
+          window = { position = "right", mappings = FILESYSTEM }, -- FIX: positions: require("config.neotree").get_default_position() klann ich hier noch nicht aufrufen? Ist dies notwendig? Oder überschreibe ich in der setup() nicht effektiv sowieso diese einstellung?
           filtered_items = {
             visible = true,
             hide_dotfiles = false,
@@ -274,7 +265,7 @@ return {
           -- Document symbols has NO filesystem mappings!
           window = {
             mappings = DOCUMENT_SYMBOLS, -- Only document_symbols mappings
-            position = "left",
+            position = "right",
           },
         },
 
@@ -300,7 +291,7 @@ return {
                 max_items = 10000,
               },
               window = {
-                position = "left",
+                position = "right",
                 mappings = DIAGNOSTICS,
               },
             }
@@ -314,7 +305,7 @@ return {
         -- Netman source configuration
         netman = has_netman and {
           window = {
-            position = "left",
+            position = "right",
             mappings = {},
           },
         } or nil,

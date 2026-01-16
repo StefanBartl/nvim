@@ -24,7 +24,7 @@
 ---@field cwd_files integer|nil
 ---@field first_session boolean
 ---@field first_cwd boolean
----@field action_type "left"|"right"|"float"|"current"
+---@field action_type Cfg.NeoTree.Position
 
 -- ===========================
 -- open.filemanager
@@ -42,13 +42,6 @@
 
 ---@alias UnixPath string
 ---@alias WinPath string
-
----@class Cfg.NeoTree.Tree
----@field get_node fun(self: Cfg.NeoTree.Tree, id?  : string): Cfg.NeoTree.Node|nil
----@field get_nodes fun(self: Cfg.NeoTree.Tree, id?  : string): Cfg.NeoTree.Node[]|nil
----@field root Cfg.NeoTree.Node|nil
----@field set_selection fun(self: Cfg.NeoTree.Tree, node_path: string) | nil
----@field children Cfg.NeoTree.Node[] | nil
 
 -- ===========================
 -- reveal_manager
@@ -134,5 +127,18 @@
 ---@class Cfg.NeoTree.Actions.NodeInfoState
 ---@field active_win integer|nil Current hover window
 ---@field active_path string|nil Currently displayed path
+
+-- ===========================
+--- CWD synchronization state
+
+---@class Cfg.NeoTree.CwdSyncState
+---@field timer uv.uv_timer_t|nil
+---@field pending boolean
+---@field last_dir string|nil
+---@field last_file string|nil
+---@field user_navigated boolean
+---@field last_user_action integer
+---@field pause_until integer
+---@field sync_scheduled boolean
 
 return {}
