@@ -9,7 +9,7 @@ local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local TESTS = require("config.neotree.keymaps.tests")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local COMMANDS = require("config.neotree.commands")
--- local ICONS = require("config.neotree.sources.icons")
+local ICONS = require("config.neotree.sources.icons")
 -- local neotest_neotree = require("config.neotest.neotree")
 
 return {
@@ -26,83 +26,87 @@ return {
       { "mrbjarksen/neo-tree-diagnostics.nvim" },
     },
 
-    -- CRITICAL: lazy = true ermöglicht lazy source loading
-    lazy = true,
-    -- Nur filesystem beim Start laden
-    event = "VeryLazy",
+    lazy = false,
+
     opts = function()
       local has_netman = pcall(require, "netman")
       local has_neotest_source = pcall(require, "neo-tree-tests-source")
       local has_diagnostics = pcall(require, "neo-tree.sources.diagnostics")
 
-      local registry = require("config.neotree.sources.registry")
+      -- configuration knobs
+      local icon_family = "nerd" -- common | nerd | codicons
+      local icon_variant = "v1" -- v1 | v2
+      local name_length = "long" -- long | short
 
-      -- Register sources (NICHT laden!)
-      registry.register("filesystem", function()
-        return require("neo-tree.sources.filesystem")
-      end)
+      local enabled_sources = {
+        "filesystem",
+        "buffers",
+        "git_status",
+        "document_symbols",
+      }
 
-      registry.register("buffers", function()
-        return require("neo-tree.sources.buffers")
-      end)
+      if has_diagnostics then
+        enabled_sources[#enabled_sources + 1] = "diagnostics"
+      end
 
-      registry.register("git_status", function()
-        return require("neo-tree.sources.git_status")
-      end)
+      if has_netman then
+        enabled_sources[#enabled_sources + 1] = "netman.ui.neo-tree"
+      end
 
-      registry.register("document_symbols", function()
-        return require("neo-tree.sources.document_symbols")
-      end)
+      if has_neotest_source then
+        enabled_sources[#enabled_sources + 1] = "tests"
+      end
 
-      -- -- Build sources for source_selector
-      -- ---@type table[]
-      -- local sources = {
-      -- {
-      -- source = "filesystem",
-      -- display_name = ICONS.format(icon_family, icon_variant, "filesystem", name_length),
-      -- },
-      -- {
-      -- source = "buffers",
-      -- display_name = ICONS.format(icon_family, icon_variant, "buffers", name_length),
-      -- },
-      -- {
-      -- source = "git_status",
-      -- display_name = ICONS.format(icon_family, icon_variant, "git_status", name_length),
-      -- },
-      -- {
-      -- source = "document_symbols",
-      -- display_name = ICONS.format(icon_family, icon_variant, "document_symbols", name_length),
-      -- },
-      -- }
+      -- Build sources for source_selector
+      ---@type table[]
+      local sources = {
+        {
+          source = "filesystem",
+          display_name = ICONS.format(icon_family, icon_variant, "filesystem", name_length),
+        },
+        {
+          source = "buffers",
+          display_name = ICONS.format(icon_family, icon_variant, "buffers", name_length),
+        },
+        {
+          source = "git_status",
+          display_name = ICONS.format(icon_family, icon_variant, "git_status", name_length),
+        },
+        {
+          source = "document_symbols",
+          display_name = ICONS.format(icon_family, icon_variant, "document_symbols", name_length),
+        },
+      }
 
-      -- if has_netman then
-      -- sources[#sources + 1] = {
-      -- source = "netman.ui.neo-tree",
-      -- display_name = ICONS.format(icon_family, icon_variant, "netman", name_length),
-      -- }
-      -- end
+      if has_netman then
+        sources[#sources + 1] = {
+          source = "netman.ui.neo-tree",
+          display_name = ICONS.format(icon_family, icon_variant, "netman", name_length),
+        }
+      end
 
-      -- if has_neotest_source then
-      -- sources[#sources + 1] = {
-      -- source = "tests",
-      -- display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
-      -- }
-      -- end
+      if has_neotest_source then
+        sources[#sources + 1] = {
+          source = "tests",
+          display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
+        }
+      end
 
-      -- if has_diagnostics then
-      -- sources[#sources + 1] = {
-      -- source = "diagnostics",
-      -- display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
-      -- }
-      -- end
+      if has_diagnostics then
+        sources[#sources + 1] = {
+          source = "diagnostics",
+          display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
+        }
+      end
 
       return {
-        -- NUR filesystem initial laden
-        sources = { "filesystem" },
-
+        sources = enabled_sources,
         source_selector = {
-          winbar = false, -- DISABLED: Icons würden alle sources laden
+          winbar = true,
           statusline = false,
+          show_scrolled_off_parent_node = true,
+          padding = { left = 1, right = 1 },
+          sources = sources,
         },
         close_if_last_window = false,
         popup_border_style = "rounded",
@@ -309,17 +313,6 @@ return {
           },
         },
       })
-
-      -- Filesystem sofort laden
-      local registry = require("config.neotree.sources.registry")
-      registry.load("filesystem")
-
-      require("neo-tree").setup(opts)
-
-      -- Keymap für Source-Switcher
-      vim.keymap.set("n", "<leader>ns", function()
-        require("config.neotree.sources.switcher").show_picker()
-      end, { desc = "[Neo-tree] Switch Source" })
     end,
   },
 }

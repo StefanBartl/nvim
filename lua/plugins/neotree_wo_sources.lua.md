@@ -1,12 +1,7 @@
 ---@module 'plugins.neotree'
 
 local KEYMAPS = require("config.neotree.keymaps")
-local BUFFERS = require("config.neotree.keymaps.buffers")
-local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
 local FILESYSTEM = require("config.neotree.keymaps.filesystem")
-local GIT_STATUS = require("config.neotree.keymaps.git_status")
-local TESTS = require("config.neotree.keymaps.tests")
-local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local COMMANDS = require("config.neotree.commands")
 
 return {
@@ -23,34 +18,8 @@ return {
     lazy = false,
 
     opts = function()
-      local has_netman = pcall(require, "netman")
-      local has_neotest_source = pcall(require, "neo-tree-tests-source")
-      local has_diagnostics = pcall(require, "neo-tree.sources.diagnostics")
-
-      -- CRITICAL: Alle Sources registrieren, auch wenn nicht sofort sichtbar
-      local enabled_sources = {
-        "filesystem",
-        "buffers",
-        "git_status",
-        "document_symbols",
-      }
-
-      if has_diagnostics then
-        enabled_sources[#enabled_sources + 1] = "diagnostics"
-      end
-
-      if has_netman then
-        enabled_sources[#enabled_sources + 1] = "netman.ui.neo-tree"
-      end
-
-      if has_neotest_source then
-        enabled_sources[#enabled_sources + 1] = "tests"
-      end
-
       return {
-        sources = enabled_sources,
-
-        -- CRITICAL: Source-Selector komplett deaktivieren
+        sources = { "filesystem" },
         source_selector = {
           winbar = false,
           statusline = false,
@@ -102,21 +71,6 @@ return {
             { "icon" },
             { "current_filter" },
             { "name" },
-            { "git_status", highlight = "NeoTreeDimText" },
-            diagnostics = has_diagnostics and {
-              symbols = {
-                hint = "",
-                info = "",
-                warn = "",
-                error = "",
-              },
-              highlights = {
-                hint = "DiagnosticSignHint",
-                info = "DiagnosticSignInfo",
-                warn = "DiagnosticSignWarn",
-                error = "DiagnosticSignError",
-              },
-            } or nil,
             { "clipboard" },
           },
           file = {
@@ -124,7 +78,6 @@ return {
             { "icon" },
             { "name", use_git_status_colors = true },
             { "git_status", highlight = "NeoTreeDimText" },
-            has_diagnostics and { "diagnostics" } or nil,
             {
               function(_, node, state)
                 local marks = state.explicitly_marked_node_ids or {}
@@ -170,73 +123,6 @@ return {
             never_show_by_pattern = {},
           },
         },
-
-        buffers = { window = { mappings = BUFFERS } },
-        git_status = { window = { mappings = GIT_STATUS } },
-
-        document_symbols = {
-          follow_cursor = true,
-          client_filters = "first",
-          renderers = {
-            root = {
-              { "indent" },
-              { "icon", default = "C" },
-              { "name", zindex = 10 },
-            },
-            symbol = {
-              { "indent", with_expanders = true },
-              { "kind_icon", default = "?" },
-              {
-                "container",
-                content = {
-                  { "name", zindex = 10 },
-                  { "kind_name", zindex = 20, align = "right" },
-                },
-              },
-            },
-          },
-          window = {
-            mappings = DOCUMENT_SYMBOLS,
-            position = "right",
-          },
-        },
-
-        diagnostics = has_diagnostics and {
-          auto_preview = {
-            enabled = false,
-            preview_config = {},
-            event = "neo_tree_buffer_enter",
-          },
-          bind_to_cwd = true,
-          diag_sort_function = "severity",
-          follow_current_file = {
-            enabled = true,
-            always_focus_file = false,
-          },
-          group_dirs_and_files = true,
-          group_empty_dirs = true,
-          show_unloaded = true,
-          refresh = {
-            delay = 100,
-            event = "vim_diagnostic_changed",
-            max_items = 10000,
-          },
-          window = {
-            position = "right",
-            mappings = DIAGNOSTICS,
-          },
-        } or nil,
-
-        tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
-          window = { mappings = TESTS },
-        }) or nil,
-
-        netman = has_netman and {
-          window = {
-            position = "right",
-            mappings = {},
-          },
-        } or nil,
       }
     end,
 
@@ -273,16 +159,6 @@ return {
         -- project_root_fallback_to_bufdir = true,
         -- },
       })
-
-      -- Source-Switcher Keymap
-      vim.keymap.set("n", "<leader>ns", function()
-        require("config.neotree.sources.switcher").show_picker()
-      end, { desc = "[Neo-tree] Switch Source" })
-
-      -- Debug Command
-      vim.api.nvim_create_user_command("NeoTreeDebugSources", function()
-        require("config.neotree.sources.switcher").debug_sources()
-      end, { desc = "[Neo-tree] Debug source detection" })
     end,
   },
 }

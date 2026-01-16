@@ -3,105 +3,24 @@
 
 local ICONS = require("config.neotree.sources.icons")
 local hover_select = require("lib.hover_select")
+local window_state = require("config.neotree.state.windows")
+local controller = require("config.neotree.open.window.controller")
 
 local M = {}
 
----Debug: Print all available information about sources
-function M.debug_sources()
-  local info = {
-    ["neo-tree.config.sources"] = nil,
-    ["filesystem.state.config.sources"] = nil,
-    ["lazy.plugins.opts.sources"] = nil,
-    ["detected_plugins"] = {},
-  }
-
-  -- Neo-tree global config
-  local ok, neo_tree = pcall(require, "neo-tree")
-  if ok and neo_tree.config then
-    info["neo-tree.config.sources"] = neo_tree.config.sources
-  end
-
-  -- Filesystem state config
-  local ok_manager, manager = pcall(require, "neo-tree.sources.manager")
-  if ok_manager then
-    local state = manager.get_state("filesystem")
-    if state and state.config then
-      info["filesystem.state.config.sources"] = state.config.sources
-    end
-  end
-
-  -- Lazy config
-  local ok_lazy, lazy_config = pcall(require, "lazy.core.config")
-  if ok_lazy then
-    local plugins = lazy_config.plugins or {}
-    local spec = plugins["neo-tree.nvim"]
-    if spec and spec.opts then
-      info["lazy.plugins.opts.sources"] = spec.opts.sources or spec.opts
-    end
-  end
-
-  -- Detected plugins
-  info["detected_plugins"] = {
-    diagnostics = pcall(require, "neo-tree.sources.diagnostics"),
-    netman = pcall(require, "netman"),
-    tests = pcall(require, "neo-tree-tests-source"),
-  }
-
-  vim.print(info)
-end
-
--- Alternative: Sources aus Lazy.nvim Config holen
--- Falls Neo-tree's Config nicht zugänglich ist, kann man die Sources auch direkt aus der Plugin-Spec holen:
---
----Get sources from lazy.nvim plugin spec
----@return string[]
-local function get_sources_from_lazy()
-  local ok, lazy_config = pcall(require, "lazy.core.config")
-  if not ok then
-    return {}
-  end
-
-  local plugins = lazy_config.plugins or {}
-  local neotree_spec = plugins["neo-tree.nvim"]
-
-  if not neotree_spec or not neotree_spec.opts then
-    return {}
-  end
-
-  -- Wenn opts eine Funktion ist, ausführen
-  local opts = neotree_spec.opts
-  if type(opts) == "function" then
-    local ok_exec, result = pcall(opts)
-    if ok_exec and type(result) == "table" then
-      opts = result
-    end
-  end
-
-  return opts.sources or {}
-end
-
 ---Get list of available sources from Neo-tree's setup
----@return string[]|nil sources List of source names
+---@return string[] sources List of source names
 local function get_available_sources()
-  -- CRITICAL: Sources direkt aus dem global setup holen
   local ok, neo_tree = pcall(require, "neo-tree")
   if not ok then
     vim.notify("Neo-tree not loaded", vim.log.levels.ERROR)
     return {}
   end
 
-  -- Neo-tree's global config enthält die sources-Liste
   local config = neo_tree.config or {}
   local sources = config.sources or {}
 
-  if #sources > 0 then -- INFO: Dieser Wefg funktioert. AUDIT: Fallback 3 (lazy) probieren, ob performance besser ist!
-    vim.notify("Sources direkt aus dem global setup geholt", vim.log.levels.info)
-    return sources
-  end
-
-  -- Fallback: Wenn config.sources nicht existiert, aus setup opts holen
   if #sources == 0 then
-    -- Versuche aus dem filesystem state
     local ok_manager, manager = pcall(require, "neo-tree.sources.manager")
     if ok_manager then
       local state = manager.get_state("filesystem")
@@ -109,16 +28,26 @@ local function get_available_sources()
         sources = state.config.sources
       end
     end
-    if #sources > 0 then
-      vim.notify(
-        "[neotree.sources.switcher]: fb 1 -> soures aus setup opts geholt",
-        vim.log.levels.info
-      )
-      return sources
+  end
+
+  if #sources == 0 then
+    local ok_lazy, lazy_config = pcall(require, "lazy.core.config")
+    if ok_lazy then
+      local plugins = lazy_config.plugins or {}
+      local spec = plugins["neo-tree.nvim"]
+      if spec and spec.opts then
+        local opts = spec.opts
+        if type(opts) == "function" then
+          local ok_exec, result = pcall(opts)
+          if ok_exec and type(result) == "table" then
+            opts = result
+          end
+        end
+        sources = opts.sources or {}
+      end
     end
   end
 
-  -- Zweiter Fallback: Hardcoded bekannte Sources
   if #sources == 0 then
     vim.notify("Using fallback source list", vim.log.levels.WARN)
     sources = {
@@ -128,7 +57,6 @@ local function get_available_sources()
       "document_symbols",
     }
 
-    -- Optional sources prüfen
     if pcall(require, "neo-tree.sources.diagnostics") then
       sources[#sources + 1] = "diagnostics"
     end
@@ -142,17 +70,7 @@ local function get_available_sources()
     end
   end
 
-  -- Dritter Fallback: Aus Lazy Config
-  if #sources == 0 then
-    sources = get_sources_from_lazy()
-    if #sources > 0 then
-      vim.notify("[neotree.sources.switcher]: fb 3 -> soures aus lazy", vim.log.levels.INFO)
-      return sources
-    end
-  end
-
-  vim.notify("[neotree.sources.switcher]: sources is nil", vim.log.levels.WARN)
-  return nil
+  return sources
 end
 
 ---Check if source is currently loadable
@@ -160,9 +78,7 @@ end
 ---@return boolean loadable
 ---@return string|nil error_msg
 local function check_source_loadable(source_name)
-  -- Special cases: Sources mit externen Dependencies
   if source_name == "document_symbols" then
-    -- LSP muss aktiv sein
     local clients = vim.lsp.get_clients({ bufnr = 0 })
     if #clients == 0 then
       return false, "No LSP client attached to current buffer"
@@ -170,7 +86,6 @@ local function check_source_loadable(source_name)
   end
 
   if source_name == "diagnostics" then
-    -- Diagnostics Plugin muss geladen sein
     local ok = pcall(require, "neo-tree.sources.diagnostics")
     if not ok then
       return false, "Diagnostics source not installed"
@@ -198,32 +113,26 @@ end
 function M.show_picker()
   local sources = get_available_sources()
 
-  if not sources or #sources == 0 then
+  if #sources == 0 then
     vim.notify("No sources available", vim.log.levels.WARN)
     return
   end
 
-  -- Determine current source
-  local manager = require("neo-tree.sources.manager")
-  local state = manager.get_state_for_window()
-  local current = state and state.name or nil
+  local current_source = window_state.get_source()
+  local current_position = window_state.get_position() or require("config.neotree").get_default_position()
 
   ---@type string[]
   local items = {}
 
-  -- Build display items with status indicators
   for i, name in ipairs(sources) do
     local icon = ICONS.get_icon(name, "nerd", "v1")
-    local is_current = (name == current) and " ←" or ""
-
-    -- Check if source is loadable
+    local is_current = (name == current_source) and " ←" or ""
     local loadable, _ = check_source_loadable(name)
     local status = loadable and "" or " [!]"
 
     items[i] = string.format("%s %s%s%s", icon, name, is_current, status)
   end
 
-  -- Open hover-select UI
   hover_select.open({
     title = "Select Neo-tree Source",
     items = items,
@@ -238,7 +147,11 @@ function M.show_picker()
         return
       end
 
-      -- Check if source is loadable before switching
+      if source_name == current_source then
+        vim.notify("Already showing " .. source_name, vim.log.levels.INFO)
+        return
+      end
+
       local loadable, err_msg = check_source_loadable(source_name)
       if not loadable then
         vim.notify(
@@ -248,27 +161,56 @@ function M.show_picker()
         return
       end
 
-      -- CRITICAL: Neo-tree Command verwenden
-      local ok, err = pcall(function()
-        require("neo-tree.command").execute({
-          source = source_name,
-          action = "show",
-          position = require("config.neotree").get_default_position(),
-        })
-      end)
-
-      if not ok then
-        vim.notify(
-          string.format("Failed to switch to %s: %s", source_name, tostring(err)),
-          vim.log.levels.ERROR
-        )
-      end
+      -- CRITICAL: Use controller's make_opener with source parameter
+      local opener = controller.make_opener(current_position, source_name)
+      opener()
     end,
   })
 end
 
+---Debug: Print all available information about sources
+function M.debug_sources()
+  local info = {
+    ["neo-tree.config.sources"] = nil,
+    ["filesystem.state.config.sources"] = nil,
+    ["lazy.plugins.opts.sources"] = nil,
+    ["detected_plugins"] = {},
+    ["window_state"] = window_state.get_state(),
+  }
+
+  local ok, neo_tree = pcall(require, "neo-tree")
+  if ok and neo_tree.config then
+    info["neo-tree.config.sources"] = neo_tree.config.sources
+  end
+
+  local ok_manager, manager = pcall(require, "neo-tree.sources.manager")
+  if ok_manager then
+    local state = manager.get_state("filesystem")
+    if state and state.config then
+      info["filesystem.state.config.sources"] = state.config.sources
+    end
+  end
+
+  local ok_lazy, lazy_config = pcall(require, "lazy.core.config")
+  if ok_lazy then
+    local plugins = lazy_config.plugins or {}
+    local spec = plugins["neo-tree.nvim"]
+    if spec and spec.opts then
+      info["lazy.plugins.opts.sources"] = spec.opts.sources or spec.opts
+    end
+  end
+
+  info["detected_plugins"] = {
+    diagnostics = pcall(require, "neo-tree.sources.diagnostics"),
+    netman = pcall(require, "netman"),
+    tests = pcall(require, "neo-tree-tests-source"),
+  }
+
+  vim.print(info)
+end
+
 ---Get available sources (for debugging)
----@return string[]|nil
+---@return string[]
 function M.get_available_sources()
   return get_available_sources()
 end

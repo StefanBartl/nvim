@@ -8,6 +8,7 @@
 ---@class Cfg.NeoTree.Window
 ---@field position? Cfg.NeoTree.Position|nil Window placement
 ---@field open? boolean If neotree window is open
+---@field source? string|nil Active source name
 
 ---@class Cfg.NeoTree.Tree
 ---@field get_node? fun(self: Cfg.NeoTree.Tree, id?: string): Cfg.NeoTree.Node|nil

@@ -94,7 +94,7 @@ function Timing.record(method, position, duration_ns, action_type)
   if print_record == true then
     print(
       string.format(
-        "[neo-tree] %s %s %s %.3f ms",
+        ("[neo-tree.open.win.timing_rec] %s %s %s %.3f ms"),
         entry.action_type,
         entry.method,
         entry.position,
@@ -242,7 +242,6 @@ vim.api.nvim_create_user_command("NeoTreeTimingsClear", function()
   opened_per_cwd = {}
   print("Neo-tree timing statistics cleared")
 end, {})
-
 
 ---@param target_position string
 ---@param method string

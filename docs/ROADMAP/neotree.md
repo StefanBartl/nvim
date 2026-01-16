@@ -19,14 +19,6 @@
 
 ## Important
 
-1. Souce switcher hat folgendenbug:
-   Info  06:57:47 notify.info Loading document_symbols...
-   Info  06:57:47 notify.info Loaded source: document_symbols
-   Error  06:57:47 notify.error Selection error: ...data/lazy/neo-tree.nvim/lua/neo-tree/sources/manager.lua:128: assertion failed!
-   Info  06:58:09 notify.info Loading git_status...
-   Info  06:58:09 notify.info Loaded source: git_status
-   Error  06:58:09 notify.error Selection error: ...data/lazy/neo-tree.nvim/lua/neo-tree/sources/manager.lua:128: assertion failed!
-
 --
 
 ## normal

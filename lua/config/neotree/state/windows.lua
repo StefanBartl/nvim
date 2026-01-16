@@ -10,6 +10,7 @@ local M = {}
 local state = {
   open = false,
   position = nil,
+  source = nil,  -- ADDED: Track active source
 }
 
 ---@type fun(from: Cfg.NeoTree.Window, to: Cfg.NeoTree.Window, action: string)[]
@@ -26,6 +27,7 @@ local function clone_state()
   return {
     open = state.open,
     position = state.position,
+    source = state.source,
   }
 end
 
@@ -37,6 +39,7 @@ local function emit(from, to, action)
     snapshots[#snapshots + 1] = {
       open = to.open,
       position = to.position,
+      source = to.source,
     }
   end
 
@@ -53,12 +56,24 @@ function M.get_position()
   return state.position
 end
 
+function M.get_source()
+  return state.source
+end
+
+---Get complete state (for debugging)
+---@return Cfg.NeoTree.Window
+function M.get_state()
+  return clone_state()
+end
+
 ---@param pos Cfg.NeoTree.Position
+---@param source? string
 ---@param action? string
-function M.set_open(pos, action)
+function M.set_open(pos, source, action)
   local from = clone_state()
   state.open = true
   state.position = pos
+  state.source = source or state.source  -- Keep existing source if not provided
   emit(from, clone_state(), action or "open")
 end
 
@@ -67,6 +82,7 @@ function M.set_closed(action)
   local from = clone_state()
   state.open = false
   state.position = nil
+  -- IMPORTANT: Keep source even when closed (for restore)
   emit(from, clone_state(), action or "close")
 end
 
@@ -88,8 +104,8 @@ end
 function M.reset()
   state.open = false
   state.position = nil
+  state.source = nil
   snapshots = {}
 end
 
 return M
-
