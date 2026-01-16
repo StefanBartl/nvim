@@ -55,4 +55,17 @@
 ---@alias Cfg.NeoTree.SourceName "filesystem"|"buffers"|"git_status"|"document_symbols"|"diagnostics"|"tests"|"netman.ui.neo-tree"
 --- Valid Neo-tree source identifiers
 
+---@alias Cfg.NeoTree.Sources.IconFamily
+---| '"common"'
+---| '"nerd"'
+---| '"codicons"'
+
+---@alias Cfg.NeoTree.Sources.IconVariantKey
+---| '"v1"'
+---| '"v2"'
+
+---@alias Cfg.NeoTree.Sources.IconLength
+---| '"long"'
+---| '"short"'
+
 return {}

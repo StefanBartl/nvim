@@ -31,15 +31,10 @@
 
 ## normal
 
-1. commands und aktionen sammeln
-    - alle usercommands nach config/neotree/usercommands/init.lua sammeln
-    - alle keymaps die mit vim.keymap.set oder einem direkten äqivalent wie nvim_create_keympa oder map (aus lib.map) nach config/neotree/keympaps/init.lua sammeln (es geht in ordnung hier eine neues modul zu schreiben, das aktuelle config/neotree/keymaps eigentlich keympas in sources sind und daher nach confiog/neotree/sources verschoieben werden.
-    - alle autocmds nach config/neotree/automcmds/init.lua sammeln
-    - Für all diese Files im Ordner eine enstprechende README.md auf deustch schreiben
-
 1. commands und actions nach keymaps, keymaps nach sources verschieben
+2. Source switcher optinal machen
 
---
+-
 
 ### Bei öffnen Fokus auf Neotree window setzen
 

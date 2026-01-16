@@ -3,12 +3,6 @@
 
 local M = {}
 
----@class Cfg.NeoTree.Sources.SourceDef
----@field name string
----@field loader fun(): table
----@field loaded boolean
----@field config table|nil
-
 ---@type table<string, Cfg.NeoTree.Sources.SourceDef>
 local sources = {}
 

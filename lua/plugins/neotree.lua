@@ -1,5 +1,4 @@
 ---@module 'plugins.neotree'
---- Neo-tree plugin spec that imports centralized keymaps.
 
 local KEYMAPS = require("config.neotree.keymaps")
 local BUFFERS = require("config.neotree.keymaps.buffers")
@@ -10,20 +9,16 @@ local TESTS = require("config.neotree.keymaps.tests")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local COMMANDS = require("config.neotree.commands")
 local ICONS = require("config.neotree.sources.icons")
--- local neotest_neotree = require("config.neotest.neotree")
 
 return {
-
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
     dependencies = {
       "MunifTanjim/nui.nvim",
-
-      -- Optional sources
-      { "miversen33/netman.nvim" },
-      { "TimCreasman/neo-tree-tests-source.nvim" },
-      { "mrbjarksen/neo-tree-diagnostics.nvim" },
+      { "miversen33/netman.nvim", lazy = true },
+      { "TimCreasman/neo-tree-tests-source.nvim", lazy = true },
+      { "mrbjarksen/neo-tree-diagnostics.nvim", lazy = true },
     },
 
     lazy = false,
@@ -33,11 +28,11 @@ return {
       local has_neotest_source = pcall(require, "neo-tree-tests-source")
       local has_diagnostics = pcall(require, "neo-tree.sources.diagnostics")
 
-      -- configuration knobs
-      local icon_family = "nerd" -- common | nerd | codicons
-      local icon_variant = "v1" -- v1 | v2
-      local name_length = "long" -- long | short
+      local icon_family = "nerd"
+      local icon_variant = "v1"
+      local name_length = "long"
 
+      -- CRITICAL: Alle Sources registrieren, auch wenn nicht sofort geladen
       local enabled_sources = {
         "filesystem",
         "buffers",
@@ -57,8 +52,7 @@ return {
         enabled_sources[#enabled_sources + 1] = "tests"
       end
 
-      -- Build sources for source_selector
-      ---@type table[]
+      -- Build sources for source_selector (WICHTIG: Alle deklarieren!)
       local sources = {
         {
           source = "filesystem",
@@ -206,7 +200,10 @@ return {
           find_by_full_path_words = true,
           group_empty_dirs = true,
           use_libuv_file_watcher = true,
-          window = { position = "right", mappings = FILESYSTEM }, -- FIX: positions: require("config.neotree").get_default_position() klann ich hier noch nicht aufrufen? Ist dies notwendig? Oder überschreibe ich in der setup() nicht effektiv sowieso diese einstellung?
+          window = {
+            position = require("config.neotree").get_default_position(),
+            mappings = FILESYSTEM,
+          },
           filtered_items = {
             visible = true,
             hide_dotfiles = false,
@@ -221,11 +218,10 @@ return {
 
         buffers = { window = { mappings = BUFFERS } },
         git_status = { window = { mappings = GIT_STATUS } },
+
         document_symbols = {
           follow_cursor = true,
           client_filters = "first",
-
-          -- Proper renderers for document_symbols
           renderers = {
             root = {
               { "indent" },
@@ -244,48 +240,42 @@ return {
               },
             },
           },
-
-          -- Document symbols has NO filesystem mappings!
           window = {
-            mappings = DOCUMENT_SYMBOLS, -- Only document_symbols mappings
+            mappings = DOCUMENT_SYMBOLS,
             position = "right",
           },
         },
 
-        diagnostics = has_diagnostics
-            and {
-              auto_preview = {
-                enabled = false,
-                preview_config = {},
-                event = "neo_tree_buffer_enter",
-              },
-              bind_to_cwd = true,
-              diag_sort_function = "severity",
-              follow_current_file = {
-                enabled = true,
-                always_focus_file = false,
-              },
-              group_dirs_and_files = true,
-              group_empty_dirs = true,
-              show_unloaded = true, -- Zeigt auch Diagnostics von nicht geladenen Buffern
-              refresh = {
-                delay = 100,
-                event = "vim_diagnostic_changed", -- Aktualisiert bei Änderungen
-                max_items = 10000,
-              },
-              window = {
-                position = "right",
-                mappings = DIAGNOSTICS,
-              },
-            }
-          or nil,
+        diagnostics = has_diagnostics and {
+          auto_preview = {
+            enabled = false,
+            preview_config = {},
+            event = "neo_tree_buffer_enter",
+          },
+          bind_to_cwd = true,
+          diag_sort_function = "severity",
+          follow_current_file = {
+            enabled = true,
+            always_focus_file = false,
+          },
+          group_dirs_and_files = true,
+          group_empty_dirs = true,
+          show_unloaded = true,
+          refresh = {
+            delay = 100,
+            event = "vim_diagnostic_changed",
+            max_items = 10000,
+          },
+          window = {
+            position = "right",
+            mappings = DIAGNOSTICS,
+          },
+        } or nil,
 
-        -- tests source configuration
         tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
           window = { mappings = TESTS },
         }) or nil,
 
-        -- Netman source configuration
         netman = has_netman and {
           window = {
             position = "right",
@@ -300,19 +290,43 @@ return {
       require("config.neotree.current_hl").attach(opts)
       require("neo-tree").setup(opts)
       require("config.neotree").setup({
-        trash = {
-          debug = true,
-          auto_close_buffers = true,
-          confirm_dangerous = true,
-        },
+        debug = true,
+        busy_guard = false,
+        default_position = "right",
+        restore_last_position = false,
         window_debug = true,
+        trash = {
+          debug = false,
+          auto_close_buffers = true,
+          create_backups = true,
+          use_safety_system = true,
+          confirm_dangerous = true,
+          use_dry_run = false,
+        },
         current_hl = {
           colors = {
-            file = "cyan",
-            parent = { fg = "blue" },
+            file = "green",
+            parent = { fg = "darkgreen", underline = false },
           },
         },
+        cwd_sync = false, -- WATCH: für dev-phase deatkiviert {
+        -- debounce_ms = 150,
+        -- keep_focus = true,
+        -- also_set_nvim_cwd = false,
+        -- open_if_closed = false,
+        -- use_project_root = true,
+        -- project_root_fallback_to_bufdir = true,
+        -- },
       })
+
+      -- Source-Switcher Keymap WATCH: In eigene keymaps dateio auslagern
+      vim.keymap.set("n", "<leader>ns", function()
+        require("config.neotree.sources.switcher").show_picker()
+      end, { desc = "[Neo-tree] Switch Source" })
+
+      vim.api.nvim_create_user_command("NeoTreeDebugSources", function()
+        require("config.neotree.sources.switcher").debug_sources()
+      end, { desc = "[Neo-tree] Debug source detection" })
     end,
   },
 }

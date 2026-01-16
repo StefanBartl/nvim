@@ -72,35 +72,36 @@ local ICONS = {
     },
 }
 
----Formats a display name for neo-tree source selector.
----@param family string   -- common | nerd | codicons
----@param variant string  -- v1 | v2
----@param key string      -- filesystem | buffers | git_status | document_symbols | netman | tests
----@param length string   -- long | short
+---Formats a display name for neo-tree source selector
+---@param family Cfg.NeoTree.Sources.IconFamily   -- Icon family selection
+---@param variant Cfg.NeoTree.Sources.IconVariantKey -- Icon variant version
+---@param key string                               -- Source key (filesystem, buffers, ...)
+---@param length Cfg.NeoTree.Sources.IconLength    -- Display name length
 ---@return string
 function M.format(family, variant, key, length)
-    local entry = ICONS[family][variant][key]
-    return " " .. entry.icon .. " " .. entry[length]
+  local entry = ICONS[family][variant][key]
+  return " " .. entry.icon .. " " .. entry[length]
 end
 
----@type table<string, Cfg.NeoTree.Sources.IconVariant>
+---@type table<string, string>
 local icon_cache = {}
 
----Get icon for source (lazy generate)
+---Get icon glyph for a source (lazy, cached)
 ---@param source_name string
----@param family Cfg.NeoTree.IconFamily
----@param variant Cfg.NeoTree.IconVariant
+---@param family Cfg.NeoTree.Sources.IconFamily
+---@param variant Cfg.NeoTree.Sources.IconVariantKey
 ---@return string icon
 function M.get_icon(source_name, family, variant)
   local cache_key = string.format("%s:%s:%s", source_name, family, variant)
 
-  if icon_cache[cache_key] then
-    return icon_cache[cache_key]
+  local cached = icon_cache[cache_key]
+  if cached then
+    return cached
   end
 
-  -- Generate icon on-demand
-  local icon_set = ICONS[family][variant][source_name]
-  local icon = icon_set and icon_set.icon or "?"
+  -- Resolve icon definition from static table
+  local icon_def = ICONS[family][variant][source_name]
+  local icon = icon_def and icon_def.icon or "?"
 
   icon_cache[cache_key] = icon
   return icon

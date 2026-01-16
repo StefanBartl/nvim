@@ -6,7 +6,6 @@ local M = {}
 function M.enable_usercmds(opts)
   opts = opts or {}
 
-
   if opts and opts.debug then
     vim.api.nvim_create_user_command(
       "NeoTreeForceReset",

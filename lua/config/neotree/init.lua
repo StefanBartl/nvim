@@ -117,8 +117,7 @@ function M.setup(opts)
   end
 
   if M.options.cwd_sync then
-    -- setup_cwd_sync(M.options.cwd_sync)
-    setup_cwd_sync(false) --FIX: TEST ohne
+    setup_cwd_sync(M.options.cwd_sync)
   end
 
   -- require("config.neotree.autocmds").attach({})
