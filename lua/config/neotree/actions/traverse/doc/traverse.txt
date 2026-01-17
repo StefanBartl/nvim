@@ -211,7 +211,7 @@ Custom Wrapper: Navigate Multiple Levels~
 Custom Command: Jump to Project Root~
 >lua
     local function to_project_root(state)
-      local root = require("config.neotree.actions.lv_project_root").get()
+      local root = require("config.neotree.actions.project_root").get()
 
       vim.api.nvim_set_current_dir(root)
 

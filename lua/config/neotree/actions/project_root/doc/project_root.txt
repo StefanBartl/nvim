@@ -1,0 +1,321 @@
+*neotree-project-root.txt*  Priority-based project root detection for Neo-tree
+
+==============================================================================
+CONTENTS                                      *neotree-project-root-contents*
+
+    1. Introduction .................... |neotree-project-root-intro|
+    2. Usage ........................... |neotree-project-root-usage|
+    3. API ............................. |neotree-project-root-api|
+    4. Detection Priority .............. |neotree-project-root-priority|
+    5. Root Markers .................... |neotree-project-root-markers|
+    6. Integration ..................... |neotree-project-root-integration|
+    7. Examples ........................ |neotree-project-root-examples|
+
+==============================================================================
+1. Introduction                                 *neotree-project-root-intro*
+
+The project_root module provides intelligent project root detection for
+Neo-tree navigation and CWD synchronization. It uses a priority-based
+strategy to find the most meaningful project boundary.
+
+Detection Priority:~
+  1. LSP client root_dir (closest/longest path wins)
+  2. Git toplevel (via vim.fs.find or git rev-parse)
+  3. Current buffer's directory
+  4. Current working directory
+
+This module is independent of LazyVim but follows similar heuristics for
+consistent behavior across different configurations.
+
+Requirements:~
+  • Neovim 0.9+ (vim.fs APIs)
+  • Modern LSP API support (0.10+ recommended)
+
+==============================================================================
+2. Usage                                        *neotree-project-root-usage*
+
+Basic usage:
+>lua
+    local project_root = require("config.neotree.actions.project_root")
+
+    -- Get project root for current buffer
+    local root = project_root.get()
+
+    -- Get project root for specific buffer
+    local root = project_root.get(42)
+
+    -- Check if path is a project root
+    local is_root = project_root.is_project_root("/path/to/dir")
+
+    -- Get project root from arbitrary path
+    local root = project_root.from_path("/path/to/file.lua")
+<
+
+==============================================================================
+3. API                                            *neotree-project-root-api*
+
+project_root.get({bufnr})                           *project_root.get()*
+    Compute the project root for a buffer.
+
+    Parameters:~
+      {bufnr}  (integer|nil)  Buffer number (default: current buffer)
+
+    Returns:~
+      (string)  Absolute, normalized path to project root
+
+    Detection order:~
+      1. LSP root_dir from nearest client
+      2. Git toplevel directory
+      3. Buffer's directory
+      4. Current working directory
+
+    Example:~
+>lua
+        local root = project_root.get()
+        print("Project root:", root)
+<
+
+project_root.is_project_root({path})         *project_root.is_project_root()*
+    Check if a path is a project root (contains root markers).
+
+    Parameters:~
+      {path}  (string)  Path to check
+
+    Returns:~
+      (boolean)  true if path contains project markers
+
+    Root markers checked:~
+      • VCS: .git, .svn, .hg
+      • Package managers: package.json, Cargo.toml, go.mod, etc.
+      • Build systems: Makefile, CMakeLists.txt
+
+    Example:~
+>lua
+        if project_root.is_project_root(vim.loop.cwd()) then
+          print("Current directory is a project root")
+        end
+<
+
+project_root.from_path({path})                  *project_root.from_path()*
+    Get project root relative to a specific path (not buffer-bound).
+
+    Parameters:~
+      {path}  (string)  Starting path (file or directory)
+
+    Returns:~
+      (string)  Project root directory
+
+    Behavior:~
+      • If path is a file, uses parent directory
+      • Searches for git root upward
+      • Falls back to path itself if directory
+      • Uses CWD as final fallback
+
+    Example:~
+>lua
+        local root = project_root.from_path("/home/user/project/src/main.lua")
+        -- Returns: "/home/user/project" (if .git exists there)
+<
+
+==============================================================================
+4. Detection Priority                          *neotree-project-root-priority*
+
+1. LSP Root Directory~
+
+The module iterates over all LSP clients attached to the buffer and collects
+their root_dir values. The longest matching path is selected as it represents
+the most specific project boundary.
+
+Example:~
+  Buffer: /home/user/projects/myapp/src/lib/utils.lua
+
+  LSP Client 1 (lua_ls):
+    root_dir = "/home/user/projects/myapp"
+
+  LSP Client 2 (null-ls):
+    root_dir = "/home/user/projects/myapp/src"
+
+  Result: "/home/user/projects/myapp/src" (longer, more specific)
+
+Rationale:~
+  • LSP servers have the most accurate project knowledge
+  • Handles mono-repos and nested projects correctly
+  • Longer path indicates more specific context
+
+2. Git Toplevel~
+
+Two-stage detection for robustness:
+
+Fast path (vim.fs.find):~
+>lua
+    local hit = vim.fs.find(".git", {
+      upward = true,
+      type = "directory",
+      path = start
+    })[1]
+<
+
+Fallback (git command):~
+>lua
+    local out = vim.fn.system({
+      "git", "-C", start,
+      "rev-parse", "--show-toplevel"
+    })
+<
+
+Why both?~
+  • vim.fs.find is faster (no process spawn)
+  • git rev-parse handles submodules and worktrees correctly
+  • Fallback only when .git is a file (worktree marker)
+
+3. Buffer Directory~
+
+If no LSP and no Git, uses the directory containing the current buffer:
+>lua
+    local dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+<
+
+Useful for single files without project context.
+
+4. Current Working Directory~
+
+Final fallback guarantees a valid path:
+>lua
+    return vim.loop.cwd() or vim.fn.getcwd()
+<
+
+==============================================================================
+5. Root Markers                                *neotree-project-root-markers*
+
+The is_project_root() function checks for these markers:
+
+Version Control:~
+  .git        Git repository
+  .svn        Subversion repository
+  .hg         Mercurial repository
+
+Package Managers:~
+  package.json      Node.js / JavaScript
+  Cargo.toml        Rust
+  go.mod            Go
+  pyproject.toml    Python (modern)
+  setup.py          Python (legacy)
+
+Build Systems:~
+  Makefile          Make
+  CMakeLists.txt    CMake
+
+Note: Markers are checked only in the specified directory (not upward).
+
+==============================================================================
+6. Integration                            *neotree-project-root-integration*
+
+With cwd_sync~
+
+The cwd_sync module can use project root detection:
+>lua
+    -- Enable project root detection in cwd_sync config:
+    {
+      use_project_root = true,
+      project_root_fallback_to_bufdir = true,
+    }
+<
+
+Implementation:
+>lua
+    local project_root = require("config.neotree.actions.project_root")
+
+    if opts.use_project_root then
+      local root = project_root.get(bufnr)
+      vim.api.nvim_set_current_dir(root)
+    else
+      local dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+      vim.api.nvim_set_current_dir(dir)
+    end
+<
+
+With traverse~
+
+Navigate to project root with a single command:
+>lua
+    local function to_root(state)
+      local root = require("config.neotree.actions.project_root").get()
+
+      vim.api.nvim_set_current_dir(root)
+      require("neo-tree.command").execute({
+        source = "filesystem",
+        dir = root,
+        reveal = true
+      })
+    end
+<
+
+==============================================================================
+7. Examples                                  *neotree-project-root-examples*
+
+Custom Commands~
+>lua
+    -- Command: Change directory to project root
+    vim.api.nvim_create_user_command("CdRoot", function()
+      local root = require("config.neotree.actions.project_root").get()
+      vim.api.nvim_set_current_dir(root)
+      vim.notify("cwd → " .. root, vim.log.levels.INFO)
+    end, {})
+
+    -- Command: Open Neo-tree at project root
+    vim.api.nvim_create_user_command("NeoTreeRoot", function()
+      local root = require("config.neotree.actions.project_root").get()
+      require("neo-tree.command").execute({
+        source = "filesystem",
+        dir = root,
+        reveal = true
+      })
+    end, {})
+<
+
+Project Root Keymap~
+>lua
+    -- In Neo-tree keymaps:
+    ["<leader>pr"] = {
+      function(state)
+        local root = require("config.neotree.actions.project_root").get()
+        require("neo-tree.command").execute({
+          source = "filesystem",
+          dir = root,
+          reveal = true
+        })
+      end,
+      desc = "Navigate to project root",
+    }
+<
+
+Validation~
+>lua
+    local project_root = require("config.neotree.actions.project_root")
+
+    -- Check if CWD is a project root
+    local cwd = vim.loop.cwd()
+    if project_root.is_project_root(cwd) then
+      print("CWD is a project root")
+    end
+
+    -- Find root from arbitrary path
+    local path = "/path/to/nested/file.lua"
+    local root = project_root.from_path(path)
+    print("Project root:", root)
+<
+
+Conditional Logic~
+>lua
+    local root = project_root.get()
+
+    -- Detect fallback to CWD
+    if root == vim.loop.cwd() then
+      vim.notify("No project root found, using CWD", vim.log.levels.WARN)
+    else
+      vim.notify("Project root: " .. root, vim.log.levels.INFO)
+    end
+<
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

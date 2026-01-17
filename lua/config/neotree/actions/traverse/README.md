@@ -426,7 +426,7 @@ end
 
 -- Navigate to project root
 local function to_project_root(state)
-  local root = require("config.neotree.actions.lv_project_root").get()
+  local root = require("config.neotree.actions.project_root").get()
 
   vim.api.nvim_set_current_dir(root)
 
@@ -447,6 +447,6 @@ end
 
 - [updir/README.md](../updir/README.md) — Legacy updir implementation
 - [cwd_sync/README.md](../../cwd_sync/README.md) — CWD synchronization system
-- [lv_project_root/README.md](../lv_project_root/README.md) — Project root detection
+- [project_root/README.md](../project_root/README.md) — Project root detection
 
 ---

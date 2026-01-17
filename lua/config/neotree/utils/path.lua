@@ -74,7 +74,7 @@ function M.to_relative(path, base)
     base = (vim.uv or vim.loop).cwd()
 
     -- Try project root first
-    local ok_root, Root = pcall(require, "config.neotree.helper.lv_project_root")
+    local ok_root, Root = pcall(require, "config.neotree.actions.project_root")
     if ok_root and type(Root.get) == "function" then
       base = Root.get(0) or base
     end

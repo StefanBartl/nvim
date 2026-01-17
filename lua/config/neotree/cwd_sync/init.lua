@@ -57,7 +57,7 @@ local function derive_dir_and_path(buf, use_project_root, _)
   local dir = ctx.dir
 
   if use_project_root then
-    local ok, Root = pcall(require, "config.neotree.helper.lv_project_root")
+    local ok, Root = pcall(require, "config.neotree.actions.project_root")
     if ok and type(Root.get) == "function" then
       local root = Root.get(buf)
       if root and root ~= "" then

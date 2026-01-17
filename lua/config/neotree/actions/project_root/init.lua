@@ -1,35 +1,44 @@
----@module 'config.neotree.helper.lv_project_root'
---- Resolve a "project root" similarly to LazyVim, but without depending on it.
---- Priority:
+---@module 'config.neotree.actions.project_root'
+---@brief Resolve a "project root" similarly to LazyVim, but without depending on it
+---@description
+--- Priority-based project root detection for Neo-tree navigation and CWD sync.
+--- Attempts multiple strategies to find the most meaningful project boundary:
+---
+--- Priority Order:
 ---   1) LSP client root_dir for the current buffer (closest/longest path wins)
 ---   2) Git toplevel (via vim.fs.find(".git", upward) or `git rev-parse`)
 ---   3) Current buffer's directory
 ---   4) Current working directory (uv.cwd())
 ---
---- Neovim: 0.9+ (vim.fs APIs); uses modern LSP API when available (0.10+).
+--- Requirements:
+---   - Neovim 0.9+ (vim.fs APIs)
+---   - Modern LSP API when available (0.10+)
+---
+--- Note: This module is independent of LazyVim but follows similar heuristics
+--- for consistent behavior across different Neo-tree configurations.
 
 local M = {}
 
 -- Backward-compatible uv handle
 local uv = vim.uv or vim.loop
 
---- Normalize a path for reliable cross-platform comparisons.
+---Normalize a path for reliable cross-platform comparisons
 ---@param p Path|nil
 ---@return Path
 local function norm(p)
   return vim.fs.normalize(p or "")
 end
 
---- Typed wrapper around `uv.cwd()` with fallback to `vim.fn.getcwd()`.
---- Some analyzers do not infer `uv.cwd()` as string → keep it explicit.
+---Typed wrapper around `uv.cwd()` with fallback to `vim.fn.getcwd()`
+---Some analyzers do not infer `uv.cwd()` as string → keep it explicit
 ---@return Path
 local function get_cwd()
   return (uv.cwd() or vim.fn.getcwd()) --[[@as Path]]
 end
 
---- Return the directory of the given buffer (or cwd if unnamed).
----@param bufnr? integer  -- 0 = current buffer
----@return Path           -- always a normalized string path
+---Return the directory of the given buffer (or cwd if unnamed)
+---@param bufnr? integer 0 = current buffer
+---@return Path always a normalized string path
 local function buffer_dir(bufnr)
   bufnr = bufnr or 0
   local name = vim.api.nvim_buf_get_name(bufnr)
@@ -42,8 +51,9 @@ local function buffer_dir(bufnr)
   return vim.fs.normalize(dir)
 end
 
---- Iterate LSP clients attached to `bufnr`, preferring the modern API.
+---Iterate LSP clients attached to `bufnr`, preferring the modern API
 ---@param bufnr? integer
+---@return table[] clients List of LSP client objects
 local function get_buf_clients(bufnr)
   bufnr = bufnr or 0
   if type(vim.lsp.get_clients) == "function" then
@@ -62,9 +72,9 @@ local function get_buf_clients(bufnr)
   return clients
 end
 
---- Collect unique LSP root dirs for the buffer and sort by "closest" (longest path first).
+---Collect unique LSP root dirs for the buffer and sort by "closest" (longest path first)
 ---@param bufnr? integer
----@return Path[] roots
+---@return Path[] roots Sorted list of root directories (longest first)
 local function lsp_roots(bufnr)
   bufnr = bufnr or 0
 
@@ -79,7 +89,7 @@ local function lsp_roots(bufnr)
     end
   end
 
-  ---@type Path[]  -- de-duplicate
+  ---@type Path[] de-duplicate
   local roots = {}
   for r, _ in pairs(acc) do
     roots[#roots + 1] = r
@@ -91,9 +101,9 @@ local function lsp_roots(bufnr)
   return roots
 end
 
---- Try to find the Git toplevel directory upward from `start`.
+---Try to find the Git toplevel directory upward from `start`
 ---@param start Path
----@return Path|nil
+---@return Path|nil git_root Git repository root or nil if not in a git repo
 local function git_root(start)
   -- Fast path: use Neovim's filesystem search (no external process)
   local hit = vim.fs.find(".git", { upward = true, type = "directory", path = start })[1]
@@ -108,10 +118,10 @@ local function git_root(start)
   return nil
 end
 
---- Check whether `child` lies within (or equals) `root`.
+---Check whether `child` lies within (or equals) `root`
 ---@param child Path
 ---@param root Path
----@return boolean
+---@return boolean is_within True if child is within or equal to root
 local function is_within(child, root)
   child = norm(child)
   root = norm(root)
@@ -124,9 +134,9 @@ local function is_within(child, root)
   return child:sub(1, #root) == root
 end
 
---- Compute the project root for `bufnr`.
----@param bufnr? integer
----@return Path
+---Compute the project root for `bufnr`
+---@param bufnr? integer Buffer number (default: current buffer)
+---@return Path root Project root directory path
 function M.get(bufnr)
   bufnr = bufnr or 0
   local bdir = buffer_dir(bufnr)
@@ -151,6 +161,67 @@ function M.get(bufnr)
 
   -- 4) CWD
   return norm(get_cwd())
+end
+
+---Check if a path is likely a project root
+---Useful for validation without computing the full resolution
+---@param path Path
+---@return boolean is_root True if path contains root markers
+function M.is_project_root(path)
+  path = norm(path)
+
+  -- Common root markers
+  local markers = {
+    ".git",
+    ".svn",
+    ".hg",
+    "package.json",
+    "Cargo.toml",
+    "go.mod",
+    "pyproject.toml",
+    "setup.py",
+    "Makefile",
+    "CMakeLists.txt",
+  }
+
+  for _, marker in ipairs(markers) do
+    local found = vim.fs.find(marker, {
+      upward = false,
+      path = path,
+      limit = 1,
+    })
+    if #found > 0 then
+      return true
+    end
+  end
+
+  return false
+end
+
+---Get project root relative to a specific path (not buffer)
+---@param path Path Starting path
+---@return Path root Project root directory
+function M.from_path(path)
+  path = norm(path)
+
+  -- If it's a file, use its directory
+  if vim.fn.isdirectory(path) == 0 then
+    path = vim.fs.dirname(path) or path
+  end
+
+  -- Try git root
+  local gr = git_root(path)
+  if gr then
+    return gr
+  end
+
+  -- Return the path itself if it's a directory
+  if vim.fn.isdirectory(path) == 1 then
+    return path
+  end
+
+  -- Fallback to cwd
+  return get_cwd()
 end
 
 ---@cast M ProjectRoot

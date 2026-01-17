@@ -142,7 +142,7 @@ open_if_closed = true  -- ⚠️ Kann störend sein
 
 ### `use_project_root` (default: `true`)
 
-Nutzt Project-Root (via `config.neotree.helper.lv_project_root`) statt Buffer-Directory.
+Nutzt Project-Root (via `config.neotree.actions.project_root`) statt Buffer-Directory.
 
 ```lua
 use_project_root = true  -- ✅ Zeigt Project-Structure
@@ -153,7 +153,7 @@ use_project_root = false
 
 **Projekt-Root Detection:**
 - Git-Root (`.git` directory)
-- Custom Markers (via `config.neotree.helper.lv_project_root` config)
+- Custom Markers (via `config.neotree.actions.project_root` config)
 - Fallback zu Buffer-Dir wenn kein Root gefunden
 
 ---
@@ -525,7 +525,7 @@ setup({ also_set_nvim_cwd = true })  -- ⚠️ Side-Effects
 ### Custom Project Root Detection
 
 ```lua
--- In config.neotree.helper.lv_project_root oder ähnlichem Modul
+-- In config.neotree.actions.project_root oder ähnlichem Modul
 local function get_project_root(buf)
   -- Custom Logic
   local markers = { ".git", "package.json", "Cargo.toml" }
@@ -644,7 +644,7 @@ end)
 ```lua
 require("config.neotree.utils")         -- Buffer-Validierung
 require("neo-tree.command")             -- Neo-tree API
-require("config.neotree.helper.lv_project_root")        -- Optional: Project-Root detection
+require("config.neotree.actions.project_root")        -- Optional: Project-Root detection
 ```
 
 ---
