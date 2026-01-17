@@ -180,6 +180,7 @@ end
 ---@param cmdline string
 ---@param cursorpos integer
 ---@return string[]
+---@diagnostic disable-next-line: unused-local
 function M.complete_stop(arglead, cmdline, cursorpos)
   local clients = get_buffer_clients(0)
   local names = {}

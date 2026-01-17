@@ -377,7 +377,7 @@ function uv.fs_scandir_next(req) end
 --- @param entries integer?
 --- @return uv.luv_dir_t? dir
 --- @return string? err
---- @return uv.error_name? err_name
+--- @return string? err_name
 --- @overload fun(path: string, callback: fun(err: string?, dir: uv.luv_dir_t?), entries: integer?): uv.uv_fs_t
 function uv.fs_opendir(path, callback, entries) end
 

@@ -21,9 +21,9 @@
 ---@field col integer            # 0-based byte column (start)
 ---@field end_line integer       # 1-based line number (end, may differ for multiline)
 ---@field end_col integer        # 0-based byte end column
----@field original string        # Original call (e.g. "vim.notify(...)")
+---@field original? string        # Original call (e.g. "vim.notify(...)")
 ---@field replacement string     # Target call (e.g. "notify.info(...)")
----@field log_level MigrateNotify.LogLevel
+---@field log_level? MigrateNotify.LogLevel
 
 ---@class MigrateNotify.FileMatches
 ---@field path string

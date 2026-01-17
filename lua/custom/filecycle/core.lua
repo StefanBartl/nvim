@@ -167,7 +167,6 @@ local function open_path(path, opts)
     -- TRUE REPLACE: Load new file and delete the old buffer
     -- This ensures the buffer number changes but window stays focused
     local old_bufnr = bufnr
-    local old_name = api.nvim_buf_get_name(old_bufnr)
 
     -- Load new file in current window
     local _cmd = "edit " .. esc
@@ -188,7 +187,6 @@ local function open_path(path, opts)
 
   elseif target == "current" then
     -- NEW: Open in new buffer, keep old buffer, focus new
-    local old_bufnr = bufnr
     local ok, err = pcall(vim.cmd, "edit " .. esc)
     if not ok then
       notify.error(("[filecycle] open failed: %s"):format(tostring(err)))

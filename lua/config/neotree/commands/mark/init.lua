@@ -88,7 +88,7 @@ function M.mark_all_in_directory(state)
   end
 
   -- Get children using tree:get_nodes() instead of parent.children
-  ---@diagnostic disable-next-line: unused-local
+  ---@diagnostic disable-next-line: undefined-field
   local children = tree:get_nodes(parent:get_id())
 
   if not children or #children == 0 then

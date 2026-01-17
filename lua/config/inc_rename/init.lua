@@ -66,7 +66,7 @@ local function collect_uris(res)
   -- From array-like "documentChanges" (may contain TextDocumentEdit or file ops)
   if res.documentChanges then
     for _, dc in ipairs(res.documentChanges) do
-      ---@cast dc table
+      -- ---@cast dc table
       if dc.textDocument and dc.edits then
         push(dc.textDocument.uri)
       elseif dc.kind == "rename" then

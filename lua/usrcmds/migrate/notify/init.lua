@@ -203,6 +203,7 @@ local function apply_matches(matches, module_name)
     -- Apply each match
     local success_count = 0
     for _, match in ipairs(buf_matches) do
+      ---@type MigrateNotify.Match
       local parser_match = {
         line = match.lnum,
         end_line = match.extra.end_line,

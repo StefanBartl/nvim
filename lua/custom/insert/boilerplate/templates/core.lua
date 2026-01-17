@@ -194,6 +194,7 @@ local function generate_template(template, args)
 
   -- Process prompts if needed
   if meta.prompts and not args then
+    ---@diagnostic disable-next-line
     values = utils.process_prompts(meta.prompts)
     if not values then
       return nil

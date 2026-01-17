@@ -102,15 +102,9 @@ local function ui_theme(args)
   local success = theme.load_theme(theme_name)
 
   if success then
-    vim.notify(
-      string.format("🎨 Theme geändert zu: %s", theme_name),
-      vim.log.levels.INFO
-    )
+    vim.notify(string.format("🎨 Theme geändert zu: %s", theme_name), vim.log.levels.INFO)
   else
-    vim.notify(
-      string.format("Fehler beim Laden von Theme '%s'", theme_name),
-      vim.log.levels.ERROR
-    )
+    vim.notify(string.format("Fehler beim Laden von Theme '%s'", theme_name), vim.log.levels.ERROR)
   end
 end
 
@@ -157,7 +151,8 @@ local function ui_status(args)
     lines[#lines + 1] = string.format("│ Toggle:       %-15s │", toggle_str)
   end
 
-  lines[#lines + 1] = "╰─────────────────────────────╯"
+  lines[#lines + 1] =
+    "╰─────────────────────────────╯"
 
   vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
 end
@@ -169,14 +164,11 @@ local function ui_toggle(args)
   local next_theme = theme.toggle_theme()
 
   if next_theme then
-    vim.notify(
-      string.format("🎨 Theme geändert zu: %s", next_theme),
-      vim.log.levels.INFO
-    )
+    vim.notify(string.format("🎨 Theme geändert zu: %s", next_theme), vim.log.levels.INFO)
   else
     vim.notify(
-      "Kein theme_toggle in chadrc konfiguriert.\n" ..
-      "Füge mindestens 2 Themes zu theme_toggle hinzu.",
+      "Kein theme_toggle in chadrc konfiguriert.\n"
+        .. "Füge mindestens 2 Themes zu theme_toggle hinzu.",
       vim.log.levels.WARN
     )
   end
@@ -238,17 +230,11 @@ local function dispatcher(opts)
   if action then
     local ok, err = pcall(action, args)
     if not ok then
-      vim.notify(
-        string.format("UI %s Fehler: %s", sub, tostring(err)),
-        vim.log.levels.ERROR
-      )
+      vim.notify(string.format("UI %s Fehler: %s", sub, tostring(err)), vim.log.levels.ERROR)
     end
   else
     vim.notify(
-      string.format(
-        "Unbekannter Befehl: '%s'\nNutze :UI help für Hilfe",
-        sub
-      ),
+      string.format("Unbekannter Befehl: '%s'\nNutze :UI help für Hilfe", sub),
       vim.log.levels.ERROR
     )
   end
@@ -262,6 +248,7 @@ end
 ---@param cmdline string
 ---@param cursorpos number
 ---@return string[]
+---@diagnostic disable-next-line: unused-local
 local function complete(arglead, cmdline, cursorpos)
   -- Split the command line into parts
   local parts = {}
@@ -323,6 +310,7 @@ function M.setup()
     dispatcher({ args = "theme " .. opts.args })
   end, {
     nargs = "?",
+    ---@diagnostic disable-next-line: unused-local
     complete = function(arglead, cmdline, cursorpos)
       return filter(arglead, theme.list_themes())
     end,

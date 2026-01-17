@@ -129,6 +129,7 @@ function M.inject_now()
   if type(list) ~= "table" then
     return false
   end
+  ---@cast list Cfg.Harpoon.List
 
   -- Ensure list shape and remove legacy duplicates
   sani.sanitize_items_in_place(list)

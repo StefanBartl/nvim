@@ -81,7 +81,7 @@ for i = 1, #lines do
       print(string.format("    call_end: %s", tostring(end_idx)))
 
       if end_idx and end_idx == i then
-        local migrated, level = migrator.migrate_aliased_line(line, notify_alias, levels_alias)
+        local migrated, level = migrator.migrate_aliased_line(line, notify_alias or "", levels_alias)
         print(string.format("    migrated: %s", migrated or "nil"))
         print(string.format("    level: %s", level or "nil"))
 

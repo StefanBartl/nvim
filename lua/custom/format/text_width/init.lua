@@ -66,6 +66,10 @@ end
 -- first_prefix is kept at start of wrapped first line; cont_prefix
 -- is prepended to continuation lines to align text after bullets/indent.
 local function detect_prefixes(first_line)
+  if not first_line then
+        vim.notify("[format.text_width] first_line is nil", vim.log.levels.WARN)
+        return
+    end
   local indent = first_line:match("^(%s*)") or ""
   local bullet = first_line:match("^%s*([%-%*%+]%s)") or first_line:match("^%s*(%d+[%.)]%s)")
   if bullet then

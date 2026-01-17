@@ -14,6 +14,8 @@
 ---| "old"
 ---| "old_norm_sources"
 ---| "wo_sources"
+---| "standard"
+---| "stub"
 
 ---@type NeoTreeVariantKey
 local ACTIVE_VARIANT = "default"
@@ -30,6 +32,8 @@ local VARIANTS = {
   old = folder .. "/neotree_old.lua.md",
   old_norm_sources = folder .. "/neotree_old_norm_sources.lua.md",
   wo_sources = folder .. "/neotree_wo_sources.lua.md",
+  standard = folder .. "/neotree_standard.lua",
+  stub = folder .. "/neotree_stub.lua",
 }
 
 -- ============================================================================

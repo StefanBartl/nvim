@@ -34,5 +34,5 @@ end
 local avg = average_age(users)
 
 -- Intentional nil field access
-print("Average age is: " .. avg.value)
+print("Average age is: " .. avg)
 

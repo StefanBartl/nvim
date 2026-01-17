@@ -4,7 +4,7 @@
 ---@class MarkdownHeadings
 local M = {}
 
-local api, fn, cmd = vim.api, vim.fn, vim.cmd
+local api, fn = vim.api, vim.fn
 local cfg = require("custom.markdown.config").get
 
 -- ============================================================================

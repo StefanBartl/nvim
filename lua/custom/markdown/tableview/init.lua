@@ -4,7 +4,7 @@
 
 local M = {}
 
----@param opts Custom.TableView.Options
+---@param opts Custom.TableView.Options|nil
 ---@return nil
 function M.setup(opts)
   opts = opts or {}

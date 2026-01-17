@@ -24,7 +24,7 @@
 ## normal
 
 1. in commands, usrcmds, kleymaps einen  oprdner /sources machen
-2. Source switcher optinal machen
+2. Plugin Varianten systemaitsch pperformance testen mit `plugins/neotree_variants`
 
 -
 

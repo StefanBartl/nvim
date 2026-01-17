@@ -82,6 +82,7 @@ local function parse_cmd_args(args)
     end
   end
 
+  ---@type LuaProjectFileStats.Config
   return config
 end
 
