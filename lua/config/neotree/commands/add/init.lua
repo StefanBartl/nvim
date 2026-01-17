@@ -324,7 +324,7 @@ function M.custom_add(state, options)
   end
   local parent_path = node.type == "directory" and node.path or node:get_parent_id()
 
-  inputs.input("File name:", "", function(input_path)
+  inputs.input("File or Folder/ name:", "", function(input_path)
     if not input_path or input_path == "" then
       return
     end

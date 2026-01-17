@@ -14,8 +14,7 @@ local node_info = require("config.neotree.actions.info.node")
 local save_node_buffer = require("config.neotree.actions.save.node_buffer")
 local save_adjacent_buffer = require("config.neotree.actions.save.adjacent_buffer")
 local fzf_grep_picker = require("config.neotree.fzf_grep_picker")
-local updir = require("config.neotree.updir")
-local node_replace_buf = require("config.neotree.actions.node_replace_buf")
+local traverse = require("config.neotree.actions.traverse")
 local commands = require("config.neotree.commands")
 local trash = require("config.neotree.trash")
 local undo = require("config.neotree.undo")
@@ -154,7 +153,7 @@ return {
   --====================== Create / Modify =============================
 
   -- ["a"] = { "add", nowait = true, config = { show_path = "relative" } },
-  ["a"] = { "custom_add", nowait = true, config = { insert_clipb = true } },  -- { insert_clipb = true } möglich (ohne confirmation)
+  ["a"] = { "custom_add", nowait = true, config = { insert_clipb = true } }, -- { insert_clipb = true } möglich (ohne confirmation)
   ["D"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
@@ -236,152 +235,127 @@ return {
   ["+"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      local node = node_utils.get_current(state)
-      if not node then
-        notify.info("no node under cursor")
-        return
-      end
-
-      local path, is_dir = node_utils.get_path(node)
-      if path == "" then
-        notify.warn("no path under cursor")
-        return
-      end
-
-      local dir = is_dir and path or fn.fnamemodify(path, ":h")
-
-      local ok, err = pcall(vim.api.nvim_set_current_dir, dir)
-      if not ok then
-        notify.error(("cd failed: %s"):format(tostring(err)))
-        return
-      end
-
-      local ok_cmd, neo_cmd = pcall(require, "neo-tree.command")
-      if ok_cmd and neo_cmd then
-        neo_cmd.execute({ source = "filesystem", dir = dir, reveal = true })
-      end
-
-      notify.info(("cwd → %s"):format(dir))
+      traverse.down(state)
     end,
-    desc = "Set Neovim cwd to node and focus Neo-tree there",
+    desc = "Navigate into directory and set as root (CWD sync)",
   },
 
   ["-"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      updir.up_one_level(state)
+      traverse.up(state)
     end,
-    desc = "Up one level (in-place) and adjust CWD",
+    desc = "Navigate up one level (in-place, CWD sync)",
   },
 
   --====================== Path / Copy ==================================
 
-    --WATCH: auskommeniterte Mappings tatsöchlich durch `fF][` ersetzt?
+  --WATCH: auskommeniterte Mappings tatsöchlich durch `fF][` ersetzt?
 
-    -- ["Y"] = { --
-    -- ---@param state Cfg.NeoTree.State
-    -- function(state)
-      -- local node = node_utils.get_current(state)
-      -- if not node then
-        -- notify.warn("no node under cursor")
-        -- return
-      -- end
+  -- ["Y"] = { --
+  -- ---@param state Cfg.NeoTree.State
+  -- function(state)
+  -- local node = node_utils.get_current(state)
+  -- if not node then
+  -- notify.warn("no node under cursor")
+  -- return
+  -- end
 
-      -- local path, _ = node_utils.get_path(node)
-      -- if path == "" then
-        -- notify.warn("no path")
-        -- return
-      -- end
+  -- local path, _ = node_utils.get_path(node)
+  -- if path == "" then
+  -- notify.warn("no path")
+  -- return
+  -- end
 
-      -- fn.setreg("+", path, "c")
-      -- notify.info(("Copied path: %s"):format(path))
-    -- end,
-    -- desc = "Copy absolute path to clipboard",
+  -- fn.setreg("+", path, "c")
+  -- notify.info(("Copied path: %s"):format(path))
+  -- end,
+  -- desc = "Copy absolute path to clipboard",
   -- },
 
   -- ["[a"] = {
-    -- ---@param state Cfg.NeoTree.State
-    -- function(state)
-      -- local node = node_utils.get_current(state)
-      -- if not node then
-        -- notify.info("no node under cursor")
-        -- return
-      -- end
+  -- ---@param state Cfg.NeoTree.State
+  -- function(state)
+  -- local node = node_utils.get_current(state)
+  -- if not node then
+  -- notify.info("no node under cursor")
+  -- return
+  -- end
 
-      -- local path, _ = node_utils.get_path(node)
-      -- if path == "" then
-        -- notify.info("no path")
-        -- return
-      -- end
+  -- local path, _ = node_utils.get_path(node)
+  -- if path == "" then
+  -- notify.info("no path")
+  -- return
+  -- end
 
-      -- fn.setreg("+", path, "c")
-      -- notify.info(("copied: %s"):format(path))
-    -- end,
-    -- desc = "Copy absolute path (+)",
+  -- fn.setreg("+", path, "c")
+  -- notify.info(("copied: %s"):format(path))
+  -- end,
+  -- desc = "Copy absolute path (+)",
   -- },
 
   -- ["]a"] = {
-    -- ---@param state Cfg.NeoTree.State
-    -- function(state)
-      -- local node = node_utils.get_current(state)
-      -- if not node then
-        -- notify.info("no node under cursor")
-        -- return
-      -- end
+  -- ---@param state Cfg.NeoTree.State
+  -- function(state)
+  -- local node = node_utils.get_current(state)
+  -- if not node then
+  -- notify.info("no node under cursor")
+  -- return
+  -- end
 
-      -- local path, is_dir = node_utils.get_path(node)
-      -- if path == "" then
-        -- notify.info("no path")
-        -- return
-      -- end
+  -- local path, is_dir = node_utils.get_path(node)
+  -- if path == "" then
+  -- notify.info("no path")
+  -- return
+  -- end
 
-      -- local base = is_dir and path or fn.fnamemodify(path, ":h")
-      -- fn.setreg("+", base, "c")
-      -- notify.info(("copied: %s"):format(base))
-    -- end,
-    -- desc = "Copy base (dir) path (+)",
+  -- local base = is_dir and path or fn.fnamemodify(path, ":h")
+  -- fn.setreg("+", base, "c")
+  -- notify.info(("copied: %s"):format(base))
+  -- end,
+  -- desc = "Copy base (dir) path (+)",
   -- },
 
   -- ["[r"] = {
-    -- ---@param state Cfg.NeoTree.State
-    -- function(state)
-      -- local node = node_utils.get_current(state)
-      -- if not node then
-        -- notify.info("no node under cursor")
-        -- return
-      -- end
+  -- ---@param state Cfg.NeoTree.State
+  -- function(state)
+  -- local node = node_utils.get_current(state)
+  -- if not node then
+  -- notify.info("no node under cursor")
+  -- return
+  -- end
 
-      -- local path, msg = path_utils.from_node(node, "relative")
-      -- if not path then
-        -- notify.info(msg or "Failed to get path")
-        -- return
-      -- end
+  -- local path, msg = path_utils.from_node(node, "relative")
+  -- if not path then
+  -- notify.info(msg or "Failed to get path")
+  -- return
+  -- end
 
-      -- fn.setreg("+", path, "c")
-      -- notify.info(("Copied relative directory: %s"):format(path))
-    -- end,
-    -- desc = "Copy relative directory path",
+  -- fn.setreg("+", path, "c")
+  -- notify.info(("Copied relative directory: %s"):format(path))
+  -- end,
+  -- desc = "Copy relative directory path",
   -- },
 
   -- ["]r"] = {
-    -- ---@param state Cfg.NeoTree.State
-    -- function(state)
-      -- local node = node_utils.get_current(state)
-      -- if not node then
-        -- notify.info("no node under cursor")
-        -- return
-      -- end
+  -- ---@param state Cfg.NeoTree.State
+  -- function(state)
+  -- local node = node_utils.get_current(state)
+  -- if not node then
+  -- notify.info("no node under cursor")
+  -- return
+  -- end
 
-      -- local path, msg = path_utils.from_node(node, "relative")
-      -- if not path then
-        -- notify.info(msg or "Failed to get path")
-        -- return
-      -- end
+  -- local path, msg = path_utils.from_node(node, "relative")
+  -- if not path then
+  -- notify.info(msg or "Failed to get path")
+  -- return
+  -- end
 
-      -- fn.setreg("+", path, "c")
-      -- notify.info(("Copied relative path: %s"):format(path))
-    -- end,
-    -- desc = "Copy relative path (file)",
+  -- fn.setreg("+", path, "c")
+  -- notify.info(("Copied relative path: %s"):format(path))
+  -- end,
+  -- desc = "Copy relative path (file)",
   -- },
 
   ["[f"] = {

@@ -26,8 +26,8 @@
 1. in commands, usrcmds, kleymaps einen  oprdner /sources machen
 2. Plugin Varianten systemaitsch pperformance testen mit `plugins/neotree_variants`
 3. Lazy opt opimierung machen
-
--
+4. updir ujd downdir sollten in einem modul sein (updir refactoring)
+5.
 
 ### Bei öffnen Fokus auf Neotree window setzen
 
