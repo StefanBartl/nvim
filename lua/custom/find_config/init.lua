@@ -1,205 +1,128 @@
 ---@module 'custom.find_config'
---- Cross-platform "find in Neovim config" using fzf-lua.
---- Uses stdpath('config') so it works on Linux/macOS/Windows without branching.
----@alias Custom.FindConfigOptions table|nil
+---@description Cross-platform "find in Neovim config" with pluggable engines (fzf-lua, Telescope)
 
----@async
+local notify = require("lib.notify").create("[find_config]")
+local defaults = require("custom.find_config.config.defaults")
+
 ---@class Custom.FindConfig
----@field find_in_config fun(opts:Custom.FindConfigOptions)
----@field grep_in_config fun(opts:Custom.FindConfigOptions)
----@field enable fun(cfg: table)
-
-local notify = require("lib.notify").create("")
-
 local M = {}
 
---- Get the Neovim config directory in a portable way.
---- For Neovim, stdpath('config') is canonical on all platforms.
---- This function tries multiple fallbacks to be robust in edge cases.
----@return string absolute_path_to_config_dir
-local function get_nvim_config_dir()
-  -- Neovim: stdpath('config') exists and is cross-platform
-  if vim.fn.has("nvim") == 1 then
-    return vim.fn.stdpath("config")
-  end
+--- Internal state
+---@class Custom.FindConfig.State
+---@field engine '"fzf"'|'"telescope"' Active engine
+---@field engine_impl table|nil Engine implementation module
+local state = {
+  engine = defaults.engine,
+  engine_impl = nil,
+}
 
-  -- Fallback for classic Vim running Lua providers (very rare)
-  if vim.fn.exists("*stdpath") == 1 then
-    return vim.fn.stdpath("config")
+--- Load engine implementation module
+---@param engine_name '"fzf"'|'"telescope"'
+---@return table|nil engine_module
+---@return string|nil error_msg
+local function load_engine(engine_name)
+  local module_path = "custom.find_config.engines." .. engine_name
+  local ok, engine = pcall(require, module_path)
+  if not ok then
+    return nil, "Failed to load engine '" .. engine_name .. "': " .. tostring(engine)
   end
-
-  -- Last-resort fallback via $MYVIMRC environment variable
-  if vim.env.MYVIMRC and vim.env.MYVIMRC ~= "" then
-    -- return parent dir of MYVIMRC
-    return vim.fn.fnamemodify(vim.env.MYVIMRC, ":p:h")
-  end
-
-  -- Conservative defaults for plain Vim:
-  -- - Windows -> ~/vimfiles
-  -- - Unix-like -> ~/.vim
-  if vim.fn.has("win32") == 1 then
-    return vim.fn.expand("~/vimfiles")
-  else
-    return vim.fn.expand("~/.vim")
-  end
+  return engine, nil
 end
 
---- Open fzf-lua file picker rooted at the config dir.
---- Uses fzf-lua.files under the hood and merges `opts` with sensible defaults.
---- Features:
----   - Case-insensitive matching (finds "INIT" and "init" equally)
----   - Fuzzy substring matching (finds "arl" in "barl")
----@param opts Custom.FindConfigOptions extra options passed to fzf-lua.files
+--- Setup find_config with user configuration
+---@param cfg table|nil Configuration options:
+---   engine: "fzf"|"telescope" (default: "fzf")
+---   keymaps: { enable: boolean, prefix: string, find: string, grep: string }
+---   usercmds: { enable: boolean, find: string, grep: string }
 ---@return nil
-local function Find_in_config(opts)
-  ---@diagnostic disable-next-line: different-requires
-  local ok, fzf = pcall(require, "fzf-lua")
-  if not ok or not fzf or type(fzf.files) ~= "function" then
-    notify.error("fzf-lua not found or does not expose 'files' function")
+function M.setup(cfg)
+  cfg = cfg or {}
+
+  -- Merge user config with defaults
+  local config = vim.tbl_deep_extend("force", {
+    engine = defaults.engine,
+    keymaps = defaults.keymaps,
+    usercmds = defaults.usercmds,
+  }, cfg)
+
+  -- Load selected engine
+  local engine, err = load_engine(config.engine)
+  if not engine then
+    notify.error(err or "Unknown engine error")
     return
   end
 
-  local cwd = get_nvim_config_dir()
+  -- Update internal state
+  state.engine = config.engine
+  state.engine_impl = engine
 
-  -- Default fzf options for better path matching
-  -- fzf's fuzzy matching is ALREADY case-insensitive by default
-  -- We can enforce it explicitly via -i flag
-  local default_fzf_opts = {
-    ["-i"] = "",  -- case-insensitive matching (explicit enforcement)
-    -- Alternative: ["--literal"] = "" for exact substring matching
-  }
+  -- Setup keymaps if enabled
+  if config.keymaps.enable then
+    local prefix = config.keymaps.prefix or "<leader>"
+    local find_key = prefix .. (config.keymaps.find or "fc")
+    local grep_key = prefix .. (config.keymaps.grep or "gc")
 
-  -- Merge provided opts on top of sensible defaults
-  local merged = vim.tbl_extend("force", {
-    cwd = cwd,
-    prompt = "Config Files❯ ",
-    fzf_opts = default_fzf_opts,
-  }, opts or {})
+    vim.keymap.set("n", find_key, function()
+      M.find_in_config()
+    end, { desc = "Find file in Neovim config" })
 
-  -- If user provided custom fzf_opts, merge them too
-  if opts and opts.fzf_opts then
-    merged.fzf_opts = vim.tbl_extend("force", default_fzf_opts, opts.fzf_opts)
+    vim.keymap.set("n", grep_key, function()
+      M.grep_in_config()
+    end, { desc = "Grep in Neovim config" })
   end
 
-  -- Call fzf-lua.files with defensive error handling
-  local ok_call, err = pcall(function()
-    fzf.files(merged)
-  end)
-  if not ok_call then
-    notify.error("fzf-lua.files failed: " .. tostring(err))
+  -- Setup user commands if enabled
+  if config.usercmds.enable then
+    local find_cmd = config.usercmds.find or "FindConfig"
+    local grep_cmd = config.usercmds.grep or "GrepConfig"
+
+    vim.api.nvim_create_user_command(find_cmd, function(params)
+      if params.args ~= "" then
+        -- Pass initial query to engine
+        M.find_in_config({ query = params.args })
+      else
+        M.find_in_config()
+      end
+    end, {
+      nargs = "?",
+      desc = "Search files in Neovim config directory",
+    })
+
+    vim.api.nvim_create_user_command(grep_cmd, function(params)
+      if params.args ~= "" then
+        M.grep_in_config({ search = params.args })
+      else
+        M.grep_in_config()
+      end
+    end, {
+      nargs = "?",
+      desc = "Live grep in Neovim config directory",
+    })
   end
 end
 
---- Run a live grep / ripgrep rooted at the config dir.
---- Uses fzf-lua.live_grep for an interactive search experience.
----@param opts Custom.FindConfigOptions extra options passed to fzf-lua.live_grep
+--- Find files in Neovim config directory
+---@param opts table|nil Engine-specific options
 ---@return nil
-local function Grep_in_config(opts)
-  ---@diagnostic disable-next-line: different-requires
-  local ok, fzf = pcall(require, "fzf-lua")
-  if not ok or not fzf or type(fzf.live_grep) ~= "function" then
-    notify.error("fzf-lua not found or does not expose 'live_grep' function")
+function M.find_in_config(opts)
+  if not state.engine_impl then
+    notify.error("Engine not initialized. Call setup() first.")
     return
   end
 
-  local cwd = get_nvim_config_dir()
-
-  -- Default fzf options for grep (case-insensitive matching)
-  local default_fzf_opts = {
-    ["-i"] = "",  -- case-insensitive
-  }
-
-  -- Merge provided opts on top of sensible defaults
-  local merged = vim.tbl_extend("force", {
-    cwd = cwd,
-    prompt = "Grep Config❯ ",
-    fzf_opts = default_fzf_opts,
-  }, opts or {})
-
-  -- If user provided custom fzf_opts, merge them
-  if opts and opts.fzf_opts then
-    merged.fzf_opts = vim.tbl_extend("force", default_fzf_opts, opts.fzf_opts)
-  end
-
-  -- Call fzf-lua.live_grep with defensive error handling
-  local ok_call, err = pcall(function()
-    fzf.live_grep(merged)
-  end)
-  if not ok_call then
-    notify.error("fzf-lua.live_grep failed: " .. tostring(err))
-  end
+  state.engine_impl.find_in_config(opts or {})
 end
 
---- Setup keymaps for find & grep in config.
---- <leader>fc : search files in config dir (Find_in_config)
---- <leader>gc : live grep within config dir (Grep_in_config)
+--- Grep in Neovim config directory
+---@param opts table|nil Engine-specific options
 ---@return nil
-local function Enable_keymaps()
-  -- Find files in config
-  vim.keymap.set("n", "<leader>fc", function()
-    Find_in_config()
-  end, { desc = "Find file in Neovim config" })
-
-  -- Grep in config
-  vim.keymap.set("n", "<leader>gc", function()
-    Grep_in_config()
-  end, { desc = "Grep in Neovim config (live_grep)" })
-end
-
---- Setup user-commands for find & grep in config.
---- :FindConfig [query]   => opens fzf file picker, optional query passed to fzf as --query
---- :GrepConfig  [query]  => opens live_grep, optional query passed to fzf as --query
----@return nil
-local function Enable_usercmds()
-  vim.api.nvim_create_user_command("FindConfig", function(params)
-    if params.args ~= "" then
-      -- pass initial query to fzf via fzf_opts --query
-      Find_in_config({ fzf_opts = { ["--query"] = params.args } })
-    else
-      Find_in_config()
-    end
-  end, {
-    nargs = "?",
-    desc = "Search files in Neovim config directory (fzf-lua)",
-  })
-
-  vim.api.nvim_create_user_command("GrepConfig", function(params)
-    if params.args ~= "" then
-      Grep_in_config({ fzf_opts = { ["--query"] = params.args } })
-    else
-      Grep_in_config()
-    end
-  end, {
-    nargs = "?",
-    desc = "Live grep in Neovim config directory (fzf-lua)",
-  })
-end
-
---- Setup both mappings and usercommands from find_config
---- The cfg table controls whether keymaps and/or usercommands are enabled.
---- Expected shape:
---- {
----   keymaps = true|false,
----   usercmds = true|false,
---- }
----@param cfg table|nil configuration toggles
----@return nil
-function M.enable(cfg)
-  if not cfg then
+function M.grep_in_config(opts)
+  if not state.engine_impl then
+    notify.error("Engine not initialized. Call setup() first.")
     return
   end
-  -- If keymaps requested, enable both find and grep keymaps
-  if cfg.keymaps then
-    Enable_keymaps()
-  end
-  -- If usercommands requested, enable both FindConfig and GrepConfig
-  if cfg.usercmds then
-    Enable_usercmds()
-  end
+
+  state.engine_impl.grep_in_config(opts or {})
 end
 
--- Expose helpers for advanced usage
-M.Find_in_config = Find_in_config
-M.Grep_in_config = Grep_in_config
-
-return M ---@type Custom.FindConfig
+return M

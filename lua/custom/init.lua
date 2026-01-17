@@ -76,7 +76,7 @@ require("custom.filecycle").setup({
   usercommands = true,
 })
 
-require("custom.find_config").enable({ usercmds = true, keymaps = true })
+require("custom.find_config").setup({ engine = "telescope" })
 require("custom.markdown").setup()
 require("custom.pathprobe").enable_keymaps()
 require("custom.repo_pickers").enable({
