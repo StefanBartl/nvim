@@ -29,22 +29,18 @@
 1. Usercommands so strukturieren:
     - `:DeleteCurrentFile` zu `:File delete`; `:Fileinfo` zu `File info`; Weiters `File rename;convert;`
     - ein usercommand, das alle emojis entfernt im buffer: `:Buffer remove emojis` `:Buffer remove empty_lines` `:Buffer translate de` `:Buffer translate_replace en ` `:Buffer insert ...`
-2. Bug: `:copy path ...` kopiert immer cwd relativ. idealerweiße eines das "immer relativ zum nvim config cwd wennd dad geht. und ein `Copy path module lua/ts/go/...` das gleich ein import daraus macht
-3.`lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
-4. lsp.tools behandeln
-5-`C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
-1.`p` funktion im v oder v-line modus: soll zeilennummer und indent des zu überschreibednen (old) einhalten
-2. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass...
+2.`lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
+3. lsp.tools behandeln
+4. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass...
     - eine neue file im ordner der trefferfile erstellt
     - background add und ersetzt aktuellen buffer
-3. usrcmds.ui: Zukünftige Features
+5. usrcmds.ui: Zukünftige Features
         - [ ] Theme-Previews in Floating Window
         - [ ] Theme-Export/Import
         - [ ] Custom Theme-Collections
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
-4. table of content ebtfernen als option in marksman als code action
 
----
+--
 
 ## Neotest
 
