@@ -52,7 +52,7 @@
 7. `config.neotree.trash.init.lua`-nmodularisieren - bzw überhaupt alles :-)
 8. es ist wrsch beser, die @types immer im modul root zu belassen und nur overall genutzte imt config root
 
----
+--
 
 ### `/ui`-Modul
 

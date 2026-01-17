@@ -21,9 +21,8 @@
 ## Important
 
 - `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
-- `M-r` indent sind 4 chars, ich will aber nur 1
 
---
+-
 
 ## MIXED
 
@@ -34,17 +33,16 @@
 3.`lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 4. lsp.tools behandeln
 5-`C:\Users\bartl\AppData\Local\nvim\lua\lib\notify`.safe() eininden
-6.`p` funktion im v oder v-line modus: soll zeilennummer und indent des zu überschreibednen (old) einhalten
-7. in markdown diles wenn man in einer einer auflistung ist  mit <C-S-f> bbzw <C-S-p> zzwsichen den Punkten springen
-8. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass...
+1.`p` funktion im v oder v-line modus: soll zeilennummer und indent des zu überschreibednen (old) einhalten
+2. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass...
     - eine neue file im ordner der trefferfile erstellt
     - background add und ersetzt aktuellen buffer
-9. usrcmds.ui: Zukünftige Features
+3. usrcmds.ui: Zukünftige Features
         - [ ] Theme-Previews in Floating Window
         - [ ] Theme-Export/Import
         - [ ] Custom Theme-Collections
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
-10. table of content ebtfernen als option in marksman als code action
+4. table of content ebtfernen als option in marksman als code action
 
 ---
 

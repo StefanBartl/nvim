@@ -25,6 +25,7 @@
 
 1. in commands, usrcmds, kleymaps einen  oprdner /sources machen
 2. Plugin Varianten systemaitsch pperformance testen mit `plugins/neotree_variants`
+3. Lazy opt opimierung machen
 
 -
 

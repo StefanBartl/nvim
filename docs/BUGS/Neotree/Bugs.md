@@ -14,22 +14,15 @@
 
 ## IMPORTANT Bugs
 
-`]r`
-   Error  22:37:48 msg_show.emsg E5108: Error executing lua: Vim:E117: Unknown function: cwd
-stack traceback:
-	[C]: in function 'cwd'
-	...rtl/AppData/Local/nvim/lua/config/neotree/utils/path.lua:124: in function 'from_node'
-	...ata/Local/nvim/lua/config/neotree/keymaps/filesystem.lua:373: in function <...ata/Local/nvim/lua/config/neotree/keymaps/filesystem.lua:366>
-
-`[f` ist nicht korrekt
-
----
+--
 
 ## NORMAL Bugs
 
 ---
 
 ## Long view
+
+1. checkhealth korrigieren und ausbauen
 
 ---
 
