@@ -1,9 +1,9 @@
----@module 'lib.hover_select.quicktest'
+---@module 'lib.ui.hover_select.quicktest'
 ---@description Quick test for hover_select multi-selection
 
 -- Run this with: :luafile lua/lib/hover_select/quicktest.lua
 
-local hover_select = require("lib.hover_select")
+local hover_select = require("lib.ui.hover_select")
 
 -- Test 1: Single-Select (default)
 local function test_single()

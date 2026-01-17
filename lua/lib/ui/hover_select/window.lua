@@ -1,9 +1,9 @@
----@module 'lib.hover_select.window'
----@description Window creation and configuration for lib.hover_select
+---@module 'lib.ui.hover_select.window'
+---@description Window creation and configuration for lib.ui.hover_select
 
 local M = {}
 
-local config = require("lib.hover_select.config")
+local config = require("lib.ui.hover_select.config")
 local notify = vim.notify
 local api = vim.api
 
@@ -108,7 +108,7 @@ function M.create(bufnr, win_config, win_options, items, auto_width)
   -- Create floating window
   local winid = api.nvim_open_win(bufnr, true, float_config)
   if winid == 0 then
-    notify("lib.hover_select: failed to create window", vim.log.levels.ERROR)
+    notify("lib.ui.hover_select: failed to create window", vim.log.levels.ERROR)
     return nil
   end
 
@@ -122,7 +122,7 @@ function M.create(bufnr, win_config, win_options, items, auto_width)
     local success, err = pcall(api.nvim_set_option_value, option, value, { win = winid })
     if not success then
       notify(
-        string.format("lib.hover_select: failed to set window option '%s': %s", option, err),
+        string.format("lib.ui.hover_select: failed to set window option '%s': %s", option, err),
         vim.log.levels.WARN
       )
     end

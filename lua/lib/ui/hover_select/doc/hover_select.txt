@@ -80,7 +80,7 @@ TESTING                                                *hover-select-testing*
 
 Test the multi-selection feature:
 >
-    :lua require("lib.hover_select.test_multiselect").test_multi_select()
+    :lua require("lib.ui.hover_select.test_multiselect").test_multi_select()
 <
 
 Available test functions:
@@ -94,22 +94,22 @@ vim:tw=78:ts=8:ft=help
 ==============================================================================
 MODULE STRUCTURE                                                   *hover-select-modules*
 
-lib.hover_select.buffer
+lib.ui.hover_select.buffer
 Buffer creation, content updates, and buffer-local options.
 
-lib.hover_select.window
+lib.ui.hover_select.window
 Floating window creation, size calculation, and lifecycle management.
 
-lib.hover_select.navigation
+lib.ui.hover_select.navigation
 Keymaps for navigation, selection, and closing the window.
 
-lib.hover_select.highlight
+lib.ui.hover_select.highlight
 Highlight setup and management for the active cursor line.
 
-lib.hover_select.config
+lib.ui.hover_select.config
 Default configuration for buffers, windows, and layout constraints.
 
-lib.hover_select.@types
+lib.ui.hover_select.@types
 EmmyLua type definitions for options and internal state.
 
 ==============================================================================

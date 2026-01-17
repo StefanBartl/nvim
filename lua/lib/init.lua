@@ -1,6 +1,8 @@
 ---@module 'lib'
 --- Aggregator module that re-exports single-function utilities under one namespace.
 
+-- FIX: Sollte alle funktionen der lib exportieren
+
 local M = {
   -- Re-export functions returned by their respective modules.
 

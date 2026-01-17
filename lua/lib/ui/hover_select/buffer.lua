@@ -1,5 +1,5 @@
----@module 'lib.hover_select.buffer'
----@description Buffer creation and content management for lib.hover_select
+---@module 'lib.ui.hover_select.buffer'
+---@description Buffer creation and content management for lib.ui.hover_select
 
 local M = {}
 
@@ -14,7 +14,7 @@ function M.create(items, buf_options)
   -- Create new unlisted buffer
   local bufnr = api.nvim_create_buf(false, true)
   if bufnr == 0 then
-    vim.notify("lib.hover_select: failed to create buffer", vim.log.levels.ERROR)
+    vim.notify("lib.ui.hover_select: failed to create buffer", vim.log.levels.ERROR)
     return nil
   end
 
@@ -27,7 +27,7 @@ function M.create(items, buf_options)
     local success, err = pcall(nvim_set_option_value, option, value, { buf = bufnr })
     if not success then
       vim.notify(
-        string.format("lib.hover_select: failed to set buffer option '%s': %s", option, err),
+        string.format("lib.ui.hover_select: failed to set buffer option '%s': %s", option, err),
         vim.log.levels.WARN
       )
     end

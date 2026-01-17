@@ -1,5 +1,5 @@
----@module 'lib.hover_select.highlight'
----@description Highlight management for lib.hover_select cursor line and multi-selection
+---@module 'lib.ui.hover_select.highlight'
+---@description Highlight management for lib.ui.hover_select cursor line and multi-selection
 
 local M = {}
 

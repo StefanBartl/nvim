@@ -2,7 +2,7 @@
 ---@description Hover-based source switcher for Neo-tree using hover-select v2
 
 local ICONS = require("config.neotree.sources.icons")
-local hover_select = require("lib.hover_select")
+local hover_select = require("lib.ui.hover_select")
 local window_state = require("config.neotree.state.windows")
 local controller = require("config.neotree.open.window.controller")
 

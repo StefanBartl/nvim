@@ -219,7 +219,7 @@ The scratch buffer is a regular Vim buffer with additional keybindings:
 ## Dependencies
 
 - Neovim 0.9+ (Tree-sitter)
-- lib.hover_select (for type selection)
+- lib.ui.hover_select (for type selection)
 
 **Optional:**
 - Telescope (if you want to use the picker.lua alternative)

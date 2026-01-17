@@ -185,7 +185,7 @@ hover_select.open({
 
 Run the test suite:
 ```lua
-require("lib.hover_select.test_multiselect").test_multi_select()
+require("lib.ui.hover_select.test_multiselect").test_multi_select()
 ```
 
 Available test functions:
@@ -197,22 +197,22 @@ Available test functions:
 
 The module is split into small, well-defined components:
 
-* **lib.hover_select.buffer**
+* **lib.ui.hover_select.buffer**
   Responsible for buffer creation, content updates, and buffer-local options
 
-* **lib.hover_select.window**
+* **lib.ui.hover_select.window**
   Calculates window dimensions (including auto-width), creates the floating window, and manages lifecycle cleanup
 
-* **lib.hover_select.navigation**
+* **lib.ui.hover_select.navigation**
   Defines keymaps for navigation, selection, and closing the UI. Supports optional Tab navigation.
 
-* **lib.hover_select.highlight**
+* **lib.ui.hover_select.highlight**
   Manages highlight groups for the active cursor line
 
-* **lib.hover_select.config**
+* **lib.ui.hover_select.config**
   Central location for default buffer, window, and layout configuration
 
-* **lib.hover_select.@types**
+* **lib.ui.hover_select.@types**
   EmmyLua type definitions for options and internal state
 
 ---
@@ -299,7 +299,7 @@ All options can be overridden or extended by passing custom tables, which are me
 ### Basic Usage
 
 ```lua
-local hover_select = require("lib.hover_select")
+local hover_select = require("lib.ui.hover_select")
 
 hover_select.open({
   items = { "Option A", "Option B", "Option C" },

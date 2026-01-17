@@ -1,7 +1,8 @@
----@module 'lib.resolve_log_level'
-
+---@module 'lib.notify.resolve_log_level'
 --- Resolves a log level parameter to a valid vim.log.levels integer value.
 --- Handles numeric levels (0-5), string level names, and vim.log.levels table values.
+require("@types.log")
+
 ---@param level? LogLevel User-provided log level (number or string level name)
 ---@param default? LogLevelNumber Default level to use if resolution fails (defaults to vim.log.levels.WARN)
 ---@return integer resolved_level A valid vim.log.levels integer value

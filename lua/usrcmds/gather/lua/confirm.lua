@@ -1,7 +1,7 @@
 ---@module 'usrcmds.gather.lua.confirm'
 ---@description CWD scan confirmation with file statistics and time estimation
 
-local hover_select = require("lib.hover_select")
+local hover_select = require("lib.ui.hover_select")
 
 local M = {}
 

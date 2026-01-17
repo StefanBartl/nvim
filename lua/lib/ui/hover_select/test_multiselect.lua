@@ -1,7 +1,7 @@
----@module 'lib.hover_select.test_multiselect'
+---@module 'lib.ui.hover_select.test_multiselect'
 ---@description Test functions for hover_select multi-selection feature
 
-local hover_select = require("lib.hover_select")
+local hover_select = require("lib.ui.hover_select")
 
 local M = {}
 

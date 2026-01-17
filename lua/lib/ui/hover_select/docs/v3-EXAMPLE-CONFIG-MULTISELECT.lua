@@ -1,7 +1,7 @@
 ---@module 'example.hover_select_multiselect'
 ---@description Example demonstrating multi-selection feature in hover-select
 
-local hover_select = require("lib.hover_select")
+local hover_select = require("lib.ui.hover_select")
 
 ---Example 1: Single-select mode (backward compatible)
 local function example_single_select()

@@ -126,7 +126,7 @@ hover_select.open({
 
 Test-Suite ausführen:
 ```lua
-require("lib.hover_select.test_multiselect").test_multi_select()
+require("lib.ui.hover_select.test_multiselect").test_multi_select()
 ```
 
 Verfügbare Test-Funktionen:
@@ -139,22 +139,22 @@ Verfügbare Test-Funktionen:
 
 Das Modul ist in mehrere logisch getrennte Teile gegliedert:
 
-* lib.hover_select.buffer
+* lib.ui.hover_select.buffer
   Verantwortlich für Buffer-Erstellung, Inhalt und Buffer-Optionen
 
-* lib.hover_select.window
+* lib.ui.hover_select.window
   Fenstererstellung, Größenberechnung und Aufräumlogik
 
-* lib.hover_select.navigation
+* lib.ui.hover_select.navigation
   Definition der Keymaps für Navigation, Auswahl und Schließen
 
-* lib.hover_select.highlight
+* lib.ui.hover_select.highlight
   Verwaltung der Highlight-Gruppen für die Cursorzeile
 
-* lib.hover_select.config
+* lib.ui.hover_select.config
   Zentrale Default-Werte für Buffer, Fenster und Layout
 
-* lib.hover_select.@types
+* lib.ui.hover_select.@types
   EmmyLua-Typen für Optionen und internen Zustand
 
 ---

@@ -1,5 +1,5 @@
 ---@meta
----@module 'lib.hover_select.@types'
+---@module 'lib.ui.hover_select.@types'
 
 -- === init ===
 ---@class Lib.HoverSelect.Options

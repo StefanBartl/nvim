@@ -200,7 +200,7 @@ end
 ---@return boolean handled True if user selected a file
 local function present_selection(matches, logger)
   -- Lazy-load hover-select module
-  local ok, hover_select = pcall(require, "lib.hover_select")
+  local ok, hover_select = pcall(require, "lib.ui.hover_select")
   if not ok then
     if logger and logger.error then
       logger.error("gofile_alternate: hover-select module not available", { err = hover_select })

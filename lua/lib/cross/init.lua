@@ -14,8 +14,11 @@ M.is = require("lib.cross.platform.is")
 -- Filesystem
 M.fs = {
   cwd = require("lib.cross.fs._cwd"),
-  has_win_sep = require("lib.cross.fs.separators.has_win_sep"),
-  normalize = require("lib.cross.fs.separators.normalize"),
+}
+
+M.separators {
+    has_win_sep = require("lib.cross.fs.separators.has_win_sep"),
+    normalize = require("lib.cross.fs.separators.normalize"),
 }
 
 -- UV/Loop compatibility

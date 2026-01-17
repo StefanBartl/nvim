@@ -4,10 +4,10 @@
 -- This file demonstrates how a plugin or module could configure and
 -- create a hover-select UI with custom options. It is not part of the
 -- core implementation and serves documentation purposes only.
-require("lib.hover_select.@types")
+require("lib.ui.hover_select.@types")
 
 -- Import the main hover-select module
-local hover_select = require("lib.hover_select")
+local hover_select = require("lib.ui.hover_select")
 
 -- Example items to display in the selection window
 ---@type string[]
@@ -74,5 +74,5 @@ local opts = {
 
 -- Create and show the hover-select UI
 -- The exact function name may differ depending on the public API
--- of lib.hover_select (for example: open, show, or create)
+-- of lib.ui.hover_select (for example: open, show, or create)
 hover_select.open(opts)

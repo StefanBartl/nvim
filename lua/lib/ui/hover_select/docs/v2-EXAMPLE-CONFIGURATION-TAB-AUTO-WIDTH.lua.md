@@ -1,7 +1,7 @@
 ---@module 'example.hover_select_v2_configuration'
 ---@description Example demonstrating new v2 features: Tab navigation and auto-width
 
-local hover_select = require("lib.hover_select")
+local hover_select = require("lib.ui.hover_select")
 
 -- ============================================================================
 -- Example 1: Basic Usage with Tab Navigation
