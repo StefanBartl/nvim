@@ -6,6 +6,12 @@
 --- String literal unions are extracted here for reusability.
 
 -- ===========================
+-- Actions
+-- ===========================
+
+---@alias Cfg.NeoTree.Actions.PickerType "telescope"|"fzf"|"auto"
+
+-- ===========================
 -- Position & Window
 -- ===========================
 

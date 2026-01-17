@@ -1,8 +1,6 @@
 ---@module 'config.neotree.keymaps.filesystem'
 --- Filesystem-Source-specific extra mappings
 
--- AUDIT: FIX: Neotree keymaps werden relativ oft verwendet. imports hier belassen, in die funktionen refactoren oder mit `lib.lazy`?
-
 local notify = require("lib.notify").create("[cfg.neotree.keymaps.fs] ")
 
 local node_utils = require("config.neotree.utils.node")
@@ -13,12 +11,11 @@ local to_require = require("config.neotree.actions.path.to_require")
 local node_info = require("config.neotree.actions.info.node")
 local save_node_buffer = require("config.neotree.actions.save.node_buffer")
 local save_adjacent_buffer = require("config.neotree.actions.save.adjacent_buffer")
-local fzf_grep_picker = require("config.neotree.fzf_grep_picker")
+local grep_picker = require("config.neotree.actions.grep_picker")
 local traverse = require("config.neotree.actions.traverse")
 local commands = require("config.neotree.commands")
 local trash = require("config.neotree.trash")
 local undo = require("config.neotree.undo")
-local fn = vim.fn
 
 ---@return table<string, any>
 return {
@@ -463,11 +460,32 @@ return {
     desc = "Copy Lua require() string(s)",
   },
 
+  --====================== Search / Grep ================================
+
   ["gr"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
-      fzf_grep_picker.live_grep_node_dir(state)
+      -- Default: auto-detect (prefers telescope, falls back to fzf)
+      grep_picker.live_grep(state)
     end,
-    desc = "fzf-lua: live_grep in node directory (Windows/WSL/macOS/Linux)",
+    desc = "Live grep in node directory (auto-detect picker)",
+  },
+
+  -- Alternative: Explicit telescope
+  ["<leader>gt"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      grep_picker.live_grep(state, "telescope")
+    end,
+    desc = "Live grep in node directory (telescope)",
+  },
+
+  -- Alternative: Explicit fzf
+  ["<leader>gf"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      grep_picker.live_grep(state, "fzf")
+    end,
+    desc = "Live grep in node directory (fzf-lua)",
   },
 }

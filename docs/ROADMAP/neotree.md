@@ -19,7 +19,10 @@
 
 ## Important
 
---
+1. Neotree keymaps werden relativ oft verwendet. imports hier belassen, in die funktionen refactoren oder mit `lib.lazy`?
+2. checkhealt: modular machen, dafoür brauche ich ein system + doc
+
+-
 
 ## normal
 
