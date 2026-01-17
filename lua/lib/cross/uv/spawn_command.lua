@@ -1,4 +1,4 @@
----@module 'lib.cross_plattform.uv.spawn_command'
+---@module 'lib.cross.uv.spawn_command'
 --- Cross-platform shell command runner for Neovim/Lua.
 ---
 --- This module provides a helper function `spawn_project_command` that executes shell commands

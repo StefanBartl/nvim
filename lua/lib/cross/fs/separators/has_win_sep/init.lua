@@ -1,4 +1,4 @@
----@module 'lib.crosss.windows.has_win_sep.init.lua'
+---@module 'lib.cross.fs.win.has_win_sep'
 
 ---@param s string
 ---@return boolean

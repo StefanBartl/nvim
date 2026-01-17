@@ -1,4 +1,4 @@
----@module 'lib.cross_plattform.fs._cwd'
+---@module 'lib.cross.fs._cwd'
 -- Resolve the current working directory via libuv, compatible across NVIM versions.
 
 ---@return string

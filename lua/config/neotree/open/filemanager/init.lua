@@ -3,7 +3,7 @@
 
 local M = {}
 
-local is_wsl = require("lib.is_wsl")
+local is_wsl = require("lib.cross.plattform.is_wsl")
 local platform = require("config.neotree.utils.platform")
 local notify = require("lib.notify").create("[neotree.open.filemanager]")
 
