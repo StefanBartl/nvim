@@ -1,4 +1,4 @@
----@module 'lib.cross.plattform.is_wsl'
+---@module 'lib.cross.platform.is_wsl'
 --- Single-purpose module that exports exactly one function to detect
 --- whether Neovim is running inside Windows Subsystem for Linux (WSL).
 --- This module intentionally returns the function itself (not a table),

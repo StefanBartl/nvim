@@ -6,7 +6,7 @@ local M = {}
 
 -- Platform Detection
 M.is_windows = require("lib.cross.platform.is_windows")
-M.is_wsl = require("lib.cross.plattform.is_wsl")
+M.is_wsl = require("lib.cross.platform.is_wsl")
 M.is_macos = require("lib.cross.platform.is_macos")
 M.is_linux = require("lib.cross.platform.is_linux")
 M.is = require("lib.cross.platform.is")

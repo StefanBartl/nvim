@@ -1,6 +1,6 @@
 ---@module 'custom.function_index.@types.core'
 -- Core Types
-require("lua.lib.require_dir")("custom.function_index.@types", "")
+require("lua.lib.require").dir("custom.function_index.@types", "")
 
 --- Categorizes the scope and visibility of a function definition.
 --- Used for logical grouping and filtering in the UI.

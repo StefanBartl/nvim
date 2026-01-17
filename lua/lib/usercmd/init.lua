@@ -8,17 +8,8 @@
 
 local M = {}
 
----@class LibUserCommandOpts
----@field nargs? string|integer
----@field bang? boolean
----@field range? boolean|integer
----@field count? integer
----@field complete? string|fun(arg_lead:string, cmd_line:string, cursor_pos:number):string[]
----@field desc? string
----@field force? boolean
-
 ---@param name string
----@param callback string|fun(args:vim.api.keyset.user_command)
+---@param callback string|fun(args:Lib.UserCommand.Args)
 ---@param opts LibUserCommandOpts|nil
 function M.create(name, callback, opts)
   opts = opts or {}

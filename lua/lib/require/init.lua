@@ -1,10 +1,31 @@
----@module 'lib.require_dir'
---- Load all Lua modules in a given `lua/<dir>` directory.
---- Supports selective function invocation per module and safely skips
---- the calling module itself to avoid recursive self-loading.
----
---- Linux/macOS only; uses POSIX-style separators.
+---@module 'lib.require'
+---Safe and extended require utilities
 
+local notify = require("lib.notify").create("[lib.require]")
+
+local M = {}
+
+---Safe require with structured error handling
+---@param name string Module name
+---@return boolean ok Success flag
+---@return any result Module or error message
+function M.safe(name)
+  if type(name) ~= "string" then
+    return false, "invalid module name"
+  end
+
+  local ok, mod = pcall(require, name)
+  if not ok then
+    return false, mod
+  end
+  return true, mod
+end
+
+---Load all modules in a directory
+---@param dir string Directory relative to lua/
+---@param calls? string|string[]|"" Functions to call on loaded modules
+---@return nil
+function M.dir(dir, calls)
 --[[
 This utility loads all Lua modules located directly inside a given directory
 under `lua/<dir>` and optionally invokes well-defined lifecycle functions
@@ -44,12 +65,6 @@ The function itself is exported directly (not wrapped in a table) to allow
 simple re-export patterns.
 ]]--
 
-local notify, levels = vim.notify, vim.log.levels
-
----@param dir string                       -- Relative to `lua/`, e.g. "autocmds" or "plugins/local"
----@param calls string|string[]|nil        -- Optional function(s) to call per module
----@return nil
-return function(dir, calls)
   -- Normalize `dir` (strip leading/trailing slashes and trailing dots)
   dir = tostring(dir):gsub("^/*", ""):gsub("/*$", ""):gsub("%.+$", "")
 
@@ -103,10 +118,7 @@ return function(dir, calls)
       if module_name ~= caller_module then
         local ok, mod = pcall(require, module_name)
         if not ok then
-          notify(
-            "[lib.require_dir] Failed to require " .. module_name .. ": " .. tostring(mod),
-            levels.ERROR
-          )
+          notify.error("[lib.require_dir] Failed to require " .. module_name .. ": " .. tostring(mod))
         else
           -- Function dispatch logic.
           if type(mod) == "table" then
@@ -115,10 +127,7 @@ return function(dir, calls)
               if type(mod.setup) == "function" then
                 local ok_setup, err = pcall(mod.setup, {})
                 if not ok_setup then
-                  notify(
-                    "[lib.require_dir] Setup error in " .. module_name .. ": " .. tostring(err),
-                    levels.ERROR
-                  )
+                  notify.error("[lib.require_dir] Setup error in " .. module_name .. ": " .. tostring(err))
                 end
               end
             else
@@ -127,10 +136,7 @@ return function(dir, calls)
                 if type(mod[fn]) == "function" then
                   local ok_call, err = pcall(mod[fn], mod)
                   if not ok_call then
-                    notify(
-                      "[lib.require_dir] Error calling " .. fn .. " in " .. module_name .. ": " .. tostring(err),
-                      levels.ERROR
-                    )
+                    notify.error("[lib.require_dir] Error calling " .. fn .. " in " .. module_name .. ": " .. tostring(err))
                   end
                 end
               end
@@ -142,3 +148,17 @@ return function(dir, calls)
   end
 end
 
+---Lazy-loading wrapper
+---@param module_name string
+---@return fun(): table
+function M.lazy(module_name)
+  local cached = nil
+  return function()
+    if not cached then
+      cached = require(module_name)
+    end
+    return cached
+  end
+end
+
+return M

@@ -28,7 +28,7 @@ function M.is_wsl()
   end
 
   -- Try user helper first
-  local ok, mod = pcall(require, "lib.cross.plattform.is_wsl")
+  local ok, mod = pcall(require, "lib.cross.platform.is_wsl")
   if ok and type(mod) == "function" then
     local ok2, ans = pcall(mod)
     if ok2 and type(ans) == "boolean" then

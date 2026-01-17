@@ -164,7 +164,7 @@ local function create_timer()
   end
 
   --- Calculate statistics for all checkpoints.
-  ---@return table stats Statistics object with min, max, avg, median, sum
+  ---@return table|nil stats Statistics object with min, max, avg, median, sum
   ---@private
   local function calculate_stats()
     if #instance._checks == 0 then

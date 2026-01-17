@@ -20,7 +20,7 @@ function M.namespace(name)
 end
 
 ---@param group string
----@param opts vim.api.keyset.highlight
+---@param opts Lib.Highlight.Opts
 ---@param ns string|integer|nil
 function M.set(group, opts, ns)
   local ns_id = 0

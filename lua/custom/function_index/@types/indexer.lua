@@ -1,6 +1,6 @@
 ---@module 'custom.function_index.@types.indexer'
 -- Indexer Types
-require("lua.lib.require_dir")("custom.function_index.@types", "")
+require("lua.lib.require").dir("custom.function_index.@types", "")
 
 --- Internal state of the indexer during index building.
 --- Not exposed to users, used for async operations.

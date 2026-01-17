@@ -1,6 +1,6 @@
 ---@module 'custom.function_index.@types.config'
 -- Configuration Types
-require("lua.lib.require_dir")("custom.function_index.@types", "")
+require("lua.lib.require").dir("custom.function_index.@types", "")
 
 --- Configuration for persistent cache behavior.
 ---@class CacheConfig

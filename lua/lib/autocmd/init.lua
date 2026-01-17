@@ -21,15 +21,8 @@ function M.group(name, clear)
   return groups[name]
 end
 
----@class LibAutocmdOpts
----@field group? string|integer
----@field pattern? string|string[]
----@field desc? string
----@field once? boolean
----@field nested? boolean
-
 ---@param event string|string[]
----@param callback fun(args:vim.api.keyset.autocmd)
+---@param callback fun(args:Lib.Autocmd.Args)
 ---@param opts LibAutocmdOpts|nil
 function M.create(event, callback, opts)
   opts = opts or {}

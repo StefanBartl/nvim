@@ -1,6 +1,6 @@
 ---@module 'custom.function_index.@types.ui'
 -- UI Types
-require("lua.lib.require_dir")("custom.function_index.@types", "")
+require("lua.lib.require").dir("custom.function_index.@types", "")
 
 --- Options passed to UI pickers (Telescope/fzf-lua).
 ---@class PickerOptions

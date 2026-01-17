@@ -7,7 +7,7 @@
 ---   • Clipboard copy with platform-specific backends
 ---   • Path helpers (join/normalize, WSL <-> Windows conversion hooks)
 ---
---- It builds on your existing 'lib.cross.plattform.is_wsl' single-function module.
+--- It builds on your existing 'lib.cross.platform.is_wsl' single-function module.
 --- Target: Linux/macOS first; adds robust Windows + WSL support.
 
 ---@version 1.0.0
@@ -49,7 +49,7 @@ M = {}
 
 -- Reuse your existing single-function detector.
 -- Note: requiring the function directly avoids cyclic deps via 'lib.init'.
-local detect_wsl = require("lib.cross.plattform.is_wsl") -- returns function() -> boolean  :contentReference[oaicite:2]{index=2}
+local detect_wsl = require("lib.cross.platform.is_wsl") -- returns function() -> boolean  :contentReference[oaicite:2]{index=2}
 
 -- OS detection ---------------------------------------------------------------
 

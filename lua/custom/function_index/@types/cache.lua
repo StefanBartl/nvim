@@ -1,6 +1,6 @@
 ---@module 'custom.function_index.@types.cache'
 -- Cache Types
-require("lua.lib.require_dir")("custom.function_index.@types", "")
+require("lua.lib.require").dir("custom.function_index.@types", "")
 
 --- Metadata stored alongside cached index entries.
 --- Used to determine cache validity.

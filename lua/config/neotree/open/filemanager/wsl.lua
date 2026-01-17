@@ -16,7 +16,7 @@ M = {
 ---@return boolean
 local function is_wsl()
   -- Prefer user helper if present
-  local ok, mod = pcall(require, "lib.cross.plattform.is_wsl")
+  local ok, mod = pcall(require, "lib.cross.platform.is_wsl")
   if ok and type(mod) == "function" then
     local ok2, ans = pcall(mod)
     if ok2 and type(ans) == "boolean" then

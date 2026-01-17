@@ -299,7 +299,7 @@ open/
 ```
 window/ → state/windows.lua, state/tree.lua, reveal/
 system_app/ → config.neotree.utils.node
-filemanager/ → config.neotree.utils.node, lib.cross.plattform.is_wsl
+filemanager/ → config.neotree.utils.node, lib.cross.platform.is_wsl
 reveal/ → (standalone)
 ```
 

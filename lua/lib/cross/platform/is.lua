@@ -17,7 +17,7 @@
 return function(platform)
   -- Import detectors (single-function modules)
   local is_windows = require("lib.cross.platform.is_windows")
-  local is_wsl = require("lib.cross.plattform.is_wsl")
+  local is_wsl = require("lib.cross.platform.is_wsl")
   local is_macos = require("lib.cross.platform.is_macos")
   local is_linux = require("lib.cross.platform.is_linux")
 
