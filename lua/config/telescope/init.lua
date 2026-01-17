@@ -13,9 +13,9 @@ local history_keymaps = require("config.telescope.history.keymaps")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
 local hl_selection = require("config.telescope.ui.hl_selection")
 local bg = require("config.telescope.open_background")
+local custom_actions = require("config.telescope.actions")
 
-local notify = vim.notify
-local levels = vim.log.levels
+local notify = require("lib.notify").create("[telescope.cfg]")
 
 -- Helper: compute effective max length for path display
 ---@param picker_opts table|nil Telescope picker options
@@ -39,7 +39,8 @@ function M.defaults()
       history_keymaps.get(actions) or {},
       fb_keymaps.get(actions),
       bg.get_mappings(),
-      require("config.telescope.keymaps").get(actions)
+      require("config.telescope.keymaps").get(actions),
+      custom_actions.get_mappings()
     )
 
   return {
@@ -115,7 +116,7 @@ function M.setup(opts)
   for _, ext in ipairs(opts.extensions_list or {}) do
     local ok, err = pcall(telescope.load_extension, ext)
     if not ok then
-      notify(string.format("Failed to load telescope extension '%s': %s", ext, err), levels.WARN)
+      notify.warn(string.format("Failed to load telescope extension '%s': %s", ext, err))
     end
   end
 

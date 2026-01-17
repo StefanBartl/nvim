@@ -31,16 +31,13 @@
     - ein usercommand, das alle emojis entfernt im buffer: `:Buffer remove emojis` `:Buffer remove empty_lines` `:Buffer translate de` `:Buffer translate_replace en ` `:Buffer insert ...`
 2.`lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 3. lsp.tools behandeln
-4. In die wichtigsten picker wie zb leader fc oder leader leade ein mapping einbauen, dass...
-    - eine neue file im ordner der trefferfile erstellt
-    - background add und ersetzt aktuellen buffer
-5. usrcmds.ui: Zukünftige Features
+4. usrcmds.ui: Zukünftige Features
         - [ ] Theme-Previews in Floating Window
         - [ ] Theme-Export/Import
         - [ ] Custom Theme-Collections
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
 
---
+---
 
 ## Neotest
 
