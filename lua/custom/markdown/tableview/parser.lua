@@ -91,6 +91,7 @@ function M.parse_table(lines, start_line)
     return nil
   end
 
+  ---@type Custom.Markdown.Table
   local tbl = {
     header = nil,
     alignments = {},

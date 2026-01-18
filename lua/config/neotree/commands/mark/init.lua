@@ -138,6 +138,7 @@ function M.unmark_all_in_directory(state)
   end
 
   -- Get children using tree:get_nodes()
+---@diagnostic disable-next-line: undefined-field
   local children = tree:get_nodes(parent:get_id())
 
   if not children or #children == 0 then

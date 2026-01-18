@@ -12,7 +12,7 @@
 ---@field cells Custom.Markdown.TableCell[]
 
 ---@class Custom.Markdown.Table
----@field header Custom.Markdown.TableRow
+---@field header Custom.Markdown.TableRow?
 ---@field alignments string[]  -- "left"|"center"|"right"
 ---@field rows Custom.Markdown.TableRow[]
 ---@field start_line integer

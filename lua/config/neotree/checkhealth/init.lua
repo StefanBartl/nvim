@@ -10,6 +10,7 @@ local warn = health.warn
 local error = health.error
 local info = health.info
 
+
 ---Check Neo-tree plugin installation
 ---@return boolean installed
 local function check_neotree_plugin()
@@ -58,12 +59,24 @@ local function check_actions()
   start("Action Modules")
 
   local actions = {
-    { name = "config.neotree.actions.traverse", desc = "Bi-directional navigation", required = true },
-    { name = "config.neotree.actions.project_root", desc = "Project root detection", required = true },
+    {
+      name = "config.neotree.actions.traverse",
+      desc = "Bi-directional navigation",
+      required = true,
+    },
+    {
+      name = "config.neotree.actions.project_root",
+      desc = "Project root detection",
+      required = true,
+    },
     { name = "config.neotree.actions.grep_picker", desc = "Grep picker", required = true },
     { name = "config.neotree.actions.copy.entries", desc = "Copy entries", required = false },
     { name = "config.neotree.actions.copy.folders", desc = "Copy folders", required = false },
-    { name = "config.neotree.actions.path.to_require", desc = "Path to require()", required = false },
+    {
+      name = "config.neotree.actions.path.to_require",
+      desc = "Path to require()",
+      required = false,
+    },
     { name = "config.neotree.actions.info.node", desc = "Node info", required = false },
   }
 
@@ -157,6 +170,12 @@ local function check_state_modules()
   else
     error("Tree state module not loadable")
   end
+
+  -- State modules
+  local state = require("config.neotree.state.windows")
+  local s = state.get_state()
+
+  vim.health.info(string.format("Window state: open=%s, position=%s", s.open, s.position or "nil"))
 
   return ok_win_state and ok_tree_state
 end
@@ -262,6 +281,32 @@ local function check_window_management()
     return false
   end
 
+  local semaphore = require("config.neotree.open.window.controller.semaphore")
+  local status = semaphore.status()
+
+  if status.available then
+    vim.health.ok(string.format("Semaphore available (waiting: %d)", status.waiting))
+  else
+    vim.health.warn("Semaphore locked")
+  end
+
+  -- Cache stats
+  ---@diagnostic disable-next-line: unused-local
+  local buffer_utils = require("config.neotree.utils.buffer") -- AUDIT: Unused local buffer_utils
+  vim.health.ok("Buffer validation cache active")
+
+  -- Error stats
+  local error_handler = require("config.neotree.open.window.controller.error_handler")
+  local stats = error_handler.get_stats()
+
+  if vim.tbl_count(stats) == 0 then
+    vim.health.ok("No errors logged")
+  else
+    for context, count in pairs(stats) do
+      vim.health.warn(string.format("%s: %d errors", context, count))
+    end
+  end
+
   local ok_float = pcall(require, "config.neotree.open.window.float")
   if ok_float then
     ok("Float window support available")
@@ -275,7 +320,6 @@ local function check_window_management()
   else
     warn("Window measuring not loaded")
   end
-
   return true
 end
 

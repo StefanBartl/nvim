@@ -16,6 +16,8 @@ local traverse = require("config.neotree.actions.traverse")
 local commands = require("config.neotree.commands")
 local trash = require("config.neotree.trash")
 local undo = require("config.neotree.undo")
+local node_replace_buf = require("config.neotree.actions.node_replace_buf")
+
 
 ---@return table<string, any>
 return {

@@ -87,9 +87,10 @@ function M.copy(entries, opts)
   -- Copy to system clipboard (+)
   vim.fn.setreg("+", formatted, "c")
 
+  vim.notify("Copy to +: " .. formatted, vim.log.levels.INFO) -- AUDIT: Ich möchte keine formatiierte ansicht auals notify ausgeben, sondern was im Zwischenspeicher ist sehen:
   -- Show preview notification
-  local preview = create_preview_message(entries, opts)
-  vim.notify(preview, vim.log.levels.INFO)
+  -- local preview = create_preview_message(entries, opts)
+  -- vim.notify(preview, vim.log.levels.INFO)
 
   return true
 end

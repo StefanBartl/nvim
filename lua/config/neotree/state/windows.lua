@@ -1,8 +1,5 @@
 ---@module 'config.neotree.state.windows'
----@brief Central Neo-tree window state registry with events and snapshots
----@description
---- This module represents the single source of truth for Neo-tree window state.
---- It is UI-agnostic, side-effect free and safe to access from any module.
+---@brief Central Neo-tree window state registry with snapshot optimization
 
 local M = {}
 
@@ -10,7 +7,7 @@ local M = {}
 local state = {
   open = false,
   position = nil,
-  source = nil,  -- ADDED: Track active source
+  source = nil,
 }
 
 ---@type fun(from: Cfg.NeoTree.Window, to: Cfg.NeoTree.Window, action: string)[]
@@ -22,6 +19,12 @@ local snapshots = {}
 ---@type boolean
 local debug_enabled = false
 
+-- PERFORMANCE: Cache for snapshot to avoid repeated cloning
+---@type {snapshot: Cfg.NeoTree.Window, timestamp: number}|nil
+local snapshot_cache = nil
+local SNAPSHOT_CACHE_TTL = 100 -- ms
+
+---Clone state (expensive)
 ---@return Cfg.NeoTree.Window
 local function clone_state()
   return {
@@ -31,16 +34,16 @@ local function clone_state()
   }
 end
 
+---Emit state transition event
 ---@param from Cfg.NeoTree.Window
 ---@param to Cfg.NeoTree.Window
 ---@param action string
 local function emit(from, to, action)
+  -- Invalidate cache
+  snapshot_cache = nil
+
   if debug_enabled then
-    snapshots[#snapshots + 1] = {
-      open = to.open,
-      position = to.position,
-      source = to.source,
-    }
+    snapshots[#snapshots + 1] = clone_state()
   end
 
   for i = 1, #listeners do
@@ -48,6 +51,25 @@ local function emit(from, to, action)
   end
 end
 
+---PERFORMANCE: Get cached snapshot
+---@return Cfg.NeoTree.Window
+function M.get_state()
+  local now = vim.loop.now()
+
+  if snapshot_cache and (now - snapshot_cache.timestamp < SNAPSHOT_CACHE_TTL) then
+    return snapshot_cache.snapshot
+  end
+
+  local snapshot = clone_state()
+  snapshot_cache = {
+    snapshot = snapshot,
+    timestamp = now,
+  }
+
+  return snapshot
+end
+
+-- Individual getters (fast, no cloning)
 function M.is_open()
   return state.open
 end
@@ -60,12 +82,6 @@ function M.get_source()
   return state.source
 end
 
----Get complete state (for debugging)
----@return Cfg.NeoTree.Window
-function M.get_state()
-  return clone_state()
-end
-
 ---@param pos Cfg.NeoTree.Position
 ---@param source? string
 ---@param action? string
@@ -73,7 +89,7 @@ function M.set_open(pos, source, action)
   local from = clone_state()
   state.open = true
   state.position = pos
-  state.source = source or state.source  -- Keep existing source if not provided
+  state.source = source or state.source
   emit(from, clone_state(), action or "open")
 end
 
@@ -82,7 +98,7 @@ function M.set_closed(action)
   local from = clone_state()
   state.open = false
   state.position = nil
-  -- IMPORTANT: Keep source even when closed (for restore)
+  -- Keep source for restore
   emit(from, clone_state(), action or "close")
 end
 
@@ -105,6 +121,7 @@ function M.reset()
   state.open = false
   state.position = nil
   state.source = nil
+  snapshot_cache = nil
   snapshots = {}
 end
 

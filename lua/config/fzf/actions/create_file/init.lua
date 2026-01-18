@@ -98,6 +98,7 @@ end
 ---@param selected table|string fzf-lua selected entry
 ---@param opts table fzf-lua options
 ---@return boolean continue Continue fzf-lua picker
+---@diagnostic disable-next-line: unused-local
 function M.create_file(selected, opts)
   -- Debug output
   notify("[DEBUG] create_file triggered", vim.log.levels.INFO)

@@ -38,6 +38,7 @@ end
 ---@param selected table|string fzf-lua selected entry
 ---@param opts table fzf-lua options
 ---@return boolean continue Continue fzf-lua picker
+---@diagnostic disable-next-line: unused-local
 function M.open_badd(selected, opts)
   -- Debug output
   notify("[DEBUG] open_badd triggered", vim.log.levels.INFO)

@@ -20,11 +20,12 @@ function M.setup(opts)
   end
 
   -- User commands (BufReport, TabReport, WinReport)
-  if opts.usercmds ~= false or opts.all == true then
+  if opts.usercmds or opts.all == true then
+    ---@diagnostic  disable-next-line
     require("debugging.usercmds").setup(opts.usercmds or { all = true })
   end
 
-  if opts.views ~= false or opts.all == true then
+  if opts.views or opts.all == true then
     require("debugging.views").setup(opts.views or { all = true })
   end
 

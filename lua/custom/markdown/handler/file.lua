@@ -19,12 +19,9 @@ local uv = vim.loop
 
 -- Trim helper
 ---@param s string
----@return string|nil
+---@return string
 local function trim(s)
-  if not s then
-    return nil
-  end
-  return s:match("^%s*(.-)%s*$")
+  return s:match("^%s*(.-)%s*$") or ""
 end
 
 --- Search for an <a ... href="..."> or <img ... src="..."> pattern in a buffer near the current cursor.

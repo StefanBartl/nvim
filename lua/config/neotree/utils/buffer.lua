@@ -1,39 +1,68 @@
 ---@module 'config.neotree.utils.buffer'
----@brief Buffer validation and context utilities
+---@brief Buffer validation and context utilities with caching
 
 local M = {}
 
----Check if buffer is a valid, normal file buffer
+-- PERFORMANCE: Validation cache with weak keys
+---@type table<integer, {valid: boolean, timestamp: number}>
+local validation_cache = {}
+setmetatable(validation_cache, { __mode = "k" })
+
+local CACHE_TTL = 1000 -- 1 second
+
+---Check if buffer is a valid, normal file buffer (cached)
 ---@param bufnr integer|nil Buffer number (0 or nil = current)
 ---@return boolean
 function M.is_valid_file_buffer(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
 
+  -- Check cache
+  local cached = validation_cache[bufnr]
+  local now = vim.loop.now()
+
+  if cached and (now - cached.timestamp < CACHE_TTL) then
+    return cached.valid
+  end
+
+  -- Full validation
+  local valid = true
+
   if not vim.api.nvim_buf_is_valid(bufnr) then
-    return false
+    valid = false
+  elseif not vim.api.nvim_buf_is_loaded(bufnr) then
+    valid = false
+  elseif vim.bo[bufnr].buftype ~= "" then
+    valid = false
+  elseif not vim.bo[bufnr].buflisted then
+    valid = false
+  else
+    local name = vim.api.nvim_buf_get_name(bufnr)
+    if not name or name == "" then
+      valid = false
+    elseif vim.fn.filereadable(name) ~= 1 then
+      valid = false
+    end
   end
 
-  if not vim.api.nvim_buf_is_loaded(bufnr) then
-    return false
-  end
+  -- Cache result
+  validation_cache[bufnr] = {
+    valid = valid,
+    timestamp = now,
+  }
 
-  -- Skip special buffer types
-  local buftype = vim.bo[bufnr].buftype
-  if buftype ~= "" then
-    return false
-  end
+  return valid
+end
 
-  -- Must be listed
-  if not vim.bo[bufnr].buflisted then
-    return false
-  end
+---Invalidate cache for buffer (call on BufDelete, etc.)
+---@param bufnr integer
+function M.invalidate_cache(bufnr)
+  validation_cache[bufnr] = nil
+end
 
-  local name = vim.api.nvim_buf_get_name(bufnr)
-  if not name or name == "" then
-    return false
-  end
-
-  return vim.fn.filereadable(name) == 1
+---Clear entire cache
+function M.clear_cache()
+  validation_cache = {}
+  setmetatable(validation_cache, { __mode = "k" })
 end
 
 ---Get buffer context for reveal/navigation operations
@@ -86,10 +115,19 @@ function M.close_related_buffers(path)
         local norm_buf = vim.fn.resolve(buf_name):gsub("\\", "/")
         if norm_buf:sub(1, #normalized) == normalized or norm_buf == normalized then
           pcall(vim.api.nvim_buf_delete, buf, { force = true, unload = true })
+          M.invalidate_cache(buf)
         end
       end
     end
   end
 end
+
+-- Autocmd to invalidate cache on buffer deletion
+vim.api.nvim_create_autocmd("BufDelete", {
+  group = vim.api.nvim_create_augroup("NeoTreeBufferCacheInvalidate", { clear = true }),
+  callback = function(args)
+    M.invalidate_cache(args.buf)
+  end,
+})
 
 return M

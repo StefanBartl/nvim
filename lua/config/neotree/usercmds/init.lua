@@ -23,6 +23,25 @@ function M.enable_usercmds(opts)
       }
     )
   end
+
+  vim.api.nvim_create_user_command("NeoTreeSemaphoreStatus", function()
+    local sem = require("config.neotree.open.window.controller.semaphore")
+    local status = sem.status()
+    vim.print(status)
+  end, {})
+
+  vim.api.nvim_create_user_command("NeoTreeClearSemaphore", function()
+    require("config.neotree.open.window.controller").clear_semaphore()
+  end, {})
+
+  vim.api.nvim_create_user_command("NeoTreeErrorStats", function()
+    local handler = require("config.neotree.open.window.controller.error_handler")
+    vim.print(handler.get_stats())
+  end, {})
+
+  vim.api.nvim_create_user_command("NeoTreeExportEvents", function()
+    require("config.neotree.open.window.observability").export_events()
+  end, {})
 end
 
 return M
