@@ -6,9 +6,9 @@ local M = {}
 --- Default configuration
 ---@type Cfg.NeoTree.InitOpts
 local defaults = {
-  debug = true,
+  debug = false,
   busy_guard = false,
-  default_position = "right",
+  default_position = "left",
   restore_last_position = false,
   window_debug = true,
   trash = {

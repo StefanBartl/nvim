@@ -1,52 +1,23 @@
 ---@module 'config.neotree.open.window.float'
----@brief Neo-tree float strategy with state tracking
-
-local buffer_utils = require("config.neotree.utils.buffer")
+---@brief Neo-tree float strategy with external state synchronization
 
 local M = {}
 
----@type {open: boolean, last_toggle: number}
+---@type {open: boolean, last_action: number}
 local float_state = {
   open = false,
-  last_toggle = 0,
+  last_action = 0,
 }
 
----Toggle float with anti-bounce protection
----@param NeoCmd table
-function M.toggle(NeoCmd)
-  local now = vim.loop.now()
-
-  -- Anti-bounce: Min 100ms between toggles
-  if now - float_state.last_toggle < 100 then
-    return
-  end
-
-  float_state.last_toggle = now
-  float_state.open = not float_state.open
-
-  local ctx = buffer_utils.get_buffer_context()
-
-  -- Use explicit show/close instead of toggle
-  if float_state.open then
-    NeoCmd.execute({
-      source = "filesystem",
-      action = "show",
-      position = "float",
-      toggle = false,
-      reveal = true,
-      reveal_file = ctx and ctx.file or nil,
-      dir = ctx and ctx.dir or nil,
-    })
-  else
-    NeoCmd.execute({
-      source = "filesystem",
-      action = "close",
-    })
-  end
+---Set open state (called by executor)
+---@param is_open boolean
+function M.set_open_state(is_open)
+  float_state.open = is_open
+  float_state.last_action = vim.loop.now()
 end
 
 ---Get float state
----@return {open: boolean, last_toggle: number}
+---@return {open: boolean, last_action: number}
 function M.get_state()
   return vim.deepcopy(float_state)
 end
@@ -54,7 +25,13 @@ end
 ---Reset float state
 function M.reset()
   float_state.open = false
-  float_state.last_toggle = 0
+  float_state.last_action = 0
+end
+
+---Check if float is open (for debugging)
+---@return boolean
+function M.is_open()
+  return float_state.open
 end
 
 return M

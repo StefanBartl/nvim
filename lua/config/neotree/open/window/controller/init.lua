@@ -19,7 +19,7 @@ function M.make_opener(target_position, source)
   if not state_machine then
     state_machine = require("config.neotree.open.window.controller.state_machine")
     semaphore = require("config.neotree.open.window.controller.semaphore")
----@diagnostic disable-next-line: unused-local
+    ---@diagnostic disable-next-line: unused-local
     executor = require("config.neotree.open.window.controller.executor")
     position_utils = require("config.neotree.open.window.controller.position")
   end

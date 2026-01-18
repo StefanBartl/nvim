@@ -21,8 +21,13 @@
 
 1. Neotree keymaps werden relativ oft verwendet. imports hier belassen, in die funktionen refactoren oder mit `lib.lazy`?
 2. checkhealt: modular machen, dafoür brauche ich ein system + doc
+3. CWD sync muss:
+    - performanter gemacht werden, asynchron sc hon bever man neotree öffnet
+    - löst die reopenings aus
+    - ist es async?
+    - wie funktniert es genau? wäre es nicht besser, anstatt bei jeden neotree openeing das im hintergrund zu machen bei bufferwechsel?
 
--
+
 
 ## normal
 
