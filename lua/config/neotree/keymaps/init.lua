@@ -52,6 +52,7 @@ return {
   ["R"] = "refresh",
   ["C"] = "close_node",
   ["z"] = "close_all_nodes",
+  ["W"] = "open_with_window_picker",
 
   --====================== Resize Helper ==============================
 

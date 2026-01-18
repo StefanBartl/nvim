@@ -29,9 +29,9 @@ local folder = vim.fn.stdpath("config") .. "/lua/plugins/neotree_variants"
 ---@type table<NeoTreeVariantKey, string>
 local VARIANTS = {
   default = folder .. "/neotree.lua",
-  old = folder .. "/neotree_old.lua.md",
-  old_norm_sources = folder .. "/neotree_old_norm_sources.lua.md",
-  wo_sources = folder .. "/neotree_wo_sources.lua.md",
+  old = folder .. "/neotree_old.lua",
+  old_norm_sources = folder .. "/neotree_old_norm_sources.lua",
+  wo_sources = folder .. "/neotree_wo_sources.lua",
   standard = folder .. "/neotree_standard.lua",
   stub = folder .. "/neotree_stub.lua",
 }

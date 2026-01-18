@@ -21,18 +21,34 @@
 
 1. Neotree keymaps werden relativ oft verwendet. imports hier belassen, in die funktionen refactoren oder mit `lib.lazy`?
 2. checkhealt: modular machen, dafoür brauche ich ein system + doc
+3. CWD sync muss:
+    - performanter gemacht werden, asynchron sc hon bever man neotree öffnet
+    - löst die reopenings aus
+    - ist es async?
+    - wie funktniert es genau? wäre es nicht besser, anstatt bei jeden neotree openeing das im hintergrund zu machen bei bufferwechsel?
 
--
+---
+
+### neotree/open/
+
+1. Der zustabnd ist unschön
+2. early float return?
+3. `config/neotree/open/window` sollte eigentlich `config/neotree/window/open` sein und nicht eumgekehrt, denn es geht um ein windcow, das geäfnet wird. aes müsste dann aber close und sowitch auch heraud refactored werden, wenn wir wirlich "open" verwenden
+
+---
 
 ## normal
 
 1. in commands, usrcmds, kleymaps einen  oprdner /sources machen
 2. Plugin Varianten systemaitsch pperformance testen mit `plugins/neotree_variants`
 3. Lazy opt opimierung machen
-4. updir ujd downdir sollten in einem modul sein (updir refactoring)
-5.
+4. watcheruarantien ist ja eigentlich ein rash / filesystem modul, sollte auch dorthin moved werden
+
+---
 
 ### Bei öffnen Fokus auf Neotree window setzen
+
+---
 
 #### funktionert, aber mit kleinen bug
 
@@ -66,7 +82,11 @@ Folgende Variante funktiert bei allen 4 window positionen. Ein Bug ist aber, wen
   },
 ```
 
+---
+
 #### Bereits geteste, hat nicht funktionert
+
+---
 
 ##### `plugins/neotree.lua`
 
@@ -120,6 +140,8 @@ event_handlers = {
 
 ```
 
+---
+
 ##### Autocommands
 
 1. Funktioniert zawr für  Neotree window links, rechts und current, aber es hat die Auswirkung, dass sich das flaot window sofort wieder schließt.
@@ -150,6 +172,8 @@ Ist also in dieser Versionm so keine Option.
   - --> Im window alles sources deaktivieren bis auf filesyte, dann einen source selector mit zb.: "M-s" machen
 
 -
+
+---
 
 ### marks / trash
 

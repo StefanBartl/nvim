@@ -250,6 +250,9 @@ return {
         default_position = "right",
         restore_last_position = false,
         window_debug = true,
+        window_open = false, -- Müsste buggy open window überspringen..
+        reveal_current_file = true, -- ...trotzdem current fil...
+        only_lhs = true, -- .. und lhs haeben
         trash = {
           debug = false,
           auto_close_buffers = true,
@@ -264,14 +267,15 @@ return {
             parent = { fg = "darkgreen", underline = false },
           },
         },
-        cwd_sync = {
-          debounce_ms = 150,
-          keep_focus = true,
-          also_set_nvim_cwd = false,
-          open_if_closed = false,
-          use_project_root = true,
-          project_root_fallback_to_bufdir = true,
-        },
+        cwd_sync = false,
+        -- cwd_sync = {
+        -- debounce_ms = 150,
+        -- keep_focus = true,
+        -- also_set_nvim_cwd = false,
+        -- open_if_closed = false,
+        -- use_project_root = true,
+        -- project_root_fallback_to_bufdir = true,
+        -- },
       })
 
       -- Source-Switcher Keymap

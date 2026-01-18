@@ -6,11 +6,14 @@ local M = {}
 --- Default configuration
 ---@type Cfg.NeoTree.InitOpts
 local defaults = {
-  debug = true,
+  debug = false,
   busy_guard = false,
-  default_position = "right",
+  default_position = "left",
   restore_last_position = false,
   window_debug = true,
+  window_open = true,
+  reveal_current_file = true,
+  only_lhs = false,
   trash = {
     debug = false,
     auto_close_buffers = true,
@@ -41,7 +44,7 @@ M.options = vim.deepcopy(defaults)
 
 ---@return Cfg.NeoTree.Position|"right"
 function M.get_default_position()
-    return M.options.default_position or "right"
+  return M.options.default_position or "right"
 end
 
 ---@return boolean
@@ -58,7 +61,7 @@ local function setup_trash(config)
   if type(config) == "table" then
     trash_mod.setup(config)
   elseif config == true then
-       trash_mod.setup(M.options.trash)
+    trash_mod.setup(M.options.trash)
   end
 
   require("config.neotree.trash.commands").setup()
@@ -86,7 +89,9 @@ end
 ---@param config Cfg.NeoTree.CwdSync.Config|boolean
 ---@return nil
 local function setup_cwd_sync(config)
-  if not config or config == false then return end
+  if not config or config == false then
+    return
+  end
   if type(config) == "table" then
     require("config.neotree.cwd_sync").setup(config)
   elseif config == true then
@@ -108,9 +113,18 @@ function M.setup(opts)
     setup_trash(M.options.trash)
   end
 
-  setup_window_opener(
-    (M.options.window_debug ~= nil and M.options.window_debug) or M.options.debug or false
-  )
+  if M.options.window_open then
+    setup_window_opener(
+      (M.options.window_debug ~= nil and M.options.window_debug) or M.options.debug or false
+    )
+  else
+    if M.options.reveal_current_file then
+      require("config.neotree.open.keymaps.reveal_current_file").attach()
+    end
+    if M.options.only_lhs then
+      require("config.neotree.open.keymaps.only_lhs").attach()
+    end
+  end
 
   if M.options.current_hl then
     setup_current_hl(M.options.current_hl)

@@ -1,11 +1,13 @@
 ---@module 'config.neotree.open.window.controller.executor'
----@brief Neo-tree command executor with window management
+---@brief Neo-tree command executor with custom float implementation
 
 local M = {}
 
 local buffer_utils = require("config.neotree.utils.buffer")
 local state = require("config.neotree.state.windows")
+
 local tree_state = require("config.neotree.state.tree")
+local custom_float = require("config.neotree.open.window.custom_float")
 local cfg = require("config.neotree").options
 
 ---Get valid Neo-tree command module
@@ -63,10 +65,11 @@ local function cleanup_duplicates()
   return #windows
 end
 
----Focus Neo-tree window with validation
+---Focus Neo-tree window with validation and retries
+---@param max_attempts? integer
 ---@return boolean success
-local function focus_neotree_window()
-  local max_attempts = 3
+local function focus_neotree_window(max_attempts)
+  max_attempts = max_attempts or 3
   local attempt = 0
 
   while attempt < max_attempts do
@@ -76,6 +79,12 @@ local function focus_neotree_window()
     if win and vim.api.nvim_win_is_valid(win) then
       local ok = pcall(vim.api.nvim_set_current_win, win)
       if ok then
+        if cfg.debug then
+          vim.notify(
+            string.format("[neo-tree] Focused window on attempt %d", attempt),
+            vim.log.levels.DEBUG
+          )
+        end
         return true
       end
     end
@@ -94,6 +103,21 @@ end
 ---@param callback fun(success: boolean)
 ---@return nil
 function M.open_window(position, source, callback)
+  -- =========================================================================
+  -- CUSTOM FLOAT: Bypass Neo-tree's buggy float implementation
+  -- =========================================================================
+  -- if position == "float" then
+    -- if cfg.debug then
+      -- vim.notify("[neo-tree] Using custom float implementation", vim.log.levels.DEBUG)
+    -- end
+
+
+    -- return
+  -- end
+
+  -- =========================================================================
+  -- Standard positions (left/right/current) - unchanged
+  -- =========================================================================
   local NeoCmd, err = get_neo_cmd()
   if not NeoCmd then
     vim.notify("[neo-tree] " .. err, vim.log.levels.ERROR)
@@ -101,31 +125,7 @@ function M.open_window(position, source, callback)
     return
   end
 
-  -- CRITICAL FIX: Cleanup BEFORE state update
   cleanup_duplicates()
-
-  if position == "float" then
-    -- Float uses toggle by design
-    require("config.neotree.open.window.float").toggle(NeoCmd)
-    state.set_open("float", source, cfg.restore_last_position and "restore" or "reveal")
-
-    vim.defer_fn(function()
-      if cfg.restore_last_position then
-        local ok, manager = pcall(require, "neo-tree.sources.manager")
-        if ok then
-          local neo_state = manager.get_state(source)
-          if neo_state and neo_state.tree then
-            tree_state.restore_state(neo_state.tree)
-          end
-        end
-      end
-      focus_neotree_window()
-      callback(true)
-    end, 200)
-    return
-  end
-
-  -- Update state BEFORE execute
   state.set_open(position, source, cfg.restore_last_position and "restore" or "reveal")
 
   local delay = (position == "current") and 100 or 50
@@ -175,13 +175,6 @@ end
 ---@param callback fun(success: boolean)
 ---@return nil
 function M.close_window(callback)
-  local NeoCmd, err = get_neo_cmd()
-  if not NeoCmd then
-    vim.notify("[neo-tree] " .. err, vim.log.levels.ERROR)
-    callback(false)
-    return
-  end
-
   local current_pos = state.get_position()
   local current_src = state.get_source()
 
@@ -192,7 +185,29 @@ function M.close_window(callback)
     )
   end
 
-  -- CRITICAL FIX: Capture state BEFORE close
+  -- =========================================================================
+  -- CUSTOM FLOAT: Use custom close logic
+  -- =========================================================================
+  -- if current_pos == "float" then
+    -- if cfg.debug then
+      -- vim.notify("[neo-tree] Using custom float close", vim.log.levels.DEBUG)
+   -- end
+
+    -- -- custom_float.close(callback)
+    -- return
+  -- end
+
+  -- =========================================================================
+  -- Standard positions - unchanged
+  -- =========================================================================
+  local NeoCmd, err = get_neo_cmd()
+  if not NeoCmd then
+    vim.notify("[neo-tree] " .. err, vim.log.levels.ERROR)
+    callback(false)
+    return
+  end
+
+  -- Capture state BEFORE close
   local ok, manager = pcall(require, "neo-tree.sources.manager")
   if ok and current_src then
     local neo_state = manager.get_state(current_src)
@@ -201,10 +216,8 @@ function M.close_window(callback)
     end
   end
 
-  -- Update state BEFORE close
   state.set_closed("closing_" .. tostring(current_pos))
 
-  -- CRITICAL FIX: Verify window is actually gone
   local function verify_closed()
     local win = find_neotree_window()
     return win == nil
@@ -215,15 +228,6 @@ function M.close_window(callback)
     if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].filetype == "neo-tree" then
       pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
     end
-
-    vim.defer_fn(function()
-      callback(verify_closed())
-    end, 50)
-    return
-  end
-
-  if current_pos == "float" then
-    require("config.neotree.open.window.float").toggle(NeoCmd)
 
     vim.defer_fn(function()
       callback(verify_closed())

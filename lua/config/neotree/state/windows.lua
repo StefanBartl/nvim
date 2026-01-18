@@ -8,6 +8,7 @@ local state = {
   open = false,
   position = nil,
   source = nil,
+  id = nil,
 }
 
 ---@type fun(from: Cfg.NeoTree.Window, to: Cfg.NeoTree.Window, action: string)[]
@@ -123,6 +124,14 @@ function M.reset()
   state.source = nil
   snapshot_cache = nil
   snapshots = {}
+end
+
+---@param _id integer|nil
+function M.set_id(_id)
+  state.id = _id
+  if state.id == nil then
+    vim.notify("[neo-tree.state.window]: id is set to nil")
+  end
 end
 
 return M
