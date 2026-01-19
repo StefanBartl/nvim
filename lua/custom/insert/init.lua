@@ -230,15 +230,22 @@ local function setup_annotation()
   end
 
   register_subcommand("module", {
-    ---@diagnostic disable-next-line: unused-local
     handler = function(args)
-      annotation.insert_module_annotation()
+      local format = args[1] -- "lua_ls" or "require" or nil
+      annotation.insert_module_annotation(format)
     end,
-    complete = function()
-      return {}
+    complete = function(arg_lead)
+      local formats = { "lua_ls", "require" }
+      local matches = {}
+      for _, f in ipairs(formats) do
+        if vim.startswith(f, arg_lead) then
+          table.insert(matches, f)
+        end
+      end
+      return matches
     end,
-    nargs = "0",
-    desc = "Insert @module annotation",
+    nargs = "*",
+    desc = "Insert module annotation/require: module [lua_ls|require]",
   })
 
   register_subcommand("class", {
@@ -267,10 +274,10 @@ local function setup_annotation()
 
   if config.enable_legacy_commands then
     api.nvim_create_user_command("LuaModuleAnnotations", function()
-      safe_call(annotation.insert_module_annotation)
+      safe_call(annotation.insert_module_annotation, "lua_ls")
     end, {
       nargs = 0,
-      desc = "[legacy] Use :Insert module instead",
+      desc = "[legacy] Use :Insert module lua_ls instead",
     })
   end
 end
