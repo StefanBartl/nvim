@@ -36,6 +36,7 @@
         - [ ] Theme-Export/Import
         - [ ] Custom Theme-Collections
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
+5. `:CwdHere` fixen
 
 ---
 

@@ -268,7 +268,7 @@ end
 -- FILE ICONS
 -------------------------------------
 
----@class FileIconHLCache
+---@class WkdNvC.UI.Stl.Modules.Custom.FileIcon.HLCache
 ---@field name string                 -- highlight group name used for the icon segment
 ---@field fg string|nil               -- last foreground hex color (e.g. "#aabbcc")
 ---@field bg string|nil               -- last background hex color matching current mode band
@@ -280,7 +280,7 @@ end
 ---@return string                     -- highlight group name to use in the statusline
 local function ensure_icon_hl(fg, band_bg)
   -- cache lives on the module table to avoid redefinition per render
-  ---@type FileIconHLCache
+  ---@type WkdNvC.UI.Stl.Modules.Custom.FileIcon.HLCache
   M.__icon_hl = M.__icon_hl or { name = "St_FileIcon", fg = nil, bg = nil }
 
   if M.__icon_hl.fg ~= fg or M.__icon_hl.bg ~= band_bg then

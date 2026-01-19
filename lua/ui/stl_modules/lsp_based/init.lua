@@ -165,7 +165,7 @@ end
 ---@param band_bg string|nil
 ---@return string
 local function ensure_icon_hl(fg, band_bg)
-  ---@type FileIconHLCache
+  ---@type WkdNvC.UI.Stl.Modules.Custom.FileIcon.HLCache
   M.__icon_hl = M.__icon_hl or { name = "St_FileIcon", fg = nil, bg = nil }
   if M.__icon_hl.fg ~= fg or M.__icon_hl.bg ~= band_bg then
     api.nvim_set_hl(0, M.__icon_hl.name, { fg = fg, bg = band_bg })
