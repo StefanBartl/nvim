@@ -1,4 +1,4 @@
----@module 'wkdnvchad.ui.usrcmnds.themes'
+---@module 'wkdnvchad.usrcmd.themes'
 ---Theme management for Base46/NvChad
 ---
 ---This module handles the complex theme switching logic for NvChad's Base46 system.

@@ -2,6 +2,25 @@
 --- Thin wrapper for WkdNvChad configuration.
 --- Delegates all logic to wkdnvchad.config.chadrc
 
+-- ============================================================================
+-- CRITICAL: Setup wkdnvchad FIRST, before config
+-- ============================================================================
+local wkdnvc_ok, wkdnvc_err = pcall(function()
+  local wkdnvc = require("wkdnvchad")
+  wkdnvc.setup({ all = true })
+end)
+
+if not wkdnvc_ok then
+  vim.notify(
+    "[chadrc] wkdnvchad setup failed: " .. tostring(wkdnvc_err),
+    vim.log.levels.ERROR
+  )
+end
+
+-- ============================================================================
+-- Statusline Config
+-- ============================================================================
+
 -- statusline feature flag
 local normal = true
 if normal then

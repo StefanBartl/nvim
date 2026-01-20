@@ -55,7 +55,6 @@ vim.schedule(function()
 end)
 
 -- FIX THIS WILL NOT STAY
-require("ui.command").setup()
 require('wkddap').setup({
   languages = { 'lua', 'go', 'python', 'javascript' },
   ui = { enable = true, },

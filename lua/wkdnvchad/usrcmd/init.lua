@@ -1,4 +1,4 @@
----@module 'wkdnvchad.ui.usrcmnds'
+---@module 'wkdnvchad.ui.usrcmd'
 ---Provides :UI usercommand for runtime UI configuration (Base46, editor UI).
 
 local M = {}
@@ -6,7 +6,7 @@ local M = {}
 local api = vim.api
 
 -- Import theme management odule
-local theme = require("wkdnvchad.ui.command.themes")
+local theme = require("wkdnvchad.usrcmd.themes")
 
 -----------------------------------------------------------------------
 -- Helpers
@@ -297,9 +297,10 @@ local function complete(arglead, cmdline, cursorpos)
 end
 
 -----------------------------------------------------------------------
--- Setup
+-- Public API
 -----------------------------------------------------------------------
 
+---@return nil
 function M.setup()
   api.nvim_create_user_command("UI", dispatcher, {
     nargs = "*",

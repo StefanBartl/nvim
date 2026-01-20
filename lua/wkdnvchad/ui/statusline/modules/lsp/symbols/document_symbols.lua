@@ -127,7 +127,6 @@ local function request_doc_symbols_async(bufnr)
     return
   end
 
-  local opts = get_options()
   local lsp = vim.lsp
   local params = vim.lsp.util.make_text_document_params(bufnr)
   local cache = M.__lsp_doc_cache[bufnr]
