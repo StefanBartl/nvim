@@ -2,8 +2,8 @@
 
 local M = {}
 
-local terminal_lib = require("lib.terminals")
-local is_terminal_buf, delete_terminal_buf = terminal_lib.is_terminal_buf, terminal_lib.delete_terminal_buf
+local lib = require("lib")
+local is_terminal_buf, delete_terminal_buf = lib.is_terminal_buf, lib.delete_terminal_buf
 
 ---@return nil
 function M.setup()

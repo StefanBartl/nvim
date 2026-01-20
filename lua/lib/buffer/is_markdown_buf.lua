@@ -1,4 +1,4 @@
----@module 'lib.is_markdown_buf'
+---@module 'lib.buffer.is_markdown_buf'
 --- Returns the current buffer number if the buffer is a valid loaded markdown buffer.
 --- Usage: local bufnr = require("lib.is_markdown_buf")()
 

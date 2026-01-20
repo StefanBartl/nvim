@@ -1,7 +1,20 @@
+---@module 'lib.fs.path'
+
+local unpack = table.unpack or unpack
+
+local M = {}
+
+---@param parts string[]
+---@return string
+function M.joinpath(parts)
+  return vim.fs.joinpath(unpack(parts))
+end
+
 -- Utility: ensure directory for a given path exists; returns true on success.
 -- Uses vim.fn.mkdir with "p" flag to create parents; returns boolean.
-
-return function(path)
+---@param path string
+---@return boolean, string?
+function M.ensure_dir(path)
   if not path or path == "" then
     return false, "empty path"
   end
@@ -26,3 +39,5 @@ return function(path)
     return false, tostring(err)
   end
 end
+
+return M

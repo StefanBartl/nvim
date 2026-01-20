@@ -1,4 +1,4 @@
----@module 'lib.simple_echo'
+---@module 'lib.nvim.simple_echo'
 -- Small helper wrapper to simplify common echo patterns.
 -- This module returns a single function that echoes messages using vim.api.nvim_echo.
 -- It preallocates a single-element chunks array to avoid reallocations when used frequently.

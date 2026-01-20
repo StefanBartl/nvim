@@ -17,13 +17,12 @@
 ---      local do_work = lazy.fn("mymodule", "do_work")
 ---      do_work(42)
 
-
-local M = {}
-
 ---@class Lib.LazyModule
 ---@field _loader fun(): table
 ---@field _value table|nil
 ---@field get? fun(): table Returns the loaded module. Loads it exactly once on first invocation.
+
+local LAZY = {}
 
 ---Creates a lazy module wrapper.
 ---The wrapped module is required only on first access and then cached.
@@ -33,7 +32,7 @@ local M = {}
 ---
 ---@return Lib.LazyModule
 ---A lazy module object exposing a get() method.
-function M.module(module_name)
+function LAZY.module(module_name)
   ---@type Lib.LazyModule
   local lazy = {
     _value = nil,
@@ -66,7 +65,7 @@ end
 ---@param module_name string
 ---@param fn_name string
 ---@return fun(...): any
-function M.fn(module_name, fn_name)
+function LAZY.fn(module_name, fn_name)
   ---@type fun(...): any
   local wrapped
 
@@ -85,5 +84,34 @@ function M.fn(module_name, fn_name)
   end
 end
 
-return M
+---Creates a lazy module with type casting for LSP support.
+---Returns the actual module (not the wrapper) for better type inference.
+---
+---Usage:
+---```lua
+---local mod = lazy.require("my.module", "MyModule.Type")
+---```
+---
+---@generic T
+---@param module_name string
+---@return T
+function LAZY.require(module_name)
+  ---@diagnostic disable-next-line: return-type-mismatch
+  return LAZY.module(module_name).get()
+end
+
+---Creates a lazy module wrapper with type casting.
+---Use this when you need LSP support for the loaded module.
+---
+---@generic T
+---@param module_name string The module name passed to require()
+---@return T
+function LAZY.typed(module_name)
+  local lazy = LAZY.module(module_name)
+  ---@diagnostic disable-next-line: return-type-mismatch
+  return lazy.get()
+end
+
+
+return LAZY
 

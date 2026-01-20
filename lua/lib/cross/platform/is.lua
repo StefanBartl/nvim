@@ -4,13 +4,7 @@
 ---   1) When called without arguments, it returns the current platform as a string.
 ---   2) When called with a platform name, it returns whether the current platform matches it.
 
----@alias PlatformName
----| '"windows"'
----| '"wsl"'
----| '"macos"'
----| '"linux"'
-
----@param platform? PlatformName
+---@param platform? Lib.Cross.Platform.PlatformName
 ---@return boolean|string
 --- If `platform` is provided, returns true if it matches the current platform.
 --- If `platform` is nil, returns the detected platform string.
@@ -21,7 +15,7 @@ return function(platform)
   local is_macos = require("lib.cross.platform.is_macos")
   local is_linux = require("lib.cross.platform.is_linux")
 
-  ---@type PlatformName
+  ---@type Lib.Cross.Platform.PlatformName
   local current
 
   -- Detection order matters:

@@ -1,6 +1,5 @@
----@module 'lib.with'
+---@module 'lib.tables.with'
 --- Utility to merge two option tables. Returns a new table if base is nil.
---- Simple and dependency-free.
 
 ---@param base table|nil
 ---@param extra table|nil
