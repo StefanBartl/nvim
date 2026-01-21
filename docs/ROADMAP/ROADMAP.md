@@ -37,8 +37,8 @@
         - [ ] Custom Theme-Collections
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
 5. `:CwdHere` fixen
-
----
+6. "a" in neotree scheint nicht mehr ganz typsiereungen ezuer rstellen
+7.--
 
 ## Neotest
 
