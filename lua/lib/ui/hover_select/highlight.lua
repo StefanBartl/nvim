@@ -102,4 +102,5 @@ function M.clear_marks(bufnr, ns_id)
   return ok
 end
 
+---@type Lib.UI.HoverSelect.Highlight
 return M

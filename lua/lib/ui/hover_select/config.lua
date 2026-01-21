@@ -47,4 +47,5 @@ M.dimensions = {
   padding = 2, -- Extra width padding for borders
 }
 
+---@type Lib.UI.HoverSelect.Config
 return M

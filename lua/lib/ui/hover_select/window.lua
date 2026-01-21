@@ -164,4 +164,5 @@ function M._setup_autocommands(bufnr, winid)
   })
 end
 
+---@type Lib.UI.HoverSelect.Window
 return M

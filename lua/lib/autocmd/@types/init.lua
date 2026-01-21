@@ -17,4 +17,9 @@
 ---@field once? boolean
 ---@field nested? boolean
 
+---@class Lib.AutoCmd
+---@field group fun(name: string, clear: boolean|nil): integer # Create autocommand group
+---@field create fun(event: string|string[], callback: fun(args:Lib.Autocmd.Args), opts: LibAutocmdOpts|nil): nil # Create autocommand
+---@field get_augroup fun(name: string, opts: { clear?: boolean, prefix?: string }|nil): integer # Augroup registry: Centralized augroup creation with optional prefixing and deduplication.
+
 return {}

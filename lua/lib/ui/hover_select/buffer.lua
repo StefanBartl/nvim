@@ -46,7 +46,7 @@ function M.update_content(bufnr, items)
   end
 
   -- Temporarily enable modifications
-  local was_modifiable = api.nvim_get_option_value("modifiable", { bufnr = bufnr })
+local was_modifiable = api.nvim_get_option_value("modifiable", { bufnr = bufnr })
   nvim_set_option_value("modifiable", true, { buf = bufnr })
 
   -- Update content
@@ -58,4 +58,5 @@ function M.update_content(bufnr, items)
   return success
 end
 
+---@type Lib.UI.HoverSelect.Buffer
 return M

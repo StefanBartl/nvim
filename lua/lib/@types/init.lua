@@ -1,0 +1,131 @@
+---@meta
+---@module 'lib.@types'
+
+---@class OsShell
+---@field prog string        -- executable to spawn (e.g. "sh" or "powershell")
+---@field args string[]      -- arguments vector (no command yet)
+---@field is_powershell boolean
+
+---@class OsRunResult
+---@field code integer
+---@field signal integer
+---@field stdout string
+---@field stderr string
+
+---@alias Lib.Cross.Platform.PlatformName
+---| '"windows"'
+---| '"wsl"'
+---| '"macos"'
+---| '"linux"'
+
+---@class Lib
+--- === Cross-Platform ===
+---@field is_windows fun(): boolean # returns true if corrent os is windows
+---@field is_wsl fun(): boolean # returns true if corrent os is wsl
+---@field is_macos fun(): boolean # returns true if corrent os is macos
+---@field is_linux fun(): boolean # returns true if corrent os is linux
+---@field is fun(platform?: Lib.Cross.Platform.PlatformName): boolean|Lib.Cross.Platform.PlatformName # Dual behavior: returns platform name or boolean check
+-- Lib.Cross.Run
+---@field shell fun(): OsShell # Pick a shell suitable for the platform
+---@field run fun(cmd: string, cb: fun(ok:boolean, res:OsRunResult): nil): nil # Async run using vim.system when available; falls back to jobstart
+---@field run_blocking fun(cmd: string): OsRunResult # Blocking run (utility for quick conversions / probing)
+---Lib.Cross.CopyToClipboard
+---@field copy_to_clipboard fun(text: string): boolean # Copy text to system clipboard using platform-appropriate backend
+---
+--- === Filesystem ===
+---@field find_upward_dir fun(names: string[], from: string): string|nil # Find directory containing files
+---@field dedup fun(entries: string[]): string[] # Deduplicate filesystem paths
+---@field path_shorten fun(path: string, max_len: integer): string # Shorten path for display
+---Lib.Fs.Path
+---@field joinpath fun(parts: string[]): string # Joins variable strings to one path
+---@field ensure_dir fun(path: string): boolean, string? # Ensure directory exists
+---@field is_subpath fun(path: string, base: string): boolean # Check if path is subpath of base
+---@field is_dir fun(p: string): boolean # Check if path is a directory
+---@field relpath fun(path: string, base: string): string # Compute relative path
+---
+--- === Require ===
+---@field require_safe fun(name: string): boolean, any # Safe require with structured error handling
+---@field require_dir fun(dir: string, calls?: string|string[]|""): nil # Load all modules in a directory
+---@field require_lazy fun(module_name: string): fun(): table # Lazy-loading wrapper
+---
+--- === Buffer ===
+---@field is_markdown_buf fun(bufnr_arg: integer|nil): integer|nil # Returns buffer number if valid markdown buffer
+---@field insert_lines fun(lines: string[], pos?: Lib.Buf.InsertLinesPos): nil # Insert lines into buffer
+---
+--- === Tables ===
+---@field with fun(base: table|nil, extra: table|nil): table # Merge two option tables
+---@field array table # Array utilities
+---@field core table # Core table utilities
+---@field dict table # Dictionary utilities
+---@field set table # Set utilities
+---@field functional table # Functional helpers
+---@field safe table # Safe table operations
+---
+--- === Strings ===
+---@field strings Lib.Strings.ALL # All string functions
+---@field trim fun(s: any): string # Trim whitespace
+---@field slugify fun(s: string): string # Convert to slug
+---@field kebab_case fun(s: string): string # Convert to kebab-case
+---@field starts_with fun(s: string, prefix: string): boolean # Check string prefix
+---@field ends_with fun(s: string, suffix: string): boolean # Check string suffix
+---@field contains fun(s: string, needle: string): boolean # Check if string contains
+---@field split fun(s: string, sep: string): string[] # Split string
+---@field join fun(parts: string[], sep: string): string # Join strings
+---@field replace_all fun(s: string, from: string, to: string): string # Replace all occurrences
+---@field capitalize fun(s: string): string # Capitalize first letter
+---@field uncapitalize fun(s: string): string # Uncapitalize first letter
+---@field snake_case fun(s: string): string # Convert to snake_case
+---@field camel_case fun(s: string): string # Convert to camelCase
+---@field pad_start fun(s: string, width: integer): string # Pad string start
+---@field pad_end fun(s: string, width: integer): string # Pad string end
+---@field pad_center fun(s: string, width: integer): string # Pad string center
+---@field indent fun(s: string, n: integer): string # Indent string
+---@field dedent fun(s: string): string # Dedent string
+---@field is_empty_or_space fun(s: any): boolean # Check if empty or whitespace
+---@field remove_prefix fun(s: string, list?: string[]): string # Remove common prefixes
+---@field uri_decode fun(s: string): string # Decode URI
+---@field normalize_anchor fun(s: string): string # Normalize anchor
+---@field has_scheme fun(s: string): boolean # Check if URL has scheme
+---@field is_web_url fun(s: string): boolean # Check if web URL
+---@field url_under_cursor fun(line: string, col: integer): string|nil # Get URL under cursor
+---@field escape_lua_magic fun(s: string): string # Escape Lua pattern magic
+---@field find_plain fun(s: string, needle: string): integer|nil, integer|nil # Plain string find
+---@field replace_plain fun(s: string, from: string, to: string): string # Plain string replace
+---@field surround fun(s: string, left: string, right: string): string # Surround string
+---@field hex_to_string fun(hex: string): string # Convert hex to UTF-8 string
+---
+--- === Terminal ===
+---@field terminal_escape fun(path: string): string # Cross-platform path escaping
+---@field is_terminal_buf fun(bufnr: integer): boolean|nil # Checks if buffer is terminal
+---@field delete_terminal_buf fun(bufnr: integer): boolean|nil # Deletes terminal buffer
+---
+--- === UI === --FIX: Ab hier müssenm sie weiter vervollständigt werden
+---@field hover_select table # Hover select module
+---@field hl table # Highlight utilities
+---
+--- === Autocmd/Keymap ===
+---@field autocmd table # Autocmd utilities
+---@field get_augroup fun(name: string, opts: { clear?: boolean, prefix?: string }|nil): integer # Augroup registry: Centralized augroup creation with optional prefixing and deduplication.
+---@field map fun(modes: string|string[], lhs: string, rhs: string|function, opts?: table, desc?: string): nil # Keymap helper
+---@field usercmd table # User command utilities
+---
+--- === Notify ===
+---@field notify table # Notification utilities
+---@field resolve_log_level fun(level?: LogLevel, default?: LogLevelNumber): integer # Resolve log level
+---
+--- === Lazy ===
+---@field lazy table # Lazy loading utilities
+---
+--- === Memo ===
+---@field memo table # Memoization utilities
+---
+--- === Time ===
+---@field time_diff fun(): TimeDiff # Create time diff instance
+---
+--- === Normalize ===
+---@field normalize table # Normalization utilities
+---
+--- === Nvim ===
+---@field simple_echo fun(msg: string, hl: string|nil, is_error: boolean|nil): integer|string # This module returns a single function that echoes messages using vim.api.nvim_echo
+
+return {}

@@ -144,4 +144,5 @@ function M._block_horizontal_movement(bufnr)
   end
 end
 
+---@type Lib.UI.HoverSelect.Navigation
 return M
