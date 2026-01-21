@@ -1,26 +1,29 @@
 ---@module 'wkdnvchad.mappings.tabufline'
 --- Custom buffer navigation without automatic centering
 
-local lazy = require("lib.lazy")
-local nvchad_tabufline = lazy.module("nvchad.tabufline")
+local nvchad_tabufline = require("lib.lazy").require("nvchad.tabufline")
 
 local M = {}
 
-local api = vim.api
+local api, bufs_t = vim.api, vim.t.bufs
 
--- Hilfsfunktion: aktuellen Buffer setzen ohne 'zz'
+---@nodiscard
 ---@param bufnr integer
+---@return boolean
 local function set_buf_no_center(bufnr)
-  if api.nvim_buf_is_valid(bufnr) then
-    api.nvim_set_current_buf(bufnr)
+  local ok, is_valid = pcall(api.nvim_buf_is_valid, bufnr)
+  if ok and is_valid then
+    local ok2 = pcall(api.nvim_set_current_buf, bufnr)
+    return ok2
   end
+  return false
 end
 
 -- Index des aktuellen Buffers
 ---@param bufnr integer
 ---@return integer|nil
 local function buf_index(bufnr)
-  local bufs = vim.t.bufs
+  local bufs = bufs_t
   if not bufs then
     return nil
   end
@@ -33,79 +36,127 @@ local function buf_index(bufnr)
   return nil
 end
 
+---@nodiscard
 ---@return integer
 local function cur_buf()
-  return api.nvim_get_current_buf()
+  local ok, bufnr = pcall(api.nvim_get_current_buf)
+  return ok and bufnr or 0
 end
 
--- Nächster Buffer
+---@return boolean
 function M.next()
   local bufs = vim.t.bufs
   if not bufs or #bufs == 0 then
-    return
+    return false
   end
 
-  local curbufIndex = buf_index(cur_buf())
-
-  if not curbufIndex then
-    set_buf_no_center(bufs[1])
-    return
+  local current = cur_buf()
+  if current == 0 then
+    return false
   end
 
-  local next_buf = (curbufIndex == #bufs) and bufs[1] or bufs[curbufIndex + 1]
-  set_buf_no_center(next_buf)
+  local idx = buf_index(current)
+  if not idx then
+    return set_buf_no_center(bufs[1])
+  end
+
+  local next_buf = (idx == #bufs) and bufs[1] or bufs[idx + 1]
+  return set_buf_no_center(next_buf)
 end
 
--- Vorheriger Buffer
+---@return boolean
 function M.prev()
   local bufs = vim.t.bufs
   if not bufs or #bufs == 0 then
-    return
+    return false
   end
 
-  local curbufIndex = buf_index(cur_buf())
-
-  if not curbufIndex then
-    set_buf_no_center(bufs[1])
-    return
+  local current = cur_buf()
+  if current == 0 then
+    return false
   end
 
-  local prev_buf = (curbufIndex == 1) and bufs[#bufs] or bufs[curbufIndex - 1]
-  set_buf_no_center(prev_buf)
+  local idx = buf_index(current)
+  if not idx then
+    return set_buf_no_center(bufs[1])
+  end
+
+  local prev_buf = (idx == 1) and bufs[#bufs] or bufs[idx - 1]
+  return set_buf_no_center(prev_buf)
 end
 
---- Move to the next buffer `n` times.
 ---@param n integer
+---@return boolean
 function M.move_next_n(n)
-  for _ = 1, n do
-    pcall(M.next)
+  if type(n) ~= "number" or n < 1 then
+    return false
   end
+
+  local success = true
+  for _ = 1, n do
+    if not M.next() then
+      success = false
+      break
+    end
+  end
+  return success
 end
 
---- Move to the previous buffer `n` times.
 ---@param n integer
+---@return boolean
 function M.move_prev_n(n)
-  for _ = 1, n do
-    pcall(M.prev)
+  if type(n) ~= "number" or n < 1 then
+    return false
   end
+
+  local success = true
+  for _ = 1, n do
+    if not M.prev() then
+      success = false
+      break
+    end
+  end
+  return success
 end
 
 --- Close the current buffer, and repeat `count` times.
 ---@param n integer
+---@return boolean
 function M.close_n_buffers(n)
-  local tabufline = nvchad_tabufline.get()
+  if type(n) ~= "number" or n < 1 then
+    return false
+  end
 
-  if not tabufline or type(tabufline.close_buffer) ~= "function" then
+  -- Lazy-load nvchad.tabufline only when closing buffers
+  if not nvchad_tabufline then
+    local ok, mod = pcall(require, "nvchad.tabufline")
+    if not ok then
+      vim.notify(
+        "[wkdnvchad.tabufline] Failed to load nvchad.tabufline",
+        vim.log.levels.ERROR
+      )
+      return false
+    end
+    nvchad_tabufline = mod
+  end
+
+  if type(nvchad_tabufline.close_buffer) ~= "function" then
     vim.notify(
-      "nvchad.tabufline.close_buffer not available",
+      "[wkdnvchad.tabufline] close_buffer not available",
       vim.log.levels.WARN
     )
-    return
+    return false
   end
+  local success = true
 
   for _ = 1, n do
-    pcall(tabufline.close_buffer)
+    local ok = pcall(nvchad_tabufline.close_buffer)
+    if not ok then
+      success = false
+      break
+    end
   end
+  return success
 end
 
 return M

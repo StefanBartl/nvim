@@ -1,7 +1,7 @@
 ---@module 'lib.strings.transform'
 --- Type surface for string transformation helpers.
 
----@class LibStringsTransform
+---@class Lib.Strings.Transform
 ---@field remove_prefix fun(s: string, list?: string[]): string
 ---@field trim fun(s: any): string
 ---@field slugify fun(s: string): string
@@ -17,7 +17,7 @@
 ---@field indent fun(s: string, n: integer): string
 ---@field dedent fun(s: string): string
 
----@type LibStringsTransform
+---@type Lib.Strings.Transform
 local transform
 
 return transform

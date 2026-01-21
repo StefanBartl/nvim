@@ -1,17 +1,42 @@
 ---@module 'wkdnvchad.ui.statusline.modules.formatters'
---------------------------------------------------------------------------------
--- Statusline formatters
---------------------------------------------------------------------------------
+--- Statusline formatters with string pooling and lib.strings integration
+--- Optimized: string operations, caching, proper error handling
 
-local options = require("wkdnvchad.ui.statusline.modules.lsp.config").get_cfg()
+---@type WkdNvC.UI.Stl.Modules.LSP.Cfg.Module
+local config_module = require("lib.lazy").require("wkdnvchad.ui.statusline.modules.lsp.config")
 
-local M ={}
+-- String pool for common operations
+local ellipsize_cache = require("lib.memo.lru").new(64)
+local escape_cache = {}
+
+-- Clear caches on colorscheme change
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("WkdNvChadFormattersCache", { clear = true }),
+  callback = function()
+    escape_cache = {}
+    -- LRU cache is self-managing
+  end,
+  desc = "Clear formatters cache on colorscheme change",
+})
+
+local M = {}
 
 ---@nodiscard
 ---@param s string
 ---@return string
 function M.stl_escape(s)
-  return (s:gsub("%%", "%%%%"))
+  if not s or s == "" then
+    return ""
+  end
+
+  local cached = escape_cache[s]
+  if cached then
+    return cached
+  end
+
+  local result = s:gsub("%%", "%%%%")
+  escape_cache[s] = result
+  return result
 end
 
 ---@nodiscard
@@ -19,12 +44,26 @@ end
 ---@param max integer
 ---@return string
 function M.ellipsize_middle(s, max)
-  if #s <= max then
+  if type(s) ~= "string" then
+    return ""
+  end
+
+  if max <= 0 or #s <= max then
     return s
   end
+
+  local cache_key = s .. ":" .. tostring(max)
+  local cached = ellipsize_cache:get(cache_key)
+  if cached then
+    return cached
+  end
+
   local head = math.floor((max - 1) / 2)
   local tail = max - head - 1
-  return string.sub(s, 1, head) .. "…" .. string.sub(s, #s - tail + 1, #s)
+  local result = string.sub(s, 1, head) .. "…" .. string.sub(s, #s - tail + 1, #s)
+
+  ellipsize_cache:put(cache_key, result)
+  return result
 end
 
 ---@nodiscard
@@ -156,6 +195,8 @@ end
 ---@param total_maxw integer|nil
 ---@return string line
 function M.compact_breadcrumb_line(rel, ctx, sep, total_maxw)
+  local options = config_module.get_cfg()
+
   local target = total_maxw
   if not target or target <= 0 then
     local frac = options.center_width_frac or 0.50

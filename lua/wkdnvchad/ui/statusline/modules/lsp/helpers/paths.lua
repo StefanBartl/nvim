@@ -3,16 +3,19 @@
 --- This file provides absolute and relative path resolution with proper
 --- normalization, Git root detection (incl. worktrees), and home/cwd shortening.
 
-local config_mod = require("wkdnvchad.ui.statusline.modules.lsp.config")
-local options = config_mod.get_cfg()
+---@type WkdNvC.UI.Stl.Modules.LSP.Cfg.Module
+local config_mod = require("lib.lazy").require("wkdnvchad.ui.statusline.modules.lsp.config")
 
 local M = {}
 
 local api, fn, fs, uv = vim.api, vim.fn, vim.fs, vim.uv or vim.loop
 
+-- Memoization cache for expensive operations
+local path_cache = require("lib.memo.lru").new(128)
+
 --- Normalize separators, collapse redundancies, unify drive letter case (best-effort).
 --- This function is pure and does not touch the filesystem.
----@param s string
+---@param s string|uv.uv_fs_t
 ---@return string
 local function norm_sep(s)
   -- Always forward slashes internally; Neovim APIs accept/return both.
@@ -28,11 +31,18 @@ local function norm_sep(s)
   return s
 end
 
+---@nodiscard
 --- Make absolute path; prefer uv.fs_realpath for canonical result.
 --- Returns empty string for non-file buffers or errors.
 ---@param path_or_buf integer|string
 ---@return string
 function M.path_absolute(path_or_buf)
+  local cache_key = tostring(path_or_buf)
+  local cached = path_cache:get(cache_key)
+  if cached then
+    return cached
+  end
+
   local path = ""
   if type(path_or_buf) == "number" then
     if not api.nvim_buf_is_loaded(path_or_buf) then
@@ -52,15 +62,25 @@ function M.path_absolute(path_or_buf)
   ---@diagnostic disable-next-line fs_realpath exists in uv library
   local ok, real = pcall(uv.fs_realpath, abs)
   local canon = ok and real or abs
-  ---@diagnostic disable-next-line uv library
-  return norm_sep(canon)
+
+  local result = norm_sep(canon)
+  path_cache:put(result)
+
+  return result
 end
 
+---@nodiscard
 --- Find Git root directory for a given file path.
 --- Supports .git dir and worktree file that contains "gitdir: <path>".
 ---@param path string
 ---@return string|nil
 local function find_git_root(path)
+  local cache_key = "git_root:" .. path
+  local cached = path_cache:get(cache_key)
+  if cached then
+    return cached
+  end
+
   local dir = fn.fnamemodify(path, ":h")
   -- Use the new root helper (Neovim 0.10+); fallback to fs.find
   local froot = nil
@@ -76,6 +96,8 @@ local function find_git_root(path)
     return nil
   end
 
+  local result
+
   -- Worktree case: if ".git" is a file, read gitdir pointer and go up to worktree top-level
   local git_path = norm_sep(froot .. "/.git")
   local stat = uv.fs_stat(git_path)
@@ -87,17 +109,22 @@ local function find_git_root(path)
       local gitdir = content:match("gitdir:%s*(.-)%s*$")
       if gitdir and #gitdir > 0 then
         -- For worktrees, the project root is the directory containing the .git file
-        return norm_sep(froot)
+        result = norm_sep(froot)
+        path_cache:put(cache_key, result)
+        return result
       end
     end
   end
-  return norm_sep(froot)
+  result = norm_sep(froot)
+  path_cache:put(cache_key, result)
+  return result
 end
 
 --- Shorten a path by replacing $HOME prefix with "~" if enabled.
 ---@param s string
 ---@return string
 local function home_tilde(s)
+  local options = config_mod.get_cfg()
   if not options.path_home_tilde then
     return s
   end
@@ -150,25 +177,35 @@ function M.path_relative(mode, path)
     return "[No Name]"
   end
 
+  local cache_key = mode .. ":" .. abs
+  local cached = path_cache:get(cache_key)
+  if cached then
+    return cached
+  end
+
+  local result
   if mode == "repo" then
     local root = find_git_root(abs)
     if root and #root > 0 then
       local rel = rel_from(root, abs)
       -- Make sure we don't display a bare "."; keep at least filename
       if rel == "." then
-        return fn.fnamemodify(abs, ":t")
+        result = fn.fnamemodify(abs, ":t")
       end
-      return rel
+      result = rel
     end
     -- No repo → fall through to home or cwd according to taste; here: home
     ---@diagnostic disable-next-line lib.uv
     return home_tilde(rel_from(vim.loop.os_homedir() or "", abs))
   elseif mode == "cwd" then
     local cwd = norm_sep(fn.getcwd())
-    return rel_from(cwd, abs)
+    result = rel_from(cwd, abs)
   else -- "home"
-    return home_tilde(abs)
+    result = home_tilde(abs)
   end
+
+  path_cache:put(cache_key, result)
+  return result
 end
 
 --- Public: choose display path according to configured strategy.
@@ -215,7 +252,11 @@ function M.display_path(_cfg, path_or_buf)
   end
 end
 
+---@nodiscard
+---@param bufnr integer
+---@return string
 function M.display_path_for_buf(bufnr)
+  local options = config_mod.get_cfg()
   return M.display_path(
     { path_mode = options.path_mode, path_home_tilde = options.path_home_tilde },
     bufnr

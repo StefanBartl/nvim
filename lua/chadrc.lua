@@ -22,9 +22,10 @@ end
 -- ============================================================================
 
 -- statusline feature flag
-local normal = true
+local normal = false
 if normal then
   return require("wkdnvchad.config.normal")
+
 end
 
 local base = false

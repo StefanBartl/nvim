@@ -64,5 +64,10 @@
 ---@field last_req number
 ---@field pending boolean
 
+---@class WkdNvC.UI.Stl.Modules.LSP.Cfg.Module
+---@field get_cfg fun(): WkdNvC.UI.Stl.Modules.LSP.Cfg
+---@field get fun(key: WkdNvC.UI.Stl.Modules.Lsp.CfgKey): any
+---@field set fun(key: WkdNvC.UI.Stl.Modules.Lsp.CfgKey, value: any): nil
+---@field update fun(patch: table<string, any>): nil
 
 return {}

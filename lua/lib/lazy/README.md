@@ -153,7 +153,7 @@ Eigenschaften:
 **Verwendung mit Type-Annotations:**
 
 ```lua
----@type WkdNvC.UI.Stl.Modules.LSP.Cfg.module
+---@type WkdNvC.UI.Stl.Modules.LSP.Cfg.Module
 local config_mod = lazy.require("wkdnvchad.ui.statusline.modules.lsp.config")
 
 -- LSP kennt jetzt alle Funktionen:

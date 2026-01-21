@@ -83,5 +83,6 @@ function M.update(patch)
   end
 end
 
+---@type WkdNvC.UI.Stl.Modules.LSP.Cfg.Module
 return M
 
