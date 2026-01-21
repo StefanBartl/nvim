@@ -229,7 +229,7 @@ function M.display_path(_cfg, path_or_buf)
     return "[No Name]"
   end
 
-  local mode = M.cfg.path_mode or "auto"
+  local mode = config_mod.get("path_mode") or "auto"
   if mode == "absolute" then
     return home_tilde(abs)
   elseif mode == "repo" then

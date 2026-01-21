@@ -7,7 +7,7 @@ local M = {}
 ---@generic T
 ---@return table
 local function lr(mod)
-  return require("lib.cache." .. mod)
+  return require("lib.memo." .. mod)
 end
 
 M.lru = lr("lru")

@@ -5,7 +5,7 @@ local nvchad_tabufline = require("lib.lazy").require("nvchad.tabufline")
 
 local M = {}
 
-local api, bufs_t = vim.api, vim.t.bufs
+local api = vim.api
 
 ---@nodiscard
 ---@param bufnr integer
@@ -21,9 +21,9 @@ end
 
 -- Index des aktuellen Buffers
 ---@param bufnr integer
+---@param bufs integer[]
 ---@return integer|nil
-local function buf_index(bufnr)
-  local bufs = bufs_t
+local function buf_index(bufnr, bufs)
   if not bufs then
     return nil
   end
@@ -45,6 +45,7 @@ end
 
 ---@return boolean
 function M.next()
+  -- WICHTIG: vim.t.bufs wird JEDES MAL frisch gelesen
   local bufs = vim.t.bufs
   if not bufs or #bufs == 0 then
     return false
@@ -55,7 +56,7 @@ function M.next()
     return false
   end
 
-  local idx = buf_index(current)
+  local idx = buf_index(current, bufs)
   if not idx then
     return set_buf_no_center(bufs[1])
   end
@@ -66,6 +67,7 @@ end
 
 ---@return boolean
 function M.prev()
+  -- WICHTIG: vim.t.bufs wird JEDES MAL frisch gelesen
   local bufs = vim.t.bufs
   if not bufs or #bufs == 0 then
     return false
@@ -76,7 +78,7 @@ function M.prev()
     return false
   end
 
-  local idx = buf_index(current)
+  local idx = buf_index(current, bufs)
   if not idx then
     return set_buf_no_center(bufs[1])
   end
@@ -98,6 +100,9 @@ function M.move_next_n(n)
       success = false
       break
     end
+
+    -- KRITISCH: Kurze Pause, damit NvChad vim.t.bufs aktualisieren kann
+    vim.cmd("redraw")
   end
   return success
 end
@@ -115,6 +120,9 @@ function M.move_prev_n(n)
       success = false
       break
     end
+
+    -- KRITISCH: Kurze Pause, damit NvChad vim.t.bufs aktualisieren kann
+    vim.cmd("redraw")
   end
   return success
 end
@@ -155,6 +163,9 @@ function M.close_n_buffers(n)
       success = false
       break
     end
+
+    -- Auch hier: Pause für NvChad's Buffer-Update
+    vim.cmd("redraw")
   end
   return success
 end

@@ -1,7 +1,7 @@
 ---@module 'lib.cache.memo'
 --- Memoization helpers backed by LRU cache from lib.cache.lru.
 
-local LRU = require("lib.cache.lru")
+local LRU = require("lib.memo.lru")
 
 ---@class Memo
 local M = {}

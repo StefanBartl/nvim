@@ -11,7 +11,7 @@ local formatters
 
 local function ensure_deps()
   if not lsp_path_helpers then
-    lsp_path_helpers = require("wkdnvchad.ui.statusline.modules.lsp.helpers.path")
+    lsp_path_helpers = require("wkdnvchad.ui.statusline.modules.lsp.helpers.paths")
   end
   if not doc_symbols then
     doc_symbols = require("wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols")

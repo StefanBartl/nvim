@@ -1,6 +1,6 @@
 # bugs
 
-Neotree chekhealt mach nichts:
+- Neotree chekhealt mach nichts
 
 ## Table of content
 

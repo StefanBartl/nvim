@@ -1,6 +1,5 @@
 ---@module 'chadrc'
---- Thin wrapper for WkdNvChad configuration.
---- Delegates all logic to wkdnvchad.config.chadrc
+--- Simplified chadrc that delegates to wkdnvchad.config
 
 -- ============================================================================
 -- CRITICAL: Setup wkdnvchad FIRST, before config
@@ -11,45 +10,38 @@ local wkdnvc_ok, wkdnvc_err = pcall(function()
 end)
 
 if not wkdnvc_ok then
-  vim.notify(
-    "[chadrc] wkdnvchad setup failed: " .. tostring(wkdnvc_err),
-    vim.log.levels.ERROR
-  )
+  vim.notify("[chadrc] wkdnvchad setup failed: " .. tostring(wkdnvc_err), vim.log.levels.ERROR)
 end
 
 -- ============================================================================
--- Statusline Config
+-- Load Configuration
+-- ============================================================================
+-- All configuration is now managed in wkdnvchad.config
+-- Change statusline variant in: lua/wkdnvchad/config/init.lua
+-- Change base46 settings in: lua/wkdnvchad/config/base46.lua
 -- ============================================================================
 
--- statusline feature flag
-local normal = false
-if normal then
-  return require("wkdnvchad.config.normal")
-
-end
-
-local base = false
-if base then
-  return require("wkdnvchad.config.base")
-end
-
--- Try to load custom statusline module with proper error handling
 local ok, config = pcall(function()
-  return require("wkdnvchad.config.chadrc").setup({
-    base46 = {
-      transparency = false,
-      theme_toggle = { "vim_default", "rosepine" },
-      theme = "tokyonight",
-    },
-  })
+  return require("wkdnvchad.config").setup()
 end)
 
-if not ok then
-  vim.notify(
-    "Failed to load Custom NVChad statusline utilities; using default config.\nError: " .. tostring(config),
-    vim.log.levels.WARN
-  )
-  return require("wkdnvchad.config.base")
-end
+if ok then
+  return {
+    base46 = config.base46 or require("wkdnvchad.config.base46"),
+    ui = config.ui or {
+      statusline = config,
+    },
+  }
+else
+  vim.notify("[chadrc] Failed to load wkdnvchad.config: " .. tostring(config), vim.log.levels.ERROR)
 
-return config
+  -- Fallback to minimal config
+  return {
+    base46 = require("wkdnvchad.config.base46"),
+    ui = {
+      statusline = {
+        order = nil,
+      },
+    },
+  }
+end
