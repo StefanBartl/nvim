@@ -1,0 +1,993 @@
+--- Startup times for process: Primary (or UI client) ---
+
+times in msec
+ clock   self+sourced   self:  sourced script
+ clock   elapsed:              other lines
+
+000.006  000.006: --- NVIM STARTING ---
+000.050  000.044: event init
+000.192  000.142: early init
+019.797  019.605: locale set
+019.850  000.053: init first window
+020.638  000.787: inits 1
+020.730  000.092: window checked
+020.737  000.007: parsing arguments
+021.988  000.454  000.454: require('vim.shared')
+022.776  000.217  000.217: require('vim.inspect')
+023.108  000.305  000.305: require('vim._options')
+023.118  001.122  000.600: require('vim._editor')
+023.122  001.684  000.109: require('vim._init_packages')
+023.132  000.710: init lua interpreter
+033.009  009.877: nvim_ui_attach
+033.320  000.311: nvim_set_client_info
+033.327  000.007: --- NVIM STARTED ---
+
+--- Startup times for process: Embedded ---
+
+times in msec
+ clock   self+sourced   self:  sourced script
+ clock   elapsed:              other lines
+
+000.012  000.012: --- NVIM STARTING ---
+000.070  000.058: event init
+000.218  000.148: early init
+023.276  023.059: locale set
+023.323  000.046: init first window
+023.953  000.630: inits 1
+024.040  000.086: window checked
+024.052  000.012: parsing arguments
+025.453  000.537  000.537: require('vim.shared')
+026.296  000.220  000.220: require('vim.inspect')
+026.606  000.284  000.284: require('vim._options')
+026.613  001.147  000.643: require('vim._editor')
+026.617  001.812  000.128: require('vim._init_packages')
+026.627  000.763: init lua interpreter
+026.895  000.268: expanding arguments
+026.924  000.029: inits 2
+027.254  000.330: init highlight
+027.258  000.004: waiting for UI
+027.368  000.111: done waiting for UI
+027.375  000.007: clear screen
+028.128  000.044  000.044: require('vim.keymap')
+029.012  000.185  000.185: sourcing nvim_exec2()
+036.700  009.319  009.090: require('vim._defaults')
+036.710  000.016: init default mappings & autocommands
+038.361  000.090  000.090: sourcing C:\Program Files\Neovim\share\nvim\runtime\ftplugin.vim
+038.747  000.065  000.065: sourcing C:\Program Files\Neovim\share\nvim\runtime\indent.vim
+040.024  000.365  000.365: require('vim.fs')
+040.432  000.397  000.397: require('vim.uri')
+040.469  001.078  000.316: require('vim.loader')
+043.145  002.337  002.337: require('config.lazy')
+043.465  000.308  000.308: require('lazy')
+043.505  000.017  000.017: require('ffi')
+043.731  000.217  000.217: require('lazy.stats')
+044.300  000.313  000.313: require('lazy.core.util')
+044.771  000.441  000.441: require('lazy.core.config')
+045.419  000.294  000.294: require('lazy.core.handler')
+046.435  000.356  000.356: require('lazy.pkg')
+046.449  000.721  000.365: require('lazy.core.meta')
+046.459  001.026  000.305: require('lazy.core.plugin')
+046.481  001.686  000.365: require('lazy.core.loader')
+047.204  000.221  000.221: require('lazy.core.fragments')
+053.019  000.233  000.233: require('config.fzf.keymaps')
+053.246  000.216  000.216: require('config.fzf.fzf_opts')
+053.491  000.238  000.238: require('config.fzf.grep')
+054.015  000.236  000.236: require('lib.fs.path_shorten')
+054.030  000.532  000.296: require('config.fzf.files')
+054.259  000.226  000.226: require('config.fzf.actions.wrapped')
+054.266  001.852  000.408: require('config.fzf')
+057.118  000.227  000.227: require('config.neotree.utils')
+057.341  000.212  000.212: require('config.neotree.watcher_quarantine')
+057.350  000.706  000.267: require('config.neotree.keymaps')
+057.536  000.182  000.182: require('config.neotree.keymaps.buffers')
+057.723  000.179  000.179: require('config.neotree.keymaps.document_symbols')
+058.401  000.212  000.212: require('lib.notify.@types')
+058.601  000.193  000.193: require('lib.notify.safe')
+058.607  000.672  000.267: require('lib.notify')
+058.833  000.220  000.220: require('config.neotree.utils.node')
+059.707  000.170  000.170: require('config.neotree.helper.is_ignored_dir.ignored_dirs')
+059.715  000.365  000.195: require('config.neotree.helper.is_ignored_dir')
+059.720  000.533  000.168: require('config.neotree.utils.tree')
+059.723  000.883  000.350: require('config.neotree.actions.copy.entries')
+059.933  000.207  000.207: require('config.neotree.actions.copy.folders')
+060.138  000.199  000.199: require('config.neotree.actions.path.to_require')
+060.351  000.207  000.207: require('config.neotree.actions.info.node')
+060.858  000.265  000.265: require('config.neotree.utils.buffer')
+060.871  000.512  000.247: require('config.neotree.actions.save.node_buffer')
+061.153  000.276  000.276: require('config.neotree.actions.save.adjacent_buffer')
+061.448  000.286  000.286: require('config.neotree.actions.grep_picker')
+061.760  000.300  000.300: require('config.neotree.actions.traverse')
+062.630  000.493  000.493: require('config.neotree.commands.get_telescope_opts')
+062.902  000.255  000.255: require('config.neotree.commands.diff_files')
+063.438  000.287  000.287: require('config.neotree.helper.renderer')
+063.453  000.542  000.255: require('config.neotree.commands.mark')
+063.748  000.288  000.288: require('config.neotree.commands.add')
+063.762  001.992  000.413: require('config.neotree.commands')
+064.265  000.237  000.237: require('config.neotree.trash.platform')
+064.507  000.235  000.235: require('config.neotree.trash.validation.buffer_checker')
+064.780  000.267  000.267: require('config.neotree.trash.confirmation')
+065.707  000.374  000.374: require('config.neotree.safety.backup')
+065.961  000.247  000.247: require('config.neotree.safety.operation_queue')
+066.168  000.200  000.200: require('config.neotree.safety.dry_run')
+066.367  000.192  000.192: require('config.neotree.safety.validation')
+066.570  000.197  000.197: require('config.neotree.safety.recovery')
+066.577  001.504  000.292: require('config.neotree.safety')
+066.582  001.795  000.292: require('config.neotree.trash.operations')
+066.587  002.821  000.288: require('config.neotree.trash')
+066.800  000.209  000.209: require('config.neotree.undo')
+067.006  000.200  000.200: require('config.neotree.actions.node_replace_buf')
+067.018  009.289  000.304: require('config.neotree.keymaps.filesystem')
+067.185  000.164  000.164: require('config.neotree.keymaps.git_status')
+067.353  000.161  000.161: require('config.neotree.keymaps.tests')
+067.520  000.162  000.162: require('config.neotree.keymaps.diagnostics')
+069.780  000.233  000.233: require('config.noice')
+070.171  000.209  000.209: require('config.todo_comments.keywords')
+072.913  000.347  000.347: require('lazy.core.handler.cmd')
+073.189  000.256  000.256: require('lazy.core.handler.keys')
+073.662  000.237  000.237: require('lazy.core.handler.event')
+073.670  000.468  000.231: require('lazy.core.handler.ft')
+073.799  000.007  000.007: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+073.851  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+073.949  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+073.998  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+074.113  000.002  000.002: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+074.220  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+074.558  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+074.605  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+074.701  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+074.747  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+074.881  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+074.925  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+075.867  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+075.922  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.045  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.094  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.207  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.254  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.364  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.412  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.503  000.002  000.002: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.549  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.745  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+076.793  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+077.684  000.007  000.007: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+077.780  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+077.849  000.002  000.002: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+077.920  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+078.906  000.307  000.307: sourcing nvim_exec2() called at C:\Program Files\Neovim\share/nvim/runtime/filetype.lua:0
+078.921  000.673  000.365: sourcing C:\Program Files\Neovim\share/nvim/runtime/filetype.lua
+078.957  001.010  000.338: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+080.314  000.411  000.411: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/nvim-puppeteer/plugin/puppeteer-autocmds.lua
+080.344  000.732  000.321: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+080.361  000.005  000.005: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+080.412  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+082.529  000.007  000.007: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+082.576  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+083.603  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+083.661  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+085.275  000.191  000.191: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/neo-tree-tests-source.nvim/plugin/neo-tree-tests-source.lua
+085.312  000.446  000.255: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+085.325  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+085.371  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+086.624  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+086.680  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+087.254  000.264  000.264: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/neo-tree.nvim/plugin/neo-tree.lua
+087.276  000.492  000.228: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+087.288  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+087.346  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+090.379  000.385  000.385: require('netman.tools.compat')
+092.064  000.368  000.368: require('netman.tools.utils.logger')
+103.673  000.527  000.527: require('netman.tools.shell')
+522.924  433.378  432.098: require('netman.tools.utils')
+524.210  000.653  000.653: require('netman.tools.options')
+524.594  000.371  000.371: require('netman.tools.cache')
+525.070  000.430  000.430: require('netman.tools.utils.provider_validator')
+525.436  000.358  000.358: require('netman.tools.parsers.json')
+525.639  000.196  000.196: require('netman.tools.configuration')
+526.146  000.206  000.206: require('netman.providers')
+534.886  008.732  008.732: require('netman.providers.ssh')
+539.594  000.077  000.077: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/nvim-web-devicons/plugin/nvim-web-devicons.vim
+539.618  000.324  000.247: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+539.633  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+539.678  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+549.827  000.009  000.009: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+549.870  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+552.035  000.158  000.158: require('wkdnvchad')
+552.444  000.209  000.209: require('lib.lazy')
+552.626  000.175  000.175: require('custom.functions.buf_win_tabs.move_buffer_to_tab')
+553.028  000.206  000.206: require('nvchad.tabufline')
+553.037  000.404  000.198: require('wkdnvchad.mappings.tabufline')
+553.235  000.194  000.194: require('lib.map')
+553.242  001.196  000.215: require('wkdnvchad.mappings')
+553.798  000.254  000.254: require('wkdnvchad.usrcmd.themes')
+553.809  000.485  000.230: require('wkdnvchad.usrcmd')
+554.142  000.303  000.303: require('wkdnvchad.config')
+554.469  000.315  000.315: require('wkdnvchad.config.base46')
+554.999  000.255  000.255: require('wkdnvchad.ui.statusline.cursor_ctl.renderer')
+555.197  000.187  000.187: require('wkdnvchad.ui.statusline.cursor_ctl.progress_calculators')
+555.416  000.211  000.211: require('wkdnvchad.ui.statusline.modules.highlighting')
+555.641  000.216  000.216: require('wkdnvchad.ui.statusline.modules.lsp')
+555.864  000.215  000.215: require('wkdnvchad.ui.statusline.cursor_ctl')
+555.872  001.388  000.305: require('wkdnvchad.config.statusline.custom')
+555.877  004.193  000.348: require('chadrc')
+555.996  004.542  000.349: require('nvconfig')
+556.245  000.235  000.235: require('nvchad.stl.utils')
+556.494  000.227  000.227: require('nvchad.tabufline.lazyload')
+556.506  006.625  001.621: require('nvchad')
+556.679  016.801  010.164: require('nvchad.icons.devicons')
+557.152  000.226  000.226: require('nvim-web-devicons.filetypes')
+557.194  000.030  000.030: require('vim.F')
+558.046  000.658  000.658: require('nvim-web-devicons.default.icons_by_filename')
+558.815  000.760  000.760: require('nvim-web-devicons.default.icons_by_file_extension')
+559.167  000.342  000.342: require('nvim-web-devicons.default.icons_by_operating_system')
+559.395  000.220  000.220: require('nvim-web-devicons.default.icons_by_desktop_environment')
+559.613  000.212  000.212: require('nvim-web-devicons.default.icons_by_window_manager')
+559.620  002.413  000.221: require('nvim-web-devicons.icons-default')
+559.869  003.183  000.513: require('nvim-web-devicons')
+564.598  026.702  006.389: require('nvim-web-devicons')
+564.673  027.192  000.490: require('netman.providers.docker')
+568.890  045.951  007.813: require('netman.api')
+569.678  482.320  002.990: require('netman')
+574.892  000.686  000.686: require('neo-tree.log')
+576.984  002.079  002.079: require('neo-tree.utils._compat')
+577.053  003.471  000.706: require('neo-tree.utils')
+579.513  000.376  000.376: require('nui.object')
+580.367  000.230  000.230: require('vim.version')
+581.746  001.926  001.696: require('nui.utils')
+581.812  002.283  000.357: require('nui.text')
+581.846  003.241  000.582: require('nui.line')
+582.365  000.177  000.177: require('nui.tree.util')
+582.380  000.529  000.352: require('nui.tree')
+582.785  000.182  000.182: require('nui.utils.buf_storage')
+583.027  000.234  000.234: require('nui.utils.autocmd')
+583.218  000.185  000.185: require('nui.utils.keymap')
+583.602  000.180  000.180: require('nui.layout.utils')
+583.612  000.386  000.206: require('nui.split.utils')
+583.630  001.246  000.258: require('nui.split')
+584.217  000.350  000.350: require('nui.popup.border')
+584.234  000.601  000.251: require('nui.popup')
+584.609  000.370  000.370: require('neo-tree.ui.highlights')
+585.327  000.362  000.362: require('neo-tree')
+585.342  000.726  000.364: require('neo-tree.ui.popups')
+586.338  000.303  000.303: require('neo-tree.collections')
+586.635  000.288  000.288: require('neo-tree.health.typecheck')
+586.644  000.936  000.344: require('neo-tree.events.queue')
+586.649  001.303  000.367: require('neo-tree.events')
+586.930  000.276  000.276: require('neo-tree.ui.windows')
+586.954  009.893  001.600: require('neo-tree.ui.renderer')
+588.876  000.078  000.078: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/plenary.nvim/plugin/plenary.vim
+588.964  000.424  000.346: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+588.979  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+589.034  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+590.812  001.545  001.545: require('plenary.compat')
+590.998  000.179  000.179: require('plenary.functional')
+591.010  003.078  000.924: require('plenary.job')
+591.018  003.409  000.331: require('neo-tree.sources.filesystem.lib.filter_external')
+592.023  000.346  000.346: require('neo-tree.sources.filesystem.lib.globtopattern')
+592.037  000.680  000.334: require('neo-tree.sources.common.file-nesting')
+592.043  001.022  000.342: require('neo-tree.sources.common.file-items')
+593.311  000.289  000.289: require('neo-tree.git.utils')
+593.320  000.615  000.326: require('neo-tree.git.status')
+593.625  000.301  000.301: require('neo-tree.git.ignored')
+593.631  001.243  000.327: require('neo-tree.git')
+593.637  001.590  000.347: require('neo-tree.sources.filesystem.lib.fs_watch')
+594.717  000.191  000.191: require('plenary.tbl')
+594.735  000.463  000.273: require('plenary.vararg.rotate')
+594.741  000.711  000.247: require('plenary.vararg')
+594.979  000.232  000.232: require('plenary.errors')
+594.992  001.145  000.203: require('plenary.async.async')
+595.807  000.177  000.177: require('plenary.async.structs')
+595.822  000.382  000.205: require('plenary.async.control')
+595.830  000.587  000.205: require('plenary.async.util')
+595.834  000.835  000.247: require('plenary.async.tests')
+595.838  002.197  000.217: require('plenary.async')
+596.539  000.341  000.341: require('neo-tree.sources.filesystem.lib.lua-glob')
+596.547  000.706  000.365: require('neo-tree.sources.filesystem.lib.ignored')
+596.558  009.279  000.357: require('neo-tree.sources.filesystem.lib.fs_scan')
+597.086  000.222  000.222: require('nui.input')
+597.096  000.534  000.312: require('neo-tree.ui.inputs')
+597.110  010.152  000.339: require('neo-tree.sources.manager')
+597.313  000.199  000.199: require('neo-tree.sources.diagnostics.lib.items')
+597.506  000.187  000.187: require('neo-tree.sources.diagnostics.highlights')
+597.696  000.183  000.183: require('neo-tree.sources.diagnostics.defaults')
+597.706  024.553  000.468: require('neo-tree.sources.diagnostics')
+597.932  000.220  000.220: require('config.neotree.event_handlers')
+598.295  000.351  000.351: require('config.neotree')
+598.535  000.229  000.229: require('lib.fs.ignore.list')
+598.760  000.211  000.211: require('config.neotree.actions.find_or_grep_menu')
+599.625  000.185  000.185: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/fzf-lua/plugin/fzf-lua.lua
+599.647  000.423  000.238: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+599.660  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+599.703  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+602.756  000.281  000.281: require('vim.func')
+603.010  000.195  000.195: require('vim.func._memoize')
+603.025  000.945  000.469: require('fzf-lua.utils')
+603.563  000.245  000.245: require('fzf-lua.lib.base64')
+603.907  000.337  000.337: require('fzf-lua.lib.serpent')
+603.918  000.889  000.307: require('fzf-lua.libuv')
+603.936  002.221  000.387: require('fzf-lua.path')
+604.834  000.539  000.539: require('fzf-lua.actions')
+605.307  000.212  000.212: require('fzf-lua.class')
+605.409  000.567  000.354: require('fzf-lua.devicons')
+606.281  000.423  000.423: require('fzf-lua.previewer')
+607.359  001.942  001.519: require('fzf-lua.defaults')
+607.377  003.436  000.389: require('fzf-lua.config')
+607.782  000.060  000.060: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/fzf-lua/autoload/fzf_lua.vim
+607.802  000.320  000.260: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+610.763  001.742  001.742: require('fzf-lua.win')
+611.699  000.293  000.293: require('fzf-lua.fzf')
+612.034  000.319  000.319: require('fzf-lua.shell')
+612.061  001.284  000.672: require('fzf-lua.core')
+612.424  000.345  000.345: require('fzf-lua.make_entry')
+612.441  012.729  003.380: require('fzf-lua')
+613.838  015.072  001.913: require('fzf-lua')
+614.139  000.289  000.289: require('config.neotree.current_hl')
+614.873  000.335  000.335: require('neo-tree.sources.common.container')
+614.893  000.746  000.411: require('neo-tree.sources.common.components')
+615.435  000.226  000.226: require('config.neotree.trash.commands')
+615.632  000.175  000.175: require('config.neotree.open.keymaps.reveal_current_file')
+615.824  000.173  000.173: require('config.neotree.open.keymaps.only_lhs')
+618.955  000.220  000.220: require('neotree-fs-refactor.utils.logger')
+619.180  000.215  000.215: require('neotree-fs-refactor.utils.path')
+619.405  000.218  000.218: require('neotree-fs-refactor.refactor.require_finder')
+619.620  000.210  000.210: require('neotree-fs-refactor.refactor.file_updater')
+619.831  000.204  000.204: require('neotree-fs-refactor.utils.notify')
+619.898  002.960  001.892: require('neotree-fs-refactor.init')
+619.920  003.189  000.230: sourcing B:/repos/neotree-fs-refactor.nvim/plugin/init.lua
+619.942  003.617  000.428: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+619.960  000.005  000.005: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+620.041  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+620.282  000.232  000.232: require('neotree-fs-refactor')
+622.812  001.810  001.810: require('snacks')
+622.821  001.995  000.185: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/snacks.nvim/plugin/snacks.lua
+622.840  002.243  000.248: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+622.855  000.005  000.005: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+622.897  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+623.729  000.273  000.273: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/vim-startuptime/plugin/startuptime.vim
+623.747  000.506  000.233: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+623.759  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+623.800  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+625.634  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+625.708  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+627.977  000.258  000.258: require('cmdlog.config')
+627.988  002.271  002.013: require('cmdlog')
+629.119  000.186  000.186: require('plenary.bit')
+629.145  000.453  000.267: require('plenary.path')
+629.151  000.691  000.238: require('cmdlog.core.favorites')
+629.368  000.213  000.213: require('cmdlog.core.history')
+629.571  000.196  000.196: require('cmdlog.core.utils')
+629.781  000.204  000.204: require('cmdlog.ui.picker_utils')
+629.787  001.546  000.241: require('cmdlog.ui.history_picker')
+629.992  000.202  000.202: require('cmdlog.ui.history_unique_picker')
+630.198  000.200  000.200: require('cmdlog.ui.favorites_picker')
+630.599  000.202  000.202: require('cmdlog.core.shell')
+630.606  000.402  000.201: require('cmdlog.ui.all_picker')
+630.817  000.207  000.207: require('cmdlog.ui.all_unique_picker')
+631.024  000.202  000.202: require('cmdlog.ui.shell_picker')
+631.227  000.197  000.197: require('cmdlog.ui.shell_unique_picker')
+631.233  003.237  000.281: require('cmdlog.ui.picker')
+631.837  000.064  000.064: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/todo-comments.nvim/plugin/todo.vim
+631.854  000.308  000.244: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+631.867  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+631.926  000.020  000.020: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+634.878  000.184  000.184: require('todo-comments.util')
+634.896  000.413  000.229: require('todo-comments.config')
+635.273  000.197  000.197: require('todo-comments.highlight')
+635.280  000.379  000.183: require('todo-comments.jump')
+635.285  003.153  002.360: require('todo-comments')
+638.987  000.174  000.174: require('translate.util.utf8')
+638.998  000.358  000.184: require('translate.util.util')
+639.003  000.564  000.205: require('translate.preset.parse_before.natural')
+639.174  000.168  000.168: require('translate.preset.parse_before.trim')
+639.343  000.163  000.163: require('translate.preset.parse_before.concat')
+639.522  000.173  000.173: require('translate.preset.parse_before.no_handle')
+639.732  000.205  000.205: require('translate.preset.command.translate_shell')
+640.079  000.173  000.173: require('translate.preset.command.deepl')
+640.086  000.347  000.175: require('translate.preset.command.deepl_free')
+640.256  000.167  000.167: require('translate.preset.command.deepl_pro')
+640.457  000.195  000.195: require('translate.preset.command.google')
+640.625  000.162  000.162: require('translate.preset.parse_after.oneline')
+640.793  000.162  000.162: require('translate.preset.parse_after.head')
+640.965  000.166  000.166: require('translate.preset.parse_after.rate')
+641.131  000.161  000.161: require('translate.preset.parse_after.window')
+641.294  000.157  000.157: require('translate.preset.parse_after.no_handle')
+641.473  000.174  000.174: require('translate.preset.parse_after.translate_shell')
+641.826  000.189  000.189: require('translate.preset.parse_after.deepl')
+641.834  000.354  000.166: require('translate.preset.parse_after.deepl_free')
+642.015  000.177  000.177: require('translate.preset.parse_after.deepl_pro')
+642.182  000.161  000.161: require('translate.preset.parse_after.google')
+642.372  000.184  000.184: require('translate.preset.output.floating')
+642.551  000.173  000.173: require('translate.preset.output.split')
+642.723  000.166  000.166: require('translate.preset.output.insert')
+642.889  000.160  000.160: require('translate.preset.output.replace')
+643.083  000.188  000.188: require('translate.preset.output.register')
+643.095  004.868  000.341: require('translate.config')
+643.261  000.163  000.163: require('translate.util.replace')
+643.999  000.193  000.193: require('translate.kit.Lua.TreeSitter')
+644.007  000.401  000.208: require('translate.util.context')
+644.012  000.579  000.178: require('translate.util.comment')
+644.016  000.750  000.171: require('translate.util.select')
+644.237  000.217  000.217: require('translate.command')
+644.248  008.273  002.275: require('translate')
+644.274  008.478  000.205: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/translate.nvim/plugin/translate.lua
+644.299  008.758  000.280: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+644.319  000.006  000.006: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+644.372  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+645.146  000.170  000.170: require('config.translate.filter')
+645.157  000.361  000.191: require('config.translate.replace')
+645.162  000.552  000.192: require('config.translate.usercommands')
+645.217  000.836  000.283: require('config.translate')
+649.310  000.235  000.235: sourcing C:\Program Files\Neovim\share\nvim\runtime\plugin\matchparen.vim
+650.124  000.389  000.389: sourcing C:\Users\Bernhard\AppData\Local\nvim-data\lazy\vim-matchup\autoload\matchup.vim
+650.625  000.124  000.124: sourcing C:\Users\Bernhard\AppData\Local\nvim-data\lazy\vim-matchup\autoload\matchup\perf.vim
+653.515  001.180  001.180: require('vim.treesitter.language')
+653.583  001.479  000.299: require('vim.treesitter.query')
+653.848  000.258  000.258: require('vim.treesitter._range')
+653.876  002.007  000.271: require('vim.treesitter.languagetree')
+653.889  002.220  000.213: require('vim.treesitter')
+654.135  000.240  000.240: require('treesitter-matchup.third-party.ts-utils')
+654.380  000.236  000.236: require('treesitter-matchup.third-party.lru')
+654.716  000.327  000.327: require('treesitter-matchup.util')
+654.749  003.444  000.421: require('treesitter-matchup.internal')
+655.231  004.004  000.560: sourcing C:\Users\Bernhard\AppData\Local\nvim-data\lazy\vim-matchup\autoload\matchup\loader.vim
+656.386  000.634  000.634: sourcing C:\Users\Bernhard\AppData\Local\nvim-data\lazy\vim-matchup\autoload\matchup\matchparen.vim
+657.065  000.166  000.166: sourcing C:\Users\Bernhard\AppData\Local\nvim-data\lazy\vim-matchup\autoload\matchup\pos.vim
+657.936  012.080  006.528: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/vim-matchup/plugin/matchup.vim
+657.959  012.366  000.286: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+657.977  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+658.042  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+658.443  000.314  000.314: require('match-up')
+687.594  028.701  028.701: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/vim-wakatime/plugin/wakatime.vim
+687.633  028.965  000.264: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+687.658  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+687.723  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+690.142  000.007  000.007: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+690.183  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+693.376  000.194  000.194: require('git-conflict.colors')
+693.563  000.176  000.176: require('git-conflict.utils')
+693.954  000.206  000.206: require('vim.health')
+693.961  000.390  000.183: require('vim.deprecated.health')
+694.233  000.239  000.239: require('vim.hl')
+694.274  004.021  003.022: require('git-conflict')
+698.959  000.266  000.266: require('vim.iter')
+699.474  000.007  000.007: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+699.514  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+699.737  000.212  000.212: require('config.harpoon.hardening')
+702.790  000.230  000.230: require('harpoon.autocmd')
+702.807  000.475  000.245: require('harpoon.buffer')
+703.195  000.172  000.172: require('harpoon.utils')
+703.204  000.393  000.221: require('harpoon.logger')
+703.428  000.221  000.221: require('harpoon.extensions')
+703.439  003.693  002.603: require('harpoon.ui')
+703.849  000.174  000.174: require('config.harpoon.utils.normkey')
+704.034  000.176  000.176: require('config.harpoon.utils.sanitize')
+704.042  000.573  000.223: require('config.harpoon.persist_paths')
+704.284  000.218  000.218: require('config.harpoon.preview')
+704.504  000.173  000.173: require('config.harpoon.health')
+704.797  000.007  000.007: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+704.838  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+707.659  002.810  002.810: require('trouble.config')
+708.179  000.244  000.244: require('trouble.util')
+708.192  000.504  000.260: require('trouble.config.highlights')
+709.199  000.178  000.178: require('trouble.cache')
+709.421  000.209  000.209: require('trouble.format')
+709.621  000.194  000.194: require('trouble.view.indent')
+709.905  000.274  000.274: require('trouble.view.text')
+709.919  001.092  000.237: require('trouble.view.render')
+709.928  001.308  000.216: require('trouble.view.preview')
+709.935  001.556  000.248: require('trouble.view.main')
+710.352  000.015  000.015: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+710.403  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+711.223  000.252  000.252: sourcing C:\Program Files\Neovim\share/nvim/runtime/plugin/editorconfig.lua
+711.253  000.559  000.307: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+711.932  000.301  000.301: sourcing C:\Program Files\Neovim\share/nvim/runtime/plugin/man.lua
+711.971  000.622  000.321: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+712.356  000.038  000.038: sourcing C:\Program Files\Neovim\share/nvim/runtime/plugin/matchparen.vim
+712.380  000.382  000.344: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+712.893  000.252  000.252: sourcing C:\Program Files\Neovim\share/nvim/runtime/plugin/osc52.lua
+712.929  000.525  000.272: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+713.317  000.128  000.128: sourcing C:\Program Files\Neovim\share/nvim/runtime/plugin/shada.vim
+713.336  000.388  000.260: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+713.640  000.048  000.048: sourcing C:\Program Files\Neovim\share/nvim/runtime/plugin/spellfile.vim
+713.657  000.308  000.260: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+715.545  000.179  000.179: require('lib.memo.lru')
+715.730  000.176  000.176: require('lib.memo.memo')
+715.736  000.611  000.256: require('lib.memo')
+715.773  000.860  000.249: require('lib')
+715.777  001.080  000.220: require('system.env')
+730.369  000.199  000.199: require('myoptions.set_diff_profile.profiles')
+730.380  000.475  000.276: require('myoptions.set_diff_profile.selector')
+739.284  014.731  014.257: require('options')
+739.556  000.253  000.253: require('myoptions')
+740.293  000.218  000.218: require('myoptions.@types.highlight')
+740.318  000.510  000.292: require('myoptions.config')
+740.775  000.262  000.262: require('myoptions.@types.skip')
+740.788  000.465  000.203: require('myoptions.skip')
+740.807  001.244  000.269: require('myoptions.Options_Cfg')
+741.212  000.324  000.324: require('myoptions.commands')
+741.694  000.336  000.336: require('lsp')
+741.971  000.265  000.265: require('lsp.core.handlers')
+742.193  000.213  000.213: require('lsp.core.filter')
+743.024  000.466  000.466: require('vim.lsp.log')
+743.814  000.780  000.780: require('vim.lsp.protocol')
+744.577  000.753  000.753: require('vim.lsp.util')
+745.801  000.598  000.598: require('vim.lsp.sync')
+745.859  001.259  000.661: require('vim.lsp._changetracking')
+746.737  000.411  000.411: require('vim.lsp._transport')
+746.776  000.905  000.495: require('vim.lsp.rpc')
+746.965  004.764  000.601: require('vim.lsp')
+747.928  000.498  000.498: require('vim.lsp.completion')
+748.033  001.058  000.559: require('vim.lsp.handlers')
+748.317  000.277  000.277: require('lsp.core.diagnostics')
+748.885  000.547  000.547: require('vim.diagnostic')
+749.117  000.220  000.220: require('lsp.core.treesitter')
+750.048  000.207  000.207: require('lsp.core.capabilities')
+751.286  000.008  000.008: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+751.331  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+754.947  000.235  000.235: require('cmp_nvim_lsp.source')
+754.956  003.071  002.836: require('cmp_nvim_lsp')
+754.973  003.270  000.199: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/cmp-nvim-lsp/after/plugin/cmp_nvim_lsp.lua
+754.994  003.541  000.271: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+755.005  004.131  000.578: require('cmp_nvim_lsp')
+755.754  000.204  000.204: require('lsp.core.attach')
+755.972  000.211  000.211: require('lsp.formatter.init')
+757.044  000.253  000.253: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/conform.nvim/plugin/conform.lua
+757.089  000.557  000.304: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+757.113  000.006  000.006: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+757.182  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+761.725  004.483  004.483: require('conform')
+762.093  006.113  001.063: require('conform')
+762.749  000.646  000.646: require('lsp.core.util')
+763.286  000.524  000.524: require('lsp.formatter.conform')
+784.117  000.355  000.355: require('lsp.usercmds.formatter')
+784.685  000.492  000.492: require('lsp.usercmds')
+785.078  000.321  000.321: require('lsp.core.registry')
+785.402  000.317  000.317: require('lsp.languages')
+785.740  000.330  000.330: require('lsp.languages.markdown')
+786.167  000.336  000.336: require('lsp.languages.shell')
+801.867  000.299  000.299: require('lsp.servers.bashls')
+817.048  000.452  000.452: require('lsp.servers.lua_ls.ignore')
+817.720  000.413  000.413: require('lib.fs.is_subpath')
+817.729  000.670  000.257: require('lsp.servers.lua_ls.rootresolver')
+817.734  001.578  000.457: require('lsp.servers.lua_ls')
+818.230  000.184  000.184: require('lsp.servers.lua_ls.reload')
+818.435  000.178  000.178: require('lsp.servers.ts_ls')
+818.624  000.170  000.170: require('lsp.servers.gopls')
+819.093  000.191  000.191: require('lsp.servers.marksman.config')
+819.276  000.175  000.175: require('lsp.servers.marksman.diagnostics_handler')
+819.653  000.194  000.194: require('lib.cross.fs._cwd')
+819.660  000.378  000.184: require('lsp.servers.marksman.rootresolver')
+819.665  000.999  000.255: require('lsp.servers.marksman')
+819.849  000.179  000.179: require('lsp.servers.marksman.code_action_handler')
+820.124  000.181  000.181: require('lsp.servers.html')
+820.906  000.178  000.178: require('lsp.lspdoctor.@types')
+821.137  000.214  000.214: require('lsp.lspdoctor.health')
+821.325  000.181  000.181: require('lsp.lspdoctor.debug')
+821.520  000.189  000.189: require('lsp.lspdoctor.inspect')
+821.528  001.041  000.279: require('lsp.lspdoctor')
+821.952  000.200  000.200: require('lsp.tools.eslint_prettier.core.find_root')
+822.129  000.170  000.170: require('lsp.tools.eslint_prettier.core.check_config')
+822.520  000.209  000.209: require('lsp.tools.eslint_prettier.eslint')
+822.530  000.395  000.186: require('lsp.tools.eslint_prettier.eslint.fix')
+822.928  000.208  000.208: require('lsp.tools.eslint_prettier.prettier')
+822.938  000.404  000.196: require('lsp.tools.eslint_prettier.prettier.format')
+823.144  000.202  000.202: require('lsp.tools.eslint_prettier.autocmds')
+823.345  000.195  000.195: require('lsp.tools.eslint_prettier.usercmds')
+823.353  001.805  000.239: require('lsp.tools.eslint_prettier')
+823.989  000.176  000.176: require('lsp.tools.lsp_signature.open_floating_preview')
+824.335  000.173  000.173: require('lsp.tools.lsp_signature.split_lines')
+824.342  000.346  000.173: require('lsp.tools.lsp_signature.format_signature_help')
+824.517  000.171  000.171: require('lsp.tools.lsp_signature.state')
+824.911  000.205  000.205: require('lsp.tools.lsp_signature.utils.helper')
+824.918  000.395  000.191: require('lsp.tools.lsp_signature.highlights.parameters')
+825.244  000.159  000.159: require('lsp.tools.lsp_signature.format_hover')
+825.251  000.329  000.170: require('lsp.tools.lsp_signature.show_hover')
+825.439  000.185  000.185: require('lsp.tools.lsp_signature.fallback_providers')
+825.477  000.016  000.016: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+825.489  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+825.497  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+825.506  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+825.514  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+825.519  001.886  000.255: require('lsp.tools.lsp_signature.request_and_show')
+825.523  002.101  000.215: require('lsp.tools.lsp_signature')
+825.810  000.204  000.204: require('lsp.tools.ts_type_lookup')
+826.002  000.186  000.186: require('lsp.tools.ts_type_lookup.cmds')
+833.977  000.217  000.217: require('nvim-treesitter.utils')
+835.587  001.599  001.599: require('nvim-treesitter.parsers')
+836.511  000.209  000.209: require('nvim-treesitter.compat')
+836.886  000.193  000.193: require('nvim-treesitter.ts_utils')
+836.930  000.411  000.218: require('nvim-treesitter.tsrange')
+837.104  000.169  000.169: require('nvim-treesitter.caching')
+837.115  001.016  000.228: require('nvim-treesitter.query')
+837.128  001.245  000.229: require('nvim-treesitter.configs')
+837.133  001.535  000.289: require('nvim-treesitter.info')
+837.361  000.224  000.224: require('nvim-treesitter.shell_command_selectors')
+837.389  003.873  000.298: require('nvim-treesitter.install')
+837.576  000.183  000.183: require('nvim-treesitter.statusline')
+837.867  000.284  000.284: require('nvim-treesitter.query_predicates')
+837.875  007.332  002.991: require('nvim-treesitter')
+838.682  008.339  001.007: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/nvim-treesitter/plugin/nvim-treesitter.lua
+838.713  008.614  000.275: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+838.729  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+838.892  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+839.487  000.540  000.540: require('nvchad.configs.treesitter')
+839.680  000.184  000.184: require('config.treesitter.parser')
+880.514  000.270  000.270: require('nvim-treesitter.indent')
+880.756  000.186  000.186: require('nvim-treesitter.highlight')
+884.804  000.010  000.010: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+884.857  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+884.968  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+885.010  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+889.005  000.010  000.010: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+889.063  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+890.258  000.540  000.540: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/telescope.nvim/plugin/telescope.lua
+890.299  000.921  000.381: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+890.339  000.008  000.008: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+890.411  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+891.706  000.178  000.178: require('plenary.strings')
+892.370  000.302  000.302: require('plenary.log')
+892.403  000.497  000.195: require('telescope.log')
+892.783  000.165  000.165: require('telescope.state')
+892.853  000.446  000.281: require('telescope.utils')
+892.867  001.150  000.207: require('telescope.sorters')
+894.507  003.201  001.874: require('telescope.config')
+895.512  000.383  000.383: require('plenary.window.border')
+895.868  000.338  000.338: require('plenary.window')
+896.157  000.277  000.277: require('plenary.popup.utils')
+896.172  001.646  000.649: require('plenary.popup')
+896.483  000.303  000.303: require('telescope.pickers.scroller')
+896.726  000.233  000.233: require('telescope.actions.state')
+896.936  000.198  000.198: require('telescope.actions.utils')
+897.331  000.186  000.186: require('telescope.actions.mt')
+897.353  000.410  000.224: require('telescope.actions.set')
+897.876  000.196  000.196: require('telescope.config.resolve')
+897.888  000.528  000.332: require('telescope.pickers.entry_display')
+898.068  000.176  000.176: require('telescope.from_entry')
+898.187  007.255  000.560: require('telescope.actions')
+898.192  007.701  000.446: require('nvchad.configs.telescope')
+898.625  000.202  000.202: require('config.telescope.history')
+902.712  000.343  000.343: require('telescope.actions.history')
+903.290  000.296  000.296: require('telescope._extensions')
+903.298  000.574  000.277: require('telescope')
+903.303  004.500  003.583: require('telescope._extensions.smart_history')
+903.307  004.674  000.174: require('config.telescope.history.keymaps')
+903.494  000.184  000.184: require('config.telescope.file_browser.keymaps')
+903.678  000.177  000.177: require('config.telescope.ui.hl_selection')
+904.027  000.340  000.340: require('config.telescope.open_background')
+904.693  000.402  000.402: require('config.telescope.actions.create_file')
+905.139  000.426  000.426: require('config.telescope.actions.open_badd')
+905.155  001.116  000.288: require('config.telescope.actions')
+905.174  006.976  000.283: require('config.telescope')
+906.043  000.189  000.189: require('sqlite.utils')
+906.054  000.526  000.337: require('sqlite.database')
+906.059  000.875  000.349: require('sqlite')
+906.915  000.252  000.252: require('config.telescope.keymaps')
+909.648  000.358  000.358: require('telescope.debounce')
+910.082  000.418  000.418: require('telescope.mappings')
+910.492  000.399  000.399: require('telescope.pickers.highlights')
+910.826  000.321  000.321: require('telescope.pickers.window')
+911.445  000.610  000.610: require('telescope.pickers.layout')
+912.750  000.685  000.685: require('telescope.algos.linked_list')
+912.771  001.306  000.621: require('telescope.entry_manager')
+913.413  000.634  000.634: require('telescope.pickers.multi')
+913.457  004.635  000.588: require('telescope.pickers')
+914.442  000.571  000.571: require('telescope.make_entry')
+914.999  000.546  000.546: require('telescope.finders.async_static_finder')
+915.801  000.177  000.177: require('plenary.class')
+915.882  000.574  000.397: require('telescope._')
+915.888  000.880  000.306: require('telescope.finders.async_oneshot_finder')
+916.238  000.346  000.346: require('telescope.finders.async_job_finder')
+916.249  002.785  000.441: require('telescope.finders')
+916.874  000.293  000.293: require('telescope.previewers.previewer')
+917.549  000.337  000.337: require('telescope.previewers.utils')
+931.647  014.766  014.430: require('telescope.previewers.term_previewer')
+946.880  015.220  015.220: require('telescope.previewers.buffer_previewer')
+946.893  030.640  000.360: require('telescope.previewers')
+946.902  038.777  000.718: require('telescope._extensions.themes')
+947.547  000.638  000.638: require('telescope._extensions.terms')
+948.696  122.477  056.487: require('telescope')
+948.706  122.668  000.192: require('lsp.tools.ts_type_lookup.ts_telescope_picker')
+949.059  000.333  000.333: require('lsp.tools.ts_type_lookup.noice_integration')
+949.466  000.176  000.176: require('lsp.tools.deprecated_help.lsp_common')
+949.822  000.169  000.169: require('lsp.tools.deprecated_help.helper')
+949.999  000.171  000.171: require('lsp.tools.deprecated_help.lsp.lua_ls.catch')
+950.179  000.174  000.174: require('lsp.tools.deprecated_help.lsp.lua_ls.diagnostic')
+950.348  000.163  000.163: require('lsp.tools.deprecated_help.defaults')
+950.354  000.881  000.205: require('lsp.tools.deprecated_help.lsp.lua_ls.lua_ls')
+950.531  000.173  000.173: require('lsp.tools.deprecated_help.lsp.lua_ls.publish_diagnostics')
+950.538  001.472  000.241: require('lsp.tools.deprecated_help')
+951.195  000.218  000.218: require('lsp.diagnostics.util')
+951.388  000.186  000.186: require('lsp.diagnostics.loclist')
+951.573  000.179  000.179: require('lsp.diagnostics.quickfix')
+951.579  000.794  000.210: require('lsp.diagnostics.commands')
+951.772  000.190  000.190: require('lsp.diagnostics.keymaps')
+951.779  001.236  000.252: require('lsp.diagnostics')
+952.269  000.212  000.212: require('autocmds.auto-center-fexplorer')
+952.757  000.222  000.222: require('autocmds.general.helpers')
+952.998  000.234  000.234: require('autocmds.general.gofile_cases')
+953.226  000.221  000.221: require('autocmds.general.gofile_logger')
+953.421  000.190  000.190: require('autocmds.general.defaults')
+953.428  001.126  000.260: require('autocmds.general')
+953.789  000.261  000.261: require('autocmds.git')
+954.034  000.190  000.190: require('autocmds.git.conflicts_qf')
+954.243  000.192  000.192: require('autocmds.git.commit_ft')
+954.448  000.189  000.189: require('autocmds.git.conflict_marks')
+954.659  000.191  000.191: require('autocmds.git.gitsigns_refresh')
+954.868  000.186  000.186: require('autocmds.git.blame_on_hold')
+955.764  000.890  000.890: require('autocmds.git.line_diff_on_hold')
+956.077  000.246  000.246: require('autocmds.terminals')
+956.395  000.241  000.241: require('autocmds.text')
+956.442  004.599  000.675: require('autocmds')
+956.871  000.225  000.225: require('custom.commands_keymaps')
+957.120  000.242  000.242: require('custom.commands_keymaps.delete_current_file')
+957.384  000.258  000.258: require('custom.insert')
+957.650  000.254  000.254: require('custom.insert.filepath.core')
+957.871  000.203  000.203: require('custom.insert.annotation.core')
+958.081  000.194  000.194: require('custom.insert.timestamp.core')
+958.279  000.189  000.189: require('custom.insert.uuid.core')
+958.578  000.292  000.292: require('custom.insert.boilerplate.core')
+959.071  000.469  000.469: require('custom.format')
+959.513  000.355  000.355: require('custom.format.column_align.core')
+959.955  000.420  000.420: require('custom.format.table')
+960.306  000.339  000.339: require('custom.format.text_width')
+960.566  000.251  000.251: require('custom.format.filter_lines')
+960.851  000.277  000.277: require('custom.format.additional_features')
+961.160  000.292  000.292: require('custom.format.markdown')
+961.469  000.300  000.300: require('custom.format.markdown.headlines.separators')
+962.147  000.331  000.331: require('custom.lua_project_file_stats.utils')
+962.426  000.269  000.269: require('custom.lua_project_file_stats.prints')
+962.681  000.247  000.247: require('custom.lua_project_file_stats.misc_files')
+962.693  001.198  000.350: require('custom.lua_project_file_stats')
+962.941  000.243  000.243: require('custom.lua_project_file_stats.usercommands')
+963.342  000.351  000.351: require('custom.function_index')
+963.591  000.237  000.237: require('custom.function_index.user_actions')
+963.797  000.198  000.198: require('custom.function_index.user_actions.usercommands')
+964.306  000.243  000.243: require('custom.recommender.rendering')
+964.550  000.236  000.236: require('custom.recommender.keymaps')
+964.748  000.192  000.192: require('custom.recommender.custom_aliases')
+964.937  000.182  000.182: require('custom.recommender.blacklist')
+965.130  000.186  000.186: require('custom.recommender.regex')
+965.332  000.197  000.197: require('custom.recommender.treesitter')
+965.340  001.514  000.278: require('custom.recommender')
+965.766  000.261  000.261: require('custom.filecycle')
+966.164  000.189  000.189: require('custom.filecycle.@types')
+966.391  000.220  000.220: require('custom.filecycle.core')
+966.398  000.623  000.214: require('custom.filecycle.keymaps')
+966.700  000.208  000.208: require('custom.filecycle.usercommands')
+967.162  000.191  000.191: require('custom.find_config.config.defaults')
+967.171  000.439  000.248: require('custom.find_config')
+967.639  000.189  000.189: require('custom.find_config.core')
+967.646  000.427  000.238: require('custom.find_config.engines.telescope')
+968.114  000.190  000.190: require('custom.markdown.config')
+968.305  000.184  000.184: require('custom.markdown.core.fold')
+968.522  000.210  000.210: require('custom.markdown.core.headings')
+968.725  000.198  000.198: require('custom.markdown.core.wrap')
+968.951  000.219  000.219: require('custom.markdown.setup.autocmds')
+969.170  000.213  000.213: require('custom.markdown.tableview')
+969.636  000.210  000.210: require('custom.markdown.tableview.parser')
+969.647  000.471  000.261: require('custom.markdown.tableview.live')
+969.929  000.276  000.276: require('custom.markdown.fenced_fix')
+970.037  002.362  000.401: require('custom.markdown')
+970.279  000.215  000.215: require('custom.markdown.tableview.autocmds')
+970.607  000.294  000.294: require('custom.pathprobe')
+971.464  000.193  000.193: require('custom.repo_pickers.@types.aliases')
+971.471  000.387  000.194: require('custom.repo_pickers.@types.types')
+971.482  000.590  000.203: require('custom.repo_pickers.config')
+972.118  000.214  000.214: require('custom.repo_pickers.fs')
+972.324  000.199  000.199: require('custom.repo_pickers.dispatch')
+972.332  000.636  000.223: require('custom.repo_pickers.actions')
+972.756  000.203  000.203: require('custom.repo_pickers.select.vim_select')
+972.980  000.215  000.215: require('custom.repo_pickers.select.telescope')
+973.193  000.205  000.205: require('custom.repo_pickers.select.fzf')
+973.201  000.864  000.241: require('custom.repo_pickers.select.router')
+973.207  001.720  000.220: require('custom.repo_pickers.register')
+973.214  002.555  000.244: require('custom.repo_pickers')
+974.449  000.223  000.223: require('custom.pathfinder.notifier')
+974.465  000.486  000.263: require('custom.pathfinder.util')
+974.475  000.720  000.234: require('custom.pathfinder.finder')
+975.365  000.192  000.192: require('custom.pathfinder.extractor.terminators')
+975.376  000.404  000.213: require('custom.pathfinder.extractor.helpers')
+975.608  000.228  000.228: require('custom.pathfinder.extractor.common_extensions')
+975.621  000.900  000.268: require('custom.pathfinder.extractor.find')
+975.627  001.149  000.248: require('custom.pathfinder.extractor')
+975.631  002.076  000.208: require('custom.pathfinder.commands')
+975.636  002.347  000.271: require('custom.pathfinder')
+976.020  000.330  000.330: require('custom.line_marker')
+976.065  019.619  001.257: require('custom')
+977.066  000.205  000.205: require('custom.mynotes.core')
+977.078  000.433  000.228: require('custom.mynotes.register')
+977.124  000.745  000.312: require('custom.mynotes.specs.checklists')
+977.371  000.243  000.243: require('custom.mynotes.specs.notes')
+977.771  000.392  000.392: require('custom.mynotes.specs.notes_lua')
+978.099  000.319  000.319: require('custom.mynotes.specs.notes_nvim')
+978.359  000.251  000.251: require('custom.mynotes.specs.wkdbook')
+978.617  000.251  000.251: require('custom.mynotes.specs.wkdbook_lua')
+978.873  000.249  000.249: require('custom.mynotes.specs.wkdbook_nvim')
+978.880  002.811  000.360: require('custom.mynotes')
+979.298  000.198  000.198: require('sessions.autocmds')
+979.516  000.209  000.209: require('sessions.usercmds')
+979.711  000.189  000.189: require('sessions.keymaps')
+979.718  000.834  000.237: require('sessions')
+980.327  000.266  000.266: require('usrcmds.copy')
+980.762  000.195  000.195: require('usrcmds.gather.@types')
+980.770  000.427  000.233: require('usrcmds.gather')
+981.375  000.587  000.587: require('usrcmds.compress_dir')
+981.732  000.327  000.327: require('usrcmds.diff')
+982.308  000.564  000.564: require('usrcmds.diff.diff_origin')
+982.778  000.440  000.440: require('usrcmds.fileinfo')
+983.264  000.445  000.445: require('usrcmds.project_tree')
+983.683  000.362  000.362: require('usrcmds.newfile')
+984.005  000.283  000.283: require('usrcmds.migrate')
+985.120  000.282  000.282: require('usrcmds.migrate.common.@types')
+985.132  000.864  000.583: require('usrcmds.migrate.common.command')
+985.532  000.396  000.396: require('usrcmds.migrate.common.picker')
+985.907  000.367  000.367: require('usrcmds.migrate.common.buffer')
+985.924  001.911  000.283: require('usrcmds.migrate.opt')
+987.136  000.311  000.311: require('usrcmds.migrate.notify.parser.aliases')
+987.429  000.285  000.285: require('usrcmds.migrate.notify.parser.patterns')
+987.749  000.312  000.312: require('usrcmds.migrate.notify.parser.extractor')
+988.111  000.354  000.354: require('usrcmds.migrate.notify.parser.migrator')
+988.140  001.794  000.531: require('usrcmds.migrate.notify.parser')
+988.853  000.322  000.322: require('usrcmds.migrate.notify.refactor.import')
+989.158  000.296  000.296: require('usrcmds.migrate.notify.refactor.cleanup')
+989.697  000.532  000.532: require('usrcmds.migrate.notify.refactor.apply')
+989.710  001.565  000.415: require('usrcmds.migrate.notify.refactor')
+989.743  003.792  000.432: require('usrcmds.migrate.notify')
+991.299  001.476  001.476: require('usrcmds.reload')
+992.555  001.047  001.047: require('usrcmds.search_all_drives')
+993.113  000.511  000.511: require('usrcmds.system_find')
+993.703  000.558  000.558: require('usrcmds.update_repos')
+994.606  000.879  000.879: require('usrcmds.uv_doc')
+994.814  015.005  001.129: require('usrcmds')
+995.715  000.881  000.881: require('wkddap')
+996.301  000.479  000.479: require('wkddap.core')
+996.654  000.304  000.304: require('wkddap.core.setup')
+1000.647  000.008  000.008: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1000.691  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1001.324  000.255  000.255: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/nvim-dap/plugin/dap.lua
+1001.347  000.531  000.276: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1001.359  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1001.402  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1005.206  000.258  000.258: require('dap.utils')
+1005.284  003.832  003.574: require('dap')
+1005.619  000.301  000.301: require('osv')
+1006.397  009.734  005.054: require('dap')
+1006.671  000.259  000.259: require('wkddap.core.capabilities')
+1010.823  000.009  000.009: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1010.874  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1010.976  000.005  000.005: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1011.032  000.004  000.004: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1015.358  000.179  000.179: require('nio.tasks')
+1015.543  000.174  000.174: require('nio.control')
+1015.815  000.266  000.266: require('nio.uv')
+1015.992  000.171  000.171: require('nio.tests')
+1016.347  000.183  000.183: require('vim.ui')
+1016.358  000.359  000.176: require('nio.ui')
+1016.710  000.178  000.178: require('nio.streams')
+1016.717  000.356  000.177: require('nio.file')
+1017.239  000.155  000.155: require('nio.util')
+1017.606  000.718  000.562: require('nio.logger')
+1017.619  000.898  000.181: require('nio.lsp')
+1017.804  000.182  000.182: require('nio.process')
+1017.819  002.836  000.251: require('nio')
+1018.751  000.026  000.026: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1018.762  000.236  000.210: require('dapui.config.highlights')
+1018.807  000.036  000.036: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1018.867  000.605  000.333: require('dapui.config')
+1018.878  000.829  000.224: require('dapui.util')
+1019.123  000.240  000.240: require('dapui.windows.layout')
+1019.133  001.309  000.240: require('dapui.windows')
+1019.340  000.203  000.203: require('dapui.controls')
+1019.353  008.260  003.911: require('dapui')
+1019.600  000.038  000.038: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1020.217  000.231  000.231: require('dapui.client.types')
+1020.234  000.534  000.302: require('dapui.client')
+1020.464  000.223  000.223: require('dap.breakpoints')
+1020.818  000.336  000.336: require('dapui.client.lib')
+1021.238  000.195  000.195: require('dapui.render.canvas')
+1021.246  000.407  000.213: require('dapui.elements.breakpoints')
+1021.449  000.183  000.183: require('dapui.components.breakpoints')
+1021.641  000.168  000.168: require('dapui.elements.repl')
+1021.815  000.166  000.166: require('dapui.elements.scopes')
+1022.023  000.191  000.191: require('dapui.components.scopes')
+1022.215  000.185  000.185: require('dapui.components.variables')
+1022.413  000.177  000.177: require('dapui.elements.stacks')
+1022.839  000.195  000.195: require('dapui.components.frames')
+1022.848  000.412  000.217: require('dapui.components.threads')
+1023.088  000.190  000.190: require('dapui.elements.watches')
+1023.298  000.186  000.186: require('dapui.components.watches')
+1023.486  000.170  000.170: require('dapui.elements.hover')
+1023.710  000.174  000.174: require('dapui.components.hover')
+1023.894  000.174  000.174: require('dapui.elements.console')
+1023.984  017.302  005.106: require('dapui')
+1024.498  000.022  000.022: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1024.541  000.003  000.003: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1028.435  003.834  003.834: require('nvim-dap-virtual-text')
+1028.491  000.021  000.021: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1028.527  000.024  000.024: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1028.545  004.556  000.651: require('nvim-dap-virtual-text')
+1028.796  000.246  000.246: require('wkddap.core.state')
+1029.019  000.215  000.215: require('wkddap.adapters')
+1029.418  000.208  000.208: require('wkddap.config')
+1029.618  000.191  000.191: require('wkddap.utils.notify')
+1029.628  000.603  000.203: require('wkddap.registry')
+1029.809  000.174  000.174: require('wkddap.adapters.lua')
+1030.339  000.171  000.171: require('wkddap.adapters.go')
+1031.192  000.179  000.179: require('wkddap.adapters.python')
+1032.016  000.172  000.172: require('wkddap.adapters.javascript')
+1032.543  000.195  000.195: require('wkddap.configurations')
+1032.722  000.171  000.171: require('wkddap.configurations.lua')
+1032.898  000.169  000.169: require('wkddap.configurations.go')
+1033.070  000.164  000.164: require('wkddap.configurations.python')
+1033.241  000.164  000.164: require('wkddap.configurations.javascript')
+1033.420  000.172  000.172: require('wkddap.utils.validation')
+1033.616  000.188  000.188: require('wkddap.ui')
+1034.714  000.176  000.176: require('wkddap.ui.highlights')
+1034.906  000.171  000.171: require('wkddap.ui.dapui')
+1035.008  000.036  000.036: sourcing nvim_exec2() called at C:\Users\Bernhard\AppData\Local\nvim\init.lua:0
+1035.914  000.279  000.279: require('editorconfig')
+1047.080  003.846  003.846: require('mdlinks.commands')
+1047.116  004.066  000.220: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/mdlinks/plugin/mdlinks.lua
+1047.140  004.330  000.264: sourcing nvim_exec2() called at FileType Autocommands for "*":0
+1047.405  000.192  000.192: require('mdlinks.config')
+1054.335  000.085  000.085: sourcing C:\Users\Bernhard\AppData\Local\nvim-data\lazy\vim-matchup\autoload\matchup\ts_engine.vim
+1057.191  000.052  000.052: sourcing C:\Users\Bernhard\AppData\Local\nvim-data\lazy\vim-matchup\autoload\matchup\re.vim
+1062.167  000.270  000.270: require('dap.ui')
+1062.198  000.692  000.423: require('dap.repl')
+1133.966  005.033  005.033: require('gitsigns')
+1139.274  000.426  000.426: require('gitsigns.highlight')
+1139.521  000.224  000.224: require('gitsigns.debug.log')
+1139.771  000.243  000.243: require('gitsigns.config')
+1140.621  000.228  000.228: require('gitsigns.async')
+1141.110  000.226  000.226: require('gitsigns.util')
+1141.122  000.487  000.261: require('gitsigns.hunks')
+1141.512  000.169  000.169: require('gitsigns.diff')
+1141.742  000.222  000.222: require('gitsigns.signs')
+1142.027  000.261  000.261: require('gitsigns.status')
+1142.211  000.178  000.178: require('gitsigns.debounce')
+1142.441  000.224  000.224: require('gitsigns.cache')
+1142.467  001.341  000.289: require('gitsigns.manager')
+1142.656  000.185  000.185: require('gitsigns.message')
+1142.871  000.207  000.207: require('gitsigns.repeat')
+1142.911  002.766  000.318: require('gitsigns.actions')
+1143.950  000.177  000.177: require('gitsigns.system')
+1143.961  000.367  000.190: require('gitsigns.git.cmd')
+1144.138  000.173  000.173: require('gitsigns.git.errors')
+1144.364  000.219  000.219: require('gitsigns.git.repo.watcher')
+1144.582  000.208  000.208: require('gitsigns.git.version')
+1144.599  001.235  000.269: require('gitsigns.git.repo')
+1144.607  001.460  000.225: require('gitsigns.git')
+1144.617  001.698  000.238: require('gitsigns.attach')
+1144.908  000.249  000.249: require('gitsigns.current_line_blame')
+1145.037  016.423  005.785: sourcing C:/Users/Bernhard/AppData/Local/nvim-data/lazy/gitsigns.nvim/plugin/gitsigns.lua
+1145.066  016.893  000.470: sourcing nvim_exec2() called at BufEnter Autocommands for "*":0
+1145.088  000.007  000.007: sourcing nvim_exec2() called at BufEnter Autocommands for "*":0
+1145.155  000.004  000.004: sourcing nvim_exec2() called at BufEnter Autocommands for "*":0
+1145.713  000.482  000.482: require('nvchad.configs.gitsigns')
+1152.418  025.445  008.060: require('gitsigns')
+1153.961  000.102  000.102: sourcing C:\Users\Bernhard\AppData\Local\nvim-data\lazy\nvim-treesitter\autoload\nvim_treesitter.vim
+1154.309  000.291  000.291: require('nvim-treesitter.fold')
+1226.617  000.210  000.210: require('wkddap.commands')
+1226.798  000.169  000.169: require('wkddap.commands.autocmds')
+1226.981  000.166  000.166: require('wkddap.commands.usercmds')
+1227.178  000.176  000.176: require('system.rpc_pipe')
+1227.987  000.394  000.394: require('debugging')
+1228.892  000.543  000.543: require('debugging.views.@types')
+1229.264  000.353  000.353: require('debugging.views.capture')
+1229.758  000.273  000.273: require('debugging.views.utils')
+1229.769  000.497  000.225: require('debugging.views.display')
+1229.967  000.194  000.194: require('debugging.views.keymaps')
+1230.168  000.191  000.191: require('debugging.views.autocmds')
+1230.178  002.177  000.399: require('debugging.views')
+1230.270  1191.096  270.338: sourcing C:\Users\Bernhard\AppData\Local\nvim\init.lua
+1230.328  002.367: sourcing vimrc file(s)
+1232.663  000.215  000.215: sourcing C:\Program Files\Neovim\share\nvim\runtime\filetype.lua
+1235.384  000.136  000.136: sourcing C:\Program Files\Neovim\share\nvim\runtime\syntax\synload.vim
+1235.561  002.051  001.915: sourcing C:\Program Files\Neovim\share/nvim/runtime/syntax/syntax.vim
+1235.599  003.005: inits 3
+1240.122  004.523: reading ShaDa
+1241.457  001.335: opening buffers
+1242.247  000.789: BufEnter autocommands
+1242.257  000.011: editing files in windows
+1242.446  000.189: --- NVIM STARTED ---
+

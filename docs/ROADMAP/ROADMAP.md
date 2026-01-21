@@ -24,6 +24,7 @@
 
 -
 
+:lua vim.cmd('profile start /tmp/profile.log') vim.cmd('profile func *') require('lib')
 ## MIXED
 
 1. Usercommands so strukturieren:
