@@ -23,7 +23,7 @@ local lib = require("lib")
   end
 
   -- 3) Linux: xclip / wl-copy (best effort)
-  if lib.is_linux() and not M.is_wsl() then
+  if lib.is_linux() and not lib.is_wsl() then
     local r1 = lib.run_blocking("xclip -selection clipboard " .. text)
     if r1.code == 0 then
       return true
@@ -35,7 +35,7 @@ local lib = require("lib")
   end
 
   -- 4) Windows native PowerShell
-  if lib.is_windows() and not M.is_wsl() then
+  if lib.is_windows() and not lib.is_wsl() then
     local cmd = "$input | Set-Clipboard"
     local sh = lib.shell()
     local obj = vim.system and vim.system({ sh.prog, sh.args[1], sh.args[2], sh.args[3], cmd }, { stdin = text }):wait()

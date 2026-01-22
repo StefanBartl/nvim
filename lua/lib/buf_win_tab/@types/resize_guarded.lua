@@ -40,22 +40,6 @@
 ---@field create fun(cmd: string, exclude_filetypes?: string[], exclude_names?: string[], lhs?: string): function # Create guarded resize mapping callback function. Returns callback suitable for vim.keymap.set. Arguments: cmd (resize command like "vertical resize -5"), exclude_filetypes (list of filetypes to exclude), exclude_names (list of Lua patterns matching buffer names to exclude), lhs (original mapping lhs like "<S-h>" - REQUIRED for key forwarding). Behavior: checks current buffer against exclusions, either forwards key or executes resize. Warns if lhs provided but fallback derivation fails.
 
 -- =========================================================
--- Function Signature Details
--- =========================================================
-
----@alias ResizeCallback fun(): nil
---- Callback function returned by create().
---- Captures cmd, exclusions, and fallback_seq in closure.
---- Executed on every keypress of mapped key.
---- Behavior:
----   1. Get current buffer and metadata (filetype, name)
----   2. Check if filetype matches any in exclude_filetypes
----   3. Check if name matches any pattern in exclude_names
----   4. If excluded: forward original key via nvim_feedkeys
----   5. If not excluded: execute resize command via vim.cmd
----   6. Catch and notify any errors from vim.cmd
-
--- =========================================================
 -- Usage Example
 -- =========================================================
 

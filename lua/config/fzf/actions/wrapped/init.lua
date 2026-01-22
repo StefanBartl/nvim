@@ -92,7 +92,7 @@ end
 function M.get()
   return {
     -- Background buffer open (keeps picker open)
-    ["ctrl-o"] = function(selected, opts)
+    ["ctrl-o"] = function(selected, _)
       local path = get_path_from_entry(selected)
 
       if not path then
@@ -119,7 +119,7 @@ function M.get()
       end, 50)
     end,
 
-    ["shift-enter"] = function(selected, opts)
+    ["shift-enter"] = function(selected, _)
       local path = get_path_from_entry(selected)
 
       if not path then
@@ -147,7 +147,7 @@ function M.get()
     end,
 
     -- File/folder creation (closes picker)
-    ["ctrl-a"] = function(selected, opts)
+    ["ctrl-a"] = function(selected, _)
       local path = get_path_from_entry(selected)
 
       if not path then

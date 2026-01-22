@@ -7,7 +7,6 @@ local buffer_utils = require("config.neotree.utils.buffer")
 local state = require("config.neotree.state.windows")
 
 local tree_state = require("config.neotree.state.tree")
-local custom_float = require("config.neotree.open.window.custom_float")
 local cfg = require("config.neotree").options
 
 ---Get valid Neo-tree command module

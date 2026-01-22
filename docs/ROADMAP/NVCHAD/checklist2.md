@@ -26,15 +26,6 @@
 | `[ ]` | Public API exportiert | set/toggle/get_cursor_progress_mode |
 | `[ ]` | lua/chadrc.lua < 30 Zeilen | Nur Thin-Wrapper |
 
-### Tabufline + Mapping
-
-| Status | Prüfschritt | Details |
-|--------|-------------|---------|
-| `[ ]` | nvchad/tabufline/init.lua | Buffer-Navigation ohne Centering |
-| `[ ]` | nvchad/mappings/init.lua | Alle NvChad-Keymaps |
-| `[ ]` | custom/tabufline/ gelöscht | |
-| `[ ]` | mappings/nvchad.lua gelöscht | |
-
 ### Type-Konsolidierung
 
 | Status | Prüfschritt | Details |

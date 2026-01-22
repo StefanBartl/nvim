@@ -41,29 +41,29 @@ local function format_entries(entries, opts)
   end
 end
 
----Create preview message
----@param entries string[]
----@param opts Cfg.NeoTree.Actions.CopyClipboardOpts
----@return string message
-local function create_preview_message(entries, opts)
-  local count = #entries
-  local limit = opts.preview_limit or 10
-  local preview_count = math.min(count, limit)
+-- ---Create preview message
+-- ---@param entries string[]
+-- ---@param opts Cfg.NeoTree.Actions.CopyClipboardOpts
+-- ---@return string message
+-- local function create_preview_message(entries, opts)
+  -- local count = #entries
+  -- local limit = opts.preview_limit or 10
+  -- local preview_count = math.min(count, limit)
 
-  local lines = { string.format("Copied %d entries:", count) }
+  -- local lines = { string.format("Copied %d entries:", count) }
 
-  for i = 1, preview_count do
-    local entry = entries[i]
-    local basename = vim.fn.fnamemodify(entry, ":t")
-    lines[#lines + 1] = string.format("  • %s", basename)
-  end
+  -- for i = 1, preview_count do
+    -- local entry = entries[i]
+    -- local basename = vim.fn.fnamemodify(entry, ":t")
+    -- lines[#lines + 1] = string.format("  • %s", basename)
+  -- end
 
-  if count > limit then
-    lines[#lines + 1] = string.format("  ... and %d more", count - limit)
-  end
+  -- if count > limit then
+    -- lines[#lines + 1] = string.format("  ... and %d more", count - limit)
+  -- end
 
-  return table.concat(lines, "\n")
-end
+  -- return table.concat(lines, "\n")
+-- end
 
 ---Copy entries to system clipboard
 ---@param entries string[] Absolute paths to copy

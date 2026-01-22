@@ -9,8 +9,6 @@ local M = {}
 
 -- Types ----------------------------------------------------------------------
 
----@alias TabInfo { tabnr: integer, tabpage: userdata, wins: integer[], bufs: integer[], current_win: integer, current_buf: integer }
-
 -- Collect a TabInfo for a given tabpage object.
 ---@param tabpage userdata
 ---@return TabInfo

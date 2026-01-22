@@ -34,11 +34,11 @@
 ---@field pluck fun(xs: table[], key: string): any[] # Pluck a field from array of tables, skipping nils. Returns array of extracted values.
 ---
 ---@field sorted fun(xs: any[], cmp: fun(a: any, b: any): boolean): any[] # Sort copy (stable-ish for small arrays); does not mutate input. Uses table.sort internally.
-
+--
 -- =========================================================
 -- Core Table Utilities
 -- =========================================================
-
+--
 ---@field is_table fun(t: any): boolean # Check if value is a table type.
 ---
 ---@field is_array fun(t: any): boolean # Check if table is a dense array. Heuristic: consecutive integer keys starting at 1 with #t matching. Rejects mixed tables with extra non-integer keys.
@@ -72,11 +72,11 @@
 ---@field group_by fun(list: any[], key: fun(item: any): any): table<any, any[]> # Group array elements by key function. Returns table mapping keys to arrays of matching elements.
 ---
 ---@field count_by fun(list: any[], key: fun(item: any): any): table<any, integer> # Count occurrences by key function. Returns table mapping keys to occurrence counts.
-
+--
 -- =========================================================
 -- Dictionary Operations
 -- =========================================================
-
+--
 ---@field dict_clone fun(t: table): table # Shallow copy of a dictionary. Copies all key-value pairs.
 ---
 ---@field dict_pick fun(t: table, keys: any[]): table # Pick subset of keys from dictionary. Returns new table with only specified keys (if they exist in source).
@@ -90,11 +90,11 @@
 ---@field dict_values fun(t: table): any[] # Extract all values as array. Preallocates output array for performance.
 ---
 ---@field dict_group_by fun(xs: any[], keyfn: fun(v: any): string|number): table<string|number, any[]> # Group array of items into dict of arrays by key function. Returns table mapping keys to arrays of items with that key.
-
+--
 -- =========================================================
 -- Set Operations
 -- =========================================================
-
+--
 ---@field from_array fun(xs: any[]): table<any, true> # Create a set from an array. Returns table where each array element becomes a key with value true.
 ---
 ---@field to_array fun(s: table<any, true>): any[] # Convert set back to array (no order guarantee). Returns array of all keys in set.
@@ -136,11 +136,11 @@
 ---@field set_map fun(s: table<any, true>, fn: fun(value: any): any): table<any, true> # Map set to a new set of possibly different element type. Note: collisions (two inputs mapping to same output) are naturally deduplicated.
 ---
 ---@field iter fun(s: table<any, true>): fun(): any # Iterator over set elements (no guaranteed order). Returns iterator function.
-
+--
 -- =========================================================
 -- Functional Programming Utilities
 -- =========================================================
-
+--
 ---@field fn_map fun(list: any[], fn: fun(item: any, index: integer): any): any[] # Map function over array. Returns new array with transformed elements. Pure function.
 ---
 ---@field fn_filter fun(list: any[], pred: fun(item: any, index: integer): boolean): any[] # Filter array by predicate. Returns new array containing only elements matching predicate. Pure function.
@@ -154,11 +154,11 @@
 ---@field all fun(list: any[], pred: fun(item: any): boolean): boolean # Check if all elements match predicate. Short-circuits on first non-match.
 ---
 ---@field flat_map fun(list: any[], fn: fun(item: any): any[]): any[] # Map and flatten in one pass. Applies fn to each element (fn must return array) and concatenates results.
-
+--
 -- =========================================================
 -- Safe Table Operations
 -- =========================================================
-
+--
 ---@field ensure_list fun(list: any[]|nil): any[] # Ensure value is a list. Returns input if it's a table, otherwise returns empty table.
 ---
 ---@field ensure_table fun(t: table|nil): table # Ensure value is a table. Returns input if it's a table, otherwise returns empty table.
