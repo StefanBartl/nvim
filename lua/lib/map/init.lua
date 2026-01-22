@@ -79,6 +79,7 @@ end
 ---@param rhs string|function
 ---@param opts Lib.Map.Opts|nil
 ---@param desc string?
+---@type Lib.Map
 return function(modes, lhs, rhs, opts, desc)
   opts = opts or {}
 

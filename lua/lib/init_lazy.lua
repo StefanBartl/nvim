@@ -117,7 +117,6 @@ LIB.insert_lines = lazy_module("lib.buffer.insert_lines")
 
 -- === TABLES ===
 LIB.with = lazy_module("lib.tables.with")
-LIB.dedup = lazy_module("lib.tables.dedup")
 
 -- Table submodules (lazy proxies)
 LIB.array = lazy_module("lib.tables.array")
@@ -126,6 +125,11 @@ LIB.dict = lazy_module("lib.tables.dict")
 LIB.set = lazy_module("lib.tables.set")
 LIB.functional = lazy_module("lib.tables.functional")
 LIB.safe = lazy_module("lib.tables.safe")
+
+-- === JSON ===
+LIB.json.is_array_like = lazy_module("lib.json.decode.to_string_array").is_array_like
+LIB.json.ensure_string_array = lazy_module("lib.json.decode.to_string_array").ensure_string_array
+LIB.json.table_to_string_array = lazy_module("lib.json.decode.to_string_array").table_to_string_array
 
 -- === STRINGS ===
 -- Strings module is frequently used, but we still lazy-load it

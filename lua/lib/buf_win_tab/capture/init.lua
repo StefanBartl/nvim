@@ -234,4 +234,5 @@ function M.capture(cmd, opts, cb)
   }
 end
 
+---@type Lib.BufWinTab.Capture
 return M

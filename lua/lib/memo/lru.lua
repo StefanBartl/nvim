@@ -1,24 +1,12 @@
----@module 'lib.cache.lru'
+---@module 'lib.memo.lru'
 --- O(1) LRU cache using a hashmap + doubly linked list.
 
----@class LruNode
----@field key any
----@field value any
----@field prev LruNode|nil
----@field next LruNode|nil
-
----@class Lru
----@field cap integer
----@field size integer
----@field map table<any, LruNode>
----@field head LruNode|nil
----@field tail LruNode|nil
 local Lru = {}
 Lru.__index = Lru
 
 --- Move a node to the front (most-recent).
----@param self Lru
----@param node LruNode
+---@param self Lib.Memo.Lru
+---@param node Lib.Memo.LruNode
 function Lru:_move_front(node)
   if self.head == node then
     return
@@ -46,7 +34,7 @@ function Lru:_move_front(node)
 end
 
 --- Evict LRU (tail) node.
----@param self Lru
+---@param self Lib.Memo.Lru
 function Lru:_evict()
   local node = self.tail
   if not node then
@@ -64,7 +52,7 @@ function Lru:_evict()
 end
 
 --- Get a value by key; returns value or nil.
----@param self Lru
+---@param self Lib.Memo.Lru
 ---@param key any
 ---@return any|nil
 function Lru:get(key)
@@ -77,7 +65,7 @@ function Lru:get(key)
 end
 
 --- Put key/value; overwrites existing and moves to front.
----@param self Lru
+---@param self Lib.Memo.Lru
 ---@param key any
 ---@param value any
 function Lru:put(key, value)
@@ -98,9 +86,19 @@ end
 
 --- New LRU with capacity >= 1.
 ---@param cap integer
----@return Lru
+---@return Lib.Memo.Lru
 local function new_lru(cap)
-  return setmetatable({ cap = math.max(1, cap), size = 0, map = {}, head = nil, tail = nil }, Lru)
+  ---@type Lib.Memo.LruState
+  local state = {
+    cap = math.max(1, cap),
+    size = 0,
+    map = {},
+    head = nil,
+    tail = nil,
+  }
+  setmetatable(state, Lru)
+  ---@cast state Lib.Memo.Lru
+  return state
 end
 
 return { new = new_lru }

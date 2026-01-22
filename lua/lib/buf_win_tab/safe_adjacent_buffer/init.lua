@@ -60,5 +60,6 @@ function M.save_last_normal_buffer()
   -- 3. No suitable buffer found → do nothing silently
 end
 
+---@type Lib.BufWinTab.SafeAdjacentBuffer
 return M
 

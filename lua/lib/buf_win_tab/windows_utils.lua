@@ -312,4 +312,5 @@ function M.collect_win_report(winid)
 end
 
 
+---@type Lib.BufWinTab.WindowsUtils
 return M

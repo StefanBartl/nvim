@@ -17,11 +17,6 @@
 ---      local do_work = lazy.fn("mymodule", "do_work")
 ---      do_work(42)
 
----@class Lib.LazyModule
----@field _loader fun(): table
----@field _value table|nil
----@field get? fun(): table Returns the loaded module. Loads it exactly once on first invocation.
-
 local LAZY = {}
 
 ---Creates a lazy module wrapper.
@@ -30,10 +25,10 @@ local LAZY = {}
 ---@param module_name string
 ---The module name passed to require(), e.g. "vim.loop" or "my.plugin.core".
 ---
----@return Lib.LazyModule
+---@return Lib.Lazy
 ---A lazy module object exposing a get() method.
 function LAZY.module(module_name)
-  ---@type Lib.LazyModule
+  ---@type Lib.Lazy
   local lazy = {
     _value = nil,
     _loader = function()

@@ -136,4 +136,5 @@ function M.collect_report()
   }
 end
 
+---@type Lib.BufWinTab.TabsUtils
 return M

@@ -4,7 +4,7 @@
 
 local lazy = require("lib.lazy")
 
----@type Lib.UI.HoverSelect.Config
+---@type Lib.UI.HoverSelect.Config.Module
 local config = lazy.require("lib.ui.hover_select.config")
 
 ---@type Lib.UI.HoverSelect.Buffer

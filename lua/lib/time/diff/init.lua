@@ -26,9 +26,6 @@
 
 local M = {}
 
---- Time unit names for formatting output.
----@alias TimeUnit "ns"|"us"|"ms"|"s"
-
 --- Convert nanoseconds to the specified unit.
 ---@param ns number Nanoseconds
 ---@param unit TimeUnit Target unit
@@ -58,14 +55,8 @@ end
 
 --- Create a new timer instance with isolated state.
 --- Automatically starts timing on creation.
----@return TimeDiff
+---@return Lib.Time.TimeDiff
 local function create_timer()
-  ---@class TimeDiff
-  ---@field private _start number Initial timestamp (nanoseconds)
-  ---@field private _checks number[] List of checkpoint timestamps (nanoseconds)
-  ---@field private _index integer Iterator index for `next()`
-  ---@field private _iter_label string|nil Custom label for iterator output
-  ---@field private _iter_show_index boolean Whether to show index in iterator output
   local instance = {
     _start = 0,
     _checks = {},
@@ -496,12 +487,13 @@ local function create_timer()
   -- Auto-start on creation
   instance.start()
 
+  ---@type Lib.Time.TimeDiff
   return instance
 end
 
 --- Factory function: Returns a new timer instance.
 --- Each call creates an independent timer with its own state.
----@return TimeDiff
+---@return Lib.Time.TimeDiff
 setmetatable(M, {
   __call = function()
     return create_timer()

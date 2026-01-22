@@ -1,6 +1,32 @@
 ---@meta
 ---@module 'lib.@types'
 
+-- =========================================================
+-- All Lib Modules
+-- =========================================================
+---@class Lib.Modules
+---@field autocmd Lib.AutoCmd
+---@field bufwintab Lib.BufWinTab
+---@field buffer Lib.Buffer
+---@field cross Lib.Cross
+---@field fs Lib.Fs
+---@field json Lib.JSON
+---@field lazy Lib.Lazy
+---@field lua_ls Lib.LuaLS
+---@field map Lib.Map
+---@field memo Lib.Memo
+---@field normalize Lib.Normalize
+---@field notifier Lib.Notify+
+---@field nvim Lib.Nvim
+---@field require Lib.Require
+---@field strings Lib.Strings
+---@field tables Lib.Tables
+---@field terminals Lib.Terminal
+---@field time Lib.Time
+---@field ui Lib.UI
+---@field usrcmd Lib.UsrCmd
+
+
 ---@class OsShell
 ---@field prog string        -- executable to spawn (e.g. "sh" or "powershell")
 ---@field args string[]      -- arguments vector (no command yet)
@@ -18,7 +44,21 @@
 ---| '"macos"'
 ---| '"linux"'
 
+-- =========================================================
+-- All Exported Lib Functions
+-- =========================================================
 ---@class Lib
+---
+--- === Editor Interfaces / Interaction Layers ===
+--- Autocmd/Keymaps
+---@field group fun(name: string, clear: boolean|nil): integer # Create autocommand group
+---@field create fun(event: string|string[], callback: fun(args:Lib.Autocmd.Args), opts: LibAutocmdOpts|nil): nil # Create autocommand
+---@field get_augroup fun(name: string, opts: { clear?: boolean, prefix?: string }|nil): integer # Augroup registry: Centralized augroup creation with optional prefixing and deduplication.
+--- Map
+---@field map fun(modes: string|string[], lhs: string, rhs: string|function, opts: Lib.Map.Opts|nil, desc: string?): nil # Keymap helper
+--- Usrcmd
+---@field create fun(name: string, callback: string|fun(args:Lib.UserCommand.Args), opts: LibUserCommandOpts|nil): nil
+------
 --- === Cross-Platform ===
 ---@field is_windows fun(): boolean # returns true if corrent os is windows
 ---@field is_wsl fun(): boolean # returns true if corrent os is wsl
@@ -99,15 +139,12 @@
 ---@field is_terminal_buf fun(bufnr: integer): boolean|nil # Checks if buffer is terminal
 ---@field delete_terminal_buf fun(bufnr: integer): boolean|nil # Deletes terminal buffer
 ---
---- === UI === --FIX: Ab hier müssenm sie weiter vervollständigt werden
----@field hover_select table # Hover select module
----@field hl table # Highlight utilities
----
---- === Autocmd/Keymap ===
----@field autocmd table # Autocmd utilities
----@field get_augroup fun(name: string, opts: { clear?: boolean, prefix?: string }|nil): integer # Augroup registry: Centralized augroup creation with optional prefixing and deduplication.
----@field map fun(modes: string|string[], lhs: string, rhs: string|function, opts?: table, desc?: string): nil # Keymap helper
----@field usercmd table # User command utilities
+--- === UI ===
+--- Hover Select
+---@field hover_select Lib.UI.HoverSelect # Hover select module
+--- HL
+---@field namespace fun(name: string): integer
+---@field set fun(group: string, opts: Lib.Highlight.Opts, ns: string|integer|nil)-
 ---
 --- === Notify ===
 ---@field notify table # Notification utilities
@@ -120,12 +157,30 @@
 ---@field memo table # Memoization utilities
 ---
 --- === Time ===
----@field time_diff fun(): TimeDiff # Create time diff instance
+---@field time_diff fun(): Lib.Time.TimeDiff # Create time diff instance
 ---
 --- === Normalize ===
 ---@field normalize table # Normalization utilities
 ---
 --- === Nvim ===
 ---@field simple_echo fun(msg: string, hl: string|nil, is_error: boolean|nil): integer|string # This module returns a single function that echoes messages using vim.api.nvim_echo
+---
+--- === JSON ====
+---
+--- Decode
+---
+---@field is_array_like fun(v: any): boolean # Prüft, ob ein Wert eine array-ähnliche Tabelle ist. Erlaubt sind ausschließlich zusammenhängende positive Integer-Keys beginnend bei 1 (Lua-Array-Semantik). Gibt false für Maps, Sparse-Arrays oder Nicht-Tabellen zurück
+---
+---@field table_to_string_array fun(tbl: table): string[] # Konvertiert eine Tabelle in ein `string[]`.
+--- * Array-ähnliche Tabellen: jedes Element wird per `tostring` übernommen.
+--- * Nicht-array-ähnliche Tabellen: Keys werden stabil sortiert und
+---   als `"key: value"`-Strings serialisiert.
+--- * Verschachtelte Tabellen werden mittels `vim.inspect` dargestellt.
+---
+---@field ensure_string_array fun(v: any): string[] # Erzwingt ein `string[]` aus beliebigem Input.
+--- * table   → `table_to_string_array`
+--- * string  → Aufteilung an Newlines (`vim.split`)
+--- * scalar  → Einzel-Array mit `tostring(v)`
+--- Garantiert immer ein nicht-nil `string[]`.
 
 return {}

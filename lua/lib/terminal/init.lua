@@ -11,6 +11,7 @@ function M.escape(path)
   return (path:gsub("([%s%$`\\])", "\\%1"))
 end
 
+--- Checks if buffer is a terminal buffer
 ---@param bufnr integer
 ---@return boolean|nil
 function M.is_terminal_buf(bufnr)
@@ -26,6 +27,7 @@ function M.is_terminal_buf(bufnr)
   end
 end
 
+--- Checks if buffer is terminal buffer, if -> try to delete terminal buffer and return boolean of succes, else return nil
 ---@param bufnr integer
 ---@return boolean|nil
 function M.delete_terminal_buf(bufnr)

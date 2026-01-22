@@ -3,11 +3,6 @@
 
 local api = vim.api
 
----@class InsertModuleOpts
----@field bufnr? integer Buffer handle; defaults to current buffer
----@field row? integer 0-based row index; defaults to current cursor row
----@field col? integer 0-based column index; defaults to current cursor column
-
 ---Insert @module annotation
 ---
 ---Semantics:
@@ -15,7 +10,7 @@ local api = vim.api
 ---- opts.bufnr only               → cursor position of current window, target buffer
 ---- opts.bufnr + opts.row (+col)  → explicit position in given buffer
 ---
----@param opts? InsertModuleOpts
+---@param opts? Lib.LuaLS.InsertModuleOpts
 ---@return boolean success
 return function(opts)
   opts = opts or {}

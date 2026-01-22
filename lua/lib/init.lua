@@ -34,7 +34,6 @@ local MODULE_MAP = {
 
   -- TABLES
   with = "lib.tables.with",
-  dedup = "lib.tables.dedup",
   array = "lib.tables.array",
   core = "lib.tables.core",
   dict = "lib.tables.dict",
@@ -127,6 +126,9 @@ local SPECIAL_HANDLERS = {
   find_plain = { mod = "lib.strings", key = "find_plain" },
   replace_plain = { mod = "lib.strings", key = "replace_plain" },
   surround = { mod = "lib.strings", key = "surround" },
+
+  -- json decode
+  json_decode_to_string_array = { mod = "lib.json.decode.to_string_array", key = "json_decode" },
 }
 
 -- ============================================================================

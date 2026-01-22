@@ -1,9 +1,8 @@
----@module 'lib.cache.memo'
---- Memoization helpers backed by LRU cache from lib.cache.lru.
+---@module 'lib.memo.memo'
+--- Memoization helpers backed by LRU cache from lib.memo.lru.
 
-local LRU = require("lib.memo.lru")
+local LRU = require("lib.lazy").require("lib.memo.lru")
 
----@class Memo
 local M = {}
 
 --- Memoize a pure function by its argument tuple.

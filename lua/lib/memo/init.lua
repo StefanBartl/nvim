@@ -13,4 +13,5 @@ end
 M.lru = lr("lru")
 M.memo = lr("memo")
 
+---@type Lib.Memo
 return M

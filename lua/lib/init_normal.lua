@@ -29,7 +29,6 @@ LIB.is_subpath = require("lib.fs.is_subpath")
 LIB.is_dir = require("lib.fs.is_dir")
 LIB.relpath = require("lib.fs.relpath")
 LIB.find_upward_dir = require("lib.fs.find_upward_dir")
-LIB.dedup = require("lib.tables.dedup")
 LIB.path_shorten = require("lib.fs.path_shorten")
 
 -- === REQUIRE ===
@@ -108,6 +107,12 @@ LIB.resolve_log_level = require("lib.notify.resolve_log_level")
 
 -- === LAZY ===
 LIB.lazy = require("lib.lazy")
+
+-- === JSON ===
+LIB.json = require("lib.json")
+LIB.json.is_array_like = require("lib.json.decode.to_string_array").is_array_like
+LIB.json.ensure_string_array = require("lib.json.decode.to_string_array").ensure_string_array
+LIB.json.table_to_string_array =require("lib.json.decode.to_string_array").table_to_string_array
 
 -- === MEMO ===
 LIB.memo = require("lib.memo")
