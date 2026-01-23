@@ -8,6 +8,7 @@ local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local TESTS = require("config.neotree.keymaps.tests")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local COMMANDS = require("config.neotree.commands")
+local ICONS = require("config.neotree.sources.icons")
 
 return {
   {
@@ -15,19 +16,19 @@ return {
     branch = "v3.x",
     dependencies = {
       "MunifTanjim/nui.nvim",
-      { "miversen33/netman.nvim", lazy = true },
-      { "TimCreasman/neo-tree-tests-source.nvim", lazy = true },
-      { "mrbjarksen/neo-tree-diagnostics.nvim", lazy = true },
+      {
+        "TimCreasman/neo-tree-tests-source.nvim",
+        lazy = false, -- Changed from true
+        dependencies = { "nvim-neotest/neotest" },
+      },
+      { "mrbjarksen/neo-tree-diagnostics.nvim" },
     },
 
     lazy = false,
 
     opts = function()
-      local has_netman = pcall(require, "netman")
       local has_neotest_source = pcall(require, "neo-tree-tests-source")
       local has_diagnostics = pcall(require, "neo-tree.sources.diagnostics")
-
-      -- CRITICAL: Alle Sources registrieren, auch wenn nicht sofort sichtbar
       local enabled_sources = {
         "filesystem",
         "buffers",
@@ -39,23 +40,48 @@ return {
         enabled_sources[#enabled_sources + 1] = "diagnostics"
       end
 
-      if has_netman then
-        enabled_sources[#enabled_sources + 1] = "netman.ui.neo-tree"
-      end
-
       if has_neotest_source then
         enabled_sources[#enabled_sources + 1] = "tests"
       end
 
-      return {
-        sources = enabled_sources,
+      -- configuration knobs
+      local icon_family = "nerd" -- common | nerd | codicons
+      local icon_variant = "v1" -- v1 | v2
+      local name_length = "long" -- long | short
 
-        -- CRITICAL: Source-Selector komplett deaktivieren
-        source_selector = {
-          winbar = false,
-          statusline = false,
+      -- Build sources for source_selector
+      ---@type table[]
+      local sources = {
+        {
+          source = "filesystem",
+          display_name = ICONS.format(icon_family, icon_variant, "filesystem", name_length),
+        },
+        {
+          source = "buffers",
+          display_name = ICONS.format(icon_family, icon_variant, "buffers", name_length),
+        },
+        {
+          source = "git_status",
+          display_name = ICONS.format(icon_family, icon_variant, "git_status", name_length),
+        },
+        {
+          source = "document_symbols",
+          display_name = ICONS.format(icon_family, icon_variant, "document_symbols", name_length),
+        },
+        {
+          source = "diagnostics",
+          display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
         },
 
+      }
+
+      return {
+        sources = enabled_sources,
+        source_selector = {
+          winbar = true,
+          statusline = false,
+          sources = sources,
+        },
         close_if_last_window = false,
         popup_border_style = "rounded",
         sort_case_insensitive = true,
@@ -230,13 +256,6 @@ return {
         tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
           window = { mappings = TESTS },
         }) or nil,
-
-        netman = has_netman and {
-          window = {
-            position = "right",
-            mappings = {},
-          },
-        } or nil,
       }
     end,
 
