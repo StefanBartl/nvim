@@ -20,6 +20,15 @@ LIB.run_blocking = cross_run.run_blocking
 -- Clipboard
 LIB.copy_to_clipboard = require("lib.cross.copy_to_clipboard")
 
+-- === FUNCTIONS ===
+
+LIB.noop = require("lib.functions.meta").noop
+LIB.identity = require("lib.functions.meta").identity
+LIB.always_true = require("lib.functions.meta").always_true
+LIB.always_false = require("lib.functions.meta").always_false
+LIB.const = require("lib.functions.meta").const
+LIB.raise  = require("lib.functions.meta").raise
+
 -- === FILESYSTEM ===
 local fs_path = require("lib.fs.path")
 LIB.joinpath = fs_path.joinpath

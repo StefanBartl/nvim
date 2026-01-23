@@ -72,8 +72,17 @@ do
   end
 end
 
--- Clipboard
+-- === Clipboard ===
 LIB.copy_to_clipboard = lazy_module("lib.cross.copy_to_clipboard")
+
+-- === FUNCTIONS ===
+
+LIB.noop = lazy_module("lib.functions.meta").noop
+LIB.identity = lazy_module("lib.functions.meta").identity
+LIB.always_true = lazy_module("lib.functions.meta").always_true
+LIB.always_false = lazy_module("lib.functions.meta").always_false
+LIB.const = lazy_module("lib.functions.meta").const
+LIB.raise  = lazy_module("lib.functions.meta").raise
 
 -- === FILESYSTEM ===
 do

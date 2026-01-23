@@ -9,6 +9,7 @@
 ---@field bufwintab Lib.BufWinTab
 ---@field buffer Lib.Buffer
 ---@field cross Lib.Cross
+---@field functions Lib.Functions
 ---@field fs Lib.Fs
 ---@field json Lib.JSON
 ---@field lazy Lib.Lazy

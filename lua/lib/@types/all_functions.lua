@@ -29,7 +29,10 @@
 ---Lib.Cross.CopyToClipboard
 ---@field copy_to_clipboard fun(text: string): boolean # Copy text to system clipboard using platform-appropriate backend
 ---
+-- =========================================================
 --- === Filesystem ===
+-- =========================================================
+--
 ---@field find_upward_dir fun(names: string[], from: string): string|nil # Find directory containing files
 ---@field dedup fun(entries: string[]): string[] # Deduplicate filesystem paths
 ---@field path_shorten fun(path: string, max_len: integer): string # Shorten path for display
@@ -45,9 +48,88 @@
 ---@field require_dir fun(dir: string, calls?: string|string[]|""): nil # Load all modules in a directory
 ---@field require_lazy fun(module_name: string): fun(): table # Lazy-loading wrapper
 ---
+-- =========================================================
 --- === Buffer ===
+-- =========================================================
+--
 ---@field is_markdown_buf fun(bufnr_arg: integer|nil): integer|nil # Returns buffer number if valid markdown buffer
 ---@field insert_lines fun(lines: string[], pos?: Lib.Buf.InsertLinesPos): nil # Insert lines into buffer
+---
+-- =========================================================
+-- === BufWinTab
+-- =========================================================
+--
+-- Buffer Utils (Flattened)
+--
+---@field DEFAULT_EXCLUDE_FILETYPES string[] # Standard exclusion list for "real" buffer counting
+---@field count_listed_buffers fun(): integer # Count all listed buffers
+---@field get_buffer_info fun(bufnr: number): BufInfo # Get metadata for single buffer
+---@field count_real_listed_buffers fun(exclude_filetypes?: string[]): integer # Count listed buffers excluding plugins
+---@field list_all_buffers_info fun(): BufInfo[] # Get metadata for all buffers
+---@field list_listed_buffers_info fun(): BufInfo[] # Get metadata for listed buffers
+---@field format_buffers_table fun(buftable: BufInfo[]): string # Format buffer table to string
+---@field print_buffers_table fun(buftable: BufInfo[]): nil # Print buffer table to command line
+---@field collect_all_buffer_info fun(): BufCollectedInfo # Aggregate all buffer information
+---@field print_summary fun(): nil # Print buffer summary to command line
+--
+-- Window Utils (Flattened)
+--
+---@field count_listed_buffers_win fun(): integer # Count listed buffers (windows_utils version)
+---@field list_all_buffers_info_win fun(): WinInfo[] # Get extended metadata for all buffers
+---@field get_listed_buffer_ids fun(): integer[] # Get array of listed buffer IDs
+---@field get_buffers_grouped_by_filetype fun(): table<string, integer[]> # Group buffers by filetype
+---@field get_current_buffer_info fun(): WinInfo # Get current buffer metadata
+---@field get_tabpage_buffers fun(tabnr?: integer): integer[] # Get buffers in tabpage
+---@field format_buffers_report fun(): string # Format compact buffer report
+---@field collect_all_state fun(): AggregatedState # Collect comprehensive state
+---@field show_aggregated_state fun(silent?: boolean): string|nil # Print or return state
+---@field collect_win_report fun(winid?: integer): WinReport # Collect window inspection report
+--
+-- Tab Utils (Flattened)
+--
+---@field list_tabs fun(): TabInfo[] # List all tabpages with metadata
+---@field format_tab_one_line fun(info: TabInfo): string # Format tabpage to one line
+---@field print_tabs fun(tabs?: TabInfo[]): nil # Pretty-print tabpages
+---@field get_current_tab fun(): TabInfo|nil # Get current tabpage metadata
+---@field get_tab_by_number fun(tabnr: integer): TabInfo|nil # Find tabpage by number
+---@field is_single_tab fun(): boolean # Check if only one tab open
+---@field collect_report fun(): TabReport # Collect tabpage report
+--
+-- =========================================================
+-- Resize Guarded (Flattened)
+-- =========================================================
+--
+---@field create_resize_callback fun(cmd: string, exclude_filetypes?: string[], exclude_names?: string[], lhs?: string): ResizeCallback # Create guarded resize callback
+--
+-- =========================================================
+-- Capture (Flattened)
+-- =========================================================
+--
+---@field capture_buf_win fun(cmd: string, opts?: BufWinCapture.Opts, cb?: fun(result: BufWinCapture.Results)): BufWinCapture.Results|nil # Capture buffers/windows after command
+--
+-- =========================================================
+-- Safe Adjacent Buffer (Flattened)
+-- =========================================================
+--
+---@field save_last_normal_buffer fun(): nil # Force-save last normal file buffer
+--
+-- =========================================================
+-- Move current buffer to new tab
+-- =========================================================
+--
+---@field move_current_buffer_to_new_tab Lib.BufWinTab.MoveBufToTab
+---
+-- =========================================================
+-- Meta
+-- =========================================================
+--
+---@field noop fun(): nil # No-operation function. Explicitly does nothing and returns nil.
+---@field identity fun(v: any): any # Identity function. Returns the value it was given unchanged. Commonly used in functional pipelines as a default mapper or when a transformation hook is optional.
+---@field always_true fun(): boolean # Constant-true predicate. Always returns true regardless of input. Useful as a default filter or guard function.
+---@field always_false fun(): boolean # Constant-false predicate. Always returns false regardless of input. Useful as a disabling predicate or sentinel.
+---@field const fun(value: any): fun(): any # Constant value generator. Returns a function that always yields the provided value. Useful for lazy defaults, dependency injection, or testing.
+---@field raise fun(err: any): nil # Error passthrough helper. Always throws an error. LuaLS has no `never` type, so `nil` is used as a pragmatic substitute.
+--
 ---
 --- === Tables ===
 ---@field with fun(base: table|nil, extra: table|nil): table # Merge two option tables

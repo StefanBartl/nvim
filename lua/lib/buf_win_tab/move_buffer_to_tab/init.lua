@@ -1,12 +1,16 @@
----@module 'custom.functions.buf_win_tab.move_buffer_to_tab'
+---@module 'lib.buf_win_tab.move_buffer_to_tab'
 -- Moves the current buffer into a new tab and removes it from the original tab
-local M = {}
 local api = vim.api
+
 local cmd = vim.cmd
 local fn = vim.fn
 
+---@class Lib.BufWinTab.MoveBufToTab
+---@field __call fun(): nil # --- Moves the current buffer to the next tab or creates a new one
+
 --- Moves the current buffer to the next tab or creates a new one
-function M.move_current_buffer_to_new_tab()
+---@type Lib.BufWinTab.MoveBufToTab
+return function ()
   -- Get current buffer info
   local bufnr = api.nvim_get_current_buf()
   local cursor_pos = api.nvim_win_get_cursor(0)
@@ -74,5 +78,3 @@ function M.move_current_buffer_to_new_tab()
     end
   end)
 end
-
-return M

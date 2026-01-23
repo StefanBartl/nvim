@@ -81,6 +81,14 @@ local SPECIAL_HANDLERS = {
   run = { mod = "lib.cross.run", key = "run" },
   run_blocking = { mod = "lib.cross.run", key = "run_blocking" },
 
+  -- functions
+  noop = { mod = "lib.functions.meta", kex = "noop" },
+  identity = { mod = "lib.functions.meta", kex = "identity" },
+  always_true = { mod = "lib.functions.meta", kex = "always_true" },
+  always_false = { mod = "lib.functions.meta", kex = "always_false" },
+  const = { mod = "lib.functions.meta", kex = "const" },
+  raise = { mod = "lib.functions.meta", kex = "raise" },
+
   -- lib.fs.path exports multiple functions
   joinpath = { mod = "lib.fs.path", key = "joinpath" },
   ensure_dir = { mod = "lib.fs.path", key = "ensure_dir" },
@@ -172,7 +180,7 @@ setmetatable(LIB, {
 
     -- Not found
     error(string.format("lib: unknown key '%s'", key))
-  end
+  end,
 })
 
 ---@type Lib

@@ -36,7 +36,7 @@
 ---@field resize_guarded Lib.BufWinTab.ResizeGuarded # Guarded window resize with terminal key forwarding
 ---@field capture Lib.BufWinTab.Capture # Deterministic buffer/window capture after Ex commands
 ---@field safe_adjacent_buffer Lib.BufWinTab.SafeAdjacentBuffer # Force-save utilities for adjacent file buffers
-
+---@field move_buffer_to_new_tab Lib.BufWinTab.MoveBufToTab
 
 -- =========================================================
 -- Complete Flattened API (All Modules)
@@ -99,7 +99,7 @@
 -- =========================================================
 --
 ---@field create_resize_callback fun(cmd: string, exclude_filetypes?: string[], exclude_names?: string[], lhs?: string): ResizeCallback # Create guarded resize callback
-
+--
 -- =========================================================
 -- Capture (Flattened)
 -- =========================================================
@@ -111,5 +111,12 @@
 -- =========================================================
 --
 ---@field save_last_normal_buffer fun(): nil # Force-save last normal file buffer
+--
+-- =========================================================
+-- Move current buffer to new tab
+-- =========================================================
+--
+---@field move_current_buffer_to_new_tab Lib.BufWinTab.MoveBufToTab
+--
 
 return {}
