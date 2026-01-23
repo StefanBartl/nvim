@@ -136,9 +136,9 @@ LIB.functional = lazy_module("lib.tables.functional")
 LIB.safe = lazy_module("lib.tables.safe")
 
 -- === JSON ===
-LIB.json.is_array_like = lazy_module("lib.json.decode.to_string_array").is_array_like
-LIB.json.ensure_string_array = lazy_module("lib.json.decode.to_string_array").ensure_string_array
-LIB.json.table_to_string_array = lazy_module("lib.json.decode.to_string_array").table_to_string_array
+LIB.json_is_array_like = lazy_module("lib.json.decode.to_string_array").is_array_like
+LIB.json_ensure_string_array = lazy_module("lib.json.decode.to_string_array").ensure_string_array
+LIB.json_table_to_string_array = lazy_module("lib.json.decode.to_string_array").table_to_string_array
 
 -- === STRINGS ===
 -- Strings module is frequently used, but we still lazy-load it

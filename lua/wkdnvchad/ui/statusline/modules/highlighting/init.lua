@@ -10,55 +10,34 @@
 -- (z. B. Normal-, Insert-, Visual-Mode).
 -- =========================================================
 
----@class WkdNvC.UI.Stl.Modules.Highlighting
----@field stl_strip_hl fun(s: string): string
---- Entfernt eingebettete Statusline-Highlight-Sequenzen
---- ("%#Group#" und "%*") aus einem String.
---- Geeignet, um Inhalte anschließend erneut mit
---- eigenen Highlight-Gruppen zu wrappen.
----
----@field hl_open fun(group: string): string
---- Öffnet eine Statusline-Highlight-Gruppe ohne
---- abschließendes Reset ("%*").
---- Wird verwendet, wenn ein Highlight-Band über
---- mehrere Module hinweg fortgeführt werden soll.
----
----@field hl_wrap fun(group: string, s: string): string
---- Wrapped einen String vollständig in eine
---- Statusline-Highlight-Gruppe inklusive Reset.
---- Leere oder nil-Strings ergeben einen leeren Rückgabewert.
----
----@field mode_band_group fun(): string
---- Ermittelt die aktuelle Mode-Band-Highlight-Gruppe
---- basierend auf dem aktuellen Vim-Mode.
---- Rückgabeformat: "St_<Name>mode"
---- Beispiele: "St_Normalmode", "St_Insertmode".
-
--- Type Usage:
--- ---@type WkdNvC.UI.Stl.Modules.Highlighting
--- local hl_module = require("lib.lazy").require("wkdnvchad.ui.statusline.modules.highlighting")
-
 local M = {}
 
--- Strip embedded statusline highlights like "%#Group#" / "%*" to allow re-wrapping with our own group.
+-- Cache for mode band groups
+local mode_band_cache = nil
+local last_mode = nil
+
 ---@nodiscard
+--- Strip embedded statusline highlights
 ---@param s string
 ---@return string
 function M.stl_strip_hl(s)
-  return (s:gsub("%%#.-#", ""):gsub("%%%*", ""))
+  -- Use lib.strings for replace operations
+  local str = require("lib.strings")
+  s = str.replace_all(s, "%%#.-#", "")
+  s = str.replace_all(s, "%%%*", "")
+  return s
 end
 
--- Open a highlight group without resetting at the end.
--- Use this when you want the band to keep filling the center area up to the next module.
 ---@nodiscard
+--- Open highlight group without reset
 ---@param group string
 ---@return string
 function M.hl_open(group)
   return "%#" .. group .. "#"
 end
 
--- Wrap payload with a statusline highlight group.
 ---@nodiscard
+--- Wrap payload with highlight group
 ---@param group string
 ---@param s string
 ---@return string
@@ -69,13 +48,45 @@ function M.hl_wrap(group, s)
   return "%#" .. group .. "#" .. s .. "%*"
 end
 
--- Compute current "mode band" highlight group, e.g. "St_Normalmode", "St_Insertmode", ...
--- Use this to wrap other modules so they visually match the mode/git band.
+---@nodiscard
+--- Get current mode band group with caching
+---@return string
 function M.mode_band_group()
-  local utils = require("nvchad.stl.utils")
-  local m = vim.api.nvim_get_mode().mode
+  local ok_mode, mode_info = pcall(vim.api.nvim_get_mode)
+  if not ok_mode or not mode_info or not mode_info.mode then
+    return "St_Normalmode" -- Fallback
+  end
+
+  local m = mode_info.mode
+
+  -- Return cached if mode unchanged
+  if last_mode == m and mode_band_cache then
+    return mode_band_cache
+  end
+
+  -- Update cache
+  last_mode = m
+
+  local ok_utils, utils = pcall(require, "nvchad.stl.utils")
+  if not ok_utils then
+    mode_band_cache = "St_Normalmode"
+    return mode_band_cache
+  end
+
   local name = (utils.modes[m] and utils.modes[m][2]) or "Normal"
-  return "St_" .. name .. "mode"
+  mode_band_cache = "St_" .. name .. "mode"
+
+  return mode_band_cache
 end
+
+-- Clear cache on mode change
+vim.api.nvim_create_autocmd("ModeChanged", {
+  group = vim.api.nvim_create_augroup("WkdNvChadHighlightCache", { clear = true }),
+  callback = function()
+    mode_band_cache = nil
+    last_mode = nil
+  end,
+  desc = "Clear mode band cache on mode change"
+})
 
 return M

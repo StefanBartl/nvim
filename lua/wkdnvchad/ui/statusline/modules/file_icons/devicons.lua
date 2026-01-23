@@ -1,17 +1,26 @@
 ---@module 'wkdnvchad.ui.statusline.modules.file_icons.devicons'
---------------------------------------------------------------------------------
--- Paths & devicons
---------------------------------------------------------------------------------
-
----@type WkdNvC.UI.Stl.Modules.Highlighting
-local hl_module = require("lib.lazy").require("wkdnvchad.ui.statusline.modules.highlighting")
+--- Optimized devicons with proper caching and lazy-loading
 
 local M = {}
 
 local api = vim.api
--- Caches
+
+-- Lazy-load dependencies
+local hl_module
+local function get_hl_module()
+  if not hl_module then
+    ---@type WkdNvC.UI.Stl.Modules.Highlighting
+    hl_module = require("lib.lazy").require("wkdnvchad.ui.statusline.modules.highlighting")
+  end
+  return hl_module
+end
+
+-- Caches with proper invalidation
 local icon_cache = require("lib.memo.lru").new(256)
 local hl_cache = { name = "St_FileIcon", fg = nil, bg = nil }
+
+-- Devicons module lazy-loaded
+local devicons_mod = nil
 
 ---@nodiscard
 ---@param n integer|nil
@@ -26,27 +35,33 @@ end
 ---@nodiscard
 ---@return string|nil
 local function mode_band_bg_hex()
-  local group = hl_module.mode_band_group()
-  local ok, hl = pcall(api.nvim_get_hl, 0, { name = group, link = false })
-  if not ok or not hl then
+  local hl = get_hl_module()
+  local group = hl.mode_band_group()
+
+  local ok, hl_def = pcall(api.nvim_get_hl, 0, { name = group, link = false })
+  if not ok or not hl_def then
     return nil
   end
-  return int_to_hex(hl.bg)
-end
 
+  return int_to_hex(hl_def.bg)
+end
 
 ---@nodiscard
 ---@param fg string|nil
 ---@param band_bg string|nil
 ---@return string
 local function ensure_icon_hl(fg, band_bg)
-  if hl_cache.fg ~= fg or hl_cache.bg ~= band_bg then
-    local ok = pcall(api.nvim_set_hl, 0, hl_cache.name, { fg = fg, bg = band_bg })
-    if ok then
-      hl_cache.fg = fg
-      hl_cache.bg = band_bg
-    end
+  -- Skip if unchanged
+  if hl_cache.fg == fg and hl_cache.bg == band_bg then
+    return hl_cache.name
   end
+
+  local ok = pcall(api.nvim_set_hl, 0, hl_cache.name, { fg = fg, bg = band_bg })
+  if ok then
+    hl_cache.fg = fg
+    hl_cache.bg = band_bg
+  end
+
   return hl_cache.name
 end
 
@@ -54,6 +69,7 @@ end
 ---@param path string
 ---@return string icon, string|nil color
 local function devicon_for_path(path)
+  -- Check cache first
   local cache_key = path
   local cached = icon_cache:get(cache_key)
   if cached then
@@ -63,33 +79,45 @@ local function devicon_for_path(path)
   local filename = (path == "" or path == nil) and "[No Name]" or vim.fn.fnamemodify(path, ":t")
   local ext = filename:match("^.+%.(.+)$") or ""
 
-  local ok_devicons, devicons = pcall(require, "nvim-web-devicons")
-  if not ok_devicons then
-    local result = { icon = "󰈙", color = nil }
-    icon_cache:put(cache_key, result)
-    return result.icon, result.color
+  -- Lazy-load devicons
+  if not devicons_mod then
+    local ok, mod = pcall(require, "nvim-web-devicons")
+    if ok then
+      devicons_mod = mod
+    else
+      -- Cache failure result
+      local result = { icon = "󰈙", color = nil }
+      icon_cache:put(cache_key, result)
+      return result.icon, result.color
+    end
   end
 
   local icon, color
+
+  -- Try get_icon_color first (most complete)
   local ok_get = pcall(function()
-    icon, color = devicons.get_icon_color(filename, ext, { default = true })
+    icon, color = devicons_mod.get_icon_color(filename, ext, { default = true })
   end)
 
+  -- Fallback to separate calls
   if not ok_get or not icon then
-    icon = devicons.get_icon(filename, ext, { default = true })
-    if devicons.get_color then
+    icon = devicons_mod.get_icon(filename, ext, { default = true })
+    if devicons_mod.get_color then
       pcall(function()
-        color = devicons.get_color(filename, ext, { default = true })
+        color = devicons_mod.get_color(filename, ext, { default = true })
       end)
     end
   end
 
+  -- Final fallback
   if not icon or icon == "" then
     icon = "󰈙"
   end
 
+  -- Cache result
   local result = { icon = icon, color = color }
   icon_cache:put(cache_key, result)
+
   return icon, color
 end
 
@@ -102,6 +130,17 @@ function M.file_icon_segment()
   end
 
   local bufnr = utils.stbufnr()
+
+  -- Validate buffer
+  if not bufnr or bufnr <= 0 then
+    return ""
+  end
+
+  local ok_valid, is_valid = pcall(api.nvim_buf_is_valid, bufnr)
+  if not ok_valid or not is_valid then
+    return ""
+  end
+
   local ok_name, path = pcall(api.nvim_buf_get_name, bufnr)
   path = ok_name and path or ""
 
@@ -122,6 +161,17 @@ function M.file_icon_segment_inherit(band_group)
   end
 
   local bufnr = utils.stbufnr()
+
+  -- Validate buffer
+  if not bufnr or bufnr <= 0 then
+    return ""
+  end
+
+  local ok_valid, is_valid = pcall(api.nvim_buf_is_valid, bufnr)
+  if not ok_valid or not is_valid then
+    return ""
+  end
+
   local ok_name, path = pcall(api.nvim_buf_get_name, bufnr)
   path = ok_name and path or ""
 
@@ -135,8 +185,6 @@ end
 ---@nodiscard
 ---@return string
 function M.file_icon_segment_lsp()
-  -- Defensive require, da das Modul auch ohne NvChad-utils
-  -- geladen werden können soll (z. B. in isolierten Tests).
   local ok_utils, utils = pcall(require, "nvchad.stl.utils")
   if not ok_utils then
     return ""
@@ -144,36 +192,48 @@ function M.file_icon_segment_lsp()
 
   local bufnr = utils.stbufnr()
 
-  -- Prüfen, ob mindestens ein LSP-Client an den Buffer gebunden ist.
-  -- Ohne LSP-Kontext wird bewusst kein Icon gerendert.
+  -- Validate buffer
+  if not bufnr or bufnr <= 0 then
+    return ""
+  end
+
+  local ok_valid, is_valid = pcall(api.nvim_buf_is_valid, bufnr)
+  if not ok_valid or not is_valid then
+    return ""
+  end
+
+  -- Check LSP clients
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
   if not clients or vim.tbl_isempty(clients) then
     return ""
   end
 
-  -- Buffer-Namen sicher ermitteln.
   local ok_name, path = pcall(api.nvim_buf_get_name, bufnr)
   path = ok_name and path or ""
+
   if path == "" then
     return ""
   end
 
-  -- Devicon und Vordergrundfarbe anhand des Pfads bestimmen.
-  -- Diese Hilfsfunktionen werden aus dem bestehenden
-  -- Devicon-Modul erwartet.
   local icon, fg = devicon_for_path(path)
   if not icon or icon == "" then
     return ""
   end
 
-  -- Hintergrundfarbe an das aktuelle Mode-Band anpassen,
-  -- damit das Icon visuell konsistent mit der LSP/Breadcrumb-
-  -- Darstellung bleibt.
   local bg = mode_band_bg_hex()
   local group = ensure_icon_hl(fg, bg)
 
-  -- Vollständig gewrapptes Statusline-Segment zurückgeben.
   return "%#" .. group .. "#" .. icon .. "%*"
 end
+
+-- Clear cache on colorscheme change
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("WkdNvChadDeviconsCache", { clear = true }),
+  callback = function()
+    icon_cache = require("lib.memo.lru").new(256)
+    hl_cache = { name = "St_FileIcon", fg = nil, bg = nil }
+  end,
+  desc = "Clear devicons cache on colorscheme change",
+})
 
 return M

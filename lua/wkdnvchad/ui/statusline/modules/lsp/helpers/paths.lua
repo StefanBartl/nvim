@@ -1,30 +1,32 @@
----@module 'wkdnvchad.ui.statusline.modules.helpers.paths'
---- Path helpers for statusline rendering (pure + fast + robust).
---- This file provides absolute and relative path resolution with proper
---- normalization, Git root detection (incl. worktrees), and home/cwd shortening.
-
----@type WkdNvC.UI.Stl.Modules.LSP.Cfg.Module
-local config_mod = require("lib.lazy").require("wkdnvchad.ui.statusline.modules.lsp.config")
+---@module 'wkdnvchad.ui.statusline.modules.lsp.helpers.paths'
+--- Optimized path helpers with buffer-tick-aware caching
 
 local M = {}
 
 local api, fn, fs, uv = vim.api, vim.fn, vim.fs, vim.uv or vim.loop
 
--- Memoization cache for expensive operations
+-- Cache mit Buffer-Tick-Awareness
 local path_cache = require("lib.memo.lru").new(128)
+local tick_cache = {} -- bufnr -> { tick, abs_path }
 
---- Normalize separators, collapse redundancies, unify drive letter case (best-effort).
---- This function is pure and does not touch the filesystem.
----@param s string|uv.uv_fs_t
+--- Get current buffer tick (für Cache-Invalidierung)
+---@param bufnr integer
+---@return integer
+local function get_tick(bufnr)
+  local ok, b = pcall(vim.api.nvim_buf_get_var, bufnr, "changedtick")
+  if ok and type(b) == "number" then
+    return b
+  end
+  return vim.b[bufnr] and vim.b[bufnr].changedtick or 0
+end
+
+--- Normalize separators (pure function)
+---@param s string
 ---@return string
 local function norm_sep(s)
-  -- Always forward slashes internally; Neovim APIs accept/return both.
   s = tostring(s or ""):gsub("\\", "/")
-  -- Collapse duplicate slashes except at prefix like "://"
   s = s:gsub("([^:])/+", "%1/")
-  -- Normalize trailing "/." → "/"
   s = s:gsub("/%./", "/")
-  -- Drive letter unify case (Windows only; benign elsewhere)
   s = s:gsub("^([A-Za-z]):/", function(d)
     return string.upper(d) .. ":/"
   end)
@@ -32,57 +34,82 @@ local function norm_sep(s)
 end
 
 ---@nodiscard
---- Make absolute path; prefer uv.fs_realpath for canonical result.
---- Returns empty string for non-file buffers or errors.
+--- Make absolute path with buffer-tick caching
 ---@param path_or_buf integer|string
 ---@return string
 function M.path_absolute(path_or_buf)
-  local cache_key = tostring(path_or_buf)
-  local cached = path_cache:get(cache_key)
-  if cached then
-    return cached
-  end
-
-  local path = ""
+  -- Fast path für Buffer mit Tick-Check
   if type(path_or_buf) == "number" then
-    if not api.nvim_buf_is_loaded(path_or_buf) then
+    local bufnr = path_or_buf
+
+    -- Validate buffer
+    local ok_valid, is_valid = pcall(api.nvim_buf_is_valid, bufnr)
+    if not ok_valid or not is_valid then
       return ""
     end
-    path = api.nvim_buf_get_name(path_or_buf) or ""
-  else
-    path = tostring(path_or_buf or "")
+
+    -- Check tick cache
+    local current_tick = get_tick(bufnr)
+    local cached = tick_cache[bufnr]
+
+    if cached and cached.tick == current_tick then
+      return cached.abs_path
+    end
+
+    -- Cache miss → compute
+    local ok_name, path = pcall(api.nvim_buf_get_name, bufnr)
+    if not ok_name or not path or path == "" then
+      return ""
+    end
+
+    local abs = fn.fnamemodify(path, ":p")
+    local ok_real, real = pcall(uv.fs_realpath, abs)
+    local canon = ok_real and real or abs
+    local result = norm_sep(tostring(canon))
+
+    -- Update tick cache
+    tick_cache[bufnr] = {
+      tick = current_tick,
+      abs_path = result
+    }
+
+    return result
   end
+
+  -- String path → use LRU cache
+  local path = tostring(path_or_buf or "")
   if path == "" then
     return ""
   end
 
-  -- Expand to absolute path first; :p handles ~/ and relative buffers
-  local abs = fn.fnamemodify(path, ":p")
-  -- Try realpath to resolve symlinks; fall back to abs if it fails
-  ---@diagnostic disable-next-line fs_realpath exists in uv library
-  local ok, real = pcall(uv.fs_realpath, abs)
-  local canon = ok and real or abs
-
-  local result = norm_sep(canon)
-  path_cache:put(result)
-
-  return result
-end
-
----@nodiscard
---- Find Git root directory for a given file path.
---- Supports .git dir and worktree file that contains "gitdir: <path>".
----@param path string
----@return string|nil
-local function find_git_root(path)
-  local cache_key = "git_root:" .. path
+  local cache_key = "abs:" .. path
   local cached = path_cache:get(cache_key)
   if cached then
     return cached
   end
 
+  local abs = fn.fnamemodify(path, ":p")
+  local ok_real, real = pcall(uv.fs_realpath, abs)
+  local canon = ok_real and real or abs
+  local result = norm_sep(tostring(canon))
+
+  path_cache:put(cache_key, result)
+  return result
+end
+
+---@nodiscard
+--- Find Git root with aggressive caching
+---@param path string
+---@return string|nil
+local function find_git_root(path)
+  -- Cache-Key basiert auf Verzeichnis (nicht Datei)
   local dir = fn.fnamemodify(path, ":h")
-  -- Use the new root helper (Neovim 0.10+); fallback to fs.find
+  local cache_key = "git:" .. dir
+  local cached = path_cache:get(cache_key)
+  if cached then
+    return cached
+  end
+
   local froot = nil
   if fs.root then
     froot = fs.root(dir, ".git")
@@ -92,44 +119,47 @@ local function find_git_root(path)
       froot = fn.fnamemodify(git_hit, ":h")
     end
   end
+
   if not froot or froot == "" then
+    path_cache:put(cache_key, false) -- Explizites nil cachen
     return nil
   end
 
-  local result
-
-  -- Worktree case: if ".git" is a file, read gitdir pointer and go up to worktree top-level
+  -- Worktree check
   local git_path = norm_sep(froot .. "/.git")
   local stat = uv.fs_stat(git_path)
+
   if stat and stat.type == "file" then
-    local fd = uv.fs_open(git_path, "r", 438) -- 0666
+    local fd = uv.fs_open(git_path, "r", 438)
     if fd then
       local content = uv.fs_read(fd, stat.size or 4096, 0) or ""
       uv.fs_close(fd)
       local gitdir = content:match("gitdir:%s*(.-)%s*$")
       if gitdir and #gitdir > 0 then
-        -- For worktrees, the project root is the directory containing the .git file
-        result = norm_sep(froot)
+        local result = norm_sep(froot)
         path_cache:put(cache_key, result)
         return result
       end
     end
   end
-  result = norm_sep(froot)
+
+  local result = norm_sep(froot)
   path_cache:put(cache_key, result)
   return result
 end
 
---- Shorten a path by replacing $HOME prefix with "~" if enabled.
+--- Shorten with home tilde (uses lib.cross for cross-platform)
 ---@param s string
 ---@return string
 local function home_tilde(s)
+  local config_mod = require("wkdnvchad.ui.statusline.modules.lsp.config")
   local options = config_mod.get_cfg()
+
   if not options.path_home_tilde then
     return s
   end
-  ---@diagnostic disable-next-line lib.uv
-  local home = norm_sep(vim.loop.os_homedir() or "")
+
+  local home = norm_sep(uv.os_homedir() or "")
   if home ~= "" and s:sub(1, #home) == home then
     local rest = s:sub(#home + 1)
     if rest == "" then
@@ -143,20 +173,21 @@ local function home_tilde(s)
   return s
 end
 
---- Compute a relative path against a given base directory.
---- Falls back to original if not a prefix.
+--- Relative path computation (pure)
 ---@param base string
 ---@param path string
 ---@return string
 local function rel_from(base, path)
   base = norm_sep(base)
   path = norm_sep(path)
-  -- Case-insensitive drive prefixes on Windows
+
+  -- Different drives on Windows
   if base:match("^[A-Za-z]:/") and path:match("^[A-Za-z]:/") then
     if base:sub(1, 1) ~= path:sub(1, 1) then
-      return path -- different drives → cannot relativize
+      return path
     end
   end
+
   if path:sub(1, #base) == base then
     local rest = path:sub(#base + 1)
     if rest == "" then
@@ -167,7 +198,7 @@ local function rel_from(base, path)
   return path
 end
 
---- Return a repo-relative, cwd-relative, or home-shortened relative path (pure).
+---@nodiscard
 ---@param mode '"repo"'|'"cwd"'|'"home"'
 ---@param path string
 ---@return string
@@ -188,15 +219,14 @@ function M.path_relative(mode, path)
     local root = find_git_root(abs)
     if root and #root > 0 then
       local rel = rel_from(root, abs)
-      -- Make sure we don't display a bare "."; keep at least filename
       if rel == "." then
         result = fn.fnamemodify(abs, ":t")
+      else
+        result = rel
       end
-      result = rel
+    else
+      result = home_tilde(rel_from(uv.os_homedir() or "", abs))
     end
-    -- No repo → fall through to home or cwd according to taste; here: home
-    ---@diagnostic disable-next-line lib.uv
-    return home_tilde(rel_from(vim.loop.os_homedir() or "", abs))
   elseif mode == "cwd" then
     local cwd = norm_sep(fn.getcwd())
     result = rel_from(cwd, abs)
@@ -208,17 +238,17 @@ function M.path_relative(mode, path)
   return result
 end
 
---- Public: choose display path according to configured strategy.
---- "auto": repo if available, else cwd, else absolute with home-tilde.
----@param _cfg { path_mode?: WkdNvC.UI.Stl.Modules.Based.PathMode_t, path_home_tilde?: boolean }|nil
+---@nodiscard
+---@param _cfg { path_mode?: string, path_home_tilde?: boolean }|nil
 ---@param path_or_buf integer|string
 ---@return string
 function M.display_path(_cfg, path_or_buf)
+  local config_mod = require("wkdnvchad.ui.statusline.modules.lsp.config")
+
   if type(_cfg) == "table" then
     if _cfg.path_mode ~= nil then
       config_mod.set("path_mode", _cfg.path_mode)
     end
-
     if _cfg.path_home_tilde ~= nil then
       config_mod.set("path_home_tilde", not not _cfg.path_home_tilde)
     end
@@ -230,6 +260,7 @@ function M.display_path(_cfg, path_or_buf)
   end
 
   local mode = config_mod.get("path_mode") or "auto"
+
   if mode == "absolute" then
     return home_tilde(abs)
   elseif mode == "repo" then
@@ -256,11 +287,21 @@ end
 ---@param bufnr integer
 ---@return string
 function M.display_path_for_buf(bufnr)
+  local config_mod = require("wkdnvchad.ui.statusline.modules.lsp.config")
   local options = config_mod.get_cfg()
   return M.display_path(
     { path_mode = options.path_mode, path_home_tilde = options.path_home_tilde },
     bufnr
   )
 end
+
+-- Clear tick cache when buffer is deleted
+vim.api.nvim_create_autocmd("BufDelete", {
+  group = vim.api.nvim_create_augroup("WkdNvChadPathsCache", { clear = true }),
+  callback = function(args)
+    tick_cache[args.buf] = nil
+  end,
+  desc = "Clear path tick cache on buffer delete"
+})
 
 return M

@@ -208,18 +208,19 @@
 ---
 --- Decode
 ---
----@field json_is_array_like fun(v: any): boolean # Prüft, ob ein Wert eine array-ähnliche Tabelle ist. Erlaubt sind ausschließlich zusammenhängende positive Integer-Keys beginnend bei 1 (Lua-Array-Semantik). Gibt false für Maps, Sparse-Arrays oder Nicht-Tabellen zurück
+---@field is_array_like fun(v: any): boolean # Prüft, ob ein Wert eine array-ähnliche Tabelle ist. Erlaubt sind ausschließlich zusammenhängende positive Integer-Keys beginnend bei 1 (Lua-Array-Semantik). Gibt false für Maps, Sparse-Arrays oder Nicht-Tabellen zurück
 ---
----@field json_table_to_string_array fun(tbl: table): string[] # Konvertiert eine Tabelle in ein `string[]`.
+---@field table_to_string_array fun(tbl: table): string[] # Konvertiert eine Tabelle in ein `string[]`.
 --- * Array-ähnliche Tabellen: jedes Element wird per `tostring` übernommen.
 --- * Nicht-array-ähnliche Tabellen: Keys werden stabil sortiert und
 ---   als `"key: value"`-Strings serialisiert.
 --- * Verschachtelte Tabellen werden mittels `vim.inspect` dargestellt.
 ---
----@field json_ensure_string_array fun(v: any): string[] # Erzwingt ein `string[]` aus beliebigem Input.
+---@field ensure_string_array fun(v: any): string[] # Erzwingt ein `string[]` aus beliebigem Input.
 --- * table   → `table_to_string_array`
 --- * string  → Aufteilung an Newlines (`vim.split`)
 --- * scalar  → Einzel-Array mit `tostring(v)`
 --- Garantiert immer ein nicht-nil `string[]`.
 
 return {}
+
