@@ -19,8 +19,8 @@ require("wkdoptions.hl_config.utils.@types")
 require("wkdoptions.hl_config.path_cache.@types")
 require("wkdoptions.hl_config.cword_occurrences.@types")
 
----@class WKDOptions.HL_CFG.Modules
---- Complete type hierarchy for hl_config subsystem.
+---@class WKDOptions.HL_CFG
+--- Complete type hierarchy for Highlight_Cfg subsystem.
 --- All visual/UX features: cursorline, mode tinting, flash, breadcrumbs, indent scope, etc.
 ---
 --- Architecture:
@@ -50,7 +50,7 @@ require("wkdoptions.hl_config.cword_occurrences.@types")
 ---@field path_cache WKDOptions.HL_CFG.PathCache # Buffer-local repo path caching
 ---@field cword_occurrences WKDOptions.HL_CFG.CwordOccurrences # <cword> occurrences highlighting
 
----@class WKDOptions.HL_CFG
+---@class WKDOptions.HL_CFG.Main
 --- Main module entry point (init.lua).
 ---@field enable fun(): nil # Enable all features, install autocmds, register commands (call once during wkdoptions.setup)
 

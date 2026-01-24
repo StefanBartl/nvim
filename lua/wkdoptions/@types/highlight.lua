@@ -1,0 +1,107 @@
+---@meta
+---@module 'wkdoptions.@types.highlight'
+---
+--- Complete and corrected type definitions for HighlightCfg.
+--- All fields that were causing "Undefined field" warnings are now properly typed.
+
+---@class HighlightCfg
+---@field enable_line boolean # Enables CursorLine in active windows
+---@field enable_column boolean # Enables CursorColumn guide
+---@field color_persist boolean # Re-applies highlights after colorscheme changes
+---@field map_cursor_to_hl boolean # Maps guicursor to custom HL groups
+---@field min_colored_file_kb integer # Size threshold (KiB) for disabling column effects
+---@field enable_indent_scope boolean # Highlights active indentation block
+---@field enable_yank_flash boolean # Flash yanked region
+---@field enable_put_flash boolean # Flash pasted region
+---@field map_put_flash boolean # Installs p/P mappings for put flash
+---@field enable_signcolumn_tint boolean # Tints SignColumn by diagnostic severity
+---@field enable_terminal_palette boolean # Harmonizes terminal buffer visuals
+---@field enable_insert_submode_colors boolean # Per-mode CursorLine tints
+---@field enable_current_word boolean # Underlines word under cursor
+---@field cword_occurrences CwordOccurrencesCfg # <cword> occurrences highlighting config
+---@field enable_diff_peek boolean # Git hunk preview keymap
+---@field large_file_kb integer # Global large file threshold (KiB)
+---@field enable_breadcrumbs boolean # Winbar breadcrumbs
+---@field breadcrumbs_max_len integer # Max breadcrumbs string length
+---@field breadcrumbs_separator string|nil # Explicit separator string
+---@field breadcrumbs_nerd_hex string|nil # Nerd Font glyph as hex codepoint
+---@field breadcrumbs_ctx WKDOptionsBreadcrumbsCtx # Context building config
+---@field colors HighlightColors # Full color/face palette
+---@field winbar_skip SkipCfg # Skip rules for breadcrumbs
+---@field indent_scope_skip SkipCfg # Skip rules for indent scope
+
+---@class WKDOptionsBreadcrumbsCtx
+---@field lua_table_root lua_table_root_opt
+---@field prefer_owner_in_literals boolean # Prefer owner in object/table literals
+---@field prefer_owner_on_member_access boolean # Prefer owner on member access
+---@field dedupe_containers boolean # Collapse duplicate container segments
+---@field prefer_lsp_function boolean # Prefer LSP function name first
+---@field use_treesitter_symbol boolean # Build symbol path via Tree-sitter
+---@field use_container_chain boolean # Prepend owner/container
+---@field fallback_object_when_empty boolean # Use object/owner as fallback
+---@field fallback_word_when_empty boolean # Use <cword> as final fallback
+---@field use_lang_specific boolean # Enable language-specific providers
+---@field container_join string # Join string between container segments
+---@field container_max_depth integer # Max container segments to collect
+---@field providers_order string[] # Provider execution order
+
+---@class lua_table_root_opt
+---@field enable boolean
+---@field mode string
+
+---@class CwordOccurrencesCfg
+---@field enabled boolean # Master switch
+---@field render CwordRender # Rendering mode
+---@field underline_color string|nil # Special color for underline modes
+---@field force_plain_underline boolean|nil # Always include plain underline
+---@field marking CwordMarking # Slice to render
+---@field firstN integer # Leading bytes when marking == "firstN"
+---@field viewport_only boolean # Restrict to visible lines
+---@field min_len integer # Minimum <cword> length
+---@field smart_case boolean # Legacy smart case flag
+---@field case_mode CwordCaseMode|nil # Case handling strategy
+---@field match_kind CwordMatchKind|nil # Match strategy
+---@field in_insert boolean # Keep decorations in Insert mode
+---@field hl string # HL group for full-word slices
+---@field hl_lead string|nil # HL group for partial slices
+---@field hl_attr CwordHlAttr|nil # Fallback attrs for hl
+---@field hl_lead_attr CwordHlAttr|nil # Fallback attrs for hl_lead
+---@field priority integer # Extmark priority
+---@field debounce_ms integer # Debounce interval
+---@field large_file_kb integer|nil # Per-feature large file guard
+
+---@alias CwordRender
+---| '"highlight"'
+---| '"underline"'
+---| '"undercurl"'
+---| '"underdouble"'
+---| '"underdotted"'
+---| '"underdashed"'
+
+---@alias CwordMarking
+---| '"leadingchar"'
+---| '"word"'
+---| '"tailchar"'
+---| '"firstN"'
+
+---@alias CwordCaseMode "smart"|"sensitive"|"insensitive"
+---@alias CwordMatchKind "exact"|"substring"
+
+---@class CwordHlAttr
+---@field fg string|nil
+---@field bg string|nil
+---@field sp string|nil
+---@field bold boolean|nil
+---@field italic boolean|nil
+---@field underline boolean|nil
+---@field undercurl boolean|nil
+---@field underdouble boolean|nil
+---@field underdotted boolean|nil
+---@field underdashed boolean|nil
+---@field strikethrough boolean|nil
+---@field reverse boolean|nil
+---@field standout boolean|nil
+---@field nocombine boolean|nil
+---@field link string|nil
+
+return {}
