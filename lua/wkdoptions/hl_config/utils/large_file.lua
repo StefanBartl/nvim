@@ -1,7 +1,8 @@
 ---@module 'wkdoptions.hl_config.utils.large_file'
 --- File size guards with memoization and safe fs_stat calls.
 
-local memo = require("lib.memo")
+local lazy = require("lib.lazy")
+local memo = lazy.require("lib.memo")
 
 local M = {}
 

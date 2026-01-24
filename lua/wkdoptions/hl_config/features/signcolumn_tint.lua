@@ -2,9 +2,10 @@
 --- SignColumn tinting based on worst diagnostic severity.
 --- Uses winhighlight to dynamically change SignColumn background per buffer/window.
 
-local State = require("wkdoptions.hl_config.core.state")
-local Winhl = require("wkdoptions.hl_config.utils.winhighlight")
-local is_ui = require("wkdoptions.hl_config.utils.skip").std_skip
+local lazy = require("lib.lazy")
+local State = lazy.require("wkdoptions.hl_config.core.state")
+local Winhl = lazy.require("wkdoptions.hl_config.utils.winhighlight")
+local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
 
 local M = {}
 

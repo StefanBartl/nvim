@@ -1,10 +1,11 @@
 ---@module 'wkdoptions.hl_config.features.cursorline'
 --- CursorLine and CursorColumn activation with safe guards and config checks.
 
-local State = require("wkdoptions.hl_config.core.state")
-local Winhl = require("wkdoptions.hl_config.utils.winhighlight")
-local LargeFile = require("wkdoptions.hl_config.utils.large_file")
-local is_ui = require("wkdoptions.hl_config.utils.skip").std_skip
+local lazy = require("lib.lazy")
+local State = lazy.require("wkdoptions.hl_config.core.state")
+local Winhl = lazy.require("wkdoptions.hl_config.utils.winhighlight")
+local LargeFile = lazy.require("wkdoptions.hl_config.utils.large_file")
+local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
 
 local M = {}
 

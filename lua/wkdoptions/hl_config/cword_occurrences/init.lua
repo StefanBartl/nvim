@@ -3,9 +3,10 @@
 --- Supports "highlight" and underline-family (underline/undercurl/underdouble/underdotted/underdashed).
 --- Slices: leadingchar | word | tailchar | firstN
 
-local M = {}
+local lazy = require("lib.lazy")
+local C = lazy.require("wkdoptions.config") ---@module 'wkdoptions.config'
 
-local C = require("wkdoptions.config") ---@module 'wkdoptions.config'
+local M = {}
 
 -- Keep a typed handle to highlight-namespace config to avoid undefined-field warnings.
 ---@type WKDOptions.HL_CFG

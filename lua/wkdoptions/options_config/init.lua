@@ -6,9 +6,10 @@
 ---   * optional subtle matchparen blink (enable_matchparen, matchtime_tenths)
 ---   * user commands :MyOptSet / :MyOptShow / :MyOptList
 
-local C = require("wkdoptions.config")
-local ocfg = C.cfg.options
-local hcfg = C.cfg.highlight
+local lazy = require("lib.lazy")
+local C = lazy.require("wkdoptions.config")
+local ocfg = lazy.require("wkdoptions.config.data.options")
+local hcfg = lazy.require("wkdoptions.config.data.highlight")
 
 ---@diagnostic disable-next-line unused local
 local buffer_is_ui_like = require("wkdoptions.hl_config.utils.skip").std_skip

@@ -2,8 +2,9 @@
 --- Safe winhighlight parsing and manipulation (prevents E5248).
 --- Uses lib.string utilities and strict validation.
 
-local trim = require("lib.string.core").trim
-local memo = require("lib.memo")
+local lazy = require("lib.lazy")
+local trim = lazy.require("lib.string.core").trim
+local memo = lazy.require("lib.memo")
 
 local M = {}
 

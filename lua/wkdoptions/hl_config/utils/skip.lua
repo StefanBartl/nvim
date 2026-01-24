@@ -7,9 +7,10 @@
 -- local matchers = M.build_matchers(C.cfg.skip)
 -- local function buffer_is_ui_like(bufnr) return M.buffer_is_ui_like(matchers, bufnr) end
 
-local M = {}
+local lazy = require("lib.lazy")
+local C = lazy.require("wkdoptions.config")
 
-local C = require("wkdoptions.config")
+local M = {}
 
 ---@param cfg WKDOptions.HL_CFG.Utils.SkipCfg
 ---@return WKDOptions.HL_CFG.Utils.SkipMatchers

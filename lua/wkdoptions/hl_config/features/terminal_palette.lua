@@ -2,8 +2,9 @@
 --- Terminal window harmonization: applies TermNormal/TermCursorLine via winhighlight.
 --- Ensures consistent theme integration for :terminal buffers.
 
-local State = require("wkdoptions.hl_config.core.state")
-local Winhl = require("wkdoptions.hl_config.utils.winhighlight")
+local lazy = require("lib.lazy")
+local State = lazy.reequire("wkdoptions.hl_config.core.state")
+local Winhl = lazy.require("wkdoptions.hl_config.utils.winhighlight")
 
 local M = {}
 

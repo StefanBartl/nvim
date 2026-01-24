@@ -8,8 +8,9 @@
 ---   5) Wort-Fallback (<cword>)
 --- Reihenfolge und Verhalten sind über cfg.breadcrumbs_ctx toggel-/konfigurierbar.
 
-local C = require("wkdoptions.config")
-local cfg = C.cfg.highlight
+local lazy = require("lib.lazy")
+---@type WKDOptions.Config.Data
+local cfg = lazy. require("wkdoptions.config").get_cfg()
 
 --------------------------------------------------------------------------------
 -- Generic TS helpers

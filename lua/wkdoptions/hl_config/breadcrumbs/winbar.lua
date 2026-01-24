@@ -1,9 +1,10 @@
 ---@module 'wkdoptions.hl_config.breadcrumbs.winbar'
 --- Winbar rendering with path + context, using memoized utilities and safe guards.
 
-local trim = require("lib.string.core").trim
-local PathCache = require("wkdoptions.hl_config.path_cache")
-local Separator = require("wkdoptions.hl_config.utils.separator")
+local lazy = require("lib.lazy")
+local trim = lazy.require("lib.string.core").trim
+local PathCache = lazy.require("wkdoptions.hl_config.path_cache")
+local Separator = lazy.require("wkdoptions.hl_config.utils.separator")
 
 local M = {}
 

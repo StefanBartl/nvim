@@ -2,9 +2,10 @@
 --- Debug command for breadcrumb context providers.
 --- Command: WKDHighlightDebugCtx
 
-local Core = require("wkdoptions.commands.core")
-local C = require("wkdoptions.config")
-local notify = require("lib.notify").create("[Commands.Debug]")
+local lazy = require("lib.lazy")
+local notify = lazy.require("lib.notify").create("[Commands.Debug]")
+local Core = lazy.require("wkdoptions.commands.core")
+local C = lazy.require("wkdoptions.config")
 
 local M = {}
 

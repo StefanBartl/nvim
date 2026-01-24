@@ -21,32 +21,34 @@
 ---   - Explicitness: no hidden state, clear data flow
 ---   - Testability: pure functions where possible, state accessible for inspection
 
-local C = require("wkdoptions.config")
-local cfg = C.cfg.highlight
+local lazy = require("lib.lazy")
+local C = lazy.require("wkdoptions.config")
+---@type WKDOptions.Config.Data
+local cfg = lazy.require("wkdoptions.config").get_cfg()
 
 -- Core
-local State = require("wkdoptions.hl_config.core.state")
-local Highlights = require("wkdoptions.hl_config.core.highlights")
+local State = lazy.require("wkdoptions.hl_config.core.state")
+local Highlights = lazy.require("wkdoptions.hl_config.core.highlights")
 
 -- Utils
-local is_ui = require("wkdoptions.hl_config.utils.skip").std_skip
+local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
 
 -- Features (all available, loaded on enable)
-local CursorLine = require("wkdoptions.hl_config.features.cursorline")
-local ModeTint = require("wkdoptions.hl_config.features.mode_tint")
-local Flash = require("wkdoptions.hl_config.features.flash")
-local SigncolTint = require("wkdoptions.hl_config.features.signcolumn_tint")
-local TermPalette = require("wkdoptions.hl_config.features.terminal_palette")
-local CurrentWord = require("wkdoptions.hl_config.features.current_word")
-local IndentScope = require("wkdoptions.hl_config.features.indent_scope")
-local DiffPeek = require("wkdoptions.hl_config.features.diff_peek")
+local CursorLine = lazy.require("wkdoptions.hl_config.features.cursorline")
+local ModeTint = lazy.require("wkdoptions.hl_config.features.mode_tint")
+local Flash = lazy.require("wkdoptions.hl_config.features.flash")
+local SigncolTint = lazy.require("wkdoptions.hl_config.features.signcolumn_tint")
+local TermPalette = lazy.require("wkdoptions.hl_config.features.terminal_palette")
+local CurrentWord = lazy.require("wkdoptions.hl_config.features.current_word")
+local IndentScope = lazy.require("wkdoptions.hl_config.features.indent_scope")
+local DiffPeek = lazy.require("wkdoptions.hl_config.features.diff_peek")
 
 -- Breadcrumbs
-local Breadcrumbs = require("wkdoptions.hl_config.breadcrumbs")
+local Breadcrumbs = lazy.require("wkdoptions.hl_config.breadcrumbs")
 
 -- Special modules (already exist, kept as-is for now)
-local PathCache = require("wkdoptions.hl_config.path_cache")
-local CwordOcc = require("wkdoptions.hl_config.cword_occurences")
+local PathCache = lazy.require("wkdoptions.hl_config.path_cache")
+local CwordOcc = lazy.require("wkdoptions.hl_config.cword_occurences")
 
 local M = {}
 

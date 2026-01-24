@@ -1,7 +1,8 @@
 ---@module 'wkdoptions.hl_config.features.flash'
 --- Yank and Put flash feedback with safe timer handling and range validation.
 
-local State = require("wkdoptions.hl_config.core.state")
+local lazy = require("lib.lazy")
+local State = lazy.require("wkdoptions.hl_config.core.state")
 
 local M = {}
 

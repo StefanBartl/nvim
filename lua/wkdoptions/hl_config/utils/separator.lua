@@ -1,7 +1,8 @@
 ---@module 'wkdoptions.hl_config.utils.separator'
 --- Breadcrumb separator resolution with Nerd Font fallback (memoized).
 
-local memo = require("lib.memo")
+local lazy = require("lib.lazy")
+local memo = lazy.require("lib.memo")
 
 local M = {}
 
@@ -42,7 +43,7 @@ end, { weak = "k", size = 16 })
 
 --- Resolve effective separator from config
 ---@nodiscard
----@param cfg WKDOptions.HL_CFG.Breadcrumbs.Ctx
+---@param cfg WKDOptions.HL_CFG
 ---@return string
 function M.resolve(cfg)
   -- 1) Explicit string wins
