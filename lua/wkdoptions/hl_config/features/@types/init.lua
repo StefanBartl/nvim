@@ -24,45 +24,45 @@
 ---@field enable_put fun(): nil # Install safe p/P mappings with put flash
 ---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Enable yank/put flash based on config flags
 
----@class MyOptions.HL_CFG.Features.SigncolTint
+---@class WKDOptions.HL_CFG.Features.SigncolTint
 --- SignColumn tinting based on worst diagnostic severity in buffer.
 --- Maps SignColumn → SignColError/Warn/Info/Hint/Neutral via winhighlight.
 ---@field apply fun(): nil # Apply tint to current window based on buffer diagnostics
 ---@field clear fun(): nil # Remove tint (reset to SignColNeutral)
 ---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install DiagnosticChanged/BufEnter autocmds
 
----@class MyOptions.HL_CFG.Features.TermPalette
+---@class WKDOptions.HL_CFG.Features.TermPalette
 --- Terminal window harmonization: applies TermNormal/TermCursorLine.
 ---@field apply fun(): nil # Apply terminal-specific palette to current window (checks buftype = "terminal")
 ---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install TermOpen autocmd
 
----@class MyOptions.HL_CFG.Features.CurrentWord
+---@class WKDOptions.HL_CFG.Features.CurrentWord
 --- Underline the word under cursor using window-local matchaddpos().
 --- Only affects the single occurrence containing the cursor (low visual noise).
 ---@field update fun(): nil # Update underline for <cword> at cursor position (skips insert mode, UI buffers)
 ---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install CursorMoved/InsertEnter/BufLeave/WinLeave autocmds
 
----@class MyOptions.HL_CFG.Features.IndentScope
+---@class WKDOptions.HL_CFG.Features.IndentScope
 --- Viewport-limited indent scope highlighting: tints full lines of active indentation block.
 --- Uses viewport bounds (w0..w$) and respects large_file_kb + skip rules.
 ---@field refresh fun(cfg: WKDOptions.HL_CFG): nil # Update indent scope highlight for current viewport (clears + reapplies)
 ---@field refresh_current fun(): nil # Refresh using global config (wrapper for after_set integration)
 ---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install BufEnter/CursorMoved/WinScrolled autocmds
 
----@class MyOptions.HL_CFG.Features.DiffPeek
+---@class WKDOptions.HL_CFG.Features.DiffPeek
 --- Git hunk preview via gitsigns.nvim integration.
 --- Maps `gh` to preview_hunk_inline/preview_hunk when gitsigns is available.
 ---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install or clear `gh` keymap based on feature state + gitsigns availability
 
----@class MyOptions.HL_CFG.Features
+---@class WKDOptions.HL_CFG.Features
 --- All feature modules consolidated for type checking and IDE support.
----@field cursorline MyOptions.HL_CFG.Features.CursorLine
----@field mode_tint MyOptions.HL_CFG.Features.ModeTint
----@field flash MyOptions.HL_CFG.Features.Flash
----@field signcolumn_tint MyOptions.HL_CFG.Features.SigncolTint
----@field terminal_palette MyOptions.HL_CFG.Features.TermPalette
----@field current_word MyOptions.HL_CFG.Features.CurrentWord
----@field indent_scope MyOptions.HL_CFG.Features.IndentScope
----@field diff_peek MyOptions.HL_CFG.Features.DiffPeek
+---@field cursorline WKDOptions.HL_CFG.Features.CursorLine
+---@field mode_tint WKDOptions.HL_CFG.Features.ModeTint
+---@field flash WKDOptions.HL_CFG.Features.Flash
+---@field signcolumn_tint WKDOptions.HL_CFG.Features.SigncolTint
+---@field terminal_palette WKDOptions.HL_CFG.Features.TermPalette
+---@field current_word WKDOptions.HL_CFG.Features.CurrentWord
+---@field indent_scope WKDOptions.HL_CFG.Features.IndentScope
+---@field diff_peek WKDOptions.HL_CFG.Features.DiffPeek
 
 return {}

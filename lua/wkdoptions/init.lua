@@ -10,40 +10,13 @@
 ---   * All modules are lazy-loaded for optimal startup performance.
 ---   * Configuration system provides live updates via user commands.
 
+local lazy = require("lib.lazy")
+
 local M = {}
 
--- Lazy-loaded module references
-local config_mod, hl_config_mod, options_config_mod
-
---- Get config module (lazy)
----@nodiscard
----@return WKDOptions.Config.Module
-local function get_config()
-  if not config_mod then
-    config_mod = require("wkdoptions.config")
-  end
-  return config_mod
-end
-
---- Get hl_config module (lazy)
----@nodiscard
----@return table
-local function get_hl_config()
-  if not hl_config_mod then
-    hl_config_mod = require("wkdoptions.hl_config")
-  end
-  return hl_config_mod
-end
-
---- Get options_config module (lazy)
----@nodiscard
----@return table
-local function get_options_config()
-  if not options_config_mod then
-    options_config_mod = require("wkdoptions.options_config")
-  end
-  return options_config_mod
-end
+-- Lazy-loaded module references using lib.lazy
+local get_config = lazy.require("wkdoptions.config")
+local get_hl_config = lazy.require("wkdoptions.hl_config")
 
 --- Enable selected subsystems.
 --- This is the main entry point for wkdoptions initialization.
@@ -64,12 +37,13 @@ function M.setup(opts)
   end
 
   if enable_opt then
-    get_options_config().enable()
+    require("wkdoptions.options_config").enable() -- Absichtlich nicht als upvalue
   end
 end
 
 --- Expose config module API for programmatic access
 ---@type WKDOptions.Config.Module
+---@diagnostic disable-next-line
 M.config = setmetatable({}, {
   __index = function(_, key)
     return get_config()[key]
@@ -113,7 +87,9 @@ end
 ---@param key string # Dot-separated path
 ---@return any|nil
 function M.get(ns, key)
-  return get_config().get(ns, key)
+  -- Use the getter module directly since get_config() doesn't have a .get() method
+  local getter = require("wkdoptions.config.core.getter")
+  return getter.get_by_path(get_config().get_cfg()[ns], key)
 end
 
 --- List all configuration keys for a namespace.

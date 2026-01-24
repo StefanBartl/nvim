@@ -2,7 +2,7 @@
 --- Winbar rendering with path + context, using memoized utilities and safe guards.
 
 local lazy = require("lib.lazy")
-local trim = lazy.require("lib.string.core").trim
+local trim = lazy.require("lib.strings.core").trim
 local PathCache = lazy.require("wkdoptions.hl_config.path_cache")
 local Separator = lazy.require("wkdoptions.hl_config.utils.separator")
 

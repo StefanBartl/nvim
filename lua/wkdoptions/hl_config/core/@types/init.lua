@@ -34,14 +34,14 @@
 ---@class WKDOptions.HL_CFG.Core.Highlights
 --- Safe highlight group application with error guards and validation.
 ---@field set_hl_safe fun(name: string, spec: table): boolean, string|nil # Apply single highlight group (returns success + error string)
----@field apply_all fun(colors: HighlightColors): table<string, string> # Apply all highlight groups from colors table (returns map of group_name → error_msg for failures)
+---@field apply_all fun(colors: WKDOptions.HighlightColors): table<string, string> # Apply all highlight groups from colors table (returns map of group_name → error_msg for failures)
 ---@field exists fun(name: string): boolean # Check if highlight group exists (follows links, validates name)
 ---@field get_hl_safe fun(name: string): table # Get effective highlight (resolves links, returns empty table on error, never fails)
 ---@field ensure_hl fun(name: string, fallback: table): nil # Create fallback highlight if group doesn't exist or is empty (idempotent)
 
 ---@class WKDOptions.HL_CFG.Core
 --- All core modules consolidated.
----@field state wkdoptions.HL_CFG.Core.State
----@field highlights wkdoptions.HL_CFG.Core.Highlights
+---@field state WKDOptions.HL_CFG.Core.State
+---@field highlights WKDOptions.HL_CFG.Core.Highlights
 
 return {}

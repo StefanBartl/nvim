@@ -40,6 +40,7 @@
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
 5. `:CwdHere` fixen
 6. "a" in neotree scheint nicht mehr ganz typsiereungen ezuer rstellen
+
 7. `:LuaFileStats` eine option machen, die keine file erzeugt sondern nur eine ausgabe im stdout/noify
 
 ---

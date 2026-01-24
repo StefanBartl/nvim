@@ -7,9 +7,22 @@
 --- Ctx
 --- =========================
 
----@class lua_table_root_opt
----@field enable? boolean
----@field mode? string
+---@class WKDOptions.HL_CFG.Breadcrumbs.StlOptions
+--- Options for statusline segment building (used by statusline_module).
+---@field include_path boolean|nil # Show project-relative path (default: true)
+---@field include_icon boolean|nil # Prepend devicon via ui.custom_stl_module (default: true)
+---@field sep string|nil # Separator between path and ctx (default: " › ")
+---@field max_width integer|nil # Ellipsize to N chars (default: floor(0.5 * &columns), min 30)
+---@field ellipsis BreadcrumbsEllipsisMode|nil # Ellipsize strategy (default: "middle")
+---@field path_resolver fun(abs_path: string): string|nil # Optional resolver for project-relative path; fallback to ":~:."
+---@field band_highlight boolean|nil # Wrap with current mode band HL (default: true)
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Orchestrator
+--- Orchestrates context building + winbar rendering.
+---@field refresh_with_config fun(cfg: WKDOptions.HL_CFG): nil # Refresh winbar using provided config (applies to current window)
+---@field refresh fun(): nil # Refresh using global config (wrapper for after_set integration)
+---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install BufEnter/CursorMoved/WinScrolled autocmds
+
 
 ---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx
 ---
@@ -156,7 +169,7 @@
 
 ---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx.Public
 --- Public API for statusline integration (optional, not used by internal winbar).
----@field statusline_module fun(opts: BreadcrumbsStlOptions|nil): fun():string # Create closure for NvChad/Lualine-like statuslines (icon + band HL)
+---@field statusline_module fun(opts: WKDOptions.HL_CFG.Breadcrumbs.StlOptions|nil): fun():string # Create closure for NvChad/Lualine-like statuslines (icon + band HL)
 
 ---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx
 --- Context building module: delegates to providers, exposes public API.

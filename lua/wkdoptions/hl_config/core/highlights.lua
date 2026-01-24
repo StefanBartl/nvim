@@ -4,7 +4,6 @@
 local M = {}
 
 --- Apply a single highlight group with full error handling
----@nodiscard
 ---@param name string
 ---@param spec table
 ---@return boolean success
@@ -26,7 +25,7 @@ function M.set_hl_safe(name, spec)
 end
 
 --- Apply all highlight groups from a colors table
----@param colors HighlightColors
+---@param colors WKDOptions.HighlightColors
 ---@return table<string, string> errors -- map of group_name -> error_msg
 function M.apply_all(colors)
   local errors = {}

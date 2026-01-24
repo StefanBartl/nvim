@@ -20,11 +20,17 @@
 ---@field _move_front fun(self: Lib.Memo.Lru, node: Lib.Memo.LruNode)
 ---@field _evict fun(self: Lib.Memo.Lru)
 
+---@class Lib.Memo.MemoOpts
+---@field size integer|nil # Cache capacity (default: 128)
+---@field weak "k"|"v"|"kv"|nil # Weak reference mode (default: nil)
+---@field keyer fun(...): string|nil # Custom key generator (default: table.concat)
+
 ---@class Lib.Memo.Memo
 ---@field memoize fun(fn: fun(...): any, cap: integer|nil, keyer: fun(...): string|nil): fun(...): any
 
 ---@class Lib.Memo
----@field lru Lib.Memo.Lru # Exposed LRU cache constructor module.
----@field memo Lib.Memo.Memo # Exposed memoization helper module.
+---@field lru table # LRU cache constructor module
+---@field memo Lib.Memo.Memo # Memoization helper module
+---@field fn fun(func: fun(...): any, opts: Lib.Memo.MemoOpts|nil): fun(...): any # Convenience wrapper
 
 return {}

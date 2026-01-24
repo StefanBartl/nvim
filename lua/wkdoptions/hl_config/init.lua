@@ -23,8 +23,9 @@
 
 local lazy = require("lib.lazy")
 local C = lazy.require("wkdoptions.config")
----@type WKDOptions.Config.Data
-local cfg = lazy.require("wkdoptions.config").get_cfg()
+
+---@type WKDOptions.HL_CFG
+local cfg = C.get_cfg().highlight
 
 -- Core
 local State = lazy.require("wkdoptions.hl_config.core.state")
@@ -48,7 +49,7 @@ local Breadcrumbs = lazy.require("wkdoptions.hl_config.breadcrumbs")
 
 -- Special modules (already exist, kept as-is for now)
 local PathCache = lazy.require("wkdoptions.hl_config.path_cache")
-local CwordOcc = lazy.require("wkdoptions.hl_config.cword_occurences")
+local CwordOcc = lazy.require("wkdoptions.hl_config.cword_occurrences")
 
 local M = {}
 
@@ -59,7 +60,7 @@ local function apply_highlights()
 
   if next(errors) then
     local notify = require("lib.notify").create("[hl_config]")
-    for name, err in pairs(errors) do
+    for _, err in pairs(errors) do
       notify.warn(err)
     end
   end
@@ -274,7 +275,8 @@ function M.enable()
     names = { set = "WKDOptions.HL.Set", show = "WKDOptions.HL.Show", list = "WKDOptions.HL.List" },
   })
 
-  require("wkdoptions.commands").register_highlight_debug_command({
+ require("wkdoptions.commands").register_highlight_debug_command({
+    ---@diagnostic disable-next-line
     mod = require("wkdoptions.hl_config.breadcrumbs.ctx"),
     sepfn = require("wkdoptions.hl_config.utils.separator").resolve,
     names = { debug = "WKDOptions.HL.DebugCtx" },

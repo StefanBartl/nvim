@@ -110,7 +110,7 @@
 --- Side-effects: reduces need for full-document highlights; low overhead.
 ---@field enable_current_word boolean
 ---
----@field cword_occurrences WKDOptions.CwordOccurrencesCfg
+---@field cword_occurrences WKDOptions.HL_CFG.CwordOccurrences
 ---
 --- Binds `gh` to preview the nearest Git hunk using `gitsigns.nvim` if present.
 --- Changes:
@@ -190,7 +190,7 @@
 --- Changes:
 ---   * Reapplied on colorscheme changes if `color_persist = true`.
 --- Side-effects: none; centralizes theming in one place.
----@field colors HighlightColors
+---@field colors WKDOptions.HighlightColors
 ---
 --- Skip rules for when to suppress breadcrumbs in `winbar`. Expected shape:
 ---   {

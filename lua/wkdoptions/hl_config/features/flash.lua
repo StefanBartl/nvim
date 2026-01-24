@@ -87,7 +87,7 @@ function M.flash_changed(group, ms)
   srow = srow - 1
   erow = erow - 1
 
-  flash_region(group, ms, bufnr, srow, scol, erow, ecol, group)
+  flash_region(group, ms, bufnr, srow, scol, erow, ecol)
 end
 
 --- Install yank flash autocmd

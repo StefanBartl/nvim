@@ -3,7 +3,7 @@
 --- Ensures consistent theme integration for :terminal buffers.
 
 local lazy = require("lib.lazy")
-local State = lazy.reequire("wkdoptions.hl_config.core.state")
+local State = lazy.require("wkdoptions.hl_config.core.state")
 local Winhl = lazy.require("wkdoptions.hl_config.utils.winhighlight")
 
 local M = {}

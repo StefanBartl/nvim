@@ -185,7 +185,9 @@ function M.refresh(cfg)
     if s:match("^%s*$") then
       return -1
     end
-    return indent_of(s)
+    local col, _ = indent_of(s)
+
+    return col
   end
 
   -- Find contiguous block with >= curindent

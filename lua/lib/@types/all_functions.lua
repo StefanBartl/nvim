@@ -131,7 +131,10 @@
 ---@field raise fun(err: any): nil # Error passthrough helper. Always throws an error. LuaLS has no `never` type, so `nil` is used as a pragmatic substitute.
 --
 ---
+-- =========================================================
 --- === Tables ===
+-- =========================================================
+---
 ---@field with fun(base: table|nil, extra: table|nil): table # Merge two option tables
 ---@field array table # Array utilities
 ---@field core table # Core table utilities
@@ -140,7 +143,10 @@
 ---@field functional table # Functional helpers
 ---@field safe table # Safe table operations
 ---
+-- =========================================================
 --- === Strings ===
+-- =========================================================
+---
 ---@field strings Lib.Strings.ALL # All string functions
 ---@field trim fun(s: any): string # Trim whitespace
 ---@field slugify fun(s: string): string # Convert to slug
@@ -173,38 +179,167 @@
 ---@field surround fun(s: string, left: string, right: string): string # Surround string
 ---@field hex_to_string fun(hex: string): string # Convert hex to UTF-8 string
 ---
+-- =========================================================
 --- === Terminal ===
+-- =========================================================
+---
 ---@field terminal_escape fun(path: string): string # Cross-platform path escaping
 ---@field is_terminal_buf fun(bufnr: integer): boolean|nil # Checks if buffer is terminal
 ---@field delete_terminal_buf fun(bufnr: integer): boolean|nil # Deletes terminal buffer
 ---
+-- =========================================================
 --- === UI ===
+-- =========================================================
+---
 --- Hover Select
 ---@field hover_select Lib.UI.HoverSelect # Hover select module
 --- HL
 ---@field namespace fun(name: string): integer
 ---@field set fun(group: string, opts: Lib.Highlight.Opts, ns: string|integer|nil)-
 ---
+-- =========================================================
 --- === Notify ===
----@field notify table # Notification utilities
+-- =========================================================
+---@field create Lib.Notify.CreateFN
+---@field safe Lib.Notify.Safe
 ---@field resolve_log_level fun(level?: LogLevel, default?: LogLevelNumber): integer # Resolve log level
 ---
+-- =========================================================
 --- === Lazy ===
----@field lazy table # Lazy loading utilities
+-- =========================================================
 ---
+---@field _loader fun(): table
+---@field _value table|nil
+---@field get? fun(): table Returns the loaded module. Loads it exactly once on first invocation.
+---
+-- =========================================================
 --- === Memo ===
----@field memo table # Memoization utilities
+-- =========================================================
 ---
+---@field lru Lib.Memo.Lru # Exposed LRU cache constructor module.
+---@field memo Lib.Memo.Memo # Exposed memoization helper module.
+---@field fn fun(func: fun(...): any, opts: table<string, any>|nil): fun(...): any # Convenience function: memoize with default settings Delegates to memo.memoize but provides shorter syntax. 
+---
+-- =========================================================
 --- === Time ===
+-- =========================================================
+---
 ---@field time_diff fun(): Lib.Time.TimeDiff # Create time diff instance
 ---
+-- =========================================================
 --- === Normalize ===
----@field normalize table # Normalization utilities
+-- =========================================================
+---
+---@field to_bool fun(v: any): boolean|nil
+--- Convert value into a boolean using loose parsing rules.
+--- Accepts: booleans directly, numbers 0/1, strings "true/false/yes/no/on/off/1/0" (case-insensitive).
+--- Returns nil for any value that cannot be interpreted as boolean.
+---
+---@field to_int fun(v: any, min?: integer, max?: integer): integer|nil
+--- Convert value to integer with optional clamping to [min, max] range.
+--- Truncates towards zero for non-integer numbers.
+--- Returns nil if conversion fails.
+---
+---@field to_float fun(v: any, min?: number, max?: number, precision?: integer): number|nil
+--- Convert value to float with optional clamping and precision rounding.
+--- precision: Number of fractional digits to keep (>=0), nil = no rounding.
+--- Returns nil if conversion fails.
+---
+---@field to_string fun(v: any, allow_empty?: boolean, do_trim?: boolean): string|nil
+--- Return string if non-empty, optionally trimming whitespace.
+--- allow_empty: If false/nil, empty strings return nil.
+--- do_trim: If true, trim leading/trailing whitespace.
+---
+---@field to_enum fun(v: any, allowed: Lib.Normalize.StringList, case_insensitive?: boolean): string|nil
+--- Map a value to an enum entry, matching against allowed values.
+--- By default performs case-insensitive matching; returns original allowed value on match.
+--- Returns nil if no match found.
+---
+---@field to_string_list fun(v: any, opts?: Lib.Normalize.StringListOpts): Lib.Normalize.StringList|nil
+--- Convert value into a list of strings.
+--- Accepts strings (split by separator) or tables (filtered to string entries).
+--- Empty results return nil.
+---
+---@field to_argv fun(v: any): Lib.Normalize.StringList|nil
+--- Convert shell-like command string or argv table into argv format.
+--- Supports simple double-quoted segments; does not resolve escapes comprehensively.
+--- Returns nil if any array element is non-string or empty.
+---
+---@field to_diagnostic_severity fun(v: any): integer|nil
+--- Map user severity to vim.diagnostic.severity constant.
+--- Accepts: "error/err", "warn/warning", "info", "hint", "all"/"" (returns nil for all/empty).
+--- Numeric values pass through unchanged.
+---
+---@field to_log_level fun(v: any): integer|nil
+--- Map user log level to vim.log.levels constant.
+--- Accepts: "trace", "debug", "info", "warn", "error", "off" (returns nil for off).
+--- Numeric values pass through unchanged.
+---
+---@field to_path fun(v: any, type_filter?: string, must_exist?: boolean): string|nil
+--- Normalize filesystem path and optionally verify existence and type.
+--- type_filter: Required path type: "file", "directory", or nil (any type).
+--- must_exist: If true, path must exist and match type_filter.
+--- Uses vim.fs.normalize when available, otherwise provides fallback normalization.
+---
+-- =========================================================
+-- Validators with (ok, val, err) Pattern
+-- =========================================================
+---
+---@field as_int fun(name: string, v: any, min: integer, allow_nil: boolean): boolean, integer|nil, string|nil
+--- Validate that a value is an integer meeting minimum bound requirements.
+--- Returns: (ok, val, err)
+--- Contract:
+---   • nil + allow_nil=true  → ok=true, val=nil, err=nil (caller keeps default)
+---   • nil + allow_nil=false → ok=false, val=nil, err="<name> is required"
+---   • non-integer           → ok=false, err="<name> must be an integer"
+---   • value < min           → ok=false, err="<name> must be ≥ <min>"
+---   • otherwise             → ok=true, val=<integer>, err=nil
+---
+---@field as_bool fun(name: string, v: any): boolean, boolean|nil, string|nil
+--- Validate that a value is strictly boolean (true/false).
+--- Returns: (ok, val, err)
+--- Only Lua booleans are accepted; strings like "true"/"false" are NOT coerced.
+--- For permissive conversion, use to_bool() + apply_bool_loose().
+---
+---
+-- =========================================================
+-- Utility Functions
+-- =========================================================
+---
+---@field trim fun(s: any): string
+--- Trim leading and trailing ASCII whitespace from string.
+--- Returns empty string if input is not a string.
+---
+---@field clamp fun(n: number, min?: number, max?: number): number
+--- Clamp number into [min, max] range (inclusive).
+--- Nil min/max values are ignored.
+---
+---@field coalesce fun(...: any): any
+--- Return the first non-nil argument.
+--- Returns nil if all arguments are nil.
+---
+---@field normalize_path fun(p: any): string
+--- Normalize filesystem path using Neovim facilities if available.
+--- Uses vim.fs.normalize when present, otherwise provides fallback that:
+---   • Collapses consecutive slashes
+---   • Strips trailing slash (except for root)
+--- Returns empty string if input is invalid.
+---
+---@field path_kind fun(p: string): string
+--- Determine path type using libuv if available.
+--- Returns: "file", "directory", or "" (does not exist/unavailable).
+---
+---@field dedup_strings fun(list: Lib.Normalize.StringList): Lib.Normalize.StringList
+--- Deduplicate string list while preserving first occurrence order.
+--- Non-string entries are filtered out.
+---
 ---
 --- === Nvim ===
 ---@field simple_echo fun(msg: string, hl: string|nil, is_error: boolean|nil): integer|string # This module returns a single function that echoes messages using vim.api.nvim_echo
 ---
+-- =========================================================
 --- === JSON ====
+-- =========================================================
 ---
 --- Decode
 ---

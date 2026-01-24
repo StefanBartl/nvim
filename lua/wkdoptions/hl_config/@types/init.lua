@@ -19,7 +19,7 @@ require("wkdoptions.hl_config.utils.@types")
 require("wkdoptions.hl_config.path_cache.@types")
 require("wkdoptions.hl_config.cword_occurrences.@types")
 
----@class WKDOptions.HL_CFG
+---@class WKDOptions.HL_CFG_Modules
 --- Complete type hierarchy for Highlight_Cfg subsystem.
 --- All visual/UX features: cursorline, mode tinting, flash, breadcrumbs, indent scope, etc.
 ---
@@ -43,12 +43,12 @@ require("wkdoptions.hl_config.cword_occurrences.@types")
 ---   - Buffer/window checks: consistent validation across all features
 ---   - Safe winhighlight: prevents E5248 via strict parsing
 ---
----@field core WKDOptions.HL_CFG.Core # State management + highlight application
----@field features WKDOptions.HL_CFG.Features # All feature modules (cursorline, mode_tint, flash, etc.)
----@field breadcrumbs WKDOptions.HL_CFG.Breadcrumbs # Winbar rendering + context building
----@field utils WKDOptions.HL_CFG.Utils # Shared utilities (winhighlight, large_file, separator, skip)
----@field path_cache WKDOptions.HL_CFG.PathCache # Buffer-local repo path caching
----@field cword_occurrences WKDOptions.HL_CFG.CwordOccurrences # <cword> occurrences highlighting
+---@field core_module WKDOptions.HL_CFG.Core # State management + highlight application
+---@field features_module WKDOptions.HL_CFG.Features # All feature modules (cursorline, mode_tint, flash, etc.)
+---@field breadcrumbs_module WKDOptions.HL_CFG.Breadcrumbs # Winbar rendering + context building
+---@field utils_module WKDOptions.HL_CFG.Utils # Shared utilities (winhighlight, large_file, separator, skip)
+---@field path_cache_module WKDOptions.HL_CFG.PathCache # Buffer-local repo path caching
+---@field cword_occurrences_module WKDOptions.HL_CFG.CwordOccurrences # <cword> occurrences highlighting
 
 ---@class WKDOptions.HL_CFG.Main
 --- Main module entry point (init.lua).

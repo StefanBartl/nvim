@@ -3,7 +3,7 @@
 --- Uses lib.string utilities and strict validation.
 
 local lazy = require("lib.lazy")
-local trim = lazy.require("lib.string.core").trim
+local trim = lazy.require("lib.strings.core").trim
 local memo = lazy.require("lib.memo")
 
 local M = {}
@@ -22,7 +22,7 @@ local parse = memo.fn(function(wh)
   -- Split by comma, validate each pair
   for item in wh:gmatch("[^,]+") do
     local t = trim(item)
-    -- Strict: only word characters and underscore on both sides
+    -- Strict: only word characters and undrscore on both sides
     local from, to = t:match("^([%w_]+):([%w_]+)$")
     if from and to then
       res[#res + 1] = { from = from, to = to }
@@ -30,7 +30,7 @@ local parse = memo.fn(function(wh)
   end
 
   return res
-end, { weak = "kv" })
+end, { size = 128 })
 
 --- Serialize pairs back to winhighlight string
 ---@nodiscard

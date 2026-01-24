@@ -20,5 +20,6 @@
 ---@class Lib.Notify
 ---@field create Lib.Notify.CreateFN
 ---@field safe Lib.Notify.Safe
+---@field resolve_log_level fun(level?: LogLevel, default?: LogLevelNumber): integer # Resolve log level
 
 return {}
