@@ -2,8 +2,8 @@
 -----------------------------------------------------------------------------------------------
 |  No | File                                                         |     Lines |     Share |
 -----------------------------------------------------------------------------------------------
-|   1 | ./lua/myoptions/Highlight_Cfg/init.lua                       |      1133 |     1.67% |
-|   2 | ./lua/myoptions/Highlight_Cfg/breadcrumbs/ctx.lua            |       981 |     1.45% |
+|   1 | ./lua/wkdoptions/Highlight_Cfg/init.lua                       |      1133 |     1.67% |
+|   2 | ./lua/wkdoptions/Highlight_Cfg/breadcrumbs/ctx.lua            |       981 |     1.45% |
 |   3 | ./lua/@types/vim_uv.lua                                      |       951 |     1.40% |
 |   4 | ./lua/usrcmds/md_tablewrap/core.lua                          |       947 |     1.40% |
 |   5 | ./lua/ui/stl_modules/lsp_based/init.lua                      |       944 |     1.39% |
@@ -13,19 +13,19 @@
 |   9 | ./lua/config/neotree/trash/init.lua                          |       512 |     0.75% |
 |  10 | ./lua/config/mason/ensure_install.lua                        |       489 |     0.72% |
 |  11 | ./lua/usrcmds/format_table/init.lua                          |       487 |     0.72% |
-|  12 | ./lua/myoptions/config.lua                                   |       486 |     0.72% |
+|  12 | ./lua/wkdoptions/config.lua                                   |       486 |     0.72% |
 |  13 | ./lua/custom/pathprobe/init.lua                              |       472 |     0.70% |
 |  14 | ./lua/custom/lua_project_file_stats/init.lua                 |       445 |     0.66% |
 |  15 | ./lua/config/neotree/keymaps/filesystem.lua                  |       427 |     0.63% |
 |  16 | ./lua/custom/lua_project_file_stats/prints.lua               |       409 |     0.60% |
 |  17 | ./lua/debugging/markdown/inline_debug.lua                    |       404 |     0.60% |
-|  18 | ./lua/myoptions/Highlight_Cfg/cword_occurences.lua           |       387 |     0.57% |
+|  18 | ./lua/wkdoptions/Highlight_Cfg/cword_occurences.lua           |       387 |     0.57% |
 |  19 | ./lua/custom/markdown/core/toc.lua                           |       379 |     0.56% |
 |  20 | ./lua/ui/stl_modules/custom_stl_module.lua                   |       371 |     0.55% |
 |  21 | ./lua/custom/markdown/core/headings.lua                      |       370 |     0.55% |
 |  22 | ./lua/custom/lua_project_file_stats/utils.lua                |       363 |     0.54% |
 |  23 | ./lua/custom/function_index/core/patterns.lua                |       350 |     0.52% |
-|  24 | ./lua/myoptions/commands.lua                                 |       346 |     0.51% |
+|  24 | ./lua/wkdoptions/commands.lua                                 |       346 |     0.51% |
 |  25 | ./lua/usrcmds/insertfilepath/init.lua                        |       342 |     0.50% |
 |  26 | ./lua/custom/markdown/tableview/renderer.lua                 |       338 |     0.50% |
 |  27 | ./lua/plugins/neotree.lua                                    |       335 |     0.49% |
@@ -58,15 +58,15 @@
 -----------------------------------------------------------------------------------------------
 |  No | File                                                         |     Words |     Share |
 -----------------------------------------------------------------------------------------------
-|   1 | ./lua/myoptions/Highlight_Cfg/init.lua                       |      4122 |     1.69% |
+|   1 | ./lua/wkdoptions/Highlight_Cfg/init.lua                       |      4122 |     1.69% |
 |   2 | ./lua/@types/vim_uv.lua                                      |      3843 |     1.57% |
-|   3 | ./lua/myoptions/Highlight_Cfg/breadcrumbs/ctx.lua            |      3715 |     1.52% |
+|   3 | ./lua/wkdoptions/Highlight_Cfg/breadcrumbs/ctx.lua            |      3715 |     1.52% |
 |   4 | ./lua/usrcmds/md_tablewrap/core.lua                          |      3674 |     1.50% |
 |   5 | ./lua/ui/stl_modules/lsp_based/init.lua                      |      3314 |     1.36% |
 |   6 | ./lua/usrcmds/uv_doc/init.lua                                |      2782 |     1.14% |
 |   7 | ./lua/lib/normalize/init.lua                                 |      2744 |     1.12% |
 |   8 | ./lua/lsp/lspdoctor/init.lua                                 |      2594 |     1.06% |
-|   9 | ./lua/myoptions/config.lua                                   |      2176 |     0.89% |
+|   9 | ./lua/wkdoptions/config.lua                                   |      2176 |     0.89% |
 |  10 | ./lua/custom/pathprobe/init.lua                              |      2022 |     0.83% |
 |  11 | ./lua/custom/markdown/core/toc.lua                           |      1940 |     0.79% |
 |  12 | ./lua/config/mason/ensure_install.lua                        |      1715 |     0.70% |
@@ -77,9 +77,9 @@
 |  17 | ./lua/debugging/markdown/inline_debug.lua                    |      1535 |     0.63% |
 |  18 | ./lua/custom/lua_project_file_stats/prints.lua               |      1469 |     0.60% |
 |  19 | ./lua/custom/markdown/core/headings.lua                      |      1442 |     0.59% |
-|  20 | ./lua/myoptions/Highlight_Cfg/cword_occurences.lua           |      1418 |     0.58% |
+|  20 | ./lua/wkdoptions/Highlight_Cfg/cword_occurences.lua           |      1418 |     0.58% |
 |  21 | ./lua/custom/lua_project_file_stats/init.lua                 |      1413 |     0.58% |
-|  22 | ./lua/myoptions/commands.lua                                 |      1398 |     0.57% |
+|  22 | ./lua/wkdoptions/commands.lua                                 |      1398 |     0.57% |
 |  23 | ./lua/config/neotree/keymaps/filesystem.lua                  |      1382 |     0.57% |
 |  24 | ./lua/lib/buf_win_tab/windows_utils.lua                      |      1353 |     0.55% |
 |  25 | ./lua/custom/markdown/tableview/renderer.lua                 |      1351 |     0.55% |

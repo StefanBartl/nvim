@@ -41,7 +41,7 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- Load core modules
 require("system.env").compute_env()
 require("options")
-require("myoptions").setup({ highlights = false, options = true })
+require("wkdoptions").setup({ highlights = false, options = true })
 require("lsp").setup({ ensure_installing = false })
 require("autocmds")
 require("custom")

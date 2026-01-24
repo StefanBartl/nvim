@@ -134,7 +134,7 @@ opt.undodir = fn.stdpath("cache") .. "/undo"
 -- Diff profile selector
 -----------------------------------------------------------
 
-local set_diff_profile = require("myoptions.set_diff_profile.selector")
+local set_diff_profile = require("wkdoptions.set_diff_profile.selector")
 
 -- options:
 -- 'minimal': default minimal diff options
