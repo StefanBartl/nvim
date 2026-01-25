@@ -1,0 +1,166 @@
+*migrate.txt*  Code Migration Framework für Neovim Lua
+
+==============================================================================
+CONTENTS                                                    *migrate-contents*
+
+    1. Introduction .................... |migrate-introduction|
+    2. Installation .................... |migrate-installation|
+    3. Setup ........................... |migrate-setup|
+    4. Commands ........................ |migrate-commands|
+    5. notify Module ................... |migrate-notify|
+    6. opt Module ...................... |migrate-opt|
+    7. Configuration ................... |migrate-configuration|
+    8. Architecture .................... |migrate-architecture|
+    9. Troubleshooting ................. |migrate-troubleshooting|
+
+==============================================================================
+1. INTRODUCTION                                        *migrate-introduction*
+
+usrcmds.migrate provides a modular framework for automated code migrations
+in Neovim Lua projects.
+
+FEATURES:
+  • Telescope-based interactive UI
+  • Multi-mode support (line, range, buffer, cwd)
+  • Batch processing with multi-select
+  • Auto-write with sync/async strategies
+  • Extensible module system
+
+AVAILABLE MIGRATIONS:
+  • notify - vim.notify → lib.notify with alias support
+  • opt    - Deprecated option APIs → nvim_get/set_option_value
+
+==============================================================================
+2. INSTALLATION                                        *migrate-installation*
+
+Using lazy.nvim: >lua
+
+    {
+      dir = "~/.config/nvim/lua/usrcmds/migrate",
+      dependencies = {
+        "nvim-telescope/telescope.nvim",
+      },
+      config = function()
+        require("usrcmds.migrate").setup({
+          notify = true,
+          opt = true,
+        })
+      end,
+    }
+
+
+==============================================================================
+3. SETUP                                                      *migrate-setup*
+
+BASIC SETUP: >lua
+
+    require("usrcmds.migrate").setup({
+      notify = true,  -- Enable :MigrateNotify
+      opt = true,     -- Enable :MigrateOpt
+    })
+
+
+ALTERNATIVE METHODS: >lua
+
+    -- Enable all modules
+    require("usrcmds.migrate").enable_all()
+
+    -- Enable individual modules
+    require("usrcmds.migrate.notify").enable()
+    require("usrcmds.migrate.opt").enable()
+
+    -- Disable all
+    require("usrcmds.migrate").disable_all()
+
+
+==============================================================================
+4. COMMANDS                                                *migrate-commands*
+
+                                                            *:MigrateNotify*
+:MigrateNotify [mode] [module_name]
+    Migrate vim.notify to lib.notify
+
+    MODES:
+    (empty)         Migrate current line
+    %               Migrate buffer (with picker)
+    cwd             Migrate all *.lua files in CWD (with picker)
+
+    MODULE_NAME:
+    (empty)         Auto-detect from file path (recommended)
+    "text"          Explicit module name
+    ""              Empty string (legacy)
+
+    EXAMPLES: >vim
+    :MigrateNotify                    " Current line
+    :MigrateNotify %                  " Buffer with auto-detect
+    :MigrateNotify % custom.module    " Buffer with custom name
+    :MigrateNotify cwd                " CWD with auto-detect
+    :'<,'>MigrateNotify              " Visual selection
+
+
+                                                               *:MigrateOpt*
+:MigrateOpt [mode]
+    Migrate deprecated option APIs
+
+    MODES:
+    (empty)         Migrate current line
+    %               Migrate buffer (with picker)
+    cwd             Migrate all *.lua files in CWD
+
+    EXAMPLES: >vim
+    :MigrateOpt              " Current line
+    :MigrateOpt %            " Buffer
+    :MigrateOpt cwd          " CWD with ripgrep
+
+
+==============================================================================
+5. notify MODULE                                              *migrate-notify*
+
+Migrates ALL vim.notify variants to lib.notify.
+
+SUPPORTED PATTERNS~
+
+1. Direct vim.notify calls: >lua
+    -- Before:
+    vim.notify("Success", vim.log.levels.INFO)
+
+    -- After:
+    notify.info("Success")
+
+
+2. Aliased calls: >lua
+    -- Before:
+    local notify, levels = vim.notify, vim.log.levels
+    notify("Error", levels.ERROR)
+
+    -- After:
+    local notify = require("lib.notify").create("[module.path]")
+    notify.error("Error")
+
+
+3. Existing notify() calls: >lua
+    -- Before:
+    local notify = require("lib.notify").create("")
+    notify("Warning", vim.log.levels.WARN)
+
+    -- After:
+    notify.warn("Warning")
+
+
+4. Multiline calls: >lua
+    -- Before:
+    vim.notify(
+      string.format("Done %d", count),
+      vim.log.levels.INFO
+    )
+
+    -- After:
+    notify.info(string.format("Done %d", count))
+
+
+MODULE PATH DETECTION~
+
+AUTO-DETECT (recommended): >vim
+    :Mi
+
+
