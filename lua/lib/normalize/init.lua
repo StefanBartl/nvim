@@ -34,7 +34,7 @@ local M = {}
   M.as_int = validators.as_int
   M.as_bool = validators.as_bool
 -- =========================================================
--- Utility Functions
+-- Utility Fuctions
 -- =========================================================
   M.trim = utils.trim
   M.clamp = utils.clamp

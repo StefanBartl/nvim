@@ -20,6 +20,7 @@ local MODULE_MAP = {
   is_linux = "lib.cross.platform.is_linux",
   is = "lib.cross.platform.is",
   copy_to_clipboard = "lib.cross.copy_to_clipboard",
+  run_argv = "lib.cross.run_argv",
 
   -- FILESYSTEM
   is_subpath = "lib.fs.is_subpath",
@@ -27,6 +28,7 @@ local MODULE_MAP = {
   relpath = "lib.fs.relpath",
   find_upward_dir = "lib.fs.find_upward_dir",
   path_shorten = "lib.fs.path_shorten",
+  write_to_file = "lib.fs.write.to_file",
 
   -- BUFFER
   is_markdown_buf = "lib.buffer.is_markdown_buf",
@@ -76,6 +78,9 @@ local MODULE_MAP = {
 
 -- Special handlers for modules with multiple exports
 local SPECIAL_HANDLERS = {
+  -- lib.nvim
+  has_exec = { mod = "lib.nvim", key = "has_exec" },
+
   -- lib.cross.run exports multiple functions
   shell = { mod = "lib.cross.run", key = "shell" },
   run = { mod = "lib.cross.run", key = "run" },
@@ -134,6 +139,7 @@ local SPECIAL_HANDLERS = {
   find_plain = { mod = "lib.strings", key = "find_plain" },
   replace_plain = { mod = "lib.strings", key = "replace_plain" },
   surround = { mod = "lib.strings", key = "surround" },
+  count_lines = { mod = "lib.strings", key = "count_lines" },
 
   -- json decode
   json_decode_to_string_array = { mod = "lib.json.decode.to_string_array", key = "json_decode" },

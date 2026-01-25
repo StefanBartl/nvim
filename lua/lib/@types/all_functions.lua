@@ -27,6 +27,7 @@
 ---@field run fun(cmd: string, cb: fun(ok:boolean, res:OsRunResult): nil): nil # Async run using vim.system when available; falls back to jobstart
 ---@field run_blocking fun(cmd: string): OsRunResult # Blocking run (utility for quick conversions / probing)
 ---Lib.Cross.CopyToClipboard
+---@field run_blocking fun(cmd: string[], input?: string): boolean, string|nil # Low-level argv-based process runner with stdin support.
 ---@field copy_to_clipboard fun(text: string): boolean # Copy text to system clipboard using platform-appropriate backend
 ---
 -- =========================================================
@@ -42,6 +43,8 @@
 ---@field is_subpath fun(path: string, base: string): boolean # Check if path is subpath of base
 ---@field is_dir fun(p: string): boolean # Check if path is a directory
 ---@field relpath fun(path: string, base: string): string # Compute relative path
+--- Lib.fs.write
+---@field write_to_file fun(path: string, content: string): boolean, string|nil # Write string content to given path. Makes sure that directory exists. Return sucess boolean and in cade of no success string notice
 ---
 --- === Require ===
 ---@field require_safe fun(name: string): boolean, any # Safe require with structured error handling
@@ -135,50 +138,220 @@
 --- === Tables ===
 -- =========================================================
 ---
----@field with fun(base: table|nil, extra: table|nil): table # Merge two option tables
----@field array table # Array utilities
----@field core table # Core table utilities
----@field dict table # Dictionary utilities
----@field set table # Set utilities
----@field functional table # Functional helpers
----@field safe table # Safe table operations
+---@field len fun(xs: any[]): integer # Return length using # operator (assumes dense array).
+---
+---@field clone fun(xs: any[]): any[] # Create a shallow copy of a dense array with preallocation.
+---
+---@field map fun(xs: any[], f: fun(v: any, i: integer, xs: any[]): any): any[] # Map over a dense array with preallocation. Returns new array with transformed values.
+---
+---@field filter fun(xs: any[], pred: fun(v: any, i: integer, xs: any[]): boolean): any[] # Filter a dense array. Prealloc then compact in one pass. Returns new array with elements matching predicate.
+---
+---@field reduce fun(xs: any[], f: fun(acc: any, v: any, i: integer): any, init: any): any # Reduce with explicit initial accumulator. Iterates left-to-right.
+---
+---@field partition fun(xs: any[], pred: fun(v: any, i: integer, xs: any[]): boolean): any[], any[] # Partition into {pass, fail} according to predicate. Returns two arrays: passing elements and failing elements.
+---
+---@field flatten fun(xss: any[][]): any[] # Flatten one level of nested arrays. Preallocates based on total size.
+---
+---@field unique fun(xs: any[]): any[] # Unique by equality (O(n) with set if primitives). Preserves first occurrence order.
+---
+---@field pluck fun(xs: table[], key: string): any[] # Pluck a field from array of tables, skipping nils. Returns array of extracted values.
+---
+---@field sorted fun(xs: any[], cmp: fun(a: any, b: any): boolean): any[] # Sort copy (stable-ish for small arrays); does not mutate input. Uses table.sort internally.
+--
+-- =========================================================
+-- Core Table Utilities
+-- =========================================================
+--
+---@field is_table fun(t: any): boolean # Check if value is a table type.
+---
+---@field is_array fun(t: any): boolean # Check if table is a dense array. Heuristic: consecutive integer keys starting at 1 with #t matching. Rejects mixed tables with extra non-integer keys.
+---
+---@field shallow_copy fun(t: table): table # Create a shallow copy of a table. Copies all key-value pairs but not nested tables.
+---
+---@field deep_copy fun(t: table): table # Create a deep copy of a table with cycle detection. Recursively copies all nested structures. Handles circular references via seen table.
+---
+---@field keys fun(t: table): string[] # Extract all string keys from a table. Returns array of string keys only.
+---
+---@field values fun(t: table): any[] # Extract all values from a table. Returns array of all values.
+---
+---@field invert_set fun(list: string[]): table<string, true> # Convert string array to set (table<string, true>). Non-string entries are skipped.
+---
+---@field pick fun(t: table, pick_keys: string[]): table # Create new table with only specified keys from source table.
+---
+---@field omit fun(t: table, omit_keys: string[]): table # Create new table excluding specified keys. Returns shallow copy without omitted keys.
+---
+---@field merge_shallow fun(dst: table, src: table): table # Merge src into dst (shallow). Mutates dst and returns it. Right-biased: src values overwrite dst.
+---
+---@field merge_deep fun(dst: table, src: table): table # Merge src into dst (deep). Recursively merges nested tables. Mutates dst and returns it.
+---
+---@field dedup_list fun(list: any[]): any[] # Deduplicate list preserving first occurrence order. Returns new array.
+---
+---@field slice fun(list: any[], i: integer, j?: integer): any[] # Extract slice from list [i..j]. Supports negative indices. Returns new array.
+---
+---@field unique_push fun(list: any[], v: any): boolean # Push value to list only if not already present. Mutates list. Returns true if added, false if duplicate.
+---
+---@field binary_search fun(list: any[], cmp: fun(a: any, b: any): boolean, x: any): integer, boolean # Binary search in sorted list. Returns (index, found). If not found, index is insertion point.
+---
+---@field group_by fun(list: any[], key: fun(item: any): any): table<any, any[]> # Group array elements by key function. Returns table mapping keys to arrays of matching elements.
+---
+---@field count_by fun(list: any[], key: fun(item: any): any): table<any, integer> # Count occurrences by key function. Returns table mapping keys to occurrence counts.
+--
+-- =========================================================
+-- Dictionary Operations
+-- =========================================================
+--
+---@field dict_clone fun(t: table): table # Shallow copy of a dictionary. Copies all key-value pairs.
+---
+---@field dict_pick fun(t: table, keys: any[]): table # Pick subset of keys from dictionary. Returns new table with only specified keys (if they exist in source).
+---
+---@field dict_omit fun(t: table, keys: any[]): table # Omit specified keys from dictionary. Returns new table excluding specified keys.
+---
+---@field dict_merge fun(a: table, b: table): table # Merge two dictionaries (right-biased). Returns new table with b's values overwriting a's for shared keys.
+---
+---@field dict_keys fun(t: table): any[] # Extract all keys as array. Preallocates output array for performance.
+---
+---@field dict_values fun(t: table): any[] # Extract all values as array. Preallocates output array for performance.
+---
+---@field dict_group_by fun(xs: any[], keyfn: fun(v: any): string|number): table<string|number, any[]> # Group array of items into dict of arrays by key function. Returns table mapping keys to arrays of items with that key.
+--
+-- =========================================================
+-- Set Operations
+-- =========================================================
+--
+---@field from_array fun(xs: any[]): table<any, true> # Create a set from an array. Returns table where each array element becomes a key with value true.
+---
+---@field to_array fun(s: table<any, true>): any[] # Convert set back to array (no order guarantee). Returns array of all keys in set.
+---
+---@field add fun(s: table<any, true>, v: any) # Add a value to the set. Mutates set in-place.
+---
+---@field add_all fun(s: table<any, true>, xs: any[]) # Add multiple values from an array to set. Mutates set in-place.
+---
+---@field remove fun(s: table<any, true>, v: any) # Remove a value from the set. Mutates set in-place.
+---
+---@field remove_all fun(s: table<any, true>, xs: any[]) # Remove multiple values from an array. Mutates set in-place.
+---
+---@field clear fun(s: table<any, true>) # Clear a set in-place. Removes all elements.
+---
+---@field has fun(s: table<any, true>, v: any): boolean # Check membership. Returns true if value is in set.
+---
+---@field size fun(s: table<any, true>): integer # Number of elements in set.
+---
+---@field copy fun(s: table<any, true>): table<any, true> # Shallow copy of a set. Returns new set with same elements.
+---
+---@field from_keys fun(t: table): table<any, true> # Build a set from the keys of a table. Returns set containing all keys as elements.
+---
+---@field union fun(a: table<any, true>, b: table<any, true>): table<any, true> # Union of two sets (new set). Returns set containing all elements from both sets.
+---
+---@field intersection fun(a: table<any, true>, b: table<any, true>): table<any, true> # Intersection of two sets (new set). Returns set containing only elements present in both sets. Optimized to iterate smaller set.
+---
+---@field difference fun(a: table<any, true>, b: table<any, true>): table<any, true> # Difference (a \ b): elements in a that are not in b (new set).
+---
+---@field symmetric_difference fun(a: table<any, true>, b: table<any, true>): table<any, true> # Symmetric difference: elements in a or b but not both (new set).
+---
+---@field is_subset fun(a: table<any, true>, b: table<any, true>): boolean # Subset test: a ⊆ b. Returns true if all elements of a are in b.
+---
+---@field is_superset fun(a: table<any, true>, b: table<any, true>): boolean # Superset test: a ⊇ b. Returns true if a contains all elements of b.
+---
+---@field equals fun(a: table<any, true>, b: table<any, true>): boolean # Equality test (same elements). Returns true if sets contain exactly the same elements.
+---
+---@field set_filter fun(s: table<any, true>, pred: fun(value: any): boolean): table<any, true> # Filter set by predicate; returns a new set containing only elements matching predicate.
+---
+---@field set_map fun(s: table<any, true>, fn: fun(value: any): any): table<any, true> # Map set to a new set of possibly different element type. Note: collisions (two inputs mapping to same output) are naturally deduplicated.
+---
+---@field iter fun(s: table<any, true>): fun(): any # Iterator over set elements (no guaranteed order). Returns iterator function.
+--
+-- =========================================================
+-- Functional Programming Utilities
+-- =========================================================
+--
+---@field fn_map fun(list: any[], fn: fun(item: any, index: integer): any): any[] # Map function over array. Returns new array with transformed elements. Pure function.
+---
+---@field fn_filter fun(list: any[], pred: fun(item: any, index: integer): boolean): any[] # Filter array by predicate. Returns new array containing only elements matching predicate. Pure function.
+---
+---@field fn_reduce fun(list: any[], init: any, fn: fun(acc: any, item: any, index: integer): any): any # Reduce array to single value. Starts with init accumulator and applies fn left-to-right.
+---
+---@field find fun(list: any[], pred: fun(item: any, index: integer): boolean): any|nil # Find first element matching predicate. Returns element or nil if not found.
+---
+---@field any fun(list: any[], pred: fun(item: any): boolean): boolean # Check if any element matches predicate. Short-circuits on first match.
+---
+---@field all fun(list: any[], pred: fun(item: any): boolean): boolean # Check if all elements match predicate. Short-circuits on first non-match.
+---
+---@field flat_map fun(list: any[], fn: fun(item: any): any[]): any[] # Map and flatten in one pass. Applies fn to each element (fn must return array) and concatenates results.
+--
+-- =========================================================
+-- Safe Table Operations
+-- =========================================================
+--
+---@field ensure_list fun(list: any[]|nil): any[] # Ensure value is a list. Returns input if it's a table, otherwise returns empty table.
+---
+---@field ensure_table fun(t: table|nil): table # Ensure value is a table. Returns input if it's a table, otherwise returns empty table.
+---
+---@field push fun(list: any[], v: any): integer # Push value to end of list. Mutates list. Returns new length.
+---
+---@field pop fun(list: any[]): any|nil # Remove and return last element of list. Mutates list. Returns nil if list is empty.
+---
+---@field insert_at fun(list: any[], idx: integer, v: any): boolean # Insert value at specific index. Mutates list. Returns true on success, false if index out of bounds [1..n+1].
+---
+---@field remove_at fun(list: any[], idx: integer): boolean # Remove element at specific index. Mutates list. Returns true on success, false if index out of bounds [1..n].
+---
+---@field snapshot_shallow fun(t: table): table # Create shallow snapshot of table. Useful for before/after comparisons or safe iteration during mutation.
+---
+---@field safe_ipairs fun(list: any[]): fun(): integer, any # Safe iterator over array. Captures length at start, preventing issues if list is mutated during iteration.
 ---
 -- =========================================================
 --- === Strings ===
 -- =========================================================
----
----@field strings Lib.Strings.ALL # All string functions
----@field trim fun(s: any): string # Trim whitespace
----@field slugify fun(s: string): string # Convert to slug
----@field kebab_case fun(s: string): string # Convert to kebab-case
----@field starts_with fun(s: string, prefix: string): boolean # Check string prefix
----@field ends_with fun(s: string, suffix: string): boolean # Check string suffix
----@field contains fun(s: string, needle: string): boolean # Check if string contains
----@field split fun(s: string, sep: string): string[] # Split string
----@field join fun(parts: string[], sep: string): string # Join strings
----@field replace_all fun(s: string, from: string, to: string): string # Replace all occurrences
----@field capitalize fun(s: string): string # Capitalize first letter
----@field uncapitalize fun(s: string): string # Uncapitalize first letter
----@field snake_case fun(s: string): string # Convert to snake_case
----@field camel_case fun(s: string): string # Convert to camelCase
----@field pad_start fun(s: string, width: integer): string # Pad string start
----@field pad_end fun(s: string, width: integer): string # Pad string end
----@field pad_center fun(s: string, width: integer): string # Pad string center
----@field indent fun(s: string, n: integer): string # Indent string
----@field dedent fun(s: string): string # Dedent string
----@field is_empty_or_space fun(s: any): boolean # Check if empty or whitespace
----@field remove_prefix fun(s: string, list?: string[]): string # Remove common prefixes
----@field uri_decode fun(s: string): string # Decode URI
----@field normalize_anchor fun(s: string): string # Normalize anchor
----@field has_scheme fun(s: string): boolean # Check if URL has scheme
----@field is_web_url fun(s: string): boolean # Check if web URL
----@field url_under_cursor fun(line: string, col: integer): string|nil # Get URL under cursor
----@field escape_lua_magic fun(s: string): string # Escape Lua pattern magic
----@field find_plain fun(s: string, needle: string): integer|nil, integer|nil # Plain string find
----@field replace_plain fun(s: string, from: string, to: string): string # Plain string replace
----@field surround fun(s: string, left: string, right: string): string # Surround string
----@field hex_to_string fun(hex: string): string # Convert hex to UTF-8 string
----
+-- lib.strings.core
+---@field trim fun(s: any): string
+---@field starts_with fun(s: string, prefix: string): boolean
+---@field ends_with fun(s: string, suffix: string): boolean
+---@field contains fun(s: string, needle: string): boolean
+---@field split fun(s: string, sep: string): string[]
+---@field join fun(parts: string[], sep: string): string
+---@field replace_all fun(s: string, from: string, to: string): string
+---@field normalize_ws fun(s: string): string|nil
+---@field capitalize fun(s: string): string
+---@field uncapitalize fun(s: string): string
+---@field slugify fun(s: string): string
+---@field kebab_case fun(s: string): string
+---@field snake_case fun(s: string): string
+---@field camel_case fun(s: string): string
+---@field pad_start fun(s: string, width: integer): string
+---@field pad_end fun(s: string, width: integer): string
+---@field pad_center fun(s: string, width: integer): string
+---@field indent fun(s: string, n: integer): string
+---@field dedent fun(s: string): string
+---@field is_empty_or_space fun(s: any): boolean
+---@field count_lines fun(s: string): integer # Count lines in a string
+-- lib.strings.links
+---@field uri_decode fun(s: string): string
+---@field normalize_anchor fun(s: string): string
+---@field has_scheme fun(s: string): boolean
+---@field is_web_url fun(s: string): boolean
+---@field url_under_cursor fun(line: string, col: integer): string|nil
+-- lib.strings.patterns
+---@field escape_lua_magic fun(s: string): string
+---@field find_plain fun(s: string, needle: string): integer|nil, integer|nil
+---@field replace_plain fun(s: string, from: string, to: string): string
+---@field surround fun(s: string, left: string, right: string): string
+-- lib.strings.transform
+---@field remove_prefix fun(s: string, list?: string[]): string
+---@field trim fun(s: any): string
+---@field slugify fun(s: string): string
+---@field kebab_case fun(s: string): string
+---@field snake_case fun(s: string): string
+---@field camel_case fun(s: string): string
+---@field capitalize fun(s: string): string
+---@field uncapitalize fun(s: string): string
+---@field normalize_ws fun(s: string): string|nil
+---@field pad_start fun(s: string, width: integer): string
+---@field pad_end fun(s: string, width: integer): string
+---@field pad_center fun(s: string, width: integer): string
+---@field indent fun(s: string, n: integer): string
+---@field dedent fun(s: string): string
+-- lib.strings.convert
+---@field hex_to_string fun(hex: string): string
+--
 -- =========================================================
 --- === Terminal ===
 -- =========================================================
@@ -218,7 +391,7 @@
 ---
 ---@field lru Lib.Memo.Lru # Exposed LRU cache constructor module.
 ---@field memo Lib.Memo.Memo # Exposed memoization helper module.
----@field fn fun(func: fun(...): any, opts: table<string, any>|nil): fun(...): any # Convenience function: memoize with default settings Delegates to memo.memoize but provides shorter syntax. 
+---@field fn fun(func: fun(...): any, opts: table<string, any>|nil): fun(...): any # Convenience function: memoize with default settings Delegates to memo.memoize but provides shorter syntax.
 ---
 -- =========================================================
 --- === Time ===
@@ -335,6 +508,7 @@
 ---
 ---
 --- === Nvim ===
+---@field has_exec fun(bin: string): boolean
 ---@field simple_echo fun(msg: string, hl: string|nil, is_error: boolean|nil): integer|string # This module returns a single function that echoes messages using vim.api.nvim_echo
 ---
 -- =========================================================

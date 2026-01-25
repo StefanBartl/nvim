@@ -252,4 +252,16 @@ function S.is_empty_or_space(s)
   return s:find("%S") == nil
 end
 
+---Count lines in a string
+---@param s string
+---@return integer
+function S.count_lines(s)
+  if s == "" then return 0 end
+  local count = 0
+  for _ in s:gmatch("[^\n]+") do
+    count = count + 1
+  end
+  return count
+end
+
 return S

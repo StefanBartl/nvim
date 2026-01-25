@@ -13,8 +13,7 @@
 ---@field patterns Lib.Strings.Patterns
 ---@field convert Lib.Strings.Convert
 
-
--- ALL String FUnctions
+-- ALL String Functions
 ---@class Lib.Strings.ALL
 -- =========================================================
 -- lib.strings.core
@@ -39,6 +38,7 @@
 ---@field indent fun(s: string, n: integer): string
 ---@field dedent fun(s: string): string
 ---@field is_empty_or_space fun(s: any): boolean
+---@field count_lines fun(s: string): integer # Count lines in a string
 -- =========================================================
 -- lib.strings.links
 -- =========================================================
@@ -50,7 +50,6 @@
 -- =========================================================
 -- lib.strings.patterns
 -- =========================================================
----@class Lib.Strings.Patterns
 ---@field escape_lua_magic fun(s: string): string
 ---@field find_plain fun(s: string, needle: string): integer|nil, integer|nil
 ---@field replace_plain fun(s: string, from: string, to: string): string
@@ -58,7 +57,6 @@
 -- =========================================================
 -- lib.strings.transform
 -- =========================================================
----@class Lib.Strings.Transform
 ---@field remove_prefix fun(s: string, list?: string[]): string
 ---@field trim fun(s: any): string
 ---@field slugify fun(s: string): string
@@ -76,7 +74,6 @@
 -- =========================================================
 -- lib.strings.convert
 -- =========================================================
----@class Lib.Strings.Convert
 ---@field hex_to_string fun(hex: string): string
 
 ---@type Lib.Strings

@@ -24,5 +24,6 @@
 ---@field indent fun(s: string, n: integer): string
 ---@field dedent fun(s: string): string
 ---@field is_empty_or_space fun(s: any): boolean
+---@field count_lines fun(s: string): integer # Count lines in a string
 
 return

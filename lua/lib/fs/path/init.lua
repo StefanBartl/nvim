@@ -7,7 +7,13 @@ local M = {}
 ---@param parts string[]
 ---@return string
 function M.joinpath(parts)
-  return vim.fs.joinpath(unpack(parts))
+  if vim.fs and vim.fs.joinpath then
+    return vim.fs.joinpath(unpack(parts))
+  end
+
+  -- Fallback: use platform separator
+  local sep = package.config:sub(1, 1)
+  return table.concat(parts, sep)
 end
 
 -- Utility: ensure directory for a given path exists; returns true on success.

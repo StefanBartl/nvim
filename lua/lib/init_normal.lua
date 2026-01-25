@@ -5,6 +5,7 @@ local LIB = {}
 
 -- === NVIM ===
 LIB.simple_echo = require("lib.nvim.simple_echo")
+LIB.has_exec = require("lib.nvim").has_exec
 
 -- === CROSS-PLATFORM ===
 LIB.is_windows = require("lib.cross.platform.is_windows")
@@ -17,6 +18,7 @@ local cross_run = require("lib.cross.run")
 LIB.shell = cross_run.shell
 LIB.run = cross_run.run
 LIB.run_blocking = cross_run.run_blocking
+LIB.run_argv = require("lib.cross.run_argv")
 -- Clipboard
 LIB.copy_to_clipboard = require("lib.cross.copy_to_clipboard")
 
@@ -39,6 +41,7 @@ LIB.is_dir = require("lib.fs.is_dir")
 LIB.relpath = require("lib.fs.relpath")
 LIB.find_upward_dir = require("lib.fs.find_upward_dir")
 LIB.path_shorten = require("lib.fs.path_shorten")
+LIB.write_to_file = require("lib.fs.write.to_file")
 
 -- === REQUIRE ===
 local lib_require = require("lib.require")
@@ -94,6 +97,7 @@ LIB.find_plain = strings.find_plain
 LIB.replace_plain = strings.replace_plain
 LIB.surround = strings.surround
 LIB.hex_to_string = require("lib.strings.convert.hex_to_string")
+LIB.count_lines = strings.count_lines
 
 -- === TERMINAL ===
 local terminal = require("lib.terminal")
