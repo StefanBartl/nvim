@@ -3,16 +3,22 @@
 ---@description
 --- Enhanced version with auto-write for CWD mode
 
-local picker = require("usrcmds.migrate.common.picker")
-local buffer_ops = require("usrcmds.migrate.common.buffer")
-local parser = require("usrcmds.migrate.notify.parser")
-local refactor = require("usrcmds.migrate.notify.refactor")
+local notify = require("lib.notify").create("[migrate.notify]")
+
+local lazy = require("lib.lazy")
+local picker = lazy.require("usrcmds.migrate.common.picker")
+local buffer_ops = lazy.require("usrcmds.migrate.common.buffer")
+local parser = lazy.require("usrcmds.migrate.notify.parser")
+local refactor = lazy.require("usrcmds.migrate.notify.refactor")
 
 local M = {}
 
 local api = vim.api
 local tbl_insert = table.insert
-local notify = require("lib.notify").create("[migrate.notify]")
+
+-- File scope configuration FIX: Config?
+local WRITE_STRATEGY = "async" -- "sync" | "async"
+local write_ops = lazy.require("usrcmds.migrate.notify.refactor.write")
 
 --------------------------------------------------------------------------------
 -- Exclusion logic
@@ -140,121 +146,93 @@ local function scan_cwd()
 end
 
 --------------------------------------------------------------------------------
--- Application (FIXED with auto-write)
+-- Application
 --------------------------------------------------------------------------------
 
----Apply migrations with optional auto-write
+---Apply migrations with optional auto-write (DEFERRED)
 ---@param matches MigrateCommon.Match[]
----@param module_name string|nil Optional module name for .create("")
----@param auto_write boolean|nil Auto-write modified buffers to disk
+---@param module_name string|nil
+---@param auto_write boolean|nil
 local function apply_matches(matches, module_name, auto_write)
   auto_write = auto_write or false
 
-  -- Group by buffer with metadata
-  local by_buffer = {}
-  for _, match in ipairs(matches) do
-    local bufnr = match.bufnr
-    if bufnr then
-      if not by_buffer[bufnr] then
-        by_buffer[bufnr] = {
-          matches = {},
-          fname = match.fname,
-          was_loaded = api.nvim_buf_is_loaded(bufnr),
-        }
-      end
-      tbl_insert(by_buffer[bufnr].matches, match)
-    end
-  end
-
-  local written_files = {}
-  local total_applied = 0
-
-  -- Apply per buffer
-  for bufnr, data in pairs(by_buffer) do
-    buffer_ops.create_undo_point(bufnr)
-
-    -- Inject import
-    refactor.inject_import(bufnr, module_name)
-
-    -- RE-SCAN buffer
-    local fresh_matches = parser.scan_buffer(bufnr)
-    local updated_matches = to_common_matches(bufnr, fresh_matches)
-
-    -- Sort DESCENDING
-    table.sort(updated_matches, function(a, b)
-      return a.extra.end_line > b.extra.end_line
-    end)
-
-    -- Apply each match
-    local success_count = 0
-    for _, match in ipairs(updated_matches) do
-      local parser_match = {
-        line = match.lnum,
-        end_line = match.extra.end_line,
-        col = match.extra.col,
-        end_col = match.extra.end_col,
-        replacement = match.migrated,
-      }
-
-      if refactor.apply_match(bufnr, parser_match) then
-        success_count = success_count + 1
-      end
-    end
-
-    -- Remove aliases
-    refactor.remove_aliases(bufnr)
-
-    total_applied = total_applied + success_count
-
-    -- WRITE TO DISK if requested
-    if success_count > 0 and auto_write and data.fname then
-      -- Direct write to file WITHOUT any buffer switching
-      local ok, err = pcall(function()
-        -- Get all buffer lines
-        local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
-
-        -- Write directly using vim.fn.writefile (handles all edge cases)
-        local result = vim.fn.writefile(lines, data.fname)
-
-        if result ~= 0 then
-          error("writefile returned non-zero: " .. result)
+  -- Defer entire migration to next event loop tick
+  vim.schedule(function()
+    local by_buffer = {}
+    for _, match in ipairs(matches) do
+      local bufnr = match.bufnr
+      if bufnr then
+        if not by_buffer[bufnr] then
+          by_buffer[bufnr] = {
+            matches = {},
+            fname = match.fname,
+            was_loaded = api.nvim_buf_is_loaded(bufnr),
+          }
         end
+        tbl_insert(by_buffer[bufnr].matches, match)
+      end
+    end
 
-        -- Clear modified flag (buffer is now in sync with file)
-        api.nvim_set_option_value("modified", false, { buf = bufnr })
+    local write_jobs = {}
+    local total_applied = 0
+
+    -- Process buffers synchronously (but UI stays responsive)
+    for bufnr, data in pairs(by_buffer) do
+      buffer_ops.create_undo_point(bufnr)
+      refactor.inject_import(bufnr, module_name)
+
+      local fresh_matches = parser.scan_buffer(bufnr)
+      local updated_matches = to_common_matches(bufnr, fresh_matches)
+
+      table.sort(updated_matches, function(a, b)
+        return a.extra.end_line > b.extra.end_line
       end)
 
-      if ok then
-        tbl_insert(written_files, data.fname)
-
-        -- Unload buffer if it wasn't originally loaded (memory optimization)
-        if not data.was_loaded then
-          vim.schedule(function()
-            if api.nvim_buf_is_valid(bufnr) then
-              -- Force unload without prompting (file is saved, safe to unload)
-              pcall(api.nvim_buf_delete, bufnr, { force = true, unload = true })
-            end
-          end)
+      local success_count = 0
+      for _, match in ipairs(updated_matches) do
+        local parser_match = {
+          line = match.lnum,
+          end_line = match.extra.end_line,
+          col = match.extra.col,
+          end_col = match.extra.end_col,
+          replacement = match.migrated,
+        }
+        if refactor.apply_match(bufnr, parser_match) then
+          success_count = success_count + 1
         end
-      else
-        notify.warn(string.format("Failed to write %s: %s", data.fname, tostring(err)))
       end
-    elseif success_count > 0 and auto_write and not data.fname then
-      -- Unnamed buffer - cannot auto-write
-      notify.warn(string.format("Buffer %d has no filename, skipping auto-write", bufnr))
+
+      refactor.remove_aliases(bufnr)
+      total_applied = total_applied + success_count
+
+      if success_count > 0 and auto_write and data.fname then
+        tbl_insert(write_jobs, {
+          bufnr = bufnr,
+          filepath = data.fname,
+          unload_after = not data.was_loaded,
+        })
+      end
     end
-  end
 
-  -- Summary notifications
-  if total_applied > 0 then
-    notify.info(string.format("Applied %d migration(s)", total_applied))
-  end
-
-  if #written_files > 0 then
-    notify.info(string.format("✅ Written %d file(s) to disk", #written_files))
-  elseif total_applied > 0 and not auto_write then
-    notify.warn("Changes in memory only. Save with :wa or reopen files")
-  end
+    -- Execute writes
+    if #write_jobs > 0 then
+      write_ops.batch_write(write_jobs, WRITE_STRATEGY, function(written, failed)
+        if total_applied > 0 then
+          notify.info(string.format("Applied %d migration(s)", total_applied))
+        end
+        if #written > 0 then
+          notify.info(string.format("✅ Written %d file(s) (%s)", #written, WRITE_STRATEGY))
+        end
+        for _, failure in ipairs(failed) do
+          notify.error(string.format("Failed: %s - %s", failure.filepath, failure.err))
+        end
+      end)
+    else
+      if total_applied > 0 then
+        notify.info(string.format("Applied %d migration(s)", total_applied))
+      end
+    end
+  end)
 end
 
 --------------------------------------------------------------------------------
@@ -263,10 +241,8 @@ end
 
 local function show_picker_impl(matches, module_name, auto_write)
   -- Add helpful prompt suffix
-  local title = string.format(
-    "Migrate vim.notify → lib.notify (%d matches) | <C-a> Apply All",
-    #matches
-  )
+  local title =
+    string.format("Migrate vim.notify → lib.notify (%d matches) | <C-a> Apply All", #matches)
 
   picker.show(matches, {
     title = title,
@@ -297,15 +273,10 @@ local function show_picker_impl(matches, module_name, auto_write)
       end
 
       -- Format with dynamic width based on path length
-      local path_width = math.min(#display_path, 50)  -- Max 50 chars for path
+      local path_width = math.min(#display_path, 50) -- Max 50 chars for path
       local location = string.format("%-" .. path_width .. "s:%d", display_path, match.lnum)
 
-      return string.format(
-        "%s  [%-5s]  %s",
-        location,
-        level:lower(),
-        match.text:sub(1, 40)
-      )
+      return string.format("%s  [%-5s]  %s", location, level:lower(), match.text:sub(1, 40))
     end,
 
     format_preview = function(match)
@@ -349,7 +320,6 @@ function M.enable()
         return
       end
       apply_matches(matches, module_name, false)
-
     elseif mode == "" then
       -- Current line: no auto-write
       local cursor = api.nvim_win_get_cursor(0)
@@ -359,7 +329,6 @@ function M.enable()
         return
       end
       apply_matches(matches, module_name, false)
-
     elseif mode == "%" then
       -- Buffer mode: no auto-write (user can save manually)
       local matches = scan_buffer(bufnr)
@@ -368,7 +337,6 @@ function M.enable()
         return
       end
       show_picker_impl(matches, module_name, false)
-
     elseif mode == "cwd" then
       -- ✅ CWD mode: AUTO-WRITE enabled
       auto_write = true
@@ -380,7 +348,6 @@ function M.enable()
       end
 
       show_picker_impl(matches, module_name, auto_write)
-
     else
       notify.error(string.format("Invalid argument: %s. Use: [empty], %%, or cwd", mode))
     end

@@ -12,7 +12,7 @@ local api = vim.api
 
 ---Scan buffer and return all matches
 ---@param bufnr integer
----@return MigrateNotify.Match[]
+---@return UsrCmds.Migrate.Notify.Match[]
 function M.scan_buffer(bufnr)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}

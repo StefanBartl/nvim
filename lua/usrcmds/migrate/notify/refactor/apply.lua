@@ -7,7 +7,7 @@ local api = vim.api
 
 ---Apply single match replacement
 ---@param bufnr integer
----@param match MigrateNotify.Match
+---@param match UsrCmds.Migrate.Notify.Match
 ---@return boolean success
 function M.apply_match(bufnr, match)
   if not api.nvim_buf_is_valid(bufnr) then
