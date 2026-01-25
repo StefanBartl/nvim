@@ -71,12 +71,4 @@ function M.is_large_for_feature(bufnr, feature_limit, cfg)
   return M.exceeds(bufnr, limit)
 end
 
---- Invalidate memoization for a specific path (call on file write)
----@param path string
----@return nil
-function M.invalidate(path)
-  -- memo.fn creates a weak-keyed cache; we can force re-check by clearing
-  -- In practice, file sizes rarely change during a session, so this is optional
-end
-
 return M

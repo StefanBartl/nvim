@@ -1,6 +1,8 @@
 ---@module 'system.rpc_pipe'
 ---@brief Start a predictable named-pipe RPC server on Windows with neotest compatibility
 
+local notify = require("lib.notify").create("[system.rpc_pipe]")
+
 local M = {}
 
 --- Try to start a Windows named-pipe RPC server and export NVIM_LISTEN_ADDRESS.
@@ -16,28 +18,25 @@ function M.setup(opts)
   local is_windows = package.config:sub(1, 1) == "\\"
   if not is_windows then
     if debug then
-      vim.notify("[system.rpc] skipping: not Windows", vim.log.levels.DEBUG)
+      notify.debug("[system.rpc] skipping: not Windows")
     end
     return
   end
 
-  -- ✅ CRITICAL: Check if we're in a test environment
+  -- CRITICAL: Check if we're in a test environment
   local is_test_env = vim.env.NEOTEST_RUNNING == "1"
     or vim.env.PLENARY_TEST_TIMEOUT ~= nil
     or vim.v.progname:match("nvim%-test")
 
   if is_test_env and debug then
-    vim.notify("[system.rpc] detected test environment, skipping RPC setup", vim.log.levels.DEBUG)
+    notify.debug("[system.rpc] detected test environment, skipping RPC setup")
     return
   end
 
-  -- ✅ If NVIM_LISTEN_ADDRESS is already set and override is allowed, respect it
+  -- If NVIM_LISTEN_ADDRESS is already set and override is allowed, respect it
   if allow_override and vim.env.NVIM_LISTEN_ADDRESS then
     if debug then
-      vim.notify(
-        "[system.rpc] NVIM_LISTEN_ADDRESS already set: " .. vim.env.NVIM_LISTEN_ADDRESS,
-        vim.log.levels.DEBUG
-      )
+      notify.debug("[system.rpc] NVIM_LISTEN_ADDRESS already set: " .. vim.env.NVIM_LISTEN_ADDRESS)
     end
     return
   end
@@ -47,13 +46,13 @@ function M.setup(opts)
 
   local function dbg(msg)
     if debug then
-      vim.notify("[system.rpc] " .. msg, vim.log.levels.DEBUG)
+      notify.debug("[system.rpc] " .. msg)
     end
   end
 
   local function warn(msg)
     if debug then
-      vim.notify("[system.rpc] " .. msg, vim.log.levels.WARN)
+      notify.warn("[system.rpc] " .. msg)
     end
   end
 
@@ -73,7 +72,7 @@ function M.setup(opts)
     end
   end)
 
-  -- ✅ Only set if not in test environment
+  -- Only set if not in test environment
   if not is_test_env then
     vim.env.NVIM_LISTEN_ADDRESS = pipe
     dbg("exported NVIM_LISTEN_ADDRESS=" .. pipe)

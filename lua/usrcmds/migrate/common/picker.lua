@@ -7,9 +7,7 @@
 ---   - Multi-select support (<Tab>)
 ---   - Preview with syntax highlighting
 ---   - Apply callback hooks
----   - Batch apply with <S-A>
-
-require("usrcmds.migrate.common.@types")
+---   - Batch apply with <C-a>, <S-A>, or <M-a>
 
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
@@ -17,13 +15,11 @@ local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local previewers = require("telescope.previewers")
 local conf = require("telescope.config").values
-local notify = require("lib.notify").create("[migrate.lua.notify]")
+local notify = require("lib.notify").create("[migrate.picker]")
 
 local M = {}
 
 local api = vim.api
-
--- Safe notify wrapper
 
 --- Show generic migration picker
 ---@param matches MigrateCommon.Match[]
@@ -57,7 +53,7 @@ function M.show(matches, opts)
         return {
           value = match,
           ordinal = display_text,
-          display = display_str,  -- Return plain string, not function
+          display = display_str,
           filename = match.fname,
           lnum = match.lnum,
         }
@@ -98,22 +94,25 @@ function M.show(matches, opts)
     selection_caret = "▶ ",
 
     attach_mappings = function(prompt_bufnr, map)
-      -- Replace default <CR> action
-      actions.select_default:replace(function()
-        print("DEBUG: select_default triggered") -- DEBUG
+      -- Helper function to apply migrations
+      local function apply_migrations(selections)
+        actions.close(prompt_bufnr)
 
+        local ok, err = pcall(opts.on_apply, selections)
+        if not ok then
+          notify.error("Migration failed: " .. tostring(err))
+        end
+      end
+
+      -- Replace default <CR> action (apply selected/multi-selected)
+      actions.select_default:replace(function()
         local picker = action_state.get_current_picker(prompt_bufnr)
         local selections = picker:get_multi_selection()
 
         if vim.tbl_isempty(selections) then
           local current = action_state.get_selected_entry()
-          print("DEBUG: No multi-selection, using current:", current and current.value.lnum or "nil") -- DEBUG
           selections = { current }
-        else
-          print("DEBUG: Multi-selection count:", #selections) -- DEBUG
         end
-
-        actions.close(prompt_bufnr)
 
         local matches_to_apply = {}
         for _, entry in ipairs(selections) do
@@ -122,23 +121,34 @@ function M.show(matches, opts)
           end
         end
 
-        print("DEBUG: Calling on_apply with", #matches_to_apply, "matches") -- DEBUG
-        local ok, err = pcall(opts.on_apply, matches_to_apply)
-        if not ok then
-          notify.error("Migration failed: " .. tostring(err))
-          print("DEBUG: Error:", err) -- DEBUG
-        end
+        apply_migrations(matches_to_apply)
       end)
 
-      -- Add batch apply with Shift-A
+      -- Batch apply: Apply ALL matches (not just selected)
+      -- Multiple keybindings for compatibility
+
+      -- <C-a> (Ctrl-A) - Most reliable
+      map({ "i", "n" }, "<C-a>", function()
+        notify.info(string.format("Applying all %d matches...", #matches))
+        apply_migrations(matches)
+      end)
+
+      -- <S-A> (Shift-A) - Alternative
       map({ "i", "n" }, "<S-A>", function()
-        print("DEBUG: Batch apply triggered") -- DEBUG
-        actions.close(prompt_bufnr)
-        local ok, err = pcall(opts.on_apply, matches)
-        if not ok then
-          notify.error("Batch migration failed: " .. tostring(err))
-          print("DEBUG: Batch error:", err) -- DEBUG
-        end
+        notify.info(string.format("Applying all %d matches...", #matches))
+        apply_migrations(matches)
+      end)
+
+      -- <M-a> (Alt-A) - Another alternative
+      map({ "i", "n" }, "<M-a>", function()
+        notify.info(string.format("Applying all %d matches...", #matches))
+        apply_migrations(matches)
+      end)
+
+      -- <C-y> (Ctrl-Y) - "Yes to all"
+      map({ "i", "n" }, "<C-y>", function()
+        notify.info(string.format("Applying all %d matches...", #matches))
+        apply_migrations(matches)
       end)
 
       return true

@@ -1,12 +1,8 @@
 ---@module 'usrcmds.migrate.notify'
 ---@brief Migrate vim.notify to lib.notify (with alias support)
 ---@description
---- Enhanced version that detects both:
----   - vim.notify() direct calls
----   - Aliased calls (local notify = vim.notify)
---- Supports optional module name for .create() syntax
+--- Enhanced version with auto-write for CWD mode
 
-local command = require("usrcmds.migrate.common.command")
 local picker = require("usrcmds.migrate.common.picker")
 local buffer_ops = require("usrcmds.migrate.common.buffer")
 local parser = require("usrcmds.migrate.notify.parser")
@@ -22,9 +18,6 @@ local notify = require("lib.notify").create("[migrate.notify]")
 -- Exclusion logic
 --------------------------------------------------------------------------------
 
----Check if file should be excluded
----@param filepath string
----@return boolean
 local function should_exclude(filepath)
   local normalized = filepath:gsub("\\", "/")
   return normalized:match("/usrcmds/migrate/") ~= nil
@@ -34,10 +27,6 @@ end
 -- Conversion helpers
 --------------------------------------------------------------------------------
 
----Convert parser matches to common format
----@param bufnr integer
----@param parser_matches MigrateNotify.Match[]
----@return MigrateCommon.Match[]
 local function to_common_matches(bufnr, parser_matches)
   local matches = {}
   local fname = api.nvim_buf_get_name(bufnr)
@@ -66,11 +55,6 @@ end
 -- Scan functions
 --------------------------------------------------------------------------------
 
----Scan buffer range
----@param bufnr integer
----@param line1 integer
----@param line2 integer
----@return MigrateCommon.Match[]
 local function scan_range(bufnr, line1, line2)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}
@@ -94,9 +78,6 @@ local function scan_range(bufnr, line1, line2)
   return to_common_matches(bufnr, range_matches)
 end
 
----Scan entire buffer
----@param bufnr integer
----@return MigrateCommon.Match[]
 local function scan_buffer(bufnr)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}
@@ -112,8 +93,6 @@ local function scan_buffer(bufnr)
   return to_common_matches(bufnr, matches)
 end
 
----Scan cwd (excluding migrate module)
----@return MigrateCommon.Match[]
 local function scan_cwd()
   local cwd = vim.fn.getcwd()
   local files = buffer_ops.find_lua_files(cwd)
@@ -161,36 +140,44 @@ local function scan_cwd()
 end
 
 --------------------------------------------------------------------------------
--- Application (with module name support)
+-- Application
 --------------------------------------------------------------------------------
 
----Apply migrations with optional module name
+---Apply migrations with optional auto-write
 ---@param matches MigrateCommon.Match[]
 ---@param module_name string|nil Optional module name for .create("")
-local function apply_matches(matches, module_name)
-  -- Group by buffer
+---@param auto_write boolean|nil Auto-write modified buffers to disk
+local function apply_matches(matches, module_name, auto_write)
+  auto_write = auto_write or false
+
+  -- Group by buffer with metadata
   local by_buffer = {}
   for _, match in ipairs(matches) do
     local bufnr = match.bufnr
     if bufnr then
       if not by_buffer[bufnr] then
-        by_buffer[bufnr] = {}
+        by_buffer[bufnr] = {
+          matches = {},
+          fname = match.fname,
+          was_loaded = api.nvim_buf_is_loaded(bufnr),
+        }
       end
-      tbl_insert(by_buffer[bufnr], match)
+      tbl_insert(by_buffer[bufnr].matches, match)
     end
   end
 
+  local written_files = {}
+  local total_applied = 0
+
   -- Apply per buffer
-  for bufnr, _ in pairs(by_buffer) do
+  for bufnr, data in pairs(by_buffer) do
     buffer_ops.create_undo_point(bufnr)
 
-    -- Inject import FIRST
+    -- Inject import
     refactor.inject_import(bufnr, module_name)
 
-    -- RE-SCAN buffer to get CORRECT line numbers
+    -- RE-SCAN buffer
     local fresh_matches = parser.scan_buffer(bufnr)
-
-    -- Convert to common format
     local updated_matches = to_common_matches(bufnr, fresh_matches)
 
     -- Sort DESCENDING
@@ -198,10 +185,9 @@ local function apply_matches(matches, module_name)
       return a.extra.end_line > b.extra.end_line
     end)
 
-    -- Apply each match (NO OFFSET NEEDED)
+    -- Apply each match
     local success_count = 0
     for _, match in ipairs(updated_matches) do
-      ---@type MigrateNotify.Match
       local parser_match = {
         line = match.lnum,
         end_line = match.extra.end_line,
@@ -215,51 +201,112 @@ local function apply_matches(matches, module_name)
       end
     end
 
-    if success_count > 0 then
-      notify.info(string.format("Applied %d/%d migration(s)", success_count, #updated_matches))
+    -- Remove aliases
+    refactor.remove_aliases(bufnr)
+
+    total_applied = total_applied + success_count
+
+    -- WRITE TO DISK if requested
+    if success_count > 0 and auto_write then
+      -- Ensure buffer is marked modified
+      api.nvim_set_option_value("modified", true, { buf = bufnr })
+
+      -- Write buffer
+      local ok, err = pcall(function()
+        -- Save current buffer
+        local current_buf = api.nvim_get_current_buf()
+
+        -- Switch to target buffer and write
+        vim.cmd(string.format("silent! buffer %d", bufnr))
+        vim.cmd("silent! write")
+
+        -- Restore original buffer if different
+        if current_buf ~= bufnr and api.nvim_buf_is_valid(current_buf) then
+          vim.cmd(string.format("silent! buffer %d", current_buf))
+        end
+      end)
+
+      if ok then
+        tbl_insert(written_files, data.fname or ("buffer:" .. bufnr))
+
+        -- Unload buffer if it wasn't originally loaded (memory optimization)
+        if not data.was_loaded then
+          vim.schedule(function()
+            if api.nvim_buf_is_valid(bufnr) then
+              pcall(api.nvim_buf_delete, bufnr, { force = false, unload = true })
+            end
+          end)
+        end
+      else
+        notify.warn(string.format(
+          "Failed to write %s: %s",
+          data.fname or ("buffer:" .. bufnr),
+          tostring(err)
+        ))
+      end
     end
   end
 
-  -- Remove aliases if present
-  for bufnr, _ in pairs(by_buffer) do
-    refactor.remove_aliases(bufnr)
+  -- Summary notifications
+  if total_applied > 0 then
+    notify.info(string.format("Applied %d migration(s)", total_applied))
+  end
+
+  if #written_files > 0 then
+    notify.info(string.format("✅ Written %d file(s) to disk", #written_files))
+  elseif total_applied > 0 and not auto_write then
+    notify.warn("Changes in memory only. Save with :wa or reopen files")
   end
 end
+
 --------------------------------------------------------------------------------
 -- Picker
 --------------------------------------------------------------------------------
 
----Show picker with module name support
----@param matches MigrateCommon.Match[]
----@param module_name string|nil
-local function show_picker_impl(matches, module_name)
+local function show_picker_impl(matches, module_name, auto_write)
+  -- Add helpful prompt suffix
+  local title = string.format(
+    "Migrate vim.notify → lib.notify (%d matches) | <C-a> Apply All",
+    #matches
+  )
+
   picker.show(matches, {
-    title = "Migrate vim.notify → lib.notify",
+    title = title,
     single_apply = false,
 
     format_entry = function(match)
-      local filename = match.fname and vim.fn.fnamemodify(match.fname, ":t")
-        or ("buf:" .. match.bufnr)
+      local display_path
 
-      -- FIXED: Ensure log_level is a string
-      local level = "INFO" -- default
+      if match.fname then
+        -- Convert to relative path from CWD without extension
+        -- :~  = replace $HOME with ~
+        -- :.  = relative to current directory
+        -- :r  = remove extension
+        display_path = vim.fn.fnamemodify(match.fname, ":~:.:r")
+      else
+        -- Unnamed buffer
+        display_path = "buf:" .. match.bufnr
+      end
+
+      local level = "INFO"
       if match.extra and match.extra.log_level then
-        -- If it's already a string, use it; if it's somehow a number, convert
         if type(match.extra.log_level) == "string" then
           level = match.extra.log_level
         elseif type(match.extra.log_level) == "number" then
-          -- Shouldn't happen, but handle it defensively
           local level_map = { "TRACE", "DEBUG", "INFO", "WARN", "ERROR" }
           level = level_map[match.extra.log_level] or "INFO"
         end
       end
 
+      -- Format with dynamic width based on path length
+      local path_width = math.min(#display_path, 50)  -- Max 50 chars for path
+      local location = string.format("%-" .. path_width .. "s:%d", display_path, match.lnum)
+
       return string.format(
-        "%s:%d  [%s]  %s",
-        filename,
-        match.lnum,
+        "%s  [%-5s]  %s",
+        location,
         level:lower(),
-        match.text:sub(1, 50)
+        match.text:sub(1, 40)
       )
     end,
 
@@ -274,7 +321,7 @@ local function show_picker_impl(matches, module_name)
     end,
 
     on_apply = function(selections)
-      apply_matches(selections, module_name)
+      apply_matches(selections, module_name, auto_write)
     end,
   })
 end
@@ -284,49 +331,6 @@ end
 --------------------------------------------------------------------------------
 
 function M.enable()
-  command.register({
-    name = "MigrateNotify",
-    scan_range = scan_range,
-    scan_buffer = scan_buffer,
-    scan_cwd = scan_cwd,
-
-    -- Wrapper that extracts module name from args
-    apply_matches = function(matches)
-      apply_matches(matches, nil)
-    end,
-
-    -- Wrapper that passes module name to picker
-    show_picker = function(matches)
-      show_picker_impl(matches, nil)
-    end,
-
-    -- Custom completion
-    ---@diagnostic disable-next-line: unused-local
-    complete = function(arg_lead, cmd_line, cursor_pos)
-      -- Extract what's already been typed
-      local args = vim.split(cmd_line, "%s+", { trimempty = true })
-
-      -- First argument: mode (%, cwd)
-      if #args <= 2 then
-        local completions = { "%", "cwd" }
-        if arg_lead == "" then
-          return completions
-        end
-
-        local matches = {}
-        for _, comp in ipairs(completions) do
-          if comp:find(arg_lead, 1, true) == 1 then
-            table.insert(matches, comp)
-          end
-        end
-        return matches
-      end
-
-      -- Second argument: module name (free text, no completion)
-      return {}
-    end,
-  })
-
   vim.api.nvim_create_user_command("MigrateNotify", function(cmd_opts)
     local args_str = cmd_opts.args
     local parts = vim.split(args_str, "%s+", { trimempty = true })
@@ -334,59 +338,59 @@ function M.enable()
     local mode = parts[1] or ""
     local module_name = parts[2] or nil
 
-    -- Store module name in global for access by apply/picker functions
-    _G._migrate_notify_module_name = module_name
-
-    -- Reconstruct args without module name
-    local new_args = mode
-    cmd_opts.args = new_args
-
-    -- Determine action based on mode
     local bufnr = api.nvim_get_current_buf()
 
+    -- Determine auto-write behavior
+    local auto_write = false
+
     if cmd_opts.range > 0 then
+      -- Range mode: no auto-write (single buffer, user can save manually)
       local matches = scan_range(bufnr, cmd_opts.line1, cmd_opts.line2)
       if #matches == 0 then
         notify.warn("No matches in range")
         return
       end
-      apply_matches(matches, module_name)
-      notify.info(string.format("Applied %d migration(s) in range", #matches))
+      apply_matches(matches, module_name, false)
+
     elseif mode == "" then
+      -- Current line: no auto-write
       local cursor = api.nvim_win_get_cursor(0)
       local matches = scan_range(bufnr, cursor[1], cursor[1])
       if #matches == 0 then
         notify.warn("No matches on current line")
         return
       end
-      apply_matches(matches, module_name)
-      notify.info(string.format("Applied %d migration(s) on line %d", #matches, cursor[1]))
+      apply_matches(matches, module_name, false)
+
     elseif mode == "%" then
+      -- Buffer mode: no auto-write (user can save manually)
       local matches = scan_buffer(bufnr)
       if #matches == 0 then
         notify.warn("No matches in buffer")
         return
       end
-      show_picker_impl(matches, module_name)
+      show_picker_impl(matches, module_name, false)
+
     elseif mode == "cwd" then
+      -- CWD mode: AUTO-WRITE enabled
+      auto_write = true
+
       local matches = scan_cwd()
       if #matches == 0 then
         notify.warn("No matches in cwd")
         return
       end
-      show_picker_impl(matches, module_name)
+
+      show_picker_impl(matches, module_name, auto_write)
+
     else
       notify.error(string.format("Invalid argument: %s. Use: [empty], %%, or cwd", mode))
     end
-
-    -- Cleanup
-    _G._migrate_notify_module_name = nil
   end, {
     nargs = "*",
     range = true,
-    desc = "Migrate vim.notify to lib.notify (with optional module name)",
-    ---@diagnostic disable-next-line: unused-local
-    complete = function(arg_lead, cmd_line, cursor_pos)
+    desc = "Migrate vim.notify to lib.notify",
+    complete = function(arg_lead, cmd_line, _)
       local args = vim.split(cmd_line, "%s+", { trimempty = true })
 
       if #args <= 2 then
@@ -398,7 +402,7 @@ function M.enable()
         local matches = {}
         for _, comp in ipairs(completions) do
           if comp:find(arg_lead, 1, true) == 1 then
-            table.insert(matches, comp)
+            tbl_insert(matches, comp)
           end
         end
         return matches

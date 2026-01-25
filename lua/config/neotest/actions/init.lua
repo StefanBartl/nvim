@@ -1,6 +1,8 @@
 ---@module 'config.neotest.actions'
 --- Centralized Neotest actions usable by keymaps, usercommands and menus.
 
+local notify = require("lib.notify").create("[config.neotest.actions]")
+
 local M = {}
 
 --- Safely require neotest
@@ -8,7 +10,7 @@ local M = {}
 local function get_neotest()
   local ok, neotest = pcall(require, "neotest")
   if not ok then
-    vim.notify("Neotest not loaded", vim.log.levels.ERROR)
+    notify.error("Neotest not loaded")
     return nil
   end
   return neotest
