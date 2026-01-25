@@ -52,7 +52,7 @@ local function to_common_matches(bufnr, parser_matches)
 end
 
 --------------------------------------------------------------------------------
--- Scan functions
+-- Scan functions (unchanged)
 --------------------------------------------------------------------------------
 
 local function scan_range(bufnr, line1, line2)
@@ -140,7 +140,7 @@ local function scan_cwd()
 end
 
 --------------------------------------------------------------------------------
--- Application
+-- Application (FIXED with auto-write)
 --------------------------------------------------------------------------------
 
 ---Apply migrations with optional auto-write
@@ -207,43 +207,41 @@ local function apply_matches(matches, module_name, auto_write)
     total_applied = total_applied + success_count
 
     -- WRITE TO DISK if requested
-    if success_count > 0 and auto_write then
-      -- Ensure buffer is marked modified
-      api.nvim_set_option_value("modified", true, { buf = bufnr })
-
-      -- Write buffer
+    if success_count > 0 and auto_write and data.fname then
+      -- Direct write to file WITHOUT any buffer switching
       local ok, err = pcall(function()
-        -- Save current buffer
-        local current_buf = api.nvim_get_current_buf()
+        -- Get all buffer lines
+        local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-        -- Switch to target buffer and write
-        vim.cmd(string.format("silent! buffer %d", bufnr))
-        vim.cmd("silent! write")
+        -- Write directly using vim.fn.writefile (handles all edge cases)
+        local result = vim.fn.writefile(lines, data.fname)
 
-        -- Restore original buffer if different
-        if current_buf ~= bufnr and api.nvim_buf_is_valid(current_buf) then
-          vim.cmd(string.format("silent! buffer %d", current_buf))
+        if result ~= 0 then
+          error("writefile returned non-zero: " .. result)
         end
+
+        -- Clear modified flag (buffer is now in sync with file)
+        api.nvim_set_option_value("modified", false, { buf = bufnr })
       end)
 
       if ok then
-        tbl_insert(written_files, data.fname or ("buffer:" .. bufnr))
+        tbl_insert(written_files, data.fname)
 
         -- Unload buffer if it wasn't originally loaded (memory optimization)
         if not data.was_loaded then
           vim.schedule(function()
             if api.nvim_buf_is_valid(bufnr) then
-              pcall(api.nvim_buf_delete, bufnr, { force = false, unload = true })
+              -- Force unload without prompting (file is saved, safe to unload)
+              pcall(api.nvim_buf_delete, bufnr, { force = true, unload = true })
             end
           end)
         end
       else
-        notify.warn(string.format(
-          "Failed to write %s: %s",
-          data.fname or ("buffer:" .. bufnr),
-          tostring(err)
-        ))
+        notify.warn(string.format("Failed to write %s: %s", data.fname, tostring(err)))
       end
+    elseif success_count > 0 and auto_write and not data.fname then
+      -- Unnamed buffer - cannot auto-write
+      notify.warn(string.format("Buffer %d has no filename, skipping auto-write", bufnr))
     end
   end
 
@@ -372,7 +370,7 @@ function M.enable()
       show_picker_impl(matches, module_name, false)
 
     elseif mode == "cwd" then
-      -- CWD mode: AUTO-WRITE enabled
+      -- ✅ CWD mode: AUTO-WRITE enabled
       auto_write = true
 
       local matches = scan_cwd()
