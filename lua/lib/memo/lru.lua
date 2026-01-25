@@ -7,6 +7,7 @@ Lru.__index = Lru
 --- Move a node to the front (most-recent).
 ---@param self Lib.Memo.Lru
 ---@param node Lib.Memo.LruNode
+---@return nil
 function Lru:_move_front(node)
   if self.head == node then
     return
@@ -35,6 +36,7 @@ end
 
 --- Evict LRU (tail) node.
 ---@param self Lib.Memo.Lru
+---@return nil
 function Lru:_evict()
   local node = self.tail
   if not node then
@@ -68,6 +70,7 @@ end
 ---@param self Lib.Memo.Lru
 ---@param key any
 ---@param value any
+---@return nil
 function Lru:put(key, value)
   local node = self.map[key]
   if node then
@@ -84,13 +87,18 @@ function Lru:put(key, value)
   end
 end
 
---- New LRU with capacity >= 1.
----@param cap integer
+--- Create new LRU cache with capacity >= 1.
+---@param cap integer # Cache capacity (must be >= 1)
 ---@return Lib.Memo.Lru
 local function new_lru(cap)
+  -- Validate and sanitize capacity
+  if type(cap) ~= "number" then
+    error(("LRU.new: expected number, got %s"):format(type(cap)), 2)
+  end
+  
   ---@type Lib.Memo.LruState
   local state = {
-    cap = math.max(1, cap),
+    cap = math.max(1, math.floor(cap)),  -- KORREKTUR: Explizite Typsicherheit
     size = 0,
     map = {},
     head = nil,
