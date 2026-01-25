@@ -4,13 +4,15 @@
 -- ============================================================================
 -- CRITICAL: Setup wkdnvchad FIRST, before config
 -- ============================================================================
+local notify = require("lib.notify").create("[chadrc]")
+
 local wkdnvc_ok, wkdnvc_err = pcall(function()
   local wkdnvc = require("wkdnvchad")
   wkdnvc.setup({ all = true })
 end)
 
 if not wkdnvc_ok then
-  vim.notify("[chadrc] wkdnvchad setup failed: " .. tostring(wkdnvc_err), vim.log.levels.ERROR)
+  notify.error("[chadrc] wkdnvchad setup failed: " .. tostring(wkdnvc_err))
 end
 
 -- ============================================================================
@@ -33,7 +35,7 @@ if ok then
     },
   }
 else
-  vim.notify("[chadrc] Failed to load wkdnvchad.config: " .. tostring(config), vim.log.levels.ERROR)
+  notify.error("[chadrc] Failed to load wkdnvchad.config: " .. tostring(config))
 
   -- Fallback to minimal config
   return {

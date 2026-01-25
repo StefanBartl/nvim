@@ -12,20 +12,20 @@ local normalize = require("usrcmds.uv_doc.normalize")
 local constants = require("usrcmds.uv_doc.constants")
 
 -- Create notify instance with proper API
-local notify = require("lib.notify").create("uv_doc")
+local notify = require("lib.notify").create("")
 
 --- Fetches and inserts signature at cursor
 ---@param uvname string
 local function fetch_and_insert_signature(uvname)
   local idx = fetcher.get_genindex()
   if not idx then
-    notify("genindex unavailable; try :h luvref.txt", vim.log.levels.WARN)
+    notify.warn("genindex unavailable; try :h luvref.txt")
     return
   end
 
   local href = parser.find_href(idx, uvname)
   if not href then
-    notify("not found in index: " .. uvname, vim.log.levels.WARN)
+    notify.warn("not found in index: " .. uvname)
     return
   end
 
@@ -48,7 +48,7 @@ local function fetch_and_insert_signature(uvname)
     return
   end
 
-  notify("could not extract signature for: " .. uvname, vim.log.levels.WARN)
+  notify.warn("could not extract signature for: " .. uvname)
 end
 
 --- Opens list for signature insertion
@@ -56,13 +56,13 @@ end
 ---@param title string
 local function open_insert_list(names, title)
   if type(names) ~= "table" or #names == 0 then
-    notify("No symbols to display", vim.log.levels.INFO)
+    notify.info("No symbols to display")
     return
   end
 
   local buf = vim.api.nvim_create_buf(false, true)
   if not vim.api.nvim_buf_is_valid(buf) then
-    notify("Failed to create list buffer", vim.log.levels.ERROR)
+    notify.error("Failed to create list buffer")
     return
   end
 
@@ -90,7 +90,7 @@ local function open_insert_list(names, title)
   })
 
   if not vim.api.nvim_win_is_valid(win) then
-    notify("Failed to create list window", vim.log.levels.ERROR)
+    notify.error("Failed to create list window")
     return
   end
 
@@ -137,7 +137,7 @@ end
 function M.insert_signature(name)
   local raw = name or vim.fn.expand("<cword>")
   if strings.is_empty_or_space(raw) then
-    notify("no name given", vim.log.levels.WARN)
+    notify.warn("no name given")
     return
   end
 
@@ -154,7 +154,7 @@ function M.insert_signature(name)
   local cands = search.candidates_for(raw)
 
   if #cands == 0 then
-    notify("no matches for query: " .. raw, vim.log.levels.INFO)
+    notify.info("no matches for query: " .. raw)
   elseif #cands == 1 then
     fetch_and_insert_signature(cands[1])
   else

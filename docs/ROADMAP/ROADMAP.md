@@ -23,7 +23,7 @@
 - `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
 - :lua vim.cmd('profile start /tmp/profile.log') vim.cmd('profile func *') require('lib')
 - `wkdoptions` readme aktualiseren, module auch readme.md schreiben (deutsch). alußerdem eine doc/
-- Alle `vim.notify` durch `lib.notify` erstetzen
+- Alle `vim.notify` durch `lib.notify` erstetzen; `.create()` und `lazy` implementieren
 
 ---
 

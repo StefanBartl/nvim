@@ -181,28 +181,26 @@ local function apply_matches(matches, module_name)
   end
 
   -- Apply per buffer
-  for bufnr, buf_matches in pairs(by_buffer) do
+  for bufnr, _ in pairs(by_buffer) do
     buffer_ops.create_undo_point(bufnr)
 
-    -- Inject import with optional module name
-    local import_added = refactor.inject_import(bufnr, module_name)
+    -- Inject import FIRST
+    refactor.inject_import(bufnr, module_name)
 
-    -- Adjust line numbers if import was added
-    if import_added then
-      for _, match in ipairs(buf_matches) do
-        match.lnum = match.lnum + 2
-        match.extra.end_line = match.extra.end_line + 2
-      end
-    end
+    -- RE-SCAN buffer to get CORRECT line numbers
+    local fresh_matches = parser.scan_buffer(bufnr)
 
-    -- Sort DESCENDING by end_line
-    table.sort(buf_matches, function(a, b)
+    -- Convert to common format
+    local updated_matches = to_common_matches(bufnr, fresh_matches)
+
+    -- Sort DESCENDING
+    table.sort(updated_matches, function(a, b)
       return a.extra.end_line > b.extra.end_line
     end)
 
-    -- Apply each match
+    -- Apply each match (NO OFFSET NEEDED)
     local success_count = 0
-    for _, match in ipairs(buf_matches) do
+    for _, match in ipairs(updated_matches) do
       ---@type MigrateNotify.Match
       local parser_match = {
         line = match.lnum,
@@ -218,7 +216,7 @@ local function apply_matches(matches, module_name)
     end
 
     if success_count > 0 then
-      notify.info(string.format("Applied %d/%d migration(s)", success_count, #buf_matches))
+      notify.info(string.format("Applied %d/%d migration(s)", success_count, #updated_matches))
     end
   end
 
@@ -227,7 +225,6 @@ local function apply_matches(matches, module_name)
     refactor.remove_aliases(bufnr)
   end
 end
-
 --------------------------------------------------------------------------------
 -- Picker
 --------------------------------------------------------------------------------

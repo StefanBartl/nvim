@@ -189,6 +189,7 @@ function M.migrate_existing_notify_line(line)
       and string.format("notify.%s(%s, %s)", method, msg, has_opts)
       or string.format("notify.%s(%s)", method, msg)
 
+    -- WICHTIG: KOMPLETTE Zeile zurückgeben
     local before = line:sub(1, start_pos - 1)
     local after = line:sub(end_pos + 1)
 

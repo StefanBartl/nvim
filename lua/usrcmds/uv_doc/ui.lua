@@ -13,7 +13,7 @@ local normalize = require("usrcmds.uv_doc.normalize")
 local constants = require("usrcmds.uv_doc.constants")
 
 -- Create notify instance with proper API
-local notify = require("lib.notify").create("uv_doc")
+local notify = require("lib.notify").create("")
 
 --- Opens floating list with cursorline navigation
 ---@param names string[]
@@ -21,13 +21,13 @@ local notify = require("lib.notify").create("uv_doc")
 ---@param on_enter fun(name: string)
 local function open_list(names, title, on_enter)
   if type(names) ~= "table" or #names == 0 then
-    notify("No symbols to display", vim.log.levels.INFO)
+    notify.info("No symbols to display")
     return
   end
 
   local buf = vim.api.nvim_create_buf(false, true)
   if not vim.api.nvim_buf_is_valid(buf) then
-    notify("Failed to create list buffer", vim.log.levels.ERROR)
+    notify.error("Failed to create list buffer")
     return
   end
 
@@ -55,7 +55,7 @@ local function open_list(names, title, on_enter)
   })
 
   if not vim.api.nvim_win_is_valid(win) then
-    notify("Failed to create list window", vim.log.levels.ERROR)
+    notify.error("Failed to create list window")
     return
   end
 
@@ -100,7 +100,7 @@ local function open_list(names, title, on_enter)
     local name = current_name()
     if name and not strings.is_empty_or_space(name) then
       vim.fn.setreg('"', name)
-      notify("yanked: " .. name, vim.log.levels.INFO)
+      notify.info("yanked: " .. name)
     end
   end, { buffer = buf, nowait = true, silent = true })
 end
@@ -140,7 +140,7 @@ local function render_doc(uvname, src_url, signature, body)
 
   local buf = vim.api.nvim_create_buf(false, true)
   if not vim.api.nvim_buf_is_valid(buf) then
-    notify("Failed to create documentation buffer", vim.log.levels.ERROR)
+    notify.error("Failed to create documentation buffer")
     return
   end
 
@@ -176,13 +176,13 @@ end
 local function fetch_and_show(uvname)
   local idx = fetcher.get_genindex()
   if not idx then
-    notify("genindex unavailable; try :h luvref.txt", vim.log.levels.WARN)
+    notify.warn("genindex unavailable; try :h luvref.txt")
     return
   end
 
   local href = parser.find_href(idx, uvname)
   if not href then
-    notify("not found in index: " .. uvname, vim.log.levels.WARN)
+    notify.warn("not found in index: " .. uvname)
     return
   end
 
@@ -201,7 +201,7 @@ local function fetch_and_show(uvname)
   end
 
   if strings.is_empty_or_space(sig) then
-    notify("could not extract signature for: " .. uvname, vim.log.levels.WARN)
+    notify.warn("could not extract signature for: " .. uvname)
     return
   end
 
@@ -213,7 +213,7 @@ end
 function M.show_doc(name)
   local raw = name or vim.fn.expand("<cword>")
   if strings.is_empty_or_space(raw) then
-    notify("no name given", vim.log.levels.WARN)
+    notify.warn("no name given")
     return
   end
 
@@ -230,7 +230,7 @@ function M.show_doc(name)
   local cands = search.candidates_for(raw)
 
   if #cands == 0 then
-    notify("no matches for query: " .. raw, vim.log.levels.INFO)
+    notify.info("no matches for query: " .. raw)
   elseif #cands == 1 then
     fetch_and_show(cands[1])
   else
@@ -245,7 +245,7 @@ function M.show_list(query)
   local cands = search.candidates_for(query)
 
   if #cands == 0 then
-    notify("no matches", vim.log.levels.INFO)
+    notify.info("no matches")
     return
   end
 

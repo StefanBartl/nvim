@@ -28,6 +28,8 @@
 
 ---@diagnostic disable undefined-type or alias -> lib.uv
 
+local notify = require("lib.notify").create("[autocmds.auto-center-fexplorer]")
+
 local M = {}
 
 ---@class AutoCenterConfig
@@ -89,7 +91,7 @@ local function schedule_center(bufnr)
   -- Create new timer with debounce delay
   local timer = vim.loop.new_timer()
   if not timer then
-    vim.notify("[auto-close-fexplorer] timer is nil", vim.log.levels.DEBUG)
+    notify.debug("[auto-close-fexplorer] timer is nil")
     return
   end
   timers[bufnr] = timer
@@ -208,9 +210,9 @@ end
 function M.toggle()
   config.enabled = not config.enabled
   if config.enabled then
-    vim.notify("Auto-center enabled", vim.log.levels.INFO)
+    notify.info("Auto-center enabled")
   else
-    vim.notify("Auto-center disabled", vim.log.levels.INFO)
+    notify.info("Auto-center disabled")
   end
 end
 
