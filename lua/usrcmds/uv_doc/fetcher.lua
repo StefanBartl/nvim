@@ -59,7 +59,7 @@ function M.get_genindex()
     if page and not strings.is_empty_or_space(page) then
       parts[#parts + 1] = page
     elseif page_err then
-      notify("Failed to fetch " .. href .. ": " .. page_err, vim.log.levels.WARN)
+      notify.warn("Failed to fetch " .. href .. ": " .. page_err)
     end
   end
 
@@ -83,7 +83,7 @@ function M.ensure_symbols()
 
   local symbols = parser.parse_symbols(html)
   if #symbols == 0 then
-    notify("genindex parsed but no uv_* anchors found", vim.log.levels.WARN)
+    notify.warn("genindex parsed but no uv_* anchors found")
     return nil
   end
 

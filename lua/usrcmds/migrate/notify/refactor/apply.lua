@@ -16,42 +16,37 @@ function M.apply_match(bufnr, match)
 
   local start_line = match.line
   local end_line = match.end_line
-  local start_col = match.col
-  local end_col = match.end_col
 
+  -- Convert to 0-based indices for API
   local start_idx = start_line - 1
-  local end_idx = end_line
+  local end_idx = end_line  -- Exclusive end for nvim_buf_set_lines
 
+  -- DEBUG: Print what we're doing
+  -- print(string.format("[apply] Replacing lines [%d-%d] (0-based [%d-%d))",
+  --   start_line, end_line, start_idx, end_idx))
+  -- print(string.format("[apply] Replacement: %s", match.replacement))
+
+  -- Get current line(s) for verification
   local lines = api.nvim_buf_get_lines(bufnr, start_idx, end_idx, false)
 
   if #lines == 0 then
     return false
   end
 
-  local replacement = match.replacement:gsub("\n", " ")
+  -- The migrator already built the complete replacement line
+  -- Replace the range [start_idx, end_idx) with the new line
+  local replacement = match.replacement
 
-  if start_line == end_line then
-    -- Single-line replacement
-    local line = lines[1]
-    local before = line:sub(1, start_col)
-    local after = line:sub(end_col + 1)
-    local new_line = before .. replacement .. after
+  local ok = pcall(
+    api.nvim_buf_set_lines,
+    bufnr,
+    start_idx,
+    end_idx,
+    false,
+    { replacement }
+  )
 
-    api.nvim_buf_set_lines(bufnr, start_idx, start_idx + 1, false, { new_line })
-  else
-    -- Multi-line replacement
-    local first_line = lines[1]
-    local last_line = lines[#lines]
-
-    local before = first_line:sub(1, start_col)
-    local after = last_line:sub(end_col + 1)
-
-    local new_line = before .. replacement .. after
-
-    api.nvim_buf_set_lines(bufnr, start_idx, end_idx, false, { new_line })
-  end
-
-  return true
+  return ok
 end
 
 return M

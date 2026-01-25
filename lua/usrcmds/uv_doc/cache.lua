@@ -49,7 +49,7 @@ function M.clear_all()
     memo.clear()
   end
 
-  notify("cache cleared", vim.log.levels.INFO)
+  notify.info("cache cleared")
 end
 
 return M
