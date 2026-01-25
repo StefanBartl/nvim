@@ -9,13 +9,9 @@ function M.force_reset_state()
   local state = require("config.neotree.state.windows")
   local tree_state = require("config.neotree.state.tree")
   local controller = require("config.neotree.open.window.controller")
-  local custom_float = require("config.neotree.open.window.custom_float")
 
   -- Clear busy guard
   controller.clear_semaphore()
-
-  -- Reset custom float
-  custom_float.reset()
 
   -- Reset window state
   state.set_closed("force_reset")

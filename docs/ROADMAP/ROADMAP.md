@@ -23,6 +23,7 @@
 - `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
 - :lua vim.cmd('profile start /tmp/profile.log') vim.cmd('profile func *') require('lib')
 - `wkdoptions` readme aktualiseren, module auch readme.md schreiben (deutsch). alußerdem eine doc/
+- Alle `vim.notify` durch `lib.notify` erstetzen
 
 ---
 
@@ -78,7 +79,6 @@
     2. Todo Coments anschauen und durchgehen
 - probieren nvchad rauszunehmen und nochmal mit lazyvim
 - experimental options:
-   1. statusline und winbar breadcrumbs sollten sich ein modul teilen
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 
 ---

@@ -15,39 +15,6 @@ function M.check()
     return
   end
 
-  -- Custom Float
-  local ok_float, custom_float = pcall(require, "config.neotree.open.window.custom_float")
-  if ok_float then
-    vim.health.ok("Custom float module loaded")
-
-    -- Test custom float state
-    local is_open = custom_float.is_open()
-    local win = custom_float.get_window()
-    local buf = custom_float.get_buffer()
-
-    vim.health.info("Custom float state:")
-    vim.health.info(string.format("  open: %s", tostring(is_open)))
-    vim.health.info(string.format("  window: %s", tostring(win or "nil")))
-    vim.health.info(string.format("  buffer: %s", tostring(buf or "nil")))
-
-    -- Validate state consistency
-    if is_open then
-      if not win or not vim.api.nvim_win_is_valid(win) then
-        vim.health.error("Custom float reports open but window is invalid")
-      else
-        vim.health.ok("Custom float window is valid")
-      end
-
-      if not buf or not vim.api.nvim_buf_is_valid(buf) then
-        vim.health.error("Custom float reports open but buffer is invalid")
-      else
-        vim.health.ok("Custom float buffer is valid")
-      end
-    end
-  else
-    vim.health.error("Custom float module not loadable")
-  end
-
   -- Semaphore
   local ok_sem, sem = pcall(require, "config.neotree.open.window.controller.semaphore")
   if ok_sem then

@@ -18,6 +18,7 @@ local trash = require("config.neotree.trash")
 local undo = require("config.neotree.undo")
 local node_replace_buf = require("config.neotree.actions.node_replace_buf")
 
+local fn = vim.fn
 
 ---@return table<string, any>
 return {
@@ -205,6 +206,7 @@ return {
     desc = "Mark all files in directory",
   },
 
+
   ["[m"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
@@ -249,113 +251,48 @@ return {
 
   --====================== Path / Copy ==================================
 
-  --WATCH: auskommeniterte Mappings tatsöchlich durch `fF][` ersetzt?
+  ["[a"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      local node = node_utils.get_current(state)
+      if not node then
+        notify.info("no node under cursor")
+        return
+      end
 
-  -- ["Y"] = { --
-  -- ---@param state Cfg.NeoTree.State
-  -- function(state)
-  -- local node = node_utils.get_current(state)
-  -- if not node then
-  -- notify.warn("no node under cursor")
-  -- return
-  -- end
+      local path, _ = node_utils.get_path(node)
+      if path == "" then
+        notify.info("no path")
+        return
+      end
 
-  -- local path, _ = node_utils.get_path(node)
-  -- if path == "" then
-  -- notify.warn("no path")
-  -- return
-  -- end
+      fn.setreg("+", path, "c")
+      notify.info(("copied: %s"):format(path))
+    end,
+    desc = "Copy absolute path (+)",
+  },
 
-  -- fn.setreg("+", path, "c")
-  -- notify.info(("Copied path: %s"):format(path))
-  -- end,
-  -- desc = "Copy absolute path to clipboard",
-  -- },
+  ["]a"] = {
+    ---@param state Cfg.NeoTree.State
+    function(state)
+      local node = node_utils.get_current(state)
+      if not node then
+        notify.info("no node under cursor")
+        return
+      end
 
-  -- ["[a"] = {
-  -- ---@param state Cfg.NeoTree.State
-  -- function(state)
-  -- local node = node_utils.get_current(state)
-  -- if not node then
-  -- notify.info("no node under cursor")
-  -- return
-  -- end
+      local path, is_dir = node_utils.get_path(node)
+      if path == "" then
+        notify.info("no path")
+        return
+      end
 
-  -- local path, _ = node_utils.get_path(node)
-  -- if path == "" then
-  -- notify.info("no path")
-  -- return
-  -- end
-
-  -- fn.setreg("+", path, "c")
-  -- notify.info(("copied: %s"):format(path))
-  -- end,
-  -- desc = "Copy absolute path (+)",
-  -- },
-
-  -- ["]a"] = {
-  -- ---@param state Cfg.NeoTree.State
-  -- function(state)
-  -- local node = node_utils.get_current(state)
-  -- if not node then
-  -- notify.info("no node under cursor")
-  -- return
-  -- end
-
-  -- local path, is_dir = node_utils.get_path(node)
-  -- if path == "" then
-  -- notify.info("no path")
-  -- return
-  -- end
-
-  -- local base = is_dir and path or fn.fnamemodify(path, ":h")
-  -- fn.setreg("+", base, "c")
-  -- notify.info(("copied: %s"):format(base))
-  -- end,
-  -- desc = "Copy base (dir) path (+)",
-  -- },
-
-  -- ["[r"] = {
-  -- ---@param state Cfg.NeoTree.State
-  -- function(state)
-  -- local node = node_utils.get_current(state)
-  -- if not node then
-  -- notify.info("no node under cursor")
-  -- return
-  -- end
-
-  -- local path, msg = path_utils.from_node(node, "relative")
-  -- if not path then
-  -- notify.info(msg or "Failed to get path")
-  -- return
-  -- end
-
-  -- fn.setreg("+", path, "c")
-  -- notify.info(("Copied relative directory: %s"):format(path))
-  -- end,
-  -- desc = "Copy relative directory path",
-  -- },
-
-  -- ["]r"] = {
-  -- ---@param state Cfg.NeoTree.State
-  -- function(state)
-  -- local node = node_utils.get_current(state)
-  -- if not node then
-  -- notify.info("no node under cursor")
-  -- return
-  -- end
-
-  -- local path, msg = path_utils.from_node(node, "relative")
-  -- if not path then
-  -- notify.info(msg or "Failed to get path")
-  -- return
-  -- end
-
-  -- fn.setreg("+", path, "c")
-  -- notify.info(("Copied relative path: %s"):format(path))
-  -- end,
-  -- desc = "Copy relative path (file)",
-  -- },
+      local base = is_dir and path or fn.fnamemodify(path, ":h")
+      fn.setreg("+", base, "c")
+      notify.info(("copied: %s"):format(base))
+    end,
+    desc = "Copy base (dir) absolute path (+)",
+  },
 
   ["[f"] = {
     ---@param state Cfg.NeoTree.State
@@ -437,7 +374,6 @@ return {
     desc = "Open in system file manager",
   },
 
-  -- FIX:Funkltioniert nicht;
   ["<leader>sm"] = {
     function(state)
       require("config.neotree.open.system_app").open_from_neotree(state)
