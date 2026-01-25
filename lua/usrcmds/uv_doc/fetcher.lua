@@ -7,8 +7,10 @@ local http = require("usrcmds.uv_doc.http")
 local cache = require("usrcmds.uv_doc.cache")
 local parser = require("usrcmds.uv_doc.parser")
 local constants = require("usrcmds.uv_doc.constants")
-local notify = require("lib.notify")
 local strings = require("lib.strings")
+
+-- Create notify instance with proper API
+local notify = require("lib.notify").create("uv_doc")
 
 --- Fetches and caches complete genindex
 ---@nodiscard
@@ -57,7 +59,7 @@ function M.get_genindex()
     if page and not strings.is_empty_or_space(page) then
       parts[#parts + 1] = page
     elseif page_err then
-      notify.warn("Failed to fetch " .. href .. ": " .. page_err)
+      notify("Failed to fetch " .. href .. ": " .. page_err, vim.log.levels.WARN)
     end
   end
 
@@ -67,7 +69,6 @@ function M.get_genindex()
 end
 
 --- Ensures symbol cache is populated
----@nodiscard
 ---@return string[]|nil
 function M.ensure_symbols()
   local cached = cache.get_symbols()
@@ -82,7 +83,7 @@ function M.ensure_symbols()
 
   local symbols = parser.parse_symbols(html)
   if #symbols == 0 then
-    notify.warn("genindex parsed but no uv_* anchors found")
+    notify("genindex parsed but no uv_* anchors found", vim.log.levels.WARN)
     return nil
   end
 

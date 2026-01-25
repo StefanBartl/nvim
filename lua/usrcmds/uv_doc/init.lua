@@ -1,4 +1,3 @@
-
 ---@module 'uv_doc'
 --- libuv doc fetcher with robust index parsing, fuzzy list UI, and "insert here".
 --- This module targets https://docs.libuv.org/en/v1.x/ and extracts symbols by the
@@ -20,50 +19,32 @@
 
 local M = {}
 
--- Lazy-loaded submodules (loaded on first use)
-local http = nil
-local parser = nil
-local cache = nil
-local ui = nil
-local completion = nil
-
---- Ensures submodule is loaded
----@param module_name string
----@return table
-local function ensure_loaded(module_name)
-  local modules = {
-    http = function()
-      return require("usrcmds.uv_doc.http")
-    end,
-    parser = function()
-      return require("usrcmds.uv_doc.parser")
-    end,
-    cache = function()
-      return require("usrcmds.uv_doc.cache")
-    end,
-    ui = function()
-      return require("usrcmds.uv_doc.ui")
-    end,
-    completion = function()
-      return require("usrcmds.uv_doc.completion")
-    end,
-  }
-
-  local loader = modules[module_name]
-  if not loader then
-    error("Unknown submodule: " .. module_name)
+-- Lazy require helper
+---@generic T
+---@param module_path string
+---@return T|nil
+local function safe_require(module_path)
+  local ok, mod = pcall(require, module_path)
+  if not ok then
+    local notify_ok, notify = pcall(require, "lib.notify")
+    if notify_ok and notify and type(notify.create) == "function" then
+      local n = notify.create("uv_doc")
+      n("Failed to load module: " .. module_path .. " - " .. tostring(mod), vim.log.levels.ERROR)
+    else
+      notify.error("[uv_doc] Failed to load: " .. module_path)
+    end
+    return nil
   end
-
-  return loader()
+  return mod
 end
 
 --- Shows documentation for exact or fuzzy symbol
 ---@param name string|nil
 function M.doc(name)
-  http = http or ensure_loaded("http")
-  parser = parser or ensure_loaded("parser")
-  cache = cache or ensure_loaded("cache")
-  ui = ui or ensure_loaded("ui")
+  local ui = safe_require("usrcmds.uv_doc.ui")
+  if not ui then
+    return
+  end
 
   ui.show_doc(name)
 end
@@ -71,8 +52,10 @@ end
 --- Opens interactive symbol list
 ---@param query string|nil
 function M.list(query)
-  cache = cache or ensure_loaded("cache")
-  ui = ui or ensure_loaded("ui")
+  local ui = safe_require("usrcmds.uv_doc.ui")
+  if not ui then
+    return
+  end
 
   ui.show_list(query)
 end
@@ -80,17 +63,21 @@ end
 --- Inserts signature at cursor
 ---@param name string|nil
 function M.here(name)
-  http = http or ensure_loaded("http")
-  parser = parser or ensure_loaded("parser")
-  cache = cache or ensure_loaded("cache")
+  local insert = safe_require("usrcmds.uv_doc.insert")
+  if not insert then
+    return
+  end
 
-  local insert = require("usrcmds.uv_doc.insert")
   insert.insert_signature(name)
 end
 
 --- Clears all caches
 function M.cache_clear()
-  cache = cache or ensure_loaded("cache")
+  local cache = safe_require("usrcmds.uv_doc.cache")
+  if not cache then
+    return
+  end
+
   cache.clear_all()
 end
 
@@ -100,7 +87,11 @@ end
 ---@param cursorpos integer|nil
 ---@return string[]
 function M.complete(arglead, cmdline, cursorpos)
-  completion = completion or ensure_loaded("completion")
+  local completion = safe_require("usrcmds.uv_doc.completion")
+  if not completion then
+    return {}
+  end
+
   return completion.complete(arglead, cmdline, cursorpos)
 end
 
@@ -136,4 +127,3 @@ function M.enable_usercmd()
 end
 
 return M
-

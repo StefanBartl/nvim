@@ -3,8 +3,8 @@
 
 local M = {}
 
-local memo = require("lib.memo")
-local notify = require("lib.notify")
+-- Create notify instance with proper API
+local notify = require("lib.notify").create("uv_doc")
 
 ---@type string|nil
 local genindex_html = nil
@@ -42,8 +42,14 @@ end
 function M.clear_all()
   genindex_html = nil
   index_symbols = nil
-  memo.clear()
-  notify.info("cache cleared")
+
+  -- Clear memo cache if available
+  local ok, memo = pcall(require, "lib.memo")
+  if ok and memo and type(memo.clear) == "function" then
+    memo.clear()
+  end
+
+  notify("cache cleared", vim.log.levels.INFO)
 end
 
 return M

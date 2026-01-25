@@ -4,7 +4,6 @@
 local M = {}
 
 local strings = require("lib.strings")
-local fetcher = require("usrcmds.uv_doc.fetcher")
 
 --- Provides completion candidates
 ---@param arglead string
@@ -14,6 +13,12 @@ local fetcher = require("usrcmds.uv_doc.fetcher")
 ---@return string[]
 ---@diagnostic disable-next-line: unused-local
 function M.complete(arglead, cmdline, cursorpos)
+  -- Lazy-load fetcher only when needed
+  local ok, fetcher = pcall(require, "usrcmds.uv_doc.fetcher")
+  if not ok then
+    return {}
+  end
+
   local all = fetcher.ensure_symbols()
 
   -- Fallback: introspect vim.uv/vim.loop
