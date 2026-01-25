@@ -26,6 +26,8 @@
 ---     },
 ---   })
 
+local notify = require("lib.notify").create("[config.mason.ensure_install]")
+
 local M = {}
 
 -- =====================================================================================
@@ -169,7 +171,7 @@ end
 local function ensure_tools(tools, log_prefix, seen)
   local ok_reg, registry = pcall(require, "mason-registry")
   if not ok_reg then
-    vim.notify(("%s: mason-registry not available; aborting"):format(log_prefix), vim.log.levels.ERROR)
+    notify.error(("%s: mason-registry not available; aborting"):format(log_prefix))
     return
   end
 

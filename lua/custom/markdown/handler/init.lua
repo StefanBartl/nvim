@@ -2,6 +2,8 @@
 --- Central handler for context-sensitive Markdown actions.
 --- Dispatches to image, url, file, or TOC/anchor navigation based on the line under cursor.
 
+local notify = require("lib.notify").create("[custom.markdown.handler]")
+
 local M = {}
 
 local api = vim.api
@@ -195,7 +197,7 @@ local function open_file_in_current_window(path)
   end
   local stat = uv.fs_stat(path)
   if not stat then
-    vim.notify("[Custom.Markdown] External anchor: target file not found: " .. tostring(path), vim.log.levels.WARN)
+    notify.warn("[Custom.Markdown] External anchor: target file not found: " .. tostring(path))
     return false
   end
   -- open with :edit
@@ -230,20 +232,14 @@ function M.handle_cursor_action()
     local fragment = ext.fragment
     local resolved = resolve_target_path(target)
     if not resolved then
-      vim.notify(
-        "[Custom.Markdown] External anchor: could not resolve target: " .. tostring(target),
-        vim.log.levels.WARN
-      )
+      notify.warn("[Custom.Markdown] External anchor: could not resolve target: " .. tostring(target))
     else
       local ok = open_file_in_current_window(resolved)
       if ok then
         if fragment and fragment ~= "" then
           local jumped = search_and_jump_to_fragment(fragment)
           if not jumped then
-            vim.notify(
-              "[Custom.Markdown] External anchor: opened file but anchor '" .. fragment .. "' not found",
-              vim.log.levels.INFO
-            )
+            notify.info("[Custom.Markdown] External anchor: opened file but anchor '" .. fragment .. "' not found")
           end
         end
         return
@@ -269,7 +265,7 @@ function M.handle_cursor_action()
     return
   end
 
-  vim.notify("[Custom.Markdown] Handler: No recognized target under cursor", vim.log.levels.INFO)
+  notify.info("[Custom.Markdown] Handler: No recognized target under cursor")
 end
 
 return M

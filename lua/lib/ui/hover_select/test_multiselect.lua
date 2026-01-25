@@ -1,6 +1,8 @@
 ---@module 'lib.ui.hover_select.test_multiselect'
 ---@description Test functions for hover_select multi-selection feature
 
+local notify = require("lib.notify").create("[lib.ui.hover_select.test_multiselect]")
+
 local hover_select = require("lib.ui.hover_select")
 
 local M = {}
@@ -20,7 +22,7 @@ function M.test_single_select()
     items = items,
     multi_select = false, -- Explicit single-select
     on_select = function(selected, index)
-      vim.notify(string.format("Selected: %s (index: %d)", selected, index), vim.log.levels.INFO)
+      notify.info(string.format("Selected: %s (index: %d)", selected, index))
     end,
   })
 end
@@ -49,7 +51,7 @@ function M.test_multi_select()
         table.insert(msg_lines, string.format("  [%d] %s", indices[i], item))
       end
 
-      vim.notify(table.concat(msg_lines, "\n"), vim.log.levels.INFO)
+      notify.info(table.concat(msg_lines, "\n"))
     end,
   })
 end
@@ -68,7 +70,7 @@ function M.test_multi_select_long()
     height = 15,
     ---@param selected string[]
     on_select = function(selected, _)
-      vim.notify(string.format("Selected %d items: %s", #selected, table.concat(selected, ", ")), vim.log.levels.INFO)
+      notify.info(string.format("Selected %d items: %s", #selected, table.concat(selected, ", ")))
     end,
   })
 end
@@ -86,10 +88,7 @@ function M.test_multi_select_no_selection()
     items = items,
     multi_select = true,
     on_select = function(selected, indices)
-      vim.notify(
-        string.format("No Tab pressed - auto-selected current line:\n  [%d] %s", indices[1], selected[1]),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("No Tab pressed - auto-selected current line:\n [%d] %s", indices[1], selected[1]))
     end,
   })
 end
@@ -115,14 +114,14 @@ function M.test_file_list()
       for _, file in ipairs(selected) do
         table.insert(msg, "  • " .. file)
       end
-      vim.notify(table.concat(msg, "\n"), vim.log.levels.INFO)
+      notify.info(table.concat(msg, "\n"))
     end,
   })
 end
 
 --- Run all tests sequentially
 function M.run_all()
-  vim.notify("Test 1: Single Select", vim.log.levels.INFO)
+  notify.info("Test 1: Single Select")
   vim.defer_fn(function()
     M.test_single_select()
   end, 100)

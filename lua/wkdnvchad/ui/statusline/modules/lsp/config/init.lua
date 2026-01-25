@@ -2,6 +2,8 @@
 -- ============================================================================
 -- Typed configuration accessor for LSP-based statusline module
 
+local notify = require("lib.notify").create("[wkdnvchad.ui.statusline.modules.lsp.config]")
+
 local M = {}
 
 ---@type WkdNvC.UI.Stl.Modules.LSP.Cfg
@@ -72,11 +74,7 @@ function M.update(patch)
       elseif current_type == value_type then
         cfg[key] = value
       else
-        vim.notify(
-          ("LSP config update rejected: field '%s' expects %s, got %s")
-            :format(key, current_type, value_type),
-          vim.log.levels.WARN
-        )
+        notify.warn(("LSP config update rejected: field '%s' expects %s, got %s") :format(key, current_type, value_type))
         return
       end
     end

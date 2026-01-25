@@ -1,5 +1,7 @@
 ---@module 'custom.repo_pickers.dispatch'
 --- Engine resolution and direct execution helpers (no need for engine-specific user commands).
+local notify = require("lib.notify").create("[custom.repo_pickers.dispatch]")
+
 require("custom.repo_pickers.@types.types")
 
 local M = {}
@@ -47,7 +49,7 @@ function M.run_files_by_engine(engine, dir)
   if engine == "fzf" then
     local ok, fzf = pcall(require, "fzf-lua")
     if not ok then
-      vim.notify("repo_pickers: fzf-lua not available", vim.log.levels.ERROR)
+      notify.error("repo_pickers: fzf-lua not available")
       return
     end
     fzf.files({ cwd = dir })
@@ -55,7 +57,7 @@ function M.run_files_by_engine(engine, dir)
   end
   local ok, tb = pcall(require, "telescope.builtin")
   if not ok then
-    vim.notify("repo_pickers: telescope.builtin not available", vim.log.levels.ERROR)
+    notify.error("repo_pickers: telescope.builtin not available")
     return
   end
   tb.find_files({ cwd = dir })
@@ -69,7 +71,7 @@ function M.run_grep_by_engine(engine, dir)
   if engine == "fzf" then
     local ok, fzf = pcall(require, "fzf-lua")
     if not ok then
-      vim.notify("repo_pickers: fzf-lua not available", vim.log.levels.ERROR)
+      notify.error("repo_pickers: fzf-lua not available")
       return
     end
     fzf.live_grep({ cwd = dir })
@@ -77,7 +79,7 @@ function M.run_grep_by_engine(engine, dir)
   end
   local ok, tb = pcall(require, "telescope.builtin")
   if not ok then
-    vim.notify("repo_pickers: telescope.builtin not available", vim.log.levels.ERROR)
+    notify.error("repo_pickers: telescope.builtin not available")
     return
   end
   tb.live_grep({ cwd = dir })

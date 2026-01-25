@@ -3,6 +3,8 @@
 --- This file contains defensive checks to prevent the dashboard opening while other
 --- tools (like :checkhealth) are writing to their buffers.
 
+local notify = require("lib.notify").create("[config.snacks.___dashboard.autocmds]")
+
 local nvim_create_autocmd = vim.api.nvim_create_autocmd
 local desc_tag = "[snacks.dashboard]: "
 
@@ -11,7 +13,7 @@ nvim_create_autocmd("VimEnter", {
   once = true,
   callback = function()
     vim.defer_fn(function()
-      vim.notify("Snacks ready · dashboard with Sessions loaded", vim.log.levels.DEBUG)
+      notify.debug("Snacks ready · dashboard with Sessions loaded")
     end, 50)
   end,
   desc = desc_tag .. "Snacks init hint",

@@ -1,6 +1,8 @@
 ---@module 'config.neotree.safety.operation_queue'
 ---@brief Sequential operation queue for file operations
 
+local notify = require("lib.notify").create("[config.neotree.safety.operation_queue]")
+
 local M = {}
 
 ---@type Cfg.NeoTree.Safety.QueuedOperation[]
@@ -44,10 +46,7 @@ function M.process_queue()
     local ok, err = pcall(operation.fn)
 
     if not ok then
-      vim.notify(
-        string.format("Operation '%s' failed: %s", operation.name, tostring(err)),
-        vim.log.levels.ERROR
-      )
+      notify.error(string.format("Operation '%s' failed: %s", operation.name, tostring(err)))
     end
 
     -- Delay before next operation (gives filesystem time to settle)

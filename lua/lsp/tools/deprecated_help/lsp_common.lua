@@ -8,6 +8,8 @@
 --- - Be minimal: only intercept diagnostics, then call registered callbacks.
 --- - Allow multiple server-specific modules to register handlers.
 
+local notify = require("lib.notify").create("[lsp.tools.deprecated_help.lsp_common]")
+
 local M = {}
 
 -- keep original handler reference to preserve behavior
@@ -50,7 +52,7 @@ local function wrapper(err, result, ctx, config)
       M.server_callbacks[server_name](err, result, ctx, config)
     end)
     if not ok then
-      vim.notify("myplugin.lsp_common: server callback error: " .. tostring(err_msg), vim.log.levels.ERROR)
+      notify.error("myplugin.lsp_common: server callback error: " .. tostring(err_msg))
     end
   end
 end

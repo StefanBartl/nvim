@@ -3,11 +3,12 @@
 --- English comments in code per project conventions.
 --- Full EmmyLua annotations included at top as requested.
 
+local notify = require("lib.notify").create("[custom.markdown.tableview.commands]")
+
 local M = {}
 
 local api = vim.api
 local create_user_command = api.nvim_buf_create_user_command
-local notify = vim.notify
 local ui = require("custom.markdown.tableview.renderer")
 local parser = require("custom.markdown.tableview.parser")
 local browser_view_basic = require("custom.markdown.tableview.views.browser_basic")
@@ -48,7 +49,7 @@ function M.apply(ev)
       end
     end
     if not chosen then
-      notify("[Custom.Markdown.TableView] No table under cursor", vim.log.levels.INFO)
+      notify.info("[Custom.Markdown.TableView] No table under cursor")
       return
     end
     ui.toggle_table(chosen, { floating = true })
@@ -58,7 +59,7 @@ function M.apply(ev)
   create_user_command(bufnr, "TableViewSelect", function()
     local tables = parser.get_tables(bufnr)
     if #tables == 0 then
-      notify("[Custom.Markdown.TableView] No tables found in buffer", vim.log.levels.INFO)
+      notify.info("[Custom.Markdown.TableView] No tables found in buffer")
       return
     end
 

@@ -2,6 +2,8 @@
 ---@description Main module for creating interactive hover selection windows
 ---with line-wise navigation, multi-selection, and custom selection callbacks
 
+local notify = require("lib.notify").create("[lib.ui.hover_select]")
+
 local lazy = require("lib.lazy")
 
 ---@type Lib.UI.HoverSelect.Config.Module
@@ -21,7 +23,6 @@ local highlight = lazy.require("lib.ui.hover_select.highlight")
 
 local M = {}
 
-local notify = vim.notify
 local api = vim.api
 
 ---@type Lib.HoverSelect.State
@@ -49,12 +50,12 @@ local state = {
 function M.open(opts)
   -- Validate required parameters
   if not opts or not opts.items or #opts.items == 0 then
-    notify("lib.ui.hover_select: items list is required and must not be empty", vim.log.levels.ERROR)
+    notify.error("lib.ui.hover_select: items list is required and must not be empty")
     return nil, nil
   end
 
   if not opts.on_select or type(opts.on_select) ~= "function" then
-    notify("lib.ui.hover_select: on_select callback is required", vim.log.levels.ERROR)
+    notify.error("lib.ui.hover_select: on_select callback is required")
     return nil, nil
   end
 
@@ -297,7 +298,7 @@ function M._handle_selection()
     -- Single-select mode: return current item
     local selected_item = state.items[line_idx]
     if not selected_item then
-      notify("lib.ui.hover_select: invalid selection", vim.log.levels.WARN)
+      notify.warn("lib.ui.hover_select: invalid selection")
       M.close()
       return
     end

@@ -3,6 +3,8 @@
 ---@description
 --- Provides functions to insert EmmyLua annotations at the cursor position.
 
+local notify = require("lib.notify").create("[custom.insert.annotation.core]")
+
 local M = {}
 
 local api = vim.api
@@ -60,19 +62,13 @@ local function insert_module_annotation_lua_ls()
   local filepath = api.nvim_buf_get_name(bufnr)
 
   if not filepath:match("%.lua$") then
-    vim.notify(
-      "[custom.insert.annotation] Not a Lua file",
-      vim.log.levels.WARN
-    )
+    notify.warn("[custom.insert.annotation] Not a Lua file")
     return false
   end
 
   local module_path = get_module_path(filepath)
   if not module_path then
-    vim.notify(
-      "[custom.insert.annotation] File not in lua/ directory",
-      vim.log.levels.WARN
-    )
+    notify.warn("[custom.insert.annotation] File not in lua/ directory")
     return false
   end
 
@@ -89,19 +85,13 @@ local function insert_module_annotation_require()
   local filepath = api.nvim_buf_get_name(bufnr)
 
   if not filepath:match("%.lua$") then
-    vim.notify(
-      "[custom.insert.annotation] Not a Lua file",
-      vim.log.levels.WARN
-    )
+    notify.warn("[custom.insert.annotation] Not a Lua file")
     return false
   end
 
   local module_path = get_module_path(filepath)
   if not module_path then
-    vim.notify(
-      "[custom.insert.annotation] File not in lua/ directory",
-      vim.log.levels.WARN
-    )
+    notify.warn("[custom.insert.annotation] File not in lua/ directory")
     return false
   end
 
@@ -125,13 +115,7 @@ function M.insert_module_annotation(format)
   elseif format == "require" then
     return insert_module_annotation_require()
   else
-    vim.notify(
-      string.format(
-        "[custom.insert.annotation] Unknown format: '%s'. Use 'lua_ls' or 'require'.",
-        format
-      ),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format( "[custom.insert.annotation] Unknown format: '%s'. Use 'lua_ls' or 'require'.", format ))
     return false
   end
 end

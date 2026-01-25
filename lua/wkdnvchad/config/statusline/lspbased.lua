@@ -1,6 +1,8 @@
 ---@module 'wkdnvchad.config.statusline.lspbased'
 --- LSP-aware statusline with breadcrumbs and enhanced modules
 
+local notify = require("lib.notify").create("[wkdnvchad.config.statusline.lspbased]")
+
 local M = {}
 
 ---Setup function called after config assembly
@@ -9,10 +11,7 @@ function M.setup(config)
   -- Lazy-load modules to avoid circular dependencies
   local ok, chadrc_module = pcall(require, "wkdnvchad.config.chadrc")
   if not ok then
-    vim.notify(
-      "[statusline.lspbased] Failed to load chadrc module: " .. tostring(chadrc_module),
-      vim.log.levels.ERROR
-    )
+    notify.error("[statusline.lspbased] Failed to load chadrc module: " .. tostring(chadrc_module))
     return
   end
 

@@ -1,7 +1,8 @@
 ---@module 'custom.markdown.tableview.views.browser_basic'
 
+local notify = require("lib.notify").create("[custom.markdown.tableview.views.browser_basic]")
+
 local api = vim.api
-local notify = vim.notify
 local parser = require("custom.markdown.tableview.parser")
 
 -- small helper: escape HTML special chars
@@ -31,14 +32,14 @@ return function(bufnr)
     end
   end
   if not chosen then
-    notify("[Costum.Markdown.TableView] No table under cursor", vim.log.levels.INFO)
+    notify.info("[Costum.Markdown.TableView] No table under cursor")
     return
   end
   -- Simple fallback: create a temporary markdown snippet and open in default browser
   local tmp = vim.fn.tempname() .. ".html"
   local fh = io.open(tmp, "w")
   if not fh then
-    notify("[Costum.Markdown.TableView] Failed to create temp file for browser preview", vim.log.levels.ERROR)
+    notify.error("[Costum.Markdown.TableView] Failed to create temp file for browser preview")
     return
   end
   -- minimal HTML table generator

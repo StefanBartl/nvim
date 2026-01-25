@@ -6,6 +6,8 @@
 --- and makes file I/O and API access more robust across Neovim versions.
 
 ---@return Dbg.MD.InlineDebug
+local notify = require("lib.notify").create("[debugging.markdown.inline_debug]")
+
 local M = {}
 
 local debugfolder = vim.fn.stdpath("data") .. "/debuglog/markdown_inline"
@@ -392,7 +394,7 @@ function M.enable()
   vim.api.nvim_create_user_command("DebugMarkdownInline", function()
     local ok, res = gather()
     if not ok then
-      vim.notify(("Dbg.MD.InlineDebug: %s"):format(res), vim.log.levels.ERROR)
+      notify.error(("Dbg.MD.InlineDebug: %s"):format(res))
     end
   end, { desc = "[debugging.markdown] Gather markdown inline-code highlight debug information" })
 

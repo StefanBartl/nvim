@@ -2,12 +2,14 @@
 --- Telescope picker to show workspace symbols for a query string and open chosen item.
 --- Requires 'telescope.nvim' installed. The picker uses workspace/symbol and presents
 --- results with filename and kind; selection opens the location in a split.
+local notify = require("lib.notify").create("[lsp.tools.ts_type_lookup.ts_telescope_picker]")
+
 local has_telescope, _ = pcall(require, "telescope")
 if not has_telescope then
   return {
     setup = function() end,
     pick = function()
-      vim.notify("telescope.nvim not found", vim.log.levels.WARN)
+      notify.warn("telescope.nvim not found")
     end,
   }
 end
@@ -58,11 +60,11 @@ function M.pick(query)
   -- request workspace/symbol from LSP
   lsp.buf_request(bufnr, "workspace/symbol", { query = query }, function(err, result)
     if err then
-      vim.notify("workspace/symbol failed: " .. tostring(err), vim.log.levels.WARN)
+      notify.warn("workspace/symbol failed: " .. tostring(err))
       return
     end
     if not result or vim.tbl_isempty(result) then
-      vim.notify("No symbols found for: " .. query, vim.log.levels.INFO)
+      notify.info("No symbols found for: " .. query)
       return
     end
     local entries = {}

@@ -12,6 +12,8 @@
 -- FIX: Theme laoding not working correctly
 ---@see fix.md
 
+local notify = require("lib.notify").create("[wkdnvchad.usrcmd.themes]")
+
 local M = {}
 
 -----------------------------------------------------------------------
@@ -148,10 +150,7 @@ local function persist_theme(theme)
   local chadrc_path = find_chadrc_path()
 
   if not chadrc_path then
-    vim.notify(
-      "Warnung: chadrc.lua nicht gefunden. Theme nur für diese Sitzung aktiv.",
-      vim.log.levels.WARN
-    )
+    notify.warn("Warnung: chadrc.lua nicht gefunden. Theme nur für diese Sitzung aktiv.")
     return false
   end
 
@@ -210,10 +209,7 @@ function M.load_theme(theme)
   -- Get Base46 module
   local ok, base46 = pcall(require, "base46")
   if not ok then
-    vim.notify(
-      "Fehler: Base46 nicht geladen. Ist NvChad installiert?",
-      vim.log.levels.ERROR
-    )
+    notify.error("Fehler: Base46 nicht geladen. Ist NvChad installiert?")
     return false
   end
 

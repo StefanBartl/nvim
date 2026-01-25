@@ -1,6 +1,8 @@
 ---@module 'wkdnvchad.mappings.tabufline'
 --- Custom buffer navigation without automatic centering
 
+local notify = require("lib.notify").create("[wkdnvchad.mappings.tabufline]")
+
 local nvchad_tabufline = require("lib.lazy").require("nvchad.tabufline")
 
 local M = {}
@@ -139,20 +141,14 @@ function M.close_n_buffers(n)
   if not nvchad_tabufline then
     local ok, mod = pcall(require, "nvchad.tabufline")
     if not ok then
-      vim.notify(
-        "[wkdnvchad.tabufline] Failed to load nvchad.tabufline",
-        vim.log.levels.ERROR
-      )
+      notify.error("[wkdnvchad.tabufline] Failed to load nvchad.tabufline")
       return false
     end
     nvchad_tabufline = mod
   end
 
   if type(nvchad_tabufline.close_buffer) ~= "function" then
-    vim.notify(
-      "[wkdnvchad.tabufline] close_buffer not available",
-      vim.log.levels.WARN
-    )
+    notify.warn("[wkdnvchad.tabufline] close_buffer not available")
     return false
   end
   local success = true

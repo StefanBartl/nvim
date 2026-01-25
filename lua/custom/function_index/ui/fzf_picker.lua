@@ -5,6 +5,8 @@
 --- function definitions. Supports ANSI color codes, pre-filled queries,
 --- and fast fuzzy matching.
 
+local notify = require("lib.notify").create("[custom.function_index.ui.fzf_picker]")
+
 local M = {}
 
 local indexer_mod = require("custom.function_index.core.indexer")
@@ -125,7 +127,7 @@ function M.pick(config, opts)
   -- Check if fzf-lua is available
   local ok, fzf = pcall(require, "fzf-lua")
   if not ok then
-    vim.notify("fzf-lua is not installed", vim.log.levels.ERROR)
+    notify.error("fzf-lua is not installed")
     return
   end
 
@@ -133,12 +135,12 @@ function M.pick(config, opts)
   local entries, msg = indexer_mod.get_index(config, false)
 
   if #entries == 0 then
-    vim.notify("No functions found. " .. (msg or ""), vim.log.levels.WARN)
+    notify.warn("No functions found. " .. (msg or ""))
     return
   end
 
   if msg then
-    vim.notify(msg, vim.log.levels.INFO)
+    notify.info(msg)
   end
 
   -- Convert entries to formatted lines
@@ -155,7 +157,7 @@ function M.pick(config, opts)
 
         local entry = parse_selected_line(selected[1], entries)
         if not entry then
-          vim.notify("Failed to parse selected entry", vim.log.levels.ERROR)
+          notify.error("Failed to parse selected entry")
           return
         end
 

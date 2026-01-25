@@ -2,6 +2,8 @@
 ---Deterministic capture of buffers and windows created by Ex commands.
 ---Supports async creation, timeouts, multi-object capture and User events.
 
+local notify = require("lib.notify").create("[lib.buf_win_tab.capture]")
+
 local api = vim.api
 local uv = vim.uv
 
@@ -120,7 +122,7 @@ end
 ---@return BufWinCapture.Results|nil
 function M.capture(cmd, opts, cb)
   if type(cmd) ~= "string" then
-    vim.notify("[lib.buf_win_tab.capture] cmd must be a string", vim.log.levels.ERROR)
+    notify.error("[lib.buf_win_tab.capture] cmd must be a string")
     return nil
   end
 

@@ -5,6 +5,8 @@
 --- function definitions. Supports pre-filled queries, fuzzy matching,
 --- and syntax-highlighted previews.
 
+local notify = require("lib.notify").create("[custom.function_index.ui.telescope_picker]")
+
 local M = {}
 
 local indexer_mod = require("custom.function_index.core.indexer")
@@ -89,7 +91,7 @@ function M.pick(config, opts)
   -- Check if Telescope is available
   local ok, _ = pcall(require, "telescope")
   if not ok then
-    vim.notify("Telescope is not installed", vim.log.levels.ERROR)
+    notify.error("Telescope is not installed")
     return
   end
 
@@ -103,12 +105,12 @@ function M.pick(config, opts)
   local entries, msg = indexer_mod.get_index(config, false)
 
   if #entries == 0 then
-    vim.notify("No functions found. " .. (msg or ""), vim.log.levels.WARN)
+    notify.warn("No functions found. " .. (msg or ""))
     return
   end
 
   if msg then
-    vim.notify(msg, vim.log.levels.INFO)
+    notify.info(msg)
   end
 
   -- Create picker

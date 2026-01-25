@@ -1,5 +1,7 @@
 ---@module 'wkddap.configurations'
 
+local notify = require("lib.notify").create("[wkddap.configurations]")
+
 local M = {}
 
 --- Load all configurations for specified languages
@@ -26,10 +28,7 @@ function M.load_all(languages, custom_configs)
     if ok and type(mod.load) == "function" then
       local load_ok, load_err = pcall(mod.load)
       if not load_ok then
-        vim.notify(
-          string.format("[pdap.configurations] Failed to load %s: %s", lang, load_err or "unknown"),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format("[pdap.configurations] Failed to load %s: %s", lang, load_err or "unknown"))
       end
     end
   end

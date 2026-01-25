@@ -9,6 +9,8 @@
 ---    * If selection is URL/path: Wrap with `()` and prepend `[]`, cursor inside `[]`
 ---    * Otherwise: Wrap with `[]`, append `()`, cursor inside `()`
 
+local notify = require("lib.notify").create("[custom.markdown.core.wrap_link]")
+
 local M = {}
 local api = vim.api
 local nvim_buf_set_text, nvim_win_set_cursor = api.nvim_buf_set_text, api.nvim_win_set_cursor
@@ -92,7 +94,7 @@ function M.attach(bufnr)
 
     local mode = vim.fn.mode()
     if not mode:match('[vV\22]') then
-      vim.notify("[wrap_link] Not in visual mode", vim.log.levels.ERROR)
+      notify.error("[wrap_link] Not in visual mode")
       return
     end
 
@@ -123,7 +125,7 @@ function M.attach(bufnr)
     -- Validate indices
     local line_count = api.nvim_buf_line_count(bufnr)
     if start_row >= line_count or end_row >= line_count or start_row < 0 or end_row < 0 then
-      vim.notify("[wrap_link] Invalid selection range", vim.log.levels.ERROR)
+      notify.error("[wrap_link] Invalid selection range")
       return
     end
 
@@ -132,7 +134,7 @@ function M.attach(bufnr)
     local end_line = api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, false)[1]
 
     if not start_line or not end_line then
-      vim.notify("[wrap_link] Could not read selection lines", vim.log.levels.ERROR)
+      notify.error("[wrap_link] Could not read selection lines")
       return
     end
 
@@ -143,7 +145,7 @@ function M.attach(bufnr)
     -- Get the selected text BEFORE exiting visual mode
     local ok, lines = pcall(api.nvim_buf_get_text, bufnr, start_row, start_col, end_row, end_col_exclusive, {})
     if not ok or not lines then
-      vim.notify("[wrap_link] Could not extract selection text: " .. tostring(lines), vim.log.levels.ERROR)
+      notify.error("[wrap_link] Could not extract selection text: " .. tostring(lines))
       return
     end
 
@@ -199,7 +201,7 @@ function M.attach(bufnr)
     if ok_set then
       api.nvim_win_set_cursor(0, { start_row + 1, start_col + cursor_offset })
     else
-      vim.notify("[wrap_link] Failed to replace text", vim.log.levels.ERROR)
+      notify.error("[wrap_link] Failed to replace text")
     end
     end)  -- end of vim.schedule
   end

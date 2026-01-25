@@ -1,6 +1,8 @@
 ---@module 'usrcmds.gather.lua.functions'
 ---@description Collects Lua function definitions using Tree-sitter with comprehensive pattern coverage
 
+local notify = require("lib.notify").create("[usrcmds.gather.lua.functions]")
+
 require("usrcmds.gather.@types")
 
 local api = vim.api
@@ -183,16 +185,13 @@ function M.run()
 
   -- Show errors if any
   if #result.errors > 0 then
-    vim.notify(
-      "Errors during function gathering:\n" .. table.concat(result.errors, "\n"),
-      vim.log.levels.ERROR
-    )
+    notify.error("Errors during function gathering:\n" .. table.concat(result.errors, "\n"))
     return
   end
 
   -- Show results
   if #result.matches == 0 then
-    vim.notify("No functions found in buffer", vim.log.levels.WARN)
+    notify.warn("No functions found in buffer")
     return
   end
 

@@ -6,10 +6,11 @@
 --- - lib.lua_ls.get_module_path (for module path calculation)
 --- - lib.buffer.insert_lines (for content insertion)
 
+local notify = require("lib.notify").create("[config.neotree.commands.add]")
+
 local M = {}
 
 local api, fn = vim.api, vim.fn
-local notify = vim.notify
 
 --- Check if a path ends with a directory separator
 ---@param path string
@@ -95,7 +96,7 @@ local function save_buffer(bufnr)
   end)
 
   if not ok then
-    notify(("Failed to save buffer: %s"):format(err), vim.log.levels.ERROR)
+    notify.error(("Failed to save buffer: %s"):format(err))
   end
 end
 
@@ -127,14 +128,14 @@ local function insert_module_annotation(file_path)
 
   -- Verify we're in the correct buffer
   if api.nvim_buf_get_name(bufnr) ~= file_path then
-    notify("Buffer mismatch, cannot insert module annotation", vim.log.levels.ERROR)
+    notify.error("Buffer mismatch, cannot insert module annotation")
     return false
   end
 
   -- Use library module to insert @module annotation
   local ok, insert_mod = pcall(require, "lib.lua_ls.insert.module_annnotation")
   if not ok then
-    notify("Failed to load module annotation library", vim.log.levels.ERROR)
+    notify.error("Failed to load module annotation library")
     return false
   end
 
@@ -167,7 +168,7 @@ local function handle_lua_types_file(file_path, state, options)
         if #lines == 1 and lines[1] == "" then
           -- Buffer has only one empty line, proceed
         else
-          notify("Buffer is not empty, skipping template insertion", vim.log.levels.INFO)
+          notify.info("Buffer is not empty, skipping template insertion")
           return
         end
       end
@@ -175,7 +176,7 @@ local function handle_lua_types_file(file_path, state, options)
       -- Get and insert template content
       local lines, err = get_types_template_content(file_path)
       if not lines then
-        notify(err or "Failed to load types template", vim.log.levels.ERROR)
+        notify.error(err or "Failed to load types template")
         return
       end
 
@@ -184,7 +185,7 @@ local function handle_lua_types_file(file_path, state, options)
       -- Insert @module annotation using library
       local success = insert_module_annotation(file_path)
       if not success then
-        notify("Warning: Failed to insert @module annotation", vim.log.levels.WARN)
+        notify.warn("Warning: Failed to insert @module annotation")
       end
 
       -- Save the buffer
@@ -234,7 +235,7 @@ local function handle_regular_file(file_path, options)
           -- Get clipboard content
           local clipboard_content, err = get_clipboard_content()
           if not clipboard_content then
-            notify(err or "No clipboard content available", vim.log.levels.WARN)
+            notify.warn(err or "No clipboard content available")
             return
           end
 
@@ -250,7 +251,7 @@ local function handle_regular_file(file_path, options)
             vim.log.levels.INFO
           )
         else
-          notify(("File created: %s"):format(fn.fnamemodify(file_path, ":t")), vim.log.levels.INFO)
+          notify.info(("File created: %s"):format(fn.fnamemodify(file_path, ":t")))
         end
       end)
     end)
@@ -277,7 +278,7 @@ local function handle_directory_creation(dir_path, state, options)
   -- Create the directory
   local ok, err = pcall(fn.mkdir, dir_path, "p")
   if not ok then
-    notify(("Failed to create directory: %s"):format(err), vim.log.levels.ERROR)
+    notify.error(("Failed to create directory: %s"):format(err))
     return
   end
 
@@ -319,7 +320,7 @@ function M.custom_add(state, options)
   -- Get the parent node
   local node = state.tree:get_node()
   if not node then
-    vim.notify("[cfg.neotree.commands].add node is nil", vim.log.levels.WARN)
+    notify.warn("[cfg.neotree.commands].add node is nil")
     return nil
   end
   local parent_path = node.type == "directory" and node.path or node:get_parent_id()
@@ -340,7 +341,7 @@ function M.custom_add(state, options)
       -- File creation
       -- Check if file already exists
       if fn.filereadable(full_path) == 1 then
-        notify("File already exists", vim.log.levels.WARN)
+        notify.warn("File already exists")
         return
       end
 
@@ -355,7 +356,7 @@ function M.custom_add(state, options)
       if file then
         file:close()
       else
-        notify("Failed to create file", vim.log.levels.ERROR)
+        notify.error("Failed to create file")
         return
       end
 

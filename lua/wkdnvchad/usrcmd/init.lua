@@ -1,6 +1,8 @@
 ---@module 'wkdnvchad.ui.usrcmd'
 ---Provides :UI usercommand for runtime UI configuration (Base46, editor UI).
 
+local notify = require("lib.notify").create("[wkdnvchad.usrcmd]")
+
 local M = {}
 
 local api = vim.api
@@ -45,7 +47,7 @@ local function ui_transparency(args)
   if action == "on" then
     local success = theme.set_transparency(false)
     if success then
-      vim.notify("✨ Transparenz aktiviert", vim.log.levels.INFO)
+      notify.info("✨ Transparenz aktiviert")
     end
     return
   end
@@ -53,17 +55,14 @@ local function ui_transparency(args)
   if action == "off" then
     local success = theme.set_transparency(true)
     if success then
-      vim.notify("🎨 Transparenz deaktiviert", vim.log.levels.INFO)
+      notify.info("🎨 Transparenz deaktiviert")
     end
     return
   end
 
   -- Toggle
   local new_state = theme.toggle_transparency()
-  vim.notify(
-    string.format("✨ Transparenz %s", new_state and "aktiviert" or "deaktiviert"),
-    vim.log.levels.INFO
-  )
+  notify.info(string.format("✨ Transparenz %s", new_state and "aktiviert" or "deaktiviert"))
 end
 
 ---Handle theme command
@@ -75,12 +74,9 @@ local function ui_theme(args)
     -- Show current theme if no argument
     local current = theme.get_current_theme()
     if current then
-      vim.notify(
-        string.format("Aktuelles Theme: %s\nNutze :UI theme <name> zum Ändern", current),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("Aktuelles Theme: %s\nNutze :UI theme <name> zum Ändern", current))
     else
-      vim.notify("Kein Theme konfiguriert", vim.log.levels.WARN)
+      notify.warn("Kein Theme konfiguriert")
     end
     return
   end
@@ -89,14 +85,7 @@ local function ui_theme(args)
   if not theme.theme_exists(theme_name) then
     local available = theme.list_themes()
     local available_str = table.concat(available, ", ")
-    vim.notify(
-      string.format(
-        "Theme '%s' nicht gefunden.\n\nVerfügbare Themes:\n%s",
-        theme_name,
-        available_str
-      ),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format( "Theme '%s' nicht gefunden.\n\nVerfügbare Themes:\n%s", theme_name, available_str ))
     return
   end
 
@@ -104,9 +93,9 @@ local function ui_theme(args)
   local success = theme.load_theme(theme_name)
 
   if success then
-    vim.notify(string.format("🎨 Theme geändert zu: %s", theme_name), vim.log.levels.INFO)
+    notify.info(string.format("🎨 Theme geändert zu: %s", theme_name))
   else
-    vim.notify(string.format("Fehler beim Laden von Theme '%s'", theme_name), vim.log.levels.ERROR)
+    notify.error(string.format("Fehler beim Laden von Theme '%s'", theme_name))
   end
 end
 
@@ -118,7 +107,7 @@ local function ui_themes(args)
   local current = theme.get_current_theme()
 
   if #themes == 0 then
-    vim.notify("Keine Themes gefunden!", vim.log.levels.ERROR)
+    notify.error("Keine Themes gefunden!")
     return
   end
 
@@ -130,7 +119,7 @@ local function ui_themes(args)
     table.insert(lines, marker .. theme_name)
   end
 
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  notify.info(table.concat(lines, "\n"))
 end
 
 ---Handle status command
@@ -156,7 +145,7 @@ local function ui_status(args)
   lines[#lines + 1] =
     "╰─────────────────────────────╯"
 
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  notify.info(table.concat(lines, "\n"))
 end
 
 ---Toggle between configured themes
@@ -166,13 +155,9 @@ local function ui_toggle(args)
   local next_theme = theme.toggle_theme()
 
   if next_theme then
-    vim.notify(string.format("🎨 Theme geändert zu: %s", next_theme), vim.log.levels.INFO)
+    notify.info(string.format("🎨 Theme geändert zu: %s", next_theme))
   else
-    vim.notify(
-      "Kein theme_toggle in chadrc konfiguriert.\n"
-        .. "Füge mindestens 2 Themes zu theme_toggle hinzu.",
-      vim.log.levels.WARN
-    )
+    notify.warn("Kein theme_toggle in chadrc konfiguriert.\n" .. "Füge mindestens 2 Themes zu theme_toggle hinzu.")
   end
 end
 
@@ -199,7 +184,7 @@ local function ui_help(args)
 
 Siehe auch: README-THEMES.md für technische Details
 ]]
-  vim.notify(help_text, vim.log.levels.INFO)
+  notify.info(help_text)
 end
 
 -----------------------------------------------------------------------
@@ -232,13 +217,10 @@ local function dispatcher(opts)
   if action then
     local ok, err = pcall(action, args)
     if not ok then
-      vim.notify(string.format("UI %s Fehler: %s", sub, tostring(err)), vim.log.levels.ERROR)
+      notify.error(string.format("UI %s Fehler: %s", sub, tostring(err)))
     end
   else
-    vim.notify(
-      string.format("Unbekannter Befehl: '%s'\nNutze :UI help für Hilfe", sub),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format("Unbekannter Befehl: '%s'\nNutze :UI help für Hilfe", sub))
   end
 end
 

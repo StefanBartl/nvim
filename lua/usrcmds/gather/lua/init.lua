@@ -1,6 +1,8 @@
 ---@module 'usrcmds.gather.lua'
 ---@description Entry point for Lua gather commands with buffer and cwd modes
 
+local notify = require("lib.notify").create("[usrcmds.gather.lua]")
+
 require("usrcmds.gather.@types")
 
 local hover_select = require("lib.ui.hover_select")
@@ -21,7 +23,7 @@ local function run_buffer_mode(gather_type)
   local gatherer = gatherers[gather_type]
 
   if not gatherer or not gatherer.run then
-    vim.notify("Unknown gather type: " .. gather_type, vim.log.levels.ERROR)
+    notify.error("Unknown gather type: " .. gather_type)
     return
   end
 
@@ -34,7 +36,7 @@ local function run_cwd_mode(gather_type)
   local gatherer = gatherers[gather_type]
 
   if not gatherer or not gatherer.scan_buffer then
-    vim.notify("Gatherer does not support cwd mode: " .. gather_type, vim.log.levels.ERROR)
+    notify.error("Gatherer does not support cwd mode: " .. gather_type)
     return
   end
 
@@ -43,7 +45,7 @@ local function run_cwd_mode(gather_type)
   local files = scanner.find_lua_files()
 
   if #files == 0 then
-    vim.notify("No Lua files found in cwd", vim.log.levels.WARN)
+    notify.warn("No Lua files found in cwd")
     return
   end
 
@@ -58,7 +60,7 @@ local function run_cwd_mode(gather_type)
     local file_matches = scanner.scan_files(files, gatherer.scan_buffer)
 
     if #file_matches == 0 then
-      vim.notify("No " .. gather_type .. " found in cwd", vim.log.levels.WARN)
+      notify.warn("No " .. gather_type .. " found in cwd")
       return
     end
 
@@ -80,10 +82,7 @@ local function run_cwd_mode(gather_type)
     local title = string.format("%s (CWD: %d matches)", gather_type:gsub("^%l", string.upper), #all_matches)
     ui.open_scratch(lines, title)
 
-    vim.notify(
-      string.format("Found %d %s across %d files", #all_matches, gather_type, #file_matches),
-      vim.log.levels.INFO
-    )
+    notify.info(string.format("Found %d %s across %d files", #all_matches, gather_type, #file_matches))
   end, function()
     -- User cancelled - do nothing
   end)
@@ -119,7 +118,7 @@ function M.run(mode)
       elseif mode == "cwd" then
         run_cwd_mode(gather_type)
       else
-        vim.notify("Unknown mode: " .. mode, vim.log.levels.ERROR)
+        notify.error("Unknown mode: " .. mode)
       end
     end,
   })

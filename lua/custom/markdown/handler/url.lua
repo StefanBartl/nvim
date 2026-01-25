@@ -3,6 +3,8 @@
 --- inline raw URLs, and simple HTML anchors). Exports helpers for extraction and
 --- cross-platform opening.
 
+local notify = require("lib.notify").create("[custom.markdown.handler.url]")
+
 local M = {}
 
 ---@type table
@@ -159,7 +161,7 @@ local function open_with_system_viewer(url)
   local ok, jid = pcall(vim.fn.jobstart, cmd, { detach = true })
   if not ok or jid == 0 or jid == -1 then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] URL: Failed to spawn browser for: " .. tostring(url), vim.log.levels.ERROR)
+      notify.error("[Custom.Markdown] URL: Failed to spawn browser for: " .. tostring(url))
     end
     return false
   end
@@ -191,7 +193,7 @@ function M.open(line)
   local target = extract_url_from_line(line)
   if not target then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] URL: No URL found under cursor", vim.log.levels.INFO)
+      notify.info("[Custom.Markdown] URL: No URL found under cursor")
     end
     return false
   end
@@ -200,11 +202,11 @@ function M.open(line)
   local ok = open_with_system_viewer(target)
   if ok then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] URL: Opening -> " .. target, vim.log.levels.INFO)
+      notify.info("[Custom.Markdown] URL: Opening -> " .. target)
     end
   else
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] URL: Failed to open -> " .. target, vim.log.levels.ERROR)
+      notify.error("[Custom.Markdown] URL: Failed to open -> " .. target)
     end
   end
   return ok

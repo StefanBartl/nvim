@@ -6,6 +6,8 @@
 -- sane defaults, defensive execution and LuaLS annotations.
 -- =========================================================
 
+local notify = require("lib.notify").create("[lib.usercmd]")
+
 local M = {}
 
 ---@param name string
@@ -30,10 +32,7 @@ function M.create(name, callback, opts)
     callback = function(args)
       local ok, err = pcall(user_cb, args)
       if not ok then
-        vim.notify(
-          ("UserCommand '%s' failed:\n%s"):format(name, err),
-          vim.log.levels.ERROR
-        )
+        notify.error(("UserCommand '%s' failed:\n%s"):format(name, err))
       end
     end
   end

@@ -1,9 +1,10 @@
 ---@module 'config.neotree.helper.rel_path_to_require'
 --- Converts a Neo-tree node to Lua require() string(s) and copies to clipboard
 
+local notify = require("lib.notify").create("[config.neotree.actions.rel_path_to_require]")
+
 local M = {}
 local fn = vim.fn
-local notify = vim.notify
 
 -- Find the lua directory root for the given path
 ---@param path string absolute or relative path
@@ -81,20 +82,20 @@ end
 function M.copy_as_require(node, opts)
   opts = opts or {}
   if not node then
-    notify("No node provided", vim.log.levels.WARN)
+    notify.warn("No node provided")
     return
   end
 
   local path = node.path or node:get_id()
   if not path or path == "" then
-    notify("Node path is empty", vim.log.levels.WARN)
+    notify.warn("Node path is empty")
     return
   end
 
   -- Find lua root directory
   local lua_root, rel_path = find_lua_root(path)
   if not lua_root then
-    notify("Could not find lua/ directory in path", vim.log.levels.WARN)
+    notify.warn("Could not find lua/ directory in path")
     return
   end
 
@@ -114,7 +115,7 @@ function M.copy_as_require(node, opts)
   end
 
   if #modules == 0 then
-    notify("No Lua files found", vim.log.levels.WARN)
+    notify.warn("No Lua files found")
     return
   end
 
@@ -124,7 +125,7 @@ function M.copy_as_require(node, opts)
   end
   local r = table.concat(require_lines, "\n")
   vim.fn.setreg("+", table.concat(require_lines, "\n"))
-  notify(("Copied %d require() string(s) to clipboard: %s"):format(#require_lines, r), vim.log.levels.INFO)
+  notify.info(("Copied %d require() string(s) to clipboard: %s"):format(#require_lines, r))
 end
 
 return M

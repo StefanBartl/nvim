@@ -5,6 +5,8 @@
 --- - sections only shown if at least one child is visible
 --- - robust nil checks and step-by-step logic
 
+local notify = require("lib.notify").create("[config.menu-update.menu.neotree]")
+
 local wrap_with_close = require("config.menu.neotree.wrap_with_close")
 local menu_state = require("menu.state")
 local api = vim.api
@@ -31,16 +33,16 @@ local function build_neotree_cmd_wrapper(handler)
     if state == nil then
       local ok_mgr, manager = safe_require("neo-tree.sources.manager")
       if not ok_mgr then
-        vim.notify("Neo-tree manager not available", vim.log.levels.ERROR)
+        notify.error("Neo-tree manager not available")
         return
       end
       if type(manager) ~= "table" or type(manager.get_state_for_window) ~= "function" then
-        vim.notify("Neo-tree manager invalid", vim.log.levels.ERROR)
+        notify.error("Neo-tree manager invalid")
         return
       end
       state = manager.get_state_for_window()
       if state == nil then
-        vim.notify("Neo-tree state not available", vim.log.levels.WARN)
+        notify.warn("Neo-tree state not available")
         return
       end
     end
@@ -53,13 +55,13 @@ local function build_neotree_cmd_wrapper(handler)
     end
 
     if fn == nil then
-      vim.notify("Invalid Neo-tree handler for menu entry", vim.log.levels.DEBUG)
+      notify.debug("Invalid Neo-tree handler for menu entry")
       return
     end
 
     local ok, err = pcall(fn, state)
     if not ok then
-      vim.notify(("Neo-tree custom menu handler failed: %s"):format(tostring(err)), vim.log.levels.ERROR)
+      notify.error(("Neo-tree custom menu handler failed: %s"):format(tostring(err)))
     end
   end
 end
@@ -165,7 +167,7 @@ local function build_entry(entry, state, window_map)
       if is_entry_applicable(entry, neo_state) then
         build_neotree_cmd_wrapper(handler)(neo_state)
       else
-        vim.notify("This action is not applicable for the current node.", vim.log.levels.WARN)
+        notify.warn("This action is not applicable for the current node.")
       end
     end
 

@@ -5,6 +5,8 @@
 --- with configurable fill characters. Supports single-line, multi-line (block),
 --- and repeat operations.
 
+local notify = require("lib.notify").create("[custom.format.column_align.core]")
+
 local M = {}
 
 local api = vim.api
@@ -184,29 +186,20 @@ end
 function M.align_to_column(target_col, fill_char)
   -- Validate and normalize inputs
   if not target_col or type(target_col) ~= "number" or target_col < 1 then
-    vim.notify(
-      "[custom.format.column_align] Target column must be a positive integer",
-      vim.log.levels.ERROR
-    )
+    notify.error("[custom.format.column_align] Target column must be a positive integer")
     return
   end
 
   fill_char = fill_char or " "
   if type(fill_char) ~= "string" then
-    vim.notify(
-      "[custom.format.column_align] Fill character must be a string",
-      vim.log.levels.ERROR
-    )
+    notify.error("[custom.format.column_align] Fill character must be a string")
     return
   end
 
   -- Handle UTF-8 fill characters
   local fill_width = display_width(fill_char)
   if fill_width ~= 1 then
-    vim.notify(
-      "[custom.format.column_align] Fill character must have display width of 1",
-      vim.log.levels.ERROR
-    )
+    notify.error("[custom.format.column_align] Fill character must have display width of 1")
     return
   end
 
@@ -217,7 +210,7 @@ function M.align_to_column(target_col, fill_char)
   -- Validate selection (works from normal mode after visual selection)
   local valid, err, selection = validate_selection()
   if not valid or not selection then
-    vim.notify("[custom.format.column_align] " .. err, vim.log.levels.ERROR)
+    notify.error("[custom.format.column_align] " .. err)
     return
   end
 
@@ -244,14 +237,11 @@ function M.align_to_column(target_col, fill_char)
   end
 
   if not success then
-    vim.notify("[custom.format.column_align] " .. align_err, vim.log.levels.ERROR)
+    notify.error("[custom.format.column_align] " .. align_err)
     return
   end
 
-  vim.notify(
-    string.format("Aligned to column %d with '%s'", target_col, fill_char),
-    vim.log.levels.INFO
-  )
+  notify.info(string.format("Aligned to column %d with '%s'", target_col, fill_char))
 end
 
 ---Interactive alignment with prompts
@@ -265,10 +255,7 @@ function M.align_interactive()
 
   local target_col = tonumber(target_input)
   if not target_col or target_col < 1 then
-    vim.notify(
-      "[custom.format.column_align] Invalid column number",
-      vim.log.levels.ERROR
-    )
+    notify.error("[custom.format.column_align] Invalid column number")
     return
   end
 
@@ -284,10 +271,7 @@ end
 ---@return nil
 function M.align_repeat()
   if not state.last_target_col then
-    vim.notify(
-      "[custom.format.column_align] No previous alignment to repeat",
-      vim.log.levels.WARN
-    )
+    notify.warn("[custom.format.column_align] No previous alignment to repeat")
     return
   end
 

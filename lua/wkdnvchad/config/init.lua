@@ -2,6 +2,8 @@
 --- Central configuration loader with statusline variant selection.
 --- Loads base46 config once and applies selected statusline variant.
 
+local notify = require("lib.notify").create("[wkdnvchad.config]")
+
 local M = {}
 
 -- ============================================================================
@@ -29,14 +31,7 @@ local function load_statusline_config()
 
   local ok, config = pcall(require, config_path)
   if not ok then
-    vim.notify(
-      string.format(
-        "[wkdnvchad.config] Failed to load statusline variant '%s': %s\nFalling back to 'normal'",
-        variant,
-        tostring(config)
-      ),
-      vim.log.levels.WARN
-    )
+    notify.warn(string.format( "[wkdnvchad.config] Failed to load statusline variant '%s': %s\nFalling back to 'normal'", variant, tostring(config) ))
     return require("wkdnvchad.config.statusline.normal")
   end
 
@@ -70,13 +65,7 @@ function M.setup(user_opts)
   if type(statusline_config.setup) == "function" then
     local setup_ok, setup_err = pcall(statusline_config.setup, config)
     if not setup_ok then
-      vim.notify(
-        string.format(
-          "[wkdnvchad.config] Statusline setup failed: %s",
-          tostring(setup_err)
-        ),
-        vim.log.levels.ERROR
-      )
+      notify.error(string.format( "[wkdnvchad.config] Statusline setup failed: %s", tostring(setup_err) ))
     end
   end
 

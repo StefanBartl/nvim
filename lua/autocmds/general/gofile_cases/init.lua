@@ -1,6 +1,8 @@
 ---@module 'autocmds.general.gofile_cases'
 --- Loader/registry for gofile_cases.
 --- Exposes a function `load_ordered_cases(cfg)` which returns an ordered list of case modules.
+local notify = require("lib.notify").create("[autocmds.general.gofile_cases]")
+
 local M = {}
 
 --- Deterministic list of module names in the intended invocation order.
@@ -27,7 +29,7 @@ function M.load_ordered_cases(cfg)
       table.insert(mods, m)
     else
       if cfg and cfg.goto_file and cfg.goto_file.debug then
-        vim.notify(("md-gf: failed to load module '%s'"):format(name), vim.log.levels.WARN)
+        notify.warn(("md-gf: failed to load module '%s'"):format(name))
       end
     end
   end

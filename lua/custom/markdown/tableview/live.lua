@@ -1,8 +1,9 @@
 ---@module 'custom.markdown.tableview.views.live'
 
+local notify = require("lib.notify").create("[custom.markdown.tableview.live]")
+
 local api = vim.api
 local uv = vim.loop
-local notify = vim.notify
 local parser = require("custom.markdown.tableview.parser")
 
 local M = {}
@@ -119,20 +120,20 @@ function M.start(bufnr)
   bufnr = bufnr or api.nvim_get_current_buf()
   local chosen = choose_table_under_cursor(bufnr)
   if not chosen then
-    notify("[Custom.Markdown.TableView] No table under cursor for live preview", vim.log.levels.INFO)
+    notify.info("[Custom.Markdown.TableView] No table under cursor for live preview")
     return
   end
 
   local tmpdir = ensure_tmpdir_for_buf()
   local ok, err = write_preview_files(chosen, tmpdir)
   if not ok then
-    notify("[Custom.Markdown.TableView] Failed to write preview files: " .. tostring(err), vim.log.levels.ERROR)
+    notify.error("[Custom.Markdown.TableView] Failed to write preview files: " .. tostring(err))
     return
   end
 
   local port, job = start_http_server(tmpdir, DEFAULT_PORT)
   if not port then
-    notify("[Custom.Markdown.TableView] Failed to start HTTP server", vim.log.levels.ERROR)
+    notify.error("[Custom.Markdown.TableView] Failed to start HTTP server")
     return
   end
 
@@ -141,7 +142,7 @@ function M.start(bufnr)
   state.running = true
 
   open_browser_for_file(state.html_file, state.port)
-  notify("[Custom.Markdown.TableView] Live preview started (port " .. tostring(state.port) .. ")", vim.log.levels.INFO)
+  notify.info("[Custom.Markdown.TableView] Live preview started (port " .. tostring(state.port) .. ")")
 end
 
 -- Public: regenerate preview
@@ -168,7 +169,7 @@ function M.stop()
     state.job_id = nil
   end
   state.running = false
-  notify("[Custom.Markdown.TableView] Live preview stopped", vim.log.levels.INFO)
+  notify.info("[Custom.Markdown.TableView] Live preview stopped")
 end
 
 -- Public: install autocmd

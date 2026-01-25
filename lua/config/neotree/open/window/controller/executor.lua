@@ -1,6 +1,8 @@
 ---@module 'config.neotree.open.window.controller.executor'
 ---@brief Neo-tree command executor with custom float implementation
 
+local notify = require("lib.notify").create("[config.neotree.open.window.controller.executor]")
+
 local M = {}
 
 local buffer_utils = require("config.neotree.utils.buffer")
@@ -55,10 +57,7 @@ local function cleanup_duplicates()
   end
 
   if cfg.debug and #windows > 0 then
-    vim.notify(
-      string.format("[neo-tree] Cleaned up %d duplicate window(s)", #windows),
-      vim.log.levels.INFO
-    )
+    notify.info(string.format("[neo-tree] Cleaned up %d duplicate window(s)", #windows))
   end
 
   return #windows
@@ -79,10 +78,7 @@ local function focus_neotree_window(max_attempts)
       local ok = pcall(vim.api.nvim_set_current_win, win)
       if ok then
         if cfg.debug then
-          vim.notify(
-            string.format("[neo-tree] Focused window on attempt %d", attempt),
-            vim.log.levels.DEBUG
-          )
+          notify.debug(string.format("[neo-tree] Focused window on attempt %d", attempt))
         end
         return true
       end
@@ -119,7 +115,7 @@ function M.open_window(position, source, callback)
   -- =========================================================================
   local NeoCmd, err = get_neo_cmd()
   if not NeoCmd then
-    vim.notify("[neo-tree] " .. err, vim.log.levels.ERROR)
+    notify.error("[neo-tree] " .. err)
     callback(false)
     return
   end
@@ -178,10 +174,7 @@ function M.close_window(callback)
   local current_src = state.get_source()
 
   if cfg.debug then
-    vim.notify(
-      string.format("[neo-tree] Closing position: %s", tostring(current_pos)),
-      vim.log.levels.INFO
-    )
+    notify.info(string.format("[neo-tree] Closing position: %s", tostring(current_pos)))
   end
 
   -- =========================================================================
@@ -201,7 +194,7 @@ function M.close_window(callback)
   -- =========================================================================
   local NeoCmd, err = get_neo_cmd()
   if not NeoCmd then
-    vim.notify("[neo-tree] " .. err, vim.log.levels.ERROR)
+    notify.error("[neo-tree] " .. err)
     callback(false)
     return
   end

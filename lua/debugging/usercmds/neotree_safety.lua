@@ -1,5 +1,7 @@
 ---@module 'debugging.usercmds.neotree_safety'
 
+local notify = require("lib.notify").create("[debugging.usercmds.neotree_safety]")
+
 local M = {}
 
 ---@return nil
@@ -16,22 +18,22 @@ function M.enable()
       reason and ("\n  Reason: " .. reason) or ""
     )
 
-    vim.notify(msg, vim.log.levels.INFO)
+    notify.info(msg)
   end, { desc = "[debugging.usercmds.neotree_safety] Check Neo-tree watcher quarantine status" })
 
   vim.api.nvim_create_user_command("DebugNeoTreeQuarantineExit", function()
     local wq = require("config.neotree.watcher_quarantine")
     wq.exit_quarantine()
-    vim.notify("Quarantine exited manually", vim.log.levels.INFO)
+    notify.info("Quarantine exited manually")
   end, { desc = "[debugging.usercmds.neotree_safety] Manually exit Neo-tree watcher quarantine" })
 
   vim.api.nvim_create_user_command("DebugNeoTreeRestartWatchers", function()
     local wq = require("config.neotree.watcher_quarantine")
     local ok, msg = wq.restart_watchers()
     if ok then
-      vim.notify("Watchers restarted", vim.log.levels.INFO)
+      notify.info("Watchers restarted")
     else
-      vim.notify("Failed to restart watchers: " .. (msg or "unknown"), vim.log.levels.WARN)
+      notify.warn("Failed to restart watchers: " .. (msg or "unknown"))
     end
   end, { desc = "[debugging.usercmds.neotree_safety] Restart Neo-tree file watchers" })
 
@@ -44,7 +46,7 @@ function M.enable()
   vim.api.nvim_create_user_command("DebugNeoTreeBackupClean", function()
     local safety = require("config.neotree.safety")
     local cleaned = safety.backup.clean_old_backups(7)
-    vim.notify(string.format("Cleaned %d old backups", cleaned), vim.log.levels.INFO)
+    notify.info(string.format("Cleaned %d old backups", cleaned))
   end, { desc = "[debugging.usercmds.neotree_safety] Clean old Neo-tree backups" })
 
   -- Dry-run commands
@@ -62,13 +64,13 @@ function M.enable()
   vim.api.nvim_create_user_command("DebugNeoTreeQueueStatus", function()
     local safety = require("config.neotree.safety")
     local status = safety.queue.status()
-    vim.notify(vim.inspect(status), vim.log.levels.INFO)
+    notify.info(vim.inspect(status))
   end, { desc = "[debugging.usercmds.neotree_safety] Show Neo-tree operation queue status" })
 
   vim.api.nvim_create_user_command("DebugNeoTreeQueueClear", function()
     local safety = require("config.neotree.safety")
     safety.queue.clear()
-    vim.notify("Queue cleared", vim.log.levels.INFO)
+    notify.info("Queue cleared")
   end, { desc = "[debugging.usercmds.neotree_safety] Clear Neo-tree operation queue" })
 end
 

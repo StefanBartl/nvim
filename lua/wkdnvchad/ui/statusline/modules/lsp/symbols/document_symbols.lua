@@ -1,6 +1,8 @@
 ---@module 'wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols'
 --- Fully async LSP document symbols with debouncing and proper error handling
 
+local notify = require("lib.notify").create("[wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols]")
+
 local M = {}
 
 local api = vim.api
@@ -206,7 +208,7 @@ local function ensure_doc_symbols_in_bg(bufnr)
   -- Create debounced timer
   local timer = vim.uv.new_timer()
   if not timer then
-    vim.notify("[wkdnvchad.statusline.modules.lsp.symbols.doc] timer is nil", vim.log.levels.WARN)
+    notify.warn("[wkdnvchad.statusline.modules.lsp.symbols.doc] timer is nil")
     return nil
   end
   debounce_timers[bufnr] = timer

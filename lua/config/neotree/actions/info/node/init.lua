@@ -2,6 +2,8 @@
 ---@brief Toggleable hover window with file or directory information for tree nodes
 --- Fixed: Uses node_utils.get_current() for consistent node retrieval
 
+local notify = require("lib.notify").create("[config.neotree.actions.info.node]")
+
 local M = {}
 
 local bitlib = require("bit")
@@ -120,14 +122,14 @@ function M.show_from_neotree(state)
   -- FIXED: Use node_utils for consistent node retrieval
   local node = node_utils.get_current(state)
   if not node then
-    vim.notify("No node under cursor", vim.log.levels.WARN)
+    notify.warn("No node under cursor")
     return
   end
 
   -- Resolve the filesystem path
   local path, _ = node_utils.get_path(node)
   if path == "" then
-    vim.notify("Node has no path", vim.log.levels.WARN)
+    notify.warn("Node has no path")
     return
   end
 

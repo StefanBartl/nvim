@@ -11,6 +11,8 @@
 --- Design notes:
 --- - Pure Lua using vim.fs.find (Neovim ≥0.9) and vim.fs.normalize (≥0.10) with fallbacks.
 
+local notify = require("lib.notify").create("[custom.pathprobe]")
+
 local M = {}
 
 local uv = vim.uv or vim.loop
@@ -371,10 +373,7 @@ function M.probe(opts)
   -- 1) Extract token
   local raw = get_visual_selection_line() or get_normal_token()
   if not raw then
-    vim.notify(
-      "[pathprobe] No path-like token found. Select a path segment or place cursor on it.",
-      vim.log.levels.WARN
-    )
+    notify.warn("[pathprobe] No path-like token found. Select a path segment or place cursor on it.")
     return false
   end
 
@@ -382,7 +381,7 @@ function M.probe(opts)
   local base, line, col = split_line_col(raw)
   local tail = sanitize_token(base)
   if tail == "" then
-    vim.notify("[pathprobe] Token is not a recognizable path.", vim.log.levels.WARN)
+    notify.warn("[pathprobe] Token is not a recognizable path.")
     return false
   end
 
@@ -392,7 +391,7 @@ function M.probe(opts)
     roots = guess_roots()
   end
   if #roots == 0 then
-    vim.notify("[pathprobe] No search roots available.", vim.log.levels.ERROR)
+    notify.error("[pathprobe] No search roots available.")
     return false
   end
 
@@ -412,7 +411,7 @@ function M.probe(opts)
   end
 
   if #all_matches == 0 then
-    vim.notify(string.format("[pathprobe] No match for '%s' in %d roots.", tail, #roots), vim.log.levels.WARN)
+    notify.warn(string.format("[pathprobe] No match for '%s' in %d roots.", tail, #roots))
     return false
   end
 

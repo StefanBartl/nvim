@@ -10,6 +10,8 @@
 ---     autocmd_events = { "BufLeave", "FocusLost" },
 ---   })
 
+local notify = require("lib.notify").create("[config.harpoon.hardening]")
+
 local M = {}
 
 ---@type uv uv
@@ -126,7 +128,7 @@ local function _ensure_ui_wrap()
     _debounced_save()
     local ok = ret[1]
     if not ok then
-      vim.notify("[harpoon hardening] ui.toggle_quick_menu failed: " .. tostring(ret[2]), vim.log.levels.WARN)
+      notify.warn("[harpoon hardening] ui.toggle_quick_menu failed: " .. tostring(ret[2]))
       return
     end
     return select(2, unpack(ret))

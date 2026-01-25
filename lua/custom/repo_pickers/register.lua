@@ -1,5 +1,7 @@
 ---@module 'custom.repo_pickers.register'
 --- Registration of public user commands and optional engine-specific extras.
+local notify = require("lib.notify").create("[custom.repo_pickers.register]")
+
 require("custom.repo_pickers.@types.types")
 
 local actions = require("custom.repo_pickers.actions")
@@ -8,7 +10,6 @@ local router = require("custom.repo_pickers.select.router")
 local M = {}
 
 local api = vim.api
-local notify, levels = vim.notify, vim.log.levels
 
 --- Register the minimal public API: RepoFiles / RepoGrep.
 --- Optionally, if cfg.expose_engine_cmds is true, also register engine-specific commands.
@@ -52,7 +53,7 @@ function M.usercmds(cfg)
     local dir = opts and opts.fargs and opts.fargs[1] or nil
     local fzf = sreq("fzf-lua")
     if not fzf then
-      notify("repo_pickers: fzf-lua not available", levels.ERROR)
+      notify.error("repo_pickers: fzf-lua not available")
       return
     end
     if dir and dir ~= "" then
@@ -67,7 +68,7 @@ function M.usercmds(cfg)
     local dir = opts and opts.fargs and opts.fargs[1] or nil
     local fzf = sreq("fzf-lua")
     if not fzf then
-      notify("repo_pickers: fzf-lua not available", levels.ERROR)
+      notify.error("repo_pickers: fzf-lua not available")
       return
     end
     if dir and dir ~= "" then
@@ -82,7 +83,7 @@ function M.usercmds(cfg)
     local dir = opts and opts.fargs and opts.fargs[1] or nil
     local tb = sreq("telescope.builtin")
     if not tb then
-      notify("repo_pickers: telescope.builtin not available", levels.ERROR)
+      notify.error("repo_pickers: telescope.builtin not available")
       return
     end
     if dir and dir ~= "" then
@@ -97,7 +98,7 @@ function M.usercmds(cfg)
     local dir = opts and opts.fargs and opts.fargs[1] or nil
     local tb = sreq("telescope.builtin")
     if not tb then
-      notify("repo_pickers: telescope.builtin not available", levels.ERROR)
+      notify.error("repo_pickers: telescope.builtin not available")
       return
     end
     if dir and dir ~= "" then

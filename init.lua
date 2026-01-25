@@ -45,7 +45,6 @@ require("wkdoptions").setup({ highlights = false, options = true })
 require("lsp").setup({ ensure_installing = false })
 require("autocmds")
 require("custom")
-require("custom.mynotes")
 require("sessions").enable({ autocommands = true, usercmds = true, keymaps = true })
 require("usrcmds")
 

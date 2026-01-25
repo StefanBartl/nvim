@@ -6,6 +6,8 @@
 ---
 --- Core logic migrated from custom.markdown.core.headline_spacing
 
+local notify = require("lib.notify").create("[custom.format.markdown.headlines.separators]")
+
 local M = {}
 local api = vim.api
 
@@ -126,22 +128,14 @@ function M.apply_headl_separators(bufnr, opts)
 
   if #sections == 0 then
     if notify_enabled then
-      vim.notify(
-        "headline_spacing: all sections properly formatted",
-        vim.log.levels.INFO,
-        { title = "headline_spacing" }
-      )
+      notify.info("headline_spacing: all sections properly formatted", { title = "headline_spacing" })
     end
     return 0
   end
 
   if dry_run then
     if notify_enabled then
-      vim.notify(
-        string.format("headline_spacing: would fix %d sections", #sections),
-        vim.log.levels.INFO,
-        { title = "headline_spacing" }
-      )
+      notify.info(string.format("headline_spacing: would fix %d sections", #sections), { title = "headline_spacing" })
     end
     return #sections
   end
@@ -179,11 +173,7 @@ function M.apply_headl_separators(bufnr, opts)
   end
 
   if notify_enabled then
-    vim.notify(
-      string.format("headline_spacing: fixed %d sections", #sections),
-      vim.log.levels.INFO,
-      { title = "headline_spacing" }
-    )
+    notify.info(string.format("headline_spacing: fixed %d sections", #sections), { title = "headline_spacing" })
   end
 
   return #sections

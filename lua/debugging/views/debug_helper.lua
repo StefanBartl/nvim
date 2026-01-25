@@ -1,6 +1,8 @@
 ---@module 'debugging.views.debug_helper'
 ---Diagnostic helper for debugging message capture issues
 
+local notify = require("lib.notify").create("[debugging.views.debug_helper]")
+
 local M = {}
 
 ---Check Noice availability and configuration
@@ -230,8 +232,8 @@ end
 function M.test_capture()
   -- Add some test messages first
   vim.notify("Test message 1", vim.log.levels.INFO)
-  vim.notify("Test message 2", vim.log.levels.WARN)
-  vim.notify("Test message 3", vim.log.levels.ERROR)
+  notify.warn("Test message 2")
+  notify.error("Test message 3")
 
   print("\n" .. string.rep("=", 60))
   print("TESTING CAPTURE (added 3 test messages)")

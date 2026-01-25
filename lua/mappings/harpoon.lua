@@ -1,13 +1,15 @@
 ---@module 'mappings.harpoon'
 --- Version-agnostic Harpoon keymaps (v1 und v2 kompatibel)
 
+local notify = require("lib.notify").create("[mappings.harpoon]")
+
 local M = {}
 
 function M.setup()
   local map = vim.g.__map_helper
   local harpoon = require("harpoon")
   if not harpoon then
-    vim.notify("[harpoon] not installed", vim.log.levels.WARN)
+    notify.warn("[harpoon] not installed")
     return
   end
   -- Safe setup: enable immediate persistence on every change.

@@ -1,6 +1,8 @@
 ---@module 'lsp.servers.csharp'
 --- Omnisharp via native LSP config/enable (Neovim ≥ 0.11).
 
+local notify = require("lib.notify").create("[lsp.servers.csharp]")
+
 local lsp = vim.lsp
 local executable = vim.fn.executable
 
@@ -34,7 +36,7 @@ function M.setup(shared, opts)
 
   local cmd = find_omnisharp()
   if not cmd then
-    vim.notify("C#: Omnisharp not found; skipping LSP", vim.log.levels.INFO)
+    notify.info("C#: Omnisharp not found; skipping LSP")
     return
   end
 

@@ -1,10 +1,11 @@
 ---@module 'custom.insert.lua_module_annotation'
 --- UserCommand zum Einfügen von Emmy Lua @module Annotation
 
+local notify = require("lib.notify").create("[custom.insert.annotation]")
+
 local M = {}
 
 local api = vim.api
-local notify, levels = vim.notify, vim.log.levels
 
 --- Converts a file path to a Lua module path
 ---@param filepath string Absolute path to the file
@@ -41,14 +42,14 @@ local function insert_module_annotation_at_cursor()
 
   -- Check if it's a .lua file
   if not filepath:match("%.lua$") then
-    notify("Not a Lua file", levels.WARN)
+    notify.warn("Not a Lua file")
     return
   end
 
   -- Calculate module path
   local module_path = get_module_path(filepath)
   if not module_path then
-    notify("File is not in a 'lua/' directory", levels.WARN)
+    notify.warn("File is not in a 'lua/' directory")
     return
   end
 
@@ -65,7 +66,7 @@ local function insert_module_annotation_at_cursor()
   -- Move cursor down one line
   api.nvim_win_set_cursor(0, { row + 2, 0 })
 
-  notify("Inserted: " .. annotation, levels.INFO)
+  notify.info("Inserted: " .. annotation)
 end
 
 --- Setup UserCommand

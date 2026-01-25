@@ -1,6 +1,8 @@
 ---@module 'debugging.capture.clipboard'
 --- Clipboard helpers using lib.cross for platform detection.
 
+local notify = require("lib.notify").create("[debugging.views.capture.clipboard]")
+
 local lazy = require("lib.lazy")
 local has_exec = lazy.require("lib.nvim").has_exec
 local cross = lazy.require("lib.cross")
@@ -14,7 +16,7 @@ return function (text, debug)
   local ok = pcall(vim.fn.setreg, "+", text)
   if ok then
     if debug then
-      vim.notify("DebugViews: setreg('+') ok", vim.log.levels.DEBUG)
+      notify.debug("DebugViews: setreg('+') ok")
     end
     return true
   end
@@ -33,7 +35,7 @@ return function (text, debug)
   if is_mac and has_exec("pbcopy") then
     local ok2, err = run_argv({ "pbcopy" }, text)
     if ok2 then return true end
-    if debug then vim.notify("pbcopy failed: " .. tostring(err), vim.log.levels.DEBUG) end
+    if debug then notify.debug("pbcopy failed: " .. tostring(err)) end
   end
 
   -- Windows / WSL
@@ -41,14 +43,14 @@ return function (text, debug)
     if has_exec("clip.exe") then
       local ok2, err = run_argv({ "clip.exe" }, text)
       if ok2 then return true end
-      if debug then vim.notify("clip.exe failed: " .. tostring(err), vim.log.levels.DEBUG) end
+      if debug then notify.debug("clip.exe failed: " .. tostring(err)) end
     end
 
     local clip_abs = "/mnt/c/Windows/System32/clip.exe"
     if is_wsl and not has_exec("clip.exe") and vim.fn.filereadable(clip_abs) == 1 then
       local ok2, err = run_argv({ clip_abs }, text)
       if ok2 then return true end
-      if debug then vim.notify("abs clip.exe failed: " .. tostring(err), vim.log.levels.DEBUG) end
+      if debug then notify.debug("abs clip.exe failed: " .. tostring(err)) end
     end
   end
 
@@ -56,7 +58,7 @@ return function (text, debug)
   if is_linux and is_wayland and has_exec("wl-copy") then
     local ok2, err = run_argv({ "wl-copy" }, text)
     if ok2 then return true end
-    if debug then vim.notify("wl-copy failed: " .. tostring(err), vim.log.levels.DEBUG) end
+    if debug then notify.debug("wl-copy failed: " .. tostring(err)) end
   end
 
   -- Linux (X11)
@@ -64,12 +66,12 @@ return function (text, debug)
     if has_exec("xclip") then
       local ok2, err = run_argv({ "xclip", "-selection", "clipboard" }, text)
       if ok2 then return true end
-      if debug then vim.notify("xclip failed: " .. tostring(err), vim.log.levels.DEBUG) end
+      if debug then notify.debug("xclip failed: " .. tostring(err)) end
     end
     if has_exec("xsel") then
       local ok2, err = run_argv({ "xsel", "--clipboard", "--input" }, text)
       if ok2 then return true end
-      if debug then vim.notify("xsel failed: " .. tostring(err), vim.log.levels.DEBUG) end
+      if debug then notify.debug("xsel failed: " .. tostring(err)) end
     end
   end
 

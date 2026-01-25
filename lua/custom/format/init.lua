@@ -14,6 +14,8 @@
 ---
 --- Use :h format.txt for full documentation.
 
+local notify = require("lib.notify").create("[custom.format]")
+
 local M = {}
 
 ---@type Custom.Format.Config
@@ -33,10 +35,7 @@ local registry = {
 local function safe_call(fn, ...)
   local ok, result = pcall(fn, ...)
   if not ok then
-    vim.notify(
-      string.format("[custom.format] Error: %s", tostring(result)),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format("[custom.format] Error: %s", tostring(result)))
   end
   return ok, result
 end
@@ -47,10 +46,7 @@ end
 ---@return nil
 local function register_subcommand(name, def)
   if registry.subcommands[name] then
-    vim.notify(
-      string.format("[custom.format] Warning: Subcommand '%s' already registered", name),
-      vim.log.levels.WARN
-    )
+    notify.warn(string.format("[custom.format] Warning: Subcommand '%s' already registered", name))
     return
   end
 
@@ -134,11 +130,7 @@ local function format_handler(opts)
     if config.default_subcommand then
       args = { config.default_subcommand }
     else
-      vim.notify(
-        "[custom.format] Usage: :Format <subcommand> [args...]\n" ..
-        "Available subcommands: " .. table.concat(vim.tbl_keys(registry.subcommands), ", "),
-        vim.log.levels.INFO
-      )
+      notify.info("[custom.format] Usage: :Format <subcommand> [args...]\n" .. "Available subcommands: " .. table.concat(vim.tbl_keys(registry.subcommands), ", "))
       return
     end
   end
@@ -151,14 +143,7 @@ local function format_handler(opts)
 
   local def = registry.subcommands[subcommand]
   if not def then
-    vim.notify(
-      string.format(
-        "[custom.format] Unknown subcommand: '%s'\nAvailable: %s",
-        subcommand,
-        table.concat(vim.tbl_keys(registry.subcommands), ", ")
-      ),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format( "[custom.format] Unknown subcommand: '%s'\nAvailable: %s", subcommand, table.concat(vim.tbl_keys(registry.subcommands), ", ") ))
     return
   end
 
@@ -183,10 +168,7 @@ local function setup_column_align()
 
       local target_col = tonumber(args[1])
       if not target_col then
-        vim.notify(
-          "[custom.format.column] Invalid target column",
-          vim.log.levels.ERROR
-        )
+        notify.error("[custom.format.column] Invalid target column")
         return
       end
 
@@ -221,18 +203,12 @@ local function setup_format_table()
       -- Validate alignments
       local valid_alignments = { "left", "center", "right" }
       if not vim.tbl_contains(valid_alignments, header_align) then
-        vim.notify(
-          string.format("[custom.format.table] Invalid header alignment: %s", header_align),
-          vim.log.levels.ERROR
-        )
+        notify.error(string.format("[custom.format.table] Invalid header alignment: %s", header_align))
         return
       end
 
       if not vim.tbl_contains(valid_alignments, entry_align) then
-        vim.notify(
-          string.format("[custom.format.table] Invalid entry alignment: %s", entry_align),
-          vim.log.levels.ERROR
-        )
+        notify.error(string.format("[custom.format.table] Invalid entry alignment: %s", entry_align))
         return
       end
 
@@ -241,14 +217,11 @@ local function setup_format_table()
       local success, err = format_table.format_table_at_cursor(bufnr, header_align, entry_align)
 
       if not success then
-        vim.notify(
-          string.format("[custom.format.table] %s", err or "Unknown error"),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format("[custom.format.table] %s", err or "Unknown error"))
         return
       end
 
-      vim.notify("Table formatted successfully", vim.log.levels.INFO)
+      notify.info("Table formatted successfully")
     end,
     ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead, cmdline, cursor_pos)
@@ -270,10 +243,7 @@ local function setup_format_text_width()
   register_subcommand("textwidth", {
     handler = function(args)
       if #args == 0 then
-        vim.notify(
-          "[custom.format.textwidth] Usage: textwidth <N|max>",
-          vim.log.levels.ERROR
-        )
+        notify.error("[custom.format.textwidth] Usage: textwidth <N|max>")
         return
       end
 
@@ -283,20 +253,14 @@ local function setup_format_text_width()
       else
         width = tonumber(args[1])
         if not width or width <= 0 then
-          vim.notify(
-            "[custom.format.textwidth] Width must be positive integer or 'max'",
-            vim.log.levels.ERROR
-          )
+          notify.error("[custom.format.textwidth] Width must be positive integer or 'max'")
           return
         end
       end
 
       vim.bo.textwidth = width
       format_text_width.reflow_buffer(0, width)
-      vim.notify(
-        string.format("Set textwidth to %d and reflowed buffer", width),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("Set textwidth to %d and reflowed buffer", width))
     end,
     ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead, cmdline, cursor_pos)
@@ -318,10 +282,7 @@ local function setup_filter_lines()
   register_subcommand("filter", {
     handler = function(args)
       if #args == 0 then
-        vim.notify(
-          "[custom.format.filter] Usage: filter [--remove] <pattern> ...",
-          vim.log.levels.ERROR
-        )
+        notify.error("[custom.format.filter] Usage: filter [--remove] <pattern> ...")
         return
       end
 
@@ -329,10 +290,7 @@ local function setup_filter_lines()
       local remove_flag, conditions = filter_lines.parse_filter_args(args)
 
       if #conditions == 0 then
-        vim.notify(
-          "[custom.format.filter] No conditions provided",
-          vim.log.levels.WARN
-        )
+        notify.warn("[custom.format.filter] No conditions provided")
         return
       end
 
@@ -341,19 +299,13 @@ local function setup_filter_lines()
       local success, err = filter_lines.filter_lines(bufnr, conditions, remove_flag)
 
       if not success then
-        vim.notify(
-          string.format("[custom.format.filter] %s", err or "Unknown error"),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format("[custom.format.filter] %s", err or "Unknown error"))
         return
       end
 
       local lines_before = vim.api.nvim_buf_line_count(bufnr)
       local lines_after = #vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-      vim.notify(
-        string.format("[custom.format.filter] Filtered: %d → %d lines", lines_before, lines_after),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("[custom.format.filter] Filtered: %d → %d lines", lines_before, lines_after))
     end,
     ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead, cmdline, cursor_pos)
@@ -378,7 +330,7 @@ local function setup_misc()
     handler = function(args)
       local bufnr = vim.api.nvim_get_current_buf()
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-      vim.notify("Buffer cleared", vim.log.levels.INFO)
+      notify.info("Buffer cleared")
     end,
     complete = function()
       return {}

@@ -3,6 +3,8 @@
 --- This file keeps the section registration idempotent and lightweight.
 
 ---@type table
+local notify = require("lib.notify").create("[config.snacks.custom_dashboard.sections]")
+
 local M = {}
 
 local ok_dash, dash = pcall(require, "snacks.dashboard")
@@ -58,7 +60,7 @@ local function my_sessions_section(_)
             return sessions.load(n)
           end)
           if not ok then
-            vim.notify("[custom_dashboard] session load failed: " .. tostring(res), vim.log.levels.ERROR)
+            notify.error("[custom_dashboard] session load failed: " .. tostring(res))
           end
         end
       end)(name),

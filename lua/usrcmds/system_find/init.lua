@@ -12,6 +12,8 @@
 ---
 --- The command will be translated to an `fd`-Command and showed with Telescope...
 
+local notify = require("lib.notify").create("[usrcmds.system_find]")
+
 local M = {}
 
 ---Starts systemwide File-Search mit `fd`
@@ -27,7 +29,7 @@ local function System_find()
 
     local fd_exec = vim.fn.executable("fd") == 1 and "fd" or (vim.fn.executable("fdfind") == 1 and "fdfind" or nil)
     if not fd_exec then
-      vim.notify("Weder 'fd' noch 'fdfind' gefunden", vim.log.levels.ERROR)
+      notify.error("Weder 'fd' noch 'fdfind' gefunden")
       return
     end
 

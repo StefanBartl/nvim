@@ -1,7 +1,7 @@
 ---@module 'lsp.core.registry'
 
-local notify = vim.notify
-local levels = vim.log.levels
+local notify = require("lib.notify").create("[lsp.core.registry]")
+
 
 local M = {}
 
@@ -28,11 +28,11 @@ function M.setup_all(shared)
     local mod = "lsp.servers." .. name
     local ok, srv = pcall(require, mod)
     if not ok or type(srv) ~= "table" or type(srv.setup) ~= "function" then
-      notify((desc_tag .. "server module '%s' unavailable"):format(name), levels.INFO)
+      notify.info((desc_tag .. "server module '%s' unavailable"):format(name))
     else
       local ok_setup, err = pcall(srv.setup, shared)
       if not ok_setup then
-        notify((desc_tag .. "setup failed for '%s': %s"):format(name, err or "?"), levels.WARN)
+        notify.warn((desc_tag .. "setup failed for '%s': %s"):format(name, err or "?"))
       end
     end
   end

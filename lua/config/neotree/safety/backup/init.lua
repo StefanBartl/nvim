@@ -1,6 +1,8 @@
 ---@module 'config.neotree.safety.backup'
 ---@brief Automatic backup system for destructive file operations
 
+local notify = require("lib.notify").create("[config.neotree.safety.backup]")
+
 local M = {}
 
 local uv = vim.loop
@@ -148,7 +150,7 @@ function M.restore_backup(backup_path, restore_path)
     return false, tostring(err)
   end
 
-  vim.notify(string.format("Restored: %s", restore_path), vim.log.levels.INFO)
+  notify.info(string.format("Restored: %s", restore_path))
   return true, nil
 end
 
@@ -203,7 +205,7 @@ end
 ---Show backup UI (select and restore)
 function M.show_backup_ui()
   if #backup_history == 0 then
-    vim.notify("No backups available", vim.log.levels.INFO)
+    notify.info("No backups available")
     return
   end
 
@@ -224,7 +226,7 @@ function M.show_backup_ui()
     local ok, err = M.restore_backup(entry.backup_path)
 
     if not ok then
-      vim.notify("Restore failed: " .. tostring(err), vim.log.levels.ERROR)
+      notify.error("Restore failed: " .. tostring(err))
     end
   end)
 end

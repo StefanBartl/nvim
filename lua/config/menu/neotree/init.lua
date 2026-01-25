@@ -5,6 +5,8 @@
 --- that are both enabled in the entries list and implemented in
 --- config.neotree.keymaps().window().
 
+local notify = require("lib.notify").create("[config.menu.neotree]")
+
 require("config.@types.menu")
 
 local M = {}
@@ -32,12 +34,12 @@ local function build_neotree_cmd_wrapper(handler)
   return function()
     local ok_mgr, manager = safe_require("neo-tree.sources.manager")
     if not ok_mgr or type(manager) ~= "table" or type(manager.get_state_for_window) ~= "function" then
-      vim.notify("neo-tree manager not available", vim.log.levels.ERROR)
+      notify.error("neo-tree manager not available")
       return
     end
     local state = manager.get_state_for_window()
     if not state then
-      vim.notify("neo-tree state not found for current window", vim.log.levels.WARN)
+      notify.warn("neo-tree state not found for current window")
       return
     end
 
@@ -49,13 +51,13 @@ local function build_neotree_cmd_wrapper(handler)
     end
 
     if not fn then
-      vim.notify("invalid neo-tree handler for menu entry", vim.log.levels.DEBUG)
+      notify.debug("invalid neo-tree handler for menu entry")
       return
     end
 
     local ok, err = pcall(fn, state)
     if not ok then
-      vim.notify(("neo-tree custom menu handler failed: %s"):format(tostring(err)), vim.log.levels.ERROR)
+      notify.error(("neo-tree custom menu handler failed: %s"):format(tostring(err)))
     end
   end
 end

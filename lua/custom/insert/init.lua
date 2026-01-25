@@ -17,6 +17,8 @@
 -- require("usrcmds.insertfilepath").enable()
 -- require("usrcmds.lua_module_annotation").enable()
 
+local notify = require("lib.notify").create("[custom.insert]")
+
 local M = {}
 
 local api = vim.api
@@ -39,10 +41,7 @@ local registry = {
 local function safe_call(fn, ...)
   local ok, result = pcall(fn, ...)
   if not ok then
-    vim.notify(
-      string.format("[custom.insert] Error: %s", tostring(result)),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format("[custom.insert] Error: %s", tostring(result)))
   end
   return ok, result
 end
@@ -53,10 +52,7 @@ end
 ---@return nil
 local function register_subcommand(name, def)
   if registry.subcommands[name] then
-    vim.notify(
-      string.format("[custom.insert] Warning: Subcommand '%s' already registered", name),
-      vim.log.levels.WARN
-    )
+    notify.warn(string.format("[custom.insert] Warning: Subcommand '%s' already registered", name))
     return
   end
 
@@ -136,12 +132,7 @@ local function insert_handler(opts)
     if config.default_subcommand then
       args = { config.default_subcommand }
     else
-      vim.notify(
-        "[custom.insert] Usage: :Insert <subcommand> [args...]\n"
-          .. "Available subcommands: "
-          .. table.concat(vim.tbl_keys(registry.subcommands), ", "),
-        vim.log.levels.INFO
-      )
+      notify.info("[custom.insert] Usage: :Insert <subcommand> [args...]\n" .. "Available subcommands: " .. table.concat(vim.tbl_keys(registry.subcommands), ", "))
       return
     end
   end
@@ -154,14 +145,7 @@ local function insert_handler(opts)
 
   local def = registry.subcommands[subcommand]
   if not def then
-    vim.notify(
-      string.format(
-        "[custom.insert] Unknown subcommand: '%s'\nAvailable: %s",
-        subcommand,
-        table.concat(vim.tbl_keys(registry.subcommands), ", ")
-      ),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format( "[custom.insert] Unknown subcommand: '%s'\nAvailable: %s", subcommand, table.concat(vim.tbl_keys(registry.subcommands), ", ") ))
     return
   end
 
@@ -360,10 +344,7 @@ local function setup_boilerplate()
   register_subcommand("boilerplate", {
     handler = function(args)
       if #args == 0 then
-        vim.notify(
-          "[custom.insert.boilerplate] Usage: boilerplate <template> [name]",
-          vim.log.levels.ERROR
-        )
+        notify.error("[custom.insert.boilerplate] Usage: boilerplate <template> [name]")
         return
       end
 

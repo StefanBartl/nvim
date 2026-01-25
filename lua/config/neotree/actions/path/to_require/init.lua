@@ -1,10 +1,11 @@
 ---@module 'config.neotree.actions.path.to_require'
 ---@brief Converts a Neo-tree node to Lua require() string(s) and copies to clipboard
 
+local notify = require("lib.notify").create("[config.neotree.actions.path.to_require]")
+
 local M = {}
 
 local fn = vim.fn
-local notify = vim.notify
 
 ---Find the lua directory root for the given path
 ---@param path string absolute or relative path
@@ -133,7 +134,7 @@ function M.copy_as_require(node, opts)
 
   local modules, err = M.node_to_requires(node, opts)
   if not modules then
-    notify(err or "Failed to convert to require()", vim.log.levels.WARN)
+    notify.warn(err or "Failed to convert to require()")
     return false
   end
 
@@ -146,12 +147,11 @@ function M.copy_as_require(node, opts)
   fn.setreg("+", result)
 
   if opts.show_preview then
-    notify(
+    notify.info(
       ("Copied %d require() string(s) to clipboard:\n%s"):format(
         #require_lines,
         #require_lines <= 5 and result or (table.concat(require_lines, "\n", 1, 5) .. "\n...")
-      ),
-      vim.log.levels.INFO
+      )
     )
   end
 

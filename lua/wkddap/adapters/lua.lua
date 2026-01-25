@@ -1,6 +1,8 @@
 ---@module 'wkddap.adapters.lua'
 ---@brief Lua debugging via one-small-step-for-vimkind (OSV)
 
+local notify = require("lib.notify").create("[wkddap.adapters.lua]")
+
 local M = {}
 
 --- Setup Lua debugging adapter
@@ -34,13 +36,13 @@ end
 function M.launch_server(port)
   local ok, osv = pcall(require, "osv")
   if not ok then
-    vim.notify("[wkddap.lua] one-small-step not available", vim.log.levels.ERROR)
+    notify.error("[wkddap.lua] one-small-step not available")
     return false
   end
 
   port = port or 8086
   osv.launch({ port = port })
-  vim.notify(string.format("[wkddap.lua] Debug server started on port %d", port), vim.log.levels.INFO)
+  notify.info(string.format("[wkddap.lua] Debug server started on port %d", port))
   return true
 end
 

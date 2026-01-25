@@ -2,8 +2,9 @@
 --- Dashboard-specific commands and keymaps.
 --- Keep mappings local, minimal, and guarded.
 
+local notify = require("lib.notify").create("[config.snacks.custom_dashboard.commands]")
+
 local api = vim.api
-local notify = vim.notify
 local utils_ok, utils = pcall(require, "config.snacks.custom_dashboard.utils")
 if not utils_ok then
   -- Do not fail startup; just skip commands if utils missing
@@ -24,7 +25,7 @@ function M.setup_commands()
   create_cmd("SnacksOpen", function()
     local ok_dash, dash = pcall(require, "snacks.dashboard")
     if not ok_dash or type(dash.open) ~= "function" then
-      notify("[custom_dashboard] snacks.dashboard not available", vim.log.levels.WARN)
+      notify.warn("[custom_dashboard] snacks.dashboard not available")
       return
     end
     -- Only open when safe according to utilities
@@ -32,7 +33,7 @@ function M.setup_commands()
     if not utils.is_special_buf(bufnr) and utils.is_modifiable(bufnr) and utils.is_empty_buffer(bufnr) then
       pcall(dash.open)
     else
-      notify("[custom_dashboard] unsafe to open dashboard in current buffer", vim.log.levels.INFO)
+      notify.info("[custom_dashboard] unsafe to open dashboard in current buffer")
     end
   end, { desc = "Open Snacks custom dashboard (safe)" })
 
@@ -41,9 +42,9 @@ function M.setup_commands()
     local ok_sess, sessions = pcall(require, "config.snacks.custom_dashboard.sessions")
     if ok_sess and type(sessions.clear_cache) == "function" then
       sessions.clear_cache()
-      notify("[custom_dashboard] session cache cleared", vim.log.levels.DEBUG)
+      notify.debug("[custom_dashboard] session cache cleared")
     else
-      notify("[custom_dashboard] sessions module not available", vim.log.levels.WARN)
+      notify.warn("[custom_dashboard] sessions module not available")
     end
   end, { desc = "Clear sessions cache used by the dashboard" })
 end
@@ -53,7 +54,7 @@ function M.setup()
   local ok, _ = pcall(M.setup_commands)
   if not ok then
     -- swallow but notify
-    notify("[custom_dashboard] failed to register commands", vim.log.levels.ERROR)
+    notify.error("[custom_dashboard] failed to register commands")
   end
 end
 

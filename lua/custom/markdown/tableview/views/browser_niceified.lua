@@ -3,8 +3,9 @@
 --- This module returns a function(bufnr) that finds the table at the current cursor
 --- and opens a temporary HTML file in the system default browser.
 
+local notify = require("lib.notify").create("[custom.markdown.tableview.views.browser_niceified]")
+
 local api = vim.api
-local notify = vim.notify
 local parser = require("custom.markdown.tableview.parser")
 
 --- Escape HTML special characters for safe insertion into the generated HTML.
@@ -114,7 +115,7 @@ end
 return function(bufnr)
   bufnr = bufnr or api.nvim_get_current_buf()
   if not (api.nvim_buf_is_valid(bufnr) and api.nvim_buf_is_loaded(bufnr)) then
-    notify("[Custom.Markdown.TableView] Invalid buffer for browser preview", vim.log.levels.ERROR)
+    notify.error("[Custom.Markdown.TableView] Invalid buffer for browser preview")
     return
   end
 
@@ -129,7 +130,7 @@ return function(bufnr)
   end
 
   if not chosen then
-    notify("[Custom.Markdown.TableView] No table under cursor", vim.log.levels.INFO)
+    notify.info("[Custom.Markdown.TableView] No table under cursor")
     return
   end
 
@@ -145,7 +146,7 @@ return function(bufnr)
   local tmp = vim.fn.tempname() .. ".html"
   local fh, err = io.open(tmp, "w")
   if not fh then
-    notify("[Custom.Markdown.TableView] Failed to write preview file: " .. tostring(err), vim.log.levels.ERROR)
+    notify.error("[Custom.Markdown.TableView] Failed to write preview file: " .. tostring(err))
     return
   end
   fh:write(html)

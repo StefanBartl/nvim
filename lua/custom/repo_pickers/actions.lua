@@ -1,5 +1,7 @@
 ---@module 'custom.repo_pickers.actions'
 --- High-level actions: select repo using the configured selector-routing, then run fzf/Telescope.
+local notify = require("lib.notify").create("[custom.repo_pickers.actions]")
+
 require("custom.repo_pickers.@types.types")
 
 local fs = require("custom.repo_pickers.fs")
@@ -15,11 +17,11 @@ function M.repo_files(cfg, selector)
   local base = (cfg.repos_dir or vim.env.REPOS_DIR or "")
   local repos, err = fs.scan_repos(base, cfg.only_git ~= false)
   if not repos then
-    vim.notify(err or "repo_pickers: failed to list repositories", vim.log.levels.WARN)
+    notify.warn(err or "repo_pickers: failed to list repositories")
     return
   end
   if #repos == 0 then
-    vim.notify("repo_pickers: no repositories found in repos_dir", vim.log.levels.INFO)
+    notify.info("repo_pickers: no repositories found in repos_dir")
     return
   end
 
@@ -37,11 +39,11 @@ function M.repo_grep(cfg, selector)
   local base = (cfg.repos_dir or vim.env.REPOS_DIR or "")
   local repos, err = fs.scan_repos(base, cfg.only_git ~= false)
   if not repos then
-    vim.notify(err or "repo_pickers: failed to list repositories", vim.log.levels.WARN)
+    notify.warn(err or "repo_pickers: failed to list repositories")
     return
   end
   if #repos == 0 then
-    vim.notify("repo_pickers: no repositories found in repos_dir", vim.log.levels.INFO)
+    notify.info("repo_pickers: no repositories found in repos_dir")
     return
   end
 
@@ -61,14 +63,11 @@ function M.wkdbook_find(cfg, selector)
 
   local wkdbooks, err = fs.scan_wkdbooks(base, prefix)
   if not wkdbooks then
-    vim.notify(err or "repo_pickers: failed to list wkdbooks", vim.log.levels.WARN)
+    notify.warn(err or "repo_pickers: failed to list wkdbooks")
     return
   end
   if #wkdbooks == 0 then
-    vim.notify(
-      ("repo_pickers: no directories with prefix '%s' found in %s"):format(prefix, base),
-      vim.log.levels.INFO
-    )
+    notify.info(("repo_pickers: no directories with prefix '%s' found in %s"):format(prefix, base))
     return
   end
 
@@ -88,14 +87,11 @@ function M.wkdbook_grep(cfg, selector)
 
   local wkdbooks, err = fs.scan_wkdbooks(base, prefix)
   if not wkdbooks then
-    vim.notify(err or "repo_pickers: failed to list wkdbooks", vim.log.levels.WARN)
+    notify.warn(err or "repo_pickers: failed to list wkdbooks")
     return
   end
   if #wkdbooks == 0 then
-    vim.notify(
-      ("repo_pickers: no directories with prefix '%s' found in %s"):format(prefix, base),
-      vim.log.levels.INFO
-    )
+    notify.info(("repo_pickers: no directories with prefix '%s' found in %s"):format(prefix, base))
     return
   end
 

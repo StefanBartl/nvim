@@ -17,6 +17,8 @@
 --- API: create(cmd, exclude_filetypes?, exclude_names?, lhs)
 ---   returns a function suitable for `vim.keymap.set` callbacks.
 
+local notify = require("lib.notify").create("[lib.buf_win_tab.resize_guarded]")
+
 local api = vim.api
 local replace_termcodes = vim.api.nvim_replace_termcodes
 local feedkeys = vim.api.nvim_feedkeys
@@ -110,11 +112,7 @@ function M.create(cmd, exclude_filetypes, exclude_names, lhs)
 
   -- Warn if lhs was provided but fallback derivation failed
   if lhs and not fallback_seq then
-    vim.notify(
-      string.format("[resize_guarded] Warning: Could not derive fallback for lhs '%s'", lhs),
-      vim.log.levels.WARN,
-      { title = "resize_guarded" }
-    )
+    notify.warn(string.format("[resize_guarded] Warning: Could not derive fallback for lhs '%s'", lhs), { title = "resize_guarded" })
   end
 
   -- Return the callback function that will be executed on keypress
@@ -150,11 +148,7 @@ function M.create(cmd, exclude_filetypes, exclude_names, lhs)
     -- Use pcall to catch any errors from vim.cmd
     local ok, err = pcall(function() vim.cmd(cmd) end)
     if not ok then
-      vim.notify(
-        string.format("[resize_guarded] Resize command failed: %s", err),
-        vim.log.levels.ERROR,
-        { title = "resize_guarded" }
-      )
+      notify.error(string.format("[resize_guarded] Resize command failed: %s", err), { title = "resize_guarded" })
     end
   end
 end

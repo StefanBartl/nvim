@@ -1,5 +1,7 @@
 ---@module 'lsp.usercmds.formatter'
 
+local notify = require("lib.notify").create("[lsp.usercmds.formatter]")
+
 local nvim_create_user_command = vim.api.nvim_create_user_command
 
 local M = {}
@@ -26,7 +28,7 @@ function M.attach(formatter)
 
   pcall(nvim_create_user_command, "LspFormatStatus", function()
     local state = formatter.is_enabled() and "true" or "false"
-    vim.notify("LSP/Conform state: " .. state, vim.log.levels.INFO)
+    notify.info("LSP/Conform state: " .. state)
   end, { desc = desc_tag .. "show state of formater" })
 
   pcall(nvim_create_user_command, "LspFormatWhich", function()
@@ -34,7 +36,7 @@ function M.attach(formatter)
     if ok and type(mod.which) == "function" then
       mod.which(0)
     else
-      vim.notify("Conform helper unavailable", vim.log.levels.WARN)
+      notify.warn("Conform helper unavailable")
     end
   end, { desc = "Show formatter chain & availability for current buffer" })
 end

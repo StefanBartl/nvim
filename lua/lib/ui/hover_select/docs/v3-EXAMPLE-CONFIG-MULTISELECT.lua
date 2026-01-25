@@ -1,6 +1,8 @@
 ---@module 'example.hover_select_multiselect'
 ---@description Example demonstrating multi-selection feature in hover-select
 
+local notify = require("lib.notify").create("[lib.ui.hover_select.docs.v3-EXAMPLE-CONFIG-MULTISELECT]")
+
 local hover_select = require("lib.ui.hover_select")
 
 ---Example 1: Single-select mode (backward compatible)
@@ -16,10 +18,7 @@ local function example_single_select()
     items = items,
     multi_select = false,  -- Default behavior
     on_select = function(selected, index)
-      vim.notify(
-        string.format("You selected: %s (line %d)", selected, index),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("You selected: %s (line %d)", selected, index))
     end,
   })
 end
@@ -43,13 +42,13 @@ local function example_multi_select()
     on_select = function(selected, indices)
       -- Handle array results
       if #selected == 1 then
-        vim.notify("Completing 1 task: " .. selected[1], vim.log.levels.INFO)
+        notify.info("Completing 1 task: " .. selected[1])
       else
         local msg = { string.format("Completing %d tasks:", #selected) }
         for i, task in ipairs(selected) do
           table.insert(msg, string.format("  %d. [line %d] %s", i, indices[i], task))
         end
-        vim.notify(table.concat(msg, "\n"), vim.log.levels.INFO)
+        notify.info(table.concat(msg, "\n"))
       end
     end,
   })
@@ -80,14 +79,7 @@ local function example_file_batch_processing()
         table.insert(results, string.format("✓ Formatted %s", file))
       end
 
-      vim.notify(
-        string.format(
-          "Batch Processing Results (%d files):\n%s",
-          #selected_files,
-          table.concat(results, "\n")
-        ),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format( "Batch Processing Results (%d files):\n%s", #selected_files, table.concat(results, "\n") ))
     end,
   })
 end
@@ -118,10 +110,7 @@ local function example_gather_integration()
         -- 1. Parse file path from context
         -- 2. Open file
         -- 3. Jump to line number
-        vim.notify(
-          string.format("Navigate to %s at line %s", func_name, line_num),
-          vim.log.levels.INFO
-        )
+        notify.info(string.format("Navigate to %s at line %s", func_name, line_num))
       end
     end,
   })
@@ -157,7 +146,7 @@ local function example_dynamic_behavior()
 
         local confirmed = vim.fn.confirm(confirm_msg, "&Yes\n&No", 1)
         if confirmed == 1 then
-          vim.notify("Executing batch operations...", vim.log.levels.INFO)
+          notify.info("Executing batch operations...")
           -- for _, op in ipairs(selected) do
           --   execute_git_command(op)
           -- end

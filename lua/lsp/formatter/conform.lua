@@ -3,6 +3,8 @@
 --- Adds a helper to format while preserving all window views that display the buffer.
 --- Linux/macOS focused; works when Conform is available.
 
+local notify = require("lib.notify").create("[lsp.formatter.conform]")
+
 local api = vim.api
 local fn = vim.fn
 local env = vim.env
@@ -186,7 +188,7 @@ function M.which(bufnr)
     or (ft == "markdown.mdx") and { "prettierd", "prettier" }
     or {}
   if #chain == 0 then
-    vim.notify("No formatter chain known for filetype=" .. tostring(ft), vim.log.levels.INFO)
+    notify.info("No formatter chain known for filetype=" .. tostring(ft))
     return
   end
   local lines = { "Formatters for filetype=" .. ft .. ":" }
@@ -200,7 +202,7 @@ function M.which(bufnr)
     lines[#lines + 1] =
       string.format(" - %s: %s%s", name, (ok and found or cmd), ok and " (available)" or " (NOT FOUND)")
   end
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  notify.info(table.concat(lines, "\n"))
 end
 
 return M

@@ -1,6 +1,8 @@
 ---@module 'custom.recommender'
 ---Public API
 
+local notify = require("lib.notify").create("[custom.recommender]")
+
 local rendering = require("custom.recommender.rendering")
 local keymaps = require("custom.recommender.keymaps")
 local custom_aliases = require("custom.recommender.custom_aliases")
@@ -9,7 +11,6 @@ local blacklist_module = require("custom.recommender.blacklist")
 local M = {}
 
 local api = vim.api
-local notify, levels = vim.notify, vim.log.levels
 local km_set = vim.keymap.set
 
 local analyzers = {
@@ -82,7 +83,7 @@ function M.setup(opts)
             all = analyzers[analyzer].analyze(threshold, state.custom_aliases, state.blacklist)
           end)
         else
-          notify("Source buffer is no longer valid", levels.WARN)
+          notify.warn("Source buffer is no longer valid")
           rendering.close()
           return
         end
@@ -96,7 +97,7 @@ function M.setup(opts)
         end
 
         if #state.visible == 0 then
-          notify("No suggestions found (threshold: " .. threshold .. ")", levels.INFO)
+          notify.info("No suggestions found (threshold: " .. threshold .. ")")
           rendering.close()
           return
         end
@@ -116,7 +117,7 @@ function M.setup(opts)
       end)
 
       if not ok then
-        notify("Recommender error: " .. tostring(err), levels.ERROR)
+        notify.error("Recommender error: " .. tostring(err))
         rendering.close()
       end
     end

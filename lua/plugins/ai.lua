@@ -1,6 +1,8 @@
 ---@module 'plugins.ai'
 
 ---@type LazyPluginSpec[]
+local notify = require("lib.notify").create("[plugins.ai]")
+
 return {
   {
     "robitx/gp.nvim",
@@ -79,10 +81,10 @@ return {
       vim.keymap.set("n", "<leader>ct", function()
         if copilot.is_enabled() then
           copilot.disable()
-          vim.notify("Copilot disabled", vim.log.levels.INFO)
+          notify.info("Copilot disabled")
         else
           copilot.enable()
-          vim.notify("Copilot enabled", vim.log.levels.INFO)
+          notify.info("Copilot enabled")
         end
       end, { noremap = true, silent = true, desc = "Toggle Copilot" })
     end,

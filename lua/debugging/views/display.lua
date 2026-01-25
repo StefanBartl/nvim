@@ -1,5 +1,7 @@
 ---@module 'debugging.views.display'
 
+local notify = require("lib.notify").create("[debugging.views.display]")
+
 local utils = require("debugging.views.utils")
 local api = vim.api
 
@@ -65,7 +67,7 @@ function M.execute_and_refresh(tag, cmd, timings)
     }, function(result)
       if not result.wins or #result.wins == 0 then
         if tag == "noice_errors" then
-          vim.notify("No errors available", vim.log.levels.INFO)
+          notify.info("No errors available")
         end
         return
       end
@@ -77,7 +79,7 @@ function M.execute_and_refresh(tag, cmd, timings)
           vim.defer_fn(function()
             if not api.nvim_win_is_valid(win) then
               if tag == "noice_errors" then
-                vim.notify("No errors available", vim.log.levels.INFO)
+                notify.info("No errors available")
               end
               return
             end
@@ -118,7 +120,7 @@ function M.refresh_log_view(win, tag, timings)
   vim.defer_fn(function()
     if not api.nvim_win_is_valid(win) then
       if tag == "noice_errors" then
-        vim.notify("No errors available", vim.log.levels.INFO)
+        notify.info("No errors available")
       end
       return
     end

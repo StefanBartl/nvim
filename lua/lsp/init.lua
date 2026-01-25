@@ -1,6 +1,8 @@
 ---@module 'lsp'
 -- Native LSP bootstrap for Neovim ≥ 0.11.
 
+local notify = require("lib.notify").create("[lsp]")
+
 local M = {}
 
 ---@type boolean
@@ -101,7 +103,7 @@ function M.setup(cfg)
 
   local ok_reg, registry = pcall(require, "lsp.core.registry")
   if not ok_reg or not registry or type(registry.setup_all) ~= "function" then
-    vim.notify("LSP registry missing; skipping server setup", vim.log.levels.WARN)
+    notify.warn("LSP registry missing; skipping server setup")
     return false
   end
 

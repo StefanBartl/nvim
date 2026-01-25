@@ -1,5 +1,7 @@
 ---@module 'wkddap.adapters'
 
+local notify = require("lib.notify").create("[wkddap.adapters]")
+
 local M = {}
 
 --- Register all adapters for specified languages
@@ -19,10 +21,7 @@ function M.register_all(languages, custom_adapters)
   for _, lang in ipairs(languages) do
     local ok, err = registry.register(lang)
     if not ok then
-      vim.notify(
-        string.format(("[wkddap.adapters] Failed to register %s: %s") , lang, err or "unknown"),
-        vim.log.levels.WARN
-      )
+      notify.warn(string.format(("[wkddap.adapters] Failed to register %s: %s") , lang, err or "unknown"))
     end
   end
 

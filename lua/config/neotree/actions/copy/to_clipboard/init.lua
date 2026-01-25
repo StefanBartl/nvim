@@ -1,6 +1,8 @@
 ---@module 'config.neotree.actions.copy.to_clipboard'
 ---@brief Copy entries to system clipboard with preview and formatting options
 
+local notify = require("lib.notify").create("[config.neotree.actions.copy.to_clipboard]")
+
 local M = {}
 
 ---Format entries based on options
@@ -78,7 +80,7 @@ function M.copy(entries, opts)
   }, opts or {})
 
   if not entries or #entries == 0 then
-    vim.notify("No entries to copy", vim.log.levels.WARN)
+    notify.warn("No entries to copy")
     return false
   end
 
@@ -87,7 +89,7 @@ function M.copy(entries, opts)
   -- Copy to system clipboard (+)
   vim.fn.setreg("+", formatted, "c")
 
-  vim.notify("Copy to +: " .. formatted, vim.log.levels.INFO) -- AUDIT: Ich möchte keine formatiierte ansicht auals notify ausgeben, sondern was im Zwischenspeicher ist sehen:
+  notify.info("Copy to +: " .. formatted) -- AUDIT: Ich möchte keine formatiierte ansicht auals notify ausgeben, sondern was im Zwischenspeicher ist sehen:
   -- Show preview notification
   -- local preview = create_preview_message(entries, opts)
   -- vim.notify(preview, vim.log.levels.INFO)

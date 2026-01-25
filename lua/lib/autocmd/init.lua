@@ -6,6 +6,8 @@
 -- augroup handling and defensive callbacks.
 -- =========================================================
 
+local notify = require("lib.notify").create("[lib.autocmd]")
+
 local M = {}
 
 ---@type table<string, integer>
@@ -63,13 +65,7 @@ function M.create(event, callback, opts)
   callback = function(args)
     local ok, err = pcall(user_cb, args)
     if not ok then
-      vim.notify(
-        ("Autocmd failed (%s):\n%s"):format(
-          table.concat(vim.tbl_flatten({ event }), ", "),
-          err
-        ),
-        vim.log.levels.ERROR
-      )
+      notify.error(("Autocmd failed (%s):\n%s"):format( table.concat(vim.tbl_flatten({ event }), ", "), err ))
     end
   end
 

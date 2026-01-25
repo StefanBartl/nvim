@@ -1,6 +1,8 @@
 ---@module 'debugging.views.capture'
 ---Unified capture system for :messages, Noice, etc.
 
+local notify = require("lib.notify").create("[debugging.views.capture]")
+
 local lazy = require("lib.lazy")
 local copy_to_clipboard = lazy.require("debugging.views.capture.clipboard")
 local write_file = lazy.require("lib.fs.write.to_file")
@@ -255,7 +257,7 @@ local function capture_messages_raw(debug)
   local ok, msgs, src = try_noice()
   table.insert(attempts, { method = "noice", success = ok, source = src })
   if ok then
-    if debug then vim.notify("DebugViews: ✓ captured via " .. src, vim.log.levels.DEBUG) end
+    if debug then notify.debug("DebugViews: ✓ captured via " .. src) end
     return true, msgs, src
   end
 
@@ -263,7 +265,7 @@ local function capture_messages_raw(debug)
   ok, msgs, src = try_execute()
   table.insert(attempts, { method = "execute", success = ok, source = src })
   if ok then
-    if debug then vim.notify("DebugViews: ✓ captured via " .. src, vim.log.levels.DEBUG) end
+    if debug then notify.debug("DebugViews: ✓ captured via " .. src) end
     return true, msgs, src
   end
 
@@ -271,7 +273,7 @@ local function capture_messages_raw(debug)
   ok, msgs, src = try_exec2()
   table.insert(attempts, { method = "exec2", success = ok, source = src })
   if ok then
-    if debug then vim.notify("DebugViews: ✓ captured via " .. src, vim.log.levels.DEBUG) end
+    if debug then notify.debug("DebugViews: ✓ captured via " .. src) end
     return true, msgs, src
   end
 
@@ -295,21 +297,13 @@ function M.capture_messages(opts)
 
   local dir, logfile = resolve_paths()
   if debug then
-    vim.notify(("DebugViews: dir=%s\nlog=%s"):format(dir, logfile), vim.log.levels.DEBUG)
+    notify.debug(("DebugViews: dir=%s\nlog=%s"):format(dir, logfile))
   end
 
   -- Try all capture methods
   local ok_capture, messages, source = capture_messages_raw(debug)
   if not ok_capture or not messages then
-    vim.notify(
-      "DebugViews: Failed to capture messages.\n" ..
-      (source or "unknown error") .. "\n\n" ..
-      "Suggestions:\n" ..
-      "  1. Try :Noice all to view messages\n" ..
-      "  2. Try :messages to check if messages exist\n" ..
-      "  3. Enable debug mode: :lua require('debugging.views.capture').capture_messages({debug=true})",
-      vim.log.levels.WARN
-    )
+    notify.warn("DebugViews: Failed to capture messages.\n" .. (source or "unknown error") .. "\n\n" .. "Suggestions:\n" .. " 1. Try :Noice all to view messages\n" .. " 2. Try :messages to check if messages exist\n" .. " 3. Enable debug mode: :lua require('debugging.views.capture').capture_messages({debug=true})")
     return false, nil
   end
 
@@ -317,14 +311,11 @@ function M.capture_messages(opts)
   local line_count = require("lib.strings.core").count_lines(messages)
 
   if debug then
-    vim.notify(
-      ("DebugViews: captured %d bytes, %d lines via %s"):format(#messages, line_count, source),
-      vim.log.levels.DEBUG
-    )
+    notify.debug(("DebugViews: captured %d bytes, %d lines via %s"):format(#messages, line_count, source))
   end
 
   if messages == "" then
-    vim.notify("DebugViews: no messages to capture (empty content)", vim.log.levels.WARN)
+    notify.warn("DebugViews: no messages to capture (empty content)")
     return false, ""
   end
 
@@ -333,7 +324,7 @@ function M.capture_messages(opts)
   if save_file then
     local ok_write, err = write_file(logfile, messages)
     if not ok_write then
-      vim.notify("DebugViews: write failed: " .. tostring(err), vim.log.levels.ERROR)
+      notify.error("DebugViews: write failed: " .. tostring(err))
     else
       table.insert(success_operations, string.format("%d lines → %s", line_count, vim.fn.fnamemodify(logfile, ":t")))
     end
@@ -342,10 +333,7 @@ function M.capture_messages(opts)
   if clipboard then
     local ok_clip = copy_to_clipboard(messages, debug)
     if not ok_clip then
-      vim.notify(
-        "DebugViews: clipboard not available. Install: pbcopy/wl-copy/xclip/xsel/clip.exe",
-        vim.log.levels.WARN
-      )
+      notify.warn("DebugViews: clipboard not available. Install: pbcopy/wl-copy/xclip/xsel/clip.exe")
     else
       table.insert(success_operations, string.format("%d lines → clipboard", line_count))
     end
@@ -357,7 +345,7 @@ function M.capture_messages(opts)
     if debug then
       msg = msg .. "\n  (via " .. source .. ")"
     end
-    vim.notify(msg, vim.log.levels.INFO)
+    notify.info(msg)
   end
 
   return true, messages

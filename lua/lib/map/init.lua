@@ -14,6 +14,8 @@
 ---@param rhs? string|function
 ---@param opts? Lib.Map.Opts
 ---@return nil
+local notify = require("lib.notify").create("[lib.map]")
+
 local function notify_caller(flags, modes, lhs, rhs, opts)
   -- Stack layout:
   -- 1: debug.getinfo
@@ -63,14 +65,7 @@ local function notify_caller(flags, modes, lhs, rhs, opts)
     )
   end
 
-  vim.notify(
-    string.format(
-      "[lib.map] argument validation failed:\n  %s\n  caller: %s",
-      table.concat(errors, "\n  "),
-      caller
-    ),
-    vim.log.levels.ERROR
-  )
+  notify.error(string.format( "[lib.map] argument validation failed:\n %s\n caller: %s", table.concat(errors, "\n "), caller ))
 end
 
 ---Convenience wrapper for vim.keymap.set with defaults.

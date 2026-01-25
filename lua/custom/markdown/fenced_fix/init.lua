@@ -6,6 +6,8 @@
 
 ---@class UIMarkdownFencedFix
 ---@field opts Custom.MD.FencedFix.Opts
+local notify = require("lib.notify").create("[custom.markdown.fenced_fix]")
+
 local M = {}
 
 -- Defaults aim for "orange-ish" via DiagnosticWarn, with robust fallbacks.
@@ -32,7 +34,7 @@ local function safe_set(name, target)
   end)
   if not ok then
     vim.schedule(function()
-      vim.notify(("markdown.fenced_fix: failed to set %s: %s"):format(name, err), vim.log.levels.DEBUG)
+      notify.debug(("markdown.fenced_fix: failed to set %s: %s"):format(name, err))
     end)
   end
 end

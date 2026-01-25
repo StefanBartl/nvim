@@ -11,6 +11,8 @@
 ---   - mode: string|nil  -- passed to open_floating_preview / callbacks
 ---   - callback: fun(buf,win)|nil
 ---   - providers: string[]|nil  -- override default provider list
+local notify = require("lib.notify").create("[lsp.tools.lsp_signature.fallback_providers]")
+
 local M = {}
 
 local open_floating_preview = require("lsp.tools.lsp_signature.open_floating_preview")
@@ -19,7 +21,6 @@ local helper = require("lsp.tools.lsp_signature.utils.helper")
 local api = vim.api
 local schedule = vim.schedule
 local uri_to_fname = vim.uri_to_fname
-local notify = vim.notify
 
 --- Provider list in preferred order. Can be adjusted.
 local DEFAULT_PROVIDERS = {
@@ -274,7 +275,7 @@ function M.try_providers(clients, params, opts)
 
   if not clients or vim.tbl_isempty(clients) then
     schedule(function()
-      notify("[signature_help] fallback: no clients available", vim.log.levels.INFO)
+      notify.info("[signature_help] fallback: no clients available")
     end)
     return
   end
@@ -286,7 +287,7 @@ function M.try_providers(clients, params, opts)
     ci = ci + 1
     if not client then
       schedule(function()
-        notify("[signature_help] fallback: no provider returned results", vim.log.levels.INFO)
+        notify.info("[signature_help] fallback: no provider returned results")
       end)
       return
     end

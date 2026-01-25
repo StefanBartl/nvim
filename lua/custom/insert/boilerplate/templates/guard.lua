@@ -1,6 +1,8 @@
 ---@module 'custom.insert.boilerplate.templates.guard'
 ---@brief Guard clause pattern generators
 
+local notify = require("lib.notify").create("[custom.insert.boilerplate.templates.guard]")
+
 local M = {}
 
 ---Generate guard clause template
@@ -16,7 +18,7 @@ function M.guard(condition, is_negated)
 
   return {
     string.format("if %s then", check),
-    '  vim.notify("TODO: Error message", vim.log.levels.ERROR)',
+    '  notify.error("TODO: Error message")',
     "  return nil",
     "end",
   }

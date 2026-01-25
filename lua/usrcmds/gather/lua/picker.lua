@@ -1,6 +1,8 @@
 ---@module 'usrcmds.gather.lua.picker'
 ---@description Telescope picker for displaying CWD-wide gather results
 
+local notify = require("lib.notify").create("[usrcmds.gather.lua.picker]")
+
 require("usrcmds.gather.@types")
 
 local pickers = require("telescope.pickers")
@@ -110,7 +112,7 @@ end
 ---@param gather_type UsrCmds.Gather.Lua.GatherType
 function M.show_picker(file_matches, gather_type)
   if #file_matches == 0 then
-    vim.notify("No " .. gather_type .. " found in cwd", vim.log.levels.WARN)
+    notify.warn("No " .. gather_type .. " found in cwd")
     return
   end
 

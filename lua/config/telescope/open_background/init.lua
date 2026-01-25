@@ -1,5 +1,7 @@
 -- config/telescope/open_background.lua
 ---@module 'config.telescope.open_background'
+local notify = require("lib.notify").create("[config.telescope.open_background]")
+
 local action_state = require("telescope.actions.state")
 
 local M = {}
@@ -11,7 +13,7 @@ function M.open_background(prompt_bufnr)
   local entry = action_state.get_selected_entry()
 
   if not entry then
-    vim.notify("No entry selected", vim.log.levels.WARN)
+    notify.warn("No entry selected")
     return
   end
 
@@ -22,7 +24,7 @@ function M.open_background(prompt_bufnr)
   end
 
   if not path or path == "" then
-    vim.notify("No valid path found", vim.log.levels.WARN)
+    notify.warn("No valid path found")
     return
   end
 
@@ -31,10 +33,7 @@ function M.open_background(prompt_bufnr)
 
   -- Check if file exists
   if vim.fn.filereadable(path) ~= 1 then
-    vim.notify(
-      "File not readable: " .. path,
-      vim.log.levels.ERROR
-    )
+    notify.error("File not readable: " .. path)
     return
   end
 
@@ -47,10 +46,7 @@ function M.open_background(prompt_bufnr)
 
   -- Show confirmation
   local filename = vim.fn.fnamemodify(path, ":t")
-  vim.notify(
-    "Opened in background: " .. filename,
-    vim.log.levels.INFO
-  )
+  notify.info("Opened in background: " .. filename)
 end
 
 ---Get static mappings table for background open (NOT attach_mappings)

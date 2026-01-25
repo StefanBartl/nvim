@@ -1,6 +1,8 @@
 ---@module 'config.neotree.open.window.debug'
 ---@brief Debug commands for custom float implementation
 
+local notify = require("lib.notify").create("[config.neotree.open.window.debug]")
+
 local M = {}
 
 ---Force-reset all neo-tree window state including custom float
@@ -26,7 +28,7 @@ function M.force_reset_state()
     end
   end
 
-  vim.notify("[neo-tree] State forcefully reset (including custom float)", vim.log.levels.INFO)
+  notify.info("[neo-tree] State forcefully reset (including custom float)")
 end
 
 ---Show current state including custom float
@@ -87,34 +89,31 @@ function M.test_custom_float(source)
 
   local custom_float = require("config.neotree.open.window.custom_float")
 
-  vim.notify(
-    string.format("[debug] Testing custom float with source: %s", source),
-    vim.log.levels.INFO
-  )
+  notify.info(string.format("[debug] Testing custom float with source: %s", source))
 
   custom_float.open(source, function(success)
     if success then
-      vim.notify("[debug] Custom float opened successfully", vim.log.levels.INFO)
+      notify.info("[debug] Custom float opened successfully")
     else
-      vim.notify("[debug] Custom float failed to open", vim.log.levels.ERROR)
+      notify.error("[debug] Custom float failed to open")
     end
   end)
 end
 
 ---Compare custom float vs native float (side by side test)
 function M.compare_float_implementations()
-  vim.notify("[debug] Starting float comparison test", vim.log.levels.INFO)
-  vim.notify("[debug] Step 1: Testing custom float...", vim.log.levels.INFO)
+  notify.info("[debug] Starting float comparison test")
+  notify.info("[debug] Step 1: Testing custom float...")
 
   local custom_float = require("config.neotree.open.window.custom_float")
 
   custom_float.open("filesystem", function(success)
     if success then
-      vim.notify("[debug] ✓ Custom float: SUCCESS", vim.log.levels.INFO)
+      notify.info("[debug] ✓ Custom float: SUCCESS")
 
       vim.defer_fn(function()
         custom_float.close(function()
-          vim.notify("[debug] Step 2: Testing native float...", vim.log.levels.INFO)
+          notify.info("[debug] Step 2: Testing native float...")
 
           vim.defer_fn(function()
             local ok, NeoCmd = pcall(require, "neo-tree.command")
@@ -126,13 +125,13 @@ function M.compare_float_implementations()
                 toggle = false,
               })
 
-              vim.notify("[debug] Native float executed", vim.log.levels.INFO)
+              notify.info("[debug] Native float executed")
             end
           end, 500)
         end)
       end, 2000)
     else
-      vim.notify("[debug] ✗ Custom float: FAILED", vim.log.levels.ERROR)
+      notify.error("[debug] ✗ Custom float: FAILED")
     end
   end)
 end

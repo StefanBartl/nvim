@@ -103,7 +103,7 @@ simple re-export patterns.
   local files = vim.fn.glob(full_dir .. "/*.lua", true, true)
 
   if #files == 0 then
-    notify("[lib.require_dir] No files found in " .. full_dir, vim.log.levels.WARN)
+    notify.warn("[lib.require_dir] No files found in " .. full_dir)
     return
   end
 

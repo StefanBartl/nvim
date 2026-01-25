@@ -1,6 +1,8 @@
 ---@module 'custom.insert.boilerplate.core'
 ---@brief Core implementation for boilerplate/template insertion
 
+local notify = require("lib.notify").create("[custom.insert.boilerplate.core]")
+
 local M = {}
 
 ---@type Custom.Insert.Boilerplate.TemplateRegistry
@@ -155,10 +157,7 @@ local function get_template_module(name)
     if ok then
       template_modules[name] = mod
     else
-      vim.notify(
-        string.format("[custom.insert.boilerplate] Failed to load template module '%s': %s", name, mod),
-        vim.log.levels.ERROR
-      )
+      notify.error(string.format("[custom.insert.boilerplate] Failed to load template module '%s': %s", name, mod))
       return nil
     end
   end
@@ -291,14 +290,7 @@ function M.insert_template(template, name)
   -- Check if template exists
   if not registry[template] then
     local available = table.concat(M.list_templates(), ", ")
-    vim.notify(
-      string.format(
-        "[custom.insert.boilerplate] Unknown template: '%s'\nAvailable templates: %s",
-        template,
-        available
-      ),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format( "[custom.insert.boilerplate] Unknown template: '%s'\nAvailable templates: %s", template, available ))
     return false
   end
 
@@ -318,10 +310,7 @@ function M.insert_template(template, name)
   lines = generate_template(template, args)
 
   if not lines then
-    vim.notify(
-      string.format("[custom.insert.boilerplate] Failed to generate template: %s", template),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format("[custom.insert.boilerplate] Failed to generate template: %s", template))
     return false
   end
 

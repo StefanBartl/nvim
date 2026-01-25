@@ -2,6 +2,8 @@
 --- Utilities for debugging LuaLS setup: root detection and workspace library inspection.
 
 -- Use the appropriate async I/O library (vim.uv preferred, vim.loop fallback)
+local notify = require("lib.notify").create("[lsp.servers.lua_ls.debug]")
+
 local uv = vim.uv or vim.loop
 
 -- Import filesystem helper utilities
@@ -111,14 +113,14 @@ function M.print_debug_info(bufnr)
   local root = M.root_for_buf(bufnr)
 
   if not root then
-    vim.notify("No root directory detected", vim.log.levels.WARN)
+    notify.warn("No root directory detected")
     return
   end
 
   -- Get full library including type files
   local ok, build_library = pcall(require, "lsp.servers.lua_ls.build_library")
   if not ok then
-    vim.notify("Could not load build_library", vim.log.levels.ERROR)
+    notify.error("Could not load build_library")
     return
   end
 
@@ -139,15 +141,15 @@ function M.print_debug_info(bufnr)
     end
   end
 
-  vim.notify("=== LuaLS Debug Info ===", vim.log.levels.INFO)
-  vim.notify("Root: " .. root, vim.log.levels.INFO)
-  vim.notify("\nType Directories (" .. #dirs .. "):", vim.log.levels.INFO)
+  notify.info("=== LuaLS Debug Info ===")
+  notify.info("Root: " .. root)
+  notify.info("\nType Directories (" .. #dirs .. "):")
   for _, dir in ipairs(dirs) do
-    vim.notify("  " .. dir, vim.log.levels.INFO)
+    notify.info("  " .. dir)
   end
-  vim.notify("\nType Files (" .. #files .. "):", vim.log.levels.INFO)
+  notify.info("\nType Files (" .. #files .. "):")
   for _, file in ipairs(files) do
-    vim.notify("  " .. file, vim.log.levels.INFO)
+    notify.info("  " .. file)
   end
 end
 

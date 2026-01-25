@@ -111,7 +111,7 @@ notify.info("Operation successful")
 ```lua
 -- Vorher:
 local notify, levels = vim.notify, vim.log.levels
-notify("Error occurred", levels.ERROR)
+notify.error("Error occurred")
 
 -- Nachher:
 local notify = require("lib.notify").create("[module.path]")
@@ -122,7 +122,7 @@ notify.error("Error occurred")
 ```lua
 -- Vorher:
 local notify = require("lib.notify").create("")
-notify("Task done", vim.log.levels.WARN)
+notify.warn("Task done")
 
 -- Nachher:
 notify.warn("Task done")

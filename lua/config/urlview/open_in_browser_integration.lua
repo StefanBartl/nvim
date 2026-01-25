@@ -11,6 +11,8 @@
 ---@class UrlviewIntegration
 ---@field uses_system_opener boolean
 
+local notify = require("lib.notify").create("[config.urlview.open_in_browser_integration]")
+
 local M = {}
 
 ---@class ProcResult
@@ -136,13 +138,13 @@ end
 local function open_url(raw_url)
   local url = sanitize_url(raw_url)
   if not url then
-    vim.notify("[urlview] Invalid or empty URL", vim.log.levels.WARN)
+    notify.warn("[urlview] Invalid or empty URL")
     return
   end
 
   local cmd = build_open_cmd(url)
   if #cmd == 0 then
-    vim.notify("[urlview] No suitable system opener found", vim.log.levels.ERROR)
+    notify.error("[urlview] No suitable system opener found")
     return
   end
 
@@ -150,7 +152,7 @@ local function open_url(raw_url)
   run_async(cmd, function(ok, code, _stdout, stderr)
     if not ok then
       local msg = string.format("[urlview] Failed to open URL (exit=%s): %s", tostring(code), tostring(stderr or ""))
-      vim.notify(msg, vim.log.levels.ERROR)
+      notify.error(msg)
     end
   end)
 end
@@ -160,7 +162,7 @@ end
 function M.register_action()
   local ok, actions = pcall(require, "urlview.actions")
   if not ok then
-    vim.notify("[urlview] Could not load urlview.actions", vim.log.levels.ERROR)
+    notify.error("[urlview] Could not load urlview.actions")
     return
   end
 
@@ -180,7 +182,7 @@ function M.setup(opts)
 
   local ok, urlview = pcall(require, "urlview")
   if not ok then
-    vim.notify("[urlview] urlview.nvim is not installed/loaded", vim.log.levels.ERROR)
+    notify.error("[urlview] urlview.nvim is not installed/loaded")
     return
   end
 

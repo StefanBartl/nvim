@@ -1,6 +1,8 @@
 ---@module 'wkdnvchad.mappings'
 --- Mappings using lib.map for consistency
 
+local notify = require("lib.notify").create("[wkdnvchad.mappings]")
+
 local M = {}
 
 -- Use lib for all mappings
@@ -27,10 +29,7 @@ local function attach_buffers()
     local cnt = get_count()
     local ok, err = pcall(custom_tabufline.move_next_n, cnt)
     if not ok then
-      vim.notify(
-        "[wkdnvchad.mappings] Buffer navigation failed: " .. tostring(err),
-        vim.log.levels.WARN
-      )
+      notify.warn("[wkdnvchad.mappings] Buffer navigation failed: " .. tostring(err))
     end
   end, { desc = "[Buffers] Next" })
 
@@ -39,10 +38,7 @@ local function attach_buffers()
     local cnt = get_count()
     local ok, err = pcall(custom_tabufline.move_prev_n, cnt)
     if not ok then
-      vim.notify(
-        "[wkdnvchad.mappings] Buffer navigation failed: " .. tostring(err),
-        vim.log.levels.WARN
-      )
+      notify.warn("[wkdnvchad.mappings] Buffer navigation failed: " .. tostring(err))
     end
   end, { desc = "[Buffers] Prev" })
 
@@ -51,10 +47,7 @@ local function attach_buffers()
     local cnt = get_count()
     local ok, err = pcall(custom_tabufline.close_n_buffers, cnt)
     if not ok then
-      vim.notify(
-        "[wkdnvchad.mappings] Buffer close failed: " .. tostring(err),
-        vim.log.levels.WARN
-      )
+      notify.warn("[wkdnvchad.mappings] Buffer close failed: " .. tostring(err))
     end
   end, { desc = "[Buffers] Close" })
 end
@@ -81,10 +74,7 @@ local function attach_tabs()
   map("n", "<leader>tt", function()
     local ok, err = pcall(move_buf_tab)
     if not ok then
-      vim.notify(
-        "[wkdnvchad.mappings] Move buffer to tab failed: " .. tostring(err),
-        vim.log.levels.WARN
-      )
+      notify.warn("[wkdnvchad.mappings] Move buffer to tab failed: " .. tostring(err))
     end
   end, { desc = "[Tabs] Move current buffer to new tab" })
 end
@@ -100,20 +90,14 @@ function M.setup(opts)
   if opts.all or opts.buffers then
     local ok, err = pcall(attach_buffers)
     if not ok then
-      vim.notify(
-        "[wkdnvchad.mappings] Buffer mappings failed: " .. tostring(err),
-        vim.log.levels.ERROR
-      )
+      notify.error("[wkdnvchad.mappings] Buffer mappings failed: " .. tostring(err))
     end
   end
 
   if opts.all or opts.tabs then
     local ok, err = pcall(attach_tabs)
     if not ok then
-      vim.notify(
-        "[wkdnvchad.mappings] Tab mappings failed: " .. tostring(err),
-        vim.log.levels.ERROR
-      )
+      notify.error("[wkdnvchad.mappings] Tab mappings failed: " .. tostring(err))
     end
   end
 end

@@ -1,6 +1,8 @@
 ---@module 'config.neotree.open.window.observability'
 ---@brief Structured logging and metrics for Neo-tree operations
 
+local notify = require("lib.notify").create("[config.neotree.open.window.observability]")
+
 local M = {}
 
 ---@type table[]
@@ -46,7 +48,7 @@ function M.export_events(path)
   if fd then
     fd:write(vim.json.encode(events))
     fd:close()
-    vim.notify(string.format("Exported %d events to %s", #events, path), vim.log.levels.INFO)
+    notify.info(string.format("Exported %d events to %s", #events, path))
   end
 end
 

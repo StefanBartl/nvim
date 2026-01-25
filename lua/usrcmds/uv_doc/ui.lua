@@ -12,8 +12,7 @@ local search = require("usrcmds.uv_doc.search")
 local normalize = require("usrcmds.uv_doc.normalize")
 local constants = require("usrcmds.uv_doc.constants")
 
--- Create notify instance with proper API
-local notify = require("lib.notify").create("")
+local notify = require("lib.notify").create("[usrcmds.uvdoc.ui]")
 
 --- Opens floating list with cursorline navigation
 ---@param names string[]
@@ -191,7 +190,7 @@ local function fetch_and_show(uvname)
 
   local rst, err = http.get(rst_url)
   if not rst then
-    notify("failed to fetch RST: " .. (err or "unknown"), vim.log.levels.ERROR)
+    notify.error("failed to fetch RST: " .. (err or "unknown"))
     return
   end
 

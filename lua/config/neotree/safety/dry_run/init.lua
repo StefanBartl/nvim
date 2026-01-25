@@ -1,6 +1,8 @@
 ---@module 'config.neotree.safety.dry_run'
 ---@brief Dry-run mode for testing file operations without executing them
 
+local notify = require("lib.notify").create("[config.neotree.safety.dry_run]")
+
 local M = {}
 
 ---@type boolean
@@ -13,14 +15,14 @@ local planned_operations = {}
 function M.enable()
   M.enabled = true
   planned_operations = {}
-  vim.notify("Dry-run mode ENABLED", vim.log.levels.INFO)
+  notify.info("Dry-run mode ENABLED")
 end
 
 ---Disable dry-run mode
 function M.disable()
   M.enabled = false
   planned_operations = {}
-  vim.notify("Dry-run mode DISABLED", vim.log.levels.INFO)
+  notify.info("Dry-run mode DISABLED")
 end
 
 ---Toggle dry-run mode
@@ -46,10 +48,7 @@ function M.log_operation(operation, details)
     timestamp = os.time(),
   })
 
-  vim.notify(
-    string.format("[DRY-RUN] %s: %s", operation, vim.inspect(details)),
-    vim.log.levels.INFO
-  )
+  notify.info(string.format("[DRY-RUN] %s: %s", operation, vim.inspect(details)))
 end
 
 ---Get all planned operations
@@ -61,7 +60,7 @@ end
 ---Show dry-run report
 function M.show_report()
   if #planned_operations == 0 then
-    vim.notify("No operations planned", vim.log.levels.INFO)
+    notify.info("No operations planned")
     return
   end
 
@@ -79,7 +78,7 @@ function M.show_report()
   table.insert(lines, "")
   table.insert(lines, string.format("Total operations: %d", #planned_operations))
 
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  notify.info(table.concat(lines, "\n"))
 end
 
 ---Clear planned operations

@@ -1,4 +1,6 @@
 ---@module 'lsp.tools.eslint_prettier.prettier.format'
+local notify = require("lib.notify").create("[lsp.tools.eslint_prettier.prettier.format]")
+
 local api = vim.api
 local run = require("lsp.tools.eslint_prettier.prettier")
 
@@ -44,13 +46,13 @@ function M.prettier_format(bufnr)
   bufnr = bufnr or api.nvim_get_current_buf()
   local filename = api.nvim_buf_get_name(bufnr)
   if filename == "" then
-    vim.notify("No file to format", vim.log.levels.WARN)
+    notify.warn("No file to format")
     return
   end
 
   local bin = run.get_prettier_bin()
   if not bin then
-    vim.notify("prettier not found (PATH or mason).", vim.log.levels.ERROR)
+    notify.error("prettier not found (PATH or mason).")
     return
   end
 
@@ -65,9 +67,9 @@ function M.prettier_format(bufnr)
     on_exit = function(code, _, err)
       if code == 0 then
         vim.cmd("checktime")
-        vim.notify("prettier: formatted", vim.log.levels.INFO)
+        notify.info("prettier: formatted")
       else
-        vim.notify("prettier failed:\n" .. table.concat(err, "\n"), vim.log.levels.WARN)
+        notify.warn("prettier failed:\n" .. table.concat(err, "\n"))
       end
     end,
   })

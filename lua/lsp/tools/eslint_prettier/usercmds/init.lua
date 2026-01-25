@@ -1,5 +1,7 @@
 ---@module 'lsp.tools.eslint_prettier.usercmds'
 --- Create user commands like :EslintFix, :PrettierFormat, :LintAndFormat, :ToggleLintFormatOnSave
+local notify = require("lib.notify").create("[lsp.tools.eslint_prettier.usercmds]")
+
 local api = vim.api
 local core = require("lsp.tools.eslint_prettier.core.find_root")
 local check = require("lsp.tools.eslint_prettier.core.check_config")
@@ -14,7 +16,7 @@ function M.attach(ctx)
     local bufnr = api.nvim_get_current_buf()
     local root = core(bufnr)
     if not check.has_eslint(root) then
-      vim.notify("No eslint config found in project root; skipping", vim.log.levels.INFO)
+      notify.info("No eslint config found in project root; skipping")
       return
     end
     eslint_fix.eslint_fix(bufnr)
@@ -24,7 +26,7 @@ function M.attach(ctx)
     local bufnr = api.nvim_get_current_buf()
     local root = core(bufnr)
     if not check.has_prettier(root) then
-      vim.notify("No prettier config found in project root; skipping", vim.log.levels.INFO)
+      notify.info("No prettier config found in project root; skipping")
       return
     end
     prettier_fmt.prettier_format(bufnr)

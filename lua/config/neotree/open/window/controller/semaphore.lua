@@ -1,6 +1,8 @@
 ---@module 'config.neotree.open.window.controller.semaphore'
 ---@brief Synchronous semaphore for concurrency control
 
+local notify = require("lib.notify").create("[config.neotree.open.window.controller.semaphore]")
+
 local M = {}
 
 ---@type {count: integer, waiting: function[], max_wait: integer}
@@ -23,7 +25,7 @@ function M.acquire()
   -- Queue is full
   if #sem.waiting >= sem.max_wait then
     if cfg.debug then
-      vim.notify("[semaphore] Queue full, dropping request", vim.log.levels.WARN)
+      notify.warn("[semaphore] Queue full, dropping request")
     end
     return false
   end

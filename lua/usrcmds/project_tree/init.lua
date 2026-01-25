@@ -35,6 +35,8 @@
 
 --FIX: Optimize
 
+local notify = require("lib.notify").create("[usrcmds.project_tree]")
+
 local lib = require("lib")
 
 local M = {}
@@ -225,7 +227,7 @@ function M.setup(cfg)
   if not ok then
     -- Low-level: return silently; the user commands will surface this as needed
     vim.schedule(function()
-      vim.notify(M.opts.notify_prefix .. "cannot ensure outdir: " .. tostring(err), vim.log.levels.WARN)
+      notify.warn(M.opts.notify_prefix .. "cannot ensure outdir: " .. tostring(err))
     end)
   end
 end

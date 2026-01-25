@@ -1,6 +1,8 @@
 ---@module 'custom.recommender.keymaps'
 ---Navigation and actions
 
+local notify = require("lib.notify").create("[custom.recommender.navigation]")
+
 local M = {}
 
 local api = vim.api
@@ -153,7 +155,7 @@ function M.attach(bufnr, state)
       "U         - Un-ignore all",
       "q/Esc     - Close",
     }
-    vim.notify(table.concat(help_text, "\n"), vim.log.levels.INFO)
+    notify.info(table.concat(help_text, "\n"))
   end, opts)
 end
 

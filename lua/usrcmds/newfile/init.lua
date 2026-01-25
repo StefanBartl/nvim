@@ -9,6 +9,8 @@
 -- :WriteToR[!] {path}       -> write copy, create parents; with ! force overwrite
 -- :MkParent                 -> ensure parent dir for the current buffer name
 
+local notify = require("lib.notify").create("[usrcmds.newfile]")
+
 local M = {}
 
 --- Ensure parent directory exists.
@@ -32,7 +34,7 @@ end
 function M.edit_new(path, opts)
   opts = opts or { recursive = true, write_now = false, overwrite = false }
   if opts.recursive and not M.ensure_parent(path, true) then
-    vim.notify("mkdir failed for: " .. path, vim.log.levels.ERROR)
+    notify.error("mkdir failed for: " .. path)
     return
   end
   -- Set the buffer name to the target path
@@ -51,7 +53,7 @@ end
 function M.save_as(path, opts)
   opts = opts or { recursive = true, overwrite = false, write_now = true }
   if opts.recursive and not M.ensure_parent(path, true) then
-    vim.notify("mkdir failed for: " .. path, vim.log.levels.ERROR)
+    notify.error("mkdir failed for: " .. path)
     return
   end
   local bang = opts.overwrite and "!" or ""
@@ -67,7 +69,7 @@ end
 function M.write_to(path, opts)
   opts = opts or { recursive = true, overwrite = false, write_now = true }
   if opts.recursive and not M.ensure_parent(path, true) then
-    vim.notify("mkdir failed for: " .. path, vim.log.levels.ERROR)
+    notify.error("mkdir failed for: " .. path)
     return
   end
   local bang = opts.overwrite and "!" or ""
@@ -100,13 +102,13 @@ function M.enable_usercmds()
   vim.api.nvim_create_user_command("MkParent", function()
     local name = vim.api.nvim_buf_get_name(0)
     if name == "" then
-      vim.notify("buffer has no name; use :file {path} first", vim.log.levels.WARN)
+      notify.warn("buffer has no name; use :file {path} first")
       return
     end
     if M.ensure_parent(name, true) then
-      vim.notify("ensured parent: " .. vim.fn.fnamemodify(name, ":p:h"), vim.log.levels.INFO)
+      notify.info("ensured parent: " .. vim.fn.fnamemodify(name, ":p:h"))
     else
-      vim.notify("mkdir failed for: " .. name, vim.log.levels.ERROR)
+      notify.error("mkdir failed for: " .. name)
     end
   end, {})
 end

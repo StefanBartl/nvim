@@ -102,7 +102,7 @@
 - lua\custom\format\filter_lines\a
 - lua\custom\format\table\
 - lua\custom\format\text_width\
-- lua\custom\format\misc\
+- lua\custom\format\misc
 - `custom/filecycle/doc` - muss aktualisert werden
 
 --
