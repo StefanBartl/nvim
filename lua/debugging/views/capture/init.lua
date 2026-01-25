@@ -1,6 +1,10 @@
 ---@module 'debugging.views.capture'
 ---Unified capture system for :messages, Noice, etc.
 
+local lazy = require("lib.lazy")
+local copy_to_clipboard = lazy.require("debugging.views.capture.clipboard")
+local write_file = lazy.require("lib.fs.write.to_file")
+
 local M = {}
 
 -- Default capture directory
@@ -13,172 +17,12 @@ local function rstrip(s)
   return (s:gsub("%s*$", ""))
 end
 
----Count lines in a string
----@param s string
----@return integer
-local function count_lines(s)
-  if s == "" then return 0 end
-  local count = 0
-  for _ in s:gmatch("[^\n]+") do
-    count = count + 1
-  end
-  return count
-end
-
----@param bin string
----@return boolean
-local function has_exec(bin)
-  return vim.fn.executable(bin) == 1
-end
-
----@return { is_mac:boolean, is_win:boolean, is_wsl:boolean, is_wayland:boolean, is_x11:boolean }|nil
-local function detect_platform()
-  local uname = (vim.uv or vim.loop).os_uname()
-  if not uname then
-    vim.notify("[debugging.capture] uname is nil", vim.log.levels.WARN)
-    return nil
-  end
-  local sys = (uname.sysname or ""):lower()
-  local rel = (uname.release or ""):lower()
-  local is_mac = sys:find("darwin", 1, true) ~= nil
-  local is_win = sys:find("windows", 1, true) ~= nil or package.config:sub(1, 1) == "\\"
-  local is_wsl = (vim.fn.has("wsl") == 1) or rel:find("microsoft", 1, true) ~= nil
-  local is_wayland = (vim.env.WAYLAND_DISPLAY or "") ~= ""
-  local is_x11 = (vim.env.DISPLAY or "") ~= ""
-  return { is_mac = is_mac, is_win = is_win, is_wsl = is_wsl, is_wayland = is_wayland, is_x11 = is_x11 }
-end
-
----@param cmd string[]
----@param input? string
----@return boolean,string|nil
-local function run_command(cmd, input)
-  if vim.system then
-    local res = vim.system(cmd, { text = true, stdin = input }):wait()
-    if res.code == 0 then
-      return true, nil
-    end
-    return false, (res.stderr ~= "" and res.stderr) or ("exit code " .. res.code)
-  else
-    local out = vim.fn.system(cmd, input or "")
-    return vim.v.shell_error == 0, out
-  end
-end
-
----@param path string
----@param content string
----@return boolean,string|nil
-local function write_file(path, content)
-  local dir = vim.fn.fnamemodify(path, ":h")
-  if dir == "" then
-    return false, "Invalid directory for path: " .. path
-  end
-  local ok_mkdir, err_mkdir = pcall(vim.fn.mkdir, dir, "p")
-  if not ok_mkdir then
-    return false, "mkdir failed: " .. tostring(err_mkdir)
-  end
-  local f, err = io.open(path, "w")
-  if not f then
-    return false, "open failed: " .. (err or path)
-  end
-  if content ~= "" and not content:match("\n$") then
-    content = content .. "\n"
-  end
-  f:write(content)
-  f:close()
-  return true, nil
-end
-
----@param text string
----@param debug boolean
----@return boolean|nil
-local function copy_to_clipboard(text, debug)
-  local ok = pcall(vim.fn.setreg, "+", text)
-  if ok then
-    if debug then
-      vim.notify("DebugViews: setreg('+') ok", vim.log.levels.DEBUG)
-    end
-    return true
-  end
-
-  local P = detect_platform()
-  if not P then
-    vim.notify("[debugging.capture] P is nil", vim.log.levels.WARN)
-    return nil
-  end
-
-  if P.is_mac and has_exec("pbcopy") then
-    local ok2, err = run_command({ "pbcopy" }, text)
-    if ok2 then return true end
-    if debug then vim.notify("pbcopy failed: " .. tostring(err), vim.log.levels.DEBUG) end
-  end
-
-  if P.is_wsl or P.is_win then
-    if has_exec("clip.exe") then
-      local ok2, err = run_command({ "clip.exe" }, text)
-      if ok2 then return true end
-      if debug then vim.notify("clip.exe failed: " .. tostring(err), vim.log.levels.DEBUG) end
-    end
-    local clip_abs = "/mnt/c/Windows/System32/clip.exe"
-    if not has_exec("clip.exe") and vim.fn.filereadable(clip_abs) == 1 then
-      local ok2, err = run_command({ clip_abs }, text)
-      if ok2 then return true end
-      if debug then vim.notify("abs clip.exe failed: " .. tostring(err), vim.log.levels.DEBUG) end
-    end
-  end
-
-  if P.is_wayland and has_exec("wl-copy") then
-    local ok2, err = run_command({ "wl-copy" }, text)
-    if ok2 then return true end
-    if debug then vim.notify("wl-copy failed: " .. tostring(err), vim.log.levels.DEBUG) end
-  end
-
-  if P.is_x11 then
-    if has_exec("xclip") then
-      local ok2, err = run_command({ "xclip", "-selection", "clipboard" }, text)
-      if ok2 then return true end
-      if debug then vim.notify("xclip failed: " .. tostring(err), vim.log.levels.DEBUG) end
-    end
-    if has_exec("xsel") then
-      local ok2, err = run_command({ "xsel", "--clipboard", "--input" }, text)
-      if ok2 then return true end
-      if debug then vim.notify("xsel failed: " .. tostring(err), vim.log.levels.DEBUG) end
-    end
-  end
-
-  return false
-end
-
----Platform-aware path join
----@param ... string
----@return string
-local function path_join(...)
-  local parts = { ... }
-  if vim.fs and vim.fs.joinpath then
-    return vim.fs.joinpath(unpack(parts))
-  end
-
-  -- Fallback: use platform separator
-  local sep = package.config:sub(1, 1)
-  return table.concat(parts, sep)
-end
-
----Normalize path for platform
----@param path string
----@return string
-local function normalize_path(path)
-  if vim.fs and vim.fs.normalize then
-    return vim.fs.normalize(path)
-  end
-  -- Fallback: just return as-is
-  return path
-end
-
 ---@return string dir, string logfile
 local function resolve_paths()
-  local base = normalize_path(M.base_dir)
+  local base = require("lib.normalize").normalize_path(M.base_dir)
   local dir = base
   local timestamp = os.date("%Y%m%d-%H%M%S")
-  local logfile = path_join(dir, string.format("messages-%s.log", timestamp))
+  local logfile = require("lib.fs.path").joinpath({ dir, string.format("messages-%s.log", timestamp) })
   return dir, logfile
 end
 
@@ -470,7 +314,7 @@ function M.capture_messages(opts)
   end
 
   messages = rstrip(messages)
-  local line_count = count_lines(messages)
+  local line_count = require("lib.strings.core").count_lines(messages)
 
   if debug then
     vim.notify(
