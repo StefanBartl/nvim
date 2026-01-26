@@ -25,17 +25,17 @@ function M.fn(func, opts)
   if type(opts) == "number" then
     return M.memo.memoize(func, opts, nil)
   end
-  
+
   -- Handle options table
   opts = opts or {}
   local size = opts.size or 128
   local keyer = opts.keyer
-  
+
   -- Validate size
   if type(size) ~= "number" then
     error(("memo.fn: size must be number, got %s"):format(type(size)), 2)
   end
-  
+
   return M.memo.memoize(func, size, keyer)
 end
 

@@ -42,10 +42,13 @@
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
 5. `:CwdHere` fixen
 6. "a" in neotree scheint nicht mehr ganz typsiereungen ezuer rstellen
-
 7. `:LuaFileStats` eine option machen, die keine file erzeugt sondern nur eine ausgabe im stdout/noify
+8. `leader fg` soll nicht zuerst eine prompt haben, sondern gleich den picker aufmachen.
+    - jeder buchstabe ist in der trefferliste eingetragen
+    - Was siond die stats neben der prompt? weeenn ich `nvim_set_current_win` eingebe steht 2871/6343649
+9. `sessions` überarbeiten
 
----
+--
 
 ## Neotest
 
@@ -75,6 +78,7 @@
 ## Long run
 
 - `editor_interface` verwenden, um funktionen, die sowohl mappings als auch usercommands begründen.
+- autocmds fokussieren, so dass sie sich die durchgänge teilen
 - workspace lsp warnings debuggen
     1. alle `disable-next-line` durchsehen
     2. Todo Coments anschauen und durchgehen

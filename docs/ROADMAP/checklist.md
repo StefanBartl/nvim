@@ -18,38 +18,16 @@ Beachte dabei die ausgearbeiteten Regeln & Leitlinien zu den Themem
 
 welche in den Dateien Arch&Coding-Regeln.md & Checklist.md & Zentrale-Prinzipien.md festgehalten sind und in den in den Projektdateien anhängig sind.
 
+### Mögliche umfangreiche  Optimierungen für künftige updates: Analyse und Machbarkeits-Einschätzung
 
+Analyse ob möglich und wenn ja, aufriss ausgeben, wie man die iomplementierung machen könnte:
+- Worker-Threads für Performance kritische Aufgaben wie zb.: Treesitter
+- Vorkompilierte Pattern
+- Bytecode-Caching
+- SIMD-Operationen
+- GPU-Offloading
+- Prädiktives Laden
 
+Arbeite diesbezüglich Implementierungen aus bzw. Machbarkeits / Sinnhaftigkeitseinschätzungen und ergänze die Liste mit mehreren weiteern sinnvollen Optimierungen.
 
-Zukünftige Optimierungen
-Geplant
-
-Native Modul-Caches (vim.loader)
-
-Inkrementelle Updates
-
-Worker-Threads für TS
-
-Vorkompilierte Pattern
-
-Bytecode-Caching
-
-Forschung
-
-SIMD-Operationen
-
-GPU-Offloading
-
-Prädiktives Laden
-
-Performance-Verbesserungen beitragen
-
-Bei Pull Requests:
-
-Benchmarks beilegen
-
-Kritische Pfade profilieren
-
-Trade-offs dokumentieren
-
-Edge-Cases testen
+---

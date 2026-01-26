@@ -1,25 +1,39 @@
-neotree- Roadmap & Ideas
+# neotree- Roadmap & Ideas
 
-# Table of content
+## Table of content
 
 - [neotree- Roadmap & Ideas](#neotree-roadmap-ideas)
-  - [Critical](#critical)
+  - [Watch](#watch)
   - [Important](#important)
+    - [neotree/open/](#neotreeopen)
   - [normal](#normal)
+    - [Bei öffnen Fokus auf Neotree window setzen](#bei-ffnen-fokus-auf-neotree-window-setzen)
+      - [funktionert, aber mit kleinen bug](#funktionert-aber-mit-kleinen-bug)
+      - [Bereits geteste, hat nicht funktionert](#bereits-geteste-hat-nicht-funktionert)
     - [open (m-f, m-l usw..)](#open-m-f-m-l-usw)
-    - [marks / trash](#marks-trash)
+  - [config/neotree/cwd_sync optimierung und bugfix](#configneotreecwd_sync-optimierung-und-bugfix)
+    - [error (Hohe priorität)](#error-hohe-prioritt)
+    - [Optimierungen ausarbeiten](#optimierungen-ausarbeiten)
+      - [Mögliche umfangreiche  Optimierungen für künftige updates: Analyse und Machbarkeits-Einschätzung](#mgliche-umfangreiche-optimierungen-fr-knftige-updates-analyse-und-machbarkeits-einschtzung)
 
 ---
 
 1. Wenn sourcves sitch dann solld er fokus im neotree bleiben
+2. löschen doppelt bestätigen
+3. mark:
+    - für löschen, kopieren, moven usw...
+    - soll ene markierung im lnken rand erzeugen wenn markiert.
+    - dlelete all muste ich dann erst wieer alle ienzeln bestätigen das löschen
 
-# Watch
+---
+
+## Watch
 
 1. Ersetztn die `[f]`-Mappings in der Praxis tatsächlich die `[r]`-Mappings?
 
 ---
 
-# Important
+## Important
 
 1. Neotree keymaps werden relativ oft verwendet. imports hier belassen, in die funktionen refactoren oder mit `lib.lazy`?
 2. checkhealt: modular machen, dafoür brauche ich ein system + doc
@@ -31,7 +45,7 @@ neotree- Roadmap & Ideas
 
 ---
 
-## neotree/open/
+### neotree/open/
 
 1. Der zustabnd ist unschön
 2. early float return?
@@ -39,7 +53,7 @@ neotree- Roadmap & Ideas
 
 ---
 
-# normal
+## normal
 
 1. in commands, usrcmds, kleymaps einen  oprdner /sources machen
 2. Plugin Varianten systemaitsch pperformance testen mit `plugins/neotree_variants`
@@ -48,11 +62,11 @@ neotree- Roadmap & Ideas
 
 ---
 
-## Bei öffnen Fokus auf Neotree window setzen
+### Bei öffnen Fokus auf Neotree window setzen
 
 ---
 
-### funktionert, aber mit kleinen bug
+#### funktionert, aber mit kleinen bug
 
 Folgende Variante funktiert bei allen 4 window positionen. Ein Bug ist aber, wenn man aus dem float window direkt in ein rechtes oder linkes neotree window wechselt, dann geht der fokus nicht mit. Man muss dann erstmal das window wieder schlie0en und neu öffnen um den fokus automaitsch hineon zu bekommen oder mit wincmd hineinwechseln, aber dnan wäre es ja kein auto fokus mehr. In allen anderen Szenarien klappt es. Spannend: wenn m,an in ein float window wechselt und dann direkt in ein current neotrew window, dann kann amn von dort direkt wieder in ein links oder rechtes mit auto fokus wechseln, das scheint es zuirückzusetzen.
 
@@ -86,11 +100,11 @@ Folgende Variante funktiert bei allen 4 window positionen. Ein Bug ist aber, wen
 
 ---
 
-### Bereits geteste, hat nicht funktionert
+#### Bereits geteste, hat nicht funktionert
 
 ---
 
-#### `plugins/neotree.lua`
+##### `plugins/neotree.lua`
 
 ```lua
 -- focus_on_open gibt es nicht mehr:
@@ -144,7 +158,7 @@ event_handlers = {
 
 ---
 
-#### Autocommands
+##### Autocommands
 
 1. Funktioniert zawr für  Neotree window links, rechts und current, aber es hat die Auswirkung, dass sich das flaot window sofort wieder schließt.
 
@@ -167,7 +181,7 @@ Ist also in dieser Versionm so keine Option.
 
 ---
 
-## open (m-f, m-l usw..)
+### open (m-f, m-l usw..)
 
 1. Neotree window muss schneller öffnen können, das dauert zu langsam und wirkt nicht mehr flüssig:
 2. sources einzeln mal deaktivieren, sources messen wir lange der unterschied ist wenn an einzeln wegnimmt
@@ -177,6 +191,3 @@ Ist also in dieser Versionm so keine Option.
 
 ---
 
-## marks / trash
-
---
