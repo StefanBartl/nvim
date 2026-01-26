@@ -1,6 +1,8 @@
 ---@module 'config.neotree.actions.copy.to_clipboard'
 ---@brief Copy entries to system clipboard with preview and formatting options
 
+local notify = require("lib.notify").create("[config.neotree.actions.copy.to_clipboard]")
+
 local M = {}
 
 ---Format entries based on options
@@ -41,29 +43,29 @@ local function format_entries(entries, opts)
   end
 end
 
----Create preview message
----@param entries string[]
----@param opts Cfg.NeoTree.Actions.CopyClipboardOpts
----@return string message
-local function create_preview_message(entries, opts)
-  local count = #entries
-  local limit = opts.preview_limit or 10
-  local preview_count = math.min(count, limit)
+-- ---Create preview message
+-- ---@param entries string[]
+-- ---@param opts Cfg.NeoTree.Actions.CopyClipboardOpts
+-- ---@return string message
+-- local function create_preview_message(entries, opts)
+  -- local count = #entries
+  -- local limit = opts.preview_limit or 10
+  -- local preview_count = math.min(count, limit)
 
-  local lines = { string.format("Copied %d entries:", count) }
+  -- local lines = { string.format("Copied %d entries:", count) }
 
-  for i = 1, preview_count do
-    local entry = entries[i]
-    local basename = vim.fn.fnamemodify(entry, ":t")
-    lines[#lines + 1] = string.format("  • %s", basename)
-  end
+  -- for i = 1, preview_count do
+    -- local entry = entries[i]
+    -- local basename = vim.fn.fnamemodify(entry, ":t")
+    -- lines[#lines + 1] = string.format("  • %s", basename)
+  -- end
 
-  if count > limit then
-    lines[#lines + 1] = string.format("  ... and %d more", count - limit)
-  end
+  -- if count > limit then
+    -- lines[#lines + 1] = string.format("  ... and %d more", count - limit)
+  -- end
 
-  return table.concat(lines, "\n")
-end
+  -- return table.concat(lines, "\n")
+-- end
 
 ---Copy entries to system clipboard
 ---@param entries string[] Absolute paths to copy
@@ -78,7 +80,7 @@ function M.copy(entries, opts)
   }, opts or {})
 
   if not entries or #entries == 0 then
-    vim.notify("No entries to copy", vim.log.levels.WARN)
+    notify.warn("No entries to copy")
     return false
   end
 
@@ -87,7 +89,7 @@ function M.copy(entries, opts)
   -- Copy to system clipboard (+)
   vim.fn.setreg("+", formatted, "c")
 
-  vim.notify("Copy to +: " .. formatted, vim.log.levels.INFO) -- AUDIT: Ich möchte keine formatiierte ansicht auals notify ausgeben, sondern was im Zwischenspeicher ist sehen:
+  notify.info("Copy to +: " .. formatted) -- AUDIT: Ich möchte keine formatiierte ansicht auals notify ausgeben, sondern was im Zwischenspeicher ist sehen:
   -- Show preview notification
   -- local preview = create_preview_message(entries, opts)
   -- vim.notify(preview, vim.log.levels.INFO)

@@ -196,4 +196,5 @@ function M.print_summary()
   vim.api.nvim_out_write(coll.formatted_listed .. "\n")
 end
 
+---@type Lib.BufWinTab.BufferUtils
 return M

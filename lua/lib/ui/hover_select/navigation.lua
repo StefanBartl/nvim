@@ -1,6 +1,8 @@
 ---@module 'lib.ui.hover_select.navigation'
 ---@description Navigation and keymap setup for lib.ui.hover_select buffer
 
+local notify = require("lib.notify").create("[lib.ui.hover_select.navigation]")
+
 local M = {}
 
 local api = vim.api
@@ -25,7 +27,7 @@ function M.setup(bufnr, on_select, on_toggle)
     set_km("n", "<Tab>", function()
       local ok, err = pcall(on_toggle)
       if not ok then
-        vim.notify("Toggle error: " .. tostring(err), vim.log.levels.ERROR)
+        notify.error("Toggle error: " .. tostring(err))
       end
     end, opts)
 
@@ -45,7 +47,7 @@ function M.setup(bufnr, on_select, on_toggle)
         end
       end)
       if not ok then
-        vim.notify("Shift-Tab error: " .. tostring(err), vim.log.levels.ERROR)
+        notify.error("Shift-Tab error: " .. tostring(err))
       end
     end, opts)
 
@@ -55,7 +57,7 @@ function M.setup(bufnr, on_select, on_toggle)
       vim.defer_fn(function()
         local ok = pcall(on_toggle)
         if not ok then
-          vim.notify("Toggle error in insert mode", vim.log.levels.ERROR)
+          notify.error("Toggle error in insert mode")
         end
       end, 10)
     end, opts)
@@ -88,14 +90,14 @@ function M.setup(bufnr, on_select, on_toggle)
   set_km("n", "<CR>", function()
     local ok, err = pcall(on_select)
     if not ok then
-      vim.notify("Selection error: " .. tostring(err), vim.log.levels.ERROR)
+      notify.error("Selection error: " .. tostring(err))
     end
   end, opts)
 
   set_km("n", "<2-LeftMouse>", function()
     local ok, err = pcall(on_select)
     if not ok then
-      vim.notify("Selection error: " .. tostring(err), vim.log.levels.ERROR)
+      notify.error("Selection error: " .. tostring(err))
     end
   end, opts)
 
@@ -144,4 +146,5 @@ function M._block_horizontal_movement(bufnr)
   end
 end
 
+---@type Lib.UI.HoverSelect.Navigation
 return M

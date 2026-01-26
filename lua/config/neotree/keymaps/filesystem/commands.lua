@@ -1,0 +1,9 @@
+---@module 'config.neotree.keymaps.filesystem.commands'
+--- Command and picker integrations (telescope, custom commands).
+
+---@type table<string, any>
+return {
+  ["i"] = "run_command",
+  ["tf"] = "telescope_find",
+  ["tg"] = "telescope_grep",
+}

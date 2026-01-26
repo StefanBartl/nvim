@@ -4,7 +4,7 @@
 local M = {}
 
 ---Default buffer options
----@type table<string, any>
+---@type Lib.UI.HoverSelect.Config.BufferOptions
 M.default_buf_options = {
   buftype = "nofile",
   bufhidden = "wipe",
@@ -14,7 +14,7 @@ M.default_buf_options = {
 }
 
 ---Default window options
----@type table<string, any>
+---@type Lib.UI.HoverSelect.Config.WindowOptions
 M.default_win_options = {
   cursorline = true,
   number = false,
@@ -26,7 +26,7 @@ M.default_win_options = {
 }
 
 ---Default window configuration
----@type table<string, any>
+---@type Lib.UI.HoverSelect.Config.WindowConfig
 M.default_win_config = {
   relative = "cursor",
   row = 1,
@@ -38,7 +38,7 @@ M.default_win_config = {
 }
 
 ---Minimum and maximum window dimensions
----@type table<string, integer>
+---@type Lib.UI.HoverSelect.Config.Dimensions
 M.dimensions = {
   min_width = 20,
   max_width = 80,
@@ -47,4 +47,5 @@ M.dimensions = {
   padding = 2, -- Extra width padding for borders
 }
 
+---@type Lib.UI.HoverSelect.Config
 return M

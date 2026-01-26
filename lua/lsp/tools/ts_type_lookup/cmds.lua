@@ -1,6 +1,8 @@
 ---@module 'lsp.tools.ts_type_lookup.cmds'
 --- Utilities and usercommands to lookup TypeScript type definitions by symbol string.
 --- Commands accept an optional argument; when omitted the current word (`<cword>`) is used.
+local notify = require("lib.notify").create("[lsp.tools.ts_type_lookup.cmds]")
+
 local api = vim.api
 local lsp = vim.lsp
 local fn = vim.fn
@@ -80,7 +82,7 @@ function M.go_to_type_definition_for(symbol)
   local bufnr = api.nvim_get_current_buf()
   local clients = lsp.get_clients({ bufnr = bufnr })
   if not clients or vim.tbl_isempty(clients) then
-    vim.notify("No active LSP client", vim.log.levels.WARN)
+    notify.warn("No active LSP client")
     return
   end
 
@@ -113,14 +115,14 @@ function M.peek_type_definition_for(symbol)
   local bufnr = api.nvim_get_current_buf()
   workspace_symbol(bufnr, symbol, function(results, _)
     if not results then
-      vim.notify("No workspace symbol found for: " .. symbol, vim.log.levels.INFO)
+      notify.info("No workspace symbol found for: " .. symbol)
       require("lsp.tools.ts_type_lookup.cmds").find_in_node_modules(symbol)
       return
     end
     local r = results[1]
     local loc = r.location or r
     if not loc then
-      vim.notify("No location in workspace symbol result", vim.log.levels.WARN)
+      notify.warn("No location in workspace symbol result")
       return
     end
     local fname, srow, _, erow = loc_to_path_range(loc)
@@ -129,7 +131,7 @@ function M.peek_type_definition_for(symbol)
     end
     local ok, content = pcall(fn.readfile, fname)
     if not ok or not content then
-      vim.notify("Could not read " .. fname, vim.log.levels.WARN)
+      notify.warn("Could not read " .. fname)
       return
     end
     local start_line = math.max(1, srow - 2)
@@ -183,7 +185,7 @@ function M.find_in_node_modules(symbol)
   local cwd = get_root()
   local node_dir = cwd .. "/node_modules"
   if fn.isdirectory(node_dir) == 0 then
-    vim.notify("No node_modules in project root: " .. cwd, vim.log.levels.WARN)
+    notify.warn("No node_modules in project root: " .. cwd)
     return
   end
   if fn.executable("rg") == 1 then
@@ -191,7 +193,7 @@ function M.find_in_node_modules(symbol)
     -- Run ripgrep and collect lines
     local result = fn.systemlist(cmd)
     if vim.v.shell_error ~= 0 or vim.tbl_isempty(result) then
-      vim.notify("No results for '" .. symbol .. "' in node_modules", vim.log.levels.INFO)
+      notify.info("No results for '" .. symbol .. "' in node_modules")
       return
     end
     local first = result[1]
@@ -242,7 +244,7 @@ function M.find_in_node_modules(symbol)
     end
 
     if not path then
-      vim.notify("Could not parse rg result: " .. first, vim.log.levels.ERROR)
+      notify.error("Could not parse rg result: " .. first)
       return
     end
 
@@ -250,10 +252,10 @@ function M.find_in_node_modules(symbol)
     if safe_lnum ~= nil then
       open_in_vsplit(path, safe_lnum)
     else
-      vim.notify("Could not parse line number from rg result: " .. first, vim.log.levels.ERROR)
+      notify.error("Could not parse line number from rg result: " .. first)
     end
   else
-    vim.notify("ripgrep (rg) not found; install rg or rely on LSP", vim.log.levels.WARN)
+    notify.warn("ripgrep (rg) not found; install rg or rely on LSP")
   end
 end
 

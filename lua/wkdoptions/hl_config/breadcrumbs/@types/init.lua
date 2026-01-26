@@ -1,0 +1,193 @@
+---@meta
+---@module 'wkdoptions.hl_config.breadcrumbs.@types'
+---
+--- Type definitions for breadcrumbs system: context building + winbar rendering.
+
+--- =========================
+--- Ctx
+--- =========================
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.StlOptions
+--- Options for statusline segment building (used by statusline_module).
+---@field include_path boolean|nil # Show project-relative path (default: true)
+---@field include_icon boolean|nil # Prepend devicon via ui.custom_stl_module (default: true)
+---@field sep string|nil # Separator between path and ctx (default: " › ")
+---@field max_width integer|nil # Ellipsize to N chars (default: floor(0.5 * &columns), min 30)
+---@field ellipsis BreadcrumbsEllipsisMode|nil # Ellipsize strategy (default: "middle")
+---@field path_resolver fun(abs_path: string): string|nil # Optional resolver for project-relative path; fallback to ":~:."
+---@field band_highlight boolean|nil # Wrap with current mode band HL (default: true)
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Orchestrator
+--- Orchestrates context building + winbar rendering.
+---@field refresh_with_config fun(cfg: WKDOptions.HL_CFG): nil # Refresh winbar using provided config (applies to current window)
+---@field refresh fun(): nil # Refresh using global config (wrapper for after_set integration)
+---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install BufEnter/CursorMoved/WinScrolled autocmds
+
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx
+---
+---@field lua_table_root lua_table_root_opt
+---@field prefer_owner_in_literals boolean
+--- Prefer showing the literal’s “owner” (the binding that holds the object/table literal)
+--- directly before the symbol when the cursor is inside a literal property.
+--- Purpose:
+---   - When editing keys/methods inside object/table literals, breadcrumbs often only show
+---     the property name (e.g., `run`). Setting this to `true` prefixes the nearest owner,
+---     yielding `M.run` or `obj.save`, which is usually more informative.
+--- Scope:
+---   - Lua: table constructors (`local M = { run = function() end }`) and nested tables
+---     (`local M = { Util = { run = function() end } }`).
+---   - JS/TS: object literals (`const obj = { save() {} }`, `let x = { util: { run() {} } }`).
+---   - Other languages: only if a language-specific provider can resolve the binding name.
+--- Resolution rules:
+---   - If the literal is assigned to an identifier (e.g., `M = {...}`), that identifier is
+---     considered the owner (`M`).
+---   - For nested literals, the chain is preserved (`M.Util.run`) when combined with
+---     `use_container_chain`.
+---   - If no identifiable owner exists (e.g., an anonymous literal returned inline),
+---     this option has no effect for that node.
+--- Interaction:
+---   - Requires either `use_treesitter_symbol` or `use_lang_specific` to resolve structure.
+---   - Works best with `use_container_chain = true` so that owner segments are collected.
+---   - Honors `container_join` for the final visual separator (e.g., `"."`, `"::"`).
+--- Defaults & tips:
+---   - Recommended default: `true`.
+---   - If breadcrumbs become too verbose, combine with `container_max_depth` to keep them compact.
+---
+---@field prefer_owner_on_member_access boolean
+--- Prefer showing the immediate owner segment in front of the accessed member for classic
+--- member/dot/attribute access expressions (e.g., `obj.foo`, `obj:bar()`).
+--- Purpose:
+---   - Some UIs emphasize only the terminal symbol (`foo`, `bar`). With this flag set to `true`,
+---     the breadcrumb head becomes `obj.foo` / `obj:bar`, which disambiguates same-named methods
+---     across different receivers.
+--- Scope:
+---   - Lua: `tbl.key`, `obj:method()` (owner = `tbl`/`obj`, symbol = `key`/`method`).
+---   - JS/TS: `obj.prop`, `ns.util.run()` (owner = `obj`/`ns.util`, symbol = `prop`/`run`).
+---   - Python: `obj.attr`, `pkg.mod.func` (owner = `obj`/`pkg.mod`, symbol = `attr`/`func`).
+--- Behavior:
+---   - Ensures the last two segments are ordered as `<owner><join><symbol>` when resolvable.
+---   - Does not reorder the entire chain; it only guarantees the owner immediately precedes
+---     the symbol segment.
+--- Interaction:
+---   - Complements `use_treesitter_symbol`/`use_lang_specific` which extract structure.
+---   - Combines with `use_container_chain = true` to display multi-segment owners
+---     (e.g., `pkg.mod.func`).
+---   - Uses `container_join` for joining (e.g., `"."` or `" :: "`).
+---   - With `dedupe_containers = true`, adjacent duplicates introduced by provider merging are collapsed.
+--- Defaults & tips:
+---   - Recommended default: `true` for codebases with repeated method names (e.g., `render`, `save`).
+---
+---@field dedupe_containers boolean
+--- Collapse adjacent duplicate container segments in the assembled container chain to keep
+--- breadcrumbs concise and avoid provider-induced repetition.
+--- Problem addressed:
+---   - When multiple providers contribute overlapping container info (e.g., TS symbol +
+---     language-specific “owner” + heuristic container), the chain can contain duplicates such as
+---     `M.M.util.run` or `Class.Class.method`.
+--- Behavior:
+---   - A single, stable pass removes only *adjacent* duplicates while preserving order:
+---       `M.M.util.run`     -> `M.util.run`
+---       `pkg.mod.mod.func` -> `pkg.mod.func`
+---       `A.B.A.B.fn`       -> unchanged (non-adjacent duplicates are left intact)
+---   - Comparison is case-sensitive by default; segments must be string-equal to dedupe.
+---   - The terminal symbol (function/property name) is never removed.
+--- Interaction:
+---   - Runs after provider merge but before `container_max_depth` truncation to ensure that
+---     deduplication doesn’t bias depth counting.
+---   - Pairs well with `prefer_owner_in_literals` and `prefer_owner_on_member_access`, as those may
+---     introduce brief, redundant segments when multiple sources agree.
+--- Defaults & tips:
+---   - Recommended default: `true`.
+---   - If you rely on deliberate duplication for emphasis, set this to `false`.
+---
+--- Bevorzuge LSP-Hinweis (b:lsp_current_function) als ersten Provider.
+--- Liefert meist nur die aktuelle Funktion/Methode.
+---@field prefer_lsp_function boolean
+---
+--- Nutze Tree-sitter, um eine Symbolkette zu erzeugen (z. B. Klasse → Methode()).
+--- Wenn true, ist dies die wichtigste Quelle für „echte“ Semantik ohne LSP.
+---@field use_treesitter_symbol boolean
+---
+--- Versuche zusätzlich, einen Container/Owner zu ermitteln (z. B. M, pkg.mod, Class),
+--- und präge ihn in die Symbolkette ein (z. B. Class.method()).
+---@field use_container_chain boolean
+---
+--- Wenn nach allen „Haupt“-Quellen (LSP/Tree-sitter) noch KEIN Kontext gefunden wurde,
+--- versuche heuristisch, ein „nützliches“ Objekt/Owner unter dem Cursor zu ermitteln
+--- (z. B. linke Seite einer Member-Expression, Table-Name in Lua).
+---@field fallback_object_when_empty boolean
+---
+--- Falls nach allen obigen Versuchen noch immer nichts vorhanden ist,
+--- erlaube als allerletzten Fallback das schlichte Wort unter dem Cursor.
+---@field fallback_word_when_empty boolean
+---
+--- Aktiviere sprachspezifische Provider (Lua/JS/TS/Python/…).
+--- Diese liefern u. a. den „Owner“ von Member-Ausdrücken oder die Klasse um eine Methode.
+---@field use_lang_specific boolean
+---
+--- Join-String zwischen Container und Symbol (z. B. ".", "::", " · ").
+---@field container_join string
+---
+--- Maximale Anzahl Container-Segmente, die gesammelt werden (Kette bleibt kompakt).
+---@field container_max_depth integer
+---
+--- Reihenfolge der Kontext-Provider. Erlaubte Namen:
+---   "lsp_func", "ts_symbol", "container", "lang_extra", "word"
+--- Diese Reihenfolge wird nach und nach abgearbeitet, bis ein Kontext gefunden ist;
+--- „container“ modifiziert/ergänzt i. d. R. das Symbol aus ts_symbol.
+---@field providers_order string[]
+
+
+---@class ModeChangedEvent
+---@field match string  -- "<old>:<new>"
+
+--- =========================
+--- WINBAR
+--- =========================
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Winbar
+--- Winbar rendering engine: composes path + context with skip rules and ellipsization.
+---@field build fun(cfg: WKDOptions.HL_CFG, ctx_fn: fun():string|nil): string # Build winbar string (path + separator + context) with skip checks + ellipsization
+---@field apply fun(cfg: WKDOptions.HL_CFG, ctx_fn: fun():string|nil): nil # Build and apply winbar to current window (scheduled to avoid mid-event modification)
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx.BaseToken
+--- Base token extraction: identifier/property/method name under cursor.
+---@field _ctx_base_token fun(): string|nil # Extract concise base token (<cword> fallback if no structured node)
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx.Providers
+--- Individual context providers (can be toggled via breadcrumbs_ctx config).
+---@field _ctx_lsp_func fun(): string|nil # Provider: LSP current function (b:lsp_current_function) - very cheap
+---@field _ctx_ts_symbol fun(): string|nil # Provider: Tree-sitter symbol path (e.g., "Class → method()") - no LSP needed
+---@field _ctx_with_container fun(base_symbol: string|nil): string|nil # Provider: Container/owner chain as prefix (e.g., "Module.Class.method()")
+---@field _ctx_lang_extra fun(): string|nil # Provider: Language-specific fallback/owner (e.g., left side of member expression)
+---@field _ctx_word_fallback fun(): string|nil # Provider: <cword> fallback (outside insert mode) to avoid empty context
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx.Main
+--- Orchestrates providers according to breadcrumbs_ctx.providers_order.
+---@field _build_context fun(): string|nil # Compose context from providers (follows providers_order, returns first non-nil)
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx.Public
+--- Public API for statusline integration (optional, not used by internal winbar).
+---@field statusline_module fun(opts: WKDOptions.HL_CFG.Breadcrumbs.StlOptions|nil): fun():string # Create closure for NvChad/Lualine-like statuslines (icon + band HL)
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx
+--- Context building module: delegates to providers, exposes public API.
+---@field base_token WKDOptions.HL_CFG.Breadcrumbs.Ctx.BaseToken
+---@field providers WKDOptions.HL_CFG.Breadcrumbs.Ctx.Providers
+---@field main WKDOptions.HL_CFG.Breadcrumbs.Ctx.Main
+---@field public WKDOptions.HL_CFG.Breadcrumbs.Ctx.Public
+
+---@class WKDOptions.HL_CFG.Breadcrumbs.Orchestrator
+--- Orchestrates context building + winbar rendering.
+---@field refresh_with_config fun(cfg: WKDOptions.HL_CFG): nil # Refresh winbar using provided config (applies to current window)
+---@field refresh fun(): nil # Refresh using global config (wrapper for after_set integration)
+---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install BufEnter/CursorMoved/WinScrolled autocmds
+
+---@class WKDOptions.HL_CFG.Breadcrumbs
+--- All breadcrumbs modules consolidated.
+---@field winbar WKDOptions.HL_CFG.Breadcrumbs.Winbar
+---@field ctx WKDOptions.HL_CFG.Breadcrumbs.Ctx
+---@field orchestrator WKDOptions.HL_CFG.Breadcrumbs.Orchestrator
+
+return {}

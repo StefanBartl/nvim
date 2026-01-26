@@ -5,9 +5,10 @@
 --- used to perform the switch (this respects tabline-specific winfixbuf logic).
 --- Otherwise a safe fallback to `nvim_set_current_buf` is used.
 
+local notify = require("lib.notify").create("[mappings.buffer_jump]")
+
 local M = {}
 
-local notify = vim.notify
 local api = vim.api
 local nvim_buf_is_valid = api.nvim_buf_is_valid
 
@@ -132,7 +133,7 @@ local function switch_to_buffer(bufnr)
       if succ then
         return
       else
-        notify(string.format("nvchad.tabufline.goto_buf failed: %s", tostring(err)), vim.log.levels.WARN)
+        notify.warn(string.format("nvchad.tabufline.goto_buf failed: %s", tostring(err)))
       end
     end
 
@@ -142,7 +143,7 @@ local function switch_to_buffer(bufnr)
       if succ then
         return
       else
-        notify(string.format("nvchad.tabufline.go_to failed: %s", tostring(err)), vim.log.levels.WARN)
+        notify.warn(string.format("nvchad.tabufline.go_to failed: %s", tostring(err)))
       end
     end
   end
@@ -155,7 +156,7 @@ local function switch_to_buffer(bufnr)
   if nvim_buf_is_valid(bufnr) then
     api.nvim_set_current_buf(bufnr)
   else
-    notify(string.format("Failed to switch to buffer %s (invalid)", tostring(bufnr)), vim.log.levels.ERROR)
+    notify.error(string.format("Failed to switch to buffer %s (invalid)", tostring(bufnr)))
   end
 end
 
@@ -163,24 +164,24 @@ end
 ---@param pos number 1-based index
 local function goto_buffer_by_pos(pos)
   if type(pos) ~= "number" then
-    notify("Invalid buffer index (not a number)", vim.log.levels.ERROR)
+    notify.error("Invalid buffer index (not a number)")
     return
   end
 
   local buflist = robust_tabpage_buflist()
   if #buflist == 0 then
-    notify("No buffers available to jump to (buflist empty). Ensure tabufline or buffers exist.", vim.log.levels.WARN)
+    notify.warn("No buffers available to jump to (buflist empty). Ensure tabufline or buffers exist.")
     return
   end
 
   if pos < 1 or pos > #buflist then
-    notify(string.format("Buffer position %d out of range (1..%d)", pos, #buflist), vim.log.levels.WARN)
+    notify.warn(string.format("Buffer position %d out of range (1..%d)", pos, #buflist))
     return
   end
 
   local target = buflist[pos]
   if not target then
-    notify(string.format("No buffer id found at position %d", pos), vim.log.levels.ERROR)
+    notify.error(string.format("No buffer id found at position %d", pos))
     return
   end
 

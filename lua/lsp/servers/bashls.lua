@@ -4,6 +4,8 @@
 --- Diagnostics are powered by shellcheck when available.
 
 ---@class BashLsServer
+local notify = require("lib.notify").create("[lsp.servers.bashls]")
+
 local M = {}
 
 ---Build LSP settings for bash-language-server
@@ -32,7 +34,7 @@ function M.setup(shared, opts)
   opts = opts or {}
 
   if type(vim.lsp.config) ~= "table" then
-    vim.notify("vim.lsp.config is unavailable; cannot configure bashls", vim.log.levels.WARN)
+    notify.warn("vim.lsp.config is unavailable; cannot configure bashls")
     return
   end
 

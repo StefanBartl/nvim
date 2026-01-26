@@ -19,6 +19,8 @@
 ---   })
 ---@brief ]]
 
+local notify = require("lib.notify").create("[wkddap]")
+
 local M = {}
 
 -- AUDIT: types
@@ -79,7 +81,7 @@ M._initialized = false
 ---@return boolean success
 function M.setup(opts)
   if M._initialized then
-    vim.notify("[dap] Already initialized", vim.log.levels.WARN)
+    notify.warn("[dap] Already initialized")
     return false
   end
 
@@ -90,14 +92,14 @@ function M.setup(opts)
   -- Load core modules
   local ok_core, core = pcall(require, "wkddap.core")
   if not ok_core then
-    vim.notify("[dap] Failed to load core module", vim.log.levels.ERROR)
+    notify.error("[dap] Failed to load core module")
     return false
   end
 
   -- Initialize core
   local ok_init, err = pcall(core.setup, opts)
   if not ok_init then
-    vim.notify(string.format("[dap] Core initialization failed: %s", err), vim.log.levels.ERROR)
+    notify.error(string.format("[dap] Core initialization failed: %s", err))
     return false
   end
 
@@ -106,13 +108,10 @@ function M.setup(opts)
   if ok_adapters and type(adapters_mod) == "table" and type(adapters_mod.register_all) == "function" then
     local adapter_success, adapter_err = pcall(adapters_mod.register_all, opts.languages, opts.adapters or {})
     if not adapter_success then
-      vim.notify(
-        string.format("[dap] Adapter registration failed: %s", adapter_err or "unknown"),
-        vim.log.levels.WARN
-      )
+      notify.warn(string.format("[dap] Adapter registration failed: %s", adapter_err or "unknown"))
     end
   else
-    vim.notify("[dap] Failed to load adapters module", vim.log.levels.WARN)
+    notify.warn("[dap] Failed to load adapters module")
   end
 
   -- Load configurations
@@ -120,13 +119,10 @@ function M.setup(opts)
   if ok_configs and type(configurations_mod) == "table" and type(configurations_mod.load_all) == "function" then
     local config_success, config_err = pcall(configurations_mod.load_all, opts.languages, opts.configurations or {})
     if not config_success then
-      vim.notify(
-        string.format("[dap] Configuration loading failed: %s", config_err or "unknown"),
-        vim.log.levels.WARN
-      )
+      notify.warn(string.format("[dap] Configuration loading failed: %s", config_err or "unknown"))
     end
   else
-    vim.notify("[dap] Failed to load configurations module", vim.log.levels.WARN)
+    notify.warn("[dap] Failed to load configurations module")
   end
 
   -- Setup UI (only after adapters are registered)

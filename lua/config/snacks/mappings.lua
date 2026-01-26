@@ -2,6 +2,8 @@
 --- Keymap definitions for custom Snacks dashboard.
 --- Expose keys() which returns the array expected by the plugin spec.
 
+local notify = require("lib.notify").create("[config.snacks.mappings]")
+
 local M = {}
 
 --- Safe dispatcher to call snacks submodules safely.
@@ -12,12 +14,12 @@ local M = {}
 local function safe_call(mod, fn, ...)
   local ok_mod, Mmod = pcall(require, "snacks." .. mod)
   if not ok_mod or type(Mmod[fn]) ~= "function" then
-    vim.notify(string.format("[snacks] missing %s.%s()", mod, fn), vim.log.levels.WARN)
+    notify.warn(string.format("[snacks] missing %s.%s()", mod, fn))
     return false
   end
   local ok_fn, err = pcall(Mmod[fn], ...)
   if not ok_fn then
-    vim.notify(string.format("[snacks] %s.%s(): %s", mod, fn, tostring(err)), vim.log.levels.ERROR)
+    notify.error(string.format("[snacks] %s.%s(): %s", mod, fn, tostring(err)))
     return false
   end
   return true

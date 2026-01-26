@@ -3,6 +3,8 @@
 --- Requires bash-language-server in PATH (Mason: bash-language-server).
 --- Diagnostics are powered by shellcheck when available.
 
+local notify = require("lib.notify").create("[lsp.languages.shell]")
+
 local lsp = vim.lsp
 
 ---@class BashLsServer
@@ -34,7 +36,7 @@ function M.enable(shared, opts)
   opts = opts or {}
 
   if type(lsp.config) ~= "table" then
-    vim.notify("vim.lsp.config is unavailable; cannot configure bashls", vim.log.levels.WARN)
+    notify.warn("vim.lsp.config is unavailable; cannot configure bashls")
     return
   end
 

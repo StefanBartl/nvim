@@ -2,6 +2,8 @@
 -- Returns the menu table for quick requires if desired
 
 -- Default toggles for top-level entries; consumers can override by passing opts to setup()
+local notify = require("lib.notify").create("[config.menu-update.menu.custom_menu]")
+
 local defaults = {
   enable_format = true,
   enable_code_actions = true,
@@ -125,7 +127,7 @@ return function(opts)
       cmd = function()
         local ok, text = pcall(vim.fn.getreg, "+")
         if not ok or not text or text == "" then
-          vim.notify("System clipboard is empty", vim.log.levels.INFO)
+          notify.info("System clipboard is empty")
           return
         end
 

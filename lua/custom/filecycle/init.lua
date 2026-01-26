@@ -2,6 +2,8 @@
 --- Navigate to the next/previous file in the current buffer's directory.
 --- This module provides user commands and keymaps with count support.
 
+local notify = require("lib.notify").create("[custom.filecycle]")
+
 local DEFAULTS = {
   open_target = "current",
   keep_focus = true,
@@ -53,14 +55,14 @@ end
 function M.open(mode, opts, count)
   local o = opts and vim.tbl_deep_extend("force", M.opts, opts) or M.opts
   if not o then
-    vim.notify("[NextPrev] Config is nil", vim.log.levels.WARN)
+    notify.warn("[NextPrev] Config is nil")
     return false
   end
 
   local core = require("custom.filecycle.core")
   local dir, err = core.get_root_dir(o)
   if not dir then
-    vim.notify("[NextPrev] " .. (err or "no directory"), vim.log.levels.WARN)
+    notify.warn("[NextPrev] " .. (err or "no directory"))
     return false
   end
 

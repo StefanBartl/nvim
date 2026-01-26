@@ -2,11 +2,12 @@
 --- Neo-tree undo functionality: restore last trashed item from system trash
 --- Cross-platform support for Windows, Linux, and macOS
 
+local notify = require("lib.notify").create("[config.neotree.undo]")
+
 local M = {}
 
 local fn = vim.fn
 local uv = vim.loop
-local notify, levels = vim.notify, vim.log.levels
 local str_format = string.format
 
 --- History of trashed items (stored in memory for this session)
@@ -216,7 +217,7 @@ end
 ---@return nil
 local function show_history()
   if #trash_history == 0 then
-    notify("No items in trash history", levels.INFO)
+    notify.info("No items in trash history")
     return
   end
 
@@ -226,7 +227,7 @@ local function show_history()
     table.insert(lines, str_format("%d. [%s] %s", i, time, item.item_name))
   end
 
-  notify(table.concat(lines, "\n"), levels.INFO)
+  notify.info(table.concat(lines, "\n"))
 end
 
 --- Neo-tree command: undo last trash operation
@@ -234,20 +235,20 @@ end
 ---@return nil
 local function neotree_undo_trash(state)
   if #trash_history == 0 then
-    notify("No items in trash history", levels.WARN)
+    notify.warn("No items in trash history")
     return
   end
 
   local last_item = trash_history[1]
   local item_name = last_item.item_name
 
-  notify("Restoring: " .. item_name .. "...", levels.INFO)
+  notify.info("Restoring: " .. item_name .. "...")
 
   vim.schedule(function()
     local ok, msg = undo_last_trash()
 
     if ok then
-      notify("✓ Restored: " .. item_name, levels.INFO)
+      notify.info("✓ Restored: " .. item_name)
 
       -- Refresh Neo-tree
       vim.defer_fn(function()
@@ -261,9 +262,9 @@ local function neotree_undo_trash(state)
       if msg:match("\n") then
         -- Multi-line message, show in split
         local lines = vim.split(msg, "\n")
-        notify(table.concat(lines, "\n"), levels.WARN)
+        notify.warn(table.concat(lines, "\n"))
       else
-        notify("✗ " .. msg, levels.WARN)
+        notify.warn("✗ " .. msg)
       end
     end
   end)

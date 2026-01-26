@@ -1,6 +1,8 @@
 ---@module 'config.neotree.open.window.controller.state_machine'
 ---@brief Deterministic state machine for Neo-tree window lifecycle
 
+local notify = require("lib.notify").create("[config.neotree.open.window.controller.state_machine]")
+
 local M = {}
 
 local state = require("config.neotree.state.windows")
@@ -45,30 +47,21 @@ function M.execute_transition(target_position, source)
 
   if cfg.debug then
     local snapshot = state.get_state()
-    vim.notify(
-      string.format(
-        "[neo-tree] Action: %s (pos: %s, source: %s -> %s)",
-        action,
-        target_position,
-        snapshot.source or "nil",
-        target_source
-      ),
-      vim.log.levels.INFO
-    )
+    notify.info(string.format( "[neo-tree] Action: %s (pos: %s, source: %s -> %s)", action, target_position, snapshot.source or "nil", target_source ))
   end
 
   if action == "open" then
     executor.open_window(target_position, target_source, function(success)
       semaphore.release()
       if not success and cfg.debug then
-        vim.notify("[neo-tree] Open failed", vim.log.levels.ERROR)
+        notify.error("[neo-tree] Open failed")
       end
     end)
   elseif action == "close" then
     executor.close_window(function(success)
       semaphore.release()
       if not success and cfg.debug then
-        vim.notify("[neo-tree] Close failed", vim.log.levels.ERROR)
+        notify.error("[neo-tree] Close failed")
       end
     end)
   else -- switch
@@ -84,7 +77,7 @@ function M.execute_transition(target_position, source)
       local snapshot = state.get_state()
       if snapshot.open then
         if cfg.debug then
-          vim.notify("[neo-tree] State inconsistency after close", vim.log.levels.WARN)
+          notify.warn("[neo-tree] State inconsistency after close")
         end
         state.set_closed("switch_recovery")
       end
@@ -96,7 +89,7 @@ function M.execute_transition(target_position, source)
         executor.open_window(target_position, target_source, function(open_ok)
           semaphore.release()
           if not open_ok and cfg.debug then
-            vim.notify("[neo-tree] Switch-open failed", vim.log.levels.ERROR)
+            notify.error("[neo-tree] Switch-open failed")
           end
         end)
       end, delay)

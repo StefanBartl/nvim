@@ -33,5 +33,6 @@ function M.set(group, opts, ns)
   vim.api.nvim_set_hl(ns_id, group, opts)
 end
 
+---@type Lib.UI.HL
 return M
 

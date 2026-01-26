@@ -2,6 +2,8 @@
 --- Manual library reload command for lua_ls
 --- Use when @types are not detected automatically
 
+local notify = require("lib.notify").create("[lsp.servers.lua_ls.reload]")
+
 local M = {}
 
 --- Reload lua_ls workspace library for current buffer
@@ -12,7 +14,7 @@ function M.reload_library()
   -- Find lua_ls client
   local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "lua_ls" })
   if #clients == 0 then
-    vim.notify("lua_ls not attached to current buffer", vim.log.levels.WARN)
+    notify.warn("lua_ls not attached to current buffer")
     return false
   end
 
@@ -21,14 +23,14 @@ function M.reload_library()
   -- Get current root
   local root = client.config.root_dir
   if not root then
-    vim.notify("Could not determine lua_ls root directory", vim.log.levels.ERROR)
+    notify.error("Could not determine lua_ls root directory")
     return false
   end
 
   -- Rebuild library
   local ok, build_library = pcall(require, "lsp.servers.lua_ls.build_library")
   if not ok then
-    vim.notify("Could not load build_library module", vim.log.levels.ERROR)
+    notify.error("Could not load build_library module")
     return false
   end
 
@@ -46,10 +48,7 @@ function M.reload_library()
     settings = client.config.settings
   })
 
-  vim.notify(
-    string.format("Reloaded lua_ls workspace library: %d paths", count),
-    vim.log.levels.INFO
-  )
+  notify.info(string.format("Reloaded lua_ls workspace library: %d paths", count))
 
   return true
 end

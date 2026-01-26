@@ -2,6 +2,8 @@
 --- Open current Neo-tree node in the system file manager with selection support.
 --- FIXED: Uses node_utils.get_current() for consistent node retrieval
 
+local notify = require("lib.notify").create("[config.neotree.open.filemanager.unix_ubutnu]")
+
 local M = {}
 
 local node_utils = require("config.neotree.utils.node")
@@ -129,13 +131,13 @@ function M.open(state)
   -- FIXED: Use node_utils.get_current() for consistent node retrieval
   local node = node_utils.get_current(state)
   if not node then
-    vim.notify("Open in File Manager: no node under cursor", vim.log.levels.WARN)
+    notify.warn("Open in File Manager: no node under cursor")
     return false
   end
 
   local raw, _ = node_utils.get_path(node)
   if raw == "" then
-    vim.notify("Open in File Manager: no path under cursor", vim.log.levels.WARN)
+    notify.warn("Open in File Manager: no path under cursor")
     return false
   end
 
@@ -147,7 +149,7 @@ function M.open(state)
   if vim.fn.has("mac") == 1 then
     local argv = is_file and { "open", "-R", abs } or { "open", abs }
     return run_detached(argv, function()
-      vim.notify("Open in Finder failed", vim.log.levels.ERROR)
+      notify.error("Open in Finder failed")
     end) or true
   end
 
@@ -162,7 +164,7 @@ function M.open(state)
         if sel then
           tried_manager = true
           run_detached(sel, function()
-            vim.notify("Open in File Manager failed (manager fallback)", vim.log.levels.ERROR)
+            notify.error("Open in File Manager failed (manager fallback)")
           end)
         end
       end)
@@ -173,20 +175,20 @@ function M.open(state)
       local dir = vim.fn.fnamemodify(abs, ":p:h")
       local argv = vim.fn.executable("gio") == 1 and { "gio", "open", dir } or { "xdg-open", dir }
       run_detached(argv, function()
-        vim.notify("Open in File Manager failed (dir fallback)", vim.log.levels.ERROR)
+        notify.error("Open in File Manager failed (dir fallback)")
       end)
       return true
     else
       -- Directory: open directly with gio/xdg-open
       local argv = vim.fn.executable("gio") == 1 and { "gio", "open", abs } or { "xdg-open", abs }
       run_detached(argv, function()
-        vim.notify("Open in File Manager failed", vim.log.levels.ERROR)
+        notify.error("Open in File Manager failed")
       end)
       return true
     end
   end
 
-  vim.notify("Open in File Manager: unsupported OS", vim.log.levels.WARN)
+  notify.warn("Open in File Manager: unsupported OS")
   return false
 end
 

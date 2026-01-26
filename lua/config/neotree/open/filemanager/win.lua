@@ -3,6 +3,8 @@
 --- Hardened: checks for executables, handles WSL detection, ensures proper quoting
 --- and provides improved diagnostics and deterministic fallbacks.
 
+local notify = require("lib.notify").create("[config.neotree.open.filemanager.win]")
+
 local node_utils = require("config.neotree.utils.node")
 
 local M = {}
@@ -75,7 +77,7 @@ function M.open(state)
   local is_win = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
   local wsl = is_wsl()
   if not (is_win or wsl) then
-    vim.notify("Open in Explorer: Windows/WSL only", vim.log.levels.WARN)
+    notify.warn("Open in Explorer: Windows/WSL only")
     return false
   end
 
@@ -85,7 +87,7 @@ function M.open(state)
   -- Use refactored get_path from node_utils
   local raw, _ = node_utils.get_path(node)
   if raw == "" then
-    vim.notify("Open in Explorer: no path under cursor", vim.log.levels.WARN)
+    notify.warn("Open in Explorer: no path under cursor")
     return false
   end
 
@@ -108,10 +110,10 @@ function M.open(state)
 
   -- check that explorer/cmd are available when needed
   if vim.fn.executable("explorer.exe") == 0 then
-    vim.notify("explorer.exe not found in PATH", vim.log.levels.WARN)
+    notify.warn("explorer.exe not found in PATH")
   end
   if vim.fn.executable("cmd.exe") == 0 then
-    vim.notify("cmd.exe not found in PATH", vim.log.levels.WARN)
+    notify.warn("cmd.exe not found in PATH")
   end
 
   -- Primary: use explorer.exe. For files use /select,<path>. Keep this as single argv element.
@@ -132,11 +134,11 @@ function M.open(state)
 
     -- primary failed: try fallback and report diagnostics
     local msg = ("explorer primary failed (code=%s, stderr=%s). Trying cmd start fallback"):format(tostring(code), tostring(stderr))
-    vim.notify(msg, vim.log.levels.WARN)
+    notify.warn(msg)
     spawn_detached(fallback, { detach = true }, function(s2, c2, e2)
       if not s2 then
         local err = ("Fallback also failed (code=%s, stderr=%s)").format(tostring(c2), tostring(e2))
-        vim.notify(err, vim.log.levels.ERROR)
+        notify.error(err)
       end
     end)
   end)

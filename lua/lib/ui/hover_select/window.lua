@@ -1,10 +1,11 @@
 ---@module 'lib.ui.hover_select.window'
 ---@description Window creation and configuration for lib.ui.hover_select
 
+local notify = require("lib.notify").create("[lib.ui.hover_select.window]")
+
 local M = {}
 
 local config = require("lib.ui.hover_select.config")
-local notify = vim.notify
 local api = vim.api
 
 ---Calculate longest line width in items
@@ -108,7 +109,7 @@ function M.create(bufnr, win_config, win_options, items, auto_width)
   -- Create floating window
   local winid = api.nvim_open_win(bufnr, true, float_config)
   if winid == 0 then
-    notify("lib.ui.hover_select: failed to create window", vim.log.levels.ERROR)
+    notify.error("lib.ui.hover_select: failed to create window")
     return nil
   end
 
@@ -121,10 +122,7 @@ function M.create(bufnr, win_config, win_options, items, auto_width)
   for option, value in pairs(win_options) do
     local success, err = pcall(api.nvim_set_option_value, option, value, { win = winid })
     if not success then
-      notify(
-        string.format("lib.ui.hover_select: failed to set window option '%s': %s", option, err),
-        vim.log.levels.WARN
-      )
+      notify.error(string.format("lib.ui.hover_select: failed to set window option '%s': %s", option, err))
     end
   end
 
@@ -164,4 +162,5 @@ function M._setup_autocommands(bufnr, winid)
   })
 end
 
+---@type Lib.UI.HoverSelect.Window
 return M

@@ -1,6 +1,8 @@
 ---@module 'config.neotree.open.window.controller.position'
 ---@brief Position normalization and validation
 
+local notify = require("lib.notify").create("[config.neotree.open.window.controller.position]")
+
 local M = {}
 
 ---@type table<string, true>
@@ -21,10 +23,7 @@ function M.normalize(pos)
 
   local cfg = require("config.neotree").options
   if cfg.debug then
-    vim.notify(
-      string.format("[neo-tree] Invalid position '%s', using default", pos),
-      vim.log.levels.WARN
-    )
+    notify.warn(string.format("[neo-tree] Invalid position '%s', using default", pos))
   end
 
   return require("config.neotree").get_default_position()

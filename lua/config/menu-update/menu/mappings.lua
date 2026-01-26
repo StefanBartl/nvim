@@ -1,6 +1,8 @@
 ---@module 'config/menu/keymaps.lua'
 -- Sets keymaps for <A-b> and RightMouse. Replaces mappings/contextmenu.lua usage.
 
+local notify = require("lib.notify").create("[config.menu-update.menu.mappings]")
+
 local M = {}
 
 function M.setup()
@@ -12,7 +14,7 @@ function M.setup()
   map("n", "<A-b>", function()
     local ok_menu, menu = pcall(require, "menu")
     if not ok_menu then
-      vim.notify("menu module not found", vim.log.levels.WARN)
+      notify.warn("menu module not found")
       return
     end
     -- prefer custom if registered

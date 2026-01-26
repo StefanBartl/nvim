@@ -2,6 +2,8 @@
 -- User Command zum Neuladen des aktuellen Lua-Moduls
 -- Fügen Sie dies zu Ihrer init.lua oder einem separaten Modul hinzu
 
+local notify = require("lib.notify").create("[usrcmds.reload]")
+
 local M = {}
 
 -- Hilfsfunktion: Konvertiert Dateipfad zu Modulnamen
@@ -74,7 +76,7 @@ local function reload_current_module()
 
   -- Überprüfe, ob es eine Lua-Datei ist
   if not filepath:match('%.lua$') then
-    vim.notify('Current buffer is not a Lua file', vim.log.levels.WARN)
+    notify.warn('Current buffer is not a Lua file')
     return
   end
 
@@ -82,7 +84,7 @@ local function reload_current_module()
   local module_name, err = path_to_module(filepath)
 
   if not module_name then
-    vim.notify('Could not determine module name: ' .. (err or 'unknown error'), vim.log.levels.ERROR)
+    notify.error('Could not determine module name: ' .. (err or 'unknown error'))
     return
   end
 
@@ -93,10 +95,10 @@ local function reload_current_module()
   local ok, result = reload_module(module_name)
 
   if ok then
-    vim.notify('✓ Module reloaded successfully: ' .. module_name, vim.log.levels.INFO)
+    notify.info('✓ Module reloaded successfully: ' .. module_name)
     return result
   else
-    vim.notify('✗ Error reloading module: ' .. tostring(result), vim.log.levels.ERROR)
+    notify.error('✗ Error reloading module: ' .. tostring(result))
   end
 end
 

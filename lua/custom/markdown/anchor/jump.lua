@@ -5,6 +5,8 @@
 
 ---@class anchor_jump_module
 ---@field jump fun(): nil
+local notify = require("lib.notify").create("[custom.markdown.anchor.jump]")
+
 local M = {}
 
 local api = vim.api
@@ -116,19 +118,19 @@ end
 function M.jump()
   local ok, line = pcall(api.nvim_get_current_line)
   if not ok or not line then
-    vim.notify("[Custom.Markdown] Anchor: Could not read current line", vim.log.levels.ERROR)
+    notify.error("[Custom.Markdown] Anchor: Could not read current line")
     return
   end
 
   local anchor = extract_anchor(line)
   if not anchor then
-    vim.notify("[Custom.Markdown] Anchor: No anchor found under cursor", vim.log.levels.INFO)
+    notify.info("[Custom.Markdown] Anchor: No anchor found under cursor")
     return
   end
 
   local success = pcall(jump_to_anchor, anchor)
   if not success then
-    vim.notify("[Custom.Markdown] Anchor: Could not jump to anchor: " .. anchor, vim.log.levels.WARN)
+    notify.warn("[Custom.Markdown] Anchor: Could not jump to anchor: " .. anchor)
   end
 end
 

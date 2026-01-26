@@ -3,6 +3,8 @@
 --- This module is invoked when the primary gofile resolution fails to find an exact match.
 --- It attempts to locate similar files in the target directory and presents them via hover-select.
 
+local notify = require("lib.notify").create("[autocmds.general.gofile_alternate]")
+
 local uv = vim.loop
 
 ---Calculate Levenshtein distance between two strings (character-level edit distance).
@@ -205,7 +207,7 @@ local function present_selection(matches, logger)
     if logger and logger.error then
       logger.error("gofile_alternate: hover-select module not available", { err = hover_select })
     end
-    vim.notify("hover-select module not found. Cannot present alternate files.", vim.log.levels.ERROR)
+    notify.error("hover-select module not found. Cannot present alternate files.")
     return false
   end
 

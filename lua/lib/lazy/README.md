@@ -16,6 +16,7 @@ erst dann zu laden, wenn sie tatsächlich benötigt werden.
     - [Konsequenzen](#konsequenzen)
   - [API](#api)
     - [lazy.module(name)](#lazymodulename)
+    - [lazy.require(name)](#lazyrequirename)
     - [lazy.fn(module, function_name)](#lazyfnmodule-function_name)
   - [Performance-Abschätzung](#performance-abschtzung)
     - [Startup](#startup)
@@ -23,6 +24,7 @@ erst dann zu laden, wenn sie tatsächlich benötigt werden.
   - [Sicherheit und Korrektheit](#sicherheit-und-korrektheit)
   - [Wann man es nicht einsetzen sollte](#wann-man-es-nicht-einsetzen-sollte)
   - [Typische Einsatzgebiete](#typische-einsatzgebiete)
+  - [LSP-Unterstützung und Type-Annotations](#lsp-untersttzung-und-type-annotations)
   - [Fazit](#fazit)
 
 ---
@@ -31,7 +33,7 @@ erst dann zu laden, wenn sie tatsächlich benötigt werden.
 
 In vielen Neovim-Konfigurationen werden Module direkt im Filescope geladen:
 
-```
+```lua
 local mod = require("heavy.module")
 ```
 
@@ -96,6 +98,73 @@ Eigenschaften:
 * Ergebnis wird in einem Upvalue gecached
 * nach dem ersten Zugriff minimaler Overhead (Nil-Check)
 
+**Hinweis zur LSP-Unterstützung:**
+
+Bei Verwendung von `lazy.module()` erhält man ein Wrapper-Objekt vom Typ `Lib.LazyModule`, nicht das eigentliche Modul. Das bedeutet:
+
+* Keine automatische Type-Inference für das geladene Modul
+* Keine Autocompletion für Modul-Funktionen bis `.get()` aufgerufen wird
+* Man muss den Typ nach `.get()` manuell annotieren
+
+```lua
+local mymod_lazy = lazy.module("mymodule")
+
+-- Kein LSP-Support hier:
+-- mymod_lazy ist vom Typ Lib.LazyModule
+
+---@type MyModule.Type
+local mymod = mymod_lazy.get()
+
+-- Jetzt hat man LSP-Support:
+mymod.do_work()
+```
+
+Für bessere LSP-Unterstützung siehe `lazy.require()`.
+
+---
+
+### lazy.require(name)
+
+Erzeugt ein lazy-geladenes Modul mit direkter Type-Inference-Unterstützung.
+
+```lua
+local lazy = require("lib.lazy")
+
+---@type MyModule.Type
+local mymod = lazy.require("mymodule")
+
+-- Volle LSP-Unterstützung ab hier:
+mymod.do_work()
+```
+
+Eigenschaften:
+
+* `require()` wird exakt einmal ausgeführt (beim ersten Zugriff auf das Modul)
+* Ergebnis wird gecacht
+* Rückgabe ist das Modul selbst, nicht ein Wrapper
+* Vollständige LSP-Unterstützung durch Type-Annotation
+
+**Unterschied zu `lazy.module()`:**
+
+* `lazy.module()` gibt ein Wrapper-Objekt zurück (Typ: `Lib.LazyModule`)
+* `lazy.require()` gibt das tatsächliche Modul zurück (castbar auf jeden Typ)
+* `lazy.require()` ist die empfohlene Variante für Module mit komplexer API
+
+**Verwendung mit Type-Annotations:**
+
+```lua
+---@type WkdNvC.UI.Stl.Modules.LSP.Cfg.Module
+local config_mod = lazy.require("wkdnvchad.ui.statusline.modules.lsp.config")
+
+-- LSP kennt jetzt alle Funktionen:
+local options = config_mod.get_cfg()
+config_mod.set("debounce_ms", 500)
+```
+
+**Technischer Hintergrund:**
+
+`lazy.require()` nutzt intern `lazy.module()`, gibt aber direkt das Ergebnis von `.get()` zurück. Die `---@diagnostic disable-next-line: return-type-mismatch` Annotation im Modul erlaubt es dem Language Server, den Generic-Type `T` anzunehmen, der durch die Type-Annotation am Call-Site definiert wird.
+
 ---
 
 ### lazy.fn(module, function_name)
@@ -132,6 +201,9 @@ Diese Variante ist aggressiver und nur für Performance-kritische Pfade gedacht.
 * `lazy.module`:
   * ein einfacher Nil-Check pro Zugriff
   * vernachlässigbarer Overhead für die meisten Use-Cases
+* `lazy.require`:
+  * identisch mit `lazy.module` (nutzt intern dasselbe Caching)
+  * kein Performance-Unterschied
 * `lazy.fn`:
   * nach dem ersten Aufruf keinerlei Zusatzkosten
 
@@ -170,6 +242,69 @@ Lazy-Loading ist ein Werkzeug, kein Dogma.
 
 ---
 
+## LSP-Unterstützung und Type-Annotations
+
+Für optimale LSP-Unterstützung mit Autocompletion und Type-Checking gibt es mehrere Ansätze:
+
+### Variante 1: lazy.require mit Type-Annotation (empfohlen)
+
+```lua
+---@type MyModule.Type
+local mymod = lazy.require("mymodule")
+```
+
+Vorteile:
+* Direkte LSP-Unterstützung
+* Keine Wrapper-Indirektion
+* Einfachste Syntax
+
+### Variante 2: lazy.module mit manuellem Cast
+
+```lua
+local mymod_lazy = lazy.module("mymodule")
+
+---@type MyModule.Type
+local mymod = mymod_lazy.get()
+```
+
+Vorteile:
+* Explizite Trennung von Lazy-Wrapper und Modul
+* Nützlich wenn man den Lazy-Wrapper selbst weitergeben will
+
+### Variante 3: Inline-Cast bei lazy.module
+
+```lua
+---@type MyModule.Type
+local mymod = lazy.module("mymodule").get()
+```
+
+Nachteile:
+* Kann zu Type-Mismatch-Warnungen führen
+* Erfordert möglicherweise `---@diagnostic disable-next-line`
+
+### Type-Definitionen erstellen
+
+Für eigene Module sollte man Type-Definitionen in `@types` Ordnern anlegen:
+
+```lua
+---@meta
+---@module 'mymodule.@types'
+
+---@class MyModule.Type
+---@field do_work fun(n: integer): string
+---@field get_config fun(): MyModule.Config
+
+---@class MyModule.Config
+---@field timeout integer
+---@field retry boolean
+
+return {}
+```
+
+Diese Types können dann bei `lazy.require()` oder `lazy.module()` verwendet werden.
+
+---
+
 ## Fazit
 
 `lib.lazy` hilft dabei, Neovim-Konfigurationen:
@@ -179,5 +314,11 @@ Lazy-Loading ist ein Werkzeug, kein Dogma.
 * besser skalierbar
 
 zu gestalten, ohne komplexe Infrastruktur oder externe Abhängigkeiten.
+
+Die Wahl zwischen `lazy.module()` und `lazy.require()` hängt vom Use-Case ab:
+
+* **`lazy.module()`**: Wenn man explizit mit dem Lazy-Wrapper arbeiten will
+* **`lazy.require()`**: Für direkten Zugriff mit optimaler LSP-Unterstützung (Standard-Fall)
+* **`lazy.fn()`**: Für einzelne Funktionen in Hot-Paths
 
 ---

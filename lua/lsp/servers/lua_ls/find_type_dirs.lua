@@ -4,6 +4,8 @@
 ---   1. Directories named "types" or "@types"
 ---   2. Individual files named "@types.lua" or "types.lua" outside those directories
 
+local notify = require("lib.notify").create("[lsp.servers.lua_ls.find_type_dirs]")
+
 local uv = vim.loop or vim.uv
 local norm = vim.fs.normalize
 
@@ -128,10 +130,7 @@ return function(root, opts)
 
   -- DEBUG: Log found paths if environment variable is set
   if vim.env.DEBUG_LUA_LS and #matches > 0 then
-    vim.notify(
-      string.format("find_type_dirs: Found %d paths", #matches),
-      vim.log.levels.INFO
-    )
+    notify.info(string.format("find_type_dirs: Found %d paths", #matches))
   end
 
   return matches

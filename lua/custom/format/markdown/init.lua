@@ -4,6 +4,8 @@
 --- Provides markdown-specific formatting subcommands:
 --- • headline_separators: Ensure proper spacing between H2+ sections
 
+local notify = require("lib.notify").create("[custom.format.markdown]")
+
 local M = {}
 
 ---Register markdown subcommands
@@ -16,10 +18,7 @@ function M.register_subcommands(register_fn)
   register_fn("markdown", {
     handler = function(args)
       if #args == 0 then
-        vim.notify(
-          "[custom.format.markdown] Usage: markdown <headline_separators>",
-          vim.log.levels.ERROR
-        )
+        notify.error("[custom.format.markdown] Usage: markdown <headline_separators>")
         return
       end
 
@@ -29,13 +28,7 @@ function M.register_subcommands(register_fn)
         local bufnr = vim.api.nvim_get_current_buf()
         separators.apply_headl_separators(bufnr, { notify = true })
       else
-        vim.notify(
-          string.format(
-            "[custom.format.markdown] Unknown markdown subcommand: %s",
-            subcommand
-          ),
-          vim.log.levels.ERROR
-        )
+        notify.error(string.format( "[custom.format.markdown] Unknown markdown subcommand: %s", subcommand ))
       end
     end,
     ---@diagnostic disable-next-line: unused-local

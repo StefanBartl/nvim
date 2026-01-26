@@ -3,6 +3,8 @@
 --- Flexible path copy command for Neovim.
 --- Supports relative/absolute paths, parent levels, custom bases, targets, and separators.
 
+local notify = require("lib.notify").create("[usrcmds.copy]")
+
 local M = {}
 
 local api = vim.api
@@ -137,7 +139,7 @@ local function copy_path(args)
   -- Handle special modes
   if special_mode == "nvim" then
     if not is_inside_nvim_config(target_path) then
-      vim.notify("File is not inside Neovim config directory", vim.log.levels.WARN)
+      notify.warn("File is not inside Neovim config directory")
       return
     end
     base = fn.stdpath("config")
@@ -145,7 +147,7 @@ local function copy_path(args)
   elseif special_mode == "nvim_module" then
     local module_path = to_lua_module(target_path)
     if not module_path then
-      vim.notify("File is not in a lua/ directory", vim.log.levels.WARN)
+      notify.warn("File is not in a lua/ directory")
       return
     end
     copy(module_path)
@@ -198,7 +200,7 @@ function M.enable()
     local args = vim.split(opts.args, "%s+")
 
     if #args == 0 or args[1] ~= "path" then
-      vim.notify("Usage: :Copy path [options]", vim.log.levels.ERROR)
+      notify.error("Usage: :Copy path [options]")
       return
     end
 

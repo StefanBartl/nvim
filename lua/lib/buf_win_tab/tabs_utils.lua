@@ -5,11 +5,11 @@
 ---FIX: LSP
 ---@diagnostic disable
 
+local notify = require("lib.notify").create("[lib.buf_win_tab.tabs_utils]")
+
 local M = {}
 
 -- Types ----------------------------------------------------------------------
-
----@alias TabInfo { tabnr: integer, tabpage: userdata, wins: integer[], bufs: integer[], current_win: integer, current_buf: integer }
 
 -- Collect a TabInfo for a given tabpage object.
 ---@param tabpage userdata
@@ -72,12 +72,12 @@ end
 function M.print_tabs(tabs)
   tabs = tabs or M.list_tabs()
   if #tabs == 0 then
-    vim.notify("No tabpages", vim.log.levels.INFO)
+    notify.info("No tabpages")
     return
   end
   for _, t in ipairs(tabs) do
     local line = M.format_tab_one_line(t)
-    vim.notify(line, vim.log.levels.DEBUG)
+    notify.debug(line)
     -- Optionally print buffer names per tab for more detail
     local names = {}
     for _, b in ipairs(t.bufs) do
@@ -88,7 +88,7 @@ function M.print_tabs(tabs)
           or "[no-name]"
       )
     end
-    vim.notify("  bufs: " .. table.concat(names, ", "), vim.log.levels.DEBUG)
+    notify.debug("  bufs: " .. table.concat(names, ", "))
   end
 end
 
@@ -136,4 +136,5 @@ function M.collect_report()
   }
 end
 
+---@type Lib.BufWinTab.TabsUtils
 return M

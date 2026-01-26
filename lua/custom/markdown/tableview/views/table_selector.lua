@@ -1,7 +1,8 @@
 ---@module 'custom.markdown.tableview.views.table_selector'
 
+local notify = require("lib.notify").create("[custom.markdown.tableview.views.table_selector]")
+
 local api = vim.api
-local notify = vim.notify
 local ui = require("custom.markdown.tableview.renderer")
 
 ---@param buf number
@@ -40,7 +41,7 @@ return function(tables)
   -- create scratch buffer and floating window
   local sel_buf = api.nvim_create_buf(false, true)
   if not sel_buf then
-    notify("[Custom.Markdown.TableView] Failed to create selector buffer", vim.log.levels.ERROR)
+    notify.error("[Custom.Markdown.TableView] Failed to create selector buffer")
     return
   end
 
@@ -73,7 +74,7 @@ return function(tables)
 
   local sel_win = api.nvim_open_win(sel_buf, true, win_opts)
   if not sel_win then
-    notify("[Custom.Markdown.TableView] Failed to open selector window", vim.log.levels.ERROR)
+    notify.error("[Custom.Markdown.TableView] Failed to open selector window")
     pcall(api.nvim_buf_delete, sel_buf, { force = true })
     return
   end
@@ -105,7 +106,7 @@ return function(tables)
       local r = api.nvim_win_get_cursor(sel_win)[1]
       local idx = r
       if idx < 1 or idx > #tables then
-        notify("[Custom.Markdown.TableView] Invalid selection", vim.log.levels.WARN)
+        notify.warn("[Custom.Markdown.TableView] Invalid selection")
         return
       end
       local sel = tables[idx]

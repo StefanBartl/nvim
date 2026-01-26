@@ -2,6 +2,8 @@
 --- Public entrypoint for the modular custom Snacks dashboard.
 --- Ensures sections are registered before calling snacks.setup(opts).
 
+local notify = require("lib.notify").create("[config.snacks.custom_dashboard]")
+
 local M = {}
 M.module_tag = "[snacks.custom_dashboard]: "
 
@@ -36,10 +38,7 @@ function M.setup(snacks, opts)
   -- sessions module optional but register sections early
   local ok_sess, sessions = safe_require("config.snacks.custom_dashboard.sessions")
   if not ok_sess then
-    vim.notify(
-      M.module_tag .. "sessions module not available; Sessions section will show placeholder",
-      vim.log.levels.INFO
-    )
+    notify.info(M.module_tag .. "sessions module not available; Sessions section will show placeholder")
   end
 
   -- sections must register the custom section before snacks.setup

@@ -1,10 +1,11 @@
 ---@module 'config.fzf.actions.create_file'
 ---@description Create file/folder in current entry's directory using hover_select
 
+local notify = require("lib.notify").create("[config.fzf.actions.create_file]")
+
 local M = {}
 
 local fn = vim.fn
-local notify = vim.notify
 
 ---Check if path ends with directory separator
 ---@param path string
@@ -25,15 +26,15 @@ local function create_entry(parent_dir, name)
     local dir_path = full_path:gsub("[/\\]$", "")
     local ok, err = pcall(fn.mkdir, dir_path, "p")
     if not ok then
-      notify(("Failed to create directory: %s"):format(err), vim.log.levels.ERROR)
+      notify.error(("Failed to create directory: %s"):format(err))
       return false
     end
-    notify(("Directory created: %s"):format(fn.fnamemodify(dir_path, ":t")), vim.log.levels.INFO)
+    notify.info(("Directory created: %s"):format(fn.fnamemodify(dir_path, ":t")))
     return true
   else
     -- File creation
     if fn.filereadable(full_path) == 1 then
-      notify("File already exists", vim.log.levels.WARN)
+      notify.warn("File already exists")
       return false
     end
 
@@ -47,7 +48,7 @@ local function create_entry(parent_dir, name)
     local file = io.open(full_path, "w")
     if file then
       file:close()
-      notify(("File created: %s"):format(fn.fnamemodify(full_path, ":t")), vim.log.levels.INFO)
+      notify.info(("File created: %s"):format(fn.fnamemodify(full_path, ":t")))
 
       -- Open file in buffer
       vim.schedule(function()
@@ -56,7 +57,7 @@ local function create_entry(parent_dir, name)
 
       return true
     else
-      notify("Failed to create file", vim.log.levels.ERROR)
+      notify.error("Failed to create file")
       return false
     end
   end
@@ -101,17 +102,17 @@ end
 ---@diagnostic disable-next-line: unused-local
 function M.create_file(selected, opts)
   -- Debug output
-  notify("[DEBUG] create_file triggered", vim.log.levels.INFO)
-  notify("[DEBUG] selected type: " .. type(selected), vim.log.levels.INFO)
+  notify.info("[DEBUG] create_file triggered")
+  notify.info("[DEBUG] selected type: " .. type(selected))
 
   local path = get_path_from_entry(selected)
 
   if not path then
-    notify("No valid path found", vim.log.levels.WARN)
+    notify.warn("No valid path found")
     return false  -- Close picker
   end
 
-  notify("[DEBUG] path: " .. path, vim.log.levels.INFO)
+  notify.info("[DEBUG] path: " .. path)
 
   -- Get parent directory
   local parent_dir
@@ -122,11 +123,11 @@ function M.create_file(selected, opts)
   end
 
   if not parent_dir or parent_dir == "" then
-    notify("Could not determine parent directory", vim.log.levels.ERROR)
+    notify.error("Could not determine parent directory")
     return false  -- Close picker
   end
 
-  notify("[DEBUG] parent_dir: " .. parent_dir, vim.log.levels.INFO)
+  notify.info("[DEBUG] parent_dir: " .. parent_dir)
 
   -- Schedule input to avoid conflicts
   vim.schedule(function()

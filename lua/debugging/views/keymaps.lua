@@ -1,5 +1,7 @@
 ---@module 'debugging.views.keymaps'
 
+local notify = require("lib.notify").create("[debugging.views.keymaps]")
+
 local display = require("debugging.views.display")
 local capture = require("debugging.views.capture")
 
@@ -30,7 +32,7 @@ function M.setup(km, timings)
 
   km.map("n", km.prefix .. "x", function()
     display.clear_all()
-    vim.notify("All debug windows closed", vim.log.levels.INFO)
+    notify.info("All debug windows closed")
   end, { desc = "[Debug] Clear all windows", silent = true })
 end
 

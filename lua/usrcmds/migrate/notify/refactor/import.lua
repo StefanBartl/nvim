@@ -45,12 +45,25 @@ local function find_first_code_line(bufnr)
   return 0
 end
 
----Inject or upgrade import
+---Inject or upgrade import with auto-detected module path
 ---@param bufnr integer
----@param module_name string|nil Optional module name for .create("[name]")
+---@param module_name string|nil Optional override module name
 ---@return boolean added True if import was added or modified
 function M.inject(bufnr, module_name)
   local has_simple, has_create, import_line = check_import(bufnr)
+
+  -- If no module_name provided, auto-detect from buffer path
+  if not module_name or module_name == "" then
+    local fname = api.nvim_buf_get_name(bufnr)
+
+    if fname ~= "" then
+      local ok, get_module_path = pcall(require, "lib.lua_ls.get_module_path")
+      if ok then
+        module_name = get_module_path(fname)
+      end
+    else
+    end
+  end
 
   -- Determine what import line to use
   local import_str

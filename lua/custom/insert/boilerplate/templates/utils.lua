@@ -1,6 +1,8 @@
 ---@module 'custom.insert.boilerplate.templates.utils'
 ---@brief Common utilities for template generation
 
+local notify = require("lib.notify").create("[custom.insert.boilerplate.templates.utils]")
+
 local M = {}
 
 local api = vim.api
@@ -48,10 +50,7 @@ function M.prompt_user(prompt_text, default, required)
       return default
     end
     if required then
-      vim.notify(
-        "[custom.insert.boilerplate] Required input was empty",
-        vim.log.levels.ERROR
-      )
+      notify.error("[custom.insert.boilerplate] Required input was empty")
       return nil
     end
   end

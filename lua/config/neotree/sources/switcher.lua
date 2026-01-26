@@ -1,6 +1,8 @@
 ---@module 'config.neotree.sources.switcher'
 ---@description Hover-based source switcher for Neo-tree using hover-select v2
 
+local notify = require("lib.notify").create("[config.neotree.sources.switcher]")
+
 local ICONS = require("config.neotree.sources.icons")
 local hover_select = require("lib.ui.hover_select")
 local window_state = require("config.neotree.state.windows")
@@ -13,7 +15,7 @@ local M = {}
 local function get_available_sources()
   local ok, neo_tree = pcall(require, "neo-tree")
   if not ok then
-    vim.notify("Neo-tree not loaded", vim.log.levels.ERROR)
+    notify.error("Neo-tree not loaded")
     return {}
   end
 
@@ -49,7 +51,7 @@ local function get_available_sources()
   end
 
   if #sources == 0 then
-    vim.notify("Using fallback source list", vim.log.levels.WARN)
+    notify.warn("Using fallback source list")
     sources = {
       "filesystem",
       "buffers",
@@ -114,7 +116,7 @@ function M.show_picker()
   local sources = get_available_sources()
 
   if #sources == 0 then
-    vim.notify("No sources available", vim.log.levels.WARN)
+    notify.warn("No sources available")
     return
   end
 
@@ -148,16 +150,13 @@ function M.show_picker()
       end
 
       if source_name == current_source then
-        vim.notify("Already showing " .. source_name, vim.log.levels.INFO)
+        notify.info("Already showing " .. source_name)
         return
       end
 
       local loadable, err_msg = check_source_loadable(source_name)
       if not loadable then
-        vim.notify(
-          string.format("Cannot load %s: %s", source_name, err_msg or "Unknown error"),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format("Cannot load %s: %s", source_name, err_msg or "Unknown error"))
         return
       end
 

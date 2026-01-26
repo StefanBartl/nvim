@@ -1,6 +1,8 @@
 ---@module 'usrcmds.gather.lua.ui'
 ---@description UI utilities for displaying gather results in scratch buffers
 
+local notify = require("lib.notify").create("[usrcmds.gather.lua.ui]")
+
 local api = vim.api
 
 local M = {}
@@ -11,21 +13,21 @@ local M = {}
 function M.open_scratch(lines, title)
   -- Validate input
   if not lines or #lines == 0 then
-    vim.notify("No content to display", vim.log.levels.WARN)
+    notify.warn("No content to display")
     return
   end
 
   -- Create unlisted scratch buffer
   local ok, bufnr = pcall(api.nvim_create_buf, false, true)
   if not ok or bufnr == 0 then
-    vim.notify("Failed to create scratch buffer", vim.log.levels.ERROR)
+    notify.error("Failed to create scratch buffer")
     return
   end
 
   -- Set buffer content (requires modifiable temporarily)
   local set_lines_ok = pcall(api.nvim_buf_set_lines, bufnr, 0, -1, false, lines)
   if not set_lines_ok then
-    vim.notify("Failed to set buffer content", vim.log.levels.ERROR)
+    notify.error("Failed to set buffer content")
     pcall(api.nvim_buf_delete, bufnr, { force = true })
     return
   end

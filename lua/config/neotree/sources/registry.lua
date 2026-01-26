@@ -1,6 +1,8 @@
 -- lua/config/neotree/sources/registry.lua
 ---@module 'config.neotree.sources.registry'
 
+local notify = require("lib.notify").create("[config.neotree.sources.registry]")
+
 local M = {}
 
 ---@type table<string, Cfg.NeoTree.Sources.SourceDef>
@@ -25,7 +27,7 @@ end
 function M.load(name)
   local def = sources[name]
   if not def then
-    vim.notify(string.format("Unknown source: %s", name), vim.log.levels.ERROR)
+    notify.error(string.format("Unknown source: %s", name))
     return nil
   end
 
@@ -35,14 +37,14 @@ function M.load(name)
 
   local ok, source = pcall(def.loader)
   if not ok then
-    vim.notify(string.format("Failed to load source %s: %s", name, source), vim.log.levels.ERROR)
+    notify.error(string.format("Failed to load source %s: %s", name, source))
     return nil
   end
 
   def.source = source
   def.loaded = true
 
-  vim.notify(string.format("Loaded source: %s", name), vim.log.levels.INFO)
+  notify.info(string.format("Loaded source: %s", name))
   return source
 end
 

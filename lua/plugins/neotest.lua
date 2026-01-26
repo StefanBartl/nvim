@@ -16,6 +16,8 @@
 --- Resolve language-specific config module
 ---@param lang string Language identifier
 ---@return table|nil config Language configuration or nil if not found
+local notify = require("lib.notify").create("[plugins.neotest]")
+
 local function get_lang_config(lang)
   local ok, cfg = pcall(require, "config.neotest.adapters." .. lang)
   if not ok then
@@ -139,9 +141,9 @@ return {
           vim.defer_fn(function()
             local tree = neotest.state.positions()
             if tree then
-              vim.notify("Tests found: " .. vim.tbl_count(tree), vim.log.levels.INFO)
+              notify.info("Tests found: " .. vim.tbl_count(tree))
             else
-              vim.notify("No tests discovered", vim.log.levels.WARN)
+              notify.warn("No tests discovered")
             end
           end, 1000)
         end,
@@ -157,7 +159,7 @@ return {
           for id, _ in pairs(adapters or {}) do
             msg = msg .. "  - " .. id .. "\n"
           end
-          vim.notify(msg, vim.log.levels.INFO)
+          notify.info(msg)
         end,
         desc = "Show loaded adapters",
       },
@@ -249,7 +251,7 @@ return {
 
         local config = neotest.config
         if not config or not config.adapters then
-          vim.notify("No adapters configured", vim.log.levels.WARN)
+          notify.warn("No adapters configured")
           return
         end
 
@@ -259,7 +261,7 @@ return {
           table.insert(lines, string.format("[%d] %s", i, name))
         end
 
-        vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+        notify.info(table.concat(lines, "\n"))
       end, {})
 
       vim.api.nvim_create_user_command("NeotestDebugTree", function()
@@ -271,7 +273,7 @@ return {
 
         local tree = neotest.state.positions()
         if not tree then
-          vim.notify("No test tree available", vim.log.levels.WARN)
+          notify.warn("No test tree available")
           return
         end
 
@@ -289,7 +291,7 @@ return {
         end
         dump(tree)
 
-        vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+        notify.info(table.concat(lines, "\n"))
       end, {})
 
       require("config.neotest.commands").setup()

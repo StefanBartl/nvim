@@ -1,6 +1,8 @@
 ---@module 'mynotes.core'
 --- Central engine for directory validation, notifications and picker abstraction.
 
+local notify = require("lib.notify").create("[custom.mynotes.core]")
+
 local M = {}
 
 ---@param spec MyNotesSpec
@@ -11,10 +13,7 @@ function M.resolve_cwd(spec)
 
   if not stat or stat.type ~= "directory" then
     if spec.notify ~= false then
-      vim.notify(
-        ("[MyNotes] directory does not exist: %s"):format(path),
-        vim.log.levels.ERROR
-      )
+      notify.error(("[MyNotes] directory does not exist: %s"):format(path))
     end
     return nil
   end

@@ -8,6 +8,8 @@
 ---   - plenary (only for robust absolute path fallback)
 ---   - harpoon v2 API (prefers :list():add(); falls back gracefully)
 
+local notify = require("lib.notify").create("[config.harpoon.persist_paths]")
+
 local M = {}
 
 local Norm = require("config.harpoon.utils.normkey")
@@ -199,7 +201,7 @@ function M.setup(opts)
 
   vim.api.nvim_create_user_command("HarpoonPersistPathsReload", function()
     local changed = M.inject_now()
-    vim.notify(string.format("[harpoon] persistpaths: %s", changed and "changed" or "no change"), vim.log.levels.INFO)
+    notify.info(string.format("[harpoon] persistpaths: %s", changed and "changed" or "no change"))
   end, { desc = "Re-inject persistent Harpoon paths" })
 end
 

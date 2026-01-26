@@ -10,6 +10,8 @@
 ---  - This module registers itself with myplugin.lsp_common.
 ---  - It relies on myplugin.catch and myplugin.helper.
 
+local notify = require("lib.notify").create("[lsp.tools.deprecated_help.lsp.lua_ls.lua_ls]")
+
 local helper = require("lsp.tools.deprecated_help.helper")
 local catch = require("lsp.tools.deprecated_help.lsp.lua_ls.catch")
 local diagnostic = require("lsp.tools.deprecated_help.lsp.lua_ls.diagnostic")
@@ -26,7 +28,7 @@ local defaults = require("lsp.tools.deprecated_help.defaults")
 function M.show_help(bufnr, symbol)
   -- guard
   if not symbol or symbol == "" then
-    vim.notify("No symbol available for help.", vim.log.levels.INFO)
+    notify.info("No symbol available for help.")
     return
   end
 
@@ -40,7 +42,7 @@ function M.show_help(bufnr, symbol)
   -- call help command for symbol (safe protected call)
   local ok, _ = pcall(function() vim.cmd("help " .. symbol) end)
   if not ok then
-    vim.notify("Help not found for: " .. symbol, vim.log.levels.WARN)
+    notify.warn("Help not found for: " .. symbol)
   end
 end
 
@@ -88,7 +90,7 @@ local function on_publish(_err, result, ctx, _config)
           defaults.keymap,
           symbol
         )
-        vim.notify(notify_msg, vim.log.levels.WARN)
+        notify.warn(notify_msg)
 
         -- set buffer-local keymap to open help for this symbol
         -- mapping will call our module function with the symbol captured by a closure

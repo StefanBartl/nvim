@@ -5,6 +5,8 @@
 --- or relying on LSP. Supports Lua, Python, JavaScript/TypeScript, Go, Rust,
 --- C/C++, Java, and Shell scripts.
 
+local notify = require("lib.notify").create("[custom.function_index]")
+
 local M = {}
 
 ---@type FunctionIndexConfig
@@ -150,7 +152,7 @@ local function collect_functions(scope)
   if scope == "buffer" then
     local current_file = vim.api.nvim_buf_get_name(0)
     if current_file == "" then
-      vim.notify("Current buffer has no file", vim.log.levels.WARN)
+      notify.warn("Current buffer has no file")
       return {}
     end
     table.insert(cmd, current_file)
@@ -207,7 +209,7 @@ function M.telescope_functions_index(scope)
 
   local ok, pickers = pcall(require, "telescope.pickers")
   if not ok then
-    vim.notify("Telescope is not installed", vim.log.levels.ERROR)
+    notify.error("Telescope is not installed")
     return
   end
 
@@ -266,7 +268,7 @@ function M.fzf_functions_index(scope)
 
   local ok, fzf = pcall(require, "fzf-lua")
   if not ok then
-    vim.notify("fzf-lua is not installed", vim.log.levels.ERROR)
+    notify.error("fzf-lua is not installed")
     return
   end
 

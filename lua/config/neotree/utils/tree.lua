@@ -1,6 +1,8 @@
 ---@module 'config.neotree.utils.tree'
 ---@brief Recursive tree traversal for file/folder collection
 
+local notify = require("lib.notify").create("[config.neotree.utils.tree]")
+
 local is_ignored_dir = require("config.neotree.helper.is_ignored_dir")
 local node_utils = require("config.neotree.utils.node")
 
@@ -49,10 +51,7 @@ function M.collect_recursive(root_path, collect_type)
             end
           end
         else
-          vim.notify(
-            string.format("tree.collect_recursive: scandir failed for %s: %s", path, tostring(err)),
-            vim.log.levels.DEBUG
-          )
+          notify.debug(string.format("tree.collect_recursive: scandir failed for %s: %s", path, tostring(err)))
         end
       end
     end
@@ -83,14 +82,14 @@ function M.collect_for_node(state, collect_type)
   -- ✅ FIX: Use node_utils instead of state.current_node
   local node = node_utils.get_current(state)
   if not node then
-    vim.notify("No node under cursor", vim.log.levels.DEBUG)
+    notify.debug("No node under cursor")
     return {}, ""
   end
 
   -- ✅ FIX: Use node_utils.get_path for consistent path resolution
   local path, is_dir = node_utils.get_path(node)
   if path == "" then
-    vim.notify("Node has no path", vim.log.levels.DEBUG)
+    notify.debug("Node has no path")
     return {}, ""
   end
 
@@ -112,10 +111,7 @@ function M.collect_for_node(state, collect_type)
   if ok and type(result) == "table" then
     entries = result
   else
-    vim.notify(
-      string.format("Failed to collect %s: %s", collect_type, tostring(result)),
-      vim.log.levels.WARN
-    )
+    notify.warn(string.format("Failed to collect %s: %s", collect_type, tostring(result)))
   end
 
   return entries, path

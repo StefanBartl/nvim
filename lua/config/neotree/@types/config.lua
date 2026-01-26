@@ -11,6 +11,9 @@
 ---@field default_position? Cfg.NeoTree.Position Default window position
 ---@field restore_last_position? boolean Restore tree state instead of revealing current file
 ---@field window_debug? boolean Enable window operation logging
+---@field window_open? boolean
+---@field reveal_current_file? boolean Only has an effect if window_open == false
+---@field only_lhs? boolean Only has an effect if window_open == false
 ---@field trash? Cfg.NeoTree.Trash.Config|boolean Trash system configuration
 ---@field current_hl? Cfg.NeoTree.CurrentHl.Config|boolean Current file highlighting
 ---@field cwd_sync? Cfg.NeoTree.CwdSync.Config|boolean CWD synchronization

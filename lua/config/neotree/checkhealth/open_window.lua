@@ -1,5 +1,5 @@
 ---@module 'config.neotree.checkhealth.open_window'
----@brief Window controller health checks
+---@brief Window controller health checks (updated for custom float)
 
 local M = {}
 
@@ -41,7 +41,7 @@ function M.check()
   -- Executor
   local ok_exec = pcall(require, "config.neotree.open.window.controller.executor")
   if ok_exec then
-    vim.health.ok("Executor loaded")
+    vim.health.ok("Executor loaded (with custom float support)")
   else
     vim.health.error("Executor not loadable")
   end
@@ -71,16 +71,42 @@ function M.check()
     vim.health.warn("Error handler not loaded")
   end
 
-  -- Float
-  local ok_float, float = pcall(require, "config.neotree.open.window.float")
-  if ok_float then
-    vim.health.ok("Float module loaded")
+  -- Legacy float module (should still exist for state tracking)
+  local ok_legacy_float, legacy_float = pcall(require, "config.neotree.open.window.float")
+  if ok_legacy_float then
+    vim.health.ok("Legacy float state module loaded")
 
-    local float_state = float.get_state()
-    vim.health.info("Float state:")
+    local float_state = legacy_float.get_state()
+    vim.health.info("Legacy float state:")
     vim.health.info("  open: " .. tostring(float_state.open))
   else
-    vim.health.warn("Float module not loaded")
+    vim.health.warn("Legacy float module not loaded")
+  end
+
+  -- Integration test
+  vim.health.start("Custom Float Integration")
+
+  local state = require("config.neotree.state.windows")
+  local current_state = state.get_state()
+
+  if current_state.position == "float" then
+    if ok_float then
+      local custom_is_open = custom_float.is_open()
+      if custom_is_open then
+        vim.health.ok("State and custom float are in sync (both open)")
+      else
+        vim.health.error("State reports float open but custom float reports closed")
+      end
+    end
+  else
+    if ok_float then
+      local custom_is_open = custom_float.is_open()
+      if not custom_is_open then
+        vim.health.ok("State and custom float are in sync (both closed)")
+      else
+        vim.health.error("State reports not float but custom float reports open")
+      end
+    end
   end
 end
 

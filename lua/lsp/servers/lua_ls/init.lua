@@ -1,6 +1,8 @@
 ---@module 'lsp.servers.lua_ls'
 --- Lua language server setup using native LSP config/enable with strict root and scoped libraries.
 ---@class LuaLsServer
+local notify = require("lib.notify").create("[lsp.servers.lua_ls]")
+
 local M = {}
 
 -- Import required dependencies for ignore patterns and root resolution
@@ -125,17 +127,17 @@ function M.setup(shared, opts)
       on_new_config = function(new_config, new_root)
         -- CRITICAL: Guard against nil config
         if not new_config then
-          vim.notify("[lua_ls] on_new_config: new_config is nil", vim.log.levels.ERROR)
+          notify.error("[lua_ls] on_new_config: new_config is nil")
           return
         end
 
         if not new_config.settings then
-          vim.notify("[lua_ls] on_new_config: settings is nil", vim.log.levels.ERROR)
+          notify.error("[lua_ls] on_new_config: settings is nil")
           return
         end
 
         if not new_config.settings.Lua then
-          vim.notify("[lua_ls] on_new_config: settings.Lua is nil", vim.log.levels.ERROR)
+          notify.error("[lua_ls] on_new_config: settings.Lua is nil")
           return
         end
 

@@ -2,6 +2,8 @@
 --- Visual wrap helpers (e.g., bold via **). Uses set_text for minimal edits.
 
 ---@class MarkdownWrap
+local notify = require("lib.notify").create("[custom.markdown.core.wrap]")
+
 local M = {}
 
 local api = vim.api
@@ -92,7 +94,7 @@ local function wrap_with_asterisks(count)
   local row, scol, ecol = get_visual_selection()
 
   if not (row and scol and ecol) then
-    vim.notify("[Custom.Markdown] No valid selection", vim.log.levels.WARN)
+    notify.warn("[Custom.Markdown] No valid selection")
     return
   end
 
@@ -124,7 +126,7 @@ function M.toggle_visual_bold()
   local row, scol, ecol = get_visual_selection()
 
   if not (row and scol and ecol) then
-    vim.notify("[Custom.Markdown] No valid selection", vim.log.levels.WARN)
+    notify.warn("[Custom.Markdown] No valid selection")
     return
   end
 

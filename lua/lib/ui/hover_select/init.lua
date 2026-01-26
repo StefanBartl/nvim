@@ -2,16 +2,30 @@
 ---@description Main module for creating interactive hover selection windows
 ---with line-wise navigation, multi-selection, and custom selection callbacks
 
+local notify = require("lib.notify").create("[lib.ui.hover_select]")
+
+local lazy = require("lib.lazy")
+
+---@type Lib.UI.HoverSelect.Config.Module
+local config = lazy.require("lib.ui.hover_select.config")
+
+---@type Lib.UI.HoverSelect.Buffer
+local buffer = lazy.require("lib.ui.hover_select.buffer")
+
+---@type Lib.UI.HoverSelect.Window
+local window = lazy.require("lib.ui.hover_select.window")
+
+---@type Lib.UI.HoverSelect.Navigation
+local navigation = lazy.require("lib.ui.hover_select.navigation")
+
+---@type Lib.UI.HoverSelect.Highlight
+local highlight = lazy.require("lib.ui.hover_select.highlight")
+
 local M = {}
 
-local config = require("lib.ui.hover_select.config")
-local buffer = require("lib.ui.hover_select.buffer")
-local window = require("lib.ui.hover_select.window")
-local navigation = require("lib.ui.hover_select.navigation")
-local highlight = require("lib.ui.hover_select.highlight")
-local notify = vim.notify
 local api = vim.api
 
+---@type Lib.HoverSelect.State
 local state = {
   bufnr = nil,
   winid = nil,
@@ -22,19 +36,26 @@ local state = {
   ns_id = api.nvim_create_namespace("hover_select"),
 }
 
----Open a new hover selection window with the given items
----@param opts Lib.HoverSelect.Options Configuration options
----@return integer|nil bufnr Buffer number, or nil on failure
----@return integer|nil winid Window ID, or nil on failure
+-- ============================================================================
+-- Public API
+-- ============================================================================
+
+--- Open a new hover selection window.
+--- Creates buffer and floating window, initializes state,
+--- sets up navigation, highlights and callbacks.
+---
+---@param opts Lib.HoverSelect.Options
+---@return integer|nil bufnr  # Buffer number on success
+---@return integer|nil winid  # Window id on success
 function M.open(opts)
   -- Validate required parameters
   if not opts or not opts.items or #opts.items == 0 then
-    notify("lib.ui.hover_select: items list is required and must not be empty", vim.log.levels.ERROR)
+    notify.error("lib.ui.hover_select: items list is required and must not be empty")
     return nil, nil
   end
 
   if not opts.on_select or type(opts.on_select) ~= "function" then
-    notify("lib.ui.hover_select: on_select callback is required", vim.log.levels.ERROR)
+    notify.error("lib.ui.hover_select: on_select callback is required")
     return nil, nil
   end
 
@@ -157,7 +178,18 @@ function M.close()
   state.selections = {}
 end
 
----Toggle selection for current line (multi-select mode)
+---Check if hover selection window is currently open
+---@return boolean is_open True if window is open and valid
+function M.is_open()
+  return state.winid ~= nil and api.nvim_win_is_valid(state.winid)
+end
+
+-- ============================================================================
+-- Internal helpers
+-- ============================================================================
+
+--- Toggle selection state of the current line.
+--- Only relevant in multi-select mode.
 ---@private
 function M._toggle_selection()
   if not state.winid or not api.nvim_win_is_valid(state.winid) then
@@ -266,7 +298,7 @@ function M._handle_selection()
     -- Single-select mode: return current item
     local selected_item = state.items[line_idx]
     if not selected_item then
-      notify("lib.ui.hover_select: invalid selection", vim.log.levels.WARN)
+      notify.warn("lib.ui.hover_select: invalid selection")
       M.close()
       return
     end
@@ -281,10 +313,6 @@ function M._handle_selection()
   end
 end
 
----Check if hover selection window is currently open
----@return boolean is_open True if window is open and valid
-function M.is_open()
-  return state.winid ~= nil and api.nvim_win_is_valid(state.winid)
-end
 
+---@type Lib.UI.HoverSelect
 return M

@@ -110,19 +110,39 @@ Insert current buffer's file path at cursor.
 
 ### :Insert module
 
-Insert `@module` annotation for current Lua file.
+Insert module-related code at cursor position.
+
+**Syntax:**
+```vim
+:Insert module [format]
+```
+
+**Formats:**
+* `require` (default): Insert `require("module.path")` statement
+* `lua_ls`: Insert `---@module 'module.path'` annotation
 
 **Requirements:**
 * File must be `.lua`
 * File must be in `lua/` directory
 
-**Example:**
+**Examples:**
+
 ```lua
+-- File: lua/custom/insert/filepath/core.lua
+
 -- Before cursor:
 
--- After :Insert module:
+-- After :Insert module (or :Insert module require):
+require("custom.insert.filepath.core")
+
+-- After :Insert module lua_ls:
 ---@module 'custom.insert.filepath.core'
 ```
+
+**Notes:**
+* The module path is automatically derived from the file's location within the `lua/` directory
+* `init.lua` files are handled correctly (the `/init` suffix is removed)
+* When no format is specified, `require` is used as the default
 
 ### :Insert class
 

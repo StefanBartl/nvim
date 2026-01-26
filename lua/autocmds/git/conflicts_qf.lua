@@ -2,6 +2,8 @@
 --- Populate quickfix with files that have unresolved conflicts on startup/focus.
 
 ---@class GitAutoCmdsConflictsQf
+local notify = require("lib.notify").create("[autocmds.git.conflicts_qf]")
+
 local M = {}
 
 local api, fn = vim.api, vim.fn
@@ -41,7 +43,7 @@ function M.enable(cfg, shared)
         vim.cmd("copen")
       end
       if cfg.notify ~= false then
-        vim.notify("Git conflicts detected:\n" .. table.concat(conflicts, "\n"), vim.log.levels.WARN)
+        notify.warn("Git conflicts detected:\n" .. table.concat(conflicts, "\n"))
       end
     end,
     desc = "Git: populate quickfix with unresolved conflicts",

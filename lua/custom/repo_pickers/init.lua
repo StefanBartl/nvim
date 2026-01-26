@@ -1,6 +1,8 @@
 ---@module 'custom.repo_pickers'
 --- Tiny facade: keeps active config, resolves selectors, exposes _entry_*.
 
+local notify = require("lib.notify").create("[custom.repo_pickers]")
+
 local cfgmod = require("custom.repo_pickers.config")
 local reg = require("custom.repo_pickers.register")
 local actions = require("custom.repo_pickers.actions")
@@ -36,7 +38,7 @@ end
 function M._entry_files()
   local C = M._active_cfg
   if not C then
-    vim.notify("repo_pickers: not enabled yet", vim.log.levels.WARN)
+    notify.warn("repo_pickers: not enabled yet")
     return
   end
   actions.repo_files(C, selector_for(C, "files"))
@@ -45,7 +47,7 @@ end
 function M._entry_grep()
   local C = M._active_cfg
   if not C then
-    vim.notify("repo_pickers: not enabled yet", vim.log.levels.WARN)
+    notify.warn("repo_pickers: not enabled yet")
     return
   end
   actions.repo_grep(C, selector_for(C, "grep"))
@@ -54,7 +56,7 @@ end
 function M._entry_wkdbook_find()
   local C = M._active_cfg
   if not C then
-    vim.notify("repo_pickers: not enabled yet", vim.log.levels.WARN)
+    notify.warn("repo_pickers: not enabled yet")
     return
   end
   actions.wkdbook_find(C, wkdbook_selector_for(C, "files"))
@@ -63,7 +65,7 @@ end
 function M._entry_wkdbook_grep()
   local C = M._active_cfg
   if not C then
-    vim.notify("repo_pickers: not enabled yet", vim.log.levels.WARN)
+    notify.warn("repo_pickers: not enabled yet")
     return
   end
   actions.wkdbook_grep(C, wkdbook_selector_for(C, "grep"))
@@ -76,7 +78,7 @@ end
 function M.enable(user_cfg, enable_opts)
   local C = cfgmod.merge(user_cfg)
   if not (C.repos_dir or vim.env.REPOS_DIR) then
-    vim.notify("repo_pickers: please set $REPOS_DIR or pass config.repos_dir", vim.log.levels.WARN)
+    notify.warn("repo_pickers: please set $REPOS_DIR or pass config.repos_dir")
   end
   M._active_cfg = C
 

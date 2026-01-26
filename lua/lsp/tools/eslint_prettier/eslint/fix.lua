@@ -1,5 +1,7 @@
 ---@module 'lsp.tools.eslint_prettier.eslint.fix'
 --- Run eslint_d --fix on current file (uses resolved bin)
+local notify = require("lib.notify").create("[lsp.tools.eslint_prettier.eslint.fix]")
+
 local api = vim.api
 local eslint = require("lsp.tools.eslint_prettier.eslint")
 
@@ -53,13 +55,13 @@ function M.eslint_fix(bufnr)
   bufnr = bufnr or api.nvim_get_current_buf()
   local filename = api.nvim_buf_get_name(bufnr)
   if filename == "" then
-    vim.notify("No file to lint", vim.log.levels.WARN)
+    notify.warn("No file to lint")
     return
   end
 
   local bin = eslint.get_eslint_bin()
   if not bin then
-    vim.notify("eslint_d not found (PATH or mason).", vim.log.levels.ERROR)
+    notify.error("eslint_d not found (PATH or mason).")
     return
   end
 
@@ -74,7 +76,7 @@ function M.eslint_fix(bufnr)
   local find_root = require("lsp.tools.eslint_prettier.core.find_root")
   local root = find_root(bufnr)
   if not root then
-    vim.notify("Could not determine project root, using current directory.", vim.log.levels.WARN)
+    notify.warn("Could not determine project root, using current directory.")
     root = vim.fn.getcwd()
   end
 
@@ -86,7 +88,7 @@ function M.eslint_fix(bufnr)
     on_exit = function(code, stdout, stderr)
       if code == 0 then
         vim.cmd("checktime") -- Refresh buffer
-        vim.notify("eslint_d: fixed", vim.log.levels.INFO)
+        notify.info("eslint_d: fixed")
       else
         local msg = {}
 
@@ -104,7 +106,7 @@ function M.eslint_fix(bufnr)
           table.insert(msg, "eslint_d returned non-zero exit code, but no output captured.")
         end
 
-        vim.notify(table.concat(msg, "\n"), vim.log.levels.ERROR)
+        notify.error(table.concat(msg, "\n"))
       end
     end,
   })

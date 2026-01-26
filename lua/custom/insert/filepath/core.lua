@@ -4,6 +4,8 @@
 --- Provides functions to insert the current buffer's file path at the cursor
 --- in various formats (cwd-relative, absolute, lua module path, etc.).
 
+local notify = require("lib.notify").create("[custom.insert.filepath.core]")
+
 local M = {}
 
 local api = vim.api
@@ -171,10 +173,7 @@ end
 function M.insert_path(opts)
   local bufname = api.nvim_buf_get_name(0)
   if not bufname or bufname == "" then
-    vim.notify(
-      "[custom.insert.filepath] Unnamed buffer",
-      vim.log.levels.WARN
-    )
+    notify.warn("[custom.insert.filepath] Unnamed buffer")
     return false
   end
 

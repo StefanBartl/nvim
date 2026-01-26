@@ -16,6 +16,8 @@ require("custom.format").setup({
   enable_legacy_commands = true, -- AUDIT: Übergangsphase
 })
 
+require("custom.mynotes")
+
 require("custom.lua_project_file_stats").setup()
 require("custom.function_index").setup()
 require("custom.recommender").setup()

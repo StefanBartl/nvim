@@ -1,12 +1,9 @@
 ---@module 'lib.lua_ls.insert.module_annotation'
 ---Insert a LuaLS @module annotation into a buffer at a configurable position
 
-local api = vim.api
+local notify = require("lib.notify").create("[lib.lua_ls.insert.module_annnotation]")
 
----@class InsertModuleOpts
----@field bufnr? integer Buffer handle; defaults to current buffer
----@field row? integer 0-based row index; defaults to current cursor row
----@field col? integer 0-based column index; defaults to current cursor column
+local api = vim.api
 
 ---Insert @module annotation
 ---
@@ -15,7 +12,7 @@ local api = vim.api
 ---- opts.bufnr only               → cursor position of current window, target buffer
 ---- opts.bufnr + opts.row (+col)  → explicit position in given buffer
 ---
----@param opts? InsertModuleOpts
+---@param opts? Lib.LuaLS.InsertModuleOpts
 ---@return boolean success
 return function(opts)
   opts = opts or {}
@@ -40,19 +37,13 @@ return function(opts)
   local filepath = api.nvim_buf_get_name(bufnr)
 
   if not filepath:match("%.lua$") then
-    vim.notify(
-      "[lib.lua_ls.insert.module_annotation] Not a Lua file",
-      vim.log.levels.WARN
-    )
+    notify.warn("[lib.lua_ls.insert.module_annotation] Not a Lua file")
     return false
   end
 
   local module_path = require("lib.lua_ls.get_module_path")(filepath)
   if not module_path then
-    vim.notify(
-      "[lib.lua_ls.insert.module_annotation] File not in lua/ directory",
-      vim.log.levels.WARN
-    )
+    notify.warn("[lib.lua_ls.insert.module_annotation] File not in lua/ directory")
     return false
   end
 

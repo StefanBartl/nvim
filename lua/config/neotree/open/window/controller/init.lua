@@ -1,6 +1,8 @@
 ---@module 'config.neotree.open.window.controller'
 ---@brief Refactored Neo-tree window controller with deterministic state machine
 
+local notify = require("lib.notify").create("[config.neotree.open.window.controller]")
+
 local M = {}
 
 -- Sub-modules (lazy loaded)
@@ -27,10 +29,15 @@ function M.make_opener(target_position, source)
   local pos = position_utils.normalize(target_position)
 
   return function()
+    if target_position == "float" then
+      vim.cmd("Neotree filesystem float toggle")
+      return -- FIX: Early return: flaot window wirh alle feature like in M-l oder M-r not easy possible. Musst du von hand schreiben!
+    end
+
     -- Acquire semaphore (blocks concurrent operations)
     if not semaphore.acquire() then
       if require("config.neotree").options.debug then
-        vim.notify("[neo-tree] Blocked by semaphore", vim.log.levels.WARN)
+        notify.warn("[neo-tree] Blocked by semaphore")
       end
       return
     end
@@ -41,10 +48,7 @@ function M.make_opener(target_position, source)
     end)
 
     if not ok then
-      vim.notify(
-        string.format("[neo-tree] Controller error: %s", tostring(err)),
-        vim.log.levels.ERROR
-      )
+      notify.error(string.format("[neo-tree] Controller error: %s", tostring(err)))
       semaphore.force_release()
     end
   end
@@ -62,7 +66,7 @@ function M.clear_semaphore()
   if semaphore then
     semaphore.force_release()
   end
-  vim.notify("[neo-tree] Semaphore manually cleared", vim.log.levels.INFO)
+  notify.info("[neo-tree] Semaphore manually cleared")
 end
 
 return M

@@ -6,6 +6,8 @@
 ---  - a required language code (first argument)
 ---  - optional flags such as --nocode to skip fenced and inline code
 ---- keep parsing small and explicit; delegate translation work to replace module
+local notify = require("lib.notify").create("[config.translate.usercommands]")
+
 local replace = require("config.translate.replace")
 
 local M = {}
@@ -50,7 +52,7 @@ function M.enable()
     local target_lang, nocode = parse_args(opts.fargs)
 
     if target_lang == "" then
-      vim.notify("Please specify a target language, e.g., :TranslateReplace EN", vim.log.levels.WARN)
+      notify.warn("Please specify a target language, e.g., :TranslateReplace EN")
       return
     end
 

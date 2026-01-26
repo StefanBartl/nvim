@@ -21,6 +21,8 @@
 
 --FIX: insert enable() und attach()
 
+local notify = require("lib.notify").create("[custom.commands_keymaps.delete_current_file]")
+
 local api = vim.api
 local fn = vim.fn
 
@@ -34,19 +36,13 @@ local function delete_current_file()
 
   -- Validate buffer state
   if filepath == "" then
-    vim.notify(
-      "Current buffer has no associated file.",
-      vim.log.levels.WARN
-    )
+    notify.warn("Current buffer has no associated file.")
     return
   end
 
   -- Check file existence
   if fn.filereadable(filepath) ~= 1 then
-    vim.notify(
-      "File does not exist on disk: " .. filepath,
-      vim.log.levels.ERROR
-    )
+    notify.error("File does not exist on disk: " .. filepath)
     return
   end
 
@@ -62,10 +58,7 @@ local function delete_current_file()
   -- Close buffer without forcing
   api.nvim_buf_delete(bufnr, { force = false })
 
-  vim.notify(
-    "Deleted file and closed buffer:\n" .. filepath,
-    vim.log.levels.INFO
-  )
+  notify.info("Deleted file and closed buffer:\n" .. filepath)
 end
 
 -- User command: :DeleteCurrentFile

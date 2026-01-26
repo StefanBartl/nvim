@@ -4,9 +4,10 @@
 --- symbol under the cursor. Install and call `require('nvim.deprecated_help').setup()` from init.lua.
 --- Comments in code are in English per project convention.
 
+local notify = require("lib.notify").create("[lsp.tools.deprecated_help.__init]")
+
 local M = {}
 
-local notify = vim.notify
 local api = vim.api
 local fn = vim.fn
 
@@ -129,7 +130,7 @@ local function open_help_for_symbol(symbol, opts)
     if found == 0 then
       local win = api.nvim_get_current_win()
       api.nvim_win_set_cursor(win, { 1, 0 })
-      notify("Symbol not found in help: " .. symbol, vim.log.levels.INFO)
+      notify.info("Symbol not found in help: " .. symbol)
     end
   end)
 end
@@ -173,7 +174,7 @@ function M.open_help_under_cursor(bufnr)
 
   local symbol = line:sub(s, e)
   if symbol == nil or symbol == "" then
-    notify("No symbol under cursor", vim.log.levels.WARN)
+    notify.warn("No symbol under cursor")
     return
   end
 

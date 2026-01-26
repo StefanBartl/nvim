@@ -3,6 +3,8 @@
 ---@description
 --- Provides functions to insert EmmyLua annotations at the cursor position.
 
+local notify = require("lib.notify").create("[custom.insert.annotation.core]")
+
 local M = {}
 
 local api = vim.api
@@ -25,8 +27,6 @@ local function get_module_path(filepath)
   return module_path
 end
 
--- AUDIT: `lib.buffers.insert_lines`?
-
 ---Insert lines at current cursor position
 ---@param lines string[]
 local function insert_lines_at_cursor(lines)
@@ -38,26 +38,37 @@ local function insert_lines_at_cursor(lines)
   api.nvim_win_set_cursor(win, { row + #lines + 1, 0 })
 end
 
----Insert @module annotation
+---Insert text at current cursor position (inline)
+---@param text string
+local function insert_text_at_cursor(text)
+  local win = api.nvim_get_current_win()
+  local cursor = api.nvim_win_get_cursor(win)
+  local row, col = cursor[1], cursor[2]
+
+  local line = api.nvim_get_current_line()
+  if col > #line then
+    col = #line
+  end
+
+  local new_line = line:sub(1, col) .. text .. line:sub(col + 1)
+  api.nvim_set_current_line(new_line)
+  api.nvim_win_set_cursor(win, { row, col + #text })
+end
+
+---Insert @module annotation (lua_ls format)
 ---@return boolean success
-function M.insert_module_annotation()
+local function insert_module_annotation_lua_ls()
   local bufnr = api.nvim_get_current_buf()
   local filepath = api.nvim_buf_get_name(bufnr)
 
   if not filepath:match("%.lua$") then
-    vim.notify(
-      "[custom.insert.annotation] Not a Lua file",
-      vim.log.levels.WARN
-    )
+    notify.warn("[custom.insert.annotation] Not a Lua file")
     return false
   end
 
   local module_path = get_module_path(filepath)
   if not module_path then
-    vim.notify(
-      "[custom.insert.annotation] File not in lua/ directory",
-      vim.log.levels.WARN
-    )
+    notify.warn("[custom.insert.annotation] File not in lua/ directory")
     return false
   end
 
@@ -65,6 +76,48 @@ function M.insert_module_annotation()
   insert_lines_at_cursor({ annotation })
 
   return true
+end
+
+---Insert require() statement with module path
+---@return boolean success
+local function insert_module_annotation_require()
+  local bufnr = api.nvim_get_current_buf()
+  local filepath = api.nvim_buf_get_name(bufnr)
+
+  if not filepath:match("%.lua$") then
+    notify.warn("[custom.insert.annotation] Not a Lua file")
+    return false
+  end
+
+  local module_path = get_module_path(filepath)
+  if not module_path then
+    notify.warn("[custom.insert.annotation] File not in lua/ directory")
+    return false
+  end
+
+  local require_stmt = string.format('require("%s")', module_path)
+  insert_text_at_cursor(require_stmt)
+
+  return true
+end
+
+---Insert @module annotation (dispatcher)
+---@param format "lua_ls"|"require"|nil Format type (default: "require")
+---@return boolean success
+function M.insert_module_annotation(format)
+  -- Default is "require" when no format specified
+  if not format or format == "" then
+    format = "require"
+  end
+
+  if format == "lua_ls" then
+    return insert_module_annotation_lua_ls()
+  elseif format == "require" then
+    return insert_module_annotation_require()
+  else
+    notify.error(string.format( "[custom.insert.annotation] Unknown format: '%s'. Use 'lua_ls' or 'require'.", format ))
+    return false
+  end
 end
 
 ---Insert @class annotation

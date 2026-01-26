@@ -2,6 +2,8 @@
 --- Open local file under cursor (robust detection for Markdown links and simple HTML anchors/figures).
 --- Provides helpers for extraction, resolution, existence check and cross-platform opening.
 
+local notify = require("lib.notify").create("[custom.markdown.handler.file]")
+
 local M = {}
 
 ---@type table
@@ -194,7 +196,7 @@ local function open_with_system_viewer(path)
   local ok, jid = pcall(vim.fn.jobstart, cmd, { detach = true })
   if not ok or jid == 0 or jid == -1 then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] File: Failed to spawn viewer for: " .. tostring(path), vim.log.levels.ERROR)
+      notify.error("[Custom.Markdown] File: Failed to spawn viewer for: " .. tostring(path))
     end
     return false
   end
@@ -238,7 +240,7 @@ function M.open(line)
   local target = extract_file_target_from_line(line)
   if not target then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] File: No link/file found under cursor", vim.log.levels.INFO)
+      notify.info("[Custom.Markdown] File: No link/file found under cursor")
     end
     return false
   end
@@ -246,7 +248,7 @@ function M.open(line)
   local resolved = resolve_target_to_path(target)
   if not resolved or resolved == "" then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] File: Could not resolve path: " .. tostring(target), vim.log.levels.ERROR)
+      notify.error("[Custom.Markdown] File: Could not resolve path: " .. tostring(target))
     end
     return false
   end
@@ -260,7 +262,7 @@ function M.open(line)
   local stat = uv.fs_stat(resolved)
   if not stat then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] File: File does not exist: " .. resolved, vim.log.levels.WARN)
+      notify.warn("[Custom.Markdown] File: File does not exist: " .. resolved)
     end
     return false
   end
@@ -268,11 +270,11 @@ function M.open(line)
   local ok = open_with_system_viewer(resolved)
   if ok then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] File: Opening -> " .. resolved, vim.log.levels.INFO)
+      notify.info("[Custom.Markdown] File: Opening -> " .. resolved)
     end
   else
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] File: Failed to open -> " .. resolved, vim.log.levels.ERROR)
+      notify.error("[Custom.Markdown] File: Failed to open -> " .. resolved)
     end
   end
   return ok

@@ -1,0 +1,52 @@
+---@module 'config.mason.ensure_install.defaults.lsp'
+-- =====================================================================================
+-- Tool set (defaults): true = ensure install, false = ignore
+-- =====================================================================================
+
+---@type Cfg.Mason.EnsureMap
+return {
+  ["copilot-language-server"] = true,
+  ["java-language-server"] = false,
+  ["csharp-language-server"] = false,
+  ["zls"] = true,
+  ["vue-language-server"] = true,
+  ["yaml-language-server"] = true,
+  ["vim-language-server"] = true,
+  ["ts_query_ls"] = true,
+  ["sqlls"] = true,
+  ["systemd-language-server"] = true,
+  ["svelte-language-server"] = true,
+  ["svlangserver"] = true,
+  ["pbls"] = true,
+  ["python-lsp-server"] = true,
+  ["powershell-editor-services"] = true,
+  ["perlnavigator"] = false,
+  ["phpactor"] = true,
+  ["omnisharp-mono"] = false,
+  ["nginx-language-server"] = true,
+  ["markdown-oxide"] = true,
+  ["m68k-lsp-server"] = true,
+  ["htmx-lsp"] = true,
+  ["lua-language-server"] = true,
+  ["jsonld-lsp"] = true,
+  ["graphql-language-service-cli"] = true,
+  ["html-lsp"] = true,
+  ["hoon-language-server"] = true,
+  ["gopls"] = true,
+  ["golangci-lint-langserver"] = true,
+  ["asm-lsp"] = true,
+  ["docker-compose-language-service"] = true,
+  ["dockerfile-language-server"] = true,
+  ["docker-language-server"] = true,
+  ["sqls"] = true,
+  ["cmake-language-server"] = true,
+  ["ast-grep"] = true,
+  ["typescript-language-server"] = true,
+  ["tailwindcss-language-server"] = true,
+  ["bash-language-server"] = true,
+  ["css-lsp"] = true,
+  ["eslint-lsp"] = true,
+  ["json-lsp"] = true,
+  ["marksman"] = true,
+}
+

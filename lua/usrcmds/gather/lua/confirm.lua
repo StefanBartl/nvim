@@ -1,6 +1,8 @@
 ---@module 'usrcmds.gather.lua.confirm'
 ---@description CWD scan confirmation with file statistics and time estimation
 
+local notify = require("lib.notify").create("[usrcmds.gather.lua.confirm]")
+
 local hover_select = require("lib.ui.hover_select")
 
 local M = {}
@@ -120,10 +122,10 @@ function M.show_confirmation(files, on_confirm, on_cancel)
       on_select = function(selected)
         ---@cast selected string
         if selected:match("^✓") then
-          vim.notify("Starting CWD scan...", vim.log.levels.INFO)
+          notify.info("Starting CWD scan...")
           on_confirm()
         else
-          vim.notify("CWD scan cancelled", vim.log.levels.INFO)
+          notify.info("CWD scan cancelled")
           if on_cancel then
             on_cancel()
           end

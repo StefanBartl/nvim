@@ -1,11 +1,12 @@
 ---@module 'config.telescope.actions.create_file'
 ---@description Create file/folder in current entry's directory using hover_select
 
+local notify = require("lib.notify").create("[config.telescope.actions.create_file]")
+
 local M = {}
 
 local action_state = require("telescope.actions.state")
 local fn = vim.fn
-local notify = vim.notify
 
 ---Check if path ends with directory separator
 ---@param path string
@@ -26,15 +27,15 @@ local function create_entry(parent_dir, name)
     local dir_path = full_path:gsub("[/\\]$", "")
     local ok, err = pcall(fn.mkdir, dir_path, "p")
     if not ok then
-      notify(("Failed to create directory: %s"):format(err), vim.log.levels.ERROR)
+      notify.error(("Failed to create directory: %s"):format(err))
       return false
     end
-    notify(("Directory created: %s"):format(fn.fnamemodify(dir_path, ":t")), vim.log.levels.INFO)
+    notify.info(("Directory created: %s"):format(fn.fnamemodify(dir_path, ":t")))
     return true
   else
     -- File creation
     if fn.filereadable(full_path) == 1 then
-      notify("File already exists", vim.log.levels.WARN)
+      notify.warn("File already exists")
       return false
     end
 
@@ -48,7 +49,7 @@ local function create_entry(parent_dir, name)
     local file = io.open(full_path, "w")
     if file then
       file:close()
-      notify(("File created: %s"):format(fn.fnamemodify(full_path, ":t")), vim.log.levels.INFO)
+      notify.info(("File created: %s"):format(fn.fnamemodify(full_path, ":t")))
 
       -- Open file in buffer
       vim.schedule(function()
@@ -57,7 +58,7 @@ local function create_entry(parent_dir, name)
 
       return true
     else
-      notify("Failed to create file", vim.log.levels.ERROR)
+      notify.error("Failed to create file")
       return false
     end
   end
@@ -69,7 +70,7 @@ function M.create_file(prompt_bufnr)
   local entry = action_state.get_selected_entry()
 
   if not entry then
-    notify("No entry selected", vim.log.levels.WARN)
+    notify.warn("No entry selected")
     return
   end
 
@@ -80,7 +81,7 @@ function M.create_file(prompt_bufnr)
   end
 
   if not path or path == "" then
-    notify("No valid path found", vim.log.levels.WARN)
+    notify.warn("No valid path found")
     return
   end
 
@@ -96,7 +97,7 @@ function M.create_file(prompt_bufnr)
   end
 
   if not parent_dir or parent_dir == "" then
-    notify("Could not determine parent directory", vim.log.levels.ERROR)
+    notify.error("Could not determine parent directory")
     return
   end
 

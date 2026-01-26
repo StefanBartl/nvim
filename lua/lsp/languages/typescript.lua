@@ -1,6 +1,6 @@
 ---@module 'lsp.languages.typescript'
 
-require("lua.myoptions.@types")
+require("lua.wkdoptions.@types")
 
 local M = {}
 

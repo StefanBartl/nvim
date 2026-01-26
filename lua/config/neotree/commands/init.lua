@@ -2,6 +2,8 @@
 -- Commands exposed to Neo-tree
 -- register via opts.commands = commands.attach()
 
+local notify = require("lib.notify").create("[config.neotree.commands]")
+
 local getTelescopeOpts = require("config.neotree.commands.get_telescope_opts")
 local diff_files_mod = require("config.neotree.commands.diff_files")
 local mark_mod = require("config.neotree.commands.mark")
@@ -9,7 +11,6 @@ local node_utils = require("config.neotree.utils.node")
 local add_mod = require("config.neotree.commands.add")
 
 local api, fn = vim.api, vim.fn
-local notify = vim.notify
 
 ---@return table<string, fun(state: Cfg.NeoTree.State)>
 return {
@@ -20,7 +21,7 @@ return {
   open_badd = function(state)
     local node = node_utils.get_current(state)
     if not node then
-      notify("no node under cursor", vim.log.levels.WARN)
+      notify.warn("no node under cursor")
       return
     end
 
@@ -31,7 +32,7 @@ return {
 
     local path, _ = node_utils.get_path(node)
     if path == "" then
-      notify("No path under cursor", vim.log.levels.WARN)
+      notify.warn("No path under cursor")
       return
     end
 
@@ -41,14 +42,14 @@ return {
       vim.bo[bufnr].buflisted = true
     end)
 
-    notify(("Buffered: %s"):format(fn.fnamemodify(path, ":t")), vim.log.levels.INFO)
+    notify.info(("Buffered: %s"):format(fn.fnamemodify(path, ":t")))
   end,
 
   --- Open file in a window but keep focus in Neo-tree
   open_keep_focus = function(state)
     local node = node_utils.get_current(state)
     if not node then
-      notify("no node under cursor", vim.log.levels.WARN)
+      notify.warn("no node under cursor")
       return
     end
 
@@ -76,7 +77,7 @@ return {
   run_command = function(state)
     local node = node_utils.get_current(state)
     if not node then
-      notify("no node under cursor", vim.log.levels.WARN)
+      notify.warn("no node under cursor")
       return
     end
 
@@ -92,7 +93,7 @@ return {
   telescope_find = function(state)
     local node = node_utils.get_current(state)
     if not node then
-      notify("no node under cursor", vim.log.levels.WARN)
+      notify.warn("no node under cursor")
       return
     end
 
@@ -106,7 +107,7 @@ return {
   telescope_grep = function(state)
     local node = node_utils.get_current(state)
     if not node then
-      notify("no node under cursor", vim.log.levels.WARN)
+      notify.warn("no node under cursor")
       return
     end
 

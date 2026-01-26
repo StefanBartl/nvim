@@ -2,6 +2,8 @@
 -- Lazy plugin spec file for your NVDash (or any plugin that should bring menu support).
 -- Adapt the plugin name and event as you use lazy.nvim
 
+local notify = require("lib.notify").create("[plugins.nvchad]")
+
 return {
   "nvzone/menu",
   event = "VeryLazy",
@@ -20,7 +22,7 @@ return {
         pcall(km.setup)
       end
     else
-      vim.notify("config.menu.init not available; custom menu not registered", vim.log.levels.WARN)
+      notify.warn("config.menu.init not available; custom menu not registered")
     end
   end,
 }

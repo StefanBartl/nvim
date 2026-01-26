@@ -13,6 +13,8 @@
 --- - We do not change buffer-local options of the real file buffer.
 --- - If your terminal does not send <M-1>.. <M-9>, consider mapping alternate keys.
 
+local notify = require("lib.notify").create("[config.harpoon.preview]")
+
 local M = {}
 
 local uv = vim.uv or vim.loop
@@ -124,7 +126,7 @@ end
 function M.open_preview_for(path, row, col)
   local lines = read_file_lines(path)
   if not lines then
-    vim.notify("[harpoon preview] cannot read file: " .. tostring(path), vim.log.levels.WARN)
+    notify.warn("[harpoon preview] cannot read file: " .. tostring(path))
     return
   end
 
@@ -175,7 +177,7 @@ function M.open_index(entry)
     end
     local it = list.items[entry]
     if not it then
-      vim.notify(("[harpoon-preview] no item at index %d"):format(entry), vim.log.levels.INFO)
+      notify.info(("[harpoon-preview] no item at index %d"):format(entry))
       return
     end
     return M.open_index(it)

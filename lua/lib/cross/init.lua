@@ -16,15 +16,22 @@ M.fs = {
   cwd = require("lib.cross.fs._cwd"),
 }
 
-M.separators {
-    has_win_sep = require("lib.cross.fs.separators.has_win_sep"),
-    normalize = require("lib.cross.fs.separators.normalize"),
+M.separators = {
+  has_win_sep = require("lib.cross.fs.separators.has_win_sep"),
+  normalize = require("lib.cross.fs.separators.normalize"),
 }
 
 -- UV/Loop compatibility
 M.uv = {
   spawn_command = require("lib.cross.uv.spawn_command"),
   spawn_shell_command = require("lib.cross.uv.spawn_shell_command"),
+}
+
+M.run = {
+  shell = require("lib.cross.run").shell,
+  run = require("lib.cross.run").run,
+  run_blocking = require("lib.cross.run").run_blocking,
+  run_argv = require("lib.cross.run_argv"),
 }
 
 return M

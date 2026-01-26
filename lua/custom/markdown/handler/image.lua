@@ -8,6 +8,8 @@
 ---@field resolve fun(target:string): string|nil
 ---@field is_image_line fun(line:string): boolean
 ---@field open fun(line?:string): boolean
+local notify = require("lib.notify").create("[custom.markdown.handler.image]")
+
 local M = {}
 
 ---@type table
@@ -212,7 +214,7 @@ local function open_with_system_viewer(path)
   local ok, jid = pcall(vim.fn.jobstart, cmd, { detach = true })
   if not ok or jid == 0 or jid == -1 then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] Image: Failed to spawn viewer for: " .. tostring(path), vim.log.levels.ERROR)
+      notify.error("[Custom.Markdown] Image: Failed to spawn viewer for: " .. tostring(path))
     end
     return false
   end
@@ -249,7 +251,7 @@ function M.open(line)
   local target = extract_image_target_from_line(line)
   if not target then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] Image: No image/link found under cursor", vim.log.levels.INFO)
+      notify.info("[Custom.Markdown] Image: No image/link found under cursor")
     end
     return false
   end
@@ -257,7 +259,7 @@ function M.open(line)
   local resolved = resolve_target_to_path(target)
   if not resolved or resolved == "" then
     if M.config.notify_on_error then
-      vim.notify("[Custom.Markdown] Image: Could not resolve path: " .. tostring(target), vim.log.levels.ERROR)
+      notify.error("[Custom.Markdown] Image: Could not resolve path: " .. tostring(target))
     end
     return false
   end
@@ -267,7 +269,7 @@ function M.open(line)
     local stat = uv.fs_stat(resolved)
     if not stat then
       if M.config.notify_on_error then
-        vim.notify("[Custom.Markdown] Image: File does not exist: " .. resolved, vim.log.levels.WARN)
+        notify.warn("[Custom.Markdown] Image: File does not exist: " .. resolved)
       end
       return false
     end

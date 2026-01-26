@@ -7,6 +7,8 @@
 ---   M.setup_range_command()              -- creates :SetTextWidthRange (range / visual)
 --- Note: Hyphenation is not implemented. The algorithm preserves exact runs of blank
 --- lines inside the affected region and simple list/bullet indentation heuristics.
+local notify = require("lib.notify").create("[custom.format.text_width]")
+
 local M = {}
 
 -- Wrap a sequence of words into lines not exceeding `width`. The first line gets
@@ -67,7 +69,7 @@ end
 -- is prepended to continuation lines to align text after bullets/indent.
 local function detect_prefixes(first_line)
   if not first_line then
-        vim.notify("[format.text_width] first_line is nil", vim.log.levels.WARN)
+        notify.warn("[format.text_width] first_line is nil")
         return
     end
   local indent = first_line:match("^(%s*)") or ""

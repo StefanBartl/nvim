@@ -24,6 +24,7 @@ M.pad_center = require("lib.strings.core").pad_center
 M.indent  = require("lib.strings.core").indent
 M.dedent = require("lib.strings.core").dedent
 M.is_empty_or_space = require("lib.strings.core").is_empty_or_space
+M.count_lines = require("lib.strings.core").count_lines
 
 -- patterns module
 M.escape_lua_magic = require("lib.strings.patterns").escape_lua_magic

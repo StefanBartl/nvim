@@ -1,6 +1,8 @@
 ---@module 'usrcmds.gather.lua.tables'
 ---@description Collects Lua table names with recursive nested table detection
 
+local notify = require("lib.notify").create("[usrcmds.gather.lua.tables]")
+
 require("usrcmds.gather.@types")
 
 local api = vim.api
@@ -227,15 +229,12 @@ function M.run()
   local result = M.scan_buffer(bufnr)
 
   if #result.errors > 0 then
-    vim.notify(
-      "Errors during table gathering:\n" .. table.concat(result.errors, "\n"),
-      vim.log.levels.ERROR
-    )
+    notify.error("Errors during table gathering:\n" .. table.concat(result.errors, "\n"))
     return
   end
 
   if #result.matches == 0 then
-    vim.notify("No tables found in buffer", vim.log.levels.WARN)
+    notify.warn("No tables found in buffer")
     return
   end
 

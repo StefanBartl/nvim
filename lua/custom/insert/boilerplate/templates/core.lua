@@ -1,6 +1,8 @@
 ---@module 'custom.insert.boilerplate.core'
 ---@brief Core implementation for boilerplate/template insertion
 
+local notify = require("lib.notify").create("[custom.insert.boilerplate.templates.core]")
+
 local utils = require("custom.insert.boilerplate.templates.utils")
 local lua_templates = require("custom.insert.boilerplate.templates.lua")
 local nvim_templates = require("custom.insert.boilerplate.templates.nvim")
@@ -257,10 +259,7 @@ function M.insert_template(template, name)
   lines = generate_template(template, args)
 
   if not lines then
-    vim.notify(
-      "[custom.insert.boilerplate] Failed to generate template: " .. template,
-      vim.log.levels.ERROR
-    )
+    notify.error("[custom.insert.boilerplate] Failed to generate template: " .. template)
     return false
   end
 

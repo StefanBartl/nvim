@@ -1,6 +1,8 @@
 ---@module 'mynotes.register'
 --- Declarative registration of commands and keymaps for note collections.
 
+local notify = require("lib.notify").create("[custom.mynotes.register]")
+
 local core = require("custom.mynotes.core")
 
 local M = {}
@@ -38,7 +40,7 @@ function M.register(name, spec, commands, keys)
 
   vim.api.nvim_create_user_command(commands.grep, function()
     if not core.has_rg() then
-      vim.notify("[MyNotes] ripgrep not available", vim.log.levels.ERROR)
+      notify.error("[MyNotes] ripgrep not available")
       return
     end
 

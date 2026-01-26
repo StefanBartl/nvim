@@ -1,6 +1,8 @@
 ---@module 'config.neotree.open_filemanager.wsl'
 --- WSL-specific "open in file manager" for Neo-tree
 
+local notify = require("lib.notify").create("[config.neotree.open.filemanager.wsl]")
+
 local node_utils = require("config.neotree.utils.node")
 
 local M ---@type Cfg.NeoTree.Wsl.FileManager
@@ -103,7 +105,7 @@ end
 function M.open(state)
   if not is_wsl() then
     if not M._cfg.silent then
-      vim.notify("Open in File Manager (WSL): not a WSL session", vim.log.levels.WARN)
+      notify.warn("Open in File Manager (WSL): not a WSL session")
     end
     return false
   end
@@ -112,7 +114,7 @@ function M.open(state)
   local node = node_utils.get_current(state)
   if not node then
     if not M._cfg.silent then
-      vim.notify("Open in File Manager (WSL): no node under cursor", vim.log.levels.WARN)
+      notify.warn("Open in File Manager (WSL): no node under cursor")
     end
     return false
   end
@@ -121,7 +123,7 @@ function M.open(state)
   local raw, is_dir = node_utils.get_path(node)
   if raw == "" then
     if not M._cfg.silent then
-      vim.notify("Open in File Manager (WSL): no path under cursor", vim.log.levels.WARN)
+      notify.warn("Open in File Manager (WSL): no path under cursor")
     end
     return false
   end
@@ -129,7 +131,7 @@ function M.open(state)
   -- Convert path to Windows
   local abs_win = to_windows_path(raw)
   if not abs_win or abs_win == "" then
-    vim.notify("Open in File Manager (WSL): path conversion failed", vim.log.levels.ERROR)
+    notify.error("Open in File Manager (WSL): path conversion failed")
     return false
   end
 
@@ -147,7 +149,7 @@ function M.open(state)
     local target = is_dir and (dir_win or abs_win) or abs_win
     local ok = spawn_detached({ "wslview", target })
     if not ok and not M._cfg.silent then
-      vim.notify("Open in File Manager (WSL): failed to spawn wslview", vim.log.levels.ERROR)
+      notify.error("Open in File Manager (WSL): failed to spawn wslview")
     end
     return ok
   end
@@ -168,7 +170,7 @@ function M.open(state)
 
   local fb_ok = spawn_detached(fallback)
   if not fb_ok and not M._cfg.silent then
-    vim.notify("Open in File Manager (WSL): failed to spawn fallback (cmd start)", vim.log.levels.ERROR)
+    notify.error("Open in File Manager (WSL): failed to spawn fallback (cmd start)")
   end
   return fb_ok
 end

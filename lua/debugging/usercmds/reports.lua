@@ -1,5 +1,7 @@
 ---@module 'debugging.usercmds.reports'
 
+local notify = require("lib.notify").create("[debugging.usercmds.reports]")
+
 local buflib = require("lib.buf_win_tab.buffer_utils")
 local winlib = require("lib.buf_win_tab.windows_utils")
 local tablib = require("lib.buf_win_tab.tabs_utils")
@@ -15,7 +17,7 @@ function M.enable()
   vim.api.nvim_create_user_command("TabReport", function()
     local r = tablib.collect_report()
     for _, l in ipairs(r.textual) do
-      vim.notify(l, vim.log.levels.INFO)
+      notify.info(l)
     end
   end, { desc = "[debugging.usercmds.reports] Prints a Tab-Report to :messages" })
 
@@ -24,14 +26,14 @@ function M.enable()
     if _opts.args ~= "" then
       winid = tonumber(_opts.args)
       if not winid or not vim.api.nvim_win_is_valid(winid) then
-        vim.notify("Invalid window ID: " .. _opts.args, vim.log.levels.ERROR)
+        notify.error("Invalid window ID: " .. _opts.args)
         return
       end
     end
 
     local r = winlib.collect_win_report(winid)
     for _, l in ipairs(r.textual) do
-      vim.notify(l, vim.log.levels.INFO)
+      notify.info(l)
     end
   end, {
     nargs = "?",

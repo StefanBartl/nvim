@@ -12,7 +12,7 @@ local api = vim.api
 
 ---Scan buffer and return all matches
 ---@param bufnr integer
----@return MigrateNotify.Match[]
+---@return UsrCmds.Migrate.Notify.Match[]
 function M.scan_buffer(bufnr)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}
@@ -24,6 +24,7 @@ function M.scan_buffer(bufnr)
 
   local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local matches = {}
+  local matched_lines = {}  -- Track which lines were already matched
 
   -- Detect aliases
   local notify_alias, levels_alias = aliases.detect(bufnr)
@@ -38,7 +39,13 @@ function M.scan_buffer(bufnr)
       goto continue
     end
 
-    -- Try vim.notify first (direct calls)
+    -- Skip if this line was already matched
+    if matched_lines[i] then
+      i = i + 1
+      goto continue
+    end
+
+    -- Priority 1: vim.notify (direct calls)
     if patterns.is_vim_notify(line) then
       local end_idx = extractor.find_call_end(lines, i)
 
@@ -56,12 +63,14 @@ function M.scan_buffer(bufnr)
               replacement = migrated,
               log_level = level,
             })
+            matched_lines[i] = true
           end
         else
           -- Multiline
           local call_lines = {}
           for j = i, end_idx do
             table.insert(call_lines, lines[j])
+            matched_lines[j] = true  -- Mark all lines as matched
           end
 
           local migrated, level = migrator.migrate_multiline(call_lines)
@@ -82,9 +91,9 @@ function M.scan_buffer(bufnr)
       end
     end
 
-    -- Try aliased notify (when aliases are detected)
-    -- IMPORTANT: Use 'if' not 'elseif' to allow both patterns to be checked
-    if notify_alias and patterns.is_aliased_notify(line, notify_alias) then
+    -- Priority 2: Aliased notify (when aliases detected)
+    -- SKIP if already matched
+    if not matched_lines[i] and notify_alias and patterns.is_aliased_notify(line, notify_alias) then
       local end_idx = extractor.find_call_end(lines, i)
 
       if end_idx and end_idx == i then
@@ -104,7 +113,26 @@ function M.scan_buffer(bufnr)
             replacement = migrated,
             log_level = level,
           })
+          matched_lines[i] = true
         end
+      end
+    end
+
+    -- Priority 3: Existing notify() calls (NEW)
+    -- SKIP if already matched
+    if not matched_lines[i] and patterns.is_existing_notify(line) then
+      local migrated, level = migrator.migrate_existing_notify_line(line)
+      if migrated then
+        table.insert(matches, {
+          line = i,
+          end_line = i,
+          col = 0,
+          end_col = #line,
+          original = line,
+          replacement = migrated,
+          log_level = level,
+        })
+        matched_lines[i] = true
       end
     end
 

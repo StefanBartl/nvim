@@ -1,6 +1,8 @@
 ---@module 'custom.recommender.rendering'
 ---Float rendering and state
 
+local notify = require("lib.notify").create("[custom.recommender.rendering]")
+
 local M = {}
 
 local api = vim.api
@@ -41,7 +43,7 @@ function M.open(suggestions, title, restore_index)
 
   M.float_buf = api.nvim_create_buf(false, true)
   if not M.float_buf or M.float_buf == 0 then
-    vim.notify("Failed to create buffer", vim.log.levels.ERROR)
+    notify.error("Failed to create buffer")
     return
   end
 
@@ -85,7 +87,7 @@ function M.open(suggestions, title, restore_index)
   })
 
   if not M.float_win or M.float_win == 0 then
-    vim.notify("Failed to create window", vim.log.levels.ERROR)
+    notify.error("Failed to create window")
     M.close()
     return
   end

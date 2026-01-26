@@ -41,11 +41,10 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- Load core modules
 require("system.env").compute_env()
 require("options")
-require("myoptions").setup({ highlights = false, options = true })
+require("wkdoptions").setup({ highlights = false, options = true })
 require("lsp").setup({ ensure_installing = false })
 require("autocmds")
 require("custom")
-require("custom.mynotes")
 require("sessions").enable({ autocommands = true, usercmds = true, keymaps = true })
 require("usrcmds")
 
@@ -55,7 +54,6 @@ vim.schedule(function()
 end)
 
 -- FIX THIS WILL NOT STAY
-require("ui.command").setup()
 require('wkddap').setup({
   languages = { 'lua', 'go', 'python', 'javascript' },
   ui = { enable = true, },

@@ -33,17 +33,22 @@
 --   outdir = "/var/tmp/my-nvim-state/project-tree",
 -- })
 
+--FIX: Optimize
+
+local notify = require("lib.notify").create("[usrcmds.project_tree]")
+
+local lib = require("lib")
+
 local M = {}
 
 local fn = vim.fn
-local oslib = require("lib").os
 
 -- Defaults --------------------------------------------------------------------
 
 local DEFAULTS ---@type ProjectTreeConfig
 DEFAULTS = {
   exclude_patterns = { "*/.git/*" },
-  outdir = oslib.default_state_dir("project-tree"),
+  outdir = vim.fn.stdpath("state") .. "project-tree",
   outfile_fmt = "%s-tree.txt",
   notify_prefix = "[ProjectTree] ",
   use_system_clipboard = true,
@@ -92,8 +97,7 @@ end
 ---@param exclude string[]
 ---@return string cmd
 local function build_tree_cmd(cwd, exclude)
-  local is_windows = (oslib.name() == "windows")
-  if not is_windows then
+  if not lib.is_windows() then
     -- POSIX branch (unchanged)
     local parts = { "find", fn.shellescape(cwd), "-type f" }
     for i = 1, #exclude do
@@ -144,7 +148,7 @@ end
 ---@param cmd string
 ---@param cb fun(success:boolean, stdout:string, stderr:string): nil
 local function run_shell(cmd, cb)
-  oslib.run(cmd, function(ok, res)
+  lib.run(cmd, function(ok, res)
     cb(ok, res.stdout or "", res.stderr or "")
   end)
 end
@@ -154,7 +158,7 @@ end
 ---@return FilePath
 local function output_path_for(proj)
   local filename = (M.opts.outfile_fmt:gsub("%%s", proj))
-  return oslib.path_join(M.opts.outdir, filename)
+  return lib.joinpath({ M.opts.outdir, filename })
 end
 
 -- Prefer lib.os clipboard; keep xclip fallback for Linux
@@ -179,14 +183,14 @@ function M.copy_tree_to_clipboard(callback)
   if ok_read and type(lines) == "table" then
     local content = table.concat(lines, "\n")
     -- First try platform-native clipboard via lib.os
-    if oslib.copy_to_clipboard(content) then
+    if lib.copy_to_clipboard(content) then
       callback(true, (M.opts.notify_prefix .. "tree copied to clipboard"))
       return
     end
   end
 
   -- Linux fallback: xclip (keine Aktion auf Windows/WSL/macOS)
-  if oslib.name() == "linux" then
+  if lib.is_windows() then
     local cmd = "xclip -selection clipboard < " .. fn.shellescape(outpath)
     run_shell(cmd, function(success, _, err)
       if success then
@@ -223,7 +227,7 @@ function M.setup(cfg)
   if not ok then
     -- Low-level: return silently; the user commands will surface this as needed
     vim.schedule(function()
-      vim.notify(M.opts.notify_prefix .. "cannot ensure outdir: " .. tostring(err), vim.log.levels.WARN)
+      notify.warn(M.opts.notify_prefix .. "cannot ensure outdir: " .. tostring(err))
     end)
   end
 end
@@ -289,7 +293,10 @@ end
 --- Setup 'project_tree'-Usercommands
 ---@return nil
 function M.enable_usercmds()
-  vim.api.nvim_create_user_command("ProjectTreeGet", function()
+  --AUDIT:
+  -- ...erweiteren mit filetypes, usw...
+  -- .. path übergeben
+  vim.api.nvim_create_user_command("PojectTreeGet", function()
     M.write_tree(function(ok, msg)
       vim.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR)
     end)

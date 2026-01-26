@@ -1,6 +1,8 @@
 ---@module 'config.neotree.safety'
 ---@brief Aggregated safety features for file operations
 
+local notify = require("lib.notify").create("[config.neotree.safety]")
+
 local M = {}
 
 M.backup = require("config.neotree.safety.backup")
@@ -18,10 +20,7 @@ function M.setup(config)
   if config.auto_cleanup_backups ~= false then
     local cleaned = M.backup.clean_old_backups(config.backup_max_age_days or 7)
     if cleaned > 0 then
-      vim.notify(
-        string.format("Cleaned %d old backups", cleaned),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("Cleaned %d old backups", cleaned))
     end
   end
 

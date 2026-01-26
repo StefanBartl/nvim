@@ -5,6 +5,8 @@
 --- commands, executing them asynchronously, parsing results, and
 --- coordinating with the cache module.
 
+local notify = require("lib.notify").create("[custom.function_index.core.indexer]")
+
 local M = {}
 
 local patterns_mod = require("custom.function_index.core.patterns")
@@ -133,10 +135,7 @@ function M.build_index(config)
 
       local cmd = build_rg_command_for_language(config, pat_entry.language, pat_entry.pattern)
 
-      vim.notify(
-        "Searching " .. pat_entry.language .. " files...",
-        vim.log.levels.DEBUG
-      )
+      notify.debug("Searching " .. pat_entry.language .. " files...")
 
       local lines, exit_code = execute_rg_sync(cmd)
 
@@ -155,10 +154,7 @@ function M.build_index(config)
     end
   end
 
-  vim.notify(
-    string.format("ripgrep found %d lines total", #all_lines),
-    vim.log.levels.DEBUG
-  )
+  notify.debug(string.format("ripgrep found %d lines total", #all_lines))
 
   -- Parse output
   local entries, parse_errors = parser_mod.parse_ripgrep_output(all_lines, config.languages)
@@ -205,10 +201,7 @@ function M.get_index(config, force_rebuild)
 
     -- Cache invalid/missing, build new index
     if cache_msg then
-      vim.notify(
-        "Cache invalid: " .. cache_msg .. ". Rebuilding index...",
-        vim.log.levels.INFO
-      )
+      notify.info("Cache invalid: " .. cache_msg .. ". Rebuilding index...")
     end
   end
 
@@ -217,22 +210,14 @@ function M.get_index(config, force_rebuild)
 
   -- Report errors if any
   if #errors > 0 then
-    vim.notify(
-      string.format(
-        "Index built with %d errors (found %d functions in %d files)",
-        #errors,
-        state.total_functions,
-        state.total_files
-      ),
-      vim.log.levels.WARN
-    )
+    notify.warn(string.format( "Index built with %d errors (found %d functions in %d files)", #errors, state.total_functions, state.total_files ))
   end
 
   -- Save to cache
   if #entries > 0 then
     local ok, err = cache_mod.save(config, entries)
     if not ok then
-      vim.notify("Failed to save cache: " .. tostring(err), vim.log.levels.WARN)
+      notify.warn("Failed to save cache: " .. tostring(err))
     end
   end
 
@@ -254,7 +239,7 @@ end
 function M.rebuild_index(config)
   local ok, err = cache_mod.clear(config)
   if not ok then
-    vim.notify("Failed to clear cache: " .. tostring(err), vim.log.levels.WARN)
+    notify.warn("Failed to clear cache: " .. tostring(err))
   end
 
   return M.get_index(config, true)

@@ -1,10 +1,11 @@
 ---@module 'custom.line_marker'
 ---Allows marking lines and yanking all marked lines via mappings.
 
+local notify = require("lib.notify").create("[custom.line_marker]")
+
 local M = {}
 
 local api, fn = vim.api, vim.fn
-local notify, levels = vim.notify, vim.log.levels
 local km_set = vim.keymap.set
 local create_usercommand = api.nvim_create_user_command
 
@@ -75,9 +76,9 @@ function M.yank_marked(bufnr)
 
   if #text > 0 then
     fn.setreg("+", table.concat(text, "\n")) -- system clipboard
-    notify("Copied " .. #text .. " marked lines to clipboard")
+    notify.info("Copied " .. #text .. " marked lines to clipboard")
   else
-    notify("No marked lines to copy", levels.WARN)
+    notify.warn("No marked lines to copy")
   end
 end
 

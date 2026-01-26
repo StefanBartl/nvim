@@ -4,6 +4,8 @@
 
 --- AUDIT: Modularisieren
 
+local notify = require("lib.notify").create("[custom.markdown.setup.keymaps]")
+
 local anchor = require("custom.markdown.anchor.jump")
 local image = require("custom.markdown.handler.image")
 local handler = require("custom.markdown.handler")
@@ -42,15 +44,7 @@ end
 local function map(modes, lhs, rhs, desc, opts)
   -- If rhs is nil, skip and log which mapping would have been set.
   if rhs == nil then
-    vim.notify(
-      string.format(
-        "[custom.markdown] SKIP mapping %s -> nil (modes=%s) ; desc=%s",
-        tostring(lhs),
-        vim.inspect(modes),
-        tostring(desc)
-      ),
-      vim.log.levels.WARN
-    )
+    notify.warn(string.format( "[custom.markdown] SKIP mapping %s -> nil (modes=%s) ; desc=%s", tostring(lhs), vim.inspect(modes), tostring(desc) ))
     return
   end
 
@@ -63,15 +57,7 @@ local function map(modes, lhs, rhs, desc, opts)
 
   local ok, err = pcall(vim.keymap.set, modes, lhs, rhs, o)
   if not ok then
-    vim.notify(
-      string.format(
-        "[custom.markdown] FAILED to set mapping %s (modes=%s): %s",
-        tostring(lhs),
-        vim.inspect(modes),
-        tostring(err)
-      ),
-      vim.log.levels.ERROR
-    )
+    notify.error(string.format( "[custom.markdown] FAILED to set mapping %s (modes=%s): %s", tostring(lhs), vim.inspect(modes), tostring(err) ))
   end
 end
 

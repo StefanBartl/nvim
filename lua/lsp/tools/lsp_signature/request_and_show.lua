@@ -7,6 +7,8 @@
 ---
 --- Behavior is best-effort and asynchronous. The module uses a small deferred check to avoid
 --- launching fallback providers when hover already produced a floating preview.
+local notify = require("lib.notify").create("[lsp.tools.lsp_signature.request_and_show]")
+
 local api = vim.api
 local schedule = vim.schedule
 local open_floating_preview = require("lsp.tools.lsp_signature.open_floating_preview")
@@ -17,7 +19,6 @@ local param_hl = require("lsp.tools.lsp_signature.highlights.parameters")
 local hover_helper = require("lsp.tools.lsp_signature.show_hover")
 local fallback_providers = require("lsp.tools.lsp_signature.fallback_providers")
 
-local notify = vim.notify
 
 -- ensure highlight groups exist and get namespace id
 local ns_id = param_hl.setup() -- returns namespace id for hl.range usage
@@ -31,13 +32,13 @@ return function(bufnr, callback)
   -- If popup already tracked and valid -> close it and notify user
   if state.current.win and api.nvim_win_is_valid(state.current.win) then
     state.close()
-    notify("[signature_help] signature popup closed", vim.log.levels.INFO)
+    notify.info("[signature_help] signature popup closed")
     return
   end
 
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
   if not clients or vim.tbl_isempty(clients) then
-    notify("[signature_help] no LSP client attached to buffer", vim.log.levels.WARN)
+    notify.warn("[signature_help] no LSP client attached to buffer")
     return
   end
 
@@ -69,7 +70,7 @@ return function(bufnr, callback)
         if not result then
           -- no signature result; notify and fall back to hover across clients
           schedule(function()
-            notify("[signature_help] signatureHelp: no result, trying hover across clients", vim.log.levels.INFO)
+            notify.info("[signature_help] signatureHelp: no result, trying hover across clients")
             show_hover_across_clients()
           end)
           return
@@ -78,10 +79,7 @@ return function(bufnr, callback)
         local lines, active_hl = format_signature_help(result)
         if not lines or #lines == 0 then
           schedule(function()
-            notify(
-              "[signature_help] signatureHelp produced no displayable lines, trying hover across clients",
-              vim.log.levels.INFO
-            )
+            notify.info("signatureHelp produced no displayable lines, trying hover across clients")
             show_hover_across_clients()
           end)
           return
@@ -101,7 +99,7 @@ return function(bufnr, callback)
 
           local buf, win = open_floating_preview(lines, { footer = footer, focus = (mode == "n") })
           if not buf or not win then
-            notify("[lsp_signature] buf or win is nil", 4)
+            notify.error("[lsp_signature] buf or win is nil")
             return
           end
 
@@ -184,6 +182,6 @@ return function(bufnr, callback)
   end
 
   -- Fallback: none of the clients provide signatureHelp -> notify and try hover across clients
-  notify("[signature_help] no client provides signatureHelp, trying hover across clients", vim.log.levels.INFO)
+  notify.info("[signature_help] no client provides signatureHelp, trying hover across clients")
   show_hover_across_clients()
 end

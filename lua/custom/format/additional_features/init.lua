@@ -8,6 +8,8 @@
 --- • indent: Fix indentation
 --- • case: Change case (upper/lower/title)
 
+local notify = require("lib.notify").create("[custom.format.additional_features]")
+
 local M = {}
 
 local api = vim.api
@@ -175,10 +177,7 @@ function M.register_subcommands(register_fn)
     ---@diagnostic disable-next-line: unused-local
     handler = function(args)
       local count = trim_whitespace()
-      vim.notify(
-        string.format("[custom.format.trim] Trimmed %d lines", count),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("[custom.format.trim] Trimmed %d lines", count))
     end,
     complete = function() return {} end,
     nargs = "0",
@@ -197,7 +196,7 @@ function M.register_subcommands(register_fn)
       local sorted = sort_lines(lines, reverse, ignore_case, numeric)
 
       api.nvim_buf_set_lines(buf, 0, -1, false, sorted)
-      vim.notify("[custom.format.sort] Buffer sorted", vim.log.levels.INFO)
+      notify.info("[custom.format.sort] Buffer sorted")
     end,
     ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead)
@@ -224,10 +223,7 @@ function M.register_subcommands(register_fn)
       local unique, removed = unique_lines(lines, ignore_case)
 
       api.nvim_buf_set_lines(buf, 0, -1, false, unique)
-      vim.notify(
-        string.format("[custom.format.unique] Removed %d duplicate lines", removed),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("[custom.format.unique] Removed %d duplicate lines", removed))
     end,
     complete = function(arg_lead)
       if vim.startswith("--ignore-case", arg_lead) then
@@ -246,20 +242,14 @@ function M.register_subcommands(register_fn)
   register_fn("case", {
     handler = function(args)
       if #args == 0 then
-        vim.notify(
-          "[custom.format.case] Usage: case <upper|lower|title|sentence>",
-          vim.log.levels.ERROR
-        )
+        notify.error("[custom.format.case] Usage: case <upper|lower|title|sentence>")
         return
       end
 
       local mode = args[1]
       local valid_modes = { "upper", "lower", "title", "sentence" }
       if not vim.tbl_contains(valid_modes, mode) then
-        vim.notify(
-          "[custom.format.case] Invalid mode: " .. mode,
-          vim.log.levels.ERROR
-        )
+        notify.error("[custom.format.case] Invalid mode: " .. mode)
         return
       end
 
@@ -272,10 +262,7 @@ function M.register_subcommands(register_fn)
       end
 
       api.nvim_buf_set_lines(buf, 0, -1, false, new_lines)
-      vim.notify(
-        string.format("[custom.format.case] Changed to %s case", mode),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format("[custom.format.case] Changed to %s case", mode))
     end,
     ---@diagnostic disable-next-line: unused-local
     complete = function(arg_lead)
@@ -311,14 +298,7 @@ function M.register_subcommands(register_fn)
       local fixed = fix_indentation(lines, use_spaces, width)
 
       api.nvim_buf_set_lines(buf, 0, -1, false, fixed)
-      vim.notify(
-        string.format(
-          "[custom.format.indent] Fixed indentation (%s, width=%d)",
-          use_spaces and "spaces" or "tabs",
-          width
-        ),
-        vim.log.levels.INFO
-      )
+      notify.info(string.format( "[custom.format.indent] Fixed indentation (%s, width=%d)", use_spaces and "spaces" or "tabs", width ))
     end,
     complete = function(arg_lead)
       local opts = { "--spaces", "--tabs", "2", "4", "8" }

@@ -16,6 +16,8 @@
 ---   traverse.up(state)        -- Navigate to parent directory
 ---   traverse.down(state)      -- Navigate into selected directory node
 
+local notify = require("lib.notify").create("[config.neotree.actions.traverse]")
+
 local M = {}
 
 local node_utils = require("config.neotree.utils.node")
@@ -132,19 +134,19 @@ function M.up(state)
   if not current_root or current_root == "" then
     local tree = state.tree
     if not tree then
-      vim.notify("No tree available", vim.log.levels.WARN)
+      notify.warn("No tree available")
       return false
     end
 
     local node = node_utils.get_current(state)
     if not node then
-      vim.notify("No node under cursor", vim.log.levels.WARN)
+      notify.warn("No node under cursor")
       return false
     end
 
     local path, _ = node_utils.get_path(node)
     if path == "" then
-      vim.notify("No path under cursor", vim.log.levels.WARN)
+      notify.warn("No path under cursor")
       return false
     end
 
@@ -154,7 +156,7 @@ function M.up(state)
   -- 2) Calculate parent directory
   local parent = fn.fnamemodify(current_root, ":h")
   if parent == current_root or parent == "" then
-    vim.notify("Already at top-level directory", vim.log.levels.WARN)
+    notify.warn("Already at top-level directory")
     return false
   end
 
@@ -162,7 +164,7 @@ function M.up(state)
   local cd_cmd = get_cd_command(state)
   local ok, err = change_directory(parent, cd_cmd)
   if not ok then
-    vim.notify(("CWD change failed: %s"):format(err), vim.log.levels.ERROR)
+    notify.error(("CWD change failed: %s"):format(err))
     return false
   end
 
@@ -172,7 +174,7 @@ function M.up(state)
   -- 5) Navigate tree to parent
   local nav_ok = navigate_tree(state, parent)
   if not nav_ok then
-    vim.notify("Failed to navigate tree", vim.log.levels.ERROR)
+    notify.error("Failed to navigate tree")
     return false
   end
 
@@ -182,7 +184,7 @@ function M.up(state)
   -- 7) Refresh tree display
   refresh_tree(state)
 
-  vim.notify(("cwd → %s"):format(parent), vim.log.levels.INFO)
+  notify.info(("cwd → %s"):format(parent))
   return true
 end
 
@@ -196,14 +198,14 @@ function M.down(state)
   -- 1) Get current node
   local node = node_utils.get_current(state)
   if not node then
-    vim.notify("No node under cursor", vim.log.levels.INFO)
+    notify.info("No node under cursor")
     return false
   end
 
   -- 2) Validate it's a directory
   local path, is_dir = node_utils.get_path(node)
   if path == "" then
-    vim.notify("No path under cursor", vim.log.levels.WARN)
+    notify.warn("No path under cursor")
     return false
   end
 
@@ -213,7 +215,7 @@ function M.down(state)
   local cd_cmd = get_cd_command(state)
   local ok, err = change_directory(target_dir, cd_cmd)
   if not ok then
-    vim.notify(("CWD change failed: %s"):format(err), vim.log.levels.ERROR)
+    notify.error(("CWD change failed: %s"):format(err))
     return false
   end
 
@@ -228,7 +230,7 @@ function M.down(state)
   else
     local nav_ok = navigate_tree(state, target_dir)
     if not nav_ok then
-      vim.notify("Failed to navigate tree", vim.log.levels.ERROR)
+      notify.error("Failed to navigate tree")
       return false
     end
   end
@@ -236,7 +238,7 @@ function M.down(state)
   -- 5) Refresh tree display
   refresh_tree(state)
 
-  vim.notify(("cwd → %s"):format(target_dir), vim.log.levels.INFO)
+  notify.info(("cwd → %s"):format(target_dir))
   return true
 end
 

@@ -3,10 +3,10 @@
 --- Prefers SQLite-backed history (smart_history) if available,
 --- otherwise falls back to a file-based history.
 
+local notify = require("lib.notify").create("[config.telescope.history]")
+
 local M = {}
 
-local levels = vim.log.levels
-local notify = vim.notify
 
 ---@type HistoryState
 local state = {
@@ -23,7 +23,7 @@ local function ensure_dir(dir_path)
   if vim.fn.isdirectory(dir_path) == 0 then
     local ok, err = pcall(vim.fn.mkdir, dir_path, "p")
     if not ok then
-      notify(string.format("Failed to create directory: %s (%s)", dir_path, err), levels.WARN)
+      notify.warn(string.format("Failed to create directory: %s (%s)", dir_path, err))
       return false
     end
   end
@@ -70,10 +70,7 @@ function M.setup()
     setup_file()
   end
 
-  -- notify(
-  --   string.format("Telescope history: Using %s backend at %s", state.backend, state.path),
-  --   levels.INFO
-  -- )
+  -- notify.info(string.format("Telescope history: Using %s backend at %s", state.backend, state.path))
 
   return {
     path = state.path,

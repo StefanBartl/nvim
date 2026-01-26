@@ -3,12 +3,14 @@
 --- - VimEnter: ensure dashboard opens once at startup (guaranteed).
 --- - BufWinEnter: defensive opener for truly empty buffers later in the session.
 
+local notify = require("lib.notify").create("[config.snacks.custom_dashboard.autocmds]")
+
 local api = vim.api
 local desc_tag = "[snacks.custom_dashboard]: "
 
 local ok_utils, utils = pcall(require, "config.snacks.custom_dashboard.utils")
 if not ok_utils then
-  vim.notify(desc_tag .. "utils not available; skipping autocmds", vim.log.levels.WARN)
+  notify.warn(desc_tag .. "utils not available; skipping autocmds")
   return {}
 end
 

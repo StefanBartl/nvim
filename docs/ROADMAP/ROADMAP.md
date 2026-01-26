@@ -21,8 +21,12 @@
 ## Important
 
 - `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
+- :lua vim.cmd('profile start /tmp/profile.log') vim.cmd('profile func *') require('lib')
+- `wkdoptions` readme aktualiseren, module auch readme.md schreiben (deutsch). alußerdem eine doc/
+- Alle `vim.notify` durch `lib.notify` erstetzen; `.create()` und `lazy` implementieren
+- auto fokus neotree wenn man es öffnet
 
--
+---
 
 ## MIXED
 
@@ -31,11 +35,15 @@
     - ein usercommand, das alle emojis entfernt im buffer: `:Buffer remove emojis` `:Buffer remove empty_lines` `:Buffer translate de` `:Buffer translate_replace en ` `:Buffer insert ...`
 2.`lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 3. lsp.tools behandeln
-4. usrcmds.ui: Zukünftige Features
+4. wkdnvchad.ui.usrcmd: Zukünftige Features
         - [ ] Theme-Previews in Floating Window
         - [ ] Theme-Export/Import
         - [ ] Custom Theme-Collections
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
+5. `:CwdHere` fixen
+6. "a" in neotree scheint nicht mehr ganz typsiereungen ezuer rstellen
+
+7. `:LuaFileStats` eine option machen, die keine file erzeugt sondern nur eine ausgabe im stdout/noify
 
 ---
 
@@ -66,13 +74,12 @@
 
 ## Long run
 
-- `custom.functions` verwenden, um funktionen, die sowohl mappings als auch usercommands begründen.
+- `editor_interface` verwenden, um funktionen, die sowohl mappings als auch usercommands begründen.
 - workspace lsp warnings debuggen
     1. alle `disable-next-line` durchsehen
     2. Todo Coments anschauen und durchgehen
 - probieren nvchad rauszunehmen und nochmal mit lazyvim
 - experimental options:
-   1. statusline und winbar breadcrumbs sollten sich ein modul teilen
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 
 ---

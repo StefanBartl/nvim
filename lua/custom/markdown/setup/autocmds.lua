@@ -1,6 +1,8 @@
 ---@module 'custom.markdown.setup.autocmds'
 ---@description Lightweight FileType hook (extensible). Installs buffer-local keymaps and usercommands for Markdown filetypes.
 ---AUDIT: Format ist übel
+local notify = require("lib.notify").create("[custom.markdown.setup.autocmds]")
+
 local M = {}
 
 ---@type table
@@ -47,15 +49,7 @@ function M.setup()
         require("custom.markdown.setup.keymaps").apply(buf)
       end)
       if not ok then
-        vim.notify(
-          string.format(
-            "[Custom.Markdown] failed to attach keymaps for buffer %d (filetype='%s'): %s",
-            buf,
-            ft,
-            tostring(err)
-          ),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format( "[Custom.Markdown] failed to attach keymaps for buffer %d (filetype='%s'): %s", buf, ft, tostring(err) ))
       end
     end,
     desc = "[Custom.Markdown] Install buffer-local Markdown keymaps (robust matcher)",
@@ -76,15 +70,7 @@ function M.setup()
         require("custom.markdown.setup.usercmds").apply(ev)
       end)
       if not ok then
-        vim.notify(
-          string.format(
-            "[Custom.Markdown] failed to attach usercommands for buffer %d (ft=%s): %s",
-            buf,
-            ft,
-            tostring(err)
-          ),
-          vim.log.levels.WARN
-        )
+        notify.warn(string.format( "[Custom.Markdown] failed to attach usercommands for buffer %d (ft=%s): %s", buf, ft, tostring(err) ))
       end
     end,
     desc = "[Custom.Markdown] Install buffer-local usercommands for Markdown (robust matcher)",

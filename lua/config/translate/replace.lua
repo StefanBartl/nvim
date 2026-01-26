@@ -5,6 +5,8 @@
 ---- execute the translate.nvim command for either a whole range or multiple
 ---  safe subranges when skipping code is requested.
 ---- Keep the interface small: replace_range(start, end, target_lang, opts)
+local notify = require("lib.notify").create("[config.translate.replace]")
+
 local M = {}
 
 local filter = require("config.translate.filter")
@@ -23,7 +25,7 @@ M.replace_range = function(start_line, end_line, target_lang, opts)
 
   -- Simple guard
   if not start_line or not end_line or start_line > end_line then
-    vim.notify("Invalid range for translation", vim.log.levels.WARN)
+    notify.warn("Invalid range for translation")
     return
   end
 
@@ -38,7 +40,7 @@ M.replace_range = function(start_line, end_line, target_lang, opts)
   local ranges = filter.get_translatable_line_ranges(bufnr, start_line, end_line)
 
   if not ranges or #ranges == 0 then
-    vim.notify("No translatable text found (skipped fenced code and inline code).", vim.log.levels.INFO)
+    notify.info("No translatable text found (skipped fenced code and inline code).")
     return
   end
 

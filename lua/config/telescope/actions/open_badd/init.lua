@@ -1,11 +1,12 @@
 ---@module 'config.telescope.actions.open_badd'
 ---@description Open file in background buffer without closing Telescope
 
+local notify = require("lib.notify").create("[config.telescope.actions.open_badd]")
+
 local M = {}
 
 local action_state = require("telescope.actions.state")
 local fn = vim.fn
-local notify = vim.notify
 
 ---Open selected entry as background buffer
 ---@param prompt_bufnr integer Telescope prompt buffer number
@@ -14,7 +15,7 @@ function M.open_badd(prompt_bufnr)
   local entry = action_state.get_selected_entry()
 
   if not entry then
-    notify("No entry selected", vim.log.levels.WARN)
+    notify.warn("No entry selected")
     return
   end
 
@@ -25,7 +26,7 @@ function M.open_badd(prompt_bufnr)
   end
 
   if not path or path == "" then
-    notify("No valid path found", vim.log.levels.WARN)
+    notify.warn("No valid path found")
     return
   end
 
@@ -34,7 +35,7 @@ function M.open_badd(prompt_bufnr)
 
   -- Check if file exists and is readable
   if fn.filereadable(path) ~= 1 then
-    notify("File not readable: " .. path, vim.log.levels.ERROR)
+    notify.error("File not readable: " .. path)
     return
   end
 
@@ -44,7 +45,7 @@ function M.open_badd(prompt_bufnr)
   -- Load buffer content
   local ok = pcall(fn.bufload, bufnr)
   if not ok then
-    notify("Failed to load buffer: " .. path, vim.log.levels.ERROR)
+    notify.error("Failed to load buffer: " .. path)
     return
   end
 
@@ -55,7 +56,7 @@ function M.open_badd(prompt_bufnr)
 
   -- Show confirmation
   local filename = fn.fnamemodify(path, ":t")
-  notify("Buffered: " .. filename, vim.log.levels.INFO)
+  notify.info("Buffered: " .. filename)
 end
 
 ---Get mappings for Telescope

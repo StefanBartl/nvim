@@ -1,6 +1,8 @@
 ---@module 'config.neotree.user_actions.find_or_grep_menu'
 --- <M-p> → choose {find_files|live_grep} in a tiny fzf-lua menu, then run on node's directory.
 
+local notify = require("lib.notify").create("[config.neotree.actions.find_or_grep_menu]")
+
 local M = {}
 
 function M.attach(opts)
@@ -46,7 +48,7 @@ function M.attach(opts)
   ---@param dir string
   local function run_fzf(action, dir)
     if not ok_fzf then
-      vim.notify("fzf-lua not available", vim.log.levels.ERROR)
+      notify.error("fzf-lua not available")
       return
     end
     if action == "find_files" then
@@ -62,7 +64,7 @@ function M.attach(opts)
         rg_opts = "--hidden --glob !.git",
       })
     else
-      vim.notify("Unknown action: " .. tostring(action), vim.log.levels.WARN)
+      notify.warn("Unknown action: " .. tostring(action))
     end
   end
 

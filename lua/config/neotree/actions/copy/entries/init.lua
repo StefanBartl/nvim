@@ -1,5 +1,7 @@
 ---@module 'config.neotree.actions.copy.entries'
 
+local notify = require("lib.notify").create("[config.neotree.actions.copy.entries]")
+
 local tree = require("config.neotree.utils.tree")
 
 ---@param state Cfg.NeoTree.State # Neotrees table object
@@ -9,7 +11,7 @@ return function(state, opts)
   local entries, _ = tree.collect_for_node(state, "files")
 
   if #entries == 0 then
-    vim.notify("No files found", vim.log.levels.WARN)
+    notify.warn("No files found")
     return false
   end
 

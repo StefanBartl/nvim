@@ -17,3 +17,12 @@ require("usrcmds.search_all_drives").enable()
 require("usrcmds.system_find").enable_usercmds()
 require("usrcmds.update_repos").enable()
 require("usrcmds.uv_doc").enable_usercmd()
+
+vim.api.nvim_create_user_command("CwdHere", function()
+  local bufname = vim.api.nvim_buf_get_name(0)
+  if bufname ~= "" then
+    local dir = vim.fn.fnamemodify(bufname, ":p:h")
+    vim.cmd("lcd " .. vim.fn.fnameescape(dir))
+  end
+end, {})
+

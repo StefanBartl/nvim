@@ -3,6 +3,8 @@
 
 ---FIX: LSP
 
+local notify = require("lib.notify").create("[lib.buf_win_tab.windows_utils]")
+
 local M = {}
 
 -- Local helpers and types -----------------------------------------------------
@@ -216,7 +218,7 @@ function M.show_aggregated_state(silent)
   else
     -- Use vim.schedule to avoid calling notify during an API-critical moment.
     vim.schedule(function()
-      vim.notify(out, vim.log.levels.INFO)
+      notify.info(out)
     end)
     return nil
   end
@@ -312,4 +314,5 @@ function M.collect_win_report(winid)
 end
 
 
+---@type Lib.BufWinTab.WindowsUtils
 return M
