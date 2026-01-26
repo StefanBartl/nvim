@@ -17,6 +17,8 @@ local C = lazy.require("wkdoptions.config")
 local ts_helpers = lazy.require("wkdoptions.hl_config.breadcrumbs.ctx.utils.ts_helpers")
 local base = lazy.require("wkdoptions.hl_config.breadcrumbs.ctx.base")
 
+local M = {}
+
 -- Provider modules (lazy-loaded on demand)
 local providers = {
   lsp_func = nil,
@@ -46,8 +48,6 @@ local function get_provider(name)
   providers[name] = false
   return nil
 end
-
-local M = {}
 
 -----------------------------------------------------------
 -- Backward Compatibility Exports (delegate to providers)
@@ -195,4 +195,5 @@ function M.invalidate_caches()
   -- Providers manage their own caches
 end
 
+---@cast M WKDOptions.Commands.Breadcrumbs_Ctx_Module
 return M

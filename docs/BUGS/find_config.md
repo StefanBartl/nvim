@@ -7,7 +7,6 @@ Das hat nicht funktionert:
 ---@param opts Custom.FindConfigOptions
 ---@return nil
 local function Find_in_config(opts)
-  ---@diagnostic disable-next-line: different-requires
   local ok, fzf = pcall(require, "fzf-lua")
   if not ok or not fzf or type(fzf.files) ~= "function" then
     notify.error("fzf-lua not found or does not expose 'files' function")

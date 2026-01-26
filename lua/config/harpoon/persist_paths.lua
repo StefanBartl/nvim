@@ -28,9 +28,7 @@ local function canon(p)
   if type(p) ~= "string" or p == "" then
     return ""
   end
-  ---@diagnostic disable-next-line fs_realpath exists in uv library
   if uv and uv.fs_realpath then
-    ---@diagnostic disable-next-line fs_realpath exists in uv library
     local rp = uv.fs_realpath(p)
     if type(rp) == "string" and rp ~= "" then
       return rp
@@ -64,7 +62,6 @@ local function expand_var(sym)
   if sym == "$REPOS_DIR" then
     return vim.env.REPOS_DIR or ""
   elseif sym == "$HOME" then
-    ---@diagnostic disable-next-line os_homedir exists in uv library
     return (uv.os_homedir and uv.os_homedir()) or vim.fn.expand("~")
   elseif sym == "$NVIM_HOME" then
     return vim.fn.stdpath("config")
@@ -165,9 +162,7 @@ function M.inject_now()
   local removed = (sani.dedup_in_place_safe(list) or 0) > 0
 
   if added or removed then
-    ---@diagnostic disable-next-line
     if type(harpoon.save) == "function" then
-      ---@diagnostic disable-next-line
       pcall(harpoon.save, harpoon)
     elseif type(list.save) == "function" then
       pcall(list.save, list)

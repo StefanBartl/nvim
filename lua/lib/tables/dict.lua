@@ -1,8 +1,6 @@
 ---@module 'lib.tables.dict'
 --- Helpers for dictionary-like tables (non-array).
 
----@diagnostic disable
-
 ---@class TablesDict
 local M = {}
 
@@ -88,7 +86,6 @@ function M.values(t)
   for _ in pairs(t) do
     n = n + 1
   end
-  ---@type V[]
   local out = { [n] = false }
   local i = 0
   for _, v in pairs(t) do

@@ -25,7 +25,6 @@ M.goto_prev_heading = head.goto_prev_heading
 M.goto_next_heading = head.goto_next_heading
 M.toggle_visual_bold = wrap.toggle_visual_bold
 
----@diagnostic disable-next-line
 require("custom.markdown.fenced_fix")
   .setup({
     -- Falls „noch oranger“ gewünscht ist, Reihenfolge hier anpassen oder direkt "Special" wählen.
@@ -33,7 +32,6 @@ require("custom.markdown.fenced_fix")
     inline_style = { italic = false, bold = false },
     delimiter_hl = "Comment",
   })
-  .apply()
 
 ---@type Custom.MD.PublicAPI
 return M

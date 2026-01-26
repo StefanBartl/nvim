@@ -34,25 +34,6 @@ local function insert_at_cursor(text)
   api.nvim_win_set_cursor(win, { row, col + #text })
 end
 
----Generate random hex string
----@param length integer
----@return string
----@diagnostic disable-next-line: unused-function, unused-local
-local function random_hex(length)
-  local chars = "0123456789abcdef"
-  local result = {}
-
-  -- Seed random generator
-  math.randomseed(os.time() * os.clock())
-
-  for _ = 1, length do
-    local idx = math.random(1, #chars)
-    table.insert(result, chars:sub(idx, idx))
-  end
-
-  return table.concat(result)
-end
-
 ---Generate UUID v4 (random)
 ---@return string uuid
 local function generate_uuid_v4()

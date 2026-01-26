@@ -16,9 +16,7 @@ local DEFAULTS = fc.DEFAULTS
 ---@param follow boolean
 ---@return FilePath
 local function canon(p, follow)
-  ---@diagnostic disable-next-line: undefined-field
   if follow and uv and uv.fs_realpath then
-    ---@diagnostic disable-next-line: undefined-field
     local rp = uv.fs_realpath(p)
     if type(rp) == "string" and rp ~= "" then
       return rp

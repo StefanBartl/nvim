@@ -1,9 +1,6 @@
 ---@module 'lib.buf_win_tab.buffer_utils'
 --- Utility library for inspecting and reacting to Neovim buffers.
 
----FIX: LSP
----@diagnostic disable
-
 local M = {}
 
 -- Default filetypes and buffer-name fragments to exclude when deciding whether

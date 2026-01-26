@@ -19,7 +19,6 @@
 ---@field context Cfg.Harpoon.Context|nil
 
 ---@class Cfg.Harpoon.List
----@diagnostic disable-next-line duplicate field
 ---@field items (Cfg.Harpoon.Item|Cfg.Harpoon.ItemLegacy|string)[]  -- allow union
 ---@field remove fun(self: Cfg.Harpoon.List, index: integer)
 ---@field save fun(self: Cfg.Harpoon.List)

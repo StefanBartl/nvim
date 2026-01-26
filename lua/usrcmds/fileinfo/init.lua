@@ -16,10 +16,6 @@ local os_date = os.date
 ---@type integer|nil
 local active_win = nil
 
----@type integer|nil
----@diagnostic disable-next-line: unused-local
-local active_buf = nil
-
 ---@type string|nil
 local active_path = nil
 
@@ -72,8 +68,7 @@ end
 local function toggle_hover(path, lines)
   if active_win and api.nvim_win_is_valid(active_win) and active_path == path then
     win_close(active_win, true)
-    ---@diagnostic disable-next-line: unused-local
-    active_win, active_buf, active_path = nil, nil, nil
+    active_win, active_path = nil, nil
     return
   end
 
@@ -89,16 +84,14 @@ local function toggle_hover(path, lines)
   km_set("n", "q", function()
     if active_win then
       win_close(active_win, true)
-      ---@diagnostic disable-next-line: unused-local
-      active_win, active_buf, active_path = nil, nil, nil
+      active_win, active_path = nil, nil
     end
   end, { buffer = buf, nowait = true })
 
   km_set("n", "<Esc>", function()
     if active_win then
       win_close(active_win, true)
-      ---@diagnostic disable-next-line: unused-local
-      active_win, active_buf, active_path = nil, nil, nil
+      active_win, active_path = nil, nil
     end
   end, { buffer = buf, nowait = true })
 
@@ -118,8 +111,6 @@ local function toggle_hover(path, lines)
   })
 
   active_win = win
-  ---@diagnostic disable-next-line: unused-local
-  active_buf = buf
   active_path = path
 end
 

@@ -25,7 +25,6 @@ end
 -- Check if char is a path separator
 ---@param ch string
 ---@return boolean
----@diagnostic disable-next-line: unused-local, unused-function
 function M.is_sep(ch)
   return ch == "/" or ch == "\\"
 end

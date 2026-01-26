@@ -227,18 +227,21 @@ end
 ---@param s string
 ---@return string
 function S.dedent(s)
-  local min = nil
+  ---@type number
+  local min = math.huge
+
   for line in (s .. "\n"):gmatch("(.-)\n") do
     local _, spaces = line:find("^[ ]*")
     local count = spaces and #spaces or 0
     if line:find("%S") then
-      ---@diagnostic disable-next-line
-      min = (min == nil) and count or math.min(min, count)
+      min = math.min(min, count)
     end
   end
-  if not min or min == 0 then
+
+  if min == math.huge or min == 0 then
     return s
   end
+
   return (s:gsub("\n[ ]{" .. min .. "}", "\n"):gsub("^[ ]{" .. min .. "}", ""))
 end
 

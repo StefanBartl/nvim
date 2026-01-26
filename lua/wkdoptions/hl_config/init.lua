@@ -276,7 +276,6 @@ function M.enable()
   })
 
  require("wkdoptions.commands").register_highlight_debug_command({
-    ---@diagnostic disable-next-line
     mod = require("wkdoptions.hl_config.breadcrumbs.ctx"),
     sepfn = require("wkdoptions.hl_config.utils.separator").resolve,
     names = { debug = "WKDOptions.HL.DebugCtx" },

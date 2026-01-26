@@ -2,8 +2,6 @@
 --- Functional-style helpers over arrays: map, filter, reduce, etc.
 --- All functions are pure and return new arrays where applicable.
 
----@diagnostic disable
-
 ---@class LibTablesFn
 local F = {}
 
@@ -13,7 +11,6 @@ local F = {}
 ---@param fn fun(item:T, index:integer):U
 ---@return U[]
 function F.map(list, fn)
-  ---@type U[]
   local out = { [#list] = false }
   for i = 1, #list do
     out[i] = fn(list[i], i)
@@ -27,7 +24,6 @@ end
 ---@param pred fun(item:T, index:integer):boolean
 ---@return T[]
 function F.filter(list, pred)
-  ---@type T[]
   local out = {}
   for i = 1, #list do
     local it = list[i]
@@ -101,7 +97,6 @@ end
 ---@param fn fun(item:T):U[]
 ---@return U[]
 function F.flat_map(list, fn)
-  ---@type U[]
   local out = {}
   for i = 1, #list do
     local r = fn(list[i])

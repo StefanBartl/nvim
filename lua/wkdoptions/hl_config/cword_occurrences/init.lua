@@ -23,7 +23,6 @@ local buffer_is_ui_like = require("wkdoptions.hl_config.utils.skip").std_skip
 
 -- Debounce timer (luv can return `userdata` in some typings)
 
----@diagnostic disable-next-line lib.uv
 ---@type userdata|uv.uv_timer_t|nil
 local timer = nil
 
@@ -313,7 +312,6 @@ end
 local function ensure_timer()
   local uv = vim.uv or vim.loop
   if not timer then
-    ---@diagnostic disable-next-line
     timer = uv.new_timer()
   end
   local t = timer
@@ -330,11 +328,8 @@ local function update_debounced()
     return
   end
   local t = ensure_timer()
-  ---@diagnostic disable-next-line stop exists in uv library
   t:stop()
-  ---@diagnostic disable-next-line start exists in uv library
   t:start(ms, 0, function()
-    ---@diagnostic disable-next-line stop exists in uv library
     t:stop()
     vim.schedule(update_now)
   end)

@@ -1,8 +1,6 @@
 ---@module 'lib.tables.set'
 --- Simple generic Set<T> implemented as table<T, true> with helper functions.
 
----@diagnostic disable
-
 ---@class TablesSet
 local M = {}
 
@@ -11,7 +9,7 @@ local M = {}
 ---@param xs T[]
 ---@return table<T, true>
 function M.from_array(xs)
-  local s = {} ---@type table<T, true>
+  local s = {}
   for i = 1, #xs do
     s[xs[i]] = true
   end
@@ -27,7 +25,6 @@ function M.to_array(s)
   for _ in pairs(s) do
     n = n + 1
   end
-  ---@type T[]
   local out = { [n] = false }
   local i = 0
   for k in pairs(s) do
@@ -108,7 +105,7 @@ end
 ---@param s table<T, true>
 ---@return table<T, true>
 function M.copy(s)
-  local out = {} ---@type table<T, true>
+  local out = {}
   for k in pairs(s) do
     out[k] = true
   end
@@ -133,7 +130,7 @@ end
 ---@param b table<T, true>
 ---@return table<T, true>
 function M.union(a, b)
-  local out = {} ---@type table<T, true>
+  local out = {}
   for k in pairs(a) do
     out[k] = true
   end
@@ -149,7 +146,7 @@ end
 ---@param b table<T, true>
 ---@return table<T, true>
 function M.intersection(a, b)
-  local out = {} ---@type table<T, true>
+  local out = {}
   -- Iterate smaller set for performance
   local sa, sb = M.size(a), M.size(b)
   if sa <= sb then
@@ -174,7 +171,7 @@ end
 ---@param b table<T, true>
 ---@return table<T, true>
 function M.difference(a, b)
-  local out = {} ---@type table<T, true>
+  local out = {}
   for k in pairs(a) do
     if not b[k] then
       out[k] = true
@@ -189,7 +186,7 @@ end
 ---@param b table<T, true>
 ---@return table<T, true>
 function M.symmetric_difference(a, b)
-  local out = {} ---@type table<T, true>
+  local out = {}
   for k in pairs(a) do
     if not b[k] then
       out[k] = true
@@ -255,7 +252,7 @@ end
 ---@param pred fun(value:T):boolean
 ---@return table<T, true>
 function M.filter(s, pred)
-  local out = {} ---@type table<T, true>
+  local out = {}
   for k in pairs(s) do
     if pred(k) then
       out[k] = true
@@ -271,7 +268,7 @@ end
 ---@param fn fun(value:T):U
 ---@return table<U, true>
 function M.map(s, fn)
-  local out = {} ---@type table<U, true>
+  local out = {}
   for k in pairs(s) do
     out[fn(k)] = true
   end

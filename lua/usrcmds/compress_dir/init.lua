@@ -64,7 +64,6 @@ local function _run_shell_async(cmd, on_exit)
   -- Fallback: luv (Neovim 0.9)
   local uv = vim.uv or vim.loop
 
-  ---@diagnostic disable
   ---@type uv.uv_pipe_t|nil
   local stdout = uv.new_pipe(false)
   ---@type uv.uv_pipe_t|nil
@@ -82,7 +81,6 @@ local function _run_shell_async(cmd, on_exit)
   local handle
 
   -- Only required fields; suppress static false-positive for missing optional fields.
-  ---@diagnostic disable
   handle = uv.spawn("sh", {
     args = { "-c", cmd },
     stdio = { nil, stdout, stderr },
@@ -121,7 +119,6 @@ local function _run_shell_async(cmd, on_exit)
     end
   end)
 end
----@diagnostic enable
 
 --- Compress the current working directory into a temp folder with file listing.
 ---@param on_complete fun(success: boolean, message: string) -- Callback with status

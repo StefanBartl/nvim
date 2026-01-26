@@ -5,8 +5,6 @@
 ---   * No globals; defensive parameter checks.
 ---   * EmmyLua-typed for strong LuaLS hints.
 
----@diagnostic disable
-
 ---@class LibTablesCore
 local M = {}
 
@@ -51,7 +49,6 @@ function M.shallow_copy(t)
   for k, v in pairs(t) do
     out[k] = v
   end
-  ---@cast out T
   return out
 end
 
@@ -77,7 +74,6 @@ function M.deep_copy(t)
   ---@type table<any, any>
   local seen = {}
   local out = _copy(t, seen)
-  ---@cast out T
   return out
 end
 
@@ -157,7 +153,6 @@ function M.merge_shallow(dst, src)
   return dst
 end
 
----@nodiscard
 ---@param dst table
 ---@param src table
 ---@return table
@@ -208,7 +203,7 @@ function M.slice(list, i, j)
   if a > b then
     return {}
   end
-  ---@type T[]
+
   local out = { [b - a + 1] = false }
   for k = a, b do
     out[k - a + 1] = list[k]
@@ -256,12 +251,13 @@ function M.binary_search(list, cmp, x)
 end
 
 ---@nodiscard
----@generic T,K
+---@generic T
+---@alias K any
 ---@param list T[]
 ---@param key fun(item:T):K
 ---@return table<K, T[]>
 function M.group_by(list, key)
-  local out = {} ---@type table<K, T[]>
+  local out = {}
   for i = 1, #list do
     local it = list[i]
     local k = key(it)
@@ -282,9 +278,7 @@ end
 ---@return T[] pass
 ---@return T[] fail
 function M.partition(list, pred)
-  ---@type T[] local pass
   local pass = {}
-  ---@type T[] local fail
   local fail = {}
   for i = 1, #list do
     local it = list[i]

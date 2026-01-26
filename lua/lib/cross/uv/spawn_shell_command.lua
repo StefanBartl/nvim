@@ -26,7 +26,6 @@ return function(cmd, args, opts)
   end
 
   local handle
-  ---@diagnostic disable-next-line lib.uv
   handle = uv.spawn(shell, {
     args = args,
     stdio = opts.stdio or { nil, 1, 2 }, -- default: inherit stdout/stderr
@@ -36,7 +35,6 @@ return function(cmd, args, opts)
     else
       print(("Command exited with code %d, signal %s"):format(code, tostring(signal)))
     end
-    ---@diagnostic disable-next-line lib.uv
     handle:close()
   end)
 

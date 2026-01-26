@@ -3,7 +3,6 @@
 --- Requires bash-language-server in PATH (Mason: bash-language-server).
 --- Diagnostics are powered by shellcheck when available.
 
----@class BashLsServer
 local notify = require("lib.notify").create("[lsp.servers.bashls]")
 
 local M = {}
@@ -28,7 +27,6 @@ end
 ---@param shared {capabilities?:table,on_attach?:fun(client,bufnr),on_init?:fun(client,init_result):boolean}|nil
 ---@param opts { enable?: boolean }|nil
 ---@return nil
----@diagnostic disable-next-line duplicate field
 function M.setup(shared, opts)
   shared = shared or {}
   opts = opts or {}

@@ -81,6 +81,7 @@ function M.mark_all_in_directory(state)
   -- Find parent directory
   local parent = current_node.type == "directory" and current_node
                  or tree:get_node(current_node:get_parent_id())
+  ---@cast parent any
 
   if not parent then
     notify.warn("No parent directory found")
@@ -88,7 +89,6 @@ function M.mark_all_in_directory(state)
   end
 
   -- Get children using tree:get_nodes() instead of parent.children
-  ---@diagnostic disable-next-line: undefined-field
   local children = tree:get_nodes(parent:get_id())
 
   if not children or #children == 0 then
@@ -131,6 +131,7 @@ function M.unmark_all_in_directory(state)
   -- Find parent directory
   local parent = current_node.type == "directory" and current_node
                  or tree:get_node(current_node:get_parent_id())
+  ---@cast parent any
 
   if not parent then
     notify.warn("No parent directory found")
@@ -138,7 +139,6 @@ function M.unmark_all_in_directory(state)
   end
 
   -- Get children using tree:get_nodes()
----@diagnostic disable-next-line: undefined-field
   local children = tree:get_nodes(parent:get_id())
 
   if not children or #children == 0 then

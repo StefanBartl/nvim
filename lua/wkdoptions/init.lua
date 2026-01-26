@@ -43,12 +43,25 @@ end
 
 --- Expose config module API for programmatic access
 ---@type WKDOptions.Config.Module
----@diagnostic disable-next-line
-M.config = setmetatable({}, {
-  __index = function(_, key)
-    return get_config()[key]
+M.config = {
+  cfg = function() return M.get_cfg() end,
+
+  parse = function(s)
+    return M.parse(s)
   end,
-})
+
+  set = function(ns, key, value, toggle_if_bool)
+    return M.set(ns, key, value, toggle_if_bool)
+  end,
+
+  keys = function(ns)
+    return M.keys(ns)
+  end,
+
+  on_after_set = function(ns, fn)
+    return M.on_after_set(ns, fn)
+  end,
+}
 
 --- Get full configuration (lazy-loaded).
 --- Recommended over direct access to ensure initialization.

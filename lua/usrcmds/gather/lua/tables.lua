@@ -39,15 +39,17 @@ local function build_table_path(node, bufnr)
       end
 
       current = table_node
-
     elseif node_type == "identifier" then
       local text = ts.get_node_text(current, bufnr)
       table.insert(parts, 1, text)
       break
-
     else
-    ---@diagnostic disable-next-line
-      current = current:parent()
+      local par = current:parent()
+      if par then
+        current = par
+      else
+        notify.debug("current parent node is nil")
+      end
     end
   end
 
@@ -93,7 +95,10 @@ function M.scan_buffer(bufnr)
   local root = trees[1]:root()
 
   -- Query for various table patterns
-  local query_ok, query = pcall(ts.query.parse, "lua", [[
+  local query_ok, query = pcall(
+    ts.query.parse,
+    "lua",
+    [[
     ; Simple table assignments: local t = {}
     (assignment_statement
       (variable_list
@@ -112,7 +117,8 @@ function M.scan_buffer(bufnr)
     (field
       name: (identifier) @field_name
       value: (table_constructor))
-  ]])
+  ]]
+  )
 
   if not query_ok or not query then
     table.insert(errors, "Failed to compile Tree-sitter query")
@@ -141,7 +147,6 @@ function M.scan_buffer(bufnr)
           context = nil,
         })
       end
-
     elseif capture_name == "path" then
       -- Dot-index expression (nested table)
       local path = build_table_path(node, bufnr)
@@ -156,7 +161,6 @@ function M.scan_buffer(bufnr)
           context = "nested",
         })
       end
-
     elseif capture_name == "field_name" then
       -- Table field
       local name = ts.get_node_text(node, bufnr)

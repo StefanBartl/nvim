@@ -2,7 +2,10 @@
 --- Personal and local development plugins (myterm, mygrep, cmdlog, etc.)
 
 if not vim.env.REPOS_DIR then
-  vim.notify("[PLUGINS PERSONAL] Environment variable 'REPOS_DIR' not set. Personal plugins not available.", 3)
+  vim.notify(
+    "[PLUGINS PERSONAL] Environment variable 'REPOS_DIR' not set. Personal plugins not available.",
+    3
+  )
   return {}
 end
 
@@ -154,11 +157,50 @@ return {
   --   end,
   -- },
 
-  -- {
-  --   "StefanBartl/telescope-selected-index",
-  --   -- dir = vim.env.REPOS_DIR .. "/telescope-selected-index",
-  --   event = "VeryLazy",
-  -- },
+  {
+    "StefanBartl/telescope-selected-index",
+    -- dir = vim.env.REPOS_DIR .. "/telescope-selected-index",
+    event = "VeryLazy",
+    opts = {
+      position = "right_align", -- Position: "overlay" | "right_align" | "eol" | "top" | "down"
+      highlight = {
+        preset = "error",
+                            ---| "default"      # Default Telescope style (fg from TelescopeResultsFunction)
+                            ---| "subtle"       # Muted gray, low contrast
+                            ---| "bold"         # Bold white on dark background
+                            ---| "accent"       # Bright accent color (cyan/blue)
+                            ---| "minimal"      # Minimal styling, inherits most from buffer
+                            ---| "error"        # Red/warning style
+                            ---| "success"      # Green/success style
+                            ---| "custom"       # User provides complete HighlightSpec
+        -- fully custom only when preset = "custom"
+        -- custom = {
+        --     fg = "#89dceb",
+        --     bold = true,
+        --     italic = true,
+        -- },
+
+        -- gruvbox
+        -- preset = "custom",
+        -- custom = {
+            -- fg = "#fe8019",  -- Orange
+            -- bg = "#3c3836",  -- Dark gray
+            -- bold = true,
+        -- },
+
+        -- catpuccin mocha
+        -- custom = {
+            -- fg = "#f5c2e7",  -- Pink
+            -- bold = true,
+            -- italic = true,
+        -- },
+      },
+    },
+
+    config = function(_, opts)
+      require("telescope_selected_index").setup(opts)
+    end,
+  },
 
   -- {
   --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/mdview.nvim"),
@@ -213,7 +255,6 @@ return {
       -- "nvim-telescope/telescope.nvim", -- für engine="telescope"
     },
     config = function()
-      ---@diagnostic disable-next-line
       require("replacer").setup({
         engine = "telescope",
         -- engine = "telescope",

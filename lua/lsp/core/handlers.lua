@@ -12,8 +12,11 @@ function M.setup()
 
   local orig = vim.lsp.handlers["textDocument/publishDiagnostics"]
 
-  ---@diagnostic disable-next-line
-  vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, conf)
+  -- Capture the handler table once (avoids duplicate-field warning)
+  local handlers = vim.lsp.handlers
+
+  ---@cast handlers any
+  handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, conf)
     if result and type(result.diagnostics) == "table" then
       -- shallow copy to avoid mutating LSP payload
       local copy = { uri = result.uri, diagnostics = {} }

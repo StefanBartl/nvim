@@ -104,7 +104,6 @@ local function resolve_tilde(path, logger)
     return nil
   end
 
-  ---@diagnostic disable-next-line lib.uv
   local home = uv.os_homedir()
   if not home or home == "" then
     if logger and logger.warn then

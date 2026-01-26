@@ -8,8 +8,6 @@ local M = {}
 -- Sub-modules (lazy loaded)
 local state_machine
 local semaphore
----@diagnostic disable-next-line: unused-local
-local executor
 local position_utils
 
 ---Create an opener function for a specific position
@@ -21,8 +19,6 @@ function M.make_opener(target_position, source)
   if not state_machine then
     state_machine = require("config.neotree.open.window.controller.state_machine")
     semaphore = require("config.neotree.open.window.controller.semaphore")
-    ---@diagnostic disable-next-line: unused-local
-    executor = require("config.neotree.open.window.controller.executor")
     position_utils = require("config.neotree.open.window.controller.position")
   end
 
@@ -31,7 +27,7 @@ function M.make_opener(target_position, source)
   return function()
     if target_position == "float" then
       vim.cmd("Neotree filesystem float toggle")
-      return -- FIX: Early return: flaot window wirh alle feature like in M-l oder M-r not easy possible. Musst du von hand schreiben!
+      return -- FIX: Float window steigt hier also von den custom 1features aus.
     end
 
     -- Acquire semaphore (blocks concurrent operations)

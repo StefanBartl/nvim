@@ -61,8 +61,8 @@ local function spawn_project_command(cmd, opts)
   end
 
   -- Spawn the process asynchronously
-  ---@diagnostic disable-next-line lib.uv
-  local handle = uv.spawn(shell, {
+  local handle
+  handle = uv.spawn(shell, {
     args = shell_args,
     cwd = cwd,
     stdio = stdio,
@@ -74,11 +74,9 @@ local function spawn_project_command(cmd, opts)
         print(("Command '%s' exited with code %d, signal %s"):format(full_cmd, code, tostring(signal)))
       end)
     end
-    ---@diagnostic disable-next-line lib.uv
     handle:close()
   end)
 
-  ---@diagnostic disable-next-line lib.uv
   return handle
 end
 

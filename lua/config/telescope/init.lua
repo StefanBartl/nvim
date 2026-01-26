@@ -11,7 +11,6 @@ local ignore_list = require("lib.fs.ignore.list")
 local history = require("config.telescope.history")
 local history_keymaps = require("config.telescope.history.keymaps")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
-local hl_selection = require("config.telescope.ui.hl_selection")
 local bg = require("config.telescope.open_background")
 local custom_actions = require("config.telescope.actions")
 
@@ -119,9 +118,6 @@ function M.setup(opts)
       notify.warn(string.format("Failed to load telescope extension '%s': %s", ext, err))
     end
   end
-
-  -- Highlight selection
-  hl_selection.setup()
 
   return opts
 end

@@ -62,8 +62,7 @@ local function get_buf_clients(bufnr)
   end
   -- Neovim < 0.10: fallback via deprecated API, filtered manually
   local clients = {}
-  ---@diagnostic disable-next-line: deprecated
-  local all = vim.lsp.get_active_clients and vim.lsp.get_active_clients() or {}
+  local all = vim.lsp.get_active_clients and vim.lsp.get_clients() or {}
   for _, c in ipairs(all) do
     if c.attached_buffers and c.attached_buffers[bufnr] then
       clients[#clients + 1] = c

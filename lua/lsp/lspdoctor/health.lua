@@ -5,12 +5,8 @@ local M = {}
 
 local lsp = vim.lsp
 
----@diagnostic disable-next-line: unused-local
-local Opts = {}
-
 ---@param opts table
 function M.setup(opts)
-    ---@diagnostic disable-next-line: unused-local
   Opts = opts or {}
 end
 

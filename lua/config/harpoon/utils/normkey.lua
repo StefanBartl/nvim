@@ -21,7 +21,6 @@ function M.normkey(p, opts)
   local use_real = (opts.realpath ~= false) -- default true
 
   -- Expand tilde if present
-  ---@diagnostic disable-next-line os_homedir exists in uv library
   local home = (uv.os_homedir and uv.os_homedir()) or os.getenv("HOME")
   if home then
     p = p:gsub("^~", home)
@@ -29,7 +28,6 @@ function M.normkey(p, opts)
 
   local out = p
 
-  ---@diagnostic disable-next-line fs_realpath exists in uv library
   if use_real and uv.fs_realpath then
     local rp = uv.fs_realpath(p)
     if rp then

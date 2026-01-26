@@ -91,7 +91,6 @@ end
 ---@param module_name string
 ---@return T
 function LAZY.require(module_name)
-  ---@diagnostic disable-next-line: return-type-mismatch
   return LAZY.module(module_name).get()
 end
 
@@ -103,7 +102,6 @@ end
 ---@return T
 function LAZY.typed(module_name)
   local lazy = LAZY.module(module_name)
-  ---@diagnostic disable-next-line: return-type-mismatch
   return lazy.get()
 end
 

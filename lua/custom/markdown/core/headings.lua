@@ -49,17 +49,6 @@ function M.goto_next_heading()
 end
 
 -- ============================================================================
--- Helper: Check if line is a heading
--- ============================================================================
-
----@param line string
----@return boolean
----@diagnostic disable-next-line: unused-local, unused-function
-local function is_heading(line)
-  return line:match("^%s*#+%s+") ~= nil
-end
-
--- ============================================================================
 -- Core: shift a single heading line WITH context awareness
 -- ============================================================================
 

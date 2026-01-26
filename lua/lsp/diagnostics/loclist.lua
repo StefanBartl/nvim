@@ -22,7 +22,6 @@ local function call_setloclist(opts)
     local win = opts.win_id or 0
     local copy = vim.tbl_extend("force", {}, opts)
     copy.win_id = nil
-    ---@diagnostic disable-next-line param-type-mismatch
     vim.diagnostic.setloclist(win, copy)
   else
     vim.diagnostic.setloclist(opts)

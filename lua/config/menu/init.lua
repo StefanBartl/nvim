@@ -13,7 +13,6 @@ function M.setup(opts)
   -- Register so require("menus.custom_menu") returns the table; menu.open normally does require("menus.<name>")
   package.loaded["menus.custom"] = menu_table
   -- Also set to preload for compatibility
-  ---@diagnostic disable-next-line
   package.preload["menus.custom"] = function()
     return menu_table
   end

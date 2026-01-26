@@ -2,9 +2,6 @@
 --- Small helper module to inspect and format tabpage information.
 --- Works on all platforms including Windows; no external dependencies.
 
----FIX: LSP
----@diagnostic disable
-
 local notify = require("lib.notify").create("[lib.buf_win_tab.tabs_utils]")
 
 local M = {}

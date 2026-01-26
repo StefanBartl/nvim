@@ -26,19 +26,18 @@ local function find_package_json(file_path)
   return nil
 end
 
----Check if project uses Vitest
----@param pkg_path string
----@return boolean
----@diagnostic disable-next-line: unused-function, unused-local
-local function uses_vitest(pkg_path)
-  local ok, content = pcall(vim.fn.readfile, pkg_path)
-  if not ok or not content then
-    return false
-  end
+-- ---Check if project uses Vitest
+-- ---@param pkg_path string
+-- ---@return boolean
+-- local function uses_vitest(pkg_path)
+  -- local ok, content = pcall(vim.fn.readfile, pkg_path)
+  -- if not ok or not content then
+    -- return false
+  -- end
 
-  local text = table.concat(content, "\n")
-  return text:match('"vitest"') ~= nil
-end
+  -- local text = table.concat(content, "\n")
+  -- return text:match('"vitest"') ~= nil
+-- end
 
 local function create_adapter()
   -- Try Vitest first

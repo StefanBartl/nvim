@@ -6,6 +6,7 @@
 
 ---@class UIMarkdownFencedFix
 ---@field opts Custom.MD.FencedFix.Opts
+
 local notify = require("lib.notify").create("[custom.markdown.fenced_fix]")
 
 local M = {}

@@ -14,8 +14,9 @@ function M.setup(opts)
   package.loaded["menus.custom"] = menu_table
 
   -- Also set to preload for compatibility
-  ---@diagnostic disable-next-line
-  package.preload["menus.custom"] = function()
+  ---@type table<string, fun(): any>
+  local preload = package.preload
+  preload["menus.custom"] = function()
     return menu_table
   end
 

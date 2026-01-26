@@ -26,7 +26,6 @@
 --     require('auto-center-explorer').toggle()
 --   end, { desc = 'Toggle auto-center in file explorers' })
 
----@diagnostic disable undefined-type or alias -> lib.uv
 
 local notify = require("lib.notify").create("[autocmds.auto-center-fexplorer]")
 
@@ -45,7 +44,7 @@ local default_config = {
 ---@type AutoCenterConfig
 local config = vim.deepcopy(default_config)
 
----@type table<number, uv_timer_t|nil> Timer storage per buffer
+---@type table<number, uv.uv_timer_t|nil> Timer storage per buffer
 local timers = {}
 
 ---@type table<number, boolean> Track which buffers have auto-centering enabled

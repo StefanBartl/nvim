@@ -59,7 +59,6 @@ local function read_file_lines(path)
   if not fd then
     return nil
   end
-  ---@diagnostic disable-next-line fs_stat exists in uv library
   local st = uv.fs_fstat(fd)
   uv.fs_close(fd)
   if not st then

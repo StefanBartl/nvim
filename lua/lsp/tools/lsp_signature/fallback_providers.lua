@@ -295,7 +295,6 @@ function M.try_providers(clients, params, opts)
     -- timeout guard per client
     local timer = vim.loop.new_timer()
     local timeout_ms = 800
-    ---@diagnostic disable-next-line lib.uv
     timer:start(
       timeout_ms,
       0,
@@ -306,12 +305,9 @@ function M.try_providers(clients, params, opts)
 
     -- wrapped callback to cancel timer when preview shown
     local wrapped_cb = function(buf, win)
-      ---@diagnostic disable-next-line lib.uv
       if timer and not timer:is_closing() then
         pcall(function()
-          ---@diagnostic disable-next-line lib.uv
           timer:stop()
-          ---@diagnostic disable-next-line lib.uv
           timer:close()
         end)
       end

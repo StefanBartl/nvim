@@ -46,8 +46,11 @@ local function wrap_publish_diagnostics(opts)
     return
   end
 
-  ---@diagnostic disable-next-line
-  vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
+  -- Capture the handler table once (avoids duplicate-field warning)
+  local handlers = vim.lsp.handlers
+
+  ---@cast handlers any
+  handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
     if not result or not result.diagnostics then
       return orig(err, result, ctx, config)
     end
@@ -55,7 +58,10 @@ local function wrap_publish_diagnostics(opts)
     if opts.annotate_diagnostics then
       for _, d in ipairs(result.diagnostics) do
         if diagnostic_is_deprecated(d) then
-          if type(d.message) == "string" and not string.find(d.message, opts.diagnostic_hint, 1, true) then
+          if
+            type(d.message) == "string"
+            and not string.find(d.message, opts.diagnostic_hint, 1, true)
+          then
             d.message = d.message .. opts.diagnostic_hint
           end
         end
@@ -140,7 +146,10 @@ end
 ---@param opts table
 local function setup_buffer_mapping(bufnr, opts)
   local lhs = opts.help_mapping
-  local rhs = string.format([[:lua require('lsp.tools.deprecated_help').open_help_under_cursor(%d)<CR>]], bufnr)
+  local rhs = string.format(
+    [[:lua require('lsp.tools.deprecated_help').open_help_under_cursor(%d)<CR>]],
+    bufnr
+  )
   api.nvim_buf_set_keymap(bufnr, "n", lhs, rhs, opts.map_opts)
 end
 

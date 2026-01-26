@@ -123,7 +123,6 @@ return {
     config = function()
       local conform = require("conform")
 
-      ---@diagnostic disable-next-line: redundant-parameter
       conform.setup({
         notify_on_error = false,
         format_on_save = { timeout_ms = 1200, lsp_fallback = true },

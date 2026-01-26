@@ -11,9 +11,6 @@ local C = lazy.require("wkdoptions.config")
 local ocfg = lazy.require("wkdoptions.config.data.options")
 local hcfg = lazy.require("wkdoptions.config.data.highlight")
 
----@diagnostic disable-next-line unused local
-local buffer_is_ui_like = require("wkdoptions.hl_config.utils.skip").std_skip
-
 local AUG_OPTS = vim.api.nvim_create_augroup("myopt_Options", { clear = true })
 
 ---@return nil

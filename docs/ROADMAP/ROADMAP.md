@@ -23,8 +23,8 @@
 - `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
 - :lua vim.cmd('profile start /tmp/profile.log') vim.cmd('profile func *') require('lib')
 - `wkdoptions` readme aktualiseren, module auch readme.md schreiben (deutsch). alußerdem eine doc/
-- Alle `vim.notify` durch `lib.notify` erstetzen; `.create()` und `lazy` implementieren
 - auto fokus neotree wenn man es öffnet
+- in grgep stimmen manchmal die stats trefferliste nicht bzw die
 
 ---
 
@@ -80,8 +80,7 @@
 - `editor_interface` verwenden, um funktionen, die sowohl mappings als auch usercommands begründen.
 - autocmds fokussieren, so dass sie sich die durchgänge teilen
 - workspace lsp warnings debuggen
-    1. alle `disable-next-line` durchsehen
-    2. Todo Coments anschauen und durchgehen
+    . Todo Coments anschauen und durchgehen
 - probieren nvchad rauszunehmen und nochmal mit lazyvim
 - experimental options:
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen

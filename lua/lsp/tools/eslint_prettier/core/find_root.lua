@@ -17,7 +17,6 @@ local function find_root(bufnr)
   local start_dir = fn.fnamemodify(bufname, ":p:h")
   if vim.fs and vim.fs.find then
     for _, m in ipairs(markers) do
-      ---@diagnostic disable-next-line: undefined-field
       local found = vim.fs.find(m, { upward = true, path = start_dir, stop = vim.loop.os_homedir() })
       if found and #found > 0 then
         return vim.fs.dirname(found[1])

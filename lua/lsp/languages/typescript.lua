@@ -1,7 +1,5 @@
 ---@module 'lsp.languages.typescript'
 
-require("lua.wkdoptions.@types")
-
 local M = {}
 
 local lsp = vim.lsp
@@ -42,9 +40,7 @@ local function organize_imports_sync(bufnr)
   ---@type LspMod.Client[]
   local eligible = {}
   for _, c in ipairs(clients) do
-    ---@diagnostic disable-next-line
     if client_supports_code_action_kind(c, "source.organizeImports") then
-      ---@diagnostic disable-next-line
       eligible[#eligible + 1] = c
     end
   end

@@ -192,11 +192,11 @@ local function generate_template(template, args)
     return nil
   end
 
+  ---@type table<string, string>|nil
   local values = args or {}
 
   -- Process prompts if needed
   if meta.prompts and not args then
-    ---@diagnostic disable-next-line
     values = utils.process_prompts(meta.prompts)
     if not values then
       return nil
@@ -204,7 +204,7 @@ local function generate_template(template, args)
   end
 
   -- Generate template based on category
-  if meta.category == "lua" then
+  if values and meta.category == "lua" then
     if template == "lua-module" then
       return lua_templates.module(values.name)
     elseif template == "lua-class" then
@@ -212,13 +212,13 @@ local function generate_template(template, args)
     elseif template == "lua-function" then
       return lua_templates.func()
     end
-  elseif meta.category == "nvim" then
+  elseif values and meta.category == "nvim" then
     if template == "nvim-autocmd" then
       return nvim_templates.autocmd(values.group_name)
     elseif template == "nvim-keymap" then
       return nvim_templates.keymap()
     end
-  elseif meta.category == "html" then
+  elseif values and meta.category == "html" then
     if template == "html-figure" then
       return html_templates.figure(values.id)
     elseif template == "html-code" then

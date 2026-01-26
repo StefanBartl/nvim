@@ -81,7 +81,7 @@ end
 --- This flexibility allows the resolver to work with both traditional LSP configs
 --- and newer callback-based configurations.
 ---
---- @return function Resolver function compatible with vim.lsp root_dir configs
+--- @return string|nil function Resolver function compatible with vim.lsp root_dir configs
 return function(arg, cb)
   local fname = ""
 
@@ -104,6 +104,5 @@ return function(arg, cb)
   end
 
   -- Always return the root directory synchronously
-  ---@diagnostic disable-next-line
   return root_dir
 end

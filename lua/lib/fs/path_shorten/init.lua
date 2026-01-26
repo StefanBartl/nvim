@@ -4,11 +4,6 @@
 -- and replaces a variable-length middle section with an ellipsis ("…") until the
 -- resulting string fits the requested maximum length.
 
---- Local reference to global utf8 if available (avoids undefined-global diagnostics).
---- @type table|nil
----@diagnostic disable-next-line
-local utf8 = _G.utf8
-
 --- Determine path separator depending on platform.
 --- @return string separator ("/" on POSIX, "\" on Windows)
 local function get_sep()
@@ -63,12 +58,6 @@ end
 --- @param s string
 --- @return integer
 local function strlen(s)
-  if utf8 and type(utf8.len) == "function" then
-    local ok, l = pcall(utf8.len, s)
-    if ok and type(l) == "number" then
-      return l
-    end
-  end
   return #s
 end
 

@@ -16,8 +16,7 @@
 ---@generic T
 ---@class ResultOk<T>
 ---@field ok true
----@diagnostic disable-next-line
----@field value T
+---@field value any
 
 ---@class ResultErr
 ---@field ok false

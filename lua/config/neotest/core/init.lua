@@ -66,7 +66,6 @@ local function setup_autocommands()
           vim.schedule(function()
             local ok, neotest = pcall(require, "neotest")
             if ok then
-              ---@diagnostic disable-next-line: undefined-field
               pcall(neotest.run.attach)
             end
           end)
@@ -86,7 +85,6 @@ local function setup_autocommands()
           if not ok then
             return
           end
-          ---@diagnostic disable-next-line: undefined-field
           local results = neotest.state.get_results()
           if not results then
             return
@@ -101,7 +99,6 @@ local function setup_autocommands()
           end
 
           if has_failed then
-            ---@diagnostic disable-next-line: undefined-field
             neotest.output.open({ enter = false })
           end
         end)

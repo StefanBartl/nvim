@@ -61,16 +61,6 @@ local function build_rg_command_for_language(config, language, pattern)
   return cmd
 end
 
---- Build ripgrep command arguments
----@param config table
----@return string[] # Command arguments for vim.fn.systemlist
----@diagnostic disable-next-line: unused-function, unused-local
-local function build_rg_command(config)
-  -- We'll execute multiple searches, one per language
-  -- This is more reliable than trying to combine all patterns
-  return {}
-end
-
 --- Execute ripgrep command synchronously
 ---@param cmd string[] # Command arguments
 ---@return string[] # Output lines

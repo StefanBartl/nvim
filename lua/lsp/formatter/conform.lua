@@ -33,7 +33,6 @@ local function resolve(cmd)
   if exepath ~= nil and exepath ~= "" then
     return exepath
   end
-  ---@diagnostic disable-next-line os_homedir exists in uv library
   local home = (uv.os_homedir and uv.os_homedir()) or os.getenv("HOME") or os.getenv("USERPROFILE") or ""
   ---@type string[]
   local candidates = {
