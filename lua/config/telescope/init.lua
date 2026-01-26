@@ -52,12 +52,9 @@ function M.defaults()
     history = hist_config,
     sorting_strategy = "ascending",
     layout_config = { prompt_position = "top" },
-
-    -- HIER
     preview = {
       wrap = false,
     },
-
     mappings = km,
   }
 end

@@ -296,10 +296,10 @@ return {
         },
       })
 
-      -- Source-Switcher Keymap
-      vim.keymap.set("n", "<leader>ns", function()
-        require("config.neotree.sources.switcher").show_picker()
-      end, { desc = "[Neo-tree] Switch Source" })
+      -- -- Source-Switcher Keymap
+      -- vim.keymap.set("n", "<leader>ns", function()
+        -- require("config.neotree.sources.switcher").show_picker()
+      -- end, { desc = "[Neo-tree] Switch Source" })
 
       -- Debug Command
       vim.api.nvim_create_user_command("NeoTreeDebugSources", function()

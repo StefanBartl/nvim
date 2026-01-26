@@ -20,13 +20,13 @@
 
 ## Important
 
-- `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
 - :lua vim.cmd('profile start /tmp/profile.log') vim.cmd('profile func *') require('lib')
 - `wkdoptions` readme aktualiseren, module auch readme.md schreiben (deutsch). alußerdem eine doc/
+- `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
 - auto fokus neotree wenn man es öffnet
-- in grgep stimmen manchmal die stats trefferliste nicht bzw die
+-- WKDBok lua und Neovim mit noters z usammenfphren
 
----
+--
 
 ## MIXED
 

@@ -27,7 +27,7 @@ function M.make_opener(target_position, source)
   return function()
     if target_position == "float" then
       vim.cmd("Neotree filesystem float toggle")
-      return -- FIX: Float window steigt hier also von den custom 1features aus.
+      return
     end
 
     -- Acquire semaphore (blocks concurrent operations)
