@@ -5,14 +5,18 @@
 --- Tracks state for automatic CWD synchronization with Neo-tree root.
 --- Handles debouncing, user navigation detection, and pause logic.
 
----@class Cfg.NeoTree.CwdSyncState
----@field timer uv.uv_timer_t|nil Debounce timer handle
----@field pending boolean Sync operation pending
----@field last_dir? string Last synchronized directory
----@field last_file? string Last processed file path
----@field user_navigated boolean User explicitly navigated (pause sync)
----@field last_user_action integer Timestamp of last user action
----@field pause_until integer Timestamp until sync is paused
----@field sync_scheduled boolean Sync already scheduled flag
+---@class Cfg.NeoTree.CwdSync.State.Timer
+---@field close? any # hier fun() FIX:
+---@field stop? any # hier fun() FIX:
+
+---@class Cfg.NeoTree.CwdSync.State
+---@field timer? Cfg.NeoTree.CwdSync.State.Timer
+---@field pending? boolean
+---@field last_dir string|nil
+---@field last_file string|nil
+---@field user_navigated boolean
+---@field last_user_action integer
+---@field pause_until integer
+---@field sync_scheduled boolean
 
 return {}

@@ -14,8 +14,8 @@ local api, fn = vim.api, vim.fn
 
 ---@return table<string, fun(state: Cfg.NeoTree.State)>
 return {
-    --- Custom add command with clipboard integration
-    custom_add = add_mod.custom_add,
+  --- Custom add command with clipboard integration
+  custom_add = add_mod.custom_add,
 
   --- Open the selected file into the buffer list without leaving Neo-tree
   open_badd = function(state)
@@ -68,7 +68,10 @@ return {
 
     vim.schedule(function()
       if api.nvim_win_is_valid(win) then
-        api.nvim_set_current_win(win)
+        local ok = pcall(api.nvim_set_current_win, win)
+        if not ok then
+          notify.debug("set_current_win failed")
+        end
       end
     end)
   end,

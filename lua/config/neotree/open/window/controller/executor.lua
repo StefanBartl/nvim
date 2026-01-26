@@ -76,6 +76,9 @@ local function focus_neotree_window(max_attempts)
     local win = find_neotree_window()
     if win and vim.api.nvim_win_is_valid(win) then
       local ok = pcall(vim.api.nvim_set_current_win, win)
+      if not ok then
+        notify.debug("set_current_win failed")
+      end
       if ok then
         if cfg.debug then
           notify.debug(string.format("[neo-tree] Focused window on attempt %d", attempt))

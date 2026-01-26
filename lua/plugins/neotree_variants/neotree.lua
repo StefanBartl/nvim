@@ -72,7 +72,6 @@ return {
           source = "diagnostics",
           display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
         },
-
       }
 
       return {
@@ -286,15 +285,15 @@ return {
             parent = { fg = "darkgreen", underline = false },
           },
         },
-        cwd_sync = false,
-        -- cwd_sync = {
-        -- debounce_ms = 150,
-        -- keep_focus = true,
-        -- also_set_nvim_cwd = false,
-        -- open_if_closed = false,
-        -- use_project_root = true,
-        -- project_root_fallback_to_bufdir = true,
-        -- },
+        -- cwd_sync = false,
+        cwd_sync = {
+          debounce_ms = 150,
+          keep_focus = true,
+          also_set_nvim_cwd = false,
+          open_if_closed = false,
+          use_project_root = true,
+          project_root_fallback_to_bufdir = true,
+        },
       })
 
       -- Source-Switcher Keymap

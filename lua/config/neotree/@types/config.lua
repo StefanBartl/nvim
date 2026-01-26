@@ -28,6 +28,7 @@
 
 ---@class Cfg.NeoTree.CwdSync.Config
 ---@field enable? boolean Enable CWD synchronization (default: false)
+---@field debug? boolean
 ---@field debounce_ms? integer Debounce time in milliseconds (default: 150)
 ---@field keep_focus? boolean Keep focus in current window after sync (default: true)
 ---@field also_set_nvim_cwd? boolean Also set global :pwd (default: false)
