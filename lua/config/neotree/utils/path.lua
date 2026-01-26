@@ -148,4 +148,5 @@ function M.quote_if_needed(path)
   return path
 end
 
+---@type Cfg.NeoTree.Utils.Platform
 return M

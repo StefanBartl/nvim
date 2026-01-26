@@ -16,13 +16,13 @@
 ```lua
 -- bench/baseline.lua
 local iterations = 1000
-local start = vim.loop.hrtime()
+local start = vim.uv.hrtime()
 
 for i = 1, iterations do
   vim.cmd("doautocmd CursorMoved")
 end
 
-local elapsed = (vim.loop.hrtime() - start) / 1e6
+local elapsed = (vim.uv.hrtime() - start) / 1e6
 print(string.format("%.2fms/event", elapsed / iterations))
 ```
 
@@ -34,11 +34,11 @@ local old = require("autocmds.events.hot_path.cursor_moved_old")
 local new = require("autocmds.events.hot_path.cursor_moved")
 
 local function bench(fn, name)
-  local start = vim.loop.hrtime()
+  local start = vim.uv.hrtime()
   for i = 1, 1000 do
     fn()
   end
-  local elapsed = (vim.loop.hrtime() - start) / 1e6
+  local elapsed = (vim.uv.hrtime() - start) / 1e6
   print(string.format("%s: %.2fms/event", name, elapsed / 1000))
 end
 

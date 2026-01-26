@@ -1,26 +1,25 @@
 ---@module 'config.neotree.trash.operations'
----@brief Execute trash operations
+---@brief Execute trash operations without re-confirmation
 
 local notify = require("lib.notify").create("[trash.operations]")
 local safety = require("config.neotree.safety")
-local confirmation = require("config.neotree.trash.confirmation")
 
 local M = {}
-
-local str_format = string.format
 
 local config = {}
 
 ---Set configuration
 ---@param cfg table
+---@return nil
 function M.set_config(cfg)
   config = cfg
 end
 
----Create backups for paths
+---Create backups
 ---@param paths string[]
 ---@param names string[]
----@return table backups_created
+---@return table<string, string> backups
+---@nodiscard
 function M.create_backups(paths, names)
   local backups = {}
 
@@ -31,61 +30,57 @@ function M.create_backups(paths, names)
     if backup_path then
       backups[path] = backup_path
       if config.debug then
-        notify.info(str_format("📦 Backup: %s", backup_path))
+        notify.info(("📦 Backup: %s"):format(backup_path))
       end
     else
-      notify.warn(str_format("Backup failed for %s: %s", names[i], err or "unknown"))
+      notify.warn(("Backup failed for %s: %s"):format(names[i], err or "unknown"))
     end
   end
 
   return backups
 end
 
----Execute batch deletion
+---Execute batch deletion (respects confirmation mode)
 ---@param paths string[]
 ---@param names string[]
----@param delete_mode Cfg.NeoTree.DeleteMode # "all"|"individual"
----@param send_fn function(path, name, ask) -> success, msg, cancelled
----@return table results {success_count, cancelled_count, failed_items}
+---@param delete_mode "all"|"individual"
+---@param send_fn fun(path: string, name: string): boolean, string
+---@return table results
+---@nodiscard
 function M.execute_batch(paths, names, delete_mode, send_fn)
   local success_count = 0
   local cancelled_count = 0
   local failed_items = {}
 
+  local confirmation = require("config.neotree.trash.confirmation")
+
   for i = 1, #paths do
     local path = paths[i]
     local name = names[i]
 
-    -- Individual confirmation
+    -- Individual confirmation ONLY in "individual" mode
     if delete_mode == "individual" then
       if not confirmation.confirm_individual(name) then
         cancelled_count = cancelled_count + 1
         if config.debug then
-          notify.info(str_format("⏭ Skipped: %s", name))
+          notify.info(("⏭ Skipped: %s"):format(name))
         end
         goto continue
       end
     end
 
     if config.debug then
-      notify.info(str_format("🗑 Processing: %s", name))
+      notify.info(("🗑 Processing: %s"):format(name))
     end
 
-    -- Ask before closing only once (first item)
-    local ask_close = delete_mode == "all" and i == 1
-    local ok, msg, user_cancelled = send_fn(path, name, ask_close)
-
-    if user_cancelled then
-      cancelled_count = cancelled_count + 1
-      notify.info(str_format("ℹ️ Skipped: %s", name))
-      goto continue
-    end
+    -- Execute without asking again (already confirmed globally)
+    local ok, msg = send_fn(path, name)
 
     if ok then
       success_count = success_count + 1
 
       if config.debug then
-        notify.info(str_format("✓ Deleted: %s", name))
+        notify.info(("✓ Deleted: %s"):format(name))
       end
 
       -- Add to undo history
@@ -94,14 +89,14 @@ function M.execute_batch(paths, names, delete_mode, send_fn)
         undo.add_to_history(path, name)
       end
     else
-      table.insert(failed_items, {
+      failed_items[#failed_items + 1] = {
         path = path,
         name = name,
         error = msg,
-      })
+      }
 
       local clean_msg = msg:match("([^\r\n]+)") or msg
-      notify.error(str_format("✗ Failed: %s - %s", name, clean_msg))
+      notify.error(("✗ Failed: %s - %s"):format(name, clean_msg))
 
       -- Recovery attempt
       if config.use_safety_system then
@@ -111,7 +106,7 @@ function M.execute_batch(paths, names, delete_mode, send_fn)
           message = msg,
         })
         if recovered then
-          notify.info(str_format("🔄 Recovery: %s", name))
+          notify.info(("🔄 Recovery: %s"):format(name))
         end
       end
     end
@@ -127,9 +122,10 @@ function M.execute_batch(paths, names, delete_mode, send_fn)
   }
 end
 
----Show operation results
+---Show results
 ---@param results table
 ---@param backups table
+---@return nil
 function M.show_results(results, backups)
   local total = results.total
   local success = results.success_count
@@ -137,23 +133,23 @@ function M.show_results(results, backups)
   local failed = #results.failed_items
 
   if success > 0 then
-    local msg = str_format("✓ Moved to Trash: %d/%d items", success, total)
+    local parts = { ("✓ Moved to Trash: %d/%d items"):format(success, total) }
 
     if cancelled > 0 then
-      msg = msg .. str_format(" (%d skipped)", cancelled)
+      parts[#parts + 1] = ("(%d skipped)"):format(cancelled)
     end
 
     if failed > 0 then
-      msg = msg .. str_format(" (%d failed)", failed)
+      parts[#parts + 1] = ("(%d failed)"):format(failed)
     end
 
-    notify.info(msg)
+    notify.info(table.concat(parts, " "))
 
     if config.create_backups and next(backups) then
-      notify.info(str_format("📦 Backups: %d", vim.tbl_count(backups)))
+      notify.info(("📦 Backups: %d"):format(vim.tbl_count(backups)))
     end
   elseif cancelled > 0 then
-    notify.info(str_format("ℹ️ Cancelled (%d skipped)", cancelled))
+    notify.info(("ℹ️ Cancelled (%d skipped)"):format(cancelled))
   else
     notify.error("❌ All operations failed")
   end

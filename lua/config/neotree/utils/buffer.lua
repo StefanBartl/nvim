@@ -130,4 +130,5 @@ vim.api.nvim_create_autocmd("BufDelete", {
   end,
 })
 
+---@type Cfg.NeoTree.Utils.Buffer
 return M

@@ -21,6 +21,11 @@
 ---@field explicitly_marked_node_ids table<string, boolean>|nil Marked nodes for batch operations
 ---@field is_directory boolean
 ---@field get_parent_id boolean
+--- Optional fields used by some Neo-tree versions / sources
+---@field line integer|nil  -- 1-based line number in buffer
+---@field row integer|nil   -- 0-based line number in buffer
+---@field position {line: integer, col: integer}|nil  -- cursor position
+---@field range {start: {line: integer, col: integer}, ["end"]: {line: integer, col: integer}}|nil
 
 -- ---Return the parent node ID for upward navigation
 -- ---@param self Cfg.NeoTree.Node

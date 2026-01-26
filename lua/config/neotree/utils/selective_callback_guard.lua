@@ -155,4 +155,5 @@ function M.is_disabled()
   return not vim.tbl_isempty(disabled_callbacks)
 end
 
+---@type Cfg.NeoTree.Utils.SelectiveCallbackGuard
 return M

@@ -239,7 +239,7 @@ local float_state = {
 }
 
 function M.toggle(NeoCmd)
-  local now = vim.loop.now()
+  local now = vim.uv.now()
 
   -- Anti-Bounce: Min 100ms zwischen Toggles
   if now - float_state.last_toggle < 100 then
@@ -332,12 +332,12 @@ setmetatable(validation_cache, {__mode = "k"})  -- Weak keys
 
 function M.is_valid_file_buffer(bufnr)
   local cached = validation_cache[bufnr]
-  if cached and (vim.loop.now() - cached.time < 1000) then
+  if cached and (vim.uv.now() - cached.time < 1000) then
     return cached.valid
   end
 
   local valid = do_full_validation(bufnr)
-  validation_cache[bufnr] = {valid = valid, time = vim.loop.now()}
+  validation_cache[bufnr] = {valid = valid, time = vim.uv.now()}
   return valid
 end
 ```
@@ -553,11 +553,11 @@ describe("performance", function()
   it("open < 10ms avg", function()
     local times = {}
     for i = 1, 50 do
-      local start = vim.loop.hrtime()
+      local start = vim.uv.hrtime()
       controller.make_opener("left")()
       vim.wait(100)
       controller.make_opener("left")()  -- close
-      times[i] = (vim.loop.hrtime() - start) / 1e6
+      times[i] = (vim.uv.hrtime() - start) / 1e6
     end
 
     local avg = sum(times) / #times

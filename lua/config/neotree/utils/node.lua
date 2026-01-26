@@ -91,4 +91,68 @@ function M.extract_paths(nodes)
   return paths, names
 end
 
+---Get line number for a node in the Neo-tree buffer
+---@param state Cfg.NeoTree.State
+---@param node_id string Node identifier
+---@return integer|nil line 1-based line number, or nil if not found
+function M.get_line_number(state, node_id)
+  -- Ensure tree exists
+  local tree = state.tree
+  if not tree then
+    return nil
+  end
+
+  -- Neo-tree API: tree:get_node is the canonical access method
+  -- Use pcall to avoid crashes on unexpected node types
+  local ok, node = pcall(tree.get_node, tree, node_id)
+  if not ok or not node then
+    return nil
+  end
+
+  ---@cast node Cfg.NeoTree.Node
+
+  -- Neo-tree nodes may expose a line/row property (varies by version)
+  -- Common candidates:
+  -- node.line, node.row, node.position, node.bufnr, node.range
+  if type(node.line) == "number" then
+    return node.line
+  end
+
+  if type(node.row) == "number" then
+    return node.row
+  end
+
+  if type(node.position) == "number" then
+    return node.position[1]
+  end
+
+  -- Some Neo-tree versions expose a range-like table
+  if type(node.range) == "table" and type(node.range[1]) == "number" then
+    return node.range[1] + 1
+  end
+
+  -- If the node does not contain line information, fallback to buffer search.
+  -- This is slower but works reliably.
+  local buf = vim.api.nvim_get_current_buf()
+  if not vim.api.nvim_buf_is_valid(buf) then
+    return nil
+  end
+
+  -- Search for node name in the buffer (safe fallback)
+  local name = node.name or node.path or node.id
+  if type(name) ~= "string" or name == "" then
+    return nil
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  for idx, line in ipairs(lines) do
+    if line:find(name, 1, true) then
+      return idx
+    end
+  end
+
+  return nil
+end
+
+---@type Cfg.NeoTree.Utils.Node
 return M

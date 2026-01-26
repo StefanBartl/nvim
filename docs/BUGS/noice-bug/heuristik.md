@@ -91,7 +91,7 @@ C) Optional: Insert-Mode bewahren (falls in seltenen Fällen noch ein Float kurz
 ---@module 'ui.insert_mode_guard_min'
 --- Minimal guard to re-enter insert if we just typed and focus flipped.
 
-local uv = vim.uv or vim.loop
+local uv = vim.uv or vim.uv
 local last_i = 0
 local function now() return uv.now() end
 

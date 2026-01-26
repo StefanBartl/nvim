@@ -83,7 +83,7 @@
 | `CursorMoved` Latenz | 0.67ms | <0.50ms | `:AutocmdStats` |
 | `BufEnter` Latenz | 0.80ms | <0.55ms | `:AutocmdStats` |
 | Cache Hit Rate | N/A | >80% | `cache.stats.ratio` |
-| Startup Zeit (`:Lazy profile`) | X ms | X-10% | `vim.loop.hrtime()` |
+| Startup Zeit (`:Lazy profile`) | X ms | X-10% | `vim.uv.hrtime()` |
 | Speicherverbrauch | Y MB | Y-5% | `:lua collectgarbage("count")` |
 
 ---

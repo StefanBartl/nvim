@@ -71,4 +71,5 @@ function M.get_cwd()
   return uv.cwd() or vim.fn.getcwd()
 end
 
+---@type Cfg.NeoTree.Utils.Platform
 return M

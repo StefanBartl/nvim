@@ -1,4 +1,4 @@
-vim.g.start_time = vim.loop.hrtime()
+vim.g.start_time = vim.uv.hrtime()
 
 -- Enable vim.loader for faster module loading
 local loader_ok = pcall(function()
@@ -131,7 +131,7 @@ require("debugging").setup({
 -- Show startup time (optional)
 vim.defer_fn(function()
     if vim.g.start_time then
-        local load_time = (vim.loop.hrtime() - vim.g.start_time) / 1e6
+        local load_time = (vim.uv.hrtime() - vim.g.start_time) / 1e6
         vim.notify(string.format('Config loaded in %.2f ms', load_time), vim.log.levels.INFO)
     end
 end, 0)

@@ -573,7 +573,7 @@ function M:search(prompt)
         return self.cache[cache_key]
     end
 
-    -- Execute find (async via vim.loop or vim.system)
+    -- Execute find (async via vim.uv or vim.system)
     local results = self:_find_files_async(prompt)
 
     -- Cache results
@@ -589,7 +589,7 @@ end
 ---@param prompt string
 ---@return ResultItem[]
 function M:_find_files_async(prompt)
-    -- Implementation with vim.system or vim.loop
+    -- Implementation with vim.system or vim.uv
     -- Return standardized ResultItem[]
 end
 ```

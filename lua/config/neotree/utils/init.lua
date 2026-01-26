@@ -41,4 +41,5 @@ function M.is_neotree_open()
   return false
 end
 
+---@type Cfg.NeoTree.Utils.Module
 return M

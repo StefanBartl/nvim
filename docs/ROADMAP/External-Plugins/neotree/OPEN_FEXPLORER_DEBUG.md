@@ -36,7 +36,7 @@
 4. Prüfen, ob Neovim unter WSL läuft:
 
 ```lua
-:lua print(vim.loop.os_uname().version)
+:lua print(vim.uv.os_uname().version)
 -- oder
 :lua print(os.getenv("WSL_DISTRO_NAME"))
 ```

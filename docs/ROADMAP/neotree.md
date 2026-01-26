@@ -18,12 +18,27 @@
 
 ---
 
-1. Wenn sourcves sitch dann solld er fokus im neotree bleiben
-2. löschen doppelt bestätigen
+1. Wenn sources switch dann soll der fokus im neotree bleiben
+
+ Jede Löschung aus dem neotree heraus muss doppelt bestätigt werden, das ist nicht notwenidg:
+
+Erste prompt:
+
+```vim
+Move to trash: nil ?  (y(N)
+```
+
+zweite prompt:
+
+```vim
+             Input
+delete: C:\.....ABSOLUTER-PFAD.md ? (y/(N)
+```
+
 3. mark:
-    - für löschen, kopieren, moven usw...
-    - soll ene markierung im lnken rand erzeugen wenn markiert.
-    - dlelete all muste ich dann erst wieer alle ienzeln bestätigen das löschen
+    - nicht nur für löschen sondern auch für files kopieren, verschieben usw...
+    - soll ene markierung im lnken rand (sign column / sign gutter) erzeugen wenn markiert.
+    - delete all muste ich dann erst wieer alle ienzeln bestätigen das löschen
 
 ---
 
