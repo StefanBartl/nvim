@@ -104,14 +104,14 @@ function M.get(key)
   return nil
 end
 
--- :lua print(vim.inspect(require("autocmds.context.cache").stats))
+-- :lua print(vim.inspect(require("autocmds.benchmarks.context.cache").stats))
 ```
 
 ### 4. **User Commands**
 ```lua
 -- usercmds/autocmds.lua
 vim.api.nvim_create_user_command("AutocmdStats", function()
-  local ctx = require("autocmds.context.cache")
+  local ctx = require("autocmds.benchmarks.context.cache")
   print(string.format("Cache hits: %d | misses: %d | ratio: %.2f%%",
     ctx.stats.hits, ctx.stats.misses,
     ctx.stats.hits / (ctx.stats.hits + ctx.stats.misses) * 100))

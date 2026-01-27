@@ -47,8 +47,17 @@
     - jeder buchstabe ist in der trefferliste eingetragen
     - Was siond die stats neben der prompt? weeenn ich `nvim_set_current_win` eingebe steht 2871/6343649
 9. `sessions` überarbeiten
+10. `Recommender` so machen, dass ein telescope oder ein selection aufgemacht wird, und dort kann man dann aussuchen ,welche auf einmal angewandt werden.
 
 --
+
+## UI
+
+Implementieren in `:UI` sowie auch als config
+- `autocmds.auto-center-fexplorer` (hat aber eigentlcih nichts mitr nvchad ui zu tun, also eigene oder wkdoptions/ui/config)
+
+- `:UI` -> `:NvChadUI` / `:WKDUI`--> `:UI NvChad bzw :UI WKD`
+
 
 ## Neotest
 

@@ -1,4 +1,4 @@
----@module 'autocmds.benchmarks.context.buffer'
+---@module 'autocmds.context.buffer'
 ---@brief Buffer context factory with intelligent caching
 ---@description
 --- Provides a unified interface to buffer metadata and content.
@@ -6,20 +6,7 @@
 
 local M = {}
 
-local api = vim.api
-
----@class BufferContext
----@field bufnr integer Buffer handle
----@field name string Full buffer path (empty if unnamed)
----@field filetype string Buffer filetype
----@field buftype string Buffer type (empty for normal files)
----@field modifiable boolean Whether buffer can be modified
----@field modified boolean Whether buffer has unsaved changes
----@field tick integer Buffer changedtick (for cache validation)
----@field lines string[]|nil Lazy-loaded buffer lines
----@field line_count integer Number of lines in buffer
----@field size_bytes integer Approximate size in bytes
----@field is_valid boolean Whether buffer still exists
+local api, bo = vim.api, vim.bo
 
 --- Weak-keyed cache (auto-cleanup on buffer deletion)
 local cache = setmetatable({}, { __mode = "k" })
@@ -32,7 +19,7 @@ M.stats = {
 }
 
 --- Check if buffer should be processed
----@param ctx BufferContext
+---@param ctx AutoCmds.Context.BufferCtx
 ---@param ignore_buftypes string[]?
 ---@param ignore_filetypes string[]?
 ---@return boolean
@@ -54,12 +41,13 @@ end
 
 --- Get buffer context (cached by changedtick)
 ---@param bufnr integer? Buffer handle (default: current)
----@return BufferContext
+---@return AutoCmds.Context.BufferCtx
 function M.get(bufnr)
   bufnr = bufnr or api.nvim_get_current_buf()
 
   -- Validate buffer exists
   if not api.nvim_buf_is_valid(bufnr) then
+    ---@type AutoCmds.Context.BufferCtx
     return {
       bufnr = bufnr,
       is_valid = false,
@@ -92,10 +80,10 @@ function M.get(bufnr)
     bufnr = bufnr,
     is_valid = true,
     name = name,
-    filetype = vim.bo[bufnr].filetype or "",
-    buftype = vim.bo[bufnr].buftype or "",
-    modifiable = vim.bo[bufnr].modifiable,
-    modified = vim.bo[bufnr].modified,
+    filetype = bo[bufnr].filetype or "",
+    buftype = bo[bufnr].buftype or "",
+    modifiable = bo[bufnr].modifiable,
+    modified = bo[bufnr].modified,
     tick = tick,
     line_count = line_count,
     size_bytes = #name + (line_count * 80), -- Rough estimate
@@ -118,16 +106,16 @@ function M.get(bufnr)
     end
   })
 
-  -- Helper methods
-  ctx.is_normal = function(self)
+  -- Add methods to context table directly (for LSP)
+  function ctx:is_normal()
     return self.buftype == "" and self.modifiable
   end
 
-  ctx.is_processable = function(self, ignore_buftypes, ignore_filetypes)
+  function ctx:is_processable(ignore_buftypes, ignore_filetypes)
     return is_processable(self, ignore_buftypes, ignore_filetypes)
   end
 
-  ctx.has_filetype = function(self, ft)
+  function ctx:has_filetype(ft)
     if type(ft) == "string" then
       return self.filetype == ft
     elseif type(ft) == "table" then

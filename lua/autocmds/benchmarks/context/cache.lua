@@ -7,12 +7,7 @@
 local M = {}
 
 local api = vim.api
-
----@class CacheEntry
----@field value any
----@field tick integer Buffer changedtick when cached
----@field timestamp number os.clock() when cached
----@field ttl number? Time-to-live in seconds
+local nvim_buf_get_changedtick = api.nvim_buf_get_changedtick
 
 --- Global cache storage (weak keys for auto-cleanup)
 local caches = setmetatable({}, { __mode = "k" })
@@ -66,7 +61,7 @@ function M.namespace(name, opts)
 
       -- Tick-based validation
       if bufnr and entry.tick then
-        local current_tick = api.nvim_buf_get_changedtick(bufnr)
+        local current_tick = nvim_buf_get_changedtick(bufnr)
         if current_tick ~= entry.tick then
           cache[key] = nil
           namespace_stats.evictions = namespace_stats.evictions + 1
@@ -91,7 +86,7 @@ function M.namespace(name, opts)
       }
 
       if bufnr then
-        entry.tick = api.nvim_buf_get_changedtick(bufnr)
+        entry.tick = nvim_buf_get_changedtick(bufnr)
       end
 
       cache[key] = entry
@@ -146,7 +141,7 @@ function M.setup_auto_invalidation()
         local invalidated = 0
         for key, entry in pairs(cache_obj) do
           if entry.tick and api.nvim_buf_is_valid(ev.buf) then
-            local current_tick = api.nvim_buf_get_changedtick(ev.buf)
+            local current_tick = nvim_buf_get_changedtick(ev.buf)
             if entry.tick ~= current_tick then
               cache_obj[key] = nil
               invalidated = invalidated + 1

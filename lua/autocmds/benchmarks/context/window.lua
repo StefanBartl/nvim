@@ -1,4 +1,4 @@
----@module 'autocmd.benchmarks.context.window'
+---@module 'autocmds.context.window'
 ---@brief Window context factory
 ---@description
 --- Provides window-specific context (cursor position, viewport, etc.)
@@ -7,16 +7,6 @@
 local M = {}
 
 local api = vim.api
-
----@class WindowContext
----@field winid integer Window handle
----@field bufnr integer Associated buffer
----@field cursor integer[] [row, col] (1-indexed)
----@field topline integer First visible line
----@field botline integer Last visible line
----@field width integer Window width
----@field height integer Window height
----@field is_valid boolean Whether window still exists
 
 --- Lightweight cache (no tick validation needed)
 local cache = {}
@@ -29,11 +19,12 @@ M.stats = {
 
 --- Get window context
 ---@param winid integer? Window handle (default: current)
----@return WindowContext
+---@return AutoCmds.Context.WindowCtx
 function M.get(winid)
   winid = winid or api.nvim_get_current_win()
 
   if not api.nvim_win_is_valid(winid) then
+    ---@type AutoCmds.Context.WindowCtx
     return {
       winid = winid,
       is_valid = false,
@@ -75,17 +66,19 @@ function M.get(winid)
     height = height,
   }
 
-  -- Helper methods
-  ctx.is_cursor_in_range = function(self, start_line, end_line)
+  -- Add methods to context table directly (for LSP)
+  function ctx:is_cursor_in_range(start_line, end_line)
     local row = self.cursor[1]
     return row >= start_line and row <= end_line
   end
 
-  ctx.get_visible_lines = function(self)
+  function ctx:get_visible_lines()
     return self.botline - self.topline + 1
   end
 
   cache[winid] = ctx
+
+ ---@type AutoCmds.Context.WindowCtx
   return ctx
 end
 

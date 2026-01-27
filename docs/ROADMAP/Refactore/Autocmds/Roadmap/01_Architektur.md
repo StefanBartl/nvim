@@ -59,7 +59,7 @@ lua/
 local M = {}
 local cache = setmetatable({}, { __mode = "k" }) -- weak keys
 
----@class BufferContext
+---@class AutoCmds.Context.BufferCtx
 ---@field bufnr integer
 ---@field name string
 ---@field filetype string
@@ -113,7 +113,7 @@ return M
 
 ```lua
 -- autocmds/events/hot_path/cursor_moved.lua
-local buffer_ctx = require("autocmds.context.buffer")
+local buffer_ctx = require("autocmds.benchmarks.context.buffer")
 local handlers = {
   git_line_diff = require("autocmds.handlers.git.line_diff"),
   cword_occurrences = require("autocmds.handlers.ui.cword_occurrences"),
