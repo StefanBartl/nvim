@@ -2,7 +2,7 @@
 --- Mode-aware line-diff preview on CursorHold/CursorHoldI with stable scrolling
 --- and strict mode filtering (re-check on render + ModeChanged invalidation).
 
----@class GitAutoCmdsLineDiffOnHold
+---@class AutoCmds.Git.LineDiffOnHold
 local M = {}
 
 local api, fn = vim.api, vim.fn
@@ -159,7 +159,7 @@ local function effective_events(modes, events_override)
   return ev
 end
 
----@param cfg GitAutoCmdsLineDiffOnHoldCfg
+---@param cfg AutoCmds.Git.LineDiffOnHoldCfg
 ---@param shared table
 ---@return nil
 function M.enable(cfg, shared)

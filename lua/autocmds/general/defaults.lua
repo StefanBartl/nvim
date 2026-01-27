@@ -1,18 +1,19 @@
 ---@module 'autocmds.general.defaults'
 
+-- AUDIT: Optionen beschreiben
+
 ---@type AutoCmds.General.Cfg
-local defaults = {
-  group_name = "custom_autocmds",
+local AUTOCMDS_GENERAL_DEFAULTS = {
+  group_name = "autocmds_general",
 
   auto_mkdir = {
     enable = true,
     skip_remote = true,
-    -- Matches e.g. "xx://", "ssh://", "http://", "file://", on both slash styles
-    detect_remote_pattern = "^%w%w+:[\\/][\\/]",
+    detect_remote_pattern = "^%w%w+:[\\/][\\/]", -- Matches e.g. "xx://", "ssh://", "http://", "file://", on both slash styles
   },
 
-  kitty = {
-    enable = false, -- Disabled by default; only meaningful inside Kitty
+  kitty = {                                     -- Sets Kitty padding/margin to compact values on VimEnter and restores them on VimLeavePre.
+    enable = true,                              -- Disabled by default; only meaningful inside Kitty
     enter_padding = 0,
     enter_margin = 0,
     leave_padding = 20,
@@ -22,7 +23,7 @@ local defaults = {
   nvdash = {
     enable = true,
     cmd = "Nvdash",
-    is_listed_only = true, -- Consider only listed buffers when deciding "last buffer"
+    is_listed_only = true,                      -- Consider only listed buffers when deciding "last buffer"
   },
 
   cursorline = {
@@ -39,4 +40,11 @@ local defaults = {
 
 }
 
-return defaults
+local M = {}
+
+---@return AutoCmds.General.Cfg
+function M.get_defaults()
+  return AUTOCMDS_GENERAL_DEFAULTS
+end
+
+return M

@@ -2,9 +2,8 @@
 --- Initialize module for 'autocmds'
 
 --FIX: Modularisere die submodule in eigene module
---FIX: Default's implementieren und hier dann nur die notwendigstsen setzen
 
--- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren:
+-- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren, aber nach wkdoptions/ui oder ähnliches:
 require("autocmds.auto-center-fexplorer").setup()
 
 ------------------------------------------------------
@@ -14,23 +13,15 @@ require("autocmds.auto-center-fexplorer").setup()
 require("autocmds.general").enable({
   kitty = {
     enable = true, -- Sets Kitty padding/margin to compact values on VimEnter and restores them on VimLeavePre.
-    enter_padding = 0,
-    enter_margin = 0,
-    leave_padding = 20,
-    leave_margin = 10,
   },
   auto_mkdir = {
     enable = true, -- Creates missing parent directories on BufWritePre, optionally skipping URL/remote-like paths.
-    skip_remote = true,
   },
   cursorline = {
     enable = false, -- Toggles the local 'cursorline' option on focus/normal events and hides it on insert/leave events.
-    show_events = { "InsertLeave", "WinEnter" },
-    hide_events = { "InsertEnter", "WinLeave" },
   },
   last_loc = {
     enable = false, -- On BufReadPost, jumps back to the last cursor position unless the filetype is excluded.
-    exclude = { "gitcommit", "commit", "gitrebase" },
   },
 })
 
@@ -49,19 +40,19 @@ end
 
 require("autocmds.terminals").enable({
   numbers = {
-    enable = true, -- On terminal open, turns off local 'number' and 'relativenumber' to declutter terminal panes.
+    enable = true,              -- On terminal open, turns off local 'number' and 'relativenumber' to declutter terminal panes.
     events = { "TermOpen" },
   },
   kitty = {
-    enable = true, -- In Kitty, applies compact padding/margin on VimEnter and restores defaults on VimLeavePre.
+    enable = true,              -- In Kitty, applies compact padding/margin on VimEnter and restores defaults on VimLeavePre.
     enter_padding = 0,
     enter_margin = 0,
     leave_padding = 20,
     leave_margin = 10,
   },
   auto_insert = {
-    enable = false, -- Automatically enters Insert mode in terminal buffers; add "TermEnter" to events if desired.
-    events = { "TermOpen" },
+    enable = false,             -- Automatically enters Insert mode in terminal buffers; add "TermEnter" to events if desired.
+    events = { "TermOpen" },    -- Alternative: add "TermEnter" if one prefers aggressive insert-on-focus.
   },
 })
 

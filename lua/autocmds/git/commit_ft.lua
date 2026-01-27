@@ -1,12 +1,12 @@
 ---@module 'autocmds.git.commit_ft'
 --- Tweak gitcommit buffers (spell, tw, colorcolumn, formatoptions, startinsert).
 
----@class GitAutoCmdsCommitFt
+---@class AutoCmds.Git.CommitFt
 local M = {}
 
 local api = vim.api
 
----@param cfg GitAutoCmdsCommitFtCfg
+---@param cfg AutoCmds.Git.CommitFtCfg
 ---@param _shared table
 ---@return nil
 ---@diagnostic disable-next-line: unused-local

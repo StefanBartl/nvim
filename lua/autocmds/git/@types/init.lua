@@ -1,19 +1,22 @@
 ---@meta
----@module 'autocmds.git.type.types'
+---@module 'autocmds.git.@types'
 --- Strongly-typed, LSP-friendly configuration contracts for Git-related autocmd modules.
 --- This file documents every field with purpose, defaults, allowed values and side effects.
 --- It mirrors the shape expected by `require('autocmds.git').enable(cfg)`.
+
+---@class AutoCmds.Git
+---@field enable fun(cfg: AutoCmds.Git.Cfg|boolean|nil): nil # Enable git-related autocommands per feature.
 
 --------------------------------------------------------------------------------
 -- Module: conflicts_qf
 --------------------------------------------------------------------------------
 
----@class GitAutoCmdsConflictsQfCfg
+---@class AutoCmds.Git.Conflicts.QfCfg
 ---@field enable boolean
 --- Enable this feature. When true, on the configured `events` a scan runs for
 --- unresolved merge conflicts and populates the quickfix list.
 ---
----@field events AutocmdEvent[]|nil
+---@field events Autocmds.Event[]|nil
 --- Autocmd events that trigger the scan.
 --- Default: { "VimEnter" }. Reasonable additions: { "FocusGained" }.
 --- Use sparingly on very large repos to avoid startup overhead.
@@ -29,7 +32,7 @@
 ---@field notify boolean|nil
 --- When true (default), shows a notification with the conflicting file names.
 ---
----@field git_cmd GitCommand|nil
+---@field git_cmd Git.Command|nil
 --- Git command to execute. Default: "git".
 --- Provide a full path to avoid PATH/resolver surprises.
 
@@ -37,7 +40,7 @@
 -- Module: commit_ft
 --------------------------------------------------------------------------------
 
----@class GitAutoCmdsCommitFtCfg
+---@class AutoCmds.Git.CommitFtCfg
 ---@field enable boolean
 --- Enable this feature. Applies only to buffers with `filetype=gitcommit`.
 ---
@@ -62,7 +65,7 @@
 -- Module: conflict_marks
 --------------------------------------------------------------------------------
 
----@class GitAutoCmdsConflictMarksCfg
+---@class AutoCmds.Git.ConflictMarksCfg
 ---@field enable boolean
 --- Enable highlighting of Git conflict markers inside any buffer.
 ---
@@ -79,11 +82,11 @@
 -- Module: gitsigns_refresh
 --------------------------------------------------------------------------------
 
----@class GitAutoCmdsGitsignsRefreshCfg
+---@class AutoCmds.Git.GitsignsRefreshCfg
 ---@field enable boolean
 --- Enable gitsigns refresh hooks (safe no-op when gitsigns is absent).
 ---
----@field events AutocmdEvent[]|nil
+---@field events Autocmds.Event[]|nil
 --- Events used to refresh hunks. Default: { "BufEnter", "FocusGained" }.
 --- Add/remove events to balance freshness vs. overhead.
 
@@ -91,7 +94,7 @@
 -- Module: blame_on_hold
 --------------------------------------------------------------------------------
 
----@class GitAutoCmdsBlameOnHoldCfg
+---@class AutoCmds.Git.BlameOnHoldCfg
 ---@field enable boolean
 --- Enable inline blame display on idle cursor (requires gitsigns).
 ---
@@ -102,27 +105,27 @@
 ---@field virt boolean|nil
 --- Request virtual-text overlay for blame when supported. Default: true.
 ---
----@field ignore_buftypes Buftype[]|nil
+---@field ignore_buftypes Git.BufType[]|nil
 --- Skip blame on these buffer types. Default: { "nofile", "prompt" }.
 
 --------------------------------------------------------------------------------
 -- Module: line_diff_on_hold
 --------------------------------------------------------------------------------
 
----@class GitAutoCmdsLineDiffOnHoldCfg
+---@class AutoCmds.Git.LineDiffOnHoldCfg
 ---@field enable boolean
 --- Enable per-line diff preview on idle cursor.
 --- Behavior:
 ---   1) Prefer `gitsigns.preview_hunk_inline()` when available (inline diff).
 ---   2) Fallback: fetch previous committed content for the current line and render as EOL/right-aligned virtual text.
 ---
----@field modes (GitModeChar|string)[]|string|nil
+---@field modes (Git.ModeChar|string)[]|string|nil
 --- Mode filter defining where previews are allowed.
 --- Accepts: "n", "v", "i" (string with any combination, e.g., "nv") or array { "n", "v" }.
 --- Default: nil → treated as allowing Normal+Visual (mapped to CursorHold).
 --- Insert-only requires "i" (mapped to CursorHoldI).
 ---
----@field events_override AutocmdEvent[]|nil
+---@field events_override Autocmds.Event[]|nil
 --- If set, completely replaces the automatically derived events from `modes`.
 --- Example: { "CursorHold", "CursorHoldI" }.
 ---
@@ -157,10 +160,10 @@
 --- Extra debounce in milliseconds added beyond `updatetime` before running the preview.
 --- Default: 0.
 ---
----@field git_cmd GitCommand|nil
+---@field git_cmd Git.Command|nil
 --- Git command to execute for blame/show plumbing. Default: "git".
 ---
----@field ignore_buftypes Buftype[]|nil
+---@field ignore_buftypes Git.BufType[]|nil
 --- Skip previews on these buffer types.
 --- Default: { "nofile", "prompt", "terminal" }.
 ---
@@ -181,7 +184,7 @@
 -- Optional commands: health/spec (registered by orchestrator when enabled)
 --------------------------------------------------------------------------------
 
----@class GitHealthCfg
+---@class AutoCmds.Git.HealthCfg
 ---@field enable boolean
 --- Enable registration of a health-check user command.
 ---
@@ -192,7 +195,7 @@
 --- When true, render results into a scratch window; otherwise print/log.
 --- Default: true.
 
----@class GitSpecCfg
+---@class AutoCmds.Git.Spec.Cfg
 ---@field enable boolean
 --- Enable registration of a lightweight spec/test command for helper functions.
 ---
@@ -203,27 +206,29 @@
 -- Root configuration passed to `require('autocmds.git').enable(cfg)`
 --------------------------------------------------------------------------------
 
----@class GitAutoCmdsCfg
----@field conflicts_qf GitAutoCmdsConflictsQfCfg
+---@class AutoCmds.Git.Cfg
+---@field conflicts_qf AutoCmds.Git.Conflicts.QfCfg
 --- Settings for unresolved-conflict quickfix population.
 ---
----@field commit_ft GitAutoCmdsCommitFtCfg
+---@field commit_ft AutoCmds.Git.CommitFtCfg
 --- Settings for `gitcommit` buffers (spelling, wrapping, rulers, etc.).
 ---
----@field conflict_marks GitAutoCmdsConflictMarksCfg
+---@field conflict_marks AutoCmds.Git.ConflictMarksCfg
 --- Settings for conflict marker highlights.
 ---
----@field gitsigns_refresh GitAutoCmdsGitsignsRefreshCfg
+---@field gitsigns_refresh AutoCmds.Git.GitsignsRefreshCfg
 --- Settings for gitsigns refresh hooks.
 ---
----@field blame_on_hold GitAutoCmdsBlameOnHoldCfg
+---@field blame_on_hold AutoCmds.Git.BlameOnHoldCfg
 --- Settings for inline blame on idle cursor.
 ---
----@field line_diff_on_hold GitAutoCmdsLineDiffOnHoldCfg
+---@field line_diff_on_hold AutoCmds.Git.LineDiffOnHoldCfg
 --- Settings for per-line diff/previous-content previews on idle cursor.
 ---
----@field health GitHealthCfg|nil
+---@field health AutoCmds.Git.HealthCfg|nil
 --- Optional: user command for dependency/repo health diagnostics.
 ---
----@field spec GitSpecCfg|nil
+---@field spec AutoCmds.Git.Spec.Cfg|nil
 --- Optional: user command for unit-like specs of helper functions.
+
+return {}

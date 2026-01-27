@@ -1,12 +1,12 @@
 ---@module 'autocmds.git.conflict_marks'
 --- Highlight conflict markers (<<<<<<< / ======= / >>>>>>>) per-window and clear on leave.
 
----@class GitAutoCmdsConflictMarks
+---@class AutoCmds.Git.ConflictMarks
 local M = {}
 
 local api, fn = vim.api, vim.fn
 
----@param cfg GitAutoCmdsConflictMarksCfg
+---@param cfg AutoCmds.Git.ConflictMarksCfg
 ---@param shared table
 ---@return nil
 function M.enable(cfg, shared)

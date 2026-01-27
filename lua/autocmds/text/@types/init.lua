@@ -1,5 +1,8 @@
 ---@meta
----@module 'autocmds.text.types'
+---@module 'autocmds.text.@types'
+
+---@class AutoCmds.Text
+---@field enable fun(cfg: AutoCmds.Text.Cfg|nil): nil # Enable text-related autocommands per feature.
 
 ---@class AutoCmds.Text.TrimTrailing.Cfg
 ---@field enable boolean                 # Enable trimming of trailing whitespace on save.
@@ -30,3 +33,4 @@
 ---@field last_loc AutoCmds.Text.LastLoc.Cfg
 
 return {}
+

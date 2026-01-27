@@ -1,12 +1,12 @@
 ---@module 'autocmds.git.gitsigns_refresh'
 --- Refresh gitsigns hunks on focus/enter to keep UI accurate.
 
----@class GitAutoCmdsGitsignsRefresh
+---@class AutoCmds.Git.GitsignsRefresh
 local M = {}
 
 local api = vim.api
 
----@param cfg GitAutoCmdsGitsignsRefreshCfg
+---@param cfg AutoCmds.Git.GitsignsRefreshCfg
 ---@param shared table
 ---@return nil
 function M.enable(cfg, shared)

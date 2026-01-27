@@ -56,5 +56,20 @@
 ---@alias OptionToggle fun(name:VimOptionName, value:TriBool):void
 ---@alias EventCallback fun(event:string, args:table):void
 ---@alias Url string
+---@alias HighlightGroup string
+
+--- Autocmd event names
+---@alias Autocmds.Event
+---| '"VimEnter"'
+---| '"FocusGained"'
+---| '"BufEnter"'
+---| '"BufHidden"'
+---| '"BufWinEnter"'
+---| '"BufWinLeave"'
+---| '"FileType"'
+---| '"CursorHold"'
+---| '"CursorHoldI"'
+---| '"CursorMoved"'
+---| '"InsertEnter"'
 
 return {}

@@ -1,12 +1,12 @@
 ---@module 'autocmds.git.blame_on_hold'
 --- Show inline blame via gitsigns when the cursor rests (non-intrusive).
 
----@class GitAutoCmdsBlameOnHold
+---@class AutoCmds.Git.BlameOnHold
 local M = {}
 
 local api = vim.api
 
----@param cfg GitAutoCmdsBlameOnHoldCfg
+---@param cfg AutoCmds.Git.BlameOnHoldCfg
 ---@param shared table
 ---@return nil
 function M.enable(cfg, shared)

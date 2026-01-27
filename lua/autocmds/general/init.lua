@@ -6,9 +6,11 @@ local M = {}
 
 local api, uv = vim.api, vim.uv or vim.loop
 local helpers = require("autocmds.general.helpers")
-local DEFAULTS = require("autocmds.general.defaults")
+local DEFAULTS = require("autocmds.general.defaults").get_defaults()
 
--- Public API ------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Public API
+--------------------------------------------------------------------------------
 
 ---@param cfg AutoCmds.General.Cfg|nil
 ---@return nil
@@ -17,7 +19,7 @@ function M.enable(cfg)
 
   -- 1) Auto-create directory on save (BufWritePre)
   if cfg.auto_mkdir.enable then
-    local grp = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_auto_mkdir")
+    local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_auto_mkdir")
     api.nvim_create_autocmd("BufWritePre", {
       group = grp,
       callback = function(event)
@@ -37,7 +39,7 @@ function M.enable(cfg)
 
   -- 2) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
   if cfg.kitty.enable then
-    local grp = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_kitty_spacing")
+    local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_kitty_spacing")
     api.nvim_create_autocmd("VimEnter", {
       group = grp,
       callback = function()
@@ -56,7 +58,7 @@ function M.enable(cfg)
 
   -- 3) Cursorline only in the active window
   if cfg.cursorline.enable then
-    local grp_show = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_cursorline_show")
+    local grp_show = helpers.augroup((cfg.group_name or "autocmds_general") .. "_cursorline_show")
     api.nvim_create_autocmd(cfg.cursorline.show_events, {
       group = grp_show,
       callback = function(event)
@@ -68,7 +70,7 @@ function M.enable(cfg)
       desc = "Enable cursorline in the active window on relevant events",
     })
 
-    local grp_hide = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_cursorline_hide")
+    local grp_hide = helpers.augroup((cfg.group_name or "autocmds_general") .. "_cursorline_hide")
     api.nvim_create_autocmd(cfg.cursorline.hide_events, {
       group = grp_hide,
       callback = function()
@@ -80,7 +82,7 @@ function M.enable(cfg)
 
   -- 4) Jump to last location when reopening a file (BufReadPost)
   if cfg.last_loc.enable then
-    local grp = helpers.augroup((cfg.group_name or "custom_autocmds") .. "_last_loc")
+    local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_last_loc")
     api.nvim_create_autocmd("BufReadPost", {
       group = grp,
       callback = function(event)
@@ -109,4 +111,5 @@ function M.enable(cfg)
 
 end
 
+---@type AutoCmds.General
 return M

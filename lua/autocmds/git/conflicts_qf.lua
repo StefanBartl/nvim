@@ -1,7 +1,7 @@
 ---@module 'autocmds.git.conflicts_qf'
 --- Populate quickfix with files that have unresolved conflicts on startup/focus.
 
----@class GitAutoCmdsConflictsQf
+---@class AutoCmds.Git.ConflictsQf
 local notify = require("lib.notify").create("[autocmds.git.conflicts_qf]")
 
 local M = {}
@@ -9,7 +9,7 @@ local M = {}
 local api, fn = vim.api, vim.fn
 
 ---Register autocmds for unresolved-conflicts → quickfix population.
----@param cfg GitAutoCmdsConflictsQfCfg
+---@param cfg AutoCmds.Git.Conflicts.QfCfg
 ---@param shared table
 ---@return nil
 function M.enable(cfg, shared)
