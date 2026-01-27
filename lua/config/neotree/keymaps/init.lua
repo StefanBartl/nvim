@@ -1,11 +1,12 @@
 ---@module 'config.neotree.keymaps'
 --- Centralized, buffer-local Neo-tree keymaps that override defaults consistently.
 
+local lazy = require("lib.lazy")
 -- Utility to safely hide the preview window without errors
 local safe_hide_preview = require("config.neotree.utils").safe_hide_preview
-
 -- Watcher quarantine helper to temporarily suppress filesystem events
-local watcher_quarantine = require("config.neotree.watcher_quarantine")
+local watcher_quarantine = lazy.require("config.neotree.watcher_quarantine")
+local source_command = lazy.require("config.neotree.commands.source")
 
 ---@return table<string, any>
 return {
@@ -43,8 +44,8 @@ return {
 
   --====================== Source Switching ===========================
 
-  ['"'] = "next_source",
-  ["!"] = "prev_source",
+  ['"'] = function(_) source_command.next_source() end,
+  ["!"] = function(_) source_command.prev_source() end,
   ["<"] = "noop",
 
   --====================== Window Management ==========================
