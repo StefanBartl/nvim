@@ -1,43 +1,45 @@
 Autocmd Audit Summary
 ---------------------
-Total unique autocmd calls: 110
-Total event registrations: 98
+Scope overview:
+buffer 12
+window 3
+global 97
 
 Event frequency:
   "FileType": 17
   "BufEnter": 11
   "BufWritePre": 7
   "VimEnter": 6
-  "BufWinEnter": 6
   "ColorScheme": 6
-  "CursorMoved": 5
+  "BufWinEnter": 6
   "VimLeavePre": 5
+  "CursorMoved": 5
   "BufDelete": 4
-  "User": 3
-  "BufReadPost": 3
-  "ModeChanged": 3
   "WinClosed": 3
-  "InsertEnter": 2
+  "BufReadPost": 3
+  "User": 3
+  "ModeChanged": 3
   "BufLeave": 2
   "WinEnter": 2
-  "BufWritePost": 1
-  "BufWinLeave": 1
+  "TextChanged": 2
+  "InsertEnter": 2
+  "BufWritePost": 2
   "DirChanged": 1
-  "LspAttach": 1
-  "TermOpen": 1
-  "TextChanged": 1
-  "BufWipeout": 1
-  "CursorMovedI": 1
-  "WinLeave": 1
-  "OptionSet": 1
-  "TextYankPost": 1
-  "CursorHold": 1
+  "BufWinLeave": 1
   "DiagnosticChanged": 1
+  "WinLeave": 1
+  "CursorMovedI": 1
+  "TextYankPost": 1
+  "OptionSet": 1
+  "BufWipeout": 1
+  "TermOpen": 1
+  "LspAttach": 1
+  "CursorHold": 1
 
-Detailed listing (by source)
-----------------------------
+Detailed listing
+----------------
 
-1. autocmds/auto-center-fexplorer.lua:138
+1. autocmds/auto-center-fexplorer.lua:137
 Events: CursorMoved
 Implementation:
   vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
@@ -52,7 +54,7 @@ Implementation:
   })
 
 
-2. autocmds/auto-center-fexplorer.lua:150
+2. autocmds/auto-center-fexplorer.lua:149
 Events: BufDelete
 Implementation:
   vim.api.nvim_create_autocmd("BufDelete", {
@@ -72,7 +74,7 @@ Implementation:
   })
 
 
-3. autocmds/auto-center-fexplorer.lua:188
+3. autocmds/auto-center-fexplorer.lua:187
 Events: FileType
 Implementation:
   vim.api.nvim_create_autocmd("FileType", {
@@ -86,7 +88,49 @@ Implementation:
   })
 
 
-4. autocmds/general/init.lua:29
+4. autocmds/benchmarks/context/cache.lua:136
+Events: TextChanged
+Implementation:
+  api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+    group = aug,
+    callback = function(ev)
+      for name, cache_obj in pairs(caches) do
+        -- Invalidate all entries for this buffer
+        local invalidated = 0
+        for key, entry in pairs(cache_obj) do
+          if entry.tick and api.nvim_buf_is_valid(ev.buf) then
+            local current_tick = nvim_buf_get_changedtick(ev.buf)
+            if entry.tick ~= current_tick then
+              cache_obj[key] = nil
+              invalidated = invalidated + 1
+            end
+          end
+        end
+
+        if invalidated > 0 and stats[name] then
+          stats[name].invalidations = stats[name].invalidations + invalidated
+        end
+      end
+    end,
+    desc = "Auto-invalidate caches on buffer changes",
+  })
+
+
+5. autocmds/benchmarks/context/cache.lua:161
+Events: BufWritePost
+Implementation:
+  api.nvim_create_autocmd("BufWritePost", {
+    group = aug,
+    callback = function()
+      for name in pairs(caches) do
+        caches[name] = setmetatable({}, { __mode = "k" })
+      end
+    end,
+    desc = "Clear all caches on buffer write",
+  })
+
+
+6. autocmds/general/init.lua:23
 Events: BufWritePre
 Implementation:
     api.nvim_create_autocmd("BufWritePre", {
@@ -106,7 +150,7 @@ Implementation:
     })
 
 
-5. autocmds/general/init.lua:49
+7. autocmds/general/init.lua:43
 Events: VimEnter
 Implementation:
     api.nvim_create_autocmd("VimEnter", {
@@ -118,7 +162,7 @@ Implementation:
     })
 
 
-6. autocmds/general/init.lua:56
+8. autocmds/general/init.lua:50
 Events: VimLeavePre
 Implementation:
     api.nvim_create_autocmd("VimLeavePre", {
@@ -130,7 +174,7 @@ Implementation:
     })
 
 
-7. autocmds/general/init.lua:68
+9. autocmds/general/init.lua:62
 Events:
 Implementation:
     api.nvim_create_autocmd(cfg.cursorline.show_events, {
@@ -145,7 +189,7 @@ Implementation:
     })
 
 
-8. autocmds/general/init.lua:80
+10. autocmds/general/init.lua:74
 Events:
 Implementation:
     api.nvim_create_autocmd(cfg.cursorline.hide_events, {
@@ -157,7 +201,7 @@ Implementation:
     })
 
 
-9. autocmds/general/init.lua:92
+11. autocmds/general/init.lua:86
 Events: BufReadPost
 Implementation:
     api.nvim_create_autocmd("BufReadPost", {
@@ -186,62 +230,7 @@ Implementation:
     })
 
 
-10. autocmds/general/init.lua:120
-Events: FileType
-Implementation:
-    api.nvim_create_autocmd("FileType", {
-      group = helpers.augroup("goto_file"),
-      pattern = helpers.snorm_pattern(cfg.goto_file.pattern),
-      callback = function()
-        -- Validate Treesitter availability; otherwise, keep default behavior.
-        local ok_ts = pcall(require, "nvim-treesitter.ts_utils")
-        if not ok_ts then
-          return
-        end
-
-        -- Preload ordered case modules
-        local cases = gofile_loader.load_ordered_cases(cfg)
-        local logger = logger_mod(cfg)
-
-        local function gf_dispatch()
-          local dispatch_cases = require("autocmds.general.gofile_case_dispatcher")
-          local ts_utils = require("nvim-treesitter.ts_utils")
-
-          local bufnr = api.nvim_get_current_buf()
-          local node = ts_utils.get_node_at_cursor()
-
-          logger.debug("gf invoked", {
-            buf = bufnr,
-            node_type = node and node:type() or nil,
-          })
-
-          local handled = false
-          if dispatch_cases then
-            handled = dispatch_cases(node, bufnr, ts_utils, cfg, cases)
-          end
-
-          if not handled then
-            logger.info("falling back to builtin gf")
-            vim.cmd.normal({ args = { "gf" }, bang = true })
-          end
-        end
-
-        local lhs_list =  {"gf"}
-
-        for _, lhs in ipairs(lhs_list) do
-          vim.keymap.set("n", lhs, gf_dispatch, {
-            buffer = 0,
-            noremap = true,
-            silent = true,
-            desc = "Markdown-aware gf with modular resolver",
-          })
-        end
-      end,
-      desc = "Markdown: override gf to follow links/URLs with fallback",
-    })
-
-
-11. autocmds/git/blame_on_hold.lua:17
+12. autocmds/git/blame_on_hold.lua:17
 Events: CursorHold
 Implementation:
   api.nvim_create_autocmd("CursorHold", {
@@ -275,7 +264,7 @@ Implementation:
   })
 
 
-12. autocmds/git/commit_ft.lua:18
+13. autocmds/git/commit_ft.lua:18
 Events: FileType
 Implementation:
   api.nvim_create_autocmd("FileType", {
@@ -306,7 +295,7 @@ Implementation:
   })
 
 
-13. autocmds/git/conflicts_qf.lua:21
+14. autocmds/git/conflicts_qf.lua:21
 Events:
 Implementation:
   api.nvim_create_autocmd(events, {
@@ -341,7 +330,7 @@ Implementation:
   })
 
 
-14. autocmds/git/conflict_marks.lua:17
+15. autocmds/git/conflict_marks.lua:17
 Events: BufWinEnter
 Implementation:
   api.nvim_create_autocmd("BufWinEnter", {
@@ -356,7 +345,7 @@ Implementation:
   })
 
 
-15. autocmds/git/conflict_marks.lua:28
+16. autocmds/git/conflict_marks.lua:28
 Events: BufWinLeave
 Implementation:
   api.nvim_create_autocmd("BufWinLeave", {
@@ -374,7 +363,7 @@ Implementation:
   })
 
 
-16. autocmds/git/gitsigns_refresh.lua:18
+17. autocmds/git/gitsigns_refresh.lua:18
 Events:
 Implementation:
   api.nvim_create_autocmd(events, {
@@ -389,7 +378,7 @@ Implementation:
   })
 
 
-17. autocmds/git/line_diff_on_hold.lua:185
+18. autocmds/git/line_diff_on_hold.lua:185
 Events:
 Implementation:
   api.nvim_create_autocmd(events, {
@@ -511,7 +500,7 @@ Implementation:
   })
 
 
-18. autocmds/git/line_diff_on_hold.lua:251
+19. autocmds/git/line_diff_on_hold.lua:251
 Events: CursorMoved
 Implementation:
               api.nvim_create_autocmd({ "CursorMoved", "BufHidden", "InsertEnter" }, {
@@ -525,7 +514,7 @@ Implementation:
               })
 
 
-19. autocmds/git/line_diff_on_hold.lua:282
+20. autocmds/git/line_diff_on_hold.lua:282
 Events: CursorMoved
 Implementation:
         api.nvim_create_autocmd({ "CursorMoved", "BufHidden", "InsertEnter" }, {
@@ -539,7 +528,7 @@ Implementation:
         })
 
 
-20. autocmds/git/line_diff_on_hold.lua:304
+21. autocmds/git/line_diff_on_hold.lua:304
 Events: ModeChanged
 Implementation:
   api.nvim_create_autocmd("ModeChanged", {
@@ -556,14 +545,14 @@ Implementation:
   })
 
 
-21. autocmds/terminals/init.lua:75
+22. autocmds/terminals/init.lua:44
 Events:
 Implementation:
-    vim.api.nvim_create_autocmd(norm_events(cfg.numbers.events, { "TermOpen" }), {
+    nvim_create_autocmd(norm_events(cfg.numbers.events, { "TermOpen" }), {
       group = augroup("numbers"),
       callback = function(ev)
         -- Use local options to avoid bleeding into non-terminal windows.
-        vim.api.nvim_buf_call(ev.buf, function()
+        api.nvim_buf_call(ev.buf, function()
           vim.opt_local.number = false
           vim.opt_local.relativenumber = false
         end)
@@ -572,30 +561,30 @@ Implementation:
     })
 
 
-22. autocmds/terminals/init.lua:94
+23. autocmds/terminals/init.lua:63
 Events: VimEnter
 Implementation:
-    vim.api.nvim_create_autocmd("VimEnter", {
+    nvim_create_autocmd("VimEnter", {
       group = augroup("kitty_enter"),
       command = kitty_cmd(cfg.kitty.enter_padding, cfg.kitty.enter_margin),
       desc = "Kitty: reduce padding/margin for a snug editor frame on startup",
     })
 
 
-23. autocmds/terminals/init.lua:99
+24. autocmds/terminals/init.lua:68
 Events: VimLeavePre
 Implementation:
-    vim.api.nvim_create_autocmd("VimLeavePre", {
+    nvim_create_autocmd("VimLeavePre", {
       group = augroup("kitty_leave"),
       command = kitty_cmd(cfg.kitty.leave_padding, cfg.kitty.leave_margin),
       desc = "Kitty: restore padding/margin when leaving Neovim",
     })
 
 
-24. autocmds/terminals/init.lua:109
+25. autocmds/terminals/init.lua:78
 Events:
 Implementation:
-    vim.api.nvim_create_autocmd(norm_events(cfg.auto_insert.events, { "TermOpen" }), {
+    nvim_create_autocmd(norm_events(cfg.auto_insert.events, { "TermOpen" }), {
       group = augroup("auto_insert"),
       callback = function()
         -- `startinsert` is safe here; schedule to avoid racing with other handlers.
@@ -609,10 +598,10 @@ Implementation:
     })
 
 
-25. autocmds/text/init.lua:94
+26. autocmds/text/init.lua:67
 Events: BufWritePre
 Implementation:
-    vim.api.nvim_create_autocmd("BufWritePre", {
+    nvim_create_autocmd("BufWritePre", {
       group = augroup("trim_trailing"),
       pattern = norm_pattern(cfg.trim_trailing.pattern),
       callback = function(ev)
@@ -630,18 +619,18 @@ Implementation:
         end
         -- Use a buffer-local :substitute that ignores errors (`e` flag) and is silent.
         -- The pattern `\s\+$` trims any whitespace at the end of lines.
-        vim.api.nvim_buf_call(buf, function()
-          vim.cmd([[silent! keepjumps keeppatterns %s/\s\+$//e]])
+        api.nvim_buf_call(buf, function()
+          cmd([[silent! keepjumps keeppatterns %s/\s\+$//e]])
         end)
       end,
       desc = "Trim trailing whitespace on save",
     })
 
 
-26. autocmds/text/init.lua:123
+27. autocmds/text/init.lua:96
 Events: BufWritePre
 Implementation:
-    vim.api.nvim_create_autocmd("BufWritePre", {
+    nvim_create_autocmd("BufWritePre", {
       group = augroup("trim_blank"),
       pattern = norm_pattern(cfg.trim_blank.pattern),
       callback = function(ev)
@@ -659,41 +648,41 @@ Implementation:
         end
         local row, col
         if cfg.trim_blank.preserve_cursor ~= false then
-          row, col = unpack(vim.api.nvim_win_get_cursor(0))
+          row, col = unpack(api.nvim_win_get_cursor(0))
         end
         -- Substitute leading whitespace on empty lines with nothing.
         -- `^\s*$` matches lines entirely composed of whitespace.
-        vim.api.nvim_buf_call(buf, function()
-          vim.cmd([[silent! keepjumps keeppatterns %s/^\s*$//e]])
+        api.nvim_buf_call(buf, function()
+          cmd([[silent! keepjumps keeppatterns %s/^\s*$//e]])
         end)
         if row and col then
-          pcall(vim.api.nvim_win_set_cursor, 0, { row, col })
+          pcall(api.nvim_win_set_cursor, 0, { row, col })
         end
       end,
       desc = "Trim whitespace on fully blank lines (preserve cursor)",
     })
 
 
-27. autocmds/text/init.lua:159
+28. autocmds/text/init.lua:132
 Events: BufReadPost
 Implementation:
-    vim.api.nvim_create_autocmd("BufReadPost", {
+    nvim_create_autocmd("BufReadPost", {
       group = augroup("last_loc"),
       pattern = norm_pattern(cfg.last_loc.pattern),
       callback = function(ev)
         local buf = ev.buf
-        local ft = vim.bo[buf].filetype or ""
-        if cfg.last_loc.exclude and vim.tbl_contains(cfg.last_loc.exclude, ft) then
+        local ft = bo[buf].filetype or ""
+        if cfg.last_loc.exclude and tbl_contains(cfg.last_loc.exclude, ft) then
           return
         end
         -- Get the mark `"` (last known cursor position in this file).
         local target_line = vim.fn.line([['"]])
-        local last_line = vim.api.nvim_buf_line_count(buf)
+        local last_line = api.nvim_buf_line_count(buf)
         local min_line = cfg.last_loc.min_line or 1
         if target_line >= min_line and target_line <= last_line then
           -- Use pcall to avoid errors in special windows.
           pcall(function()
-            vim.cmd([[normal! g`"]])
+            cmd([[normal! g`"]])
           end)
         end
       end,
@@ -701,7 +690,7 @@ Implementation:
     })
 
 
-28. config/harpoon/hardening.lua:151
+29. config/harpoon/hardening.lua:146
 Events:
 Implementation:
   nvim_create_autocmd(events, {
@@ -713,7 +702,7 @@ Implementation:
   })
 
 
-29. config/harpoon/hardening.lua:160
+30. config/harpoon/hardening.lua:155
 Events: VimLeavePre
 Implementation:
   nvim_create_autocmd("VimLeavePre", {
@@ -725,7 +714,7 @@ Implementation:
   })
 
 
-30. config/harpoon/persist_paths.lua:193
+31. config/harpoon/persist_paths.lua:188
 Events: VimEnter
 Implementation:
   vim.api.nvim_create_autocmd("VimEnter", {
@@ -738,7 +727,7 @@ Implementation:
   })
 
 
-31. config/markdown_preview/init.lua:67
+32. config/markdown_preview/init.lua:67
 Events: BufEnter
 Implementation:
   vim.api.nvim_create_autocmd("BufEnter", {
@@ -751,7 +740,7 @@ Implementation:
   })
 
 
-32. config/markdown_preview/init.lua:95
+33. config/markdown_preview/init.lua:95
 Events: BufEnter
 Implementation:
   vim.api.nvim_create_autocmd("BufEnter", {
@@ -765,7 +754,7 @@ Implementation:
   })
 
 
-33. config/neotest/core/init.lua:62
+34. config/neotest/core/init.lua:62
 Events: BufEnter
 Implementation:
     vim.api.nvim_create_autocmd({ "BufEnter", "BufNewFile" }, {
@@ -775,7 +764,6 @@ Implementation:
           vim.schedule(function()
             local ok, neotest = pcall(require, "neotest")
             if ok then
-              ---@diagnostic disable-next-line: undefined-field
               pcall(neotest.run.attach)
             end
           end)
@@ -785,7 +773,7 @@ Implementation:
     })
 
 
-34. config/neotest/core/init.lua:80
+35. config/neotest/core/init.lua:79
 Events: User
 Implementation:
     vim.api.nvim_create_autocmd("User", {
@@ -797,7 +785,6 @@ Implementation:
           if not ok then
             return
           end
-          ---@diagnostic disable-next-line: undefined-field
           local results = neotest.state.get_results()
           if not results then
             return
@@ -812,7 +799,6 @@ Implementation:
           end
 
           if has_failed then
-            ---@diagnostic disable-next-line: undefined-field
             neotest.output.open({ enter = false })
           end
         end)
@@ -821,7 +807,7 @@ Implementation:
     })
 
 
-35. config/neotree/current_hl/init.lua:184
+36. config/neotree/current_hl/init.lua:181
 Events: ColorScheme
 Implementation:
   vim.api.nvim_create_autocmd("ColorScheme", {
@@ -830,7 +816,7 @@ Implementation:
   })
 
 
-36. config/neotree/current_hl/init.lua:259
+37. config/neotree/current_hl/init.lua:256
 Events: BufEnter
 Implementation:
   vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "TabEnter", "BufWritePost" }, {
@@ -839,10 +825,25 @@ Implementation:
   })
 
 
-37. config/neotree/cwd_sync/init.lua:273
+38. config/neotree/cwd_sync/disable_follow.lua:29
+Events: FileType
+Implementation:
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = "neo-tree",
+    once = true,
+    callback = function()
+      vim.defer_fn(function()
+        M.disable_follow()
+      end, 100)
+    end,
+    desc = "Disable Neo-tree follow behavior",
+  })
+
+
+39. config/neotree/cwd_sync/init.lua:301
 Events: BufEnter
 Implementation:
-  vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+  api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
     group = aug,
     callback = function()
       schedule_sync(cfg)
@@ -851,10 +852,10 @@ Implementation:
   })
 
 
-38. config/neotree/cwd_sync/init.lua:281
+40. config/neotree/cwd_sync/init.lua:309
 Events: VimLeavePre
 Implementation:
-  vim.api.nvim_create_autocmd("VimLeavePre", {
+  api.nvim_create_autocmd("VimLeavePre", {
     group = aug,
     callback = function()
       if S.timer then
@@ -867,7 +868,7 @@ Implementation:
   })
 
 
-39. config/neotree/utils/buffer.lua:126
+41. config/neotree/utils/buffer.lua:126
 Events: BufDelete
 Implementation:
 vim.api.nvim_create_autocmd("BufDelete", {
@@ -878,7 +879,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
 })
 
 
-40. config/snacks/custom_dashboard/autocmds.lua:18
+42. config/snacks/custom_dashboard/autocmds.lua:18
 Events: VimEnter
 Implementation:
 api.nvim_create_autocmd("VimEnter", {
@@ -896,7 +897,7 @@ api.nvim_create_autocmd("VimEnter", {
 })
 
 
-41. config/snacks/custom_dashboard/autocmds.lua:66
+43. config/snacks/custom_dashboard/autocmds.lua:66
 Events: BufWinEnter
 Implementation:
 api.nvim_create_autocmd({ "BufWinEnter" }, {
@@ -916,7 +917,7 @@ api.nvim_create_autocmd({ "BufWinEnter" }, {
 })
 
 
-42. config/snacks/___dashboard/autocmds.lua:12
+44. config/snacks/___dashboard/autocmds.lua:12
 Events: VimEnter
 Implementation:
 nvim_create_autocmd("VimEnter", {
@@ -930,7 +931,7 @@ nvim_create_autocmd("VimEnter", {
 })
 
 
-43. config/snacks/___dashboard/autocmds.lua:70
+45. config/snacks/___dashboard/autocmds.lua:70
 Events: BufWinEnter
 Implementation:
 nvim_create_autocmd({ "BufWinEnter" }, {
@@ -952,7 +953,7 @@ nvim_create_autocmd({ "BufWinEnter" }, {
 })
 
 
-44. custom/insert/boilerplate/templates/nvim.lua:13
+46. custom/insert/boilerplate/templates/nvim.lua:13
 Events:
 Implementation:
     "vim.api.nvim_create_autocmd({ TODO: events }, {",
@@ -965,7 +966,7 @@ Implementation:
     "})",
 
 
-45. custom/markdown/fenced_fix/init.lua:159
+47. custom/markdown/fenced_fix/init.lua:160
 Events: ColorScheme
 Implementation:
 vim.api.nvim_create_autocmd("ColorScheme", {
@@ -977,7 +978,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 })
 
 
-46. custom/markdown/setup/autocmds.lua:21
+48. custom/markdown/setup/autocmds.lua:21
 Events: FileType
 Implementation:
   api.nvim_create_autocmd("FileType", {
@@ -1018,7 +1019,7 @@ Implementation:
   })
 
 
-47. custom/markdown/setup/autocmds.lua:59
+49. custom/markdown/setup/autocmds.lua:59
 Events: FileType
 Implementation:
   api.nvim_create_autocmd("FileType", {
@@ -1042,7 +1043,7 @@ Implementation:
   })
 
 
-48. custom/markdown/tableview/autocmds.lua:14
+50. custom/markdown/tableview/autocmds.lua:14
 Events: FileType
 Implementation:
   api.nvim_create_autocmd("FileType", {
@@ -1059,7 +1060,7 @@ Implementation:
   })
 
 
-49. custom/markdown/tableview/live.lua:178
+51. custom/markdown/tableview/live.lua:178
 Events: BufWritePost
 Implementation:
   api.nvim_create_autocmd("BufWritePost", {
@@ -1075,7 +1076,7 @@ Implementation:
   })
 
 
-50. custom/recommender/autocmds.lua:13
+52. custom/recommender/autocmds.lua:13
 Events: WinClosed
 Implementation:
   api.nvim_create_autocmd("WinClosed", {
@@ -1127,7 +1128,7 @@ Implementation:
   })
 
 
-51. debugging/views/autocmds.lua:19
+53. debugging/views/autocmds.lua:19
 Events: WinEnter
 Implementation:
     api.nvim_create_autocmd("WinEnter", {
@@ -1147,7 +1148,7 @@ Implementation:
     })
 
 
-52. debugging/views/autocmds.lua:35
+54. debugging/views/autocmds.lua:35
 Events: BufWinEnter
 Implementation:
     api.nvim_create_autocmd("BufWinEnter", {
@@ -1169,7 +1170,7 @@ Implementation:
     })
 
 
-53. debugging/views/autocmds.lua:54
+55. debugging/views/autocmds.lua:54
 Events: FileType
 Implementation:
   api.nvim_create_autocmd("FileType", {
@@ -1205,7 +1206,7 @@ Implementation:
   })
 
 
-54. lib/autocmd/init.lua:72
+56. lib/autocmd/init.lua:74
 Events:
 Implementation:
   vim.api.nvim_create_autocmd(event, {
@@ -1218,7 +1219,7 @@ Implementation:
   })
 
 
-55. lib/ui/hover_select/window.lua:143
+57. lib/ui/hover_select/window.lua:143
 Events: BufLeave
 Implementation:
   api.nvim_create_autocmd({ "BufLeave", "BufWipeout" }, {
@@ -1232,7 +1233,7 @@ Implementation:
   })
 
 
-56. lib/ui/hover_select/window.lua:154
+58. lib/ui/hover_select/window.lua:154
 Events: WinClosed
 Implementation:
   api.nvim_create_autocmd("WinClosed", {
@@ -1246,7 +1247,7 @@ Implementation:
   })
 
 
-57. lsp/formatter/init.lua:137
+59. lsp/formatter/init.lua:137
 Events: BufWritePre
 Implementation:
     api.nvim_create_autocmd("BufWritePre", {
@@ -1262,7 +1263,7 @@ Implementation:
     })
 
 
-58. lsp/languages/c.lua:9
+60. lsp/languages/c.lua:9
 Events: FileType
 Implementation:
   vim.api.nvim_create_autocmd("FileType", {
@@ -1272,7 +1273,7 @@ Implementation:
   })
 
 
-59. lsp/languages/csharp.lua:9
+61. lsp/languages/csharp.lua:9
 Events: FileType
 Implementation:
   vim.api.nvim_create_autocmd("FileType", {
@@ -1282,7 +1283,7 @@ Implementation:
   })
 
 
-60. lsp/languages/go.lua:9
+62. lsp/languages/go.lua:9
 Events: FileType
 Implementation:
   vim.api.nvim_create_autocmd("FileType", {
@@ -1292,7 +1293,7 @@ Implementation:
   })
 
 
-61. lsp/languages/html.lua:10
+63. lsp/languages/html.lua:10
 Events: FileType
 Implementation:
   vim.api.nvim_create_autocmd("FileType", {
@@ -1308,7 +1309,7 @@ Implementation:
   })
 
 
-62. lsp/languages/lua.lua:9
+64. lsp/languages/lua.lua:9
 Events: FileType
 Implementation:
   vim.api.nvim_create_autocmd("FileType", {
@@ -1318,7 +1319,7 @@ Implementation:
   })
 
 
-63. lsp/languages/markdown.lua:26
+65. lsp/languages/markdown.lua:26
 Events: FileType
 Implementation:
   api.nvim_create_autocmd("FileType", {
@@ -1358,7 +1359,7 @@ Implementation:
   })
 
 
-64. lsp/languages/typescript.lua:103
+66. lsp/languages/typescript.lua:99
 Events: BufWritePre
 Implementation:
   api.nvim_create_autocmd("BufWritePre", {
@@ -1370,7 +1371,7 @@ Implementation:
   })
 
 
-65. lsp/languages/zig.lua:9
+67. lsp/languages/zig.lua:9
 Events: FileType
 Implementation:
   vim.api.nvim_create_autocmd("FileType", {
@@ -1380,7 +1381,7 @@ Implementation:
   })
 
 
-66. lsp/tools/deprecated_help/__init.lua:194
+68. lsp/tools/deprecated_help/__init.lua:203
 Events: LspAttach
 Implementation:
   api.nvim_create_autocmd("LspAttach", {
@@ -1394,7 +1395,7 @@ Implementation:
   })
 
 
-67. lsp/tools/eslint_prettier/autocmds/init.lua:18
+69. lsp/tools/eslint_prettier/autocmds/init.lua:18
 Events: BufWritePre
 Implementation:
   api.nvim_create_autocmd("BufWritePre", {
@@ -1428,7 +1429,7 @@ Implementation:
   })
 
 
-68. lsp/tools/lsp_signature/open_floating_preview.lua:116
+70. lsp/tools/lsp_signature/open_floating_preview.lua:116
 Events: BufWipeout
 Implementation:
   api.nvim_create_autocmd({ "BufWipeout", "BufHidden", "BufLeave", "WinClosed" }, {
@@ -1442,7 +1443,7 @@ Implementation:
   })
 
 
-69. lsp/tools/ts_type_lookup/noice_integration.lua:54
+71. lsp/tools/ts_type_lookup/noice_integration.lua:54
 Events: BufWinEnter
 Implementation:
 api.nvim_create_autocmd("BufWinEnter", {
@@ -1456,7 +1457,7 @@ api.nvim_create_autocmd("BufWinEnter", {
 })
 
 
-70. mappings/noice.lua:16
+72. mappings/noice.lua:16
 Events: FileType
 Implementation:
   vim.api.nvim_create_autocmd("FileType", {
@@ -1502,7 +1503,7 @@ Implementation:
   })
 
 
-71. options.lua:77
+73. options.lua:77
 Events: FileType
 Implementation:
   api.nvim_create_autocmd("FileType", {
@@ -1519,7 +1520,7 @@ Implementation:
   })
 
 
-72. options.lua:157
+74. options.lua:157
 Events: OptionSet
 Implementation:
 vim.api.nvim_create_autocmd("OptionSet", {
@@ -1533,7 +1534,7 @@ vim.api.nvim_create_autocmd("OptionSet", {
 })
 
 
-73. plugins/workflow.lua:123
+75. plugins/workflow.lua:123
 Events: FileType
 Implementation:
       vim.api.nvim_create_autocmd("FileType", {
@@ -1555,7 +1556,7 @@ Implementation:
       })
 
 
-74. plugins/workflow.lua:129
+76. plugins/workflow.lua:129
 Events: BufWritePre
 Implementation:
           vim.api.nvim_create_autocmd("BufWritePre", {
@@ -1569,7 +1570,7 @@ Implementation:
           })
 
 
-75. sessions/autocmds.lua:12
+77. sessions/autocmds.lua:12
 Events: VimEnter
 Implementation:
   -- api.nvim_create_autocmd("VimEnter", {
@@ -1585,7 +1586,7 @@ Implementation:
   -- })
 
 
-76. sessions/autocmds.lua:25
+78. sessions/autocmds.lua:25
 Events: VimLeavePre
 Implementation:
   api.nvim_create_autocmd("VimLeavePre", {
@@ -1597,7 +1598,7 @@ Implementation:
   })
 
 
-77. usrcmds/reload/init.lua:122
+79. usrcmds/reload/init.lua:122
 Events:
 Implementation:
 vim.api.nvim_create_autocmd('BufWritePost', {
@@ -1613,7 +1614,7 @@ vim.api.nvim_create_autocmd('BufWritePost', {
 })
 
 
-78. wkddap/commands/autocmds.lua:7
+80. wkddap/commands/autocmds.lua:7
 Events: User
 Implementation:
   vim.api.nvim_create_autocmd("User", {
@@ -1624,7 +1625,7 @@ Implementation:
   })
 
 
-79. wkddap/commands/autocmds.lua:15
+81. wkddap/commands/autocmds.lua:15
 Events: User
 Implementation:
   vim.api.nvim_create_autocmd("User", {
@@ -1635,7 +1636,7 @@ Implementation:
   })
 
 
-80. wkdnvchad/ui/statusline/modules/file_icons/devicons.lua:230
+82. wkdnvchad/ui/statusline/modules/file_icons/devicons.lua:230
 Events: ColorScheme
 Implementation:
 vim.api.nvim_create_autocmd("ColorScheme", {
@@ -1648,7 +1649,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 })
 
 
-81. wkdnvchad/ui/statusline/modules/formatters/init.lua:24
+83. wkdnvchad/ui/statusline/modules/formatters/init.lua:24
 Events: ColorScheme
 Implementation:
 vim.api.nvim_create_autocmd("ColorScheme", {
@@ -1660,7 +1661,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 })
 
 
-82. wkdnvchad/ui/statusline/modules/highlighting/init.lua:83
+84. wkdnvchad/ui/statusline/modules/highlighting/init.lua:83
 Events: ModeChanged
 Implementation:
 vim.api.nvim_create_autocmd("ModeChanged", {
@@ -1673,7 +1674,7 @@ vim.api.nvim_create_autocmd("ModeChanged", {
 })
 
 
-83. wkdnvchad/ui/statusline/modules/lsp/helpers/paths.lua:299
+85. wkdnvchad/ui/statusline/modules/lsp/helpers/paths.lua:299
 Events: BufDelete
 Implementation:
 vim.api.nvim_create_autocmd("BufDelete", {
@@ -1685,7 +1686,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
 })
 
 
-84. wkdnvchad/ui/statusline/modules/lsp/symbols/document_symbols.lua:239
+86. wkdnvchad/ui/statusline/modules/lsp/symbols/document_symbols.lua:239
 Events:
 Implementation:
       api.nvim_create_autocmd(ev, {
@@ -1701,7 +1702,7 @@ Implementation:
       })
 
 
-85. wkdnvchad/ui/statusline/modules/lsp/symbols/document_symbols.lua:402
+87. wkdnvchad/ui/statusline/modules/lsp/symbols/document_symbols.lua:402
 Events: BufDelete
 Implementation:
 vim.api.nvim_create_autocmd("BufDelete", {
@@ -1718,7 +1719,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
 })
 
 
-86. wkdoptions/hl_config/breadcrumbs/init.lua:80
+88. wkdoptions/hl_config/breadcrumbs/init.lua:80
 Events: BufEnter
 Implementation:
     vim.api.nvim_create_autocmd("BufEnter", {
@@ -1730,7 +1731,7 @@ Implementation:
     })
 
 
-87. wkdoptions/hl_config/breadcrumbs/init.lua:91
+89. wkdoptions/hl_config/breadcrumbs/init.lua:91
 Events: BufEnter
 Implementation:
   vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
@@ -1742,7 +1743,7 @@ Implementation:
   })
 
 
-88. wkdoptions/hl_config/cword_occurrences/init.lua:350
+90. wkdoptions/hl_config/cword_occurrences/init.lua:345
 Events: CursorMoved
 Implementation:
   vim.api.nvim_create_autocmd({ "CursorMoved" }, {
@@ -1752,7 +1753,7 @@ Implementation:
   })
 
 
-89. wkdoptions/hl_config/cword_occurrences/init.lua:355
+91. wkdoptions/hl_config/cword_occurrences/init.lua:350
 Events: CursorMovedI
 Implementation:
   vim.api.nvim_create_autocmd({ "CursorMovedI" }, {
@@ -1762,7 +1763,7 @@ Implementation:
   })
 
 
-90. wkdoptions/hl_config/cword_occurrences/init.lua:360
+92. wkdoptions/hl_config/cword_occurrences/init.lua:355
 Events: BufEnter
 Implementation:
   vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "WinScrolled" }, {
@@ -1772,7 +1773,7 @@ Implementation:
   })
 
 
-91. wkdoptions/hl_config/cword_occurrences/init.lua:365
+93. wkdoptions/hl_config/cword_occurrences/init.lua:360
 Events: TextChanged
 Implementation:
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
@@ -1782,7 +1783,7 @@ Implementation:
   })
 
 
-92. wkdoptions/hl_config/cword_occurrences/init.lua:370
+94. wkdoptions/hl_config/cword_occurrences/init.lua:365
 Events: BufLeave
 Implementation:
   vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave" }, {
@@ -1792,7 +1793,7 @@ Implementation:
   })
 
 
-93. wkdoptions/hl_config/cword_occurrences/init.lua:375
+95. wkdoptions/hl_config/cword_occurrences/init.lua:370
 Events: InsertEnter
 Implementation:
   vim.api.nvim_create_autocmd({ "InsertEnter" }, {
@@ -1806,7 +1807,7 @@ Implementation:
   })
 
 
-94. wkdoptions/hl_config/features/current_word.lua:105
+96. wkdoptions/hl_config/features/current_word.lua:105
 Events: CursorMoved
 Implementation:
   vim.api.nvim_create_autocmd({ "CursorMoved" }, {
@@ -1816,7 +1817,7 @@ Implementation:
   })
 
 
-95. wkdoptions/hl_config/features/current_word.lua:111
+97. wkdoptions/hl_config/features/current_word.lua:111
 Events: InsertEnter
 Implementation:
   vim.api.nvim_create_autocmd({ "InsertEnter", "BufLeave", "WinLeave" }, {
@@ -1826,7 +1827,7 @@ Implementation:
   })
 
 
-96. wkdoptions/hl_config/features/flash.lua:98
+98. wkdoptions/hl_config/features/flash.lua:98
 Events: TextYankPost
 Implementation:
   vim.api.nvim_create_autocmd("TextYankPost", {
@@ -1838,7 +1839,7 @@ Implementation:
   })
 
 
-97. wkdoptions/hl_config/features/indent_scope.lua:228
+99. wkdoptions/hl_config/features/indent_scope.lua:228
 Events: BufEnter
 Implementation:
   vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
@@ -1852,7 +1853,7 @@ Implementation:
   })
 
 
-98. wkdoptions/hl_config/features/mode_tint.lua:85
+100. wkdoptions/hl_config/features/mode_tint.lua:85
 Events: ModeChanged
 Implementation:
   vim.api.nvim_create_autocmd("ModeChanged", {
@@ -1864,7 +1865,7 @@ Implementation:
   })
 
 
-99. wkdoptions/hl_config/features/mode_tint.lua:93
+101. wkdoptions/hl_config/features/mode_tint.lua:93
 Events: BufWinEnter
 Implementation:
   vim.api.nvim_create_autocmd("BufWinEnter", {
@@ -1876,7 +1877,7 @@ Implementation:
   })
 
 
-100. wkdoptions/hl_config/features/mode_tint.lua:101
+102. wkdoptions/hl_config/features/mode_tint.lua:101
 Events: WinClosed
 Implementation:
   vim.api.nvim_create_autocmd("WinClosed", {
@@ -1891,7 +1892,7 @@ Implementation:
   })
 
 
-101. wkdoptions/hl_config/features/signcolumn_tint.lua:91
+103. wkdoptions/hl_config/features/signcolumn_tint.lua:91
 Events: BufEnter
 Implementation:
     vim.api.nvim_create_autocmd("BufEnter", {
@@ -1901,7 +1902,7 @@ Implementation:
     })
 
 
-102. wkdoptions/hl_config/features/signcolumn_tint.lua:99
+104. wkdoptions/hl_config/features/signcolumn_tint.lua:99
 Events: DiagnosticChanged
 Implementation:
   vim.api.nvim_create_autocmd({ "DiagnosticChanged", "BufEnter" }, {
@@ -1911,7 +1912,7 @@ Implementation:
   })
 
 
-103. wkdoptions/hl_config/features/terminal_palette.lua:56
+105. wkdoptions/hl_config/features/terminal_palette.lua:56
 Events: TermOpen
 Implementation:
   vim.api.nvim_create_autocmd("TermOpen", {
@@ -1921,7 +1922,7 @@ Implementation:
   })
 
 
-104. wkdoptions/hl_config/init.lua:191
+106. wkdoptions/hl_config/init.lua:191
 Events: ColorScheme
 Implementation:
   vim.api.nvim_create_autocmd("ColorScheme", {
@@ -1940,7 +1941,7 @@ Implementation:
   })
 
 
-105. wkdoptions/hl_config/init.lua:212
+107. wkdoptions/hl_config/init.lua:212
 Events: WinEnter
 Implementation:
   vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
@@ -1950,7 +1951,7 @@ Implementation:
   })
 
 
-106. wkdoptions/hl_config/init.lua:218
+108. wkdoptions/hl_config/init.lua:218
 Events: WinLeave
 Implementation:
   vim.api.nvim_create_autocmd({ "WinLeave" }, {
@@ -1960,7 +1961,7 @@ Implementation:
   })
 
 
-107. wkdoptions/hl_config/init.lua:224
+109. wkdoptions/hl_config/init.lua:224
 Events: BufReadPost
 Implementation:
   vim.api.nvim_create_autocmd({ "BufReadPost", "TextChanged", "TextChangedI" }, {
@@ -1974,7 +1975,7 @@ Implementation:
   })
 
 
-108. wkdoptions/hl_config/path_cache/init.lua:99
+110. wkdoptions/hl_config/path_cache/init.lua:99
 Events: BufEnter
 Implementation:
   vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost" }, {
@@ -1986,7 +1987,7 @@ Implementation:
   })
 
 
-109. wkdoptions/hl_config/path_cache/init.lua:106
+111. wkdoptions/hl_config/path_cache/init.lua:106
 Events: DirChanged
 Implementation:
   vim.api.nvim_create_autocmd("DirChanged", {
@@ -1999,7 +2000,7 @@ Implementation:
   })
 
 
-110. wkdoptions/options_config/init.lua:99
+112. wkdoptions/options_config/init.lua:96
 Events: ColorScheme
 Implementation:
   vim.api.nvim_create_autocmd("ColorScheme", {

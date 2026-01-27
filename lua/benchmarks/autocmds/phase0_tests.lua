@@ -25,6 +25,8 @@ function M.test_buffer_context()
   end
   nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   bo[bufnr].filetype = "lua"
+  vim.bo[bufnr].buftype = ""
+  vim.bo[bufnr].modifiable = true
 
   -- Test 1: Context creation
   local ctx = buffer_ctx.get(bufnr)
@@ -114,6 +116,7 @@ function M.test_cache()
 
   -- Test 3: Tick-based caching
   local bufnr = nvim_create_buf(false, true)
+  vim.bo[bufnr].buftype = ""
   test_cache.set("buf_key", "buf_value", bufnr)
 
   local val2 = test_cache.get("buf_key", bufnr)
@@ -152,6 +155,7 @@ function M.bench_context_overhead()
     lines[i] = "Line " .. i
   end
   nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.bo[bufnr].buftype = ""
 
   -- Benchmark 1: Direct API calls
   local start1 = hrtime()
