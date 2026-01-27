@@ -2,11 +2,11 @@ vim.g.start_time = vim.uv.hrtime()
 
 -- Enable vim.loader for faster module loading
 local loader_ok = pcall(function()
-  vim.loader.enable()
+    vim.loader.enable()
 end)
 
 if not loader_ok then
-  vim.notify("Using standard Neovim loader (vim.loader failed)", vim.log.levels.INFO)
+    vim.notify('Using standard Neovim loader (vim.loader failed)', vim.log.levels.INFO)
 end
 
 -- Bootstrap lazy.nvim
@@ -62,32 +62,23 @@ vim.defer_fn(function()
 end, 50)
 
 -- =============================================================================
--- PHASE 3: LSP BufReadPost - wenn der erste Buffer geladen ist
+-- PHASE 3: MITTEL (150ms) - LSP (wenn du ein File öffnest)
 -- =============================================================================
-vim.api.nvim_create_autocmd("BufReadPost", {
-  once = true,
-  callback = function()
-    vim.defer_fn(function()
-      require("lsp").setup({ ensure_installing = false })
-    end, 100)
-  end,
-})
+vim.defer_fn(function()
+  require("lsp").setup({ ensure_installing = false })
+end, 150)
 
 -- =============================================================================
--- PHASE 4: DAP (Filetype Lazy-Load)
+-- PHASE 4: NIEDRIG (400ms) - DAP (nur wenn wirklich benötigt)
 -- =============================================================================
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "lua", "go", "python", "javascript" },
-  once = true,
-  callback = function()
-    require("wkddap").setup({
-      languages = { "lua", "go", "python", "javascript" },
-      ui = { enable = true },
-      keymaps = { enable = false, prefix = "<leader>d" },
-      auto_install = true,
-    })
-  end,
-})
+vim.defer_fn(function()
+  require('wkddap').setup({
+    languages = { 'lua', 'go', 'python', 'javascript' },
+    ui = { enable = true, },
+    keymaps = { enable = false, prefix = '<leader>d' },
+    auto_install = true,
+  })
+end, 400)
 
 -- =============================================================================
 -- PHASE 5: SEHR NIEDRIG (600ms) - RPC & Debugging
@@ -108,8 +99,8 @@ end, 600)
 
 -- Show startup time
 vim.defer_fn(function()
-  if vim.g.start_time then
-    local load_time = (vim.uv.hrtime() - vim.g.start_time) / 1e6
-    vim.notify(string.format("Config loaded in %.2f ms", load_time), vim.log.levels.INFO)
-  end
+    if vim.g.start_time then
+        local load_time = (vim.uv.hrtime() - vim.g.start_time) / 1e6
+        vim.notify(string.format('Config loaded in %.2f ms', load_time), vim.log.levels.INFO)
+    end
 end, 0)

@@ -21,19 +21,13 @@
 1. Wenn sources switch dann soll der fokus im neotree bleiben
 2. updaten: config.menu.neotree.entries
 
--
-
 ## Watch
-
-1. Ersetztn die `[f]`-Mappings in der Praxis tatsächlich die `[r]`-Mappings?
 
 ---
 
 ## Important
 
-1. Neotree keymaps werden relativ oft verwendet. imports hier belassen, in die funktionen refactoren oder mit `lib.lazy`?
-2. checkhealt: modular machen, dafoür brauche ich ein system + doc
-3. CWD sync muss:
+1. CWD sync muss:
     - performanter gemacht werden, asynchron sc hon bever man neotree öffnet
     - löst die reopenings aus
     - ist es async?

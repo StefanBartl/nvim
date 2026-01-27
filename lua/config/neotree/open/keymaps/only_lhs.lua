@@ -9,7 +9,6 @@ local M = {}
 
 ---Attach Neo-tree opener mappings.
 ---Mappings directly call the standard Neo-tree command with a custom lhs.
----
 ---@return nil
 function M.attach()
   map("n", "<M-c>", function()
