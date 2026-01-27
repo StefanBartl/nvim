@@ -1,124 +1,53 @@
 ---@module 'config.neotree.commands.mark'
----@brief Neo-tree marking system with visual feedback and batch operation support
----@description
---- Enhanced marking system that provides:
---- - Visual feedback via sign column
---- - Generic batch operations (delete, copy, move, rename)
---- - Persistent marks across refreshes
---- - Smart cursor advancement
+--- Neo-tree marking commands: toggle mark on nodes for batch operations
 
----@nodiscard
-local notify = require("lib.notify").create("[neotree.mark]")
+local notify = require("lib.notify").create("[neotree.commands.mark]")
 
 local renderer = require("config.neotree.helper.renderer")
 local node_utils = require("config.neotree.utils.node")
 
 local M = {}
 
--- ============================================================================
--- Sign Definition
--- ============================================================================
+--- Define custom highlight for marked nodes
+local function setup_highlights()
+  -- Only setup once
+  if vim.g.neotree_mark_highlights_setup then
+    return
+  end
 
-local MARK_SIGN = "NeoTreeMark"
-local MARK_NS = vim.api.nvim_create_namespace("neo_tree_marks")
-
----Initialize sign column marks
----@private
-local function init_signs()
-  pcall(vim.fn.sign_define, MARK_SIGN, {
-    text = "●",
-    texthl = "DiagnosticWarn",
-    linehl = "",
-    numhl = "",
+  vim.api.nvim_set_hl(0, "NeoTreeMarked", {
+    fg = "#FFD700", -- Gold
+    bold = true,
   })
+
+  vim.g.neotree_mark_highlights_setup = true
 end
 
--- Initialize on load
-init_signs()
-
--- ============================================================================
--- State Management
--- ============================================================================
-
----@class MarkState
----@field marks table<string, boolean> Node IDs that are marked
----@field extmarks table<integer, integer> Map of line -> extmark ID
-
----@type table<integer, MarkState>
-local buffer_states = setmetatable({}, { __mode = "k" })
-
----Get or create mark state for buffer
----@param bufnr integer
----@return MarkState
-local function get_state(bufnr)
-  if not buffer_states[bufnr] then
-    buffer_states[bufnr] = {
-      marks = {},
-      extmarks = {},
-    }
-  end
-  return buffer_states[bufnr]
-end
-
--- ============================================================================
--- Visual Feedback
--- ============================================================================
-
----Update visual marks in sign column
----@param state Cfg.NeoTree.State
----@private
-local function update_visual_marks(state)
-  local bufnr = vim.api.nvim_get_current_buf()
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-
-  local mark_state = get_state(bufnr)
-
-  -- Clear existing extmarks
-  vim.api.nvim_buf_clear_namespace(bufnr, MARK_NS, 0, -1)
-  mark_state.extmarks = {}
-
-  -- Get tree
-  local tree = state.tree
-  if not tree then
-    return
-  end
-
-  -- Add marks for marked nodes
-  local marks = state.explicitly_marked_node_ids or {}
-  for node_id, _ in pairs(marks) do
-    local node = tree:get_node(node_id)
-    if node then
-      -- Find line number for this node
-      local line = node_utils.get_line_number(state, node_id)
-      if line then
-        local mark_id = vim.api.nvim_buf_set_extmark(bufnr, MARK_NS, line - 1, 0, {
-          sign_text = "●",
-          sign_hl_group = "DiagnosticWarn",
-        })
-        mark_state.extmarks[line] = mark_id
-      end
-    end
+--- Get mark icon/indicator
+---@return string
+local function get_mark_icon()
+  -- Try to use nerd fonts, fallback to simple indicator
+  if vim.g.have_nerd_font or vim.fn.has("gui_running") == 1 then
+    return "✓" -- Check mark
+  else
+    return "*" -- Simple asterisk
   end
 end
 
--- ============================================================================
--- Core Marking Functions
--- ============================================================================
-
----Toggle mark on current node
+--- Toggle mark on the current node
 ---@param state Cfg.NeoTree.State
 ---@param auto_advance? boolean Move cursor down after marking (default: true)
 ---@return nil
 function M.toggle_mark(state, auto_advance)
+  setup_highlights()
+
   if auto_advance == nil then
     auto_advance = true
   end
 
   local node = node_utils.get_current(state)
   if not node then
-    notify.warn("No node under cursor")
+    notify.warn("no node under cursor")
     return
   end
 
@@ -126,7 +55,6 @@ function M.toggle_mark(state, auto_advance)
   local marks = state.explicitly_marked_node_ids or {}
   local is_marked = marks[node_id] ~= nil
 
-  -- Toggle mark
   if is_marked then
     marks[node_id] = nil
     notify.info("✗ Unmarked: " .. (node.name or "<unknown>"))
@@ -137,11 +65,10 @@ function M.toggle_mark(state, auto_advance)
 
   state.explicitly_marked_node_ids = marks
 
-  -- Update visuals
+  -- Force UI update
   renderer.redraw(state)
-  update_visual_marks(state)
 
-  -- Auto-advance cursor
+  -- Move cursor down for multi-selection convenience
   if auto_advance then
     vim.schedule(function()
       vim.cmd("normal! j")
@@ -149,26 +76,44 @@ function M.toggle_mark(state, auto_advance)
   end
 end
 
----Mark all files in current directory
+--- Clear all marks
+---@param state Cfg.NeoTree.State
+---@return nil
+function M.clear_all_marks(state)
+  if state.explicitly_marked_node_ids then
+    local count = vim.tbl_count(state.explicitly_marked_node_ids)
+    state.explicitly_marked_node_ids = {}
+
+    -- Refresh to update visuals
+    renderer.redraw(state)
+
+    notify.info(string.format("Cleared %d marks", count))
+  else
+    notify.info("No marks to clear")
+  end
+end
+
+--- Mark all files in the current directory node
 ---@param state Cfg.NeoTree.State
 ---@return nil
 function M.mark_all_in_directory(state)
+  setup_highlights()
+
   local tree = state.tree
   if not tree then
     notify.warn("No tree available")
     return
   end
 
-  local current = tree:get_node()
-  if not current then
+  local current_node = tree:get_node()
+  if not current_node then
     notify.warn("No node under cursor")
     return
   end
 
   -- Find parent directory
-  local parent = current.type == "directory" and current
-    or tree:get_node(current:get_parent_id())
-
+  local parent = current_node.type == "directory" and current_node
+                 or tree:get_node(current_node:get_parent_id())
   ---@cast parent any
 
   if not parent then
@@ -176,14 +121,15 @@ function M.mark_all_in_directory(state)
     return
   end
 
-  -- Get children
+  -- Get children using tree:get_nodes() instead of parent.children
   local children = tree:get_nodes(parent:get_id())
+
   if not children or #children == 0 then
     notify.warn("Directory is empty")
     return
   end
 
-  -- Mark all files (not directories)
+  -- Mark all children (files only)
   local marks = state.explicitly_marked_node_ids or {}
   local count = 0
 
@@ -195,14 +141,11 @@ function M.mark_all_in_directory(state)
   end
 
   state.explicitly_marked_node_ids = marks
-
   renderer.redraw(state)
-  update_visual_marks(state)
-
-  notify.info(("Marked %d files"):format(count))
+  notify.info(string.format("Marked %d files", count))
 end
 
----Unmark all files in current directory
+--- Unmark all files in the current directory node
 ---@param state Cfg.NeoTree.State
 ---@return nil
 function M.unmark_all_in_directory(state)
@@ -212,29 +155,31 @@ function M.unmark_all_in_directory(state)
     return
   end
 
-  local current = tree:get_node()
-  if not current then
+  local current_node = tree:get_node()
+  if not current_node then
     notify.warn("No node under cursor")
     return
   end
 
   -- Find parent directory
-  local parent = current.type == "directory" and current
-    or tree:get_node(current:get_parent_id())
+  local parent = current_node.type == "directory" and current_node
+                 or tree:get_node(current_node:get_parent_id())
+  ---@cast parent any
 
   if not parent then
     notify.warn("No parent directory found")
     return
   end
 
-  -- Get children
+  -- Get children using tree:get_nodes()
   local children = tree:get_nodes(parent:get_id())
+
   if not children or #children == 0 then
     notify.warn("Directory is empty")
     return
   end
 
-  -- Unmark all files
+  -- Unmark all children (files only)
   local marks = state.explicitly_marked_node_ids or {}
   local count = 0
 
@@ -246,116 +191,100 @@ function M.unmark_all_in_directory(state)
   end
 
   state.explicitly_marked_node_ids = marks
-
   renderer.redraw(state)
-  update_visual_marks(state)
-
-  notify.info(("Unmarked %d files"):format(count))
+  notify.info(string.format("Unmarked %d files", count))
 end
 
----Clear all marks globally
+--- Show all marked nodes in floating window
 ---@param state Cfg.NeoTree.State
 ---@return nil
-function M.clear_all_marks(state)
-  if state.explicitly_marked_node_ids then
-    state.explicitly_marked_node_ids = {}
+function M.show_marked_nodes(state)
+  local marks = state.explicitly_marked_node_ids
 
-    renderer.redraw(state)
-    update_visual_marks(state)
-
-    notify.info("Cleared all marks")
-  else
-    notify.info("No marks to clear")
+  if not marks or vim.tbl_isempty(marks) then
+    notify.info("No marked nodes")
+    return
   end
-end
 
--- ============================================================================
--- Batch Operations
--- ============================================================================
+  -- Collect marked node paths
+  local marked_paths = {}
+  for node_id, _ in pairs(marks) do
+    table.insert(marked_paths, node_id)
+  end
 
----Get marked nodes or current node
----@param state Cfg.NeoTree.State
----@return table[] nodes
----@nodiscard
-function M.get_marked_or_current(state)
-  local marks = state.explicitly_marked_node_ids or {}
-  local nodes = {}
+  -- Sort for consistent display
+  table.sort(marked_paths)
 
-  -- Collect marked nodes
-  if next(marks) then
-    local tree = state.tree
-    if tree then
-      for node_id, _ in pairs(marks) do
-        local node = tree:get_node(node_id)
-        if node then
-          table.insert(nodes, node)
-        end
-      end
+  local count = #marked_paths
+  local icon = get_mark_icon()
+
+  -- Build display lines
+  local lines = {
+    string.format("%s Marked Nodes (%d):", icon, count),
+    string.rep("─", 50),
+  }
+
+  for i, path in ipairs(marked_paths) do
+    local cwd = vim.fn.getcwd()
+    local display_path = path
+
+    if vim.startswith(path, cwd) then
+      display_path = path:sub(#cwd + 2)
+    end
+
+    table.insert(lines, string.format(" %s %2d. %s", icon, i, display_path))
+  end
+
+  -- Create floating window
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].bufhidden = "wipe"
+
+  local width = 80
+  local height = math.min(#lines + 2, 20)
+
+  local ui = vim.api.nvim_list_uis()[1]
+  if not ui then
+    notify.error("No UI available")
+    return
+  end
+
+  local win_opts = {
+    relative = "editor",
+    width = width,
+    height = height,
+    col = math.floor((ui.width - width) / 2),
+    row = math.floor((ui.height - height) / 2),
+    border = "rounded",
+    style = "minimal",
+    title = string.format(" %s Marked Nodes ", icon),
+    title_pos = "center",
+  }
+
+  local win = vim.api.nvim_open_win(buf, true, win_opts)
+
+  -- Set buffer-local keymaps to close
+  local close_win = function()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
     end
   end
 
-  -- Fallback to current node
-  if #nodes == 0 and state.tree then
-    local current = state.tree:get_node()
-    if current then
-      return { current }
-    end
+  vim.keymap.set("n", "q", close_win, { buffer = buf, nowait = true })
+  vim.keymap.set("n", "<Esc>", close_win, { buffer = buf, nowait = true })
+  vim.keymap.set("n", "<CR>", close_win, { buffer = buf, nowait = true })
+
+  -- Highlighting
+  vim.api.nvim_buf_add_highlight(buf, -1, "Title", 0, 0, -1)
+  vim.api.nvim_buf_add_highlight(buf, -1, "Comment", 1, 0, -1)
+
+  for i = 3, #lines do
+    -- Highlight icon
+    vim.api.nvim_buf_add_highlight(buf, -1, "NeoTreeMarked", i - 1, 1, 2)
+    -- Highlight path
+    vim.api.nvim_buf_add_highlight(buf, -1, "Directory", i - 1, 6, -1)
   end
-
-  return nodes
 end
-
----Execute batch operation on marked nodes
----@param state Cfg.NeoTree.State
----@param operation fun(nodes: table[]): boolean, string|nil
----@param operation_name string
----@return boolean success
----@return string|nil message
-function M.execute_batch(state, operation, operation_name)
-  local nodes = M.get_marked_or_current(state)
-
-  if #nodes == 0 then
-    notify.warn("No nodes selected")
-    return false, "No nodes selected"
-  end
-
-  notify.info(("Executing %s on %d node(s)..."):format(operation_name, #nodes))
-
-  -- Execute operation
-  local ok, msg = operation(nodes)
-
-  -- Clear marks on success
-  if ok and #nodes > 1 then
-    state.explicitly_marked_node_ids = {}
-    renderer.redraw(state)
-    update_visual_marks(state)
-  end
-
-  return ok, msg
-end
-
--- ============================================================================
--- Autocommands
--- ============================================================================
-
----Setup autocommands for mark persistence
-function M.setup_autocommands()
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = "neo-tree",
-    ---@diagnostic disable-next-line: unused-local
-    callback = function(ev)
-      -- Restore visual marks after refresh
-      vim.schedule(function()
-        local ok, state = pcall(require("neo-tree.sources.manager").get_state, "filesystem")
-        if ok and state then
-          update_visual_marks(state)
-        end
-      end)
-    end,
-  })
-end
-
--- Initialize autocommands
-M.setup_autocommands()
 
 return M

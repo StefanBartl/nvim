@@ -26,6 +26,8 @@
 ---@field row integer|nil   -- 0-based line number in buffer
 ---@field position {line: integer, col: integer}|nil  -- cursor position
 ---@field range {start: {line: integer, col: integer}, ["end"]: {line: integer, col: integer}}|nil
+---@field get_id fun(self: Cfg.NeoTree.Node): string
+---@field uri string|nil
 
 -- ---Return the parent node ID for upward navigation
 -- ---@param self Cfg.NeoTree.Node

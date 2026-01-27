@@ -194,6 +194,31 @@ return {
             never_show = {},
             never_show_by_pattern = {},
           },
+
+          components = {
+            -- Add mark indicator component
+            mark_indicator = function(config, node, state)
+              return require("config.neotree.components.marks").mark_indicator(config, node, state)
+            end,
+          },
+          -- Update renderers to include mark indicator
+          renderers = {
+            file = {
+              { "indent" },
+              { "icon" },
+              { "mark_indicator" }, -- ADD THIS
+              { "name", use_git_status_colors = true },
+              { "git_status" },
+            },
+            directory = {
+              { "indent" },
+              { "icon" },
+              { "mark_indicator" }, -- ADD THIS
+              { "current_filter" },
+              { "name" },
+              { "git_status" },
+            },
+          },
         },
 
         buffers = { window = { mappings = BUFFERS } },
@@ -298,7 +323,7 @@ return {
 
       -- -- Source-Switcher Keymap
       -- vim.keymap.set("n", "<leader>ns", function()
-        -- require("config.neotree.sources.switcher").show_picker()
+      -- require("config.neotree.sources.switcher").show_picker()
       -- end, { desc = "[Neo-tree] Switch Source" })
 
       -- Debug Command

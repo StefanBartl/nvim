@@ -1,8 +1,7 @@
 ---@module 'config.neotree.trash'
----@brief Trash orchestrator with single confirmation point
+---@brief Main orchestrator for Neo-tree trash functionality
 
 local notify = require("lib.notify").create("[neotree.trash]")
-local memo = require("lib.memo")
 
 -- Submodules
 local platform = require("config.neotree.trash.platform")
@@ -10,7 +9,7 @@ local buffer_checker = require("config.neotree.trash.validation.buffer_checker")
 local confirmation = require("config.neotree.trash.confirmation")
 local operations = require("config.neotree.trash.operations")
 
--- Safety & Watcher
+-- Safety system
 local safety = require("config.neotree.safety")
 local watcher_quarantine = require("config.neotree.watcher_quarantine")
 
@@ -18,97 +17,139 @@ local M = {}
 
 local fn = vim.fn
 local defer_fn = vim.defer_fn
+local str_format = string.format
 
 ---@type Cfg.NeoTree.Trash.Config
 M.config = {
   use_safety_system = true,
   create_backups = true,
+  confirm_dangerous = true,
   use_dry_run = true,
-  auto_close_buffers = true, -- Always true now
-  debug = false,
+  auto_close_buffers = true,
+  debug = true,
 }
 
 ---Configure trash module
 ---@param config Cfg.NeoTree.Trash.Config|boolean|nil
----@return nil
 function M.setup(config)
   if config then
     M.config = vim.tbl_deep_extend("force", M.config, config)
   end
 
-  -- Force auto_close to true (no separate prompt anymore)
-  M.config.auto_close_buffers = true
-
+  -- Pass config to submodules
   buffer_checker.set_config(M.config)
   operations.set_config(M.config)
 end
 
----Debug notify
+---Debug notify helper
 ---@param msg string
----@return nil
 local function debug_notify(msg)
   if M.config.debug then
     notify.info(msg)
   end
 end
 
----Safe refresh
+---Safely refresh Neo-tree
 ---@param state_name string
----@return nil
 local function safe_refresh(state_name)
   watcher_quarantine.safe_refresh(state_name)
 end
 
----Collect nodes (memoized)
+---Collect nodes to trash (marked or current)
 ---@param state Cfg.NeoTree.State
----@return Cfg.NeoTree.Node[]
----@nodiscard
-local get_nodes_to_trash = memo.fn(function(state)
-  local mark_cmd = require("config.neotree.commands.mark")
-  return mark_cmd.get_marked_or_current(state)
-end, { size = 16 })
+---@return Cfg.NeoTree.Node[] nodes
+local function get_nodes_to_trash(state)
+  if not state then
+    return {}
+  end
 
----Send single item to trash
----@param path string
----@param filename string
----@return boolean success
----@return string message
----@nodiscard
-local function send_single_to_trash(path, filename)
-  filename = filename or fn.fnamemodify(path, ":t")
+  local marks = state.explicitly_marked_node_ids or {}
+  local nodes = {}
 
-  -- Check and auto-close references
-  local has_refs, ref_info = buffer_checker.check_references(path)
-
-  if has_refs then
-    debug_notify(("⚠ File '%s' has open references"):format(filename))
-
-    local closed = buffer_checker.auto_close_references(path, filename, ref_info)
-
-    if not closed then
-      return false, "Could not close all references"
+  -- CASE 1: Marked nodes exist
+  if next(marks) then
+    local tree = state.tree
+    if tree and tree.get_node then
+      for node_id, _ in pairs(marks) do
+        local node = tree:get_node(node_id)
+        if node then
+          table.insert(nodes, node)
+        end
+      end
     end
 
-    -- Double-check
-    has_refs, ref_info = buffer_checker.check_references(path)
-    if has_refs then
-      notify.error(("❌ Still cannot delete '%s'\nPlease close manually"):format(filename))
-      return false, "References still open"
+    if #nodes > 0 then
+      return nodes
     end
   end
 
-  -- Validation
+  -- CASE 2: Current node (fallback)
+  if state.tree and state.tree.get_node then
+    local current = state.tree:get_node()
+    if current then
+      return { current }
+    end
+  end
+
+  return {}
+end
+
+---Send single item to trash with all safety checks
+---@param path string
+---@param filename string
+---@param ask_before_close boolean
+---@return boolean success
+---@return string message
+---@return boolean user_cancelled
+local function send_single_to_trash(path, filename, ask_before_close)
+  filename = filename or fn.fnamemodify(path, ":t")
+
+  -- STEP 1: Check and close buffers/previews FIRST (before validation)
+  local has_refs, ref_info = buffer_checker.check_references(path)
+
+  if has_refs then
+    debug_notify(string.format("⚠ File '%s' has open references", filename))
+
+    local closed, user_cancelled = buffer_checker.close_references(
+      path,
+      filename,
+      ref_info,
+      ask_before_close
+    )
+
+    if user_cancelled then
+      return false, "user cancelled", true
+    end
+
+    if not closed then
+      return false, "Could not close all references", false
+    end
+
+    -- Double-check after closure
+    has_refs, ref_info = buffer_checker.check_references(path)
+    if has_refs then
+      notify.error(string.format(
+        "❌ Still cannot delete '%s'\n%s\nPlease close manually or restart Neovim",
+        filename,
+        buffer_checker.format_remaining_references(ref_info)
+      ))
+      return false, "References still open", false
+    end
+  end
+
+  -- STEP 2: Now validate (after buffers are closed)
   if M.config.use_safety_system then
     local valid, reason = safety.validation.validate_operation("delete", { path })
     if not valid then
       notify.error("Validation failed: " .. reason)
-      return false, reason or "validation failed"
+      return false, reason or "reason is nil", false
     end
   end
 
-  -- Execute trash
+  -- STEP 3: Execute trash operation
   if not M.config.use_safety_system then
-    return platform.send_to_trash(path)
+    local ok, msg = platform.send_to_trash(path)
+    return ok, msg, false
   end
 
   -- With safety system
@@ -125,12 +166,11 @@ local function send_single_to_trash(path, filename)
     return success, err
   end, "delete", { path })
 
-  return ok, msg or "unknown error"
+  return ok, msg or "msg is nil", false
 end
 
----Main Neo-tree command
+---Main Neo-tree command: trash selected nodes
 ---@param state Cfg.NeoTree.State
----@return nil
 function M.neotree_send_node_to_trash(state)
   local nodes = get_nodes_to_trash(state)
 
@@ -157,25 +197,25 @@ function M.neotree_send_node_to_trash(state)
     return
   end
 
-  -- Check for open buffers (for confirmation message)
-  local has_any_refs = false
-  for _, path in ipairs(paths) do
-    local has_refs = buffer_checker.check_references(path)
-    if has_refs then
-      has_any_refs = true
-      break
-    end
+  -- Dry-run check
+  if M.config.use_dry_run and safety.dry_run.enabled then
+    safety.dry_run.log_operation("trash", {
+      paths = paths,
+      names = names,
+      count = #paths,
+    })
+    notify.info(str_format("[DRY-RUN] Would trash %d items", #paths))
+    return
   end
 
-  -- SINGLE CONFIRMATION POINT
-  local delete_mode = confirmation.get_unified_confirmation(names, has_any_refs)
-
+  -- Get confirmation mode
+  local delete_mode = confirmation.get_confirmation_mode(names)
   if delete_mode == "cancel" then
     notify.info("ℹ️ Operation cancelled")
     return
   end
 
-  ---@cast delete_mode "all"|"individual"
+  ---@cast delete_mode Cfg.NeoTree.DeleteMode
 
   notify.info("Moving to Trash...")
 
@@ -207,9 +247,12 @@ function M.neotree_send_node_to_trash(state)
       )
 
       -- Clear marks on success
-      if results.success_count > 0 then
-        local mark_cmd = require("config.neotree.commands.mark")
-        pcall(mark_cmd.clear_all_marks, state)
+      if results.success_count > 0 and state.explicitly_marked_node_ids then
+        state.explicitly_marked_node_ids = {}
+        pcall(function()
+          local renderer = require("neo-tree.ui.renderer")
+          renderer.redraw(state)
+        end)
       end
 
       -- Refresh
@@ -217,22 +260,20 @@ function M.neotree_send_node_to_trash(state)
         safe_refresh(state.name or "filesystem")
       end, 200)
 
-      -- Show results
+      -- Final notifications
       operations.show_results(results, backups_created)
     end, 150)
   end)
 end
 
----Toggle debug
----@return nil
+---Toggle debug mode
 function M.toggle_debug()
   M.config.debug = not M.config.debug
-  buffer_checker.set_config(M.config)
-  notify.info(("Debug mode: %s"):format(M.config.debug and "ENABLED" or "DISABLED"))
+  buffer_checker.set_debug(M.config.debug)
+  notify.info(str_format("Debug mode: %s", M.config.debug and "ENABLED" or "DISABLED"))
 end
 
 ---Toggle dry-run
----@return nil
 function M.toggle_dry_run()
   if safety.dry_run.enabled then
     safety.dry_run.disable()
@@ -241,8 +282,7 @@ function M.toggle_dry_run()
   end
 end
 
----Show stats
----@return nil
+---Show statistics
 function M.show_stats()
   local backups = safety.backup.list_backups()
   local recovery_points = safety.recovery.list_recovery_points()
@@ -251,18 +291,18 @@ function M.show_stats()
   local stats = {
     "=== Neo-tree Trash Statistics ===",
     "",
-    ("Safety System: %s"):format(M.config.use_safety_system and "✓" or "✗"),
-    ("Debug Mode: %s"):format(M.config.debug and "✓" or "✗"),
-    ("Auto-Close Buffers: YES (always enabled)"),
-    ("Backups: %d"):format(#backups),
-    ("Recovery Points: %d"):format(#recovery_points),
-    ("Queue: %s"):format(queue_status.processing and "PROCESSING" or "IDLE"),
-    ("Dry-Run: %s"):format(safety.dry_run.enabled and "✓" or "✗"),
+    string.format("Safety System: %s", M.config.use_safety_system and "✓" or "✗"),
+    string.format("Debug Mode: %s", M.config.debug and "✓" or "✗"),
+    string.format("Auto-Close Buffers: %s", M.config.auto_close_buffers and "YES" or "NO"),
+    string.format("Backups: %d", #backups),
+    string.format("Recovery Points: %d", #recovery_points),
+    string.format("Queue: %s", queue_status.processing and "PROCESSING" or "IDLE"),
+    string.format("Dry-Run: %s", safety.dry_run.enabled and "✓" or "✗"),
     "",
     "User Commands:",
-    "  :NeoTreeTrashStats     - Show this",
-    "  :NeoTreeTrashDebug     - Toggle debug",
-    "  :NeoTreeTrashDryRun    - Toggle dry-run",
+    "  :NeoTreeTrashStats     - Show this message",
+    "  :NeoTreeTrashDebug     - Toggle debug mode",
+    "  :NeoTreeTrashDryRun    - Toggle dry-run mode",
   }
 
   notify.info(table.concat(stats, "\n"))

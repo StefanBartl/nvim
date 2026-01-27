@@ -2,7 +2,7 @@
 
 ## Table of content
 
-- [neotree- Roadmap & Ideas](#neotree-roadmap-ideas)
+ [neotree- Roadmap & Ideas](#neotree-roadmap-ideas)
   - [Watch](#watch)
   - [Important](#important)
     - [neotree/open/](#neotreeopen)
@@ -19,8 +19,9 @@
 ---
 
 1. Wenn sources switch dann soll der fokus im neotree bleiben
+2. updaten: config.menu.neotree.entries
 
- Jede Löschung aus dem neotree heraus muss doppelt bestätigt werden, das ist nicht notwenidg:
+2. Jede Löschung aus dem neotree heraus muss doppelt bestätigt werden, das ist nicht notwenidg:
 
 Erste prompt:
 
