@@ -41,7 +41,7 @@ function M.attach_opener_mappings(opts)
   end
 
   -- enable window debug usercommands
-  require("config.neotree.open.window.debug")
+  -- require("config.neotree.open.window.debug")
 end
 
 return M

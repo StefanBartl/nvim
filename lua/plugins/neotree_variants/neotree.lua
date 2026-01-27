@@ -268,33 +268,36 @@ return {
         busy_guard = false,
         default_position = "right",
         restore_last_position = false,
-        window_debug = true,
-        window_open = false, -- Müsste buggy open window überspringen..
-        reveal_current_file = true, -- ...trotzdem current fil...
-        only_lhs = true, -- .. und lhs haeben
-        trash = {
-          debug = false,
-          auto_close_buffers = true,
-          create_backups = true,
-          use_safety_system = true,
-          confirm_dangerous = true,
-          use_dry_run = false,
-        },
-        current_hl = {
-          colors = {
-            file = "green",
-            parent = { fg = "darkgreen", underline = false },
-          },
-        },
-        -- cwd_sync = false,
-        cwd_sync = {
-          debounce_ms = 150,
-          keep_focus = true,
-          also_set_nvim_cwd = false,
-          open_if_closed = false,
-          use_project_root = true,
-          project_root_fallback_to_bufdir = true,
-        },
+        window_debug = false,
+        window_open = false,
+        reveal_current_file = false,
+        -- reveal_current_file = true,
+        only_lhs = true,
+        trash = false,
+        -- trash = {
+          -- debug = false,
+          -- auto_close_buffers = true,
+          -- create_backups = true,
+          -- use_safety_system = true,
+          -- confirm_dangerous = true,
+          -- use_dry_run = false,
+        -- },
+        current_hl = false,
+        -- current_hl = {
+          -- colors = {
+            -- file = "green",
+            -- parent = { fg = "darkgreen", underline = false },
+          -- },
+        -- },
+        cwd_sync = false,
+        -- cwd_sync = {
+          -- debounce_ms = 150,
+          -- keep_focus = true,
+          -- also_set_nvim_cwd = false,
+          -- open_if_closed = false,
+          -- use_project_root = true,
+          -- project_root_fallback_to_bufdir = true,
+        -- },
       })
 
       -- -- Source-Switcher Keymap
@@ -303,9 +306,9 @@ return {
       -- end, { desc = "[Neo-tree] Switch Source" })
 
       -- Debug Command
-      vim.api.nvim_create_user_command("NeoTreeDebugSources", function()
-        require("config.neotree.sources.switcher").debug_sources()
-      end, { desc = "[Neo-tree] Debug source detection" })
+      -- vim.api.nvim_create_user_command("NeoTreeDebugSources", function()
+        -- require("config.neotree.sources.switcher").debug_sources()
+      -- end, { desc = "[Neo-tree] Debug source detection" })
     end,
   },
 }
