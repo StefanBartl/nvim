@@ -11,6 +11,7 @@
 ---@field cross Lib.Cross
 ---@field functions Lib.Functions
 ---@field fs Lib.Fs
+---@field git Lib.Git
 ---@field json Lib.JSON
 ---@field lazy Lib.Lazy
 ---@field lua_ls Lib.LuaLS

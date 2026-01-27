@@ -276,6 +276,7 @@ LIB.hl = lazy_module("lib.ui.hl")
 -- === AUTOCMD/KEYMAP ===
 LIB.autocmd = lazy_module("lib.autocmd")
 LIB.augroup = lazy_module("lib.autocmd.augroup")
+LIB.augroup_create_clear = lazy_module("lib.autocmd.augroup.create").clear
 LIB.map = lazy_module("lib.map")
 LIB.usercmd = lazy_module("lib.usercmd")
 

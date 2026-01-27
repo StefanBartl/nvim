@@ -44,4 +44,14 @@ function M.delete_terminal_buf(bufnr)
   end
 end
 
+---@return boolean
+function M.is_kitty()
+  local env = vim.env
+  if env.KITTY_LISTEN_ON and env.KITTY_LISTEN_ON ~= "" then
+    return true
+  end
+  local term = env.TERM or ""
+  return term:find("kitty", 1, true) ~= nil
+end
+
 return M

@@ -111,6 +111,8 @@ LIB.hl = require("lib.ui.hl")
 
 -- === AUTOCMD/KEYMAP ===
 LIB.autocmd = require("lib.autocmd")
+LIB.autogroup = require("lib.autocmd.augroup")
+LIB.autogroup_create_clear = require("lib.autocmd.augroup").create.clear
 LIB.map = require("lib.map")
 LIB.usercmd = require("lib.usercmd")
 

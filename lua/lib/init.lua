@@ -49,7 +49,6 @@ local MODULE_MAP = {
 
   -- AUTOCMD/KEYMAP
   autocmd = "lib.autocmd",
-  augroup = "lib.autocmd.augroup",
   map = "lib.map",
   usercmd = "lib.usercmd",
 
@@ -78,6 +77,9 @@ local MODULE_MAP = {
 
 -- Special handlers for modules with multiple exports
 local SPECIAL_HANDLERS = {
+
+  augroup_create_clear = { "lib.autocmd.augroup.create", key = "clear"},
+
   -- lib.nvim
   has_exec = { mod = "lib.nvim", key = "has_exec" },
 

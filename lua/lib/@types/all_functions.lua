@@ -7,26 +7,52 @@
 ---@class Lib
 ---
 --- === Editor Interfaces / Interaction Layers ===
+---
+-- =========================================================
 --- Autocmd/Keymaps
+-- =========================================================
+--
+---@field augroup_create_clear Lib.AutoCmd.AuGroup.Create
 ---@field group fun(name: string, clear: boolean|nil): integer # Create autocommand group
 ---@field create fun(event: string|string[], callback: fun(args:Lib.Autocmd.Args), opts: LibAutocmdOpts|nil): nil # Create autocommand
 ---@field get_augroup fun(name: string, opts: { clear?: boolean, prefix?: string }|nil): integer # Augroup registry: Centralized augroup creation with optional prefixing and deduplication.
+---@field norm_events fun(ev: any, fallback: string[]): string[] # Normalize event configuration to a non-empty list.
+---@field norm_pattern fun(pat: any): string|string[] # Normalize an autocmd pattern field.
+---
+-- =========================================================
 --- Map
+-- =========================================================
+--
 ---@field map fun(modes: string|string[], lhs: string, rhs: string|function, opts: Lib.Map.Opts|nil, desc: string?): nil # Keymap helper
+---
+-- =========================================================
 --- Usrcmd
+-- =========================================================
+--
 ---@field create fun(name: string, callback: string|fun(args:Lib.UserCommand.Args), opts: LibUserCommandOpts|nil): nil
-------
+---
+-- =========================================================
 --- === Cross-Platform ===
+---
+-- =========================================================
 ---@field is_windows fun(): boolean # returns true if corrent os is windows
 ---@field is_wsl fun(): boolean # returns true if corrent os is wsl
 ---@field is_macos fun(): boolean # returns true if corrent os is macos
 ---@field is_linux fun(): boolean # returns true if corrent os is linux
 ---@field is fun(platform?: Lib.Cross.Platform.PlatformName): boolean|Lib.Cross.Platform.PlatformName # Dual behavior: returns platform name or boolean check
+---
+-- =========================================================
 -- Lib.Cross.Run
+-- =========================================================
+--
 ---@field shell fun(): OsShell # Pick a shell suitable for the platform
 ---@field run fun(cmd: string, cb: fun(ok:boolean, res:OsRunResult): nil): nil # Async run using vim.system when available; falls back to jobstart
 ---@field run_blocking fun(cmd: string): OsRunResult # Blocking run (utility for quick conversions / probing)
+---
+-- =========================================================
 ---Lib.Cross.CopyToClipboard
+-- =========================================================
+--
 ---@field run_blocking fun(cmd: string[], input?: string): boolean, string|nil # Low-level argv-based process runner with stdin support.
 ---@field copy_to_clipboard fun(text: string): boolean # Copy text to system clipboard using platform-appropriate backend
 ---
@@ -46,10 +72,28 @@
 --- Lib.fs.write
 ---@field write_to_file fun(path: string, content: string): boolean, string|nil # Write string content to given path. Makes sure that directory exists. Return sucess boolean and in cade of no success string notice
 ---
+-- =========================================================
 --- === Require ===
+-- =========================================================
+--
 ---@field require_safe fun(name: string): boolean, any # Safe require with structured error handling
 ---@field require_dir fun(dir: string, calls?: string|string[]|""): nil # Load all modules in a directory
 ---@field require_lazy fun(module_name: string): fun(): table # Lazy-loading wrapper
+---
+-- =========================================================
+--- === Git ===
+-- =========================================================
+---
+---@field in_git_repo fun(git_cmd: string): boolean # Check if current directory is inside a Git work-tree.
+---@field repo_root fun(git_cmd?:string):string|nil # Get the absolute path to the repository root.
+---@field current_branch fun(git_cmd?:string):string|nil # Get the current branch name. Returns nil in detached HEAD state.
+---@field is_detached_head fun(git_cmd?:string):boolean # Check whether the repository is in a detached HEAD state.
+---@field is_dirty fun(git_cmd?:string):boolean # Check whether the working tree has uncommitted changes.
+---@field is_tracked fun(path:string, git_cmd?:string):boolean # Check whether the given path is tracked by Git.
+---@field upstream fun(git_cmd?:string):string|nil # Get the upstream branch of the current branch.
+---@field ahead_behind fun(git_cmd?:string):(boolean, boolean) # Check whether the current branch is ahead or behind its upstream.
+---@field head_short_hash fun(git_cmd?:string):string|nil # Get the short hash of HEAD.
+---@field clear_line_diff fun(ns:integer):fun(buf:integer):nil # Create a buffer-scoped function that clears all virtual text in the given namespace. This function binds the namespace once and returns a callback suitable for autocmd usage.
 ---
 -- =========================================================
 --- === Buffer ===
@@ -359,6 +403,7 @@
 ---@field terminal_escape fun(path: string): string # Cross-platform path escaping
 ---@field is_terminal_buf fun(bufnr: integer): boolean|nil # Checks if buffer is terminal
 ---@field delete_terminal_buf fun(bufnr: integer): boolean|nil # Deletes terminal buffer
+---@field is_kitty fun(): nil # Return true if the current terminal environment is Kitty (Linux/macOS). Heuristics: KITTY_LISTEN_ON set OR TERM contains "kitty". Return true if the current terminal environment is Kitty (Linux/macOS). Heuristics: KITTY_LISTEN_ON set OR TERM contains "kitty".
 ---
 -- =========================================================
 --- === UI ===

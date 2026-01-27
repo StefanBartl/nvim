@@ -10,6 +10,8 @@ local notify = require("lib.notify").create("[lib.autocmd]")
 
 local M = {}
 
+M.augroup = require("lib.lazy").require("lib.autocmd.augroup")
+
 ---@type table<string, integer>
 local groups = {}
 
@@ -77,6 +79,37 @@ function M.create(event, callback, opts)
     nested = opts.nested == true,
     callback = callback,
   })
+end
+
+-- Normalize event configuration to a non-empty list.
+-- - Always guarantees a non-empty string[] for Autocmd events
+-- - Decoups feature configuration from internal defaults
+--
+-- - Allows multiple configuration options:
+--  * Explicit event list
+--  * False / nil / empty table → Fallback
+-- - Prevents errors such as:
+--  * Empty event lists
+--  * Incorrect types
+--  * Uninitialized fields
+---@param ev any
+---@param fallback string[]
+---@return string[]
+function M.norm_events(ev, fallback)
+  if type(ev) == "table" and #ev > 0 then
+    return ev
+  end
+  return fallback
+end
+
+--- Normalize an autocmd pattern field.
+---@param pat any
+---@return string|string[]
+function M.norm_pattern(pat)
+  if pat == nil then
+    return "*"
+  end
+  return pat
 end
 
 return M
