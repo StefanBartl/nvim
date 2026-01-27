@@ -194,31 +194,6 @@ return {
             never_show = {},
             never_show_by_pattern = {},
           },
-
-          components = {
-            -- Add mark indicator component
-            mark_indicator = function(config, node, state)
-              return require("config.neotree.components.marks").mark_indicator(config, node, state)
-            end,
-          },
-          -- Update renderers to include mark indicator
-          renderers = {
-            file = {
-              { "indent" },
-              { "icon" },
-              { "mark_indicator" }, -- ADD THIS
-              { "name", use_git_status_colors = true },
-              { "git_status" },
-            },
-            directory = {
-              { "indent" },
-              { "icon" },
-              { "mark_indicator" }, -- ADD THIS
-              { "current_filter" },
-              { "name" },
-              { "git_status" },
-            },
-          },
         },
 
         buffers = { window = { mappings = BUFFERS } },
@@ -287,6 +262,7 @@ return {
       require("config.neotree.actions.find_or_grep_menu").attach(opts)
       require("config.neotree.current_hl").attach(opts)
       require("neo-tree").setup(opts)
+      require("config.neotree.components.marks").attach(opts)
       require("config.neotree").setup({
         debug = true,
         busy_guard = false,

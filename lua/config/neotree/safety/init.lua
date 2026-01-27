@@ -48,11 +48,6 @@ function M.safe_operation(operation_fn, operation_name, paths)
     return false, reason
   end
 
-  -- Confirm if dangerous
-  if not M.validation.confirm_operation(operation_name, paths) then
-    return false, "user cancelled"
-  end
-
   -- Create backup
   local backups = {}
   if operation_name == "delete" or operation_name == "move" then

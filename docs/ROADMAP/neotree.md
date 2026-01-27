@@ -20,64 +20,8 @@
 
 1. Wenn sources switch dann soll der fokus im neotree bleiben
 2. updaten: config.menu.neotree.entries
-2. Jede Löschung aus dem neotree heraus muss doppelt bestätigt werden, das ist nicht notwenidg:
 
-Erste prompt:
-
-```vim
-Move to trash: nil ?  (y(N)
-```
-
-zweite prompt:
-
-```vim
-             Input
-delete: C:\.....ABSOLUTER-PFAD.md ? (y/(N)
-```
-
-3. mark:
-    - nicht nur für löschen sondern auch für files kopieren, verschieben usw...
-    - soll ene markierung im lnken rand (sign column / sign gutter) erzeugen wenn markiert.
-    - delete all muste ich dann erst wieer alle ienzeln bestätigen das löschen
-
-4. mark icon weg von plugin/neotree:
-
-```lua
-require("neo-tree").setup({
-  -- ... existing config ...
-
-  -- Add mark component to filesystem renderers
-  filesystem = {
-    components = {
-      -- Add mark indicator component
-      mark_indicator = function(config, node, state)
-        return require("config.neotree.components.marks").mark_indicator(config, node, state)
-      end,
-    },
-
-    -- Update renderers to include mark indicator
-    renderers = {
-      file = {
-        { "indent" },
-        { "icon" },
-        { "mark_indicator" }, -- ADD THIS
-        { "name", use_git_status_colors = true },
-        { "git_status" },
-      },
-      directory = {
-        { "indent" },
-        { "icon" },
-        { "mark_indicator" }, -- ADD THIS
-        { "current_filter" },
-        { "name" },
-        { "git_status" },
-      },
-    },
-  },
-})
-```
-
----
+-
 
 ## Watch
 
@@ -242,4 +186,10 @@ Ist also in dieser Versionm so keine Option.
 -
 
 ---
+
+
+
+
+   Error  17:58:20 notify.error [Neo-tree ERROR] debounce  filesystem_navigate  error:  ...Data/Local/nvim-data/lazy/nui.nvim/lua/nui/tree/init.lua:261: Invalid 'window': Expected Lua number
+
 
