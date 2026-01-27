@@ -37,6 +37,5 @@
 ---@field kitty AutoCmds.General.Kitty.SpacingCfg?    -- Configure kitty terminal spacing
 ---@field cursorline AutoCmds.General.Cursorline.Cfg? -- Configure active-window-only cursorline
 ---@field last_loc AutoCmds.General.JumpLastLoc.Cfg?  -- Configure jump-to-last-location on open
----@field goto_file AutoCmds.General.MD.GotoFile.Cfg
 
 return {}

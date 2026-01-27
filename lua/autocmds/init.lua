@@ -2,7 +2,7 @@
 --- Initialize module for 'autocmds'
 
 --FIX: Modularisere die submodule in eigene module
---FIX: Default's implementieren und h ier dann nur die notwendigstsen setzen
+--FIX: Default's implementieren und hier dann nur die notwendigstsen setzen
 
 -- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren:
 require("autocmds.auto-center-fexplorer").setup()
@@ -31,12 +31,6 @@ require("autocmds.general").enable({
   last_loc = {
     enable = false, -- On BufReadPost, jumps back to the last cursor position unless the filetype is excluded.
     exclude = { "gitcommit", "commit", "gitrebase" },
-  },
-
---AUDIT; Wenn das reicht,mm dann entferne den goto_file btranch aus autocmds
-  goto_file = {
-    enable = false,
-    debug = false,
   },
 })
 

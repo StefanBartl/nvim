@@ -1,4 +1,4 @@
---AUDIT: Daurhaft implementieren in autocmds
+--AUDIT: Daurhaft implementieren in UI/autocmds
 
 ---@module 'autocmds.auto-center-fexplorer'
 -- Automatically centers the cursor in file explorer windows (neo-tree, nvim-tree, netrw).

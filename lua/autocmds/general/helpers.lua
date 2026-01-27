@@ -46,5 +46,4 @@ function M.snorm_pattern(pat)
   return pat
 end
 
-
 return M

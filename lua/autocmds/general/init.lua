@@ -4,16 +4,8 @@
 --- Guards are included to avoid side effects in unsupported contexts.
 local M = {}
 
-local api = vim.api
+local api, uv = vim.api, vim.uv or vim.loop
 local helpers = require("autocmds.general.helpers")
-
--- Dispatcher & Wiring --------------------------------------------------------
-local gofile_loader = require("autocmds.general.gofile_cases")
-local logger_mod = require("autocmds.general.gofile_logger")
-
--- Compatibility shim for libuv
-local uv = vim.uv or vim.loop
-
 local DEFAULTS = require("autocmds.general.defaults")
 
 -- Public API ------------------------------------------------------------------
@@ -115,59 +107,6 @@ function M.enable(cfg)
     })
   end
 
-  -- 5) gf override with modular cases
-  if cfg.goto_file.enable then
-    api.nvim_create_autocmd("FileType", {
-      group = helpers.augroup("goto_file"),
-      pattern = helpers.snorm_pattern(cfg.goto_file.pattern),
-      callback = function()
-        -- Validate Treesitter availability; otherwise, keep default behavior.
-        local ok_ts = pcall(require, "nvim-treesitter.ts_utils")
-        if not ok_ts then
-          return
-        end
-
-        -- Preload ordered case modules
-        local cases = gofile_loader.load_ordered_cases(cfg)
-        local logger = logger_mod(cfg)
-
-        local function gf_dispatch()
-          local dispatch_cases = require("autocmds.general.gofile_case_dispatcher")
-          local ts_utils = require("nvim-treesitter.ts_utils")
-
-          local bufnr = api.nvim_get_current_buf()
-          local node = ts_utils.get_node_at_cursor()
-
-          logger.debug("gf invoked", {
-            buf = bufnr,
-            node_type = node and node:type() or nil,
-          })
-
-          local handled = false
-          if dispatch_cases then
-            handled = dispatch_cases(node, bufnr, ts_utils, cfg, cases)
-          end
-
-          if not handled then
-            logger.info("falling back to builtin gf")
-            vim.cmd.normal({ args = { "gf" }, bang = true })
-          end
-        end
-
-        local lhs_list =  {"gf"}
-
-        for _, lhs in ipairs(lhs_list) do
-          vim.keymap.set("n", lhs, gf_dispatch, {
-            buffer = 0,
-            noremap = true,
-            silent = true,
-            desc = "Markdown-aware gf with modular resolver",
-          })
-        end
-      end,
-      desc = "Markdown: override gf to follow links/URLs with fallback",
-    })
-  end
 end
 
 return M
