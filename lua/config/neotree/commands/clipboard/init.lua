@@ -57,7 +57,7 @@ function M.copy_to_clipboard(state)
   }
 
   for _, node in ipairs(nodes) do
-    local path = node.path or node.uri or node:get_id()
+    local path = node.path or node:get_id()
     if path then
       table.insert(clipboard.nodes, {
         id = node.id,
@@ -91,7 +91,7 @@ function M.cut_to_clipboard(state)
   }
 
   for _, node in ipairs(nodes) do
-    local path = node.path or node.uri or node:get_id()
+    local path = node.path or node:get_id()
     if path then
       table.insert(clipboard.nodes, {
         id = node.id,

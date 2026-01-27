@@ -2,11 +2,10 @@
 
 ## Table of content
 
-- [clean code und performance bezogene Änderungen](#clean-code-und-performance-bezogene-nderungen)
+- [Clean Code und Performance bezogene Änderungen](#clean-code-und-performance-bezogene-nderungen)
   - [Syntax](#syntax)
-    - [Funktionene, Funktionssignaturen, Methoden](#funktionene-funktionssignaturen-methoden)
+    - [Funktionen, Funktionssignaturen, Methoden](#funktionen-funktionssignaturen-methoden)
   - [Projektstruktur](#projektstruktur)
-    - [`/ui`-Modul](#ui-modul)
   - [Cleanup](#cleanup)
     - [`plugins.`](#plugins)
     - [`mappings.`](#mappings)
@@ -20,14 +19,9 @@
 
 ## Syntax
 
-2. **namespaces** von Typen 'explizit einschränken' (Custom `recommender -r`-Usercommands nutzen)
-3. Explizit coden -> `return nil` statt `return` als Beispiel
-4. Wenn möglich auf `local M` verzichten und einen benannten Export table erstellen:
-    - explizite Typisierung durch `return UsrCmds`, `return Cfg`. ...
+---
 
--
-
-### Funktionene, Funktionssignaturen, Methoden
+### Funktionen, Funktionssignaturen, Methoden
 
 1. Mehr als 1 optionaler Parameter deutet auf mögliche Anwendung von `varargs` hin. [](Development/wkdbook-Lua/Notes/Funktionen/varargs.md)
 2. local funktionen statt exportieren, sofern keine externe Referenz! Alle files durchgehen! Das ist deswegen wichtig, damit man nicht von außen eine FUnktion - zumindest in der Theoprie - requiren und dann neu setzten kann.
@@ -54,13 +48,6 @@
 
 --
 
-### `/ui`-Modul
-
-1. `init.lua`: Statusline ausgliedern
-2. `ui.stl_module` auf custom statusline ändern und modularisieren
-
----
-
 ## Cleanup
 
 1. überlegen, ob usrcmds nicht eigentlichs usercmds gennant werden sollen
@@ -68,6 +55,9 @@
 3. `pcall` doppelungen rauscoden
 4. `mappings.*` map durch `lib.map` tauschen
 5. `<Plug>` in den Mappings verwenden und dabei erlernen wie an sie erstellt
+6. `:Recommender -r` einsetzten
+
+---
 
 ### `plugins.`
 
@@ -93,6 +83,8 @@
 2. (Debugging :h update)[../../../lua/debugging/doc/debugging.txt]
 3. `usrcmds\migrate\` doc & docs aktulasieren, dass `require("usrcmds.migrate").setup({ opts = enable, notify = true, })` möglich ist;
 4. `\usrcmds\migrate\notify` docs und doc aktulasieren, dass ein `:MigrateNotify %/cwd [dest tag]` desc tag übereb wird, der dann in `.create("desc tag")` übergebn wird. AUF ENGLISCH
+5. `wkdoptions` readme aktualiseren, module auch readme.md schreiben (deutsch). alußerdem eine doc/
+6. `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
 
 --
 

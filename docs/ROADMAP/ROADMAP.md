@@ -3,10 +3,10 @@
 ## Table of content
 
 - [WKD Neovim Roadmap](#wkd-neovim-roadmap)
-  - [Table of content](#table-of-content)
   - [Watch](#watch)
   - [Important](#important)
   - [MIXED](#mixed)
+  - [UI](#ui)
   - [Neotest](#neotest)
   - [`custom.format.text_width`](#customformattext_width)
   - [ideas](#ideas)
@@ -19,12 +19,6 @@
 ---
 
 ## Important
-
-- :lua vim.cmd('profile start /tmp/profile.log') vim.cmd('profile func *') require('lib')
-- `wkdoptions` readme aktualiseren, module auch readme.md schreiben (deutsch). alußerdem eine doc/
-- `wkddap`: README.md, doc/, docs/, test, Mappings/Usercommands ausbauen usw..
-- auto fokus neotree wenn man es öffnet
--- WKDBok lua und Neovim mit noters z usammenfphren
 
 --
 
@@ -78,7 +72,7 @@ Implementieren in `:UI` sowie auch als config
     - ? Buffer-locales Autowrap beim Tippen (z. B. über autocmd BufEnter,BufWinEnter + formatoptions oder textwidth während Insert).
     - SUPER: Verbinden mit marksman format + der Idee, dass man in codeblöcken lsp callt
 
----
+--
 
 ## ideas
 
@@ -93,5 +87,6 @@ Implementieren in `:UI` sowie auch als config
 - probieren nvchad rauszunehmen und nochmal mit lazyvim
 - experimental options:
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
+-- WKDBook lua und Neovim mit Notes zusammenführen
 
 ---

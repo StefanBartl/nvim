@@ -185,7 +185,7 @@ function M.neotree_send_node_to_trash(state)
 
   for i = 1, #nodes do
     local node = nodes[i]
-    local path = node.path or node.uri or node:get_id()
+    local path = node.path or node:get_id()
     if path then
       paths[#paths + 1] = path
       names[#names + 1] = node.name or fn.fnamemodify(path, ":t")

@@ -42,6 +42,7 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- =============================================================================
 require("system.env").compute_env()
 require("options")
+require("sessions").enable({ autocommands = true, usercmds = true, keymaps = true })
 
 -- =============================================================================
 -- PHASE 1: SEHR FRÜH (10ms) - Grundlegende Config
@@ -56,7 +57,6 @@ end, 10)
 -- PHASE 2: FRÜH (50ms) - Keymaps & Sessions
 -- =============================================================================
 vim.defer_fn(function()
-  require("sessions").enable({ autocommands = true, usercmds = true, keymaps = true })
   require("usrcmds")
   require("mappings").setup()
 end, 50)
@@ -104,6 +104,9 @@ vim.defer_fn(function()
     usercmds = false,
     tools = nil,
   })
+
+  require("benchmarks").setup()
+
 end, 600)
 
 -- Show startup time
