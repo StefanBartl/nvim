@@ -16,23 +16,23 @@
 --- Enable this feature. When true, on the configured `events` a scan runs for
 --- unresolved merge conflicts and populates the quickfix list.
 ---
----@field events Autocmds.Event[]|nil
+---@field events? Autocmds.Event[]|nil
 --- Autocmd events that trigger the scan.
 --- Default: { "VimEnter" }. Reasonable additions: { "FocusGained" }.
 --- Use sparingly on very large repos to avoid startup overhead.
 ---
----@field diff_filter string|nil
+---@field diff_filter? string|nil
 --- Value passed to `git diff --name-only --diff-filter=<X>`. Default: "U" (unmerged).
 --- Common filters: "U" (conflicts), "M" (modified), "AM" (added/modified).
 ---
----@field open_qf boolean|nil
+---@field open_qf? boolean|nil
 --- When true (default), opens the quickfix list after populating it.
 --- Set to false to only update the list silently.
 ---
----@field notify boolean|nil
+---@field notify? boolean|nil
 --- When true (default), shows a notification with the conflicting file names.
 ---
----@field git_cmd Git.Command|nil
+---@field git_cmd? Git.Command|nil
 --- Git command to execute. Default: "git".
 --- Provide a full path to avoid PATH/resolver surprises.
 
@@ -44,21 +44,21 @@
 ---@field enable boolean
 --- Enable this feature. Applies only to buffers with `filetype=gitcommit`.
 ---
----@field spell boolean|nil
+---@field spell? boolean|nil
 --- Enable local spell checking in commit messages. Default: true.
 ---
----@field textwidth integer|nil
+---@field textwidth? integer|nil
 --- Soft line wrap width via `textwidth`. Default: 72 (common Git convention).
 ---
----@field colorcolumn string|nil
+---@field colorcolumn? string|nil
 --- Comma-separated columns for visual ruler(s). Default: "73".
 --- Example: "73,100" to show two rulers.
 ---
----@field formatoptions string|nil
+---@field formatoptions? string|nil
 --- Local `formatoptions`. Default: "tcqj".
 --- Typical meanings: t=auto-wrap, c=auto-wrap comments, q=gq formats comments, j=remove comment leader on join.
 ---
----@field start_in_insert boolean|nil
+---@field start_in_insert? boolean|nil
 --- When true, enters Insert mode after opening a commit buffer. Default: false.
 
 --------------------------------------------------------------------------------
@@ -69,13 +69,13 @@
 ---@field enable boolean
 --- Enable highlighting of Git conflict markers inside any buffer.
 ---
----@field hl_a HighlightGroup|nil
+---@field hl_a? HighlightGroup|nil
 --- Highlight group for `<<<<<<<` regions. Default: "DiffDelete".
 ---
----@field hl_b HighlightGroup|nil
+---@field hl_b? HighlightGroup|nil
 --- Highlight group for `=======` separator. Default: "DiffChange".
 ---
----@field hl_c HighlightGroup|nil
+---@field hl_c? HighlightGroup|nil
 --- Highlight group for `>>>>>>>` regions. Default: "DiffAdd".
 
 --------------------------------------------------------------------------------
@@ -86,7 +86,7 @@
 ---@field enable boolean
 --- Enable gitsigns refresh hooks (safe no-op when gitsigns is absent).
 ---
----@field events Autocmds.Event[]|nil
+---@field events? Autocmds.Event[]|nil
 --- Events used to refresh hunks. Default: { "BufEnter", "FocusGained" }.
 --- Add/remove events to balance freshness vs. overhead.
 
@@ -98,14 +98,14 @@
 ---@field enable boolean
 --- Enable inline blame display on idle cursor (requires gitsigns).
 ---
----@field delay integer|nil
+---@field delay? integer|nil
 --- Extra debounce in milliseconds added on top of `updatetime` before showing blame.
 --- Default: 0 (immediate after CursorHold). Example: 300–1000 for calmer UX.
 ---
----@field virt boolean|nil
+---@field virt? boolean|nil
 --- Request virtual-text overlay for blame when supported. Default: true.
 ---
----@field ignore_buftypes Git.BufType[]|nil
+---@field ignore_buftypes? Git.BufType[]|nil
 --- Skip blame on these buffer types. Default: { "nofile", "prompt" }.
 
 --------------------------------------------------------------------------------
@@ -119,64 +119,64 @@
 ---   1) Prefer `gitsigns.preview_hunk_inline()` when available (inline diff).
 ---   2) Fallback: fetch previous committed content for the current line and render as EOL/right-aligned virtual text.
 ---
----@field modes (Git.ModeChar|string)[]|string|nil
+---@field modes? (Git.ModeChar|string)[]|string|nil
 --- Mode filter defining where previews are allowed.
 --- Accepts: "n", "v", "i" (string with any combination, e.g., "nv") or array { "n", "v" }.
 --- Default: nil → treated as allowing Normal+Visual (mapped to CursorHold).
 --- Insert-only requires "i" (mapped to CursorHoldI).
 ---
----@field events_override Autocmds.Event[]|nil
+---@field events_override? Autocmds.Event[]|nil
 --- If set, completely replaces the automatically derived events from `modes`.
 --- Example: { "CursorHold", "CursorHoldI" }.
 ---
----@field only_tracked boolean|nil
+---@field only_tracked? boolean|nil
 --- When true, skip files that are not tracked by Git (`git ls-files --error-unmatch`).
 --- Default: false.
 ---
----@field require_clean_buffer boolean|nil
+---@field require_clean_buffer? boolean|nil
 --- When true, skip preview if the buffer has unsaved modifications (`&modified`).
 --- Default: false.
 ---
----@field prefix string|nil
+---@field prefix? string|nil
 --- Text prefix prepended to the fallback EOL preview (previous line content).
 --- Default: "previous: ".
 ---
----@field right_align boolean|nil
+---@field right_align? boolean|nil
 --- If true, place virtual text with `virt_text_pos="right_align"`; otherwise at EOL.
 --- Default: false.
 ---
----@field max_len integer|nil
+---@field max_len? integer|nil
 --- Max characters to render for the fallback EOL preview, with ellipsis when truncated.
 --- Default: 160.
 ---
----@field hl_prev HighlightGroup|nil
+---@field hl_prev? HighlightGroup|nil
 --- Highlight group used for the fallback EOL preview text. Default: "Comment".
 ---
----@field virt_priority integer|nil
+---@field virt_priority? integer|nil
 --- Priority for the extmark-based virtual text. Higher values render above others.
 --- Default: 1000.
 ---
----@field delay integer|nil
+---@field delay? integer|nil
 --- Extra debounce in milliseconds added beyond `updatetime` before running the preview.
 --- Default: 0.
 ---
----@field git_cmd Git.Command|nil
+---@field git_cmd? Git.Command|nil
 --- Git command to execute for blame/show plumbing. Default: "git".
 ---
----@field ignore_buftypes Git.BufType[]|nil
+---@field ignore_buftypes? Git.BufType[]|nil
 --- Skip previews on these buffer types.
 --- Default: { "nofile", "prompt", "terminal" }.
 ---
----@field prefer_inline boolean|nil
+---@field prefer_inline? boolean|nil
 --- Prefer `gitsigns.preview_hunk_inline()` over fallback EOL preview.
 --- Set false to avoid inline diff (useful for very large hunks or jumpy layouts).
 --- Default: true.
 ---
----@field restore_view boolean|nil
+---@field restore_view? boolean|nil
 --- Save and restore window view and cursor around the inline preview to prevent scroll jumps.
 --- Default: true.
 ---
----@field throttle_ms integer|nil
+---@field throttle_ms? integer|nil
 --- Minimum time in milliseconds between triggers per window. Reduces re-renders while scrolling.
 --- Default: 800.
 
@@ -188,10 +188,10 @@
 ---@field enable boolean
 --- Enable registration of a health-check user command.
 ---
----@field cmd_name string|nil
+---@field cmd_name? string|nil
 --- Name of the user command for health checks. Default: "GitAutocmdsHealth".
 ---
----@field open_win boolean|nil
+---@field open_win? boolean|nil
 --- When true, render results into a scratch window; otherwise print/log.
 --- Default: true.
 
@@ -199,7 +199,7 @@
 ---@field enable boolean
 --- Enable registration of a lightweight spec/test command for helper functions.
 ---
----@field cmd_name string|nil
+---@field cmd_name? string|nil
 --- Name of the user command for specs. Default: "GitAutocmdsSpec".
 
 --------------------------------------------------------------------------------
@@ -207,28 +207,28 @@
 --------------------------------------------------------------------------------
 
 ---@class AutoCmds.Git.Cfg
----@field conflicts_qf AutoCmds.Git.Conflicts.QfCfg
+---@field conflicts_qf? AutoCmds.Git.Conflicts.QfCfg
 --- Settings for unresolved-conflict quickfix population.
 ---
----@field commit_ft AutoCmds.Git.CommitFtCfg
+---@field commit_ft? AutoCmds.Git.CommitFtCfg
 --- Settings for `gitcommit` buffers (spelling, wrapping, rulers, etc.).
 ---
----@field conflict_marks AutoCmds.Git.ConflictMarksCfg
+---@field conflict_marks? AutoCmds.Git.ConflictMarksCfg
 --- Settings for conflict marker highlights.
 ---
----@field gitsigns_refresh AutoCmds.Git.GitsignsRefreshCfg
+---@field gitsigns_refresh? AutoCmds.Git.GitsignsRefreshCfg
 --- Settings for gitsigns refresh hooks.
 ---
----@field blame_on_hold AutoCmds.Git.BlameOnHoldCfg
+---@field blame_on_hold? AutoCmds.Git.BlameOnHoldCfg
 --- Settings for inline blame on idle cursor.
 ---
----@field line_diff_on_hold AutoCmds.Git.LineDiffOnHoldCfg
+---@field line_diff_on_hold? AutoCmds.Git.LineDiffOnHoldCfg
 --- Settings for per-line diff/previous-content previews on idle cursor.
 ---
----@field health AutoCmds.Git.HealthCfg|nil
+---@field health? AutoCmds.Git.HealthCfg|nil
 --- Optional: user command for dependency/repo health diagnostics.
 ---
----@field spec AutoCmds.Git.Spec.Cfg|nil
+---@field spec? AutoCmds.Git.Spec.Cfg|nil
 --- Optional: user command for unit-like specs of helper functions.
 
 return {}

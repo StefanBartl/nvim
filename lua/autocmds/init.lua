@@ -41,18 +41,12 @@ end
 require("autocmds.terminals").enable({
   numbers = {
     enable = true,              -- On terminal open, turns off local 'number' and 'relativenumber' to declutter terminal panes.
-    events = { "TermOpen" },
   },
   kitty = {
     enable = true,              -- In Kitty, applies compact padding/margin on VimEnter and restores defaults on VimLeavePre.
-    enter_padding = 0,
-    enter_margin = 0,
-    leave_padding = 20,
-    leave_margin = 10,
   },
   auto_insert = {
     enable = false,             -- Automatically enters Insert mode in terminal buffers; add "TermEnter" to events if desired.
-    events = { "TermOpen" },    -- Alternative: add "TermEnter" if one prefers aggressive insert-on-focus.
   },
 })
 
@@ -63,25 +57,11 @@ require("autocmds.terminals").enable({
 require("autocmds.text").enable({
   trim_trailing = {
     enable = true, -- On BufWritePre, removes trailing whitespace at end-of-line in normal, modifiable buffers.
-    pattern = "*",
-    ignore_filetypes = { "diff" },
-    ignore_buftypes = { "nofile", "prompt" },
-    only_modifiable = true,
-    only_normal_bufs = true,
   },
   trim_blank = {
     enable = true, -- On BufWritePre, cleans whitespace-only (blank) lines; restores the exact cursor position afterwards.
-    pattern = "*",
-    preserve_cursor = true,
-    ignore_filetypes = { "diff" },
-    ignore_buftypes = { "nofile", "prompt" },
-    only_modifiable = true,
-    only_normal_bufs = true,
   },
   last_loc = {
     enable = true, -- On BufReadPost, jumps back to the last saved cursor position unless filetype is excluded.
-    pattern = "*",
-    exclude = { "commit", "gitrebase", "xxd" },
-    min_line = 1,
   },
 })
