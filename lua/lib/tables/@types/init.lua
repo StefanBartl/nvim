@@ -9,6 +9,7 @@
 ---@field functional Lib.Tables.Functional
 ---@field safe Lib.Tables.Safe
 ---@field with fun(base: table|nil, extra: table|nil): table
+---@field unique_table Lib.Tables.UniqueTable
 
 -- =========================================================
 -- All Array Operations
@@ -174,5 +175,13 @@
 ---@field snapshot_shallow fun(t: table): table # Create shallow snapshot of table. Useful for before/after comparisons or safe iteration during mutation.
 ---
 ---@field safe_ipairs fun(list: any[]): fun(): integer, any # Safe iterator over array. Captures length at start, preventing issues if list is mutated during iteration.
+---
+-- =========================================================
+-- Unique Table
+-- =========================================================
+--
+---@field unique fun(list: Lib.Tables.UniqueTable.List<any>): Lib.Tables.UniqueTable.List<any> # Create a new list containing only unique elements from the input list. The first occurrence of each element is preserved.
+---@field unique_by fun(list: Lib.Tables.UniqueTable.List<any>, key_fn: Lib.Tables.UniqueTable.KeyFn<any>): Lib.Tables.UniqueTable.List<any> # Create a new list containing only unique elements from the input list, using a custom key extraction function. This is useful when values are tables or when only part of a value should participate in the uniqueness decision.
+---@field is_unique fun(list: Lib.Tables.UniqueTable.List<any>): boolean # Check whether a list already contains only unique elements.
 
 return {}

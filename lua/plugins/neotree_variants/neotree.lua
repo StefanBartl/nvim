@@ -176,8 +176,14 @@ return {
 
         filesystem = {
           bind_to_cwd = true,
-          follow_current_file = { enabled = true },
           find_by_full_path_words = true,
+          -- Automatically expand all parent nodes required to reveal the currently active buffer.
+          follow_current_file = {
+            enabled = true,
+            -- When true, Neo-tree focuses the tree and selects the file.
+            -- When false, the tree updates silently in the background.
+            leave_dirs_open = false,
+          },
           group_empty_dirs = true,
           use_libuv_file_watcher = true,
           window = {
@@ -273,7 +279,7 @@ return {
         reveal_current_file = false,
         -- reveal_current_file = true,
         only_lhs = true,
-      -- trash = false,
+        -- trash = false,
         trash = {
           debug = false,
           auto_close_buffers = true,
@@ -289,15 +295,6 @@ return {
             parent = { fg = "darkgreen", underline = false },
           },
         },
-        -- cwd_sync = false,
-        cwd_sync = {
-          debounce_ms = 150,
-          keep_focus = true,
-          also_set_nvim_cwd = false,
-          open_if_closed = false,
-          use_project_root = true,
-          project_root_fallback_to_bufdir = true,
-        },
       })
 
       -- -- Source-Switcher Keymap
@@ -307,7 +304,7 @@ return {
 
       -- Debug Command
       -- vim.api.nvim_create_user_command("NeoTreeDebugSources", function()
-        -- require("config.neotree.sources.switcher").debug_sources()
+      -- require("config.neotree.sources.switcher").debug_sources()
       -- end, { desc = "[Neo-tree] Debug source detection" })
     end,
   },

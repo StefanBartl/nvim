@@ -9,7 +9,6 @@
 --- - Navigate down to a directory node (set as new root)
 --- - Smart CWD handling (window-local for float/current, global for sidebars)
 --- - Automatic node selection after navigation
---- - Integration with cwd_sync pause mechanism
 ---
 --- Usage:
 ---   local traverse = require("config.neotree.actions.traverse")
@@ -22,16 +21,6 @@ local M = {}
 
 local node_utils = require("config.neotree.utils.node")
 local fn = vim.fn
-
----Pause CWD sync to prevent conflicts
----@param duration_ms integer Pause duration in milliseconds
----@return nil
-local function pause_cwd_sync(duration_ms)
-  local ok_sync, sync = pcall(require, "config.neotree.cwd_sync")
-  if ok_sync and sync.pause_sync then
-    sync.pause_sync(duration_ms)
-  end
-end
 
 ---Determine the appropriate cd command based on window position
 ---@param state Cfg.NeoTree.State
@@ -126,8 +115,6 @@ end
 ---@param state Cfg.NeoTree.State
 ---@return boolean success
 function M.up(state)
-  -- Pause CWD sync for 3 seconds to allow manual navigation
-  pause_cwd_sync(3000)
 
   -- 1) Resolve current root directory
   local current_root = state.path
@@ -192,8 +179,6 @@ end
 ---@param state Cfg.NeoTree.State
 ---@return boolean success
 function M.down(state)
-  -- Pause CWD sync for 3 seconds
-  pause_cwd_sync(3000)
 
   -- 1) Get current node
   local node = node_utils.get_current(state)

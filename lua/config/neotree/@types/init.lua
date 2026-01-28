@@ -17,7 +17,6 @@
 ---   - safety:      Backup, recovery, and operation queue
 ---   - open:        Window management and positioning
 ---   - reveal:      File reveal and navigation context
----   - cwd_sync:    CWD synchronization state
 ---   - highlights:  Current file highlighting
 ---   - watcher:     File system watcher quarantine
 ---
@@ -40,21 +39,5 @@
 ---   3. Minimal forward dependencies between type modules
 ---   4. Structural typing for Neo-tree core objects
 ---   5. Explicit field documentation with usage notes
-
-require("config.neotree.@types.aliases")
-require("config.neotree.@types.node")
-require("config.neotree.@types.state")
-require("config.neotree.@types.config")
-require("config.neotree.@types.actions")
-require("config.neotree.@types.trash")
-require("config.neotree.@types.safety")
-require("config.neotree.@types.open")
-require("config.neotree.@types.reveal")
-require("config.neotree.@types.cwd_sync")
-require("config.neotree.@types.highlights")
-require("config.neotree.@types.watcher")
-require("config.neotree.@types.sources")
-require("config.neotree.@types.wsl")
-require("config.neotree.@types.project_root")
 
 return {}

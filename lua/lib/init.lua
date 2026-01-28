@@ -60,7 +60,17 @@ local MODULE_MAP = {
   lazy = "lib.lazy",
   memo = "lib.memo",
 
-  -- TIME
+  -- Table
+  array = "lib.tables.array",
+  core = "lib.tables.core",
+  dict = "lib.tables.dict",
+  set = "lib.tables.set",
+  functional = "lib.tables.functional",
+  safe = "lib.tables.safe",
+  unique_table = "lib.tables.unique_table",
+  with = "lib.tables.with",
+
+  -- TIM ,
   time_diff = "lib.time.diff",
 
   -- NORMALIZE
@@ -78,7 +88,7 @@ local MODULE_MAP = {
 -- Special handlers for modules with multiple exports
 local SPECIAL_HANDLERS = {
 
-  augroup_create_clear = { "lib.autocmd.augroup.create", key = "clear"},
+  augroup_create_clear = { "lib.autocmd.augroup.create", key = "clear" },
 
   -- lib.nvim
   has_exec = { mod = "lib.nvim", key = "has_exec" },

@@ -343,6 +343,14 @@
 ---@field safe_ipairs fun(list: any[]): fun(): integer, any # Safe iterator over array. Captures length at start, preventing issues if list is mutated during iteration.
 ---
 -- =========================================================
+-- Unique Table
+-- =========================================================
+--
+---@field unique fun(list: Lib.Tables.UniqueTable.List<any>): Lib.Tables.UniqueTable.List<any> # Create a new list containing only unique elements from the input list. The first occurrence of each element is preserved.
+---@field unique_by fun(list: Lib.Tables.UniqueTable.List<any>, key_fn: Lib.Tables.UniqueTable.KeyFn<any>): Lib.Tables.UniqueTable.List<any> # Create a new list containing only unique elements from the input list, using a custom key extraction function. This is useful when values are tables or when only part of a value should participate in the uniqueness decision.
+---@field is_unique fun(list: Lib.Tables.UniqueTable.List<any>): boolean # Check whether a list already contains only unique elements.
+---
+-- =========================================================
 --- === Strings ===
 -- =========================================================
 -- lib.strings.core
@@ -435,7 +443,7 @@
 -- =========================================================
 ---
 ---@field lru Lib.Memo.Lru # Exposed LRU cache constructor module.
----@field memo Lib.Memo.Memo # Exposed memoization helper module.
+---@field memo_memo Lib.Memo.Memo # Exposed memoization helper module.
 ---@field fn fun(func: fun(...): any, opts: table<string, any>|nil): fun(...): any # Convenience function: memoize with default settings Delegates to memo.memoize but provides shorter syntax.
 ---
 -- =========================================================

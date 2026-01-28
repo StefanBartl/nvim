@@ -20,14 +20,6 @@ function M.check()
     vim.health.warn("Trash system not loaded (optional)")
   end
 
-  -- CWD sync
-  local ok_sync = pcall(require, "config.neotree.cwd_sync")
-  if ok_sync then
-    vim.health.ok("CWD sync loaded")
-  else
-    vim.health.warn("CWD sync not loaded (optional)")
-  end
-
   -- Current highlight
   local ok_hl = pcall(require, "config.neotree.current_hl")
   if ok_hl then

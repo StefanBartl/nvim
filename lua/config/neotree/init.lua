@@ -8,10 +8,10 @@ local M = {}
 local defaults = {
   debug = false,
   busy_guard = false,
-  default_position = "left",
+  default_position = "right",
   restore_last_position = false,
-  window_debug = true,
-  window_open = true,
+  window_debug = false,
+  window_open = false,
   reveal_current_file = true,
   only_lhs = false,
   trash = {
@@ -27,14 +27,6 @@ local defaults = {
       file = "green",
       parent = { fg = "darkgreen", underline = false },
     },
-  },
-  cwd_sync = {
-    debounce_ms = 150,
-    keep_focus = true,
-    also_set_nvim_cwd = false,
-    open_if_closed = false,
-    use_project_root = true,
-    project_root_fallback_to_bufdir = true,
   },
 }
 
@@ -85,20 +77,6 @@ local function setup_current_hl(config)
   end
 end
 
---- Initialize CWD sync
----@param config Cfg.NeoTree.CwdSync.Config|boolean
----@return nil
-local function setup_cwd_sync(config)
-  if not config or config == false then
-    return
-  end
-  if type(config) == "table" then
-    require("config.neotree.cwd_sync").setup(config)
-  elseif config == true then
-    require("config.neotree.cwd_sync").setup(M.options.cwd_sync)
-  end
-end
-
 --- Main setup function
 ---@param opts Cfg.NeoTree.InitOpts|nil User configuration options
 ---@return nil
@@ -128,10 +106,6 @@ function M.setup(opts)
 
   if M.options.current_hl then
     setup_current_hl(M.options.current_hl)
-  end
-
-  if M.options.cwd_sync then
-    setup_cwd_sync(M.options.cwd_sync)
   end
 
   -- require("config.neotree.autocmds").attach({})

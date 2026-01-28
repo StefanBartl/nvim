@@ -20,6 +20,8 @@
 
 ## Important
 
+1. Wenn man autocmpletion angezeigt bekommt, dann soll enter das wort einfügen, nicht eine neue Zeile einfügen.
+
 --
 
 ## MIXED

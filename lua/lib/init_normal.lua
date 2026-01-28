@@ -61,6 +61,7 @@ LIB.dict = require("lib.tables.dict")
 LIB.set = require("lib.tables.set")
 LIB.functional = require("lib.tables.functional")
 LIB.safe = require("lib.tables.safe")
+LIB.unique_table = require("lib.tables.unique_table")
 
 -- === STRINGS ===
 local strings = require("lib.strings")

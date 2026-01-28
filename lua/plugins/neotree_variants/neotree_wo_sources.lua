@@ -150,14 +150,6 @@ return {
             parent = { fg = "darkgreen", underline = false },
           },
         },
-        cwd_sync = false, -- WATCH: für dev-phase deatkiviert {
-        -- debounce_ms = 150,
-        -- keep_focus = true,
-        -- also_set_nvim_cwd = false,
-        -- open_if_closed = false,
-        -- use_project_root = true,
-        -- project_root_fallback_to_bufdir = true,
-        -- },
       })
     end,
   },
