@@ -1,5 +1,5 @@
 ---@module 'wkdnvchad.config.statusline.custom'
---- Statusline with properly integrated separators
+--- Statusline using NvChad's gen_block pattern
 
 local lazy = require("lib.lazy")
 local render_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl.renderer")
@@ -7,18 +7,40 @@ local progr_calc_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl.progr
 local hl_module = lazy.require("wkdnvchad.ui.statusline.modules.highlighting")
 local lsp_module = lazy.require("wkdnvchad.ui.statusline.modules.lsp")
 local cursor_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl")
-local get_separators = lazy.require("wkdnvchad.ui.statusline.utils.get_separators")
 
 -- ============================================================================
--- Modules
+-- Gen Block Helper (wie in minimal.lua)
 -- ============================================================================
+
+local function get_gen_block()
+  local config = require("nvconfig").ui.statusline
+  local sep_style = config.separator_style
+  local utils = require("nvchad.stl.utils")
+
+  sep_style = (sep_style ~= "round" and sep_style ~= "block") and "block" or sep_style
+  local sep_icons = utils.separators
+  local separators = (type(sep_style) == "table" and sep_style) or sep_icons[sep_style]
+
+  local sep_l = separators["left"]
+  local sep_r = "%#St_sep_r#" .. separators["right"] .. " %#ST_EmptySpace#"
+
+  ---@param icon string
+  ---@param txt string
+  ---@param sep_l_hlgroup string
+  ---@param iconHl_group string
+  ---@param txt_hl_group string
+  ---@return string
+  return function(icon, txt, sep_l_hlgroup, iconHl_group, txt_hl_group)
+    return sep_l_hlgroup .. sep_l .. iconHl_group .. icon .. " " .. txt_hl_group .. " " .. txt .. sep_r
+  end
+end
 
 return {
   base46 = require("wkdnvchad.config.base46"),
   ui = {
     statusline = {
-      theme = "default", -- oder "vscode_colored"
-      separator_style = "arrow", -- "arrow", "round", "block", "default"
+      theme = "default",
+      separator_style = "arrow",
 
       order = {
         "mode",
@@ -32,43 +54,36 @@ return {
       },
 
       modules = {
-        --- Mode (NvChad default überschreiben mit Separatoren)
-        --- @return string
+        --- Mode (minimal.lua style)
         mode = function()
           local ok_utils, utils = pcall(require, "nvchad.stl.utils")
           if not ok_utils or not utils.is_activewin() then
             return ""
           end
 
+          local gen_block = get_gen_block()
           local modes = utils.modes
           local m = vim.api.nvim_get_mode().mode
-          local mode_name = modes[m][1]
-          local mode_type = modes[m][2]
 
-          local sep = get_separators()
-
-          local current_mode = "%#St_" .. mode_type .. "Mode#  " .. mode_name
-          local mode_sep1 = "%#St_" .. mode_type .. "ModeSep#" .. sep.right
-
-          return current_mode .. mode_sep1 .. "%#ST_EmptySpace#" .. sep.right
+          return gen_block(
+            "",
+            modes[m][1],
+            "%#St_" .. modes[m][2] .. "ModeSep#",
+            "%#St_" .. modes[m][2] .. "Mode#",
+            "%#St_" .. modes[m][2] .. "ModeText#"
+          )
         end,
 
-        --- @return string
+        --- Git
         git = function()
           local ok_utils, utils = pcall(require, "nvchad.stl.utils")
           if not ok_utils then
             return ""
           end
-
-          local git_status = utils.git()
-          if not git_status or git_status == "" then
-            return ""
-          end
-
-          return " %#St_gitIcons#" .. git_status .. "%#St_gitIcons# " .. " "
+          return "%#St_gitIcons#" .. utils.git()
         end,
 
-        --- @return string
+        --- Breadcrumbs (inline ohne gen_block)
         breadcrumbs = function()
           local band = hl_module.mode_band_group()
           local content = lsp_module.render_breadcrumbs_inherit_lspfirst(band)
@@ -77,71 +92,56 @@ return {
             return ""
           end
 
-          local sep = get_separators()
-
-          return hl_module.hl_open(band)
-            .. content
-            .. "%#" .. band .. "Sep#" .. sep.right .. " "
+          return hl_module.hl_open(band) .. content
         end,
 
-        --- @return string
+        --- Diagnostics
         diagnostics = function()
           local ok_utils, utils = pcall(require, "nvchad.stl.utils")
           if not ok_utils then
             return ""
           end
-
-          local diag = utils.diagnostics()
-          if not diag or diag == "" then
-            return ""
-          end
-
-          return diag
+          return utils.diagnostics()
         end,
 
-        --- @return string
+        --- LSP
         lsp = function()
           local ok_utils, utils = pcall(require, "nvchad.stl.utils")
           if not ok_utils then
             return ""
           end
-
-          local lsp_status = utils.lsp()
-          if not lsp_status or lsp_status == "" then
-            return ""
-          end
-
-          return "%#St_Lsp#" .. lsp_status .. " "
+          return "%#St_Lsp#" .. utils.lsp()
         end,
 
-        --- @return string
+        --- Cursor (minimal.lua style mit gen_block)
         cursor = function()
+          local gen_block = get_gen_block()
           local mode = cursor_module.get_mode()
 
           if mode == "off" then
             return ""
           end
 
-          local pieces = { render_module.cursor_classic() }
+          local pieces = { "%l/%v" }
 
           if mode == "row_progress" then
-            pieces[#pieces + 1] = render_module.pct_token(progr_calc_module.compute_row_pct(), "R")
+            pieces[#pieces + 1] = " " .. render_module.pct_token(progr_calc_module.compute_row_pct(), "R")
           elseif mode == "col_progress" then
-            pieces[#pieces + 1] = render_module.pct_token(progr_calc_module.compute_col_pct(), "C")
+            pieces[#pieces + 1] = " " .. render_module.pct_token(progr_calc_module.compute_col_pct(), "C")
           elseif mode == "rows_cols_progress" then
-            pieces[#pieces + 1] = render_module.pct_token(progr_calc_module.compute_row_pct(), "R")
-            pieces[#pieces + 1] = render_module.pct_token(progr_calc_module.compute_col_pct(), "C")
+            pieces[#pieces + 1] = " " .. render_module.pct_token(progr_calc_module.compute_row_pct(), "R")
+            pieces[#pieces + 1] = " " .. render_module.pct_token(progr_calc_module.compute_col_pct(), "C")
           end
 
           local content = table.concat(pieces, "")
-          local sep = get_separators()
 
-          -- Cursor wie im default theme: linker + rechter Separator
-          return "%#St_pos_sep#"
-            .. sep.left
-            .. "%#St_pos_icon# %#St_pos_text# "
-            .. content
-            .. " "
+          return gen_block(
+            "",
+            content,
+            "%#St_Pos_sep#",
+            "%#St_Pos_bg#",
+            "%#St_Pos_txt#"
+          )
         end,
       },
     },

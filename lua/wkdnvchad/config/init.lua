@@ -16,7 +16,7 @@ local M = {}
 -- "custom"   -> Your legacy custom breadcrumbs implementation
 -- ============================================================================
 
----@type "normal"|"base"|"lspbased"|"custom"|"custom_light"
+---@type "normal"|"base"|"lspbased"|"custom"|"custom_light"|"custom_minimal"
 M.STATUSLINE_VARIANT = "custom"
 
 -- ============================================================================
