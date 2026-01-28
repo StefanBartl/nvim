@@ -5,6 +5,7 @@
 ---@field highlights boolean|nil # Enable visual/UX features subsystem
 ---@field higlights boolean|nil # Typo-friendly alias for 'highlights'
 ---@field options boolean|nil # Enable editor options subsystem
+---@field italic_keywords boolean|nil # Enable italic keywords
 
 ---@class WKDOptions.Modules
 --- Top-level wkdoptions module structure (extended with refactored hl_config).

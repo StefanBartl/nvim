@@ -7,10 +7,6 @@
 ---2. Recompiling all highlight groups
 ---3. Persisting changes to chadrc.lua file
 ---
----@see README-THEMES.md for detailed explanation
-
--- FIX: Theme laoding not working correctly
----@see fix.md
 
 local notify = require("lib.notify").create("[wkdnvchad.usrcmd.themes]")
 

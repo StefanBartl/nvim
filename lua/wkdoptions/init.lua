@@ -39,6 +39,10 @@ function M.setup(opts)
   if enable_opt then
     require("wkdoptions.options_config").enable() -- Absichtlich nicht als upvalue
   end
+
+  if opts.italic_keywords then
+    require("wkdoptions.italic_keywords").setup()
+  end
 end
 
 --- Expose config module API for programmatic access

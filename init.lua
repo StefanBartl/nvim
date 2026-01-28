@@ -49,7 +49,7 @@ require("sessions").enable({ autocommands = true, usercmds = true, keymaps = tru
 -- PHASE 1: SEHR FRÜH (10ms) - Grundlegende Config
 -- =============================================================================
 vim.defer_fn(function()
-  require("wkdoptions").setup({ highlights = false, options = true })
+  require("wkdoptions").setup({ highlights = false, options = true, italic_keywords = true, })
   require("autocmds")
   require("custom")
 end, 10)
