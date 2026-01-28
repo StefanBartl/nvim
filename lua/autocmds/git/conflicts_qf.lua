@@ -1,7 +1,6 @@
 ---@module 'autocmds.git.conflicts_qf'
 --- Populate quickfix with files that have unresolved conflicts on startup/focus.
 
----@class AutoCmds.Git.ConflictsQf
 local notify = require("lib.notify").create("[autocmds.git.conflicts_qf]")
 
 local M = {}
@@ -50,4 +49,5 @@ function M.enable(cfg, shared)
   })
 end
 
+---@class AutoCmds.Git.ConflictsQf
 return M

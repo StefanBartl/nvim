@@ -71,6 +71,7 @@ opt.foldexpr = "nvim_treesitter#foldexpr()"
 opt.foldlevel = 99
 opt.foldlevelstart = 99
 
+-- CHECK: PHASE1A
 -- Markdown-specific folding via utils.markdown.foldexpr only for markdown buffers
 do
   local grp = api.nvim_create_augroup("MarkdownLocalFolds", { clear = true })

@@ -18,7 +18,7 @@ local api = vim.api
 local buffer_ctx = require("autocmds.benchmarks.context.buffer")
 
 ---@class FiletypeHandler
----@field load fun(): table Lazy loader function
+---@field load fun(): table|nil Lazy loader function
 ---@field priority? integer Handler priority (lower = earlier, default: 100)
 ---@field once? boolean Run only once per buffer (default: false)
 
@@ -27,19 +27,34 @@ local handlers = {
   -- Markdown files
   markdown = {
     {
-      load = function() return require("custom.markdown.setup.keymaps") end,
+      load = function()
+        return require("custom.markdown.setup.keymaps")
+      end,
       priority = 10,
     },
     {
-      load = function() return require("custom.markdown.setup.usercmds") end,
+      load = function()
+        return require("custom.markdown.setup.usercmds")
+      end,
       priority = 20,
     },
     {
-      load = function() return require("custom.markdown.tableview.mappings") end,
+      load = function()
+        return require("custom.markdown.tableview.mappings")
+      end,
       priority = 30,
     },
     {
-      load = function() return require("options").setup_markdown_folding end,
+      load = function()
+        -- Markdown-specific folding via utils.markdown.foldexpr only for markdown buffers
+        local opt_local = vim.opt_local
+        opt_local.foldmethod = "expr"
+        opt_local.foldexpr = "v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)"
+        opt_local.foldenable = true
+        opt_local.foldlevel = 99
+        opt_local.foldlevelstart = 99
+        return nil
+      end,
       priority = 40,
       once = true,
     },
@@ -48,11 +63,15 @@ local handlers = {
   -- MDX (treat as markdown variant)
   mdx = {
     {
-      load = function() return require("custom.markdown.setup.keymaps") end,
+      load = function()
+        return require("custom.markdown.setup.keymaps")
+      end,
       priority = 10,
     },
     {
-      load = function() return require("custom.markdown.setup.usercmds") end,
+      load = function()
+        return require("custom.markdown.setup.usercmds")
+      end,
       priority = 20,
     },
   },
@@ -60,7 +79,9 @@ local handlers = {
   -- Git commit messages
   gitcommit = {
     {
-      load = function() return require("autocmds.git.commit_ft") end,
+      load = function()
+        return require("autocmds.git.commit_ft")
+      end,
       priority = 10,
       once = true,
     },
@@ -69,7 +90,9 @@ local handlers = {
   -- Noice buffers
   ["noice*"] = {
     {
-      load = function() return require("mappings.noice") end,
+      load = function()
+        return require("mappings.noice")
+      end,
       priority = 10,
     },
   },
@@ -77,7 +100,9 @@ local handlers = {
   -- LSP-specific filetypes
   lua = {
     {
-      load = function() return require("lsp.languages.lua") end,
+      load = function()
+        return require("lsp.languages.lua")
+      end,
       priority = 10,
       once = true,
     },
@@ -85,7 +110,9 @@ local handlers = {
 
   c = {
     {
-      load = function() return require("lsp.languages.c") end,
+      load = function()
+        return require("lsp.languages.c")
+      end,
       priority = 10,
       once = true,
     },
@@ -93,7 +120,9 @@ local handlers = {
 
   cpp = {
     {
-      load = function() return require("lsp.languages.c") end,
+      load = function()
+        return require("lsp.languages.c")
+      end,
       priority = 10,
       once = true,
     },
@@ -101,7 +130,9 @@ local handlers = {
 
   cs = {
     {
-      load = function() return require("lsp.languages.csharp") end,
+      load = function()
+        return require("lsp.languages.csharp")
+      end,
       priority = 10,
       once = true,
     },
@@ -109,7 +140,9 @@ local handlers = {
 
   go = {
     {
-      load = function() return require("lsp.languages.go") end,
+      load = function()
+        return require("lsp.languages.go")
+      end,
       priority = 10,
       once = true,
     },
@@ -117,7 +150,9 @@ local handlers = {
 
   html = {
     {
-      load = function() return require("lsp.languages.html") end,
+      load = function()
+        return require("lsp.languages.html")
+      end,
       priority = 10,
       once = true,
     },
@@ -125,7 +160,9 @@ local handlers = {
 
   zig = {
     {
-      load = function() return require("lsp.languages.zig") end,
+      load = function()
+        return require("lsp.languages.zig")
+      end,
       priority = 10,
       once = true,
     },
@@ -134,7 +171,9 @@ local handlers = {
   -- Messages/debug filetypes
   messages = {
     {
-      load = function() return require("debugging.views.autocmds") end,
+      load = function()
+        return require("debugging.views.autocmds")
+      end,
       priority = 10,
     },
   },
@@ -311,8 +350,13 @@ end
 function M.print_registry()
   local stats = M.get_stats()
 
-  print(string.format("FileType Handler Registry (%d handlers, %d filetypes)",
-    stats.total_handlers, stats.total_filetypes))
+  print(
+    string.format(
+      "FileType Handler Registry (%d handlers, %d filetypes)",
+      stats.total_handlers,
+      stats.total_filetypes
+    )
+  )
   print(string.rep("─", 60))
 
   for _, ft in ipairs(stats.filetypes) do
