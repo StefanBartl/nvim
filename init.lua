@@ -30,6 +30,7 @@ require("lazy").setup({
   },
   { import = "nvchad.plugins" },
   { import = "plugins" },
+  { import = "plugins.colorscheme" },
 }, lazy_config)
 
 -- Load base46 cache

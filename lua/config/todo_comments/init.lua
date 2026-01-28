@@ -1,5 +1,4 @@
 ---@module 'config.todo_comments'
--- Export a setup function so lazy.nvim can pass opts reliably.
 
 local unique_table = require("lib.tables.unique_table")
 
@@ -40,15 +39,14 @@ function M.setup(opts)
   end
 
   opts.highlight = opts.highlight or {}
-
-  opts.highlight.pattern = "\\v\\C<(" .. keyword_or .. ")>" -- exact word match, case-sensitive
-  opts.highlight.before = nil -- do not include chars before the match
-  opts.highlight.keyword = nil -- remove 'wide' expansion; let plugin default apply
-  opts.highlight.after = nil -- do not include chars after the match
-  opts.highlight.comments_only = true -- uses treesitter to match keywords in comments only
-  opts.highlight.multiline = true -- enable multine todo comments
-  opts.highlight.multiline_pattern = "^." -- lua pattern to match the next multiline from the start of the matched keyword
-  opts.highlight.multiline_context = 3 -- extra lines that will be re-evaluated when changing a line
+  opts.highlight.pattern = "\\v\\C<(" .. keyword_or .. ")>"
+  opts.highlight.before = nil
+  opts.highlight.keyword = nil
+  opts.highlight.after = nil
+  opts.highlight.comments_only = true
+  opts.highlight.multiline = true
+  opts.highlight.multiline_pattern = "^."
+  opts.highlight.multiline_context = 3
 
   todo.setup(opts)
 end

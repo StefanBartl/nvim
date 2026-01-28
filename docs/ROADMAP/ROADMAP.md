@@ -21,6 +21,7 @@
 ## Important
 
 1. Wenn man autocmpletion angezeigt bekommt, dann soll enter das wort einfügen, nicht eine neue Zeile einfügen.
+2. Neotree defaults richtig impleemntieren
 
 --
 
