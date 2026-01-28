@@ -70,4 +70,59 @@ BufWritePre,200,339.735500,1.698678,1.537000,2.408300,0.155968,2026-01-27 21:09:
 FileType,200,3384.346300,16.921732,15.544600,22.024900,0.910163,2026-01-27 21:09:59
 ColorScheme,100,348.942700,3.489427,2.786500,6.792200,0.679281,2026-01-27 21:10:00
 ```
-^
+
+
+   Info  21:11:27 notify.info [benchmarks] ✅ Phase 0 Tests
+
+# Phase 0 Tests
+
+**Timestamp:** 2026-01-27 21:11:27
+**Status:** ✅ PASSED
+
+## Summary
+
+- **duration_ms:** 1183.73
+- **window_ctx_stats:** table: 0x01d5055102c8
+- **buffer_ctx_stats:** table: 0x01d5055101b8
+
+21:11:27 msg_show.lua_print ✓ TTL expiration
+21:11:27 msg_show.lua_print ✓ Tick-based invalidation
+21:11:27 msg_show.lua_print ✓ Statistics tracking
+21:11:27 msg_show.lua_print ✅ All cache tests passed
+21:11:27 msg_show.lua_print [4/4] Running: Performance Overhead
+21:11:27 msg_show.lua_print === Benchmarking Context Overhead ===
+21:11:27 msg_show.lua_print Direct API:        34.054ms (0.003405ms/call)
+21:11:27 msg_show.lua_print Context (cached):  1.047ms (0.000105ms/call)
+21:11:27 msg_show.lua_print Overhead:          -96.9% (-33.007ms total)
+21:11:27 msg_show.lua_print Cache hit rate:    99.97%
+21:11:27 msg_show.lua_print ✅ Benchmark complete
+21:11:27 msg_show.lua_print ============================================================
+21:11:27 msg_show.lua_print ✅ All tests passed!
+
+
+^   Info  21:11:27 notify.info [benchmarks] ✅ Phase 0 Tests
+
+# Phase 0 Tests
+
+**Timestamp:** 2026-01-27 21:11:27
+**Status:** ✅ PASSED
+
+## Summary
+
+- **duration_ms:** 1183.73
+- **window_ctx_stats:** table: 0x01d5055102c8
+- **buffer_ctx_stats:** table: 0x01d5055101b8
+
+21:11:27 msg_show.lua_print ✓ TTL expiration
+21:11:27 msg_show.lua_print ✓ Tick-based invalidation
+21:11:27 msg_show.lua_print ✓ Statistics tracking
+21:11:27 msg_show.lua_print ✅ All cache tests passed
+21:11:27 msg_show.lua_print [4/4] Running: Performance Overhead
+21:11:27 msg_show.lua_print === Benchmarking Context Overhead ===
+21:11:27 msg_show.lua_print Direct API:        34.054ms (0.003405ms/call)
+21:11:27 msg_show.lua_print Context (cached):  1.047ms (0.000105ms/call)
+21:11:27 msg_show.lua_print Overhead:          -96.9% (-33.007ms total)
+21:11:27 msg_show.lua_print Cache hit rate:    99.97%
+21:11:27 msg_show.lua_print ✅ Benchmark complete
+21:11:27 msg_show.lua_print ============================================================
+21:11:27 msg_show.lua_print ✅ All tests passed!
