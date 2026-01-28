@@ -295,6 +295,9 @@ return {
             parent = { fg = "darkgreen", underline = false },
           },
         },
+        cwd_sync = {
+          enabled = false,
+        },
       })
 
       -- -- Source-Switcher Keymap

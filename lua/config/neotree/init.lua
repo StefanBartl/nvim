@@ -1,6 +1,9 @@
 ---@module 'config.neotree'
 ---@brief Neo-tree unified configuration and initialization
 
+local lazy = require("lib.lazy")
+local CWD_SYNC_DEFAULTS = lazy.require("config.neotree.cwd_sync.defaults")
+
 local M = {}
 
 --- Default configuration
@@ -28,6 +31,7 @@ local defaults = {
       parent = { fg = "darkgreen", underline = false },
     },
   },
+  cwd_sync = CWD_SYNC_DEFAULTS,
 }
 
 --- Active configuration (merged with user options)
@@ -77,6 +81,15 @@ local function setup_current_hl(config)
   end
 end
 
+--- Initialize CWD sync
+---@param config Cfg.NeoTree.CwdSync.Config|boolean
+---@return nil
+local function setup_cwd_sync(config)
+  local cfg = vim.tbl_extend("force", CWD_SYNC_DEFAULTS, config or {}) -- AUDIT: SO soll das bei den modulen sein: hier wird de user config mit den defaults vermengt und dann an das tatsächliche Modul weitergegebn. Trash und Current hl soll auch so organisert sein.
+
+  require("config.neotree.cwd_sync").setup(cfg)
+end
+
 --- Main setup function
 ---@param opts Cfg.NeoTree.InitOpts|nil User configuration options
 ---@return nil
@@ -108,6 +121,9 @@ function M.setup(opts)
     setup_current_hl(M.options.current_hl)
   end
 
+  if M.options.cwd_sync.enabled then
+    setup_cwd_sync(M.options.cwd_sync)
+  end
   -- require("config.neotree.autocmds").attach({})
 
   -- Register checkhealth

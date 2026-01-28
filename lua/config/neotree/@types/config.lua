@@ -16,6 +16,7 @@
 ---@field only_lhs? boolean Only has an effect if window_open == false
 ---@field trash? Cfg.NeoTree.Trash.Config|boolean Trash system configuration
 ---@field current_hl? Cfg.NeoTree.CurrentHl.Config|boolean Current file highlighting
+---@field cwd_sync? Cfg.NeoTree.CwdSync.Config|boolean CWD synchronization
 
 ---@class Cfg.NeoTree.CurrentHl.Config
 ---@field enable? boolean Enable current file highlighting (default: true)
@@ -26,7 +27,7 @@
 ---@field colors? table<string, string|table> Custom color overrides
 
 ---@class Cfg.NeoTree.CwdSync.Config
----@field enable? boolean Enable CWD synchronization (default: false)
+---@field enabled? boolean Enable CWD synchronization (default: false)
 ---@field debug? boolean
 ---@field debounce_ms? integer Debounce time in milliseconds (default: 150)
 ---@field keep_focus? boolean Keep focus in current window after sync (default: true)
