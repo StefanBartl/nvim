@@ -17,8 +17,8 @@ return {
   base46 = require("wkdnvchad.config.base46"),
   ui = {
     statusline = {
-      theme = "default", -- oder "vscode_colored"
-      separator_style = "arrow", -- "arrow", "round", "block", "default"
+      theme = "minimal", -- oder "vscode_colored"
+      separator_style = "round", -- "arrow", "round", "block", "default"
 
       order = {
         "mode",

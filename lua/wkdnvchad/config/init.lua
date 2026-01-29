@@ -17,7 +17,7 @@ local M = {}
 -- ============================================================================
 
 ---@type "normal"|"base"|"lspbased"|"custom"|"custom_light"|"custom_minimal"
-M.STATUSLINE_VARIANT = "custom"
+M.STATUSLINE_VARIANT = "normal"
 
 -- ============================================================================
 -- Config Assembly
@@ -31,7 +31,13 @@ local function load_statusline_config()
 
   local ok, config = pcall(require, config_path)
   if not ok then
-    notify.warn(string.format( "[wkdnvchad.config] Failed to load statusline variant '%s': %s\nFalling back to 'normal'", variant, tostring(config) ))
+    notify.warn(
+      string.format(
+        "[wkdnvchad.config] Failed to load statusline variant '%s': %s\nFalling back to 'normal'",
+        variant,
+        tostring(config)
+      )
+    )
     return require("wkdnvchad.config.statusline.normal")
   end
 
@@ -65,8 +71,19 @@ function M.setup(user_opts)
   if type(statusline_config.setup) == "function" then
     local setup_ok, setup_err = pcall(statusline_config.setup, config)
     if not setup_ok then
-      notify.error(string.format( "[wkdnvchad.config] Statusline setup failed: %s", tostring(setup_err) ))
+      notify.error(
+        string.format("[wkdnvchad.config] Statusline setup failed: %s", tostring(setup_err))
+      )
     end
+  end
+
+  -- Remove diagnostic backgrounds
+  local ok_diag, diag_err = pcall(function()
+    require("wkdnvchad.ui.highlights.diagnostics").setup()
+  end)
+
+  if not ok_diag then
+    notify.warn("[config] Diagnostic highlight setup failed: " .. tostring(diag_err))
   end
 
   return config

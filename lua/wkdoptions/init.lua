@@ -33,7 +33,7 @@ function M.setup(opts)
 
   -- Enable subsystems
   if enable_hl then
-    get_hl_config().enable()
+    get_hl_config.enable()
   end
 
   if enable_opt then
@@ -72,7 +72,7 @@ M.config = {
 ---@nodiscard
 ---@return WKDOptions.Config.Data
 function M.get_cfg()
-  return get_config().get_cfg()
+  return get_config.get_cfg()
 end
 
 --- Parse a string into a typed value (boolean/number/string).
@@ -81,7 +81,7 @@ end
 ---@param s string|nil
 ---@return boolean|number|string
 function M.parse(s)
-  return get_config().parse(s)
+  return get_config.parse(s)
 end
 
 --- Set a configuration value with validation.
@@ -94,7 +94,7 @@ end
 ---@return boolean success
 ---@return string|nil error
 function M.set(ns, key, value, toggle_if_bool)
-  return get_config().set(ns, key, value, toggle_if_bool)
+  return get_config.set(ns, key, value, toggle_if_bool)
 end
 
 --- Get a configuration value by path.
@@ -106,7 +106,7 @@ end
 function M.get(ns, key)
   -- Use the getter module directly since get_config() doesn't have a .get() method
   local getter = require("wkdoptions.config.core.getter")
-  return getter.get_by_path(get_config().get_cfg()[ns], key)
+  return getter.get_by_path(get_config.get_cfg()[ns], key)
 end
 
 --- List all configuration keys for a namespace.
@@ -115,7 +115,7 @@ end
 ---@param ns '"highlight"'|'"options"'
 ---@return string[] # Sorted list of keys
 function M.keys(ns)
-  return get_config().keys(ns)
+  return get_config.keys(ns)
 end
 
 --- Register after-set callback for configuration changes.
@@ -124,7 +124,7 @@ end
 ---@param fn fun(key:string):nil # Callback receives the changed key
 ---@return nil
 function M.on_after_set(ns, fn)
-  return get_config().on_after_set(ns, fn)
+  return get_config.on_after_set(ns, fn)
 end
 
 ---@type WKDOptions

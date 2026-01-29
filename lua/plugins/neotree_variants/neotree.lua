@@ -309,6 +309,11 @@ return {
       -- vim.api.nvim_create_user_command("NeoTreeDebugSources", function()
       -- require("config.neotree.sources.switcher").debug_sources()
       -- end, { desc = "[Neo-tree] Debug source detection" })
+
+      -- Setze Neo-tree Highlights so, dass sie andere Fenster nicht beeinflussen
+      vim.api.nvim_set_hl(0, "NeoTreeNormal", { link = "Normal" })
+      vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { link = "NormalNC" })
+      vim.api.nvim_set_hl(0, "NeoTreeEndOfBuffer", { link = "EndOfBuffer" })
     end,
   },
 }

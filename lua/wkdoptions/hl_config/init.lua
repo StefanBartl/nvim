@@ -272,13 +272,13 @@ function M.enable()
   require("wkdoptions.commands").register_highlight_commands({
     after_set = after_set,
     show_table = cfg,
-    names = { set = "WKDOptions.HL.Set", show = "WKDOptions.HL.Show", list = "WKDOptions.HL.List" },
+    names = { set = "WKDOptionsHLSet", show = "WKDOptionsHLShow", list = "WKDOptionsHLList" },
   })
 
  require("wkdoptions.commands").register_highlight_debug_command({
     mod = require("wkdoptions.hl_config.breadcrumbs.ctx"),
     sepfn = require("wkdoptions.hl_config.utils.separator").resolve,
-    names = { debug = "WKDOptions.HL.DebugCtx" },
+    names = { debug = "WKDOptionsHLDebugCtx" },
   })
 end
 

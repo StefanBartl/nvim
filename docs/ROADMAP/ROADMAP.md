@@ -22,6 +22,7 @@
 
 1. Wenn man autocmpletion angezeigt bekommt, dann soll enter das wort einfügen, nicht eine neue Zeile einfügen.
 2. Neotree defaults richtig impleemntieren
+3. wenn ich quickfix opder loc liste aufrufe, dann verwscwindet die statusline. ich habe aber gesehen in anderen nvim configs, das es möglich ist, dass die statusline "oin top" deruickfixlistre sein kann, also fast wie eine headerleiste. gibt es da eine optin dafür?Vy
 
 --
 

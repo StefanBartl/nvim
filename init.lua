@@ -29,6 +29,7 @@ require("lazy").setup({
     branch = "v2.5",
   },
   { import = "nvchad.plugins" },
+  -- { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },
   { import = "plugins.colorscheme" },
 }, lazy_config)
@@ -49,7 +50,7 @@ require("sessions").enable({ autocommands = true, usercmds = true, keymaps = tru
 -- PHASE 1: SEHR FRÜH (10ms) - Grundlegende Config
 -- =============================================================================
 vim.defer_fn(function()
-  require("wkdoptions").setup({ highlights = false, options = true, italic_keywords = true, })
+  require("wkdoptions").setup({ highlights = true, options = true, italic_keywords = true })
   require("autocmds")
   require("custom")
 end, 10)
@@ -107,7 +108,6 @@ vim.defer_fn(function()
   })
 
   require("benchmarks").setup()
-
 end, 600)
 
 -- Show startup time

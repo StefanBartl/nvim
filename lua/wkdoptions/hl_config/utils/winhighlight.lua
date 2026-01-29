@@ -34,12 +34,12 @@ end, { size = 128 })
 
 --- Serialize pairs back to winhighlight string
 ---@nodiscard
----@param pairs WKDOptions.HL_CFG_WinhlPair[]
+---@param _pairs WKDOptions.HL_CFG_WinhlPair[]
 ---@return string
-function M.serialize(pairs)
+function M.serialize(_pairs)
   local out = {}
-  for i = 1, #pairs do
-    local p = pairs[i]
+  for i = 1, #_pairs do
+    local p = _pairs[i]
     -- Re-validate before serializing (defensive)
     if p.from:match("^[%w_]+$") and p.to:match("^[%w_]+$") then
       out[i] = p.from .. ":" .. p.to
@@ -55,13 +55,13 @@ end
 ---@param to string|nil -- target group (nil = remove mapping)
 ---@return string       -- new winhighlight
 function M.set_pair(wh, from, to)
-  local pairs = parse(wh)
+  local _pairs = parse(wh)
   local out = {}
 
   -- Filter out old mapping with same 'from'
-  for i = 1, #pairs do
-    if pairs[i].from ~= from then
-      out[#out + 1] = pairs[i]
+  for i = 1, #_pairs do
+    if _pairs[i].from ~= from then
+      out[#out + 1] = _pairs[i]
     end
   end
 
@@ -79,7 +79,7 @@ end
 ---@param new_pairs table<string, string> -- map from->to
 ---@return string
 function M.merge(wh, new_pairs)
-  local pairs = parse(wh)
+  local _pairs = parse(wh)
   local seen = {}
   local out = {}
 
@@ -92,8 +92,8 @@ function M.merge(wh, new_pairs)
   end
 
   -- Add old pairs if not overridden
-  for i = 1, #pairs do
-    local p = pairs[i]
+  for i = 1, #_pairs do
+    local p = _pairs[i]
     if not seen[p.from] then
       out[#out + 1] = p
     end
@@ -108,15 +108,15 @@ end
 ---@param from_keys string[] -- list of 'from' keys to remove
 ---@return string
 function M.remove_keys(wh, from_keys)
-  local pairs = parse(wh)
+  local _pairs = parse(wh)
   local blacklist = {}
   for i = 1, #from_keys do
     blacklist[from_keys[i]] = true
   end
 
   local out = {}
-  for i = 1, #pairs do
-    local p = pairs[i]
+  for i = 1, #_pairs do
+    local p = _pairs[i]
     if not blacklist[p.from] then
       out[#out + 1] = p
     end
