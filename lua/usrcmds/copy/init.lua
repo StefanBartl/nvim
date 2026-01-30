@@ -194,6 +194,12 @@ end
 -- Command Setup
 -- ============================================================================
 
+local function attach_keymap()
+    require("lib.map")("n", "<leader>cnm", function()
+    vim.cmd("Copy path nvim_module")
+  end, { desc = "[usrcmds.copy] Copy module path relative to nvim config" })
+end
+
 --- Setup user command
 function M.enable()
   api.nvim_create_user_command("Copy", function(opts)
@@ -243,6 +249,8 @@ function M.enable()
     end,
     desc = "[Copy] Copy paths to clipboard with flexible options",
   })
+
+  attach_keymap()
 end
 
 return M
