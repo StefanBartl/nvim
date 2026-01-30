@@ -154,11 +154,45 @@ return {
     version = "*",
     lazy = false,
     config = function()
-      require("trouble.config").setup({
-        mode = "document_diagnostics",
-        auto_close = true,
-        auto_preview = false,
-        focus = true,
+      require("trouble").setup({
+        preview = {
+          type = "split",
+          relative = "win",
+          position = "right",
+          size = 0.3,
+        },
+
+        modes = {
+          diagnostics = {
+            mode = "diagnostics",
+            preview = {
+              type = "split",
+              relative = "win",
+              position = "right",
+              size = 0.3,
+            },
+          },
+
+          qflist = {
+            mode = "qflist",
+            preview = {
+              type = "split",
+              relative = "win",
+              position = "right",
+              size = 0.3,
+            },
+          },
+
+          loclist = {
+            mode = "loclist",
+            preview = {
+              type = "split",
+              relative = "win",
+              position = "right",
+              size = 0.3,
+            },
+          },
+        },
       })
     end,
   },

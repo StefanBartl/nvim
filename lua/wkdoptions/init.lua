@@ -32,6 +32,36 @@ local function normalize_inactice_win_hl()
   vim.api.nvim_set_hl(0, "NormalNC", normal)
 end
 
+-- Define diagnostic signs with nerd icons
+local function set_diagnostic_signs()
+  local diagnostic_signs = {
+    Error = " ",
+    Warn = " ",
+    Hint = " ",
+    Info = " ",
+  }
+
+  for type, icon in pairs(diagnostic_signs) do
+    local hl = "DiagnosticSign" .. type
+    vim.fn.sign_define(hl, {
+      text = icon,
+      texthl = hl,
+      numhl = "",
+    })
+  end
+
+  vim.diagnostic.config({
+    signs = true,
+    underline = true,
+    update_in_insert = false,
+    severity_sort = true,
+    virtual_text = {
+      spacing = 2,
+      prefix = "●",
+    },
+  })
+end
+
 --- Enable selected subsystems.
 --- This is the main entry point for wkdoptions initialization.
 --- Call once during your Neovim startup.
@@ -60,6 +90,7 @@ function M.setup(opts)
 
   require("wkdoptions.qflist")
   normalize_inactice_win_hl()
+  set_diagnostic_signs()
 end
 
 --- Expose config module API for programmatic access
