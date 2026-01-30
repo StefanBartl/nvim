@@ -1,6 +1,6 @@
 ---@module 'lsp.servers.lua_ls'
 --- Lua language server setup using native LSP config/enable with strict root and scoped libraries.
----@class LuaLsServer
+
 local notify = require("lib.notify").create("[lsp.servers.lua_ls]")
 
 local M = {}
@@ -8,9 +8,10 @@ local M = {}
 -- Import required dependencies for ignore patterns and root resolution
 local ignore = require("lsp.servers.lua_ls.ignore")
 local root_resolver = require("lsp.servers.lua_ls.rootresolver")
+local library_profiles = require("lsp.servers.lua_ls.library_profiles")
 
 ---@param shared {capabilities?:table,on_attach?:fun(client,bufnr),on_init?:fun(client,init_result):boolean}|nil
----@param opts { enable?: boolean }|nil
+---@param opts { enable?: boolean,  profile?: LibraryProfile }|nil
 ---@return nil
 function M.setup(shared, opts)
   -- Ensure shared and opts are tables, even if nil was passed
@@ -57,7 +58,12 @@ function M.setup(shared, opts)
         Lua = {
           -- Configure Lua runtime environment
           runtime = {
-            version = "LuaJIT", -- Use LuaJIT for Neovim
+            version = "LuaJIT",
+            path = {
+              "?.lua",
+              "?/init.lua",
+            },
+            pathStrict = false,
           },
 
           -- Enable inlay hints for better code insight
@@ -68,11 +74,19 @@ function M.setup(shared, opts)
             globals = {
               -- Neovim API globals
               "vim",
-              "vim.uv", -- Async I/O library
-              "vim.loop", -- Legacy name for vim.uv
-              "vim.fn", -- Vimscript function access
-              "vim.inspect", -- Table inspection
-              "vim", -- Duplicate entry for safety
+              "vim.uv",
+              "vim.loop",
+              "vim.fn",
+              "vim.api",
+              "vim.cmd",
+              "vim.o",
+              "vim.g",
+              "vim.bo",
+              "vim.wo",
+              "vim.env",
+              "vim.log",
+              "vim.lsp",
+              "vim.inspect",
 
               -- Testing framework globals (busted/plenary)
               "describe",
@@ -88,10 +102,29 @@ function M.setup(shared, opts)
             },
           },
 
-          -- Configure completion behavior
+          -- Erweiterte Completion-Einstellungen
           completion = {
-            callSnippet = "Replace", -- Replace function signature when completing
-            workspaceWord = false, -- Don't suggest words from entire workspace
+            callSnippet = "Both", -- Zeige Funktion + Signatur
+            displayContext = 10, -- Mehr Kontext-Zeilen
+            showWord = "Fallback",
+            workspaceWord = true,
+            keywordSnippet = "Both", -- Zeige Keyword-Snippets
+          },
+
+          -- Erweiterte Hover-Informationen
+          hover = {
+            enable = true,
+            viewString = true, -- Zeige String-Werte
+            viewStringMax = 1000, -- Maximale String-Länge
+            viewNumber = true, -- Zeige Zahlen-Werte
+            fieldInfer = 10000, -- Feld-Inferenz-Limit
+            previewFields = 50, -- Anzahl Preview-Felder
+            enumsLimit = 100, -- Enum-Limit
+          },
+
+          -- Wichtig: Signatur-Hilfe aktivieren
+          signatureHelp = {
+            enable = true,
           },
 
           -- Disable semantic token highlighting (use TreeSitter instead)
@@ -111,9 +144,8 @@ function M.setup(shared, opts)
             -- maxPreload = 3000, -- Maximum number of files to preload
             -- preloadFileSize = 500, -- Maximum file size in KB
 
-            -- CRITICAL: Increase preload limits for type files
-            maxPreload = 5000, -- Increased from 3000
-            preloadFileSize = 1000, -- Increased from 500 (KB)
+            maxPreload = 2000,
+            preloadFileSize = 500,
 
             -- library will be populated dynamically per root in on_new_config
           },
@@ -125,44 +157,39 @@ function M.setup(shared, opts)
 
       -- Hook called when a new root directory is detected or config changes
       on_new_config = function(new_config, new_root)
-        -- CRITICAL: Guard against nil config
-        if not new_config then
-          notify.error("[lua_ls] on_new_config: new_config is nil")
-          return
-        end
-
-        if not new_config.settings then
-          notify.error("[lua_ls] on_new_config: settings is nil")
-          return
-        end
-
-        if not new_config.settings.Lua then
-          notify.error("[lua_ls] on_new_config: settings.Lua is nil")
+        if not new_config or not new_config.settings or not new_config.settings.Lua then
+          notify.error("[lua_ls] on_new_config: invalid config structure")
           return
         end
 
         -- Build project-specific library paths
-        local build_library = require("lsp.servers.lua_ls.build_library")
-        local per_root_lib = build_library(new_root) or {}
+        -- local build_library = require("lsp.servers.lua_ls.build_library")
+        -- local per_root_lib = build_library(new_root) or {}
 
-        -- Get all Neovim runtime paths
-        local runtime_lib = vim.api.nvim_get_runtime_file("", true) or {}
+        -- -- Get all Neovim runtime paths
+        -- local runtime_lib = vim.api.nvim_get_runtime_file("", true) or {}
 
-        -- Merge libraries
-        local merged = {}
+        -- -- Merge libraries
+        -- local merged = {}
 
-        -- Add Neovim runtime paths
-        for _, p in ipairs(runtime_lib) do
-          merged[p] = true
-        end
+        -- -- Add Neovim runtime paths
+        -- for _, p in ipairs(runtime_lib) do
+        -- merged[p] = true
+        -- end
 
-        -- Add project-specific library paths
-        for k, v in pairs(per_root_lib) do
-          merged[k] = v
-        end
+        -- -- Add project-specific library paths
+        -- for k, v in pairs(per_root_lib) do
+        -- merged[k] = v
+        -- end
 
-        -- Assign merged library to workspace configuration
-        new_config.settings.Lua.workspace.library = merged
+        -- -- Assign merged library to workspace configuration
+        -- new_config.settings.Lua.workspace.library = merged
+
+        -- Verwende Library-Profile
+        local profile = opts.profile or library_profiles.get_active_profile()
+        local library = library_profiles.build_library(new_root, profile)
+
+        new_config.settings.Lua.workspace.library = library
       end,
     })
 
@@ -176,4 +203,5 @@ function M.setup(shared, opts)
   require("lsp.servers.lua_ls.reload").setup()
 end
 
+---@class LuaLsServer
 return M

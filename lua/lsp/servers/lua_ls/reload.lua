@@ -67,6 +67,24 @@ function M.setup()
   end, {
     desc = "[lsp.lua_ls] Inspect current workspace library configuration"
   })
+
+    vim.api.nvim_create_user_command("LuaLsSetProfile", function(opts)
+    local profile = opts.args
+    if profile == "" then
+      profile = "normal"
+    end
+
+    vim.env.LUA_LS_PROFILE = profile
+    M.reload_library()
+
+    notify.info(string.format("Switched to profile: %s - Reloading...", profile))
+  end, {
+    nargs = "?",
+    complete = function()
+      return { "minimal", "normal", "full" }
+    end,
+    desc = "[lsp.lua_ls] Set library profile (minimal/normal/full)"
+  })
 end
 
 return M
