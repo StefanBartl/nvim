@@ -95,6 +95,7 @@ end
 ---@param mode string -- normalized mode char
 ---@param cfg WKDOptions.HL_CFG
 ---@return string
+---@diagnostic disable-next-line: unused-local
 function M.resolve_line_hl(mode, cfg)
   if not State.is_enabled("mode_colors") then
     return "CursorLine"

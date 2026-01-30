@@ -24,6 +24,7 @@
 ---
 ---@class toc_module
 ---@field update_markdown_toc fun(header_line: string|nil, opts: table|nil): nil
+
 local notify = require("lib.notify").create("[custom.markdown.core.toc]")
 
 local M = {}

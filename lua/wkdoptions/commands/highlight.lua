@@ -5,7 +5,7 @@
 local lazy = require("lib.lazy")
 local notify = lazy.require("lib.notify").create("[Commands.Highlight]")
 local Core = lazy.require("wkdoptions.commands.core")
-local C = lazyrequire("wkdoptions.config")
+local C = lazy.require("wkdoptions.config")
 
 local M = {}
 

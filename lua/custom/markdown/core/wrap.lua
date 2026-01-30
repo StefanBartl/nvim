@@ -1,7 +1,7 @@
 ---@module 'custom.markdown.core.wrap'
 --- Visual wrap helpers (e.g., bold via **). Uses set_text for minimal edits.
 
----@class MarkdownWrap
+
 local notify = require("lib.notify").create("[custom.markdown.core.wrap]")
 
 local M = {}
@@ -151,4 +151,5 @@ function M.toggle_visual_bold()
   end
 end
 
+---@class MarkdownWrap
 return M

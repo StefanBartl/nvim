@@ -93,6 +93,7 @@ end
 --- Install autocmds
 ---@param _cfg WKDOptions.HL_CFG
 ---@return nil
+---@diagnostic disable-next-line: unused-local
 function M.enable(_cfg)
   local aug = State.get_augroup("CWord", true)
 

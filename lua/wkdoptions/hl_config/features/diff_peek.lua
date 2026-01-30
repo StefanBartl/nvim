@@ -42,6 +42,7 @@ end
 --- Install or remove keymap based on feature state
 ---@param _cfg WKDOptions.HL_CFG
 ---@return nil
+---@diagnostic disable-next-line: unused-local
 function M.enable(_cfg)
   clear_mapping()
 

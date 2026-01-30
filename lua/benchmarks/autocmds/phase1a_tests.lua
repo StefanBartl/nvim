@@ -22,10 +22,6 @@ local loop = vim.loop or vim.uv
 ---@param iterations integer
 ---@return number avg_ms
 local function bench_old_filetype(iterations)
-  -- Count existing FileType autocmds
-  local autocmds = api.nvim_get_autocmds({ event = "FileType" })
-  local count_before = #autocmds
-
   local samples = {}
 
   -- Warmup

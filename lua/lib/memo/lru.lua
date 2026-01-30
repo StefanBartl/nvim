@@ -95,7 +95,7 @@ local function new_lru(cap)
   if type(cap) ~= "number" then
     error(("LRU.new: expected number, got %s"):format(type(cap)), 2)
   end
-  
+
   ---@type Lib.Memo.LruState
   local state = {
     cap = math.max(1, math.floor(cap)),  -- KORREKTUR: Explizite Typsicherheit

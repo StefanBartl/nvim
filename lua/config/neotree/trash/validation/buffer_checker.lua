@@ -206,6 +206,7 @@ end
 ---@param ask_user boolean
 ---@return boolean success
 ---@return boolean user_cancelled
+---@diagnostic disable-next-line: unused-local
 function M.close_references(path, filename, ref_info, ask_user)
   local bufnrs = ref_info.buffers.bufnrs
   local buf_names = ref_info.buffers.names

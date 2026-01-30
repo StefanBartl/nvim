@@ -18,6 +18,20 @@ local M = {}
 local get_config = lazy.require("wkdoptions.config")
 local get_hl_config = lazy.require("wkdoptions.hl_config")
 
+local function normalize_inactice_win_hl()
+  vim.api.nvim_create_autocmd("ColorScheme", {
+    pattern = "*",
+    callback = function()
+      -- Kopiere Normal zu NormalNC (macht sie identisch)
+      local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
+      vim.api.nvim_set_hl(0, "NormalNC", normal)
+    end,
+  })
+
+  local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
+  vim.api.nvim_set_hl(0, "NormalNC", normal)
+end
+
 --- Enable selected subsystems.
 --- This is the main entry point for wkdoptions initialization.
 --- Call once during your Neovim startup.
@@ -43,12 +57,18 @@ function M.setup(opts)
   if opts.italic_keywords then
     require("wkdoptions.italic_keywords").setup()
   end
+
+  require("wkdoptions.qflist")
+  normalize_inactice_win_hl()
 end
 
 --- Expose config module API for programmatic access
 ---@type WKDOptions.Config.Module
 M.config = {
-  cfg = function() return M.get_cfg() end,
+  ---@diagnostic disable-next-line
+  cfg = function()
+    return M.get_cfg()
+  end,
 
   parse = function(s)
     return M.parse(s)

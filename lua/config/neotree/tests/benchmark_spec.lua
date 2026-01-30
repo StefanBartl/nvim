@@ -1,4 +1,5 @@
----@diagnostic disable: undefined-global
+---@diagnostic disable
+
 describe("neo-tree performance", function()
   local controller
 

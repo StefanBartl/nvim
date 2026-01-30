@@ -34,15 +34,6 @@ local MODULE_MAP = {
   is_markdown_buf = "lib.buffer.is_markdown_buf",
   insert_lines = "lib.buffer.insert_lines",
 
-  -- TABLES
-  with = "lib.tables.with",
-  array = "lib.tables.array",
-  core = "lib.tables.core",
-  dict = "lib.tables.dict",
-  set = "lib.tables.set",
-  functional = "lib.tables.functional",
-  safe = "lib.tables.safe",
-
   -- UI
   hover_select = "lib.ui.hover_select",
   hl = "lib.ui.hl",

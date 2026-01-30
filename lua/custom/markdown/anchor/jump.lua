@@ -5,6 +5,7 @@
 
 ---@class anchor_jump_module
 ---@field jump fun(): nil
+
 local notify = require("lib.notify").create("[custom.markdown.anchor.jump]")
 
 local M = {}

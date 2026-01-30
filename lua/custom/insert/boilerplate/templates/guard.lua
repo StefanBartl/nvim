@@ -1,8 +1,6 @@
 ---@module 'custom.insert.boilerplate.templates.guard'
 ---@brief Guard clause pattern generators
 
-local notify = require("lib.notify").create("[custom.insert.boilerplate.templates.guard]")
-
 local M = {}
 
 ---Generate guard clause template

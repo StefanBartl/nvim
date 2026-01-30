@@ -294,7 +294,6 @@ function M.register_debug(opts)
   local mod = opts.mod or require("wkdoptions.hl_config.breadcrumbs.ctx")
 
   local function default_sepfn()
-    local C = require("wkdoptions.config")
     local hc = C.get_cfg().highlight
     local s = hc.breadcrumbs_separator
     if type(s) == "string" and s ~= "" then
@@ -327,7 +326,6 @@ function M.register_debug(opts)
 
   safe_delete_cmd(name_debug)
   vim.api.nvim_create_user_command(name_debug, function()
-    local C = require("wkdoptions.config")
     local hc = C.get_cfg().highlight
     local bctx = hc.breadcrumbs_ctx or {}
 

@@ -8,12 +8,13 @@
 -- =========================================================
 
 
----@param flags Lib.Map.ErrorFlags
----@param modes? string|string[]
----@param lhs? string
----@param rhs? string|function
----@param opts? Lib.Map.Opts
----@return nil
+-- ---@param flags Lib.Map.ErrorFlags
+-- ---@param modes? string|string[]
+-- ---@param lhs? string
+-- ---@param rhs? string|function
+-- ---@param opts? Lib.Map.Opts
+-- ---@return nil
+
 local notify = require("lib.notify").create("[lib.map]")
 
 local function notify_caller(flags, modes, lhs, rhs, opts)

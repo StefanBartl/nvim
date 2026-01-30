@@ -152,7 +152,7 @@ function M.exec_pattern(pattern, node)
   end
 
   -- Return first capture
-  for id, capture_node in iter do
+  for _, capture_node in iter do
     if capture_node then
       return capture_node
     end

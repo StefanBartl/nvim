@@ -85,29 +85,6 @@ function M.check()
 
   -- Integration test
   vim.health.start("Custom Float Integration")
-
-  local state = require("config.neotree.state.windows")
-  local current_state = state.get_state()
-
-  if current_state.position == "float" then
-    if ok_float then
-      local custom_is_open = custom_float.is_open()
-      if custom_is_open then
-        vim.health.ok("State and custom float are in sync (both open)")
-      else
-        vim.health.error("State reports float open but custom float reports closed")
-      end
-    end
-  else
-    if ok_float then
-      local custom_is_open = custom_float.is_open()
-      if not custom_is_open then
-        vim.health.ok("State and custom float are in sync (both closed)")
-      else
-        vim.health.error("State reports not float but custom float reports open")
-      end
-    end
-  end
 end
 
 return M

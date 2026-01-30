@@ -16,6 +16,7 @@
 --- Resolve language-specific config module
 ---@param lang string Language identifier
 ---@return table|nil config Language configuration or nil if not found
+
 local notify = require("lib.notify").create("[plugins.neotest]")
 
 local function get_lang_config(lang)

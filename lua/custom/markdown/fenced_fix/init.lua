@@ -153,6 +153,8 @@ function M.setup(opts)
     end
   end
   pcall(M.apply) -- apply immediately
+
+  ---@type UIMarkdownFencedFix
   return M
 end
 

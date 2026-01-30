@@ -8,6 +8,7 @@
 ---@field resolve fun(target:string): string|nil
 ---@field is_image_line fun(line:string): boolean
 ---@field open fun(line?:string): boolean
+
 local notify = require("lib.notify").create("[custom.markdown.handler.image]")
 
 local M = {}

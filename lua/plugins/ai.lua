@@ -1,8 +1,9 @@
 ---@module 'plugins.ai'
 
----@type LazyPluginSpec[]
+
 local notify = require("lib.notify").create("[plugins.ai]")
 
+---@type LazyPluginSpec[]
 return {
   {
     "robitx/gp.nvim",
