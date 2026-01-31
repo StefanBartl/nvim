@@ -124,6 +124,12 @@ function M.attach()
   end, {
     desc = desc_tag .. "Show LSP debug information",
   })
+
+  -- Mobile diagnostics
+  local ok_mobile, mobile_diag = pcall(require, "lsp.usercmds.mobile_diagnostics")
+  if ok_mobile and type(mobile_diag.attach) == "function" then
+    pcall(mobile_diag.attach)
+  end
 end
 
 return M

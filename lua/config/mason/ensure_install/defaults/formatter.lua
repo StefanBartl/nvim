@@ -31,4 +31,8 @@ return {
   ["markdown-toc"] = true,
   ["markdownlint"] = true,
   ["mdformat"] = true,
+
+  -- Mobile formatters
+  ["google-java-format"] = true,
+  ["ktlint"] = true,
 }

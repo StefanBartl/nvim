@@ -2,7 +2,6 @@
 
 local notify = require("lib.notify").create("[lsp.core.registry]")
 
-
 local M = {}
 
 local desc_tag = "[lsp.registry] "
@@ -18,12 +17,23 @@ local ACTIVE = {
   --"clangd",
   --"csharp",
   --"zig",
+
+  -- Mobile development servers
+  "jdtls", -- Java (Android)
+  "kotlin_language_server", -- Kotlin (Android)
+  "dartls", -- Dart/Flutter
 }
 
 function M.setup_all(shared)
   if type(shared) ~= "table" then
     return false
   end
+
+  -- on ios add sourcekit
+  if require("lib.cross.platform.is_macos")() then
+    ACTIVE[#ACTIVE + 1] = "sourcekit"
+  end
+
   for _, name in ipairs(ACTIVE) do
     local mod = "lsp.servers." .. name
     local ok, srv = pcall(require, mod)
