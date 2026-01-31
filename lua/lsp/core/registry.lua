@@ -2,7 +2,6 @@
 
 local notify = require("lib.notify").create("[lsp.core.registry]")
 
-
 local M = {}
 
 local desc_tag = "[lsp.registry] "
@@ -18,6 +17,12 @@ local ACTIVE = {
   --"clangd",
   --"csharp",
   --"zig",
+
+  -- Mobile development servers
+  "jdtls", -- Java (Android)
+  "kotlin_language_server", -- Kotlin (Android)
+  "sourcekit", -- Swift (iOS)
+  "dartls", -- Dart/Flutter
 }
 
 function M.setup_all(shared)

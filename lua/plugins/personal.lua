@@ -44,6 +44,32 @@ return {
     end,
   },
 
+  {
+    "StefanBartl/github_stats.nvim",
+    lazy = false,
+    config = function()
+      require("github_stats").setup({
+        token_source = "env",
+        token_env_var = "GITHUB_TOKEN",
+        fetch_interval_hours = 24,
+        notification_level = "all",
+        repos = {
+          "StefanBartl/color_my_ascii.nvim",
+          "StefanBartl/github_stats.nvim",
+          "StefanBartl/gopath.nvim",
+          "StefanBartl/mdlinks",
+          "StefanBartl/mdview.nvim",
+          "StefanBartl/mygrep.nvim",
+          "StefanBartl/nvim-cmdlog",
+          "StefanBartl/nvim-containers",
+          "StefanBartl/replacer",
+          "StefanBartl/reposcope.nvim",
+          "StefanBartl/telescope-selected-index",
+        },
+      })
+    end,
+  },
+
   -- {
   --   -- 'StefanBartl/learn-cli.nvim',
   --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/learn-cli.nvim"),
@@ -56,22 +82,6 @@ return {
   -- },
   --
   -- {
-  --   dir = vim.fn.expand(vim.env.REPOS_DIR .. "/github_stats.nvim"),
-  --   lazy = false,
-  --   config = function()
-  --     require("github_stats").setup({
-  --       repos = {
-  --         "StefanBartl/color_my_ascii.nvim",
-  --         "StefanBartl/github_stats.nvim",
-  --         "StefanBartl/gopath.nvim",
-  --         "StefanBartl/mdlinks",
-  --         "StefanBartl/mdview.nvim",
-  --         "StefanBartl/monkeypatch.nvim",
-  --         "StefanBartl/mygrep.nvim",
-  --         "StefanBartl/nvim-cmdlog",
-  --         "StefanBartl/nvim-containers",
-  --         "StefanBartl/replacer",
-  --         "StefanBartl/reposcope.nvim",
   --         "StefanBartl/telescope-selected-index",
   --       },
   --       token_source = "file",
@@ -165,14 +175,14 @@ return {
       position = "right_align", -- Position: "overlay" | "right_align" | "eol" | "top" | "down"
       highlight = {
         preset = "error",
-                            ---| "default"      # Default Telescope style (fg from TelescopeResultsFunction)
-                            ---| "subtle"       # Muted gray, low contrast
-                            ---| "bold"         # Bold white on dark background
-                            ---| "accent"       # Bright accent color (cyan/blue)
-                            ---| "minimal"      # Minimal styling, inherits most from buffer
-                            ---| "error"        # Red/warning style
-                            ---| "success"      # Green/success style
-                            ---| "custom"       # User provides complete HighlightSpec
+        ---| "default"      # Default Telescope style (fg from TelescopeResultsFunction)
+        ---| "subtle"       # Muted gray, low contrast
+        ---| "bold"         # Bold white on dark background
+        ---| "accent"       # Bright accent color (cyan/blue)
+        ---| "minimal"      # Minimal styling, inherits most from buffer
+        ---| "error"        # Red/warning style
+        ---| "success"      # Green/success style
+        ---| "custom"       # User provides complete HighlightSpec
         -- fully custom only when preset = "custom"
         -- custom = {
         --     fg = "#89dceb",
@@ -183,16 +193,16 @@ return {
         -- gruvbox
         -- preset = "custom",
         -- custom = {
-            -- fg = "#fe8019",  -- Orange
-            -- bg = "#3c3836",  -- Dark gray
-            -- bold = true,
+        -- fg = "#fe8019",  -- Orange
+        -- bg = "#3c3836",  -- Dark gray
+        -- bold = true,
         -- },
 
         -- catpuccin mocha
         -- custom = {
-            -- fg = "#f5c2e7",  -- Pink
-            -- bold = true,
-            -- italic = true,
+        -- fg = "#f5c2e7",  -- Pink
+        -- bold = true,
+        -- italic = true,
         -- },
       },
     },

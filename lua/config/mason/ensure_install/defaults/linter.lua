@@ -23,4 +23,7 @@ return {
   ["cmakelang"] = true,
   ["ast-grep"] = true,
   ["markdownlint"] = true,
+
+  -- Mobile linters
+  ["checkstyle"] = true,
 }

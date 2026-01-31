@@ -48,5 +48,9 @@ return {
   ["eslint-lsp"] = true,
   ["json-lsp"] = true,
   ["marksman"] = true,
-}
 
+  -- Mobile development
+  ["jdtls"] = true,
+  ["kotlin-language-server"] = true,
+  ["dart-language-server"] = true,
+}
