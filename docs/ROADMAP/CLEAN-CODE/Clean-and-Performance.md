@@ -96,6 +96,7 @@
 - lua\custom\format\text_width\
 - lua\custom\format\misc
 - `custom/filecycle/doc` - muss aktualisert werden
+-`lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
 
 --
 

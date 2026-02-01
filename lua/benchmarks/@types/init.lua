@@ -29,7 +29,6 @@
 ---@field stddev_ms number
 ---@field timestamp string
 
--- AUDIT: Wird NICHT verwendet momentan !?!
 ---@class Benchmarks.BaselineSuite.Summary
 ---@field results Benchmarks.BaselineSuite.Result[]
 ---@field total_events integer

@@ -1,6 +1,8 @@
 ---@module 'plugins.lsp'
 --- Language Server Protocol integration, formatting, and diagnostics tools.
 
+local numbering = require("config.trouble.numbering")
+
 ---@type LazyPluginSpec[]
 return {
   -- {
@@ -171,6 +173,10 @@ return {
               position = "right",
               size = 0.3,
             },
+            formatters = {
+              index = numbering.index_prefix(),
+              main = "message",
+            },
           },
 
           qflist = {
@@ -180,6 +186,10 @@ return {
               relative = "win",
               position = "right",
               size = 0.3,
+            },
+            formatters = {
+              index = numbering.index_prefix(),
+              main = "message",
             },
           },
 

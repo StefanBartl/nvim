@@ -21,7 +21,6 @@ local ACTIVE = {
   -- Mobile development servers
   "jdtls", -- Java (Android)
   "kotlin_language_server", -- Kotlin (Android)
-  "sourcekit", -- Swift (iOS)
   "dartls", -- Dart/Flutter
 }
 
@@ -29,6 +28,12 @@ function M.setup_all(shared)
   if type(shared) ~= "table" then
     return false
   end
+
+  -- On macos add sourcekit
+  if require("lib.cross.platform.is_macos")() then
+    ACTIVE[#ACTIVE+1] = "sourcekit"
+  end
+
   for _, name in ipairs(ACTIVE) do
     local mod = "lsp.servers." .. name
     local ok, srv = pcall(require, mod)

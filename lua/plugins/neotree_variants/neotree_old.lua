@@ -206,7 +206,10 @@ return {
           find_by_full_path_words = true,
           group_empty_dirs = true,
           use_libuv_file_watcher = true,
-          window = { position = "right", mappings = FILESYSTEM }, -- FIX: positions: require("config.neotree").get_default_position() klann ich hier noch nicht aufrufen? Ist dies notwendig? Oder überschreibe ich in der setup() nicht effektiv sowieso diese einstellung?
+          window = {
+            position = require("config.neotree").get_default_position(),
+            mappings = FILESYSTEM,
+          },
           filtered_items = {
             visible = true,
             hide_dotfiles = false,

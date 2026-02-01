@@ -25,7 +25,7 @@ function M.setup()
 
   map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
 
-  map("n", "+", "<C-y>", { desc = "[Number] Increment" }) -- AUDIT: EIgenes increment ? cycle...
+  map("n", "+", "<C-y>", { desc = "[Number] Increment" })
   map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
   map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
   map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
