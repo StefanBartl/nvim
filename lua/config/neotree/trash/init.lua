@@ -27,6 +27,10 @@ M.config = {
   use_dry_run = true,
   auto_close_buffers = true,
   debug = true,
+
+  quarantine_duration = 3000,  -- Increased from 2000
+  pre_delete_wait = 200,       -- Wait before deletion
+  post_delete_wait = 300,      -- Wait after deletion
 }
 
 ---Configure trash module
@@ -104,7 +108,7 @@ end
 local function send_single_to_trash(path, filename, ask_before_close)
   filename = filename or fn.fnamemodify(path, ":t")
 
-  -- STEP 1: Check and close buffers/previews FIRST (before validation)
+  -- STEP 1: Check and close buffers/previews
   local has_refs, ref_info = buffer_checker.check_references(path)
 
   if has_refs then
@@ -125,7 +129,10 @@ local function send_single_to_trash(path, filename, ask_before_close)
       return false, "Could not close all references", false
     end
 
-    -- Double-check after closure
+    -- Wait for buffers to fully close
+    vim.wait(M.config.post_delete_wait)
+
+    -- Double-check
     has_refs, ref_info = buffer_checker.check_references(path)
     if has_refs then
       notify.error(string.format(
@@ -137,7 +144,7 @@ local function send_single_to_trash(path, filename, ask_before_close)
     end
   end
 
-  -- STEP 2: Now validate (after buffers are closed)
+  -- STEP 2: Validate
   if M.config.use_safety_system then
     local valid, reason = safety.validation.validate_operation("delete", { path })
     if not valid then
@@ -146,20 +153,24 @@ local function send_single_to_trash(path, filename, ask_before_close)
     end
   end
 
-  -- STEP 3: Execute trash operation
+  -- STEP 3: Execute with extended quarantine
   if not M.config.use_safety_system then
     local ok, msg = platform.send_to_trash(path)
     return ok, msg, false
   end
 
-  -- With safety system
-  local ok, msg = safety.safe_operation(function()
-    watcher_quarantine.enter_quarantine(2000, { path })
-    vim.wait(100)
+  -- Enter quarantine BEFORE deletion
+  watcher_quarantine.enter_quarantine(M.config.quarantine_duration, { path })
 
+  -- Wait for watchers to fully stop
+  vim.wait(M.config.pre_delete_wait)
+
+  local ok, msg = safety.safe_operation(function()
     local success, err = platform.send_to_trash(path)
 
     if success then
+      -- Wait before triggering refresh
+      vim.wait(M.config.post_delete_wait)
       watcher_quarantine.safe_refresh("filesystem")
     end
 
@@ -179,7 +190,6 @@ function M.neotree_send_node_to_trash(state)
     return
   end
 
-  -- Collect paths and names
   local paths = {}
   local names = {}
 
@@ -208,7 +218,6 @@ function M.neotree_send_node_to_trash(state)
     return
   end
 
-  -- Get confirmation mode
   local delete_mode = confirmation.get_confirmation_mode(names)
   if delete_mode == "cancel" then
     notify.info("ℹ️ Operation cancelled")
@@ -219,13 +228,11 @@ function M.neotree_send_node_to_trash(state)
 
   notify.info("Moving to Trash...")
 
-  -- Create backups
   local backups_created = {}
   if M.config.create_backups then
     backups_created = operations.create_backups(paths, names)
   end
 
-  -- Create recovery point
   if M.config.use_safety_system then
     safety.recovery.create_recovery_point("trash", paths, {
       backups = backups_created,
@@ -233,11 +240,11 @@ function M.neotree_send_node_to_trash(state)
     })
   end
 
-  -- Enter quarantine
-  watcher_quarantine.enter_quarantine(2000, paths)
+  -- CRITICAL: Enter quarantine for ALL paths BEFORE any deletion
+  watcher_quarantine.enter_quarantine(M.config.quarantine_duration, paths)
 
-  -- Execute operations
   vim.schedule(function()
+    -- Additional wait for watchers to stabilize
     defer_fn(function()
       local results = operations.execute_batch(
         paths,
@@ -246,7 +253,6 @@ function M.neotree_send_node_to_trash(state)
         send_single_to_trash
       )
 
-      -- Clear marks on success
       if results.success_count > 0 and state.explicitly_marked_node_ids then
         state.explicitly_marked_node_ids = {}
         pcall(function()
@@ -255,14 +261,13 @@ function M.neotree_send_node_to_trash(state)
         end)
       end
 
-      -- Refresh
+      -- Wait before final refresh
       defer_fn(function()
         safe_refresh(state.name or "filesystem")
-      end, 200)
+      end, M.config.post_delete_wait)
 
-      -- Final notifications
       operations.show_results(results, backups_created)
-    end, 150)
+    end, M.config.pre_delete_wait)
   end)
 end
 
