@@ -49,23 +49,8 @@ return {
     lazy = false,
     config = function()
       require("github_stats").setup({
-        token_source = "env",
-        token_env_var = "GITHUB_TOKEN",
-        fetch_interval_hours = 24,
-        notification_level = "all",
-        repos = {
-          "StefanBartl/color_my_ascii.nvim",
-          "StefanBartl/github_stats.nvim",
-          "StefanBartl/gopath.nvim",
-          "StefanBartl/mdlinks",
-          "StefanBartl/mdview.nvim",
-          "StefanBartl/mygrep.nvim",
-          "StefanBartl/nvim-cmdlog",
-          "StefanBartl/nvim-containers",
-          "StefanBartl/replacer",
-          "StefanBartl/reposcope.nvim",
-          "StefanBartl/telescope-selected-index",
-        },
+        config_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats",
+        data_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats/data"
       })
     end,
   },

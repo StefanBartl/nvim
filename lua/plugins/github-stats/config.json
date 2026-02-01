@@ -34,6 +34,7 @@
     "sort_by": "clones",
     "theme": "default",
     "refresh_interval_seconds": 300,
+    "token_source": "env",
     "token_env_var": "GITHUB_TOKEN"
   },
   "fetch_interval_hours": 24,
@@ -51,6 +52,4 @@
   "StefanBartl/reposcope.nvim",
   "StefanBartl/telescope-selected-index"
   ],
-  "token_source": "file",
-  "token_file": "~/.github_token"
 }
