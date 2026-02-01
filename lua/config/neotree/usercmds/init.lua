@@ -3,10 +3,15 @@
 local M = {}
 
 ---@return nil
-function M.enable_usercmds(opts)
-  opts = opts or {}
+function M.enable(opts)
+  -- Register checkhealth
+  vim.api.nvim_create_user_command("NeoTreeCheckHealth", function()
+    require("config.neotree.checkhealth").check()
+  end, {
+    desc = "Run Neo-tree config health checks",
+  })
 
-  if opts and opts.debug then
+  if opts.debug == true then
     vim.api.nvim_create_user_command(
       "NeoTreeForceReset",
       require("config.neotree.open.window.debug").force_reset_state,
@@ -22,6 +27,10 @@ function M.enable_usercmds(opts)
         desc = "[Neo-tree] Show current state for debugging",
       }
     )
+
+    vim.api.nvim_create_user_command("NeoTreeDebugSources", function()
+      require("config.neotree.sources.switcher").debug_sources()
+    end, { desc = "[Neo-tree] Debug source detection" })
   end
 
   vim.api.nvim_create_user_command("NeoTreeSemaphoreStatus", function()

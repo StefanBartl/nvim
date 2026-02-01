@@ -129,44 +129,14 @@ function M.setup(opts)
     setup_cwd_sync(M.options.cwd_sync)
   end
 
-  -- Register checkhealth
-  vim.api.nvim_create_user_command("NeoTreeCheckHealth", function()
-    require("config.neotree.checkhealth").check()
-  end, {
-    desc = "Run Neo-tree config health checks",
-  })
-end
+  require("config.neotree.autocmds").attach()
+  require("config.neotree.usercmds").enable({ M.options.debug or nil })
+  require("config.neotree.window.highlight").setup({ all = true })
 
----Health check
-function M.health_check()
-  local results = {}
-
-  -- Check event patch
-  table.insert(results, {
-    name = "FS Watch Callback Patch",
-    status = event_patch.is_patched() and "✓" or "✗",
-  })
-
-  -- Check watcher quarantine
-  local wq = require("config.neotree.watcher_quarantine")
-  local healthy, reason = wq.health_check()
-  table.insert(results, {
-    name = "Watcher Quarantine",
-    status = healthy and "✓" or "✗",
-    reason = reason,
-  })
-
-  -- Print results
-  local lines = { "=== Neo-tree Health Check ===" }
-  for _, r in ipairs(results) do
-    local line = string.format("%s %s", r.status, r.name)
-    if r.reason then
-      line = line .. " (" .. r.reason .. ")"
-    end
-    table.insert(lines, line)
-  end
-
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  -- Source-Switcher Keymap
+  vim.keymap.set("n", "<leader>ns", function()
+    require("config.neotree.sources.switcher").show_picker()
+  end, { desc = "[Neo-tree] Switch Source" })
 end
 
 ---@type Cfg.NeoTree.SetupModule

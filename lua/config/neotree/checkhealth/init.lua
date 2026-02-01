@@ -25,6 +25,9 @@ function M.check()
 
   -- Integration tests
   require("config.neotree.checkhealth.integration").check()
+
+  -- Watcher Quaeantine & FS Patch
+  require("config.neotree.watcher_quarantine.health").check()
 end
 
 return M

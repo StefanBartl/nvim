@@ -20,16 +20,7 @@
 
 ## Important
 
-1. Neotree defaults richtig impleemntieren
-
-1. `  Error  16:43:45 notify.error [Neo-tree ERROR] file_event_callback:  EPERM`
-
-   Info  16:45:15 notify.info [github-stats] Fetch interval not elapsed (use 'force' to bypass)
-   Info  16:45:27 notify.info [neotree.trash] Moving to Trash...
-   Error  16:45:28 notify.error [Neo-tree ERROR] file_event_callback:  EPERM
-
-
--
+---
 
 ## MIXED
 
@@ -49,7 +40,8 @@
     - jeder buchstabe ist in der trefferliste eingetragen
     - Was siond die stats neben der prompt? weeenn ich `nvim_set_current_win` eingebe steht 2871/6343649
 8. `sessions` überarbeiten
-9. `Recommender` so machen, dass ein telescope oder ein selection aufgemacht wird, und dort kann man dann aussuchen ,welche auf einmal angewandt werden.
+9. `Recommender`
+    - so machen, dass ein telescope oder ein selection aufgemacht wird, und dort kann man dann aussuchen ,welche auf einmal angewandt werden
 
 --
 
