@@ -9,26 +9,28 @@ local TESTS = require("config.neotree.keymaps.tests")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local COMMANDS = require("config.neotree.commands")
 local ICONS = require("config.neotree.sources.icons")
+local TEST_COMMANDS = require("config.neotree.commands.tests")
 
 return {
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
+    lazy = false,
     dependencies = {
       "MunifTanjim/nui.nvim",
       {
         "TimCreasman/neo-tree-tests-source.nvim",
-        lazy = false, -- Changed from true
+        lazy = false,
         dependencies = { "nvim-neotest/neotest" },
       },
       { "mrbjarksen/neo-tree-diagnostics.nvim" },
     },
-
-    lazy = false,
-
     opts = function()
-      local has_neotest_source = pcall(require, "neo-tree-tests-source")
-      local has_diagnostics = pcall(require, "neo-tree.sources.diagnostics")
+      -- Check if optional sources are available
+      local ok_tests, _ = pcall(require, "neo-tree.sources.tests")
+      local ok_diagnostics, _ = pcall(require, "neo-tree.sources.diagnostics")
+
+      -- Build enabled sources list
       local enabled_sources = {
         "filesystem",
         "buffers",
@@ -36,15 +38,20 @@ return {
         "document_symbols",
       }
 
-      if has_diagnostics then
+      -- Add optional sources if available
+      if ok_diagnostics then
         enabled_sources[#enabled_sources + 1] = "diagnostics"
+      else
+        vim.notify("diagnostics source not available - plugin may not be loaded", vim.log.levels.WARN)
       end
 
-      if has_neotest_source then
+      if ok_tests then
         enabled_sources[#enabled_sources + 1] = "tests"
+      else
+        vim.notify("tests source not available - plugin may not be loaded", vim.log.levels.WARN)
       end
 
-      -- configuration knobs
+      -- Configuration knobs
       local icon_family = "nerd" -- common | nerd | codicons
       local icon_variant = "v1" -- v1 | v2
       local name_length = "long" -- long | short
@@ -68,11 +75,34 @@ return {
           source = "document_symbols",
           display_name = ICONS.format(icon_family, icon_variant, "document_symbols", name_length),
         },
-        {
+      }
+
+      -- Add optional sources to selector
+      if ok_diagnostics then
+        sources[#sources + 1] = {
           source = "diagnostics",
           display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
-        },
-      }
+        }
+      end
+
+      if ok_tests then
+        sources[#sources + 1] = {
+          source = "tests",
+          display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
+        }
+      end
+
+      -- Commands zusammenführen
+      local all_commands = vim.tbl_extend("force", COMMANDS, {
+        -- Neotest commands
+        run_test = TEST_COMMANDS.run_test,
+        debug_test = TEST_COMMANDS.debug_test,
+        output = TEST_COMMANDS.output,
+        short_output = TEST_COMMANDS.short_output,
+        watch_test = TEST_COMMANDS.watch_test,
+        stop_test = TEST_COMMANDS.stop_test,
+        refresh = TEST_COMMANDS.refresh,
+      })
 
       return {
         sources = enabled_sources,
@@ -128,7 +158,7 @@ return {
             { "current_filter" },
             { "name" },
             { "git_status", highlight = "NeoTreeDimText" },
-            diagnostics = has_diagnostics and {
+            ok_diagnostics and {
               symbols = {
                 hint = "",
                 info = "",
@@ -149,7 +179,7 @@ return {
             { "icon" },
             { "name", use_git_status_colors = true },
             { "git_status", highlight = "NeoTreeDimText" },
-            has_diagnostics and { "diagnostics" } or nil,
+            ok_diagnostics and { "diagnostics" } or nil,
             {
               function(_, node, state)
                 local marks = state.explicitly_marked_node_ids or {}
@@ -173,16 +203,13 @@ return {
           position = require("config.neotree").get_default_position(),
         },
 
-        commands = COMMANDS,
+        commands = all_commands,
 
         filesystem = {
           bind_to_cwd = true,
           find_by_full_path_words = true,
-          -- Automatically expand all parent nodes required to reveal the currently active buffer.
           follow_current_file = {
             enabled = true,
-            -- When true, Neo-tree focuses the tree and selects the file.
-            -- When false, the tree updates silently in the background.
             leave_dirs_open = false,
           },
           group_empty_dirs = true,
@@ -206,14 +233,14 @@ return {
         buffers = {
           window = {
             mappings = BUFFERS,
-            require("config.neotree").get_default_position(),
+            position = require("config.neotree").get_default_position(),
           }
         },
 
         git_status = {
           window = {
             mappings = GIT_STATUS,
-            require("config.neotree").get_default_position(),
+            position = require("config.neotree").get_default_position(),
           }
         },
 
@@ -244,7 +271,7 @@ return {
           },
         },
 
-        diagnostics = has_diagnostics and {
+        diagnostics = ok_diagnostics and {
           auto_preview = {
             enabled = false,
             preview_config = {},
@@ -270,7 +297,7 @@ return {
           },
         } or nil,
 
-        tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
+        tests = ok_tests and vim.tbl_extend("force", TESTS, {
           window = {
             mappings = TESTS,
             position = require("config.neotree").get_default_position(),

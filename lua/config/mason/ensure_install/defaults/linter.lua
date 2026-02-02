@@ -16,13 +16,16 @@ return {
   ["markdownlint-cli2"] = true,
   ["luacheck"] = true,
   ["jsonlint"] = true,
-  ["htmlhint"] = true,
   ["golangci-lint"] = true,
   ["eslint_d"] = true,
   ["cmakelint"] = true,
   ["cmakelang"] = true,
   ["ast-grep"] = true,
   ["markdownlint"] = true,
+
+  -- Web Development
+  ["htmlhint"] = true,
+  ["biome"] = true,
 
   -- Mobile linters
   ["checkstyle"] = true,

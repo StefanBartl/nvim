@@ -5,14 +5,17 @@
 
 ---@type Cfg.Mason.EnsureMap
 return {
-  ["node-debug2-adapter"] = false,
   ["java-language-server"] = false,
   ["php-debug-adapter"] = true,
   ["netcoredbg"] = true,
-  ["js-debug-adapter"] = true,
   ["java-test"] = true,
   ["java-debug-adapter"] = true,
-  ["firefox-debug-adapter"] = true,
   ["go-debug-adapter"] = true,
   ["bash-debug-adapter"] = true,
+
+  -- Web Development
+  ["node-debug2-adapter"] = false,
+  ["js-debug-adapter"] = true,
+  ["chrome-debug-adapter"] = true,
+  ["firefox-debug-adapter"] = true,
 }

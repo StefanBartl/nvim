@@ -13,10 +13,6 @@
 ---   - Assembly (custom frameworks)
 ---   - WebAssembly (wasm-pack, jest)
 
---- Resolve language-specific config module
----@param lang string Language identifier
----@return table|nil config Language configuration or nil if not found
-
 local notify = require("lib.notify").create("[plugins.neotest]")
 
 local function get_lang_config(lang)
@@ -96,8 +92,14 @@ return {
       { "nvim-neotest/neotest-go", ft = "go" },
       { "nvim-neotest/neotest-python", ft = "python" },
       { "rouge8/neotest-rust", ft = "rust" },
-      { "nvim-neotest/neotest-jest", ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" } },
-      { "marilari88/neotest-vitest", ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" } },
+      {
+        "nvim-neotest/neotest-jest",
+        ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
+      },
+      {
+        "marilari88/neotest-vitest",
+        ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
+      },
     },
 
     cmd = {
@@ -112,9 +114,8 @@ return {
       "NeotestStop",
       "NeotestWatchToggle",
 
-    "NeotestDebugAdapters",
-    "NeotestDebugTree",
-
+      "NeotestDebugAdapters",
+      "NeotestDebugTree",
     },
     keys = {
       "<leader>ntt",
@@ -151,7 +152,7 @@ return {
         desc = "Refresh test discovery",
       },
 
-      -- ✅ NEU: Debug adapter info
+      -- Debug adapter info
       {
         "<leader>ntD",
         function()
@@ -239,10 +240,13 @@ return {
       }
     end,
 
-    config = function(_, opts)
+    config = function()
       local neotest = require("neotest")
-      neotest.setup(opts)
-
+      neotest.setup({
+        consumers = {
+          neotree = require("neotest.consumers.neotree"), -- Specify our plugin as a test result consumer here:
+        },
+      })
       vim.api.nvim_create_user_command("NeotestDebugAdapters", function()
         -- local ok, neotest = pcall(require, "neotest")
         -- if not ok then
@@ -304,6 +308,8 @@ return {
       if ok_core and type(core_cfg.setup) == "function" then
         core_cfg.setup()
       end
+
+      -- require("config.neotest.autocmds.auto_discovery").attach() -- AUDIT:
     end,
   },
 }

@@ -1,8 +1,14 @@
 # WKD Neovim Roadmap
 
+- Fighting Game
+- WebAssembly
+- nvim-nexus
+- Portfolio (mit den nvim plugins, htmx, Zertifikate, fighting game einbinden)
+
 ## Table of content
 
 - [WKD Neovim Roadmap](#wkd-neovim-roadmap)
+  - [Table of content](#table-of-content)
   - [Watch](#watch)
   - [Important](#important)
   - [MIXED](#mixed)
@@ -19,6 +25,8 @@
 ---
 
 ## Important
+
+1. toc ??
 
 ---
 

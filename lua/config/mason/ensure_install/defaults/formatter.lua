@@ -17,7 +17,6 @@ return {
   ["phpcbf"] = false,
   ["nginx-config-formatter"] = true,
   ["markdownlint-cli2"] = true,
-  ["htmlbeautifier"] = false,
   ["gotests"] = true,
   ["golines"] = true,
   ["goimports"] = true,
@@ -31,6 +30,11 @@ return {
   ["markdown-toc"] = true,
   ["markdownlint"] = true,
   ["mdformat"] = true,
+
+  -- Web Development
+  ["biome"] = true,
+  ["rustywind"] = true, -- Tailwind class sorter
+  ["htmlbeautifier"] = false,
 
   -- Mobile formatters
   ["google-java-format"] = true,

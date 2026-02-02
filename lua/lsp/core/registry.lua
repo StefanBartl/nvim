@@ -9,11 +9,18 @@ local desc_tag = "[lsp.registry] "
 local ACTIVE = {
   "bashls",
   "lua_ls",
-  "ts_ls",
   "gopls",
   "marksman",
   -- "emmet_ls",
+
+  -- Web Development
   "html",
+  "ts_ls",
+  "webdev.astro",
+  "webdev.tailwindcss",
+  "webdev.htmx_lsp",
+  "webdev.wasm_language_server",
+
   --"clangd",
   --"csharp",
   --"zig",
@@ -35,7 +42,7 @@ function M.setup_all(shared)
   end
 
   for _, name in ipairs(ACTIVE) do
-    local mod = "lsp.servers." .. name
+    local mod = "lsp.servers." .. name or "lsp.servers.webdev." .. name
     local ok, srv = pcall(require, mod)
     if not ok or type(srv) ~= "table" or type(srv.setup) ~= "function" then
       notify.info((desc_tag .. "server module '%s' unavailable"):format(name))
