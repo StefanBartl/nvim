@@ -170,6 +170,7 @@ return {
         window = {
           width = 25,
           mappings = KEYMAPS,
+          position = require("config.neotree").get_default_position(),
         },
 
         commands = COMMANDS,
@@ -187,8 +188,8 @@ return {
           group_empty_dirs = true,
           use_libuv_file_watcher = true,
           window = {
-            position = require("config.neotree").get_default_position(),
             mappings = FILESYSTEM,
+            position = require("config.neotree").get_default_position(),
           },
           filtered_items = {
             visible = true,
@@ -202,8 +203,19 @@ return {
           },
         },
 
-        buffers = { window = { mappings = BUFFERS } },
-        git_status = { window = { mappings = GIT_STATUS } },
+        buffers = {
+          window = {
+            mappings = BUFFERS,
+            require("config.neotree").get_default_position(),
+          }
+        },
+
+        git_status = {
+          window = {
+            mappings = GIT_STATUS,
+            require("config.neotree").get_default_position(),
+          }
+        },
 
         document_symbols = {
           follow_cursor = true,
@@ -228,7 +240,7 @@ return {
           },
           window = {
             mappings = DOCUMENT_SYMBOLS,
-            position = "right",
+            position = require("config.neotree").get_default_position(),
           },
         },
 
@@ -253,13 +265,16 @@ return {
             max_items = 10000,
           },
           window = {
-            position = "right",
             mappings = DIAGNOSTICS,
+            position = require("config.neotree").get_default_position(),
           },
         } or nil,
 
         tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
-          window = { mappings = TESTS },
+          window = {
+            mappings = TESTS,
+            position = require("config.neotree").get_default_position(),
+          },
         }) or nil,
       }
     end,
@@ -272,48 +287,13 @@ return {
       require("config.neotree").setup({
         debug = true,
         busy_guard = false,
-        default_position = "right",
+        default_position = "left",
         restore_last_position = false,
         window_debug = false,
         window_open = false,
         reveal_current_file = false,
-        -- reveal_current_file = true,
         only_lhs = true,
-        -- trash = false,
-        trash = {
-          debug = false,
-          auto_close_buffers = true,
-          create_backups = true,
-          use_safety_system = true,
-          confirm_dangerous = true,
-          use_dry_run = false,
-        },
-        -- current_hl = false,
-        current_hl = {
-          colors = {
-            file = "green",
-            parent = { fg = "darkgreen", underline = false },
-          },
-        },
-        cwd_sync = {
-          enabled = false,
-        },
       })
-
-      -- -- Source-Switcher Keymap
-      -- vim.keymap.set("n", "<leader>ns", function()
-      -- require("config.neotree.sources.switcher").show_picker()
-      -- end, { desc = "[Neo-tree] Switch Source" })
-
-      -- Debug Command
-      -- vim.api.nvim_create_user_command("NeoTreeDebugSources", function()
-      -- require("config.neotree.sources.switcher").debug_sources()
-      -- end, { desc = "[Neo-tree] Debug source detection" })
-
-      -- Setze Neo-tree Highlights so, dass sie andere Fenster nicht beeinflussen
-      vim.api.nvim_set_hl(0, "NeoTreeNormal", { link = "Normal" })
-      vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { link = "NormalNC" })
-      vim.api.nvim_set_hl(0, "NeoTreeEndOfBuffer", { link = "EndOfBuffer" })
     end,
   },
 }

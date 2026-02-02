@@ -69,9 +69,6 @@ function M.register(language)
   _registered[language] = true
   _enabled[actual_lang] = true
 
-
-  -- AUDIT: Implement notify toggle
-  -- notify.info(string.format(("[wkddap.registry] Registered: %s"), language))
   return true, nil
 end
 

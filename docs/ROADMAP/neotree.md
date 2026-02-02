@@ -17,12 +17,8 @@
 
 ## Important
 
-1. CWD sync muss:
-    - performanter gemacht werden, asynchron sc hon bever man neotree öffnet
-    - löst die reopenings aus
-    - ist es async?
-    - wie funktniert es genau? wäre es nicht besser, anstatt bei jeden neotree openeing das im hintergrund zu machen bei bufferwechsel?
-2. updaten: config.menu.neotree.entries
+1. Ich kann im  help fenster nicht mehr mit / suchen
+2. Gibt es eine Möglichkeit via keymap die aktuelle file im neotree aufzudecken ?
 
 ---
 

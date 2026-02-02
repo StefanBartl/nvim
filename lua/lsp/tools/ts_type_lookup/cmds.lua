@@ -159,7 +159,7 @@ function M.peek_type_definition_for(symbol)
     }
     api.nvim_open_win(buf, true, opts)
     -- map 'o' in preview to open actual location in vsplit
-    -- NOTE: use the correct module path here to call the internal helper.
+    -- ...use the correct module path here to call the internal helper.
     api.nvim_buf_set_keymap(
       buf,
       "n",

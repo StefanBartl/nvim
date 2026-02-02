@@ -20,30 +20,28 @@
 
 ## Important
 
-1. Neotree defaults richtig impleemntieren
-
--
+---
 
 ## MIXED
 
 1. Usercommands so strukturieren:
     - `:DeleteCurrentFile` zu `:File delete`; `:Fileinfo` zu `File info`; Weiters `File rename;convert;`
     - ein usercommand, das alle emojis entfernt im buffer: `:Buffer remove emojis` `:Buffer remove empty_lines` `:Buffer translate de` `:Buffer translate_replace en ` `:Buffer insert ...`
-2.`lsp.tools.lsp_signature_tool` -> `/doc/lsp_signature_tool.txt` erstellen
-3. lsp.tools behandeln
-4. wkdnvchad.ui.usrcmd: Zukünftige Features
+2. lsp.tools behandeln
+3. wkdnvchad.ui.usrcmd: Zukünftige Features
         - [ ] Theme-Previews in Floating Window
         - [ ] Theme-Export/Import
         - [ ] Custom Theme-Collections
         - [ ] Theme-Scheduler (basierend auf Tageszeit)
-5. `:CwdHere` fixen
-6. "a" in neotree scheint nicht mehr ganz typsiereungen ezuer rstellen
-7. `:LuaFileStats` eine option machen, die keine file erzeugt sondern nur eine ausgabe im stdout/noify
-8. `leader fg` soll nicht zuerst eine prompt haben, sondern gleich den picker aufmachen.
+4. `:CwdHere` fixen
+5. "a" in neotree scheint nicht mehr ganz typsiereungen ezuer rstellen
+6. `:LuaFileStats` eine option machen, die keine file erzeugt sondern nur eine ausgabe im stdout/noify
+7. `leader fg` soll nicht zuerst eine prompt haben, sondern gleich den picker aufmachen.
     - jeder buchstabe ist in der trefferliste eingetragen
     - Was siond die stats neben der prompt? weeenn ich `nvim_set_current_win` eingebe steht 2871/6343649
-9. `sessions` überarbeiten
-10. `Recommender` so machen, dass ein telescope oder ein selection aufgemacht wird, und dort kann man dann aussuchen ,welche auf einmal angewandt werden.
+8. `sessions` überarbeiten
+9. `Recommender`
+    - so machen, dass ein telescope oder ein selection aufgemacht wird, und dort kann man dann aussuchen ,welche auf einmal angewandt werden
 
 --
 

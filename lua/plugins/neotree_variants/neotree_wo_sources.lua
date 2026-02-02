@@ -132,7 +132,6 @@ return {
       require("neo-tree").setup(opts)
       require("config.neotree").setup({
         debug = true,
-        busy_guard = false,
         default_position = "right",
         restore_last_position = false,
         window_debug = true,

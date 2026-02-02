@@ -1,12 +1,5 @@
 ---@module 'config.neotree.watcher_quarantine'
 ---@brief Safe file-watcher management during file operations (Windows EPERM fix)
----
---- This module implements a "quarantine" system to prevent EPERM errors and
---- UI freezes during file operations on Windows. It works by:
---- 1. Stopping all file watchers before destructive operations
---- 2. Suppressing EPERM notifications during the quarantine period
---- 3. Safely restarting watchers after filesystem has settled
---- 4. Providing async-safe refresh that waits for quarantine to end
 
 local M = {}
 
@@ -28,7 +21,6 @@ function M.is_quarantined()
 
   local now = vim.loop.now()
   if now >= S.quarantine_until then
-    -- Quarantine expired naturally
     M._auto_exit_quarantine()
     return false
   end
@@ -52,7 +44,6 @@ function M.is_path_quarantined(path)
   end
 
   if now >= until_time then
-    -- Path quarantine expired
     S.suspended_paths[path] = nil
     return false
   end
@@ -60,7 +51,19 @@ function M.is_path_quarantined(path)
   return true
 end
 
----Enter quarantine mode: stop all watchers and suppress EPERM errors
+---Stop all Neo-tree file watchers safely
+---@return boolean success
+local function stop_watchers()
+  local ok, fs_watch = pcall(require, "neo-tree.sources.filesystem.lib.fs_watch")
+  if not ok or not fs_watch or not fs_watch.stop_watching then
+    return false
+  end
+
+  pcall(fs_watch.stop_watching)
+  return true
+end
+
+---Enter quarantine mode: stop all watchers
 ---@param duration_ms integer Duration in milliseconds (default: 1500)
 ---@param paths string[]|nil Specific paths to quarantine (optional)
 function M.enter_quarantine(duration_ms, paths)
@@ -71,7 +74,6 @@ function M.enter_quarantine(duration_ms, paths)
   S.quarantine_until = now + duration_ms
   S.error_suppressed = true
 
-  -- Add specific paths if provided
   if paths then
     for _, path in ipairs(paths) do
       S.suspended_paths[path] = S.quarantine_until
@@ -79,25 +81,15 @@ function M.enter_quarantine(duration_ms, paths)
   end
 
   -- Stop all Neo-tree file watchers
-  pcall(function()
-    local watcher = require("neo-tree.sources.filesystem.lib.file_watcher")
-    if watcher and watcher.stop_all then
-      watcher.stop_all()
-    end
-  end)
-
-  -- Patch error handler to suppress EPERM
-  -- M._patch_error_handler()
+  stop_watchers()
 end
 
----Exit quarantine early (if operation completed faster than expected)
+---Exit quarantine early
 function M.exit_quarantine()
   S.in_quarantine = false
   S.quarantine_until = 0
   S.error_suppressed = false
   S.suspended_paths = {}
-
-  -- M._unpatch_error_handler()
 end
 
 ---Auto-exit when quarantine expires naturally
@@ -106,108 +98,41 @@ function M._auto_exit_quarantine()
   S.in_quarantine = false
   S.error_suppressed = false
   S.suspended_paths = {}
-
-  -- M._unpatch_error_handler()
 end
 
--- FIX: Eventuell neuen error handler schreiben, der aber nicht vim.notify überschreibt
----Patch Neo-tree's error handler to suppress EPERM during quarantine
--- ---@private
--- function M._patch_error_handler()
---   -- Store original notify (only once)
---   if not S.original_notify then
---     S.original_notify = vim.notify
---   end
---
---   -- Guard: Prevent double-patching
---   if vim.notify == M._notify_patch then
---     return
---   end
---
---   -- Define patch function (stored for unpatch check)
---   M._notify_patch = function(msg, level, opts)
---     -- DEFENSE 1: Validate msg before string operations
---     if type(msg) ~= "string" or msg == "" then
---       -- Pass through non-string or empty messages
---       return S.original_notify(msg, level, opts)
---     end
---
---     -- DEFENSE 2: Only filter when suppression active
---     if not S.error_suppressed then
---       return S.original_notify(msg, level, opts)
---     end
---
---     -- DEFENSE 3: Use plain-text search (faster, safer)
---     local patterns = { "EPERM", "permission denied", "Operation not permitted" }
---     for _, pattern in ipairs(patterns) do
---       if msg:find(pattern, 1, true) then  -- Plain search
---         return -- Suppress matching errors
---       end
---     end
---
---     -- DEFENSE 4: Safe call with pcall
---     local ok, err = pcall(S.original_notify, msg, level, opts)
---     if not ok then
---       -- Fallback: Print to stderr if notify fails
---       io.stderr:write("[notify error] " .. tostring(err) .. "\n")
---     end
---   end
---
---   -- Apply patch
---   vim.notify = M._notify_patch
--- end
-
--- ---Restore original error handler
--- ---@private
--- function M._unpatch_error_handler()
-  -- if S.original_notify then
-    -- vim.notify = S.original_notify
-    -- S.original_notify = nil
-    -- M._notify_patch = nil
-  -- end
--- end
-
 ---Safe refresh with quarantine awareness
----Waits for quarantine to end before refreshing Neo-tree
 ---@param state_name string Neo-tree source name (e.g., "filesystem")
 ---@param callback fun()|nil Optional callback after refresh completes
 function M.safe_refresh(state_name, callback)
   local function do_refresh()
-    -- Check if still in quarantine
     if M.is_quarantined() then
-      -- Still quarantined, retry later
       vim.defer_fn(do_refresh, 200)
       return
     end
 
-    -- Quarantine ended, safe to refresh
     local ok_mgr, manager = pcall(require, "neo-tree.sources.manager")
     if not ok_mgr then
       return
     end
 
-    -- Get state
     local state_ok, state = pcall(manager.get_state, state_name)
     if not state_ok or not state then
       return
     end
 
-    -- Try command-based refresh first (safer than direct manager.refresh)
+    -- Try command-based refresh first (safer)
     local commands_ok, commands = pcall(require, "neo-tree.sources." .. state_name .. ".commands")
     if commands_ok and commands and type(commands.refresh) == "function" then
       pcall(commands.refresh, state)
     else
-      -- Fallback to manager refresh
       pcall(manager.refresh, state_name)
     end
 
-    -- Execute callback if provided
     if callback and type(callback) == "function" then
       vim.defer_fn(callback, 100)
     end
   end
 
-  -- Initial delay before checking quarantine
   vim.defer_fn(do_refresh, 100)
 end
 
@@ -215,23 +140,23 @@ end
 ---@return boolean healthy
 ---@return string|nil reason
 function M.health_check()
-  local ok, watcher = pcall(require, "neo-tree.sources.filesystem.lib.file_watcher")
+  local ok, fs_watch = pcall(require, "neo-tree.sources.filesystem.lib.fs_watch")
   if not ok then
-    return false, "file_watcher module not available"
+    return false, "fs_watch module not available"
   end
 
-  if not watcher then
-    return false, "file_watcher is nil"
+  if not fs_watch then
+    return false, "fs_watch is nil"
   end
 
-  if not watcher.stop_all then
-    return false, "file_watcher missing stop_all function"
+  if not fs_watch.stop_watching then
+    return false, "fs_watch missing stop_watching function"
   end
 
   return true
 end
 
----Restart all watchers safely (only when not quarantined)
+---Restart all watchers safely
 ---@return boolean success
 ---@return string|nil error_message
 function M.restart_watchers()
@@ -239,15 +164,8 @@ function M.restart_watchers()
     return false, "still in quarantine"
   end
 
-  -- Stop all watchers
-  pcall(function()
-    local watcher = require("neo-tree.sources.filesystem.lib.file_watcher")
-    if watcher and watcher.stop_all then
-      watcher.stop_all()
-    end
-  end)
+  stop_watchers()
 
-  -- Restart via refresh after short delay
   vim.defer_fn(function()
     local ok, manager = pcall(require, "neo-tree.sources.manager")
     if ok and manager then
@@ -264,4 +182,3 @@ function M._cleanup()
 end
 
 return M
-

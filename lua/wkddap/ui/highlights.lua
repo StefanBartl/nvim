@@ -1,7 +1,5 @@
 local config = require("wkddap.config")
 
---FIX: MUSS DAS?
-
 local M = {}
 
 function M.setup()

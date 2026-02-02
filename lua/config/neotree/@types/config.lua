@@ -7,11 +7,8 @@
 
 ---@class Cfg.NeoTree.InitOpts
 ---@field debug? boolean Global debug flag for all modules
----@field busy_guard? boolean Use guard to protect to fast window openings
 ---@field default_position? Cfg.NeoTree.Position Default window position
 ---@field restore_last_position? boolean Restore tree state instead of revealing current file
----@field window_debug? boolean Enable window operation logging
----@field window_open? boolean
 ---@field reveal_current_file? boolean Only has an effect if window_open == false
 ---@field only_lhs? boolean Only has an effect if window_open == false
 ---@field trash? Cfg.NeoTree.Trash.Config|boolean Trash system configuration

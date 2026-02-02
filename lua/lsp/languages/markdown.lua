@@ -1,8 +1,4 @@
--- lsp/languages/markdown.lua
 ---@module 'lsp.languages.markdown'
----@class LangMdQoL
-
---AUDIT: Modularisieren
 
 local api = vim.api
 local lsp = vim.lsp
@@ -13,7 +9,7 @@ local M = {}
 --- Set highlight for LSP reference groups (affects documentHighlight results).
 function M.setup_reference_hl()
   -- Example: change foreground to a soft color and enable italic.
-  -- Use your colorscheme values or explicit hex values (here as placeholders).
+  -- Use colorscheme values or explicit hex values (here as placeholders).
   vim.api.nvim_set_hl(0, "LspReferenceText", { fg = "#FFFFFF", bg = "#2b2b2b", italic = true })
   vim.api.nvim_set_hl(0, "LspReferenceRead", { fg = "#FFFFFF", bg = "#2b2b2b" })
   vim.api.nvim_set_hl(0, "LspReferenceWrite", { fg = "#FFFFFF", bg = "#3a2b2b", bold = true })

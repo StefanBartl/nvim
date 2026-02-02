@@ -1,7 +1,5 @@
 ---@module 'wkddap.ui.signs'
 
---FIX: MUSS DAS?
-
 local config = require("dap.config")
 
 local M = {}

@@ -15,6 +15,7 @@ local function find_jdtls()
   local candidates = {
     mason_bin .. sep .. "jdtls",
     mason_bin .. sep .. "jdtls.cmd",  -- Windows
+    mason_bin .. "/jdtls",
     vim.fn.exepath("jdtls"),
   }
 
@@ -105,7 +106,9 @@ function M.setup(shared, opts)
             "org.junit.Assume.*",
             "org.junit.jupiter.api.Assertions.*",
             "org.junit.jupiter.api.Assumptions.*",
+            "org.junit.jupiter.api.DynamicTest.*",
             "org.mockito.Mockito.*",
+            "org.mockito.ArgumentMatchers.*",
           },
         },
         sources = {

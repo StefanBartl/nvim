@@ -1,7 +1,5 @@
 ---@module 'wkddap.utils.notify'
 
---FIX: LIB
-
 local notify = require("lib.notify").create("[wkddap.utils.notify]")
 
 local M = {}
