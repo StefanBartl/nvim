@@ -37,6 +37,7 @@ return {
     "folke/snacks.nvim",
     -- event = "VimEnter", -- custom dashboard neesds to load early
     lazy = false,
+    priority=1000,
 
     ---@param _ any
     ---@return Plugins.Snacks.Setup|table
