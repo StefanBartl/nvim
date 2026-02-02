@@ -119,7 +119,7 @@ function M.setup(opts)
   end
 
   require("config.neotree.autocmds").attach()
-  require("config.neotree.usercmds").enable({ M.options.debug or nil })
+  require("config.neotree.usercmds").enable()
   require("config.neotree.window.highlight").setup({ all = true })
 
   -- Source-Switcher Keymap
