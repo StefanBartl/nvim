@@ -1,12 +1,10 @@
 ---@module 'config.neotree.sources.switcher'
----@description Hover-based source switcher for Neo-tree using hover-select v2
+---@brief Hover-based source switcher for Neo-tree using direct Neo-tree commands
 
 local notify = require("lib.notify").create("[config.neotree.sources.switcher]")
 
 local ICONS = require("config.neotree.sources.icons")
 local hover_select = require("lib.ui.hover_select")
-local window_state = require("config.neotree.state.windows")
-local controller = require("config.neotree.open.window.controller")
 
 local M = {}
 
@@ -111,7 +109,97 @@ local function check_source_loadable(source_name)
   return true, nil
 end
 
+---Get current Neo-tree window position if open
+---@return string|nil position Current position or nil if not open
+local function get_current_position()
+  -- Check all windows in current tabpage
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == "neo-tree" then
+        -- Try to get position from window config
+        local win_config = vim.api.nvim_win_get_config(win)
+
+        -- Float detection
+        if win_config.relative and win_config.relative ~= "" then
+          return "float"
+        end
+
+        -- Try to detect position from window placement
+        local win_width = vim.api.nvim_win_get_width(win)
+        local win_height = vim.api.nvim_win_get_height(win)
+        local screen_width = vim.o.columns
+        local screen_height = vim.o.lines
+
+        -- Current window detection (takes most of screen)
+        if win_width >= screen_width * 0.8 and win_height >= screen_height * 0.8 then
+          return "current"
+        end
+
+        -- Left/Right detection (narrow vertical split)
+        if win_width < screen_width * 0.5 then
+          local win_col = vim.api.nvim_win_get_position(win)[2]
+          if win_col == 0 then
+            return "left"
+          else
+            return "right"
+          end
+        end
+
+        -- Fallback: assume left
+        return require("config.neotree").get_default_position()
+      end
+    end
+  end
+
+  return nil
+end
+
+---Get current source from the active Neo-tree buffer
+---@return string|nil source Current source name or nil
+local function get_current_source()
+  local buf = vim.api.nvim_get_current_buf()
+
+  if vim.bo[buf].filetype ~= "neo-tree" then
+    return nil
+  end
+
+  -- Neo-tree stores source name in buffer variables
+  local source = vim.b[buf].neo_tree_source
+  if type(source) == "string" then
+    return source
+  end
+
+  return nil
+end
+
+
+---Switch to a different Neo-tree source
+---@param source_name string Target source name
+---@return nil
+local function switch_to_source(source_name)
+  local ok, NeoCmd = pcall(require, "neo-tree.command")
+  if not ok then
+    notify.error("Neo-tree command module not loaded")
+    return
+  end
+
+  -- Close existing Neo-tree window first
+  NeoCmd.execute({ action = "close" })
+
+  local position = get_current_position()
+    or require("config.neotree").get_default_position()
+
+  NeoCmd.execute({
+    source = source_name,
+    action = "show",
+    position = position,
+    reveal = false,
+  })
+end
+
 ---Show Neo-tree source picker in a hover-select floating window
+---@return nil
 function M.show_picker()
   local sources = get_available_sources()
 
@@ -120,8 +208,7 @@ function M.show_picker()
     return
   end
 
-  local current_source = window_state.get_source()
-  local current_position = window_state.get_position() or require("config.neotree").get_default_position()
+  local current_source = get_current_source()
 
   ---@type string[]
   local items = {}
@@ -160,21 +247,23 @@ function M.show_picker()
         return
       end
 
-      -- CRITICAL: Use controller's make_opener with source parameter
-      local opener = controller.make_opener(current_position, source_name)
-      opener()
+      -- Switch to source using direct Neo-tree command
+      switch_to_source(source_name)
     end,
   })
 end
 
 ---Debug: Print all available information about sources
+---@return nil
 function M.debug_sources()
   local info = {
     ["neo-tree.config.sources"] = nil,
     ["filesystem.state.config.sources"] = nil,
     ["lazy.plugins.opts.sources"] = nil,
     ["detected_plugins"] = {},
-    ["window_state"] = window_state.get_state(),
+    ["current_position"] = get_current_position(),
+    ["current_source"] = get_current_source(),
+    ["default_position"] = require("config.neotree").get_default_position(),
   }
 
   local ok, neo_tree = pcall(require, "neo-tree")
