@@ -117,7 +117,7 @@ function M.setup(opts)
     setup_cwd_sync(M.options.cwd_sync)
   end
 
-  require("config.neotree.autocmds").attach()
+  require("config.neotree.autocmds").attach() -- disable statusline;
   require("config.neotree.usercmds").enable()
   require("config.neotree.window.highlight").setup({ all = true })
   require("config.neotree.keymaps.global").attach()
