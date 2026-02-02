@@ -272,32 +272,12 @@ return {
       require("config.neotree").setup({
         debug = true,
         busy_guard = false,
-        default_position = "right",
+        default_position = "left",
         restore_last_position = false,
         window_debug = false,
         window_open = false,
         reveal_current_file = false,
-        -- reveal_current_file = true,
         only_lhs = true,
-        -- trash = false,
-        trash = {
-          debug = false,
-          auto_close_buffers = true,
-          create_backups = true,
-          use_safety_system = true,
-          confirm_dangerous = true,
-          use_dry_run = false,
-        },
-        -- current_hl = false,
-        current_hl = {
-          colors = {
-            file = "green",
-            parent = { fg = "darkgreen", underline = false },
-          },
-        },
-        cwd_sync = {
-          enabled = false,
-        },
       })
     end,
   },

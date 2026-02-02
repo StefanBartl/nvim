@@ -14,7 +14,7 @@ local M = {}
 local defaults = {
   debug = false,
   busy_guard = false,
-  default_position = "right",
+  default_position = "left",
   restore_last_position = false,
   window_debug = false,
   window_open = false,
@@ -52,13 +52,6 @@ local function setup_trash(config)
   end
 
   require("config.neotree.trash.commands").setup()
-end
-
---- Initialize window opener (with or without debug timing)
----@param debug boolean
----@return nil
-local function setup_window_opener(debug)
-  require("config.neotree.open.window").attach_opener_mappings({ debug = debug })
 end
 
 --- Initialize current file highlight
@@ -103,22 +96,18 @@ function M.setup(opts)
     )
   end
 
+  -- ================
   -- Setup subsystems
+
   if M.options.trash then
     setup_trash(M.options.trash)
   end
 
-  if M.options.window_open then
-    setup_window_opener(
-      (M.options.window_debug ~= nil and M.options.window_debug) or M.options.debug or false
-    )
-  else
-    if M.options.reveal_current_file then
-      require("config.neotree.open.keymaps.reveal_current_file").attach()
-    end
-    if M.options.only_lhs then
-      require("config.neotree.open.keymaps.only_lhs").attach()
-    end
+  if M.options.reveal_current_file then
+    require("config.neotree.window.open.keymaps.reveal_current_file").attach()
+  end
+  if M.options.only_lhs then
+    require("config.neotree.window.open.keymaps.only_lhs").attach()
   end
 
   if M.options.current_hl then
