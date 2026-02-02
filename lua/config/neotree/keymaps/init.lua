@@ -44,8 +44,12 @@ return {
 
   --====================== Source Switching ===========================
 
-  ['"'] = function(_) source_command.next_source() end,
-  ["!"] = function(_) source_command.prev_source() end,
+  ['"'] = function(_)
+    source_command.next_source()
+  end,
+  ["!"] = function(_)
+    source_command.prev_source()
+  end,
   ["<"] = "noop",
 
   --====================== Window Management ==========================
@@ -59,26 +63,34 @@ return {
 
   ["w"] = {
     function(state)
-      -- Base width of the Neo-tree window
-      local normal = state.window.width
-
-      -- Precomputed target widths
-      local large = normal * 1.9
-      local small = math.floor(normal / 1.6)
-
-      -- Current window width
-      local cur_width = state.win_width
-      local new_width = normal
-
-      -- Cycle between normal -> large -> small
-      if cur_width > normal then
-        new_width = small
-      elseif cur_width == normal then
-        new_width = large
+      local win = vim.api.nvim_get_current_win()
+      if not vim.api.nvim_win_is_valid(win) then
+        return
       end
 
-      -- Apply new width
-      vim.cmd(new_width .. " wincmd |")
+      -- Use buffer variable to track resize state
+      local buf = vim.api.nvim_win_get_buf(win)
+      local resize_state = vim.b[buf].neotree_resize_state or "normal"
+
+      local base_width = (state and state.window and state.window.width) or 30
+      local widths = {
+        normal = base_width,
+        large = math.floor(base_width * 1.9),
+        small = math.floor(base_width / 1.6),
+      }
+
+      -- State transition
+      local next_state = {
+        normal = "large",
+        large = "small",
+        small = "normal",
+      }
+
+      local new_state = next_state[resize_state]
+      local new_width = widths[new_state]
+
+      vim.api.nvim_win_set_width(win, new_width)
+      vim.b[buf].neotree_resize_state = new_state
     end,
     desc = "Resize the neotree window",
   },
