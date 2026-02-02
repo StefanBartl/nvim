@@ -53,7 +53,7 @@ return {
         toggle = { enabled = true },
         words = { enabled = true },
 
-        image = { enabled = false },
+        image = { enabled = true },
 
         -- Safeguard for very large files
         bigfile = { enabled = false },

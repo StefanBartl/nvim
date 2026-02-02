@@ -66,7 +66,7 @@ local DOCUMENT_SYMBOLS_CONFIG = {
   },
   window = {
     mappings = DOCUMENT_SYMBOLS,
-    position = "right",
+    position = require("config.neotree").get_default_position(),
   },
 }
 
@@ -169,8 +169,8 @@ function M.generate_config(user_config)
       statusline = false,
       sources = source_selector_sources,
     },
-    buffers = { window = { mappings = BUFFERS } },
-    git_status = { window = { mappings = GIT_STATUS } },
+    buffers = { window = { mappings = BUFFERS, position = require("config.neotree").get_default_position(), } },
+    git_status = { window = { mappings = GIT_STATUS, position =  require("config.neotree").get_default_position(), } },
     document_symbols = DOCUMENT_SYMBOLS_CONFIG,
 
     diagnostics = has_diagnostics and {
@@ -194,13 +194,13 @@ function M.generate_config(user_config)
         max_items = 10000,
       },
       window = {
-        position = "right",
         mappings = DIAGNOSTICS,
+        position = require("config.neotree").get_default_position(),
       },
     } or nil,
 
     tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
-      window = { mappings = TESTS },
+      window = { mappings = TESTS, position = require("config.neotree").get_default_position(), },
     }) or nil,
 
     renderers = {

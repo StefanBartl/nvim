@@ -117,13 +117,6 @@ function M.attach()
   end, {
     desc = desc_tag .. "Show LSP information for current buffer",
   })
-
-  -- LspDebug: Show debug info (completion, configs, etc.)
-  pcall(nvim_create_user_command, "LspDebug", function()
-    commands.debug().execute()
-  end, {
-    desc = desc_tag .. "Show LSP debug information",
-  })
 end
 
 return M

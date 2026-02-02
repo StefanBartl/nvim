@@ -28,14 +28,9 @@ local defaults = {
 ---@type Cfg.NeoTree.InitOpts
 M.options = vim.deepcopy(defaults)
 
----@return Cfg.NeoTree.Position|"right"
+---@return Cfg.NeoTree.Position|"left"
 function M.get_default_position()
-  return M.options.default_position or "right"
-end
-
----@return boolean
-function M.busy_guard()
-  return M.options.busy_guard
+  return M.options.default_position or "left"
 end
 
 --- Initialize trash system
