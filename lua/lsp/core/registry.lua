@@ -19,7 +19,7 @@ local ACTIVE = {
   "webdev.astro",
   "webdev.tailwindcss",
   "webdev.htmx_lsp",
-  "webdev.wasm_language_server",
+  "webdev.wasm_language_tools",
 
   --"clangd",
   --"csharp",
@@ -31,29 +31,58 @@ local ACTIVE = {
   "dartls", -- Dart/Flutter
 }
 
+---@param shared table
+---@return string[]
 function M.setup_all(shared)
   if type(shared) ~= "table" then
-    return false
+    return {}
   end
 
-  -- on ios add sourcekit
+  -- iOS: sourcekit hinzufügen
   if require("lib.cross.platform.is_macos")() then
     ACTIVE[#ACTIVE + 1] = "sourcekit"
   end
 
+  local enabled = {}
+
   for _, name in ipairs(ACTIVE) do
-    local mod = "lsp.servers." .. name or "lsp.servers.webdev." .. name
-    local ok, srv = pcall(require, mod)
-    if not ok or type(srv) ~= "table" or type(srv.setup) ~= "function" then
-      notify.info((desc_tag .. "server module '%s' unavailable"):format(name))
-    else
-      local ok_setup, err = pcall(srv.setup, shared)
-      if not ok_setup then
-        notify.warn((desc_tag .. "setup failed for '%s': %s"):format(name, err or "?"))
+    -- Versuche beide Pfade: direkter Name und webdev-Präfix
+    local paths = {
+      "lsp.servers." .. name,
+    }
+
+    -- Falls Name kein Punkt enthält, auch webdev-Variante versuchen
+    if not name:match("%.") then
+      paths[#paths + 1] = "lsp.servers.webdev." .. name
+    end
+
+    local loaded = false
+    local last_error = nil
+
+    for _, mod_path in ipairs(paths) do
+      local ok, srv = pcall(require, mod_path)
+      if ok and type(srv) == "table" and type(srv.setup) == "function" then
+        local ok_setup, err = pcall(srv.setup, shared)
+        if ok_setup then
+          enabled[#enabled + 1] = name
+          loaded = true
+          break
+        else
+          last_error = err
+        end
+      end
+    end
+
+    if not loaded then
+      if last_error then
+        notify.warn((desc_tag .. "setup failed for '%s': %s"):format(name, last_error or "?"))
+      else
+        notify.info((desc_tag .. "server module '%s' unavailable"):format(name))
       end
     end
   end
-  return true
+
+  return enabled
 end
 
 return M

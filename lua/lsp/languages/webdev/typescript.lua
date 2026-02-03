@@ -1,4 +1,4 @@
----@module 'lsp.languages.typescript'
+---@module 'lsp.languages.webdev.typescript'
 
 local M = {}
 

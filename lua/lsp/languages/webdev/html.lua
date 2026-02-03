@@ -1,4 +1,4 @@
----@module 'lsp.languages.html'
+---@module 'lsp.languages.webdev.html'
 --- HTML language enablement helpers for autocommands and small QoL.
 
 ---@return nil

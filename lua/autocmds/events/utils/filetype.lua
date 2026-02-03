@@ -151,7 +151,7 @@ local handlers = {
   html = {
     {
       load = function()
-        return require("lsp.languages.html")
+        return require("lsp.languages.webdev.html")
       end,
       priority = 10,
       once = true,

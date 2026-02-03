@@ -27,6 +27,7 @@
 ## Important
 
 1. toc ??
+2. lsp webdev struktur durchziehen
 
 ---
 

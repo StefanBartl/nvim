@@ -1,4 +1,4 @@
----@module 'lsp.servers.ts_ls'
+---@module 'lsp.servers.webdev.ts_ls'
 --- TypeScript/JavaScript server via native LSP config/enable.
 
 ---@class TsLsServer
