@@ -16,11 +16,6 @@
 local notify = require("lib.notify").create("[plugins.neotest]")
 local neotest_init_utils = require("config.neotest.init.utils")
 
-----------------------------------------------------------------------
--- Plugin-Spezifikation
-----------------------------------------------------------------------
-
----@type LazyPluginSpec[]
 return {
   {
     "nvim-neotest/neotest",
@@ -29,21 +24,33 @@ return {
     cmd = require("config.neotest.init.cmd"),
 
     config = function()
-      -- KRITISCH: Consumer VOR setup() laden und validieren
-      local consumer_ok, neotree_consumer = pcall(require, "neotest.consumers.neotree")
+      -- KRITISCH: Consumer-Registrierung korrigiert
+      local neotree_consumer = nil
 
-      if not consumer_ok then
-        notify.warn("Neo-tree tests consumer not available")
-        neotree_consumer = nil
+      -- Versuche 1: neotest.consumers.neotree (alte API)
+      local ok1, consumer1 = pcall(require, "neotest.consumers.neotree")
+      if ok1 then
+        if type(consumer1) == "function" then
+          neotree_consumer = consumer1
+        elseif type(consumer1) == "table" and type(consumer1.setup) == "function" then
+          neotree_consumer = consumer1.setup
+        end
       end
 
-      -- Validiere Consumer-Typ
-      if neotree_consumer and type(neotree_consumer) ~= "function" then
-        notify.warn("Neo-tree consumer has unexpected type: " .. type(neotree_consumer))
-        neotree_consumer = nil
+      -- Versuche 2: neo-tree.sources.tests (neue API)
+      if not neotree_consumer then
+        local ok2, consumer2 = pcall(require, "neo-tree.sources.tests")
+        if ok2 then
+          if type(consumer2) == "function" then
+            neotree_consumer = consumer2
+          elseif type(consumer2) == "table" and type(consumer2.setup) == "function" then
+            neotree_consumer = consumer2.setup
+          end
+        end
       end
 
-      -- Setup-Optionen
+      local neotest = require("neotest")
+
       local opts = {
         adapters = neotest_init_utils.build_adapters(),
 
@@ -111,8 +118,6 @@ return {
         },
       }
 
-      -- Setup ausführen
-      local neotest = require("neotest")
       neotest.setup(opts)
 
       -- Post-Setup-Initialisierung
@@ -122,9 +127,19 @@ return {
       require("config.neotest.debug").setup_all()
       require("config.neotest.utils.validate_consumer").setup_command()
       -- require("config.neotest.autocmds.auto_discovery").attach()
+      require("config.neotest.highlights").setup()
 
       -- check wieviele adapter erfolgreich implementiert wurden
       --require("config.neotest.init.checks.adapter")(opts.adapters, neotree_consumer)
+
+      local ok_core, core = pcall(require, "config.neotest.core")
+      if ok_core and type(core.setup) == "function" then
+        core.setup()
+      end
+
+      -- local adapter_count = #opts.adapters
+      -- local consumer_status = neotree_consumer and "with Neo-tree" or "without Neo-tree"
+      -- notify.info(string.format("Neotest initialized with %d adapters %s", adapter_count, consumer_status))
     end,
   },
 }
