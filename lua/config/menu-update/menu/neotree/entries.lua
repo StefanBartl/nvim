@@ -103,7 +103,7 @@ local entries = {
         rtxt = "[T]",
         node_type = "any",
       },
-      { key = "Y", enabled = true, label = "Copy Path to Clipboard", icon = "", rtxt = "Y", node_type = "any" },
+      { key = "c", enabled = true, label = "Copy Path to Clipboard", icon = "", rtxt = "c", node_type = "any" },
     },
   },
 

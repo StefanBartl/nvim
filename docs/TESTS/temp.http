@@ -1,0 +1,4 @@
+@hostname = httpbin.org
+GET https://{{hostname}}/get
+accept: application/json
+

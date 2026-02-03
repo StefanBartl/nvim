@@ -141,7 +141,7 @@ local function load()
     maybe_add("+", " Set Neovim cwd to node and focus Neo-tree there", "+")
     maybe_add("-", " Up one level (in-place) and adjust CWD", "-")
     maybe_add("grep", " fzf-lua: live_grep in node directory", "grep")
-    maybe_add("Y", " Copy Path to Clipboard", "Y")
+    maybe_add("c", " Copy Path to Clipboard", "c")
   end
 
   -- 4) append a separator and the custom entries at the end (keeps original menu intact)

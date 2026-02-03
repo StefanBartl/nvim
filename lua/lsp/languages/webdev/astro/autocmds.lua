@@ -27,7 +27,7 @@ function M.setup()
   api.nvim_create_autocmd("BufWritePre", {
     group = grp,
     pattern = "*.astro",
-    callback = function(ev)
+    callback = function(_)
       vim.lsp.buf.code_action({
         context = { only = { "source.organizeImports.astro" } },
         apply = true,
