@@ -3,19 +3,23 @@
 
 local M = {}
 
----Find package.json by walking up from file
+---Find project root by looking for package.json
 ---@param file_path string
 ---@return string|nil
-local function find_package_json(file_path)
-  -- Normalisiere Pfad für Windows
-  local normalized = file_path:gsub("\\", "/")
-  local dir = vim.fn.fnamemodify(normalized, ":h")
+local function find_project_root(file_path)
+  -- Nutze Neovim's eingebaute Root-Finding
+  local root = vim.fs.root(file_path, { "package.json", "tsconfig.json" })
+  if root then
+    return root
+  end
 
-  -- Max 10 levels up
+  -- Fallback: Manuelles Suchen
+  local dir = vim.fn.fnamemodify(file_path, ":h")
+
   for _ = 1, 10 do
     local pkg = dir .. "/package.json"
     if vim.fn.filereadable(pkg) == 1 then
-      return pkg
+      return dir
     end
 
     local parent = vim.fn.fnamemodify(dir, ":h")
@@ -28,79 +32,34 @@ local function find_package_json(file_path)
   return nil
 end
 
--- ---Check if project uses Vitest
--- ---@param pkg_path string
--- ---@return boolean
--- local function uses_vitest(pkg_path)
-  -- local ok, content = pcall(vim.fn.readfile, pkg_path)
-  -- if not ok or not content then
-    -- return false
-  -- end
-
-  -- local text = table.concat(content, "\n")
-  -- return text:match('"vitest"') ~= nil
--- end
-
 local function create_adapter()
   -- Try Vitest first
   local ok_vitest, vitest = pcall(require, "neotest-vitest")
   if ok_vitest then
     return vitest({
-      -- KRITISCH: Explizites vitestCommand
-      vitestCommand = function()
-        -- Prüfe ob npx verfügbar ist
-        if vim.fn.executable("npx") == 1 then
-          return "npx vitest"
-        end
-        -- Fallback zu globalem vitest
-        return "vitest"
-      end,
+      vitestCommand = "npx vitest",
 
-      env = { CI = "true" },
+      env = {
+        CI = "true",
+        FORCE_COLOR = "0",
+      },
 
-      -- KRITISCH: CWD muss auf package.json-Verzeichnis zeigen
-      cwd = function(file_path)
-        local pkg = find_package_json(file_path)
-        if pkg then
-          local dir = vim.fn.fnamemodify(pkg, ":h")
-          -- Normalisiere für Windows
-          return dir:gsub("\\", "/")
-        end
-        return vim.fn.getcwd():gsub("\\", "/")
+      -- KRITISCH: root statt cwd für Neotest >= 5.0
+      root = function(file_path)
+        return find_project_root(file_path) or vim.fn.getcwd()
       end,
 
       filter_dir = function(name, rel_path, root)
         return name ~= "node_modules"
       end,
 
-      -- KRITISCH: is_test_file muss ALLE JS/TS Varianten erkennen
       is_test_file = function(file_path)
         if not file_path then
           return false
         end
 
-        -- Normalisiere Pfad
-        local normalized = file_path:gsub("\\", "/")
-
-        -- Prüfe alle Test-Muster
-        local patterns = {
-          "%.test%.js$",
-          "%.test%.ts$",
-          "%.test%.jsx$",
-          "%.test%.tsx$",
-          "%.spec%.js$",
-          "%.spec%.ts$",
-          "%.spec%.jsx$",
-          "%.spec%.tsx$",
-        }
-
-        for _, pattern in ipairs(patterns) do
-          if normalized:match(pattern) then
-            return true
-          end
-        end
-
-        return false
+        return file_path:match("%.test%.[jt]sx?$") ~= nil
+            or file_path:match("%.spec%.[jt]sx?$") ~= nil
       end,
     })
   end
@@ -110,33 +69,9 @@ local function create_adapter()
   if ok_jest then
     return jest({
       jestCommand = "npx jest",
-      jestConfigFile = function(file_path)
-        local pkg_dir = vim.fn.fnamemodify(find_package_json(file_path) or "", ":h")
-        if pkg_dir == "" then
-          return nil
-        end
-
-        local configs = {
-          pkg_dir .. "/jest.config.js",
-          pkg_dir .. "/jest.config.ts",
-          pkg_dir .. "/jest.config.json",
-        }
-
-        for _, cfg in ipairs(configs) do
-          if vim.fn.filereadable(cfg) == 1 then
-            return cfg
-          end
-        end
-
-        return nil
-      end,
       env = { CI = "true" },
-      cwd = function(file_path)
-        local pkg = find_package_json(file_path)
-        if pkg then
-          return vim.fn.fnamemodify(pkg, ":h"):gsub("\\", "/")
-        end
-        return vim.fn.getcwd():gsub("\\", "/")
+      root = function(file_path)
+        return find_project_root(file_path) or vim.fn.getcwd()
       end,
     })
   end
@@ -162,11 +97,8 @@ function M.is_test_file(filepath)
     return false
   end
 
-  -- Normalisiere Pfad
-  local normalized = filepath:gsub("\\", "/")
-
   for i = 1, #M.test_patterns do
-    if normalized:match(M.test_patterns[i]) then
+    if filepath:match(M.test_patterns[i]) then
       return true
     end
   end
