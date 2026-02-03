@@ -26,9 +26,9 @@ local ACTIVE = {
   --"zig",
 
   -- Mobile development servers
-  "jdtls", -- Java (Android)
-  "kotlin_language_server", -- Kotlin (Android)
-  "dartls", -- Dart/Flutter
+  "mobiledev.jdtls", -- Java (Android)
+  "mobiledev.kotlin_language_server", -- Kotlin (Android)
+  "mobiledev.dartls", -- Dart/Flutter
 }
 
 ---@param shared table
@@ -40,7 +40,7 @@ function M.setup_all(shared)
 
   -- iOS: sourcekit hinzufügen
   if require("lib.cross.platform.is_macos")() then
-    ACTIVE[#ACTIVE + 1] = "sourcekit"
+    ACTIVE[#ACTIVE + 1] = "mobiledev.sourcekit"
   end
 
   local enabled = {}
@@ -54,6 +54,10 @@ function M.setup_all(shared)
     -- Falls Name kein Punkt enthält, auch webdev-Variante versuchen
     if not name:match("%.") then
       paths[#paths + 1] = "lsp.servers.webdev." .. name
+    end
+
+    if not name:match("%.") then
+      paths[#paths + 1] = "lsp.servers.mobiledev." .. name
     end
 
     local loaded = false

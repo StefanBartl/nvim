@@ -34,27 +34,45 @@ function M.setup(cfg)
     end
   end
 
+  -- capabilities explizit holen und verifizieren
   local caps = (function()
     local ok, mod = pcall(require, "lsp.core.capabilities")
     if ok and mod and type(mod.get) == "function" then
-      return mod.get()
+      local result = mod.get()
+
+      if result.textDocument and result.textDocument.completion then
+        -- notify.info("Completion capabilities loaded")
+      else
+        notify.warn("⚠️  Completion capabilities missing!")
+      end
+
+      return result
     end
+    notify.warn("⚠️  Using fallback capabilities (no cmp/blink)")
     return vim.lsp.protocol.make_client_capabilities()
   end)()
 
+  -- attach api mit validation
   local attach_api = (function()
     local ok, mod = pcall(require, "lsp.core.attach")
     if ok and mod and type(mod.build) == "function" then
       return mod.build({ use_workspace_diagnostics = true, use_lazydev = true })
     end
+    notify.warn("⚠️  Using minimal attach handlers")
     return {
-      on_attach = function() end,
+      on_attach = function(client, bufnr)
+        -- Minimal fallback: nur omnifunc setzen
+        if client and client.server_capabilities and client.server_capabilities.completionProvider then
+          vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
+        end
+      end,
       on_init = function()
         return true
       end,
     }
   end)()
 
+  -- Formatter setup
   local formatter = (function()
     local ok, mod = pcall(require, "lsp.formatter.init")
     if ok and mod and type(mod.build) == "function" then
@@ -78,6 +96,7 @@ function M.setup(cfg)
       end,
     }
   end)()
+
   do
     local ok, conform_mod = pcall(require, "lsp.formatter.conform")
     if ok and conform_mod and type(conform_mod.setup) == "function" then
@@ -94,6 +113,7 @@ function M.setup(cfg)
   -- usercommands lps
   require("lsp.usercmds").attach()
 
+  -- shared config mit validierung
   local shared = {
     capabilities = caps,
     on_attach = attach_api.on_attach,
@@ -101,12 +121,7 @@ function M.setup(cfg)
     formatter = formatter,
   }
 
-  local ok_reg, registry = pcall(require, "lsp.core.registry")
-  if not ok_reg or not registry or type(registry.setup_all) ~= "function" then
-    notify.warn("LSP registry missing; skipping server setup")
-    return false
-  end
-
+  -- language-specific qol muss vor server-setup
   do
     local ok, langs = pcall(require, "lsp.languages")
     if ok and langs and type(langs.enable_all) == "function" then
@@ -114,11 +129,22 @@ function M.setup(cfg)
     end
   end
 
-  local names = registry.setup_all(shared)
-  if type(names) == "table" and #names > 0 then
-    pcall(vim.lsp.enable, names)
+  -- Registry setup
+  local ok_reg, registry = pcall(require, "lsp.core.registry")
+  if not ok_reg or not registry or type(registry.setup_all) ~= "function" then
+    notify.warn("LSP registry missing; skipping server setup")
+    return false
   end
 
+  local names = registry.setup_all(shared)
+  if type(names) == "table" and #names > 0 then
+    -- notify.info(string.format("Enabling %d LSP servers: %s", #names, table.concat(names, ", ")))
+    pcall(vim.lsp.enable, names)
+  else
+    notify.warn("No LSP servers configured!")
+  end
+
+  -- diagnostic config nach Server-Enable
   vim.diagnostic.config({
     update_in_insert = false,
     severity_sort = true,
@@ -126,6 +152,7 @@ function M.setup(cfg)
     float = { border = "rounded", source = "if_many" },
   })
 
+  -- Mason ensure_install (optional)
   if cfg.ensure_installing == true then
     require("config.mason.ensure_install").enable({
       lsp = true,
@@ -134,24 +161,23 @@ function M.setup(cfg)
       formatters = true,
       overrides = {
         lsp = {
-          ["java-language-server"] = false, -- keep off unless 'mvn' is available
-          ["csharp-language-server"] = false, -- prefer 'omnisharp' if dotnet exists
-          -- ["omnisharp"]              = require('config.mason.ensure_install').has_dotnet and true or false, -- you can compute booleans beforehand
+          ["java-language-server"] = false,
+          ["csharp-language-server"] = false,
         },
         dap = {
-          ["node-debug2-adapter"] = false, -- deprecated; use js-debug-adapter
+          ["node-debug2-adapter"] = false,
         },
         linters = {
-          ["eslint_d"] = true, -- ensure enabled
+          ["eslint_d"] = true,
         },
         formatters = {
-          ["prettier"] = true, -- ensure enabled
+          ["prettier"] = true,
         },
       },
     })
   end
 
-  --- ==== CUSTOM ENABLE  LSP TOOLS ====
+  --- ==== CUSTOM ENABLE LSP TOOLS ====
   require("lsp.lspdoctor").setup({
     use_notify = false,
     list_limit = 8,
@@ -168,13 +194,8 @@ function M.setup(cfg)
   require("lsp.lspdoctor").enable_usercmd()
 
   require("lsp.tools.eslint_prettier").setup({
-    -- optional: provide custom binaries if Mason is not in the default location
-    -- binaries = {
-    --   eslint = "C:\\Users\\me\\AppData\\Local\\nvim-data\\mason\\bin\\eslint_d.cmd",
-    --   prettier = "C:\\Users\\me\\AppData\\Local\\nvim-data\\mason\\bin\\prettier.cmd"
-    -- },
     filetypes = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
-    enable_on_setup = true, -- initial autorun state
+    enable_on_setup = true,
   })
 
   require("lsp.tools.lsp_signature").setup()
@@ -183,7 +204,9 @@ function M.setup(cfg)
   require("lsp.diagnostics").setup()
 
   M._initialized = true
+  -- notify.info("✅ LSP initialization complete")
   return true
 end
 
 return M
+

@@ -67,14 +67,26 @@ end, 50)
 -- PHASE 3: LSP BufReadPost - wenn der erste Buffer geladen ist
 -- =============================================================================
 vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
-vim.api.nvim_create_autocmd("BufReadPost", {
-  once = true,
-  callback = function()
-    vim.defer_fn(function()
-      require("lsp").setup({ ensure_installing = false })
-    end, 100)
-  end,
-})
+-- vim.api.nvim_create_autocmd("BufReadPost", {
+  -- once = true,
+  -- callback = function()
+    -- vim.defer_fn(function()
+      -- require("lsp").setup({ ensure_installing = false })
+    -- end, 100)
+  -- end,
+-- })
+
+-- LSP Setup direkt nach Keymaps
+vim.defer_fn(function()
+  -- Capabilities müssen GLOBAL applied werden
+  local ok_caps, caps = pcall(require, "lsp.core.capabilities")
+  if ok_caps and type(caps.apply_globally) == "function" then
+    caps.apply_globally()
+  end
+
+  -- LSP Setup
+  require("lsp").setup({ ensure_installing = false })
+end, 80)
 
 -- =============================================================================
 -- PHASE 4: DAP (Filetype Lazy-Load)
