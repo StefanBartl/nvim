@@ -32,13 +32,13 @@ end
 -- ---@param pkg_path string
 -- ---@return boolean
 -- local function uses_vitest(pkg_path)
--- local ok, content = pcall(vim.fn.readfile, pkg_path)
--- if not ok or not content then
--- return false
--- end
+  -- local ok, content = pcall(vim.fn.readfile, pkg_path)
+  -- if not ok or not content then
+    -- return false
+  -- end
 
--- local text = table.concat(content, "\n")
--- return text:match('"vitest"') ~= nil
+  -- local text = table.concat(content, "\n")
+  -- return text:match('"vitest"') ~= nil
 -- end
 
 local function create_adapter()
@@ -46,26 +46,61 @@ local function create_adapter()
   local ok_vitest, vitest = pcall(require, "neotest-vitest")
   if ok_vitest then
     return vitest({
-      vitestCommand = "npx vitest",
+      -- KRITISCH: Explizites vitestCommand
+      vitestCommand = function()
+        -- Prüfe ob npx verfügbar ist
+        if vim.fn.executable("npx") == 1 then
+          return "npx vitest"
+        end
+        -- Fallback zu globalem vitest
+        return "vitest"
+      end,
+
       env = { CI = "true" },
+
+      -- KRITISCH: CWD muss auf package.json-Verzeichnis zeigen
       cwd = function(file_path)
         local pkg = find_package_json(file_path)
         if pkg then
-          return vim.fn.fnamemodify(pkg, ":h")
+          local dir = vim.fn.fnamemodify(pkg, ":h")
+          -- Normalisiere für Windows
+          return dir:gsub("\\", "/")
         end
-        return vim.fn.getcwd()
+        return vim.fn.getcwd():gsub("\\", "/")
       end,
-      filter_dir = function(name, _, _)
+
+      filter_dir = function(name, rel_path, root)
         return name ~= "node_modules"
       end,
-      -- KRITISCH: JavaScript-Dateien explizit erlauben
+
+      -- KRITISCH: is_test_file muss ALLE JS/TS Varianten erkennen
       is_test_file = function(file_path)
         if not file_path then
           return false
         end
-        -- Unterstütze .js, .ts, .jsx, .tsx
-        return file_path:match("%.test%.[jt]sx?$") ~= nil
-          or file_path:match("%.spec%.[jt]sx?$") ~= nil
+
+        -- Normalisiere Pfad
+        local normalized = file_path:gsub("\\", "/")
+
+        -- Prüfe alle Test-Muster
+        local patterns = {
+          "%.test%.js$",
+          "%.test%.ts$",
+          "%.test%.jsx$",
+          "%.test%.tsx$",
+          "%.spec%.js$",
+          "%.spec%.ts$",
+          "%.spec%.jsx$",
+          "%.spec%.tsx$",
+        }
+
+        for _, pattern in ipairs(patterns) do
+          if normalized:match(pattern) then
+            return true
+          end
+        end
+
+        return false
       end,
     })
   end
@@ -99,9 +134,9 @@ local function create_adapter()
       cwd = function(file_path)
         local pkg = find_package_json(file_path)
         if pkg then
-          return vim.fn.fnamemodify(pkg, ":h")
+          return vim.fn.fnamemodify(pkg, ":h"):gsub("\\", "/")
         end
-        return vim.fn.getcwd()
+        return vim.fn.getcwd():gsub("\\", "/")
       end,
     })
   end
@@ -127,8 +162,11 @@ function M.is_test_file(filepath)
     return false
   end
 
+  -- Normalisiere Pfad
+  local normalized = filepath:gsub("\\", "/")
+
   for i = 1, #M.test_patterns do
-    if filepath:match(M.test_patterns[i]) then
+    if normalized:match(M.test_patterns[i]) then
       return true
     end
   end
