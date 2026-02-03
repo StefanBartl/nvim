@@ -7,7 +7,9 @@ local M = {}
 ---@param file_path string
 ---@return string|nil
 local function find_package_json(file_path)
-  local dir = vim.fn.fnamemodify(file_path, ":h")
+  -- Normalisiere Pfad für Windows
+  local normalized = file_path:gsub("\\", "/")
+  local dir = vim.fn.fnamemodify(normalized, ":h")
 
   -- Max 10 levels up
   for _ = 1, 10 do
@@ -30,13 +32,13 @@ end
 -- ---@param pkg_path string
 -- ---@return boolean
 -- local function uses_vitest(pkg_path)
-  -- local ok, content = pcall(vim.fn.readfile, pkg_path)
-  -- if not ok or not content then
-    -- return false
-  -- end
+-- local ok, content = pcall(vim.fn.readfile, pkg_path)
+-- if not ok or not content then
+-- return false
+-- end
 
-  -- local text = table.concat(content, "\n")
-  -- return text:match('"vitest"') ~= nil
+-- local text = table.concat(content, "\n")
+-- return text:match('"vitest"') ~= nil
 -- end
 
 local function create_adapter()
@@ -55,6 +57,15 @@ local function create_adapter()
       end,
       filter_dir = function(name, _, _)
         return name ~= "node_modules"
+      end,
+      -- KRITISCH: JavaScript-Dateien explizit erlauben
+      is_test_file = function(file_path)
+        if not file_path then
+          return false
+        end
+        -- Unterstütze .js, .ts, .jsx, .tsx
+        return file_path:match("%.test%.[jt]sx?$") ~= nil
+          or file_path:match("%.spec%.[jt]sx?$") ~= nil
       end,
     })
   end

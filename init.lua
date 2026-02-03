@@ -66,6 +66,7 @@ end, 50)
 -- =============================================================================
 -- PHASE 3: LSP BufReadPost - wenn der erste Buffer geladen ist
 -- =============================================================================
+vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 vim.api.nvim_create_autocmd("BufReadPost", {
   once = true,
   callback = function()

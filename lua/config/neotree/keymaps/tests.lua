@@ -1,73 +1,25 @@
 ---@module 'config.neotree.keymaps.tests'
---- Neotest-Source-specific mappings for Neo-tree
+--- Keymaps für Neo-tree Tests Source
 
----@return table<string, any>
-return {
+---@type table<string, string|table>
+local M = {
+  -- Standard Neo-tree Navigation (überschreiben)
+  ["<cr>"] = "open",
+  ["<esc>"] = "cancel",
+  ["<2-LeftMouse>"] = "open",
 
-  --====================== Test Execution ==============================
+  -- Neotest-spezifisch
+  ["t"] = "run_test",           -- Test unter Cursor ausführen
+  ["T"] = "run_file",           -- Alle Tests in Datei
+  ["d"] = "debug_test",         -- Debug einzelner Test
+  ["w"] = "watch_test",         -- Watch-Mode
+  ["s"] = "stop_test",          -- Tests stoppen
+  ["o"] = "show_output",        -- Output anzeigen
+  ["r"] = "refresh",            -- Tests neu laden
 
-  ["<CR>"]   = "run_test",
-  ["<S-CR>"] = "debug_test",
-
-  --====================== Output =====================================
-
-  ["O"] = "short_output",
-  ["o"] = "output",
-
-  --====================== Control ====================================
-
-  ["s"] = "stop_test",
-  ["w"] = "watch_test",
-
-  --====================== Disable ALL filesystem operations ==========
-
-  -- single-character symbols
-  ["+"] = "noop",
-  ["-"] = "noop",
-  ["/"] = "noop",
-
-  -- single-character letters
-  ["a"] = "noop",
-  ["c"] = "noop",
-  ["d"] = "noop",
-  ["m"] = "noop",
-  ["p"] = "noop",
-  ["r"] = "noop",
-  ["x"] = "noop",
-
-  -- single-character uppercase letters
-  ["A"] = "noop",
-  ["D"] = "noop",
-  ["I"] = "noop",
-  ["M"] = "noop",
-  ["U"] = "noop",
-  ["Y"] = "noop",
-
-  -- multi-character plain tokens
-  ["dd"] = "noop",
-  ["fm"] = "noop",
-  ["gb"] = "noop",
-  ["gr"] = "noop",
-  ["rq"] = "noop",
-  ["sm"] = "noop",
-  ["st"] = "noop",
-  ["sv"] = "noop",
-
-  -- control / modifier keys (grouped by base key)
-  ["<C-c>"] = "noop",
-  ["<C-b>"] = "noop",
-  ["<C-f>"] = "noop",
-  ["<C-s>"] = "noop",
-
-  ["<M-s>"] = "noop",
-
-  ["<Tab>"] = "noop",
-
-  -- leader keys
-  ["<leader>mc"] = "noop",
-  ["<leader>th"] = "noop",
-
-  -- named special keys
-  ["<PageDown>"] = "noop",
-  ["<PageUp>"]   = "noop",
+  -- Navigation
+  ["q"] = "close_window",
+  ["?"] = "show_help",
 }
+
+return M

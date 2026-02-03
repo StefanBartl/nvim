@@ -1,15 +1,15 @@
 ---@module 'plugins.neotree'
 
 local KEYMAPS = require("config.neotree.keymaps")
+local COMMANDS = require("config.neotree.commands")
+local NEOTEST = require("config.neotest.neotree")
 local BUFFERS = require("config.neotree.keymaps.buffers")
 local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
 local FILESYSTEM = require("config.neotree.keymaps.filesystem")
 local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local TESTS = require("config.neotree.keymaps.tests")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
-local COMMANDS = require("config.neotree.commands")
 local ICONS = require("config.neotree.sources.icons")
-local TEST_COMMANDS = require("config.neotree.commands.tests")
 
 return {
   {
@@ -18,38 +18,20 @@ return {
     lazy = false,
     dependencies = {
       "MunifTanjim/nui.nvim",
-      {
-        "TimCreasman/neo-tree-tests-source.nvim",
-        lazy = false,
-        dependencies = { "nvim-neotest/neotest" },
-      },
-      { "mrbjarksen/neo-tree-diagnostics.nvim" },
+      "TimCreasman/neo-tree-tests-source.nvim", -- vor neotest laden!
+      "nvim-neotest/neotest",
+      "mrbjarksen/neo-tree-diagnostics.nvim",
     },
     opts = function()
-      -- Check if optional sources are available
-      local ok_tests, _ = pcall(require, "neo-tree.sources.tests")
-      local ok_diagnostics, _ = pcall(require, "neo-tree.sources.diagnostics")
-
       -- Build enabled sources list
       local enabled_sources = {
         "filesystem",
         "buffers",
         "git_status",
         "document_symbols",
+        "diagnostics",
+        "tests",
       }
-
-      -- Add optional sources if available
-      if ok_diagnostics then
-        enabled_sources[#enabled_sources + 1] = "diagnostics"
-      else
-        vim.notify("diagnostics source not available - plugin may not be loaded", vim.log.levels.WARN)
-      end
-
-      if ok_tests then
-        enabled_sources[#enabled_sources + 1] = "tests"
-      else
-        vim.notify("tests source not available - plugin may not be loaded", vim.log.levels.WARN)
-      end
 
       -- Configuration knobs
       local icon_family = "nerd" -- common | nerd | codicons
@@ -75,34 +57,18 @@ return {
           source = "document_symbols",
           display_name = ICONS.format(icon_family, icon_variant, "document_symbols", name_length),
         },
-      }
-
-      -- Add optional sources to selector
-      if ok_diagnostics then
-        sources[#sources + 1] = {
+        {
           source = "diagnostics",
           display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
-        }
-      end
-
-      if ok_tests then
-        sources[#sources + 1] = {
+        },
+        {
           source = "tests",
           display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
-        }
-      end
+        },
+      }
 
-      -- Commands zusammenführen
-      local all_commands = vim.tbl_extend("force", COMMANDS, {
-        -- Neotest commands
-        run_test = TEST_COMMANDS.run_test,
-        debug_test = TEST_COMMANDS.debug_test,
-        output = TEST_COMMANDS.output,
-        short_output = TEST_COMMANDS.short_output,
-        watch_test = TEST_COMMANDS.watch_test,
-        stop_test = TEST_COMMANDS.stop_test,
-        refresh = TEST_COMMANDS.refresh,
-      })
+      -- Neotree & Neotest commands zusammenführen
+      local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, NEOTEST.commands())
 
       return {
         sources = enabled_sources,
@@ -158,7 +124,8 @@ return {
             { "current_filter" },
             { "name" },
             { "git_status", highlight = "NeoTreeDimText" },
-            ok_diagnostics and {
+            {
+              "diagnostics",
               symbols = {
                 hint = "",
                 info = "",
@@ -171,7 +138,7 @@ return {
                 warn = "DiagnosticSignWarn",
                 error = "DiagnosticSignError",
               },
-            } or nil,
+            },
             { "clipboard" },
           },
           file = {
@@ -179,7 +146,7 @@ return {
             { "icon" },
             { "name", use_git_status_colors = true },
             { "git_status", highlight = "NeoTreeDimText" },
-            ok_diagnostics and { "diagnostics" } or nil,
+            { "diagnostics" },
             {
               function(_, node, state)
                 local marks = state.explicitly_marked_node_ids or {}
@@ -197,13 +164,12 @@ return {
           },
         },
 
+        commands = ALL_COMMANDS,
         window = {
           width = 25,
           mappings = KEYMAPS,
           position = require("config.neotree").get_default_position(),
         },
-
-        commands = all_commands,
 
         filesystem = {
           bind_to_cwd = true,
@@ -234,14 +200,14 @@ return {
           window = {
             mappings = BUFFERS,
             position = require("config.neotree").get_default_position(),
-          }
+          },
         },
 
         git_status = {
           window = {
             mappings = GIT_STATUS,
             position = require("config.neotree").get_default_position(),
-          }
+          },
         },
 
         document_symbols = {
@@ -271,7 +237,7 @@ return {
           },
         },
 
-        diagnostics = ok_diagnostics and {
+        diagnostics = {
           auto_preview = {
             enabled = false,
             preview_config = {},
@@ -297,12 +263,17 @@ return {
           },
         } or nil,
 
-        tests = ok_tests and vim.tbl_extend("force", TESTS, {
+        tests = {
+          follow_cursor = true,
           window = {
-            mappings = TESTS,
+            mappings = vim.tbl_extend(
+              "force",
+              require("config.neotree.keymaps.tests"),
+              NEOTEST.keymaps()
+            ),
             position = require("config.neotree").get_default_position(),
           },
-        }) or nil,
+        },
       }
     end,
 

@@ -45,7 +45,7 @@ local PROFILES = {
 --- Get current profile from environment or default to "normal"
 ---@return LibraryProfile
 function M.get_active_profile()
-  local profile = vim.env.LUA_LS_PROFILE or "minimal"
+  local profile = vim.env.LUA_LS_PROFILE or "normal"
   if not PROFILES[profile] then
     return "normal"
   end

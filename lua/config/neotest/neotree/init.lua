@@ -1,77 +1,66 @@
 ---@module 'config.neotest.neotree'
 --- Neo-tree integration for Neotest actions.
 
---[[ FIX: Einbinden in neotree (merge mit filesystem mappings)
+--[[
  Einbindung in Neo-tree
  local neotest_neotree = require("config.neotest.neotree")
 
  require("neo-tree").setup({
    filesystem = {
      window = {
-       mappings = neotest_neotree.mappings(),
+       mappings = neotest_neotree.keymaps(),
      },
    },
    commands = neotest_neotree.commands(),
  })
+
+ACHTUNG: Merge mit Neotree filesysten mappings und commands notwendig!
 ]]--
+---@module 'config.neotest.neotree'
+--- Neo-tree integration for Neotest actions.
 
 local actions = require("config.neotest.actions")
 
 local M = {}
 
 --- Neo-tree command definitions
----@return table<string, table>
+--- Diese werden in opts.commands registriert
+---@return table<string, function>
 function M.commands()
   return {
-    neotest_run_nearest = {
-      text = "Run nearest test",
-      callback = actions.run_nearest,
-    },
-    neotest_run_file = {
-      text = "Run file tests",
-      callback = actions.run_file,
-    },
-    neotest_run_all = {
-      text = "Run all tests",
-      callback = actions.run_all,
-    },
-    neotest_debug = {
-      text = "Debug nearest test",
-      callback = actions.debug_nearest,
-    },
-    neotest_summary = {
-      text = "Toggle summary",
-      callback = actions.toggle_summary,
-    },
-    neotest_output = {
-      text = "Show output",
-      callback = actions.open_output,
-    },
+    neotest_run_nearest = function(_)
+      actions.run_nearest()
+    end,
+    neotest_run_file = function(_)
+      actions.run_file()
+    end,
+    neotest_run_all = function(_)
+      actions.run_all()
+    end,
+    neotest_debug = function(_)
+      actions.debug_nearest()
+    end,
+    neotest_summary = function(_)
+      actions.toggle_summary()
+    end,
+    neotest_output = function(_)
+      actions.open_output()
+    end,
   }
 end
 
---- Neo-tree menu mapping
----@return table[]
-function M.mappings()
+--- Neo-tree window mappings
+--- Diese werden in source.window.mappings verwendet
+---@return table<string, string>
+function M.keymaps()
   return {
-    {
-      key = "T",
-      command = "neotest_run_nearest",
-    },
-    {
-      key = "F",
-      command = "neotest_run_file",
-    },
-    {
-      key = "A",
-      command = "neotest_run_all",
-    },
-    {
-      key = "D",
-      command = "neotest_debug",
-    },
+    ["T"] = "neotest_run_nearest",
+    ["F"] = "neotest_run_file",
+    ["A"] = "neotest_run_all",
+    ["D"] = "neotest_debug",
+    ["S"] = "neotest_summary",
+    ["O"] = "neotest_output",
   }
 end
 
 return M
-
