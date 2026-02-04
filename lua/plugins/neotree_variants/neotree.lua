@@ -18,7 +18,7 @@ return {
     lazy = false,
     dependencies = {
       "MunifTanjim/nui.nvim",
-      "TimCreasman/neo-tree-tests-source.nvim", -- vor neotest laden!
+      "TimCreasman/neo-tree-tests-source.nvim",
       "nvim-neotest/neotest",
       "mrbjarksen/neo-tree-diagnostics.nvim",
     },
