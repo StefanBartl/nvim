@@ -7,7 +7,6 @@ local BUFFERS = require("config.neotree.keymaps.buffers")
 local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
 local FILESYSTEM = require("config.neotree.keymaps.filesystem")
 local GIT_STATUS = require("config.neotree.keymaps.git_status")
-local TESTS = require("config.neotree.keymaps.tests")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local ICONS = require("config.neotree.sources.icons")
 
@@ -23,7 +22,6 @@ return {
       "mrbjarksen/neo-tree-diagnostics.nvim",
     },
     opts = function()
-      -- Build enabled sources list
       local enabled_sources = {
         "filesystem",
         "buffers",
@@ -67,7 +65,6 @@ return {
         },
       }
 
-      -- Neotree & Neotest commands zusammenführen
       local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, NEOTEST.commands())
 
       return {
@@ -266,11 +263,12 @@ return {
         tests = {
           follow_cursor = true,
           window = {
-            mappings = vim.tbl_extend(
-              "force",
-              require("config.neotree.keymaps.tests"),
-              NEOTEST.keymaps()
-            ),
+            -- mappings = vim.tbl_extend(
+              -- "force",
+              -- require("config.neotree.keymaps.tests"),
+              -- NEOTEST.keymaps()
+            -- ),
+            mappings = NEOTEST.keymaps(),
             position = require("config.neotree").get_default_position(),
           },
         },

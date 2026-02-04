@@ -22,7 +22,7 @@ local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
 local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local ICONS = require("config.neotree.sources.icons")
-local TESTS = require("config.neotree.keymaps.tests")
+local NEOTEST = require("config.neotest.neotree")
 
 local M = {}
 
@@ -159,9 +159,6 @@ function M.generate_config(user_config)
     string.format("Loaded %d sources: %s", #enabled_sources, table.concat(enabled_sources, ", "))
   )
 
-  local has_neotest_source = pcall(require, "neo-tree-tests-source")
-  local has_diagnostics = pcall(require, "neo-tree.sources.diagnostics")
-
   return {
     sources = enabled_sources,
     source_selector = {
@@ -169,11 +166,18 @@ function M.generate_config(user_config)
       statusline = false,
       sources = source_selector_sources,
     },
-    buffers = { window = { mappings = BUFFERS, position = require("config.neotree").get_default_position(), } },
-    git_status = { window = { mappings = GIT_STATUS, position =  require("config.neotree").get_default_position(), } },
+    buffers = {
+      window = { mappings = BUFFERS, position = require("config.neotree").get_default_position() },
+    },
+    git_status = {
+      window = {
+        mappings = GIT_STATUS,
+        position = require("config.neotree").get_default_position(),
+      },
+    },
     document_symbols = DOCUMENT_SYMBOLS_CONFIG,
 
-    diagnostics = has_diagnostics and {
+    diagnostics = {
       auto_preview = {
         enabled = false,
         preview_config = {},
@@ -199,9 +203,18 @@ function M.generate_config(user_config)
       },
     } or nil,
 
-    tests = has_neotest_source and vim.tbl_extend("force", TESTS, {
-      window = { mappings = TESTS, position = require("config.neotree").get_default_position(), },
-    }) or nil,
+    tests = {
+      follow_cursor = true,
+      window = {
+        -- mappings = vim.tbl_extend(
+        -- "force",
+        -- require("config.neotree.keymaps.tests"),
+        -- NEOTEST.keymaps()
+        -- ),
+        mappings = NEOTEST.keymaps(),
+        position = require("config.neotree").get_default_position(),
+      },
+    },
 
     renderers = {
       directory = {
@@ -210,7 +223,7 @@ function M.generate_config(user_config)
         { "current_filter" },
         { "name" },
         { "git_status", highlight = "NeoTreeDimText" },
-        diagnostics = has_diagnostics and {
+        diagnostics = {
           symbols = {
             hint = "",
             info = "",
@@ -231,7 +244,7 @@ function M.generate_config(user_config)
         { "icon" },
         { "name", use_git_status_colors = true },
         { "git_status", highlight = "NeoTreeDimText" },
-        has_diagnostics and { "diagnostics" } or nil,
+        { "diagnostics" },
         {
           function(_, node, state)
             local marks = state.explicitly_marked_node_ids or {}

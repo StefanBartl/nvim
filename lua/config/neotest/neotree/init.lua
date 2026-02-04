@@ -46,6 +46,9 @@ function M.commands()
     neotest_output = function(_)
       actions.open_output()
     end,
+    neotest_refresh = function(state)
+      require("neo-tree.sources.tests").navigate(state)
+    end,
   }
 end
 
@@ -60,6 +63,7 @@ function M.keymaps()
     ["D"] = "neotest_debug",
     ["S"] = "neotest_summary",
     ["O"] = "neotest_output",
+    ["R"] = "neotest_refresh",
   }
 end
 
