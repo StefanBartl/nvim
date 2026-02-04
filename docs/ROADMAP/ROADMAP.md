@@ -29,8 +29,8 @@
 1. toc ??
 2. lsp webdev struktur durchziehen
 3. Fehler meldungen mit  ⚠️ versehen; generell notifys aufhübschen
-
----
+4. chrome debnug adapter -> js debug adapter
+5.--
 
 ## MIXED
 

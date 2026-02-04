@@ -12,11 +12,11 @@ local langs = { "astro", "htmx", "tailwind", "typescript", "html" }
     end
   end
 
-  -- WASM/WAT Filetype Detection
   vim.filetype.add({
     extension = {
       wasm = "wasm",
       wat = "wasm",
+      astro = 'astro',
     },
   })
 end

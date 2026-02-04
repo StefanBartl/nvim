@@ -16,10 +16,10 @@ local ACTIVE = {
   -- Web Development
   "html",
   "ts_ls",
-  "webdev.astro",
-  "webdev.tailwindcss",
-  "webdev.htmx_lsp",
-  "webdev.wasm_language_tools",
+  "astro",
+  "tailwindcss",
+  "htmx_lsp",
+  "wasm_language_tools",
 
   --"clangd",
   --"csharp",
@@ -81,7 +81,7 @@ function M.setup_all(shared)
       if last_error then
         notify.warn((desc_tag .. "setup failed for '%s': %s"):format(name, last_error or "?"))
       else
-        notify.info((desc_tag .. "server module '%s' unavailable"):format(name))
+        notify.info((desc_tag .. ("server module '%s' unavailable"):format()):format(name))
       end
     end
   end
