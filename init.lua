@@ -68,25 +68,22 @@ end, 50)
 -- =============================================================================
 vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 -- vim.api.nvim_create_autocmd("BufReadPost", {
-  -- once = true,
-  -- callback = function()
-    -- vim.defer_fn(function()
-      -- require("lsp").setup({ ensure_installing = false })
-    -- end, 100)
-  -- end,
+-- once = true,
+-- callback = function()
+-- vim.defer_fn(function()
+-- require("lsp").setup({ ensure_installing = false })
+-- end, 100)
+-- end,
 -- })
 
+-- LSP Setup
+require("lsp").setup({ ensure_installing = false })
 -- LSP Setup direkt nach Keymaps
-vim.defer_fn(function()
-  -- Capabilities müssen GLOBAL applied werden
-  local ok_caps, caps = pcall(require, "lsp.core.capabilities")
-  if ok_caps and type(caps.apply_globally) == "function" then
-    caps.apply_globally()
-  end
-
-  -- LSP Setup
-  require("lsp").setup({ ensure_installing = false })
-end, 80)
+-- Capabilities müssen GLOBAL applied werden
+local ok_caps, caps = pcall(require, "lsp.core.capabilities")
+if ok_caps and type(caps.apply_globally) == "function" then
+  caps.apply_globally()
+end
 
 -- =============================================================================
 -- PHASE 4: DAP (Filetype Lazy-Load)
@@ -120,8 +117,17 @@ vim.defer_fn(function()
     tools = nil,
   })
 
-  require("benchmarks").setup()
+  -- require("benchmarks").setup()
 end, 600)
+
+-- vim.defer_fn(function()
+  -- local ok, astro = pcall(require, "astro_lsp_standalone")
+  -- if ok then
+    -- astro.setup()
+  -- else
+    -- print("[ERROR] Failed to load astro-lsp-standalone: " .. tostring(astro))
+  -- end
+-- end, 800)
 
 -- Show startup time
 vim.defer_fn(function()

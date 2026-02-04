@@ -62,7 +62,11 @@ function M.setup(cfg)
     return {
       on_attach = function(client, bufnr)
         -- Minimal fallback: nur omnifunc setzen
-        if client and client.server_capabilities and client.server_capabilities.completionProvider then
+        if
+          client
+          and client.server_capabilities
+          and client.server_capabilities.completionProvider
+        then
           vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
         end
       end,
@@ -129,6 +133,12 @@ function M.setup(cfg)
     end
   end
 
+  vim.filetype.add({
+    extension = {
+        astro = 'astro',
+    },
+})
+
   -- Registry setup
   local ok_reg, registry = pcall(require, "lsp.core.registry")
   if not ok_reg or not registry or type(registry.setup_all) ~= "function" then
@@ -138,11 +148,28 @@ function M.setup(cfg)
 
   local names = registry.setup_all(shared)
   if type(names) == "table" and #names > 0 then
-    -- notify.info(string.format("Enabling %d LSP servers: %s", #names, table.concat(names, ", ")))
-    pcall(vim.lsp.enable, names)
+    for _, name in ipairs(names) do
+      pcall(vim.lsp.enable, name)
+    end
   else
     notify.warn("No LSP servers configured!")
   end
+
+  -- LSP Server debugging
+  -- if type(names) == "table" and #names > 0 then
+    -- notify.info(string.format("Enabling %d LSP servers: %s", #names, table.concat(names, ", ")))
+
+    -- for _, name in ipairs(names) do
+        -- local ok, err = pcall(vim.lsp.enable, name)
+        -- if not ok then
+            -- notify.warn(string.format("Failed to enable '%s': %s", name, err))
+        -- else
+            -- notify.info(string.format("✓ Enabled '%s'", name))
+        -- end
+    -- end
+-- else
+    -- notify.warn("No LSP servers configured!")
+-- end
 
   -- diagnostic config nach Server-Enable
   vim.diagnostic.config({
@@ -209,4 +236,3 @@ function M.setup(cfg)
 end
 
 return M
-
