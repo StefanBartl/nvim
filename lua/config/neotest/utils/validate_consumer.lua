@@ -98,34 +98,34 @@ function M.diagnose()
   end
   lines[#lines + 1] = ""
 
-  -- Schritt 3: Neo-tree Sources
-  local sources_ok, neotree_sources = pcall(require, "neo-tree.sources.manager")
-  lines[#lines + 1] = string.format(
-    "3. Neo-tree Sources: %s",
-    sources_ok and "✓ LOADED" or "✗ NOT FOUND"
-  )
+  -- Schritt 3: Neo-tree Sources FIX:
+  -- local sources_ok, neotree_sources = pcall(require, "neo-tree.sources.manager")
+  -- lines[#lines + 1] = string.format(
+    -- "3. Neo-tree Sources: %s",
+    -- sources_ok and "✓ LOADED" or "✗ NOT FOUND"
+  -- )
 
-  if sources_ok then
-    local source_names = neotree_sources.get_source_names()
-    local has_tests = false
-    for _, name in ipairs(source_names) do
-      if name == "tests" then
-        has_tests = true
-        break
-      end
-    end
+  -- if sources_ok then
+    -- local source_names = neotree_sources.get_source_names()
+    -- local has_tests = false
+    -- for _, name in ipairs(source_names) do
+      -- if name == "tests" then
+        -- has_tests = true
+        -- break
+      -- end
+    -- end
 
-    lines[#lines + 1] = string.format(
-      "   Tests source: %s",
-      has_tests and "✓ REGISTERED" or "✗ NOT REGISTERED"
-    )
+    -- lines[#lines + 1] = string.format(
+      -- "   Tests source: %s",
+      -- has_tests and "✓ REGISTERED" or "✗ NOT REGISTERED"
+    -- )
 
-    lines[#lines + 1] = "   Available sources:"
-    for _, name in ipairs(source_names) do
-      lines[#lines + 1] = string.format("     - %s", name)
-    end
-  end
-  lines[#lines + 1] = ""
+    -- lines[#lines + 1] = "   Available sources:"
+    -- for _, name in ipairs(source_names) do
+      -- lines[#lines + 1] = string.format("     - %s", name)
+    -- end
+  -- end
+  -- lines[#lines + 1] = ""
 
   -- Gesamtergebnis
   local success, error_msg = M.check_consumer()
