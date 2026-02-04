@@ -1,7 +1,7 @@
 ---@module 'plugins.neotest'
 ---@brief Neotest: Testrunner-Framework für Neovim mit Neo-tree-Integration
 
-local notify = require("lib.notify").create("[plugins.neotest]")
+-- local notify = require("lib.notify").create("[plugins.neotest]")
 local neotest_init_utils = require("config.neotest.init.utils")
 
 return {
@@ -15,6 +15,7 @@ return {
       local neotest = require("neotest")
       local opts = {
         adapters = neotest_init_utils.build_adapters(),
+        -- consumers = neotest_init_utils.build_consumers(),
         consumers = {
           neotree = require("neotest.consumers.neotree"),
         },

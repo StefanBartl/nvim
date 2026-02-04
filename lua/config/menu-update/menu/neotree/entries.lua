@@ -60,7 +60,7 @@ local entries = {
       { key = "h", enabled = true, label = "Close node", icon = "", rtxt = "h", node_type = "folder" },
       { key = "C", enabled = true, label = "Close node", icon = "", rtxt = "C", node_type = "folder" },
       { key = "z", enabled = true, label = "Close all nodes", icon = "", rtxt = "z", node_type = "folder" },
-      { key = "<C-r>", enabled = true, label = "Refresh", icon = "", rtxt = "<C-r>", node_type = "any" },
+      -- { key = "r", enabled = true, label = "Refresh", icon = "", rtxt = "<C-r>", node_type = "any" },
     },
   },
 

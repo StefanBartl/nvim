@@ -15,6 +15,7 @@
 - `:UI theme` setzen
 - ToDo-Comments
 - github stats
+- menu copy marked selection
 
 ---
 
