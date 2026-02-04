@@ -13,6 +13,31 @@ return {
 
     config = function()
       local neotest = require("neotest")
+      -- KRITISCH: Consumer-Registrierung korrigiert
+      local neotree_consumer = nil
+
+      -- Versuche 1: neotest.consumers.neotree (alte API)
+      local ok1, consumer1 = pcall(require, "neotest.consumers.neotree")
+      if ok1 then
+        if type(consumer1) == "function" then
+          neotree_consumer = consumer1
+        elseif type(consumer1) == "table" and type(consumer1.setup) == "function" then
+          neotree_consumer = consumer1.setup
+        end
+      end
+
+      -- Versuche 2: neo-tree.sources.tests (neue API)
+      if not neotree_consumer then
+        local ok2, consumer2 = pcall(require, "neo-tree.sources.tests")
+        if ok2 then
+          if type(consumer2) == "function" then
+            neotree_consumer = consumer2
+          elseif type(consumer2) == "table" and type(consumer2.setup) == "function" then
+            neotree_consumer = consumer2.setup
+          end
+        end
+      end
+
       local opts = {
         adapters = neotest_init_utils.build_adapters(),
         consumers = neotest_init_utils.build_consumers(),
@@ -83,15 +108,19 @@ return {
       require("config.neotest.keymaps").setup()
       require("config.neotest.whichkey").setup()
       require("config.neotest.debug").setup_all()
+      require("config.neotest.utils.validate_consumer").setup_command()
+      -- require("config.neotest.autocmds.auto_discovery").attach()
+      require("config.neotest.highlights").setup()
+
+      -- check wieviele adapter erfolgreich implementiert wurden
+      --require("config.neotest.init.checks.adapter")(opts.adapters, neotree_consumer)
 
       local ok_core, core = pcall(require, "config.neotest.core")
       if ok_core and type(core.setup) == "function" then
         core.setup()
       end
 
-      local adapter_count = #opts.adapters
-      local consumer_status = consumers and "with Neo-tree" or "without Neo-tree"
-      notify.info(string.format("Neotest initialized with %d adapters %s", adapter_count, consumer_status))
+      -- notify.info(string.format("Neotest initialized with %d adapters %s", adapter_count, consumer_status))
     end,
   },
 }
