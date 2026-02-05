@@ -9,17 +9,13 @@ function M.build_adapters()
   return factory.get_all()
 end
 
---- Build consumers
+--- Build consumers with deferred initialization
 ---@return table<string, function>
 function M.build_consumers()
-  local consumers = {}
-
-  local ok, neotree = pcall(require, "neotest.consumers.neotree")
-  if ok and type(neotree) == "function" then
-    consumers.neotree = neotree
-  end
-
-  return consumers
+  return {
+    -- Wrapper prevents race conditions by deferring consumer creation
+    neotree = require("config.neotest.consumers.neotree_wrapper"),
+  }
 end
 
 return M

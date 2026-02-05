@@ -136,3 +136,11 @@ vim.defer_fn(function()
     vim.notify(string.format("Config loaded in %.2f ms", load_time), vim.log.levels.INFO)
   end
 end, 0)
+
+-- FIX: oeinstweiliger fix für: Error in event handler for event before_render[buffers.before_render
+vim.defer_fn(function()
+  vim.cmd("Neotree focus source=tests left")
+  vim.defer_fn(function()
+    vim.cmd("Neotree close")
+  end, 300)
+end, 200)

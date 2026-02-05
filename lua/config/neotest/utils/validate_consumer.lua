@@ -38,7 +38,20 @@ function M.check_consumer()
     return false, "Neo-tree consumer not registered in neotest.config.consumers"
   end
 
-  -- 5. Prüfe ob Neo-tree Source existiert
+  -- 5. CRITICAL: Prüfe ob Consumer initialisiert wurde (nicht mehr nur Factory)
+  local consumer_instance = neotest.config.consumers.neotree
+  if type(consumer_instance) == "function" then
+    return false, "Consumer is still a factory function (not initialized)"
+  end
+
+  if type(consumer_instance) ~= "table" then
+    return false, string.format(
+      "Consumer has invalid type: %s (expected: table after initialization)",
+      type(consumer_instance)
+    )
+  end
+
+  -- 6. Prüfe ob Neo-tree Source existiert
   local neotree_ok, neotree_sources = pcall(require, "neo-tree.sources.manager")
   if neotree_ok then
     local sources = neotree_sources.get_source_names()
@@ -94,38 +107,23 @@ function M.diagnose()
         "   Neotree registered: %s",
         has_neotree and "✓ YES" or "✗ NO"
       )
+
+      if has_neotree then
+        local consumer_type = type(neotest.config.consumers.neotree)
+        lines[#lines + 1] = string.format(
+          "   Consumer type: %s",
+          consumer_type
+        )
+
+        if consumer_type == "function" then
+          lines[#lines + 1] = "   Status: ✗ NOT INITIALIZED (still factory)"
+        elseif consumer_type == "table" then
+          lines[#lines + 1] = "   Status: ✓ INITIALIZED"
+        end
+      end
     end
   end
   lines[#lines + 1] = ""
-
-  -- Schritt 3: Neo-tree Sources FIX:
-  -- local sources_ok, neotree_sources = pcall(require, "neo-tree.sources.manager")
-  -- lines[#lines + 1] = string.format(
-    -- "3. Neo-tree Sources: %s",
-    -- sources_ok and "✓ LOADED" or "✗ NOT FOUND"
-  -- )
-
-  -- if sources_ok then
-    -- local source_names = neotree_sources.get_source_names()
-    -- local has_tests = false
-    -- for _, name in ipairs(source_names) do
-      -- if name == "tests" then
-        -- has_tests = true
-        -- break
-      -- end
-    -- end
-
-    -- lines[#lines + 1] = string.format(
-      -- "   Tests source: %s",
-      -- has_tests and "✓ REGISTERED" or "✗ NOT REGISTERED"
-    -- )
-
-    -- lines[#lines + 1] = "   Available sources:"
-    -- for _, name in ipairs(source_names) do
-      -- lines[#lines + 1] = string.format("     - %s", name)
-    -- end
-  -- end
-  -- lines[#lines + 1] = ""
 
   -- Gesamtergebnis
   local success, error_msg = M.check_consumer()
