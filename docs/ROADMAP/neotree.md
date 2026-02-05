@@ -17,8 +17,7 @@
 
 ## Important
 
-1. Ich kann im  help fenster nicht mehr mit / suchen
-2. Gibt es eine Möglichkeit via keymap die aktuelle file im neotree aufzudecken ?
+1. Gibt es eine Möglichkeit via keymap die aktuelle file im neotree aufzudecken ?
 
 ---
 

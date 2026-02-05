@@ -88,18 +88,18 @@ end
 -- =============================================================================
 -- PHASE 4: DAP (Filetype Lazy-Load)
 -- =============================================================================
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "lua", "go", "python", "javascript" },
-  once = true,
-  callback = function()
-    require("wkddap").setup({
-      languages = { "lua", "go", "python", "javascript" },
-      ui = { enable = true },
-      keymaps = { enable = false, prefix = "<leader>d" },
-      auto_install = true,
-    })
-  end,
-})
+-- vim.api.nvim_create_autocmd("FileType", {
+  -- pattern = { "lua", "go", "python", "javascript" },
+  -- once = true,
+  -- callback = function()
+    -- require("wkddap").setup({
+      -- languages = { "lua", "go", "python", "javascript" },
+      -- ui = { enable = true },
+      -- keymaps = { enable = false, prefix = "<leader>d" },
+      -- auto_install = true,
+    -- })
+  -- end,
+-- })
 
 -- =============================================================================
 -- PHASE 5: SEHR NIEDRIG (600ms) - RPC & Debugging
@@ -107,15 +107,15 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.defer_fn(function()
   require("system.rpc_pipe").setup({ debug = false })
 
-  require("debugging").setup({
-    views = { all = true },
-    all = false,
-    autocmds = nil,
-    markdown = nil,
-    terminals = nil,
-    usercmds = false,
-    tools = nil,
-  })
+  -- require("debugging").setup({
+    -- views = { all = true },
+    -- all = false,
+    -- autocmds = nil,
+    -- markdown = nil,
+    -- terminals = nil,
+    -- usercmds = false,
+    -- tools = nil,
+  -- })
 
   -- require("benchmarks").setup()
 end, 600)
@@ -137,10 +137,19 @@ vim.defer_fn(function()
   end
 end, 0)
 
--- FIX: oeinstweiliger fix für: Error in event handler for event before_render[buffers.before_render
-vim.defer_fn(function()
-  vim.cmd("Neotree focus source=tests left")
-  vim.defer_fn(function()
-    vim.cmd("Neotree close")
-  end, 300)
-end, 200)
+-- -- FIX: einstweiliger fix für: Error in event handler for event before_render[buffers.before_render
+-- vim.defer_fn(function()
+  -- require("neo-tree.command").execute({
+    -- source = "tests",
+    -- position = "left",
+    -- toggle = true,
+  -- })
+
+  -- vim.defer_fn(function()
+    -- require("neo-tree.command").execute({
+      -- source = "tests",
+      -- position = "left",
+      -- toggle = true,
+    -- })
+  -- end, 400)
+-- end, 10)
