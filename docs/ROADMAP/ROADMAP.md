@@ -38,19 +38,14 @@
     - `:DeleteCurrentFile` zu `:File delete`; `:Fileinfo` zu `File info`; Weiters `File rename;convert;`
     - ein usercommand, das alle emojis entfernt im buffer: `:Buffer remove emojis` `:Buffer remove empty_lines` `:Buffer translate de` `:Buffer translate_replace en ` `:Buffer insert ...`
 2. lsp.tools behandeln
-3. wkdnvchad.ui.usrcmd: Zukünftige Features
-        - [ ] Theme-Previews in Floating Window
-        - [ ] Theme-Export/Import
-        - [ ] Custom Theme-Collections
-        - [ ] Theme-Scheduler (basierend auf Tageszeit)
-4. `:CwdHere` fixen
-5. "a" in neotree scheint nicht mehr ganz typsiereungen ezuer rstellen
-6. `:LuaFileStats` eine option machen, die keine file erzeugt sondern nur eine ausgabe im stdout/noify
-7. `leader fg` soll nicht zuerst eine prompt haben, sondern gleich den picker aufmachen.
+3. `:CwdHere` fixen
+4. "a" in neotree scheint nicht mehr ganz typsiereungen ezuer rstellen
+5. `:LuaFileStats` eine option machen, die keine file erzeugt sondern nur eine ausgabe im stdout/noify
+6. `leader fg` soll nicht zuerst eine prompt haben, sondern gleich den picker aufmachen.
     - jeder buchstabe ist in der trefferliste eingetragen
     - Was siond die stats neben der prompt? weeenn ich `nvim_set_current_win` eingebe steht 2871/6343649
-8. `sessions` überarbeiten
-9. `Recommender`
+7. `sessions` überarbeiten
+8. `Recommender`
     - so machen, dass ein telescope oder ein selection aufgemacht wird, und dort kann man dann aussuchen ,welche auf einmal angewandt werden
 
 --

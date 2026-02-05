@@ -1,68 +1,297 @@
 ---@module 'plugins.neotree'
----@brief Neo-tree variant loader for lazy.nvim
----@description
---- Central entrypoint for all Neo-tree variants.
---- Exactly one variant is selected via a symbolic key and loaded dynamically.
---- Variants may live outside /plugins and may even use non-.lua extensions.
 
--- ============================================================================
--- Variant selection
--- ============================================================================
+local KEYMAPS = require("config.neotree.keymaps")
+local COMMANDS = require("config.neotree.commands")
+-- local NEOTEST = require("config.neotest.neotree")
+local BUFFERS = require("config.neotree.keymaps.buffers")
+local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
+local FILESYSTEM = require("config.neotree.keymaps.filesystem")
+local GIT_STATUS = require("config.neotree.keymaps.git_status")
+local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
+local ICONS = require("config.neotree.sources.icons")
 
----@alias NeoTreeVariantKey
----| "default"
----| "wo_sources"
----| "standard"
----| "stub"
+return {
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    lazy = false,
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      -- "TimCreasman/neo-tree-tests-source.nvim",
+      "nvim-neotest/neotest",
+      "mrbjarksen/neo-tree-diagnostics.nvim",
+    },
+    opts = function()
+      local enabled_sources = {
+        "filesystem",
+        "buffers",
+        "git_status",
+        "document_symbols",
+        "diagnostics",
+        -- "tests",
+      }
 
----@type NeoTreeVariantKey
-local ACTIVE_VARIANT = "default"
+      -- Configuration knobs
+      local icon_family = "nerd" -- common | nerd | codicons
+      local icon_variant = "v1" -- v1 | v2
+      local name_length = "long" -- long | short
 
--- ============================================================================
--- Variant registry
--- ============================================================================
+      -- Build sources for source_selector
+      ---@type table[]
+      local sources = {
+        {
+          source = "filesystem",
+          display_name = ICONS.format(icon_family, icon_variant, "filesystem", name_length),
+        },
+        {
+          source = "buffers",
+          display_name = ICONS.format(icon_family, icon_variant, "buffers", name_length),
+        },
+        {
+          source = "git_status",
+          display_name = ICONS.format(icon_family, icon_variant, "git_status", name_length),
+        },
+        {
+          source = "document_symbols",
+          display_name = ICONS.format(icon_family, icon_variant, "document_symbols", name_length),
+        },
+        {
+          source = "diagnostics",
+          display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
+        },
+        -- {
+          -- source = "tests",
+          -- display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
+        -- },
+      }
 
-local folder = vim.fn.stdpath("config") .. "/lua/plugins/neotree_variants"
+      -- local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, NEOTEST.commands())
+      local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, {})
 
----@type table<NeoTreeVariantKey, string>
-local VARIANTS = {
-  default = folder .. "/neotree.lua",
-  wo_sources = folder .. "/neotree_wo_sources.lua",
-  standard = folder .. "/neotree_standard.lua",
-  stub = folder .. "/neotree_stub.lua",
+      return {
+        sources = enabled_sources,
+        source_selector = {
+          winbar = true,
+          statusline = false,
+          sources = sources,
+        },
+        close_if_last_window = false,
+        popup_border_style = "rounded",
+        sort_case_insensitive = true,
+        event_handlers = require("config.neotree.event_handlers"),
+
+        default_component_config = {
+          indent = { with_expanders = false },
+          icon = {
+            folder_empty = "",
+            folder_empty_open = "",
+            default = "",
+            folder_closed = "",
+            folder_open = "",
+            highlight = "NeoTreeFileIcon",
+          },
+          modified = {
+            symbol = "[+]",
+            highlight = "NeoTreeModified",
+          },
+          name = {
+            trailing_slash = true,
+            use_git_status_colors = false,
+            highlight_opened_files = true,
+            highlight = "NeoTreeFileName",
+          },
+          git_status = {
+            symbols = {
+              added = "A",
+              deleted = "D",
+              modified = "M",
+              renamed = "R",
+              unstaged = "✗",
+              staged = "✓",
+              untracked = "★",
+              ignored = "◌",
+              conflict = "C",
+            },
+          },
+        },
+
+        renderers = {
+          directory = {
+            { "indent" },
+            { "icon" },
+            { "current_filter" },
+            { "name" },
+            { "git_status", highlight = "NeoTreeDimText" },
+            {
+              "diagnostics",
+              symbols = {
+                hint = "",
+                info = "",
+                warn = "",
+                error = "",
+              },
+              highlights = {
+                hint = "DiagnosticSignHint",
+                info = "DiagnosticSignInfo",
+                warn = "DiagnosticSignWarn",
+                error = "DiagnosticSignError",
+              },
+            },
+            { "clipboard" },
+          },
+          file = {
+            { "indent" },
+            { "icon" },
+            { "name", use_git_status_colors = true },
+            { "git_status", highlight = "NeoTreeDimText" },
+            { "diagnostics" },
+            {
+              function(_, node, state)
+                local marks = state.explicitly_marked_node_ids or {}
+                local node_id = node:get_id()
+                if marks[node_id] then
+                  return {
+                    text = " ✓",
+                    highlight = "NeoTreeGitStaged",
+                  }
+                end
+                return {}
+              end,
+            },
+            { "clipboard" },
+          },
+        },
+
+        commands = ALL_COMMANDS,
+        window = {
+          width = 25,
+          mappings = KEYMAPS,
+          position = require("config.neotree").get_default_position(),
+        },
+
+        filesystem = {
+          bind_to_cwd = true,
+          find_by_full_path_words = true,
+          follow_current_file = {
+            enabled = true,
+            leave_dirs_open = false,
+          },
+          group_empty_dirs = true,
+          use_libuv_file_watcher = true,
+          window = {
+            mappings = FILESYSTEM,
+            position = require("config.neotree").get_default_position(),
+          },
+          filtered_items = {
+            visible = true,
+            hide_dotfiles = false,
+            hide_gitignored = false,
+            hide_hidden = false,
+            hide_by_pattern = {},
+            hide_by_name = require("lib.fs.ignore.list").as_neotree_names(),
+            never_show = {},
+            never_show_by_pattern = {},
+          },
+        },
+
+        buffers = {
+          window = {
+            mappings = BUFFERS,
+            position = require("config.neotree").get_default_position(),
+          },
+        },
+
+        git_status = {
+          window = {
+            mappings = GIT_STATUS,
+            position = require("config.neotree").get_default_position(),
+          },
+        },
+
+        document_symbols = {
+          follow_cursor = true,
+          client_filters = "first",
+          renderers = {
+            root = {
+              { "indent" },
+              { "icon", default = "C" },
+              { "name", zindex = 10 },
+            },
+            symbol = {
+              { "indent", with_expanders = true },
+              { "kind_icon", default = "?" },
+              {
+                "container",
+                content = {
+                  { "name", zindex = 10 },
+                  { "kind_name", zindex = 20, align = "right" },
+                },
+              },
+            },
+          },
+          window = {
+            mappings = DOCUMENT_SYMBOLS,
+            position = require("config.neotree").get_default_position(),
+          },
+        },
+
+        diagnostics = {
+          auto_preview = {
+            enabled = false,
+            preview_config = {},
+            event = "neo_tree_buffer_enter",
+          },
+          bind_to_cwd = true,
+          diag_sort_function = "severity",
+          follow_current_file = {
+            enabled = true,
+            always_focus_file = false,
+          },
+          group_dirs_and_files = true,
+          group_empty_dirs = true,
+          show_unloaded = true,
+          refresh = {
+            delay = 100,
+            event = "vim_diagnostic_changed",
+            max_items = 10000,
+          },
+          window = {
+            mappings = DIAGNOSTICS,
+            position = require("config.neotree").get_default_position(),
+          },
+        } or nil,
+
+        -- tests = {
+          -- follow_cursor = true,
+          -- window = {
+            -- -- mappings = vim.tbl_extend(
+              -- -- "force",
+              -- -- require("config.neotree.keymaps.tests"),
+              -- -- NEOTEST.keymaps()
+            -- -- ),
+            -- mappings = NEOTEST.keymaps(),
+            -- position = require("config.neotree").get_default_position(),
+          -- },
+        -- },
+      }
+    end,
+
+    config = function(_, opts)
+      require("config.neotree.actions.find_or_grep_menu").attach(opts)
+      require("config.neotree.current_hl").attach(opts)
+      require("neo-tree").setup(opts)
+      require("config.neotree.components.marks").attach(opts)
+      require("config.neotree").setup({
+        debug = true,
+        busy_guard = false,
+        default_position = "left",
+        restore_last_position = false,
+        window_debug = false,
+        window_open = false,
+        reveal_current_file = false,
+        only_lhs = true,
+      })
+    end,
+  },
 }
 
--- ============================================================================
--- Loader
--- ============================================================================
-
----@param path string
----@return any
-local function load_variant(path)
-  -- loadfile executes the file in an isolated chunk
-  local chunk, err = loadfile(path)
-  if not chunk then
-    error("[neotree] failed to load variant: " .. err)
-  end
-
-  return chunk()
-end
-
----@return any
-local function resolve_and_load()
-  local path = VARIANTS[ACTIVE_VARIANT]
-  if not path then
-    error("[neotree] unknown variant: " .. tostring(ACTIVE_VARIANT))
-  end
-
-  return load_variant(path)
-end
-
--- ============================================================================
--- lazy.nvim spec passthrough
--- ============================================================================
-
--- The loaded variant is expected to return either:
--- 1. a lazy.nvim plugin spec table
--- 2. or a list of plugin specs
-return resolve_and_load()
