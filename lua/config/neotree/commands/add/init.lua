@@ -7,6 +7,7 @@
 --- - lib.buffer.insert_lines (for content insertion)
 
 local notify = require("lib.notify").create("[config.neotree.commands.add]")
+local notify_clean = require("lib.notify").create("")
 
 local M = {}
 
@@ -251,7 +252,7 @@ local function handle_regular_file(file_path, options)
             vim.log.levels.INFO
           )
         else
-          notify.info(("File created: %s"):format(fn.fnamemodify(file_path, ":t")))
+          notify_clean.info(("File created: %s"):format(fn.fnamemodify(file_path, ":t")))
         end
       end)
     end)

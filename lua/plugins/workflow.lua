@@ -16,6 +16,22 @@ return {
       keywords = require("config.todo_comments.keywords"),
       colors = require("config.todo_comments.colors.strong"),
     },
+    keys = {
+      {
+        "<leader>ST",
+        function()
+          Snacks.picker.todo_comments()
+        end,
+        desc = "Todo",
+      },
+      {
+        "<leader>sT",
+        function()
+          Snacks.picker.todo_comments({ keywords = { "TODO", "FIX", "FIXME" } })
+        end,
+        desc = "Todo/Fix/Fixme",
+      },
+    },
     config = function(_, opts)
       local ok, mod = pcall(require, "config.todo_comments")
       if ok and type(mod) == "table" and type(mod.setup) == "function" then
@@ -79,10 +95,20 @@ return {
       local map = require("lib.map")
       -- map("i", "<tab>", "<cmd>AutolistTab<cr>", { desc = "[Autolist] Indent list item" })
       -- map("i", "<s-tab>", "<cmd>AutolistShiftTab<cr>", { desc = "[Autolist] Unindent list item" })
-      map("i", "<CR>", "<CR><cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet on next line" })
+      map(
+        "i",
+        "<CR>",
+        "<CR><cmd>AutolistNewBullet<cr>",
+        { desc = "[Autolist] New bullet on next line" }
+      )
       map("n", "o", "o<cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet below" })
       map("n", "O", "O<cmd>AutolistNewBulletBefore<cr>", { desc = "[Autolist] New bullet above" })
-      map("n", "<leader>rc", "<cmd>AutolistRecalculate<cr>", { desc = "[Autolist] Recalculate ordered list" })
+      map(
+        "n",
+        "<leader>rc",
+        "<cmd>AutolistRecalculate<cr>",
+        { desc = "[Autolist] Recalculate ordered list" }
+      )
       map(
         "n",
         "<leader>cn",
