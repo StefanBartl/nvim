@@ -6,6 +6,7 @@ local M = {}
 
 local desc_tag = "[lsp.registry] "
 
+-- NOTE: Hier mpüsen die config-filenames der server angegeben werden
 local ACTIVE = {
   "bashls",
   "lua_ls",
@@ -16,9 +17,9 @@ local ACTIVE = {
   -- Web Development
   "html",
   "ts_ls",
-  "astro",
   "tailwindcss",
-  "htmx_lsp",
+  "astro",
+  "htmx",
   "wasm_language_tools",
 
   --"clangd",
@@ -26,9 +27,9 @@ local ACTIVE = {
   --"zig",
 
   -- Mobile development servers
-  "mobiledev.jdtls", -- Java (Android)
-  "mobiledev.kotlin_language_server", -- Kotlin (Android)
-  "mobiledev.dartls", -- Dart/Flutter
+  "jdtls", -- Java (Android)
+  "kotlin_language_server", -- Kotlin (Android)
+  "dartls", -- Dart/Flutter
 }
 
 ---@param shared table

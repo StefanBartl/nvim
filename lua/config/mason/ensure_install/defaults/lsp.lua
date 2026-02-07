@@ -49,7 +49,7 @@ return {
   ["tailwindcss-language-server"] = true,
   ["css-lsp"] = true,
   ["htmx-lsp"] = true,
-  ["wasm-language-tools"] = false, -- oft manuell installiert
+  ["wasm-language-tools"] = true, -- oft manuell installiert
   ["unocss-language-server"] = true,
   ["vtsls"] = true, -- besserer TS/JS Server
   ["biome"] = true, -- schneller Formatter/Linter
