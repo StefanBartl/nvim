@@ -16,6 +16,5 @@ return {
   -- Web Development
   ["node-debug2-adapter"] = false,
   ["js-debug-adapter"] = true,
-  ["chrome-debug-adapter"] = true,
   ["firefox-debug-adapter"] = true,
 }
