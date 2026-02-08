@@ -20,14 +20,25 @@ return {
       {
         "<leader>ST",
         function()
-          Snacks.picker.todo_comments()
+          local snacks = require("snacks")
+          if snacks and snacks.picker then
+            snacks.picker.todo_comments()
+          else
+            vim.notify("Snacks not loaded", vim.log.levels.WARN)
+          end
         end,
         desc = "Todo",
       },
       {
         "<leader>sT",
         function()
-          Snacks.picker.todo_comments({ keywords = { "TODO", "FIX", "FIXME" } })
+          local snacks = require("snacks")
+          local KEYWORDS = require("config.todo_comments.keywords")
+          if snacks and snacks.picker and KEYWORDS then
+            snacks.picker.todo_comments({ keywords = KEYWORDS })
+          else
+            vim.notify("Snacks not loaded or custom keywords table does not exist", vim.log.levels.WARN)
+          end
         end,
         desc = "Todo/Fix/Fixme",
       },
