@@ -32,26 +32,27 @@ local function normalize_inactice_win_hl()
   vim.api.nvim_set_hl(0, "NormalNC", normal)
 end
 
--- Define diagnostic signs with nerd icons
+-- Define diagnostic signs with modern API and fallback for older versions
 local function set_diagnostic_signs()
-  local diagnostic_signs = {
-    Error = " ",
-    Warn = " ",
-    Hint = " ",
-    Info = " ",
+  local use_modern_signs = vim.fn.has("nvim-0.10") == 1
+
+  local diagnostic_icons = {
+    [vim.diagnostic.severity.ERROR] = " ",
+    [vim.diagnostic.severity.WARN] = " ",
+    [vim.diagnostic.severity.HINT] = " ",
+    [vim.diagnostic.severity.INFO] = " ",
   }
 
-  for type, icon in pairs(diagnostic_signs) do
-    local hl = "DiagnosticSign" .. type
-    vim.fn.sign_define(hl, {
-      text = icon,
-      texthl = hl,
-      numhl = "",
-    })
-  end
-
   vim.diagnostic.config({
-    signs = true,
+    signs = use_modern_signs and {
+      text = diagnostic_icons,
+      numhl = {
+        [vim.diagnostic.severity.ERROR] = "DiagnosticSignError",
+        [vim.diagnostic.severity.WARN] = "DiagnosticSignWarn",
+        [vim.diagnostic.severity.HINT] = "DiagnosticSignHint",
+        [vim.diagnostic.severity.INFO] = "DiagnosticSignInfo",
+      },
+    } or true,  -- For older versions: just enable signs
     underline = true,
     update_in_insert = false,
     severity_sort = true,
@@ -60,6 +61,25 @@ local function set_diagnostic_signs()
       prefix = "●",
     },
   })
+
+  -- Fallback for Neovim < 0.10: use deprecated sign_define
+  if not use_modern_signs then
+    local legacy_signs = {
+      Error = " ",
+      Warn = " ",
+      Hint = " ",
+      Info = " ",
+    }
+
+    for type, icon in pairs(legacy_signs) do
+      local hl = "DiagnosticSign" .. type
+      vim.fn.sign_define(hl, {
+        text = icon,
+        texthl = hl,
+        numhl = "",
+      })
+    end
+  end
 end
 
 --- Enable selected subsystems.
