@@ -1,6 +1,6 @@
 ---@module 'wkddap.ui.virtual_text'
 
-local config = require("dap.config")
+local config = require("wkddap.config")
 
 local M = {}
 

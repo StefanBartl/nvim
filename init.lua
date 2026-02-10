@@ -77,7 +77,7 @@ vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 -- })
 
 -- LSP Setup
-require("lsp").setup({ ensure_installing = false })
+require("lsp").setup({ ensure_installing = true })
 -- LSP Setup direkt nach Keymaps
 -- Capabilities müssen GLOBAL applied werden
 local ok_caps, caps = pcall(require, "lsp.core.capabilities")
@@ -92,12 +92,12 @@ end
   -- pattern = { "lua", "go", "python", "javascript" },
   -- once = true,
   -- callback = function()
-    -- require("wkddap").setup({
-      -- languages = { "lua", "go", "python", "javascript" },
-      -- ui = { enable = true },
-      -- keymaps = { enable = false, prefix = "<leader>d" },
-      -- auto_install = true,
-    -- })
+    require("wkddap").setup({
+      languages = {},
+      ui = { enable = true },
+      keymaps = { enable = true, prefix = "<leader>d" },
+      auto_install = true,
+    })
   -- end,
 -- })
 

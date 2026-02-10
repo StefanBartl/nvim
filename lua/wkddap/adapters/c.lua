@@ -1,5 +1,5 @@
 ---@module 'wkddap.adapters.c'
-local config = require("dap.config")
+local config = require("wkddap.config")
 
 local M = {}
 

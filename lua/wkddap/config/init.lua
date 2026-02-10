@@ -17,12 +17,6 @@ M.adapter_binaries = {
     mason_pkg = "js-debug-adapter",
     required = true,
   },
-  c = {
-    type = "binary",
-    binary = "lldb-vscode",
-    mason_pkg = "codelldb",
-    required = true,
-  },
   go = {
     type = "binary",
     binary = "dlv",
@@ -35,15 +29,21 @@ M.adapter_binaries = {
     mason_pkg = "debugpy",
     required = true,
   },
+  c = {
+    type = "binary",
+    binary = "codelldb",
+    mason_pkg = "codelldb",
+    required = true,
+  },
   rust = {
     type = "binary",
-    binary = "lldb-vscode",
+    binary = "codelldb",
     mason_pkg = "codelldb",
     required = true,
   },
   zig = {
     type = "binary",
-    binary = "lldb-vscode",
+    binary = "codelldb",
     mason_pkg = "codelldb",
     required = true,
   },

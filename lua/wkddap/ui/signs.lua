@@ -1,6 +1,6 @@
 ---@module 'wkddap.ui.signs'
 
-local config = require("dap.config")
+local config = require("wkddap.config")
 
 local M = {}
 

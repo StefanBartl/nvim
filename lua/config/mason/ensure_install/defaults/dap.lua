@@ -12,6 +12,7 @@ return {
   ["java-debug-adapter"] = true,
   ["go-debug-adapter"] = true,
   ["bash-debug-adapter"] = true,
+  ["codelldb"] = true, -- zig, rust, c
 
   -- Web Development
   ["node-debug2-adapter"] = false,
