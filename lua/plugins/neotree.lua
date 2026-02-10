@@ -2,7 +2,7 @@
 
 local KEYMAPS = require("config.neotree.keymaps")
 local COMMANDS = require("config.neotree.commands")
--- local NEOTEST = require("config.neotest.neotree")
+local NEOTEST = require("config.neotest.neotree")
 local BUFFERS = require("config.neotree.keymaps.buffers")
 local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
 local FILESYSTEM = require("config.neotree.keymaps.filesystem")
@@ -17,7 +17,7 @@ return {
     lazy = false,
     dependencies = {
       "MunifTanjim/nui.nvim",
-      -- "TimCreasman/neo-tree-tests-source.nvim",
+      "TimCreasman/neo-tree-tests-source.nvim",
       "nvim-neotest/neotest",
       "mrbjarksen/neo-tree-diagnostics.nvim",
     },
@@ -28,7 +28,7 @@ return {
         "git_status",
         "document_symbols",
         "diagnostics",
-        -- "tests",
+        "tests",
       }
 
       -- Configuration knobs
@@ -59,14 +59,14 @@ return {
           source = "diagnostics",
           display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
         },
-        -- {
-          -- source = "tests",
-          -- display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
-        -- },
+        {
+          source = "tests",
+          display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
+        },
       }
 
-      -- local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, NEOTEST.commands())
-      local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, {})
+      local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, NEOTEST.commands())
+      -- local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, {})
 
       return {
         sources = enabled_sources,
@@ -261,18 +261,18 @@ return {
           },
         } or nil,
 
-        -- tests = {
-          -- follow_cursor = true,
-          -- window = {
-            -- -- mappings = vim.tbl_extend(
-              -- -- "force",
-              -- -- require("config.neotree.keymaps.tests"),
-              -- -- NEOTEST.keymaps()
-            -- -- ),
-            -- mappings = NEOTEST.keymaps(),
-            -- position = require("config.neotree").get_default_position(),
-          -- },
-        -- },
+        tests = {
+          follow_cursor = true,
+          window = {
+            -- mappings = vim.tbl_extend(
+              -- "force",
+              -- require("config.neotree.keymaps.tests"),
+              -- NEOTEST.keymaps()
+            -- ),
+            mappings = NEOTEST.keymaps(),
+            position = require("config.neotree").get_default_position(),
+          },
+        },
       }
     end,
 

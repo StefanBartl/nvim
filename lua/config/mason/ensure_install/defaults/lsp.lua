@@ -44,8 +44,8 @@ return {
   -- Web Development
   ["html-lsp"] = true,
   ["typescript-language-server"] = true,
-  ["astro-ls"] = true,
-  -- ["astro-language-server"] = true,
+  -- ["astro-ls"] = true,
+  ["astro-language-server"] = true,
   ["tailwindcss-language-server"] = true,
   ["css-lsp"] = true,
   ["htmx-lsp"] = true,

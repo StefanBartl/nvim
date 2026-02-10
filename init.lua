@@ -77,11 +77,12 @@ vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 -- })
 
 -- LSP Setup
-require("lsp").setup({ ensure_installing = true })
+require("lsp").setup({ ensure_installing = false })
 -- LSP Setup direkt nach Keymaps
 -- Capabilities müssen GLOBAL applied werden
 local ok_caps, caps = pcall(require, "lsp.core.capabilities")
 if ok_caps and type(caps.apply_globally) == "function" then
+
   caps.apply_globally()
 end
 
@@ -107,15 +108,15 @@ end
 vim.defer_fn(function()
   require("system.rpc_pipe").setup({ debug = false })
 
-  -- require("debugging").setup({
-    -- views = { all = true },
-    -- all = false,
-    -- autocmds = nil,
-    -- markdown = nil,
-    -- terminals = nil,
-    -- usercmds = false,
-    -- tools = nil,
-  -- })
+  require("debugging").setup({
+    views = { all = true },
+    all = false,
+    autocmds = nil,
+    markdown = nil,
+    terminals = nil,
+    usercmds = false,
+    tools = nil,
+  })
 
   -- require("benchmarks").setup()
 end, 600)
