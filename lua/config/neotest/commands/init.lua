@@ -62,6 +62,13 @@ function M.setup()
   create("NeotestWatchToggle", actions.toggle_watch, {
     desc = "Toggle Neotest watch mode",
   })
+
+  create("NeotestClearAll", function()
+    local neotest = require("neotest")
+    neotest.run.stop()
+    neotest.output.close()
+    neotest.summary.close()
+end, { desc = "Stop tests and close all windows" })
 end
 
 return M

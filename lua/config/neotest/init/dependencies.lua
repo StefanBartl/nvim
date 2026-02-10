@@ -5,6 +5,7 @@ local PLUGINS = {
   "nvim-lua/plenary.nvim",
   "antoinemadec/FixCursorHold.nvim",
   "nvim-treesitter/nvim-treesitter",
+  "vim-test/vim-test",
 }
 
 local CONSUMER = {
