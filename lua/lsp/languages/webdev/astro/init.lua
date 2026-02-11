@@ -6,7 +6,7 @@ local M = {}
 
 ---@return nil
 function M.enable()
-  local grp = api.nvim_create_augroup("LangAstro", { clear = true })
+  -- local grp = api.nvim_create_augroup("LangAstro", { clear = true })
 
   require("lsp.languages.webdev.astro.usercmds").setup()
   require("lsp.languages.webdev.astro.autocmds").setup()

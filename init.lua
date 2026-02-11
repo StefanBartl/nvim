@@ -106,7 +106,7 @@ end
 -- PHASE 5: SEHR NIEDRIG (600ms) - RPC & Debugging
 -- =============================================================================
 vim.defer_fn(function()
-  require("system.rpc_pipe").setup({ debug = false })
+  -- require("system.rpc_pipe").setup({ debug = false })
 
   require("debugging").setup({
     views = { all = true },

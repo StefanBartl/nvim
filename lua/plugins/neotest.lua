@@ -16,7 +16,11 @@ return {
 
       -- CRITICAL: Use wrapped consumer to prevent initialization race
       local opts = {
-        adapters = neotest_init_utils.build_adapters(),
+        adapters = {
+      require("neotest-plenary"),
+      require("neotest-vitest"),
+      require("neotest-go"),
+        },
         consumers = neotest_init_utils.build_consumers(),
 
         discovery = {

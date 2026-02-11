@@ -20,6 +20,7 @@
 ---@field extract_base fun(node: TSNode|nil): string|nil # Extract base identifier (fallback)
 
 ---@class Breadcrumbs.TSPattern
+---@diagnostic disable-next-line: undefined-doc-name
 ---@field query vim.treesitter.Query # Compiled query
 ---@field cache_key string # Pattern identifier for bytecode cache
 

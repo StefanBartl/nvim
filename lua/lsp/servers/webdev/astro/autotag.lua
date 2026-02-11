@@ -84,7 +84,7 @@ function M.setup_manual_autoclose(bufnr)
 
   -- Auto-close on "/"
   vim.keymap.set("i", "/", function()
-    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local _, col = unpack(vim.api.nvim_win_get_cursor(0))
     local line = vim.api.nvim_get_current_line()
     local before_cursor = line:sub(1, col)
 

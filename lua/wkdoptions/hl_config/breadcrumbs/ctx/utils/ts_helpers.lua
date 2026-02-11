@@ -146,6 +146,7 @@ function M.exec_pattern(pattern, node)
     return nil
   end
 
+  ---@diagnostic disable-next-line: undefined-field
   local ok, iter = pcall(pattern.query.iter_captures, pattern.query, node, 0)
   if not ok then
     return nil

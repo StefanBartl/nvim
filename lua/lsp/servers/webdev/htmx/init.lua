@@ -49,6 +49,7 @@ function M.setup(shared, opts)
 
   -- OPTIONAL: Filter INFO-Logs aus stderr
   -- htmx-lsp schreibt JSON-Logs auf stderr, die Neovim als [ERROR] loggt
+  ---@diagnostic disable-next-line: unused-local
   local handlers = {}
   if opts.filter_stderr ~= false then
     local ok, stderr_filter = pcall(require, "lsp.servers.webdev.htmx.filter_logs") -- FIX: Filtering funktionert nicht
