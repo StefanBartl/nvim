@@ -112,4 +112,5 @@ function M.keys()
   return maps
 end
 
+---@type Cfg.Snacks.Mappings.Module
 return M

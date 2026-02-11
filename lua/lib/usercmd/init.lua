@@ -24,8 +24,9 @@ function M.create(name, callback, opts)
     opts.nargs = 0
   end
 
-  local force = opts.force == true
-  opts.force = nil
+  if opts.force == nil then
+    opts.force = false
+  end
 
   if type(callback) == "function" then
     local user_cb = callback
@@ -37,9 +38,8 @@ function M.create(name, callback, opts)
     end
   end
 
-  vim.api.nvim_create_user_command(name, callback, opts, force)
+  vim.api.nvim_create_user_command(name, callback, opts)
 end
 
 ---@type Lib.UsrCmd
 return M
-
