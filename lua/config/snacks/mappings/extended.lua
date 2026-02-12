@@ -1,4 +1,4 @@
----@module 'config.snacks.custom_dashboard.mappings'
+---@module 'config.snacks.mappings.ext_mappings'
 --- Keymap definitions for custom Snacks dashboard.
 --- Expose keys() which returns the array expected by the plugin spec.
 

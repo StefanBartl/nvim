@@ -31,6 +31,7 @@
 3. chrome debnug adapter -> js debug adapter
 4. `custom.insert` nach `usrcmds.isnert` ?
 5. trroublke bzw workspacve diagonisc sollen die zeile hervorheben in der man ist
+6. `mappings.` nach `.config` refactoren
 
 
 ## MIXED

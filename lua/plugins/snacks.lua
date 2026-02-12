@@ -15,6 +15,8 @@
 ---   Built-in defaults are `{ {section="header"}, {section="keys", ...}, {section="startup"} }`.  -- we replicate + extend
 ---   Each item supports fields `icon|title|desc|action|key|...`; `action` may be string/func.  -- compatible formats
 
+local picker_config = require("config.snacks.picker")
+
 ---@type table
 return {
 
@@ -71,98 +73,52 @@ return {
           },
         },
 
-        picker = {
-          enabled = true,
-        },
+        picker = picker_config.get_config(),
       }
       return cfg
     end,
 
-    keys = require("config.snacks.mappings").keys(),
-
-    -- init = function()
-      -- vim.api.nvim_create_autocmd("User", {
-        -- pattern = "VeryLazy",
-        -- callback = function()
-
-          -- local Snacks = require("snacks")
-          -- -- Setup some globals for debugging (lazy-loaded)
-          -- _G.dd = function(...)
-            -- Snacks.debug.inspect(...)
-          -- end
-          -- _G.bt = function()
-            -- Snacks.debug.backtrace()
-          -- end
-
-          -- -- Override print to use snacks for `:=` command
-          -- if vim.fn.has("nvim-0.11") == 1 then
-            -- vim._print = function(_, ...)
-              -- dd(...)
-            -- end
-          -- else
-            -- vim.print = _G.dd
-          -- end
-
-          -- -- Create some toggle mappings
-          -- Snacks.toggle.option("spell", { name = "Spelling" }):map("<leader>us")
-          -- Snacks.toggle.option("wrap", { name = "Wrap" }):map("<leader>uw")
-          -- Snacks.toggle.option("relativenumber", { name = "Relative Number" }):map("<leader>uL")
-          -- Snacks.toggle.diagnostics():map("<leader>ud")
-          -- Snacks.toggle.line_number():map("<leader>ul")
-          -- Snacks.toggle
-            -- .option("conceallevel", { off = 0, on = vim.o.conceallevel > 0 and vim.o.conceallevel or 2 })
-            -- :map("<leader>uc")
-          -- Snacks.toggle.treesitter():map("<leader>uT")
-          -- Snacks.toggle
-            -- .option("background", { off = "light", on = "dark", name = "Dark Background" })
-            -- :map("<leader>ub")
-          -- Snacks.toggle.inlay_hints():map("<leader>uh")
-          -- Snacks.toggle.indent():map("<leader>ug")
-          -- Snacks.toggle.dim():map("<leader>uD")
-        -- end,
-      -- })
-    -- end,
+    keys = require("config.snacks.mappings").get_all_keys(),
 
     ---@param _ any
     ---@param opts Plugins.Snacks.Setup
     ---@diagnostic disable-next-line: unused-local
     config = function(_, opts)
-
       require("config.snacks.usrcmds").setup()
 
-    --   -- Defensive require for snacks itself
-    --   local ok_snacks, snacks = pcall(require, "snacks")
-    --   if not ok_snacks then
-    --     vim.notify("[snacks] not available", vim.log.levels.WARN)
-    --     return
-    --   end
-    --
-    --   -- Attempt to load the modular custom dashboard entrypoint.
-    --   -- If it's not present, fall back to the old direct setup path.
-    --   local ok_cd, cd = pcall(require, "config.snacks.custom_dashboard.init")
-    --   if not ok_cd or type(cd.setup) ~= "function" then
-    --     -- Fallback: old direct setup if custom_dashboard module missing
-    --     local ok_setup, err = pcall(snacks.setup, opts)
-    --     if not ok_setup then
-    --       vim.notify("[snacks] setup() failed (fallback): " .. tostring(err), vim.log.levels.ERROR)
-    --     end
-    --     return
-    --   end
-    --
-    --   -- Call the custom dashboard setup, passing snacks and opts.
-    --   -- The custom module will ensure sections are registered BEFORE snacks.setup().
-    --   local ok, err = pcall(cd.setup, snacks, opts)
-    --   if not ok then
-    --     vim.notify("[snacks.custom_dashboard] setup failed: " .. tostring(err), vim.log.levels.ERROR)
-    --   end
-    -- end,
-    --
-    -- keys = function()
-    --   local ok, maps = pcall(require, "config.snacks.custom_dashboard.mappings")
-    --   if ok and type(maps.keys) == "function" then
-    --     return maps.keys()
-    --   end
-    --   return {}
+      --   -- Defensive require for snacks itself
+      --   local ok_snacks, snacks = pcall(require, "snacks")
+      --   if not ok_snacks then
+      --     vim.notify("[snacks] not available", vim.log.levels.WARN)
+      --     return
+      --   end
+      --
+      --   -- Attempt to load the modular custom dashboard entrypoint.
+      --   -- If it's not present, fall back to the old direct setup path.
+      --   local ok_cd, cd = pcall(require, "config.snacks.custom_dashboard.init")
+      --   if not ok_cd or type(cd.setup) ~= "function" then
+      --     -- Fallback: old direct setup if custom_dashboard module missing
+      --     local ok_setup, err = pcall(snacks.setup, opts)
+      --     if not ok_setup then
+      --       vim.notify("[snacks] setup() failed (fallback): " .. tostring(err), vim.log.levels.ERROR)
+      --     end
+      --     return
+      --   end
+      --
+      --   -- Call the custom dashboard setup, passing snacks and opts.
+      --   -- The custom module will ensure sections are registered BEFORE snacks.setup().
+      --   local ok, err = pcall(cd.setup, snacks, opts)
+      --   if not ok then
+      --     vim.notify("[snacks.custom_dashboard] setup failed: " .. tostring(err), vim.log.levels.ERROR)
+      --   end
+      -- end,
+      --
+      -- keys = function()
+      --   local ok, maps = pcall(require, "config.snacks.custom_dashboard.mappings")
+      --   if ok and type(maps.keys) == "function" then
+      --     return maps.keys()
+      --   end
+      --   return {}
     end,
   },
 }

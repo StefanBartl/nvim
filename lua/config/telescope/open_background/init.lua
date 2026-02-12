@@ -1,4 +1,3 @@
--- config/telescope/open_background.lua
 ---@module 'config.telescope.open_background'
 local notify = require("lib.notify").create("[config.telescope.open_background]")
 
