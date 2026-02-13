@@ -1,4 +1,4 @@
----@module 'lsp.languages.markdown'
+---@module 'lsp.languages.scriipting.documentation.markdown'
 
 local api = vim.api
 local lsp = vim.lsp
@@ -7,6 +7,7 @@ local desc_tag = "[lsp] "
 local M = {}
 
 --- Set highlight for LSP reference groups (affects documentHighlight results).
+---@return nil
 function M.setup_reference_hl()
   -- Example: change foreground to a soft color and enable italic.
   -- Use colorscheme values or explicit hex values (here as placeholders).
@@ -76,4 +77,5 @@ function M.enable()
   end, { desc = desc_tag .. "Format via Prettier" })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.Webdev.Markdown.Module
 return M

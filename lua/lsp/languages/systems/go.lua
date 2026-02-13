@@ -1,4 +1,4 @@
----@module 'lsp.languages.go'
+---@module 'lsp.languages.systems.go'
 ---@class LangGoQoL
 
 local M = {}
@@ -13,4 +13,5 @@ function M.enable()
   })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.Webdev.Go.Module
 return M

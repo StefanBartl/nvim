@@ -1,4 +1,4 @@
----@module 'lsp.languages.csharp'
+---@module 'lsp.languages.app.csharp'
 ---@class LangCsQoL
 
 local M = {}
@@ -13,4 +13,5 @@ function M.enable()
   })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.CSharp.Module
 return M

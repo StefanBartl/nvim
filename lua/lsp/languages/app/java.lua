@@ -1,4 +1,4 @@
----@module 'lsp.languages.java'
+---@module 'lsp.languages.app.java'
 
 local M = {}
 
@@ -33,4 +33,5 @@ function M.enable()
   })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.Webdev.Java.Module
 return M

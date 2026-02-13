@@ -1,4 +1,4 @@
----@module 'lsp.languages.dart'
+---@module 'lsp.languages.app.dart'
 
 local M = {}
 
@@ -27,4 +27,5 @@ function M.enable()
   })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.Dart.Module
 return M

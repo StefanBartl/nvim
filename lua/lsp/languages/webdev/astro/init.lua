@@ -1,8 +1,8 @@
 ---@module 'lsp.languages.webdev.astro'
 
-local api = vim.api
-
 local M = {}
+
+local bo = vim.bo
 
 ---@return nil
 function M.enable()
@@ -27,10 +27,10 @@ function M.enable()
       end
 
       -- Buffer-lokale Settings
-      vim.bo[args.buf].commentstring = "{/* %s */}"
-      vim.bo[args.buf].shiftwidth = 2
-      vim.bo[args.buf].tabstop = 2
-      vim.bo[args.buf].expandtab = true
+      bo[args.buf].commentstring = "{/* %s */}"
+      bo[args.buf].shiftwidth = 2
+      bo[args.buf].tabstop = 2
+      bo[args.buf].expandtab = true
 
       -- REMOVED: vim.lsp.start() - causes conflict with vim.lsp.enable()
       -- The server auto-attaches because:
@@ -42,4 +42,5 @@ function M.enable()
   })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.Webdev.Astro.Modu1e
 return M

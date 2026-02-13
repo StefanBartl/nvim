@@ -19,7 +19,7 @@ return {
   ["powershell-editor-services"] = true,
   ["perlnavigator"] = false,
   ["phpactor"] = true,
-  ["omnisharp-mono"] = false,
+  ["omnisharp"] = true,
   ["nginx-language-server"] = true,
   ["markdown-oxide"] = true,
   ["m68k-lsp-server"] = true,

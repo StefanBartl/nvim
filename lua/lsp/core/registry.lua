@@ -6,7 +6,7 @@ local M = {}
 
 local desc_tag = "[lsp.registry] "
 
--- NOTE: Hier mpüsen die config-filenames der server angegeben werden
+-- NOTE: Hier müssen die config-filenames der server angegeben werden
 local ACTIVE = {
   "bashls",
   "lua_ls",
@@ -23,7 +23,7 @@ local ACTIVE = {
   "wasm_language_tools",
 
   --"clangd",
-  --"csharp",
+  "csharp",
   --"zig",
 
   -- Mobile development servers

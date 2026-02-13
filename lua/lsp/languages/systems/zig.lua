@@ -1,4 +1,4 @@
----@module 'lsp.languages.zig'
+---@module 'lsp.languages.systems.zig'
 ---@class LangZigQoL
 
 local M = {}
@@ -13,4 +13,5 @@ function M.enable()
   })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.Webdev.Zig.Module
 return M

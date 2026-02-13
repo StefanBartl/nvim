@@ -1,4 +1,4 @@
----@module 'lsp.languages.lua'
+---@module 'lsp.languages.scriipting.lua'
 ---@class LangLuaQoL
 
 local M = {}
@@ -13,4 +13,5 @@ function M.enable()
   })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.Webdev.Lua.Module
 return M

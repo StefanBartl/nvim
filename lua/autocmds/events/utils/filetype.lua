@@ -101,7 +101,7 @@ local handlers = {
   lua = {
     {
       load = function()
-        return require("lsp.languages.lua")
+        return require("lsp.languages.scripting.lua")
       end,
       priority = 10,
       once = true,
@@ -111,7 +111,7 @@ local handlers = {
   c = {
     {
       load = function()
-        return require("lsp.languages.c")
+        return require("lsp.languages.systems.c")
       end,
       priority = 10,
       once = true,
@@ -121,7 +121,7 @@ local handlers = {
   cpp = {
     {
       load = function()
-        return require("lsp.languages.c")
+        return require("lsp.languages.systems.c")
       end,
       priority = 10,
       once = true,
@@ -131,7 +131,7 @@ local handlers = {
   cs = {
     {
       load = function()
-        return require("lsp.languages.csharp")
+        return require("lsp.languages.app.csharp")
       end,
       priority = 10,
       once = true,
@@ -141,7 +141,7 @@ local handlers = {
   go = {
     {
       load = function()
-        return require("lsp.languages.go")
+        return require("lsp.languages.systems.go")
       end,
       priority = 10,
       once = true,
@@ -161,7 +161,7 @@ local handlers = {
   zig = {
     {
       load = function()
-        return require("lsp.languages.zig")
+        return require("lsp.languages.systems.zig")
       end,
       priority = 10,
       once = true,
