@@ -154,3 +154,6 @@ end, 0)
     -- })
   -- end, 400)
 -- end, 10)
+
+-- Für einen harten Kontrast: Weißer Hintergrund, schwarzer Text
+vim.api.nvim_set_hl(0, "Visual", { bg = "#FFFFFF", fg = "#000000", bold = true })

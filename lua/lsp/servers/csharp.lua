@@ -14,7 +14,7 @@ local function find_omnisharp()
   -- 1. EINFACHSTE LÖSUNG: omnisharp ist bereits im PATH!
   --    Das Debug-Script zeigt: "1. omnisharp in PATH: ✓ YES"
   if executable("omnisharp") == 1 then
-    notify.info("C#: Using omnisharp from PATH")
+    -- notify.info("C#: Using omnisharp from PATH")
     return "omnisharp"
   end
 
@@ -55,7 +55,7 @@ end
 ---@param opts { enable?: boolean }|nil
 ---@return nil
 function M.setup(shared, opts)
-  notify.info("🔧 C# Setup: Starting...") -- DEBUG
+  -- notify.info("🔧 C# Setup: Starting...") -- DEBUG
 
   shared = shared or {}
   opts = opts or {}
@@ -66,11 +66,11 @@ function M.setup(shared, opts)
     return
   end
 
-  notify.info("🔧 C# Setup: Found cmd = " .. cmd) -- DEBUG
+  -- notify.info("🔧 C# Setup: Found cmd = " .. cmd) -- DEBUG
 
   -- Define config
   if type(lsp.config) == "table" then
-    notify.info("🔧 C# Setup: lsp.config available") -- DEBUG
+    -- notify.info("🔧 C# Setup: lsp.config available") -- DEBUG
 
     local config_ok, config_err = pcall(function()
       lsp.config("omnisharp", {
@@ -90,14 +90,14 @@ function M.setup(shared, opts)
       return
     end
 
-    notify.info("🔧 C# Setup: Config registered") -- DEBUG
+    -- notify.info("🔧 C# Setup: Config registered") -- DEBUG
 
     if opts.enable ~= false then
       local enable_ok, enable_err = pcall(lsp.enable, "omnisharp")
       if not enable_ok then
         notify.error("🔧 C# Setup: Enable failed: " .. tostring(enable_err))
       else
-        notify.info("🔧 C# Setup: LSP enabled ✓") -- DEBUG
+        -- notify.info("🔧 C# Setup: LSP enabled ✓") -- DEBUG
       end
     end
   else
