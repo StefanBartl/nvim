@@ -106,7 +106,7 @@ local function extract_image_target_from_line(line)
   end
 
   -- If markdown-style target found, normalize and return
-  if t ~= nil and t ~= "" then
+  if t and type(t) == "string" and t ~= "" then
     t = trim(t)
     if t and t:match("^<.+>$") then
       t = t:sub(2, -2)

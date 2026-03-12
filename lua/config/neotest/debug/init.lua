@@ -186,6 +186,7 @@ function M.usercommands()
     }
 
     lines[#lines + 1] = "Vitest config check:"
+    ---@diagnostic disable-next-line: unused-local
     local has_vitest = false
     for _, config in ipairs(vitest_configs) do
       local path = cwd .. "/" .. config

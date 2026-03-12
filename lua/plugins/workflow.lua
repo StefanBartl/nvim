@@ -16,6 +16,33 @@ return {
       keywords = require("config.todo_comments.keywords"),
       colors = require("config.todo_comments.colors.strong"),
     },
+    keys = {
+      {
+        "<leader>ST",
+        function()
+          local snacks = require("snacks")
+          if snacks and snacks.picker then
+            snacks.picker.todo_comments()
+          else
+            vim.notify("Snacks not loaded", vim.log.levels.WARN)
+          end
+        end,
+        desc = "Todo",
+      },
+      {
+        "<leader>sT",
+        function()
+          local snacks = require("snacks")
+          local KEYWORDS = require("config.todo_comments.keywords")
+          if snacks and snacks.picker and KEYWORDS then
+            snacks.picker.todo_comments({ keywords = KEYWORDS })
+          else
+            vim.notify("Snacks not loaded or custom keywords table does not exist", vim.log.levels.WARN)
+          end
+        end,
+        desc = "Todo/Fix/Fixme",
+      },
+    },
     config = function(_, opts)
       local ok, mod = pcall(require, "config.todo_comments")
       if ok and type(mod) == "table" and type(mod.setup) == "function" then
@@ -79,10 +106,20 @@ return {
       local map = require("lib.map")
       -- map("i", "<tab>", "<cmd>AutolistTab<cr>", { desc = "[Autolist] Indent list item" })
       -- map("i", "<s-tab>", "<cmd>AutolistShiftTab<cr>", { desc = "[Autolist] Unindent list item" })
-      map("i", "<CR>", "<CR><cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet on next line" })
+      map(
+        "i",
+        "<CR>",
+        "<CR><cmd>AutolistNewBullet<cr>",
+        { desc = "[Autolist] New bullet on next line" }
+      )
       map("n", "o", "o<cmd>AutolistNewBullet<cr>", { desc = "[Autolist] New bullet below" })
       map("n", "O", "O<cmd>AutolistNewBulletBefore<cr>", { desc = "[Autolist] New bullet above" })
-      map("n", "<leader>rc", "<cmd>AutolistRecalculate<cr>", { desc = "[Autolist] Recalculate ordered list" })
+      map(
+        "n",
+        "<leader>rc",
+        "<cmd>AutolistRecalculate<cr>",
+        { desc = "[Autolist] Recalculate ordered list" }
+      )
       map(
         "n",
         "<leader>cn",

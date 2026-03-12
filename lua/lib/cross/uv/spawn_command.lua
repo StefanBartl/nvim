@@ -36,7 +36,7 @@ local uv = vim.loop
 ---   args: string[]|nil - extra arguments appended to cmd
 ---   stdio: table|nil - uv.spawn stdio configuration
 ---   on_exit: fun(code:number, signal:number)|nil - callback when process exits
----@return userdata handle uv.spawn handle
+---@return (uv.uv_process_t)? # handle uv.spawn handle
 local function spawn_project_command(cmd, opts)
   opts = opts or {}
   local args = opts.args or {}
@@ -74,7 +74,7 @@ local function spawn_project_command(cmd, opts)
         print(("Command '%s' exited with code %d, signal %s"):format(full_cmd, code, tostring(signal)))
       end)
     end
-    handle:close()
+    if handle then handle:close() end
   end)
 
   return handle

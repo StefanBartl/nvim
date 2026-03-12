@@ -15,6 +15,8 @@
 ---   Built-in defaults are `{ {section="header"}, {section="keys", ...}, {section="startup"} }`.  -- we replicate + extend
 ---   Each item supports fields `icon|title|desc|action|key|...`; `action` may be string/func.  -- compatible formats
 
+local picker_config = require("config.snacks.picker")
+
 ---@type table
 return {
 
@@ -37,83 +39,86 @@ return {
     "folke/snacks.nvim",
     -- event = "VimEnter", -- custom dashboard neesds to load early
     lazy = false,
-    priority=1000,
+    priority = 1000,
 
     ---@param _ any
     ---@return Plugins.Snacks.Setup|table
     opts = function(_)
-      --- keep configuration isolated; never mutate shared tables
       ---@type Plugins.Snacks.Setup
       local cfg = {
         debug = { enabled = true },
-        dim = { enabled = true },
-        profiler = { enabled = false }, -- enable only when profiling to avoid overhead
+        dim = { enabled = false },
+        profiler = { enabled = false },
         quickfile = { enabled = true },
-        scope = { enabled = true },
-        scratch = { enabled = true },
-        toggle = { enabled = true },
-        words = { enabled = true },
-
-        image = { enabled = true },
-
-        -- Safeguard for very large files
+        scope = { enabled = false },
+        scratch = { enabled = false },
+        toggle = { enabled = false },
+        words = { enabled = false },
+        image = { enabled = false },
         bigfile = { enabled = false },
-
-        -- Dashboard: replicate defaults and insert our custom "sessions" section.
-        -- According to Snacks docs, defaults are: header, keys, startup.
-        -- We keep those and add our own section in between keys and startup.
+        notifier = { enabled = false },
         dashboard = {
           enabled = false,
           sections = {
             { section = "header" }, -- default
             { section = "keys", gap = 1, padding = 1 }, -- default
-            { title = "Sessions", icon = "󰆓 ", section = "my_sessions", indent = 2, padding = 1 }, -- custom
+            {
+              title = "Sessions",
+              icon = "󰆓 ",
+              section = "my_sessions",
+              indent = 2,
+              padding = 1,
+            }, -- custom
             { section = "startup" }, -- default
           },
         },
 
-        -- Keep Snacks' own picker disabled to avoid redundancy with Telescope/fzf-lua
-        picker = { enabled = false },
+        picker = picker_config.get_config(),
       }
       return cfg
     end,
 
-    -- ---@param _ any
-    -- ---@param opts Plugins.Snacks.Setup
-    -- config = function(_, opts)
-    --   -- Defensive require for snacks itself
-    --   local ok_snacks, snacks = pcall(require, "snacks")
-    --   if not ok_snacks then
-    --     vim.notify("[snacks] not available", vim.log.levels.WARN)
-    --     return
-    --   end
-    --
-    --   -- Attempt to load the modular custom dashboard entrypoint.
-    --   -- If it's not present, fall back to the old direct setup path.
-    --   local ok_cd, cd = pcall(require, "config.snacks.custom_dashboard.init")
-    --   if not ok_cd or type(cd.setup) ~= "function" then
-    --     -- Fallback: old direct setup if custom_dashboard module missing
-    --     local ok_setup, err = pcall(snacks.setup, opts)
-    --     if not ok_setup then
-    --       vim.notify("[snacks] setup() failed (fallback): " .. tostring(err), vim.log.levels.ERROR)
-    --     end
-    --     return
-    --   end
-    --
-    --   -- Call the custom dashboard setup, passing snacks and opts.
-    --   -- The custom module will ensure sections are registered BEFORE snacks.setup().
-    --   local ok, err = pcall(cd.setup, snacks, opts)
-    --   if not ok then
-    --     vim.notify("[snacks.custom_dashboard] setup failed: " .. tostring(err), vim.log.levels.ERROR)
-    --   end
-    -- end,
-    --
-    -- keys = function()
-    --   local ok, maps = pcall(require, "config.snacks.custom_dashboard.mappings")
-    --   if ok and type(maps.keys) == "function" then
-    --     return maps.keys()
-    --   end
-    --   return {}
-    -- end,
+    keys = require("config.snacks.mappings").get_all_keys(),
+
+    ---@param _ any
+    ---@param opts Plugins.Snacks.Setup
+    ---@diagnostic disable-next-line: unused-local
+    config = function(_, opts)
+      require("config.snacks.usrcmds").setup()
+
+      --   -- Defensive require for snacks itself
+      --   local ok_snacks, snacks = pcall(require, "snacks")
+      --   if not ok_snacks then
+      --     vim.notify("[snacks] not available", vim.log.levels.WARN)
+      --     return
+      --   end
+      --
+      --   -- Attempt to load the modular custom dashboard entrypoint.
+      --   -- If it's not present, fall back to the old direct setup path.
+      --   local ok_cd, cd = pcall(require, "config.snacks.custom_dashboard.init")
+      --   if not ok_cd or type(cd.setup) ~= "function" then
+      --     -- Fallback: old direct setup if custom_dashboard module missing
+      --     local ok_setup, err = pcall(snacks.setup, opts)
+      --     if not ok_setup then
+      --       vim.notify("[snacks] setup() failed (fallback): " .. tostring(err), vim.log.levels.ERROR)
+      --     end
+      --     return
+      --   end
+      --
+      --   -- Call the custom dashboard setup, passing snacks and opts.
+      --   -- The custom module will ensure sections are registered BEFORE snacks.setup().
+      --   local ok, err = pcall(cd.setup, snacks, opts)
+      --   if not ok then
+      --     vim.notify("[snacks.custom_dashboard] setup failed: " .. tostring(err), vim.log.levels.ERROR)
+      --   end
+      -- end,
+      --
+      -- keys = function()
+      --   local ok, maps = pcall(require, "config.snacks.custom_dashboard.mappings")
+      --   if ok and type(maps.keys) == "function" then
+      --     return maps.keys()
+      --   end
+      --   return {}
+    end,
   },
 }

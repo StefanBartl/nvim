@@ -1,6 +1,6 @@
 ---@module 'lsp.servers.webdev.astro'
 --- Astro Language Server für .astro Komponenten
---- FIXED: Mason binary name + Filetype autostart
+--- FIXED: Consistent server name across config/enable
 
 local notify = require("lib.notify").create("[lsp.servers.webdev.astro]")
 
@@ -34,7 +34,8 @@ function M.setup(shared, opts)
 
   caps.textDocument.completion.completionItem.snippetSupport = true
 
-  vim.lsp.config("astro-language-server", {
+  -- FIXED: Use "astro" as server name consistently
+  vim.lsp.config("astro", {
     cmd = { "astro-ls", "--stdio" },
 
     filetypes = { "astro" },
@@ -61,8 +62,6 @@ function M.setup(shared, opts)
       if type(shared.on_attach) == "function" then
         shared.on_attach(client, bufnr)
       end
-
-      -- Keymaps …
     end,
 
     on_init = shared.on_init,
@@ -84,7 +83,9 @@ function M.setup(shared, opts)
     },
   })
 
-  vim.lsp.enable("astro-language-server")
+  if opts.enable ~= false then
+    pcall(vim.lsp.enable, "astro")
+  end
 end
 
 return M

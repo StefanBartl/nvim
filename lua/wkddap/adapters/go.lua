@@ -1,7 +1,7 @@
 ---@module 'wkddap.adapters.go'
 ---@brief Go debugging via Delve
 
-local config = require("wkddap.config") -- Fixed: was "dap.config"
+local config = require("wkddap.config")
 local M = {}
 
 --- Setup Go debugging adapter

@@ -105,4 +105,5 @@ function M.enable()
   })
 end
 
+---@type Lsp.Languages.ConfiguredLangs.Webdev.Typescript.Module
 return M

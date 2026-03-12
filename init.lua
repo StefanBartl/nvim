@@ -88,24 +88,24 @@ end
 -- =============================================================================
 -- PHASE 4: DAP (Filetype Lazy-Load)
 -- =============================================================================
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "lua", "go", "python", "javascript" },
-  once = true,
-  callback = function()
+-- vim.api.nvim_create_autocmd("FileType", {
+  -- pattern = { "lua", "go", "python", "javascript" },
+  -- once = true,
+  -- callback = function()
     require("wkddap").setup({
-      languages = { "lua", "go", "python", "javascript" },
+      languages = {},
       ui = { enable = true },
-      keymaps = { enable = false, prefix = "<leader>d" },
+      keymaps = { enable = true, prefix = "<leader>d" },
       auto_install = true,
     })
-  end,
-})
+  -- end,
+-- })
 
 -- =============================================================================
 -- PHASE 5: SEHR NIEDRIG (600ms) - RPC & Debugging
 -- =============================================================================
 vim.defer_fn(function()
-  require("system.rpc_pipe").setup({ debug = false })
+  -- require("system.rpc_pipe").setup({ debug = false })
 
   require("debugging").setup({
     views = { all = true },
@@ -136,3 +136,23 @@ vim.defer_fn(function()
     vim.notify(string.format("Config loaded in %.2f ms", load_time), vim.log.levels.INFO)
   end
 end, 0)
+
+-- -- FIX: einstweiliger fix für: Error in event handler for event before_render[buffers.before_render
+-- vim.defer_fn(function()
+  -- require("neo-tree.command").execute({
+    -- source = "tests",
+    -- position = "left",
+    -- toggle = true,
+  -- })
+
+  -- vim.defer_fn(function()
+    -- require("neo-tree.command").execute({
+      -- source = "tests",
+      -- position = "left",
+      -- toggle = true,
+    -- })
+  -- end, 400)
+-- end, 10)
+
+-- Für einen harten Kontrast: Weißer Hintergrund, schwarzer Text
+vim.api.nvim_set_hl(0, "Visual", { bg = "#FFFFFF", fg = "#000000", bold = true })

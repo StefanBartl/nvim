@@ -294,6 +294,10 @@ function M.try_providers(clients, params, opts)
 
     -- timeout guard per client
     local timer = vim.loop.new_timer()
+    if not timer then
+      notify.warn("timer is nil")
+      return
+    end
     local timeout_ms = 800
     timer:start(
       timeout_ms,

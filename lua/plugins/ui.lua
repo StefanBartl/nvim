@@ -65,4 +65,8 @@ return {
     "folke/zen-mode.nvim",
     cmd = "ZenMode",
   },
+
+  {
+    "MunifTanjim/nui.nvim",
+  },
 }

@@ -166,7 +166,7 @@ end
 function M.test_lazy_loading()
   print("\n=== Testing Lazy Loading ===")
 
-  local dispatcher = require("autocmds.events.utils.filetype")
+  -- local dispatcher = require("autocmds.events.utils.filetype")
 
   -- Check that handlers aren't loaded yet
   local loaded_before = {}

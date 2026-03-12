@@ -81,7 +81,7 @@ local handlers = {
     { load = function() return require("custom.markdown.setup.usercmds") end, priority = 20 },
   },
   lua = {
-    { load = function() return require("lsp.languages.lua") end, priority = 10, once = true },
+    { load = function() return require("lsp.languages.scriipting.lua") end, priority = 10, once = true },
   },
 }
 
@@ -199,7 +199,7 @@ return M
 
 ```lua
 {
-  load = function() return require("lsp.languages.lua") end,
+  load = function() return require("lsp.languages.scriipting.lua") end,
   priority = 10,
   once = true,  -- Nur beim ersten FileType-Event
 }

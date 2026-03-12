@@ -139,6 +139,4 @@ M.ResultStatus = {
 ---@field started fun()
 ---@type NeoTest.Client
 
-
-
 return M

@@ -2,6 +2,6 @@
 
 return {
   transparency = false,
-  theme_toggle = { "vim_default", "rosepine" },
+  theme_toggle = { "vim_default", "tokyonight" },
   theme = "tokyonight",
 }

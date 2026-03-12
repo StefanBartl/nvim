@@ -11,6 +11,16 @@ local M = {}
 _G._neotest_adapter_cache = _G._neotest_adapter_cache or {}
 
 ----------------------------------------------------------------------
+-- Helper: Check if file exists
+----------------------------------------------------------------------
+
+---@param filepath string
+---@return boolean
+local function file_exists(filepath)
+  return vim.fn.filereadable(filepath) == 1
+end
+
+----------------------------------------------------------------------
 -- Adapter Registry
 ----------------------------------------------------------------------
 
@@ -21,9 +31,26 @@ local ADAPTER_BUILDERS = {
     if not ok then
       return nil
     end
-    return plenary({
-      min_init = "./scripts/tests/minimal_init.lua",
-    })
+
+    local min_init_candidates = {
+      "./scripts/tests/minimal_init.lua",
+      vim.fn.getcwd() .. "/scripts/tests/minimal_init.lua",
+    }
+
+    local min_init = nil
+    for _, candidate in ipairs(min_init_candidates) do
+      if file_exists(candidate) then
+        min_init = candidate
+        break
+      end
+    end
+
+    -- Return with or without minimal_init
+    if min_init then
+      return plenary({ min_init = min_init })
+    else
+      return plenary()
+    end
   end,
 
   go = function()

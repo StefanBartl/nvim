@@ -19,7 +19,7 @@ return {
   ["powershell-editor-services"] = true,
   ["perlnavigator"] = false,
   ["phpactor"] = true,
-  ["omnisharp-mono"] = false,
+  ["omnisharp"] = true,
   ["nginx-language-server"] = true,
   ["markdown-oxide"] = true,
   ["m68k-lsp-server"] = true,
@@ -44,12 +44,12 @@ return {
   -- Web Development
   ["html-lsp"] = true,
   ["typescript-language-server"] = true,
-  ["astro-ls"] = true,
-  -- ["astro-language-server"] = true,
+  -- ["astro-ls"] = true,
+  ["astro-language-server"] = true,
   ["tailwindcss-language-server"] = true,
   ["css-lsp"] = true,
   ["htmx-lsp"] = true,
-  ["wasm-language-tools"] = false, -- oft manuell installiert
+  ["wasm-language-tools"] = true, -- oft manuell installiert
   ["unocss-language-server"] = true,
   ["vtsls"] = true, -- besserer TS/JS Server
   ["biome"] = true, -- schneller Formatter/Linter

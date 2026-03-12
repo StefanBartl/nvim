@@ -21,11 +21,8 @@ local uv = vim.loop
 
 -- Trim helper
 ---@param s string
----@return string|nil
+---@return string
 local function trim(s)
-  if not s then
-    return nil
-  end
   return s:match("^%s*(.-)%s*$")
 end
 
@@ -90,7 +87,7 @@ local function extract_url_from_line(line)
 
   -- Prefer markdown link syntax first: [text](url)
   local md = line:match("%[.-%]%((.-)%)")
-  if md and md ~= "" then
+  if md and type(md) == "string" and md ~= "" then
     md = trim(md)
     if md and md:match("^<.+>$") then
       md = md:sub(2, -2)

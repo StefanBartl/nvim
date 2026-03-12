@@ -1,5 +1,4 @@
 ---@module 'lsp.core.diagnostics'
-
 ---@class DiagnosticsPolicy
 local M = {}
 
@@ -16,30 +15,25 @@ function M.setup()
     underline = true,
     update_in_insert = false,
     severity_sort = true,
-
-    -- -virtual_lines = { only_current_line = true },
+    -- virtual_lines = { only_current_line = true },
     virtual_text = true,
-
     -- Modern sign configuration (no deprecated sign_define)
-    signs = use_modern_signs
-        and {
-          -- You can use Nerd Font icons or simple ASCII
-          text = {
-            ERROR = "■",
-            WARN = "■",
-            INFO = "□",
-            HINT = "·",
-          },
-          -- Optional: highlight groups; omit to use defaults
-          -- numhl = {
-          --   ERROR = "DiagnosticSignError",
-          --   WARN  = "DiagnosticSignWarn",
-          --   INFO  = "DiagnosticSignInfo",
-          --   HINT  = "DiagnosticSignHint",
-          -- },
-        }
-      or true, -- keep signs enabled on older Neovim; icons set below via sign_define
-
+    signs = use_modern_signs and {
+      -- Using Nerd Font icons or simple ASCII
+      text = {
+        [vim.diagnostic.severity.ERROR] = "■",
+        [vim.diagnostic.severity.WARN] = "■",
+        [vim.diagnostic.severity.INFO] = "□",
+        [vim.diagnostic.severity.HINT] = "·",
+      },
+      -- Optional: highlight groups for line numbers
+      numhl = {
+        [vim.diagnostic.severity.ERROR] = "DiagnosticSignError",
+        [vim.diagnostic.severity.WARN] = "DiagnosticSignWarn",
+        [vim.diagnostic.severity.INFO] = "DiagnosticSignInfo",
+        [vim.diagnostic.severity.HINT] = "DiagnosticSignHint",
+      },
+    } or true, -- keep signs enabled on older Neovim; icons set below via sign_define
     float = {
       focusable = true,
       style = "minimal",
