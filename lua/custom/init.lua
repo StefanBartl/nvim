@@ -9,9 +9,6 @@ require("custom.open").setup({
   default_handler = "browser",  -- run when :Open is called with no args
 })
 
--- AUDIT
-require("custom.picker_fd_depth").setup()
-
 --AUDIT
 require("custom.commands_keymaps").setup({
   delete_current_file = true,

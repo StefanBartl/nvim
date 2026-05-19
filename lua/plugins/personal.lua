@@ -44,17 +44,17 @@ return {
     -- end,
   -- },
 
-  {
-    "StefanBartl/github_stats.nvim",
-    lazy = false,
-    config = function()
-      require("github_stats").setup({
-        notify_fetch = false,
-        config_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats",
-        data_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats/data"
-      })
-    end,
-  },
+ -- {
+ --   "StefanBartl/github_stats.nvim",
+  --  lazy = false,
+  --  config = function()
+  --    require("github_stats").setup({
+  --      notify_fetch = false,
+  --      config_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats",
+   --     data_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats/data"
+   --   })
+   -- end,
+  --},
 
   -- {
   --   -- 'StefanBartl/learn-cli.nvim',
@@ -119,7 +119,7 @@ return {
   -- },
 
   {
-    -- "StefanBartl/color_my_ascii.nvim",
+    "StefanBartl/color_my_ascii.nvim",
     dir = vim.fn.expand(vim.env.REPOS_DIR .. "/color_my_ascii.nvim"),
     ft = "markdown",
     config = function()
@@ -218,7 +218,7 @@ return {
   -- },
 
   {
-    -- "StefanBartl/nvim-cmdlog",
+    "StefanBartl/nvim-cmdlog",
     dir = vim.env.REPOS_DIR .. "/nvim-cmdlog",
     lazy = false,
     cmd = { "CmdlogOpen", "CmdlogSearch" }, -- or map keys
@@ -317,13 +317,13 @@ return {
   },
 
   -- nvim-containers: Manage container engines from Neovim
-  {
-    dir = vim.fs.joinpath(vim.env.REPOS_DIR, "/nvim-containers"),
-    event = "VeryLazy",
-    config = function()
-      require("containers").setup({})
-    end,
-  },
+ -- {
+--    dir = vim.fs.joinpath(vim.env.REPOS_DIR, "/nvim-containers"),
+ --   event = "VeryLazy",
+ --   config = function()
+ --     require("containers").setup({})
+ --   end,
+ -- },
 
   --[[
 

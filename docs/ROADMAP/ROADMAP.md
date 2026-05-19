@@ -1,4 +1,4 @@
-# WKD Neovim Roadmap
+# Roadmap for `main-workstation` branch
 
   GOUT.prod("TEST eins")
   GOUT.prod("TEST zqa")
