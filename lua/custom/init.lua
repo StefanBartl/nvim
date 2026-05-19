@@ -1,6 +1,9 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
+-- AUDIT
+require("custom.picker_fd_depth").setup()
+
 --AUDIT
 require("custom.commands_keymaps").setup({
   delete_current_file = true,

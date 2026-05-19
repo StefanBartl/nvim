@@ -5,12 +5,12 @@
 
 ---@type Cfg.Mason.EnsureMap
 return {
-  ["java-language-server"] = false,
-  ["php-debug-adapter"] = true,
+ -- ["java-language-server"] = false,
+ -- ["php-debug-adapter"] = true,
   ["netcoredbg"] = true,
-  ["java-test"] = true,
-  ["java-debug-adapter"] = true,
-  ["go-debug-adapter"] = true,
+ -- ["java-test"] = true,
+ -- ["java-debug-adapter"] = true,
+ -- ["go-debug-adapter"] = true,
   ["bash-debug-adapter"] = true,
   ["codelldb"] = true, -- zig, rust, c
 

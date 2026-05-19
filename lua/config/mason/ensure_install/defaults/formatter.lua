@@ -11,17 +11,17 @@ return {
   ["xmlformatter"] = true,
   ["sqlfmt"] = true,
   ["rustfmt"] = true,
-  ["php-cs-fixer"] = true,
-  ["pgformatter"] = false,
-  ["ormolu"] = false,
-  ["phpcbf"] = false,
-  ["nginx-config-formatter"] = true,
+ -- ["php-cs-fixer"] = true,
+  --["pgformatter"] = false,
+  --["ormolu"] = false,
+  --["phpcbf"] = false,
+  --["nginx-config-formatter"] = true,
   ["markdownlint-cli2"] = true,
-  ["gotests"] = true,
-  ["golines"] = true,
-  ["goimports"] = true,
-  ["goimports-reviser"] = true,
-  ["gofumpt"] = true,
+ -- ["gotests"] = true,
+ -- ["golines"] = true,
+  --["goimports"] = true,
+ -- ["goimports-reviser"] = true,
+ -- ["gofumpt"] = true,
   ["cmakelang"] = true,
   ["ast-grep"] = true,
   ["asmfmt"] = true,
@@ -32,11 +32,11 @@ return {
   ["mdformat"] = true,
 
   -- Web Development
-  ["biome"] = true,
-  ["rustywind"] = true, -- Tailwind class sorter
-  ["htmlbeautifier"] = false,
+--  ["biome"] = true,
+  --["rustywind"] = true, -- Tailwind class sorter
+--  ["htmlbeautifier"] = false,
 
   -- Mobile formatters
-  ["google-java-format"] = true,
-  ["ktlint"] = true,
+--  ["google-java-format"] = true,
+ -- ["ktlint"] = true,
 }

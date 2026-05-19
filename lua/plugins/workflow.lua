@@ -57,10 +57,10 @@ return {
     end,
   },
 
-  {
-    "wakatime/vim-wakatime",
-    lazy = false,
-  },
+ -- {
+ --   "wakatime/vim-wakatime",
+ --   lazy = false,
+ -- },
 
   {
     "NStefan002/screenkey.nvim",

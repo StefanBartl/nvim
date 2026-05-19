@@ -123,7 +123,7 @@ function M.setup()
   conform.setup({
     formatters_by_ft = {
       lua = { "stylua" },
-      go = { "goimports", "gofmt" },
+   --   go = { "goimports", "gofmt" },
       javascript = { "prettierd", "prettier" },
       typescript = { "prettierd", "prettier" },
       typescriptreact = { "prettierd", "prettier" },
@@ -131,15 +131,15 @@ function M.setup()
       json = { "jq" },
       css = { "prettierd", "prettier" },
       html = { "prettierd", "prettier" },
-      zig = { "zigfmt" },
-      c = { "clang_format" },
-      cpp = { "clang_format" },
+    --  zig = { "zigfmt" },
+    --  c = { "clang_format" },
+    --  cpp = { "clang_format" },
       cs = { "csharpier" },
       markdown = { "mdformat", "prettierd", "prettier" },
       sh = { "shfmt", "shellharden" }, -- shfmt first (idempotent), shellharden optional
       bash = { "shfmt", "shellharden" },
       zsh = { "shfmt" }, -- shellharden may warn on zsh-isms; keep optional
-      ksh = { "shfmt" },
+     -- ksh = { "shfmt" },
     },
 
     -- Explicit commands so Conform can find the executables reliably

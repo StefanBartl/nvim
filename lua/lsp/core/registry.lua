@@ -18,18 +18,18 @@ local ACTIVE = {
   "html",
   "ts_ls",
   "tailwindcss",
-  "astro",
-  "htmx",
-  "wasm_language_tools",
+ -- "astro",
+ -- "htmx",
+ -- "wasm_language_tools",
 
   --"clangd",
   "csharp",
   --"zig",
 
   -- Mobile development servers
-  "jdtls", -- Java (Android)
-  "kotlin_language_server", -- Kotlin (Android)
-  "dartls", -- Dart/Flutter
+ -- "jdtls", -- Java (Android)
+ -- "kotlin_language_server", -- Kotlin (Android)
+ -- "dartls", -- Dart/Flutter
 }
 
 ---@param shared table
@@ -40,9 +40,9 @@ function M.setup_all(shared)
   end
 
   -- iOS: sourcekit hinzufügen
-  if require("lib.cross.platform.is_macos")() then
-    ACTIVE[#ACTIVE + 1] = "mobiledev.sourcekit"
-  end
+ -- if require("lib.cross.platform.is_macos")() then
+  --  ACTIVE[#ACTIVE + 1] = "mobiledev.sourcekit"
+  --end
 
   local enabled = {}
 
@@ -57,9 +57,9 @@ function M.setup_all(shared)
       paths[#paths + 1] = "lsp.servers.webdev." .. name
     end
 
-    if not name:match("%.") then
-      paths[#paths + 1] = "lsp.servers.mobiledev." .. name
-    end
+   -- if not name:match("%.") then
+   --   paths[#paths + 1] = "lsp.servers.mobiledev." .. name
+   -- end
 
     local loaded = false
     local last_error = nil

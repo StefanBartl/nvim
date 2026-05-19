@@ -6,17 +6,17 @@
 ---@type Cfg.Mason.EnsureMap
 return {
   ["yamllint"] = true,
-  ["systemdlint"] = true,
-  ["swiftlint"] = true,
+ -- ["systemdlint"] = true,
+ -- ["swiftlint"] = true,
   ["sqlfluff"] = true,
-  ["pymarkdownlnt"] = true,
-  ["phpcs"] = true,
-  ["phpmd"] = true,
+  --["pymarkdownlnt"] = true,
+  --["phpcs"] = true,
+  --["phpmd"] = true,
   ["markuplint"] = true,
   ["markdownlint-cli2"] = true,
   ["luacheck"] = true,
   ["jsonlint"] = true,
-  ["golangci-lint"] = true,
+ -- ["golangci-lint"] = true,
   ["eslint_d"] = true,
   ["cmakelint"] = true,
   ["cmakelang"] = true,
@@ -25,8 +25,8 @@ return {
 
   -- Web Development
   ["htmlhint"] = true,
-  ["biome"] = true,
+--  ["biome"] = true,
 
   -- Mobile linters
-  ["checkstyle"] = true,
+ -- ["checkstyle"] = true,
 }

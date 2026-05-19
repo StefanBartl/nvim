@@ -5,7 +5,7 @@ local M = {}
 
 ---@return nil
 function M.setup()
-  local ok, ts = pcall(require, "nvim-treesitter.config")
+  local ok, ts = pcall(require, "nvim-treesitter.configs")
   if not ok then
     return
   end

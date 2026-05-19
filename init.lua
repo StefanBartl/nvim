@@ -92,12 +92,12 @@ end
   -- pattern = { "lua", "go", "python", "javascript" },
   -- once = true,
   -- callback = function()
-    require("wkddap").setup({
-      languages = {},
-      ui = { enable = true },
-      keymaps = { enable = true, prefix = "<leader>d" },
-      auto_install = true,
-    })
+ --   require("wkddap").setup({
+ --     languages = {},
+ --    ui = { enable = true },
+ --     keymaps = { enable = true, prefix = "<leader>d" },
+ --    auto_install = true,
+ --   })
   -- end,
 -- })
 
