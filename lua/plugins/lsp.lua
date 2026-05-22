@@ -1,8 +1,6 @@
 ---@module 'plugins.lsp'
 --- Language Server Protocol integration, formatting, and diagnostics tools.
 
-local numbering = require("config.trouble.numbering")
-
 ---@type LazyPluginSpec[]
 return {
   -- {
@@ -34,15 +32,15 @@ return {
 
     opts = {
       library = {
-        { path = "${3rd}/luv/library", words = { "vim%.uv", "uv", "vim%.loop" } },
+        { path = "${3rd}/luv/library",   words = { "vim%.uv", "uv", "vim%.loop" } },
         { path = "lazydev.nvim/types" },
-        { path = "luvit-meta/library", words = { "vim%.uv", "uv", "vim%.loop" } },
-        { path = "plenary.nvim/types", mods = { "plenary" } },
+        { path = "luvit-meta/library",   words = { "vim%.uv", "uv", "vim%.loop" } },
+        { path = "plenary.nvim/types",   mods = { "plenary" } },
         { path = "telescope.nvim/types", mods = { "telescope" } },
         { "nvim-dap-ui" },
-        { path = "wezterm-types", mods = { "wezterm" } },
-        { path = "LazyVim", words = { "LazyVim" } },
-        { path = "nvim-treesitter", mods = { "vim.treesitter" } },
+        { path = "wezterm-types",        mods = { "wezterm" } },
+        { path = "LazyVim",              words = { "LazyVim" } },
+        { path = "nvim-treesitter",      mods = { "vim.treesitter" } },
       },
     },
   },
@@ -90,7 +88,7 @@ return {
     end,
     dependencies = {
       "nvim-treesitter/nvim-treesitter", -- optional
-      "nvim-tree/nvim-web-devicons", -- optional
+      "nvim-tree/nvim-web-devicons",     -- optional
     },
   },
 
@@ -147,64 +145,6 @@ return {
   {
     "artemave/workspace-diagnostics.nvim",
     event = "LspAttach",
-  },
-
-  -- Trouble: Diagnostic list in sidebar (virtual text alternative)
-  {
-    "folke/trouble.nvim",
-    dependencies = "nvim-tree/nvim-web-devicons",
-    version = "*",
-    lazy = false,
-    config = function()
-      require("trouble").setup({
-        preview = {
-          type = "split",
-          relative = "win",
-          position = "right",
-          size = 0.3,
-        },
-
-        modes = {
-          diagnostics = {
-            mode = "diagnostics",
-            preview = {
-              type = "split",
-              relative = "win",
-              position = "right",
-              size = 0.3,
-            },
-            formatters = {
-              index = numbering.index_prefix(),
-              main = "message",
-            },
-          },
-
-          qflist = {
-            mode = "qflist",
-            preview = {
-              type = "split",
-              relative = "win",
-              position = "right",
-              size = 0.3,
-            },
-            formatters = {
-              index = numbering.index_prefix(),
-              main = "message",
-            },
-          },
-
-          loclist = {
-            mode = "loclist",
-            preview = {
-              type = "split",
-              relative = "win",
-              position = "right",
-              size = 0.3,
-            },
-          },
-        },
-      })
-    end,
   },
 
   {
