@@ -1,5 +1,6 @@
 # WKD Neovim Roadmap
 
+<<<<<<< HEAD
 - Fighting Game
 - WebAssembly
 - nvim-nexus
@@ -95,5 +96,16 @@ Implementieren in `:UI` sowie auch als config
 - experimental options:
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 -- WKDBook lua und Neovim mit Notes zusammenführen
+=======
+1. `nvim-container` really needed or should i disable it? `Arch`?
+
+## Neotree
+
+### `leader fm` - open in file manager
+
+   Warn  9:58:23 AM notify.warn [config.neotree.open.filemanager.win] Open in Explorer: no path under cursor
+   Warn  9:58:23 AM notify.warn [cfg.neotree.keymaps.fs.info] Failed to open in file manager
+
+>>>>>>> 5257a2b (custom trouble spell)
 
 ---
