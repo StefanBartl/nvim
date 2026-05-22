@@ -1,6 +1,5 @@
 # WKD Neovim Roadmap
 
-<<<<<<< HEAD
 - Fighting Game
 - WebAssembly
 - nvim-nexus
@@ -99,13 +98,15 @@ Implementieren in `:UI` sowie auch als config
 =======
 1. `nvim-container` really needed or should i disable it? `Arch`?
 
+=======
+1. `nvim-container` really needed or should i disable it? `Arch`?
+
+>>>>>>> 5257a2b (custom trouble spell)
 ## Neotree
 
 ### `leader fm` - open in file manager
 
    Warn  9:58:23 AM notify.warn [config.neotree.open.filemanager.win] Open in Explorer: no path under cursor
    Warn  9:58:23 AM notify.warn [cfg.neotree.keymaps.fs.info] Failed to open in file manager
-
->>>>>>> 5257a2b (custom trouble spell)
 
 ---
