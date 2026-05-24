@@ -103,6 +103,10 @@ Implementieren in `:UI` sowie auch als config
 
 1. `nvim-container` really needed or should i disable it? `Arch`?
 
+## tresitter
+
+`9:09:55 PM msg_show Treesitter konnte noch nicht geladen werden. Starte Neovim ggf. neu.`
+
 ## Neotree
 
 ### `leader fm` - open in file manager
