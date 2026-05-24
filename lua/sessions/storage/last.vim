@@ -1,18 +1,22 @@
 let SessionLoad = 1
 let s:so_save = &g:so | let s:siso_save = &g:siso | setg so=0 siso=0 | setl so=-1 siso=-1
 let v:this_session=expand("<sfile>:p")
-doautoall SessionLoadPre
 silent only
 silent tabonly
+<<<<<<< HEAD
 <<<<<<< HEAD
 cd ~/AppData/Local/nvim
 =======
 cd ~/OneDrive\ -\ TRICENTIS
 >>>>>>> 08d184b (ccbujuruguvdjjblifhuhdtegkgkckljiibn)
+=======
+cd ~/AppData/Local/nvim
+>>>>>>> 1a9a40e (TEMP)
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 let s:shortmess_save = &shortmess
+<<<<<<< HEAD
 set shortmess+=aoO
 <<<<<<< HEAD
 argglobal
@@ -23,7 +27,20 @@ argglobal
 %argdel
 $argadd ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
 edit ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
+=======
+if &shortmess =~ 'A'
+  set shortmess=aoOA
+else
+  set shortmess=aoO
+endif
+badd +14 ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
+badd +26 ~/AppData/Local/nvim/lua/plugins/markdown.lua
 argglobal
+%argdel
+edit ~/AppData/Local/nvim/lua/plugins/markdown.lua
+>>>>>>> 1a9a40e (TEMP)
+argglobal
+balt ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
 setlocal foldmethod=expr
 setlocal foldexpr=v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)
 setlocal foldmarker={{{,}}}
@@ -32,11 +49,19 @@ setlocal foldlevel=99
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldenable
+<<<<<<< HEAD
 let s:l = 17 - ((16 * winheight(0) + 25) / 50)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 17
+=======
+let s:l = 26 - ((25 * winheight(0) + 17) / 35)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 26
+>>>>>>> 1a9a40e (TEMP)
 normal! 0
 >>>>>>> 08d184b (ccbujuruguvdjjblifhuhdtegkgkckljiibn)
 tabnext 1
