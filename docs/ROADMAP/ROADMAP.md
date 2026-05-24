@@ -95,13 +95,9 @@ Implementieren in `:UI` sowie auch als config
 - experimental options:
 - [nvim install doc](./NVIM-Install Doc/install_notes.md) fertig aufteilen
 -- WKDBook lua und Neovim mit Notes zusammenführen
-=======
+
 1. `nvim-container` really needed or should i disable it? `Arch`?
 
-=======
-1. `nvim-container` really needed or should i disable it? `Arch`?
-
->>>>>>> 5257a2b (custom trouble spell)
 ## Neotree
 
 ### `leader fm` - open in file manager
