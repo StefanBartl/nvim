@@ -107,16 +107,14 @@ function M.open(state)
     return false
   end
 
-  -- Resolve the focused node via the tree, not via state.current_node which
-  -- is not a stable Neo-tree API field and is typically nil.
-  local node = node_utils.get_current(state)
-  if not node then
-    notify.warn("Open in Explorer: no node under cursor")
-    return false
+  -- Get the currently focused node safely from Neo-tree state
+  local node = nil
+  if state and state.tree then
+    node = state.tree:get_node()
   end
 
-  local raw, _ = node_utils.get_path(node)
-  if raw == "" then
+  -- Use refactored get_path from node_utils
+  local raw, _ = node_utils.get_path(node)if raw == "" then
     notify.warn("Open in Explorer: no path under cursor")
     return false
   end
@@ -144,26 +142,24 @@ function M.open(state)
     and { "explorer.exe", abs }
     or  { "explorer.exe", "/select," .. abs }
 
-  -- Fallback: cmd.exe /C start opens the directory in the default file manager
+  -- Fallback: use cmd.exe /C start "" "dir"
   local fallback = { "cmd.exe", "/C", "start", "", dir }
 
-  spawn_detached(primary, function(ok, code, stderr)
-    if ok then
+  spawn_detached(primary, { detach = true }, function(success, code, stderr)
+    -- HARDENING: explorer.exe gibt unter Windows extrem oft den Exit-Code 1 zurück,
+    -- wenn es erfolgreich geforkt/geöffnet wurde. Wir fangen das hier ab.
+    if success or code == 1 then
       return
     end
+--TODO:
+    -- Wenn es wirklich ein Fehler war (code ~= 0 und code ~= 1):
+    local msg = ("explorer primary failed (code=%s, stderr=%s). Trying cmd start fallback"):format(tostring(code), tostring(stderr))
+    notify.warn(msg)
 
-    -- Primary failed; log diagnostics and attempt fallback
-    notify.warn(("explorer.exe failed (code=%s, stderr=%s) — trying cmd fallback"):format(
-      tostring(code),
-      tostring(stderr)
-    ))
-
-    spawn_detached(fallback, function(ok2, code2, stderr2)
-      if not ok2 then
-        notify.error(("cmd fallback also failed (code=%s, stderr=%s)"):format(
-          tostring(code2),
-          tostring(stderr2)
-        ))
+    spawn_detached(fallback, { detach = true }, function(s2, c2, e2)
+      if not s2 then
+        local err = ("Fallback also failed (code=%s, stderr=%s)").format(tostring(c2), tostring(e2))
+        notify.error(err)
       end
     end)
   end)
