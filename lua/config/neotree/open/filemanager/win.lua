@@ -81,12 +81,14 @@ function M.open(state)
     return false
   end
 
-  -- Get the currently focused node
-  local node = state and state.current_node or nil
+  -- Get the currently focused node safely from Neo-tree state
+  local node = nil
+  if state and state.tree then
+    node = state.tree:get_node()
+  end
 
   -- Use refactored get_path from node_utils
-  local raw, _ = node_utils.get_path(node)
-  if raw == "" then
+  local raw, _ = node_utils.get_path(node)if raw == "" then
     notify.warn("Open in Explorer: no path under cursor")
     return false
   end
@@ -126,15 +128,19 @@ function M.open(state)
   end
 
   -- Fallback: use cmd.exe /C start "" "dir"
-  -- make sure dir is a single argument (quoted if needed by system API)
   local fallback = { "cmd.exe", "/C", "start", "", dir }
 
   spawn_detached(primary, { detach = true }, function(success, code, stderr)
-    if success then return end
+    -- HARDENING: explorer.exe gibt unter Windows extrem oft den Exit-Code 1 zurück,
+    -- wenn es erfolgreich geforkt/geöffnet wurde. Wir fangen das hier ab.
+    if success or code == 1 then
+      return
+    end
 
-    -- primary failed: try fallback and report diagnostics
+    -- Wenn es wirklich ein Fehler war (code ~= 0 und code ~= 1):
     local msg = ("explorer primary failed (code=%s, stderr=%s). Trying cmd start fallback"):format(tostring(code), tostring(stderr))
     notify.warn(msg)
+
     spawn_detached(fallback, { detach = true }, function(s2, c2, e2)
       if not s2 then
         local err = ("Fallback also failed (code=%s, stderr=%s)").format(tostring(c2), tostring(e2))
