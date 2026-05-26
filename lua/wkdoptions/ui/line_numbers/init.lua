@@ -8,21 +8,6 @@ vim.opt.relativenumber = false
 local M = {}
 
 ---Render custom statuscolumn numbers.
----
----Behavior:
---- - First visible line:
----     Distance from cursor to file start
----
---- - Last visible line:
----     Absolute total line count
----
---- - Cursor line:
----     0
----
---- - All other lines:
----     Relative distance to cursor
----
----@return string
 function M.render()
   -- Ignore wrapped/virtual lines.
   if vim.v.virtnum ~= 0 then
@@ -45,28 +30,28 @@ function M.render()
   local last_visible = vim.fn.line("w$")
 
   -- =========================================================================
-  -- First visible line
+  -- Erste sichtbare Zeile (Hervorgehoben mit %#DiagnosticWarn#)
   -- =========================================================================
   if line_number == first_visible then
-    return tostring(cursor_line - 1)
+    return "%#DiagnosticWarn#" .. tostring(cursor_line - 1) .. "%*"
   end
 
   -- =========================================================================
-  -- Last visible line
+  -- Letzte sichtbare Zeile (Hervorgehoben mit %#DiagnosticInfo#)
   -- =========================================================================
   if line_number == last_visible then
-    return tostring(last_buffer_line)
+    return "%#DiagnosticInfo#" .. tostring(last_buffer_line) .. "%*"
   end
 
   -- =========================================================================
-  -- Cursor line
+  -- Cursor-Zeile
   -- =========================================================================
   if line_number == cursor_line then
     return "0"
   end
 
   -- =========================================================================
-  -- Default relative numbers
+  -- Standard relative Nummern
   -- =========================================================================
   return tostring(math.abs(cursor_line - line_number))
 end
@@ -74,8 +59,7 @@ end
 -- Export globally for statuscolumn.
 _G.custom_line_numbers = M.render
 
--- Right-aligned rendering.
-vim.opt.statuscolumn = "%=%{v:lua.custom_line_numbers()} "
+vim.opt.statuscolumn = "%=%{%v:lua.custom_line_numbers()%} "
 
 -- Dynamically resize number column for large files.
 vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost" }, {
