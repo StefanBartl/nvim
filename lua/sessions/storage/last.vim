@@ -4,14 +4,41 @@ let v:this_session=expand("<sfile>:p")
 doautoall SessionLoadPre
 silent only
 silent tabonly
+<<<<<<< HEAD
 cd ~/AppData/Local/nvim
+=======
+cd ~/OneDrive\ -\ TRICENTIS
+>>>>>>> 08d184b (ccbujuruguvdjjblifhuhdtegkgkckljiibn)
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 let s:shortmess_save = &shortmess
 set shortmess+=aoO
+<<<<<<< HEAD
 argglobal
 %argdel
+=======
+badd +17 ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
+argglobal
+%argdel
+$argadd ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
+edit ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
+argglobal
+setlocal foldmethod=expr
+setlocal foldexpr=v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)
+setlocal foldmarker={{{,}}}
+setlocal foldignore=#
+setlocal foldlevel=99
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldenable
+let s:l = 17 - ((16 * winheight(0) + 25) / 50)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 17
+normal! 0
+>>>>>>> 08d184b (ccbujuruguvdjjblifhuhdtegkgkckljiibn)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
