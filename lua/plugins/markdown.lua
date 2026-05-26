@@ -8,10 +8,14 @@ return {
   {
     "MeanderingProgrammer/render-markdown.nvim",
     ft = { "markdown" },
-    cmd = { "RenderMarkdown" },
+    cmd = { "RenderMarkdown", "MarkdownRender" },
     opts = {
       enabled = false,
     },
+    config = function(opts)
+      require("render-markdown").setup(opts)
+      require("config.markdown_render").setup()
+    end
   },
 
   {

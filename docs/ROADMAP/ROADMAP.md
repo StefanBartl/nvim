@@ -1,6 +1,8 @@
 # Roadmap for `main-workstation` branch
 
 1. `nvim-container` really needed or should i disable it? `Arch`?
+2. `markdown_render`-implementieren in `:Markdown [] []`
+3. `leader fc` findet `git.lua` nicht???
 
 
 `open` solte natürlich nach usrcmd sowie andere aus `custom` wahrscheinlich auch!

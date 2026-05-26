@@ -4,31 +4,31 @@ let v:this_session=expand("<sfile>:p")
 doautoall SessionLoadPre
 silent only
 silent tabonly
-cd ~/OneDrive\ -\ TRICENTIS/Dokumente/Onboarding
+cd ~/OneDrive\ -\ TRICENTIS
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 let s:shortmess_save = &shortmess
 set shortmess+=aoO
-badd +1 ~/AppData/Local/nvim/lua/lib/ui/hover_select/buffer.lua
+badd +17 ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
 argglobal
 %argdel
-edit ~/AppData/Local/nvim/lua/lib/ui/hover_select/buffer.lua
-tcd ~/AppData/Local/nvim
+$argadd ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
+edit ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
 argglobal
 setlocal foldmethod=expr
-setlocal foldexpr=v:lua.vim.treesitter.foldexpr()
+setlocal foldexpr=v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)
 setlocal foldmarker={{{,}}}
 setlocal foldignore=#
 setlocal foldlevel=99
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldenable
-let s:l = 1 - ((0 * winheight(0) + 24) / 49)
+let s:l = 17 - ((16 * winheight(0) + 25) / 50)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
+keepjumps 17
 normal! 0
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
