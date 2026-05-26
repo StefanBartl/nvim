@@ -4,20 +4,14 @@
 ---@type LazyPluginSpec[]
 return {
 
-  ---@type LazyPluginSpec
   {
     "MeanderingProgrammer/render-markdown.nvim",
     ft = { "markdown" },
     cmd = { "RenderMarkdown", "MarkdownRender" },
-    opts = {
-      enabled = false,
-    },
-    config = function(opts)
-      require("render-markdown").setup(opts)
+    config = function()
       require("config.markdown_render").setup()
-    end
+    end,
   },
-
   {
     "iamcco/markdown-preview.nvim",
     cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
