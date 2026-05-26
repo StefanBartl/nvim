@@ -2,6 +2,8 @@
 
 1. `nvim-container` really needed or should i disable it? `Arch`?
 leader fm open in neotree?
+2. `markdown_render`-implementieren in `:Markdown [] []`
+3. `leader fc` findet `git.lua` nicht???
 
 
 `open` solte natürlich nach usrcmd sowie andere aus `custom` wahrscheinlich auch!

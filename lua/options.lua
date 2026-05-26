@@ -17,8 +17,9 @@ local api = vim.api
 opt.termguicolors = true
 
 -- Line numbers: absolute + relative for efficient motions.
-opt.number = true
-opt.relativenumber = true
+-- opt.number = true
+-- opt.relativenumber = true
+require("wkdoptions.ui.line_numbers")
 
 -- Always show the sign column to avoid layout shifts.
 opt.signcolumn = "yes" -- "number" / "auto"

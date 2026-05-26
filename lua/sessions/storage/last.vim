@@ -21,7 +21,7 @@ edit ~/AppData/Local/nvim/lua/plugins/markdown.lua
 argglobal
 balt ~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
 setlocal foldmethod=expr
-setlocal foldexpr=v:lua.vim.treesitter.foldexpr()
+setlocal foldexpr=v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)
 setlocal foldmarker={{{,}}}
 setlocal foldignore=#
 setlocal foldlevel=99

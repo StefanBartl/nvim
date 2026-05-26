@@ -1,12 +1,14 @@
 -- markdown.lua
 return {
+
   {
     "MeanderingProgrammer/render-markdown.nvim",
     ft = { "markdown" },
-    cmd = { "RenderMarkdown" },
-    opts = { enabled = false },
+    cmd = { "RenderMarkdown", "MarkdownRender" },
+    config = function()
+      require("config.markdown_render").setup()
+    end,
   },
-
   {
     "iamcco/markdown-preview.nvim",
     -- Wir fügen deine Wrapper-Befehle hier hinzu, damit Lazy-Loading auch auf sie anspringt

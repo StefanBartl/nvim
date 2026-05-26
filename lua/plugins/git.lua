@@ -19,6 +19,10 @@ return {
     keys = {
       { "<leader>lg", "<cmd>LazyGit<cr>", desc = "[LazyGit] Open UI" },
     },
+    config = function()
+      -- Setzt den Editor-Befehl explizit für die Sub-Prozesse von Neovim
+      vim.g.lazygit_use_neovim_remote = 1 -- Nutzt das interne nvim-remote Feature falls verfügbar TODO: Funkioniert nicht...
+    end,
   },
 
   -- -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
@@ -32,13 +36,13 @@ return {
   {
     "sindrets/diffview.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
-  cmd = {
-    "DiffviewOpen",
-    "DiffviewClose",
-    "DiffviewToggleFiles",
-    "DiffviewFocusFiles",
-    "DiffviewFileHistory",
-  },
+    cmd = {
+      "DiffviewOpen",
+      "DiffviewClose",
+      "DiffviewToggleFiles",
+      "DiffviewFocusFiles",
+      "DiffviewFileHistory",
+    },
     -- lazy = true,
     config = true,
   },
@@ -80,7 +84,7 @@ return {
   },
 
   {
-    'akinsho/git-conflict.nvim',
+    "akinsho/git-conflict.nvim",
     version = "*",
     config = true,
     lazy = false,
