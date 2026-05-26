@@ -1,52 +1,50 @@
----@module 'config.renderMarkdown'
+---@module 'config.markdown_render'
+
+local notify = require("lib.notify").create("[markdown_render]")
+local map    = require("lib.map")
+
 local M = {}
 
----Kern-Logik zum Setzen des Render-Zustands
----@param state "on"|"off"|"toggle"
-function M.toggle_render(state)
-  local lib_ok, lib = pcall(require, "lib")
-  local notify = lib_ok and lib.notify or vim.notify
+local is_enabled = false
 
-  -- Lazy-Check entfällt hier implizit, da der Command das Plugin ohnehin lädt.
-  -- Dennoch sichern wir den API-Call ab:
-  local rm_ok, rm = pcall(require, "render-markdown")
-  if not rm_ok then
-    notify("render-markdown.nvim konnte nicht geladen werden!", vim.log.levels.ERROR)
-    return
-  end
-
-  -- Wir nutzen das State-API des Plugins anstelle einer eigenen Variable
-  local state_manager = require("render-markdown.state")
-  -- Falls das Plugin-API den State anders hält, fragen wir ab, ob es aktiv ist:
-  local is_active = state_manager.enabled
-
-  if state == "on" or (state == "toggle" and not is_active) then
-    vim.cmd("RenderMarkdown enable")
-    notify("Markdown Rendering: AN", vim.log.levels.INFO)
-  elseif state == "off" or (state == "toggle" and is_active) then
-    vim.cmd("RenderMarkdown disable")
-    notify("Markdown Rendering: AUS", vim.log.levels.INFO)
-  end
-end
-
----Setup-Funktion für den eigenständigen Usercommand
+--- Initialisiert render-markdown mit disabled-Startzustand
 function M.setup()
-  vim.api.nvim_create_user_command("MarkdownRender", function(opts)
+  require("render-markdown").setup({
+    enabled = false,  -- explizit deaktiviert beim Start
+  })
+
+  require("lib.usercmd").create("MarkdownRender", function(opts)
     local arg = opts.args:lower()
-    if arg == "on" or arg == "off" or arg == "toggle" then
-      M.toggle_render(arg)
-    elseif arg == "" then
-      M.toggle_render("toggle")
+    if arg == "on" then
+      M.set(true)
+    elseif arg == "off" then
+      M.set(false)
+    elseif arg == "" or arg == "toggle" then
+      M.set(not is_enabled)
     else
-      vim.notify("Ungültiges Argument. Erlaubt: on, off, toggle", vim.log.levels.WARN)
+      notify.warn("Ungültiges Argument. Erlaubt: on, off, toggle")
     end
   end, {
     nargs = "?",
-    complete = function()
-      return { "on", "off", "toggle" }
-    end,
-    desc = "Markdown Rendering steuern",
+    complete = function() return { "on", "off", "toggle" } end,
+    desc = "Markdown Rendering steuern (on/off/toggle)",
   })
+
+  map("n", "<leader>mr", function() M.set(not is_enabled) end,
+    nil, "Toggle Markdown Rendering")
+end
+
+--- Setzt den Render-Zustand
+---@param state boolean
+function M.set(state)
+  is_enabled = state
+  if is_enabled then
+    vim.cmd("RenderMarkdown enable")
+    notify.info("Markdown rendering aktiviert")
+  else
+    vim.cmd("RenderMarkdown disable")
+    notify.info("Markdown rendering deaktiviert")
+  end
 end
 
 return M
