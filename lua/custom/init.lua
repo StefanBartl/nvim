@@ -1,7 +1,10 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
--- AUDIT:
+-- AUDIT
+require("custom.find_in_folder").setup({ keymaps = true, usercmds = true })
+
+-- AUDIT
 require("custom.open").setup({
   default_handler = "browser",  -- run when :Open is called with no args
 })
