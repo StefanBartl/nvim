@@ -16,7 +16,7 @@ local webdev_langs = { "astro", "typescript", "html" }
 ---@return nil
 local function enable_app()
   for _, name in ipairs(app_langs) do
-    local ok, mod = pcall(require, "lsp.languages.app" .. name)
+    local ok, mod = pcall(require, "lsp.languages.app." .. name)
     if ok and type(mod.enable) == "function" then
       pcall(mod.enable)
     end
@@ -26,7 +26,7 @@ end
 ---@return nil
 local function enable_documentation()
   for _, name in ipairs(documentation_langs) do
-    local ok, mod = pcall(require, "lsp.languages.documentation" .. name)
+    local ok, mod = pcall(require, "lsp.languages.documentation." .. name)
     if ok and type(mod.enable) == "function" then
       pcall(mod.enable)
     end
@@ -36,7 +36,7 @@ end
 ---@return nil
 local function enable_scripting()
   for _, name in ipairs(scripting_langs) do
-    local ok, mod = pcall(require, "lsp.languages.scripting" .. name)
+    local ok, mod = pcall(require, "lsp.languages.scripting." .. name)
     if ok and type(mod.enable) == "function" then
       pcall(mod.enable)
     end
@@ -47,7 +47,7 @@ end
 ---@return nil
 local function enable_systems()
   for _, name in ipairs(system_langs) do
-    local ok, mod = pcall(require, "lsp.languages.systems" .. name)
+    local ok, mod = pcall(require, "lsp.languages.systems." .. name)
     if ok and type(mod.enable) == "function" then
       pcall(mod.enable)
     end
