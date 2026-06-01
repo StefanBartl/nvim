@@ -1,5 +1,5 @@
 ---@module 'plugins.trouble'
----@brief trouble.nvim plugin specification with spell-check integration.
+---@brief trouble.nvim plugin specification with SpellChecker integration.
 
 local numbering = require("config.trouble.numbering")
 
@@ -11,7 +11,7 @@ return {
     },
 
     version = "*",
-    lazy = false,
+    lazy    = false,
 
     config = function()
       require("trouble").setup({
@@ -76,17 +76,20 @@ return {
         },
       })
 
+      -- ── SpellChecker ───────────────────────────────────────────────────────
       require("config.trouble.spell").setup({
-        severity = vim.diagnostic.severity.WARN,
+        severity    = vim.diagnostic.severity.WARN,
 
-        -- Toggle spell session
-        keymap = "<leader>zs",
+        -- Global toggle keymap (no lang / no scope → defaults to en / buf)
+        keymap      = "<leader>zs",
 
-        -- Interactive correction
-        keymap_fix = "<leader>z=",
+        -- Per-buffer correction keymaps (attached when a session is active)
+        keymap_fix  = "<leader>z=",   -- z= menu, then advance
+        keymap_fix1 = "<leader>z1",   -- accept first suggestion, advance
+        keymap_next = "]s",           -- jump to next spell error
 
-        -- Accept first suggestion
-        keymap_fix1 = "<leader>z1",
+        -- Set to false to always use the quickfix fallback
+        use_trouble = true,
       })
     end,
   },
