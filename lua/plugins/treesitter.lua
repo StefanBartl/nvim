@@ -1,63 +1,73 @@
+---@module 'plugins.treesitter'
+---@brief Treesitter plugin spec – extends NvChad's base config via opts-merge.
+--- No `config` override: NvChad owns the configs.setup() call.
+--- This spec only adds parsers, textobjects and context on top.
+
 return {
-  -- 1. nvim-treesitter (Das Haupt-Plugin)
+  -- =========================================================================
+  -- Core: extend NvChad's treesitter spec via opts merge
+  -- opts = function(_, opts) receives NvChad's already-merged opts as second
+  -- argument, so we never stomp on what NvChad configured.
+  -- =========================================================================
   {
     "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdate",
-    event = { "BufReadPost", "BufNewFile" },
-    -- Wir laden die Erweiterungen als direkte Abhängigkeiten
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
       "nvim-treesitter/nvim-treesitter-context",
     },
-    opts = function()
-      -- Sicherer Import der Parser-Liste
+    opts = function(_, opts)
+      -- -----------------------------------------------------------------------
+      -- Parser list: merge our list into NvChad's ensure_installed
+      -- -----------------------------------------------------------------------
       local ok_parser, parser_list = pcall(require, "config.treesitter.parser")
 
-      return {
-        ensure_installed = ok_parser and parser_list or { "c_sharp", "lua", "vim", "vimdoc", "rust", "go" },
-        highlight = {
-          enable = true,
-          use_languagetree = true,
-          additional_vim_regex_highlighting = false,
-        },
-        indent = { enable = true },
-        -- Textobjects Konfiguration direkt hier rein
-        textobjects = {
-          select = {
-            enable = true,
-            lookahead = true,
-            keymaps = {
-              ["af"] = "@function.outer",
-              ["if"] = "@function.inner",
-              ["ac"] = "@class.outer",
-              ["ic"] = "@class.inner",
-            },
+      opts.ensure_installed = opts.ensure_installed or {}
+      if ok_parser and type(parser_list) == "table" then
+        vim.list_extend(opts.ensure_installed, parser_list)
+      end
+
+      -- -----------------------------------------------------------------------
+      -- Highlight (NvChad sets this already; only override if you must)
+      -- -----------------------------------------------------------------------
+      opts.highlight = opts.highlight or {}
+      opts.highlight.enable                            = true
+      opts.highlight.additional_vim_regex_highlighting = false
+
+      -- -----------------------------------------------------------------------
+      -- Indent
+      -- -----------------------------------------------------------------------
+      opts.indent = { enable = true }
+
+      -- -----------------------------------------------------------------------
+      -- Textobjects
+      -- -----------------------------------------------------------------------
+      opts.textobjects = {
+        select = {
+          enable    = true,
+          lookahead = true,
+          keymaps   = {
+            ["af"] = "@function.outer",
+            ["if"] = "@function.inner",
+            ["ac"] = "@class.outer",
+            ["ic"] = "@class.inner",
           },
         },
       }
+
+      return opts
     end,
-    config = function(_, opts)
+    -- No `config` key here – NvChad's config function runs configs.setup(opts)
+  },
 
--- Wir nutzen pcall, damit Neovim nicht hart crasht,
-      -- falls das Plugin im ersten Moment noch nicht "da" ist.
-      local ok, configs = pcall(require, "nvim-treesitter.configs")
-      if ok then
-        configs.setup(opts)
-      else
-        -- Falls es fehlschlägt, geben wir eine Warnung aus,
-        -- aber lassen Neovim weiterlaufen.
-        vim.notify("Treesitter konnte noch nicht geladen werden. Starte Neovim ggf. neu.", vim.log.levels.WARN)
-      end
-
-
-      -- Treesitter Context hier drin initialisieren, um Sicherzugehen
-      local ok_context, context = pcall(require, "treesitter-context")
-      if ok_context then
-        context.setup({
-          enable = true,
-          max_lines = 3, -- optional: begrenzt die Anzeige oben
-        })
-      end
-    end,
+  -- =========================================================================
+  -- Context: separate spec so it never interferes with the core setup
+  -- =========================================================================
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = "BufReadPost",
+    opts  = {
+      enable    = true,
+      max_lines = 3,
+    },
   },
 }
