@@ -75,6 +75,9 @@ function M.enable()
       lsp.buf.format({ timeout_ms = 2000 })
     end
   end, { desc = desc_tag .. "Format via Prettier" })
+
+  --- AUDIT:
+  require("lsp.languages.documentation.markdown_words").setup()
 end
 
 ---@type Lsp.Languages.ConfiguredLangs.Webdev.Markdown.Module

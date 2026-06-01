@@ -2,19 +2,8 @@
 
 1. `nvim-container` really needed or should i disable it? `Arch`?
 leader fm open in neotree?
-2. `markdown_render`-implementieren in `:Markdown [] []`
-3. `leader fc` findet `git.lua` nicht???
 
-
-`open` solte natürlich nach usrcmd sowie andere aus `custom` wahrscheinlich auch!
-
-`usrcmds.collection` machen wenn diese nirgends anders zueprdnet werden können, dami die uscmds aus der init.lua rauskommen!
-
-## tresitter
-
-`9:09:55 PM msg_show Treesitter konnte noch nicht geladen werden. Starte Neovim ggf. neu.`
-
-## Neotree
+## `config`
 
 
 ### Neovim-Usercmd: `Open [wo?]` ähnlich wie  `Format [was?][wie?]` gestalten
@@ -141,6 +130,7 @@ und die ersten Überlegungen fpr eine
 
 return {}
 ```
+
 
 ---
 
