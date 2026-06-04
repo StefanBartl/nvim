@@ -11,9 +11,6 @@ function M.enable()
     pattern = "lua",
     callback = function(_) end,
   })
-
-  -- AUDIT:
-  require("lsp.languages.scripting.lua_hl").setup()
 end
 
 ---@type Lsp.Languages.ConfiguredLangs.Webdev.Lua.Module
