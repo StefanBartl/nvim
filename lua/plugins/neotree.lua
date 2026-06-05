@@ -9,6 +9,7 @@ local FILESYSTEM = require("config.neotree.keymaps.filesystem")
 local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local ICONS = require("config.neotree.sources.icons")
+local OPEN_SYSTEM_APP   = require("config.neotree.actions.open_system_app")
 
 return {
   {
@@ -277,6 +278,18 @@ return {
     end,
 
     config = function(_, opts)
+      -- ── System-app opener ─────────────────────────────────────────────────
+      OPEN_SYSTEM_APP.setup({
+        -- Completely replace the default list (takes precedence over extra_filetypes):
+        -- filetypes = { "pdf", "png" },
+
+        -- Or just extend the defaults with additional types:
+        -- extra_filetypes = { "epub", "blend" },
+
+        notify_on_open  = true,
+        notify_on_error = true,
+      })
+
       require("config.neotree.actions.find_or_grep_menu").attach(opts)
       require("config.neotree.current_hl").attach(opts)
       require("neo-tree").setup(opts)
