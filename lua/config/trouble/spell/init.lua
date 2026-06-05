@@ -105,7 +105,7 @@ end
 ---@param entry    Cfg.Spell.Entry
 ---@param source   string
 ---@param severity vim.diagnostic.Severity
----@return vim.Diagnostic
+---@return Cfg.Spell.Diag
 local function make_diag(bufnr, lnum, entry, source, severity)
   local word = entry[1]
   local col  = entry[3] - 1   -- vim.spell returns 1-based byte col
@@ -130,12 +130,12 @@ end
 ---@param bufnr    integer
 ---@param source   string
 ---@param severity vim.diagnostic.Severity
----@return vim.Diagnostic[]
+---@return Cfg.Spell.Diag[]
 local function collect_buf(bufnr, source, severity)
   local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local spell_check = vim.spell.check
 
-  ---@type vim.Diagnostic[]
+  ---@type Cfg.Spell.Diag[]
   local out = {}
   local n   = 0
 
@@ -164,7 +164,7 @@ local TEXT_EXT = {
 ---Only files already open in Neovim are scanned (avoids mass-loading).
 ---@param source   string
 ---@param severity vim.diagnostic.Severity
----@return table<integer, vim.Diagnostic[]>   bufnr → diagnostics
+---@return table<integer, Cfg.Spell.Diag[]>   bufnr → diagnostics
 local function collect_cwd(source, severity)
   local cwd  = fn.getcwd()
   ---@type table<integer, vim.Diagnostic[]>
@@ -172,7 +172,7 @@ local function collect_cwd(source, severity)
 
   for _, bufnr in ipairs(api.nvim_list_bufs()) do
     if not buf_valid(bufnr) then goto continue end
-    if api.nvim_buf_get_option(bufnr, "buftype") ~= "" then goto continue end
+    if api.nvim_get_option_value("buftype", { buf = bufnr }) ~= "" then goto continue end
 
     local path = api.nvim_buf_get_name(bufnr)
     if path == "" then goto continue end
@@ -195,22 +195,24 @@ end
 -- Quickfix helpers
 -- ─────────────────────────────────────────────────────────────────────────────
 
----Convert vim.Diagnostic list to quickfix entries.
----@param diagnostics vim.Diagnostic[]
+---Convert spell diagnostics to quickfix entries.
+---@param diagnostics Cfg.Spell.Diag[]
 ---@return table[]
 local function diags_to_qf(diagnostics)
-  local entries = { [#diagnostics] = false }   -- pre-size
+  ---@type table[]
+  local entries = {}
+  entries[#diagnostics] = entries[#diagnostics]   -- pre-size hint for the LS
 
   for i, d in ipairs(diagnostics) do
-    local bufnr  = d.bufnr or 0
-    local fname  = buf_valid(bufnr) and api.nvim_buf_get_name(bufnr) or ""
+    local bufnr = d.bufnr or 0
+    local fname = buf_valid(bufnr) and api.nvim_buf_get_name(bufnr) or ""
     entries[i] = {
-      bufnr = bufnr,
+      bufnr    = bufnr,
       filename = fname,
-      lnum  = d.lnum + 1,
-      col   = d.col + 1,
-      text  = d.message,
-      type  = "W",
+      lnum     = d.lnum + 1,
+      col      = d.col + 1,
+      text     = d.message,
+      type     = "W",
     }
   end
 
@@ -218,7 +220,7 @@ local function diags_to_qf(diagnostics)
 end
 
 ---Populate the quickfix list from a diagnostics table.
----@param diagnostics vim.Diagnostic[]
+---@param diagnostics Cfg.Spell.Diag[]
 ---@param title string
 local function set_qf(diagnostics, title)
   local entries = diags_to_qf(diagnostics)
@@ -285,7 +287,7 @@ end
 -- ─────────────────────────────────────────────────────────────────────────────
 
 ---Open whichever list backend is configured/available.
----@param diagnostics vim.Diagnostic[]
+---@param diagnostics Cfg.Spell.Diag[]
 local function open_list(diagnostics)
   if _cfg.use_trouble and trouble_available() then
     open_trouble()
@@ -296,7 +298,7 @@ local function open_list(diagnostics)
 end
 
 ---Refresh whichever list is open.
----@param diagnostics vim.Diagnostic[]
+---@param diagnostics Cfg.Spell.Diag[]
 local function refresh_list(diagnostics)
   if _cfg.use_trouble and trouble_available() then
     vim.schedule(refresh_trouble)
@@ -371,13 +373,20 @@ end
 -- Language helpers
 -- ─────────────────────────────────────────────────────────────────────────────
 
----Temporarily set spelllang to `lang` in the current window.
+---Temporarily set spelllang to `lang` for the current buffer/window.
+---`spelllang` is classified as a window option by the Neovim API but is
+---actually stored per-buffer on some platforms; using `vim.opt_local` is
+---the safest cross-platform approach and avoids the "'win' cannot be passed
+---for buffer-local option" error on Windows.
 ---Returns the previous value so it can be restored on deactivation.
 ---@param lang string
 ---@return string  previous spelllang
 local function apply_lang(lang)
-  local prev = vim.wo.spelllang
-  vim.wo.spelllang = lang
+  -- vim.bo.spelllang is the safe cross-platform read (returns a plain string).
+  -- vim.opt_local is used for writing so Neovim resolves the correct scope.
+  local prev = vim.bo.spelllang   ---@type string
+  if type(prev) ~= "string" then prev = "en" end
+  vim.opt_local.spelllang = lang
   return prev
 end
 
@@ -400,13 +409,13 @@ end
 ---Jump to the next diagnostic in the spell namespace.
 ---@return nil
 function M.goto_next()
-  diag.goto_next({ namespace = NS, float = false })
+  diag.jump({ count = 1, float = false, namespace = NS })
 end
 
 ---Jump to the previous diagnostic in the spell namespace.
 ---@return nil
 function M.goto_prev()
-  diag.goto_prev({ namespace = NS, float = false })
+  diag.jump({ count = -1, float = false, namespace = NS })
 end
 
 ---Open the z= suggestion menu for the word under the cursor.
@@ -432,7 +441,7 @@ function M.refresh()
   diag.reset(NS, bufnr)
 
   local diagnostics = collect_buf(bufnr, _cfg.source, _cfg.severity)
-  diag.set(NS, bufnr, diagnostics)
+  diag.set(NS, bufnr, diagnostics --[[@as vim.Diagnostic[] ]])
 
   refresh_list(diagnostics)
 
@@ -492,7 +501,7 @@ function M.run(lang, scope)
     local total = 0
     for b, ds in pairs(all) do
       diag.reset(NS, b)
-      diag.set(NS, b, ds)
+      diag.set(NS, b, ds --[[@as vim.Diagnostic[] ]])
       total = total + #ds
     end
 
@@ -510,7 +519,7 @@ function M.run(lang, scope)
       notify.info("No spelling errors found in cwd")
       _state[bufnr] = nil
       vim.wo.spell = spell_was_on
-      vim.wo.spelllang = prev_spelllang
+      vim.opt_local.spelllang = prev_spelllang
       return
     end
 
@@ -525,12 +534,12 @@ function M.run(lang, scope)
       notify.info("No spelling errors found")
       _state[bufnr] = nil
       vim.wo.spell = spell_was_on
-      vim.wo.spelllang = prev_spelllang
+      vim.opt_local.spelllang = prev_spelllang
       return
     end
 
     diag.reset(NS, bufnr)
-    diag.set(NS, bufnr, diagnostics)
+    diag.set(NS, bufnr, diagnostics --[[@as vim.Diagnostic[] ]])
 
     attach_keymaps(bufnr)
     open_list(diagnostics)
@@ -556,11 +565,11 @@ function M.clear()
 
   detach_keymaps(bufnr)
 
-  -- Restore window options that existed before the session
+  -- Restore window/buffer options that existed before the session
   if st then
     vim.wo.spell = st.spell_was_on
-    if st.prev_spelllang then
-      vim.wo.spelllang = st.prev_spelllang
+    if type(st.prev_spelllang) == "string" and st.prev_spelllang ~= "" then
+      vim.opt_local.spelllang = st.prev_spelllang
     end
   end
 
@@ -578,16 +587,16 @@ end
 -- Registration helpers
 -- ─────────────────────────────────────────────────────────────────────────────
 
----@param name string
----@param fna   function
----@param desc string
-local function register_cmd(name, _fna, desc)
+---@param name     string
+---@param callback function
+---@param desc     string
+local function register_cmd(name, callback, desc)
   local ok, usercmd = pcall(require, "lib.usercmd")
 
   if ok and type(usercmd) == "function" then
-    usercmd(name, fn, { desc = desc })
+    usercmd(name, callback, { desc = desc })
   else
-    api.nvim_create_user_command(name, fna, { desc = desc })
+    api.nvim_create_user_command(name, callback, { desc = desc })
   end
 end
 

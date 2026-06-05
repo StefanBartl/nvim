@@ -53,8 +53,24 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 
 ---@class Cfg.Spell.BufState
----@field spell_was_on boolean   Value of vim.wo.spell before activation
----@field lang         string    Language used for this session
+---@field spell_was_on   boolean   Value of vim.wo.spell before activation
+---@field prev_spelllang string    Value of spelllang before activation
+---@field lang           string    Language used for this session
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- vim.Diagnostic subset (avoid undefined-field warnings from the LS)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+---@class Cfg.Spell.Diag
+---@field bufnr    integer
+---@field lnum     integer                   0-based line number
+---@field col      integer                   0-based byte column
+---@field end_lnum integer
+---@field end_col  integer
+---@field severity vim.diagnostic.Severity
+---@field source   string
+---@field message  string
+---@field user_data? { word: string, error_type: Cfg.Spell.ErrorType }
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Public module shape
