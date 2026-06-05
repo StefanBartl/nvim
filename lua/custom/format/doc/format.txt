@@ -28,7 +28,7 @@ formatting operations in Neovim. All operations are accessible through the
 
 Features:
 • Column alignment with configurable fill characters
-• Markdown table formatting with alignment control
+• Markdown table formatting with per-role and per-column alignment control
 • Text reflow to specified width
 • Line filtering based on patterns
 • Quick buffer clearing
@@ -127,28 +127,71 @@ See also: ~
 4.2 :Format table                                              *format-table*
                                                         *:Format-table*
 
-Format Markdown table with configurable alignment.
+Format one or more Markdown tables with configurable per-role and
+per-column alignment, with optional multi-file scope.
 
 Syntax: ~
 >vim
-    :Format table [header_align] [entry_align]
+    :Format table [ALIGN] [header=ALIGN] [cell=ALIGN] [skip=COLS] [scope=SCOPE]
 <
 
 Arguments: ~
-    [header_align]  Alignment for header row (left|center|right)
-    [entry_align]   Alignment for data rows (left|center|right)
-    Default: both center
+
+    Positional (backward-compatible): ~
+        [ALIGN]             Apply this alignment to BOTH header and data rows.
+                            (Fixes the previous bug where one positional arg
+                            only affected the header.)
+        [ALIGN] [ALIGN]     First arg = header alignment, second = cell alignment.
+
+    Key-value (take precedence over positional): ~
+        header=ALIGN        Alignment for the header row only.
+        cell=ALIGN          Alignment for all data rows.
+
+        ALIGN values: left | center | right
+
+    Column exceptions: ~
+        skip=COLS           Comma-separated list of column names (case-insensitive)
+                            or 1-based column indices. Listed columns are pinned
+                            to left alignment regardless of the cell= setting.
+                            Use col_overrides in the Lua API for other alignments.
+
+    Scope: ~
+        scope=SCOPE         Where to apply the formatting. Default: cursor.
+
+        SCOPE values:
+            cursor          Only the table the cursor is currently inside.
+            buffer          Every table in the current buffer (equivalent to %).
+            cwd             Every *.md file under vim.fn.getcwd() (writes to disk).
+            <path>          A specific file path (absolute or relative to cwd).
 
 Examples: ~
 >vim
-    " Center both headers and entries
+    " Center both headers and cells (default)
     :Format table
 
-    " Center headers, left-align entries
+    " Left-align EVERYTHING – header AND cells (single positional arg)
+    :Format table left
+
+    " Center headers, left-align cells (two positional args)
     :Format table center left
 
-    " Right-align everything
-    :Format table right right
+    " Explicit key-value syntax
+    :Format table header=center cell=left
+
+    " Left-align all cells, but keep 'Beschreibung' column left
+    :Format table left skip=Beschreibung
+
+    " Center cells, skip columns 3 and 'Notes' from centering
+    :Format table center skip=3,Notes
+
+    " Format every table in the current buffer
+    :Format table center left scope=buffer
+
+    " Format all *.md files under the project root
+    :Format table left scope=cwd
+
+    " Format a specific file
+    :Format table center scope=~/project/docs/api.md
 <
 
 Features: ~
@@ -158,20 +201,22 @@ Features: ~
   - Compact: |-----|
   - Spaced:  | ----- |
 • Cursor-position-based table detection (scans up/down)
+• Per-column alignment overrides via skip= or Lua API col_overrides
 
 Table Requirements: ~
-• Cursor must be inside table
+• Cursor must be inside table (for scope=cursor)
 • Minimum structure: header + separator + 1 data row
 • Separator must be on line 2 (directly after header)
 • All rows must have consistent column count
 
-Edge Cases: ~
-• Handles empty cells
-• Normalizes rows with fewer columns
-• Maintains spacing in spaced separators
+Bug Fix (v2): ~
+• Previously, :Format table left only applied "left" to the header row
+  while data rows silently stayed centered. This is now corrected:
+  a single positional argument applies to both header and data rows.
 
 See also: ~
-    custom/format/format_table/README.md for detailed documentation
+    |format-api-table| for the Lua API
+    custom/format/table/README.md for detailed documentation
 
 ------------------------------------------------------------------------------
 4.3 :Format textwidth                                      *format-textwidth*
@@ -257,10 +302,6 @@ Pattern Syntax: ~
     { "a", "b" }       OR-group (matches if any present)
     Multiple args      AND logic (all must match)
 
-Table Syntax: ~
-    { "double", 'single' }    Both quote styles supported
-    Whitespace tolerated:     { "a" , "b" }
-
 Safety: ~
 • Prevents removing all lines unintentionally in remove mode
 • Warns when no lines match in keep mode
@@ -312,17 +353,20 @@ Setup options: ~
 
 Per-Submodule Configuration: ~
 
-Some submodules accept their own setup options:
-
 Format Table: ~
 >lua
-    require("custom.format.format_table").setup({
-      header_align = "center",  -- Default header alignment
-      entry_align = "center",   -- Default entry alignment
+    -- Module-level defaults (apply when no per-call args given)
+    -- The module itself does not expose a separate setup(); configure
+    -- via :Format table arguments or the Lua API opts table.
+    require("custom.format.table").format_table_at_cursor(bufnr, {
+      header_align  = "center",
+      entry_align   = "left",
+      col_overrides = { { col = "Beschreibung", align = "left" } },
+      scope         = "cursor",
     })
 <
 
-Note: Submodule setup is optional if using :Format command, as alignment
+Note: Submodule setup is optional if using :Format command, as all options
 can be specified per-invocation.
 
 ==============================================================================
@@ -331,10 +375,6 @@ can be specified per-invocation.
 The module does not set global keymaps by default. Suggested mappings:
 
 Column Alignment: ~
->vim
-    " Visual mode: align selected character
-    xnoremap <leader>ac <Cmd>Format column<CR>
-<
 >lua
     vim.keymap.set("x", "<leader>ac", "<Cmd>Format column<CR>", {
       desc = "Align character to column"
@@ -342,24 +382,21 @@ Column Alignment: ~
 <
 
 Table Formatting: ~
->vim
-    " Normal mode: format table at cursor
-    nnoremap <leader>ft <Cmd>Format table<CR>
+>lua
+    -- Format table under cursor
+    vim.keymap.set("n", "<leader>ft", "<Cmd>Format table<CR>", {
+      desc = "Format table at cursor"
+    })
+
+    -- Format all tables in buffer
+    vim.keymap.set("n", "<leader>fT", "<Cmd>Format table scope=buffer<CR>", {
+      desc = "Format all tables in buffer"
+    })
 <
 
 Text Reflow: ~
 >vim
-    " Normal mode: reflow buffer to 80 columns
     nnoremap <leader>fw <Cmd>Format textwidth 80<CR>
-<
-
-Custom Workflows: ~
->vim
-    " Filter: keep only function definitions
-    nnoremap <leader>ff <Cmd>Format filter function<CR>
-
-    " Clear buffer quickly
-    nnoremap <leader>fc <Cmd>Format clear<CR>
 <
 
 ==============================================================================
@@ -379,8 +416,91 @@ Main Module: ~
         Returns: ~
             nil
 
-Submodules: ~
+------------------------------------------------------------------------------
+                                                            *format-api-table*
+Format Table: ~
+    require("custom.format.table")
 
+    .format_table_at_cursor(bufnr, opts)      *format.format_table_at_cursor()*
+        Format only the table the cursor is currently inside.
+
+        Parameters: ~
+            {bufnr}  (integer|nil)  Buffer number. nil = current buffer.
+            {opts}   (table|nil)    Options:
+                     • header_align   (string)  "left"|"center"|"right"
+                     • entry_align    (string)  "left"|"center"|"right"
+                     • col_overrides  (table[]) Per-column exceptions.
+                                      Each entry: { col = name_or_idx,
+                                                    align = alignment }
+                     • scope          ignored here; use format_tables_in_scope
+
+        Returns: ~
+            boolean ok, string|nil err
+
+    .format_tables_in_buffer(bufnr, opts)    *format.format_tables_in_buffer()*
+        Format every table in a buffer.
+
+        Parameters: ~
+            {bufnr}  (integer|nil)  Buffer number. nil = current buffer.
+            {opts}   (table|nil)    Same keys as format_table_at_cursor.
+
+        Returns: ~
+            boolean ok, string|nil err, integer count
+
+    .format_tables_in_scope(opts)            *format.format_tables_in_scope()*
+        Dispatch formatting by scope.
+
+        Parameters: ~
+            {opts}  (table|nil)
+                    • scope  (string)  "cursor"|"buffer"|"cwd"|<path>
+                    All other keys same as format_table_at_cursor.
+
+        Returns: ~
+            boolean ok, string|nil err
+
+        Scope behaviour: ~
+            "cursor"   Delegates to format_table_at_cursor.
+            "buffer"   Delegates to format_tables_in_buffer.
+            "cwd"      Finds all *.md under vim.fn.getcwd() and formats
+                       them on disk (no buffer required).
+            <path>     Formats tables in that specific file on disk.
+
+        Note: ~
+            cwd and path scopes read/write files directly via io.open.
+            They do NOT require the file to be open in Neovim.
+
+col_overrides type: ~
+>lua
+    ---@class Custom.Fmt.FmtTbl.ColOverride
+    ---@field col   integer|string  1-based index OR header name (case-insensitive)
+    ---@field align "left"|"center"|"right"
+<
+
+    Examples: ~
+>lua
+    local tbl = require("custom.format.table")
+
+    -- Format cursor table: header centered, cells left, 'Notes' column also left
+    tbl.format_table_at_cursor(0, {
+      header_align  = "center",
+      entry_align   = "left",
+    })
+
+    -- All tables in buffer, skip column 3 from centering
+    tbl.format_tables_in_buffer(0, {
+      entry_align   = "center",
+      col_overrides = { { col = 3, align = "left" } },
+    })
+
+    -- All *.md under cwd
+    tbl.format_tables_in_scope({
+      header_align = "center",
+      entry_align  = "left",
+      scope        = "cwd",
+    })
+<
+
+------------------------------------------------------------------------------
 Column Align: ~
     require("custom.format.column_align.core")
 
@@ -394,30 +514,14 @@ Column Align: ~
         Returns: ~
             nil
 
-        Validates: ~
-            • Visual mode active
-            • Target column > current position
-            • Fill character display width == 1
-
     .align_interactive()                        *format.align_interactive()*
         Prompt for target column and fill character, then align.
 
         Returns: ~
             nil
 
-    .align_repeat()                                  *format.align_repeat()*
-        Repeat last alignment operation with stored parameters.
-
-        Returns: ~
-            nil
-
-Format Table: ~
-    require("custom.format.format_table")
-
-    Internal API (called via :Format table command)
-
 Format Text Width: ~
-    require("custom.format.format_text_width")
+    require("custom.format.text_width")
 
     .reflow_buffer(bufnr, width)                   *format.reflow_buffer()*
         Reflow entire buffer to specified width.
@@ -440,11 +544,6 @@ Format Text Width: ~
 
         Returns: ~
             nil
-
-Filter Lines: ~
-    require("custom.format.filter_lines")
-
-    Internal API (called via :Format filter command)
 
 Type Definitions: ~
     See @types.lua files in each submodule for full type annotations.
@@ -516,7 +615,7 @@ Column Alignment Workflow: ~
     key_________________________________________=value
 <
 
-Table Formatting Workflow: ~
+Table Formatting – Basic: ~
 >markdown
     Before:
     | Name | Age | City |
@@ -532,6 +631,49 @@ Table Formatting Workflow: ~
     |--------|-----|------|
     | Alice  | 30  | NYC  |
     | Bob    | 25  | LA   |
+<
+
+Table Formatting – Single alignment arg (v2 fix): ~
+>markdown
+    Before:
+    | Name | Age | Description |
+    |---|---|---|
+    | Alice | 30 | Developer |
+
+    :Format table left        ← previously: header=left, cells=center (bug)
+                              ← now:        header=left, cells=left    (correct)
+
+    After:
+    | Name  | Age | Description |
+    |-------|-----|-------------|
+    | Alice | 30  | Developer   |
+<
+
+Table Formatting – Per-column exceptions: ~
+>markdown
+    Before:
+    | Name | Age | Description |
+    |---|---|---|
+    | Alice | 30 | A long description that reads better left-aligned |
+
+    :Format table center skip=Description
+
+    After (Name + Age centered, Description left):
+    |  Name  | Age | Description                                      |
+    |--------|-----|--------------------------------------------------|
+    | Alice  | 30  | A long description that reads better left-aligned |
+<
+
+Table Formatting – Scope: ~
+>vim
+    " Format every table in the current buffer
+    :Format table center left scope=buffer
+
+    " Format all *.md files under the project root (writes to disk)
+    :Format table left scope=cwd
+
+    " Format a specific file
+    :Format table center scope=~/project/docs/api.md
 <
 
 Text Reflow Workflow: ~
@@ -559,29 +701,6 @@ Line Filtering Workflow: ~
     DONE: fix bug
 <
 
-Complex Filter: ~
->markdown
-    Before:
-    function public getData() { }
-    function private setData() { }
-    const value = 42;
-    function public render() { }
-
-    :Format filter function { "public", "private" }
-
-    After:
-    function public getData() { }
-    function private setData() { }
-    function public render() { }
-<
-
-Chained Operations: ~
->vim
-    " Format table, then reflow to window width
-    :Format table center left
-    :Format textwidth max
-<
-
 ==============================================================================
 10. TROUBLESHOOTING                                  *format-troubleshooting*
 
@@ -600,6 +719,20 @@ A: Ensure:
    • Separator is exactly on line 2 (directly after header)
    • All rows start and end with | character
 
+Q: :Format table left aligned only the header, cells stayed centered ~
+A: This was a bug in v1. Update to v2 of the table module.
+   A single positional argument now applies to both header and data rows.
+
+Q: skip= column name not recognized ~
+A: Column names are matched case-insensitively against the header row.
+   Ensure the cursor is inside the table so the header can be read.
+   Alternatively, use the 1-based column index: skip=3
+
+Q: scope=cwd changed files I didn't expect ~
+A: scope=cwd recurses all *.md files under vim.fn.getcwd().
+   Run :pwd first to confirm your working directory. Use scope=<path>
+   to target a specific file instead.
+
 Q: Completion not working ~
 A: Verify setup was called in your configuration:
 >lua
@@ -613,11 +746,6 @@ A: The module uses vim.fn.strdisplaywidth for accurate width calculation.
    • 'encoding' is set to utf-8
    • Terminal supports UTF-8
    • Font provides correct character widths
-
-Q: Filter removes all lines unexpectedly ~
-A: The module has safety checks to prevent this in remove mode.
-   If you see "operation would remove all lines", your pattern matched
-   everything. Refine your pattern.
 
 Q: Text reflow breaks code blocks ~
 A: The current implementation does not detect code blocks.

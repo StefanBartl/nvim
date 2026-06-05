@@ -1,332 +1,430 @@
-# Markdown Table Formatter
+# custom.format
 
-A Neovim plugin module that formats Markdown tables with configurable alignment for headers and entries.
+Unified formatting command interface for Neovim that consolidates various text formatting operations under a single `:Format` command with subcommands.
+
+---
 
 ## Table of content
 
-  - [Features](#features)
+  - [Overview](#overview)
   - [Installation](#installation)
-    - [Using lazy.nvim](#using-lazynvim)
-    - [Manual Setup](#manual-setup)
   - [Usage](#usage)
-    - [Basic Command](#basic-command)
-    - [With Alignment Arguments](#with-alignment-arguments)
-    - [Example Transformation](#example-transformation)
-  - [Command Arguments](#command-arguments)
+    - [Command Syntax](#command-syntax)
+    - [Available Subcommands](#available-subcommands)
+  - [Subcommand Reference](#subcommand-reference)
+    - [:Format column](#format-column)
+    - [:Format table](#format-table)
+    - [:Format textwidth](#format-textwidth)
+    - [:Format filter](#format-filter)
+    - [:Format clear](#format-clear)
   - [Configuration](#configuration)
-    - [Default Setup](#default-setup)
-    - [Available Options](#available-options)
-  - [Alignment Behavior](#alignment-behavior)
-    - [Left Alignment](#left-alignment)
-    - [Center Alignment](#center-alignment)
-    - [Right Alignment](#right-alignment)
-  - [Separator Style Detection](#separator-style-detection)
-    - [Compact Style](#compact-style)
-    - [Spaced Style](#spaced-style)
-  - [Error Handling](#error-handling)
-  - [Technical Details](#technical-details)
-    - [Architecture](#architecture)
-    - [Key Functions](#key-functions)
-      - [`parse_table_at_cursor(bufnr, cursor_line)`](#parse_table_at_cursorbufnr-cursor_line)
-      - [`calculate_column_widths(rows, col_count)`](#calculate_column_widthsrows-col_count)
-      - [`format_row(cells, widths, align)`](#format_rowcells-widths-align)
-      - [`pad_cell(str, width, align)`](#pad_cellstr-width-align)
-    - [Performance Considerations](#performance-considerations)
-    - [Memory Profile](#memory-profile)
-  - [Limitations](#limitations)
+  - [Legacy Commands](#legacy-commands)
+  - [Examples](#examples)
+  - [Architecture](#architecture)
   - [Troubleshooting](#troubleshooting)
-    - [Table not detected](#table-not-detected)
-    - [Incorrect alignment](#incorrect-alignment)
-    - [Command not found](#command-not-found)
-  - [Changelog](#changelog)
-    - [v1.0.0 (Initial Release)](#v100-initial-release)
+  - [See Also](#see-also)
 
 ---
 
-## Features
+## Overview
 
-- **Automatic Column Width Calculation**: Adjusts column widths based on content
-- **UTF-8 Support**: Correctly handles multi-byte characters using `vim.fn.strdisplaywidth`
-- **Flexible Alignment**: Configure alignment per header/entry or per command invocation
-- **Separator Style Preservation**: Maintains compact (`|-----|`) or spaced (`| ----- |`) separator styles
-- **Type-Safe**: Full type annotations for LSP support
-- **Error Handling**: Comprehensive validation and user feedback
+This module provides a centralized interface for various formatting operations in Neovim:
+
+* **Column Alignment**: Align characters to specific columns with fill characters
+* **Table Formatting**: Format Markdown tables with per-role and per-column alignment control, across cursor / buffer / cwd / file scopes
+* **Text Width**: Reflow text to specified width
+* **Line Filtering**: Keep or remove lines based on patterns
+* **Buffer Clearing**: Quick buffer content clearing
+
+All operations are accessible through the `:Format` command with intelligent completion.
+
+---
 
 ## Installation
 
-### Using lazy.nvim
+Add to your Neovim configuration:
 
 ```lua
-{
-  require("usrcmds.format_table").setup({
-    header_align = "center",  -- "left" | "center" | "right"
-    entry_align = "center",   -- "left" | "center" | "right"
-  })
-}
-```
-
-### Manual Setup
-
-```lua
--- In your init.lua or after/plugin/format_table.lua
-require("usrcmds.format_table").setup({
-  header_align = "center",
-  entry_align = "center",
+require("custom.format").setup({
+  enable_legacy_commands = true,  -- Keep old commands like :FormatTable
+  default_subcommand = nil,       -- Optional default if no subcommand given
 })
 ```
+
+The setup automatically registers all subcommands and creates the `:Format` command.
+
+---
 
 ## Usage
 
-### Basic Command
-
-Place your cursor anywhere within a Markdown table and run:
+### Command Syntax
 
 ```vim
-:FormatTable
+:Format <subcommand> [arguments...]
 ```
 
-This formats the table using default alignments (both centered).
+Tab completion is available for:
+* Subcommand names
+* Subcommand-specific arguments
 
-### With Alignment Arguments
+### Available Subcommands
+
+| Subcommand  | Purpose                        | Arguments                                          |
+|-------------|--------------------------------|----------------------------------------------------|
+| `column`    | Align character to column      | `<col> [fill_char]`                                |
+| `table`     | Format Markdown table(s)       | `[ALIGN] [header=ALIGN] [cell=ALIGN] [skip=COLS] [scope=SCOPE]` |
+| `textwidth` | Reflow text to width           | `<N\|max>`                                         |
+| `filter`    | Filter lines by pattern        | `[--remove] <pattern> ...`                         |
+| `trim`      | Remove trailing whitespace     | none                                               |
+| `sort`      | Sort lines                     | `[-r] [-i] [-n]`                                   |
+| `unique`    | Remove duplicate lines         | `[-i]`                                             |
+| `case`      | Change case                    | `<upper\|lower\|title\|sentence>`                  |
+| `indent`    | Fix indentation                | `[--spaces\|--tabs] [width]`                       |
+| `clear`     | Clear buffer content           | none                                               |
+
+---
+
+## Subcommand Reference
+
+### :Format column
+
+Aligns visually selected character(s) to a target column.
+
+**Syntax:**
+```vim
+:Format column <target_col> [fill_char]
+```
+
+**Arguments:**
+* `<target_col>`: Target column number (1-based)
+* `[fill_char]`: Fill character (default: space)
+
+**Modes:**
+* Visual mode (`v`): Single line, single character
+* Visual block mode (`<C-v>`): Multiple lines, same column
+
+**Examples:**
+```vim
+" Interactive prompt
+:Format column
+
+" Align to column 40 with spaces
+:Format column 40
+
+" Align to column 60 with underscores
+:Format column 60 _
+```
+
+**Features:**
+* UTF-8 support for fill characters
+* Repeat last alignment with `.` (dot command)
+* Handles multi-byte characters correctly
+
+**Limitations:**
+* Target column must be greater than current position
+* Fill character must have display width of 1
+
+---
+
+### :Format table
+
+Formats one or more Markdown tables with configurable per-role and per-column alignment.
+
+**Syntax:**
+```vim
+:Format table [ALIGN] [header=ALIGN] [cell=ALIGN] [skip=COLS] [scope=SCOPE]
+```
+
+**Arguments:**
+
+| Argument | Description | Values | Default |
+|---|---|---|---|
+| `ALIGN` (positional) | Set alignment for **both** header and cells | `left` \| `center` \| `right` | — |
+| `ALIGN ALIGN` (positional) | First = header, second = cells | `left` \| `center` \| `right` | — |
+| `header=ALIGN` | Header row alignment (key-value, takes precedence) | `left` \| `center` \| `right` | `center` |
+| `cell=ALIGN` | Data row alignment (key-value, takes precedence) | `left` \| `center` \| `right` | `center` |
+| `skip=COLS` | Columns excluded from cell alignment, pinned to `left` | Comma-separated names or 1-based indices | — |
+| `scope=SCOPE` | Where to apply formatting | `cursor` \| `buffer` \| `cwd` \| `<path>` | `cursor` |
+
+**Scope values:**
+
+| Value | Effect |
+|---|---|
+| `cursor` | Only the table the cursor is currently inside (default) |
+| `buffer` | Every table in the current buffer |
+| `cwd` | Every `*.md` file under `vim.fn.getcwd()` — writes to disk |
+| `<path>` | A specific file path (absolute or relative to cwd) |
+
+**Examples:**
+```vim
+" Center both headers and cells (default)
+:Format table
+
+" Left-align EVERYTHING — header AND cells (v2 fix: one arg = both roles)
+:Format table left
+
+" Center headers, left-align cells (two positional args)
+:Format table center left
+
+" Explicit key-value syntax — mix freely
+:Format table header=center cell=left
+
+" Center cells, but keep 'Beschreibung' column left-aligned
+:Format table center skip=Beschreibung
+
+" Center cells, skip columns 3 and 'Notes'
+:Format table center skip=3,Notes
+
+" Format all tables in the current buffer
+:Format table center left scope=buffer
+
+" Format all *.md files under the project root (writes to disk)
+:Format table left scope=cwd
+
+" Format a specific file
+:Format table center scope=~/project/docs/api.md
+```
+
+**Features:**
+* Automatic column width calculation
+* UTF-8 character support via `vim.fn.strdisplaywidth`
+* Preserves separator style (compact `|---|` or spaced `| --- |`)
+* Per-column alignment exceptions via `skip=` or Lua API `col_overrides`
+* Multi-file scope: batch-format an entire directory without opening buffers
+
+**Bug fix (v2):**
+Previously, `:Format table left` silently applied `left` only to the header while data rows stayed `center`. A single positional argument now correctly applies to **both** header and data rows.
+
+**Requirements:**
+* Cursor must be inside table (for `scope=cursor`)
+* Table must have header + separator + at least one data row
+* Separator must be on line 2
+
+---
+
+### :Format textwidth
+
+Reflows text to specified width.
+
+**Syntax:**
+```vim
+:Format textwidth <N|max>
+```
+
+**Arguments:**
+* `<N>`: Target width in columns
+* `max`: Use window width
+
+**Examples:**
+```vim
+:Format textwidth 80
+:Format textwidth max
+```
+
+**Features:**
+* Preserves paragraph structure
+* Handles list indentation
+* No hyphenation (words kept intact)
+* Sets `textwidth` buffer-local option
+
+---
+
+### :Format filter
+
+Filters lines based on patterns.
+
+**Syntax:**
+```vim
+:Format filter [--remove] <pattern> [<pattern>...]
+```
+
+**Arguments:**
+* `[--remove]` or `[-r]`: Remove matching lines (default: keep)
+* `<pattern>`: String to match (plain text, not regex)
+* Multiple patterns: AND logic (all must match)
+* Table patterns `{ "a", "b" }`: OR logic (any must match)
+
+**Examples:**
+```vim
+:Format filter foo
+:Format filter --remove TODO
+:Format filter foo { "bar", "baz" }
+:Format filter -r { "error", "warning" }
+```
+
+---
+
+### :Format clear
+
+Clears all buffer content.
 
 ```vim
-:FormatTable center left   " Center headers, left-align entries
-:FormatTable left center   " Left headers, center entries
-:FormatTable right right   " Right-align both headers and entries
+:Format clear
 ```
 
-### Example Transformation
+Use `u` to undo immediately after.
 
-**Before:**
-
-```markdown
-| Mapping-Typ      | init.lua (global) | filesystem | buffers | git_status | document_symbols | tests |
-|------------------|-------------------|------------|---------|------------|------------------|-------|
-| Window control   |         ✅        |      -     |    -    |     -      |         -        |   -   |
-| Source switch    |         ✅        |      -     |    -    |     -      |         -        |   -   |
-| File operations  |         ❌        |     ✅ | noop | noop | noop | noop |
-```
-
-**After** (`:FormatTable center center`):
-
-```markdown
-|   Mapping-Typ    | init.lua (global) | filesystem | buffers | git_status | document_symbols | tests |
-|------------------|-------------------|------------|---------|------------|------------------|-------|
-| Window control   |        ✅         |     -      |    -    |     -      |        -         |   -   |
-| Source switch    |        ✅         |     -      |    -    |     -      |        -         |   -   |
-| File operations  |        ❌         |     ✅     |  noop   |   noop    |       noop       | noop  |
-```
-
-## Command Arguments
-
-| Argument Position | Description              | Values                    | Default  |
-|-------------------|--------------------------|---------------------------|----------|
-| 1                 | Header row alignment     | `left`, `center`, `right` | `center` |
-| 2                 | Data rows alignment      | `left`, `center`, `right` | `center` |
+---
 
 ## Configuration
 
-### Default Setup
-
 ```lua
-require("usrcmds.format_table").setup({
-  header_align = "center",
-  entry_align = "center",
+require("custom.format").setup({
+  enable_legacy_commands = true,
+  default_subcommand = nil,
 })
 ```
 
-### Available Options
+---
 
-| Option         | Type       | Default  | Description                     |
-|----------------|------------|----------|---------------------------------|
-| `header_align` | `string`   | `center` | Default alignment for headers   |
-| `entry_align`  | `string`   | `center` | Default alignment for data rows |
+## Legacy Commands
 
-Valid alignment values: `"left"`, `"center"`, `"right"`
+When `enable_legacy_commands = true`, the following commands remain available:
 
-## Alignment Behavior
+* `:ColumnAlignInteractive`
+* `:ColumnAlignToColumn <col> [fill]`
+* `:FormatTable [header] [entry]`
+* `:SetTextWidth <N|max>`
+* `:SetTextWidthRange <N|max>` (range command)
+* `:FilterLines [--remove] <pattern> ...`
+* `:BufferClear`
+* `:CopyFilepathToClipboard`
 
-### Left Alignment
+These are deprecated in favor of `:Format` subcommands.
+
+---
+
+## Examples
+
+### Column Alignment Workflow
+
+```vim
+" Select = character in visual mode, then:
+:Format column 40 _
+" Result: key_________=value
+```
+
+### Table Formatting Workflow
 
 ```markdown
-| Header       |
-|--------------|
-| Content      |
+Before:
+| Name | Age | Description |
+|---|---|---|
+| Alice | 30 | A long description |
+
+" Cursor in table:
+:Format table center skip=Description
+
+After:
+|  Name  | Age | Description        |
+|--------|-----|--------------------|
+| Alice  | 30  | A long description |
 ```
 
-### Center Alignment
+### Batch Table Formatting
 
-```markdown
-|   Header     |
-|--------------|
-|   Content    |
+```vim
+" All tables in buffer
+:Format table left scope=buffer
+
+" All *.md files under cwd
+:Format table center left scope=cwd
 ```
 
-### Right Alignment
+### Text Reflow Workflow
 
-```markdown
-|       Header |
-|--------------|
-|      Content |
+```vim
+:Format textwidth 80
 ```
 
-## Separator Style Detection
+### Line Filtering Workflow
 
-The formatter automatically detects and preserves your separator style:
-
-### Compact Style
-
-```markdown
-|-----|-----|
+```vim
+:Format filter --remove TODO
+:Format filter function { "public", "private" }
 ```
 
-### Spaced Style
+---
 
-```markdown
-| ----- | ----- |
-```
-
-The original style is maintained in the formatted output.
-
-## Error Handling
-
-The module provides clear error messages for common issues:
-
-- **Invalid alignment**: `"Invalid alignment: xyz (use left, center, or right)"`
-- **Not a table**: `"Not a valid table (need at least header + separator + 1 row)"`
-- **Buffer issues**: `"Invalid buffer"` or `"Failed to read buffer lines"`
-
-## Technical Details
-
-### Architecture
+## Architecture
 
 ```
-┌─────────────────────┐
-│  User Command       │
-│  :FormatTable       │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Argument Parser    │
-│  Validate alignment │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Table Parser       │
-│  • Find boundaries  │
-│  • Extract cells    │
-│  • Detect style     │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Formatter          │
-│  • Calc widths      │
-│  • Apply alignment  │
-│  • Generate output  │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Buffer Update      │
-│  Replace lines      │
-└─────────────────────┘
+custom/format/
+├── @types.lua                  -- Central type definitions
+├── init.lua                    -- Main module + command registry
+├── column_align/
+│   ├── @types.lua
+│   └── core.lua                -- Alignment logic
+├── table/
+│   ├── @types.lua              -- ColOverride, Opts, Scope types
+│   ├── init.lua                -- Table formatting + scope dispatch
+│   └── _handler.lua            -- Argument parser + :Format registration
+├── text_width/
+│   ├── @types.lua
+│   └── init.lua                -- Text reflow
+├── filter_lines/
+│   ├── @types.lua
+│   └── init.lua                -- Line filtering
+└── misc/
+    ├── @types.lua
+    └── init.lua                -- Misc utilities
 ```
 
-### Key Functions
+### Command Flow
 
-#### `parse_table_at_cursor(bufnr, cursor_line)`
+```
+:Format table center skip=Description scope=buffer
+    ↓
+_handler.parse_args({"center", "skip=Description", "scope=buffer"})
+    ↓
+{ entry_align="center", col_overrides=[{col="Description",align="left"}], scope="buffer" }
+    ↓
+format_table.format_tables_in_scope(opts)
+    ↓
+format_tables_in_buffer(current_buf, opts)   -- for each table
+    ↓
+render_table(parsed, header_align, entry_align, override_map)
+```
 
-Scans up and down from cursor to find table boundaries, validates structure, and extracts cells.
-
-**Returns**: `Custom.Fmt.FmtTbl.ParsedTable` object with:
-- `start_line`: First line of table (1-indexed)
-- `end_line`: Last line of table
-- `rows`: Array of cell arrays
-- `separator_style`: `"compact"` or `"spaced"`
-- `col_count`: Number of columns
-
-#### `calculate_column_widths(rows, col_count)`
-
-Iterates all cells to determine maximum display width per column using `vim.fn.strdisplaywidth()`.
-
-#### `format_row(cells, widths, align)`
-
-Pads each cell to target width with specified alignment using `pad_cell()`.
-
-#### `pad_cell(str, width, align)`
-
-Core padding logic:
-- **Left**: Content + spaces
-- **Right**: Spaces + content
-- **Center**: Floor(padding/2) + content + remaining padding
-
-### Performance Considerations
-
-- **Single-pass width calculation**: O(rows × cols)
-- **No redundant allocations**: Reuses string buffers via `table.concat`
-- **Safe API calls**: All Neovim API calls wrapped in `pcall`
-- **UTF-8 aware**: Uses `vim.fn.strdisplaywidth` for accurate width calculation
-
-### Memory Profile
-
-- Temporary table allocations: O(rows × cols)
-- No persistent state between invocations
-- Immediate garbage collection of parsed data
-
-## Limitations
-
-1. **Cursor must be within table**: The command uses cursor position to detect table boundaries
-2. **Minimum structure required**: At least header + separator + one data row
-3. **No column-specific alignment**: Alignment is global per row type (header vs. entries)
-4. **Single table per invocation**: Does not format multiple tables simultaneously
+---
 
 ## Troubleshooting
 
+### "Unknown subcommand" error
+
+Check available subcommands with `:Format` (no arguments).
+
 ### Table not detected
 
-**Problem**: "Not a valid table" error
+Ensure:
+* Cursor is inside table
+* Table has header + separator (`|---|`) + data row
+* Separator is on line 2
 
-**Solution**: Ensure table has:
-- Opening and closing `|` on each line
-- A separator row with dashes (e.g., `|-----|`)
-- At least one data row after separator
+### `:Format table left` only aligned the header
 
-### Incorrect alignment
+This was a bug in v1 — update to v2. A single positional argument now applies to both header and data rows.
 
-**Problem**: Columns appear misaligned after formatting
+### `skip=` column not recognized
 
-**Solution**: Check for:
-- Hidden characters (tabs, non-breaking spaces)
-- Inconsistent column counts across rows
-- UTF-8 characters (should work, but verify with `:set list`)
+Column names are matched case-insensitively against the header row. Alternatively, use a 1-based index: `skip=3`.
 
-### Command not found
+### `scope=cwd` changed unexpected files
 
-**Problem**: `:FormatTable` not recognized
+Run `:pwd` first. Use `scope=<path>` to target a specific file.
 
-**Solution**: Ensure `setup()` was called:
+### Completion not working
 
+Verify `setup()` was called:
 ```lua
-require("usrcmds.format_table").setup()
+require("custom.format").setup()
 ```
 
-## Changelog
-
-### v1.0.0 (Initial Release)
-
-- Core table formatting functionality
-- Configurable header/entry alignment
-- Separator style detection and preservation
-- UTF-8 support
-- Comprehensive error handling
-
 ---
 
-**Maintained by**: [Your Name]
-**Issues**: [Link to issue tracker]
-**Documentation**: [Link to extended docs]
+## See Also
 
----
+* `:h format.txt` – Full Vim help documentation
+* `custom/format/column_align/README.md` – Column alignment details
+* `custom/format/table/README.md` – Table formatting details
+* Source: `lua/custom/format/`
