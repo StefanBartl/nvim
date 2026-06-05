@@ -1,72 +1,78 @@
 ---@module 'plugins.treesitter'
----@brief Treesitter plugin spec – extends NvChad's base config via opts-merge.
---- No `config` override: NvChad owns the configs.setup() call.
---- This spec only adds parsers, textobjects and context on top.
+---@brief Modern Treesitter setup (Neovim 0.12+, no deprecated install API)
 
 return {
-  -- =========================================================================
-  -- Core: extend NvChad's treesitter spec via opts merge
-  -- opts = function(_, opts) receives NvChad's already-merged opts as second
-  -- argument, so we never stomp on what NvChad configured.
-  -- =========================================================================
+  ---------------------------------------------------------------------------
+  -- Core Treesitter
+  ---------------------------------------------------------------------------
   {
     "nvim-treesitter/nvim-treesitter",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter-textobjects",
-      "nvim-treesitter/nvim-treesitter-context",
-    },
-    opts = function(_, opts)
-      -- -----------------------------------------------------------------------
-      -- Parser list: merge our list into NvChad's ensure_installed
-      -- -----------------------------------------------------------------------
-      local ok_parser, parser_list = pcall(require, "config.treesitter.parser")
 
-      opts.ensure_installed = opts.ensure_installed or {}
-      if ok_parser and type(parser_list) == "table" then
-        vim.list_extend(opts.ensure_installed, parser_list)
-      end
+    lazy = false,
 
-      -- -----------------------------------------------------------------------
-      -- Highlight (NvChad sets this already; only override if you must)
-      -- -----------------------------------------------------------------------
-      opts.highlight = opts.highlight or {}
-      opts.highlight.enable                            = true
-      opts.highlight.additional_vim_regex_highlighting = false
+    build = ":TSUpdate",
 
-      -- -----------------------------------------------------------------------
-      -- Indent
-      -- -----------------------------------------------------------------------
-      opts.indent = { enable = true }
+    config = function()
+      -----------------------------------------------------------------------
+      -- Guard module
+      -----------------------------------------------------------------------
+      local guards = require("config.treesitter.guards")
 
-      -- -----------------------------------------------------------------------
-      -- Textobjects
-      -- -----------------------------------------------------------------------
-      opts.textobjects = {
-        select = {
-          enable    = true,
-          lookahead = true,
-          keymaps   = {
-            ["af"] = "@function.outer",
-            ["if"] = "@function.inner",
-            ["ac"] = "@class.outer",
-            ["ic"] = "@class.inner",
-          },
-        },
-      }
+      -----------------------------------------------------------------------
+      -- Highlight activation
+      -----------------------------------------------------------------------
+      vim.api.nvim_create_autocmd("FileType", {
+        callback = function(args)
+          if guards.is_enabled(args.buf) then
+            vim.treesitter.start(args.buf)
+          end
+        end,
+      })
 
-      return opts
+      -----------------------------------------------------------------------
+      -- Folding
+      -----------------------------------------------------------------------
+      vim.api.nvim_create_autocmd("FileType", {
+        callback = function(args)
+          if guards.is_enabled(args.buf) then
+            vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+            vim.wo.foldmethod = "expr"
+          end
+        end,
+      })
+
+      -----------------------------------------------------------------------
+      -- Indentation (experimental)
+      -----------------------------------------------------------------------
+      vim.api.nvim_create_autocmd("FileType", {
+        callback = function(args)
+          if guards.is_enabled(args.buf) then
+            vim.bo[args.buf].indentexpr =
+              "v:lua.require'nvim-treesitter'.indentexpr()"
+          end
+        end,
+      })
     end,
-    -- No `config` key here – NvChad's config function runs configs.setup(opts)
   },
 
-  -- =========================================================================
-  -- Context: separate spec so it never interferes with the core setup
-  -- =========================================================================
+  ---------------------------------------------------------------------------
+  -- Textobjects
+  ---------------------------------------------------------------------------
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    lazy = false,
+  },
+
+  ---------------------------------------------------------------------------
+  -- Context (sticky code context window)
+  ---------------------------------------------------------------------------
   {
     "nvim-treesitter/nvim-treesitter-context",
+
     event = "BufReadPost",
-    opts  = {
-      enable    = true,
+
+    opts = {
+      enable = true,
       max_lines = 3,
     },
   },
