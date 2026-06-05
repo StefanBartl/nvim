@@ -190,46 +190,14 @@ end
 ---Setup table formatting subcommand
 ---@return nil
 local function setup_format_table()
-  local ok, format_table = pcall(require, "custom.format.table")
+  local ok, handler = pcall(require, "custom.format.table._handler")
   if not ok then
-    return
+    -- Fallback: try to load without the handler module (older layout).
+    local ok2, _ = pcall(require, "custom.format.table")
+    if not ok2 then return end
   end
 
-  register_subcommand("table", {
-    handler = function(args)
-      local header_align = args[1] or "center"
-      local entry_align = args[2] or "center"
-
-      -- Validate alignments
-      local valid_alignments = { "left", "center", "right" }
-      if not vim.tbl_contains(valid_alignments, header_align) then
-        notify.error(string.format("[custom.format.table] Invalid header alignment: %s", header_align))
-        return
-      end
-
-      if not vim.tbl_contains(valid_alignments, entry_align) then
-        notify.error(string.format("[custom.format.table] Invalid entry alignment: %s", entry_align))
-        return
-      end
-
-      -- Call internal API directly
-      local bufnr = vim.api.nvim_get_current_buf()
-      local success, err = format_table.format_table_at_cursor(bufnr, header_align, entry_align)
-
-      if not success then
-        notify.warn(string.format("[custom.format.table] %s", err or "Unknown error"))
-        return
-      end
-
-      notify.info("Table formatted successfully")
-    end,
-    ---@diagnostic disable-next-line: unused-local
-    complete = function(arg_lead, cmdline, cursor_pos)
-      return { "left", "center", "right" }
-    end,
-    nargs = "*",
-    desc = "[custom.format.table] Format Markdown Table: table [header_align] [entry_align]",
-  })
+  handler.setup(register_subcommand, notify)
 end
 
 ---Setup text width formatting subcommand
