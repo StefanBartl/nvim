@@ -128,7 +128,7 @@ local function display_png(png_path, tool)
 end
 
 ---@param _ PdfPort.Result  (text field contains path for terminal mode)
----@param opts PdfPort.RenderOpts
+---@param opts PdfPort.OpenOpts
 ---@return nil
 function term_mod.render(_, opts)
   local path = opts.path

@@ -13,9 +13,9 @@
 --- Callers always get a non-blocking response; the callback receives a
 --- PdfPort.Result on success or a result with status="error" on failure.
 
-local uv = vim.uv or vim.loop
-local resolver = require("custom.pdfport.core.resolver")
-local registry = require("custom.pdfport.core.registry")
+local uv      = vim.uv or vim.loop
+local resolver  = require("custom.pdfport.core.resolver")
+local registry  = require("custom.pdfport.core.registry")
 
 local M = {}
 
@@ -39,12 +39,12 @@ end
 ---@return PdfPort.Result
 local function err_result(msg, backend_id)
   return {
-    status = "error",
-    text = nil,
-    format = "plain",
+    status  = "error",
+    text    = nil,
+    format  = "plain",
     backend = backend_id or "none",
     pages_processed = nil,
-    error = msg,
+    error   = msg,
   }
 end
 
@@ -99,11 +99,12 @@ function M.dispatch(opts, callback)
   -- Path validation happens on the main thread (uv.fs_stat is fast)
   local ok, err = validate_path(opts.path)
   if not ok then
-    if err then
-      vim.schedule(function()
-        callback(err_result(err))
-      end)
-    end
+    vim.schedule(function()
+      if not err then
+        err = "validate_path err"
+      end
+      callback(err_result(err))
+    end)
     return
   end
 
@@ -120,12 +121,12 @@ function M.dispatch(opts, callback)
     vim.schedule(function()
       -- System-open does not need text; pass a minimal result
       sys_renderer({
-        status = "ok",
-        text = nil,
-        format = "plain",
+        status  = "ok",
+        text    = nil,
+        format  = "plain",
         backend = "system",
         pages_processed = nil,
-        error = nil,
+        error   = nil,
       }, opts)
     end)
     return
@@ -143,12 +144,12 @@ function M.dispatch(opts, callback)
 
     vim.schedule(function()
       term_renderer({
-        status = "ok",
-        text = opts.path, -- path used by renderer directly
-        format = "plain",
+        status  = "ok",
+        text    = opts.path, -- path used by renderer directly
+        format  = "plain",
         backend = "terminal",
         pages_processed = nil,
-        error = nil,
+        error   = nil,
       }, opts)
     end)
     return
@@ -163,39 +164,48 @@ function M.dispatch(opts, callback)
     return
   end
 
-  -- Merge global extract opts with per-call opts
+  -- Merge global extract opts with per-call opts.
+  -- opts is PdfPort.OpenOpts which carries the extraction fields explicitly,
+  -- so we build the internal opts table with a concrete type annotation to
+  -- avoid undefined-field diagnostics.
   local cfg_extract = (_config and _config.extract_opts) or {}
-  ---@type PdfPort.ExtractOpts
+
+  ---@type PdfPort.InternalExtractOpts
   local extract_opts = vim.tbl_deep_extend("force", cfg_extract, {
-    pages = opts.pages,
-    max_pages = opts.max_pages,
-    prompt = opts.prompt,
-    model = opts.model,
-    timeout_ms = opts.timeout_ms,
+    pages      = (opts --[[@as PdfPort.OpenOpts]]).pages,
+    max_pages  = (opts --[[@as PdfPort.OpenOpts]]).max_pages,
+    prompt     = (opts --[[@as PdfPort.OpenOpts]]).prompt,
+    model      = (opts --[[@as PdfPort.OpenOpts]]).model,
+    timeout_ms = (opts --[[@as PdfPort.OpenOpts]]).timeout_ms,
+    __callback = callback,
   })
 
-  local path = opts.path
+  local path       = opts.path
   local backend_id = backend.id
+
+  -- Capture extract function in a local to give the type-checker a concrete
+  -- callable type. The Backend.extract field signature is known, so we cast
+  -- via an intermediate local to satisfy pcall's variadic parameter.
+  ---@type fun(p: string, o: PdfPort.InternalExtractOpts): PdfPort.Result|nil
   local extract_fn = backend.extract
 
-  -- Run extraction in libuv work queue (non-blocking)
-  -- NOTE: extract_fn must be safe to call from a non-main thread context.
-  -- Backends that call vim.fn or vim.api must wrap their work in vim.schedule.
-  -- For backends that spawn external processes (pdftotext, marker, ...),
-  -- the spawning itself happens on the main thread inside the backend, with
-  -- stdout collected asynchronously, so they schedule their own callbacks.
-  -- We therefore invoke extract_fn on the main thread and let it own async.
+  -- Run extraction on the main thread and let the backend own its async loop.
+  -- Backends that spawn external processes (pdftotext, marker, ...) return nil
+  -- immediately and deliver their result via opts.__callback themselves.
   vim.schedule(function()
-    local ok_extract, result = pcall(extract_fn, path, extract_opts)
+    local ok_extract, result = pcall(
+      ---@type fun(...): any
+      (extract_fn),
+      path,
+      extract_opts
+    )
 
     if not ok_extract then
       -- extract_fn threw a Lua error (not a process failure)
-      callback(
-        err_result(
-          string.format("pdfport: backend '%s' threw: %s", backend_id, tostring(result)),
-          backend_id
-        )
-      )
+      callback(err_result(
+        string.format("pdfport: backend '%s' threw: %s", backend_id, tostring(result)),
+        backend_id
+      ))
       return
     end
 
@@ -215,19 +225,24 @@ function M.open(opts)
   assert(type(opts) == "table", "opts must be a table")
   assert(type(opts.path) == "string", "opts.path must be a string")
 
-  local mode = opts.mode
-    or ((_config and _config.render_opts and _config.render_opts.mode) or "buffer")
-  opts.mode = mode
+  local mode = opts.mode or ((_config and _config.render_opts and _config.render_opts.mode) or "buffer")
+  opts.mode  = mode
 
   M.dispatch(opts, function(result)
     if result.status == "error" then
-      vim.notify(result.error or "pdfport: unknown extraction error", vim.log.levels.ERROR)
+      vim.notify(
+        result.error or "pdfport: unknown extraction error",
+        vim.log.levels.ERROR
+      )
       return
     end
 
     local renderer = registry.get_renderer(mode)
     if not renderer then
-      vim.notify(string.format("pdfport: renderer '%s' not registered", mode), vim.log.levels.ERROR)
+      vim.notify(
+        string.format("pdfport: renderer '%s' not registered", mode),
+        vim.log.levels.ERROR
+      )
       return
     end
 
