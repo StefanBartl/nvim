@@ -16,10 +16,11 @@
 local platform = require("custom.pdfport.platform")
 local uv       = vim.uv or vim.loop
 
----@type PdfPort.Backend
+---@type PdfPort.StatefulBackend
 local M = {
   id   = "pdftotext",
   name = "pdftotext (poppler-utils)",
+
   capabilities = {
     markdown    = false,
     tables      = false,
@@ -144,10 +145,11 @@ function M.extract(path, opts)
     }
   end
 
-  if not stdout or not stderr or not timer then
-    vim.notify("stdout stderr or timer is nil", 4)
-    return nil
+  if not stdout then
+    vim.notify("stdout is nil", 4)
+    return
   end
+
   -- Read stdout incrementally
   stdout:read_start(function(err, data)
     if err then
@@ -158,6 +160,11 @@ function M.extract(path, opts)
     end
   end)
 
+  if not stderr then
+    vim.notify("stderr is nil", 4)
+    return
+  end
+
   stderr:read_start(function(err, data)
     if err then
       return
@@ -166,6 +173,11 @@ function M.extract(path, opts)
       stderr_chunks[#stderr_chunks + 1] = data
     end
   end)
+
+  if not timer then
+    vim.notify("timer is nil", 4)
+    return
+  end
 
   -- Timeout guard
   timer:start(timeout_ms, 0, function()

@@ -4,6 +4,7 @@
 --- pdfport is a Neovim module that extracts and displays PDF content
 --- using a pluggable backend/renderer architecture.
 ---
+--- [README.md](custom/pdfport/docs/README.md)
 --- Quick start:
 ---
 ---   require("custom.pdfport").setup({
@@ -133,7 +134,7 @@ end
 
 --- Extracts text from a PDF and delivers it to a callback.
 --- Does not render anything; useful for integrations (telescope, fzf).
----@param opts PdfPort.ExtractOpts
+---@param opts PdfPort.InternalExtractOpts
 ---@return nil
 function M.extract(opts)
   if not _initialized then

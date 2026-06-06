@@ -31,16 +31,30 @@
 ---@field name string                                  -- Human-readable label
 ---@field capabilities PdfPort.BackendCapabilities
 ---@field available? fun(): boolean                     -- Runtime availability check
----@field extract? fun(path: string, opts: PdfPort.ExtractOpts): PdfPort.Result -- Blocking async-safe extraction
----@field _last_result? table
----@field _set_config? fun(config:PdfPort.Config): nil Injected by pdfport.init after setup()
+---@field extract? fun(path: string, opts: PdfPort.InternalExtractOpts): PdfPort.Result|nil
 
-  ---@class PdfPort.ExtractOpts
+--- Extended backend class for backends that cache their last result internally.
+--- Use this as the type for `M` in backends that write to `M._last_result`.
+---@class PdfPort.StatefulBackend : PdfPort.Backend
+---@field _last_result? PdfPort.Result  -- Cached result of the most recent extraction
+
+--- Extended backend class for backends that accept runtime configuration injection
+--- (e.g. claude, ollama which need an API key or host from the global config).
+---@class PdfPort.ConfigurableBackend : PdfPort.Backend
+---@field _set_config? fun(config: PdfPort.Config): nil  -- Called by init after setup()
+
+---@class PdfPort.ExtractOpts
 ---@field pages? integer[]          -- Page numbers to extract (1-based), nil = all
 ---@field max_pages? integer        -- Hard limit on pages processed
 ---@field prompt? string            -- Custom prompt for AI backends
 ---@field model? string             -- Model override for AI backends (ollama/claude)
 ---@field timeout_ms? integer       -- Extraction timeout in milliseconds
+
+--- Internal extension of ExtractOpts used when a backend is invoked through
+--- the dispatcher. The __callback field carries the delivery function and is
+--- never part of the public-facing API surface.
+---@class PdfPort.InternalExtractOpts : PdfPort.ExtractOpts
+---@field __callback? fun(result: PdfPort.Result): nil  -- Async delivery callback
 
 -- #############################################################################
 -- Renderer types
@@ -54,15 +68,22 @@
 
 ---@class PdfPort.RenderOpts
 ---@field mode PdfPort.RendererMode
----@field backend_id? PdfPort.BackendId     -- Force specific backend; nil = auto-resolve
----@field split? "vsplit"|"split"|"tab"     -- For buffer mode
----@diagnostic  disable-next-line
----@field float_opts? vim.api.keyset.win_config  -- For float mode
----@field terminal_tool? "ueberzug"|"chafa"|"kitty"|"imgcat"  -- For terminal mode
----@field focus? boolean                    -- Focus opened window after render
+---@field backend_id? PdfPort.BackendId       -- Force specific backend; nil = auto-resolve
+---@field split? "vsplit"|"split"|"tab"       -- For buffer mode
+---@diagnostic disable-next-line
+---@field float_opts? vim.api.keyset.win_config -- For float mode
+---@field terminal_tool? "ueberzug"|"chafa"|"kitty"|"imgcat" -- For terminal mode
+---@field focus? boolean                      -- Focus opened window after render
+---@field pages? integer[]                    -- Page numbers to render (terminal mode)
 
+--- Full open request: combines path, render options and extract options.
+--- This is the type passed through dispatcher.open() and into renderers.
 ---@class PdfPort.OpenOpts : PdfPort.RenderOpts
----@field path string                       -- Absolute path to the PDF file
+---@field path string          -- Absolute path to the PDF file
+---@field max_pages? integer   -- Forwarded to the extraction backend
+---@field prompt? string       -- Custom prompt for AI backends
+---@field model? string        -- Model override for AI backends
+---@field timeout_ms? integer  -- Per-call timeout override
 
 -- #############################################################################
 -- Result types

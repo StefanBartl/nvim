@@ -37,7 +37,7 @@ function M.available()
 end
 
 ---@param path string  Absolute path to PDF
----@param opts PdfPort.ExtractOpts
+---@param opts PdfPort.InternalExtractOpts
 ---@return PdfPort.Result|nil
 function M.extract(path, opts)
   -- marker writes output to a directory; we use a temp dir per extraction
