@@ -6,6 +6,7 @@ local CURRENT_HL_DEFAULTS = lazy.require("config.neotree.current_hl.defaults")
 local CWD_SYNC_DEFAULTS = lazy.require("config.neotree.cwd_sync.defaults")
 local TRASH_DEFAULTS = lazy.require("config.neotree.trash.defaults")
 local event_patch = require("config.neotree.utils.event_patch")
+local layout_guard = require("config.neotree.layout_guard")
 
 local M = {}
 
@@ -22,6 +23,7 @@ local defaults = {
   current_hl = CURRENT_HL_DEFAULTS,
   cwd_sync = CWD_SYNC_DEFAULTS,
   trash = TRASH_DEFAULTS,
+  layout_guard = true,
 }
 
 --- Active configuration (merged with user options)
@@ -111,6 +113,8 @@ function M.setup(opts)
   if M.options.cwd_sync.enabled then
     setup_cwd_sync(M.options.cwd_sync)
   end
+
+  layout_guard.setup(M.options.layout_guard)
 
   require("config.neotree.autocmds").attach() -- disable statusline;
   require("config.neotree.usercmds").enable()

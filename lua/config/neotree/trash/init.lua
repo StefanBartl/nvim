@@ -12,6 +12,7 @@ local operations = require("config.neotree.trash.operations")
 -- Safety system
 local safety = require("config.neotree.safety")
 local watcher_quarantine = require("config.neotree.watcher_quarantine")
+local layout_guard = require("config.neotree.layout_guard")
 
 local M = {}
 
@@ -264,6 +265,7 @@ function M.neotree_send_node_to_trash(state)
       -- Wait before final refresh
       defer_fn(function()
         safe_refresh(state.name or "filesystem")
+        layout_guard.ensure_editor_window_deferred()
       end, M.config.post_delete_wait)
 
       operations.show_results(results, backups_created)

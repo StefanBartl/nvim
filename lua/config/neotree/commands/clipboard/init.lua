@@ -4,6 +4,7 @@
 
 local notify = require("lib.notify").create("[neotree.commands.clipboard]")
 local node_utils = require("config.neotree.utils.node")
+local layout_guard = require("config.neotree.layout_guard")
 
 local M = {}
 
@@ -301,6 +302,8 @@ function M.paste_from_clipboard(state)
     if ok_mgr then
       pcall(manager.refresh, state.name or "filesystem")
     end
+
+    layout_guard.ensure_editor_window_deferred()
   end)
 
   -- Final notifications

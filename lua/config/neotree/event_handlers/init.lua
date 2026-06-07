@@ -20,6 +20,14 @@ return {
     end,
   },
 
+  -- Sicherstellen, dass Neo-tree nicht als einziges normales Fenster übrig bleibt.
+  {
+    event = "neo_tree_window_after_open",
+    handler = function()
+      require("config.neotree.layout_guard").ensure_editor_window_deferred()
+    end,
+  },
+
   -- Bei neuen Preview Window cursor zum Start zurücksetzen
   {
     event = "neo_tree_preview_buffer_enter",
