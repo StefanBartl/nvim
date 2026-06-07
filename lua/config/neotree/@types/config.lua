@@ -14,6 +14,12 @@
 ---@field trash? Cfg.NeoTree.Trash.Config|boolean Trash system configuration
 ---@field current_hl? Cfg.NeoTree.CurrentHl.Config|boolean Current file highlighting
 ---@field cwd_sync? Cfg.NeoTree.CwdSync.Config|boolean CWD synchronization
+---@field layout_guard? Cfg.NeoTree.LayoutGuard.Config|boolean Keep an editor window beside Neo-tree
+
+---@class Cfg.NeoTree.LayoutGuard.Config
+---@field enabled? boolean Enable layout guard
+---@field delay_ms? integer Deferred check delay in milliseconds
+---@field restore_focus? boolean Restore focus after creating an editor window
 
 ---@class Cfg.NeoTree.CurrentHl.Config
 ---@field enable? boolean Enable current file highlighting (default: true)
