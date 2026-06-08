@@ -11,40 +11,41 @@ local M = {}
 
 ---@return string|nil
 local function find_omnisharp()
-  -- 1. EINFACHSTE LÖSUNG: omnisharp ist bereits im PATH!
-  --    Das Debug-Script zeigt: "1. omnisharp in PATH: ✓ YES"
+  -- 1. SYSTEM PATH CHECK
   if executable("omnisharp") == 1 then
-    -- notify.info("C#: Using omnisharp from PATH")
     return "omnisharp"
   end
 
-  -- 2. FALLBACK: Mason bin directory (Windows-kompatibel)
-  local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
-  local candidates = {
-    mason_bin .. "/omnisharp.CMD",  -- Windows
-    mason_bin .. "/omnisharp.cmd",  -- Windows (lowercase)
-    mason_bin .. "/omnisharp",      -- Linux/Mac
-  }
-
-  for _, path in ipairs(candidates) do
-    if vim.fn.executable(path) == 1 then
-      notify.info("C#: Using omnisharp from Mason: " .. path)
-      return path
-    end
+  -- Hilfsfunktion für absolute Pfadprüfungen (zuverlässiger als executable() bei WSL/Skripten)
+  local function file_exists(path)
+    local stat = (vim.uv or vim.loop).fs_stat(path)
+    return stat and stat.type == "file" or false
   end
 
-  -- 3. LETZTER FALLBACK: Mason packages (alter Pfad)
-  local mason_pkg = vim.fn.stdpath("data") .. "/mason/packages/omnisharp"
-  local old_candidates = {
-    mason_pkg .. "/omnisharp.CMD",
-    mason_pkg .. "/omnisharp",
-  }
+  -- Standard-Datenpfad auflösen
+  local data_path = vim.fn.stdpath("data")
 
-  for _, path in ipairs(old_candidates) do
-    if vim.fn.executable(path) == 1 then
-      notify.info("C#: Using omnisharp from packages: " .. path)
-      return path
-    end
+  -- 2. MASON BIN FALLBACK (Der Standard-Wrapper)
+  -- Unter WSL/Linux ist das oft ein Shell-Skript ohne Endung
+  local mason_bin_linux = data_path .. "/mason/bin/omnisharp"
+  local mason_bin_windows = data_path .. "/mason/bin/omnisharp.CMD"
+
+  if file_exists(mason_bin_linux) then
+    return mason_bin_linux
+  elseif file_exists(mason_bin_windows) then
+    return mason_bin_windows
+  end
+
+  -- 3. MASON PACKAGES FALLBACK (Direkter Zugriff auf die Assembly)
+  -- Mason entpackt OmniSharp unter Linux tief in diesen Unterordner:
+  local mason_pkg_run = data_path .. "/mason/packages/omnisharp/OmniSharp"
+  -- Falls es die standalone Version ist (manchmal auch kleingeschrieben):
+  local mason_pkg_run_cmd = data_path .. "/mason/packages/omnisharp/omnisharp"
+
+if file_exists(mason_pkg_run) then
+    return mason_pkg_run
+  elseif file_exists(mason_pkg_run_cmd) then
+    return mason_pkg_run_cmd
   end
 
   notify.warn("C#: omnisharp not found in PATH or Mason")
