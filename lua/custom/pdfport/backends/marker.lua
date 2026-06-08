@@ -71,12 +71,13 @@ function M.extract(path, opts)
     end
   end
 
+  ---@type uv_process_t|nil
   local handle
 
   handle = uv.spawn("marker_single", {
     args  = args,
     stdio = { nil, nil, stderr },
-  }, function(code, _)
+  }, function(code, _signal)
     cleanup()
 
     local err_text = table.concat(stderr_chunks)
@@ -100,17 +101,22 @@ function M.extract(path, opts)
         return
       end
 
-      -- Locate the generated .md file
-      -- marker names it <stem>/<stem>.md inside tmp_dir
-      local stem = vim.fn.fnamemodify(path, ":t:r")
+      -- Locate the generated .md file.
+      -- marker names it <tmp_dir>/<stem>/<stem>.md
+      -- On Windows, fnamemodify uses backslashes; normalise to forward slashes.
+      local stem    = vim.fn.fnamemodify(path, ":t:r")
       local md_path = tmp_dir .. "/" .. stem .. "/" .. stem .. ".md"
 
-      -- Fallback: scan tmp_dir for any .md file
+      -- Fallback: scan the entire tmp_dir tree for any .md file
       if vim.fn.filereadable(md_path) ~= 1 then
-        local found = vim.fn.glob(tmp_dir .. "/**/*.md", false, true)
+        -- vim.fn.glob with ** requires forward slashes on all platforms
+        local pattern = tmp_dir:gsub("\\", "/") .. "/**/*.md"
+        local found   = vim.fn.glob(pattern, false, true)
         if #found > 0 then
           md_path = found[1]
         else
+          -- Last resort: list everything in tmp_dir for debug visibility
+          local all = vim.fn.glob(tmp_dir:gsub("\\", "/") .. "/**/*", false, true)
           vim.fn.delete(tmp_dir, "rf")
           local result = {
             status  = "error",
@@ -118,7 +124,11 @@ function M.extract(path, opts)
             format  = "markdown",
             backend = "marker",
             pages_processed = nil,
-            error   = "marker_single: output .md file not found in " .. tmp_dir,
+            error   = string.format(
+              "marker_single: no .md file found in %s. Files present: %s",
+              tmp_dir,
+              table.concat(all, ", ")
+            ),
           }
           if type(opts.__callback) == "function" then
             opts.__callback(result)
@@ -157,11 +167,6 @@ function M.extract(path, opts)
       pages_processed = nil,
       error   = "marker: failed to spawn marker_single process",
     }
-  end
-
-  if not stderr or not timer then
-    vim.notify("stdout, stderr or timer is nil", 4)
-    return nil
   end
 
   stderr:read_start(function(err, data)

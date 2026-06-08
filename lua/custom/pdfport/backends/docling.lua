@@ -84,7 +84,7 @@ except Exception as e:
     vim.fn.delete(script_file)
   end
 
-  local handle = uv.spawn("python3", {
+  local handle = uv.spawn(py, {
     args  = { script_file },
     stdio = { nil, stdout, stderr },
   }, function(code, _)
@@ -126,11 +126,6 @@ except Exception as e:
       pages_processed = nil,
       error   = "docling: failed to spawn python3",
     }
-  end
-
-  if not stdout or not stderr or not timer then
-    vim.notify("stdout, stderr or timer is nil", 4)
-    return nil
   end
 
   stdout:read_start(function(_, data)
