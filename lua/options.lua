@@ -190,3 +190,28 @@ else
   o.shell = fn.executable("zsh") == 1 and "zsh" or "bash"
   o.shellcmdflag = "-c"
 end
+
+-----------------------------------------------------------
+-- WSL
+-----------------------------------------------------------
+-- Windows CRLF (^M) beim Einfügen aus der Zwischenablage im WSL filtern
+vim.g.clipboard = {
+  name = 'WslClipboard',
+  copy = {
+    ['+'] = 'wl-copy',
+    ['*'] = 'wl-copy',
+  },
+  paste = {
+    ['+'] = function()
+      return vim.fn.systemlist('wl-paste --no-newline | tr -d "\\r"')
+    end,
+    ['*'] = function()
+      return vim.fn.systemlist('wl-paste --no-newline | tr -d "\\r"')
+    end,
+  },
+  cache_enabled = 1,
+}
+
+-- Stelle sicher, dass Neovim weiß, wie es mit gemischten Zeilenenden umgehen soll. Wenn Neovim eine Datei als reines Unix-Format öffnet, maskiert es jedes CRLF rigoros als ^M.
+vim.opt.fileformats = { "unix", "dos" }
+
