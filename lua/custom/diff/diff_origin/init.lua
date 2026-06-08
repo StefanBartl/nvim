@@ -1,4 +1,4 @@
----@module 'usrcmds.diff.diff_origin'
+---@module 'custom.diff.diff_origin'
 --- Diff the current buffer against its last saved state on disk.
 --- This command creates a readonly, non-modifiable snapshot buffer
 --- containing the file contents from disk and enables Neovim's native
@@ -37,7 +37,7 @@ function M.enable()
       diffthis
     ]])
   end, {
-    desc = "[usrcmds.diff_origin] Diff current buffer against last saved version",
+    desc = "[custom.diff_origin] Diff current buffer against last saved version",
   })
 end
 

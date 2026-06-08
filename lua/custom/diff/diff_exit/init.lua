@@ -1,4 +1,4 @@
----@module 'usrcmds.diff.diff_exit'
+---@module 'custom.diff.diff_exit'
 --- Context-aware mapping to exit Neovim diff mode.
 --- The mapping only triggers :diffoff when the current window
 --- is in diff mode; otherwise it does nothing.
@@ -16,7 +16,7 @@ function M.enable()
     end
   end, {
     silent = true,
-    desc = "[usrcmds.diff] Exit diff mode when active",
+    desc = "[custom.diff] Exit diff mode when active",
   })
 end
 
