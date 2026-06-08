@@ -1,178 +1,149 @@
 ---@module 'custom.open'
----@brief Unified :Open command for Neovim.
+---@brief Entry point for the :Open user command.
 ---@description
---- Provides a single :Open <target> command that dispatches the text under the
---- cursor (or the current visual selection) to a registered handler.
----
---- Available targets (registered on setup):
----   browser      Open in the system default browser
----   chrome       Open in Google Chrome
----   chromium     Open in Chromium
----   firefox      Open in Mozilla Firefox
----   edge         Open in Microsoft Edge
----   safari       Open in Safari (macOS only)
----   filemanager  Open path in the system file manager
----   notepad      Open text in the system default text editor
----   editor       Alias for notepad
----   split        Open file in a Neovim horizontal split
----   vsplit       Open file in a Neovim vertical split
----   tab          Open file in a new Neovim tab
----
---- Usage:
----   :Open browser
----   :Open chrome
----   :Open filemanager
----   :Open notepad
----   :Open split
----
---- In normal mode the WORD under the cursor is used as input.
---- Run :Open from visual mode (or directly after a visual selection) to use the
---- selected text.
----
---- @see custom.open.context   for how the text is extracted
---- @see custom.open.registry  for the handler contract
-
-local notify = require("lib.notify").create("[custom.open]")
+--- Registers the :Open [target] user command with tab-completion over the
+--- registered handler names.  Resolution order for the target path is
+--- documented in custom.open.context.
 
 local M = {}
 
-local api = vim.api
-
----@type Custom.Open.Config
-local config = {
-  default_handler = nil,
-}
-
 -- ---------------------------------------------------------------------------
--- Internal utilities
+-- Internal helpers
 -- ---------------------------------------------------------------------------
 
----Wrap fn in pcall and report errors through notify.
----@param fn function
----@param ... any
----@return boolean success, any result_or_error
-local function safe_call(fn, ...)
-  local ok, result = pcall(fn, ...)
-  if not ok then
-    notify.error(string.format("[custom.open] %s", tostring(result)))
-  end
-  return ok, result
-end
-
--- ---------------------------------------------------------------------------
--- Command handlers
--- ---------------------------------------------------------------------------
-
----Print available handlers to notify.
-local function show_usage()
-  local registry = require("custom.open.registry")
-  local parts    = { "Usage: :Open <target>\n\nAvailable targets:" }
-  for _, h in ipairs(registry.list()) do
-    parts[#parts + 1] = string.format("  %-15s %s", h.key, h.desc)
-  end
-  notify.info(table.concat(parts, "\n"))
-end
-
----Main :Open handler.
----@param opts table  opts from nvim_create_user_command
-local function open_handler(opts)
-  local args = opts.fargs or {}
-
-  if #args == 0 then
-    if config.default_handler then
-      args = { config.default_handler }
-    else
-      show_usage()
-      return
-    end
+--- Dispatch to the appropriate handler.
+---@param target string  Handler key, e.g. "filemanager", "browser", "notepad".
+---@param ctx    Open.Context
+---@return nil
+local function dispatch(target, ctx)
+  local ok_reg, registry = pcall(require, "custom.open.registry")
+  if not ok_reg then
+    require("lib.notify").create("[custom.open]").error("Registry not available")
+    return
   end
 
-  local key      = args[1]
-  local registry = require("custom.open.registry")
-  local handler  = registry.get(key)
-
+  local handler = registry.get(target)
   if not handler then
-    notify.error(string.format(
-      "[custom.open] Unknown target: '%s'\nAvailable: %s",
-      key,
-      table.concat(registry.list_keys(), ", ")
-    ))
+    require("lib.notify").create("[custom.open]").error(
+      string.format("Unknown target: '%s'  (available: %s)",
+        target, table.concat(registry.list(), ", "))
+    )
     return
   end
 
-  local context = require("custom.open.context")
-  local ctx, err = context.build()
-
-  if not ctx then
-    notify.error("[custom.open] " .. (err or "No context available"))
-    return
+  local ok, err = pcall(handler.open, ctx)
+  if not ok then
+    require("lib.notify").create("[custom.open]").error(
+      string.format("Handler '%s' failed: %s", target, tostring(err))
+    )
   end
-
-  safe_call(handler.run, ctx)
 end
 
----Tab-completion for :Open.
----@param arg_lead string
----@return string[]
-local function open_complete(arg_lead, _, _)
-  local registry = require("custom.open.registry")
-  local matches  = {}
-  for _, key in ipairs(registry.list_keys()) do
-    if vim.startswith(key, arg_lead) then
-      matches[#matches + 1] = key
-    end
+--- Default handler when no target argument is given.
+--- Uses "filemanager" when coming from a tree buffer, "browser" otherwise.
+---@param ctx Open.Context
+---@return string target
+local function default_target(ctx)
+  if ctx.source == "tree" then
+    return "filemanager"
   end
-  return matches
+  -- Heuristic: looks like a URL → browser; otherwise filemanager.
+  local p = ctx.path or ""
+  if p:match("^https?://") or p:match("^ftp://") then
+    return "browser"
+  end
+  return "filemanager"
 end
 
 -- ---------------------------------------------------------------------------
 -- Setup
 -- ---------------------------------------------------------------------------
 
----Register all built-in handlers.
-local function register_builtin_handlers()
-  local registry = require("custom.open.registry")
-  local reg      = function(h) registry.register(h) end
-
-  -- Browser handlers
-  local ok_b, browser = pcall(require, "custom.open.handlers.browser")
-  if ok_b then
-    browser.register_all(reg)
-  end
-
-  -- File manager handler
-  local ok_f, fm = pcall(require, "custom.open.handlers.filemanager")
-  if ok_f then
-    fm.register_all(reg)
-  end
-
-  -- Notepad / editor handler
-  local ok_n, notepad = pcall(require, "custom.open.handlers.notepad")
-  if ok_n then
-    notepad.register_all(reg)
-  end
-
-  -- Neovim-internal handlers (split/vsplit/tab)
-  local ok_nv, nvim_internal = pcall(require, "custom.open.handlers.nvim_internal")
-  if ok_nv then
-    nvim_internal.register_all(reg)
-  end
-end
-
----Setup the :Open command.
----@param opts Custom.Open.Config|nil
+--- Register all handlers and create the :Open user command.
 ---@return nil
-function M.setup(opts)
-  if opts and type(opts) == "table" then
-    config = vim.tbl_extend("force", config, opts)
+function M.setup()
+  -- Register handlers (order does not matter).
+  local ok_reg, registry = pcall(require, "custom.open.registry")
+  if not ok_reg then
+    return
   end
 
-  register_builtin_handlers()
+  -- Handlers are registered by their own modules; just ensure they are loaded.
+  local handler_modules = {
+    "custom.open.filemanager",
+    "custom.open.browser",
+    "custom.open.notepad",
+  }
+  for i = 1, #handler_modules do
+    pcall(require, handler_modules[i])
+  end
 
-  api.nvim_create_user_command("Open", open_handler, {
-    nargs    = "*",
-    complete = open_complete,
-    desc     = "[custom.open] Open text under cursor/selection with <target>",
+  -- -------------------------------------------------------------------------
+  -- :Open [target]
+  --
+  -- Tab-completion enumerates the registered handler names so the user can
+  -- press <Tab> after :Open to cycle through "filemanager", "browser", etc.
+  -- -------------------------------------------------------------------------
+  vim.api.nvim_create_user_command("Open", function(opts)
+    local ctx = require("custom.open.context").resolve(nil)
+    if not ctx then
+      require("lib.notify").create("[custom.open]").warn("Nothing to open")
+      return
+    end
+
+    -- The first fargs entry is treated as the target/handler name.
+    -- Additional fargs (if any) could be a path override – kept for future use.
+    local target = (opts.fargs and opts.fargs[1]) or default_target(ctx)
+    target = target:lower()
+
+    -- Allow the second arg to override the path (power-user escape hatch).
+    if opts.fargs and opts.fargs[2] then
+      ctx = { path = opts.fargs[2], source = "arg" }
+    end
+
+    dispatch(target, ctx)
+  end, {
+    nargs   = "*",
+    desc    = "Open path/URL with the specified handler (filemanager | browser | notepad)",
+
+    --- Tab-completion: first arg → handler name, second arg → path (file completion).
+    ---@param arg_lead string   The text typed so far in the current argument position.
+    ---@param cmd_line string   The full command line text.
+    ---@param cursor_pos integer Byte position of the cursor in cmd_line.
+    ---@return string[] candidates
+    complete = function(arg_lead, cmd_line, cursor_pos)
+      -- Count how many space-separated tokens precede the cursor.
+      -- Token 0 is the command name itself; token 1 is the first argument.
+      local before_cursor = cmd_line:sub(1, cursor_pos)
+      local tokens = {}
+      for tok in before_cursor:gmatch("%S+") do
+        tokens[#tokens + 1] = tok
+      end
+
+      -- If the line ends with whitespace, we are starting a new token.
+      local starting_new = before_cursor:match("%s$") ~= nil
+      -- arg_index: how many complete args have been typed (not counting the cmd).
+      local arg_index = #tokens - 1 + (starting_new and 1 or 0)
+
+      if arg_index <= 1 then
+        -- Complete the handler/target name.
+        local ok_r, reg = pcall(require, "custom.open.registry")
+        if not ok_r then
+          return {}
+        end
+        local names = reg.list()
+        local candidates = {}
+        for i = 1, #names do
+          if names[i]:sub(1, #arg_lead) == arg_lead then
+            candidates[#candidates + 1] = names[i]
+          end
+        end
+        return candidates
+      else
+        -- Second argument: fall back to built-in file/path completion.
+        return vim.fn.getcompletion(arg_lead, "file")
+      end
+    end,
   })
 end
 
