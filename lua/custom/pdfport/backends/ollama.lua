@@ -104,8 +104,10 @@ local function b64_encode(path)
   return table.concat(result), nil
 end
 
---- Sends one base64 image to ollama and returns the response text.
----@param b64 string
+--- Sends a prompt to ollama, optionally with a base64 image.
+--- Vision models (llava, bakllava) require the image field.
+--- Text-only models (qwen, mistral, llama) must NOT receive an images field.
+---@param b64 string|nil  Base64 image, or nil for text-only models
 ---@param prompt string
 ---@param model string
 ---@param host string
@@ -116,10 +118,18 @@ local function query_ollama(b64, prompt, model, host, timeout_ms, callback)
   local safe_prompt = prompt:gsub('"', '\\"'):gsub("\n", "\\n")
   local safe_model  = model:gsub('"', '\\"')
 
-  local body = string.format(
-    '{"model":"%s","prompt":"%s","images":["%s"],"stream":false}',
-    safe_model, safe_prompt, b64
-  )
+  local body
+  if b64 then
+    body = string.format(
+      '{"model":"%s","prompt":"%s","images":["%s"],"stream":false}',
+      safe_model, safe_prompt, b64
+    )
+  else
+    body = string.format(
+      '{"model":"%s","prompt":"%s","stream":false}',
+      safe_model, safe_prompt
+    )
+  end
 
   local body_file = vim.fn.tempname() .. ".json"
   local f = io.open(body_file, "w")
@@ -138,10 +148,16 @@ local function query_ollama(b64, prompt, model, host, timeout_ms, callback)
   local timer = uv.new_timer()
 
   local function cleanup()
-    if timer then timer:stop(); timer:close() end
+    if timer and not timer:is_closing() then
+      timer:stop()
+      timer:close()
+    end
     if stdout and not stdout:is_closing() then stdout:close() end
     if stderr and not stderr:is_closing() then stderr:close() end
-    vim.fn.delete(body_file)
+    -- vim.fn.delete must run on the main thread
+    vim.schedule(function()
+      vim.fn.delete(body_file)
+    end)
   end
 
   local handle = uv.spawn("curl", {
@@ -164,15 +180,53 @@ local function query_ollama(b64, prompt, model, host, timeout_ms, callback)
         return
       end
 
-      local ok_json, decoded = pcall(vim.json.decode, raw)
-      if not ok_json or type(decoded) ~= "table" then
-        callback(nil, "ollama: invalid JSON response")
-        return
+      -- Check for ollama-level error before parsing response
+      local first_line = vim.trim(vim.split(raw, "\n", { plain = true })[1] or "")
+      if first_line ~= "" then
+        local ok_err, err_obj = pcall(vim.json.decode, first_line)
+        if ok_err and type(err_obj) == "table" and type(err_obj.error) == "string" then
+          callback(nil, "ollama error: " .. err_obj.error
+            .. "\n\nInstall the model with:  ollama pull " .. model)
+          return
+        end
+      end
+      -- stream:false. The final object has "done":true and contains the
+      -- complete "response" field. Scan lines in reverse to find it.
+      local lines = vim.split(raw, "\n", { plain = true })
+      local text  = nil
+
+      for i = #lines, 1, -1 do
+        local line = vim.trim(lines[i])
+        if line ~= "" then
+          local ok_json, decoded = pcall(vim.json.decode, line)
+          if ok_json and type(decoded) == "table" then
+            if type(decoded.response) == "string" then
+              text = decoded.response
+              break
+            end
+          end
+        end
       end
 
-      local text = decoded.response
-      if type(text) ~= "string" then
-        callback(nil, "ollama: response field missing in JSON")
+      if not text then
+        -- Fallback: concatenate all response fields across all lines
+        local parts = {}
+        for _, line in ipairs(lines) do
+          local line_t = vim.trim(line)
+          if line_t ~= "" then
+            local ok_json, decoded = pcall(vim.json.decode, line_t)
+            if ok_json and type(decoded) == "table" and type(decoded.response) == "string" then
+              parts[#parts + 1] = decoded.response
+            end
+          end
+        end
+        if #parts > 0 then
+          text = table.concat(parts)
+        end
+      end
+
+      if not text then
+        callback(nil, "ollama: response field missing. Raw: " .. raw:sub(1, 300))
         return
       end
 
@@ -184,11 +238,6 @@ local function query_ollama(b64, prompt, model, host, timeout_ms, callback)
     vim.fn.delete(body_file)
     callback(nil, "ollama: failed to spawn curl")
     return
-  end
-
-  if not stdout or not stderr or not timer then
-    vim.notify("stdout, stderr or timer is nil", 4)
-    return nil
   end
 
   stdout:read_start(function(_, data)
@@ -227,9 +276,15 @@ function M.extract(path, opts)
   local page_texts  = {}
   local page_idx    = 1
 
+  -- Detect whether the model is a vision model by name convention.
+  -- Known vision models contain "llava", "bakllava", "moondream", "vision".
+  local is_vision_model = model:lower():match("llava")
+    or model:lower():match("bakllava")
+    or model:lower():match("moondream")
+    or model:lower():match("vision")
+
   local function process_next()
     if page_idx > #pages then
-      -- All pages done: assemble and deliver result
       local final = table.concat(page_texts, "\n\n---\n\n")
       local result = {
         status          = "ok",
@@ -245,63 +300,85 @@ function M.extract(path, opts)
       return
     end
 
-    local page = pages[page_idx]
-    page_idx   = page_idx + 1
+    local page     = pages[page_idx]
+    page_idx       = page_idx + 1
 
-    -- Rasterize on main thread (sync, fast for single pages)
-    local png = rasterize_sync(path, page)
-    if not png then
-      local result = {
-        status  = "error",
-        text    = nil,
-        format  = "markdown",
-        backend = "ollama",
-        pages_processed = page_idx - 2,
-        error   = string.format("ollama: failed to rasterize page %d", page),
-      }
-      if type(opts.__callback) == "function" then
-        opts.__callback(result)
-      end
-      return
-    end
-
-    local b64, b64_err = b64_encode(png)
-    vim.fn.delete(png)
-
-    if not b64 then
-      local result = {
-        status  = "error",
-        text    = nil,
-        format  = "markdown",
-        backend = "ollama",
-        pages_processed = page_idx - 2,
-        error   = string.format("ollama: %s", b64_err or "base64 encoding failed"),
-      }
-      if type(opts.__callback) == "function" then
-        opts.__callback(result)
-      end
-      return
-    end
-
-    query_ollama(b64, prompt, model, host, timeout_ms, function(text, err)
-      if err then
+    if is_vision_model then
+      -- Vision path: rasterize page -> base64 -> send image to model
+      local png = rasterize_sync(path, page)
+      if not png then
         local result = {
           status  = "error",
           text    = nil,
           format  = "markdown",
           backend = "ollama",
           pages_processed = page_idx - 2,
-          error   = err,
+          error   = string.format("ollama: failed to rasterize page %d", page),
         }
-        if type(opts.__callback) == "function" then
-          opts.__callback(result)
-        end
+        if type(opts.__callback) == "function" then opts.__callback(result) end
         return
       end
 
-      page_texts[#page_texts + 1] = string.format("<!-- page %d -->\n%s", page, text or "")
-      process_next()
-    end)
+      local b64, b64_err = b64_encode(png)
+      vim.fn.delete(png)
+
+      if not b64 then
+        local result = {
+          status  = "error",
+          text    = nil,
+          format  = "markdown",
+          backend = "ollama",
+          pages_processed = page_idx - 2,
+          error   = string.format("ollama: %s", b64_err or "base64 encoding failed"),
+        }
+        if type(opts.__callback) == "function" then opts.__callback(result) end
+        return
+      end
+
+      query_ollama(b64, prompt, model, host, timeout_ms, function(text, err)
+        if err then
+          local result = {
+            status  = "error",
+            text    = nil,
+            format  = "markdown",
+            backend = "ollama",
+            pages_processed = page_idx - 2,
+            error   = err,
+          }
+          if type(opts.__callback) == "function" then opts.__callback(result) end
+          return
+        end
+        page_texts[#page_texts + 1] = string.format("<!-- page %d -->\n%s", page, text or "")
+        process_next()
+      end)
+
+    else
+      -- Text path: extract page text via pdftotext, send as plain prompt
+      local raw_text = vim.fn.system({
+        "pdftotext", "-f", tostring(page), "-l", tostring(page), path, "-"
+      })
+
+      local page_prompt = string.format(
+        "%s\n\nPage %d content:\n%s", prompt, page, raw_text
+      )
+
+      query_ollama(nil, page_prompt, model, host, timeout_ms, function(text, err)
+        if err then
+          local result = {
+            status  = "error",
+            text    = nil,
+            format  = "markdown",
+            backend = "ollama",
+            pages_processed = page_idx - 2,
+            error   = err,
+          }
+          if type(opts.__callback) == "function" then opts.__callback(result) end
+          return
+        end
+        page_texts[#page_texts + 1] = string.format("<!-- page %d -->\n%s", page, text or "")
+        process_next()
+      end)
+    end
   end
 
   -- Kick off async page processing

@@ -57,11 +57,6 @@ local function rasterize(pdf_path, page, dpi, callback)
     end)
   end)
 
-  if not stderr then
-    vim.notify("stderr is nil", 4)
-    return nil
-  end
-
   stderr:read_start(function(_, data)
     if data then stderr_chunks[#stderr_chunks + 1] = data end
   end)
@@ -77,11 +72,6 @@ end
 local function wait_for_file(path, interval_ms, max_attempts, callback)
   local attempts = 0
   local timer    = uv.new_timer()
-
-  if not timer then
-    vim.notify("timer is nil", 4)
-    return nil
-  end
 
   timer:start(0, interval_ms, function()
     attempts = attempts + 1
@@ -176,17 +166,13 @@ function term_mod.render(_result, opts)
 
   local pages = (opts.pages and #opts.pages > 0) and opts.pages or { 1 }
   local tool  = opts.terminal_tool or platform.best_terminal_renderer()
-  local dpi   = 150
+  local dpi   = 216  -- higher DPI = sharper chafa output; 150 is too coarse
 
   -- Render pages sequentially
   local function render_next(idx)
     if idx > #pages then return end
 
     rasterize(path, pages[idx], dpi, function(png, err)
-      if not png or png == "" then
-        vim.notify("png is nil", 4)
-        return nil
-      end
       if err then
         vim.notify("pdfport terminal: " .. err, vim.log.levels.ERROR)
         return
