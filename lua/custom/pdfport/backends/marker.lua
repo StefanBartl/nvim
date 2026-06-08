@@ -37,7 +37,7 @@ function M.available()
 end
 
 ---@param path string  Absolute path to PDF
----@param opts PdfPort.InternalExtractOpts
+---@param opts PdfPort.ExtractOpts
 ---@return PdfPort.Result|nil
 function M.extract(path, opts)
   -- marker writes output to a directory; we use a temp dir per extraction
@@ -58,11 +58,11 @@ function M.extract(path, opts)
   local stderr_chunks = {}
   local stderr = uv.new_pipe(false)
 
-  local timeout_ms = opts.timeout_ms or 120000 -- marker can be slow on CPU
+  local timeout_ms = opts.timeout_ms or 120000 -- marker is slow on CPU; 2 min default
   local timer = uv.new_timer()
 
   local function cleanup()
-    if timer then
+    if timer and not timer:is_closing() then
       timer:stop()
       timer:close()
     end
@@ -160,7 +160,7 @@ function M.extract(path, opts)
   end
 
   if not stderr or not timer then
-    vim.notify("stderr or timer is nil ", 4)
+    vim.notify("stdout, stderr or timer is nil", 4)
     return nil
   end
 
