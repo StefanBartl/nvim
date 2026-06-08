@@ -4,7 +4,6 @@
 require("usrcmds.copy").enable()
 require("usrcmds.gather").setup({ lua = true })
 require("usrcmds.compress_dir").enable_usercmd()
-require("usrcmds.diff").enable({ diff_origin = true })
 require("usrcmds.fileinfo").enable()
 require("usrcmds.project_tree").enable_usercmds()
 require("usrcmds.newfile").enable_usercmds()

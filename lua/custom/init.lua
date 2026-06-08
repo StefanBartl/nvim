@@ -2,10 +2,18 @@
 -- Initialize modules for 'custom'
 
 ---AUDIT:
+require("custom.diff").enable({
+  diff_exit   = true,
+  diff_origin = true,
+  diff        = true,
+})
+
+---AUDIT:
 --- pdfport lives entirely in lua/custom/ and has no upstream plugin URL.
 --- This spec uses a local dummy plugin entry so that lazy.nvim still manages
 --- the load order and we can hook into the `config` callback reliably.
 --- All real work happens inside require("custom.pdfport").setup().
+
       require("custom.pdfport").setup({
         default_backend = "auto",
 
@@ -34,10 +42,18 @@
         claude_api_key = nil,
 
         ollama_host  = "http://localhost:11434",
-        ollama_model = "llava",
+        -- Change to any model installed locally (check with: ollama list).
+        -- Vision models (llava, bakllava) are needed for scanned PDFs.
+        -- Text models (qwen2.5-coder:7b, mistral, llama3) work for normal PDFs.
+        ollama_model = "qwen2.5-coder:7b",
 
         debug = false,
       })
+
+
+
+
+
 
 -- AUDIT
 require("custom.find_in_folder").setup({ keymaps = true, usercmds = true })
