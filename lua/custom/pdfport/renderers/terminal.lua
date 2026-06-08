@@ -58,13 +58,46 @@ local function rasterize(pdf_path, page, dpi, callback)
   end)
 
   if not stderr then
-    vim.notify("stderr is nil ", 4)
+    vim.notify("stderr is nil", 4)
     return nil
   end
 
-
   stderr:read_start(function(_, data)
     if data then stderr_chunks[#stderr_chunks + 1] = data end
+  end)
+end
+
+--- Waits until a file exists on disk, then calls the callback.
+--- Retries up to max_attempts times with interval_ms between attempts.
+---@param path string
+---@param interval_ms integer
+---@param max_attempts integer
+---@param callback fun(exists: boolean): nil
+---@return nil
+local function wait_for_file(path, interval_ms, max_attempts, callback)
+  local attempts = 0
+  local timer    = uv.new_timer()
+
+  if not timer then
+    vim.notify("timer is nil", 4)
+    return nil
+  end
+
+  timer:start(0, interval_ms, function()
+    attempts = attempts + 1
+
+    if vim.fn.filereadable(path) == 1 then
+      timer:stop()
+      timer:close()
+      vim.schedule(function() callback(true) end)
+      return
+    end
+
+    if attempts >= max_attempts then
+      timer:stop()
+      timer:close()
+      vim.schedule(function() callback(false) end)
+    end
   end)
 end
 
@@ -84,53 +117,57 @@ local function display_png(png_path, tool)
     return
   end
 
-  if tool == "chafa" then
-    -- chafa: outputs ANSI art to stdout; display in a terminal buffer
-    local width  = math.floor(vim.o.columns * 0.9)
-    local height = math.floor(vim.o.lines   * 0.8)
-    local cmd    = string.format(
-      "chafa --size=%dx%d %s",
-      width, height, vim.fn.shellescape(png_path)
-    )
-    -- Open a terminal buffer showing chafa output
-    vim.cmd("split | terminal " .. cmd)
-    vim.fn.delete(png_path)
+  -- Wait until pdftoppm has actually flushed the file to disk before opening it
+  wait_for_file(png_path, 50, 40, function(exists)
+    if not exists then
+      vim.notify(
+        "pdfport terminal: PNG file not found after rasterization: " .. png_path,
+        vim.log.levels.ERROR
+      )
+      return
+    end
 
-  elseif tool == "kitty" then
-    local exe = platform.has("kitten") and "kitten" or "kitty"
-    vim.cmd("split | terminal " .. exe .. " icat " .. vim.fn.shellescape(png_path))
-    vim.fn.delete(png_path)
+    -- Use a shellescape that works on Windows and Unix
+    local escaped = vim.fn.shellescape(png_path)
 
-  elseif tool == "imgcat" then
-    vim.cmd("split | terminal imgcat " .. vim.fn.shellescape(png_path))
-    vim.fn.delete(png_path)
-
-  elseif tool == "ueberzug" then
-    -- ueberzug++ requires a daemon; this sends a single draw command
-    -- For a full integration, a persistent ueberzug layer is recommended.
-    -- Here we fall back to chafa for simplicity.
-    if platform.has("chafa") then
+    if tool == "chafa" then
       local width  = math.floor(vim.o.columns * 0.9)
       local height = math.floor(vim.o.lines   * 0.8)
-      local cmd    = string.format(
-        "chafa --size=%dx%d %s",
-        width, height, vim.fn.shellescape(png_path)
-      )
+      local cmd = string.format("chafa --size=%dx%d %s", width, height, escaped)
       vim.cmd("split | terminal " .. cmd)
-    else
-      vim.notify(
-        "pdfport terminal: ueberzug++ daemon mode not yet supported; install chafa as fallback",
-        vim.log.levels.WARN
-      )
+      vim.defer_fn(function() vim.fn.delete(png_path) end, 2000)
+
+    elseif tool == "kitty" then
+      local exe = platform.has("kitten") and "kitten" or "kitty"
+      vim.cmd("split | terminal " .. exe .. " icat " .. escaped)
+      vim.defer_fn(function() vim.fn.delete(png_path) end, 2000)
+
+    elseif tool == "imgcat" then
+      vim.cmd("split | terminal imgcat " .. escaped)
+      vim.defer_fn(function() vim.fn.delete(png_path) end, 2000)
+
+    elseif tool == "ueberzug" then
+      if platform.has("chafa") then
+        local width  = math.floor(vim.o.columns * 0.9)
+        local height = math.floor(vim.o.lines   * 0.8)
+        local cmd = string.format("chafa --size=%dx%d %s", width, height, escaped)
+        vim.cmd("split | terminal " .. cmd)
+        vim.defer_fn(function() vim.fn.delete(png_path) end, 2000)
+      else
+        vim.notify(
+          "pdfport terminal: ueberzug++ daemon mode not yet supported; install chafa as fallback",
+          vim.log.levels.WARN
+        )
+        vim.fn.delete(png_path)
+      end
     end
-    vim.fn.delete(png_path)
-  end
+  end)
 end
 
----@param _ PdfPort.Result  (text field contains path for terminal mode)
----@param opts PdfPort.OpenOpts
+---@param _result PdfPort.Result  (text field contains path for terminal mode)
+---@param opts PdfPort.RenderOpts
 ---@return nil
-function term_mod.render(_, opts)
+function term_mod.render(_result, opts)
   local path = opts.path
   if not path or path == "" then
     vim.notify("pdfport terminal: no path provided", vim.log.levels.ERROR)
@@ -146,8 +183,8 @@ function term_mod.render(_, opts)
     if idx > #pages then return end
 
     rasterize(path, pages[idx], dpi, function(png, err)
-      if not png then
-        vim.notify("paramter argument png is nil", 4)
+      if not png or png == "" then
+        vim.notify("png is nil", 4)
         return nil
       end
       if err then
@@ -166,3 +203,6 @@ function term_mod.render(_, opts)
 end
 
 return term_mod
+
+
+

@@ -7,10 +7,10 @@
 local sys_mod  = {}
 local platform = require("custom.pdfport.platform")
 
----@param _ PdfPort.Result  (unused, path comes from opts)
----@param opts PdfPort.OpenOpts
+---@param _result PdfPort.Result  (unused, path comes from opts)
+---@param opts PdfPort.RenderOpts
 ---@return nil
-function sys_mod.render(_, opts)
+function sys_mod.render(_result, opts)
   local path = opts.path
   if not path or path == "" then
     vim.notify("pdfport system: no path provided", vim.log.levels.ERROR)

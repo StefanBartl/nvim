@@ -41,7 +41,7 @@ local function get_or_create_buf(name)
 end
 
 ---@param result PdfPort.Result
----@param opts PdfPort.OpenOpts
+---@param opts PdfPort.RenderOpts
 ---@return nil
 function M.render(result, opts)
   local path   = opts.path or ""

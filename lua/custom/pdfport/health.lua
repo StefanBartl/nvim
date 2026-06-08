@@ -15,8 +15,10 @@ local err   = health.error or health.report_error
 local start = health.start or health.report_start
 local info  = health.info  or health.report_info
 
-local platform = require("custom.pdfport.platform")
-local registry = require("custom.pdfport.core.registry")
+-- Defensive requires: if a sub-module fails to load, health.check() should
+-- still run and report the problem rather than crashing entirely.
+local ok_platform, platform = pcall(require, "custom.pdfport.platform")
+local ok_registry, registry = pcall(require, "custom.pdfport.core.registry")
 
 -- #############################################################################
 -- Helpers
@@ -47,18 +49,23 @@ end
 local function check_core()
   start("pdfport: core")
 
+  if not ok_platform then
+    err("custom.pdfport.platform failed to load: " .. tostring(platform))
+  else
+    ok("custom.pdfport.platform loads")
+  end
+
+  if not ok_registry then
+    err("custom.pdfport.core.registry failed to load: " .. tostring(registry))
+  else
+    ok("custom.pdfport.core.registry loads")
+  end
+
   local ok_init, _ = pcall(require, "custom.pdfport")
   if ok_init then
     ok("custom.pdfport module loads without error")
   else
     err("custom.pdfport module failed to load")
-  end
-
-  local ok_reg, _ = pcall(require, "custom.pdfport.core.registry")
-  if ok_reg then
-    ok("core.registry loads")
-  else
-    err("core.registry failed to load")
   end
 
   local ok_res, _ = pcall(require, "custom.pdfport.core.resolver")
@@ -78,6 +85,11 @@ end
 
 local function check_backends()
   start("pdfport: extraction backends")
+
+  if not ok_platform then
+    err("platform module unavailable – cannot check tool executables")
+    return
+  end
 
   -- pdftotext (recommended baseline)
   if check_exe("pdftotext", false) then
@@ -142,6 +154,11 @@ end
 
 local function check_renderers()
   start("pdfport: renderers")
+
+  if not ok_platform then
+    err("platform module unavailable – cannot check renderers")
+    return
+  end
 
   -- buffer / float: always available (pure Lua)
   ok("buffer renderer: built-in (always available)")
