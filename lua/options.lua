@@ -193,25 +193,34 @@ end
 
 -----------------------------------------------------------
 -- WSL
------------------------------------------------------------
--- Windows CRLF (^M) beim Einfügen aus der Zwischenablage im WSL filtern
-vim.g.clipboard = {
-  name = 'WslClipboard',
-  copy = {
-    ['+'] = 'wl-copy',
-    ['*'] = 'wl-copy',
-  },
-  paste = {
-    ['+'] = function()
-      return vim.fn.systemlist('wl-paste --no-newline | tr -d "\\r"')
-    end,
-    ['*'] = function()
-      return vim.fn.systemlist('wl-paste --no-newline | tr -d "\\r"')
-    end,
-  },
-  cache_enabled = 1,
-}
+-------------------------------------------------------
+local has_wl_clipboard =
+  vim.fn.executable("wl-copy") == 1
+  and vim.fn.executable("wl-paste") == 1
 
--- Stelle sicher, dass Neovim weiß, wie es mit gemischten Zeilenenden umgehen soll. Wenn Neovim eine Datei als reines Unix-Format öffnet, maskiert es jedes CRLF rigoros als ^M.
-vim.opt.fileformats = { "unix", "dos" }
+if has_wl_clipboard then
+  vim.g.clipboard = {
+    name = "WaylandClipboard",
 
+    copy = {
+      ["+"] = "wl-copy",
+      ["*"] = "wl-copy",
+    },
+
+    paste = {
+      ["+"] = function()
+        return vim.fn.systemlist(
+          [[wl-paste --no-newline | tr -d '\r']]
+        )
+      end,
+
+      ["*"] = function()
+        return vim.fn.systemlist(
+          [[wl-paste --no-newline | tr -d '\r']]
+        )
+      end,
+    },
+
+    cache_enabled = 1,
+  }
+end
