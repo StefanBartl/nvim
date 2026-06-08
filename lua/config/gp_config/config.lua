@@ -4,6 +4,9 @@
 local M = {
   openai_api_key = os.getenv("OPENAI_API_KEY"),
 
+  default_chat_agent = "Ollama_Qwen_Chat",
+  default_command_agent = "Ollama_Qwen_Cmd",
+
   providers = {
     openai = {
       disable = false,
@@ -14,6 +17,12 @@ local M = {
       disable = true,
       endpoint = "https://api.anthropic.com/v1/messages",
       secret = os.getenv("ANTHROPIC_API_KEY"),
+    },
+    -- 1. Neuen lokalen Ollama Provider hinzufügen
+    ollama = {
+      disable = false,
+      endpoint = "http://localhost:11434/api/chat",
+      secret = "dummy_key", -- Ollama braucht keinen Key, gp.nvim verlangt hier aber einen String
     },
   },
 
@@ -37,6 +46,25 @@ local M = {
       system_prompt = "Du bist Senior-Developer und und gehst ganz genau auf Thematiken und erklärst den wissenschaftlichen Kontext.",
       chat = true,
       command = false,
+    },
+    -- 2. Lokalen Qwen Chat-Agenten hinzufügen
+    {
+      name = "Ollama_Qwen_Chat",
+      provider = "ollama",
+      -- WICHTIG: Direkt als String definieren, wenn der native Endpoint genutzt wird:
+      model = "qwen2.5-coder:7b",
+      system_prompt = "Du bist ein lokaler KI-Assistent. Antworte präzise...",
+      chat = true,
+      command = false,
+    },
+    {
+      name = "Ollama_Qwen_Cmd",
+      provider = "ollama",
+      -- WICHTIG: Auch hier direkt als String:
+      model = "qwen2.5-coder:7b",
+      system_prompt = "Du bist ein präziser Code-Generierungs-Agent...",
+      chat = false,
+      command = true,
     },
   },
 }
