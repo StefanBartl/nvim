@@ -2,6 +2,16 @@
 -- Initialize modules for 'custom'
 
 ---AUDIT:
+require("custom.dir_picker").setup({
+  default_engine  = "telescope",   -- or "fzf"
+  fallback_engine = "fzf",
+  -- optional: add or override named depth aliases
+  depth_aliases = {
+    work = function() return "/home/user/work" end,
+  },
+})
+
+---AUDIT:
 require("custom.diff").enable({
   diff_exit   = true,
   diff_origin = true,
@@ -54,14 +64,6 @@ require("custom.diff").enable({
 
 
 
-
--- AUDIT
-require("custom.find_in_folder").setup({ keymaps = true, usercmds = true })
-
--- AUDIT
-require("custom.open").setup({
-  default_handler = "browser",  -- run when :Open is called with no args
-})
 
 -- AUDIT
 require("custom.find_in_folder").setup({ keymaps = true, usercmds = true })
