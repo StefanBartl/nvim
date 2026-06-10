@@ -1,6 +1,19 @@
 ---@module 'usrcmds'
 -- Initialize module for 'usrcmds'
 
+--AUDIT :
+local emojis = require("usrcmds.emojis")
+emojis.setup({
+  -- Ändert das Standard-Verhalten, falls kein Scope übergeben wird
+    -- Gültig: "word", "line", "visual", "%", "cwd"
+  default_scope = "%",
+})
+-- Schneller Emoji-Picker im Insert- oder Normal-Mode
+vim.keymap.set({ "n", "i" }, "<C-o>", "<cmd>Emojis insert<cr>", { desc = "Emoji: Picker öffnen" })
+-- Schneller Check der aktuellen Datei
+vim.keymap.set("n", "<leader>ec", "<cmd>Emojis count %<cr>", { desc = "Emoji: Zählen im Puffer" })
+vim.keymap.set("n", "<leader>el", "<cmd>Emojis list %<cr>", { desc = "Emoji: In Quickfix auflisten" })
+
 require("usrcmds.copy").enable()
 require("usrcmds.gather").setup({ lua = true })
 require("usrcmds.compress_dir").enable_usercmd()
