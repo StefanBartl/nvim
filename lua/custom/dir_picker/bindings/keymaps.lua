@@ -8,7 +8,7 @@ local M = {}
 function M.enable()
   local map = (vim.g.__map_helper) or require("lib.map")
 
-  map("n", "<leader>fd", function()
+  map("n", "<leader>dp", function()
     vim.ui.input({
       -- Inform the user about all accepted input forms in the prompt itself
       prompt = "Depth / alias / path=… (default: cwd): ",
