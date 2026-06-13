@@ -1,4 +1,5 @@
----@module 'lib.fs.ignore'
+---@module 'lib.fs.ignore.list'
+
 --- Canonical filesystem ignore definitions for developer tooling.
 ---
 --- This module centralizes filesystem ignore rules shared across multiple

@@ -19,13 +19,8 @@ local clipboard = require("custom.markdown.util.clipboard")
 -- Ignore rules
 ----------------------------------------------------------------------
 
---AUDIT; Es gibt im repo eine vollstöändige liste (lib?)
 ---@type table<string, boolean>
-local default_ignore = {
-  [".git"] = true,
-  ["node_modules"] = true,
-  [".DS_Store"] = true,
-}
+local default_ignore = require("lib.fs.ignore.list").as_set()
 
 --- Check if directory should be ignored
 ---@param name string
