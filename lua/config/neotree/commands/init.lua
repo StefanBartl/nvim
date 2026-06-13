@@ -9,6 +9,7 @@ local diff_files_mod = require("config.neotree.commands.diff_files")
 local mark_mod = require("config.neotree.commands.mark")
 local node_utils = require("config.neotree.utils.node")
 local add_mod = require("config.neotree.commands.add")
+local markdown_bridge = require("config.neotree.commands.markdown.links")
 
 local api, fn = vim.api, vim.fn
 
@@ -121,6 +122,11 @@ return {
 
     require("telescope.builtin").live_grep(getTelescopeOpts(state, path))
   end,
+
+  --- Generate markdown links from current node
+  markdown_links = markdown_bridge.from_node,
+  --- Generate markdown links recursively from current node
+  markdown_links_recursive = markdown_bridge.from_node_recursive,
 
   -- Diff & mark modules
   diff_files = diff_files_mod,

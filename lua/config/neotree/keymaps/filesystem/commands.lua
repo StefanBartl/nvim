@@ -6,4 +6,7 @@ return {
   ["i"] = "run_command",
   ["tf"] = "telescope_find",
   ["tg"] = "telescope_grep",
+
+  ["ML"] = "markdown_links",
+  ["MR"] = "markdown_links_recursive",
 }
