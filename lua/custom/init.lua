@@ -1,7 +1,6 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
----AUDIT:
 require("custom.dir_picker").setup({
   default_engine  = "telescope",   -- or "fzf"
   fallback_engine = "fzf",

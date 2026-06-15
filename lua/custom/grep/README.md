@@ -9,7 +9,7 @@ Eine Datei wird angezeigt, wenn die Suchbedingungen irgendwo im gesamten Dateiin
 ## Installation
 
 ```lua
-require("usrcmds.live_grep").setup()
+require("custom.grep").setup()
 ```
 
 ## Command

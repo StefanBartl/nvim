@@ -4,35 +4,32 @@ let v:this_session=expand("<sfile>:p")
 doautoall SessionLoadPre
 silent only
 silent tabonly
-cd ~/AppData/Local/nvim
+cd ~/AppData/Local/nvim/lua/custom/mynotes
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 let s:shortmess_save = &shortmess
 set shortmess+=aoO
-badd +184 lua/config/neotree/open/filemanager/win.lua
-badd +294 docs/ROADMAP/ROADMAP.md
-badd +59 lua/sessions/storage/last.vim
-badd +1 /docs/ROADMAP/ROADMAP.md
+badd +8 init.lua
 argglobal
 %argdel
-edit /docs/ROADMAP/ROADMAP.md
+edit init.lua
+tcd ~/AppData/Local/nvim
 argglobal
-balt lua/sessions/storage/last.vim
 setlocal foldmethod=expr
-setlocal foldexpr=v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)
+setlocal foldexpr=v:lua.vim.treesitter.foldexpr()
 setlocal foldmarker={{{,}}}
 setlocal foldignore=#
 setlocal foldlevel=99
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldenable
-let s:l = 1 - ((0 * winheight(0) + 24) / 49)
+let s:l = 8 - ((7 * winheight(0) + 18) / 37)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
-normal! 0
+keepjumps 8
+normal! 041|
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
