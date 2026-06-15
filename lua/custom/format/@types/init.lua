@@ -16,6 +16,7 @@
 ---| "indent"      -- Fix indentation
 ---| "clear"       -- Clear buffer content
 ---| "markdown"    -- Markdown-specific formatting operations
+---| "enum"        -- Enumeration of lines
 
 ---@class Custom.Format.SubcommandDef
 ---@field handler fun(args: string[]): nil Function that handles the subcommand

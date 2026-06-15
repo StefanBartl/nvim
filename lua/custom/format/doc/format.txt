@@ -7,11 +7,12 @@ CONTENTS                                                      *format-contents*
     2. Installation ...................... |format-installation|
     3. Usage ............................. |format-usage|
     4. Commands .......................... |format-commands|
-        4.1 :Format column ............... |format-column|
-        4.2 :Format table ................ |format-table|
-        4.3 :Format textwidth ............ |format-textwidth|
-        4.4 :Format filter ............... |format-filter|
-        4.5 :Format clear ................ |format-clear|
+        4.1  :Format column .............. |format-column|
+        4.2  :Format table ............... |format-table|
+        4.3  :Format textwidth ........... |format-textwidth|
+        4.4  :Format filter .............. |format-filter|
+        4.5  :Format clear ............... |format-clear|
+        4.6  :Format enum ................ |format-enum|
     5. Configuration ..................... |format-config|
     6. Keymaps ........................... |format-keymaps|
     7. Lua API ........................... |format-api|
@@ -31,13 +32,8 @@ Features:
 • Markdown table formatting with per-role and per-column alignment control
 • Text reflow to specified width
 • Line filtering based on patterns
+• Token enumeration in visual selections (any filetype)
 • Quick buffer clearing
-
-Architecture:
-• Subcommand-based design (like :Telescope, :Gitsigns)
-• Type-safe with full LSP support
-• Modular implementation with clear separation of concerns
-• UTF-8 aware for proper character handling
 
 ==============================================================================
 2. INSTALLATION                                         *format-installation*
@@ -45,16 +41,10 @@ Architecture:
 Add to your Neovim configuration:
 >lua
     require("custom.format").setup({
-      enable_legacy_commands = true,  -- Keep old commands
-      default_subcommand = nil,       -- Optional default
+      enable_legacy_commands = true,
+      default_subcommand = nil,
     })
 <
-
-The setup function automatically:
-• Registers all subcommands
-• Creates the |:Format| command
-• Sets up completion functions
-• Optionally preserves legacy commands
 
 ==============================================================================
 3. USAGE                                                        *format-usage*
@@ -64,13 +54,8 @@ General syntax:
     :Format <subcommand> [arguments...]
 <
 
-Tab completion is available for:
-• Subcommand names
-• Subcommand-specific arguments
-
-Without arguments, :Format shows usage information.
-
-With a configured default subcommand, :Format alone runs that default.
+Tab completion is available for subcommand names and their arguments.
+Without arguments, :Format shows available subcommands.
 
 ==============================================================================
 4. COMMANDS                                                  *format-commands*
@@ -86,137 +71,39 @@ Syntax: ~
     :Format column [<target_col> [fill_char]]
 <
 
-Arguments: ~
-    <target_col>    Target column number (1-based, required for non-interactive)
-    [fill_char]     Fill character (default: space, must have display width 1)
-
-Without arguments, prompts interactively for column and fill character.
+Without arguments, prompts interactively.
 
 Modes: ~
-    v               Visual mode: single line, single character
-    <C-v>           Visual block: multiple lines, same column position
+    v       Visual mode: single line, single character
+    <C-v>   Visual block: multiple lines, same column position
 
 Examples: ~
 >vim
-    " Interactive prompt
     :Format column
-
-    " Align to column 40 with spaces
     :Format column 40
-
-    " Align to column 60 with underscores
     :Format column 60 _
 <
-
-Features: ~
-• UTF-8 support for both selected character and fill character
-• Validates display width (fill char must be exactly 1 column wide)
-• Stores last-used values for repeat operations
-• Handles multi-byte characters correctly via vim.str_utfindex
-
-Requirements: ~
-• Must be in visual mode when executed
-• Target column must be greater than current character position
-• Fill character must have display width of 1
-
-See also: ~
-    |format-examples| for workflow examples
-    custom/format/column_align/README.md for detailed documentation
 
 ------------------------------------------------------------------------------
 4.2 :Format table                                              *format-table*
                                                         *:Format-table*
 
-Format one or more Markdown tables with configurable per-role and
-per-column alignment, with optional multi-file scope.
+Format one or more Markdown tables.
 
 Syntax: ~
 >vim
     :Format table [ALIGN] [header=ALIGN] [cell=ALIGN] [skip=COLS] [scope=SCOPE]
 <
 
-Arguments: ~
-
-    Positional (backward-compatible): ~
-        [ALIGN]             Apply this alignment to BOTH header and data rows.
-                            (Fixes the previous bug where one positional arg
-                            only affected the header.)
-        [ALIGN] [ALIGN]     First arg = header alignment, second = cell alignment.
-
-    Key-value (take precedence over positional): ~
-        header=ALIGN        Alignment for the header row only.
-        cell=ALIGN          Alignment for all data rows.
-
-        ALIGN values: left | center | right
-
-    Column exceptions: ~
-        skip=COLS           Comma-separated list of column names (case-insensitive)
-                            or 1-based column indices. Listed columns are pinned
-                            to left alignment regardless of the cell= setting.
-                            Use col_overrides in the Lua API for other alignments.
-
-    Scope: ~
-        scope=SCOPE         Where to apply the formatting. Default: cursor.
-
-        SCOPE values:
-            cursor          Only the table the cursor is currently inside.
-            buffer          Every table in the current buffer (equivalent to %).
-            cwd             Every *.md file under vim.fn.getcwd() (writes to disk).
-            <path>          A specific file path (absolute or relative to cwd).
+See |format-api-table| for the full option reference.
 
 Examples: ~
 >vim
-    " Center both headers and cells (default)
     :Format table
-
-    " Left-align EVERYTHING – header AND cells (single positional arg)
     :Format table left
-
-    " Center headers, left-align cells (two positional args)
     :Format table center left
-
-    " Explicit key-value syntax
-    :Format table header=center cell=left
-
-    " Left-align all cells, but keep 'Beschreibung' column left
-    :Format table left skip=Beschreibung
-
-    " Center cells, skip columns 3 and 'Notes' from centering
-    :Format table center skip=3,Notes
-
-    " Format every table in the current buffer
-    :Format table center left scope=buffer
-
-    " Format all *.md files under the project root
-    :Format table left scope=cwd
-
-    " Format a specific file
-    :Format table center scope=~/project/docs/api.md
+    :Format table header=center cell=left skip=Beschreibung scope=buffer
 <
-
-Features: ~
-• Automatic column width calculation based on content
-• UTF-8 character support via vim.fn.strdisplaywidth
-• Preserves separator style:
-  - Compact: |-----|
-  - Spaced:  | ----- |
-• Cursor-position-based table detection (scans up/down)
-• Per-column alignment overrides via skip= or Lua API col_overrides
-
-Table Requirements: ~
-• Cursor must be inside table (for scope=cursor)
-• Minimum structure: header + separator + 1 data row
-• Separator must be on line 2 (directly after header)
-• All rows must have consistent column count
-
-Bug Fix (v2): ~
-• Previously, :Format table left only applied "left" to the header row
-  while data rows silently stayed centered. This is now corrected:
-  a single positional argument applies to both header and data rows.
-
-See also: ~
-    |format-api-table| for the Lua API
-    custom/format/table/README.md for detailed documentation
 
 ------------------------------------------------------------------------------
 4.3 :Format textwidth                                      *format-textwidth*
@@ -229,86 +116,29 @@ Syntax: ~
     :Format textwidth <N|max>
 <
 
-Arguments: ~
-    <N>    Target width in columns (positive integer)
-    max    Use current window width (vim.api.nvim_win_get_width)
-
 Examples: ~
 >vim
-    " Reflow to 80 columns
     :Format textwidth 80
-
-    " Reflow to window width
     :Format textwidth max
 <
-
-Behavior: ~
-• Reflows entire buffer
-• Preserves paragraph structure (blank lines separate paragraphs)
-• Handles list indentation (bullets -, *, +, numbered 1., 2.)
-• No hyphenation (words kept intact)
-• Sets buffer-local 'textwidth' option
-
-Features: ~
-• Simple greedy wrapping algorithm
-• Maintains indentation on continuation lines
-• Preserves runs of blank lines exactly
-• Detects and aligns bullet/numbered lists
-
-Limitations: ~
-• No hyphenation support
-• Simple list detection (basic bullets and numbers only)
-• Does not handle code blocks specially
-
-See also: ~
-    custom/format/format_text_width/README.md
-    custom/format/format_text_width/ROADMAP.md for planned features
 
 ------------------------------------------------------------------------------
 4.4 :Format filter                                            *format-filter*
                                                        *:Format-filter*
 
-Filter lines based on patterns.
+Filter buffer lines based on patterns.
 
 Syntax: ~
 >vim
     :Format filter [--remove | -r] <pattern> [<pattern>...]
 <
 
-Arguments: ~
-    --remove, -r    Remove matching lines (default: keep matching)
-    <pattern>       String to match (plain text, not regex)
-    {table}         OR-group: { "a", "b" } matches lines with 'a' OR 'b'
-
-Multiple patterns use AND logic (all must match).
-
 Examples: ~
 >vim
-    " Keep lines containing 'foo'
     :Format filter foo
-
-    " Remove lines containing 'TODO'
     :Format filter --remove TODO
-
-    " Keep lines with 'foo' AND ('bar' OR 'baz')
     :Format filter foo { "bar", "baz" }
-
-    " Remove lines with 'error' OR 'warning'
-    :Format filter -r { "error", "warning" }
 <
-
-Pattern Syntax: ~
-    "string"           Plain text match (case-sensitive)
-    { "a", "b" }       OR-group (matches if any present)
-    Multiple args      AND logic (all must match)
-
-Safety: ~
-• Prevents removing all lines unintentionally in remove mode
-• Warns when no lines match in keep mode
-• No operation on empty result unless intended
-
-See also: ~
-    |format-examples| for complex filtering patterns
 
 ------------------------------------------------------------------------------
 4.5 :Format clear                                              *format-clear*
@@ -316,441 +146,326 @@ See also: ~
 
 Clear all buffer content.
 
-Syntax: ~
 >vim
     :Format clear
 <
 
-No arguments.
+Use |u| to undo.
 
-Behavior: ~
-• Deletes all lines in current buffer
-• No confirmation prompt
-• Undo with |u| immediately after
+------------------------------------------------------------------------------
+4.6 :Format enum                                               *format-enum*
+                                                        *:Format-enum*
 
-Equivalent to: ~
+Enumerate whitespace-separated tokens in the current visual selection and
+replace the selected region with the numbered result.
+
+Works in ANY filetype – no Markdown requirement.
+
+Syntax: ~
 >vim
-    :BufferClear
-    :%delete
+    :Format enum [STYLE] [style=STYLE] [sep=SEP] [start=N] [inline=true|false]
 <
+
+Arguments: ~
+
+    STYLE (bare positional)                              *format-enum-style*
+        Shorthand for style=STYLE. One of:
+            decimal   1. 2. 3. …  (default)
+            alpha     a. b. c. …
+            ALPHA     A. B. C. …
+            roman     i. ii. iii. …
+            ROMAN     I. II. III. …
+
+    style=STYLE
+        Same as bare STYLE; key=value form, takes precedence.
+
+    sep=SEP                                              *format-enum-sep*
+        String placed between the counter and the token text.
+        Default: ". "  (period + space)
+        Examples: sep=)   → "1) foo"
+                  sep=":  "  → "1:  foo"
+        Note: the value is used verbatim; add a trailing space inside the
+        quotes if you want one: sep=") "
+
+    start=N                                              *format-enum-start*
+        Counter value for the first token. Default: 1.
+        Useful for continuing an existing list: start=4 → "4. foo 5. bar".
+
+    inline=true|false                                    *format-enum-inline*
+        true  → all labelled tokens are joined on ONE output line.
+        false → each labelled token goes on its OWN output line.
+        When omitted, the behaviour is determined automatically:
+          • single-line selection → inline (true)
+          • multi-line selection  → one per line (false)
+
+Behaviour: ~
+    • Every whitespace-separated token across all selected lines is collected.
+    • Empty lines inside the selection are skipped (contribute no tokens).
+    • The leading indentation of the first selected line is preserved on the
+      first output line.
+    • The selected region is replaced in-place; surrounding lines are untouched.
+
+Tab completion: ~
+    Styles, key=value forms, and common sep / start values are all
+    offered by <Tab> during command-line completion.
+
+Examples: ~
+>vim
+    " Select 'Eins Zweite Drita' on one line, then run:
+    :Format enum
+    " → 1. Eins 2. Zweite 3. Drita
+
+    " Alpha style
+    :Format enum alpha
+    " → a. Eins b. Zweite c. Drita
+
+    " Roman numerals, custom separator
+    :Format enum roman sep=)
+    " → i) Eins ii) Zweite iii) Drita
+
+    " Continue a list at 4
+    :Format enum start=4
+    " → 4. Eins 5. Zweite 6. Drita
+
+    " Force one token per line
+    :Format enum inline=false
+    " → 1. Eins
+    "   2. Zweite
+    "   3. Drita
+
+    " Combined
+    :Format enum ROMAN sep=": " start=2 inline=false
+    " → II: Eins
+    "   III: Zweite
+    "   IV: Drita
+<
+
+Lua API: ~
+>lua
+    local core = require("custom.format.enum_lines.core")
+
+    -- Operate on the visual selection in the current buffer:
+    core.enum_selection({ style = "alpha", sep = ") " })
+
+    -- Operate on an explicit line range:
+    local result = core.enum_range(0, 3, 7, { style = "roman", inline = false })
+    -- result.ok    → boolean
+    -- result.lines → string[]  (new buffer lines)
+    -- result.count → integer   (number of tokens enumerated)
+    -- result.err   → string|nil
+<
+
+See also: ~
+    custom/format/enum_lines/core.lua   – full implementation
+    custom/format/enum_lines/@types.lua – type annotations
 
 ==============================================================================
 5. CONFIGURATION                                               *format-config*
 
-Setup options: ~
 >lua
     require("custom.format").setup({
-      -- Keep legacy commands (:FormatTable, :FilterLines, etc.)
-      -- Default: true
       enable_legacy_commands = true,
-
-      -- Default subcommand when :Format is called without arguments
-      -- nil = show usage message
-      -- Default: nil
       default_subcommand = nil,
     })
 <
 
-Per-Submodule Configuration: ~
-
-Format Table: ~
->lua
-    -- Module-level defaults (apply when no per-call args given)
-    -- The module itself does not expose a separate setup(); configure
-    -- via :Format table arguments or the Lua API opts table.
-    require("custom.format.table").format_table_at_cursor(bufnr, {
-      header_align  = "center",
-      entry_align   = "left",
-      col_overrides = { { col = "Beschreibung", align = "left" } },
-      scope         = "cursor",
-    })
-<
-
-Note: Submodule setup is optional if using :Format command, as all options
-can be specified per-invocation.
-
 ==============================================================================
 6. KEYMAPS                                                    *format-keymaps*
 
-The module does not set global keymaps by default. Suggested mappings:
-
-Column Alignment: ~
+The module sets no global keymaps by default. Suggested mappings:
 >lua
+    -- Enumerate selection
+    vim.keymap.set("x", "<leader>ae", "<Cmd>Format enum<CR>", {
+      desc = "Enumerate selected tokens"
+    })
+
+    -- Column alignment
     vim.keymap.set("x", "<leader>ac", "<Cmd>Format column<CR>", {
       desc = "Align character to column"
     })
-<
 
-Table Formatting: ~
->lua
-    -- Format table under cursor
+    -- Table formatting
     vim.keymap.set("n", "<leader>ft", "<Cmd>Format table<CR>", {
       desc = "Format table at cursor"
     })
-
-    -- Format all tables in buffer
-    vim.keymap.set("n", "<leader>fT", "<Cmd>Format table scope=buffer<CR>", {
-      desc = "Format all tables in buffer"
-    })
-<
-
-Text Reflow: ~
->vim
-    nnoremap <leader>fw <Cmd>Format textwidth 80<CR>
 <
 
 ==============================================================================
 7. LUA API                                                       *format-api*
 
-Main Module: ~
-    require("custom.format")
-
-    .setup(opts)                                             *format.setup()*
-        Setup the format module.
-
-        Parameters: ~
-            {opts}  (table|nil) Configuration options
-                    • enable_legacy_commands (boolean)
-                    • default_subcommand (string|nil)
-
-        Returns: ~
-            nil
+Main module: ~
+    require("custom.format").setup(opts)                     *format.setup()*
 
 ------------------------------------------------------------------------------
                                                             *format-api-table*
 Format Table: ~
     require("custom.format.table")
 
-    .format_table_at_cursor(bufnr, opts)      *format.format_table_at_cursor()*
-        Format only the table the cursor is currently inside.
+    .format_table_at_cursor(bufnr, opts)
+    .format_tables_in_buffer(bufnr, opts)
+    .format_tables_in_scope(opts)
+
+    opts keys: header_align, entry_align, col_overrides, scope
+
+------------------------------------------------------------------------------
+                                                             *format-api-enum*
+Enum Lines: ~
+    require("custom.format.enum_lines.core")
+
+    .enum_selection(opts)                         *format.enum_selection()*
+        Enumerate the visually selected region in the current buffer.
 
         Parameters: ~
-            {bufnr}  (integer|nil)  Buffer number. nil = current buffer.
-            {opts}   (table|nil)    Options:
-                     • header_align   (string)  "left"|"center"|"right"
-                     • entry_align    (string)  "left"|"center"|"right"
-                     • col_overrides  (table[]) Per-column exceptions.
-                                      Each entry: { col = name_or_idx,
-                                                    align = alignment }
-                     • scope          ignored here; use format_tables_in_scope
+            {opts}  (Custom.Format.EnumLines.Opts|nil)
 
-        Returns: ~
-            boolean ok, string|nil err
+        Returns: nil
 
-    .format_tables_in_buffer(bufnr, opts)    *format.format_tables_in_buffer()*
-        Format every table in a buffer.
+    .enum_range(bufnr, start_line, end_line, opts)  *format.enum_range()*
+        Enumerate a specific line range (programmatic use).
 
         Parameters: ~
-            {bufnr}  (integer|nil)  Buffer number. nil = current buffer.
-            {opts}   (table|nil)    Same keys as format_table_at_cursor.
+            {bufnr}       (integer)   Buffer number (0 = current)
+            {start_line}  (integer)   First line, 1-based
+            {end_line}    (integer)   Last line, 1-based inclusive
+            {opts}        (Custom.Format.EnumLines.Opts|nil)
 
-        Returns: ~
-            boolean ok, string|nil err, integer count
+        Returns: Custom.Format.EnumLines.Result
+            • ok     (boolean)
+            • lines  (string[])  – new buffer lines
+            • count  (integer)   – number of tokens enumerated
+            • err    (string|nil)
 
-    .format_tables_in_scope(opts)            *format.format_tables_in_scope()*
-        Dispatch formatting by scope.
+    .enumerate(lines, opts)                            *format.enumerate()*
+        Pure function: enumerate tokens from a string[] without side-effects.
+        Useful for testing or preview.
 
         Parameters: ~
-            {opts}  (table|nil)
-                    • scope  (string)  "cursor"|"buffer"|"cwd"|<path>
-                    All other keys same as format_table_at_cursor.
+            {lines}  (string[])
+            {opts}   (Custom.Format.EnumLines.Opts|nil)
 
-        Returns: ~
-            boolean ok, string|nil err
+        Returns: Custom.Format.EnumLines.Result
 
-        Scope behaviour: ~
-            "cursor"   Delegates to format_table_at_cursor.
-            "buffer"   Delegates to format_tables_in_buffer.
-            "cwd"      Finds all *.md under vim.fn.getcwd() and formats
-                       them on disk (no buffer required).
-            <path>     Formats tables in that specific file on disk.
-
-        Note: ~
-            cwd and path scopes read/write files directly via io.open.
-            They do NOT require the file to be open in Neovim.
-
-col_overrides type: ~
+Type definition: ~
 >lua
-    ---@class Custom.Fmt.FmtTbl.ColOverride
-    ---@field col   integer|string  1-based index OR header name (case-insensitive)
-    ---@field align "left"|"center"|"right"
-<
-
-    Examples: ~
->lua
-    local tbl = require("custom.format.table")
-
-    -- Format cursor table: header centered, cells left, 'Notes' column also left
-    tbl.format_table_at_cursor(0, {
-      header_align  = "center",
-      entry_align   = "left",
-    })
-
-    -- All tables in buffer, skip column 3 from centering
-    tbl.format_tables_in_buffer(0, {
-      entry_align   = "center",
-      col_overrides = { { col = 3, align = "left" } },
-    })
-
-    -- All *.md under cwd
-    tbl.format_tables_in_scope({
-      header_align = "center",
-      entry_align  = "left",
-      scope        = "cwd",
-    })
+    ---@class Custom.Format.EnumLines.Opts
+    ---@field style?   "decimal"|"alpha"|"ALPHA"|"roman"|"ROMAN"
+    ---@field sep?     string    -- default ". "
+    ---@field start?   integer   -- default 1
+    ---@field inline?  boolean   -- nil = auto
 <
 
 ------------------------------------------------------------------------------
 Column Align: ~
     require("custom.format.column_align.core")
 
-    .align_to_column(target_col, fill_char)    *format.align_to_column()*
-        Align visually selected character(s) to target column.
-
-        Parameters: ~
-            {target_col}  (number) Target column (1-based)
-            {fill_char}   (string|nil) Fill character (default: space)
-
-        Returns: ~
-            nil
-
-    .align_interactive()                        *format.align_interactive()*
-        Prompt for target column and fill character, then align.
-
-        Returns: ~
-            nil
-
-Format Text Width: ~
-    require("custom.format.text_width")
-
-    .reflow_buffer(bufnr, width)                   *format.reflow_buffer()*
-        Reflow entire buffer to specified width.
-
-        Parameters: ~
-            {bufnr}  (integer|nil) Buffer number (default: current)
-            {width}  (integer) Target width in columns
-
-        Returns: ~
-            nil
-
-    .reflow_range(bufnr, start, end, width)         *format.reflow_range()*
-        Reflow only specified line range.
-
-        Parameters: ~
-            {bufnr}  (integer|nil) Buffer number (default: current)
-            {start}  (integer) Start line (1-based)
-            {end}    (integer) End line (1-based, inclusive)
-            {width}  (integer) Target width in columns
-
-        Returns: ~
-            nil
-
-Type Definitions: ~
-    See @types.lua files in each submodule for full type annotations.
-    All modules use EmmyLua annotations for LSP support.
+    .align_to_column(target_col, fill_char)
+    .align_interactive()
 
 ==============================================================================
 8. LEGACY COMMANDS                                            *format-legacy*
 
-When enable_legacy_commands = true, these commands remain available:
+When enable_legacy_commands = true:
 
-Column Alignment: ~
     :ColumnAlignInteractive                    *:ColumnAlignInteractive*
-        Interactive column alignment (prompts for inputs)
-        Deprecated: use |:Format-column| without arguments
-
     :ColumnAlignToColumn <col> [fill]          *:ColumnAlignToColumn*
-        Align to column with arguments
-        Deprecated: use |:Format-column| <col> [fill]
-
-Table Formatting: ~
     :FormatTable [header] [entry]                       *:FormatTable*
-        Format Markdown table
-        Deprecated: use |:Format-table| [header] [entry]
-
-Text Width: ~
     :SetTextWidth <N|max>                              *:SetTextWidth*
-        Set textwidth and reflow buffer
-        Deprecated: use |:Format-textwidth| <N|max>
-
     :SetTextWidthRange <N|max>                    *:SetTextWidthRange*
-        Set textwidth and reflow range
-        Accepts range: :'<,'>SetTextWidthRange 80
-        Deprecated: use |:Format-textwidth| with visual selection
-
-Line Filtering: ~
     :FilterLines [--remove] <pattern> ...              *:FilterLines*
-        Filter buffer lines
-        Deprecated: use |:Format-filter| [--remove] <pattern> ...
-
-Misc: ~
     :BufferClear                                       *:BufferClear*
-        Clear buffer content
-        Deprecated: use |:Format-clear|
-
     :CopyFilepathToClipboard                  *:CopyFilepathToClipboard*
-        Copy current file path to system clipboard
-        No :Format equivalent (not a formatting operation)
 
-Migration: ~
-    To disable legacy commands and use only :Format:
->lua
-    require("custom.format").setup({
-      enable_legacy_commands = false
-    })
-<
+All deprecated in favour of :Format subcommands.
 
 ==============================================================================
 9. EXAMPLES                                                  *format-examples*
 
-Column Alignment Workflow: ~
->markdown
-    Before:
-    key=value
-
-    Visual select the '=' character (v, move cursor)
-    :Format column 40 _
-
-    After:
-    key_________________________________________=value
+Enum – inline (single-line selection): ~
+>
+    Input:   markdown Eins Zweite Drita
+    Command: :Format enum
+    Output:  markdown 1. Eins 2. Zweite 3. Drita
 <
 
-Table Formatting – Basic: ~
+Enum – alpha style: ~
+>
+    Input:   foo bar baz
+    Command: :Format enum alpha
+    Output:  a. foo b. bar c. baz
+<
+
+Enum – one per line with roman numerals: ~
+>
+    Input (3 lines visually selected):
+      Step one
+      Step two
+      Step three
+    Command: :Format enum roman inline=false
+    Output:
+      i. Step one
+      ii. Step two
+      iii. Step three
+<
+
+Enum – continue an existing list: ~
+>
+    Input:   delta epsilon
+    Command: :Format enum start=4
+    Output:  4. delta 5. epsilon
+<
+
+Column Alignment: ~
+>
+    Input:   key=value    (= selected)
+    Command: :Format column 40 _
+    Output:  key_________________________________________=value
+<
+
+Table Formatting: ~
 >markdown
     Before:
     | Name | Age | City |
     |---|---|---|
     | Alice | 30 | NYC |
-    | Bob | 25 | LA |
 
-    Cursor anywhere in table:
     :Format table center left
 
     After:
     |  Name  | Age | City |
     |--------|-----|------|
     | Alice  | 30  | NYC  |
-    | Bob    | 25  | LA   |
-<
-
-Table Formatting – Single alignment arg (v2 fix): ~
->markdown
-    Before:
-    | Name | Age | Description |
-    |---|---|---|
-    | Alice | 30 | Developer |
-
-    :Format table left        ← previously: header=left, cells=center (bug)
-                              ← now:        header=left, cells=left    (correct)
-
-    After:
-    | Name  | Age | Description |
-    |-------|-----|-------------|
-    | Alice | 30  | Developer   |
-<
-
-Table Formatting – Per-column exceptions: ~
->markdown
-    Before:
-    | Name | Age | Description |
-    |---|---|---|
-    | Alice | 30 | A long description that reads better left-aligned |
-
-    :Format table center skip=Description
-
-    After (Name + Age centered, Description left):
-    |  Name  | Age | Description                                      |
-    |--------|-----|--------------------------------------------------|
-    | Alice  | 30  | A long description that reads better left-aligned |
-<
-
-Table Formatting – Scope: ~
->vim
-    " Format every table in the current buffer
-    :Format table center left scope=buffer
-
-    " Format all *.md files under the project root (writes to disk)
-    :Format table left scope=cwd
-
-    " Format a specific file
-    :Format table center scope=~/project/docs/api.md
-<
-
-Text Reflow Workflow: ~
->markdown
-    Before (long line):
-    This is a very long paragraph that exceeds 80 columns and should be wrapped.
-
-    :Format textwidth 80
-
-    After:
-    This is a very long paragraph that exceeds 80 columns and should be
-    wrapped.
-<
-
-Line Filtering Workflow: ~
->markdown
-    Before:
-    TODO: implement feature
-    DONE: fix bug
-    TODO: write tests
-
-    :Format filter --remove TODO
-
-    After:
-    DONE: fix bug
 <
 
 ==============================================================================
 10. TROUBLESHOOTING                                  *format-troubleshooting*
 
+Q: `:Format enum` reports "No tokens found" ~
+A: The visual selection must contain at least one non-whitespace character.
+   Ensure you are in Visual mode (v / V / <C-v>) before running the command.
+
+Q: All tokens appear on one line but I want one per line ~
+A: Add inline=false:
+>vim
+    :Format enum inline=false
+<
+
+Q: I want a custom separator without a trailing space ~
+A: Pass sep= with the exact string you want, e.g. sep=): produces "1)token".
+   Add the space inside the value: sep=") " to get "1) token".
+
 Q: "Unknown subcommand" error ~
 A: Check available subcommands with :Format (no arguments).
    Verify setup was called: require("custom.format").setup()
 
-Q: Column alignment fails with "must be in visual mode" ~
-A: Enter visual mode (v or <C-v>) before running :Format column.
-   The command operates on visual selection, not cursor position.
-
 Q: Table not detected ~
-A: Ensure:
-   • Cursor is inside table boundaries
-   • Table has header + separator (|---|) + at least one data row
-   • Separator is exactly on line 2 (directly after header)
-   • All rows start and end with | character
-
-Q: :Format table left aligned only the header, cells stayed centered ~
-A: This was a bug in v1. Update to v2 of the table module.
-   A single positional argument now applies to both header and data rows.
-
-Q: skip= column name not recognized ~
-A: Column names are matched case-insensitively against the header row.
-   Ensure the cursor is inside the table so the header can be read.
-   Alternatively, use the 1-based column index: skip=3
-
-Q: scope=cwd changed files I didn't expect ~
-A: scope=cwd recurses all *.md files under vim.fn.getcwd().
-   Run :pwd first to confirm your working directory. Use scope=<path>
-   to target a specific file instead.
+A: Ensure cursor is inside the table, which needs header + separator + data row,
+   with the separator on line 2 directly after the header.
 
 Q: Completion not working ~
-A: Verify setup was called in your configuration:
+A: Verify setup() was called in your configuration:
 >lua
     require("custom.format").setup()
 <
-   Check that lazy loading (if used) has triggered.
-
-Q: UTF-8 characters misaligned ~
-A: The module uses vim.fn.strdisplaywidth for accurate width calculation.
-   If issues persist, check:
-   • 'encoding' is set to utf-8
-   • Terminal supports UTF-8
-   • Font provides correct character widths
-
-Q: Text reflow breaks code blocks ~
-A: The current implementation does not detect code blocks.
-   See custom/format/format_text_width/ROADMAP.md for planned features.
-   Workaround: manually exclude code blocks or use visual range.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

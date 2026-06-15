@@ -60,14 +60,7 @@ require("custom.diff").enable({
       })
 
 
-
-
-
-
--- AUDIT
 require("custom.find_in_folder").setup({ keymaps = true, usercmds = true })
-
--- AUDIT
 require("custom.open").setup({
   default_handler = "browser",  -- run when :Open is called with no args
 })
@@ -77,18 +70,13 @@ require("custom.commands_keymaps").setup({
   delete_current_file = true,
 })
 
--- AUDIT
 require("custom.insert").setup({
   enable_legacy_commands = true,
 })
-
---AUDIT
 require("custom.format").setup({
-  enable_legacy_commands = true, -- AUDIT: Übergangsphase
+  enable_legacy_commands = true,
 })
-
 require("custom.mynotes")
-
 require("custom.lua_project_file_stats").setup()
 require("custom.function_index").setup()
 require("custom.recommender").setup()

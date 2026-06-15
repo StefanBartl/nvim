@@ -16,6 +16,12 @@ Unified formatting command interface for Neovim that consolidates various text f
     - [:Format table](#format-table)
     - [:Format textwidth](#format-textwidth)
     - [:Format filter](#format-filter)
+    - [:Format trim](#format-trim)
+    - [:Format sort](#format-sort)
+    - [:Format unique](#format-unique)
+    - [:Format case](#format-case)
+    - [:Format indent](#format-indent)
+    - [:Format enum](#format-enum)
     - [:Format clear](#format-clear)
   - [Configuration](#configuration)
   - [Legacy Commands](#legacy-commands)
@@ -34,6 +40,7 @@ This module provides a centralized interface for various formatting operations i
 * **Table Formatting**: Format Markdown tables with configurable alignment
 * **Text Width**: Reflow text to specified width
 * **Line Filtering**: Keep or remove lines based on patterns
+* **Enumeration**: Number whitespace-separated tokens in a visual selection
 * **Buffer Clearing**: Quick buffer content clearing
 
 All operations are accessible through the `:Format` command with intelligent completion.
@@ -69,18 +76,19 @@ Tab completion is available for:
 
 ### Available Subcommands
 
-| Subcommand | Purpose | Arguments |
-|------------|---------|-----------|
-| `column` | Align character to column | `<col> [fill_char]` |
-| `table` | Format Markdown table | `[header_align] [entry_align]` |
-| `textwidth` | Reflow text to width | `<N\|max>` |
-| `filter` | Filter lines by pattern | `[--remove] <pattern> ...` |
-| `trim` | Remove trailing whitespace | none |
-| `sort` | Sort lines | `[-r] [-i] [-n]` |
-| `unique` | Remove duplicate lines | `[-i]` |
-| `case` | Change case | `<upper\|lower\|title\|sentence>` |
-| `indent` | Fix indentation | `[--spaces\|--tabs] [width]` |
-| `clear` | Clear buffer content | none |
+| Subcommand  | Purpose                             | Arguments                                              |
+|-------------|-------------------------------------|--------------------------------------------------------|
+| `column`    | Align character to column           | `<col> [fill_char]`                                    |
+| `table`     | Format Markdown table               | `[header_align] [entry_align]`                         |
+| `textwidth` | Reflow text to width                | `<N\|max>`                                             |
+| `filter`    | Filter lines by pattern             | `[--remove] <pattern> ...`                             |
+| `trim`      | Remove trailing whitespace          | none                                                   |
+| `sort`      | Sort lines                          | `[-r] [-i] [-n]`                                       |
+| `unique`    | Remove duplicate lines              | `[-i]`                                                 |
+| `case`      | Change case                         | `<upper\|lower\|title\|sentence>`                      |
+| `indent`    | Fix indentation                     | `[--spaces\|--tabs] [width]`                           |
+| `enum`      | Enumerate tokens in selection       | `[STYLE] [sep=SEP] [start=N] [inline=true\|false]`    |
+| `clear`     | Clear buffer content                | none                                                   |
 
 ---
 
@@ -180,10 +188,7 @@ Reflows text to specified width.
 
 **Examples:**
 ```vim
-" Reflow to 80 columns
 :Format textwidth 80
-
-" Reflow to window width
 :Format textwidth max
 ```
 
@@ -192,11 +197,6 @@ Reflows text to specified width.
 * Handles list indentation
 * No hyphenation (words kept intact)
 * Sets `textwidth` buffer-local option
-
-**Notes:**
-* Entire buffer is reflowed
-* Blank lines preserved
-* Simple bullet/number list detection
 
 ---
 
@@ -217,38 +217,11 @@ Filters lines based on patterns.
 
 **Examples:**
 ```vim
-" Keep lines containing 'foo'
 :Format filter foo
-
-" Remove lines containing 'TODO'
 :Format filter --remove TODO
-
-" Keep lines with 'foo' AND ('bar' OR 'baz')
 :Format filter foo { "bar", "baz" }
-
-" Remove lines with 'error' OR 'warning'
 :Format filter -r { "error", "warning" }
 ```
-
-**Features:**
-* Plain text matching (not regex)
-* Supports OR-groups via table syntax
-* Safety: prevents removing all lines unintentionally
-
----
-
-### :Format clear
-
-Clears all buffer content.
-
-**Syntax:**
-```vim
-:Format clear
-```
-
-**Notes:**
-* No undo confirmation
-* Use `u` to undo immediately after
 
 ---
 
@@ -260,11 +233,6 @@ Removes trailing whitespace from all lines.
 ```vim
 :Format trim
 ```
-
-**Features:**
-* Operates on entire buffer
-* Reports number of lines modified
-* Preserves empty lines
 
 ---
 
@@ -282,24 +250,6 @@ Sorts buffer lines with optional flags.
 * `-i, --ignore-case`: Case-insensitive sort
 * `-n, --numeric`: Numeric sort (extracts leading numbers)
 
-**Examples:**
-```vim
-" Alphabetical sort
-:Format sort
-
-" Reverse alphabetical
-:Format sort -r
-
-" Case-insensitive
-:Format sort -i
-
-" Numeric sort by leading numbers
-:Format sort -n
-
-" Reverse numeric
-:Format sort -r -n
-```
-
 ---
 
 ### :Format unique
@@ -309,18 +259,6 @@ Removes duplicate lines (keeps first occurrence).
 **Syntax:**
 ```vim
 :Format unique [-i]
-```
-
-**Flags:**
-* `-i, --ignore-case`: Case-insensitive comparison
-
-**Examples:**
-```vim
-" Remove exact duplicates
-:Format unique
-
-" Remove case-insensitive duplicates
-:Format unique -i
 ```
 
 ---
@@ -334,20 +272,7 @@ Changes case of all buffer text.
 :Format case <mode>
 ```
 
-**Modes:**
-* `upper`: UPPERCASE
-* `lower`: lowercase
-* `title`: Title Case (Each Word Capitalized)
-* `sentence`: Sentence case. First letter after punctuation.
-
-**Examples:**
-```vim
-" Convert to uppercase
-:Format case upper
-
-" Convert to title case
-:Format case title
-```
+**Modes:** `upper` | `lower` | `title` | `sentence`
 
 ---
 
@@ -360,31 +285,87 @@ Fixes indentation based on buffer settings or arguments.
 :Format indent [--spaces|--tabs] [width]
 ```
 
-**Arguments:**
-* `--spaces`: Force spaces (overrides `expandtab`)
-* `--tabs`: Force tabs
-* `width`: Indentation width (overrides `shiftwidth`)
+---
 
-**Default Behavior:**
-* Uses `expandtab` setting (spaces vs. tabs)
-* Uses `shiftwidth` or `tabstop` for width
+### :Format enum
+
+Numbers every whitespace-separated token in the current visual selection and
+writes the result back to the buffer. Works in **any filetype**.
+
+**Syntax:**
+```vim
+:Format enum [STYLE] [sep=SEP] [start=N] [inline=true|false]
+```
+
+**Arguments:**
+
+| Argument         | Description                                                          | Default   |
+|------------------|----------------------------------------------------------------------|-----------|
+| `STYLE` (bare)   | Shorthand for `style=STYLE`                                          | `decimal` |
+| `style=STYLE`    | Numbering style (see table below)                                    | `decimal` |
+| `sep=SEP`        | String placed between the counter and the token (e.g. `sep=)`)      | `. `      |
+| `start=N`        | Counter value for the first token (useful for continuing a list)     | `1`       |
+| `inline=true`    | Force all tokens onto **one** output line                            | auto      |
+| `inline=false`   | Force each token onto its **own** output line                        | auto      |
+
+**Numbering styles (`STYLE`):**
+
+| Style     | Output example           |
+|-----------|--------------------------|
+| `decimal` | `1. foo 2. bar 3. baz`   |
+| `alpha`   | `a. foo b. bar c. baz`   |
+| `ALPHA`   | `A. foo B. bar C. baz`   |
+| `roman`   | `i. foo ii. bar iii. baz`|
+| `ROMAN`   | `I. foo II. bar III. baz`|
+
+**Inline vs. per-line output (automatic):**
+* Single-line selection → tokens joined on **one** line (default)
+* Multi-line selection  → each token on its **own** line (default)
+* Use `inline=true` / `inline=false` to override.
 
 **Examples:**
 ```vim
-" Fix with current settings
-:Format indent
+" Select 'Eins Zweite Drita' on one line, then:
+:Format enum
+" → 1. Eins 2. Zweite 3. Drita
 
-" Fix with spaces, width 4
-:Format indent --spaces 4
+" Alpha style
+:Format enum alpha
+" → a. Eins b. Zweite c. Drita
 
-" Fix with tabs
-:Format indent --tabs
+" Roman numerals with custom separator
+:Format enum roman sep=)
+" → i) Eins ii) Zweite iii) Drita
+
+" Continue a list starting at 4
+:Format enum start=4
+" → 4. Eins 5. Zweite 6. Drita
+
+" Force one token per output line
+:Format enum inline=false
+" → 1. Eins
+"   2. Zweite
+"   3. Drita
 ```
 
-**Features:**
-* Converts mixed indentation to consistent style
-* Preserves indentation levels
-* Empty lines stay empty
+**Notes:**
+* Empty lines inside a multi-line selection are ignored (they contribute no tokens).
+* Leading indentation of the first selected line is preserved.
+* The `sep` value is used verbatim – append a trailing space yourself if needed
+  (e.g. `sep=") "` for `"1) foo"`).
+
+---
+
+### :Format clear
+
+Clears all buffer content.
+
+**Syntax:**
+```vim
+:Format clear
+```
+
+Use `u` to undo immediately after.
 
 ---
 
@@ -392,11 +373,7 @@ Fixes indentation based on buffer settings or arguments.
 
 ```lua
 require("custom.format").setup({
-  -- Keep legacy commands (:FormatTable, :FilterLines, etc.)
   enable_legacy_commands = true,
-
-  -- Default subcommand when none specified
-  -- nil = show usage message
   default_subcommand = nil,
 })
 ```
@@ -416,19 +393,36 @@ When `enable_legacy_commands = true`, the following commands remain available:
 * `:BufferClear`
 * `:CopyFilepathToClipboard`
 
-These are deprecated in favor of `:Format` subcommands.
+These are deprecated in favour of `:Format` subcommands.
 
 ---
 
 ## Examples
 
+### Enum Workflow
+
+```
+Input line (visually selected):
+  markdown Eins Zweite Drita
+
+:Format enum
+→ markdown 1. Eins 2. Zweite 3. Drita
+
+:Format enum alpha sep=)
+→ markdown a) Eins b) Zweite c) Drita
+
+:Format enum roman inline=false
+→ markdown
+  i. Eins
+  ii. Zweite
+  iii. Drita
+```
+
 ### Column Alignment Workflow
 
 ```vim
-" Select = character in visual mode
-" Then:
+" Select = character in visual mode, then:
 :Format column 40 _
-
 " Result: key_________=value
 ```
 
@@ -440,7 +434,6 @@ Before:
 |---|---|---|
 | Alice | 30 | NYC |
 
-" Place cursor in table, run:
 :Format table center left
 
 After:
@@ -452,19 +445,13 @@ After:
 ### Text Reflow Workflow
 
 ```vim
-" Long paragraph on one line
 :Format textwidth 80
-
-" Result: wrapped to 80 columns
 ```
 
 ### Line Filtering Workflow
 
 ```vim
-" Remove all TODO comments
 :Format filter --remove TODO
-
-" Keep only lines with 'function' and ('public' or 'private')
 :Format filter function { "public", "private" }
 ```
 
@@ -474,45 +461,30 @@ After:
 
 ```
 custom/format/
-├── @types.lua              -- Central type definitions
+├── @types/
+│   └── init.lua            -- Central type definitions
 ├── init.lua                -- Main module + command registry
 ├── column_align/
 │   ├── @types.lua
-│   └── core.lua            -- Alignment logic
-├── format_table/
+│   └── core.lua
+├── enum_lines/             -- NEW
+│   ├── @types.lua          -- Type definitions
+│   ├── core.lua            -- Pure enumeration logic + buffer API
+│   └── init.lua            -- Public facade
+├── table/
 │   ├── @types.lua
-│   └── init.lua            -- Table formatting
-├── format_text_width/
-│   ├── @types.lua
-│   └── init.lua            -- Text reflow
+│   ├── init.lua
+│   └── _handler.lua
+├── text_width/
+│   └── init.lua
 ├── filter_lines/
-│   ├── @types.lua
-│   └── init.lua            -- Line filtering
-└── misc/
-    ├── @types.lua
-    └── init.lua            -- Misc utilities
-```
-
-### Command Flow
-
-```
-:Format column 40 _
-    ↓
-parse_command_line()
-    ↓
-registry.subcommands["column"].handler({"40", "_"})
-    ↓
-column_align.align_to_column(40, "_")
-```
-
-### Completion Flow
-
-```
-:Format co<Tab>
-    ↓
-format_complete("co", ...)
-    ↓
-returns: ["column"]
+│   └── init.lua
+├── markdown/
+│   └── ...
+├── additional_features/
+│   └── init.lua
+└── doc/
+    └── format.txt
 ```
 
 ---
@@ -521,30 +493,26 @@ returns: ["column"]
 
 ### "Unknown subcommand" error
 
-**Problem:** `:Format xyz` fails
+Check available subcommands with `:Format` (no arguments).
 
-**Solution:** Check available subcommands with `:Format` (no arguments)
+### `:Format enum` – "No tokens found"
 
-### Column alignment fails in visual mode
+Ensure the visual selection contains at least one non-whitespace character.
 
-**Problem:** "Command must be executed from visual mode"
+### `:Format enum` outputs all on one line, but I want one per line
 
-**Solution:** Enter visual mode (`v` or `<C-v>`) before running command
+Add `inline=false`:
+```vim
+:Format enum inline=false
+```
 
 ### Table not detected
 
-**Problem:** "Not a valid table"
-
-**Solution:** Ensure:
-* Cursor is inside table
-* Table has header + separator (`|---|`) + data row
-* Separator is on line 2
+Ensure cursor is inside the table, which has header + separator (`|---|`) + data row.
 
 ### Completion not working
 
-**Problem:** Tab completion shows nothing
-
-**Solution:** Verify setup was called:
+Verify `setup()` was called:
 ```lua
 require("custom.format").setup()
 ```
@@ -553,9 +521,7 @@ require("custom.format").setup()
 
 ## See Also
 
-* `:h format.txt` - Full Vim help documentation
-* `custom/format/column_align/README.md` - Column alignment details
-* `custom/format/format_table/README.md` - Table formatting details
+* `:h format.txt` – Full Vim help documentation
+* `custom/format/column_align/README.md` – Column alignment details
+* `custom/format/enum_lines/` – Enumeration module source
 * Source: `lua/custom/format/`
-
----
