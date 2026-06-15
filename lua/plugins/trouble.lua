@@ -11,15 +11,15 @@ return {
     },
 
     version = "*",
-    lazy    = false,
+    lazy = false,
 
     config = function()
       require("trouble").setup({
         preview = {
-          type     = "split",
+          type = "split",
           relative = "win",
           position = "right",
-          size     = 0.30,
+          size = 0.30,
         },
 
         modes = {
@@ -28,15 +28,15 @@ return {
             mode = "diagnostics",
 
             preview = {
-              type     = "split",
+              type = "split",
               relative = "win",
               position = "right",
-              size     = 0.30,
+              size = 0.30,
             },
 
             formatters = {
               index = numbering.index_prefix(),
-              main  = "message",
+              main = "message",
             },
           },
 
@@ -45,15 +45,15 @@ return {
             mode = "qflist",
 
             preview = {
-              type     = "split",
+              type = "split",
               relative = "win",
               position = "right",
-              size     = 0.30,
+              size = 0.30,
             },
 
             formatters = {
               index = numbering.index_prefix(),
-              main  = "message",
+              main = "message",
             },
           },
 
@@ -62,31 +62,72 @@ return {
             mode = "loclist",
 
             preview = {
-              type     = "split",
+              type = "split",
               relative = "win",
               position = "right",
-              size     = 0.30,
+              size = 0.30,
             },
 
             formatters = {
               index = numbering.index_prefix(),
-              main  = "message",
+              main = "message",
             },
           },
         },
       })
 
+
+      -- AUDIT:
+
+      -- Patch: trouble.view.treesitter calls TSHighlighter._on_win / _on_line
+      -- which are private methods removed or renamed in Neovim 0.12+.
+      -- We defer the patch so trouble's own setup() has already run and
+      -- registered its decoration provider before we intercept it.
+      vim.schedule(function()
+        local ok, ts_view = pcall(require, "trouble.view.treesitter")
+        if not ok or type(ts_view) ~= "table" then return end
+
+        local TSHighlighter = vim.treesitter.highlighter
+        if type(TSHighlighter) ~= "table" then return end
+
+        -- Detect which internal method names actually exist.
+        -- Neovim < 0.12 uses _on_win / _on_line directly on the module table.
+        -- Neovim >= 0.12 moved them; the highlighter instance carries them
+        -- as methods or they were dropped in favour of the decoration API.
+        local function resolve_method(primary, fallbacks)
+          if type(TSHighlighter[primary]) == "function" then
+            return TSHighlighter[primary]
+          end
+          for _, alt in ipairs(fallbacks) do
+            if type(TSHighlighter[alt]) == "function" then
+              return TSHighlighter[alt]
+            end
+          end
+          -- Return a no-op so the decoration provider does not crash.
+          return function() end
+        end
+
+        -- Remap the missing private methods to whatever exists in this
+        -- Neovim version, or to a safe no-op.
+        TSHighlighter._on_win  = resolve_method("_on_win",  { "on_win",  "_win_start" })
+        TSHighlighter._on_line = resolve_method("_on_line", { "on_line", "_on_buf"    })
+      end)
+
+
+      -- END
+
+
       -- SpellChecker ───────────────────────────────────────────────────────
       require("config.trouble.spell").setup({
-        severity    = vim.diagnostic.severity.WARN,
+        severity = vim.diagnostic.severity.WARN,
 
         -- Global toggle keymap (no lang / no scope → defaults to en / buf)
-        keymap      = "<leader>zs",
+        keymap = "<leader>zs",
 
         -- Per-buffer correction keymaps (attached when a session is active)
-        keymap_fix  = "<leader>z=",   -- z= menu, then advance
-        keymap_fix1 = "<leader>z1",   -- accept first suggestion, advance
-        keymap_next = "]s",           -- jump to next spell error
+        keymap_fix = "<leader>z=", -- z= menu, then advance
+        keymap_fix1 = "<leader>z1", -- accept first suggestion, advance
+        keymap_next = "]s", -- jump to next spell error
 
         -- Set to false to always use the quickfix fallback
         use_trouble = true,

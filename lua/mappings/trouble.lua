@@ -52,6 +52,52 @@ function M.setup()
   map("n", "]q", "<cmd>cnext<cr>", { desc = "[Trouble] Next Quickfix" })
   map("n", "[l", "<cmd>lprevious<cr>", { desc = "[Trouble] Prev Location" })
   map("n", "]l", "<cmd>lnext<cr>", { desc = "[Trouble] Next Location" })
+
+  -- -- Navigation in Workspace Diagnostics via Trouble (v3+)
+  -- Navigation within an open Trouble diagnostics list.
+  -- Requires trouble.nvim v3 (folke/trouble.nvim, version = "*").
+  --
+  -- trouble.next / trouble.prev jump to the next/previous item inside the
+  -- active Trouble window of the given mode without switching focus to it.
+  -- { skip_groups = true } skips file-group headers and lands on actual items.
+  -- { jump = true }        immediately jumps the cursor to the source location.
+
+  local ok, trouble = pcall(require, "trouble")
+  if not ok then
+    return
+  end
+
+  ---Jump to the next workspace-diagnostic entry.
+  ---Falls back to a silent no-op when no Trouble window is open.
+  ---@return nil
+  local function diag_next()
+    if not trouble.is_open({ mode = "diagnostics" }) then
+      vim.notify("[trouble] diagnostics list not open", vim.log.levels.INFO)
+      return
+    end
+    trouble.next({ mode = "diagnostics", skip_groups = true, jump = true })
+  end
+
+  ---Jump to the previous workspace-diagnostic entry.
+  ---Falls back to a silent no-op when no Trouble window is open.
+  ---@return nil
+  local function diag_prev()
+    if not trouble.is_open({ mode = "diagnostics" }) then
+      vim.notify("[trouble] diagnostics list not open", vim.log.levels.INFO)
+      return
+    end
+    trouble.prev({ mode = "diagnostics", skip_groups = true, jump = true })
+  end
+
+  -- ]d  – next workspace diagnostic
+  -- [d  – previous workspace diagnostic
+  --
+  -- Chosen to mirror the existing ]q / [q quickfix pattern while staying
+  -- consistent with Neovim's built-in ]d / [d diagnostic navigation.
+  -- If the built-in ]d / [d are already mapped elsewhere, change the lhs
+  -- to e.g. ]D / [D or <leader>]d / <leader>[d.
+  map("n", "]w", diag_next, { desc = "[Trouble] Next workspace diagnostic" })
+  map("n", "[w", diag_prev, { desc = "[Trouble] Prev workspace diagnostic" })
 end
 
 return M
