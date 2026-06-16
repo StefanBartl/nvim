@@ -4,32 +4,18 @@ let v:this_session=expand("<sfile>:p")
 doautoall SessionLoadPre
 silent only
 silent tabonly
-cd ~/AppData/Local/nvim/lua/custom/mynotes
+cd ~/AppData/Local
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 let s:shortmess_save = &shortmess
 set shortmess+=aoO
-badd +8 init.lua
+badd +26 nvim/init.lua
+badd +11 nvim/lua/custom/pdfport/renderers/buffer.lua
+badd +148 nvim/lua/custom/pdfport/init.lua
+badd +17 nvim/lua/config/neotree/actions/pdfport/init.lua
 argglobal
 %argdel
-edit init.lua
-tcd ~/AppData/Local/nvim
-argglobal
-setlocal foldmethod=expr
-setlocal foldexpr=v:lua.vim.treesitter.foldexpr()
-setlocal foldmarker={{{,}}}
-setlocal foldignore=#
-setlocal foldlevel=99
-setlocal foldminlines=1
-setlocal foldnestmax=20
-setlocal foldenable
-let s:l = 8 - ((7 * winheight(0) + 18) / 37)
-if s:l < 1 | let s:l = 1 | endif
-keepjumps exe s:l
-normal! zt
-keepjumps 8
-normal! 041|
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
