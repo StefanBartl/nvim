@@ -186,76 +186,171 @@ end
 --- Registers Neovim user commands for pdfport.
 ---@return nil
 function M._register_commands()
-  local function create(name, fn, desc)
-    vim.api.nvim_create_user_command(name, fn, { desc = desc, nargs = "?" })
+  -- Autocompletion: gibt Dateien/Verzeichnisse passend zum aktuellen Argument zurück,
+  -- mit PDF-Vorschlag wenn kein Argument geschrieben wurde (cfile-Konvention).
+  ---@param arg_lead string
+  ---@return string[]
+  local function complete_pdf_path(arg_lead)
+    if arg_lead == "" then
+      -- Zeige cfile als ersten Vorschlag
+      local cfile = vim.fn.expand("<cfile>")
+      if cfile and cfile ~= "" and vim.fn.filereadable(cfile) == 1 then
+        return { cfile }
+      end
+      return {}
+    end
+    -- Standard-Dateisystem-Completion (Verzeichnisse + Dateien)
+    local completions = vim.fn.glob(arg_lead .. "*", false, true)
+    -- PDFs oben hinstellen
+    local pdfs, rest = {}, {}
+    for _, p in ipairs(completions) do
+      if p:lower():match("%.pdf$") then
+        pdfs[#pdfs + 1] = p
+      else
+        rest[#rest + 1] = p
+      end
+    end
+    vim.list_extend(pdfs, rest)
+    return pdfs
   end
 
-  -- :PdfPort [path]  – open current file or given path with mode picker
-  create("PdfPort", function(args)
-    local path = args.args ~= "" and args.args or vim.api.nvim_buf_get_name(0)
+  -- Gemeinsamer Pfad-Resolver:
+  --   1. Explizites Argument (args.args)
+  --   2. Wort unter Cursor (<cfile>)
+  --   3. Aktueller Buffer-Name
+  ---@param args table  vim.api.nvim_create_user_command callback args
+  ---@return string|nil path
+  local function resolve_path(args)
+    -- Explizites Argument hat höchste Priorität
+    if args.args and args.args ~= "" then
+      return vim.fn.expand(args.args)
+    end
+
+    -- cfile: Pfad unter dem Cursor (funktioniert in jedem Buffer,
+    -- also auch in Quickfix, Terminal, normalem Text usw.)
+    local cfile = vim.fn.expand("<cfile>")
+    if cfile and cfile ~= "" then
+      -- Absoluten Pfad versuchen; wenn nicht lesbar → trotzdem weitergeben
+      local abs = vim.fn.fnamemodify(cfile, ":p")
+      if vim.fn.filereadable(abs) == 1 then
+        return abs
+      end
+      -- Relativer Pfad direkt prüfen
+      if vim.fn.filereadable(cfile) == 1 then
+        return cfile
+      end
+    end
+
+    -- Fallback: aktueller Buffer
+    local buf_name = vim.api.nvim_buf_get_name(0)
+    if buf_name and buf_name ~= "" then
+      return buf_name
+    end
+
+    return nil
+  end
+
+  local cmd_opts_base = { nargs = "?", complete = complete_pdf_path }
+
+  -- ── :PdfPort [path]  – interaktiver Modus-Picker ────────────────────────
+  vim.api.nvim_create_user_command("PdfPort", function(args)
+    local path = resolve_path(args)
     if not path or path == "" then
-      vim.notify("PdfPort: no file path", vim.log.levels.ERROR)
+      vim.notify("PdfPort: Kein Dateipfad gefunden (Argument, cfile oder Buffer)", vim.log.levels.ERROR)
       return
     end
 
-    local hover = require("lib.ui.hover_select")
+    local hover_ok, hover = pcall(require, "lib.ui.hover_select")
     local choices = {
-      { label = "buffer  – plain text (auto)",     mode = "buffer",   backend = nil       },
-      { label = "buffer  – pdftotext",             mode = "buffer",   backend = "pdftotext" },
-      { label = "buffer  – marker (Markdown AI)",  mode = "buffer",   backend = "marker"  },
-      { label = "buffer  – docling",               mode = "buffer",   backend = "docling" },
-      { label = "buffer  – Claude API",            mode = "buffer",   backend = "claude"  },
-      { label = "buffer  – Ollama",                mode = "buffer",   backend = "ollama"  },
-      { label = "float   – auto",                  mode = "float",    backend = nil       },
-      { label = "terminal image preview",          mode = "terminal", backend = nil       },
-      { label = "system application",              mode = "system",   backend = nil       },
+      { label = "buffer  – plain text (auto)",    mode = "buffer",   backend = nil          },
+      { label = "buffer  – pdftotext",            mode = "buffer",   backend = "pdftotext"  },
+      { label = "buffer  – marker (Markdown AI)", mode = "buffer",   backend = "marker"     },
+      { label = "buffer  – docling",              mode = "buffer",   backend = "docling"    },
+      { label = "buffer  – Claude API",           mode = "buffer",   backend = "claude"     },
+      { label = "buffer  – Ollama",               mode = "buffer",   backend = "ollama"     },
+      { label = "float   – auto",                 mode = "float",    backend = nil          },
+      { label = "terminal image preview",         mode = "terminal", backend = nil          },
+      { label = "system application",             mode = "system",   backend = nil          },
     }
 
     local items = { [#choices] = nil }
-    for i, c in ipairs(choices) do
-      items[i] = c.label
+    for i, c in ipairs(choices) do items[i] = c.label end
+
+    local on_select = function(_, idx)
+      local c = choices[idx]
+      if not c then return end
+      M.open({ path = path, mode = c.mode, backend_id = c.backend, focus = true })
     end
 
-    hover.open({
-      title    = "pdfport – open as",
-      items    = items,
-      auto_width = true,
-      on_select = function(_, idx)
-        local c = choices[idx]
-        if not c then return end
-        M.open({ path = path, mode = c.mode, backend_id = c.backend, focus = true })
-      end,
-    })
-  end, "Open a PDF with pdfport (mode picker)")
+    if hover_ok then
+      hover.open({
+        title     = "pdfport – open as",
+        items     = items,
+        auto_width = true,
+        on_select = on_select,
+      })
+    else
+      -- Fallback: vim.ui.select
+      vim.ui.select(items, { prompt = "pdfport – open as:" }, function(_, idx)
+        if idx then on_select(nil, idx) end
+      end)
+    end
+  end, vim.tbl_extend("force", cmd_opts_base, {
+    desc = "pdfport: PDF öffnen (Modus-Picker). Nutzt Argument, cfile oder aktuellen Buffer.",
+  }))
 
-  -- :PdfPortText [path]
-  create("PdfPortText", function(args)
-    local path = args.args ~= "" and args.args or vim.api.nvim_buf_get_name(0)
+  -- ── :PdfPortText [path]  – plain text in Buffer ──────────────────────────
+  vim.api.nvim_create_user_command("PdfPortText", function(args)
+    local path = resolve_path(args)
+    if not path or path == "" then
+      vim.notify("PdfPortText: Kein Dateipfad gefunden", vim.log.levels.ERROR)
+      return
+    end
     M.open({ path = path, mode = "buffer", focus = true })
-  end, "Extract PDF text into a buffer")
+  end, vim.tbl_extend("force", cmd_opts_base, {
+    desc = "pdfport: PDF-Text in Buffer extrahieren (pdftotext, auto).",
+  }))
 
-  -- :PdfPortFloat [path]
-  create("PdfPortFloat", function(args)
-    local path = args.args ~= "" and args.args or vim.api.nvim_buf_get_name(0)
+  -- ── :PdfPortFloat [path] ────────────────────────────────────────────────
+  vim.api.nvim_create_user_command("PdfPortFloat", function(args)
+    local path = resolve_path(args)
+    if not path or path == "" then
+      vim.notify("PdfPortFloat: Kein Dateipfad gefunden", vim.log.levels.ERROR)
+      return
+    end
     M.open({ path = path, mode = "float", focus = true })
-  end, "Extract PDF text into a floating window")
+  end, vim.tbl_extend("force", cmd_opts_base, {
+    desc = "pdfport: PDF-Text im Float-Fenster anzeigen.",
+  }))
 
-  -- :PdfPortSystem [path]
-  create("PdfPortSystem", function(args)
-    local path = args.args ~= "" and args.args or vim.api.nvim_buf_get_name(0)
+  -- ── :PdfPortSystem [path] ────────────────────────────────────────────────
+  vim.api.nvim_create_user_command("PdfPortSystem", function(args)
+    local path = resolve_path(args)
+    if not path or path == "" then
+      vim.notify("PdfPortSystem: Kein Dateipfad gefunden", vim.log.levels.ERROR)
+      return
+    end
     M.open({ path = path, mode = "system" })
-  end, "Open PDF in system application")
+  end, vim.tbl_extend("force", cmd_opts_base, {
+    desc = "pdfport: PDF mit System-Anwendung öffnen.",
+  }))
 
-  -- :PdfPortTerminal [path]
-  create("PdfPortTerminal", function(args)
-    local path = args.args ~= "" and args.args or vim.api.nvim_buf_get_name(0)
+  -- ── :PdfPortTerminal [path] ──────────────────────────────────────────────
+  vim.api.nvim_create_user_command("PdfPortTerminal", function(args)
+    local path = resolve_path(args)
+    if not path or path == "" then
+      vim.notify("PdfPortTerminal: Kein Dateipfad gefunden", vim.log.levels.ERROR)
+      return
+    end
     M.open({ path = path, mode = "terminal" })
-  end, "Render PDF pages in terminal")
+  end, vim.tbl_extend("force", cmd_opts_base, {
+    desc = "pdfport: PDF als Bild im Terminal rendern.",
+  }))
 
-  -- :PdfPortHealth
-  create("PdfPortHealth", function(_)
+  -- ── :PdfPortHealth ───────────────────────────────────────────────────────
+  vim.api.nvim_create_user_command("PdfPortHealth", function(_)
     vim.cmd("checkhealth pdfport")
-  end, "Run pdfport health checks")
+  end, { desc = "pdfport: Health-Check ausführen." })
 end
 
 return M

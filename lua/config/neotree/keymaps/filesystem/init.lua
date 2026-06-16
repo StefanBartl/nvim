@@ -16,6 +16,7 @@ local modules = {
   require("config.neotree.keymaps.filesystem.path"),
   require("config.neotree.keymaps.filesystem.info"),
   require("config.neotree.keymaps.filesystem.search"),
+  require("config.neotree.keymaps.filesystem.pdfport"), ---! muss NACH preview kommen !
 }
 
 ---@type table<string, any>
