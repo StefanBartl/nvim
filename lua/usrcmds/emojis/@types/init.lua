@@ -41,4 +41,3 @@
 ---@field default_scope? Emojis.Scope  Override the default scope (default: "%")
 
 return {}
-return {}
