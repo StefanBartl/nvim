@@ -1,36 +1,42 @@
 # pdfport – Usage Guide
 
-## Table of Contents
+## Table of content
 
-- [Overview](#overview)
-- [Installation](#installation)
-- [Setup](#setup)
-- [Configuration Reference](#configuration-reference)
-- [User Commands](#user-commands)
-- [Lua API](#lua-api)
-  - [open()](#open)
-  - [extract()](#extract)
-  - [register_backend()](#register_backend)
-  - [config()](#config)
-- [Backends](#backends)
-  - [pdftotext](#pdftotext)
-  - [pdfplumber](#pdfplumber)
-  - [marker](#marker)
-  - [docling](#docling)
-  - [ollama](#ollama)
-  - [claude](#claude)
-- [Renderer Modes](#renderer-modes)
-  - [buffer](#buffer)
-  - [float](#float)
-  - [terminal](#terminal)
-  - [system](#system)
-- [Integrations](#integrations)
-  - [Neo-tree](#neo-tree)
-  - [Telescope](#telescope)
-  - [fzf-lua](#fzf-lua)
-- [Custom Backends](#custom-backends)
-- [Health Check](#health-check)
-- [Troubleshooting](#troubleshooting)
+- [pdfport – Usage Guide](#pdfport-usage-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Installation](#installation)
+    - [External Dependencies (Optional)](#external-dependencies-optional)
+  - [Setup](#setup)
+  - [Configuration Reference](#configuration-reference)
+  - [User Commands](#user-commands)
+  - [Lua API](#lua-api)
+    - [open()](#open)
+    - [extract()](#extract)
+    - [register_backend()](#register_backend)
+    - [config()](#config)
+  - [Backends](#backends)
+    - [pdftotext](#pdftotext)
+    - [pdfplumber](#pdfplumber)
+    - [marker](#marker)
+    - [docling](#docling)
+    - [ollama](#ollama)
+    - [claude](#claude)
+  - [Renderer Modes](#renderer-modes)
+    - [buffer](#buffer)
+    - [float](#float)
+    - [terminal](#terminal)
+    - [system](#system)
+  - [Integrations](#integrations)
+    - [Neo-tree](#neo-tree)
+    - [Telescope](#telescope)
+    - [fzf-lua](#fzf-lua)
+  - [Custom Backends](#custom-backends)
+  - [Health Check](#health-check)
+  - [Troubleshooting](#troubleshooting)
+- [Debian / Ubuntu](#debian-ubuntu)
+- [macOS](#macos)
+- [Arch](#arch)
 
 ---
 
@@ -58,6 +64,67 @@ depend on which backends are used. See [Backends](#backends) for details.
 
 For lazy.nvim, no plugin spec entry is needed since pdfport lives in your own
 config tree and is loaded via `require`.
+
+---
+
+### External Dependencies (Optional)
+
+Depending on which backends and render modes you want to use, you can install the following external tools:
+
+#### 1. Poppler (Required for `pdftotext` and `terminal` / `ollama` rasterization)
+
+* **Windows:** Download [poppler for windows](https://github.com/oschwartz10612/poppler-windows) and add the binary directory to your system's `PATH` environment variable:
+
+```cmd
+  C:\tools\poppler-26.02.0\Library\bin
+```
+
+#### 2. Chafa (Required for `terminal` mode universal fallback image rendering)
+
+* **Windows (via Scoop):**
+
+```sh
+scoop install chafa
+
+```
+
+* **Arch Linux:**
+
+```sh
+sudo pacman -S chafa --noconfirm
+
+```
+
+#### 3. pdfplumber (Python Backend)
+
+* Install via `pip` or `pipx`:
+
+```sh
+pip install pdfplumber
+
+```
+* **Windows Note:** If installed locally, ensure the Python Scripts path is added to your system's `PATH` environment variable:
+
+```cmd
+C:\Users\bartl\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\Scripts
+
+```
+
+#### 4. marker-pdf (Advanced Markdown Backend)
+
+* Install via `pip` (or `pipx` if you prefer an isolated environment):
+
+```sh
+pip install marker-pdf
+
+```
+
+#### 5. docling (Structured Layout Backend)
+
+* Install via `pip` (or `pipx` if you prefer an isolated environment):
+```sh
+pip install docling
+```
 
 ---
 
