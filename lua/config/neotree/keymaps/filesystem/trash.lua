@@ -1,5 +1,5 @@
 ---@module 'config.neotree.keymaps.filesystem.trash'
---- Trash and undo-trash mappings.
+--- Trash and undo-trash mappings with buffer cleanup.
 
 local trash = require("config.neotree.trash")
 local undo = require("config.neotree.undo")

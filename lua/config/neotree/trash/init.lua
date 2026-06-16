@@ -29,9 +29,9 @@ M.config = {
   auto_close_buffers = true,
   debug = true,
 
-  quarantine_duration = 3000,  -- Increased from 2000
-  pre_delete_wait = 200,       -- Wait before deletion
-  post_delete_wait = 300,      -- Wait after deletion
+  quarantine_duration = 3000, -- Increased from 2000
+  pre_delete_wait = 200, -- Wait before deletion
+  post_delete_wait = 300, -- Wait after deletion
 }
 
 ---Configure trash module
@@ -115,12 +115,8 @@ local function send_single_to_trash(path, filename, ask_before_close)
   if has_refs then
     debug_notify(string.format("⚠ File '%s' has open references", filename))
 
-    local closed, user_cancelled = buffer_checker.close_references(
-      path,
-      filename,
-      ref_info,
-      ask_before_close
-    )
+    local closed, user_cancelled =
+      buffer_checker.close_references(path, filename, ref_info, ask_before_close)
 
     if user_cancelled then
       return false, "user cancelled", true
@@ -136,11 +132,13 @@ local function send_single_to_trash(path, filename, ask_before_close)
     -- Double-check
     has_refs, ref_info = buffer_checker.check_references(path)
     if has_refs then
-      notify.error(string.format(
-        "❌ Still cannot delete '%s'\n%s\nPlease close manually or restart Neovim",
-        filename,
-        buffer_checker.format_remaining_references(ref_info)
-      ))
+      notify.error(
+        string.format(
+          "❌ Still cannot delete '%s'\n%s\nPlease close manually or restart Neovim",
+          filename,
+          buffer_checker.format_remaining_references(ref_info)
+        )
+      )
       return false, "References still open", false
     end
   end
@@ -208,7 +206,7 @@ function M.neotree_send_node_to_trash(state)
     return
   end
 
-  -- Dry-run check
+  -- 1. ABSICHERUNG: Dry-run check (bricht hier ab -> Buffer bleiben offen)
   if M.config.use_dry_run and safety.dry_run.enabled then
     safety.dry_run.log_operation("trash", {
       paths = paths,
@@ -219,6 +217,7 @@ function M.neotree_send_node_to_trash(state)
     return
   end
 
+  -- 2. ABSICHERUNG: User bricht im Popup ab (bricht hier ab -> Buffer bleiben offen)
   local delete_mode = confirmation.get_confirmation_mode(names)
   if delete_mode == "cancel" then
     notify.info("ℹ️ Operation cancelled")
@@ -241,18 +240,14 @@ function M.neotree_send_node_to_trash(state)
     })
   end
 
-  -- CRITICAL: Enter quarantine for ALL paths BEFORE any deletion
   watcher_quarantine.enter_quarantine(M.config.quarantine_duration, paths)
 
   vim.schedule(function()
-    -- Additional wait for watchers to stabilize
     defer_fn(function()
-      local results = operations.execute_batch(
-        paths,
-        names,
-        delete_mode,
-        send_single_to_trash
-      )
+      local force_close = require("config.neotree.helper.force_close_target_buffer")
+      pcall(force_close, state)
+
+      local results = operations.execute_batch(paths, names, delete_mode, send_single_to_trash)
 
       if results.success_count > 0 and state.explicitly_marked_node_ids then
         state.explicitly_marked_node_ids = {}
@@ -262,7 +257,6 @@ function M.neotree_send_node_to_trash(state)
         end)
       end
 
-      -- Wait before final refresh
       defer_fn(function()
         safe_refresh(state.name or "filesystem")
         layout_guard.ensure_editor_window_deferred()
@@ -272,7 +266,6 @@ function M.neotree_send_node_to_trash(state)
     end, M.config.pre_delete_wait)
   end)
 end
-
 ---Toggle debug mode
 function M.toggle_debug()
   M.config.debug = not M.config.debug
