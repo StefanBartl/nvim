@@ -50,8 +50,8 @@ opt.smartindent = true
 -- Indentation width and tab behavior
 vim.o.expandtab = true -- use spaces
 opt.shiftwidth = 2
-opt.tabstop = 4
-opt.softtabstop = 4
+opt.tabstop = 2
+opt.softtabstop = 2
 opt.smarttab = true
 
 -----------------------------------------------------------

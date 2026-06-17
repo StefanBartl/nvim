@@ -1,6 +1,39 @@
 ---@module 'mappings.editing'
 
+local helpers = require("mappings.utils.line_renumbering.helpers")
+
 local M = {}
+
+-- ── Indent width per filetype ─────────────────────────────────
+-- Add or change entries as needed. Unlisted filetypes get DEFAULT_INDENT.
+local INDENT_BY_FT = {
+  lua        = 2,
+  markdown   = 2,
+  javascript = 2,
+  typescript = 2,
+  css        = 2,
+  html       = 2,
+  python     = 4,
+  java       = 4,
+  go         = 4,
+  rust       = 4,
+  c          = 4,
+  cpp        = 4,
+}
+local DEFAULT_INDENT = 2
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern  = "*",
+  callback = function()
+    local w = INDENT_BY_FT[vim.bo.filetype] or DEFAULT_INDENT
+    vim.bo.shiftwidth  = w
+    vim.bo.tabstop     = w
+    vim.bo.softtabstop = w
+    vim.bo.expandtab   = true
+  end,
+})
+
+
 
 function M.setup()
   local map = vim.g.__map_helper
@@ -19,25 +52,82 @@ function M.setup()
     desc = "Paste over selection without yanking it",
   })
 
-  -- Move selected lines (unchanged as requested)
-  map("n", "<A-Up>", ":m .-2<CR>==", { desc = "[Text] Move line up", noremap = true, silent = true })
-  map("n", "<A-Down>", ":m .+1<CR>==", { desc = "[Text] Move line down", noremap = true, silent = true })
-  map("i", "<A-Up>", "<C-o>:m .-2<CR><C-o>==", { desc = "[Text] Move line up", noremap = true, silent = true })
-  map("i", "<A-Down>", "<C-o>:m .+1<CR><C-o>==", { desc = "[Text] Move line down", noremap = true, silent = true })
-  map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "[Text] Move selection up", noremap = true, silent = true })
-  map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selection down", noremap = true, silent = true })
+-- ── Move lines ───────────────────────────────────────────────
 
-  -- Indent / Outdent
-  map("n", "<A-Right>", function()
-    return string.rep(">>", vim.v.count1)
-  end, { desc = "[Text] Indent current line", noremap = true, silent = true, expr = true })
-  map("n", "<A-Left>", function()
-    return string.rep("<<", vim.v.count1)
-  end, { desc = "[Text] Outdent current line", noremap = true, silent = true, expr = true })
-  map("i", "<A-Right>", "<C-t>", { desc = "[Text] Indent line (insert)", noremap = true, silent = true })
-  map("i", "<A-Left>", "<C-d>", { desc = "[Text] Outdent line (insert)", noremap = true, silent = true })
-  map("v", "<A-Right>", ">gv", { desc = "[Text] Indent selection", noremap = true, silent = true })
-  map("v", "<A-Left>", "<gv", { desc = "[Text] Outdent selection", noremap = true, silent = true })
+map("n", "<A-Up>", function()
+  vim.cmd("m .-2")
+  vim.cmd("normal! ==")
+  helpers.maybe_renumber()
+end, { desc = "[Text] Move line up", noremap = true, silent = true })
+
+map("n", "<A-Down>", function()
+  vim.cmd("m .+1")
+  vim.cmd("normal! ==")
+  helpers.maybe_renumber()
+end, { desc = "[Text] Move line down", noremap = true, silent = true })
+
+map("i", "<A-Up>",   "<C-o>:m .-2<CR><C-o>==", { desc = "[Text] Move line up",   noremap = true, silent = true })
+map("i", "<A-Down>", "<C-o>:m .+1<CR><C-o>==", { desc = "[Text] Move line down", noremap = true, silent = true })
+
+map("v", "<A-Up>",   ":m '<-2<CR>gv=gv", { desc = "[Text] Move selection up",   noremap = true, silent = true })
+map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selection down", noremap = true, silent = true })
+
+-- ── Indent / Outdent ─────────────────────────────────────────
+
+map("n", "<A-Right>", function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local lnum  = vim.api.nvim_win_get_cursor(0)[1]
+  local count = vim.v.count1
+  for _ = 1, count do helpers.shift_line(bufnr, lnum, 1) end
+  helpers.maybe_renumber()
+end, { desc = "[Text] Indent current line", noremap = true, silent = true })
+
+map("n", "<A-Left>", function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local lnum  = vim.api.nvim_win_get_cursor(0)[1]
+  local count = vim.v.count1
+  for _ = 1, count do helpers.shift_line(bufnr, lnum, -1) end
+  helpers.maybe_renumber()
+end, { desc = "[Text] Outdent current line", noremap = true, silent = true })
+
+map("i", "<A-Right>", "<C-t>", { desc = "[Text] Indent line (insert)",  noremap = true, silent = true })
+map("i", "<A-Left>",  "<C-d>", { desc = "[Text] Outdent line (insert)", noremap = true, silent = true })
+
+map("v", "<A-Right>", function()
+  local start_ln = vim.fn.line("'<")
+  local end_ln   = vim.fn.line("'>")
+  helpers.shift_range(start_ln, end_ln, 1)
+  vim.cmd("normal! gv")
+end, { desc = "[Text] Indent selection", noremap = true, silent = true })
+
+map("v", "<A-Left>", function()
+  local start_ln = vim.fn.line("'<")
+  local end_ln   = vim.fn.line("'>")
+  helpers.shift_range(start_ln, end_ln, -1)
+  vim.cmd("normal! gv")
+end, { desc = "[Text] Outdent selection", noremap = true, silent = true })
+
+-- AUDIT: löschen?
+
+  -- -- Move selected lines (unchanged as requested)
+  -- map("n", "<A-Up>", ":m .-2<CR>==", { desc = "[Text] Move line up", noremap = true, silent = true })
+  -- map("n", "<A-Down>", ":m .+1<CR>==", { desc = "[Text] Move line down", noremap = true, silent = true })
+  -- map("i", "<A-Up>", "<C-o>:m .-2<CR><C-o>==", { desc = "[Text] Move line up", noremap = true, silent = true })
+  -- map("i", "<A-Down>", "<C-o>:m .+1<CR><C-o>==", { desc = "[Text] Move line down", noremap = true, silent = true })
+  -- map("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "[Text] Move selection up", noremap = true, silent = true })
+  -- map("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "[Text] Move selection down", noremap = true, silent = true })
+
+  -- -- Indent / Outdent
+  -- map("n", "<A-Right>", function()
+    -- return string.rep(">>", vim.v.count1)
+  -- end, { desc = "[Text] Indent current line", noremap = true, silent = true, expr = true })
+  -- map("n", "<A-Left>", function()
+    -- return string.rep("<<", vim.v.count1)
+  -- end, { desc = "[Text] Outdent current line", noremap = true, silent = true, expr = true })
+  -- map("i", "<A-Right>", "<C-t>", { desc = "[Text] Indent line (insert)", noremap = true, silent = true })
+  -- map("i", "<A-Left>", "<C-d>", { desc = "[Text] Outdent line (insert)", noremap = true, silent = true })
+  -- map("v", "<A-Right>", ">gv", { desc = "[Text] Indent selection", noremap = true, silent = true })
+  -- map("v", "<A-Left>", "<gv", { desc = "[Text] Outdent selection", noremap = true, silent = true })
 end
 
 return M
