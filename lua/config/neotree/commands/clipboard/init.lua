@@ -107,89 +107,100 @@ local function copy_recursive(src, dest)
   return false, "Unsupported file type: " .. stat.type
 end
 
----Copy marked/current nodes to clipboard.
----@param state Cfg.NeoTree.State
----@return nil
-function M.copy_to_clipboard(state)
-  local nodes = get_target_nodes(state)
+---Generate a unique destination path by appending (1), (2), ... to the stem.
+--- For a file `foo.lua` this yields `foo (1).lua`, `foo (2).lua`, etc.
+--- For a bare name (directory or extension-less file) it yields `foo (1)`, etc.
+---@param dir string  Target directory (without trailing slash)
+---@param basename string  Original filename, e.g. "create.lua"
+---@return string unique_path  An unused path inside `dir`
+local function unique_dest(dir, basename)
+  -- Split into stem + extension, keeping the leading dot for dotfiles.
+  -- Examples:  "create.lua" -> stem="create", ext=".lua"
+  --            ".bashrc"    -> stem=".bashrc", ext=""
+  --            "Makefile"   -> stem="Makefile", ext=""
+  local stem = vim.fn.fnamemodify(basename, ":r")
+  local ext  = vim.fn.fnamemodify(basename, ":e")
 
-  if #nodes == 0 then
-    notify.warn("No nodes to copy")
-    return
+  -- fnamemodify strips the dot from the extension, re-add it when present
+  if ext ~= "" then
+    ext = "." .. ext
   end
 
-  ---@type table
-  local clipboard = {
-    action = "copy",
-    nodes = {},
-  }
+  local counter = 1
 
-  for _, node in ipairs(nodes) do
-    local path = node.path or node:get_id()
-
-    if path then
-      table.insert(clipboard.nodes, {
-        id = node.id,
-        path = path,
-        name = node.name,
-        type = node.type,
-      })
-    end
-  end
-
-  state.clipboard = clipboard
-
-  notify.info(
-    string.format(
-      "📋 Copied %d item%s",
-      #nodes,
-      #nodes > 1 and "s" or ""
+  while true do
+    local candidate = vim.fs.joinpath(
+      dir,
+      string.format("%s (%d)%s", stem, counter, ext)
     )
-  )
+
+    if not uv.fs_stat(candidate) then
+      return candidate
+    end
+
+    counter = counter + 1
+  end
 end
 
----Cut marked/current nodes to clipboard.
----@param state Cfg.NeoTree.State
----@return nil
-function M.cut_to_clipboard(state)
-  local nodes = get_target_nodes(state)
+---Resolve the final destination path for a single paste item.
+--- If a conflict is detected, open a `vim.ui.input` prompt pre-filled with
+--- the current basename.  When the user submits an empty string the name is
+--- resolved automatically via `unique_dest`.  When the user cancels (nil)
+--- the whole resolution is aborted.
+---@param target_dir string  Absolute path to the destination directory
+---@param basename string  Original filename of the item being pasted
+---@param callback fun(dest: string|nil)  Called with the resolved path, or nil on cancel
+local function resolve_dest(target_dir, basename, callback)
+  local dest = vim.fs.joinpath(target_dir, basename)
 
-  if #nodes == 0 then
-    notify.warn("No nodes to cut")
+  -- No conflict — use the path as-is
+  if not uv.fs_stat(dest) then
+    callback(dest)
     return
   end
 
-  ---@type table
-  local clipboard = {
-    action = "move",
-    nodes = {},
-  }
+  -- Conflict: ask the user for a new name
+  vim.ui.input(
+    {
+      prompt  = "Name conflict — new name (empty = auto): ",
+      default = basename,
+    },
+    function(input)
+      -- User cancelled the prompt (Escape / <C-c>)
+      if input == nil then
+        callback(nil)
+        return
+      end
 
-  for _, node in ipairs(nodes) do
-    local path = node.path or node:get_id()
+      local trimmed = vim.trim(input)
 
-    if path then
-      table.insert(clipboard.nodes, {
-        id = node.id,
-        path = path,
-        name = node.name,
-        type = node.type,
-      })
+      -- Empty input → automatic suffix
+      if trimmed == "" then
+        callback(unique_dest(target_dir, basename))
+        return
+      end
+
+      local new_dest = vim.fs.joinpath(target_dir, trimmed)
+
+      -- The user-supplied name could itself collide; inform and auto-resolve
+      if uv.fs_stat(new_dest) then
+        notify.warn(
+          string.format(
+            "Name '%s' also exists, using auto-generated name",
+            trimmed
+          )
+        )
+        callback(unique_dest(target_dir, trimmed))
+        return
+      end
+
+      callback(new_dest)
     end
-  end
-
-  state.clipboard = clipboard
-
-  notify.info(
-    string.format(
-      "✂️ Cut %d item%s",
-      #nodes,
-      #nodes > 1 and "s" or ""
-    )
   )
 end
 
 ---Paste clipboard contents into current directory.
+--- Conflict resolution per item: prompt → empty input → auto-suffix → cancel skips item.
 ---@param state Cfg.NeoTree.State
 ---@return nil
 function M.paste_from_clipboard(state)
@@ -231,98 +242,189 @@ function M.paste_from_clipboard(state)
     return
   end
 
-  local action = clipboard.action
-  local count = #clipboard.nodes
+  local action     = clipboard.action
+  local items      = clipboard.nodes
+  local total      = #items
+  local success    = 0
+  local failed     = 0
+  local skipped    = 0
 
-  local success = 0
-  local failed = 0
+  -- Process items sequentially so that each vim.ui.input call completes
+  -- before the next one opens (recursive continuation-passing style).
+  ---@param index integer  1-based index into `items`
+  local function process(index)
+    if index > total then
+      -- ── All items processed — finalise ──────────────────────────────────
 
-  for _, item in ipairs(clipboard.nodes) do
-    local source = item.path
-    local basename = vim.fn.fnamemodify(source, ":t")
-    local dest = vim.fs.joinpath(target_dir, basename)
-
-    -- Prevent overwriting existing targets
-    if uv.fs_stat(dest) then
-      notify.warn(string.format("Skipped (exists): %s", basename))
-      failed = failed + 1
-      goto continue
-    end
-
-    local ok, err
-
-    -- Copy operation
-    if action == "copy" then
-      ok, err = copy_recursive(source, dest)
-
-    -- Move operation
-    else
-      ok, err = uv.fs_rename(source, dest)
-
-      if not ok and not err then
-        err = "Rename failed"
+      -- Clear clipboard after a successful move
+      if action == "move" and success > 0 then
+        state.clipboard = nil
       end
-    end
 
-    if ok then
-      success = success + 1
-    else
-      notify.warn(
-        string.format(
-          "Failed %s: %s - %s",
-          action,
-          basename,
-          tostring(err)
+      -- Clear marks after operation
+      if state.explicitly_marked_node_ids then
+        state.explicitly_marked_node_ids = {}
+      end
+
+      -- Refresh Neo-tree and restore the editor window
+      vim.schedule(function()
+        local ok_mgr, manager = pcall(require, "neo-tree.sources.manager")
+
+        if ok_mgr then
+          pcall(manager.refresh, state.name or "filesystem")
+        end
+
+        layout_guard.ensure_editor_window_deferred()
+      end)
+
+      -- Final summary notifications
+      local verb = action == "copy" and "Copied" or "Moved"
+
+      if success > 0 then
+        notify.info(
+          string.format("✓ %s %d/%d items", verb, success, total)
         )
-      )
+      end
 
-      failed = failed + 1
+      if skipped > 0 then
+        notify.warn(string.format("↷ Skipped (cancelled): %d items", skipped))
+      end
+
+      if failed > 0 then
+        notify.warn(string.format("✗ Failed: %d items", failed))
+      end
+
+      return
     end
 
-    ::continue::
+    -- ── Resolve destination for this item ───────────────────────────────
+    local item     = items[index]
+    local source   = item.path
+    local basename = vim.fn.fnamemodify(source, ":t")
+
+    resolve_dest(target_dir, basename, function(dest)
+      -- User cancelled the prompt for this item
+      if dest == nil then
+        notify.warn(string.format("Skipped (cancelled): %s", basename))
+        skipped = skipped + 1
+        process(index + 1)
+        return
+      end
+
+      -- ── Perform the actual file operation ─────────────────────────────
+      local ok, err
+
+      if action == "copy" then
+        ok, err = copy_recursive(source, dest)
+      else
+        ok, err = uv.fs_rename(source, dest)
+
+        if not ok and not err then
+          err = "Rename failed"
+        end
+      end
+
+      if ok then
+        success = success + 1
+      else
+        notify.warn(
+          string.format(
+            "Failed %s: %s - %s",
+            action,
+            basename,
+            tostring(err)
+          )
+        )
+        failed = failed + 1
+      end
+
+      process(index + 1)
+    end)
   end
 
-  -- Clear clipboard after successful move
-  if action == "move" and success > 0 then
-    state.clipboard = nil
+  process(1)
+end
+
+---Copy marked/current nodes to clipboard.
+---@param state Cfg.NeoTree.State
+---@return nil
+function M.copy_to_clipboard(state)
+  local nodes = get_target_nodes(state)
+
+  if #nodes == 0 then
+    notify.warn("No nodes to copy")
+    return
   end
 
-  -- Clear marks after operation
-  if state.explicitly_marked_node_ids then
-    state.explicitly_marked_node_ids = {}
-  end
+  ---@type table
+  local clipboard = {
+    action = "copy",
+    nodes  = {},
+  }
 
-  -- Refresh Neo-tree
-  vim.schedule(function()
-    local ok_mgr, manager = pcall(
-      require,
-      "neo-tree.sources.manager"
-    )
+  for _, node in ipairs(nodes) do
+    local path = node.path or node:get_id()
 
-    if ok_mgr then
-      pcall(manager.refresh, state.name or "filesystem")
+    if path then
+      table.insert(clipboard.nodes, {
+        id   = node.id,
+        path = path,
+        name = node.name,
+        type = node.type,
+      })
     end
+  end
 
-    layout_guard.ensure_editor_window_deferred()
-  end)
+  state.clipboard = clipboard
 
-  -- Final notifications
-  local verb = action == "copy" and "Copied" or "Moved"
-
-  if success > 0 then
-    notify.info(
-      string.format(
-        "✓ %s %d/%d items",
-        verb,
-        success,
-        count
-      )
+  notify.info(
+    string.format(
+      "📋 Copied %d item%s",
+      #nodes,
+      #nodes > 1 and "s" or ""
     )
+  )
+end
+
+---Cut marked/current nodes to clipboard.
+---@param state Cfg.NeoTree.State
+---@return nil
+function M.cut_to_clipboard(state)
+  local nodes = get_target_nodes(state)
+
+  if #nodes == 0 then
+    notify.warn("No nodes to cut")
+    return
   end
 
-  if failed > 0 then
-    notify.warn(string.format("✗ Failed: %d items", failed))
+  ---@type table
+  local clipboard = {
+    action = "move",
+    nodes  = {},
+  }
+
+  for _, node in ipairs(nodes) do
+    local path = node.path or node:get_id()
+
+    if path then
+      table.insert(clipboard.nodes, {
+        id   = node.id,
+        path = path,
+        name = node.name,
+        type = node.type,
+      })
+    end
   end
+
+  state.clipboard = clipboard
+
+  notify.info(
+    string.format(
+      "✂️ Cut %d item%s",
+      #nodes,
+      #nodes > 1 and "s" or ""
+    )
+  )
 end
 
 return M
