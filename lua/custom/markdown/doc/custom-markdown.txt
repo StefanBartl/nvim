@@ -1,4 +1,4 @@
-*custom-markdown.txt*   Minimal Markdown folding & navigation
+*custom-markdown.txt*   Minimal Markdown folding, navigation & highlighting
 ==============================================================================
 INTRODUCTION                                                   *custom-markdown*
 
@@ -8,6 +8,7 @@ A tiny, safe set of Markdown helpers for Neovim:
   • heading navigation and level shifting (ATX)
   • selection wrap (**)
   • markerless table-of-contents (TOC)
+  • VS Code–style blockquote highlighting (theme-independent)
 
 Single source of truth for keymaps: |custom-markdown-keymaps|.
 A lightweight shim exists: |custom-markdown-shim|.
@@ -24,6 +25,10 @@ SETUP                                                        *custom-markdown-se
     ft_only               = true,   -- buffer-local maps on FileType=markdown
     use_zf_override       = false,  -- keep native 'zf'
     enable_autocmds       = false,  -- reserved for your own UI hooks
+    blockquote_hl = {
+      fg     = "#6A9955",           -- VS Code green (default)
+      italic = true,
+    },
   })
 
 TIP: If you prefer a FileType-oriented entrypoint, see |custom-markdown-shim|.
@@ -41,11 +46,47 @@ ft_only (bool)              If true, keymaps are buffer-local on FileType=markdo
 use_zf_override (bool)      If true, map 'zf' to fold toggle. Default: false
 enable_autocmds (bool)      For your own UI/FileType hooks (e.g. conceallevel).
                             Not required for keymaps. Default: false
+blockquote_hl (table|nil)   Blockquote highlight options. See |custom-markdown-blockquote|.
+                            Default: { fg = "#6A9955", italic = true, bold = false }
 
 Keymaps logic (independent of 'enable_autocmds'):
   • enable_keymaps=true,  ft_only=false → global maps (once)
   • enable_keymaps=true,  ft_only=true  → buffer-local maps on FileType=markdown
   • enable_keymaps=false                → no maps
+
+==============================================================================
+BLOCKQUOTE HIGHLIGHTING                               *custom-markdown-blockquote*
+
+Lines beginning with `>` are highlighted using the dedicated `MarkdownBlockquote`
+highlight group, giving VS Code–style rendering that is independent of the active
+colorscheme. The group is re-applied automatically after `:colorscheme` changes.
+
+Configuration (inside setup):
+>lua
+  blockquote_hl = {
+    fg     = "#6A9955",  -- hex foreground color (default: VS Code green)
+    bg     = nil,        -- hex background color (optional)
+    italic = true,       -- default: true
+    bold   = false,      -- default: false
+    -- link = "Comment", -- link to an existing group (overrides fg/bg/style)
+  }
+
+The group links to:
+  • Tree-sitter: @markup.quote, @markup.quote.markdown
+  • Legacy Vim syntax: markdownBlockquote
+
+When `link` is set, all fg/bg/style keys are ignored.
+
+Module layout: >
+  custom/
+  └─ markdown/
+     └─ hl_options/
+        ├─ init.lua              orchestrator + ColorScheme autocmd
+        └─ hl_groups/
+           ├─ blockquote.lua     MarkdownBlockquote implementation
+           ├─ headings.lua       stub (future per-level colors)
+           ├─ code.lua           stub (future code-block highlights)
+           └─ links.lua          stub (future link highlights)
 
 ==============================================================================
 KEYMAPS                                                     *custom-markdown-keymaps*
@@ -178,5 +219,6 @@ NOTES / LIMITATIONS                                        *custom-markdown-note
   • TOC ignores fenced code; anchors are GitHub-like with de-duplication.
   • 'enable_autocmds' is reserved for your own UI/FileType hooks (e.g., conceal),
     and does not influence keymap installation.
+  • blockquote_hl.link overrides all fg/bg/style keys when set.
 
 ==============================================================================
