@@ -34,9 +34,12 @@ function M.enable()
   -- Load
   nvim_create_user_command("SessionLoad", function(cmd)
     local arg = (cmd and cmd.args or "last")
-    local ok, res = require("sessions.core").load(arg ~= "" and arg or nil)
+    local ok, res, hidden = require("sessions.core").load(arg ~= "" and arg or nil)
     if ok then
       notify.info("Session loaded: " .. (res or "?"))
+          if hidden and #hidden > 0 then
+      notify.info("Hidden (nicht verloren) wegen Session-Load: " .. table.concat(hidden, ", "))
+    end
     else
       notify.error("Session load failed: " .. (res or "?"))
     end

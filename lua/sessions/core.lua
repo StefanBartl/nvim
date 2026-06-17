@@ -96,19 +96,48 @@ function M.save(name)
   return true, si.path
 end
 
+---@return string[]
+local function collect_modified_buffer_names()
+  -- Wird direkt vor dem Force-Collapse aufgerufen, damit man dem Nutzer sagen
+  -- kann, welche Buffer gehidet (nicht verworfen!) wurden, um :SessionLoad
+  -- ohne E445 durchzubekommen.
+  local out = {}
+  local bufs = vim.api.nvim_list_bufs()
+  for i = 1, #bufs do
+    local b = bufs[i]
+    if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].modified then
+      local nm = vim.api.nvim_buf_get_name(b)
+      out[#out + 1] = (nm ~= "" and nm) or ("[No Name#" .. b .. "]")
+    end
+  end
+  return out
+end
+
 ---@param name string|nil
----@return boolean, string|nil
+---@return boolean, string|nil, string[]|nil
 function M.load(name)
   local si = resolve_session(name)
   if fn.filereadable(si.path) == 0 then
     return false, "no such session: " .. si.path
   end
   apply_sessionoptions()
+
+  -- Das Session-Script selbst ruft `silent only` / `silent tabonly` (ohne
+  -- Bang) auf. Hat die *aktuell laufende* Instanz noch ein anderes Fenster
+  -- mit ungespeicherten Änderungen, bricht das mit E445 ab, bevor die
+  -- Session geladen werden kann (siehe :help :only / :help :tabonly).
+  -- Fix: selbst vorher mit Bang kollabieren - das hidet modifizierte Buffer
+  -- nur, verwirft sie aber laut Doku nie ("changes cannot get lost"). Danach
+  -- ist `only`/`tabonly` in last.vim ein No-Op, weil schon nur 1 Fenster da ist.
+  local hidden = collect_modified_buffer_names()
+  pcall(vim.cmd, "silent! only!")
+  pcall(vim.cmd, "silent! tabonly!")
+
   local ok, err = pcall(vim.cmd.source, si.path)
   if not ok then
     return false, err
   end
-  return true, si.path
+  return true, si.path, hidden
 end
 
 ---@return string[]
