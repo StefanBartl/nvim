@@ -43,7 +43,7 @@ require("custom.diff").enable({
 
         render_opts = {
           mode  = "buffer",
-          split = "vsplit",
+          split = "current",
           focus = true,
         },
 

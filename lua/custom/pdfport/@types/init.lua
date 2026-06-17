@@ -69,7 +69,7 @@
 ---@class PdfPort.RenderOpts
 ---@field mode PdfPort.RendererMode
 ---@field backend_id? PdfPort.BackendId       -- Force specific backend; nil = auto-resolve
----@field split? "vsplit"|"split"|"tab"       -- For buffer mode
+---@field split? "vsplit"|"split"|"tab"|"current"       -- For buffer mode
 ---@diagnostic disable-next-line
 ---@field float_opts? vim.api.keyset.win_config -- For float mode
 ---@field terminal_tool? "ueberzug"|"chafa"|"kitty"|"imgcat" -- For terminal mode
