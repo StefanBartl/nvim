@@ -150,6 +150,7 @@ All browser targets handle text as follows:
 :Open safari     " macOS only; warns on other platforms
 ```
 
+
 ### :Open filemanager
 
 Resolves `~` and relative paths, then opens the result in the native GUI
@@ -164,8 +165,12 @@ file manager.  URL text is rejected.
 **macOS note:** directories use `open <dir>`; files use `open -R <file>`
 (Reveal in Finder).
 
+**Windows note:** uses `cmd.exe /c start "" explorer.exe` to spawn a fully
+detached process.  Files are revealed via `/select,<path>`; directories are
+opened directly.
+
 **WSL note:** `wslpath -w` is used to convert the Unix path before calling
-`explorer.exe`.
+`explorer.exe` via `cmd.exe /c start`.
 
 ### :Open notepad / editor
 

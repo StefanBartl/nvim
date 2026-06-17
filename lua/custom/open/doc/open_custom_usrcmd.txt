@@ -120,27 +120,28 @@ Platform notes: ~
 ------------------------------------------------------------------------------
 4.2 filemanager                                   *open-custom-filemanager*
                                                     *:Open-filemanager*
-
 Open a filesystem path in the platform's GUI file manager.
 
 Syntax: ~
 >vim
     :Open filemanager
-<
 
 Examples: ~
 >vim
     " Cursor on: /home/alice/projects
     :Open filemanager   → opens Nautilus / Finder / Explorer at that path
-
     " Cursor on: ~/Downloads
     :Open filemanager   → expands ~ and opens the directory
-<
 
 Platform notes: ~
-    Windows     explorer.exe <path>
-    WSL         wslpath -w converts path, then explorer.exe
-    macOS       open <dir> or open -R <file>  (reveals in Finder)
+    Windows     cmd.exe /c start "" explorer.exe <path>
+                Files are revealed with /select,<path>.
+                Using cmd /c start ensures explorer.exe runs as a fully
+                detached process with no inherited handles from Neovim.
+    WSL         wslpath -w converts the Unix path to a Windows path first,
+                then cmd.exe /c start "" explorer.exe is used identically
+                to the native Windows case.
+    macOS       open <dir>  or  open -R <file>  (reveals in Finder)
     Linux       xdg-open, nautilus, thunar, nemo, dolphin, pcmanfm …
 
 URL text is rejected with a warning.

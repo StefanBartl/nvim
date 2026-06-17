@@ -1,15 +1,74 @@
 ---@module 'custom.open.context'
----@brief Resolves the target path/URL for the :Open command.
+---@brief Resolves the target text (path or URL) for the :Open command.
 ---@description
---- Determines what to open based on the current editor context.
---- Resolution order (highest priority first):
----   1. Explicit argument passed to :Open
----   2. Active file-tree buffer node (neotree / nvim-tree / netrw)
----   3. Visual selection
----   4. Word under cursor
----   5. Current buffer path (fallback)
+--- Two-stage resolution:
+---   1. M.gather() collects raw, target-agnostic signals from the current
+---      editor state: tree-buffer node, <cfile>, <cWORD>, visual selection,
+---      current buffer path.
+---   2. M.resolve(arg, target, signals) turns those signals (plus an optional
+---      explicit user override) into the final Custom.Open.Context consumed
+---      by every handler.
+---
+--- Explicit override tokens for `arg`:
+---   "%"            → current buffer path
+---   "cfile"        → <cfile> text under the cursor
+---   "path=<path>"  → literal path given after "path="
+---   anything else  → used verbatim as the resolved text
+---
+--- Default heuristic (no explicit `arg`):
+---   1. Tree-buffer node (neo-tree / nvim-tree / netrw), if the current
+---      buffer is a recognised tree buffer — wins regardless of `target`.
+---   2. For path-oriented targets (filemanager, split, vsplit, tab):
+---        <cfile> if it resolves to an existing path on disk, else the
+---        current buffer path (%).
+---   3. For all other targets (browser, notepad, editor, …):
+---        visual selection, else <cWORD>, else the current buffer path (%).
+---@see custom.open.@types
 
 local M = {}
+
+-- ---------------------------------------------------------------------------
+-- URL heuristic
+-- ---------------------------------------------------------------------------
+
+---@param text string
+---@return boolean
+local function looks_like_url(text)
+  return text:match("^https?://") ~= nil
+    or text:match("^ftp://") ~= nil
+    or text:match("^www%.") ~= nil
+end
+
+-- ---------------------------------------------------------------------------
+-- Existing-path check
+-- ---------------------------------------------------------------------------
+
+---Try to resolve `candidate` to an existing file/dir on disk: first verbatim
+---(resolved against the process cwd by fs_stat), then relative to the
+---current buffer's directory.
+---@param candidate string|nil
+---@return string|nil resolved
+local function resolve_existing_path(candidate)
+  if type(candidate) ~= "string" or candidate == "" then
+    return nil
+  end
+
+  local expanded = vim.fn.expand(candidate)
+  if expanded ~= "" and vim.uv.fs_stat(expanded) then
+    return expanded
+  end
+
+  local bufdir = vim.fn.expand("%:p:h")
+  if bufdir ~= "" then
+    local sep    = package.config:sub(1, 1)
+    local joined = bufdir:gsub("[/\\]$", "") .. sep .. candidate
+    if vim.uv.fs_stat(joined) then
+      return joined
+    end
+  end
+
+  return nil
+end
 
 -- ---------------------------------------------------------------------------
 -- Tree-buffer node resolution
@@ -23,11 +82,8 @@ local function resolve_neotree_path()
     return nil
   end
 
-  -- Determine which source is active in the current window.
-  local buf     = vim.api.nvim_get_current_buf()
-  local source  = vim.b[buf] and vim.b[buf].neo_tree_source
-
-  -- Fallback: try filesystem source.
+  local buf    = vim.api.nvim_get_current_buf()
+  local source = vim.b[buf] and vim.b[buf].neo_tree_source
   source = source or "filesystem"
 
   local ok_src, state = pcall(manager.get_state, source)
@@ -35,7 +91,6 @@ local function resolve_neotree_path()
     return nil
   end
 
-  -- node_utils helper used elsewhere in the config.
   local ok_nu, node_utils = pcall(require, "config.neotree.utils.node")
   if ok_nu then
     local node = node_utils.get_current(state)
@@ -47,7 +102,6 @@ local function resolve_neotree_path()
     end
   end
 
-  -- Direct fallback via neo-tree internal tree API.
   if state.tree then
     local ok_node, node = pcall(state.tree.get_node, state.tree)
     if ok_node and node then
@@ -92,20 +146,17 @@ local function resolve_netrw_path()
     return nil
   end
 
-  -- The entry name sits on the current cursor line.
   local line = vim.api.nvim_get_current_line()
   if not line then
     return nil
   end
 
-  -- Strip leading whitespace / netrw decorations.
   local entry = line:match("^%s*(.-)%s*$")
   if not entry or entry == "" then
     -- Cursor is on a header line; return the directory itself.
     return curdir
   end
 
-  -- Build absolute path.
   local sep  = package.config:sub(1, 1)
   local path = curdir:gsub("[/\\]$", "") .. sep .. entry
 
@@ -139,57 +190,93 @@ local function resolve_tree_node_path()
 end
 
 -- ---------------------------------------------------------------------------
+-- Target classification
+-- ---------------------------------------------------------------------------
+
+---Targets for which a validated <cfile> path is preferred over <cWORD>/visual.
+---@type table<string, boolean>
+local PATH_TARGETS = {
+  filemanager = true,
+  split       = true,
+  vsplit      = true,
+  tab         = true,
+}
+
+-- ---------------------------------------------------------------------------
 -- Public API
 -- ---------------------------------------------------------------------------
 
----@class Open.Context
----@field path   string   Resolved absolute path or URL.
----@field source "arg"|"tree"|"visual"|"cword"|"buffer"  Where the path came from.
+---Gather raw context signals without making any target-specific decision.
+---@return Custom.Open.Signals
+function M.gather()
+  ---@type Custom.Open.Signals
+  local signals = {}
 
---- Resolve what should be opened.
---- When called from a file-tree buffer (neotree / nvim-tree / netrw) the node
---- under the cursor takes precedence over everything except an explicit arg.
----@param arg string|nil  Explicit argument from the user command, may be nil or "".
----@return Open.Context|nil ctx  nil when nothing useful could be resolved.
-function M.resolve(arg)
-  -- 1. Explicit argument from the command line.
-  if arg and arg ~= "" then
-    return { path = arg, source = "arg" }
-  end
+  signals.tree_path = resolve_tree_node_path()
 
-  -- 2. File-tree node (neotree / nvim-tree / netrw).
-  local tree_path = resolve_tree_node_path()
-  if tree_path then
-    return { path = tree_path, source = "tree" }
-  end
+  local cfile = vim.fn.expand("<cfile>")
+  signals.cfile      = (cfile ~= "" and cfile) or nil
+  signals.cfile_path = resolve_existing_path(signals.cfile)
 
-  -- 3. Visual selection (single line assumed; multi-line not meaningful here).
+  local cword = vim.fn.expand("<cWORD>")
+  signals.cword = (cword ~= "" and cword) or nil
+
   local mode = vim.fn.mode()
   if mode == "v" or mode == "V" or mode == "\22" then
     local ok, sel = pcall(function()
-      local s = vim.fn.getpos("'<")
-      local e = vim.fn.getpos("'>")
+      local s     = vim.fn.getpos("'<")
+      local e     = vim.fn.getpos("'>")
       local lines = vim.api.nvim_buf_get_text(0, s[2] - 1, s[3] - 1, e[2] - 1, e[3], {})
       return table.concat(lines, "")
     end)
     if ok and sel and sel ~= "" then
-      return { path = sel, source = "visual" }
+      signals.visual = sel
     end
   end
 
-  -- 4. Word under cursor.
-  local cword = vim.fn.expand("<cWORD>")
-  if cword and cword ~= "" then
-    return { path = cword, source = "cword" }
-  end
-
-  -- 5. Current buffer file path.
   local bufname = vim.api.nvim_buf_get_name(0)
-  if bufname and bufname ~= "" then
-    return { path = bufname, source = "buffer" }
+  signals.buffer_path = (bufname ~= "" and bufname) or nil
+
+  return signals
+end
+
+---Resolve what should be opened for `target`.
+---@param arg      string|nil              Explicit scope override: "%", "cfile", "path=<path>", or literal text.
+---@param target   string|nil              Handler key the context is being built for.
+---@param signals  Custom.Open.Signals|nil Pre-gathered signals; gathered internally if omitted.
+---@return Custom.Open.Context|nil ctx      nil when nothing useful could be resolved.
+function M.resolve(arg, target, signals)
+  signals = signals or M.gather()
+
+  local text
+
+  if arg and arg ~= "" then
+    if arg == "%" then
+      text = signals.buffer_path
+    elseif arg == "cfile" then
+      text = signals.cfile
+    elseif arg:sub(1, 5) == "path=" then
+      text = arg:sub(6)
+    else
+      text = arg
+    end
+  elseif signals.tree_path then
+    text = signals.tree_path
+  elseif PATH_TARGETS[target] then
+    text = signals.cfile_path or signals.buffer_path
+  else
+    text = signals.visual or signals.cword or signals.buffer_path
   end
 
-  return nil
+  if not text or text == "" then
+    return nil
+  end
+
+  return {
+    text    = text,
+    is_url  = looks_like_url(text),
+    is_path = resolve_existing_path(text) ~= nil,
+  }
 end
 
 return M

@@ -1,7 +1,6 @@
 ---@module 'custom.open.@types'
 ---@brief Type definitions for the :Open command module.
 ---@description
---- Pure annotation target — no executable code.
 --- Defines shared types used across all sub-modules.
 
 -- ---------------------------------------------------------------------------
@@ -44,6 +43,20 @@
 ---@field text    string   Raw text: WORD under cursor (normal) or visual selection
 ---@field is_url  boolean  True when text matches a URL heuristic (http/https/ftp/www)
 ---@field is_path boolean  True when text matches a path heuristic or exists on disk
+
+-- ---------------------------------------------------------------------------
+-- Context resolution signals
+-- ---------------------------------------------------------------------------
+
+---Raw, target-agnostic signals gathered from the current editor state.
+---Used internally by custom.open.context to build the final Context.
+---@class Custom.Open.Signals
+---@field tree_path   string|nil  Node path when the current buffer is a recognised tree buffer (neo-tree/nvim-tree/netrw).
+---@field cfile       string|nil  Raw <cfile> text under the cursor (file-name heuristic), if any.
+---@field cfile_path  string|nil  `cfile` resolved to an existing path on disk, if any.
+---@field cword       string|nil  Raw <cWORD> text under the cursor (whitespace-delimited), if any.
+---@field visual      string|nil  Visual selection text (only set while still in Visual mode, e.g. via <Cmd> mappings).
+---@field buffer_path string|nil  Path of the current buffer, if it has a name.
 
 -- ---------------------------------------------------------------------------
 -- Handler contract

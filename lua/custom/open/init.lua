@@ -1,9 +1,23 @@
 ---@module 'custom.open'
 ---@brief Entry point for the :Open user command.
 ---@description
---- Registers the :Open [target] user command with tab-completion over the
---- registered handler names.  Resolution order for the target path is
---- documented in custom.open.context.
+--- Registers the :Open [target] [scope] user command with tab-completion
+--- over the registered handler names (1st arg) and explicit scope tokens
+--- (2nd arg).
+---
+--- Target resolution (1st arg):
+---   Explicit handler key (e.g. "filemanager") or, if omitted, an automatic
+---   choice based on the current context (tree buffer → "filemanager",
+---   URL-like cfile/cword → "browser", otherwise "filemanager").
+---
+--- Scope resolution (2nd arg), see custom.open.context for full details:
+---   "%"            → current buffer path
+---   "cfile"        → <cfile> under the cursor
+---   "path=<path>"  → literal path given after "path="
+---   (omitted)      → target-aware default (tree node → cfile-if-valid → %,
+---                    or visual/cWORD → % for non-path targets)
+---@see custom.open.context
+---@see custom.open.registry
 
 local M = {}
 
@@ -12,8 +26,8 @@ local M = {}
 -- ---------------------------------------------------------------------------
 
 --- Dispatch to the appropriate handler.
----@param target string  Handler key, e.g. "filemanager", "browser", "notepad".
----@param ctx    Open.Context
+---@param target string             Handler key, e.g. "filemanager", "browser", "notepad".
+---@param ctx    Custom.Open.Context
 ---@return nil
 local function dispatch(target, ctx)
   local ok_reg, registry = pcall(require, "custom.open.registry")
@@ -26,12 +40,12 @@ local function dispatch(target, ctx)
   if not handler then
     require("lib.notify").create("[custom.open]").error(
       string.format("Unknown target: '%s'  (available: %s)",
-        target, table.concat(registry.list(), ", "))
+        target, table.concat(registry.list_keys(), ", "))
     )
     return
   end
 
-  local ok, err = pcall(handler.open, ctx)
+  local ok, err = pcall(handler.run, ctx)
   if not ok then
     require("lib.notify").create("[custom.open]").error(
       string.format("Handler '%s' failed: %s", target, tostring(err))
@@ -40,18 +54,21 @@ local function dispatch(target, ctx)
 end
 
 --- Default handler when no target argument is given.
---- Uses "filemanager" when coming from a tree buffer, "browser" otherwise.
----@param ctx Open.Context
+--- Uses "filemanager" when coming from a tree buffer or when nothing
+--- URL-like is under the cursor; "browser" when the cursor sits on
+--- something that looks like a URL.
+---@param signals Custom.Open.Signals
 ---@return string target
-local function default_target(ctx)
-  if ctx.source == "tree" then
+local function default_target(signals)
+  if signals.tree_path then
     return "filemanager"
   end
-  -- Heuristic: looks like a URL → browser; otherwise filemanager.
-  local p = ctx.path or ""
-  if p:match("^https?://") or p:match("^ftp://") then
+
+  local probe = signals.cfile or signals.cword or signals.buffer_path or ""
+  if probe:match("^https?://") or probe:match("^ftp://") then
     return "browser"
   end
+
   return "filemanager"
 end
 
@@ -62,67 +79,65 @@ end
 --- Register all handlers and create the :Open user command.
 ---@return nil
 function M.setup()
-  -- Register handlers (order does not matter).
   local ok_reg, registry = pcall(require, "custom.open.registry")
   if not ok_reg then
     return
   end
 
-  -- Handlers are registered by their own modules; just ensure they are loaded.
+  -- Handler modules export M.register_all(register_fn); requiring them is
+  -- not enough, register_all must be invoked explicitly.
   local handler_modules = {
-    "custom.open.filemanager",
-    "custom.open.browser",
-    "custom.open.notepad",
+    "custom.open.handlers.filemanager",
+    "custom.open.handlers.browser",
+    "custom.open.handlers.notepad",
+    "custom.open.handlers.nvim_internal",
   }
   for i = 1, #handler_modules do
-    pcall(require, handler_modules[i])
+    local ok_mod, mod = pcall(require, handler_modules[i])
+    if ok_mod and type(mod) == "table" and type(mod.register_all) == "function" then
+      pcall(mod.register_all, registry.register)
+    end
   end
 
   -- -------------------------------------------------------------------------
-  -- :Open [target]
+  -- :Open [target] [scope]
   --
-  -- Tab-completion enumerates the registered handler names so the user can
-  -- press <Tab> after :Open to cycle through "filemanager", "browser", etc.
+  -- Tab-completion: 1st arg enumerates registered handler names; 2nd arg
+  -- offers explicit scope tokens ("%", "cfile", "path=") plus file completion.
   -- -------------------------------------------------------------------------
   vim.api.nvim_create_user_command("Open", function(opts)
-    local ctx = require("custom.open.context").resolve(nil)
+    local context = require("custom.open.context")
+    local signals  = context.gather()
+
+    local target = (opts.fargs and opts.fargs[1]) or default_target(signals)
+    target = target:lower()
+
+    local scope = opts.fargs and opts.fargs[2]
+    local ctx   = context.resolve(scope, target, signals)
+
     if not ctx then
       require("lib.notify").create("[custom.open]").warn("Nothing to open")
       return
     end
 
-    -- The first fargs entry is treated as the target/handler name.
-    -- Additional fargs (if any) could be a path override – kept for future use.
-    local target = (opts.fargs and opts.fargs[1]) or default_target(ctx)
-    target = target:lower()
-
-    -- Allow the second arg to override the path (power-user escape hatch).
-    if opts.fargs and opts.fargs[2] then
-      ctx = { path = opts.fargs[2], source = "arg" }
-    end
-
     dispatch(target, ctx)
   end, {
-    nargs   = "*",
-    desc    = "Open path/URL with the specified handler (filemanager | browser | notepad)",
+    nargs = "*",
+    desc  = "Open path/URL with the specified handler (filemanager | browser | notepad | ...)",
 
-    --- Tab-completion: first arg → handler name, second arg → path (file completion).
+    --- Tab-completion: 1st arg → handler name, 2nd arg → scope token or path.
     ---@param arg_lead string   The text typed so far in the current argument position.
     ---@param cmd_line string   The full command line text.
     ---@param cursor_pos integer Byte position of the cursor in cmd_line.
     ---@return string[] candidates
     complete = function(arg_lead, cmd_line, cursor_pos)
-      -- Count how many space-separated tokens precede the cursor.
-      -- Token 0 is the command name itself; token 1 is the first argument.
       local before_cursor = cmd_line:sub(1, cursor_pos)
       local tokens = {}
       for tok in before_cursor:gmatch("%S+") do
         tokens[#tokens + 1] = tok
       end
 
-      -- If the line ends with whitespace, we are starting a new token.
       local starting_new = before_cursor:match("%s$") ~= nil
-      -- arg_index: how many complete args have been typed (not counting the cmd).
       local arg_index = #tokens - 1 + (starting_new and 1 or 0)
 
       if arg_index <= 1 then
@@ -131,7 +146,7 @@ function M.setup()
         if not ok_r then
           return {}
         end
-        local names = reg.list()
+        local names = reg.list_keys()
         local candidates = {}
         for i = 1, #names do
           if names[i]:sub(1, #arg_lead) == arg_lead then
@@ -139,10 +154,33 @@ function M.setup()
           end
         end
         return candidates
-      else
-        -- Second argument: fall back to built-in file/path completion.
-        return vim.fn.getcompletion(arg_lead, "file")
       end
+
+      -- Second argument: explicit scope tokens, then file/path completion.
+      if arg_lead:sub(1, 5) == "path=" then
+        local rest        = arg_lead:sub(6)
+        local file_matches = vim.fn.getcompletion(rest, "file")
+        local candidates   = {}
+        for i = 1, #file_matches do
+          candidates[#candidates + 1] = "path=" .. file_matches[i]
+        end
+        return candidates
+      end
+
+      local candidates = {}
+      local scopes = { "%", "cfile", "path=" }
+      for i = 1, #scopes do
+        if scopes[i]:sub(1, #arg_lead) == arg_lead then
+          candidates[#candidates + 1] = scopes[i]
+        end
+      end
+
+      local file_matches = vim.fn.getcompletion(arg_lead, "file")
+      for i = 1, #file_matches do
+        candidates[#candidates + 1] = file_matches[i]
+      end
+
+      return candidates
     end,
   })
 end

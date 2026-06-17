@@ -24,7 +24,22 @@ function M.run_detached(cmd, label)
     return false
   end
 
-  -- vim.system is available since Neovim 0.10
+  -- On Windows, use jobstart with detach – vim.system's detach is unreliable
+  -- for GUI processes (explorer.exe, notepad, …) because the process is tied
+  -- to Neovim's job infrastructure and may be killed when the handle drops.
+  if vim.fn.has("win32") == 1 or vim.fn.has("wsl") == 1 then
+    local ok, job_id = pcall(vim.fn.jobstart, cmd, {
+      detach    = true,
+      on_exit   = nil,   -- explicit: we don't care about exit
+    })
+    if not ok or type(job_id) ~= "number" or job_id <= 0 then
+      notify.error(string.format("[custom.open.util] Failed to launch '%s' via jobstart", label))
+      return false
+    end
+    return true
+  end
+
+  -- Non-Windows: vim.system with detach (Neovim ≥ 0.10)
   if vim.system then
     local ok, err = pcall(vim.system, cmd, { detach = true }, nil)
     if not ok then
@@ -40,7 +55,6 @@ function M.run_detached(cmd, label)
     notify.error(string.format("[custom.open.util] Failed to launch '%s' via jobstart", label))
     return false
   end
-
   return true
 end
 
