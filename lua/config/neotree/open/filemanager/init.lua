@@ -24,15 +24,18 @@ function M.open_from_neotree(state)
   local ok, fm = pcall(require, mod_name)
   if not ok then
     notify.error(string.format("File manager module not found: %s", mod_name))
+    notify.error(string.format("Reason: %s", mod_name, tostring(fm)))
     return false
   end
 
   -- Call the open function
   local success = fm.open(state)
 
-  -- if success then
+  if success then
     -- notify.info("Opened in file manager")
-  -- end
+  else
+    notify.warn("Open in filemanager snot succesfull!")
+  end
 
   return success
 end

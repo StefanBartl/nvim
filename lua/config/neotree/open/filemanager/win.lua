@@ -1,14 +1,17 @@
 ---@module 'config.neotree.open.filemanager.win'
----@brief Windows-specific file manager integration for Neo-tree.
+---@brief Windows Explorer integration for Neo-tree (Win32 and WSL).
 ---@description
---- Opens the currently focused Neo-tree node (file or directory) in Windows
---- Explorer. Supports both native Win32 and WSL environments.
+--- Opens the focused Neo-tree node in Windows Explorer.
+--- File nodes are opened with /select so the file is pre-selected.
+--- Directory nodes open the directory directly.
 ---
---- Hardened against:
----   - missing nodes / empty paths
----   - WSL path translation failures
----   - unavailable executables (explorer.exe, cmd.exe)
----   - async spawn failures with deterministic fallback chain
+--- WSL-specific behaviour:
+---   - Path translation is handled via wslpath(1).
+---   - Spawning uses cmd.exe /C start via vim.fn.jobstart (detach=true),
+---     because vim.system with detach=true blocks the Neovim UI briefly
+---     when crossing the WSL/Win32 interop boundary.
+---   - isdirectory() is always called on the raw Linux path, not the
+---     translated Windows path, because Neovim in WSL only sees the Linux VFS.
 
 local notify     = require("lib.notify").create("[config.neotree.open.filemanager.win]")
 local node_utils = require("config.neotree.utils.node")
@@ -19,20 +22,9 @@ local M = {}
 -- Internal helpers
 -- ---------------------------------------------------------------------------
 
----Convert a POSIX-style path to a Windows-style path.
----Expands to absolute, strips surrounding quotes, replaces forward slashes.
----@private
----@param p string
----@return string
-local function to_winpath(p)
-  p = vim.fn.fnamemodify(p, ":p")
-  p = p:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1")
-  p = p:gsub("/", "\\")
-  return p
-end
-
----Detect whether the current process runs inside WSL.
----Checks the uname version string and the WSL_DISTRO_NAME environment variable.
+---Detect whether Neovim is running inside a WSL environment.
+---Checks both the kernel version string (covers WSL1 and WSL2) and the
+---WSL_DISTRO_NAME environment variable (set by WSL2 user-space init).
 ---@private
 ---@return boolean
 local function is_wsl()
@@ -41,144 +33,167 @@ local function is_wsl()
   if uname:match("[Mm]icrosoft") then
     return true
   end
-  if vim.env and vim.env.WSL_DISTRO_NAME then
+  if vim.env and vim.env.WSL_DISTRO_NAME and vim.env.WSL_DISTRO_NAME ~= "" then
     return true
   end
   return false
 end
 
----Spawn an external command without blocking the editor.
----Prefers vim.system (Neovim >= 0.10); falls back to vim.fn.jobstart.
+---Convert a POSIX-style path to an absolute Windows-style path.
+---Only used on native Win32, not in WSL (wsl_to_win handles WSL).
 ---@private
----@param argv    string[]                                         Argument vector; argv[1] is the executable.
----@param cb      fun(success: boolean, code: integer|nil, stderr: string|nil)
-local function spawn_detached(argv, cb)
-  if vim.system then
-    vim.system(argv, { text = true, detach = true }, function(res)
-      if not res then
-        cb(false, nil, "no response from vim.system")
-        return
-      end
-      cb(res.code == 0, res.code, res.stderr)
-    end)
-  else
-    local jid = vim.fn.jobstart(argv, { detach = true })
-    -- jobstart does not expose an exit code synchronously; treat positive jid as success
-    cb(jid > 0, nil, jid <= 0 and "jobstart returned non-positive jid" or nil)
+---@param p string  POSIX or mixed-style absolute path.
+---@return string   Absolute Windows path with backslash separators.
+local function to_winpath(p)
+  p = vim.fn.fnamemodify(p, ":p")
+  p = p:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1")
+  p = p:gsub("/", "\\")
+  -- Strip trailing backslash on non-root paths (e.g. C:\foo\ -> C:\foo)
+  if #p > 3 then
+    p = p:gsub("\\+$", "")
   end
+  return p
 end
 
----Translate a Linux absolute path to its Windows counterpart inside WSL.
----Returns the original path unchanged when wslpath is unavailable or fails.
+---Translate a Linux absolute path to its Windows drive-letter path via wslpath.
+---Returns the original path unchanged when wslpath is absent or fails, so
+---callers never receive nil or an empty string from this function alone.
 ---@private
----@param path string
----@return string
+---@param path string  Absolute Linux path inside the WSL mount namespace.
+---@return string      Windows path (e.g. C:\Users\...), or original on failure.
 local function wsl_to_win(path)
   if vim.fn.executable("wslpath") == 0 then
+    notify.warn("wslpath not found; cannot translate path to Windows format")
     return path
   end
   local ok, lines = pcall(vim.fn.systemlist, { "wslpath", "-w", path })
   if ok and lines and lines[1] and lines[1] ~= "" then
     return lines[1]
   end
+  notify.warn(("wslpath failed for path: %s"):format(path))
   return path
+end
+
+---Spawn a detached Windows GUI process from WSL using cmd.exe /C start.
+---
+---Rationale for this approach:
+---  vim.system({ detach=true }) crosses the WSL/Win32 interop boundary
+---  synchronously for the duration of process creation, which freezes the
+---  Neovim UI until the Windows process manager acknowledges the request.
+---  vim.fn.jobstart with detach=true avoids this by handing the child to
+---  Neovim's libuv job layer, which does not block the main loop.
+---
+---  cmd.exe /C start /B launches the target as a fully detached Windows
+---  process, so neither cmd.exe nor the target block the WSL side.
+---@private
+---@param winpath string  Absolute Windows path to open (backslash-separated).
+---@param select  boolean When true, open with /select (file pre-selection).
+---@return boolean        True when jobstart accepted the command (jid > 0).
+local function wsl_open(winpath, select)
+  -- /B suppresses cmd from opening a new console window.
+  -- The empty string after "start" is the window title (required positional arg).
+  -- /select,<path> must be a single token; no additional quoting needed in argv.
+  local target = select
+    and ("explorer.exe /select," .. winpath)
+    or  ("explorer.exe " .. winpath)
+
+  local argv = { "cmd.exe", "/C", "start", "/B", "", target }
+
+  local jid = vim.fn.jobstart(argv, { detach = true })
+  if jid <= 0 then
+    notify.error(("cmd.exe /C start failed (jid=%d) for: %s"):format(jid, winpath))
+    return false
+  end
+  return true
+end
+
+---Spawn a detached GUI process on native Win32 using vim.system.
+---On native Windows, vim.system with detach=true does not block the UI because
+---Neovim runs as a full Win32 process and CreateProcess returns immediately.
+---@private
+---@param argv string[]  Full argument vector; argv[1] is the executable.
+---@return boolean       True when the OS accepted the spawn request.
+local function win32_open(argv)
+  -- vim.system with detach=true is unreliable for GUI processes on Win32
+  -- (explorer.exe may be killed when Neovim drops the process handle).
+  -- Use the same cmd.exe /C start /B approach as WSL for consistency.
+  local target = table.concat(argv, " ")
+  local jid = vim.fn.jobstart(
+    { "cmd.exe", "/C", "start", "/B", "", target },
+    { detach = true }
+  )
+  if jid <= 0 then
+    notify.error(("cmd.exe /C start failed (jid=%d) for: %s"):format(jid, target))
+    return false
+  end
+  return true
 end
 
 -- ---------------------------------------------------------------------------
 -- Public API
 -- ---------------------------------------------------------------------------
 
----Open the Neo-tree node under the cursor in Windows Explorer.
+---Open the focused Neo-tree node in Windows Explorer.
 ---
----For file nodes, Explorer is invoked with `/select,<path>` so the file is
----highlighted inside its parent directory.
----For directory nodes, Explorer opens the directory directly.
----
----Falls back to `cmd.exe /C start "" "<dir>"` when the primary invocation fails.
+---On WSL: spawns via cmd.exe /C start /B using vim.fn.jobstart to avoid
+---blocking the Neovim UI across the WSL/Win32 interop boundary.
+---On native Win32: spawns explorer.exe directly via vim.system (detach=true).
 ---
 ---@param state Cfg.NeoTree.State
----@return boolean success False when no path could be resolved or the platform guard fires.
+---@return boolean  False when the platform guard fires or path resolution fails.
 function M.open(state)
-  -- Platform guard: only meaningful on Windows or WSL
-  local is_win = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
   local wsl    = is_wsl()
+  local is_win = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+
   if not (is_win or wsl) then
-    notify.warn("Open in Explorer: Windows or WSL required")
+    notify.warn("Open in Explorer: requires Windows or WSL environment")
     return false
   end
 
-  -- Get the currently focused node safely from Neo-tree state
-  local node = nil
-  if state and state.tree then
-    node = state.tree:get_node()
-  end
-
-  -- Use refactored get_path from node_utils
-  local raw, _ = node_utils.get_path(node)if raw == "" then
-=======
-  -- Resolve the focused node via the tree, not via state.current_node which
-  -- is not a stable Neo-tree API field and is typically nil.
   local node = node_utils.get_current(state)
   if not node then
     notify.warn("Open in Explorer: no node under cursor")
     return false
   end
 
-  local raw, _ = node_utils.get_path(node)
-  if raw == "" then
-    notify.warn("Open in Explorer: no path under cursor")
+  -- raw is the Linux/POSIX path; always valid for Neovim VFS operations
+  local raw = node_utils.get_path(node)
+  if not raw or raw == "" then
+    notify.warn("Open in Explorer: node has no resolvable path")
     return false
   end
 
-  -- Convert to Windows-style path; apply WSL translation when needed
-  local abs = wsl and wsl_to_win(raw) or to_winpath(raw)
+  -- isdirectory() must be called on the raw Linux path in WSL because Neovim
+  -- only has visibility into the Linux VFS, not the Windows filesystem.
+  local is_dir = vim.fn.isdirectory(raw) == 1
+
+  if wsl then
+    -- Translate the target path (and parent dir for files) to Windows format
+    local winpath = wsl_to_win(raw)
+    if winpath == "" then
+      notify.warn("Open in Explorer: WSL path translation returned empty result")
+      return false
+    end
+
+    return wsl_open(winpath, not is_dir)
+  end
+
+  -- Native Win32: translate to backslash path and spawn explorer.exe directly
+  local abs = to_winpath(raw)
   if abs == "" then
-    notify.warn("Open in Explorer: path translation failed")
+    notify.warn("Open in Explorer: path conversion returned empty result")
     return false
   end
 
-  local is_dir = vim.fn.isdirectory(abs) == 1
-  local dir    = is_dir and abs
-    or (wsl and wsl_to_win(vim.fn.fnamemodify(raw, ":h")) or to_winpath(vim.fn.fnamemodify(raw, ":h")))
-
-  -- Warn early when executables are missing (non-fatal; spawn may still work via PATH)
   if vim.fn.executable("explorer.exe") == 0 then
-    notify.warn("Open in Explorer: explorer.exe not found in PATH")
+    notify.warn("explorer.exe not found in PATH")
   end
 
-  -- Build the primary argument vector.
-  -- /select,<path> must be passed as a single element; the Windows API handles
-  -- the comma separator internally — no shell quoting issue when using argv arrays.
-  local primary = is_dir
+  local argv = is_dir
     and { "explorer.exe", abs }
     or  { "explorer.exe", "/select," .. abs }
 
-  -- Fallback: cmd.exe /C start opens the directory in the default file manager
-  local fallback = { "cmd.exe", "/C", "start", "", dir }
-
-  spawn_detached(primary, function(ok, code, stderr)
-    if ok then
-      return
-    end
-
-    -- Primary failed; log diagnostics and attempt fallback
-    notify.warn(("explorer.exe failed (code=%s, stderr=%s) — trying cmd fallback"):format(
-      tostring(code),
-      tostring(stderr)
-    ))
-
-    spawn_detached(fallback, function(ok2, code2, stderr2)
-      if not ok2 then
-        notify.error(("cmd fallback also failed (code=%s, stderr=%s)"):format(
-          tostring(code2),
-          tostring(stderr2)
-        ))
-      end
-    end)
-  end)
-
-  -- spawn_detached is async; returning true signals that an attempt was initiated
-  return true
+  return win32_open(argv)
 end
 
 return M
