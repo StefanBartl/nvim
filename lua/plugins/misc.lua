@@ -21,6 +21,7 @@ return {
       require("config.harpoon.persist_paths").setup({
         target_specs = {
           { "$REPOS_DIR", "Notes", "spickzettel", "spickzettel.md" },
+          { vim.fn.stdpath("config"), "docs", "ROADMAP", "ROADMAP.md" },
           { "$REPOS_DIR", "Notes", "MyNotes", "Notes.md" },
           { "$REPOS_DIR", "Notes", "MyNotes", "Checklists", "Lua", "Arch&Coding-Regeln.md" },
         },
