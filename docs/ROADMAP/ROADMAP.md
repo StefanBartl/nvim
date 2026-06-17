@@ -17,9 +17,6 @@
 ## nvim: High
 
 1. `leader wq`: Alle issues lösen
-2. nvim-cmdlog kann nicht verwendet werden ?
-3. gopath env variablen?
-    [Funktioniert am PC]($REPOS_DIR/Notes/spickzettel/Learn.md)
 
 ---
 
@@ -30,11 +27,6 @@
 3. `:Copy`
     1. hat keine ordentliche autocompletions
     2. `:Copy module [lua/c/js/...]` command, wobei die logik für das erstellen des modulpfades mit `:Isert module` geteilt werden kann
-4. `/plugins/personal.lua`: Alle Usercommands + Mapppings + Feature-Übersicht in...
-    - eigenes Sheet in `docs/bindings/`
-        - sowie ein md link vom `README.md` dorthin
-        - Sammelordner in wkdbook-neovim/plugins/personel
-5. `/nvim/lua/**` auf Module durchsuchen, die eigenständige, kleine repositories sein können (wie `/custom/pdfport`)
 
 ---
 
