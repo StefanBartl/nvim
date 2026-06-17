@@ -9,7 +9,7 @@
 
 ## Fuzzy Finder
 
-1. `/` und `\` sollten im fuzzy finder nichts aussmachen (sonst kann ich keine pfade copy pasten ohne sie anzupdasse)
+1. `/` und `\` und `.` sollten im fuzzy finder nichts aussmachen (sonst kann ich keine pfade copy pasten ohne sie anzupdasse)
 
 ## Markdown
 
