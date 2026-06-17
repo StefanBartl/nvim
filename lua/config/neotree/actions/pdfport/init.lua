@@ -160,7 +160,7 @@ function M.open_quick(state)
     path       = path,
     mode       = "buffer",
     backend_id = "pdftotext",
-    split      = "vsplit",
+    split      = "current",
     focus      = true,   -- buffer.lua wechselt intern ins Editor-Fenster
   })
 

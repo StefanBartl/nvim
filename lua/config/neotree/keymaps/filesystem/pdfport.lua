@@ -99,11 +99,11 @@ return {
   },
 
   -- pdf: Immer pdfport Modus-Picker (nur bei PDF sinnvoll, aber kein Fehler bei anderen)
-  ["pdf"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      pdfport_action.open(state)
-    end,
-    desc = "pdfport: Modus-Picker für PDF-Node öffnen",
-  },
+  -- ["PDF"] = {
+    -- ---@param state Cfg.NeoTree.State
+    -- function(state)
+      -- pdfport_action.open(state)
+    -- end,
+    -- desc = "pdfport: Modus-Picker für PDF-Node öffnen",
+  -- },
 }
