@@ -150,27 +150,27 @@ return {
       local opts = { group_name = "AutolistAutoRecalc" }
 
       -- ---@type integer
-      -- local augroup = vim.api.nvim_create_augroup(opts.group_name, { clear = true })
+      local augroup = vim.api.nvim_create_augroup(opts.group_name, { clear = true })
 
       -- Create buffer-local BufWritePre only for autolist filetypes.
       -- Using FileType ensures the buffer has its correct 'filetype' and autolist is loaded.
-      -- vim.api.nvim_create_autocmd("FileType", {
-        -- group = augroup,
-        -- pattern = { "markdown", "text", "tex", "plaintex", "norg" },
-        -- desc = "[autolist] set up pre-save renumbering for this buffer",
-        -- callback = function(ev)
-          -- -- Buffer-local pre-save hook: renumber just before write, so the file on disk is already correct.
-          -- vim.api.nvim_create_autocmd("BufWritePre", {
-            -- group = augroup,
-            -- buffer = ev.buf,
-            -- desc = "[autolist] renumber list before saving",
-            -- callback = function()
-              -- -- Use the user command; 'silent!' avoids noise if not applicable.
-              -- vim.cmd([[silent! AutolistRecalculate]])
-            -- end,
-          -- })
-        -- end,
-      -- })
+      vim.api.nvim_create_autocmd("FileType", {
+        group = augroup,
+        pattern = { "markdown", "text", "tex", "plaintex", "norg" },
+        desc = "[autolist] set up pre-save renumbering for this buffer",
+        callback = function(ev)
+          -- Buffer-local pre-save hook: renumber just before write, so the file on disk is already correct.
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            group = augroup,
+            buffer = ev.buf,
+            desc = "[autolist] renumber list before saving",
+            callback = function()
+              -- Use the user command; 'silent!' avoids noise if not applicable.
+              vim.cmd([[silent! AutolistRecalculate]])
+            end,
+          })
+        end,
+      })
     end,
   },
 }
