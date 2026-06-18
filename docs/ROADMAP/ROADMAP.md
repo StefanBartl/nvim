@@ -18,6 +18,7 @@
 
 1. `leader wq`: Alle issues lösen
 2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
+3. `leader toc` sollte eigntlich das erste Level headline nicht angeben (h1_protected = true)
 
 ---
 

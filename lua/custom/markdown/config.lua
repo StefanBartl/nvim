@@ -15,13 +15,17 @@ local Defaults = {
   ft_only                  = true,
   ensure_headline_spacing  = true,
   blockquote_hl = {
-    -- `>` marker: green
-    marker_fg     = "#39FF14",
+            -- `>` marker: green
+    marker_fg     = "#6A9955",
+    -- marker_bg     = "#121314", -- TODO: Noch nicht implementiert
     marker_bold   = false,
     marker_italic = false,
-    -- text after `>`: normal fg, dark green background (auto-derived if nil)
-    text_bg       = nil,   -- auto: 20% dim of marker_fg → "#152012"
-    text_fg       = nil,   -- nil: inherits Normal fg
+
+            -- text after `>`: normal fg, dark green background (auto-derived if nil)
+    text_bg       = nil,
+    -- text_bg       = "dimm",      -- 20% dim of marker_fg
+    -- text_bg       = "#121314", -- von vscode abgeleitet, aber 20% dimmer wird passen
+    text_fg       = "#7EE787",    -- nil: inherits Normal fg
     text_italic   = false,
     text_bold     = true,
   },

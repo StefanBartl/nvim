@@ -47,7 +47,13 @@ end
 ---@param hl Custom.MD.BlockquoteHL
 local function set_hl(hl)
   local marker_fg = hl.marker_fg or hl.fg or "#6A9955"
-  local text_bg   = hl.text_bg or dim_bg(marker_fg)
+
+  local text_bg = nil
+  if hl.text_bg == "dimm" then
+    text_bg = dim_bg(marker_fg)
+  elseif hl.text_bg ~= nil then
+    text_bg = hl.text_bg
+  end
 
   if hl.link then
     vim.api.nvim_set_hl(0, GROUP_MARKER, { link = hl.link })
@@ -62,9 +68,8 @@ local function set_hl(hl)
   })
 
   vim.api.nvim_set_hl(0, GROUP_TEXT, {
-    -- fg intentionally omitted → inherits Normal fg (= normal text color)
     fg     = hl.text_fg   or nil,
-    bg     = text_bg,
+    bg     = text_bg, -- Ist nil, wenn hl.text_bg nil war -> kein BG wird gesetzt
     italic = hl.text_italic or false,
     bold   = hl.text_bold   or false,
   })
