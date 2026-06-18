@@ -1,24 +1,27 @@
+-- TODO: image preview zuerst checkne, also snacks, images.nviim, ueberzug usw... dann wenn das nicht ist, mit system app
+
 ---@module 'config.neotree.keymaps.filesystem.pdfport'
----@brief pdfport-Keymaps für den Neo-tree Filesystem-Source.
+---@brief PDF and image keymaps for the Neo-tree filesystem source.
 ---@description
---- Dieses Modul wird in config/neotree/keymaps/filesystem/init.lua
---- als weiteres Modul eingebunden.
+--- This module is loaded last in config/neotree/keymaps/filesystem/init.lua
+--- so that it wins the <Tab> and <CR> merge slots.
+---
+--- Handler priority per keypress:
+---   1. PDF   -> pdfport quick open  (pdftotext buffer)
+---   2. Image -> system default app  (xdg-open / open)
+---   3. Other -> standard Neo-tree behaviour (toggle_preview / expand / open)
 ---
 --- Keymaps:
----   <Tab>  → wenn auf PDF: pdfport quick open (buffer, pdftotext)
----            wenn auf Nicht-PDF: normales Neo-tree toggle_preview
----   <CR>   → wenn auf PDF: pdfport quick open
----            wenn auf Nicht-PDF: normales Neo-tree open
----   gP     → pdfport Modus-Picker (immer, unabhängig vom Typ)
----
---- Damit überschreiben wir NUR die PDF-spezifischen Fälle; für alle anderen
---- Nodes bleibt das Standardverhalten exakt erhalten.
+---   <Tab>  -> PDF: pdfport quick  | Image: system app | Other: toggle_preview
+---   <CR>   -> PDF: pdfport quick  | Image: system app | Other: expand / open
+---   gP     -> pdfport mode picker (always, regardless of node type)
 
-local notify     = require("lib.notify").create("[cfg.neotree.keymaps.fs.pdfport]")
-local node_utils = require("config.neotree.utils.node")
+local notify        = require("lib.notify").create("[cfg.neotree.keymaps.fs.pdfport]")
+local node_utils    = require("config.neotree.utils.node")
 local pdfport_action = require("config.neotree.actions.pdfport")
+local img           = require("config.neotree.keymaps.filesystem.images")
 
--- Hilfsfunktion: gibt true zurück, wenn der aktuelle Node eine PDF ist.
+--- Returns true when the node under the cursor is a PDF file.
 ---@param state Cfg.NeoTree.State
 ---@return boolean
 local function current_node_is_pdf(state)
@@ -28,10 +31,32 @@ local function current_node_is_pdf(state)
   return type(path) == "string" and path:lower():match("%.pdf$") ~= nil
 end
 
+--- Returns true when the node under the cursor is an image file.
+---@param state Cfg.NeoTree.State
+---@return boolean
+local function current_node_is_image(state)
+  local node = node_utils.get_current(state)
+  if not node then return false end
+  local path, _ = node_utils.get_path(node)
+  return img.is_image_path(path)
+end
+
+--- Opens the image at the node under the cursor in the system default app.
+---@param state Cfg.NeoTree.State
+local function open_image(state)
+  local node = node_utils.get_current(state)
+  local path, _ = node_utils.get_path(node)
+  if type(path) ~= "string" then
+    notify.warn("Could not resolve path for image node")
+    return
+  end
+  img.open_in_system_app(path)
+end
+
 ---@type table<string, any>
 return {
 
-  -- <Tab>: PDF → pdfport quick; Nicht-PDF → toggle_preview (Original)
+  -- <Tab>: PDF -> pdfport quick | Image -> system app | Other -> toggle_preview
   ["<Tab>"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
@@ -40,7 +65,12 @@ return {
         return
       end
 
-      -- Original-Verhalten: toggle_preview
+      if current_node_is_image(state) then
+        open_image(state)
+        return
+      end
+
+      -- Fallback: identical to the handler in preview.lua.
       local win = vim.api.nvim_get_current_win()
       local buf = vim.api.nvim_win_get_buf(win)
       if vim.bo[buf].filetype ~= "neo-tree" then return end
@@ -50,10 +80,10 @@ return {
         if ok and preview.hide then preview.hide() end
       end
     end,
-    desc = "PDF: pdfport quick open (pdftotext) | Andere: Preview toggle",
+    desc = "PDF: pdfport quick | Image: system app | Other: preview toggle",
   },
 
-  -- <CR>: PDF → pdfport quick; Nicht-PDF → normales open / expand
+  -- <CR>: PDF -> pdfport quick | Image -> system app | Other -> expand / open
   ["<CR>"] = {
     ---@param state Cfg.NeoTree.State
     function(state)
@@ -62,21 +92,25 @@ return {
         return
       end
 
-      -- Original-Verhalten aus filesystem/files.lua
+      if current_node_is_image(state) then
+        open_image(state)
+        return
+      end
+
+      -- Fallback: identical to the handler in files.lua.
       local node = node_utils.get_current(state)
       if not node then
-        notify.info("Kein Node unter dem Cursor")
+        notify.info("No node under cursor")
         return
       end
 
       local win = vim.api.nvim_get_current_win()
       local buf = vim.api.nvim_win_get_buf(win)
       if vim.bo[buf].filetype ~= "neo-tree" then
-        notify.warn("Nicht in einem Neo-tree Fenster")
+        notify.warn("Not in a Neo-tree window")
         return
       end
 
-      -- Safe hide preview (optionally, wie im Original)
       local utils_ok, utils = pcall(require, "config.neotree.utils")
       if utils_ok and utils.safe_hide_preview then
         utils.safe_hide_preview()
@@ -95,15 +129,7 @@ return {
         pcall(state.commands.open, state)
       end
     end,
-    desc = "PDF: pdfport quick open (pdftotext) | Andere: expand / open",
-  },
+    desc = "PDF: pdfport quick | Image: system app | Other: expand / open",
 
-  -- pdf: Immer pdfport Modus-Picker (nur bei PDF sinnvoll, aber kein Fehler bei anderen)
-  -- ["PDF"] = {
-    -- ---@param state Cfg.NeoTree.State
-    -- function(state)
-      -- pdfport_action.open(state)
-    -- end,
-    -- desc = "pdfport: Modus-Picker für PDF-Node öffnen",
-  -- },
+  },
 }

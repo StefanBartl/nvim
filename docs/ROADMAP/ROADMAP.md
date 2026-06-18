@@ -17,6 +17,7 @@
 ## nvim: High
 
 1. `leader wq`: Alle issues lösen
+2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
 
 ---
 
@@ -27,6 +28,7 @@
 3. `:Copy`
     1. hat keine ordentliche autocompletions
     2. `:Copy module [lua/c/js/...]` command, wobei die logik für das erstellen des modulpfades mit `:Isert module` geteilt werden kann
+4. Vereinen von neotree keymaps filetree: preview;images;pdfprot
 
 ---
 
