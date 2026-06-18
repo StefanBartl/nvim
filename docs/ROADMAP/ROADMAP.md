@@ -30,6 +30,8 @@
     1. hat keine ordentliche autocompletions
     2. `:Copy module [lua/c/js/...]` command, wobei die logik für das erstellen des modulpfades mit `:Isert module` geteilt werden kann
 4. Vereinen von neotree keymaps filetree: preview;images;pdfprot
+5. insert mode paste funktioert nicht
+6. TODO usw.. durchgehen
 
 ---
 
