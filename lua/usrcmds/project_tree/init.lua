@@ -294,9 +294,9 @@ end
 ---@return nil
 function M.enable_usercmds()
   --AUDIT:
-  -- ...erweiteren mit filetypes, usw...
+-- ...erweiteren mit filetypes, usw...
   -- .. path übergeben
-  vim.api.nvim_create_user_command("PojectTreeGet", function()
+vim.api.nvim_create_user_command("ProjectTreeGet", function()
     M.write_tree(function(ok, msg)
       vim.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR)
     end)

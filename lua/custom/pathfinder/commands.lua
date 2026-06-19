@@ -155,8 +155,6 @@ function M.setup(opts)
     notifier.notify(("mapping '%s' triggered"):format(map), "debug")
     action(opts)
   end, { noremap = true, silent = true, desc = "Pathfinder: search paths from current line" })
-
-  -- notifier.notify(("commands: mapping %s installed and :PathfinderFind created"):format(map), "info")
 end
 
 return M
