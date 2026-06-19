@@ -17,14 +17,6 @@ local LIST_PAT   = "^%s*[%d%-*+]"
 -- Pattern for a continuation line (non-empty, no list marker) that belongs to an item.
 local CONT_PAT   = "^%s+%S"
 
---- Count leading spaces in a string.
----@param s string
----@return integer
-local function indent_of(s)
-  local spaces = s:match("^(%s*)")
-  return #spaces
-end
-
 --- Return true if the line looks like part of a list (item or continuation).
 ---@param line string
 ---@return boolean

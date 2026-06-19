@@ -193,6 +193,7 @@ function M.usercommands()
       local readable = vim.fn.filereadable(path)
       if readable == 1 then
         lines[#lines + 1] = string.format("  ✓ %s (EXISTS)", config)
+        ---@diagnostic disable-next-line: unused-local
         has_vitest = true
       else
         lines[#lines + 1] = string.format("  ✗ %s (not found)", config)

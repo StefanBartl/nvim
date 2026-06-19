@@ -7,11 +7,6 @@ local M = {}
 
 local api = vim.api
 
----@class Cfg.NeoTree.LayoutGuard.Config
----@field enabled? boolean
----@field delay_ms? integer
----@field restore_focus? boolean
-
 ---@type Cfg.NeoTree.LayoutGuard.Config
 local config = {
   enabled = true,

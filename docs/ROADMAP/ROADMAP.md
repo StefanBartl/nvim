@@ -37,13 +37,13 @@
 
 ## nvim: Low
 
-2. Spellchecking nochmnal durchgehen und notizen machen. Spell Strategie ausarbeiten - entweder Plugin einbindne oder Modul debuggen
-3. Durchsuchen %/cwd/path nach einen bestimmten String, alle Treffer sollen je nach eingabe mit char sumhüllt werden, zb ``, ''. "" oder **. Das soll abgefragt werden bzw bei einen usrcmd angegebn werden können wenn.
-4. claude code . avante nvim plugin anschauen wenn lizernz da ist
-5. repo_picker, dir_picker, usw... lässt es sich fusionieren?
-6. Module als pugins auslagern: umso mehr aus der config weg ist, umso weniger lsp probleme wird es geben
-7. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
-8. In allen modulen  `/bindings` und dort dann
+1. Spellchecking nochmnal durchgehen und notizen machen. Spell Strategie ausarbeiten - entweder Plugin einbindne oder Modul debuggen
+2. Durchsuchen %/cwd/path nach einen bestimmten String, alle Treffer sollen je nach eingabe mit char sumhüllt werden, zb ``, ''. "" oder **. Das soll abgefragt werden bzw bei einen usrcmd angegebn werden können wenn.
+3. claude code . avante nvim plugin anschauen wenn lizernz da ist
+4. repo_picker, dir_picker, usw... lässt es sich fusionieren?
+5. Module als pugins auslagern: umso mehr aus der config weg ist, umso weniger lsp probleme wird es geben
+6. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
+7. In allen modulen  `/bindings` und dort dann
     - `usrcmds`
     - `keymaps`
     - `autocmds`

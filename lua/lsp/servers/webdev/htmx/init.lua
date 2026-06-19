@@ -55,6 +55,7 @@ function M.setup(shared, opts)
     local ok, stderr_filter = pcall(require, "lsp.servers.webdev.htmx.filter_logs") -- FIX: Filtering funktionert nicht
     if ok and type(stderr_filter.create_json_filter) == "function" then
       -- Use JSON filter to ignore INFO/DEBUG logs
+      ---@diagnostic disable-next-line: unused-local
       handlers["stderr"] = stderr_filter.create_json_filter("htmx-lsp")
     end
   end
