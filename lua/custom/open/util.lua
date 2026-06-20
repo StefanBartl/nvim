@@ -70,7 +70,9 @@ function M.url_encode(s)
   s = s:gsub("([^%w%-%.%_%~ ])", function(c)
     return string.format("%%%02X", string.byte(c))
   end)
-  return s:gsub(" ", "+")
+
+  local encoded, _ = s:gsub(" ", "+")
+  return encoded
 end
 
 -- ---------------------------------------------------------------------------

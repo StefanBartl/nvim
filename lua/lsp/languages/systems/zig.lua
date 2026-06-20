@@ -13,5 +13,5 @@ function M.enable()
   })
 end
 
----@type Lsp.Languages.ConfiguredLangs.Webdev.Zig.Module
+---@type Lsp.Languages.ConfiguredLangs.Zig.Module
 return M

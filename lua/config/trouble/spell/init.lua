@@ -104,7 +104,7 @@ end
 ---@param lnum     integer            0-based line number
 ---@param entry    Cfg.Spell.Entry
 ---@param source   string
----@param severity vim.diagnostic.Severity
+---@param severity integer
 ---@return Cfg.Spell.Diag
 local function make_diag(bufnr, lnum, entry, source, severity)
   local word = entry[1]
@@ -113,6 +113,7 @@ local function make_diag(bufnr, lnum, entry, source, severity)
   -- Clamp: col must be >= 0
   if col < 0 then col = 0 end
 
+  ---@type Cfg.Spell.Diag
   return {
     bufnr    = bufnr,
     lnum     = lnum,
@@ -129,7 +130,7 @@ end
 ---Scan a buffer and return all spell diagnostics.
 ---@param bufnr    integer
 ---@param source   string
----@param severity vim.diagnostic.Severity
+---@param severity integer
 ---@return Cfg.Spell.Diag[]
 local function collect_buf(bufnr, source, severity)
   local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -163,7 +164,7 @@ local TEXT_EXT = {
 ---Collect diagnostics from every text file under cwd.
 ---Only files already open in Neovim are scanned (avoids mass-loading).
 ---@param source   string
----@param severity vim.diagnostic.Severity
+---@param severity integer
 ---@return table<integer, Cfg.Spell.Diag[]>   bufnr → diagnostics
 local function collect_cwd(source, severity)
   local cwd  = fn.getcwd()

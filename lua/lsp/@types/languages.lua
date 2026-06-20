@@ -2,7 +2,7 @@
 
 -- # Webdev languages (Modules)
 
----@class Lsp.Languages.ConfiguredLangs.Webdev.Astro.Modu1e
+---@class Lsp.Languages.ConfiguredLangs.Webdev.Astro.Module
 ---@field enable fun(): nil # Enable astro language
 
 ---@class Lsp.Languages.ConfiguredLangs.Webdev.HTML.Module
@@ -44,7 +44,7 @@
 -- All Languages (Modules)
 
 ---@class Lsp.Languages.ConfiguredLangs
----@field astro_module Lsp.Languages.ConfiguredLangs.Webdev.Astro.Modu1e
+---@field astro_module Lsp.Languages.ConfiguredLangs.Webdev.Astro.Module
 ---@field html_module Lsp.Languages.ConfiguredLangs.Webdev.HTML.Module
 ---@field typescript_module Lsp.Languages.ConfiguredLangs.Webdev.Typescript.Module
 ---@field c_module Lsp.Languages.ConfiguredLangs.C.Module

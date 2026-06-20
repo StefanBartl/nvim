@@ -13,5 +13,5 @@ function M.enable()
   })
 end
 
----@type Lsp.Languages.ConfiguredLangs.Webdev.Lua.Module
+---@type Lsp.Languages.ConfiguredLangs.Lua.Module
 return M

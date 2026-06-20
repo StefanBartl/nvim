@@ -43,5 +43,5 @@ function M.enable()
 
 end
 
----@type Lsp.Languages.ConfiguredLangs.Webdev.Astro.Modu1e
+---@type Lsp.Languages.ConfiguredLangs.Webdev.Astro.Module
 return M

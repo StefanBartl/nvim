@@ -130,7 +130,7 @@ local function debounce(fn, ms)
   return function()
     if S.timer then
       pcall(vim.uv.timer_stop, S.timer)
-      pcall(vim.uv.close, S.timer)
+      pcall(S.timer.close, S.timer)
       S.timer = nil
     end
 

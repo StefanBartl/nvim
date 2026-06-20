@@ -27,7 +27,7 @@ end
 --- Quick access to main module
 ---@return table
 function M.main()
-  return require("benchmarks.main")
+  return (require("benchmarks.main"))
 end
 
 --- Quick access to autocmds suite

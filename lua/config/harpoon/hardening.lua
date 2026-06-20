@@ -126,6 +126,7 @@ local function _ensure_ui_wrap()
       notify.warn("[harpoon hardening] ui.toggle_quick_menu failed: " .. tostring(ret[2]))
       return
     end
+    ---@diagnostic disable-next-line: deprecated
     return select(2, unpack(ret))
   end
 

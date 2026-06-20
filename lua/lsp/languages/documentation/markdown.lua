@@ -97,5 +97,4 @@ function M.enable()
   end
 end
 
----@type Lsp.Languages.ConfiguredLangs.Webdev.Markdown.Module
 return M

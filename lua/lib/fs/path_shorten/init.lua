@@ -48,6 +48,7 @@ local function join(parts, sep)
       return sep
     end
     -- table.unpack compatibility: use table.unpack (Lua 5.2+) or unpack as fallback
+    ---@diagnostic disable-next-line: deprecated
     local unpack = table.unpack or unpack
     return sep .. table.concat({ unpack(parts, 2) }, sep)
   end

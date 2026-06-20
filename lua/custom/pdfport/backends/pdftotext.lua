@@ -44,7 +44,7 @@ end
 --- async delivery. The dispatcher handles this transparently.
 ---
 ---@param path string  Absolute path to the PDF file
----@param opts PdfPort.ExtractOpts
+---@param opts PdfPort.InternalExtractOpts
 ---@return PdfPort.Result|nil  Synchronous result (nil = async, callback used)
 function M.extract(path, opts)
   -- Build argument list

@@ -29,7 +29,7 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 
 ---@class Cfg.Spell.Opts
----@field severity?    vim.diagnostic.Severity
+---@field severity?    integer
 ---@field source?      string
 ---@field keymap?      string|false   Global toggle keymap  (e.g. "<leader>zs")
 ---@field keymap_fix?  string|false   Per-buffer: open z= menu then advance
@@ -39,7 +39,7 @@
 ---@field qf_title?    string         Title used for the quickfix list
 
 ---@class Cfg.Spell.Config
----@field severity    vim.diagnostic.Severity
+---@field severity    integer
 ---@field source      string
 ---@field keymap      string|false
 ---@field keymap_fix  string|false
@@ -67,7 +67,7 @@
 ---@field col      integer                   0-based byte column
 ---@field end_lnum integer
 ---@field end_col  integer
----@field severity vim.diagnostic.Severity
+---@field severity integer
 ---@field source   string
 ---@field message  string
 ---@field user_data? { word: string, error_type: Cfg.Spell.ErrorType }
@@ -85,5 +85,8 @@
 ---@field fix_current fun(): nil
 ---@field get_config fun(): Cfg.Spell.Config
 ---@field active_bufs fun(): integer[]
+
+
+---@class vim.Diagnostic : Cfg.Spell.Diag
 
 return {}

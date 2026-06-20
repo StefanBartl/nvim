@@ -47,6 +47,7 @@ end
 ---@return nil
 function M.setup_manual_autoclose(bufnr)
   vim.keymap.set("i", ">", function()
+    ---@diagnostic disable-next-line: deprecated
     local row, col = unpack(vim.api.nvim_win_get_cursor(0))
     local line = vim.api.nvim_get_current_line()
     local before_cursor = line:sub(1, col)
@@ -84,6 +85,7 @@ function M.setup_manual_autoclose(bufnr)
 
   -- Auto-close on "/"
   vim.keymap.set("i", "/", function()
+    ---@diagnostic disable-next-line: deprecated
     local _, col = unpack(vim.api.nvim_win_get_cursor(0))
     local line = vim.api.nvim_get_current_line()
     local before_cursor = line:sub(1, col)

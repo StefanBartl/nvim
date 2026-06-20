@@ -48,7 +48,8 @@ end
 ---@param line string
 ---@return string
 local function strip_cr(line)
-  return line:gsub("\r$", "")
+  local result = line:gsub("\r$", "")
+  return result
 end
 
 --- Switches the current window to the "best" normal editor window – i.e.
@@ -96,7 +97,7 @@ end
 -- ── Public API ────────────────────────────────────────────────────────────────
 
 ---@param result PdfPort.Result
----@param opts   PdfPort.RenderOpts
+---@param opts   PdfPort.OpenOpts
 ---@return nil
 function M.render(result, opts)
   local path  = opts.path or ""

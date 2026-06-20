@@ -23,6 +23,7 @@
     },
     "type.castNumberToInteger": true,
     "diagnostics.libraryFiles": "Disable",
+    "diagnostics.unusedLocalExclude": ["_*"],
     "diagnostics.globals": [
         "assert",
         "after_each",

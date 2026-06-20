@@ -1,4 +1,3 @@
----@meta
 ---@module 'custom.pdfport.types'
 ---@brief EmmyLua type definitions for the pdfport module.
 ---@description
@@ -49,12 +48,15 @@
 ---@field prompt? string            -- Custom prompt for AI backends
 ---@field model? string             -- Model override for AI backends (ollama/claude)
 ---@field timeout_ms? integer       -- Extraction timeout in milliseconds
+---@field path? string              -- PDF path for direct extract() calls
 
 --- Internal extension of ExtractOpts used when a backend is invoked through
 --- the dispatcher. The __callback field carries the delivery function and is
 --- never part of the public-facing API surface.
 ---@class PdfPort.InternalExtractOpts : PdfPort.ExtractOpts
 ---@field __callback? fun(result: PdfPort.Result): nil  -- Async delivery callback
+---@field backend_id? PdfPort.BackendId
+---@field mode? PdfPort.RendererMode
 
 -- #############################################################################
 -- Renderer types
@@ -68,10 +70,10 @@
 
 ---@class PdfPort.RenderOpts
 ---@field mode PdfPort.RendererMode
+---@field path? string                         -- PDF path when renderers are invoked from open()
 ---@field backend_id? PdfPort.BackendId       -- Force specific backend; nil = auto-resolve
 ---@field split? "vsplit"|"split"|"tab"|"current"       -- For buffer mode
----@diagnostic disable-next-line
----@field float_opts? vim.api.keyset.win_config -- For float mode
+---@field float_opts? table -- For float mode (vim.api.keyset.win_config)
 ---@field terminal_tool? "ueberzug"|"chafa"|"kitty"|"imgcat" -- For terminal mode
 ---@field focus? boolean                      -- Focus opened window after render
 ---@field pages? integer[]                    -- Page numbers to render (terminal mode)
@@ -131,5 +133,7 @@
 ---@field ollama_host? string                        -- Ollama host (default: localhost:11434)
 ---@field ollama_model? string                       -- Ollama model (default: llava)
 ---@field debug boolean                              -- Enable debug notifications
+
+---@alias uv_process_t any
 
 return {}

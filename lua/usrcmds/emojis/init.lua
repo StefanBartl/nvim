@@ -153,6 +153,7 @@ local function do_insert()
     if not choice then return end
     local icon = choice:match("^(.-)%s%s")
     if not icon or icon=="" then return end
+    ---@diagnostic disable-next-line: deprecated
     local row, col = unpack(api.nvim_win_get_cursor(0))
     local line = api.nvim_buf_get_lines(0, row-1, row, false)[1] or ""
     api.nvim_buf_set_lines(0, row-1, row, false,

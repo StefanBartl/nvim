@@ -387,7 +387,7 @@ end
 ---@param path         string
 ---@param header_align Custom.Fmt.FmtTbl.Alignment
 ---@param entry_align  Custom.Fmt.FmtTbl.Alignment
----@param override_map table<integer, Custom.Fmt.FmtTbl.Alignment>
+---@param override_map? table<integer, Custom.Fmt.FmtTbl.Alignment>
 ---@return boolean ok, string|nil err
 local function format_file(path, header_align, entry_align, override_map)
   local fh, open_err = io.open(path, "r")

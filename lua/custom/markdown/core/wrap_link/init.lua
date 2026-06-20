@@ -45,6 +45,7 @@ function M.attach(bufnr)
 
   --- Handler for <leader>[ mapping in normal mode
   local function wrap_handler_normal()
+    ---@diagnostic disable-next-line: deprecated
     local row, col = unpack(api.nvim_win_get_cursor(0))
     local line = api.nvim_get_current_line()
 

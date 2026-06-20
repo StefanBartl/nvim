@@ -32,7 +32,7 @@ function LAZY.module(module_name)
   local lazy = {
     _value = nil,
     _loader = function()
-      return require(module_name)
+      return (require(module_name))
     end,
   }
 

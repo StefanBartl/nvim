@@ -56,5 +56,5 @@ function M.enable(shared, opts)
   end
 end
 
----@type Lsp.Languages.ConfiguredLangs.Webdev.Shell.Module
+---@type Lsp.Languages.ConfiguredLangs.Shell.Module
 return M

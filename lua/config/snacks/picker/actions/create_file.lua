@@ -68,8 +68,8 @@ local function create_entry(parent_dir, name)
 end
 
 ---Create file/folder action for snacks picker
----@param picker snacks.Picker Picker instance
----@param item? snacks.picker.Item Selected item
+---@param picker any Picker instance
+---@param item? any Selected item
 function M.create_file(picker, item)
   if not item then
     notify.warn("No item selected")
@@ -77,11 +77,14 @@ function M.create_file(picker, item)
   end
 
   -- Extract path from item
+  ---@diagnostic disable-next-line: undefined-field
   local path = item.file or item.path or item.filename
+  ---@diagnostic disable-next-line: undefined-field
   if not path and type(item.item) == "table" then
+    ---@diagnostic disable-next-line: undefined-field
     path = item.item.path or item.item.filename
   end
-  
+
   if not path or path == "" then
     notify.warn("No valid path found")
     return
@@ -104,6 +107,7 @@ function M.create_file(picker, item)
   end
 
   -- Close picker
+  ---@diagnostic disable-next-line: undefined-field
   picker:close()
 
   -- Show input prompt

@@ -37,7 +37,7 @@ function M.available()
 end
 
 ---@param path string  Absolute path to PDF
----@param opts PdfPort.ExtractOpts
+---@param opts PdfPort.InternalExtractOpts
 ---@return PdfPort.Result|nil
 function M.extract(path, opts)
   -- marker writes output to a directory; we use a temp dir per extraction
@@ -169,12 +169,22 @@ function M.extract(path, opts)
     }
   end
 
+  if not stderr then
+    vim.notify("stderr is nil", 4)
+    return
+  end
+
   stderr:read_start(function(err, data)
     if err then return end
     if data then
       stderr_chunks[#stderr_chunks + 1] = data
     end
   end)
+
+  if not timer then
+    vim.notify("timer is nil", 4)
+    return
+  end
 
   timer:start(timeout_ms, 0, function()
     if handle and not handle:is_closing() then

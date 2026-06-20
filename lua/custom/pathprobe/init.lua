@@ -325,7 +325,9 @@ local function get_visual_selection_line()
     return nil
   end -- char, line, block
   -- Get marks '< and '>
+  ---@diagnostic disable-next-line: deprecated
   local srow, scol = unpack(api.nvim_buf_get_mark(0, "<"))
+  ---@diagnostic disable-next-line: deprecated
   local erow, ecol = unpack(api.nvim_buf_get_mark(0, ">"))
   if srow == 0 or erow == 0 then
     return nil

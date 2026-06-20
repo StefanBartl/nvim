@@ -10,20 +10,25 @@ local fn = vim.fn
 local M = {}
 
 ---Open selected entry as background buffer
----@param picker snacks.Picker Picker instance
----@param item? snacks.picker.Item Selected item
-function M.open_background(picker, item)
+---@param _picker any Picker instance
+---@param item? any Selected item
+function M.open_background(_picker, item)
   if not item then
     notify.warn("No item selected")
     return
   end
 
   -- Extract path from item (snacks picker structure)
+  ---@diagnostic disable-next-line: undefined-field
   local path = item.file or item.path or item.filename
+  ---@diagnostic disable-next-line: undefined-field
   if not path and type(item.item) == "table" then
+    ---@diagnostic disable-next-line: undefined-field
     path = item.item.path or item.item.filename or item.item.file
   end
+  ---@diagnostic disable-next-line: undefined-field
   if not path and type(item.text) == "string" then
+    ---@diagnostic disable-next-line: undefined-field
     path = item.text
   end
 
@@ -59,7 +64,7 @@ function M.open_background(picker, item)
   -- Show confirmation
   local filename = fn.fnamemodify(path, ":t")
   notify.info("Buffered: " .. filename)
-  
+
   -- Do NOT close picker - that's the point of background open
 end
 

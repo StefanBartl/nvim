@@ -72,10 +72,32 @@ except Exception as e:
   local stderr_chunks = {}
   local stdout = uv.new_pipe(false)
   local stderr = uv.new_pipe(false)
+  if not stdout or not stderr then
+    vim.fn.delete(script_file)
+    return {
+      status  = "error",
+      text    = nil,
+      format  = "markdown",
+      backend = "docling",
+      pages_processed = nil,
+      error   = "docling: failed to create process pipes",
+    }
+  end
 
   -- docling can be slow on CPU; give it extra time
   local timeout_ms = opts.timeout_ms or 120000
   local timer = uv.new_timer()
+  if not timer then
+    vim.fn.delete(script_file)
+    return {
+      status  = "error",
+      text    = nil,
+      format  = "markdown",
+      backend = "docling",
+      pages_processed = nil,
+      error   = "docling: failed to create timeout timer",
+    }
+  end
 
   local function cleanup()
     if timer then timer:stop(); timer:close() end
@@ -84,7 +106,7 @@ except Exception as e:
     vim.fn.delete(script_file)
   end
 
-  local handle = uv.spawn(py, {
+  local handle = uv.spawn("python3", {
     args  = { script_file },
     stdio = { nil, stdout, stderr },
   }, function(code, _)
@@ -128,10 +150,12 @@ except Exception as e:
     }
   end
 
+  ---@diagnostic disable-next-line: need-check-nil
   stdout:read_start(function(_, data)
     if data then stdout_chunks[#stdout_chunks + 1] = data end
   end)
 
+  ---@diagnostic disable-next-line: need-check-nil
   stderr:read_start(function(_, data)
     if data then stderr_chunks[#stderr_chunks + 1] = data end
   end)

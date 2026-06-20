@@ -182,10 +182,12 @@ local function words_to_items(word_set)
   local n = 0
   for _ in pairs(word_set) do n = n + 1 end
 
-  local items = { [n] = false }  -- inline pre-reserve
+  ---@type {label:string, kind:integer, filterText:string, insertText:string, documentation:{kind:string,value:string}}[]
+  local items = {}
   local i = 0
   for w in pairs(word_set) do
     i = i + 1
+    ---@diagnostic disable-next-line: assign-type-mismatch
     items[i] = {
       label         = w,
       kind          = 1,   -- CompletionItemKind.Text
@@ -195,7 +197,9 @@ local function words_to_items(word_set)
     }
   end
 
-  table.sort(items, function(a, b) return a.label < b.label end)
+  table.sort(items, function(a, b)
+    return tostring(a.label) < tostring(b.label)
+  end)
   return items
 end
 
@@ -370,7 +374,7 @@ function M.setup(opts)
         end
 
         -- Build new list with md_words appended at low priority
-        local new_sources = { [#sources + 1] = false }  -- pre-reserve
+        local new_sources = {}
         for i, s in ipairs(sources) do
           new_sources[i] = s
         end

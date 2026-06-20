@@ -45,10 +45,10 @@ function M.enable()
     ---@return string[]
     complete = function(arg_lead, cmd_line, _)
       -- Count how many space-separated tokens precede the current word
-      local before_cursor = cmd_line:gsub("%s+$", "")
-      local words = vim.split(before_cursor, "%s+", { trimempty = true })
+      -- local before_cursor = cmd_line:gsub("%s+$", "")
+      -- local words = vim.split(before_cursor, "%s+", { trimempty = true })
       -- words[1] is always "DirPicker"
-      local token_index = #words + (arg_lead == "" and 1 or 0)
+      -- local token_index = #words + (arg_lead == "" and 1 or 0)
 
       -- Build the candidate list depending on what is already present
       local line_lower = cmd_line:lower()

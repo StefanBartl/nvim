@@ -21,11 +21,8 @@ end
 ---@param s table<T, true>
 ---@return T[]
 function M.to_array(s)
-  local n = 0
-  for _ in pairs(s) do
-    n = n + 1
-  end
-  local out = { [n] = false }
+  ---@type T[]
+  local out = {}
   local i = 0
   for k in pairs(s) do
     i = i + 1

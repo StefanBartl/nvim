@@ -1,5 +1,6 @@
 ---@module 'lib.fs.path'
 
+---@diagnostic disable-next-line: deprecated
 local unpack = table.unpack or unpack
 
 local M = {}

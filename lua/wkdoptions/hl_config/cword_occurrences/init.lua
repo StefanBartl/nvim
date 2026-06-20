@@ -235,6 +235,7 @@ local function place_occurrences(pat, srow, erow)
     local line = vim.api.nvim_buf_get_lines(0, l0, l0 + 1, false)[1] or ""
     local start = 0
     while true do
+      ---@diagnostic disable-next-line: deprecated
       local _, s, e = unpack(vim.fn.matchstrpos(line, pat, start))
       if s == -1 then
         break

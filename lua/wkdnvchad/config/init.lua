@@ -38,7 +38,7 @@ local function load_statusline_config()
         tostring(config)
       )
     )
-    return require("wkdnvchad.config.statusline.normal")
+    return (require("wkdnvchad.config.statusline.normal"))
   end
 
   return config

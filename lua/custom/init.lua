@@ -61,11 +61,8 @@ require("custom.diff").enable({
 
 
 require("custom.find_in_folder").setup({ keymaps = true, usercmds = true })
-require("custom.open").setup({
-  default_handler = "browser",  -- run when :Open is called with no args
-})
-
---AUDIT
+require("custom.open").setup()
+---AUDIT
 require("custom.commands_keymaps").setup({
   delete_current_file = true,
 })

@@ -8,7 +8,7 @@ local M = {}
 ---@param mod string
 ---@return T
 local function lr(mod)
-  return require("lib.memo." .. mod)
+  return (require("lib.memo." .. mod))
 end
 
 -- Existing submodules

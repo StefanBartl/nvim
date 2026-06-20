@@ -110,7 +110,7 @@ local function unix_trash(path)
     end
     local dest = trashdir .. "/" .. fn.fnamemodify(path, ":t")
     local ok, err = os.rename(path, dest)
-    return ok, ok and ("moved to " .. dest) or tostring(err)
+    return ok == true, ok and ("moved to " .. dest) or tostring(err)
   end
 end
 

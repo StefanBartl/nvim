@@ -7,7 +7,7 @@
 local float_mod = {}
 
 ---@param result PdfPort.Result
----@param opts PdfPort.RenderOpts
+---@param opts PdfPort.OpenOpts
 ---@return nil
 function float_mod.render(result, opts)
   local lines = vim.split(result.text or "", "\n", { plain = true })

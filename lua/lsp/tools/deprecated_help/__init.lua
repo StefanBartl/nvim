@@ -158,6 +158,7 @@ end
 function M.open_help_under_cursor(bufnr)
   bufnr = bufnr or api.nvim_get_current_buf()
   local win = api.nvim_get_current_win()
+  ---@diagnostic disable-next-line: deprecated
   local _, col = unpack(api.nvim_win_get_cursor(win))
   local line = api.nvim_get_current_line()
 

@@ -31,6 +31,7 @@
 4. TODO usw.. durchgehen
 5. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
 6. Checklisten anwenden
+7. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
 
 ---
 

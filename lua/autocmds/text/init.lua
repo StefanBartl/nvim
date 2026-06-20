@@ -111,6 +111,7 @@ function M.enable(cfg)
         end
         local row, col
         if cfg.trim_blank.preserve_cursor ~= false then
+          ---@diagnostic disable-next-line: deprecated
           row, col = unpack(api.nvim_win_get_cursor(0))
         end
         -- Substitute leading whitespace on empty lines with nothing.

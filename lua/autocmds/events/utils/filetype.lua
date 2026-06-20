@@ -28,19 +28,19 @@ local handlers = {
   markdown = {
     {
       load = function()
-        return require("custom.markdown.setup.keymaps")
+        return (require("custom.markdown.setup.keymaps"))
       end,
       priority = 10,
     },
     {
       load = function()
-        return require("custom.markdown.setup.usercmds")
+        return (require("custom.markdown.setup.usercmds"))
       end,
       priority = 20,
     },
     {
       load = function()
-        return require("custom.markdown.tableview.mappings")
+        return (require("custom.markdown.tableview.mappings"))
       end,
       priority = 30,
     },
@@ -64,13 +64,13 @@ local handlers = {
   mdx = {
     {
       load = function()
-        return require("custom.markdown.setup.keymaps")
+        return (require("custom.markdown.setup.keymaps"))
       end,
       priority = 10,
     },
     {
       load = function()
-        return require("custom.markdown.setup.usercmds")
+        return (require("custom.markdown.setup.usercmds"))
       end,
       priority = 20,
     },
@@ -80,7 +80,7 @@ local handlers = {
   gitcommit = {
     {
       load = function()
-        return require("autocmds.git.commit_ft")
+        return (require("autocmds.git.commit_ft"))
       end,
       priority = 10,
       once = true,
@@ -91,7 +91,7 @@ local handlers = {
   ["noice*"] = {
     {
       load = function()
-        return require("mappings.noice")
+        return (require("mappings.noice"))
       end,
       priority = 10,
     },
@@ -101,7 +101,7 @@ local handlers = {
   lua = {
     {
       load = function()
-        return require("lsp.languages.scripting.lua")
+        return (require("lsp.languages.scripting.lua"))
       end,
       priority = 10,
       once = true,
@@ -111,7 +111,7 @@ local handlers = {
   c = {
     {
       load = function()
-        return require("lsp.languages.systems.c")
+        return (require("lsp.languages.systems.c"))
       end,
       priority = 10,
       once = true,
@@ -121,7 +121,7 @@ local handlers = {
   cpp = {
     {
       load = function()
-        return require("lsp.languages.systems.c")
+        return (require("lsp.languages.systems.c"))
       end,
       priority = 10,
       once = true,
@@ -131,7 +131,7 @@ local handlers = {
   cs = {
     {
       load = function()
-        return require("lsp.languages.app.csharp")
+        return (require("lsp.languages.app.csharp"))
       end,
       priority = 10,
       once = true,
@@ -141,7 +141,7 @@ local handlers = {
   go = {
     {
       load = function()
-        return require("lsp.languages.systems.go")
+        return (require("lsp.languages.systems.go"))
       end,
       priority = 10,
       once = true,
@@ -151,7 +151,7 @@ local handlers = {
   html = {
     {
       load = function()
-        return require("lsp.languages.webdev.html")
+        return (require("lsp.languages.webdev.html"))
       end,
       priority = 10,
       once = true,
@@ -161,7 +161,7 @@ local handlers = {
   zig = {
     {
       load = function()
-        return require("lsp.languages.systems.zig")
+        return (require("lsp.languages.systems.zig"))
       end,
       priority = 10,
       once = true,
@@ -172,7 +172,7 @@ local handlers = {
   messages = {
     {
       load = function()
-        return require("debugging.views.autocmds")
+        return (require("debugging.views.autocmds"))
       end,
       priority = 10,
     },

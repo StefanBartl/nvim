@@ -38,6 +38,10 @@ local function rasterize(pdf_path, page, dpi, callback)
 
   local stderr_chunks = {}
   local stderr = uv.new_pipe(false)
+  if not stderr then
+    callback(nil, "pdftoppm: failed to create stderr pipe")
+    return
+  end
 
   uv.spawn("pdftoppm", {
     args  = args,
@@ -57,6 +61,7 @@ local function rasterize(pdf_path, page, dpi, callback)
     end)
   end)
 
+  ---@diagnostic disable-next-line: need-check-nil
   stderr:read_start(function(_, data)
     if data then stderr_chunks[#stderr_chunks + 1] = data end
   end)
@@ -72,6 +77,10 @@ end
 local function wait_for_file(path, interval_ms, max_attempts, callback)
   local attempts = 0
   local timer    = uv.new_timer()
+  if not timer then
+    vim.schedule(function() callback(false) end)
+    return
+  end
 
   timer:start(0, interval_ms, function()
     attempts = attempts + 1
@@ -155,7 +164,7 @@ local function display_png(png_path, tool)
 end
 
 ---@param _result PdfPort.Result  (text field contains path for terminal mode)
----@param opts PdfPort.RenderOpts
+---@param opts PdfPort.OpenOpts
 ---@return nil
 function term_mod.render(_result, opts)
   local path = opts.path
@@ -175,6 +184,10 @@ function term_mod.render(_result, opts)
     rasterize(path, pages[idx], dpi, function(png, err)
       if err then
         vim.notify("pdfport terminal: " .. err, vim.log.levels.ERROR)
+        return
+      end
+      if not png then
+        vim.notify("pdfport terminal: rasterizer returned no PNG", vim.log.levels.ERROR)
         return
       end
       display_png(png, tool)

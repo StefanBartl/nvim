@@ -20,7 +20,7 @@
 local platform = require("custom.pdfport.platform")
 local uv       = vim.uv or vim.loop
 
----@type PdfPort.Backend
+---@class PdfPort.ClaudeBackend : PdfPort.ConfigurableBackend
 local M = {
   id   = "claude",
   name = "Anthropic Claude API",
@@ -113,7 +113,7 @@ local function build_request(base64_pdf, prompt, model)
 end
 
 ---@param path string  Absolute path to PDF
----@param opts PdfPort.ExtractOpts
+---@param opts PdfPort.InternalExtractOpts
 ---@return PdfPort.Result|nil
 function M.extract(path, opts)
   local api_key = (_config and _config.claude_api_key)

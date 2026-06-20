@@ -88,7 +88,7 @@ end
 --- The extraction runs off the main thread; the callback is always
 --- invoked on the main thread via vim.schedule.
 ---
----@param opts PdfPort.OpenOpts
+---@param opts PdfPort.OpenOpts|PdfPort.InternalExtractOpts
 ---@param callback fun(result: PdfPort.Result): nil  Called with extraction result
 ---@return nil
 function M.dispatch(opts, callback)

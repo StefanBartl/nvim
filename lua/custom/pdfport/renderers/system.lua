@@ -8,7 +8,7 @@ local sys_mod  = {}
 local platform = require("custom.pdfport.platform")
 
 ---@param _result PdfPort.Result  (unused, path comes from opts)
----@param opts PdfPort.RenderOpts
+---@param opts PdfPort.OpenOpts
 ---@return nil
 function sys_mod.render(_result, opts)
   local path = opts.path

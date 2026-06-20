@@ -33,7 +33,6 @@ local function notify()
   return _notify
 end
 
-local ok_api, api_or_err = pcall(function() return vim.api end)
 local api = vim.api
 
 -- ─────────────────────────────────────────────────────────────────────────────

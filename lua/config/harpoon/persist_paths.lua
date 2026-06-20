@@ -78,6 +78,7 @@ local function join_spec(segs)
   for i = 2, #segs do
     parts[#parts + 1] = segs[i]
   end
+  ---@diagnostic disable-next-line: deprecated
   local unpack = table.unpack or unpack
   return vim.fs.joinpath(unpack(parts))
 end

@@ -46,6 +46,7 @@ end
 
 -- Helper to get word under cursor
 local function get_word_under_cursor()
+    ---@diagnostic disable-next-line: deprecated
     local _, col = unpack(api.nvim_win_get_cursor(0))
     local line = api.nvim_get_current_line()
     local from, to = line:find("%w+", col + 1)

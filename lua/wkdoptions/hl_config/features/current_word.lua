@@ -59,6 +59,7 @@ function M.update()
       break
     end
 
+    ---@diagnostic disable-next-line: deprecated
     local _, s, e = unpack(match_res)
     if s == -1 then
       break

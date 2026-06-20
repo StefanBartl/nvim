@@ -2,7 +2,7 @@
 ---@module 'plugins.@types.snacks'
 
 ---@class Plugins.Snacks.ModuleOpts
----@field enabled boolean
+---@field enabled? boolean
 ---@field [string] any
 
 ---@class Plugins.Snacks.Setup
@@ -16,6 +16,6 @@
 ---@field words Plugins.Snacks.ModuleOpts|nil
 ---@field bigfile Plugins.Snacks.ModuleOpts|nil
 ---@field dashboard table|nil
----@field picker Plugins.Snacks.ModuleOpts|nil
+---@field picker table|nil
 
 return {}

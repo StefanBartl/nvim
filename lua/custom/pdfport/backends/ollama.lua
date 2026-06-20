@@ -240,12 +240,28 @@ local function query_ollama(b64, prompt, model, host, timeout_ms, callback)
     return
   end
 
+  if not stdout then
+    vim.notify("stdout is nil", 4)
+    return
+  end
+
   stdout:read_start(function(_, data)
     if data then response_chunks[#response_chunks + 1] = data end
   end)
+
+  if not stderr then
+    vim.notify("stderr is nil", 4)
+    return
+  end
+
   stderr:read_start(function(_, data)
     if data then stderr_chunks[#stderr_chunks + 1] = data end
   end)
+
+  if not timer then
+    vim.notify("timer is nil", 4)
+    return
+  end
 
   timer:start(timeout_ms, 0, function()
     if handle and not handle:is_closing() then handle:kill(15) end

@@ -33,5 +33,5 @@ function M.enable()
   })
 end
 
----@type Lsp.Languages.ConfiguredLangs.Webdev.Java.Module
+---@type Lsp.Languages.ConfiguredLangs.Java.Module
 return M

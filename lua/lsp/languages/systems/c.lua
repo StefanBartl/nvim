@@ -13,5 +13,5 @@ function M.enable()
   })
 end
 
----@type Lsp.Languages.ConfiguredLangs.Webdev.C.Module
+---@type Lsp.Languages.ConfiguredLangs.C.Module
 return M

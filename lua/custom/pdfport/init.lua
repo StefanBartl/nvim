@@ -157,19 +157,19 @@ end
 --- Returns the Neo-tree integration module.
 ---@return table  Module with commands() and keymaps()
 function M.neotree()
-  return require("custom.pdfport.integrations.neotree")
+  return (require("custom.pdfport.integrations.neotree"))
 end
 
 --- Returns the Telescope integration module.
 ---@return table  Module with previewer() and filetype_hook
 function M.telescope()
-  return require("custom.pdfport.integrations.telescope")
+  return (require("custom.pdfport.integrations.telescope"))
 end
 
 --- Returns the fzf-lua integration module.
 ---@return table  Module with preview_fn()
 function M.fzf()
-  return require("custom.pdfport.integrations.fzf")
+  return (require("custom.pdfport.integrations.fzf"))
 end
 
 --- Registers a custom backend.

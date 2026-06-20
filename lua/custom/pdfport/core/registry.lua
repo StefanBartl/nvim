@@ -90,7 +90,7 @@ end
 
 --- Retrieve a renderer function by mode.
 ---@param mode PdfPort.RendererMode
----@return (fun(result: PdfPort.Result, opts: PdfPort.RenderOpts): nil)|nil
+---@return (fun(result: PdfPort.Result, opts: PdfPort.RenderOpts|PdfPort.InternalExtractOpts|PdfPort.OpenOpts): nil)|nil
 function M.get_renderer(mode)
   return _renderers[mode]
 end

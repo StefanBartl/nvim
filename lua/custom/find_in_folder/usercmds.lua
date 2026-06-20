@@ -40,7 +40,7 @@ function M.setup()
   end, {
     nargs = "*",
     desc  = "Fuzzy-find files in a folder  [path] [telescope|fzf]",
-    complete = function(arg_lead, cmd_line, _)
+    complete = function(arg_lead, _, _)
       -- Offer picker names if the word looks like one, else dir completion
       local pickers = { "telescope", "fzf" }
       local completions = {}

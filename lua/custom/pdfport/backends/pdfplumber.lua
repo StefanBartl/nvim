@@ -71,9 +71,31 @@ with pdfplumber.open(path) as pdf:
   local stderr_chunks = {}
   local stdout = uv.new_pipe(false)
   local stderr = uv.new_pipe(false)
+  if not stdout or not stderr then
+    vim.fn.delete(script_file)
+    return {
+      status  = "error",
+      text    = nil,
+      format  = "plain",
+      backend = "pdfplumber",
+      pages_processed = nil,
+      error   = "pdfplumber: failed to create process pipes",
+    }
+  end
 
   local timeout_ms = opts.timeout_ms or 30000
   local timer = uv.new_timer()
+  if not timer then
+    vim.fn.delete(script_file)
+    return {
+      status  = "error",
+      text    = nil,
+      format  = "plain",
+      backend = "pdfplumber",
+      pages_processed = nil,
+      error   = "pdfplumber: failed to create timeout timer",
+    }
+  end
 
   local function cleanup()
     if timer then timer:stop(); timer:close() end
@@ -82,7 +104,7 @@ with pdfplumber.open(path) as pdf:
     vim.fn.delete(script_file)
   end
 
-  local handle = uv.spawn(py, {
+  local handle = uv.spawn("python3", {
     args  = { script_file },
     stdio = { nil, stdout, stderr },
   }, function(code, _)
@@ -126,10 +148,12 @@ with pdfplumber.open(path) as pdf:
     }
   end
 
+  ---@diagnostic disable-next-line: need-check-nil
   stdout:read_start(function(_, data)
     if data then stdout_chunks[#stdout_chunks + 1] = data end
   end)
 
+  ---@diagnostic disable-next-line: need-check-nil
   stderr:read_start(function(_, data)
     if data then stderr_chunks[#stderr_chunks + 1] = data end
   end)
