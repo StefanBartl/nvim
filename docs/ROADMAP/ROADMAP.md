@@ -16,30 +16,22 @@
 
 1. `leader wq`: Alle issues lösen
 2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
-3. `leader toc` sollte eigntlich das erste Level headline nicht angeben (h1_protected = true)
-4. `/custom/pathprope`, `/custom/pathfinder` && `gopath.nvim` vereiraten
+3. `/custom/pathprope`, `/custom/pathfinder` && `gopath.nvim` vereiraten
 
 ---
 
 ## nvim
 
 1. ROADMAP.md durchgehen
-2. `:Copy`
-    1. hat keine ordentliche autocompletions
-    2. `:Copy module [lua/c/js/...]` command, wobei die logik für das erstellen des modulpfades mit `:Isert module` geteilt werden kann
-3. insert mode paste funktioert nicht
-4. TODO usw.. durchgehen
-5. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
-6. Checklisten anwenden
-7. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
+2. TODO usw.. durchgehen
+3. Checklisten anwenden
+4. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
 
 ---
 
 ## nvim: Bugs
 
-1. todo-comments problem mit end line.... einfach keywords eingben, dann schmeißt er in irgendwann
-2. Indent: `A-Left` & `A-Right` funktioniert nicht korrekt mit mehreren Zeilen auf einmal: Es springt der Cursor dann zwischen der Stelle wo er ist und einer anderen hin und her wenn man `A-Left` / `A-Right` merhmals eingibt. Aber nicht immer: Manchmal funktionert es auch. Es muss zuverlässig sein.
-3. `:Gather Lua`
+1. `:Gather Lua`
 
 ---
 
@@ -61,17 +53,14 @@
 
 ### nvim markdown: Low
 
-1. strg+f/p soll auch mit count sein, also
-    - `2, strg+f/p` soll 2 weiter vor/nach hinten springen
-    - `2+leader, strg+f` soll zu nächsten/vorigen 2 level headline springen
-2. `leader toc` sollte eigentlich unter jeder headline `---` sicherstellen
-3. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht
-4. `markdown_render`-implementieren in `:Markdown [] []` usrcmd
-5. `usrcmds.collection` machen wenn diese nirgends anders zueprdnet werden können, dami die uscmds aus der init.lua rauskommen!
+1. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht
+2. `markdown_render`-implementieren in `:Markdown [] []` usrcmd
+3. `usrcmds.collection` machen wenn diese nirgends anders zueprdnet werden können, dami die uscmds aus der init.lua rauskommen!
 
 ---
 
 ## Neotree
+1. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
 
 1. Folgender error:
 
@@ -96,9 +85,5 @@ stack traceback:
 ### Neotree: LOW
 
 1. Vereinen von neotree keymaps filetree: preview;images;pdfprot
-
-## Harpoon
-
-1. Es wäre sinnvoll, dass leader h einen neuen einrtag am ende der liste hinzufügt, nicht zu beginn
 
 ---

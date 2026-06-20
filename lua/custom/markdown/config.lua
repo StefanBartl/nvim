@@ -3,7 +3,6 @@
 
 local M = {}
 
-
 ---@type Custom.MD.Config
 local Defaults = {
   map_double_asterisk      = true,

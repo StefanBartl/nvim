@@ -242,9 +242,9 @@ return {
   },
 
   {
-    -- dir = vim.fn.expand(vim.env.REPOS_DIR .. "/replacer"),
-    "StefanBartl/replacer",
-    cmd = { "Replace", "" },
+    dir = vim.fn.expand(vim.env.REPOS_DIR .. "/replacer"),
+    -- "StefanBartl/replacer",
+    cmd = { "Replace" },
     dependencies = {
       -- wähle je nach Engine:
       "ibhagwan/fzf-lua", -- für engine="fzf"
