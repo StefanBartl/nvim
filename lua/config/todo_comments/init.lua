@@ -12,6 +12,53 @@ end
 
 local KEYWORDS = require("config.todo_comments.keywords")
 
+--- Workaround for an upstream todo-comments bug:
+---   highlight.lua:94 nvim_buf_set_extmark -> "Invalid 'end_col': out of range"
+--- add_highlight() snapshots the buffer lines, then applies extmarks; if the
+--- buffer shrinks in between (e.g. rapidly switching buffers) the cached `#line`
+--- end_col is now past the real line length and the extmark call throws.
+--- add_highlight is a local, so we wrap the module's public highlight() and
+--- temporarily clamp any out-of-range columns while it runs. Highlights still
+--- apply correctly; only the stray error is gone. Idempotent.
+local function patch_highlight_endcol()
+  local ok, hl = pcall(require, "todo-comments.highlight")
+  if not ok or type(hl.highlight) ~= "function" or hl.__endcol_clamped then
+    return
+  end
+
+  local api = vim.api
+  local orig = hl.highlight
+
+  hl.highlight = function(buf, first, last, event)
+    if not api.nvim_buf_is_valid(buf) then
+      return
+    end
+
+    local orig_set = api.nvim_buf_set_extmark
+    api.nvim_buf_set_extmark = function(b, ns, line, col, opts)
+      local snapshot = api.nvim_buf_get_lines(b, line, line + 1, false)
+      local len = snapshot[1] and #snapshot[1] or nil
+      if len == nil then
+        -- Line vanished since the snapshot; drop this extmark instead of erroring.
+        return 0
+      end
+      if col > len then
+        col = len
+      end
+      if opts and type(opts.end_col) == "number" and opts.end_col > len then
+        opts.end_col = len
+      end
+      return orig_set(b, ns, line, col, opts)
+    end
+
+    local ok_run = pcall(orig, buf, first, last, event)
+    api.nvim_buf_set_extmark = orig_set
+    return ok_run
+  end
+
+  hl.__endcol_clamped = true
+end
+
 local function build_keyword_list(keywords)
   ---@type string[]
   local words = {}
@@ -50,6 +97,7 @@ function M.setup(opts)
   opts.highlight.multiline_context = 3
 
   todo.setup(opts)
+  patch_highlight_endcol()
 end
 
 return M

@@ -50,8 +50,10 @@ function M.setup()
     desc = "Paste over selection without yanking it",
   })
 
-  --TODO: funktoinert nicht
-  map("i", "<C-A-S-p>", "<C-r>+", {
+  -- Insert clipboard (+) literally, without triggering auto-indent doubling.
+  -- NOTE: some terminals cannot encode <C-A-S-p>; if it never fires, the
+  -- terminal/GUI is swallowing the chord, not this mapping.
+  map("i", "<C-A-S-p>", "<C-r><C-o>+", {
     noremap = true,
     silent = true,
     desc = "Aus System-Zwischenablage im Insert-Modus einfügen",
@@ -132,18 +134,37 @@ function M.setup()
     { desc = "[Text] Outdent line (insert)", noremap = true, silent = true }
   )
 
+  -- Reliable, repeatable visual (out)dent.
+  -- The old version reselected with `gv`, which reuses the '<,'> columns. After
+  -- a charwise selection is outdented the line gets shorter, those columns are
+  -- clamped, and the cursor flips between the two ends on every press. We work
+  -- purely on the line range and reselect LINEWISE so column clamping can no
+  -- longer move the selection — indent is a whole-line operation anyway.
+  local function visual_shift(direction)
+    local count = vim.v.count1
+    local s = vim.fn.line("'<")
+    local e = vim.fn.line("'>")
+    if s > e then
+      s, e = e, s
+    end
+    for _ = 1, count do
+      helpers.shift_range(s, e, direction)
+    end
+    helpers.maybe_renumber()
+    -- Re-establish a clean linewise selection over the same lines.
+    vim.api.nvim_win_set_cursor(0, { s, 0 })
+    vim.cmd("normal! V")
+    if e > s then
+      vim.api.nvim_win_set_cursor(0, { e, 0 })
+    end
+  end
+
   map("v", "<A-Right>", function()
-    local start_ln = vim.fn.line("'<")
-    local end_ln = vim.fn.line("'>")
-    helpers.shift_range(start_ln, end_ln, 1)
-    vim.cmd("normal! gv")
+    visual_shift(1)
   end, { desc = "[Text] Indent selection", noremap = true, silent = true })
 
   map("v", "<A-Left>", function()
-    local start_ln = vim.fn.line("'<")
-    local end_ln = vim.fn.line("'>")
-    helpers.shift_range(start_ln, end_ln, -1)
-    vim.cmd("normal! gv")
+    visual_shift(-1)
   end, { desc = "[Text] Outdent selection", noremap = true, silent = true })
 
   -- AUDIT: löschen?

@@ -58,23 +58,67 @@ local function is_inside_nvim_config(path)
   return real_path:sub(1, #real_config) == real_config
 end
 
---- Convert file path to Lua module path
+--- Convert file path to Lua module path.
+--- Shares the single source of truth with `:Insert module`.
 ---@param filepath string Absolute path to file
 ---@return string|nil module_path
 local function to_lua_module(filepath)
-  local normalized = normalize(filepath, "/")
-  local lua_idx = normalized:find("/lua/")
+  return require("lib.lua_ls.get_module_path")(filepath)
+end
 
-  if not lua_idx then
-    return nil
+--- Derive a default module style from the current buffer's filetype.
+---@return string style
+local function style_from_filetype()
+  local ft = vim.bo.filetype
+  if ft == "lua" then
+    return "lua"
+  elseif ft == "javascript" or ft == "typescript"
+      or ft == "javascriptreact" or ft == "typescriptreact" then
+    return "js"
+  elseif ft == "c" or ft == "cpp" then
+    return "c"
+  end
+  return "generic"
+end
+
+--- Build a module path string for the given file in the requested style.
+--- - lua/luals/lua_ls -> dotted Lua module (relative to the nearest `lua/` dir)
+--- - any other style  -> path relative to cwd, extension stripped, `/`-separated
+---@param filepath string Absolute path to file
+---@param style string
+---@return string|nil result
+local function build_module_path(filepath, style)
+  style = (style or ""):lower()
+  if style == "lua" or style == "luals" or style == "lua_ls" then
+    return to_lua_module(filepath)
+  end
+  -- Generic: project-relative path without extension (js/ts/c/... import style).
+  local rel = normalize(fn.fnamemodify(filepath, ":."), "/")
+  rel = rel:gsub("%.[^./]+$", "")
+  return rel
+end
+
+--- :Copy module [style] — copy the current file path as a module path.
+---@param args string[]
+local function copy_module(args)
+  local style = args[1]
+  if not style or style == "" then
+    style = style_from_filetype()
   end
 
-  local after_lua = normalized:sub(lua_idx + 5)
-  local without_ext = after_lua:gsub("%.lua$", "")
-  without_ext = without_ext:gsub("/init$", "")
-  local module_path = without_ext:gsub("/", ".")
+  local filepath = fn.expand("%:p")
+  if filepath == "" then
+    notify.warn("No file in current buffer")
+    return
+  end
 
-  return module_path
+  local result = build_module_path(filepath, style)
+  if not result or result == "" then
+    notify.warn(string.format("Could not derive module path (style=%s)", tostring(style)))
+    return
+  end
+
+  copy(result)
 end
 
 -- ============================================================================
@@ -203,51 +247,66 @@ end
 --- Setup user command
 function M.enable()
   api.nvim_create_user_command("Copy", function(opts)
-    local args = vim.split(opts.args, "%s+")
+    local args = vim.split(vim.trim(opts.args), "%s+", { trimempty = true })
+    local sub = args[1]
 
-    if #args == 0 or args[1] ~= "path" then
-      notify.error("Usage: :Copy path [options]")
-      return
+    if sub == "path" then
+      table.remove(args, 1)
+      copy_path(args)
+    elseif sub == "module" then
+      table.remove(args, 1)
+      copy_module(args)
+    else
+      notify.error("Usage: :Copy path|module [options]")
     end
-
-    -- Remove "path" from args
-    table.remove(args, 1)
-
-    copy_path(args)
   end, {
     nargs = "*",
-    ---@diagnostic disable-next-line: unused-local
-    complete = function(arg_lead, cmd_line, _)
-      -- Base completions
-      local completions = {
-        "path",
-        "absolute",
-        "relative",
-        "nvim",
-        "nvim_module",
-        "file",
-        "dir",
-        "sep",
-        "separator",
-        "0",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
+    complete = function(arg_lead, cmd_line, cursor_pos)
+      -- Subcommands and their option sets.
+      local subcommands = { "path", "module" }
+      local path_options = {
+        "absolute", "relative", "nvim", "nvim_module",
+        "file", "dir", "sep", "separator",
+        "0", "1", "2", "3", "4", "5",
       }
+      local module_styles = { "lua", "luals", "lua_ls", "js", "ts", "c", "cpp", "generic" }
 
-      -- Filter based on what's already typed
-      local filtered = {}
-      for _, comp in ipairs(completions) do
-        if comp:sub(1, #arg_lead) == arg_lead then
-          table.insert(filtered, comp)
+      local function filter(cands)
+        local out = {}
+        for _, c in ipairs(cands) do
+          if c:sub(1, #arg_lead) == arg_lead then
+            out[#out + 1] = c
+          end
         end
+        return out
       end
 
-      return filtered
+      -- Determine which argument position we are completing.
+      local before = cmd_line:sub(1, cursor_pos)
+      local toks = vim.split(vim.trim(before), "%s+", { trimempty = true })
+      -- toks[1] == "Copy". When arg_lead is non-empty, its partial is the last token.
+      local completed = (arg_lead ~= "") and (#toks - 2) or (#toks - 1)
+      local sub = toks[2]
+
+      if completed <= 0 then
+        -- Completing the subcommand itself.
+        return filter(subcommands)
+      end
+
+      if sub == "path" then
+        -- Path options may appear in any order/repetition.
+        return filter(path_options)
+      elseif sub == "module" then
+        -- Only the first argument after `module` is the style.
+        if completed == 1 then
+          return filter(module_styles)
+        end
+        return {}
+      end
+
+      return {}
     end,
-    desc = "[Copy] Copy paths to clipboard with flexible options",
+    desc = "[Copy] Copy paths/module paths to clipboard with flexible options",
   })
 
   attach_keymap()

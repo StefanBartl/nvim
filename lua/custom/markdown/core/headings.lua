@@ -8,42 +8,57 @@ local api, fn = vim.api, vim.fn
 local cfg = require("custom.markdown.config").get
 
 -- ============================================================================
--- Helper: navigate to previous / next heading (H2+) with optional count for level
+-- Helper: navigate to previous / next heading (H2+)
 -- ============================================================================
----Navigate to previous heading. With count, jumps to heading of that level.
+
+-- Matches any H2+ ATX heading.
+local ANY_HEADING = "^##\\+\\s\\+.*$"
+
+---Build a Vim regex that matches a heading of an exact level.
+---@param level integer
+---@return string
+local function level_pattern(level)
+  return "^" .. string.rep("#", level) .. "\\s\\+.*$"
+end
+
+---Navigate to previous heading (H2+). With a count, moves that many headings.
+---e.g. 2<C-p> jumps two headings back.
 ---@return nil
 function M.goto_prev_heading()
-  local count = vim.v.count
-  local pattern
-
-  if count > 0 then
-    -- With count: jump to heading of specific level (e.g., 2<C-p> -> ## heading)
-    local hashes = string.rep("#", count)
-    pattern = "^" .. hashes .. "\\s\\+.*$"
-  else
-    -- Without count: jump to any H2+ heading
-    pattern = "^##\\+\\s\\+.*$"
+  for _ = 1, vim.v.count1 do
+    vim.fn.search(ANY_HEADING, "bWs")
   end
+  vim.cmd("nohlsearch")
+end
 
+---Navigate to next heading (H2+). With a count, moves that many headings.
+---e.g. 2<C-f> jumps two headings forward.
+---@return nil
+function M.goto_next_heading()
+  for _ = 1, vim.v.count1 do
+    vim.fn.search(ANY_HEADING, "Ws")
+  end
+  vim.cmd("nohlsearch")
+end
+
+---Jump to the previous heading of a specific level (count = level).
+---e.g. 2<leader><C-p> jumps to the previous `## ` heading. Without a count it
+---falls back to any H2+ heading.
+---@return nil
+function M.goto_prev_heading_level()
+  local count = vim.v.count
+  local pattern = count > 0 and level_pattern(count) or ANY_HEADING
   vim.fn.search(pattern, "bWs")
   vim.cmd("nohlsearch")
 end
 
----Navigate to next heading. With count, jumps to heading of that level.
+---Jump to the next heading of a specific level (count = level).
+---e.g. 2<leader><C-f> jumps to the next `## ` heading. Without a count it falls
+---back to any H2+ heading.
 ---@return nil
-function M.goto_next_heading()
+function M.goto_next_heading_level()
   local count = vim.v.count
-  local pattern
-
-  if count > 0 then
-    -- With count: jump to heading of specific level (e.g., 2<C-f> -> ## heading)
-    local hashes = string.rep("#", count)
-    pattern = "^" .. hashes .. "\\s\\+.*$"
-  else
-    -- Without count: jump to any H2+ heading
-    pattern = "^##\\+\\s\\+.*$"
-  end
-
+  local pattern = count > 0 and level_pattern(count) or ANY_HEADING
   vim.fn.search(pattern, "Ws")
   vim.cmd("nohlsearch")
 end

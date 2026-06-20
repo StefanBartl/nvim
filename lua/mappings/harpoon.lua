@@ -38,8 +38,22 @@ function M.setup()
 
   map("n", "<leader>h", function()
     local list = harpoon:list()
+    -- harpoon:add() fills the FIRST nil gap in items (1.._length+1), so if a
+    -- persisted/pinned slot was removed earlier the new file lands in that hole
+    -- near the top. Compact the holes away first so add() always appends at the
+    -- real end of the list.
+    local items = list.items or {}
+    local len = list._length or #items
+    local compact = {}
+    for i = 1, len do
+      if items[i] ~= nil then
+        compact[#compact + 1] = items[i]
+      end
+    end
+    list.items = compact
+    list._length = #compact
     list:add()
-  end, { desc = "[HARPOON] Add current file (append)" })
+  end, { desc = "[HARPOON] Add current file (append at end)" })
 
   map("n", "<C-e>", function()
     vim.cmd("HarpoonPersistPathsReload")

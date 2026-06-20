@@ -100,13 +100,22 @@ function M.apply(bufnr)
   end
 
   -- Headings navigation -------------------------------------------------------
+  -- <C-p>/<C-f> (and [[ / ]]): count = number of headings to move (e.g. 2<C-f>).
+  -- <leader><C-p>/<leader><C-f>: count = target heading level (e.g. 2<leader><C-f>
+  -- jumps to the next `## ` heading).
   if headings.goto_prev_heading then
-    map({ "n", "v", "x" }, "<C-p>", headings.goto_prev_heading, "[custom.markdown] Previous heading (H2+)", o)
-    map("n", "[[", headings.goto_prev_heading, "[custom.markdown] Previous heading", o)
+    map({ "n", "v", "x" }, "<C-p>", headings.goto_prev_heading, "[custom.markdown] Previous heading (count = how many)", o)
+    map("n", "[[", headings.goto_prev_heading, "[custom.markdown] Previous heading (count = how many)", o)
   end
   if headings.goto_next_heading then
-    map({ "n", "v", "x" }, "<C-f>", headings.goto_next_heading, "[custom.markdown] Next heading (H2+)", o)
-    map("n", "]]", headings.goto_next_heading, "[custom.markdown] Next heading", o)
+    map({ "n", "v", "x" }, "<C-f>", headings.goto_next_heading, "[custom.markdown] Next heading (count = how many)", o)
+    map("n", "]]", headings.goto_next_heading, "[custom.markdown] Next heading (count = how many)", o)
+  end
+  if headings.goto_prev_heading_level then
+    map({ "n", "v", "x" }, "<leader><C-p>", headings.goto_prev_heading_level, "[custom.markdown] Previous heading of level N (count = level)", o)
+  end
+  if headings.goto_next_heading_level then
+    map({ "n", "v", "x" }, "<leader><C-f>", headings.goto_next_heading_level, "[custom.markdown] Next heading of level N (count = level)", o)
   end
   -- Folding controls ----------------------------------------------------------
   map("n", "<localleader>f", fold.toggle_under_cursor, "[custom.markdown] Toggle fold under cursor & center", o)
@@ -143,7 +152,7 @@ function M.apply(bufnr)
       local max_level = count > 0 and count or nil
 
       toc.update_markdown_toc("## Table of content", {
-        min_level = 1,
+        min_level = 2,
         max_level = max_level,
       })
     end, "[custom.markdown] Insert/Refresh TOC (count = max heading level)", o)

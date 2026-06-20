@@ -12,6 +12,16 @@
 
 ---
 
+## nvim: ZIEL
+
+1. ROADMAP.md durchgehen
+2. Alle plugin fähigen Module augliedern
+3. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
+4. TODO usw.. durchgehen
+5. Checklisten anwenden
+
+---
+
 ## nvim: High
 
 1. `leader wq`: Alle issues lösen
@@ -22,10 +32,7 @@
 
 ## nvim
 
-1. ROADMAP.md durchgehen
-2. TODO usw.. durchgehen
-3. Checklisten anwenden
-4. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
+1. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
 
 ---
 
@@ -41,9 +48,8 @@
 2. Durchsuchen %/cwd/path nach einen bestimmten String, alle Treffer sollen je nach eingabe mit char sumhüllt werden, zb ``, ''. "" oder **. Das soll abgefragt werden bzw bei einen usrcmd angegebn werden können wenn.
 3. claude code . avante nvim plugin anschauen wenn lizernz da ist
 4. repo_picker, dir_picker, usw... lässt es sich fusionieren?
-5. Module als pugins auslagern: umso mehr aus der config weg ist, umso weniger lsp probleme wird es geben
-6. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
-7. In allen modulen  `/bindings` und dort dann
+5. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
+6. In allen modulen  `/bindings` und dort dann
     - `usrcmds`
     - `keymaps`
     - `autocmds`
