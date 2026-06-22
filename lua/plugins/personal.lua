@@ -25,6 +25,7 @@ return {
 
   {
     "StefanBartl/pickers.nvim",
+    lazy = false,
     dependencies = { "StefanBartl/lib.nvim" },
     config = function()
       require("pickers").setup({

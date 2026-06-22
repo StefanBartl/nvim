@@ -20,9 +20,6 @@ I've mapped the whole `custom/` and `usrcmds/` surface (plus how the commands an
 
 ## Tier 1 — strong overlap, real duplication
 
-### 2. `custom/pathfinder` + `custom/pathprobe` (your example) ✓
-Both take text (selection / `<cfile>`) → sanitize → resolve to a real on-disk file across candidate roots → open at line/col. `pathfinder` has the richer `extractor/` + `finder.lua`; `pathprobe` is a single-file specialization for truncated error-message paths. → **pathprobe becomes a resolution strategy inside pathfinder**, sharing the extractor + root-search + open logic.
-
 ### 3. `custom/insert` + `usrcmds/copy` → shared path-text core
 `:Insert filepath|module` (inserts at cursor) and `:Copy path|module` (to clipboard) format the *same* things: cwd-relative / absolute / lua-module / custom separator / depth. We already shared `get_module_path` last session — the rest (modes/formats/depth) is still duplicated in both. → extract one path-formatting core; Insert and Copy become two *sinks* (cursor vs clipboard).
 

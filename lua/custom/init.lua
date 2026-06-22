@@ -1,15 +1,6 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
-require("custom.dir_picker").setup({
-  default_engine  = "telescope",   -- or "fzf"
-  fallback_engine = "fzf",
-  -- optional: add or override named depth aliases
-  depth_aliases = {
-    work = function() return "/home/user/work" end,
-  },
-})
-
 ---AUDIT:
 require("custom.diff").enable({
   diff_exit   = true,
@@ -60,7 +51,6 @@ require("custom.diff").enable({
       })
 
 
-require("custom.find_in_folder").setup({ keymaps = true, usercmds = true })
 require("custom.open").setup()
 ---AUDIT
 require("custom.commands_keymaps").setup({
@@ -134,15 +124,8 @@ require("custom.filecycle").setup({
   usercommands = true,
 })
 
-require("custom.find_config").setup({ engine = "telescope" })
 require("custom.markdown").setup()
 require("custom.pathprobe").enable_keymaps()
-require("custom.repo_pickers").enable({
-  selector = "auto", -- "auto" | "vim_select" | "telescope" | "fzf"
-  engine = "auto", -- "auto" | "telescope" | "fzf"
-  expose_engine_cmds = false,
-  keymaps_lhs = { repo_files = "<leader>rf", repo_grep = "<leader>rg" },
-}, { usercmds = true, keymaps = true })
 require("custom.pathfinder").setup({})
 
 -- AUDIT:

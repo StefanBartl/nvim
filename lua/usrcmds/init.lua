@@ -23,8 +23,6 @@ require("usrcmds.migrate").setup({
     notify = true, -- `MigrateNotify`
 })
 require("usrcmds.reload").enable()
-require("usrcmds.search_all_drives").enable()
-require("usrcmds.system_find").enable_usercmds()
 require("usrcmds.update_repos").enable()
 require("usrcmds.uv_doc").enable_usercmd()
 

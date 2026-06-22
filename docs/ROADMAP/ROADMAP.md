@@ -20,7 +20,13 @@
 4. TODO usw.. durchgehen
 5. Checklisten anwenden, auch auf die customplugins
   1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
-6. Module und Plugins durchgehen und CHEATSHEETSA schreibenm. Jedes repo soll auch eigene /docs/BINDINGS.lua haben mit allen keymaps, usrcmds aber auch die autocmds!
+
+---
+
+## CUSTOM PLUGINS
+
+1. Module und Plugins durchgehen und CHEATSHEETS schreibenm. Jedes repo soll auch eigene /docs/BINDINGS.lua haben mit allen keymaps, usrcmds aber auch die autocmds!
+2. `lib.nvim` auf alle plugins anwenden (als dependency)
 
 ---
 
@@ -28,10 +34,9 @@
 
 1. `leader wq`: Alle issues lösen
 2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
-3. `/custom/pathprope`, `/custom/pathfinder` && `gopath.nvim` vereiraten
-4. [avante](./avante.md) letzter teil umsetzen.
-5. avante: usrcmds erstellen
-6. gp. gegen avante testen
+3. [avante](./avante.md) letzter teil umsetzen1
+  1. avante: usrcmds erstellen
+  2. gp. gegen avante testen
 
 ---
 
