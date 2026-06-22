@@ -7,10 +7,10 @@
 ---   - Dot/method index: obj.field, obj:method()
 ---   - Function declarations: function M.run() / M:run()
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local ts = lazy.require("..utils.ts_helpers")
 local txt = lazy.require("..utils.text_utils")
-local memo = lazy.require("lib.memo")
+local memo = lazy.require("lib.lua.memo")
 
 local M = {}
 

@@ -1,7 +1,7 @@
 ---@module 'custom.markdown.setup.autocmds'
 ---@description Lightweight FileType hook (extensible). Installs buffer-local keymaps and usercommands for Markdown filetypes.
 
-local notify = require("lib.notify").create("[custom.markdown.setup.autocmds]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.setup.autocmds]")
 local M = {}
 
 local api = vim.api

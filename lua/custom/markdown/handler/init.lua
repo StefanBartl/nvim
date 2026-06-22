@@ -2,7 +2,7 @@
 --- Central handler for context-sensitive Markdown actions.
 --- Dispatches to image, url, file, or TOC/anchor navigation based on the line under cursor.
 
-local notify = require("lib.notify").create("[custom.markdown.handler]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.handler]")
 
 local M = {}
 

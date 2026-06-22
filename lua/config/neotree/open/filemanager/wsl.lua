@@ -1,7 +1,7 @@
 ---@module 'config.neotree.open_filemanager.wsl'
 --- WSL-specific "open in file manager" for Neo-tree
 
-local notify = require("lib.notify").create("[config.neotree.open.filemanager.wsl]")
+local notify = require("lib.nvim.notify").create("[config.neotree.open.filemanager.wsl]")
 
 local node_utils = require("config.neotree.utils.node")
 
@@ -18,7 +18,7 @@ M = {
 ---@return boolean
 local function is_wsl()
   -- Prefer user helper if present
-  local ok, mod = pcall(require, "lib.cross.platform.is_wsl")
+  local ok, mod = pcall(require, "lib.nvim.cross.platform.is_wsl")
   if ok and type(mod) == "function" then
     local ok2, ans = pcall(mod)
     if ok2 and type(ans) == "boolean" then

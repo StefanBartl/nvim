@@ -10,7 +10,7 @@
 --- Provider order (default):
 ---   lsp_func → ts_symbol → container → lang_extra → word
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
 
 -- Core modules

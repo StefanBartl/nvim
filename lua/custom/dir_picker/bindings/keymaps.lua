@@ -6,7 +6,7 @@ local M = {}
 --- Registers the <leader>fd keymap in normal mode.
 ---@return nil
 function M.enable()
-  local map = (vim.g.__map_helper) or require("lib.map")
+  local map = (vim.g.__map_helper) or require("lib.nvim.map")
 
   map("n", "<leader>dp", function()
     vim.ui.input({
@@ -26,7 +26,7 @@ function M.enable()
         require("custom.dir_picker.core").pick(depth_arg, choice, raw_args)
       end
 
-      local ok, hover = pcall(require, "lib.ui.hover_select")
+      local ok, hover = pcall(require, "lib.nvim.ui.hover_select")
       if ok and hover and type(hover.open) == "function" then
         hover.open({ title = "Picker Engine", items = engines, on_select = dispatch })
       else

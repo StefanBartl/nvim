@@ -1,7 +1,7 @@
 ---@module 'config.neotree.actions.copy.to_clipboard'
 ---@brief Copy entries to system clipboard with preview and formatting options
 
-local notify = require("lib.notify").create("[config.neotree.actions.copy.to_clipboard]")
+local notify = require("lib.nvim.notify").create("[config.neotree.actions.copy.to_clipboard]")
 
 local M = {}
 

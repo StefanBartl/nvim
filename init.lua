@@ -20,6 +20,34 @@ if not vim.uv.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Bootstrap lib.nvim
+-- lib.nvim is a foundational dependency: plugin specs in lua/plugins/*.lua
+-- require config modules that use lib.* already during the spec-import phase of
+-- lazy.setup(). It must therefore be on the runtimepath BEFORE the specs are
+-- imported, so we bootstrap it the same way as lazy.nvim itself. The lazy spec
+-- in plugins/personal.lua keeps it updatable; this only guarantees early
+-- availability.
+local libpath = vim.fn.stdpath("data") .. "/lazy/lib.nvim"
+if not vim.uv.fs_stat(libpath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/StefanBartl/lib.nvim.git",
+    libpath,
+  })
+end
+vim.opt.rtp:prepend(libpath)
+-- lazy.nvim installs its own module loader that does not search runtimepath
+-- entries we add here, so during the plugin spec-import phase `require("lib.*")`
+-- would still fail. Register lib.nvim on package.path as well — the C require
+-- searcher is the universal fallback that lazy does not replace.
+package.path = table.concat({
+  libpath .. "/lua/?.lua",
+  libpath .. "/lua/?/init.lua",
+  package.path,
+}, ";")
+
 -- Setup lazy.nvim with plugins
 local lazy_config = require("config.lazy")
 require("lazy").setup({

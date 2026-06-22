@@ -1,12 +1,12 @@
 ---@module 'debugging.capture.clipboard'
 --- Clipboard helpers using lib.cross for platform detection.
 
-local notify = require("lib.notify").create("[debugging.views.capture.clipboard]")
+local notify = require("lib.nvim.notify").create("[debugging.views.capture.clipboard]")
 
-local lazy = require("lib.lazy")
-local has_exec = lazy.require("lib.nvim").has_exec
-local cross = lazy.require("lib.cross")
-local run_argv = lazy.require("lib.cross.run_argv")
+local lazy = require("lib.lua.lazy")
+local has_exec = lazy.require("lib.nvim.core").has_exec
+local cross = lazy.require("lib.nvim.cross")
+local run_argv = lazy.require("lib.nvim.cross.run_argv")
 
 ---@param text string
 ---@param debug boolean

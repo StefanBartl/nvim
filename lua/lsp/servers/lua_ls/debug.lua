@@ -2,13 +2,13 @@
 --- Utilities for debugging LuaLS setup: root detection and workspace library inspection.
 
 -- Use the appropriate async I/O library (vim.uv preferred, vim.loop fallback)
-local notify = require("lib.notify").create("[lsp.servers.lua_ls.debug]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.lua_ls.debug]")
 
 local uv = vim.uv or vim.loop
 
 -- Import filesystem helper utilities
-local is_subpath = require("lib.fs.is_subpath")
-local find_upward_dir = require("lib.fs.find_upward_dir")
+local is_subpath = require("lib.nvim.fs.is_subpath")
+local find_upward_dir = require("lib.nvim.fs.find_upward_dir")
 
 ---@class LuaLsDebug
 local M = {}

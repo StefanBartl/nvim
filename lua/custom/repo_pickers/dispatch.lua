@@ -1,6 +1,6 @@
 ---@module 'custom.repo_pickers.dispatch'
 --- Engine resolution and direct execution helpers (no need for engine-specific user commands).
-local notify = require("lib.notify").create("[custom.repo_pickers.dispatch]")
+local notify = require("lib.nvim.notify").create("[custom.repo_pickers.dispatch]")
 
 require("custom.repo_pickers.@types.types")
 

@@ -2,7 +2,7 @@
 --- Central configuration loader with statusline variant selection.
 --- Loads base46 config once and applies selected statusline variant.
 
-local notify = require("lib.notify").create("[wkdnvchad.config]")
+local notify = require("lib.nvim.notify").create("[wkdnvchad.config]")
 
 local M = {}
 

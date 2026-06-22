@@ -9,7 +9,7 @@
 ---    * If selection is URL/path: Wrap with `()` and prepend `[]`, cursor inside `[]`
 ---    * Otherwise: Wrap with `[]`, append `()`, cursor inside `()`
 
-local notify = require("lib.notify").create("[custom.markdown.core.wrap_link]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.core.wrap_link]")
 
 local M = {}
 local api = vim.api

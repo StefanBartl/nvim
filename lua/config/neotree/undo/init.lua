@@ -2,7 +2,7 @@
 --- Neo-tree undo functionality: restore last trashed item from system trash
 --- Cross-platform support for Windows, Linux, and macOS
 
-local notify = require("lib.notify").create("[config.neotree.undo]")
+local notify = require("lib.nvim.notify").create("[config.neotree.undo]")
 
 local M = {}
 

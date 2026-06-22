@@ -1,7 +1,7 @@
 -- lua/config/neotree/sources/registry.lua
 ---@module 'config.neotree.sources.registry'
 
-local notify = require("lib.notify").create("[config.neotree.sources.registry]")
+local notify = require("lib.nvim.notify").create("[config.neotree.sources.registry]")
 
 local M = {}
 

@@ -3,7 +3,7 @@
 --- This file keeps the section registration idempotent and lightweight.
 
 ---@type table
-local notify = require("lib.notify").create("[config.snacks.custom_dashboard.sections]")
+local notify = require("lib.nvim.notify").create("[config.snacks.custom_dashboard.sections]")
 
 local M = {}
 

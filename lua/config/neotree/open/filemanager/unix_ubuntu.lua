@@ -2,7 +2,7 @@
 --- Open current Neo-tree node in the system file manager with selection support.
 --- FIXED: Uses node_utils.get_current() for consistent node retrieval
 
-local notify = require("lib.notify").create("[config.neotree.open.filemanager.unix_ubutnu]")
+local notify = require("lib.nvim.notify").create("[config.neotree.open.filemanager.unix_ubutnu]")
 
 local M = {}
 

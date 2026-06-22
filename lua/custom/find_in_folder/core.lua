@@ -11,7 +11,7 @@
 --- `find_files` implementation so this module stays free of picker-specific
 --- knowledge beyond the interface contract.
 
-local notify = require("lib.notify").create("[find_in_folder]")
+local notify = require("lib.nvim.notify").create("[find_in_folder]")
 
 local M = {}
 

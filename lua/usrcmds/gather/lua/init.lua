@@ -1,11 +1,11 @@
 ---@module 'usrcmds.gather.lua'
 ---@description Entry point for Lua gather commands with buffer and cwd modes
 
-local notify = require("lib.notify").create("[usrcmds.gather.lua]")
+local notify = require("lib.nvim.notify").create("[usrcmds.gather.lua]")
 
 require("usrcmds.gather.@types")
 
-local hover_select = require("lib.ui.hover_select")
+local hover_select = require("lib.nvim.ui.hover_select")
 
 local M = {}
 

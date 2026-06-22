@@ -2,7 +2,7 @@
 require("custom.filecycle.@types")
 
 local api = vim.api
-local notify = require("lib.notify").create("[filecycle]")
+local notify = require("lib.nvim.notify").create("[filecycle]")
 local core = require("custom.filecycle.core")
 
 local M = {}

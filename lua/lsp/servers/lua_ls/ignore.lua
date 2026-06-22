@@ -18,7 +18,7 @@ local M = {}
 --- Raw list of directory names commonly ignored.
 --- These are loaded from a centralized ignore list module.
 --- @type string[]
-M._names = require("lib.fs.ignore.list").as_luals_patterns()
+M._names = require("lib.nvim.fs.ignore.list").as_luals_patterns()
 
 --- Platform-normalize a name for consistent comparisons (no filesystem IO).
 --- On Windows this lower-cases strings for case-insensitive comparison.

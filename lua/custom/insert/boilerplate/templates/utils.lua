@@ -1,7 +1,7 @@
 ---@module 'custom.insert.boilerplate.templates.utils'
 ---@brief Common utilities for template generation
 
-local notify = require("lib.notify").create("[custom.insert.boilerplate.templates.utils]")
+local notify = require("lib.nvim.notify").create("[custom.insert.boilerplate.templates.utils]")
 
 local M = {}
 

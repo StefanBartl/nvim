@@ -3,7 +3,7 @@
 
 local M = {}
 
-local notify = require("lib.notify").create("[LSP.Start] ")
+local notify = require("lib.nvim.notify").create("[LSP.Start] ")
 local lsp = vim.lsp
 
 --- Get filetype-to-server mapping

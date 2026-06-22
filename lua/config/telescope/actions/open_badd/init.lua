@@ -1,7 +1,7 @@
 ---@module 'config.telescope.actions.open_badd'
 ---@description Open file in background buffer without closing Telescope
 
-local notify = require("lib.notify").create("[config.telescope.actions.open_badd]")
+local notify = require("lib.nvim.notify").create("[config.telescope.actions.open_badd]")
 
 local M = {}
 

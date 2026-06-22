@@ -1,7 +1,7 @@
 ---@module 'custom.dir_picker.core'
 ---@brief Core resolution and engine dispatch logic for dir_picker.
 
-local notify  = require("lib.notify").create("[dir_picker.core]")
+local notify  = require("lib.nvim.notify").create("[dir_picker.core]")
 local cfg_mod = require("custom.dir_picker.config")
 
 local M = {}

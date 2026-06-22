@@ -2,9 +2,9 @@
 --- Git hunk preview via gitsigns.nvim integration.
 --- Maps `gh` to inline/float hunk preview when gitsigns is available.
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
-local notify = lazy.require("lib.notify").create("[DiffPeek]")
+local notify = lazy.require("lib.nvim.notify").create("[DiffPeek]")
 
 local M = {}
 

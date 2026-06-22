@@ -1,6 +1,6 @@
 ---@module 'config.neotree.keymaps.filesystem.info'
 
-local notify = require("lib.notify").create("[cfg.neotree.keymaps.fs.info] ")
+local notify = require("lib.nvim.notify").create("[cfg.neotree.keymaps.fs.info] ")
 
 local node_utils = require("config.neotree.utils.node")
 local line_counter = require("config.neotree.utils.line_count")

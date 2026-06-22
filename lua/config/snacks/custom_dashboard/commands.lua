@@ -2,7 +2,7 @@
 --- Dashboard-specific commands and keymaps.
 --- Keep mappings local, minimal, and guarded.
 
-local notify = require("lib.notify").create("[config.snacks.custom_dashboard.commands]")
+local notify = require("lib.nvim.notify").create("[config.snacks.custom_dashboard.commands]")
 
 local api = vim.api
 local utils_ok, utils = pcall(require, "config.snacks.custom_dashboard.utils")

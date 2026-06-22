@@ -3,7 +3,7 @@
 --- Supports "highlight" and underline-family (underline/undercurl/underdouble/underdotted/underdashed).
 --- Slices: leadingchar | word | tailchar | firstN
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config") ---@module 'wkdoptions.config'
 
 local M = {}

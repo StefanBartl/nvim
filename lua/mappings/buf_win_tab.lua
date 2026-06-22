@@ -44,7 +44,7 @@ function M.setup()
   map("n", "<C-j>", "<C-w>j", { desc = "[Window] Jump down" })
   map("n", "<C-k>", "<C-w>k", { desc = "[Window] Jump up" })
 
-  local resize_guarded = require("lib.buf_win_tab.resize_guarded")
+  local resize_guarded = require("lib.nvim.buf_win_tab.resize_guarded")
   local exclude_filetypes = {
     "terminal",
     "TelescopePrompt",

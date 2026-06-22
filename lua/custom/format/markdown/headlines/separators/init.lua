@@ -6,7 +6,7 @@
 ---
 --- Core logic migrated from custom.markdown.core.headline_spacing
 
-local notify = require("lib.notify").create("[custom.format.markdown.headlines.separators]")
+local notify = require("lib.nvim.notify").create("[custom.format.markdown.headlines.separators]")
 
 local M = {}
 local api = vim.api

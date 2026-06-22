@@ -2,7 +2,7 @@
 ---@brief Enhanced clipboard operations with mark support.
 --- Cross-platform clipboard operations for Neo-tree using native libuv APIs.
 
-local notify = require("lib.notify").create("[neotree.commands.clipboard]")
+local notify = require("lib.nvim.notify").create("[neotree.commands.clipboard]")
 local node_utils = require("config.neotree.utils.node")
 local layout_guard = require("config.neotree.layout_guard")
 

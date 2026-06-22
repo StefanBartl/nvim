@@ -1,7 +1,7 @@
 ---@module 'config.neotest.actions'
 --- Centralized Neotest actions usable by keymaps, usercommands and menus.
 
-local notify = require("lib.notify").create("[config.neotest.actions]")
+local notify = require("lib.nvim.notify").create("[config.neotest.actions]")
 
 local M = {}
 

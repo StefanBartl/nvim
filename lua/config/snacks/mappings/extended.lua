@@ -2,7 +2,7 @@
 --- Keymap definitions for custom Snacks dashboard.
 --- Expose keys() which returns the array expected by the plugin spec.
 
-local notify = require("lib.notify").create("[config.snacks.mappings]")
+local notify = require("lib.nvim.notify").create("[config.snacks.mappings]")
 
 local M = {}
 

@@ -18,8 +18,8 @@
 ---   :Snacks find files    (with autocompletion)
 ---   :Snacks git branches  (with autocompletion)
 
-local usercmd = require("lib.usercmd")
-local notify = require("lib.notify").create("[config.snacks.usrcmds]")
+local usercmd = require("lib.nvim.usercmd")
+local notify = require("lib.nvim.notify").create("[config.snacks.usrcmds]")
 
 local M = {}
 

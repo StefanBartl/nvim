@@ -10,7 +10,7 @@
 --- Each migration type provides callbacks for scanning and applying.
 
 require("usrcmds.migrate.common.@types")
-local notify = require("lib.notify").create("[usrcmds.migrate]")
+local notify = require("lib.nvim.notify").create("[usrcmds.migrate]")
 
 local M = {}
 

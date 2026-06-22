@@ -1,7 +1,7 @@
 ---@module 'config.neotree.trash'
 ---@brief Main orchestrator for Neo-tree trash functionality
 
-local notify = require("lib.notify").create("[neotree.trash]")
+local notify = require("lib.nvim.notify").create("[neotree.trash]")
 
 -- Submodules
 local platform = require("config.neotree.trash.platform")

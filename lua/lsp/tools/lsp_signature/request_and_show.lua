@@ -7,7 +7,7 @@
 ---
 --- Behavior is best-effort and asynchronous. The module uses a small deferred check to avoid
 --- launching fallback providers when hover already produced a floating preview.
-local notify = require("lib.notify").create("[lsp.tools.lsp_signature.request_and_show]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.lsp_signature.request_and_show]")
 
 local api = vim.api
 local schedule = vim.schedule

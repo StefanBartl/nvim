@@ -1,7 +1,7 @@
 ---@module 'config.neotree.safety.dry_run'
 ---@brief Dry-run mode for testing file operations without executing them
 
-local notify = require("lib.notify").create("[config.neotree.safety.dry_run]")
+local notify = require("lib.nvim.notify").create("[config.neotree.safety.dry_run]")
 
 local M = {}
 

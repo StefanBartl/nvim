@@ -5,7 +5,7 @@
 --- that are both enabled in the entries list and implemented in
 --- config.neotree.keymaps().window().
 
-local notify = require("lib.notify").create("[config.menu.neotree]")
+local notify = require("lib.nvim.notify").create("[config.menu.neotree]")
 
 require("config.@types.menu")
 

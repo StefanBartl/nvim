@@ -1,7 +1,7 @@
 ---@module 'wkdnvchad.config.statusline.custom'
 --- Statusline using NvChad's gen_block pattern
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local render_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl.renderer")
 local progr_calc_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl.progress_calculators")
 local hl_module = lazy.require("wkdnvchad.ui.statusline.modules.highlighting")

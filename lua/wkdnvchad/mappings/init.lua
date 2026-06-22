@@ -1,17 +1,17 @@
 ---@module 'wkdnvchad.mappings'
 --- Mappings using lib.map for consistency
 
-local notify = require("lib.notify").create("[wkdnvchad.mappings]")
+local notify = require("lib.nvim.notify").create("[wkdnvchad.mappings]")
 
 local M = {}
 
 -- Use lib for all mappings
-local map = require("lib.map")
-local lazy = require("lib.lazy")
+local map = require("lib.nvim.map")
+local lazy = require("lib.lua.lazy")
 
 -- Lazy-load heavy modules
 local custom_tabufline = lazy.require("wkdnvchad.mappings.tabufline")
-local move_buf_tab = lazy.require("lib.buf_win_tab.move_buffer_to_tab")
+local move_buf_tab = lazy.require("lib.nvim.buf_win_tab.move_buffer_to_tab")
 
 ---@nodiscard
 ---@return integer

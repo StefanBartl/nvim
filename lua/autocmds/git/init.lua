@@ -11,14 +11,14 @@ local api = vim.api
 -- Helpers
 --------------------------------------------------------------------------------
 
-local lazy = require("lib.lazy")
-local augroup_lib = lazy.require("lib.autocmd.augroup")
+local lazy = require("lib.lua.lazy")
+local augroup_lib = lazy.require("lib.nvim.autocmd.augroup")
 local augroup = augroup_lib.create.clear
-local autocmd_lib = lazy.require("lib.autocmd")
+local autocmd_lib = lazy.require("lib.nvim.autocmd")
 local norm_events = autocmd_lib.norm_events
-local in_git_repo = lazy.require("lib.git").in_git_repo
+local in_git_repo = lazy.require("lib.nvim.git").in_git_repo
 local NS_LINE_DIFF = api.nvim_create_namespace("git_line_diff_preview") -- Namespace for inline virtual text previews (line_diff_on_hold).
-local clear_line_diff = require("lib.git").clear_line_diff(NS_LINE_DIFF)
+local clear_line_diff = require("lib.nvim.git").clear_line_diff(NS_LINE_DIFF)
 
 ---Return true if the current buffer is a "normal" file buffer (not special/ignored).
 ---@param ignore_buftypes string[]|nil

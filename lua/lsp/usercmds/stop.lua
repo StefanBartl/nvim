@@ -3,7 +3,7 @@
 
 local M = {}
 
-local notify = require("lib.notify").create("[LSP.Stop] ")
+local notify = require("lib.nvim.notify").create("[LSP.Stop] ")
 local lsp = vim.lsp
 
 --- Get clients attached to buffer

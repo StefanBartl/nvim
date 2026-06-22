@@ -3,7 +3,7 @@
 --- Requires bash-language-server in PATH (Mason: bash-language-server).
 --- Diagnostics are powered by shellcheck when available.
 
-local notify = require("lib.notify").create("[lsp.languages.scriipting.shell]")
+local notify = require("lib.nvim.notify").create("[lsp.languages.scriipting.shell]")
 
 local lsp = vim.lsp
 

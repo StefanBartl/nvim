@@ -2,7 +2,7 @@
 ---@brief Keymaps for portable sessions
 
 local M = {}
-local map = require("lib.map")
+local map = require("lib.nvim.map")
 
 ---@return nil
 function M.enable()

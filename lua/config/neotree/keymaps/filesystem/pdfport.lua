@@ -16,7 +16,7 @@
 ---   <CR>   -> PDF: pdfport quick  | Image: system app | Other: expand / open
 ---   gP     -> pdfport mode picker (always, regardless of node type)
 
-local notify        = require("lib.notify").create("[cfg.neotree.keymaps.fs.pdfport]")
+local notify        = require("lib.nvim.notify").create("[cfg.neotree.keymaps.fs.pdfport]")
 local node_utils    = require("config.neotree.utils.node")
 local pdfport_action = require("config.neotree.actions.pdfport")
 local img           = require("config.neotree.keymaps.filesystem.images")

@@ -13,7 +13,7 @@
 --- - We do not change buffer-local options of the real file buffer.
 --- - If your terminal does not send <M-1>.. <M-9>, consider mapping alternate keys.
 
-local notify = require("lib.notify").create("[config.harpoon.preview]")
+local notify = require("lib.nvim.notify").create("[config.harpoon.preview]")
 
 local M = {}
 

@@ -10,7 +10,7 @@ local M = {}
 ---@param hex string                 -- preferred Nerd Font codepoint in hex, e.g. "F0056"
 ---@return string                    -- separator surrounded by spaces, e.g. "  "
 function M.nerdf_sep_or_fallback(hex)
-  local g = require("lib.strings.convert.hex_to_string")(hex)
+  local g = require("lib.lua.strings.convert.hex_to_string")(hex)
   -- Only accept if it renders as a single display cell (prevents centering drift)
   if g ~= "" and vim.fn.strdisplaywidth(g) == 1 then
     return " " .. g .. " "

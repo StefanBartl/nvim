@@ -26,7 +26,7 @@
 ---     },
 ---   })
 
-local notify = require("lib.notify").create("[config.mason.ensure_install]")
+local notify = require("lib.nvim.notify").create("[config.mason.ensure_install]")
 
 local M = {}
 

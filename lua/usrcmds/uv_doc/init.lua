@@ -26,7 +26,7 @@ local M = {}
 local function safe_require(module_path)
   local ok, mod = pcall(require, module_path)
   if not ok then
-    local notify_ok, notify = pcall(require, "lib.notify")
+    local notify_ok, notify = pcall(require, "lib.nvim.notify")
     if notify_ok and notify and type(notify.create) == "function" then
       local n = notify.create("uv_doc")
       n("Failed to load module: " .. module_path .. " - " .. tostring(mod), vim.log.levels.ERROR)

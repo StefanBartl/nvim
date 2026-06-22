@@ -17,7 +17,7 @@
 -- require("usrcmds.insertfilepath").enable()
 -- require("usrcmds.lua_module_annotation").enable()
 
-local notify = require("lib.notify").create("[custom.insert]")
+local notify = require("lib.nvim.notify").create("[custom.insert]")
 
 local M = {}
 

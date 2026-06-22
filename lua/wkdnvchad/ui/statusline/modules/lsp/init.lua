@@ -57,7 +57,7 @@ function M.render_breadcrumbs_lspfirst()
   local ctx = doc_symbols.symbol_context_smart()
   local icon = devicons.file_icon_segment_lsp()
 
-  local cp = require("lib.strings.convert.hex_to_string")
+  local cp = require("lib.lua.strings.convert.hex_to_string")
   local sep = (function()
     return (
       " "
@@ -79,7 +79,7 @@ function M.render_breadcrumbs_inherit_lspfirst(band_group)
   local ctx = doc_symbols.symbol_context_smart()
   local icon = devicons.file_icon_segment_inherit(band_group)
 
-  local cp = require("lib.strings.convert.hex_to_string")
+  local cp = require("lib.lua.strings.convert.hex_to_string")
   local sep = (function()
     return (
       " "

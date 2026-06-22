@@ -3,7 +3,7 @@
 --- Adds the pattern [empty line, "---", empty line] between H2+ heading sections.
 --- Ignores headings inside fenced code blocks.
 
-local notify = require("lib.notify").create("[custom.markdown.core.headline_spacing]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.core.headline_spacing]")
 
 local api = vim.api
 local M = {}

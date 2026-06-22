@@ -11,7 +11,7 @@
 --- Design notes:
 --- - Pure Lua using vim.fs.find (Neovim ≥0.9) and vim.fs.normalize (≥0.10) with fallbacks.
 
-local notify = require("lib.notify").create("[custom.pathprobe]")
+local notify = require("lib.nvim.notify").create("[custom.pathprobe]")
 
 local M = {}
 

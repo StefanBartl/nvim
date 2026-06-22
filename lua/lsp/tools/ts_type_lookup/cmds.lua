@@ -1,7 +1,7 @@
 ---@module 'lsp.tools.ts_type_lookup.cmds'
 --- Utilities and usercommands to lookup TypeScript type definitions by symbol string.
 --- Commands accept an optional argument; when omitted the current word (`<cword>`) is used.
-local notify = require("lib.notify").create("[lsp.tools.ts_type_lookup.cmds]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.ts_type_lookup.cmds]")
 
 local api = vim.api
 local lsp = vim.lsp

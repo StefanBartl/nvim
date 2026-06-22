@@ -1,7 +1,7 @@
 ---@module 'lsp.servers.lua_ls.error_handler'
 --- Error handler for lua_ls to catch malformed requests
 
-local notify = require("lib.notify").create("[lsp.servers.lua_ls.error_handler]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.lua_ls.error_handler]")
 
 local M = {}
 

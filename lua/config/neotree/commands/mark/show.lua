@@ -1,7 +1,7 @@
 ---@module 'config.neotree.commands.mark.show'
 --- Display all currently marked nodes in a floating window
 
-local notify = require("lib.notify").create("[neotree.commands.mark.show]")
+local notify = require("lib.nvim.notify").create("[neotree.commands.mark.show]")
 
 local M = {}
 

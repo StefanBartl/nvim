@@ -2,7 +2,7 @@
 --- Open local file under cursor (robust detection for Markdown links and simple HTML anchors/figures).
 --- Provides helpers for extraction, resolution, existence check and cross-platform opening.
 
-local notify = require("lib.notify").create("[custom.markdown.handler.file]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.handler.file]")
 
 local M = {}
 

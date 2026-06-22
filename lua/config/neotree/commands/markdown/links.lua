@@ -3,7 +3,7 @@
 
 local M = {}
 
-local notify = require("lib.notify").create("[neo-tree.markdown]")
+local notify = require("lib.nvim.notify").create("[neo-tree.markdown]")
 local node_utils = require("config.neotree.utils.node")
 
 local markdown_links = require("custom.markdown.commands.markdown_links")

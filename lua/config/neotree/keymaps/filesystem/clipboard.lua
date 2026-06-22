@@ -29,7 +29,7 @@ return {
     function(state)
       -- Clear clipboard
       state.clipboard = nil
-      require("lib.notify").create("[clipboard]").info("Clipboard cleared")
+      require("lib.nvim.notify").create("[clipboard]").info("Clipboard cleared")
     end,
     desc = "Clear clipboard",
   },

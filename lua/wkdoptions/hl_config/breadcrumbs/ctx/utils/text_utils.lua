@@ -4,10 +4,10 @@
 --- All string operations are delegated to lib.strings for consistency
 --- Pattern extraction is memoized per (text, lang) pair
 
-local lazy = require("lib.lazy")
-local memo = lazy.require("lib.memo")
-local trim = lazy.require("lib.strings.core").trim
-local split = lazy.require("lib.strings.core").split
+local lazy = require("lib.lua.lazy")
+local memo = lazy.require("lib.lua.memo")
+local trim = lazy.require("lib.lua.strings.core").trim
+local split = lazy.require("lib.lua.strings.core").split
 
 local M = {}
 
@@ -26,7 +26,7 @@ function M.dedupe_consecutive(parts)
   end
 
   -- Try lib.table.array first
-  local ok, array_utils = pcall(require, "lib.table.array")
+  local ok, array_utils = pcall(require, "lib.lua.tables.array")
   if ok and type(array_utils.dedup_consecutive) == "function" then
     return array_utils.dedup_consecutive(parts)
   end
@@ -166,7 +166,7 @@ function M.escape_pattern(s)
   end
 
   -- Try lib.strings.pattern.escape first
-  local ok, pattern_utils = pcall(require, "lib.strings.pattern")
+  local ok, pattern_utils = pcall(require, "lib.lua.strings.patterns")
   if ok and type(pattern_utils.escape) == "function" then
     return pattern_utils.escape(s)
   end

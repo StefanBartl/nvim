@@ -2,7 +2,7 @@
 require("custom.filecycle.@types")
 
 local fc = require("custom.filecycle")
-local notify = require("lib.notify").create("[filecycle]")
+local notify = require("lib.nvim.notify").create("[filecycle]")
 
 local M = {}
 
@@ -133,7 +133,7 @@ local function open_path(path, opts)
 
   -- Check for modified buffer if target is "replace" and confirm_on_modified is true
   if target == "replace" and opts.confirm_on_modified and vim.bo[bufnr].modified then
-    local hover_select = require("lib.ui.hover_select")
+    local hover_select = require("lib.nvim.ui.hover_select")
 
     hover_select.open({
       title = "Buffer has unsaved changes",

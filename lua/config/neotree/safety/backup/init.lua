@@ -1,7 +1,7 @@
 ---@module 'config.neotree.safety.backup'
 ---@brief Automatic backup system for destructive file operations
 
-local notify = require("lib.notify").create("[config.neotree.safety.backup]")
+local notify = require("lib.nvim.notify").create("[config.neotree.safety.backup]")
 
 local M = {}
 

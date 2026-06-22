@@ -21,7 +21,7 @@
 ---   - Explicitness: no hidden state, clear data flow
 ---   - Testability: pure functions where possible, state accessible for inspection
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
 
 ---@type WKDOptions.HL_CFG
@@ -59,7 +59,7 @@ local function apply_highlights()
   local errors = Highlights.apply_all(cfg.colors)
 
   if next(errors) then
-    local notify = require("lib.notify").create("[hl_config]")
+    local notify = require("lib.nvim.notify").create("[hl_config]")
     for _, err in pairs(errors) do
       notify.warn(err)
     end

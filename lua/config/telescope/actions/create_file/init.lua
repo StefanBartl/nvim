@@ -1,7 +1,7 @@
 ---@module 'config.telescope.actions.create_file'
 ---@description Create file/folder in current entry's directory using hover_select
 
-local notify = require("lib.notify").create("[config.telescope.actions.create_file]")
+local notify = require("lib.nvim.notify").create("[config.telescope.actions.create_file]")
 
 local M = {}
 

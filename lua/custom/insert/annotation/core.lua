@@ -3,7 +3,7 @@
 ---@description
 --- Provides functions to insert EmmyLua annotations at the cursor position.
 
-local notify = require("lib.notify").create("[custom.insert.annotation.core]")
+local notify = require("lib.nvim.notify").create("[custom.insert.annotation.core]")
 
 local M = {}
 

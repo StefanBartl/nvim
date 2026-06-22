@@ -1,7 +1,7 @@
 ---@module 'custom.recommender.rendering'
 ---Float rendering and state
 
-local notify = require("lib.notify").create("[custom.recommender.rendering]")
+local notify = require("lib.nvim.notify").create("[custom.recommender.rendering]")
 
 local M = {}
 

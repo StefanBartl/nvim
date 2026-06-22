@@ -8,7 +8,7 @@
 --- • indent: Fix indentation
 --- • case: Change case (upper/lower/title)
 
-local notify = require("lib.notify").create("[custom.format.additional_features]")
+local notify = require("lib.nvim.notify").create("[custom.format.additional_features]")
 
 local M = {}
 

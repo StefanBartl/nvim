@@ -11,7 +11,7 @@
 ---@class UrlviewIntegration
 ---@field uses_system_opener boolean
 
-local notify = require("lib.notify").create("[config.urlview.open_in_browser_integration]")
+local notify = require("lib.nvim.notify").create("[config.urlview.open_in_browser_integration]")
 
 local M = {}
 

@@ -4,7 +4,7 @@
 
 local M = {}
 
-local notify = require("lib.notify").create("[neotree.open.system_app]")
+local notify = require("lib.nvim.notify").create("[neotree.open.system_app]")
 local node_utils = require("config.neotree.utils.node")
 
 ---Open path with system default application

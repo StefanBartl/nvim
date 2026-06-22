@@ -1,7 +1,7 @@
 ---@module 'usrcmds.gather.lua.tables'
 ---@description Collects Lua table names with recursive nested table detection
 
-local notify = require("lib.notify").create("[usrcmds.gather.lua.tables]")
+local notify = require("lib.nvim.notify").create("[usrcmds.gather.lua.tables]")
 
 require("usrcmds.gather.@types")
 

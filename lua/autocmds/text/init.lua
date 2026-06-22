@@ -13,10 +13,10 @@ local nvim_create_autocmd = api.nvim_create_autocmd
 -- Helpers
 --------------------------------------------------------------------------------
 
-local lazy = require("lib.lazy")
-local augroup_lib = lazy.require("lib.autocmd.augroup")
+local lazy = require("lib.lua.lazy")
+local augroup_lib = lazy.require("lib.nvim.autocmd.augroup")
 local augroup = augroup_lib.create.clear
-local autocmd_lib = lazy.require("lib.autocmd")
+local autocmd_lib = lazy.require("lib.nvim.autocmd")
 local norm_pattern = autocmd_lib.norm_pattern
 
 --- Check whether the current buffer should be processed given the config gates.

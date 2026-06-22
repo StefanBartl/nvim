@@ -2,16 +2,16 @@
 --- Public entrypoint for the modular custom Snacks dashboard.
 --- Ensures sections are registered before calling snacks.setup(opts).
 
-local notify = require("lib.notify").create("[config.snacks.custom_dashboard]")
+local notify = require("lib.nvim.notify").create("[config.snacks.custom_dashboard]")
 
 local M = {}
 M.module_tag = "[snacks.custom_dashboard]: "
 
--- prefer lib.safe_require.safe_require if available; fallback to simple pcall wrapper
-local ok_lib, lib = pcall(require, "lib.safe_require")
+-- prefer lib.nvim.require.safe if available; fallback to simple pcall wrapper
+local ok_lib, lib = pcall(require, "lib.nvim.require")
 local function safe_require(name)
-  if ok_lib and type(lib.safe_require) == "function" then
-    local ok, res = lib.safe_require(name)
+  if ok_lib and type(lib.safe) == "function" then
+    local ok, res = lib.safe(name)
     return ok, res
   end
   local ok, mod = pcall(require, name)

@@ -1,7 +1,7 @@
 ---@module 'config.fzf.actions.create_file'
 ---@description Create file/folder in current entry's directory using hover_select
 
-local notify = require("lib.notify").create("[config.fzf.actions.create_file]")
+local notify = require("lib.nvim.notify").create("[config.fzf.actions.create_file]")
 
 local M = {}
 

@@ -1,7 +1,7 @@
 ---@module 'custom.lua_project_file_stats.usercommands'
 ---@brief Neovim user commands with completion
 
-local notify = require("lib.notify").create("[LuaProjectFileStats]")
+local notify = require("lib.nvim.notify").create("[LuaProjectFileStats]")
 
 local M = {}
 

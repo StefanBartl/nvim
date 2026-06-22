@@ -4,9 +4,9 @@
 --- Builds symbol chains like: Class → method()
 --- Priority: 80
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local ts = lazy.require("wkdoptions.hl_config.breadcrumbs.ctx.utils.ts_helpers")
-local memo = lazy.require("lib.memo")
+local memo = lazy.require("lib.lua.memo")
 
 local M = {}
 

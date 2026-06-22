@@ -1,7 +1,7 @@
 ---@module 'usrcmds.gather.lua.strings'
 ---@description Collects all Lua string literals using Tree-sitter
 
-local notify = require("lib.notify").create("[usrcmds.gather.lua.strings]")
+local notify = require("lib.nvim.notify").create("[usrcmds.gather.lua.strings]")
 
 require("usrcmds.gather.@types")
 

@@ -2,7 +2,7 @@
 -- Returns the menu table for quick requires if desired
 
 -- Default toggles for top-level entries; consumers can override by passing opts to setup()
-local notify = require("lib.notify").create("[config.menu-update.menu.custom_menu]")
+local notify = require("lib.nvim.notify").create("[config.menu-update.menu.custom_menu]")
 
 local defaults = {
   enable_format = true,

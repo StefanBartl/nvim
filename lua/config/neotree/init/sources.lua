@@ -16,7 +16,7 @@ opts = function()
 end
 --]]
 
-local notify = require("lib.notify").create("[config.neotree.sources]")
+local notify = require("lib.nvim.notify").create("[config.neotree.sources]")
 local BUFFERS = require("config.neotree.keymaps.buffers")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")

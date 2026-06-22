@@ -1,6 +1,6 @@
 ---@module 'custom.repo_pickers.actions'
 --- High-level actions: select repo using the configured selector-routing, then run fzf/Telescope.
-local notify = require("lib.notify").create("[custom.repo_pickers.actions]")
+local notify = require("lib.nvim.notify").create("[custom.repo_pickers.actions]")
 
 require("custom.repo_pickers.@types.types")
 

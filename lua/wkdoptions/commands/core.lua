@@ -2,7 +2,7 @@
 --- Core command utilities: definition, completion, path resolution.
 --- Shared by all command registration functions.
 
-local trim = require("lib.strings.core").trim
+local trim = require("lib.lua.strings.core").trim
 
 local M = {}
 
@@ -16,7 +16,7 @@ function M.define_cmd(name, rhs, opts)
 
   local ok, err = pcall(vim.api.nvim_create_user_command, name, rhs, opts or {})
   if not ok then
-    local notify = require("lib.notify").create("[Commands]")
+    local notify = require("lib.nvim.notify").create("[Commands]")
     notify.error(("Failed to create command '%s': %s"):format(name, tostring(err)))
   end
 end

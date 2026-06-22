@@ -2,7 +2,7 @@
 --- Navigate to the next/previous file in the current buffer's directory.
 --- This module provides user commands and keymaps with count support.
 
-local notify = require("lib.notify").create("[custom.filecycle]")
+local notify = require("lib.nvim.notify").create("[custom.filecycle]")
 
 local DEFAULTS = {
   open_target = "current",

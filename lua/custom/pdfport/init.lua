@@ -260,7 +260,7 @@ function M._register_commands()
       return
     end
 
-    local hover_ok, hover = pcall(require, "lib.ui.hover_select")
+    local hover_ok, hover = pcall(require, "lib.nvim.ui.hover_select")
     local choices = {
       { label = "buffer  – plain text (auto)",    mode = "buffer",   backend = nil          },
       { label = "buffer  – pdftotext",            mode = "buffer",   backend = "pdftotext"  },

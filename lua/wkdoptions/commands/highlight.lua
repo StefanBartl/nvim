@@ -2,8 +2,8 @@
 --- Highlight-related user command registration.
 --- Commands: WKDHighlightSet, WKDHighlightShow, WKDHighlightList
 
-local lazy = require("lib.lazy")
-local notify = lazy.require("lib.notify").create("[Commands.Highlight]")
+local lazy = require("lib.lua.lazy")
+local notify = lazy.require("lib.nvim.notify").create("[Commands.Highlight]")
 local Core = lazy.require("wkdoptions.commands.core")
 local C = lazy.require("wkdoptions.config")
 

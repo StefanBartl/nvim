@@ -4,7 +4,7 @@
 vim.opt.number = true
 vim.opt.relativenumber = false
 
-local ignore_lib = require("lib.fs.ignore.list")
+local ignore_lib = require("lib.nvim.fs.ignore.list")
 local ignore_filetypes = ignore_lib.as_set()
 
 -- UI-spezifische Typen ergänzen

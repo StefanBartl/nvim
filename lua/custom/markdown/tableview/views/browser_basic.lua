@@ -1,6 +1,6 @@
 ---@module 'custom.markdown.tableview.views.browser_basic'
 
-local notify = require("lib.notify").create("[custom.markdown.tableview.views.browser_basic]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.tableview.views.browser_basic]")
 
 local api = vim.api
 local parser = require("custom.markdown.tableview.parser")

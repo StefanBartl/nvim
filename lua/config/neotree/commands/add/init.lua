@@ -6,8 +6,8 @@
 --- - lib.lua_ls.get_module_path (for module path calculation)
 --- - lib.buffer.insert_lines (for content insertion)
 
-local notify = require("lib.notify").create("[config.neotree.commands.add]")
-local notify_clean = require("lib.notify").create("")
+local notify = require("lib.nvim.notify").create("[config.neotree.commands.add]")
+local notify_clean = require("lib.nvim.notify").create("")
 
 local M = {}
 
@@ -134,7 +134,7 @@ local function insert_module_annotation(file_path)
   end
 
   -- Use library module to insert @module annotation
-  local ok, insert_mod = pcall(require, "lib.lua_ls.insert.module_annnotation")
+  local ok, insert_mod = pcall(require, "lib.nvim.lua_ls.insert.module_annnotation")
   if not ok then
     notify.error("Failed to load module annotation library")
     return false

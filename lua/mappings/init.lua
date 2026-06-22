@@ -6,7 +6,7 @@ local M = {}
 ---Setup all mapping modules
 ---@return nil
 function M.setup()
-  vim.g.__map_helper = require("lib.map")
+  vim.g.__map_helper = require("lib.nvim.map")
 
   require("mappings.buf_win_tab").setup()
   require("mappings.buffer_jump").setup()

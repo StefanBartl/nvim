@@ -16,7 +16,7 @@
 
 local M = {}
 
-local notify = require("lib.notify").create("[neotree.grep_picker]")
+local notify = require("lib.nvim.notify").create("[neotree.grep_picker]")
 local node_utils = require("config.neotree.utils.node")
 local fn = vim.fn
 

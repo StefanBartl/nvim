@@ -6,7 +6,7 @@ local M = {}
 --- Registers the :DirPicker user command.
 ---@return nil
 function M.enable()
-  local ok, lib_usercmd = pcall(require, "lib.usercmd")
+  local ok, lib_usercmd = pcall(require, "lib.nvim.usercmd")
   local create = (ok and lib_usercmd and lib_usercmd.create)
     or vim.api.nvim_create_user_command
 

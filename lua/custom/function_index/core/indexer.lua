@@ -5,7 +5,7 @@
 --- commands, executing them asynchronously, parsing results, and
 --- coordinating with the cache module.
 
-local notify = require("lib.notify").create("[custom.function_index.core.indexer]")
+local notify = require("lib.nvim.notify").create("[custom.function_index.core.indexer]")
 
 local M = {}
 

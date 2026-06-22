@@ -1,7 +1,7 @@
 ---@module 'config.neotree.trash.validation.buffer_checker'
 ---@brief Detect and close buffers/previews referencing a path
 
-local notify = require("lib.notify").create("[trash.buffer_checker]")
+local notify = require("lib.nvim.notify").create("[trash.buffer_checker]")
 
 local M = {}
 

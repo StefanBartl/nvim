@@ -2,7 +2,7 @@
 --- LSP UserCommands - Main Registry
 --- Delegates to specialized submodules for each command
 
-local notify = require("lib.notify").create("[lsp.usrcmds] ")
+local notify = require("lib.nvim.notify").create("[lsp.usrcmds] ")
 
 local M = {}
 

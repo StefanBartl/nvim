@@ -1,7 +1,7 @@
 ---@module 'custom.find_in_folders.telescope'
 ---@brief Telescope find_files adapter for find_in_folder.
 
-local notify = require("lib.notify").create("[find_in_folder.telescope]")
+local notify = require("lib.nvim.notify").create("[find_in_folder.telescope]")
 
 local M = {}
 

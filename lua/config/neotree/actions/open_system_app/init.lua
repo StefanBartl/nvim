@@ -39,7 +39,7 @@
 -- Imports
 -- ─────────────────────────────────────────────────────────────────────────────
 
-local notify = require("lib.notify").create("[neotree.open_system_app]")
+local notify = require("lib.nvim.notify").create("[neotree.open_system_app]")
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Module
@@ -97,7 +97,7 @@ local _setup_done = false
 
 ---@return OpenSysApp.OpenCmd
 local function detect_opener()
-  local ok, cross = pcall(require, "lib.cross")
+  local ok, cross = pcall(require, "lib.nvim.cross")
   if ok and type(cross) == "table" then
     if cross.is_windows and cross.is_windows() then return "cmd.exe" end
     if cross.is_mac    and cross.is_mac()     then return "open"     end

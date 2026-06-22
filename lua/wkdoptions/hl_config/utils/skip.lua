@@ -7,7 +7,7 @@
 -- local matchers = M.build_matchers(C.cfg.skip)
 -- local function buffer_is_ui_like(bufnr) return M.buffer_is_ui_like(matchers, bufnr) end
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
 
 local M = {}

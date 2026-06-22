@@ -7,7 +7,7 @@
 ---   M.setup_range_command()              -- creates :SetTextWidthRange (range / visual)
 --- Note: Hyphenation is not implemented. The algorithm preserves exact runs of blank
 --- lines inside the affected region and simple list/bullet indentation heuristics.
-local notify = require("lib.notify").create("[custom.format.text_width]")
+local notify = require("lib.nvim.notify").create("[custom.format.text_width]")
 
 local M = {}
 

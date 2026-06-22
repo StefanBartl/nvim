@@ -1,7 +1,7 @@
 ---@module 'custom.repo_pickers'
 --- Tiny facade: keeps active config, resolves selectors, exposes _entry_*.
 
-local notify = require("lib.notify").create("[custom.repo_pickers]")
+local notify = require("lib.nvim.notify").create("[custom.repo_pickers]")
 
 local cfgmod = require("custom.repo_pickers.config")
 local reg = require("custom.repo_pickers.register")

@@ -4,7 +4,7 @@
 
 local Core = require("wkdoptions.commands.core")
 local C = require("wkdoptions.config")
-local notify = require("lib.notify").create("[Commands.Options]")
+local notify = require("lib.nvim.notify").create("[Commands.Options]")
 
 local M = {}
 

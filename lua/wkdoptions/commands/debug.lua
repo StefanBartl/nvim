@@ -2,8 +2,8 @@
 --- Debug command for breadcrumb context providers.
 --- Command: WKDHighlightDebugCtx
 
-local lazy = require("lib.lazy")
-local notify = lazy.require("lib.notify").create("[Commands.Debug]")
+local lazy = require("lib.lua.lazy")
+local notify = lazy.require("lib.nvim.notify").create("[Commands.Debug]")
 local Core = lazy.require("wkdoptions.commands.core")
 local C = lazy.require("wkdoptions.config")
 

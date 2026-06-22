@@ -1,7 +1,7 @@
 ---@module 'config.neotree.user_actions.find_or_grep_menu'
 --- <M-p> → choose {find_files|live_grep} in a tiny fzf-lua menu, then run on node's directory.
 
-local notify = require("lib.notify").create("[config.neotree.actions.find_or_grep_menu]")
+local notify = require("lib.nvim.notify").create("[config.neotree.actions.find_or_grep_menu]")
 
 local M = {}
 

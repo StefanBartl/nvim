@@ -2,7 +2,7 @@
 -- Commands exposed to Neo-tree
 -- register via opts.commands = commands.attach()
 
-local notify = require("lib.notify").create("[config.neotree.commands]")
+local notify = require("lib.nvim.notify").create("[config.neotree.commands]")
 
 local getTelescopeOpts = require("config.neotree.commands.get_telescope_opts")
 local diff_files_mod = require("config.neotree.commands.diff_files")

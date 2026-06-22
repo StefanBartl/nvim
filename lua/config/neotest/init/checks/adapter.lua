@@ -1,6 +1,6 @@
 ---@module 'config.neotest.init.checks.adapter'
 
-local notify = require("lib.notify").create("[plugins.neotest]")
+local notify = require("lib.nvim.notify").create("[plugins.neotest]")
 
 -- Implementieren in plugin/neotest require("config.neotest.init.checks.adapter")(opts.adapters, neotree_consumer_m)
 return function(adapters, neotree_consumer_m)

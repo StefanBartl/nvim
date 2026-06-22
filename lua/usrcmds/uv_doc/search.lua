@@ -3,7 +3,7 @@
 
 local M = {}
 
-local strings = require("lib.strings")
+local strings = require("lib.lua.strings")
 local cache = require("usrcmds.uv_doc.cache")
 local normalize = require("usrcmds.uv_doc.normalize")
 

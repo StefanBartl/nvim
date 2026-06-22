@@ -1,7 +1,7 @@
 ---@module 'config.neotree.keymaps'
 --- Centralized, buffer-local Neo-tree keymaps that override defaults consistently.
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 -- Utility to safely hide the preview window without errors
 local safe_hide_preview = require("config.neotree.utils").safe_hide_preview
 -- Watcher quarantine helper to temporarily suppress filesystem events

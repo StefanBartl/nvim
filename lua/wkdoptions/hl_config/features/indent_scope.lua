@@ -2,7 +2,7 @@
 --- Viewport-limited indent scope highlighting: tints full lines of the active indentation block.
 --- Respects large_file_kb guard and skip rules.
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local LargeFile = lazy.require("wkdoptions.hl_config.utils.large_file")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip

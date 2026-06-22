@@ -1,8 +1,8 @@
 ---@module 'wkdoptions.hl_config.utils.separator'
 --- Breadcrumb separator resolution with Nerd Font fallback (memoized).
 
-local lazy = require("lib.lazy")
-local memo = lazy.require("lib.memo")
+local lazy = require("lib.lua.lazy")
+local memo = lazy.require("lib.lua.memo")
 
 local M = {}
 

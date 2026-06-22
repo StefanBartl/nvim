@@ -20,7 +20,7 @@ local clipboard = require("custom.markdown.util.clipboard")
 ----------------------------------------------------------------------
 
 ---@type table<string, boolean>
-local default_ignore = require("lib.fs.ignore.list").as_set()
+local default_ignore = require("lib.nvim.fs.ignore.list").as_set()
 
 --- Check if directory should be ignored
 ---@param name string

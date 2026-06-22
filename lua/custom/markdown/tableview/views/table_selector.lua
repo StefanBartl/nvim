@@ -1,6 +1,6 @@
 ---@module 'custom.markdown.tableview.views.table_selector'
 
-local notify = require("lib.notify").create("[custom.markdown.tableview.views.table_selector]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.tableview.views.table_selector]")
 
 local api = vim.api
 local ui = require("custom.markdown.tableview.renderer")

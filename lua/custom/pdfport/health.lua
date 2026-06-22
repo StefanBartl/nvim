@@ -213,11 +213,11 @@ local function check_integrations()
     info("fzf-lua not loaded – fzf integration inactive")
   end
 
-  local ok_hover, _ = pcall(require, "lib.ui.hover_select")
+  local ok_hover, _ = pcall(require, "lib.nvim.ui.hover_select")
   if ok_hover then
-    ok("lib.ui.hover_select found – mode picker available")
+    ok("lib.nvim.ui.hover_select found – mode picker available")
   else
-    warn("lib.ui.hover_select not found – mode picker will fallback to vim.ui.select")
+    warn("lib.nvim.ui.hover_select not found – mode picker will fallback to vim.ui.select")
   end
 end
 

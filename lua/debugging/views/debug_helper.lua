@@ -1,7 +1,7 @@
 ---@module 'debugging.views.debug_helper'
 ---Diagnostic helper for debugging message capture issues
 
-local notify = require("lib.notify").create("[debugging.views.debug_helper]")
+local notify = require("lib.nvim.notify").create("[debugging.views.debug_helper]")
 
 local M = {}
 

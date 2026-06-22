@@ -10,13 +10,13 @@ local hl_module
 local function get_hl_module()
   if not hl_module then
     ---@type WkdNvC.UI.Stl.Modules.Highlighting
-    hl_module = require("lib.lazy").require("wkdnvchad.ui.statusline.modules.highlighting")
+    hl_module = require("lib.lua.lazy").require("wkdnvchad.ui.statusline.modules.highlighting")
   end
   return hl_module
 end
 
 -- Caches with proper invalidation
-local icon_cache = require("lib.memo.lru").new(256)
+local icon_cache = require("lib.lua.memo.lru").new(256)
 local hl_cache = { name = "St_FileIcon", fg = nil, bg = nil }
 
 -- Devicons module lazy-loaded
@@ -230,7 +230,7 @@ end
 vim.api.nvim_create_autocmd("ColorScheme", {
   group = vim.api.nvim_create_augroup("WkdNvChadDeviconsCache", { clear = true }),
   callback = function()
-    icon_cache = require("lib.memo.lru").new(256)
+    icon_cache = require("lib.lua.memo.lru").new(256)
     hl_cache = { name = "St_FileIcon", fg = nil, bg = nil }
   end,
   desc = "Clear devicons cache on colorscheme change",

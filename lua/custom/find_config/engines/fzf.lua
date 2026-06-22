@@ -1,7 +1,7 @@
 ---@module 'custom.find_config.engines.fzf'
 ---@description fzf-lua engine implementation for find_config
 
-local notify = require("lib.notify").create("[find_config:fzf]")
+local notify = require("lib.nvim.notify").create("[find_config:fzf]")
 local core = require("custom.find_config.core")
 
 local M = {}

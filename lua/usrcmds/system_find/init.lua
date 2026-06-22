@@ -12,7 +12,7 @@
 ---
 --- The command will be translated to an `fd`-Command and showed with Telescope...
 
-local notify = require("lib.notify").create("[usrcmds.system_find]")
+local notify = require("lib.nvim.notify").create("[usrcmds.system_find]")
 
 local M = {}
 

@@ -6,7 +6,7 @@
 --- and makes file I/O and API access more robust across Neovim versions.
 
 ---@return Dbg.MD.InlineDebug
-local notify = require("lib.notify").create("[debugging.markdown.inline_debug]")
+local notify = require("lib.nvim.notify").create("[debugging.markdown.inline_debug]")
 
 local M = {}
 

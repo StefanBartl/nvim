@@ -7,7 +7,7 @@ local M = {}
 ---Setup function: keymaps only, no user commands
 ---@return nil
 function M.setup()
-  local bufnr = require("lib.is_markdown_buf")()
+  local bufnr = require("lib.nvim.buffer.is_markdown_buf")()
   local o = (type(bufnr) == "number") and { buffer = bufnr } or nil
 
   local ok_col, column_align = pcall(require, "custom.format.column_align.core")

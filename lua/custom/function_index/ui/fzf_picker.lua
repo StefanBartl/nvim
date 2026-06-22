@@ -5,7 +5,7 @@
 --- function definitions. Supports ANSI color codes, pre-filled queries,
 --- and fast fuzzy matching.
 
-local notify = require("lib.notify").create("[custom.function_index.ui.fzf_picker]")
+local notify = require("lib.nvim.notify").create("[custom.function_index.ui.fzf_picker]")
 
 local M = {}
 

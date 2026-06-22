@@ -1,7 +1,7 @@
 ---@module 'config.neotree.utils.tree'
 ---@brief Recursive tree traversal for file/folder collection
 
-local notify = require("lib.notify").create("[config.neotree.utils.tree]")
+local notify = require("lib.nvim.notify").create("[config.neotree.utils.tree]")
 
 local is_ignored_dir = require("config.neotree.helper.is_ignored_dir")
 local node_utils = require("config.neotree.utils.node")

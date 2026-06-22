@@ -3,9 +3,9 @@
 
 local M = {}
 
-local is_wsl = require("lib.cross.platform.is_wsl")
+local is_wsl = require("lib.nvim.cross.platform.is_wsl")
 local platform = require("config.neotree.utils.platform")
-local notify = require("lib.notify").create("[neotree.open.filemanager]")
+local notify = require("lib.nvim.notify").create("[neotree.open.filemanager]")
 
 ---Open selected node in file manager
 ---@param state Cfg.NeoTree.State

@@ -1,7 +1,7 @@
 ---@module 'config.neotree.trash.operations'
 ---@brief Execute trash operations without re-confirmation
 
-local notify = require("lib.notify").create("[trash.operations]")
+local notify = require("lib.nvim.notify").create("[trash.operations]")
 local safety = require("config.neotree.safety")
 
 local M = {}

@@ -1,9 +1,9 @@
 ---@module 'wkdnvchad.mappings.tabufline'
 --- Custom buffer navigation without automatic centering
 
-local notify = require("lib.notify").create("[wkdnvchad.mappings.tabufline]")
+local notify = require("lib.nvim.notify").create("[wkdnvchad.mappings.tabufline]")
 
-local nvchad_tabufline = require("lib.lazy").require("nvchad.tabufline")
+local nvchad_tabufline = require("lib.lua.lazy").require("nvchad.tabufline")
 
 local M = {}
 

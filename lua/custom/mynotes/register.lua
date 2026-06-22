@@ -1,7 +1,7 @@
 ---@module 'mynotes.register'
 --- Declarative registration of commands and keymaps for note collections.
 
-local notify = require("lib.notify").create("[custom.mynotes.register]")
+local notify = require("lib.nvim.notify").create("[custom.mynotes.register]")
 
 local core = require("custom.mynotes.core")
 

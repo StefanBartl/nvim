@@ -4,8 +4,8 @@
 --- Provides ready-to-use functions for NvChad/Lualine-style statuslines.
 --- Separated from ctx logic for clean public interface.
 
-local lazy = require("lib.lazy")
-local trim = lazy.require("lib.strings.core").trim
+local lazy = require("lib.lua.lazy")
+local trim = lazy.require("lib.lua.strings.core").trim
 
 -- Lazy-load context builder
 local ctx = lazy.require("wkdoptions.hl_config.breadcrumbs.ctx")

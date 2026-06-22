@@ -6,7 +6,7 @@
 ---  - a required language code (first argument)
 ---  - optional flags such as --nocode to skip fenced and inline code
 ---- keep parsing small and explicit; delegate translation work to replace module
-local notify = require("lib.notify").create("[config.translate.usercommands]")
+local notify = require("lib.nvim.notify").create("[config.translate.usercommands]")
 
 local replace = require("config.translate.replace")
 

@@ -1,7 +1,7 @@
 ---@module 'autocmds.git.conflicts_qf'
 --- Populate quickfix with files that have unresolved conflicts on startup/focus.
 
-local notify = require("lib.notify").create("[autocmds.git.conflicts_qf]")
+local notify = require("lib.nvim.notify").create("[autocmds.git.conflicts_qf]")
 
 local M = {}
 

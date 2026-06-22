@@ -19,7 +19,7 @@
 ---   })
 ---@brief ]]
 
-local notify = require("lib.notify").create("[wkddap]")
+local notify = require("lib.nvim.notify").create("[wkddap]")
 
 local M = {}
 

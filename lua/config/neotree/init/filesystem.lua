@@ -24,7 +24,7 @@ return {
     hide_gitignored = false,
     hide_hidden = false,
     hide_by_pattern = {},
-    hide_by_name = require("lib.fs.ignore.list").as_neotree_names(),
+    hide_by_name = require("lib.nvim.fs.ignore.list").as_neotree_names(),
     never_show = {},
     never_show_by_pattern = {},
   },

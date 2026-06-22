@@ -10,7 +10,7 @@
 ---   * All modules are lazy-loaded for optimal startup performance.
 ---   * Configuration system provides live updates via user commands.
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 
 local M = {}
 

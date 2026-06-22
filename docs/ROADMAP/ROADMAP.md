@@ -37,6 +37,7 @@
 
 1. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
 2. `init.lua` Check ob import dr plugins nur mit { import = "plugins" }, reicht.
+3. `lib.nvim`: ROADMAP
 
 ---
 

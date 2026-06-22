@@ -1,6 +1,6 @@
 ---@module 'wkddap.adapters'
 
-local notify = require("lib.notify").create("[wkddap.adapters]")
+local notify = require("lib.nvim.notify").create("[wkddap.adapters]")
 
 local M = {}
 

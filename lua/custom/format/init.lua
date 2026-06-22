@@ -15,7 +15,7 @@
 ---
 --- Use :h format.txt for full documentation.
 
-local notify = require("lib.notify").create("[custom.format]")
+local notify = require("lib.nvim.notify").create("[custom.format]")
 
 local M = {}
 

@@ -1,10 +1,10 @@
 ---@module 'config.neotree.cwd_sync'
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local buffer_utils = lazy.require('config.neotree.utils.buffer')
 local callback_guard = lazy.require('config.neotree.utils.selective_callback_guard')
-local memo = lazy.require("lib.memo")
-local notify = lazy.require("lib.notify").create("[config.neotree.cwd_sync]")
+local memo = lazy.require("lib.lua.memo")
+local notify = lazy.require("lib.nvim.notify").create("[config.neotree.cwd_sync]")
 local debug = notify.debug
 local warn = notify.warn
 

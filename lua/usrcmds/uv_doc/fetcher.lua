@@ -7,10 +7,10 @@ local http = require("usrcmds.uv_doc.http")
 local cache = require("usrcmds.uv_doc.cache")
 local parser = require("usrcmds.uv_doc.parser")
 local constants = require("usrcmds.uv_doc.constants")
-local strings = require("lib.strings")
+local strings = require("lib.lua.strings")
 
 -- Create notify instance with proper API
-local notify = require("lib.notify").create("uv_doc")
+local notify = require("lib.nvim.notify").create("uv_doc")
 
 --- Fetches and caches complete genindex
 ---@nodiscard

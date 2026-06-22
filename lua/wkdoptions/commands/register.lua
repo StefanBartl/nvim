@@ -2,10 +2,10 @@
 --- Central user command registration with autocompletion.
 --- All commands are created via vim.api.nvim_create_user_command with proper completion.
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
-local notify = lazy.require("lib.notify").create("[Commands]")
-local trim = lazy.require("lib.strings.core").trim
+local notify = lazy.require("lib.nvim.notify").create("[Commands]")
+local trim = lazy.require("lib.lua.strings.core").trim
 
 local M = {}
 

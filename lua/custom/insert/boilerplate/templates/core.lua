@@ -1,7 +1,7 @@
 ---@module 'custom.insert.boilerplate.core'
 ---@brief Core implementation for boilerplate/template insertion
 
-local notify = require("lib.notify").create("[custom.insert.boilerplate.templates.core]")
+local notify = require("lib.nvim.notify").create("[custom.insert.boilerplate.templates.core]")
 
 local utils = require("custom.insert.boilerplate.templates.utils")
 local lua_templates = require("custom.insert.boilerplate.templates.lua")

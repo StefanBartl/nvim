@@ -5,7 +5,7 @@ local M = {}
 
 ---@return nil
 function M.setup()
-  local hl = require("lib.ui.hl")
+  local hl = require("lib.nvim.ui.hl")
 
   -- Remove background from all diagnostic virtual text levels
   local groups = {

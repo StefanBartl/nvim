@@ -55,7 +55,7 @@ end
 ---@return nil
 local function pick_mode_and_open(path)
   local pdfport = require("custom.pdfport")
-  local hover   = require("lib.ui.hover_select")
+  local hover   = require("lib.nvim.ui.hover_select")
 
   ---@type { label: string, mode: PdfPort.RendererMode, backend?: PdfPort.BackendId }[]
   local choices = {

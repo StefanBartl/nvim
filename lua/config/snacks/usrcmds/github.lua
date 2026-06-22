@@ -4,8 +4,8 @@
 --- This module provides usercommands for GitHub-related snacks.nvim picker features
 --- like issues and pull requests.
 
-local usercmd = require("lib.usercmd")
-local notify = require("lib.notify").create("[config.snacks.usrcmds.github]")
+local usercmd = require("lib.nvim.usercmd")
+local notify = require("lib.nvim.notify").create("[config.snacks.usrcmds.github]")
 
 local M = {}
 

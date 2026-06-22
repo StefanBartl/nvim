@@ -8,7 +8,7 @@
 ---   • Linux          → first of: xdg-open, gedit, kate, mousepad, leafpad, pluma
 --- "editor" is registered as an alias for "notepad".
 
-local notify   = require("lib.notify").create("[custom.open.handlers.notepad]")
+local notify   = require("lib.nvim.notify").create("[custom.open.handlers.notepad]")
 local platform = require("custom.open.platform")
 local util     = require("custom.open.util")
 

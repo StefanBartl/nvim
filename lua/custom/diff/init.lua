@@ -28,7 +28,7 @@
 -- Imports
 -- ─────────────────────────────────────────────────────────────────────────────
 
-local notify = require("lib.notify").create("[custom.diff]")
+local notify = require("lib.nvim.notify").create("[custom.diff]")
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Module
@@ -299,7 +299,7 @@ end
 local function pick_target(callback)
   local select_fn
 
-  local ok, hover = pcall(require, "lib.hover_select")
+  local ok, hover = pcall(require, "lib.nvim.ui.hover_select")
 
   if ok and type(hover) == "function" then
     select_fn = hover
@@ -509,7 +509,7 @@ end
 ---@return nil
 local function setup_diff_cmd()
   local function usercmd(name, fn, desc)
-    local ok, lib = pcall(require, "lib.usercmd")
+    local ok, lib = pcall(require, "lib.nvim.usercmd")
 
     if ok and type(lib) == "function" then
       lib(name, fn, { desc = desc })

@@ -1,6 +1,6 @@
 ---@module 'lsp.tools.eslint_prettier.usercmds'
 --- Create user commands like :EslintFix, :PrettierFormat, :LintAndFormat, :ToggleLintFormatOnSave
-local notify = require("lib.notify").create("[lsp.tools.eslint_prettier.usercmds]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.eslint_prettier.usercmds]")
 
 local api = vim.api
 local core = require("lsp.tools.eslint_prettier.core.find_root")

@@ -1,7 +1,7 @@
 ---@module 'config.neotree.layout_guard'
 ---@brief Keeps Neo-tree from becoming the only normal window in a tab.
 
-local autocmd = require("lib.autocmd")
+local autocmd = require("lib.nvim.autocmd")
 
 local M = {}
 

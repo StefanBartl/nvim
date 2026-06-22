@@ -1,6 +1,6 @@
 ---@module 'config.neotree.keymaps.filesystem.path'
 
-local notify = require("lib.notify").create("[cfg.neotree.keymaps.fs.path] ")
+local notify = require("lib.nvim.notify").create("[cfg.neotree.keymaps.fs.path] ")
 
 local node_utils = require("config.neotree.utils.node")
 local copy_entries = require("config.neotree.actions.copy.entries")

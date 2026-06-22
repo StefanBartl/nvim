@@ -5,7 +5,7 @@
 --- command invocation time.  Duplicate keys produce a warning, not an error,
 --- to allow user overrides.
 
-local notify = require("lib.notify").create("[custom.open.registry]")
+local notify = require("lib.nvim.notify").create("[custom.open.registry]")
 
 local M = {}
 

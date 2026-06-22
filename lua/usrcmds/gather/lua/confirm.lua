@@ -1,9 +1,9 @@
 ---@module 'usrcmds.gather.lua.confirm'
 ---@description CWD scan confirmation with file statistics and time estimation
 
-local notify = require("lib.notify").create("[usrcmds.gather.lua.confirm]")
+local notify = require("lib.nvim.notify").create("[usrcmds.gather.lua.confirm]")
 
-local hover_select = require("lib.ui.hover_select")
+local hover_select = require("lib.nvim.ui.hover_select")
 
 local M = {}
 

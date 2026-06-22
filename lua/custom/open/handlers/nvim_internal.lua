@@ -6,7 +6,7 @@
 --- the appropriate Neovim command.  URL text is rejected (not applicable).
 --- If the path is a directory, a Netrw/oil split is opened instead.
 
-local notify = require("lib.notify").create("[custom.open.handlers.nvim_internal]")
+local notify = require("lib.nvim.notify").create("[custom.open.handlers.nvim_internal]")
 
 local M = {}
 

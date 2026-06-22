@@ -22,7 +22,7 @@ local last_mode = nil
 ---@return string
 function M.stl_strip_hl(s)
   -- Use lib.strings for replace operations
-  local str = require("lib.strings")
+  local str = require("lib.lua.strings")
   s = str.replace_all(s, "%%#.-#", "")
   s = str.replace_all(s, "%%%*", "")
   return s

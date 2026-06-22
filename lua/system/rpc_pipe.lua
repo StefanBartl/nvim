@@ -1,7 +1,7 @@
 ---@module 'system.rpc_pipe'
 ---@brief Start a predictable named-pipe RPC server on Windows with neotest compatibility
 
-local notify = require("lib.notify").create("[system.rpc_pipe]")
+local notify = require("lib.nvim.notify").create("[system.rpc_pipe]")
 
 local M = {}
 

@@ -27,6 +27,6 @@
 
 -- Type Usage:
 -- ---@type WkdNvC.UI.Stl.Modules.Highlighting
--- local hl_module = require("lib.lazy").require("wkdnvchad.ui.statusline.modules.highlighting")
+-- local hl_module = require("lib.lua.lazy").require("wkdnvchad.ui.statusline.modules.highlighting")
 
 return {}

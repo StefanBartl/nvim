@@ -2,7 +2,7 @@
 --- Manual library reload command for lua_ls
 --- Use when @types are not detected automatically
 
-local notify = require("lib.notify").create("[lsp.servers.lua_ls.reload]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.lua_ls.reload]")
 
 local M = {}
 

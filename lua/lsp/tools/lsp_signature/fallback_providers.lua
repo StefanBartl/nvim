@@ -11,7 +11,7 @@
 ---   - mode: string|nil  -- passed to open_floating_preview / callbacks
 ---   - callback: fun(buf,win)|nil
 ---   - providers: string[]|nil  -- override default provider list
-local notify = require("lib.notify").create("[lsp.tools.lsp_signature.fallback_providers]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.lsp_signature.fallback_providers]")
 
 local M = {}
 

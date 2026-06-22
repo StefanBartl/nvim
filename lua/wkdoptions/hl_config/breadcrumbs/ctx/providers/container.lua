@@ -4,7 +4,7 @@
 --- Wraps base symbol with container: M.run() → M
 --- Priority: 60
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local txt = lazy.require("wkdoptions.hl_config.breadcrumbs.ctx.utils.text_utils")
 
 local M = {}

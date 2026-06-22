@@ -2,7 +2,7 @@
 -- Module-level locals to avoid accidental globals and lsp warnings.
 
 local node_utils = require("config.neotree.utils.node")
-local notify = require("lib.notify").create("[neotree.commands.diff_files] ")
+local notify = require("lib.nvim.notify").create("[neotree.commands.diff_files] ")
 
 ---@type string|nil
 local diff_node = nil

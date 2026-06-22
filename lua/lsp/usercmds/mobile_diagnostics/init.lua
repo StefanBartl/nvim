@@ -1,7 +1,7 @@
 ---@module 'lsp.usercmds.mobile_diagnostics'
 --- Diagnostic command to check mobile development setup.
 
-local notify = require("lib.notify").create("[lsp.mobile_diagnostics]")
+local notify = require("lib.nvim.notify").create("[lsp.mobile_diagnostics]")
 
 local M = {}
 

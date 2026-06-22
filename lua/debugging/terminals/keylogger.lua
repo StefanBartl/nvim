@@ -3,7 +3,7 @@
 -- Startet und stoppt Keylogging über User-Commands.
 -- Alle gedrückten Keys im Terminal-Modus werden über vim.notify angezeigt.
 
-local notify = require("lib.notify").create("[debugging.terminals.keylogger]")
+local notify = require("lib.nvim.notify").create("[debugging.terminals.keylogger]")
 
 local M = {}
 

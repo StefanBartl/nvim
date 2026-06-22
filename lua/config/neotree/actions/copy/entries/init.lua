@@ -1,6 +1,6 @@
 ---@module 'config.neotree.actions.copy.entries'
 
-local notify = require("lib.notify").create("[config.neotree.actions.copy.entries]")
+local notify = require("lib.nvim.notify").create("[config.neotree.actions.copy.entries]")
 
 local tree = require("config.neotree.utils.tree")
 

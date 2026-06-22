@@ -2,7 +2,7 @@
 --- Visual wrap helpers (e.g., bold via **). Uses set_text for minimal edits.
 
 
-local notify = require("lib.notify").create("[custom.markdown.core.wrap]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.core.wrap]")
 
 local M = {}
 

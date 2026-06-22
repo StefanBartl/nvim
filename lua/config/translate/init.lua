@@ -2,7 +2,7 @@
 ---Orchestrates translate.nvim modules
 
 require("config.translate.usercommands").enable()
-require("lib.map")(
+require("lib.nvim.map")(
     "v",
     "<leader>tr",
     ":TranslateReplace DE<CR>",

@@ -2,7 +2,7 @@
 --- Telescope picker to show workspace symbols for a query string and open chosen item.
 --- Requires 'telescope.nvim' installed. The picker uses workspace/symbol and presents
 --- results with filename and kind; selection opens the location in a split.
-local notify = require("lib.notify").create("[lsp.tools.ts_type_lookup.ts_telescope_picker]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.ts_type_lookup.ts_telescope_picker]")
 
 local has_telescope, _ = pcall(require, "telescope")
 if not has_telescope then

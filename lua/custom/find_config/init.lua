@@ -1,7 +1,7 @@
 ---@module 'custom.find_config'
 ---@description Cross-platform "find in Neovim config" with pluggable engines (fzf-lua, Telescope)
 
-local notify = require("lib.notify").create("[find_config]")
+local notify = require("lib.nvim.notify").create("[find_config]")
 local defaults = require("custom.find_config.config.defaults")
 
 ---@class Custom.FindConfig

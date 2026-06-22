@@ -1,7 +1,7 @@
 ---@module 'config.markdown_render'
 
-local notify = require("lib.notify").create("[markdown_render]")
-local map    = require("lib.map")
+local notify = require("lib.nvim.notify").create("[markdown_render]")
+local map    = require("lib.nvim.map")
 
 local M = {}
 
@@ -13,7 +13,7 @@ function M.setup()
     enabled = false,  -- explizit deaktiviert beim Start
   })
 
-  require("lib.usercmd").create("MarkdownRender", function(opts)
+  require("lib.nvim.usercmd").create("MarkdownRender", function(opts)
     local arg = opts.args:lower()
     if arg == "on" then
       M.set(true)

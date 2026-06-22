@@ -3,7 +3,7 @@
 --- - VimEnter: ensure dashboard opens once at startup (guaranteed).
 --- - BufWinEnter: defensive opener for truly empty buffers later in the session.
 
-local notify = require("lib.notify").create("[config.snacks.custom_dashboard.autocmds]")
+local notify = require("lib.nvim.notify").create("[config.snacks.custom_dashboard.autocmds]")
 
 local api = vim.api
 local desc_tag = "[snacks.custom_dashboard]: "

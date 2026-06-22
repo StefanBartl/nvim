@@ -8,7 +8,7 @@ local M = {}
 local _notify
 local function notify()
   if not _notify then
-    local ok, n = pcall(require, "lib.notify")
+    local ok, n = pcall(require, "lib.nvim.notify")
     if not ok then
       vim.notify("DBG core.lua: lib.notify FAILED: " .. tostring(n), 4) ---REMOVE
       -- fallback so the rest doesn't break

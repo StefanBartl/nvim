@@ -3,7 +3,7 @@
 --- Requires bash-language-server in PATH (Mason: bash-language-server).
 --- Diagnostics are powered by shellcheck when available.
 
-local notify = require("lib.notify").create("[lsp.servers.bashls]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.bashls]")
 
 local M = {}
 

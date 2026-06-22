@@ -5,7 +5,7 @@
 --- selected Neo-tree node.  Line count is accepted as an explicit parameter
 --- (opts.line_count) so callers remain free to compute it however they choose.
 
-local notify = require("lib.notify").create("[config.neotree.actions.info.node]")
+local notify = require("lib.nvim.notify").create("[config.neotree.actions.info.node]")
 local node_utils = require("config.neotree.utils.node")
 
 local M = {}

@@ -9,7 +9,7 @@
 --- - Unicode Table (floating window)
 
 -- Default toggles for top-level entries
-local notify = require("lib.notify").create("[config.menu.custom_menu]")
+local notify = require("lib.nvim.notify").create("[config.menu.custom_menu]")
 
 local defaults = {
   enable_format = true,

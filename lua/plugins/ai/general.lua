@@ -1,6 +1,6 @@
 ---@module 'plugins.ai'
 
-local notify = require("lib.notify").create("[plugins.ai]")
+local notify = require("lib.nvim.notify").create("[plugins.ai]")
 
 ---@type LazyPluginSpec[]
 return {

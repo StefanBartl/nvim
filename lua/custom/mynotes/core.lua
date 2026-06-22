@@ -1,7 +1,7 @@
 ---@module 'mynotes.core'
 --- Central engine for directory validation, notifications and picker abstraction.
 
-local notify = require("lib.notify").create("[custom.mynotes.core]")
+local notify = require("lib.nvim.notify").create("[custom.mynotes.core]")
 
 local M = {}
 

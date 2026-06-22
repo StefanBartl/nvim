@@ -7,8 +7,8 @@
 ---   - node_at_cursor: cached per vim.fn.getcurpos() hash
 ---   - Pre-compiled TS queries stored in bytecode cache
 
-local lazy = require("lib.lazy")
-local memo = lazy.require("lib.memo")
+local lazy = require("lib.lua.lazy")
+local memo = lazy.require("lib.lua.memo")
 
 local M = {}
 

@@ -3,7 +3,7 @@
 
 local M = {}
 
-local strings = require("lib.strings")
+local strings = require("lib.lua.strings")
 
 --- Provides completion candidates
 ---@param arglead string

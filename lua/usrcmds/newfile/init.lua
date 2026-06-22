@@ -9,7 +9,7 @@
 -- :WriteToR[!] {path}       -> write copy, create parents; with ! force overwrite
 -- :MkParent                 -> ensure parent dir for the current buffer name
 
-local notify = require("lib.notify").create("[usrcmds.newfile]")
+local notify = require("lib.nvim.notify").create("[usrcmds.newfile]")
 
 local M = {}
 

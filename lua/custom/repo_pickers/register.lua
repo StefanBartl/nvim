@@ -1,6 +1,6 @@
 ---@module 'custom.repo_pickers.register'
 --- Registration of public user commands and optional engine-specific extras.
-local notify = require("lib.notify").create("[custom.repo_pickers.register]")
+local notify = require("lib.nvim.notify").create("[custom.repo_pickers.register]")
 
 require("custom.repo_pickers.@types.types")
 

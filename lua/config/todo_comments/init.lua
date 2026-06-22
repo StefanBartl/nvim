@@ -1,6 +1,6 @@
 ---@module 'config.todo_comments'
 
-local unique_table = require("lib.tables.unique_table")
+local unique_table = require("lib.lua.tables.unique_table")
 
 local M = {}
 

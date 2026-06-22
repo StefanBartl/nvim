@@ -7,7 +7,7 @@
 local command = require("usrcmds.migrate.common.command")
 local picker = require("usrcmds.migrate.common.picker")
 local buffer_ops = require("usrcmds.migrate.common.buffer")
-local notify = require("lib.notify")
+local notify = require("lib.nvim.notify")
 
 local M = {}
 

@@ -10,7 +10,7 @@
 ---     autocmd_events = { "BufLeave", "FocusLost" },
 ---   })
 
-local notify = require("lib.notify").create("[config.harpoon.hardening]")
+local notify = require("lib.nvim.notify").create("[config.harpoon.hardening]")
 
 local M = {}
 

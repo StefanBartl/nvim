@@ -4,7 +4,7 @@
 
 --- AUDIT: Modularisieren
 
-local notify = require("lib.notify").create("[custom.markdown.setup.keymaps]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.setup.keymaps]")
 
 local anchor = require("custom.markdown.anchor.jump")
 local image = require("custom.markdown.handler.image")

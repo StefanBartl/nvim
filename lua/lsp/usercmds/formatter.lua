@@ -1,6 +1,6 @@
 ---@module 'lsp.usercmds.formatter'
 
-local notify = require("lib.notify").create("[lsp.usercmds.formatter]")
+local notify = require("lib.nvim.notify").create("[lsp.usercmds.formatter]")
 
 local nvim_create_user_command = vim.api.nvim_create_user_command
 

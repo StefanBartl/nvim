@@ -5,7 +5,7 @@
 --- with configurable fill characters. Supports single-line, multi-line (block),
 --- and repeat operations.
 
-local notify = require("lib.notify").create("[custom.format.column_align.core]")
+local notify = require("lib.nvim.notify").create("[custom.format.column_align.core]")
 
 local M = {}
 

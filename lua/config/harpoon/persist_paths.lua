@@ -8,7 +8,7 @@
 ---   - plenary (only for robust absolute path fallback)
 ---   - harpoon v2 API (prefers :list():add(); falls back gracefully)
 
-local notify = require("lib.notify").create("[config.harpoon.persist_paths]")
+local notify = require("lib.nvim.notify").create("[config.harpoon.persist_paths]")
 
 local M = {}
 

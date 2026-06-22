@@ -2,7 +2,7 @@
 --- SourceKit-LSP for Swift and iOS development.
 --- macOS only - gracefully skips on other platforms.
 
-local notify = require("lib.notify").create("[lsp.servers.sourcekit]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.sourcekit]")
 
 local M = {}
 

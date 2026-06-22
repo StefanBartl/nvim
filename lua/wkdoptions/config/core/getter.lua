@@ -1,8 +1,8 @@
 ---@module 'wkdoptions.config.core.getter'
 --- Safe configuration getters and key collection.
 
-local lazy = require("lib.lazy")
-local split = lazy.require("lib.strings.core").split
+local lazy = require("lib.lua.lazy")
+local split = lazy.require("lib.lua.strings.core").split
 
 local M = {}
 

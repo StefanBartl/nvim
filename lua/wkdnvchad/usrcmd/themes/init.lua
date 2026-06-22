@@ -8,7 +8,7 @@
 ---3. Persisting changes to chadrc.lua file
 ---
 
-local notify = require("lib.notify").create("[wkdnvchad.usrcmd.themes]")
+local notify = require("lib.nvim.notify").create("[wkdnvchad.usrcmd.themes]")
 
 local M = {}
 

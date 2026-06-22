@@ -1,6 +1,6 @@
 ---@module 'debugging.views.display'
 
-local notify = require("lib.notify").create("[debugging.views.display]")
+local notify = require("lib.nvim.notify").create("[debugging.views.display]")
 
 local utils = require("debugging.views.utils")
 local api = vim.api
@@ -59,7 +59,7 @@ function M.execute_and_refresh(tag, cmd, timings)
   end
 
   -- Try to use lib.buf_win_tab.capture if available
-  local ok_capture, capture_lib = pcall(require, "lib.buf_win_tab.capture")
+  local ok_capture, capture_lib = pcall(require, "lib.nvim.buf_win_tab.capture")
   if ok_capture and capture_lib.capture then
     capture_lib.capture(cmd, {
       timeout = 500,

@@ -1,7 +1,7 @@
 ---@module 'config.neotree.safety.operation_queue'
 ---@brief Sequential operation queue for file operations
 
-local notify = require("lib.notify").create("[config.neotree.safety.operation_queue]")
+local notify = require("lib.nvim.notify").create("[config.neotree.safety.operation_queue]")
 
 local M = {}
 

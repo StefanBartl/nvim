@@ -1,7 +1,7 @@
 ---@module 'config.neotree.helper.rel_path_to_require'
 --- Converts a Neo-tree node to Lua require() string(s) and copies to clipboard
 
-local notify = require("lib.notify").create("[config.neotree.actions.rel_path_to_require]")
+local notify = require("lib.nvim.notify").create("[config.neotree.actions.rel_path_to_require]")
 
 local M = {}
 local fn = vim.fn

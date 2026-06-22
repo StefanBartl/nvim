@@ -17,7 +17,7 @@
 --- TODO: check for in-terminal image preview backends first (snacks, image.nvim,
 ---       ueberzug++) and fall back to the system app only when none is available.
 
-local notify     = require("lib.notify").create("[cfg.neotree.keymaps.fs.images]")
+local notify     = require("lib.nvim.notify").create("[cfg.neotree.keymaps.fs.images]")
 local node_utils = require("config.neotree.utils.node")
 
 -- ---------------------------------------------------------------------------

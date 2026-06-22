@@ -16,7 +16,7 @@
 --- Usage:
 ---  require("config.menu.custom_neotree")  -- returns the patched menu table
 ---
-local notify = require("lib.notify").create("[config.menu.custom_neotree]")
+local notify = require("lib.nvim.notify").create("[config.menu.custom_neotree]")
 
 local M = {}
 

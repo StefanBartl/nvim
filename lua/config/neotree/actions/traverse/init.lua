@@ -15,7 +15,7 @@
 ---   traverse.up(state)        -- Navigate to parent directory
 ---   traverse.down(state)      -- Navigate into selected directory node
 
-local notify = require("lib.notify").create("[config.neotree.actions.traverse]")
+local notify = require("lib.nvim.notify").create("[config.neotree.actions.traverse]")
 
 local M = {}
 

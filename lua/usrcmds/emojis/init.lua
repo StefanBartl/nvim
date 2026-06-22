@@ -18,7 +18,7 @@ local api = vim.api
 local fn  = vim.fn
 
 -- notify: use lib.notify if available, else plain vim.notify
-local ok_n, _n = pcall(require, "lib.notify")
+local ok_n, _n = pcall(require, "lib.nvim.notify")
 local N = ok_n and _n.create("[usrcmds.emojis]") or {
   info  = function(m) vim.notify("[emojis] "..m, vim.log.levels.INFO)  end,
   warn  = function(m) vim.notify("[emojis] "..m, vim.log.levels.WARN)  end,

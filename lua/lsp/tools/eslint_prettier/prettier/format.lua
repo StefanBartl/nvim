@@ -1,5 +1,5 @@
 ---@module 'lsp.tools.eslint_prettier.prettier.format'
-local notify = require("lib.notify").create("[lsp.tools.eslint_prettier.prettier.format]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.eslint_prettier.prettier.format]")
 
 local api = vim.api
 local run = require("lsp.tools.eslint_prettier.prettier")

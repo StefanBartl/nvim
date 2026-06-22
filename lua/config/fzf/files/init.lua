@@ -1,7 +1,7 @@
 ---@module 'config.fzf.files'
 ---File picker (fd) configuration and entry formatting
 
-local path_shorten = require("lib.fs.path_shorten")
+local path_shorten = require("lib.nvim.fs.path_shorten")
 
 local M = {}
 

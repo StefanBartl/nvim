@@ -3,7 +3,7 @@
 
 local M = {}
 
-local strings = require("lib.strings")
+local strings = require("lib.lua.strings")
 local http = require("usrcmds.uv_doc.http")
 local parser = require("usrcmds.uv_doc.parser")
 local fetcher = require("usrcmds.uv_doc.fetcher")
@@ -12,7 +12,7 @@ local normalize = require("usrcmds.uv_doc.normalize")
 local constants = require("usrcmds.uv_doc.constants")
 
 -- Create notify instance with proper API
-local notify = require("lib.notify").create("")
+local notify = require("lib.nvim.notify").create("")
 
 --- Fetches and inserts signature at cursor
 ---@param uvname string

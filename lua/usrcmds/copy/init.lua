@@ -3,7 +3,7 @@
 --- Flexible path copy command for Neovim.
 --- Supports relative/absolute paths, parent levels, custom bases, targets, and separators.
 
-local notify = require("lib.notify").create("[usrcmds.copy]")
+local notify = require("lib.nvim.notify").create("[usrcmds.copy]")
 
 local M = {}
 
@@ -63,7 +63,7 @@ end
 ---@param filepath string Absolute path to file
 ---@return string|nil module_path
 local function to_lua_module(filepath)
-  return require("lib.lua_ls.get_module_path")(filepath)
+  return require("lib.nvim.lua_ls.get_module_path")(filepath)
 end
 
 --- Derive a default module style from the current buffer's filetype.
@@ -239,7 +239,7 @@ end
 -- ============================================================================
 
 local function attach_keymap()
-    require("lib.map")("n", "<leader>cnm", function()
+    require("lib.nvim.map")("n", "<leader>cnm", function()
     vim.cmd("Copy path nvim_module")
   end, { desc = "[usrcmds.copy] Copy module path relative to nvim config" })
 end

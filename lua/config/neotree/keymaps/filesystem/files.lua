@@ -1,7 +1,7 @@
 ---@module 'config.neotree.keymaps.filesystem.files'
 --- File open, expand, and split-related mappings.
 
-local notify = require("lib.notify").create("[cfg.neotree.keymaps.fs] ")
+local notify = require("lib.nvim.notify").create("[cfg.neotree.keymaps.fs] ")
 local node_utils = require("config.neotree.utils.node")
 local safe_hide_preview = require("config.neotree.utils").safe_hide_preview
 
@@ -16,7 +16,7 @@ return {
       safe_hide_preview()
 
       -- Get alternate buffer path (:e # semantics)
-      local _, filepath = require("lib.buffer.get_alternate")()
+      local _, filepath = require("lib.nvim.buffer.get_alternate")()
       if not filepath or filepath == "" then
         notify.warn("No buffer to reveal (try opening a file first)")
         return

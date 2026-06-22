@@ -16,7 +16,7 @@
 
 ---@see custom.format.table.@types
 
-local notify = require("lib.notify").create("[custom.format.table]")
+local notify = require("lib.nvim.notify").create("[custom.format.table]")
 
 local M = {}
 

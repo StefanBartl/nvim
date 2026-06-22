@@ -27,7 +27,7 @@
 --   end, { desc = 'Toggle auto-center in file explorers' })
 
 
-local notify = require("lib.notify").create("[autocmds.auto-center-fexplorer]")
+local notify = require("lib.nvim.notify").create("[autocmds.auto-center-fexplorer]")
 
 local M = {}
 

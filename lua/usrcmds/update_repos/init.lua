@@ -7,7 +7,7 @@
 ---Asynchronously update all git repositories inside a directory.
 ---Uses non-blocking vim.system calls and a sequential job queue.
 
-local notify = require("lib.notify").create("[usrcmds.update_repos] ")
+local notify = require("lib.nvim.notify").create("[usrcmds.update_repos] ")
 
 local M = {}
 

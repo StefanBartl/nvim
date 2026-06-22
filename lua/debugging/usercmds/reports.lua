@@ -1,10 +1,10 @@
 ---@module 'debugging.usercmds.reports'
 
-local notify = require("lib.notify").create("[debugging.usercmds.reports]")
+local notify = require("lib.nvim.notify").create("[debugging.usercmds.reports]")
 
-local buflib = require("lib.buf_win_tab.buffer_utils")
-local winlib = require("lib.buf_win_tab.windows_utils")
-local tablib = require("lib.buf_win_tab.tabs_utils")
+local buflib = require("lib.nvim.buf_win_tab.buffer_utils")
+local winlib = require("lib.nvim.buf_win_tab.windows_utils")
+local tablib = require("lib.nvim.buf_win_tab.tabs_utils")
 
 local M = {}
 

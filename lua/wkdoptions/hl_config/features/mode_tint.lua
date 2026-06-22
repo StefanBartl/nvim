@@ -1,7 +1,7 @@
 ---@module 'wkdoptions.hl_config.features.mode_tint'
 --- Per-mode CursorLine tinting with cached mode tracking to avoid redundant updates.
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local CursorLine = lazy.require("wkdoptions.hl_config.features.cursorline")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip

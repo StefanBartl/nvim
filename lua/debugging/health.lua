@@ -23,25 +23,25 @@ function M.check()
   end
 
   -- Check lib dependencies
-  local ok_capture = pcall(require, "lib.buf_win_tab.capture")
+  local ok_capture = pcall(require, "lib.nvim.buf_win_tab.capture")
   if ok_capture then
-    vim.health.ok("lib.buf_win_tab.capture available")
+    vim.health.ok("lib.nvim.buf_win_tab.capture available")
   else
-    vim.health.info("lib.buf_win_tab.capture not found (fallback mode active)")
+    vim.health.info("lib.nvim.buf_win_tab.capture not found (fallback mode active)")
   end
 
-  local ok_buflib = pcall(require, "lib.buf_win_tab.windows_utils")
+  local ok_buflib = pcall(require, "lib.nvim.buf_win_tab.windows_utils")
   if ok_buflib then
-    vim.health.ok("lib.buf_win_tab.windows_utils available")
+    vim.health.ok("lib.nvim.buf_win_tab.windows_utils available")
   else
-    vim.health.warn("lib.buf_win_tab.windows_utils not found (BufReport unavailable)")
+    vim.health.warn("lib.nvim.buf_win_tab.windows_utils not found (BufReport unavailable)")
   end
 
-  local ok_tablib = pcall(require, "lib.buf_win_tab.tabs_utils")
+  local ok_tablib = pcall(require, "lib.nvim.buf_win_tab.tabs_utils")
   if ok_tablib then
-    vim.health.ok("lib.buf_win_tab.tabs_utils available")
+    vim.health.ok("lib.nvim.buf_win_tab.tabs_utils available")
   else
-    vim.health.warn("lib.buf_win_tab.tabs_utils not found (TabReport unavailable)")
+    vim.health.warn("lib.nvim.buf_win_tab.tabs_utils not found (TabReport unavailable)")
   end
 
   -- Check write permissions

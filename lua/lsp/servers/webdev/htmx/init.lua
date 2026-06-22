@@ -1,7 +1,7 @@
 ---@module 'lsp.servers.webdev.htmx_lsp'
 --- HTMX Language Server für HTMX-Attribute
 
-local notify = require("lib.notify").create("[lsp.servers.webdev.htmx_lsp]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.webdev.htmx_lsp]")
 
 local M = {}
 

@@ -4,8 +4,8 @@
 --- This module provides usercommands for miscellaneous snacks.nvim features
 --- like file explorer, notifications, and command history.
 
-local usercmd = require("lib.usercmd")
-local notify = require("lib.notify").create("[config.snacks.usrcmds.misc]")
+local usercmd = require("lib.nvim.usercmd")
+local notify = require("lib.nvim.notify").create("[config.snacks.usrcmds.misc]")
 
 local M = {}
 

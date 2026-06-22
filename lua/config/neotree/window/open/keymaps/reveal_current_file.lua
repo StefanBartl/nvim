@@ -1,6 +1,6 @@
 ---@module 'config.neotree.open.keymaps.reveal_current_file'
 
-local map = require("lib.map")
+local map = require("lib.nvim.map")
 
 local M = {}
 

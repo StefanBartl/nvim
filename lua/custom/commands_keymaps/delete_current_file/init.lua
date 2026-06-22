@@ -21,7 +21,7 @@
 
 --FIX: insert enable() und attach()
 
-local notify = require("lib.notify").create("[custom.commands_keymaps.delete_current_file]")
+local notify = require("lib.nvim.notify").create("[custom.commands_keymaps.delete_current_file]")
 
 local api = vim.api
 local fn = vim.fn

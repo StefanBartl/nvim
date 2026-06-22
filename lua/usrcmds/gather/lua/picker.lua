@@ -1,7 +1,7 @@
 ---@module 'usrcmds.gather.lua.picker'
 ---@description Telescope picker for displaying CWD-wide gather results
 
-local notify = require("lib.notify").create("[usrcmds.gather.lua.picker]")
+local notify = require("lib.nvim.notify").create("[usrcmds.gather.lua.picker]")
 
 require("usrcmds.gather.@types")
 

@@ -32,13 +32,13 @@ local M = {}
 local function dispatch(target, ctx)
   local ok_reg, registry = pcall(require, "custom.open.registry")
   if not ok_reg then
-    require("lib.notify").create("[custom.open]").error("Registry not available")
+    require("lib.nvim.notify").create("[custom.open]").error("Registry not available")
     return
   end
 
   local handler = registry.get(target)
   if not handler then
-    require("lib.notify").create("[custom.open]").error(
+    require("lib.nvim.notify").create("[custom.open]").error(
       string.format("Unknown target: '%s'  (available: %s)",
         target, table.concat(registry.list_keys(), ", "))
     )
@@ -47,7 +47,7 @@ local function dispatch(target, ctx)
 
   local ok, err = pcall(handler.run, ctx)
   if not ok then
-    require("lib.notify").create("[custom.open]").error(
+    require("lib.nvim.notify").create("[custom.open]").error(
       string.format("Handler '%s' failed: %s", target, tostring(err))
     )
   end
@@ -116,7 +116,7 @@ function M.setup()
     local ctx   = context.resolve(scope, target, signals)
 
     if not ctx then
-      require("lib.notify").create("[custom.open]").warn("Nothing to open")
+      require("lib.nvim.notify").create("[custom.open]").warn("Nothing to open")
       return
     end
 

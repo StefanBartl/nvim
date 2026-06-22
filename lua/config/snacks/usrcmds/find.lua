@@ -4,8 +4,8 @@
 --- This module provides usercommands for find-related snacks.nvim picker features
 --- like finding files, buffers, git files, recent files, and projects.
 
-local usercmd = require("lib.usercmd")
-local notify = require("lib.notify").create("[config.snacks.usrcmds.find]")
+local usercmd = require("lib.nvim.usercmd")
+local notify = require("lib.nvim.notify").create("[config.snacks.usrcmds.find]")
 
 local M = {}
 

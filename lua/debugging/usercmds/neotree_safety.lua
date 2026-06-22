@@ -1,6 +1,6 @@
 ---@module 'debugging.usercmds.neotree_safety'
 
-local notify = require("lib.notify").create("[debugging.usercmds.neotree_safety]")
+local notify = require("lib.nvim.notify").create("[debugging.usercmds.neotree_safety]")
 
 local M = {}
 

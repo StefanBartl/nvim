@@ -35,7 +35,7 @@
 
 --FIX: Optimize
 
-local notify = require("lib.notify").create("[usrcmds.project_tree]")
+local notify = require("lib.nvim.notify").create("[usrcmds.project_tree]")
 
 local lib = require("lib")
 

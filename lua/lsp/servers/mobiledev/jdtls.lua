@@ -2,7 +2,7 @@
 --- Eclipse JDT Language Server for Java (Android development).
 --- Requires Java runtime.
 
-local notify = require("lib.notify").create("[lsp.servers.jdtls]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.jdtls]")
 
 local M = {}
 

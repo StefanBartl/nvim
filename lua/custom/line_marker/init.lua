@@ -1,7 +1,7 @@
 ---@module 'custom.line_marker'
 ---Allows marking lines and yanking all marked lines via mappings.
 
-local notify = require("lib.notify").create("[custom.line_marker]")
+local notify = require("lib.nvim.notify").create("[custom.line_marker]")
 
 local M = {}
 

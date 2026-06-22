@@ -1,7 +1,7 @@
 ---@module 'wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols'
 --- Fully async LSP document symbols with debouncing and proper error handling
 
-local notify = require("lib.notify").create("[wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols]")
+local notify = require("lib.nvim.notify").create("[wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols]")
 
 local M = {}
 

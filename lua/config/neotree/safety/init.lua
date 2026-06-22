@@ -1,7 +1,7 @@
 ---@module 'config.neotree.safety'
 ---@brief Aggregated safety features for file operations
 
-local notify = require("lib.notify").create("[config.neotree.safety]")
+local notify = require("lib.nvim.notify").create("[config.neotree.safety]")
 
 local M = {}
 

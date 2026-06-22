@@ -1,7 +1,7 @@
 ---@module 'lsp.servers.csharp'
 --- Omnisharp via native LSP config/enable (Neovim ≥ 0.11).
 
-local notify = require("lib.notify").create("[lsp.servers.csharp]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.csharp]")
 
 local lsp = vim.lsp
 local executable = vim.fn.executable

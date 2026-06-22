@@ -1,6 +1,6 @@
 ---@module 'custom.markdown.tableview.views.live'
 
-local notify = require("lib.notify").create("[custom.markdown.tableview.live]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.tableview.live]")
 
 local api = vim.api
 local uv = vim.loop

@@ -4,7 +4,7 @@
 local M = {}
 
 local lsp = vim.lsp
-local notify = require("lib.notify").create("[LSP.Recovery] ")
+local notify = require("lib.nvim.notify").create("[LSP.Recovery] ")
 
 ---@class RecoveryState
 ---@field attempts table<string, integer> -- server_name -> attempt count

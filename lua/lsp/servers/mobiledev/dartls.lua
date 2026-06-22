@@ -1,7 +1,7 @@
 ---@module 'lsp.servers.dartls'
 --- Dart Analysis Server for Flutter development.
 
-local notify = require("lib.notify").create("[lsp.servers.dartls]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.dartls]")
 
 local M = {}
 

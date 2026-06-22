@@ -4,8 +4,8 @@
 --- This module provides usercommands for grep-related snacks.nvim picker features
 --- like grep, buffer lines, grep buffers, and grep word/selection.
 
-local usercmd = require("lib.usercmd")
-local notify = require("lib.notify").create("[config.snacks.usrcmds.grep]")
+local usercmd = require("lib.nvim.usercmd")
+local notify = require("lib.nvim.notify").create("[config.snacks.usrcmds.grep]")
 
 local M = {}
 

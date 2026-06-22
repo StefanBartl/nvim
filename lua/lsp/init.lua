@@ -1,7 +1,7 @@
 ---@module 'lsp'
 -- Native LSP bootstrap for Neovim ≥ 0.11.
 
-local notify = require("lib.notify").create("[lsp]")
+local notify = require("lib.nvim.notify").create("[lsp]")
 
 local M = {}
 

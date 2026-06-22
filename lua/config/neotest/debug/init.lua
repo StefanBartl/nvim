@@ -1,6 +1,6 @@
 ---@module 'config.neotest.debug'
 
-local notify = require("lib.notify").create("[neotest.debug]")
+local notify = require("lib.nvim.notify").create("[neotest.debug]")
 
 local M = {}
 
@@ -234,7 +234,7 @@ end
 ----------------------------------------------------------------------
 
 function M.keymaps()
-  local map = require("lib.map")
+  local map = require("lib.nvim.map")
 
   map("n", "<leader>ntr", function()
     local ok, neotest = pcall(require, "neotest")

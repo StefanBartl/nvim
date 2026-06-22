@@ -3,7 +3,7 @@
 --- inline raw URLs, and simple HTML anchors). Exports helpers for extraction and
 --- cross-platform opening.
 
-local notify = require("lib.notify").create("[custom.markdown.handler.url]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.handler.url]")
 
 local M = {}
 

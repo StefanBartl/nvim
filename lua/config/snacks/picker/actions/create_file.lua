@@ -4,7 +4,7 @@
 --- Provides <C-a> action to create files and folders in the current entry's directory.
 --- Adapted from config.telescope.actions.create_file
 
-local notify = require("lib.notify").create("[config.snacks.picker.actions.create_file]")
+local notify = require("lib.nvim.notify").create("[config.snacks.picker.actions.create_file]")
 local fn = vim.fn
 
 local M = {}

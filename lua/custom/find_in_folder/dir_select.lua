@@ -11,7 +11,7 @@
 ---   2. **vim.ui.input** – plain fallback that just asks the user to type a path.
 ---      Supports `~` expansion and tab-completion via `cmdline = "dir"`.
 
-local notify = require("lib.notify").create("[find_in_folder.dir_select]")
+local notify = require("lib.nvim.notify").create("[find_in_folder.dir_select]")
 
 local M = {}
 

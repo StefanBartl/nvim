@@ -3,7 +3,7 @@
 --- English comments in code per project conventions.
 --- Full EmmyLua annotations included at top as requested.
 
-local notify = require("lib.notify").create("[custom.markdown.tableview.commands]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.tableview.commands]")
 
 local M = {}
 

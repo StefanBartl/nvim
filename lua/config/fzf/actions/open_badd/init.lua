@@ -1,7 +1,7 @@
 ---@module 'config.fzf.actions.open_badd'
 ---@description Open file in background buffer without closing fzf-lua
 
-local notify = require("lib.notify").create("[config.fzf.actions.open_badd]")
+local notify = require("lib.nvim.notify").create("[config.fzf.actions.open_badd]")
 
 local M = {}
 

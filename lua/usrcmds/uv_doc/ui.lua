@@ -3,7 +3,7 @@
 
 local M = {}
 
-local strings = require("lib.strings")
+local strings = require("lib.lua.strings")
 local config = require("usrcmds.uv_doc.config")
 local http = require("usrcmds.uv_doc.http")
 local parser = require("usrcmds.uv_doc.parser")
@@ -12,7 +12,7 @@ local search = require("usrcmds.uv_doc.search")
 local normalize = require("usrcmds.uv_doc.normalize")
 local constants = require("usrcmds.uv_doc.constants")
 
-local notify = require("lib.notify").create("[usrcmds.uvdoc.ui]")
+local notify = require("lib.nvim.notify").create("[usrcmds.uvdoc.ui]")
 
 --- Opens floating list with cursorline navigation
 ---@param names string[]

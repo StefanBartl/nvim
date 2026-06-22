@@ -4,7 +4,7 @@
 --- Provides functions to insert the current buffer's file path at the cursor
 --- in various formats (cwd-relative, absolute, lua module path, etc.).
 
-local notify = require("lib.notify").create("[custom.insert.filepath.core]")
+local notify = require("lib.nvim.notify").create("[custom.insert.filepath.core]")
 
 local M = {}
 

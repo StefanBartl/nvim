@@ -2,7 +2,7 @@
 --- Breadcrumbs orchestrator: coordinates context building and winbar rendering.
 --- Lazy-loads the context module only when breadcrumbs are enabled.
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Winbar = lazy.require("wkdoptions.hl_config.breadcrumbs.winbar")
 

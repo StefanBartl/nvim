@@ -1,7 +1,7 @@
 ---@module 'usrcmds.gather.lua.functions'
 ---@description Collects Lua function definitions using Tree-sitter with comprehensive pattern coverage
 
-local notify = require("lib.notify").create("[usrcmds.gather.lua.functions]")
+local notify = require("lib.nvim.notify").create("[usrcmds.gather.lua.functions]")
 
 require("usrcmds.gather.@types")
 

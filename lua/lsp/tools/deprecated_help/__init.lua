@@ -4,7 +4,7 @@
 --- symbol under the cursor. Install and call `require('nvim.deprecated_help').setup()` from init.lua.
 --- Comments in code are in English per project convention.
 
-local notify = require("lib.notify").create("[lsp.tools.deprecated_help.__init]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.deprecated_help.__init]")
 
 local M = {}
 

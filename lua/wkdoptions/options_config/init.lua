@@ -6,7 +6,7 @@
 ---   * optional subtle matchparen blink (enable_matchparen, matchtime_tenths)
 ---   * user commands :MyOptSet / :MyOptShow / :MyOptList
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
 local ocfg = lazy.require("wkdoptions.config.data.options")
 local hcfg = lazy.require("wkdoptions.config.data.highlight")

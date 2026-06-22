@@ -2,7 +2,7 @@
 --- Kotlin Language Server for Android development.
 --- Requires JAVA_HOME to be set.
 
-local notify = require("lib.notify").create("[lsp.servers.kotlin_language_server]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.kotlin_language_server]")
 
 local M = {}
 

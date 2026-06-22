@@ -13,7 +13,7 @@
 ---   - isdirectory() is always called on the raw Linux path, not the
 ---     translated Windows path, because Neovim in WSL only sees the Linux VFS.
 
-local notify     = require("lib.notify").create("[config.neotree.open.filemanager.win]")
+local notify     = require("lib.nvim.notify").create("[config.neotree.open.filemanager.win]")
 local node_utils = require("config.neotree.utils.node")
 
 local M = {}

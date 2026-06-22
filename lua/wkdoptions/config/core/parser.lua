@@ -2,9 +2,9 @@
 --- Pure functions for parsing configuration values.
 --- All functions are memoized for performance.
 
-local lazy = require("lib.lazy")
-local trim = lazy.require("lib.strings.core").trim
-local memo = lazy.require("lib.memo")
+local lazy = require("lib.lua.lazy")
+local trim = lazy.require("lib.lua.strings.core").trim
+local memo = lazy.require("lib.lua.memo")
 
 local M = {}
 

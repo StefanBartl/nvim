@@ -1,6 +1,6 @@
 ---@module 'lsp.tools.eslint_prettier.eslint.fix'
 --- Run eslint_d --fix on current file (uses resolved bin)
-local notify = require("lib.notify").create("[lsp.tools.eslint_prettier.eslint.fix]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.eslint_prettier.eslint.fix]")
 
 local api = vim.api
 local eslint = require("lsp.tools.eslint_prettier.eslint")

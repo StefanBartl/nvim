@@ -3,7 +3,7 @@
 
 local M = {}
 
-local strings = require("lib.strings")
+local strings = require("lib.lua.strings")
 local config = require("usrcmds.uv_doc.config")
 
 --- Executes curl with timeout and size limits

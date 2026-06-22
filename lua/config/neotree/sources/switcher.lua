@@ -1,10 +1,10 @@
 ---@module 'config.neotree.sources.switcher'
 ---@brief Hover-based source switcher for Neo-tree using direct Neo-tree commands
 
-local notify = require("lib.notify").create("[config.neotree.sources.switcher]")
+local notify = require("lib.nvim.notify").create("[config.neotree.sources.switcher]")
 
 local ICONS = require("config.neotree.sources.icons")
-local hover_select = require("lib.ui.hover_select")
+local hover_select = require("lib.nvim.ui.hover_select")
 
 local M = {}
 

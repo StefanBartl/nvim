@@ -6,7 +6,7 @@
 ---   • Grep-Tabs via ripgrep; Files-Tab via a robust, imported finder argv.
 ---   • No global side effects; UI concerns (vim.notify) only in tele_func.
 
-local notify = require("lib.notify").create("[usrcmds.search_all_drives] ")
+local notify = require("lib.nvim.notify").create("[usrcmds.search_all_drives] ")
 
 ---@type SearchMounts
 local Mounts = { cache = nil }

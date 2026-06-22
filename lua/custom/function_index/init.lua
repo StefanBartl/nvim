@@ -5,7 +5,7 @@
 --- or relying on LSP. Supports Lua, Python, JavaScript/TypeScript, Go, Rust,
 --- C/C++, Java, and Shell scripts.
 
-local notify = require("lib.notify").create("[custom.function_index]")
+local notify = require("lib.nvim.notify").create("[custom.function_index]")
 
 local M = {}
 

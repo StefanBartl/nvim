@@ -16,7 +16,7 @@
 ---   bevor er splittet. Das hier stellt sicher, dass Neo-tree-Fokus
 ---   danach korrekt wiederhergestellt wird.
 
-local notify     = require("lib.notify").create("[config.neotree.actions.pdfport]")
+local notify     = require("lib.nvim.notify").create("[config.neotree.actions.pdfport]")
 local node_utils = require("config.neotree.utils.node")
 
 local M = {}
@@ -96,7 +96,7 @@ function M.open(state)
     return
   end
 
-  local hover_ok, hover = pcall(require, "lib.ui.hover_select")
+  local hover_ok, hover = pcall(require, "lib.nvim.ui.hover_select")
 
   local choices = {
     { label = "buffer  – plain text (auto)",    mode = "buffer",   backend = nil          },

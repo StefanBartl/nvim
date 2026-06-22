@@ -5,7 +5,7 @@
 --- - sections only shown if at least one child is visible
 --- - robust nil checks and step-by-step logic
 
-local notify = require("lib.notify").create("[config.menu-update.menu.neotree]")
+local notify = require("lib.nvim.notify").create("[config.menu-update.menu.neotree]")
 
 local wrap_with_close = require("config.menu.neotree.wrap_with_close")
 local menu_state = require("menu.state")

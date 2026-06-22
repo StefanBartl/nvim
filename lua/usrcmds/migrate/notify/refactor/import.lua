@@ -57,7 +57,7 @@ function M.inject(bufnr, module_name)
     local fname = api.nvim_buf_get_name(bufnr)
 
     if fname ~= "" then
-      local ok, get_module_path = pcall(require, "lib.lua_ls.get_module_path")
+      local ok, get_module_path = pcall(require, "lib.nvim.lua_ls.get_module_path")
       if ok then
         module_name = get_module_path(fname)
       end
@@ -68,9 +68,9 @@ function M.inject(bufnr, module_name)
   -- Determine what import line to use
   local import_str
   if module_name and module_name ~= "" then
-    import_str = string.format('local notify = require("lib.notify").create("[%s]")', module_name)
+    import_str = string.format('local notify = require("lib.nvim.notify").create("[%s]")', module_name)
   else
-    import_str = 'local notify = require("lib.notify").create("")'
+    import_str = 'local notify = require("lib.nvim.notify").create("")'
   end
 
   -- If we already have exactly this import, nothing to do

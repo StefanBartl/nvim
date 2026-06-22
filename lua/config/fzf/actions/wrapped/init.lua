@@ -1,7 +1,7 @@
 ---@module 'config.fzf.actions.wrapped'
 ---@description fzf-lua custom actions with proper action wrappers
 
-local notify = require("lib.notify").create("[config.fzf.actions.wrapped]")
+local notify = require("lib.nvim.notify").create("[config.fzf.actions.wrapped]")
 
 local M = {}
 

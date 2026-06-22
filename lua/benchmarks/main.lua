@@ -4,7 +4,7 @@
 --- Central entry point for all benchmark suites.
 --- Supports multiple output formats: notify, file, return table.
 
-local notify = require("lib.notify").create("[benchmarks]")
+local notify = require("lib.nvim.notify").create("[benchmarks]")
 
 local M = {}
 

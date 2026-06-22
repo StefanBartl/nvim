@@ -1,7 +1,7 @@
 ---@module 'config.neotree'
 ---@brief Neo-tree unified configuration and initialization
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local CURRENT_HL_DEFAULTS = lazy.require("config.neotree.current_hl.defaults")
 local CWD_SYNC_DEFAULTS = lazy.require("config.neotree.cwd_sync.defaults")
 local TRASH_DEFAULTS = lazy.require("config.neotree.trash.defaults")

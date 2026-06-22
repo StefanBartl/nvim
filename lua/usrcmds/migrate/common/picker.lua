@@ -15,7 +15,7 @@ local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local previewers = require("telescope.previewers")
 local conf = require("telescope.config").values
-local notify = require("lib.notify").create("[migrate.picker]")
+local notify = require("lib.nvim.notify").create("[migrate.picker]")
 
 local M = {}
 

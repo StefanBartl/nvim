@@ -4,7 +4,7 @@
 --- Provides markdown-specific formatting subcommands:
 --- • headline_separators: Ensure proper spacing between H2+ sections
 
-local notify = require("lib.notify").create("[custom.format.markdown]")
+local notify = require("lib.nvim.notify").create("[custom.format.markdown]")
 
 local M = {}
 

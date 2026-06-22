@@ -2,7 +2,7 @@
 -- ============================================================================
 -- Typed configuration accessor for LSP-based statusline module
 
-local notify = require("lib.notify").create("[wkdnvchad.ui.statusline.modules.lsp.config]")
+local notify = require("lib.nvim.notify").create("[wkdnvchad.ui.statusline.modules.lsp.config]")
 
 local M = {}
 

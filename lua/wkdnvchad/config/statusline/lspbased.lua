@@ -1,7 +1,7 @@
 ---@module 'wkdnvchad.config.statusline.lspbased'
 --- LSP-aware statusline with breadcrumbs and enhanced modules
 
-local notify = require("lib.notify").create("[wkdnvchad.config.statusline.lspbased]")
+local notify = require("lib.nvim.notify").create("[wkdnvchad.config.statusline.lspbased]")
 
 local M = {}
 

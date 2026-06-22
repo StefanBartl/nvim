@@ -3,7 +3,7 @@
 --- Prefers SQLite-backed history (smart_history) if available,
 --- otherwise falls back to a file-based history.
 
-local notify = require("lib.notify").create("[config.telescope.history]")
+local notify = require("lib.nvim.notify").create("[config.telescope.history]")
 
 local M = {}
 

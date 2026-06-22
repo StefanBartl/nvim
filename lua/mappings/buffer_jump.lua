@@ -5,7 +5,7 @@
 --- used to perform the switch (this respects tabline-specific winfixbuf logic).
 --- Otherwise a safe fallback to `nvim_set_current_buf` is used.
 
-local notify = require("lib.notify").create("[mappings.buffer_jump]")
+local notify = require("lib.nvim.notify").create("[mappings.buffer_jump]")
 
 local M = {}
 

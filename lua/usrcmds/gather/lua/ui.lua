@@ -1,7 +1,7 @@
 ---@module 'usrcmds.gather.lua.ui'
 ---@description UI utilities for displaying gather results in scratch buffers
 
-local notify = require("lib.notify").create("[usrcmds.gather.lua.ui]")
+local notify = require("lib.nvim.notify").create("[usrcmds.gather.lua.ui]")
 
 local api = vim.api
 

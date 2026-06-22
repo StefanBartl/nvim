@@ -2,7 +2,7 @@
 -- Polymorphic root_dir resolver for Marksman LSP.
 
 local cfg = require("lsp.servers.marksman.config")
-local _cwd = require("lib.cross.fs._cwd")
+local _cwd = require("lib.nvim.cross.fs._cwd")
 local fs = vim.fs
 
 --- @return fun(arg:(string|integer), cb?:fun(root:string)):string

@@ -6,7 +6,7 @@
 ---@class anchor_jump_module
 ---@field jump fun(): nil
 
-local notify = require("lib.notify").create("[custom.markdown.anchor.jump]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.anchor.jump]")
 
 local M = {}
 

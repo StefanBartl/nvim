@@ -5,7 +5,7 @@
 ---- execute the translate.nvim command for either a whole range or multiple
 ---  safe subranges when skipping code is requested.
 ---- Keep the interface small: replace_range(start, end, target_lang, opts)
-local notify = require("lib.notify").create("[config.translate.replace]")
+local notify = require("lib.nvim.notify").create("[config.translate.replace]")
 
 local M = {}
 

@@ -1,6 +1,6 @@
 ---@module 'lsp.core.registry'
 
-local notify = require("lib.notify").create("[lsp.core.registry]")
+local notify = require("lib.nvim.notify").create("[lsp.core.registry]")
 
 local M = {}
 
@@ -40,7 +40,7 @@ function M.setup_all(shared)
   end
 
   -- iOS: sourcekit hinzufügen
- -- if require("lib.cross.platform.is_macos")() then
+ -- if require("lib.nvim.cross.platform.is_macos")() then
   --  ACTIVE[#ACTIVE + 1] = "mobiledev.sourcekit"
   --end
 

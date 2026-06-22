@@ -3,7 +3,7 @@
 --- Adds a helper to format while preserving all window views that display the buffer.
 --- Linux/macOS focused; works when Conform is available.
 
-local notify = require("lib.notify").create("[lsp.formatter.conform]")
+local notify = require("lib.nvim.notify").create("[lsp.formatter.conform]")
 
 local api = vim.api
 local fn = vim.fn

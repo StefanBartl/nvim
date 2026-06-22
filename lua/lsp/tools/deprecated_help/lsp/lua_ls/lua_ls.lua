@@ -10,7 +10,7 @@
 ---  - This module registers itself with myplugin.lsp_common.
 ---  - It relies on myplugin.catch and myplugin.helper.
 
-local notify = require("lib.notify").create("[lsp.tools.deprecated_help.lsp.lua_ls.lua_ls]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.deprecated_help.lsp.lua_ls.lua_ls]")
 
 local helper = require("lsp.tools.deprecated_help.helper")
 local catch = require("lsp.tools.deprecated_help.lsp.lua_ls.catch")

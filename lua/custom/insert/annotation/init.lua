@@ -1,7 +1,7 @@
 ---@module 'custom.insert.lua_module_annotation'
 --- UserCommand zum Einfügen von Emmy Lua @module Annotation
 
-local notify = require("lib.notify").create("[custom.insert.annotation]")
+local notify = require("lib.nvim.notify").create("[custom.insert.annotation]")
 
 local M = {}
 

@@ -1,7 +1,7 @@
 ---@module 'config.neotest.utils.validate_consumer'
 ---@brief Validiert die korrekte Initialisierung des Neo-tree Tests Consumers
 
-local notify = require("lib.notify").create("[neotest.validate]")
+local notify = require("lib.nvim.notify").create("[neotest.validate]")
 
 local M = {}
 

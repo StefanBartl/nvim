@@ -1,5 +1,5 @@
 ---@module 'config.telescope.open_background'
-local notify = require("lib.notify").create("[config.telescope.open_background]")
+local notify = require("lib.nvim.notify").create("[config.telescope.open_background]")
 
 local action_state = require("telescope.actions.state")
 

@@ -1,11 +1,11 @@
 ---@module 'debugging.views.capture'
 ---Unified capture system for :messages, Noice, etc.
 
-local notify = require("lib.notify").create("[debugging.views.capture]")
+local notify = require("lib.nvim.notify").create("[debugging.views.capture]")
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local copy_to_clipboard = lazy.require("debugging.views.capture.clipboard")
-local write_file = lazy.require("lib.fs.write.to_file")
+local write_file = lazy.require("lib.nvim.fs.write.to_file")
 
 local M = {}
 
@@ -21,10 +21,10 @@ end
 
 ---@return string dir, string logfile
 local function resolve_paths()
-  local base = require("lib.normalize").normalize_path(M.base_dir)
+  local base = require("lib.nvim.normalize").normalize_path(M.base_dir)
   local dir = base
   local timestamp = os.date("%Y%m%d-%H%M%S")
-  local logfile = require("lib.fs.path").joinpath({ dir, string.format("messages-%s.log", timestamp) })
+  local logfile = require("lib.nvim.fs.path").joinpath({ dir, string.format("messages-%s.log", timestamp) })
   return dir, logfile
 end
 
@@ -308,7 +308,7 @@ function M.capture_messages(opts)
   end
 
   messages = rstrip(messages)
-  local line_count = require("lib.strings.core").count_lines(messages)
+  local line_count = require("lib.lua.strings.core").count_lines(messages)
 
   if debug then
     notify.debug(("DebugViews: captured %d bytes, %d lines via %s"):format(#messages, line_count, source))

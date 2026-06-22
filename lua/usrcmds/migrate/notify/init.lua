@@ -3,9 +3,9 @@
 ---@description
 --- Enhanced version with auto-write for CWD mode
 
-local notify = require("lib.notify").create("[migrate.notify]")
+local notify = require("lib.nvim.notify").create("[migrate.notify]")
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local picker = lazy.require("usrcmds.migrate.common.picker")
 local buffer_ops = lazy.require("usrcmds.migrate.common.buffer")
 local parser = lazy.require("usrcmds.migrate.notify.parser")

@@ -2,7 +2,7 @@
 
 -- FIX: Ohne auto_close funktionert es nicht korrekt, weil neotree sich nach dem ausfphren des Mappings ungewollt rechts öffnet
 
-local notify = require("lib.notify").create("[cfg.neotree.actions.node_replace_buf]")
+local notify = require("lib.nvim.notify").create("[cfg.neotree.actions.node_replace_buf]")
 
 local api = vim.api
 local fn = vim.fn

@@ -33,7 +33,7 @@ local api  = vim.api
 local diag = vim.diagnostic
 local fn   = vim.fn
 
-local notify = require("lib.notify").create("[spell]")
+local notify = require("lib.nvim.notify").create("[spell]")
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Module
@@ -592,7 +592,7 @@ end
 ---@param callback function
 ---@param desc     string
 local function register_cmd(name, callback, desc)
-  local ok, usercmd = pcall(require, "lib.usercmd")
+  local ok, usercmd = pcall(require, "lib.nvim.usercmd")
 
   if ok and type(usercmd) == "function" then
     usercmd(name, callback, { desc = desc })
@@ -605,7 +605,7 @@ end
 ---@param rhs  function
 ---@param desc string
 local function register_map(lhs, rhs, desc)
-  local ok, libmap = pcall(require, "lib.map")
+  local ok, libmap = pcall(require, "lib.nvim.map")
 
   if ok and type(libmap) == "function" then
     libmap("n", lhs, rhs, { desc = desc })
@@ -664,7 +664,7 @@ function M.setup(opts)
   }
 
   -- Wrap raw command handler via lib.usercmd if available, else fallback.
-  local ok_uc, usercmd = pcall(require, "lib.usercmd")
+  local ok_uc, usercmd = pcall(require, "lib.nvim.usercmd")
 
   if ok_uc and type(usercmd) == "function" then
     usercmd("SpellChecker",  cmd_run, vim.tbl_extend("force", cmd_opts, {
@@ -696,7 +696,7 @@ function M.setup(opts)
   end
 
   -- ── Autocmd: clean up state for deleted buffers ───────────────────────────
-  local ok_ag, augroup = pcall(require, "lib.augroup")
+  local ok_ag, augroup = pcall(require, "lib.nvim.autocmd.augroup")
 
   if ok_ag and type(augroup) == "function" then
     augroup("cfg_spell_checker_gc", {

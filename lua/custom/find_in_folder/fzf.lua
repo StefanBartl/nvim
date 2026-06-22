@@ -1,7 +1,7 @@
 ---@module 'custom.find_in_folder.fzf'
 ---@brief fzf-lua files adapter for find_in_folder.
 
-local notify = require("lib.notify").create("[find_in_folder.fzf]")
+local notify = require("lib.nvim.notify").create("[find_in_folder.fzf]")
 
 local M = {}
 

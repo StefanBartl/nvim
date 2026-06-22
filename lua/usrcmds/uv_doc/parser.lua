@@ -3,7 +3,7 @@
 
 local M = {}
 
-local strings = require("lib.strings")
+local strings = require("lib.lua.strings")
 
 --- Extracts uv_* symbols from genindex HTML
 ---@param html string

@@ -4,7 +4,7 @@
 --- Provides <S-CR> and <C-o> actions to open files in background without closing picker.
 --- Adapted from config.telescope.actions.open_badd
 
-local notify = require("lib.notify").create("[config.snacks.picker.actions.open_background]")
+local notify = require("lib.nvim.notify").create("[config.snacks.picker.actions.open_background]")
 local fn = vim.fn
 
 local M = {}

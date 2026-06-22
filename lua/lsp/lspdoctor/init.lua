@@ -24,7 +24,7 @@
 
 require("lsp.lspdoctor.@types")
 
-local notify = require("lib.notify").create("[lspdoctor]")
+local notify = require("lib.nvim.notify").create("[lspdoctor]")
 
 local M = {}
 

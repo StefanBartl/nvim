@@ -4,7 +4,7 @@
 --- This is the fallback when no provider yields a result.
 --- Returns the most relevant identifier from the node under cursor.
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local ts = lazy.require("wkdoptions.hl_config.breadcrumbs.ctx.utils.ts_helpers")
 local txt = lazy.require("wkdoptions.hl_config.breadcrumbs.ctx.utils.text_utils")
 

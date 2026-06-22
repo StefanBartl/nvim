@@ -1,7 +1,7 @@
 ---@module 'wkddap.adapters.lua'
 ---@brief Lua debugging via one-small-step-for-vimkind (OSV)
 
-local notify = require("lib.notify").create("[wkddap.adapters.lua]")
+local notify = require("lib.nvim.notify").create("[wkddap.adapters.lua]")
 
 local M = {}
 

@@ -65,7 +65,7 @@
 --- Prefer `reveal` for clarity and forward compatibility.
 ---
 
-local map = require("lib.map")
+local map = require("lib.nvim.map")
 
 local M = {}
 

@@ -1,7 +1,7 @@
 ---@module 'config.neotree.commands.mark'
 --- Neo-tree marking commands: toggle mark on nodes for batch operations
 
-local notify = require("lib.notify").create("[neotree.commands.mark]")
+local notify = require("lib.nvim.notify").create("[neotree.commands.mark]")
 
 local renderer = require("config.neotree.helper.renderer")
 local node_utils = require("config.neotree.utils.node")

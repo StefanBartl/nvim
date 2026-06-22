@@ -8,7 +8,7 @@
 --- - Be minimal: only intercept diagnostics, then call registered callbacks.
 --- - Allow multiple server-specific modules to register handlers.
 
-local notify = require("lib.notify").create("[lsp.tools.deprecated_help.lsp_common]")
+local notify = require("lib.nvim.notify").create("[lsp.tools.deprecated_help.lsp_common]")
 
 local M = {}
 

@@ -5,7 +5,7 @@
 --- Non-URL text is treated as a web search query (Google) automatically.
 --- Platform-specific launch commands are selected at run time.
 
-local notify  = require("lib.notify").create("[custom.open.handlers.browser]")
+local notify  = require("lib.nvim.notify").create("[custom.open.handlers.browser]")
 local platform = require("custom.open.platform")
 local util     = require("custom.open.util")
 

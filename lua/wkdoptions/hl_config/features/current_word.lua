@@ -2,7 +2,7 @@
 --- Underline the word under cursor using window-local matchaddpos().
 --- Only affects the single occurrence containing the cursor (low noise).
 
-local lazy = require("lib.lazy")
+local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Highlights = lazy.require("wkdoptions.hl_config.core.highlights")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip

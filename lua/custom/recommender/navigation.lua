@@ -1,7 +1,7 @@
 ---@module 'custom.recommender.keymaps'
 ---Navigation and actions
 
-local notify = require("lib.notify").create("[custom.recommender.navigation]")
+local notify = require("lib.nvim.notify").create("[custom.recommender.navigation]")
 
 local M = {}
 

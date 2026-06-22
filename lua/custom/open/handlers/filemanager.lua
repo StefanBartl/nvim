@@ -8,7 +8,7 @@
 ---   • macOS    → Finder (open / open -R for files)
 ---   • Linux    → xdg-open, then common managers as fallback
 
-local notify = require("lib.notify").create("[custom.open.handlers.filemanager]")
+local notify = require("lib.nvim.notify").create("[custom.open.handlers.filemanager]")
 local platform = require("custom.open.platform")
 local util = require("custom.open.util")
 

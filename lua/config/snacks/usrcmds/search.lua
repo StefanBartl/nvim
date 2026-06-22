@@ -4,8 +4,8 @@
 --- This module provides usercommands for search-related snacks.nvim picker features
 --- like registers, history, autocmds, commands, diagnostics, help, and more.
 
-local usercmd = require("lib.usercmd")
-local notify = require("lib.notify").create("[config.snacks.usrcmds.search]")
+local usercmd = require("lib.nvim.usercmd")
+local notify = require("lib.nvim.notify").create("[config.snacks.usrcmds.search]")
 
 local M = {}
 

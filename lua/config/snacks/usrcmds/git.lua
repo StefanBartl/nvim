@@ -4,8 +4,8 @@
 --- This module provides usercommands for git-related snacks.nvim picker features
 --- like branches, log, status, stash, and diff.
 
-local usercmd = require("lib.usercmd")
-local notify = require("lib.notify").create("[config.snacks.usrcmds.git]")
+local usercmd = require("lib.nvim.usercmd")
+local notify = require("lib.nvim.notify").create("[config.snacks.usrcmds.git]")
 
 local M = {}
 

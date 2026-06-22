@@ -1,6 +1,6 @@
 ---@module 'debugging.views.keymaps'
 
-local notify = require("lib.notify").create("[debugging.views.keymaps]")
+local notify = require("lib.nvim.notify").create("[debugging.views.keymaps]")
 
 local display = require("debugging.views.display")
 local capture = require("debugging.views.capture")

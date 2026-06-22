@@ -14,9 +14,13 @@ end
 ---@type LazyPluginSpec[]
 return {
 
+  -- lib.nvim is bootstrapped early in init.lua (it is required already during
+  -- the plugin spec-import phase). This spec only lets lazy manage updates;
+  -- lazy = false because it is effectively always loaded.
   {
     "StefanBartl/lib.nvim",
-    lazy = true
+    lazy = false,
+    priority = 1000,
   },
 
   -- {
@@ -31,7 +35,7 @@ return {
   -- notify_on_refactor = true,
 
   -- -- Use minimal ignore patterns for testing
-  -- ignore_patterns = require("lib.fs.ignore.list").as_luals_patterns(),
+  -- ignore_patterns = require("lib.nvim.fs.ignore.list").as_luals_patterns(),
 
   -- -- Enable all file types
   -- file_types = {

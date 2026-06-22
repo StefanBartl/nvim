@@ -5,7 +5,7 @@
 --- function definitions. Supports pre-filled queries, fuzzy matching,
 --- and syntax-highlighted previews.
 
-local notify = require("lib.notify").create("[custom.function_index.ui.telescope_picker]")
+local notify = require("lib.nvim.notify").create("[custom.function_index.ui.telescope_picker]")
 
 local M = {}
 

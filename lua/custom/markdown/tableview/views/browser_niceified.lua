@@ -3,7 +3,7 @@
 --- This module returns a function(bufnr) that finds the table at the current cursor
 --- and opens a temporary HTML file in the system default browser.
 
-local notify = require("lib.notify").create("[custom.markdown.tableview.views.browser_niceified]")
+local notify = require("lib.nvim.notify").create("[custom.markdown.tableview.views.browser_niceified]")
 
 local api = vim.api
 local parser = require("custom.markdown.tableview.parser")

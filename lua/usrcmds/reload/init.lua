@@ -2,7 +2,7 @@
 -- User Command zum Neuladen des aktuellen Lua-Moduls
 -- Fügen Sie dies zu Ihrer init.lua oder einem separaten Modul hinzu
 
-local notify = require("lib.notify").create("[usrcmds.reload]")
+local notify = require("lib.nvim.notify").create("[usrcmds.reload]")
 
 local M = {}
 

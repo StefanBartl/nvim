@@ -4,7 +4,7 @@
 -- ============================================================================
 -- CRITICAL: Setup wkdnvchad FIRST, before config
 -- ============================================================================
-local notify = require("lib.notify").create("[chadrc]")
+local notify = require("lib.nvim.notify").create("[chadrc]")
 
 local wkdnvc_ok, wkdnvc_err = pcall(function()
   local wkdnvc = require("wkdnvchad")

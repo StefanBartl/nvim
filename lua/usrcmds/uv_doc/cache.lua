@@ -4,7 +4,7 @@
 local M = {}
 
 -- Create notify instance with proper API
-local notify = require("lib.notify").create("uv_doc")
+local notify = require("lib.nvim.notify").create("uv_doc")
 
 ---@type string|nil
 local genindex_html = nil
@@ -44,7 +44,7 @@ function M.clear_all()
   index_symbols = nil
 
   -- Clear memo cache if available
-  local ok, memo = pcall(require, "lib.memo")
+  local ok, memo = pcall(require, "lib.lua.memo")
   if ok and memo and type(memo.clear) == "function" then
     memo.clear()
   end

@@ -1,7 +1,7 @@
 ---@module 'sessions/usercmds'
 ---@brief Usercommands for portable sessions
 
-local notify = require("lib.notify").create("[sessions.usercmds]")
+local notify = require("lib.nvim.notify").create("[sessions.usercmds]")
 
 local M = {}
 

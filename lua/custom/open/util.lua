@@ -6,7 +6,7 @@
 ---   • url_encode    – percent-encode a string for URL usage
 ---   • find_exec     – return first executable found from a candidate list
 
-local notify = require("lib.notify").create("[custom.open.util]")
+local notify = require("lib.nvim.notify").create("[custom.open.util]")
 
 local M = {}
 

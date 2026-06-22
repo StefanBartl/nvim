@@ -6,7 +6,7 @@ local M = {}
 local api, fn, fs, uv = vim.api, vim.fn, vim.fs, vim.uv or vim.loop
 
 -- Cache mit Buffer-Tick-Awareness
-local path_cache = require("lib.memo.lru").new(128)
+local path_cache = require("lib.lua.memo.lru").new(128)
 local tick_cache = {} -- bufnr -> { tick, abs_path }
 
 --- Get current buffer tick (für Cache-Invalidierung)

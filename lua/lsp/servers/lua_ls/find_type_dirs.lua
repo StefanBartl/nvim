@@ -4,7 +4,7 @@
 ---   1. Directories named "types" or "@types"
 ---   2. Individual files named "@types.lua" or "types.lua" outside those directories
 
-local notify = require("lib.notify").create("[lsp.servers.lua_ls.find_type_dirs]")
+local notify = require("lib.nvim.notify").create("[lsp.servers.lua_ls.find_type_dirs]")
 
 local uv = vim.loop or vim.uv
 local norm = vim.fs.normalize

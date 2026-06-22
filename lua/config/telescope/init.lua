@@ -6,15 +6,15 @@
 local M = {}
 
 local actions = require("telescope.actions")
-local files_path_shorten = require("lib.fs.path_shorten")
-local ignore_list = require("lib.fs.ignore.list")
+local files_path_shorten = require("lib.nvim.fs.path_shorten")
+local ignore_list = require("lib.nvim.fs.ignore.list")
 local history = require("config.telescope.history")
 local history_keymaps = require("config.telescope.history.keymaps")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
 local bg = require("config.telescope.open_background")
 local custom_actions = require("config.telescope.actions")
 
-local notify = require("lib.notify").create("[telescope.cfg]")
+local notify = require("lib.nvim.notify").create("[telescope.cfg]")
 
 -- Helper: compute effective max length for path display
 ---@param picker_opts table|nil Telescope picker options

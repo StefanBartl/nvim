@@ -2,7 +2,7 @@
 require("custom.filecycle.@types")
 
 local core = require("custom.filecycle.core")
-local map = require("lib.map")
+local map = require("lib.nvim.map")
 
 local M = {}
 
