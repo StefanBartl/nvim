@@ -18,7 +18,9 @@
 2. Alle plugin fähigen Module augliedern
 3. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
 4. TODO usw.. durchgehen
-5. Checklisten anwenden
+5. Checklisten anwenden, auch auf die customplugins
+  1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
+6. Module und Plugins durchgehen und CHEATSHEETSA schreibenm. Jedes repo soll auch eigene /docs/BINDINGS.lua haben mit allen keymaps, usrcmds aber auch die autocmds!
 
 ---
 
@@ -36,8 +38,6 @@
 ## nvim
 
 1. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
-2. `init.lua` Check ob import dr plugins nur mit { import = "plugins" }, reicht.
-3. `lib.nvim`: ROADMAP
 
 ---
 
@@ -66,13 +66,10 @@ stack traceback:
 
 1. Spellchecking nochmnal durchgehen und notizen machen. Spell Strategie ausarbeiten - entweder Plugin einbindne oder Modul debuggen
 2. Durchsuchen %/cwd/path nach einen bestimmten String, alle Treffer sollen je nach eingabe mit char sumhüllt werden, zb ``, ''. "" oder **. Das soll abgefragt werden bzw bei einen usrcmd angegebn werden können wenn.
-3. claude code . avante nvim plugin anschauen wenn lizernz da ist
-4. repo_picker, dir_picker, usw... lässt es sich fusionieren?
-5. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
-6. In allen modulen  `/bindings` und dort dann
+3. In allen modulen  `/bindings` und dort dann
     - `usrcmds`
     - `keymaps`
-    - `autocmds`
+    - `autocmds` - sind zentralisiert !
     - Wenn etwas beide ist, dann `Bindings` oder `Interaction` bzw. `InteractionLayer`
 
 ---

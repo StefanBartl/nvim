@@ -20,23 +20,6 @@ I've mapped the whole `custom/` and `usrcmds/` surface (plus how the commands an
 
 ## Tier 1 — strong overlap, real duplication
 
-### 1. Fuzzy file/dir/grep pickers → one shared engine layer
-This is the biggest win. Seven modules independently wrap **fzf-lua + telescope** to do "build a picker over a list/command":
-
-| Module | Command(s) | What it finds |
-|---|---|---|
-| `custom/find_config` | `WkdBookFind/Grep` | files in nvim config |
-| `custom/find_in_folder` | `FindInFolder` | files in a picked folder |
-| `custom/dir_picker` | `CwdHere` | directories |
-| `custom/repo_pickers` | `RepoFiles*`, `RepoGrep*` | files/grep in repos |
-| `custom/grep` | (live grep; header even says `usrcmds.live_grep`) | grep |
-| `usrcmds/search_all_drives` | `AllDrives`, `AllDrivesFzf` | grep+files across drives |
-| `usrcmds/system_find` | `FindOnSystem` | files via `fd` |
-
-Evidence of duplication: each carries its **own** `fzf.lua` + `telescope.lua` adapter — `find_in_folder/`, `grep/`, `repo_pickers/select/`, `find_config/engines/` are four+ parallel implementations of the same two adapters. Plus `find_in_folder/dir_select.lua` and `dir_picker/` both do "pick a directory."
-
-**Proposal:** a single `custom/pickers` (or `lib/pickers`) with one fzf adapter, one telescope adapter, engine auto-detect, and `pick_files / pick_dir / live_grep`. The seven modules above shrink to thin *sources* (root + scope + args). Optionally collapse the file-finders into one `:Find <config|folder|system|drives>` and grep into one `:Grep <scope>`.
-
 ### 2. `custom/pathfinder` + `custom/pathprobe` (your example) ✓
 Both take text (selection / `<cfile>`) → sanitize → resolve to a real on-disk file across candidate roots → open at line/col. `pathfinder` has the richer `extractor/` + `finder.lua`; `pathprobe` is a single-file specialization for truncated error-message paths. → **pathprobe becomes a resolution strategy inside pathfinder**, sharing the extractor + root-search + open logic.
 

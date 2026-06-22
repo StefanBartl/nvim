@@ -19,5 +19,8 @@ return {
     "MeanderingProgrammer/render-markdown.nvim",
   },
 
-  opts = require("plugins.ai.anthropic"),
+  config = function()
+    local avante_opts = require("config.ai.anthropic")
+    require("avante").setup(avante_opts)
+  end,
 }

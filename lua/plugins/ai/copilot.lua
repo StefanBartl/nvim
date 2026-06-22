@@ -1,21 +1,9 @@
----@module 'plugins.ai'
+---@module 'plugins.ai.copilot'
 
-local notify = require("lib.nvim.notify").create("[plugins.ai]")
+-- local notify = require("lib.nvim.notify").create("[plugins.ai]")
 
 ---@type LazyPluginSpec[]
 return {
-  {
-    "robitx/gp.nvim",
-    lazy = true,
-    dependencies = { "nvim-lua/plenary.nvim" },
-    event = "VeryLazy",
-    config = function()
-      local conf = require("config.gp_config.config")
-      require("gp").setup(conf)
-    end,
-  },
-
-  --- ==== COPILOT ===
   -- required: Copilot LSP installed via Mason or system and on PATH
   -- {
   --   "copilotlsp-nvim/copilot-lsp",
