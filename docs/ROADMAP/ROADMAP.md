@@ -39,6 +39,21 @@
 ## nvim: Bugs
 
 1. `:Gather Lua`
+2. mehrere Zeilen markiert, dann verscuht zu identen: `A-Rght`:
+```vim
+   Error  10:56:34 AM msg_show.emsg E5108: Lua: ...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: 'start' is higher than 'end'
+stack traceback:
+	[C]: in function 'nvim_buf_set_lines'
+	...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: in function 'shift_line'
+	...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:38: in function 'shift_range'
+	.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:151: in function 'visual_shift'
+	.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:163: in function <.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:162>
+
+```
+1. `leader toc` sollter sicherstellen, dass am ende jeder Headline ein `---` ist.
+2. `ZenMode` sollte auch eienen usrcmds toggle schalter haben
+3. `:Emojis clear` entfern korrekt di eEmjois, hinterlässt aber einen char leerzeivchen dort wo das emoji war. das solte auch entfernt wereden
+
 
 ---
 
@@ -62,12 +77,22 @@
 1. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht
 2. `markdown_render`-implementieren in `:Markdown [] []` usrcmd
 3. `usrcmds.collection` machen wenn diese nirgends anders zueprdnet werden können, dami die uscmds aus der init.lua rauskommen!
+4. `:MARKDOWN create fs`: Neuer usrcmd, soll zb.: wenn hier alle Zeilen markiert sind, dann soll es alle Pfade die enthalten sind in der markierung anlegen, sofern sie noch nicht existieren:
+
+[PART 1 - Projects I](./PART1/Intro.md)
+[PART 2 - Licensing](./PART2/Intro.md)
+[PART 3 - Projects II](./PART3/Intro.md)
+[PART 4 - DEX and CICD](./PART4/Intro.md)
+[PART 5 - Logs](./PART5/Intro.md)
+
+Erzeugt / stellt sicher, dass /PART1/Intro.md bis /PART5/Intro.md existieren
+Wenn ees noch weitere interesxsante optioenn neben `fs` für das neue usrcmd `Markdown create` gibt, gerne!
 
 ---
 
 ## Neotree
-1. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
 
+1. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
 1. Folgender error:
 
 ```vim

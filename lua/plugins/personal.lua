@@ -14,46 +14,51 @@ end
 ---@type LazyPluginSpec[]
 return {
 
+  {
+    "StefanBartl/lib.nvim",
+    lazy = true
+  },
+
   -- {
-    -- -- "StefanBartl/neotree-fs-refactor",
-    -- dir = vim.fn.expand(vim.env.REPOS_DIR .. "/neotree-fs-refactor.nvim"),
-    -- lazy = false,
-    -- config = function()
-      -- -- require("neotree-fs-refactor").setup()
-      -- require("neotree-fs-refactor").setup({
-        -- enabled = false,
-        -- auto_save = true, -- Enble auto-save for testing
-        -- notify_on_refactor = true,
+  -- -- "StefanBartl/neotree-fs-refactor",
+  -- dir = vim.fn.expand(vim.env.REPOS_DIR .. "/neotree-fs-refactor.nvim"),
+  -- lazy = false,
+  -- config = function()
+  -- -- require("neotree-fs-refactor").setup()
+  -- require("neotree-fs-refactor").setup({
+  -- enabled = false,
+  -- auto_save = true, -- Enble auto-save for testing
+  -- notify_on_refactor = true,
 
-        -- -- Use minimal ignore patterns for testing
-        -- ignore_patterns = require("lib.fs.ignore.list").as_luals_patterns(),
+  -- -- Use minimal ignore patterns for testing
+  -- ignore_patterns = require("lib.fs.ignore.list").as_luals_patterns(),
 
-        -- -- Enable all file types
-        -- file_types = {
-          -- lua = true,
-          -- typescript = true,
-          -- javascript = true,
-          -- typescriptreact = true,
-          -- javascriptreact = true,
-          -- python = true,
-        -- },
-
-        -- max_file_size = 10 * 1024 * 1024, -- 10MB for testing
-        -- debounce_ms = 10, -- Shorter debounce for faster testing
-      -- })
-    -- end,
+  -- -- Enable all file types
+  -- file_types = {
+  -- lua = true,
+  -- typescript = true,
+  -- javascript = true,
+  -- typescriptreact = true,
+  -- javascriptreact = true,
+  -- python = true,
   -- },
 
- -- {
- --   "StefanBartl/github_stats.nvim",
+  -- max_file_size = 10 * 1024 * 1024, -- 10MB for testing
+  -- debounce_ms = 10, -- Shorter debounce for faster testing
+  -- })
+  -- end,
+  -- },
+
+  -- {
+  --   "StefanBartl/github_stats.nvim",
   --  lazy = false,
   --  config = function()
   --    require("github_stats").setup({
   --      notify_fetch = false,
   --      config_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats",
-   --     data_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats/data"
-   --   })
-   -- end,
+  --     data_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats/data"
+  --   })
+  -- end,
   --},
 
   -- {
@@ -317,13 +322,13 @@ return {
   },
 
   -- nvim-containers: Manage container engines from Neovim
- -- {
---    dir = vim.fs.joinpath(vim.env.REPOS_DIR, "/nvim-containers"),
- --   event = "VeryLazy",
- --   config = function()
- --     require("containers").setup({})
- --   end,
- -- },
+  -- {
+  --    dir = vim.fs.joinpath(vim.env.REPOS_DIR, "/nvim-containers"),
+  --   event = "VeryLazy",
+  --   config = function()
+  --     require("containers").setup({})
+  --   end,
+  -- },
 
   --[[
 
