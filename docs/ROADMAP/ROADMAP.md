@@ -27,12 +27,16 @@
 1. `leader wq`: Alle issues lösen
 2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
 3. `/custom/pathprope`, `/custom/pathfinder` && `gopath.nvim` vereiraten
+4. [avante](./avante.md) letzter teil umsetzen.
+5. avante: usrcmds erstellen
+6. gp. gegen avante testen
 
 ---
 
 ## nvim
 
 1. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
+2. `init.lua` Check ob import dr plugins nur mit { import = "plugins" }, reicht.
 
 ---
 

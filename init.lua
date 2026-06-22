@@ -32,6 +32,7 @@ require("lazy").setup({
   -- { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },
   { import = "plugins.colorscheme" },
+  -- { import = "plugins.ai" },
 }, lazy_config)
 
 -- Load base46 cache

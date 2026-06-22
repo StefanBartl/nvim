@@ -30,7 +30,7 @@ wo.breakindent = true -- indent wrapped screen lines
 wo.breakindentopt = "shift:2,sbr" -- add +2 spaces and use 'showbreak'
 vim.o.showbreak = "⤷ " -- prefix shown on continuation screen lines
 
-opt.laststatus = 2 -- ensures 'one' continuous statusline
+opt.laststatus = 3 -- ensures 'one' continuous statusline
 
 -----------------------------------------------------------
 -- Clipboard
