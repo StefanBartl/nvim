@@ -18,7 +18,7 @@
 2. Alle plugin fähigen Module augliedern
 3. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
 4. TODO usw.. durchgehen
-5. Checklisten anwenden, auch auf die customplugins
+5. Checklisten anwenden
   1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
 
 ---
@@ -27,6 +27,10 @@
 
 1. Module und Plugins durchgehen und CHEATSHEETS schreibenm. Jedes repo soll auch eigene /docs/BINDINGS.lua haben mit allen keymaps, usrcmds aber auch die autocmds!
 2. `lib.nvim` auf alle plugins anwenden (als dependency)
+3. Alle .nvim pluigfins eine .vim version erstellen (wenn notwendig fc)
+4. Checklisten anwenden
+  1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
+5. Weitere fetures, usrcmds, keymaps, autocmds ROADMAP erstellen
 
 ---
 

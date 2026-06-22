@@ -18,19 +18,32 @@ return {
   -- the plugin spec-import phase). This spec only lets lazy manage updates;
   -- lazy = false because it is effectively always loaded.
   {
-    "StefanBartl/lib.nvim",
+    -- "StefanBartl/lib.nvim",
+    dir = vim.env.REPOS_DIR .. "/lib.nvim",
     lazy = false,
     priority = 1000,
   },
 
   {
-    "StefanBartl/pickers.nvim",
+    -- "StefanBartl/pickers.nvim",
+    dir = vim.env.REPOS_DIR .. "/pickers.nvim",
     lazy = false,
     dependencies = { "StefanBartl/lib.nvim" },
     config = function()
       require("pickers").setup({
         engine = "auto",
         repos_dir = vim.env.REPOS_DIR,
+      })
+    end,
+  },
+
+  {
+    -- "StefanBartl/project-insight.nvim",
+    dir = vim.env.REPOS_DIR .. "/project-insight.nvim",
+    cmd = "ProjectInsight",
+    config = function()
+      require("project_insight").setup({
+        -- symbols.use_treesitter_for_lua = true,  -- optionale TS-Variante für Lua
       })
     end,
   },
