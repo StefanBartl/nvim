@@ -3,9 +3,9 @@
 
 ---AUDIT:
 require("custom.diff").enable({
-  diff_exit   = true,
+  diff_exit = true,
   diff_origin = true,
-  diff        = true,
+  diff = true,
 })
 
 ---AUDIT:
@@ -14,42 +14,41 @@ require("custom.diff").enable({
 --- the load order and we can hook into the `config` callback reliably.
 --- All real work happens inside require("custom.pdfport").setup().
 
-      require("custom.pdfport").setup({
-        default_backend = "auto",
+require("custom.pdfport").setup({
+  default_backend = "auto",
 
-        -- Ordered fallback chain: fastest/lightest first
-        fallback_chain = {
-          "pdftotext",
-          "pdfplumber",
-          "marker",
-          "docling",
-          "ollama",
-          "claude",
-        },
+  -- Ordered fallback chain: fastest/lightest first
+  fallback_chain = {
+    "pdftotext",
+    "pdfplumber",
+    "marker",
+    "docling",
+    "ollama",
+    "claude",
+  },
 
-        extract_opts = {
-          max_pages  = nil,    -- nil = no limit; set e.g. 20 for large docs
-          timeout_ms = 30000,
-        },
+  extract_opts = {
+    max_pages = nil, -- nil = no limit; set e.g. 20 for large docs
+    timeout_ms = 30000,
+  },
 
-        render_opts = {
-          mode  = "buffer",
-          split = "current",
-          focus = true,
-        },
+  render_opts = {
+    mode = "buffer",
+    split = "current",
+    focus = true,
+  },
 
-        -- Claude API key: leave nil to read from $ANTHROPIC_API_KEY
-        claude_api_key = nil,
+  -- Claude API key: leave nil to read from $ANTHROPIC_API_KEY
+  claude_api_key = nil,
 
-        ollama_host  = "http://localhost:11434",
-        -- Change to any model installed locally (check with: ollama list).
-        -- Vision models (llava, bakllava) are needed for scanned PDFs.
-        -- Text models (qwen2.5-coder:7b, mistral, llama3) work for normal PDFs.
-        ollama_model = "qwen2.5-coder:7b",
+  ollama_host = "http://localhost:11434",
+  -- Change to any model installed locally (check with: ollama list).
+  -- Vision models (llava, bakllava) are needed for scanned PDFs.
+  -- Text models (qwen2.5-coder:7b, mistral, llama3) work for normal PDFs.
+  ollama_model = "qwen2.5-coder:7b",
 
-        debug = false,
-      })
-
+  debug = false,
+})
 
 require("custom.open").setup()
 ---AUDIT
@@ -125,8 +124,6 @@ require("custom.filecycle").setup({
 })
 
 require("custom.markdown").setup()
-require("custom.pathprobe").enable_keymaps()
-require("custom.pathfinder").setup({})
 
 -- AUDIT:
 local line_marker = require("custom.line_marker")
