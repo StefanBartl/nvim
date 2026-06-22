@@ -2,3 +2,4 @@ lazy-lock.json
 pack/github/start/copilot.vim
 .vscode/
 noice.log
+lua/sessions/storage/last.vim
