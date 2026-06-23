@@ -6,8 +6,6 @@ local M = {}
 local notify = require("lib.nvim.notify").create("[neo-tree.markdown]")
 local node_utils = require("config.neotree.utils.node")
 
-local markdown_links = require("custom.markdown.commands.markdown_links")
-
 --- Convert node into markdown links (non-recursive)
 ---@param state Cfg.NeoTree.State
 function M.from_node(state)
@@ -25,7 +23,7 @@ function M.from_node(state)
     return
   end
 
-  markdown_links.run({ path })
+  require("markdown_nvim.commands.markdown_links").run({ path })
 end
 
 --- Convert node into markdown links (recursive)
@@ -45,8 +43,7 @@ function M.from_node_recursive(state)
     return
   end
 
-  -- reuse CLI flag
-  markdown_links.run({ "-r", path })
+  require("markdown_nvim.commands.markdown_links").run({ "-r", path })
 end
 
 return M

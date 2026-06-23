@@ -28,28 +28,30 @@ local handlers = {
   markdown = {
     {
       load = function()
-        return (require("custom.markdown.setup.keymaps"))
+        local m = require("markdown_nvim.setup.keymaps")
+        return { apply = function(_, bufnr) m.apply(bufnr) end }
       end,
       priority = 10,
     },
     {
       load = function()
-        return (require("custom.markdown.setup.usercmds"))
+        local m = require("markdown_nvim.setup.usercmds")
+        return { apply = function(_, bufnr) m.apply({ buf = bufnr }) end }
       end,
       priority = 20,
     },
     {
       load = function()
-        return (require("custom.markdown.tableview.mappings"))
+        local m = require("markdown_nvim.tableview.mappings")
+        return { apply = function(_, bufnr) m.apply(bufnr) end }
       end,
       priority = 30,
     },
     {
       load = function()
-        -- Markdown-specific folding via utils.markdown.foldexpr only for markdown buffers
         local opt_local = vim.opt_local
         opt_local.foldmethod = "expr"
-        opt_local.foldexpr = "v:lua.require'custom.markdown.core.fold'.foldexpr(v:lnum)"
+        opt_local.foldexpr = "v:lua.require'markdown_nvim.core.fold'.foldexpr(v:lnum)"
         opt_local.foldenable = true
         opt_local.foldlevel = 99
         opt_local.foldlevelstart = 99
@@ -64,13 +66,15 @@ local handlers = {
   mdx = {
     {
       load = function()
-        return (require("custom.markdown.setup.keymaps"))
+        local m = require("markdown_nvim.setup.keymaps")
+        return { apply = function(_, bufnr) m.apply(bufnr) end }
       end,
       priority = 10,
     },
     {
       load = function()
-        return (require("custom.markdown.setup.usercmds"))
+        local m = require("markdown_nvim.setup.usercmds")
+        return { apply = function(_, bufnr) m.apply({ buf = bufnr }) end }
       end,
       priority = 20,
     },

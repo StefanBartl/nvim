@@ -49,6 +49,15 @@ return {
   },
 
   {
+    -- "StefanBartl/markdown.nvim",
+    dir = vim.env.REPOS_DIR .. "/markdown.nvim",
+    ft = { "markdown", "mdx", "md" },
+    config = function()
+      require("markdown_nvim").setup()
+    end,
+  },
+
+  {
     "StefanBartl/nvim-cmdlog",
     dir = vim.env.REPOS_DIR .. "/nvim-cmdlog",
     lazy = false,

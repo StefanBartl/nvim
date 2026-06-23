@@ -77,8 +77,6 @@ require("custom.filecycle").setup({
   usercommands = true,
 })
 
-require("custom.markdown").setup()
-
 -- AUDIT:
 local line_marker = require("custom.line_marker")
 line_marker.enable_commands()
