@@ -9,4 +9,5 @@ return {
 
   ["ML"] = "markdown_links",
   ["MR"] = "markdown_links_recursive",
+  ["MM"] = "markdown_links_from_marked",
 }

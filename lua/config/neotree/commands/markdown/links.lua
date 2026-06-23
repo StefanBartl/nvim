@@ -46,4 +46,38 @@ function M.from_node_recursive(state)
   require("markdown_nvim.commands.markdown_links").run({ "-r", path })
 end
 
+--- Generate markdown links for all explicitly marked nodes.
+--- Falls back to current node when no marks are set.
+---@param state Cfg.NeoTree.State
+function M.from_marked_nodes(state)
+  local marks = state.explicitly_marked_node_ids
+
+  if not marks or vim.tbl_isempty(marks) then
+    notify.info("No marked nodes — using current node")
+    M.from_node(state)
+    return
+  end
+
+  local paths = {}
+  for node_id, _ in pairs(marks) do
+    table.insert(paths, node_id)
+  end
+  table.sort(paths)
+
+  local md_links = require("markdown_nvim.commands.markdown_links")
+  local clipboard = require("markdown_nvim.util.clipboard")
+
+  local result = md_links.for_paths(paths)
+  if result == "" then
+    notify.warn("No links generated for marked nodes")
+    return
+  end
+
+  clipboard.copy(result)
+  print(result)
+  notify.info(string.format("%d node(s) → links copied to clipboard", #paths))
+
+  require("config.neotree.commands.mark").clear_all_marks(state)
+end
+
 return M

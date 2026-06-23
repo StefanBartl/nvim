@@ -123,10 +123,12 @@ return {
     require("telescope.builtin").live_grep(getTelescopeOpts(state, path))
   end,
 
-  --- Generate markdown links from current node
+  --- Generate markdown links from current node (file→single link, dir→all files)
   markdown_links = markdown_bridge.from_node,
   --- Generate markdown links recursively from current node
   markdown_links_recursive = markdown_bridge.from_node_recursive,
+  --- Generate markdown links for all marked nodes (falls back to current node)
+  markdown_links_from_marked = markdown_bridge.from_marked_nodes,
 
   -- Diff & mark modules
   diff_files = diff_files_mod,
