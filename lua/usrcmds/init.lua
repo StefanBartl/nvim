@@ -1,17 +1,6 @@
 ---@module 'usrcmds'
 -- Initialize module for 'usrcmds'
 
---AUDIT :
-local emojis = require("usrcmds.emojis")
-emojis.setup({
-  -- Ändert das Standard-Verhalten, falls kein Scope übergeben wird
-    -- Gültig: "word", "line", "visual", "%", "cwd"
-  default_scope = "%",
-})
--- vim.keymap.set({ "n", "i" }, "<C-o>", "<cmd>Emojis insert<cr>", { desc = "Emoji: Picker öffnen" })
--- vim.keymap.set("n", "<leader>ec", "<cmd>Emojis count %<cr>", { desc = "Emoji: Zählen im Puffer" })
--- vim.keymap.set("n", "<leader>el", "<cmd>Emojis list %<cr>", { desc = "Emoji: In Quickfix auflisten" })
-
 require("usrcmds.compress_dir").enable_usercmd()
 require("usrcmds.migrate").setup({
     opt = true,    -- `:MigrateOpt`

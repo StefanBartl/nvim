@@ -126,6 +126,18 @@ return {
   },
 
   {
+    -- "StefanBartl/emojis.nvim"
+    dir = vim.env.REPOS_DIR .. "/emojis.nvim",
+    cmd = "Emojis",
+    opts = {
+      default_scope = "%",
+    },
+    config = function(_, opts)
+      require("emojis").setup(opts)
+    end,
+  },
+
+  {
     -- "StefanBartl/markdown.nvim",
     dir = vim.env.REPOS_DIR .. "/markdown.nvim",
     ft = { "markdown", "mdx", "md" },
