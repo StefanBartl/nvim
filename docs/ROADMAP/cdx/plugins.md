@@ -27,8 +27,10 @@ lua\custom\commands_keymaps\delete_current_file\init.lua
 
 /usrcmds/newfile bereits alle features in `fileops.nvim` enthalten?
 
+linemarker gehört in die ui
+
 ## Klein / optional (lazy als `cmd`, Auslagern lohnt nur gebündelt)
-`compress_dir` (180), `update_repos` (165), `newfile` (129), `reload` (135), `commands_keymaps` (99) → entweder ein gemeinsames **„utils.nvim"** oder einfach lokal auf `cmd=`-Lazy umstellen.
+`compress_dir` (180), `update_repos` (165), `newfile` (129), `reload` (135), → entweder ein gemeinsames **„utils.nvim"** oder einfach lokal auf `cmd=`-Lazy umstellen.
 
 ## Bewusst **nicht** auslagern
 - `wkdoptions`, `wkdnvchad`, `wkddap` → NvChad-Anpassungen / DAP, eng mit dem Setup verwoben.

@@ -1,3 +1,19 @@
+
+   Error  21:28:32 msg_show.lua_error    Lua callback: ...Data/Local/nvim-data/lazy/avante.nvim/lua/avante/llm.lua:283: Make sure to build avante (missing avante_templates)
+stack traceback:
+	[C]: in function 'error'
+	...ata/Local/nvim-data/lazy/avante.nvim/lua/avante/path.lua:293: in function 'get_templates_dir'
+	...Data/Local/nvim-data/lazy/avante.nvim/lua/avante/llm.lua:283: in function 'generate_prompts'
+	...Data/Local/nvim-data/lazy/avante.nvim/lua/avante/llm.lua:479: in function 'calculate_tokens'
+	.../Local/nvim-data/lazy/avante.nvim/lua/avante/sidebar.lua:2775: in function 'get_generate_prompts_options'
+	.../Local/nvim-data/lazy/avante.nvim/lua/avante/sidebar.lua:3043: in function 'initialize_token_count'
+	.../Local/nvim-data/lazy/avante.nvim/lua/avante/sidebar.lua:2556: in function 'show_input_hint'
+	...ocal/nvim-data/lazy/avante.nvim/ftplugin/AvanteInput.lua:62: in function <...ocal/nvim-data/lazy/avante.nvim/ftplugin/AvanteInput.lua:62>
+
+
+
+
+
 Das ist einer der Punkte, bei denen Avante noch etwas eingeschränkt ist.
 
 Es gibt grundsätzlich drei Möglichkeiten.

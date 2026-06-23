@@ -3,3 +3,6 @@ pack/github/start/copilot.vim
 .vscode/
 noice.log
 lua/sessions/storage/last.vim
+CLAUDE.md
+.claude/
+.agents/

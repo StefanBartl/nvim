@@ -138,6 +138,20 @@ return {
   },
 
   {
+    -- "StefanBartl/debugging.nvim"
+    dir = vim.env.REPOS_DIR .. "/debugging.nvim",
+    cmd = "Debug",
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- neotree stays opt-in; flip to true if the config.neotree.* layer is present
+      features = { neotree = false },
+    },
+    config = function(_, opts)
+      require("debugging").setup(opts)
+    end,
+  },
+
+  {
     -- "StefanBartl/markdown.nvim",
     dir = vim.env.REPOS_DIR .. "/markdown.nvim",
     ft = { "markdown", "mdx", "md" },

@@ -8,8 +8,8 @@ require("usrcmds.migrate").setup({
 })
 require("usrcmds.reload").enable()
 require("usrcmds.update_repos").enable()
-require("usrcmds.list.autocmd_audit").enable()
---FIX:
+
+--FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden
 vim.api.nvim_create_user_command("CwdHere", function()
   local bufname = vim.api.nvim_buf_get_name(0)
   if bufname ~= "" then

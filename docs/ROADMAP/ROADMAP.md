@@ -31,12 +31,16 @@
 4. Checklisten anwenden: Bestes Modell Bester Modus
   1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
   2. Weitere fetures, usrcmds, keymaps, autocmds ROADMAP erstellen
+  3. In der `README.md` badges und toc
 5. ist es möglioch die neotree inteegrierung von pdfport innerhal podfports zu belassen?
 6. Weenn fertig: alles auf remote stellen statt lokal
 7. gopath auf main stellen, alle anderen auch
 8. Format.nvim - Nummerieungen zu checkboxen uwmandeln;weoter featuresderart
 9. Alle features testen
 10. Sind alle Plugins `lazy`?
+11. `:checkhealth` sollten alle module haben^
+12. `objtrack`
+13. `monkeypatch` noch sinnvoll? besser ausbauen
 
 ---
 
@@ -48,6 +52,11 @@
   1. avante: usrcmds erstellen
   2. gp. gegen avante testen
 4. center in neotree: wen nich mit der maus scrolle, dase centered es, was mühasm ist
+5. wkdoptiuons UI Linemarker gehört README
+6. wkdoptions mit options.lua verheiraten
+7. manchmal briucht C-c mit sigint nvim ab, es solte aber alles kopieren des buffers
+8. `nvim/init.lua` durchgehen
+9. `/plugins/personal.lua`: Einbauen, dass wenn die `vim.env.REPOS_DIR` nicht da ist zuerst gecheckt wird, ob es einen `/repos`-Ordner im root der Laufwerke gibt, wenn ja, check das, wenn nein alle plugins automatisch auf remote umstellen. So müsste es eigentlich immer passen. Ein notify immer dann, wenn es keine REPOS_DIR variable gibt damit man daraauf hingewiesen wird.
 
 ---
 

@@ -131,22 +131,8 @@ end
 -- })
 
 -- =============================================================================
--- PHASE 5: SEHR NIEDRIG (600ms) - RPC & Debugging
+-- PHASE 5: SEHR NIEDRIG (600ms) - RPC
 -- =============================================================================
-vim.defer_fn(function()
-  -- require("system.rpc_pipe").setup({ debug = false })
-
-  require("debugging").setup({
-    views = { all = true },
-    all = false,
-    autocmds = nil,
-    markdown = nil,
-    terminals = nil,
-    usercmds = false,
-    tools = nil,
-  })
-
-end, 600)
 
 -- vim.defer_fn(function()
   -- local ok, astro = pcall(require, "astro_lsp_standalone")
