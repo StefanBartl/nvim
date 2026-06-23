@@ -1,3 +1,4 @@
+Implementieren wir nun `/*` bzw `*.nvim`
 
 ## Dokumentation
 
@@ -22,3 +23,6 @@ welche in den Dateien Arch&Coding-Regeln.md & Checklist.md & Zentrale-Prinzipien
 - Wenn dir sinnvolle Features einfallen, implementiere sie gleich. Nicht ganz passende oder sehr große Änderungen in die `  ROADMAP.md`
 
 Erstelle ein Konzept!
+
+Das Repo ist bereits unter `e:\repos\*.nvim` angelegt und gepushed.
+Wenn du ein commit schreibst, dann las bitte die referenz auf dich als co author weg.

@@ -36,6 +36,7 @@
 7. gopath auf main stellen, alle anderen auch
 8. Format.nvim - Nummerieungen zu checkboxen uwmandeln;weoter featuresderart
 9. Alle features testen
+10. Sind alle Plugins `lazy`?
 
 ---
 

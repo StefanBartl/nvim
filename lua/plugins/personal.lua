@@ -110,6 +110,22 @@ return {
   },
 
   {
+    -- "StefanBartl/diff.nvim"
+    dir = vim.env.REPOS_DIR .. "/diff.nvim",
+    cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" },
+    opts = {
+      features = {
+        diff        = true,
+        diff_origin = true,
+        diff_exit   = true,
+      },
+    },
+    config = function(_, opts)
+      require("diff_nvim").setup(opts)
+    end,
+  },
+
+  {
     -- "StefanBartl/markdown.nvim",
     dir = vim.env.REPOS_DIR .. "/markdown.nvim",
     ft = { "markdown", "mdx", "md" },

@@ -19,14 +19,16 @@
 
 | Plugin | Quelle | LOC | Trigger | Hinweis |
 |---|---|---|---|---|
-| **insert.nvim** (ggf. + `copy`) | `custom/insert` (+ `usrcmds/copy`) | ~2.850 | `cmd = Insert`/`Copy` + keys | Pfad/Modul/Timestamp/UUID/Boilerplate als Text. Teilen schon `get_module_path`. |
 | **format-cmd.nvim** | `custom/format` | 2.886 | `cmd = Format` | Grenzfall — prüfen, wie stark mit LSP/conform verzahnt. |
 
 | **buffer-nav.nvim** | `filecycle` + `tabufline` | ~685 | `keys` | Klein, aber rein keymap-getriggert. |
 lua\custom\commands_keymaps\delete_current_file\init.lua
 
+
+/usrcmds/newfile bereits alle features in `fileops.nvim` enthalten?
+
 ## Klein / optional (lazy als `cmd`, Auslagern lohnt nur gebündelt)
-`diff` (706), `emojis` (520), `compress_dir` (180), `update_repos` (165), `newfile` (129), `reload` (135), `commands_keymaps` (99) → entweder ein gemeinsames **„utils.nvim"** oder einfach lokal auf `cmd=`-Lazy umstellen.
+`compress_dir` (180), `update_repos` (165), `newfile` (129), `reload` (135), `commands_keymaps` (99) → entweder ein gemeinsames **„utils.nvim"** oder einfach lokal auf `cmd=`-Lazy umstellen.
 
 ## Bewusst **nicht** auslagern
 - `wkdoptions`, `wkdnvchad`, `wkddap` → NvChad-Anpassungen / DAP, eng mit dem Setup verwoben.
