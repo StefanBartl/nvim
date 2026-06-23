@@ -31,6 +31,9 @@
 4. Checklisten anwenden
   1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
 5. Weitere fetures, usrcmds, keymaps, autocmds ROADMAP erstellen
+6. ist es möglioch die neotree inteegrierung von pdfport innerhal podfports zu belassen?
+7. Weenn fertig: alles auf remote stellen statt lokal
+8. gopath auf main stellen, alle anderen auch
 
 ---
 

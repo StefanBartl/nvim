@@ -90,7 +90,7 @@ function M.open(state)
   -- Neo-tree Preview sofort stoppen → kein Freeze
   suppress_neotree_preview()
 
-  local ok_pdfport, pdfport = pcall(require, "custom.pdfport")
+  local ok_pdfport, pdfport = pcall(require, "pdfport_nvim")
   if not ok_pdfport then
     notify.error("pdfport-Modul nicht geladen")
     return
@@ -147,7 +147,7 @@ function M.open_quick(state)
   -- Neo-tree Preview sofort stoppen → kein Freeze
   suppress_neotree_preview()
 
-  local ok_pdfport, pdfport = pcall(require, "custom.pdfport")
+  local ok_pdfport, pdfport = pcall(require, "pdfport_nvim")
   if not ok_pdfport then
     notify.error("pdfport-Modul nicht geladen")
     return

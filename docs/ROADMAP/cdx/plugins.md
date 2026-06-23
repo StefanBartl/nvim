@@ -13,8 +13,6 @@
 
 | Plugin | Quelle | LOC | Lazy-Trigger | Warum |
 |---|---|---|---|---|
-| **pdfport.nvim** | `custom/pdfport` | 4.273 | `cmd = PdfPort*` | Schwergewichtig (Backends claude/ollama/pdfplumber), selten gebraucht, lädt aktuell eager. |
-| **recommender.nvim** | `custom/recommender` | 1.142 | `keys`/`cmd = Recommender` | Eigenständiges Feature. |
 | **migrate.nvim** | `usrcmds/migrate` | 2.212 | `cmd = Migrate*` | Einmal-/Wartungs-Tool — gehört evtl. gar nicht in die Laufzeit-Config (oder ganz raus). |
 
 ## Thematische Bündel (mehrere Module → ein Plugin)
@@ -23,7 +21,9 @@
 |---|---|---|---|---|
 | **insert.nvim** (ggf. + `copy`) | `custom/insert` (+ `usrcmds/copy`) | ~2.850 | `cmd = Insert`/`Copy` + keys | Pfad/Modul/Timestamp/UUID/Boilerplate als Text. Teilen schon `get_module_path`. |
 | **format-cmd.nvim** | `custom/format` | 2.886 | `cmd = Format` | Grenzfall — prüfen, wie stark mit LSP/conform verzahnt. |
+
 | **buffer-nav.nvim** | `filecycle` + `tabufline` | ~685 | `keys` | Klein, aber rein keymap-getriggert. |
+lua\custom\commands_keymaps\delete_current_file\init.lua
 
 ## Klein / optional (lazy als `cmd`, Auslagern lohnt nur gebündelt)
 `diff` (706), `emojis` (520), `compress_dir` (180), `update_repos` (165), `newfile` (129), `reload` (135), `commands_keymaps` (99) → entweder ein gemeinsames **„utils.nvim"** oder einfach lokal auf `cmd=`-Lazy umstellen.

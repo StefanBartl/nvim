@@ -25,6 +25,29 @@ return {
   },
 
   {
+    -- "StefanBartl/pdfport.nvim",
+    dir = vim.env.REPOS_DIR .. "/pdfport.nvim",
+    cmd = {
+      "PdfPort",
+      "PdfPortText",
+      "PdfPortFloat",
+      "PdfPortSystem",
+      "PdfPortTerminal",
+      "PdfPortHealth",
+    },
+    opts = {
+      default_backend = "auto",
+      fallback_chain = { "pdftotext", "pdfplumber", "marker", "docling", "ollama", "claude" },
+      extract_opts = { max_pages = nil, timeout_ms = 30000 },
+      render_opts = { mode = "buffer", split = "current", focus = true },
+      claude_api_key = nil,
+      ollama_host = "http://localhost:11434",
+      ollama_model = "qwen2.5-coder:7b",
+      debug = false,
+    },
+  },
+
+  {
     -- "StefanBartl/pickers.nvim",
     dir = vim.env.REPOS_DIR .. "/pickers.nvim",
     lazy = false,
