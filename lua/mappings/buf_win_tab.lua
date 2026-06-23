@@ -14,7 +14,7 @@ function M.setup()
   -- ---------------------------------------------------------------------------
   map("n", "<leader>bn", "<cmd>enew<CR>", { desc = "[Buffers] New" })
   -- map("n", "<tab>", function()
-  --   require("custom.tabufline").next()
+  --   require("config.tabufline").next()
   -- end, { desc = "[Buffers] Next" })
 
   map("n", "<leader>bx", function()

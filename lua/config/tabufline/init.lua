@@ -1,4 +1,4 @@
----@module 'custom.tabufline'
+---@module 'config.tabufline'
 --- Custom buffer navigation without automatic centering
 
 local M = {}
