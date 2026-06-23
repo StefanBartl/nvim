@@ -22,8 +22,6 @@ require("usrcmds.migrate").setup({
 })
 require("usrcmds.reload").enable()
 require("usrcmds.update_repos").enable()
-require("usrcmds.uv_doc").enable_usercmd()
-
 require("usrcmds.list.autocmd_audit").enable()
 --FIX:
 vim.api.nvim_create_user_command("CwdHere", function()

@@ -13,9 +13,7 @@
 
 | Plugin | Quelle | LOC | Lazy-Trigger | Warum |
 |---|---|---|---|---|
-| **markdown.nvim** | `custom/markdown` (+ `mynotes`, + `line_marker`) | ~6.100 | `ft = "markdown"` | Größtes Subsystem, eigene `doc/`, rein ft-gebunden. Idealfall. |
 | **pdfport.nvim** | `custom/pdfport` | 4.273 | `cmd = PdfPort*` | Schwergewichtig (Backends claude/ollama/pdfplumber), selten gebraucht, lädt aktuell eager. |
-| **uv-doc.nvim** | `usrcmds/uv_doc` | 1.144 | `cmd = UVDoc*` | Netz-gebundener Doc-Fetcher, abgeschlossen. |
 | **recommender.nvim** | `custom/recommender` | 1.142 | `keys`/`cmd = Recommender` | Eigenständiges Feature. |
 | **migrate.nvim** | `usrcmds/migrate` | 2.212 | `cmd = Migrate*` | Einmal-/Wartungs-Tool — gehört evtl. gar nicht in die Laufzeit-Config (oder ganz raus). |
 
