@@ -92,6 +92,24 @@ return {
   },
 
   {
+    -- "StefanBartl/buffer-ctx.nvim"
+    dir = vim.env.REPOS_DIR .. "/buffer-ctx.nvim",
+    cmd = { "Insert", "Copy" },
+    keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf" },
+    opts = {
+      commands = true,
+      keymaps = {
+        location_copy = "<leader>cnl",
+        module_copy   = "<leader>cnm",
+        filepath_copy = "<leader>cnf",
+      },
+    },
+    config = function(_, opts)
+      require("buffer_ctx").setup(opts)
+    end,
+  },
+
+  {
     -- "StefanBartl/markdown.nvim",
     dir = vim.env.REPOS_DIR .. "/markdown.nvim",
     ft = { "markdown", "mdx", "md" },

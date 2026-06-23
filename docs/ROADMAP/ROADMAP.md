@@ -28,14 +28,14 @@
 1. Module und Plugins durchgehen und CHEATSHEETS schreibenm. Jedes repo soll auch eigene /docs/BINDINGS.lua haben mit allen keymaps, usrcmds aber auch die autocmds!
 2. `lib.nvim` auf alle plugins anwenden (als dependency)
 3. Alle .nvim pluigfins eine .vim version erstellen (wenn notwendig fc)
-4. Checklisten anwenden
+4. Checklisten anwenden: Bestes Modell Bester Modus
   1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
-5. Weitere fetures, usrcmds, keymaps, autocmds ROADMAP erstellen
-6. ist es möglioch die neotree inteegrierung von pdfport innerhal podfports zu belassen?
-7. Weenn fertig: alles auf remote stellen statt lokal
-8. gopath auf main stellen, alle anderen auch
-9. Format.nvim - Nummerieungen zu checkboxen uwmandeln;weoter featuresderart
-
+  2. Weitere fetures, usrcmds, keymaps, autocmds ROADMAP erstellen
+5. ist es möglioch die neotree inteegrierung von pdfport innerhal podfports zu belassen?
+6. Weenn fertig: alles auf remote stellen statt lokal
+7. gopath auf main stellen, alle anderen auch
+8. Format.nvim - Nummerieungen zu checkboxen uwmandeln;weoter featuresderart
+9. Alle features testen
 
 ---
 

@@ -8,9 +8,6 @@ require("custom.diff").enable({
   diff = true,
 })
 require("custom.open").setup()
-require("custom.insert").setup({
-  enable_legacy_commands = true,
-})
 require("custom.format").setup({
   enable_legacy_commands = true,
 })
