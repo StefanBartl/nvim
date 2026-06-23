@@ -63,7 +63,6 @@ require("custom.format").setup({
   enable_legacy_commands = true,
 })
 require("custom.mynotes")
-require("custom.recommender").setup()
 require("custom.filecycle").setup({
   open_target = "current", -- "current"|"split"|"vsplit"|"tab"|"background"
   keep_focus = true, -- bei Split/Vsplit Fokus im Ursprungsfenster behalten

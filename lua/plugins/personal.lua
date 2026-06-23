@@ -56,6 +56,15 @@ return {
       require("markdown_nvim").setup()
     end,
   },
+  {
+    -- "StefanBartl/recommender.nvim",
+    dir = vim.env.REPOS_DIR .. "/recommender.nvim",
+    ft = { "lua" },
+    cmd = { "Recommender" },
+    config = function()
+      require("recommender_nvim").setup()
+    end,
+  },
 
   {
     "StefanBartl/nvim-cmdlog",
