@@ -44,6 +44,7 @@
 3. [avante](./avante.md) letzter teil umsetzen1
   1. avante: usrcmds erstellen
   2. gp. gegen avante testen
+4. center in neotree: wen nich mit der maus scrolle, dase centered es, was mühasm ist
 
 ---
 

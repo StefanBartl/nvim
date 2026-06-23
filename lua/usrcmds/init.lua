@@ -13,7 +13,8 @@ emojis.setup({
 -- vim.keymap.set("n", "<leader>el", "<cmd>Emojis list %<cr>", { desc = "Emoji: In Quickfix auflisten" })
 
 require("usrcmds.copy").enable()
-require("usrcmds.gather").setup({ lua = true })
+-- usrcmds.gather removed: tables+strings are now in project-insight.nvim
+-- :ProjectInsight symbols [buffer|cwd] [functions|tables|strings]
 require("usrcmds.compress_dir").enable_usercmd()
 require("usrcmds.newfile").enable_usercmds()
 require("usrcmds.migrate").setup({
