@@ -72,6 +72,26 @@ return {
   },
 
   {
+    -- "StefanBartl/fileops.nvim",
+    dir = vim.env.REPOS_DIR .. "/fileops.nvim",
+    event = "VeryLazy",
+    opts = {
+      cycle = {
+        open_target         = "current",
+        keep_focus          = true,
+        include_hidden      = false,
+        wrap                = true,
+        follow_symlinks     = true,
+        root                = "buffer_dir",
+        confirm_on_modified = true,
+        case_insensitive    = true,
+      },
+      keymaps   = { cycle = true, delete = true },
+      commands  = true,
+    },
+  },
+
+  {
     -- "StefanBartl/markdown.nvim",
     dir = vim.env.REPOS_DIR .. "/markdown.nvim",
     ft = { "markdown", "mdx", "md" },

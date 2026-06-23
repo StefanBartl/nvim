@@ -34,6 +34,8 @@
 6. ist es möglioch die neotree inteegrierung von pdfport innerhal podfports zu belassen?
 7. Weenn fertig: alles auf remote stellen statt lokal
 8. gopath auf main stellen, alle anderen auch
+9. Format.nvim - Nummerieungen zu checkboxen uwmandeln;weoter featuresderart
+
 
 ---
 

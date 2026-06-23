@@ -16,7 +16,8 @@ require("usrcmds.copy").enable()
 -- usrcmds.gather removed: tables+strings are now in project-insight.nvim
 -- :ProjectInsight symbols [buffer|cwd] [functions|tables|strings]
 require("usrcmds.compress_dir").enable_usercmd()
-require("usrcmds.newfile").enable_usercmds()
+-- usrcmds.newfile disabled: replaced by fileops.nvim (:NewFile, :SaveAsR, :WriteToR, :MkParent)
+-- require("usrcmds.newfile").enable_usercmds()
 require("usrcmds.migrate").setup({
     opt = true,    -- `:MigrateOpt`
     notify = true, -- `MigrateNotify`

@@ -146,7 +146,6 @@ vim.defer_fn(function()
     tools = nil,
   })
 
-  -- require("benchmarks").setup()
 end, 600)
 
 -- vim.defer_fn(function()
