@@ -43,13 +43,18 @@
 13. `monkeypatch` noch sinnvoll? besser ausbauen
 14. migrate.nvim fertig stellen
 
+
+## `fileops.nvim`
+
+1. Wenn man  `:File delete %` auslöst, wird die file gelöscht und der Buffer geschlossen, perfekt. Es wird abber immer auch ein leerer Buffer aufgemacht, selbst wenn andree Buffer existieren - das ist unnötig.
+
 ---
 
 ## nvim: High
 
 1. `leader wq`: Alle issues lösen
 2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
-3. [avante](./avante.md) letzter teil umsetzen1
+3. [avante](./avante.md) Letzter teil umsetzen1
   1. avante: usrcmds erstellen
   2. gp. gegen avante testen
 4. center in neotree: wen nich mit der maus scrolle, dase centered es, was mühasm ist
@@ -144,5 +149,6 @@ stack traceback:
 ### Neotree: LOW
 
 1. Vereinen von neotree keymaps filetree: preview;images;pdfprot
+2. Nach den gesamten Aufräumarbeiten checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
 
 ---
