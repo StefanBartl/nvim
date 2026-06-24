@@ -227,19 +227,6 @@ In jedem Fall: `custom.format.markdown/` danach löschen.
 
 ---
 
-## Task F — `custom.line_marker` → `wkdoptions/ui`
-
-### Implementierung
-Einfachstes Task.
-
-1. `lua/custom/line_marker/init.lua` → `lua/wkdoptions/ui/line_marker/init.lua` (Inhalt unverändert)
-2. Alle require-Stellen in der Config von `custom.line_marker` auf `wkdoptions.ui.line_marker` umstellen
-3. `lua/custom/line_marker/` löschen
-
-Kein Plugin-Wechsel, nur internes Verschieben innerhalb der nvim-Config.
-
----
-
 ## Task G — `custom.mynotes` → `pickers.nvim` Collections-System
 
 Das größte Task. Kernidee: `repos` und `wkdbooks` sind bereits "benannte Verzeichnis-Collections" — das wird zum generischen System.
@@ -330,13 +317,11 @@ Für jede Collection in `cfg.collections`:
 
 Tasks sind weitgehend unabhängig. Empfohlene Reihenfolge:
 
-1. **F** (line_marker) — trivial, sofort erledigt, kein Plugin-Risiko
-2. **A** (debugging.nvim) — kleines, isoliertes Modul
-3. **E** (markdown.nvim) — Merge-Check zuerst, dann entscheiden
-4. **B** (project-insight.nvim) — cross-platform Arbeit
-5. **D** (buffer-ctx.nvim) — größere Portierung
-6. **G** (pickers.nvim) — größtes Refactoring
-7. **C** (xopen.nvim) — neues Plugin, braucht Docs
+1. **E** (markdown.nvim) — Merge-Check zuerst, dann entscheiden
+2. **B** (project-insight.nvim) — cross-platform Arbeit
+3. **D** (buffer-ctx.nvim) — größere Portierung
+4. **G** (pickers.nvim) — größtes Refactoring
+5. **C** (xopen.nvim) — neues Plugin, braucht Docs
 
 ---
 

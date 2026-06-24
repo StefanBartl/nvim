@@ -23,7 +23,7 @@
 
 ---
 
-## CUSTOM PLUGINS
+## CUSTOM PLUGINS (`/***.nvim`)
 
 1. Module und Plugins durchgehen und CHEATSHEETS schreibenm. Jedes repo soll auch eigene /docs/BINDINGS.lua haben mit allen keymaps, usrcmds aber auch die autocmds!
 2. `lib.nvim` auf alle plugins anwenden (als dependency)
@@ -42,6 +42,24 @@
 12. `objtrack`
 13. `monkeypatch` noch sinnvoll? besser ausbauen
 14. migrate.nvim fertig stellen
+15. readme.md überprüfen auf license
+
+### `debugging.nvim`
+
+1. Lieblings keymap `<lt>e` && `<lt>n` funlktnieren nicht (`debugging.nvim\debugging\views\keymaps.lua`)
+
+### Verifikation für jedes feature jedes plugins
+
+**Beispiel:**
+- **A**: `:Debug module reload` auf einer Lua-Datei → Modul wird neu geladen; `:checkhealth debugging` grün
+- **B**: `:ProjectInsight archive` → Archiv in `~/temp/`; auf Windows mit PowerShell; `:checkhealth project-insight` grün
+- **C**: `:Open` auf URL → Browser öffnet; auf Datei → Explorer/Finder; `:checkhealth open_nvim` grün
+- **D**: `:Format trim`, `:Format sort`, `:Format column 40` auf Testbuffer; `:checkhealth buffer_ctx` grün
+- **E**: `:Format markdown headline_separators` (falls API-Redirect) oder komplett gestrichen; markdown.nvim-Test
+- **F**: require-Pfad in Config testen, `MarkLineToggle` + `MarkLinesYank` funktionieren
+- **G**: `:Pickers notes files` → Picker öffnet; `NotesFiles` als Compat-Command; prefix-Collection listet Unterordner; `:checkhealth pickers` grün; alle alten `:Nvim*Files`-Commands funktionieren als Compat-Aliases
+
+---
 
 ## `markdown.nvim`
 
@@ -59,8 +77,8 @@
 1. `leader wq`: Alle issues lösen
 2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
 3. [avante](./avante.md) Letzter teil umsetzen1
-  1. avante: usrcmds erstellen
-  2. gp. gegen avante testen
+1. avante: usrcmds erstellen
+2. gp. gegen avante testen
 4. center in neotree: wen nich mit der maus scrolle, dase centered es, was mühasm ist
 5. wkdoptiuons UI Linemarker gehört README
 6. wkdoptions mit options.lua verheiraten
@@ -80,13 +98,13 @@
 
 1. mehrere Zeilen markiert, dann verscuht zu identen: `A-Rght`:
 ```vim
-   Error  10:56:34 AM msg_show.emsg E5108: Lua: ...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: 'start' is higher than 'end'
+  Error  10:56:34 AM msg_show.emsg E5108: Lua: ...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: 'start' is higher than 'end'
 stack traceback:
-	[C]: in function 'nvim_buf_set_lines'
-	...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: in function 'shift_line'
-	...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:38: in function 'shift_range'
-	.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:151: in function 'visual_shift'
-	.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:163: in function <.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:162>
+[C]: in function 'nvim_buf_set_lines'
+...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: in function 'shift_line'
+...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:38: in function 'shift_range'
+.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:151: in function 'visual_shift'
+.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:163: in function <.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:162>
 
 ```
 1. `leader toc` sollter sicherstellen, dass am ende jeder Headline ein `---` ist.
@@ -103,10 +121,10 @@ stack traceback:
 1. Spellchecking nochmnal durchgehen und notizen machen. Spell Strategie ausarbeiten - entweder Plugin einbindne oder Modul debuggen
 2. Durchsuchen %/cwd/path nach einen bestimmten String, alle Treffer sollen je nach eingabe mit char sumhüllt werden, zb ``, ''. "" oder **. Das soll abgefragt werden bzw bei einen usrcmd angegebn werden können wenn.
 3. In allen modulen  `/bindings` und dort dann
-    - `usrcmds`
-    - `keymaps`
-    - `autocmds` - sind zentralisiert !
-    - Wenn etwas beide ist, dann `Bindings` oder `Interaction` bzw. `InteractionLayer`
+- `usrcmds`
+- `keymaps`
+- `autocmds` - sind zentralisiert !
+- Wenn etwas beide ist, dann `Bindings` oder `Interaction` bzw. `InteractionLayer`
 
 ---
 
@@ -143,12 +161,12 @@ Wenn ees noch weitere interesxsante optioenn neben `fs` für das neue usrcmd `Ma
 3. Folgender error:
 
 ```vim
-   Error  10:54:33 msg_show.lua_error Lua callback:
+  Error  10:54:33 msg_show.lua_error Lua callback:
 ...a/Local/nvim/lua/config/neotree/open/filemanager/win.lua:62: attempt to call upvalue 'cb' (a table value)
 stack traceback:
-	...a/Local/nvim/lua/config/neotree/open/filemanager/win.lua:62: in function 'on_exit'
-	vim/_core/system.lua:388: in function <vim/_core/system.lua:358>
-   Error  10:54:33 msg_show.emsg E486: Pattern not found: \<resolver_module\>
+...a/Local/nvim/lua/config/neotree/open/filemanager/win.lua:62: in function 'on_exit'
+vim/_core/system.lua:388: in function <vim/_core/system.lua:358>
+  Error  10:54:33 msg_show.emsg E486: Pattern not found: \<resolver_module\>
    Error  10:54:21 msg_show.lua_error Lua callback:
 ...a/Local/nvim/lua/config/neotree/open/filemanager/win.lua:62: attempt to call upvalue 'cb' (a table value)
 stack traceback:
