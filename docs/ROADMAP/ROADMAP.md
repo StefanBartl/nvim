@@ -68,8 +68,7 @@
 
 ## nvim: Bugs
 
-1. `:Gather Lua`
-2. mehrere Zeilen markiert, dann verscuht zu identen: `A-Rght`:
+1. mehrere Zeilen markiert, dann verscuht zu identen: `A-Rght`:
 ```vim
    Error  10:56:34 AM msg_show.emsg E5108: Lua: ...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: 'start' is higher than 'end'
 stack traceback:
@@ -119,8 +118,9 @@ Wenn ees noch weitere interesxsante optioenn neben `fs` für das neue usrcmd `Ma
 
 ## Neotree
 
-1. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
-1. Folgender error:
+1. Neotree: Keymaps auch als usrcmds implementieren, die in neotree aber auch nvim tree usw funktioenren, zb könte man dann alle folder eines ordnnenr pfad kopieren, und den rekuuriscen kevek angeben
+2. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
+3. Folgender error:
 
 ```vim
    Error  10:54:33 msg_show.lua_error Lua callback:

@@ -92,12 +92,23 @@ local function mode_allowed(modes)
   return cur ~= nil and want[cur] == true
 end
 
+---Split process stdout into lines (matching systemlist semantics).
+---@param stdout string|nil
+---@return string[]
+local function to_lines(stdout)
+  if type(stdout) ~= "string" or stdout == "" then
+    return {}
+  end
+  return vim.split((stdout:gsub("\n$", "")), "\n", { plain = true })
+end
+
 ---@param git_cmd string
 ---@param file string
 ---@return boolean
 local function is_tracked(git_cmd, file)
-  local _ = fn.system(string.format([[%s ls-files --error-unmatch -- %s 2>/dev/null]], git_cmd, fn.fnameescape(file)))
-  return vim.v.shell_error == 0
+  -- argv array: no shell parsing, file path passed verbatim (no injection risk)
+  local res = vim.system({ git_cmd, "ls-files", "--error-unmatch", "--", file }, { text = true }):wait()
+  return res.code == 0
 end
 
 ---@param git_cmd string
@@ -105,17 +116,26 @@ end
 ---@param lnum integer
 ---@return string|nil
 local function get_previous_line(git_cmd, file, lnum)
-  local blame =
-    fn.systemlist(string.format([[%s blame -L %d,%d --porcelain -- %s]], git_cmd, lnum, lnum, fn.fnameescape(file)))
-  if type(blame) ~= "table" or #blame == 0 then
+  local blame_res = vim
+    .system({ git_cmd, "blame", "-L", lnum .. "," .. lnum, "--porcelain", "--", file }, { text = true })
+    :wait()
+  if blame_res.code ~= 0 then
+    return nil
+  end
+  local blame = to_lines(blame_res.stdout)
+  if #blame == 0 then
     return nil
   end
   local sha = parse_blame_sha(blame[1])
   if not sha then
     return nil
   end
-  local blob = fn.systemlist(string.format([[%s show %s:%s]], git_cmd, sha, fn.fnameescape(file)))
-  if type(blob) ~= "table" or #blob == 0 or lnum > #blob then
+  local blob_res = vim.system({ git_cmd, "show", sha .. ":" .. file }, { text = true }):wait()
+  if blob_res.code ~= 0 then
+    return nil
+  end
+  local blob = to_lines(blob_res.stdout)
+  if #blob == 0 or lnum > #blob then
     return nil
   end
   return blob[lnum]

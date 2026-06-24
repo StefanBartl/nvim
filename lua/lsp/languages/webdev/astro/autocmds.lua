@@ -66,7 +66,11 @@ function M.setup()
     group = grp,
     pattern = "*.astro",
     callback = function()
-      vim.fn.system("pkill -f 'astro dev'")
+      -- argv array instead of a shell string; guarded because pkill is Unix-only.
+      -- :wait() so the kill completes before Neovim exits (VimLeavePre).
+      if vim.fn.executable("pkill") == 1 then
+        vim.system({ "pkill", "-f", "astro dev" }):wait()
+      end
     end,
     desc = "Kill Astro dev server on exit",
   })

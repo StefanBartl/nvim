@@ -24,8 +24,8 @@ function M.load()
       type = "lldb",
       request = "launch",
       program = function()
-        -- Build the project first
-        vim.fn.system("zig build")
+        -- Build the project first (argv array, no shell parsing)
+        vim.system({ "zig", "build" }):wait()
         return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/zig-out/bin/", "file")
       end,
       cwd = "${workspaceFolder}",

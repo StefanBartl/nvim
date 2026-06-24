@@ -13,14 +13,18 @@ function M.setup()
 
   -- Stop Astro dev server
   vim.api.nvim_create_user_command("AstroDevStop", function()
-    vim.fn.system("pkill -f 'astro dev'")
+    if vim.fn.executable("pkill") ~= 1 then
+      vim.notify("pkill not available on this system", vim.log.levels.WARN)
+      return
+    end
+    vim.system({ "pkill", "-f", "astro dev" }):wait()
     vim.notify("Astro dev server stopped")
   end, { desc = "Stop Astro dev server" })
 
   -- Build Astro project
   vim.api.nvim_create_user_command("AstroBuild", function()
-    local output = vim.fn.system("astro build")
-    vim.notify(output, vim.log.levels.INFO)
+    local res = vim.system({ "astro", "build" }, { text = true }):wait()
+    vim.notify(res.stdout or res.stderr or "", vim.log.levels.INFO)
   end, { desc = "Build Astro project" })
 
   -- Preview production build

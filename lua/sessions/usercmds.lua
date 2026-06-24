@@ -75,33 +75,32 @@ function M.enable()
 
   -- Toggle tracking `/storage/last.vim`-file in git
   vim.api.nvim_create_user_command("ToggleLastVimTrack", function()
-    local last_vim_file = vim.fn.stdpath("config") .. "/lua/sessions/storage/last.vim"
+    local cfg_dir = vim.fn.stdpath("config")
+    local file = cfg_dir .. "/lua/sessions/storage/last.vim"
 
-    local function is_skipped(file)
-      local handle = io.popen("git ls-files -v " .. vim.fn.fnameescape(file))
-      if not handle then
+    -- All git calls use argv arrays (no shell parsing) and run inside the config
+    -- repo via cwd, avoiding quoting/injection issues with the file path.
+    ---@param f string
+    ---@return boolean
+    local function is_skipped(f)
+      local res = vim.system({ "git", "ls-files", "-v", "--", f }, { cwd = cfg_dir, text = true }):wait()
+      if res.code ~= 0 then
         return false
       end
-      local result = handle:read("*a")
-      handle:close()
-      return result:match("^S")
+      return (res.stdout or ""):match("^S") ~= nil
     end
 
-    local file = last_vim_file
-    if is_skipped(file) then
-      local result = vim.fn.system("git update-index --no-skip-worktree " .. vim.fn.fnameescape(file))
-      if vim.v.shell_error ~= 0 then
-        notify.error("Git command failed: " .. result)
-      else
-        notify.info("last.vim is now tracked in git")
-      end
+    local args = is_skipped(file)
+        and { "git", "update-index", "--no-skip-worktree", "--", file }
+        or { "git", "update-index", "--skip-worktree", "--", file }
+    local res = vim.system(args, { cwd = cfg_dir, text = true }):wait()
+
+    if res.code ~= 0 then
+      notify.error("Git command failed: " .. (res.stderr or "unknown error"))
+    elseif args[3] == "--no-skip-worktree" then
+      notify.info("last.vim is now tracked in git")
     else
-      local result = vim.fn.system("git update-index --skip-worktree " .. vim.fn.fnameescape(file))
-      if vim.v.shell_error ~= 0 then
-        notify.error("Git command failed: " .. result)
-      else
-        notify.info("last.vim marked as skip-worktree")
-      end
+      notify.info("last.vim marked as skip-worktree")
     end
   end, {})
 end

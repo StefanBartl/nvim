@@ -17,7 +17,7 @@ function M.load()
       cwd = "${workspaceFolder}",
       stopOnEntry = false,
       initCommands = function()
-        local rustc_sysroot = vim.fn.trim(vim.fn.system("rustc --print sysroot"))
+        local rustc_sysroot = vim.fn.trim(vim.system({ "rustc", "--print", "sysroot" }, { text = true }):wait().stdout or "")
         local script_import = 'command script import "' .. rustc_sysroot .. '/lib/rustlib/etc/lldb_lookup.py"'
         local commands_file = rustc_sysroot .. "/lib/rustlib/etc/lldb_commands"
         local commands = {}

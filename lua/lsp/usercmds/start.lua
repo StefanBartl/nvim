@@ -89,8 +89,13 @@ local function start_lsp(name, bufnr)
   -- Success case: schedule async check
   notify.info(string.format("LSP '%s' setup called, waiting for attachment...", name))
 
-  -- Check attachment after short delay (LSP startup is async)
+  -- Check attachment after short delay (LSP startup is async).
+  -- The buffer handle is captured here; revalidate it before use because the
+  -- buffer may have been deleted during the 1.5s window (deferred-handle guard).
   vim.defer_fn(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
     if is_server_running(name, bufnr) then
       notify.info(string.format("✓ LSP '%s' attached successfully", name))
     else
