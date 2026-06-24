@@ -2,10 +2,6 @@
 -- Initialize module for 'usrcmds'
 
 require("usrcmds.compress_dir").enable_usercmd()
-require("usrcmds.migrate").setup({
-    opt = true,    -- `:MigrateOpt`
-    notify = true, -- `MigrateNotify`
-})
 
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden
 vim.api.nvim_create_user_command("CwdHere", function()
