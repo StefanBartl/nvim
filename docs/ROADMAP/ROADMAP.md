@@ -110,6 +110,14 @@ stack traceback:
 
 ---
 
+## CHECK: linemarker
+
+line marker hat enen kleinen bug - ziel ist eigentlich:
+vom standunkt der aktuellen zeile aus nach oben immer wieviele zeilen zur zeile 0 sind. wenn ich also in der uzeile 10 stehe, ost die nummerierung der aktuellen zeile 0 und die der errsten zeile 10.
+Nach unten hingegegen: Auch hjier z#ählöt es hinauf, also zeile 11 hat nummerieung 1, zeile 20 hat nummerieung 10 usw.. Die  Nummerierung  der letzten zeile ist aber immer die macimale zeilanazahl, also wenn das dokument 122 zeilen hat, ist die nummerieung der leten zeile immer 122.
+
+Ist das noch immer ein bug?
+
 ### nvim markdown: Low
 
 1. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht

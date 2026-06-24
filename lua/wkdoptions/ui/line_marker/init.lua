@@ -1,7 +1,7 @@
----@module 'custom.line_marker'
+---@module 'wkdoptions.ui.line_marker'
 ---Allows marking lines and yanking all marked lines via mappings.
 
-local notify = require("lib.nvim.notify").create("[custom.line_marker]")
+local notify = require("lib.nvim.notify").create("[wkdoptions.ui.line_marker]")
 
 local M = {}
 
@@ -86,11 +86,11 @@ end
 function M.enable_commands()
   create_usercommand("MarkLineToggle", function()
     M.toggle_line(api.nvim_win_get_cursor(0)[1], nil)
-  end, { desc = "[custom.line_marker] Toggle mark on current line" })
+  end, { desc = "[wkdoptions.ui.line_marker] Toggle mark on current line" })
 
   create_usercommand("MarkLinesYank", function()
     M.yank_marked(nil)
-  end, { desc = "[custom.line_marker] Yank all marked lines" })
+  end, { desc = "[wkdoptions.ui.line_marker] Yank all marked lines" })
 end
 
 -- Mappings
@@ -98,12 +98,12 @@ function M.enable_mappings()
   -- Toggle current line mark
   km_set("n", "<S-m>", function()
     M.toggle_line(api.nvim_win_get_cursor(0)[1], nil)
-  end, { desc = "[custom.line_marker] Toggle line mark" })
+  end, { desc = "[wkdoptions.ui.line_marker] Toggle line mark" })
 
   -- Yank all marked lines
   km_set("n", "<C-p>", function()
     M.yank_marked(nil)
-  end, { desc = "[custom.line_marker] Yank all marked lines" })
+  end, { desc = "[wkdoptions.ui.line_marker] Yank all marked lines" })
 end
 
 return M
