@@ -23,13 +23,17 @@ function M.enable()
   -- Save with timestamp
   nvim_create_user_command("SessionSaveTimestamp", function()
     local stamp = os.date("sess-%Y%m%d-%H%M%S")
-    local ok, res = pcall(vim.cmd("SessionSave " .. stamp))
+    -- Call core.save directly (same as :SessionSave). The previous
+    -- `pcall(vim.cmd("SessionSave " .. stamp))` was a bug: vim.cmd ran *before*
+    -- pcall (its nil result was passed to pcall), so errors were never caught
+    -- and `res` was always nil.
+    local ok, res = require("sessions.core").save(stamp)
     if ok then
       notify.info("Session saved with timestamp: " .. (res or "?"))
     else
       notify.error("Session saving with timestamp failed: " .. (res or "?"))
     end
-  end, { nargs = "?", desc = "Save session with timestamp to file" })
+  end, { desc = "Save session with timestamp to file" })
 
   -- Load
   nvim_create_user_command("SessionLoad", function(cmd)
