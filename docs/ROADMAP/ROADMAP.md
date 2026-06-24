@@ -57,25 +57,27 @@
 16. Alle Plugins auf implementierte NVIM-Filetree-Features checken, diese
       - jedenfalls so ausbauen, dass es in Neotree, NvimTree, Netrw...
       - aus den gesammelten Features und aus `/(nvim/lua/config/neotree` ein eigenes Plugin `neotee-features.nvim` erstellen
-17. `config.lua` für plugin defaults, aber möglichst viele Features sollen vom user aus einstellbar sein, also zb.:
+17. `sessions` plugijn würdig?
+18. `/autcmds` passt zu `/bindings` ?
+19. `config.lua` für plugin defaults, aber möglichst viele Features sollen vom user aus einstellbar sein, also zb.:
 
-```lua
-  {
-    -- "StefanBartl/project-insight.nvim",
-    dir = vim.env.REPOS_DIR .. "/project-insight.nvim",
-    cmd = "ProjectInsight",
-    config = function()
-      require("project_insight").setup({
-        -- symbols.use_treesitter_for_lua = true,  -- optionale TS-Variante für Lua
-        compress = {
-            outdir = "C:\temp",
-            ---@type ProjectInsight.CompressEngine
-            engine = "tar",
-        },
-      })
-    end,
-  },
-```
+    ```lua
+    {
+      -- "StefanBartl/project-insight.nvim",
+      dir = vim.env.REPOS_DIR .. "/project-insight.nvim",
+      cmd = "ProjectInsight",
+      config = function()
+        require("project_insight").setup({
+          -- symbols.use_treesitter_for_lua = true,  -- optionale TS-Variante für Lua
+          compress = {
+              outdir = "C:\temp",
+              ---@type ProjectInsight.CompressEngine
+              engine = "tar",
+          },
+        })
+      end,
+    },
+    ```
 
 Hier kann man die keys **Output dir** und **Compress Engine** als User explizit setzen und damit die `config.lua` Pluginseitige Defaults überschreiben.
 
@@ -83,6 +85,38 @@ Dazu ist noch eines wichtig: Um dem User ein sehr gutes LSP Erlebnis zu bieten, 
 `--@alias ProjectInsight.CompressEngine "auto"|"tar"|"zip"|"powershell"`
 
 Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nicht User-seitig gesetzt werden können.
+
+20. Passen folgende usrcmds in ein `.nvim` Plugin von mir?
+
+  ```lua
+  --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.
+  vim.api.nvim_create_user_command("CwdHere", function()
+    local bufname = vim.api.nvim_buf_get_name(0)
+    if bufname ~= "" then
+      local dir = vim.fn.fnamemodify(bufname, ":p:h")
+      vim.cmd("lcd " .. vim.fn.fnameescape(dir))
+    end
+  end, {})
+
+  vim.api.nvim_create_user_command('PowershellProfile', function()
+      if vim.fn.executable("powershell") ~= 1 then
+          print("Fehler: powershell ist auf diesem System nicht verfügbar.")
+          return
+      end
+      -- argv array instead of io.popen with an embedded shell string
+      local res = vim.system(
+          { "powershell", "-NoProfile", "-Command", "[Console]::Write($PROFILE)" },
+          { text = true }
+      ):wait()
+      local profile_path = res.code == 0 and res.stdout or nil
+
+      if profile_path and profile_path ~= "" then
+          vim.cmd('edit ' .. vim.fn.fnameescape(profile_path))
+          return
+      end
+      print("Fehler: Der PowerShell Profil-Pfad konnte nicht ermittelt werden.")
+  end, { desc = 'Öffnet das aktuelle PowerShell-Profil' })
+  ```
 
 ---
 
@@ -114,6 +148,7 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 3. `ml` soll, wenn unter dem cursor gerade kein Pfad/Url/usw. oder so ist, checken ob in der aktuellen Zeile Links/URls/usw.. sind. Wenn...
     - ...genau einer in der aktuellen Zeile ist, aber der Cursor nicht genau drauf steht, dann verwende diesen trotzdem
     - ...mehrere sind, dann mit `lib.nvim -> hover_select` verwenden um eine Entscheidung des Users herbeizuführen, welcher verwendet werden soll
+    - Außerdem: Momentan funktioniert das Ganze nur innerhalb von markdown links, also [](), es wäre aber schön, wenn es ach generell in markdown dokumenten funktionieren würde, also auch wenn einfach auf einen Pfad/url/etc wie zb,; http://www.google.com steht und man `ml` ausführt, oder eben dass es auch alle Pfad/Links/etc dammelt die im Dokument sind
 4. Feature-Check: `:Markdown`-usrcmmd, dass alle Links/Urls/usw...
     - im gewählten Scope (`%/cwd/path/...`) gesammelt
     - explizit per [option?] im usrcmd wie damit verfahren wird, denkbar: `lib.nvim -> hover_select`, `Telescope`, `fzf-lua`, OutputDir (in File schreiben), usw...

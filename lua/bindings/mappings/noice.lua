@@ -1,4 +1,4 @@
----@module 'mappings.noice'
+---@module 'bindings.mappings.noice'
 ---Noice-specific key mappings that are only active in buffers with filetype "noice*".
 
 local M = {}

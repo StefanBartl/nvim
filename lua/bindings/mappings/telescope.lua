@@ -1,4 +1,4 @@
----@module 'mappings.telescope'
+---@module 'bindings.mappings.telescope'
 --- Centralized Telescope-related key mappings.
 ---
 --- This module defines all Telescope and Telescope-extension mappings

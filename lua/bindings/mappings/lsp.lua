@@ -1,4 +1,4 @@
----@module 'mappings.lsp'
+---@module 'bindings.mappings.lsp'
 
 local M = {}
 

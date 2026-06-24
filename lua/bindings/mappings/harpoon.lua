@@ -1,7 +1,7 @@
----@module 'mappings.harpoon'
+---@module 'bindings.mappings.harpoon'
 --- Version-agnostic Harpoon keymaps (v1 und v2 kompatibel)
 
-local notify = require("lib.nvim.notify").create("[mappings.harpoon]")
+local notify = require("lib.nvim.notify").create("[bindings.mappings.harpoon]")
 
 local M = {}
 

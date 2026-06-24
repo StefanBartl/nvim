@@ -9,7 +9,15 @@ local using_remote_fallback = false
 if vim.env.REPOS_DIR and vim.fn.isdirectory(vim.env.REPOS_DIR) == 1 then
   local_repos_path = vim.env.REPOS_DIR
 else
-  local candidate_roots = { "/repos", "C:/repos", "D:/repos", "E:/repos" }
+  local candidate_roots = {
+    "E:\\repos",
+    "E:/repos",
+    "D:\\repos",
+    "D:/repos",
+    "C:\\repos",
+    "C:/repos",
+    "/repos",
+  }
   for _, path in ipairs(candidate_roots) do
     if vim.fn.isdirectory(path) == 1 then
       local_repos_path = path

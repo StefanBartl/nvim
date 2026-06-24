@@ -1,4 +1,4 @@
----@module 'mappings.window_orientation'
+---@module 'bindings.mappings.window_orientation'
 --- Module for quickly changing split orientation in Neovim.
 --- Provides:
 ---   - Lua functions for vertical/horizontal layout changes

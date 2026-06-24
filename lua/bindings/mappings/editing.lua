@@ -1,6 +1,6 @@
----@module 'mappings.editing'
+---@module 'bindings.mappings.editing'
 
-local helpers = require("mappings.utils.line_renumbering.helpers")
+local helpers = require("bindings.mappings.utils.line_renumbering.helpers")
 
 local M = {}
 

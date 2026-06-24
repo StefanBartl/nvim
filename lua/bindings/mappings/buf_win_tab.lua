@@ -1,4 +1,4 @@
----@module 'mappings.buf_win_tab'
+---@module 'bindings.mappings.buf_win_tab'
 
 local M = {}
 
@@ -87,7 +87,7 @@ function M.setup()
   )
 
   map("n", "<leader>zm", function()
-    require("mappings.utils.window_zoom").zoom_toggle()
+    require("bindings.mappings.utils.window_zoom").zoom_toggle()
   end, { desc = "[Window] Zoom toggle." })
 
   -- ---------------------------------------------------------------------------

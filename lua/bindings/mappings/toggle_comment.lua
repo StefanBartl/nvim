@@ -1,4 +1,4 @@
----@module 'mappings.toggle_comment'
+---@module 'bindings.mappings.toggle_comment'
 --- Provides comment toggling functionality with support for EmmyLua annotations.
 --- Handles both regular comments and annotation comments (---@...) in normal and visual mode.
 

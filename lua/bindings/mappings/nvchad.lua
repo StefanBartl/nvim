@@ -1,4 +1,4 @@
----@module 'mappings.nvchad'
+---@module 'bindings.mappings.nvchad'
 
 local M = {}
 

@@ -81,15 +81,14 @@ require("sessions").enable({ autocommands = true, usercmds = true, keymaps = tru
 vim.defer_fn(function()
   require("wkdoptions").setup({ highlights = true, options = true, italic_keywords = true })
   require("autocmds")
-  require("custom")
 end, 10)
 
 -- =============================================================================
 -- PHASE 2: FRÜH (50ms) - Keymaps & Sessions
 -- =============================================================================
 vim.defer_fn(function()
-  require("usrcmds")
-  require("mappings").setup()
+  require("bindings.usrcmds")
+  require("bindings.mappings").setup()
 end, 50)
 
 -- =============================================================================

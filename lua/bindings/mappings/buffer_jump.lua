@@ -1,11 +1,11 @@
----@module 'mappings.buffer_jump'
+---@module 'bindings.mappings.buffer_jump'
 --- Numeric buffer jump that leverages nvchad.tabufline's goto_buf when available.
 --- The module resolves a sensible buffer order (prefer vim.t.bufs), then jumps
 --- to the selected buffer. If nvchad.tabufline.goto_buf is present it will be
 --- used to perform the switch (this respects tabline-specific winfixbuf logic).
 --- Otherwise a safe fallback to `nvim_set_current_buf` is used.
 
-local notify = require("lib.nvim.notify").create("[mappings.buffer_jump]")
+local notify = require("lib.nvim.notify").create("[bindings.mappings.buffer_jump]")
 
 local M = {}
 

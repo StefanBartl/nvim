@@ -1,7 +1,7 @@
----@module 'mappings.utils.line_renumbering.helpers'
+---@module 'bindings.mappings.utils.line_renumbering.helpers'
 -- ── Helpers ──────────────────────────────────────────────────
 
-local renumber = require("mappings.utils.line_renumbering")
+local renumber = require("bindings.mappings.utils.line_renumbering")
 
 local HELPERS = {}
 

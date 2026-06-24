@@ -1,4 +1,4 @@
----@module 'mappings.snacks'
+---@module 'bindings.mappings.snacks'
 --- Centralized key mappings for folke/snacks.nvim.
 --- Active mappings are defined normally, inactive mappings are kept commented
 --- at their original logical positions for easy activation later.

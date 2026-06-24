@@ -1,4 +1,4 @@
----@module 'mappings.fzf'
+---@module 'bindings.mappings.fzf'
 
 local M = {}
 

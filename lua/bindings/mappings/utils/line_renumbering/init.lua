@@ -1,4 +1,4 @@
----@module "mappings.utils.line_renumbering"
+---@module "bindings.mappings.utils.line_renumbering"
 --- Renumber ordered lists around the cursor.
 ---
 --- Supports nested lists (indent-based grouping).

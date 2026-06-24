@@ -1,4 +1,4 @@
----@module 'mappings.terminal'
+---@module 'bindings.mappings.terminal'
 
 local M = {}
 

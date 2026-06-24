@@ -1,4 +1,4 @@
----@module 'mappings.view_scroll'
+---@module 'bindings.mappings.view_scroll'
 --- Small helper module to scroll the window (view) without moving the cursor.
 --- Usage:
 ---   local vs = require('view.scroll')

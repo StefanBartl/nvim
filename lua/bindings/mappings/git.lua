@@ -1,4 +1,4 @@
----@module 'mappings.git'
+---@module 'bindings.mappings.git'
 
 local M = {}
 
