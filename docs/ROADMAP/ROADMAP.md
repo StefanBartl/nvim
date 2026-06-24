@@ -39,10 +39,38 @@
 9. Alle features testen
 10. Sind alle Plugins `lazy`?
 11. `:checkhealth` sollten alle module haben^
-12. `objtrack`
+12. `objtrack` - Analysieren (merge mit anderen Plugin? Ausbau notwendig?)
 13. `monkeypatch` noch sinnvoll? besser ausbauen
 14. migrate.nvim fertig stellen
 15. readme.md überprüfen auf license
+16. `config.lua` für plugin defaults, aber möglichst viele Features sollen vom user aus einstellbar sein, also zb.:
+
+```lua
+  {
+    -- "StefanBartl/project-insight.nvim",
+    dir = vim.env.REPOS_DIR .. "/project-insight.nvim",
+    cmd = "ProjectInsight",
+    config = function()
+      require("project_insight").setup({
+        -- symbols.use_treesitter_for_lua = true,  -- optionale TS-Variante für Lua
+        compress = {
+            outdir = "C:\temp",
+            ---@type ProjectInsight.CompressEngine
+            engine = "tar",
+        },
+      })
+    end,
+  },
+```
+
+Hier kann man die keys **Output dir** und **Compress Engine** als User explizit setzen und damit die `config.lua` Pluginseitige Defaults überschreiben.
+
+Dazu ist noch eines wichtig: Um dem User ein sehr gutes LSP Erlebnis zu bieten, braucht jeder Key einen Typen, wie zb.:
+`--@alias ProjectInsight.CompressEngine "auto"|"tar"|"zip"|"powershell"`
+
+Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nicht User-seitig gesetzt werden können.
+
+---
 
 ### `debugging.nvim`
 

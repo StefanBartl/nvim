@@ -1,8 +1,6 @@
 ---@module 'usrcmds'
 -- Initialize module for 'usrcmds'
 
-require("usrcmds.compress_dir").enable_usercmd()
-
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden
 vim.api.nvim_create_user_command("CwdHere", function()
   local bufname = vim.api.nvim_buf_get_name(0)
