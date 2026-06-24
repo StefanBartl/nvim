@@ -78,14 +78,18 @@ return {
   {
     "StefanBartl/buffer-ctx.nvim",
     dir = local_dev("buffer-ctx.nvim"),
-    cmd = { "Insert", "Copy" },
-    keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf" },
+    cmd = { "Insert", "Copy", "Format", "Mark", "MarkLineToggle", "MarkLinesYank" },
+    keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>", "<C-p>" },
     opts = {
       commands = true,
       keymaps = {
         location_copy = "<leader>cnl",
-        module_copy = "<leader>cnm",
+        module_copy   = "<leader>cnm",
         filepath_copy = "<leader>cnf",
+      },
+      mark = {
+        enable  = true,
+        keymaps = { toggle = "<S-m>", yank = "<C-p>" },
       },
     },
     config = function(_, opts)
