@@ -4,14 +4,6 @@
 
   - [Kontext](#kontext)
   - [Globale Konventionen (für alle Tasks)](#globale-konventionen-fr-alle-tasks)
-  - [Task B — `usrcmds/compress_dir` → `project-insight.nvim`](#task-b-usrcmdscompress_dir-project-insightnvim)
-    - [Zieldateien im Plugin](#zieldateien-im-plugin-1)
-    - [Implementierung](#implementierung-1)
-    - [nvim-Config](#nvim-config-1)
-  - [Task C — `custom.open` → Neues Plugin `open.nvim`](#task-c-customopen-neues-plugin-opennvim)
-    - [Neue Repo-Struktur (`E:\repos\open.nvim`)](#neue-repo-struktur-ereposopennvim)
-    - [Implementierung](#implementierung-2)
-    - [nvim-Config](#nvim-config-2)
   - [Task D — `custom.format` (non-markdown) → `buffer-ctx.nvim`](#task-d-customformat-non-markdown-buffer-ctxnvim)
     - [Zieldateien im Plugin](#zieldateien-im-plugin-2)
     - [Implementierung](#implementierung-3)
@@ -45,91 +37,6 @@ Mehrere eigenständige Module in der nvim-Config (`lua/custom/`, `lua/usrcmds/`)
 - **`:checkhealth`** in jedem Plugin aktuell halten
 - **Require-Pfade** in der nvim-Config nach jeder Migration anpassen und alten Code löschen
 - **Leitlinien**: Arch&Coding-Regeln.md / Checklist.md / Zentrale-Prinzipien.md
-
----
-
-## Task B — `usrcmds/compress_dir` → `project-insight.nvim`
-
-### Zieldateien im Plugin
-- NEU: `lua/project_insight/archive/init.lua`
-- MOD: `lua/project_insight/usercommands.lua` (neuer Eintrag in SUBCOMMANDS + Handler)
-- MOD: `lua/project_insight/config.lua` (Archive-Config-Block)
-- MOD: `lua/project_insight/health.lua`
-
-### Implementierung
-
-**Cross-Platform-Strategie** (wichtig — project-insight wirbt mit Windows-Support):
-- Unix/macOS: `find` + `tar --exclude=.git -czf` (bestehende Logik)
-- Windows/WSL: PowerShell `Compress-Archive -Path . -DestinationPath archive.zip -Force` (neuer Fallback)
-- Erkennung via `vim.fn.has("win32")` oder `vim.uv.os_uname().sysname`
-
-**`archive/init.lua`**:
-- `M.compress(on_complete)` — öffentliche Funktion mit Callback
-- Interne `_run_async(cmd_array, on_exit)` — nutzt `vim.system()` ≥0.10 / `uv.spawn` Fallback (identisch zu heute)
-- `M.compress_unix()` + `M.compress_windows()` — plattformspezifische Kommandos
-
-**Config-Block** (in `config.lua`):
-```lua
-archive = {
-  enable   = true,
-  outdir   = vim.fn.expand("~/temp"),  -- Zielverzeichnis
-},
-```
-
-**usercommands.lua**: `:ProjectInsight archive` → ruft `archive.compress()` auf.
-
-### nvim-Config
-`lua/usrcmds/compress_dir/` löschen, require entfernen.
-
----
-
-## Task C — `custom.open` → Neues Plugin `open.nvim`
-
-### Neue Repo-Struktur (`E:\repos\open.nvim`)
-```
-plugin/open.lua           -- Load-Guard (vim.g.loaded_open_nvim)
-lua/open_nvim/
-  init.lua                -- setup() + M.open(target?, scope?)
-  registry.lua            -- Handler-Registry (Pfade angepasst)
-  context.lua             -- Signals + Context-Resolving
-  platform.lua            -- Platform-Detection
-  util.lua                -- run_detached, url_encode, find_exec
-  @types/init.lua
-  handlers/
-    filemanager.lua
-    browser.lua
-    notepad.lua
-    nvim_internal.lua
-  config.lua              -- NEU: setup-Optionen + Defaults
-  health.lua              -- NEU: :checkhealth open_nvim
-doc/open.txt
-docs/ROADMAP.md
-README.md
-CHEATSHEET.md
-```
-
-### Implementierung
-
-**Renames**: alle `require("custom.open.*")` → `require("open_nvim.*")`
-
-**`config.lua`** (neu): Default-Handler + optionale Handler-Whitelist
-```lua
-{
-  default_filemanager = "filemanager",
-  default_browser     = "browser",
-  handlers            = { "filemanager", "browser", "notepad", "nvim_internal" },
-  command             = "Open",
-}
-```
-
-**`setup(opts)`** in `init.lua`: merged config, registriert Handler-Module, legt `:Open` an — genau wie heute `M.setup()`, nur über `config.lua` gesteuert.
-
-**`health.lua`**: prüft Neovim-Version, Platform-Executables (explorer.exe / xdg-open / open), ob lib.nvim vorhanden.
-
-**`CHEATSHEET.md`**: Tabelle aller Handler mit Beispielbefehlen.
-
-### nvim-Config
-`lua/custom/open/` löschen. lazy.nvim-Spec auf `dir = vim.env.REPOS_DIR .. "/open.nvim"` zeigen.
 
 ---
 
@@ -276,10 +183,9 @@ Für jede Collection in `cfg.collections`:
 Tasks sind weitgehend unabhängig. Empfohlene Reihenfolge:
 
 1. **E** (markdown.nvim) — Merge-Check zuerst, dann entscheiden
-2. **B** (project-insight.nvim) — cross-platform Arbeit
-3. **D** (buffer-ctx.nvim) — größere Portierung
-4. **G** (pickers.nvim) — größtes Refactoring
-5. **C** (xopen.nvim) — neues Plugin, braucht Docs
+2. **D** (buffer-ctx.nvim) — größere Portierung
+3. **G** (pickers.nvim) — größtes Refactoring
+4. **C** (xopen.nvim) — neues Plugin, braucht Docs
 
 ---
 

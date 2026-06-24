@@ -28,12 +28,12 @@
 1. Module und Plugins durchgehen und CHEATSHEETS schreibenm. Jedes repo soll auch eigene /docs/BINDINGS.lua haben mit allen keymaps, usrcmds aber auch die autocmds!
 2. `lib.nvim` auf alle plugins anwenden (als dependency)
 3. Alle .nvim pluigfins eine .vim version erstellen (wenn notwendig fc)
-4. Checklisten anwenden: Bestes Modell Bester Modus
+4. Checklisten anwenden:
   1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
   2. Weitere fetures, usrcmds, keymaps, autocmds ROADMAP erstellen
   3. In der `README.md` badges und toc
 5. ist es möglioch die neotree inteegrierung von pdfport innerhal podfports zu belassen?
-6. Weenn fertig: alles auf remote stellen statt lokal
+6. Wenn fertig: alles auf remote stellen statt lokal
 7. gopath auf main stellen, alle anderen auch
 8. Format.nvim - Nummerieungen zu checkboxen uwmandeln;weoter featuresderart
 9. Alle features testen
@@ -42,8 +42,13 @@
 12. `objtrack` - Analysieren (merge mit anderen Plugin? Ausbau notwendig?)
 13. `monkeypatch` noch sinnvoll? besser ausbauen
 14. migrate.nvim fertig stellen
-15. readme.md überprüfen auf license
-16. `config.lua` für plugin defaults, aber möglichst viele Features sollen vom user aus einstellbar sein, also zb.:
+15. readme.md überprüfen auf
+      - license
+      - dir = vime.env... raus aus den READMEs
+16. Alle Plugins auf implementierte NVIM-Filetree-Features checken, diese
+      - jedenfalls so ausbauen, dass es in Neotree, NvimTree, Netrw...
+      - aus den gesammelten Features und aus `/(nvim/lua/config/neotree` ein eigenes Plugin `neotee-features.nvim` erstellen
+17. `config.lua` für plugin defaults, aber möglichst viele Features sollen vom user aus einstellbar sein, also zb.:
 
 ```lua
   {
@@ -89,10 +94,20 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 
 ---
 
-## `markdown.nvim`
+## `markdown.nvim` && `mdlinks.nvim`
 
 1.  sollte auch `markdown/core/wrap_links` enthalten. Außerdem sicher gehen, dass `markdown/core/headline_spacing´ funktioniert. (am besten ganzen ex-ordner kopieren)
 2. `mdlinks.nvim` in `markdown.nvim` implementieren und dann auf nicht mehr gewartet setzen
+3. `ml` soll, wenn unter dem cursor gerade kein Pfad/Url/usw. oder so ist, checken ob in der aktuellen Zeile Links/URls/usw.. sind. Wenn...
+    - ...genau einer in der aktuellen Zeile ist, aber der Cursor nicht genau drauf steht, dann verwende diesen trotzdem
+    - ...mehrere sind, dann mit `lib.nvim -> hover_select` verwenden um eine Entscheidung des Users herbeizuführen, welcher verwendet werden soll
+4. Feature-Check: `:Markdown`-usrcmmd, dass alle Links/Urls/usw...
+    - im gewählten Scope (`%/cwd/path/...`) gesammelt
+    - explizit per [option?] im usrcmd wie damit verfahren wird, denkbar: `lib.nvim -> hover_select`, `Telescope`, `fzf-lua`, OutputDir (in File schreiben), usw...
+      - wichtig: Wenn in einem Picker oder hover_select, dann müssen die Entrys mit Enter dazu führen, dass sie geöffnet werden (nicht nur Aufzählung)
+    - Das Default-Verhalten soll der User in der Plugin-Implementierung setzen können
+
+---
 
 ## `fileops.nvim`
 
@@ -105,20 +120,23 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 1. `leader wq`: Alle issues lösen
 2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
 3. [avante](./avante.md) Letzter teil umsetzen1
-1. avante: usrcmds erstellen
-2. gp. gegen avante testen
-4. center in neotree: wen nich mit der maus scrolle, dase centered es, was mühasm ist
-5. wkdoptiuons UI Linemarker gehört README
-6. wkdoptions mit options.lua verheiraten
-7. manchmal briucht C-c mit sigint nvim ab, es solte aber alles kopieren des buffers
-8. `nvim/init.lua` durchgehen
-9. `/plugins/personal.lua`: Einbauen, dass wenn die `vim.env.REPOS_DIR` nicht da ist zuerst gecheckt wird, ob es einen `/repos`-Ordner im root der Laufwerke gibt, wenn ja, check das, wenn nein alle plugins automatisch auf remote umstellen. So müsste es eigentlich immer passen. Ein notify immer dann, wenn es keine REPOS_DIR variable gibt damit man daraauf hingewiesen wird.
+4. avante: usrcmds erstellen
+5. gp. gegen avante testen
+6. center in neotree: wen nich mit der maus scrolle, dase centered es, was mühasm ist
+7. wkdoptiuons UI Linemarker gehört README
+8. wkdoptions mit options.lua verheiraten
+9. manchmal briucht C-c mit sigint nvim ab, es solte aber alles kopieren des buffers
+10. `nvim/init.lua` durchgehen
+12. `:Lazy` -> `todo-comments` + `ui` haben Updates - sind bei mir aber monkeypatched, also Sicherungskope der Files anlegen, Updaten und neu bewerten
 
 ---
 
 ## nvim
 
 1. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
+2. `plugins/personal.lua`:
+    - Thematisch sortieren, schöner formatieren
+    - `/plugins/personal.lua`: Einbauen, dass wenn die `vim.env.REPOS_DIR` nicht da ist zuerst gecheckt wird, ob es einen `/repos`-Ordner im root der Laufwerke gibt, wenn ja, check das, wenn nein alle plugins automatisch auf remote umstellen. So müsste es eigentlich immer passen. Ein notify immer dann, wenn es keine REPOS_DIR variable gibt damit man daraauf hingewiesen wird.
 
 ---
 
