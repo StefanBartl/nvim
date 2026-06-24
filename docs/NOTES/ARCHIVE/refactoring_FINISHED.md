@@ -4,6 +4,18 @@
 
   - [Kontext](#kontext)
   - [Globale Konventionen (für alle Tasks)](#globale-konventionen-fr-alle-tasks)
+  - [Task A — `usrcmds/reload` → `debugging.nvim`](#task-a-usrcmdsreload-debuggingnvim)
+    - [Zieldateien im Plugin](#zieldateien-im-plugin)
+    - [Implementierung](#implementierung)
+    - [nvim-Config](#nvim-config)
+  - [Task B — `usrcmds/compress_dir` → `project-insight.nvim`](#task-b-usrcmdscompress_dir-project-insightnvim)
+    - [Zieldateien im Plugin](#zieldateien-im-plugin-1)
+    - [Implementierung](#implementierung-1)
+    - [nvim-Config](#nvim-config-1)
+  - [Task C — `custom.open` → Neues Plugin `open.nvim`](#task-c-customopen-neues-plugin-opennvim)
+    - [Neue Repo-Struktur (`E:\repos\open.nvim`)](#neue-repo-struktur-ereposopennvim)
+    - [Implementierung](#implementierung-2)
+    - [nvim-Config](#nvim-config-2)
   - [Task D — `custom.format` (non-markdown) → `buffer-ctx.nvim`](#task-d-customformat-non-markdown-buffer-ctxnvim)
     - [Zieldateien im Plugin](#zieldateien-im-plugin-2)
     - [Implementierung](#implementierung-3)
@@ -12,6 +24,8 @@
     - [Situation](#situation)
     - [Vorgehen](#vorgehen)
     - [Zieldateien im Plugin](#zieldateien-im-plugin-3)
+  - [Task F — `custom.line_marker` → `wkdoptions/ui`](#task-f-customline_marker-wkdoptionsui)
+    - [Implementierung](#implementierung-4)
   - [Task G — `custom.mynotes` → `pickers.nvim` Collections-System](#task-g-custommynotes-pickersnvim-collections-system)
     - [Neue Config-Struktur](#neue-config-struktur)
     - [Collection-Typen (via `prefix`-Feld)](#collection-typen-via-prefix-feld)
@@ -37,6 +51,127 @@ Mehrere eigenständige Module in der nvim-Config (`lua/custom/`, `lua/usrcmds/`)
 - **`:checkhealth`** in jedem Plugin aktuell halten
 - **Require-Pfade** in der nvim-Config nach jeder Migration anpassen und alten Code löschen
 - **Leitlinien**: Arch&Coding-Regeln.md / Checklist.md / Zentrale-Prinzipien.md
+
+---
+
+## Task A — `usrcmds/reload` → `debugging.nvim`
+
+### Zieldateien im Plugin
+- NEU: `lua/debugging/usercmds/module_reload.lua`
+- MOD: `lua/debugging/commands.lua` (neuer Eintrag in `build_registry()`)
+- MOD: `lua/debugging/config/DEFAULTS.lua` (neues Feature-Flag)
+- MOD: `lua/debugging/health.lua` (Checks für neue Kategorie)
+- MOD: `lua/debugging/@types/init.lua` (optionales Typ-Update)
+
+### Implementierung
+
+**`module_reload.lua`** übernimmt direkt die zwei Hilfsfunktionen aus dem original Modul:
+- `path_to_module(filepath)` — Dateipfad → Lua-Modulname
+- `reload_module(module_name)` — `package.loaded` + `vim.loader` leeren + `pcall(require)`
+
+Öffentlich: `M.reload_current()` (heutiger `reload_current_module`-Body).
+
+**`commands.lua`** bekommt einen neuen Registry-Eintrag:
+```lua
+module = {
+  feature = "module_reload",
+  actions = { "reload" },
+  run = {
+    reload = function() require("debugging.usercmds.module_reload").reload_current() end,
+  },
+},
+```
+Befehl: `:Debug module reload`
+
+**`DEFAULTS.lua`**: `features.module_reload = true`
+
+### nvim-Config
+`lua/usrcmds/reload/` löschen. In `lua/usrcmds/init.lua` den require-Call entfernen oder durch Hinweis auf `:Debug module reload` ersetzen.
+
+---
+
+## Task B — `usrcmds/compress_dir` → `project-insight.nvim`
+
+### Zieldateien im Plugin
+- NEU: `lua/project_insight/archive/init.lua`
+- MOD: `lua/project_insight/usercommands.lua` (neuer Eintrag in SUBCOMMANDS + Handler)
+- MOD: `lua/project_insight/config.lua` (Archive-Config-Block)
+- MOD: `lua/project_insight/health.lua`
+
+### Implementierung
+
+**Cross-Platform-Strategie** (wichtig — project-insight wirbt mit Windows-Support):
+- Unix/macOS: `find` + `tar --exclude=.git -czf` (bestehende Logik)
+- Windows/WSL: PowerShell `Compress-Archive -Path . -DestinationPath archive.zip -Force` (neuer Fallback)
+- Erkennung via `vim.fn.has("win32")` oder `vim.uv.os_uname().sysname`
+
+**`archive/init.lua`**:
+- `M.compress(on_complete)` — öffentliche Funktion mit Callback
+- Interne `_run_async(cmd_array, on_exit)` — nutzt `vim.system()` ≥0.10 / `uv.spawn` Fallback (identisch zu heute)
+- `M.compress_unix()` + `M.compress_windows()` — plattformspezifische Kommandos
+
+**Config-Block** (in `config.lua`):
+```lua
+archive = {
+  enable   = true,
+  outdir   = vim.fn.expand("~/temp"),  -- Zielverzeichnis
+},
+```
+
+**usercommands.lua**: `:ProjectInsight archive` → ruft `archive.compress()` auf.
+
+### nvim-Config
+`lua/usrcmds/compress_dir/` löschen, require entfernen.
+
+---
+
+## Task C — `custom.open` → Neues Plugin `open.nvim`
+
+### Neue Repo-Struktur (`E:\repos\open.nvim`)
+```
+plugin/open.lua           -- Load-Guard (vim.g.loaded_open_nvim)
+lua/open_nvim/
+  init.lua                -- setup() + M.open(target?, scope?)
+  registry.lua            -- Handler-Registry (Pfade angepasst)
+  context.lua             -- Signals + Context-Resolving
+  platform.lua            -- Platform-Detection
+  util.lua                -- run_detached, url_encode, find_exec
+  @types/init.lua
+  handlers/
+    filemanager.lua
+    browser.lua
+    notepad.lua
+    nvim_internal.lua
+  config.lua              -- NEU: setup-Optionen + Defaults
+  health.lua              -- NEU: :checkhealth open_nvim
+doc/open.txt
+docs/ROADMAP.md
+README.md
+CHEATSHEET.md
+```
+
+### Implementierung
+
+**Renames**: alle `require("custom.open.*")` → `require("open_nvim.*")`
+
+**`config.lua`** (neu): Default-Handler + optionale Handler-Whitelist
+```lua
+{
+  default_filemanager = "filemanager",
+  default_browser     = "browser",
+  handlers            = { "filemanager", "browser", "notepad", "nvim_internal" },
+  command             = "Open",
+}
+```
+
+**`setup(opts)`** in `init.lua`: merged config, registriert Handler-Module, legt `:Open` an — genau wie heute `M.setup()`, nur über `config.lua` gesteuert.
+
+**`health.lua`**: prüft Neovim-Version, Platform-Executables (explorer.exe / xdg-open / open), ob lib.nvim vorhanden.
+
+**`CHEATSHEET.md`**: Tabelle aller Handler mit Beispielbefehlen.
+
+### nvim-Config
+`lua/custom/open/` löschen. lazy.nvim-Spec auf `dir = vim.env.REPOS_DIR .. "/open.nvim"` zeigen.
 
 ---
 
@@ -89,6 +224,19 @@ In jedem Fall: `custom.format.markdown/` danach löschen.
 - ggf. MOD: `lua/markdown_nvim/headline_spacing/init.lua`
 - MOD: `lua/markdown_nvim/init.lua` (public API-Export)
 - MOD: `lua/markdown_nvim/health.lua`
+
+---
+
+## Task F — `custom.line_marker` → `wkdoptions/ui`
+
+### Implementierung
+Einfachstes Task.
+
+1. `lua/custom/line_marker/init.lua` → `lua/wkdoptions/ui/line_marker/init.lua` (Inhalt unverändert)
+2. Alle require-Stellen in der Config von `custom.line_marker` auf `wkdoptions.ui.line_marker` umstellen
+3. `lua/custom/line_marker/` löschen
+
+Kein Plugin-Wechsel, nur internes Verschieben innerhalb der nvim-Config.
 
 ---
 
@@ -182,10 +330,13 @@ Für jede Collection in `cfg.collections`:
 
 Tasks sind weitgehend unabhängig. Empfohlene Reihenfolge:
 
-1. **E** (markdown.nvim) — Merge-Check zuerst, dann entscheiden
-2. **D** (buffer-ctx.nvim) — größere Portierung
-3. **G** (pickers.nvim) — größtes Refactoring
-4. **C** (xopen.nvim) — neues Plugin, braucht Docs
+1. **F** (line_marker) — trivial, sofort erledigt, kein Plugin-Risiko
+2. **A** (debugging.nvim) — kleines, isoliertes Modul
+3. **E** (markdown.nvim) — Merge-Check zuerst, dann entscheiden
+4. **B** (project-insight.nvim) — cross-platform Arbeit
+5. **D** (buffer-ctx.nvim) — größere Portierung
+6. **G** (pickers.nvim) — größtes Refactoring
+7. **C** (xopen.nvim) — neues Plugin, braucht Docs
 
 ---
 
@@ -198,5 +349,3 @@ Tasks sind weitgehend unabhängig. Empfohlene Reihenfolge:
 - **E**: `:Format markdown headline_separators` (falls API-Redirect) oder komplett gestrichen; markdown.nvim-Test
 - **F**: require-Pfad in Config testen, `MarkLineToggle` + `MarkLinesYank` funktionieren
 - **G**: `:Pickers notes files` → Picker öffnet; `NotesFiles` als Compat-Command; prefix-Collection listet Unterordner; `:checkhealth pickers` grün; alle alten `:Nvim*Files`-Commands funktionieren als Compat-Aliases
-
----

@@ -1,14 +1,23 @@
 # Roadmap for `main-workstation` branch
 
+- [ ]
+
 ## Table of content
 
+  - [nvim: ZIEL](#nvim-ziel)
+  - [CUSTOM PLUGINS (`/***.nvim`)](#custom-plugins-nvim)
+    - [`debugging.nvim`](#debuggingnvim)
+    - [Verifikation für jedes feature jedes plugins](#verifikation-fr-jedes-feature-jedes-plugins)
+  - [`markdown.nvim` && `mdlinks.nvim`](#markdownnvim-mdlinksnvim)
+  - [`fileops.nvim`](#fileopsnvim)
   - [nvim: High](#nvim-high)
   - [nvim](#nvim)
   - [nvim: Bugs](#nvim-bugs)
   - [nvim: Low](#nvim-low)
+  - [CHECK: linemarker](#check-linemarker)
     - [nvim markdown: Low](#nvim-markdown-low)
   - [Neotree](#neotree)
-  - [Harpoon](#harpoon)
+    - [Neotree: LOW](#neotree-low)
 
 ---
 
@@ -77,6 +86,10 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 
 ---
 
+### `lib.nvim`
+
+- [ ] Overlay/Fenster müssem sich oft im Normal-Mode intuitiv über `q` oder `Escape` schließen lassen. Dies könnte man in einer `lib.nvim`-Funktion anbieten: `function close_window_with_keymap(win_id){ ... }` Somit müsste man das nicht in jedem Plugin extra implementieren. Derartige weitere Features möglich?
+
 ### `debugging.nvim`
 
 1. Lieblings keymap `<lt>e` && `<lt>n` funlktnieren nicht (`debugging.nvim\debugging\views\keymaps.lua`)
@@ -134,9 +147,6 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 ## nvim
 
 1. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
-2. `plugins/personal.lua`:
-    - Thematisch sortieren, schöner formatieren
-    - `/plugins/personal.lua`: Einbauen, dass wenn die `vim.env.REPOS_DIR` nicht da ist zuerst gecheckt wird, ob es einen `/repos`-Ordner im root der Laufwerke gibt, wenn ja, check das, wenn nein alle plugins automatisch auf remote umstellen. So müsste es eigentlich immer passen. Ein notify immer dann, wenn es keine REPOS_DIR variable gibt damit man daraauf hingewiesen wird.
 
 ---
 
@@ -155,9 +165,8 @@ stack traceback:
 ```
 1. `leader toc` sollter sicherstellen, dass am ende jeder Headline ein `---` ist.
 2. `ZenMode` sollte auch eienen usrcmds toggle schalter haben
-3. `:Emojis clear` entfern korrekt di eEmjois, hinterlässt aber einen char leerzeivchen dort wo das emoji war. das solte auch entfernt wereden
-4. tablewview toggle sollt emit `q` bzw `Escape im Nomral Mode` geschlossen werden können.
-5. Manchmal funktioert `C-s` nicht mehr...
+3. tablewview toggle sollt emit `q` bzw `Escape im Nomral Mode` geschlossen werden können.
+4. Manchmal funktioert `C-s` nicht mehr...
 
 
 ---
