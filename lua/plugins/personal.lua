@@ -152,6 +152,17 @@ return {
   },
 
   {
+    -- "StefanBartl/open.nvim",
+    dir          = vim.env.REPOS_DIR .. "/open.nvim",
+    cmd          = "Open",
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts         = {},
+    config = function(_, opts)
+      require("open_nvim").setup(opts)
+    end,
+  },
+
+  {
     -- "StefanBartl/markdown.nvim",
     dir = vim.env.REPOS_DIR .. "/markdown.nvim",
     ft = { "markdown", "mdx", "md" },

@@ -1,7 +1,6 @@
 ---@module 'custom'
 -- Initialize modules for 'custom'
 
-require("custom.open").setup()
 require("custom.format").setup({
   enable_legacy_commands = true,
 })
