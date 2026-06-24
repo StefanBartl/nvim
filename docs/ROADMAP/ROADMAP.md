@@ -41,6 +41,7 @@
 11. `:checkhealth` sollten alle module haben^
 12. `objtrack`
 13. `monkeypatch` noch sinnvoll? besser ausbauen
+14. migrate.nvim fertig stellen
 
 ---
 

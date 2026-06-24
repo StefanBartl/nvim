@@ -6,7 +6,6 @@ require("usrcmds.migrate").setup({
     opt = true,    -- `:MigrateOpt`
     notify = true, -- `MigrateNotify`
 })
-require("usrcmds.update_repos").enable()
 
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden
 vim.api.nvim_create_user_command("CwdHere", function()
