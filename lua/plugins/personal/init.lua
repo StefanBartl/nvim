@@ -26,48 +26,48 @@ return {
     config = function()
       local repos = personal_utils.repos_path
       require("pickers").setup({
-        engine    = "auto",
+        engine = "auto",
         repos_dir = repos,
         collections = {
           {
             name = "notes",
-            dir  = repos .. "/Notes",
+            dir = repos .. "/Notes",
             keys = { files = "<leader>mnf", grep = "<leader>mng" },
           },
           {
             name = "notes_lua",
-            dir  = repos .. "/Notes/MyNotes/Lua",
+            dir = repos .. "/Notes/MyNotes/Lua",
             keys = { files = "<leader>mlf", grep = "<leader>mlg" },
           },
           {
             name = "notes_nvim",
-            dir  = repos .. "/Notes/MyNotes/Neovim",
+            dir = repos .. "/Notes/MyNotes/Neovim",
             keys = { files = "<leader>mvf", grep = "<leader>mvg" },
           },
           {
             name = "checklists",
-            dir  = repos .. "/Notes/MyNotes/Checklists",
+            dir = repos .. "/Notes/MyNotes/Checklists",
             keys = { files = "<leader>chf", grep = "<leader>chg" },
           },
           {
             name = "spickzettel",
-            dir  = repos .. "/Notes/spickzettel",
+            dir = repos .. "/Notes/spickzettel",
             keys = { files = "<leader>spf", grep = "<leader>spg" },
           },
           {
-            name   = "wkdbooks",
-            dir    = repos .. "/WKDBooks",
+            name = "wkdbooks",
+            dir = repos .. "/WKDBooks",
             prefix = "wkdbook-",
-            keys   = { files = "<leader>wkf", grep = "<leader>wkg" },
+            keys = { files = "<leader>wkf", grep = "<leader>wkg" },
           },
           {
             name = "wkdbooks_lua",
-            dir  = repos .. "/WKDBooks/Development/wkdbook-Lua",
+            dir = repos .. "/WKDBooks/Development/wkdbook-Lua",
             keys = { files = "<leader>wlf", grep = "<leader>wlg" },
           },
           {
             name = "wkdbooks_nvim",
-            dir  = repos .. "/WKDBooks/Development/wkdbook-Neovim",
+            dir = repos .. "/WKDBooks/Development/wkdbook-Neovim",
             keys = { files = "<leader>wvf", grep = "<leader>wvg" },
           },
         },
@@ -84,11 +84,11 @@ return {
       commands = true,
       keymaps = {
         location_copy = "<leader>cnl",
-        module_copy   = "<leader>cnm",
+        module_copy = "<leader>cnm",
         filepath_copy = "<leader>cnf",
       },
       mark = {
-        enable  = true,
+        enable = true,
         keymaps = { toggle = "<S-m>", yank = "<C-p>" },
       },
     },
@@ -190,7 +190,7 @@ return {
   },
 
   {
-    "StefanBartl/replacer",
+    -- "StefanBartl/replacer",
     dir = local_dev("replacer"),
     cmd = { "Replace" },
     dependencies = { "ibhagwan/fzf-lua" },
@@ -245,15 +245,15 @@ return {
   --   end,
   -- },
 
-  -- {
-  --   "StefanBartl/reposcope.nvim",
-  --   dir = local_dev("reposcope.nvim"),
-  --   name = "reposcope",
-  --   event = "VeryLazy",
-  --   config = function()
-  --     require("reposcope.init").setup({})
-  --   end,
-  -- },
+  {
+    "StefanBartl/reposcope.nvim",
+    dir = local_dev("reposcope.nvim"),
+    name = "reposcope",
+    event = "VeryLazy",
+    config = function()
+      require("reposcope.init").setup({})
+    end,
+  },
 
   -- {
   --   "StefanBartl/mygrep.nvim",
@@ -436,13 +436,13 @@ return {
   },
 
   -- {  -- TODO: Nicht gepushed, nur readme drinnen
-    -- "StefanBartl/recommender.nvim",
-    -- dir = local_dev("recommender.nvim"),
-    -- ft = { "lua" },
-    -- cmd = { "Recommender" },
-    -- config = function()
-      -- require("recommender_nvim").setup()
-    -- end,
+  -- "StefanBartl/recommender.nvim",
+  -- dir = local_dev("recommender.nvim"),
+  -- ft = { "lua" },
+  -- cmd = { "Recommender" },
+  -- config = function()
+  -- require("recommender_nvim").setup()
+  -- end,
   -- },
 
   -- {
