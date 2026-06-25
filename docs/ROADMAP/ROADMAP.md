@@ -118,15 +118,14 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
   end, { desc = 'Öffnet das aktuelle PowerShell-Profil' })
   ```
 
+21. `mdlink` vs `mdlinks`?
+22. Alle Plugins auf .nvim umstellen
+
 ---
 
 ### `lib.nvim`
 
 - [ ] Overlay/Fenster müssem sich oft im Normal-Mode intuitiv über `q` oder `Escape` schließen lassen. Dies könnte man in einer `lib.nvim`-Funktion anbieten: `function close_window_with_keymap(win_id){ ... }` Somit müsste man das nicht in jedem Plugin extra implementieren. Derartige weitere Features möglich?
-
-### `debugging.nvim`
-
-1. Lieblings keymap `<lt>e` && `<lt>n` funlktnieren nicht (`debugging.nvim\debugging\views\keymaps.lua`)
 
 ### Verifikation für jedes feature jedes plugins
 
@@ -141,19 +140,22 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 
 ---
 
-## `markdown.nvim` && `mdlinks.nvim`
+## `markdown.nvim` && `mdlinks.nvim` && `mdview.nvim`
 
 1.  sollte auch `markdown/core/wrap_links` enthalten. Außerdem sicher gehen, dass `markdown/core/headline_spacing´ funktioniert. (am besten ganzen ex-ordner kopieren)
 2. `mdlinks.nvim` in `markdown.nvim` implementieren und dann auf nicht mehr gewartet setzen
-3. `ml` soll, wenn unter dem cursor gerade kein Pfad/Url/usw. oder so ist, checken ob in der aktuellen Zeile Links/URls/usw.. sind. Wenn...
+3. `mdview.nvim` in `markdown.nvim` implementieren und dann auf nicht mehr gewartet setzen
+4. `ml` soll, wenn unter dem cursor gerade kein Pfad/Url/usw. oder so ist, checken ob in der aktuellen Zeile Links/URls/usw.. sind. Wenn...
     - ...genau einer in der aktuellen Zeile ist, aber der Cursor nicht genau drauf steht, dann verwende diesen trotzdem
     - ...mehrere sind, dann mit `lib.nvim -> hover_select` verwenden um eine Entscheidung des Users herbeizuführen, welcher verwendet werden soll
     - Außerdem: Momentan funktioniert das Ganze nur innerhalb von markdown links, also [](), es wäre aber schön, wenn es ach generell in markdown dokumenten funktionieren würde, also auch wenn einfach auf einen Pfad/url/etc wie zb,; http://www.google.com steht und man `ml` ausführt, oder eben dass es auch alle Pfad/Links/etc dammelt die im Dokument sind
-4. Feature-Check: `:Markdown`-usrcmmd, dass alle Links/Urls/usw...
+5. Feature-Check: `:Markdown`-usrcmmd, dass alle Links/Urls/usw...
     - im gewählten Scope (`%/cwd/path/...`) gesammelt
     - explizit per [option?] im usrcmd wie damit verfahren wird, denkbar: `lib.nvim -> hover_select`, `Telescope`, `fzf-lua`, OutputDir (in File schreiben), usw...
       - wichtig: Wenn in einem Picker oder hover_select, dann müssen die Entrys mit Enter dazu führen, dass sie geöffnet werden (nicht nur Aufzählung)
     - Das Default-Verhalten soll der User in der Plugin-Implementierung setzen können
+6. `:Narkdown table` klappt nucht mehr?
+7. `:Tableview` gehört auch nach markdown.nvim
 
 ---
 
@@ -187,17 +189,6 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 
 ## nvim: Bugs
 
-1. mehrere Zeilen markiert, dann verscuht zu identen: `A-Rght`:
-```vim
-  Error  10:56:34 AM msg_show.emsg E5108: Lua: ...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: 'start' is higher than 'end'
-stack traceback:
-[C]: in function 'nvim_buf_set_lines'
-...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:28: in function 'shift_line'
-...cal/nvim/lua/mappings/utils/line_renumbering/helpers.lua:38: in function 'shift_range'
-.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:151: in function 'visual_shift'
-.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:163: in function <.../StefanBartl/AppData/Local/nvim/lua/mappings/editing.lua:162>
-
-```
 1. `leader toc` sollter sicherstellen, dass am ende jeder Headline ein `---` ist.
 2. `ZenMode` sollte auch eienen usrcmds toggle schalter haben
 3. tablewview toggle sollt emit `q` bzw `Escape im Nomral Mode` geschlossen werden können.
@@ -241,6 +232,8 @@ Ist das noch immer ein bug?
 
 Erzeugt / stellt sicher, dass /PART1/Intro.md bis /PART5/Intro.md existieren
 Wenn ees noch weitere interesxsante optioenn neben `fs` für das neue usrcmd `Markdown create` gibt, gerne!
+
+1. Es wäre ccool, wenn es unterstützung gibt bei erstellen eine md tables, also zb das ein leeres template mix col/rows eingefügt wird und noch mehr features
 
 ---
 

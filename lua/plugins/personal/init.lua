@@ -274,7 +274,8 @@ return {
   {
     "StefanBartl/debugging.nvim",
     dir = local_dev("debugging.nvim"),
-    cmd = "Debug",
+    -- cmd = "Debug",
+    event = "VeryLazy",
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {
       features = { neotree = false },
@@ -434,15 +435,15 @@ return {
     end,
   },
 
-  {
-    "StefanBartl/recommender.nvim",
-    dir = local_dev("recommender.nvim"),
-    ft = { "lua" },
-    cmd = { "Recommender" },
-    config = function()
-      require("recommender_nvim").setup()
-    end,
-  },
+  -- {  -- TODO: Nicht gepushed, nur readme drinnen
+    -- "StefanBartl/recommender.nvim",
+    -- dir = local_dev("recommender.nvim"),
+    -- ft = { "lua" },
+    -- cmd = { "Recommender" },
+    -- config = function()
+      -- require("recommender_nvim").setup()
+    -- end,
+  -- },
 
   -- {
   --   "StefanBartl/mdview.nvim",

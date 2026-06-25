@@ -142,8 +142,8 @@ function M.setup()
   -- longer move the selection — indent is a whole-line operation anyway.
   local function visual_shift(direction)
     local count = vim.v.count1
-    local s = vim.fn.line("'<")
-    local e = vim.fn.line("'>")
+    local s = vim.fn.line("v")
+    local e = vim.fn.line(".")
     if s > e then
       s, e = e, s
     end
@@ -151,12 +151,7 @@ function M.setup()
       helpers.shift_range(s, e, direction)
     end
     helpers.maybe_renumber()
-    -- Re-establish a clean linewise selection over the same lines.
-    vim.api.nvim_win_set_cursor(0, { s, 0 })
-    vim.cmd("normal! V")
-    if e > s then
-      vim.api.nvim_win_set_cursor(0, { e, 0 })
-    end
+    vim.api.nvim_feedkeys("gv", "n", false)
   end
 
   map("v", "<A-Right>", function()
