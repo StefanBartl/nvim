@@ -13,14 +13,14 @@ return {
 
   {
     "StefanBartl/lib.nvim",
-    dir = local_dev("lib.nvim"),
+    -- dir = local_dev("lib.nvim"),
     lazy = false,
     priority = 1000,
   },
 
   {
     "StefanBartl/pickers.nvim",
-    dir = local_dev("pickers.nvim"),
+    -- dir = local_dev("pickers.nvim"),
     lazy = false,
     dependencies = { "StefanBartl/lib.nvim" },
     config = function()
@@ -77,7 +77,7 @@ return {
 
   {
     "StefanBartl/buffer-ctx.nvim",
-    dir = local_dev("buffer-ctx.nvim"),
+    -- dir = local_dev("buffer-ctx.nvim"),
     cmd = { "Insert", "Copy", "Format", "Mark", "MarkLineToggle", "MarkLinesYank" },
     keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>", "<C-p>" },
     opts = {
@@ -99,7 +99,7 @@ return {
 
   {
     "StefanBartl/open.nvim",
-    dir = local_dev("open.nvim"),
+    -- dir = local_dev("open.nvim"),
     cmd = "Open",
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {},
@@ -131,14 +131,14 @@ return {
   --   end,
   -- },
 
-  -- {
-  --   "StefanBartl/nvim-containers",
-  --   dir = local_dev("nvim-containers"),
-  --   event = "VeryLazy",
-  --   config = function()
-  --     require("containers").setup({})
-  --   end,
-  -- },
+  {
+    "StefanBartl/nvim-containers",
+    -- dir = local_dev("nvim-containers"),
+    event = "VeryLazy",
+    config = function()
+      require("containers").setup({})
+    end,
+  },
 
   -- ==========================================================================
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
@@ -146,7 +146,7 @@ return {
 
   {
     "StefanBartl/fileops.nvim",
-    dir = local_dev("fileops.nvim"),
+    -- dir = local_dev("fileops.nvim"),
     event = "VeryLazy",
     opts = {
       cycle = {
@@ -166,7 +166,7 @@ return {
 
   {
     "StefanBartl/gopath.nvim",
-    dir = local_dev("gopath.nvim"),
+    -- dir = local_dev("gopath.nvim"),
     event = "VeryLazy",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     opts = {
@@ -190,8 +190,8 @@ return {
   },
 
   {
-    -- "StefanBartl/replacer",
-    dir = local_dev("replacer"),
+    "StefanBartl/replacer",
+    -- dir = local_dev("replacer"),
     cmd = { "Replace" },
     dependencies = { "ibhagwan/fzf-lua" },
     config = function()
@@ -204,7 +204,7 @@ return {
 
   {
     "StefanBartl/project-insight.nvim",
-    dir = local_dev("project-insight.nvim"),
+    -- dir = local_dev("project-insight.nvim"),
     cmd = "ProjectInsight",
     config = function()
       require("project_insight").setup({})
@@ -247,7 +247,7 @@ return {
 
   {
     "StefanBartl/reposcope.nvim",
-    dir = local_dev("reposcope.nvim"),
+    -- dir = local_dev("reposcope.nvim"),
     name = "reposcope",
     event = "VeryLazy",
     config = function()
@@ -273,7 +273,7 @@ return {
 
   {
     "StefanBartl/debugging.nvim",
-    dir = local_dev("debugging.nvim"),
+    -- dir = local_dev("debugging.nvim"),
     -- cmd = "Debug",
     event = "VeryLazy",
     dependencies = { "StefanBartl/lib.nvim" },
@@ -287,7 +287,7 @@ return {
 
   {
     "StefanBartl/diff.nvim",
-    dir = local_dev("diff.nvim"),
+    -- dir = local_dev("diff.nvim"),
     cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" },
     opts = {
       features = {
@@ -303,7 +303,7 @@ return {
 
   {
     "StefanBartl/nvim-cmdlog",
-    dir = local_dev("nvim-cmdlog"),
+    -- dir = local_dev("nvim-cmdlog"),
     lazy = false,
     cmd = { "CmdlogOpen", "CmdlogSearch" },
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -316,7 +316,7 @@ return {
 
   {
     "StefanBartl/telescope-selected-index",
-    dir = local_dev("telescope-selected-index"),
+    -- dir = local_dev("telescope-selected-index"),
     event = "VeryLazy",
     opts = {
       position = "right_align",
@@ -331,7 +331,7 @@ return {
 
   {
     "StefanBartl/emojis.nvim",
-    dir = local_dev("emojis.nvim"),
+    -- dir = local_dev("emojis.nvim"),
     cmd = "Emojis",
     opts = {
       default_scope = "%",
@@ -371,7 +371,7 @@ return {
 
   {
     "StefanBartl/pdfport.nvim",
-    dir = local_dev("pdfport.nvim"),
+    -- dir = local_dev("pdfport.nvim"),
     cmd = {
       "PdfPort",
       "PdfPortText",
@@ -394,7 +394,7 @@ return {
 
   {
     "StefanBartl/markdown.nvim",
-    dir = local_dev("markdown.nvim"),
+    -- dir = local_dev("markdown.nvim"),
     ft = { "markdown", "mdx", "md" },
     config = function()
       require("markdown_nvim").setup()
@@ -403,7 +403,7 @@ return {
 
   {
     "StefanBartl/mdlinks",
-    dir = local_dev("mdlinks"),
+    -- dir = local_dev("mdlinks"),
     ft = "*",
     config = function()
       require("mdlinks.config").setup({
@@ -417,7 +417,7 @@ return {
 
   {
     "StefanBartl/color_my_ascii.nvim",
-    dir = local_dev("color_my_ascii.nvim"),
+    -- dir = local_dev("color_my_ascii.nvim"),
     ft = "markdown",
     config = function()
       require("color_my_ascii").setup({
@@ -435,28 +435,28 @@ return {
     end,
   },
 
-  -- {  -- TODO: Nicht gepushed, nur readme drinnen
-  -- "StefanBartl/recommender.nvim",
-  -- dir = local_dev("recommender.nvim"),
-  -- ft = { "lua" },
-  -- cmd = { "Recommender" },
-  -- config = function()
-  -- require("recommender_nvim").setup()
-  -- end,
-  -- },
+  { -- TODO: Nicht gepushed, nur readme drinnen
+    "StefanBartl/recommender.nvim",
+    dir = local_dev("recommender.nvim"),
+    ft = { "lua" },
+    cmd = { "Recommender" },
+    config = function()
+      require("recommender_nvim").setup()
+    end,
+  },
 
-  -- {
-  --   "StefanBartl/mdview.nvim",
-  --   dir = local_dev("mdview.nvim"),
-  --   name = "mdview.nvim",
-  --   lazy = false,
-  --   cmd = { "MarkdownViewStart", "MarkdownViewStop" },
-  --   config = function()
-  --     if pcall(require, "mdview") then
-  --       require("mdview").setup()
-  --     else
-  --       vim.notify("mdview.nvim: module not found after loading plugin files", vim.log.levels.ERROR)
-  --     end
-  --   end,
-  -- },
+  {
+    "StefanBartl/mdview.nvim",
+    dir = local_dev("mdview.nvim"),
+    name = "mdview.nvim",
+    lazy = false,
+    cmd = { "MarkdownViewStart", "MarkdownViewStop" },
+    config = function()
+      if pcall(require, "mdview") then
+        require("mdview").setup()
+      else
+        vim.notify("mdview.nvim: module not found after loading plugin files", vim.log.levels.ERROR)
+      end
+    end,
+  },
 }

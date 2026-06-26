@@ -4,12 +4,13 @@
 
 ## Table of content
 
-  - [nvim: ZIEL](#nvim-ziel)
-  - [nvim: High](#nvim-high)
-  - [nvim](#nvim)
-  - [nvim: Bugs](#nvim-bugs)
-  - [nvim: Low](#nvim-low)
-    - [nvim markdown: Low](#nvim-markdown-low)
+- [Roadmap for `main-workstation` branch](#roadmap-for-main-workstation-branch)
+  - [Table of content](#table-of-content)
+  - [ZIEL](#ziel)
+  - [High](#high)
+  - [General](#general)
+  - [Bugs](#bugs)
+  - [Low](#low)
   - [Neotree](#neotree)
     - [Neotree: LOW](#neotree-low)
 
@@ -54,6 +55,17 @@
 2. Manchmal funktioert `C-s` nicht mehr...
 3. manchmal bricht `C-c` mit sigint nvim ab, es solte aber alles kopieren des buffers
 4. Indenting von mehreren Zeilen funktiert zwar, aber manchmal springt dann der Fokus an irgendeine Stelle im Dokument. Warum ist das so und woe klan ich das verhindern?
+5. indent (markeiert aber nicht sicher ob das wichtig ist) und dann nahc unten geshcoben, in der letzten Zeile angekommen folgenden error:
+
+```vim
+   Error  11:46:16 AM msg_show.emsg E5108: Lua: vim/_core/editor.lua:355: nvim_exec2(), line 1: Vim(move):E16: Invalid range
+stack traceback:
+	[C]: in function 'nvim_exec2'
+	vim/_core/editor.lua:355: in function 'cmd'
+	...rtl/AppData/Local/nvim/lua/bindings/mappings/editing.lua:71: in function <...rtl/AppData/Local/nvim/lua/bindings/mappings/editing.lua:70>
+```
+
+1. `:Open browser %` funktionert nicht, `:Open chrome %` schon
 
 ---
 
@@ -66,9 +78,10 @@
 
 ## Neotree
 
-1. Neotree: Keymaps auch als usrcmds implementieren, die in neotree aber auch nvim tree usw funktioenren, zb könte man dann alle folder eines ordnnenr pfad kopieren, und den rekuuriscen kevek angeben
-2. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
-3. Folgender error:
+1. neotree: .git folder soll default ausgebledet sein (ignored list), aber per keymap eitogglebar
+2. Neotree: Keymaps auch als usrcmds implementieren, die in neotree aber auch nvim tree usw funktioenren, zb könte man dann alle folder eines ordnnenr pfad kopieren, und den rekuuriscen kevek angeben
+3. Neotree, aktuelle zeile entweder hl oder vom cursor zum ersten char der node unterstrichen?
+4. Folgender error:
 
 ```vim
   Error  10:54:33 msg_show.lua_error Lua callback:
