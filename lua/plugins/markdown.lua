@@ -1,21 +1,21 @@
 -- markdown.lua
 return {
 
+  -- render-markdown.nvim: installed disabled; toggled via `:Markdown render`
+  -- (markdown.nvim owns the toggle command).
   {
     "MeanderingProgrammer/render-markdown.nvim",
     ft = { "markdown" },
-    cmd = { "RenderMarkdown", "MarkdownRender" },
+    cmd = { "RenderMarkdown" },
     config = function()
-      require("config.markdown_render").setup()
+      require("render-markdown").setup({ enabled = false })
     end,
   },
+  -- markdown-preview.nvim: configured via vim.g; controlled via
+  -- `:Markdown preview` (markdown.nvim owns the toggle/auto-refresh logic).
   {
     "iamcco/markdown-preview.nvim",
-    -- Wir fügen deine Wrapper-Befehle hier hinzu, damit Lazy-Loading auch auf sie anspringt
-    cmd = {
-      "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop",
-      "MarkdownPreviewWrapper", "MarkdownPreviewStopWrapper", "MarkdownPreviewToggleWrapper"
-    },
+    cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
     ft = { "markdown" },
     build = "cd app && yarn install",
     init = function()
@@ -33,10 +33,6 @@ return {
       elseif vim.g.is_wsl then
         vim.g.mkdp_browser = "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe"
       end
-    end,
-    config = function()
-      -- Ruft deine init.lua auf, um die Wrapper-Befehle und Autocommands zu registrieren
-      require("config.markdown_preview").setup()
     end,
   },
 }
