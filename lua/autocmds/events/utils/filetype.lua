@@ -1,16 +1,5 @@
 ---@module 'autocmds.events.utils.filetype'
 ---@brief Central FileType event dispatcher with lazy handler loading
----@description
---- Replaces 17 individual FileType autocmds with a single dispatcher.
---- Handlers are loaded on-demand only when their filetype is triggered.
----
---- Performance impact:
----   BEFORE: 16.922ms avg (17 separate autocmds)
----   TARGET: <5ms avg (1 dispatcher + lazy loading)
----
---- Migration:
----   Old: vim.api.nvim_create_autocmd("FileType", { pattern = "markdown", ... })
----   New: Register handler in handlers table below
 
 local M = {}
 
@@ -24,62 +13,6 @@ local buffer_ctx = require("autocmds.benchmarks.context.buffer")
 
 ---@type table<string, FiletypeHandler[]>
 local handlers = {
-  -- Markdown files
-  markdown = {
-    {
-      load = function()
-        local m = require("markdown_nvim.setup.keymaps")
-        return { apply = function(_, bufnr) m.apply(bufnr) end }
-      end,
-      priority = 10,
-    },
-    {
-      load = function()
-        local m = require("markdown_nvim.setup.usercmds")
-        return { apply = function(_, bufnr) m.apply({ buf = bufnr }) end }
-      end,
-      priority = 20,
-    },
-    {
-      load = function()
-        local m = require("markdown_nvim.tableview.mappings")
-        return { apply = function(_, bufnr) m.apply(bufnr) end }
-      end,
-      priority = 30,
-    },
-    {
-      load = function()
-        local opt_local = vim.opt_local
-        opt_local.foldmethod = "expr"
-        opt_local.foldexpr = "v:lua.require'markdown_nvim.core.fold'.foldexpr(v:lnum)"
-        opt_local.foldenable = true
-        opt_local.foldlevel = 99
-        opt_local.foldlevelstart = 99
-        return nil
-      end,
-      priority = 40,
-      once = true,
-    },
-  },
-
-  -- MDX (treat as markdown variant)
-  mdx = {
-    {
-      load = function()
-        local m = require("markdown_nvim.setup.keymaps")
-        return { apply = function(_, bufnr) m.apply(bufnr) end }
-      end,
-      priority = 10,
-    },
-    {
-      load = function()
-        local m = require("markdown_nvim.setup.usercmds")
-        return { apply = function(_, bufnr) m.apply({ buf = bufnr }) end }
-      end,
-      priority = 20,
-    },
-  },
-
   -- Git commit messages
   gitcommit = {
     {
