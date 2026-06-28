@@ -1,6 +1,7 @@
 # `color_my_ascii.nvim`
 
-1. ```vim sollte funktionieren!
+1. Mehr Languages einbinden
+2. Mehr Keywords füür diee Languages (wie zb.: vim)
 
 ---
 

@@ -5,12 +5,15 @@
   2. Jedes repo soll auch eigene `/docs/BINDINGS.lua` haben mit allen keymaps, usrcmds aber auch die autocmds!
   3. Checklisten anwenden
   4. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
-  5. Weitere fetures, usrcmds, keymaps, autocmds ROADMAP erstellen
+  5. Weitere features, usrcmds, keymaps, autocmds für jedes Plugin erstellen
+    - `/nvim/lua/` alle Modle durchgehene nd checken, ob sie wo hineinpassen
   6. `README.md` überprüfen auf
         - badges & ASCII implementieren und toc
         - dir = vime.env... raus aus den READMEs
         - license
-  7. `:checkhealth` sollten alle module haben -> check!
+2. `README.md` && `/doc/**.txt` Spec anpasse:
+        - entweder `lazy = false` oder `event = "VeryLazy",` im Insatallationsblock angeben: [spec](./spec.md)
+3. `:checkhealth` sollten alle module haben -> check!
   8. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht
   9. `lib.nvim` auf alle plugins anwenden (als dependency)
   10. Sind alle Plugins `lazy`?
@@ -30,6 +33,7 @@
     {
       -- "StefanBartl/project-insight.nvim",
       dir = vim.env.REPOS_DIR .. "/project-insight.nvim",
+      event = "VeryLazy",
       cmd = "ProjectInsight",
       config = function()
         require("project_insight").setup({

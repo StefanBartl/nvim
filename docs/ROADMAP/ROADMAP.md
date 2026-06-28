@@ -16,6 +16,8 @@
 
 ---
 
+- mdview debuggen, dann als dependencsy in markdown.nvim implementieren
+
 ## ZIEL
 
 1. ROADMAP.md durchgehen
@@ -51,7 +53,7 @@
 
 ## Bugs
 
-1. tablewview toggle sollt emit `q` bzw `Escape im Normal Mode` geschlossen werden können.
+1. tableview toggle sollt emit `q` bzw `Escape im Normal Mode` geschlossen werden können.
 2. Manchmal funktioert `C-s` nicht mehr...
 3. manchmal bricht `C-c` mit sigint nvim ab, es solte aber alles kopieren des buffers
 4. Indenting von mehreren Zeilen funktiert zwar, aber manchmal springt dann der Fokus an irgendeine Stelle im Dokument. Warum ist das so und woe klan ich das verhindern?

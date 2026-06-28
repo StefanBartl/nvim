@@ -73,7 +73,6 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- =============================================================================
 require("system.env").compute_env()
 require("options")
-require("sessions").enable({ autocommands = true, usercmds = true, keymaps = true })
 
 -- =============================================================================
 -- PHASE 1: SEHR FRÜH (10ms) - Grundlegende Config
