@@ -42,14 +42,21 @@ end
 -- Export the path (important for pickers.nvim)
 PERSONAL_UTILS.repos_path = local_repos_path or ""
 
---- Helper function for determining the local development path
+--- Helper function for determining the local development path.
+--- Returns nil (→ remote) when no local repos root exists OR when the
+--- concrete plugin folder is not present locally, so a repo flagged "dir"
+--- but not cloned simply falls back to its remote spec instead of erroring.
 ---@param plugin_name string Der Name des Ordners im Repos-Verzeichnis
 ---@return string|nil
 function PERSONAL_UTILS.local_dev(plugin_name)
   if using_remote_fallback or not local_repos_path then
     return nil
   end
-  return vim.fs.joinpath(local_repos_path, plugin_name)
+  local path = vim.fs.joinpath(local_repos_path, plugin_name)
+  if vim.fn.isdirectory(path) == 0 then
+    return nil
+  end
+  return path
 end
 
 return PERSONAL_UTILS

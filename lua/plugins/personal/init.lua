@@ -1,11 +1,108 @@
 ---@module 'plugins.personal'
 --- Personal and local development plugins with smart local/remote fallback.
+---
+--- Source control is centralized in the `MODE` table below. Each repo is set to
+--- one of three states; the global `SOURCE` switch can force all of them at once.
 
 local personal_utils = require("plugins.personal.utils")
-local local_dev = personal_utils.local_dev
+
+-- ===========================================================================
+-- SOURCE CONTROL
+-- ===========================================================================
+
+---@alias PersonalRepoMode "disabled"|"dir"|"remote"
+---  - "disabled" → Repo gar nicht laden (enabled = false)
+---  - "dir"      → lokal aus dem repos-Verzeichnis (dir), Fallback remote falls Ordner fehlt
+---  - "remote"   → von GitHub (StefanBartl/...)
+
+--- Globaler "all"-Schalter. Übersteuert die MODE-Tabelle, wenn ungleich "auto":
+---   "auto"     → pro Repo entscheidet die MODE-Tabelle unten
+---   "dir"      → ALLE lokal
+---   "remote"   → ALLE remote
+---   "disabled" → ALLE aus
+---@type "auto"|PersonalRepoMode
+
+local SOURCE = "remote"
+
+--- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
+---@type table<string, PersonalRepoMode>
+local MODE = {
+  -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
+  ["lib.nvim"]                 = "dir",
+  ["sessions.nvim"]            = "dir",
+  ["pickers.nvim"]             = "dir",
+  ["buffer-ctx.nvim"]          = "dir",
+  ["open.nvim"]                = "dir",
+  -- ["monkeypatch.nvim"]      = "dir",
+  ["nvim-containers"]          = "dir",
+
+  -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
+  ["fileops.nvim"]             = "dir",
+  ["gopath.nvim"]              = "dir",
+  ["replacer"]                 = "dir",
+  ["project-insight.nvim"]     = "dir",
+  -- ["neotree-fs-refactor"]   = "dir",
+  -- ["filetreepicker.nvim"]   = "dir",
+  ["reposcope.nvim"]           = "dir",
+  -- ["mygrep.nvim"]           = "dir",
+
+  -- 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY
+  ["debugging.nvim"]           = "dir",
+  ["diff.nvim"]                = "dir",
+  ["nvim-cmdlog"]              = "dir",
+  ["telescope-selected-index"] = "dir",
+  ["emojis.nvim"]              = "dir",
+  -- ["github_stats.nvim"]     = "dir",
+  -- ["learn-cli.nvim"]        = "dir",
+
+  -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)
+  ["cascade.nvim"]             = "dir",
+  ["pdfport.nvim"]             = "dir",
+  ["markdown.nvim"]            = "dir",
+  -- ["mdlinks"]               = "dir", -- DEPRECATED
+  ["color_my_ascii.nvim"]      = "dir",
+  ["recommender.nvim"]         = "dir",
+  ["mdview.nvim"]              = "dir",
+}
+
+local VALID_MODE = { disabled = true, dir = true, remote = true }
+
+--- Applies SOURCE/MODE to every spec in place:
+---   resolves `dir` (lokal) bzw. `enabled = false` (disabled) anhand des Repo-Basenamens.
+---@param specs LazyPluginSpec[]
+---@return LazyPluginSpec[]
+local function apply_source(specs)
+  for _, spec in ipairs(specs) do
+    local repo = spec[1]
+    if type(repo) == "string" then
+      local name = vim.fn.fnamemodify(repo, ":t")
+      local mode = (SOURCE ~= "auto") and SOURCE or (MODE[name] or "dir")
+
+      if not VALID_MODE[mode] then
+        vim.notify(
+          ("[PLUGINS PERSONAL] Ungültiger Modus '%s' für '%s' → 'remote'"):format(tostring(mode), name),
+          vim.log.levels.WARN
+        )
+        mode = "remote"
+      end
+
+      if mode == "disabled" then
+        spec.enabled = false
+      elseif mode == "dir" then
+        spec.dir = personal_utils.local_dev(name) -- nil → remote, falls Ordner fehlt
+      end
+      -- "remote": dir bleibt nil → lazy nutzt repo[1]
+    end
+  end
+  return specs
+end
+
+-- ===========================================================================
+-- PLUGIN SPECS
+-- ===========================================================================
 
 ---@type LazyPluginSpec[]
-return {
+return apply_source({
 
   -- ==========================================================================
   -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
@@ -13,14 +110,19 @@ return {
 
   {
     "StefanBartl/lib.nvim",
-    -- dir = local_dev("lib.nvim"),
     lazy = false,
     priority = 1000,
   },
 
   {
+    "stefanbartl/sessions.nvim",
+    lazy = false,
+    dependencies = { "stefanbartl/lib.nvim" }, -- optional
+    opts = {},
+  },
+
+  {
     "StefanBartl/pickers.nvim",
-    -- dir = local_dev("pickers.nvim"),
     lazy = false,
     dependencies = { "StefanBartl/lib.nvim" },
     config = function()
@@ -77,7 +179,6 @@ return {
 
   {
     "StefanBartl/buffer-ctx.nvim",
-    -- dir = local_dev("buffer-ctx.nvim"),
     cmd = { "Insert", "Copy", "Format", "Mark", "MarkLineToggle", "MarkLinesYank" },
     keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>", "<C-p>" },
     opts = {
@@ -99,7 +200,6 @@ return {
 
   {
     "StefanBartl/open.nvim",
-    -- dir = local_dev("open.nvim"),
     cmd = "Open",
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {},
@@ -110,7 +210,6 @@ return {
 
   -- {
   --   "StefanBartl/monkeypatch.nvim",
-  --   dir = local_dev("monkeypatch.nvim"),
   --   lazy = false,
   --   config = function()
   --     require("monkeypatch").setup({
@@ -133,7 +232,6 @@ return {
 
   {
     "StefanBartl/nvim-containers",
-    -- dir = local_dev("nvim-containers"),
     event = "VeryLazy",
     config = function()
       require("containers").setup({})
@@ -146,7 +244,6 @@ return {
 
   {
     "StefanBartl/fileops.nvim",
-    -- dir = local_dev("fileops.nvim"),
     event = "VeryLazy",
     opts = {
       cycle = {
@@ -166,7 +263,6 @@ return {
 
   {
     "StefanBartl/gopath.nvim",
-    -- dir = local_dev("gopath.nvim"),
     event = "VeryLazy",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     opts = {
@@ -191,7 +287,6 @@ return {
 
   {
     "StefanBartl/replacer",
-    -- dir = local_dev("replacer"),
     cmd = { "Replace" },
     dependencies = { "ibhagwan/fzf-lua" },
     config = function()
@@ -204,7 +299,6 @@ return {
 
   {
     "StefanBartl/project-insight.nvim",
-    -- dir = local_dev("project-insight.nvim"),
     cmd = "ProjectInsight",
     config = function()
       require("project_insight").setup({})
@@ -213,7 +307,6 @@ return {
 
   -- {
   --   "StefanBartl/neotree-fs-refactor",
-  --   dir = local_dev("neotree-fs-refactor.nvim"),
   --   lazy = false,
   --   config = function()
   --     require("neotree-fs-refactor").setup({
@@ -237,7 +330,6 @@ return {
 
   -- {
   --   "StefanBartl/filetreepicker.nvim",
-  --   dir = local_dev("filetreepicker.nvim"),
   --   event = "VeryLazy",
   --   dependencies = { "nvim-neo-tree/neo-tree.nvim" },
   --   config = function()
@@ -247,7 +339,6 @@ return {
 
   {
     "StefanBartl/reposcope.nvim",
-    -- dir = local_dev("reposcope.nvim"),
     name = "reposcope",
     event = "VeryLazy",
     config = function()
@@ -257,7 +348,6 @@ return {
 
   -- {
   --   "StefanBartl/mygrep.nvim",
-  --   dir = local_dev("mygrep.nvim"),
   --   name = "mygrep",
   --   lazy = false,
   --   config = function()
@@ -273,7 +363,6 @@ return {
 
   {
     "StefanBartl/debugging.nvim",
-    -- dir = local_dev("debugging.nvim"),
     -- cmd = "Debug",
     event = "VeryLazy",
     dependencies = { "StefanBartl/lib.nvim" },
@@ -287,7 +376,6 @@ return {
 
   {
     "StefanBartl/diff.nvim",
-    -- dir = local_dev("diff.nvim"),
     cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" },
     opts = {
       features = {
@@ -303,7 +391,6 @@ return {
 
   {
     "StefanBartl/nvim-cmdlog",
-    -- dir = local_dev("nvim-cmdlog"),
     lazy = false,
     cmd = { "CmdlogOpen", "CmdlogSearch" },
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -316,7 +403,6 @@ return {
 
   {
     "StefanBartl/telescope-selected-index",
-    -- dir = local_dev("telescope-selected-index"),
     event = "VeryLazy",
     opts = {
       position = "right_align",
@@ -331,7 +417,6 @@ return {
 
   {
     "StefanBartl/emojis.nvim",
-    -- dir = local_dev("emojis.nvim"),
     cmd = "Emojis",
     opts = {
       default_scope = "%",
@@ -343,7 +428,6 @@ return {
 
   -- {
   --   "StefanBartl/github_stats.nvim",
-  --   dir = local_dev("github_stats.nvim"),
   --   lazy = false,
   --   config = function()
   --     require("github_stats").setup({
@@ -356,7 +440,6 @@ return {
 
   -- {
   --   "StefanBartl/learn-cli.nvim",
-  --   dir = local_dev("learn-cli.nvim"),
   --   lazy = false,
   --   config = function()
   --     require("learn_cli").setup({
@@ -370,8 +453,16 @@ return {
   -- ==========================================================================
 
   {
+    "StefanBartl/cascade.nvim",
+    ft = { "markdown", "markdown.mdx", "text", "tex", "norg" },
+    event = "VeryLazy",
+    opts = {
+      keymaps = { preset = true },
+    },
+  },
+
+  {
     "StefanBartl/pdfport.nvim",
-    -- dir = local_dev("pdfport.nvim"),
     cmd = {
       "PdfPort",
       "PdfPortText",
@@ -394,30 +485,28 @@ return {
 
   {
     "StefanBartl/markdown.nvim",
-    -- dir = local_dev("markdown.nvim"),
     ft = { "markdown", "mdx", "md" },
     config = function()
       require("markdown_nvim").setup()
     end,
   },
 
-  {
-    "StefanBartl/mdlinks",
-    -- dir = local_dev("mdlinks"),
-    ft = "*",
-    config = function()
-      require("mdlinks.config").setup({
-        debug = true,
-        open_url_cmd = { "cmd.exe", "/c", "start", "" },
-        open_cmd = { "cmd.exe", "/c", "start", "" },
-        anchor_levels = { 1, 2, 3, 4, 5, 6 },
-      })
-    end,
-  },
+  -- DEPRECATED
+  -- {
+  -- "StefanBartl/mdlinks",
+  -- ft = "*",
+  -- config = function()
+  -- require("mdlinks.config").setup({
+  -- debug = true,
+  -- open_url_cmd = { "cmd.exe", "/c", "start", "" },
+  -- open_cmd = { "cmd.exe", "/c", "start", "" },
+  -- anchor_levels = { 1, 2, 3, 4, 5, 6 },
+  -- })
+  -- end,
+  -- },
 
   {
     "StefanBartl/color_my_ascii.nvim",
-    -- dir = local_dev("color_my_ascii.nvim"),
     ft = "markdown",
     config = function()
       require("color_my_ascii").setup({
@@ -437,7 +526,6 @@ return {
 
   { -- TODO: Nicht gepushed, nur readme drinnen
     "StefanBartl/recommender.nvim",
-    dir = local_dev("recommender.nvim"),
     ft = { "lua" },
     cmd = { "Recommender" },
     config = function()
@@ -447,7 +535,6 @@ return {
 
   {
     "StefanBartl/mdview.nvim",
-    dir = local_dev("mdview.nvim"),
     name = "mdview.nvim",
     lazy = false,
     cmd = { "MarkdownViewStart", "MarkdownViewStop" },
@@ -459,4 +546,4 @@ return {
       end
     end,
   },
-}
+})
