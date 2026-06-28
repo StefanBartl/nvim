@@ -4,42 +4,17 @@
 
 local notify = require("lib.nvim.notify").create("[cfg.neotree.actions.node_replace_buf]")
 
+-- Shared buffer/window primitives (also used by the LazyGit bridge). This
+-- replaces the previously inlined `prompt_save` and `find_last_normal_buffer`.
+local normal = require("lib.nvim.buf_win_tab.normal_buffer")
+
 local api = vim.api
 local fn = vim.fn
 
-local function prompt_save(buf)
-  if not api.nvim_get_option_value("modified", { buf = buf }) then
-    return true
-  end
-  local name = api.nvim_buf_get_name(buf)
-  local short = name ~= "" and fn.fnamemodify(name, ":t") or "[No name]"
-  local prompt = string.format("Buffer %s has unsaved changes. Save before replacing?", short)
-  local res = fn.confirm(prompt, "&Save\n&Don't save\n&Cancel", 1)
-  if res == 1 then
-    return pcall(function()
-      vim.cmd("write")
-    end)
-  elseif res == 2 then
-    return true
-  else
-    return false
-  end
-end
-
-local function find_last_normal_buffer(exclude_win)
-  local wins = api.nvim_tabpage_list_wins(0)
-  for i = #wins, 1, -1 do
-    local w = wins[i]
-    if w ~= exclude_win and api.nvim_win_is_valid(w) then
-      local buf = api.nvim_win_get_buf(w)
-      if vim.bo[buf].buflisted and vim.bo[buf].filetype ~= "neo-tree" then
-        return buf, w
-      end
-    end
-  end
-  return nil, nil
-end
-
+-- Neo-tree-specific fallback: reuse ANY window that isn't the Neo-tree window
+-- (including terminals / unnamed buffers) instead of forcing a split. There is
+-- intentionally no generic lib.nvim equivalent — `find_last_normal_window` only
+-- matches real, named file buffers.
 local function find_any_non_neo_window(exclude_win)
   local wins = api.nvim_tabpage_list_wins(0)
   for _, w in ipairs(wins) do
@@ -108,11 +83,11 @@ return function(state, opts)
   local orig_win = api.nvim_get_current_win()
 
   -- Try to find last normal buffer (and its window)
-  local buf_to_close, win_of_buf = find_last_normal_buffer(neo_win)
+  local buf_to_close, win_of_buf = normal.find_last_normal_window(neo_win)
   local target_win = win_of_buf
 
   if buf_to_close and target_win then
-    local ok = prompt_save(buf_to_close)
+    local ok = normal.prompt_save(buf_to_close)
     if not ok then
       if logger and logger.debug then
         logger.debug("node_replace_buf: user cancelled save prompt")

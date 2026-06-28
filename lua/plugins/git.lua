@@ -21,7 +21,9 @@ return {
     },
     config = function()
       -- Setzt den Editor-Befehl explizit für die Sub-Prozesse von Neovim
-      vim.g.lazygit_use_neovim_remote = 1 -- Nutzt das interne nvim-remote Feature falls verfügbar TODO: Funkioniert nicht...
+      vim.g.lazygit_use_neovim_remote = 1 -- Nutzt das interne nvim-remote Feature falls verfügbar
+
+      require("config.lazygit").setup()
     end,
   },
 

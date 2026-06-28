@@ -68,6 +68,7 @@ stack traceback:
 ```
 
 1. `:Open browser %` funktionert nicht, `:Open chrome %` schon
+2. `leader fc`: findet keine dateien mit `git`, also zumindes `plugins/git.lua` nict. kann es sein, dass er ignored wird? (telescoope/fzf-lua)
 
 ---
 
