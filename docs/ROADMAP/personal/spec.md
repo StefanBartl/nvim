@@ -1,5 +1,15 @@
 ```lua
-**lazy.nvim**
+## Installation setup
+
+**When to use which:**
+
+| Variant | Startup impact | Commands available | When to use |
+|---|---|---|---|
+| **Default (lazy)** | Minimal | On first `:SessionLoad` / `:SessionSave` | Large config, many plugins |
+| **`lazy = false`** | Loads immediately | Right from the start | Small plugin, want instant availability |
+| **`event = "VimEnter"`** | After UI init | After editor UI ready | **Recommended** — autoload/autosave timing, minimal impact |
+
+### lazy.nvim
 
 *Load at startup (eager):*
 ```lua
@@ -21,7 +31,7 @@
 }
 ```
 
-**pckr / packer**
+### packer
 
 *Default setup:*
 ```lua
@@ -46,13 +56,6 @@ use {
 }
 ```
 
-**When to use which:**
-
-| Variant | Startup impact | Commands available | When to use |
-|---|---|---|---|
-| **Default (lazy)** | Minimal | On first `:SessionLoad` / `:SessionSave` | Large config, many plugins |
-| **`lazy = false`** | Loads immediately | Right from the start | Small plugin, want instant availability |
-| **`event = "VimEnter"`** | After UI init | After editor UI ready | **Recommended** — autoload/autosave timing, minimal impact |
-
 ---
+
 ```

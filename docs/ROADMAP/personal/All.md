@@ -9,15 +9,16 @@
     - `/nvim/lua/` alle Modle durchgehene nd checken, ob sie wo hineinpassen
   6. `README.md` überprüfen auf
         - badges & ASCII implementieren und toc
-        - dir = vime.env... raus aus den READMEs
-        - license
 2. `README.md` && `/doc/**.txt` Spec anpasse:
-        - entweder `lazy = false` oder `event = "VeryLazy",` im Insatallationsblock angeben: [spec](./spec.md)
+    - für verschiedene nvim Package-Manager ist die installationsweiße interressant, wie zb.; hier [Installations Spec Template](./spec.md)
+    - entweder `lazy = false` oder `event = "VeryLazy",` im Insatallationsblock angeben: [spec](./spec.md)
+    - dir = vime.env... raus aus den READMEs - das kann jeder Dev sich selbst denken
+    - license
 3. `:checkhealth` sollten alle module haben -> check!
-  8. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht
-  9. `lib.nvim` auf alle plugins anwenden (als dependency)
-  10. Sind alle Plugins `lazy`?
-  11. In allen Modulen  `/bindings` und dort dann
+  1. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht
+  2. `lib.nvim` auf alle plugins anwenden (als dependency)
+  3. Sind alle Plugins `lazy`?
+  4. In allen Modulen  `/bindings` und dort dann
     - `usrcmds`
     - `keymaps`
     - `autocmds`
@@ -55,20 +56,17 @@ Dazu ist noch eines wichtig: Um dem User ein sehr gutes LSP Erlebnis zu bieten, 
 
 Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nicht User-seitig gesetzt werden können.
 
-1. `sessions.nvim`
-
 ---
 
 ## Finish
 
-1. Wenn fertig: alles auf remote stellen statt lokal
-2. Alle Plugins auf .nvim umstellen
-3. Alle `.nvim` plugins eine `.vim` version erstellen (bzw.: wie würde das aussehen, wenn man das im gleichen Plugin macht? Vorteil wäre, dass man wrsch einige funktionen teilen könnte)
-4. Alle Plugins auf implementierte NVIM-Filetree-Features checken, diese
-      - jedenfalls so ausbauen, dass es in Neotree, NvimTree, Netrw...
-      - aus den gesammelten Features und aus `/(nvim/lua/config/neotree` ein eigenes Plugin `neotee-features.nvim` erstellen
+1. Alle Plugins auf .nvim als Namesendung umstellen (wenn möglich)
+2. Für alle `.nvim` plugins eine `.vim` version erstellen bzw.: wie würde das aussehen, wenn man das im gleichen Plugin macht? Vorteil wäre, dass man wrsch einige funktionen teilen könnte. andererseits sollen die Repos so klein wie möglich sein, daher wäre unnötiger Lua code in einem .vim plugin unnötig.
+3. Alle Plugins auf implementierte NVIM-Filetree-Features (Neotree, Nvimtree, Netrw...)  checken, diese
+      - jedenfalls so ausbauen, dass es in Neotree, NvimTree, Netrw... cross filetree agnostisch funkltienrt oder zumindest so agnostisch wie es geht, eventuell api ? die man dann bei seinem filrtee manager verweden kann.
+      - aus den gesammelten Features und aus `/nvim/lua/config/neotree` ein eigenes Plugin `filetree.nvim` erstellen. Diess Plugin soll erkennen, welchen filetree amnager man verwendet (nvimtree, neotree, netrw usw..) und dort dann automatisch seine features andocken können
 
-### 5. Alle features testen Verifikation für jedes feature jedes plugins
+## Alle features testen Verifikation für jedes feature jedes plugins
 
 **Beispiel:**
 - **A**: `:Debug module reload` auf einer Lua-Datei → Modul wird neu geladen; `:checkhealth debugging` grün
