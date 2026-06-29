@@ -58,6 +58,7 @@
         ".neotest",
         "build",
         "dist",
+        "docs",
         "node_modules",
         "vendor"
     ],
@@ -65,7 +66,8 @@
         "**/.git/**",
         "**/node_modules/**",
         "**/dist/**",
-        "**/build/**"
+        "**/build/**",
+        "**/docs/**"
     ]
 }
 
