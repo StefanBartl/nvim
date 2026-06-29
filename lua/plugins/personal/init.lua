@@ -22,7 +22,7 @@ local personal_utils = require("plugins.personal.utils")
 ---   "disabled" → ALLE aus
 ---@type "auto"|PersonalRepoMode
 
-local SOURCE = "remote"
+local SOURCE = "dir"
 
 --- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
 ---@type table<string, PersonalRepoMode>
@@ -294,7 +294,7 @@ return apply_source({
   },
 
   {
-    "StefanBartl/replacer",
+    "StefanBartl/replacer.nvim",
     cmd = { "Replace" },
     dependencies = { "ibhagwan/fzf-lua" },
     config = function()
@@ -481,7 +481,11 @@ return apply_source({
           indent = true, -- indent/outdent + level-aware renumber (<A-Right>/<A-Left>)
           move = true, -- move line/selection up/down + renumber (<A-Up>/<A-Down>)
         },
-        renumber = true, -- auto-renumber ordered lists after edits
+        -- WHEN ordered lists are auto-renumbered:
+        renumber = {
+          enable = true,
+          on = { "edit" }, -- "edit" = sofort beim Indent/Move/…, "save" = bei :w
+        },
       },
 
       -- CYCLE DOMAIN (global) --------------------------------------------------
@@ -527,20 +531,6 @@ return apply_source({
       require("markdown_nvim").setup()
     end,
   },
-
-  -- DEPRECATED
-  -- {
-  -- "StefanBartl/mdlinks",
-  -- ft = "*",
-  -- config = function()
-  -- require("mdlinks.config").setup({
-  -- debug = true,
-  -- open_url_cmd = { "cmd.exe", "/c", "start", "" },
-  -- open_cmd = { "cmd.exe", "/c", "start", "" },
-  -- anchor_levels = { 1, 2, 3, 4, 5, 6 },
-  -- })
-  -- end,
-  -- },
 
   {
     "StefanBartl/color_my_ascii.nvim",
