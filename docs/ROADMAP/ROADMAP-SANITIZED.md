@@ -63,7 +63,7 @@
 - [ ] **Rendering:** `markdown_render` innerhalb des `:Markdown [] []` Befehls implementieren.
 
 ### 3.2 `project-insight.nvim` & `objtrack`
-- [ ] **Architektur-Review:** `objtrack` tiefgehend analysieren. Macht ein Merge mit einem bestehenden Plugin Sinn, oder muss es isoliert ausgebaut werden?
+- [x] **Architektur-Review:** `objtrack` analysiert. Ergebnis: kein eigenständiges Plugin — seine drei Scanner duplizierten `project-insight` (symbols/imports) und `recommender`. Das einzige Alleinstellungsmerkmal (Definition hinter `require("mod").field` auflösen & anzeigen) wurde nach `project-insight.nvim` (`imports/resolve.lua` + `imports/definition.lua`, `gd`/`gp` im Imports-Report) integriert; `objtrack` wurde gelöscht.
 - [ ] **Deprecations:** Evaluieren, ob `monkeypatch` noch zeitgemäß ist, oder restlos entfernt werden kann.
 - [ ] **Refactoring:** `migrate.nvim` abschließen.
 
