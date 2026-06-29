@@ -112,6 +112,14 @@ return apply_source({
     "StefanBartl/lib.nvim",
     lazy = false,
     priority = 1000,
+    config = function()
+      -- TODO: Das muss anders gemacht werden: helptags generell; usrcmds als normales userconfig nicht extra
+      require("lib.nvim_usrcmds").setup({
+        helptags           = true,
+        cwd_here           = true,
+        powershell_profile = true,
+      })
+    end,
   },
 
   {
@@ -457,7 +465,36 @@ return apply_source({
     ft = { "markdown", "markdown.mdx", "text", "tex", "norg" },
     event = "VeryLazy",
     opts = {
-      keymaps = { preset = true },
+      -- LIST DOMAIN (filetype-scoped) ------------------------------------------
+      lists = {
+        enable = true, -- master switch for the whole list domain
+        -- Per-feature on/off. Disabling one stops its keymap action and the
+        -- preset stops binding its keys (native keys stay native).
+        features = {
+          continue = true, -- <CR>/o/O continuation + empty-bullet deletion
+          checkbox = true, -- toggle/cycle checkbox  (<leader>tc)
+          cycle_type = true, -- cycle a single item's marker shape (<leader>tt/tT)
+          rotate = true, -- block/visual form rotation (<leader>tf/tF)
+          sort = true, -- block/visual A-Z sort (<leader>ts)
+          reverse = true, -- block/visual reverse order (<leader>tv)
+          strip = true, -- block/visual remove checkboxes (<leader>tx)
+          indent = true, -- indent/outdent + level-aware renumber (<A-Right>/<A-Left>)
+          move = true, -- move line/selection up/down + renumber (<A-Up>/<A-Down>)
+        },
+        renumber = true, -- auto-renumber ordered lists after edits
+      },
+
+      -- CYCLE DOMAIN (global) --------------------------------------------------
+      cycle = {
+        enable = true, -- master switch for word/number cycling
+        features = {
+          word = true, -- cycle the word/boolean under the cursor (<C-a>/<C-x>)
+        },
+        number_fallback = true, -- native <C-a>/<C-x> on numeric tokens
+      },
+
+      -- KEYMAPS ----------------------------------------------------------------
+      keymaps = { preset = true }, -- bind the opinionated default keys
     },
   },
 

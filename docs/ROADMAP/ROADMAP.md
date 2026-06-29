@@ -16,7 +16,9 @@
 
 ---
 
-- mdview debuggen, dann als dependencsy in markdown.nvim implementieren
+- :h dateien der neuen repositories sind dort nicht auzffindbar. `:h nvim-cmdlog` schon als beispiel. SOllten die nicht automatisch generiert werden?
+ - mdview debuggen, dann als dependencsy in markdown.nvim implementieren
+
 
 ## ZIEL
 
@@ -71,6 +73,14 @@ stack traceback:
 2. `leader fc`: findet keine dateien mit `git`, also zumindes `plugins/git.lua` nict. kann es sein, dass er ignored wird? (telescoope/fzf-lua)
 
 ---
+
+## menus
+
+   Error  19:26:07 msg_show.lua_error vim.schedule callback: ...AppData/Local/nvim-data/lazy/menu/lua/menus/neo-tree.lua:17: attempt to call local 'cb' (a nil value)
+stack traceback:
+	...AppData/Local/nvim-data/lazy/menu/lua/menus/neo-tree.lua:17: in function 'fn'
+	vim/_core/editor.lua:273: in function <vim/_core/editor.lua:272>
+
 
 ## Low
 

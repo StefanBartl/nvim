@@ -1,8 +1,5 @@
-#  `replacer.nvim`
+#  `replacer`
 
-## github
-
-      StefanBartl/replacer – CI #4
-      CI workflow run failed for main branch
+1. auf `replacer.nvim` umstellen. (Laut github insight ~30 unique clines in den letzten 14 Tagem)
 
 ---

@@ -10,7 +10,6 @@
 `/learn-cli.nvim`
 `/lib.nvim`
 `/markdown.nvim`
-`/mdlinks`
 `/mdview.nvim`
 `/migrate.nvim`
 `/monkeypatch.nvim`

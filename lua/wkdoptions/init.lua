@@ -111,6 +111,7 @@ function M.setup(opts)
   require("wkdoptions.qflist")
   normalize_inactice_win_hl()
   set_diagnostic_signs()
+  require("wkdoptions.indent_per_ft")
 end
 
 --- Expose config module API for programmatic access

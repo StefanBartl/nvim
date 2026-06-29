@@ -1,6 +1,7 @@
 # Alle Custom Plugins
 
-1. Module und Plugins durchgehen und
+1. `ROADMAP.md` durchgehen und Plan zur Implementierungen erstellen
+2. Module und Plugins durchgehen und
   1. CHEATSHEETS schreiben
   2. Jedes repo soll auch eigene `/docs/BINDINGS.lua` haben mit allen keymaps, usrcmds aber auch die autocmds!
   3. Checklisten anwenden
@@ -9,12 +10,12 @@
     - `/nvim/lua/` alle Modle durchgehene nd checken, ob sie wo hineinpassen
   6. `README.md` überprüfen auf
         - badges & ASCII implementieren und toc
-2. `README.md` && `/doc/**.txt` Spec anpasse:
+3. `README.md` && `/doc/**.txt` Spec anpasse:
     - für verschiedene nvim Package-Manager ist die installationsweiße interressant, wie zb.; hier [Installations Spec Template](./spec.md)
     - entweder `lazy = false` oder `event = "VeryLazy",` im Insatallationsblock angeben: [spec](./spec.md)
     - dir = vime.env... raus aus den READMEs - das kann jeder Dev sich selbst denken
     - license
-3. `:checkhealth` sollten alle module haben -> check!
+4. `:checkhealth` sollten alle module haben -> check!
   1. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht
   2. `lib.nvim` auf alle plugins anwenden (als dependency)
   3. Sind alle Plugins `lazy`?
@@ -23,12 +24,12 @@
     - `keymaps`
     - `autocmds`
     unterbringen.
-
-1. `objtrack` - Analysieren (merge mit anderen Plugin? Ausbau notwendig?)
-2. `monkeypatch` noch sinnvoll? besser ausbauen
-3. `migrate.nvim` fertig stellen
-4. `mdlink` vs `mdlinks`? Migration nach `markdown.nvim`
-5. `config.lua` für pluginseitige defaults, aber möglichst viele Features sollen vom user aus ebenfalls einstellbar sein, also zb.:
+1. Alle Plugins sollen **Cross-Plattform** sein
+2. `objtrack` - Analysieren (merge mit anderen Plugin? Ausbau notwendig?)
+3. `monkeypatch` noch sinnvoll? besser ausbauen
+4. `migrate.nvim` fertig stellen
+5. `mdlink` vs `mdlinks`? Migration nach `markdown.nvim`
+6. `config.lua` für pluginseitige defaults, aber möglichst viele Features sollen vom user aus ebenfalls einstellbar sein, also zb.:
 
     ```lua
     {
@@ -65,6 +66,7 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 3. Alle Plugins auf implementierte NVIM-Filetree-Features (Neotree, Nvimtree, Netrw...)  checken, diese
       - jedenfalls so ausbauen, dass es in Neotree, NvimTree, Netrw... cross filetree agnostisch funkltienrt oder zumindest so agnostisch wie es geht, eventuell api ? die man dann bei seinem filrtee manager verweden kann.
       - aus den gesammelten Features und aus `/nvim/lua/config/neotree` ein eigenes Plugin `filetree.nvim` erstellen. Diess Plugin soll erkennen, welchen filetree amnager man verwendet (nvimtree, neotree, netrw usw..) und dort dann automatisch seine features andocken können
+4. `:Recommender` durch alle Module durchlaufen lassen
 
 ## Alle features testen Verifikation für jedes feature jedes plugins
 
