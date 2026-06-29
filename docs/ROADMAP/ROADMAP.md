@@ -16,6 +16,8 @@
 
 ---
 
+- Nach indent vcon mehreren zeilen verscwindet die markeirung udn wen man eins mehr indenten will, mus man neu markeiren. die markierung soll bleiben.
+- github:stats.nvim besser machen
 - :h dateien der neuen repositories sind dort nicht auzffindbar. `:h nvim-cmdlog` schon als beispiel. SOllten die nicht automatisch generiert werden?
  - mdview debuggen, dann als dependencsy in markdown.nvim implementieren
 
@@ -27,9 +29,10 @@
 3. `/autcmds`
   1. passt zu `/bindings` ?
   2. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
-5. Checklisten anwenden
+4. Checklisten anwenden
   1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
   2. ToDo's duchgehen
+5. Branch küren (so wenig commits wit möglch, damit die .git folder nicht groß ist)
 
 ---
 

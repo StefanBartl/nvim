@@ -1,5 +1,4 @@
 # `reposcope.nvim`
 
-
 ---
 

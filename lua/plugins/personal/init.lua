@@ -125,7 +125,7 @@ return apply_source({
   {
     "stefanbartl/sessions.nvim",
     lazy = false,
-    dependencies = { "stefanbartl/lib.nvim" }, -- optional
+    dependencies = { "stefanbartl/lib.nvim" },
     opts = {},
   },
 
