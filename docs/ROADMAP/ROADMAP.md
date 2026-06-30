@@ -16,6 +16,8 @@ filetreepicker
 
 ---
 
+- `leader[` toc funktiert ncih
+- `C-a`: Sollte alles markieren
 - Nach indent vcon mehreren zeilen verscwindet die markeirung udn wen man eins mehr indenten will, mus man neu markeiren. die markierung soll bleiben.
 - github:stats.nvim besser machen
 - :h dateien der neuen repositories sind dort nicht auzffindbar. `:h nvim-cmdlog` schon als beispiel. SOllten die nicht automatisch generiert werden?
