@@ -33,7 +33,6 @@ local MODE = {
   ["pickers.nvim"]             = "dir",
   ["buffer-ctx.nvim"]          = "dir",
   ["open.nvim"]                = "dir",
-  -- ["monkeypatch.nvim"]      = "dir",
   ["nvim-containers"]          = "dir",
 
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
@@ -215,28 +214,6 @@ return apply_source({
       require("open_nvim").setup(opts)
     end,
   },
-
-  -- {
-  --   "StefanBartl/monkeypatch.nvim",
-  --   lazy = false,
-  --   config = function()
-  --     require("monkeypatch").setup({
-  --       strategy_order = { "diff", "semantic" },
-  --       enabled_strategies = {
-  --         diff = true,
-  --         semantic = true,
-  --         treesitter = false,
-  --       },
-  --       max_concurrency = 3,
-  --       timeout_ms = 30000,
-  --       notify = true,
-  --       verbose = false,
-  --       lazy_update_delay_ms = 1000,
-  --       diff_fuzz_factor = 2,
-  --       semantic_strict = true,
-  --     })
-  --   end,
-  -- },
 
   {
     "StefanBartl/nvim-containers",

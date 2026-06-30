@@ -1,0 +1,235 @@
+*neotree-traverse.txt*  Bi-directional tree navigation for Neo-tree
+
+==============================================================================
+CONTENTS                                              *neotree-traverse-contents*
+
+    1. Introduction .......................... |neotree-traverse-intro|
+    2. Usage ................................. |neotree-traverse-usage|
+    3. API ................................... |neotree-traverse-api|
+    4. Configuration ......................... |neotree-traverse-config|
+    5. Integration ........................... |neotree-traverse-integration|
+    6. Examples .............................. |neotree-traverse-examples|
+
+==============================================================================
+1. Introduction                                         *neotree-traverse-intro*
+
+The traverse module provides unified bi-directional navigation for Neo-tree
+file explorer. It handles both upward (parent directory) and downward (into
+directory) navigation with automatic CWD synchronization and smart node
+selection.
+
+Features:~
+  • Navigate up to parent directory (like `cd ..`)
+  • Navigate down into selected directory node
+  • Automatic CWD synchronization (position-aware)
+  • Smart node selection after navigation
+  • Integration with cwd_sync pause mechanism
+  • Robust error handling with user notifications
+
+==============================================================================
+2. Usage                                                *neotree-traverse-usage*
+
+Basic usage in Neo-tree keymaps:
+>lua
+    -- In config/neotree/keymaps/filesystem.lua:
+    ["+"] = {
+      function(state)
+        require("config.neotree.actions.traverse").down(state)
+      end,
+      desc = "Navigate into directory and set as root",
+    },
+
+    ["-"] = {
+      function(state)
+        require("config.neotree.actions.traverse").up(state)
+      end,
+      desc = "Navigate up one level",
+    },
+<
+
+==============================================================================
+3. API                                                    *neotree-traverse-api*
+
+traverse.up({state})                                    *traverse.up()*
+    Navigate up one directory level.
+
+    Parameters:~
+      {state}  (table)  Neo-tree state object
+
+    Returns:~
+      (boolean)  true on success, false on error
+
+    Behavior:~
+      1. Pauses cwd_sync for 3 seconds
+      2. Resolves current root directory
+      3. Calculates parent directory
+      4. Changes CWD (window-local or global based on position)
+      5. Navigates tree root to parent
+      6. Selects previous directory in new view
+      7. Refreshes tree display
+
+    Example:~
+>lua
+        local traverse = require("config.neotree.actions.traverse")
+        traverse.up(state)
+<
+
+traverse.down({state})                                  *traverse.down()*
+    Navigate down into selected directory node.
+
+    Parameters:~
+      {state}  (table)  Neo-tree state object
+
+    Returns:~
+      (boolean)  true on success, false on error
+
+    Behavior:~
+      1. Pauses cwd_sync for 3 seconds
+      2. Validates node is a directory
+      3. Changes CWD to directory
+      4. Executes neo-tree.command with reveal
+      5. Refreshes tree display
+
+    Example:~
+>lua
+        local traverse = require("config.neotree.actions.traverse")
+        traverse.down(state)
+<
+
+==============================================================================
+4. Configuration                                      *neotree-traverse-config*
+
+The traverse module adapts its behavior based on Neo-tree window position:
+
+Position-Aware CWD Commands:~
+
+  Position     Command    Scope           Rationale
+  --------     -------    -----           ---------
+  float        lcd        Window-local    Temporary view
+  current      lcd        Window-local    Buffer-specific
+  left         cd         Global          Persistent sidebar
+  right        cd         Global          Persistent sidebar
+  top          cd         Global          Horizontal persistent
+  bottom       cd         Global          Horizontal persistent
+
+CWD Sync Integration:~
+
+Both `up()` and `down()` automatically pause the cwd_sync module for 3
+seconds to prevent conflicts during manual navigation.
+
+Why 3 seconds?~
+  • Longer than buffer-switch pause (2000ms)
+  • Gives user time for additional manual navigation
+  • Prevents cwd_sync from immediately re-syncing
+
+==============================================================================
+5. Integration                                  *neotree-traverse-integration*
+
+With cwd_sync Module~
+
+The traverse module integrates seamlessly with the cwd_sync system:
+>lua
+    -- User navigates manually
+    traverse.down(state)  -- Pauses cwd_sync for 3s
+
+    -- Within 3s: cwd_sync is suppressed
+    -- After 3s: cwd_sync resumes normal operation
+<
+
+Migration from updir~
+
+The traverse module replaces the legacy updir module:
+>lua
+    -- Old (updir):
+    local updir = require("config.neotree.updir")
+    updir.up_one_level(state)
+
+    -- New (traverse):
+    local traverse = require("config.neotree.actions.traverse")
+    traverse.up(state)
+<
+
+traverse.up() is functionally identical to updir.up_one_level() and can be
+used as a drop-in replacement, with the added benefit of the unified down()
+functionality.
+
+==============================================================================
+6. Examples                                        *neotree-traverse-examples*
+
+Basic Keymaps~
+>lua
+    local traverse = require("config.neotree.actions.traverse")
+
+    return {
+      ["-"] = {
+        function(state) traverse.up(state) end,
+        desc = "Up one level (in-place) and adjust CWD",
+      },
+
+      ["+"] = {
+        function(state) traverse.down(state) end,
+        desc = "Set Neovim cwd to node and focus there",
+      },
+    }
+<
+
+Alternative Keybindings~
+>lua
+    -- Arrow-based navigation
+    ["<C-Up>"] = {
+      function(state) traverse.up(state) end,
+      desc = "Parent directory",
+    },
+
+    ["<C-Down>"] = {
+      function(state) traverse.down(state) end,
+      desc = "Into directory",
+    },
+<
+
+Custom Wrapper: Navigate Multiple Levels~
+>lua
+    local function up_n_levels(state, n)
+      local traverse = require("config.neotree.actions.traverse")
+
+      for i = 1, n do
+        local ok = traverse.up(state)
+        if not ok then break end
+
+        -- Wait for tree to update
+        vim.wait(150, function() return false end)
+      end
+    end
+
+    -- Use in keymap
+    ["<leader>uu"] = {
+      function(state) up_n_levels(state, 2) end,
+      desc = "Up two levels",
+    },
+<
+
+Custom Command: Jump to Project Root~
+>lua
+    local function to_project_root(state)
+      local root = require("config.neotree.actions.project_root").get()
+
+      vim.api.nvim_set_current_dir(root)
+
+      local ok_cmd, neo_cmd = pcall(require, "neo-tree.command")
+      if ok_cmd then
+        neo_cmd.execute({
+          source = "filesystem",
+          dir = root,
+          reveal = true
+        })
+      end
+    end
+
+    vim.api.nvim_create_user_command("NeoTreeRoot", function()
+      local state = get_neotree_state()
+      to_project_root(state)
+    end, {})
+<
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

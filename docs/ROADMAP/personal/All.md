@@ -28,7 +28,6 @@
   1. Wenn es sin macht, hier `docs/TESTS/**` dateien durchfürhen und die ergebnise amit in checkhealth ausgebe. wenn das nicht state of the art ist, dann lassen wir das so-
 1. Alle Plugins sollen **Cross-Plattform** sein
 2. `DEFAULTS.lua` -> expliziote Datei für Defaults vonm UserConfigurations, also: `/config/init.lua` && `/config/DEFAULTS.lua`
-3. `monkeypatch` noch sinnvoll? besser ausbauen
 5. `mygrep.nvim` - was machen wir mit demn? Implemeniteren in `pickers.nvim`
 6. `migrate.nvim` fertig stellen
 7. `mdlink` vs `mdlinks`? Migration nach `markdown.nvim`
