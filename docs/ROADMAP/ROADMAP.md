@@ -12,6 +12,13 @@ filetreepicker
 
 ---
 
+- `leader[` toc funktiert ncih
+- `C-a`: Sollte alles markieren
+- Nach indent vcon mehreren zeilen verscwindet die markeirung udn wen man eins mehr indenten will, mus man neu markeiren. die markierung soll bleiben.
+- github:stats.nvim besser machen
+- :h dateien der neuen repositories sind dort nicht auzffindbar. `:h nvim-cmdlog` schon als beispiel. SOllten die nicht automatisch generiert werden?
+ - mdview debuggen, dann als dependencsy in markdown.nvim implementieren
+
 1. checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
 2. mappings für telescope und fzf lua müssten eigentlich schon über piockers.nvim kommen?
 
