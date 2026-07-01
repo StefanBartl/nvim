@@ -2,11 +2,8 @@
 ---@brief Neo-tree unified configuration and initialization
 
 local lazy = require("lib.lua.lazy")
-local CURRENT_HL_DEFAULTS = lazy.require("config.neotree.current_hl.defaults")
-local CWD_SYNC_DEFAULTS = lazy.require("config.neotree.cwd_sync.defaults")
 local TRASH_DEFAULTS = lazy.require("config.neotree.trash.defaults")
 local event_patch = require("config.neotree.utils.event_patch")
-local layout_guard = require("config.neotree.layout_guard")
 
 local M = {}
 
@@ -20,10 +17,7 @@ local defaults = {
   window_open = false,
   reveal_current_file = true,
   only_lhs = false,
-  current_hl = CURRENT_HL_DEFAULTS,
-  cwd_sync = CWD_SYNC_DEFAULTS,
   trash = TRASH_DEFAULTS,
-  layout_guard = true,
 }
 
 --- Active configuration (merged with user options)
@@ -48,25 +42,6 @@ local function setup_trash(config)
   end
 
   require("config.neotree.trash.commands").setup()
-end
-
---- Initialize current file highlight
----@param config Cfg.NeoTree.CurrentHl.Config|boolean|nil
----@return nil
-local function setup_current_hl(config)
-  if type(config) == "table" then
-    require("config.neotree.current_hl").setup(config)
-  elseif config == true then
-    require("config.neotree.current_hl").setup(M.options.current_hl)
-  end
-end
-
---- Initialize CWD sync
----@param config Cfg.NeoTree.CwdSync.Config|boolean
----@return nil
-local function setup_cwd_sync(config)
-  local cfg = vim.tbl_extend("force", CWD_SYNC_DEFAULTS, config or {})
-  require("config.neotree.cwd_sync").setup(cfg)
 end
 
 --- Main setup function
@@ -105,16 +80,6 @@ function M.setup(opts)
   if M.options.only_lhs then
     require("config.neotree.window.open.keymaps.only_lhs").attach()
   end
-
-  if M.options.current_hl then
-    setup_current_hl(M.options.current_hl)
-  end
-
-  if M.options.cwd_sync.enabled then
-    setup_cwd_sync(M.options.cwd_sync)
-  end
-
-  layout_guard.setup(M.options.layout_guard)
 
   require("config.neotree.autocmds").attach() -- disable statusline;
   require("config.neotree.usercmds").enable()

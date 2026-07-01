@@ -5,24 +5,16 @@
 ---   preview -> images -> pdfport
 ---   plain toggle_preview < system app for images < pdfport for PDFs
 
+-- Modules handled by filetree.nvim (removed):
+--   filter, save, replace, mark, navigation, path, info, search,
+--   preview, images, pdfport
+-- Remaining: neotree-native operations only.
 local modules = {
-  require("config.neotree.keymaps.filesystem.filter"),
   require("config.neotree.keymaps.filesystem.commands"),
   require("config.neotree.keymaps.filesystem.files"),
-  require("config.neotree.keymaps.filesystem.save"),
-  require("config.neotree.keymaps.filesystem.replace"),
   require("config.neotree.keymaps.filesystem.clipboard"),
   require("config.neotree.keymaps.filesystem.create"),
   require("config.neotree.keymaps.filesystem.trash"),
-  require("config.neotree.keymaps.filesystem.mark"),
-  require("config.neotree.keymaps.filesystem.navigation"),
-  require("config.neotree.keymaps.filesystem.path"),
-  require("config.neotree.keymaps.filesystem.info"),
-  require("config.neotree.keymaps.filesystem.search"),
-  -- TODO: Vereinen von preview;images;pdfprot
-  require("config.neotree.keymaps.filesystem.preview"), -- <Tab> scroll + toggle fallback
-  require("config.neotree.keymaps.filesystem.images"),  -- <Tab>/<CR> image -> system app  (must come AFTER preview)
-  require("config.neotree.keymaps.filesystem.pdfport"), -- <Tab>/<CR> PDF  -> pdfport       (must come AFTER images)
 }
 
 ---@type table<string, any>

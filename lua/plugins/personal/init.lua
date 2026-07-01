@@ -28,40 +28,41 @@ local SOURCE = "dir"
 ---@type table<string, PersonalRepoMode>
 local MODE = {
   -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
-  ["lib.nvim"]                 = "dir",
-  ["sessions.nvim"]            = "dir",
-  ["pickers.nvim"]             = "dir",
-  ["buffer-ctx.nvim"]          = "dir",
-  ["open.nvim"]                = "dir",
-  ["nvim-containers"]          = "dir",
+  ["lib.nvim"] = "dir",
+  ["sessions.nvim"] = "dir",
+  ["pickers.nvim"] = "dir",
+  ["buffer-ctx.nvim"] = "dir",
+  ["open.nvim"] = "dir",
+  ["nvim-containers"] = "dir",
 
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
-  ["fileops.nvim"]             = "dir",
-  ["gopath.nvim"]              = "dir",
-  ["replacer"]                 = "dir",
-  ["project-insight.nvim"]     = "dir",
+  ["fileops.nvim"] = "dir",
+  ["gopath.nvim"] = "dir",
+  ["replacer"] = "dir",
+  ["project-insight.nvim"] = "dir",
   -- ["neotree-fs-refactor"]   = "dir",
+  ["filetree.nvim"] = "dir",
   -- ["filetreepicker.nvim"]   = "dir",
-  ["reposcope.nvim"]           = "dir",
+  ["reposcope.nvim"] = "dir",
   -- ["mygrep.nvim"]           = "dir",
 
   -- 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY
-  ["debugging.nvim"]           = "dir",
-  ["diff.nvim"]                = "dir",
-  ["nvim-cmdlog"]              = "dir",
+  ["debugging.nvim"] = "dir",
+  ["diff.nvim"] = "dir",
+  ["nvim-cmdlog"] = "dir",
   ["telescope-selected-index"] = "dir",
-  ["emojis.nvim"]              = "dir",
+  ["emojis.nvim"] = "dir",
   -- ["github_stats.nvim"]     = "dir",
   -- ["learn-cli.nvim"]        = "dir",
 
   -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)
-  ["cascade.nvim"]             = "dir",
-  ["pdfport.nvim"]             = "dir",
-  ["markdown.nvim"]            = "dir",
+  ["cascade.nvim"] = "dir",
+  ["pdfport.nvim"] = "dir",
+  ["markdown.nvim"] = "dir",
   -- ["mdlinks"]               = "dir", -- DEPRECATED
-  ["color_my_ascii.nvim"]      = "dir",
-  ["recommender.nvim"]         = "dir",
-  ["mdview.nvim"]              = "dir",
+  ["color_my_ascii.nvim"] = "dir",
+  ["recommender.nvim"] = "dir",
+  ["mdview.nvim"] = "dir",
 }
 
 local VALID_MODE = { disabled = true, dir = true, remote = true }
@@ -79,7 +80,10 @@ local function apply_source(specs)
 
       if not VALID_MODE[mode] then
         vim.notify(
-          ("[PLUGINS PERSONAL] Ungültiger Modus '%s' für '%s' → 'remote'"):format(tostring(mode), name),
+          ("[PLUGINS PERSONAL] Ungültiger Modus '%s' für '%s' → 'remote'"):format(
+            tostring(mode),
+            name
+          ),
           vim.log.levels.WARN
         )
         mode = "remote"
@@ -114,8 +118,8 @@ return apply_source({
     config = function()
       -- TODO: Das muss anders gemacht werden: helptags generell; usrcmds als normales userconfig nicht extra
       require("lib.nvim_usrcmds").setup({
-        helptags           = true,
-        cwd_here           = true,
+        helptags = true,
+        cwd_here = true,
         powershell_profile = true,
       })
     end,
@@ -312,6 +316,25 @@ return apply_source({
   --     })
   --   end,
   -- },
+
+  {
+    "StefanBartl/filetree.nvim",
+    dependencies = {
+      -- only ONE of these is needed
+      "nvim-neo-tree/neo-tree.nvim",
+      -- or: "nvim-tree/nvim-tree.lua",
+    },
+    event = "VeryLazy",
+    config = function()
+      require("filetree").setup({
+        adapter = "neotree",
+        features = {
+          picker = { enabled = true },
+          layout_guard = { enabled = true },
+        },
+      })
+    end,
+  },
 
   -- {
   --   "StefanBartl/filetreepicker.nvim",

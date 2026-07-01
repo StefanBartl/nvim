@@ -9,7 +9,6 @@ local FILESYSTEM = require("config.neotree.keymaps.filesystem")
 local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
 local ICONS = require("config.neotree.sources.icons")
-local OPEN_SYSTEM_APP   = require("config.neotree.actions.open_system_app")
 
 return {
   {
@@ -146,19 +145,6 @@ return {
             { "name", use_git_status_colors = true },
             { "git_status", highlight = "NeoTreeDimText" },
             { "diagnostics" },
-            {
-              function(_, node, state)
-                local marks = state.explicitly_marked_node_ids or {}
-                local node_id = node:get_id()
-                if marks[node_id] then
-                  return {
-                    text = " ✓",
-                    highlight = "NeoTreeGitStaged",
-                  }
-                end
-                return {}
-              end,
-            },
             { "clipboard" },
           },
         },
@@ -278,22 +264,7 @@ return {
     end,
 
     config = function(_, opts)
-      -- ── System-app opener ─────────────────────────────────────────────────
-      OPEN_SYSTEM_APP.setup({
-        -- Completely replace the default list (takes precedence over extra_filetypes):
-        -- filetypes = { "pdf", "png" },
-
-        -- Or just extend the defaults with additional types:
-        -- extra_filetypes = { "epub", "blend" },
-
-        notify_on_open  = true,
-        notify_on_error = true,
-      })
-
-      require("config.neotree.actions.find_or_grep_menu").attach(opts)
-      require("config.neotree.current_hl").attach(opts)
       require("neo-tree").setup(opts)
-      require("config.neotree.components.marks").attach(opts)
       require("config.neotree").setup({
         debug = true,
         busy_guard = false,
