@@ -1,6 +1,4 @@
-  -- TODO: Vereinen von preview;images;pdfprot
-
-  ---@module 'config.neotree.keymaps.filesystem.preview'
+---@module 'config.neotree.keymaps.filesystem.preview'
 ---@brief Standard Neo-tree preview window control and scroll keymaps.
 ---@description
 --- Provides the generic <Tab> toggle-preview handler and scroll bindings.

@@ -1,5 +1,8 @@
 # Alle Custom Plugins
 
+TODO:
+- Spellchecking nochmnal durchgehen und notizen machen. Spell Strategie ausarbeiten - entweder Plugin einbindne oder Modul debuggen
+
 1. `ROADMAP.md` durchgehen und Plan zur Implementierungen erstellen
 2. Module und Plugins durchgehen und
   1. CHEATSHEETS schreiben
@@ -10,6 +13,7 @@
     - `/nvim/lua/` alle Modle durchgehene nd checken, ob sie wo hineinpassen
   6. `README.md` überprüfen auf
         - badges & ASCII implementieren und toc
+        - ist sie auf englisch? GIbt es eine Deutsche Version?
 3. `README.md` && `/doc/**.txt` Spec anpasse:
     - für verschiedene nvim Package-Manager ist die installationsweiße interressant, wie zb.; hier [Installations Spec Template](./spec.md)
     - entweder `lazy = false` oder `event = "VeryLazy",` im Insatallationsblock angeben: [spec](./spec.md)
@@ -73,6 +77,8 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
   1. Kurzinfo für jedes Repo schreiben
   2. Keywords für jedes repo eingeben
   3. usw...
+6. `vimdoc` von allen PLugins in `:h ***` auffindbar?
+7. `.luarc.json` in jedem root
 
 ## Alle features testen Verifikation für jedes feature jedes plugins
 
