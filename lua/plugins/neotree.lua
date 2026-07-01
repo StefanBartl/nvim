@@ -264,6 +264,12 @@ return {
     end,
 
     config = function(_, opts)
+      -- Inject filetree.nvim feature keymaps into window.mappings BEFORE setup so
+      -- they show up in neo-tree's `?` cheatsheet (uses the same config table that
+      -- the filetree spec passes to require("filetree").setup()).
+      pcall(function()
+        require("filetree").attach(opts, require("config.filetree"))
+      end)
       require("neo-tree").setup(opts)
       require("config.neotree").setup({
         debug = true,
