@@ -1,6 +1,14 @@
 # `filetree.nvim`
 
 - neotree, nvimtre, netrwq, oil, minifiles speziscfische features saammeln
+- in `?` Cheetsheet sollen alle Keymaps angezeigt werden
+  - in neotree
+  - in nvim
+  - in netrw
+  - in oil
+  - in minifiles
+  - wenn es nicht klappt, als letzten ausweg: eigenes cheatsheet schreiben, das `?` ersetzt
+- Instllations Spec: Defautlt                                 settings sollte dort nicht extra gesetzt werden
 
 ## utils/ — Analyse
 
@@ -23,10 +31,10 @@ folgende features wären denke ich kandidaten für den `/ui` modulfolder
 | Datei | Was drin | Für filetree.nvim? |
 |-------|----------|-------------------|
 | `disable_statusline.lua` | `vim.wo[win].statusline = " "` auf neo-tree-Fenstern | **JA** — kleines Feature `window_style` mit `statusline = false`. Eine Zeile Logic, aber explizit als Feature konfigurierbar |
-| `highlight.lua` | `NeoTreeNormal → Normal`, `NeoTreeNormalNC → NormalNC` — HL-Isolation | **VIELLEICHT** — sinnvoll als neotree-Adapter-Option `isolate_highlights = true`. Nicht als eigenes Feature |
+light.lua` | `NeoTreeNormal → Normal`, `NeoTreeNormalNC → NormalNC` — HL-Isolation | **VIELLEICHT** — sinnvoll als neotree-Adapter-Option `isolate_highlights = true`. Nicht als eigenes Feature |
 | `only_lhs.lua` | Globale Keymaps `<M-c/f/l/r>` → neotree in verschiedenen Positionen (current/float/left/right) + reveal_force_cwd | **JA** — neues Feature `tree_open_keymaps` (oder `global_keymaps`): globale Normal-Mode-Keys für Tree-Toggle in versch. Positionen. Adapter-agnostisch implementierbar |
 
----
+--
 
 ## Schlachtplan
 
