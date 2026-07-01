@@ -1,9 +1,6 @@
 # `filetree.nvim`
 
-## state/windows.lua & state/tree.lua
-
-- `state/windows.lua` — Window-State-Registry (open/position/source, Listener-Pattern, Snapshot-Cache). Das deckt `adapter.is_open()` / `adapter.get_winid()` in filetree.nvim bereits ab. Das Listener-Pattern wäre interessant, gehört aber in einen zentralen Event-Bus (filetree hat `hooks_api` dafür geplant).
-- `state/tree.lua` — Cursor-Position + expanded-Nodes speichern/restoren. Nutzt neotree-interne APIs (`tree.expand_batch`, `tree.set_selection`) — nicht übertragbar. Inspiration für `session`-Feature (adapter-spezifisch implementieren).
+- neotree, nvimtre, netrwq, oil, minifiles speziscfische features saammeln
 
 ## utils/ — Analyse
 
@@ -15,20 +12,19 @@
 | `utils/buffer.lua` | `is_valid_file_buffer(bufnr)` (gecacht, 1s TTL), `get_buffer_context()`, `find_last_normal_buffer()`, `close_related_buffers()` | **JA** — `find_last_normal_buffer()` ist genau das was `buffer_save` und `open_replace` heute mit eigenem `find_adjacent_win()` lösen. Zentralisieren → `filetree/util/buffer.lua` |
 | `utils/tree.lua` | `collect_recursive(path, "files"\|"folders")` — libuv-Stack, ignoriert `.git` etc. | **JA** — `copy_file_list` macht das heute selbst (vermutlich schlechter). → `filetree/util/fs.lua` |
 | `utils/node.lua` | `get_path(node)`, `extract_paths(nodes)` — generisch; `collect_nodes(state)`, `get_current(state)` — neotree-intern | **TEILS** — `get_path` / `extract_paths` → neotree-Adapter. Rest skip |
-| `utils/selective_callback_guard.lua` | Monkey-patcht `neo-tree.events._handlers` für Event-Transitionen | **NEIN** — neotree-intern, aber inspiriert `watcher_quarantine` neotree-Adapter-Integration |
-| `utils/event_patch.lua` | Patcht `neo-tree.sources.filesystem.lib.fs_watch` für EPERM-Suppression | **NEIN** — komplett neotree-intern |
 | `utils/init.lua` | `safe_hide_preview()`, `is_neotree_open()` — neotree-spezifisch | **NEIN** — adapter deckt das ab |
 
 ---
 
 ## window/ — Analyse
 
+folgende features wären denke ich kandidaten für den `/ui` modulfolder
+
 | Datei | Was drin | Für filetree.nvim? |
 |-------|----------|-------------------|
 | `disable_statusline.lua` | `vim.wo[win].statusline = " "` auf neo-tree-Fenstern | **JA** — kleines Feature `window_style` mit `statusline = false`. Eine Zeile Logic, aber explizit als Feature konfigurierbar |
 | `highlight.lua` | `NeoTreeNormal → Normal`, `NeoTreeNormalNC → NormalNC` — HL-Isolation | **VIELLEICHT** — sinnvoll als neotree-Adapter-Option `isolate_highlights = true`. Nicht als eigenes Feature |
 | `only_lhs.lua` | Globale Keymaps `<M-c/f/l/r>` → neotree in verschiedenen Positionen (current/float/left/right) + reveal_force_cwd | **JA** — neues Feature `tree_open_keymaps` (oder `global_keymaps`): globale Normal-Mode-Keys für Tree-Toggle in versch. Positionen. Adapter-agnostisch implementierbar |
-| `reveal_current_file.lua` | `C` → reveal controller | **NEIN** — `auto_reveal` Feature deckt das bereits ab |
 
 ---
 
@@ -37,7 +33,6 @@
 **Gruppe 1 — Util-Infrastruktur (kein neues Feature, pure Verbesserung)**
 
 Diese ersetzen Inline-Code der bereits existierenden Features:
-
 1. `filetree/util/platform.lua` — aus `utils/platform.lua` adaptiert; `open_in_fm`, `shell_run`, `preview` refactoren
 2. `filetree/util/path.lua` — reine Pfadfunktionen aus `utils/path.lua`; `project_root`-Abhängigkeit rauswerfen
 3. `filetree/util/line_count.lua` — direkt aus `utils/line_count.lua`; `node_info` + `preview` (is_binary) nutzen es
@@ -45,14 +40,12 @@ Diese ersetzen Inline-Code der bereits existierenden Features:
 5. `filetree/util/fs.lua` — `collect_recursive` aus `utils/tree.lua`; `copy_file_list` nutzt es
 
 **Gruppe 2 — Neue Features**
-
-6. `window_style` Feature — `statusline = false`, `highlights_isolate = false`; FileType-Autocmd setzt `vim.wo[win].statusline` + HL-Links
-7. `tree_open_keymaps` Feature — globale Normal-Mode-Keys für `toggle position=left/right/float/current` mit `reveal_force_cwd`; adapter-agnostisch via `adapter.open_reveal()` + neotree-Command-Fallback
+1. `window_style` Feature — `statusline = false`, `highlights_isolate = false`; FileType-Autocmd setzt `vim.wo[win].statusline` + HL-Links
+2. `tree_open_keymapss` Feature — globale Normal-Mode-Keys für `toggle position=left/right/float/current` mit `reveal_force_cwd`; adapter-agnostisch via `adapter.open_reveal()` + neotree-Command-Fallback
 
 **Gruppe 3 — Neotree-Adapter-Erweiterungen (intern, kein eigenes Feature)**
-
-8. `node.get_path` + `node.extract_paths` in den neotree-Adapter bringen → `adapter.get_current_node()` robuster machen
-9. `event_patch` Logik → in `watcher_quarantine` als neotree-spezifische EPERM-Unterdrückung integrieren
+1. `node.get_path` + `nod.extract_paths` in den neotree-Adapter bringen → `adapter.get_current_node()` robuster machen
+2. `event_patch` Logik → in `watcher_quarantine` als neotree-spezifische EPERM-Unterdrückung integrieren
 
 ---
 
@@ -70,11 +63,6 @@ Diese ersetzen Inline-Code der bereits existierenden Features:
 
 ## Features
 
-1. `sources` feature von neotree, kann wr das implementieren? Filetree spezifische features z uunterstützen ist auf dauewr sicherlich ein key zum Erfolg - es mus aber nicht 1:1 jedes feature sein, denn man kann als user ja auch in dedr seiner neotree config features aktiviren neben filetree.nvim... aber trotzdem wenn feaatures gut unterstützt werdden können wäre das super. Da wäre es toll, wenn wir Templates anbieten könnten, also zb: für das source feature in neotree verschiedenne source konfiguartionen,. anrodungen usw... ich weiß noch,. das war ein pain in the *peips* daie sources manuell einzurichten...
-2. Explizit userkonfigurationen füür dasd filetree.nvim sammeln: Auf eigener developer seite kawnn ich einen Endppoint/Webppage bauen, bei der man konfigurationen posten und scrreenshots teilen kann. Diese Seite kan ich dann ihn der filetree.nvim README auf GIthub auch hinterlgen
-
----
-
 ## Feature-Inventur
 
 | Domäne | Was es macht |
@@ -88,46 +76,50 @@ Diese ersetzen Inline-Code der bereits existierenden Features:
 | **keymaps/** | 6 Sources × eigene Keymaps, 25+ Filesystem-Keys, 3-state Resize, Multi-action ESC |
 | **commands/** | Clipboard cut/copy/paste (recursive + marks), Diff, Markdown-Links (single/dir/recursive/marked) |
 | **actions/** | System-App-Opener (PDF/Images/Office), Path-to-require, Telescope/fzf-Integration, Tree-Traversal |
-| **sources/ + icons/** | Lazy Source Registry, 3 Icon-Familien (nerd/codicons/common), responsive Größe |
 | **@types/** | 17 LuaLS-Typ-Dateien, `Cfg.NeoTree.*`-Namespace, vollständige Funktionssignaturen |
 | **checkhealth/** | `:checkhealth neotree` mit 4 Submodulen |
 | **refresh**  | Small adapter to refresh Neo-tree safely with proper types and quarantine awareness. |
 |               | `lua\config\neotree\refresh_adapter\init.lua` |
 
----
 
-## Deine zwei Ideen
+## window/ — Analyse
 
-### Option B — `filetree.nvim` / `filetree-features.nvim` (agnostisch)
+| Datei | Was drin | Für filetree.nvim? |
+|-------|----------|-------------------|
+| `disable_statusline.lua` | `vim.wo[win].statusline = " "` auf neo-tree-Fenstern | **JA** — kleines Feature `window_style` mit `statusline = false`. Eine Zeile Logic, aber explizit als Feature konfigurierbar |
+| `highlight.lua` | `NeoTreeNormal → Normal`, `NeoTreeNormalNC → NormalNC` — HL-Isolation | **VIELLEICHT** — sinnvoll als neotree-Adapter-Option `isolate_highlights = true`. Nicht als eigenes Feature |
+| `only_lhs.lua` | Globale Keymaps `<M-c/f/l/r>` → neotree in verschiedenen Positionen (current/float/left/right) + reveal_force_cwd | **JA** — neues Feature `tree_open_keymaps` (oder `global_keymaps`): globale Normal-Mode-Keys für Tree-Toggle in versch. Positionen. Adapter-agnostisch implementierbar |
 
-**Die 3 großen Filetree-Explorer** sind tatsächlich Neotree, nvim-tree, und Netrw — wobei [oil.nvim](https://github.com/stevearc/oil.nvim) inzwischen auch sehr verbreitet ist (buffer-as-filesystem Paradigma). Für ein Adapter-Pattern wären die 4 realistischen Targets: `neo-tree`, `nvim-tree`, `oil.nvim`, `netrw`.
+Abner alle im idealfall agnoszisch, also so imeplemntieren, das es bei allen filetree amnaer klappt. wenn möglicvhl ansisnten zu den nur neoiteree spezifischen features
 
-Das Problem: die APIs sind fundamental verschieden.
-  - **nvim-tree** hat `api.tree.get_node_under_cursor()`, `api.fs.rename()` etc.
-  - **neo-tree** hat `state.tree`, `commands.*`, eigenes Event-System
-  - **oil.nvim** ist buffer-based — kein "Node"-Konzept
-  - **netrw** hat kaum public API
 
-Ein sauberes Plugin würde **Port/Adapter-Interfaces** brauchen:
+## neotree spezifisch
 
-```lua
--- Konzept: filetree-features.nvim
-require("filetree-features").setup({
-  adapter = "neo-tree",   -- oder "nvim-tree", "oil"
-  features = { "safety", "layout_guard", "cwd_sync", "current_hl" },
-})
-```
 
-**Konkret portierbar aus deinem Code (JETZT, ohne viel Umbau):**
-- `safety/` — keine Tree-API, reine Filesystem-Ops
-- `watcher_quarantine/` — generisches libuv-Pattern
-- `layout_guard/` — nur Window-Management
-- `undo/` (Trash Restore Engine) — Platform-Logic ist isoliert
-- `utils/path.lua` + `utils/platform.lua` — vollständig generisch
+| Datei | Was drin | Für filetree.nvim? |
+| ----- | -------- | ------------------ |
+| `utils/selective_callback_guard.lua` | Monkey-patcht `neo-tree.events._handlers` für Event-Transitionen | **NEIN** — neotree-intern, aber inspiriert `watcher_quarantine` neotree-Adapter-Integration |
+| `utils/event_patch.lua` | Patcht `neo-tree.sources.filesystem.lib.fs_watch` für EPERM-Suppression | **NEIN** — komplett neotree-intern |
 
-**Braucht Adapter-Interface:**
-- `cwd_sync/` — Core-Logik generisch, aber Tree-Reveal muss abstrahiert werden
-- `current_hl/` — Renderer-Integration Tree-spezifisch
+### sources
+
+| **sources/ + icons/** | Lazy Source Registry, 3 Icon-Familien (nerd/codicons/common), responsive Größe |
+
+1. `sources` feature von neotree, kann wr das implementieren? Filetree spezifische features z uunterstützen ist auf dauewr sicherlich ein key zum Erfolg - es mus aber nicht 1:1 jedes feature sein, denn man kann als user ja auch in dedr seiner neotree config features aktiviren neben filetree.nvim... aber trotzdem wenn feaatures gut unterstützt werdden können wäre das super. Da wäre es toll, wenn wir Templates anbieten könnten, also zb: für das source feature in neotree verschiedenne source konfiguartionen,. anrodungen usw... ich weiß noch,. das war ein pain in the *peips* daie sources manuell einzurichten...
+2. Explizit userkonfigurationen füür dasd filetree.nvim sammeln: Auf eigener developer seite kawnn ich einen Endppoint/Webppage bauen, bei der man konfigurationen posten und scrreenshots teilen kann. Diese Seite kan ich dann ihn der filetree.nvim README auf GIthub auch hinterlgen
 
 ---
 
+## hooks
+
+### state/windows.lua & state/tree.lua
+
+- `state/windows.lua` — Window-State-Registry (open/position/source, Listener-Pattern, Snapshot-Cache). Das deckt `adapter.is_open()` / `adapter.get_winid()` in filetree.nvim bereits ab. Das Listener-Pattern wäre interessant, gehört aber in einen zentralen Event-Bus (filetree hat `hooks_api` dafür geplant).
+
+lua\config\neotree\state\tree.lua
+
+- `state/tree.lua` — Cursor-Position + expanded-Nodes speichern/restoren. Nutzt neotree-interne APIs (`tree.expand_batch`, `tree.set_selection`) — nicht übertragbar. Inspiration für `session`-Feature (adapter-spezifisch implementieren).
+
+lua\config\neotree\state\tree.lua
+
+---
