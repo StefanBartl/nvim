@@ -8,7 +8,40 @@
   - in oil
   - in minifiles
   - wenn es nicht klappt, als letzten ausweg: eigenes cheatsheet schreiben, das `?` ersetzt
-- Instllations Spec: Defautlt                                 settings sollte dort nicht extra gesetzt werden
+
+- - Instllations Spec: Die allermeisten feature sollen defaultsewin und der user soll sioe explizit deaktivieren müssen:
+
+
+      ```lua
+      require("filetree").setup({
+        adapter = "neotree",
+        features = {
+          -- Defaults are exactly the keymaps we want, so just enable them:
+          --   marks m ]m [m <C-m> <leader>ms · tree_traverse - + · node_info I
+          --   path_copy [a ]a <leader>yp <leader>yn · preview <Tab> <CR>
+          --   filter / · live_search gs · buffer_save <C-s> <M-s> · open_replace O
+          --   find_or_grep_menu <M-p> · copy_file_list [f ]f [F ]F
+          --   open_in_fm <leader>fm · shell_run i
+          marks             = { enabled = true },
+          path_copy         = { enabled = true },
+          node_info         = { enabled = true },
+          preview           = { enabled = true },
+          filter            = { enabled = true },
+          live_search       = { enabled = true },
+          buffer_save       = { enabled = true },
+          open_replace      = { enabled = true },
+          find_or_grep_menu = { enabled = true },
+          copy_file_list    = { enabled = true },
+          open_in_fm        = { enabled = true },
+          shell_run         = { enabled = true },
+
+          -- Enabled + a non-default override:
+          tree_traverse      = { enabled = true, sync_cwd = true },
+          current_hl         = { enabled = true, file_hl = "CursorLine", parent_hl = "Visual" },
+          window_size_cycler = { enabled = true, sizes = { 35, 55, 18 } },
+        },
+      })
+      ```
 
 ## utils/ — Analyse
 

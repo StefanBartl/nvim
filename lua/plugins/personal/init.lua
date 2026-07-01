@@ -327,108 +327,36 @@ return apply_source({
     -- event = "VeryLazy",
     lazy = false,
     config = function()
-      -- Just setup() — filetree auto-injects its keymaps into neo-tree's `?`
-      -- cheatsheet, so no extra wiring in the neo-tree spec is needed.
+      -- Out-of-the-box: filetree auto-injects its keymaps into neo-tree's `?`
+      -- cheatsheet, and every feature ships sensible default keymaps.  So each
+      -- feature only needs `enabled = true` — list a field only to override a
+      -- default.  (picker + layout_guard are enabled by default → omitted.)
       require("filetree").setup({
         adapter = "neotree",
-
-        -- Noop neotree's built-in `i` (run_command) so shell_run can use it
-        adapter_keymaps = { ["i"] = false },
-
         features = {
-          -- Core
-          picker       = { enabled = true },
-          layout_guard = { enabled = true },
+          -- Defaults are exactly the keymaps we want, so just enable them:
+          --   marks m ]m [m <C-m> <leader>ms · tree_traverse - + · node_info I
+          --   path_copy [a ]a <leader>yp <leader>yn · preview <Tab> <CR>
+          --   filter / · live_search gs · buffer_save <C-s> <M-s> · open_replace O
+          --   find_or_grep_menu <M-p> · copy_file_list [f ]f [F ]F
+          --   open_in_fm <leader>fm · shell_run i
+          marks             = { enabled = true },
+          path_copy         = { enabled = true },
+          node_info         = { enabled = true },
+          preview           = { enabled = true },
+          filter            = { enabled = true },
+          live_search       = { enabled = true },
+          buffer_save       = { enabled = true },
+          open_replace      = { enabled = true },
+          find_or_grep_menu = { enabled = true },
+          copy_file_list    = { enabled = true },
+          open_in_fm        = { enabled = true },
+          shell_run         = { enabled = true },
 
-          -- Ersetzt entfernte neotree-Module ──────────────────────────────
-          marks = {
-            enabled           = true,
-            keymap            = "m",
-            keymap_all        = "]m",
-            keymap_unmark_all = "[m",
-            keymap_clear      = "<C-m>",
-            keymap_show       = "<leader>ms",
-          },
-          tree_traverse = {
-            enabled     = true,
-            keymap_up   = "-",
-            keymap_down = "+",
-            sync_cwd    = true,
-          },
-          path_copy = {
-            enabled     = true,
-            keymap_abs  = "[a",
-            keymap_rel  = "]a",
-            keymap_pick = "<leader>yp",
-            keymap_name = "<leader>yn",
-          },
-          node_info = {
-            enabled    = true,
-            keymap     = "I",
-            show_lines = true,
-          },
-          preview = {
-            enabled     = true,
-            keymap      = "<Tab>",
-            keymap_open = "<CR>",
-            max_lines   = 40,
-            image = { backend = "auto" },
-            pdf   = { backend = "pdfport" },
-          },
-          filter = {
-            enabled = true,
-            keymap  = "/",
-            hl_dim  = "Comment",
-          },
-          live_search = {
-            enabled          = true,
-            keymap           = "gs",
-            commit_to_filter = true,
-          },
-          buffer_save = {
-            enabled         = true,
-            keymap_adjacent = "<C-s>",
-            keymap_node     = "<M-s>",
-            force           = true,
-          },
-          open_replace = {
-            enabled = true,
-            keymap  = "O",
-          },
-          find_or_grep_menu = {
-            enabled = true,
-            keymap  = "<M-p>",
-            prefer  = "auto",
-          },
-
-          -- Extras ─────────────────────────────────────────────────────────
-          current_hl = {
-            enabled     = true,
-            file_hl     = "CursorLine",
-            parent_hl   = "Visual",
-            debounce_ms = 100,
-          },
-          copy_file_list = {
-            enabled          = true,
-            keymap_files_abs = "[f",
-            keymap_files_rel = "]f",
-            keymap_dirs_abs  = "[F",
-            keymap_dirs_rel  = "]F",
-          },
-          window_size_cycler = {
-            enabled = true,
-            keymap  = "w",
-            sizes   = { 35, 55, 18 },
-          },
-          open_in_fm = {
-            enabled = true,
-            keymap  = "<leader>fm",
-          },
-          shell_run = {
-            enabled     = true,
-            keymap      = "i",   -- neotree's `i` nooped via adapter_keymaps above
-            close_on_ok = true,
-          },
+          -- Enabled + a non-default override:
+          tree_traverse      = { enabled = true, sync_cwd = true },
+          current_hl         = { enabled = true, file_hl = "CursorLine", parent_hl = "Visual" },
+          window_size_cycler = { enabled = true, sizes = { 35, 55, 18 } },
         },
       })
     end,
