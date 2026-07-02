@@ -319,46 +319,16 @@ return apply_source({
 
   {
     "StefanBartl/filetree.nvim",
+    event = "VeryLazy", -- must load AFTER the tree plugin's config function runs
     dependencies = {
-      -- only ONE of these is needed
+      "StefanBartl/lib.nvim", -- shared helpers (neo-tree node utils, etc.)
+      -- only ONE tree plugin is needed:
       "nvim-neo-tree/neo-tree.nvim",
       -- or: "nvim-tree/nvim-tree.lua",
     },
-    -- event = "VeryLazy",
-    lazy = false,
     config = function()
-      -- Out-of-the-box: filetree auto-injects its keymaps into neo-tree's `?`
-      -- cheatsheet, and every feature ships sensible default keymaps.  So each
-      -- feature only needs `enabled = true` — list a field only to override a
-      -- default.  (picker + layout_guard are enabled by default → omitted.)
-      require("filetree").setup({
-        adapter = "neotree",
-        features = {
-          -- Defaults are exactly the keymaps we want, so just enable them:
-          --   marks m ]m [m <C-m> <leader>ms · tree_traverse - + · node_info I
-          --   path_copy [a ]a <leader>yp <leader>yn · preview <Tab> <CR>
-          --   filter / · live_search gs · buffer_save <C-s> <M-s> · open_replace O
-          --   find_or_grep_menu <M-p> · copy_file_list [f ]f [F ]F
-          --   open_in_fm <leader>fm · shell_run i
-          marks             = { enabled = true },
-          path_copy         = { enabled = true },
-          node_info         = { enabled = true },
-          preview           = { enabled = true },
-          filter            = { enabled = true },
-          live_search       = { enabled = true },
-          buffer_save       = { enabled = true },
-          open_replace      = { enabled = true },
-          find_or_grep_menu = { enabled = true },
-          copy_file_list    = { enabled = true },
-          open_in_fm        = { enabled = true },
-          shell_run         = { enabled = true },
-
-          -- Enabled + a non-default override:
-          tree_traverse      = { enabled = true, sync_cwd = true },
-          current_hl         = { enabled = true, file_hl = "CursorLine", parent_hl = "Visual" },
-          window_size_cycler = { enabled = true, sizes = { 35, 55, 18 } },
-        },
-      })
+      -- That's it — every feature is on by default.
+      require("filetree").setup({ adapter = "neotree" })
     end,
   },
 

@@ -12,15 +12,7 @@ filetreepicker
 
 ---
 
-- `leader[` toc funktiert ncih
-- `C-a`: Sollte alles markieren
-- Nach indent vcon mehreren zeilen verscwindet die markeirung udn wen man eins mehr indenten will, mus man neu markeiren. die markierung soll bleiben.
-- github:stats.nvim besser machen
-- :h dateien der neuen repositories sind dort nicht auzffindbar. `:h nvim-cmdlog` schon als beispiel. SOllten die nicht automatisch generiert werden?
- - mdview debuggen, dann als dependencsy in markdown.nvim implementieren
-
-1. checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
-2. mappings für telescope und fzf lua müssten eigentlich schon über piockers.nvim kommen?
+- Spellchecking nochmnal durchgehen und notizen machen. Spell Strategie ausarbeiten - entweder Plugin einbindne oder Modul debuggen
 
 ## ZIEL
 
@@ -39,13 +31,16 @@ filetreepicker
 ## High
 
 1. `leader wq`: Alle issues lösen
-2. Epressions, die auswerten auf welchen os wir sind, durch `system.env` ersetzen
-3. `/wkdoptions`
+2. `/wkdoptions`
   1. UI Linemarker gehört README
   2. `wkdoptions` mit `options.lua` verheiraten (vielleicht als default_options)
-4. `nvim/init.lua` durchgehen
-5. `:Lazy` -> `todo-comments` + `ui` haben Updates - sind bei mir aber monkeypatched, also Sicherungskope der Files anlegen, Updaten und neu bewerten
-6. lightbulb: Manchmal stört sie und ich möchhte das schnell ausblenden können, am besten mit Keymap togglebnar (markdown lsp)
+3. `nvim/init.lua` durchgehen
+4. [ ] Funktionen/Module identifizieren, die man mit FFI/C performanter machen könnte
+  - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
+
+## LSP
+
+7. lightbulb: Manchmal stört sie und ich möchhte das schnell ausblenden können, am besten mit Keymap togglebnar (markdown lsp)
 
 ---
 
@@ -58,19 +53,7 @@ filetreepicker
 
 ## Bugs
 
-1. Manchmal funktioert `C-s` nicht mehr...
-2. manchmal bricht `C-c` mit sigint nvim ab, es solte aber alles kopieren des buffers
-
-- `---@module '...'` ist nicht hervorgeheben, obwohl lua_ls attached ist
-
-  Treesitter in der Zeile:
-
-  ```vim
-  20:21:46 msg_show.list_cmd   Inspect Treesitter
-    - @comment.lua links to @comment   priority: 100   language: lua
-    - @spell.lua links to @spell   priority: 100   language: lua
-    - @comment.documentation.lua links to @comment   priority: 100   language: lua
-  ```
+1. manchmal bricht `C-c` mit sigint nvim ab, es solte aber alles kopieren des buffers
 
 ---
 

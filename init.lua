@@ -71,7 +71,10 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- =============================================================================
 -- PHASE 0: SOFORT (Kritisch für Basic-Funktionalität)
 -- =============================================================================
-require("system.env").compute_env()
+-- Host environment snapshot (OS/shell/paths). Lives in lib.nvim now; the
+-- `publish_globals` feature mirrors it to vim.g.is_windows/is_wsl/... for the
+-- few consumers that read the globals (e.g. plugins/markdown.lua).
+require("lib.nvim.system").setup({ publish_globals = true })
 require("options")
 
 -- =============================================================================

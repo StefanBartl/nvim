@@ -58,7 +58,7 @@ end
 -- ---------------------------------------------------------------------------
 
 --- Resolves the correct opener command and arguments for the current platform.
---- Uses the system.env cache that is computed once at Neovim startup.
+--- Uses the lib.nvim.system.env cache that is computed once at Neovim startup.
 ---
 --- Platform mapping:
 ---   Windows (native) -> { "cmd.exe", "/c", "start", "", path }
@@ -69,7 +69,7 @@ end
 ---@param path string  Absolute filesystem path to open.
 ---@return string[]    Argument vector suitable for vim.system / vim.fn.jobstart.
 local function build_open_argv(path)
-  local env = require("system.env").get()
+  local env = require("lib.nvim.system.env").get()
 
   if env.is_windows then
     -- "start" is a cmd built-in; the empty string is the window title,
