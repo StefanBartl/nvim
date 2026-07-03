@@ -73,8 +73,9 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- =============================================================================
 -- Host environment snapshot (OS/shell/paths). Lives in lib.nvim now; the
 -- `publish_globals` feature mirrors it to vim.g.is_windows/is_wsl/... for the
--- few consumers that read the globals (e.g. plugins/markdown.lua).
-require("lib.nvim.system").setup({ publish_globals = true })
+-- few consumers that read the globals (e.g. plugins/markdown.lua). `rpc_pipe`
+-- starts the predictable Windows named-pipe RPC server (no-op off Windows).
+require("lib.nvim.system").setup({ publish_globals = true, rpc_pipe = true })
 require("options")
 
 -- =============================================================================
