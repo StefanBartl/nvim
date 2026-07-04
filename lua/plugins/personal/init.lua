@@ -531,20 +531,10 @@ return apply_source({
   {
     "StefanBartl/color_my_ascii.nvim",
     ft = "markdown",
-    config = function()
-      require("color_my_ascii").setup({
-        debug_enabled = false,
-        debug_verbose = false,
-        scheme = "default",
-        enable_keywords = true,
-        enable_language_detection = true,
-        language_detection_threshold = 2,
-        enable_function_names = true,
-        enable_bracket_highlighting = true,
-        treat_empty_fence_as_ascii = true,
-        enable_inline_code = true,
-      })
-    end,
+    dependencies = { "StefanBartl/lib.nvim" }, -- optional, enables graceful keymap/notify integration
+    opts = {
+      -- Optional: Configuration here
+    },
   },
 
   { -- TODO: Nicht gepushed, nur readme drinnen

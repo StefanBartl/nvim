@@ -41,7 +41,7 @@ Gracefully stop LSP servers with timeout.
 
 ### LspRestartHere
 Restart LSP servers with proper cleanup.
-```vim
+```ascii-vim
 :LspRestartHere          " Restart all servers
 :LspRestartHere lua_ls   " Restart specific server
 ```

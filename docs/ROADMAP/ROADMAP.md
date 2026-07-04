@@ -1,6 +1,8 @@
 # Roadmap for `main-workstation` branch
-filetreepicker
-- [ ]
+
+- filetreepicker
+- netree-fs-refactor
+- `config` durchgehen auf fetaures, die zu meinen eigenen plugins passen
 
 ## Table of content
 
@@ -37,6 +39,7 @@ filetreepicker
 3. `nvim/init.lua` durchgehen
 4. [ ] Funktionen/Module identifizieren, die man mit FFI/C performanter machen könnte
   - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
+5. `C-a` markiert manchmal niucht mehr
 
 ## LSP
 
@@ -46,7 +49,7 @@ filetreepicker
 
 ## General
 
-1. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/
+1. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/ zb mit `leader lsp`öffnet ein `lib.nvim -> hover_select` und den scope den man wählt wir lua_ls nochmal neu berechnet auf den scope
 2. `ZenMode` sollte auch eienen usrcmds toggle schalter haben
 
 ---
@@ -59,10 +62,12 @@ filetreepicker
 
 ## menus
 
+```ascii-vim
    Error  19:26:07 msg_show.lua_error vim.schedule callback: ...AppData/Local/nvim-data/lazy/menu/lua/menus/neo-tree.lua:17: attempt to call local 'cb' (a nil value)
 stack traceback:
 	...AppData/Local/nvim-data/lazy/menu/lua/menus/neo-tree.lua:17: in function 'fn'
 	vim/_core/editor.lua:273: in function <vim/_core/editor.lua:272>
+```
 
 ---
 

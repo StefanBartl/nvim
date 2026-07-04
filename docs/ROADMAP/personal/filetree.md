@@ -12,6 +12,10 @@
 
 ---
 
+## Bugs
+
+CWD sync: File not in CWD
+
 ## General
 
 1. Alle keymaps prüfen

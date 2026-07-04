@@ -17,13 +17,39 @@
 ## 1. Module & Plugins durchgehen
 
 - [ ] **CHEATSHEETS** schreiben:
-    - [ ]Repo soll eine eigene `/docs/BINDINGS.lua` haben mit:
+    - [ ]Repo soll eine eigene `/docs/BINDINGS.md` haben mit:
       - [ ] allen Keymaps
       - [ ] allen Usrcmds
       - [ ] allen Autocmds
 - [ ] alle Keymaps müssen
   - [ ] vom user einfach modifizierbar / deaktiviert werden können
   - [ ] eine which-key implementierung haben
+- [ ] Die meisten Features (sinnvoll) default aktiv stellen: So das maximale Nutzererfahrung bei minimaler initialer config Notwendigkeit ensteht. Im Idealfall sieht die Initialisierung-Spec so aus:
+
+    ```lua
+    {
+      "StefanBartl/**.nvim",
+      ft = { "" }, -- oder cmd = {""} oder event = "" - was sinnvoll ist
+      config = function()
+        require("***").setup()
+      end,
+    },
+
+      --- ODER:
+
+    {
+      "StefanBartl/**.nvim",
+      ft = { "" }, -- oder cmd = {""} oder event = "" - was sinnvoll ist
+      dependencies = { "StefanBartl/lib.nvim" }, -- Beispielhaft
+      opts = {
+        -- Optional: Configuration here
+      },
+    },
+    ```
+
+    -> Aber klar: Wenn etwas ins Initialiserungs-Spec muss, dann ist das auch ok.
+
+
 - [ ] `/docs/ROADMAP.md` erstellen für weitere Features, Usrcmds, Keymaps, Autocmds
 - [ ] `README.md` überprüfen:
   - [ ] Badges & ASCII implementieren
@@ -50,13 +76,11 @@
 
 ## 4. Healthchecks & Config-Struktur
 
-- [ ] Alle Module sollen `:checkhealth` unterstützen → prüfen!
+- [ ] Soll `:checkhealth` unterstützen → prüfen!
   - [ ] `/config`-Ordner mit `/config/DEFAULTS.lua` in jedem Module/Plugin, wo sinnvoll
-  - [ ] `lib.nvim` auf alle Plugins anwenden (als Dependency)
-    - [ ] Personal Plugins nach `utils`-Folder durchsuchen → eventuell Funktionen für die lib?
-    - [ ] `ProjectInsight stats lib` über alle Repos ausführen und gesammelte Übersicht erstellen
+  - [ ] `lib.nvim` anwenden (als Dependency) - Funktionen von dort verwenden wenn möglich, interesante funkltnien für lib.nvim dorthin transferoeren und von dort nehmen
   - [ ] Prüfen: Sind alle Plugins `lazy`?
-  - [ ] In allen Modulen `/bindings`-Ordner anlegen mit:
+  - [ ] `/bindings`-Ordner anlegen mit:
     - [ ] `usrcmds`
     - [ ] `keymaps`
     - [ ] `autocmds`
@@ -66,7 +90,7 @@
 
 ## 5. Cross-Plattform
 
-- [ ] Alle Plugins sollen **Cross-Plattform** sein
+- [ ] Auf **Cross-Plattform** abklopfen: Alles soll Cross-Plattform sein
 
 ---
 
@@ -108,7 +132,7 @@
   ---@alias ProjectInsight.CompressEngine "auto"|"tar"|"zip"|"powershell"
   ```
 
-- [ ] Jedes Plugin abklopfen: Gibt es sinnvolle Optionen, die noch nicht User-seitig gesetzt werden können?
+- [ ] Abklopfen: Gibt es sinnvolle Optionen, die noch nicht User-seitig gesetzt werden können?
 
 ---
 
@@ -120,7 +144,8 @@
 
 ## 10. Git
 
-- [ ] Alles committen und Branch auf `main` umstellen
+- [ ] Alles committen (commit message ausgeben)
+- [ ] Branch auf `main` umstellen wenn noch nicht geschehen
 
 ---
 

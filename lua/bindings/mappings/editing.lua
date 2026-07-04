@@ -28,12 +28,6 @@ function M.setup()
     desc = "Aus System-Zwischenablage im Insert-Modus einfügen",
   })
 
-
-
-  -- ── Move lines ───────────────────────────────────────────────
-  -- Moved to cascade.nvim: <A-Up>/<A-Down> (normal, visual, insert) are bound
-  -- globally by cascade's preset. cascade reindents and re-sequences ordered
-  -- list blocks after the move; native :move behavior everywhere else.
 end
 
 return M
