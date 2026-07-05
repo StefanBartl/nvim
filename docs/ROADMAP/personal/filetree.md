@@ -12,9 +12,13 @@
 
 ---
 
+- config schalter, mitdeem der user umschalten kann zwischen einer biehsreigen message wenn man eine neuie file/ordner erstellt `a` (lange nachricht) oder eine kurze nahricht dieoder eben keine nachreicht, sonder eigentlich reicht auchv wenn nur "Path:" oder so auf die art steht, halt dfast nichts. cool wäre es, weis aber nicht ob das einfach geht, wenn es möglich wäre, dass wen man `a` eiingibt (create new)das mit `?` ein urzes cheatsheet pupued, indem steht dass nur pfa erstellt file pfad mit / oder \ am ende erstellt ordner suw...
+
+
+
 ## Bugs
 
-CWD sync: File not in CWD
+CWD sync: File not in CWD. Change to CWD?
 
 ## General
 

@@ -2,19 +2,18 @@
 
 ## Table of content
 
-  - [1. Module & Plugins durchgehen](#1-module-plugins-durchgehen)
+  - [1. Module durchgehen](#1-module-durchgehen)
   - [2. README & Doc-Spec anpassen](#2-readme-doc-spec-anpassen)
-  - [3. Tests](#3-tests)
-  - [4. Healthchecks & Config-Struktur](#4-healthchecks-config-struktur)
-  - [5. Cross-Plattform](#5-cross-plattform)
-  - [6. Defaults-Struktur](#6-defaults-struktur)
-  - [7. User-seitige Konfigurierbarkeit](#7-user-seitige-konfigurierbarkeit)
-  - [9. Which-Key](#9-which-key)
-  - [10. Git](#10-git)
+  - [3. Healthchecks & Config-Struktur](#3-healthchecks-config-struktur)
+  - [4. Cross-Plattform](#4-cross-plattform)
+  - [5. Defaults-Struktur](#5-defaults-struktur)
+  - [6. User-seitige Konfigurierbarkeit](#6-user-seitige-konfigurierbarkeit)
+  - [8. Which-Key](#8-which-key)
+  - [9. Git](#9-git)
 
 ---
 
-## 1. Module & Plugins durchgehen
+## 1. Module durchgehen
 
 - [ ] **CHEATSHEETS** schreiben:
     - [ ]Repo soll eine eigene `/docs/BINDINGS.md` haben mit:
@@ -55,6 +54,10 @@
   - [ ] Badges & ASCII implementieren
   - [ ] Sollte auf englisch sein! (auch die `/doc/**` vimdoc file)
   - [ ] Zu Beginn, nach der ascii art, ein kurzer `>` absatz mit eienen link zu einen der anderen Plugins, vielleicht jenes, welches am besten dieses ergänzt.
+- [ ] Auf implementierte Features checken die für `e:\repos\filetree.nvim` (Neotree, NvimTree, Netrw, ...) interessant sind:
+  - [ ] Eine Featurlist daraus erstellen indem enthalten ist: Welches Feature; Origin (Datei, Zeile); Wo es thematisch angelegt ist; Infos/Was sonst noch Sinn macht
+  - [ ] `/docs/ROADMAP/NEOTREE_FEATURES.md` anlegen: Dort kommt eine Übersicht/Auflistung aller dieser Features hin
+  - [ ] Nur zur Info: Die Features werden später dann alle später in `filetree.nvim` eingebaut und zwar **Cross-Platform** & **Filetree-Manager agnostisch**
 
 ---
 
@@ -65,16 +68,11 @@
   - [ ] Im Installationsblock entweder `lazy = false` **oder** `event = "VeryLazy"` oder was sonst auch passt explizit angeben (siehe [spec](./spec.md))
   - [ ] `dir = vim.env...` aus den READMEs entfernen (kann jeder Dev sich selbst denken wenn er lokal entwickeln will)
   - [ ] Lizenzverweiße löschen, keine lizenz!
+- [ ] `.luarc.json` im Projektroot anlegen
 
 ---
 
-## 3. Tests
-
-- [ ] Wenn sinnvoll: `docs/TESTS/**` Testdateien für die Features schreiben
-
----
-
-## 4. Healthchecks & Config-Struktur
+## 3. Healthchecks & Config-Struktur
 
 - [ ] Soll `:checkhealth` unterstützen → prüfen!
   - [ ] `/config`-Ordner mit `/config/DEFAULTS.lua` in jedem Module/Plugin, wo sinnvoll
@@ -88,22 +86,22 @@
 
 ---
 
-## 5. Cross-Plattform
+## 4. Cross-Plattform
 
 - [ ] Auf **Cross-Plattform** abklopfen: Alles soll Cross-Plattform sein
 
 ---
 
-## 6. Defaults-Struktur
+## 5. Defaults-Struktur
 
 - [ ] Explizite Datei für User-Config-Defaults: `/config/init.lua` && `/config/DEFAULTS.lua`
 
 ---
 
-## 7. User-seitige Konfigurierbarkeit
+## 6. User-seitige Konfigurierbarkeit
 
 - [ ] `config/init.lua` & `config/DEFAULTS.lua` für pluginseitige Defaults anlegen
-- [ ] Möglichst viele Features sollen vom User aus einstellbar sein, z. B.:
+- [ ] Möglichst viele Features sollen vom User aus einstellbar sein z. B.:
 
   ```lua
   {
@@ -136,16 +134,20 @@
 
 ---
 
-## 9. Which-Key
+## 8. Which-Key
 
-- [ ] LLW-Mappings sollen `which-key` unterstützen
+- [ ] Mappings sollen `which-key` unterstützen
 
 ---
 
-## 10. Git
+## 9. Git
 
-- [ ] Alles committen (commit message ausgeben)
+- [ ] Für github.com erledige folgendes (`gh` ist installiert und authorisiert):
+  - [ ] Kurzinfo für Repo schreiben: `gh repo edit --description "Mein cooles Neovim Listen-Plugin" --homepage "https://deine-seite.de"`
+  - [ ] Korrekte, passende Keywords für Repo eingeben: `gh repo edit --add-topic "neovim,lua,plugin"`
+  - [ ] usw.
 - [ ] Branch auf `main` umstellen wenn noch nicht geschehen
+- [ ] Alle features/bugfixes committen und pushen (wenn nicht möglich: commit message ausgeben)
 
 ---
 

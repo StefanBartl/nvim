@@ -1,43 +1,44 @@
 
-1. CHECKLIST: Du findes unter C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/MATERIALS/CHECKLIST.md eine Checklist zum abarbeiten
-2. CHECKLIS1T-FINISH: Du findest in C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/MATERIALS/FINISH.md eine Aufgabeliste zum abarbeiten!
-3. Finish_Me:
+1. Du findes unter C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/MATERIALS/CHECKLIST.md eine Checklist zum abarbeiten
+2. Finish_Me:
 
 ---
 
 1: Einmal ausgeführt
 2: Zweimal ausgeführt
-...
-...
+F: Finish bereits aufgeteilt nach Checklist & FinishMe; Checklisten in FinishMe
 
-|         Repository          | Checklist | Finish   | FinishMe |
-| --------------------------- | --------- | -------- | -----    |
+|         Repository          | Checklist | Finish   | FinishMe | Arch&Coding | Zentrale Prinzipien | Checklist |
+| --------------------------- | --------- | -------- | -------- | ----------- | ------------------- | --------- |
 |     `/buffer-ctx.nvim`      |    [1]    |   [ ]    |          |
 |   `/color_my_ascii.nvim`    |    [1]    |   [1]    |          |
 |   `/cascade.nvim`           |    [1]    |   [1]    |          |
 |      `/debugging.nvim`      |    [1]    |   [1]    |          |
-|        `/diff.nvim`         |    [ ]    |   [ ]    |          |
-|       `/emojis.nvim`        |    [ ]    |   [ ]    |          |
-|       `/fileops.nvim`       |    [ ]    |   [ ]    |          |
+|        `/diff.nvim`         |    [1]    |   [1]    |          |
+|       `/emojis.nvim`        |    [1]    |   [1]    |          |
+|       `/fileops.nvim`       |    [1]    |   [1]    |          |
 |   `/filetreepicker.nvim`    |    [ ]    |   [ ]    |          |
 |   `/filetree.nvim`          |    [1]    |   [1]    |          |
-|    `/github_stats.nvim`     |    [ ]    |   [ ]    |          |
-|       `/gopath.nvim`        |    [ ]    |   [ ]    |          |
-|      `/learn-cli.nvim`      |    [ ]    |   [ ]    |          |
-|         `/lib.nvim`         |    [ ]    |   [ ]    |          |
+|    `/github_stats.nvim`     |    [1]    |   [1]    |          |
+|       `/gopath.nvim`        |    [1]    |   [1]    |          |
+|         `/lib.nvim`         |    [1]    |   [1]    |          |
 |      `/markdown.nvim`       |    [1]    |   [1]    |          |
-|       `/mdview.nvim`        |    [ ]    |   [ ]    |          |
-|       `/migrate.nvim`       |    [ ]    |   [ ]    |          |
-|       `/mygrep.nvim`        |    [ ]    |   [ ]    |          |
+|       `/migrate.nvim`       |    [1]    |   [1]    |          |
 |       `/nvim-cmdlog`        |    [ ]    |   [ ]    |          |
 |     `/nvim-containers`      |    [ ]    |   [ ]    |          |
-|        `/open.nvim`         |    [ ]    |   [ ]    |          |
-|       `/pdfport.nvim`       |    [ ]    |   [ ]    |          |
+|        `/open.nvim`         |    [1]    |   [1]    |          |
+|       `/pdfport.nvim`       |    [1]    |   [1]    |          |
 |       `/pickers.nvim`       |    [1]    |   [1]    |          |
-|   `/project-insight.nvim`   |    [ ]    |   [ ]    |          |
-|     `/recommender.nvim`     |    [ ]    |   [ ]    |          |
+|   `/project-insight.nvim`   |    [1]    |   [F]    |          |
+|     `/recommender.nvim`     |    [1]    |   [F]    |          |
 |      `/replacer.nvim`       |    [ ]    |   [ ]    |          |
-|      `/reposcope.nvim`      |    [ ]    |   [ ]    |          |
+|      `/reposcope.nvim`      |    [1]    |   [F]    |          |
+
+
+Muss generell noch debugged werden:
+|       `/mdview.nvim`        |    [ ]    |   [ ]    |          |
+
+Geht evetnuell in pickers.nvim auf:
 | `/telescope-selected-index` |    [ ]    |   [ ]    |          |
 
 ---

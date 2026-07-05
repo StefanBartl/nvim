@@ -277,11 +277,17 @@ return apply_source({
   {
     "StefanBartl/replacer.nvim",
     cmd = { "Replace" },
-    dependencies = { "ibhagwan/fzf-lua" },
+    dependencies = {
+      "ibhagwan/fzf-lua",
+      "StefanBartl/lib.nvim",
+      -- "j-hui/fidget.nvim"
+    },
     config = function()
       require("replacer").setup({
         engine = "telescope",
         default_scope = "%",
+        progress_style = "statusline",   -- "auto" | "notify" | "statusline" | "fidget" | "float" (needs lib.nvim)
+
       })
     end,
   },
