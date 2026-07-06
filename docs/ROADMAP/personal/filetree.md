@@ -1,5 +1,29 @@
 # `filetree.nvim`
 
+```vim
+   Error  1:57:46 PM notify.error lazy.nvim Failed to run `config` for filetree.nvim
+
+...anBartl/AppData/Local/nvim/lua/plugins/personal/init.lua:341: module 'filetree' not found:
+	no field package.preload['filetree']
+	cache_loader: module 'filetree' not found
+	cache_loader_lib: module 'filetree' not found
+	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy/lib.nvim/lua/filetree.lua'
+	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy/lib.nvim/lua/filetree/init.lua'
+	no file '.\filetree.lua'
+	no file 'C:\Program Files\Neovim\bin\lua\filetree.lua'
+	no file 'C:\Program Files\Neovim\bin\lua\filetree\init.lua'
+	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy-rocks/telescope.nvim/share/lua/5.1/filetree.lua'
+	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy-rocks/telescope.nvim/share/lua/5.1/filetree/init.lua'
+	no file '.\filetree.dll'
+	no file 'C:\Program Files\Neovim\bin\filetree.dll'
+	no file 'C:\Program Files\Neovim\bin\loadall.dll'
+	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy-rocks/telescope.nvim/lib/lua/5.1/filetree.dll'
+	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy-rocks/telescope.nvim/lib64/lua/5.1/filetree.dll'
+
+# stacktrace:
+  - lua/plugins/personal/init.lua:341 _in_ **config**
+```
+
 
 ## Table of content
 
