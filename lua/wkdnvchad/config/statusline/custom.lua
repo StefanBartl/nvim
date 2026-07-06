@@ -8,6 +8,7 @@ local hl_module = lazy.require("wkdnvchad.ui.statusline.modules.highlighting")
 local lsp_module = lazy.require("wkdnvchad.ui.statusline.modules.lsp")
 local cursor_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl")
 local get_separators = lazy.require("wkdnvchad.ui.statusline.utils.get_separators")
+local replacer_progress = lazy.require("wkdnvchad.ui.statusline.modules.replacer_progress")
 
 -- ============================================================================
 -- Modules
@@ -28,10 +29,15 @@ return {
         "%=",
         "diagnostics",
         "lsp",
+        "replacer_progress",
         "cursor",
       },
 
       modules = {
+        replacer_progress = function()
+          return replacer_progress()
+        end,
+
         --- Mode (NvChad default überschreiben mit Separatoren)
         --- @return string
         mode = function()

@@ -22,7 +22,7 @@ local personal_utils = require("plugins.personal.utils")
 ---   "disabled" → ALLE aus
 ---@type "auto"|PersonalRepoMode
 
-local SOURCE = "dir"
+local SOURCE = "remote"
 
 --- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
 ---@type table<string, PersonalRepoMode>
@@ -50,7 +50,6 @@ local MODE = {
   ["debugging.nvim"] = "dir",
   ["diff.nvim"] = "dir",
   ["nvim-cmdlog"] = "dir",
-  ["telescope-selected-index"] = "dir",
   ["emojis.nvim"] = "dir",
   -- ["github_stats.nvim"]     = "dir",
   -- ["learn-cli.nvim"]        = "dir",
@@ -184,6 +183,12 @@ return apply_source({
             keys = { files = "<leader>wvf", grep = "<leader>wvg" },
           },
         },
+
+        selected_index = {
+          enabled = true,
+          position = "right_align", -- "overlay" | "right_align" | "eol" | "top" | "down"
+          highlight = { preset = "accent" },
+        },
       })
     end,
   },
@@ -286,8 +291,7 @@ return apply_source({
       require("replacer").setup({
         engine = "telescope",
         default_scope = "%",
-        progress_style = "statusline",   -- "auto" | "notify" | "statusline" | "fidget" | "float" (needs lib.nvim)
-
+        progress_style = "statusline", -- "auto" | "notify" | "statusline" | "fidget" | "float" (needs lib.nvim)
       })
     end,
   },
@@ -408,20 +412,6 @@ return apply_source({
       require("cmdlog").setup({
         picker = "telescope",
       })
-    end,
-  },
-
-  {
-    "StefanBartl/telescope-selected-index",
-    event = "VeryLazy",
-    opts = {
-      position = "right_align",
-      highlight = {
-        preset = "error",
-      },
-    },
-    config = function(_, opts)
-      require("telescope_selected_index").setup(opts)
     end,
   },
 
@@ -550,19 +540,5 @@ return apply_source({
     config = function()
       require("recommender_nvim").setup()
     end,
-  },
-
-  {
-    "StefanBartl/mdview.nvim",
-    name = "mdview.nvim",
-    lazy = false,
-    cmd = { "MarkdownViewStart", "MarkdownViewStop" },
-    config = function()
-      if pcall(require, "mdview") then
-        require("mdview").setup()
-      else
-        vim.notify("mdview.nvim: module not found after loading plugin files", vim.log.levels.ERROR)
-      end
-    end,
-  },
+  }
 })

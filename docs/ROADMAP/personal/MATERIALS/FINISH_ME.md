@@ -1,7 +1,4 @@
 # FINISH: von mir ausführen
-telescopew-seöected-index iausprobieren
-EINZELN übergeben!
-
 
 - [ ] Schlachtplan erstellen für jeden dieser Punkte:
   - [ ] Checklisten einzeln, nacheinander anwenden; Gehe dafür jede List einzeln durch und erstelle für jede eine `/docs/ROADMAP/**.md` wobei `**` also der Dateiname jeweils der List-Name ist:
@@ -10,7 +7,7 @@ EINZELN übergeben!
       - [Checklist.md](E:/repos/Notes/MyNotes/Checklists/Lua/Checklist.md) -> (`/docs/ROADMAP/Checklist.md`)
   - [ ] Alle features/bugfixes committen und pushen (wenn nicht möglich: commit message ausgeben)
   - [ ] `/docs/ROADMAP.md` durchgehen und Plan zur Implementierung erstellen
-- [ ] `/NEOTREE_FEATURES1`
+  - [ ] `/NEOTREE_FEATURES` durchgehen und bewerten, was damit gemacht wird
 - [ ] `:Recommender` durch alle Module laufen lassen
 - [ ] `vimdoc`-Datei `doc/{NAME}.txt` + `tags`-Datei generieren? Bzw. gibt es ein Autocmd, damit die Tgas bei jeden User der das Repo ladet automatisch erstellt werden?
 - [ ] Alle Plugins auf `.nvim`-Namensendung umstellen (wenn möglich)

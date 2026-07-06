@@ -17,28 +17,34 @@ F: Finish bereits aufgeteilt nach Checklist & FinishMe; Checklisten in FinishMe
 |        `/diff.nvim`         |    [1]    |   [1]    |          |
 |       `/emojis.nvim`        |    [1]    |   [1]    |          |
 |       `/fileops.nvim`       |    [1]    |   [1]    |          |
-|   `/filetreepicker.nvim`    |    [ ]    |   [ ]    |          |
 |   `/filetree.nvim`          |    [1]    |   [1]    |          |
 |    `/github_stats.nvim`     |    [1]    |   [1]    |          |
 |       `/gopath.nvim`        |    [1]    |   [1]    |          |
 |         `/lib.nvim`         |    [1]    |   [1]    |          |
 |      `/markdown.nvim`       |    [1]    |   [1]    |          |
 |       `/migrate.nvim`       |    [1]    |   [1]    |          |
-|       `/nvim-cmdlog`        |    [ ]    |   [ ]    |          |
-|     `/nvim-containers`      |    [ ]    |   [ ]    |          |
+|       `/nvim-cmdlog`        |    [1]    |   [F]    |          |
+|     `/nvim-containers`      |    [1]    |   [F]    |          |
 |        `/open.nvim`         |    [1]    |   [1]    |          |
 |       `/pdfport.nvim`       |    [1]    |   [1]    |          |
 |       `/pickers.nvim`       |    [1]    |   [1]    |          |
 |   `/project-insight.nvim`   |    [1]    |   [F]    |          |
 |     `/recommender.nvim`     |    [1]    |   [F]    |          |
-|      `/replacer.nvim`       |    [ ]    |   [ ]    |          |
+|      `/replacer.nvim`       |    [1]    |   [F]    |          |
 |      `/reposcope.nvim`      |    [1]    |   [F]    |          |
 
 
 Muss generell noch debugged werden:
-|       `/mdview.nvim`        |    [ ]    |   [ ]    |          |
+| `/mdview.nvim`              |    [ ]    |   [ ]    |          |
 
-Geht evetnuell in pickers.nvim auf:
-| `/telescope-selected-index` |    [ ]    |   [ ]    |          |
+Geht eventuell in filetree.nvim auf:
+| `/neotree-fs-refactor`      |    [ ]    |   [ ]    |          |
+
+Fertig machen?
+| `/loomAI`                   |    [ ]    |   [ ]    |          |
+
+Was damit machen:
+| `/learn-cli.nvim`           |    [ ]    |   [ ]    |          |
 
 ---
+
