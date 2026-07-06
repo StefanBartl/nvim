@@ -233,28 +233,40 @@ local function place_occurrences(pat, srow, erow)
 
   for l0 = srow, erow do
     local line = vim.api.nvim_buf_get_lines(0, l0, l0 + 1, false)[1] or ""
-    local start = 0
-    while true do
-      ---@diagnostic disable-next-line: deprecated
-      local _, s, e = unpack(vim.fn.matchstrpos(line, pat, start))
-      if s == -1 then
-        break
-      end
 
-      local exclude = (l0 == cur_l0) and (s <= cur_cbyte) and (cur_cbyte < e)
-      if not exclude then
-        if marking == "leadingchar" then
-          add_range(l0, s, s + 1, true)
-        elseif marking == "tailchar" then
-          add_range(l0, e - 1, e, true)
-        elseif marking == "firstN" then
-          local upto = math.min(s + firstN, e)
-          add_range(l0, s, upto, true)
-        else -- "word"
-          add_range(l0, s, e, false)
+    -- A line containing an embedded NUL byte cannot be represented as a plain
+    -- Vimscript String; vim.fn.* silently converts such a Lua string into a
+    -- Blob when crossing into Vimscript, and matchstrpos() then throws
+    -- "E976: Using a Blob as a String" because it expects a String argument.
+    -- This happens e.g. when a binary file gets loaded into a buffer (neo-tree
+    -- rename_buffer() calls bufload() on the renamed path, which fires this
+    -- module's BufEnter handler even for non-text buffers) — skip such lines.
+    if not line:find("\0", 1, true) then
+      local start = 0
+      while true do
+        ---@diagnostic disable-next-line: deprecated
+        local ok, res = pcall(vim.fn.matchstrpos, line, pat, start)
+        if not ok then break end
+        local _, s, e = unpack(res)
+        if s == -1 then
+          break
         end
+
+        local exclude = (l0 == cur_l0) and (s <= cur_cbyte) and (cur_cbyte < e)
+        if not exclude then
+          if marking == "leadingchar" then
+            add_range(l0, s, s + 1, true)
+          elseif marking == "tailchar" then
+            add_range(l0, e - 1, e, true)
+          elseif marking == "firstN" then
+            local upto = math.min(s + firstN, e)
+            add_range(l0, s, upto, true)
+          else -- "word"
+            add_range(l0, s, e, false)
+          end
+        end
+        start = s + 1
       end
-      start = s + 1
     end
   end
 end
@@ -280,6 +292,9 @@ local function update_now()
     return
   end
   if not CC().enabled then
+    return
+  end
+  if vim.bo[0].binary then
     return
   end
   if is_large_file_guard() then
