@@ -4,6 +4,9 @@
 - netree-fs-refactor
 - `config` durchgehen auf fetaures, die zu meinen eigenen plugins passen
 
+
+
+
 ## Table of content
 
   - [ZIEL](#ziel)
@@ -57,17 +60,6 @@
 ## Bugs
 
 1. manchmal bricht `C-c` mit sigint nvim ab, es solte aber alles kopieren des buffers
-
----
-
-## menus
-
-```ascii-vim
-   Error  19:26:07 msg_show.lua_error vim.schedule callback: ...AppData/Local/nvim-data/lazy/menu/lua/menus/neo-tree.lua:17: attempt to call local 'cb' (a nil value)
-stack traceback:
-	...AppData/Local/nvim-data/lazy/menu/lua/menus/neo-tree.lua:17: in function 'fn'
-	vim/_core/editor.lua:273: in function <vim/_core/editor.lua:272>
-```
 
 ---
 

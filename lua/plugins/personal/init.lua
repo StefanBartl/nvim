@@ -22,7 +22,7 @@ local personal_utils = require("plugins.personal.utils")
 ---   "disabled" → ALLE aus
 ---@type "auto"|PersonalRepoMode
 
-local SOURCE = "remote"
+local SOURCE = "dir"
 
 --- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
 ---@type table<string, PersonalRepoMode>

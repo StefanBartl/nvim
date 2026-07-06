@@ -1,30 +1,5 @@
 # `filetree.nvim`
 
-```vim
-   Error  1:57:46 PM notify.error lazy.nvim Failed to run `config` for filetree.nvim
-
-...anBartl/AppData/Local/nvim/lua/plugins/personal/init.lua:341: module 'filetree' not found:
-	no field package.preload['filetree']
-	cache_loader: module 'filetree' not found
-	cache_loader_lib: module 'filetree' not found
-	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy/lib.nvim/lua/filetree.lua'
-	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy/lib.nvim/lua/filetree/init.lua'
-	no file '.\filetree.lua'
-	no file 'C:\Program Files\Neovim\bin\lua\filetree.lua'
-	no file 'C:\Program Files\Neovim\bin\lua\filetree\init.lua'
-	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy-rocks/telescope.nvim/share/lua/5.1/filetree.lua'
-	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy-rocks/telescope.nvim/share/lua/5.1/filetree/init.lua'
-	no file '.\filetree.dll'
-	no file 'C:\Program Files\Neovim\bin\filetree.dll'
-	no file 'C:\Program Files\Neovim\bin\loadall.dll'
-	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy-rocks/telescope.nvim/lib/lua/5.1/filetree.dll'
-	no file 'C:\Users\StefanBartl\AppData\Local\nvim-data/lazy-rocks/telescope.nvim/lib64/lua/5.1/filetree.dll'
-
-# stacktrace:
-  - lua/plugins/personal/init.lua:341 _in_ **config**
-```
-
-
 ## Table of content
 
   - [General](#general)
@@ -43,7 +18,18 @@
 
 ## Bugs
 
-- [ ]
+- [ ] `a` create: `?` funktioniert in der prompt nicht, obwohl datei und folder namen mit `?` denke ich sowie so ungültig wären, daher kann man `?`  durchaus auf Cheatsheet open mapen im insert modus oder was sagst du? wenn nein, dann cheatsheet komplett weg lassen dafür und aus dem title für `a` create prompt ? herausnehmen
+- [ ] `x` oder `y`, slebst mit `m` msrkieren avor, wenn ch dann `p` eingbe zeigt es immre an "Clipboard is empty"
+- [ ] Die hidden ordner sind default nicht hidden, erste wenn ch `H` ausführe werden sie (und die richitigen) ordner versteckt. Sie solltedefault aber schon hidden sein
+- [ ] `Tab` preview funktioniert nicht. es wird immer "next tab" ausgelöst anstatt preview
+
+
+- [ ] `cwd_sync`
+  - [ ] BUG: Wenn ich ein cwd sync auslöse, zb ffne ich über das harpoon menu eine file in einem andern projekt während der filetree offen ist, dann pasiert momentan folgerndes: Es wird eine prompt ausgeben "File not in cwd. Change to new cwd?" oder so auf die art. Das sollte nicht sein, wenn ich cwd_sync als feature aktiviert habe, dann soll er immer das cqwd syncen ium filetere - sobald im fokusierten buffer ein anderes cwd ist, dann der sync
+  - [ ] Eine neue option - für die user config & default - mit der man cwd_sync so steuern kann, dass es versucht bei einem cwd_sync immer den nächstgelegene Folder mit .git hinsynced. DAmit kann verhindert werden, dass cwd_sync immer den übergeorndeten folder der files nimmt und man sehr häufoige cwd spprünge/syncs hat. Es wäre natürlich super wenn
+    - [ ] es eine `lib.nvim` modul schreiben würd, das immer das nächstgelgende .git folder findet - bzw. einen bestimmten Folder findet und den korrekte fad zurückgibt, so könnte man eine liste an möglichen flder die au fein projekt hinweisen übergeben, wie .gi oder node_modules usw... Und diesen verwenden wir dann in filetree.nvim
+    - [ ] Dies option soll der user daeaktviern können, default ist es aktiv, optional kann er auch eine liste an ordnern übergeben zu denen geachtet wierden soll
+    - [ ] Irgendein system brauchen wir, dass möglichst gute performancer sicherstellt, vielleicht ein cache oder eine art hot path, indem zu jheder in der session aufgemachten file das püassende cwd einmal errechnet und dann temporär für die sessiongespeichert wird, vielleicht mit  einen ringbuffer, oder vielelicht gibt es eine bessere option...
 
 ## General
 
@@ -114,4 +100,26 @@ lua\config\neotree\state\tree.lua
 3. `e:\repos\neotree-fs-refactor.nvim`
 
 ---
+
+## TEMP
+
+rotzdem passt da einiges nicht. ich übergeb dir nun die liste der keymaos so wie sie super funkltionert hjabe als ich noch alles in der nvim config hatte, als neotree user config. Genaui so von den keymaps her sol es auch jetzt sein. daher:
+
+Gehe ddie liste mit den aktuell zughwiesenen keymPs kexmap für kexymapo durch und checke>:
+
+
+
+* ist das mapping kgenasu auf der gelichen taste?
+
+* Gib es das mapping überhaupt`?
+
+* Ist es ein neus mapping ? (die gehen wir dann separat durech, ob wir jede neer neuen wirlich benötigen)
+
+
+
+gib die lsite danach bitte mal aus und ich werded dann feebak geben. heir mal die liste der keymaos so wie sie sein sollten:
+
+
+
+<!-- # Neo-tree Keymaps Übersicht
 
