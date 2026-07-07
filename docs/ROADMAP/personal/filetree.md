@@ -14,16 +14,47 @@
 
 ## Neue Features
 
-- [ ]
+- [ ] Userconfig schalter, mit dmm man angeben kann, wo man confirmations nach aktion haben will, also zb.:
+  - Beim pasten mit `p`
+  - Beim entfernen mit `d`
+  - Beim .... also alle aktionen, die dementsprechend confiramtion verlangen könnten
+
+  In der user config sol dan so in etwa:
+
+  ```lua
+  {
+    "StefanBartl/filetree.nvim",
+    event = "VeryLazy", -- must load AFTER the tree plugin's config function runs
+    dependencies = {
+      "StefanBartl/lib.nvim", -- shared helpers (neo-tree node utils, etc.)
+      -- only ONE tree plugin is needed:
+      "nvim-neo-tree/neo-tree.nvim",
+      -- or: "nvim-tree/nvim-tree.lua",
+    },
+    config = function()
+      -- That's it — every feature is on by default.
+      require("filetree").setup({
+        adapter = "neotree",
+        confirmation = true, -- Alle confiramtoins an
+        --oder
+        confirmations = {
+          delete = true,
+          create = false,
+          --....
+        }
+      })
+    end,
+  },
+  ```
+
+  Wobei de genaue bezeichnung und umsetzung du etewas vorschlagen kanns!
+
+- [ ] Beim createn mit `a` soll die erstellte file gleich als buffer geöffnet und fokusiiert werden.
 
 ## Bugs
 
-- [ ] `a` create: `?` funktioniert in der prompt nicht, obwohl datei und folder namen mit `?` denke ich sowie so ungültig wären, daher kann man `?`  durchaus auf Cheatsheet open mapen im insert modus oder was sagst du? wenn nein, dann cheatsheet komplett weg lassen dafür und aus dem title für `a` create prompt ? herausnehmen
-- [ ] `x` oder `y`, slebst mit `m` msrkieren avor, wenn ch dann `p` eingbe zeigt es immre an "Clipboard is empty"
-- [ ] Die hidden ordner sind default nicht hidden, erste wenn ch `H` ausführe werden sie (und die richitigen) ordner versteckt. Sie solltedefault aber schon hidden sein
-- [ ] `Tab` preview funktioniert nicht. es wird immer "next tab" ausgelöst anstatt preview
-
-
+- [ ] `U`: Trash Undo scheint nicht zufunkltnioeren
+- [ ] `Tab` preview hat keine lsp highlghtiung, das wäre suer, soll auch vom suer einstellbar sein ob er das will oder nicht
 - [ ] `cwd_sync`
   - [ ] BUG: Wenn ich ein cwd sync auslöse, zb ffne ich über das harpoon menu eine file in einem andern projekt während der filetree offen ist, dann pasiert momentan folgerndes: Es wird eine prompt ausgeben "File not in cwd. Change to new cwd?" oder so auf die art. Das sollte nicht sein, wenn ich cwd_sync als feature aktiviert habe, dann soll er immer das cqwd syncen ium filetere - sobald im fokusierten buffer ein anderes cwd ist, dann der sync
   - [ ] Eine neue option - für die user config & default - mit der man cwd_sync so steuern kann, dass es versucht bei einem cwd_sync immer den nächstgelegene Folder mit .git hinsynced. DAmit kann verhindert werden, dass cwd_sync immer den übergeorndeten folder der files nimmt und man sehr häufoige cwd spprünge/syncs hat. Es wäre natürlich super wenn

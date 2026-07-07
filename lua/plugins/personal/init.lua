@@ -281,7 +281,7 @@ return apply_source({
 
   {
     "StefanBartl/replacer.nvim",
-    cmd = { "Replace" },
+    cmd = { "Replace", "Replacer", "Surround", "Wrap" },
     dependencies = {
       "ibhagwan/fzf-lua",
       "StefanBartl/lib.nvim",
@@ -338,7 +338,9 @@ return apply_source({
     },
     config = function()
       -- That's it — every feature is on by default.
-      require("filetree").setup({ adapter = "neotree" })
+      require("filetree").setup({
+        adapter = "neotree"
+      })
     end,
   },
 
@@ -497,6 +499,7 @@ return apply_source({
   {
     "StefanBartl/pdfport.nvim",
     cmd = {
+
       "PdfPort",
       "PdfPortText",
       "PdfPortFloat",
