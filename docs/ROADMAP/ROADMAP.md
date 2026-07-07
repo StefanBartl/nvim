@@ -1,11 +1,8 @@
 # Roadmap for `main-workstation` branch
 
-- filetreepicker
-- netree-fs-refactor
+- neotree-fs-refactor
 - `config` durchgehen auf fetaures, die zu meinen eigenen plugins passen
-
-
-
+- `mdview.nvim`: Das war eigentlich mein Websocket Lern Projekt....
 
 ## Table of content
 
@@ -23,13 +20,14 @@
 
 1. ROADMAP.md durchgehen
 2. Alle plugin fähigen Module augliedern
-3. `/autcmds`
+3. `BINDINGS.lua`: In der Descrtiptionder Keymaps und Usrcmds: Das plugin selbst nicht nennen,, wie zb.: "[iletree]:" in fileteree.nvim keymap descreiption
+4. `/autcmds`
   1. passt zu `/bindings` ?
   2. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
-4. Checklisten anwenden
+5. Checklisten anwenden
   1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
   2. ToDo's duchgehen
-5. Branch küren (so wenig commits wit möglch, damit die .git folder nicht groß ist)
+6. Branch küren (so wenig commits wit möglch, damit die .git folder nicht groß ist)
 
 ---
 

@@ -533,12 +533,28 @@ return apply_source({
     },
   },
 
-  { -- TODO: Nicht gepushed, nur readme drinnen
+  {
+    "StefanBartl/mdview.nvim",
+    dependencies = { "StefanBartl/lib.nvim" },
+    ft = { "markdown" },
+    cmd = {
+      "MDViewStart",
+      "MDViewStop",
+      "MDViewOpen",
+      "MDViewShowWebLogs",
+      "MDViewPreviewTab",
+    },
+    config = function()
+      require("mdview").setup()
+    end,
+  },
+
+  {
     "StefanBartl/recommender.nvim",
     ft = { "lua" },
     cmd = { "Recommender" },
     config = function()
       require("recommender_nvim").setup()
     end,
-  }
+  },
 })
