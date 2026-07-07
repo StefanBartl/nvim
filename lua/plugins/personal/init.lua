@@ -522,6 +522,10 @@ return apply_source({
   {
     "StefanBartl/markdown.nvim",
     ft = { "markdown", "mdx", "md" },
+    -- Soft dependency: markdown.nvim's fenced_scope feature consumes
+    -- color_my_ascii's fence API when present (falls back to a built-in scanner
+    -- otherwise). Listing it here just guarantees load order in this config.
+    dependencies = { "StefanBartl/color_my_ascii.nvim" },
     config = function()
       require("markdown_nvim").setup()
     end,
