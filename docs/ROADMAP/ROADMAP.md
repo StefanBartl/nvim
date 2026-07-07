@@ -4,6 +4,12 @@
 - `config` durchgehen auf fetaures, die zu meinen eigenen plugins passen
 - `mdview.nvim`: Das war eigentlich mein Websocket Lern Projekt....
 
+- pdfport tags
+- filertreee_ beim pasten bestätigung nicht notwendig. vieleicht wäre das auhc in der user config super einstellbar:  alle aktinen, bei denen confirmation möglih ist, togglebar machen
+- color_my_Ascciii: Innerhlab eines markdown enced block soll markdow headlines als ein zusammengeehörigesm neues dokument behandelt werden, dass auch... markdown.nvim nicht im toc aufgenommen wird (wenn markdown.nvim hierzu color my ascii as dependency benötigt ist es ok, weventuelle mehr features denkbar?)
+ cascade: C-y soll inkrementiern! checken, was es jetzt macht1
+- lazy git: `O`: template fehler
+
 ## Table of content
 
   - [ZIEL](#ziel)

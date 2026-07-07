@@ -1,5 +1,9 @@
 # `mdview.nvim`
 
+[mdview.runner]  Running on http://localhost:43219
+ws endpoint: ws://localhost:43219/ws
+[mdview.runner]  runner: detected backend server port 43219
+
 ## Table of content
 
   - [mdview.nvim Rewrite: Go Relay + Rust/WASM Rendering](#mdviewnvim-rewrite-go-relay-rustwasm-rendering)
