@@ -127,5 +127,28 @@ return function(root)
     end
   end
 
+  -- ===================================================================
+  -- LOCAL DEV PLUGINS (personal *.nvim repos)
+  -- ===================================================================
+  -- Make the type definitions of lazy-loaded dev plugins resolvable even before
+  -- the plugin is loaded (they're only on the runtimepath once their ft/cmd
+  -- fires). This gives value completion in the plugin specs — e.g.
+  -- `ColorMyAscii.Config` / `Mkdn.Config`, so `preset = "…"` suggests the fence
+  -- presets. Guarded by fs_stat, so it's a no-op when the repos aren't present.
+  local repos = vim.env.REPOS_DIR
+  if type(repos) == "string" and repos ~= "" then
+    repos = repos:gsub("\\", "/")
+    local dev_type_dirs = {
+      repos .. "/color_my_ascii.nvim/lua",
+      repos .. "/markdown.nvim/lua",
+    }
+    for _, path in ipairs(dev_type_dirs) do
+      local stat = (vim.uv or vim.loop).fs_stat(path)
+      if stat and stat.type == "directory" then
+        library[path] = true
+      end
+    end
+  end
+
   return library
 end

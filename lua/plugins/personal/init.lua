@@ -339,7 +339,7 @@ return apply_source({
     config = function()
       -- That's it — every feature is on by default.
       require("filetree").setup({
-        adapter = "neotree"
+        adapter = "neotree",
       })
     end,
   },
@@ -535,8 +535,13 @@ return apply_source({
     "StefanBartl/color_my_ascii.nvim",
     ft = "markdown",
     dependencies = { "StefanBartl/lib.nvim" }, -- optional, enables graceful keymap/notify integration
+    -- Typing `opts` as ColorMyAscii.Config makes lua_ls offer value completion
+    -- inside the config (e.g. `preset = "…"` suggests the fence-line presets).
+    -- Requires the plugin's types on the LSP path (lazydev/neodev or workspace lib).
+    ---@type ColorMyAscii.Config
     opts = {
-      -- Optional: Configuration here
+      -- Optional: Configuration here, e.g.
+      -- fence_line_highlight = { preset = "auto" }, -- type `"` after preset = for completion
     },
   },
 
