@@ -1,7 +1,8 @@
 # `filetree.nvim`
 
-performance!! beum datei öffnen, aus filetree raus öffnen
-
+- [ ] performance!! beim datei öffnen, aus filetree raus öffnen
+- [ ] ständig bleibt nvim hängen wenn ich dateien aus dem filetree aus öffne usw...
+- [ ] `I` auf Folder soll anzeigen, wieviele Dateien im Folder sind; Size zeigt bei Folder immer `0kb` an;
 
 ## Table of content
 

@@ -1,7 +1,6 @@
 # Roadmap for `main-workstation` branch
 
 - leader nF geht nicht?``
-
 - neotree-fs-refactor
 - `config` durchgehen auf fetaures, die zu meinen eigenen plugins passen
 - `mdview.nvim`: Das war eigentlich mein Websocket Lern Projekt....

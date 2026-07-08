@@ -1,5 +1,7 @@
 # FINISH: von mir ausführen
 
+- [ ] `doc/tags` macht auf der workstation immer noch probleme?
+
 ## `lib.nvim`
 
 - [ ]In `lib.nvim` implementieren:
