@@ -22,8 +22,9 @@
 - [ ] Alle Plugins auf `.nvim`-Namensendung umstellen (wenn möglich)
 - [ ] `Github Actions` einrichten (`luacheck` usw.)
 - [ ] `ProjectInsight stats lib` über alle Repos ausführen und gesammelte Übersicht erstellen
-- [ ] Wenn sinnvoll: `docs/TESTS/**` Testdateien für die Features schreiben
-  - [ ] Alle features/bugfixes committen und pushen (wenn nicht möglich: commit message ausgeben)
+- [ ] Wenn sinnvoll: `TESTS/**` Testdateien für die Features schreiben und_
+  - [ ] `docs/TESTS/**` verschiedben nach `TESTS/**`, sodass es im root des plugins st , nicht mehrr in `docs`
+- [ ] Alle features/bugfixes committen und pushen (wenn nicht möglich: commit message ausgeben)
 
 ---
 

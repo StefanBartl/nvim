@@ -1,5 +1,8 @@
 # `filetree.nvim`
 
+performance!! beum datei öffnen, aus filetree raus öffnen
+
+
 ## Table of content
 
   - [General](#general)
@@ -62,9 +65,17 @@
     - [ ] Dies option soll der user daeaktviern können, default ist es aktiv, optional kann er auch eine liste an ordnern übergeben zu denen geachtet wierden soll
     - [ ] Irgendein system brauchen wir, dass möglichst gute performancer sicherstellt, vielleicht ein cache oder eine art hot path, indem zu jheder in der session aufgemachten file das püassende cwd einmal errechnet und dann temporär für die sessiongespeichert wird, vielleicht mit  einen ringbuffer, oder vielelicht gibt es eine bessere option...
 
+
+
+## Neue Bindings
+
+- [ ] `]R` erlativer pfad zum Projekt root, welche unabhängig vom aktuellen cwd sein kann, dazu gibt es berreits eine Funktion, wie man projekt root finden kann am besten und zwar in `lib.nvim`, eventuel in `ignore` oder so. wenne s keine gibt, dan sollte eine erstellt werden. Außerdem: `]f` hat als pardon `[f`, und `]F` hat `[F]`, giobt es ein passendes für das neue `]R` ?
+
+
 ## General
 
 1. Alle keymaps prüfen
+2. wen cwd_syn akltiv , der filetee offen iost undzwischen den buffern hin und her gewwechselt wird, dann soll der filetree immer das neue cwd_yyncen wen ein buffer ein anderes hat als der vorige^
 
 ---
 
