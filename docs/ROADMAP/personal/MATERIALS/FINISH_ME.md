@@ -1,5 +1,7 @@
 # FINISH: von mir ausführen
 
+- [ ] Nvim startet, dann kann ich ein oaar sekunden was machen, dann freezed er mehrere minuten, dann geht es normal weiter
+  - [ ] Auch bei  Doppelklick freezed es, es könnte aber auh sein, dass das nur so wirkt, weil envim sowieso freezen würde..
 - [ ] `doc/tags` macht auf der workstation immer noch probleme?
 
 ## `lib.nvim`
