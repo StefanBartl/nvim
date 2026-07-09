@@ -337,9 +337,16 @@ return apply_source({
       -- or: "nvim-tree/nvim-tree.lua",
     },
     config = function()
-      -- That's it — every feature is on by default.
+      -- Every feature is on by default; cwd_sync is opt-in (auto-chdir), so
+      -- enable it explicitly. It anchors the cwd to the nearest .git ancestor on
+      -- buffer switch. reveal = false because neo-tree already follows the cwd
+      -- (bind_to_cwd + follow_current_file) — so cwd_sync only sets the cwd and
+      -- lets neo-tree root/reveal, instead of the two fighting each other.
       require("filetree").setup({
         adapter = "neotree",
+        features = {
+          cwd_sync = { enabled = true, reveal = false },
+        },
       })
     end,
   },
