@@ -4,6 +4,9 @@
   - [ ] Auch bei  Doppelklick freezed es, es könnte aber auh sein, dass das nur so wirkt, weil envim sowieso freezen würde..
 - [ ] `doc/tags` macht auf der workstation immer noch probleme?
 
+- Gibt es eube möglichkeit, bei nvim crashes, relevante logs auszugeben, diese an einen bestimmten ort zu süeichern und relevantes gleih zu filtern?
+- Strategi entwickeln fpr custom Plugins, um möglischt sinnvoll logs & messages / notifys auszugeben. Ein `lib.nvim`-Modul dazu wäre ideal, denn dann mus das nicht jedes plugin selbst mplementieren...
+
 ## `lib.nvim`
 
 - [ ]In `lib.nvim` implementieren:
