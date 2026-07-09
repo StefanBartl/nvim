@@ -5,8 +5,9 @@
 ### Workstation (auf PC checken, wenn es da funkt, Workstation debugging)
 
 - [ ] `:Markdown` usrcmd funkltinert nicht mehr ganzm zb render wird nicht angezeigt und auch nicht ausführbar
-- [ ]  ml, doppelklick.. soll url öffnen, funktnaber nicht
+- [ ]  ml, doppelklick.. soll url öffnen, funktioniert aber nicht
 - [ ] `leader [` funkt nicht
+
 
 ## mögliche Features
 

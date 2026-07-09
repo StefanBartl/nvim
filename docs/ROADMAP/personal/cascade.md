@@ -1,10 +1,9 @@
 # `cascade.nvim`
-`C-y` soll incrementedn^
 
 1. `autolist` features?
 2. keymaps
 
-## Aut renumbering
+## Auto renumbering
 
 `C-s` hat ein renumbering ausgelöst:
 
@@ -59,6 +58,8 @@ hir sind zeilen unter nden punkten indentet und daher sagen wir: diese zeile bri
 ```
 
 Was ist aber mit leerzeilen? wie gehen wir damit um ? 1 Leerzeile ok, ab 2 leerzeilen neues renumbering? oder so oau die art?
+Kannst du eineen schlachtplan bauen?
+
 
 ---
 

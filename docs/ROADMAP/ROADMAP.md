@@ -6,7 +6,6 @@
 - `mdview.nvim`: Das war eigentlich mein Websocket Lern Projekt....
 
  cascade: C-y soll inkrementiern! checken, was es jetzt macht1
-- lazy git: `O`: template fehler
 
 ## Table of content
 

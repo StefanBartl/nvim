@@ -4,8 +4,11 @@
   - [ ] Auch bei  Doppelklick freezed es, es könnte aber auh sein, dass das nur so wirkt, weil envim sowieso freezen würde..
 - [ ] `doc/tags` macht auf der workstation immer noch probleme?
 
-- Gibt es eube möglichkeit, bei nvim crashes, relevante logs auszugeben, diese an einen bestimmten ort zu süeichern und relevantes gleih zu filtern?
-- Strategi entwickeln fpr custom Plugins, um möglischt sinnvoll logs & messages / notifys auszugeben. Ein `lib.nvim`-Modul dazu wäre ideal, denn dann mus das nicht jedes plugin selbst mplementieren...
+- Enwticklung einer Strategie für miene custom Plugins, um möglischt sinnvoll logs & messages / notifys auszugeben. Ein `lib.nvim`-Modul dazu wäre ideal, denn dann mus das nicht jedes plugin selbst implementieren... Ein paar Gedanken dazu:
+  - Ein Objekt bereitstellen, dass ein funktnoin bereitstellt, dass neben dem normalen notify("") weitere Möglichkeiten ermöglicht, Informationen weiterzugeben. zb.: `lib.nvim.SOMENAME("Some normal notify message", 5, { SOME_KEY = VAL, ..., DUMPINGPATH = "c:/Project/logs" })`
+    Dann msüste ein Mechanismus kreirt werden, der zuverlässig bei einen Crash diees Objekt aufrufen und ausgeben kann.
+    `DUMPINGPATH` bzw ein besserer Key - wenn dieser angegeben wird, werden alle diese Informationen aller `lib.nvim.SOMENAME` calls dorthin geschrieben
+    ... weitere features...
 
 ## `lib.nvim`
 

@@ -1,4 +1,17 @@
 # `filetree.nvim`
+Folgendes: Wir gaheb ein fence featre, dass die fence  zeilen start und ende marker ``` dfie g anze zeiele higlighted. Nun, auf meinen pc (screenshot) funktinert das wie gewünscht, af meiner workstatiopn (dell laptop) aber wird ales im fence higlighted (screenshot)
+
+
+
+Auf beiden systemen sind windows und powershell im einsatz, einziger unterschie ist, das ich auf meinen pc wezterm verwende, in der workstation das windows terminal powershell standard. Aber das hat denke ich dkeinen auswirkung, nur zur vollständigkeit. 
+
+Auf beiden systemen ist die gleiche nvim config isntalliert und exakt gleich implemenitert..
+
+
+
+Wie kann das sein? gibt es etwas, was ich misse? Soll cih etwas abfragen auf der workstation? oder kann es ein bug in der filetere fence iomplementierung sein?
+
+
 
 ## Table of content
 
@@ -11,15 +24,6 @@
   - [möglicherweise](#mglicherweise)
 
 ---
-
-```lua
-reveal = false because neo-tree already follows the cwd
-      -- (bind_to_cwd + follow_current_file) — so cwd_sync only sets the cwd and
-      -- lets neo-tree root/reveal, instead of the two fighting each other.
-```
-
-Wie schaut das beid en anderen dfiletree manager plugins aus? müssen wor da unte rshcviedliche handhabungen mplemeniteren=
-
 
 ## Neue Features
 
