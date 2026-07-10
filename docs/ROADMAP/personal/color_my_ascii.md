@@ -1,5 +1,7 @@
 # `color_my_ascii.nvim`
 
+- [ ] Zischen den fence marker zeilen hl, dazwishcen den source code highlighten, aber in einer eher abgedunkeleten version bzw einer helleren, damit man es untercheidn kann. Aber wichtig: Nicht nur den text highlighten, sondern auch die leerzeichen bzw wo gar keine chars sind, dodas halt der ganze blick innerhalb der fence marker eine andere bg hat.
+
 ---
 
 sefan.bartl.dev:
@@ -12,3 +14,4 @@ Docs (README/vimdoc/BINDINGS) für alle Subcommands.
 Suite laufen lassen, committen & pushen.
 Sobald der Klassifikator wieder verfügbar ist (meist nach kurzer Zeit), sag einfach „weiter" — dann arbeite ich die 6 offenen Punkte in einem Rutsch ab, teste und pushe. Es geht nichts verloren; die geschriebenen Module bleiben liegen.
 
+---

@@ -1,8 +1,14 @@
 # FINISH: von mir ausführen
 
+- Alle polugins durchgehen und checken, ob es eh keine doppelungen bei den lhs bei dne keymaps hibt
+
+- Workstation problem: nach jeden start kann ich ein paar sekunfen nvim benutztne, dann frert es ca für eine minute ein, dann kann cih es wieder normal verwenden.
+
 - [ ] Nvim startet, dann kann ich ein oaar sekunden was machen, dann freezed er mehrere minuten, dann geht es normal weiter
   - [ ] Auch bei  Doppelklick freezed es, es könnte aber auh sein, dass das nur so wirkt, weil envim sowieso freezen würde..
 - [ ] `doc/tags` macht auf der workstation immer noch probleme?
+
+
 
 - Enwticklung einer Strategie für miene custom Plugins, um möglischt sinnvoll logs & messages / notifys auszugeben. Ein `lib.nvim`-Modul dazu wäre ideal, denn dann mus das nicht jedes plugin selbst implementieren... Ein paar Gedanken dazu:
   - Ein Objekt bereitstellen, dass ein funktnoin bereitstellt, dass neben dem normalen notify("") weitere Möglichkeiten ermöglicht, Informationen weiterzugeben. zb.: `lib.nvim.SOMENAME("Some normal notify message", 5, { SOME_KEY = VAL, ..., DUMPINGPATH = "c:/Project/logs" })`

@@ -7,6 +7,8 @@
 
  cascade: C-y soll inkrementiern! checken, was es jetzt macht1
 
+lernen: https://www.browserstack.com/
+
 ## Table of content
 
   - [ZIEL](#ziel)
