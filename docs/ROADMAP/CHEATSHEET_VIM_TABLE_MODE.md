@@ -1,5 +1,27 @@
 # Vim Table Mode Cheatsheet
 
+## tablemode - implementierung in `markdown.nvim`
+
+Tablemode mit tableview verbinden oder einperformanteres, sichreers mit mehr features tablemode schreiben...
+
+  Path:     C:\Users\bartl\AppData\Local\nvim-data\lazy\vim-table-mode
+  Type:     directory
+  Items:    104 files, 37 folders
+  Size:     537.1 KiB
+
+Das ist eigentlich nicht viel, den soweit ich sehe, sind
+-> Featurte optional: KI UNterstützung bzw ein separates Tool verwenden (das ich noch nict weiß welches), dass zb aus so einen TExt:
+
+```markdown
+Kontextfenster: 855,1k/1M (86%)
+5 Stunden Limit: 0%
+Wöchentlich - alle: 11%
+Wöchentlich - Fable: 3%
+```
+
+mit intelligenten Herangehen eine Markdown-Tabelle erstellen kann
+
+
 ## Table of content
 
   - [Globale Befehle (User Commands)](#globale-befehle-user-commands)
@@ -33,8 +55,6 @@
 ---
 
 ## Standard-Tastenkombinationen (Keymaps)
-
-*Hinweis: `<Leader>` ist standardmäßig die Backslash-Taste `\`, sofern du sie nicht umbelegt hast.*
 
 ### Modus & Formatierung
 

@@ -1,11 +1,8 @@
 # Roadmap for `main-workstation` branch
-
-- leader nF geht nicht?``
-- neotree-fs-refactor
-- `config` durchgehen auf fetaures, die zu meinen eigenen plugins passen
+- neotree-fs-refactora
+- `config` durchgehen auf features, die zu meinen eigenen plugins passen
 - `mdview.nvim`: Das war eigentlich mein Websocket Lern Projekt....
-
- cascade: C-y soll inkrementiern! checken, was es jetzt macht1
+- Spellchecking nochmnal durchgehen und notizen machen. Spell Strategie ausarbeiten - entweder Plugin einbindne oder Modul debuggen
 
 lernen: https://www.browserstack.com/
 
@@ -18,8 +15,6 @@ lernen: https://www.browserstack.com/
   - [menus](#menus)
 
 ---
-
-- Spellchecking nochmnal durchgehen und notizen machen. Spell Strategie ausarbeiten - entweder Plugin einbindne oder Modul debuggen
 
 ## ZIEL
 

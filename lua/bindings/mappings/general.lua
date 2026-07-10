@@ -4,6 +4,7 @@ local M = {}
 
 function M.setup()
   local map = vim.g.__map_helper
+
   map("n", "<C-a>", "gg<S-v>G", { desc = "[General] Select all" })
 
   -- map({ "n", "i", "v", "t" }, "<C-s>", function()
@@ -33,161 +34,161 @@ function M.setup()
     { desc = "[General] Disable F1", silent = true }
   )
 
- -- TODO: personal plugins auslagern + usrcmds ertellen
   -- Fügt das aktuelle Datum ein (z. B. 10.07.2026) buffer-ctx.nvim!
-  vim.keymap.set(
-    "n",
-    "<leader>date",
-    'i<C-r>=strftime("%d.%m.%Y")<CR><Esc>',
-    { desc = "Datum einfügen" }
-  )
+  vim.keymap.set("n", "<leader>date", function()
+    vim.api.nvim_put({ os.date("%d.%m.%Y") }, "c", false, true)
+  end, { desc = "Datum einfügen" })
 
   -- ==========================================
-  -- 1. ALT + - : Bullet Point Umschalter (- )
+  -- 1-3. Bullet-/Nummerierungs-/Checkbox-Umschalter (- , 1. , - [ ])
+  -- Ausgelagert nach cascade.nvim (lua/cascade/lists/quick_toggle.lua):
+  -- <A-->/<A-0>/<A-c>, per lists.features.{bullet,number,checkbox}_toggle
+  -- an/abschaltbar, siehe lua/plugins/personal/init.lua.
   -- ==========================================
-  vim.keymap.set("n", "<A-->", function()
-    local line = vim.api.nvim_get_current_line()
-    -- Erkennt die Einrückung (Leerzeichen/Tabs) am Anfang der Zeile
-    local indent = line:match("^([%s]*)")
-    -- Entfernt die Einrückung temporär für die Prüfung
-    local content = line:sub(#indent + 1)
 
-    if content:match("^%- ") then
-      -- Wenn bereits "- " vorhanden ist, wegschneiden
-      local new_content = content:sub(3)
-      vim.api.nvim_set_current_line(indent .. new_content)
-    else
-      -- Ansonsten "- " einfügen
-      vim.api.nvim_set_current_line(indent .. "- " .. content)
+  -- ==========================================
+  -- 4. Systeminformationen anzeigen und in die Zwischenablage kopieren (Cross-Platform)
+  -- ==========================================
+
+  --- Baut das Kommando zur Systeminformations-Abfrage als Argument-Tabelle statt als
+  --- Shell-String. Neovim führt Listen-Kommandos direkt aus (ohne 'shell'/cmd.exe),
+  --- wodurch die ursprünglichen Quoting-Probleme (^M-Reste, leere Felder durch
+  --- kaputt escapte Anführungszeichen) gar nicht erst entstehen.
+  local function build_system_info_cmd()
+    if vim.fn.executable("fastfetch") == 1 then
+      return { "fastfetch", "--logo", "none" }
+    elseif vim.fn.executable("neofetch") == 1 then
+      return { "neofetch", "--off" }
     end
-  end, { desc = "Toggle Bullet Point (-)" })
 
-  -- ==========================================
-  -- 2. ALT + 0 : Nummerierungs-Umschalter (X. )
-  -- ==========================================
-  vim.keymap.set("n", "<A-0>", function()
-    local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
-    local line = vim.api.nvim_get_current_line()
-    local indent = line:match("^([%s]*)")
-    local content = line:sub(#indent + 1)
-
-    -- Prüfen, ob die aktuelle Zeile bereits mit einer Nummerierung startet (z. B. "1. " oder "12. ")
-    if content:match("^%d+%. ") then
-      -- Wenn ja, Nummerierung wegschneiden
-      local _, end_idx = content:find("^%d+%. ")
-      local new_content = content:sub(end_idx + 1)
-      vim.api.nvim_set_current_line(indent .. new_content)
-    else
-      -- Wenn nein, ermitteln wir die nächste logische Nummer
-      local next_num = 1
-
-      -- Zeile darüber prüfen (falls wir nicht in Zeile 1 sind)
-      if row > 1 then
-        local prev_line = vim.api.nvim_buf_get_lines(0, row - 2, row - 1, false)[1]
-        local prev_content = prev_line:match("^[%s]*(.*)")
-        -- Suchen, ob die Zeile darüber mit einer Zahl + Punkt startet
-        local prev_num_str = prev_content:match("^(%d+)%. ")
-        if prev_num_str then
-          next_num = tonumber(prev_num_str) + 1
-        end
-      end
-
-      -- Nummerierung einfügen (z. B. "1. " oder "2. ")
-      vim.api.nvim_set_current_line(indent .. next_num .. ". " .. content)
-    end
-  end, { desc = "Toggle Smart Numbered List" })
-
---[[ BUG:
--- gibt momentan nur aus:
-^M
-^M
-OS             :
-Version        : 10.0.26200
-OSArchitecture : 64-bit
-^M
-^M
-]]--
-
--- Funktion, um Systeminformationen anzuzeigen und in die Zwischenablage zu kopieren
-local function show_system_info()
-  local cmd = ""
-
-  -- 1. Versuch: Externe CLI-Tools prüfen
-  if vim.fn.executable("fastfetch") == 1 then
-    cmd = "fastfetch --stdout"
-  elseif vim.fn.executable("neofetch") == 1 then
-    cmd = "neofetch --off"
-  else
-    -- 2. Fallback: OS-native Bordmittel verwenden
     if vim.fn.has("win32") == 1 then
-      -- Kompakter PowerShell-Befehl, der garantiert Text zurückgibt
-      cmd = 'powershell -NoProfile -Command "Get-CimInstance Win32_OperatingSystem | Select-Object @{N=\'OS\';E={$_.Caption}}, Version, OSArchitecture | Format-List | Out-String"'
+      local ps_exe = vim.fn.executable("pwsh") == 1 and "pwsh" or "powershell"
+      local ps_script = [[
+$ErrorActionPreference = 'SilentlyContinue'
+$os    = Get-CimInstance Win32_OperatingSystem
+$cs    = Get-CimInstance Win32_ComputerSystem
+$cpu   = Get-CimInstance Win32_Processor | Select-Object -First 1
+$gpu   = (Get-CimInstance Win32_VideoController | ForEach-Object { $_.Name }) -join ', '
+$ramGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
+$uptime = (Get-Date) - $os.LastBootUpTime
+
+Write-Output "OS           : $($os.Caption)"
+Write-Output "Version      : $($os.Version)"
+Write-Output "Architecture : $($os.OSArchitecture)"
+Write-Output "Hostname     : $($cs.Name)"
+Write-Output "Manufacturer : $($cs.Manufacturer)"
+Write-Output "Model        : $($cs.Model)"
+Write-Output "CPU          : $($cpu.Name.Trim())"
+Write-Output "RAM          : $ramGB GB"
+Write-Output "GPU          : $gpu"
+Write-Output "User         : $env:USERNAME"
+Write-Output "Uptime       : $($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m"
+]]
+      return { ps_exe, "-NoProfile", "-NonInteractive", "-Command", ps_script }
     elseif vim.fn.has("mac") == 1 then
-      cmd = "sw_vers && system_profiler SPHardwareDataType | grep -E 'Model Name|Processor|Memory|Chip:'"
+      local script = [[
+echo "OS           : $(sw_vers -productName) $(sw_vers -productVersion)"
+echo "Build        : $(sw_vers -buildVersion)"
+echo "Architecture : $(uname -m)"
+echo "Hostname     : $(scutil --get ComputerName 2>/dev/null || hostname)"
+echo "Model        : $(sysctl -n hw.model)"
+echo "CPU          : $(sysctl -n machdep.cpu.brand_string)"
+echo "RAM          : $(( $(sysctl -n hw.memsize) / 1073741824 )) GB"
+echo "GPU          : $(system_profiler SPDisplaysDataType 2>/dev/null | awk -F': ' '/Chipset Model/{print $2; exit}')"
+echo "User         : $(whoami)"
+echo "Uptime       : $(uptime | sed 's/.*up //;s/,.*load.*//')"
+]]
+      return { "/bin/bash", "-c", script }
     else
-      -- Linux Fallback
-      cmd = "hostnamectl 2>/dev/null || (cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+      local script = [[
+echo "OS           : $( . /etc/os-release 2>/dev/null; echo "$PRETTY_NAME" )"
+echo "Kernel       : $(uname -r)"
+echo "Architecture : $(uname -m)"
+echo "Hostname     : $(hostname)"
+echo "Manufacturer : $(cat /sys/devices/virtual/dmi/id/sys_vendor 2>/dev/null || echo unknown)"
+echo "Model        : $(cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null || echo unknown)"
+echo "CPU          : $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ //')"
+echo "RAM          : $(free -h --si 2>/dev/null | awk '/Mem:/{print $2}')"
+echo "GPU          : $(lspci 2>/dev/null | grep -Ei 'vga|3d controller' | cut -d: -f3 | sed 's/^ //' | paste -sd ', ')"
+echo "User         : $(whoami)"
+echo "Uptime       : $(uptime -p 2>/dev/null)"
+]]
+      local sh = vim.fn.executable("bash") == 1 and "bash" or "sh"
+      return { sh, "-c", script }
     end
   end
 
-  -- Befehl ausführen und Output als Tabelle (Zeilen) zurückerhalten
-  -- systemlist verhindert das Einfrieren besser bei reinen CLI-Befehlen
-  local data = vim.fn.systemlist(cmd)
+  --- Führt das Kommando aus, kopiert das Ergebnis in die Zwischenablage und
+  --- zeigt es in einem Floating Window an.
+  local function show_system_info()
+    local ok, data = pcall(vim.fn.systemlist, build_system_info_cmd())
+    if not ok then
+      vim.notify("Systeminfo-Abfrage fehlgeschlagen: " .. tostring(data), vim.log.levels.ERROR)
+      return
+    end
 
-  -- Fehlerprüfung: Falls gar nichts zurückgegeben wurde
-  if not data or #data == 0 or (#data == 1 and data[1] == "") then
-    print("Fehler: Systeminformationen konnten nicht abgerufen werden.")
-    return
+    -- CRLF-Reste (^M) entfernen und leere Zeilen rausfiltern
+    local lines = {}
+    for _, line in ipairs(data) do
+      line = line:gsub("\r$", "")
+      if line:match("%S") then
+        lines[#lines + 1] = line
+      end
+    end
+
+    if #lines == 0 then
+      vim.notify("Systeminformationen konnten nicht abgerufen werden.", vim.log.levels.ERROR)
+      return
+    end
+
+    -- In die Zwischenablage kopieren
+    local full_text = table.concat(lines, "\n")
+    vim.fn.setreg("+", full_text) -- System-Zwischenablage (Ctrl+V)
+    vim.fn.setreg("*", full_text) -- Maus-Zwischenablage (Mittelklick)
+    vim.notify("System-Infos in die Zwischenablage kopiert", vim.log.levels.INFO)
+
+    -- Floating Window anzeigen
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    vim.bo[buf].modifiable = false
+    vim.bo[buf].bufhidden = "wipe"
+
+    local width = math.min(60, vim.o.columns - 10)
+    local height = math.min(#lines + 2, vim.o.lines - 5)
+
+    local win = vim.api.nvim_open_win(buf, true, {
+      style = "minimal",
+      relative = "editor",
+      width = width,
+      height = height,
+      row = math.ceil((vim.o.lines - height) / 2 - 1),
+      col = math.ceil((vim.o.columns - width) / 2),
+      border = "rounded",
+      title = " System Information ",
+      title_pos = "center",
+    })
+    vim.wo[win].wrap = false
+
+    for _, key in ipairs({ "q", "<Esc>" }) do
+      vim.keymap.set("n", key, "<cmd>close<CR>", { buffer = buf, silent = true, nowait = true })
+    end
   end
 
-  -- --- ZWISCHENABLAGE LOGIK ---
-  -- Konvertiert die Tabelle in einen durchgehenden String für die Zwischenablage
-  local full_text = table.concat(data, "\n")
-  vim.fn.setreg("+", full_text) -- System-Zwischenablage (Ctrl+V)
-  vim.fn.setreg("*", full_text) -- Maus-Zwischenablage (Mittelklick)
-  print("📋 System-Infos erfolgreich in die Zwischenablage kopiert!")
+  vim.api.nvim_create_user_command("SystemInfo", show_system_info, {})
+  vim.keymap.set("n", "<leader>si", show_system_info, {
+    desc = "Zeige System-Informationen & kopiere sie",
+    silent = true,
+  })
 
-  -- --- FLOATING WINDOW LOGIK ---
-  -- Erstelle einen neuen, leeren Scratch-Buffer
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, data)
+    -- ==========================================
+  -- 5. Char changing (TODO: auch nach cascade.nvim auslagern!)
+  -- ==========================================chen mit dem rechten Nachbarn tauschen (Ctrl+Shift+Rechts)
+  -- Zeichen mit dem rechten Nachbarn tauschen (Leader + Pfeiltaste Rechts)
+  vim.keymap.set('n', '<leader><Right>', 'xp', { desc = 'Tausche aktuellen Char mit rechts' })
+  -- Zeichen mit dem linken Nachbarn tauschen (Leader + Pfeiltaste Links)
+  vim.keymap.set('n', '<leader><Left>', 'xhP', { desc = 'Tausche aktuellen Char mit links' })
 
-  -- Berechne die Größe des Floating Windows (zentriert)
-  local width = math.min(80, vim.o.columns - 10)
-  local height = math.min(#data + 2, vim.o.lines - 5)
-  local row = math.ceil((vim.o.lines - height) / 2 - 1)
-  local col = math.ceil((vim.o.columns - width) / 2)
 
-  -- Fenster-Optionen
-  local opts = {
-    style = "minimal",
-    relative = "editor",
-    width = width,
-    height = height,
-    row = row,
-    col = col,
-    border = "rounded",
-    title = " 🖥️ System Informationen (Kopiert!) ",
-    title_pos = "center",
-  }
-
-  -- Fenster öffnen
-  local win = vim.api.nvim_open_win(buf, true, opts)
-
-  -- Tasten zum Schließen des Fensters definieren
-  vim.api.nvim_buf_set_keymap(buf, "n", "q", ":close<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(buf, "n", "<Esc>", ":close<CR>", { noremap = true, silent = true })
-  vim.wo[win].wrap = false
-end
-
--- 1. Erstelle das Benutzer-Kommando :SystemInfo
-vim.api.nvim_create_user_command("SystemInfo", show_system_info, {})
-
--- 2. Erstelle die Keymap (<Leader>si für SystemInfo)
-vim.keymap.set("n", "<Leader>si", ":SystemInfo<CR>", {
-  desc = "Zeige System-Informationen & kopiere sie",
-  silent = true
-})
 end
 
 return M
