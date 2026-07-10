@@ -547,8 +547,12 @@ return apply_source({
     -- Requires the plugin's types on the LSP path (lazydev/neodev or workspace lib).
     ---@type ColorMyAscii.Config
     opts = {
-      -- Optional: Configuration here, e.g.
-      -- fence_line_highlight = { preset = "auto" }, -- type `"` after preset = for completion
+      -- Force the CommonMark-correct heuristic scanner for fence-block
+      -- detection instead of treesitter: the installed markdown grammar
+      -- version can differ machine-to-machine (no lockfile pinning), and
+      -- some versions mis-parse a shorter fence nested inside a longer one
+      -- as its own block, causing spurious fence-line highlights.
+      treesitter = { block_detection = false },
     },
   },
 

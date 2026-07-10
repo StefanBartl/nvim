@@ -274,6 +274,12 @@ return {
         window_open = false,
         reveal_current_file = false,
         only_lhs = true,
+        -- Trash/undo is owned by filetree.nvim now (batch chooser + reliable
+        -- buffer-close). false skips config.neotree.trash.setup entirely so the
+        -- old system can't race filetree's `d` binding. The
+        -- config.neotree.trash/undo modules stay on disk but are inert; delete
+        -- them if you want a clean tree.
+        trash = false,
       })
     end,
   },

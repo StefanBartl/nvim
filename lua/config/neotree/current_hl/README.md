@@ -91,12 +91,12 @@ return {
       use_git_status_colors = false, -- keep our color dominant
       enable = true,
     })
-
-    -- Your cwd sync or other config can remain unchanged
-    -- require("config.neotree.cwd_sync").setup({ ... })
   end,
 }
 ```
+
+> cwd syncing is handled by filetree.nvim's `cwd_sync` feature (see
+> `plugins/personal/init.lua`'s filetree.nvim setup), not by any config here.
 
 ## Configuration
 

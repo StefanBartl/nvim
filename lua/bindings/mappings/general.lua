@@ -24,9 +24,6 @@ function M.setup()
   end, { desc = "[General] Save file", noremap = true })
 
   map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })
-
-  map("n", "+", "<C-y>", { desc = "[Number] Increment" })
-  map("n", "-", "<C-x>", { desc = "[Number] Decrement" })
   map("n", "x", '"_x', { desc = "[Edit] Delete char without yanking" })
   map("n", "dw", 'vb"_d', { desc = "[Edit] Delete word backwards without yanking" })
   map({ "n", "i", "v", "t", "c" }, "<F1>", "<Nop>", { desc = "[General] Disable F1", silent = true })

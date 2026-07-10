@@ -1,8 +1,9 @@
 # `mdview.nvim`
 
-[mdview.runner]  Running on http://localhost:43219
-ws endpoint: ws://localhost:43219/ws
-[mdview.runner]  runner: detected backend server port 43219
+bei unseren eigenen css sheet: ich habe uen nvim pluin gebaut: color_my_ascii.nvim das innerhalb von markjdwon fences, aslo ``` start / end marken highlighting wie mit lsp habewenn man die sprachen angibt beim start marker, alsoo zb ```lua . Das efehlt hier,  der source code steht nur weiß ddrinnen. das plugin hätte auch eine api, aber wir können ja nicht einen server machen wo dieses featjure über eine nvim instan ausgegeben wird haha
+
+Generell was highlighting undusw... in markdown files angeht, mein plugin markdown.nvim beschreibt das sehr gut
+
 
 ## Table of content
 
