@@ -5,20 +5,59 @@ local notify = require("lib.nvim.notify").create("[config.menu.mappings]")
 
 local M = {}
 
+--- Markdown filetype test (markdown / md / mdx / markdown.*).
+---@param ft string|nil
+---@return boolean
+local function is_markdown(ft)
+  if not ft or ft == "" then return false end
+  return ft == "markdown" or ft == "md" or ft == "mdx" or ft:match("^markdown%.") ~= nil
+end
+
+--- Build a composed menu source for a markdown buffer: markdown.nvim's own
+--- context-aware entries (fold on a heading, TOC, refs — the plugin owns them)
+--- followed by the general custom menu. Returns nil when the buffer is not
+--- markdown, the plugin/integration is absent, or it yields no entries.
+---@param buf integer
+---@return table|nil  an nvzone/menu entry table, or nil
+local function markdown_menu_source(buf)
+  if not is_markdown(vim.bo[buf].ft) then return nil end
+
+  local ok, mdmenu = pcall(require, "markdown_nvim.integrations.menu")
+  if not ok then return nil end
+
+  local items = mdmenu.items()
+  if type(items) ~= "table" or #items == 0 then return nil end
+
+  local composed = {}
+  vim.list_extend(composed, items)
+
+  -- Append the general custom menu (format/copy/delete/… ) beneath a divider.
+  local ok_custom, custom = pcall(require, "menus.custom")
+  if ok_custom and type(custom) == "table" and #custom > 0 then
+    table.insert(composed, { name = "separator" })
+    vim.list_extend(composed, custom)
+  end
+
+  return composed
+end
+
 function M.setup()
   local map = vim.g.__map_helper or function(mode, lhs, rhs, opts)
     vim.keymap.set(mode, lhs, rhs, opts or {})
   end
 
-  -- Alt-b opens top-level custom menu if present, otherwise default
+  -- Alt-b opens top-level custom menu if present, otherwise default.
+  -- Markdown buffers get the plugin's entries composed on top.
   map("n", "<A-b>", function()
     local ok_menu, menu = pcall(require, "menu")
     if not ok_menu then
       notify.warn("menu module not found")
       return
     end
-    -- prefer custom if registered
-    if vim.g._menu_custom_registered then
+    local md = markdown_menu_source(vim.api.nvim_get_current_buf())
+    if md then
+      menu.open(md)
+    elseif vim.g._menu_custom_registered then
       menu.open("custom")
     else
       menu.open("default")
@@ -49,6 +88,18 @@ function M.setup()
     end
     local ft = vim.bo[buf].ft or ""
 
+    local ok_menu, menu = pcall(require, "menu")
+    if not ok_menu then return end
+
+    -- Markdown buffers: plugin-owned context menu (fold on heading, TOC, refs)
+    -- composed with the general custom menu. Checked before the ft routing so
+    -- it wins for markdown without a dedicated menu name.
+    local md = markdown_menu_source(buf)
+    if md then
+      menu.open(md, { mouse = true })
+      return
+    end
+
     local options = "default"
     if ft == "neo-tree" or ft == "neo_tree" then
       options = "neo-tree"
@@ -60,14 +111,11 @@ function M.setup()
       end
     end
 
-    local ok_menu, menu = pcall(require, "menu")
-    if ok_menu then
-      if options == "neo-tree" then
-        local patch = require("config.menu.neotree")
-        menu.open(patch, { mouse = true })
-      else
-        menu.open(options, { mouse = true })
-      end
+    if options == "neo-tree" then
+      local patch = require("config.menu.neotree")
+      menu.open(patch, { mouse = true })
+    else
+      menu.open(options, { mouse = true })
     end
   end, {})
 end
