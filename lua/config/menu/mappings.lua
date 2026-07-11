@@ -41,6 +41,32 @@ local function markdown_menu_source(buf)
   return composed
 end
 
+--- Build the Neo-tree context menu from filetree.nvim's plugin-owned entries
+--- (create/rename/copy/trash/open/paths/search — filetree owns them now),
+--- optionally followed by nvzone's built-in neo-tree base menu. Returns nil when
+--- filetree/its integration is absent, so the caller can fall back to the legacy
+--- `config.menu.neotree` menu.
+---@return table|nil
+local function neotree_menu_source()
+  local ok, ftmenu = pcall(require, "filetree.integrations.menu")
+  if not ok then return nil end
+
+  local items = ftmenu.items()
+  if type(items) ~= "table" or #items == 0 then return nil end
+
+  local composed = {}
+  vim.list_extend(composed, items)
+
+  -- Append nvzone's generic neo-tree entries (open/close/…) beneath a divider.
+  local ok_base, base = pcall(require, "menus.neo-tree")
+  if ok_base and type(base) == "table" and #base > 0 then
+    table.insert(composed, { name = "separator" })
+    vim.list_extend(composed, base)
+  end
+
+  return composed
+end
+
 function M.setup()
   local map = vim.g.__map_helper or function(mode, lhs, rhs, opts)
     vim.keymap.set(mode, lhs, rhs, opts or {})
@@ -100,23 +126,26 @@ function M.setup()
       return
     end
 
-    local options = "default"
+    -- Neo-tree: prefer filetree.nvim's plugin-owned entries; fall back to the
+    -- legacy config.menu.neotree menu when filetree/its integration is absent.
     if ft == "neo-tree" or ft == "neo_tree" then
-      options = "neo-tree"
-    elseif ft == "NvimTree" or ft:match("^NvimTree") then
-      options = "nvimtree"
-    else
-      if vim.g._menu_custom_registered then
-        options = "custom"
+      local src = neotree_menu_source()
+      if src then
+        menu.open(src, { mouse = true })
+      else
+        menu.open(require("config.menu.neotree"), { mouse = true })
       end
+      return
     end
 
-    if options == "neo-tree" then
-      local patch = require("config.menu.neotree")
-      menu.open(patch, { mouse = true })
-    else
-      menu.open(options, { mouse = true })
+    local options = "default"
+    if ft == "NvimTree" or ft:match("^NvimTree") then
+      options = "nvimtree"
+    elseif vim.g._menu_custom_registered then
+      options = "custom"
     end
+
+    menu.open(options, { mouse = true })
   end, {})
 end
 
