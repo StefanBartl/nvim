@@ -75,7 +75,13 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- `publish_globals` feature mirrors it to vim.g.is_windows/is_wsl/... for the
 -- few consumers that read the globals (e.g. plugins/markdown.lua). `rpc_pipe`
 -- starts the predictable Windows named-pipe RPC server (no-op off Windows).
-require("lib.nvim.system").setup({ publish_globals = true, rpc_pipe = true })
+-- `info_usercmd` registers :SystemInfo (cross-platform system info float,
+-- formerly inline in bindings/mappings/general.lua).
+require("lib.nvim.system").setup({
+  publish_globals = true,
+  rpc_pipe = true,
+  info_usercmd = true,
+})
 require("options")
 
 -- =============================================================================
