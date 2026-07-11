@@ -165,7 +165,7 @@ return function(opts)
   -- Copy
   -- ============================================================================
 
-  if opts.enab_copy_all then
+  if opts.enable_copy_all then
     table.insert(composed, {
       name = "Copy All (Buffer)",
       cmd = "%y+",
