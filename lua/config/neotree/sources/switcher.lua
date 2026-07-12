@@ -4,7 +4,7 @@
 local notify = require("lib.nvim.notify").create("[config.neotree.sources.switcher]")
 
 local ICONS = require("config.neotree.sources.icons")
-local hover_select = require("lib.nvim.ui.hover_select")
+local kit = require("lib.nvim.ui.kit")
 
 local M = {}
 
@@ -222,11 +222,9 @@ function M.show_picker()
     items[i] = string.format("%s %s%s%s", icon, name, is_current, status)
   end
 
-  hover_select.open({
+  kit.select({
     title = "Select Neo-tree Source",
     items = items,
-    auto_width = true,
-    use_tab_navigation = true,
 
     ---@param _ string Display string (unused)
     ---@param index integer 1-based index into sources
