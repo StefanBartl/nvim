@@ -38,6 +38,10 @@ local AUTOCMDS_GENERAL_DEFAULTS = {
     mark = '"',
   },
 
+  no_name_guard = {
+    enable = true,
+  },
+
 }
 
 local M = {}

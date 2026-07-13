@@ -109,6 +109,26 @@ function M.enable(cfg)
     })
   end
 
+  -- 5) Redirect spurious [No Name] buffers left behind by a close, to a real
+  --    buffer if one exists (BufDelete/BufWipeout, WinClosed)
+  if cfg.no_name_guard.enable then
+    local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_no_name_guard")
+    api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
+      group = grp,
+      callback = function(event)
+        helpers.no_name_guard_sweep({ [event.buf] = true })
+      end,
+      desc = "After a buffer is deleted, redirect any window left showing a spurious [No Name] buffer to a real one",
+    })
+    api.nvim_create_autocmd("WinClosed", {
+      group = grp,
+      callback = function()
+        helpers.no_name_guard_sweep({})
+      end,
+      desc = "After a window closes, redirect any window left showing a spurious [No Name] buffer to a real one",
+    })
+  end
+
 end
 
 ---@type AutoCmds.General
