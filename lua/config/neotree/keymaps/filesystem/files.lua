@@ -5,43 +5,18 @@ local notify = require("lib.nvim.notify").create("[cfg.neotree.keymaps.fs] ")
 local node_utils = require("config.neotree.utils.node")
 local safe_hide_preview = require("config.neotree.utils").safe_hide_preview
 
+-- B, <S-CR>, gb, sg, sv, st removed: filetree.nvim's reveal_alt/open_variants
+-- features own these now (default-on) and blindly overwrite via buffer-local
+-- vim.keymap.set on FileType, so keeping a second native implementation here
+-- was pure dead weight racing the same key -- same class of issue as the
+-- old native `d`/trash duplicate (see keymaps/filesystem/init.lua).
+-- <CR> and <2-LeftMouse> stay: filetree.nvim's `preview` feature explicitly
+-- captures and wraps THIS <CR> handler as its non-image/PDF fallback
+-- (see filetree/features/ui/preview/init.lua, `original_cr_cb`), so it is not
+-- a duplicate -- removing it would silently downgrade <CR> to neo-tree's raw
+-- default action and drop the window-picker integration below.
 ---@type table<string, any>
 return {
-
-  -- Reveal alternate buffer file
-  ["B"] = {
-    ---@param state Cfg.NeoTree.State
-    ---@diagnostic disable-next-line: unused-local
-    function(state)
-      safe_hide_preview()
-
-      -- Get alternate buffer path (:e # semantics)
-      local _, filepath = require("lib.nvim.buffer.get_alternate")()
-      if not filepath or filepath == "" then
-        notify.warn("No buffer to reveal (try opening a file first)")
-        return
-      end
-
-      -- Ensure the path is valid
-      if vim.fn.filereadable(filepath) ~= 1 and vim.fn.isdirectory(filepath) ~= 1 then
-        notify.warn("buffer is not a readable file")
-        return
-      end
-
-      -- Normalize to absolute path (mandatory for Neo-tree matching)
-      filepath = vim.fn.fnamemodify(filepath, ":p")
-
-      -- Execute Neo-tree reveal via internal command API
-      require("neo-tree.command").execute({
-        action = "focus", -- open and focus Neo-tree
-        source = "filesystem", -- explicitly target filesystem source
-        reveal_file = filepath, -- file or directory to reveal
-        reveal_force_cwd = true, -- adjust root if file is outside cwd
-      })
-    end,
-
-    desc = "Reveal buffer file (like :e #)",
-  },
 
   ["<CR>"] = {
     ---@param state Cfg.NeoTree.State
@@ -78,10 +53,4 @@ return {
   },
 
   ["<2-LeftMouse>"] = "open",
-  ["<S-CR>"] = "open_badd",
-  ["gb"] = "open_badd",
-
-  ["sg"] = "open_vsplit",
-  ["sv"] = "open_split",
-  ["st"] = "open_tabnew",
 }

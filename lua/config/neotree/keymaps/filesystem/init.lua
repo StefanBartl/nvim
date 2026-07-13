@@ -5,20 +5,22 @@
 ---   preview -> images -> pdfport
 ---   plain toggle_preview < system app for images < pdfport for PDFs
 
--- Modules handled by filetree.nvim (removed):
+-- Modules handled by filetree.nvim (removed, files deleted):
 --   filter, save, replace, mark, navigation, path, info, search,
---   preview, images, pdfport, trash
--- trash: d/U/<leader>th are now owned by filetree.nvim's trash feature
---   (batch chooser + reliable buffer-close). Keeping the old
---   config.neotree.keymaps.filesystem.trash in this merge bound `d` a second
---   time and raced filetree's own `d`, which is why buffer-close was
---   intermittent. See also `trash = false` passed to config.neotree.setup().
+--   preview, images, pdfport, trash, clipboard, create, commands
+-- Each removal follows the same pattern: filetree.nvim's own feature
+-- (default-on) binds the same key via a buffer-local vim.keymap.set on
+-- FileType, so a second native implementation here was pure dead weight
+-- racing the same key -- e.g. the old `trash` module bound `d` a second time
+-- and raced filetree's own `d`, causing intermittent buffer-close bugs.
+-- Confirmed duplicates removed in this pass: clipboard.lua (c/x/p/<C-c> vs
+-- copy_move), create.lua (a/r/D vs smart_create/smart_rename/diff),
+-- commands.lua (i/tf/tg/ML/MR/MM vs shell_run/find_files/grep_in_dir/
+-- markdown_links), and files.lua's B/<S-CR>/gb/sg/sv/st (vs reveal_alt/
+-- open_variants) -- see the trimmed files.lua for what stayed and why.
 -- Remaining: neotree-native operations only.
 local modules = {
-  require("config.neotree.keymaps.filesystem.commands"),
   require("config.neotree.keymaps.filesystem.files"),
-  require("config.neotree.keymaps.filesystem.clipboard"),
-  require("config.neotree.keymaps.filesystem.create"),
 }
 
 ---@type table<string, any>

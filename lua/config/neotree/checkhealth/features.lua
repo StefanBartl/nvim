@@ -6,27 +6,9 @@ local M = {}
 function M.check()
   vim.health.start("Optional Features")
 
-  -- Trash system
-  local ok_trash, trash = pcall(require, "config.neotree.trash")
-  if ok_trash then
-    vim.health.ok("Trash system loaded")
-
-    if trash.config then
-      vim.health.info("Trash configuration:")
-      vim.health.info("  use_safety_system: " .. tostring(trash.config.use_safety_system))
-      vim.health.info("  create_backups: " .. tostring(trash.config.create_backups))
-    end
-  else
-    vim.health.warn("Trash system not loaded (optional)")
-  end
-
-  -- Current highlight
-  local ok_hl = pcall(require, "config.neotree.current_hl")
-  if ok_hl then
-    vim.health.ok("Current highlight loaded")
-  else
-    vim.health.warn("Current highlight not loaded (optional)")
-  end
+  -- Trash/undo and current_hl were removed: filetree.nvim's `trash` and
+  -- `current_hl` features own both now (see keymaps/filesystem/init.lua's
+  -- header comment and plugins/personal/init.lua's filetree.nvim setup).
 
   -- Watcher quarantine
   local ok_watcher, watcher = pcall(require, "config.neotree.watcher_quarantine")

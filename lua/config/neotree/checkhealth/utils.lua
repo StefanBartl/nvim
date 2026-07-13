@@ -22,36 +22,9 @@ function M.check()
     vim.health.error("Node utilities not loadable")
   end
 
-  -- Buffer utils
-  local ok_buf, _ = pcall(require, "config.neotree.utils.buffer")
-  if ok_buf then
-    vim.health.ok("Buffer utilities loaded")
-    vim.health.info("Buffer validation cache active")
-  else
-    vim.health.error("Buffer utilities not loadable")
-  end
-
-  -- Tree utils
-  local ok_tree = pcall(require, "config.neotree.utils.tree")
-  if ok_tree then
-    vim.health.ok("Tree utilities loaded")
-  else
-    vim.health.error("Tree utilities not loadable")
-  end
-
-  -- Platform utils
-  local ok_platform, platform = pcall(require, "config.neotree.utils.platform")
-  if ok_platform then
-    vim.health.ok("Platform utilities loaded")
-
-    vim.health.info("Platform detection:")
-    vim.health.info("  Windows: " .. tostring(platform.is_windows()))
-    vim.health.info("  WSL: " .. tostring(platform.is_wsl()))
-    vim.health.info("  macOS: " .. tostring(platform.is_macos()))
-    vim.health.info("  Unix: " .. tostring(platform.is_unix()))
-  else
-    vim.health.warn("Platform utilities not loaded")
-  end
+  -- utils.buffer / utils.tree / utils.platform were removed: only ever used
+  -- by dead actions/* modules (save/*, copy/entries|folders) already gone
+  -- or checkhealth-probed only, no live caller left.
 end
 
 return M
