@@ -27,7 +27,13 @@ vim.opt.rtp:prepend(lazypath)
 -- imported, so we bootstrap it the same way as lazy.nvim itself. The lazy spec
 -- in plugins/personal.lua keeps it updatable; this only guarantees early
 -- availability.
-local libpath = vim.fn.stdpath("data") .. "/lazy/lib.nvim"
+--
+-- Must resolve to the same dir plugins/personal/init.lua's apply_source() will
+-- later assign to the "StefanBartl/lib.nvim" spec (local repos checkout when
+-- present, else lazy's managed dir). Otherwise lazy sees the plugin's `dir`
+-- change after it's already on the runtimepath and errors ("changed dir ...
+-- already partially loaded") on every startup.
+local libpath = require("plugins.personal.utils").local_dev("lib.nvim") or (vim.fn.stdpath("data") .. "/lazy/lib.nvim")
 if not vim.uv.fs_stat(libpath) then
   vim.fn.system({
     "git",
@@ -56,6 +62,16 @@ require("lazy").setup({
     lazy = false,
     branch = "v2.5",
   },
+  -- Pin lib.nvim's `dir` as the very first spec fragment lazy.nvim sees for
+  -- this plugin. Some imported files (e.g. plugins/nvchad.lua) run a
+  -- top-level `require("lib.*")` during the spec-import phase, and others
+  -- reference "StefanBartl/lib.nvim" as a bare dependency string; either one
+  -- can register a dir-less fragment (defaulting to lazy's managed dir)
+  -- before plugins/personal/init.lua's dir-overriding fragment is merged in,
+  -- which trips lazy's "changed dir ... already partially loaded" error.
+  -- plugins/personal/init.lua still owns the full spec (lazy=false,
+  -- priority, config); this only pins `dir` early enough to avoid the race.
+  { "StefanBartl/lib.nvim", dir = libpath },
   { import = "nvchad.plugins" },
   -- { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },
