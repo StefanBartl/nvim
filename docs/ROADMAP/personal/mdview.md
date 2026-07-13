@@ -1,12 +1,9 @@
 # `mdview.nvim`
 
-bei unseren eigenen css sheet: ich habe uen nvim pluin gebaut: color_my_ascii.nvim das innerhalb von markjdwon fences, aslo ``` start / end marken highlighting wie mit lsp habewenn man die sprachen angibt beim start marker, alsoo zb ```lua . Das efehlt hier,  der source code steht nur weiß ddrinnen. das plugin hätte auch eine api, aber wir können ja nicht einen server machen wo dieses featjure über eine nvim instan ausgegeben wird haha
-
-Generell was highlighting undusw... in markdown files angeht, mein plugin markdown.nvim beschreibt das sehr gut
-
-
 ## Table of content
 
+  - [FINISH](#finish)
+  - [Workflow Doc](#workflow-doc)
   - [mdview.nvim Rewrite: Go Relay + Rust/WASM Rendering](#mdviewnvim-rewrite-go-relay-rustwasm-rendering)
     - [Context](#context)
     - [Zielarchitektur](#zielarchitektur)
@@ -20,6 +17,12 @@ Generell was highlighting undusw... in markdown files angeht, mein plugin markdo
 
 ---
 
+## FINISH
+
+- Alle features durchgehjen und die perform,anteste, ideale DEFAULT config zusammenstellen
+
+---
+
 ## Workflow Doc
 
 Szenario: In nvim eine markdown file offen, `MDViewStart`:
@@ -29,6 +32,7 @@ Szenario: In nvim eine markdown file offen, `MDViewStart`:
 
 Welche Protkolle machen wann was?
 
+---
 
 ## mdview.nvim Rewrite: Go Relay + Rust/WASM Rendering
 

@@ -49,6 +49,7 @@ local MODE = {
   -- 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY
   ["debugging.nvim"] = "dir",
   ["diff.nvim"] = "dir",
+  ["languages.nvim"] = "dir",
   ["nvim-cmdlog"] = "dir",
   ["emojis.nvim"] = "dir",
   -- ["github_stats.nvim"]     = "dir",
@@ -351,6 +352,11 @@ return apply_source({
         adapter = "neotree",
         features = {
           cwd_sync = { enabled = true, reveal = false },
+          -- Mark the currently-focused file with a sign-column icon (on top of
+          -- neo-tree's own fg colour for all opened files). opened_sync is on by
+          -- default and keeps those opened-file colours in sync as buffers open/
+          -- close, so no config needed for it.
+          current_hl = { enabled = true, icon = "▸" },
         },
       })
     end,
@@ -568,21 +574,55 @@ return apply_source({
     cmd = {
       "MDViewStart",
       "MDViewStop",
+      "MDViewToggle",
       "MDViewOpen",
-      "MDViewShowWebLogs",
+      "MDViewTheme",
       "MDViewPreviewTab",
+      "MDViewShowWebLogs",
+      "MDViewLog",
+      "MDViewDiagnose",
     },
     config = function()
-      require("mdview").setup()
+      require("mdview").setup({
+        browser = {
+          -- theme = "github", -- P1-6: neues Theme (auch: catppuccin, dark-dimmed, plain, github) -> FUNKTioNNERTT
+          highlighter = "hljs", -- P1-5: exakte VSCode/TextMate-Themes (oder "hljs" / "none") - shiki highligihted nichts, hljs funkltiert wunderbar! höjs als default, shiki  wenn leicht debuggen dann debuggen oder wenn performance technisch ewwas dafür spricht, weil shiki besser als hljs ist, dnn jedeflals debuggen, ansosnten lassen wenn nichts dagegen spricht und als default; wäre es auch möglich, de color_m<_ascii api zu nutzen? dann könnten wir diese sdependecmy streichen und cmein eigenes colotr_my_ascii plugin nutzen
+          -- focus = "nvim", -- P2-9: Fokus bleibt in nvim (Windows best-effort) - wenn dies optin aktiv ist, dann öffnet sich nichts im browser! Bug!
+        },
+        experimental = {
+          line_diff = true, -- P?: nur geänderte Zeilen senden -> FUnktnioert -> postives/negatives abwägen ob default
+          click_navigate = true, -- P0-3: relativer Link öffnet Datei in nvim -> FUNKTIONERT -> als Default setzen
+          reverse_scroll = true, -- P1: im Browser scrollen bewegt nvim-Cursor -> funktioniert fast ideal (siehe feedback punkte)
+          -- webtransport = true,  -- fällt transparent auf WebSocket zurück (kein Backend) --> FUnktinoert -> abwägen ob DEFULT positives/negatives
+        },
+      })
     end,
   },
-
   {
     "StefanBartl/recommender.nvim",
     ft = { "lua" },
     cmd = { "Recommender" },
     config = function()
       require("recommender_nvim").setup()
+    end,
+  },
+
+    {
+    "StefanBartl/language.nvim",
+    event = "VeryLazy",
+    dependencies = {
+      "StefanBartl/lib.nvim",
+      "folke/trouble.nvim", -- optional: nicer list; pcall-guarded in the plugin
+    },
+    config = function()
+      require("language").setup({
+        spell = {
+          -- Panel is the default UI; set view = "quickfix" for the classic
+          -- diagnostics + quickfix session flow instead.
+          ui = { view = "picker", preview = true },
+          programming_dict = true,
+        },
+      })
     end,
   },
 })

@@ -2,14 +2,12 @@
 
 - [ ] Alle polugins durchgehen und checken, ob es eh keine doppelungen bei den lhs bei dne keymaps hibt
 - [ ] Nvim startet, dann kann ich ein oaar sekunden was machen, dann freezed er mehrere minuten, dann geht es normal weiter
+- [ ] Plugins explizit auf sicherheitsrelevantes abklopfen und härten
 
 ## `lib.nvim`
 
-- [ ]In `lib.nvim` implementieren:
-  - [ ]In `lib.nvim.`:
-
 - [ ] Aus `lib.nvim` implementieren:
-  - [ ] Aus `lib.nvim.window` zb.: `nice_quit`
+  - [ ] Aus `lib.nvim.window` bzw `lib.nvim.ui.kit` zb.: `nice_quit` usw.. für alle aufrufe von windows checken und die lib nvim ui kit variante iomplemeniteren
 
 ## General
 
@@ -29,11 +27,5 @@
   - [ ] `docs/TESTS/**` verschiedben nach `TESTS/**`, sodass es im root des plugins st , nicht mehrr in `docs`
 - [ ] Alle features/bugfixes committen und pushen (wenn nicht möglich: commit message ausgeben)
 
----
-
-## Opus HOCH oder Fable5
-
-- [ ] `telescope-selected-index` implementierung prüfen: Momentan passt weder die Indexierung sobald sich in der Prompt etwas tut noch oftmals die indexierung gleich beim start. ist es nciht möglich, nachdem die resultatsliste upgedatet aht (zb nahch einen keystroke in dre prompt), dass danach nochmal drüber gegangen und die nummerierung eingebetet wird mit einen kurzen debounce ... oder eine ganz andere möglichkeit, af die ich noch nict gedacht habe vielleicht?
 
 ---
-

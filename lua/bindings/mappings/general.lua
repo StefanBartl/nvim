@@ -38,10 +38,6 @@ function M.setup()
   vim.keymap.set("n", "<leader>date", function()
     vim.api.nvim_put({ os.date("%d.%m.%Y") }, "c", false, true)
   end, { desc = "Datum einfügen" })
-
-  -- :SystemInfo (Systeminformationen als Float + Zwischenablage) lebt jetzt in
-  -- lib.nvim (lib.nvim.system.info) und wird in init.lua via
-  -- require("lib.nvim.system").setup({ info_usercmd = true, ... }) registriert.
 end
 
 return M

@@ -16,23 +16,9 @@ local function is_linux()
   return false
 end
 
-if is_linux() then
-  specs = {
-    {
-      "3rd/image.nvim",
-      build = false,
-      lazy = false,
-      opts = {
-        processor = "magick_cli",
-        integrations = {
-          markdown = {
-            only_render_image_at_cursor = true,
-            only_render_image_at_cursor_mode = "popup",
-          },
-        },
-      },
-    },
-  }
-end
+-- NOTE: in-terminal image rendering is now handled by snacks.image on ALL
+-- platforms (see lua/plugins/snacks.lua, `image = { enabled = true }`).
+-- The former `3rd/image.nvim` Linux-only spec was removed to avoid two
+-- backends fighting over the terminal graphics protocol.
 
 return specs

@@ -10,5 +10,3 @@
 > Alle neuen features in die `docs/lib.txt` `vimdoc` sowie die `@types/all_functions` sowie die `init.lua` eintragen
 
 ---
-
-- JSON-Encoder (lib.lua.json kann nur decode

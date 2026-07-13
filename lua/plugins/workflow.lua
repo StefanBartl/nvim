@@ -69,13 +69,8 @@ return {
     version = "*",
   },
 
-  {
-    "uga-rosa/translate.nvim",
-    lazy = false,
-    config = function()
-      require("config.translate")
-    end,
-  },
+  -- translate.nvim replaced by the standalone language.nvim plugin
+  -- (see lua/plugins/language.lua). Use :Translate.
 
   {
     "chrisbra/unicode.vim",

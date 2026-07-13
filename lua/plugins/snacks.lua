@@ -54,7 +54,11 @@ return {
         scratch = { enabled = false },
         toggle = { enabled = false },
         words = { enabled = false },
-        image = { enabled = false },
+        -- In-terminal image rendering (kitty graphics protocol).
+        -- Requires nvim to run inside a graphics-capable terminal (WezTerm on
+        -- Windows) and the `magick` CLI in PATH for png/webp/svg conversion.
+        -- Defaults already enable doc.inline + doc.float for markdown.
+        image = { enabled = true },
         bigfile = { enabled = false },
         notifier = { enabled = false },
         dashboard = {

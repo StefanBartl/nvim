@@ -1,5 +1,5 @@
 ---@module 'plugins.trouble'
----@brief trouble.nvim plugin specification with SpellChecker integration.
+---@brief trouble.nvim plugin specification.
 
 local numbering = require("config.trouble.numbering")
 
@@ -116,22 +116,8 @@ return {
 
       -- END
 
-
-      -- SpellChecker ───────────────────────────────────────────────────────
-      require("config.trouble.spell").setup({
-        severity = vim.diagnostic.severity.WARN,
-
-        -- Global toggle keymap (no lang / no scope → defaults to en / buf)
-        keymap = "<leader>zs",
-
-        -- Per-buffer correction keymaps (attached when a session is active)
-        keymap_fix = "<leader>z=", -- z= menu, then advance
-        keymap_fix1 = "<leader>z1", -- accept first suggestion, advance
-        keymap_next = "]s", -- jump to next spell error
-
-        -- Set to false to always use the quickfix fallback
-        use_trouble = true,
-      })
+      -- Spell/grammar checking moved out of the config into the standalone
+      -- language.nvim plugin (see lua/plugins/language.lua). Use :Spellcheck.
     end,
   },
 }
