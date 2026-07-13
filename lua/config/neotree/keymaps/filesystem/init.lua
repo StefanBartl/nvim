@@ -1,9 +1,6 @@
 ---@module 'config.neotree.keymaps.filesystem'
 --- Entry point that merges all filesystem keymap modules into a single mapping table.
----
---- Merge priority for <Tab> and <CR> (later entry wins):
----   preview -> images -> pdfport
----   plain toggle_preview < system app for images < pdfport for PDFs
+--- Only files.lua remains; every other module was handled by filetree.nvim.
 
 -- Modules handled by filetree.nvim (removed, files deleted):
 --   filter, save, replace, mark, navigation, path, info, search,

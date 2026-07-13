@@ -1,7 +1,6 @@
 ---@module 'plugins.neotree'
 
 local KEYMAPS = require("config.neotree.keymaps")
-local COMMANDS = require("config.neotree.commands")
 local NEOTEST = require("config.neotest.neotree")
 local BUFFERS = require("config.neotree.keymaps.buffers")
 local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
@@ -65,8 +64,10 @@ return {
         },
       }
 
-      local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, NEOTEST.commands())
-      -- local ALL_COMMANDS = vim.tbl_extend("force", COMMANDS, {})
+      -- config.neotree.commands (custom_add/telescope_*/markdown_links/diff/mark)
+      -- were removed: filetree.nvim owns those and none were key-bound here.
+      -- Only neotest's commands remain in the registry.
+      local ALL_COMMANDS = NEOTEST.commands()
 
       return {
         sources = enabled_sources,

@@ -20,13 +20,8 @@ return {
     end,
   },
 
-  -- Sicherstellen, dass Neo-tree nicht als einziges normales Fenster übrig bleibt.
-  {
-    event = "neo_tree_window_after_open",
-    handler = function()
-      require("config.neotree.layout_guard").ensure_editor_window_deferred()
-    end,
-  },
+  -- (layout_guard entfernt: filetree.nvim's nav/layout_guard hält per Adapter
+  -- ein Editor-Fenster offen, wenn der Baum das letzte Fenster wäre.)
 
   -- Bei neuen Preview Window cursor zum Start zurücksetzen
   {
