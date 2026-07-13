@@ -1,5 +1,7 @@
 ---@module 'plugins.telescope'
----@brief Telescope plugin configuration with modular history backend support.
+---@brief Telescope plugin configuration.
+---@description History is owned by pickers.nvim (StefanBartl/pickers.nvim,
+---history.fzf_scope = "patch"), which patches telescope's defaults.history itself.
 
 return {
   ------------------------------------------------------------------------------
@@ -11,13 +13,6 @@ return {
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
-
-      {
-        "nvim-telescope/telescope-smart-history.nvim",
-        dependencies = {
-          "3rd/sqlite.nvim",
-        },
-      },
 
       -- Optional GitHub extension
       { "nvim-telescope/telescope-github.nvim", lazy = true },

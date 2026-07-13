@@ -184,6 +184,11 @@ return apply_source({
           },
         },
 
+        history = {
+          enabled = true,
+          fzf_scope = "patch", -- patches telescope + fzf-lua setup() itself, no config change needed elsewhere
+        },
+
         selected_index = {
           enabled = true,
           position = "right_align", -- "overlay" | "right_align" | "eol" | "top" | "down"

@@ -1,6 +1,7 @@
 ---@module 'config.telescope'
---- Modularized Telescope setup with unified history and file browser keymaps
---- Prefers SQLite-backed history (smart_history) if available, otherwise falls back to file-based history.
+--- Modularized Telescope setup with file browser keymaps.
+--- History is owned by pickers.nvim (history.fzf_scope = "patch" in its setup()),
+--- which patches telescope's defaults.history itself — see StefanBartl/pickers.nvim.
 --- Also merges keymaps for history and file browser, sets UI highlights, and loads extensions safely.
 
 local M = {}
@@ -8,7 +9,6 @@ local M = {}
 local actions = require("telescope.actions")
 local files_path_shorten = require("lib.nvim.fs.path_shorten")
 local ignore_list = require("lib.nvim.fs.ignore.list")
-local history = require("config.telescope.history")
 local history_keymaps = require("config.telescope.history.keymaps")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
 local bg = require("config.telescope.open_background")
@@ -30,8 +30,6 @@ end
 -- Returns merged default options for telescope.setup
 ---@return table opts
 function M.defaults()
-  local hist_config = history.setup()
-
   local km =
     vim.tbl_deep_extend(
       "force",
@@ -49,7 +47,6 @@ function M.defaults()
     end,
 
     file_ignore_patterns = ignore_list.as_telescope_patterns(),
-    history = hist_config,
     sorting_strategy = "ascending",
     layout_config = { prompt_position = "top" },
     preview = {
@@ -62,7 +59,7 @@ end
 -- Returns extension configuration table
 ---@return table extensions
 function M.extensions()
-  local ext = {
+  return {
     file_browser = {
       path = "%:p:h",
       cwd_to_path = true,
@@ -76,22 +73,12 @@ function M.extensions()
       prompt_path = true,
     },
   }
-
-  -- Merge backend-specific extensions (e.g., smart_history)
-  local hist_ext = history.get_extension_config()
-  if hist_ext then
-    ext = vim.tbl_deep_extend("force", ext, hist_ext)
-  end
-
-  return ext
 end
 
 -- Returns list of extensions to load
 ---@return string[] extensions
 function M.extensions_list()
-  local list = { "fzf" }
-  vim.list_extend(list, history.get_extensions())
-  return list
+  return { "fzf" }
 end
 
 -- Apply Telescope setup
