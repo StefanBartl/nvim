@@ -1,7 +1,5 @@
 # `filetree.nvim`
 
-[TESTS](./UHUHU.md)
-
 ## Table of content
 
   - [Neue Features](#neue-features)
@@ -11,14 +9,12 @@
     - [neotree spezifisch](#neotree-spezifisch)
       - [sources](#sources)
   - [Später](#spter)
-  - [ANFRAGE](#anfrage)
 
 ---
 
 ## Neue Features
 
-- [ ] **filetree.nvim-Integration von mdview.nvim**: auf einer Markdown-File-Node
-  ein Usrcmd/Keymap anbieten, das die Datei direkt via mdview öffnet. e:\repos\mdview.nvim
+- alle keymaps / features müssen auch via usrcmd ausführbnar sein
 
 ---
 
@@ -35,6 +31,7 @@
 ## Filetree Manager spezifische Features
 
 1. neotree, nvimtre, netrwq, oil, minifiles spezifische features sammeln (features, die diese plugins selbst anbieten)
+2. `commands/markdown/links.lua`, `actions/path/to_require/init.lua`, `actions/grep_picker/init.lua` — ✅ **verifiziert, bereits vollständig in filetree.nvim implementiert**: `features/paths/markdown_links`, `features/paths/lua_require_copy`, `features/search/{find_files,grep_in_dir}` (kombiniert im `search`-Menü-Block von `integrations/menu.lua`). Alle drei alten neotree-Configs waren bereits in vorherigen Commits (`71fef4a2`, `ba47a088`, beide schon auf `origin/cdxV2`) entfernt — keine Code-Änderung nötig, keine Doku-Lücke in filetree.nvim (README + vimdoc decken alle drei bereits ab).
 
 ---
 
@@ -62,44 +59,6 @@
    - **Recherche (Quellcode von nvim-tree.lua geklont und gelesen):** `g?`/`toggle_help` baut seine Liste, indem es `on_attach` erneut auf einem **Scratch-Buffer** ausführt und dessen Keymaps ausliest (`nvim-tree/keymap.lua:generate_keymap`) — keine Live-Buffer-Introspektion. filetree.nvim's Keys (separat per `FileType`-Autocmd gebunden) tauchen dort grundsätzlich nie auf, außer man hängt sich in nvim-trees `on_attach`-Callback selbst ein — das wäre ein Umbau der kompletten Keymap-Architektur des nvimtree-Adapters, kein Cheatsheet-Feature mehr. Netrw's `?` ist zudem eine statische Hilfeseite; oil/minifiles nicht verifiziert.
    - **Nebenfund (nicht behoben, separater Punkt):** `node_info` und vermutlich weitere Features hardcoden `pattern = {"neo-tree", "NvimTree"}` in ihrem `FileType`-Autocmd statt `adapter.filetypes` zu nutzen — würde für netrw/oil/minifiles vermutlich gar nicht binden. Nicht Teil dieser Phase, aber ein Hinweis, dass die nvimtree/netrw/oil/minifiles-Unterstützung insgesamt noch nicht durchgängig verifiziert ist.
 2. Cross-Check mit [Keymaps.md](../../../NOTES/neotree/Keymaps.md) & [Auto-Usrcmds-EventHandler.md](../../../NOTES/neotree/Auto-Usrcmds-EventHandler.md)
-
----
-
-## ANFRAGE
-
-Alten Config-Code entfernen, der bereits in filetree.nvim abgedeckt ist — ✅ **erste Runde umgesetzt** (nur die zweifelsfrei toten Dateien; der Rest bleibt bewusst offener Folgepunkt).
-
-   - **Analyse:** Ein Explore-Agent hat den kompletten `lua/config/neotree/**`-Baum (~150 Dateien) von den beiden echten Einstiegspunkten (`plugins/neotree.lua`, `config.neotree.init.setup()`) aus auf Erreichbarkeit geprüft. Ergebnis: ~40 Dateien komplett unreferenziert (`open/**`, `init/**`, `state/*`, `refresh_adapter/`, `undo/`, diverse `actions/*`, fast alle `keymaps/filesystem/*.lua` außer `files.lua`, u.a.), eine weitere Gruppe (`trash/*`, `safety/*`, `current_hl/*`, u.a.) nur noch über `:NeoTreeCheckHealth`-Diagnose-Probes "geladen" (praktisch tot, aber Löschen bräuchte eine Begleitänderung in `checkhealth/*`), und `commands/*` (die neo-tree-Custom-Commands-Registry) technisch noch eingehängt aber fast durchgängig ohne Tastenbindung.
-
-   - **Umgesetzt:** nur die zweifelsfrei tote erste Gruppe gelöscht (~50 Dateien). Die checkhealth-verknüpfte Gruppe und `commands/*` bewusst **nicht** angefasst — eigener Folgepunkt.
-
-   - ⚠️ **Zwei Fehler dabei gefunden und korrigiert:**
-
-     1. `lua/config/neotree/keymaps/filesystem/images.lua` hatte bereits *vor* dieser gesamten Session nicht-committete Änderungen (stand von Anfang an als `M` im `git status`) — versehentlich mitgelöscht, ohne vorher `git diff` zu prüfen. Auf den letzten committeten Stand wiederhergestellt (`git checkout HEAD --`); die eigentliche unfertige Änderung ist nicht wiederherstellbar (keine Swap-/Undo-Datei gefunden). **Der User weiß ggf. noch, was dort geändert war.**
-
-     2. Der Agent-Bericht behauptete, `trash/defaults.lua` würde trotz `lazy.require(...)` nie wirklich dereferenziert — falsch: `require("config.neotree")` brach danach mit einem echten Fehler ab. Datei wiederhergestellt, danach alle ~51 gelöschten Dateien manuell per grep gegengeprüft (nicht mehr blind dem Agenten vertraut).
-
-   - **Verifiziert:** `require("config.neotree")`, `require("config.neotree").setup({…echte Live-Optionen…})` und `:NeoTreeCheckHealth` laufen alle fehlerfrei durch.
-
-   - **Runde 2 (checkhealth-verknüpfte Gruppe): ✅ ebenfalls umgesetzt.** Vor dem Löschen `git status` auf jede Zieldatei geprüft (Lehre aus Runde 1) — sauber, keine vorbestehenden Änderungen. Gelöscht: `trash/{init,platform,validation,confirmation,operations}` (aber **nicht** `trash/defaults.lua` — bleibt wegen des `lazy.require`-Verhaltens aus Runde 1 nötig), `safety/**` komplett, `current_hl/**` komplett, `utils/{tree,buffer,platform}.lua`. Begleitend die zugehörigen Probe-Blöcke aus `checkhealth/{features,utils}.lua` entfernt.
-
-   - **Folgefund dabei:** `actions/copy/{entries,folders}` requiren `config.neotree.utils.tree` auf Modul-Top-Level (nicht in einer Funktion) — durch das Löschen von `utils/tree.lua` wäre das kaputt (harmlos dank `pcall`, aber inkonsistent) geblieben. Da beide ohnehin schon tot waren (einziger Caller: die längst tote `keymaps/filesystem/path.lua`), auf Rückfrage mitgelöscht inkl. ihrer beiden `checkhealth/actions.lua`-Probe-Einträge.
-
-   - **Verifiziert (erneut vollständig):** alle verbleibenden ~51 Referenzen manuell per grep gegen die komplette Löschliste geprüft (keine Treffer außer den bekannten, `pcall`-geschützten), `config.neotree.setup()` mit echten Live-Optionen und `config.neotree.checkhealth().check()` laufen beide fehlerfrei durch.
-
-   - **`commands/*`-Registry: Entscheidung — so lassen.** Technisch noch in `neo-tree.setup()` eingehängt, aber `run_command`/`custom_add`/`telescope_find`/`telescope_grep`/`diff_files`/`markdown_links*`/`mark` fast durchgängig ohne Tastenbindung (filetree.nvim deckt dieselbe Funktionalität ab). Bewusst **nicht** entfernt: würde den `opts.commands`-Aufbau in der live `plugins/neotree.lua` direkt anfassen — zentraler und sensibler als alles bisher Gelöschte, für reinen Aufräum-Nutzen ohne funktionalen Vorteil. Nur `commands/source` ist noch aktiv gebunden (`keymaps/init.lua`) und bleibt so oder so unangetastet.
-
-
-
----
-
-
-
-
-
-Kannst dud das weiter machen, also ales ewas in gfiletree.nvim bererits implementiert ist, aus meiner nvim/lua/config/neotree /nvim/lua/config/fzf.lua bzw nvim/lua/plugins/telescope.lua / nvim/lua/plugins/fzf.lua entfernen.
-
-Alles was dann noch über ist: auflisten und in bereiche einteilen, mal schauen was wir damit machen werden
 
 ---
 
