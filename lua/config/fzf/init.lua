@@ -5,13 +5,16 @@ local keymaps = require("config.fzf.keymaps")
 local fzf_opts = require("config.fzf.fzf_opts")
 local grep_cfg = require("config.fzf.grep")
 local files_cfg = require("config.fzf.files")
-local wrapped_actions = require("config.fzf.actions.wrapped")
 
 local M = {}
 
 ---@return table
 function M.get()
   local fzf_actions = require("fzf-lua").actions
+  -- Deferred (not a module-top-level require): this module is itself
+  -- required eagerly from plugins/fzf.lua's spec top level, before
+  -- lazy=false plugins like pickers.nvim have been loaded onto the path.
+  local entry_actions = require("pickers.entry_actions.adapters.fzf")
 
   return {
     -- Builtin keymaps
@@ -31,7 +34,7 @@ function M.get()
       ["ctrl-s"] = fzf_actions.file_split,
       ["ctrl-v"] = fzf_actions.file_vsplit,
       ["ctrl-t"] = fzf_actions.file_tabedit,
-    }, wrapped_actions.get()),
+    }, entry_actions.get_actions()),
   }
 end
 

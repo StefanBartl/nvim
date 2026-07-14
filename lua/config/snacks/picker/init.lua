@@ -15,20 +15,27 @@
 ---     picker = vim.tbl_deep_extend("force", { enabled = true }, snacks_opts)
 ---   })
 
-local actions = require("config.snacks.picker.actions")
 local keymaps = require("config.snacks.picker.keymaps")
 
 local M = {}
+
+-- Deferred (not a module-top-level require): this module is itself required
+-- eagerly from plugins/snacks.lua's spec top level, before lazy=false
+-- plugins like pickers.nvim have been loaded onto the path.
+---@return table
+local function entry_actions()
+  return require("pickers.entry_actions.adapters.snacks")
+end
 
 ---Get complete picker configuration
 ---@return table config Snacks picker configuration
 function M.get_config()
 
   -- Get custom actions
-  local custom_actions = actions.get_actions()
+  local custom_actions = entry_actions().get_actions()
 
   -- Get keymaps
-  local list_keys = keymaps.get_list_keys()
+  local list_keys = vim.tbl_extend("force", keymaps.get_list_keys(), entry_actions().get_keys())
   local preview_keys = keymaps.get_preview_keys()
 
   return {
@@ -74,14 +81,14 @@ end
 ---Get only actions (for manual integration)
 ---@return table<string, function> actions
 function M.get_actions()
-  return actions.get_actions()
+  return entry_actions().get_actions()
 end
 
 ---Get only keymaps (for manual integration)
 ---@return {input: table, list: table, preview: table} keymaps
 function M.get_keymaps()
   return {
-    list = keymaps.get_list_keys(),
+    list = vim.tbl_extend("force", keymaps.get_list_keys(), entry_actions().get_keys()),
     preview = keymaps.get_preview_keys(),
   }
 end

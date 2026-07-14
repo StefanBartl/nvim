@@ -11,8 +11,7 @@ local files_path_shorten = require("lib.nvim.fs.path_shorten")
 local ignore_list = require("lib.nvim.fs.ignore.list")
 local history_keymaps = require("config.telescope.history.keymaps")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
-local bg = require("config.telescope.open_background")
-local custom_actions = require("config.telescope.actions")
+local entry_actions = require("pickers.entry_actions.adapters.telescope")
 
 local notify = require("lib.nvim.notify").create("[telescope.cfg]")
 
@@ -35,9 +34,8 @@ function M.defaults()
       "force",
       history_keymaps.get(actions) or {},
       fb_keymaps.get(actions),
-      bg.get_mappings(),
       require("config.telescope.keymaps").get(actions),
-      custom_actions.get_mappings()
+      entry_actions.get_mappings()
     )
 
   return {

@@ -2,11 +2,12 @@
 ---@brief Keymaps configuration for snacks picker
 ---@description
 --- Provides custom keymaps for snacks.nvim picker:
---- - <C-a>: Create file/folder
---- - <S-CR>, <C-o>: Open in background
 --- - <PageUp>, <PageDown>: Preview vertical scroll
 --- - <C-Left>, <C-Right>: Preview horizontal scroll
 --- - <C-p>, <C-n>: History navigation (if available)
+---
+--- Create-file/open-background keys come from
+--- pickers.entry_actions.adapters.snacks.get_keys() (see config.snacks.picker).
 
 local M = {}
 
@@ -41,16 +42,13 @@ function M.get_input_keys(has_history)
 end
 
 ---Get keymaps for list window
+---@description
+--- Create-file/open-background bindings come from
+--- pickers.entry_actions.adapters.snacks.get_keys() (see config.snacks.picker),
+--- not from here.
 ---@return table keymaps
 function M.get_list_keys()
   return {
-    -- File creation
-    ["<C-a>"] = "create_file",
-
-    -- Open in background
-    ["<S-CR>"] = "open_background",
-    ["<C-o>"] = "open_background",
-
     -- Preview scrolling (vertical)
     ["<PageDown>"] = "preview_scroll_down",
     ["<PageUp>"] = "preview_scroll_up",
