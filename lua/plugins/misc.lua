@@ -35,8 +35,9 @@ return {
     "axieax/urlview.nvim",
     lazy = true,
     cmd = { "UrlView" },
+    dependencies = { "StefanBartl/open.nvim" },
     config = function()
-      require("config.urlview.open_in_browser_integration").setup()
+      require("open_nvim.integrations.urlview").setup()
     end,
   },
 

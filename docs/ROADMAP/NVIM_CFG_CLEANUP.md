@@ -30,10 +30,10 @@ Der natürliche Heimatort für **alle** picker-spezifischen Aktionen/Keymaps. De
 | Modul | Ziel-Plugin | Warum | Konfidenz |
 |---|---|---|---|
 | `config/neotree/actions/pdfport/init.lua` | **pdfport.nvim** | PDF-Extraktion ist dessen Domäne | sehr hoch |
-| `config/neotree/commands/markdown/links.lua` | **mdlinks** / **markdown.nvim** | Markdown-Link-Logik | hoch |
-| `config/neotree/actions/path/to_require/init.lua` | **project-insight.nvim** | rel-Path→`require()`, passt zu imports/`rel_path_to_require` | hoch |
-| `config/neotree/actions/grep_picker/init.lua` | **mygrep.nvim** / pickers | find-or-grep-Menü | hoch |
-| `config/urlview/open_in_browser_integration.lua` | **open.nvim** | „route URL/Pfad zum Ziel" ist genau `:Open` | hoch |
+| `config/neotree/commands/markdown/links.lua` | **filetree.nvim** | Markdown-Link-Logik | hoch |
+| `config/neotree/actions/path/to_require/init.lua` | **filetree.nvim** | rel-Path→`require()`, passt zu imports/`rel_path_to_require` | hoch |
+| `config/neotree/actions/grep_picker/init.lua` | filetree.nvim | find-or-grep-Menü | hoch |
+
 | `config/lazygit/actions/{badd,replace}`, `resolve_path` | pickers / buffer-ctx / lib | Badd = Background-Buffer (dupliziert, s. Liste 2) | mittel |
 
 ---
