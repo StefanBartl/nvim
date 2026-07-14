@@ -14,7 +14,7 @@
 --- See lua/config/lazygit/README.md for the full nvr/$NVIM mechanism.
 
 local notify = require("lib.nvim.notify").create("[cfg.lazygit.replace]")
-local resolve = require("config.lazygit.resolve_path")
+local resolve = require("lib.nvim.fs.path").from_repo_relative
 local normal = require("lib.nvim.buf_win_tab.normal_buffer")
 local badd = require("config.lazygit.actions.badd")
 

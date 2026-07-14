@@ -5,7 +5,8 @@
 --- See lua/config/lazygit/README.md for the full nvr/$NVIM mechanism.
 
 local notify = require("lib.nvim.notify").create("[cfg.lazygit.badd]")
-local resolve = require("config.lazygit.resolve_path")
+local resolve = require("lib.nvim.fs.path").from_repo_relative
+local open_background = require("lib.nvim.buffer.open_background")
 
 local fn = vim.fn
 
@@ -25,7 +26,7 @@ function M.run(raw)
     return false
   end
 
-  local ok, err = pcall(vim.cmd, "badd " .. fn.fnameescape(path))
+  local ok, err = open_background(path, { load = false })
   if not ok then
     notify.warn(("badd failed: %s"):format(err))
     return false
