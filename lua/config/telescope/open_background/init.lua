@@ -1,5 +1,6 @@
 ---@module 'config.telescope.open_background'
 local notify = require("lib.nvim.notify").create("[config.telescope.open_background]")
+local open_background_core = require("lib.nvim.buffer.open_background")
 
 local action_state = require("telescope.actions.state")
 
@@ -27,25 +28,13 @@ function M.open_background(prompt_bufnr)
     return
   end
 
-  -- Expand to absolute path
-  path = vim.fn.fnamemodify(path, ":p")
-
-  -- Check if file exists
-  if vim.fn.filereadable(path) ~= 1 then
-    notify.error("File not readable: " .. path)
+  local ok, bufnr_or_err = open_background_core(path)
+  if not ok then
+    notify.error(bufnr_or_err)
     return
   end
 
-  -- Add and load buffer
-  local bufnr = vim.fn.bufadd(path)
-  vim.fn.bufload(bufnr)
-
-  -- Ensure buffer is listed
-  vim.bo[bufnr].buflisted = true
-
-  -- Show confirmation
-  local filename = vim.fn.fnamemodify(path, ":t")
-  notify.info("Opened in background: " .. filename)
+  notify.info("Opened in background: " .. vim.fn.fnamemodify(path, ":t"))
 end
 
 ---Get static mappings table for background open (NOT attach_mappings)

@@ -5,6 +5,7 @@
 --- Adapted from config.telescope.actions.open_badd
 
 local notify = require("lib.nvim.notify").create("[config.snacks.picker.actions.open_background]")
+local open_background_core = require("lib.nvim.buffer.open_background")
 local fn = vim.fn
 
 local M = {}
@@ -37,33 +38,13 @@ function M.open_background(_picker, item)
     return
   end
 
-  -- Expand to absolute path
-  path = fn.fnamemodify(path, ":p")
-
-  -- Check if file exists and is readable
-  if fn.filereadable(path) ~= 1 then
-    notify.error("File not readable: " .. path)
-    return
-  end
-
-  -- Add buffer to buffer list
-  local bufnr = fn.bufadd(path)
-
-  -- Load buffer content
-  local ok = pcall(fn.bufload, bufnr)
+  local ok, bufnr_or_err = open_background_core(path)
   if not ok then
-    notify.error("Failed to load buffer: " .. path)
+    notify.error(bufnr_or_err)
     return
   end
 
-  -- Ensure buffer is listed
-  pcall(function()
-    vim.bo[bufnr].buflisted = true
-  end)
-
-  -- Show confirmation
-  local filename = fn.fnamemodify(path, ":t")
-  notify.info("Buffered: " .. filename)
+  notify.info("Buffered: " .. fn.fnamemodify(path, ":t"))
 
   -- Do NOT close picker - that's the point of background open
 end

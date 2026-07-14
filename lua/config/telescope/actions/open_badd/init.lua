@@ -2,6 +2,7 @@
 ---@description Open file in background buffer without closing Telescope
 
 local notify = require("lib.nvim.notify").create("[config.telescope.actions.open_badd]")
+local open_background = require("lib.nvim.buffer.open_background")
 
 local M = {}
 
@@ -30,33 +31,13 @@ function M.open_badd(prompt_bufnr)
     return
   end
 
-  -- Expand to absolute path
-  path = fn.fnamemodify(path, ":p")
-
-  -- Check if file exists and is readable
-  if fn.filereadable(path) ~= 1 then
-    notify.error("File not readable: " .. path)
-    return
-  end
-
-  -- Add buffer to buffer list
-  local bufnr = fn.bufadd(path)
-
-  -- Load buffer content
-  local ok = pcall(fn.bufload, bufnr)
+  local ok, bufnr_or_err = open_background(path)
   if not ok then
-    notify.error("Failed to load buffer: " .. path)
+    notify.error(bufnr_or_err)
     return
   end
 
-  -- Ensure buffer is listed
-  pcall(function()
-    vim.bo[bufnr].buflisted = true
-  end)
-
-  -- Show confirmation
-  local filename = fn.fnamemodify(path, ":t")
-  notify.info("Buffered: " .. filename)
+  notify.info("Buffered: " .. fn.fnamemodify(path, ":t"))
 end
 
 ---Get mappings for Telescope

@@ -2,17 +2,13 @@
 ---@description fzf-lua custom actions with proper action wrappers
 
 local notify = require("lib.nvim.notify").create("[config.fzf.actions.wrapped]")
+local strip_ansi = require("lib.lua.strings").strip_ansi
+local create_entry_core = require("lib.nvim.fs.create_entry")
+local open_background = require("lib.nvim.buffer.open_background")
 
 local M = {}
 
 local fn = vim.fn
-
----Check if path ends with directory separator
----@param path string
----@return boolean
-local function ends_with_separator(path)
-  return path:match("[/\\]$") ~= nil
-end
 
 ---Extract file path from fzf-lua entry
 ---@param selected table|string fzf-lua selected entry
@@ -30,10 +26,10 @@ local function get_path_from_entry(selected)
     return nil
   end
 
-  -- Remove fzf formatting
+  -- Remove fzf formatting (ANSI colors, leading icon/prefix)
   path = path:gsub("^%s*\27%[[%d;]*m*", "")
   path = path:gsub("^%s*[^ ]*%s+", "")
-  path = path:gsub("\27%[[%d;]*m", "")
+  path = strip_ansi(path)
   path = path:gsub("^%s+", ""):gsub("%s+$", "")
 
   -- Expand to absolute path
@@ -42,50 +38,27 @@ local function get_path_from_entry(selected)
   return path
 end
 
----Create file or directory
+---Create file or directory, notify, and open newly created files
 ---@param parent_dir string Parent directory path
 ---@param name string Name of file/folder to create
 ---@return boolean success
 local function create_entry(parent_dir, name)
-  local full_path = fn.resolve(parent_dir .. "/" .. name)
-
-  if ends_with_separator(name) then
-    -- Directory creation
-    local dir_path = full_path:gsub("[/\\]$", "")
-    local ok, err = pcall(fn.mkdir, dir_path, "p")
-    if not ok then
-      notify.error(("Failed to create directory: %s"):format(err))
-      return false
-    end
-    notify.info(("Directory created: %s"):format(fn.fnamemodify(dir_path, ":t")))
-    return true
-  else
-    -- File creation
-    if fn.filereadable(full_path) == 1 then
-      notify.warn("File already exists")
-      return false
-    end
-
-    local parent = fn.fnamemodify(full_path, ":h")
-    if fn.isdirectory(parent) == 0 then
-      fn.mkdir(parent, "p")
-    end
-
-    local file = io.open(full_path, "w")
-    if file then
-      file:close()
-      notify.info(("File created: %s"):format(fn.fnamemodify(full_path, ":t")))
-
-      vim.schedule(function()
-        vim.cmd("edit " .. fn.fnameescape(full_path))
-      end)
-
-      return true
-    else
-      notify.error("Failed to create file")
-      return false
-    end
+  local ok, kind, path_or_err = create_entry_core(parent_dir, name)
+  if not ok then
+    notify.error(path_or_err)
+    return false
   end
+
+  if kind == "directory" then
+    notify.info(("Directory created: %s"):format(fn.fnamemodify(path_or_err, ":t")))
+  else
+    notify.info(("File created: %s"):format(fn.fnamemodify(path_or_err, ":t")))
+    vim.schedule(function()
+      vim.cmd("edit " .. fn.fnameescape(path_or_err))
+    end)
+  end
+
+  return true
 end
 
 ---Get wrapped actions for fzf-lua
@@ -101,16 +74,11 @@ function M.get()
         return
       end
 
-      if fn.filereadable(path) ~= 1 then
-        notify.error("File not readable: " .. fn.fnamemodify(path, ":t"))
+      local ok, bufnr_or_err = open_background(path)
+      if not ok then
+        notify.error(bufnr_or_err)
         return
       end
-
-      local bufnr = fn.bufadd(path)
-      pcall(fn.bufload, bufnr)
-      pcall(function()
-        vim.bo[bufnr].buflisted = true
-      end)
 
       notify.info("Buffered: " .. fn.fnamemodify(path, ":t"))
 
@@ -128,16 +96,11 @@ function M.get()
         return
       end
 
-      if fn.filereadable(path) ~= 1 then
-        notify.error("File not readable: " .. fn.fnamemodify(path, ":t"))
+      local ok, bufnr_or_err = open_background(path)
+      if not ok then
+        notify.error(bufnr_or_err)
         return
       end
-
-      local bufnr = fn.bufadd(path)
-      pcall(fn.bufload, bufnr)
-      pcall(function()
-        vim.bo[bufnr].buflisted = true
-      end)
 
       notify.info("Buffered: " .. fn.fnamemodify(path, ":t"))
 

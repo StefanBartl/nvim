@@ -5,66 +5,33 @@
 --- Adapted from config.telescope.actions.create_file
 
 local notify = require("lib.nvim.notify").create("[config.snacks.picker.actions.create_file]")
+local create_entry_core = require("lib.nvim.fs.create_entry")
 local fn = vim.fn
 
 local M = {}
 
----Check if path ends with directory separator
----@param path string
----@return boolean
----@private
-local function ends_with_separator(path)
-  return path:match("[/\\]$") ~= nil
-end
-
----Create file or directory
+---Create file or directory, notify, and open newly created files
 ---@param parent_dir string Parent directory path
 ---@param name string Name of file/folder to create
 ---@return boolean success
 ---@private
 local function create_entry(parent_dir, name)
-  local full_path = fn.resolve(parent_dir .. "/" .. name)
-
-  if ends_with_separator(name) then
-    -- Directory creation
-    local dir_path = full_path:gsub("[/\\]$", "")
-    local ok, err = pcall(fn.mkdir, dir_path, "p")
-    if not ok then
-      notify.error(("Failed to create directory: %s"):format(err))
-      return false
-    end
-    notify.info(("Directory created: %s"):format(fn.fnamemodify(dir_path, ":t")))
-    return true
-  else
-    -- File creation
-    if fn.filereadable(full_path) == 1 then
-      notify.warn("File already exists")
-      return false
-    end
-
-    -- Create parent directory if needed
-    local parent = fn.fnamemodify(full_path, ":h")
-    if fn.isdirectory(parent) == 0 then
-      fn.mkdir(parent, "p")
-    end
-
-    -- Create empty file
-    local file = io.open(full_path, "w")
-    if file then
-      file:close()
-      notify.info(("File created: %s"):format(fn.fnamemodify(full_path, ":t")))
-
-      -- Open file in buffer
-      vim.schedule(function()
-        vim.cmd("edit " .. fn.fnameescape(full_path))
-      end)
-
-      return true
-    else
-      notify.error("Failed to create file")
-      return false
-    end
+  local ok, kind, path_or_err = create_entry_core(parent_dir, name)
+  if not ok then
+    notify.error(path_or_err)
+    return false
   end
+
+  if kind == "directory" then
+    notify.info(("Directory created: %s"):format(fn.fnamemodify(path_or_err, ":t")))
+  else
+    notify.info(("File created: %s"):format(fn.fnamemodify(path_or_err, ":t")))
+    vim.schedule(function()
+      vim.cmd("edit " .. fn.fnameescape(path_or_err))
+    end)
+  end
+
+  return true
 end
 
 ---Create file/folder action for snacks picker
