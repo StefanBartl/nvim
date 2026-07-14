@@ -16,12 +16,24 @@ function M.setup()
   map({ "n", "v", "t" }, "<C-s>", function()
     local pos = vim.api.nvim_win_get_cursor(0)
     vim.cmd("write")
-    vim.api.nvim_win_set_cursor(0, pos)
+
+    -- Verhindert Fehler, falls die Datei nach dem Speichern/Formatieren kürzer ist
+    local last_line = vim.api.nvim_buf_line_count(0)
+    if pos[1] > last_line then
+        pos[1] = last_line
+    end
+    pcall(vim.api.nvim_win_set_cursor, 0, pos)
+
   end, { desc = "[General] Save file" })
   map("i", "<C-s>", function() --- explicit because of vim.lsp.buf.signature_help()
     local pos = vim.api.nvim_win_get_cursor(0)
     vim.cmd("write")
-    vim.api.nvim_win_set_cursor(0, pos)
+
+    local last_line = vim.api.nvim_buf_line_count(0)
+    if pos[1] > last_line then
+        pos[1] = last_line
+    end
+    pcall(vim.api.nvim_win_set_cursor, 0, pos)
   end, { desc = "[General] Save file", noremap = true })
 
   map({ "i", "v", "t" }, "jk", "<Esc>", { desc = "[General] Exit to normal mode" })

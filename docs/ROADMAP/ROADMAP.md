@@ -7,88 +7,10 @@
 - beim öfgfnen eienr datzei über harpoon aktualisere filetree.nvim den filetree noch nicht cwd_sync
 
 **Wichtig:**
-- nach ein paar sekundn anch dem start blkeiubt nvim für ca 3-5 sekunden freezen, egal awas ich gerade mache. Was kö nnte das sein? Könnte es sein, dass das verzögerte initieren in der `nvim/init.lua` damit zu tun hat und etwas zeitverzögert ausggelöst wird, dass nicht asynchron ist?
+- [ ] Nvim startet, dann kann ich ein paar sekunden was machen, dann freezed er mehrere minuten, dann geht es normal weiter
+  nach ein paar sekundn anch dem start blkeiubt nvim für ca 3-5 sekunden freezen, egal awas ich gerade mache. Was kö nnte das sein? Könnte es sein, dass das verzögerte initieren in der `nvim/init.lua` damit zu tun hat und etwas zeitverzögert ausggelöst wird, dass nicht asynchron ist?
 
-test: [test](./CDX.md)
 lernen: https://www.browserstack.com/
-
-```lua
-local notify = require("lib.nvim.notify").create("[config.telescope.history]")
-
-local M = {}
-
-
----@type HistoryState
-local state = {
-  backend = "none",
-  path = "",
-  limit = 3000,
-  extensions = {},
-}
-
----Ensure a directory exists
----@param dir_path string
----@return boolean
-local function ensure_dir(dir_path)
-  if vim.fn.isdirectory(dir_path) == 0 then
-    local ok, err = pcall(vim.fn.mkdir, dir_path, "p")
-    if not ok then
-      notify.warn(string.format("Failed to create directory: %s (%s)", dir_path, err))
-      return false
-    end
-  end
-  return true
-end
-
----Setup SQLite backend if possible
----@return boolean success
-local function setup_sqlite()
-  local ok_sqlite = pcall(require, "sqlite")
-  local ok_smart = pcall(require, "telescope-smart-history")
-  if not (ok_sqlite and ok_smart) then
-    return false
-  end
-
-  local dir = vim.fn.stdpath("data") .. "/databases"
-  if not ensure_dir(dir) then
-    return false
-  end
-
-  state.backend = "sqlite"
-  state.path = dir .. "/telescope_history.sqlite3"
-  state.extensions = { "smart_history" }
-  return true
-end
-
----Setup file-based fallback backend
----@return boolean success
-local function setup_file()
-  local dir = vim.fn.stdpath("data") .. "/picker-history"
-  if not ensure_dir(dir) then
-    return false
-  end
-
-  state.backend = "file"
-  state.path = dir .. "/_global.txt"
-  state.extensions = {}
-  return true
-end
-
----Setup history backend (SQLite preferred)
-function M.setup()
-  if not setup_sqlite() then
-    setup_file()
-  end
-
-  -- notify.info(string.format("Telescope history: Using %s backend at %s", state.backend, state.path))
-
-  return {
-    path = state.path,
-    limit = state.limit,
-  }
-end
-
-```
 
 ## Table of content
 

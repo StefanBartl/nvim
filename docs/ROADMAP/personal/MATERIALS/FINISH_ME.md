@@ -1,8 +1,17 @@
 # FINISH: von mir ausführen
 
-- [ ] Alle polugins durchgehen und checken, ob es eh keine doppelungen bei den lhs bei dne keymaps hibt
-- [ ] Nvim startet, dann kann ich ein oaar sekunden was machen, dann freezed er mehrere minuten, dann geht es normal weiter
-- [ ] Plugins explizit auf sicherheitsrelevantes abklopfen und härten
+- [ ] Alle persönliches Plugins durchgehen und
+  - [ ] Alle Keymaps als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Keymaps.md` schreiben
+    - [ ] checken, ob es eh keine doppelungen bei den lhs der keymaps gibt
+  - [ ] Alle Usrcmds als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Usermcds.md` schreiben
+  - [ ] Alle Autocomands als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Autocmds.md` schreiben
+  - [ ] Sonstige Events/Actions/Features als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/Misc.md` schreiben
+
+- [ ] Alle persönliches Plugins durchgehen und
+  - [ ] explizit auf sicherheitsrelevantes abklopfen und härten
+  - [ ] macht es Sinn das Plugin oder Teil(e) davon als kompilierte binaries auszugeben ?
+
+
 
 ## `lib.nvim`
 

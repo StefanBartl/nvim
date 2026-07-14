@@ -25,6 +25,7 @@
 `/filetreepicker.nvim`
 `/github_stats.nvim`
 `/gopath.nvim`
+`/language.nvim`
 `/learn-cli.nvim`
 `/lib.nvim`
 `/markdown.nvim`
@@ -52,6 +53,7 @@
 `\repos\filerreepicker.nvim`
 `\repos\github_stats.nvim`
 `\repos\gopath.nvim`
+`\repos\language.nvim`
 `\repos\learn-cli.nvim`
 `\repos\lib.nvim`
 `\repos\markdown.nvim`

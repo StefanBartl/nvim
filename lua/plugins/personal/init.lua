@@ -52,7 +52,7 @@ local MODE = {
   ["languages.nvim"] = "dir",
   ["nvim-cmdlog"] = "dir",
   ["emojis.nvim"] = "dir",
-  -- ["github_stats.nvim"]     = "dir",
+  ["github_stats.nvim"] = "dir",
   -- ["learn-cli.nvim"]        = "dir",
 
   -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)
@@ -446,17 +446,21 @@ return apply_source({
     end,
   },
 
-  -- {
-  --   "StefanBartl/github_stats.nvim",
-  --   lazy = false,
-  --   config = function()
-  --     require("github_stats").setup({
-  --       notify_fetch = false,
-  --       config_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats",
-  --       data_dir = vim.fn.stdpath("config") .. "/lua/plugins/github-stats/data"
-  --     })
-  --   end,
-  -- },
+  {
+    "StefanBartl/github_stats.nvim",
+    event = "VimEnter",
+    config = function()
+      require("github_stats").setup({
+        repos = { "username/repo1", "username/repo2" },
+        token_source = "env",
+        token_env_var = "GITHUB_TOKEN",
+        fetch_interval_hours = 24,
+        notification_level = "all",
+        watch_users = { "StefanBartl" },
+        data_dir = vim.fn.stdpath('config') .. "/github-stats/",
+      })
+    end,
+  },
 
   -- {
   --   "StefanBartl/learn-cli.nvim",
@@ -607,7 +611,7 @@ return apply_source({
     end,
   },
 
-    {
+  {
     "StefanBartl/language.nvim",
     event = "VeryLazy",
     dependencies = {

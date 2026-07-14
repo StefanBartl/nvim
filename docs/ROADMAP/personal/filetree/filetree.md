@@ -1,33 +1,6 @@
 # `filetree.nvim`
 
-[s](docs/ROADMAP/personal/filetree/tester.lua)
-[s](./tester.lua)
-[s](docs/ROADMAP/personal/filetree/tester2.lua)
-[s](./test2.lua)
-
-- Es funkltiert, als das anpasen der refrenezen, aber wenn man "update all references" auswählt, alks nicht per oicker, dann wird nur eine refenez angepast, nicht alle die exosistieren. Und das auch nicht zuverlöässig: der markdown link relativ zum cwd ist, dann scheint er den link nicht zu finden. Beispiel:
-
-```lua
-[s](docs/ROADMAP/personal/filetree/tester.lua)
-[s](./tester.lua)
-[s](docs/ROADMAP/personal/filetree/tester2.lua)
-[s](./test2.lua)
-```
-
-wenn ich jetz im filetree tester.lua zu testing.lua umbenne, und auf update all refreences klicke, dann erzeugt er:
-
-```lua
-[s](docs/ROADMAP/personal/filetree/tester.lua)
-[s](docs/ROADMAP/personal/filetree/testing.lua)
-[s](docs/ROADMAP/personal/filetree/tester2.lua)
-[s](./test2.lua)
-```
-
-Infos:
- - Aktuelles cwd ist nvim config, aslso `./docs/ROADMAP/personal/filetree/tester.lua` existiert tatsächlich
- - Die datei, in der das steht (und geäbndert wurde) ist `./docs/ROADMAP/personal/filetree/filetee.md`, also stimmt von der file aus gesehen auch der pfad ./tester.lua bzw ./testing.lua
-
-- Noch ein wichtigewr punkt: Momentan dauerst es sehr sehr lange, 20-30 Sekunden, nachdem man "d" bzw "r" oder "m" eingeben hat auf einer node. Kann man da performace technisch etwas machen?Bei der perorfmacne momentan, müssen wir es fast opt in machen und default mäßig deaktivieren. GIbt es viellecht den ein oder anderen "schmäh" den wir anwenden können? zb.: schon wenn man das keymap drückt, gleich starten miut dem suchen der referenzen, noch bevor bzw in dem zeitnkjt, wo der user auswähöt eiunen eeuen namen bzw welche option man wäht zum ref updaten. wenn man dan wählt, keine updaten, na dann ist es halt so, aber wenn man gleich beim satrt der keymap einen asynchronen prozess startet, dann könnte das etwaws bringen, oder nicht? sicherlich am meisten beim renaimng, denn da muss der user jha einen neuen namen eingeben -> viel zeiut. aber auch beim "x" muss der user eine neue standort suchen und dort hin mocven, -> auch 7eiot... Was dnekst du? mach einen schlachtplan für das performance problem
+[TESTS](./UHUHU.md)
 
 ## Table of content
 
