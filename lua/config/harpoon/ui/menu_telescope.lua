@@ -12,7 +12,7 @@ local finders = require("telescope.finders")
 local conf = require("telescope.config").values
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
-local label = require("config.harpoon.utils.path_label")
+local path_shorten = require("lib.nvim.fs.path_shorten")
 
 ---@return nil
 function M.open()
@@ -31,7 +31,7 @@ function M.open()
   for i = 1, n do
     local it = items[i]
     local v = (type(it) == "table") and it.value or tostring(it)
-    entries[i] = string.format("%s\0%s", label.to_label(v), v)
+    entries[i] = string.format("%s\0%s", path_shorten(v, nil, { style = "label" }), v)
   end
 
   pickers

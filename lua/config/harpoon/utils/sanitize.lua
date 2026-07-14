@@ -3,7 +3,8 @@
 
 local M = {}
 
-local Norm = require("config.harpoon.utils.normkey")
+local normkey = require("lib.nvim.fs.normkey")
+local dedup_indices = require("lib.lua.tables").dedup_indices
 
 ---@param list Cfg.Harpoon.List
 ---@return nil
@@ -44,21 +45,13 @@ function M.dedup_in_place_safe(list)
   if type(list) ~= "table" or type(list.items) ~= "table" then
     return 0
   end
-  local seen = {} ---@type table<string, boolean>
-  local to_remove = {} ---@type integer[]
 
-  for i = 1, #list.items do
-    local it = list.items[i]
+  -- Non-string values (shouldn't occur after sanitize_items_in_place, but
+  -- kept defensive) key to themselves so they never collide with a real path.
+  local to_remove = dedup_indices(list.items, function(it)
     local v = (type(it) == "table") and it.value or it
-    if type(v) == "string" then
-      local k = Norm.normkey(v)
-      if seen[k] then
-        to_remove[#to_remove + 1] = i
-      else
-        seen[k] = true
-      end
-    end
-  end
+    return type(v) == "string" and normkey(v) or it
+  end)
 
   if #to_remove == 0 then
     return 0

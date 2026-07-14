@@ -4,7 +4,7 @@
 
 local M = {}
 
-local label = require("config.harpoon.utils.path_label")
+local path_shorten = require("lib.nvim.fs.path_shorten")
 local bo = vim.bo
 local nvim_buf_set_lines = vim.api.nvim_buf_set_lines
 local nvim_create_user_command = vim.api.nvim_create_user_command
@@ -27,7 +27,7 @@ local function collect_lines()
     for i = 1, #list.items do
       local it = list.items[i]
       local v = type(it) == "table" and it.value or tostring(it)
-      lines[#lines + 1] = string.format("%3d  %s", i, label.to_label(v))
+      lines[#lines + 1] = string.format("%3d  %s", i, path_shorten(v, nil, { style = "label" }))
     end
   end
   return lines

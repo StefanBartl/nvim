@@ -12,7 +12,7 @@ local notify = require("lib.nvim.notify").create("[config.harpoon.persist_paths]
 
 local M = {}
 
-local Norm = require("config.harpoon.utils.normkey")
+local normkey = require("lib.nvim.fs.normkey")
 local uv = vim.uv or vim.loop
 local ok_path, Path = pcall(require, "plenary.path")
 local sani = require("config.harpoon.utils.sanitize")
@@ -140,7 +140,7 @@ function M.inject_now()
       local it = list.items[i]
       local v = (type(it) == "table") and it.value or it
       if type(v) == "string" then
-        have[Norm.normkey(v)] = true
+        have[normkey(v)] = true
       end
     end
   end
@@ -150,7 +150,7 @@ function M.inject_now()
   for i = 1, #targets do
     local p = targets[i]
     if p ~= "" and is_file(p) then
-      local k = Norm.normkey(p, { realpath = true })
+      local k = normkey(p, { realpath = true })
       if not have[k] then
         add_with_context(list, p)
         have[k] = true

@@ -4,7 +4,7 @@
 
 local M = {}
 
-local label = require("config.harpoon.utils.path_label")
+local path_shorten = require("lib.nvim.fs.path_shorten")
 
 ---@return boolean
 local function has_fzf_lua()
@@ -38,7 +38,7 @@ function M.open()
     for i = 1, n do
       local it = items[i]
       local v = (type(it) == "table") and it.value or tostring(it)
-      entries[i] = string.format("%s\0%s", label.to_label(v), v)
+      entries[i] = string.format("%s\0%s", path_shorten(v, nil, { style = "label" }), v)
     end
 
     fzf.fzf_exec(entries, {
