@@ -16,7 +16,7 @@ return {
       -----------------------------------------------------------------------
       -- Guard module
       -----------------------------------------------------------------------
-      local guards = require("config.treesitter.guards")
+      local guards = require("lib.nvim.treesitter.guard")
 
       -----------------------------------------------------------------------
       -- Highlight activation
