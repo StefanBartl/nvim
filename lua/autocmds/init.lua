@@ -14,9 +14,6 @@ require("autocmds.general").enable({
   kitty = {
     enable = true, -- Sets Kitty padding/margin to compact values on VimEnter and restores them on VimLeavePre.
   },
-  auto_mkdir = {
-    enable = true, -- Creates missing parent directories on BufWritePre, optionally skipping URL/remote-like paths.
-  },
   cursorline = {
     enable = false, -- Toggles the local 'cursorline' option on focus/normal events and hides it on insert/leave events.
   },

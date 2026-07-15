@@ -254,6 +254,7 @@ return apply_source({
       },
       keymaps = { cycle = true, delete = true },
       commands = true,
+      auto_mkdir = { enable = true }, -- Creates missing parent dirs on BufWritePre (moved here from autocmds.general)
     },
   },
 

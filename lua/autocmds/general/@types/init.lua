@@ -31,11 +31,6 @@
                            -- (e.g. the last file buffer closes, or a tree plugin is the only window
                            -- left with `close_if_last_window = false`).
 
----@class AutoCmds.General.AutoMkdir.Cfg
----@field enable boolean                             -- Auto-create directories on BufWritePre
----@field skip_remote? boolean                       -- Skip remote/URL-style buffers (e.g. scheme://)
----@field detect_remote_pattern? string              -- Lua pattern to detect remote buffers (default: "^%w%w+:[\\/][\\/]")
-
 ---@class AutoCmds.General.MD.GotoFile.Cfg
 ---@field enable boolean                             -- Enable Markdown-aware "gf" override for links/URLs.
 ---@field debug? boolean                             -- Emit verbose debug via vim.notify while resolving links.
@@ -46,7 +41,6 @@
 
 ---@class AutoCmds.General.Cfg
 ---@field group_name? string                          -- Basename for augroups created by this module
----@field auto_mkdir AutoCmds.General.AutoMkdir.Cfg  -- Configure auto mkdir on save
 ---@field kitty AutoCmds.General.Kitty.SpacingCfg    -- Configure kitty terminal spacing
 ---@field cursorline AutoCmds.General.Cursorline.Cfg -- Configure active-window-only cursorline
 ---@field last_loc AutoCmds.General.JumpLastLoc.Cfg  -- Configure jump-to-last-location on open

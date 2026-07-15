@@ -4,7 +4,7 @@
 --- Guards are included to avoid side effects in unsupported contexts.
 local M = {}
 
-local api, uv = vim.api, vim.uv or vim.loop
+local api = vim.api
 local helpers = require("autocmds.general.helpers")
 local DEFAULTS = require("autocmds.general.defaults").get_defaults()
 
@@ -17,27 +17,7 @@ local DEFAULTS = require("autocmds.general.defaults").get_defaults()
 function M.enable(cfg)
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS), cfg or {})
 
-  -- 1) Auto-create directory on save (BufWritePre)
-  if cfg.auto_mkdir.enable then
-    local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_auto_mkdir")
-    api.nvim_create_autocmd("BufWritePre", {
-      group = grp,
-      callback = function(event)
-        -- Optional: skip URL-like or remote buffers (e.g., "ssh://host/path", "http://…")
-        if cfg.auto_mkdir.skip_remote and event.match:match(cfg.auto_mkdir.detect_remote_pattern) then
-          return
-        end
-        -- Resolve to a real path if possible; falls back to the raw buffer path.
-        local file = (uv.fs_realpath and uv.fs_realpath(event.match)) or event.match
-        -- Create the parent directory recursively ("p" flag).
-        -- Uses Vim’s robust `mkdir()` which handles both Linux and macOS gracefully.
-        vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
-      end,
-      desc = "Auto-create the parent directory before writing a file",
-    })
-  end
-
-  -- 2) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
+  -- 1) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
   if cfg.kitty.enable then
     local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_kitty_spacing")
     api.nvim_create_autocmd("VimEnter", {
@@ -56,7 +36,7 @@ function M.enable(cfg)
     })
   end
 
-  -- 3) Cursorline only in the active window
+  -- 2) Cursorline only in the active window
   if cfg.cursorline.enable then
     local grp_show = helpers.augroup((cfg.group_name or "autocmds_general") .. "_cursorline_show")
     api.nvim_create_autocmd(cfg.cursorline.show_events, {
@@ -80,7 +60,7 @@ function M.enable(cfg)
     })
   end
 
-  -- 4) Jump to last location when reopening a file (BufReadPost)
+  -- 3) Jump to last location when reopening a file (BufReadPost)
   if cfg.last_loc.enable then
     local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_last_loc")
     api.nvim_create_autocmd("BufReadPost", {
@@ -109,7 +89,7 @@ function M.enable(cfg)
     })
   end
 
-  -- 5) Redirect spurious [No Name] buffers left behind by a close, to a real
+  -- 4) Redirect spurious [No Name] buffers left behind by a close, to a real
   --    buffer if one exists (BufDelete/BufWipeout, WinClosed)
   if cfg.no_name_guard.enable then
     local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_no_name_guard")
