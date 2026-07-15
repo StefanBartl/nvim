@@ -447,12 +447,42 @@ return apply_source({
     event = "VimEnter",
     config = function()
       require("github_stats").setup({
-        repos = { "username/repo1", "username/repo2" },
+        -- Explicit allowlist instead of watch_users auto-discovery: discovery
+        -- pulled in every public repo (~40), and fetch_all spawns one curl
+        -- process per repo per metric (4 metrics) in a tight synchronous
+        -- loop. On machines where process creation is slow (AV/EDR scanning
+        -- each spawn), that many near-simultaneous spawns froze the UI for
+        -- 45-90s. Capping the repo list keeps the spawn count small.
+        repos = {
+          "StefanBartl/buffer-ctx.nvim",
+          "StefanBartl/cascade.nvim",
+          "StefanBartl/color_my_ascii.nvim",
+          "StefanBartl/debugging.nvim",
+          "StefanBartl/diff.nvim",
+          "StefanBartl/emojis.nvim",
+          "StefanBartl/fileops.nvim",
+          "StefanBartl/filetree.nvim",
+          "StefanBartl/github_stats.nvim",
+          "StefanBartl/gopath.nvim",
+          "StefanBartl/language.nvim",
+          "StefanBartl/lib.nvim",
+          "StefanBartl/markdown.nvim",
+          "StefanBartl/mdview.nvim",
+          "StefanBartl/migrate.nvim",
+          "StefanBartl/nvim-cmdlog",
+          "StefanBartl/nvim-containers",
+          "StefanBartl/open.nvim",
+          "StefanBartl/pdfport.nvim",
+          "StefanBartl/pickers.nvim",
+          "StefanBartl/project-insight.nvim",
+          "StefanBartl/recommender.nvim",
+          "StefanBartl/replacer.nvim",
+          "StefanBartl/reposcope.nvim",
+        },
         token_source = "env",
         token_env_var = "GITHUB_TOKEN",
         fetch_interval_hours = 24,
         notification_level = "all",
-        watch_users = { "StefanBartl" },
         data_dir = vim.fn.stdpath('config') .. "/github-stats/",
       })
     end,
