@@ -255,6 +255,8 @@ return apply_source({
       keymaps = { cycle = true, delete = true },
       commands = true,
       auto_mkdir = { enable = true }, -- Creates missing parent dirs on BufWritePre (moved here from autocmds.general)
+      on_hold = { enable = true },        -- moved here from autocmds.git.line_diff_on_hold
+      conflict_marks = { enable = true }, -- moved here from autocmds.git.conflict_marks
     },
   },
 
@@ -407,17 +409,12 @@ return apply_source({
 
   {
     "StefanBartl/diff.nvim",
-    -- VeryLazy (not just cmd): on_hold/conflict_marks are ambient autocmds
-    -- that must be live before the user ever runs :Diff.
-    event = "VeryLazy",
     cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" },
     opts = {
       features = {
         diff = true,
         diff_origin = true,
         diff_exit = true,
-        diff_on_hold = true,   -- moved here from autocmds.git.line_diff_on_hold
-        conflict_marks = true, -- moved here from autocmds.git.conflict_marks
       },
     },
     config = function(_, opts)
