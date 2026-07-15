@@ -40,11 +40,8 @@ local MODE = {
   ["gopath.nvim"] = "dir",
   ["replacer"] = "dir",
   ["project-insight.nvim"] = "dir",
-  -- ["neotree-fs-refactor"]   = "dir",
   ["filetree.nvim"] = "dir",
-  -- ["filetreepicker.nvim"]   = "dir",
   ["reposcope.nvim"] = "dir",
-  -- ["mygrep.nvim"]           = "dir",
 
   -- 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY
   ["debugging.nvim"] = "dir",
@@ -59,7 +56,6 @@ local MODE = {
   ["cascade.nvim"] = "dir",
   ["pdfport.nvim"] = "dir",
   ["markdown.nvim"] = "dir",
-  -- ["mdlinks"]               = "dir", -- DEPRECATED
   ["color_my_ascii.nvim"] = "dir",
   ["recommender.nvim"] = "dir",
   ["mdview.nvim"] = "dir",

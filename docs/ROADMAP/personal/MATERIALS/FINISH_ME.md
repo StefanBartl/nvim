@@ -1,5 +1,7 @@
 # FINISH: von mir ausführen
 
+- [ ] nvim/lua/autocmds analysieren, zb general -> no name guard in filetee.nvim buffer-ctx implementieren
+
 - [ ] Alle persönliches Plugins durchgehen und
   - [ ] Alle Keymaps als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Keymaps.md` schreiben
     - [ ] checken, ob es eh keine doppelungen bei den lhs der keymaps gibt
@@ -10,6 +12,11 @@
 - [ ] Alle persönliches Plugins durchgehen und
   - [ ] explizit auf sicherheitsrelevantes abklopfen und härten
   - [ ] macht es Sinn das Plugin oder Teil(e) davon als kompilierte binaries auszugeben ?
+
+
+- alle keymaps / features müssen
+  - auch via usrcmd ausführbnar sein
+  - lib.nvim.selection — a reusable module (lines/reselect_lines/keep_lines for row ranges, chars/reselect_chars/keep_chars for same-line byte-column ranges) that restores a Visual selection after a mapping mutates the buffer, since gv doesn't work for this (its marks are only set once Visual mode actually ends). Full README,  --> zuerst nochmal checken, ob es am richtigen ort in der lib ist, verbessert weren muss usw... dann every visual-mode keymap that previously dropped the selection dieses Modul anwenden sofern es auch sinn macht
 
 
 

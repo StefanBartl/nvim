@@ -24,7 +24,7 @@ require("autocmds.general").enable({
     enable = false, -- On BufReadPost, jumps back to the last cursor position unless the filetype is excluded.
   },
   no_name_guard = {
-    enable = true, -- After a buffer/window close, redirects a window left showing a spurious empty [No Name] buffer to a real, named buffer -- but only when one actually exists; never touches a deliberate blank buffer (:enew) or a plugin's own scratch buffer (buftype ~= "" or unlisted).
+    enable = false, -- TEMP DISABLED: investigating a possible interaction with neo-tree's own startup/open sequence (state.tree nil in commands.lua:827) reported right after this shipped.
   },
 })
 
