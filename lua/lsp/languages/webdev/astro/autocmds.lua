@@ -61,56 +61,9 @@ function M.setup()
     desc = "Custom Astro syntax highlighting",
   })
 
-  -- Auto-close dev server on exit
-  api.nvim_create_autocmd("VimLeavePre", {
-    group = grp,
-    pattern = "*.astro",
-    callback = function()
-      -- argv array instead of a shell string; guarded because pkill is Unix-only.
-      -- :wait() so the kill completes before Neovim exits (VimLeavePre).
-      if vim.fn.executable("pkill") == 1 then
-        vim.system({ "pkill", "-f", "astro dev" }):wait()
-      end
-    end,
-    desc = "Kill Astro dev server on exit",
-  })
-
-  -- Create missing component imports
-  api.nvim_create_autocmd("BufWritePost", {
-    group = grp,
-    pattern = "*.astro",
-    callback = function(ev)
-      local lines = vim.api.nvim_buf_get_lines(ev.buf, 0, -1, false)
-      local used_components = {}
-
-      -- Find all component usages
-      for _, line in ipairs(lines) do
-        for component in line:gmatch("<([A-Z][%w]*)") do
-          used_components[component] = true
-        end
-      end
-
-      -- Check if imports exist
-      local missing = {}
-      for component, _ in pairs(used_components) do
-        local has_import = false
-        for _, line in ipairs(lines) do
-          if line:match("import " .. component) then
-            has_import = true
-            break
-          end
-        end
-        if not has_import then
-          table.insert(missing, component)
-        end
-      end
-
-      if #missing > 0 then
-        vim.notify("Missing imports: " .. table.concat(missing, ", "), vim.log.levels.WARN)
-      end
-    end,
-    desc = "Check for missing component imports",
-  })
+  -- Dev-server kill on exit and the missing-component-import check are not
+  -- here: both live in project-insight.nvim (`devserver` / `unimported`),
+  -- generalized past Astro and configured via its setup() spec.
 end
 
 return M

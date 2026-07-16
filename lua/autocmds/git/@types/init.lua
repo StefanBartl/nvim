@@ -8,35 +8,6 @@
 ---@field enable fun(cfg: AutoCmds.Git.Cfg|boolean|nil): nil # Enable git-related autocommands per feature.
 
 --------------------------------------------------------------------------------
--- Module: conflicts_qf
---------------------------------------------------------------------------------
-
----@class AutoCmds.Git.Conflicts.QfCfg
----@field enable boolean
---- Enable this feature. When true, on the configured `events` a scan runs for
---- unresolved merge conflicts and populates the quickfix list.
----
----@field events? Autocmds.Event[]|nil
---- Autocmd events that trigger the scan.
---- Default: { "VimEnter" }. Reasonable additions: { "FocusGained" }.
---- Use sparingly on very large repos to avoid startup overhead.
----
----@field diff_filter? string|nil
---- Value passed to `git diff --name-only --diff-filter=<X>`. Default: "U" (unmerged).
---- Common filters: "U" (conflicts), "M" (modified), "AM" (added/modified).
----
----@field open_qf? boolean|nil
---- When true (default), opens the quickfix list after populating it.
---- Set to false to only update the list silently.
----
----@field notify? boolean|nil
---- When true (default), shows a notification with the conflicting file names.
----
----@field git_cmd? Git.Command|nil
---- Git command to execute. Default: "git".
---- Provide a full path to avoid PATH/resolver surprises.
-
---------------------------------------------------------------------------------
 -- Module: commit_ft
 --------------------------------------------------------------------------------
 
@@ -117,10 +88,9 @@
 -- Root configuration passed to `require('autocmds.git').enable(cfg)`
 --------------------------------------------------------------------------------
 
+--- Unresolved-conflict quickfix population is not here: it lives in
+--- project-insight.nvim (`conflicts`), configured via its setup() spec.
 ---@class AutoCmds.Git.Cfg
----@field conflicts_qf? AutoCmds.Git.Conflicts.QfCfg
---- Settings for unresolved-conflict quickfix population.
----
 ---@field commit_ft? AutoCmds.Git.CommitFtCfg
 --- Settings for `gitcommit` buffers (spelling, wrapping, rulers, etc.).
 ---

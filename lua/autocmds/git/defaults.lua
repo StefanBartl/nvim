@@ -4,14 +4,6 @@
 
 ---@type AutoCmds.Git.Cfg
 local AUTOCMDS_GIT_DEFAULTS = {
-  conflicts_qf = {
-    enable = true,
-    events = { "VimEnter" },
-    diff_filter = "U",
-    open_qf = true,
-    notify = true,
-    git_cmd = "git",
-  },
   commit_ft = {
     enable = true,
     spell = true,

@@ -309,7 +309,10 @@ return apply_source({
 
   {
     "StefanBartl/project-insight.nvim",
-    cmd = "ProjectInsight",
+    -- Not `cmd = "ProjectInsight"`: the conflicts / unimported / devserver
+    -- autocmds are registered by setup(), so lazy-loading on the command would
+    -- mean they never fire. Set their `enable = false` to opt out instead.
+    lazy = false,
     config = function()
       require("project_insight").setup({})
     end,
