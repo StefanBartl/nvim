@@ -4,7 +4,10 @@
 local M = {}
 
 local api = vim.api
-local buffer_ctx = require("autocmds.benchmarks.context.buffer")
+-- Changedtick-cached buffer metadata; formerly the local prototype at
+-- autocmds/benchmarks/context/buffer.lua, now shared via lib.nvim so other
+-- consumers (e.g. filetree.nvim) don't reimplement the same cache.
+local buffer_ctx = require("lib.nvim.buffer.context")
 
 ---@class FiletypeHandler
 ---@field load fun(): table|nil Lazy loader function
