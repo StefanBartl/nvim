@@ -1,5 +1,60 @@
 # Modules to Replace with `lib.nvim`
 
+## Umsetzungsstand (2026-07-16)
+
+Entscheidung: **harte Abhängigkeit** — direkt `require("lib.nvim...")`, Eigenimplementierung löschen
+(kein Soft-Dependency-/pcall-Fallback). Dokumentierte "keine lib.nvim"-Design-Ziele werden bewusst
+überschrieben; die betroffene Doku wird im selben Commit mitgezogen.
+
+Commits liegen pro Repo auf Branch `refactor/adopt-lib-nvim` (nicht gepusht, nicht auf `main`).
+
+| Repo | Status | Commit |
+| ---- | ------ | ------ |
+| `diff.nvim` | ✅ erledigt — notify delegiert; README/ROADMAP/Checklist/Arch&Coding auf neue Abhängigkeit umgeschrieben | `390ae8d` (main) |
+| `fileops.nvim` | ✅ erledigt — `util/platform.lua` gelöscht → `cross.fs.mutate`; background-open → `buffer.open_background`; `is_windows` war toter Code | `0f93f85` (main) |
+| `learn-cli.nvim` | ✅ erledigt — notify delegiert; `persistence.lua` I/O → `fs.json`/`cross.fs.mutate` (OperationResult-Contract unverändert; `persistence.lua` hat aktuell keine Aufrufer im Repo) | `88742b1` (main) |
+| `github_stats.nvim` | ✅ erledigt — `show_float` → `ui.kit.note` (+focus-Fix), `format_number` 5x → `strings.format`, `repo_discovery`-Dedup → `unique_table`, `config.notify` behält Gating, delegiert nur den `vim.notify`-Call (leerer Prefix, da Call-Sites ihn schon inline mitgeben). `commands.lua`-Duplikat bewusst nicht angefasst (toter Code, nirgends required) | `cdc7d60` (main) |
+| `gopath.nvim` | ✅ erledigt — `touch`→`create_entry`, `uniq`→`unique_table.unique_by`, `opener`-Fallback→`system_opener`; alle drei im **Soft-Dependency-Muster** des Repos (pcall+Fallback wie `util.cross`/`util.log`, nicht hart), da gopath dieses Muster schon etabliert hatte. Nebenbefund: `system_opener` hatte 0 Aufrufer im ganzen Ökosystem (cfg Pflichtfeld, Windows opt-in) — in lib.nvim gefixt (Commit `2c37431`: cfg optional, Windows jetzt default an) | `0f2ae69` (main) |
+| `language.nvim` | ✅ erledigt — `translate/history.lua` JSON-Persistenz → `fs.json` (war als "low-value" markiert, der Vollständigkeit halber trotzdem gemacht) | `59c8f41` (main) |
+| `nvim-cmdlog` | ⏭️ übersprungen — Analyse fand keine REPLACE-Kandidaten (bereits durchgängig auf lib.nvim umgestellt) | — |
+| `migrate.nvim` | ✅ erledigt — `common/buffer.lua`s `ensure_buffer` → `buffer.open_background` (Arch&Coding.md-Erwähnung von "ohne lib.nvim testbar" betrifft nur `opt.migrator`s Test-Design, keine Repo-weite Design-Entscheidung — kein Konflikt) | `6f655b6` (main) |
+| `nvim-containers` | ✅ erledigt — alle 15 docker/podman/wsl-Adapter (roh `vim.fn.system`) → neuer Soft-Wrapper `containers/util/run_argv.lua` (Muster von `containers/notify.lua` gespiegelt, lib.nvim bleibt "optional" laut README). Nebenbefund: `run_argv.run_blocking` verwirft stdout bei Erfolg — in lib.nvim per neuer Funktion `run_blocking_captured` gefixt (Commit `6d65583`). Bonus-Fix: `vim.logd`-Tippfehler in podman start_container.lua | `9fec2bf` (main) |
+| `open.nvim` | ✅ **teilweise** — nur `platform.lua`s OS-Erkennung → `cross.platform.*` ersetzt (robuster: uname+env+/proc-Fallback statt nur `/proc/version`). `handlers/{default,browser,filemanager}.lua` **bewusst NICHT** auf `system_opener` umgestellt — die sind funktional überlegen (WSL `wslpath`, Multi-Browser-Kandidaten, Filemanager-Reveal); ein Zwangsersatz wäre eine Funktionsregression, keine Bereinigung. Erst sinnvoll, wenn `system_opener` bewusst auf dieses Niveau gehoben wird | `d4ad422` (main) |
+| `pdfport.nvim` | ✅ **teilweise** — `platform.os/is_wsl` → `cross.platform.*`, `util/notify.lua` → `lib.nvim.notify` (mit `debug(msg,cfg)`-Gate als dünnem Wrapper erhalten), `renderers/float.lua` → `window.make_scratch`. **Bewusst NICHT** angefasst: `open_cmd()`+`renderers/system.lua` (eigener `wsl-open`-Fallback + Exit-Code-Warnung, die `system_opener` nicht hat — Zwangsersatz wäre Regression); `backends/*.lua`/`terminal.lua`s `wait_for_file` sind NEW_MODULE-Kandidaten (jetzt in lib.nvim vorhanden: `spawn_capture`/`wait_until`), aber nicht Teil dieses Replace-Durchgangs | `c76a5f4` (main) |
+| `pickers.nvim` | ⏭️ übersprungen — keine REPLACE-Kandidaten (bereits durchgängig auf lib.nvim inkl. `ui.kit` aufgebaut, `notify.lua` schon korrektes Soft-Bridge-Muster) | — |
+| `project-insight.nvim` | ✅ erledigt — `platform.run_shell`/`copy_to_clipboard` → `cross.run`/`cross.copy_to_clipboard`; `fileinfo.open_hover` → `window.make_scratch` (Toggle-Verhalten, `row=2`-Positionierung, konfigurierbare `close_keys` erhalten) | `de1f821` (main) |
+| `recommender.nvim` | ✅ erledigt — `blacklist.is_blacklisted`s Prefix-Vergleich → `strings.starts_with` (low-value, der Vollständigkeit halber). `float/rendering.lua` bewusst nicht angefasst (schwacher Fit, Modul-State eng mit Cursor-Tracking/Highlighting verwoben) | `4c207ad` (main) |
+| alle übrigen | ⬜ offen — verbleibend: replacer.nvim, reposcope.nvim, buffer-ctx.nvim, cascade.nvim, color_my_ascii.nvim, debugging.nvim, emojis.nvim, filetree.nvim, markdown.nvim, mdview.nvim | — |
+
+**Wiederkehrendes Muster bei "system_opener"-Kandidaten:** mehrfach festgestellt, dass die jeweilige Eigenimplementierung (open.nvim, pdfport.nvim) **funktional überlegen** ist (WSL-Pfadkonvertierung, Exit-Code-Reporting, Multi-Browser). `lib.nvim.fs.open.url.system_opener` bleibt bewusst schlank; ein Zwangsersatz wäre in beiden Fällen eine Regression gewesen und wurde unterlassen. Für die restlichen Kandidaten (filetree.nvim, gopath.nvim ✅ bereits erledigt, markdown.nvim, reposcope.nvim) diese Möglichkeit vorher genauso prüfen.
+
+**Nebenbefund in lib.nvim:** `cross.platform.is_windows/is_macos/is_linux/is_wsl` hatten einen kaputten "Cache" (`local cached` stand *innerhalb* der zurückgegebenen Funktion, wurde bei jedem Aufruf auf `nil` zurückgesetzt — der Docstring behauptete Caching, das nie stattfand). Gefixt beim Verdrahten von open.nvim, das diese Funktionen bei jedem `:Open` aufruft (Commit `0e4e360`).
+
+**Wichtig für die restlichen Repos:** vor dem Ersetzen prüfen, ob das Zielrepo schon ein **eigenes** Soft-Dependency-Muster für lib.nvim etabliert hat (pcall-Wrapper wie `util/cross.lua`). Falls ja: diesem Muster folgen (Konsistenz im Repo), nicht hart requiren — das war bei gopath.nvim der Fall und widerspricht nicht der "harte Abhängigkeit"-Entscheidung, die sich auf Repos OHNE jede lib.nvim-Anbindung bezog.
+
+Seit 2026-07-16 wird direkt auf `main` gearbeitet (kein Branch pro Repo mehr) — lib.nvims neue Module
+sind inzwischen selbst auf `main` gemerged und gepusht (Commit `d864a8c`, inkl. eines zweiten,
+parallel laufenden Prozesses, der `buffer.context`/`window.context`/`lib.nvim.cache` beigesteuert hat).
+
+**Voraussetzung:** Die neuen lib.nvim-Module liegen auf Branch `feat/lib-new-modules` (Commit `078af00`),
+noch nicht auf `main`. Solange der Branch nicht gemergt ist, laufen die Plugin-Branches nur gegen den
+lokalen Checkout `E:\repos\lib.nvim`.
+
+### Fallstricke, die beim Umbau auftraten (für die restlichen Repos relevant)
+
+1. **Test-Runner brauchen lib.nvim auf dem rtp.** Sobald ein Plugin hart requiret, schlägt seine
+   Suite fehl. `fileops.nvim/docs/TESTS/run.lua` enthält jetzt eine Auflösungs-Routine
+   (`$LIB_NVIM_PATH` → Sibling-Checkout → `stdpath("data")/lazy`) — als Vorlage kopierbar.
+2. **Der Bootstrap-Klon unter `stdpath("data")/lazy/lib.nvim` ist veraltet** und kennt neue Module
+   nicht. Der Sibling-Checkout muss Vorrang haben, sonst gibt es irreführende Fehler.
+3. **rtp allein reicht nicht** für nach dem Start angehängte Einträge — `package.path` muss zusätzlich
+   gesetzt werden (so schreibt es lib.nvims README selbst vor).
+4. **Vor dem Ersetzen prüfen, ob die Fundstelle überhaupt Aufrufer hat** — `fileops`' `is_windows`
+   war toter Code; löschen statt umbiegen.
+5. `migrate.nvim` nimmt lib.nvim-abhängige Module bewusst aus dem Test-Scope — dort ggf. Präzedenz folgen.
+
+---
+
 Generated by a parallel multi-agent scan of all personal plugins in `E:\repos` (2026-07-14).
 Every entry below is code in another plugin that reimplements something `lib.nvim` **already
 provides**. Grouped by the `lib.nvim`/`lib.lua` module that should be used instead, so a whole

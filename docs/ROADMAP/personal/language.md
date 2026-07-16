@@ -1,5 +1,6 @@
 # language.nvim — Spell-, Grammar- & Translate-Werkzeug für Neovim
 
+- `:TranslateReplace` ist weg? Das war ziemlich nützlich!
 - natives rekursives Directory-Walking für Spell ohne CLI-Provider. -was meinst du damit genau?
 
 

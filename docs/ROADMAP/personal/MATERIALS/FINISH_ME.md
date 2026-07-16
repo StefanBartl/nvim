@@ -1,5 +1,7 @@
 # FINISH: von mir ausführen
 
+- [no name] Buffer - wenn einer neben offenen buffer existiert, dann kann ich mit Tab nicht auf den no name buffer gehen, es springt sofort zurück. Da wir einen schutz eggeb no name buffer implementieret haben, habe ich gleich an diesen gedacht, dass dieser eventuell interferiert. Es passt wzar,m dass wir einnen schutzt gegen no name buffer haben (sfern andere buffer bestehen, die fokusiiert werden können), aber entweder muss ich sie wenn sie neben anderen normallen bufffe r eisiteren anwöhlen und schlißen können oder, das wäre mir lieber, diese no name buffer werden geschlossen sobald ein nirmaler buffer exisitiert.
+
 - [ ] nvim/lua/autocmds analysieren, zb general -> no name guard in filetee.nvim buffer-ctx implementieren
 
 - [ ] Alle persönliches Plugins durchgehen und

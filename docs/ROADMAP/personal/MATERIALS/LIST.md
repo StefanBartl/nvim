@@ -18,20 +18,18 @@
 `/cascade,nvim`
 `/color_my_ascii.nvim`
 `/debugging.nvim`
+`/dap.nvim`
 `/diff.nvim`
 `/emojis.nvim`
 `/fileops.nvim`
 `/filetree.nvim`
-`/filetreepicker.nvim`
 `/github_stats.nvim`
 `/gopath.nvim`
 `/language.nvim`
-`/learn-cli.nvim`
 `/lib.nvim`
 `/markdown.nvim`
 `/mdview.nvim`
 `/migrate.nvim`
-`/mygrep.nvim`
 `/nvim-cmdlog`
 `/nvim-containers`
 `/open.nvim`
@@ -46,21 +44,19 @@
 `\repos\color_my_ascii.nvim`
 `\repos\cascade,nvim`
 `\repos\debugging.nvim`
+`\repos\dap.nvim`
 `\repos\diff.nvim`
 `\repos\emojis.nvim`
 `\repos\fileops.nvim`
 `\repos\filetree.nvim`
-`\repos\filerreepicker.nvim`
 `\repos\github_stats.nvim`
 `\repos\gopath.nvim`
 `\repos\language.nvim`
-`\repos\learn-cli.nvim`
 `\repos\lib.nvim`
 `\repos\markdown.nvim`
 `\repos\mdlinks`
 `\repos\mdview.nvim`
 `\repos\migrate.nvim`
-`\repos\mygrep.nvim`
 `\repos\nvim-cmdlog`
 `\repos\nvim-containers`
 `\repos\open.nvim`
@@ -82,7 +78,7 @@
 Dieser Befehl nutzt eine Schleife, entfernt das führende `/` automatisch und klont die Repos nacheinander:
 
 ```bash
-repos=("/buffer-ctx.nvim" "/cascade,nvim" "/color_my_ascii.nvim" "/debugging.nvim" "/diff.nvim" "/emojis.nvim" "/fileops.nvim" "/filetree.nvim" "/filetreepicker.nvim" "/github_stats.nvim" "/gopath.nvim" "/learn-cli.nvim" "/lib.nvim" "/markdown.nvim" "/mdview.nvim" "/migrate.nvim" "/mygrep.nvim" "/nvim-cmdlog" "/nvim-containers" "/open.nvim" "/pdfport.nvim" "/pickers.nvim" "/project-insight.nvim" "/recommender.nvim" "/replacer.nvim" "/reposcope.nvim" ); for repo in "${repos[@]}"; do clean_repo=${repo#/}; git clone "git@github.com:StefanBartl/${clean_repo}.git"; done
+repos=("/buffer-ctx.nvim" "/cascade,nvim" "/color_my_ascii.nvim" "/debugging.nvim" "/dap.nvim" "/diff.nvim" "/emojis.nvim" "/fileops.nvim" "/filetree.nvim" "/github_stats.nvim" "/gopath.nvim" "/lib.nvim" "/markdown.nvim" "/mdview.nvim" "/migrate.nvim" "/mygrep.nvim" "/nvim-cmdlog" "/nvim-containers" "/open.nvim" "/pdfport.nvim" "/pickers.nvim" "/project-insight.nvim" "/recommender.nvim" "/replacer.nvim" "/reposcope.nvim" ); for repo in "${repos[@]}"; do clean_repo=${repo#/}; git clone "git@github.com:StefanBartl/${clean_repo}.git"; done
 
 ```
 
@@ -93,7 +89,7 @@ repos=("/buffer-ctx.nvim" "/cascade,nvim" "/color_my_ascii.nvim" "/debugging.nvi
 Die PowerShell-Variante säubert den Pfad ebenfalls über `.TrimStart('/')` und jagt die Liste durch eine `ForEach-Object`-Schleife (abgekürzt `foreach`):
 
 ```powershell
-@("buffer-ctx.nvim", "cascade,nvim", "color_my_ascii.nvim", "debugging.nvim", "diff.nvim", "emojis.nvim", "fileops.nvim", "filetree.nvim", "filetreepicker.nvim", "github_stats.nvim", "gopath.nvim", "learn-cli.nvim", "lib.nvim", "markdown.nvim", "mdview.nvim", "migrate.nvim", "mygrep.nvim", "nvim-cmdlog", "nvim-containers", "open.nvim", "pdfport.nvim", "pickers.nvim", "project-insight.nvim", "recommender.nvim", "replacer", "reposcope.nvim") | ForEach-Object { git clone "https://github.com/StefanBartl/$_.git" }
+@("buffer-ctx.nvim", "cascade,nvim", "color_my_ascii.nvim", "debugging.nvim", "dap.nvim", "diff.nvim", "emojis.nvim", "fileops.nvim", "filetree.nvim",  "github_stats.nvim", "gopath.nvim", "lib.nvim", "markdown.nvim", "mdview.nvim", "migrate.nvim", "nvim-cmdlog", "nvim-containers", "open.nvim", "pdfport.nvim", "pickers.nvim", "project-insight.nvim", "recommender.nvim", "replacer", "reposcope.nvim") | ForEach-Object { git clone "https://github.com/StefanBartl/$_.git" }
 ```
 
 ---
@@ -109,7 +105,7 @@ Die PowerShell-Variante säubert den Pfad ebenfalls über `.TrimStart('/')` und 
 In der PowerShell nutzen wir `Remove-Item` mit den Parametern `-Recurse` (löscht Unterordner) und `-Force` (löscht schreibgeschützte Dateien wie die Git-Historie ohne Nachfrage):
 
 ```powershell
-@("buffer-ctx.nvim", "cascade,nvim", "color_my_ascii.nvim", "debugging.nvim", "diff.nvim", "emojis.nvim", "fileops.nvim", "filetree.nvim",  "filetreepicker.nvim", "github_stats.nvim", "gopath.nvim", "learn-cli.nvim", "lib.nvim", "markdown.nvim", "mdview.nvim", "migrate.nvim", "mygrep.nvim", "nvim-cmdlog", "nvim-containers", "open.nvim", "pdfport.nvim", "pickers.nvim", "project-insight.nvim", "recommender.nvim", "replacer", "reposcope.nvim") | ForEach-Object { if (Test-Path $_) { Remove-Item $_ -Recurse -Force } }
+@("buffer-ctx.nvim", "cascade,nvim", "color_my_ascii.nvim", "debugging.nvim", "dap.nvim", "diff.nvim", "emojis.nvim", "fileops.nvim", "filetree.nvim",  "github_stats.nvim", "gopath.nvim", "lib.nvim", "markdown.nvim", "mdview.nvim", "migrate.nvim", "nvim-cmdlog", "nvim-containers", "open.nvim", "pdfport.nvim", "pickers.nvim", "project-insight.nvim", "recommender.nvim", "replacer", "reposcope.nvim") | ForEach-Object { if (Test-Path $_) { Remove-Item $_ -Recurse -Force } }
 
 ```
 
@@ -120,7 +116,7 @@ In der PowerShell nutzen wir `Remove-Item` mit den Parametern `-Recurse` (lösch
 In der Git-Bash nutzen wir `rm -rf` (recursive + force), um die Verzeichnisse direkt zu entfernen:
 
 ```bash
-repos=("buffer-ctx.nvim" "cascade,nvim" "color_my_ascii.nvim" "debugging.nvim" "diff.nvim" "emojis.nvim" "fileops.nvim" "filetree.nvim" "filetreepicker.nvim" "github_stats.nvim" "gopath.nvim" "learn-cli.nvim" "lib.nvim" "markdown.nvim" "mdview.nvim" "migrate.nvim" "mygrep.nvim" "nvim-cmdlog" "nvim-containers" "open.nvim" "pdfport.nvim" "pickers.nvim" "project-insight.nvim" "recommender.nvim" "replacer" "reposcope.nvim"); for repo in "${repos[@]}"; do rm -rf "$repo"; done
+repos=("buffer-ctx.nvim" "cascade,nvim" "color_my_ascii.nvim" "dap.nvim" "debugging.nvim" "diff.nvim" "emojis.nvim" "fileops.nvim" "filetree.nvim" "github_stats.nvim" "gopath.nvim" "lib.nvim" "markdown.nvim" "mdview.nvim" "migrate.nvim" "nvim-cmdlog" "nvim-containers" "open.nvim" "pdfport.nvim" "pickers.nvim" "project-insight.nvim" "recommender.nvim" "replacer" "reposcope.nvim"); for repo in "${repos[@]}"; do rm -rf "$repo"; done
 
 ```
 
