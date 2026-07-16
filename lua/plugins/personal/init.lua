@@ -45,6 +45,7 @@ local MODE = {
 
   -- 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY
   ["debugging.nvim"] = "dir",
+  ["dap.nvim"] = "dir",
   ["diff.nvim"] = "dir",
   ["languages.nvim"] = "dir",
   ["nvim-cmdlog"] = "dir",
@@ -404,6 +405,27 @@ return apply_source({
     },
     config = function(_, opts)
       require("debugging").setup(opts)
+    end,
+  },
+
+  {
+    "StefanBartl/dap.nvim",
+    event = "VeryLazy",
+    dependencies = {
+      "StefanBartl/lib.nvim",
+      "mfussenegger/nvim-dap",
+      "rcarriga/nvim-dap-ui",
+      "nvim-neotest/nvim-nio",
+      "theHamsta/nvim-dap-virtual-text",
+      "jbyuki/one-small-step-for-vimkind",
+    },
+    opts = {
+      -- "<leader>d" alone collides with existing git/fzf mappings
+      -- (dc = DiffviewClose, di = ToggleInlineDiff, do = FzfLua diagnostics)
+      keymaps = { prefix = "<leader>da" },
+    },
+    config = function(_, opts)
+      require("dap_nvim").setup(opts)
     end,
   },
 

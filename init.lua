@@ -139,20 +139,11 @@ if ok_caps and type(caps.apply_globally) == "function" then
 end
 
 -- =============================================================================
--- PHASE 4: DAP (Filetype Lazy-Load)
+-- PHASE 4: DAP
 -- =============================================================================
--- vim.api.nvim_create_autocmd("FileType", {
-  -- pattern = { "lua", "go", "python", "javascript" },
-  -- once = true,
-  -- callback = function()
- --   require("wkddap").setup({
- --     languages = {},
- --    ui = { enable = true },
- --     keymaps = { enable = true, prefix = "<leader>d" },
- --    auto_install = true,
- --   })
-  -- end,
--- })
+-- DAP setup (adapters, launch configs, UI, keymaps) now lives in
+-- StefanBartl/dap.nvim, loaded via lua/plugins/personal/init.lua (event =
+-- "VeryLazy"). The former lua/wkddap prototype has been extracted there.
 
 -- =============================================================================
 -- PHASE 5: SEHR NIEDRIG (600ms) - RPC
