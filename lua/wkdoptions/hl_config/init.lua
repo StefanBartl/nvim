@@ -22,6 +22,7 @@
 ---   - Testability: pure functions where possible, state accessible for inspection
 
 local lazy = require("lib.lua.lazy")
+local Autocmd = lazy.require("lib.nvim.autocmd")
 local C = lazy.require("wkdoptions.config")
 
 ---@type WKDOptions.HL_CFG
@@ -188,18 +189,17 @@ function M.ensure_color_persist()
     return
   end
 
-  vim.api.nvim_create_autocmd("ColorScheme", {
+  Autocmd.create("ColorScheme", function()
+    apply_highlights()
+    activate_window()
+    if State.is_enabled("breadcrumbs") then
+      Breadcrumbs.refresh()
+    end
+    if State.is_enabled("indent_scope") then
+      IndentScope.refresh_current()
+    end
+  end, {
     group = aug,
-    callback = function()
-      apply_highlights()
-      activate_window()
-      if State.is_enabled("breadcrumbs") then
-        Breadcrumbs.refresh()
-      end
-      if State.is_enabled("indent_scope") then
-        IndentScope.refresh_current()
-      end
-    end,
     desc = "Re-apply highlights after colorscheme change",
   })
 end
@@ -209,25 +209,22 @@ end
 local function ensure_window_autocmds()
   local aug = State.get_augroup("PerWindow", true)
 
-  vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
+  Autocmd.create({ "WinEnter", "BufWinEnter" }, activate_window, {
     group = aug,
-    callback = activate_window,
     desc = "Activate highlights for active window",
   })
 
-  vim.api.nvim_create_autocmd({ "WinLeave" }, {
+  Autocmd.create({ "WinLeave" }, deactivate_window, {
     group = aug,
-    callback = deactivate_window,
     desc = "Dim highlights for inactive windows",
   })
 
-  vim.api.nvim_create_autocmd({ "BufReadPost", "TextChanged", "TextChangedI" }, {
+  Autocmd.create({ "BufReadPost", "TextChanged", "TextChangedI" }, function()
+    if vim.wo.cursorline then
+      activate_window()
+    end
+  end, {
     group = aug,
-    callback = function()
-      if vim.wo.cursorline then
-        activate_window()
-      end
-    end,
     desc = "Re-check column highlight on size changes",
   })
 end

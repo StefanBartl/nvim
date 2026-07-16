@@ -6,8 +6,13 @@ local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local LargeFile = lazy.require("wkdoptions.hl_config.utils.large_file")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
+local Debounce = lazy.require("lib.nvim.debounce")
 
 local M = {}
+
+--- Debounce handle shared across all windows (created lazily in M.enable)
+---@type { call: fun(...:any), cancel: fun() }|nil
+local refresh_debounced = nil
 
 --- Check if skip rules apply
 ---@nodiscard
@@ -225,14 +230,23 @@ function M.enable(cfg)
     return
   end
 
+  if not refresh_debounced then
+    refresh_debounced = Debounce.new(function(winid, bufnr)
+      -- Window/buffer may have closed between the triggering event and this
+      -- deferred call firing; skip stale work instead of erroring.
+      if not vim.api.nvim_win_is_valid(winid) or not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+      end
+      M.refresh(cfg)
+    end, 30)
+  end
+
   vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
     group = aug,
     callback = function()
-      vim.schedule(function()
-        M.refresh(cfg)
-      end)
+      refresh_debounced.call(vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf())
     end,
-    desc = "Update indent scope on movement/scroll",
+    desc = "Update indent scope on movement/scroll (debounced)",
   })
 
   -- Initial refresh

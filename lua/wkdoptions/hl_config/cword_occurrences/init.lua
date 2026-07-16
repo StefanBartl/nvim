@@ -5,6 +5,7 @@
 
 local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config") ---@module 'wkdoptions.config'
+local Debounce = lazy.require("lib.nvim.debounce")
 
 local M = {}
 
@@ -21,10 +22,9 @@ local HLCACHE = {} ---@type table<string, boolean>
 
 local buffer_is_ui_like = require("wkdoptions.hl_config.utils.skip").std_skip
 
--- Debounce timer (luv can return `userdata` in some typings)
-
----@type userdata|uv.uv_timer_t|nil
-local timer = nil
+-- Debounce handle (recreated in M.enable() so config changes to debounce_ms take effect)
+---@type { call: fun(...:any), cancel: fun() }|nil
+local debounced = nil
 
 --- Shorthand to access effective feature config.
 ---@return CwordOccurrencesCfg
@@ -323,32 +323,28 @@ local function update_now()
   place_occurrences(pat, srow, erow)
 end
 
---- Ensure a uv timer (typed) and return it.
----@return uv.uv_timer_t
-local function ensure_timer()
-  local uv = vim.uv or vim.loop
-  if not timer then
-    timer = uv.new_timer()
+--- Only run `fn` if the window/buffer that scheduled it are still valid
+--- (they may have closed between the triggering event and this deferred call).
+---@param winid integer
+---@param bufnr integer
+---@param fn fun()
+local function if_still_valid(winid, bufnr, fn)
+  if not vim.api.nvim_win_is_valid(winid) or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
   end
-  local t = timer
-  ---@cast t uv.uv_timer_t
-  return t
+  fn()
 end
 
---- Debounced repaint entry.
+--- Debounced repaint entry (guards stale win/buf on fire).
 ---@return nil
 local function update_debounced()
+  local winid, bufnr = vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf()
   local ms = CC().debounce_ms or 40
-  if ms <= 0 then
+  if ms <= 0 or not debounced then
     update_now()
     return
   end
-  local t = ensure_timer()
-  t:stop()
-  t:start(ms, 0, function()
-    t:stop()
-    vim.schedule(update_now)
-  end)
+  debounced.call(winid, bufnr)
 end
 
 function M.refresh()
@@ -357,6 +353,10 @@ end
 
 function M.enable()
   vim.api.nvim_clear_autocmds({ group = AUG })
+
+  debounced = Debounce.new(function(winid, bufnr)
+    if_still_valid(winid, bufnr, update_now)
+  end, CC().debounce_ms or 40)
 
   vim.api.nvim_create_autocmd({ "CursorMoved" }, {
     group = AUG,

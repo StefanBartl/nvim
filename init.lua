@@ -120,14 +120,6 @@ end, 50)
 -- PHASE 3: LSP BufReadPost - wenn der erste Buffer geladen ist
 -- =============================================================================
 vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
--- vim.api.nvim_create_autocmd("BufReadPost", {
--- once = true,
--- callback = function()
--- vim.defer_fn(function()
--- require("lsp").setup({ ensure_installing = false })
--- end, 100)
--- end,
--- })
 
 -- LSP Setup
 require("lsp").setup({ ensure_installing = false })
@@ -135,7 +127,14 @@ require("lsp").setup({ ensure_installing = false })
 -- Capabilities müssen GLOBAL applied werden
 local ok_caps, caps = pcall(require, "lsp.core.capabilities")
 if ok_caps and type(caps.apply_globally) == "function" then
-  caps.apply_globally()
+  local applied, cap_warnings = caps.apply_globally()
+  local cap_notify = require("lib.nvim.notify").create("[lsp.capabilities]")
+  for _, w in ipairs(cap_warnings) do
+    cap_notify.notify(w.msg, w.level)
+  end
+  if not applied then
+    cap_notify.error("Failed to apply capabilities globally")
+  end
 end
 
 -- =============================================================================
@@ -149,15 +148,6 @@ end
 -- PHASE 5: SEHR NIEDRIG (600ms) - RPC
 -- =============================================================================
 
--- vim.defer_fn(function()
-  -- local ok, astro = pcall(require, "astro_lsp_standalone")
-  -- if ok then
-    -- astro.setup()
-  -- else
-    -- print("[ERROR] Failed to load astro-lsp-standalone: " .. tostring(astro))
-  -- end
--- end, 800)
-
 -- Show startup time
 vim.defer_fn(function()
   if vim.g.start_time then
@@ -165,23 +155,6 @@ vim.defer_fn(function()
     vim.notify(string.format("Config loaded in %.2f ms", load_time), vim.log.levels.INFO)
   end
 end, 0)
-
--- -- FIX: einstweiliger fix für: Error in event handler for event before_render[buffers.before_render
--- vim.defer_fn(function()
-  -- require("neo-tree.command").execute({
-    -- source = "tests",
-    -- position = "left",
-    -- toggle = true,
-  -- })
-
-  -- vim.defer_fn(function()
-    -- require("neo-tree.command").execute({
-      -- source = "tests",
-      -- position = "left",
-      -- toggle = true,
-    -- })
-  -- end, 400)
--- end, 10)
 
 -- Für einen harten Kontrast: Weißer Hintergrund, schwarzer Text
 vim.api.nvim_set_hl(0, "Visual", { bg = "#FFFFFF", fg = "#000000", bold = true })

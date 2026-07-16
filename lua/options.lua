@@ -7,7 +7,6 @@ local opt = vim.opt
 local wo = vim.wo
 local fn = vim.fn
 local opt_local = vim.opt_local
-local api = vim.api
 
 -----------------------------------------------------------
 -- Appearance & UI
@@ -75,17 +74,16 @@ opt.foldlevelstart = 99
 -- CHECK: PHASE1A
 -- Markdown-specific folding via utils.markdown.foldexpr only for markdown buffers
 do
-  local grp = api.nvim_create_augroup("MarkdownLocalFolds", { clear = true })
-  api.nvim_create_autocmd("FileType", {
-    group = grp,
+  local autocmd = require("lib.nvim.autocmd")
+  autocmd.create("FileType", function()
+    opt_local.foldmethod = "expr"
+    opt_local.foldexpr = "v:lua.require'markdown_nvim.core.fold'.foldexpr(v:lnum)"
+    opt_local.foldenable = true
+    opt_local.foldlevel = 99
+    opt_local.foldlevelstart = 99
+  end, {
+    group = autocmd.group("MarkdownLocalFolds", true),
     pattern = { "markdown" },
-    callback = function()
-      opt_local.foldmethod = "expr"
-      opt_local.foldexpr = "v:lua.require'markdown_nvim.core.fold'.foldexpr(v:lnum)"
-      opt_local.foldenable = true
-      opt_local.foldlevel = 99
-      opt_local.foldlevelstart = 99
-    end,
     desc = "Enable lightweight markdown-specific folding only for markdown buffers",
   })
 end
@@ -156,14 +154,14 @@ set_diff_profile("review")
       - profile switching without a reset
 ]]--
 
-vim.api.nvim_create_autocmd("OptionSet", {
+require("lib.nvim.autocmd").create("OptionSet", function()
+  if vim.wo.diff then
+    vim.wo.wrap = false
+    vim.wo.cursorbind = false
+  end
+end, {
   pattern = "diff",
-  callback = function()
-    if vim.wo.diff then
-      vim.wo.wrap = false
-      vim.wo.cursorbind = false
-    end
-  end,
+  desc = "Reset wrap/cursorbind when entering diff mode",
 })
 
 -----------------------------------------------------------

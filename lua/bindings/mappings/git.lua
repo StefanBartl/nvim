@@ -1,5 +1,8 @@
 ---@module 'bindings.mappings.git'
 
+local notify = require("lib.nvim.notify").create("[bindings.mappings.git]")
+local usercmd = require("lib.nvim.usercmd")
+
 local M = {}
 
 --- ==== ToggleInlineDiff =====
@@ -20,7 +23,7 @@ local defaults = {
 local function require_gs()
   local ok, gitsigns = pcall(require, "gitsigns")
   if not ok or not gitsigns then
-    vim.notify("gitsigns not found", defaults.notify_level)
+    notify.notify("gitsigns not found", defaults.notify_level)
     return nil
   end
   return gitsigns
@@ -58,22 +61,18 @@ function M.toggle_inline_diff(bufnr)
     -- If preview_hunk_inline not available, fall back to preview_hunk (popup).
     if type(gs.preview_hunk) == "function" then
       pcall(gs.preview_hunk)
-      vim.notify("preview_hunk_inline not available; used preview_hunk popup", defaults.notify_level)
+      notify.notify("preview_hunk_inline not available; used preview_hunk popup", defaults.notify_level)
     end
   end
 
-  vim.notify(defaults.msg, defaults.notify_level)
+  notify.notify(defaults.msg, defaults.notify_level)
 end
 
 local function ToggleInlineDiffSetup()
-  pcall(
-    vim.keymap.set,
-    "n",
-    defaults.key,
-    M.toggle_inline_diff,
-    { noremap = true, silent = true, desc = "Toggle inline diff (gitsigns)" }
-  )
-  pcall(vim.api.nvim_create_user_command, defaults.cmd, function()
+  local map = vim.g.__map_helper
+  map("n", defaults.key, M.toggle_inline_diff, { desc = "Toggle inline diff (gitsigns)" })
+
+  usercmd.create(defaults.cmd, function()
     M.toggle_inline_diff()
   end, { desc = "Toggle inline diff: invert word_diff & linehl, preview current hunk inline" })
 end

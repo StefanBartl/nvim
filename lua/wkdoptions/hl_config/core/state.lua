@@ -16,9 +16,7 @@ local features = {}
 ---@type table<string, integer>
 local namespaces = {}
 
---- Autocmd group handles
----@type table<string, integer>
-local augroups = {}
+local lib_autocmd = require("lib.nvim.autocmd")
 
 ---@nodiscard
 ---@param win integer
@@ -69,10 +67,7 @@ end
 ---@param clear? boolean
 ---@return integer
 function M.get_augroup(name, clear)
-  if not augroups[name] then
-    augroups[name] = vim.api.nvim_create_augroup("myopt_" .. name, { clear = clear ~= false })
-  end
-  return augroups[name]
+  return lib_autocmd.get_augroup(name, { prefix = "myopt", clear = clear ~= false })
 end
 
 --- Initialize features from config (call once during enable())

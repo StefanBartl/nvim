@@ -5,8 +5,13 @@
 local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Winbar = lazy.require("wkdoptions.hl_config.breadcrumbs.winbar")
+local Debounce = lazy.require("lib.nvim.debounce")
 
 local M = {}
+
+--- Debounce handle shared across all windows (created lazily in M.enable)
+---@type { call: fun(...:any), cancel: fun() }|nil
+local refresh_debounced = nil
 
 -- Context module (lazy-loaded)
 local ctx_mod = nil
@@ -87,13 +92,28 @@ function M.enable(cfg)
     return
   end
 
+  if not refresh_debounced then
+    refresh_debounced = Debounce.new(function(winid, bufnr)
+      -- Window/buffer may have changed between the triggering event and this
+      -- deferred call firing; skip stale work instead of building context
+      -- for the wrong window.
+      if not vim.api.nvim_win_is_valid(winid) or not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+      end
+      if vim.api.nvim_get_current_win() ~= winid then
+        return
+      end
+      M.refresh_with_config(cfg)
+    end, 30)
+  end
+
   -- Update on viewport/cursor changes
   vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
     group = aug,
     callback = function()
-      M.refresh_with_config(cfg)
+      refresh_debounced.call(vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf())
     end,
-    desc = "Update breadcrumbs on movement/scroll",
+    desc = "Update breadcrumbs on movement/scroll (debounced)",
   })
 
   -- Initial refresh
