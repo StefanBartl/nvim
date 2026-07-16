@@ -5,6 +5,7 @@
 --- one of three states; the global `SOURCE` switch can force all of them at once.
 
 local personal_utils = require("plugins.personal.utils")
+local machine = require("plugins.personal.machine")
 
 -- ===========================================================================
 -- SOURCE CONTROL
@@ -22,7 +23,11 @@ local personal_utils = require("plugins.personal.utils")
 ---   "disabled" → ALLE aus
 ---@type "auto"|PersonalRepoMode
 
-local SOURCE = "dir"
+-- "workstation" (see plugins.personal.machine) never has local dev checkouts
+-- of these repos, so force "remote" there regardless of what happens to
+-- exist under REPOS_DIR on that machine — dir-mode's own fallback already
+-- goes remote when the folder is missing, but this makes it unconditional.
+local SOURCE = machine.is("workstation") and "remote" or "dir"
 
 --- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
 ---@type table<string, PersonalRepoMode>
@@ -418,6 +423,7 @@ return apply_source({
       "nvim-neotest/nvim-nio",
       "theHamsta/nvim-dap-virtual-text",
       "jbyuki/one-small-step-for-vimkind",
+      "igorlfs/nvim-dap-view", -- lighter alternative/complement to nvim-dap-ui, evaluating alongside it
     },
     opts = {
       -- "<leader>d" alone collides with existing git/fzf mappings
@@ -426,6 +432,11 @@ return apply_source({
     },
     config = function(_, opts)
       require("dap_nvim").setup(opts)
+
+      local ok, dap_view = pcall(require, "dap-view")
+      if ok then
+        dap_view.setup()
+      end
     end,
   },
 
@@ -509,6 +520,10 @@ return apply_source({
         fetch_interval_hours = 24,
         notification_level = "all",
         data_dir = vim.fn.stdpath('config') .. "/github-stats/",
+        -- "workstation" only reads the already-committed data/ snapshots
+        -- (dashboard, :GithubStatsShow, ... all read from disk regardless);
+        -- it just never runs the fetch cycle itself.
+        background = { enabled = not machine.is("workstation") },
       })
     end,
   },
