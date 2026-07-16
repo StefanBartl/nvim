@@ -626,7 +626,6 @@ return apply_source({
     -- Typing `opts` as ColorMyAscii.Config makes lua_ls offer value completion
     -- inside the config (e.g. `preset = "…"` suggests the fence-line presets).
     -- Requires the plugin's types on the LSP path (lazydev/neodev or workspace lib).
-    ---@type ColorMyAscii.Config
     opts = {
       -- Force the CommonMark-correct heuristic scanner for fence-block
       -- detection instead of treesitter: the installed markdown grammar
@@ -677,6 +676,7 @@ return apply_source({
     end,
   },
 
+
   {
     "StefanBartl/language.nvim",
     event = "VeryLazy",
@@ -695,4 +695,5 @@ return apply_source({
       })
     end,
   },
+
 })
