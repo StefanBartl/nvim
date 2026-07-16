@@ -21,7 +21,7 @@ require("autocmds.general").enable({
     enable = false, -- On BufReadPost, jumps back to the last cursor position unless the filetype is excluded.
   },
   no_name_guard = {
-    enable = false, -- TEMP DISABLED: investigating a possible interaction with neo-tree's own startup/open sequence (state.tree nil in commands.lua:827) reported right after this shipped.
+    enable = false, -- SUPERSEDED: this generic sweep has no tree-window exclusion, which raced with neo-tree's own startup/open sequence (state.tree nil in commands.lua:827). Re-implemented tree-aware in filetree.nvim (features/nav/no_name_guard, using util/buffer.lua's TREE_FT/adapter.get_winid() exclusion) — enable there once the neo-tree block migrates to filetree.nvim (Liste 1). Keep disabled here.
   },
 })
 
