@@ -34,13 +34,7 @@ It stays off in the nvim-config itself until "Liste 1" (the neo-tree→filetree.
 
 ## 2. Autocmd → plugin mapping
 
-| Autocmd (file) | What it does | Plugin | Why |
-|---|---|---|---|
-| `general.no_name_guard` | Redirect stray `[No Name]` windows to a real buffer | **filetree.nvim** | Done above — needs adapter/tree-window awareness that only filetree.nvim has |
-| `git.conflicts_qf` (VimEnter) | Populate quickfix with unresolved-conflict files | **project-insight.nvim** | Fits its "analyze and report on the codebase" mandate — a conflict scan is a project-health report, same category as symbols/metrics |
-| Astro `autocmds.lua` — missing-component-import check (BufWritePost) | Scans buffer for used-but-unimported JSX-style components, warns | **project-insight.nvim** | Static analysis + report on a buffer, same shape as its existing symbol/metric analysis — would need generalizing beyond Astro, but the pattern belongs there, not hand-rolled per-language |
 
-| Astro dev-server kill (VimLeavePre, `pkill -f "astro dev"`) | Kill background dev server on exit | *(no clean fit — flag as bug)* | Unix-only (`pkill`); on this Windows machine `executable("pkill")` is false, so it's a silent no-op today. Closest domain is **nvim-containers.nvim** (external dev-process lifecycle) but that's Docker/Podman-specific, not a generic process manager — not a real fit as-is |
 
 **No good fit among the 24** (stay host-level, since nothing in the list covers their domain): kitty padding/margin tweaks (general + terminals, duplicated in both!), cursorline-on-focus, `last_loc` (duplicated near-identically in *both* `general` and `text` — worth deduping regardless of plugin extraction), terminal `numbers`/`auto_insert`, `git.commit_ft` (trivial filetype-local opts), `git.gitsigns_refresh`/`blame_on_hold` (thin gitsigns wrappers, not worth a standalone plugin), neotest auto-discovery, eslint/prettier BufWritePre, snacks dashboard opener.
 

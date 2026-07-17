@@ -3,6 +3,26 @@
 - [ ] Images, inline in markdown files wären super:
   ![test](./docs/ROADMAP/personal/MATERIALS/ML_Link_Thing.png)
 
+## Autocmds zentralisieren
+
+Viele Module nutzen direkt `vim.api.nvim_create_autocmd`, obwohl `lib.autocmd` existiert. Das betrifft z. B. [options.lua](C:/Users/bartl/AppData/Local/nvim/lua/options.lua:79), [hl_config/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/init.lua:212), [astro/autocmds.lua](C:/Users/bartl/AppData/Local/nvim/lua/lsp/languages/webdev/astro/autocmds.lua:12). Verbesserung: nach und nach auf `lib.autocmd` bzw. den vorhandenen FileType-Dispatcher migrieren, damit Fehlerbehandlung, Gruppen und Reload-Verhalten einheitlich sind.
+
+## Shell-Kommandos von Strings auf argv umstellen
+
+Es gibt einige String-Shell-Aufrufe mit zusammengesetzten Pfaden, z. B. [line_diff_on_hold.lua](C:/Users/bartl/AppData/Local/nvim/lua/autocmds/git/line_diff_on_hold.lua:99), [astro/autocmds.lua](C:/Users/bartl/AppData/Local/nvim/lua/lsp/languages/webdev/astro/autocmds.lua:69). Verbesserung: `vim.system({ ... })` oder `lib.cross.run[_argv]` verwenden. Das reduziert Quoting-Bugs, Injection-Risiko und Plattformprobleme.
+
+## **Direkte `vim.notify`, `print`, `vim.keymap.set` reduzieren**
+Die Checklisten wollen `lib.notify`, `lib.map`, `lib.usercmd`. Direkte Treffer gibt es u. a. in  [sessions/usercmds.lua](C:/Users/bartl/AppData/Local/nvim/lua/sessions/usercmds.lua:61). Verbesserung: produktive Module migrieren; Debug-/Testmodule dürfen ggf. separat markiert bleiben.
+
+## **Buffer/Window-Handles in Deferred/Scheduled-Code härten**
+Einige Callbacks arbeiten später mit implizit aktuellem Window/Buffer, z. B. [pathprobe/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/custom/pathprobe/init.lua:306), [neotree/commands/clipboard/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/config/neotree/commands/clipboard/init.lua:286). Verbesserung: beim Scheduling `bufnr/winid` snapshotten und vor Nutzung erneut validieren.
+
+##  **Low-Level-Module ohne UI-Seiteneffekte halten**
+Einige Core-nahe Module melden direkt per Notify, z. B. LSP-Capabilities oder FS-/PDF-Port-Backendbereiche. Verbesserung: Low-Level gibt `{ ok, err }` zurück; UI-Schicht entscheidet über `notify`. Das würde deine Fehlerbehandlung konsistenter machen.
+
+---
+
+
 - [no name] Buffer - wenn einer neben offenen buffer existiert, dann kann ich mit Tab nicht auf den no name buffer gehen, es springt sofort zurück. Da wir einen schutz eggeb no name buffer implementieret haben, habe ich gleich an diesen gedacht, dass dieser eventuell interferiert. Es passt wzar,m dass wir einnen schutzt gegen no name buffer haben (sfern andere buffer bestehen, die fokusiiert werden können), aber entweder muss ich sie wenn sie neben anderen normallen bufffe r eisiteren anwöhlen und schlißen können oder, das wäre mir lieber, diese no name buffer werden geschlossen sobald ein nirmaler buffer exisitiert.
 
 - [ ] nvim/lua/autocmds analysieren, zb general -> no name guard in filetee.nvim buffer-ctx implementieren

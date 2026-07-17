@@ -261,7 +261,7 @@ return apply_source({
       keymaps = { cycle = true, delete = true },
       commands = true,
       auto_mkdir = { enable = true }, -- Creates missing parent dirs on BufWritePre (moved here from autocmds.general)
-      on_hold = { enable = true },        -- moved here from autocmds.git.line_diff_on_hold
+      on_hold = { enable = false },        -- moved here from autocmds.git.line_diff_on_hold
       conflict_marks = { enable = true }, -- moved here from autocmds.git.conflict_marks
     },
   },
