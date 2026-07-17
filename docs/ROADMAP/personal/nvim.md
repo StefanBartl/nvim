@@ -54,6 +54,27 @@ Der Vollständigkeit halber, da du „auslagern" fragst — diese Domänen haben
 | Modul | Vorschlag | Warum |
 |---|---|---|
 | `config/neotest/**` | eigenes / dap-kit-Sibling | Test-Runner-Adapter, große eigenständige Einheit |
+| `lua/lsp/**` | eigenes `lsp.nvim` (dap.nvim-Sibling) | Stateful Subsystem — Registry, Capabilities, Attach-Handler, Formatter-Toggle, Workspace-Diagnostics-Toggle — nicht deklarative Settings. Gehört NICHT in `options.nvim`. |
+
+## `lsp.nvim` vs. `options.nvim`
+
+Frage vom 2026-07-17: gehört `lua/lsp/` eher in ein eigenes `lsp.nvim` oder in das
+geplante `options.nvim` (Sammelbecken für generelle Optionen)?
+
+**Antwort: eigenes `lsp.nvim`.** `lua/lsp/` ist strukturell dasselbe wie
+`dap.nvim` ("a config layer on top of X") — Registry (`lsp/core/registry.lua`),
+Capabilities, `on_attach`/`on_init`, Formatter-Toggle (`:LspFormat*`), und seit
+heute der Workspace-Diagnostics-Toggle (`:LspWorkspaceDiagnostics*`,
+`lsp/core/workspace_diagnostics.lua`) — alles stateful, mit eigenen Commands.
+`options.nvim` sollte dagegen eng auf deklarative `vim.opt`/`vim.g`-Settings
+begrenzt bleiben (siehe `lua/options.lua` heutiger Inhalt); sobald stateful
+Subsysteme wie LSP/DAP/Formatter dort reinwandern, wird es zur Mini-Kopie der
+Config und die Extraktion verliert ihren Sinn.
+
+Größerer Umbau als `options.nvim` (Registry/Capabilities/NvChad-Kopplung
+hängen dran — `nvchad.config.lspconfig` wird aktuell direkt referenziert), aber
+symmetrisch zu `dap.nvim` und wirklich wiederverwendbar. Noch nicht begonnen —
+offener Punkt, falls/wenn die Extraktion angegangen wird.
 
 ---
 
