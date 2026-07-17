@@ -30,7 +30,7 @@ else
 
   if local_repos_path then
     vim.notify(
-      string.format(("[PLUGINS PERSONAL] 'REPOS_DIR' is missing. Local fallback: '%s'"):format(), local_repos_path),
+      ("[PLUGINS PERSONAL] 'REPOS_DIR' is missing. Local fallback: '%s'"):format(local_repos_path),
       vim.log.levels.WARN
     )
   else

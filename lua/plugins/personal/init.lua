@@ -17,18 +17,35 @@ local notify = require("lib.nvim.notify").create("[plugins.personal]")
 ---  - "dir"      → lokal aus dem repos-Verzeichnis (dir), Fallback remote falls Ordner fehlt
 ---  - "remote"   → von GitHub (StefanBartl/...)
 
---- Globaler "all"-Schalter. Übersteuert die MODE-Tabelle, wenn ungleich "auto":
----   "auto"     → pro Repo entscheidet die MODE-Tabelle unten
----   "dir"      → ALLE lokal
----   "remote"   → ALLE remote
----   "disabled" → ALLE aus
+-- ── MANUELLER SCHALTER ─────────────────────────────────────────────────────
+-- Erzwingt EINE Quelle für ALLE personal-Plugins und übersteuert sowohl die
+-- Maschinen-Erkennung als auch die MODE-Tabelle weiter unten. Zum Debuggen /
+-- Umschalten einfach auf "dir" oder "remote" setzen:
+--   "auto"     → nichts erzwingen (Maschinenrolle + MODE entscheiden, s. u.)
+--   "dir"      → ALLE lokal
+--   "remote"   → ALLE von GitHub
+--   "disabled" → ALLE aus
 ---@type "auto"|PersonalRepoMode
+local OVERRIDE = "auto"
 
--- "workstation" (see plugins.personal.machine) never has local dev checkouts
--- of these repos, so force "remote" there regardless of what happens to
--- exist under REPOS_DIR on that machine — dir-mode's own fallback already
--- goes remote when the folder is missing, but this makes it unconditional.
-local SOURCE = machine.is("workstation") and "remote" or "dir"
+-- Auflösung der effektiven Quelle, wenn OVERRIDE == "auto":
+--   * "workstation" (siehe plugins.personal.machine) hat nie lokale Checkouts
+--     dieser Repos → alles "remote" (der dir-Fallback ginge zwar auch remote,
+--     das hier macht es unbedingt und spart 25× isdirectory-Prüfungen).
+--   * jede andere Maschine → "auto": pro Repo entscheidet die MODE-Tabelle.
+-- Achtung: "remote" auf der workstation heißt, dass lazy alle Repos als echte
+-- GitHub-Remotes verwaltet. Der lazy-Update-Checker ist deshalb auf der
+-- workstation bewusst deaktiviert (siehe lua/config/lazy/init.lua), sonst
+-- fetcht er bei jedem Start ~116 Repos und friert die UI 60-90s ein.
+---@type "auto"|PersonalRepoMode
+local SOURCE
+if OVERRIDE ~= "auto" then
+  SOURCE = OVERRIDE
+elseif machine.is("workstation") then
+  SOURCE = "remote"
+else
+  SOURCE = "auto"
+end
 
 --- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
 ---@type table<string, PersonalRepoMode>
@@ -44,7 +61,7 @@ local MODE = {
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
   ["fileops.nvim"] = "dir",
   ["gopath.nvim"] = "dir",
-  ["replacer"] = "dir",
+  ["replacer.nvim"] = "dir", -- Basename des Specs "StefanBartl/replacer.nvim"
   ["project-insight.nvim"] = "dir",
   ["filetree.nvim"] = "dir",
   ["reposcope.nvim"] = "dir",
@@ -53,7 +70,7 @@ local MODE = {
   ["debugging.nvim"] = "dir",
   ["dap.nvim"] = "dir",
   ["diff.nvim"] = "dir",
-  ["languages.nvim"] = "dir",
+  ["language.nvim"] = "dir", -- Basename des Specs "StefanBartl/language.nvim"
   ["nvim-cmdlog"] = "dir",
   ["emojis.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
