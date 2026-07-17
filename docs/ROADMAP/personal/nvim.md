@@ -1,5 +1,7 @@
 # nvim
 
+- Redo: `U` implementieren
+
 ## nvim config autocmds
 
 I'll start by locating the autocmds in the nvim config, then cross-reference against the plugin list.
