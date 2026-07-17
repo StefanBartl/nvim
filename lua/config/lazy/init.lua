@@ -1,5 +1,7 @@
 ---@module 'config.lazy_config'
 
+local machine = require("plugins.personal.machine")
+
 return {
   defaults = { lazy = true },
 
@@ -9,8 +11,21 @@ return {
   -- lazy-lock.json entry (dir-mode plugins are excluded from the lock), so
   -- nothing pins/flags their version, and ":Lazy" showing no pending action
   -- just means "never checked", not "up to date".
+  --
+  -- BUT: lazy's checker starts on VeryLazy (interactive sessions only) and, on
+  -- the first start after `frequency` has elapsed — i.e. practically every
+  -- fresh daily launch — immediately `git fetch`es every non-local plugin.
+  -- On the "workstation" SOURCE="remote" makes ALL ~25 personal plugins remote
+  -- too (~116 git repos total), and the corporate EDR scans every git.exe
+  -- spawn, so that fetch storm froze the UI for 60-90s on every startup.
+  -- (Headless can't reproduce it: the checker is gated to non-headless.)
+  --
+  -- Fix: no automatic checker on the workstation — run `:Lazy check` manually
+  -- when you actually want to see drift. Everywhere else the personal plugins
+  -- are local dir-mode (skipped by the checker anyway), so only third-party
+  -- remotes get fetched over a fast, EDR-free network — keep it enabled there.
   checker = {
-    enabled = true,
+    enabled = not machine.is("workstation"),
     notify = true,
   },
 
