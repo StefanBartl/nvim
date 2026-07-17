@@ -10,6 +10,7 @@ local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
 local ocfg = lazy.require("wkdoptions.config.data.options")
 local hcfg = lazy.require("wkdoptions.config.data.highlight")
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local AUG_OPTS = vim.api.nvim_create_augroup("myopt_Options", { clear = true })
 
@@ -93,13 +94,12 @@ local function enable()
 
   -- Re-apply on colorscheme too (to keep guicursor sane if scheme touches it)
   vim.api.nvim_clear_autocmds({ group = AUG_OPTS })
-  vim.api.nvim_create_autocmd("ColorScheme", {
+  Autocmd.create("ColorScheme", function()
+    apply_cursorline_defaults()
+    apply_guicursor()
+    apply_matchparen()
+  end, {
     group = AUG_OPTS,
-    callback = function()
-      apply_cursorline_defaults()
-      apply_guicursor()
-      apply_matchparen()
-    end,
     desc = "Keep base options/guicursor stable across colorscheme changes",
   })
 

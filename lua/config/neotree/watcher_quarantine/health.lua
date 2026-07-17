@@ -1,6 +1,7 @@
 ---@module 'config.neotree.watcher_quarantine.health'
 
 local event_patch = require("config.neotree.utils.event_patch")
+local notify = require("lib.nvim.notify").create("[config.neotree.watcher_quarantine.health]")
 
 local M = {}
 
@@ -33,7 +34,7 @@ function M.check()
     table.insert(lines, line)
   end
 
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  notify.info(table.concat(lines, "\n"))
 end
 
 return M

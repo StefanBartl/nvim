@@ -1,18 +1,20 @@
 ---@module 'config.neotree.usercmds'
 
+local usercmd = require("lib.nvim.usercmd")
+
 local M = {}
 
 ---@return nil
 function M.enable()
   local api = vim.api
 
-  api.nvim_create_user_command("NeoTreeCheckHealth", function()
+  usercmd.create("NeoTreeCheckHealth", function()
     require("config.neotree.checkhealth").check()
   end, {
     desc = "Run Neo-tree config health checks",
   })
 
-  api.nvim_create_user_command("NeoTreeDebugSources", function()
+  usercmd.create("NeoTreeDebugSources", function()
     require("config.neotree.sources.switcher").debug_sources()
   end, { desc = "[Neo-tree] Debug source detection" })
 

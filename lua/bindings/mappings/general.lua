@@ -47,7 +47,7 @@ function M.setup()
   )
 
   -- Fügt das aktuelle Datum ein (z. B. 10.07.2026) buffer-ctx.nvim!
-  vim.keymap.set("n", "<leader>date", function()
+  map("n", "<leader>date", function()
     vim.api.nvim_put({ os.date("%d.%m.%Y") }, "c", false, true)
   end, { desc = "Datum einfügen" })
 end

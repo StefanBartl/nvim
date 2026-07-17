@@ -1,15 +1,16 @@
 ---@module 'lsp.languages.systems.go'
 ---@class LangGoQoL
 
+local Autocmd = require("lib.nvim.autocmd")
+
 local M = {}
 
 ---@return nil
 function M.enable()
   local grp = vim.api.nvim_create_augroup("LangGo", { clear = true })
-  vim.api.nvim_create_autocmd("FileType", {
+  Autocmd.create("FileType", function(_) end, {
     group = grp,
     pattern = "go",
-    callback = function(_) end,
   })
 end
 

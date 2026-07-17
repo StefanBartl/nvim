@@ -5,6 +5,8 @@
 ---   - Mappings (normal mode)
 ---   - User commands :WinVertical and :WinHorizontal
 
+local usercmd = require("lib.nvim.usercmd")
+
 local M = {}
 
 --- Move current window into a vertical layout, left side.
@@ -39,7 +41,7 @@ end
 
 --- Set up keymaps and user commands.
 function M.setup()
-  local map = vim.g.__map_helper or vim.keymap.set
+  local map = vim.g.__map_helper
 
   -- vertical
   map("n", "<leader>wl", M.to_vertical_left, { desc = "Move window to vertical split (left)" })
@@ -53,11 +55,11 @@ function M.setup()
   map("n", "<leader>wo", M.rotate, { desc = "Rotate window layout" })
 
   -- user commands
-  vim.api.nvim_create_user_command("WinVertical", function()
+  usercmd.create("WinVertical", function()
     M.to_vertical_left()
   end, { desc = "Move current window to vertical split" })
 
-  vim.api.nvim_create_user_command("WinHorizontal", function()
+  usercmd.create("WinHorizontal", function()
     M.to_horizontal_top()
   end, { desc = "Move current window to horizontal split" })
 end

@@ -11,6 +11,7 @@
 ---   })
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.hardening]")
+local Autocmd = require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -144,20 +145,18 @@ local function _install_autocmds(events)
   STATE.augroup = api.nvim_create_augroup("HarpoonHardening", { clear = true })
 
   -- Debounced save on common "user done something with buffer" cues
-  nvim_create_autocmd(events, {
+  Autocmd.create(events, function()
+    _debounced_save()
+  end, {
     group = STATE.augroup,
-    callback = function()
-      _debounced_save()
-    end,
     desc = "Harpoon debounced save",
   })
 
   -- Flush on exit to avoid losing last pending write
-  nvim_create_autocmd("VimLeavePre", {
+  Autocmd.create("VimLeavePre", function()
+    _flush_now()
+  end, {
     group = STATE.augroup,
-    callback = function()
-      _flush_now()
-    end,
     desc = "Harpoon flush pending save",
   })
 end

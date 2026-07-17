@@ -2,6 +2,7 @@
 -- Accept opts.orig_fname / orig_line / orig_col and use them to set buffer name and a compact title.
 local api = vim.api
 local fn = vim.fn
+local Autocmd = require("lib.nvim.autocmd")
 
 ---@param lines string[]
 ---@param opts table|nil
@@ -113,14 +114,13 @@ return function(lines, opts)
 
   local group_name = "LspSignaturePopup_" .. tostring(winid)
   local aug_id = api.nvim_create_augroup(group_name, { clear = true })
-  api.nvim_create_autocmd({ "BufWipeout", "BufHidden", "BufLeave", "WinClosed" }, {
+  Autocmd.create({ "BufWipeout", "BufHidden", "BufLeave", "WinClosed" }, function()
+    pcall(require("lsp.tools.lsp_signature.state").close)
+    pcall(api.nvim_del_augroup_by_id, aug_id)
+  end, {
     group = aug_id,
     once = true,
     buffer = bufnr,
-    callback = function()
-      pcall(require("lsp.tools.lsp_signature.state").close)
-      pcall(api.nvim_del_augroup_by_id, aug_id)
-    end,
   })
 
   return bufnr, winid

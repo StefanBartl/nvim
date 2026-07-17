@@ -3,6 +3,7 @@
 --- Linux/macOS only; no Windows-specific branches.
 
 local api = vim.api
+local Autocmd = require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -134,15 +135,14 @@ function M.build(opts)
     if not STATE.enabled then
       return
     end
-    api.nvim_create_autocmd("BufWritePre", {
+    Autocmd.create("BufWritePre", function(ev)
+      if vim.bo[ev.buf].buftype ~= "" then
+        return
+      end
+      -- Silent one-shot format with view preservation
+      format(ev.buf)
+    end, {
       group = STATE.augroup,
-      callback = function(ev)
-        if vim.bo[ev.buf].buftype ~= "" then
-          return
-        end
-        -- Silent one-shot format with view preservation
-        format(ev.buf)
-      end,
       desc = "LSP/Conform: format current buffer on save (toggleable, preserves views)",
     })
   end

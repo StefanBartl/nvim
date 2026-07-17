@@ -3,6 +3,7 @@
 --- Use when @types are not detected automatically
 
 local notify = require("lib.nvim.notify").create("[lsp.servers.lua_ls.reload]")
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -55,20 +56,20 @@ end
 
 --- Setup user command
 function M.setup()
-  vim.api.nvim_create_user_command("LuaLsReloadLibrary", function()
+  usercmd.create("LuaLsReloadLibrary", function()
     M.reload_library()
   end, {
     desc = "[lsp.lua_ls] Reload workspace library (useful when @types not detected)"
   })
 
-  vim.api.nvim_create_user_command("LuaLsInspectLibrary", function()
+  usercmd.create("LuaLsInspectLibrary", function()
     local debug = require("lsp.servers.lua_ls.debug")
     debug.print_debug_info(vim.api.nvim_get_current_buf())
   end, {
     desc = "[lsp.lua_ls] Inspect current workspace library configuration"
   })
 
-    vim.api.nvim_create_user_command("LuaLsSetProfile", function(opts)
+    usercmd.create("LuaLsSetProfile", function(opts)
     local profile = opts.args
     if profile == "" then
       profile = "normal"

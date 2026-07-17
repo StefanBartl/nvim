@@ -1,6 +1,8 @@
 ---@module 'config.neotest.consumers.neotree_wrapper'
 ---@brief Deferred Neo-tree consumer wrapper to prevent race conditions
 
+local notify = require("lib.nvim.notify").create("[config.neotest.consumers.neotree_wrapper]")
+
 ---@type function|nil
 local _real_consumer = nil
 
@@ -16,9 +18,8 @@ local function create_consumer(client)
   -- Load real consumer lazily
   local ok, neotree_consumer = pcall(require, "neotest.consumers.neotree")
   if not ok then
-    vim.notify(
-      "[neotest.consumers.neotree_wrapper] Failed to load neo-tree consumer",
-      vim.log.levels.ERROR
+    notify.error(
+      "[neotest.consumers.neotree_wrapper] Failed to load neo-tree consumer"
     )
     return {}
   end

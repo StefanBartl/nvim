@@ -1,5 +1,7 @@
 ---@module 'bindings.mappings.trouble'
 
+local notify = require("lib.nvim.notify").create("[bindings.mappings.trouble]")
+
 local M = {}
 
 function M.setup()
@@ -72,7 +74,7 @@ function M.setup()
   ---@return nil
   local function diag_next()
     if not trouble.is_open({ mode = "diagnostics" }) then
-      vim.notify("[trouble] diagnostics list not open", vim.log.levels.INFO)
+      notify.info("[trouble] diagnostics list not open")
       return
     end
     trouble.next({ mode = "diagnostics", skip_groups = true, jump = true })
@@ -83,7 +85,7 @@ function M.setup()
   ---@return nil
   local function diag_prev()
     if not trouble.is_open({ mode = "diagnostics" }) then
-      vim.notify("[trouble] diagnostics list not open", vim.log.levels.INFO)
+      notify.info("[trouble] diagnostics list not open")
       return
     end
     trouble.prev({ mode = "diagnostics", skip_groups = true, jump = true })

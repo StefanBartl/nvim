@@ -1,5 +1,7 @@
 ---@module 'config.neotest.autocmds.auto_discovery'
 
+local Autocmd = require("lib.nvim.autocmd")
+
 local M = {}
 
 --- Force initial test discovery on project open
@@ -25,8 +27,7 @@ end
 -- Auto-discovery beim VimEnter
 ---@return nil
 function M.attach()
-  vim.api.nvim_create_autocmd("VimEnter", {
-    callback = force_initial_discovery,
+  Autocmd.create("VimEnter", force_initial_discovery, {
     once = true,
     desc = "[neotest] Initial test discovery",
   })

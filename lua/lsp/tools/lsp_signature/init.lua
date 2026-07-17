@@ -7,11 +7,12 @@
 
 local M = {}
 
+local map = require("lib.nvim.map")
 local schedule = vim.schedule
 local request_and_show = require("lsp.tools.lsp_signature.request_and_show")
 
 function M.setup()
-  vim.keymap.set({ "i", "n" }, "<C-b>", function()
+  map({ "i", "n" }, "<C-b>", function()
     schedule(function()
       request_and_show()
     end)

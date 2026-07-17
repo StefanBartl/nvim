@@ -78,6 +78,9 @@ function M.retry_start(name, bufnr, max_attempts)
     -- Retry after delay if not max attempts
     if state.attempts[name] < max_attempts then
       vim.defer_fn(function()
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
         M.retry_start(name, bufnr, max_attempts)
       end, 2000 * state.attempts[name]) -- Progressive delay: 2s, 4s, 6s
     end
@@ -87,6 +90,9 @@ function M.retry_start(name, bufnr, max_attempts)
 
   -- Check if attached
   vim.defer_fn(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
     if is_running(name, bufnr) then
       notify.info(string.format("✓ '%s' started successfully on attempt %d", name, state.attempts[name]))
       reset_state(name)
@@ -133,6 +139,9 @@ function M.force_restart(name, bufnr)
 
   -- Wait for cleanup, then start
   vim.defer_fn(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
     reset_state(name) -- Reset retry counter
     M.retry_start(name, bufnr, 3)
   end, 500)
@@ -144,7 +153,7 @@ end
 ---@param bufnr integer|nil
 function M.auto_recover(bufnr)
   if not bufnr then
-    vim.notify("[lsp.usrcmds.recovery] bufnr is nil", vim.log.levels.warn)
+    notify.notify("[lsp.usrcmds.recovery] bufnr is nil", vim.log.levels.WARN)
     return nil
   end
   local health = M.health_check(bufnr)

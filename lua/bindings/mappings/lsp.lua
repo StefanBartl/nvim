@@ -5,7 +5,7 @@ local M = {}
 function M.setup()
   local map = vim.g.__map_helper
 
-  vim.keymap.set("n", "<leader>gtt", function()
+  map("n", "<leader>gtt", function()
     require("mylsp.nav.lua_root").goto_root_at_cursor({ center = true })
   end, { desc = "Go to Lua table/function root" })
 

@@ -2,6 +2,7 @@
 --- Utilities and usercommands to lookup TypeScript type definitions by symbol string.
 --- Commands accept an optional argument; when omitted the current word (`<cword>`) is used.
 local notify = require("lib.nvim.notify").create("[lsp.tools.ts_type_lookup.cmds]")
+local usercmd = require("lib.nvim.usercmd")
 
 local api = vim.api
 local lsp = vim.lsp
@@ -261,17 +262,17 @@ end
 
 --- Setup convenience usercommands with optional argument (default: <cword>)
 function M.attach()
-  api.nvim_create_user_command("TypeDefGoTo", function(opts)
+  usercmd.create("TypeDefGoTo", function(opts)
     local sym = opts.args ~= "" and opts.args or fn.expand("<cword>")
     M.go_to_type_definition_for(sym)
   end, { nargs = "?", desc = "Go to type definition for symbol string (vsplit). Defaults to <cword>." })
 
-  api.nvim_create_user_command("TypeDefPeek", function(opts)
+  usercmd.create("TypeDefPeek", function(opts)
     local sym = opts.args ~= "" and opts.args or fn.expand("<cword>")
     M.peek_type_definition_for(sym)
   end, { nargs = "?", desc = "Peek type definition for symbol string (floating). Defaults to <cword>." })
 
-  api.nvim_create_user_command("TypeDefFindInNodeModules", function(opts)
+  usercmd.create("TypeDefFindInNodeModules", function(opts)
     local sym = opts.args ~= "" and opts.args or fn.expand("<cword>")
     M.find_in_node_modules(sym)
   end, { nargs = "?", desc = "Search symbol in node_modules (rg fallback). Defaults to <cword>." })

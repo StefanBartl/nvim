@@ -23,6 +23,7 @@ local previewers = require("telescope.previewers")
 local lsp = vim.lsp
 local api = vim.api
 local fn = vim.fn
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -143,7 +144,7 @@ end
 
 --- Setup usercommand to invoke the picker
 function M.attach()
-  api.nvim_create_user_command("TypeDefPick", function(opts)
+  usercmd.create("TypeDefPick", function(opts)
     local sym = opts.args ~= "" and opts.args or fn.expand("<cword>")
     M.pick(sym)
   end, { nargs = "?", desc = "Telescope picker for workspace symbols (default: <cword>)" })

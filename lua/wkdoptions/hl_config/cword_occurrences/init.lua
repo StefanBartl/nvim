@@ -6,6 +6,7 @@
 local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config") ---@module 'wkdoptions.config'
 local Debounce = lazy.require("lib.nvim.debounce")
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -358,38 +359,32 @@ function M.enable()
     if_still_valid(winid, bufnr, update_now)
   end, CC().debounce_ms or 40)
 
-  vim.api.nvim_create_autocmd({ "CursorMoved" }, {
+  Autocmd.create({ "CursorMoved" }, update_debounced, {
     group = AUG,
-    callback = update_debounced,
     desc = "Cword occurrences: update on movement",
   })
-  vim.api.nvim_create_autocmd({ "CursorMovedI" }, {
+  Autocmd.create({ "CursorMovedI" }, update_debounced, {
     group = AUG,
-    callback = update_debounced,
     desc = "Cword occurrences: update on movement (insert)",
   })
-  vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "WinScrolled" }, {
+  Autocmd.create({ "BufEnter", "BufWinEnter", "WinScrolled" }, update_now, {
     group = AUG,
-    callback = update_now,
     desc = "Cword occurrences: update on view/window changes",
   })
-  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+  Autocmd.create({ "TextChanged", "TextChangedI" }, update_debounced, {
     group = AUG,
-    callback = update_debounced,
     desc = "Cword occurrences: update on edits",
   })
-  vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave" }, {
+  Autocmd.create({ "BufLeave", "WinLeave" }, clear_all, {
     group = AUG,
-    callback = clear_all,
     desc = "Cword occurrences: clear when leaving",
   })
-  vim.api.nvim_create_autocmd({ "InsertEnter" }, {
+  Autocmd.create({ "InsertEnter" }, function()
+    if not CC().in_insert then
+      clear_all()
+    end
+  end, {
     group = AUG,
-    callback = function()
-      if not CC().in_insert then
-        clear_all()
-      end
-    end,
     desc = "Cword occurrences: clear on insert (if configured)",
   })
 

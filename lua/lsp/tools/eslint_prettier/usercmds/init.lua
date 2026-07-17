@@ -1,6 +1,7 @@
 ---@module 'lsp.tools.eslint_prettier.usercmds'
 --- Create user commands like :EslintFix, :PrettierFormat, :LintAndFormat, :ToggleLintFormatOnSave
 local notify = require("lib.nvim.notify").create("[lsp.tools.eslint_prettier.usercmds]")
+local usercmd = require("lib.nvim.usercmd")
 
 local api = vim.api
 local core = require("lsp.tools.eslint_prettier.core.find_root")
@@ -12,7 +13,7 @@ local M = {}
 
 function M.attach(ctx)
   ctx = ctx or {}
-  api.nvim_create_user_command("EslintFix", function()
+  usercmd.create("EslintFix", function()
     local bufnr = api.nvim_get_current_buf()
     local root = core(bufnr)
     if not check.has_eslint(root) then
@@ -22,7 +23,7 @@ function M.attach(ctx)
     eslint_fix.eslint_fix(bufnr)
   end, { desc = "Run eslint_d --fix on current file (requires eslint config in project root)" })
 
-  api.nvim_create_user_command("PrettierFormat", function()
+  usercmd.create("PrettierFormat", function()
     local bufnr = api.nvim_get_current_buf()
     local root = core(bufnr)
     if not check.has_prettier(root) then
@@ -32,7 +33,7 @@ function M.attach(ctx)
     prettier_fmt.prettier_format(bufnr)
   end, { desc = "Run prettier --write on current file (requires prettier config in project root)" })
 
-  api.nvim_create_user_command("LintAndFormat", function()
+  usercmd.create("LintAndFormat", function()
     local bufnr = api.nvim_get_current_buf()
     local root = core(bufnr)
     if check.has_eslint(root) then
@@ -43,10 +44,10 @@ function M.attach(ctx)
     end
   end, { desc = "Run eslint_d --fix then prettier --write on current file" })
 
-  api.nvim_create_user_command("ToggleLintFormatOnSave", function()
+  usercmd.create("ToggleLintFormatOnSave", function()
     ctx._enabled = not not not not ctx._enabled -- placeholder if ctx is external
     -- better: toggle global in main module; user can call require('lsp.tools.eslint_prettier')._enabled = false
-    vim.notify("Toggle autorun: use plugin.setup to change default programmatically", vim.log.levels.INFO)
+    notify.info("Toggle autorun: use plugin.setup to change default programmatically")
   end, { desc = "Toggle automatic lint+format on save (toggle via API)" })
 end
 

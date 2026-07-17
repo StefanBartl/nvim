@@ -59,14 +59,14 @@ function M.attach()
   -- LspRecover: Auto-recover missing servers
   pcall(nvim_create_user_command, "LspRecover", function()
     local recovery = require("lsp.usercmds.recovery")
-    recovery.auto_recover(0)
+    recovery.auto_recover(vim.api.nvim_get_current_buf())
   end, { desc = desc_tag .. "Auto-recover missing LSP servers" })
 
   -- LspForceRestart: Force-restart with cleanup
   pcall(nvim_create_user_command, "LspForceRestart", function(args)
     local recovery = require("lsp.usercmds.recovery")
     if args.args and args.args ~= "" then
-      recovery.force_restart(args.args, 0)
+      recovery.force_restart(args.args, vim.api.nvim_get_current_buf())
     else
       notify.warn("Usage: :LspForceRestart <server_name>")
     end

@@ -1,4 +1,7 @@
 ---@module 'plugins.personal.utils'
+--- init.lua requires this module to locate lib.nvim itself (`local_dev("lib.nvim")`),
+--- before lib.nvim is on the runtime path — so this file cannot depend on lib.nvim
+--- (including lib.nvim.notify) at module-load time. Uses plain vim.notify.
 
 local PERSONAL_UTILS = {}
 

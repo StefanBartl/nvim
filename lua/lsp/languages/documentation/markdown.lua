@@ -4,6 +4,7 @@
 local api = vim.api
 local lsp = vim.lsp
 local desc_tag = "[lsp] "
+local Autocmd = require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -30,37 +31,36 @@ function M.enable()
   -- ------------------------------------------------------------------
   -- Per-buffer FileType setup
   -- ------------------------------------------------------------------
-  api.nvim_create_autocmd("FileType", {
+  Autocmd.create("FileType", function(ev)
+    if not (ev and ev.buf) then return end
+
+    local bo = vim.bo[ev.buf]
+    local bt = bo.buftype or ""
+
+    -- Only touch encoding on normal, modifiable files
+    if bt == "" and bo.modifiable then
+      bo.fileencoding = "utf-8"
+      bo.bomb         = false
+    end
+
+    bo.textwidth    = 0
+    bo.formatoptions = "jnql"
+
+    M.setup_reference_hl()
+
+    -- Buffer-local format keymap
+    pcall(vim.keymap.set, "n", "<leader>fm", function()
+      local ok, conform = pcall(require, "conform")
+      if ok and type(conform.format) == "function" then
+        conform.format({ bufnr = ev.buf, timeout_ms = 2000, lsp_fallback = false })
+      else
+        lsp.buf.format({ bufnr = ev.buf, timeout_ms = 2000 })
+      end
+    end, { buffer = ev.buf, silent = true, desc = desc_tag .. "Format markdown buffer" })
+  end, {
     group   = grp,
     pattern = { "markdown", "mdx" },
     desc    = desc_tag .. "Markdown QoL: UTF-8, soft defaults, format keymap",
-    callback = function(ev)
-      if not (ev and ev.buf) then return end
-
-      local bo = vim.bo[ev.buf]
-      local bt = bo.buftype or ""
-
-      -- Only touch encoding on normal, modifiable files
-      if bt == "" and bo.modifiable then
-        bo.fileencoding = "utf-8"
-        bo.bomb         = false
-      end
-
-      bo.textwidth    = 0
-      bo.formatoptions = "jnql"
-
-      M.setup_reference_hl()
-
-      -- Buffer-local format keymap
-      pcall(vim.keymap.set, "n", "<leader>fm", function()
-        local ok, conform = pcall(require, "conform")
-        if ok and type(conform.format) == "function" then
-          conform.format({ bufnr = ev.buf, timeout_ms = 2000, lsp_fallback = false })
-        else
-          lsp.buf.format({ bufnr = ev.buf, timeout_ms = 2000 })
-        end
-      end, { buffer = ev.buf, silent = true, desc = desc_tag .. "Format markdown buffer" })
-    end,
   })
 
   -- ------------------------------------------------------------------

@@ -20,6 +20,7 @@ local augroup = augroup_lib.create.clear
 local autocmd_lib = lazy.require("lib.nvim.autocmd")
 local norm_events = autocmd_lib.norm_events
 local is_kitty = lazy.require("lib.nvim.terminal").is_kitty
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 --------------------------------------------------------------------------------
 -- Defaults --------------------------------------------------------------------
@@ -41,15 +42,14 @@ function M.enable(cfg)
   -- 1) Terminal window numbers off -------------------------------------------
   -- Description: On terminal open (or configured events), disable absolute/relative numbers locally.
   if cfg.numbers.enable then
-    nvim_create_autocmd(norm_events(cfg.numbers.events, { "TermOpen" }), {
+    Autocmd.create(norm_events(cfg.numbers.events, { "TermOpen" }), function(ev)
+      -- Use local options to avoid bleeding into non-terminal windows.
+      api.nvim_buf_call(ev.buf, function()
+        vim.opt_local.number = false
+        vim.opt_local.relativenumber = false
+      end)
+    end, {
       group = augroup("numbers"),
-      callback = function(ev)
-        -- Use local options to avoid bleeding into non-terminal windows.
-        api.nvim_buf_call(ev.buf, function()
-          vim.opt_local.number = false
-          vim.opt_local.relativenumber = false
-        end)
-      end,
       desc = "Terminal: disable absolute and relative line numbers (local)",
     })
   end
@@ -75,16 +75,22 @@ function M.enable(cfg)
   -- 3) Auto Insert in terminals ----------------------------------------------
   -- Description: Automatically switch to Insert mode on terminal open (and optionally on enter).
   if cfg.auto_insert.enable then
-    nvim_create_autocmd(norm_events(cfg.auto_insert.events, { "TermOpen" }), {
+    Autocmd.create(norm_events(cfg.auto_insert.events, { "TermOpen" }), function(args)
+      local buf = args.buf
+      -- `startinsert` is safe here; schedule to avoid racing with other handlers.
+      -- Re-check the terminal buffer is still current: another handler may have
+      -- switched windows/buffers during the scheduled gap.
+      vim.schedule(function()
+        if
+          vim.api.nvim_buf_is_valid(buf)
+          and vim.bo[buf].buftype == "terminal"
+          and vim.api.nvim_get_current_buf() == buf
+        then
+          vim.cmd("startinsert")
+        end
+      end)
+    end, {
       group = augroup("auto_insert"),
-      callback = function()
-        -- `startinsert` is safe here; schedule to avoid racing with other handlers.
-        vim.schedule(function()
-          if vim.bo.buftype == "terminal" then
-            vim.cmd("startinsert")
-          end
-        end)
-      end,
       desc = "Terminal: enter Insert mode automatically",
     })
   end

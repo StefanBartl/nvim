@@ -3,33 +3,32 @@
 local M = {}
 
 local api = vim.api
+local Autocmd = require("lib.nvim.autocmd")
 
 ---@return nil
 function M.enable()
   local grp = api.nvim_create_augroup("LangJava", { clear = true })
 
-  api.nvim_create_autocmd("FileType", {
+  Autocmd.create("FileType", function(ev)
+    local bufnr = ev.buf
+
+    -- Set reasonable defaults
+    vim.bo[bufnr].shiftwidth = 4
+    vim.bo[bufnr].tabstop = 4
+    vim.bo[bufnr].expandtab = true
+
+    -- Organize imports on save
+    Autocmd.create("BufWritePre", function()
+      vim.lsp.buf.code_action({
+        context = { only = { "source.organizeImports" } },
+        apply = true,
+      })
+    end, {
+      buffer = bufnr,
+    })
+  end, {
     group = grp,
     pattern = { "java" },
-    callback = function(ev)
-      local bufnr = ev.buf
-
-      -- Set reasonable defaults
-      vim.bo[bufnr].shiftwidth = 4
-      vim.bo[bufnr].tabstop = 4
-      vim.bo[bufnr].expandtab = true
-
-      -- Organize imports on save
-      api.nvim_create_autocmd("BufWritePre", {
-        buffer = bufnr,
-        callback = function()
-          vim.lsp.buf.code_action({
-            context = { only = { "source.organizeImports" } },
-            apply = true,
-          })
-        end,
-      })
-    end,
   })
 end
 

@@ -34,6 +34,8 @@
 --- @field changes? table<string, LspTextEdit[]>
 --- @field documentChanges? (LspTextDocumentEdit|LspFileOp)[]
 
+local map = require("lib.nvim.map")
+
 -- ============================================================================
 -- Helpers
 -- ============================================================================
@@ -168,6 +170,6 @@ require("inc_rename").setup({
 
 -- <leader>rn → Start incremental rename, pre-filled with the word under the cursor.
 -- { expr = true } returns a command-line string to execute.
-vim.keymap.set("n", "<leader>rn", function()
+map("n", "<leader>rn", function()
   return ":IncRename " .. vim.fn.expand("<cword>")
 end, { expr = true, desc = "[LSP] Incremental rename (workspace, auto-save)" })

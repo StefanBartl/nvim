@@ -2,6 +2,7 @@
 ---@brief Validiert die korrekte Initialisierung des Neo-tree Tests Consumers
 
 local notify = require("lib.nvim.notify").create("[neotest.validate]")
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -147,7 +148,7 @@ end
 
 --- Registriert Diagnose-Command
 function M.setup_command()
-  vim.api.nvim_create_user_command("NeotestValidateConsumer", function()
+  usercmd.create("NeotestValidateConsumer", function()
     M.diagnose()
   end, { desc = "Validate Neo-tree tests consumer setup" })
 end

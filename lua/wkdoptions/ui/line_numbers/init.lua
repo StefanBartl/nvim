@@ -5,6 +5,7 @@ vim.opt.number = true
 vim.opt.relativenumber = false
 
 local ignore_lib = require("lib.nvim.fs.ignore.list")
+local Autocmd = require("lib.nvim.autocmd")
 local ignore_filetypes = ignore_lib.as_set()
 
 -- UI-spezifische Typen ergänzen
@@ -56,17 +57,15 @@ _G.custom_line_numbers = M.render
 -- =========================================================================
 -- DIE LÖSUNG: Dynamische Zuweisung statt globalem Vorschlaghammer
 -- =========================================================================
-vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "FileType" }, {
-  callback = function()
-    local ft = ignore_lib.normalize(vim.bo.filetype)
+Autocmd.create({ "BufEnter", "BufWinEnter", "FileType" }, function()
+  local ft = ignore_lib.normalize(vim.bo.filetype)
 
-    -- Wenn es ein normaler Datei-Buffer ist (kein Neo-tree, kein Quickfix etc.)
-    if not ignore_filetypes[ft] and vim.bo.buftype == "" then
-      vim.opt_local.statuscolumn = "%=%{%v:lua.custom_line_numbers()%} "
-      vim.opt_local.numberwidth = math.max(4, tostring(vim.fn.line("$")):len() + 1)
-    else
-      -- Für Neo-tree und Co: Überschreibe es lokal mit "leer" oder dem Standard
-      vim.opt_local.statuscolumn = ""
-    end
-  end,
-})
+  -- Wenn es ein normaler Datei-Buffer ist (kein Neo-tree, kein Quickfix etc.)
+  if not ignore_filetypes[ft] and vim.bo.buftype == "" then
+    vim.opt_local.statuscolumn = "%=%{%v:lua.custom_line_numbers()%} "
+    vim.opt_local.numberwidth = math.max(4, tostring(vim.fn.line("$")):len() + 1)
+  else
+    -- Für Neo-tree und Co: Überschreibe es lokal mit "leer" oder dem Standard
+    vim.opt_local.statuscolumn = ""
+  end
+end)

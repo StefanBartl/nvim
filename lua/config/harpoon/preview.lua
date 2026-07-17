@@ -14,6 +14,7 @@
 --- - If your terminal does not send <M-1>.. <M-9>, consider mapping alternate keys.
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.preview]")
+local map = require("lib.nvim.map")
 
 local M = {}
 
@@ -109,7 +110,7 @@ local function ensure_preview_window()
   -- Identify buffer for external autocmd guards
   vim.b[STATE.buf]._harpoon_preview = true
 
-  pcall(vim.keymap.set, "n", "q", function()
+  map("n", "q", function()
     if STATE.win and vim.api.nvim_win_is_valid(STATE.win) then
       vim.api.nvim_win_close(STATE.win, true)
     end
@@ -193,7 +194,7 @@ end
 function M.install_alt_number_maps()
   for i = 1, 9 do
     local lhs = ("<M-%d>"):format(i)
-    vim.keymap.set("n", lhs, function()
+    map("n", lhs, function()
       M.open_index(i)
     end, {
       desc = ("Harpoon preview %d (full-screen, 'q' to close)"):format(i),

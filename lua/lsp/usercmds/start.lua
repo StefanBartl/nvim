@@ -113,7 +113,7 @@ end
 ---@param args table vim.api.nvim_create_user_command args
 ---@return nil
 function M.execute(args)
-  local bufnr = 0
+  local bufnr = vim.api.nvim_get_current_buf()
 
   if args.args and args.args ~= "" then
     -- Start specific server

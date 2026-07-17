@@ -17,15 +17,15 @@ local M = {}
 -- Lazy-loaded module references using lib.lazy
 local get_config = lazy.require("wkdoptions.config")
 local get_hl_config = lazy.require("wkdoptions.hl_config")
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local function normalize_inactice_win_hl()
-  vim.api.nvim_create_autocmd("ColorScheme", {
+  Autocmd.create("ColorScheme", function()
+    -- Kopiere Normal zu NormalNC (macht sie identisch)
+    local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
+    vim.api.nvim_set_hl(0, "NormalNC", normal)
+  end, {
     pattern = "*",
-    callback = function()
-      -- Kopiere Normal zu NormalNC (macht sie identisch)
-      local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
-      vim.api.nvim_set_hl(0, "NormalNC", normal)
-    end,
   })
 
   local normal = vim.api.nvim_get_hl(0, { name = "Normal" })

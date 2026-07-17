@@ -7,6 +7,7 @@ local api, fn, fs, uv = vim.api, vim.fn, vim.fs, vim.uv or vim.loop
 
 -- Cache mit Buffer-Tick-Awareness
 local path_cache = require("lib.lua.memo.lru").new(128)
+local Autocmd = require("lib.nvim.autocmd")
 local tick_cache = {} -- bufnr -> { tick, abs_path }
 
 --- Get current buffer tick (für Cache-Invalidierung)
@@ -296,11 +297,10 @@ function M.display_path_for_buf(bufnr)
 end
 
 -- Clear tick cache when buffer is deleted
-vim.api.nvim_create_autocmd("BufDelete", {
+Autocmd.create("BufDelete", function(args)
+  tick_cache[args.buf] = nil
+end, {
   group = vim.api.nvim_create_augroup("WkdNvChadPathsCache", { clear = true }),
-  callback = function(args)
-    tick_cache[args.buf] = nil
-  end,
   desc = "Clear path tick cache on buffer delete"
 })
 

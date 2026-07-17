@@ -27,6 +27,7 @@
 
 
 local notify = require("lib.nvim.notify").create("[autocmds.auto-center-fexplorer]")
+local Autocmd = require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -140,41 +141,39 @@ local function setup_buffer(bufnr)
   --      while focus is in another window (editor, browser, etc.).
   --   2. Mouse guard  – no mouse event must have happened within the cooldown
   --      window. Catches clicks and scrolls while neo-tree IS focused.
-  vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+  Autocmd.create({ "CursorMoved", "CursorMovedI" }, function()
+    if not config.enabled then
+      return
+    end
+    if mouse_was_recent() then
+      return
+    end
+    local current_win = vim.api.nvim_get_current_win()
+    local wins = vim.fn.win_findbuf(bufnr)
+    for _, w in ipairs(wins) do
+      if w == current_win then
+        schedule_center(bufnr)
+        return
+      end
+    end
+  end, {
     group = group,
     buffer = bufnr,
-    callback = function()
-      if not config.enabled then
-        return
-      end
-      if mouse_was_recent() then
-        return
-      end
-      local current_win = vim.api.nvim_get_current_win()
-      local wins = vim.fn.win_findbuf(bufnr)
-      for _, w in ipairs(wins) do
-        if w == current_win then
-          schedule_center(bufnr)
-          return
-        end
-      end
-    end,
     desc = "Auto-center cursor in file explorer (keyboard only)",
   })
 
-  vim.api.nvim_create_autocmd("BufDelete", {
+  Autocmd.create("BufDelete", function()
+    if timers[bufnr] then
+      if not timers[bufnr]:is_closing() then
+        timers[bufnr]:stop()
+        timers[bufnr]:close()
+      end
+      timers[bufnr] = nil
+    end
+    enabled_buffers[bufnr] = nil
+  end, {
     group = group,
     buffer = bufnr,
-    callback = function()
-      if timers[bufnr] then
-        if not timers[bufnr]:is_closing() then
-          timers[bufnr]:stop()
-          timers[bufnr]:close()
-        end
-        timers[bufnr] = nil
-      end
-      enabled_buffers[bufnr] = nil
-    end,
     desc = "Cleanup auto-center resources",
   })
 
@@ -215,13 +214,12 @@ function M.setup(user_config)
     end
   end
 
-  vim.api.nvim_create_autocmd("FileType", {
+  Autocmd.create("FileType", function(args)
+    if is_explorer_filetype(args.match) then
+      setup_buffer(args.buf)
+    end
+  end, {
     group = vim.api.nvim_create_augroup("AutoCenterExplorerSetup", { clear = true }),
-    callback = function(args)
-      if is_explorer_filetype(args.match) then
-        setup_buffer(args.buf)
-      end
-    end,
     desc = "Setup auto-centering for file explorer buffers",
   })
 end

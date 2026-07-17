@@ -5,6 +5,7 @@ local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local CursorLine = lazy.require("wkdoptions.hl_config.features.cursorline")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -82,30 +83,27 @@ end
 function M.enable(cfg)
   local aug = State.get_augroup("ModeTint", true)
 
-  vim.api.nvim_create_autocmd("ModeChanged", {
+  Autocmd.create("ModeChanged", function(ev)
+    M.update(cfg, ev)
+  end, {
     group = aug,
-    callback = function(ev)
-      M.update(cfg, ev)
-    end,
     desc = "Tint CursorLine per mode",
   })
 
-  vim.api.nvim_create_autocmd("BufWinEnter", {
+  Autocmd.create("BufWinEnter", function()
+    M.update(cfg, nil)
+  end, {
     group = aug,
-    callback = function()
-      M.update(cfg, nil)
-    end,
     desc = "Reapply mode tint on window enter",
   })
 
-  vim.api.nvim_create_autocmd("WinClosed", {
+  Autocmd.create("WinClosed", function(ev)
+    local id = tonumber(ev.match)
+    if id then
+      M.clear_cache(id)
+    end
+  end, {
     group = aug,
-    callback = function(ev)
-      local id = tonumber(ev.match)
-      if id then
-        M.clear_cache(id)
-      end
-    end,
     desc = "Purge mode-tint cache",
   })
 

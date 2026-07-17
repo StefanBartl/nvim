@@ -8,6 +8,8 @@
 ---   'q' -> close the preview window
 
 local api = vim.api
+local Autocmd = require("lib.nvim.autocmd")
+local usercmd = require("lib.nvim.usercmd")
 local M = {}
 
 --- Determine whether a buffer looks like a Noice floating buffer.
@@ -51,14 +53,13 @@ end
 
 --- Autocmd callback: when a window is entered, check if it's a Noice preview and install maps
 local group = api.nvim_create_augroup("ToolsNoiceIntegration", { clear = true })
-api.nvim_create_autocmd("BufWinEnter", {
+Autocmd.create("BufWinEnter", function(ev)
+  local bufnr = ev.buf
+  if is_noice_buf(bufnr) then
+    install_maps(bufnr)
+  end
+end, {
   group = group,
-  callback = function(ev)
-    local bufnr = ev.buf
-    if is_noice_buf(bufnr) then
-      install_maps(bufnr)
-    end
-  end,
 })
 
 --- Manual function to attach maps to current buffer
@@ -69,7 +70,7 @@ function M.attach_to_current()
   end
 end
 
-api.nvim_create_user_command("TypeDefAttachNoiceKeys", function()
+usercmd.create("TypeDefAttachNoiceKeys", function()
   M.attach_to_current()
 end, { desc = "Attach type lookup keymaps to current Noice buffer" })
 

@@ -50,7 +50,7 @@ end
 ---@param args table vim.api.nvim_create_user_command args
 ---@return nil
 function M.execute(args)
-  local bufnr = 0
+  local bufnr = vim.api.nvim_get_current_buf()
   local clients = get_buffer_clients(bufnr)
 
   if #clients == 0 then
@@ -68,6 +68,9 @@ function M.execute(args)
 
         -- Delayed restart to allow cleanup
         vim.defer_fn(function()
+          if not vim.api.nvim_buf_is_valid(bufnr) then
+            return
+          end
           if start_lsp(args.args, bufnr) then
             notify.info(string.format("Restarted LSP: %s", args.args))
           else
@@ -97,6 +100,9 @@ function M.execute(args)
 
     -- Delayed restart for all servers
     vim.defer_fn(function()
+      if not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+      end
       local started = 0
       for _, name in ipairs(server_names) do
         if start_lsp(name, bufnr) then

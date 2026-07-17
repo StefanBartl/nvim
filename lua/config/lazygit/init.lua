@@ -11,6 +11,7 @@
 ---   actions/replace.lua  focus-safe replace action
 
 local notify = require("lib.nvim.notify").create("[cfg.lazygit]")
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -21,14 +22,14 @@ function M.setup()
     notify.warn("nvr not found in PATH — LazyGit O/<C-o> need neovim-remote (pip install neovim-remote)")
   end
 
-  vim.api.nvim_create_user_command("LazygitBadd", function(opts)
+  usercmd.create("LazygitBadd", function(opts)
     require("config.lazygit.actions.badd").run(opts.args)
   end, {
     nargs = 1, -- keeps spaces as part of the single path argument
     desc = "[LazyGit] Add file to buffer list (called via nvr)",
   })
 
-  vim.api.nvim_create_user_command("LazygitReplace", function(opts)
+  usercmd.create("LazygitReplace", function(opts)
     require("config.lazygit.actions.replace").run(opts.args)
   end, {
     nargs = 1,

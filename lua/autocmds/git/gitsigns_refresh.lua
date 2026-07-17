@@ -5,6 +5,7 @@
 local M = {}
 
 local api = vim.api
+local Autocmd = require("lib.nvim.autocmd")
 
 ---@param cfg AutoCmds.Git.GitsignsRefreshCfg
 ---@param shared table
@@ -15,14 +16,13 @@ function M.enable(cfg, shared)
   end
 
   local events = shared.norm_events(cfg.events, { "BufEnter", "FocusGained" })
-  api.nvim_create_autocmd(events, {
+  Autocmd.create(events, function()
+    local ok, gs = pcall(require, "gitsigns")
+    if ok and gs.refresh then
+      pcall(gs.refresh)
+    end
+  end, {
     group = shared.augroup("gitsigns_refresh"),
-    callback = function()
-      local ok, gs = pcall(require, "gitsigns")
-      if ok and gs.refresh then
-        pcall(gs.refresh)
-      end
-    end,
     desc = "Git: refresh gitsigns on focus/enter",
   })
 end

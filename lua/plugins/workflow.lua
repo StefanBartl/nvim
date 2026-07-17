@@ -1,6 +1,8 @@
 ---@module 'plugins.workflow'
 --- Tools for organizing development workflow (TODOs, annotations, reminders).
 
+local notify = require("lib.nvim.notify").create("[plugins.workflow]")
+
 ---@type LazyPluginSpec[]
 return {
 
@@ -24,7 +26,7 @@ return {
           if snacks and snacks.picker then
             snacks.picker.todo_comments()
           else
-            vim.notify("Snacks not loaded", vim.log.levels.WARN)
+            notify.warn("Snacks not loaded")
           end
         end,
         desc = "Todo",
@@ -37,7 +39,7 @@ return {
           if snacks and snacks.picker and KEYWORDS then
             snacks.picker.todo_comments({ keywords = KEYWORDS })
           else
-            vim.notify("Snacks not loaded or custom keywords table does not exist", vim.log.levels.WARN)
+            notify.warn("Snacks not loaded or custom keywords table does not exist")
           end
         end,
         desc = "Todo/Fix/Fixme",

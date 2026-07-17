@@ -4,14 +4,14 @@ local notify = require("lib.nvim.notify").create("[neotest.debug]")
 
 local M = {}
 
-local nvim_create_user_command = vim.api.nvim_create_user_command
+local usercmd = require("lib.nvim.usercmd")
 
 ----------------------------------------------------------------------
 -- User Commands
 ----------------------------------------------------------------------
 
 function M.usercommands()
-  nvim_create_user_command("NeotestDebugAdapters", function()
+  usercmd.create("NeotestDebugAdapters", function()
     local ok, neotest = pcall(require, "neotest")
     if not ok then
       notify.error("Neotest not loaded")
@@ -35,7 +35,7 @@ function M.usercommands()
     notify.info(table.concat(lines, "\n"))
   end, { desc = "[NeoTest Debug] Show adapter status" })
 
-  nvim_create_user_command("NeotestDebugState", function()
+  usercmd.create("NeotestDebugState", function()
     local ok, neotest = pcall(require, "neotest")
     if not ok then
       notify.error("Neotest not loaded")
@@ -84,7 +84,7 @@ function M.usercommands()
     notify.info(table.concat(lines, "\n"))
   end, { desc = "[NeoTest Debug] Show current state" })
 
-  nvim_create_user_command("NeotestDebugFile", function()
+  usercmd.create("NeotestDebugFile", function()
     local bufname = vim.api.nvim_buf_get_name(0)
 
     if bufname == "" then
@@ -120,7 +120,7 @@ function M.usercommands()
     notify.info(table.concat(lines, "\n"))
   end, { desc = "[NeoTest Debug] Show file test status" })
 
-  nvim_create_user_command("NeotestDebugRoot", function()
+  usercmd.create("NeotestDebugRoot", function()
     local bufname = vim.api.nvim_buf_get_name(0)
 
     if bufname == "" then
@@ -159,7 +159,7 @@ function M.usercommands()
     notify.info(table.concat(lines, "\n"))
   end, { desc = "[NeoTest Debug] Test root detection" })
 
-  nvim_create_user_command("NeotestDebugFramework", function()
+  usercmd.create("NeotestDebugFramework", function()
     local cwd = vim.fn.getcwd()
 
     local lines = { "=== Framework Detection ===" }

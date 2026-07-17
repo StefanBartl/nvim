@@ -10,6 +10,8 @@
 -- (z. B. Normal-, Insert-, Visual-Mode).
 -- =========================================================
 
+local Autocmd = require("lib.nvim.autocmd")
+
 local M = {}
 
 -- Cache for mode band groups
@@ -80,12 +82,11 @@ function M.mode_band_group()
 end
 
 -- Clear cache on mode change
-vim.api.nvim_create_autocmd("ModeChanged", {
+Autocmd.create("ModeChanged", function()
+  mode_band_cache = nil
+  last_mode = nil
+end, {
   group = vim.api.nvim_create_augroup("WkdNvChadHighlightCache", { clear = true }),
-  callback = function()
-    mode_band_cache = nil
-    last_mode = nil
-  end,
   desc = "Clear mode band cache on mode change"
 })
 

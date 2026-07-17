@@ -5,6 +5,7 @@
 --- Comments in code are in English per project convention.
 
 local notify = require("lib.nvim.notify").create("[lsp.tools.deprecated_help.__init]")
+local Autocmd = require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -201,15 +202,13 @@ function M.setup(user_opts)
 
   wrap_publish_diagnostics(opts)
 
-  api.nvim_create_autocmd("LspAttach", {
-    callback = function(args)
-      local bufnr = args.buf
-      if not api.nvim_buf_is_valid(bufnr) then
-        return
-      end
-      setup_buffer_mapping(bufnr, opts)
-    end,
-  })
+  Autocmd.create("LspAttach", function(args)
+    local bufnr = args.buf
+    if not api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    setup_buffer_mapping(bufnr, opts)
+  end, {})
 end
 
 return M

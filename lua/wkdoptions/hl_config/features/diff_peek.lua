@@ -5,6 +5,7 @@
 local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local notify = lazy.require("lib.nvim.notify").create("[DiffPeek]")
+local map = require("lib.nvim.map")
 
 local M = {}
 
@@ -21,14 +22,14 @@ local function install_keymap()
 
   if not ok then
     -- Gitsigns not available: install fallback keymap with notification
-    vim.keymap.set("n", "gh", function()
+    map("n", "gh", function()
       notify.info("Diff peek requires gitsigns.nvim")
     end, { desc = "Git hunk peek (install gitsigns)" })
     return
   end
 
   -- Gitsigns available: use preview_hunk_inline (preferred) or preview_hunk
-  vim.keymap.set("n", "gh", function()
+  map("n", "gh", function()
     if type(gs.preview_hunk_inline) == "function" then
       gs.preview_hunk_inline()
     elseif type(gs.preview_hunk) == "function" then

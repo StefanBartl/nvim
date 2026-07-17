@@ -2,6 +2,7 @@
 --- Fully async LSP document symbols with debouncing and proper error handling
 
 local notify = require("lib.nvim.notify").create("[wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols]")
+local Autocmd = require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -236,15 +237,14 @@ do
     local aug = api.nvim_create_augroup("LspBreadcrumbsAsync", { clear = true })
 
     for _, ev in ipairs(opts.update_events) do
-      api.nvim_create_autocmd(ev, {
+      Autocmd.create(ev, function(args)
+        local bufnr = args.buf or 0
+        if bufnr <= 0 then
+          bufnr = api.nvim_get_current_buf()
+        end
+        ensure_doc_symbols_in_bg(bufnr)
+      end, {
         group = aug,
-        callback = function(args)
-          local bufnr = args.buf or 0
-          if bufnr <= 0 then
-            bufnr = api.nvim_get_current_buf()
-          end
-          ensure_doc_symbols_in_bg(bufnr)
-        end,
         desc = "Warm LSP documentSymbol cache for breadcrumbs",
       })
     end
@@ -399,16 +399,15 @@ function M.symbol_context_smart()
 end
 
 -- Clean up on buffer delete
-vim.api.nvim_create_autocmd("BufDelete", {
+Autocmd.create("BufDelete", function(args)
+  M.__lsp_doc_cache[args.buf] = nil
+  if debounce_timers[args.buf] then
+    debounce_timers[args.buf]:stop()
+    debounce_timers[args.buf]:close()
+    debounce_timers[args.buf] = nil
+  end
+end, {
   group = vim.api.nvim_create_augroup("WkdNvChadLspSymbolsCache", { clear = true }),
-  callback = function(args)
-    M.__lsp_doc_cache[args.buf] = nil
-    if debounce_timers[args.buf] then
-      debounce_timers[args.buf]:stop()
-      debounce_timers[args.buf]:close()
-      debounce_timers[args.buf] = nil
-    end
-  end,
   desc = "Clear LSP symbols cache on buffer delete"
 })
 

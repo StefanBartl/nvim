@@ -18,13 +18,14 @@ local INDENT_BY_FT = {
 }
 local DEFAULT_INDENT = 2
 
-vim.api.nvim_create_autocmd("FileType", {
+local Autocmd = require("lib.nvim.autocmd")
+
+Autocmd.create("FileType", function()
+  local w = INDENT_BY_FT[vim.bo.filetype] or DEFAULT_INDENT
+  vim.bo.shiftwidth = w
+  vim.bo.tabstop = w
+  vim.bo.softtabstop = w
+  vim.bo.expandtab = true
+end, {
   pattern = "*",
-  callback = function()
-    local w = INDENT_BY_FT[vim.bo.filetype] or DEFAULT_INDENT
-    vim.bo.shiftwidth = w
-    vim.bo.tabstop = w
-    vim.bo.softtabstop = w
-    vim.bo.expandtab = true
-  end,
 })

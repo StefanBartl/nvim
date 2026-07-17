@@ -14,6 +14,8 @@
 
 local M = {}
 
+local notify = require("lib.nvim.notify").create("[plugins.personal.machine]")
+
 ---@alias MachineRole "default"|"workstation"
 
 --- Known roles. Extend this when a new per-machine behavior split is needed.
@@ -33,9 +35,8 @@ do
     if ROLES[normalized] then
       role = normalized
     else
-      vim.notify(
-        ("[plugins.personal.machine] Unknown NVIM_MACHINE_ROLE '%s', falling back to 'default'"):format(env_value),
-        vim.log.levels.WARN
+      notify.warn(
+        ("Unknown NVIM_MACHINE_ROLE '%s', falling back to 'default'"):format(env_value)
       )
     end
   end

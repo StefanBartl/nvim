@@ -37,8 +37,9 @@ end
 --- @param key_down string key for view-scroll-down (e.g. '<C-d>')
 --- @param key_up string key for view-scroll-up (e.g. '<C-u>')
 function M.map_default_keys(key_down, key_up)
+  local map = vim.g.__map_helper
   -- Map in normal mode. The lambda uses v:count to preserve counts (works like 3<C-d>).
-  vim.keymap.set("n", key_down, function()
+  map("n", key_down, function()
     local c = vim.v.count
     if c == 0 then
       M.view_scroll_down()
@@ -47,7 +48,7 @@ function M.map_default_keys(key_down, key_up)
     end
   end, { silent = true, desc = "View-only scroll down" })
 
-  vim.keymap.set("n", key_up, function()
+  map("n", key_up, function()
     local c = vim.v.count
     if c == 0 then
       M.view_scroll_up()

@@ -4,6 +4,7 @@
 local util = require("lsp.diagnostics.util")
 local loclist = require("lsp.diagnostics.loclist")
 local quickfix = require("lsp.diagnostics.quickfix")
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -16,30 +17,30 @@ function M.enable()
   vim.g._diagnostics_cmds_enabled = 1
 
   -- Location list (buffer)
-  vim.api.nvim_create_user_command("DiagLoc", function(ctx)
+  usercmd.create("DiagLoc", function(ctx)
     loclist.to_loc({ open = true, severity = ctx.args })
   end, { nargs = "?" })
 
-  vim.api.nvim_create_user_command("DiagNextLoc", function(ctx)
+  usercmd.create("DiagNextLoc", function(ctx)
     local sev = util.to_severity(ctx.args)
     loclist.next_loc(sev)
   end, { nargs = "?" })
 
-  vim.api.nvim_create_user_command("DiagPrevLoc", function(ctx)
+  usercmd.create("DiagPrevLoc", function(ctx)
     local sev = util.to_severity(ctx.args)
     loclist.prev_loc(sev)
   end, { nargs = "?" })
 
   -- Quickfix (workspace)
-  vim.api.nvim_create_user_command("DiagQF", function(ctx)
+  usercmd.create("DiagQF", function(ctx)
     quickfix.to_qf({ open = true, severity = ctx.args })
   end, { nargs = "?" })
 
-  vim.api.nvim_create_user_command("DiagNextQF", function()
+  usercmd.create("DiagNextQF", function()
     quickfix.next_qf()
   end, { bang = true })
 
-  vim.api.nvim_create_user_command("DiagPrevQF", function()
+  usercmd.create("DiagPrevQF", function()
     quickfix.prev_qf()
   end, { bang = true })
 end

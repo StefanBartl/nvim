@@ -5,6 +5,8 @@
 --- Buffer-local cache for repo root and repo-relative path. Reduces repeated
 --- upward searches on every CursorMoved/WinScrolled event when the winbar updates.
 
+local Autocmd = require("lib.nvim.autocmd")
+
 local M = {}
 
 -- Namespace augroup for cache refresh
@@ -96,19 +98,17 @@ end
 ---@return nil
 function M.ensure_autocmds()
   vim.api.nvim_clear_autocmds({ group = AUG_PATHCACHE })
-  vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost" }, {
+  Autocmd.create({ "BufEnter", "BufFilePost" }, function(args)
+    M.refresh_buffer_cache(args.buf)
+  end, {
     group = AUG_PATHCACHE,
-    callback = function(args)
-      M.refresh_buffer_cache(args.buf)
-    end,
     desc = "Prime repo path cache per buffer",
   })
-  vim.api.nvim_create_autocmd("DirChanged", {
+  Autocmd.create("DirChanged", function()
+    -- CWD changed: refresh current buffer cache
+    M.refresh_buffer_cache(0)
+  end, {
     group = AUG_PATHCACHE,
-    callback = function()
-      -- CWD changed: refresh current buffer cache
-      M.refresh_buffer_cache(0)
-    end,
     desc = "Refresh repo path cache on :cd/:tcd",
   })
 end

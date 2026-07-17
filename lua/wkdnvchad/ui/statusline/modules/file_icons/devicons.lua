@@ -4,6 +4,7 @@
 local M = {}
 
 local api = vim.api
+local Autocmd = require("lib.nvim.autocmd")
 
 -- Lazy-load dependencies
 local hl_module
@@ -227,12 +228,11 @@ function M.file_icon_segment_lsp()
 end
 
 -- Clear cache on colorscheme change
-vim.api.nvim_create_autocmd("ColorScheme", {
+Autocmd.create("ColorScheme", function()
+  icon_cache = require("lib.lua.memo.lru").new(256)
+  hl_cache = { name = "St_FileIcon", fg = nil, bg = nil }
+end, {
   group = vim.api.nvim_create_augroup("WkdNvChadDeviconsCache", { clear = true }),
-  callback = function()
-    icon_cache = require("lib.lua.memo.lru").new(256)
-    hl_cache = { name = "St_FileIcon", fg = nil, bg = nil }
-  end,
   desc = "Clear devicons cache on colorscheme change",
 })
 

@@ -105,7 +105,7 @@ local function flush_summary_if_done()
   end
 
   vim.schedule(function()
-    vim.notify(msg, level)
+    notify.notify(msg, level)
   end)
   SESSION.open = false
 end

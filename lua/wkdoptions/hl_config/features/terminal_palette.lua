@@ -5,6 +5,7 @@
 local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Winhl = lazy.require("wkdoptions.hl_config.utils.winhighlight")
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -54,9 +55,8 @@ function M.enable(_cfg)
     return
   end
 
-  vim.api.nvim_create_autocmd("TermOpen", {
+  Autocmd.create("TermOpen", M.apply, {
     group = aug,
-    callback = M.apply,
     desc = "Apply terminal-specific palette",
   })
 end

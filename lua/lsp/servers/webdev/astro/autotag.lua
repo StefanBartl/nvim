@@ -1,16 +1,18 @@
 ---@module 'lsp.languages.webdev.astro.autotag'
 --- Astro Auto-Close Tags via nvim-ts-autotag integration
 
+local notify = require("lib.nvim.notify").create("[lsp.languages.webdev.astro.autotag]")
+local map = require("lib.nvim.map")
+
 local M = {}
 
 ---@return boolean success
 function M.setup()
   local ok, autotag = pcall(require, "nvim-ts-autotag")
   if not ok then
-    vim.notify(
+    notify.warn(
       "[Astro] nvim-ts-autotag not found. Install for better auto-close support:\n" ..
-      "  { 'windwp/nvim-ts-autotag', event = 'InsertEnter' }",
-      vim.log.levels.WARN
+      "  { 'windwp/nvim-ts-autotag', event = 'InsertEnter' }"
     )
     return false
   end
@@ -46,7 +48,7 @@ end
 ---@param bufnr integer
 ---@return nil
 function M.setup_manual_autoclose(bufnr)
-  vim.keymap.set("i", ">", function()
+  map("i", ">", function()
     ---@diagnostic disable-next-line: deprecated
     local row, col = unpack(vim.api.nvim_win_get_cursor(0))
     local line = vim.api.nvim_get_current_line()
@@ -84,7 +86,7 @@ function M.setup_manual_autoclose(bufnr)
   })
 
   -- Auto-close on "/"
-  vim.keymap.set("i", "/", function()
+  map("i", "/", function()
     ---@diagnostic disable-next-line: deprecated
     local _, col = unpack(vim.api.nvim_win_get_cursor(0))
     local line = vim.api.nvim_get_current_line()

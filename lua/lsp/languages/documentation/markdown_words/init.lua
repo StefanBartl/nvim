@@ -17,6 +17,10 @@
 
 local M = {}
 
+local Autocmd = require("lib.nvim.autocmd")
+local notify = require("lib.nvim.notify").create("[lsp.languages.documentation.markdown_words]")
+local usercmd = require("lib.nvim.usercmd")
+
 -- ============================================================================
 -- Guard: prevent double-setup
 -- ============================================================================
@@ -286,9 +290,8 @@ function M.set_root(path)
   root = root:gsub("[/\\]+$", "")
 
   if root == state.root and state.items then
-    vim.notify(
-      "[md_words] Root unchanged (" .. root .. "), cache still valid.",
-      vim.log.levels.INFO
+    notify.info(
+      "[md_words] Root unchanged (" .. root .. "), cache still valid."
     )
     return
   end
@@ -298,9 +301,8 @@ function M.set_root(path)
     local count = 0
     for _ in pairs(state.words) do count = count + 1 end
     vim.schedule(function()
-      vim.notify(
-        string.format("[md_words] Rebuilt: %d unique words from %s", count, root),
-        vim.log.levels.INFO
+      notify.info(
+        string.format("[md_words] Rebuilt: %d unique words from %s", count, root)
       )
     end)
   end)
@@ -357,54 +359,51 @@ function M.setup(opts)
     -- Inject our source into buffer-local cmp config for markdown files.
     -- Uses `once = false` so every new markdown buffer picks it up,
     -- but the duplicate-guard inside prevents double-appending.
-    vim.api.nvim_create_autocmd("FileType", {
+    Autocmd.create("FileType", function()
+      local ok2, cmp2 = pcall(require, "cmp")
+      if not ok2 then return end
+
+      -- Read the *buffer-local* config so we see what's already active here
+      local bufcfg = cmp2.get_config()
+      if not bufcfg then return end
+
+      local sources = bufcfg.sources or {}
+      for _, s in ipairs(sources) do
+        if s.name == "md_words" then return end   -- already present
+      end
+
+      -- Build new list with md_words appended at low priority
+      local new_sources = {}
+      for i, s in ipairs(sources) do
+        new_sources[i] = s
+      end
+      new_sources[#sources + 1] = { name = "md_words", priority = 100 }
+
+      cmp2.setup.buffer({ sources = new_sources })
+    end, {
       group   = vim.api.nvim_create_augroup("MdWordsCmpSource", { clear = true }),
       pattern = { "markdown", "mdx" },
-      callback = function()
-        local ok2, cmp2 = pcall(require, "cmp")
-        if not ok2 then return end
-
-        -- Read the *buffer-local* config so we see what's already active here
-        local bufcfg = cmp2.get_config()
-        if not bufcfg then return end
-
-        local sources = bufcfg.sources or {}
-        for _, s in ipairs(sources) do
-          if s.name == "md_words" then return end   -- already present
-        end
-
-        -- Build new list with md_words appended at low priority
-        local new_sources = {}
-        for i, s in ipairs(sources) do
-          new_sources[i] = s
-        end
-        new_sources[#sources + 1] = { name = "md_words", priority = 100 }
-
-        cmp2.setup.buffer({ sources = new_sources })
-      end,
       desc = "[md_words] Inject cmp source into markdown buffer",
     })
   else
-    vim.notify(
-      "[md_words] nvim-cmp not found – source will not appear in completions.",
-      vim.log.levels.WARN
+    notify.warn(
+      "[md_words] nvim-cmp not found – source will not appear in completions."
     )
   end
 
   -- -------------------------------------------------------------------------
   -- Initial word scan: trigger on first markdown FileType event
   -- -------------------------------------------------------------------------
-  vim.api.nvim_create_autocmd("FileType", {
+  Autocmd.create("FileType", function()
+    if not state.root then
+      local root = (uv.cwd and uv.cwd()) or vim.fn.getcwd()
+      state.root = root
+      rebuild_async(root, nil)
+    end
+  end, {
     group   = vim.api.nvim_create_augroup("MdWordsInitialScan", { clear = true }),
     pattern = { "markdown", "mdx" },
     once    = true,
-    callback = function()
-      if not state.root then
-        local root = (uv.cwd and uv.cwd()) or vim.fn.getcwd()
-        state.root = root
-        rebuild_async(root, nil)
-      end
-    end,
     desc = "[md_words] Initial word-cache build on first markdown open",
   })
 
@@ -413,40 +412,39 @@ function M.setup(opts)
   -- -------------------------------------------------------------------------
   local debounce_timer = nil
 
-  vim.api.nvim_create_autocmd("DirChanged", {
-    group    = vim.api.nvim_create_augroup("MdWordsDirChanged", { clear = true }),
-    callback = function()
-      -- Cancel pending timer
-      if debounce_timer then
-        pcall(function()
-          debounce_timer:stop()
-          debounce_timer:close()
-        end)
-        debounce_timer = nil
+  Autocmd.create("DirChanged", function()
+    -- Cancel pending timer
+    if debounce_timer then
+      pcall(function()
+        debounce_timer:stop()
+        debounce_timer:close()
+      end)
+      debounce_timer = nil
+    end
+
+    debounce_timer = uv.new_timer()
+    if not debounce_timer then return end
+
+    debounce_timer:start(cfg.debounce_ms, 0, vim.schedule_wrap(function()
+      debounce_timer = nil
+      -- Respect explicit user-set root
+      if state._user_root then return end
+
+      local new_root = (uv.cwd and uv.cwd()) or vim.fn.getcwd()
+      if new_root ~= state.root then
+        state.items = nil
+        rebuild_async(new_root, nil)
       end
-
-      debounce_timer = uv.new_timer()
-      if not debounce_timer then return end
-
-      debounce_timer:start(cfg.debounce_ms, 0, vim.schedule_wrap(function()
-        debounce_timer = nil
-        -- Respect explicit user-set root
-        if state._user_root then return end
-
-        local new_root = (uv.cwd and uv.cwd()) or vim.fn.getcwd()
-        if new_root ~= state.root then
-          state.items = nil
-          rebuild_async(new_root, nil)
-        end
-      end))
-    end,
+    end))
+  end, {
+    group    = vim.api.nvim_create_augroup("MdWordsDirChanged", { clear = true }),
     desc = "[md_words] Debounced rebuild on cwd change",
   })
 
   -- -------------------------------------------------------------------------
   -- User commands
   -- -------------------------------------------------------------------------
-  vim.api.nvim_create_user_command("MdSetRoot", function(cmd_opts)
+  usercmd.create("MdSetRoot", function(cmd_opts)
     local path = cmd_opts.args ~= "" and cmd_opts.args or nil
     state._user_root = path
     M.set_root(path)
@@ -456,24 +454,23 @@ function M.setup(opts)
     desc     = "[md_words] Set project root for Markdown word scanning (empty = cwd)",
   })
 
-  vim.api.nvim_create_user_command("MdRebuildWords", function()
+  usercmd.create("MdRebuildWords", function()
     state.items = nil
     M.rebuild()
   end, {
     desc = "[md_words] Force full rebuild of the project-wide word cache",
   })
 
-  vim.api.nvim_create_user_command("MdWordStats", function()
+  usercmd.create("MdWordStats", function()
     local s = M.stats()
-    vim.notify(
+    notify.info(
       string.format(
         "[md_words]\n  root     : %s\n  words    : %d\n  cached   : %s\n  building : %s",
         tostring(s.root),
         s.words,
         tostring(s.cached),
         tostring(s.building)
-      ),
-      vim.log.levels.INFO
+      )
     )
   end, {
     desc = "[md_words] Show word-cache statistics",

@@ -2,6 +2,8 @@
 --- Helper utilities used by other modules.
 --- Provides safe buffer/diagnostic helpers and small caches.
 
+local map = require("lib.nvim.map")
+
 local M = {}
 
 -- Cache per-buffer mapped symbols to avoid duplicated mappings/notifications.
@@ -89,9 +91,9 @@ function M.set_buf_keymap_once(bufnr, lhs, rhs, opts)
 
   -- set mapping
   if type(rhs) == "function" then
-    vim.keymap.set("n", lhs, rhs, opts)
+    map("n", lhs, rhs, opts)
   else
-    vim.keymap.set("n", lhs, rhs, opts)
+    map("n", lhs, rhs, opts)
   end
 end
 

@@ -7,7 +7,7 @@ local M = {}
 local path_shorten = require("lib.nvim.fs.path_shorten")
 local bo = vim.bo
 local nvim_buf_set_lines = vim.api.nvim_buf_set_lines
-local nvim_create_user_command = vim.api.nvim_create_user_command
+local usercmd = require("lib.nvim.usercmd")
 
 ---@return string[]
 local function collect_lines()
@@ -35,7 +35,7 @@ end
 
 ---@return nil
 function M.setup_cmd()
-  nvim_create_user_command("HarpoonDebug", function()
+  usercmd.create("HarpoonDebug", function()
     local out = collect_lines()
     vim.cmd("new")
     nvim_buf_set_lines(0, 0, -1, false, out)
@@ -45,7 +45,7 @@ function M.setup_cmd()
     vim.bo.modifiable = false
   end, {})
 
-  nvim_create_user_command("CheckHealthHarpoon", function()
+  usercmd.create("CheckHealthHarpoon", function()
     require("config.harpoon.health").check()
   end, {})
 end

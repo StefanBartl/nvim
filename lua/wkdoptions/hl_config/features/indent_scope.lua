@@ -7,6 +7,7 @@ local State = lazy.require("wkdoptions.hl_config.core.state")
 local LargeFile = lazy.require("wkdoptions.hl_config.utils.large_file")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
 local Debounce = lazy.require("lib.nvim.debounce")
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -241,11 +242,10 @@ function M.enable(cfg)
     end, 30)
   end
 
-  vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
+  Autocmd.create({ "BufEnter", "CursorMoved", "WinScrolled" }, function()
+    refresh_debounced.call(vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf())
+  end, {
     group = aug,
-    callback = function()
-      refresh_debounced.call(vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf())
-    end,
     desc = "Update indent scope on movement/scroll (debounced)",
   })
 

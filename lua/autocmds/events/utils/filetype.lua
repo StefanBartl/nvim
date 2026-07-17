@@ -8,6 +8,8 @@ local api = vim.api
 -- autocmds/benchmarks/context/buffer.lua, now shared via lib.nvim so other
 -- consumers (e.g. filetree.nvim) don't reimplement the same cache.
 local buffer_ctx = require("lib.nvim.buffer.context")
+local Autocmd = require("lib.nvim.autocmd")
+local notify = require("lib.nvim.notify").create("[autocmds.events.utils.filetype]")
 
 ---@class FiletypeHandler
 ---@field load fun(): table|nil Lazy loader function
@@ -183,9 +185,8 @@ local function run_handler(handler, ctx, bufnr)
 
   local ok, module = pcall(handler.load)
   if not ok then
-    vim.notify(
-      string.format("[FileType] Failed to load handler: %s", tostring(module)),
-      vim.log.levels.ERROR
+    notify.error(
+      string.format("[FileType] Failed to load handler: %s", tostring(module))
     )
     return false
   end
@@ -205,9 +206,8 @@ local function run_handler(handler, ctx, bufnr)
   end
 
   if not ok then
-    vim.notify(
-      string.format("[FileType] Handler execution failed for %s", ctx.filetype),
-      vim.log.levels.WARN
+    notify.warn(
+      string.format("[FileType] Handler execution failed for %s", ctx.filetype)
     )
     return false
   end
@@ -245,10 +245,9 @@ end
 function M.setup()
   local aug = api.nvim_create_augroup("FiletypeDispatcher", { clear = true })
 
-  api.nvim_create_autocmd("FileType", {
+  Autocmd.create("FileType", M.dispatch, {
     group = aug,
     pattern = "*",
-    callback = M.dispatch,
     desc = "Central filetype dispatcher with lazy handlers",
   })
 end

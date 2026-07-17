@@ -4,6 +4,7 @@
 --- - BufWinEnter: defensive opener for truly empty buffers later in the session.
 
 local notify = require("lib.nvim.notify").create("[config.snacks.custom_dashboard.autocmds]")
+local Autocmd = require("lib.nvim.autocmd")
 
 local api = vim.api
 local desc_tag = "[snacks.custom_dashboard]: "
@@ -15,17 +16,16 @@ if not ok_utils then
 end
 
 -- One-time discoverability hint (non-intrusive)
-api.nvim_create_autocmd("VimEnter", {
+Autocmd.create("VimEnter", function()
+  -- Try to register and open the dashboard after a short delay to let startup finish.
+  vim.defer_fn(function()
+    local ok_dash, dash = pcall(require, "snacks.dashboard")
+    if ok_dash and type(dash.open) == "function" then
+      pcall(dash.open)
+    end
+  end, 50)
+end, {
   once = true,
-  callback = function()
-    -- Try to register and open the dashboard after a short delay to let startup finish.
-    vim.defer_fn(function()
-      local ok_dash, dash = pcall(require, "snacks.dashboard")
-      if ok_dash and type(dash.open) == "function" then
-        pcall(dash.open)
-      end
-    end, 50)
-  end,
   desc = desc_tag .. "startup open",
 })
 
@@ -63,19 +63,18 @@ local function safe_to_open_dashboard()
   return true
 end
 
-api.nvim_create_autocmd({ "BufWinEnter" }, {
-  callback = function()
-    local ok_dash, dash = pcall(require, "snacks.dashboard")
-    if not ok_dash or type(dash.open) ~= "function" then
-      return
-    end
+Autocmd.create({ "BufWinEnter" }, function()
+  local ok_dash, dash = pcall(require, "snacks.dashboard")
+  if not ok_dash or type(dash.open) ~= "function" then
+    return
+  end
 
-    vim.defer_fn(function()
-      if safe_to_open_dashboard() then
-        pcall(dash.open)
-      end
-    end, 30)
-  end,
+  vim.defer_fn(function()
+    if safe_to_open_dashboard() then
+      pcall(dash.open)
+    end
+  end, 30)
+end, {
   desc = desc_tag .. "defensive open on empty buffers",
 })
 

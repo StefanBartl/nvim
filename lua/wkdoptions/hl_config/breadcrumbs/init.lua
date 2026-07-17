@@ -6,6 +6,7 @@ local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Winbar = lazy.require("wkdoptions.hl_config.breadcrumbs.winbar")
 local Debounce = lazy.require("lib.nvim.debounce")
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -82,11 +83,10 @@ function M.enable(cfg)
 
   if not State.is_enabled("breadcrumbs") then
     -- Clear all winbars
-    vim.api.nvim_create_autocmd("BufEnter", {
+    Autocmd.create("BufEnter", function()
+      vim.wo.winbar = ""
+    end, {
       group = aug,
-      callback = function()
-        vim.wo.winbar = ""
-      end,
       desc = "Clear winbar (breadcrumbs disabled)",
     })
     return
@@ -108,11 +108,10 @@ function M.enable(cfg)
   end
 
   -- Update on viewport/cursor changes
-  vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "WinScrolled" }, {
+  Autocmd.create({ "BufEnter", "CursorMoved", "WinScrolled" }, function()
+    refresh_debounced.call(vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf())
+  end, {
     group = aug,
-    callback = function()
-      refresh_debounced.call(vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf())
-    end,
     desc = "Update breadcrumbs on movement/scroll (debounced)",
   })
 

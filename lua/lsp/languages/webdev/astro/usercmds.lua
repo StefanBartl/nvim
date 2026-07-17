@@ -1,41 +1,44 @@
 ---@module 'lsp.languages.webdev.astro.commands'
 
+local notify = require("lib.nvim.notify").create("[lsp.languages.webdev.astro.commands]")
+local usercmd = require("lib.nvim.usercmd")
+
 local M = {}
 
 ---@return nil
 function M.setup()
   -- Start Astro dev server
-  vim.api.nvim_create_user_command("AstroDevStart", function()
+  usercmd.create("AstroDevStart", function()
     vim.cmd("terminal astro dev")
     vim.cmd("wincmd J")
     vim.cmd("resize 10")
   end, { desc = "Start Astro dev server" })
 
   -- Stop Astro dev server
-  vim.api.nvim_create_user_command("AstroDevStop", function()
+  usercmd.create("AstroDevStop", function()
     if vim.fn.executable("pkill") ~= 1 then
-      vim.notify("pkill not available on this system", vim.log.levels.WARN)
+      notify.warn("pkill not available on this system")
       return
     end
     vim.system({ "pkill", "-f", "astro dev" }):wait()
-    vim.notify("Astro dev server stopped")
+    notify.notify("Astro dev server stopped")
   end, { desc = "Stop Astro dev server" })
 
   -- Build Astro project
-  vim.api.nvim_create_user_command("AstroBuild", function()
+  usercmd.create("AstroBuild", function()
     local res = vim.system({ "astro", "build" }, { text = true }):wait()
-    vim.notify(res.stdout or res.stderr or "", vim.log.levels.INFO)
+    notify.info(res.stdout or res.stderr or "")
   end, { desc = "Build Astro project" })
 
   -- Preview production build
-  vim.api.nvim_create_user_command("AstroPreview", function()
+  usercmd.create("AstroPreview", function()
     vim.cmd("terminal astro preview")
     vim.cmd("wincmd J")
     vim.cmd("resize 10")
   end, { desc = "Preview Astro build" })
 
   -- Create new component
-  vim.api.nvim_create_user_command("AstroNewComponent", function(opts)
+  usercmd.create("AstroNewComponent", function(opts)
     local name = opts.args
     if name == "" then
       name = vim.fn.input("Component name: ")
@@ -66,7 +69,7 @@ function M.setup()
   })
 
   -- Create new page
-  vim.api.nvim_create_user_command("AstroNewPage", function(opts)
+  usercmd.create("AstroNewPage", function(opts)
     local name = opts.args
     if name == "" then
       name = vim.fn.input("Page name (e.g., about.astro): ")
@@ -101,7 +104,7 @@ function M.setup()
   })
 
   -- List all components
-  vim.api.nvim_create_user_command("AstroListComponents", function()
+  usercmd.create("AstroListComponents", function()
     require("telescope.builtin").find_files({
       prompt_title = "Astro Components",
       search_dirs = { "src/components" },
@@ -110,7 +113,7 @@ function M.setup()
   end, { desc = "List all Astro components" })
 
   -- Find component usage
-  vim.api.nvim_create_user_command("AstroFindUsage", function()
+  usercmd.create("AstroFindUsage", function()
     local component = vim.fn.expand("<cword>")
     require("telescope.builtin").live_grep({
       prompt_title = "Component Usage: " .. component,
@@ -119,7 +122,7 @@ function M.setup()
   end, { desc = "Find component usage" })
 
   -- Check project structure
-  vim.api.nvim_create_user_command("AstroCheckStructure", function()
+  usercmd.create("AstroCheckStructure", function()
     local required_dirs = {
       "src/components",
       "src/layouts",
@@ -135,9 +138,9 @@ function M.setup()
     end
 
     if #missing > 0 then
-      vim.notify("Missing directories:\n" .. table.concat(missing, "\n"), vim.log.levels.WARN)
+      notify.warn("Missing directories:\n" .. table.concat(missing, "\n"))
     else
-      vim.notify("Project structure is valid", vim.log.levels.INFO)
+      notify.info("Project structure is valid")
     end
   end, { desc = "Check Astro project structure" })
 end

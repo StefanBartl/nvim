@@ -6,6 +6,7 @@
 
 local personal_utils = require("plugins.personal.utils")
 local machine = require("plugins.personal.machine")
+local notify = require("lib.nvim.notify").create("[plugins.personal]")
 
 -- ===========================================================================
 -- SOURCE CONTROL
@@ -81,12 +82,11 @@ local function apply_source(specs)
       local mode = (SOURCE ~= "auto") and SOURCE or (MODE[name] or "dir")
 
       if not VALID_MODE[mode] then
-        vim.notify(
+        notify.warn(
           ("[PLUGINS PERSONAL] Ungültiger Modus '%s' für '%s' → 'remote'"):format(
             tostring(mode),
             name
-          ),
-          vim.log.levels.WARN
+          )
         )
         mode = "remote"
       end

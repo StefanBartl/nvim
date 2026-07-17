@@ -1,4 +1,6 @@
 ---@module 'wkdoptions.italic_keywords'
+local Autocmd = require("lib.nvim.autocmd")
+
 local M = {}
 
 -- Sprachen-spezifische Keyword-Definitionen
@@ -14,13 +16,12 @@ M.languages = {
 function M.setup()
   for lang, config in pairs(M.languages) do
     if config.enabled then
-      vim.api.nvim_create_autocmd("FileType", {
+      Autocmd.create("FileType", function()
+        -- Doppelte Backslashes für Vim-Regex!
+        local pattern = '\\<\\(' .. table.concat(config.keywords, '\\|') .. '\\)\\>'
+        vim.fn.matchadd('ItalicKeywords_' .. lang, pattern)
+      end, {
         pattern = lang,
-        callback = function()
-          -- Doppelte Backslashes für Vim-Regex!
-          local pattern = '\\<\\(' .. table.concat(config.keywords, '\\|') .. '\\)\\>'
-          vim.fn.matchadd('ItalicKeywords_' .. lang, pattern)
-        end,
       })
 
       -- Highlight-Gruppe pro Sprache

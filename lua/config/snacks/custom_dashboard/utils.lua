@@ -5,6 +5,8 @@
 local uv = vim.uv or vim.loop
 local api = vim.api
 
+local notify = require("lib.nvim.notify").create("[config.snacks.custom_dashboard.utils]")
+
 local M = {}
 
 --- Check whether a buffer is "empty" (no name, single empty line).
@@ -86,7 +88,7 @@ function M.safe_call(fn, on_err_level)
   local ok, res1, res2 = pcall(fn)
   if not ok then
     local lvl = on_err_level or vim.log.levels.ERROR
-    vim.notify("[custom_dashboard] error: " .. tostring(res1), lvl)
+    notify.notify("[custom_dashboard] error: " .. tostring(res1), lvl)
   end
   return ok, res1, res2
 end

@@ -6,6 +6,7 @@ local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Winhl = lazy.require("wkdoptions.hl_config.utils.winhighlight")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -89,17 +90,15 @@ function M.enable(_cfg)
 
   if not State.is_enabled("signcolumn_tint") then
     -- Feature disabled: clear all tints
-    vim.api.nvim_create_autocmd("BufEnter", {
+    Autocmd.create("BufEnter", M.clear, {
       group = aug,
-      callback = M.clear,
       desc = "Clear SignColumn tint (feature disabled)",
     })
     return
   end
 
-  vim.api.nvim_create_autocmd({ "DiagnosticChanged", "BufEnter" }, {
+  Autocmd.create({ "DiagnosticChanged", "BufEnter" }, M.apply, {
     group = aug,
-    callback = M.apply,
     desc = "Tint SignColumn based on worst diagnostic",
   })
 

@@ -1,6 +1,8 @@
 ---@module 'config.neotest.adapters.typescript'
 ---@brief Neotest adapter for TypeScript/JavaScript with Vitest/Jest
 
+local notify = require("lib.nvim.notify").create("[config.neotest.adapters.typescript]")
+
 local M = {}
 
 ----------------------------------------------------------------------
@@ -210,20 +212,20 @@ end
 ---@return table|nil
 function M.create()
   local root = find_root(_locked_cwd)
-   vim.notify("locked cwd for neotest: " .. _locked_cwd)
+   notify.info("locked cwd for neotest: " .. _locked_cwd)
 
   if not root then
-    vim.notify("no root found for neotest")
+    notify.info("no root found for neotest")
     return create_vitest() or create_jest()
   end
 
   local framework = detect_framework(root)
 
   if framework == "vitest" then
-    vim.notify("vitest found")
+    notify.info("vitest found")
     return create_vitest()
   elseif framework == "jest" then
-    vim.notify("jest found")
+    notify.info("jest found")
     return create_jest()
   end
 

@@ -105,11 +105,11 @@ return function(opts)
   -- Load nested modules
   local ok_lsp, lsp_module = pcall(require, "menus.lsp")
   if not ok_lsp then
-    vim.notify("[nvzone.menu.custom]: lsp_module not loaded. " .. lsp_module, 2)
+    notify.notify("[nvzone.menu.custom]: lsp_module not loaded. " .. lsp_module, 2)
   end
   local ok_gs, gitsigns_module = pcall(require, "menus.gitsigns")
   if not ok_gs then
-    vim.notify("[nvzone.menu.custom]: gitsigns_module not loaded. " .. gitsigns_module, 2)
+    notify.notify("[nvzone.menu.custom]: gitsigns_module not loaded. " .. gitsigns_module, 2)
   end
 
   local menu = {}

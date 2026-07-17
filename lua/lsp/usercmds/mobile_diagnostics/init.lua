@@ -2,6 +2,7 @@
 --- Diagnostic command to check mobile development setup.
 
 local notify = require("lib.nvim.notify").create("[lsp.mobile_diagnostics]")
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -51,7 +52,7 @@ end
 
 ---@return nil
 function M.attach()
-  vim.api.nvim_create_user_command("LspMobileDiagnostics", function()
+  usercmd.create("LspMobileDiagnostics", function()
     M.run()
   end, {
     desc = "Check mobile development LSP setup"

@@ -1,16 +1,18 @@
 ---@module 'bindings.usrcmds'
 -- Initialize module for 'bindings.usrcmds'
 
+local usercmd = require("lib.nvim.usercmd")
+
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.
-vim.api.nvim_create_user_command("CwdHere", function()
+usercmd.create("CwdHere", function()
   local bufname = vim.api.nvim_buf_get_name(0)
   if bufname ~= "" then
     local dir = vim.fn.fnamemodify(bufname, ":p:h")
     vim.cmd("lcd " .. vim.fn.fnameescape(dir))
   end
-end, {})
+end, { force = true })
 
-vim.api.nvim_create_user_command('PowershellProfile', function()
+usercmd.create('PowershellProfile', function()
     if vim.fn.executable("powershell") ~= 1 then
         print("Fehler: powershell ist auf diesem System nicht verfügbar.")
         return
@@ -27,4 +29,4 @@ vim.api.nvim_create_user_command('PowershellProfile', function()
         return
     end
     print("Fehler: Der PowerShell Profil-Pfad konnte nicht ermittelt werden.")
-end, { desc = 'Öffnet das aktuelle PowerShell-Profil' })
+end, { desc = 'Öffnet das aktuelle PowerShell-Profil', force = true })

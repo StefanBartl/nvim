@@ -2,6 +2,7 @@
 ---Provides :UI usercommand for runtime UI configuration (Base46, editor UI).
 
 local notify = require("lib.nvim.notify").create("[wkdnvchad.usrcmd]")
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -284,14 +285,14 @@ end
 
 ---@return nil
 function M.setup()
-  api.nvim_create_user_command("UI", dispatcher, {
+  usercmd.create("UI", dispatcher, {
     nargs = "*",
     complete = complete,
     desc = "UI Kontrolle (Base46, Transparenz, Themes)",
   })
 
   -- Optional: Create shorter aliases
-  api.nvim_create_user_command("Theme", function(opts)
+  usercmd.create("Theme", function(opts)
     dispatcher({ args = "theme " .. opts.args })
   end, {
     nargs = "?",

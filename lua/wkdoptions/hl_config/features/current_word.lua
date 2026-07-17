@@ -6,6 +6,7 @@ local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Highlights = lazy.require("wkdoptions.hl_config.core.highlights")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
+local Autocmd = lazy.require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -104,15 +105,13 @@ function M.enable(_cfg)
     return
   end
 
-  vim.api.nvim_create_autocmd({ "CursorMoved" }, {
+  Autocmd.create({ "CursorMoved" }, M.update, {
     group = aug,
-    callback = M.update,
     desc = "Underline current word (window-local)",
   })
 
-  vim.api.nvim_create_autocmd({ "InsertEnter", "BufLeave", "WinLeave" }, {
+  Autocmd.create({ "InsertEnter", "BufLeave", "WinLeave" }, clear_match, {
     group = aug,
-    callback = clear_match,
     desc = "Clear current-word underline",
   })
 end

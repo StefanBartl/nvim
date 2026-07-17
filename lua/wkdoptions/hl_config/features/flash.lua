@@ -3,6 +3,8 @@
 
 local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
+local Autocmd = lazy.require("lib.nvim.autocmd")
+local map = require("lib.nvim.map")
 
 local M = {}
 
@@ -63,7 +65,7 @@ end
 ---@param ms integer
 ---@return nil
 function M.flash_changed(group, ms)
-  local bufnr = 0
+  local bufnr = vim.api.nvim_get_current_buf()
 
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
@@ -95,11 +97,10 @@ end
 function M.enable_yank()
   local aug = State.get_augroup("Flash", true)
 
-  vim.api.nvim_create_autocmd("TextYankPost", {
+  Autocmd.create("TextYankPost", function()
+    vim.highlight.on_yank({ higroup = "YankFlash", timeout = 150, on_visual = true })
+  end, {
     group = aug,
-    callback = function()
-      vim.highlight.on_yank({ higroup = "YankFlash", timeout = 150, on_visual = true })
-    end,
     desc = "Flash yanked text region",
   })
 end
@@ -120,8 +121,8 @@ function M.enable_put()
     end
   end
 
-  vim.keymap.set("n", "p", paste_and_flash("p"), { noremap = true, silent = true, desc = "Paste (flash)" })
-  vim.keymap.set("n", "P", paste_and_flash("P"), { noremap = true, silent = true, desc = "Paste before (flash)" })
+  map("n", "p", paste_and_flash("p"), { noremap = true, silent = true, desc = "Paste (flash)" })
+  map("n", "P", paste_and_flash("P"), { noremap = true, silent = true, desc = "Paste before (flash)" })
 end
 
 --- Main entry point

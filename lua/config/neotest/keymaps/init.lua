@@ -17,7 +17,7 @@ map("n", "<leader>ntr", function()
   end
 
   -- Force rediscover
-  vim.notify("Forcing test discovery...", vim.log.levels.INFO)
+  notify.info("Forcing test discovery...")
 
   vim.defer_fn(function()
     local tree = neotest.state.positions()

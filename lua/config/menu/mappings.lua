@@ -2,6 +2,7 @@
 -- Sets keymaps for <A-b> and RightMouse. Replaces mappings/contextmenu.lua usage.
 
 local notify = require("lib.nvim.notify").create("[config.menu.mappings]")
+local map = require("lib.nvim.map")
 
 local M = {}
 
@@ -69,7 +70,7 @@ end
 
 function M.setup()
   local map = vim.g.__map_helper or function(mode, lhs, rhs, opts)
-    vim.keymap.set(mode, lhs, rhs, opts or {})
+    map(mode, lhs, rhs, opts or {})
   end
 
   -- Alt-b opens top-level custom menu if present, otherwise default.
@@ -91,7 +92,7 @@ function M.setup()
   end, {})
 
   -- RightMouse: tries to detect NeoTree / NvimTree
-  vim.keymap.set({ "n", "v" }, "<RightMouse>", function()
+  map({ "n", "v" }, "<RightMouse>", function()
     local ok_utils, utils = pcall(require, "menu.utils")
     if ok_utils then
       pcall(utils.delete_old_menus)

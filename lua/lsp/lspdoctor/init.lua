@@ -25,6 +25,8 @@
 require("lsp.lspdoctor.@types")
 
 local notify = require("lib.nvim.notify").create("[lspdoctor]")
+local map = require("lib.nvim.map")
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -75,9 +77,9 @@ local function render_to_scratch(lines)
 
   -- Buffer-local keymaps
   local opts = { nowait = true, noremap = true, silent = true, buffer = scratch }
-  vim.keymap.set("n", "q", "<cmd>bd!<CR>", opts)
-  vim.keymap.set("n", "y", "ggyG", opts)
-  vim.keymap.set("n", "gw", function()
+  map("n", "q", "<cmd>bd!<CR>", opts)
+  map("n", "y", "ggyG", opts)
+  map("n", "gw", function()
     local path = fn.stdpath("cache") .. "/lspdoctor_" .. os.date("%Y%m%d_%H%M%S") .. ".md"
     api.nvim_command("silent keepalt keepjumps write! " .. fn.fnameescape(path))
     notify.info("Wrote report to: " .. path)
@@ -213,7 +215,7 @@ end
 ---Enable :LspDoctor user command
 ---@return nil
 function M.enable_usercmd()
-  api.nvim_create_user_command("LspDoctor", function(ctx)
+  usercmd.create("LspDoctor", function(ctx)
     local arg = (ctx.args or ""):gsub("^%s+", ""):gsub("%s+$", "")
     local use_scratch = ctx.bang
 

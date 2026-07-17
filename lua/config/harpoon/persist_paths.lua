@@ -9,6 +9,7 @@
 ---   - harpoon v2 API (prefers :list():add(); falls back gracefully)
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.persist_paths]")
+local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -16,6 +17,7 @@ local normkey = require("lib.nvim.fs.normkey")
 local uv = vim.uv or vim.loop
 local ok_path, Path = pcall(require, "plenary.path")
 local sani = require("config.harpoon.utils.sanitize")
+local Autocmd = require("lib.nvim.autocmd")
 
 --------------------------------------------------------------------------------
 -- Path normalization
@@ -186,16 +188,15 @@ function M.setup(opts)
   end
 
   local grp = vim.api.nvim_create_augroup("HarpoonPersistPaths", { clear = true })
-  vim.api.nvim_create_autocmd("VimEnter", {
+  Autocmd.create("VimEnter", function()
+    vim.schedule(function()
+      M.inject_now()
+    end)
+  end, {
     group = grp,
-    callback = function()
-      vim.schedule(function()
-        M.inject_now()
-      end)
-    end,
   })
 
-  vim.api.nvim_create_user_command("HarpoonPersistPathsReload", function()
+  usercmd.create("HarpoonPersistPathsReload", function()
     local changed = M.inject_now()
     notify.info(string.format("[harpoon] persistpaths: %s", changed and "changed" or "no change"))
   end, { desc = "Re-inject persistent Harpoon paths" })

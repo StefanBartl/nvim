@@ -6,6 +6,7 @@ local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
 local notify = lazy.require("lib.nvim.notify").create("[Commands]")
 local trim = lazy.require("lib.lua.strings.core").trim
+local usercmd = lazy.require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -85,7 +86,7 @@ function M.register_highlight(spec)
 
   -- :WKDHighlightSet
   safe_delete_cmd(names.set)
-  vim.api.nvim_create_user_command(names.set, function(opts)
+  usercmd.create(names.set, function(opts)
     local key, value_str = parse_args(opts.fargs)
 
     if not key then
@@ -119,7 +120,7 @@ function M.register_highlight(spec)
 
   -- :WKDHighlightShow
   safe_delete_cmd(names.show)
-  vim.api.nvim_create_user_command(names.show, function(opts)
+  usercmd.create(names.show, function(opts)
     local key = opts.fargs[1]
     if not key or key == "" then
       notify.info(vim.inspect(spec.show_table))
@@ -143,7 +144,7 @@ function M.register_highlight(spec)
 
   -- :WKDHighlightList
   safe_delete_cmd(names.list)
-  vim.api.nvim_create_user_command(names.list, function()
+  usercmd.create(names.list, function()
     local keys = C.keys("highlight")
     local lines = { "Highlight keys:" }
     for i = 1, #keys do
@@ -167,7 +168,7 @@ function M.register_options(spec)
 
   -- :WKDOptSet
   safe_delete_cmd(names.set)
-  vim.api.nvim_create_user_command(names.set, function(opts)
+  usercmd.create(names.set, function(opts)
     local key, value_str = parse_args(opts.fargs)
 
     if not key then
@@ -201,7 +202,7 @@ function M.register_options(spec)
 
   -- :WKDOptShow
   safe_delete_cmd(names.show)
-  vim.api.nvim_create_user_command(names.show, function(opts)
+  usercmd.create(names.show, function(opts)
     local key = opts.fargs[1]
     if not key or key == "" then
       notify.info(vim.inspect(spec.show_table))
@@ -225,7 +226,7 @@ function M.register_options(spec)
 
   -- :WKDOptList
   safe_delete_cmd(names.list)
-  vim.api.nvim_create_user_command(names.list, function()
+  usercmd.create(names.list, function()
     local keys = C.keys("options")
     local lines = { "Options keys:" }
     for i = 1, #keys do
@@ -244,7 +245,7 @@ function M.register_diff_profile()
   local profiles = require("wkdoptions.set_diff_profile.profiles")
 
   safe_delete_cmd("WKDDiffProfile")
-  vim.api.nvim_create_user_command("WKDDiffProfile", function(opts)
+  usercmd.create("WKDDiffProfile", function(opts)
     local profile = opts.fargs[1]
 
     if not profile or profile == "" then
@@ -325,7 +326,7 @@ function M.register_debug(opts)
   end
 
   safe_delete_cmd(name_debug)
-  vim.api.nvim_create_user_command(name_debug, function()
+  usercmd.create(name_debug, function()
     local hc = C.get_cfg().highlight
     local bctx = hc.breadcrumbs_ctx or {}
 

@@ -1,6 +1,8 @@
 ---@module 'config.neotest.core'
 ---@brief Core configuration and utilities for neotest integration
 
+local Autocmd = require("lib.nvim.autocmd")
+
 local M = {}
 
 ---@class NeotestCoreConfig
@@ -59,50 +61,48 @@ local function setup_autocommands()
   local aug = vim.api.nvim_create_augroup("NeotestCore", { clear = true })
 
   if config.auto_attach_on_test_file then
-    vim.api.nvim_create_autocmd({ "BufEnter", "BufNewFile" }, {
+    Autocmd.create({ "BufEnter", "BufNewFile" }, function()
+      if is_test_file() then
+        vim.schedule(function()
+          local ok, neotest = pcall(require, "neotest")
+          if ok then
+            pcall(neotest.run.attach)
+          end
+        end)
+      end
+    end, {
       group = aug,
-      callback = function()
-        if is_test_file() then
-          vim.schedule(function()
-            local ok, neotest = pcall(require, "neotest")
-            if ok then
-              pcall(neotest.run.attach)
-            end
-          end)
-        end
-      end,
       desc = "Neotest: Auto-attach to test files",
     })
   end
 
   if config.show_output_on_fail then
-    vim.api.nvim_create_autocmd("User", {
+    Autocmd.create("User", function()
+      vim.schedule(function()
+        local ok, neotest = pcall(require, "neotest")
+        if not ok then
+          return
+        end
+        local results = neotest.state.get_results()
+        if not results then
+          return
+        end
+
+        local has_failed = false
+        for _, result in pairs(results) do
+          if result.status == "failed" then
+            has_failed = true
+            break
+          end
+        end
+
+        if has_failed then
+          neotest.output.open({ enter = false })
+        end
+      end)
+    end, {
       pattern = "NeotestRunComplete",
       group = aug,
-      callback = function()
-        vim.schedule(function()
-          local ok, neotest = pcall(require, "neotest")
-          if not ok then
-            return
-          end
-          local results = neotest.state.get_results()
-          if not results then
-            return
-          end
-
-          local has_failed = false
-          for _, result in pairs(results) do
-            if result.status == "failed" then
-              has_failed = true
-              break
-            end
-          end
-
-          if has_failed then
-            neotest.output.open({ enter = false })
-          end
-        end)
-      end,
       desc = "Neotest: Show output on test failure",
     })
   end

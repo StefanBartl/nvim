@@ -2,37 +2,29 @@
 
 ## jetzt durchführen
 
-### 1. Autocmds zentralisieren — ✅ erster Schritt erledigt
+### 1. Autocmds zentralisieren — ✅ erledigt
 
-Viele Module nutzen direkt `vim.api.nvim_create_autocmd`, obwohl `lib.nvim.autocmd` existiert. Migriert wurden die drei genannten Beispiele: [options.lua](C:/Users/bartl/AppData/Local/nvim/lua/options.lua:78) (inkl. zweitem `OptionSet`-Autocmd), [hl_config/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/init.lua:212) sowie dessen [core/state.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/core/state.lua) (`get_augroup` delegiert jetzt an `lib.nvim.autocmd.get_augroup`), und [astro/autocmds.lua](C:/Users/bartl/AppData/Local/nvim/lua/lsp/languages/webdev/astro/autocmds.lua). Damit profitieren diese Stellen von der pcall-geschützten Fehlerbehandlung in `lib.nvim.autocmd.create`.
+Alle `vim.api.nvim_create_autocmd`/`api.nvim_create_autocmd`-Aufrufe im Repo (ca. 50 Dateien, ~90 Call-Sites) sind auf `lib.nvim.autocmd.create` migriert — reine mechanische Verschiebung des `callback`-Felds in den zweiten Positionsparameter, `group`/`pattern`/`desc`/`once`/`nested` unverändert durchgereicht. Augroup-Erzeugung (`nvim_create_augroup`) selbst wurde nicht angefasst, nur die Registrierung profitiert jetzt von `lib.nvim.autocmd`s pcall-geschützter Fehlerbehandlung.
 
-Rest (ca. 60 weitere Fundstellen laut Bestandsaufnahme) bewusst noch offen — weiter "nach und nach" migrieren, keine Big-Bang-Änderung an ungetesteten Stellen.
+Bewusst nicht migriert: zwei Fälle in `autocmds/terminals/init.lua` (`kitty_enter`/`kitty_leave`), die `command = "..."`-Strings statt `callback`-Funktionen nutzen — `Autocmd.create` erwartet eine Callback-Funktion, eine Umstellung wäre keine reine mechanische Änderung mehr.
 
-### 2. High-Frequency-Events budgetieren — ✅ erster Schritt erledigt
+### 2. High-Frequency-Events budgetieren — ✅ erledigt (für die drei genannten Stellen)
 
-Mehrere Features laufen auf `CursorMoved`, `WinScrolled`, `TextChanged`, `BufEnter`. Die drei genannten Stellen nutzen jetzt `lib.nvim.debounce` statt eigenem/keinem Timer: [indent_scope.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/features/indent_scope.lua) (vorher ungedrosselt, nur `vim.schedule`), [cword_occurrences/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/cword_occurrences/init.lua) (vorher handgerollter `uv.timer`, jetzt `lib.nvim.debounce.new`, pro `M.enable()`-Aufruf neu erzeugt damit `debounce_ms`-Config-Änderungen greifen), [breadcrumbs/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/breadcrumbs/init.lua) (vorher synchron bei jedem Event).
+[indent_scope.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/features/indent_scope.lua), [cword_occurrences/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/cword_occurrences/init.lua) und [breadcrumbs/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/breadcrumbs/init.lua) nutzen jetzt `lib.nvim.debounce` statt eigenem/keinem Timer.
 
 Ein gemeinsamer Dispatcher pro Eventklasse (statt nur Debounce pro Feature) bleibt offen — analog zum bestehenden `FileType`-Dispatcher in `autocmds/events/utils/filetype.lua`.
 
-### 3. Direkte `vim.notify`, `print`, `vim.keymap.set` reduzieren — ✅ Beispiel erledigt
+### 6. Low-Level-Module ohne UI-Seiteneffekte halten — ✅ erledigt (im Scope dieses Repos)
 
-Die Checklisten wollen `lib.notify`, `lib.map`, `lib.usercmd`. [bindings/mappings/git.lua](C:/Users/bartl/AppData/Local/nvim/lua/bindings/mappings/git.lua) (tatsächlicher Pfad, nicht `mappings/git.lua`) nutzt jetzt durchgängig `lib.nvim.notify`, `vim.g.__map_helper` (`lib.nvim.map`) und `lib.nvim.usercmd.create` statt roher `vim.notify`/`vim.keymap.set`/`nvim_create_user_command`-Aufrufe.
+[lsp/core/capabilities.lua](C:/Users/bartl/AppData/Local/nvim/lua/lsp/core/capabilities.lua) gibt jetzt `caps, warnings` (bzw. `ok, warnings` bei `apply_globally`) zurück statt selbst `vim.notify` aufzurufen; der Call-Site in [init.lua](C:/Users/bartl/AppData/Local/nvim/init.lua) übernimmt das Notifying über `lib.nvim.notify`.
 
-Weitere ca. 60+ `vim.notify`- und ~15 `vim.keymap.set`-Fundstellen im restlichen Repo bleiben offen (siehe Bestandsaufnahme vom 2026-07-17 im Projektgedächtnis).
+FS-/PDF-Port-Backendbereiche (zweites im Roadmap-Punkt genanntes Beispiel) leben in eigenen Repos (`fileops.nvim`, `pdfport.nvim`) außerhalb von `lua/` dieses Repos — hier nicht im Zugriff, müsste dort separat angegangen werden.
 
-### 4. Buffer/Window-Handles in Deferred/Scheduled-Code härten — ✅ erster Schritt erledigt
+---
 
-Die drei in Punkt 2 migrierten Feature-Module snapshotten jetzt `winid`/`bufnr` beim Event und validieren sie (`nvim_win_is_valid`/`nvim_buf_is_valid`, bei breadcrumbs zusätzlich Vergleich mit dem aktuellen Fenster) bevor der verzögerte Callback tatsächlich arbeitet. `breadcrumbs/winbar.lua` hatte dieses Pattern für den reinen Fenster-Write bereits vorher.
+## Später erledigt (beim Testen gefunden, nicht Teil der ursprünglichen Liste)
 
-### 5. Konfig-Duplikate und Altpläne aufräumen — ✅ erledigt
-
-`config/menu-update` existiert nicht (mehr) — nur `config/menu/` ist vorhanden, hier gibt es aktuell kein Duplikat aufzuräumen. Die drei toten, auskommentierten Alt-Pläne in [init.lua](C:/Users/bartl/AppData/Local/nvim/init.lua) (BufReadPost-gated LSP-Lazyload, `astro_lsp_standalone`-defer, neo-tree-"tests"-Fix) wurden entfernt; Git-History bewahrt sie bei Bedarf.
-
-### 6. Low-Level-Module ohne UI-Seiteneffekte halten — ✅ Beispiel erledigt
-
-[lsp/core/capabilities.lua](C:/Users/bartl/AppData/Local/nvim/lua/lsp/core/capabilities.lua) gibt jetzt `caps, warnings` (bzw. `ok, warnings` bei `apply_globally`) zurück statt selbst `vim.notify` aufzurufen; der Call-Site in [init.lua](C:/Users/bartl/AppData/Local/nvim/init.lua) übernimmt das Notifying über `lib.nvim.notify`. Der zweite bestehende Call-Site in `lsp/init.lua` prüfte Completion-Capabilities bereits selbst und notifyt unverändert dort.
-
-FS-/PDF-Port-Backendbereiche (zweites im Roadmap-Punkt genanntes Beispiel) noch nicht durchgesehen.
+- `lua/lsp/usercmds/recovery.lua:150` ruft `M.health_check(bufnr)` auf, das nirgends definiert ist — `:LspRecover` crasht deshalb immer. Vorbestehender Bug, nicht durch diese Session verursacht; als eigene Aufgabe ausgelagert statt hier mitgefixt.
 
 ---
 

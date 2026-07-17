@@ -4,6 +4,7 @@ local M = {}
 
 local lsp = vim.lsp
 local api = vim.api
+local Autocmd = require("lib.nvim.autocmd")
 
 --- Check whether a client supports a given CodeActionKind.
 ---@param client LspMod.Client
@@ -96,12 +97,11 @@ end
 ---@return nil
 function M.enable()
   local grp = api.nvim_create_augroup("LangTs", { clear = true })
-  api.nvim_create_autocmd("BufWritePre", {
+  Autocmd.create("BufWritePre", function(ev)
+    pcall(organize_imports_sync, ev.buf)
+  end, {
     group = grp,
     pattern = { "*.ts", "*.tsx", "*.js", "*.jsx" },
-    callback = function(ev)
-      pcall(organize_imports_sync, ev.buf)
-    end,
   })
 end
 

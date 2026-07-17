@@ -4,6 +4,7 @@
 local lazy = require("lib.lua.lazy")
 local TRASH_DEFAULTS = lazy.require("config.neotree.trash.defaults")
 local event_patch = require("config.neotree.utils.event_patch")
+local notify = require("lib.nvim.notify").create("[config.neotree]")
 
 local M = {}
 
@@ -61,9 +62,8 @@ function M.setup(opts)
   local watcher_patch_ok = event_patch.patch_watcher_start()
 
   if not patch_ok and not watcher_patch_ok then
-    vim.notify(
-      "[Neo-tree] Warning: Could not patch fs_watch callbacks. EPERM errors may occur during file operations.",
-      vim.log.levels.WARN
+    notify.warn(
+      "[Neo-tree] Warning: Could not patch fs_watch callbacks. EPERM errors may occur during file operations."
     )
   end
 
