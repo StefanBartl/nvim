@@ -24,6 +24,15 @@ end
 function M.build(opts)
   opts = opts or {}
 
+  -- `opts.use_workspace_diagnostics` is only the STARTUP default (seeded
+  -- once, e.g. machine-role-gated in lsp/init.lua). After that,
+  -- lsp.core.workspace_diagnostics.enabled() is the live, runtime-
+  -- toggleable source of truth (see :LspWorkspaceDiagnostics{Toggle,On,Off,
+  -- Status,Now}) — on_attach below reads it fresh on every attach instead of
+  -- a value captured once here.
+  local workspace_diagnostics = require("lsp.core.workspace_diagnostics")
+  workspace_diagnostics.seed(opts.use_workspace_diagnostics == true)
+
   local function on_init(client, _)
     local ok, nvlsp = pcall(require, "nvchad.config.lspconfig")
     if ok and type(nvlsp.on_init) == "function" then
@@ -43,7 +52,7 @@ function M.build(opts)
       return
     end
 
-    if opts.use_workspace_diagnostics then
+    if workspace_diagnostics.enabled() then
       local ok_wd, wd = pcall(require, "workspace-diagnostics")
       if ok_wd and type(wd.populate_workspace_diagnostics) == "function" then
         pcall(wd.populate_workspace_diagnostics, client, bufnr)
