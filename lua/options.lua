@@ -169,6 +169,28 @@ end, {
 -----------------------------------------------------------
 
 if fn.has("win32") == 1 then
+  -- WORKSTATION-FREEZE-FIX: Der Firmen-OneDrive spiegelt "Dokumente" (Known
+  -- Folder Move), wodurch `Documents\WindowsPowerShell\Modules` in
+  -- $PSModulePath landet UND als Files-On-Demand-Platzhalter (online-only)
+  -- markiert ist. nvim nutzt PowerShell als Shell (unten), also triggert jeder
+  -- system()/Git-/:!-Aufruf eine PowerShell-Command-Discovery, die diesen
+  -- OneDrive-Ordner enumerieren muss → Cloud-Rehydrierung → 60-90s UI-Freeze
+  -- (gemessen: ein einzelner `Get-Module -ListAvailable`-Scan = 95s).
+  -- nvim spawnt PowerShell ohnehin mit -NoProfile und braucht keine
+  -- OneDrive-Module, daher entfernen wir alle OneDrive-Pfade aus dem
+  -- PSModulePath, den die Kindprozesse erben. Behebt den Freeze an der Wurzel,
+  -- unabhängig von OneDrive-Einstellungen/Firmen-Policy.
+  local psmp = vim.env.PSModulePath
+  if psmp and psmp:find("OneDrive", 1, true) then
+    local kept = {}
+    for entry in psmp:gmatch("[^;]+") do
+      if not entry:find("OneDrive", 1, true) then
+        kept[#kept + 1] = entry
+      end
+    end
+    vim.env.PSModulePath = table.concat(kept, ";")
+  end
+
   if fn.executable("pwsh") == 1 then
     o.shell = "pwsh.exe"
     o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"

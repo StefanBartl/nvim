@@ -56,7 +56,18 @@ function M.setup(cfg)
   local attach_api = (function()
     local ok, mod = pcall(require, "lsp.core.attach")
     if ok and mod and type(mod.build) == "function" then
-      return mod.build({ use_workspace_diagnostics = true, use_lazydev = true })
+      -- workspace-diagnostics lädt beim LSP-Attach das GESAMTE Repo (git
+      -- ls-files) synchron in Buffer. In großen Nicht-Code-Repos (z.B.
+      -- C:\repos\WKDBook-Tricentis, ~600 Markdown/Attachment-Dateien) löst
+      -- das eine git-Spawn-Lawine über gitsigns/fileops/gopath aus und
+      -- blockiert die Event-Loop 60-90s → der eigentliche Startup-Freeze.
+      -- Auf der "workstation" wird ohnehin v.a. Markdown geschrieben (kein
+      -- projektweites Coden), also dort abschalten; Dev-Maschinen behalten es.
+      local machine = require("plugins.personal.machine")
+      return mod.build({
+        use_workspace_diagnostics = not machine.is("workstation"),
+        use_lazydev = true,
+      })
     end
     notify.warn("⚠️  Using minimal attach handlers")
     return {
