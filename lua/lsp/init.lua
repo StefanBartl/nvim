@@ -56,7 +56,17 @@ function M.setup(cfg)
   local attach_api = (function()
     local ok, mod = pcall(require, "lsp.core.attach")
     if ok and mod and type(mod.build) == "function" then
-      return mod.build({ use_workspace_diagnostics = true, use_lazydev = true })
+      -- Startup default only — see lsp.core.workspace_diagnostics for why
+      -- (60-90s freeze in a large non-code repo) and for the runtime toggle
+      -- (:LspWorkspaceDiagnostics{Toggle,On,Off,Status,Now}) built on top.
+      -- Off by default on the "workstation" (v.a. Markdown, kein
+      -- projektweites Coden); on elsewhere, toggleable during a research/
+      -- browsing phase without restarting Neovim.
+      local machine = require("plugins.personal.machine")
+      return mod.build({
+        use_workspace_diagnostics = not machine.is("workstation"),
+        use_lazydev = true,
+      })
     end
     notify.warn("⚠️  Using minimal attach handlers")
     return {
@@ -116,6 +126,9 @@ function M.setup(cfg)
 
   -- usercommands lps
   require("lsp.usercmds").attach()
+
+  -- usercommands: runtime toggle for workspace-diagnostics on LSP attach
+  require("lsp.usercmds.workspace_diagnostics").attach()
 
   -- shared config mit validierung
   local shared = {
