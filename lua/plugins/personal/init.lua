@@ -382,12 +382,21 @@ return apply_source({
           -- default and keeps those opened-file colours in sync as buffers open/
           -- close, so no config needed for it.
           current_hl = { enabled = true, icon = "▸" },
-          -- Trash and watcher_quarantine own the config.neotree legacy trash/
-          -- event_patch systems fully now (see docs/ROADMAP/personal/filetree/
-          -- filetree.md); both must be explicitly enabled here since they
-          -- default off inside filetree.nvim itself.
+          -- Trash and watcher_quarantine are on by default in filetree.nvim
+          -- (not in its DEFAULT_DISABLED list) - listed here only to make
+          -- that explicit, no functional effect.
           trash = { enabled = true },
           watcher_quarantine = { enabled = true },
+          -- Both off by default even though window_style itself is on. Meant
+          -- to replace config.neotree's window/{disable_statusline,highlight}
+          -- .lua + autocmds/init.lua (statusline blanking + HL isolation),
+          -- but headless testing couldn't reliably confirm the FileType/
+          -- ColorScheme-triggered effect actually lands (3/3 failed live
+          -- checks despite a verified-correct config reaching the module) -
+          -- kept enabled here as a best-effort duplicate while the proven
+          -- config.neotree fallback stays in place; see config/neotree/
+          -- init.lua and event_handlers/init.lua.
+          window_style = { statusline = true, highlights_isolate = true },
         },
       })
     end,

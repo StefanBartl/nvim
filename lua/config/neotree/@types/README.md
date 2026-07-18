@@ -36,36 +36,12 @@ Dieser Ordner enthält alle Typdefinitionen für das `config.neotree` Modul, org
   - Enthält Tree, Current Node, Clipboard, etc.
 
 - **`config.lua`**: Setup und Initialisierung
-  - `Cfg.NeoTree.InitOpts` für `setup()`
-  - Konfiguration für CurrentHL, CwdSync, Trash
+  - `Cfg.NeoTree.InitOpts` für `setup()` (nur noch die Felder, die
+    `config.neotree.init`'s `M.setup()` tatsächlich liest — trash, current_hl,
+    cwd_sync, watcher_quarantine, layout_guard usw. sind vollständig nach
+    filetree.nvim migriert und haben hier keine Laufzeit-Entsprechung mehr)
 
----
-
-### Feature Modules (Funktionsmodule)
-
-- **`actions.lua`**: Custom Command Optionen
-  - Clipboard-Optionen, Path-Conversion, Node-Info
-
-- **`trash.lua`**: Trash System
-  - Konfiguration für sichere Dateilöschung
-
-- **`safety.lua`**: Safety & Recovery
-  - Backup-Entries, Recovery Points, Queued Operations
-
-- **`open.lua`**: Window Management
-  - Timing, Busy Guards, Extra Keymaps
-
-- **`reveal.lua`**: File Reveal
-  - Context für Datei-Navigation
-
-- **`cwd_sync.lua`**: CWD Synchronisation
-  - State für automatische CWD-Sync
-
-- **`highlights.lua`**: Current File Highlighting
-  - Farben und State für aktuelle Datei
-
-- **`watcher.lua`**: File Watcher
-  - Quarantine State, Error Handling
+- **`commands.lua`**: Custom Command Optionen
 
 ---
 
@@ -73,12 +49,6 @@ Dieser Ordner enthält alle Typdefinitionen für das `config.neotree` Modul, org
 
 - **`sources.lua`**: Source Display
   - Icon-Sets, Dynamic Config
-
-- **`wsl.lua`**: WSL Integration
-  - Path-Konvertierung, File Manager Backend
-
-- **`project_root.lua`**: Project Root Detection
-  - Minimal Interface für Root-Finding
 
 ---
 
@@ -139,18 +109,15 @@ Oder spezifisch:
 
 ## Mapping: Folder → Type File
 
-|  Modul-Folder  |         Type-File         |   Beschreibung    |
-|----------------|---------------------------|-------------------|
-|   `/` (root)   |       `config.lua`        |   Setup & Init    |
-|  `/actions/`   |       `actions.lua`       |  Custom Commands  |
-|   `/trash/`    | `trash.lua`, `safety.lua` |  Deletion System  |
-|    `/open/`    |        `open.lua`         | Window Management |
-|   `/reveal/`   |       `reveal.lua`        |  File Navigation  |
-|  `/cwd_sync/`  |      `cwd_sync.lua`       |     CWD Sync      |
-| `/current_hl/` |     `highlights.lua`      |   Highlighting    |
-|  `/watcher/`   |       `watcher.lua`       |    FS Watcher     |
-|  `/sources/`   |       `sources.lua`       |  Source Display   |
-|    `/wsl/`     |         `wsl.lua`         |  WSL Integration  |
-|   (utility)    |    `project_root.lua`     |  Root Detection   |
+| Modul-Folder  |    Type-File     |  Beschreibung  |
+|---------------|------------------|----------------|
+|  `/` (root)   |   `config.lua`   | Setup & Init   |
+| `/commands/`  |  `commands.lua`  | Custom Commands|
+|  `/sources/`  |  `sources.lua`   | Source Display |
+
+Trash, Safety, Reveal, CwdSync, CurrentHl (highlights), Watcher(-Quarantine)
+und WSL-Integration wurden vollständig nach filetree.nvim migriert; die
+zugehörigen Type-Dateien wurden entfernt (kein Laufzeit-Code mehr, der sie
+brauchte).
 
 ---

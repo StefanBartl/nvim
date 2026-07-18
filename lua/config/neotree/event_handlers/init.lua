@@ -3,16 +3,18 @@
 
 ---@type table[] Cfg.NeoTree.EventHandler[]
 return {
-  -- Cursor unsichtbar machen, wenn Neo-tree-Fenster betreten wird
+  -- Kept alongside filetree.nvim's ui/cursor_hide feature (also enabled, see
+  -- personal/init.lua): its BufEnter/WinEnter-triggered winhighlight override
+  -- couldn't be reliably confirmed live in headless testing. This global
+  -- Cursor-HL approach is coarser (recolors the Cursor group for the whole
+  -- editor, not just the tree window) but proven to work, so it stays as a
+  -- fallback until cursor_hide's reliability is confirmed.
   {
     event = "neo_tree_buffer_enter",
     handler = function()
-      -- Effekt: der Cursor ist im Neo-tree-Fenster unsichtbar, obwohl das Fenster fokussiert ist
       vim.cmd("highlight! Cursor blend=100")
     end,
   },
-
-  -- Cursor wieder sichtbar machen, wenn Neo-tree-Fenster verlassen wird
   {
     event = "neo_tree_buffer_leave",
     handler = function()

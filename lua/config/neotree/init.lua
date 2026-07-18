@@ -47,7 +47,13 @@ function M.setup(opts)
 
   require("config.neotree.autocmds").attach() -- disable statusline;
   require("config.neotree.usercmds").enable()
-  require("config.neotree.window.highlight").setup({ all = true })
+  -- Kept alongside filetree.nvim's window_style feature (also enabled, see
+  -- personal/init.lua): headless testing couldn't reliably confirm
+  -- window_style's FileType/ColorScheme-triggered statusline+HL-isolation
+  -- actually applies (3/3 failed live checks despite a verified-correct
+  -- config reaching the module). Both applying the same effect is
+  -- idempotent, so this stays as the proven fallback until that's resolved.
+  require("config.neotree.window.highlight").setup({ isolate_hl = true })
   require("config.neotree.keymaps.global").attach()
 end
 
