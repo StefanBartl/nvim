@@ -85,68 +85,99 @@ pcall(dofile, vim.g.base46_cache .. "defaults")
 pcall(dofile, vim.g.base46_cache .. "statusline")
 
 -- =============================================================================
--- PHASE 0: SOFORT (Kritisch für Basic-Funktionalität)
+-- STARTUP PHASES
 -- =============================================================================
+-- Policy and rationale: docs/ARCHITECTURE/startup.md
+-- Timeline and pending-phase check at runtime: :StartupReport
+--
+-- Two triggers only, and each phase must justify which one it uses:
+--   startup.now(..)             synchronous — must exist before the first paint
+--                               or before an event that fires during startup
+--   startup.on("UIReady", ..)  after the UI is interactive — nothing can be
+--                               typed or invoked before that point
+--
+-- Wall-clock timers (the old `defer_fn(.., 10|50)`) are deliberately not an
+-- option: they cannot run before the event loop goes idle, which is ~2s AFTER
+-- VimEnter here, so phases registering VimEnter/BufReadPost handlers silently
+-- did nothing.
+local startup = require("startup")
+startup.setup_usercmd()
+
+-- --- synchronous ------------------------------------------------------------
+
 -- Host environment snapshot (OS/shell/paths). Lives in lib.nvim now; the
 -- `publish_globals` feature mirrors it to vim.g.is_windows/is_wsl/... for the
 -- few consumers that read the globals (e.g. plugins/markdown.lua). `rpc_pipe`
 -- starts the predictable Windows named-pipe RPC server (no-op off Windows).
 -- `info_usercmd` registers :SystemInfo (cross-platform system info float,
 -- formerly inline in bindings/mappings/general.lua).
-require("lib.nvim.system").setup({
-  publish_globals = true,
-  rpc_pipe = true,
-  info_usercmd = true,
-})
-require("options")
+-- Sync: publishes globals that later phases and plugin specs read.
+startup.now("system", function()
+  require("lib.nvim.system").setup({
+    publish_globals = true,
+    rpc_pipe = true,
+    info_usercmd = true,
+  })
+end)
 
--- =============================================================================
--- PHASE 1: SEHR FRÜH (10ms) - Grundlegende Config
--- =============================================================================
-vim.defer_fn(function()
+-- Sync: options shape how the first buffer is rendered.
+startup.now("options", function()
+  require("options")
+end)
+
+-- Sync: sets highlight groups and vim.diagnostic.config. Highlights must land
+-- before the first paint to avoid a visible flash; the diagnostic config must
+-- precede the first LSP attach.
+startup.now("wkdoptions", function()
   require("wkdoptions").setup({ highlights = true, options = true, italic_keywords = true })
+end)
+
+-- Sync: THIS IS THE ONE THAT WAS BROKEN. autocmds/general registers a VimEnter
+-- handler (kitty spacing) and autocmds/text a BufReadPost handler (last_loc).
+-- Under the old 10ms timer both were registered ~2s after their events had
+-- already fired, so neither ever ran. Registration must happen before VimEnter.
+startup.now("autocmds", function()
   require("autocmds")
-end, 10)
+end)
 
--- =============================================================================
--- PHASE 2: FRÜH (50ms) - Keymaps & Sessions
--- =============================================================================
-vim.defer_fn(function()
-  require("bindings.usrcmds")
-  require("bindings.mappings").setup()
-end, 50)
-
--- =============================================================================
--- PHASE 3: LSP BufReadPost - wenn der erste Buffer geladen ist
--- =============================================================================
+-- Sync: lsp.setup() only registers configs and an LspAttach handler; servers
+-- themselves start on FileType via vim.lsp.enable. Capabilities must be applied
+-- globally before any client attaches, which can happen on the first
+-- BufReadPost of a startup-argument file.
 vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
+startup.now("lsp", function()
+  require("lsp").setup({ ensure_installing = false })
 
--- LSP Setup
-require("lsp").setup({ ensure_installing = false })
--- LSP Setup direkt nach Keymaps
--- Capabilities müssen GLOBAL applied werden
-local ok_caps, caps = pcall(require, "lsp.core.capabilities")
-if ok_caps and type(caps.apply_globally) == "function" then
-  local applied, cap_warnings = caps.apply_globally()
-  local cap_notify = require("lib.nvim.notify").create("[lsp.capabilities]")
-  for _, w in ipairs(cap_warnings) do
-    cap_notify.notify(w.msg, w.level)
+  local ok_caps, caps = pcall(require, "lsp.core.capabilities")
+  if ok_caps and type(caps.apply_globally) == "function" then
+    local applied, cap_warnings = caps.apply_globally()
+    local cap_notify = require("lib.nvim.notify").create("[lsp.capabilities]")
+    for _, w in ipairs(cap_warnings) do
+      cap_notify.notify(w.msg, w.level)
+    end
+    if not applied then
+      cap_notify.error("Failed to apply capabilities globally")
+    end
   end
-  if not applied then
-    cap_notify.error("Failed to apply capabilities globally")
-  end
-end
+end)
 
--- =============================================================================
--- PHASE 4: DAP
--- =============================================================================
--- DAP setup (adapters, launch configs, UI, keymaps) now lives in
+-- --- after the UI is interactive --------------------------------------------
+
+-- UIReady: user commands cannot be invoked before the command line is usable.
+startup.on("UIReady", "usrcmds", function()
+  require("bindings.usrcmds")
+end)
+
+-- UIReady: keymaps cannot be pressed before the UI accepts input. This pulls
+-- in ~19 submodules and is the single largest phase body, so keeping it off the
+-- synchronous path is what actually shortens time-to-first-paint.
+startup.on("UIReady", "mappings", function()
+  require("bindings.mappings").setup()
+end)
+
+-- DAP setup (adapters, launch configs, UI, keymaps) lives in
 -- StefanBartl/dap.nvim, loaded via lua/plugins/personal/init.lua (event =
 -- "VeryLazy"). The former lua/wkddap prototype has been extracted there.
-
--- =============================================================================
--- PHASE 5: SEHR NIEDRIG (600ms) - RPC
--- =============================================================================
 
 -- Show startup time
 vim.defer_fn(function()
