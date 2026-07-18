@@ -352,44 +352,57 @@ function M.setup(opts)
   -- -------------------------------------------------------------------------
   -- Register nvim-cmp source
   -- -------------------------------------------------------------------------
-  local ok_cmp, cmp = pcall(require, "cmp")
-  if ok_cmp then
-    cmp.register_source("md_words", Source.new())
+  -- `require("cmp")` happens inside the FileType handler, never at setup time.
+  -- setup() runs on the synchronous startup path (via lsp.languages.documentation
+  -- .markdown), and a top-level require here force-loaded nvim-cmp despite its
+  -- `lazy = true` spec — 469 ms, plus LuaSnip (272 ms) and nvim-autopairs (79 ms)
+  -- pulled in as its dependencies. Deferring to the first markdown buffer keeps
+  -- cmp lazy for sessions that never open one.
+  local source_registered = false
+  local warned_missing = false
 
-    -- Inject our source into buffer-local cmp config for markdown files.
-    -- Uses `once = false` so every new markdown buffer picks it up,
-    -- but the duplicate-guard inside prevents double-appending.
-    Autocmd.create("FileType", function()
-      local ok2, cmp2 = pcall(require, "cmp")
-      if not ok2 then return end
-
-      -- Read the *buffer-local* config so we see what's already active here
-      local bufcfg = cmp2.get_config()
-      if not bufcfg then return end
-
-      local sources = bufcfg.sources or {}
-      for _, s in ipairs(sources) do
-        if s.name == "md_words" then return end   -- already present
+  -- Inject our source into buffer-local cmp config for markdown files.
+  -- Uses `once = false` so every new markdown buffer picks it up,
+  -- but the duplicate-guard inside prevents double-appending.
+  Autocmd.create("FileType", function()
+    local ok_cmp, cmp = pcall(require, "cmp")
+    if not ok_cmp then
+      if not warned_missing then
+        warned_missing = true
+        notify.warn("[md_words] nvim-cmp not found – source will not appear in completions.")
       end
+      return
+    end
 
-      -- Build new list with md_words appended at low priority
-      local new_sources = {}
-      for i, s in ipairs(sources) do
-        new_sources[i] = s
-      end
-      new_sources[#sources + 1] = { name = "md_words", priority = 100 }
+    -- Registration is global, so it must happen exactly once — but only now
+    -- that we know cmp is actually loaded.
+    if not source_registered then
+      source_registered = true
+      cmp.register_source("md_words", Source.new())
+    end
 
-      cmp2.setup.buffer({ sources = new_sources })
-    end, {
-      group   = vim.api.nvim_create_augroup("MdWordsCmpSource", { clear = true }),
-      pattern = { "markdown", "mdx" },
-      desc = "[md_words] Inject cmp source into markdown buffer",
-    })
-  else
-    notify.warn(
-      "[md_words] nvim-cmp not found – source will not appear in completions."
-    )
-  end
+    -- Read the *buffer-local* config so we see what's already active here
+    local bufcfg = cmp.get_config()
+    if not bufcfg then return end
+
+    local sources = bufcfg.sources or {}
+    for _, s in ipairs(sources) do
+      if s.name == "md_words" then return end   -- already present
+    end
+
+    -- Build new list with md_words appended at low priority
+    local new_sources = {}
+    for i, s in ipairs(sources) do
+      new_sources[i] = s
+    end
+    new_sources[#sources + 1] = { name = "md_words", priority = 100 }
+
+    cmp.setup.buffer({ sources = new_sources })
+  end, {
+    group   = vim.api.nvim_create_augroup("MdWordsCmpSource", { clear = true }),
+    pattern = { "markdown", "mdx" },
+    desc = "[md_words] Inject cmp source into markdown buffer",
+  })
 
   -- -------------------------------------------------------------------------
   -- Initial word scan: trigger on first markdown FileType event
