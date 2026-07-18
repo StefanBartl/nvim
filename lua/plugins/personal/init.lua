@@ -26,7 +26,7 @@ local notify = require("lib.nvim.notify").create("[plugins.personal]")
 --   "remote"   → ALLE von GitHub
 --   "disabled" → ALLE aus
 ---@type "auto"|PersonalRepoMode
-local OVERRIDE = "auto"
+local OVERRIDE = "dir"
 
 -- Auflösung der effektiven Quelle, wenn OVERRIDE == "auto":
 --   * "workstation" (siehe plugins.personal.machine) hat nie lokale Checkouts
@@ -453,20 +453,20 @@ return apply_source({
       "nvim-neotest/nvim-nio",
       "theHamsta/nvim-dap-virtual-text",
       "jbyuki/one-small-step-for-vimkind",
-      "igorlfs/nvim-dap-view", -- lighter alternative/complement to nvim-dap-ui, evaluating alongside it
+      "igorlfs/nvim-dap-view", -- default panel UI (dap.nvim ui.provider = "dap-view")
     },
     opts = {
       -- "<leader>d" alone collides with existing git/fzf mappings
       -- (dc = DiffviewClose, di = ToggleInlineDiff, do = FzfLua diagnostics)
       keymaps = { prefix = "<leader>da" },
+      -- dap.nvim wires exactly one panel UI. nvim-dap-view is the default;
+      -- switch to ui = { provider = "dap-ui" } to go back to nvim-dap-ui.
+      ui = { provider = "dap-view" },
     },
+    -- Explicit config: lazy's main-module guess for "dap.nvim" would resolve to
+    -- nvim-dap's own `dap` module, not `dap_nvim`.
     config = function(_, opts)
       require("dap_nvim").setup(opts)
-
-      local ok, dap_view = pcall(require, "dap-view")
-      if ok then
-        dap_view.setup()
-      end
     end,
   },
 
