@@ -4,6 +4,7 @@
 
   - [FINISH](#finish)
   - [Workflow Doc](#workflow-doc)
+  - [Bugs](#bugs)
 
 ---
 
@@ -21,6 +22,12 @@ Szenario: In nvim eine markdown file offen, dann `MDViewStart`:
   3. Was assiert, wenn sich die Datei ändert? Wie wird gesynced (Prozess)?
   4. Welche Protkolle machen wann was?
 Zusätzlich anhand von praxis use cases die jeweiligen Prozesse beschreiben, also zb.: Welcher Prozess läuft bei den einzelnen usercommands ab?
+
+---
+
+## Bugs
+
+nvim/logs/debuglog ausschalten und als switch implementieren
 
 ---
 
