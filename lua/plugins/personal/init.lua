@@ -549,7 +549,6 @@ return apply_source({
         token_env_var = "GITHUB_TOKEN",
         fetch_interval_hours = 24,
         notification_level = "all",
-        data_dir = vim.fn.stdpath('config') .. "/github-stats/",
         -- "workstation" only reads the already-committed data/ snapshots
         -- (dashboard, :GithubStatsShow, ... all read from disk regardless);
         -- it just never runs the fetch cycle itself.
