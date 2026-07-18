@@ -78,17 +78,31 @@ Cmdline-spezifischer Keymaps auf `CmdlineEnter` der nächste sinnvolle Schritt.
 
 ## Prüfen
 
-`:StartupReport` zeigt pro Phase Trigger, Startzeitpunkt und Dauer:
+`:StartupReport` öffnet die Zeitachse als Float (`lib.nvim.ui.kit`, mit `q` /
+`<Esc>` schließbar, scrollbar):
 
 ```
-system                 [sync]       ran    851.2 ms  took    45.4 ms
-options                [sync]       ran    896.6 ms  took    81.2 ms
-wkdoptions             [sync]       ran    977.8 ms  took    47.4 ms
-autocmds               [sync]       ran   1025.3 ms  took     6.8 ms
-lsp                    [sync]       ran   1032.1 ms  took   490.8 ms
-usrcmds                [UIReady]    ran   6046.7 ms  took     1.7 ms
-mappings               [UIReady]    ran   6048.5 ms  took   237.0 ms
+Windows  ·  nvim 0.12.2  ·  7272 ms since start
+
+  system               [sync]       1412.6 ms  ██················    78.5 ms
+  options              [sync]       1491.2 ms  ███···············   128.0 ms
+  wkdoptions           [sync]       1619.2 ms  ██················    87.5 ms
+  autocmds             [sync]       1706.7 ms  ··················    15.8 ms
+  lsp                  [sync]       1722.6 ms  ██████████████████   759.8 ms
+  usrcmds              [UIReady]    6120.4 ms  ··················     1.0 ms
+  mappings             [UIReady]    6121.4 ms  ██················    80.7 ms
+
+  TOTAL                                         1151.3 ms in phase bodies
 ```
+
+Der Balken ist **relativ zur langsamsten Phase**, nicht zu einem festen Budget —
+er beantwortet „was dominiert", nicht „ist das zu langsam". Auch die
+Slow-Markierung ist ein Anteil (≥ 25 % der Gesamt-Body-Zeit), kein
+Millisekunden-Schwellwert: die absoluten Zeiten schwanken zwischen kaltem und
+warmem Run um Faktor 2–3.
+
+`:StartupCheck` meldet nur Verstöße und schweigt sonst — gedacht zum Prüfen,
+nicht zum Lesen.
 
 `PENDING` bedeutet: Das Event ist nie gekommen oder war schon durch, als sich
 die Phase registriert hat — die Phase läuft also nicht. Genau dieser Zustand
@@ -97,6 +111,25 @@ war vorher unsichtbar und hat die toten Autocmds verursacht. Eine Phase auf
 
 Fehler in einem Phasen-Body werden per `pcall` abgefangen, gemeldet und in der
 Zeile markiert; die nachfolgenden Phasen laufen weiter.
+
+## Aufbau
+
+| Datei | Rolle |
+| --- | --- |
+| [`lua/startup/init.lua`](../../lua/startup/init.lua) | Runner: `now`, `on`, `marks`, `pending`, `failed`, `total`, `slowest` |
+| [`lua/startup/report.lua`](../../lua/startup/report.lua) | Darstellung: Float via `lib.nvim.ui.kit`, `check()` |
+
+Die Trennung ist Absicht: der Runner läuft in der allerersten Phase, die UI darf
+deshalb nicht auf dem synchronen Pfad landen. `report.lua` wird erst durch
+`:StartupReport` geladen.
+
+Alles Plattform- und Infrastrukturseitige kommt aus lib.nvim statt handgerollt:
+`lib.nvim.ui.kit` (Float), `lib.nvim.ui.hl` (Namespace + Gruppen, die auf
+Standardgruppen linken und so dem Colorscheme folgen), `lib.nvim.usercmd`
+(Kommandos mit pcall-Wrapper), `lib.nvim.notify` (präfixierte Meldungen) und
+`lib.nvim.system.env` für die Host-Zeile — letzteres delegiert an
+`lib.nvim.cross.platform`, weshalb WSL korrekt als WSL und nicht als Linux
+erscheint.
 
 ## Offen: die Gesamtdauer
 

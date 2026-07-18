@@ -3,34 +3,38 @@
 ---
 --- Replaces the previous `vim.defer_fn(..., 10|50)` scheme. Wall-clock timers
 --- were never a real policy: `defer_fn` cannot run before the event loop goes
---- idle, which on this config happens ~4.3s in — long after VimEnter (~2.1s).
---- Modules that register VimEnter/BufReadPost handlers were therefore loaded
---- after the very events they listen for, and their handlers never fired.
+--- idle, which on this config happens ~2s AFTER VimEnter. Modules that register
+--- VimEnter/BufReadPost handlers were therefore loaded after the very events
+--- they listen for, and their handlers never fired.
 ---
---- Phases are now attached to events, and every phase is recorded so the policy
---- can be checked instead of assumed. See docs/ARCHITECTURE/startup.md.
+--- Phases are attached to events, and every phase is recorded so the policy can
+--- be checked instead of assumed. See docs/ARCHITECTURE/startup.md.
 ---
 --- Usage:
 ---   local startup = require("startup")
 ---   startup.now("options", function() require("options") end)
----   startup.on("VeryLazy", "mappings", function() require("bindings.mappings").setup() end)
----   :StartupReport
+---   startup.on("UIReady", "mappings", function() require("bindings.mappings").setup() end)
+---   :StartupReport   -- themed float, see startup.report
+---   :StartupCheck    -- policy violations only, exit-code friendly
 
 local M = {}
 
----@class StartupMark
----@field label string
----@field trigger string      -- "sync" or the event name it waited for
----@field at number|nil       -- ms since vim.g.start_time, nil while pending
----@field dur number|nil      -- ms spent inside the phase body
----@field err string|nil      -- error message if the phase body threw
+--- Synthetic trigger: VimEnter has fired and the following paint is not blocked.
+M.UI_READY = "UIReady"
 
----@type StartupMark[]
+---@class Startup.Mark
+---@field label string
+---@field trigger string      # "sync" or the event name it waited for
+---@field at number|nil       # ms since vim.g.start_time, nil while pending
+---@field dur number|nil      # ms spent inside the phase body
+---@field err string|nil      # error message if the phase body threw
+
+---@type Startup.Mark[]
 M.marks = {}
 
 --- Milliseconds since the interpreter started (vim.g.start_time set in init.lua).
 ---@return number
-local function elapsed()
+function M.elapsed()
   local t0 = vim.g.start_time
   if not t0 then
     return 0
@@ -41,17 +45,19 @@ end
 --- Run a phase body, recording timing and any error.
 --- Errors are captured rather than propagated: one broken phase must not abort
 --- the phases queued behind it.
----@param mark StartupMark
+---@param mark Startup.Mark
 ---@param fn fun()
 local function run(mark, fn)
-  mark.at = elapsed()
+  mark.at = M.elapsed()
   local t0 = vim.uv.hrtime()
   local ok, err = pcall(fn)
   mark.dur = (vim.uv.hrtime() - t0) / 1e6
   if not ok then
     mark.err = tostring(err)
     vim.schedule(function()
-      vim.notify(string.format("[startup] phase '%s' failed: %s", mark.label, mark.err), vim.log.levels.ERROR)
+      require("lib.nvim.notify").create("[startup] ").error(
+        string.format("phase '%s' failed: %s", mark.label, mark.err)
+      )
     end)
   end
 end
@@ -90,7 +96,7 @@ function M.on(event, label, fn)
   local mark = { label = label, trigger = event }
   M.marks[#M.marks + 1] = mark
 
-  if event == "UIReady" then
+  if event == M.UI_READY then
     if vim.v.vim_did_enter == 1 then
       vim.schedule(function() run(mark, fn) end)
     else
@@ -105,46 +111,49 @@ function M.on(event, label, fn)
   vim.api.nvim_create_autocmd(event, { once = true, callback = function() run(mark, fn) end })
 end
 
---- Render the phase timeline as report lines.
----@return string[]
-function M.report_lines()
-  local lines = { string.format("Startup phases (%.0f ms since start)", elapsed()), string.rep("─", 62) }
-  local total = 0
-
-  for _, m in ipairs(M.marks) do
-    if m.at then
-      total = total + (m.dur or 0)
-      lines[#lines + 1] = string.format(
-        "%-22s %-12s ran %8.1f ms  took %7.1f ms%s",
-        m.label,
-        "[" .. m.trigger .. "]",
-        m.at,
-        m.dur or 0,
-        m.err and "  ERROR" or ""
-      )
-    else
-      lines[#lines + 1] = string.format(
-        "%-22s %-12s PENDING — '%s' has not fired (or fired before registration)",
-        m.label,
-        "[" .. m.trigger .. "]",
-        m.trigger
-      )
-    end
-    if m.err then
-      lines[#lines + 1] = "    " .. m.err
-    end
-  end
-
-  lines[#lines + 1] = string.rep("─", 62)
-  lines[#lines + 1] = string.format("%-22s %31.1f ms in phase bodies", "TOTAL", total)
-  return lines
+--- Phases that never ran: their event has not fired, or had already fired when
+--- the phase registered. Both are bugs — see docs/ARCHITECTURE/startup.md.
+---@return Startup.Mark[]
+function M.pending()
+  return vim.tbl_filter(function(m) return m.at == nil end, M.marks)
 end
 
---- Register :StartupReport.
-function M.setup_usercmd()
-  pcall(vim.api.nvim_create_user_command, "StartupReport", function()
-    vim.notify(table.concat(M.report_lines(), "\n"), vim.log.levels.INFO)
-  end, { desc = "Startup: show phase timeline and pending phases" })
+--- Phases whose body threw.
+---@return Startup.Mark[]
+function M.failed()
+  return vim.tbl_filter(function(m) return m.err ~= nil end, M.marks)
+end
+
+--- Total time spent inside phase bodies (not wall-clock startup time — the bulk
+--- of startup happens in lazy.setup() before the first phase runs).
+---@return number
+function M.total()
+  local sum = 0
+  for _, m in ipairs(M.marks) do
+    sum = sum + (m.dur or 0)
+  end
+  return sum
+end
+
+--- Marks sorted by duration, slowest first.
+---@return Startup.Mark[]
+function M.slowest()
+  local sorted = vim.deepcopy(M.marks)
+  table.sort(sorted, function(a, b) return (a.dur or 0) > (b.dur or 0) end)
+  return sorted
+end
+
+--- Register :StartupReport and :StartupCheck.
+function M.setup_usercmds()
+  local usercmd = require("lib.nvim.usercmd")
+
+  usercmd.create("StartupReport", function()
+    require("startup.report").open()
+  end, { desc = "Startup: phase timeline (themed float)" })
+
+  usercmd.create("StartupCheck", function()
+    require("startup.report").check()
+  end, { desc = "Startup: report policy violations only" })
 end
 
 return M

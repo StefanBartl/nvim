@@ -101,7 +101,7 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- VimEnter here, so phases registering VimEnter/BufReadPost handlers silently
 -- did nothing.
 local startup = require("startup")
-startup.setup_usercmd()
+startup.setup_usercmds()
 
 -- --- synchronous ------------------------------------------------------------
 
