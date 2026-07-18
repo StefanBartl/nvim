@@ -156,10 +156,16 @@ function M.auto_recover(bufnr)
     notify.notify("[lsp.usrcmds.recovery] bufnr is nil", vim.log.levels.WARN)
     return nil
   end
-  local health = M.health_check(bufnr)
+  local ok, health = pcall(require, "lsp.lspdoctor.health")
+  if not ok then
+    notify.error("lsp.lspdoctor.health not available, cannot auto-recover")
+    return nil
+  end
+
+  local _, results = health.check(bufnr)
   local to_start = {}
 
-  for _, status in ipairs(health) do
+  for _, status in ipairs(results) do
     if status.config_exists and not status.running then
       table.insert(to_start, status.name)
     end
