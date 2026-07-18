@@ -15,61 +15,6 @@ Custom PLugins sollen lib.nvim als hard dep nutzen, fallback code (pcall lib.nvi
    (`$LIB_NVIM_PATH` → Sibling-Checkout → `stdpath("data")/lazy`) — als Vorlage kopierbar.
   1. `migrate.nvim` nimmt lib.nvim-abhängige Module bewusst aus dem Test-Scope — dort ggf. Präzedenz folgen.
 
-### Neue Module (Kandidatenliste `FINISH/lib_NEW_MODULES.md`) — Status
-
-Alle Kandidaten aus der Multi-Agent-Scan-Liste vom 2026-07-14 wurden bearbeitet. Policy dabei: Plugins nutzen
-lib.nvim als hard dep (kein pcall-Fallback-Template im Regelbetrieb — siehe Kopf dieser Datei).
-
-- [x] **Debounce/throttle** (5 Plugins) → `lib.nvim.debounce` — verdrahtet in pickers.nvim, reposcope.nvim,
-      color_my_ascii.nvim, filetree.nvim (9 Fundstellen), markdown.nvim.
-- [x] **Executable/CLI-Detection** (3 Plugins) → `lib.nvim.system.has_executable`/`first_available` —
-      verdrahtet in nvim-containers, pdfport.nvim, reposcope.nvim.
-- [x] **Async spawn+capture** (9 Fundstellen / 3 Plugins) → `lib.nvim.cross.uv.spawn_capture` — verdrahtet in
-      pdfport.nvim (6 Backends), reposcope.nvim (curl/wget/gh; behob dabei einen Doppel-Callback-Bug in
-      curl.lua). language.nvim's Job-Runner wurde nicht mit-absorbiert (out of scope, eigener Cancel/Timeout-
-      Vertrag).
-- [x] **Path-Template/Env-Var-Expansion** (2 Plugins) → verdrahtet in nvim-cmdlog, pickers.nvim.
-- [x] **Dedup-Helper** (kein neues Modul, nur Verdrahtung) — ~14 Fundstellen in 10 Plugins auf
-      `lib.lua.tables.unique_table`/`dedup_list` umgestellt.
-- [x] **Strings/Text** → `lib.lua.strings.{utf8,encoding,distance,format,location,case,wrap}` — UTF-8
-      codepoint-Handling, Percent-Encode/Base64, Levenshtein/Similarity, Byte-/Zahlenformatierung,
-      Location-Parser, Case-Shape/Change-Case, Text-Centering verdrahtet in 10 Plugins.
-      **Ausnahme:** reposcope.nvim's wortbewusstes `center_text`/`center_text_lines` wurde NICHT ersetzt —
-      lib.nvim-Variante ist nicht wort-aware, echter Funktionsverlust.
-- [x] **Deep merge** → `lib.lua.tables.deep_merge` — verdrahtet in migrate.nvim (mutierend statt pure,
-      Wrapper-Adaption nötig).
-- [x] **Numeral** (roman/alpha) → `lib.lua.numeral` — verdrahtet in cascade.nvim.
-- [x] **UUID** → `lib.lua.uuid` — verdrahtet in buffer-ctx.nvim.
-      **Ausnahme:** Timestamp-Formatter und Ephemeral-Token-Generator (mdview.nvim) wurden NICHT als eigene
-      Module extrahiert — zu klein/eng genug am jeweiligen Call-Site, kein zweiter Konsument gefunden.
-- [x] **Filesystem/Caching** → Read-to-string, atomic JSON write, Persistent-Disk-Cache-mit-TTL,
-      recursive-dir-walker, Byte-Size-Formatter verdrahtet in learn-cli.nvim, github_stats.nvim (3 Dateien),
-      filetree.nvim (2 Stellen), project-insight.nvim, migrate.nvim.
-      **Ausnahme:** color_my_ascii's größenbegrenzter Buffer-Scoped-Cache wurde NICHT durch `lib.lua.memo`
-      ersetzt (kein Size-Cap dort, echter Funktionsverlust). Trash/Recycle-Bin und Bounded-Concurrency-
-      Async-Index (gopath.nvim) wurden nicht angefasst (kein zweiter Konsument, Scope-Grenze).
-- [x] **Git Porcelain-Status-Parser** → verdrahtet in filetree.nvim.
-- [x] **Async HTTP/Date** → Async-Curl+Bearer-Auth-Client, Date-Range-Presets, YAML-Decoder (`lib.lua.yaml`)
-      verdrahtet in github_stats.nvim, learn-cli.nvim (behob dabei einen Dedent-Bug im YAML-Parser).
-- [x] **Editor/Buffer/Window-Helfer** → `lib.nvim.safe_api` (neu, pcall-Wrapper über `vim.api`),
-      Cross-Version-Buffer-Option-Getter, Named-Scratch-Split-Dedup (`window.open_named_scratch`),
-      `.`-Repeat-Wiring (`lib.nvim.dotrepeat`), Poll-until-Predicate, Detached-GUI-Process-Launcher
-      verdrahtet in color_my_ascii.nvim, mdview.nvim, nvim-containers (6 Dateien — behob dabei einen
-      Fenster-Proliferations-Bug), cascade.nvim, pdfport.nvim, open.nvim.
-      **Ausnahme:** debugging.nvim's Log-Fenster-Fokus-Helfer (`ensure_bottom`/`force_focus`) wurde NICHT
-      ersetzt — Streaming-Log-aware Retry-Verhalten wäre verloren gegangen.
-- [x] **Debug/Dev-Tooling** → `lib.lua.dump` (neu, Recursive-Value-Dumper, mit Bugfix: Metatable-Felder
-      werden jetzt NEBEN statt ANSTATT den eigenen Feldern angezeigt) verdrahtet in debugging.nvim;
-      `lib.lua.error.safe_call` verdrahtet in gopath.nvim.
-- [x] **Structured-Error-Pattern** → `lib.lua.error` ({kind, message, data} + safe_call mit Traceback)
-      verdrahtet in replacer.nvim, pickers.nvim.
-
-Zusätzlich beim Wiring gefundene und behobene Bugs (nicht Teil der ursprünglichen Kandidatenliste, aber
-direkt daraus entstanden): `spawn_capture`s `table.unpack`-Crash auf LuaJIT, `opts.env`-Typ-Diskrepanz in
-dessen Doku, CRLF-Korruption in `fs.write.to_file`/`append`/`read` durch Text-Mode-`io.open` auf Windows
-(betraf alle bereits verdrahteten Konsumenten von `fs.write`/`fs.json` rückwirkend), sowie ein
-`config_dir`-Override-Bug in github_stats.nvim (out of scope belassen, als separater Task geflaggt).
-
 ### Übersprungene Replace-Kandidaten
 
 Vier Fundstellen aus replace_moduls.md, bei denen ein Zwangsersatz durch die entsprechende lib.nvim-Funktion eine echte Funktionsregression gewesen wäre. In allen vier Fällen ist die Eigenimplementierung des Plugins in mindestens einer Dimension nachweislich fähiger als das aktuelle lib.nvim-Äquivalent.

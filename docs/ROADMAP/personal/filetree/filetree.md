@@ -3,8 +3,6 @@
 ## Table of content
 
   - [Neue Features](#neue-features)
-  - [**Filesystem-Operationen stärker vereinheitlichen**](#filesystem-operationen-strker-vereinheitlichen)
-  - [**Gefährliche Fallbacks beim Trash prüfen**](#gefhrliche-fallbacks-beim-trash-prfen)
   - [Bugs](#bugs)
   - [General](#general)
   - [Filetree Manager spezifische Features](#filetree-manager-spezifische-features)
@@ -17,20 +15,6 @@
 ## Neue Features
 
 - alle keymaps / features müssen auch via usrcmd ausführbnar sein
-
----
-
-- trash/quarantine/ usw..
-
----
-
-## **Filesystem-Operationen stärker vereinheitlichen**
-Neo-tree hat Safety/Backup/Trash, aber Clipboard-Copy/Move macht eigene rekursive Logik in [clipboard/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/config/neotree/commands/clipboard/init.lua:43). Verbesserung: gemeinsame FS-Operation-Schicht für copy/move/delete/create mit Dry-run, Backup, Quarantine, Layout-Guard und einheitlichen Rückgaben.
-
----
-
-## **Gefährliche Fallbacks beim Trash prüfen**
-[trash/platform/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/config/neotree/trash/platform/init.lua:57) nutzt auf Windows als Fallback echtes `Remove-Item`, also nicht mehr Papierkorb. Verbesserung: klar als “destructive fallback” konfigurierbar machen oder deaktivieren, plus deutlichere Fehler-/Recovery-Strategie.
 
 ---
 
