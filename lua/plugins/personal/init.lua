@@ -382,6 +382,12 @@ return apply_source({
           -- default and keeps those opened-file colours in sync as buffers open/
           -- close, so no config needed for it.
           current_hl = { enabled = true, icon = "▸" },
+          -- Trash and watcher_quarantine own the config.neotree legacy trash/
+          -- event_patch systems fully now (see docs/ROADMAP/personal/filetree/
+          -- filetree.md); both must be explicitly enabled here since they
+          -- default off inside filetree.nvim itself.
+          trash = { enabled = true },
+          watcher_quarantine = { enabled = true },
         },
       })
     end,

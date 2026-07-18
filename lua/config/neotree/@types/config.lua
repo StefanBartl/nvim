@@ -11,7 +11,6 @@
 ---@field restore_last_position? boolean Restore tree state instead of revealing current file
 ---@field reveal_current_file? boolean Only has an effect if window_open == false
 ---@field only_lhs? boolean Only has an effect if window_open == false
----@field trash? Cfg.NeoTree.Trash.Config|boolean Trash system configuration
 ---@field current_hl? Cfg.NeoTree.CurrentHl.Config|boolean Current file highlighting
 ---@field cwd_sync? Cfg.NeoTree.CwdSync.Config|boolean CWD synchronization
 ---@field layout_guard? Cfg.NeoTree.LayoutGuard.Config|boolean Keep an editor window beside Neo-tree

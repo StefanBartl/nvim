@@ -16,9 +16,6 @@ function M.check()
 
   -- Utilities
   require("config.neotree.checkhealth.utils").check()
-
-  -- Watcher Quaeantine & FS Patch
-  require("config.neotree.watcher_quarantine.health").check()
 end
 
 return M

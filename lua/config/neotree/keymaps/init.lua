@@ -4,8 +4,6 @@
 local lazy = require("lib.lua.lazy")
 -- Utility to safely hide the preview window without errors
 local safe_hide_preview = require("config.neotree.utils").safe_hide_preview
--- Watcher quarantine helper to temporarily suppress filesystem events
-local watcher_quarantine = lazy.require("config.neotree.watcher_quarantine")
 local source_command = lazy.require("config.neotree.commands.source")
 
 ---@return table<string, any>
@@ -34,12 +32,10 @@ return {
       -- Clear any active search highlighting in the editor
       vim.cmd("nohlsearch")
 
-      -- Exit watcher quarantine mode if it is currently active
-      if watcher_quarantine.is_quarantined() then
-        watcher_quarantine.exit_quarantine()
-      end
+      -- Watcher-quarantine exit is filetree.nvim's tree_reset feature's job now
+      -- (buffer-local on the same <Esc>, see filetree/features/ui/tree_reset).
     end,
-    desc = "Clear search, filters, preview, highlights, and exit watcher quarantine",
+    desc = "Clear search, filters, preview, and highlights",
   },
 
   --====================== Source Switching ===========================

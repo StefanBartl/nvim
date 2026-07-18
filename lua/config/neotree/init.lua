@@ -1,11 +1,6 @@
 ---@module 'config.neotree'
 ---@brief Neo-tree unified configuration and initialization
 
-local lazy = require("lib.lua.lazy")
-local TRASH_DEFAULTS = lazy.require("config.neotree.trash.defaults")
-local event_patch = require("config.neotree.utils.event_patch")
-local notify = require("lib.nvim.notify").create("[config.neotree]")
-
 local M = {}
 
 --- Default configuration
@@ -18,7 +13,6 @@ local defaults = {
   window_open = false,
   reveal_current_file = true,
   only_lhs = false,
-  trash = TRASH_DEFAULTS,
 }
 
 --- Active configuration (merged with user options)
@@ -28,21 +22,6 @@ M.options = vim.deepcopy(defaults)
 ---@return Cfg.NeoTree.Position|"left"
 function M.get_default_position()
   return M.options.default_position or "left"
-end
-
---- Initialize trash system
----@param config Cfg.NeoTree.Trash.Config|boolean|nil
----@return nil
-local function setup_trash(config)
-  local trash_mod = require("config.neotree.trash")
-
-  if type(config) == "table" then
-    trash_mod.setup(config)
-  elseif config == true then
-    trash_mod.setup(M.options.trash)
-  end
-
-  require("config.neotree.trash.commands").setup()
 end
 
 --- Main setup function
@@ -56,23 +35,8 @@ function M.setup(opts)
     M.options = vim.tbl_deep_extend("force", vim.deepcopy(defaults), opts)
   end
 
-  -- CRITICAL: Patch fs_watch callbacks BEFORE any Neo-tree usage
-  -- Try both patching methods for maximum coverage
-  local patch_ok = event_patch.patch()
-  local watcher_patch_ok = event_patch.patch_watcher_start()
-
-  if not patch_ok and not watcher_patch_ok then
-    notify.warn(
-      "[Neo-tree] Warning: Could not patch fs_watch callbacks. EPERM errors may occur during file operations."
-    )
-  end
-
   -- ================
   -- Setup subsystems
-
-  if M.options.trash then
-    setup_trash(M.options.trash)
-  end
 
   if M.options.reveal_current_file then
     require("config.neotree.window.open.keymaps.reveal_current_file").attach()
