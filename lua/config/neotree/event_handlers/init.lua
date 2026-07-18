@@ -4,11 +4,14 @@
 ---@type table[] Cfg.NeoTree.EventHandler[]
 return {
   -- Kept alongside filetree.nvim's ui/cursor_hide feature (also enabled, see
-  -- personal/init.lua): its BufEnter/WinEnter-triggered winhighlight override
-  -- couldn't be reliably confirmed live in headless testing. This global
+  -- personal/init.lua). Despite real fixes there (adapter-driven filetypes,
+  -- merge-not-replace winhighlight, vim.schedule deferral matching what
+  -- fixed window_style's statusline race), its BufEnter/WinEnter-triggered
+  -- winhighlight override still didn't apply in headless testing (0/3
+  -- across several rounds, isolated from this fallback). This global
   -- Cursor-HL approach is coarser (recolors the Cursor group for the whole
-  -- editor, not just the tree window) but proven to work, so it stays as a
-  -- fallback until cursor_hide's reliability is confirmed.
+  -- editor, not just the tree window) but proven to work, so it stays until
+  -- cursor_hide's reliability is understood or confirmed in real usage.
   {
     event = "neo_tree_buffer_enter",
     handler = function()

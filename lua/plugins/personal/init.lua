@@ -387,16 +387,14 @@ return apply_source({
           -- that explicit, no functional effect.
           trash = { enabled = true },
           watcher_quarantine = { enabled = true },
-          -- Both off by default even though window_style itself is on. Meant
-          -- to replace config.neotree's window/{disable_statusline,highlight}
-          -- .lua + autocmds/init.lua (statusline blanking + HL isolation),
-          -- but headless testing couldn't reliably confirm the FileType/
-          -- ColorScheme-triggered effect actually lands (3/3 failed live
-          -- checks despite a verified-correct config reaching the module) -
-          -- kept enabled here as a best-effort duplicate while the proven
-          -- config.neotree fallback stays in place; see config/neotree/
-          -- init.lua and event_handlers/init.lua.
-          window_style = { statusline = true, highlights_isolate = true },
+          -- statusline defaults to true in filetree.nvim itself; both it and
+          -- highlights_isolate here are best-effort duplicates of
+          -- config.neotree's window/{disable_statusline,highlight}.lua +
+          -- autocmds/init.lua, which stay in place (see config/neotree/
+          -- init.lua) because neither effect could be confirmed reliable on
+          -- its own in headless testing, despite real fixes on the
+          -- filetree.nvim side (see its git log).
+          window_style = { highlights_isolate = true },
         },
       })
     end,
