@@ -45,18 +45,11 @@ function M.setup(opts)
     require("config.neotree.window.open.keymaps.only_lhs").attach()
   end
 
-  require("config.neotree.autocmds").attach() -- disable statusline;
+  -- Statusline blanking + HL isolation are filetree.nvim's window_style
+  -- feature now (see personal/init.lua) - confirmed working in real
+  -- interactive use; the config.neotree autocmds/disable_statusline +
+  -- window/highlight duplicates were removed.
   require("config.neotree.usercmds").enable()
-  -- Kept alongside filetree.nvim's window_style feature (statusline default
-  -- true, highlights_isolate opt-in, both enabled - see personal/init.lua):
-  -- isolating a headless test from this fallback (temporarily removing it)
-  -- showed window_style's FileType/BufWinEnter/WinEnter-triggered statusline
-  -- blanking does NOT reliably apply on its own in headless mode, despite
-  -- reaching the module with a verified-correct config - the earlier
-  -- "verified" result was this fallback doing the work in parallel, not
-  -- window_style. Same open question for highlights_isolate. Both stay here
-  -- until that's understood or confirmed working in real interactive use.
-  require("config.neotree.window.highlight").setup({ isolate_hl = true })
   require("config.neotree.keymaps.global").attach()
 end
 

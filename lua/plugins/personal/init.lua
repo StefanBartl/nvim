@@ -387,13 +387,10 @@ return apply_source({
           -- that explicit, no functional effect.
           trash = { enabled = true },
           watcher_quarantine = { enabled = true },
-          -- statusline defaults to true in filetree.nvim itself; both it and
-          -- highlights_isolate here are best-effort duplicates of
+          -- statusline defaults to true; highlights_isolate opted in here.
+          -- Confirmed working in real interactive use - replaces
           -- config.neotree's window/{disable_statusline,highlight}.lua +
-          -- autocmds/init.lua, which stay in place (see config/neotree/
-          -- init.lua) because neither effect could be confirmed reliable on
-          -- its own in headless testing, despite real fixes on the
-          -- filetree.nvim side (see its git log).
+          -- autocmds/init.lua, all removed.
           window_style = { highlights_isolate = true },
         },
       })
