@@ -56,7 +56,11 @@ function M.setup()
   end, { desc = "[HARPOON] Add current file (append at end)" })
 
   map("n", "<C-e>", function()
-    vim.cmd("HarpoonPersistPathsReload")
+    -- Harpoon's own toggle_quick_menu() closes instead of opening when
+    -- win_id is already set; only reload paths on the opening edge, not on close.
+    if harpoon.ui.win_id == nil then
+      vim.cmd("HarpoonPersistPathsReload")
+    end
     harpoon.ui:toggle_quick_menu(harpoon:list())
   end, { desc = "[HARPOON] Open harpoon window (default)." })
   --

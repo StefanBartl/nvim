@@ -683,6 +683,8 @@ return apply_source({
           -- theme = "github", -- P1-6: neues Theme (auch: catppuccin, dark-dimmed, plain, github) -> FUNKTioNNERTT
           highlighter = "hljs", -- P1-5: exakte VSCode/TextMate-Themes (oder "hljs" / "none") - shiki highligihted nichts, hljs funkltiert wunderbar! höjs als default, shiki  wenn leicht debuggen dann debuggen oder wenn performance technisch ewwas dafür spricht, weil shiki besser als hljs ist, dnn jedeflals debuggen, ansosnten lassen wenn nichts dagegen spricht und als default; wäre es auch möglich, de color_m<_ascii api zu nutzen? dann könnten wir diese sdependecmy streichen und cmein eigenes colotr_my_ascii plugin nutzen
           -- focus = "nvim", -- P2-9: Fokus bleibt in nvim (Windows best-effort) - wenn dies optin aktiv ist, dann öffnet sich nichts im browser! Bug!
+
+          cursor_marker = "caret",
         },
         experimental = {
           line_diff = true, -- P?: nur geänderte Zeilen senden -> FUnktnioert -> postives/negatives abwägen ob default

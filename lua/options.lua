@@ -180,16 +180,17 @@ if fn.has("win32") == 1 then
   -- OneDrive-Module, daher entfernen wir alle OneDrive-Pfade aus dem
   -- PSModulePath, den die Kindprozesse erben. Behebt den Freeze an der Wurzel,
   -- unabhängig von OneDrive-Einstellungen/Firmen-Policy.
-  local psmp = vim.env.PSModulePath
-  if psmp and psmp:find("OneDrive", 1, true) then
-    local kept = {}
-    for entry in psmp:gmatch("[^;]+") do
-      if not entry:find("OneDrive", 1, true) then
-        kept[#kept + 1] = entry
-      end
-    end
-    vim.env.PSModulePath = table.concat(kept, ";")
-  end
+
+  -- local psmp = vim.env.PSModulePath
+  -- if psmp and psmp:find("OneDrive", 1, true) then
+    -- local kept = {}
+    -- for entry in psmp:gmatch("[^;]+") do
+      -- if not entry:find("OneDrive", 1, true) then
+        -- kept[#kept + 1] = entry
+      -- end
+    -- end
+    -- vim.env.PSModulePath = table.concat(kept, ";")
+  -- end
 
   if fn.executable("pwsh") == 1 then
     o.shell = "pwsh.exe"

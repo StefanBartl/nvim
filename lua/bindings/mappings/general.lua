@@ -22,6 +22,7 @@ function M.setup()
     if pos[1] > last_line then
         pos[1] = last_line
     end
+    -- vim.api.nvim_win_set_cursor(0, pos)
     pcall(vim.api.nvim_win_set_cursor, 0, pos)
 
   end, { desc = "[General] Save file" })
@@ -33,6 +34,7 @@ function M.setup()
     if pos[1] > last_line then
         pos[1] = last_line
     end
+    -- vim.api.nvim_win_set_cursor(0, pos)
     pcall(vim.api.nvim_win_set_cursor, 0, pos)
   end, { desc = "[General] Save file", noremap = true })
 
