@@ -51,20 +51,13 @@
 
 ## LSP
 
-12. lightbulb: Manchmal stört sie und ich möchhte das schnell ausblenden können, am besten mit Keymap togglebnar (markdown lsp)
-
 ---
 
 ## General
 
-13. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/ zb mit `leader lsp`öffnet ein `lib.nvim -> select` und den scope den man wählt wir lua_ls nochmal neu berechnet auf den scope
-14. `ZenMode` sollte auch eienen usrcmds toggle schalter haben
-
 ---
 
 ## Bugs
-
-16. manchmal bricht `C-c` mit sigint nvim ab, es solte aber alles kopieren des buffers
 
 ---
 

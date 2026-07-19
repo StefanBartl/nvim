@@ -117,6 +117,30 @@ function M.attach()
   end, {
     desc = desc_tag .. "Show LSP information for current buffer",
   })
+
+  -- LspMdHints: toggle marksman's Hint-severity diagnostics ("lightbulb")
+  pcall(nvim_create_user_command, "LspMdHints", function(args)
+    local hints = require("lsp.servers.marksman.hints")
+    local arg = (args.args or ""):lower()
+
+    if arg == "" or arg == "toggle" then
+      hints.toggle()
+    elseif arg == "on" then
+      hints.set(true)
+    elseif arg == "off" then
+      hints.set(false)
+    elseif arg == "status" then
+      notify.info("Markdown hints: " .. (hints.enabled() and "on" or "off"))
+    else
+      notify.warn("Usage: :LspMdHints [on|off|toggle|status]")
+    end
+  end, {
+    nargs = "?",
+    complete = function()
+      return { "on", "off", "toggle", "status" }
+    end,
+    desc = desc_tag .. "Toggle marksman Hint-severity diagnostics (markdown 'lightbulb')",
+  })
 end
 
 return M

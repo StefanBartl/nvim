@@ -3,19 +3,12 @@ restliche Roamap-Punkte in filetree.nvim prüfen
 
 ## Table of content
 
-  - [Neue Features](#neue-features)
   - [Bugs](#bugs)
   - [General](#general)
   - [Filetree Manager spezifische Features](#filetree-manager-spezifische-features)
     - [neotree spezifisch](#neotree-spezifisch)
       - [sources](#sources)
   - [Später](#spter)
-
----
-
-## Neue Features
-
-- alle keymaps / features müssen auch via usrcmd ausführbnar sein
 
 ---
 

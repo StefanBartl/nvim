@@ -13,6 +13,7 @@
     - [LspInfo](#lspinfo)
     - [LspDebug](#lspdebug)
     - [LspLog](#lsplog)
+    - [LspMdHints](#lspmdhints)
   - [Troubleshooting](#troubleshooting)
     - ["Server not attached" after start](#server-not-attached-after-start)
     - ["Exit code 1, signal 15"](#exit-code-1-signal-15)
@@ -81,6 +82,22 @@ Open LSP log file.
 ```vim
 :LspLog
 ```
+
+### LspMdHints
+Toggle marksman's Hint-severity diagnostics — the closest thing marksman has
+to an editor "lightbulb" (unresolved references, dangling link suggestions,
+etc.). Only affects Hint severity; Error/Warn/Info diagnostics and other
+servers are untouched. Also bound to `<leader>lb`.
+```vim
+:LspMdHints          " toggle
+:LspMdHints on
+:LspMdHints off
+:LspMdHints status    " print current state
+```
+Implemented in `lsp.servers.marksman.hints` (state) and
+`lsp.servers.marksman.diagnostics_handler` (filtering + instant re-publish of
+already-open buffers, since marksman only pushes diagnostics on its own
+schedule).
 
 ## Troubleshooting
 

@@ -37,7 +37,7 @@ function M.setup(shared, opts)
       on_attach = shared.on_attach,
       on_init = shared.on_init,
       handlers = {
-        ["textDocument/publishDiagnostics"] = diagnostics_handler(),
+        ["textDocument/publishDiagnostics"] = diagnostics_handler.make_handler(),
         ["textDocument/codeAction"] = require("lsp.servers.marksman.code_action_handler")(),
       },
       -- Marksman benefits from multi-file workspaces for link resolution

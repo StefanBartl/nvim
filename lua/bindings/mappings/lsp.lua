@@ -13,6 +13,10 @@ function M.setup()
     require("lsp.core.root_scope_picker").open()
   end, { desc = "[LSP] Switch root-scope (cwd/git/path)" })
 
+  map("n", "<leader>lb", function()
+    require("lsp.servers.marksman.hints").toggle()
+  end, { desc = "[LSP] Toggle markdown hints ('lightbulb')" })
+
   --Buffer wide rename
   map("n", "grn", vim.lsp.buf.rename, { desc = "[LSP] Rename" })
 
