@@ -42,11 +42,34 @@ real bugs in 3 of the 7 done repos — mdview.nvim's log-buffer E95, dap.nvim/
 cascade.nvim's CI gaps, color_my_ascii.nvim's `dracula`-scheme stats crash and
 wrong `lib.map` health-check path).
 
+## Composer capability extensions (Phase 7, shipped)
+
+Three gaps found while planning the remaining migrations below, built ahead
+of hitting them (all opt-in, zero behavior change for routes that don't use
+them — see `lib.nvim`'s own `docs/ROADMAP/usrcmd_builder.md` §12 Phase 7 and
+`lua/lib/nvim/usercmd/composer/README.md` for full docs):
+
+- **Buffer-local commands** — `composer.verb(name, { buffer = true|bufnr, ... })`
+  routes through `nvim_buf_create_user_command`. Unblocks markdown.nvim's
+  per-buffer `:TableView`/`OpenWithSystemApplication`.
+- **Short-flag aliases** — `FlagSpec.short = "r"` matches `-r` alongside
+  `--replace`; next-token-value only (no `-o=value`); unrecognized `-x`
+  (e.g. a negative number) stays a lenient positional, not an error.
+  Unblocks recommender.nvim's `-r`/`--replace`.
+- **Bare `key=value` grammar** — new `Route.kv` (`KvSpec[]`), its own module
+  (`kv.lua`, separate from `flags.lua` since the leniency stance differs —
+  an undeclared `key=value` stays positional, no hard error, unlike `--name`).
+  Composes freely with `flags` on the same route (`ctx.kv` + `ctx.flags` both
+  populated). Unblocks diff.nvim's `target=`/`view=vsplit`.
+
+All three previously-blocked plugins below are now unblocked — see the
+updated "Needs Phase 6" and "Needs a real design decision" sections.
+
 ## Checklist
 
 | plugin | erledigt |
 | -------------------------------- | --- |
-| `buffer-ctx.nvim`         |  |
+| `buffer-ctx.nvim`         | ✅ |
 | `cascade.nvim`          | ✅ |
 | `color_my_ascii.nvim`       | ✅ |
 | `debugging.nvim`         |  |
@@ -55,16 +78,16 @@ wrong `lib.map` health-check path).
 | `emojis.nvim`           |  |
 | `fileops.nvim`          |  |
 | `filetree.nvim`          |  |
-| `github_stats.nvim`        |  |
+| `github_stats.nvim`        | ✅ |
 | `gopath.nvim`           |  |
 | `language.nvim`          |  |
 | `lib.nvim`            | ✅ |
 | `markdown.nvim`          |  |
 | `mdview.nvim`           | ✅ |
 | `migrate.nvim`          |  |
-| `nvim-cmdlog`           |  |
-| `nvim-containers`         |  |
-| `open.nvim`            |  |
+| `nvim-cmdlog`           | ✅ |
+| `nvim-containers`         | ✅ |
+| `open.nvim`            | ✅ |
 | `pdfport.nvim`          | ✅ |
 | `pickers.nvim`          |  |
 | `project-insight.nvim`      |  |
@@ -73,7 +96,7 @@ wrong `lib.map` health-check path).
 | `reposcope.nvim`         |  |
 | `sessions.nvim`          | ✅ |
 
-7 of 26 done.
+12 of 26 done.
 
 ## Remaining plugins — what's known so far
 
@@ -81,21 +104,6 @@ Grouped by shape, not priority order — pick whichever fits the next session.
 
 ### Flat anti-pattern (clear win — command count drops, completion is new)
 
-- **`nvim-containers`** — biggest win by command count: ~24 flat commands
-  across `Container*`/`Image*`/`Wsl*`/`*Buffer` families. Collapses to
-  `:Container`, `:Image`, `:Wsl` (maybe 3 separate verbs, not one — each
-  family is its own resource type).
-- **`github_stats.nvim`** — 10 flat commands. **Investigate first**: possible
-  duplicate registration bug (registered in both `commands.lua` *and*
-  `bindings/usrcmds/init.lua` in an earlier survey pass) — confirm before
-  migrating, flag separately if real.
-- **`buffer-ctx.nvim`** — `:Insert`, `:Copy`, each with their own dispatch
-  table already (not fully flat, but command *names* aren't plugin-prefixed —
-  collision risk). Migration is also a chance to prefix them properly
-  (`:BufferCtx insert|copy` or similar — decide the verb name).
-- **`nvim-cmdlog`** — 7 flat commands. **The only repo with zero lib.nvim
-  dependency currently** — add the dependency as part of this migration, not
-  before.
 
 ### Already has a decent hand-rolled subcommand tree (port for consistency + docgen)
 
@@ -142,9 +150,9 @@ Grouped by shape, not priority order — pick whichever fits the next session.
   from positional scope args. Now has a real answer via `Route.flags`.
 - **`diff.nvim`** — `:Diff` + companions (`:DiffClear`, `:DiffBuffers`,
   `:DiffOrig`, `:DiffExit`), `key=value` grammar (`target=`, `view=vsplit`).
-  Same flags mechanism as above, though the `key=value` (no `--` prefix)
-  shape doesn't map 1:1 onto `--flag=value` — may need `key=value` support as
-  a small follow-up variant of Phase 6, or reframe as named positional args.
+  **Unblocked**: use the new `Route.kv` (Phase 7) directly — `kv = {
+  { key = "target", type = "STRING" }, { key = "view", type = "STRING",
+  enum = {...} } }`, no reframing needed.
 
 ### Needs a real design decision (doesn't fit the tree model cleanly)
 
@@ -154,27 +162,23 @@ Grouped by shape, not priority order — pick whichever fits the next session.
   `mdview.nvim`'s `ctx.rest` escape hatch or a `path = {}` root route with
   no declared args (falls through to `ctx.rest`, handler does its own
   shape-sniffing) — needs a short design pass before implementing, not just
-  a mechanical port.
+  a mechanical port. (Still open — buffer-local/short-flag/kv extensions
+  don't help this one.)
 - **`markdown.nvim`** — `:Markdown` + **buffer-local** commands
   (`OpenWithSystemApplication`, `TableView*`, registered via
-  `nvim_buf_create_user_command`). Composer currently only wraps
-  `nvim_create_user_command` (global commands) — same limitation hit with
-  color_my_ascii.nvim's separate `:Fence` system, left untouched there. Two
-  options: (a) migrate only `:Markdown` itself and leave the buffer-locals as
-  they are (matches the color_my_ascii.nvim precedent), or (b) extend
-  composer with buffer-local support first — a real composer feature, not a
-  plugin-migration task. Decide before starting.
+  `nvim_buf_create_user_command`). **Unblocked**: composer now supports
+  `spec.buffer = true` (Phase 7) — register the buffer-local commands as
+  their own composer verbs from the same `FileType` autocmd that used to
+  call `nvim_buf_create_user_command` directly. `:Markdown` itself migrates
+  as a normal global verb alongside.
 
 ### Single command / low priority (little to no win)
 
 - **`emojis.nvim`** — one configurable command, small 2-arg-position
   completion idiom. Low risk, low value — fine to batch with something else
   or skip.
-- **`open.nvim`** — one configurable command, 2 positional slots, no real
-  subtree. Possibly not worth migrating at all beyond typed-arg/docgen
-  consistency — low priority.
 - **`recommender.nvim`** — one command, flag+positional mixed parsing
-  (`-r`/`--replace`, single-dash short flag — composer's flags are `--name`
-  only, no short-flag support yet). Check whether the short-flag form is
-  load-bearing before deciding to migrate; may need a Phase 6 follow-up
-  (short-flag aliases) or just isn't worth forcing into composer's grammar.
+  (`-r`/`--replace`, single-dash short flag). **Unblocked**: `FlagSpec.short
+  = "r"` (Phase 7) matches `-r` alongside `--replace` directly — still
+  low-value (single command, no subtree), but no longer blocked if worth
+  doing for consistency.
