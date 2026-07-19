@@ -28,8 +28,11 @@ function M.setup(shared, opts)
       -- File types this server should attach to
       filetypes = { "lua" },
 
-      -- Use our custom root directory resolver
-      root_dir = root_resolver(),
+      -- Use our custom root directory resolver. NOTE: pass the resolver
+      -- function itself, not its result — vim.lsp calls it per-buffer as
+      -- root_dir(bufnr, cb). Calling it here would freeze root_dir to a
+      -- single string computed once at setup time.
+      root_dir = root_resolver,
 
       -- Allow the server to run even without a detected project root
       single_file_support = true,

@@ -9,6 +9,10 @@ function M.setup()
     require("mylsp.nav.lua_root").goto_root_at_cursor({ center = true })
   end, { desc = "Go to Lua table/function root" })
 
+  map("n", "<leader>lsp", function()
+    require("lsp.core.root_scope_picker").open()
+  end, { desc = "[LSP] Switch root-scope (cwd/git/path)" })
+
   --Buffer wide rename
   map("n", "grn", vim.lsp.buf.rename, { desc = "[LSP] Rename" })
 

@@ -7,6 +7,65 @@ local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
+--- Start the lua_ls server config (as registered via vim.lsp.config) and
+--- attach it to the given buffer.
+---@param bufnr integer
+---@return boolean success
+local function start_lua_ls(bufnr)
+  if type(vim.lsp.config) ~= "table" then
+    return false
+  end
+
+  local config_list = vim.lsp.config.get and vim.lsp.config.get() or {}
+  local server_config = nil
+  for _, cfg in pairs(config_list) do
+    if cfg.name == "lua_ls" then
+      server_config = cfg
+      break
+    end
+  end
+  if not server_config then
+    return false
+  end
+
+  local ok, client_id = pcall(vim.lsp.start, server_config, { bufnr = bufnr })
+  return ok and client_id ~= nil
+end
+
+--- Restart every attached lua_ls client so `root_dir` is recomputed for the
+--- currently open buffers. Used after the root-scope switch changes
+--- (see lsp.core.root_scope / lsp.core.root_scope_picker, <leader>lsp).
+---@return nil
+function M.recompute_root()
+  local clients = vim.lsp.get_clients({ name = "lua_ls" })
+  if #clients == 0 then
+    return
+  end
+
+  local bufs = {}
+  for _, c in ipairs(clients) do
+    for bufnr in pairs(c.attached_buffers or {}) do
+      bufs[bufnr] = true
+    end
+  end
+
+  local ids = {}
+  for _, c in ipairs(clients) do
+    ids[#ids + 1] = c.id
+  end
+  vim.lsp.stop_client(ids, true)
+
+  vim.defer_fn(function()
+    local restarted = 0
+    for bufnr in pairs(bufs) do
+      if vim.api.nvim_buf_is_valid(bufnr) and start_lua_ls(bufnr) then
+        restarted = restarted + 1
+      end
+    end
+    notify.info(string.format("lua_ls root recomputed (%d buffer(s))", restarted))
+  end, 100)
+end
+
 --- Reload lua_ls workspace library for current buffer
 ---@return boolean success
 function M.reload_library()
@@ -85,6 +144,15 @@ function M.setup()
       return { "minimal", "normal", "full" }
     end,
     desc = "[lsp.lua_ls] Set library profile (minimal/normal/full)"
+  })
+
+  -- Recompute root_dir for open buffers whenever <leader>lsp switches scope
+  vim.api.nvim_create_autocmd("User", {
+    pattern = "LspRootScopeChanged",
+    callback = function()
+      M.recompute_root()
+    end,
+    desc = "[lsp.lua_ls] Recompute root_dir on root-scope change",
   })
 end
 

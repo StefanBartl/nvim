@@ -6,6 +6,8 @@
 
 -- Import filesystem helper to check if a path is contained within another
 local is_subpath = require("lib.nvim.fs.is_subpath")
+-- Global cwd/git/path switch (see lsp.core.root_scope_picker, <leader>lsp)
+local root_scope = require("lsp.core.root_scope")
 
 --- Determine a strict root directory from a filename or use sensible fallbacks.
 ---
@@ -39,6 +41,18 @@ local function strict_root_from(fname)
   -- Guard against invalid directory
   if not dir or dir == "" then
     return nil
+  end
+
+  -- Root-scope switch (<leader>lsp): "cwd" and "path" bypass the VCS/marker
+  -- search below entirely; "git" (default) keeps the original algorithm.
+  local scope = root_scope.get()
+
+  if scope == "cwd" then
+    return (vim.uv or vim.loop).cwd() or vim.fn.getcwd()
+  end
+
+  if scope == "path" then
+    return dir
   end
 
   -- Step 1: Look for version control system markers
