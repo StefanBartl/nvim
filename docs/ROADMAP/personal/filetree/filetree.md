@@ -1,4 +1,5 @@
 # `filetree.nvim`
+restliche Roamap-Punkte in filetree.nvim prüfen
 
 ## Table of content
 

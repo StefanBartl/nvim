@@ -1,14 +1,15 @@
-# Roadmap for `main-workstation` branch
+# Roadmap
 
-
+* [ ] Inline-Images in Markdown-Files einbinden: snacks?
+- github:stats.nvim besser machen
+- checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
+- [ ] `migrate.nvim` fertigstellen
 - learn-cli.nvim vielleicht doch ?
 - `mdview.nvim`: Das war eigentlich mein Websocket Lern Prozess...
 - `lua/config/menu` nach `lua/wkdnvchad`?
 - beim öfgfnen eienr datzei über harpoon aktualisere filetree.nvim den filetree noch nicht cwd_sync
-
-
-
-lernen: https://www.browserstack.com/
+- [ ] nvim/lua/autocmds analysieren, zb general -> no name guard in filetee.nvim buffer-ctx implementieren
+- lernen: https://www.browserstack.com/
 
 ## Table of content
 
@@ -56,9 +57,8 @@ lernen: https://www.browserstack.com/
 
 ## General
 
-13. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/ zb mit `leader lsp`öffnet ein `lib.nvim -> hover_select` und den scope den man wählt wir lua_ls nochmal neu berechnet auf den scope
+13. lsp: Einen switch einbauen, mitdem ich regeln kann, was der root für lsp ist: Switch zwischen cwd/nächstes_git/pfad/ zb mit `leader lsp`öffnet ein `lib.nvim -> select` und den scope den man wählt wir lua_ls nochmal neu berechnet auf den scope
 14. `ZenMode` sollte auch eienen usrcmds toggle schalter haben
-15. ✅ **[No Name]-Buffer-Guard** — wenn nvim aus irgendeinem Grund einen `[No Name]`-Buffer in einem Fenster anzeigen würde (Buffer gelöscht, Fenster geschlossen), aber ein echter benannter Buffer existiert, wird das Fenster stattdessen dorthin umgeleitet. Ausnahmen bleiben intakt: existiert kein Alternativ-Buffer (z.B. letzter Datei-Buffer schließt, oder ein Tree-Plugin ist mit `close_if_last_window = false` das letzte Fenster), bleibt der `[No Name]`-Buffer unangetastet; bewusst erzeugte Scratch-/Temp-Buffer (`:enew`, Plugin-eigene Buffer mit `buftype ~= ""` oder unlisted) werden nie umgeleitet, da die Erkennung rein zustandsbasiert ist (leer, unbenannt, `buftype=""`, gelistet, unmodifiziert) und nur auf `BufDelete`/`BufWipeout`/`WinClosed` reagiert, nie auf jeden Fensterwechsel. Implementiert in `lua/autocmds/general/{init,helpers,defaults,@types}.lua` (`no_name_guard`), verallgemeinert die bereits bewährte Logik aus `filetree.nvim`s `util/buffer.lua:close_for_path()`.
 
 ---
 

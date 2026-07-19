@@ -1,12 +1,5 @@
 # Alle Custom Plugins
 
-- github:stats.nvim besser machen
-- checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
-- [ ] `mygrep.nvim` – Entscheidung treffen: Implementierung in `pickers.nvim`?
-- [ ] `migrate.nvim` fertigstellen
-- [ ] `mdlink` vs. `mdlinks`? → Migration nach `markdown.nvim`
-
-
 ## Checklist
 
 2. Module und Plugins durchgehen und

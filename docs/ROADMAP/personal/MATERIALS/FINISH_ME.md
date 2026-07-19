@@ -1,72 +1,121 @@
-# FINISH: von mir ausführen
+# TODO & ROADMAP: Refactoring & Plugin-Optimierung
 
-- [ ] Images, inline in markdown files wären super:
-  ![test](./docs/ROADMAP/personal/MATERIALS/ML_Link_Thing.png)
-
-## Autocmds zentralisieren
-
-Viele Module nutzen direkt `vim.api.nvim_create_autocmd`, obwohl `lib.autocmd` existiert. Das betrifft z. B. [options.lua](C:/Users/bartl/AppData/Local/nvim/lua/options.lua:79), [hl_config/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/wkdoptions/hl_config/init.lua:212), [astro/autocmds.lua](C:/Users/bartl/AppData/Local/nvim/lua/lsp/languages/webdev/astro/autocmds.lua:12). Verbesserung: nach und nach auf `lib.autocmd` bzw. den vorhandenen FileType-Dispatcher migrieren, damit Fehlerbehandlung, Gruppen und Reload-Verhalten einheitlich sind.
-
-## Shell-Kommandos von Strings auf argv umstellen
-
-Es gibt einige String-Shell-Aufrufe mit zusammengesetzten Pfaden, z. B. [line_diff_on_hold.lua](C:/Users/bartl/AppData/Local/nvim/lua/autocmds/git/line_diff_on_hold.lua:99), [astro/autocmds.lua](C:/Users/bartl/AppData/Local/nvim/lua/lsp/languages/webdev/astro/autocmds.lua:69). Verbesserung: `vim.system({ ... })` oder `lib.cross.run[_argv]` verwenden. Das reduziert Quoting-Bugs, Injection-Risiko und Plattformprobleme.
-
-## **Direkte `vim.notify`, `print`, `vim.keymap.set` reduzieren**
-Die Checklisten wollen `lib.notify`, `lib.map`, `lib.usercmd`. Direkte Treffer gibt es u. a. in  [sessions/usercmds.lua](C:/Users/bartl/AppData/Local/nvim/lua/sessions/usercmds.lua:61). Verbesserung: produktive Module migrieren; Debug-/Testmodule dürfen ggf. separat markiert bleiben.
-
-## **Buffer/Window-Handles in Deferred/Scheduled-Code härten**
-Einige Callbacks arbeiten später mit implizit aktuellem Window/Buffer, z. B. [pathprobe/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/custom/pathprobe/init.lua:306), [neotree/commands/clipboard/init.lua](C:/Users/bartl/AppData/Local/nvim/lua/config/neotree/commands/clipboard/init.lua:286). Verbesserung: beim Scheduling `bufnr/winid` snapshotten und vor Nutzung erneut validieren.
-
-##  **Low-Level-Module ohne UI-Seiteneffekte halten**
-Einige Core-nahe Module melden direkt per Notify, z. B. LSP-Capabilities oder FS-/PDF-Port-Backendbereiche. Verbesserung: Low-Level gibt `{ ok, err }` zurück; UI-Schicht entscheidet über `notify`. Das würde deine Fehlerbehandlung konsistenter machen.
-
----
+**Notes:**
+  - "Betroffene Dateien" sind als Beispiel genannt - darin nichts ändern, sondern im Plugin das bearbeitet wird.
 
 
-- [no name] Buffer - wenn einer neben offenen buffer existiert, dann kann ich mit Tab nicht auf den no name buffer gehen, es springt sofort zurück. Da wir einen schutz eggeb no name buffer implementieret haben, habe ich gleich an diesen gedacht, dass dieser eventuell interferiert. Es passt wzar,m dass wir einnen schutzt gegen no name buffer haben (sfern andere buffer bestehen, die fokusiiert werden können), aber entweder muss ich sie wenn sie neben anderen normallen bufffe r eisiteren anwöhlen und schlißen können oder, das wäre mir lieber, diese no name buffer werden geschlossen sobald ein nirmaler buffer exisitiert.
-
-- [ ] nvim/lua/autocmds analysieren, zb general -> no name guard in filetee.nvim buffer-ctx implementieren
-
-- [ ] Alle persönliches Plugins durchgehen und
-  - [ ] Alle Keymaps als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Keymaps.md` schreiben
-    - [ ] checken, ob es eh keine doppelungen bei den lhs der keymaps gibt
-  - [ ] Alle Usrcmds als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Usermcds.md` schreiben
-  - [ ] Alle Autocomands als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Autocmds.md` schreiben
-  - [ ] Sonstige Events/Actions/Features als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/Misc.md` schreiben
-
-- [ ] Alle persönliches Plugins durchgehen und
-  - [ ] explizit auf sicherheitsrelevantes abklopfen und härten
-  - [ ] macht es Sinn das Plugin oder Teil(e) davon als kompilierte binaries auszugeben ?
+- [ ] C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\BINDINGS\Usercmds\{PLUGIN_NAME}.md  erstelle dort ein vollständiges cheatsheet für das usrcmd/die usrcmds des plugins
+- [ ] C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\BINDINGS\Keymaps\{PLUGIN_NAME}.md  erstelle dort ein vollständiges cheatsheet für die keymaps des plugins
+- [ ] C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\BINDINGS\Autocmds\{PLUGIN_NAME}.md  erstelle dort ein vollständiges cheatsheet für die Autocmds des plugins
 
 
-- alle keymaps / features müssen
-  - auch via usrcmd ausführbnar sein
-  - lib.nvim.selection — a reusable module (lines/reselect_lines/keep_lines for row ranges, chars/reselect_chars/keep_chars for same-line byte-column ranges) that restores a Visual selection after a mapping mutates the buffer, since gv doesn't work for this (its marks are only set once Visual mode actually ends). Full README,  --> zuerst nochmal checken, ob es am richtigen ort in der lib ist, verbessert weren muss usw... dann every visual-mode keymap that previously dropped the selection dieses Modul anwenden sofern es auch sinn macht
-
-
-
-## `lib.nvim`
-
-- [ ] Aus `lib.nvim` implementieren:
-  - [ ] Aus `lib.nvim.window` bzw `lib.nvim.ui.kit` zb.: `nice_quit` usw.. für alle aufrufe von windows checken und die lib nvim ui kit variante iomplemeniteren
-
-## General
-
-- [ ] Schlachtplan erstellen für jeden dieser Punkte:
-  - [ ] Checklisten einzeln, nacheinander anwenden; Gehe dafür jede List einzeln durch und erstelle für jede eine `/docs/ROADMAP/**.md` wobei `**` also der Dateiname jeweils der List-Name ist:
-      - [Architekur&Coding-Regeln](E:/repos/Notes/MyNotes/Checklists/Lua/Arch&Coding-Regeln.md) -> (`/docs/ROADMAP/Arch&Coding.md`)
-      - [Zentrale Prinzipien](E:/repos/Notes/MyNotes/Checklists/Lua/Zentrale-Prinzipien.md) -> (`/docs/ROADMAP/Zentral-Prinzipien.md`)
-      - [Checklist.md](E:/repos/Notes/MyNotes/Checklists/Lua/Checklist.md) -> (`/docs/ROADMAP/Checklist.md`)
-  - [ ] `/docs/ROADMAP.md` durchgehen und Plan zur Implementierung erstellen
-  - [ ] `/NEOTREE_FEATURES` durchgehen und bewerten, was damit gemacht wird
-- [ ] `:Recommender` durch alle Module laufen lassen
-- [ ] `vimdoc`-Datei `doc/{NAME}.txt` + Funktnion die auto `tags`-Datei generiert für user (`doc/tags` in `.gitignore`)? Bzw. gibt es ein Autocmd, damit die Tgas bei jeden User der das Repo ladet automatisch erstellt werden?
-- [ ] Alle Plugins auf `.nvim`-Namensendung umstellen (wenn möglich)
-- [ ] `Github Actions` einrichten (`luacheck` usw.)
-- [ ] `ProjectInsight stats lib` über alle Repos ausführen und gesammelte Übersicht erstellen
-- [ ] Wenn sinnvoll: `TESTS/**` Testdateien für die Features schreiben und_
-  - [ ] `docs/TESTS/**` verschiedben nach `TESTS/**`, sodass es im root des plugins st , nicht mehrr in `docs`
-- [ ] Alle features/bugfixes committen und pushen (wenn nicht möglich: commit message ausgeben)
+## Allgemeines & Medien
 
 
 ---
+
+## Code-Architektur & API-Zentralisierung
+
+### Autocmds zentralisieren
+
+* [ ] **Problem:** Viele Module nutzen direkt `vim.api.nvim_create_autocmd`, obwohl `lib.autocmd` existiert.
+  * *Betroffene Dateien:* `options.lua:79`, `hl_config/init.lua:212`, `astro/autocmds.lua:12`
+  * *Verbesserung:* Nach und nach auf `lib.autocmd` bzw. den vorhandenen FileType-Dispatcher migrieren (für einheitliche Fehlerbehandlung, Gruppen und zuverlässiges Reload-Verhalten).
+
+### Wrapper-Funktionen erzwingen
+
+* [ ] **Problem:** Direkte Aufrufe von `vim.notify`, `print` und `vim.keymap.set` reduzieren. Die Checklisten verlangen die Nutzung von `lib.notify`, `lib.map` und `lib.usercmd`.
+  * *Betroffene Dateien:* Direkte Treffer u. a. in `sessions/usercmds.lua:61`.
+  * *Verbesserung:* Produktive Module migrieren; Debug- und Testmodule dürfen ggf. separat markiert bleiben.
+
+### Robustheit (Buffer/Window-Handles)
+
+* [ ] **Problem:** Einige Callbacks arbeiten verzögert (Deferred/Scheduled-Code) mit einem implizit aktuellen Window oder Buffer.
+  * *Betroffene Dateien:* `pathprobe/init.lua:306`, `neotree/commands/clipboard/init.lua:286`
+  * *Verbesserung:* Beim Scheduling `bufnr/winid` via Snapshot sichern und vor der tatsächlichen Nutzung erneut validieren.
+
+### UI-Entkopplung
+
+* [ ] **Problem:** Einige Core-nahe Module (Low-Level-Module) melden Fehler oder Status direkt per UI-Notify (z. B. LSP-Capabilities oder FS-/PDF-Port-Backendbereiche).
+  * *Verbesserung:* Low-Level-Module geben stattdessen strukturiert `{ ok, err }` zurück. Die UI-Schicht entscheidet eigenständig über das `notify`. Das macht die Fehlerbehandlung konsistent.
+
+### `lib.nvim` & UI-Kit Integration
+
+* [ ] Fednefalls aus `lib.nvim` implementieren:
+  * [ ] Aus `lib.nvim.ui.kit` z. B. `nice_quit` für alle Aufrufe von Windows prüfen und die entsprechende Variante aus dem UI-Kit implementieren.
+  * [ ] Source code check, ob noch mehr von `lib.nvim` verwendet werden kann. Wenn ja, dann gleich implementieren
+
+---
+
+## Dokumentation, Cheatsheets & Benchmarks
+
+### Plugin-Analyse & Cheatsheet-Generierung
+
+* [ ] Plugin komplett durchgehen und folgende Dokumente befüllen:
+  * [ ] **Keymaps:** Alle Keymaps als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Keymaps.md` schreiben.
+    * [ ] Prüfen, dass es absolut keine Dopplungen bei den `lhs` der Keymaps mit anderen meiner personal Plugins gibt.
+* [ ] **User Commands:** Alle Usrcmds als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Usermcds.md` schreiben.
+* [ ] **Autocommands:** Alle Autocomands als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Autocmds.md` schreiben.
+* [ ] **Sonstiges:** Sonstige Events, Actions und Features als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/Misc.md` schreiben.
+
+
+
+### Hilfesystem & Tools
+
+* [ ] `:Recommender` durch alle Module laufen lassen.
+* [ ] `vimdoc`-Datei `doc/{NAME}.txt` erstellen + Funktion schreiben, die automatisch die `tags`-Datei für User generiert (`doc/tags` in `.gitignore` aufnehmen).
+* [ ] Prüfen: Gibt es ein Autocmd, damit die Tags bei jedem User, der das Repo lädt, automatisch erstellt werden?
+
+
+* [ ] `ProjectInsight stats lib` über alle Repositories ausführen und eine gesammelte Übersicht erstellen.
+
+---
+
+## Features, Keymaps & Selektions-Handling
+
+### Anforderungen an Keymaps & Features
+
+* [ ] Alle Keymaps und Features müssen zwingend auch via **User Command (usrcmd)** ausführbar sein.
+* [ ] Verwendung von `lib.nvim.selection` durchsetzen:
+* Ein wiederverwendbares Modul (`lines/reselect_lines/keep_lines` für Zeilenbereiche, `chars/reselect_chars/keep_chars` für Byte-Spaltenbereiche in derselben Zeile), das eine visuelle Auswahl wiederherstellt, nachdem ein Mapping den Buffer verändert hat (da `gv` hier nicht funktioniert, weil dessen Marks erst gesetzt werden, wenn der Visual-Mode tatsächlich endet). Inklusive vollständiger README.
+* **Vorgehen:**
+1. Zuerst noch einmal prüfen, ob das Modul am richtigen Ort in der `lib` liegt, verbessert werden muss usw.
+2. Anschließend bei **jeder** Visual-Mode-Keymap, die zuvor die Selektion verloren hat, dieses Modul anwenden (sofern es sinnvoll ist).
+
+
+
+
+
+---
+
+## Sicherheit, Tests & CI/CD
+
+### Code-Härtung
+
+* [ ] Das Plugin explizit auf sicherheitsrelevante Aspekte abklopfen und härten.
+* [ ] Evaluieren: Macht es Sinn, das Plugin oder bestimmte Teile davon als kompilierte Binaries auszugeben?
+
+### Testing
+
+* [ ] Wenn sinnvoll: Testdateien für die Features unter `TESTS/**` schreiben.
+* [ ] Struktur anpassen: `docs/TESTS/**` verschieben nach `TESTS/**`, sodass sich die Tests im Root des Plugins befinden (nicht mehr im Ordner `docs`).
+
+### DevOps & Repository-Struktur
+
+* [ ] Alle Plugins auf die `.nvim`-Namensendung umstellen (sofern möglich).
+* [ ] `Github Actions` einrichten (z. B. für `luacheck` etc.).
+* [ ] Alle neuen Features und Bugfixes committen und pushen (falls nicht möglich: Commit-Message in der Konsole ausgeben).
+
+---
+
+## Strategie & Schlachtplan-Erstellung
+
+* [ ] Einen dedizierten Schlachtplan für jeden dieser Punkte erstellen:
+* [ ] **Checklisten einzeln und nacheinander anwenden:** Gehe dafür jede Liste separat durch und erstelle für jede eine `/docs/ROADMAP/**.md` Datei (wobei `**` dem jeweiligen Namen der Liste entspricht):
+* [Architekur&Coding-Regeln](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Arch%26Coding-Regeln.md) `/docs/ROADMAP/Arch&Coding.md`
+* [Zentrale Prinzipien](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Zentrale-Prinzipien.md) `/docs/ROADMAP/Zentral-Prinzipien.md`
+* [Checklist.md](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Checklist.md) `/docs/ROADMAP/Checklist.md`
+
+
+* [ ] Die vorhandene `/docs/ROADMAP.md` komplett durchgehen und einen konkreten Plan zur Implementierung ausarbeiten.
+* [ ] Den Ordner `/NEOTREE_FEATURES` durchgehen und strukturiert bewerten, was mit den darin enthaltenen Elementen gemacht wird.
