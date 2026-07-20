@@ -116,24 +116,9 @@ updated "Needs Phase 6" and "Needs a real design decision" sections.
 | `pdfport.nvim`          | ✅ |
 | `pickers.nvim`          | ✅ |
 | `project-insight.nvim`      | ✅ |
-| `recommender.nvim`        |  |
+| `recommender.nvim`        | ✅ |
 | `replacer.nvim`         | ✅ |
 | `reposcope.nvim`         | ✅ |
 | `sessions.nvim`          | ✅ |
 
-25 of 26 done.
-
-## Remaining plugins — what's known so far
-
-Grouped by shape, not priority order — pick whichever fits the next session.
-
-### Flat anti-pattern (clear win — command count drops, completion is new)
-
-
-### Single command / low priority (little to no win)
-
-- **`recommender.nvim`** — one command, flag+positional mixed parsing
-  (`-r`/`--replace`, single-dash short flag). **Unblocked**: `FlagSpec.short
-  = "r"` (Phase 7) matches `-r` alongside `--replace` directly — still
-  low-value (single command, no subtree), but no longer blocked if worth
-  doing for consistency.
+26 of 26 done. Rollout complete.

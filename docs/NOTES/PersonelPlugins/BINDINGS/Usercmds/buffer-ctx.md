@@ -1,6 +1,9 @@
 # buffer-ctx.nvim — User Commands Cheatsheet
 
-Four command trees, `<Tab>`-completable throughout.
+Four command trees, built via `lib.nvim.usercmd.composer` (migrated
+2026-07-19). `lib.nvim` is now a **required** dependency (was previously
+optional, only for `notify`/`map` cosmetics) — the whole command layer
+`require`s `lib.nvim.usercmd.composer` unconditionally at module load.
 
 Source: `lua/buffer_ctx/commands.lua` (`:Insert`/`:Copy`), `lua/buffer_ctx/format/init.lua` (`:Format`), `lua/buffer_ctx/mark/init.lua` (`:Mark`)
 Docs: `docs/BINDINGS.md`, `docs/commands.md`, `doc/buffer-ctx.txt`
@@ -66,6 +69,31 @@ Args not given on the command line are prompted via `vim.fn.input`.
 
 ## Notes
 
+- **Composer migration design**: all three registration sites
+  (`commands.lua`, `format/init.lua`, `mark/init.lua`) kept their existing
+  dispatch tables (`DISPATCH`, `subcommands`/`register_subcommand`) and
+  per-subcommand handler functions completely unchanged — only the final
+  `nvim_create_user_command` + hand-rolled `complete()` pair was replaced
+  with a `composer.verb(...)` call. Each route declares a single optional
+  first-arg, then forwards `{a1, ...ctx.rest}` into the original, unmodified
+  handler — zero behavior change to dispatch/validation/error messages.
+- **Completion regression, accepted tradeoff**: `:Format` previously
+  completed at *every* token position (each subcommand's `complete(arg_lead)`
+  is position-agnostic, ignoring how many tokens already precede it) — the
+  single-first-arg composer route model only completes the first token per
+  subcommand now (e.g. `:Format sort -r <Tab>` no longer re-offers `-i`/`-n`).
+  `:Insert`/`:Copy` already had this exact limitation pre-migration (their
+  old completer explicitly checked `arg_idx == 1`), so no change there.
+  Recovering full multi-position completion would require re-modeling each
+  subcommand's ad hoc flag/kv-ish grammar onto composer's `flags`/`kv`
+  schemas individually — not done, low value for a personal plugin.
+- **CI gap found and fixed**: `.github/workflows/ci.yml`'s `test`/`health`
+  jobs ran deliberately *without* lib.nvim ("soft dependency" comment) to
+  exercise the standalone fallback path. That's no longer valid — the
+  default `setup()` path now hard-requires `lib.nvim.usercmd.composer` (no
+  pcall, matching every other migrated repo). Fixed by checking out
+  `StefanBartl/lib.nvim` as a sibling in both jobs, matching cascade.nvim's
+  precedent. `docs/TESTS/run.lua` already auto-detects a sibling checkout.
 - **`squeeze` range plumbing**: `format_handler` threads the command's
   `line1`/`line2` through to subcommand handlers as an optional `ctx` second
   argument (`nil` when no range was given) — added 2026-07-18 alongside
