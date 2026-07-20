@@ -1,4 +1,4 @@
-# open.nvim — `:Open [target] [scope]` / `:UrlView` Cheatsheet
+# open.nvim — `:Open [target] [scope]` / `:Open viewer` Cheatsheet
 
 One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion via two
 custom types — `OPEN_TARGET` for the live handler-registry keys, `OPEN_SCOPE`
@@ -15,8 +15,9 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `CHEATSHEET.md`, `README.md`, `doc
 | `:Open` | Context-aware default (tree → filemanager, URL → browser) |
 | `:Open [target]` | Explicit handler key (see `:Open <Tab>` for all registered keys) |
 | `:Open [target] [scope]` | Explicit handler + explicit scope (`%`, `cfile`, `path=<path>`, named keyword, or verbatim text) |
-| `:Open urlview [scope] [opts]` | List every link in a scope, then open / export |
-| `:UrlView [scope] [opts]` | Shallow wrapper over `:Open urlview` (name from `urlview.command`, `false` disables) |
+| `:Open viewer [kind] [scope] [opts]` | List links in a scope, then open / export |
+| `:UrlView [scope] [opts]` | Wrapper pinning `kind=urls` (name from `viewer.commands.urls`) |
+| `:MDLinksView [scope] [opts]` | Wrapper pinning `kind=mdlinks` (name from `viewer.commands.mdlinks`) |
 
 ## Notes
 
@@ -65,7 +66,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `CHEATSHEET.md`, `README.md`, `doc
   handling (no crash), and `:checkhealth open_nvim` reporting the new
   `lib.nvim.usercmd.composer` line — all pass.
 
-## `:Open urlview` / `:UrlView` (added later)
+## `:Open viewer` / `:UrlView` / `:MDLinksView` (added later)
 
 Replaces the `axieax/urlview.nvim` dependency, which is now removed from
 `lua/plugins/misc.lua`. Collects links from a scope and either opens a pick
@@ -74,48 +75,67 @@ or exports the list.
 | Part | Where |
 | --- | --- |
 | Scope → lines with provenance | `lib.nvim.harvest.scope` (new lib.nvim module) |
-| Lines → links | `lua/open_nvim/urlview/scan.lua` |
+| Lines → links | `lua/open_nvim/viewer/scan.lua` |
+| Filter / sort / format / open | `lua/open_nvim/viewer/init.lua` |
 | Rows → GFM table / CSV | `lib.nvim.harvest.render` |
 | Text → clipboard/file/scratch/picker | `lib.nvim.harvest.sink` |
+| The results list itself | `lib.nvim.ui.kit.chooser` (already existed) |
 
 ```
-:UrlView                                 current buffer → picker
-:UrlView cwd sort=file out=table         project-wide table
-:UrlView cwd match=%.md$ out=mdlinks     docs links as markdown → clipboard
+:UrlView                                 URLs in this buffer → picker
+:MDLinksView cwd                         every markdown link in the project
+:Open viewer cwd sort=file out=table     everything, as a table
 :'<,'>UrlView                            just the selection
 ```
 
+Kinds: `all` (default), `urls`, `mdlinks`, `files`, `paths`.
 Scopes: *(omitted)*/`%`, `cwd`, `buffers`, `<path>`, or a range.
-Options: `sort=none|file|kind|alpha`, `out=picker|table|clipboard|mdlinks|csv|echo|file:<path>`,
-`match=<lua pattern>`, `--paths`, `--all`, `--flat`.
+Options: `sort=`, `out=`, `match=`, `--paths`, `--anchors`, `--dupes`, `--flat`.
 
 ### Notes
 
-- **Literal route + root route coexist**: `:Open urlview` works *because*
-  composer's `tree.walk` consumes literal children greedily — the token
-  matches the literal child node and never reaches the root route's
-  `OPEN_TARGET` positional. The corollary is that **`urlview` is now a
-  reserved handler key**: a handler registered under that name would be
-  unreachable via `:Open urlview`. There's a test asserting no handler
-  claims it.
-- **`:UrlView` is a second `composer.verb` over the same route body**, not a
-  `vim.cmd` alias — same precedent as replacer.nvim's `:Replace`/`:Replacer`
-  (`command.lua:405-406`). It keeps its own completion and usage listing.
-- **Command-name conflict with urlview.nvim**: both want `:UrlView`, and
-  whichever registers last wins. Since urlview.nvim is now removed from the
-  config this is moot, but `urlview.command = false` is the escape hatch.
-- **Range only counts when actually typed**: nvim reports `line1`/`line2` as
-  the cursor line even with no range, so the handler gates on
-  `ctx.range.range > 0`. Without that gate a plain `:UrlView` would silently
-  scan one line instead of the buffer.
-- **Why lib.nvim got `harvest` and not a "flow framework"**: the picker step
-  already existed (`lib.nvim.ui.kit.select`), and the collect/action steps are
-  domain logic. Only the *scope resolution* and *render/sink* halves were
-  genuinely duplicated (markdown.nvim carried two copies of scope collection),
-  so only those moved into lib.nvim, as three independently-usable modules.
-- Verified end-to-end headlessly, not just unit-tested: all four sinks
-  (`table`/`csv`/`mdlinks`/`file:`), fenced-code exclusion, and the bad-scope
-  error path were driven through a real `:UrlView` invocation.
+- **lib.nvim needed no new UI module.** The requested list behavior — whole
+  current line highlighted, cursor locked to up/down, `<CR>` acts on the row —
+  was already implemented in `lib.nvim.ui.kit.chooser`: it sets
+  `cursorline` + `winhighlight=CursorLine:KitSelection` and maps
+  `h l 0 ^ $ w e b W E B <Left> <Right>` to `<Nop>`. `harvest.sink.select`
+  routes through `kit.select` → `chooser`, so the viewer got that for free.
+  Verified headlessly (500-item list: window height clamps to 20, buffer keeps
+  all 500 rows, cursorline on, horizontal keys blocked).
+- **`urls` vs `mdlinks` filter on different axes on purpose**: `urls` selects
+  on the *target* (a `[docs](https://x)` counts), `mdlinks` on the *syntax*
+  (a `[doc](./a.md)` counts). They overlap. This is what makes `:UrlView`
+  mean "things a browser can open" rather than "things without brackets" —
+  the original complaint was that `:UrlView` was flooded with local
+  document links.
+- **The kind argument is disambiguated in the handler, not by an `enum`.**
+  Declaring `enum` on the positional would make `:Open viewer cwd` a hard
+  error instead of reading it as "all kinds, cwd scope". `run_viewer` checks
+  the first positional against `viewer.kinds()` and shifts it into the scope
+  slot when it does not name one.
+- **Relative markdown targets are resolved against the source file's
+  directory**, not the cwd. Without this, `[x](../../lua/init.lua)` found in
+  a nested doc was reported verbatim and could not be opened at all.
+- **Bare in-document anchors (`[Kontext](#kontext)`) are dropped by default**
+  (`--anchors` re-includes them). A repo-wide scan of the config turned up
+  dozens of TOC entries, none of them openable.
+- **`<CR>` on a local file opens a Neovim split, not the file manager**
+  (`viewer.open_file`, default `"split"`). A `file.md#heading` target has its
+  fragment stripped before dispatch and jumps to the heading afterwards.
+- **Column alignment must pad by display width, not bytes.** Lua's
+  `("%-24s"):format(s)` counts bytes, and a shortened cell contains a `…`
+  that is 3 bytes but 1 cell — byte-padding stopped short and the target
+  column started two cells left on every elided row. Caught by a test that
+  compares `strdisplaywidth` of the prefix, not `find()` byte offsets.
+- **Literal route + root route still coexist**: `:Open viewer` works because
+  composer's `tree.walk` consumes literal children greedily. `viewer` is
+  therefore a reserved handler key; a test asserts no handler claims it.
+- **Range only counts when actually typed** (`ctx.range.range > 0`), else
+  nvim reports line1/line2 as the cursor line and a plain `:UrlView` would
+  scan one line.
+- Renamed from the initial `:Open urlview` / `open_nvim.urlview` to
+  `viewer` so the module name matches the command. Config moved from
+  `urlview = { command = … }` to `viewer = { commands = { urls, mdlinks, all } }`.
 
 ## Pre-existing bug (since fixed)
 
