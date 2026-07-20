@@ -595,7 +595,10 @@ return apply_source({
         -- WHEN ordered lists are auto-renumbered:
         renumber = {
           enable = true,
-          on = { "edit" }, -- "edit" = sofort beim Indent/Move/…, "save" = bei :w
+          -- "edit" = sofort bei Indent/Move/Continue, "save" = bei :w als
+          -- Sicherheitsnetz fuer von Hand getippte/eingefuegte Listen (z.B.
+          -- "1./1./1."), die nie ein Edit-Event ausloesen.
+          on = { "edit", "save" },
         },
       },
 
