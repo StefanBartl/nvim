@@ -142,18 +142,48 @@ genauso ein Pfad-String vom User sind (in der jeweiligen `setup({...})`-Config):
 - [x] `gopath.nvim`: Composer-Route `:Gopath cache add-root <dir>` verifiziert;
       Handler + Legacy-Alias `:GopathCacheAddRoot` von `vim.fn.expand` auf
       `expand_path` gehoben. — [2cca22d](https://github.com/StefanBartl/gopath.nvim/commit/2cca22d)
-- [ ] **Einzel-Fixes** (kein gemeinsamer Hook, da individuelle Config-Reads):
-  - [ ] `pickers.nvim`: `repos_dir`, Collection-`dir` in `config/init.lua` expandieren
-  - [ ] `project-insight.nvim`: `symbols.cache.dir`, `metrics.output_file`,
-        `tree.outdir`, `imports.output_file`, `--file=`-Flag expandieren
-  - [ ] `sessions.nvim`: `root`-Config expandieren
-  - [ ] `nvim-cmdlog`: `notes.dir` an `expand_path`-Pattern von `shell.lua` angleichen
-  - [ ] `filetree.nvim`: `util/path.lua:to_absolute()` + `safety.backup_dir` expandieren
-  - [ ] `mdview.nvim`: `helper/normalize.lua:path()` + `browser_cmd`/`server_cwd` expandieren
-  - [ ] `open.nvim` / `lib.nvim.cross.open_default`: nativer-Windows-Zweig ohne
-        Expansion fixen; Keyword-Pfade auf `expand_path` heben
-  - [ ] `replacer.nvim`: `resolve_scope()` bekommt `expand_path` vor `fnamemodify`
-- [ ] `dap.nvim`s totes `utils/paths.lua` an die 4 Executable-Prompts anschließen.
+- [x] **Einzel-Fixes** (kein gemeinsamer Hook, da individuelle Config-Reads):
+  - [x] `pickers.nvim`: `repos_dir`, Collection-`dir` (und `history.dir`) in
+        `config/init.lua` expandiert — bereits vorher erledigt, verifiziert.
+        — [26b7e67](https://github.com/StefanBartl/pickers.nvim/commit/26b7e67)
+  - [x] `project-insight.nvim`: `symbols.cache.dir`, `metrics.output_file`,
+        `tree.outdir`, `compress.outdir`, `imports.output_file` und das
+        `--file=`-Flag expandiert (`config/init.lua`, `bindings/usrcmds.lua`).
+        — [4bb3720](https://github.com/StefanBartl/project-insight.nvim/commit/4bb3720)
+  - [x] `sessions.nvim`: `root`-Config expandiert.
+        — [e06d86a](https://github.com/StefanBartl/sessions.nvim/commit/e06d86a)
+  - [x] `nvim-cmdlog`: `notes.dir` an `expand_path`-Pattern von `shell.lua` angeglichen.
+        — [bdc290a](https://github.com/StefanBartl/nvim-cmdlog/commit/bdc290a)
+  - [x] `filetree.nvim`: `util/path.lua:to_absolute()` (soft-dependency-Pattern,
+        analog zu `unify_slashes`/`relpath`) + `safety.backup_dir` expandiert.
+        — [d9aadcf](https://github.com/StefanBartl/filetree.nvim/commit/d9aadcf)
+  - [x] `mdview.nvim`: nicht über `helper/normalize.lua:path()` (zu riskant —
+        wird auch auf bereits aufgelöste Buffer-Namen angewendet, ein Dollar
+        im Dateinamen könnte fehlinterpretiert werden), sondern gezielt an
+        den tatsächlichen Eintrittspunkten: `adapter/runner.lua:resolve_spawn_cwd()`
+        (deckt `cwd=`-Arg *und* `server_cwd`-Config in einem Rutsch ab) und
+        `config/browser.lua:resolve_and_validate()` (`browser_cmd` — dort lag
+        sogar ein zweiter Bug: `resolved_browser_cmd` speicherte den
+        unexpandierten String, obwohl die Executable-Prüfung selbst schon
+        expandierte). 24/24 Tests grün.
+        — [32754c7](https://github.com/StefanBartl/mdview.nvim/commit/32754c7)
+  - [x] `open.nvim` / `lib.nvim.cross.open_default`: nativer-Windows-Zweig
+        expandiert jetzt (vorher gar keine Expansion); WSL/macOS/Linux von
+        `vim.fn.expand` auf `expand_path` gehoben (`%VAR%`-Support).
+        — [94d1180](https://github.com/StefanBartl/lib.nvim/commit/94d1180)
+        `open.nvim`: `path=`-Arg und String-Keyword-Overrides in
+        `context.lua:M.resolve()` sowie die eingebauten Keyword-Pfade in
+        `keywords.lua` auf `expand_path` gehoben.
+        — [9a86b3c](https://github.com/StefanBartl/open.nvim/commit/9a86b3c)
+  - [x] `replacer.nvim`: `resolve_scope()` bekommt `expand_path` vor
+        `fnamemodify` (auch vor dem "%"-Autodetect-Vergleich, unschädlich für
+        die Keyword-Token `%`/`buf`/`cwd`/`.`).
+        — [455d184](https://github.com/StefanBartl/replacer.nvim/commit/455d184)
+- [x] `dap.nvim`s totes `utils/paths.lua` an die 4 Executable-Prompts
+      (assembly/c/rust/zig) angeschlossen — delegiert an
+      `lib.nvim.normalize`, das seit dem Konsolidierungs-Commit oben selbst
+      an `expand_path` delegiert.
+      — [4b3e022](https://github.com/StefanBartl/dap.nvim/commit/4b3e022)
 - Referenzimplementierungen als Vorlage: `pickers.nvim/actions/dir.lua`
   (`expand_vars`) und `nvim-cmdlog/core/shell.lua` (`expand_path_template`)
   zeigten bereits vor diesem Umbau den korrekten Umgang mit `expand_path`.
