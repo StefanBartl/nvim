@@ -1,5 +1,4 @@
 
-1. Usrcmds, mit dem man alles links aus einen pfad in einer tabelle auflisten kann, eventuelle sortiert nach files (als options) usw.. dann zeigen wirt m:markdown table view oder ausgeeb als sdatei oder in zwischenablage, umwadnlung in markdown links, weitere solcher features...
 
 1. lib.nvim composer fertig stellen
 2. Alle plugins umstellen auf das modul
