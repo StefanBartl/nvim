@@ -1,16 +1,3 @@
-
-
-1. lib.nvim composer fertig stellen
-2. Alle plugins umstellen auf das modul
-3. All bindings der plugins hier eintragen:
-
-  docs/NOTES/PersonelPlugins/BINDINGS
-  docs/NOTES/PersonelPlugins/BINDINGS/Autocmds
-  docs/NOTES/PersonelPlugins/BINDINGS/Keymaps
-  docs/NOTES/PersonelPlugins/BINDINGS/Usercmds
-
-  jedes plugin eine eigene file, zum schluss eine Übersihtsfile mit markdown links zu jeder einzelnen plugin bindings file, also docs/NOTES/PersonelPlugins/BINDINGS/All.md, docs/NOTES/PersonelPlugins/BINDINGS/Autocmds/ALL.md, usw..
-
 1. Du findes unter C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/MATERIALS/CHECKLIST.md eine Checklist zum abarbeiten
 2. Finish_Me:
 

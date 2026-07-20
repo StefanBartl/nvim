@@ -13,3 +13,15 @@ Custom PLugins sollen lib.nvim als hard dep nutzen, fallback code (pcall lib.nvi
 
 ---
 
+1. lib.nvim composer fertig stellen
+  1. Alle plugins umstellen auf das modul
+
+## docmodule
+
+1. Ausbauen, so das es hirachie usw.. wie in doxygen darstellen kann
+2. Komponenten wie tables, funktionen usw.. bereitstellen, die man in den SOurce code miteinbauen kann/soll und mehr infos/context bieten; das kann eben source code sein, wie tables usw.. aber auch annotationen usw..,
+  1. von mir aus auch eigene zusätzliche zu emmylua keywords..
+  2. emmylua/luals keywords verwenden, die bisher kaum genutzt sind, aber im zusammenhang mit docmodule echten mehrwert bringen können: Analyse und Tasksheet erstellen, welche dies sein können / was ich im source code zusätzich noch einfügen soll
+
+---
+
