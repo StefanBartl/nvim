@@ -15,6 +15,8 @@
 
 ## Bugs
 
+1. Windows File-Lock nach move/rename/delete (sporadisch) — Root Cause gefunden (neo-tree `fs_watch` Handle-Leak), Fix in Arbeit. Details, Stand & offene Schritte: [handle_guard.md](handle_guard.md).
+
 ---
 
 ## General
