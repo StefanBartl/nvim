@@ -241,7 +241,10 @@ return apply_source({
 
   {
     "StefanBartl/open.nvim",
-    cmd = "Open",
+    -- Both names are needed: :UrlView is registered by open.nvim's setup(), so
+    -- lazy-loading on "Open" alone would leave :UrlView undefined until
+    -- something else pulled the plugin in.
+    cmd = { "Open", "UrlView" },
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {},
     config = function(_, opts)

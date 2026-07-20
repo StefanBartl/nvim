@@ -65,7 +65,8 @@ match at the shorter prefix — found three such cases, all minor (below).
 | `:MDView` | mdview.nvim | Preview relay start/stop/toggle/theme/log/diagnose |
 | `:MigrateNotify` | migrate.nvim | Migrate `notify()`-style calls |
 | `:MigrateOpt` | migrate.nvim | Migrate `vim.opt`-style calls |
-| `:Open` | open.nvim | Open target with a handler (default/browser/filemanager/…) |
+| `:Open` | open.nvim | Open target with a handler (default/browser/filemanager/…); `:Open urlview` lists links in a scope |
+| `:UrlView` | open.nvim | Wrapper for `:Open urlview` — list/open/export links. **Formerly owned by axieax/urlview.nvim** (now removed from the config); name is configurable via `urlview.command` |
 | `:PdfPort` | pdfport.nvim | Open/extract/render a PDF |
 | `:Pickers` | pickers.nvim | Scope+action fuzzy pickers |
 | `:DirPicker` + 10 more | pickers.nvim | Compat aliases (unchanged) — see that repo's `docs/COMMANDS.md` |

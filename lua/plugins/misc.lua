@@ -31,15 +31,10 @@ return {
     end,
   },
 
-  {
-    "axieax/urlview.nvim",
-    lazy = true,
-    cmd = { "UrlView" },
-    dependencies = { "StefanBartl/open.nvim" },
-    config = function()
-      require("open_nvim.integrations.urlview").setup()
-    end,
-  },
+  -- urlview.nvim removed: open.nvim provides `:UrlView` natively as a wrapper
+  -- over `:Open urlview`. Same command name, more scopes (files, directories,
+  -- all buffers, a visual range), plus table/markdown/clipboard/file export.
+  -- See open.nvim's docs/integrations.md.
 
   {
     "jghauser/mkdir.nvim",
