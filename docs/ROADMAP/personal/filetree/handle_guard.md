@@ -38,7 +38,7 @@ Der eigentliche Bug (`handle:close()` fehlt) ist ein **neo-tree-Upstream-Bug**, 
 
 Ursprünglich als reines filetree.nvim-Feature geplant. Nach Durchsicht von `c:\repos` (alle 26 Plugins nach `fs_rename|fs_unlink|fs_rmdir|new_fs_event` durchsucht) auf zwei Schichten aufgeteilt:
 
-- **Treffer nur in:** `lib.nvim`, `filetree.nvim`, indirekt `fileops.nvim`. Alle anderen (sessions, reposcope, pdfport, github_stats, color_my_ascii, project-insight, …) haben keine FS-Mutation/Watcher-Berührung — kein Nutzen von einer Abstraktion dort.
+- **Treffer nur in:** `lib.nvim`, `filetree.nvim`, indirekt `fileops.nvim`. Alle anderen (sessions, reposcope, pdfport, github_stats, color_my_ascii, insights, …) haben keine FS-Mutation/Watcher-Berührung — kein Nutzen von einer Abstraktion dort.
 - **`lib.nvim.cross.fs.mutate` existierte bereits** als zentraler Mutations-Chokepoint, genutzt von `fileops.nvim` (`ops/file.lua:7`). War der naheliegende Ort für einen generischen Retry-Layer — profitiert automatisch, ohne Codeänderung dort.
 - Die Watcher-Registry dagegen ist **kein generisches FS-Problem**, sondern neo-tree-Domänenwissen (patcht `neo-tree.sources.filesystem.lib.fs_watch`). Zielort: `lib.nvim/lua/lib/nvim/neotree/` (existiert bereits, aktuell nur `node`) — konsistente Adresse für neo-tree-Wissen, nicht weil andere Plugins es bräuchten.
 - filetree.nvim selbst bleibt am Ende nur noch **dünne Verdrahtung**.
@@ -103,7 +103,7 @@ Noch nicht begonnen. Geplanter Umfang:
 ## Nebenfunde / Notizen
 
 - **Upstream-Bug-Kandidat:** fehlendes `handle:close()` in neo-trees `fs_watch.lua` ist unabhängig von diesem Workaround meldenswert (`stop_watching()` wirft die Handle-Tabelle weg ohne zu schließen). Noch nicht als Issue eingereicht.
-- **Plugin-Liste durchsucht, keine weiteren Kandidaten:** `buffer-ctx`, `cascade`, `color_my_ascii`, `debugging`, `dap`, `diff`, `emojis`, `github_stats`, `gopath`, `language`, `markdown`, `mdview`, `migrate`, `nvim-cmdlog`, `nvim-containers`, `open`, `pdfport`, `pickers`, `project-insight`, `recommender`, `replacer`, `reposcope`, `sessions` — keine Treffer auf FS-Mutation/Watcher-Pattern. `cross.fs.mutate` bleibt trotzdem sinnvoll generisch (z. B. `fs/json`s atomarer tmp+rename-Write, `fs/trash`, die beide dasselbe Windows-`fs_rename`-Verhalten dokumentiert hatten, siehe `lib.nvim/lua/lib/nvim/fs/json/README.md:31`).
+- **Plugin-Liste durchsucht, keine weiteren Kandidaten:** `buffer-ctx`, `cascade`, `color_my_ascii`, `debugging`, `dap`, `diff`, `emojis`, `github_stats`, `gopath`, `language`, `markdown`, `mdview`, `migrate`, `nvim-cmdlog`, `nvim-containers`, `open`, `pdfport`, `pickers`, `insights`, `recommender`, `replacer`, `reposcope`, `sessions` — keine Treffer auf FS-Mutation/Watcher-Pattern. `cross.fs.mutate` bleibt trotzdem sinnvoll generisch (z. B. `fs/json`s atomarer tmp+rename-Write, `fs/trash`, die beide dasselbe Windows-`fs_rename`-Verhalten dokumentiert hatten, siehe `lib.nvim/lua/lib/nvim/fs/json/README.md:31`).
 - **`fs/json` und `fs/trash` profitieren indirekt**, sobald sie (separat, nicht Teil dieses Plans) auf `cross.fs.mutate.rename_file` statt direktem `uv.fs_rename` umgestellt werden — aktuell rufen beide noch roh auf, siehe `lib.nvim/lua/lib/nvim/fs/json/init.lua:68` und `lib.nvim/lua/lib/nvim/fs/trash/init.lua:99,120`. Nicht Teil dieses Plans, aber derselbe Chokepoint-Gedanke.
 
 ---

@@ -23,7 +23,7 @@
 |           `open.nvim`            |
 |          `pdfport.nvim`          |
 |          `pickers.nvim`          |
-|      `project-insight.nvim`      |
+|         `insights.nvim`          |
 |        `recommender.nvim`        |
 |         `replacer.nvim`          |
 |         `reposcope.nvim`         |

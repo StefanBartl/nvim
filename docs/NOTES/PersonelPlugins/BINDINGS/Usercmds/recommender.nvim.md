@@ -28,7 +28,7 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/recommender.nvim.txt`
   `FlagSpec` (`{name="replace", short="r", bool=true}`) covers both forms.
 - **`ctx.flags`/`ctx.pos` fed the original logic directly — no
   reconstruction needed, unlike every prior "flags" migration
-  (project-insight.nvim's `metrics`, emojis.nvim)**: composer's flag/
+  (insights.nvim's `metrics`, emojis.nvim)**: composer's flag/
   positional split is *the same algorithm* the original inline loop already
   used (strip `-r`/`--replace` tokens, keep everything else as positional,
   in order) — not just format-compatible, semantically identical. So

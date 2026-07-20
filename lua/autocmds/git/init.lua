@@ -48,8 +48,8 @@ function M.enable(cfg)
   }
 
   -- Delegate to submodules (each may register its own autocmds)
-  -- Unresolved-conflict quickfix population lives in project-insight.nvim now
-  -- (`conflicts` — :ProjectInsight conflicts, VimEnter autocmd).
+  -- Unresolved-conflict quickfix population lives in insights.nvim now
+  -- (`conflicts` — :Insights conflicts, VimEnter autocmd).
   require("autocmds.git.commit_ft").enable(cfg.commit_ft, shared)
   require("autocmds.git.gitsigns_refresh").enable(cfg.gitsigns_refresh, shared)
   require("autocmds.git.blame_on_hold").enable(cfg.blame_on_hold, shared)

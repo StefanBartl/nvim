@@ -57,7 +57,7 @@ presumably the one you want fast).
 
 - `dap.nvim` — `<leader>d` itself is never bound, only `<leader>d`+one letter throughout. No wait.
 - `cascade.nvim` — `<leader>c`+one letter throughout (`cx`, `cX`, `ct`, `cT`, `cr`, `cf`, `cF`, `cs`, `cv`); no bare `<leader>c`. No wait (which-key also intercepts the prefix if installed, changing the UX further in your favor).
-- `project-insight.nvim` — `ps`/`pS` diverge at the very next character (case-sensitive), not a prefix relationship. No wait.
+- `insights.nvim` — `ps`/`pS` diverge at the very next character (case-sensitive), not a prefix relationship. No wait.
 - `gopath.nvim`, `github_stats.nvim`, `sessions.nvim` — single-level suffixes only, nothing nests.
 
 ## 2. Cross-plugin shadowing
@@ -75,9 +75,9 @@ without realizing why. **Fix**: remap one side — buffer-ctx.nvim's
 `mark.keymaps.yank` config key is the easiest lever (it's already
 individually configurable per buffer-ctx's own cheatsheet).
 
-### `<leader>ps` (n) — project-insight.nvim vs. pdfport.nvim, lower severity
+### `<leader>ps` (n) — insights.nvim vs. pdfport.nvim, lower severity
 
-- `project-insight.nvim`: `<leader>ps`, **global**, default on → "symbols (telescope)".
+- `insights.nvim`: `<leader>ps`, **global**, default on → "symbols (telescope)".
 - `pdfport.nvim`: `<leader>ps`, **buffer-local to nvim-tree/oil/netrw filetypes**, only if that integration's `setup()` was explicitly called (not automatic) → "open with system application".
 
 Only overlaps while sitting inside a file-tree buffer with pdfport's
@@ -95,7 +95,7 @@ characters differ), but each is a namespace two plugins are quietly sharing:
 | Prefix | Plugins using it | Their second-level keys |
 | --- | --- | --- |
 | `<leader>c` | buffer-ctx.nvim, cascade.nvim | buffer-ctx: `cn`+letter; cascade: `c`+letter directly (`cx`,`cX`,`ct`,`cT`,`cr`,`cf`,`cF`,`cs`,`cv`) |
-| `<leader>p` | fileops.nvim, gopath.nvim, project-insight.nvim, pdfport.nvim (buffer-local) | fileops: `pf`,`pfn`,`pF`,`PF`; gopath: `pp`; project-insight: `ps`,`pS`; pdfport: `po`,`pt`,`ps`,`pi` |
+| `<leader>p` | fileops.nvim, gopath.nvim, insights.nvim, pdfport.nvim (buffer-local) | fileops: `pf`,`pfn`,`pF`,`PF`; gopath: `pp`; insights: `ps`,`pS`; pdfport: `po`,`pt`,`ps`,`pi` |
 | `<leader>d` | dap.nvim, fileops.nvim | dap: `d`+letter (continue/step/etc.); fileops: `dcf` (delete current file) — no direct clash, but both treat `<leader>d` as "their" prefix |
 
 If you (or a plugin update) ever add a new binding under `<leader>c`/

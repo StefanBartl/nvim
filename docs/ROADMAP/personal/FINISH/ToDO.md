@@ -30,7 +30,7 @@ F: Finish bereits aufgeteilt nach Checklist & FinishMe; Checklisten in FinishMe
 |        `/open.nvim`         |    [1]    |   [1]    |          |
 |       `/pdfport.nvim`       |    [1]    |   [1]    |          |
 |       `/pickers.nvim`       |    [1]    |   [1]    |          |
-|   `/project-insight.nvim`   |    [1]    |   [F]    |          |
+|      `/insights.nvim`       |    [1]    |   [F]    |          |
 |     `/recommender.nvim`     |    [1]    |   [F]    |          |
 |      `/replacer.nvim`       |    [1]    |   [F]    |          |
 |      `/reposcope.nvim`      |    [1]    |   [F]    |          |

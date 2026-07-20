@@ -105,16 +105,16 @@
 
   ```lua
   {
-    -- "StefanBartl/project-insight.nvim",
-    dir = vim.env.REPOS_DIR .. "/project-insight.nvim",
+    -- "StefanBartl/insights.nvim",
+    dir = vim.env.REPOS_DIR .. "/insights.nvim",
     event = "VeryLazy",
-    cmd = "ProjectInsight",
+    cmd = "Insights",
     config = function()
-      require("project_insight").setup({
+      require("insights").setup({
         -- symbols.use_treesitter_for_lua = true,  -- optionale TS-Variante für Lua
         compress = {
             outdir = "C:\temp",
-            ---@type ProjectInsight.CompressEngine
+            ---@type Insights.CompressEngine
             engine = "tar",
         },
       })
@@ -127,7 +127,7 @@
 - [ ] Für ein gutes LSP-Erlebnis: jeder Key braucht einen Typ, z. B.:
 
   ```lua
-  ---@alias ProjectInsight.CompressEngine "auto"|"tar"|"zip"|"powershell"
+  ---@alias Insights.CompressEngine "auto"|"tar"|"zip"|"powershell"
   ```
 
 - [ ] Abklopfen: Gibt es sinnvolle Optionen, die noch nicht User-seitig gesetzt werden können?

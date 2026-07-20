@@ -58,7 +58,7 @@ function M.setup()
   })
 
   -- Dev-server kill on exit and the missing-component-import check are not
-  -- here: both live in project-insight.nvim (`devserver` / `unimported`),
+  -- here: both live in insights.nvim (`devserver` / `unimported`),
   -- generalized past Astro and configured via its setup() spec.
 end
 

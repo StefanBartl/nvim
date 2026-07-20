@@ -8,7 +8,7 @@
     - [Zieldateien im Plugin](#zieldateien-im-plugin)
     - [Implementierung](#implementierung)
     - [nvim-Config](#nvim-config)
-  - [Task B — `usrcmds/compress_dir` → `project-insight.nvim`](#task-b-usrcmdscompress_dir-project-insightnvim)
+  - [Task B — `usrcmds/compress_dir` → `insights.nvim`](#task-b-usrcmdscompress_dir-insightsnvim)
     - [Zieldateien im Plugin](#zieldateien-im-plugin-1)
     - [Implementierung](#implementierung-1)
     - [nvim-Config](#nvim-config-1)
@@ -90,17 +90,17 @@ Befehl: `:Debug module reload`
 
 ---
 
-## Task B — `usrcmds/compress_dir` → `project-insight.nvim`
+## Task B — `usrcmds/compress_dir` → `insights.nvim`
 
 ### Zieldateien im Plugin
-- NEU: `lua/project_insight/archive/init.lua`
-- MOD: `lua/project_insight/usercommands.lua` (neuer Eintrag in SUBCOMMANDS + Handler)
-- MOD: `lua/project_insight/config.lua` (Archive-Config-Block)
-- MOD: `lua/project_insight/health.lua`
+- NEU: `lua/insights/archive/init.lua`
+- MOD: `lua/insights/usercommands.lua` (neuer Eintrag in SUBCOMMANDS + Handler)
+- MOD: `lua/insights/config.lua` (Archive-Config-Block)
+- MOD: `lua/insights/health.lua`
 
 ### Implementierung
 
-**Cross-Platform-Strategie** (wichtig — project-insight wirbt mit Windows-Support):
+**Cross-Platform-Strategie** (wichtig — insights wirbt mit Windows-Support):
 - Unix/macOS: `find` + `tar --exclude=.git -czf` (bestehende Logik)
 - Windows/WSL: PowerShell `Compress-Archive -Path . -DestinationPath archive.zip -Force` (neuer Fallback)
 - Erkennung via `vim.fn.has("win32")` oder `vim.uv.os_uname().sysname`
@@ -118,7 +118,7 @@ archive = {
 },
 ```
 
-**usercommands.lua**: `:ProjectInsight archive` → ruft `archive.compress()` auf.
+**usercommands.lua**: `:Insights archive` → ruft `archive.compress()` auf.
 
 ### nvim-Config
 `lua/usrcmds/compress_dir/` löschen, require entfernen.
@@ -333,7 +333,7 @@ Tasks sind weitgehend unabhängig. Empfohlene Reihenfolge:
 1. **F** (line_marker) — trivial, sofort erledigt, kein Plugin-Risiko
 2. **A** (debugging.nvim) — kleines, isoliertes Modul
 3. **E** (markdown.nvim) — Merge-Check zuerst, dann entscheiden
-4. **B** (project-insight.nvim) — cross-platform Arbeit
+4. **B** (insights.nvim) — cross-platform Arbeit
 5. **D** (buffer-ctx.nvim) — größere Portierung
 6. **G** (pickers.nvim) — größtes Refactoring
 7. **C** (xopen.nvim) — neues Plugin, braucht Docs
@@ -343,7 +343,7 @@ Tasks sind weitgehend unabhängig. Empfohlene Reihenfolge:
 ## Verifikation (pro Task)
 
 - **A**: `:Debug module reload` auf einer Lua-Datei → Modul wird neu geladen; `:checkhealth debugging` grün
-- **B**: `:ProjectInsight archive` → Archiv in `~/temp/`; auf Windows mit PowerShell; `:checkhealth project-insight` grün
+- **B**: `:Insights archive` → Archiv in `~/temp/`; auf Windows mit PowerShell; `:checkhealth insights` grün
 - **C**: `:Open` auf URL → Browser öffnet; auf Datei → Explorer/Finder; `:checkhealth open_nvim` grün
 - **D**: `:Format trim`, `:Format sort`, `:Format column 40` auf Testbuffer; `:checkhealth buffer_ctx` grün
 - **E**: `:Format markdown headline_separators` (falls API-Redirect) oder komplett gestrichen; markdown.nvim-Test

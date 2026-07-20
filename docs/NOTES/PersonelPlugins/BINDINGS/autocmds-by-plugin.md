@@ -96,6 +96,16 @@ opt-in).
 | --- | --- | --- | --- |
 | `BufWritePost` | `GopathCacheAutoRebuild` | `{*.lua,*.vim}` | Debounced truncated-path cache rebuild (opt-in) |
 
+## [insights.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/insights.nvim.md)
+
+| Event(s) | Augroup | Pattern | Action |
+| --- | --- | --- | --- |
+| `VimEnter` (configurable) | `Insights_conflicts` | — | Quickfix unresolved git conflicts |
+| `BufWritePost` (configurable) | `Insights_unimported` | astro/jsx/tsx/vue/svelte | Warn on unimported components |
+| `TermOpen` | `Insights_devserver` | — | Detect dev-server command |
+| `TermRequest` | `Insights_devserver` | — | Same, via OSC title change |
+| `VimLeavePre` | `Insights_devserver` | — | Kill tracked dev servers |
+
 ## [language.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/language.nvim.md)
 
 | Event(s) | Augroup | Pattern | Action |
@@ -185,16 +195,6 @@ None.
 | `CursorMoved` | `PickersSelectedIndexAUG_<bufnr>` | results buf | Debounced index-overlay redraw |
 | `TextChangedI`,`TextChanged` | same | prompt buf | Same, on prompt edits |
 | `BufDelete` (once) | none | results buf | Cleanup extmarks/timer |
-
-## [project-insight.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/project-insight.nvim.md)
-
-| Event(s) | Augroup | Pattern | Action |
-| --- | --- | --- | --- |
-| `VimEnter` (configurable) | `ProjectInsight_conflicts` | — | Quickfix unresolved git conflicts |
-| `BufWritePost` (configurable) | `ProjectInsight_unimported` | astro/jsx/tsx/vue/svelte | Warn on unimported components |
-| `TermOpen` | `ProjectInsight_devserver` | — | Detect dev-server command |
-| `TermRequest` | `ProjectInsight_devserver` | — | Same, via OSC title change |
-| `VimLeavePre` | `ProjectInsight_devserver` | — | Kill tracked dev servers |
 
 ## [recommender.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/recommender.nvim.md)
 

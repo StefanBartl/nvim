@@ -1,23 +1,23 @@
-# project-insight.nvim — User Commands Cheatsheet
+# insights.nvim — User Commands Cheatsheet
 
 One command tree, built via `lib.nvim.usercmd.composer` (migrated
 2026-07-20). Replaced the hand-rolled `nvim_create_user_command` + custom
 `complete()` pair — the 12 handler functions in `bindings/usrcmds.lua` are
 byte-for-byte unchanged, only their registration changed.
 
-Source: `lua/project_insight/bindings/usrcmds.lua`
-Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/project-insight.txt`
+Source: `lua/insights/bindings/usrcmds.lua`
+Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/insights.txt`
 
 | Command | Args | Effect |
 | --- | --- | --- |
-| `:ProjectInsight symbols` | `[cwd\|buffer] [functions\|tables\|strings] [telescope\|fzf\|scratch] [rebuild]` | Symbol index / picker (tokens in any order) |
-| `:ProjectInsight metrics` | `[--flags...] [dir]` | Lua code metrics report |
-| `:ProjectInsight tree` \| `count` \| `clipboard` \| `fileinfo` | — | File tree / count / clipboard / fs.stat float |
-| `:ProjectInsight cache {build\|info\|clear}` | — | Symbol index cache |
-| `:ProjectInsight compress` | `[path] [outdir]` | Archive a directory |
-| `:ProjectInsight imports` | `[filter...]` | `require()` usage report, group-filterable |
-| `:ProjectInsight conflicts` \| `unimported` | — | Quickfix conflicts / unimported-component check |
-| `:ProjectInsight devserver` | `[list\|kill]` | List/kill tracked dev servers (bare = list) |
+| `:Insights symbols` | `[cwd\|buffer] [functions\|tables\|strings] [telescope\|fzf\|scratch] [rebuild]` | Symbol index / picker (tokens in any order) |
+| `:Insights metrics` | `[--flags...] [dir]` | Lua code metrics report |
+| `:Insights tree` \| `count` \| `clipboard` \| `fileinfo` | — | File tree / count / clipboard / fs.stat float |
+| `:Insights cache {build\|info\|clear}` | — | Symbol index cache |
+| `:Insights compress` | `[path] [outdir]` | Archive a directory |
+| `:Insights imports` | `[filter...]` | `require()` usage report, group-filterable |
+| `:Insights conflicts` \| `unimported` | — | Quickfix conflicts / unimported-component check |
+| `:Insights devserver` | `[list\|kill]` | List/kill tracked dev servers (bare = list) |
 
 ## Notes
 
@@ -31,7 +31,7 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/project-insight.txt`
   `ctx.rest` back into one flat token list and forwards it, unmodified, into
   the original `handle_symbols`/`handle_imports`, whose own order-independent
   parsing loops do the real work exactly as before. Verified via a headless
-  check that `:ProjectInsight symbols buffer` and `:ProjectInsight symbols
+  check that `:Insights symbols buffer` and `:Insights symbols
   rebuild buffer` produce the same `scope="buffer"` with only `rebuild`
   differing.
 - **`metrics` needed real `Route.flags`, not the same trick**: composer's
@@ -39,7 +39,7 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/project-insight.txt`
   *unconditionally*, before a route's own `args` completers ever run
   (confirmed by testing — a repeated-custom-type route, like symbols/imports
   above, silently returned no completions for `--<Tab>`, the single most
-  common thing to type after `:ProjectInsight metrics `). Fixed by declaring
+  common thing to type after `:Insights metrics `). Fixed by declaring
   real `Route.flags` (one `FlagSpec` per literal `--flag`) purely so
   composer's flag completion fires — dispatch still goes through the
   original, unchanged `parse_metrics_args`: `reconstruct_metrics_tokens()`
@@ -62,7 +62,7 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/project-insight.txt`
   (`compress` creates it). Registered `PI_DIR_SOFT` instead (soft validate,
   dir-only completion) for both slots, matching the original's actual
   behavior (neither slot was ever validated at parse time either).
-- **`devserver`'s bare form kept**: `:ProjectInsight devserver` (no
+- **`devserver`'s bare form kept**: `:Insights devserver` (no
   subcommand) still defaults to `list`, via a route directly on the
   `devserver` node itself (`path = {"devserver"}`) *alongside* its two
   literal children (`{"devserver","list"}`, `{"devserver","kill"}`) — a node

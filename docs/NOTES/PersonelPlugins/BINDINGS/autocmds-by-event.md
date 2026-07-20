@@ -15,7 +15,7 @@ See also: [by plugin](autocmds-by-plugin.md), [by filetype/scope](autocmds-by-fi
 | filetree.nvim | `filetree_cwd_sync` (once) | opt-in, off | Startup catch-up cwd sync |
 | filetree.nvim | none (once) | neotree adapter | Defer neo-tree `?`-cheatsheet injection |
 | github_stats.nvim | `GithubStatsAutoFetch` | — | Background fetch + auto-open dashboard |
-| project-insight.nvim | `ProjectInsight_conflicts` | configurable (default trigger) | Quickfix git conflicts |
+| insights.nvim | `Insights_conflicts` | configurable (default trigger) | Quickfix git conflicts |
 | pickers.nvim | `pickers.nvim`/none (once) | only if `setup()` never called | Register default keymaps/commands |
 | sessions.nvim | `SessionsNvim` (once, nested) | `cfg.autoload` (default **off**) | Autoload contextual session |
 
@@ -33,7 +33,7 @@ startup ever looks like two things fighting for the screen.
 | diff.nvim | `diff_nvim_cleanup` | Wipe tracked scratch buffers |
 | filetree.nvim | `filetree_session` | Save scroll/cursor/root state (opt-out) |
 | language.nvim | none | Kill cspell sidecar job |
-| project-insight.nvim | `ProjectInsight_devserver` | Kill tracked dev servers |
+| insights.nvim | `Insights_devserver` | Kill tracked dev servers |
 | sessions.nvim | `SessionsNvim` | Autosave session (default **on**) |
 | lib.nvim | `lib_logger_<name>` | Flush logger ring buffer (per logger instance) |
 
@@ -68,7 +68,7 @@ the write is later aborted for spelling.
 
 | Plugin | Augroup | Condition | Action |
 | --- | --- | --- | --- |
-| project-insight.nvim | `ProjectInsight_unimported` | configurable filetypes | Warn on unimported components |
+| insights.nvim | `Insights_unimported` | configurable filetypes | Warn on unimported components |
 | gopath.nvim | `GopathCacheAutoRebuild` | opt-in, off | Debounced cache rebuild |
 | filetree.nvim | `filetree_current_hl` (opt-in, off), `filetree_opened_sync`, `filetree_git_status` (opt-in, off), `filetree_lsp_diagnostics` (opt-in, off) | various | Tree-buffer redecoration |
 | markdown.nvim | (via `commands/preview.lua`'s `BufEnter`, not `BufWritePost` — see Refs' `BufWritePre` above instead) | — | — |
@@ -109,7 +109,7 @@ setup are what you're feeling, not any single one).
 Hit by: filetree.nvim (auto_reveal, cwd_sync opt-in, breadcrumbs, cursor_hide,
 size_info opt-in, copy_move, marks), mdview.nvim (snapshot, browser.behavior,
 tab-preview sync/close), markdown.nvim (blockquote HL, preview refresh),
-project-insight — no, project-insight doesn't use BufEnter (uses
+insights — no, insights doesn't use BufEnter (uses
 BufWritePost/VimEnter/TermOpen/TermRequest/VimLeavePre only). No shared
 concern beyond "several plugins re-check state when you switch buffers" —
 all cheap, debounced where it matters (auto_reveal, current_hl equivalents).
@@ -167,7 +167,7 @@ these itself (dap.nvim's pair comes from nvim-dap-ui, an external plugin).
 
 `VimResized` (filetree, opt-in), `WinScrolled` (language, opt-in),
 `OptionSet` (diff, opt-in), `DiagnosticChanged` (filetree, opt-in),
-`DirChanged` (filetree, opt-in), `TermOpen`/`TermRequest` (project-insight),
+`DirChanged` (filetree, opt-in), `TermOpen`/`TermRequest` (insights),
 `ModeChanged` (fileops), `BufWinEnter`/`BufWinLeave` (debugging, filetree,
 mdview — different purposes, no overlap), `BufHidden` (filetree, sessions —
 different purposes), `QuitPre` (reposcope only — and the one autocmd in

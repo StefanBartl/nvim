@@ -43,7 +43,7 @@ claims — a couple of repos' docs are stale on this point.
 | `open.nvim` | none | hard (11 files) | no suite yet — Pattern A if one is added |
 | `pdfport.nvim` | none | hard (12 files) | no suite yet — Pattern A if one is added |
 | `pickers.nvim` | `docs/TESTS/pickers_spec.lua` | hard | ✅ has its own equivalent (Pattern C, partial-skip); today also aligned to accept `$LIB_NVIM_PATH` (kept `$REPOS_DIR` for back-compat) |
-| `project-insight.nvim` | none | hard (7 files) | no suite yet — Pattern A if one is added |
+| `insights.nvim` | none | hard (7 files) | no suite yet — Pattern A if one is added |
 | `recommender.nvim` | none | mixed: `util/lib.lua` is a soft pcall-bridge, but `analyzers/regex.lua`/`blacklist.lua` hard-require `lib.lua.*` directly | no suite yet — Pattern A if one is added |
 | `replacer.nvim` | `tests/*.lua` | hard | **gap**: no `lib.nvim` resolution at all in the test files (checked `health_debug.lua` — only checks `replacer` itself is on rtp). Not urgent since these look like manual/interactive checks rather than a CI-headless suite, but worth the template if that changes |
 | `reposcope.nvim` | none | hard (8 files) | no suite yet — Pattern A if one is added |
@@ -86,7 +86,7 @@ completeness:
   at all**, so a WSL user hits the Linux `xdg-open` branch even when a
   Windows-side opener would be correct (same class of gap `open.nvim`
   already solved).
-- `project-insight.nvim`'s `util/platform.lua` and `filetree.nvim`'s
+- `insights.nvim`'s `util/platform.lua` and `filetree.nvim`'s
   `util/platform.lua` don't open anything themselves but both bridge OS
   detection for exactly this kind of use.
 

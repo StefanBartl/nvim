@@ -1,5 +1,7 @@
 # TODO & ROADMAP: Refactoring & Plugin-Optimierung
 
+BINDINGS autocmds durchgeehn ob man was optimeren kann
+
 **Notes:**
   - "Betroffene Dateien" sind als Beispiel genannt - darin nichts ändern, sondern im Plugin das bearbeitet wird.
 
@@ -22,7 +24,7 @@
 * [ ] `:Recommender` durch alle Module laufen lassen.
 * [ ] `vimdoc`-Datei `doc/{NAME}.txt` erstellen + Funktion schreiben, die automatisch die `tags`-Datei für User generiert (`doc/tags` in `.gitignore` aufnehmen).
 * [ ] Prüfen: Gibt es ein Autocmd, damit die Tags bei jedem User, der das Repo lädt, automatisch erstellt werden?
-* [ ] `ProjectInsight stats lib` über alle Repositories ausführen und eine gesammelte Übersicht erstellen.
+* [ ] `Insights stats lib` über alle Repositories ausführen und eine gesammelte Übersicht erstellen.
 
 ---
 

@@ -89,7 +89,7 @@
 --------------------------------------------------------------------------------
 
 --- Unresolved-conflict quickfix population is not here: it lives in
---- project-insight.nvim (`conflicts`), configured via its setup() spec.
+--- insights.nvim (`conflicts`), configured via its setup() spec.
 ---@class AutoCmds.Git.Cfg
 ---@field commit_ft? AutoCmds.Git.CommitFtCfg
 --- Settings for `gitcommit` buffers (spelling, wrapping, rulers, etc.).

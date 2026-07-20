@@ -57,6 +57,7 @@ match at the shorter prefix — found three such cases, all minor (below).
 | `:GopathResolve`/`Open`/`Copy`/`Debug`/`Check`/`Probe`/`CacheBuild`/`CacheInfo`/`CacheAddRoot` | gopath.nvim | Legacy compat aliases (kept alongside, individually toggleable) |
 | `:Image` | nvim-containers | Image ops (list/pull/remove/prune) |
 | `:Insert` | buffer-ctx.nvim | Insert context text at cursor (subcommand tree) |
+| `:Insights` | insights.nvim | symbols/metrics/tree/cache/compress/imports/conflicts/… |
 | `:LastSession` | sessions.nvim | Load the "last" session (CLI-friendly, plain command) |
 | `:Lib` | lib.nvim | `cwd-here`/`ps-profile`/`helptags` (alongside pre-existing flat `:CwdHere`/`:PowershellProfile`) |
 | `:Mark` | buffer-ctx.nvim | Toggle/yank per-line marks |
@@ -70,7 +71,6 @@ match at the shorter prefix — found three such cases, all minor (below).
 | `:PdfPort` | pdfport.nvim | Open/extract/render a PDF |
 | `:Pickers` | pickers.nvim | Scope+action fuzzy pickers |
 | `:DirPicker` + 10 more | pickers.nvim | Compat aliases (unchanged) — see that repo's `docs/COMMANDS.md` |
-| `:ProjectInsight` | project-insight.nvim | symbols/metrics/tree/cache/compress/imports/conflicts/… |
 | `:Recommender` | recommender.nvim | Suggestion float (regex/treesitter analyzers) |
 | `:Replace` / `:Replacer` | replacer.nvim | Search-and-replace |
 | `:ReplaceDebug` | replacer.nvim | Debug helper (untouched, not composer-based) |

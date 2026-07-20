@@ -23,7 +23,7 @@
   1. Einen `/config` Folder mit `/config/DEFAULTS.lua` in jedem Module und Plugin wo es sinn macht
   2. `lib.nvim` auf alle plugins anwenden (als dependency)
     1. Personal Plugins auf `utils`-Folder durchsuchen -> Eventuell Funktionen für die lib dabei?
-    2. `ProjectInsight stats lib` ausführen über alle repos und eine gesammelte übersicht erstellen
+    2. `Insights stats lib` ausführen über alle repos und eine gesammelte übersicht erstellen
   3. Sind alle Plugins `lazy`?
   4. In allen Modulen  `/bindings` und dort dann
     - `usrcmds`
@@ -45,16 +45,16 @@
 
     ```lua
     {
-      -- "StefanBartl/project-insight.nvim",
-      dir = vim.env.REPOS_DIR .. "/project-insight.nvim",
+      -- "StefanBartl/insights.nvim",
+      dir = vim.env.REPOS_DIR .. "/insights.nvim",
       event = "VeryLazy",
-      cmd = "ProjectInsight",
+      cmd = "Insights",
       config = function()
-        require("project_insight").setup({
+        require("insights").setup({
           -- symbols.use_treesitter_for_lua = true,  -- optionale TS-Variante für Lua
           compress = {
               outdir = "C:\temp",
-              ---@type ProjectInsight.CompressEngine
+              ---@type Insights.CompressEngine
               engine = "tar",
           },
         })
@@ -65,7 +65,7 @@
 Hier kann man die keys **Output dir** und **Compress Engine** als User explizit setzen und damit die `config.lua` Pluginseitige Defaults überschreiben.
 
 Dazu ist noch eines wichtig: Um dem User ein sehr gutes LSP Erlebnis zu bieten, braucht jeder Key einen Typen, wie zb.:
-`--@alias ProjectInsight.CompressEngine "auto"|"tar"|"zip"|"powershell"`
+`--@alias Insights.CompressEngine "auto"|"tar"|"zip"|"powershell"`
 
 Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nicht User-seitig gesetzt werden können.
 

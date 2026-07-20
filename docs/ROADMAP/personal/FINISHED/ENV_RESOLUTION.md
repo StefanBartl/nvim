@@ -75,7 +75,7 @@ oder nur an einer von mehreren Stellen · **NO** = raw string, keine Expansion �
 | `open.nvim` | `:Open [scope]` (`path=<dir>`, Keyword-Pfade) | PARTIAL (`vim.fn.expand`, kein `%VAR%`), zusätzlich **Bug**: nativer-Windows-Zweig in `lib.nvim.cross.open_default` expandiert gar nicht | keins lokal |
 | `pdfport.nvim` | `:PdfPort [path]` | PARTIAL | keins lokal |
 | `pickers.nvim` | `:Pickers dir <nav>`, `path=`-Prompt, `repos_dir`/Collection-`dir` Config, `system`-Suchtoken | **YES für `dir`/`path=`** (volle Expansion inkl. `%VAR%`) — **Referenz-Implementierung**; aber `repos_dir`/Collection-`dir` aus `setup()` und `system`-Suchtoken **NO** | `actions/dir.lua:expand_vars` |
-| `project-insight.nvim` | `metrics [root] [--file=] `, `compress [path] [outdir]`, 4 Config-Pfade | inkonsistent: `root`/`path` PARTIAL, `--file=`-Flag und alle Config-Optionen **NO** | keins, jeweils inline |
+| `insights.nvim` | `metrics [root] [--file=] `, `compress [path] [outdir]`, 4 Config-Pfade | inkonsistent: `root`/`path` PARTIAL, `--file=`-Flag und alle Config-Optionen **NO** | keins, jeweils inline |
 | `recommender.nvim` | keine | N/A | — |
 | `replacer.nvim` | `:Replace <old> <new> [scope]` | **NO** (`fnamemodify` ohne `expand`) | keins |
 | `reposcope.nvim` | `:Reposcope status [dir] --to=<path>`, `update [dir]`, `clone.std_dir` Config | `status`s `dir` **NO — hard block** (DIR-Validator lehnt `$REPOS_DIR` als "not a directory" ab, bevor Expansion läuft); `update`s `dir` PARTIAL; `--to=` PARTIAL; Config PARTIAL | `utils/repos.lua:resolve_base_dir` |
@@ -110,7 +110,7 @@ Diese sind leicht zu übersehen, weil sie nicht interaktiv getippt werden, aber
 genauso ein Pfad-String vom User sind (in der jeweiligen `setup({...})`-Config):
 
 - `pickers.nvim`: `repos_dir`, Collection-`dir`
-- `project-insight.nvim`: `symbols.cache.dir`, `metrics.output_file`, `tree.outdir`, `imports.output_file`
+- `insights.nvim`: `symbols.cache.dir`, `metrics.output_file`, `tree.outdir`, `imports.output_file`
 - `sessions.nvim`: `root`
 - `nvim-cmdlog`: `notes.dir`
 - `filetree.nvim`: `safety.backup_dir`
@@ -146,10 +146,10 @@ genauso ein Pfad-String vom User sind (in der jeweiligen `setup({...})`-Config):
   - [x] `pickers.nvim`: `repos_dir`, Collection-`dir` (und `history.dir`) in
         `config/init.lua` expandiert — bereits vorher erledigt, verifiziert.
         — [26b7e67](https://github.com/StefanBartl/pickers.nvim/commit/26b7e67)
-  - [x] `project-insight.nvim`: `symbols.cache.dir`, `metrics.output_file`,
+  - [x] `insights.nvim`: `symbols.cache.dir`, `metrics.output_file`,
         `tree.outdir`, `compress.outdir`, `imports.output_file` und das
         `--file=`-Flag expandiert (`config/init.lua`, `bindings/usrcmds.lua`).
-        — [4bb3720](https://github.com/StefanBartl/project-insight.nvim/commit/4bb3720)
+        — [4bb3720](https://github.com/StefanBartl/insights.nvim/commit/4bb3720)
   - [x] `sessions.nvim`: `root`-Config expandiert.
         — [e06d86a](https://github.com/StefanBartl/sessions.nvim/commit/e06d86a)
   - [x] `nvim-cmdlog`: `notes.dir` an `expand_path`-Pattern von `shell.lua` angeglichen.

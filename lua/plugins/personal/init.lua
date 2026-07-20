@@ -62,7 +62,7 @@ local MODE = {
   ["fileops.nvim"] = "dir",
   ["gopath.nvim"] = "dir",
   ["replacer.nvim"] = "dir", -- Basename des Specs "StefanBartl/replacer.nvim"
-  ["project-insight.nvim"] = "dir",
+  ["insights.nvim"] = "dir",
   ["filetree.nvim"] = "dir",
   ["reposcope.nvim"] = "dir",
 
@@ -329,13 +329,13 @@ return apply_source({
   },
 
   {
-    "StefanBartl/project-insight.nvim",
-    -- Not `cmd = "ProjectInsight"`: the conflicts / unimported / devserver
+    "StefanBartl/insights.nvim",
+    -- Not `cmd = "Insights"`: the conflicts / unimported / devserver
     -- autocmds are registered by setup(), so lazy-loading on the command would
     -- mean they never fire. Set their `enable = false` to opt out instead.
     lazy = false,
     config = function()
-      require("project_insight").setup({})
+      require("insights").setup({})
     end,
   },
 
@@ -544,7 +544,7 @@ return apply_source({
           "StefanBartl/open.nvim",
           "StefanBartl/pdfport.nvim",
           "StefanBartl/pickers.nvim",
-          "StefanBartl/project-insight.nvim",
+          "StefanBartl/insights.nvim",
           "StefanBartl/recommender.nvim",
           "StefanBartl/replacer.nvim",
           "StefanBartl/reposcope.nvim",
