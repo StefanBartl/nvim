@@ -100,7 +100,7 @@ updated "Needs Phase 6" and "Needs a real design decision" sections.
 | `debugging.nvim`         | ✅ |
 | `dap.nvim`            | ✅ |
 | `diff.nvim`            | ✅ |
-| `emojis.nvim`           |  |
+| `emojis.nvim`           | ✅ |
 | `fileops.nvim`          | ✅ |
 | `filetree.nvim`          | ✅ |
 | `github_stats.nvim`        | ✅ |
@@ -109,7 +109,7 @@ updated "Needs Phase 6" and "Needs a real design decision" sections.
 | `lib.nvim`            | ✅ |
 | `markdown.nvim`          | ✅ |
 | `mdview.nvim`           | ✅ |
-| `migrate.nvim`          |  |
+| `migrate.nvim`          | ✅ |
 | `nvim-cmdlog`           | ✅ |
 | `nvim-containers`         | ✅ |
 | `open.nvim`            | ✅ |
@@ -121,7 +121,7 @@ updated "Needs Phase 6" and "Needs a real design decision" sections.
 | `reposcope.nvim`         | ✅ |
 | `sessions.nvim`          | ✅ |
 
-23 of 26 done.
+25 of 26 done.
 
 ## Remaining plugins — what's known so far
 
@@ -130,22 +130,8 @@ Grouped by shape, not priority order — pick whichever fits the next session.
 ### Flat anti-pattern (clear win — command count drops, completion is new)
 
 
-### Needs a real design decision (doesn't fit the tree model cleanly)
-
-- **`migrate.nvim`** — dispatches on **argument shape** (empty / `%` / `cwd`
-  / range) via a command factory, not a subcommand string. Doesn't map onto
-  composer's token-tree model directly; closest existing precedent is
-  `mdview.nvim`'s `ctx.rest` escape hatch or a `path = {}` root route with
-  no declared args (falls through to `ctx.rest`, handler does its own
-  shape-sniffing) — needs a short design pass before implementing, not just
-  a mechanical port. (Still open — buffer-local/short-flag/kv extensions
-  don't help this one.)
-
 ### Single command / low priority (little to no win)
 
-- **`emojis.nvim`** — one configurable command, small 2-arg-position
-  completion idiom. Low risk, low value — fine to batch with something else
-  or skip.
 - **`recommender.nvim`** — one command, flag+positional mixed parsing
   (`-r`/`--replace`, single-dash short flag). **Unblocked**: `FlagSpec.short
   = "r"` (Phase 7) matches `-r` alongside `--replace` directly — still
