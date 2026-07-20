@@ -33,6 +33,24 @@ decoupled from `MdviewAutocmds`/`:MDView start`/`stop`.
 | `TextChanged`,`TextChangedI`,`BufWritePost` | If a tab preview is open for that buffer, sync it |
 | `BufEnter`,`BufWinEnter`,`FileType` | Closes a tab preview when a file/explorer takes over its tab |
 
+## Events mdview *fires* (not listens to)
+
+| Event | Fired by | Purpose |
+| --- | --- | --- |
+| `User MDViewSessionEnded` | `usrcmds/stop.lua`, at the very end of `M.stop()` | Public hook: preview session fully torn down |
+
+Added for `:MDView detach` — a headless background instance has no UI whose
+close would end the process, so `scripts/minimal_init.lua` hooks this event to
+`qa!` itself when the preview stops. Also usable from my own config: >lua
+
+    vim.api.nvim_create_autocmd("User", {
+      pattern  = "MDViewSessionEnded",
+      callback = function() ... end,
+    })
+
+Fired via `pcall` + `modeline=false`, so a throwing user callback can't break
+`:MDView stop` itself.
+
 ## Notes
 
 - `docs/templates/autocmds.lua`/`usercmds.lua` are scaffolding/boilerplate under `docs/templates/`, not `lua/` — not wired into anything, don't mistake these for live registrations.

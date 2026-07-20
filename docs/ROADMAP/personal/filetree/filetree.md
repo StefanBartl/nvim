@@ -1,7 +1,5 @@
 # `filetree.nvim`
 
-- restliche Roamap-Punkte in filetree.nvim prüfen
-
 ## Table of content
 
   - [Bug](#bug)
@@ -54,8 +52,6 @@
 1. `?`-Cheatsheet mit allen Keymaps — ✅ **Phase 2 umgesetzt.**
    - neotree: ✅ FIXED (native `?`/show_help bereits vollständig über `attach.lua`s `window.mappings`-Injection).
    - **Recherche (Quellcode von nvim-tree.lua geklont und gelesen):** `g?`/`toggle_help` baut seine Liste, indem es `on_attach` erneut auf einem **Scratch-Buffer** ausführt und dessen Keymaps ausliest (`nvim-tree/keymap.lua:generate_keymap`) — keine Live-Buffer-Introspektion. filetree.nvim's Keys (separat per `FileType`-Autocmd gebunden) tauchen dort grundsätzlich nie auf, außer man hängt sich in nvim-trees `on_attach`-Callback selbst ein — das wäre ein Umbau der kompletten Keymap-Architektur des nvimtree-Adapters, kein Cheatsheet-Feature mehr. Netrw's `?` ist zudem eine statische Hilfeseite; oil/minifiles nicht verifiziert.
-   - **Nebenfund (nicht behoben, separater Punkt):** `node_info` und vermutlich weitere Features hardcoden `pattern = {"neo-tree", "NvimTree"}` in ihrem `FileType`-Autocmd statt `adapter.filetypes` zu nutzen — würde für netrw/oil/minifiles vermutlich gar nicht binden. Nicht Teil dieser Phase, aber ein Hinweis, dass die nvimtree/netrw/oil/minifiles-Unterstützung insgesamt noch nicht durchgängig verifiziert ist.
-2. Cross-Check mit [Keymaps.md](../../../NOTES/neotree/Keymaps.md) & [Auto-Usrcmds-EventHandler.md](../../../NOTES/neotree/Auto-Usrcmds-EventHandler.md)
 
 ---
 

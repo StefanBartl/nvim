@@ -5,6 +5,10 @@ BINDINGS autocmds durchgeehn ob man was optimeren kann
 **Notes:**
   - "Betroffene Dateien" sind als Beispiel genannt - darin nichts ändern, sondern im Plugin das bearbeitet wird.
 
+3. `:Recommender` durch alle Module durchlaufen lassen
+4. Auf github.com:
+  1. Kurzinfo für jedes Repo schreiben
+  2. Keywords für jedes repo eingeben
 
 ## Allgemeines & Medien
 

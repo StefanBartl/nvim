@@ -1,6 +1,6 @@
 # nvim
 
-- Redu/Undo usrcmdeventuell mit history
+- Redu/Undo usrcmd eventuell mit (pickers) history
 
 ## nvim config autocmds
 
@@ -79,6 +79,4 @@ symmetrisch zu `dap.nvim` und wirklich wiederverwendbar. Noch nicht begonnen —
 offener Punkt, falls/wenn die Extraktion angegangen wird.
 
 ---
-
-
 

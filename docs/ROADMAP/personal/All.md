@@ -1,16 +1,18 @@
 # Alle Custom Plugins
 
+- `:Replace some thing cwd` kann bei großen cwd's dutzende sekunden dauern. da es async ist, kann er user leich mehrere hintereinander ausführen.
+  - IUnteressehaber: ist jede neue :Replace befehl ein neuer prozess? ergo die beiden hintereinander ausageführten tasks laufen abslut unabhängig voneinander?
+  - Ist es nicht sinnvoll, nahc iener :Replace ausführung diesen zu sperren, denn der user kann sowieso nicht zwei pickers gleichezeitig aufhaben in einer Instanz
+  - ist das eine sinnvoll erweiterung des usrdcmd moduls in lib.nvim - eine neue arg option?
+
 
 ## Checklist
 
 2. Module und Plugins durchgehen und
-  1. CHEATSHEETS schreiben
-  2. Jedes repo soll auch eigene `/docs/BINDINGS.lua` haben mit allen keymaps, usrcmds aber auch die autocmds!
-  3. Checklisten anwenden
-  4. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
-  5. Weitere features, usrcmds, keymaps, autocmds für jedes Plugin erstellen
+  1. Funktionen/Module die man in der nvim config mit ffi c perfomranter machen könnte?
+  2. Weitere features, usrcmds, keymaps, autocmds für jedes Plugin erstellen
     - `/nvim/lua/` alle Modle durchgehene nd checken, ob sie wo hineinpassen
-  6. `README.md` überprüfen auf
+  3. `README.md` überprüfen auf
         - badges & ASCII implementieren und toc
         - ist sie auf englisch? GIbt es eine Deutsche Version?
 3. `README.md` && `/doc/**.txt` Spec anpasse:
@@ -69,25 +71,7 @@ Dazu ist noch eines wichtig: Um dem User ein sehr gutes LSP Erlebnis zu bieten, 
 
 Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nicht User-seitig gesetzt werden können.
 
-12. LLW MAppings sollen which-key unterstützen
 13. alles commitet und branche auf main umstellen
 
 ---
 
-### Finish
-
-1. Alle Plugins auf .nvim als Namesendung umstellen (wenn möglich)
-2. Für alle `.nvim` plugins eine `.vim` version erstellen bzw.: wie würde das aussehen, wenn man das im gleichen Plugin macht? Vorteil wäre, dass man wrsch einige funktionen teilen könnte. andererseits sollen die Repos so klein wie möglich sein, daher wäre unnötiger Lua code in einem .vim plugin unnötig.
-3. `:Recommender` durch alle Module durchlaufen lassen
-4. Auf github.com:
-  1. Kurzinfo für jedes Repo schreiben
-  2. Keywords für jedes repo eingeben
-5. usw...
-
-1. Alle Plugins auf implementierte NVIM-Filetree-Features (Neotree, Nvimtree, Netrw...)  checken, diese
-      - jedenfalls so ausbauen, dass es in Neotree, NvimTree, Netrw... cross filetree agnostisch funkltienrt oder zumindest so agnostisch wie es geht, eventuell api ? die man dann bei seinem filrtee manager verweden kann.
-2. aus den gesammelten Features und aus `/nvim/lua/config/neotree` ein eigenes Plugin `filetree.nvim` erstellen. Diess Plugin soll erkennen, welchen filetree amnager man verwendet (nvimtree, neotree, netrw usw..) und dort dann automatisch seine features andocken können
-3. `vimdoc` datei `doc/{NAME}.txt` datei + `tags` dateiu generiert??
-4. `.luarc.json` in jedem root
-
----
