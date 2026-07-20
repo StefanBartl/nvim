@@ -1,6 +1,6 @@
 # nvim
 
-- Redo: `U` implementieren
+- Redu/Undo usrcmdeventuell mit history
 
 ## nvim config autocmds
 
