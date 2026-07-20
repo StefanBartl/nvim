@@ -1,0 +1,23 @@
+# emojis.nvim — Keymaps Cheatsheet
+
+Source: `lua/emojis/bindings/keymaps.lua`, `M.bind_preset()`
+Bridge: `lua/emojis/util/lib.lua`'s `lib.map()` — prefers `lib.nvim.map`, falls back to `vim.keymap.set`.
+Cross-reference: `docs/BINDINGS.md`, `docs/keymaps.md` — both current and accurate.
+
+Gated by `cfg.keymaps.preset == true` (checked in `bindings/init.lua`).
+
+| lhs | mode | action | desc |
+| --- | --- | --- | --- |
+| `<C-e>` | n, i | Opens the emoji insert picker at cursor (telescope/fzf-lua if available, else `vim.ui.select`) | "emojis: insert picker" |
+| `<leader>ec` | n | Counts emojis in the buffer | "emojis: count buffer" |
+| `<leader>el` | n | Lists emojis in buffer to quickfix | "emojis: list buffer" |
+
+## which-key
+
+`<leader>e` group label, registered when `keymaps.preset` is on and
+which-key is installed (soft dependency, supports v2/v3 API). No individual
+key labels needed — each mapping already carries its own `desc`.
+
+## Notes
+
+- These are opt-in preset keymaps binding directly onto the public API, no `<Plug>` indirection.
