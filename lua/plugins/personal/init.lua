@@ -56,7 +56,7 @@ local MODE = {
   ["pickers.nvim"] = "dir",
   ["buffer-ctx.nvim"] = "dir",
   ["open.nvim"] = "dir",
-  ["nvim-containers"] = "dir",
+  ["sandbox.nvim"] = "dir",
 
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
   ["fileops.nvim"] = "dir",
@@ -254,7 +254,7 @@ return apply_source({
   },
 
   {
-    "StefanBartl/nvim-containers",
+    "StefanBartl/sandbox.nvim",
     event = "VeryLazy",
     config = function()
       require("containers").setup({})
@@ -540,7 +540,7 @@ return apply_source({
           "StefanBartl/mdview.nvim",
           "StefanBartl/migrate.nvim",
           "StefanBartl/nvim-cmdlog",
-          "StefanBartl/nvim-containers",
+          "StefanBartl/sandbox.nvim",
           "StefanBartl/open.nvim",
           "StefanBartl/pdfport.nvim",
           "StefanBartl/pickers.nvim",

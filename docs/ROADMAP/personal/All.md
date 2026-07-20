@@ -1,11 +1,5 @@
 # Alle Custom Plugins
 
-- `:Replace some thing cwd` kann bei großen cwd's dutzende sekunden dauern. da es async ist, kann er user leich mehrere hintereinander ausführen.
-  - IUnteressehaber: ist jede neue :Replace befehl ein neuer prozess? ergo die beiden hintereinander ausageführten tasks laufen abslut unabhängig voneinander?
-  - Ist es nicht sinnvoll, nahc iener :Replace ausführung diesen zu sperren, denn der user kann sowieso nicht zwei pickers gleichezeitig aufhaben in einer Instanz
-  - ist das eine sinnvoll erweiterung des usrdcmd moduls in lib.nvim - eine neue arg option?
-
-
 ## Checklist
 
 2. Module und Plugins durchgehen und
