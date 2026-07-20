@@ -65,6 +65,31 @@ them — see `lib.nvim`'s own `docs/ROADMAP/usrcmd_builder.md` §12 Phase 7 and
 All three previously-blocked plugins below are now unblocked — see the
 updated "Needs Phase 6" and "Needs a real design decision" sections.
 
+## Phase 8 (shipped) + a real bug fix, both found mid-rollout
+
+- **Count prefix** — `spec.count`/`route.count` (an integer, matching
+  `nvim_create_user_command`'s own `count` option) accepts a `:N Verb`
+  prefix, surfaced as `ctx.range.count`. Found blocking fileops.nvim's
+  `:File next`/`:File prev` cycling-by-N (`ctx.range.count` was already
+  plumbed through since Phase 1, but nothing ever set the
+  registration-time `count` option, so a count prefix was silently
+  rejected). Opt-in, zero behavior change for verbs that don't use it.
+- **Bug fix — bare invocation of a `path = {}` root route was silently
+  skipped.** `parse.dispatch`'s `#fargs == 0` branch unconditionally used
+  `spec.default` or the auto-usage listing, bypassing a registered root
+  route entirely — even though `tree.walk(root, {})` resolves to it just
+  fine. Found migrating markdown.nvim (several `:TableView*` commands are
+  *always* invoked bare). **Confirmed as a real, already-shipped
+  regression** in every previously-migrated repo whose root route's args
+  are all optional: pdfport.nvim's bare `:PdfPort` (the plugin's *primary*
+  documented use case — the interactive picker never opened),
+  diff.nvim's `:DiffClear`/`:DiffOrig`/`:DiffExit` (never ran) and bare
+  `:Diff`, and language.nvim's bare `:Spellcheck`. Fixed in `lib.nvim`
+  itself with 3 regression tests — **no code changes needed in any
+  affected repo**, since the fix lives entirely in the shared dependency
+  and applies the moment they pick up the new lib.nvim version. Verified
+  directly against pdfport.nvim and diff.nvim post-fix.
+
 ## Checklist
 
 | plugin | erledigt |
@@ -72,31 +97,31 @@ updated "Needs Phase 6" and "Needs a real design decision" sections.
 | `buffer-ctx.nvim`         | ✅ |
 | `cascade.nvim`          | ✅ |
 | `color_my_ascii.nvim`       | ✅ |
-| `debugging.nvim`         |  |
+| `debugging.nvim`         | ✅ |
 | `dap.nvim`            | ✅ |
-| `diff.nvim`            |  |
+| `diff.nvim`            | ✅ |
 | `emojis.nvim`           |  |
-| `fileops.nvim`          |  |
-| `filetree.nvim`          |  |
+| `fileops.nvim`          | ✅ |
+| `filetree.nvim`          | ✅ |
 | `github_stats.nvim`        | ✅ |
-| `gopath.nvim`           |  |
-| `language.nvim`          |  |
+| `gopath.nvim`           | ✅ |
+| `language.nvim`          | ✅ |
 | `lib.nvim`            | ✅ |
-| `markdown.nvim`          |  |
+| `markdown.nvim`          | ✅ |
 | `mdview.nvim`           | ✅ |
 | `migrate.nvim`          |  |
 | `nvim-cmdlog`           | ✅ |
 | `nvim-containers`         | ✅ |
 | `open.nvim`            | ✅ |
 | `pdfport.nvim`          | ✅ |
-| `pickers.nvim`          |  |
-| `project-insight.nvim`      |  |
+| `pickers.nvim`          | ✅ |
+| `project-insight.nvim`      | ✅ |
 | `recommender.nvim`        |  |
-| `replacer.nvim`         |  |
-| `reposcope.nvim`         |  |
+| `replacer.nvim`         | ✅ |
+| `reposcope.nvim`         | ✅ |
 | `sessions.nvim`          | ✅ |
 
-12 of 26 done.
+23 of 26 done.
 
 ## Remaining plugins — what's known so far
 
@@ -104,55 +129,6 @@ Grouped by shape, not priority order — pick whichever fits the next session.
 
 ### Flat anti-pattern (clear win — command count drops, completion is new)
 
-
-### Already has a decent hand-rolled subcommand tree (port for consistency + docgen)
-
-- **`filetree.nvim`** — `:Filetree`/`:Ft`, the best existing prior art (a
-  `TREE` table walked by dispatch, completion, *and* a `command_paths()`
-  doc-walker — literally the design composer generalized). Port carefully;
-  this one is well-tested, don't regress it.
-- **`pickers.nvim`** — already has `:Pickers [scope] [nav|action] [action]`
-  (hand-rolled `pickers.command.handle`/`.complete()`) *plus* ~11 "compat"
-  flat aliases (`:DirPicker`, `:FindConfig`, `:LiveGrep`, `:RepoFiles
-  [repo]`, …) that all translate into calls against the same dispatcher —
-  same shape as gopath.nvim's legacy-alias pattern. Decide what happens to
-  the compat aliases (they're explicitly *designed* as a compat layer, so
-  "keep alongside" may be the right call here specifically, unlike other
-  repos' default of removing flat commands).
-- **`debugging.nvim`** — `:Debug` category→action table, lazily
-  `require`s leaf modules. Composer's `route.run` already supports a
-  module-path string (lazy `require` on first dispatch) — use it here.
-- **`gopath.nvim`** — `:Gopath` + 8 legacy flat aliases, 3-level dispatch,
-  completion computed from live cmdline token count. Decide alongside/replace
-  specifically for the *legacy aliases* (the main `:Gopath` verb itself is
-  the obvious composer target either way).
-- **`reposcope.nvim`** — `:Reposcope` subcommand table carries its own
-  `.desc` + a hand-rolled `print_usage()` — composer's auto-usage-on-error
-  and `document()` replace that printer outright.
-- **`fileops.nvim`** — already the *ideal* single-verb case (`:File
-  [options?]`), a `SUBCMDS` list reused for dispatch+completion. Low
-  functional change; port mainly for typed args + docgen consistency with
-  everything else.
-- **`project-insight.nvim`** — `:ProjectInsight`, 12 subcommands incl. nested
-  `cache build/info/clear`. Straightforward port of an already-decent tree.
-
-### Needs Phase 6 (flag-style / `key=value` grammar) — now buildable
-
-- **`replacer.nvim`** — the plugin that originally motivated Phase 6.
-  `:Replace {old} {new} [scope] [--flags]` (flat grammar, no subcommand word
-  — use the `path = {}` root-route trick) + `--dry`/`--type=`/`--engine=`
-  flags via the new `Route.flags`. `:Surround`/`:Wrap` is a **separate**
-  root verb (confirmed correct by the original design sketch — not a
-  subcommand of `:Replace`). `:ReplaceDebug` is a small flat dispatch, lower
-  priority, could fold into `:Replace debug` or stay separate.
-- **`language.nvim`** — `:Spellcheck`/`:Translate`/`:TranslateReplace`,
-  token-based grammar distinguishing control verbs from `--flag=value` pairs
-  from positional scope args. Now has a real answer via `Route.flags`.
-- **`diff.nvim`** — `:Diff` + companions (`:DiffClear`, `:DiffBuffers`,
-  `:DiffOrig`, `:DiffExit`), `key=value` grammar (`target=`, `view=vsplit`).
-  **Unblocked**: use the new `Route.kv` (Phase 7) directly — `kv = {
-  { key = "target", type = "STRING" }, { key = "view", type = "STRING",
-  enum = {...} } }`, no reframing needed.
 
 ### Needs a real design decision (doesn't fit the tree model cleanly)
 
@@ -164,13 +140,6 @@ Grouped by shape, not priority order — pick whichever fits the next session.
   shape-sniffing) — needs a short design pass before implementing, not just
   a mechanical port. (Still open — buffer-local/short-flag/kv extensions
   don't help this one.)
-- **`markdown.nvim`** — `:Markdown` + **buffer-local** commands
-  (`OpenWithSystemApplication`, `TableView*`, registered via
-  `nvim_buf_create_user_command`). **Unblocked**: composer now supports
-  `spec.buffer = true` (Phase 7) — register the buffer-local commands as
-  their own composer verbs from the same `FileType` autocmd that used to
-  call `nvim_buf_create_user_command` directly. `:Markdown` itself migrates
-  as a normal global verb alongside.
 
 ### Single command / low priority (little to no win)
 
