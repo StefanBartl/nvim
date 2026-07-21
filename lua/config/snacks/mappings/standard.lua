@@ -1,9 +1,49 @@
 ---@module 'config.snacks.mappings.standard'
---- Keymap definitions for folke/snacks.nvim.
+--- Keymap definitions previously calling `snacks.picker.*` directly. Routed
+--- through pickers.nvim instead, so they work the same regardless of which
+--- picker engine is active (telescope/fzf-lua/snacks) — see
+--- pickers.nvim's docs/BUILTINS.md and docs/COMMANDS.md.
+---
+--- Three dispatch shapes:
+---   scope_action(scope, action)  -- files/grep with pickers.nvim's own
+---                                    roots/find-flags handling, e.g. cwd files
+---   builtin(name, opts?)         -- native pickers (git/lsp/search/…),
+---                                    dispatched to whichever engine is active
+---   call(fn)                     -- NOT a picker (snacks.explorer()) — stays
+---                                    a direct snacks call, out of scope for
+---                                    pickers.nvim entirely
+---
+--- Only the previously *active* (non-commented) keymaps from the old version
+--- of this file are reproduced here. More native pickers are available via
+--- `:Pickers builtin <Tab>` if you want to bind additional ones yourself.
 
 local M = {}
 
---- Safely require snacks and call a picker/explorer function.
+---@param scope string
+---@param action "files"|"grep"
+local function scope_action(scope, action)
+  return function()
+    local ok, cmd = pcall(require, "pickers.command")
+    if not ok then
+      return
+    end
+    cmd.handle({ fargs = { scope, action } })
+  end
+end
+
+---@param name string
+---@param opts table|nil
+local function builtin(name, opts)
+  return function()
+    local ok, builtins = pcall(require, "pickers.builtins")
+    if not ok then
+      return
+    end
+    builtins.run(name, opts)
+  end
+end
+
+--- Safely require snacks and call a non-picker function (e.g. explorer).
 --- @param fn fun(snacks: table)
 local function call(fn)
   return function()
@@ -23,52 +63,21 @@ function M.keys()
   local maps = {}
 
   ---------------------------------------------------------------------------
-  -- Top Pickers & Explorer
+  -- Top pickers & explorer
   ---------------------------------------------------------------------------
-
-  -- maps[#maps + 1] = {
-  --   "<leader><space>",
-  --   call(function(snacks)
-  --     snacks.picker.smart()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Smart Find Files",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>,",
-  --   call(function(snacks)
-  --     snacks.picker.buffers()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Buffers",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>/",
-  --   call(function(snacks)
-  --     snacks.picker.grep()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Grep",
-  -- }
 
   maps[#maps + 1] = {
     "<leader>:",
-    call(function(snacks)
-      snacks.picker.command_history()
-    end),
+    builtin("command_history"),
     mode = "n",
-    desc = "[snacks] Command History",
+    desc = "[pickers] Command History",
   }
 
   maps[#maps + 1] = {
     "<leader>N",
-    call(function(snacks)
-      snacks.picker.notifications()
-    end),
+    builtin("notifications"),
     mode = "n",
-    desc = "[snacks] Notification History",
+    desc = "[pickers] Notification History",
   }
 
   maps[#maps + 1] = {
@@ -84,72 +93,25 @@ function M.keys()
   -- Find
   ---------------------------------------------------------------------------
 
-  -- maps[#maps + 1] = {
-  --   "<leader>fb",
-  --   call(function(snacks)
-  --     snacks.picker.buffers()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Buffers",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>fc",
-  --   call(function(snacks)
-  --     snacks.picker.files({ cwd = vim.fn.stdpath("config") })
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Find Config File",
-  -- }
-
   maps[#maps + 1] = {
     "<leader>ff",
-    -- "<leader>ff",
-    call(function(snacks)
-      snacks.picker.files()
-    end),
+    scope_action("cwd", "files"),
     mode = "n",
-    desc = "[snacks] Find Files",
+    desc = "[pickers] Find Files",
   }
-
-  -- maps[#maps + 1] = {
-  -- "<leader>git",
-  -- -- "<leader>fg",
-  -- call(function(snacks)
-  -- snacks.picker.git_files()
-  -- end),
-  -- mode = "n",
-  -- desc = "[snacks] Find Git Files",
-  -- }
 
   maps[#maps + 1] = {
     "<leader>pro",
-    -- "<leader>fp",
-    call(function(snacks)
-      local projects_config = {
-        finder = "recent_projects",
-        dev = vim.fn.has("win32") == 1 and "E:\\repos" or "~/repos",
-        patterns = { ".git", "package.json", "Makefile" },
-        recent = true,
-        max_depth = 2,
-        win = {
-          preview = { minimal = true },
-        },
-      }
-      snacks.picker.projects(projects_config)
-    end),
+    builtin("projects"),
     mode = "n",
-    desc = "[snacks] Projects",
+    desc = "[pickers] Projects",
   }
 
   maps[#maps + 1] = {
     "<leader>old",
-    -- "<leader>fr",
-    call(function(snacks)
-      snacks.picker.recent()
-    end),
+    builtin("recent"),
     mode = "n",
-    desc = "[snacks] Recent Files",
+    desc = "[pickers] Recent Files",
   }
 
   ---------------------------------------------------------------------------
@@ -158,65 +120,51 @@ function M.keys()
 
   maps[#maps + 1] = {
     "<leader>gb",
-    call(function(snacks)
-      snacks.picker.git_branches()
-    end),
+    builtin("git_branches"),
     mode = "n",
-    desc = "[snacks] Git Branches",
+    desc = "[pickers] Git Branches",
   }
 
   maps[#maps + 1] = {
     "<leader>gl",
-    call(function(snacks)
-      snacks.picker.git_log()
-    end),
+    builtin("git_log"),
     mode = "n",
-    desc = "[snacks] Git Log",
+    desc = "[pickers] Git Log",
   }
 
   maps[#maps + 1] = {
     "<leader>gL",
-    call(function(snacks)
-      snacks.picker.git_log_line()
-    end),
+    builtin("git_log_line"),
     mode = "n",
-    desc = "[snacks] Git Log Line",
+    desc = "[pickers] Git Log Line",
   }
 
   maps[#maps + 1] = {
     "<leader>gs",
-    call(function(snacks)
-      snacks.picker.git_status()
-    end),
+    builtin("git_status"),
     mode = "n",
-    desc = "[snacks] Git Status",
+    desc = "[pickers] Git Status",
   }
 
   maps[#maps + 1] = {
     "<leader>gS",
-    call(function(snacks)
-      snacks.picker.git_stash()
-    end),
+    builtin("git_stash"),
     mode = "n",
-    desc = "[snacks] Git Stash",
+    desc = "[pickers] Git Stash",
   }
 
   maps[#maps + 1] = {
     "<leader>gd",
-    call(function(snacks)
-      snacks.picker.git_diff()
-    end),
+    builtin("git_diff"),
     mode = "n",
-    desc = "[snacks] Git Diff (Hunks)",
+    desc = "[pickers] Git Diff (Hunks)",
   }
 
   maps[#maps + 1] = {
     "<leader>gf",
-    call(function(snacks)
-      snacks.picker.git_log_file()
-    end),
+    builtin("git_log_file"),
     mode = "n",
-    desc = "[snacks] Git Log File",
+    desc = "[pickers] Git Log File",
   }
 
   ---------------------------------------------------------------------------
@@ -225,38 +173,30 @@ function M.keys()
 
   maps[#maps + 1] = {
     "<leader>gi",
-    call(function(snacks)
-      snacks.picker.gh_issue()
-    end),
+    builtin("gh_issue"),
     mode = "n",
-    desc = "[snacks] GitHub Issues (open)",
+    desc = "[pickers] GitHub Issues (open)",
   }
 
   maps[#maps + 1] = {
     "<leader>gI",
-    call(function(snacks)
-      snacks.picker.gh_issue({ state = "all" })
-    end),
+    builtin("gh_issue_all"),
     mode = "n",
-    desc = "[snacks] GitHub Issues (all)",
+    desc = "[pickers] GitHub Issues (all)",
   }
 
   maps[#maps + 1] = {
     "<leader>gp",
-    call(function(snacks)
-      snacks.picker.gh_pr()
-    end),
+    builtin("gh_pr"),
     mode = "n",
-    desc = "[snacks] GitHub Pull Requests (open)",
+    desc = "[pickers] GitHub Pull Requests (open)",
   }
 
   maps[#maps + 1] = {
     "<leader>gP",
-    call(function(snacks)
-      snacks.picker.gh_pr({ state = "all" })
-    end),
+    builtin("gh_pr_all"),
     mode = "n",
-    desc = "[snacks] GitHub Pull Requests (all)",
+    desc = "[pickers] GitHub Pull Requests (all)",
   }
 
   ---------------------------------------------------------------------------
@@ -265,228 +205,62 @@ function M.keys()
 
   maps[#maps + 1] = {
     "<leader>cb",
-    -- "<leader>sb",
-    call(function(snacks)
-      snacks.picker.lines()
-    end),
+    builtin("lines"),
     mode = "n",
-    desc = "[snacks] Buffer Lines",
+    desc = "[pickers] Buffer Lines",
   }
 
   maps[#maps + 1] = {
     "<leader>cB",
-    -- "<leader>sB",
-    call(function(snacks)
-      snacks.picker.grep_buffers()
-    end),
+    builtin("grep_buffers"),
     mode = "n",
-    desc = "[snacks] Grep Open Buffers",
+    desc = "[pickers] Grep Open Buffers",
   }
 
   maps[#maps + 1] = {
     "<leader><leader>",
-    -- "<leader>sg",
-    call(function(snacks)
-      snacks.picker.grep()
-    end),
+    scope_action("cwd", "grep"),
     mode = "n",
-    desc = "[snacks] Grep",
+    desc = "[pickers] Grep",
   }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sw",
-  --   call(function(snacks)
-  --     snacks.picker.grep_word()
-  --   end),
-  --   mode = { "n", "x" },
-  --   desc = "[snacks] Grep Word / Selection",
-  -- }
 
   ---------------------------------------------------------------------------
   -- Search
   ---------------------------------------------------------------------------
 
-  -- maps[#maps + 1] = {
-  --   '<leader>s"',
-  --   call(function(snacks)
-  --     snacks.picker.registers()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Registers",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>s/",
-  --   call(function(snacks)
-  --     snacks.picker.search_history()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Search History",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sa",
-  --   call(function(snacks)
-  --     snacks.picker.autocmds()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Autocmds",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sc",
-  --   call(function(snacks)
-  --     snacks.picker.command_history()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Command History",
-  -- }
-
   maps[#maps + 1] = {
     "<leader>com",
-    -- "<leader>sC",
-    call(function(snacks)
-      snacks.picker.commands()
-    end),
+    builtin("commands"),
     mode = "n",
-    desc = "[snacks] Commands",
+    desc = "[pickers] Commands",
   }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sd",
-  --   call(function(snacks)
-  --     snacks.picker.diagnostics()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Diagnostics",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sD",
-  --   call(function(snacks)
-  --     snacks.picker.diagnostics_buffer()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Buffer Diagnostics",
-  -- }
-
-  maps[#maps + 1] = {
-    "<leader>help",
-    -- "<leader>sh",
-    call(function(snacks)
-      snacks.picker.help()
-    end),
-    mode = "n",
-    desc = "[snacks] Help Pages",
-  }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sH",
-  --   call(function(snacks)
-  --     snacks.picker.highlights()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Highlights",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>si",
-  --   call(function(snacks)
-  --     snacks.picker.icons()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Icons",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sj",
-  --   call(function(snacks)
-  --     snacks.picker.jumps()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Jumps",
-  -- }
 
   maps[#maps + 1] = {
     "<leader>fk",
-    -- "<leader>sk",
-    call(function(snacks)
-      snacks.picker.keymaps()
-    end),
+    builtin("keymaps"),
     mode = "n",
-    desc = "[snacks] Keymaps",
+    desc = "[pickers] Keymaps",
   }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sl",
-  --   call(function(snacks)
-  --     snacks.picker.loclist()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Location List",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sm",
-  --   call(function(snacks)
-  --     snacks.picker.marks()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Marks",
-  -- }
 
   maps[#maps + 1] = {
     "<leader>sM",
-    call(function(snacks)
-      snacks.picker.man()
-    end),
+    builtin("man"),
     mode = "n",
-    desc = "[snacks] Man Pages",
+    desc = "[pickers] Man Pages",
   }
 
-  -- maps[#maps + 1] = {
-  --   "<leader>sp",
-  --   call(function(snacks)
-  --     snacks.picker.lazy()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Plugin Specs",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sq",
-  --   call(function(snacks)
-  --     snacks.picker.qflist()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Quickfix List",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>sR",
-  --   call(function(snacks)
-  --     snacks.picker.resume()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Resume Picker",
-  -- }
-
-  -- maps[#maps + 1] = {
-  --   "<leader>su",
-  --   call(function(snacks)
-  --     snacks.picker.undo()
-  --   end),
-  --   mode = "n",
-  --   desc = "[snacks] Undo History",
-  -- }
+  maps[#maps + 1] = {
+    "<leader>help",
+    builtin("help"),
+    mode = "n",
+    desc = "[pickers] Help Pages",
+  }
 
   maps[#maps + 1] = {
     "<leader>ch",
-    call(function(snacks)
-      snacks.picker.colorschemes()
-    end),
+    builtin("colorschemes"),
     mode = "n",
-    desc = "[snacks] Colorschemes",
+    desc = "[pickers] Colorschemes",
   }
 
   ---------------------------------------------------------------------------
@@ -495,84 +269,66 @@ function M.keys()
 
   maps[#maps + 1] = {
     "GD",
-    call(function(snacks)
-      snacks.picker.lsp_definitions()
-    end),
+    builtin("lsp_definitions"),
     mode = "n",
-    desc = "[snacks] Goto Definition",
+    desc = "[pickers] Goto Definition",
   }
 
   maps[#maps + 1] = {
     "gD",
-    call(function(snacks)
-      snacks.picker.lsp_declarations()
-    end),
+    builtin("lsp_declarations"),
     mode = "n",
-    desc = "[snacks] Goto Declaration",
+    desc = "[pickers] Goto Declaration",
   }
 
   maps[#maps + 1] = {
     "GR",
-    call(function(snacks)
-      snacks.picker.lsp_references()
-    end),
+    builtin("lsp_references"),
     mode = "n",
-    desc = "[snacks] References",
+    desc = "[pickers] References",
     nowait = true,
   }
 
   maps[#maps + 1] = {
     "GI",
-    call(function(snacks)
-      snacks.picker.lsp_implementations()
-    end),
+    builtin("lsp_implementations"),
     mode = "n",
-    desc = "[snacks] Goto Implementation",
+    desc = "[pickers] Goto Implementation",
   }
 
   maps[#maps + 1] = {
     "GY",
-    call(function(snacks)
-      snacks.picker.lsp_type_definitions()
-    end),
+    builtin("lsp_type_definitions"),
     mode = "n",
-    desc = "[snacks] Goto Type Definition",
+    desc = "[pickers] Goto Type Definition",
   }
 
   maps[#maps + 1] = {
     "GAI",
-    call(function(snacks)
-      snacks.picker.lsp_incoming_calls()
-    end),
+    builtin("lsp_incoming_calls"),
     mode = "n",
-    desc = "[snacks] Calls Incoming",
+    desc = "[pickers] Calls Incoming",
   }
 
   maps[#maps + 1] = {
     "GAO",
-    call(function(snacks)
-      snacks.picker.lsp_outgoing_calls()
-    end),
+    builtin("lsp_outgoing_calls"),
     mode = "n",
-    desc = "[snacks] Calls Outgoing",
+    desc = "[pickers] Calls Outgoing",
   }
 
   maps[#maps + 1] = {
     "<leader>SS",
-    call(function(snacks)
-      snacks.picker.lsp_symbols()
-    end),
+    builtin("lsp_symbols"),
     mode = "n",
-    desc = "[snacks] LSP Symbols",
+    desc = "[pickers] LSP Symbols",
   }
 
   maps[#maps + 1] = {
     "<leader>sS",
-    call(function(snacks)
-      snacks.picker.lsp_workspace_symbols()
-    end),
+    builtin("lsp_workspace_symbols"),
     mode = "n",
-    desc = "[snacks] LSP Workspace Symbols",
+    desc = "[pickers] LSP Workspace Symbols",
   }
 
   return maps

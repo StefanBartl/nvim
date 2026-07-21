@@ -99,11 +99,16 @@ Repo: `E:\repos\filetree.nvim`, committet & gepusht (`fix(fileops): route rename
 3. **`M.with_release(paths, fn)`**: release → fn → release (fängt zwischenzeitlich neu angelegte Watcher). ✅ (die `adapter.refresh()`-Kopplung aus dem Plan bewusst weggelassen — gehört auf die filetree-Seite, nicht in die generische lib).
 4. **Integration via `on_retry`-Hook** (filetree.nvim `0622a34`): neues opt-in Feature `handle_guard` (infra) installiert die Registry (neo-tree + Windows/WSL), plus `on_retry`-Verdrahtung in `smart_rename`, `copy_move` `do_move`, `rename_batch` (letzteres von rohem `vim.fn.rename` auf `fsops.rename_file` + EXDEV-Fallback konvertiert). End-to-end verifiziert (EPERM bis release, dann Erfolg, kein Crash). **`handle_guard` ist default-disabled** (patcht neo-tree-Internal + schließt uv-Handles → opt-in).
 
-**🔲 Offen:**
+**✅ Zusätzlich erledigt (2026-07-21, Fortsetzung):**
 
-- **`trash`** ist bewusst *nicht* über `on_retry` verdrahtet: trash verschiebt über externe Kommandos (`mv`/`trash`/`gio`) via `run_argv`, nicht über `cross.fs.mutate` — es gibt dort keinen `on_retry`-Seam. Braucht stattdessen ein `with_release`-Pre-Wrap um den trash-Aufruf. Separater, anders geformter Schritt.
-- **Schritt 5 — `watcher_quarantine` auflösen/umbauen:** noch offen. Beide Features koexistieren aktuell (beide wrappen `watch_folder` unabhängig — komponierbar, aber Duplikation). Ziel: `watcher_quarantine` in `handle_guard` auflösen (ein Konzept statt zwei) oder `M.enter` zusätzlich `handle_guard.release` rufen lassen.
-- **Schritt 6 — Diagnose:** `:Filetree handles` (listet getrackte Handles pro Pfad; `watch.count()` + interne Registry sind die Datenquelle) + Health-Check. Noch nicht gebaut. `watch` exponiert bereits `count()` als Ansatzpunkt.
+- **`trash`-Integration** (filetree `92274d1`): `do_trash` gibt den Watcher auf dem Pfad vor dem externen trash-Kommando frei. Weil trash über einen *separaten Prozess* (`mv`/`trash`/`gio` via run_argv) läuft und libuv-Close asynchron ist, wird — nur wenn wirklich ein Watcher freigegeben wurde — die Loop kurz gepumpt (`vim.wait(20)`), damit das Handle wirklich zu ist, bevor der Fremdprozess läuft. Kein `on_retry` (den gibt's dort nicht), sondern explizites release+pump.
+- **Schritt 6 — Diagnose** (lib.nvim `e60b94e`, filetree `edf80b9`): `watch.list()` liefert `{path, active, exists}`; `:Filetree handles` listet die getrackten Handles (● aktiv / ○ idle) und markiert Watcher auf nicht mehr existierenden Pfaden (= Leak-Signatur). `:checkhealth filetree` hat eine `handle_guard`-Zeile (ok mit Count, oder Warn bei geleakten Watchern).
+
+**🔲 Offen — Schritt 5, bewusst nach dem Test:**
+
+- **`watcher_quarantine` auflösen/mergen:** absichtlich zurückgestellt. `watcher_quarantine` ist aktuell noch aktiv (in der User-Config) und dient als **Sicherheitsnetz** während des 1-2-Tage-Tests von `handle_guard`. Beide koexistieren sauber (beide wrappen `watch_folder` unabhängig, komponierbar). Erst wenn der Test bestätigt, dass `handle_guard` den Lock wirklich behebt, sollte `watcher_quarantine` aufgelöst werden — es vorher zu entfernen hieße, das Netz vor dem Beweis wegzunehmen. Ziel danach: ein Konzept statt zwei.
+
+**Aktueller Test-Status:** `handle_guard = { enabled = true }` in `plugins/personal/init.lua` aktiviert (2026-07-21). User beobachtet 1-2 Tage, ob der sporadische EPERM-Lock noch auftritt. Zur Laufzeit prüfbar via `:Filetree handles` / `:checkhealth filetree`.
 
 ---
 

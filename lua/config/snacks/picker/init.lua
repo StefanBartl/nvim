@@ -36,7 +36,9 @@ end
 ---@return { input: { keys: table }, list: { keys: table }, preview: { keys: table } }
 local function pickers_win()
   local ok, keys = pcall(require, "pickers.keys")
-  if not ok then return empty_win() end
+  if not ok then
+    return empty_win()
+  end
   local win = keys.snacks_win()
   -- Defensive: guarantee all three window buckets exist.
   win.input = win.input or { keys = {} }
