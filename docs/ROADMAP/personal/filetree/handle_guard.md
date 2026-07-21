@@ -80,7 +80,7 @@ Repo: `E:\repos\filetree.nvim`, committet & gepusht (`fix(fileops): route rename
 - **Kontext-Sicherheit geprüft:** `do_copy`/`do_move` rufen bereits `vim.fn.mkdir`/`readdir`/`isdirectory` (Main-Loop-pflichtige vimL-Funktionen), laufen also schon auf dem Main-Loop — `vim.wait` im Retry dort sicher, ohne Änderung.
 - **Verifiziert:** beide Module laden headless mit lib.nvim auf rtp; realer copy+rename auf Temp-Dateien über `cross.fs.mutate` (Inhalt erhalten, alt weg/neu da); Testsuite ohne neue Fehler (die zwei bestehenden Fails — fehlende `docs/BINDINGS.lua`, `units.lua:453` — sind vorbestehend).
 
-**Offene Lücke (bewusst nicht Teil dieser Migration, aber verwandt):** `copy_move/init.lua`s `do_move` nutzt weiterhin `vim.fn.rename()` (nicht `uv.fs_rename`) für den eigentlichen Move — das ist der *primäre* Lock-Trigger laut Root-Cause und umgeht den Retry-Layer weiterhin. Kandidat für einen Folge-Commit: `do_move` ebenfalls auf `fsops.rename_file` umstellen.
+**Folge-Commit (erledigt): `do_move` ebenfalls umgestellt.** Der eigentliche Move ist laut Root-Cause der *primäre* Lock-Trigger, lief aber noch über `vim.fn.rename()`. Jetzt über `fsops.rename_file` — mit einem bewussten Fallback: `uv.fs_rename` kann **nicht** laufwerksübergreifend (gibt `EXDEV`, kein transienter Fehler → kein Retry). Da nvim-Config auf `C:` und Repos auf `E:` liegen, ist ein cross-drive Paste-Move real. Deshalb: bei `EXDEV` Rückfall auf `vim.fn.rename` (das intern copy+delete macht) — cross-drive bleibt funktionsfähig (ohne Retry-Schutz, aber selten), same-drive kriegt den EPERM/EACCES/EBUSY-Retry. Verhalten headless verifiziert (same-drive rename ok; cross-drive → `EXDEV: cross-device link not permitted` → `vim.fn.rename`-Fallback landet die Datei).
 
 ---
 
@@ -90,16 +90,20 @@ Repo: `E:\repos\filetree.nvim`, committet & gepusht (`fix(fileops): route rename
 
 `use_libuv_file_watcher = false` in [`neotree.lua:168`](../../../../lua/plugins/neotree.lua) testen, über mehrere Tage (Fehler ist sporadisch). Bestätigt oder widerlegt die Root-Cause-Analyse, bevor weiter Arbeit in Schritt 4 fließt. **Vom User noch nicht zurückgemeldet.**
 
-### 🔲 Schritt 4 — `lib.nvim/neotree/watch`-Registry + `handle_guard`-Feature
+### 🟡 Schritt 4 — `lib.nvim/neotree/watch`-Registry + `handle_guard`-Feature (Kern fertig, Reste offen)
 
-Noch nicht begonnen. Geplanter Umfang:
+**✅ Erledigt & gepusht:**
 
-1. **`lib.nvim/lua/lib/nvim/neotree/watch/init.lua`**: patcht `neo-tree.sources.filesystem.lib.fs_watch` (Patch-Mechanismus existiert schon als Vorlage in `filetree.nvim`s `watcher_quarantine.patch_neotree_watch`). Wrapt `watch_folder`, `unwatch_folder`, `stop_watching` so, dass vor dem Verwerfen eines Watchers immer `handle:stop()` **und** `handle:close()` passiert, plus Entfernen aus der internen `watchers`-Tabelle.
-2. **`M.release(paths)`**: schließt alle Handles auf `path` und alle Unterpfade (Prefix-Match auf normalisierten Pfaden, `util/path.lua`-Normalisierung nutzen) — bei Ordner-Rename hängen Kind-Watcher mit dran und blockieren genauso.
-3. **`M.with_release(paths, fn)`**: `release(paths)` → `fn()` → nach Erfolg nochmal `release({old, new})`, dann `adapter.refresh()`. Der zweite Release fängt Watcher ab, die neo-tree zwischenzeitlich neu angelegt hat.
-4. **Integration via `on_retry`-Hook** (aus Schritt 2) in den Fileops, die dann Schritt 3 nutzen: `smart_rename`, `copy_move` (beim Move), `rename_batch` (mehrere Pfade in Folge — hier besonders relevant), `trash`.
-5. **`watcher_quarantine` umbauen statt duplizieren**: `M.enter(duration, paths)` soll zusätzlich `handle_guard.release(paths)` rufen. Der Notify-Patch bleibt als Netz für Race-Fenster, aber die Ursache wird behoben statt nur versteckt. Alternative, eher bevorzugt: `watcher_quarantine` komplett in das neue Feature auflösen — ein Konzept statt zwei.
-6. **Diagnose:** `:Filetree handles` listet offene Handles pro Pfad; Health-Check in `checkhealth/features.lua`, der auf Windows warnt, wenn Watcher auf nicht mehr existierende Pfade zeigen (= die Leak-Signatur, sofort sichtbar).
+1. **`lib.nvim/lua/lib/nvim/neotree/watch/init.lua`** (lib.nvim `e2316ce`): `install()` wrapt `fs_watch.watch_folder` (trackt jeden Watcher nach Pfad) und `stop_watching` (schließt die Handles, die neo-tree leakt). Idempotent, graceful No-op wenn fs_watch fehlt. **Bewusste Design-Entscheidung gegenüber dem Plan:** `unwatch_folder`/`Watcher:stop` werden *nicht* reimplementiert (zu fragil gegen neo-tree-Updates) — stattdessen trackt die Registry die Watcher und schließt on-demand via `release`. **Kritische Korrektheit:** `release` gibt neo-trees `Watcher` nach dem Close ein *frisches, ungestartetes* `fs_event` — sonst würde neo-trees späteres `updated_watched()`/`:start()` auf einem geschlossenen Handle crashen. Headless gegen ein originalgetreues Fake-`fs_watch` verifiziert (19 Assertions).
+2. **`M.release(paths)`**: schließt Handles auf `path` + alle Unterpfade (Prefix-Match, Separator/Laufwerks-Case normalisiert). ✅
+3. **`M.with_release(paths, fn)`**: release → fn → release (fängt zwischenzeitlich neu angelegte Watcher). ✅ (die `adapter.refresh()`-Kopplung aus dem Plan bewusst weggelassen — gehört auf die filetree-Seite, nicht in die generische lib).
+4. **Integration via `on_retry`-Hook** (filetree.nvim `0622a34`): neues opt-in Feature `handle_guard` (infra) installiert die Registry (neo-tree + Windows/WSL), plus `on_retry`-Verdrahtung in `smart_rename`, `copy_move` `do_move`, `rename_batch` (letzteres von rohem `vim.fn.rename` auf `fsops.rename_file` + EXDEV-Fallback konvertiert). End-to-end verifiziert (EPERM bis release, dann Erfolg, kein Crash). **`handle_guard` ist default-disabled** (patcht neo-tree-Internal + schließt uv-Handles → opt-in).
+
+**🔲 Offen:**
+
+- **`trash`** ist bewusst *nicht* über `on_retry` verdrahtet: trash verschiebt über externe Kommandos (`mv`/`trash`/`gio`) via `run_argv`, nicht über `cross.fs.mutate` — es gibt dort keinen `on_retry`-Seam. Braucht stattdessen ein `with_release`-Pre-Wrap um den trash-Aufruf. Separater, anders geformter Schritt.
+- **Schritt 5 — `watcher_quarantine` auflösen/umbauen:** noch offen. Beide Features koexistieren aktuell (beide wrappen `watch_folder` unabhängig — komponierbar, aber Duplikation). Ziel: `watcher_quarantine` in `handle_guard` auflösen (ein Konzept statt zwei) oder `M.enter` zusätzlich `handle_guard.release` rufen lassen.
+- **Schritt 6 — Diagnose:** `:Filetree handles` (listet getrackte Handles pro Pfad; `watch.count()` + interne Registry sind die Datenquelle) + Health-Check. Noch nicht gebaut. `watch` exponiert bereits `count()` als Ansatzpunkt.
 
 ---
 

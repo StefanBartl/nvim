@@ -13,7 +13,10 @@
 
 ## Bug
 
-1. Windows File-Lock nach move/rename/delete (sporadisch) — Root Cause gefunden (neo-tree `fs_watch` Handle-Leak), Fix in Arbeit. Details, Stand & offene Schritte: [handle_guard.md](handle_guard.md).
+[ ] filetree.nvim handle_guard: seit 2026-07-21 08:36  aktiv (Windows watcher-lock fix).
+    Über 1-2 Tage prüfen: tritt der sporadische "kann Ordner/File nach move/rename
+    nicht löschen" EPERM-Lock nochmal auf? Falls nein → fix bestätigt. Falls ja →
+    handle_guard release greift nicht in dem Fall, Details an Claude.
 
 ---
 
