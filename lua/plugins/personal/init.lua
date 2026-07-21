@@ -391,6 +391,11 @@ return apply_source({
           -- that explicit, no functional effect.
           trash = { enabled = true },
           watcher_quarantine = { enabled = true },
+          -- handle_guard: actually closes neo-tree's leaked directory-watcher
+          -- handles before a rename/move so the Windows EPERM file-lock can't
+          -- happen (watcher_quarantine only hides the error). Opt-in / default
+          -- off; enabled here to test whether the sporadic lock stops recurring.
+          handle_guard = { enabled = true },
           -- statusline defaults to true; highlights_isolate opted in here.
           -- Confirmed working in real interactive use - replaces
           -- config.neotree's window/{disable_statusline,highlight}.lua +
