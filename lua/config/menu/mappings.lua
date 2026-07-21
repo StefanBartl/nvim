@@ -23,7 +23,7 @@ end
 local function markdown_menu_source(buf)
   if not is_markdown(vim.bo[buf].ft) then return nil end
 
-  local ok, mdmenu = pcall(require, "markdown_nvim.integrations.menu")
+  local ok, mdmenu = pcall(require, "markdown.integrations.menu")
   if not ok then return nil end
 
   local items = mdmenu.items()

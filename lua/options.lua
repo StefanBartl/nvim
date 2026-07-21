@@ -77,7 +77,7 @@ do
   local autocmd = require("lib.nvim.autocmd")
   autocmd.create("FileType", function()
     opt_local.foldmethod = "expr"
-    opt_local.foldexpr = "v:lua.require'markdown_nvim.core.fold'.foldexpr(v:lnum)"
+    opt_local.foldexpr = "v:lua.require'markdown.core.fold'.foldexpr(v:lnum)"
     opt_local.foldenable = true
     opt_local.foldlevel = 99
     opt_local.foldlevelstart = 99

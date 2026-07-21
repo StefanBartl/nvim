@@ -1,6 +1,6 @@
 # markdown.nvim — Keymaps Cheatsheet
 
-Source: `lua/markdown_nvim/bindings/keymaps.lua`
+Source: `lua/markdown/bindings/keymaps.lua`
 Cross-reference: `docs/BINDINGS.lua`, `docs/keymaps.md` — both current for keymaps/commands.
 
 Buffer-local, installed on `FileType` for markdown/mdx/md (see

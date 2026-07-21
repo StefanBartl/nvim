@@ -656,7 +656,7 @@ return apply_source({
     -- otherwise). Listing it here just guarantees load order in this config.
     dependencies = { "StefanBartl/color_my_ascii.nvim" },
     config = function()
-      require("markdown_nvim").setup()
+      require("markdown").setup()
     end,
   },
 

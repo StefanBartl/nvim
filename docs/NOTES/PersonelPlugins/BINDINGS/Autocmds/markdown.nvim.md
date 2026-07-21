@@ -1,6 +1,6 @@
 # markdown.nvim — Autocmds Cheatsheet
 
-Sources: `lua/markdown_nvim/bindings/autocmds.lua`, `scope/init.lua`, `hl_options/init.lua`, `hl_options/hl_groups/blockquote.lua`, `fenced_fix/init.lua`, `core/table_mode.lua`, `commands/refs.lua`, `commands/preview.lua`
+Sources: `lua/markdown/bindings/autocmds.lua`, `scope/init.lua`, `hl_options/init.lua`, `hl_options/hl_groups/blockquote.lua`, `fenced_fix/init.lua`, `core/table_mode.lua`, `commands/refs.lua`, `commands/preview.lua`
 
 **⚠️ `docs/BINDINGS.lua`'s autocmd table is stale/incomplete** — missing
 `MarkdownNvimScopeFoldCache`, `MarkdownNvimTableMode_<bufnr>`,

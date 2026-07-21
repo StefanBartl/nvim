@@ -7,7 +7,7 @@
 2026-07-19) — the plugin that originally motivated Phase 7's
 `spec.buffer = true|bufnr` buffer-local support. **No syntax change**.
 
-Source: `lua/markdown_nvim/bindings/usrcmds.lua`
+Source: `lua/markdown/bindings/usrcmds.lua`
 Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health.md`
 
 | Command | Scope | Grammar |
@@ -43,7 +43,7 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
   against `pdfport.nvim` and `diff.nvim` after the fix.
 - **`:Markdown`'s 10 subcommands**: dispatch bypasses composer's own bound
   `ctx.args` and calls the ORIGINAL, unmodified
-  `markdown_nvim.commands.execute(ctx.raw.fargs, {range,...})` directly —
+  `markdown.commands.execute(ctx.raw.fargs, {range,...})` directly —
   `ctx.raw.fargs` already includes the subcommand token itself, the exact
   shape `M.execute` expects (it does its own `table.remove(argv,1)`).
   First-arg `<Tab>` completion reuses `M.complete()` *itself* (not a
