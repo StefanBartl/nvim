@@ -4,7 +4,7 @@ One command tree, built via `lib.nvim.usercmd.composer` (migrated
 2026-07-20). **First hard `lib.nvim` dependency this repo has ever had** —
 previously fully standalone (`util/lib.lua`'s own module doc used to say "no
 hard dependency is ever introduced"); now `:Emojis` fails to register without
-it, no fallback. Matches the nvim-cmdlog precedent already established in the
+it, no fallback. Matches the cmdlog precedent already established in the
 roadmap for "zero lib.nvim dependency" repos: add the dependency as part of
 the migration, not before.
 

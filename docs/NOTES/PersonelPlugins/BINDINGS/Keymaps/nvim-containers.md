@@ -1,4 +1,4 @@
-# nvim-containers — Keymaps Cheatsheet
+# sandbox.nvim — Keymaps Cheatsheet
 
 **None — confirmed genuinely zero.** A full source grep for
 `vim.keymap.set(`/`nvim_set_keymap(`/`nvim_buf_set_keymap(` and any local
@@ -9,7 +9,7 @@ views (`ui/list_view.lua`, `ui/log_view.lua`, `ui/inspect_view.lua`,
 own.
 
 A stub at `lua/containers/bindings/keymaps/README.md` confirms this is
-intentional: *"No default keymaps are defined by nvim-containers — all
+intentional: *"No default keymaps are defined by sandbox.nvim — all
 functionality is exposed via user commands... Add keymap modules here if/when
 default keymaps are introduced."*
 

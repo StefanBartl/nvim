@@ -167,11 +167,11 @@ buffer cleanup), `User LazyDone` (nvim_usrcmds helptags, opt-in).
 
 None.
 
-## [nvim-cmdlog](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/nvim-cmdlog.md)
+## [cmdlog](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/cmdlog.md)
 
 None.
 
-## [nvim-containers](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/nvim-containers.md)
+## [sandbox.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/sandbox.nvim.md)
 
 None (documented as intentional).
 

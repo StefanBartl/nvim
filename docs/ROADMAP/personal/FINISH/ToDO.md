@@ -25,8 +25,8 @@ F: Finish bereits aufgeteilt nach Checklist & FinishMe; Checklisten in FinishMe
 |         `/lib.nvim`         |    [1]    |   [1]    |          |
 |      `/markdown.nvim`       |    [1]    |   [1]    |          |
 |       `/migrate.nvim`       |    [1]    |   [1]    |          |
-|       `/nvim-cmdlog`        |    [1]    |   [F]    |          |
-|     `/nvim-containers`      |    [1]    |   [F]    |          |
+|       `/cmdlog`        |    [1]    |   [F]    |          |
+|     `/sandbox.nvim`      |    [1]    |   [F]    |          |
 |        `/open.nvim`         |    [1]    |   [1]    |          |
 |       `/pdfport.nvim`       |    [1]    |   [1]    |          |
 |       `/pickers.nvim`       |    [1]    |   [1]    |          |

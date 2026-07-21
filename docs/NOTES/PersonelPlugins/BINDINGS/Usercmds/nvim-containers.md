@@ -1,4 +1,4 @@
-# nvim-containers — User Commands Cheatsheet
+# sandbox.nvim — User Commands Cheatsheet
 
 Three command trees, built via `lib.nvim.usercmd.composer` (migrated
 2026-07-19). Replaces 25 independent flat commands (`Container*` ×10,
@@ -64,7 +64,7 @@ instead of a `vim.notify` summary.
   `require("containers.bindings.usrcmds").setup()` — the new handler
   modules no longer self-register on require, so an explicit `.setup()`
   call is needed (matching the `setup()`-gated pattern used by every other
-  migrated repo, rather than nvim-containers' previous load-order-implicit
+  migrated repo, rather than sandbox.nvim' previous load-order-implicit
   one).
 - **`:Wsl` registration is now conditional in Lua, not structural**: the
   original guard (`if not engine_utils.is_executable("wsl") then return

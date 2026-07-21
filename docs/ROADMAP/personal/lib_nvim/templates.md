@@ -38,8 +38,8 @@ claims — a couple of repos' docs are stale on this point.
 | `markdown.nvim` | `TESTS/run.lua` | hard | ✅ has template, Pattern A |
 | `mdview.nvim` | `tests/lua/*_spec.lua`, `tests/nvim/*_spec.lua` (+`tests/nvim/harness.lua`) | hard (8 files) | **gap**: `harness.lua`'s header only documents a manual `--cmd "set rtp+=.,../lib.nvim"` — no `$LIB_NVIM_PATH` override, no `lazy` fallback, no `package.path` registration. Good candidate to adopt the shared template (Pattern A) |
 | `migrate.nvim` | `docs/TESTS/run.lua` | hard for `migrate.opt`/`migrate.notify`/`migrate.common.*` | ✅ Pattern D (excludes those modules, documented in a comment) — the precedent Pattern D is named after |
-| `nvim-cmdlog` | none | **zero** — confirmed, no `require("lib.` anywhere | matches the composer roadmap's note; add the dependency before adding a test suite, then pick a pattern |
-| `nvim-containers` | none (a few files literally named `inspect_container*.lua`, not tests) | soft (`util/run_argv.lua` explicitly pcall-bridges `lib.nvim.cross.run_argv`, matching its `notify.lua` convention) | no suite yet — Pattern B fits its existing soft-dependency stance if one is added |
+| `cmdlog` | none | **zero** — confirmed, no `require("lib.` anywhere | matches the composer roadmap's note; add the dependency before adding a test suite, then pick a pattern |
+| `sandbox.nvim` | none (a few files literally named `inspect_container*.lua`, not tests) | soft (`util/run_argv.lua` explicitly pcall-bridges `lib.nvim.cross.run_argv`, matching its `notify.lua` convention) | no suite yet — Pattern B fits its existing soft-dependency stance if one is added |
 | `open.nvim` | none | hard (11 files) | no suite yet — Pattern A if one is added |
 | `pdfport.nvim` | none | hard (12 files) | no suite yet — Pattern A if one is added |
 | `pickers.nvim` | `docs/TESTS/pickers_spec.lua` | hard | ✅ has its own equivalent (Pattern C, partial-skip); today also aligned to accept `$LIB_NVIM_PATH` (kept `$REPOS_DIR` for back-compat) |

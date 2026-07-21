@@ -1,4 +1,4 @@
-# nvim-cmdlog — Autocmds Cheatsheet
+# cmdlog — Autocmds Cheatsheet
 
 **None.** A repo-wide search for `nvim_create_autocmd`, `nvim_create_augroup`,
 and legacy `vim.cmd("autocmd ...")`/`augroup` strings returned zero matches

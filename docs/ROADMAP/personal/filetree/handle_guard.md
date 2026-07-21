@@ -71,21 +71,24 @@ Repo: `c:\repos\lib.nvim`, committet & gepusht (`96afd50`).
 
 **Bekannte Grenze:** Der Retry hilft gegen spurious Windows-Locks (Defender/Indexer/OneDrive). Gegen die eigentliche Ursache (neo-tree schließt Watcher-Handles nie) hilft er nur zufällig, wenn der GC dazwischenkommt — das ist erst mit Schritt 4 wirklich behoben.
 
+### ✅ Schritt 3 — filetree.nvim auf `cross.fs.mutate` umgestellt (fertig)
+
+Repo: `E:\repos\filetree.nvim`, committet & gepusht (`fix(fileops): route rename/copy through lib.nvim.cross.fs.mutate`).
+
+- `copy_move/init.lua` — beide `uv.fs_copyfile()` (in `copy_dir` + `do_copy`) auf `fsops.copy_file()` umgestellt; Modul-Level-`require("lib.nvim.cross.fs.mutate")`, die zwei lokalen `local uv = vim.uv or vim.loop` entfernt.
+- `smart_rename/init.lua` — der **async** `uv.fs_rename(old, new, cb)` auf das **synchrone** `fsops.rename_file()` umgestellt. Der alte `vim.schedule`-Wrap um das Post-Work war nur nötig, weil der libuv-Rename-Callback off-loop lief; der `function(workspace_edit)`-Kontext ist bereits Main-Loop (das un-scheduled `apply_workspace_edit` darüber beweist es), was der Retry-Backoff-`vim.wait` genau braucht → Post-Work läuft jetzt inline.
+- **Kontext-Sicherheit geprüft:** `do_copy`/`do_move` rufen bereits `vim.fn.mkdir`/`readdir`/`isdirectory` (Main-Loop-pflichtige vimL-Funktionen), laufen also schon auf dem Main-Loop — `vim.wait` im Retry dort sicher, ohne Änderung.
+- **Verifiziert:** beide Module laden headless mit lib.nvim auf rtp; realer copy+rename auf Temp-Dateien über `cross.fs.mutate` (Inhalt erhalten, alt weg/neu da); Testsuite ohne neue Fehler (die zwei bestehenden Fails — fehlende `docs/BINDINGS.lua`, `units.lua:453` — sind vorbestehend).
+
+**Offene Lücke (bewusst nicht Teil dieser Migration, aber verwandt):** `copy_move/init.lua`s `do_move` nutzt weiterhin `vim.fn.rename()` (nicht `uv.fs_rename`) für den eigentlichen Move — das ist der *primäre* Lock-Trigger laut Root-Cause und umgeht den Retry-Layer weiterhin. Kandidat für einen Folge-Commit: `do_move` ebenfalls auf `fsops.rename_file` umstellen.
+
 ---
 
 ## Was noch fehlt
 
 ### 🔲 Schritt 1 — Diagnose-Bestätigung (kein Code)
 
-`use_libuv_file_watcher = false` in [`neotree.lua:168`](../../../../lua/plugins/neotree.lua) testen, über mehrere Tage (Fehler ist sporadisch). Bestätigt oder widerlegt die Root-Cause-Analyse, bevor weiter Arbeit in Schritt 3/4 fließt. **Vom User noch nicht zurückgemeldet.**
-
-### 🔲 Schritt 3 — filetree.nvim auf `cross.fs.mutate` umstellen
-
-Aktuell umgeht filetree.nvim die Mutationsschicht komplett:
-- `smart_rename/init.lua:471` — `uv.fs_rename()` direkt
-- `copy_move/init.lua:185,205` — `uv.fs_copyfile()` direkt
-
-Beide auf `lib.nvim.cross.fs.mutate.rename_file`/`copy_file` umstellen. Unabhängig vom Lock-Thema für sich genommen richtig (Duplikation der Mutationsschicht beseitigen, passt zur laufenden [[lib-nvim-extraction]]-Migration). **Voraussetzung für Schritt 4**, weil der `on_retry`-Hook nur dort greift, wo tatsächlich über `cross.fs.mutate` mutiert wird.
+`use_libuv_file_watcher = false` in [`neotree.lua:168`](../../../../lua/plugins/neotree.lua) testen, über mehrere Tage (Fehler ist sporadisch). Bestätigt oder widerlegt die Root-Cause-Analyse, bevor weiter Arbeit in Schritt 4 fließt. **Vom User noch nicht zurückgemeldet.**
 
 ### 🔲 Schritt 4 — `lib.nvim/neotree/watch`-Registry + `handle_guard`-Feature
 
@@ -103,7 +106,7 @@ Noch nicht begonnen. Geplanter Umfang:
 ## Nebenfunde / Notizen
 
 - **Upstream-Bug-Kandidat:** fehlendes `handle:close()` in neo-trees `fs_watch.lua` ist unabhängig von diesem Workaround meldenswert (`stop_watching()` wirft die Handle-Tabelle weg ohne zu schließen). Noch nicht als Issue eingereicht.
-- **Plugin-Liste durchsucht, keine weiteren Kandidaten:** `buffer-ctx`, `cascade`, `color_my_ascii`, `debugging`, `dap`, `diff`, `emojis`, `github_stats`, `gopath`, `language`, `markdown`, `mdview`, `migrate`, `nvim-cmdlog`, `nvim-containers`, `open`, `pdfport`, `pickers`, `insights`, `recommender`, `replacer`, `reposcope`, `sessions` — keine Treffer auf FS-Mutation/Watcher-Pattern. `cross.fs.mutate` bleibt trotzdem sinnvoll generisch (z. B. `fs/json`s atomarer tmp+rename-Write, `fs/trash`, die beide dasselbe Windows-`fs_rename`-Verhalten dokumentiert hatten, siehe `lib.nvim/lua/lib/nvim/fs/json/README.md:31`).
+- **Plugin-Liste durchsucht, keine weiteren Kandidaten:** `buffer-ctx`, `cascade`, `color_my_ascii`, `debugging`, `dap`, `diff`, `emojis`, `github_stats`, `gopath`, `language`, `markdown`, `mdview`, `migrate`, `cmdlog`, `sandbox.nvim`, `open`, `pdfport`, `pickers`, `insights`, `recommender`, `replacer`, `reposcope`, `sessions` — keine Treffer auf FS-Mutation/Watcher-Pattern. `cross.fs.mutate` bleibt trotzdem sinnvoll generisch (z. B. `fs/json`s atomarer tmp+rename-Write, `fs/trash`, die beide dasselbe Windows-`fs_rename`-Verhalten dokumentiert hatten, siehe `lib.nvim/lua/lib/nvim/fs/json/README.md:31`).
 - **`fs/json` und `fs/trash` profitieren indirekt**, sobald sie (separat, nicht Teil dieses Plans) auf `cross.fs.mutate.rename_file` statt direktem `uv.fs_rename` umgestellt werden — aktuell rufen beide noch roh auf, siehe `lib.nvim/lua/lib/nvim/fs/json/init.lua:68` und `lib.nvim/lua/lib/nvim/fs/trash/init.lua:99,120`. Nicht Teil dieses Plans, aber derselbe Chokepoint-Gedanke.
 
 ---

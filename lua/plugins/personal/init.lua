@@ -71,7 +71,7 @@ local MODE = {
   ["dap.nvim"] = "dir",
   ["diff.nvim"] = "dir",
   ["language.nvim"] = "dir", -- Basename des Specs "StefanBartl/language.nvim"
-  ["nvim-cmdlog"] = "dir",
+  ["cmdlog"] = "dir",
   ["emojis.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
   -- ["learn-cli.nvim"]        = "dir",
@@ -490,7 +490,7 @@ return apply_source({
   },
 
   {
-    "StefanBartl/nvim-cmdlog",
+    "StefanBartl/cmdlog",
     lazy = false,
     cmd = { "CmdlogOpen", "CmdlogSearch" },
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -539,7 +539,7 @@ return apply_source({
           "StefanBartl/markdown.nvim",
           "StefanBartl/mdview.nvim",
           "StefanBartl/migrate.nvim",
-          "StefanBartl/nvim-cmdlog",
+          "StefanBartl/cmdlog",
           "StefanBartl/sandbox.nvim",
           "StefanBartl/open.nvim",
           "StefanBartl/pdfport.nvim",

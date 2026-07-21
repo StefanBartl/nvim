@@ -18,8 +18,8 @@
 |         `markdown.nvim`          |
 |          `mdview.nvim`           |
 |          `migrate.nvim`          |
-|          `nvim-cmdlog`           |
-|        `nvim-containers`         |
+|          `cmdlog`           |
+|        `sandbox.nvim`         |
 |           `open.nvim`            |
 |          `pdfport.nvim`          |
 |          `pickers.nvim`          |

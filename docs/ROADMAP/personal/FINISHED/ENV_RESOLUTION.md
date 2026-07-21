@@ -14,7 +14,7 @@ Analyse via 3 parallele Explore-Agents über alle 25 Repos unter `E:\repos`.
 
 **Der Baustein existiert bereits** — `lib.nvim.cross.fs.expand_path` löst
 `~`, `$VAR`, `${VAR}` und `%VAR%` korrekt auf — wird aber nur von **2 von 25
-Plugins** (`pickers.nvim`, `nvim-cmdlog`) tatsächlich benutzt. Der Rest macht
+Plugins** (`pickers.nvim`, `cmdlog`) tatsächlich benutzt. Der Rest macht
 entweder gar nichts (raw string), oder verlässt sich auf `vim.fn.expand`
 (deckt `~`/`$VAR`, aber **nie** `%VAR%`) oder `vim.fn.fnamemodify(":p")`
 (expandiert **gar nichts**, nur Pfad-Normalisierung).
@@ -34,10 +34,10 @@ stattfindet.
 
 | Baustein | Pfad | Deckt ab | Genutzt von |
 |---|---|---|---|
-| `expand_path` | `lib.nvim/lua/lib/nvim/cross/fs/expand_path/init.lua` | `~` (via `vim.uv.os_homedir()`), `$VAR`, `${VAR}`, `%VAR%` — alles über `vim.env` | nur `pickers.nvim` (`actions/dir.lua`), `nvim-cmdlog` (`core/shell.lua`) |
+| `expand_path` | `lib.nvim/lua/lib/nvim/cross/fs/expand_path/init.lua` | `~` (via `vim.uv.os_homedir()`), `$VAR`, `${VAR}`, `%VAR%` — alles über `vim.env` | nur `pickers.nvim` (`actions/dir.lua`), `cmdlog` (`core/shell.lua`) |
 | re-export | `lib.nvim.cross.init.lua:29` (`M.fs.expand_path`) | — | — |
 | `normalize_path` | `lib.nvim/lua/lib/nvim/normalize/utils.lua:66` | delegiert an `vim.fs.normalize` (expandiert laut Neovim-Doku ebenfalls `~`/env), aber primär Separator-Normalisierung | `debugging.nvim`, referenziert-aber-tot in `dap.nvim` |
-| Composer `PATH`/`DIR`/`FILE`-Argtypen | `lib.nvim/lua/lib/nvim/usercmd/composer/argtypes.lua:129-161` | **keine** Expansion — nur `fnamemodify(":p")` + `is_dir`/`filereadable` | fast alle Composer-Plugins (gopath, mdview, nvim-containers, migrate, reposcope, filetree, fileops, debugging, …) |
+| Composer `PATH`/`DIR`/`FILE`-Argtypen | `lib.nvim/lua/lib/nvim/usercmd/composer/argtypes.lua:129-161` | **keine** Expansion — nur `fnamemodify(":p")` + `is_dir`/`filereadable` | fast alle Composer-Plugins (gopath, mdview, sandbox.nvim, migrate, reposcope, filetree, fileops, debugging, …) |
 | `lib.nvim.ui.kit` (nicht `lib.nvim.ui` — das Modul existiert nicht) | `lib.nvim/lua/lib/nvim/ui/kit/init.lua` | `input()`, `select()`, `prompt()`, `confirm()`, `picker()`, `popup()` — geben getippten Text **unverändert** zurück | alle Plugins, die `vim.ui.input`-artige Prompts brauchen |
 
 Zwei überlappende Normalisierungs-Pfade (`expand_path` vs. `normalize_path`)
@@ -70,8 +70,8 @@ oder nur an einer von mehreren Stellen · **NO** = raw string, keine Expansion �
 | `markdown.nvim` | `table view <path>`, `create <target>`, `links show <scope>`, mdview-Forward | YES | `util/path.lua` — **Referenz-Implementierung** |
 | `mdview.nvim` | `:MDView start [file] [cwd=<dir>]`, `file-log <path>`, `browser_cmd`/`server_cwd` config | **NO** für `start`/`cwd=`/Config (nur Slash-Unify), YES nur für `file-log` | `helper/normalize.lua` — guter Hook-Punkt |
 | `migrate.nvim` | keine | N/A | — |
-| `nvim-cmdlog` | `favorites_path`, `shell_history_path` (YES, via `expand_path`), `notes.dir` (**NO**) | gemischt | `core/shell.lua` — **Referenz-Implementierung** für `expand_path`-Nutzung |
-| `nvim-containers` | keine (nur IDs/Distro-Namen) | N/A | — |
+| `cmdlog` | `favorites_path`, `shell_history_path` (YES, via `expand_path`), `notes.dir` (**NO**) | gemischt | `core/shell.lua` — **Referenz-Implementierung** für `expand_path`-Nutzung |
+| `sandbox.nvim` | keine (nur IDs/Distro-Namen) | N/A | — |
 | `open.nvim` | `:Open [scope]` (`path=<dir>`, Keyword-Pfade) | PARTIAL (`vim.fn.expand`, kein `%VAR%`), zusätzlich **Bug**: nativer-Windows-Zweig in `lib.nvim.cross.open_default` expandiert gar nicht | keins lokal |
 | `pdfport.nvim` | `:PdfPort [path]` | PARTIAL | keins lokal |
 | `pickers.nvim` | `:Pickers dir <nav>`, `path=`-Prompt, `repos_dir`/Collection-`dir` Config, `system`-Suchtoken | **YES für `dir`/`path=`** (volle Expansion inkl. `%VAR%`) — **Referenz-Implementierung**; aber `repos_dir`/Collection-`dir` aus `setup()` und `system`-Suchtoken **NO** | `actions/dir.lua:expand_vars` |
@@ -112,7 +112,7 @@ genauso ein Pfad-String vom User sind (in der jeweiligen `setup({...})`-Config):
 - `pickers.nvim`: `repos_dir`, Collection-`dir`
 - `insights.nvim`: `symbols.cache.dir`, `metrics.output_file`, `tree.outdir`, `imports.output_file`
 - `sessions.nvim`: `root`
-- `nvim-cmdlog`: `notes.dir`
+- `cmdlog`: `notes.dir`
 - `filetree.nvim`: `safety.backup_dir`
 - `mdview.nvim`: `browser_cmd`, `server_cwd`
 - `open.nvim`: `keywords`-Werte (teilweise gedeckt, s.o.)
@@ -152,8 +152,8 @@ genauso ein Pfad-String vom User sind (in der jeweiligen `setup({...})`-Config):
         — [4bb3720](https://github.com/StefanBartl/insights.nvim/commit/4bb3720)
   - [x] `sessions.nvim`: `root`-Config expandiert.
         — [e06d86a](https://github.com/StefanBartl/sessions.nvim/commit/e06d86a)
-  - [x] `nvim-cmdlog`: `notes.dir` an `expand_path`-Pattern von `shell.lua` angeglichen.
-        — [bdc290a](https://github.com/StefanBartl/nvim-cmdlog/commit/bdc290a)
+  - [x] `cmdlog`: `notes.dir` an `expand_path`-Pattern von `shell.lua` angeglichen.
+        — [bdc290a](https://github.com/StefanBartl/cmdlog/commit/bdc290a)
   - [x] `filetree.nvim`: `util/path.lua:to_absolute()` (soft-dependency-Pattern,
         analog zu `unify_slashes`/`relpath`) + `safety.backup_dir` expandiert.
         — [d9aadcf](https://github.com/StefanBartl/filetree.nvim/commit/d9aadcf)
@@ -185,7 +185,7 @@ genauso ein Pfad-String vom User sind (in der jeweiligen `setup({...})`-Config):
       an `expand_path` delegiert.
       — [4b3e022](https://github.com/StefanBartl/dap.nvim/commit/4b3e022)
 - Referenzimplementierungen als Vorlage: `pickers.nvim/actions/dir.lua`
-  (`expand_vars`) und `nvim-cmdlog/core/shell.lua` (`expand_path_template`)
+  (`expand_vars`) und `cmdlog/core/shell.lua` (`expand_path_template`)
   zeigten bereits vor diesem Umbau den korrekten Umgang mit `expand_path`.
 
 Kein Plugin aus der Liste braucht eine komplett neue Utility — `lib.nvim`

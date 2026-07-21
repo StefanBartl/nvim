@@ -1,4 +1,4 @@
-# nvim-cmdlog — Keymaps Cheatsheet
+# cmdlog — Keymaps Cheatsheet
 
 No global/normal-mode keymaps. All keymaps are **prompt-buffer-local, inside
 picker `attach_mappings`** — different per backend (`config.options.picker`:

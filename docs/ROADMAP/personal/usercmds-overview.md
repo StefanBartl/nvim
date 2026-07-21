@@ -38,8 +38,8 @@ match at the shorter prefix — found three such cases, all minor (below).
 | --- | --- | --- |
 | `:Cascade` | cascade.nvim | List rotate/sort/reverse/strip/indent/dedent/renumber |
 | `:ColorMyAscii` | color_my_ascii.nvim | ASCII-art highlighting, schemes, fences |
-| `:Cmdlog` | nvim-cmdlog | Command/shell history pickers |
-| `:Container` | nvim-containers | Container ops (list/logs/exec/start/stop/…) |
+| `:Cmdlog` | cmdlog | Command/shell history pickers |
+| `:Container` | sandbox.nvim | Container ops (list/logs/exec/start/stop/…) |
 | `:Copy` | buffer-ctx.nvim | Copy context text to clipboard (subcommand tree) |
 | `:Dap` | dap.nvim | Debug adapter control |
 | `:Debug` | debugging.nvim | ~15-category debug view/dump toolkit |
@@ -55,7 +55,7 @@ match at the shorter prefix — found three such cases, all minor (below).
 | `:GithubStats` | github_stats.nvim | Fetch/show/summary/chart/export/dashboard |
 | `:Gopath` | gopath.nvim | Resolve/open/copy/debug/check/probe/cache |
 | `:GopathResolve`/`Open`/`Copy`/`Debug`/`Check`/`Probe`/`CacheBuild`/`CacheInfo`/`CacheAddRoot` | gopath.nvim | Legacy compat aliases (kept alongside, individually toggleable) |
-| `:Image` | nvim-containers | Image ops (list/pull/remove/prune) |
+| `:Image` | sandbox.nvim | Image ops (list/pull/remove/prune) |
 | `:Insert` | buffer-ctx.nvim | Insert context text at cursor (subcommand tree) |
 | `:Insights` | insights.nvim | symbols/metrics/tree/cache/compress/imports/conflicts/… |
 | `:LastSession` | sessions.nvim | Load the "last" session (CLI-friendly, plain command) |
@@ -79,7 +79,7 @@ match at the shorter prefix — found three such cases, all minor (below).
 | `:Spellcheck` | language.nvim | Spell/grammar review |
 | `:Surround` / `:Wrap` | replacer.nvim | Wrap matches with a delimiter |
 | `:Translate` / `:TranslateReplace` | language.nvim | Translate (popup/window) / translate-and-replace |
-| `:Wsl` | nvim-containers | WSL distro ops (only if `wsl.exe` reachable) |
+| `:Wsl` | sandbox.nvim | WSL distro ops (only if `wsl.exe` reachable) |
 
 ## Buffer-local commands (only exist on a specific filetype's buffer)
 
