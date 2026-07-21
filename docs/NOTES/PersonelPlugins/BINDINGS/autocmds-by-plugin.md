@@ -183,7 +183,7 @@ None.
 
 | Event(s) | Augroup | Pattern | Action |
 | --- | --- | --- | --- |
-| `FileType` | `pdfport_nvim_tree` | `NvimTree` | Register nvim-tree integration keymaps |
+| `FileType` | `pdfport_tree` | `NvimTree` | Register nvim-tree integration keymaps |
 | `FileType` | `pdfport_oil` | `oil` | Register oil.nvim integration keymaps |
 | `FileType` | `pdfport_netrw` | `netrw` | Register netrw integration keymaps |
 

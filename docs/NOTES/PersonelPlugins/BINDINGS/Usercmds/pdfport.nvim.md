@@ -6,7 +6,7 @@ completing with no input yet, reusing the plugin's own existing completion
 logic verbatim). Replaces the old 6 flat `:PdfPortX` commands (fully removed,
 no alongside period).
 
-Source: `lua/pdfport_nvim/bindings/usrcmds.lua`
+Source: `lua/pdfport/bindings/usrcmds.lua`
 Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `doc/pdfport.nvim.txt`
 
 | Command | Effect |
@@ -16,7 +16,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `doc/pdfport.nvim.txt
 | `:PdfPort float [path]` | Extract to floating window |
 | `:PdfPort system [path]` | Open with system application |
 | `:PdfPort terminal [path]` | Render as terminal image |
-| `:PdfPort health` | Run `:checkhealth pdfport_nvim` |
+| `:PdfPort health` | Run `:checkhealth pdfport` |
 
 All path-taking subcommands fall back to `<cfile>` then the current buffer
 name when `[path]` is omitted — unchanged from the original.

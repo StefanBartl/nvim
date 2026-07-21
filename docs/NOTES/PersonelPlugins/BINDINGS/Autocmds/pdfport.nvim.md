@@ -1,6 +1,6 @@
 # pdfport.nvim — Autocmds Cheatsheet
 
-Source: `lua/pdfport_nvim/bindings/autocmds.lua`
+Source: `lua/pdfport/bindings/autocmds.lua`
 Cross-reference: `docs/BINDINGS.md` — verified accurate and current, no discrepancies.
 
 All autocmds go through one shared helper, `M.on_filetype(pattern,
@@ -21,7 +21,7 @@ accumulating duplicate autocmds/keymaps).
 
 | Pattern | Augroup name | Integration |
 | --- | --- | --- |
-| `"NvimTree"` | `pdfport_nvim_tree` | `integrations/nvim_tree.lua` |
+| `"NvimTree"` | `pdfport_tree` | `integrations/nvim_tree.lua` |
 | `"oil"` | `pdfport_oil` | `integrations/oil.lua` |
 | `"netrw"` | `pdfport_netrw` | `integrations/netrw.lua` |
 
