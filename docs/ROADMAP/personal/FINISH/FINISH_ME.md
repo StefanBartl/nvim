@@ -40,8 +40,8 @@ BINDINGS autocmds durchgeehn ob man was optimeren kann
 * [ ] Verwendung von `lib.nvim.selection` durchsetzen:
 * Ein wiederverwendbares Modul (`lines/reselect_lines/keep_lines` für Zeilenbereiche, `chars/reselect_chars/keep_chars` für Byte-Spaltenbereiche in derselben Zeile), das eine visuelle Auswahl wiederherstellt, nachdem ein Mapping den Buffer verändert hat (da `gv` hier nicht funktioniert, weil dessen Marks erst gesetzt werden, wenn der Visual-Mode tatsächlich endet). Inklusive vollständiger README.
 * **Vorgehen:**
-1. Zuerst noch einmal prüfen, ob das Modul am richtigen Ort in der `lib` liegt, verbessert werden muss usw.
-2. Anschließend bei **jeder** Visual-Mode-Keymap, die zuvor die Selektion verloren hat, dieses Modul anwenden (sofern es sinnvoll ist).
+  1. Zuerst noch einmal prüfen, ob das Modul am richtigen Ort in der `lib` liegt, verbessert werden muss usw.
+  2. Anschließend bei **jeder** Visual-Mode-Keymap, die zuvor die Selektion verloren hat, dieses Modul anwenden (sofern es sinnvoll ist).
 
 ---
 
@@ -69,10 +69,12 @@ BINDINGS autocmds durchgeehn ob man was optimeren kann
 
 * [ ] Einen dedizierten Schlachtplan für jeden dieser Punkte erstellen:
 * [ ] **Checklisten einzeln und nacheinander anwenden:** Gehe dafür jede Liste separat durch und erstelle für jede eine `/docs/ROADMAP/**.md` Datei (wobei `**` dem jeweiligen Namen der Liste entspricht):
-* [Architekur&Coding-Regeln](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Arch%26Coding-Regeln.md) `/docs/ROADMAP/Arch&Coding.md`
-* [Zentrale Prinzipien](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Zentrale-Prinzipien.md) `/docs/ROADMAP/Zentral-Prinzipien.md`
-* [Checklist.md](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Checklist.md) `/docs/ROADMAP/Checklist.md`
-
-
+  * [Architekur&Coding-Regeln](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Arch%26Coding-Regeln.md) `/docs/ROADMAP/Arch&Coding.md`
+  * [Zentrale Prinzipien](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Zentrale-Prinzipien.md) `/docs/ROADMAP/Zentral-Prinzipien.md`
+  * [Checklist.md](https://www.google.com/search?q=E:/repos/Notes/MyNotes/Checklists/Lua/Checklist.md) `/docs/ROADMAP/Checklist.md`
 * [ ] Die vorhandene `/docs/ROADMAP.md` komplett durchgehen und einen konkreten Plan zur Implementierung ausarbeiten.
-* [ ] Den Ordner `/NEOTREE_FEATURES` durchgehen und strukturiert bewerten, was mit den darin enthaltenen Elementen gemacht wird.
+* [ ] Den Ordner `doss/NEOTREE_FEATURES`, wenn vorhanden, durchgehen und strukturiert bewerten, was mit den darin enthaltenen Elementen gemacht wird.
+* [ ] Kurze Bewertung ausgeben, ob sich inm Plugin etwas lohnt bzw sinnvoll machbar ist, um es als `Source` für Neotree zu verwenden. (Wie Tabliste im filebrowser)
+
+---
+

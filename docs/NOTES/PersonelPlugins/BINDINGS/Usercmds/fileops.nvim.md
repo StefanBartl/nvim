@@ -1,18 +1,78 @@
 # fileops.nvim — User Commands Cheatsheet
 
-`:File` rebuilt via `lib.nvim.usercmd.composer` (migrated 2026-07-19).
-**No syntax change**: same `:[count]File[!] {subcommand} [args…]` grammar,
-same 11 subcommands, same `:N File next/prev` count-prefix cycling.
+`:File` built via `lib.nvim.usercmd.composer`. Grammar:
+`:[count]File[!] {subcommand} [args…]`
 
 Source: `lua/fileops_nvim/bindings/usrcmds.lua`
-Docs: `doc/fileops.txt`, `docs/installation.md`, `README.md`
+Docs: `doc/fileops.txt`, `docs/commands.md`, `docs/BINDINGS.md`, `README.md`
 
-`new`, `write`, `saveas`, `writeto`, `mkdir`, `rename [%] {dest}`,
-`duplicate [%] {dest}`, `delete`, `next [target]`, `prev [target]`,
-`cd [window|tab|global]` — see `doc/fileops.txt` §5 for the full reference.
+## Subcommands (19)
+
+| Subcommand | Args | Notes |
+| --- | --- | --- |
+| `new` | `[path]` | set buffer name, no write; prompts via `vim.ui.input` if `path` omitted |
+| `write` | `[path]` | set buffer name + write (`!` overwrites) |
+| `saveas` | `[path]` | `:saveas`-equivalent (`!` overwrites) |
+| `writeto` | `[path]` | write a copy, name stays (`!` overwrites) |
+| `mkdir` | — | create parent dirs for current buffer |
+| `touch` | `[path]` | create an empty file if missing (real `touch` semantics) |
+| `rename` | `[%] [dest]` | rename + update buffer (reloads); git-aware (see below) |
+| `move` | `[%] [dest]` | move + update buffer (no reload); git-aware |
+| `duplicate` | `[%] [dest]` | copy + open the copy (`!` overwrites); git-aware (warn only) |
+| `copy` | `[%] [dest]` | copy without opening (`!` overwrites); git-aware (warn only) |
+| `delete` | `[%]` | delete + close buffer (`!` force-closes); git-aware |
+| `next` | `[target] [glob]` | navigate directory listing; `[glob]` e.g. `*.lua` narrows before navigating |
+| `prev` | `[target] [glob]` | same, backwards |
+| `first` | `[target]` | jump to first file in directory listing |
+| `last` | `[target]` | jump to last file |
+| `open` | `[target]` | reopen the current file in a different window target (no navigation) |
+| `path` | `[mode]` | copy path to clipboard — `abs`\|`rel`\|`name`\|`dir` |
+| `info` | — | size/mtime/permissions via libuv `fs_stat` |
+| `bulk rename` | `{pattern} {replacement}` | batch-rename files in dir via Lua pattern; preview + `vim.ui.select` confirm; `!` overwrites |
+| `cd` | `[scope]` | cd to buffer's dir + refresh explorer — `window`\|`tab`\|`global` |
+| `help` | — | short usage overview in the command line |
+
+`[path]`/`[dest]` args are all optional: omitted → `vim.ui.input` prompt
+instead of an error. Tab-completion for them is relative to the **current
+buffer's directory**, not cwd.
+
+`[target]` values (next/prev/first/last/open): `%`/`replace`, `stay`/`current`,
+`new`/`split`, `vsplit`, `tab`, `bg`/`background`.
+
+`:N File next/prev` count-prefix still cycles N files at once
+(`ctx.range.count`).
+
+## Git-aware ops (opt-in: `git_aware.enable = true`)
+
+`rename`/`move`/`duplicate`/`copy`/`delete` check tracked-ness via
+`git ls-files` when enabled. Default `git_aware.warn_only = true` just notes
+it in the result message; `warn_only = false` uses `git mv`/`git rm` instead
+of the plain libuv op (delete only when `delete.mode == "permanent"`).
+
+## Explorer refresh / events
+
+Every mutating op (new/write/saveas/writeto/mkdir/touch/rename/move/
+duplicate/copy/delete) fires a `User FileopsChanged` autocmd
+(`{action, path}`) and reloads neo-tree/nvim-tree in place, gated by
+`explorer.refresh_on_change` (default `true`; the event itself always fires).
 
 ## Notes
 
+- 2026-07-21: extended from the original 11 subcommands to 19 in one session
+  — `open`, `path`, `info`, `bulk rename` are new subcommands; `copy`,
+  `touch`, `first`, `last` were added just before that. `bulk rename` is a
+  two-segment composer route (`path = { "bulk", "rename" }`), same mechanism
+  as any other subcommand, dispatched through a synthetic `"bulk_rename"` key.
+- `next`/`prev`'s first arg can't be a strict enum anymore now that it may
+  be a glob pattern instead of a target keyword (`:File next *.lua`) — a
+  custom `FILEOPS_CYCLE_ARG` composer type validates anything but still
+  offers the known target keywords for `<Tab>`; `resolve_cycle_args()` in
+  `usrcmds.lua` decides at dispatch time whether arg1 was a target or the
+  pattern.
+- `:File open` is new, not a rename of `next`/`prev` — it reopens the
+  *current* file in a different window target without navigating anywhere
+  (`cycle.open_current()`, which just calls the exported `cycle.open_path()`
+  on the current buffer's own name).
 - **Motivated a new composer capability — Phase 8, `spec.count`/`route.count`
   (`:N Verb` prefix)**. fileops.nvim's `:File next`/`:File prev` cycling
   needs a `v:count`-style prefix (`:5File next` = skip 5 at once) — composer
@@ -41,12 +101,6 @@ Docs: `doc/fileops.txt`, `docs/installation.md`, `README.md`
   distinguish the actually-required parts (command layer, fs mutate,
   background buffer open) from the genuinely-cosmetic soft part (notify
   styling only).
-- **Vestigial completion dropped**: the original's `delete` subcommand
-  offered `"%"` as a first-arg completion candidate, but `dispatch()`'s
-  `delete` branch takes zero arguments (`file.delete_current({force=bang})`
-  never reads `fargs`) — a harmless leftover, not reproduced (`delete` has
-  no declared args in the composer route).
 - `resolve_dest`'s `[%] {dest}` two-shape argument (implicit `%` when one
   arg given, explicit when two) is preserved by forwarding composer's bound
-  positionals straight into the unchanged `resolve_dest(fargs)`/
-  `dispatch()` functions — no reimplementation.
+  positionals straight into `resolve_dest(fargs)`/`dispatch()`.

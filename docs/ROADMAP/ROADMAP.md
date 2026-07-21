@@ -1,25 +1,20 @@
 # Roadmap
-- Könmte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
+- Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
 * [ ] Inline-Images in Markdown-Files einbinden: snacks?
-- github:stats.nvim besser machen
-- checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
+  - checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
+- [ ] `github_stats.nvim` besser machen
 - [ ] `migrate.nvim` fertigstellen
-- learn-cli.nvim vielleicht doch ?
-- `mdview.nvim`: Das war eigentlich mein Websocket Lern Prozess...
-- `lua/config/menu` nach `lua/wkdnvchad`?
-- beim öfgfnen eienr datzei über harpoon aktualisere filetree.nvim den filetree noch nicht cwd_sync
-- [ ] nvim/lua/autocmds analysieren, zb general -> no name guard in filetee.nvim buffer-ctx implementieren
-- lernen: https://www.browserstack.com/
+- [ ] `learn-cli.nvim` vielleicht doch ?
+- [ ] `lua/config/menu` nach `lua/wkdnvchad`?
+- [ ] beim öffnen einer derzeit über `harpoon` aktualisiert `filetree.nvim` den filetree noch nicht `cwd_sync`
+- [ ] `nvim/lua/autocmds` analysieren
 
 ## Table of content
 
   - [ZIEL](#ziel)
   - [High](#high)
-  - [LSP](#lsp)
-  - [General](#general)
-  - [Bugs](#bugs)
 
 ---
 
@@ -42,24 +37,13 @@
 ## High
 
 8. `leader wq`: Alle issues lösen
+  1. dass was wq macht in einem `lib.nvim / lib.nvim.ui` ausgeben
 9. `/wkdoptions`
   1. UI Linemarker gehört README
   2. `wkdoptions` mit `options.lua` verheiraten (vielleicht als default_options)
 10. `nvim/init.lua` durchgehen
 11. [ ] Funktionen/Module identifizieren, die man mit FFI/C performanter machen könnte
   - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
-
----
-
-## LSP
-
----
-
-## General
-
----
-
-## Bugs
 
 ---
 

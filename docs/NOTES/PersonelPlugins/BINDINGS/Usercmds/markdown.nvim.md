@@ -1,6 +1,6 @@
 # markdown.nvim — User Commands Cheatsheet
 
-`:Markdown` (global, 10 subcommands) plus 8 buffer-local commands
+`:Markdown` (global, 11 subcommands) plus 8 buffer-local commands
 (`OpenWithSystemApplication`, `TableViewToggle`, `TableViewMarkdown`,
 `TableViewBox`, `TableViewSelect`, `TableViewClose`, `TableViewOpenBrowser`,
 `TableViewOpenBrowserNice`) rebuilt via `lib.nvim.usercmd.composer` (migrated
@@ -12,13 +12,30 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 | Command | Scope | Grammar |
 | --- | --- | --- |
-| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|headline_spacing} [args…]` | global | see `commands/*.lua` per-subcommand grammar |
+| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|headline_spacing\|gaps} [args…]` | global | see `commands/*.lua` per-subcommand grammar |
 | `:OpenWithSystemApplication` | buffer-local | open image/url/file under cursor |
 | `:TableViewToggle\|Markdown\|Box [scope]` | buffer-local | toggle table preview (config/markdown/box style) |
 | `:TableViewSelect` / `:TableViewClose` | buffer-local | select+preview / close persistent preview |
 | `:TableViewOpenBrowser[Nice] [reopen]` | buffer-local | open table in browser (basic/nice HTML) |
 
 ## Notes
+
+- **2026-07-21: added `gaps` subcommand** (heading-level gap checker).
+  `<leader>toc` / `:Markdown toc` now also detect skipped heading levels
+  (e.g. `#` -> `###` with no `##` in between) after each refresh, notify,
+  and offer (`vim.fn.confirm`) to renumber the offending headings on the
+  spot. Toggle with the new `check_heading_gaps` config option (default
+  `true`); per-call override via `:Markdown toc --check-gaps` /
+  `--no-check-gaps`. Explicit on-demand form: `:Markdown gaps`. New module
+  `lua/markdown/core/heading_gaps.lua` (`find_gaps`/`fix_gaps`/`check`).
+  Gated by the existing `toc` feature (not its own feature name), same
+  pattern as `ensure_headline_spacing` — added to `SUBCOMMAND_FEATURES` in
+  both `commands/init.lua` and the mirrored `enabled()` gate in
+  `bindings/usrcmds.lua` (`gaps -> {"toc"}`), and to `SUBCOMMAND_NAMES` in
+  `usrcmds.lua` (now 11 entries) so the real `:Markdown` composer
+  registration path actually creates the route — easy to miss since
+  `commands/init.lua`'s own dispatch table alone isn't what wires the
+  live `:Markdown` command.
 
 - **Found and fixed a real, already-shipped composer bug while migrating
   this repo**: `parse.dispatch`'s bare-invocation branch (`#fargs == 0`)

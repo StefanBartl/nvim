@@ -1,8 +1,5 @@
 # Alle Custom Plugins
 
-auch in docs/list container/cmdlog
-
-
 ## Checklist
 
 2. Module und Plugins durchgehen und
@@ -37,10 +34,7 @@ auch in docs/list container/cmdlog
   1. Wenn es sin macht, hier `docs/TESTS/**` dateien durchfürhen und die ergebnise amit in checkhealth ausgebe. wenn das nicht state of the art ist, dann lassen wir das so-
 6. Alle Plugins sollen **Cross-Plattform** sein
 7. `DEFAULTS.lua` -> expliziote Datei für Defaults vonm UserConfigurations, also: `/config/init.lua` && `/config/DEFAULTS.lua`
-8. `mygrep.nvim` - was machen wir mit demn? Implemeniteren in `pickers.nvim`
-9. `migrate.nvim` fertig stellen
-10. `mdlink` vs `mdlinks`? Migration nach `markdown.nvim`
-11. `config/init.lua` `config/DEFAULTS.lua` für pluginseitige defaults, aber möglichst viele Features sollen vom user aus ebenfalls einstellbar sein, also zb.:
+8. `config/init.lua` `config/DEFAULTS.lua` für pluginseitige defaults, aber möglichst viele Features sollen vom user aus ebenfalls einstellbar sein, also zb.:
 
     ```lua
     {
@@ -71,4 +65,3 @@ Jedes Plugin muss abgeklopft werden, ob es sinnvolle Optionen gibt, die noch nic
 13. alles commitet und branche auf main umstellen
 
 ---
-

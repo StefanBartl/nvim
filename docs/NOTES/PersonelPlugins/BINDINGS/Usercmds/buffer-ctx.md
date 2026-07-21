@@ -28,8 +28,8 @@ the system clipboard (+ unnamed register).
 | `filename` | `[noext]` | Filename, with or without extension |
 | `module` | `[require\|lua_ls\|js\|c\|generic]` | `require("foo.bar")` / `---@module` / etc. |
 | `location` | `[cwd\|abs\|lua] [range]` | `path:line`; with `range`, `path:L1-L2` from a `:'<,'>` selection or an explicit range |
-| `timestamp` | `[format] [--utc]` | Current timestamp; sticky UTC via `timestamp = { utc = true }` config |
-| `date` | — | Shorthand for `timestamp iso-date` |
+| `timestamp` | `[format] [--utc]` | Current timestamp; sticky UTC via `timestamp = { utc = true }` config. Formats: `iso`, `iso-date`, `iso-time`, `unix`, `human`, `short`, `log`, `filename`, `long`, `weekday`, `time`, `12h`, `rfc2822` |
+| `date` | `[format] [--utc]` | Shorthand for `timestamp`, defaulting to `iso-date` instead of `iso` — same format list |
 | `uuid` | `[standard\|compact\|upper\|braced]` | UUID v4 |
 | `annotation` | `{type} [args…]` | LuaLS annotation line(s) — see types below |
 | `boilerplate` | `[template] [name]` | Multi-line code template; no arg → `vim.ui.select` picker |
@@ -108,3 +108,14 @@ Args not given on the command line are prompted via `vim.fn.input`.
   external process. Runs in the buffer's own directory (not cwd), so it stays
   correct after `:cd`. Detached HEAD reports an error for `branch` rather than
   the literal string `"HEAD"`.
+- **`date` options (2026-07-21)**: `:Insert date`/`:Copy date` gained the same
+  `[format] [--utc]` grammar as `:Insert timestamp` (previously it was a fixed
+  `iso-date`, no args). `timestamp.lua` also gained 5 formats: `long`
+  (weekday + full date), `weekday`, `time` (alias of `iso-time`), `12h`,
+  `rfc2822`. Two real Windows/locale bugs found while adding these, both
+  fixed by hand-building the string instead of trusting `os.date`'s strftime:
+  `%p` (AM/PM) silently vanishes under Windows' C runtime, and `%A`/`%B`/`%a`/`%b`
+  (weekday/month names) follow the system locale rather than English (a German
+  locale renders `%a` as `"Di"`) — `long`/`weekday`/`rfc2822` now use a fixed
+  English name table instead. `human` format is untouched (pre-existing,
+  still locale-dependent via `%B`).

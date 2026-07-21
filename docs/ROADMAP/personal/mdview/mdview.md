@@ -1,5 +1,11 @@
 # `mdview.nvim`
 
+- overlay macht nichts
+- oom und cursor keine wirkung
+- schnell das mitscrollen unterbrechen im broswer kann wertvoll sein wenn man schenll was nachschjauen will und im browse rsoll man das scrollen ncht sehen
+- kleines, nciht os wichtig, aber momentan, im browser, werdenb klleerzeilen komplett weg removed wenn man mehrere unterinander hat. ich wllte "!plat" lassen im dokument mit 5 leerzeilen untereinander, das hat er dann nicht angezgit.
+
+
 ## FINISH
 
 - Alle features durchgehjen und die perform,anteste, ideale DEFAULT config zusammenstellen
