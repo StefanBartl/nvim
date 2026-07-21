@@ -4,13 +4,16 @@ Source: `lua/migrate/bindings/keymaps.lua`, `lua/migrate/common/picker.lua`
 Cross-reference: `docs/BINDINGS.md` — verified accurate and current, no discrepancies.
 
 Optional, **off by default** (`config.keymaps = false`). If the user sets
-`keymaps = { opt = "<lhs>", notify = "<lhs>" }` (registered via
-`require("lib.nvim.map")`):
+`keymaps = { opt = "<lhs>", notify = "<lhs>", hl = "<lhs>", lsp = "<lhs>" }`
+(registered via `require("lib.nvim.map")`, now looped generically over
+`migrate.registry`'s entries instead of two hardcoded fields):
 
 | lhs (user-chosen) | mode | action | desc |
 | --- | --- | --- | --- |
 | `km.opt` | n | `:MigrateOpt` (current-line mode) | "migrate: run :MigrateOpt (current line)" |
 | `km.notify` | n | `:MigrateNotify` (current-line mode) | "migrate: run :MigrateNotify (current line)" |
+| `km.hl` | n | `:MigrateHl` (current-line mode) | "migrate: run :MigrateHl (current line)" |
+| `km.lsp` | n | `:MigrateLsp` (current-line mode) | "migrate: run :MigrateLsp (current line)" |
 
 Which-key picks up `desc` automatically since there's no fixed prefix;
 `bindings/which_key.lua` registers no groups, only reports which-key's

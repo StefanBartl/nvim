@@ -15,18 +15,37 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/insights.txt`
 | `:Insights tree` \| `count` \| `clipboard` \| `fileinfo` | — | File tree / count / clipboard / fs.stat float |
 | `:Insights cache {build\|info\|clear}` | — | Symbol index cache |
 | `:Insights compress` | `[path] [outdir]` | Archive a directory |
-| `:Insights imports` | `[filter...]` | `require()` usage report, group-filterable |
+| `:Insights imports` | `[filter/lang...] [telescope\|fzf]` | Import/require usage report across Lua, Python, JS/TS, Go, Rust, C/C++ — filterable by group, module prefix, or language; optional picker view |
+| `:Insights imports reverse` | `<module>` | Every file that imports `<module>` |
+| `:Insights imports unused` | `[filter/lang...]` | Bound import names never referenced again in their file |
 | `:Insights conflicts` \| `unimported` | — | Quickfix conflicts / unimported-component check |
 | `:Insights devserver` | `[list\|kill]` | List/kill tracked dev servers (bare = list) |
 
 ## Notes
 
+- **2026-07-25 — imports went multi-language**: `insights/imports/init.lua` now
+  dispatches across a `langs/` registry (Lua, Python, JS/TS, Go, Rust, C/C++;
+  Lua keeps its Tree-sitter/ripgrep dual backend, the other five are
+  regex/text scanners). Two new composer routes were added as literal
+  children of `imports` — `{"imports","reverse"}` (takes one required
+  `STRING` module arg) and `{"imports","unused"}` (repeated filter args,
+  same as the base route) — coexisting with the base `imports` route's
+  6 repeated `INSIGHTS_IMPORT_GROUP` slots exactly like `devserver`'s
+  `list`/`kill` children already did: composer's tree-walk (`tree.lua`
+  `M.walk`) greedily consumes literal children before falling back to
+  parsing remaining tokens as the parent route's positional args, so a
+  group/filter literally named `reverse` or `unused` would be shadowed
+  (accepted, same tradeoff `devserver` already has for `list`/`kill`). The
+  base route also grew an optional trailing `telescope`/`fzf` token (picker
+  view over the occurrence list, reusing the existing generic
+  `ui/telescope.lua`/`ui/fzf.lua` pickers via a `{filename,lnum,name,
+  func_type}` field mapping — no picker code duplicated).
 - **Order-independent and variadic grammars, not a fixed tree**: `symbols`
   (scope/type/ui/`rebuild` in any order), `metrics` (flags in any order +
   one directory), and `imports` (a variadic list of filter names) don't map
   onto composer's position-means-something route model directly. Solved by
   declaring N optional positional slots of the *same* custom type per route
-  (`repeated_args("PI_SYMBOLS_TOKEN", 4)`, 6 for imports) so every position
+  (`repeated_args("INSIGHTS_SYMBOLS_TOKEN", 4)`, 6 for imports) so every position
   offers the identical candidate set — then `run` merges `ctx.pos` +
   `ctx.rest` back into one flat token list and forwards it, unmodified, into
   the original `handle_symbols`/`handle_imports`, whose own order-independent
@@ -59,7 +78,7 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/insights.txt`
 - **`compress`'s path/outdir stay soft, deliberately not `DIR`**: composer's
   built-in `DIR` type hard-validates the token is an *existing* directory —
   wrong for `outdir`, which is routinely a path that doesn't exist yet
-  (`compress` creates it). Registered `PI_DIR_SOFT` instead (soft validate,
+  (`compress` creates it). Registered `INSIGHTS_DIR_SOFT` instead (soft validate,
   dir-only completion) for both slots, matching the original's actual
   behavior (neither slot was ever validated at parse time either).
 - **`devserver`'s bare form kept**: `:Insights devserver` (no

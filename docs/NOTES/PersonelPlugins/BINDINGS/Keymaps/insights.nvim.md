@@ -22,7 +22,12 @@ which-key.nvim discovers them automatically.
 
 ## Imports report buffer (via `ui.scratch.open`)
 
+Only shown for the scratch-buffer view of `:Insights imports` (not the
+`telescope`/`fzf` picker mode). 2026-07-25: imports now spans Lua, Python,
+JS/TS, Go, Rust, C/C++ (`imports/langs/*.lua`); `gd`/`gp` stayed Lua-only —
+on a non-Lua entry they just notify instead of erroring.
+
 | lhs (config key, default) | action | desc |
 | --- | --- | --- |
-| `def_cfg.keymaps.jump` (`gd`) | Resolves the import entry on the cursor's line, jumps or floats to its definition | "insights: go to import definition" |
-| `def_cfg.keymaps.preview` (`gp`) | Always reveals the import definition in a floating preview | "insights: preview import definition" |
+| `def_cfg.keymaps.jump` (`gd`) | Resolves the Lua import entry on the cursor's line, jumps or floats to its definition (non-Lua: notifies "Lua-only") | "insights: go to import definition" |
+| `def_cfg.keymaps.preview` (`gp`) | Always reveals the import definition in a floating preview (same Lua-only gate) | "insights: preview import definition" |

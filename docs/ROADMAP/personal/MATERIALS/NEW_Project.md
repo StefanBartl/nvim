@@ -19,10 +19,11 @@ Beachte dabei die ausgearbeiteten Regeln & Leitlinien zu den Themem
 - uvm...
 
 welche in den Dateien
-  1. [Arch&Coding-Regeln.md](E:\Notes\MyNotes\Checklists\Lua\Arch&Coding-Regeln.md) &
-  2. [Checklist.md](E:\Notes\MyNotes\Checklists\Lua\Checklist.md) &
-  3. [Zentrale-Prinzipien.md](E:\Notes\MyNotes\Checklists\Lua\Zentrale-Prinzipien.md)
+  1. [Arch&Coding-Regeln.md](./Arch&Coding-Regeln.md) &
+  2. [Checklist.md](./Checklist.md) &
+  3. [Zentrale-Prinzipien.md](./Zentrale-Prinzipien.md)
 festgehalten sind und/oder in den in den Projektdateien anhängig sind.
+
 
 ## Finish
 

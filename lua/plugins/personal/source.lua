@@ -39,7 +39,7 @@ local control = require("plugins.control.mode")
 --   "remote"   → ALLE von GitHub
 --   "disabled" → ALLE aus
 ---@type "auto"|PersonalRepoMode
-local OVERRIDE = "auto"
+local OVERRIDE = "dir"
 
 -- Auflösung der effektiven Quelle, wenn OVERRIDE == "auto":
 --   * "workstation" (siehe machine.lua) hat nie lokale Checkouts

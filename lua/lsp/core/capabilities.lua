@@ -1,24 +1,27 @@
 ---@module 'lsp.core.capabilities'
 --- Build client capabilities from multiple completion stacks (cmp, blink, NvChad).
---- Low-level module: no UI side effects. Callers get `{ warnings, error }` back
---- and decide whether/how to notify.
+---
+--- Never notifies directly: degraded/missing completion stacks are collected
+--- into `warnings` and returned alongside `caps`, so the caller (lsp/init.lua)
+--- decides whether/how to surface them.
 
 local lsp = vim.lsp
 local tbl_deep_extend = vim.tbl_deep_extend
 
 local M = {}
 
----@alias Lsp.Capabilities.Warning { level: integer, msg: string }
+---@alias LspCaps.Warning { level: "warn"|"error", msg: string }
 
---- Build merged LSP client capabilities.
 ---@return table caps
----@return Lsp.Capabilities.Warning[] warnings
+---@return LspCaps.Warning[] warnings
 function M.get()
   ---@type Lsp.Capabilities.Warning[]
   local warnings = {}
 
   -- Start with base LSP capabilities
   local caps = lsp.protocol.make_client_capabilities()
+  ---@type LspCaps.Warning[]
+  local warnings = {}
 
   -- NvChad capabilities FIRST
   do
@@ -37,16 +40,11 @@ function M.get()
 
       -- Verify completion capabilities wurden geladen
       if not (caps.textDocument and caps.textDocument.completion) then
-        table.insert(warnings, {
-          level = vim.log.levels.WARN,
-          msg = "nvim-cmp loaded but no completion capabilities!",
-        })
+        warnings[#warnings + 1] =
+          { level = "warn", msg = "⚠️  nvim-cmp loaded but no completion capabilities!" }
       end
     else
-      table.insert(warnings, {
-        level = vim.log.levels.WARN,
-        msg = "nvim-cmp not found! Completion may not work.",
-      })
+      warnings[#warnings + 1] = { level = "warn", msg = "⚠️  nvim-cmp not found! Completion may not work." }
     end
   end
 
@@ -60,10 +58,17 @@ function M.get()
 
   -- Explizit completion capabilities verifizieren
   if not caps.textDocument or not caps.textDocument.completion then
+<<<<<<< HEAD
     table.insert(warnings, {
       level = vim.log.levels.ERROR,
       msg = "NO COMPLETION CAPABILITIES! Check if nvim-cmp or blink.cmp is installed!",
     })
+=======
+    warnings[#warnings + 1] = {
+      level = "error",
+      msg = "⚠️  NO COMPLETION CAPABILITIES! Check if nvim-cmp or blink.cmp is installed!",
+    }
+>>>>>>> 8b6135fd (Decouple lsp.core.capabilities from notify; progress bar for :UpdateRepos)
 
     -- Fallback: Minimale completion capabilities manuell setzen
     caps.textDocument = caps.textDocument or {}
@@ -98,10 +103,14 @@ function M.get()
         }
       }
     }
+<<<<<<< HEAD
     table.insert(warnings, {
       level = vim.log.levels.WARN,
       msg = "Using FALLBACK completion capabilities",
     })
+=======
+    warnings[#warnings + 1] = { level = "warn", msg = "⚠️  Using FALLBACK completion capabilities" }
+>>>>>>> 8b6135fd (Decouple lsp.core.capabilities from notify; progress bar for :UpdateRepos)
   end
 
   return caps, warnings
@@ -109,20 +118,15 @@ end
 
 ---Apply capabilities globally to all LSP configs.
 ---@return boolean ok
----@return Lsp.Capabilities.Warning[] warnings
+---@return string|nil err
 function M.apply_globally()
   -- Merge these caps into every named config as a base ("*")
-  local caps, warnings = M.get()
+  local caps = M.get()
   if type(lsp.config) ~= "table" then
-    table.insert(warnings, {
-      level = vim.log.levels.WARN,
-      msg = "vim.lsp.config not available (Neovim < 0.10?)",
-    })
-    return false, warnings
+    return false, "vim.lsp.config not available (Neovim < 0.10?)"
   end
-
   lsp.config("*", { capabilities = caps })
-  return true, warnings
+  return true, nil
 end
 
 return M

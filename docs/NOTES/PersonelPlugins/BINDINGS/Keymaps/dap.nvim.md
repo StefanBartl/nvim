@@ -34,4 +34,4 @@ rest of `setup()` (which-key/autocmds still get wired).
 
 ## Notes
 
-- No other keymap registrations exist anywhere else in the repo (`ui/`, `adapters/`, `configurations/`, `core/` register none).
+- No other keymap registrations exist anywhere else in the repo (`ui/`, `languages/`, `adapters/`, `configurations/`, `core/` register none).

@@ -1,22 +1,48 @@
-# migrate.nvim — `:MigrateOpt` / `:MigrateNotify` Cheatsheet
+# migrate.nvim — `:MigrateOpt` / `:MigrateNotify` / `:MigrateHl` / `:MigrateLsp` Cheatsheet
 
-Two independent top-level commands, each its own `lib.nvim.usercmd.composer`
+Four independent top-level commands, each its own `lib.nvim.usercmd.composer`
 verb on a `path = {}` root route. This was the roadmap's "needs a real
 design decision" repo — its grammar dispatches on **argument shape**
 (empty / `%` / `cwd` / range), not a subcommand string.
 
-Source: `lua/migrate/common/command.lua` (`:MigrateOpt` factory, reused by
-any future module registered the same way), `lua/migrate/notify/init.lua`
-(`:MigrateNotify` — bespoke, doesn't go through the factory)
+Source: `lua/migrate/common/command.lua` (shared factory, used by
+`:MigrateOpt`/`:MigrateHl`/`:MigrateLsp`), `lua/migrate/notify/init.lua`
+(`:MigrateNotify` — bespoke, doesn't go through the factory), `lua/migrate/registry.lua`
+(config key -> {module, command, desc} — the only place a new module needs
+to be wired in; `migrate.config.DEFAULTS`/`migrate.bindings.*`/`migrate.health`
+all iterate it instead of naming modules by hand)
 Docs: `docs/BINDINGS.md`, `docs/commands.md`, `doc/migrate.txt`
 
 | Command | Effect |
 | --- | --- |
-| `:MigrateOpt` / `:MigrateNotify` | Migrate the current line, applied immediately |
-| `:[range]MigrateOpt` / `:[range]MigrateNotify` | Migrate the given range, applied immediately (no picker) |
-| `:MigrateOpt %` / `:MigrateNotify %` | Scan the whole buffer, open Telescope picker |
-| `:MigrateOpt cwd` / `:MigrateNotify cwd` | Scan cwd via ripgrep, open Telescope picker (`MigrateNotify cwd` auto-writes) |
+| `:MigrateOpt` / `:MigrateNotify` / `:MigrateHl` / `:MigrateLsp` | Migrate the current line, applied immediately |
+| `:[range]MigrateOpt` / `:[range]MigrateNotify` / `:[range]MigrateHl` / `:[range]MigrateLsp` | Migrate the given range, applied immediately (no picker) |
+| `:MigrateOpt %` / `:MigrateNotify %` / `:MigrateHl %` / `:MigrateLsp %` | Scan the whole buffer, open Telescope picker |
+| `:MigrateOpt cwd` / `:MigrateNotify cwd` / `:MigrateHl cwd` / `:MigrateLsp cwd` | Scan cwd via ripgrep, open Telescope picker (`MigrateNotify cwd` auto-writes) |
 | `:MigrateNotify [mode] <module_name>` | `module_name` sets the injected `require(...).create("[name]")` label |
+
+## `:MigrateHl` / `:MigrateLsp` (added later, same session as the registry refactor)
+
+Both are plain instances of the `migrate.common.command` factory — no new
+grammar, nothing bespoke. `migrate.hl` migrates `vim.highlight.range()` /
+`.on_yank()` / `.priorities` to `vim.hl.*` (ground-truthed against the
+installed Neovim runtime: `lua/vim/highlight.lua` no longer exists at all —
+a hard removal, not a `vim.deprecate()`-warned shim). `migrate.lsp` migrates
+`vim.lsp.buf_get_clients()` and `vim.lsp.get_active_clients()` to
+`vim.lsp.get_clients()` — the only two `@deprecated`-tagged client-lookup
+functions in `lua/vim/lsp.lua`; every other `buf_*` function there
+(`buf_request*`, `buf_notify`, `buf_attach_client`, ...) is NOT deprecated
+and deliberately left alone.
+
+Also fixed in the same pass (`lua/migrate/notify/parser/init.lua`): a
+pre-existing double-`i`-increment bug in `scan_buffer`'s skip branches
+(`i = i + 1` followed by `goto continue`, which itself does `i = i + 1` —
+skipping an extra line every time a comment, or the new long-string guard,
+fired). Latent and inconsequential for the old comment-skip branch in
+practice, but the new long-string tracking made it fire on every real
+multiline string and broke its own state tracking. Fixed by dropping the
+branches' own `i = i + 1` and letting the `::continue::` label's single
+increment do the job.
 
 ## Notes
 

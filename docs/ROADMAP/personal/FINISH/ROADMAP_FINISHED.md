@@ -1,4 +1,4 @@
-# Finished Roadmap implemntierungen
+# Finsihed Roadmap implemntierungen
 
 |             plugin               | state 1. |
 | -------------------------------- | -------- |
@@ -6,7 +6,7 @@
 |         `cascade.nvim`           |    ✅    |
 |      `color_my_ascii.nvim`       |
 |          `cmdlog.nvim`           |
-|            `dap.nvim`            |
+|            `dap.nvim`            |    ✅    |
 |         `debugging.nvim`         |    ✅    |
 |           `diff.nvim`            |    ✅    |
 |          `emojis.nvim`           |    ✅    |
@@ -14,15 +14,14 @@
 |         `filetree.nvim`          |
 |       `github_stats.nvim`        |    ✅    |
 |          `gopath.nvim`           |    ✅    |
-|          `insights.nvim`         |
+|          `insights.nvim`         |    ✅    |
 |         `language.nvim`          |    ✅    |
 |            `lib.nvim`            |
 |         `markdown.nvim`          |
 |          `mdview.nvim`           |
-|          `migrate.nvim`          |
-|          `open.nvim`             |    ✅     |
-|           `open.nvim`            |
-|          `pdfport.nvim`          |
+|          `migrate.nvim`          |    ✅    |
+|          `open.nvim`             |    ✅    |
+|          `pdfport.nvim`          |    ✅    |
 |          `pickers.nvim`          |
 |        `recommender.nvim`        |    ✅    |
 |         `replacer.nvim`          |    ✅    |

@@ -13,15 +13,29 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `doc/pdfport.nvim.txt
 | --- | --- |
 | `:PdfPort [path]` | Open PDF with interactive mode/backend picker |
 | `:PdfPort text [path]` | Extract to buffer (auto backend chain) |
-| `:PdfPort float [path]` | Extract to floating window |
+| `:PdfPort float [path]` | Extract to floating window (prompts for a page range) |
 | `:PdfPort system [path]` | Open with system application |
-| `:PdfPort terminal [path]` | Render as terminal image |
+| `:PdfPort terminal [path]` | Render as terminal image (prompts for a page range) |
+| `:PdfPort backends` | List all registered backends with live availability (float) |
 | `:PdfPort health` | Run `:checkhealth pdfport` |
 
 All path-taking subcommands fall back to `<cfile>` then the current buffer
 name when `[path]` is omitted — unchanged from the original.
 
-## Notes
+## Notes (2026-07 ROADMAP pass)
+
+- **`backends` route added** — implements the ROADMAP's `:PdfPortBackends` item as a
+  `:PdfPort backends` subcommand instead of a new flat command, staying consistent with
+  the composer migration below. Reuses `registry.diagnostics()` (previously dead code,
+  never called anywhere), shown via `lib.nvim.window.make_scratch` (falls back to
+  `notify.info` if that module can't be required).
+- **`float`/`terminal` now prompt for a page range** (`lua/pdfport/util/page_range.lua`,
+  `vim.ui.input`) before opening — `<Esc>` cancels the whole open, not just the prompt.
+- **Backends are now lazy-registered** (`pdfport.backends.load_all(cfg)`) — `:PdfPort`
+  itself doesn't change, but the first real `:PdfPort text`/`float`/etc. call is what
+  actually triggers `require()` of the resolved backend module, not `setup()`.
+
+## Notes (original composer migration)
 
 - **`path = {}` root route**: the bare `:PdfPort [path]` case (mode picker,
   no subcommand token) uses composer's root-route pattern — same technique

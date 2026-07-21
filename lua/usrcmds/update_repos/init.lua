@@ -16,6 +16,17 @@ local M = {}
 local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
 local system, fnamemodify = vim.system, fn.fnamemodify
 
+-- Optional: per-repo progress, since fetch+pull over a whole directory of
+-- repos is exactly the kind of path-driven, potentially long-running
+-- operation that benefits from visible feedback. No-op (returns nil) when
+-- lib.nvim's ui.kit progress module isn't available.
+local ok_progress, progress_mod = pcall(require, "lib.nvim.progress")
+local function new_progress()
+  if not ok_progress then return nil end
+  return progress_mod.create({ title = "[usrcmds.update_repos]" })
+end
+
+---Check whether a directory is a git repository.
 ---@param path string
 ---@return boolean
 local function is_git_repo(path)
@@ -104,6 +115,7 @@ local function update_all(path)
   local errors = {}
   local index = 1
   local total = #repos
+  local prog = new_progress()
 
   local function run_next()
     local repo = repos[index]

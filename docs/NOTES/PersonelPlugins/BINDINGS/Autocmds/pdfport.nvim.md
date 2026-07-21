@@ -31,3 +31,14 @@ Each callback registers that integration's 4 keymaps buffer-locally — see
 Neo-tree deliberately does **not** use this mechanism — it registers
 commands/mappings declaratively via `opts.commands`/
 `opts.filesystem.window.mappings` instead.
+
+## Optional: `BufReadCmd *.pdf` (2026-07, ROADMAP item)
+
+`M.register_bufreadcmd()` — NOT wired to `M.on_filetype`; registers a standalone
+`BufReadCmd` (augroup `pdfport_bufreadcmd`, pattern `*.pdf`) directly via
+`autocmd.create`. Opt-in: only called from `pdfport/init.lua`'s `M.setup()` when
+`cfg.auto_open_on_read == true` (default `false`). Intercepts a direct `:e file.pdf`,
+marks the auto-created buffer `nofile`/`bufhidden=wipe`/not modifiable, and
+`vim.schedule`s `require("pdfport.util.picker").pick_and_open(path)` instead of loading
+raw PDF bytes.
+

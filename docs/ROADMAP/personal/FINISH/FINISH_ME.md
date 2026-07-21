@@ -1,9 +1,7 @@
 # TODO & ROADMAP: Refactoring & Plugin-Optimierung
 
-BINDINGS autocmds durchgehen ob man was optimeren kann
 
-1. Auf github.com:
-2. `:Recommender` durch alle Module durchlaufen lassen
+3. Auf github.com:
   1. Kurzinfo für jedes Repo schreiben
   2. Keywords für jedes repo eingeben
 
@@ -22,10 +20,7 @@ BINDINGS autocmds durchgehen ob man was optimeren kann
 
 ### Hilfesystem & Tools
 
-* [ ] `:Recommender` durch alle Module laufen lassen.
 * [ ] `vimdoc`-Datei `doc/{NAME}.txt` erstellen + Funktion schreiben, die automatisch die `tags`-Datei für User generiert (`doc/tags` in `.gitignore` aufnehmen).
-* [ ] Prüfen: Gibt es ein Autocmd, damit die Tags bei jedem User, der das Repo lädt, automatisch erstellt werden?
-* [ ] `Insights stats lib` über alle Repositories ausführen und eine gesammelte Übersicht erstellen.
 
 ---
 
