@@ -1,6 +1,6 @@
 # diff.nvim — Keymaps Cheatsheet
 
-Source: `lua/diff_nvim/bindings/keymaps.lua`, `lua/diff_nvim/features/exit.lua`, `lua/diff_nvim/core/render.lua`
+Source: `lua/diff/bindings/keymaps.lua`, `lua/diff/features/exit.lua`, `lua/diff/core/render.lua`
 Cross-reference: `docs/BINDINGS.md` — verified accurate and current, including scope caveats.
 
 Module doc: "The only keymap diff.nvim ships is the 'leave diffmode' key."

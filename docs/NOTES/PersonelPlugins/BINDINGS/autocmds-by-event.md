@@ -30,7 +30,7 @@ startup ever looks like two things fighting for the screen.
 
 | Plugin | Augroup | Action |
 | --- | --- | --- |
-| diff.nvim | `diff_nvim_cleanup` | Wipe tracked scratch buffers |
+| diff.nvim | `diff_cleanup` | Wipe tracked scratch buffers |
 | filetree.nvim | `filetree_session` | Save scroll/cursor/root state (opt-out) |
 | language.nvim | none | Kill cspell sidecar job |
 | insights.nvim | `Insights_devserver` | Kill tracked dev servers |

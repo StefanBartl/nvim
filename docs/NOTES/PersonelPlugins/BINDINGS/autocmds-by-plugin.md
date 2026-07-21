@@ -53,8 +53,8 @@ See also: [by event](autocmds-by-event.md), [by filetype/scope](autocmds-by-file
 
 | Event(s) | Augroup | Pattern | Action |
 | --- | --- | --- | --- |
-| `VimLeavePre` | `diff_nvim_cleanup` | — | Wipes tracked scratch buffers |
-| `OptionSet` | `diff_nvim_native_diffthis` | `diff` | Mirrors exit keymap onto native diffmode buffers (opt-in) |
+| `VimLeavePre` | `diff_cleanup` | — | Wipes tracked scratch buffers |
+| `OptionSet` | `diff_native_diffthis` | `diff` | Mirrors exit keymap onto native diffmode buffers (opt-in) |
 
 ## [emojis.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/emojis.nvim.md)
 

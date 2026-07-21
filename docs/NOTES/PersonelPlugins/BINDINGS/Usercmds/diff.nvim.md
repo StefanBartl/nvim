@@ -7,7 +7,7 @@ syntax change**: same 5 independently name-configurable top-level commands
 (NOT a subcommand tree — each is its own composer verb, since each has a
 genuinely distinct grammar and independent `cfg.commands.*` name).
 
-Source: `lua/diff_nvim/bindings/usrcmds.lua`
+Source: `lua/diff/bindings/usrcmds.lua`
 Docs: `doc/diff.txt`, `docs/installation.md`, `README.md`
 
 | Command | Grammar |

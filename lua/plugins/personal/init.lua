@@ -490,7 +490,7 @@ return apply_source({
       },
     },
     config = function(_, opts)
-      require("diff_nvim").setup(opts)
+      require("diff").setup(opts)
     end,
   },
 
