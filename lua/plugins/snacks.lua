@@ -88,7 +88,9 @@ return {
     ---@param opts Plugins.Snacks.Setup
     ---@diagnostic disable-next-line: unused-local
     config = function(_, opts)
-      require("config.snacks.usrcmds").setup()
+      -- config.snacks.usrcmds removed: every command it exposed now has an
+      -- engine-agnostic equivalent in pickers.builtins, reached via
+      -- `:Pickers builtin <name>` (see pickers.nvim's docs/BUILTINS.md).
 
       --   -- Defensive require for snacks itself
       --   local ok_snacks, snacks = pcall(require, "snacks")
