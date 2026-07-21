@@ -15,6 +15,7 @@
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.preview]")
 local map = require("lib.nvim.map")
+local window = require("lib.nvim.window")
 
 local M = {}
 
@@ -110,11 +111,7 @@ local function ensure_preview_window()
   -- Identify buffer for external autocmd guards
   vim.b[STATE.buf]._harpoon_preview = true
 
-  map("n", "q", function()
-    if STATE.win and vim.api.nvim_win_is_valid(STATE.win) then
-      vim.api.nvim_win_close(STATE.win, true)
-    end
-  end, { buffer = STATE.buf, nowait = true, silent = true, desc = "Close Harpoon preview" })
+  window.nice_quit(STATE.win, { force = true })
 
   return STATE.buf, STATE.win
 end

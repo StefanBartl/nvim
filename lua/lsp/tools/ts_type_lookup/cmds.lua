@@ -3,6 +3,7 @@
 --- Commands accept an optional argument; when omitted the current word (`<cword>`) is used.
 local notify = require("lib.nvim.notify").create("[lsp.tools.ts_type_lookup.cmds]")
 local usercmd = require("lib.nvim.usercmd")
+local window = require("lib.nvim.window")
 
 local api = vim.api
 local lsp = vim.lsp
@@ -158,7 +159,7 @@ function M.peek_type_definition_for(symbol)
       style = "minimal",
       border = "rounded",
     }
-    api.nvim_open_win(buf, true, opts)
+    local win = api.nvim_open_win(buf, true, opts)
     -- map 'o' in preview to open actual location in vsplit
     -- ...use the correct module path here to call the internal helper.
     api.nvim_buf_set_keymap(
@@ -168,7 +169,7 @@ function M.peek_type_definition_for(symbol)
       ("<cmd>lua require('lsp.tools.ts_type_lookup.cmds')._open_loc_in_split(%q,%d)<CR>"):format(fname, srow),
       { nowait = true, noremap = true, silent = true }
     )
-    api.nvim_buf_set_keymap(buf, "n", "q", "<cmd>close<CR>", { nowait = true, noremap = true, silent = true })
+    window.nice_quit(win)
   end)
 end
 

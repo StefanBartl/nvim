@@ -5,6 +5,7 @@ local M = {}
 
 local api = vim.api
 local lsp = vim.lsp
+local window = require("lib.nvim.window")
 
 --- Get filetype-to-server mapping
 ---@return table<string, string[]>
@@ -115,7 +116,7 @@ function M.execute()
   local width = math.min(80, vim.o.columns - 4)
   local height = math.min(#lines + 2, vim.o.lines - 4)
 
-  api.nvim_open_win(buf, true, {
+  local win = api.nvim_open_win(buf, true, {
     relative = "editor",
     width = width,
     height = height,
@@ -127,7 +128,7 @@ function M.execute()
     title_pos = "center",
   })
 
-  api.nvim_buf_set_keymap(buf, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
+  window.nice_quit(win)
 end
 
 return M
