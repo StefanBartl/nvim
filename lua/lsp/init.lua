@@ -38,12 +38,14 @@ function M.setup(cfg)
   local caps = (function()
     local ok, mod = pcall(require, "lsp.core.capabilities")
     if ok and mod and type(mod.get) == "function" then
-      local result = mod.get()
+      local result, warnings = mod.get()
 
-      if result.textDocument and result.textDocument.completion then
-        -- notify.info("Completion capabilities loaded")
-      else
-        notify.warn("⚠️  Completion capabilities missing!")
+      for _, w in ipairs(warnings or {}) do
+        if w.level == "error" then
+          notify.error(w.msg)
+        else
+          notify.warn(w.msg)
+        end
       end
 
       return result
