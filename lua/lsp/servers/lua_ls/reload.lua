@@ -4,6 +4,7 @@
 
 local notify = require("lib.nvim.notify").create("[lsp.servers.lua_ls.reload]")
 local usercmd = require("lib.nvim.usercmd")
+local Autocmd = require("lib.nvim.autocmd")
 
 local M = {}
 
@@ -147,11 +148,10 @@ function M.setup()
   })
 
   -- Recompute root_dir for open buffers whenever <leader>lsp switches scope
-  vim.api.nvim_create_autocmd("User", {
+  Autocmd.create("User", function()
+    M.recompute_root()
+  end, {
     pattern = "LspRootScopeChanged",
-    callback = function()
-      M.recompute_root()
-    end,
     desc = "[lsp.lua_ls] Recompute root_dir on root-scope change",
   })
 end

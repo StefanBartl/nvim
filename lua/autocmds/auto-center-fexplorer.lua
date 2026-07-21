@@ -133,7 +133,7 @@ local function setup_buffer(bufnr)
 
   enabled_buffers[bufnr] = true
 
-  local group = vim.api.nvim_create_augroup("AutoCenterExplorer_" .. bufnr, { clear = true })
+  local group = Autocmd.group("AutoCenterExplorer_" .. bufnr, true)
 
   -- Two guards before centering:
   --   1. Focus guard  – the explorer window must be the active window.
@@ -219,7 +219,7 @@ function M.setup(user_config)
       setup_buffer(args.buf)
     end
   end, {
-    group = vim.api.nvim_create_augroup("AutoCenterExplorerSetup", { clear = true }),
+    group = Autocmd.group("AutoCenterExplorerSetup", true),
     desc = "Setup auto-centering for file explorer buffers",
   })
 end

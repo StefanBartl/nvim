@@ -7,7 +7,7 @@ local M = {}
 
 ---@return nil
 function M.enable()
-  local grp = vim.api.nvim_create_augroup("LangLua", { clear = true })
+  local grp = Autocmd.group("LangLua", true)
   Autocmd.create("FileType", function(_) end, {
     group = grp,
     pattern = "lua",

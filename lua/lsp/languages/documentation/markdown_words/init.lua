@@ -399,7 +399,7 @@ function M.setup(opts)
 
     cmp.setup.buffer({ sources = new_sources })
   end, {
-    group   = vim.api.nvim_create_augroup("MdWordsCmpSource", { clear = true }),
+    group   = Autocmd.group("MdWordsCmpSource", true),
     pattern = { "markdown", "mdx" },
     desc = "[md_words] Inject cmp source into markdown buffer",
   })
@@ -414,7 +414,7 @@ function M.setup(opts)
       rebuild_async(root, nil)
     end
   end, {
-    group   = vim.api.nvim_create_augroup("MdWordsInitialScan", { clear = true }),
+    group   = Autocmd.group("MdWordsInitialScan", true),
     pattern = { "markdown", "mdx" },
     once    = true,
     desc = "[md_words] Initial word-cache build on first markdown open",
@@ -450,7 +450,7 @@ function M.setup(opts)
       end
     end))
   end, {
-    group    = vim.api.nvim_create_augroup("MdWordsDirChanged", { clear = true }),
+    group    = Autocmd.group("MdWordsDirChanged", true),
     desc = "[md_words] Debounced rebuild on cwd change",
   })
 

@@ -30,7 +30,7 @@ function M.setup()
   end
 
   -- Create an augroup for Noice mappings
-  local grp = vim.api.nvim_create_augroup("NoiceBufferMaps", { clear = true })
+  local grp = Autocmd.group("NoiceBufferMaps", true)
 
   -- Autocmd to set mappings only for buffers with filetype starting with "noice"
   Autocmd.create("FileType", function(ev)

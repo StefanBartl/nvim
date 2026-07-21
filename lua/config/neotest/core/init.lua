@@ -58,7 +58,7 @@ end
 
 --- Setup autocommands for test file detection
 local function setup_autocommands()
-  local aug = vim.api.nvim_create_augroup("NeotestCore", { clear = true })
+  local aug = Autocmd.group("NeotestCore", true)
 
   if config.auto_attach_on_test_file then
     Autocmd.create({ "BufEnter", "BufNewFile" }, function()

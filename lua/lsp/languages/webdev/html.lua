@@ -7,7 +7,7 @@ local M = {}
 
 ---@return nil
 function M.enable()
-  local grp = vim.api.nvim_create_augroup("LangHtml", { clear = true })
+  local grp = Autocmd.group("LangHtml", true)
   Autocmd.create("FileType", function(event)
     -- Example small QoL: ensure omnifunc is set for legacy completion fallback
     local bufnr = event.buf

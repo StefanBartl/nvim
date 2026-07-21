@@ -187,7 +187,7 @@ function M.setup(opts)
     M.target_specs = opts.target_specs
   end
 
-  local grp = vim.api.nvim_create_augroup("HarpoonPersistPaths", { clear = true })
+  local grp = Autocmd.group("HarpoonPersistPaths", true)
   Autocmd.create("VimEnter", function()
     vim.schedule(function()
       M.inject_now()
