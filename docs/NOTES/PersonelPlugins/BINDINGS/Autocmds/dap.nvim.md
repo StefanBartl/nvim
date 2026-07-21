@@ -1,6 +1,6 @@
 # dap.nvim — Autocmds Cheatsheet
 
-Source: `lua/dap_nvim/bindings/autocmds/init.lua`, `M.setup(opts)`
+Source: `lua/wkddap/bindings/autocmds/init.lua`, `M.setup(opts)`
 Cross-reference: `docs/BINDINGS.md` — verified accurate and complete.
 
 No-op unless `opts.enable` (`config.autocmds.enable`, default on). Augroup

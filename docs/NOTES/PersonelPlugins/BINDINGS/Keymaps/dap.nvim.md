@@ -1,6 +1,6 @@
 # dap.nvim — Keymaps Cheatsheet
 
-Source: `lua/dap_nvim/bindings/keymaps/init.lua`, `M.setup(opts)`
+Source: `lua/wkddap/bindings/keymaps/init.lua`, `M.setup(opts)`
 Cross-reference: `docs/BINDINGS.md` in this repo — verified accurate and complete.
 
 No-op unless `opts.enable` (`config.keymaps.enable`, default on). Uses bare

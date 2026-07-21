@@ -4,7 +4,7 @@ One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion on every
 subcommand). Replaces the old flat `:DapContinue`/`:DapStepOver`/… commands
 (fully removed, no alongside period).
 
-Source: `lua/dap_nvim/bindings/usercmds/init.lua`
+Source: `lua/wkddap/bindings/usercmds/init.lua`
 Docs: `docs/BINDINGS.md`, `docs/commands.md`, `doc/dap.txt`
 
 All subcommands are zero-argument.

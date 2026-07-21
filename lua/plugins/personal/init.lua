@@ -472,10 +472,12 @@ return apply_source({
       -- switch to ui = { provider = "dap-ui" } to go back to nvim-dap-ui.
       ui = { provider = "dap-view" },
     },
-    -- Explicit config: lazy's main-module guess for "dap.nvim" would resolve to
-    -- nvim-dap's own `dap` module, not `dap_nvim`.
+    -- dap.nvim's own Lua module is "wkddap", not "dap" -- it depends on
+    -- nvim-dap, which itself owns the top-level `dap` module (lua/dap.lua)
+    -- and several submodule names (dap.ui, dap.utils) that would otherwise
+    -- collide with this plugin's files if both used "dap" as their root.
     config = function(_, opts)
-      require("dap_nvim").setup(opts)
+      require("wkddap").setup(opts)
     end,
   },
 
