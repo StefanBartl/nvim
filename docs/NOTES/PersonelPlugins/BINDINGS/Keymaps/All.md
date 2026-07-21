@@ -29,4 +29,4 @@ All plugin keymap cheatsheets in this folder.
 - [reposcope.nvim](reposcope.nvim.md)
 - [sessions.nvim](sessions.nvim.md)
 
-See also: [keymap collision & prefix-wait analysis](../../../../ROADMAP/personal/keymap-collisions.md).
+See also: [keymap collision & prefix-wait analysis](REF!).

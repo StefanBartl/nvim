@@ -71,7 +71,7 @@ local MODE = {
   ["dap.nvim"] = "dir",
   ["diff.nvim"] = "dir",
   ["language.nvim"] = "dir", -- Basename des Specs "StefanBartl/language.nvim"
-  ["cmdlog"] = "dir",
+  ["cmdlog.nvim"] = "dir",
   ["emojis.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
   -- ["learn-cli.nvim"]        = "dir",
@@ -257,7 +257,7 @@ return apply_source({
     "StefanBartl/sandbox.nvim",
     event = "VeryLazy",
     config = function()
-      require("containers").setup({})
+      require("sandbox").setup({})
     end,
   },
 
@@ -495,7 +495,7 @@ return apply_source({
   },
 
   {
-    "StefanBartl/cmdlog",
+    "StefanBartl/cmdlog.nvim",
     lazy = false,
     cmd = { "CmdlogOpen", "CmdlogSearch" },
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -544,7 +544,7 @@ return apply_source({
           "StefanBartl/markdown.nvim",
           "StefanBartl/mdview.nvim",
           "StefanBartl/migrate.nvim",
-          "StefanBartl/cmdlog",
+          "StefanBartl/cmdlog.nvim",
           "StefanBartl/sandbox.nvim",
           "StefanBartl/open.nvim",
           "StefanBartl/pdfport.nvim",

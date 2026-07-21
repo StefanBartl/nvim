@@ -1,5 +1,8 @@
 # Alle Custom Plugins
 
+auch in docs/list container/cmdlog
+
+
 ## Checklist
 
 2. Module und Plugins durchgehen und
