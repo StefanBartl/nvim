@@ -19,8 +19,11 @@ local notify = require("lib.nvim.notify").create("[plugins.personal]")
 
 -- ── MANUELLER SCHALTER ─────────────────────────────────────────────────────
 -- Erzwingt EINE Quelle für ALLE personal-Plugins und übersteuert sowohl die
--- Maschinen-Erkennung als auch die MODE-Tabelle weiter unten. Zum Debuggen /
--- Umschalten einfach auf "dir" oder "remote" setzen:
+-- Maschinen-Erkennung als auch die MODE-Tabelle weiter unten - AUSSER für
+-- Repos, die dort explizit auf "disabled" stehen: eine Deaktivierung gewinnt
+-- immer, unabhängig von diesem Schalter (ein Repo, das man gar nicht braucht,
+-- soll weder lokal noch remote geladen werden). Zum Debuggen / Umschalten
+-- einfach auf "dir" oder "remote" setzen:
 --   "auto"     → nichts erzwingen (Maschinenrolle + MODE entscheiden, s. u.)
 --   "dir"      → ALLE lokal
 --   "remote"   → ALLE von GitHub
@@ -74,7 +77,7 @@ local MODE = {
   ["cmdlog.nvim"] = "dir",
   ["emojis.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
-  -- ["learn-cli.nvim"]        = "dir",
+  ["learn-cli.nvim"] = "disabled", -- gebraucht weder lokal noch remote
 
   -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)
   ["cascade.nvim"] = "dir",
@@ -87,8 +90,9 @@ local MODE = {
 
 local VALID_MODE = { disabled = true, dir = true, remote = true }
 
---- Applies SOURCE/MODE to every spec in place:
----   resolves `dir` (lokal) bzw. `enabled = false` (disabled) anhand des Repo-Basenamens.
+--- Applies SOURCE/MODE to every spec in place. A per-repo "disabled" entry
+--- in MODE always wins over OVERRIDE/SOURCE: a repo one does not need at
+--- all should never load, neither locally nor remotely.
 ---@param specs LazyPluginSpec[]
 ---@return LazyPluginSpec[]
 local function apply_source(specs)
@@ -96,7 +100,12 @@ local function apply_source(specs)
     local repo = spec[1]
     if type(repo) == "string" then
       local name = vim.fn.fnamemodify(repo, ":t")
-      local mode = (SOURCE ~= "auto") and SOURCE or (MODE[name] or "dir")
+      local configured = MODE[name]
+
+      -- Präzedenz: repo-eigenes "disabled" > globales OVERRIDE/SOURCE > repo-eigenes dir/remote > Default "dir".
+      local mode = (configured == "disabled") and "disabled"
+        or (SOURCE ~= "auto") and SOURCE
+        or (configured or "dir")
 
       if not VALID_MODE[mode] then
         notify.warn(
@@ -568,15 +577,15 @@ return apply_source({
     end,
   },
 
-  -- {
-  --   "StefanBartl/learn-cli.nvim",
-  --   lazy = false,
-  --   config = function()
-  --     require("learn_cli").setup({
-  --       exercises_dir = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "plugins", "learn-cli.nvim", "exercises"),
-  --     })
-  --   end,
-  -- },
+  {
+    "StefanBartl/learn-cli.nvim",
+    lazy = false,
+    config = function()
+      require("learn_cli").setup({
+        exercises_dir = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "plugins", "learn-cli.nvim", "exercises"),
+      })
+    end,
+  },
 
   -- ==========================================================================
   -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)
