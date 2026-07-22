@@ -47,7 +47,8 @@
         "$HOME/.local/share/nvim/lazy/plenary.nvim",
         "$HOME/.local/share/nvim/lazy/nui.nvim",
         "$HOME/.local/share/nvim/lazy/nvim-web-devicons",
-        "$HOME/.local/share/nvim/lazy/snacks.nvim"
+        "$HOME/.local/share/nvim/lazy/snacks.nvim",
+        "E:/repos/lib.nvim"
     ],
     "workspace.checkThirdParty": false,
     "workspace.ignoreDir": [

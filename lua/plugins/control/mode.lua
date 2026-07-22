@@ -22,6 +22,11 @@ local M = {}
 
 ---@alias PluginMode "disabled"|"dir"|"remote"
 
+---@class Plugins.Control.ModeApi
+---@field modes fun(t: table<string, string>): Plugins.Control.ModeApi
+---@field add fun(list: LazyPluginSpec[]): Plugins.Control.ModeApi
+---@field export fun(): LazyPluginSpec[]
+
 --- Default resolver used by every non-personal spec file: only "disabled"
 --- has an effect, everything else is left untouched (third-party plugins are
 --- always remote-managed by lazy anyway - no dir/remote handling needed here).
@@ -35,18 +40,17 @@ end
 
 --- Create a new per-file mode-control instance.
 ---@param opts? { resolve?: fun(spec: LazyPluginSpec, mode: string|nil, name: string) }
----@return { modes: fun(t: table<string, string>): table, add: fun(list: LazyPluginSpec[]): table, export: fun(): LazyPluginSpec[] }
+---@return Plugins.Control.ModeApi
 function M.new(opts)
   local modes = {} ---@type table<string, string>
   local specs = {} ---@type LazyPluginSpec[]
   local resolve = (opts and opts.resolve) or default_resolve
 
+  ---@type Plugins.Control.ModeApi
   local api
   api = {
     --- Declare per-repo modes (Key = Ordner-/Repo-Basename). Merges into the
     --- existing table, so it may be called more than once. Chainable.
-    ---@param t table<string, string>
-    ---@return table api
     modes = function(t)
       for name, mode in pairs(t) do
         modes[name] = mode
@@ -55,8 +59,6 @@ function M.new(opts)
     end,
 
     --- Register this file's plugin specs. Chainable.
-    ---@param list LazyPluginSpec[]
-    ---@return table api
     add = function(list)
       for _, spec in ipairs(list) do
         specs[#specs + 1] = spec
@@ -66,7 +68,6 @@ function M.new(opts)
 
     --- Apply the declared modes to every registered spec and return the list
     --- for lazy. Call this as the file's `return`.
-    ---@return LazyPluginSpec[]
     export = function()
       for _, spec in ipairs(specs) do
         local repo = spec[1]
