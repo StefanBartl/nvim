@@ -3,7 +3,7 @@
 local dap = require("dap")
 
 -- set `noshellslash` in windows to get 'netcoredbg' correctly working
-local is_windows = vim.loop.os_uname().version:match("Windows")
+local is_windows = vim.uv.os_uname().version:match("Windows")
 if is_windows then
   vim.cmd([[set noshellslash]])
 end

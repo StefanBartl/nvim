@@ -50,14 +50,14 @@ end
 ---@param severity integer|nil
 ---@return nil
 function M.next_loc(severity)
-  vim.diagnostic.goto_next({ severity = severity, float = true })
+  vim.diagnostic.jump({ count = 1, severity = severity, float = true })
 end
 
 --- Jump to previous diagnostic in current buffer.
 ---@param severity integer|nil
 ---@return nil
 function M.prev_loc(severity)
-  vim.diagnostic.goto_prev({ severity = severity, float = true })
+  vim.diagnostic.jump({ count = -1, severity = severity, float = true })
 end
 
 return M

@@ -18,7 +18,7 @@ local function resolve_executable(name)
   -- mason bin path: stdpath('data') .. '/mason/bin'
   local mason_bin = fn.stdpath("data") .. "/mason/bin"
   local platform_suffix = ""
-  if vim.loop.os_uname().sysname:match("Windows") or vim.fn.has("win32") == 1 then
+  if vim.uv.os_uname().sysname:match("Windows") or vim.fn.has("win32") == 1 then
     platform_suffix = ".cmd"
   end
 

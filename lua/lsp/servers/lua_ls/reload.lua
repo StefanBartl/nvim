@@ -50,11 +50,9 @@ function M.recompute_root()
     end
   end
 
-  local ids = {}
   for _, c in ipairs(clients) do
-    ids[#ids + 1] = c.id
+    c:stop(true)
   end
-  vim.lsp.stop_client(ids, true)
 
   vim.defer_fn(function()
     local restarted = 0

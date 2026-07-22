@@ -299,7 +299,7 @@ return function(opts)
         local old_buf = (state_ok and state.old_data and state.old_data.buf) and state.old_data.buf
           or vim.api.nvim_get_current_buf()
         local old_bufname = vim.api.nvim_buf_get_name(old_buf)
-        local old_buf_dir = vim.fn.fnamemodify(old_bufname ~= "" and old_bufname or vim.loop.cwd() or "./", ":h")
+        local old_buf_dir = vim.fn.fnamemodify(old_bufname ~= "" and old_bufname or vim.uv.cwd() or "./", ":h")
 
         local thecmd = "cd " .. old_buf_dir
 

@@ -32,7 +32,7 @@ function M.shorten_display_path(fname)
   end
 
   -- try relative to cwd
-  local ok, cwd = pcall(vim.loop.cwd)
+  local ok, cwd = pcall(vim.uv.cwd)
   if ok and cwd and cwd ~= "" then
     local norm_cwd = cwd:gsub("\\", "/")
     if norm:sub(1, #norm_cwd) == norm_cwd then

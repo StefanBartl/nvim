@@ -30,8 +30,8 @@ local function graceful_stop(client_id, timeout_ms)
   end
 
   -- Wait for graceful shutdown
-  local deadline = vim.loop.now() + timeout_ms
-  while vim.loop.now() < deadline do
+  local deadline = vim.uv.now() + timeout_ms
+  while vim.uv.now() < deadline do
     local client = lsp.get_client_by_id(client_id)
     if not client or client.is_stopped() then
       return true

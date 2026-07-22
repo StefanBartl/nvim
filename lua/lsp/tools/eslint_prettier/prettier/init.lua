@@ -8,7 +8,7 @@ local function resolve_executable(name)
   end
   local mason_bin = fn.stdpath("data") .. "/mason/bin"
   local suffix = ""
-  if vim.loop.os_uname().sysname:match("Windows") or fn.has("win32") == 1 then
+  if vim.uv.os_uname().sysname:match("Windows") or fn.has("win32") == 1 then
     suffix = ".cmd"
   end
   local candidate = mason_bin .. "/" .. name .. suffix

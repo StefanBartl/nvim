@@ -51,7 +51,7 @@ function M.setup()
 
     pcall(telescope.load_extension, "file_browser")
     telescope.extensions.file_browser.file_browser({
-      path = vim.loop.cwd(),
+      path = vim.uv.cwd(),
     })
   end, { desc = "[Telescope] File Browser (at CWD)" })
 end

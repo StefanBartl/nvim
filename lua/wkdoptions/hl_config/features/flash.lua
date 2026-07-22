@@ -98,7 +98,8 @@ function M.enable_yank()
   local aug = State.get_augroup("Flash", true)
 
   Autocmd.create("TextYankPost", function()
-    vim.highlight.on_yank({ higroup = "YankFlash", timeout = 150, on_visual = true })
+    local on_yank = (vim.hl and vim.hl.on_yank) or vim.highlight.on_yank
+    on_yank({ higroup = "YankFlash", timeout = 150, on_visual = true })
   end, {
     group = aug,
     desc = "Flash yanked text region",

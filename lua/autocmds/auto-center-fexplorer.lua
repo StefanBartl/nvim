@@ -88,7 +88,7 @@ local function schedule_center(bufnr)
     timers[bufnr] = nil
   end
 
-  local timer = vim.loop.new_timer()
+  local timer = vim.uv.new_timer()
   if not timer then
     notify.debug("[auto-close-fexplorer] timer is nil")
     return

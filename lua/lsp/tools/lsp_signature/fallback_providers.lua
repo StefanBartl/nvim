@@ -293,7 +293,7 @@ function M.try_providers(clients, params, opts)
     end
 
     -- timeout guard per client
-    local timer = vim.loop.new_timer()
+    local timer = vim.uv.new_timer()
     if not timer then
       notify.warn("timer is nil")
       return
