@@ -27,10 +27,9 @@ plugins.add({
       })
       require("config.harpoon.persist_paths").setup({
         target_specs = {
-          { "$REPOS_DIR", "Notes", "spickzettel", "spickzettel.md" },
+          { vim.fn.stdpath("config"), "lua", "plugins", "personal", "init.lua" },
           { vim.fn.stdpath("config"), "docs", "ROADMAP", "ROADMAP.md" },
-          { "$REPOS_DIR", "Notes", "MyNotes", "Notes.md" },
-          { "$REPOS_DIR", "Notes", "MyNotes", "Checklists", "Lua", "Arch&Coding-Regeln.md" },
+          { "$REPOS_DIR", "Notes", "spickzettel", "spickzettel.md" },
         },
       })
       require("config.harpoon.preview").install_alt_number_maps()

@@ -1,11 +1,5 @@
 # `mdview.nvim`
 
-- overlay macht nichts
-- oom und cursor keine wirkung
-- schnell das mitscrollen unterbrechen im broswer kann wertvoll sein wenn man schenll was nachschjauen will und im browse rsoll man das scrollen ncht sehen
-- kleines, nciht os wichtig, aber momentan, im browser, werdenb klleerzeilen komplett weg removed wenn man mehrere unterinander hat. ich wllte "!plat" lassen im dokument mit 5 leerzeilen untereinander, das hat er dann nicht angezgit.
-
-
 ## FINISH
 
 - Alle features durchgehjen und die perform,anteste, ideale DEFAULT config zusammenstellen
@@ -25,6 +19,14 @@ Zusätzlich anhand von praxis use cases die jeweiligen Prozesse beschreiben, als
 ---
 
 ## Bugs
+
+---
+
+## Notes
+
+`:MDView standalone` öffnet den Browser über den Go-Binary-eigenen `rundll32`-Aufruf (unabhängig von Neovim), während `:MDView detach` das über Neovims jobstart innerhalb eines headless, komplett `stdio`-losen Kindprozesses macht.
+  - :MDView standalone öffnet den Browser direkt aus dem Go-Relay-Binary heraus (rundll32.exe url.dll,FileProtocolHandler), völlig unabhängig von Neovim — ein einziger, schneller Prozessaufruf.
+  - :MDView detach / mdview-bg.ps1 laufen dagegen komplett über Neovims eigenes jobstart(), ausgeführt in einer headless, komplett stdio-losen, detachten Neovim-Instanz: erst der /health-Poll (curl per jobstart, alle 200ms bis zu 10s), dann der initiale Push, dann erst der jobstart-Aufruf für den Browser-Opener selbst. Drei separate, verkettete Kindprozess-Spawns statt einem.
 
 ---
 

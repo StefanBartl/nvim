@@ -9,7 +9,7 @@ Source: `lua/mdview/bindings/usrcmds/init.lua` + one action module per
 subcommand (`start/`, `stop.lua`, `open.lua`, `toggle.lua`, `detach.lua`,
 `standalone.lua`, `show_weblogs.lua`, `preview_tab.lua`, `diagnose.lua`,
 `theme.lua`, `log.lua`, `file_log.lua`, `cursor.lua`, `sync.lua`, `zoom.lua`,
-`reveal.lua`, `overlay.lua`, `breadcrumbs.lua`)
+`reveal.lua`, `blanklines.lua`, `overlay.lua`, `breadcrumbs.lua`)
 Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 `README.md`, `doc/mdview.txt`
 
@@ -31,11 +31,29 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 | --- | --- |
 | `:MDView theme [name]` | Switch preview theme (tab-completed) |
 | `:MDView cursor [line\|caret\|section\|off]` | Cursor marker mode in the preview |
-| `:MDView sync [action]` | Pause/resume nvim→browser scroll sync |
+| `:MDView sync [action]` | Pause/resume nvim→browser scroll sync (paused ⇒ "⏸ paused" pill in the tab) |
 | `:MDView zoom [+\|-\|reset\|<factor>]` | Preview font-size zoom |
 | `:MDView reveal [action]` | Reveal/hide ```private blocks |
+| `:MDView blanklines [on\|off\|toggle]` | Toggle rendering ≥2 consecutive blank lines as vertical space (`browser.preserve_blank_lines`); re-renders the tab live |
 | `:MDView overlay [name] [on\|off\|toggle]` | Toggle a preview overlay (floating TOC, …) |
 | `:MDView overlay list` | List known overlays + their state |
+
+> ⚠️ **These "live control" commands (overlay / zoom / cursor-mode) do nothing
+> against the pinned `install.version` release**, because they POST to the
+> relay's `/control` route which only exists *after* `v0.2.0` (overlays came
+> even later). The POST is fire-and-forget, so you get **no error and no
+> effect** while scroll sync (an older `/scroll`-based feature) keeps working —
+> exactly the "overlay/zoom/cursor tun nichts" symptom. Run the **local build**
+> to get them. In my `setup()`:
+> ```lua
+> dev = {
+>   binary_path = "E:/repos/mdview.nvim/native/server/mdview-server.exe",
+>   web_root    = "E:/repos/mdview.nvim/dist/client",
+> }
+> ```
+> Build first: `npm run build` (wasm+client) **and** `npm run build:go` (relay).
+> Falls back to `$MDVIEW_DEV_BINARY` / `$MDVIEW_DEV_WEB_ROOT`. This is the normal
+> `:MDView start` path — separate from `standalone.binary_path` (standalone only).
 
 ### Diagnostics
 
@@ -50,15 +68,15 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 | `:MDView file-log status` | Report file logging state |
 | `:MDView file-log path [value]` | Set/report the file log path |
 | `:MDView diagnose [path]` | Write a full diagnostics report and open it |
-| `:MDView breadcrumbs [export\|clear]` | Session breadcrumbs (doc + heading over time) |
+| `:MDView breadcrumbs [export\|clear]` | :Session breadcrumbs (doc + heading over time) |
 
 ## detach vs. standalone — which one
 
-|  | Survives `:qa` | Unsaved buffer | Scroll sync / cursor |
-| --- | --- | --- | --- |
-| `start` | ✗ | ✓ | ✓ |
-| `detach` | ✓ | ✓ | ✓ |
-| `standalone` | ✓ | ✗ (file on disk) | ✗ |
+|              | Survives `:qa` |  Unsaved buffer  | Scroll sync / cursor |
+| ------------ | -------------- | ---------------- | -------------------- |
+|   `start`    |       ✗        |        ✓         |          ✓           |
+|   `detach`   |       ✓        |        ✓         |          ✓           |
+| `standalone` |       ✓        | ✗ (file on disk) |          ✗           |
 
 - **`detach`** = second headless nvim loading *only* mdview + lib.nvim via
   `scripts/minimal_init.lua`. Full feature set, isolated from my config —

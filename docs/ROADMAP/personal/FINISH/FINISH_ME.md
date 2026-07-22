@@ -1,12 +1,9 @@
 # TODO & ROADMAP: Refactoring & Plugin-Optimierung
 
-BINDINGS autocmds durchgeehn ob man was optimeren kann
+BINDINGS autocmds durchgehen ob man was optimeren kann
 
-**Notes:**
-  - "Betroffene Dateien" sind als Beispiel genannt - darin nichts ändern, sondern im Plugin das bearbeitet wird.
-
-3. `:Recommender` durch alle Module durchlaufen lassen
-4. Auf github.com:
+1. Auf github.com:
+2. `:Recommender` durch alle Module durchlaufen lassen
   1. Kurzinfo für jedes Repo schreiben
   2. Keywords für jedes repo eingeben
 

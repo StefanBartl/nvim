@@ -1,7 +1,8 @@
-# List
-|             plugin               | keymaps | usercmds | autocmds |
-| -------------------------------- |
-|        `buffer-ctx.nvim`         |
+# Finsihed Roadmap implemntierungen
+
+|             plugin               | state |
+| -------------------------------- | ----- |
+|        `buffer-ctx.nvim`         |   ✅  |
 |          `cascade.nvim`          |
 |      `color_my_ascii.nvim`       |
 |          `cmdlog.nvim`           |

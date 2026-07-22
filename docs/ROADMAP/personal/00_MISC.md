@@ -1,5 +1,4 @@
 # `personal plugins` - MISC
 
-## All
-
 ---
+
