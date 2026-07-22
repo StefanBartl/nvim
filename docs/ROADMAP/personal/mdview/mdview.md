@@ -20,6 +20,8 @@ Zusätzlich anhand von praxis use cases die jeweiligen Prozesse beschreiben, als
 
 ## Bugs
 
+`:MDView detach`: Startet, aber erst nach 5-10 Minuten
+
 ---
 
 ## Notes

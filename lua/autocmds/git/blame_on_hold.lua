@@ -4,7 +4,6 @@
 ---@class AutoCmds.Git.BlameOnHold
 local M = {}
 
-local api = vim.api
 local Autocmd = require("lib.nvim.autocmd")
 
 ---@param cfg AutoCmds.Git.BlameOnHoldCfg

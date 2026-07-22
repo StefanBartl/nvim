@@ -29,4 +29,4 @@ no-op unless which-key.nvim is installed; adds descriptive labels under a
 
 ## Notes
 
-- The floating text-preview window (`renderers/float.lua`) delegates to the external `lib.nvim.window.make_scratch` helper with `nice_quit = true`, which provides "q/`<Esc>`-to-close" — but that keymap lives in `lib.nvim`, not pdfport.nvim's own source. See [lib.nvim's cheatsheet](lib.nvim.md).
+- The floating text-preview window (`renderers/float.lua`) delegates to the external `lib.nvim.window.make_scratch` helper with `nice_quit = true`, which provides "q/`<Esc>`-to-close" — but that keymap lives in `lib.nvim`, not pdfport.nvim's own source. See [lib.nvim's cheatsheet](./lib.nvim.md).

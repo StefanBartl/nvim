@@ -6,10 +6,7 @@ Initial:
   `standalone = { binary_path = "E:/repos/mdview.nvim/native/server/mdview-server.exe" }` gesetzt
 
 1. **`:MDView detach`** auf einer .md-Datei — Browser-Tab öffnet sich? Dann `:qa` in der Ursprungsinstanz: läuft die Preview weiter?
-  `:MDView detach` öffnet gar nichts
-
-   Info  20:04:21 notify.info [mdview] detached preview started (pid 28880) for README.md
-It outlives this instance — stop it by closing the preview tab, or kill the pid.
+  Startet, aber erst nach 10-15 Minuten öffnet sich das browser tab
 
 
 2. **Danach editieren**: neue Instanz öffnen, dieselbe Datei ändern — kommt Live-Push und Scroll-Sync in der detachten Preview an? (Das ist der Kernunterschied zu standalone.)

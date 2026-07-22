@@ -7,7 +7,6 @@
 local M = {}
 local api, cmd, bo = vim.api, vim.cmd, vim.bo
 local tbl_contains = vim.tbl_contains
-local nvim_create_autocmd = api.nvim_create_autocmd
 
 --------------------------------------------------------------------------------
 -- Helpers

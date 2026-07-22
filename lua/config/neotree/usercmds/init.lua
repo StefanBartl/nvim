@@ -6,8 +6,6 @@ local M = {}
 
 ---@return nil
 function M.enable()
-  local api = vim.api
-
   usercmd.create("NeoTreeCheckHealth", function()
     require("config.neotree.checkhealth").check()
   end, {

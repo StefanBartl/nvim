@@ -6,8 +6,6 @@ local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
-local api = vim.api
-
 -- Import theme management odule
 local theme = require("wkdnvchad.usrcmd.themes")
 

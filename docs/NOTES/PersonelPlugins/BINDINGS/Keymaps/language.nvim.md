@@ -43,5 +43,5 @@ keeps its native keys.
 
 ## Notes
 
-- Every `kit.select`/`kit.menu` call (spell review panel, per-issue action menu, retarget/history pickers) opens a `lib.nvim.ui.kit` component, which supplies its own `<CR>`/`<C-n>`/`<C-p>`/`<Up>`/`<Down>`/`<Esc>` keys — see [lib.nvim's cheatsheet](lib.nvim.md) for those.
+- Every `kit.select`/`kit.menu` call (spell review panel, per-issue action menu, retarget/history pickers) opens a `lib.nvim.ui.kit` component, which supplies its own `<CR>`/`<C-n>`/`<C-p>`/`<Up>`/`<Down>`/`<Esc>` keys — see [lib.nvim's cheatsheet](./lib.nvim.md) for those.
 - `docs/BINDINGS.md` matches source exactly for the config-driven table (including default lhs values cross-checked against `config/DEFAULTS.lua`), but doesn't list the translate-window's dynamic keys as their own entries.

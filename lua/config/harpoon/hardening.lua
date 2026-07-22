@@ -18,7 +18,6 @@ local M = {}
 ---@type uv uv
 local uv = vim.uv or vim.loop
 local api = vim.api
-local nvim_create_autocmd = api.nvim_create_autocmd
 
 -- Internal state (local to avoid polluting globals)
 local STATE = { ---@type Cfg.Harpoon.HardeningState
