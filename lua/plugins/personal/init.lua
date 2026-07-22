@@ -1,12 +1,16 @@
 ---@module 'plugins.personal'
 --- Personal and local development plugins with smart local/remote fallback.
 ---
---- Source control is centralized in the `MODE` table below. Each repo is set to
---- one of three states; the global `SOURCE` switch can force all of them at once.
+--- Source control is centralized in the `plugins.modes({...})` call below. Each
+--- repo is set to one of three states; the global `SOURCE` switch can force all
+--- of them at once. The generic per-file mode-control core lives in
+--- `plugins.control.mode`; this file injects a resolver that adds the personal
+--- "dir"/"remote" + SOURCE/OVERRIDE handling on top of the plain "disabled".
 
 local personal_utils = require("plugins.personal.utils")
 local machine = require("plugins.personal.machine")
 local notify = require("lib.nvim.notify").create("[plugins.personal]")
+local control = require("plugins.control.mode")
 
 -- ===========================================================================
 -- SOURCE CONTROL
@@ -50,9 +54,42 @@ else
   SOURCE = "auto"
 end
 
---- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
----@type table<string, PersonalRepoMode>
-local MODE = {
+local VALID_MODE = { disabled = true, dir = true, remote = true }
+
+--- Personal-Resolver, in den generischen Kern (plugins.control.mode) injiziert.
+--- Ein repo-eigenes "disabled" gewinnt immer über OVERRIDE/SOURCE: ein Repo,
+--- das man gar nicht braucht, soll weder lokal noch remote laden.
+---@param spec LazyPluginSpec
+---@param configured string|nil  aus plugins.modes(...) für diesen Basenamen
+---@param name string            Repo-Basename
+local function resolve(spec, configured, name)
+  -- Präzedenz: repo-eigenes "disabled" > globales OVERRIDE/SOURCE > repo-eigenes dir/remote > Default "dir".
+  local mode = (configured == "disabled") and "disabled"
+    or (SOURCE ~= "auto") and SOURCE
+    or (configured or "dir")
+
+  if not VALID_MODE[mode] then
+    notify.warn(
+      ("[PLUGINS PERSONAL] Ungültiger Modus '%s' für '%s' → 'remote'"):format(
+        tostring(mode),
+        name
+      )
+    )
+    mode = "remote"
+  end
+
+  if mode == "disabled" then
+    spec.enabled = false
+  elseif mode == "dir" then
+    spec.dir = personal_utils.local_dev(name) -- nil → remote, falls Ordner fehlt
+  end
+  -- "remote": dir bleibt nil → lazy nutzt repo[1]
+end
+
+local plugins = control.new({ resolve = resolve })
+
+-- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
+plugins.modes({
   -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
   ["lib.nvim"] = "dir",
   ["sessions.nvim"] = "dir",
@@ -86,54 +123,13 @@ local MODE = {
   ["color_my_ascii.nvim"] = "dir",
   ["recommender.nvim"] = "dir",
   ["mdview.nvim"] = "dir",
-}
-
-local VALID_MODE = { disabled = true, dir = true, remote = true }
-
---- Applies SOURCE/MODE to every spec in place. A per-repo "disabled" entry
---- in MODE always wins over OVERRIDE/SOURCE: a repo one does not need at
---- all should never load, neither locally nor remotely.
----@param specs LazyPluginSpec[]
----@return LazyPluginSpec[]
-local function apply_source(specs)
-  for _, spec in ipairs(specs) do
-    local repo = spec[1]
-    if type(repo) == "string" then
-      local name = vim.fn.fnamemodify(repo, ":t")
-      local configured = MODE[name]
-
-      -- Präzedenz: repo-eigenes "disabled" > globales OVERRIDE/SOURCE > repo-eigenes dir/remote > Default "dir".
-      local mode = (configured == "disabled") and "disabled"
-        or (SOURCE ~= "auto") and SOURCE
-        or (configured or "dir")
-
-      if not VALID_MODE[mode] then
-        notify.warn(
-          ("[PLUGINS PERSONAL] Ungültiger Modus '%s' für '%s' → 'remote'"):format(
-            tostring(mode),
-            name
-          )
-        )
-        mode = "remote"
-      end
-
-      if mode == "disabled" then
-        spec.enabled = false
-      elseif mode == "dir" then
-        spec.dir = personal_utils.local_dev(name) -- nil → remote, falls Ordner fehlt
-      end
-      -- "remote": dir bleibt nil → lazy nutzt repo[1]
-    end
-  end
-  return specs
-end
+})
 
 -- ===========================================================================
 -- PLUGIN SPECS
 -- ===========================================================================
 
----@type LazyPluginSpec[]
-return apply_source({
+plugins.add({
 
   -- ==========================================================================
   -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
@@ -751,3 +747,5 @@ return apply_source({
   },
 
 })
+
+return plugins.export()

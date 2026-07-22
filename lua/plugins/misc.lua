@@ -1,7 +1,14 @@
 ---@module 'plugins.misc'
 
----@type LazyPluginSpec[]
-return {
+local plugins = require("plugins.control.mode").new()
+
+-- Repos hier zentral deaktivieren (Basename -> "disabled"), statt weiter unten
+-- im jeweiligen Spec `enabled = false` zu setzen.
+plugins.modes({
+  -- ["mkdir.nvim"] = "disabled",
+})
+
+plugins.add({
 
   -- Harpoon: Efficient file and terminal navigation system
   {
@@ -35,4 +42,6 @@ return {
     "jghauser/mkdir.nvim",
     lazy = true,
   },
-}
+})
+
+return plugins.export()
