@@ -258,7 +258,7 @@ return apply_source({
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {},
     config = function(_, opts)
-      require("open_nvim").setup(opts)
+      require("open").setup(opts)
     end,
   },
 
@@ -726,7 +726,7 @@ return apply_source({
     ft = { "lua" },
     cmd = { "Recommender" },
     config = function()
-      require("recommender_nvim").setup()
+      require("recommender").setup()
     end,
   },
 
