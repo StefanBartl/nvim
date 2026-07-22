@@ -25,8 +25,8 @@ F: Finish bereits aufgeteilt nach Checklist & FinishMe; Checklisten in FinishMe
 |         `/lib.nvim`         |    [1]    |   [1]    |          |
 |      `/markdown.nvim`       |    [1]    |   [1]    |          |
 |       `/migrate.nvim`       |    [1]    |   [1]    |          |
-|       `/cmdlog`        |    [1]    |   [F]    |          |
-|     `/sandbox.nvim`      |    [1]    |   [F]    |          |
+|       `/cmdlog.nvim`        |    [1]    |   [F]    |          |
+|     `/sandbox.nvim`         |    [1]    |   [F]    |          |
 |        `/open.nvim`         |    [1]    |   [1]    |          |
 |       `/pdfport.nvim`       |    [1]    |   [1]    |          |
 |       `/pickers.nvim`       |    [1]    |   [1]    |          |
@@ -35,19 +35,6 @@ F: Finish bereits aufgeteilt nach Checklist & FinishMe; Checklisten in FinishMe
 |      `/replacer.nvim`       |    [1]    |   [F]    |          |
 |      `/reposcope.nvim`      |    [1]    |   [F]    |          |
 |      `/sessions.nvim`       |    [1]    |   [ ]    |          |
-
-
-Muss generell noch debugged werden:
-| `/mdview.nvim`              |    [ ]    |   [ ]    |          |
-
-Geht eventuell in filetree.nvim auf:
-| `/neotree-fs-refactor`      |    [ ]    |   [ ]    |          |
-
-Fertig machen?
-| `/loomAI`                   |    [ ]    |   [ ]    |          |
-
-Was damit machen:
-| `/learn-cli.nvim`           |    [ ]    |   [ ]    |          |
 
 ---
 
