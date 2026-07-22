@@ -109,6 +109,14 @@ plugins.add({
           position = "right_align", -- "overlay" | "right_align" | "eol" | "top" | "down"
           highlight = { preset = "accent" },
         },
+
+        keys = {
+          -- Keep the old config.telescope.keymaps horizontal-scroll bindings
+          -- (that module is now redundant/removed) instead of the plugin's
+          -- own <C-Left>/<C-Right> default.
+          preview_scroll_left = "<M-Left>",
+          preview_scroll_right = "<M-Right>",
+        },
       })
     end,
   },
@@ -598,6 +606,7 @@ plugins.add({
 
           cursor_marker = "caret",
         },
+        standalone = { binary_path = "E:/repos/mdview.nvim/native/server/mdview-server.exe" },
         experimental = {
           line_diff = true, -- P?: nur geänderte Zeilen senden -> FUnktnioert -> postives/negatives abwägen ob default
           click_navigate = true, -- P0-3: relativer Link öffnet Datei in nvim -> FUNKTIONERT -> als Default setzen

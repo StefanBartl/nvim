@@ -38,18 +38,12 @@ function M.setup()
   )
 
   ---==== Telescope file browser extension mappings =====---
+  -- <leader>. now belongs to pickers.nvim's own "explorer" builtin
+  -- (engine-agnostic, same "at current file" behavior this used to have on
+  -- <leader>,). Keeping only the CWD variant here since pickers.builtins
+  -- doesn't take a path override with a stable cross-engine opts shape.
 
   map("n", "<leader>,", function()
-    local ok, telescope = pcall(require, "telescope")
-    if not ok then
-      return
-    end
-
-    pcall(telescope.load_extension, "file_browser")
-    telescope.extensions.file_browser.file_browser()
-  end, { desc = "[Telescope] File Browser (at current file)" })
-
-  map("n", "<leader>.", function()
     local ok, telescope = pcall(require, "telescope")
     if not ok then
       return

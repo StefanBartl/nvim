@@ -2,14 +2,20 @@
 --- Modularized Telescope setup with file browser keymaps.
 --- History is owned by pickers.nvim (history.fzf_scope = "patch" in its setup()),
 --- which patches telescope's defaults.history itself — see StefanBartl/pickers.nvim.
---- Also merges keymaps for history and file browser, sets UI highlights, and loads extensions safely.
+--- Preview-scroll (<PageUp>/<PageDown>) and history-nav (<C-p>/<C-n>) keys are
+--- also owned by pickers.nvim (lua/pickers/keys/), patched globally into
+--- telescope's defaults.mappings — do not rebind them here, see
+--- pickers.nvim's docs/KEYMAPS.md. Horizontal preview scroll
+--- (<M-Left>/<M-Right>) is configured via pickers.setup({ keys = {
+--- preview_scroll_left/right = ... } }) in plugins/personal/init.lua, same
+--- reason. This module only merges file-browser keymaps, sets UI highlights,
+--- and loads extensions safely.
 
 local M = {}
 
 local actions = require("telescope.actions")
 local files_path_shorten = require("lib.nvim.fs.path_shorten")
 local ignore_list = require("lib.nvim.fs.ignore.list")
-local history_keymaps = require("config.telescope.history.keymaps")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
 local entry_actions = require("pickers.entry_actions.adapters.telescope")
 
@@ -29,14 +35,7 @@ end
 -- Returns merged default options for telescope.setup
 ---@return table opts
 function M.defaults()
-  local km =
-    vim.tbl_deep_extend(
-      "force",
-      history_keymaps.get(actions) or {},
-      fb_keymaps.get(actions),
-      require("config.telescope.keymaps").get(actions),
-      entry_actions.get_mappings()
-    )
+  local km = vim.tbl_deep_extend("force", fb_keymaps.get(actions), entry_actions.get_mappings())
 
   return {
     path_display = function(picker_opts, path)

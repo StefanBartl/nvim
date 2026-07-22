@@ -21,7 +21,8 @@ function M.setup()
 
   map("n", "<leader>flg", ":FzfLua live_grep<CR>", { desc = "[FzfLua] Live Grep" })
   map("n", "<leader>fg", ":FzfLua grep<CR>", { desc = "[FzfLua] Grep" })
-  map("n", "<leader>fb", "<cmd>FzfLua grep_curbuf<CR>", { desc = "[FzfLua] Grep current buffer" })
+  -- <leader>fb moved to fB: pickers.nvim's keymaps.folder_files owns <leader>fb now.
+  map("n", "<leader>fB", "<cmd>FzfLua grep_curbuf<CR>", { desc = "[FzfLua] Grep current buffer" })
 
   map("n", "<leader>fzf", ":FzfLua files<CR>", { desc = "[FzfLua] Files" })
 
