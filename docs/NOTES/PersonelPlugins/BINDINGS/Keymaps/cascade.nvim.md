@@ -18,8 +18,9 @@ All of the below is gated by the top-level switch `cfg.keymaps.preset`
 | --- | --- | --- |
 | `<C-y>` | n | Cycle word/token under cursor forward through configured groups |
 | `<C-x>` | n | Cycle word/token backward |
-| `+` | n | Increment / cycle word (native line-down otherwise) |
-| `-` | n | Decrement / cycle word (native line-up otherwise) |
+| `+` | n | Increment / cycle word / flip an operator (`==`/`&&`/`<`/...) / step an ISO date segment (native line-down otherwise) |
+| `-` | n | Decrement / cycle word / flip an operator / step an ISO date segment (native line-up otherwise) |
+| `<leader>cp` | n | Pick a cycle-group value via `vim.ui.select` (Telescope-backed if registered) |
 
 ### Indent (`cfg.lists.enable and features.indent`)
 

@@ -18,6 +18,7 @@ See also: [by event](autocmds-by-event.md), [by filetype/scope](autocmds-by-file
 | Event(s) | Augroup | Pattern | Action |
 | --- | --- | --- | --- |
 | `FileType` | `cascade_list_keymaps` | `cfg.lists.filetypes` | Binds buffer-local list keymaps |
+| `FileType` | `cascade_list_format` | `cfg.lists.filetypes` | Sets `formatlistpat`/`formatoptions` for `gq` hanging indent (independent of `keymaps.preset`) |
 | `BufWritePre` | `cascade_renumber_save` | `*` | Renumbers ordered lists before write |
 
 ## [color_my_ascii.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/color_my_ascii.nvim.md)
