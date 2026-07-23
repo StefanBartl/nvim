@@ -54,6 +54,15 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 > Build first: `npm run build` (wasm+client) **and** `npm run build:go` (relay).
 > Falls back to `$MDVIEW_DEV_BINARY` / `$MDVIEW_DEV_WEB_ROOT`. This is the normal
 > `:MDView start` path — separate from `standalone.binary_path` (standalone only).
+>
+> **Update: this `dev.binary_path`/`dev.web_root` config did not actually exist
+> in the code** until a Claude Code session implemented it (`server_args.lua`
+> now checks `dev.binary_path`/`dev.web_root` → `$MDVIEW_DEV_BINARY`/
+> `$MDVIEW_DEV_WEB_ROOT` → `install.ensure_binary()`/`ensure_client_bundle()`,
+> in that order). Verified end-to-end: local relay started via `:MDView start`
+> with the config above, then `zoom`/`overlay`/`cursor` control payloads POSTed
+> directly to `/control` → all `204`. The snippet above now genuinely works —
+> just needed a real local build + a restarted Neovim to pick it up.
 
 ### Diagnostics
 
@@ -95,6 +104,29 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
   mdview probes the binary and errors clearly if it's too old (it used to fail
   completely silently, since a detached process has no pipes).
 
+### `detach` caveats found while testing (still open, see Roadmap.md BUGS #8-10)
+
+- **Browser tab can open with a multi-minute delay, or not at all** (`mdview-bg.ps1`
+  too). Cause not fully isolated: `standalone`'s browser-open is one direct Go-side
+  `rundll32` call; `detach`/`mdview-bg.ps1` route health-poll AND browser-open
+  through Neovim's own `jobstart` from a headless, fully stdio-less, detached
+  instance — three chained child-process spawns instead of one. Reproduced
+  working end-to-end in one test, unreliable timing in another — looks
+  environment/Neovim-job-control-specific, not a plain logic bug.
+- **Editing the file from a separate/new Neovim instance does NOT reach the
+  detached preview** — verified: no live-push, no scroll-sync. The detached
+  instance keeps its own buffer from spawn time; there's no file-watcher
+  (`checktime`/`autoread`/`fs_event` — none exist) and `detach.lua` doesn't pass
+  `--listen`, so there's no way to reattach to it either. In practice `detach`'s
+  advertised "live buffer push because a real Neovim drives it" only works if
+  something edits inside that exact instance — not achievable today.
+- **Closing the preview tab does NOT stop the detached instance**, despite the
+  start notification saying so. `User MDViewSessionEnded` only fires from
+  `:MDViewStop` — nothing observes a tab close, and the default (non-isolated)
+  `browser.open_mode` gives no process handle to detect it with anyway. The
+  *only* reliable way to end a `:MDView detach` session right now is
+  `Stop-Process`/`taskkill` on the pid from the start notification.
+
 ## Notes
 
 - `start [file] [cwd=...]` and `toggle` use `ctx.rest` (composer's "leftover
@@ -115,3 +147,21 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
   session (hardcoded scratch buffer name, no reuse/wipe guard). Flagged as a
   background task, fixed with a regression spec
   (`tests/nvim/log_scratch_spec.lua`) shortly after.
+- Implemented `dev.binary_path`/`dev.web_root` (`lua/mdview/adapter/server_args.lua`):
+  this config never actually existed before, despite the warning note above
+  describing it as if it did — `server_args.resolve()` always called
+  `install.ensure_binary()`/`ensure_client_bundle()` with no override, which is
+  why overlay/zoom/cursor live-control silently did nothing against the normal
+  `:MDView start` path. Mirrors `standalone.binary_path`'s pattern, plus a
+  `$MDVIEW_DEV_BINARY`/`$MDVIEW_DEV_WEB_ROOT` env-var fallback for detached
+  instances (which don't load this Lua config at all).
+- Implemented `:MDView blanklines` (`blanklines.lua`, `browser.preserve_blank_lines`):
+  no Rust/comrak change needed — `data-sourcepos` (start+end line) is already
+  emitted unconditionally on every top-level block. `src/client/render/
+  blankLines.ts` diffs consecutive blocks' sourcepos gap and inserts a plain
+  spacer `<div>` (additive — never touches the theme's own margins) sized to
+  the extra blank lines. Wired like `zoom`/`cursor`/`overlay`: config default +
+  `?blanklines=1` URL param + live `/control` push. The `/control` wire key
+  stayed `blankLines` (camelCase) even though the config field is
+  `preserve_blank_lines` — matches the existing `cursor_marker` → `cursor`
+  pattern (config name and wire key aren't required to match).

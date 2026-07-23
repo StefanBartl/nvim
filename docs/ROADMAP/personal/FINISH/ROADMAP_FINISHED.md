@@ -3,7 +3,7 @@
 |             plugin               | state |
 | -------------------------------- | ----- |
 |        `buffer-ctx.nvim`         |   ✅  |
-|          `cascade.nvim`          |
+|         `cascade.nvim`           |   ✅  |
 |      `color_my_ascii.nvim`       |
 |          `cmdlog.nvim`           |
 |            `dap.nvim`            |

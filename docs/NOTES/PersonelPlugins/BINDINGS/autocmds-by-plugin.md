@@ -139,6 +139,7 @@ buffer cleanup), `User LazyDone` (nvim_usrcmds helptags, opt-in).
 | `BufWritePre` | `MarkdownNvimRefs` | `*.md,*.markdown,*.mdx` | Sync anchors+TOC on save (mode=save) |
 | `TextChanged`,`TextChangedI` | `MarkdownNvimRefs` | same | Debounced live sync (mode=live) |
 | `BufWipeout` | `MarkdownNvimRefs` | same | Teardown |
+| `BufWritePre` | `MarkdownNvimLinksSanitize` | `*.md,*.markdown,*.mdx` | Normalize inline-link targets (sanitize_on_save) |
 | `FileType` | `MarkdownNvimKeymaps` | markdown/mdx/md | Install default keymaps |
 | `FileType` | `MarkdownNvimUserCommands` | markdown/mdx/md | Install buffer-local commands |
 | `FileType` | `MarkdownNvimFold` | markdown/mdx/md | Set fold options |

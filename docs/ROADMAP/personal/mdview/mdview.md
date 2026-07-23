@@ -1,5 +1,5 @@
 # `mdview.nvim`
-
+:MDView blanklines
 ## FINISH
 
 - Alle features durchgehjen und die perform,anteste, ideale DEFAULT config zusammenstellen

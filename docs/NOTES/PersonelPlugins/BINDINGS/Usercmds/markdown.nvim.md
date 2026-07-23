@@ -20,6 +20,29 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 ## Notes
 
+- **2026-07-23: added `:Markdown links sanitize [%|cwd|<file>]`** (branch
+  `claude/markdown-links-sanitize-4a5e72`, off `main` — does **not** include
+  the `gaps` subcommand noted below, which lives on the separate
+  `claude/leader-toc-gap-checker-357f5b` branch; the two haven't been merged
+  together yet, so `:Markdown` here still has its original 10 subcommands,
+  not 11). Normalizes inline-link targets: backslashes -> forward slashes,
+  bare relative paths get a `./` prefix (`[t](doc.md)` ->
+  `[t](./doc.md)`; `[t](.\doc\file.md)` -> `[t](./doc/file.md)`). Leaves
+  URLs, `mailto:`/drive-letter scheme targets, `#anchor`-only links,
+  absolute paths, and `~`-relative paths alone. New module
+  `lua/markdown/core/link_sanitize.lua` (`sanitize_target`/`sanitize_line`/
+  `sanitize_lines`/`buffer`/`file`/`path`), reusing `link_scan.lua`'s
+  fenced-code-block skip so an example inside a ``` block is never touched.
+  Wired into `commands/links.lua`'s existing `show|create` subcommand router
+  (same `%|cwd|<file>` scope convention as `links show`) — no changes needed
+  to `commands/init.lua` or `usrcmds.lua`'s `SUBCOMMAND_NAMES` since
+  `sanitize` nests *under* the already-registered `links` route rather than
+  adding a new top-level one (unlike `gaps`, which needed its own top-level
+  entry in both places).
+  Also **runs automatically on `BufWritePre`** (new `MarkdownNvimLinksSanitize`
+  augroup in `bindings/autocmds.lua`, see the Autocmds cheatsheet), gated by
+  the new `config.links.sanitize_on_save` option (default `true`) — same
+  independent-opt-in-by-default pattern as `config.refs.mode = "save"`.
 - **2026-07-21: added `gaps` subcommand** (heading-level gap checker).
   `<leader>toc` / `:Markdown toc` now also detect skipped heading levels
   (e.g. `#` -> `###` with no `##` in between) after each refresh, notify,

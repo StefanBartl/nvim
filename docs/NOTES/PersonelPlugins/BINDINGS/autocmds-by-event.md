@@ -47,6 +47,7 @@ shared state, no ordering dependency between them.
 | cascade.nvim | `cascade_renumber_save` | list feature + `"save"` trigger configured | Renumber ordered lists |
 | fileops.nvim | `fileops_nvim_auto_mkdir` | default on | Create parent dirs |
 | markdown.nvim | `MarkdownNvimRefs` | mode == save (default) | Sync anchors + TOC |
+| markdown.nvim | `MarkdownNvimLinksSanitize` | `sanitize_on_save` (default on) | Normalize inline-link targets (./, forward slashes) |
 | language.nvim | `language_nvim` | opt-in, off | Abort write on spelling errors |
 
 **Worth knowing — the one real ordering dependency in this whole audit**:

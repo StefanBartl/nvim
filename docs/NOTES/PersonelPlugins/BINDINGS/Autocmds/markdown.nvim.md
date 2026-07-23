@@ -19,6 +19,7 @@ source) as authoritative.
 | `MarkdownNvimRefs` | `BufWritePre` | `*.md,*.markdown,*.mdx` | mode == "save" | Syncs `#anchor` links + TOC on save |
 | `MarkdownNvimRefs` | `TextChanged`,`TextChangedI` | same | mode == "live" | Debounced live sync |
 | `MarkdownNvimRefs` | `BufWipeout` | `*.md,*.markdown,*.mdx` | feature `refs` + mode∈{save,live} | Tears down timers/extmarks |
+| `MarkdownNvimLinksSanitize` | `BufWritePre` | `*.md,*.markdown,*.mdx` | feature `links` AND `cfg.links.sanitize_on_save ~= false` (default on) | Normalizes inline-link targets (`core/link_sanitize.lua`'s `buffer()`) before write — 2026-07-23, `claude/markdown-links-sanitize-4a5e72` branch, independent of `enable_autocmds` (same as the refs augroup) |
 | `MarkdownNvimKeymaps` | `FileType` | ftpat | `enable_autocmds ~= false` (default on) | Installs `DEFAULT_KEYMAPS` |
 | `MarkdownNvimUserCommands` | `FileType` | ftpat | same | Installs `:Markdown` + `OpenWithSystemApplication` |
 | `MarkdownNvimFold` | `FileType` | ftpat | same, and feature `fold` | Sets `foldmethod`/`foldexpr`/`foldenable`/`foldlevel`/`foldlevelstart` |
