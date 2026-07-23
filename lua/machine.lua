@@ -1,5 +1,5 @@
----@module 'plugins.personal.machine'
----@brief Machine-role detection for per-machine plugin behavior overrides.
+---@module 'machine'
+---@brief Machine-role detection for per-machine config/plugin behavior overrides.
 ---@description
 --- Reads the `NVIM_MACHINE_ROLE` environment variable (case-insensitive).
 --- Cross-platform: `vim.env` works the same on Windows/Linux/macOS, only how
@@ -11,10 +11,13 @@
 --- Unset/unknown → "default" (today's PC behavior: local dev checkouts,
 --- full github_stats fetching, ...). Add a new role by adding it to ROLES
 --- below; callers then gate behavior with `machine.is("that_role")`.
+---
+--- Config-wide utility (not tied to plugins/personal): used from plugin specs,
+--- lsp/init.lua, config/lazy/init.lua and elsewhere to gate per-machine policy.
 
 local M = {}
 
-local notify = require("lib.nvim.notify").create("[plugins.personal.machine]")
+local notify = require("lib.nvim.notify").create("[machine]")
 
 ---@alias MachineRole "default"|"workstation"
 

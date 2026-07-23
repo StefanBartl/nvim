@@ -1,6 +1,6 @@
 ---@module 'config.lazy_config'
 
-local machine = require("plugins.personal.machine")
+local machine = require("machine")
 
 return {
   defaults = { lazy = true },

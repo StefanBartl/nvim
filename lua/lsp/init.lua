@@ -62,7 +62,7 @@ function M.setup(cfg)
       -- Off by default on the "workstation" (v.a. Markdown, kein
       -- projektweites Coden); on elsewhere, toggleable during a research/
       -- browsing phase without restarting Neovim.
-      local machine = require("plugins.personal.machine")
+      local machine = require("machine")
       return mod.build({
         use_workspace_diagnostics = not machine.is("workstation"),
         use_lazydev = true,

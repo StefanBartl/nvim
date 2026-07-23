@@ -126,6 +126,12 @@ startup.now("options", function()
   require("options")
 end)
 
+-- Sync: cheap monkeypatch, no reason to defer it. Fixes vim.ui.open() on
+-- Windows truncating URLs at the first unescaped `&` (see config/ui_open.lua).
+startup.now("ui_open", function()
+  require("config.ui_open").setup()
+end)
+
 -- Sync: sets highlight groups and vim.diagnostic.config. Highlights must land
 -- before the first paint to avoid a visible flash; the diagnostic config must
 -- precede the first LSP attach.

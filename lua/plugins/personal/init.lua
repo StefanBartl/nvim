@@ -12,7 +12,7 @@
 --- not this file.
 
 local personal_utils = require("plugins.personal.utils")
-local machine = require("plugins.personal.machine")
+local machine = require("machine")
 local plugins = require("plugins.personal.source")
 
 -- ===========================================================================

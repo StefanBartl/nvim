@@ -12,6 +12,22 @@ function M.setup()
     notify.warn("[harpoon] not installed")
     return
   end
+  -- ONE global harpoon list, shared across every project/cwd. Harpoon2 keys
+  -- its lists by `settings.key()`, defaulting to the raw `vim.loop.cwd()` — so
+  -- out of the box every directory gets its own list and the quick menu looks
+  -- empty whenever the cwd differs from where marks were added. We pin the key
+  -- to a single constant (config.harpoon.persist_paths.PINS_KEY, =
+  -- stdpath("config")), which is also the bucket the persistent default paths
+  -- are seeded into, so `<C-e>` always shows the same list everywhere and the
+  -- pins are always present.
+  local PINS_KEY = require("config.harpoon.persist_paths").PINS_KEY
+  local settings = {
+    save_on_change = true,
+    save_on_toggle = true,
+    key = function()
+      return PINS_KEY
+    end,
+  }
   -- Safe setup: enable immediate persistence on every change.
   -- In Harpoon v2, this writes to storage on add/remove/toggle operations.
   pcall(function()
@@ -19,19 +35,9 @@ function M.setup()
     if type(harpoon.setup) == "function" then
       local info = debug.getinfo(harpoon.setup, "u")
       if info and info.nparams and info.nparams >= 2 then
-        harpoon:setup({
-          settings = {
-            save_on_change = true,
-            save_on_toggle = true,
-          },
-        })
+        harpoon:setup({ settings = settings })
       else
-        harpoon.setup({
-          settings = {
-            save_on_change = true,
-            save_on_toggle = true,
-          },
-        })
+        harpoon.setup({ settings = settings })
       end
     end
   end)
@@ -56,11 +62,6 @@ function M.setup()
   end, { desc = "[HARPOON] Add current file (append at end)" })
 
   map("n", "<C-e>", function()
-    -- Harpoon's own toggle_quick_menu() closes instead of opening when
-    -- win_id is already set; only reload paths on the opening edge, not on close.
-    if harpoon.ui.win_id == nil then
-      vim.cmd("HarpoonPersistPathsReload")
-    end
     harpoon.ui:toggle_quick_menu(harpoon:list())
   end, { desc = "[HARPOON] Open harpoon window (default)." })
   --

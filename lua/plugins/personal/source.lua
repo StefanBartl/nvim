@@ -18,7 +18,7 @@
 --- never its siblings, so this file is not seen by the importer.
 
 local personal_utils = require("plugins.personal.utils")
-local machine = require("plugins.personal.machine")
+local machine = require("machine")
 local notify = require("lib.nvim.notify").create("[plugins.personal]")
 local control = require("plugins.control.mode")
 
@@ -39,10 +39,10 @@ local control = require("plugins.control.mode")
 --   "remote"   → ALLE von GitHub
 --   "disabled" → ALLE aus
 ---@type "auto"|PersonalRepoMode
-local OVERRIDE = "dir"
+local OVERRIDE = "auto"
 
 -- Auflösung der effektiven Quelle, wenn OVERRIDE == "auto":
---   * "workstation" (siehe plugins.personal.machine) hat nie lokale Checkouts
+--   * "workstation" (siehe machine.lua) hat nie lokale Checkouts
 --     dieser Repos → alles "remote" (der dir-Fallback ginge zwar auch remote,
 --     das hier macht es unbedingt und spart 25× isdirectory-Prüfungen).
 --   * jede andere Maschine → "auto": pro Repo entscheidet die MODE-Tabelle.

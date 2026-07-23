@@ -1,5 +1,6 @@
 ---@module 'plugins.misc'
 
+local machine = require("machine")
 local plugins = require("plugins.control.mode").new()
 
 -- Repos hier zentral deaktivieren (Basename -> "disabled"), statt weiter unten
@@ -25,15 +26,32 @@ plugins.add({
         debounce_ms = 200, -- tweak if remote FS
         autocmd_events = { "BufLeave", "FocusLost" }, -- extend if nötig: "FocusGained", "WinLeave" etc.
       })
-      require("config.harpoon.persist_paths").setup({
+      local target_specs = {
+        { vim.fn.stdpath("config"), "lua", "plugins", "personal", "init.lua" },
+        { vim.fn.stdpath("config"), "docs", "ROADMAP", "ROADMAP.md" },
+        { "$REPOS_DIR", "Notes", "spickzettel", "spickzettel.md" },
+      }
+
+      -- Work-specific Harpoon targets: only exist/matter on the workstation.
+      if machine.is("workstation") then
         target_specs = {
-          { vim.fn.stdpath("config"), "lua", "plugins", "personal", "init.lua" },
-          { vim.fn.stdpath("config"), "docs", "ROADMAP", "ROADMAP.md" },
-          { "$REPOS_DIR", "Notes", "spickzettel", "spickzettel.md" },
-        },
+          { "$REPOS_DIR", "WKDBook-Tricentis", "Cases", "Workflow", "Workflow.md" },
+          { "$REPOS_DIR", "WKDBook-Tricentis", "Cases", "Workflow", "Templates", "FirstResponse_Rick.md" },
+          { "$REPOS_DIR", "WKDBook-Tricentis", "Cases", "Workflow", "Templates", "SAP_TBox_RequestInfos.md" },
+          { "$REPOS_DIR", "WKDBook-Tricentis", "Cases", "Workflow", "Templates", "RequestMoreInfo.md" },
+          { "$REPOS_DIR", "WKDBook-Tricentis", "ToDo-Collection", "SAP_Support_ToDo.md" },
+          target_specs[1],
+          target_specs[2],
+          target_specs[3],
+        }
+      end
+
+      require("config.harpoon.persist_paths").setup({
+        target_specs = target_specs,
       })
+      require("config.harpoon.pin_marks").setup()
       require("config.harpoon.preview").install_alt_number_maps()
-      require("config.harpoon.health")
+      require("config.harpoon.debug").setup_cmd()
     end,
   },
 
