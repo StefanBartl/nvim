@@ -18,6 +18,8 @@
     nicht löschen" EPERM-Lock nochmal auf? Falls nein → fix bestätigt. Falls ja →
     handle_guard release greift nicht in dem Fall, Details an Claude.
 
+[] Refersh nachdem man eine datei verschoben hat; bzw bei allen aktionen, die eine änderung im filetree bewirken
+
 ---
 
 ## General

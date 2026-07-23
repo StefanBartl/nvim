@@ -1,6 +1,10 @@
 # Roadmap
 
-- Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
+   Warn  3:37:11 PM notify.warn [filetree.pdf] pdfport.nvim not installed — opening PDF in system viewer
+
+
+- nivm.ui.kit die buttons prompt ist cool, das würde ichgerne bei allen prompts haben, bei der man selection machen kann, alsoeigentlich alle select auf button variante umstellen, außer es gibt mehr als 4 selcts, denn dann würde se viele buttons geben
+-  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
 * [ ] Inline-Images in Markdown-Files einbinden: snacks?
   - checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
