@@ -59,7 +59,7 @@ plugins.add({
           {
             name = "notes",
             dir = repos .. "/Notes",
-            keys = { files = "<leader>mnf", grep = "<leader>mng" },
+            keys = { files = "<leader>mnf", grep = "<leader>mng", smart = "<leader>mns" },
           },
           {
             name = "notes_lua",
@@ -85,7 +85,7 @@ plugins.add({
             name = "wkdbooks",
             dir = repos .. "/WKDBooks",
             prefix = "wkdbook-",
-            keys = { files = "<leader>wkf", grep = "<leader>wkg" },
+            keys = { files = "<leader>wkf", grep = "<leader>wkg", smart = "<leader>wks" },
           },
           {
             name = "wkdbooks_lua",
@@ -97,6 +97,14 @@ plugins.add({
             dir = repos .. "/WKDBooks/Development/wkdbook-Neovim",
             keys = { files = "<leader>wvf", grep = "<leader>wvg" },
           },
+        },
+
+        keymaps = {
+          -- Smart action: one picker running grep (content) + find (filenames)
+          -- for the same query, merged and ranked by relevance. See
+          -- pickers.nvim docs/COMMANDS.md#the-smart-action.
+          cwd_smart = "<leader>ss", -- smart grep+find in CWD
+          config_smart = "<leader>sc", -- smart grep+find in nvim config
         },
 
         history = {

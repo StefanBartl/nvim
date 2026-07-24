@@ -28,15 +28,29 @@ Registered from `setup()`, or — if the user never calls `setup()` — from a
 | *(disabled by default)* `repos_files` | Pick a repo, then find files | "[pickers] Pick a repo, then find files" |
 | *(disabled by default)* `repos_grep` | Pick a repo, then live grep | "[pickers] Pick a repo, then live grep" |
 | *(disabled by default)* `system_files` | Systemwide fd search (prompts) | "[pickers] Systemwide fd search (prompts for query)" |
+| *(disabled by default)* `cwd_smart` | Smart grep+find in CWD | "[pickers] Smart (grep + find) in CWD" |
+| *(disabled by default)* `config_smart` | Smart grep+find in nvim config | "[pickers] Smart (grep + find) in nvim config" |
+| *(disabled by default)* `folder_smart` | Smart grep+find in picked folder | "[pickers] Smart (grep + find) in interactively picked folder" |
 
 `repos_files`/`repos_grep`/`system_files` added 2026-07-22 (closed the last
 open ROADMAP.md keymaps item — previously command-only via `:RepoFiles`/
 `:RepoGrep`/`:FindOnSystem`).
 
+`cwd_smart`/`config_smart`/`folder_smart` added 2026-07-24 with the **smart
+action** (combined grep + find files, merged and ranked — a third action
+alongside `files`/`grep`). **This repo's own config now enables** `cwd_smart`
+= `<leader>ss` and `config_smart` = `<leader>sc` (see
+`lua/plugins/personal/init.lua`). See the pickers.nvim docs
+(`docs/COMMANDS.md#the-smart-action`, `docs/CONFIGURATION.md#smart-combined-grep--find`,
+`:help pickers-smart`) for the scorer/weights.
+
 ## 2. Collection keymaps
 
 `bindings/collections.lua` — only for user-configured `collections` entries
-with a `keys.files`/`keys.grep` field (no default collections ship).
+with a `keys.files`/`keys.grep`/`keys.smart` field (no default collections
+ship). `keys.smart` added 2026-07-24 with the smart action. This repo's config
+sets it on the `notes` (`<leader>mns`) and `wkdbooks` (`<leader>wks`)
+collections.
 
 ## 3. `selected_index` overlay — Telescope engine only
 

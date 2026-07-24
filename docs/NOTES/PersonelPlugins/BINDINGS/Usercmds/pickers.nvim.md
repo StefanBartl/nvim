@@ -16,7 +16,7 @@ Docs: `docs/COMMANDS.md`, `docs/BINDINGS.md`, `doc/pickers.txt`
 | Command | Args | Effect |
 | --- | --- | --- |
 | `:Pickers` | — | Interactive scope picker → action picker |
-| `:Pickers {scope}` | `[action]` | `scope` ∈ `cwd`\|`config`\|`folder`\|`repos`\|`wkdbooks`\|`system`\|`drives`\|any collection name |
+| `:Pickers {scope}` | `[action]` | `scope` ∈ `cwd`\|`config`\|`folder`\|`repos`\|`wkdbooks`\|`system`\|`drives`\|any collection name; `action` ∈ `files`\|`grep`\|`smart` |
 | `:Pickers dir` | `[nav] [action]` | Depth / alias / explicit-path navigation, then files/grep |
 | `:Pickers builtin {name}` | — | Dispatch one of 51 native picker-engine functions (git/LSP/help/vim-intrinsics/diagnostics/…) straight to the resolved engine — bypasses `pickers.command.handle` entirely. See `docs/BUILTINS.md`. Added 2026-07-21/22. |
 | `:DirPicker` etc. | — | 12 compat aliases (see below), unchanged |
@@ -30,6 +30,17 @@ Docs: `docs/COMMANDS.md`, `docs/BINDINGS.md`, `doc/pickers.txt`
 `:LiveGrep` · `:AllDrives` · `:AllDrivesGrep` · `:FindOnSystem` ·
 `:RepoFiles [repo]` · `:RepoGrep [repo]` · `:WkdBookFiles` · `:WkdBookGrep` —
 see `docs/COMMANDS.md` for the full `:Pickers ...` equivalents.
+
+## `smart` action + `:{PascalName}Smart` — added 2026-07-24
+
+The **smart** action (combined grep + find files, merged and ranked) is a
+third action alongside `files`/`grep`, so it's reachable everywhere they are:
+`:Pickers {scope} smart` for any built-in scope or collection. Each collection
+now also generates a `:{PascalName}Smart` compat command (e.g. `:NotesSmart`
+→ `:Pickers notes smart`) next to `:{Pascal}Files`/`:{Pascal}Grep`
+(`bindings/collections.lua`). Engine-agnostic core lives in
+`lua/pickers/smart/` (search + score); each engine adapter got an `M.smart`.
+See `:help pickers-smart` and `docs/CONFIGURATION.md#smart-combined-grep--find`.
 
 ## `:PickersRepeat` — added 2026-07-22
 
