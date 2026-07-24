@@ -1,7 +1,7 @@
 # language.nvim — Autocmds Cheatsheet
 
 Sources: `lua/language/bindings/autocmds/init.lua`, `lua/language/translate/window.lua`, `lua/language/spell/providers/cspell_server.lua`
-Cross-reference: `docs/BINDINGS.md` — matches `bindings/autocmds.lua`'s table exactly; doesn't mention the translate-window's own augroup or the cspell-sidecar shutdown autocmd (internal plumbing).
+Cross-reference: `docs/BINDINGS.md` — matches `bindings/autocmds/init.lua`'s table exactly; doesn't mention the translate-window's own augroup or the cspell-sidecar shutdown autocmd (internal plumbing).
 
 ## `bindings/autocmds/init.lua` — augroup `language_nvim` (clear=true)
 
