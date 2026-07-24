@@ -43,10 +43,19 @@ Docs: `docs/BINDINGS.md`, `docs/installation.md`, `README.md`
 - **lib.nvim was genuinely optional before this migration** (unlike most
   other repos in this series where it was already a hidden hard dependency
   — gopath's `health.lua`/`util.log`/create-on-missing dialog all had real
-  pcall-guarded fallbacks). `bindings/usrcmds.lua`'s new unconditional
-  `require("lib.nvim.usercmd.composer")` is the *only* hard lib.nvim
-  dependency in the whole repo now. Fixed README/installation.md's
-  "optional" framing (renamed the installation.md section from "Optional
-  dependencies" to "Dependencies") and added a required-check to
-  `health.lua` alongside its existing informational lib.nvim check.
-- No CI for this repo — pre-existing, not part of this migration's scope.
+  pcall-guarded fallbacks). `bindings/usrcmds.lua`'s unconditional
+  `require("lib.nvim.usercmd.composer")` was the first hard lib.nvim
+  dependency in the repo. Fixed README/installation.md's "optional" framing
+  (renamed the installation.md section from "Optional dependencies" to
+  "Dependencies") and added a required-check to `health.lua` alongside its
+  existing informational lib.nvim check.
+- **Update (2026-07)**: `bindings/keymaps.lua` and `bindings/autocmds.lua`
+  were folded into the same migration (`require("lib.nvim.map")` /
+  `require("lib.nvim.autocmd")`, both unconditional) — lib.nvim is no longer
+  a single-file dependency, it's required across the whole bindings layer.
+  `lua/gopath/util/cross.lua`'s `lib.nvim.cross` usage remains the one
+  genuinely soft (pcall-guarded, falls back to built-ins) usage in the repo.
+- **CI added**: `.github/workflows/ci.yml` runs `stylua --check`, `luacheck`,
+  and a headless smoke test (`scripts/ci/headless_tests.lua`) that clones
+  `lib.nvim` onto the runtimepath, calls `setup()`, and executes every
+  `docs/TESTS/*.lua` fixture — supersedes the "No CI for this repo" note.

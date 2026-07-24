@@ -65,12 +65,12 @@ None — intentionally empty stub.
 
 | Event(s) | Augroup | Pattern | Action |
 | --- | --- | --- | --- |
-| `BufWritePre` | `fileops_nvim_auto_mkdir` | — | Creates parent dirs before write |
-| `CursorHold`/`CursorHoldI` | `fileops_nvim_on_hold_preview` | — | Git hunk/line preview (opt-in, off) |
-| `CursorMoved`, `BufHidden`, `InsertEnter` (once) | `fileops_nvim_on_hold_cleanup` | buffer-local | Clears preview virtual text |
-| `ModeChanged` | `fileops_nvim_on_hold_modeclear` | — | Clears preview on mode change |
-| `BufWinEnter` | `fileops_nvim_conflict_marks_on` | — | Highlights conflict markers |
-| `BufWinLeave` | `fileops_nvim_conflict_marks_off` | — | Clears conflict-marker matches |
+| `BufWritePre` | `fileops_auto_mkdir` | — | Creates parent dirs before write |
+| `CursorHold`/`CursorHoldI` | `fileops_on_hold_preview` | — | Git hunk/line preview (opt-in, off) |
+| `CursorMoved`, `BufHidden`, `InsertEnter` (once) | `fileops_on_hold_cleanup` | buffer-local | Clears preview virtual text |
+| `ModeChanged` | `fileops_on_hold_modeclear` | — | Clears preview on mode change |
+| `BufWinEnter` | `fileops_conflict_marks_on` | — | Highlights conflict markers |
+| `BufWinLeave` | `fileops_conflict_marks_off` | — | Clears conflict-marker matches |
 
 ## [filetree.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/filetree.nvim.md)
 
@@ -95,6 +95,7 @@ opt-in).
 
 | Event(s) | Augroup | Pattern | Action |
 | --- | --- | --- | --- |
+| `BufWritePost` | `GopathPathCacheInvalidate` | — | Drop directory-listing caches (always on) |
 | `BufWritePost` | `GopathCacheAutoRebuild` | `{*.lua,*.vim}` | Debounced truncated-path cache rebuild (opt-in) |
 
 ## [insights.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/insights.nvim.md)

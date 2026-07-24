@@ -17,6 +17,26 @@ Docs: `docs/BINDINGS.md`, `README.md`, `doc/replacer.txt`
 | `:Replacer` | alias for `:Replace` |
 | `:[range]Surround[!] {pattern} [delim] [scope] [--flags]` | wrap matches with a delimiter |
 | `:Wrap` | alias for `:Surround` |
+| `:ReplaceEscape {text}` | escape text for use as a Vim regex pattern (echo + unnamed register) |
+| `:ReplaceTest [pattern] [sample]` | small floating live pattern-test panel |
+| `:ReplaceRoot[!] {old} {new} [--flags]` | like `:Replace`, scope is an auto-detected project root; prompts if ambiguous |
+| `:ReplaceUndo [id]` | restore files from a `--checkpoint` snapshot (most recent by default) |
+| `:ReplaceHistory` | vim.ui.select over last 50 applies, re-runs the choice |
+| `:ReplaceSavePreset {name} {old} {new} [scope] [--flags]` / `:ReplacePreset {name}` | named reusable replace requests, JSON under stdpath("data")/replacer/ |
+| `:ReplaceBatch[!] {source} [scope] [--flags]` | multiple old=>new pairs, one full :Replace dispatch per pair; source = file/clipboard/qf |
+| `:ReplaceFNames[!] {old} {new} [scope] [--dry]` | rename files/dirs whose basename matches; nested matches skipped (re-run to catch) |
+
+## 2026-07-24 roadmap implementation pass
+
+Working through `docs/ROADMAP.md` "Planned" section item by item (one
+feature per commit, removed from ROADMAP.md as each lands). So far:
+error-message quality, `--preserve-ws`, `--case-preserve` (new
+`lua/replacer/casing.lua`), `--word`/`--code-only` (new
+`lua/replacer/tscode.lua`, Tree-sitter best-effort/fails-open),
+`:ReplaceEscape`/`:ReplaceTest`/backreferences (new `lua/replacer/regex.lua`).
+All additive flags/config, off by default, zero behavior change when unset.
+Still in progress — more roadmap items to follow in later commits on
+`claude/replacer-nvim-roadmap-28b128`.
 
 ## Notes
 

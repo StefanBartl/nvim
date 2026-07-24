@@ -9,6 +9,8 @@ Gated by `cfg.keymaps.preset == true` (checked in `bindings/init.lua`).
 | lhs | mode | action | desc |
 | --- | --- | --- | --- |
 | `<C-e>` | n, i | Opens the emoji insert picker at cursor (telescope/fzf-lua if available, else `vim.ui.select`) | "emojis: insert picker" |
+| `<leader>ee` | n | Opens the quick-insert overlay (frecency-ordered grid) | "emojis: quick-insert overlay" |
+| `<leader>et` | n, x | Cycles the emoji checkbox on the cursor line, or every line in the visual range | "emojis: toggle checkbox" |
 | `<leader>ec` | n | Counts emojis in the buffer | "emojis: count buffer" |
 | `<leader>el` | n | Lists emojis in buffer to quickfix | "emojis: list buffer" |
 

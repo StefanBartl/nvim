@@ -7,7 +7,7 @@ family existed to remove — this was already a single `:Open` command, so the
 migration is purely internal (typed args + docgen consistency), no user-
 visible syntax change at all.
 
-Source: `lua/open_nvim/bindings/usrcmds.lua`
+Source: `lua/open/bindings/usrcmds.lua`
 Docs: `docs/BINDINGS.md`, `docs/commands.md`, `CHEATSHEET.md`, `README.md`, `doc/open.txt`
 
 | Command | Effect |
@@ -18,6 +18,8 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `CHEATSHEET.md`, `README.md`, `doc
 | `:Open viewer [kind] [scope] [opts]` | List links in a scope, then open / export |
 | `:UrlView [scope] [opts]` | Wrapper pinning `kind=urls` (name from `viewer.commands.urls`) |
 | `:MDLinksView [scope] [opts]` | Wrapper pinning `kind=mdlinks` (name from `viewer.commands.mdlinks`) |
+| `:Open terminal [scope]` | Terminal split in the target's directory (added later, see below) |
+| `:Open <target> git` | `git` is now a special scope token — nearest Git root (added later, see below) |
 
 ## Notes
 
@@ -75,8 +77,8 @@ or exports the list.
 | Part | Where |
 | --- | --- |
 | Scope → lines with provenance | `lib.nvim.harvest.scope` (new lib.nvim module) |
-| Lines → links | `lua/open_nvim/viewer/scan.lua` |
-| Filter / sort / format / open | `lua/open_nvim/viewer/init.lua` |
+| Lines → links | `lua/open/viewer/scan.lua` |
+| Filter / sort / format / open | `lua/open/viewer/init.lua` |
 | Rows → GFM table / CSV | `lib.nvim.harvest.render` |
 | Text → clipboard/file/scratch/picker | `lib.nvim.harvest.sink` |
 | The results list itself | `lib.nvim.ui.kit.chooser` (already existed) |
@@ -141,6 +143,38 @@ Options: `sort=`, `out=`, `match=`, `--paths`, `--anchors`, `--dupes`, `--flat`.
 
 `docs/configuration.md` and `doc/open.txt` §4 CONFIGURATION used to list the
 default `handlers` table as `{filemanager, browser, notepad, nvim_internal}`
-while `lua/open_nvim/config/DEFAULTS.lua` defaulted to that plus `"default"`.
+while `lua/open/config/DEFAULTS.lua` defaulted to that plus `"default"`.
 Both docs now include `"default"` and match the code — verified, no action
 needed.
+
+## Module root rename (`lua/open_nvim/` → `lua/open/`)
+
+The plugin's own Lua module root dropped the `_nvim` suffix at some point
+after the notes above were written (repo commit `b6b3a88`, "refactor: drop
+_nvim suffix from lua module root") — `require("open_nvim...")` became
+`require("open...")` throughout. Purely internal; no user-visible command or
+config-key change. The stale `open_nvim` paths in the older notes above have
+been corrected in place; anything below this point already uses `open`.
+
+## Roadmap features (all of docs/ROADMAP.md implemented, then cleared)
+
+Every item that was tracked in `docs/ROADMAP.md` got implemented in one
+commit each and the file was then emptied (nothing left to track). New
+surface added to `:Open`/`setup()`:
+
+| Feature | What changed |
+| --- | --- |
+| `custom_handlers` | `setup({ custom_handlers = { {key, desc, run}, ... } })` registers user handlers alongside the built-in `handlers` modules — no need to call `registry.register()` by hand. |
+| `terminal` handler | New handler key `terminal`, in the default `handlers` list. `:Open terminal` opens a terminal split in the buffer's directory; a file target resolves to its parent dir. Added to `context.PATH_TARGETS` alongside filemanager/split/vsplit/tab. |
+| `keymaps` config | `setup({ keymaps = { open_default=, open_browser=, open_manager= } })` registers fixed-target keymaps via a new `lua/open/bindings/keymaps.lua`. Still **none by default** — the "no default keymaps" claim in `docs/BINDINGS.md`/this file's Keymaps note is about the shipped defaults, not the absence of the option now. |
+| `brave` / `opera` handlers | Two more `make_named_handler(...)` registrations in `handlers/browser.lua`, same pattern as chrome/firefox/edge. |
+| `git` scope token | `:Open filemanager git` resolves the nearest Git root via `git rev-parse --show-toplevel`, added as a third special scope token alongside `%`/`cfile` (before the keyword-lookup fallback) in `context.resolve()`. |
+| `picker` config | `setup({ picker = { enabled = true } })` — a no-target `:Open`/`open.open()` call whose context has more than one meaningful handler (see `context.candidate_targets()`) shows a `vim.ui.select` prompt (new `lua/open/picker.lua`) instead of the automatic pick. Off by default; an explicit target always bypasses it. |
+| `filemanager.reveal` | `setup({ filemanager = { reveal = false } })` makes a file target navigate to its parent directory instead of being selected/revealed there. Directories are always navigated into regardless. Rewrote every platform branch in `handlers/filemanager.lua` to compute the file-vs-reveal target explicitly. |
+| `debug` config | `setup({ debug = true })` logs `context.gather()`, `context.resolve()`, and `registry.dispatch()` steps to `:messages`, tagged `[open.context]`/`[open.registry]`. Off by default. |
+| Context cache | New `context.with_cache(fn)` memoizes `gather()`'s result for the duration of `fn`. `open.open()` and the `:Open` user-command handler both now run through it; nested `with_cache` calls reuse the outermost cache rather than clearing it early. |
+| Telescope integration | New opt-in `lua/open/integrations/telescope.lua` (`picker()` / `extension()`) — lists registered handlers with a live "would open: ..." preview per row, dispatches the chosen one on `<CR>`. Not loaded by `setup()`, matching the existing `open.integrations.urlview` opt-in convention. |
+
+All ten shipped with test coverage added to a new `TESTS/features_spec.lua`
+(registered in `TESTS/run.lua`), verified against a real headless run with
+`lib.nvim` on `$LIB_NVIM_PATH` — full suite green after every commit.

@@ -14,9 +14,11 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/emojis.txt`
 | Command | Args | Effect |
 | --- | --- | --- |
 | `:Emojis` | — | `clear` the whole buffer (`%`) |
-| `:Emojis {action}` | `[scope]` | `action` ∈ clear\|insert\|list\|count\|replace\|unreplace\|first\|next\|wrap |
+| `:Emojis {action}` | `[scope]` | `action` ∈ clear\|insert\|list\|count\|replace\|unreplace\|first\|next\|wrap\|overlay\|toggle |
 | `:[range]Emojis {action}` | — | range overrides the scope keyword |
 | `:Emojis {clear\|list\|count\|replace} cwd` | `[glob...]` | project-wide via ripgrep, extra tokens become `--glob` filters |
+| `:Emojis overlay` | `[grid\|grid_keys\|list]` | quick-insert overlay (`config.overlay`), second arg is interaction mode, not scope |
+| `:Emojis toggle` | `[set]` | cycles the checkbox glyph on the cursor line / range through `config.checkbox.sets`, second arg is a set name, not scope |
 
 Command name is configurable (`setup({ command = "Emo" })`) — `composer.verb(cfg.command, ...)` registers under whatever name is configured, verified only that name exists afterward.
 
@@ -78,3 +80,11 @@ Command name is configurable (`setup({ command = "Emo" })`) — `composer.verb(c
 - **No pre-existing bugs found** while verifying. Full `docs/TESTS/run.lua`
   suite (7 specs, including `commands_spec.lua`'s real `vim.cmd("Emojis
   ...")` calls) passes unmodified against the composer-based registration.
+- **v0.3 (2026-07-24): `overlay`/`toggle` routes added** to the same
+  composer verb — `overlay` (quick-insert grid) and `toggle` (emoji
+  checkbox cycling) round out the action set to 9. Both repurpose the
+  second CLI token as something other than a scope (interaction mode /
+  set name respectively), same `NO_SCOPE`-style bypass pattern as
+  `insert`/`first`/`next`. `docs/ROADMAP.md` was emptied the same day (all
+  prior roadmap items shipped, nothing pending) — cross-references to its
+  now-removed "Nicht geplant" section were also cleaned up repo-wide.

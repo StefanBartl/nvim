@@ -3,10 +3,10 @@
 `:File` built via `lib.nvim.usercmd.composer`. Grammar:
 `:[count]File[!] {subcommand} [args…]`
 
-Source: `lua/fileops_nvim/bindings/usrcmds.lua`
+Source: `lua/fileops/bindings/usrcmds.lua`
 Docs: `doc/fileops.txt`, `docs/commands.md`, `docs/BINDINGS.md`, `README.md`
 
-## Subcommands (19)
+## Subcommands (21)
 
 | Subcommand | Args | Notes |
 | --- | --- | --- |
@@ -16,8 +16,8 @@ Docs: `doc/fileops.txt`, `docs/commands.md`, `docs/BINDINGS.md`, `README.md`
 | `writeto` | `[path]` | write a copy, name stays (`!` overwrites) |
 | `mkdir` | — | create parent dirs for current buffer |
 | `touch` | `[path]` | create an empty file if missing (real `touch` semantics) |
-| `rename` | `[%] [dest]` | rename + update buffer (reloads); git-aware (see below) |
-| `move` | `[%] [dest]` | move + update buffer (no reload); git-aware |
+| `rename` | `[%] [dest]` | rename + update buffer (reloads); git-aware (see below); resaves active `:mksession` session |
+| `move` | `[%] [dest]` | move + update buffer (no reload); git-aware; resaves active `:mksession` session |
 | `duplicate` | `[%] [dest]` | copy + open the copy (`!` overwrites); git-aware (warn only) |
 | `copy` | `[%] [dest]` | copy without opening (`!` overwrites); git-aware (warn only) |
 | `delete` | `[%]` | delete + close buffer (`!` force-closes); git-aware |
@@ -55,6 +55,15 @@ Every mutating op (new/write/saveas/writeto/mkdir/touch/rename/move/
 duplicate/copy/delete) fires a `User FileopsChanged` autocmd
 (`{action, path}`) and reloads neo-tree/nvim-tree in place, gated by
 `explorer.refresh_on_change` (default `true`; the event itself always fires).
+
+## Session compat (`session_compat.enable`, default true)
+
+`rename`/`move` resave the active `:mksession` session (`v:this_session`)
+after repointing the buffer, so the session file doesn't keep pointing at
+the old path. No-op when `v:this_session == ""` (no active session). Other
+session managers (possession.nvim, `sessions.nvim`) should hook the
+`User FileopsChanged` event above instead — this only covers Vim/Neovim's
+own built-in `:mksession`.
 
 ## Notes
 
@@ -104,3 +113,25 @@ duplicate/copy/delete) fires a `User FileopsChanged` autocmd
 - `resolve_dest`'s `[%] {dest}` two-shape argument (implicit `%` when one
   arg given, explicit when two) is preserved by forwarding composer's bound
   positionals straight into `resolve_dest(fargs)`/`dispatch()`.
+- 2026-07-23: the feature branch that did the 2026-07-21 work above
+  (`claude/session-ccf9cf`) had branched *before* `d803686`
+  ("refactor: drop `_nvim` suffix from lua module root") landed on `main`,
+  so it never got that rename and sat unmerged with the whole module tree
+  still at `lua/fileops_nvim/`. Discovered it via `git log --oneline --all`
+  while starting this same roadmap task fresh — merged it into
+  `main`'s successor branch instead of redoing the work, resolving the
+  rename conflict by keeping the no-suffix `lua/fileops/` path (3 conflicts
+  total: `bindings/usrcmds.lua`'s require block, plus `ops/bulk.lua` and
+  `util/git.lua` needing a manual `fileops_nvim` → `fileops` sed pass after
+  git placed them at the right new path automatically). This is why the
+  Autocmds cheatsheet's augroup names had a stale `fileops_nvim_*` infix
+  until the same pass fixed it.
+- 2026-07-23: implemented the one item the merged branch had legitimately
+  left undone — "Session-Kompatibilität" (`session_compat`, see above) — and
+  caught a real bug in the first draft via the new `file_spec.lua` test:
+  bare `vim.cmd("mksession!")` does **not** reuse `v:this_session`, it
+  writes `./Session.vim` in Neovim's cwd instead (confirmed against
+  `:h mksession`'s actual behavior, not just the docstring's assumption).
+  Fixed by passing `fn.fnameescape(vim.v.this_session)` explicitly. Left a
+  stray `Session.vim` in the repo root during manual debugging before the
+  fix landed — cleaned up before committing.

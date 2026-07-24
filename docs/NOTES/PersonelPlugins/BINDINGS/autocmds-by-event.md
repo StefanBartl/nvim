@@ -45,7 +45,7 @@ shared state, no ordering dependency between them.
 | Plugin | Augroup | Condition | Action |
 | --- | --- | --- | --- |
 | cascade.nvim | `cascade_renumber_save` | list feature + `"save"` trigger configured | Renumber ordered lists |
-| fileops.nvim | `fileops_nvim_auto_mkdir` | default on | Create parent dirs |
+| fileops.nvim | `fileops_auto_mkdir` | default on | Create parent dirs |
 | markdown.nvim | `MarkdownNvimRefs` | mode == save (default) | Sync anchors + TOC |
 | markdown.nvim | `MarkdownNvimLinksSanitize` | `sanitize_on_save` (default on) | Normalize inline-link targets (./, forward slashes) |
 | language.nvim | `language_nvim` | opt-in, off | Abort write on spelling errors |
@@ -70,6 +70,7 @@ the write is later aborted for spelling.
 | Plugin | Augroup | Condition | Action |
 | --- | --- | --- | --- |
 | insights.nvim | `Insights_unimported` | configurable filetypes | Warn on unimported components |
+| gopath.nvim | `GopathPathCacheInvalidate` | always on | Drop directory-listing caches after a write |
 | gopath.nvim | `GopathCacheAutoRebuild` | opt-in, off | Debounced cache rebuild |
 | filetree.nvim | `filetree_current_hl` (opt-in, off), `filetree_opened_sync`, `filetree_git_status` (opt-in, off), `filetree_lsp_diagnostics` (opt-in, off) | various | Tree-buffer redecoration |
 | markdown.nvim | (via `commands/preview.lua`'s `BufEnter`, not `BufWritePost` — see Refs' `BufWritePre` above instead) | — | — |

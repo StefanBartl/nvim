@@ -1,6 +1,6 @@
 # fileops.nvim — Keymaps Cheatsheet
 
-Source: `lua/fileops_nvim/bindings/keymaps.lua`
+Source: `lua/fileops/bindings/keymaps.lua`
 Bridge: local `map()` helper — prefers `lib.nvim.map`, falls back to `vim.keymap.set` (mode always `n`).
 Cross-reference: `docs/BINDINGS.md`, `docs/keymaps.md` — both current and complete.
 
