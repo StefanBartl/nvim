@@ -1,0 +1,53 @@
+---@meta
+---@module '@types.tsnode'
+
+---@alias byte integer # A byte value in range 0..255
+
+---@class BytePosition
+---@field [1] byte  # row (0-based)
+---@field [2] byte  # column (byte offset)
+
+--- Extended TSNode shape for EmmyLua/LuaLS diagnostics and autocompletion.
+---@class TSNode
+---@field type fun(self: TSNode): string            # Returns the type of the node
+---@field parent fun(self: TSNode): TSNode|nil      # Returns the parent node
+---@field field fun(self: TSNode, name: string): TSNode|TSNode[]|nil
+--- Retrieves child(ren) under a named field
+---@field named_child fun(self: TSNode, index: integer): TSNode|nil
+--- Returns the index-th named child
+---@field child fun(self: TSNode, index: integer): TSNode|nil
+--- Returns the index-th child (named or unnamed)
+---@field named_children fun(self: TSNode): TSNode[]
+--- Returns all named children
+---@field children fun(self: TSNode): TSNode[]
+--- Returns all children (named and unnamed)
+---@field has_error fun(self: TSNode): boolean
+--- Returns true if the node has a parse error
+---@field is_missing fun(self: TSNode): boolean
+--- Returns true if the node is missing
+---@field start byte[] # {row, column} of start position
+---@field end byte[]   # {row, column} of end position
+---@field start_byte integer
+--- Byte index of the start
+---@field end_byte integer
+--- Byte index of the end
+---@field text fun(self: TSNode, buf: integer): string
+--- Returns the text of this node from a given buffer
+---@field named? boolean
+--- True if the node is a named node
+---@field symbol? integer
+--- Internal symbol ID
+---@field id? integer
+--- Unique node ID (internal)
+---@field child_count fun(self: TSNode): integer
+--- Returns the number of children
+---@field prev_sibling fun(self: TSNode): TSNode|nil
+---@field next_sibling fun(self: TSNode): TSNode|nil
+---@field first_child fun(self: TSNode): TSNode|nil
+---@field last_child fun(self: TSNode): TSNode|nil
+---@field sexpr fun(self: TSNode): string
+--- Returns S-expression representation of this node
+---@field eq fun(self: TSNode, other: TSNode): boolean
+--- Checks if two nodes are equal
+
+return {}

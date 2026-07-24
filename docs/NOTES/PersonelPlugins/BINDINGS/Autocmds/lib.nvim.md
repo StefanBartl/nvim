@@ -1,0 +1,28 @@
+# lib.nvim — Autocmds Cheatsheet
+
+lib.nvim is a **library** — almost nothing registers eagerly. No
+`docs/BINDINGS.md` exists (there's nothing default-active to document).
+
+## Helper module
+
+- `lua/lib/nvim/autocmd/init.lua` + `augroup.lua` — the `lib.nvim.autocmd` helper other plugins bridge to: `M.create()` wraps `nvim_create_autocmd` with a pcall-guarded callback (notifies on error) and augroup name→id caching (`M.group`/`M.get_augroup`).
+
+## Dynamic registrations — fire only when a consuming plugin invokes the enclosing function
+
+| Module | Trigger | Registers |
+| --- | --- | --- |
+| `lua/lib/nvim/window/close_on_focus_lost.lua` | any float-owning code with a `winid` | augroup `LibNvimWindowFocusClose_<winid>`; `{WinLeave,BufLeave}` (configurable), buffer-local, once → deferred-close the window |
+| `lua/lib/nvim/ui/kit/picker.lua` | every `kit.select`-style picker | `{TextChangedI,TextChanged}` on the prompt buffer → debounced query-change |
+| `lua/lib/nvim/ui/kit/surface.lua` | every kit float (backs select/menu/input/note/toast/confirm) | augroup `lib_ui_kit_surface_<winid>`; `WinClosed` (pattern=winid, once) → fires the surface's `on_close` callbacks |
+| `lua/lib/nvim/ui/kit/theme.lua` | first call to `theme.setup()` | augroup `lib_ui_kit_theme` (created once); `ColorScheme` → re-materializes `Kit*` highlight groups |
+| `lua/lib/nvim/ui/kit/preview.lua` | `:KitPreview` | augroup `lib_kit_preview_<config_buf>`; `{TextChanged,TextChangedI}` re-render |
+| `lua/lib/nvim/cache/memory.lua` | **opt-in**: consumer calls `M.setup_auto_invalidation()` | augroup (default `"lib.nvim.cache.memory"`); `{TextChanged,TextChangedI}` prune stale entries, `BufWritePost` clears every namespace |
+| `lua/lib/nvim/logger/init.lua` | automatic, once per `logger.new()` call with a file sink (`opts.capture ~= false`, default true) | augroup `lib_logger_<name>`; `VimLeavePre` → flushes that logger's ring buffer |
+| `lua/lib/nvim/docmap/registry.lua` | **opt-in**: `docmap.install({watch=true, ...})` | augroup `LibDocmapWatch:<root>`; `BufWritePost` pattern `*.lua` → debounced IR rescan when the written file is under the watched source dir (checked via `is_subpath`, not the autocmd glob — avoids a Windows backslash-path mismatch bug) |
+| `lua/lib/nvim/debounce/buffer/init.lua` | automatic, first `.call(bufnr)` for a new buffer | per-buffer cleanup autocmd (default `{BufDelete,BufWipeout}`) cancels that buffer's debounce timer |
+| `lua/lib/nvim_usrcmds/init.lua` | **opt-in**: consumer calls `require("lib.nvim_usrcmds").setup({helptags=true})` | `User` event, pattern `LazyDone`, once → `:helptags ALL` |
+
+## Notes
+
+- None of the "opt-in" rows (`cache.memory` auto-invalidation, `docmap.install(watch=true)`, `nvim_usrcmds.setup()`) are ever called by lib.nvim's own dependents — they're features a *user's own config* would opt into.
+- See [lib.nvim's Keymaps cheatsheet](../Keymaps/lib.nvim.md) for the keymap-side counterparts of these same UI components.

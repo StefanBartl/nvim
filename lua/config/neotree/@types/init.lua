@@ -1,0 +1,41 @@
+---@meta
+---@module 'config.neotree.@types'
+---@brief Central type definition index for Neo-tree configuration
+---@description
+--- This module serves as the entry point for all Neo-tree type definitions.
+--- Individual type modules are organized by functional domain:
+---
+--- Core Structures:
+---   - aliases:     Common type aliases and string literal unions
+---   - node:        Tree node structure and methods
+---   - state:       Neo-tree state passed to commands/handlers
+---   - config:      Setup and initialization configuration
+---
+--- Feature Modules:
+---   - actions:     Custom command options (copy, convert, info)
+---   - safety:      Backup, recovery, and operation queue
+---   - open:        Window management and positioning
+---   - reveal:      File reveal and navigation context
+---   - highlights:  Current file highlighting
+---
+--- Integration:
+---   - sources:     Icon and source selector display
+---   - wsl:         WSL file manager integration
+---   - project_root: Project root detection interface
+---
+--- Usage:
+---   All type files use the `Cfg.NeoTree.*` namespace prefix.
+---   Import specific type modules as needed via:
+---   ```lua
+---   ---@type Cfg.NeoTree.State
+---   local state = ...
+---   ```
+---
+--- Organization Principles:
+---   1. One file per functional domain (not per source file)
+---   2. Extract string literal unions as type aliases
+---   3. Minimal forward dependencies between type modules
+---   4. Structural typing for Neo-tree core objects
+---   5. Explicit field documentation with usage notes
+
+return {}
