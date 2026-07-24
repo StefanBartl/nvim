@@ -103,8 +103,8 @@ plugins.add({
           -- Smart action: one picker running grep (content) + find (filenames)
           -- for the same query, merged and ranked by relevance. See
           -- pickers.nvim docs/COMMANDS.md#the-smart-action.
-          cwd_smart = "<leader>ss", -- smart grep+find in CWD
-          config_smart = "<leader>sc", -- smart grep+find in nvim config
+          cwd_smart = "<leader>cw", -- smart grep+find in CWD
+          config_smart = "<leader>cf", -- smart grep+find in nvim config
         },
 
         history = {
