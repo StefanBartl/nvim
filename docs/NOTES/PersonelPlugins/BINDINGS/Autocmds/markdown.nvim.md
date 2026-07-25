@@ -20,6 +20,7 @@ source) as authoritative.
 | `MarkdownNvimRefs` | `TextChanged`,`TextChangedI` | same | mode == "live" | Debounced live sync |
 | `MarkdownNvimRefs` | `BufWipeout` | `*.md,*.markdown,*.mdx` | feature `refs` + mode∈{save,live} | Tears down timers/extmarks |
 | `MarkdownNvimLinksSanitize` | `BufWritePre` | `*.md,*.markdown,*.mdx` | feature `links` AND `cfg.links.sanitize_on_save ~= false` (default on) | Normalizes inline-link targets (`core/link_sanitize.lua`'s `buffer()`) before write — 2026-07-23, `claude/markdown-links-sanitize-4a5e72` branch, independent of `enable_autocmds` (same as the refs augroup) |
+| `MarkdownNvimLinkDiagnostics` | `BufWritePost` | `*.md,*.markdown,*.mdx` | feature `links` AND `cfg.links.diagnostics.mode == "save"` (default `"off"`, manual-only) | Reruns `core/link_diagnostics.check()` (dead relative-file links + duplicate heading anchors, via `vim.diagnostic`) — 2026-07-26, `claude/markdown-nvim-roadmap-bindings-194495`, now on `main`; independent of `enable_autocmds` (same pattern as the refs/sanitize augroups) |
 | `MarkdownNvimKeymaps` | `FileType` | ftpat | `enable_autocmds ~= false` (default on) | Installs `DEFAULT_KEYMAPS` |
 | `MarkdownNvimUserCommands` | `FileType` | ftpat | same | Installs `:Markdown` + `OpenWithSystemApplication` |
 | `MarkdownNvimFold` | `FileType` | ftpat | same, and feature `fold` | Sets `foldmethod`/`foldexpr`/`foldenable`/`foldlevel`/`foldlevelstart` |

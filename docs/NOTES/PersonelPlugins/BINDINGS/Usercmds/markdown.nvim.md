@@ -20,6 +20,29 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 ## Notes
 
+- **2026-07-26: worked through `docs/ROADMAP.md` end to end** (branch
+  `claude/markdown-nvim-roadmap-bindings-194495`, merged/pushed straight to
+  `main` — does **not** include the `sanitize`/`gaps` work below, which are
+  still on their own unmerged branches). No new *top-level* `:Markdown`
+  subcommands (still the original 10); two new nested ones:
+  - **`:Markdown links check`** — flags dead relative-file links and
+    duplicate heading titles in the current buffer via `vim.diagnostic`
+    (namespace `markdown_links`; new module `core/link_diagnostics.lua`,
+    reusing `link_scan.lua` + the anchor-slug logic in the new
+    `core/slug.lua`). New `config.links.diagnostics.mode` (`"off"` default |
+    `"save"` for an automatic `BufWritePost` rerun — see the Autocmds
+    cheatsheet, `MarkdownNvimLinkDiagnostics`).
+  - **`:Markdown table import [clipboard|PATH]`** — parses an HTML
+    `<table>` into a GFM table, round-tripping with the existing TableView
+    HTML export. New `table_fmt.parse_html_table`/`rows_to_gfm`.
+  Also new, not user-command-facing but config-relevant: `links.picker` gained
+  `"telescope"`/`"fzf"` backends in `util/picker.lua` (soft deps, fall back to
+  `vim.ui.select` with a warning); `config.toc` (header/marker/min_level/
+  max_level/anchor_style/anchor_separator) now drives `:Markdown toc`, which
+  also accepts `min=`/`max=`/`marker=` per-call args; `config.table`
+  (header_align/entry_align/col_overrides) now supplies `:Markdown table
+  format` defaults; `blockquote_hl.marker_fg`/`text_fg` are unset by default
+  and derived from the active colorscheme instead of a hard-coded hex.
 - **2026-07-23: added `:Markdown links sanitize [%|cwd|<file>]`** (branch
   `claude/markdown-links-sanitize-4a5e72`, off `main` — does **not** include
   the `gaps` subcommand noted below, which lives on the separate

@@ -74,7 +74,7 @@ the write is later aborted for spelling.
 | gopath.nvim | `GopathPathCacheInvalidate` | always on | Drop directory-listing caches after a write |
 | gopath.nvim | `GopathCacheAutoRebuild` | opt-in, off | Debounced cache rebuild |
 | filetree.nvim | `filetree_current_hl` (opt-in, off), `filetree_opened_sync`, `filetree_git_status` (opt-in, off), `filetree_lsp_diagnostics` (opt-in, off) | various | Tree-buffer redecoration |
-| markdown.nvim | (via `commands/preview.lua`'s `BufEnter`, not `BufWritePost` — see Refs' `BufWritePre` above instead) | — | — |
+| markdown.nvim | `MarkdownNvimLinkDiagnostics` | `links.diagnostics.mode == "save"` (default off — opt-in, 2026-07-26) | Rerun dead-link/duplicate-anchor check via `vim.diagnostic` (also see `commands/preview.lua`'s `BufEnter` and Refs' `BufWritePre`, unrelated) |
 | mdview.nvim | `MdviewAutocmds` | active session | Forced full resync push |
 | color_my_ascii.nvim | `ColorMyAsciiFenceOpen_<tbuf>` | `:Fence open` scratch buf | Sync fence content back |
 | lib.nvim | `lib.nvim.cache.memory` (opt-in), `LibDocmapWatch:<root>` (opt-in) | opt-in only | Cache invalidation / docmap rescan |
