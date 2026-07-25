@@ -27,6 +27,7 @@ See also: [by event](autocmds-by-event.md), [by filetype/scope](autocmds-by-file
 | --- | --- | --- | --- |
 | `FileType` | `ColorMyAscii` | `markdown` | Per-buffer highlighting + `:Fence` family |
 | `ColorScheme` | `ColorMyAsciiFenceLineHl` | `*` | Re-resolves fence-line/content highlight groups |
+| `ColorScheme` | `ColorMyAsciiHl` | `*` | Re-applies dynamically created (fixed-hex) ASCII-art highlight groups |
 | `TextChanged`, `TextChangedI` | `ColorMyAsciiBuffer_<bufnr>` | buffer-local | Re-highlights (adaptive debounce) |
 | `BufDelete` | `ColorMyAsciiBuffer_<bufnr>` | buffer-local | Clears highlighter state/cache |
 | `BufDelete`, `BufWipeout` | `ColorMyAsciiFenceApiCache` | `*` | Invalidates fences-API cache entry |

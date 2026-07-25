@@ -20,10 +20,22 @@ passes a `keymaps = { action = lhs, ... }` table to `setup()`.
 | `show_config` | `:ColorMyAscii show-config<cr>` | "color_my_ascii: show config" |
 | `debug` | `:ColorMyAscii debug<cr>` | "color_my_ascii: show debug info" |
 | `check_fences` | `:ColorMyAscii check-fences<cr>` | "color_my_ascii: check fences" |
+| `fence_jump` | `:ColorMyAscii fence-jump<cr>` | "color_my_ascii: jump between fence markers (%-style)" |
+| `fence_yank` | `:Fence yank<cr>` | "color_my_ascii: yank fence content" |
+| `fence_open` | `:Fence open<cr>` | "color_my_ascii: open fence content in a split" |
+| `fence_run` | `:Fence run<cr>` | "color_my_ascii: run fence content" |
+| `fence_format` | `:Fence format<cr>` | "color_my_ascii: format fence content" |
+| `fence_select` | `:Fence select<cr>` | "color_my_ascii: select fence content" |
+| `fence_wrap` | `:Fence wrap<cr>` | "color_my_ascii: wrap line in a fence" |
+| `fence_unwrap` | `:Fence unwrap<cr>` | "color_my_ascii: unwrap fence under cursor" |
 
 All mode `n`. The lhs for each is whatever the user assigns in their own
 `setup({ keymaps = { <action> = "<leader>ah" } })` call — there are no
-built-in defaults.
+built-in defaults. Since `:Fence` itself is only registered buffer-local on
+markdown buffers (see `Autocmds/color_my_ascii.nvim.md`'s `FileType`
+registration), the `fence_*` actions (like `check_fences`/`fence_jump`) only
+do anything useful there — bound globally via a normal `vim.keymap.set('n',
+...)`, same as every other action here.
 
 ## Dynamic keymaps (not user-configurable, not in `docs/BINDINGS.md`)
 

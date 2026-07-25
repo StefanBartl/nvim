@@ -93,18 +93,21 @@ breakdown (markdown vs. tree-buffer vs. debug-view vs. generic).
 | Plugin | Augroup | Condition | Action |
 | --- | --- | --- | --- |
 | color_my_ascii.nvim | `ColorMyAsciiFenceLineHl` | — | Re-resolve fence-line/content HL groups |
+| color_my_ascii.nvim | `ColorMyAsciiHl` | — | Re-apply dynamically created (fixed-hex) ASCII-art HL groups, wiped by `:colorscheme`'s implicit `hi clear` |
 | markdown.nvim | `MarkdownNvimHL` | feature `hl`/`link_hl` (default on) | Re-apply blockquote HL / re-strip link underline |
 | markdown.nvim | `MarkdownNvimFencedFix` | feature `fenced_fix` (default on) | Re-apply fenced-code HL overrides |
 | filetree.nvim | `filetree_current_hl` (opt-in, off) | — | Re-apply current-line HL |
 | filetree.nvim | `filetree_window_style` (opt-in, off) | — | Re-link tree window HL groups |
 | lib.nvim | `lib_ui_kit_theme` | `theme.setup()` called | Re-materialize `Kit*` HL groups |
 
-Six independent "re-apply my custom highlights after a colorscheme
-change" routines. All idempotent, no shared state — this is just what it
-costs to switch colorschemes with this many plugins installed; not a
-correctness issue, only relevant if you ever notice a colorscheme switch
-feels slow (it's plausible several of these plus your colorscheme's own
-setup are what you're feeling, not any single one).
+Seven independent "re-apply my custom highlights after a colorscheme
+change" routines (two of them from color_my_ascii.nvim alone — one for
+fence-line/content HL, one for the ASCII-art character-group HL groups).
+All idempotent, no shared state — this is just what it costs to switch
+colorschemes with this many plugins installed; not a correctness issue, only
+relevant if you ever notice a colorscheme switch feels slow (it's plausible
+several of these plus your colorscheme's own setup are what you're feeling,
+not any single one).
 
 ## `BufEnter`
 

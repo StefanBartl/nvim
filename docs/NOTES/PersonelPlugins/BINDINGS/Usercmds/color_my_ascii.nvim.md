@@ -21,6 +21,31 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `docs/README-de.md`,
 | `:ColorMyAscii show-config` | Show detailed configuration |
 | `:ColorMyAscii check-fences` | Check for unmatched fenced code blocks |
 | `:ColorMyAscii ensure-blank-lines` | Ensure blank lines around code blocks |
+| `:ColorMyAscii fence-jump` | Jump between a fence's opening/closing delimiter (%-style); falls back to built-in `%` elsewhere |
+
+## `:Fence` (buffer-local, markdown only)
+
+Not a `:ColorMyAscii` subcommand — a separate dispatcher registered
+buffer-local on `FileType markdown` (`nvim_buf_create_user_command`), source
+`lua/color_my_ascii/commands/fence/*.lua`. Was just `export` for a while;
+now a full small literate-programming toolkit:
+
+| Command | Effect |
+| --- | --- |
+| `:Fence export [path] [--open] [--replace]` | Extract the block under the cursor into a file |
+| `:Fence yank [register]` | Copy block content (no delimiters) to a register |
+| `:Fence open [--split\|--vsplit\|--tab\|--edit]` | Edit the block in a real split (full LSP/formatter), synced back on `:w` |
+| `:Fence run` | Run the block with its language's interpreter, output in a scratch split |
+| `:Fence format` | Format the block in place with the language's formatter |
+| `:Fence import <file>` | Replace block content with a file's content (inverse of export) |
+| `:Fence lang <language>` | Change the fence's language tag |
+| `:Fence select` | Visually (linewise) select the block interior |
+| `:[range]Fence wrap [language]` | Wrap the current line/range in a fence |
+| `:Fence unwrap` | Remove the fence delimiters around the block under the cursor |
+
+Each of the argument-less ones above also has an opt-in default keymap action
+(`fence_yank`, `fence_open`, `fence_run`, `fence_format`, `fence_select`,
+`fence_wrap`, `fence_unwrap`) — see `Keymaps/color_my_ascii.nvim.md`.
 
 ## Schemes
 
