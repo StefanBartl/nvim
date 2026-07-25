@@ -1,6 +1,11 @@
 # pickers.nvim — Keymaps Cheatsheet
 
-Sources: `lua/pickers/bindings/keymaps.lua`, `bindings/collections.lua`, `selected_index/actions.lua`, `keys/**`, `entry_actions/**`, `engines/fzf.lua`
+Sources: `lua/pickers/bindings/keymaps.lua`, `bindings/collections.lua`, `selected_index/actions.lua`, `keys/**`, `entry_actions/**`, `engines/fzf.lua`, `mappings/**`
+
+**2026-07-26 roadmap pass** (10-item batch, see pickers.nvim's own
+`docs/ROADMAP.md`): added `keymaps.cwd_find_all`, `keys.split`/`vsplit`/
+`tab`, and the new declarative `mappings` config surface (§6 below). Moved
+`selected_index` config to `cfg.experimental.selected_index` (§3 below).
 
 **⚠️ pickers.nvim's own `docs/BINDINGS.md`/`CHEATSHEET.md` still only list the
 5 base keymaps and share the same gaps** — `docs/KEYMAPS.md` was updated
@@ -31,6 +36,7 @@ Registered from `setup()`, or — if the user never calls `setup()` — from a
 | *(disabled by default)* `cwd_smart` | Smart grep+find in CWD | "[pickers] Smart (grep + find) in CWD" |
 | *(disabled by default)* `config_smart` | Smart grep+find in nvim config | "[pickers] Smart (grep + find) in nvim config" |
 | *(disabled by default)* `folder_smart` | Smart grep+find in picked folder | "[pickers] Smart (grep + find) in interactively picked folder" |
+| *(disabled by default)* `cwd_find_all` | Find all files in CWD, forcing hidden+no_ignore+follow for that one search | "[pickers] Find all files in CWD (forces hidden+no_ignore+follow)" |
 
 `repos_files`/`repos_grep`/`system_files` added 2026-07-22 (closed the last
 open ROADMAP.md keymaps item — previously command-only via `:RepoFiles`/
@@ -44,6 +50,14 @@ alongside `files`/`grep`). **This repo's own config now enables** `cwd_smart`
 (`docs/COMMANDS.md#the-smart-action`, `docs/CONFIGURATION.md#smart-combined-grep--find`,
 `:help pickers-smart`) for the scorer/weights.
 
+`cwd_find_all` added 2026-07-26 — a thin wrapper over the new `:Pickers cwd
+files all` "find all" escape hatch (`pickers.command`), which force-enables
+`hidden`+`no_ignore`+`follow` for one search only, regardless of configured
+`find.*` defaults — this restores the old `<leader>fa` behaviour, now
+generalised to every scope/collection via the command, not just `cwd`. The
+keymap itself only covers `cwd`; bind the command directly
+(`:Pickers <scope> files all`) for other scopes.
+
 ## 2. Collection keymaps
 
 `bindings/collections.lua` — only for user-configured `collections` entries
@@ -54,9 +68,18 @@ collections.
 
 ## 3. `selected_index` overlay — Telescope engine only
 
-Attached only if `cfg.selected_index.enabled == true` **or**
-`cfg.selected_index.toggle_key` is set (both inert by default). When active,
-wraps every Telescope engine call (fzf-lua/snacks never get this feature).
+**2026-07-26: moved to `cfg.experimental.selected_index`** (opt-in
+namespace, signals not-yet-stable — old top-level `cfg.selected_index` is
+now ignored with a `notify.warn` pointing here). Also: the long-standing
+indexing bug is now fixed — see the Autocmds cheatsheet's `smart.frecency`
+section note for the full root-cause writeup (it used `row + 1`, correct
+only under Telescope's non-default `sorting_strategy = "ascending"`; now
+uses `picker:get_index(row)`, Telescope's own authoritative mapping).
+
+Attached only if `cfg.experimental.selected_index.enabled == true` **or**
+`cfg.experimental.selected_index.toggle_key` is set (both inert by
+default). When active, wraps every Telescope engine call (fzf-lua/snacks
+never get this feature).
 
 | lhs | mode | action |
 | --- | --- | --- |
@@ -64,7 +87,7 @@ wraps every Telescope engine call (fzf-lua/snacks never get this feature).
 | `<Up>` / `<C-p>` | i | Move selection previous + refresh overlay |
 | `j` / `<Down>` | n | Move selection next + refresh overlay |
 | `k` / `<Up>` | n | Move selection previous + refresh overlay |
-| `cfg.selected_index.toggle_key` (default unset) | i, n | Toggle overlay visibility + redraw |
+| `cfg.experimental.selected_index.toggle_key` (default unset) | i, n | Toggle overlay visibility + redraw |
 
 ## 4. Unified `keys` namespace (`lua/pickers/keys/`) — as of 2026-07-22
 
@@ -91,6 +114,9 @@ function or pickers.nvim-specific logic:
 | `history_back` | `<C-p>` | patched | — (fzf-native, fixed) | export only¹ |
 | `history_forward` | `<C-n>` | patched | — (fzf-native, fixed) | export only¹ |
 | `preview_toggle` | *(off, opt-in)* | patched | native `<F4>`, not ours | native `<A-p>`, not ours |
+| `split` | `<C-s>` | patched | native `ctrl-s`, not ours | export only¹ |
+| `vsplit` | `<C-v>` | patched | native `ctrl-v`, not ours | export only¹ |
+| `tab` | `<C-t>` | patched | native `ctrl-t`, not ours | export only¹ |
 
 ¹ snacks: pickers.nvim doesn't own `Snacks.setup()`, so nothing is
 auto-registered there — the user must merge
@@ -105,6 +131,17 @@ automatically from `bindings.setup()` (fires on `setup()` *or* the
 fzf-lua/snacks already ship it natively, so it's deliberately excluded from
 their lookup tables (would otherwise try to bind a nonexistent action name
 on snacks, since its native name is `toggle_preview`, reversed word order).
+
+`split`/`vsplit`/`tab` added 2026-07-26, **on by default** (unlike
+`preview_toggle`) — opens the selected entry in a horizontal/vertical split
+or a new tab. All three engines already ship the primitive natively
+(telescope `actions.select_horizontal`/`select_vertical`/`select_tab`,
+snacks `actions.split`/`vsplit`/`tab` — its action names happen to match
+pickers.nvim's 1:1, so they pass straight through the same way
+`preview_scroll_*`/`history_*` do — fzf-lua's fixed `ctrl-s`/`ctrl-v`/
+`ctrl-t`), so this is pure translation-table wiring, no new pickers.nvim
+logic. Default `<C-s>`/`<C-v>`/`<C-t>` matches the old pre-pickers.nvim
+fzf-lua config for a consistent lhs across engines.
 
 **NOT patched globally, merge-it-yourself** — `create_file`,
 `open_background` (this is genuinely pickers.nvim logic — `pickers.entry_actions.*`,
@@ -136,6 +173,51 @@ engine makes — automatic, no config flag.
 
 fzf runs in a terminal buffer, so a naive single `<Esc>` would normally abort
 fzf's input read — this two-step scheme is the workaround.
+
+## 6. Declarative `mappings` — per-entry engine override, added 2026-07-26
+
+A second, more flexible keymap surface alongside the fixed `keymaps.*`
+fields above (§1) — does **not** replace them. `cfg.mappings = { [name] =
+{ lhs, engine? } }`, empty by default. New module `lua/pickers/mappings/`,
+applied unconditionally from `bindings.setup()` (no separate enable flag —
+an empty `cfg.mappings` is already a no-op).
+
+```lua
+require("pickers").setup({
+  mappings = {
+    cwd_files   = { "<leader>ff", "telescope" }, -- always telescope
+    cwd_grep    = { "<leader>gr" },               -- active/default engine
+    explorer    = { "<leader>.",  "snacks" },     -- always snacks
+  },
+})
+```
+
+Name resolution (`pickers.mappings.classify`, pure/unit-tested):
+
+| Name shape | Dispatches to |
+| --- | --- |
+| a `pickers.builtins.names()` entry | `pickers.builtins.run(name, nil, resolved_engine)` |
+| `<scope>_files` / `<scope>_grep` / `<scope>_smart` | `pickers.command.handle({ fargs = { scope, action }, engine = ... })` |
+| `<scope>_find_all` | same, with the `"all"` escape-hatch modifier appended |
+
+`<scope>` is any built-in scope or collection name — the **last**
+`_files`/`_grep`/`_smart`/`_find_all` suffix is stripped, so scope names
+with underscores work (`notes_lua_grep` → collection `notes_lua`, action
+`grep`). `dir` scope is **not** supported (same limitation as the "find
+all" escape hatch's nav argument not fitting this flat shape).
+
+**Engine override plumbing**: `pickers.command.handle` gained an optional
+`opts.engine` that threads straight into `pickers.engines.load(opts.engine)`
+— a one-line change, since every internal routing helper already took an
+already-resolved `engine_mod`, not a name. Builtins pre-resolve the
+requested engine via `engines.load(requested)` too, rather than passing the
+raw name straight to `pickers.builtins.run`'s own `engine_name` param —
+that param does **not** itself re-verify availability when given one
+explicitly, so skipping the pre-resolve step would silently break the
+"engine named but not installed falls back to the default" guarantee for
+builtin mappings specifically. An unresolvable name or malformed entry
+(`{ lhs, engine? }` expected) is skipped with a `notify.warn`, never a
+throw or a dead keymap.
 
 ## Notes
 

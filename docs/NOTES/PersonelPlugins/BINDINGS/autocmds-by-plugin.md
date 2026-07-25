@@ -199,6 +199,8 @@ None.
 | `CursorMoved` | `PickersSelectedIndexAUG_<bufnr>` | results buf | Debounced index-overlay redraw |
 | `TextChangedI`,`TextChanged` | same | prompt buf | Same, on prompt edits |
 | `BufDelete` (once) | none | results buf | Cleanup extmarks/timer |
+| `BufReadPost` | `pickers.nvim` | real file bufs | Record `smart.frecency` visit (opt-in, off by default; added 2026-07-26) |
+| `VimLeavePre` | `pickers.nvim` | — | Flush `smart.frecency` store to disk (same opt-in) |
 
 ## [recommender.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/recommender.nvim.md)
 

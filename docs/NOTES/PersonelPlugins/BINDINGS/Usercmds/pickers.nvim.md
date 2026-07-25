@@ -13,6 +13,14 @@ Source: `lua/pickers/command/composer.lua` (`:Pickers` registration incl.
 (registry behind `:Pickers builtin` and `:PickersResume`)
 Docs: `docs/COMMANDS.md`, `docs/BINDINGS.md`, `doc/pickers.txt`
 
+Not a usercmd, but adjacent: `require("pickers").plugin_spec({ engine,
+own_engine, engine_opts, picker_opts })` (new 2026-07-26, `lua/pickers/
+plugin_spec.lua`) — returns a ready lazy.nvim spec list that also installs
++ configures the chosen engine, called from the user's own plugin list at
+spec-build time (`own_engine` opt-in, off by default — this repo's own
+config doesn't use it, still bring-your-own-engine). See
+`docs/INSTALLATION.md#optional-engine-ownership--auto-install`.
+
 | Command | Args | Effect |
 | --- | --- | --- |
 | `:Pickers` | — | Interactive scope picker → action picker |
@@ -23,6 +31,7 @@ Docs: `docs/COMMANDS.md`, `docs/BINDINGS.md`, `doc/pickers.txt`
 | `:PickersRepeat` | — | Reopen the most recently dispatched `:Pickers` action (same resolved scope/root/action) — added 2026-07-22 |
 | `:PickersScopes` | — | List every resolvable scope (built-ins + collections) via `notify.info` — added 2026-07-22 |
 | `:PickersResume` | — | Reopen the last picker with its last query — thin wrapper over `:Pickers builtin resume` (the engine's own native resume, fzf-lua excepted). Added 2026-07-22 |
+| `:Pickers {scope} files all` | — | "Find all" escape hatch — forces `hidden`+`no_ignore`+`follow` for that one search only, regardless of configured `find.*` defaults. Works for every built-in scope/collection, not `dir`. No-op on `grep`/`smart` (silently ignored). Added 2026-07-26. |
 
 ## Compat aliases (unchanged from the composer migration)
 
@@ -62,6 +71,32 @@ as the public `M.list()`, previously a local `build_scope_list()` used only
 by the interactive picker) — same built-ins-then-collections list, just
 printed via `notify.info` (with a one-line description per built-in, and each
 collection's root dir) instead of opening a picker.
+
+## "Find all" escape hatch (`:Pickers {scope} files all`) — added 2026-07-26
+
+Restores the old `<leader>fa` behaviour (force `hidden`+`no_ignore`+
+`follow` for one search), generalised from cwd-only to every scope/
+collection. Implemented as an optional 3rd arg to `pickers.actions.files.run`
+(merged force on top of `cfg.find`/`source.find`) and an optional
+`force_find_all` flag threaded through `pickers.command`'s internal routing
+helpers (`dispatch_action`/`after_source`/`run_standard_scope`/
+`run_collection_scope`). `pickers.command.dispatch` (the public entry point
+`pickers.last`/`dir` scope use) and `dir` scope itself are deliberately
+unaffected — the escape hatch is one-off by design, so `:PickersRepeat`
+replaying a recorded `{action, source}` pair without it is correct
+behaviour, not a gap. New opt-in `keymaps.cwd_find_all` (see the
+[Keymaps cheatsheet](../Keymaps/pickers.nvim.md)).
+
+## `pickers.command.handle`'s new `opts.engine` + declarative `mappings` — added 2026-07-26
+
+`pickers.command.handle({ fargs = {...}, engine = "telescope" })` now
+accepts an optional `engine` override (Lua API only, not exposed on the
+`:Pickers` command itself) — threads into `pickers.engines.load(opts.engine)`,
+falling back to the configured default if that engine isn't installed. This
+is what the new `cfg.mappings` declarative keymap surface uses under the
+hood for its per-entry engine override — see the
+[Keymaps cheatsheet](../Keymaps/pickers.nvim.md)'s §6 for the full writeup
+(name resolution against builtins + scope×action, fallback guarantees).
 
 ## `:PickersResume` — added 2026-07-22
 

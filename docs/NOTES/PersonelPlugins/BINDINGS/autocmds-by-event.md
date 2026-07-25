@@ -36,8 +36,9 @@ startup ever looks like two things fighting for the screen.
 | insights.nvim | `Insights_devserver` | Kill tracked dev servers |
 | sessions.nvim | `SessionsNvim` | Autosave session (default **on**) |
 | lib.nvim | `lib_logger_<name>` | Flush logger ring buffer (per logger instance) |
+| pickers.nvim | `pickers.nvim` | Flush `smart.frecency` store to disk (opt-in, off by default; added 2026-07-26) |
 
-Six independent cleanup/save routines on exit — all cheap, none touch
+Seven independent cleanup/save routines on exit — all cheap, none touch
 shared state, no ordering dependency between them.
 
 ## `BufWritePre`
@@ -108,6 +109,16 @@ colorschemes with this many plugins installed; not a correctness issue, only
 relevant if you ever notice a colorscheme switch feels slow (it's plausible
 several of these plus your colorscheme's own setup are what you're feeling,
 not any single one).
+
+## `BufReadPost`
+
+| Plugin | Augroup | Condition | Action |
+| --- | --- | --- | --- |
+| pickers.nvim | `pickers.nvim` | `smart.frecency.enabled` (opt-in, off by default; added 2026-07-26), real listed file buffers only | Record a visit for the smart action's recency/frequency ranking boost |
+
+First (and currently only) plugin in this config hooking `BufReadPost`.
+Cheap (in-memory table update, no disk I/O per visit — the store is only
+flushed to disk on `VimLeavePre` or an explicit `M.flush()` call).
 
 ## `BufEnter`
 
