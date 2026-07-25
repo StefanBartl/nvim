@@ -17,6 +17,17 @@ Docs: `docs/COMMANDS.md`, `README.md`, `doc/cmdlog.txt`
 | `:Cmdlog nvim-full` | Neovim `:`-history, duplicates included |
 | `:Cmdlog shell` | Shell history, deduplicated |
 | `:Cmdlog shell-full` | Shell history, duplicates included |
+| `:Cmdlog project` | History recorded while inside the current Git project (`.git` root) |
+| `:Cmdlog lua` | Lua-mode history only (`:lua`, `:lua=`, `:=`), deduplicated |
+| `:Cmdlog stats` | Commands sorted by usage frequency, annotated with count + last-used date |
+
+Three new subcommands added 2026-07-25 (roadmap pass): `project`, `lua`,
+`stats`. All three read from new persistent JSON stores
+(`project_history.json`, `stats.json`) populated by a single shared
+`CmdlineLeave` autocmd in `core/tracker.lua` — see
+`docs/OPTIONS.md`'s `track_commands` option. `project` and `stats` only
+reflect commands run since that tracker was introduced; there is no
+retroactive attribution of older `:history` entries.
 
 ## Notes
 
