@@ -7,7 +7,7 @@ Prompts → `kit.confirm` (Buttons). Mehr/dynamische Optionen → `kit.select`.
 Freitext → `kit.input`.
 
 Hinweis zur Zählweise: Datei:Zeile bezieht sich auf den Stand beim Audit
-(2026-07-25, Nachtrag 2026-07-26) — kann sich bei künftigen Edits verschieben.
+(2026-07-25, Nachträge 2026-07-26) — kann sich bei künftigen Edits verschieben.
 Audit deckt jedes `E:\repos\*.nvim`-Repo plus die nvim-Config ab.
 
 Alles bereits abgeschlossene ist aus diesem Dokument entfernt — nur noch
@@ -15,13 +15,6 @@ offene Punkte unten. Fertiggestellte Migrationen inkl. Commit-Hashes stehen
 in der Git-Historie dieser Datei.
 
 ## 1. Ja/Nein & ≤4-Optionen-Prompts → `kit.confirm` (Buttons)
-
-### fileops.nvim
-- `lua/fileops/ops/cycle.lua:182` — `vim.ui.select` mit 3 Optionen ("Save and
-  open" / "Discard changes and open" / "Cancel") beim Reload einer modifizierten
-  Buffer.
-- `lua/fileops/bindings/usrcmds.lua:288` — `vim.ui.select` mit 2 Optionen
-  (Confirm-Choice-String / "Cancel") für `:File bulk rename` Bestätigung.
 
 ### nvim-Config
 - `lua/config/lazygit/actions/replace.lua:9` (Kommentar) — **kein
@@ -36,12 +29,6 @@ in der Git-Historie dieser Datei.
 
 ## 2. Auswahllisten (>4 Optionen / dynamisch) → `kit.select`
 
-- `dap.nvim/lua/wkddap/utils/validation.lua:15` — `vim.ui.select` über
-  `ps -eo pid,comm`-Output (Prozessliste, dynamisch/lang) für Attach-Debugging.
-- `replacer.nvim/lua/replacer/root.lua:99` — `vim.ui.select` über gefundene
-  Projekt-Root-Kandidaten (meist 2-3, aber unbegrenzt).
-- `replacer.nvim/lua/replacer/history.lua:77` — `vim.ui.select` über die
-  letzten 50 Replace-Runs.
 - `pickers.nvim/lua/pickers/sources/system.lua` — kein Select, aber siehe
   Abschnitt 3 (Freitext).
 - `open.nvim/lua/open/picker.lua:20` — `vim.ui.select` über Handler-Kandidaten.
@@ -49,8 +36,6 @@ in der Git-Historie dieser Datei.
   `vim.ui.select`-Overrides (telescope-ui-select, fzf-lua, dressing.nvim) vom
   User respektiert werden. Migration würde dieses Verhalten ändern/entfernen —
   eher niedrige Priorität bzw. Rücksprache nötig.
-- `gopath.nvim/lua/gopath/resolvers/common/tailsearch.lua:381` (`M.probe`) —
-  `vim.ui.select` über mehrdeutige Tail-Search-Treffer, kein kit-Fallback.
 - `gopath.nvim/lua/gopath/alternate/ui.lua:38` — `vim.ui.select` über
   ähnliche Dateien beim "File not found"-Fallback. Kommentar sagt ebenfalls
   bewusst: respektiert User-Backend (telescope/dressing). Gleiche Vorsicht wie
@@ -63,15 +48,17 @@ in der Git-Historie dieser Datei.
   ein `kit.select`, aber mit Rendering, das kit vermutlich nicht abdeckt —
   niedrige Priorität, eher Kandidat für ein kit-Feature "custom highlight per
   item" als für eine 1:1-Migration.
-- `buffer_ctx.nvim/lua/buffer_ctx/commands.lua:153` — `vim.ui.select` über
-  Snippet-Keys (dynamisch, aus User-Config).
-- `buffer_ctx.nvim/lua/buffer_ctx/commands.lua:226` — `vim.ui.select` über
-  Boilerplate-Template-Keys (dynamisch).
 - `diff.nvim/lua/diff/core/init.lua:433` (`run_buffers`) — `vim.ui.select`
-  (via `resolve_select_fn()`) über alle offenen Buffer, dynamische Länge.
+  via `resolve_select_fn()`. **Vorsicht (neu entdeckt beim Abarbeiten
+  dieser Liste)**: `resolve_select_fn()` löst bewusst zuerst gegen
+  pickers.nvim (falls installiert und nicht abgewählt) auf, sonst
+  `vim.ui.select` — dieselbe "respektiert User-Backend"-Kategorie wie
+  open.nvim/gopath-alternate. Nicht migrieren ohne das Backend-Respekt-
+  Verhalten aufzugeben.
 - `cascade.nvim/lua/cascade/cycle/word_cycle.lua:142` (`M.pick`) —
-  `vim.ui.select` über eine Cycle-Gruppe (Länge variiert je nach User-Config,
-  oft klein aber nicht garantiert ≤4).
+  **Vorsicht (neu entdeckt)**: Kommentar sagt explizit "Telescope-backed if
+  the user has `telescope-ui-select.nvim` registered, else Neovim's builtin
+  list" — gleiche Kategorie wie open.nvim, nicht migrieren.
 
 ## 3. Freitext-Eingaben → `kit.input`
 
