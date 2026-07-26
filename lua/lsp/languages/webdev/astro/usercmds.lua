@@ -39,30 +39,33 @@ function M.setup()
 
   -- Create new component
   usercmd.create("AstroNewComponent", function(opts)
-    local name = opts.args
-    if name == "" then
-      name = vim.fn.input("Component name: ")
+    local function create(name)
+      if name == "" then
+        return
+      end
+
+      local path = "src/components/" .. name .. ".astro"
+      local template = {
+        "---",
+        "interface Props {}",
+        "",
+        "const {} = Astro.props;",
+        "---",
+        "",
+        "<div>",
+        "  <!-- Component content -->",
+        "</div>",
+      }
+
+      vim.fn.writefile(template, path)
+      vim.cmd("edit " .. path)
     end
 
-    if name == "" then
-      return
+    if opts.args ~= "" then
+      create(opts.args)
+    else
+      require("lib.nvim.ui.kit").input({ title = "Component name: ", on_submit = create })
     end
-
-    local path = "src/components/" .. name .. ".astro"
-    local template = {
-      "---",
-      "interface Props {}",
-      "",
-      "const {} = Astro.props;",
-      "---",
-      "",
-      "<div>",
-      "  <!-- Component content -->",
-      "</div>",
-    }
-
-    vim.fn.writefile(template, path)
-    vim.cmd("edit " .. path)
   end, {
     nargs = "?",
     desc = "Create new Astro component",
@@ -70,34 +73,37 @@ function M.setup()
 
   -- Create new page
   usercmd.create("AstroNewPage", function(opts)
-    local name = opts.args
-    if name == "" then
-      name = vim.fn.input("Page name (e.g., about.astro): ")
+    local function create(name)
+      if name == "" then
+        return
+      end
+
+      if not name:match("%.astro$") then
+        name = name .. ".astro"
+      end
+
+      local path = "src/pages/" .. name
+      local template = {
+        "---",
+        'import Layout from "@/layouts/Layout.astro";',
+        "---",
+        "",
+        "<Layout title=\"Page\">",
+        "  <main>",
+        "    <h1>Page Content</h1>",
+        "  </main>",
+        "</Layout>",
+      }
+
+      vim.fn.writefile(template, path)
+      vim.cmd("edit " .. path)
     end
 
-    if name == "" then
-      return
+    if opts.args ~= "" then
+      create(opts.args)
+    else
+      require("lib.nvim.ui.kit").input({ title = "Page name (e.g., about.astro): ", on_submit = create })
     end
-
-    if not name:match("%.astro$") then
-      name = name .. ".astro"
-    end
-
-    local path = "src/pages/" .. name
-    local template = {
-      "---",
-      'import Layout from "@/layouts/Layout.astro";',
-      "---",
-      "",
-      "<Layout title=\"Page\">",
-      "  <main>",
-      "    <h1>Page Content</h1>",
-      "  </main>",
-      "</Layout>",
-    }
-
-    vim.fn.writefile(template, path)
-    vim.cmd("edit " .. path)
   end, {
     nargs = "?",
     desc = "Create new Astro page",

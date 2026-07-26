@@ -91,47 +91,57 @@ function M.attach()
 
   -- Add import statement
   map("n", "<leader>aI", function()
-    local component = vim.fn.input("Component name: ")
-    if component ~= "" then
-      local import_line = string.format('import %s from "@/components/%s.astro";', component, component)
+    require("lib.nvim.ui.kit").input({
+      title = "Component name: ",
+      on_submit = function(component)
+        if component ~= "" then
+          local import_line = string.format('import %s from "@/components/%s.astro";', component, component)
 
-      -- Find frontmatter end
-      vim.fn.cursor(1, 1)
-      local fm_end = vim.fn.search("^---$", "W", 20)
-      if fm_end > 0 then
-        vim.fn.append(fm_end - 1, import_line)
-      end
-    end
+          -- Find frontmatter end
+          vim.fn.cursor(1, 1)
+          local fm_end = vim.fn.search("^---$", "W", 20)
+          if fm_end > 0 then
+            vim.fn.append(fm_end - 1, import_line)
+          end
+        end
+      end,
+    })
   end, { buffer = bufnr, desc = "Add component import" })
 
   -- Extract to Component
   map("v", "<leader>ax", function()
-    local name = vim.fn.input("Component name: ")
-    if name == "" then
-      return
-    end
-
-    -- Get visual selection
+    -- Capture the visual selection BEFORE the prompt: leaving visual mode to
+    -- answer it is fine (marks persist), but reading '</'> only makes sense
+    -- for the selection this mapping was invoked on.
     local start_line = vim.fn.line("'<")
     local end_line = vim.fn.line("'>")
     local lines = vim.fn.getline(start_line, end_line)
 
-    -- Create new component file
-    local component_path = "src/components/" .. name .. ".astro"
-    local content = {
-      "---",
-      "---",
-      "",
-      table.concat(lines, "\n"),
-    }
+    require("lib.nvim.ui.kit").input({
+      title = "Component name: ",
+      on_submit = function(name)
+        if name == "" then
+          return
+        end
 
-    vim.fn.writefile(vim.split(table.concat(content, "\n"), "\n"), component_path)
+        -- Create new component file
+        local component_path = "src/components/" .. name .. ".astro"
+        local content = {
+          "---",
+          "---",
+          "",
+          table.concat(lines, "\n"),
+        }
 
-    -- Replace selection with component usage
-    vim.fn.deletebufline(bufnr, start_line, end_line)
-    vim.fn.append(start_line - 1, "<" .. name .. " />")
+        vim.fn.writefile(vim.split(table.concat(content, "\n"), "\n"), component_path)
 
-    notify.notify("Created component: " .. component_path)
+        -- Replace selection with component usage
+        vim.fn.deletebufline(bufnr, start_line, end_line)
+        vim.fn.append(start_line - 1, "<" .. name .. " />")
+
+        notify.notify("Created component: " .. component_path)
+      end,
+    })
   end, { buffer = bufnr, desc = "Extract to component" })
 
   -- Preview in Browser

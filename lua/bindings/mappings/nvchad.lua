@@ -41,7 +41,10 @@ function M.setup()
   -- Which-key
   map("n", "<leader>wK", "<cmd>WhichKey <CR>", { desc = "[General] WhichKey (all)" })
   map("n", "<leader>wk", function()
-    vim.cmd("WhichKey " .. vim.fn.input("WhichKey: "))
+    require("lib.nvim.ui.kit").input({
+      title = "WhichKey: ",
+      on_submit = function(query) vim.cmd("WhichKey " .. query) end,
+    })
   end, { desc = "[General] WhichKey query" })
 
   -- Insert-mode cursor moves
