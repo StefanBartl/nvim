@@ -78,25 +78,11 @@ in der Git-Historie dieser Datei.
 - `emojis.nvim/lua/emojis/picker.lua:97` (`select_fallback`) — reiner
   Fallback wenn weder Telescope noch fzf-lua verfügbar sind; ähnlich wie
   open.nvim bewusst multi-backend. Niedrige Priorität.
-- `filetree.nvim/lua/filetree/features/system/open_with/init.lua:110`
-  (`M.pick`) — **kompletter Eigenbau-`nvim_open_win`-Picker** über konfigurierte
-  Apps (dynamische Länge), kein kit/`filetree.util.select` genutzt. Klarer
-  Migrationskandidat.
-- `filetree.nvim/lua/filetree/features/paths/path_copy/init.lua:152`
-  (`M.pick`) — Eigenbau-`nvim_open_win`-Picker über 9 Pfad-Formate (>4, also
-  Liste statt Buttons). Auch kein kit genutzt.
-- `filetree.nvim/lua/filetree/features/fileops/create_from_template/init.lua:146`
-  (`pick_template`) — Eigenbau-Liste mit Nummern-Shortcuts (1-9) fürs
-  Template-Picking. `kit.select` deckt das Grundverhalten ab, Nummern-Shortcuts
-  wären ein Feature-Verlust (siehe Abschnitt 4).
 - `recommender.nvim/lua/recommender/float/rendering.lua` — Eigenbau-Picker mit
   Syntax-Highlighting pro Eintrag (chain/alias farblich abgesetzt). Funktional
   ein `kit.select`, aber mit Rendering, das kit vermutlich nicht abdeckt —
   niedrige Priorität, eher Kandidat für ein kit-Feature "custom highlight per
   item" als für eine 1:1-Migration.
-- `markdown.nvim/lua/markdown/tableview/views/table_selector.lua` —
-  Eigenbau-`nvim_open_win`-Liste zum Wählen einer von mehreren Markdown-Tabellen
-  im Buffer. Simpler 1:1 `kit.select`-Kandidat.
 - `buffer_ctx.nvim/lua/buffer_ctx/commands.lua:153` — `vim.ui.select` über
   Snippet-Keys (dynamisch, aus User-Config).
 - `buffer_ctx.nvim/lua/buffer_ctx/commands.lua:226` — `vim.ui.select` über
@@ -131,14 +117,6 @@ migrierten Sonderfälle (dokumentiert im jeweiligen Code):
 
 ## 4. Eigenbau-Floats (Menü/Picker) → `kit.menu`/`kit.select`/`kit.layout`
 
-- `filetree.nvim/lua/filetree/features/system/open_with/init.lua:110` — siehe
-  Abschnitt 2.
-- `filetree.nvim/lua/filetree/features/paths/path_copy/init.lua:152` — siehe
-  Abschnitt 2.
-- `filetree.nvim/lua/filetree/features/fileops/create_from_template/init.lua:146`
-  — siehe Abschnitt 2, plus Nummern-Shortcut-Feature das kit ggf. nicht bietet.
-- `markdown.nvim/lua/markdown/tableview/views/table_selector.lua` — siehe
-  Abschnitt 2.
 - `recommender.nvim/lua/recommender/float/rendering.lua` — siehe Abschnitt 2,
   niedrige Priorität wegen Custom-Highlighting.
 
@@ -190,13 +168,10 @@ soll, wäre das der einzige Call-Site dafür im Audit.
 
 ## 6. Priorisierung / Reihenfolge-Vorschlag (verbleibend)
 
-1. **`kit.select`-Migrationen der Eigenbau-Picker** (open_with, path_copy,
-   create_from_template, table_selector) — funktional unkritisch, aber
-   entfernt viel duplizierten `nvim_open_win`-Code.
-2. **replacer.nvim `perfile.lua`** und **diff.nvim `pick_specifier`** —
+1. **replacer.nvim `perfile.lua`** und **diff.nvim `pick_specifier`** —
    beide brauchen Rücksicht auf bestehende Architektur (synchrone Schleife
    bzw. pluggable select_fn), kein Quick-Win.
-3. **`kit.viewer`/`kit.form`/`kit.live_input`-Call-Site-Migrationen**
+2. **`kit.viewer`/`kit.form`/`kit.live_input`-Call-Site-Migrationen**
    (Abschnitt 5) — alle drei kit-Bausteine existieren bereits, nur die
    eigentliche Migration in den Consumer-Plugins steht noch aus (filetree.nvim
    allein hat 8+ Call-Sites über alle drei Bausteine).
