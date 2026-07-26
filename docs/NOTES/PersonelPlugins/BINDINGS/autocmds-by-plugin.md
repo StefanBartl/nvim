@@ -76,11 +76,12 @@ None — intentionally empty stub.
 ## [filetree.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/filetree.nvim.md)
 
 ~40 autocmds across nav/ui/fileops/search/paths/org/git/lsp/infra/plugin-wide
-categories — almost all `FileType` on `{neo-tree,NvimTree}` (or the
-adapter's declared filetypes), one per feature, keymap-setup-only. See the
-[full file](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/filetree.nvim.md)
+categories. As of 2026-07-26, keymap-setup for ~28 features funnels through
+**one** `FileType` autocmd (`filetree_tree_attach`, on `{neo-tree,NvimTree}`
+or the adapter's declared filetypes) instead of each feature owning its own
+— see the [full file](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/filetree.nvim.md)
 for the complete table (too large to usefully condense here). Notable
-non-`FileType` ones: `VimResized`/`ColorScheme` (ui, opt-in), `VimEnter`
+non-keymap-setup ones: `VimResized`/`ColorScheme` (ui, opt-in), `VimEnter`
 (×2, cwd_sync catch-up + neotree-injection defer), `VimLeavePre`/`BufHidden`
 (org/session), `DiagnosticChanged` (lsp, opt-in), `DirChanged` (file_watcher,
 opt-in).

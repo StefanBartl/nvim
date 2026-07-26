@@ -1,6 +1,6 @@
 # filetree.nvim — Keymaps Cheatsheet
 
-Sources: ~40 files under `lua/filetree/features/<category>/<name>/init.lua`, each independently `setup(config, adapter)`-gated by its own `enabled` flag. Almost every feature registers its own `FileType` autocmd (pattern `{"neo-tree","NvimTree"}` or the adapter's declared filetypes) via `filetree.util.map`/`filetree.util.autocmd`, deferred one tick so it runs after the adapter's own buffer-local keymaps. `compare/diff` is the one exception, routed through the centralized `filetree.util.tree_attach` dispatcher instead of its own autocmd.
+Sources: ~40 files under `lua/filetree/features/<category>/<name>/init.lua`, each independently `setup(config, adapter)`-gated by its own `enabled` flag. Every feature registers its keymaps via `filetree.util.tree_attach.on_attach(fn)` — one central `FileType` autocmd (pattern `{"neo-tree","NvimTree"}` or the adapter's declared filetypes) dispatches to every feature's callback, deferred one tick so it runs after the adapter's own buffer-local keymaps. (As of 2026-07-26; previously each feature owned its own `FileType` autocmd and `compare/diff` was the sole `tree_attach` user — that inconsistency is now resolved.)
 
 **⚠️ Doc gaps found**: `docs/BINDINGS/KEYMAPS.md` and the source catalog `lua/filetree/bindings/keymaps.lua` are both missing `pdf_open`'s keymaps entirely. The markdown doc also omits `reveal_alt` (`B`) and `markdown_links` (`ML`/`MR`/`MM`), which *are* present in the source catalog. Treat this file (and source) as authoritative over the doc.
 
@@ -93,7 +93,7 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 
 | lhs | action | notes |
 | --- | --- | --- |
-| `D` | Stage/diff current file: first press stages the node, second press opens a `vsplit` diff | Registered via the centralized `tree_attach.on_attach` dispatcher, unlike every other feature above |
+| `D` | Stage/diff current file: first press stages the node, second press opens a `vsplit` diff | Registered via `tree_attach.on_attach`, same as every other feature above |
 
 ## Adapter-level / plugin-wide
 

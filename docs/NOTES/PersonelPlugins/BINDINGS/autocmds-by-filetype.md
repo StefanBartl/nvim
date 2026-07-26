@@ -47,7 +47,7 @@ whichever tree/file-manager buffer you're in:
 
 | Plugin | Pattern(s) | Role |
 | --- | --- | --- |
-| filetree.nvim | `neo-tree`/`NvimTree` (or adapter's filetypes) | The tree itself — ~35 `FileType` autocmds, one per feature (nav, ui, fileops, search, paths, org, git, lsp, infra) |
+| filetree.nvim | `neo-tree`/`NvimTree` (or adapter's filetypes) | The tree itself — 1 `FileType` autocmd (`tree_attach`) dispatching to ~28 features' keymap setup (nav, ui, fileops, search, paths, org, git, lsp, infra), as of 2026-07-26; was ~35 separate `FileType` autocmds before |
 | pdfport.nvim | `NvimTree`, `oil`, `netrw` | Adds 4 PDF-related keymaps to whichever tree/file-manager buffer opens |
 
 No conflict: pdfport.nvim's keymaps (`<leader>po/pt/ps/pi`) don't appear
