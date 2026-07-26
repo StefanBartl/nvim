@@ -1,27 +1,3 @@
-- nvim.ui.kit^da gibt es ein selection/prompt mit "buttons" die ist cool, das würde ichgerne bei allen prompts haben, bei der man selection machen kann, alsoeigentlich alle select auf button variante umstellen, außer es gibt mehr als 4 selcts, denn dann würde se viele buttons geben
-
-gehe alle nvim repos in e:\repos durch und auch meine nvim config und anaylsere und sammle ale estellen in de rein plugin etwsas verwendet, dass man mit lib.nvim/nvim/ui/ ersetzen könnte bzw wenn ein ui ist, die npoch nicht im ui modul abgeilder tist, dann auch notieren, was noch fehlen würde.
-
-speziel wegen den selections bzw ja/nein/vielleicht ppronpts usw... die sepearat auflisten,
-
-das ganze bitte in 
-
-nvim/docs/ROADMAP/personal/lib_nvim/ 
-in eine datei schreiben
-
-
-
-NICHT FERTIG GEWESEN
-
-
-
-
-
-
-
-
-
-
 # lib.nvim.ui.kit — Migrations-Audit (native Prompts → kit)
 
 Ziel: native `vim.ui.*`/`vim.fn.confirm`/`vim.fn.input`-Aufrufe sowie
@@ -31,72 +7,94 @@ Prompts → `kit.confirm` (Buttons). Mehr/dynamische Optionen → `kit.select`.
 Freitext → `kit.input`.
 
 Hinweis zur Zählweise: Datei:Zeile bezieht sich auf den Stand beim Audit
-(2026-07-25) — kann sich bei künftigen Edits verschieben.
+(2026-07-25, Nachtrag 2026-07-26) — kann sich bei künftigen Edits verschieben.
+
+Nachtrag 2026-07-26: Audit war beim ersten Durchlauf nicht vollständig —
+`cmdlog.nvim`, `debugging.nvim`, `insights.nvim`, `learn-cli.nvim`, `lsp.nvim`,
+`mdview.nvim`, `migrate.nvim` und `neotree-fs-refactor.nvim` fehlten noch.
+Jetzt nachgeholt (Ergebnisse unten eingearbeitet); `insights.nvim`, `lsp.nvim`,
+`mdview.nvim`, `migrate.nvim` und `neotree-fs-refactor.nvim` haben **keine**
+Treffer (kein `vim.ui.select`/`vim.ui.input`/`vim.fn.confirm`/`vim.fn.input`/
+`vim.fn.inputsecret`, kein Eigenbau-`nvim_open_win`-Prompt). Damit ist jetzt
+jedes `E:\repos\*.nvim`-Repo plus die nvim-Config abgedeckt.
 
 ## 1. Ja/Nein & ≤4-Optionen-Prompts → `kit.confirm` (Buttons)
 
 Das ist die für dich wichtigste Kategorie. Sortiert grob nach Impact.
 
-### sandbox.nvim — **ein Fix behebt alles**
-- `lua/sandbox/util/confirm.lua:16` — `M.destructive(prompt, on_confirm)` nutzt
-  `vim.ui.select({"Yes","No"}, ...)`. Das ist der **zentrale Chokepoint**: wird
-  laut Grep in **7 Dateien** aufgerufen (`ui/list_actions.lua`,
-  `bindings/usrcmds/{container,image,volume,network,wsl}_commands.lua`,
-  `container_commands_buffer.lua`) — Kill/Remove/Prune für Container, Images,
-  Volumes, Networks, WSL-Distros läuft alles hier durch. Einmal auf
-  `kit.confirm({question=prompt, on_answer=...})` umstellen (2 Choices: Yes/No)
-  → sofort plugin-weiter Effekt.
+### sandbox.nvim — ~~ein Fix behebt alles~~ ✅ erledigt (2026-07-26)
+- ~~`lua/sandbox/util/confirm.lua:16`~~ — `M.destructive` läuft jetzt über
+  `kit.confirm({question=prompt, on_answer=...})`; wirkt in allen 7
+  Call-Sites (`ui/list_actions.lua`, `bindings/usrcmds/{container,image,
+  volume,network,wsl}_commands.lua`, `container_commands_buffer.lua`) ohne
+  weitere Änderung dort. Test: neue `tests/sandbox/util/confirm_spec.lua`
+  + `list_actions_spec.lua`s `bulk_confirm_then`-Mock auf `kit.confirm`
+  umgestellt. Commit `66ca7b5`, gepusht auf `main`.
 
-### filetree.nvim
-- `lua/filetree/util/confirm.lua` (ganzes Modul) — Eigenbau-Yes/No-Float mit
-  optionalem Info-Body (`nvim_open_win`, y/n/CR/Esc/q-Keymaps, WinClosed-Guard).
-  Baut exakt das nach, was `kit.confirm` schon kann (der Body-Text ließe sich
-  als zusätzliche Message-Zeile mitgeben). Wird u.a. von
-  `features/fileops/trash/init.lua:159` (`confirm_popup`) für den
-  Single-Item-Trash-Confirm genutzt.
-- `lua/filetree/features/fileops/trash/init.lua:69` — lokale `confirm(path)`
-  nutzt rohes `vim.fn.confirm(..., "&Yes\n&No", 2)` für `M.delete()` (der
-  nicht-interaktive/API-Pfad). Macht 3 verschiedene Confirm-Mechanismen im
-  selben Feature (`vim.fn.confirm` hier, der Eigenbau-Float in
-  `confirm_popup`, `ui_select` fürs Batch-Menü) — Konsolidierung auf
-  `kit.confirm` würde das vereinheitlichen.
-- `lua/filetree/features/fileops/trash/init.lua:176` — `ui_select` mit 4
-  Optionen ("Delete + remove all refs" / "Inspect first" / "Delete, keep refs"
-  / "Cancel") für die Markdown-Referenzen-Frage beim Trash. Läuft schon über
-  `filetree.util.select` (kit-geroutet), aber als Liste statt Buttons.
-- `lua/filetree/features/fileops/trash/init.lua:331` — `ui_select` mit 3
-  Optionen ("Delete all at once" / "Confirm individually" / "Cancel") fürs
-  Batch-Trash-Menü.
-- `lua/filetree/features/fileops/smart_rename/init.lua:429` — `ui_select` mit 3
-  Optionen (Update all refs / Inspect first / Leave as-is).
-- `lua/filetree/features/fileops/smart_rename/init.lua:554` — `ui_select` mit 2
-  Optionen ("Overwrite" / "Cancel") wenn Zieldatei beim Rename existiert.
-- `lua/filetree/features/fileops/smart_create/init.lua:200` — `ui_select` mit 2
-  Optionen ("Empty" / "Paste clipboard").
-- `lua/filetree/features/fileops/copy_move/init.lua:261` — `ui_select` mit 3
-  Optionen (Update all refs / Inspect / Leave as-is), gleiches Pattern wie oben.
-- `lua/filetree/features/fileops/rename_batch/init.lua:97` — `ui_select` mit 3
-  Optionen, gleiches Pattern.
-- `lua/filetree/features/fileops/rename_batch/init.lua:169` — `vim.fn.input`
-  mit `"Rename %d item(s)? [y/N] "` — Yes/No wird hier als **Freitext**
-  abgefragt (`answer:lower() ~= "y"`). Schlechteste UX-Variante im ganzen
-  Audit für ein Ja/Nein — klarer `kit.confirm`-Kandidat.
-- `lua/filetree/features/fileops/copy_move/init.lua:310` — gleiches
-  `vim.fn.input(...[y/N]...)`-Pattern beim Paste-Confirm.
-- `lua/filetree/features/fileops/create_from_template/init.lua:213` —
-  `vim.fn.input("File exists. Overwrite? [y/N] ")`, gleiches Pattern.
+### filetree.nvim — Chooser-Konsolidierung ✅ erledigt (2026-07-26)
+- ~~`lua/filetree/util/confirm.lua` (ganzes Modul)~~ — Eigenbau-Float ersetzt,
+  läuft jetzt über `kit.confirm` (Body-Zeilen werden als zusätzliche
+  Message-Zeilen in `question` gefaltet). Weiter genutzt von
+  `features/fileops/trash/init.lua:159` (`confirm_popup`).
+- Neues Modul `lua/filetree/util/confirm_choice.lua` — dünner
+  `kit.confirm`-Wrapper mit `choices`-Array für die wiederkehrenden
+  ≤4-Options-Chooser (ersetzt `filetree.util.select` an diesen Stellen).
+- ~~`lua/filetree/features/fileops/trash/init.lua:176`~~ (4 Optionen) und
+  ~~`:331`~~ (3 Optionen, Batch-Menü) — beide auf `confirm_choice` (Buttons)
+  umgestellt.
+- ~~`lua/filetree/features/fileops/smart_rename/init.lua:429`~~ (3 Optionen)
+  und ~~`:554`~~ (Overwrite/Cancel) — auf `confirm_choice` umgestellt.
+- ~~`lua/filetree/features/fileops/smart_create/init.lua:200`~~
+  (Empty/Paste clipboard) — auf `confirm_choice` umgestellt.
+- ~~`lua/filetree/features/fileops/copy_move/init.lua:261`~~ und
+  ~~`lua/filetree/features/fileops/rename_batch/init.lua:97`~~ (je 3 Optionen)
+  — auf `confirm_choice` umgestellt.
+- **Bewusst NICHT migriert** (Sonderfall, dokumentiert im Code):
+  `lua/filetree/features/fileops/trash/init.lua:69` — lokale `confirm(path)`
+  bleibt auf rohem `vim.fn.confirm`, weil sie die einzige Confirm-Stelle im
+  synchronen `M.delete(path)`-Pfad ist (dokumentierte Sync-API für
+  direkte/programmatische Aufrufer). `kit.confirm` ist callback-basiert —
+  eine Migration hier würde `M.delete` stillschweigend asynchron machen und
+  den Rückgabewert-Vertrag brechen. Gleiche Kategorie wie die
+  `replacer.nvim`/`diff.nvim`-Sonderfälle unten.
+- Tests: `test/units.lua` — alle `filetree.util.select`-Stubs für die
+  migrierten Choosers auf `filetree.util.confirm_choice` umgestellt, der
+  y/n-Test treibt jetzt `<CR>`/`l<CR>` statt roher y/n-Tasten, plus neue
+  Regressionstests für die vorher ungetesteten smart_rename-Overwrite- und
+  smart_create-Paste-Chooser. Commit `fd14fe4`, gepusht auf `main`.
+  (Nebenbefund: ein vorbestehender, unabhängiger Buffer-Keymap-Testflake in
+  `units.lua` — als separate Task ausgelagert, nicht Teil dieser Migration.)
+- ~~`lua/filetree/features/fileops/rename_batch/init.lua:169`~~ — war
+  `vim.fn.input("Rename %d item(s)? [y/N] ")` (Yes/No als **Freitext**,
+  `answer:lower() ~= "y"`) ✅ auf `util.confirm` (`kit.confirm`) umgestellt.
+  Da der alte Rückgabewert synchron im `BufWriteCmd`-Handler konsumiert wurde,
+  wurde `execute_renames` dafür auf einen `on_done(ok)`-Callback umgebaut
+  (Rename-Ausführung selbst in neues `run_plan(plan)` extrahiert).
+- ~~`lua/filetree/features/fileops/copy_move/init.lua:310`~~ — gleiches
+  Pattern beim Paste-Confirm, ✅ ebenfalls auf `util.confirm` umgestellt;
+  `M.paste()`s Post-Confirm-Body dafür in neues `do_paste_impl(dst_dir)`
+  extrahiert.
+- ~~`lua/filetree/features/fileops/create_from_template/init.lua:213`~~ —
+  `vim.fn.input("File exists. Overwrite? [y/N] ")`, ✅ auf `util.confirm`
+  umgestellt (war schon in einem async Callback, keine Restrukturierung
+  nötig).
+  Alle drei: 2026-07-26, Commit `bac28eb`, gepusht auf `main`, inkl. neuer
+  Regressionstests für den vorher ungetesteten `confirm=true`-Pfad.
 
   (Die 5 "Update all refs / Inspect / Leave as-is"-Chooser in trash,
-  smart_rename, copy_move und rename_batch sind praktisch derselbe Codeblock,
-  4x dupliziert — bei der Migration auf `kit.confirm` lohnt sich vermutlich
-  auch ein Shared-Helper statt 4x denselben String-Array + Handler.)
+  smart_rename, copy_move und rename_batch — siehe oben, bereits als
+  `confirm_choice`-Helper konsolidiert.)
 
-### sessions.nvim
-- `lua/sessions/bindings/autocmds/init.lua:33` — `float_confirm(question, cb)`:
-  kompletter Eigenbau-Yes/No-Float (eigene `nvim_open_win`, y/n/CR/Esc/q-Keys).
-  Der Kommentar im Code sagt explizit *"Not a vim.ui.select ... the roadmap
-  asks for an actual floating prompt"* — das ist wortwörtlich die
-  `kit.confirm`-Beschreibung. Für `autoload = "ask"` beim Start.
+### sessions.nvim ✅ erledigt (2026-07-26)
+- ~~`lua/sessions/bindings/autocmds/init.lua:33` — `float_confirm(question, cb)`~~:
+  Eigenbau-Yes/No-Float war exakt die im Kommentar selbst beschriebene
+  `kit.confirm`-Anforderung. `float_confirm` nutzt jetzt `kit.confirm` wenn
+  lib.nvim da ist; der alte Eigenbau-Float bleibt (umbenannt zu
+  `hand_rolled_confirm`) als Fallback erhalten — lib.nvim ist in dieser Datei
+  bewusst Soft-Dependency (siehe Datei-Kommentar, konsistent mit autocmd/
+  notify dort). Manuell verifiziert (kein Testsetup im Repo): beide Pfade
+  (kit vorhanden / lib.nvim fehlt) durchlaufen. Commit `84ce371`, gepusht auf
+  `main`.
 
 ### fileops.nvim
 - `lua/fileops/ops/cycle.lua:182` — `vim.ui.select` mit 3 Optionen ("Save and
@@ -105,15 +103,48 @@ Das ist die für dich wichtigste Kategorie. Sortiert grob nach Impact.
 - `lua/fileops/bindings/usrcmds.lua:288` — `vim.ui.select` mit 2 Optionen
   (Confirm-Choice-String / "Cancel") für `:File bulk rename` Bestätigung.
 
-### color_my_ascii.nvim
-- `lua/color_my_ascii/commands/fence/export.lua:75` — `vim.fn.confirm(...,
-  "&Yes\n&No", 2)` beim Overwrite-Check von `:Fence export`.
+### color_my_ascii.nvim ✅ erledigt (2026-07-26)
+- ~~`lua/color_my_ascii/commands/fence/export.lua:75`~~ — war
+  `vim.fn.confirm(..., "&Yes\n&No", 2)` beim Overwrite-Check von
+  `:Fence export`. Neuer `confirm()`-Helper: `kit.confirm` als Soft-Dep
+  (gleiche Konvention wie `lib.nvim.fs.write.to_file` direkt daneben),
+  Fallback auf `vim.fn.confirm` falls lib.nvim fehlt. Write-Logik nach dem
+  Confirm-Punkt dafür in `write_content()` extrahiert (kit.confirm ist
+  Callback-basiert). Neuer Regressionstest für den vorher ungetesteten
+  Overwrite-Pfad. Commit `3609192`, gepusht auf `main`.
 
-### nvim-Config
-- `lua/config/menu/custom_menu/init.lua:242` — `vim.fn.confirm("Delete all
-  content in buffer?", "&Yes\n&No", 2)`.
-- `lua/config/menu/custom_menu/init.lua:267` — `vim.fn.confirm('Delete file
-  "%s"?', "&Yes\n&No", 2)`.
+### cmdlog.nvim ✅ erledigt (2026-07-26)
+- ~~`lua/cmdlog/core/shell.lua:351`~~ — war `vim.fn.confirm("Delete %d
+  occurrence(s) ... from shell history file?", "&Yes\n&No", 2)`, jetzt
+  `kit.confirm`. `opts.skip_confirm`-Guard unverändert erhalten. Da der alte
+  Rückgabewert 3 Ebenen höher synchron konsumiert wurde (Telescope
+  Delete-Keymap → `delete_from_any_history` → `shell.delete_entry`), wurden
+  alle drei auf einen `on_done(ok, err)`-Callback umgebaut
+  (`shell.lua`, `all_picker.lua`/`all_unique_picker.lua`, `mappings.lua`).
+  Manuell verifiziert (kein Testsetup im Repo). **Hinweis:** Repo war auf
+  Branch `feature-notes` (nicht `main`) ausgecheckt — Commit `1d3af41` ging
+  dorthin, gepusht auf `origin/feature-notes`, nicht auf `main`.
+
+### learn-cli.nvim ✅ erledigt (2026-07-26)
+- ~~`lua/learn_cli/user_actions/commands.lua:94` (`:LearnCLIReset`)~~ — war
+  `vim.ui.input({prompt = "Reset all progress? (yes/no): "}, ...)` mit
+  `input:lower() == "yes"`-Check, jetzt `require("lib.nvim.ui.kit").confirm(...)`.
+  lib.nvim war hier schon Hard-Dependency. Commit `3bbb748`, gepusht auf `main`.
+
+### nvim-Config ✅ erledigt (2026-07-26)
+- ~~`lua/config/menu/custom_menu/init.lua:242`~~ — war `vim.fn.confirm("Delete
+  all content in buffer?", "&Yes\n&No", 2)`, jetzt `kit.confirm`.
+- ~~`lua/config/menu/custom_menu/init.lua:267`~~ — war `vim.fn.confirm('Delete
+  file "%s"?', "&Yes\n&No", 2)`, jetzt `kit.confirm`. Commit `c8766c8c`,
+  gepusht auf `main`. Manuell verifiziert (kein Testsetup für dieses Modul).
+- `lua/config/lazygit/actions/replace.lua:9` (Kommentar) — **kein
+  Migrationskandidat, bewusst so gebaut**: Codekommentar begründet explizit,
+  warum hier kein `vim.fn.confirm` (und damit auch kein `kit.confirm`) genutzt
+  wird — ein LazyGit-Terminal-Float besitzt den Screen, ein blockierender
+  Prompt wäre unsichtbar und sein Input würde von LazyGit verschluckt.
+  Stattdessen No-Op-Fallback (`:badd` statt Save-Prompt). Gleiche Kategorie wie
+  die Sonderfälle bei `replacer.nvim`/`diff.nvim` unten — nicht anfassen ohne
+  das Terminal-Float-Problem zu lösen.
 
 ### replacer.nvim (Sonderfall, siehe unten)
 - `lua/replacer/rename_assist.lua:36` — `vim.fn.confirm(..., "&Yes\n&No", 2)`
@@ -221,10 +252,11 @@ auffällige/wiederkehrende Stellen einzeln gelistet, Rest gebündelt:
   `features/fileops/smart_create/init.lua:155` (neuer Name/Ordner),
   `features/search/grep_in_dir/init.lua:97` (`vim.fn.input` für Grep-Pattern),
   `features/fileops/create_from_template/init.lua:207` (Dateiname).
-- `fileops.nvim/lua/fileops/bindings/usrcmds.lua:218` (`prompt_dest`) —
-  zentraler Helper, wird von new/write/saveas/writeto/touch/rename/move/
-  duplicate/copy genutzt, sobald kein Pfad-Argument übergeben wurde. Einmaliger
-  Fix hier hat großen Radius.
+- ~~`fileops.nvim/lua/fileops/bindings/usrcmds.lua:218` (`prompt_dest`)~~ ✅
+  erledigt (2026-07-26) — war `vim.ui.input`, jetzt `kit.input`. Zentraler
+  Helper für new/write/saveas/writeto/touch/rename/move/duplicate/copy (9
+  Subcommands), ein Fix deckt alle ab. Neuer `docs/TESTS/usrcmds_spec.lua`
+  (erster Test für diesen Dispatcher). Commit `1ad83c9`, gepusht auf `main`.
 - `diff.nvim/lua/diff/core/init.lua:197,205` — File-Path- und
   Buffer-Number-Prompt innerhalb des Picker-Flows.
 - `dap.nvim/lua/wkddap/languages/{zig,rust,c,assembly}.lua` — je ein
@@ -282,10 +314,11 @@ gehoben werden, wenn du das durchziehen willst:
   (`{"files","grep","smart"}`) → **Buttons-Kandidat** wenn du konsequent sein willst.
 - `markdown.nvim/util/picker.lua` — generischer kit.select-Wrapper (Backend
   "hover_select"), sauber.
-- `filetree.nvim/util/select.lua` — der zentrale kit.select-Wrapper, den
-  smart_rename/smart_create/trash/rename_batch/copy_move alle nutzen. Guter
-  Ankerpunkt: ließe sich um einen `ui_confirm2/ui_confirm_choices`-Wrapper
-  ergänzen, der automatisch Buttons vs. Liste je nach Optionsanzahl wählt.
+- `filetree.nvim/util/select.lua` — der zentrale kit.select-Wrapper. ✅ Der
+  vorgeschlagene Buttons-Wrapper existiert jetzt separat als
+  `filetree.nvim/util/confirm_choice.lua`; smart_rename/smart_create/trash/
+  rename_batch/copy_move nutzen ihn für ihre ≤4-Options-Chooser, `util/select`
+  bleibt nur noch für dynamische/>4-Options-Listen (z.B. `find_files`) im Einsatz.
 - `gopath.nvim/create.lua` (`ask()`) — kit.confirm mit Fallback, Vorbild-Pattern.
 - `language.nvim/translate/window.lua` — kit.select fürs Sprachziel.
 - `github_stats.nvim/bindings/usrcmds/utils.lua` — kit.note fürs Floating-Info.
@@ -305,7 +338,18 @@ werden und noch keine kit-Komponente haben:
    nicht mitgezählt. Jede Implementierung dupliziert: Buffer erstellen,
    Breite/Höhe aus Content berechnen, zentrieren, `border=rounded`,
    `q`/`<Esc>`-Keymap, Auto-Close bei `WinLeave`. Ein `kit.viewer({lines,
-   title})` (o.ä.) würde das bündeln.
+   title})` (o.ä.) würde das bündeln. Weiterer Beleg (Nachtrag 2026-07-26):
+   `learn-cli.nvim/lua/learn_cli/ui/info_reader.lua` — 1:1 dasselbe Pattern
+   (fullscreen statt zentriert, aber gleiche q/CR/Esc-Keymaps + manuelles
+   Zentrieren), macht die Wiederverwendungs-Argumentation für `kit.viewer`
+   noch stärker.
+
+   Zur Einordnung: `debugging.nvim` hat sein Scratch/Float-UI laut eigenem
+   `docs/ROADMAP.md` bereits nach `lib.nvim.window.make_scratch` /
+   `open_scratch_split` migriert — das ist aber `lib.nvim.window`, nicht
+   `ui.kit`, und deckt reine Scratch-Buffer ab, kein interaktives
+   Confirm/Select. Kein Handlungsbedarf hier, nur als Präzedenzfall für
+   "gemeinsamer Helper lohnt sich" erwähnenswert.
 2. **Multi-Field-Form** (mehrere `vim.fn.input`/`vim.ui.input` nacheinander,
    jedes Feld optional mit Default). Belege:
    `sandbox.nvim/bindings/usrcmds/container_commands.lua:380` (`M.run`, 5
@@ -337,19 +381,24 @@ soll, wäre das der einzige Call-Site dafür im Audit.
 1. **sandbox.nvim: `util/confirm.lua` → `kit.confirm`.** Ein einziger Fix,
    wirkt in 7 Dateien / de facto jeder destruktiven Aktion im Plugin. Bester
    Aufwand/Nutzen im ganzen Audit.
-2. **filetree.nvim: `util/confirm.lua` konsolidieren.** Ersetzt den
-   Eigenbau-Float durch `kit.confirm` und behebt gleichzeitig die
-   Drei-Wege-Fragmentierung (vim.fn.confirm in trash.lua + Eigenbau-Float +
-   ui_select fürs Batch-Menü). Danach die 5 duplizierten "Update refs /
-   Inspect / Leave as-is"-Chooser (trash, smart_rename, copy_move,
-   rename_batch) auf einen gemeinsamen Helper + `kit.confirm` ziehen.
-3. **Die drei `vim.fn.input("...[y/N]...")`-Stellen** (filetree
-   rename_batch/copy_move/create_from_template) — kleine, in sich
-   geschlossene Fixes mit sofortigem UX-Gewinn (Buttons statt Text-y/n tippen).
-4. **sessions.nvim `float_confirm`** — 1 Stelle, Code-Kommentar verrät
-   selbst schon die Absicht.
-5. **nvim-Config (`custom_menu`) + color_my_ascii.nvim** — beide je 1-2
-   simple `vim.fn.confirm`-Stellen, schnell erledigt.
+2. ✅ **filetree.nvim: `util/confirm.lua` konsolidieren.** Erledigt
+   (2026-07-26, Commit `fd14fe4`) — Eigenbau-Float durch `kit.confirm`
+   ersetzt, alle 7 ≤4-Options-Chooser (trash x2, smart_rename x2,
+   smart_create, copy_move, rename_batch) auf den neuen gemeinsamen
+   `util/confirm_choice.lua`-Helper + Buttons gezogen. `trash.lua`s
+   synchroner `M.delete`-Pfad bleibt bewusst auf `vim.fn.confirm` (Sync-API-
+   Vertrag, siehe Abschnitt 1).
+3. ✅ **Die vier `vim.fn.input`/`vim.ui.input("...[y/N]/yes-no...")`-Stellen**
+   (filetree rename_batch/copy_move/create_from_template, learn-cli.nvim
+   `:LearnCLIReset`) — erledigt (2026-07-26, Commits `bac28eb` filetree.nvim,
+   `3bbb748` learn-cli.nvim). rename_batch/copy_move brauchten dafür einen
+   Sync→Callback-Umbau (`execute_renames`/`M.paste` liefen vorher synchron).
+4. ✅ **sessions.nvim `float_confirm`** — erledigt (2026-07-26, Commit `84ce371`).
+5. ✅ **nvim-Config (`custom_menu`) + color_my_ascii.nvim + cmdlog.nvim** —
+   erledigt (2026-07-26, Commits `c8766c8c` nvim-Config, `3609192`
+   color_my_ascii.nvim, `1d3af41` cmdlog.nvim auf `feature-notes`).
+   cmdlog.nvim brauchte einen 3-Ebenen Sync→Callback-Umbau (Guard auf
+   `opts.skip_confirm` blieb erhalten).
 6. **Freitext-Aufräumen (Abschnitt 3)** — kein Quick-Win an einer Stelle,
    aber viele kleine mechanische Ersetzungen; am besten pro Repo im Rutsch
    erledigen, `fileops.nvim`s `prompt_dest`-Helper zuerst (deckt 9
