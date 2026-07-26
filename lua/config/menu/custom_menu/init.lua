@@ -10,6 +10,7 @@
 
 -- Default toggles for top-level entries
 local notify = require("lib.nvim.notify").create("[config.menu.custom_menu]")
+local kit = require("lib.nvim.ui.kit")
 
 local defaults = {
   enable_format = true,
@@ -239,15 +240,15 @@ return function(opts)
     table.insert(composed, {
       name = "Delete All (Clear Buffer)",
       cmd = function()
-        local choice = vim.fn.confirm(
-          "Delete all content in buffer?",
-          "&Yes\n&No",
-          2
-        )
-        if choice == 1 then
-          vim.cmd("%d")
-          notify.info("Buffer cleared")
-        end
+        kit.confirm({
+          question = "Delete all content in buffer?",
+          on_answer = function(yes)
+            if yes then
+              vim.cmd("%d")
+              notify.info("Buffer cleared")
+            end
+          end,
+        })
       end,
       rtxt = "da",
     })
@@ -264,21 +265,19 @@ return function(opts)
         end
 
         local filename = vim.fn.fnamemodify(filepath, ":t")
-        local choice = vim.fn.confirm(
-          string.format('Delete file "%s"?', filename),
-          "&Yes\n&No",
-          2
-        )
-
-        if choice == 1 then
-          local ok, err = pcall(vim.fn.delete, filepath)
-          if ok and err == 0 then
-            vim.cmd("bdelete!")
-            notify.info("File deleted: " .. filename)
-          else
-            notify.error("Failed to delete file: " .. tostring(err))
-          end
-        end
+        kit.confirm({
+          question = string.format('Delete file "%s"?', filename),
+          on_answer = function(yes)
+            if not yes then return end
+            local ok, err = pcall(vim.fn.delete, filepath)
+            if ok and err == 0 then
+              vim.cmd("bdelete!")
+              notify.info("File deleted: " .. filename)
+            else
+              notify.error("Failed to delete file: " .. tostring(err))
+            end
+          end,
+        })
       end,
       rtxt = "df",
     })
