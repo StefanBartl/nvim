@@ -144,8 +144,9 @@ migrierten Sonderfälle (dokumentiert im jeweiligen Code):
 
 ## 5. Fehlende UI-Bausteine in lib.nvim.ui.kit
 
-Zwei der drei ursprünglich fehlenden Bausteine sind inzwischen gebaut
-(`kit.viewer`, `kit.form`) — offen ist jeweils noch, ihre Call-Sites in den
+Alle drei ursprünglich fehlenden Bausteine sind inzwischen gebaut
+(`kit.viewer`, `kit.form`, `kit.live_input` — Commit `5df6fc3` in lib.nvim,
+gepusht auf `main`) — offen ist jeweils noch, ihre Call-Sites in den
 Consumer-Plugins tatsächlich zu migrieren:
 
 1. **`kit.viewer`-Migration** — Baustein existiert (`kit.viewer(opts)` /
@@ -169,15 +170,18 @@ Consumer-Plugins tatsächlich zu migrieren:
    `required`), `buffer_ctx.nvim/ops/boilerplate/templates/utils.lua:18`
    (`process_prompts`, siehe auch Abschnitt 3).
 
-3. **Live-Incremental-Input** (Prompt-Buffer mit Debounce, der bei jedem
-   Tastendruck einen Callback/Preview aktualisiert — kein einmaliges Submit
-   wie `kit.input`). Belege: `filetree.nvim/features/search/live_search/init.lua`
-   und `features/search/filter/init.lua` implementieren beide unabhängig
+3. **`kit.live_input`-Migration** — Baustein existiert (`kit.live_input(opts)`
+   / `kit.popup({type="live_input"})`: wie `kit.input`, plus debounced
+   `on_change(query)` bei jedem Tastendruck, Default-Debounce 80ms, gleicher
+   Timer-Mechanismus wie `kit.picker`s Prompt-Slot intern). Migrationskandidaten:
+   `filetree.nvim/features/search/live_search/init.lua` und
+   `features/search/filter/init.lua` (beide implementieren unabhängig
    voneinander einen floating Prompt-Buffer mit `TextChangedI`-Debounce +
-   Overlay-Highlighting. `reposcope.nvim/ui/actions/filter_prompt.lua` ist ein
-   einfacherer (nicht-live) Fall vom selben Grundbedürfnis. Kein 1:1-Ersatz für
-   `kit.input`, aber ein potenzielles `kit.live_input({on_change=...})`-Primitiv
-   würde 2 Implementierungen in filetree.nvim allein einsparen.
+   Overlay-Highlighting — das Overlay-Highlighting selbst bietet
+   `kit.live_input` nicht, nur den Debounce-Mechanismus). Kein
+   Migrationskandidat: `reposcope.nvim/ui/actions/filter_prompt.lua` (der
+   einfachere, nicht-live Fall vom selben Grundbedürfnis) läuft bereits über
+   `kit.input` — es sei denn, der Filter dort soll live werden.
 
 Kein neuer Baustein nötig, aber erwähnenswert: Sekret-/Passwort-Eingabe
 (`sandbox.nvim/registry_commands.lua:30`, `vim.fn.inputsecret`) hat aktuell
@@ -192,8 +196,7 @@ soll, wäre das der einzige Call-Site dafür im Audit.
 2. **replacer.nvim `perfile.lua`** und **diff.nvim `pick_specifier`** —
    beide brauchen Rücksicht auf bestehende Architektur (synchrone Schleife
    bzw. pluggable select_fn), kein Quick-Win.
-3. **`kit.viewer`/`kit.form`-Call-Site-Migrationen** (Abschnitt 5) — die
-   kit-Bausteine existieren bereits, nur die eigentliche Migration in den
-   Consumer-Plugins steht noch aus.
-4. **`kit.live_input`** (Abschnitt 5) — neuer kit-Baustein, am aufwendigsten,
-   nur 2-3 Call-Sites, unabhängig einplanen sobald du eh an `ui/kit` arbeitest.
+3. **`kit.viewer`/`kit.form`/`kit.live_input`-Call-Site-Migrationen**
+   (Abschnitt 5) — alle drei kit-Bausteine existieren bereits, nur die
+   eigentliche Migration in den Consumer-Plugins steht noch aus (filetree.nvim
+   allein hat 8+ Call-Sites über alle drei Bausteine).
