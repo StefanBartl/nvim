@@ -225,59 +225,98 @@ Das ist die für dich wichtigste Kategorie. Sortiert grob nach Impact.
   `vim.ui.select` über eine Cycle-Gruppe (Länge variiert je nach User-Config,
   oft klein aber nicht garantiert ≤4).
 
-## 3. Freitext-Eingaben → `kit.input`
+## 3. Freitext-Eingaben → `kit.input` ✅ erledigt (2026-07-26)
 
-Sehr viele Treffer, meist simple "prompt für einen Wert"-Aufrufe. Nur
-auffällige/wiederkehrende Stellen einzeln gelistet, Rest gebündelt:
+Alles bis auf drei dokumentierte Ausnahmen (File-Completion, nvim-dap-Coroutine,
+Multi-Field-Form) migriert. Sync→Callback-Umbauten waren nötig, wo der alte
+Rückgabewert synchron weiterverarbeitet wurde (markiert unten).
 
-- `pdfport.nvim/lua/pdfport/util/page_range.lua:45` — Seitenbereich-Prompt.
-- `reposcope.nvim/lua/reposcope/ui/actions/filter_prompt.lua` (ganzes Modul) —
-  kompletter Eigenbau-`nvim_open_win` + `buftype=prompt`-Aufbau nur für einen
-  einzeiligen Filter-Text. 1:1 `kit.input`-Kandidat (ersetzt ~35 Zeilen Boilerplate).
-- `replacer.nvim/lua/replacer/surround.lua:244` — Delimiter-Prompt für
-  `:Surround`.
-- `pickers.nvim/lua/pickers/sources/system.lua:80` — fd-Suchstring-Prompt.
-- `pickers.nvim/lua/pickers/entry_actions/create_file.lua:70` — Dateiname-Prompt.
-- `pickers.nvim/lua/pickers/ui/dir_nav_picker.lua:50` — "path=…"-Prompt
-  innerhalb eines ansonsten schon kit-migrierten Pickers.
-- `sandbox.nvim` — mehrere `vim.ui.input`-Stellen: `ui/list_view.lua:56`
-  (Container umbenennen), `ui/image_list_view_{podman,docker}.lua` (Image
-  taggen), `bindings/usrcmds/registry_commands.lua:24` (Registry-Username;
-  Passwort via `vim.fn.inputsecret`, siehe Abschnitt 6).
-- `sandbox.nvim/lua/sandbox/bindings/usrcmds/container_commands.lua:365`
-  (`M.run`) — **5 verkettete** `vim.ui.input`-Aufrufe (Image/Name/Ports/
-  Volumes/Env) für `:Sandbox container run`. Siehe Abschnitt 6 (Multi-Field-Form).
-- `filetree.nvim` — `features/system/shell_run/init.lua:89` (Shell-Kommando),
-  `features/fileops/smart_rename/init.lua:540` (neuer Name),
-  `features/fileops/smart_create/init.lua:155` (neuer Name/Ordner),
-  `features/search/grep_in_dir/init.lua:97` (`vim.fn.input` für Grep-Pattern),
-  `features/fileops/create_from_template/init.lua:207` (Dateiname).
+- ~~`pdfport.nvim/lua/pdfport/util/page_range.lua:45`~~ — Seitenbereich-Prompt,
+  jetzt `kit.input`. Erster Test für `M.prompt` ergänzt. Commit `dfeb83d`.
+- ~~`reposcope.nvim/lua/reposcope/ui/actions/filter_prompt.lua`~~ (ganzes Modul)
+  — Eigenbau-`nvim_open_win`+`buftype=prompt` (~35 Zeilen) durch `kit.input`
+  ersetzt. Commit `fa45e8f`.
+- ~~`replacer.nvim/lua/replacer/surround.lua:244`~~ — Delimiter-Prompt für
+  `:Surround`, jetzt `kit.input` inkl. `on_cancel` (kit.input feuert
+  `on_submit` nicht bei Esc, anders als `vim.ui.input`s `callback(nil)` —
+  musste explizit nachgebildet werden, um die "surround_cancelled"-Message
+  bei Esc zu erhalten). Neuer Regressionstest. Commit `6811497`.
+- ~~`pickers.nvim/lua/pickers/sources/system.lua:80`~~,
+  ~~`pickers.nvim/lua/pickers/entry_actions/create_file.lua:70`~~,
+  ~~`pickers.nvim/lua/pickers/ui/dir_nav_picker.lua:50`~~ — alle drei auf
+  `kit.input` umgestellt (`dir_nav_picker.lua` folgt dem Datei-eigenen
+  kit.select-Soft-Dep-Muster: `pcall` + `vim.ui.input`-Fallback statt Hard-
+  Require). Erste Tests für alle drei. Commit `3bb4573`.
+- ~~`sandbox.nvim`~~ — `ui/list_view.lua:56` (Container umbenennen),
+  `ui/image_list_view_{podman,docker}.lua` (Image taggen),
+  `bindings/usrcmds/registry_commands.lua:24` (Registry-Username; Passwort
+  bleibt bewusst auf `vim.fn.inputsecret` — kein kit-Äquivalent für maskierte
+  Eingabe) — alle auf `kit.input` umgestellt.
+  ~~`bindings/usrcmds/container_commands.lua:365` (`M.run`)~~ — die 5
+  verketteten Image/Name/Ports/Volumes/Env-Prompts ebenfalls: jedes optionale
+  Feld bekam zusätzlich `on_cancel`, das mit einem leeren Wert weiterläuft
+  (Esc = "Feld überspringen", nicht "ganzen Flow abbrechen" — nur beim
+  Pflichtfeld Image bricht Esc wirklich ab). Neuer
+  `tests/sandbox/bindings/usrcmds/container_commands_spec.lua` (3 Fälle: alle
+  Felder ausgefüllt / Esc auf optionalem Feld / Esc auf Image). Commit
+  `f6ff0a2`.
+- ~~`filetree.nvim`~~ — `features/system/shell_run/init.lua:89`,
+  `features/fileops/smart_rename/init.lua:540`,
+  `features/fileops/smart_create/init.lua:155`,
+  `features/fileops/create_from_template/init.lua:207` — alle auf `kit.input`
+  umgestellt. `features/search/grep_in_dir/init.lua:97`: `via_builtin` in
+  `run_builtin_search` (der eigentliche rg/grep-Lauf) + einen async
+  `kit.input`-Wrapper gesplittet — der alte Rückgabewert war ohnehin nie von
+  Aufrufern konsumiert (`via_builtin` ist immer der letzte, unbeobachtete
+  Fallback in `M.grep`s Backend-Kette), also risikolos machbar. Commit
+  `8ce7c8e` (siehe auch Abschnitt 1 für die dabei aktualisierten
+  `units.lua`-Stubs).
 - ~~`fileops.nvim/lua/fileops/bindings/usrcmds.lua:218` (`prompt_dest`)~~ ✅
   erledigt (2026-07-26) — war `vim.ui.input`, jetzt `kit.input`. Zentraler
   Helper für new/write/saveas/writeto/touch/rename/move/duplicate/copy (9
   Subcommands), ein Fix deckt alle ab. Neuer `docs/TESTS/usrcmds_spec.lua`
   (erster Test für diesen Dispatcher). Commit `1ad83c9`, gepusht auf `main`.
-- `diff.nvim/lua/diff/core/init.lua:197,205` — File-Path- und
-  Buffer-Number-Prompt innerhalb des Picker-Flows.
-- `dap.nvim/lua/wkddap/languages/{zig,rust,c,assembly}.lua` — je ein
-  `vim.fn.input("Path to executable: ...")`.
-- `dap.nvim/lua/wkddap/languages/lua.lua:46,49` — Host/Port-Prompts fürs
-  Attach.
-- `dap.nvim/lua/wkddap/bindings/{usercmds,keymaps}/init.lua` —
-  Breakpoint-Condition / Log-Message-Prompts (je 2x dupliziert zwischen
-  Usercmd- und Keymap-Pfad).
-- `color_my_ascii.nvim/lua/color_my_ascii/commands/fence/export.lua:147` —
-  Export-Pfad mit Default + File-Completion.
-- `buffer_ctx.nvim/lua/buffer_ctx/ops/boilerplate/templates/utils.lua:18`
-  (`M.prompt_user`) — generischer Prompt-Helper, von `process_prompts` (Zeile
-  34) mehrfach in Folge aufgerufen → auch ein Multi-Field-Form-Kandidat
-  (Abschnitt 6).
-- `buffer_ctx.nvim/lua/buffer_ctx/format/column_align.lua:173,183` — Zielspalte
-  + Fill-Char, zwei verkettete `vim.fn.input`.
-- nvim-Config: `lsp/debug_adapters/dotnet.lua:24` (DLL-Pfad),
-  `bindings/mappings/telescope.lua:21` (Grep-Query),
+- `diff.nvim/lua/diff/core/init.lua:197` (`prompt_file`) — **bewusst NICHT
+  migriert**: braucht `completion = "file"` (Cmdline-Tab-Completion), für die
+  `kit.input` (reiner Insert-Mode-Buffer) noch kein Äquivalent hat. Code-
+  Kommentar ergänzt. ~~`:205` (`prompt_buffer`)~~ — keine Completion nötig,
+  auf `kit.input` umgestellt. Commit `70d6bd4`.
+- ~~`dap.nvim/lua/wkddap/bindings/keymaps/init.lua`~~ — Breakpoint-Condition /
+  Log-Message-Prompts, jetzt `kit.input` (reine Keymap-Callbacks, kein
+  Sonderfall). ~~`lua/wkddap/languages/lua.lua:46,49`~~ (nach der zwischen-
+  zeitlichen `configurations/`→`languages/`-Umstrukturierung durch den
+  Autor) — Host/Port-Prompts fürs Attach: nvim-dap löst Config-Funktionen
+  innerhalb von `coroutine.wrap()` auf, also nutzt die Migration dasselbe
+  yield/resume-Idiom, das nvim-daps eigene Async-Picker verwenden (`kit.input`
+  anstoßen, `on_submit` weckt die suspendierte Coroutine mit dem Wert,
+  `coroutine.yield()`). Gegen das echte nvim-dap-Plugin verifiziert, inkl.
+  einer echten Async-Lücke via `vim.schedule`. Commit `51feb40`.
+  `languages/{zig,rust,c,assembly}.lua`s "Path to executable"-Prompts sind
+  **bewusst NICHT migriert**: gleiche `completion="file"`-Einschränkung wie
+  bei diff.nvim, plus derselbe Coroutine-Kontext.
+- `color_my_ascii.nvim/lua/color_my_ascii/commands/fence/export.lua:178`
+  (No-Path-Prompt in `M.run`) — **bewusst NICHT migriert**, gleicher Grund
+  (`completion = 'file'`). Code-Kommentar ergänzt, Commit `8fde040`.
+- ~~`buffer_ctx.nvim/lua/buffer_ctx/format/column_align.lua:173,183`~~ —
+  Zielspalte + Fill-Char, jetzt zwei verkettete `kit.input`-Aufrufe. Neuer
+  Regressionstest für `align_interactive` (vorher nur `align_to_column`
+  direkt getestet). Commit `3ed2290`.
+  `ops/boilerplate/templates/utils.lua:18` (`M.prompt_user`/
+  `process_prompts`, von `guard.lua`s `guard_interactive` genutzt) — **bewusst
+  NICHT migriert**: 4-Ebenen-synchrone Kette (`:Insert`/`:Copy`-Dispatch →
+  `boiler.get()` → `guard_interactive()` → `process_prompts()` →
+  `prompt_user()`), nur für einen einzigen 2-Felder-Call-Site. Genau der
+  Fall, für den Abschnitt 6 ein zukünftiges `kit.form`-Primitiv statt einer
+  Ad-hoc-Migration vorschlägt.
+- ~~nvim-Config~~ — `bindings/mappings/telescope.lua:21` (Grep-Query),
+  `bindings/mappings/nvchad.lua:44` (WhichKey-Query),
   `lsp/languages/webdev/astro/{usercmds,keymaps}.lua` (Component-/Page-Name,
-  mehrfach), `bindings/mappings/nvchad.lua:44` (WhichKey-Query).
+  4 Stellen — `usercmds.lua`s zwei Stellen um eine gemeinsame
+  `create()`-Continuation herum restrukturiert, damit der Explicit-Arg-Pfad
+  ohne Prompt weiterhin funktioniert) — alle auf `kit.input` umgestellt.
+  Commit `0ddb6156`. `lsp/debug_adapters/dotnet.lua:24` (DLL-Pfad) — **bewusst
+  NICHT migriert**, gleicher Grund wie dap.nvim/diff.nvim
+  (`completion="file"` + nvim-dap-Coroutine-Kontext).
 
 ## 4. Eigenbau-Floats (Menü/Picker) → `kit.menu`/`kit.select`/`kit.layout`
 
@@ -399,10 +438,17 @@ soll, wäre das der einzige Call-Site dafür im Audit.
    color_my_ascii.nvim, `1d3af41` cmdlog.nvim auf `feature-notes`).
    cmdlog.nvim brauchte einen 3-Ebenen Sync→Callback-Umbau (Guard auf
    `opts.skip_confirm` blieb erhalten).
-6. **Freitext-Aufräumen (Abschnitt 3)** — kein Quick-Win an einer Stelle,
-   aber viele kleine mechanische Ersetzungen; am besten pro Repo im Rutsch
-   erledigen, `fileops.nvim`s `prompt_dest`-Helper zuerst (deckt 9
-   Subcommands ab).
+6. ✅ **Freitext-Aufräumen (Abschnitt 3)** — erledigt (2026-07-26). Alle Stellen
+   über pdfport.nvim, reposcope.nvim, replacer.nvim, pickers.nvim, sandbox.nvim,
+   filetree.nvim, fileops.nvim, dap.nvim, buffer_ctx.nvim und nvim-Config auf
+   `kit.input` umgestellt — siehe Abschnitt 3 für Commit-Hashes je Repo. Drei
+   bewusste Ausnahmen bleiben auf `vim.fn.input`/`vim.ui.input` (dokumentiert
+   im Code): diff.nvim `prompt_file`, dap.nvim `languages/{zig,rust,c,
+   assembly}.lua`, color_my_ascii.nvim `export.lua`, nvim-Config
+   `dotnet.lua` (alle brauchen `completion="file"`, das `kit.input` nicht
+   bietet) sowie buffer_ctx.nvim `boilerplate/templates/utils.lua`
+   (4-Ebenen-Sync-Kette für einen einzigen 2-Felder-Call-Site, siehe
+   Abschnitt 6 unten für das fehlende `kit.form`-Primitiv).
 7. **`kit.select`-Migrationen der Eigenbau-Picker** (open_with, path_copy,
    create_from_template, table_selector) — funktional unkritisch, aber
    entfernt viel duplizierten `nvim_open_win`-Code.
