@@ -30,29 +30,9 @@ in der Git-Historie dieser Datei.
   wird — ein LazyGit-Terminal-Float besitzt den Screen, ein blockierender
   Prompt wäre unsichtbar und sein Input würde von LazyGit verschluckt.
   Stattdessen No-Op-Fallback (`:badd` statt Save-Prompt). Gleiche Kategorie wie
-  die Sonderfälle bei `replacer.nvim`/`diff.nvim` unten — nicht anfassen ohne
-  das Terminal-Float-Problem zu lösen.
-
-### replacer.nvim (Sonderfall, siehe unten)
-- `lua/replacer/rename_assist.lua:36` — `vim.fn.confirm(..., "&Yes\n&No", 2)`
-  für `--also-rename-file`. Klarer 2-Options-Kandidat.
-- `lua/replacer/perfile.lua:46` — `vim.fn.confirm(..., "&All\n&Skip\n&Only
-  some\n&Quit", 1)`, exakt 4 Optionen — **aber**: der Code-Kommentar
-  begründet explizit, warum hier bewusst `vim.fn.confirm` statt
-  `kit.confirm` verwendet wird — es ist eine synchrone Schleife über Dateien,
-  die den Rückgabewert blockierend braucht (wie `:confirm quit`). `kit.confirm`
-  ist vermutlich async/callback-basiert; eine Migration bräuchte entweder eine
-  synchrone kit-Variante oder einen Umbau der Schleife auf Callback-Rekursion.
-  Nicht ignorieren, aber mit Vorsicht angehen — kein Quick-Win.
-
-### diff.nvim (Sonderfall)
-- `lua/diff/core/init.lua:238` (`pick_specifier`) — Quellen-Picker hat 4
-  Optionen ("current buffer" / "clipboard" / "file path …" / "buffer number …"),
-  Target/Base-Picker haben 3. Aber: `resolve_select_fn()` (Zeile 219) erlaubt
-  explizit einen Custom-`select_fn` oder pickers.nvim als Backend, `vim.ui.select`
-  ist nur der letzte Fallback. Migration auf `kit.confirm` würde nur den
-  Default-Fallback-Pfad ändern — sauber machbar, aber die Pluggable-Architektur
-  im Hinterkopf behalten.
+  der Terminal-Float-Sonderfall, der zuvor bei `replacer.nvim`/`diff.nvim`
+  dokumentiert war (inzwischen migriert, siehe Git-Historie) — nicht anfassen
+  ohne das Terminal-Float-Problem zu lösen.
 
 ## 2. Auswahllisten (>4 Optionen / dynamisch) → `kit.select`
 
@@ -168,10 +148,7 @@ soll, wäre das der einzige Call-Site dafür im Audit.
 
 ## 6. Priorisierung / Reihenfolge-Vorschlag (verbleibend)
 
-1. **replacer.nvim `perfile.lua`** und **diff.nvim `pick_specifier`** —
-   beide brauchen Rücksicht auf bestehende Architektur (synchrone Schleife
-   bzw. pluggable select_fn), kein Quick-Win.
-2. **`kit.viewer`/`kit.form`/`kit.live_input`-Call-Site-Migrationen**
+1. **`kit.viewer`/`kit.form`/`kit.live_input`-Call-Site-Migrationen**
    (Abschnitt 5) — alle drei kit-Bausteine existieren bereits, nur die
    eigentliche Migration in den Consumer-Plugins steht noch aus (filetree.nvim
    allein hat 8+ Call-Sites über alle drei Bausteine).
