@@ -367,8 +367,17 @@ gehoben werden, wenn du das durchziehen willst:
 Drei wiederkehrende Muster, die über mehrere Plugins hinweg selbst gebaut
 werden und noch keine kit-Komponente haben:
 
-1. **Read-only Info-Panel** (zentrierter Rounded-Float, Titel, `q`/`<Esc>`
-   schließt, kein Confirm/Select nötig). Belege: `filetree.nvim` allein hat das
+1. **Read-only Info-Panel** ✅ erledigt (2026-07-26) — `lib.nvim.ui.kit.viewer`
+   (`kit.viewer(opts)` / `kit.popup({type="viewer"})`) implementiert:
+   zentrierter, auto-sized Rounded-Float, `q`/`<Esc>` schließt, schließt
+   zusätzlich bei `WinLeave`/`BufLeave` (Opt-out via
+   `close_on_focus_lost = false`) — anders als `kit.note`, das weder
+   Focus-Loss-Close noch das hier relevante Read-Panel-Verhalten hat.
+   Commit `e1986c3` in lib.nvim, gepusht auf `main`. Migration der unten
+   gelisteten 6+ Call-Sites in filetree.nvim/learn-cli.nvim/nvim-Config auf
+   `kit.viewer` ist noch offen (separate Aufgabe, jetzt aber möglich).
+
+   Belege (Migrationskandidaten, jetzt umsetzbar): `filetree.nvim` allein hat das
    **6x** separat implementiert — `features/ui/node_info/init.lua`,
    `features/ui/cheatsheet/init.lua`, `features/org/marks/init.lua:141`
    (`M.show`), `features/fileops/trash/undo.lua:186` (`show_history`),
@@ -389,17 +398,22 @@ werden und noch keine kit-Komponente haben:
    `ui.kit`, und deckt reine Scratch-Buffer ab, kein interaktives
    Confirm/Select. Kein Handlungsbedarf hier, nur als Präzedenzfall für
    "gemeinsamer Helper lohnt sich" erwähnenswert.
-2. **Multi-Field-Form** (mehrere `vim.fn.input`/`vim.ui.input` nacheinander,
-   jedes Feld optional mit Default). Belege:
-   `sandbox.nvim/bindings/usrcmds/container_commands.lua:380` (`M.run`, 5
-   Felder: Image/Name/Ports/Volumes/Env), `buffer_ctx.nvim/ops/boilerplate/
-   templates/utils.lua:34` (`process_prompts`, generischer Form-Helper —
-   zeigt, dass der Bedarf sogar plugin-intern schon erkannt wurde),
-   `buffer_ctx.nvim/format/column_align.lua:172` (2 Felder: Zielspalte +
-   Fill-Char), `filetree.nvim/features/fileops/smart_rename` +
-   `create_from_template` (Name-Prompt + Overwrite-Nachfrage als zwei
-   getrennte Schritte). Ein `kit.form({fields={...}})` mit sequenziellem
-   Tab/Enter-Fluss und Defaults pro Feld wäre hier ein klarer Gewinn.
+2. **Multi-Field-Form** ✅ erledigt (2026-07-26) — `lib.nvim.ui.kit.form`
+   (`kit.form(opts)` / `kit.popup({type="form"})`) implementiert: verkettet
+   `kit.input`-Aufrufe pro Feld in eine gemeinsame `values`-Tabelle
+   (`fields = {{name, label, default?, required?, expand_env?}, ...}`).
+   `<Esc>` auf einem optionalen Feld überspringt es (Default bzw. `""` bleibt
+   stehen, Form läuft weiter) — `<Esc>` auf einem `required`-Feld bricht die
+   ganze Form ab (`on_cancel` statt `on_submit`). Genau das sandbox.nvim-Muster
+   aus `container_commands.lua:380` (Image = required, Name/Ports/Volumes/Env
+   = optional) als kit-Primitiv nachgebaut. Neue Tests (Full-Submit,
+   Optional-Skip, Required-Abort, Routing über `kit.popup`) in
+   `docs/TESTS/ui_kit_spec.lua`. Migration der Belege
+   (`sandbox.nvim/container_commands.lua`,
+   `buffer_ctx.nvim/boilerplate/templates/utils.lua` `process_prompts`,
+   `buffer_ctx.nvim/format/column_align.lua`) auf `kit.form` ist noch offen
+   (separate Aufgabe je Repo, jetzt aber möglich). Commit `f2ca4f1` in
+   lib.nvim, gepusht auf `main`.
 3. **Live-Incremental-Input** (Prompt-Buffer mit Debounce, der bei jedem
    Tastendruck einen Callback/Preview aktualisiert — kein einmaliges Submit
    wie `kit.input`). Belege: `filetree.nvim/features/search/live_search/init.lua`
@@ -455,6 +469,8 @@ soll, wäre das der einzige Call-Site dafür im Audit.
 8. **replacer.nvim `perfile.lua`** und **diff.nvim pick_specifier** zuletzt —
    beide brauchen Rücksicht auf bestehende Architektur (synchrone Schleife
    bzw. pluggable select_fn), kein Quick-Win.
-9. **Neue kit-Bausteine (Abschnitt 6)** unabhängig einplanen, sobald du eh an
-   `ui/kit` arbeitest — Info-Panel zuerst (höchste Wiederverwendung), dann
-   Multi-Field-Form, Live-Input zuletzt (am aufwendigsten, nur 2-3 Call-Sites).
+9. **Neue kit-Bausteine (Abschnitt 6)** — Info-Panel ✅ erledigt (`kit.viewer`,
+   2026-07-26, Commit `e1986c3`, siehe Abschnitt 6). Multi-Field-Form ✅
+   erledigt (`kit.form`, 2026-07-26, siehe Abschnitt 6). Live-Input weiterhin
+   offen, unabhängig einplanen sobald du eh an `ui/kit` arbeitest — am
+   aufwendigsten, nur 2-3 Call-Sites.
