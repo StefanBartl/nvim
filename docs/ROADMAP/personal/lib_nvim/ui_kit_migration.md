@@ -42,11 +42,6 @@ Backend-Respekt-Verhalten wurde aufgegeben.
 
 - `pickers.nvim/lua/pickers/sources/system.lua` — kein Select, aber siehe
   Abschnitt 3 (Freitext).
-- `recommender.nvim/lua/recommender/float/rendering.lua` — Eigenbau-Picker mit
-  Syntax-Highlighting pro Eintrag (chain/alias farblich abgesetzt). Funktional
-  ein `kit.select`, aber mit Rendering, das kit vermutlich nicht abdeckt —
-  niedrige Priorität, eher Kandidat für ein kit-Feature "custom highlight per
-  item" als für eine 1:1-Migration.
 
 ## 3. Freitext-Eingaben → `kit.input`
 
@@ -66,8 +61,18 @@ migrierten Sonderfälle (dokumentiert im jeweiligen Code):
 
 ## 4. Eigenbau-Floats (Menü/Picker) → `kit.menu`/`kit.select`/`kit.layout`
 
-- `recommender.nvim/lua/recommender/float/rendering.lua` — siehe Abschnitt 2,
-  niedrige Priorität wegen Custom-Highlighting.
+Alles migriert. `recommender.nvim`s Custom-Highlight-Picker (Chain/Alias
+farblich abgesetzt, 3 Zeilen pro Eintrag) wurde zum Auslöser für
+`kit.select`s neues Feature "rich items" (Phase 9 in lib.nvim, siehe
+UI-KIT-CONCEPT.md §13b): Items können jetzt mehrzeilige Tabellen mit
+Highlight-Spans pro Spalte sein statt nur einzeiliger Strings. Navigation
+läuft über logische Item-Indizes statt roher Buffer-Zeilen, sodass ein
+Klick irgendwo in einem mehrzeiligen Item korrekt auflöst. `rendering.lua`
+verlor dadurch fast die Hälfte seines Codes (kein eigenes
+`nvim_open_win`/`vim.hl.range`/Stride-Tracking mehr); `keymaps.lua` behält
+nur noch die Aktionen, die kit.select nicht kennt (y/A/Backspace/U — lesen
+das aktuelle Item über das neu öffentliche `kit.chooser.current_item()`,
+ohne zu schließen).
 
 ## 5. Fehlende UI-Bausteine in lib.nvim.ui.kit
 
@@ -84,9 +89,3 @@ Kein neuer Baustein nötig, aber erwähnenswert: Sekret-/Passwort-Eingabe
 (`sandbox.nvim/registry_commands.lua:30`, `vim.fn.inputsecret`) hat aktuell
 keine kit-Entsprechung — falls `kit.input` maskierte Eingabe unterstützen
 soll, wäre das der einzige Call-Site dafür im Audit.
-
-## 6. Priorisierung / Reihenfolge-Vorschlag (verbleibend)
-
-1. **`recommender.nvim`s Custom-Highlight-Picker** (Abschnitte 2+4) — eher
-   ein Kandidat für ein neues kit-Feature ("custom highlight per item") als
-   für eine 1:1-Migration.
