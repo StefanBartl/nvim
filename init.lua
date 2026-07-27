@@ -160,8 +160,15 @@ startup.now("lsp", function()
   if ok_caps and type(caps.apply_globally) == "function" then
     local applied, cap_warnings = caps.apply_globally()
     local cap_notify = require("lib.nvim.notify").create("[lsp.capabilities]")
-    for _, w in ipairs(cap_warnings) do
-      cap_notify.notify(w.msg, w.level)
+    for _, w in ipairs(cap_warnings or {}) do
+      -- w.level is "warn"|"error" (LspCaps.Warning); notify()'s own level
+      -- param is a vim.log.levels integer, so route through the matching
+      -- convenience method instead of passing the string through raw.
+      if w.level == "error" then
+        cap_notify.error(w.msg)
+      else
+        cap_notify.warn(w.msg)
+      end
     end
     if not applied then
       cap_notify.error("Failed to apply capabilities globally")

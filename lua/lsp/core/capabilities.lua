@@ -99,17 +99,21 @@ function M.get()
   return caps, warnings
 end
 
----Apply capabilities globally to all LSP configs.
+---Apply capabilities globally to all LSP configs. Never notifies directly
+---(see module doc) -- always returns the warnings from M.get(), plus an
+---extra entry when vim.lsp.config itself isn't available, so the caller
+---can iterate a single list either way.
 ---@return boolean ok
----@return string|nil err
+---@return LspCaps.Warning[] warnings
 function M.apply_globally()
   -- Merge these caps into every named config as a base ("*")
-  local caps = M.get()
+  local caps, warnings = M.get()
   if type(lsp.config) ~= "table" then
-    return false, "vim.lsp.config not available (Neovim < 0.10?)"
+    warnings[#warnings + 1] = { level = "error", msg = "vim.lsp.config not available (Neovim < 0.10?)" }
+    return false, warnings
   end
   lsp.config("*", { capabilities = caps })
-  return true, nil
+  return true, warnings
 end
 
 return M
