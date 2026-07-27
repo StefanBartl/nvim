@@ -1,21 +1,76 @@
 # sandbox.nvim — Keymaps Cheatsheet
 
-**None — confirmed genuinely zero.** A full source grep for
-`vim.keymap.set(`/`nvim_set_keymap(`/`nvim_buf_set_keymap(` and any local
-`map()`-style helper found no matches anywhere in `lua/containers/`. All UI
-views (`ui/list_view.lua`, `ui/log_view.lua`, `ui/inspect_view.lua`,
-`ui/error_view.lua`) delegate window/buffer creation to the external
-`lib.nvim.window.open_named_scratch()` helper and add no keymaps of their
-own.
+**No global keymaps** — everything is still exposed via `:Sandbox`/`:Sbx`
+user commands (see [Usercmds/sandbox.nvim.md](../Usercmds/sandbox.nvim.md)),
+nothing to map via which-key at the global level.
 
-A stub at `lua/containers/bindings/keymaps/README.md` confirms this is
-intentional: *"No default keymaps are defined by sandbox.nvim — all
-functionality is exposed via user commands... Add keymap modules here if/when
-default keymaps are introduced."*
+**As of 2026-07-26 this is no longer "zero keymaps" overall**, though: the
+read-only list-view scratch buffers (`container list`, `image list`,
+`volume list`, `network list`) now carry **buffer-local** keymaps so you can
+act on the entry under the cursor instead of re-typing a command with its
+id/name — a lazygit/k9s-style TUI layer on top of the previously
+inspect-only buffers. Source: `lua/sandbox/ui/list_actions.lua` (shared
+`vim.keymap.set(..., { buffer = bufnr })` wiring, plus the Visual-mode
+multi-select dispatch and the `BufWipeout` cleanup for the
+`refresh_interval` timer) wired into `ui/list_view.lua`,
+`ui/image_list_view_{docker,podman}.lua`, `ui/volume_list_view.lua`,
+`ui/network_list_view.lua`.
 
-All functionality is exposed exclusively through `:Container`, `:Image`, and
-(conditionally, when `wsl.exe` is reachable) `:Wsl`, built on
-`lib.nvim.usercmd.composer`.
+Press `?` inside any list buffer for a live reminder; `q` closes it.
 
-Cross-reference: `docs/BINDINGS.md` states "There are no default keymaps or
-autocmds" explicitly — matches source, safe to use as-is.
+## Container list (`sandbox.nvim://container-list`)
+
+| Key | Action | Key | Action |
+|---|---|---|---|
+| `<CR>` / `i` | inspect | `n` | rename (prompts) |
+| `s` | start | `D` | remove (confirm) |
+| `x` | stop | `l` | logs |
+| `X` | kill | `L` | logs (follow, `logs -f`; `q` in that buffer stops it) |
+| `r` | restart | `e` | exec (shell) |
+| `p` | pause | `t` | top |
+| `P` | unpause | `T` | stats |
+| | | `R` | refresh list |
+
+The `[status]` prefix on each line is highlighted by container state —
+`SandboxStatusRunning` (green) / `SandboxStatusStopped` (red) /
+`SandboxStatusPaused` (yellow) / `SandboxStatusOther` (comment-colored),
+each linked to a `Diagnostic{Ok,Error,Warn}`/`Comment` group so it follows
+the active colorscheme. Source: `lua/sandbox/ui/highlights.lua`.
+
+## Image list (`sandbox.nvim://image-list` / `sandbox.nvim://images`)
+
+| Key | Action |
+|---|---|
+| `<CR>` / `i` | inspect |
+| `h` | history |
+| `t` | tag (prompts for target) |
+| `D` | remove (confirm) |
+| `R` | refresh list |
+
+## Volume list (`sandbox.nvim://volume-list`) / Network list (`sandbox.nvim://network-list`)
+
+| Key | Action |
+|---|---|
+| `<CR>` / `i` | inspect |
+| `D` | remove (confirm) |
+| `R` | refresh list |
+
+## Multi-select (all list views above)
+
+Select several lines in any Visual mode (`V`, `v`, `j`/`k` to extend, ...),
+then press the same key you'd use on one line to apply it to every
+selected entry — `s`/`x`/`X`/`D` in the container list, `D` elsewhere. A
+destructive bulk action (`D`, `X`) confirms once for the whole batch
+instead of once per item (still gated by `confirm_destructive`, same as a
+single-item action).
+
+## Inspect view (`sandbox.nvim://inspect/<id>`)
+
+Opened by any `inspect` action above. Renders the engine's JSON metadata
+as a folded, indented `vim.inspect`-style Lua table (`foldmethod=indent`,
+`foldlevel=1` — starts collapsed one level in) rather than a flat dump;
+`za`/`zo`/`zc` toggle sections, `q` closes the buffer.
+
+Cross-reference: `docs/BINDINGS.md` "## Keymaps" section and
+`doc/sandbox.txt` (native `:help sandbox`, added 2026-07-26) carry the
+same tables — kept in sync with this file.

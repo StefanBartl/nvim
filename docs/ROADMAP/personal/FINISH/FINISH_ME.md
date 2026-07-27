@@ -1,10 +1,5 @@
 # TODO & ROADMAP: Refactoring & Plugin-Optimierung
 
-
-3. Auf github.com:
-  1. Kurzinfo für jedes Repo schreiben
-  2. Keywords für jedes repo eingeben
-
 ## Allgemeines & Medien
 
 ## Dokumentation, Cheatsheets & Benchmarks
@@ -51,7 +46,6 @@
 
 ### DevOps & Repository-Struktur
 
-* [ ] Alle Plugins auf die `.nvim`-Namensendung umstellen (sofern möglich).
 * [ ] `Github Actions` einrichten (z. B. für `luacheck` etc.).
 * [ ] Alle neuen Features und Bugfixes committen und pushen (falls nicht möglich: Commit-Message in der Konsole ausgeben).
 

@@ -26,7 +26,7 @@ return {
   -- remotes get fetched over a fast, EDR-free network — keep it enabled there.
   checker = {
     enabled = not machine.is("workstation"),
-    notify = true,
+    notify = false,
   },
 
   ui = {

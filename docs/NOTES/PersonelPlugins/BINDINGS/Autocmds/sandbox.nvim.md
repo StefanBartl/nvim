@@ -1,10 +1,29 @@
 # sandbox.nvim — Autocmds Cheatsheet
 
-**None — confirmed genuinely zero.** No `nvim_create_autocmd`/
-`nvim_create_augroup`/legacy autocmd strings anywhere in the repo. A stub at
-`lua/containers/bindings/autocmds/README.md` confirms this is intentional:
-*"No autocmds are defined by sandbox.nvim... Add autocmd modules here
-if/when autocmds are introduced."*
+**Update 2026-07-26 (later same day)**: no longer strictly "none" — two
+**buffer-local, one-shot** `BufWipeout` autocmds exist, both pure cleanup,
+neither registering a global augroup:
 
-Cross-reference: `docs/BINDINGS.md` states "None defined" explicitly —
-matches source, safe to use as-is.
+- `lua/sandbox/ui/list_actions.lua` — stops and closes a list view's
+  `refresh_interval` timer (`vim.uv`/`luv` timer) when that view's specific
+  buffer is wiped, so an auto-refreshing list doesn't keep a timer running
+  against a buffer that no longer exists.
+- `lua/sandbox/ui/log_follow_view.lua` — stops the `logs -f` background
+  job when a `container logs-follow` buffer is wiped, so following a
+  container's logs doesn't leak a job after you close the buffer (`q`
+  inside the buffer does the same thing manually, before wipeout).
+
+Both are scoped with `buffer = bufnr` and `once = true` — they fire for
+exactly one specific scratch buffer and then remove themselves; there is
+still no `nvim_create_augroup` anywhere in the repo, and no autocmd
+listens buffer-agnostically or on a filetype/pattern basis. The prior
+"still none" note (also dated 2026-07-26, written right after the
+volumes/networks/compose/keymaps push) predates these two — they landed
+later the same day alongside `refresh_interval`
+(auto-refresh, task from `docs/ROADMAP.md` §5) and `logs-follow`
+(live log follow, same section).
+
+Cross-reference: `docs/BINDINGS.md`'s "## Autocmds" section and
+`doc/sandbox.txt` (native `:help sandbox`, added 2026-07-26) now describe
+the same two autocmds — previously both also said "None defined", caught
+and fixed as part of finishing off the ROADMAP.md items.

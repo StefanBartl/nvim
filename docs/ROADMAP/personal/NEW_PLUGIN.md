@@ -366,6 +366,7 @@ API). Ergänzend, nicht dort enthalten:
 - **Command-Präfixe:** `options.nvim` erbt `:WKDHighlightSet`/`:WKDOptSet`/
   `:WKDDiffProfile` — beibehalten (Breaking Change für eigene Muscle-Memory
   vermeiden) oder auf `:Options*` vereinheitlichen? Analog für `nvchad-ui.nvim`
+ ->auf :Options bzw :UI vereinen  vereinen
   (`:UI` ist schon generisch genug, vermutlich unverändert lassen).
 - **README-Drift bei lib.nvim-Pfaden:** Beide READMEs (`wkdnvchad/README.md`
   insbesondere) nennen lib.nvim-Kurzpfade (`lib.memo`, `lib.cross`, `lib.map`,
@@ -373,6 +374,7 @@ API). Ergänzend, nicht dort enthalten:
   `lib.lua.*`/`lib.nvim.*` liegen. Vor der Migration klären, ob das
   Dokumentations-Drift ist oder ob tatsächlich (noch) über alte Kompat-Aliase
   referenziert wird — sonst wird der Fehler beim Umzug 1:1 mitkopiert.
+  -> es gibt mein ülugin lib.nvim das ist gemeint. das soll alas ahard dependendcy dabe sein
 - **`nvchad-ui.nvim` als harte NvChad-Abhängigkeit:** anders als bei
   `lsp.nvim` (dort ist die NvChad-Kopplung ein *optionaler* Adapter) ist
   NvChad hier fachlich notwendig, nicht optional. Das sollte im

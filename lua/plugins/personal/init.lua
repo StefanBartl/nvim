@@ -53,7 +53,7 @@ plugins.add({
     config = function()
       local repos = personal_utils.repos_path
       require("pickers").setup({
-        engine = "auto",
+        engine = "snacks",
         repos_dir = repos,
         collections = {
           {
@@ -112,18 +112,20 @@ plugins.add({
           fzf_scope = "patch", -- patches telescope + fzf-lua setup() itself, no config change needed elsewhere
         },
 
-        selected_index = {
-          enabled = true,
-          position = "right_align", -- "overlay" | "right_align" | "eol" | "top" | "down"
-          highlight = { preset = "accent" },
-        },
-
         keys = {
           -- Keep the old config.telescope.keymaps horizontal-scroll bindings
           -- (that module is now redundant/removed) instead of the plugin's
           -- own <C-Left>/<C-Right> default.
           preview_scroll_left = "<M-Left>",
           preview_scroll_right = "<M-Right>",
+        },
+
+        experimental = {
+          selected_index = {
+            enabled = true,
+            position = "right_align", -- "overlay" | "right_align" | "eol" | "top" | "down"
+            highlight = { preset = "accent" },
+          },
         },
       })
     end,
@@ -193,7 +195,7 @@ plugins.add({
       keymaps = { cycle = true, delete = true },
       commands = true,
       auto_mkdir = { enable = true }, -- Creates missing parent dirs on BufWritePre (moved here from autocmds.general)
-      on_hold = { enable = false },        -- moved here from autocmds.git.line_diff_on_hold
+      on_hold = { enable = false }, -- moved here from autocmds.git.line_diff_on_hold
       conflict_marks = { enable = true }, -- moved here from autocmds.git.conflict_marks
     },
   },
@@ -307,11 +309,16 @@ plugins.add({
           -- happen (watcher_quarantine only hides the error). Opt-in / default
           -- off; enabled here to test whether the sporadic lock stops recurring.
           handle_guard = { enabled = true },
-          -- statusline defaults to true; highlights_isolate opted in here.
-          -- Confirmed working in real interactive use - replaces
-          -- config.neotree's window/{disable_statusline,highlight}.lua +
-          -- autocmds/init.lua, all removed.
-          window_style = { highlights_isolate = true },
+          -- statusline defaults to true, but that blanks the tree window's
+          -- local 'statusline' — harmless under laststatus=2 (per-window),
+          -- but with laststatus=3 (global statusline, see options.lua) that
+          -- blank local override becomes the content of the ONE shared
+          -- statusline whenever the tree is focused. Disabled here so
+          -- filetree leaves the global statusline alone.
+          -- highlights_isolate confirmed working in real interactive use -
+          -- replaces config.neotree's window/{disable_statusline,highlight}.lua
+          -- + autocmds/init.lua, all removed.
+          window_style = { statusline = false, highlights_isolate = true },
         },
       })
     end,
@@ -410,7 +417,7 @@ plugins.add({
   {
     "StefanBartl/cmdlog.nvim",
     lazy = false,
-    cmd = { "CmdlogOpen", "CmdlogSearch" },
+    cmd = { "Cmdlog" },
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
       require("cmdlog").setup({
@@ -484,7 +491,13 @@ plugins.add({
     lazy = false,
     config = function()
       require("learn_cli").setup({
-        exercises_dir = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "plugins", "learn-cli.nvim", "exercises"),
+        exercises_dir = vim.fs.joinpath(
+          vim.fn.stdpath("config"),
+          "lua",
+          "plugins",
+          "learn-cli.nvim",
+          "exercises"
+        ),
       })
     end,
   },
@@ -594,25 +607,19 @@ plugins.add({
     "StefanBartl/mdview.nvim",
     dependencies = { "StefanBartl/lib.nvim" },
     ft = { "markdown" },
-    cmd = {
-      "MDViewStart",
-      "MDViewStop",
-      "MDViewToggle",
-      "MDViewOpen",
-      "MDViewTheme",
-      "MDViewPreviewTab",
-      "MDViewShowWebLogs",
-      "MDViewLog",
-      "MDViewDiagnose",
-    },
+    cmd = { "MDView" },
     config = function()
       require("mdview").setup({
         browser = {
           -- theme = "github", -- P1-6: neues Theme (auch: catppuccin, dark-dimmed, plain, github) -> FUNKTioNNERTT
-          highlighter = "hljs", -- P1-5: exakte VSCode/TextMate-Themes (oder "hljs" / "none") - shiki highligihted nichts, hljs funkltiert wunderbar! höjs als default, shiki  wenn leicht debuggen dann debuggen oder wenn performance technisch ewwas dafür spricht, weil shiki besser als hljs ist, dnn jedeflals debuggen, ansosnten lassen wenn nichts dagegen spricht und als default; wäre es auch möglich, de color_m<_ascii api zu nutzen? dann könnten wir diese sdependecmy streichen und cmein eigenes colotr_my_ascii plugin nutzen
-          -- focus = "nvim", -- P2-9: Fokus bleibt in nvim (Windows best-effort) - wenn dies optin aktiv ist, dann öffnet sich nichts im browser! Bug!
+          highlighter = "hljs", -- P1-5: shiki-Bug wird untersucht (siehe mdview.nvim-Session-Notizen); hljs bleibt bis dahin Default
+          focus = "nvim", -- P2-9: Fokus bleibt in nvim. Bug (jobstart-Quoting) war in b794c27 bereits gefixt, jetzt aktiviert.
 
           cursor_marker = "caret",
+        },
+        dev = {
+          binary_path = "E:/repos/mdview.nvim/native/server/mdview-server.exe",
+          web_root = "E:/repos/mdview.nvim/dist/client",
         },
         standalone = { binary_path = "E:/repos/mdview.nvim/native/server/mdview-server.exe" },
         experimental = {
@@ -633,7 +640,6 @@ plugins.add({
     end,
   },
 
-
   {
     "StefanBartl/language.nvim",
     event = "VeryLazy",
@@ -652,7 +658,6 @@ plugins.add({
       })
     end,
   },
-
 })
 
 return plugins.export()

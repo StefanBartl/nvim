@@ -6,7 +6,7 @@ period). This was the **first** composer migration — the pilot for the whole
 `lib.nvim.usercmd.composer` module.
 
 Source: `lua/mdview/bindings/usrcmds/init.lua` + one action module per
-subcommand (`start/`, `stop.lua`, `open.lua`, `toggle.lua`, `detach.lua`,
+subcommand (`start/`, `stop.lua`, `open.lua`, `toggle.lua`,
 `standalone.lua`, `show_weblogs.lua`, `preview_tab.lua`, `diagnose.lua`,
 `theme.lua`, `log.lua`, `file_log.lua`, `cursor.lua`, `sync.lua`, `zoom.lua`,
 `reveal.lua`, `blanklines.lua`, `overlay.lua`, `breadcrumbs.lua`)
@@ -21,8 +21,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 | `:MDView stop` | Stop the relay, detach autocommands |
 | `:MDView toggle [file] [cwd=...]` | Start if stopped, stop if running |
 | `:MDView open` | Re-open a browser tab against the running session |
-| `:MDView detach [file] [--no-browser]` | Preview in a **detached minimal nvim** that outlives this instance |
-| `:MDView standalone [file] [--no-browser]` | Preview with **no nvim in the chain** (relay watches the file on disk) |
+| `:MDView standalone [file] [--no-browser]` | Preview with **no nvim in the chain** (relay watches the file on disk); outlives `:qa` |
 | `:MDView preview-tab` | In-nvim tab preview (Treesitter mirror; no relay/browser) |
 
 ### Live preview controls (push to the open tab, no reload)
@@ -79,53 +78,55 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 | `:MDView diagnose [path]` | Write a full diagnostics report and open it |
 | `:MDView breadcrumbs [export\|clear]` | :Session breadcrumbs (doc + heading over time) |
 
-## detach vs. standalone — which one
+## background preview = `standalone` only (`detach` removed)
 
 |              | Survives `:qa` |  Unsaved buffer  | Scroll sync / cursor |
 | ------------ | -------------- | ---------------- | -------------------- |
 |   `start`    |       ✗        |        ✓         |          ✓           |
-|   `detach`   |       ✓        |        ✓         |          ✓           |
 | `standalone` |       ✓        | ✗ (file on disk) |          ✗           |
 
-- **`detach`** = second headless nvim loading *only* mdview + lib.nvim via
-  `scripts/minimal_init.lua`. Full feature set, isolated from my config —
-  which also makes it the fastest way to answer "mdview bug or my config?".
 - **`standalone`** = relay's own `--watch` mode, no nvim at all. Runs on
   `server_port + 100` (43319) so it can sit next to a normal session.
-  Previews the file **as saved**.
-- Terminal entry points: `scripts/mdview-bg.sh` / `.ps1`
-  (`nvim +MDView --background file.md` is NOT valid nvim syntax — `+cmd` takes
-  no trailing flags; the wrappers are the supported spelling).
+  Previews the file **as saved**. Reliable in every test (open, live-update on
+  save, no interference with a normal session).
+- Terminal entry points: `scripts/mdview-bg.sh` / `.ps1` — now run a throwaway
+  headless nvim that fires `:MDView standalone` then quits (verified: launcher
+  exits in ~240ms, relay survives detached). `nvim +MDView --background file.md`
+  is NOT valid nvim syntax (`+cmd` takes no trailing flags); the wrappers are
+  the supported spelling.
 - ⚠️ `standalone` needs a relay with `--watch` (**v0.3.0+**). The installed
   v0.2.0 release binary does **not** have it. Until a release ships, set:
   ```lua
   standalone = { binary_path = "E:/repos/mdview.nvim/native/server/mdview-server.exe" }
   ```
-  mdview probes the binary and errors clearly if it's too old (it used to fail
-  completely silently, since a detached process has no pipes).
+  Env override for the wrappers: `$MDVIEW_STANDALONE_BIN`. mdview probes the
+  binary and errors clearly if it's too old (it used to fail completely
+  silently, since a detached process has no pipes).
 
-### `detach` caveats found while testing (still open, see Roadmap.md BUGS #8-10)
+### Why `detach` was cut (my test findings, confirmed by Claude's own analysis)
 
-- **Browser tab can open with a multi-minute delay, or not at all** (`mdview-bg.ps1`
-  too). Cause not fully isolated: `standalone`'s browser-open is one direct Go-side
-  `rundll32` call; `detach`/`mdview-bg.ps1` route health-poll AND browser-open
-  through Neovim's own `jobstart` from a headless, fully stdio-less, detached
-  instance — three chained child-process spawns instead of one. Reproduced
-  working end-to-end in one test, unreliable timing in another — looks
-  environment/Neovim-job-control-specific, not a plain logic bug.
-- **Editing the file from a separate/new Neovim instance does NOT reach the
-  detached preview** — verified: no live-push, no scroll-sync. The detached
-  instance keeps its own buffer from spawn time; there's no file-watcher
-  (`checktime`/`autoread`/`fs_event` — none exist) and `detach.lua` doesn't pass
-  `--listen`, so there's no way to reattach to it either. In practice `detach`'s
-  advertised "live buffer push because a real Neovim drives it" only works if
-  something edits inside that exact instance — not achievable today.
-- **Closing the preview tab does NOT stop the detached instance**, despite the
-  start notification saying so. `User MDViewSessionEnded` only fires from
-  `:MDViewStop` — nothing observes a tab close, and the default (non-isolated)
-  `browser.open_mode` gives no process handle to detect it with anyway. The
-  *only* reliable way to end a `:MDView detach` session right now is
-  `Stop-Process`/`taskkill` on the pid from the start notification.
+The first commit shipped `:MDView detach` (a second headless nvim). Testing
+killed it — it was strictly dominated by `standalone`:
+
+- **Browser tab opened after 10–15 min, or never** (`mdview-bg.ps1` too). The
+  headless nvim's main loop is input-poll-driven; idle with no stdin, it
+  services pending libuv job/pipe events on very coarse wakeups. `standalone`'s
+  browser-open is one direct Go-side `rundll32` call — no headless nvim in the
+  path, so none of this.
+- **Editing the file from another nvim did NOT reach the detached preview** —
+  no live-push, no scroll-sync. The detached instance keeps its spawn-time
+  buffer; no `checktime`/`autoread`/`fs_event`, and no `--listen` to reattach.
+  So detach's advertised "live buffer because a real nvim drives it" never
+  materialised — nothing edits inside a headless instance.
+- **Closing the tab did NOT stop it** — nothing observed a tab close; only
+  `taskkill` on the pid worked.
+
+Net: static snapshot + flaky vs. `standalone`'s live-file-following + robust.
+Decision (2026-07-26): remove `detach`, `detach.lua`, the `User
+MDViewSessionEnded` event (was only there to auto-quit the detached instance),
+and repoint the wrappers at `standalone`. `detached.lua` stays — `standalone`
+uses its `spawn`/`resolve_target`. Rationale preserved in
+`docs/Roadmap/KONZEPT_headless_und_standalone.md`.
 
 ## Notes
 
@@ -134,12 +135,12 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
   can appear before or after the file arg — this is the pattern for any route
   whose grammar doesn't fit strict positional args (later formalized as
   Phase 6 flag support, motivated partly by this case and by `replacer.nvim`).
-- `detach`/`standalone` **do** use the Phase 6 schema (`args` + `flags`), i.e.
-  the thing `start` predates: `{name="file",type="PATH",optional=true}` plus
+- `standalone` uses the Phase 6 schema (`args` + `flags`), i.e. the thing
+  `start` predates: `{name="file",type="PATH",optional=true}` plus
   `flags={{name="no-browser",bool=true}}` → `ctx.args.file` / `ctx.flags`.
-  Gotcha hit while building these: once a route declares `args`, `ctx.rest`
-  holds only *leftovers beyond the schema* — reading `ctx.rest` there silently
-  gets you nothing. Declare a schema **or** use `rest`, never mix.
+  Gotcha hit while building it: once a route declares `args`, `ctx.rest` holds
+  only *leftovers beyond the schema* — reading `ctx.rest` there silently gets
+  you nothing. Declare a schema **or** use `rest`, never mix.
 - `toggle` now calls `start`/`stop`'s functions **directly** (no more
   `vim.cmd("MDViewStart ...")` string round-trip).
 - Found + fixed a pre-existing bug during verification: `:MDView log`

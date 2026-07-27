@@ -15,9 +15,6 @@ local M = {}
 ---@return table caps
 ---@return LspCaps.Warning[] warnings
 function M.get()
-  ---@type Lsp.Capabilities.Warning[]
-  local warnings = {}
-
   -- Start with base LSP capabilities
   local caps = lsp.protocol.make_client_capabilities()
   ---@type LspCaps.Warning[]
@@ -58,17 +55,10 @@ function M.get()
 
   -- Explizit completion capabilities verifizieren
   if not caps.textDocument or not caps.textDocument.completion then
-<<<<<<< HEAD
-    table.insert(warnings, {
-      level = vim.log.levels.ERROR,
-      msg = "NO COMPLETION CAPABILITIES! Check if nvim-cmp or blink.cmp is installed!",
-    })
-=======
     warnings[#warnings + 1] = {
       level = "error",
       msg = "⚠️  NO COMPLETION CAPABILITIES! Check if nvim-cmp or blink.cmp is installed!",
     }
->>>>>>> 8b6135fd (Decouple lsp.core.capabilities from notify; progress bar for :UpdateRepos)
 
     -- Fallback: Minimale completion capabilities manuell setzen
     caps.textDocument = caps.textDocument or {}
@@ -103,14 +93,7 @@ function M.get()
         }
       }
     }
-<<<<<<< HEAD
-    table.insert(warnings, {
-      level = vim.log.levels.WARN,
-      msg = "Using FALLBACK completion capabilities",
-    })
-=======
     warnings[#warnings + 1] = { level = "warn", msg = "⚠️  Using FALLBACK completion capabilities" }
->>>>>>> 8b6135fd (Decouple lsp.core.capabilities from notify; progress bar for :UpdateRepos)
   end
 
   return caps, warnings
