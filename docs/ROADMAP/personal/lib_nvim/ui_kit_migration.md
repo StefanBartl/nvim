@@ -49,15 +49,15 @@ Fast vollständig migriert — verbleibend nur die folgenden bewusst nicht
 migrierten Sonderfälle (dokumentiert im jeweiligen Code):
 
 - `diff.nvim/lua/diff/core/init.lua:197` (`prompt_file`) — braucht
-  `completion = "file"` (Cmdline-Tab-Completion), für die `kit.input` (reiner
-  Insert-Mode-Buffer) noch kein Äquivalent hat.
+`completion = "file"` (Cmdline-Tab-Completion), für die `kit.input` (reiner
+Insert-Mode-Buffer) noch kein Äquivalent hat.
 - `dap.nvim/lua/wkddap/languages/{zig,rust,c,assembly}.lua`s "Path to
-  executable"-Prompts — gleiche `completion="file"`-Einschränkung wie bei
-  diff.nvim, plus nvim-dap-Coroutine-Kontext (`coroutine.wrap()`).
+executable"-Prompts — gleiche `completion="file"`-Einschränkung wie bei
+diff.nvim, plus nvim-dap-Coroutine-Kontext (`coroutine.wrap()`).
 - `color_my_ascii.nvim/lua/color_my_ascii/commands/fence/export.lua:178`
-  (No-Path-Prompt in `M.run`) — gleicher Grund (`completion = 'file'`).
+(No-Path-Prompt in `M.run`) — gleicher Grund (`completion = 'file'`).
 - nvim-Config `lsp/debug_adapters/dotnet.lua:24` (DLL-Pfad) — gleicher Grund
-  wie dap.nvim/diff.nvim (`completion="file"` + nvim-dap-Coroutine-Kontext).
+wie dap.nvim/diff.nvim (`completion="file"` + nvim-dap-Coroutine-Kontext).
 
 ## 4. Eigenbau-Floats (Menü/Picker) → `kit.menu`/`kit.select`/`kit.layout`
 
@@ -85,7 +85,15 @@ Call-Sites einheitlich die Callback-Form nutzen können, ohne pro Eintrag zu
 verzweigen. Nur Guard-Clause ist als `is_async` markiert und läuft über
 `kit.form` statt Zeilen direkt zurückzugeben.
 
-Kein neuer Baustein nötig, aber erwähnenswert: Sekret-/Passwort-Eingabe
-(`sandbox.nvim/registry_commands.lua:30`, `vim.fn.inputsecret`) hat aktuell
-keine kit-Entsprechung — falls `kit.input` maskierte Eingabe unterstützen
-soll, wäre das der einzige Call-Site dafür im Audit.
+Sekret-/Passwort-Eingabe ✅ erledigt (2026-07-27) — `kit.input({secret=true})`
+(Phase 10, Commit `fa4c2f6` in lib.nvim, gepusht auf `main`; siehe
+UI-KIT-CONCEPT.md §13c) maskiert die Eingabe zeichenweise über `conceal`
+(`opts.mask` überschreibt das Standard-`"*"`), neu berechnet aus dem echten
+Buffer-Inhalt bei jedem Edit (Paste, Backspace, Edits in der Mitte — alles
+funktioniert ohne Keystroke-Diffing). `on_submit` bekommt weiterhin den
+echten Klartext; Undo ist auf diesem Buffer deaktiviert
+(`undolevels = -1`), Swapfile war auf jedem kit-Scratch-Buffer ohnehin schon
+aus. Migrationskandidat noch offen:
+`sandbox.nvim/lua/sandbox/bindings/usrcmds/registry_commands.lua:30` —
+einziger `vim.fn.inputsecret`-Call-Site im Audit, noch nicht auf
+`kit.input({secret=true})` umgestellt.
