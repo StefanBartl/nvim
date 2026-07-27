@@ -13,15 +13,13 @@
 
 ## Bug
 
-[ ] filetree.nvim handle_guard: seit 2026-07-21 08:36  aktiv (Windows watcher-lock fix).
-    Über 1-2 Tage prüfen: tritt der sporadische "kann Ordner/File nach move/rename
-    nicht löschen" EPERM-Lock nochmal auf? Falls nein → fix bestätigt. Falls ja →
-    handle_guard release greift nicht in dem Fall, Details an Claude.
 
-[] Refersh nachdem man eine datei verschoben hat; bzw bei allen aktionen, die eine änderung im filetree bewirken
-
-- [ ] Webn man "a" im filtree ausführt, dann wird prompt aufgerufen welchen fillepath man erstellen wirll. als title des windows wird der pfad angezeigt. dort fehltr aber der ertebuchstabe, also wenn der pfad Notes/OSV ist steht als title im prompt window >otes/OSV/ (append / for a directory):
-  Das höängt vielleiht mit dfem lib.nvim/nvim/ui.kit zusammen
+[] - Refersh nachdem man eine datei verschoben hat; bzw bei allen aktionen, die eine änderung im filetree bewirken, also auch :File delete oder wenn man mit `TAB` von einem buffer zum nächsten geht, da sollte immer filetree sich updaten, also eigentlich immer, wenn der aktuelle context des buffers nicht mher mit dem cwd  übereinstimmt...
+[] - Einen "mode", denn man per keymap bzw per usrcmds ausführen kann, und indem sich das cwd des filetree.nvim
+  -  nicht ändert, egal welche cwd ders aktuellen buffer sit, also sozusagen ein "sperren" des cwd im filetree
+  - ein mode, der immer das repository als root hat, also mit .git oder /node_modules kann amn erkenn, onb dass das root ist, und wenn man dann einen buffer mit E:\repos\Notes\tes.md offen hat und der mode ist on, dann idst der filetree solange /Notes als cwd, bis man ineinen buffer eine file offen hat, die auß´erhabl des /Notes ios, dann seetzt man diesen cwd
+  - das ganz wäre idealö, wenn im filetree links unten (wenn man filetree links offen hat), über der statusline ganz links ein kleine anzeige, "PROJECT" für das lock innerhabder projekte, "LOCK" für wenn man ein cwd einloggt und nichts wenn man keinen mode hat. vielliht gibt es auach noch andre modes, die mir grad nicht einfallen aber sinnvoll sdind
+  denkjst, du wir bekommen das hin? ein konzept bitte!
 
 ---
 
