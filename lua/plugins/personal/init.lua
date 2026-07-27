@@ -203,6 +203,12 @@ plugins.add({
   {
     "StefanBartl/gopath.nvim",
     event = "VeryLazy",
+    -- Optional, not required: every nvim-treesitter call in gopath.nvim
+    -- (health.lua's parser check, providers/treesitter.lua's Neovim-0.9
+    -- ts_utils fallback) is pcall-guarded; almost everything else runs on
+    -- built-in vim.treesitter. Kept here only because telescope.lua already
+    -- pulls it in as a hard dep, so listing it costs nothing and documents
+    -- the (optional) coupling explicitly.
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     opts = {
       mode = "hybrid",
@@ -418,7 +424,6 @@ plugins.add({
     "StefanBartl/cmdlog.nvim",
     lazy = false,
     cmd = { "Cmdlog" },
-    dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
       require("cmdlog").setup({
         picker = "telescope",

@@ -471,9 +471,37 @@ D: Funktions-Ids + State-Achsen       ─┘                       ├→ F: Ani
 
 # Konzept: `:LibBrowse` — die Map im Editor (`ui.kit`)
 
-> Status: **geplant**. Im ursprünglichen Konzept unter Phase G als „später,
-> eigener Scope" vertagt. Baut auf `lib.nvim.ui.kit` (`layout.mount`,
-> `surface`, `picker`) und dem vorhandenen IR auf — kein neuer Scanner.
+> Status: **umgesetzt** (N-A bis N-D in einem Zug). Modul:
+> `lua/lib/nvim/docmap/browse/` (`source.lua` = Datenherkunft, `view.lua` =
+> pure State→Zeilen, `init.lua` = Layout/State/Keymaps). Command `:LibBrowse
+> [live] [modul]` neben `:LibMap` registriert, Tests in
+> `docs/TESTS/docmap_browse_spec.lua`, Doku in `browse/README.md` +
+> `docs/EXAMPLES/docmap-browse.lua`.
+>
+> **Zwei Fehler, beide erst durchs Benutzen gefunden, nicht durchs Lesen:**
+>
+> 1. **Artefakt ≠ In-Memory-IR.** `to_json` schreibt `nodes` als **Array** in
+>    Walk-Reihenfolge (genau das macht die Datei byte-deterministisch — die
+>    Key-Reihenfolge eines JSON-Objekts wäre es nicht) und hat gar kein
+>    `order`-Feld. Im Speicher ist `nodes` eine Map und `order` existiert.
+>    Ohne Rehydrierung fand *jeder* Node-Lookup nichts, der Browser zeigte
+>    „no such node" für alles. Dazu: `null` dekodiert per Default zu
+>    `vim.NIL`, was **truthy** ist — `node.module or node.name` hätte
+>    „userdata: 0x…" gerendert und `types_detail == nil` (das „LuaLS lief
+>    nie"-Signal) wäre nie wahr geworden. Also `luanil` beim Dekodieren.
+> 2. **Namespace-Auflösung, exakt derselbe Bug wie bei `:LibMap graph`
+>    (Debug-Runde Punkt 4).** `:LibBrowse lib.nvim.fs` landete still auf der
+>    Wurzel, weil `lua/lib/nvim/fs` keine `init.lua` hat und damit kein
+>    `@module` deklariert. Jetzt über das schon dafür exportierte
+>    `command.find_node` statt einer zweiten Kopie der Ableitung.
+>
+> Dazu ein echter Defekt in der eigenen Interaktion: `<CR>` wertete einen
+> gecachten Cursor-Index aus, den nur ein `CursorMoved`-Autocmd pflegt — mit
+> Cursor auf Zeile 3 stieg es in Zeile 1 ab. Aktionen lesen die
+> Fensterposition jetzt direkt; der Cache dient nur noch dem Redraw.
+>
+> Baut auf `lib.nvim.ui.kit` (`layout.mount`, `surface`, `picker`) und dem
+> vorhandenen IR auf — kein neuer Scanner.
 
 ## N0. Was das ausdrücklich *nicht* ist
 
@@ -569,14 +597,30 @@ Der Verlaufsstapel ist die Entsprechung zur Browser-History. Er ist hier
 ## N5. Phasen
 
 ```
-N-A  Struktur-Navigator: Layout, Liste, Detail, Baum, gd, q        (~1 Tag)
-N-B  Deps- und Calls-Modus + Richtung/Tiefe                        (~½ Tag)
-N-C  Quickfix (gq) + Fuzzy-Sprung (/)                              (~½ Tag)
-N-D  Live-Modus über install({watch=true}) + on_change             (~2 h)
+N-A  Struktur-Navigator: Layout, Liste, Detail, Baum, gd, q        ✅
+N-B  Deps- und Calls-Modus + Richtung/Tiefe                        ✅
+N-C  Quickfix (gq) + Fuzzy-Sprung (/)                              ✅
+N-D  Live-Modus über install({watch=true}) + on_change             ✅
 ```
 
-N-A allein ist schon nützlich (Modulbaum + Doku ohne den Browser zu öffnen) und
-lässt sich bewerten, bevor N-B die Kanten dazunimmt.
+Alle vier in einem Zug umgesetzt statt gestaffelt: die Modus-Umschaltung ist
+die tragende Achse des ganzen Views (`state.mode` steuert Liste, Detail *und*
+Statuszeile), N-A allein hätte sie eingebaut und N-B hätte sie sofort wieder
+angefasst.
+
+**Abweichungen von der Konzeptskizze:**
+
+- **`gd` auf einer Calls-Zeile springt zur *Deklaration*, nicht zur
+  Call-Site.** Die `line` einer Call-Kante ist die Stelle, an der der Aufruf
+  *steht* — also in der Datei, die man ohnehin gerade ansieht. Damit hätte
+  jede Zeile der Liste zurück an den Ausgangspunkt geführt. Die Call-Site
+  bleibt als `site_line`/`site_source` erhalten.
+- **`gq` und `gd` schließen den View.** Die Floats liegen über dem ganzen
+  Editor; „zu einer Datei springen", die man nicht sehen kann, ist kein
+  Sprung.
+- **Externe Requires stehen mit in der Deps-Liste** (als `○`, nicht
+  navigierbar). Sie ganz wegzulassen lässt ein Modul weniger Abhängigkeiten
+  haben, als es hat.
 
 ## N6. Risiken und offene Fragen
 
@@ -588,6 +632,136 @@ lässt sich bewerten, bevor N-B die Kanten dazunimmt.
 | `layout.mount` hat keine Keymap-Schnittstelle | Keymaps über `slot.bufnr`; falls mehr Komponenten das brauchen, gehört es in `ui.kit` |
 | Zwei UIs driften auseinander | Beide lesen dieselbe IR; alles Ableitbare bleibt abgeleitet, nichts wird doppelt gepflegt |
 | Types-Modus ohne `--full` leer | Wie im Browser: erklärende Zeile statt leerer Liste |
+
+---
+
+# Feature-Ideen (nach Wert/Aufwand sortiert)
+
+> Stand: alles bisher Geplante ist umgesetzt und durchgetestet. Was folgt, sind
+> neue Ideen — jede mit dem Grund, warum sie sich lohnt, und dem, was sie
+> kostet. Die vier Kanten-Arten (`require`, `call`, `type`, plus
+> `requires_external`) sind das Kapital, aus dem fast alles davon fällt.
+
+## F1. `:LibMap why <a> <b>` — der kürzeste Abhängigkeitspfad
+
+> Aufwand: **~2 h**. Wert: hoch.
+
+„Warum zieht `lib.nvim.ui.kit` am Ende `lib.nvim.fs` herein?" ist eine Frage,
+die man beim Aufräumen ständig hat, und der Graph beantwortet sie exakt: BFS
+über die `require`-Kanten, kürzester Pfad, ausgegeben als Kette.
+
+```
+:LibMap why lib.nvim.ui.kit lib.nvim.fs
+  lib.nvim.ui.kit → lib.nvim.ui.kit.surface → lib.nvim.window → lib.nvim.fs
+                                              (lazy)
+```
+
+Lohnt sich, weil es die Frage beantwortet, für die man sonst den Deps-View von
+Hand abläuft. Load-time- und Lazy-Kanten sind schon unterschieden, der Pfad
+kann also dazusagen, ob er beim Laden oder erst beim Aufruf entsteht — was den
+Unterschied zwischen „muss weg" und „ist in Ordnung" ausmacht. Im Browser als
+fünfter Modus, im Editor als eigener `:LibBrowse`-Modus.
+
+## F2. Blast-Radius: was bricht, wenn ich das ändere
+
+> Aufwand: **~2 h**. Wert: hoch.
+
+Die transitive Hülle von `required_by` ist die Antwort auf „wie riskant ist
+diese Änderung". Sie steht schon in den Kanten, ist aber nirgends sichtbar.
+
+- Detail-Pane und Browse-Detail: eine Zeile `impact: 37 Module, 4 direkt`.
+- `:LibBrowse` bekommt `gI` — die ganze Hülle in die Quickfix-Liste.
+- Optional als Check: ein Modul mit sehr großem Radius *und* ohne README ist
+  ein Kandidat für „dokumentieren, bevor es jemand anfasst".
+
+Der Reiz ist, dass es dieselbe Zahl vor und nach einem Refactor gibt. Ein
+Umbau, der den Radius halbiert, hat nachweislich etwas verbessert.
+
+## F3. `:LibMap diff <ref>` — was hat dieser Branch an der Struktur geändert
+
+> Aufwand: **~4 h**. Wert: hoch, besonders für Review.
+
+Beide Seiten sind IRs, der Vergleich ist ein Mengen-Diff:
+
+```
+:LibMap diff HEAD~5
+  + Modul   lib.nvim.system.job
+  + 12 Funktionen, - 3
+  + Abhängigkeit  lib.nvim.docmap.browse → lib.nvim.ui.kit
+  ! Zyklus neu    lib.a ↔ lib.b
+  ! Blast-Radius  lib.nvim.notify  29 → 34
+```
+
+Das ist der Punkt, an dem das committete Artefakt aufhört, nur ein Bild zu
+sein, und anfängt, ein *Vergleichspunkt* zu sein — es liegt ja bereits in jedem
+Commit. Als CI-Schritt auf einem PR wäre die Ausgabe eine Zusammenfassung, die
+kein Mensch von Hand erstellt.
+
+Aufwandstreiber: die alte Fassung besorgen (`git show <ref>:docs/map/module_map.json`)
+und ältere Schema-Versionen tolerieren, statt an ihnen zu scheitern.
+
+## F4. `@internal` — die öffentliche Fläche schärfen
+
+> Aufwand: **~1 h**. Wert: mittel, aber Voraussetzung für F5.
+
+Ein Tag im Doc-Block, der eine Funktion als nicht-öffentlich markiert. Wirkung:
+`undocumented-param` überspringt sie, der Map-Baum kann sie ausblenden
+(Schalter), und F5 kann sie überhaupt erst sinnvoll auswerten.
+
+Billig, weil `functions.lua` die Tags schon parst — es ist ein `elseif`.
+
+## F5. Tote Funktionen (opt-in, nur `info`)
+
+> Aufwand: **~3 h**. Wert: mittel — und mit einer echten Falle.
+
+Eine Funktion ohne einen einzigen auflösbaren Aufrufer im Baum *ist* ein
+Kandidat. Die Falle: **eine Bibliothek besteht aus Funktionen, die absichtlich
+keinen internen Aufrufer haben** — das ist ihr Zweck. Ohne Gegenmaßnahme würde
+der Check die halbe öffentliche API melden und wäre sofort wertlos.
+
+Also nur dort, wo die Aussage trägt:
+- `local function` auf Modulebene ohne Aufrufer — das ist eindeutig tot;
+- mit `@internal` markierte Funktionen ohne Aufrufer;
+- alles andere nur, wenn `opts.dead_code = true` gesetzt ist.
+
+Und wie beim Call-Graph generell: nie `error`-Severity, weil dynamischer
+Dispatch unsichtbar bleibt.
+
+## F6. DOT-/Graphviz-Export
+
+> Aufwand: **~1 h**. Wert: mittel.
+
+`:LibMap graph deps --dot > deps.dot`. Graphviz kann Dinge, die weder das
+Layer-BFS im Browser noch Mermaid können: echte Kantenführung, Ranking,
+Cluster nach Namespace, und Ausgabe in Druckqualität. Der Renderer ist im
+Kern dieselbe Kantenschleife wie `mermaid.render_deps`.
+
+## F7. `gO` — von `:LibBrowse` in die HTML-Seite springen
+
+> Aufwand: **~30 min**. Wert: klein, aber verbindet die zwei Hälften.
+
+Der Editor-Navigator kennt Modus, Zentrum, Richtung, Tiefe und Funktion. Der
+gesamte Zustand der HTML-Seite steckt in ihrem URL-Fragment. `gO` ist damit
+buchstäblich ein `format()` plus `:LibMap open` — und beantwortet „das will ich
+jetzt doch als Bild sehen", ohne die Stelle erneut zu suchen.
+
+## Bewusst *nicht* auf der Liste
+
+| Idee | Warum nicht |
+|---|---|
+| Artefakt beim Speichern automatisch neu schreiben | Erzeugt Diffs, die niemand beabsichtigt hat — dieselbe Begründung, mit der der Pre-Commit-Hook nicht regeneriert. Seit der CI-Job Staleness fängt, ist der Nutzen ohnehin weg. |
+| Den Graphen im Terminal zeichnen | Bereits in `browse/README.md` ausargumentiert: ein Zellraster kann das nicht besser als die Seite, die es schon gibt. |
+| Vollständiger Lua-Parser für einen perfekten Call-Graph | Die vier exakten Formen decken diesen Baum ab; der Rest ist dynamischer Dispatch, den auch ein Parser nicht sieht. Der Aufwand steht in keinem Verhältnis. |
+| Metriken über die Zeit (Trend-Diagramme) | Bräuchte eine Historie, die niemand pflegt. F3 beantwortet dieselbe Frage punktuell und ohne Datenhaltung. |
+
+## Reihenfolge, wenn es nach mir ginge
+
+**F1 → F2 → F7** zuerst: zusammen etwa ein halber Tag, alle drei fallen direkt
+aus vorhandenen Daten, und sie machen aus der Karte ein Werkzeug zum
+*Entscheiden* statt nur zum Anschauen. **F3** danach, weil es den größten
+Einzelnutzen hat, aber auch am meisten kostet. **F4/F5** nur, wenn tote
+Funktionen ein tatsächliches Problem sind — sonst ist es Arbeit für einen
+Check, den man wegklickt.
 
 ---
 
