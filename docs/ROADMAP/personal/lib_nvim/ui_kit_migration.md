@@ -75,12 +75,6 @@ migrierten Sonderfälle (dokumentiert im jeweiligen Code):
   (No-Path-Prompt in `M.run`) — gleicher Grund (`completion = 'file'`).
 - nvim-Config `lsp/debug_adapters/dotnet.lua:24` (DLL-Pfad) — gleicher Grund
   wie dap.nvim/diff.nvim (`completion="file"` + nvim-dap-Coroutine-Kontext).
-- `buffer_ctx.nvim/ops/boilerplate/templates/utils.lua:18` (`M.prompt_user`/
-  `process_prompts`, von `guard.lua`s `guard_interactive` genutzt) — 4-Ebenen-
-  synchrone Kette (`:Insert`/`:Copy`-Dispatch → `boiler.get()` →
-  `guard_interactive()` → `process_prompts()` → `prompt_user()`), nur für
-  einen einzigen 2-Felder-Call-Site. `kit.form` (siehe Abschnitt 5) existiert
-  jetzt und wäre eine Option — noch nicht umgesetzt.
 
 ## 4. Eigenbau-Floats (Menü/Picker) → `kit.menu`/`kit.select`/`kit.layout`
 
@@ -90,21 +84,13 @@ migrierten Sonderfälle (dokumentiert im jeweiligen Code):
 ## 5. Fehlende UI-Bausteine in lib.nvim.ui.kit
 
 Alle drei ursprünglich fehlenden Bausteine sind inzwischen gebaut
-(`kit.viewer`, `kit.form`, `kit.live_input`) — `kit.viewer` und
-`kit.live_input` sind an jedem Call-Site im Audit bereits migriert.
-Verbleibend nur:
-
-- **`kit.form`** — `sandbox.nvim/bindings/usrcmds/container_commands.lua:380`
-  bereits migriert. `buffer_ctx.nvim/ops/boilerplate/templates/utils.lua:18`
-  (`process_prompts`, genutzt von `guard.lua`s `guard_interactive`) **bewusst
-  offen gelassen**: `boiler.get()` (der Call-Site-Aufrufer) ist synchron und
-  wird von jedem der ~10 Boilerplate-Registry-Einträge so aufgerufen, nicht
-  nur vom Guard-Clause-Template — `kit.form` ist async (Callback-basiert).
-  Migration würde den Sync-Contract von `boiler.get()` für alle Templates
-  brechen, nur um einen einzigen 2-Felder-Call-Site zu bedienen. Braucht eine
-  bewusste Architekturentscheidung (z. B. optionaler Callback-Parameter an
-  `boiler.get()`, Default = synchrones Verhalten), keine spekulative
-  Umstellung ohne Rücksprache.
+(`kit.viewer`, `kit.form`, `kit.live_input`) und an jedem Call-Site im Audit
+migriert — inklusive `buffer_ctx.nvim`s Guard-Clause-Template: `boiler.get()`
+akzeptiert jetzt einen optionalen `callback`-Parameter, den auch die
+synchronen Templates (alle außer Guard-Clause) unverändert aufrufen, sodass
+Call-Sites einheitlich die Callback-Form nutzen können, ohne pro Eintrag zu
+verzweigen. Nur Guard-Clause ist als `is_async` markiert und läuft über
+`kit.form` statt Zeilen direkt zurückzugeben.
 
 Kein neuer Baustein nötig, aber erwähnenswert: Sekret-/Passwort-Eingabe
 (`sandbox.nvim/registry_commands.lua:30`, `vim.fn.inputsecret`) hat aktuell
@@ -113,13 +99,11 @@ soll, wäre das der einzige Call-Site dafür im Audit.
 
 ## 6. Priorisierung / Reihenfolge-Vorschlag (verbleibend)
 
-1. **`buffer_ctx.nvim`s `boiler.get()`-Sync/Async-Frage** (Abschnitt 5) —
-   Architekturentscheidung nötig, siehe oben.
-2. **Abschnitt 2's "Vorsicht"-Fälle** (open.nvim, gopath/alternate,
+1. **Abschnitt 2's "Vorsicht"-Fälle** (open.nvim, gopath/alternate,
    emojis.nvim, diff.nvim/run_buffers, cascade.nvim/word_cycle) — alle
    respektieren bewusst das vom User konfigurierte Picker-Backend; nur nach
    expliziter Rücksprache migrieren, ob dieses Verhalten aufgegeben werden
    soll.
-3. **`recommender.nvim`s Custom-Highlight-Picker** (Abschnitte 2+4) — eher
+2. **`recommender.nvim`s Custom-Highlight-Picker** (Abschnitte 2+4) — eher
    ein Kandidat für ein neues kit-Feature ("custom highlight per item") als
    für eine 1:1-Migration.
