@@ -3,9 +3,7 @@
 
 local M = {}
 
-local api = vim.api
 local lsp = vim.lsp
-local window = require("lib.nvim.window")
 
 --- Get filetype-to-server mapping
 ---@return table<string, string[]>
@@ -107,28 +105,13 @@ function M.execute()
     table.insert(lines, "  (none)")
   end
 
-  -- Show in floating window
-  local buf = api.nvim_create_buf(false, true)
-  api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.bo[buf].filetype = "markdown"
-  vim.bo[buf].modifiable = false
-
-  local width = math.min(80, vim.o.columns - 4)
-  local height = math.min(#lines + 2, vim.o.lines - 4)
-
-  local win = api.nvim_open_win(buf, true, {
-    relative = "editor",
-    width = width,
-    height = height,
-    row = math.floor((vim.o.lines - height) / 2),
-    col = math.floor((vim.o.columns - width) / 2),
-    style = "minimal",
-    border = "rounded",
+  require("lib.nvim.ui.kit").viewer({
+    lines = lines,
     title = " LSP Info ",
-    title_pos = "center",
+    width = math.min(80, vim.o.columns - 4),
+    height = math.min(#lines + 2, vim.o.lines - 4),
+    filetype = "markdown",
   })
-
-  window.nice_quit(win)
 end
 
 return M
