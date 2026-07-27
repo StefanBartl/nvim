@@ -637,12 +637,13 @@ angefasst.
 
 # Feature-Ideen (nach Wert/Aufwand sortiert)
 
-> Stand: alles bisher Geplante ist umgesetzt und durchgetestet. Was folgt, sind
-> neue Ideen — jede mit dem Grund, warum sie sich lohnt, und dem, was sie
-> kostet. Die vier Kanten-Arten (`require`, `call`, `type`, plus
-> `requires_external`) sind das Kapital, aus dem fast alles davon fällt.
+> Stand: **alle sieben umgesetzt** (F1/F2/F7 zusammen in Commit `5a3c520`, F3
+> in `3b8f184`, F4 in `7cfe261`, F6 in `7b7d879`, F5 zuletzt in `c40d2ec` —
+> alle in lib.nvim, gepusht auf `main`). Die vier Kanten-Arten (`require`,
+> `call`, `type`, plus `requires_external`) waren das Kapital, aus dem fast
+> alles davon fiel.
 
-## F1. `:LibMap why <a> <b>` — der kürzeste Abhängigkeitspfad
+## F1. `:LibMap why <a> <b>` — der kürzeste Abhängigkeitspfad ✅ umgesetzt
 
 > Aufwand: **~2 h**. Wert: hoch.
 
@@ -662,7 +663,7 @@ kann also dazusagen, ob er beim Laden oder erst beim Aufruf entsteht — was den
 Unterschied zwischen „muss weg" und „ist in Ordnung" ausmacht. Im Browser als
 fünfter Modus, im Editor als eigener `:LibBrowse`-Modus.
 
-## F2. Blast-Radius: was bricht, wenn ich das ändere
+## F2. Blast-Radius: was bricht, wenn ich das ändere ✅ umgesetzt
 
 > Aufwand: **~2 h**. Wert: hoch.
 
@@ -677,7 +678,7 @@ diese Änderung". Sie steht schon in den Kanten, ist aber nirgends sichtbar.
 Der Reiz ist, dass es dieselbe Zahl vor und nach einem Refactor gibt. Ein
 Umbau, der den Radius halbiert, hat nachweislich etwas verbessert.
 
-## F3. `:LibMap diff <ref>` — was hat dieser Branch an der Struktur geändert
+## F3. `:LibMap diff <ref>` — was hat dieser Branch an der Struktur geändert ✅ umgesetzt
 
 > Aufwand: **~4 h**. Wert: hoch, besonders für Review.
 
@@ -700,7 +701,7 @@ kein Mensch von Hand erstellt.
 Aufwandstreiber: die alte Fassung besorgen (`git show <ref>:docs/map/module_map.json`)
 und ältere Schema-Versionen tolerieren, statt an ihnen zu scheitern.
 
-## F4. `@internal` — die öffentliche Fläche schärfen
+## F4. `@internal` — die öffentliche Fläche schärfen ✅ umgesetzt
 
 > Aufwand: **~1 h**. Wert: mittel, aber Voraussetzung für F5.
 
@@ -710,24 +711,31 @@ Ein Tag im Doc-Block, der eine Funktion als nicht-öffentlich markiert. Wirkung:
 
 Billig, weil `functions.lua` die Tags schon parst — es ist ein `elseif`.
 
-## F5. Tote Funktionen (opt-in, nur `info`)
+## F5. Tote Funktionen (opt-in, nur `info`) ✅ umgesetzt (2026-07-28, Commit `c40d2ec`)
 
-> Aufwand: **~3 h**. Wert: mittel — und mit einer echten Falle.
+> Aufwand: **~3 h** geschätzt, gebraucht: deutlich weniger — die Fallen-
+> Analyse unten war schon vollständig, nur noch als `check_dead_functions` in
+> `lua/lib/nvim/docmap/check.lua` umgesetzt. Wert: mittel.
 
-Eine Funktion ohne einen einzigen auflösbaren Aufrufer im Baum *ist* ein
-Kandidat. Die Falle: **eine Bibliothek besteht aus Funktionen, die absichtlich
-keinen internen Aufrufer haben** — das ist ihr Zweck. Ohne Gegenmaßnahme würde
-der Check die halbe öffentliche API melden und wäre sofort wertlos.
-
-Also nur dort, wo die Aussage trägt:
-- `local function` auf Modulebene ohne Aufrufer — das ist eindeutig tot;
+Neuer Check `dead-function`, immer `info`-Severity: eine Funktion ohne
+einen einzigen auflösbaren `kind="call"`-Aufrufer im Baum *ist* ein Kandidat.
+Die Falle blieb genau die beschriebene — eine Bibliothek besteht aus
+Funktionen, die absichtlich keinen internen Aufrufer haben — also greift der
+Check nur dort, wo die Aussage trägt:
+- `local function` auf Modulebene ohne Aufrufer (eindeutig tot — von außerhalb
+  der eigenen Datei ohnehin unerreichbar);
 - mit `@internal` markierte Funktionen ohne Aufrufer;
-- alles andere nur, wenn `opts.dead_code = true` gesetzt ist.
+- alles andere (gewöhnliche exportierte, nicht-`@internal` Funktionen) nur,
+  wenn `opts.dead_code = true` gesetzt ist — sonst würde der Check die halbe
+  öffentliche API melden und wäre sofort wertlos.
 
-Und wie beim Call-Graph generell: nie `error`-Severity, weil dynamischer
-Dispatch unsichtbar bleibt.
+Über lib.nvim selbst: 76 `dead-function`-Treffer im Default-Modus (0 Errors,
+`--check` bleibt grün). Neue Tests in `docs/TESTS/docmap_spec.lua` (6 Fälle:
+lokale Funktion mit/ohne Aufrufer, `@internal` mit/ohne Aufrufer, exportierte
+Funktion mit/ohne Aufrufer unter `opts.dead_code`). README-Tabelle und
+`ANNOTATIONS.md`s `@internal`-Referenzliste aktualisiert.
 
-## F6. DOT-/Graphviz-Export
+## F6. DOT-/Graphviz-Export ✅ umgesetzt
 
 > Aufwand: **~1 h**. Wert: mittel.
 
@@ -736,7 +744,7 @@ Layer-BFS im Browser noch Mermaid können: echte Kantenführung, Ranking,
 Cluster nach Namespace, und Ausgabe in Druckqualität. Der Renderer ist im
 Kern dieselbe Kantenschleife wie `mermaid.render_deps`.
 
-## F7. `gO` — von `:LibBrowse` in die HTML-Seite springen
+## F7. `gO` — von `:LibBrowse` in die HTML-Seite springen ✅ umgesetzt
 
 > Aufwand: **~30 min**. Wert: klein, aber verbindet die zwei Hälften.
 
@@ -754,14 +762,19 @@ jetzt doch als Bild sehen", ohne die Stelle erneut zu suchen.
 | Vollständiger Lua-Parser für einen perfekten Call-Graph | Die vier exakten Formen decken diesen Baum ab; der Rest ist dynamischer Dispatch, den auch ein Parser nicht sieht. Der Aufwand steht in keinem Verhältnis. |
 | Metriken über die Zeit (Trend-Diagramme) | Bräuchte eine Historie, die niemand pflegt. F3 beantwortet dieselbe Frage punktuell und ohne Datenhaltung. |
 
-## Reihenfolge, wenn es nach mir ginge
+## Reihenfolge, wenn es nach mir ginge — ✅ alle sieben umgesetzt, in genau dieser Reihenfolge
 
 **F1 → F2 → F7** zuerst: zusammen etwa ein halber Tag, alle drei fallen direkt
 aus vorhandenen Daten, und sie machen aus der Karte ein Werkzeug zum
 *Entscheiden* statt nur zum Anschauen. **F3** danach, weil es den größten
-Einzelnutzen hat, aber auch am meisten kostet. **F4/F5** nur, wenn tote
-Funktionen ein tatsächliches Problem sind — sonst ist es Arbeit für einen
-Check, den man wegklickt.
+Einzelnutzen hat, aber auch am meisten kostet. **F4/F5** zuletzt — tote
+Funktionen waren ein tatsächliches Problem genug, um den Check zu bauen statt
+ihn wegzuklicken.
+
+Damit sind alle in diesem Dokument geplanten Bausteine (Phasen A–G, N-A–N-D,
+Z-A–Z-D, F1–F7) umgesetzt. Offen bleibt nur der Backlog-Eintrag B1
+(Laufzeit-Inspektion), der explizit *nicht* Teil von docmap ist, sondern ein
+eigenes zukünftiges Werkzeug.
 
 ---
 
