@@ -20,6 +20,9 @@
 
 [] Refersh nachdem man eine datei verschoben hat; bzw bei allen aktionen, die eine änderung im filetree bewirken
 
+- [ ] Webn man "a" im filtree ausführt, dann wird prompt aufgerufen welchen fillepath man erstellen wirll. als title des windows wird der pfad angezeigt. dort fehltr aber der ertebuchstabe, also wenn der pfad Notes/OSV ist steht als title im prompt window >otes/OSV/ (append / for a directory):
+  Das höängt vielleiht mit dfem lib.nvim/nvim/ui.kit zusammen
+
 ---
 
 ## General
