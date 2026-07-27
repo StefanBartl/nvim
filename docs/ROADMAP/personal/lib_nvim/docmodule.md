@@ -471,8 +471,27 @@ D: Funktions-Ids + State-Achsen       ─┘                       ├→ F: Ani
 
 # Konzept: Semantischer Zoom im Hierarchy-View
 
-> Status: **geplant**, noch nicht umgesetzt. Baut vollständig auf dem
-> vorhandenen State/Layout/Animations-Gerüst auf — kein neues Layout-Verfahren.
+> Status: **umgesetzt** (`b6fae49`). Z-A bis Z-D in einem Zug, plus die
+> Modul-Infos/Stats aus deinem zweiten Feedback (`aae7970`).
+>
+> Abweichung vom Konzept unten, gefunden beim Testen: die Schwelle darf nicht
+> auf dem *Zustand* („`z >= 1.8`") feuern, sondern nur auf dem **Überschreiten**.
+> Sonst kann der Zoom oberhalb der Schwelle liegenbleiben — und dann löst die
+> nächste Rad-Bewegung in *beliebiger* Richtung einen Drill nach innen aus, auch
+> ein Rausdrehen. Nebeneffekt der Korrektur: eine verweigerte Ebene (Blatt,
+> Wurzel) darf den Zoom stehenlassen, ohne bei jedem weiteren Klick erneut zu
+> feuern — genau das macht „auf ein Blatt weiter reinzoomen, um es zu lesen"
+> möglich.
+>
+> Ebenfalls ergänzt: ein Drill auf die *bereits zentrierte* Box ist eine
+> Verweigerung, keine Navigation — sonst setzt der Zoom grundlos zurück.
+>
+> **Modul-Infos** (zweites Feedback): `symbols.lua` liefert Tabellen,
+> Konstanten und Load-Time-Bindings auf Modulebene; `node.stats` zählt Module,
+> Namespaces, `.lua`/`.md`/sonstige Dateien, Lua-Zeilen, Funktionen, Symbole
+> und Typen — aggregiert über den *ganzen Teilbaum*. Beides im Detail-Pane.
+> Über lib.nvim: 129 Module, 375 Lua-Dateien, 62 Markdown, 33 662 Zeilen,
+> 894 Funktionen, 600 Modul-Symbole.
 
 ## Z0. Zwei Zooms, die nicht dasselbe sind
 
