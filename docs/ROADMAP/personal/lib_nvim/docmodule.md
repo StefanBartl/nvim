@@ -469,6 +469,34 @@ D: Funktions-Ids + State-Achsen       ─┘                       ├→ F: Ani
 
 ---
 
+# Backlog
+
+## B1. Laufzeit-Inspektion eines geladenen Moduls
+
+**Nicht** von docmap zu erledigen — bewusst als eigenes Werkzeug vorgemerkt.
+
+docmap liest Quelltext; nichts wird ausgeführt. Was es zeigen kann, ist die
+*statische* Modulfläche: `local X = {}`, `M.defaults = {...}`, Konstanten,
+Load-Time-Bindings. Was es prinzipiell **nicht** zeigen kann:
+
+- echte Instanzen und ihr Zustand zur Laufzeit,
+- worauf die Metatable-/Lazy-Strategien in `lib.nvim.require` tatsächlich
+  auflösen (syntaktisch steht dort nichts),
+- tatsächliche Feldwerte, `__index`-Ketten, was `setup()` in eine Config
+  geschrieben hat.
+
+Ein zweiter Modus könnte im laufenden nvim `require("mod")` aufrufen und die
+zurückgegebene Tabelle begehen. Das ist ein **anderes Vertrauensmodell**: er
+führt fremden Code aus, hat Nebenwirkungen, hängt vom Zeitpunkt ab und darf
+deshalb niemals in `--check` oder in ein committetes Artefakt fließen. Eher ein
+`:LibInspect <modul>` neben der Map als ein Teil von ihr.
+
+Offene Fragen, bevor das lohnt: Zyklen und Tiefenbegrenzung beim Begehen,
+Umgang mit `__index`-Funktionen (aufrufen? nur melden?), und ob das Ergebnis
+überhaupt woanders hingehört als in ein `ui.kit`-Fenster.
+
+---
+
 # Konzept: Semantischer Zoom im Hierarchy-View
 
 > Status: **umgesetzt** (`b6fae49`). Z-A bis Z-D in einem Zug, plus die
