@@ -29,36 +29,24 @@ in der Git-Historie dieser Datei.
 
 ## 2. Auswahllisten (>4 Optionen / dynamisch) → `kit.select`
 
+Alle "respektiert User-Backend"-Fälle (open.nvim, gopath/alternate,
+emojis.nvim, diff.nvim/run_buffers, cascade.nvim/word_cycle) sind migriert,
+via `kit.select`s neuer `respect_override`-Option (siehe lib.nvim Commit
+`2e02157`): löst zur Laufzeit über `debug.getinfo(vim.ui.select, "S").source`
+auf, ob `vim.ui.select` noch Neovims eingebaute Implementierung ist
+(`runtime/lua/vim/ui.lua`) oder von einem Plugin überschrieben wurde — im
+zweiten Fall wird an `vim.ui.select` delegiert (respektiert also weiterhin
+telescope-ui-select/fzf-lua/dressing.nvim), im ersten Fall nutzt es kits
+eigenen themed Chooser statt der schlichten Neovim-Builtin-Liste. Kein
+Backend-Respekt-Verhalten wurde aufgegeben.
+
 - `pickers.nvim/lua/pickers/sources/system.lua` — kein Select, aber siehe
   Abschnitt 3 (Freitext).
-- `open.nvim/lua/open/picker.lua:20` — `vim.ui.select` über Handler-Kandidaten.
-  **Vorsicht**: Kommentar sagt explizit, das ist bewusst so gebaut, damit
-  `vim.ui.select`-Overrides (telescope-ui-select, fzf-lua, dressing.nvim) vom
-  User respektiert werden. Migration würde dieses Verhalten ändern/entfernen —
-  eher niedrige Priorität bzw. Rücksprache nötig.
-- `gopath.nvim/lua/gopath/alternate/ui.lua:38` — `vim.ui.select` über
-  ähnliche Dateien beim "File not found"-Fallback. Kommentar sagt ebenfalls
-  bewusst: respektiert User-Backend (telescope/dressing). Gleiche Vorsicht wie
-  bei open.nvim.
-- `emojis.nvim/lua/emojis/picker.lua:97` (`select_fallback`) — reiner
-  Fallback wenn weder Telescope noch fzf-lua verfügbar sind; ähnlich wie
-  open.nvim bewusst multi-backend. Niedrige Priorität.
 - `recommender.nvim/lua/recommender/float/rendering.lua` — Eigenbau-Picker mit
   Syntax-Highlighting pro Eintrag (chain/alias farblich abgesetzt). Funktional
   ein `kit.select`, aber mit Rendering, das kit vermutlich nicht abdeckt —
   niedrige Priorität, eher Kandidat für ein kit-Feature "custom highlight per
   item" als für eine 1:1-Migration.
-- `diff.nvim/lua/diff/core/init.lua:433` (`run_buffers`) — `vim.ui.select`
-  via `resolve_select_fn()`. **Vorsicht (neu entdeckt beim Abarbeiten
-  dieser Liste)**: `resolve_select_fn()` löst bewusst zuerst gegen
-  pickers.nvim (falls installiert und nicht abgewählt) auf, sonst
-  `vim.ui.select` — dieselbe "respektiert User-Backend"-Kategorie wie
-  open.nvim/gopath-alternate. Nicht migrieren ohne das Backend-Respekt-
-  Verhalten aufzugeben.
-- `cascade.nvim/lua/cascade/cycle/word_cycle.lua:142` (`M.pick`) —
-  **Vorsicht (neu entdeckt)**: Kommentar sagt explizit "Telescope-backed if
-  the user has `telescope-ui-select.nvim` registered, else Neovim's builtin
-  list" — gleiche Kategorie wie open.nvim, nicht migrieren.
 
 ## 3. Freitext-Eingaben → `kit.input`
 
@@ -99,11 +87,6 @@ soll, wäre das der einzige Call-Site dafür im Audit.
 
 ## 6. Priorisierung / Reihenfolge-Vorschlag (verbleibend)
 
-1. **Abschnitt 2's "Vorsicht"-Fälle** (open.nvim, gopath/alternate,
-   emojis.nvim, diff.nvim/run_buffers, cascade.nvim/word_cycle) — alle
-   respektieren bewusst das vom User konfigurierte Picker-Backend; nur nach
-   expliziter Rücksprache migrieren, ob dieses Verhalten aufgegeben werden
-   soll.
-2. **`recommender.nvim`s Custom-Highlight-Picker** (Abschnitte 2+4) — eher
+1. **`recommender.nvim`s Custom-Highlight-Picker** (Abschnitte 2+4) — eher
    ein Kandidat für ein neues kit-Feature ("custom highlight per item") als
    für eine 1:1-Migration.
