@@ -469,5 +469,171 @@ D: Funktions-Ids + State-Achsen       ─┘                       ├→ F: Ani
 
 ---
 
+# Konzept: Semantischer Zoom im Hierarchy-View
+
+> Status: **geplant**, noch nicht umgesetzt. Baut vollständig auf dem
+> vorhandenen State/Layout/Animations-Gerüst auf — kein neues Layout-Verfahren.
+
+## Z0. Zwei Zooms, die nicht dasselbe sind
+
+Der Wunsch enthält zwei Mechanismen, die im Code getrennt bleiben müssen,
+sonst wird beides halb:
+
+| | Was passiert | Kostet |
+|---|---|---|
+| **Geometrischer Zoom** | Dasselbe Diagramm größer/kleiner. Nichts ändert sich am Inhalt. | Eine CSS-`transform: scale()`, GPU-billig, kein Relayout |
+| **Semantischer Zoom** | Beim Überschreiten einer Schwelle wird *ein anderer Ausschnitt* gezeichnet — eine Ebene tiefer bzw. höher. | Ein `navigate({center})` — also exakt der Pfad, den Doppelklick heute schon geht |
+
+Der geometrische Zoom ist das **Gefühl** zwischen zwei Ebenen, der semantische
+ist der **Sprung**. Google Maps macht genau das: stufenlos skalieren, und an
+bestimmten Zoomstufen kippt der Karteninhalt um.
+
+**Wichtig:** „das Modul öffnet sich auf" hat zwei mögliche Lesarten, und die
+Wahl entscheidet über den Aufwand:
+
+- **(a) Re-Zentrieren** — das Modul unter dem Cursor wird zum neuen Zentrum,
+  seine Kinder werden zur nächsten Layer. Nutzt `state.center` und das
+  vorhandene Layout unverändert. **Empfohlen.**
+- **(b) In-Place-Expansion** — die Kinder erscheinen *innerhalb* der Box, die
+  Geschwister bleiben stehen. Das ist ein Containment-Layout (Treemap-artig),
+  ein grundsätzlich anderes Verfahren als das aktuelle Layer-BFS, und es
+  verträgt sich schlecht mit Deps/Calls, die keine Containment-Hierarchie sind.
+
+Deine Formulierung („mit rauszoomen kann man wieder eine ebene raus gehen")
+beschreibt (a): raus = zum Elternknoten. Das Konzept unten setzt (a).
+
+## Z1. Interaktionsmodell
+
+| Geste | Wirkung |
+|---|---|
+| Mausrad über dem Graphen | Stufenlos skalieren, Ankerpunkt ist der Cursor |
+| Rad hoch über Schwelle | **Drill-down**: `center` = Modul unter dem Cursor |
+| Rad runter unter Schwelle | **Drill-up**: `center` = Elternknoten (wie `▲ Up`) |
+| `Shift` + Rad | Horizontal pannen, statt zoomen |
+| Ziehen mit gedrückter Maustaste | Pannen (fehlt heute auch schon) |
+| `+` / `-` / `0` | Zoom rein / raus / auf 100 % zurück |
+
+**Offene Entscheidung — Rad ohne Modifier oder mit `Strg`?**
+`#hgraph-wrap` ist heute ein scrollbarer Kasten *innerhalb* einer Seite; Rad
+scrollt dort. Wenn Rad künftig zoomt, muss `preventDefault` her (und damit
+`{ passive: false }`), und wer scrollen will, ist überrascht.
+**Empfehlung: Rad = Zoom**, weil der Pane als Canvas gelesen wird und nicht als
+Text, plus `Shift`+Rad zum Pannen und ein Hinweis in der Legende. Trackpad-Pinch
+kommt ohnehin als `ctrl+wheel` an und wird gleich behandelt.
+Wer das anders will: `ctrl+wheel`-only ist eine Einzeilen-Änderung an der
+Bedingung — aber dann fühlt sich der Zoom nicht wie der gewünschte an.
+
+## Z2. Schwellen und Hysterese
+
+Naiv („bei `z ≥ 1.5` eine Ebene runter, danach `z = 1.0`") flackert: ein
+minimales Zurückdrehen unterschreitet sofort die Gegen-Schwelle und springt
+wieder hoch. Deshalb **asymmetrische Schwellen plus Cooldown**:
+
+```
+DRILL_IN     z >= 1.80   -> navigate({center: unterCursor});  z := 0.90
+DRILL_OUT    z <= 0.55   -> navigate({center: parent});        z := 1.15
+Z_MIN 0.35   Z_MAX 2.40  (harte Klammer, wenn kein Sprung möglich ist)
+COOLDOWN_MS  260         (≈ ANIM_MS: eine Wischgeste darf nicht drei Ebenen fallen)
+```
+
+Nach einem Sprung liegt `z` bewusst *innerhalb* des Bandes, nicht auf der
+Gegenschwelle — das ist die Hysterese.
+
+**Kein Sprung möglich** (Blatt ohne Kinder beim Rein-, Wurzel beim
+Rauszoomen): `z` an `Z_MAX`/`Z_MIN` klemmen und die betroffene Box kurz
+pulsieren lassen (`.pulse` gibt es schon). Stillschweigend nichts tun liest
+sich wie ein Bug.
+
+## Z3. Ziel-Ermittlung
+
+Das Modul unter dem Cursor, nicht das zentrierte:
+
+1. `document.elementFromPoint(x, y)` → mit dem vorhandenen `boxOf()` zur Box.
+2. Kein Treffer (Cursor im Leerraum) → die Box mit dem geringsten Abstand vom
+   Cursor, aus `positions` gerechnet, **nicht** aus dem DOM gemessen.
+3. Box ohne `_spec.recenter` (externe Requires!) → kein Ziel, klemmen.
+
+Beim Drill-up ist das Ziel immer `byId[hcenter].parent` — unabhängig vom
+Cursor, damit „raus" berechenbar bleibt.
+
+## Z4. Umsetzung im Renderer
+
+Der Punkt, an dem es sich mit dem bestehenden Code beißen könnte, und warum
+nicht:
+
+- **Layout bleibt analytisch.** Der Zoom ist eine `transform: scale(z)` auf
+  einer *neuen* Zwischenebene `#hstage`, die Boxen und SVG umschließt.
+  `positions` in px bleiben unangetastet — die README-Zusage „nie aus dem DOM
+  gemessen" gilt weiter, und `reconcile()` muss nichts wissen.
+- **Scrollfläche.** `transform` ändert die Layoutgröße nicht, sonst wächst der
+  Scrollbereich beim Reinzoomen nicht mit. Also: `#hstage` bekommt die
+  Transform, `#hgraph` bekommt `width/height = totalW*z / totalH*z`.
+- **Ankerformel.** Damit der Punkt unter dem Cursor stehen bleibt:
+  ```
+  const r = wrap.getBoundingClientRect();
+  const gx = (wrap.scrollLeft + ev.clientX - r.left) / z;   // Graph-Koordinate
+  const gy = (wrap.scrollTop  + ev.clientY - r.top ) / z;
+  z = clamp(z * Math.exp(-ev.deltaY * 0.0015), Z_MIN, Z_MAX);
+  wrap.scrollLeft = gx * z - (ev.clientX - r.left);
+  wrap.scrollTop  = gy * z - (ev.clientY - r.top);
+  ```
+- **Auto-Scroll unterdrücken.** `drawHierarchy()` scrollt heute das Zentrum in
+  die Mitte. Nach einem Zoom-Sprung würde das gegen den Cursor-Anker
+  arbeiten. Also ein Flag `suppressAutoScroll` für genau diesen Übergang —
+  stattdessen die neue Zentrums-Box unter den Cursor legen, damit der Sprung
+  räumlich zusammenhängt.
+- **Zoom kommt NICHT in die History.** Gleiche Lektion wie beim Such-Preview
+  (siehe README): nur der *Sprung* ruft `navigate()`, das Skalieren nie. Auch
+  nicht in den Hash — Zoom ist Komfort, kein Zustand.
+- **`ANIM_MS`-Transition** auf `#hstage` beim Sprung (nicht beim stufenlosen
+  Rad, das muss 1:1 folgen), abgeschaltet unter `prefers-reduced-motion`.
+
+## Z5. Level-of-Detail am Boxinhalt (Zugabe, billig)
+
+Unter ~0.65 Skalierung ist die Summary-Zeile unlesbar und nur noch Grau.
+Eine Klasse `#hstage.lod-min` blendet `.hsm`/`.hline` aus und lässt nur den
+Namen stehen — reines CSS, kein Neuzeichnen. Über ~1.5 könnte umgekehrt eine
+Zeile mehr erscheinen (Funktionszahl, Findings-Anzahl). Das ist der *zweite*
+Sinn von „semantischem Zoom" und kostet fast nichts.
+
+## Z6. Was in den anderen Views passiert
+
+| View | Geometrischer Zoom | Drill |
+|---|---|---|
+| **Modules** | ja | ja — das ist der Anwendungsfall |
+| **Types** | ja | Drill-down auf den besitzenden Node der Klasse; Drill-up = `▲ Up` |
+| **Deps** | ja | **nein** — „eine Ebene tiefer" ist in einem Require-Graphen nicht definiert. Stattdessen bindet Rad+Schwelle dort auf `depth ±1`, was die inhaltlich passende Entsprechung ist |
+| **Calls** | ja | wie Deps: Schwelle ändert `depth` |
+
+Das ist bewusst *keine* Vereinheitlichung um jeden Preis: in Deps/Calls ist
+die Tiefe die Achse, die „mehr/weniger zeigen" bedeutet, und sie existiert
+schon als State und als Toolbar-Control.
+
+## Z7. Phasen
+
+```
+Z-A  #hstage + geometrischer Zoom + Anker + Shift-Pan + Tastatur   (~½ Tag)
+Z-B  Schwellen/Hysterese/Cooldown + Drill in Modules               (~½ Tag)
+Z-C  LOD-Klassen am Boxinhalt                                      (~1 h)
+Z-D  Types-Drill, Deps/Calls auf depth±1                           (~2 h)
+```
+
+Z-A ist für sich schon nützlich (der 90-Boxen-Modules-View ist heute ohne
+Zoom mühsam) und lässt sich unabhängig bewerten, bevor Z-B die Magie draufsetzt.
+
+## Z8. Risiken
+
+| Risiko | Umgang |
+|---|---|
+| Rad-Hijacking überrascht | `Shift`+Rad pannt, Hinweis in der Legende, `ctrl+wheel` als Rückfalloption dokumentiert |
+| Flackern an der Schwelle | Asymmetrische Schwellen + Cooldown, Reset *innerhalb* des Bandes |
+| Eine Wischgeste fällt drei Ebenen | `COOLDOWN_MS` ≈ `ANIM_MS` |
+| Anker kämpft gegen Auto-Scroll | `suppressAutoScroll` beim Zoom-Sprung, Zentrum unter den Cursor |
+| History füllt sich mit Zoomstufen | Nur der Sprung ruft `navigate()`, Skalierung nie — dieselbe Regel wie beim Such-Preview |
+| SVG-Export exportiert verzerrt | Export ignoriert `z` und schreibt das 1:1-Layout |
+| Externe Boxen als Drill-Ziel | Haben kein `recenter` → werden als Ziel verworfen |
+
+---
+
 
 
