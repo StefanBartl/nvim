@@ -60,6 +60,43 @@ Zahlen aus dem echten Lauf über lib.nvim: **387 require-Kanten, 611 call-Kanten
 - **Backedges brauchen echtes Routing.** Bestätigt: mit der alten S-Kurve
   laufen sie durch die Boxen. Jetzt seitlich raus/rein, plus Pfeilköpfe.
 
+### Debug-Runde nach dem ersten Commit (`965ba60`)
+
+Alle vier durch *Benutzen* des ausgelieferten Artefakts gefunden, keiner durch
+Lesen des Codes:
+
+1. **Empty-State-Meldung blieb stehen.** `reconcile()` entfernt nur Boxen, die
+   es kennt — der `<p class="hmsg">` aus dem leeren Zweig überlebte in die
+   nächste Zeichnung. Calls-auf-Namespace (leer) → Modules zeigte
+   „lib.nvim declares no functions." über 90 Boxen.
+2. **Hover-Fokus löste nie aus.** `mouseleave` feuert erst beim Verlassen von
+   `#hgraph`; neben einer Box im Leerraum blieb das ganze Diagramm gedimmt.
+3. **`:LibMap graph` öffnete nichts.** Fragment an einen *Dateipfad* gehängt →
+   `explorer.exe`/`xdg-open` sucht eine Datei namens `index.html#tab=…`. Jetzt
+   `file://`-URL; `:LibMap open` bleibt ein Pfad.
+4. **`:LibMap graph deps lib.nvim.fs` fand nichts.** Das Verzeichnis ist eine
+   *Namespace* ohne `init.lua`, hat also kein `@module`. Namen lösen jetzt auch
+   über den pfad-implizierten Modulnamen auf (`check.expected_module`
+   exportiert statt einer zweiten Kopie der Ableitung).
+
+Plus: Twisty der Funktions-Gruppe blieb nach „Collapse" auf ▾.
+
+### Nachträglich getestet (`a33b7b5`)
+
+`opts.layers`, `opts.calls_heuristic` und die Handle-Queries waren ausgeliefert
+und noch nie gelaufen. Alle drei verhalten sich korrekt — insbesondere lässt die
+Heuristik einen von zwei Modulen deklarierten Namen fallen, statt zu raten. Als
+Specs abgesichert, weil genau dieser Fall in einem Happy-Path-Test fehlt.
+
+### Nebenbefund: CI war seit ~8 Commits rot (`b266353`)
+
+Nicht durch diese Arbeit verursacht. `leafo/gh-actions-lua@v10` bekommt das
+LuaJIT-2.1-Tarball nicht mehr (404) — der `luacheck`-Job scheiterte im
+*Setup*, luacheck lief also seit Wochen überhaupt nicht, auch nicht über die
+neuen Dateien. Auf PUC Lua 5.4 umgestellt; `std = "luajit"` in `.luacheckrc`
+bleibt und ist unabhängig davon, welcher Interpreter luacheck ausführt.
+CI ist jetzt grün.
+
 ---
 
 ## 0. Ist-Stand (was schon da ist)
@@ -425,3 +462,12 @@ D: Funktions-Ids + State-Achsen       ─┘                       ├→ F: Ani
 | Scan-Zeit verdoppelt sich | Ein treesitter-Parse pro Datei für `functions` **und** `calls` |
 | `history` erneut subtil kaputt | Neue Achsen (`dir`, `depth`, `fn`) **nur** über `navigate()`; Live-Preview weiterhin ohne `replaceState` |
 | Zyklen zerlegen das Layer-Layout | Backedge-Erkennung + eigener Pfad + eigene CSS-Klasse |
+
+## Feedback von mir
+
+- In den hirarchie wo die module eigene objeklte sind, wäre es super, wenn man auch in module reinzoomen könnte und ab einen gewissen zoom öffnetz sich das modul auf also die nächste ebene, mit rauszoomen kann man wieder eine ebene raus gehen, zoom mit mausrad meine ich
+
+---
+
+
+
