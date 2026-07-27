@@ -1,21 +1,66 @@
-# docmodule
-
-- Man soll sich durch die
-  - hirarchie,
-  - Abhängigkreiten der module zueiandner
-  - Calls und gecallt werden von funktionen eines moduls visualisert
-
-  durchklicken können, jedes ein einzelner menüpunkt bzw mit rechtscklick auf ein table oder funktionsobjekt auswählbar sein.
-  und wenn man eines anklickt, dann verändet sich die Visualiseirung entsprechend für dieses Objekt, und zwar smooth also mit "bewegung".
-  Doxygen --> Vorbield
-
----
-
 # Implementierungs-Konzept: `lib.nvim.docmap` — Graph-Views & Browser-UI
 
 > Modul: `lua/lib/nvim/docmap/` (heißt im Code `docmap`, nicht `docmodule`).
 > Output: `docs/map/index.html`, `overview.md`, `module_map.json`.
 > Vorbild: Doxygen (Collaboration / Include / Caller / Callee Graphs).
+
+## STATUS: umgesetzt (Phasen A–G)
+
+Branch `claude/lib-nvim-docmodule-roadmap-ed6eab`. Alles unten Beschriebene ist
+implementiert; `--check` grün, Artefakte byte-deterministisch, 0 errors.
+Zahlen aus dem echten Lauf über lib.nvim: **387 require-Kanten, 611 call-Kanten,
+330 type-Kanten** (letztere nur mit `--full`).
+
+| Phase | Status | Wo |
+|---|---|---|
+| A — Require-Graph | ✅ | `deps.lua`, neue Checks in `check.lua` |
+| B — Call-Graph | ✅ | `calls.lua`, Parse-Reuse in `functions.lua` |
+| C — Views Deps/Calls + Richtung/Tiefe | ✅ | `render/html.lua` |
+| D — Funktions-Ids + State-Achsen | ✅ | `render/html.lua` |
+| E — Kontextmenü | ✅ | `render/html.lua` |
+| F — Bewegung (keyed reconcile) | ✅ | `render/html.lua` |
+| G — Ausbau | ✅ | Mermaid-Deps, `:LibMap graph`, Handle-API, SVG-Export |
+
+### Abweichungen vom Konzept — und warum
+
+1. **Deferred-Requires unterscheiden** (nicht im Konzept). Der Zyklus-Check
+   meldete zunächst 6 Zyklen — *jeder einzelne* war ein absichtlicher Lazy-Load
+   (`require()` im Funktionsrumpf). Ein Check, der nur auf Absicht anspringt,
+   wird weggeklickt und kostet dann die echten mit. `RawRequire.deferred` wird
+   aus dem Parse bestimmt (**jeder** Funktionsrumpf, nicht nur Top-Level — der
+   Rest-Zyklus steckte in einem anonymen `__index = function(_, k)`), der
+   Check sieht nur Load-Time-Kanten. Beide Arten bleiben echte Kanten im
+   Deps-View, lazy gepunktet.
+2. **Kommentarzeilen überspringen** (nicht im Konzept). Die vier
+   verbleibenden „Zyklen" waren `require`-Aufrufe in **Doc-Kommentaren**
+   (`---   local kit = require("lib.nvim.ui.kit")`) — davon ist der Baum voll.
+   Nach dem Fix: 0 Zyklen.
+3. **`deps`/`calls` laufen in `scan()`**, nicht in `scan_full()`. Sie brauchen
+   kein externes Tool; so sieht jeder `scan()`-Aufrufer dieselbe fertige IR.
+4. **Kanten-Sortierung pro Produzent**, nicht global. Ein gemeinsamer
+   Comparator müsste jede Kind-Variante kennen — `luals.lua` verglich sonst
+   `from_class` gegen `nil`, sobald die erste require-Kante da war.
+5. **Kanten-Interpolation verworfen** (Konzept-Variante 2 gewählt): Kanten
+   werden während der Box-Bewegung ausgeblendet und danach eingeblendet.
+6. **Funktionen im Tree** hängen hinter einer eigenen, eingeklappten
+   `ƒ N functions`-Gruppe statt in `children` — der Baum rendert eager, ~1500
+   zusätzliche Zeilen im Default-Zustand hätten die Struktur begraben.
+
+### Fallstricke, die beim Umsetzen aufgetaucht sind
+
+- **`]]` beendet den Lua-Long-String.** Das gesamte JS liegt in `[[ … ]]`.
+  Ein Array von Arrays (`[['a','b'],['c','d']]`) endet auf `]]` und macht den
+  Rest der Datei zu Lua-Quelltext. Betraf erst die Legende, dann den Kommentar,
+  der davor warnte. Im Renderer nie zwei schließende eckige Klammern
+  nebeneinander.
+- **Search-Preview vs. zentrierte Funktion.** Live-Tippen re-zentriert ohne den
+  Rest des States anzufassen; ohne Guard hätte der Calls-View weiter die alte
+  Funktion gezeichnet. Gelöst über „`state.fn` gilt nur, solange das Zentrum
+  ihr eigener Node ist".
+- **Backedges brauchen echtes Routing.** Bestätigt: mit der alten S-Kurve
+  laufen sie durch die Boxen. Jetzt seitlich raus/rein, plus Pfeilköpfe.
+
+---
 
 ## 0. Ist-Stand (was schon da ist)
 
