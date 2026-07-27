@@ -2,16 +2,16 @@
 ---@brief Clone or remove the personal Neovim plugin list in bulk.
 ---@description
 --- Registers `:PluginsClone [dir]` and `:PluginsRemove [dir]`. Both operate
---- on the curated list in `docs/ROADMAP/personal/MATERIALS/LIST.md`'s
---- "## Pluginlist" section (see `usrcmds.plugin_repos.list`) against `dir`
---- (or `vim.env.REPOS_DIR` when no argument is given) — never on every
---- directory `sibling` this way, unlike `:UpdateRepos`, which fetches/pulls
---- whatever git repos it finds regardless of what they are. Cloning
---- everything found and removing everything found are not symmetric risks:
---- an unrelated repo picked up by a directory scan just gets an unwanted
---- `git pull`, but the same repo picked up by a scan-and-delete loses
---- uncommitted work permanently. Sticking to the named list is what makes
---- `:PluginsRemove` safe to run at all.
+--- on the repos `plugins.personal` actually declares (see
+--- `usrcmds.plugin_repos.list`) against `dir` (or `vim.env.REPOS_DIR` when
+--- no argument is given) — never on every directory found by scanning `dir`,
+--- unlike `:UpdateRepos`, which fetches/pulls whatever git repos it finds
+--- regardless of what they are. Cloning everything found and removing
+--- everything found are not symmetric risks: an unrelated repo picked up by
+--- a directory scan just gets an unwanted `git pull`, but the same repo
+--- picked up by a scan-and-delete loses uncommitted work permanently.
+--- Sticking to the named list is what makes `:PluginsRemove` safe to run at
+--- all.
 ---
 --- `:PluginsClone` never overwrites an existing clone (skips it) — cloning
 --- is additive, no confirmation needed.
@@ -64,17 +64,20 @@ end
 -- Clone
 -- =============================================================================
 
----@param name string
+---@param entry Usrcmds.PluginRepos.Entry
 ---@param base_dir string
 ---@param on_done fun(status: "cloned"|"exists"|"failed", err: string|nil)
-local function clone_one(name, base_dir, on_done)
-  local target = base_dir .. "/" .. name
+local function clone_one(entry, base_dir, on_done)
+  local target = base_dir .. "/" .. entry.name
   if loop.fs_stat(target) then
     on_done("exists", nil)
     return
   end
 
-  local url = "https://github.com/StefanBartl/" .. name .. ".git"
+  -- entry.repo is the full "owner/repo" exactly as declared in the spec
+  -- (plugins.personal), not assembled from a hardcoded owner prefix — a repo
+  -- under a different GitHub account would still clone correctly.
+  local url = "https://github.com/" .. entry.repo .. ".git"
   system({ "git", "clone", url, target }, { text = true }, function(res)
     if res.code ~= 0 then
       on_done("failed", res.stderr or "git clone failed")
@@ -98,8 +101,8 @@ local function clone_all(path)
     return
   end
 
-  local names, err = plugin_list.read()
-  if not names then
+  local entries, err = plugin_list.read()
+  if not entries then
     notify.error(tostring(err))
     return
   end
@@ -107,11 +110,11 @@ local function clone_all(path)
   local prog = new_progress("[usrcmds.plugin_repos] clone")
   local cloned, existing, failed = {}, {}, {}
   local index = 1
-  local total = #names
+  local total = #entries
 
   local function run_next()
-    local name = names[index]
-    if not name then
+    local entry = entries[index]
+    if not entry then
       vim.schedule(function()
         if prog then
           prog:finish(("%d cloned, %d already present, %d failed"):format(#cloned, #existing, #failed))
@@ -128,16 +131,16 @@ local function clone_all(path)
     end
 
     if prog then
-      prog:update({ text = name, current = index, total = total })
+      prog:update({ text = entry.name, current = index, total = total })
     end
 
-    clone_one(name, base_dir, function(status, clone_err)
+    clone_one(entry, base_dir, function(status, clone_err)
       if status == "cloned" then
-        cloned[#cloned + 1] = name
+        cloned[#cloned + 1] = entry.name
       elseif status == "exists" then
-        existing[#existing + 1] = name
+        existing[#existing + 1] = entry.name
       else
-        failed[#failed + 1] = name .. ": " .. tostring(clone_err)
+        failed[#failed + 1] = entry.name .. ": " .. tostring(clone_err)
       end
       index = index + 1
       run_next()
@@ -181,12 +184,12 @@ local function check_removable(path, on_done)
   end)
 end
 
----@param path string|nil
 -- Forward-declared: remove_all calls it before its definition further down,
 -- and both need to stay `local` rather than leaking a global into a config
 -- shared with every other plugin's Lua.
 local finish_check
 
+---@param path string|nil
 local function remove_all(path)
   local base_dir = resolve_base_dir(path)
   if not base_dir then
@@ -194,21 +197,21 @@ local function remove_all(path)
     return
   end
 
-  local names, err = plugin_list.read()
-  if not names then
+  local entries, err = plugin_list.read()
+  if not entries then
     notify.error(tostring(err))
     return
   end
 
   ---@type string[]
   local present = {}
-  for _, name in ipairs(names) do
-    local target = base_dir .. "/" .. name
+  for _, entry in ipairs(entries) do
+    local target = base_dir .. "/" .. entry.name
     if loop.fs_stat(target) then
       if is_git_repo(target) then
-        present[#present + 1] = name
+        present[#present + 1] = entry.name
       else
-        notify.warn(("%s exists at %s but is not a git repository — left untouched"):format(name, target))
+        notify.warn(("%s exists at %s but is not a git repository — left untouched"):format(entry.name, target))
       end
     end
   end
