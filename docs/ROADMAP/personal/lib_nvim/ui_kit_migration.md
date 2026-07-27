@@ -91,9 +91,19 @@ UI-KIT-CONCEPT.md §13c) maskiert die Eingabe zeichenweise über `conceal`
 (`opts.mask` überschreibt das Standard-`"*"`), neu berechnet aus dem echten
 Buffer-Inhalt bei jedem Edit (Paste, Backspace, Edits in der Mitte — alles
 funktioniert ohne Keystroke-Diffing). `on_submit` bekommt weiterhin den
-echten Klartext; Undo ist auf diesem Buffer deaktiviert
-(`undolevels = -1`), Swapfile war auf jedem kit-Scratch-Buffer ohnehin schon
-aus. Migrationskandidat noch offen:
-`sandbox.nvim/lua/sandbox/bindings/usrcmds/registry_commands.lua:30` —
-einziger `vim.fn.inputsecret`-Call-Site im Audit, noch nicht auf
-`kit.input({secret=true})` umgestellt.
+echten Klartext; Undo ist auf diesem Buffer deaktiviert (`undolevels = -1`),
+Swapfile war auf jedem kit-Scratch-Buffer ohnehin schon aus. Der einzige
+`vim.fn.inputsecret`-Call-Site im Audit —
+`sandbox.nvim/lua/sandbox/bindings/usrcmds/registry_commands.lua:30`
+(Registry-Passwort) — ist ebenfalls migriert: Passwort-Prompt wandert dafür
+in den `on_submit` des Username-Feldes (kit.input ist Callback-basiert,
+inputsecret war blockierend-synchron), `on_cancel` liefert jetzt eine
+explizite "cancelled"-Meldung bei `<Esc>`, die der alte inputsecret-Pfad nur
+über einen leeren String erraten konnte. Neuer
+`tests/sandbox/bindings/usrcmds/registry_commands_spec.lua`. Commit
+`5e9a7f2` in sandbox.nvim, gepusht auf `main`.
+
+Damit ist Abschnitt 5 vollständig abgeschlossen — alle drei ursprünglich
+fehlenden kit-Bausteine (`viewer`, `form`, `live_input`) plus die
+nachträglich ergänzte maskierte Eingabe sind gebaut und an jedem bekannten
+Call-Site im Audit migriert.
