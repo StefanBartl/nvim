@@ -27,7 +27,7 @@ in der Git-Historie dieser Datei.
   dokumentiert war (inzwischen migriert, siehe Git-Historie) — nicht anfassen
   ohne das Terminal-Float-Problem zu lösen.
 
-## 2. Auswahllisten (>4 Optionen / dynamisch) → `kit.select`
+## 2. Auswahllisten (>4 Optionen / dynamisch) → `kit.select` ✅ vollständig erledigt
 
 Alle "respektiert User-Backend"-Fälle (open.nvim, gopath/alternate,
 emojis.nvim, diff.nvim/run_buffers, cascade.nvim/word_cycle) sind migriert,
@@ -38,10 +38,10 @@ auf, ob `vim.ui.select` noch Neovims eingebaute Implementierung ist
 zweiten Fall wird an `vim.ui.select` delegiert (respektiert also weiterhin
 telescope-ui-select/fzf-lua/dressing.nvim), im ersten Fall nutzt es kits
 eigenen themed Chooser statt der schlichten Neovim-Builtin-Liste. Kein
-Backend-Respekt-Verhalten wurde aufgegeben.
-
-- `pickers.nvim/lua/pickers/sources/system.lua` — kein Select, aber siehe
-  Abschnitt 3 (Freitext).
+Backend-Respekt-Verhalten wurde aufgegeben. `pickers.nvim/lua/pickers/
+sources/system.lua` (der einzige verbliebene Kandidat hier) war schon auf
+`kit.input` migriert (Freitext, kein Select) — nur der Modul-Docstring
+zitierte noch `vim.ui.input`.
 
 ## 3. Freitext-Eingaben → `kit.input` ✅ vollständig erledigt
 
