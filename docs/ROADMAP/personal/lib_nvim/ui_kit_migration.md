@@ -7,8 +7,8 @@ Prompts → `kit.confirm` (Buttons). Mehr/dynamische Optionen → `kit.select`.
 Freitext → `kit.input`.
 
 Hinweis zur Zählweise: Datei:Zeile bezieht sich auf den Stand beim Audit
-(2026-07-25, Nachträge 2026-07-26) — kann sich bei künftigen Edits verschieben.
-Audit deckt jedes `E:\repos\*.nvim`-Repo plus die nvim-Config ab.
+(2026-07-25, Nachträge 2026-07-26/27) — kann sich bei künftigen Edits
+verschieben. Audit deckt jedes `E:\repos\*.nvim`-Repo plus die nvim-Config ab.
 
 Alles bereits abgeschlossene ist aus diesem Dokument entfernt — nur noch
 offene Punkte unten. Fertiggestellte Migrationen inkl. Commit-Hashes stehen
@@ -90,43 +90,21 @@ migrierten Sonderfälle (dokumentiert im jeweiligen Code):
 ## 5. Fehlende UI-Bausteine in lib.nvim.ui.kit
 
 Alle drei ursprünglich fehlenden Bausteine sind inzwischen gebaut
-(`kit.viewer`, `kit.form`, `kit.live_input` — Commit `5df6fc3` in lib.nvim,
-gepusht auf `main`) — offen ist jeweils noch, ihre Call-Sites in den
-Consumer-Plugins tatsächlich zu migrieren:
+(`kit.viewer`, `kit.form`, `kit.live_input`) — `kit.viewer` und
+`kit.live_input` sind an jedem Call-Site im Audit bereits migriert.
+Verbleibend nur:
 
-1. **`kit.viewer`-Migration** — Baustein existiert (`kit.viewer(opts)` /
-   `kit.popup({type="viewer"})`: zentrierter, auto-sized Rounded-Float,
-   `q`/`<Esc>` schließt, schließt zusätzlich bei `WinLeave`/`BufLeave`,
-   Opt-out via `close_on_focus_lost = false`). Migrationskandidaten:
-   `filetree.nvim/features/ui/node_info/init.lua`,
-   `filetree.nvim/features/ui/cheatsheet/init.lua`,
-   `filetree.nvim/features/org/marks/init.lua:141` (`M.show`),
-   `filetree.nvim/features/fileops/trash/undo.lua:186` (`show_history`),
-   `filetree.nvim/features/paths/path_copy/init.lua` (teils),
-   `learn-cli.nvim/lua/learn_cli/ui/info_reader.lua`,
-   nvim-Config `lsp/usercmds/info.lua`.
-
-2. **`kit.form`-Migration** — Baustein existiert (`kit.form(opts)` /
-   `kit.popup({type="form"})`: verkettet `kit.input`-Aufrufe pro Feld in eine
-   gemeinsame `values`-Tabelle; `<Esc>` auf einem optionalen Feld überspringt
-   es, auf einem `required`-Feld bricht es die ganze Form ab).
-   Migrationskandidaten: `sandbox.nvim/bindings/usrcmds/container_commands.lua:380`
-   (`M.run`, 5 verkettete Prompts: Image/Name/Ports/Volumes/Env — Image als
-   `required`), `buffer_ctx.nvim/ops/boilerplate/templates/utils.lua:18`
-   (`process_prompts`, siehe auch Abschnitt 3).
-
-3. **`kit.live_input`-Migration** — Baustein existiert (`kit.live_input(opts)`
-   / `kit.popup({type="live_input"})`: wie `kit.input`, plus debounced
-   `on_change(query)` bei jedem Tastendruck, Default-Debounce 80ms, gleicher
-   Timer-Mechanismus wie `kit.picker`s Prompt-Slot intern). Migrationskandidaten:
-   `filetree.nvim/features/search/live_search/init.lua` und
-   `features/search/filter/init.lua` (beide implementieren unabhängig
-   voneinander einen floating Prompt-Buffer mit `TextChangedI`-Debounce +
-   Overlay-Highlighting — das Overlay-Highlighting selbst bietet
-   `kit.live_input` nicht, nur den Debounce-Mechanismus). Kein
-   Migrationskandidat: `reposcope.nvim/ui/actions/filter_prompt.lua` (der
-   einfachere, nicht-live Fall vom selben Grundbedürfnis) läuft bereits über
-   `kit.input` — es sei denn, der Filter dort soll live werden.
+- **`kit.form`** — `sandbox.nvim/bindings/usrcmds/container_commands.lua:380`
+  bereits migriert. `buffer_ctx.nvim/ops/boilerplate/templates/utils.lua:18`
+  (`process_prompts`, genutzt von `guard.lua`s `guard_interactive`) **bewusst
+  offen gelassen**: `boiler.get()` (der Call-Site-Aufrufer) ist synchron und
+  wird von jedem der ~10 Boilerplate-Registry-Einträge so aufgerufen, nicht
+  nur vom Guard-Clause-Template — `kit.form` ist async (Callback-basiert).
+  Migration würde den Sync-Contract von `boiler.get()` für alle Templates
+  brechen, nur um einen einzigen 2-Felder-Call-Site zu bedienen. Braucht eine
+  bewusste Architekturentscheidung (z. B. optionaler Callback-Parameter an
+  `boiler.get()`, Default = synchrones Verhalten), keine spekulative
+  Umstellung ohne Rücksprache.
 
 Kein neuer Baustein nötig, aber erwähnenswert: Sekret-/Passwort-Eingabe
 (`sandbox.nvim/registry_commands.lua:30`, `vim.fn.inputsecret`) hat aktuell
@@ -135,7 +113,13 @@ soll, wäre das der einzige Call-Site dafür im Audit.
 
 ## 6. Priorisierung / Reihenfolge-Vorschlag (verbleibend)
 
-1. **`kit.viewer`/`kit.form`/`kit.live_input`-Call-Site-Migrationen**
-   (Abschnitt 5) — alle drei kit-Bausteine existieren bereits, nur die
-   eigentliche Migration in den Consumer-Plugins steht noch aus (filetree.nvim
-   allein hat 8+ Call-Sites über alle drei Bausteine).
+1. **`buffer_ctx.nvim`s `boiler.get()`-Sync/Async-Frage** (Abschnitt 5) —
+   Architekturentscheidung nötig, siehe oben.
+2. **Abschnitt 2's "Vorsicht"-Fälle** (open.nvim, gopath/alternate,
+   emojis.nvim, diff.nvim/run_buffers, cascade.nvim/word_cycle) — alle
+   respektieren bewusst das vom User konfigurierte Picker-Backend; nur nach
+   expliziter Rücksprache migrieren, ob dieses Verhalten aufgegeben werden
+   soll.
+3. **`recommender.nvim`s Custom-Highlight-Picker** (Abschnitte 2+4) — eher
+   ein Kandidat für ein neues kit-Feature ("custom highlight per item") als
+   für eine 1:1-Migration.
