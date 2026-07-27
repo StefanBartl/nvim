@@ -43,21 +43,12 @@ Backend-Respekt-Verhalten wurde aufgegeben.
 - `pickers.nvim/lua/pickers/sources/system.lua` — kein Select, aber siehe
   Abschnitt 3 (Freitext).
 
-## 3. Freitext-Eingaben → `kit.input`
+## 3. Freitext-Eingaben → `kit.input` ✅ vollständig erledigt
 
-Fast vollständig migriert — verbleibend nur die folgenden bewusst nicht
-migrierten Sonderfälle (dokumentiert im jeweiligen Code):
-
-- `diff.nvim/lua/diff/core/init.lua:197` (`prompt_file`) — braucht
-`completion = "file"` (Cmdline-Tab-Completion), für die `kit.input` (reiner
-Insert-Mode-Buffer) noch kein Äquivalent hat.
-- `dap.nvim/lua/wkddap/languages/{zig,rust,c,assembly}.lua`s "Path to
-executable"-Prompts — gleiche `completion="file"`-Einschränkung wie bei
-diff.nvim, plus nvim-dap-Coroutine-Kontext (`coroutine.wrap()`).
-- `color_my_ascii.nvim/lua/color_my_ascii/commands/fence/export.lua:178`
-(No-Path-Prompt in `M.run`) — gleicher Grund (`completion = 'file'`).
-- nvim-Config `lsp/debug_adapters/dotnet.lua:24` (DLL-Pfad) — gleicher Grund
-wie dap.nvim/diff.nvim (`completion="file"` + nvim-dap-Coroutine-Kontext).
+Alle vier Stellen, die bewusst auf `vim.ui.input`/`vim.fn.input` geblieben
+waren, brauchten dasselbe fehlende Feature (`completion = "file"`) — siehe
+Abschnitt 5 (`completion = "file"`-Tab-Completion) für den lib.nvim-Fix und
+die Liste aller vier migrierten Call-Sites.
 
 ## 4. Eigenbau-Floats (Menü/Picker) → `kit.menu`/`kit.select`/`kit.layout`
 
@@ -103,7 +94,29 @@ explizite "cancelled"-Meldung bei `<Esc>`, die der alte inputsecret-Pfad nur
 `tests/sandbox/bindings/usrcmds/registry_commands_spec.lua`. Commit
 `5e9a7f2` in sandbox.nvim, gepusht auf `main`.
 
+`completion = "file"`-Tab-Completion ✅ erledigt (2026-07-27) —
+`kit.input({completion="file"})` (Phase 11, Commit `6e6d985` in lib.nvim,
+gepusht auf `main`; siehe UI-KIT-CONCEPT.md §13d) verkabelt `<Tab>` mit
+echter Ins-Completion: `vim.fn.getcompletion()` löst das Fragment vor dem
+Cursor auf, `vim.fn.complete()` öffnet Neovims natives Popup — kein
+Eigenbau-Picker, `<C-n>`/`<C-p>` funktionieren wie überall sonst auch.
+`<Tab>`/`<S-Tab>` cyclen das offene Popup statt es neu zu triggern, `<CR>`
+übernimmt zuerst den markierten Kandidaten (zweites `<CR>` submittet).
+Akzeptiert jeden `getcompletion()`-Typ, nicht nur `"file"`. Dabei einen
+echten Bug gefangen und gefixt: die erste Fassung machte `<CR>`s Handler zu
+einer `<expr>`-Mapping, was das Schließen des Floats beim Submit für **jeden**
+`kit.input`-Aufruf lautlos brach (Neovim blockt Fenster-/Buffer-Änderungen
+während einer `<expr>`-Auswertung — Textlock). Alle vier Call-Sites im Audit,
+die exakt dieses fehlende Feature zitiert hatten, sind jetzt migriert:
+- `diff.nvim/lua/diff/core/init.lua:197` (`prompt_file`) — Commit `20d450b`.
+- `dap.nvim/lua/wkddap/languages/{zig,rust,c,assembly}.lua` (5 Call-Sites,
+  Coroutine-yield/resume-Idiom) — Commit `6a91aeb`.
+- `color_my_ascii.nvim/lua/color_my_ascii/commands/fence/export.lua:178` —
+  Commit `e7e5c6c`.
+- nvim-Config `lsp/debug_adapters/dotnet.lua:24` — Commit `177e898b`.
+
 Damit ist Abschnitt 5 vollständig abgeschlossen — alle drei ursprünglich
-fehlenden kit-Bausteine (`viewer`, `form`, `live_input`) plus die
-nachträglich ergänzte maskierte Eingabe sind gebaut und an jedem bekannten
-Call-Site im Audit migriert.
+fehlenden kit-Bausteine (`viewer`, `form`, `live_input`) plus beide
+nachträglich ergänzten `kit.input`-Erweiterungen (`secret`, `completion`)
+sind gebaut und an jedem bekannten Call-Site im Audit migriert.
+
