@@ -469,6 +469,128 @@ D: Funktions-Ids + State-Achsen       ─┘                       ├→ F: Ani
 
 ---
 
+# Konzept: `:LibBrowse` — die Map im Editor (`ui.kit`)
+
+> Status: **geplant**. Im ursprünglichen Konzept unter Phase G als „später,
+> eigener Scope" vertagt. Baut auf `lib.nvim.ui.kit` (`layout.mount`,
+> `surface`, `picker`) und dem vorhandenen IR auf — kein neuer Scanner.
+
+## N0. Was das ausdrücklich *nicht* ist
+
+**Nicht das HTML-Diagramm im Terminal.** Boxen mit Verbindungslinien brauchen
+Pixel: freie Positionen, Kurven, stufenlosen Zoom. Ein Terminal gibt ein festes
+Zellraster — was dabei herauskommt, ist eine schlechtere Version der Seite, die
+es schon gibt, und niemand würde sie der Seite vorziehen.
+
+Der Editor-View ist deshalb ein **Navigator über dieselben Kanten**, kein
+Zeichner. Die Hierarchie darf ein ASCII-Baum sein (das kann Text gut); Deps und
+Calls werden **Listen**, keine Graphen.
+
+## N1. Warum es ihn trotzdem geben soll
+
+Drei Dinge kann der Editor, die die generierte Seite prinzipiell nicht kann:
+
+1. **Zum Quelltext springen.** `<CR>` auf eine Funktion öffnet die Datei an der
+   Zeile. Die HTML-Seite kann bestenfalls auf GitHub verlinken.
+2. **Quickfix füllen.** „Alle Aufrufer von `M.read` in die Quickfix-Liste" ist
+   genau das, wofür ein Editor-UI gebaut ist — und der Punkt, an dem die
+   Call-Kanten aufhören, hübsch zu sein, und anfangen, Arbeit zu sparen.
+3. **Live sein.** Die Seite ist ein Artefakt und zeigt den Stand des letzten
+   `:LibMap`. `docmap.install({ watch = true })` liefert eine IR, die sich beim
+   Speichern selbst aktualisiert.
+
+Wenn nur eins davon übrig bliebe, wäre es (2).
+
+## N2. Datenquelle — gemessen, nicht geraten
+
+| Weg | Kosten |
+|---|---|
+| `scan()` über lib.nvim | **0,65 s** (283 Nodes) |
+| `check()` | 0,05 s |
+| `module_map.json` einlesen + dekodieren | **0,01 s** (810 KB) |
+
+Das entscheidet den Default: **erst das Artefakt lesen**, nicht scannen. 0,65 s
+blockierendes nvim beim ersten Öffnen ist der Unterschied zwischen „geht auf"
+und „hängt". Also:
+
+- Default: `docs/map/module_map.json` laden (10 ms). Fehlt es oder ist es älter
+  als die neueste Quelldatei → Hinweiszeile „Karte ist veraltet — `:LibMap`"
+  statt stillschweigend falscher Daten.
+- `:LibBrowse live` → `install({ watch = true })`, einmal 0,65 s zahlen, dafür
+  aktualisiert sich der View beim Speichern über `on_change`.
+
+Das Artefakt enthält seit dem Graph-Umbau alles Nötige: `edges` mit `kind`,
+`requires`/`required_by`, `symbols`, `stats`. Nur `types_detail` fehlt ohne
+`:LibMap full` — dann entfällt der Types-Modus, wie im Browser auch.
+
+## N3. Layout
+
+`ui.kit.layout.mount` gibt benannte Slots als `Surface`-Handles zurück
+(`set_lines`, `set_title`, `focus`, `on_close`, plus `.bufnr`/`.winid` für
+eigene Keymaps). Drei Slots:
+
+```
+┌─ list ───────────────┬─ detail ─────────────────┐
+│ ▸ lib.nvim.fs        │ lib.nvim.fs.read         │
+│   lib.nvim.git       │                          │
+│ ▸ lib.nvim.store     │ Reads a file…            │
+│   …                  │ @param path string       │
+│                      │ 3 callers · 1 callee     │
+├──────────────────────┴──────────────────────────┤
+│ lib.nvim ▸ fs ▸ read     [calls ←]  q:close     │
+└─────────────────────────────────────────────────┘
+```
+
+Keymaps setzt der Aufrufer auf `slots.list.bufnr` — `layout.mount` selbst hat
+dafür keine Schnittstelle, was für diesen Fall reicht, aber erwähnenswert ist,
+falls mehr Komponenten das brauchen.
+
+## N4. Modi und Tasten
+
+Vier Modi, dieselben wie im Browser, umgeschaltet mit einer Taste:
+
+| Taste | Wirkung |
+|---|---|
+| `1`…`4` | Struktur / Deps / Calls / Types |
+| `j` `k` | Auswahl bewegen (Detail folgt sofort) |
+| `<CR>` | eine Ebene hinein (Struktur) bzw. der Kante folgen (Deps/Calls) |
+| `-` / `<BS>` | eine Ebene heraus |
+| `<C-o>` / `<C-i>` | zurück / vorwärts im Besuchsverlauf |
+| `h` / `l` | Richtung: eingehend / ausgehend (Deps, Calls) |
+| `+` / `_` | Tiefe ±1 |
+| `gd` | Quelle an der Zeile öffnen (schließt den View) |
+| `gq` | aktuelle Liste in die Quickfix-Liste |
+| `/` | Fuzzy-Suche über alle Module und Funktionen (`ui.kit.picker`) |
+| `q` `<Esc>` | schließen |
+
+Der Verlaufsstapel ist die Entsprechung zur Browser-History. Er ist hier
+*wichtiger* als dort: ohne Adresszeile gibt es kein „wo war ich".
+
+## N5. Phasen
+
+```
+N-A  Struktur-Navigator: Layout, Liste, Detail, Baum, gd, q        (~1 Tag)
+N-B  Deps- und Calls-Modus + Richtung/Tiefe                        (~½ Tag)
+N-C  Quickfix (gq) + Fuzzy-Sprung (/)                              (~½ Tag)
+N-D  Live-Modus über install({watch=true}) + on_change             (~2 h)
+```
+
+N-A allein ist schon nützlich (Modulbaum + Doku ohne den Browser zu öffnen) und
+lässt sich bewerten, bevor N-B die Kanten dazunimmt.
+
+## N6. Risiken und offene Fragen
+
+| Risiko | Umgang |
+|---|---|
+| Wird doch ein schlechter Graph-Zeichner | Listen statt Kanten; wer das Bild will, bekommt `:LibMap graph` |
+| 0,65 s Blockade beim Öffnen | Artefakt-First (10 ms); Live-Scan nur auf Ansage |
+| Veraltetes Artefakt zeigt Unsinn | Mtime-Vergleich gegen die Quellen, sichtbarer Hinweis |
+| `layout.mount` hat keine Keymap-Schnittstelle | Keymaps über `slot.bufnr`; falls mehr Komponenten das brauchen, gehört es in `ui.kit` |
+| Zwei UIs driften auseinander | Beide lesen dieselbe IR; alles Ableitbare bleibt abgeleitet, nichts wird doppelt gepflegt |
+| Types-Modus ohne `--full` leer | Wie im Browser: erklärende Zeile statt leerer Liste |
+
+---
+
 # Backlog
 
 ## B1. Laufzeit-Inspektion eines geladenen Moduls
