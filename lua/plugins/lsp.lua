@@ -56,6 +56,22 @@ return {
       })
 
       require("config.copilot.cmp")
+
+      -- Disable completion in any scratch/utility buffer (buftype ~= "" --
+      -- nofile, prompt, terminal, quickfix, ...). Without this, cmp's popup
+      -- also shows over lib.nvim.ui.kit's own floating input/chooser/
+      -- confirm/form surfaces (all buftype=nofile), where <CR> is bound to
+      -- "confirm the visible completion" (see nvchad.configs.cmp's
+      -- `select = true`) -- so submitting e.g. a filename in filetree.nvim's
+      -- create/rename prompt could silently confirm a fuzzy-matched
+      -- completion/snippet instead.
+      local prev_enabled = opts.enabled
+      opts.enabled = function()
+        if vim.bo.buftype ~= "" then
+          return false
+        end
+        return type(prev_enabled) ~= "function" or prev_enabled()
+      end
     end,
   },
 
