@@ -361,6 +361,36 @@ So geschnitten, dass das Fundament zuerst steht und unabhängig testbar ist —
 Variante A braucht es genauso wie B/C/D, also ist keine Phase verschwendet,
 egal wie die UI-Entscheidung ausfällt.
 
+### ✅ Phase 1 erledigt (2026-07-28, `08b4494`)
+
+`fn.line_end` ergänzt (verifiziert gegen `coverage.lua`: alle fünf Spans
+treffen die echten `end`-Zeilen exakt) und `history.lua` gebaut — pur wie
+`diff.lua`, mit `parse_diff` und `analyze(diff, ir_after, ir_before)`.
+Liefert `touched` (berührte Funktionen), `callers`, `calling_modules`
+(präzise) und `impacted_modules` (transitiv via `deps.impact`).
+
+**Ein Befund, der eine Korrektur erzwang und für Phase 3 wichtig ist:**
+`line_end` existiert nur in Artefakten, die *ab jetzt* erzeugt werden — alle
+92 historischen Commits haben nur `line`. Der naive Fallback
+(`line_end or line`) bedeutet „zählt nur, wenn die Änderung exakt auf dem
+`function`-Keyword landet" und fand gemessen an `1ce752e` (Hunks bei
+Zeile 235–239 und 249–254 im Rumpf von `S.dedent`) **null** der zwei
+Funktionen, die der Commit nachweislich geändert hat — Stille, die wie eine
+Antwort aussieht. Fehlendes `line_end` wird jetzt als *Startzeile der
+nächsten Funktion minus eins* genähert (über- statt unterattribuiert) und
+setzt `Impact.approximate`.
+
+**Konsequenz für Phase 3:** die UI muss diesen Unterschied anzeigen — für
+Commits ab heute exakt, davor genähert. Nicht verschweigen.
+
+Verifiziert gegen echte Commits, nicht nur Fixtures: `fd27b90` meldet
+korrekt `cyclomatic_complexity` mit `M.scan_file` als einzigem Aufrufer und
+attribuiert die `render/html.lua`-Änderung korrekt *nicht* (sie liegt im
+`local JS = [[…]]`-String außerhalb jeder Lua-Funktion). Fixture-Tests
+decken beide Grenzen inklusive, die Lücke zwischen Funktionen, alle vier
+Hunk-Formen, `/dev/null`-Add/Delete, den Näherungs-Fallback und fehlende
+IRs ab.
+
 **Phase 1 — Fundament (klein, testbar, kein UI, keine Laufzeit):**
 1. `fn.line_end` in `functions.lua`/`@types` ergänzen (Daten liegen in
    `ranges` bereits vor), `to_json` mitziehen.
@@ -804,9 +834,10 @@ weiter unten für Details.
 **Nächster konkreter Schritt, in absteigender Priorität:**
 - **R11 — Commit-Historie mit Ausstrahlung** (2026-07-28 analysiert und nach
   Rückfrage korrigiert, eigenes Konzept-Kapitel oben mit Phasenplan):
-  Phase 1 (`fn.line_end` + pures `history.lua`) ist klein, testbar und
-  unabhängig von der UI-Entscheidung — der beste nächste Schritt.
-  Empfohlene Zielvariante ist **A: `:LibMap serve`** (lokaler libuv-Server,
+  **Phase 1 ist erledigt** (`08b4494`: `fn.line_end` + pures `history.lua`).
+  Nächster Schritt ist **Phase 2** (`:LibMap impact <ref>` → Quickfix), die
+  die Rechenlogik an echten Commits im Alltag verifiziert, bevor UI darauf
+  gesetzt wird. Empfohlene Zielvariante bleibt **A: `:LibMap serve`** (lokaler libuv-Server,
   History-Tab lädt beim Klick per `fetch`) — damit werden die Kosten lazy
   (~0,3 s pro Commit statt 25–50 s vorab) und Staleness entfällt ganz.
   Vorab lesen: Befund 1b (eine `file://`-Seite darf keine Nachbardatei
