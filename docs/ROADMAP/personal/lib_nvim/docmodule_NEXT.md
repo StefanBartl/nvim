@@ -117,7 +117,7 @@ nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
 | R3 | Modul-/Namespace-A-Z-Index | Doxygen File/Class Index | S | **✅ Erledigt (2026-07-28, `eb25ca9`)** |
 | R4 | Doku-Abdeckung als Zahl + Badge | — (eigene Idee, auf Findings aufbauend) | S | **✅ Erledigt (2026-07-28, `a467e49`)** |
 | R5 | `param-name-mismatch`-Check | — (Erweiterung von `undocumented-param`) | S | **✅ Erledigt (2026-07-28, `f353a16`)** |
-| R6 | Fan-in/Fan-out-Hotspot-Übersicht | — (auf `node.stats` aufbauend) | M | Später, wenn Bedarf konkret wird |
+| R6 | Fan-in/Fan-out-Hotspot-Übersicht | — (auf `n.requires`/`n.required_by` aufbauend) | S–M | **Nächster Kandidat — umsetzungsbereite Spezifikation weiter unten** |
 | R7 | Volltext-Suche (Prose, `@param`-Text) | Doxygen Search-Index | M | Später |
 | R8 | `@group`/`@ingroup` (virtuelle Gruppen quer zur Modulstruktur) | Doxygen `\defgroup` | L | Eher nicht — kein aktueller Bedarf |
 | R9 | `ctags`-Export (`:LibMap tags`) | ctags/gutentags | S | Eher nicht — LSP deckt das schon ab |
@@ -192,13 +192,46 @@ die Doku nicht mitgezogen. Gleiche Vorsicht wie beim bestehenden Check nötig
 (nie über `info`, da text-basiert und auf komplexen Signaturen falsch liegen
 kann).
 
-### R6–R10 — kurz begründet
+### R6 — nächster Kandidat, umsetzungsbereite Spezifikation
 
-- **R6 Hotspot-Übersicht** (meist-gebrauchtes Modul, größte Funktion nach
-  Zeilen, höchster Fan-in): `node.stats` und `ir.edges` liefern die Rohdaten
-  bereits, aber ohne konkreten Anlass (niemand hat bisher gefragt "welches
-  Modul bricht am meisten, wenn ich es anfasse") ist das Spekulation auf
-  Vorrat — zurückgestellt, nicht verworfen.
+**Ziel:** drittes Analysis-Tab-Werkzeug, "Fan-in/Fan-out" (Arbeitstitel;
+Button-Label z.B. "Dependencies"), zeigt pro Modul, wie viele andere Module
+es requiret (Fan-out) und wie viele es requiren (Fan-in) — beantwortet
+"was bricht am meisten, wenn ich das hier anfasse" (hoher Fan-in) und
+"was ist verdächtig verflochten" (hoher Fan-out).
+
+**Warum jetzt dran:** einziges verbliebenes Werkzeug, das laut
+"Einordnung"-Abschnitt oben ohne neue Datenextraktion auskommt — Fan-in/
+Fan-out lässt sich vollständig aus bereits vorhandenem `n.requires`/
+`n.required_by` ablesen (siehe `Lib.Docmap.Node` in `@types/init.lua`),
+keine neue Lua-Berechnung nötig, nur JS-seitige Aggregation wie beim
+Coverage-Panel.
+
+**Umsetzungsplan (analog zum Coverage/Documentation-Panel-Bau in
+`2b9ac67`):**
+1. In `render/html.lua`: dritten Button `<button class="anview-btn"
+   data-atool="deps">Dependencies</button>` im `#antoggle`-Toolbar
+   ergänzen (nach dem Muster der bestehenden zwei Buttons).
+2. `state.atool` um den Wert `"deps"` erweitern (`DEFAULT_STATE`,
+   `serializeState`/`parseState`s `atool`-Zweig — dort steht aktuell nur
+   `s.atool === "doc"`, muss auf drei Werte erweitert werden).
+3. Eigene Render-Funktion (kein `renderAnalysisPanel`-Wiederverwendung,
+   da das bestehende Panel auf *einer* pick-Funktion über Funktionen
+   basiert, Fan-in/Fan-out aber Zahlen direkt aus `n.requires.length`/
+   `n.required_by.length` liest, nicht aus `n.functions`): pro Modul zwei
+   Spalten (Fan-in, Fan-out) statt Treffer/Gesamt, sortiert nach Fan-in
+   absteigend (höchster Blast-Radius zuerst) — Klick-Navigation wie
+   gehabt.
+4. `drawAnalysis()`s if/else auf drei Zweige erweitern, dritten
+   Cache (`analysisDepsHTML`) ergänzen.
+5. Verifikation: gegen lib.nvims eigene Map im Browser (welches Modul hat
+   den höchsten Fan-in? Plausibilitätscheck: sollte etwas Fundamentales
+   wie `lib.nvim.fs`/`lib.nvim.notify` sein), Node-`--check`
+   JS-Syntaxprüfung wie bei den vorherigen zwei Tools.
+
+**Aufwand:** klein-mittel (S–M), da reine JS-Aggregation ohne neue
+Lua-Datenextraktion — realistisch die schnellste der drei
+Analysis-Tab-Ergänzungen nach R2/R4.
 - **R7 Volltextsuche**: aktuell durchsucht die HTML-Suche Name/Modul/Summary,
   nicht Fließtext oder `@example`-Blöcke. Echter Mehrwert, aber die
   bestehende Suche deckt den Alltag (Modul/Funktion finden) schon ab — lohnt
@@ -409,13 +442,36 @@ Navigation, Zahlen gegen CLI abgeglichen), neuer Test in `docmap_spec.lua`
 für `doccoverage.resolve`. `--check` grün, stylua/luacheck sauber (294
 Dateien), volle Testsuite grün, CI grün.
 
-## Empfehlung für die nächste Runde
+## Stand 2026-07-28 — was als Nächstes (für eine Fortsetzung an anderer Stelle)
 
-**R1 → R2 → R5 → R3 → R4**, in dieser Reihenfolge: R1 ist die einzige Idee,
-die direkt auf der gerade abgeschlossenen O1-Arbeit aufbaut und ohne sie
-wenig Sinn ergäbe; R2 und R5 sind kleine, in sich abgeschlossene
-Check-Ergänzungen nach demselben Muster wie `dead-function`/`dead-see-target`;
-R3/R4 sind günstige UI-Ergänzungen, die auf bereits vorhandenen Daten
-aufbauen. R6–R10 bleiben Backlog, nicht weil sie schlecht wären, sondern weil
-für keine davon bisher ein echter Schmerzpunkt aufgetreten ist — derselbe
-Maßstab, an dem D4/O2 in `docmodule.md` schon gemessen wurden.
+**Erledigt, alle verifiziert (`--check` grün, stylua/luacheck sauber,
+Testsuite grün, CI grün) und gepusht:** R1 (`0c67b50`), R2 (`ba919c2`),
+R3 (`eb25ca9`), R4 (`a467e49`), R5 (`f353a16`), Tag-Adoption (`7025e61`),
+Analysis-Tab-Grundgerüst + erste zwei Werkzeuge (`2b9ac67`).
+
+**Nächster konkreter Schritt: R6** (Fan-in/Fan-out, drittes
+Analysis-Tab-Werkzeug) — vollständige, umsetzungsbereite Spezifikation
+im Abschnitt "R6 — nächster Kandidat" oben, inklusive Schritt-für-Schritt-
+Plan, betroffener Dateien und Verifikationsschritten. Kein Rechercheaufwand
+mehr nötig, direkt umsetzbar.
+
+**Danach, in absteigender Priorität:**
+- **Zyklomatische Komplexität** als viertes Analysis-Tab-Werkzeug (siehe
+  "Einordnung — was zuerst" oben): einziger *wirklich neue* Rohdaten-Bedarf
+  unter den verbliebenen Kandidaten — ein neuer `vim.treesitter`-Query über
+  `if`/`elseif`/`while`/`for`/`repeat`/`and`/`or` je Funktionskörper, analog
+  zu `calls.lua`s `identifier_counts`. Noch keine Spezifikation wie bei R6
+  ausformuliert — das wäre der erste Schritt, bevor implementiert wird.
+- **R7** (Volltextsuche) — zurückgestellt, siehe Begründung oben.
+- **R8/R9/R10** — bewusste Nicht-Entscheidungen, siehe Begründungen oben.
+  Nur erneut aufgreifen, wenn sich die genannten Voraussetzungen ändern
+  (R8: Repo wächst so, dass modulübergreifende API-Gruppen eine echte Frage
+  werden; R9: jemand nutzt `lib.nvim` ohne LSP; R10: `:LibBrowse live`
+  reicht nicht mehr aus).
+
+**Offene TaskList-Aufgabe (separat von diesem Dokument):** Task #7
+"Runtime inspection of a loaded module" — bewusst zurückgestellt, siehe
+Backlog-Abschnitt B1 in `docmodule.md`. Kein docmap-Feature, sondern ein
+eigenständiges künftiges Werkzeug (`:LibInspect`-Arbeitstitel), da es Code
+zur Laufzeit ausführen müsste (anderes Vertrauensmodell als der rein
+statische Scanner) und nie in `--check` einfließen darf.
