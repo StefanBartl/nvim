@@ -300,6 +300,14 @@ plugins.add({
         adapter = "neotree",
         features = {
           cwd_sync = { enabled = true, reveal = false },
+          -- The mode badge (PROJECT/LOCK/…) is shown in wkdnvchad's own
+          -- statusline instead (modules/filetree_cwd_mode) via cwd_mode's
+          -- external-statusline API (badge()/component()). indicator.enabled
+          -- must stay false here, or the mode shows twice: once in the
+          -- shared statusline, once as a float in the tree window (with
+          -- laststatus=3 there is no per-window statusline for it to use,
+          -- so it would fall back to exactly that float).
+          cwd_mode = { indicator = { enabled = false } },
           -- Mark the currently-focused file with a sign-column icon (on top of
           -- neo-tree's own fg colour for all opened files). opened_sync is on by
           -- default and keeps those opened-file colours in sync as buffers open/

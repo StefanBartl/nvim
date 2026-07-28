@@ -330,7 +330,7 @@ bleiben oder die Datei wächst deutlich (~0,9 MB für 92 Commits, geschätzt
 aus Befund 2); veraltet ab dem nächsten Commit still → braucht einen
 sichtbaren Stand-Hinweis, wie ihn `:LibBrowse` im Artefakt-Modus schon hat.
 
-### C) `:LibBrowse history` — Editor-seitiger Commit-Browser
+### C) `:LibBrowse history` — Editor-seitiger Commit-Browser ✅
 
 `:LibBrowse` ist bereits ein Drill-down-Navigator mit Modi (`1`…`4`) — ein
 fünfter Modus fügt sich ein: Commits als Liste, `<CR>` hinein, berührte
@@ -343,6 +343,12 @@ landet in echten Dateien mit LSP.
 ("es geht hier vor allem um die Ansicht im Browser"). Deshalb hier
 *nicht* mehr die Hauptempfehlung, sondern die Ergänzung für den
 Editor-Alltag.
+
+**Umgesetzt in Phase 4 (`97b7837`)** — mit einer Abweichung: `<CR>` auf
+einer berührten Funktion wechselt in den **Calls-Modus (eingehend)**,
+statt die Aufrufer als dritte History-Ebene nachzubauen. Derselbe Blick,
+aber im Modus, der ihn ohnehin kann, und von dort geht die Navigation
+normal weiter.
 
 ### D) `:LibMap impact <ref>` → Quickfix-Liste
 
@@ -489,6 +495,32 @@ Ursprünglicher Plan (umgesetzt wie beschrieben):
 Editor-Gegenstück, sobald das Fundament steht. Kostet dann fast nur noch
 die UI, weil Phase 1 die gesamte Rechenlogik liefert.
 
+### ✅ Phase 4 erledigt (2026-07-28, `97b7837`)
+
+Der fünfte `:LibBrowse`-Modus, mit `:LibBrowse history` auch direkt
+aufrufbar. Zwei Ebenen: Commit-Liste → `<CR>` → die Funktionen, die der
+Diff berührt, je mit Aufrufer-Zahl. `<CR>` darauf verlässt History Richtung
+**Calls eingehend** — „wen trifft diese Änderung" ist die Frage, mit der man
+auf diesem Schirm steht, und Calls-in ist der Modus, der sie schon
+beantwortet. `-` zurück zur Liste, `gD` zeigt den Diff.
+
+**Kein Server nötig.** `serve.lua` existiert, um den Browser an der
+`file://`-Origin-Beschränkung vorbeizubringen — die der Editor nie hatte.
+Beide lesen dieselbe `history.lua`, also stimmen ihre Antworten inklusive
+beider Warnungen (Revision älter als die Map / Map ohne `line_end`) per
+Konstruktion überein, nicht per Durchsicht.
+
+Git läuft in `browse/init.lua` und legt das Ergebnis auf den State;
+`view.lua` bleibt rein — genau das hält den Modus headless testbar.
+
+**Ein latenter Bug fiel dabei auf und ist behoben:** `go` wendet seinen
+Patch mit `pairs` an, und `pairs` liefert nie einen Schlüssel mit Wert nil.
+`{ sha = nil }` *war* also der leere Patch, und `-` aus einem geöffneten
+Commit zeichnete ewig dieselbe Funktionsliste. Jetzt ein explizites
+`CLEAR`-Sentinel; die schon vorhandenen `{ fn = nil }`-Aufrufe hatten
+denselben Defekt, nur unbemerkt, weil danach niemand ein veraltetes `fn`
+las. Kein Test oberhalb fing das: jede andere Bewegung *setzt* nur Felder.
+
 ---
 
 ## Kandidaten, priorisiert
@@ -505,7 +537,7 @@ die UI, weil Phase 1 die gesamte Rechenlogik liefert.
 | R8 | `@group`/`@ingroup` (virtuelle Gruppen quer zur Modulstruktur) | Doxygen `\defgroup` | L | Eher nicht — kein aktueller Bedarf |
 | R9 | `ctags`-Export (`:LibMap tags`) | ctags/gutentags | S | Eher nicht — LSP deckt das schon ab |
 | R10 | Live-Diagramm-Reload bei `:LibBrowse live` auch für die HTML-Seite | — | M | Eher nicht — zwei offene Prozesse synchron zu halten lohnt den Aufwand nicht |
-| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **Umgesetzt** (Phasen 1–3: `history.lua`, `:LibMap impact`, `:LibMap serve` + History-Tab). Offen nur noch das optionale `:LibBrowse history` (Phase 4). Eigenes Konzept-Kapitel oben |
+| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **✅ Erledigt** (Phasen 1–4: `history.lua`, `:LibMap impact`, `:LibMap serve` + History-Tab, `:LibBrowse history`). Eigenes Konzept-Kapitel oben |
 
 ---
 
@@ -901,9 +933,9 @@ weiter unten für Details.
   `serve.lua` + `:LibMap serve` + History-Tab). Variante A ist damit
   vollständig umgesetzt — die Kosten sind lazy (0,299 s pro Commit gemessen
   statt 25–50 s vorab), Staleness entfällt, und der `file://`-Fall erklärt
-  sich statt tot zu sein. Offen ist nur noch **Phase 4** (optional):
-  `:LibBrowse history` als Editor-Gegenstück, das dank Phase 1 fast nur noch
-  UI kostet.
+  sich statt tot zu sein. **Phase 4** (`97b7837`) ergänzt `:LibBrowse
+  history` als Editor-Gegenstück — und kostete dank Phase 1 tatsächlich
+  fast nur UI. R11 ist damit vollständig.
 - **Code-Duplikate** (PMD/CPD-artig) oder **Churn-Hotspots** als fünftes
   Analysis-Tab-Werkzeug — beide laut "Einordnung"-Abschnitt oben die
   aufwendigsten verbliebenen Kandidaten (Baum-Ähnlichkeitsvergleich bzw.
