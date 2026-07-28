@@ -113,7 +113,7 @@ nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
 | R2 | Auto-erkannte Testabdeckung | — (eigene Idee) | S–M | **✅ Erledigt (2026-07-28, `ba919c2`)** |
 | R3 | Modul-/Namespace-A-Z-Index | Doxygen File/Class Index | S | Empfehlenswert, günstig |
 | R4 | Doku-Abdeckung als Zahl + Badge | — (eigene Idee, auf Findings aufbauend) | S | Empfehlenswert |
-| R5 | `param-name-mismatch`-Check | — (Erweiterung von `undocumented-param`) | S | Empfehlenswert |
+| R5 | `param-name-mismatch`-Check | — (Erweiterung von `undocumented-param`) | S | **✅ Erledigt (2026-07-28, `f353a16`)** |
 | R6 | Fan-in/Fan-out-Hotspot-Übersicht | — (auf `node.stats` aufbauend) | M | Später, wenn Bedarf konkret wird |
 | R7 | Volltext-Suche (Prose, `@param`-Text) | Doxygen Search-Index | M | Später |
 | R8 | `@group`/`@ingroup` (virtuelle Gruppen quer zur Modulstruktur) | Doxygen `\defgroup` | L | Eher nicht — kein aktueller Bedarf |
@@ -274,6 +274,32 @@ Verifiziert: End-to-End-Test in `docmap_spec.lua` gegen eine echte
 Spec-Datei-Fixture (nicht nur eine Namensliste), inkl. des
 "tests_dir existiert nicht"-Falls. `--check` grün, stylua/luacheck
 reposweit sauber (292 Dateien), volle Testsuite grün, CI grün.
+
+## R5 — Umsetzung (2026-07-28, `f353a16`)
+
+Neuer Check `param-name-mismatch` in `check.lua`, positional statt
+mengenbasiert (Lua hat keine Keyword-Argumente — "die n-te `@param`-Zeile
+beschreibt den n-ten Parameter" ist der eigentliche Vertrag, nicht "jeder
+Doku-Name kommt irgendwo in der Signatur vor", was zwei vertauschte
+Parameter durchwinken würde).
+
+Ein echter Sonderfall musste behandelt werden, bevor der Check nutzbar war:
+eine Doppelpunkt-Methode dokumentiert ihr eigenes `self` oft explizit
+(legitimer LuaCATS-Stil), obwohl `self` im rohen Signatur-Text (Luas
+Doppelpunkt-Zucker) gar nicht auftaucht — unkorrigiert hätte das *jede*
+Doppelpunkt-Methode mit dokumentiertem `self` fälschlich gemeldet. Verifiziert
+und gefixt gegen `lib.nvim`s eigene `Lru:get`/`Lru:put`.
+
+**Beim ersten Lauf gegen den echten Baum zwei echte Bugs gefunden, keine
+theoretischen**: `lua/lib/nvim/progress/styles/{float,kit}.lua`s
+`bind_cancel_on_escape` hatte einen `bufnr`-Parameter bekommen, ohne dass
+die `@param`-Zeile dafür ergänzt wurde — alle nachfolgenden Doku-Zeilen
+waren dadurch stillschweigend um eine Position verschoben. Beide direkt
+gefixt.
+
+Verifiziert: Test in `docmap_spec.lua` inkl. des Self-Ausschluss-Falls,
+`--check` grün, stylua/luacheck reposweit sauber, volle Testsuite grün,
+CI grün.
 
 ## Empfehlung für die nächste Runde
 
