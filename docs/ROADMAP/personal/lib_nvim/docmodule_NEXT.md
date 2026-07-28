@@ -404,9 +404,32 @@ IRs ab.
    Degradationsfall aus Befund 3 (Map ohne `functions` → Commit + Dateien,
    aber keine Funktions-Ausstrahlung).
 
-**Phase 2 — Logik verifizieren:** `:LibMap impact <ref>` (Variante D).
-Klein, sofort im Review-Alltag brauchbar, und beweist die Rechenlogik an
-echten Commits, bevor UI darauf gesetzt wird.
+### ✅ Phase 2 erledigt (2026-07-28, `05ec245`)
+
+`:LibMap impact [ref]` → Quickfix. Die Rechenlogik aus Phase 1 ist damit an
+echten Commits verifiziert, bevor Phase 3 Server und UI daraufsetzt.
+
+**Semantik bewusst wie `diff`:** alles zwischen `ref` und dem *Working Tree*,
+Default `HEAD`. Damit ist blankes `:LibMap impact` die Pre-Commit-Frage („was
+betrifft meine noch nicht committete Arbeit?") und bei sauberem Baum ist
+`impact HEAD~1` exakt „was hat der letzte Commit betroffen". Eine Regel statt
+zwei — und die *lebende* IR landet auf der `+`-Seite. Das ist der Punkt: die
+lebende IR hat immer `line_end`, also wird die neue Seite immer exakt
+attribuiert und nur die historische Seite kann degradieren. Beide Richtungen
+belegt: `impact HEAD~1` meldet die Näherung, blankes `impact` nicht.
+
+**Gegen `08b4494` selbst verifiziert:** attribuiert die `line_end`-Änderung
+korrekt an `M.scan_file`, jede neue `history.lua`-Funktion an sich selbst, und
+attribuiert für `init.lua`/`@types`/`README`/Spec korrekt *nichts* — deren
+Änderungen liegen außerhalb jeder gescannten Funktion.
+
+Die `:(exclude)<out_dir>`-Pathspec ist nicht optional und wird hier gesetzt,
+nicht dem Aufrufer überlassen: gemessen an einem Commit sind vom 4,8-MB-Diff
+alle bis auf 27 KB die regenerierte Map.
+
+`quickfix_items` liegt in `history.lua`, nicht in `command.lua` — aus dem
+Grund, aus dem `diff.render` in `diff.lua` liegt: `command.lua` bleibt dünne
+git-und-UI-Schale, und die Form der Antwort bleibt ohne Repository testbar.
 
 **Phase 3 — Server + History-Tab (Variante A):**
 1. `serve.lua`: minimaler HTTP-Server auf `vim.uv` (Request-Zeile parsen,
@@ -443,7 +466,7 @@ die UI, weil Phase 1 die gesamte Rechenlogik liefert.
 | R8 | `@group`/`@ingroup` (virtuelle Gruppen quer zur Modulstruktur) | Doxygen `\defgroup` | L | Eher nicht — kein aktueller Bedarf |
 | R9 | `ctags`-Export (`:LibMap tags`) | ctags/gutentags | S | Eher nicht — LSP deckt das schon ab |
 | R10 | Live-Diagramm-Reload bei `:LibBrowse live` auch für die HTML-Seite | — | M | Eher nicht — zwei offene Prozesse synchron zu halten lohnt den Aufwand nicht |
-| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **Analysiert, Phasenplan steht — Zielvariante: `:LibMap serve` + dynamischer History-Tab. Eigenes Konzept-Kapitel oben** |
+| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **Phase 1+2 umgesetzt** (`history.lua` + `:LibMap impact`); offen: Phase 3 (`:LibMap serve` + dynamischer History-Tab). Eigenes Konzept-Kapitel oben |
 
 ---
 
@@ -834,10 +857,11 @@ weiter unten für Details.
 **Nächster konkreter Schritt, in absteigender Priorität:**
 - **R11 — Commit-Historie mit Ausstrahlung** (2026-07-28 analysiert und nach
   Rückfrage korrigiert, eigenes Konzept-Kapitel oben mit Phasenplan):
-  **Phase 1 ist erledigt** (`08b4494`: `fn.line_end` + pures `history.lua`).
-  Nächster Schritt ist **Phase 2** (`:LibMap impact <ref>` → Quickfix), die
-  die Rechenlogik an echten Commits im Alltag verifiziert, bevor UI darauf
-  gesetzt wird. Empfohlene Zielvariante bleibt **A: `:LibMap serve`** (lokaler libuv-Server,
+  **Phase 1 und 2 sind erledigt** (`08b4494`: `fn.line_end` + pures
+  `history.lua`; `05ec245`: `:LibMap impact [ref]` → Quickfix, womit die
+  Rechenlogik an echten Commits verifiziert ist).
+  Nächster Schritt ist **Phase 3** (Server + History-Tab).
+  Empfohlene Zielvariante bleibt **A: `:LibMap serve`** (lokaler libuv-Server,
   History-Tab lädt beim Klick per `fetch`) — damit werden die Kosten lazy
   (~0,3 s pro Commit statt 25–50 s vorab) und Staleness entfällt ganz.
   Vorab lesen: Befund 1b (eine `file://`-Seite darf keine Nachbardatei
