@@ -110,7 +110,7 @@ nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
 | # | Feature | Vorbild | Aufwand | Einschätzung |
 |---|---|---|---|---|
 | R1 | Cross-Projekt-Tag-Dateien | Doxygen `TAGFILES` | M | **✅ Erledigt (2026-07-28, `0c67b50`)** |
-| R2 | Auto-erkannte Testabdeckung | — (eigene Idee) | S–M | **Empfehlenswert** |
+| R2 | Auto-erkannte Testabdeckung | — (eigene Idee) | S–M | **✅ Erledigt (2026-07-28, `ba919c2`)** |
 | R3 | Modul-/Namespace-A-Z-Index | Doxygen File/Class Index | S | Empfehlenswert, günstig |
 | R4 | Doku-Abdeckung als Zahl + Badge | — (eigene Idee, auf Findings aufbauend) | S | Empfehlenswert |
 | R5 | `param-name-mismatch`-Check | — (Erweiterung von `undocumented-param`) | S | Empfehlenswert |
@@ -247,6 +247,33 @@ lib.nvims eigene, echte Map verifiziert (ein synthetisches Fixture-Plugin,
 das `lib.nvim.fs.read` requiret, löst korrekt gegen `docs/map/module_map.json`
 auf). `--check` grün, stylua/luacheck sauber (291 Dateien reposweit),
 volle Testsuite grün. CI grün nach Push (`0c67b50`).
+
+## R2 — Umsetzung (2026-07-28, `ba919c2`)
+
+`coverage.lua` mit `M.resolve(ir, opts)` (setzt `fn.tested` auf jeder
+Funktion, Abgleich gegen `opts.tests_dir`, Default `docs/TESTS`) und
+`M.summary(ir)` (`tested, total`). Dieselbe Identifier-Zähltechnik wie
+`calls.lua`s `identifier_counts`, nur über den Testbaum statt den
+Quellbaum. `@test` selbst bleibt als manuelles Tag bestehen, hatte aber
+**0** echte Treffer — dieser Mechanismus ersetzt die Notwendigkeit, es zu
+pflegen, ohne das Tag selbst zu entfernen.
+
+Bewusst asymmetrisch beim Rendern: nur ein positives "tested"-Badge
+(Index-Tab, Funktions-Detail), nie ein "untested"-Warn-Badge — die
+Heuristik hat einen echten, dokumentierten blinden Fleck (indirekt
+getestete Funktionen, die nie namentlich in einer Spec auftauchen, bleiben
+unsichtbar), und ein Warn-Badge auf der Mehrheit der ~600 Funktionen wäre
+Rauschen, keine Information.
+
+`:LibMap`/`gen_map.lua` drucken jetzt eine Zusammenfassungszeile:
+`388/989 functions found by name in docs/TESTS (39%)` — lib.nvims eigene
+aktuelle Zahl. Das ist absichtlich der erste Baustein für den geplanten
+Analysis-Tab (siehe oben), aber schon jetzt ohne den Tab nutzbar.
+
+Verifiziert: End-to-End-Test in `docmap_spec.lua` gegen eine echte
+Spec-Datei-Fixture (nicht nur eine Namensliste), inkl. des
+"tests_dir existiert nicht"-Falls. `--check` grün, stylua/luacheck
+reposweit sauber (292 Dateien), volle Testsuite grün, CI grün.
 
 ## Empfehlung für die nächste Runde
 
