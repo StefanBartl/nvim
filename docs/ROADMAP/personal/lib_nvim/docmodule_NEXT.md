@@ -70,7 +70,7 @@ andocken kann, im selben Geist wie `opts.extra_checks`.
 | **Doku-Abdeckung** | eigene Idee (R4 unten) | eine Zahl statt verstreuter Findings |
 | **Parameter-Drift** | Erweiterung von `undocumented-param` (R5) | Doku, die dem Code hinterherhinkt |
 | **Fan-in/Fan-out-Hotspots** | eigene Idee (R6) | "was bricht am meisten, wenn ich es anfasse" |
-| **Zyklomatische Komplexität** | klassische Statik-Metrik (McCabe), kein Doxygen-Feature | längste/verschachteltste Funktionen, reiner `vim.treesitter`-Zähler über `if`/`elseif`/`while`/`for`/`repeat`/`and`/`or` je Funktionskörper — kein externes Tool nötig |
+| **Zyklomatische Komplexität** | klassische Statik-Metrik (McCabe), kein Doxygen-Feature | **✅ Erledigt (2026-07-28, `fd27b90`)** |
 | **Code-Duplikate** | PMD/CPD-artig ("Copy-Paste-Detector"), kein Doxygen-Feature | strukturelle Ähnlichkeit von Funktionskörpern über einen Baum von ~250 Dateien — genau das Muster, das in einer Utility-Bibliothek am ehesten unbemerkt entsteht |
 | **Churn-Hotspots (Git-Historie × Komplexität)** | Adam Tornhills "Your Code as a Crime Scene", kein Doxygen-Feature | Module, die *oft geändert werden* **und** *komplex sind* — der eigentliche Refactor-Risiko-Indikator, den weder Abdeckung noch Komplexität allein zeigen |
 | **God-Module-Geruch** | eigene Idee, verwandt mit `layer-violation` | Module mit ungewöhnlich hohem Fan-out (requiren fast alles) — Kandidat für Aufspaltung |
@@ -398,6 +398,38 @@ Ergebnis, ehrlich statt vollständig:
 `--check` grün, stylua/luacheck reposweit sauber (294 Dateien), volle
 Testsuite grün, CI grün.
 
+## Zyklomatische Komplexität — Umsetzung (2026-07-28, `fd27b90`)
+
+Viertes Analysis-Tab-Werkzeug, `fn.complexity` (McCabe): 1 Basis + ein
+Punkt je `if`/`elseif`/`while`/`for`/`repeat`, plus ein Punkt je `and`/`or`
+(ein Kurzschluss-Booleschoperator ist genauso eine Verzweigung wie ein
+`if`). Neue `COMPLEXITY_QUERY` + `cyclomatic_complexity()` in
+`functions.lua` — Knotentypen vorab empirisch gegen einen echten geparsten
+Baum verifiziert, nicht geraten (`if_statement`, `elseif_statement`,
+`while_statement`, `for_statement`, `repeat_statement`,
+`(binary_expression "and"/"or")`).
+
+Bewusst **unbedingt** während desselben Scans berechnet (nicht als
+späterer `resolve()`-Schritt wie bei `fn.tested`/`fn.documented`): die
+Berechnung braucht den Treesitter-Knoten selbst, der nur während dieses
+einen Durchlaufs existiert. Zählt über den gesamten Teilbaum der Funktion
+inklusive verschachtelter anonymer Closures — deren Verzweigungen muss der
+Leser der äußeren Funktion trotzdem verstehen, und docmap scannt die
+Closure ohnehin nicht als eigene Einheit.
+
+Viertes Panel (`renderAnalysisComplexity`) rankt nach **Funktion**, nicht
+nach Modul — das einzige Panel dieser Form, weil eine Durchschnittsbildung
+pro Modul die eine wirklich komplexe Funktion in einem sonst gesunden
+Modul verstecken würde.
+
+Verifiziert: Knotentypen empirisch gegen echten Baum bestätigt, dedizierter
+Test in `docmap_spec.lua` mit exakter erwarteter Zahl (if+elseif+while+for+
+repeat+and+or+Basis = 8), im Browser durchgeklickt — höchste Komplexität im
+echten `lib.nvim`-Baum: `docmap.command`s `M.setup` mit 104 (der
+`:LibMap`-Subcommand-Dispatcher — genau die Art Funktion, die dieses
+Ranking aufdecken soll). `--check` grün (0 errors, 0 warnings),
+stylua/luacheck sauber, volle Testsuite grün, CI grün.
+
 ## R6 — Umsetzung (2026-07-28, `ef36780`)
 
 Wie in der Spezifikation vorgesehen: drittes Analysis-Tab-Werkzeug
@@ -473,13 +505,18 @@ Analysis-Tab-Grundgerüst + erste zwei Werkzeuge (`2b9ac67`).
 **R6 erledigt** (2026-07-28, `ef36780`) — siehe "R6 — Umsetzung" weiter
 unten für Details.
 
+**Zyklomatische Komplexität erledigt** (2026-07-28, `fd27b90`) — viertes
+Analysis-Tab-Werkzeug, siehe "Zyklomatische Komplexität — Umsetzung"
+weiter unten für Details.
+
 **Nächster konkreter Schritt, in absteigender Priorität:**
-- **Zyklomatische Komplexität** als viertes Analysis-Tab-Werkzeug (siehe
-  "Einordnung — was zuerst" oben): einziger *wirklich neue* Rohdaten-Bedarf
-  unter den verbliebenen Kandidaten — ein neuer `vim.treesitter`-Query über
-  `if`/`elseif`/`while`/`for`/`repeat`/`and`/`or` je Funktionskörper, analog
-  zu `calls.lua`s `identifier_counts`. Noch keine Spezifikation wie bei R6
-  ausformuliert — das wäre der erste Schritt, bevor implementiert wird.
+- **Code-Duplikate** (PMD/CPD-artig) oder **Churn-Hotspots** als fünftes
+  Analysis-Tab-Werkzeug — beide laut "Einordnung"-Abschnitt oben die
+  aufwendigsten verbliebenen Kandidaten (Baum-Ähnlichkeitsvergleich bzw.
+  `git log`-Auswertung über Zeit), noch keine umsetzungsbereite
+  Spezifikation wie bei R6/Komplexität ausformuliert. Erst lohnend, wenn
+  der Tab selbst (jetzt mit vier Werkzeugen) tatsächlich benutzt wird —
+  siehe Begründung im "Einordnung"-Abschnitt.
 - **R7** (Volltextsuche) — zurückgestellt, siehe Begründung oben.
 - **R8/R9/R10** — bewusste Nicht-Entscheidungen, siehe Begründungen oben.
   Nur erneut aufgreifen, wenn sich die genannten Voraussetzungen ändern
