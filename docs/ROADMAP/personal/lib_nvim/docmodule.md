@@ -1191,5 +1191,59 @@ machen ist teurer, als sie zu verschieben.
 
 ---
 
+## O1 — Umsetzung (2026-07-28, `476d62e`)
+
+Vollständiger Durchgang durch `docmap/`: A–G, N0–N6, F1–F7, Z0–Z8, D1–D3 alle
+bereits ✅ (teils aus einer parallelen Session, beim Rebase integriert). D4
+bleibt bewusst zurückgestellt (siehe oben). Einziger konkret offene Punkt war
+O1.
+
+Umgesetzt anders als hier ursprünglich skizziert, aus einem neuen
+Anforderungs-Detail: der Hook soll sich **ohne Änderung an docmap selbst** in
+jedem anderen Plugin einsetzen lassen, das docmap als Library verwendet — nicht
+nur in diesem Repo. Das schob die Entscheidung von "lokal vs. lefthook" auf
+eine andere Achse: `lefthook` würde jedem *Konsumenten* von `lib.nvim` eine
+zusätzliche externe Abhängigkeit aufzwingen, nur weil `lib.nvim` selbst den
+Hook so betreibt — das widerspricht dem Ziel direkt. Lokal (`core.hooksPath`)
+gewinnt also nicht nur fürs Ein-Personen-Repo, sondern gerade *weil* es
+portabel ist: ein Plugin kopiert eine Datei, keine neue Toolchain.
+
+Was tatsächlich fehlte, war nicht Auto-Regenerierung+Staging (das hätte das
+bestehende `README.md` explizit widersprochen — "a hook that regenerates and
+stages output produces diffs the author never intended" — das war schon vor
+diesem Task bewusst so entschieden, nicht Teil dieser Änderung), sondern dass
+die CLI-Logik (`--check`/`--full`) fest in `scripts/gen_map.lua` verdrahtet
+war und nicht wiederverwendbar.
+
+Drei Änderungen in `lib.nvim`s `lua/lib/nvim/docmap/`:
+
+- **`cli.lua`** (neu) — die komplette `--check`/`--full`-Logik aus
+  `scripts/gen_map.lua` extrahiert, als `run(opts, argv) -> exit_code`. Kein
+  `vim.cmd("cq …")` mehr darin — das bleibt Sache des Aufrufers, damit die
+  Funktion selbst plain und testbar bleibt.
+- **`scripts/gen_map.lua`** — auf 3 Zeilen Logik geschrumpft: cwd auflösen,
+  `docmap.config` laden, `docmap.cli.run` aufrufen. Jedes andere Plugin kopiert
+  diese Datei jetzt **wortwörtlich**.
+- **`scripts/hooks/pre-commit`** — zum Template gemacht: drei Variablen oben
+  (`SOURCE_DIR`, `OUT_DIR`, `GEN_SCRIPT`) sind der einzige projektspezifische
+  Teil, der Rest ist generisches Shell. Kommentar im Skript verweist auf den
+  neuen README-Abschnitt "Reusing docmap in another plugin".
+
+`README.md` bekam den entsprechenden Abschnitt mit einem 3-Schritte-Rezept
+(eigene `config.lua`, `gen_map.lua` kopieren, `pre-commit` kopieren + 3 Zeilen
+anpassen) plus einem Minimalbeispiel für `Lib.Docmap.Opts`.
+
+Verifiziert: `--check` grün vor/nach Regenerierung (deterministisch), stylua
+sauber, luacheck sauber, volle Testsuite (`docs/TESTS/run.lua`) grün inkl.
+`docmap_spec.lua`, Hook manuell gegen eine echte staged Datei ausgeführt (Exit
+0). Gemergt `--ff-only` nach `main` (nach `rebase origin/main`, ein
+Style-Fix-Commit war zwischenzeitlich dazugekommen), gepusht.
+
+Damit ist O1 erledigt. Übrig laut diesem Dokument: **D4** (bewusste
+Nicht-Entscheidung, kein Task), **O2** (bewusst "jetzt nicht"), **B1**
+(explizit außerhalb docmap-Scope, eigenes künftiges Tool `:LibInspect`).
+
+---
+
 
 
