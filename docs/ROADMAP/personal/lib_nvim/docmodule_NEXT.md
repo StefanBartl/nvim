@@ -152,9 +152,50 @@ nicht (verschiebt die Regress nur um eins). Der einzige stabile Schnitt wäre
 eine eingefrorene Grenze — was den Zweck aufhebt.
 
 **Konsequenz:** die anderen vier Tabs sind *immer aktuell, committet und
-geprüft*. Ein History-Tab kann das per Konstruktion nicht sein. Er wäre eine
-konzeptionell andere Art Artefakt — das ist die zentrale Entscheidung, die
-vor der Umsetzung bewusst getroffen werden muss, nicht nebenbei.
+geprüft*. Ein History-Tab mit **eingebetteten** Daten kann das per
+Konstruktion nicht sein. Das schließt aber nur diese eine Variante aus —
+nicht die Browser-Ansicht als solche.
+
+## Befund 1b: "Cache-Datei daneben" trägt nicht — `file://` darf sie nicht lesen
+
+Der naheliegende Ausweg ("beim Klick die Daten holen, ggf. in eine
+Cache-Datei neben der HTML") scheitert an einer Browser-Sicherheitsgrenze,
+nicht an docmap: eine über `file://` geöffnete Seite bekommt in Chrome und
+Firefox einen *opaken* Origin. `fetch()` lehnt das `file:`-Schema für
+CORS-Anfragen grundsätzlich ab, und `XMLHttpRequest` auf eine Nachbardatei
+ist ohne `--allow-file-access-from-files` ebenfalls gesperrt (Firefox seit
+FF68 via `privacy.file_unique_origin`). `:LibMap open` öffnet aber genau so:
+als `file://`-URL im Systembrowser.
+
+*Ehrlichkeitshinweis zum Test:* im eingebauten Vorschau-Browser dieser
+Sitzung funktionierten `fetch` **und** XHR auf eine Nachbardatei. Der ist
+aber kein echter `file://`-Origin (meldet selbst "non-http" und rendert
+projektfremde Dateien als Snapshot) und taugt daher nicht als Beleg. Auf
+das Verhalten des Default-Browsers eines Nutzers kann man sich hier nicht
+verlassen — das ist der Punkt, nicht ob es irgendwo zufällig geht.
+
+**Konsequenz:** "dynamisch holen" heißt konkret **lokaler HTTP-Server**.
+Über `http://127.0.0.1:PORT` ist der Origin normal, `fetch()` funktioniert
+überall, und die Gegenstelle kann `git` direkt aufrufen.
+
+## Befund 1c: ein lokaler Server ist machbar — ohne neue Abhängigkeit (gemessen)
+
+Verifiziert im headless nvim:
+
+```
+new_tcp: true   bind: true   bound to port: 63840
+vim.system available: function
+```
+
+`vim.uv.new_tcp()` + `bind`/`listen` steht bereit, `vim.system()` ist für
+git bereits das etablierte Muster (`command.lua` nutzt es für `diff`). Ein
+minimaler HTTP-Server in reinem Lua auf libuv ist damit realistisch ~150
+Zeilen und bringt **keine externe Abhängigkeit** mit — passt also zum
+"nur vim und sich selbst"-Prinzip.
+
+Damit dreht sich die Bewertung: mit Server ist die Browser-Ansicht nicht
+nur möglich, sondern *besser* als jede eingebettete Variante — siehe
+Abwägung unten.
 
 ## Befund 2: der Diff-Text wird von den Artefakten selbst dominiert
 
@@ -236,80 +277,125 @@ Alte Zeilen werden gegen die IR von `<ref>~1` aufgelöst, neue gegen die von
 Für die vollen 92 auflösbaren Commits also grob 25–50 s plus Parsen — d.h.
 **definitiv opt-in**, niemals Teil eines normalen `:LibMap`-Laufs.
 
-## Drei mögliche Orte, mit Abwägung
+## Vier mögliche Orte, mit Abwägung
 
-### A) `:LibMap impact <ref>` → Quickfix-Liste
+### A) `:LibMap serve` — lokaler Server, dynamisch geladener History-Tab ⭐ **empfohlen**
 
-Kein Artefakt, keine Staleness, passt exakt in die bestehende
-Kommando-Familie (`why`, `diff`, `dot`). Rechnet live für *einen* Commit
-(oder Range): welche Funktionen berührt, wer ruft sie, welche Module strahlt
-es an. Quickfix ist in diesem Repo bereits der etablierte Ort für "alles
-Betroffene" (`gq`, `gI`, `why`).
+Genau die ursprüngliche Idee, sauber gebaut: `:LibMap serve` startet einen
+libuv-TCP-Server auf `127.0.0.1:<zufälliger Port>` und öffnet die Map über
+`http://`. Der History-Tab lädt beim Anklicken per `fetch()`:
 
-**Dafür:** billigster echter Nutzen, sofort einsetzbar im Review-Alltag
-("was fasse ich mit diesem Commit alles an").
-**Dagegen:** kein Browsen, keine Liste, kein Diff-Viewer — nicht das, was
-die Anfrage beschreibt.
+```
+GET  /                      → index.html (dieselbe Datei wie bisher)
+GET  /api/commits?n=50      → Commit-Liste (git log, ~instant)
+GET  /api/commit/<sha>      → berührte Funktionen + deren Aufrufer + Diff
+```
 
-### B) `:LibBrowse`-Modus (Editor-seitiger Commit-Browser) — **empfohlen**
+**Dafür — und das ist der ausschlaggebende Punkt:** die Kosten werden
+**lazy**. Aus Befund 3 (0,27 s je historischem Artefakt): ein Klick auf
+einen Commit kostet ~0,3 s, statt 25–50 s Vorabberechnung für alle 92.
+Dazu: keinerlei Staleness (git wird im Moment der Anfrage gefragt), keine
+Größenobergrenze (Diff-Text wird geliefert, nicht eingebettet — Befund 2
+erledigt sich), kein zweites Artefakt, kein `.gitignore`-Jonglieren. Und
+der Server verallgemeinert: R10 (Live-Reload) wäre danach fast geschenkt,
+und teure Analysis-Werkzeuge (Duplikate, Churn) verlören ihre
+Vorabberechnungs-Grenze ebenfalls.
 
-`:LibBrowse` ist bereits ein Drill-down-Navigator mit Modi (`1`…`4`:
-Structure/Deps/Calls/Types) — ein fünfter Modus "History" fügt sich exakt
-ein. Commits als Liste, `<CR>` steigt in einen Commit, die berührten
-Funktionen werden zur Liste, `<CR>` darauf zeigt deren Aufrufer, `gq`
-schickt alles in die Quickfix-Liste, `gd` springt in die Quelle.
+**Dagegen — ehrlich zu benennen:**
+- **Lebenszyklus:** ein laufender Prozess will gestartet und beendet werden
+  (`:LibMap serve stop` + `VimLeavePre`-Autocmd). Genau das war R10s
+  Ablehnungsgrund ("Prozessverwaltung") — dort erkaufte es aber nur eine
+  Bequemlichkeit, hier ist es *die Voraussetzung des Features*. Andere
+  Abwägung, anderes Ergebnis.
+- **Sicherheitsfläche:** strikt an `127.0.0.1` binden (nie `0.0.0.0`), und
+  `<sha>` **hart validieren** (`^[0-9a-f]{7,40}$`) bevor es an git geht —
+  sonst ist das Argument-Injection in einen Subprozess. Ebenso keine
+  Pfad-Parameter, die aus dem Repo herausführen können.
+- Bricht das bisherige Selbstverständnis "docmap erzeugt Dateien, hat aber
+  keine Laufzeit". Das ist eine bewusste Erweiterung, keine Kleinigkeit.
 
-**Dafür:** git ist live verfügbar → **kein Staleness-Problem, kein
-Artefakt**; Diff-Text kostenlos via `git show` in einen Buffer (und `gd`
-springt in echte Dateien mit LSP — genau die Begründung, mit der schon der
-HTML-Quelltext-Browser D4 verworfen wurde); die Kosten aus Befund 3 fallen
-nur beim tatsächlichen Öffnen an, nicht bei jeder Generierung; passt zum
-Selbstverständnis "nicht das Diagramm im Terminal, sondern das, was der
-Editor besser kann".
-**Dagegen:** kein Web-UI.
+### B) Snapshot ohne Server: `:LibMap history` regeneriert und öffnet
 
-### C) HTML-"History"-Tab als **separat generiertes, gitignoriertes** Artefakt
+Der billige Kompromiss, falls keine Laufzeit gewünscht ist. Kein `fetch`,
+alles eingebettet — aber in eine **eigene, gitignorierte** Datei
+(`docs/map/history.html`), erzeugt *unmittelbar vor* dem Öffnen. Dadurch ist
+sie im Moment des Betrachtens aktuell; Befund 1 greift nicht, weil sie nie
+committet wird.
 
-Bekommt das visuelle Tab-Erlebnis der Anfrage, aber nur unter der Bedingung
-aus Befund 1: eigene Datei (z.B. `docs/map/history.html`), **nicht committet,
-nicht in `--check`**, erzeugt durch ein explizites `:LibMap history [N]`.
-Eingebettet würde nur die Analyse (Commit-Metadaten + berührte Funktionen +
-deren Aufrufer, grob geschätzt ~1 KB/Commit → ~100 KB für 92 Commits, neben
-1,5 MB `index.html` unkritisch); der Diff-Text bliebe extern über
-`repo_url` verlinkt.
+**Dafür:** keine neue Laufzeit, keine Sicherheitsfläche, kein
+Lebenszyklus. Teilbar/versendbar als einzelne Datei.
+**Dagegen:** muss alles vorab berechnen, was man anklicken könnte → 25–50 s
+je Aufruf (Befund 3); Diff-Text müsste extern über `repo_url` verlinkt
+bleiben oder die Datei wächst deutlich (~0,9 MB für 92 Commits, geschätzt
+aus Befund 2); veraltet ab dem nächsten Commit still → braucht einen
+sichtbaren Stand-Hinweis, wie ihn `:LibBrowse` im Artefakt-Modus schon hat.
 
-**Dafür:** genau die beschriebene Oberfläche, teilbar/versendbar.
-**Dagegen:** bricht die Eigenschaft "jeder Tab ist aktuell, committet,
-geprüft"; veraltet ab dem nächsten Commit stillschweigend (bräuchte also
-mindestens einen sichtbaren Stand-Hinweis, wie `:LibBrowse` ihn beim
-Artefakt-Modus schon zeigt); zweiter Generierungspfad zu pflegen.
+### C) `:LibBrowse history` — Editor-seitiger Commit-Browser
+
+`:LibBrowse` ist bereits ein Drill-down-Navigator mit Modi (`1`…`4`) — ein
+fünfter Modus fügt sich ein: Commits als Liste, `<CR>` hinein, berührte
+Funktionen als Liste, `<CR>` zeigt deren Aufrufer, `gq` in die Quickfix-Liste,
+`gd` in die Quelle, Diff via `git show` in einen Buffer.
+
+**Dafür:** git live, keine Staleness, kein Artefakt, kein Server; `gd`
+landet in echten Dateien mit LSP.
+**Dagegen:** **kein Web-UI** — und genau das war der Kern der Anfrage
+("es geht hier vor allem um die Ansicht im Browser"). Deshalb hier
+*nicht* mehr die Hauptempfehlung, sondern die Ergänzung für den
+Editor-Alltag.
+
+### D) `:LibMap impact <ref>` → Quickfix-Liste
+
+Kein Artefakt, keine Staleness, passt in die Kommando-Familie (`why`,
+`diff`, `dot`). Rechnet live für *einen* Commit: welche Funktionen berührt,
+wer ruft sie, welche Module strahlt es an.
+
+**Dafür:** billigster echter Nutzen, unabhängig von jeder UI-Entscheidung —
+und teilt sich das gesamte Fundament mit A/B/C.
+**Dagegen:** kein Browsen — aber als *Zwischenschritt* ideal, weil es die
+Rechenlogik verifiziert, bevor UI darauf gebaut wird.
 
 ## Empfohlener Phasenplan
 
-Die Phasen sind bewusst so geschnitten, dass jede für sich Nutzen liefert und
-die Entscheidung B-vs-C erst am Ende fällt — wenn das Fundament steht und
-sich zeigt, ob das Quickfix-Ergebnis den Bedarf schon deckt.
+So geschnitten, dass das Fundament zuerst steht und unabhängig testbar ist —
+Variante A braucht es genauso wie B/C/D, also ist keine Phase verschwendet,
+egal wie die UI-Entscheidung ausfällt.
 
-**Phase 1 — Fundament (klein, testbar, kein UI):**
+**Phase 1 — Fundament (klein, testbar, kein UI, keine Laufzeit):**
 1. `fn.line_end` in `functions.lua`/`@types` ergänzen (Daten liegen in
    `ranges` bereits vor), `to_json` mitziehen.
 2. Neues `history.lua`, **pur** im Stil von `diff.lua` (kein git, kein
    Dateisystem — nur Daten rein, Struktur raus): `hunks + IR → berührte
-   Funktionen`, und darauf aufbauend `→ direkte Aufrufer → betroffene
-   Module`. Das git-Holen bleibt wie bei `diff.lua` in `command.lua`.
-3. Test gegen echte Fixtures im `docmap_spec.lua`-Stil: Hunk-Bereich auf
-   Funktion abbilden, inklusive der Ränder (Zeile == `line`, Zeile ==
-   `line_end`, rein additiver Hunk `@@ -x,0 +y,n @@`).
+   Funktionen`, darauf aufbauend `→ direkte Aufrufer → betroffene Module`.
+   Das git-Holen bleibt wie bei `diff.lua` in `command.lua`.
+3. Tests im `docmap_spec.lua`-Stil gegen echte Fixtures: Hunk-Bereich auf
+   Funktion abbilden **inklusive der Ränder** (Zeile == `line`, Zeile ==
+   `line_end`, rein additiver Hunk `@@ -x,0 +y,n @@`), und der ehrliche
+   Degradationsfall aus Befund 3 (Map ohne `functions` → Commit + Dateien,
+   aber keine Funktions-Ausstrahlung).
 
-**Phase 2 — erster echter Nutzen:** `:LibMap impact <ref>` (Variante A).
-Klein, sofort brauchbar, deckt "wohin strahlt dieser Commit aus" bereits ab.
+**Phase 2 — Logik verifizieren:** `:LibMap impact <ref>` (Variante D).
+Klein, sofort im Review-Alltag brauchbar, und beweist die Rechenlogik an
+echten Commits, bevor UI darauf gesetzt wird.
 
-**Phase 3 — Browsing:** dann entscheiden. Empfehlung **B** (`:LibBrowse
-history`), weil es das Staleness-Problem vollständig umgeht, den Diff-Text
-gratis bekommt und dieselbe Begründung trägt, mit der D4 (HTML-Quelltext-
-Browser) schon einmal zugunsten des Editors verworfen wurde. **C** bleibt
-möglich, wenn ausdrücklich das Web-UI gewünscht ist — dann aber bewusst als
-separates, gitignoriertes Artefakt mit sichtbarem Stand-Hinweis.
+**Phase 3 — Server + History-Tab (Variante A):**
+1. `serve.lua`: minimaler HTTP-Server auf `vim.uv` (Request-Zeile parsen,
+   drei Routen, statisch ausliefern) — `127.0.0.1`, zufälliger Port,
+   `VimLeavePre`-Teardown, harte `<sha>`-Validierung.
+2. `:LibMap serve [stop]`, und `:LibMap open` bekommt die Wahl zwischen
+   `file://` (wie bisher) und `http://` (wenn ein Server läuft).
+3. History-Tab in `render/html.lua`: Commit-Liste, Klick → `fetch` →
+   Detailansicht mit berührten Funktionen, deren Aufrufern und den
+   betroffenen Modulen (verlinkt in Tree/Hierarchy/Calls, wie jede andere
+   Querverweis-Stelle der Seite), Diff-Text darunter.
+4. **Wichtig:** der Tab muss sich sauber verhalten, wenn *kein* Server läuft
+   (also bei `file://`-Aufruf der committeten Map) — dann eine erklärende
+   Meldung statt eines toten Tabs, nach dem Muster der Hierarchy-Views ohne
+   LuaLS-Daten ("`:LibMap full` ausführen").
+
+**Phase 4 — optional:** `:LibBrowse history` (Variante C) als
+Editor-Gegenstück, sobald das Fundament steht. Kostet dann fast nur noch
+die UI, weil Phase 1 die gesamte Rechenlogik liefert.
 
 ---
 
@@ -327,7 +413,7 @@ separates, gitignoriertes Artefakt mit sichtbarem Stand-Hinweis.
 | R8 | `@group`/`@ingroup` (virtuelle Gruppen quer zur Modulstruktur) | Doxygen `\defgroup` | L | Eher nicht — kein aktueller Bedarf |
 | R9 | `ctags`-Export (`:LibMap tags`) | ctags/gutentags | S | Eher nicht — LSP deckt das schon ab |
 | R10 | Live-Diagramm-Reload bei `:LibBrowse live` auch für die HTML-Seite | — | M | Eher nicht — zwei offene Prozesse synchron zu halten lohnt den Aufwand nicht |
-| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **Analysiert, Phasenplan steht — siehe eigenes Konzept-Kapitel oben** |
+| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **Analysiert, Phasenplan steht — Zielvariante: `:LibMap serve` + dynamischer History-Tab. Eigenes Konzept-Kapitel oben** |
 
 ---
 
@@ -716,12 +802,16 @@ Analysis-Tab-Werkzeug, siehe "Zyklomatische Komplexität — Umsetzung"
 weiter unten für Details.
 
 **Nächster konkreter Schritt, in absteigender Priorität:**
-- **R11 — Commit-Historie mit Ausstrahlung** (2026-07-28 analysiert, eigenes
-  Konzept-Kapitel oben mit Phasenplan): Phase 1 (`fn.line_end` + pures
-  `history.lua`) ist klein, testbar und ohne UI-Entscheidung umsetzbar —
-  der beste nächste Schritt, wenn hier weitergemacht wird. Wichtig vorab
-  lesen: Befund 1 (Historie kann strukturell nicht ins `--check`-Artefakt)
-  bestimmt, welche der drei Umsetzungsvarianten überhaupt in Frage kommt.
+- **R11 — Commit-Historie mit Ausstrahlung** (2026-07-28 analysiert und nach
+  Rückfrage korrigiert, eigenes Konzept-Kapitel oben mit Phasenplan):
+  Phase 1 (`fn.line_end` + pures `history.lua`) ist klein, testbar und
+  unabhängig von der UI-Entscheidung — der beste nächste Schritt.
+  Empfohlene Zielvariante ist **A: `:LibMap serve`** (lokaler libuv-Server,
+  History-Tab lädt beim Klick per `fetch`) — damit werden die Kosten lazy
+  (~0,3 s pro Commit statt 25–50 s vorab) und Staleness entfällt ganz.
+  Vorab lesen: Befund 1b (eine `file://`-Seite darf keine Nachbardatei
+  lesen → "dynamisch" heißt zwingend Server) und die dort benannte
+  Sicherheits-/Lebenszyklus-Auflage.
 - **Code-Duplikate** (PMD/CPD-artig) oder **Churn-Hotspots** als fünftes
   Analysis-Tab-Werkzeug — beide laut "Einordnung"-Abschnitt oben die
   aufwendigsten verbliebenen Kandidaten (Baum-Ähnlichkeitsvergleich bzw.
