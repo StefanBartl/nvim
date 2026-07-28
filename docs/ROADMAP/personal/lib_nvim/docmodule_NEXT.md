@@ -93,10 +93,13 @@ gebraucht wird).
 
 **Empfohlene Reihenfolge, wenn der Tab drankommt:** Tab-Grundgerüst (leerer
 Werkzeugkasten mit Umschalter, nach dem Hierarchy-Toolbar-Muster) → R2 als
-erstes eingehängtes Werkzeug (da ohnehin als Nächstes geplant, siehe unten) →
-R4/R6 nachziehen (billig, bereits vorhandene Daten) → zyklomatische
-Komplexität als erstes wirklich neues Werkzeug, danach neu bewerten, ob
-Duplikate/Churn echten Bedarf treffen.
+erstes eingehängtes Werkzeug → R4 nachziehen → zyklomatische Komplexität als
+erstes wirklich neues Werkzeug, danach neu bewerten, ob Duplikate/Churn
+echten Bedarf treffen.
+
+**Umgesetzt (2026-07-28, `2b9ac67`):** Tab-Grundgerüst + R2 + R4 als die
+ersten beiden Werkzeuge, siehe Abschnitt weiter unten. R6 (Fan-in/Fan-out)
+und zyklomatische Komplexität bleiben die nächsten Kandidaten für diesen Tab.
 
 **Nicht jetzt, nur notiert:** Lizenz-/Abhängigkeits-Scanning (für eine
 in sich geschlossene Lua-Utility-Bibliothek ohne externe Paketabhängigkeiten
@@ -111,7 +114,7 @@ nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
 |---|---|---|---|---|
 | R1 | Cross-Projekt-Tag-Dateien | Doxygen `TAGFILES` | M | **✅ Erledigt (2026-07-28, `0c67b50`)** |
 | R2 | Auto-erkannte Testabdeckung | — (eigene Idee) | S–M | **✅ Erledigt (2026-07-28, `ba919c2`)** |
-| R3 | Modul-/Namespace-A-Z-Index | Doxygen File/Class Index | S | Empfehlenswert, günstig |
+| R3 | Modul-/Namespace-A-Z-Index | Doxygen File/Class Index | S | **✅ Erledigt (2026-07-28, `eb25ca9`)** |
 | R4 | Doku-Abdeckung als Zahl + Badge | — (eigene Idee, auf Findings aufbauend) | S | **✅ Erledigt (2026-07-28, `a467e49`)** |
 | R5 | `param-name-mismatch`-Check | — (Erweiterung von `undocumented-param`) | S | **✅ Erledigt (2026-07-28, `f353a16`)** |
 | R6 | Fan-in/Fan-out-Hotspot-Übersicht | — (auf `node.stats` aufbauend) | M | Später, wenn Bedarf konkret wird |
@@ -361,6 +364,50 @@ Ergebnis, ehrlich statt vollständig:
 
 `--check` grün, stylua/luacheck reposweit sauber (294 Dateien), volle
 Testsuite grün, CI grün.
+
+## R3 — Umsetzung (2026-07-28, `eb25ca9`)
+
+Umschalter "Functions / Modules" im Index-Tab (`state.iview`), spiegelt das
+Hierarchy-Toolbar-Muster. Zweiter Index über alle `module`/`namespace`-Knoten
+(bewusst ohne `file`-Knoten — eine Datei wird über ihr Modul im Tree-Tab
+erreicht), sortiert wie der Funktionsindex nach dem letzten Segment des
+Modulpfads. Sortier-/Sprungbar-Logik aus dem Funktionsindex extrahiert
+(`buildIndexBuckets`/`indexJumpBar`/`wireIndexBody`) statt dupliziert — genau
+wie in der Ursprungsidee vorhergesagt. Verifiziert im Browser: 158
+Module/Namespaces indiziert, Sprungleiste und Klick-Navigation funktionieren.
+
+## Analysis-Tab — Umsetzung (2026-07-28, `2b9ac67`)
+
+Fünfter Tab, wie oben entworfen: Werkzeugkasten-Toolbar statt Diagramm.
+Zwei Werkzeuge live, beide auf bereits vorhandenen IR-Daten:
+
+- **Test coverage** (R2) — `fn.tested`, pro Modul Treffer/Gesamt
+- **Documentation** (R4) — `fn.documented`, neu: `doccoverage.lua` bekam
+  `M.is_documented` (die eine Definition, auf der jetzt `M.resolve` UND
+  `M.summary` aufbauen, damit sie nie auseinanderlaufen können) und
+  `M.resolve`, das es in die IR stempelt — genau wie `coverage.resolve`
+  das für `fn.tested` schon tut.
+
+Beide Panels: pro Modul Treffer/Gesamt + Prozent + Balken, **schlechteste
+zuerst** sortiert (Tiebreak: mehr betroffene Funktionen zuerst), Klick auf
+eine Zeile öffnet das Modul im Tree-Tab. Das Documentation-Panel schließt
+`@internal`-Funktionen aus den Summen aus — exakt wie `doccoverage.summary`
+das selbst tut, verifiziert: CLI zeigt "653/984 (66%)", das Panel exakt
+dieselbe Zahl. Bewusst nur zwei Werkzeuge — R6 und weitere sind echte
+Kandidaten, haben aber noch keine in die IR gestempelten Daten; ein dritter
+Button, der ein leeres Panel öffnet, wäre genau das, was die
+"disabled mit Zähler"-Regel des Kontextmenüs an anderer Stelle vermeidet.
+
+**Nebenbei gefunden und gefixt:** R3s Index-Umschalter fragte
+`#ixtoggle .hview-btn` ab, um die Aktiv-Markierung zu setzen, aber die
+Buttons hatten nur die Klasse `ixview-btn` (bewusst, um nicht mit dem
+globalen `.hview-btn`-Klick-Handler zu kollidieren) — die aktive
+Hervorhebung aktualisierte sich seit R3 nie wirklich. Selektor korrigiert.
+
+Verifiziert: im Browser durchgeklickt (beide Panels, Sortierung,
+Navigation, Zahlen gegen CLI abgeglichen), neuer Test in `docmap_spec.lua`
+für `doccoverage.resolve`. `--check` grün, stylua/luacheck sauber (294
+Dateien), volle Testsuite grün, CI grün.
 
 ## Empfehlung für die nächste Runde
 
