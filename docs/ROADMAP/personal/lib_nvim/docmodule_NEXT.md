@@ -431,6 +431,45 @@ alle bis auf 27 KB die regenerierte Map.
 Grund, aus dem `diff.render` in `diff.lua` liegt: `command.lua` bleibt dünne
 git-und-UI-Schale, und die Form der Antwort bleibt ohne Repository testbar.
 
+### ✅ Phase 3 erledigt (2026-07-28, `07c090c`)
+
+`serve.lua` (~150 Zeilen auf `vim.uv`, keine neue Abhängigkeit),
+`:LibMap serve [stop]`, `:LibMap open` bevorzugt `http://` wenn ein Server
+läuft, und der History-Tab in `render/html.lua`.
+
+**Sicherheit ist erzwungen, nicht dokumentiert** — und gegen einen laufenden
+Server mit curl belegt: `--upload-pack=…`, `$(id)`, `abc;id`, `HEAD`,
+`../../etc/passwd`, zu kurze/zu lange Hashes → alle **400**, keiner erreicht
+git. Traversal auf der Static-Route → 400, POST → 405, `netstat` bestätigt
+Bindung ausschließlich an `127.0.0.1`. `VimLeavePre` schließt den Socket.
+Auch `HEAD` wird abgelehnt: eine Whitelist, die Ausnahmen macht, ist keine.
+
+**Kosten wie vorhergesagt:** ein Commit-Detail dauert **0,299 s** (gemessen)
+— exakt die ~0,3 s aus Befund 3, statt 25–50 s Vorabberechnung.
+
+**Handler laufen über `vim.schedule`:** libuv-Read-Callbacks sind ein
+Fast-Event-Kontext, in dem `vim.system():wait()` (also `vim.wait`) nicht
+laufen darf. Beim In-Process-Test fiel genau das auf — verschachtelte
+`:wait()` verklemmen sich; der echte Fall (Browser = eigener Prozess) ist
+davon nicht betroffen, getestet wurde daher gegen einen Hintergrund-nvim.
+
+**Drei Zustände statt einem**, an echten Commits verifiziert: exakt;
+*Spans genähert* (`1ce752e` → meldet die Näherung und findet exakt
+`S.dedent` + `M.is_array`); *Revision älter als die Map* (Root-Commit →
+degradiert auf „nur Dateien" statt am fehlenden Parent zu scheitern).
+Nebenbefund: `08b4494` meldet **korrekt keine** Näherung, obwohl sein Parent
+`line_end` noch nicht kannte — alle seine Hunks sind reine Einfügungen
+(`-N,0`), die alte Seite steuert also gar keine Ranges bei. Ein rein
+additiver Commit degradiert nie, egal wie alt das Parent-Artefakt ist.
+
+**Der `file://`-Fall ist erfüllt:** der Tab erklärt sich (Screenshot geprüft)
+*und* versucht die Anfrage gar nicht erst, die Konsole bleibt sauber.
+Modul-Chips verlinken in den Tree — aber nur, wenn der Node in der
+*aktuellen* Map noch existiert; ein Commit kann etwas nennen, das inzwischen
+umbenannt wurde, und ein Link ins Leere wäre schlechter als Klartext.
+
+Ursprünglicher Plan (umgesetzt wie beschrieben):
+
 **Phase 3 — Server + History-Tab (Variante A):**
 1. `serve.lua`: minimaler HTTP-Server auf `vim.uv` (Request-Zeile parsen,
    drei Routen, statisch ausliefern) — `127.0.0.1`, zufälliger Port,
@@ -466,7 +505,7 @@ die UI, weil Phase 1 die gesamte Rechenlogik liefert.
 | R8 | `@group`/`@ingroup` (virtuelle Gruppen quer zur Modulstruktur) | Doxygen `\defgroup` | L | Eher nicht — kein aktueller Bedarf |
 | R9 | `ctags`-Export (`:LibMap tags`) | ctags/gutentags | S | Eher nicht — LSP deckt das schon ab |
 | R10 | Live-Diagramm-Reload bei `:LibBrowse live` auch für die HTML-Seite | — | M | Eher nicht — zwei offene Prozesse synchron zu halten lohnt den Aufwand nicht |
-| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **Phase 1+2 umgesetzt** (`history.lua` + `:LibMap impact`); offen: Phase 3 (`:LibMap serve` + dynamischer History-Tab). Eigenes Konzept-Kapitel oben |
+| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **Umgesetzt** (Phasen 1–3: `history.lua`, `:LibMap impact`, `:LibMap serve` + History-Tab). Offen nur noch das optionale `:LibBrowse history` (Phase 4). Eigenes Konzept-Kapitel oben |
 
 ---
 
@@ -857,16 +896,14 @@ weiter unten für Details.
 **Nächster konkreter Schritt, in absteigender Priorität:**
 - **R11 — Commit-Historie mit Ausstrahlung** (2026-07-28 analysiert und nach
   Rückfrage korrigiert, eigenes Konzept-Kapitel oben mit Phasenplan):
-  **Phase 1 und 2 sind erledigt** (`08b4494`: `fn.line_end` + pures
-  `history.lua`; `05ec245`: `:LibMap impact [ref]` → Quickfix, womit die
-  Rechenlogik an echten Commits verifiziert ist).
-  Nächster Schritt ist **Phase 3** (Server + History-Tab).
-  Empfohlene Zielvariante bleibt **A: `:LibMap serve`** (lokaler libuv-Server,
-  History-Tab lädt beim Klick per `fetch`) — damit werden die Kosten lazy
-  (~0,3 s pro Commit statt 25–50 s vorab) und Staleness entfällt ganz.
-  Vorab lesen: Befund 1b (eine `file://`-Seite darf keine Nachbardatei
-  lesen → "dynamisch" heißt zwingend Server) und die dort benannte
-  Sicherheits-/Lebenszyklus-Auflage.
+  **Phasen 1–3 sind erledigt** (`08b4494`: `fn.line_end` + pures
+  `history.lua`; `05ec245`: `:LibMap impact [ref]` → Quickfix; `07c090c`:
+  `serve.lua` + `:LibMap serve` + History-Tab). Variante A ist damit
+  vollständig umgesetzt — die Kosten sind lazy (0,299 s pro Commit gemessen
+  statt 25–50 s vorab), Staleness entfällt, und der `file://`-Fall erklärt
+  sich statt tot zu sein. Offen ist nur noch **Phase 4** (optional):
+  `:LibBrowse history` als Editor-Gegenstück, das dank Phase 1 fast nur noch
+  UI kostet.
 - **Code-Duplikate** (PMD/CPD-artig) oder **Churn-Hotspots** als fünftes
   Analysis-Tab-Werkzeug — beide laut "Einordnung"-Abschnitt oben die
   aufwendigsten verbliebenen Kandidaten (Baum-Ähnlichkeitsvergleich bzw.
