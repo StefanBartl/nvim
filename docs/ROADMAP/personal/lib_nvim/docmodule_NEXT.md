@@ -112,7 +112,7 @@ nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
 | R1 | Cross-Projekt-Tag-Dateien | Doxygen `TAGFILES` | M | **✅ Erledigt (2026-07-28, `0c67b50`)** |
 | R2 | Auto-erkannte Testabdeckung | — (eigene Idee) | S–M | **✅ Erledigt (2026-07-28, `ba919c2`)** |
 | R3 | Modul-/Namespace-A-Z-Index | Doxygen File/Class Index | S | Empfehlenswert, günstig |
-| R4 | Doku-Abdeckung als Zahl + Badge | — (eigene Idee, auf Findings aufbauend) | S | Empfehlenswert |
+| R4 | Doku-Abdeckung als Zahl + Badge | — (eigene Idee, auf Findings aufbauend) | S | **✅ Erledigt (2026-07-28, `a467e49`)** |
 | R5 | `param-name-mismatch`-Check | — (Erweiterung von `undocumented-param`) | S | **✅ Erledigt (2026-07-28, `f353a16`)** |
 | R6 | Fan-in/Fan-out-Hotspot-Übersicht | — (auf `node.stats` aufbauend) | M | Später, wenn Bedarf konkret wird |
 | R7 | Volltext-Suche (Prose, `@param`-Text) | Doxygen Search-Index | M | Später |
@@ -300,6 +300,31 @@ gefixt.
 Verifiziert: Test in `docmap_spec.lua` inkl. des Self-Ausschluss-Falls,
 `--check` grün, stylua/luacheck reposweit sauber, volle Testsuite grün,
 CI grün.
+
+## R4 — Umsetzung (2026-07-28, `a467e49`)
+
+`doccoverage.lua` mit `M.summary(ir)` (`documented, total`) und
+`M.badge_svg(ir)`. Definition "dokumentiert" bewusst deckungsgleich mit den
+drei bereits existierenden Einzel-Findings (`missing-summary`,
+`undocumented-param`, `param-name-mismatch`) statt einer zweiten,
+möglicherweise abweichenden Logik — `check.declared_param_names` wurde dafür
+aus `check.lua` exportiert. `@return` bewusst **nicht** Teil der Definition:
+anders als bei Parametern gibt es in der rohen Signatur keine strukturelle
+Tatsache, gegen die eine `@return`-Zeile geprüft werden könnte.
+
+`opts.badge` (Default `false`) schreibt zusätzlich `coverage.svg` über das
+neue `render/badge.lua` — handgebaut, nicht von shields.io selbst
+abgerufen, dieselbe Begründung wie beim nicht an ein `dot`-Binary
+gekoppelten DOT-Export: ein Netzwerkaufruf während `scan_full()` würde
+`--check` von Netzwerkverfügbarkeit abhängig machen. `:LibMap`/`gen_map.lua`
+drucken die reine Zahl immer, unabhängig von `opts.badge`.
+
+lib.nvims eigene aktuelle Zahl: **666/997 (67%)** der veröffentlichten
+Funktionen sind vollständig dokumentiert.
+
+Verifiziert: Test in `docmap_spec.lua` inkl. Badge-SVG-Form und
+-Prozentzahl, `--check` grün, stylua/luacheck reposweit sauber (294
+Dateien), volle Testsuite grün, CI grün.
 
 ## Empfehlung für die nächste Runde
 
