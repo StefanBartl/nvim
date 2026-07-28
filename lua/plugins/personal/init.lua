@@ -175,8 +175,6 @@ plugins.add({
   },
 
   {
-    -- Ehemals lib.nvim.docmap, seit der Extraktion ein eigenes Plugin.
-    -- Modulpfad: `documentation`, Commands: :DocMap / :DocBrowse.
     "StefanBartl/documentation.nvim",
     cmd = { "DocMap", "DocBrowse" },
     dependencies = { "StefanBartl/lib.nvim" },
