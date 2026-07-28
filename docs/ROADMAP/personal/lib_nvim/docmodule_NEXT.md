@@ -469,6 +469,11 @@ mehr nötig, direkt umsetzbar.
   werden; R9: jemand nutzt `lib.nvim` ohne LSP; R10: `:LibBrowse live`
   reicht nicht mehr aus).
 
+**Nebenbei erledigt (2026-07-28, `ef4b430`):** die verbliebenen 10
+`missing-summary`-Warnungen (letzte Warn-Findings von `--check` außer
+Info-Meldungen) durch je eine Ein-Zeilen-Zusammenfassung behoben. `--check`
+zeigt jetzt `0 errors, 0 warnings, 88 info`.
+
 **Offene TaskList-Aufgabe (separat von diesem Dokument):** Task #7
 "Runtime inspection of a loaded module" — bewusst zurückgestellt, siehe
 Backlog-Abschnitt B1 in `docmodule.md`. Kein docmap-Feature, sondern ein
