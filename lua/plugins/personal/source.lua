@@ -103,6 +103,7 @@ plugins.modes({
   ["buffer-ctx.nvim"] = "dir",
   ["open.nvim"] = "dir",
   ["sandbox.nvim"] = "dir",
+  ["documentation.nvim"] = "dir",
 
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
   ["fileops.nvim"] = "dir",

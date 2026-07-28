@@ -174,6 +174,22 @@ plugins.add({
     end,
   },
 
+  {
+    -- Ehemals lib.nvim.docmap, seit der Extraktion ein eigenes Plugin.
+    -- Modulpfad: `documentation`, Commands: :DocMap / :DocBrowse.
+    "StefanBartl/documentation.nvim",
+    cmd = { "DocMap", "DocBrowse" },
+    dependencies = { "StefanBartl/lib.nvim" },
+    -- Kein `root`: die Commands mappen bewusst das aktuelle Arbeitsverzeichnis,
+    -- weil hier reihenweise Repos nebeneinander liegen und ein fixes Ziel genau
+    -- das Falsche waere. `source` leitet documentation.config aus dem Root ab
+    -- (lua/<name>, wenn lua/ genau einen Kandidaten enthaelt).
+    opts = {},
+    config = function(_, opts)
+      require("documentation").setup(opts)
+    end,
+  },
+
   -- ==========================================================================
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
   -- ==========================================================================
@@ -467,6 +483,7 @@ plugins.add({
           "StefanBartl/color_my_ascii.nvim",
           "StefanBartl/debugging.nvim",
           "StefanBartl/diff.nvim",
+          "StefanBartl/documentation.nvim",
           "StefanBartl/emojis.nvim",
           "StefanBartl/fileops.nvim",
           "StefanBartl/filetree.nvim",
