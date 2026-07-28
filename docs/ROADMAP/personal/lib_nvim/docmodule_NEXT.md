@@ -122,10 +122,20 @@ Abhängigkeiten, Zyklen), aber nicht, was ein konkreter Zeilendiff an
 *Aufrufern* berührt. Vor einem Plan stehen aber drei Befunde, von denen einer
 die naheliegendste Umsetzung ausschließt.
 
-## Befund 1 (blockierend): Commit-Historie kann nicht ins `--check`-Artefakt
+> **Korrektur (2026-07-28, nach Rückfrage):** Die erste Fassung dieses
+> Kapitels hat aus Befund 1 zu viel gefolgert — nämlich dass die
+> Browser-Ansicht insgesamt problematisch sei. Das stimmt nicht. Befund 1
+> gilt ausschließlich fürs **Einbetten ins committete Artefakt**. Holt man
+> die Daten stattdessen **dynamisch beim Klick**, entfällt er vollständig,
+> weil dann gar nichts committet wird. Befund 1b/1c unten klären, was
+> "dynamisch" konkret erfordert — und die Empfehlung unten ist entsprechend
+> umgedreht.
 
-Das ist kein Aufwands-, sondern ein Struktur-Problem, und es schließt die
-naheliegende Variante ("noch ein Tab wie Notes/Index/Analysis") direkt aus:
+## Befund 1: Commit-Historie kann nicht ins `--check`-Artefakt *eingebettet* werden
+
+Das ist kein Aufwands-, sondern ein Struktur-Problem, und es schließt genau
+eine Variante aus: das statische Mitschreiben der Historie in `index.html`
+(also "noch ein Tab wie Notes/Index/Analysis", mit den Daten fest drin):
 
 `--check` vergleicht das committete Artefakt **byteweise** mit einer frisch
 generierten Fassung. Enthielte das Artefakt `git log`-Daten, dann gilt:
