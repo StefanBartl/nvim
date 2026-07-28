@@ -30,6 +30,81 @@ realistische Zielgruppe für ein Neovim-Plugin), Doxywizard-artige GUI-Konfig
 
 ---
 
+## Ein fünfter Tab: "Analysis" — ein Werkzeugkasten statt Einzelfeatures
+
+Nutzeranfrage (2026-07-28): ein fünfter Tab neben Tree/Hierarchy/Notes/Index,
+der beim Anklicken eine eigene Sub-Toolbar aufklappt — verschiedene
+"Analyse-Werkzeuge" nebeneinander, von einfach (Testabdeckung) bis komplexer,
+was für Lua-Softwareprojekte sinnvoll sein kann. Bewusst mit Blick auf
+Doxygen & Co., aber auch mit eigenen, neuen Ideen.
+
+**Warum ein eigener Tab und nicht vier Einzelfeatures verstreut über Header,
+Notes und Findings:** R2 (Testabdeckung), R4 (Doku-Abdeckung), R5
+(Parameter-Namensabgleich) und R6 (Fan-in/Fan-out-Hotspots) — alle vier
+bereits weiter unten als Einzelkandidaten gelistet — sind strukturell
+dasselbe: eine Kennzahl oder ein Ranking, berechnet über die bereits
+vorhandene IR, ohne eigene Graph-Darstellung. Sie einzeln im Header, in Notes
+und in Findings zu verstreuen ist genau das Muster, das beim Notes-Tab schon
+einmal bewusst vermieden wurde ("vier Tabs, die meist leer sind, sind vier
+Tabs Rauschen" — dieselbe Begründung gilt hier für vier verstreute
+Kennzahlen statt eines Orts, an dem man sie erwartet).
+
+**Architektur:** kein neues UI-Paradigma nötig — genau das Muster, das der
+Hierarchy-Tab schon hat. Dort wählt eine Toolbar zwischen fünf *Views*
+(Modules/Types/Inheritance/Deps/Calls), die dieselbe Box-Layout-Engine
+unterschiedlich befüllen. Analysis wählt zwischen mehreren *Panels*, die
+keine Graph-Boxen zeichnen, sondern Tabellen/Listen/einfache Balken — näher
+am Notes-Tab als am Hierarchy-Tab, UI-technisch also eher "ein Panel-Slot mit
+Werkzeugauswahl" als "ein Diagramm mit View-Achse". Jedes Werkzeug ist eine
+reine Funktion `ir -> Ergebnis`, dieselbe Form wie ein `Lib.Docmap.Check`,
+nur dass das Ergebnis eine Tabelle statt eine Finding-Liste ist — passt zur
+bestehenden `extra_checks`-Erweiterbarkeit, ein `extra_analyses`-Äquivalent
+wäre naheliegend, damit auch ein konsumierendes Plugin eigene Werkzeuge
+andocken kann, im selben Geist wie `opts.extra_checks`.
+
+### Werkzeug-Kandidaten
+
+| Werkzeug | Vorbild / Herkunft | Nutzen für Lua-Projekte |
+|---|---|---|
+| **Testabdeckung** | eigene Idee (R2 unten) | welche Funktionen tauchen in keiner Spec auf |
+| **Doku-Abdeckung** | eigene Idee (R4 unten) | eine Zahl statt verstreuter Findings |
+| **Parameter-Drift** | Erweiterung von `undocumented-param` (R5) | Doku, die dem Code hinterherhinkt |
+| **Fan-in/Fan-out-Hotspots** | eigene Idee (R6) | "was bricht am meisten, wenn ich es anfasse" |
+| **Zyklomatische Komplexität** | klassische Statik-Metrik (McCabe), kein Doxygen-Feature | längste/verschachteltste Funktionen, reiner `vim.treesitter`-Zähler über `if`/`elseif`/`while`/`for`/`repeat`/`and`/`or` je Funktionskörper — kein externes Tool nötig |
+| **Code-Duplikate** | PMD/CPD-artig ("Copy-Paste-Detector"), kein Doxygen-Feature | strukturelle Ähnlichkeit von Funktionskörpern über einen Baum von ~250 Dateien — genau das Muster, das in einer Utility-Bibliothek am ehesten unbemerkt entsteht |
+| **Churn-Hotspots (Git-Historie × Komplexität)** | Adam Tornhills "Your Code as a Crime Scene", kein Doxygen-Feature | Module, die *oft geändert werden* **und** *komplex sind* — der eigentliche Refactor-Risiko-Indikator, den weder Abdeckung noch Komplexität allein zeigen |
+| **God-Module-Geruch** | eigene Idee, verwandt mit `layer-violation` | Module mit ungewöhnlich hohem Fan-out (requiren fast alles) — Kandidat für Aufspaltung |
+| **API-Stabilität über Zeit** | eigene Idee, baut auf `diff.lua` | wie oft ändert sich die öffentliche Oberfläche über die letzten N Commits — nutzt die bereits vorhandene Diff-Maschinerie mehrfach hintereinander |
+| **Verwaiste Module** | Verfeinerung von `unreferenced-module` | dediziertes, browsbares Ranking statt einer Zeile in Findings |
+
+### Einordnung — was zuerst
+
+Nicht alles auf einmal: **Testabdeckung, Doku-Abdeckung und
+Fan-in/Fan-out-Hotspots** (R2/R4/R6) sind die einzigen drei, die schon heute
+mit vorhandenen Daten auskommen (keine neue Extraktion nötig). **Zyklomatische
+Komplexität** ist der günstigste *neue* Rohdaten-Kandidat — ein einziger
+zusätzlicher `vim.treesitter`-Query, dieselbe Kategorie Aufwand wie
+`identifier_counts` in `calls.lua`. **Code-Duplikate** und
+**Churn-Hotspots** sind die aufwendigsten (Baum-Ähnlichkeitsvergleich bzw.
+`git log`-Auswertung über die Zeit) und lohnen erst, wenn der Tab selbst
+schon existiert und benutzt wird — sonst ist die Reihenfolge verkehrt
+(zuerst das teuerste Werkzeug bauen, bevor klar ist, ob der Tab überhaupt
+gebraucht wird).
+
+**Empfohlene Reihenfolge, wenn der Tab drankommt:** Tab-Grundgerüst (leerer
+Werkzeugkasten mit Umschalter, nach dem Hierarchy-Toolbar-Muster) → R2 als
+erstes eingehängtes Werkzeug (da ohnehin als Nächstes geplant, siehe unten) →
+R4/R6 nachziehen (billig, bereits vorhandene Daten) → zyklomatische
+Komplexität als erstes wirklich neues Werkzeug, danach neu bewerten, ob
+Duplikate/Churn echten Bedarf treffen.
+
+**Nicht jetzt, nur notiert:** Lizenz-/Abhängigkeits-Scanning (für eine
+in sich geschlossene Lua-Utility-Bibliothek ohne externe Paketabhängigkeiten
+nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
+`luacheck`/`stylua`s Job, nicht docmaps).
+
+---
+
 ## Kandidaten, priorisiert
 
 | # | Feature | Vorbild | Aufwand | Einschätzung |
