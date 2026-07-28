@@ -326,6 +326,42 @@ Verifiziert: Test in `docmap_spec.lua` inkl. Badge-SVG-Form und
 -Prozentzahl, `--check` grün, stylua/luacheck reposweit sauber (294
 Dateien), volle Testsuite grün, CI grün.
 
+## Tag-Adoption — Umsetzung (2026-07-28, `7025e61`)
+
+Vier Tasks, die parallel zu R1/R2/R5/R4 offen standen: die docmap-Tags
+(`@todo`/`@bug`/`@internal`/`@see`/`@deprecated`), die laut
+`ANNOTATIONS.md` alle bei **0 echten Treffern** standen, im tatsächlichen
+`lib.nvim`-Code dort einführen, wo es echte Kandidaten gibt.
+
+Ergebnis, ehrlich statt vollständig:
+
+- **`@todo`/`@bug`**: nichts zu konvertieren. Grep nach reinen
+  TODO/FIXME/HACK/XXX-Kommentaren im gesamten Baum fand nur
+  Docstring-Beispiele, die `harvest`s eigenes TODO-Scan-Feature
+  illustrieren — keine echten Marker.
+- **`@deprecated`**: nichts Echtes gefunden. Jede "legacy"/"deprecated"-Erwähnung
+  im Baum bezieht sich auf Neovim-eigene API-Deprecations, die umgangen
+  werden, oder eine alte externe Aufrufkonvention, die aus
+  Kompatibilitätsgründen noch gespiegelt wird — nie eine `lib.nvim`-Funktion,
+  die durch eine andere tatsächlich ersetzt wurde.
+- **`@internal`**: die eigene dokumentierte Konvention (`internal/`-Verzeichnis
+  oder `_`-Präfix, `doc/lib.nvim.txt`s Conventions-Abschnitt) existierte
+  schon auf Modulebene, hatte sich aber nie auf die Funktionsebene
+  fortgepflanzt. Alle 15 exportierten Funktionen in
+  `lua/lib/lua/time/diff/internal/*.lua` getaggt — dem einzigen echten
+  `internal/`-Verzeichnis mit benannten (nicht anonymen) Funktionen. Deckte
+  dabei zwei bereits tote Funktionen auf (`convert_batch`,
+  `create_memoized_calculator`), die jetzt korrekt als `dead-function`-Finding
+  erscheinen — bewusst nicht gelöscht, da Aufräumen nicht Teil dieses Tasks war.
+- **`@see`**: ein klar 1:1 passendes Paar ergänzt, dessen Modul-Header sich
+  bereits gegenseitig als "counterpart" beschreiben, aber nie auf
+  Funktionsebene verlinkt waren: `fs.scan_cached.scan` ↔ `fs.scan_roots.scan`
+  (session-lebendiger In-Memory-Cache vs. plattenpersistenter Cache
+  desselben Walks). Gegen `dead-see-target` verifiziert — 0 Findings.
+
+`--check` grün, stylua/luacheck reposweit sauber (294 Dateien), volle
+Testsuite grün, CI grün.
+
 ## Empfehlung für die nächste Runde
 
 **R1 → R2 → R5 → R3 → R4**, in dieser Reihenfolge: R1 ist die einzige Idee,
