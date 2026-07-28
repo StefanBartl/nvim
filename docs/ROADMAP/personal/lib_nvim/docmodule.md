@@ -993,39 +993,66 @@ Zoom mühsam) und lässt sich unabhängig bewerten, bevor Z-B die Magie draufset
 
 # Roadmap: Doxygen-Parität + Betrieb
 
-> Status: **geplant, noch nichts umgesetzt** (Stand 2026-07-28). Vier
-> Diagramm-/Feature-Lücken gegenüber Doxygen, gefunden durch einen gezielten
-> Abgleich (Doxygen-Manual als Quelle, nicht nur aus dem Gedächtnis), plus
-> zwei Betriebsfragen, die vor einer Umsetzung entschieden werden sollten
-> statt nebenbei mitzuentscheiden.
+> Status (Stand 2026-07-28): **D1 umgesetzt**, D2/D3 offen, D4 bewusst
+> zurückgestellt. Vier Diagramm-/Feature-Lücken gegenüber Doxygen, gefunden
+> durch einen gezielten Abgleich (Doxygen-Manual als Quelle, nicht nur aus dem
+> Gedächtnis), plus zwei Betriebsfragen, die vor einer Umsetzung entschieden
+> werden sollten statt nebenbei mitzuentscheiden.
 
-## D1. Klassen-Hierarchie (Vererbung) — die eine echte Lücke
+## D1. Klassen-Hierarchie (Vererbung) ✅ umgesetzt (2026-07-28, Commit `a93fb1e`)
 
-> Aufwand: ~1 Tag. Wert: hoch — Doxygens bekanntestes Diagramm hat aktuell
-> gar kein Äquivalent, obwohl die Rohdaten (`@class Foo : Bar`) längst überall
-> im Baum stehen.
+> Aufwand geschätzt ~1 Tag, tatsächlich deutlich weniger. Wert: hoch —
+> Doxygens bekanntestes Diagramm hatte kein Äquivalent, obwohl die Rohdaten
+> (`@class Foo : Bar`) längst überall im Baum stehen.
 
-`---@class Foo : Bar` deklariert Vererbung; LuaLS' `doc.class`-Eintrag trägt
-das Parent in `entry.extends`. `luals.lua` liest heute nur `f.extends` pro
-**Feld** (dessen eigenen Typ), nie `entry.extends` der **Klasse selbst** — die
-Types-View zeigt deshalb ausschließlich HAS-A (ein `@field` referenziert eine
-andere Klasse), nie IS-A.
+**Konzept-Korrektur, gefunden durch Nachmessen statt Annehmen:** die Parents
+liegen auf **`defines[1].extends`**, nicht auf `entry.extends` wie unten
+ursprünglich vermutet — und es ist ein **Array** (Mehrfachvererbung), je
+Element `{ type = "doc.extends.name", view = "<Name>" }`. Gegen echte
+`lua-language-server 3.18.2`-Ausgabe verifiziert, bevor eine Zeile Code
+entstand. Ebenfalls geprüft: ein `@alias` trägt **nie** `extends`, auch wenn
+er auf eine Klasse aliast — sonst hätte der Alias-Fall Vererbung erfunden,
+die es nicht gibt.
 
-Umsetzung:
-- Neuer Edge-Kind `"extends"` (`from_class`/`to_class`, kein `via` nötig — es
-  gibt nur einen Parent, kein Feld dazwischen).
-- `luals.lua`: `entry.extends` (die Klasse, nicht das Feld) auflösen — auf den
-  Node, der die Parent-Klasse deklariert, genau wie bei Feld-Typen schon.
-- Neue Hierarchy-View `"Inheritance"` (fünfter Button neben Modules/Types/
-  Deps/Calls): Baum von Wurzeln (keine eigene `: Parent`-Zeile) zu Blättern,
-  über `extends`-Kanten statt `children` — sonst dasselbe Layer-BFS wie die
-  anderen Views.
-- Drill/Zoom brauchen keinen Sonderfall: verhält sich wie Types (Drill auf
-  den besitzenden Node, `▲ Up` eine Ebene hoch).
+Umgesetzt:
+- Neuer Edge-Kind `"extends"` (`from_class`/`to_class`, kein `via` — nichts
+  vermittelt die Beziehung). Eigener Sortier-/Append-Block, wie jeder
+  Produzent.
+- `luals.lua` löst die Parent-Liste auf; nicht auflösbare Parents bleiben auf
+  `types_detail[].extends` lesbar, erzeugen aber keine Kante — dieselbe Regel,
+  der `requires_external` für Requires außerhalb der Map folgt.
+- Neue Hierarchy-View `"Inheritance"` (fünfter Button). Boxen zeigen die
+  Parent-Liste (`: A, B`) bzw. `base` statt des nichtssagenden `class`.
+  Kontextmenü-Eintrag, eigene Legende, eigene Kantenfarbe + Pfeilkopf
+  (Pfeil zeigt auf die Basisklasse), SVG-Export eingeschlossen.
 
-**Acceptance:** ein `--full`-Lauf über lib.nvim zeigt für jede reale
-`---@class X : Y`-Deklaration eine `extends`-Kante X→Y; Gegenprobe per
-`grep -rn '^---@class .*: ' lua/` gegen die Kantenzahl.
+**Abweichung vom Konzept:** die View benutzt **nicht** das gemeinsame
+`walk()`. `walk` legt jeden Seed auf Layer 0 — ein Modul deklariert aber
+typischerweise Basisklasse *und* Subklassen zusammen, also sind alle Seeds und
+die Hierarchie fiel auf eine einzige Zeile zusammen (im Browser gesehen:
+`Lib.Cache.Opts` neben seinen eigenen `LoadOpts`/`SaveOpts`). Tiefe kommt
+jetzt aus der Relation selbst: längster Pfad von einer parentlosen Klasse,
+damit eine Klasse *immer* strikt unter **jedem** ihrer Parents landet, auch im
+Diamant (an einem eigenen Fixture mit 3 Ebenen + Diamant verifiziert).
+
+**Nebenbefund, mitgefixt:** *jeder* Empty-State im Hierarchy-Tab war
+unsichtbar — die Meldung hing an `#hstage`, das seit dem Zoom-Umbau
+`position:absolute` ist und damit keine Höhe an ein `#hgraph` liefert, dessen
+explizite Höhe der Empty-Zweig gerade gelöscht hatte; `overflow` schnitt sie
+weg. Jetzt an `#hgraph` — exakt das, was der Kommentar zwei Zeilen darunter
+ohnehin schon behauptete. Bei Types/Deps/Calls selten, bei Inheritance der
+Normalfall.
+
+**Acceptance erfüllt:** `--full` über lib.nvim liefert 8 `extends`-Kanten;
+`grep -rn '^---@class [^ ]* *:' lua/` findet 9 Deklarationen, davon ist
+`Array<T>: { [integer]: T }` ein Tabellentyp statt eines benannten Parents und
+erzeugt korrekt nichts. Null unaufgelöste Parents.
+
+**Wichtig zu wissen:** das committete Artefakt unter `docs/map/` wird
+**ohne** `--full` erzeugt (CI vergleicht es byte-genau und bräuchte sonst
+`lua-language-server`). Types- *und* Inheritance-View sagen das beim Öffnen
+explizit, statt leer zu bleiben. Erste Tests für `luals.merge` überhaupt —
+die Funktion ist rein (IR + doc.json rein), braucht also kein LuaLS im Test.
 
 ## D2. Aggregierte Listen (Deprecated/Todo/Bug/Test)
 
