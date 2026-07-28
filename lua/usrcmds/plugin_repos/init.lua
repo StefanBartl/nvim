@@ -1,7 +1,7 @@
 ---@module 'usrcmds.plugin_repos'
 ---@brief Clone or remove the personal Neovim plugin list in bulk.
 ---@description
---- Registers `:PluginsClone [dir]` and `:PluginsRemove [dir]`. Both operate
+--- Registers `:MyPluginsClone [dir]` and `:MyPluginsRemove [dir]`. Both operate
 --- on the repos `plugins.personal` actually declares (see
 --- `usrcmds.plugin_repos.list`) against `dir` (or `vim.env.REPOS_DIR` when
 --- no argument is given) — never on every directory found by scanning `dir`,
@@ -10,13 +10,13 @@
 --- everything found are not symmetric risks: an unrelated repo picked up by
 --- a directory scan just gets an unwanted `git pull`, but the same repo
 --- picked up by a scan-and-delete loses uncommitted work permanently.
---- Sticking to the named list is what makes `:PluginsRemove` safe to run at
+--- Sticking to the named list is what makes `:MyPluginsRemove` safe to run at
 --- all.
 ---
---- `:PluginsClone` never overwrites an existing clone (skips it) — cloning
+--- `:MyPluginsClone` never overwrites an existing clone (skips it) — cloning
 --- is additive, no confirmation needed.
 ---
---- `:PluginsRemove` checks every present repo's `git status --porcelain
+--- `:MyPluginsRemove` checks every present repo's `git status --porcelain
 --- --branch` first: anything with uncommitted changes or commits ahead of
 --- its upstream is reported and left alone, never deleted, no matter what.
 --- The remaining clean repos are listed in a single confirmation prompt
@@ -296,9 +296,9 @@ finish_check = function(safe, unsafe, base_dir)
   end
 end
 
----Register :PluginsClone and :PluginsRemove.
+---Register :MyPluginsClone and :MyPluginsRemove.
 function M.enable()
-  usercmd.create("PluginsClone", function(args)
+  usercmd.create("MyPluginsClone", function(args)
     local path = args.args ~= "" and args.args or nil
     clone_all(path)
   end, {
@@ -306,7 +306,7 @@ function M.enable()
     nargs = "?",
   })
 
-  usercmd.create("PluginsRemove", function(args)
+  usercmd.create("MyPluginsRemove", function(args)
     local path = args.args ~= "" and args.args or nil
     remove_all(path)
   end, {
