@@ -34,7 +34,7 @@ realistische Zielgruppe für ein Neovim-Plugin), Doxywizard-artige GUI-Konfig
 
 | # | Feature | Vorbild | Aufwand | Einschätzung |
 |---|---|---|---|---|
-| R1 | Cross-Projekt-Tag-Dateien | Doxygen `TAGFILES` | M | **Empfehlenswert, naheliegend nach O1** |
+| R1 | Cross-Projekt-Tag-Dateien | Doxygen `TAGFILES` | M | **✅ Erledigt (2026-07-28, `0c67b50`)** |
 | R2 | Auto-erkannte Testabdeckung | — (eigene Idee) | S–M | **Empfehlenswert** |
 | R3 | Modul-/Namespace-A-Z-Index | Doxygen File/Class Index | S | Empfehlenswert, günstig |
 | R4 | Doku-Abdeckung als Zahl + Badge | — (eigene Idee, auf Findings aufbauend) | S | Empfehlenswert |
@@ -144,6 +144,34 @@ kann).
   halten zu müssen.
 
 ---
+
+## R1 — Umsetzung (2026-07-28, `0c67b50`)
+
+`opts.tag_files: table<string, string>` (Modul-Präfix -> Verzeichnis mit einer
+committeten `module_map.json` eines anderen Projekts). Ein
+`requires_external`-Modul, das auf einen konfigurierten Präfix passt, wird
+gegen die fremde Artefakt-Datei aufgelöst statt eine tote graue Box zu
+bleiben — die Box wird durchgezogen/akzentfarben und öffnet beim Klick die
+Seite des anderen Projekts an genau dem Knoten, in einem neuen Tab.
+
+Neu: `lib.nvim`s `lua/lib/nvim/docmap/tagfiles.lua` mit `M.resolve(ir, opts)`,
+`ir.tag_links` in `to_json` und im HTML-Payload
+serialisiert, Auflösung über dieselbe Namens-Reihenfolge wie
+`command.find_node` (deklariertes `@module`, rohe Node-ID,
+Namespace-Fallback) — gegen die geladene fremde IR, nicht gegen die eigene.
+
+Bewusst nur lokale Pfade, keine URLs: das Tag-File wird synchron während
+`scan_full()` gelesen, genau wie `opts.root` selbst — ein Netzwerk-Fetch
+hätte `--check` von deterministisch zu netzwerkabhängig gemacht, dieselbe
+Begründung wie beim bewusst nicht an ein `dot`-Binary gekoppelten
+DOT-Export.
+
+Verifiziert: End-to-End-Test gegen einen echten zweiten gescannten Baum (kein
+handgebautes JSON-Fixture) in `docmap_spec.lua`, zusätzlich manuell gegen
+lib.nvims eigene, echte Map verifiziert (ein synthetisches Fixture-Plugin,
+das `lib.nvim.fs.read` requiret, löst korrekt gegen `docs/map/module_map.json`
+auf). `--check` grün, stylua/luacheck sauber (291 Dateien reposweit),
+volle Testsuite grün. CI grün nach Push (`0c67b50`).
 
 ## Empfehlung für die nächste Runde
 
