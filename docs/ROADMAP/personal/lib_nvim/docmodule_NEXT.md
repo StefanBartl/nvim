@@ -117,7 +117,7 @@ nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
 | R3 | Modul-/Namespace-A-Z-Index | Doxygen File/Class Index | S | **✅ Erledigt (2026-07-28, `eb25ca9`)** |
 | R4 | Doku-Abdeckung als Zahl + Badge | — (eigene Idee, auf Findings aufbauend) | S | **✅ Erledigt (2026-07-28, `a467e49`)** |
 | R5 | `param-name-mismatch`-Check | — (Erweiterung von `undocumented-param`) | S | **✅ Erledigt (2026-07-28, `f353a16`)** |
-| R6 | Fan-in/Fan-out-Hotspot-Übersicht | — (auf `n.requires`/`n.required_by` aufbauend) | S–M | **Nächster Kandidat — umsetzungsbereite Spezifikation weiter unten** |
+| R6 | Fan-in/Fan-out-Hotspot-Übersicht | — (auf `n.requires`/`n.required_by` aufbauend) | S–M | **✅ Erledigt (2026-07-28, `ef36780`)** |
 | R7 | Volltext-Suche (Prose, `@param`-Text) | Doxygen Search-Index | M | Später |
 | R8 | `@group`/`@ingroup` (virtuelle Gruppen quer zur Modulstruktur) | Doxygen `\defgroup` | L | Eher nicht — kein aktueller Bedarf |
 | R9 | `ctags`-Export (`:LibMap tags`) | ctags/gutentags | S | Eher nicht — LSP deckt das schon ab |
@@ -398,6 +398,27 @@ Ergebnis, ehrlich statt vollständig:
 `--check` grün, stylua/luacheck reposweit sauber (294 Dateien), volle
 Testsuite grün, CI grün.
 
+## R6 — Umsetzung (2026-07-28, `ef36780`)
+
+Wie in der Spezifikation vorgesehen: drittes Analysis-Tab-Werkzeug
+"Dependencies", reine JS-Aggregation über bereits vorhandenes
+`n.requires`/`n.required_by` — keine neue Lua-Extraktion nötig, kein
+Lua-Test nötig (rein clientseitig, gleiche Kategorie wie der R3-Umschalter).
+
+Eigene Render-Funktion (`renderAnalysisDeps`) statt Wiederverwendung des
+funktions-zählenden Panels: R6 zählt Kanten über den Knoten selbst, nicht
+ein Boolean über dessen Funktionen. Sortiert nach Fan-in absteigend
+(Tiebreak Fan-out) — das Modul mit den meisten Abhängigen zuerst, dieselbe
+"folgenreichstes zuerst"-Regel wie bei den Prozent-sortierten
+Coverage-Panels. `state.atool` von zwei- auf dreiwertig erweitert
+(`test`/`doc`/`deps`).
+
+Verifiziert im Browser: 241 Module mit mindestens einer Require-Kante,
+höchster Fan-in ist `lib.nvim.notify` (30) — genau das erwartete Ergebnis
+(ein fundamentales, breit genutztes Modul), Klick-Navigation bestätigt
+`REQUIRED BY (30)` exakt. `--check` grün (0 errors, 0 warnings),
+stylua/luacheck sauber, volle Testsuite grün, CI grün.
+
 ## R3 — Umsetzung (2026-07-28, `eb25ca9`)
 
 Umschalter "Functions / Modules" im Index-Tab (`state.iview`), spiegelt das
@@ -449,13 +470,10 @@ Testsuite grün, CI grün) und gepusht:** R1 (`0c67b50`), R2 (`ba919c2`),
 R3 (`eb25ca9`), R4 (`a467e49`), R5 (`f353a16`), Tag-Adoption (`7025e61`),
 Analysis-Tab-Grundgerüst + erste zwei Werkzeuge (`2b9ac67`).
 
-**Nächster konkreter Schritt: R6** (Fan-in/Fan-out, drittes
-Analysis-Tab-Werkzeug) — vollständige, umsetzungsbereite Spezifikation
-im Abschnitt "R6 — nächster Kandidat" oben, inklusive Schritt-für-Schritt-
-Plan, betroffener Dateien und Verifikationsschritten. Kein Rechercheaufwand
-mehr nötig, direkt umsetzbar.
+**R6 erledigt** (2026-07-28, `ef36780`) — siehe "R6 — Umsetzung" weiter
+unten für Details.
 
-**Danach, in absteigender Priorität:**
+**Nächster konkreter Schritt, in absteigender Priorität:**
 - **Zyklomatische Komplexität** als viertes Analysis-Tab-Werkzeug (siehe
   "Einordnung — was zuerst" oben): einziger *wirklich neue* Rohdaten-Bedarf
   unter den verbliebenen Kandidaten — ein neuer `vim.treesitter`-Query über
