@@ -993,7 +993,7 @@ Zoom mühsam) und lässt sich unabhängig bewerten, bevor Z-B die Magie draufset
 
 # Roadmap: Doxygen-Parität + Betrieb
 
-> Status (Stand 2026-07-28): **D1 umgesetzt**, D2/D3 offen, D4 bewusst
+> Status (Stand 2026-07-28): **D1–D3 umgesetzt**, D4 bewusst
 > zurückgestellt. Vier Diagramm-/Feature-Lücken gegenüber Doxygen, gefunden
 > durch einen gezielten Abgleich (Doxygen-Manual als Quelle, nicht nur aus dem
 > Gedächtnis), plus zwei Betriebsfragen, die vor einer Umsetzung entschieden
@@ -1054,44 +1054,60 @@ erzeugt korrekt nichts. Null unaufgelöste Parents.
 explizit, statt leer zu bleiben. Erste Tests für `luals.merge` überhaupt —
 die Funktion ist rein (IR + doc.json rein), braucht also kein LuaLS im Test.
 
-## D2. Aggregierte Listen (Deprecated/Todo/Bug/Test)
+## D2. Aggregierte Listen (Deprecated/Todo/Bug/Test) ✅ umgesetzt (2026-07-28, Commit `ef119bf`)
 
-> Aufwand: Deprecated ~1 h (Daten existieren bereits), Todo/Bug/Test ~2 h
-> (neue Tags in `functions.lua`, gleiche Mechanik wie `@since`). Wert:
-> mittel — Deprecated zuerst, der Rest nur falls die Tags sich als nützlich
-> erweisen.
+> Aufwand wie geschätzt (~3 h zusammen). Wert: mittel.
 
-`@deprecated` wird heute nur als Badge **pro Funktion** gezeigt — keine
-Sammel-Ansicht "alles Deprecated auf einen Blick", obwohl das Datum längst in
-`FunctionInfo.deprecated` steckt. `@todo`/`@bug`/`@test` existieren als Tags
-noch gar nicht.
+Neuer **Notes-Tab** (dritter Tab neben Tree/Hierarchy) mit vier Sektionen:
+`@deprecated` (Daten existierten schon, nur nirgends gesammelt) plus die drei
+neuen Tags `@todo`/`@bug`/`@test` in `parse_doc_block`.
 
-Reihenfolge:
-1. **Deprecated-Liste** — reiner Renderer über vorhandene Daten, kein neuer
-   Scan: eine Detail-Pane-Sektion oder ein eigener `:LibBrowse`-Modus, der
-   `ir.nodes[*].functions` nach `fn.deprecated ~= nil` filtert und flach,
-   sortiert, mit Quelle zeigt.
-2. **`@todo`/`@bug`/`@test`** — neue Tags in `parse_doc_block` (dieselbe
-   `elseif`-Kette wie `@since`), je ein `string?`-Feld auf `FunctionInfo`.
-   Erst danach lohnt sich eine gemeinsame Seite analog zu Doxygens vier
-   Listen.
+**Abweichung vom Konzept:** die drei neuen Tags sind **Arrays**, nicht je ein
+`string?` wie unten geplant. Doxygen sammelt einen Listeneintrag *pro
+Vorkommen*, und eine Funktion mit zwei offenen Todos hat zwei Todos — ein
+Skalar hätte den zweiten stillschweigend verschluckt. `@see`/`@overload`
+etablieren dieselbe Form in derselben Datei bereits.
 
-**Nicht** als `check`-Finding modellieren — keine Drift, kein Fehler, würde
-`--check`s Exit-Code unnötig verkomplizieren. Reine Render-Sektion.
+**Vorab geprüft, weil es über den Sinn des ganzen Features entscheidet:**
+`lua-language-server` kennt diese Tags nicht, *diagnostiziert* unbekannte
+Annotationen aber auch nicht — mit `--check --checklevel=Information` gegen
+3.18.2 verifiziert, bevor die Tags eingeführt wurden. Ein Tag, das jedem eine
+LSP-Warnung beschert, wäre keine Listenseite wert gewesen.
 
-## D3. Alphabetischer Funktions-Index
+Ein Tab statt Doxygens vier Seiten: in einem gegebenen Baum sind drei dieser
+Tags meist ungenutzt (in lib.nvim selbst aktuell **alle vier** — die Sektionen
+zeigen 0), und vier meist leere Tabs wären vier Tabs Rauschen. Leere Sektionen
+sagen das explizit, statt zu verschwinden — damit bleibt "hier ist nichts
+deprecated" von "dieser Build hat es nicht gesammelt" unterscheidbar.
 
-> Aufwand: ~2 h. Wert: mittel. Der Tree-Tab ist hierarchisch, die
-> Picker-Suche (`/`) ist modal — keins von beiden ist eine überflieg-bare,
-> statische Seite.
+Wie geplant **nicht** als `check`-Finding: keine Drift, kein Fehler, und
+Autoren-Todos haben im Exit-Code, an dem CI scheitert, nichts zu suchen.
+Nebenbei: `serializeState` bekam einen eigenen Zweig für flache Tabs — sonst
+hätte jeder geteilte Notes-Link ein sinnloses `view=modules` mitgeschleppt.
 
-Doxygens "File Members"/"Globals": eine flache, A–Z sortierte Liste jeder
-dokumentierten Funktion im ganzen Baum, ohne durch den Modul-Baum zu
-navigieren. Umsetzung: dritter Tab `"Index"` im HTML-Renderer — eine `<ul>`
-über alle `ir.nodes[*].functions`, sortiert nach bare name (`calls.lua`s
-`bare()` existiert bereits), mit Sprungmarke ins Tree-Tab. Im Editor ist die
-Lücke eher kosmetisch — der bestehende Fuzzy-Picker (`/`) mit leerer
-Anfangs-Query deckt dieselbe Frage schon ab.
+## D3. Alphabetischer Funktions-Index ✅ umgesetzt (2026-07-28, Commit `7d1cf24`)
+
+> Aufwand wie geschätzt (~2 h). Wert: mittel.
+
+Vierter Tab `"Index"`: alle **976** dokumentierten Funktionen von lib.nvim in
+einem flachen Alphabet, mit Buchstaben-Sprungleiste; Klick öffnet das Modul im
+Tree-Tab, `@internal`/`@deprecated` sind inline getaggt.
+
+Sortiert nach **bare name**, `M.read` steht also unter **R**. Das `M.` ist die
+lokale Tabellen-Konvention dieses Repos, nicht Teil des Funktionsnamens — 555
+von 976 Einträgen unter einem einzigen "M" wären ein Index nur dem Namen nach.
+`calls.lua` brauchte dieselbe Reduktion, sein `bare()` war die Vorlage. Namen
+mit nicht-alphabetischem Anfang (`_evict`) sammeln sich unter `#`, statt
+wegzufallen.
+
+Im Editor bleibt es wie vermutet kosmetisch — der Fuzzy-Picker (`/`) deckt
+dieselbe Frage ab, also kein `:LibBrowse`-Modus dafür.
+
+**Verifikation ohne Browser:** die Browser-Vorschau nahm ab einem Punkt keine
+neuen Dateien mehr an, also wurde das *ausgelieferte* `drawIndex()` unter Node
+gegen die im generierten Artefakt eingebettete IR ausgeführt: 976 `<li>`, 27
+Sektionen deren Zähler exakt 976 ergeben, `M.read` unter R, kein `M.*`
+fehleinsortiert; beide Tag-Zweige an einem Fixture nachgewiesen.
 
 ## D4. Source-Browser — bewusst zurückgestellt, nicht verworfen
 
