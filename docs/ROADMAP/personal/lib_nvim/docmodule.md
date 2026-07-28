@@ -991,5 +991,162 @@ Zoom mühsam) und lässt sich unabhängig bewerten, bevor Z-B die Magie draufset
 
 ---
 
+# Roadmap: Doxygen-Parität + Betrieb
+
+> Status: **geplant, noch nichts umgesetzt** (Stand 2026-07-28). Vier
+> Diagramm-/Feature-Lücken gegenüber Doxygen, gefunden durch einen gezielten
+> Abgleich (Doxygen-Manual als Quelle, nicht nur aus dem Gedächtnis), plus
+> zwei Betriebsfragen, die vor einer Umsetzung entschieden werden sollten
+> statt nebenbei mitzuentscheiden.
+
+## D1. Klassen-Hierarchie (Vererbung) — die eine echte Lücke
+
+> Aufwand: ~1 Tag. Wert: hoch — Doxygens bekanntestes Diagramm hat aktuell
+> gar kein Äquivalent, obwohl die Rohdaten (`@class Foo : Bar`) längst überall
+> im Baum stehen.
+
+`---@class Foo : Bar` deklariert Vererbung; LuaLS' `doc.class`-Eintrag trägt
+das Parent in `entry.extends`. `luals.lua` liest heute nur `f.extends` pro
+**Feld** (dessen eigenen Typ), nie `entry.extends` der **Klasse selbst** — die
+Types-View zeigt deshalb ausschließlich HAS-A (ein `@field` referenziert eine
+andere Klasse), nie IS-A.
+
+Umsetzung:
+- Neuer Edge-Kind `"extends"` (`from_class`/`to_class`, kein `via` nötig — es
+  gibt nur einen Parent, kein Feld dazwischen).
+- `luals.lua`: `entry.extends` (die Klasse, nicht das Feld) auflösen — auf den
+  Node, der die Parent-Klasse deklariert, genau wie bei Feld-Typen schon.
+- Neue Hierarchy-View `"Inheritance"` (fünfter Button neben Modules/Types/
+  Deps/Calls): Baum von Wurzeln (keine eigene `: Parent`-Zeile) zu Blättern,
+  über `extends`-Kanten statt `children` — sonst dasselbe Layer-BFS wie die
+  anderen Views.
+- Drill/Zoom brauchen keinen Sonderfall: verhält sich wie Types (Drill auf
+  den besitzenden Node, `▲ Up` eine Ebene hoch).
+
+**Acceptance:** ein `--full`-Lauf über lib.nvim zeigt für jede reale
+`---@class X : Y`-Deklaration eine `extends`-Kante X→Y; Gegenprobe per
+`grep -rn '^---@class .*: ' lua/` gegen die Kantenzahl.
+
+## D2. Aggregierte Listen (Deprecated/Todo/Bug/Test)
+
+> Aufwand: Deprecated ~1 h (Daten existieren bereits), Todo/Bug/Test ~2 h
+> (neue Tags in `functions.lua`, gleiche Mechanik wie `@since`). Wert:
+> mittel — Deprecated zuerst, der Rest nur falls die Tags sich als nützlich
+> erweisen.
+
+`@deprecated` wird heute nur als Badge **pro Funktion** gezeigt — keine
+Sammel-Ansicht "alles Deprecated auf einen Blick", obwohl das Datum längst in
+`FunctionInfo.deprecated` steckt. `@todo`/`@bug`/`@test` existieren als Tags
+noch gar nicht.
+
+Reihenfolge:
+1. **Deprecated-Liste** — reiner Renderer über vorhandene Daten, kein neuer
+   Scan: eine Detail-Pane-Sektion oder ein eigener `:LibBrowse`-Modus, der
+   `ir.nodes[*].functions` nach `fn.deprecated ~= nil` filtert und flach,
+   sortiert, mit Quelle zeigt.
+2. **`@todo`/`@bug`/`@test`** — neue Tags in `parse_doc_block` (dieselbe
+   `elseif`-Kette wie `@since`), je ein `string?`-Feld auf `FunctionInfo`.
+   Erst danach lohnt sich eine gemeinsame Seite analog zu Doxygens vier
+   Listen.
+
+**Nicht** als `check`-Finding modellieren — keine Drift, kein Fehler, würde
+`--check`s Exit-Code unnötig verkomplizieren. Reine Render-Sektion.
+
+## D3. Alphabetischer Funktions-Index
+
+> Aufwand: ~2 h. Wert: mittel. Der Tree-Tab ist hierarchisch, die
+> Picker-Suche (`/`) ist modal — keins von beiden ist eine überflieg-bare,
+> statische Seite.
+
+Doxygens "File Members"/"Globals": eine flache, A–Z sortierte Liste jeder
+dokumentierten Funktion im ganzen Baum, ohne durch den Modul-Baum zu
+navigieren. Umsetzung: dritter Tab `"Index"` im HTML-Renderer — eine `<ul>`
+über alle `ir.nodes[*].functions`, sortiert nach bare name (`calls.lua`s
+`bare()` existiert bereits), mit Sprungmarke ins Tree-Tab. Im Editor ist die
+Lücke eher kosmetisch — der bestehende Fuzzy-Picker (`/`) mit leerer
+Anfangs-Query deckt dieselbe Frage schon ab.
+
+## D4. Source-Browser — bewusst zurückgestellt, nicht verworfen
+
+Doxygens `SOURCE_BROWSER=YES` rendert Quelltext syntax-highlighted inline,
+mit anklickbaren Querverweisen. docmap verlinkt über `srcUrl()` nur nach
+außen (GitHub-Blob oder `file://`). Grund, das NICHT nachzubauen: `:LibBrowse`s
+`gd` springt bereits in den echten Editor an die echte Zeile — strikt besser
+für tatsächliche Nutzung als eine statische HTML-Ansicht. Bleibt hier nur als
+bewusste Nicht-Entscheidung dokumentiert, falls die Frage später nochmal
+aufkommt (z.B. für jemanden ohne die Quelle lokal).
+
+---
+
+# Betriebsfragen (vor D1–D3 zu klären, nicht nebenbei)
+
+## O1. `:LibMap` ganz ohne nvim starten — oder: nie mehr von Hand aktualisieren
+
+Zwei verschiedene Wünsche, die sich leicht vermischen:
+
+1. **Kein nvim-Prozess überhaupt** (echtes Standalone-CLI-Tool, kein
+   `nvim --headless`). Nicht realistisch ohne kompletten Umbau:
+   `scan.lua`/`functions.lua`/`calls.lua` hängen an `vim.treesitter`
+   (Query-API, geparste Bäume), `luals.lua` an `vim.uv`/`vim.system`,
+   `deps.lua`/`check.lua` an `vim.fn`/`vim.split` — im Kern die komplette
+   Scan-Schicht. Alternativen wären ein eigenständiges `tree-sitter`-CLI-Binary
+   mit eigener Query-Auswertung außerhalb von Lua, oder ein vollständiger
+   Treesitter-Lua-Binding-Stack ohne Neovim (z.B. `ltreesitter`) — beides ein
+   eigenes, mehrtägiges Projekt, keine Erweiterung von docmap mehr, sondern
+   ein Parallel-Scanner, der mit der Zeit von der echten Implementierung
+   abdriftet.
+2. **Kein *interaktives* nvim** — das gibt es bereits:
+   `nvim --headless -l scripts/gen_map.lua` startet keine UI und läuft in CI
+   genau so (`ea365bf`). Falls das der eigentliche Wunsch war: **schon
+   erledigt**, nur vielleicht nicht als solches erkannt.
+
+**Empfehlung:** (1) nicht verfolgen — der Aufwand steht in keinem Verhältnis,
+wenn (2) den eigentlichen Schmerzpunkt schon deckt (ein Terminal-/CI-Kommando
+ohne geöffneten Editor). Stattdessen den *tatsächlichen* Punkt angehen —
+"ich vergesse, `:LibMap` nach neuen Modulen laufen zu lassen":
+
+- **Git pre-commit Hook**, nicht "bei jedem Speichern" (das wurde oben schon
+  bewusst verworfen — "Bewusst *nicht* auf der Liste" — weil es Diffs
+  erzeugt, die niemand beabsichtigt hat). Ein Hook, der **vor** dem Commit
+  `gen_map.lua` laufen lässt und `docs/map/*` bei Drift automatisch neu
+  schreibt und mit-staged, erzeugt dagegen **keinen** überraschenden Diff —
+  er wird Teil desselben Commits, den man ohnehin gerade macht, nicht ein
+  nachträglich entdeckter.
+- CI (`--check`) bleibt das Sicherheitsnetz für den Fall, dass der Hook
+  umgangen wird (`--no-verify`) — das ist bereits so eingerichtet.
+
+**Offene Frage:** Hook nur lokal (`.git/hooks/pre-commit`, nicht versioniert,
+einmal selbst installiert) oder über ein Tool wie `lefthook` versioniert und
+für jeden Checkout automatisch aktiv? Für ein Ein-Personen-Repo spricht viel
+für die einfache lokale Variante ohne zusätzliche Abhängigkeit.
+
+## O2. Docmap in ein eigenes Plugin auslagern — mitdenken, nicht jetzt entscheiden
+
+Nur als Überlegung festgehalten, keine Entscheidung. Stand heute: **22
+Lua-Dateien, 8682 Zeilen** in `lua/lib/nvim/docmap/` allein, plus **1537
+Zeilen** Tests (`docmap_spec.lua` + `docmap_browse_spec.lua`) — das ist groß
+genug, um sich vom Rest von `lib.nvim` (kleine, fokussierte Utility-Module)
+deutlich abzuheben. Eher eine eigenständige Anwendung *auf* `lib.nvim` als
+ein Teil davon.
+
+- **Dafür:** eigener Versions-/Release-Zyklus (docmap ändert sich schneller
+  als der Rest von lib.nvim); wer `lib.nvim` nur wegen `ui.kit`/`fs`/etc.
+  installiert, bekommt nicht ungefragt einen ganzen Doxygen-Klon mit;
+  eigenes README/eigene Tests/eigene Issues statt alles unter einem Dach.
+- **Dagegen:** docmap hängt an nichts anderem in `lib.nvim` außer
+  `lib.nvim.ui.kit` (für `:LibBrowse`) — eine Auslagerung bräuchte entweder
+  `lib.nvim` weiterhin als Abhängigkeit (dann ist wenig gewonnen) oder eine
+  Entkopplung von `ui.kit` (Aufwand). Der Registrierungs-Mechanismus
+  (`command.setup()`, `install()`) ist aber schon so gebaut, dass ein
+  externes Plugin ihn 1:1 verwenden könnte, ohne dass docmap selbst sich
+  ändern müsste — die Tür ist also bereits offen, falls die Entscheidung
+  später fällt.
+
+**Empfehlung:** jetzt nicht tun. D1–D4 zuerst fertig, dann anhand der
+tatsächlichen Größe/Kopplung neu bewerten — eine Auslagerung rückgängig zu
+machen ist teurer, als sie zu verschieben.
+
+---
+
 
 
