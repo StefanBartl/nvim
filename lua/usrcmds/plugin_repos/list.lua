@@ -28,7 +28,7 @@ local M = {}
 ---to be present on disk. A spec the resolver marked `enabled = false` —
 ---source.lua's "disabled" mode, e.g. `learn-cli.nvim` — is excluded: those
 ---are "neither local nor remote" by explicit choice, not an oversight, so
----`:PluginsClone` should not fetch them and `:PluginsRemove` should not
+---`:MyPluginsClone` should not fetch them and `:MyPluginsRemove` should not
 ---report on repos that were never supposed to be cloned in the first place.
 ---@return Usrcmds.PluginRepos.Entry[]|nil entries
 ---@return string|nil err
