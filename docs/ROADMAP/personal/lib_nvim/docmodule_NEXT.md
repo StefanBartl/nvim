@@ -108,6 +108,201 @@ nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
 
 ---
 
+# Konzept: Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff")
+
+Nutzeranfrage (2026-07-28): ein "Git"/"Repository"-Tab, der alle Commits
+auflistet, in die man hineinklicken kann (Message, Metadaten, Diff), mit dem
+eigentlichen Zusatzfeature: **wenn ein Commit eine Funktion ändert, zeigen,
+welche Module diese Funktion aufrufen** — also nicht primär der geänderte
+Code, sondern *wohin diese Änderung ausstrahlt*.
+
+Die Idee ist gut und trifft eine echte Lücke: `:LibMap diff <ref>` sagt heute,
+was sich an der *Form* des Baums geändert hat (Module/Funktionen dazu/weg,
+Abhängigkeiten, Zyklen), aber nicht, was ein konkreter Zeilendiff an
+*Aufrufern* berührt. Vor einem Plan stehen aber drei Befunde, von denen einer
+die naheliegendste Umsetzung ausschließt.
+
+## Befund 1 (blockierend): Commit-Historie kann nicht ins `--check`-Artefakt
+
+Das ist kein Aufwands-, sondern ein Struktur-Problem, und es schließt die
+naheliegende Variante ("noch ein Tab wie Notes/Index/Analysis") direkt aus:
+
+`--check` vergleicht das committete Artefakt **byteweise** mit einer frisch
+generierten Fassung. Enthielte das Artefakt `git log`-Daten, dann gilt:
+
+1. Commit N wird erstellt → `HEAD` ist jetzt N
+2. Eine Neugenerierung enthielte jetzt Commit N — das committete Artefakt
+   (generiert als `HEAD` noch N−1 war) aber nicht
+3. → Artefakt sofort nach *jedem* Commit stale, Hook/CI rot
+4. Reparatur = neuer Commit = wieder stale
+
+Es gibt **keinen Fixpunkt**: der Inhalt des Artefakts hinge vom Hash des
+Commits ab, der das Artefakt enthält. Auch "alles außer HEAD einbetten" hilft
+nicht (verschiebt die Regress nur um eins). Der einzige stabile Schnitt wäre
+eine eingefrorene Grenze — was den Zweck aufhebt.
+
+**Konsequenz:** die anderen vier Tabs sind *immer aktuell, committet und
+geprüft*. Ein History-Tab kann das per Konstruktion nicht sein. Er wäre eine
+konzeptionell andere Art Artefakt — das ist die zentrale Entscheidung, die
+vor der Umsetzung bewusst getroffen werden muss, nicht nebenbei.
+
+## Befund 2: der Diff-Text wird von den Artefakten selbst dominiert
+
+Gemessen am letzten Commit (`fd27b90`):
+
+| | Größe |
+|---|---|
+| voller `git show` | **4,8 MB** |
+| ohne `docs/map/` | **15,8 KB** |
+
+Faktor ~300. Jeder docmap-Commit schleppt das regenerierte `index.html` +
+`module_map.json` mit. Zwei Folgerungen:
+
+- Jede Diff-Anzeige **muss `opts.out_dir` ausschließen**, sonst zeigt sie fast
+  ausschließlich generiertes Rauschen.
+- "Alle Diffs einbetten" ist damit ohnehin erledigt — selbst ohne Befund 1.
+  Einzubetten wäre die *Analyse* (welche Funktionen berührt, wer ruft sie),
+  nicht der Diff-Text; für den Text existiert mit `opts.repo_url`/`srcUrl()`
+  bereits die GitHub-Verlinkung, und lokal kann `git show` in einen Buffer.
+
+## Befund 3: die nutzbare Historientiefe ist begrenzt (und messbar)
+
+Die Funktions-Auflösung alter Zeilennummern hängt daran, dass jeder Commit
+sein eigenes Artefakt mitbringt (derselbe Trick, den `diff.lua` schon nutzt:
+`git show <ref>:docs/map/module_map.json`). Das geht aber nicht beliebig weit
+zurück:
+
+| Ab wann | Commits |
+|---|---|
+| Repository gesamt | 202 |
+| Artefakt existiert (`910a26b`, 19.07.) | 126 |
+| **Artefakt enthält Funktionen (`8362f89`, 21.07.)** | **92** |
+| Schema 2 (`51ece89`, 27.07.) | 50 |
+
+Die ersten committeten Maps sind Schema 1 **ohne** `functions` — für Commits
+davor ist Funktions-Granularität schlicht nicht rekonstruierbar. Das ist kein
+Fehler, sondern derselbe Fall, den `diff.lua` bereits sauber behandelt
+("Dependencies, cycles and impact are not comparable" statt stillschweigend
+Unvergleichbares zu vergleichen). Ein History-Werkzeug muss genauso ehrlich
+degradieren: unterhalb der Grenze Commit + Message + Dateiliste, aber keine
+Funktions-Ausstrahlung.
+
+## Was schon existiert — die Hälfte "Ausstrahlung" ist fertig
+
+Der eigentlich interessante Teil der Idee ist bereits gebaut:
+
+| Baustein | Wo |
+|---|---|
+| direkte Aufrufer einer Funktion | `ir.edges`, `kind="call"`, `to`/`to_fn` |
+| Blast-Radius eines Moduls (transitive Hülle `required_by`) | `deps.impact(ir, id)` |
+| interaktiv im Editor | `:LibBrowse` `gI` |
+| Fan-in-Ranking | Analysis-Tab, Dependencies-Panel (R6) |
+| IR einer beliebigen Revision holen | `diff.lua` (`git show <ref>:…json`) |
+| strukturelle Änderungen zwischen zwei Revisionen | `diff.compare` |
+
+## Der einzige wirklich fehlende Baustein: `fn.line_end`
+
+Um "Zeile 247 wurde geändert" → "das ist `M.scan_full`" aufzulösen, braucht
+es den Zeilen*bereich* jeder Funktion. Aktuell wird nur `fn.line` (Startzeile)
+serialisiert — der Endwert existiert beim Scan bereits (`ranges` in
+`functions.lua` führt `{ name, srow, erow }` für genau diesen Zweck für
+`calls.lua`), wird aber nicht in die `FunctionInfo` übernommen.
+
+Das ist eine Ein-Feld-Ergänzung, exakt wie `complexity` gerade eine war: die
+Daten liegen an derselben Stelle schon vor.
+
+Die Diff-Seite ist ebenfalls billig: `git diff --unified=0` liefert exakte
+Zeilenbereiche (verifiziert):
+
+```
+@@ -2003 +2003,47 @@     alt: Zeile 2003, neu: Zeilen 2003–2049
+@@ -2034,0 +2082,3 @@     rein additiv ab Zeile 2082
+```
+
+Alte Zeilen werden gegen die IR von `<ref>~1` aufgelöst, neue gegen die von
+`<ref>` — beide über den bereits etablierten `git show`-Trick.
+
+**Kostenmessung:** ein historisches Artefakt holen dauert 0,27 s (1 MB JSON).
+Für die vollen 92 auflösbaren Commits also grob 25–50 s plus Parsen — d.h.
+**definitiv opt-in**, niemals Teil eines normalen `:LibMap`-Laufs.
+
+## Drei mögliche Orte, mit Abwägung
+
+### A) `:LibMap impact <ref>` → Quickfix-Liste
+
+Kein Artefakt, keine Staleness, passt exakt in die bestehende
+Kommando-Familie (`why`, `diff`, `dot`). Rechnet live für *einen* Commit
+(oder Range): welche Funktionen berührt, wer ruft sie, welche Module strahlt
+es an. Quickfix ist in diesem Repo bereits der etablierte Ort für "alles
+Betroffene" (`gq`, `gI`, `why`).
+
+**Dafür:** billigster echter Nutzen, sofort einsetzbar im Review-Alltag
+("was fasse ich mit diesem Commit alles an").
+**Dagegen:** kein Browsen, keine Liste, kein Diff-Viewer — nicht das, was
+die Anfrage beschreibt.
+
+### B) `:LibBrowse`-Modus (Editor-seitiger Commit-Browser) — **empfohlen**
+
+`:LibBrowse` ist bereits ein Drill-down-Navigator mit Modi (`1`…`4`:
+Structure/Deps/Calls/Types) — ein fünfter Modus "History" fügt sich exakt
+ein. Commits als Liste, `<CR>` steigt in einen Commit, die berührten
+Funktionen werden zur Liste, `<CR>` darauf zeigt deren Aufrufer, `gq`
+schickt alles in die Quickfix-Liste, `gd` springt in die Quelle.
+
+**Dafür:** git ist live verfügbar → **kein Staleness-Problem, kein
+Artefakt**; Diff-Text kostenlos via `git show` in einen Buffer (und `gd`
+springt in echte Dateien mit LSP — genau die Begründung, mit der schon der
+HTML-Quelltext-Browser D4 verworfen wurde); die Kosten aus Befund 3 fallen
+nur beim tatsächlichen Öffnen an, nicht bei jeder Generierung; passt zum
+Selbstverständnis "nicht das Diagramm im Terminal, sondern das, was der
+Editor besser kann".
+**Dagegen:** kein Web-UI.
+
+### C) HTML-"History"-Tab als **separat generiertes, gitignoriertes** Artefakt
+
+Bekommt das visuelle Tab-Erlebnis der Anfrage, aber nur unter der Bedingung
+aus Befund 1: eigene Datei (z.B. `docs/map/history.html`), **nicht committet,
+nicht in `--check`**, erzeugt durch ein explizites `:LibMap history [N]`.
+Eingebettet würde nur die Analyse (Commit-Metadaten + berührte Funktionen +
+deren Aufrufer, grob geschätzt ~1 KB/Commit → ~100 KB für 92 Commits, neben
+1,5 MB `index.html` unkritisch); der Diff-Text bliebe extern über
+`repo_url` verlinkt.
+
+**Dafür:** genau die beschriebene Oberfläche, teilbar/versendbar.
+**Dagegen:** bricht die Eigenschaft "jeder Tab ist aktuell, committet,
+geprüft"; veraltet ab dem nächsten Commit stillschweigend (bräuchte also
+mindestens einen sichtbaren Stand-Hinweis, wie `:LibBrowse` ihn beim
+Artefakt-Modus schon zeigt); zweiter Generierungspfad zu pflegen.
+
+## Empfohlener Phasenplan
+
+Die Phasen sind bewusst so geschnitten, dass jede für sich Nutzen liefert und
+die Entscheidung B-vs-C erst am Ende fällt — wenn das Fundament steht und
+sich zeigt, ob das Quickfix-Ergebnis den Bedarf schon deckt.
+
+**Phase 1 — Fundament (klein, testbar, kein UI):**
+1. `fn.line_end` in `functions.lua`/`@types` ergänzen (Daten liegen in
+   `ranges` bereits vor), `to_json` mitziehen.
+2. Neues `history.lua`, **pur** im Stil von `diff.lua` (kein git, kein
+   Dateisystem — nur Daten rein, Struktur raus): `hunks + IR → berührte
+   Funktionen`, und darauf aufbauend `→ direkte Aufrufer → betroffene
+   Module`. Das git-Holen bleibt wie bei `diff.lua` in `command.lua`.
+3. Test gegen echte Fixtures im `docmap_spec.lua`-Stil: Hunk-Bereich auf
+   Funktion abbilden, inklusive der Ränder (Zeile == `line`, Zeile ==
+   `line_end`, rein additiver Hunk `@@ -x,0 +y,n @@`).
+
+**Phase 2 — erster echter Nutzen:** `:LibMap impact <ref>` (Variante A).
+Klein, sofort brauchbar, deckt "wohin strahlt dieser Commit aus" bereits ab.
+
+**Phase 3 — Browsing:** dann entscheiden. Empfehlung **B** (`:LibBrowse
+history`), weil es das Staleness-Problem vollständig umgeht, den Diff-Text
+gratis bekommt und dieselbe Begründung trägt, mit der D4 (HTML-Quelltext-
+Browser) schon einmal zugunsten des Editors verworfen wurde. **C** bleibt
+möglich, wenn ausdrücklich das Web-UI gewünscht ist — dann aber bewusst als
+separates, gitignoriertes Artefakt mit sichtbarem Stand-Hinweis.
+
+---
+
 ## Kandidaten, priorisiert
 
 | # | Feature | Vorbild | Aufwand | Einschätzung |
@@ -122,6 +317,7 @@ nicht relevant), Stilkonsistenz-Analyse (Namenskonventionen etc. — das ist
 | R8 | `@group`/`@ingroup` (virtuelle Gruppen quer zur Modulstruktur) | Doxygen `\defgroup` | L | Eher nicht — kein aktueller Bedarf |
 | R9 | `ctags`-Export (`:LibMap tags`) | ctags/gutentags | S | Eher nicht — LSP deckt das schon ab |
 | R10 | Live-Diagramm-Reload bei `:LibBrowse live` auch für die HTML-Seite | — | M | Eher nicht — zwei offene Prozesse synchron zu halten lohnt den Aufwand nicht |
+| R11 | Commit-Historie mit Ausstrahlung ("wohin wirkt dieser Diff") | — (eigene Idee; git-blame-artig, aber über den Call-Graph) | M–L | **Analysiert, Phasenplan steht — siehe eigenes Konzept-Kapitel oben** |
 
 ---
 
@@ -510,6 +706,12 @@ Analysis-Tab-Werkzeug, siehe "Zyklomatische Komplexität — Umsetzung"
 weiter unten für Details.
 
 **Nächster konkreter Schritt, in absteigender Priorität:**
+- **R11 — Commit-Historie mit Ausstrahlung** (2026-07-28 analysiert, eigenes
+  Konzept-Kapitel oben mit Phasenplan): Phase 1 (`fn.line_end` + pures
+  `history.lua`) ist klein, testbar und ohne UI-Entscheidung umsetzbar —
+  der beste nächste Schritt, wenn hier weitergemacht wird. Wichtig vorab
+  lesen: Befund 1 (Historie kann strukturell nicht ins `--check`-Artefakt)
+  bestimmt, welche der drei Umsetzungsvarianten überhaupt in Frage kommt.
 - **Code-Duplikate** (PMD/CPD-artig) oder **Churn-Hotspots** als fünftes
   Analysis-Tab-Werkzeug — beide laut "Einordnung"-Abschnitt oben die
   aufwendigsten verbliebenen Kandidaten (Baum-Ähnlichkeitsvergleich bzw.
