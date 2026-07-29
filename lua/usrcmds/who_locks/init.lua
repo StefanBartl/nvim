@@ -9,7 +9,7 @@
 ---   3. Neo-tree's own `fs_event` watchers covering the file's folder.
 ---
 --- (1) and (2) live in `lib.nvim.cross.fs.lock`, shared with fileops.nvim's
---- `:File lock` and filetree.nvim. What this command adds is (3) and the fact
+--- `:File lockinfo` and filetree.nvim. What this command adds is (3) and the fact
 --- that it works on *any* path, with no buffer needed — which is what makes
 --- it useful outside a plugin: it distinguishes a foreign holder from a
 --- handle leaked inside this very Neovim, the one case no retry can outwait.

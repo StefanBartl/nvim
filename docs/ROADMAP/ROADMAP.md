@@ -1,7 +1,7 @@
 # Roadmap
 
-Statusline hat keine anzeige wie weit man im dokumenbt ist mehr..
-
+!!! Hier alle aktuellen bindings von externen plugins einfügen:
+C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\ExternPlugins\Bindings
 
 
    Warn  3:37:11 PM notify.warn [filetree.pdf] pdfport.nvim not installed — opening PDF in system viewer

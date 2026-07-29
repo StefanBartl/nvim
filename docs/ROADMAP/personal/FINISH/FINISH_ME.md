@@ -15,7 +15,7 @@
 
 ### Hilfesystem & Tools
 
-* [ ] `vimdoc`-Datei `doc/{NAME}.txt` erstellen + Funktion schreiben, die automatisch die `tags`-Datei für User generiert (`doc/tags` in `.gitignore` aufnehmen).
+* [ ] `vimdoc`-Datei `doc/{NAME}.txt` erstellen
 
 ---
 
