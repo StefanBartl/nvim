@@ -8,6 +8,7 @@ All plugin keymap cheatsheets in this folder.
 - [dap.nvim](./dap.nvim.md)
 - [debugging.nvim](./debugging.nvim.md)
 - [diff.nvim](./diff.nvim.md)
+- [documentation.nvim](./documentation.nvim.md)
 - [emojis.nvim](./emojis.nvim.md)
 - [fileops.nvim](./fileops.nvim.md)
 - [filetree.nvim](./filetree.nvim.md)
