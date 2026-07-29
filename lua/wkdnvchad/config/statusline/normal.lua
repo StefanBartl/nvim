@@ -14,11 +14,21 @@ local cursor_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl")
 
 local M = {}
 
--- Mirrors nvchad.stl.utils' `orders.default`, with "replacer_progress" and
--- "filetree_cwd_mode" inserted before "cwd" (both are about *where you are*,
--- same neighbourhood as NvChad's own cwd module). If NvChad ever changes its
--- own default order, update this list to match (see nvchad/stl/utils.lua).
-local order = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "replacer_progress", "filetree_cwd_mode", "cwd", "cursor" }
+-- Mirrors nvchad.stl.utils' `orders.default`, with two insertions. The `%=`
+-- entries are the alignment breaks, so the list is really three groups:
+-- left (up to the first `%=`), centre, right (after the second).
+--
+--   filetree_cwd_mode  last in the LEFT group — it belongs with mode/file/git,
+--                      which describe the current buffer's context. Putting it
+--                      in the right group left it floating at that group's
+--                      leading edge, since diagnostics/lsp/replacer_progress
+--                      are all empty most of the time.
+--   replacer_progress  right group, before "cwd" — transient status, same
+--                      neighbourhood as the other transient indicators.
+--
+-- If NvChad ever changes its own default order, update this list to match
+-- (see nvchad/stl/utils.lua).
+local order = { "mode", "file", "git", "filetree_cwd_mode", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "replacer_progress", "cwd", "cursor" }
 
 M.ui = {
   statusline = {
