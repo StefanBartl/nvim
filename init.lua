@@ -104,6 +104,7 @@ local startup = require("startup")
 startup.setup_usercmds()
 require("usrcmds.update_repos").enable()
 require("usrcmds.plugin_repos").enable()
+require("usrcmds.who_locks").enable()
 
 -- --- synchronous ------------------------------------------------------------
 
