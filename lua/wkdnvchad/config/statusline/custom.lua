@@ -9,6 +9,7 @@ local lsp_module = lazy.require("wkdnvchad.ui.statusline.modules.lsp")
 local cursor_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl")
 local get_separators = lazy.require("wkdnvchad.ui.statusline.utils.get_separators")
 local replacer_progress = lazy.require("wkdnvchad.ui.statusline.modules.replacer_progress")
+local filetree_cwd_mode = lazy.require("wkdnvchad.ui.statusline.modules.filetree_cwd_mode")
 
 -- ============================================================================
 -- Modules
@@ -30,12 +31,17 @@ return {
         "diagnostics",
         "lsp",
         "replacer_progress",
+        "filetree_cwd_mode",
         "cursor",
       },
 
       modules = {
         replacer_progress = function()
           return replacer_progress()
+        end,
+
+        filetree_cwd_mode = function()
+          return filetree_cwd_mode()
         end,
 
         --- Mode (NvChad default überschreiben mit Separatoren)

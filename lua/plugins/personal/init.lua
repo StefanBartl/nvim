@@ -174,6 +174,20 @@ plugins.add({
     end,
   },
 
+  {
+    "StefanBartl/documentation.nvim",
+    cmd = { "DocMap", "DocBrowse" },
+    dependencies = { "StefanBartl/lib.nvim" },
+    -- Kein `root`: die Commands mappen bewusst das aktuelle Arbeitsverzeichnis,
+    -- weil hier reihenweise Repos nebeneinander liegen und ein fixes Ziel genau
+    -- das Falsche waere. `source` leitet documentation.config aus dem Root ab
+    -- (lua/<name>, wenn lua/ genau einen Kandidaten enthaelt).
+    opts = {},
+    config = function(_, opts)
+      require("documentation").setup(opts)
+    end,
+  },
+
   -- ==========================================================================
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
   -- ==========================================================================
@@ -300,6 +314,24 @@ plugins.add({
         adapter = "neotree",
         features = {
           cwd_sync = { enabled = true, reveal = false },
+          -- The mode badge (PROJECT/LOCK/…) is shown in wkdnvchad's own
+          -- statusline instead (modules/filetree_cwd_mode) via cwd_mode's
+          -- external-statusline API (badge()/component()). indicator.enabled
+          -- must stay false here, or the mode shows twice: once in the
+          -- shared statusline, once as a float in the tree window (with
+          -- laststatus=3 there is no per-window statusline for it to use,
+          -- so it would fall back to exactly that float).
+          -- labels.follow is "" upstream by design: filetree's own in-tree
+          -- badge is meant to be invisible while no policy is active. In a
+          -- shared statusline that reads as "the component is broken" rather
+          -- than "no mode" — so give follow a visible label. Everything else
+          -- keeps filetree's defaults (PROJECT/PKG/LOCK/MANUAL/TREE).
+          cwd_mode = {
+            indicator = {
+              enabled = false,
+              labels = { follow = "FOLLOW" },
+            },
+          },
           -- Mark the currently-focused file with a sign-column icon (on top of
           -- neo-tree's own fg colour for all opened files). opened_sync is on by
           -- default and keeps those opened-file colours in sync as buffers open/
@@ -459,6 +491,7 @@ plugins.add({
           "StefanBartl/color_my_ascii.nvim",
           "StefanBartl/debugging.nvim",
           "StefanBartl/diff.nvim",
+          "StefanBartl/documentation.nvim",
           "StefanBartl/emojis.nvim",
           "StefanBartl/fileops.nvim",
           "StefanBartl/filetree.nvim",

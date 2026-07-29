@@ -1,5 +1,9 @@
 # Roadmap
 
+Statusline hat keine anzeige wie weit man im dokumenbt ist mehr..
+
+
+
    Warn  3:37:11 PM notify.warn [filetree.pdf] pdfport.nvim not installed — opening PDF in system viewer
 
 
