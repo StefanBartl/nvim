@@ -1,13 +1,12 @@
 ---@module 'config.harpoon.debug'
---- Minimal observability for Harpoon state.
---- Provides :HarpoonDebug to dump current project key and items.
+--- Minimal observability for Harpoon state: dump the current items into a
+--- scratch buffer. Exposed as `:Harpoon debug` (config.harpoon.usrcmds).
 
 local M = {}
 
 local path_shorten = require("lib.nvim.fs.path_shorten")
 local bo = vim.bo
 local nvim_buf_set_lines = vim.api.nvim_buf_set_lines
-local usercmd = require("lib.nvim.usercmd")
 
 ---@return string[]
 local function collect_lines()
@@ -33,21 +32,16 @@ local function collect_lines()
   return lines
 end
 
+---Dump the current Harpoon items into a throwaway scratch buffer.
 ---@return nil
-function M.setup_cmd()
-  usercmd.create("HarpoonDebug", function()
-    local out = collect_lines()
-    vim.cmd("new")
-    nvim_buf_set_lines(0, 0, -1, false, out)
-    bo.buftype = "nofile"
-    bo.bufhidden = "wipe"
-    bo.swapfile = false
-    vim.bo.modifiable = false
-  end, {})
-
-  usercmd.create("CheckHealthHarpoon", function()
-    require("config.harpoon.health").check()
-  end, {})
+function M.dump()
+  local out = collect_lines()
+  vim.cmd("new")
+  nvim_buf_set_lines(0, 0, -1, false, out)
+  bo.buftype = "nofile"
+  bo.bufhidden = "wipe"
+  bo.swapfile = false
+  vim.bo.modifiable = false
 end
 
 return M

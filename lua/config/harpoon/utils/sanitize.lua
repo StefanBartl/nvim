@@ -48,9 +48,15 @@ function M.dedup_in_place_safe(list)
 
   -- Non-string values (shouldn't occur after sanitize_items_in_place, but
   -- kept defensive) key to themselves so they never collide with a real path.
+  -- A nil hole has no identity to key on at all and would be an illegal table
+  -- index, so each one gets its own fresh table as a key: never deduped away,
+  -- never a crash.
   local to_remove = dedup_indices(list.items, function(it)
     local v = (type(it) == "table") and it.value or it
-    return type(v) == "string" and normkey(v) or it
+    if type(v) == "string" then
+      return normkey(v)
+    end
+    return v ~= nil and v or {}
   end)
 
   if #to_remove == 0 then

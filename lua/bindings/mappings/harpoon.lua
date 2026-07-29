@@ -1,5 +1,7 @@
 ---@module 'bindings.mappings.harpoon'
---- Version-agnostic Harpoon keymaps (v1 und v2 kompatibel)
+--- Harpoon keymaps. Every mapping is a thin wrapper around config.harpoon.api,
+--- i.e. the exact same entry point `:Harpoon <sub>` dispatches to — each
+--- mapping's `desc` names its command equivalent, so the two never drift.
 
 local notify = require("lib.nvim.notify").create("[bindings.mappings.harpoon]")
 
@@ -7,8 +9,8 @@ local M = {}
 
 function M.setup()
   local map = vim.g.__map_helper
-  local harpoon = require("harpoon")
-  if not harpoon then
+  local ok_hp, harpoon = pcall(require, "harpoon")
+  if not ok_hp or not harpoon then
     notify.warn("[harpoon] not installed")
     return
   end
@@ -42,65 +44,27 @@ function M.setup()
     end
   end)
 
+  local api = require("config.harpoon.api")
+
   map("n", "<leader>h", function()
-    local list = harpoon:list()
-    -- harpoon:add() fills the FIRST nil gap in items (1.._length+1), so if a
-    -- persisted/pinned slot was removed earlier the new file lands in that hole
-    -- near the top. Compact the holes away first so add() always appends at the
-    -- real end of the list.
-    local items = list.items or {}
-    local len = list._length or #items
-    local compact = {}
-    for i = 1, len do
-      if items[i] ~= nil then
-        compact[#compact + 1] = items[i]
-      end
-    end
-    list.items = compact
-    list._length = #compact
-    list:add()
-  end, { desc = "[HARPOON] Add current file (append at end)" })
+    api.add(nil)
+  end, { desc = "[HARPOON] Add current file at the end (:Harpoon add)" })
+
+  map("n", "<leader>H", function()
+    api.add(nil, { front = true })
+  end, { desc = "[HARPOON] Add current file at the top (:Harpoon add --front)" })
 
   map("n", "<C-e>", function()
-    harpoon.ui:toggle_quick_menu(harpoon:list())
-  end, { desc = "[HARPOON] Open harpoon window (default)." })
-  --
-  -- map("n", "<leader>1", function()
-  --   harpoon:list():select(1)
-  -- end, { desc = "[HARPOON] Select item 1." })
-  -- map("n", "<leader>2", function()
-  --   harpoon:list():select(2)
-  -- end, { desc = "[HARPOON] Select item 2." })
-  -- map("n", "<leader>3", function()
-  --   harpoon:list():select(3)
-  -- end, { desc = "[HARPOON] Select item 3." })
-  -- map("n", "<leader>4", function()
-  --   harpoon:list():select(4)
-  -- end, { desc = "[HARPOON] Select item 4." })
-  --
-  -- basic telescope configuration
-  local conf = require("telescope.config").values
-  local function toggle_telescope(harpoon_files)
-    local file_paths = {}
-    for _, item in ipairs(harpoon_files.items) do
-      table.insert(file_paths, item.value)
-    end
-
-    require("telescope.pickers")
-      .new({}, {
-        prompt_title = "Harpoon",
-        finder = require("telescope.finders").new_table({
-          results = file_paths,
-        }),
-        previewer = conf.file_previewer({}),
-        sorter = conf.generic_sorter({}),
-      })
-      :find()
-  end
+    api.menu("default")
+  end, { desc = "[HARPOON] Open harpoon window (:Harpoon menu)" })
 
   map("n", "<leader>ht", function()
-    toggle_telescope(harpoon:list())
-  end, { desc = "[HARPOON] Open harpoon window with telescope." })
+    api.menu("telescope")
+  end, { desc = "[HARPOON] Open harpoon window with telescope (:Harpoon menu telescope)" })
+
+  map("n", "<leader>hf", function()
+    api.menu("fzf")
+  end, { desc = "[HARPOON] Open harpoon window with fzf (:Harpoon menu fzf)" })
 end
 
 return M

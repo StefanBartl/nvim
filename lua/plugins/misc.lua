@@ -51,7 +51,7 @@ plugins.add({
       })
       require("config.harpoon.pin_marks").setup()
       require("config.harpoon.preview").install_alt_number_maps()
-      require("config.harpoon.debug").setup_cmd()
+      require("config.harpoon.usrcmds").setup()
     end,
   },
 

@@ -89,14 +89,33 @@ Harpoon selbst persistiert nach `stdpath("data")/harpoon/<sha256(key)>.json`
 
 ## 3. User-Commands
 
+Ein einziges Verb `:Harpoon <subcommand>` (gebaut mit
+`lib.nvim.usercmd.composer`, registriert in
+[lua/config/harpoon/usrcmds.lua](../../lua/config/harpoon/usrcmds.lua)) plus
+flache Aliase. Vollständige Referenz:
+[ExternPlugins/Bindings/Usercmds/Harpoon.md](ExternPlugins/Bindings/Usercmds/Harpoon.md).
+
 | Command | Zweck |
 |---|---|
-| `:HarpoonPersistPaths` | **Top-up**: fügt fehlende Default-Pfade (aus `target_specs` + User-Pins) ans Ende an. Bestehende Reihenfolge/Zusatzeinträge bleiben unangetastet. |
-| `:HarpoonSetDefaultPaths` | **Hard-Reset**: leert das Bucket komplett und baut es exakt aus `target_specs` + User-Pins neu auf, in genau dieser Reihenfolge. Alles, was darüber hinaus manuell hinzugefügt wurde, geht verloren. |
-| `:HarpoonPin [pfad]` | Nimmt die aktuelle Datei (oder `pfad`, mit Datei-Completion) dauerhaft als Default-Pin auf. Erscheint sofort in der Liste, gespeichert in `harpoon_user_pins.json`. |
-| `:HarpoonUnpin [pfad]` | Entfernt `pfad` (oder aktuelle Datei) wieder aus den User-Pins. Der Eintrag selbst bleibt in der Liste, bis er per `dd` im Quick-Menu gelöscht wird — nur der "geschützte Default"-Status entfällt. |
-| `:HarpoonDebug` | Öffnet einen Scratch-Buffer mit Index + gekürztem Pfad-Label jedes aktuellen Listeneintrags. |
-| `:CheckHealthHarpoon` | Manueller Health-Check (Plugin geladen? plenary/fzf-lua/telescope optional vorhanden? Liste lesbar?) — äquivalent zu `:checkhealth`, nur direkt aufrufbar. |
+| `:Harpoon` | Quick-Menu öffnen/schließen (Bare-Form). |
+| `:Harpoon menu [default\|telescope\|fzf]` | Listen-UI öffnen. |
+| `:Harpoon add [pfad] [--front] [--permanent]` | Datei hinzufügen (Default: aktueller Buffer, ans Ende). `--front` = Slot 1, `--permanent` = zusätzlich als Default-Pin. |
+| `:Harpoon remove [pfad]` | Eintrag aus der Live-Liste entfernen. |
+| `:Harpoon pin [pfad] [--front]` | Dauerhaft als Default-Pin aufnehmen (`harpoon_user_pins.json`). |
+| `:Harpoon unpin [pfad]` | Aus den Default-Pins nehmen; der Listeneintrag bleibt. |
+| `:Harpoon defaults sync` | **Top-up**: fügt fehlende Default-Pfade (aus `target_specs` + User-Pins) ans Ende an. Bestehende Reihenfolge/Zusatzeinträge bleiben unangetastet. |
+| `:Harpoon defaults reset` | **Hard-Reset**: leert das Bucket komplett und baut es exakt aus `target_specs` + User-Pins neu auf, in genau dieser Reihenfolge. Alles, was darüber hinaus manuell hinzugefügt wurde, geht verloren. |
+| `:Harpoon select <n>` | Zu Eintrag *n* springen. |
+| `:Harpoon preview <n>` | Vollbild-Preview von Eintrag *n* (siehe §5). |
+| `:Harpoon debug` | Öffnet einen Scratch-Buffer mit Index + gekürztem Pfad-Label jedes aktuellen Listeneintrags. |
+| `:Harpoon health` | Manueller Health-Check (Plugin geladen? plenary/fzf-lua/telescope optional vorhanden? Liste lesbar?) — äquivalent zu `:checkhealth`, nur direkt aufrufbar. |
+
+Flache Aliase (bleiben bewusst bestehen):
+`:HarpoonAddToList [pfad]` = `add --front`,
+`:HarpoonAddToListPermanent [pfad]` = `add --front --permanent`,
+`:HarpoonPin`, `:HarpoonUnpin`, `:HarpoonPersistPaths` (= `defaults sync`),
+`:HarpoonSetDefaultPaths` (= `defaults reset`), `:HarpoonDebug`,
+`:CheckHealthHarpoon`.
 
 ---
 
@@ -104,14 +123,20 @@ Harpoon selbst persistiert nach `stdpath("data")/harpoon/<sha256(key)>.json`
 
 | Mapping | Modus | Aktion |
 |---|---|---|
-| `<leader>h` | n | Aktuelle Datei anhängen (`list:add()`). Komprimiert vorher etwaige `nil`-Lücken (durch frühere Löschungen), damit neue Einträge wirklich ans Ende gehängt werden statt in eine Lücke zu fallen. |
-| `<C-e>` | n | Quick-Menu öffnen/schließen (`harpoon.ui:toggle_quick_menu`). Zeigt die globale Liste, siehe §1. |
-| `<leader>ht` | n | Liste als Telescope-Picker öffnen (einfacher File-Picker über die Harpoon-Pfade, kein Custom-Preview). |
-| `<M-1>` … `<M-9>` (Alt+1..Alt+9) | n | Vollbild-Preview von Eintrag *N* (siehe §5). |
+Alle Maps sind dünne Wrapper um `config.harpoon.api` — dieselbe Funktion, die
+auch das jeweilige `:Harpoon`-Subcommand aufruft.
 
-Auskommentiert/inaktiv im Code (`bindings/mappings/harpoon.lua`):
-`<leader>1`–`<leader>4` für Direkt-Select wären vorbereitet, sind aber
-deaktiviert (kollidieren vermutlich mit anderen Bindings).
+| Mapping | Modus | Aktion | = Command |
+|---|---|---|---|
+| `<leader>h` | n | Aktuelle Datei anhängen. Komprimiert vorher etwaige `nil`-Lücken (durch frühere Löschungen), damit neue Einträge wirklich ans Ende gehängt werden statt in eine Lücke zu fallen. | `:Harpoon add` |
+| `<leader>H` | n | Aktuelle Datei an den Anfang der Liste setzen. | `:Harpoon add --front` |
+| `<C-e>` | n | Quick-Menu öffnen/schließen (`harpoon.ui:toggle_quick_menu`). Zeigt die globale Liste, siehe §1. | `:Harpoon menu` |
+| `<leader>ht` | n | Liste als Telescope-Picker öffnen (gekürzte Labels, `<CR>`/`<C-v>`/`<C-x>`/`<C-t>`). | `:Harpoon menu telescope` |
+| `<leader>hf` | n | Liste als fzf-lua-Picker öffnen. | `:Harpoon menu fzf` |
+| `<M-1>` … `<M-9>` (Alt+1..Alt+9) | n | Vollbild-Preview von Eintrag *N* (siehe §5). | `:Harpoon preview <n>` |
+
+Nicht gemappt: `<leader>1`–`<leader>4` für Direkt-Select (Kollisionsgefahr mit
+anderen Bindings) — dafür `:Harpoon select <n>`.
 
 **Im Quick-Menu selbst** (Harpoon-Standardverhalten, `filetype=harpoon`):
 normaler Buffer-Editing-Flow — Zeilen umsortieren (verschieben wie normalen
@@ -202,14 +227,14 @@ User-Pins) gehört, bekommt einen End-of-Line-Marker:
 
 ## 9. Debug/Health (`config.harpoon.debug`, `config.harpoon.health`)
 
-- `:HarpoonDebug` — Scratch-Buffer, `nnn  <gekürzter Pfad>` pro Zeile
-  (`lib.nvim.fs.path_shorten`, Style `"label"`).
-- `:CheckHealthHarpoon` — ruft `config.harpoon.health.check()` direkt auf:
-  prüft ob `harpoon` ladbar ist, ob `plenary`/`fzf-lua`/`telescope`
-  (optional) vorhanden sind, und ob `harpoon:list()` eine plausible Struktur
-  zurückgibt.
-- Beide Commands werden über `config.harpoon.debug.setup_cmd()` registriert
-  (aufgerufen in `misc.lua`).
+- `:Harpoon debug` (`:HarpoonDebug`) — Scratch-Buffer, `nnn  <gekürzter Pfad>`
+  pro Zeile (`lib.nvim.fs.path_shorten`, Style `"label"`).
+- `:Harpoon health` (`:CheckHealthHarpoon`) — ruft
+  `config.harpoon.health.check()` direkt auf: prüft ob `harpoon` ladbar ist, ob
+  `plenary`/`fzf-lua`/`telescope` (optional) vorhanden sind, und ob
+  `harpoon:list()` eine plausible Struktur zurückgibt.
+- Registriert werden sie — wie alle Harpoon-Commands — in
+  `config.harpoon.usrcmds.setup()` (aufgerufen in `misc.lua`).
 
 ---
 
@@ -221,11 +246,11 @@ config.harpoon.hardening.setup({ debounce_ms = 200, autocmd_events = {...} })
 config.harpoon.persist_paths.setup({ target_specs = target_specs })
 config.harpoon.pin_marks.setup()
 config.harpoon.preview.install_alt_number_maps()
-config.harpoon.debug.setup_cmd()
+config.harpoon.usrcmds.setup()   -- :Harpoon-Verb + flache Aliase
 ```
 
 Die `harpoon:setup({ settings = { key = ..., save_on_change = true, ... } })`-
-Aufruf und die eigentlichen Keymaps (`<leader>h`, `<C-e>`, `<leader>ht`)
+Aufruf und die eigentlichen Keymaps (`<leader>h`, `<C-e>`, `<leader>ht`, …)
 laufen separat in `bindings/mappings/harpoon.lua` (`UIReady`-Phase, siehe
 `init.lua`), **nach** dem Plugin-Setup.
 
@@ -239,7 +264,9 @@ beschreiben Konzepte, die **nicht** (mehr) implementiert sind, u. a.:
 - Git-Root-basierter Project-Key (`GoodToKnow.md`) — tatsächlich: fester
   globaler Key, siehe §1.
 - FZF-Menü auf `<C-h>` — `<C-h>` ist tatsächlich mit "Fenster nach links"
-  belegt (`bindings/mappings/buf_win_tab.lua`), es gibt kein FZF-Harpoon-Menü.
+  belegt (`bindings/mappings/buf_win_tab.lua`); das FZF-Menü
+  (`config.harpoon.ui.menu_fzf`) hängt an `<leader>hf` bzw.
+  `:Harpoon menu fzf`.
 - Modulpfade wie `utils.fs_project_key`, `config.harpoon_hardening` (ohne
   Punkt-Nesting) existieren in diesem Repo nicht; die echten Pfade sind
   `config.harpoon.*` wie oben referenziert.

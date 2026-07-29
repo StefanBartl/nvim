@@ -5,11 +5,13 @@
 --- user-owned: reordering/deleting entries in the Harpoon UI persists across
 --- restarts like any other Harpoon list, and nothing here auto-re-adds
 --- deleted entries on its own. Two commands give explicit, on-demand control:
----   :HarpoonPersistPaths     - top up: add any target_specs path that is
+---   :Harpoon defaults sync   - top up: add any target_specs path that is
 ---                               currently missing, appended at the end.
 ---                               Everything else in the list is left alone.
----   :HarpoonSetDefaultPaths  - hard reset: clear the bucket and rebuild it
+---   :Harpoon defaults reset  - hard reset: clear the bucket and rebuild it
 ---                               from target_specs, in that exact order.
+--- (Registered in config.harpoon.usrcmds, together with the flat
+--- :HarpoonPersistPaths / :HarpoonSetDefaultPaths aliases.)
 ---
 --- Depends on:
 ---   - utils.harpoon_sanitize (sanitize + dedup, no full replace)
@@ -17,7 +19,6 @@
 ---   - harpoon v2 API (prefers :list():add(); falls back gracefully)
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.persist_paths]")
-local usercmd = require("lib.nvim.usercmd")
 
 local M = {}
 
@@ -216,9 +217,12 @@ local INIT_MARKER = vim.fs.joinpath(vim.fn.stdpath("state"), "harpoon_persist_pa
 ---`settings.key()` again on every ADD/REMOVE-triggered autosave (see
 ---`sync_on_change` in harpoon/init.lua), so the override must stay in place
 ---for the whole call, not just the `harpoon:list()` lookup.
+---Also the single entry point every other harpoon module uses to touch the
+---bucket (config.harpoon.api), so the key-pinning rule lives in exactly one
+---place.
 ---@param fn fun(harpoon: table, list: Cfg.Harpoon.List): boolean
 ---@return boolean ok, boolean|string result_or_err
-local function with_pins_key(fn)
+function M.with_pins_key(fn)
   local ok_hp, harpoon = pcall(require, "harpoon")
   if not ok_hp then
     return false, "harpoon not available"
@@ -264,12 +268,54 @@ end
 ---@param harpoon table
 ---@param list table
 local function save_bucket(harpoon, list)
+  -- `Harpoon:sync()` is the real writer in v2 (encode every list under the
+  -- current key, then flush the data file). `save` is checked first only as a
+  -- forward/backward-compat courtesy — no v2 release actually has it, so a
+  -- `harpoon.save`-only implementation silently persisted nothing.
   if type(harpoon.save) == "function" then
     pcall(harpoon.save, harpoon)
+  elseif type(harpoon.sync) == "function" then
+    pcall(harpoon.sync, harpoon)
   elseif type(list.save) == "function" then
     pcall(list.save, list)
   end
 end
+
+--- Shared with config.harpoon.api, which writes the bucket from its own
+--- with_pins_key callback.
+M.save_bucket = save_bucket
+
+---Close nil holes in `list.items`. `HarpoonList:add()` fills the FIRST nil gap
+---(1.._length+1), so if an entry was removed earlier a later add lands in that
+---hole near the top instead of at the end; `prepend()` shifts items until it
+---hits a nil, which likewise stops early at a hole. Compacting first makes
+---both behave positionally as their names promise.
+---Mutates in place (no fresh table) so any reference harpoon's UI is holding
+---onto stays the same object, like utils.sanitize does.
+---@param list Cfg.Harpoon.List
+---@return integer closed  number of holes removed
+local function compact(list)
+  local items = list.items
+  if type(items) ~= "table" then
+    return 0
+  end
+  local len = math.max(list._length or 0, #items)
+  local write = 0
+  for i = 1, len do
+    local it = items[i]
+    items[i] = nil
+    if it ~= nil then
+      write = write + 1
+      items[write] = it
+    end
+  end
+  list._length = write
+  return len - write
+end
+
+--- Shared with config.harpoon.api, whose removal path leaves the same kind of
+--- hole `HarpoonList:remove_at` does.
+M.compact = compact
 
 ---Add an item to the harpoon list using v2 API when available.
 ---@param list table
@@ -296,9 +342,12 @@ end
 ---untouched), appended at the end in target_specs order.
 ---@return boolean changed
 function M.inject_now()
-  local ok, result = with_pins_key(function(harpoon, list)
-    -- Ensure list shape and remove legacy duplicates
+  local ok, result = M.with_pins_key(function(harpoon, list)
+    -- Ensure list shape and remove legacy duplicates. Compacting first is not
+    -- cosmetic: a nil hole (harpoon's remove_at leaves one, and it is persisted
+    -- as `null`) makes the dedup pass key on a nil item and blow up.
     sani.sanitize_items_in_place(list)
+    local compacted = compact(list) > 0
 
     local have = {} ---@type table<string, boolean>
     if type(list.items) == "table" then
@@ -328,7 +377,7 @@ function M.inject_now()
     -- Final dedup in case of races or overlaps
     local removed = (sani.dedup_in_place_safe(list) or 0) > 0
 
-    local changed = added or removed
+    local changed = added or removed or compacted
     if changed then
       save_bucket(harpoon, list)
     end
@@ -347,7 +396,7 @@ end
 ---this is the explicit "give me the defaults back" command.
 ---@return boolean ok
 function M.set_defaults()
-  local ok, result = with_pins_key(function(harpoon, list)
+  local ok, result = M.with_pins_key(function(harpoon, list)
     for i = #list.items, 1, -1 do
       if list.items[i] ~= nil then
         list:remove_at(i)
@@ -373,6 +422,61 @@ function M.set_defaults()
   return true
 end
 
+---Insert a single path into the live PINS_KEY bucket WITHOUT making it a
+---persistent default (that is `M.pin`) — the "temporary entry" half of
+---`:Harpoon add`. A path that is already present is a no-op, except with
+---`opts.front`, which moves it up to slot 1.
+---@param path string absolute or relative; canonicalized here
+---@param opts { front?: boolean }|nil
+---@return boolean changed
+function M.insert_into_list(path, opts)
+  opts = opts or {}
+  local abs = canon(vim.fs.normalize(vim.fn.fnamemodify(path, ":p")))
+
+  local ok, result = M.with_pins_key(function(harpoon, list)
+    sani.sanitize_items_in_place(list)
+    compact(list)
+
+    local key = normkey(abs, { realpath = true })
+    local at ---@type integer|nil
+    for i = 1, #list.items do
+      local it = list.items[i]
+      local v = (type(it) == "table") and it.value or it
+      if type(v) == "string" and normkey(v, { realpath = true }) == key then
+        at = i
+        break
+      end
+    end
+
+    if at then
+      if not opts.front or at == 1 then
+        return false
+      end
+      -- Already listed further down: remove, then re-insert at the front, so
+      -- "add to the top" is idempotent instead of silently doing nothing.
+      list:remove_at(at)
+      compact(list)
+    end
+
+    if opts.front and type(list.prepend) == "function" then
+      pcall(function()
+        list:prepend({ value = abs, context = { row = 1, col = 0 } })
+      end)
+    else
+      add_with_context(list, abs)
+    end
+
+    save_bucket(harpoon, list)
+    return true
+  end)
+
+  if not ok then
+    notify.error("[harpoon] insert_into_list failed: " .. tostring(result))
+    return false
+  end
+  return result
+end
+
 --------------------------------------------------------------------------------
 -- Pin / unpin (runtime-added defaults)
 --------------------------------------------------------------------------------
@@ -395,11 +499,17 @@ local function resolve_pin_arg(path)
   return abs, nil
 end
 
+--- Shared with config.harpoon.api so `:Harpoon add` validates its path
+--- argument exactly like `:Harpoon pin` does.
+M.resolve_path = resolve_pin_arg
+
 ---Add a path to the machine-local default pins (persisted) and inject it into
 ---the live list now. Defaults to the current buffer when path is nil/empty.
 ---@param path string|nil
+---@param opts { front?: boolean }|nil  front: put it at slot 1 instead of the end
 ---@return boolean ok
-function M.pin(path)
+function M.pin(path, opts)
+  opts = opts or {}
   local abs, err = resolve_pin_arg(path)
   if not abs then
     notify.warn("[harpoon] pin: " .. tostring(err))
@@ -423,9 +533,14 @@ function M.pin(path)
     end
   end
 
-  -- Make it show up immediately (appended if missing). inject_now also tops up
-  -- any other missing default, which is the intended "defaults present" state.
-  M.inject_now()
+  -- Make it show up immediately. Appending goes through inject_now, which also
+  -- tops up any other missing default (the intended "defaults present" state);
+  -- a front insert is targeted, because topping up must not reshuffle slot 1.
+  if opts.front then
+    M.insert_into_list(abs, { front = true })
+  else
+    M.inject_now()
+  end
   notify.info(string.format("[harpoon] %s: %s", already and "already pinned" or "pinned", abs))
   return true
 end
@@ -519,32 +634,8 @@ function M.setup(opts)
     })
   end
 
-  usercmd.create("HarpoonPersistPaths", function()
-    local changed = M.inject_now()
-    notify.info(string.format("[harpoon] persistpaths: %s", changed and "changed" or "no change"))
-  end, { desc = "Add any missing default Harpoon paths (appended, existing entries untouched)" })
-
-  usercmd.create("HarpoonSetDefaultPaths", function()
-    if M.set_defaults() then
-      notify.info("[harpoon] persistpaths: reset to defaults")
-    end
-  end, { desc = "Reset the Harpoon default-paths bucket to exactly target_specs" })
-
-  usercmd.create("HarpoonPin", function(cmd)
-    M.pin(cmd.args ~= "" and cmd.args or nil)
-  end, {
-    nargs = "?",
-    complete = "file",
-    desc = "Pin a file as a persistent Harpoon default (defaults to current buffer)",
-  })
-
-  usercmd.create("HarpoonUnpin", function(cmd)
-    M.unpin(cmd.args ~= "" and cmd.args or nil)
-  end, {
-    nargs = "?",
-    complete = "file",
-    desc = "Remove a file from the persistent Harpoon defaults (defaults to current buffer)",
-  })
+  -- Commands live in config.harpoon.usrcmds (one :Harpoon verb + flat
+  -- aliases), so every entry point is declared in a single tree.
 end
 
 return M
