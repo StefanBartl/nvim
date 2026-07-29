@@ -321,7 +321,17 @@ plugins.add({
           -- shared statusline, once as a float in the tree window (with
           -- laststatus=3 there is no per-window statusline for it to use,
           -- so it would fall back to exactly that float).
-          cwd_mode = { indicator = { enabled = false } },
+          -- labels.follow is "" upstream by design: filetree's own in-tree
+          -- badge is meant to be invisible while no policy is active. In a
+          -- shared statusline that reads as "the component is broken" rather
+          -- than "no mode" — so give follow a visible label. Everything else
+          -- keeps filetree's defaults (PROJECT/PKG/LOCK/MANUAL/TREE).
+          cwd_mode = {
+            indicator = {
+              enabled = false,
+              labels = { follow = "FOLLOW" },
+            },
+          },
           -- Mark the currently-focused file with a sign-column icon (on top of
           -- neo-tree's own fg colour for all opened files). opened_sync is on by
           -- default and keeps those opened-file colours in sync as buffers open/
