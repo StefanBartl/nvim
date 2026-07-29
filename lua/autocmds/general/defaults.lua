@@ -14,12 +14,6 @@ local AUTOCMDS_GENERAL_DEFAULTS = {
     leave_margin = 10,
   },
 
-  nvdash = {
-    enable = true,
-    cmd = "Nvdash",
-    is_listed_only = true,                      -- Consider only listed buffers when deciding "last buffer"
-  },
-
   cursorline = {
     enable = true,
     show_events = { "InsertLeave", "WinEnter" },

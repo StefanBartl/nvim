@@ -1,5 +1,6 @@
 ---@module 'config.snacks.mappings.ext_mappings'
---- Keymap definitions for custom Snacks dashboard.
+--- Keymap definitions for the optional Snacks submodules (debug, dim, profiler,
+--- quickfile, scope, scratch).
 --- Expose keys() which returns the array expected by the plugin spec.
 
 local notify = require("lib.nvim.notify").create("[config.snacks.mappings]")

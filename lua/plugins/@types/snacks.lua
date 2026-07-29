@@ -15,7 +15,6 @@
 ---@field toggle Plugins.Snacks.ModuleOpts|nil
 ---@field words Plugins.Snacks.ModuleOpts|nil
 ---@field bigfile Plugins.Snacks.ModuleOpts|nil
----@field dashboard table|nil
 ---@field picker table|nil
 
 return {}
