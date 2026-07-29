@@ -61,10 +61,12 @@ function M.get_config()
     win = {
       input = { keys = win.input.keys },
       list = { keys = list_keys },
-      preview = { keys = win.preview.keys },
+      -- Disable line wrapping by default (like Telescope). This belongs on the
+      -- preview WINDOW's `wo`, not on `picker.preview` — the latter is the
+      -- previewer itself (function or name), so a table there is resolved as a
+      -- previewer and then called: "attempt to call a table value".
+      preview = { keys = win.preview.keys, wo = { wrap = false } },
     },
-    -- Disable line wrapping by default (like Telescope).
-    preview = { wrap = false },
   }
 end
 
