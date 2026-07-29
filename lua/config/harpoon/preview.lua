@@ -1,7 +1,8 @@
 ---@module 'config.harpoon.preview'
 --- Memory-safe preview with a single reusable scratch buffer/window.
 --- Preview-open Harpoon entries in a full-screen floating window.
---- - Triggered via Alt+<number> (Alt+1..Alt+9)
+--- - Entry point: `:Harpoon preview <n>`, mapped to Alt+1..Alt+9 in
+---   bindings.mappings.harpoon
 --- - Opens a read-only, non-modifiable preview that fills the editor
 --- - Cursor jumps to the last known position (shada '" mark), fallback to Harpoon context
 --- - Scrollable like a normal buffer; press 'q' to close the preview
@@ -14,7 +15,6 @@
 --- - If your terminal does not send <M-1>.. <M-9>, consider mapping alternate keys.
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.preview]")
-local map = require("lib.nvim.map")
 local window = require("lib.nvim.window")
 
 local M = {}
@@ -184,19 +184,6 @@ function M.open_index(entry)
     M.open_preview_for(entry.value, entry.row or 1, entry.col or 0)
   elseif type(entry) == "string" then
     M.open_preview_for(entry, 1, 0)
-  end
-end
-
---- Install Alt+1..Alt+9 mappings.
-function M.install_alt_number_maps()
-  for i = 1, 9 do
-    local lhs = ("<M-%d>"):format(i)
-    map("n", lhs, function()
-      M.open_index(i)
-    end, {
-      desc = ("Harpoon preview %d (full-screen, 'q' to close)"):format(i),
-      silent = true,
-    })
   end
 end
 

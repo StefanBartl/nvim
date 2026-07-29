@@ -121,22 +121,28 @@ Flache Aliase (bleiben bewusst bestehen):
 
 ## 4. Keymaps
 
-| Mapping | Modus | Aktion |
-|---|---|---|
-Alle Maps sind dünne Wrapper um `config.harpoon.api` — dieselbe Funktion, die
-auch das jeweilige `:Harpoon`-Subcommand aufruft.
+Alle Maps stehen als **ein which-key-Spec** (`wk.add`-Form) in
+[bindings/mappings/harpoon.lua](../../lua/bindings/mappings/harpoon.lua). Die
+rhs ist immer ein `<cmd>Harpoon …<cr>`, d.h. jede Keymap *ist* ihr
+Usercmd-Aufruf — eine Map ohne Command-Entsprechung ist konstruktiv unmöglich.
+Details: [ExternPlugins/Bindings/Keymaps/Harpoon.md](ExternPlugins/Bindings/Keymaps/Harpoon.md).
 
 | Mapping | Modus | Aktion | = Command |
 |---|---|---|---|
-| `<leader>h` | n | Aktuelle Datei anhängen. Komprimiert vorher etwaige `nil`-Lücken (durch frühere Löschungen), damit neue Einträge wirklich ans Ende gehängt werden statt in eine Lücke zu fallen. | `:Harpoon add` |
-| `<leader>H` | n | Aktuelle Datei an den Anfang der Liste setzen. | `:Harpoon add --front` |
-| `<C-e>` | n | Quick-Menu öffnen/schließen (`harpoon.ui:toggle_quick_menu`). Zeigt die globale Liste, siehe §1. | `:Harpoon menu` |
+| `<leader>h` | n | Gruppe "Harpoon" (which-key), keine eigene Aktion. | — |
+| `<leader>ha` | n | Aktuelle Datei ans Ende anhängen. Komprimiert vorher etwaige `nil`-Lücken (durch frühere Löschungen), damit neue Einträge wirklich ans Ende gehängt werden statt in eine Lücke zu fallen. | `:Harpoon add` |
+| `<leader>hA` | n | Aktuelle Datei an den Anfang der Liste setzen. | `:Harpoon add --front` |
+| `<leader>hp` | n | Aktuelle Datei an den Anfang + dauerhafter Default-Pin. | `:Harpoon add --front --permanent` |
+| `<leader>hd` | n | Aktuelle Datei aus der Liste entfernen. | `:Harpoon remove` |
+| `<leader>hm`, `<C-e>` | n | Quick-Menu öffnen/schließen (`harpoon.ui:toggle_quick_menu`). Zeigt die globale Liste, siehe §1. | `:Harpoon menu` |
 | `<leader>ht` | n | Liste als Telescope-Picker öffnen (gekürzte Labels, `<CR>`/`<C-v>`/`<C-x>`/`<C-t>`). | `:Harpoon menu telescope` |
 | `<leader>hf` | n | Liste als fzf-lua-Picker öffnen. | `:Harpoon menu fzf` |
+| `<leader>hs` | n | Fehlende Default-Pfade nachziehen. | `:Harpoon defaults sync` |
+| `<leader>hD` | n | Liste in Scratch-Buffer dumpen. | `:Harpoon debug` |
 | `<M-1>` … `<M-9>` (Alt+1..Alt+9) | n | Vollbild-Preview von Eintrag *N* (siehe §5). | `:Harpoon preview <n>` |
 
-Nicht gemappt: `<leader>1`–`<leader>4` für Direkt-Select (Kollisionsgefahr mit
-anderen Bindings) — dafür `:Harpoon select <n>`.
+Nicht gemappt (selten/zustandsverändernd, nur als Command): `:Harpoon select <n>`,
+`:Harpoon unpin`, `:Harpoon defaults reset`, `:Harpoon health`.
 
 **Im Quick-Menu selbst** (Harpoon-Standardverhalten, `filetype=harpoon`):
 normaler Buffer-Editing-Flow — Zeilen umsortieren (verschieben wie normalen
@@ -149,8 +155,9 @@ Cursor, Fenster schließen persistiert automatisch (siehe §6).
 
 Datei: [lua/config/harpoon/preview.lua](../../lua/config/harpoon/preview.lua)
 
-- `<M-1>`…`<M-9>` öffnen Harpoon-Eintrag *N* in einem read-only,
-  nicht-modifizierbaren Floating-Fenster, das den Editor weitgehend ausfüllt.
+- `:Harpoon preview <n>` (gemappt auf `<M-1>`…`<M-9>`) öffnet Harpoon-Eintrag
+  *N* in einem read-only, nicht-modifizierbaren Floating-Fenster, das den
+  Editor weitgehend ausfüllt.
 - Cursor springt auf die im Harpoon-Item gespeicherte Position
   (`context.row/col`).
 - Einzelner wiederverwendeter Scratch-Buffer/Fenster (kein Leak bei
@@ -218,8 +225,8 @@ User-Pins) gehört, bekommt einen End-of-Line-Marker:
 - Wird bei jedem Öffnen des Menüs (`FileType harpoon`) sowie live bei
   Änderungen im Menü-Buffer (`TextChanged`, `TextChangedI`) neu berechnet —
   Umsortieren/Löschen aktualisiert die Marker sofort.
-- Ad-hoc über `<leader>h` hinzugefügte Einträge (keine Defaults) bleiben
-  unmarkiert.
+- Ad-hoc über `<leader>ha`/`<leader>hA` hinzugefügte Einträge (keine Defaults)
+  bleiben unmarkiert.
 - Icon (`ICON`-Konstante oben in der Datei) und Highlight sind einzeilig
   anpassbar.
 
@@ -245,12 +252,12 @@ config.harpoon.hardening.setup({ debounce_ms = 200, autocmd_events = {...} })
 -- target_specs zusammenbauen (machine.is("workstation") gate)
 config.harpoon.persist_paths.setup({ target_specs = target_specs })
 config.harpoon.pin_marks.setup()
-config.harpoon.preview.install_alt_number_maps()
 config.harpoon.usrcmds.setup()   -- :Harpoon-Verb + flache Aliase
 ```
 
 Die `harpoon:setup({ settings = { key = ..., save_on_change = true, ... } })`-
-Aufruf und die eigentlichen Keymaps (`<leader>h`, `<C-e>`, `<leader>ht`, …)
+Aufruf und die eigentlichen Keymaps (which-key-Spec: `<leader>h…`, `<C-e>`,
+`<M-1>`…`<M-9>`)
 laufen separat in `bindings/mappings/harpoon.lua` (`UIReady`-Phase, siehe
 `init.lua`), **nach** dem Plugin-Setup.
 
