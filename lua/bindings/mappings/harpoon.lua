@@ -1,11 +1,108 @@
 ---@module 'bindings.mappings.harpoon'
---- Harpoon keymaps. Every mapping is a thin wrapper around config.harpoon.api,
---- i.e. the exact same entry point `:Harpoon <sub>` dispatches to — each
---- mapping's `desc` names its command equivalent, so the two never drift.
+--- Harpoon keymaps, declared as ONE which-key spec (`wk.add` shape) that is
+--- both the source for the real keymaps and what which-key is handed.
+---
+--- Two rules hold by construction here:
+---   1. Every mapping's rhs is a `:Harpoon …` call, so no keymap can exist
+---      without a user-command equivalent — the command IS the mapping.
+---   2. Nothing in this file force-loads which-key (it is lazy, triggered by
+---      `<leader>`): the mappings are created right away with the plain map
+---      helper, and the spec goes to `wk.add` only once which-key is loaded
+---      anyway — which is all the "Harpoon" group label needs, since which-key
+---      reads the `desc` of existing keymaps by itself.
+---
+--- Commands live in config.harpoon.usrcmds, their implementation in
+--- config.harpoon.api.
 
 local notify = require("lib.nvim.notify").create("[bindings.mappings.harpoon]")
 
 local M = {}
+
+--- which-key spec: `{ lhs, rhs, desc = … }` entries plus the group label.
+--- Passed verbatim to `wk.add()`.
+---@type table[]
+M.spec = {
+  { "<leader>h", group = "Harpoon" },
+
+  { "<leader>ha", "<cmd>Harpoon add<cr>", desc = "[HARPOON] Add current file (end of list)" },
+  {
+    "<leader>hA",
+    "<cmd>Harpoon add --front<cr>",
+    desc = "[HARPOON] Add current file (top of list)",
+  },
+  {
+    "<leader>hp",
+    "<cmd>Harpoon add --front --permanent<cr>",
+    desc = "[HARPOON] Add current file permanently (top, pinned default)",
+  },
+  { "<leader>hd", "<cmd>Harpoon remove<cr>", desc = "[HARPOON] Remove current file from the list" },
+
+  { "<leader>hm", "<cmd>Harpoon menu<cr>", desc = "[HARPOON] Open quick menu" },
+  { "<leader>ht", "<cmd>Harpoon menu telescope<cr>", desc = "[HARPOON] Open list in telescope" },
+  { "<leader>hf", "<cmd>Harpoon menu fzf<cr>", desc = "[HARPOON] Open list in fzf" },
+
+  { "<leader>hs", "<cmd>Harpoon defaults sync<cr>", desc = "[HARPOON] Sync missing default paths" },
+  { "<leader>hD", "<cmd>Harpoon debug<cr>", desc = "[HARPOON] Dump the current list" },
+
+  { "<C-e>", "<cmd>Harpoon menu<cr>", desc = "[HARPOON] Open quick menu" },
+}
+
+-- Alt+1 … Alt+9: full-screen preview of entry N ('q' closes).
+for i = 1, 9 do
+  M.spec[#M.spec + 1] = {
+    ("<M-%d>"):format(i),
+    ("<cmd>Harpoon preview %d<cr>"):format(i),
+    desc = ("[HARPOON] Preview entry %d (full screen)"):format(i),
+  }
+end
+
+---Hand the spec to which-key, but only if it happens to be loaded already.
+---@return boolean ok  false when which-key is not loaded (or has no `add`)
+local function add_to_which_key()
+  -- Deliberately `package.loaded` and not `pcall(require, …)`: requiring would
+  -- LOAD which-key here, which is exactly what this file must not do.
+  if not package.loaded["which-key"] then
+    return false
+  end
+  local wk = require("which-key")
+  if type(wk.add) ~= "function" then
+    return false
+  end
+  wk.add(M.spec)
+  return true
+end
+
+---Create the mappings without which-key, from the same spec.
+---@param map fun(mode: string, lhs: string, rhs: string, opts: table)
+---@return nil
+local function map_plain(map)
+  for _, entry in ipairs(M.spec) do
+    if not entry.group then
+      map("n", entry[1], entry[2], { desc = entry.desc, silent = true })
+    end
+  end
+end
+
+---Hand the spec over as soon as which-key loads (it is lazy, triggered by
+---`<leader>`). Without this the mappings still work and still show up —
+---which-key reads any keymap's `desc` — but `<leader>h` would be an unnamed
+---prefix instead of the "Harpoon" group.
+---@return nil
+local function register_which_key_when_loaded()
+  local grp = vim.api.nvim_create_augroup("HarpoonWhichKey", { clear = true })
+  vim.api.nvim_create_autocmd("User", {
+    group = grp,
+    pattern = "LazyLoad",
+    desc = "Register the Harpoon which-key group once which-key loads",
+    callback = function(ev)
+      if ev.data ~= "which-key.nvim" then
+        return
+      end
+      add_to_which_key()
+      return true -- one-shot: delete this autocmd
+    end,
+  })
+end
 
 function M.setup()
   local map = vim.g.__map_helper
@@ -44,27 +141,16 @@ function M.setup()
     end
   end)
 
-  local api = require("config.harpoon.api")
+  -- The keymaps are always created here, never left to which-key: `wk.add`
+  -- only files the spec into which-key's own tree (verified against the
+  -- pinned version — no `vim.keymap.set` happens), so relying on it would
+  -- leave the mappings nonexistent whenever which-key is absent or lazy.
+  -- which-key then contributes the group label on top.
+  map_plain(map)
 
-  map("n", "<leader>h", function()
-    api.add(nil)
-  end, { desc = "[HARPOON] Add current file at the end (:Harpoon add)" })
-
-  map("n", "<leader>H", function()
-    api.add(nil, { front = true })
-  end, { desc = "[HARPOON] Add current file at the top (:Harpoon add --front)" })
-
-  map("n", "<C-e>", function()
-    api.menu("default")
-  end, { desc = "[HARPOON] Open harpoon window (:Harpoon menu)" })
-
-  map("n", "<leader>ht", function()
-    api.menu("telescope")
-  end, { desc = "[HARPOON] Open harpoon window with telescope (:Harpoon menu telescope)" })
-
-  map("n", "<leader>hf", function()
-    api.menu("fzf")
-  end, { desc = "[HARPOON] Open harpoon window with fzf (:Harpoon menu fzf)" })
+  if not add_to_which_key() then
+    register_which_key_when_loaded()
+  end
 end
 
 return M

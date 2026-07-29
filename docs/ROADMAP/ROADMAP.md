@@ -3,6 +3,10 @@
 !!! Hier alle aktuellen bindings von externen plugins einfügen:
 C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\ExternPlugins\Bindings
 
+- doc/tags wrid immer neu generiert und dann ist es in den zustagenden files, dnn kan ich nciht fpullen, eigtnlich sollten die in der .gitignore angegebn sein, aber wi auch immer, scaunach, ob eventuell noch der vimdoc erstlelungs mechanismus drinnen ist in den plugins, der die tags dtie nach init erstellet.
+betrifft sicher: buffe-ctx.nvim, debugging.nivm, dap.nvim, diff.nvim, emojis.nivm, github_stats.nvim
+andere plujgns kotrolieren
+
 
    Warn  3:37:11 PM notify.warn [filetree.pdf] pdfport.nvim not installed — opening PDF in system viewer
 
