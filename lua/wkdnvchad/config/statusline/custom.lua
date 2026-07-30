@@ -8,7 +8,7 @@ local hl_module = lazy.require("wkdnvchad.ui.statusline.modules.highlighting")
 local lsp_module = lazy.require("wkdnvchad.ui.statusline.modules.lsp")
 local cursor_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl")
 local get_separators = lazy.require("wkdnvchad.ui.statusline.utils.get_separators")
-local replacer_progress = lazy.require("wkdnvchad.ui.statusline.modules.replacer_progress")
+local plugin_progress = lazy.require("wkdnvchad.ui.statusline.modules.plugin_progress")
 local filetree_cwd_mode = lazy.require("wkdnvchad.ui.statusline.modules.filetree_cwd_mode")
 
 -- ============================================================================
@@ -30,14 +30,14 @@ return {
         "%=",
         "diagnostics",
         "lsp",
-        "replacer_progress",
+        "plugin_progress",
         "filetree_cwd_mode",
         "cursor",
       },
 
       modules = {
-        replacer_progress = function()
-          return replacer_progress()
+        plugin_progress = function()
+          return plugin_progress()
         end,
 
         filetree_cwd_mode = function()

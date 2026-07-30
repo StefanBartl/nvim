@@ -21,25 +21,27 @@ local M = {}
 --   filetree_cwd_mode  last in the LEFT group — it belongs with mode/file/git,
 --                      which describe the current buffer's context. Putting it
 --                      in the right group left it floating at that group's
---                      leading edge, since diagnostics/lsp/replacer_progress
+--                      leading edge, since diagnostics/lsp/plugin_progress
 --                      are all empty most of the time.
---   replacer_progress  right group, before "cwd" — transient status, same
---                      neighbourhood as the other transient indicators.
+--   plugin_progress    right group, before "cwd" — transient status, same
+--                      neighbourhood as the other transient indicators. Shows
+--                      whichever plugin is currently running a long operation,
+--                      not one specific plugin.
 --
 -- If NvChad ever changes its own default order, update this list to match
 -- (see nvchad/stl/utils.lua).
-local order = { "mode", "file", "git", "filetree_cwd_mode", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "replacer_progress", "cwd", "cursor" }
+local order = { "mode", "file", "git", "filetree_cwd_mode", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "plugin_progress", "cwd", "cursor" }
 
 M.ui = {
   statusline = {
     order = order,
     modules = {
-      -- Only "replacer_progress" and "filetree_cwd_mode" are provided here;
+      -- Only "plugin_progress" and "filetree_cwd_mode" are provided here;
       -- every other key in `order` above resolves to NvChad's own built-in
       -- "default" theme module (mode/file/git/lsp_msg/diagnostics/lsp/cwd/
       -- cursor), which `generate()` merges this table into rather than
       -- replaces.
-      replacer_progress = require("wkdnvchad.ui.statusline.modules.replacer_progress"),
+      plugin_progress = require("wkdnvchad.ui.statusline.modules.plugin_progress"),
       filetree_cwd_mode = require("wkdnvchad.ui.statusline.modules.filetree_cwd_mode"),
 
       -- Overrides NvChad's built-in `cursor` (a fixed "%l/%v" string) with the

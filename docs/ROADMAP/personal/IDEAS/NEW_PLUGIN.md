@@ -203,7 +203,7 @@ nvchad-ui.nvim/
 │   │   └── statusline/{normal,base,lspbased,custom}.lua
 │   ├── ui/statusline/
 │   │   ├── cursor_ctl/
-│   │   └── modules/{custom,file_icons,formatters,highlighting,lsp,neotest_module,replacer_progress}/
+│   │   └── modules/{custom,file_icons,formatters,highlighting,lsp,neotest_module,plugin_progress}/
 │   ├── mappings/{init,tabufline}.lua
 │   └── usrcmd/{init,themes}/
 ├── plugin/health.lua (oder lua/nvchad_ui/health.lua)  -- :checkhealth nvchad-ui

@@ -169,8 +169,14 @@ plugins.add({
   {
     "StefanBartl/sandbox.nvim",
     event = "VeryLazy",
+    dependencies = { "StefanBartl/lib.nvim" },
     config = function()
-      require("sandbox").setup({})
+      require("sandbox").setup({
+        -- `image pull`/`push` and the devcontainer build report into the shared
+        -- lib.nvim.progress registry, rendered by the statusline's
+        -- "plugin_progress" module.
+        progress_style = "statusline",
+      })
     end,
   },
 
@@ -375,8 +381,13 @@ plugins.add({
     "StefanBartl/reposcope.nvim",
     name = "reposcope",
     event = "VeryLazy",
+    dependencies = { "StefanBartl/lib.nvim" },
     config = function()
-      require("reposcope.init").setup({})
+      require("reposcope.init").setup({
+        -- `:Reposcope update`/`status` walk a whole directory of clones; both
+        -- report into the shared lib.nvim.progress registry.
+        progress_style = "statusline",
+      })
     end,
   },
 
@@ -477,6 +488,7 @@ plugins.add({
   {
     "StefanBartl/github_stats.nvim",
     event = "VimEnter",
+    dependencies = { "StefanBartl/lib.nvim" },
     config = function()
       require("github_stats").setup({
         -- Explicit allowlist instead of watch_users auto-discovery: discovery
@@ -516,6 +528,9 @@ plugins.add({
         token_env_var = "GITHUB_TOKEN",
         fetch_interval_hours = 24,
         notification_level = "all",
+        -- Manual fetches only (`:GithubStatsFetch`, dashboard refresh keys) —
+        -- the background cycle deliberately never shows an indicator.
+        progress_style = "statusline",
         -- "workstation" only reads the already-committed data/ snapshots
         -- (dashboard, :GithubStatsShow, ... all read from disk regardless);
         -- it just never runs the fetch cycle itself.
