@@ -188,7 +188,11 @@ plugins.add({
     -- weil hier reihenweise Repos nebeneinander liegen und ein fixes Ziel genau
     -- das Falsche waere. `source` leitet documentation.config aus dem Root ab
     -- (lua/<name>, wenn lua/ genau einen Kandidaten enthaelt).
-    opts = {},
+    opts = {
+      -- `:DocMap full` (LuaLS over the whole tree) and `:DocMap churn` (walks
+      -- the repo history) both report into the shared progress registry.
+      progress_style = "statusline",
+    },
     config = function(_, opts)
       require("documentation").setup(opts)
     end,
@@ -273,8 +277,13 @@ plugins.add({
     -- autocmds are registered by setup(), so lazy-loading on the command would
     -- mean they never fire. Set their `enable = false` to opt out instead.
     lazy = false,
+    dependencies = { "StefanBartl/lib.nvim" },
     config = function()
-      require("insights").setup({})
+      require("insights").setup({
+        -- Building the cwd symbol index runs one rg pass per language pattern;
+        -- reports into the shared lib.nvim.progress registry.
+        symbols = { progress_style = "statusline" },
+      })
     end,
   },
 
@@ -621,6 +630,9 @@ plugins.add({
       extract_opts = { max_pages = nil, timeout_ms = 30000 },
       render_opts = { mode = "buffer", split = "current", focus = true },
       claude_api_key = nil,
+      -- OCR/AI backends run for minutes on a large PDF. Not cancellable from
+      -- the indicator (see pdfport's docs), so a non-interactive style only.
+      progress_style = "statusline",
       ollama_host = "http://localhost:11434",
       ollama_model = "qwen2.5-coder:7b",
       debug = false,
