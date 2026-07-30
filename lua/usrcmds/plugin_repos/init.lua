@@ -5,7 +5,7 @@
 --- on the repos `plugins.personal` actually declares (see
 --- `usrcmds.plugin_repos.list`) against `dir` (or `vim.env.REPOS_DIR` when
 --- no argument is given) — never on every directory found by scanning `dir`,
---- unlike `:UpdateRepos`, which fetches/pulls whatever git repos it finds
+--- unlike `:MyReposUpdate`, which fetches/pulls whatever git repos it finds
 --- regardless of what they are. Cloning everything found and removing
 --- everything found are not symmetric risks: an unrelated repo picked up by
 --- a directory scan just gets an unwanted `git pull`, but the same repo

@@ -3,41 +3,12 @@
 
 local map = require("lib.nvim.map")
 local actions = require("config.neotest.actions")
-local notify = require("lib.nvim.notify").create("[plugins.neotest]")
 
 local M = {}
 
--- FIX: nach actions ausagliedern oder keymaps module
-map("n", "<leader>ntr", function()
-  local neotest = require("neotest")
-
-  -- Clear all state
-  if neotest.state then
-    pcall(neotest.state.clear)
-  end
-
-  -- Force rediscover
-  notify.info("Forcing test discovery...")
-
-  vim.defer_fn(function()
-    local tree = neotest.state.positions()
-    if tree then
-      notify.info("Tests found: " .. vim.tbl_count(tree))
-    else
-      notify.warn("No tests discovered")
-    end
-  end, 1000)
-end, { desc = "Refresh test discovery" })
-
--- Debug adapter info
-map("n", "<leader>ntD", function()
-  local adapters = require("neotest").state.adapter_ids()
-  local msg = "Loaded adapters:\n"
-  for id, _ in pairs(adapters or {}) do
-    msg = msg .. "  - " .. id .. "\n"
-  end
-  notify.info(msg)
-end, { desc = "Show loaded adapters" })
+-- <leader>ntr / <leader>ntD live in config.neotest.debug (M.keymaps()),
+-- called after this module's M.setup() from plugins/neotest.lua — defining
+-- them here too would just be silently shadowed by that later call.
 
 ---@type table[]
 M.keymaps = {

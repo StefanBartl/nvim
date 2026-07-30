@@ -134,28 +134,11 @@ return {
   -- },
 
   -- Conform: LSP-agnostic formatting engine
-  {
-    "stevearc/conform.nvim",
-    config = function()
-      local conform = require("conform")
-
-      conform.setup({
-        notify_on_error = false,
-        format_on_save = { timeout_ms = 1200, lsp_fallback = true },
-        formatters_by_ft = {
-          lua = { "stylua" },
-          javascript = { "prettierd", "prettier" },
-          typescript = { "prettierd", "prettier" },
-          typescriptreact = { "prettierd", "prettier" },
-          json = { "jq", "prettierd", "prettier" },
-          css = { "prettierd", "prettier" },
-          sh = { "shfmt" },
-          go = { "gofumpt", "goimports" }, -- keep golines opt-in
-          markdown = { "prettierd", "mdformat", "prettier" },
-        },
-      })
-    end,
-  },
+  -- No `config` here on purpose: `lsp.formatter.conform.setup()` (called from
+  -- `lsp.init`) is the single authoritative `conform.setup()` call — it runs
+  -- after plugin startup and carries the full formatter/resolve() config. A
+  -- second `conform.setup()` here would just be silently overwritten by it.
+  { "stevearc/conform.nvim" },
 
   -- Workspace-wide diagnostics (LSP-level)
   {

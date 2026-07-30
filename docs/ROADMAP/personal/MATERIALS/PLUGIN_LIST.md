@@ -8,6 +8,7 @@
 |            `dap.nvim`            |
 |         `debugging.nvim`         |
 |           `diff.nvim`            |
+|           `documentation.nvim`            |
 |          `emojis.nvim`           |
 |          `fileops.nvim`          |
 |         `filetree.nvim`          |

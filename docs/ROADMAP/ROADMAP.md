@@ -1,17 +1,12 @@
 # Roadmap
 
-!!! Hier alle aktuellen bindings von externen plugins einfügen:
-C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\ExternPlugins\Bindings
-
-- doc/tags wrid immer neu generiert und dann ist es in den zustagenden files, dnn kan ich nciht fpullen, eigtnlich sollten die in der .gitignore angegebn sein, aber wi auch immer, scaunach, ob eventuell noch der vimdoc erstlelungs mechanismus drinnen ist in den plugins, der die tags dtie nach init erstellet.
-betrifft sicher: buffe-ctx.nvim, debugging.nivm, dap.nvim, diff.nvim, emojis.nivm, github_stats.nvim
-andere plujgns kotrolieren
+- [ ] NeoTree git_status: Keys A und gr sind je doppelt definiert → git_add_all/git_revert_file aktuell unerreichbar (Lua "letzter Key gewinnt").
+- [ ] Lazygit: :LazyGitLog fehlt inder cmd-Liste des Lazy-Specs — evtl. unbeabsichtigt.
 
 
    Warn  3:37:11 PM notify.warn [filetree.pdf] pdfport.nvim not installed — opening PDF in system viewer
 
 
-- nivm.ui.kit die buttons prompt ist cool, das würde ichgerne bei allen prompts haben, bei der man selection machen kann, alsoeigentlich alle select auf button variante umstellen, außer es gibt mehr als 4 selcts, denn dann würde se viele buttons geben
 -  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
 * [ ] Inline-Images in Markdown-Files einbinden: snacks?
@@ -19,39 +14,31 @@ andere plujgns kotrolieren
 - [ ] `github_stats.nvim` besser machen
 - [ ] `learn-cli.nvim` vielleicht doch ?
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
-- [ ] beim öffnen einer derzeit über `harpoon` aktualisiert `filetree.nvim` den filetree noch nicht `cwd_sync`
 - [ ] `nvim/lua/autocmds` analysieren
-
-## Table of content
-
-  - [ZIEL](#ziel)
-  - [High](#high)
-
----
 
 ## ZIEL
 
-2. Alle plugin fähigen Module augliedern
-3. Funktionen/Module/ganze Custom Plugins, die man mit ffi über vc performanter machen könnte?
+1. Alle plugin fähigen Module augliedern
+2. Funktionen/Module/ganze Custom Plugins, die man mit ffi über vc performanter machen könnte?
   1.  Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufen lassen, die mit nvim gemeinsam gestartet wir Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufen lassen, die mit nvim gemeinsam gestartet wirdd
-4. `BINDINGS.lua`: In der Descrtiptionder Keymaps und Usrcmds: Das plugin selbst nicht nennen,, wie zb.: "[iletree]:" in fileteree.nvim keymap descreiption
-5. `/autcmds`
+3. `BINDINGS.lua`: In der Descrtiptionder Keymaps und Usrcmds: Das plugin selbst nicht nennen,, wie zb.: "[iletree]:" in fileteree.nvim keymap descreiption
+4. `/autcmds`
   1. passt zu `/bindings` ?
   2. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
-6. Checklisten anwenden
+5. Checklisten anwenden
   1. ToDo's duchgehen
 
 ---
 
 ## High
 
-8. `leader wq`: Alle issues lösen
+6. `leader wq`: Alle issues lösen
   1. dass was wq macht in einem `lib.nvim / lib.nvim.ui` ausgeben
-9. `/wkdoptions`
+7. `/wkdoptions`
   1. UI Linemarker gehört README
   2. `wkdoptions` mit `options.lua` verheiraten (vielleicht als default_options)
-10. `nvim/init.lua` durchgehen
-11. [ ] Funktionen/Module identifizieren, die man mit FFI/C performanter machen könnte
+8. `nvim/init.lua` durchgehen
+9. [ ] Funktionen/Module identifizieren, die man mit FFI/C performanter machen könnte
   - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
 
 ---

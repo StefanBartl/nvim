@@ -14,6 +14,7 @@ return {
       "LazyGitCurrentFile",
       "LazyGitFilter",
       "LazyGitFilterCurrentFile",
+      "LazyGitLog",
     },
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {

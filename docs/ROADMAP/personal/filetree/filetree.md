@@ -17,7 +17,7 @@
 
 ## Bug
 
-[] - Refersh nachdem man eine datei verschoben hat; bzw bei allen aktionen, die eine änderung im filetree bewirken, also auch :File delete oder wenn man mit `TAB` von einem buffer zum nächsten geht, da sollte immer filetree sich updaten, also eigentlich immer, wenn der aktuelle context des buffers sich geändert hat, zb bei rename oder so..
+- [ ] Refersh nachdem man eine datei verschoben hat; bzw bei allen aktionen, die eine änderung im filetree bewirken, also auch :File delete oder wenn man mit `TAB` von einem buffer zum nächsten geht, da sollte immer filetree sich updaten, also eigentlich immer, wenn der aktuelle context des buffers sich geändert hat, zb bei rename oder so..
 
 ---
 

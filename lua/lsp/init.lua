@@ -27,13 +27,6 @@ function M.setup(cfg)
       pcall(diagnostics.setup)
     end
   end
-  do
-    local ok_ts, treesitter = pcall(require, "lsp.core.treesitter")
-    if ok_ts and treesitter and type(treesitter.setup) == "function" then
-      pcall(treesitter.setup)
-    end
-  end
-
   -- capabilities explizit holen und verifizieren
   local caps = (function()
     local ok, mod = pcall(require, "lsp.core.capabilities")

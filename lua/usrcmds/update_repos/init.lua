@@ -1,7 +1,7 @@
 ---@module 'usrcmds.update_repos'
 ---@brief Update all git repositories inside a given directory.
 ---@description
---- Registers `:UpdateRepos [path]`. Scans `path` (or `vim.env.REPOS_DIR` when
+--- Registers `:MyReposUpdate [path]`. Scans `path` (or `vim.env.REPOS_DIR` when
 --- no argument is given) for git repositories and runs `git fetch --all --prune`
 --- + `git pull --ff-only` on each, sequentially. Non-git directories are
 --- skipped. Errors are collected and reported once all repos have been
@@ -153,9 +153,9 @@ local function update_all(path)
   run_next()
 end
 
----Register :UpdateRepos.
+---Register :MyReposUpdate.
 function M.enable()
-  usercmd.create("UpdateRepos", function(args)
+  usercmd.create("MyReposUpdate", function(args)
     local path = args.args ~= "" and args.args or nil
     update_all(path)
   end, {
