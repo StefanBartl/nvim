@@ -38,6 +38,11 @@ return {
     "folke/snacks.nvim",
     lazy = false,
     priority = 1000,
+    -- Forces lazy.nvim to load pickers.nvim before this spec's opts() runs,
+    -- since opts() pulls in-picker actions/keys from pickers.nvim (see
+    -- config.snacks.picker). Without this, priority alone doesn't guarantee
+    -- order against pickers.nvim's lower/default priority.
+    dependencies = { "StefanBartl/pickers.nvim" },
 
     ---@param _ any
     ---@return Plugins.Snacks.Setup|table

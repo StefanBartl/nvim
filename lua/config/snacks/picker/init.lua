@@ -17,12 +17,32 @@
 
 local M = {}
 
+--- Empty entry-actions skeleton, used when pickers.nvim is not (yet) on the
+--- runtimepath. Mirrors pickers_win()'s degrade pattern below so a load-order
+--- slip silently yields "no extra actions" instead of an error in Snacks'
+--- opts(), which would otherwise drop the entire picker config (including
+--- unrelated keys like preview scroll).
+---@return { get_keys: fun(): table, get_input_keys: fun(): table, get_actions: fun(): table }
+local function empty_entry_actions()
+  return {
+    get_keys = function() return {} end,
+    get_input_keys = function() return {} end,
+    get_actions = function() return {} end,
+  }
+end
+
 -- Deferred (not a module-top-level require): this module is required eagerly
--- from plugins/snacks.lua's spec top level, before lazy=false plugins like
--- pickers.nvim have been loaded onto the path.
----@return table
+-- from plugins/snacks.lua's spec top level. plugins/snacks.lua declares an
+-- explicit `dependencies = { "StefanBartl/pickers.nvim" }` to guarantee load
+-- order, but this pcall stays as a second line of defense (e.g. plugin
+-- renamed/removed) rather than hard-failing Snacks.setup().
+---@return { get_keys: fun(): table, get_input_keys: fun(): table, get_actions: fun(): table }
 local function entry_actions()
-  return require("pickers.entry_actions.adapters.snacks")
+  local ok, mod = pcall(require, "pickers.entry_actions.adapters.snacks")
+  if not ok then
+    return empty_entry_actions()
+  end
+  return mod
 end
 
 --- Empty win skeleton, used when pickers.nvim is not (yet) on the runtimepath.
@@ -51,15 +71,19 @@ end
 ---@return table config Snacks picker configuration
 function M.get_config()
   local win = pickers_win()
+  local ea = entry_actions()
 
-  -- entry_actions (create_file / open_background) bind on the list window.
-  local list_keys = vim.tbl_extend("force", win.list.keys, entry_actions().get_keys())
+  -- entry_actions (create_file / open_background) bind on BOTH windows: a
+  -- picker opens with focus in the input prompt, so a list-only binding is
+  -- unreachable while typing and the key falls through to plain `confirm`.
+  local list_keys = vim.tbl_extend("force", win.list.keys, ea.get_keys())
+  local input_keys = vim.tbl_extend("force", win.input.keys, ea.get_input_keys())
 
   return {
     enabled = true,
-    actions = entry_actions().get_actions(),
+    actions = ea.get_actions(),
     win = {
-      input = { keys = win.input.keys },
+      input = { keys = input_keys },
       list = { keys = list_keys },
       -- Disable line wrapping by default (like Telescope). This belongs on the
       -- preview WINDOW's `wo`, not on `picker.preview` — the latter is the
@@ -87,9 +111,10 @@ end
 ---@return { input: table, list: table, preview: table } keymaps
 function M.get_keymaps()
   local win = pickers_win()
+  local ea = entry_actions()
   return {
-    input = win.input.keys,
-    list = vim.tbl_extend("force", win.list.keys, entry_actions().get_keys()),
+    input = vim.tbl_extend("force", win.input.keys, ea.get_input_keys()),
+    list = vim.tbl_extend("force", win.list.keys, ea.get_keys()),
     preview = win.preview.keys,
   }
 end
