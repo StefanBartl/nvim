@@ -13,6 +13,8 @@
 * [ ] **Autocommands:** Alle Autocomands als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Autocmds.md` schreiben.
 * [ ] **Sonstiges:** Sonstige Events, Actions und Features als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/Misc.md` schreiben.
 
+- C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\BINDINGS - hier alle Folder mit dem Plugin befüllen
+
 ### Hilfesystem & Tools
 
 * [ ] `vimdoc`-Datei `doc/{NAME}.txt` erstellen

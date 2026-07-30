@@ -283,6 +283,8 @@ festgelegt:
   §5: "Jedes Modul braucht eine README.md in deutscher [Sprache]") ins Deutsche
   übertragen werden.
 
+-C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\BINDINGS: Hier alle ordner mit dem neuen plugin füllen!
+
 ---
 
 ## 6. Migrationsplan

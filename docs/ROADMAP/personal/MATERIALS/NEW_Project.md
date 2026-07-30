@@ -81,6 +81,8 @@ festgehalten sind und/oder in den in den Projektdateien anhängig sind.
   - [ ] Lizenzverweiße löschen, keine lizenz!
 - [ ] `.luarc.json` im Projektroot anlegen
 
+- C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\BINDINGS - hier alle Folder mit dem Plugin befüllen
+
 ---
 
 ## 3. Healthchecks & Config-Struktur

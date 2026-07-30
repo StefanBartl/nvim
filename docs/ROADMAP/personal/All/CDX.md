@@ -2,7 +2,9 @@
 
 - [ ] BINDINGS
   - [ ] autocmds durchgehen ob man was optimeren kann
-  - [ ] usercmds sollten ein cwd&path scope option haben wenn sinnvoll und bisher zb.: nur ein % (buffer) verfügbar ist
+
+- alle ci / stylua / tests grün?
+
 
 
 
