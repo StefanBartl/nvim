@@ -198,6 +198,15 @@ plugins.add({
     end,
   },
 
+  {
+    "StefanBartl/spotlight.nvim",
+    dependencies = { "StefanBartl/lib.nvim" },
+    event = "VeryLazy",
+    config = function()
+      require("spotlight").setup()
+    end,
+  },
+
   -- ==========================================================================
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
   -- ==========================================================================
