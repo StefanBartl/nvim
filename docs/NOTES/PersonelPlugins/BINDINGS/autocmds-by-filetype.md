@@ -81,6 +81,17 @@ callback" — a normal, safe pattern (cheaper than a real Vim pattern glob in
 some cases, since the callback can consult live plugin state the pattern
 syntax can't express), not a performance concern at this scale.
 
+spotlight.nvim belongs here too, and is the one case that is global by
+*design* rather than by convenience: its `spotlight_windows` group
+(`WinNew`/`BufWinEnter`/`TabNewEntered`/`WinClosed`) genuinely has to reach
+every window, because `matchadd()` is window-local and a `:split` would
+otherwise show the same buffer with no highlights. Filtering is by window
+*kind*, not by filetype: floating windows are skipped (transient UI), the
+quickfix window is not (seeing the colors there is the point of
+`:Spotlight qf`). Its `spotlight_highlights` group (`ColorScheme`,
+`OptionSet background`) is likewise global — highlight groups are not
+filetype-scoped in the first place.
+
 ## Buffer-local to a plugin's own special/scratch buffer
 
 The largest category by count, and the safest by construction — these can

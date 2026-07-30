@@ -29,5 +29,6 @@ All plugin user-command cheatsheets in this folder.
 - [replacer.nvim](./replacer.nvim.md)
 - [reposcope.nvim](./reposcope.nvim.md)
 - [sessions.nvim](./sessions.nvim.md)
+- [spotlight.nvim](./spotlight.nvim.md)
 
 See also: [overview & collision check across all plugins](REF!).

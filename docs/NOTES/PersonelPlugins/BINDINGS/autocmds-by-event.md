@@ -18,8 +18,9 @@ See also: [by plugin](autocmds-by-plugin.md), [by filetype/scope](autocmds-by-fi
 | insights.nvim | `Insights_conflicts` | configurable (default trigger) | Quickfix git conflicts |
 | pickers.nvim | `pickers.nvim`/none (once) | only if `setup()` never called | Register default keymaps/commands |
 | sessions.nvim | `SessionsNvim` (once, nested) | `cfg.autoload` (default **off**) | Autoload contextual session |
+| spotlight.nvim | `spotlight_persist` | `persist.enable` (default **on**) | Restore the persisted spotlights (also self-schedules when `setup()` runs after startup) |
 
-**Worth knowing**: five plugins hook Neovim startup. With `sessions.nvim`'s
+**Worth knowing**: six plugins hook Neovim startup. With `sessions.nvim`'s
 autoload *and* `github_stats.nvim`'s dashboard auto-open both enabled, you'd
 get a restored session layout immediately followed by a dashboard window
 appearing on top of it (github_stats defers 1000ms, so it fires after
@@ -37,8 +38,9 @@ startup ever looks like two things fighting for the screen.
 | sessions.nvim | `SessionsNvim` | Autosave session (default **on**) |
 | lib.nvim | `lib_logger_<name>` | Flush logger ring buffer (per logger instance) |
 | pickers.nvim | `pickers.nvim` | Flush `smart.frecency` store to disk (opt-in, off by default; added 2026-07-26) |
+| spotlight.nvim | `spotlight_persist` | Flush a pending debounced spotlight-state save (default **on**) |
 
-Seven independent cleanup/save routines on exit — all cheap, none touch
+Eight independent cleanup/save routines on exit — all cheap, none touch
 shared state, no ordering dependency between them.
 
 ## `BufWritePre`
@@ -100,8 +102,9 @@ breakdown (markdown vs. tree-buffer vs. debug-view vs. generic).
 | filetree.nvim | `filetree_current_hl` (opt-in, off) | — | Re-apply current-line HL |
 | filetree.nvim | `filetree_window_style` (opt-in, off) | — | Re-link tree window HL groups |
 | lib.nvim | `lib_ui_kit_theme` | `theme.setup()` called | Re-materialize `Kit*` HL groups |
+| spotlight.nvim | `spotlight_highlights` | `palette.reapply_on_colorscheme` (default on) | Re-define `Spotlight1..8` (explicit bg+fg per slot), wiped by `:colorscheme` |
 
-Seven independent "re-apply my custom highlights after a colorscheme
+Eight independent "re-apply my custom highlights after a colorscheme
 change" routines (two of them from color_my_ascii.nvim alone — one for
 fence-line/content HL, one for the ASCII-art character-group HL groups).
 All idempotent, no shared state — this is just what it costs to switch
@@ -168,6 +171,29 @@ Hit by: debugging.nvim (auto-refresh tagged view), filetree.nvim
 language.nvim (translate window teardown), lib.nvim (window focus-close,
 kit surface lifecycle), reposcope.nvim (implicitly via `QuitPre`, not
 `WinLeave`). No overlap — each owns a distinct window/float.
+
+spotlight.nvim is the one plugin here that hooks the Win* family *globally*
+rather than for a window it owns:
+
+| Plugin | Event(s) | Augroup | Action |
+| --- | --- | --- | --- |
+| spotlight.nvim | `WinNew`, `BufWinEnter`, `TabNewEntered` | `spotlight_windows` | Apply every active spotlight to windows that have none yet, deferred one tick |
+| spotlight.nvim | `WinClosed` | `spotlight_windows` | Drop the closed window's match-ledger entry |
+
+That is unavoidable rather than greedy: `matchadd()` is window-local, so a
+`:split` would otherwise show the same buffer with no highlights. The callback
+skips windows that already carry the match, so the sweep is a no-op in the
+common case. Floating windows are excluded; the quickfix window is not.
+
+## `OptionSet`
+
+| Plugin | Augroup | Pattern | Action |
+| --- | --- | --- | --- |
+| spotlight.nvim | `spotlight_highlights` | `background` | Switch between `palette.colors` and `palette.colors_light` |
+
+Only plugin here that watches an option change. Registered unconditionally, even
+when `palette.reapply_on_colorscheme` is false — that option is about colorscheme
+churn, not about the plugin's own two-palette (dark/light) model.
 
 ## `User` (custom events)
 

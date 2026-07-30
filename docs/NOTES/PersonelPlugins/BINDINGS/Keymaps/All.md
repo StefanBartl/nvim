@@ -29,5 +29,6 @@ All plugin keymap cheatsheets in this folder.
 - [replacer.nvim](./replacer.nvim.md)
 - [reposcope.nvim](./reposcope.nvim.md)
 - [sessions.nvim](./sessions.nvim.md)
+- [spotlight.nvim](./spotlight.nvim.md)
 
 See also: [keymap collision & prefix-wait analysis](REF!).

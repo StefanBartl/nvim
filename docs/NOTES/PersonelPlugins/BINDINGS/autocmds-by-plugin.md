@@ -228,3 +228,18 @@ None.
 | --- | --- | --- | --- |
 | `VimEnter` (once, nested, configurable off) | `SessionsNvim` | — | Autoload contextual session |
 | `VimLeavePre` (configurable on) | `SessionsNvim` | — | Autosave to fixed session name |
+
+## [spotlight.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/spotlight.nvim.md)
+
+| Event(s) | Augroup | Pattern | Action |
+| --- | --- | --- | --- |
+| `WinNew`,`BufWinEnter`,`TabNewEntered` | `spotlight_windows` | `*` | Apply every active spotlight to windows that have none yet (deferred one tick; `matchadd()` is window-local) |
+| `WinClosed` | `spotlight_windows` | `*` | Drop the closed window's match-ledger entry |
+| `ColorScheme` | `spotlight_highlights` | `*` | Redefine `Spotlight1..8` (configurable off) |
+| `OptionSet` | `spotlight_highlights` | `background` | Switch between the dark and light palette |
+| `VimEnter` | `spotlight_persist` | `*` | Restore the persisted spotlights (configurable off) |
+| `VimLeavePre` | `spotlight_persist` | `*` | Flush a pending debounced state save |
+
+**Deliberately absent**: no `TextChanged`/`CursorMoved`/`CursorHold`. A
+pattern-based highlight needs no invalidation when the text moves — that is the
+whole reason `matchadd()` was chosen over extmarks.

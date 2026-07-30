@@ -77,3 +77,97 @@ hook.
 Registers `:DocBrowse`'s buffer-local keys when which-key is installed
 (`opts.which_key`, default true; v3 `wk.add` / v2 `wk.register`, guarded by
 `pcall`). No-op without it.
+
+---
+
+## spotlight.nvim
+
+Added 2026-07-30.
+
+### Highlight groups — `Spotlight1` … `Spotlight8`
+
+Eight groups, defined by `setup()` and re-defined on `ColorScheme` /
+`OptionSet background`. Each sets an explicit **bg and fg** (plus `bold`), so
+contrast is a property of the plugin rather than inherited from the colorscheme —
+a bg-only definition is how a readable marker becomes yellow-on-yellow after a
+theme switch. Two arrays exist (`palette.colors` dark, `palette.colors_light`
+light) and `'background'` selects between them.
+
+Consequence worth knowing: redefining `SpotlightN` by hand after `setup()` gets
+overwritten by the next `:colorscheme`. Configure the colors through `setup()`.
+
+Slot allocation is round-robin from the last one handed out, **skipping slots
+still in use** while any are free — plain round-robin would hand out a color
+already on screen while others sit unused.
+
+### Persisted state — `lib.nvim.store.project`, key `spotlight/state`
+
+Keyed by **git root**, so it survives opening the project from a subdirectory and
+follows the checkout to another machine. Shape:
+
+```lua
+{
+  version = 1,
+  spotlights = { { text, slot, kind, origin }, ... },
+  persist_exceptions = { ["logs/app.log"] = false },
+}
+```
+
+Writes are debounced (`persist.debounce_ms`, default 500 ms) and flushed on
+`VimLeavePre`; loading is once, on `VimEnter` — deliberately not from `setup()`,
+because a session or `:cd` plugin may not have settled the project root yet and
+the store key depends on it.
+
+The stored regex is **not** persisted: `pattern` is rebuilt from `text` + `kind`
+on load, so a later change to the escaping or word-boundary policy applies to
+restored spotlights instead of resurrecting an old version's regex.
+
+### Per-file persistence exceptions — the semantics
+
+Spotlights are session-global, but an exception names a *file*, so this needed
+deciding. **An exception suppresses the spotlights that were *created while
+looking at* that file** — each spotlight records its `origin` (project-relative
+path) once, at creation.
+
+It explicitly does *not* mean "spotlights that appear in this file": knowing that
+would require scanning every project file on every save, and the answer would
+change whenever a log rotates. So a spotlight made in `worker.log` stays
+persisted even if its token also occurs in an excluded `secrets.log`.
+
+The exception list itself is always persisted, including for excluded files —
+otherwise `:Spotlight persist off` would not survive a restart.
+
+Filtering runs on load as well as on save, so flipping `persist.default` takes
+effect for already-stored spotlights rather than only for new ones.
+
+### Window-match ledger
+
+`window -> { spotlight id -> matchadd() id }`, in `lua/spotlight/core/match.lua`.
+This is what makes a window-local mechanism behave globally, and it is the reason
+the `spotlight_windows` autocmd group exists. Reported by `:checkhealth spotlight`
+as "N active spotlights across M tracked windows".
+
+Reusable elsewhere — see the plugin's `docs/ROADMAP/NEOTREE_FEATURES.md`, which
+nominates this ledger (plus the cross-platform project-relative path keys and the
+global-default-plus-per-path-override model) for lifting into `filetree.nvim`.
+
+### Notifications
+
+`notify = true` (default) reports added/removed/cleared spotlights through
+`lib.nvim.notify` with the `[spotlight]` prefix. Warnings and errors are always
+shown regardless of the setting.
+
+### `:checkhealth spotlight`
+
+Four sections. Notably reports each `lib.nvim` module *separately* with what it is
+used for — a missing `usercmd.composer` (hard requirement, the command layer) and
+a missing `debounce` (soft, has a native fallback) are very different problems —
+plus `'termguicolors'`, every config value that failed validation and what it fell
+back to, and the live registry/persistence state.
+
+### Config validation degrades, never throws
+
+Invalid palette entries, unparseable Lua patterns in `cursor.patterns`, and
+out-of-range numbers are dropped and replaced with their defaults; the reasons
+collect in `config.issues` and surface in `:checkhealth`. One bad config line
+never stops the plugin from loading.

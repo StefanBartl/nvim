@@ -29,5 +29,6 @@ All plugin autocmd cheatsheets in this folder.
 - [replacer.nvim](./replacer.nvim.md)
 - [reposcope.nvim](./reposcope.nvim.md)
 - [sessions.nvim](./sessions.nvim.md)
+- [spotlight.nvim](./spotlight.nvim.md)
 
 See also, cross-plugin analyses: [by plugin](../autocmds-by-plugin.md), [by event](../autocmds-by-event.md), [by filetype/scope](../autocmds-by-filetype.md).
