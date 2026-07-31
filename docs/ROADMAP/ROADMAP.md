@@ -1,7 +1,12 @@
 # Roadmap
 
+- [ ] Kannst du in nvim imlementieren, dass :MyPluginsRemove und MyPluginsCLone das lib.nvim progress stausline modul verwenden. dann cheke andere bindigns ob es sinn maht dort und implementiere es
 - [ ] NeoTree git_status: Keys A und gr sind je doppelt definiert → git_add_all/git_revert_file aktuell unerreichbar (Lua "letzter Key gewinnt").
 - [ ] Lazygit: :LazyGitLog fehlt inder cmd-Liste des Lazy-Specs — evtl. unbeabsichtigt.
+
+- [ ] > in markdown
+- [ ] Keymaps: Count implementieren; ev ein lib.nvim modul erweitereung ?
+  - [ ] indenting mit count: zb `3 leader ->` oder `leader 3 ->` indentn den markoeten bereich /zeile um 3 default weiten
 
 
    Warn  3:37:11 PM notify.warn [filetree.pdf] pdfport.nvim not installed — opening PDF in system viewer

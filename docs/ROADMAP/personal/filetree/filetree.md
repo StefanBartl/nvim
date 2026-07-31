@@ -1,5 +1,7 @@
 # `filetree.nvim`
 
+autocmd, bei jeder änderung der tab bufferlist checken ob ein no name uffer ist oder nicht, nur wenn ausschließlich der no namebuffer existiert darf er bleiben, anstonst muss er geschlossen werden. Vielleicht gibt es noch ei fcnen besseren moment es einzuhängen..?
+
 ## Table of content
 
   - [Bug](#bug)
