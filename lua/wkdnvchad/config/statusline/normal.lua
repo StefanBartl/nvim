@@ -27,21 +27,26 @@ local M = {}
 --                      neighbourhood as the other transient indicators. Shows
 --                      whichever plugin is currently running a long operation,
 --                      not one specific plugin.
+--   plugin_summary     right group, right after plugin_progress — static
+--                      own/external plugin count badge, same neighbourhood
+--                      since both describe "the plugin layer", one transient
+--                      one static.
 --
 -- If NvChad ever changes its own default order, update this list to match
 -- (see nvchad/stl/utils.lua).
-local order = { "mode", "file", "git", "filetree_cwd_mode", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "plugin_progress", "cwd", "cursor" }
+local order = { "mode", "file", "git", "filetree_cwd_mode", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "plugin_progress", "plugin_summary", "cwd", "cursor" }
 
 M.ui = {
   statusline = {
     order = order,
     modules = {
-      -- Only "plugin_progress" and "filetree_cwd_mode" are provided here;
-      -- every other key in `order` above resolves to NvChad's own built-in
-      -- "default" theme module (mode/file/git/lsp_msg/diagnostics/lsp/cwd/
-      -- cursor), which `generate()` merges this table into rather than
-      -- replaces.
+      -- Only "plugin_progress", "plugin_summary" and "filetree_cwd_mode" are
+      -- provided here; every other key in `order` above resolves to NvChad's
+      -- own built-in "default" theme module (mode/file/git/lsp_msg/
+      -- diagnostics/lsp/cwd/cursor), which `generate()` merges this table
+      -- into rather than replaces.
       plugin_progress = require("wkdnvchad.ui.statusline.modules.plugin_progress"),
+      plugin_summary = require("wkdnvchad.ui.statusline.modules.plugin_summary"),
       filetree_cwd_mode = require("wkdnvchad.ui.statusline.modules.filetree_cwd_mode"),
 
       -- Overrides NvChad's built-in `cursor` (a fixed "%l/%v" string) with the

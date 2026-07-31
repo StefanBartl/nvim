@@ -32,13 +32,16 @@ local M = {}
 local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
 local system, fnamemodify = vim.system, fn.fnamemodify
 
+-- "statusline" reports into the shared lib.nvim.progress registry, rendered
+-- by the statusline's "plugin_progress" module — same convention as the
+-- personal plugins (see lua/plugins/personal/init.lua).
 local ok_progress, progress_mod = pcall(require, "lib.nvim.progress")
 ---@param title string
 local function new_progress(title)
   if not ok_progress then
     return nil
   end
-  return progress_mod.create({ title = title })
+  return progress_mod.create({ title = title, style = "statusline" })
 end
 
 ---@param override string|nil
