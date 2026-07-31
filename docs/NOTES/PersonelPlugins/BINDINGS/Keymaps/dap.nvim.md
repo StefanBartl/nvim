@@ -16,6 +16,18 @@ rest of `setup()` (which-key/autocmds still get wired).
 | `s` | n | `dap.step_over` | "[DAP] Step Over" |
 | `i` | n | `dap.step_into` | "[DAP] Step Into" |
 | `o` | n | `dap.step_out` | "[DAP] Step Out" |
+
+**Count support (since 2026-07-31):** `3<prefix>s` steps over 3 times. Not a
+naive `for i=1,count do step_over() end` — a step command assumes the thread
+is currently stopped, and firing several back-to-back before the adapter
+processes the first one is invalid per the DAP spec. Instead
+`counted_step()` (in `bindings/keymaps/init.lua`) fires the first step
+immediately, then chains the rest one at a time via
+`dap.listeners.after.event_stopped`, only issuing the next step once the
+adapter confirms the thread actually stopped again. `event_terminated`/
+`event_exited` clean up the listener if the session ends mid-chain, and a
+1000-step cap bounds a fat-fingered count. With no count (the common case)
+this is unchanged — `step_fn()` is called directly, no listener registered.
 | `t` | n | `dap.terminate` | "[DAP] Terminate" |
 | `r` | n | `dap.restart` | "[DAP] Restart" |
 | `b` | n | `dap.toggle_breakpoint` | "[DAP] Toggle Breakpoint" |

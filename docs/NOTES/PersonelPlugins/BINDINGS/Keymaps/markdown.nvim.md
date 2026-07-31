@@ -25,8 +25,8 @@ Buffer-local, installed on `FileType` for markdown/mdx/md (see
 | fold_toggle_zf | n | `zf` | Toggle fold under cursor (overrides built-in `zf`) | `use_zf_override` (default on) |
 | fold_toggle | n | `<localleader>f` | Same, non-overriding | — |
 | unfold_all | n | `zu` | Unfold all, center | — |
-| fold_prev_heading | n | `zi` | Fold prev heading, center | — |
-| fold_h2plus | n | `zk` | Toggle outline, keeps H1/H2 open | — |
+| fold_prev_heading | n | `zi` | Fold prev heading, center. `3zi` hops back 3 headings before folding (`vim.v.count1`, since 2026-07-31 — has its own private Setext-aware single-hop search, so this needed its own loop rather than delegating to `prev_heading`'s) | — |
+| fold_h2plus | n | `zk` | Toggle outline, keeps H1/H2 open. `3zk` folds below heading level 3 instead of the fixed H2 default (raw `vim.v.count`, since 2026-07-31 — mirrors `toc`'s existing "count sets the level" convention below) | — |
 | toc | n | `<leader>toc` | Insert/refresh TOC (`vim.v.count` = max heading level) | feature `toc` (survives `just_enable={"toc"}` even with keymaps off) |
 | cursor_action_2click | n | `<2-LeftMouse>` | Open anchor/image/url/file under cursor (silent — a miss is a normal, frequent mouse-move outcome); double-click on a heading toggles its fold instead | — |
 | cursor_action_cclick | n | `<C-LeftMouse>` | Same | — |
@@ -36,7 +36,7 @@ Buffer-local, installed on `FileType` for markdown/mdx/md (see
 | heading_inc / _dec | n | `<C-Right>`/`<C-Left>` | Shift current line's heading level by `vim.v.count1` | — |
 | heading_inc_visual / _dec_visual | v,x | `<C-Right>`/`<C-Left>` | Shift visual selection's headings | — |
 | heading_inc_all / _dec_all | n | `<S-Right>`/`<S-Left>` | Shift ALL headings, or (if fenced-scope on and cursor inside a fenced block) only that block's | — |
-| table_next_cell / _prev_cell | n | `]\|` / `[\|` | Next/prev table cell | feature `table` |
+| table_next_cell / _prev_cell | n | `]\|` / `[\|` | Next/prev table cell. `3]\|` moves 3 cells (`vim.v.count1`, since 2026-07-31), stopping early at a table edge rather than erroring | feature `table` |
 
 ## TableView keys (`M.apply_tableview`, independent of `enable_keymaps`)
 

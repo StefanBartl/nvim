@@ -11,7 +11,7 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 
 | lhs | action | notes |
 | --- | --- | --- |
-| `-` | Set tree root to parent dir | |
+| `-` | Set tree root to parent dir | `3-` climbs 3 levels (`vim.v.count1`, since 2026-07-31) |
 | `+` | Set tree root to node under cursor | Both call adapter `set_root`, optionally sync cwd if `sync_cwd=true` |
 | `B` | Reveal alternate buffer (`#`) in tree | default **on** |
 
@@ -21,11 +21,11 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 | --- | --- | --- |
 | `<Tab>` | Toggle/open image/PDF viewer, else text/dir preview | |
 | `<CR>` | Reads adapter's original `<CR>` first, wraps it: image/PDF → dispatch, else falls through | |
-| `<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>` | Scroll float preview | `mode="float"` only |
-| `<PageUp>`/`<PageDown>` | Page buffer-mode preview (falls to native scroll if no preview active) | `mode="buffer"` (default) |
+| `<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>` | Scroll float preview | `mode="float"` only; `vim.v.count1` multiplies the scroll amount (`5<C-f>` = 5 lines / 5×10 lines) since 2026-07-31 |
+| `<PageUp>`/`<PageDown>` | Page buffer-mode preview (falls to native scroll if no preview active) | `mode="buffer"` (default); count is prefixed onto the native `:normal! N<C-f>` it delegates to (Neovim's own `<C-f>`/`<C-b>` already honor a leading count) rather than looped |
 | `I` | Node info float (path/type/size/permissions/mtime/line-count, recursive dir scan capped at 100000 entries) | |
 | `q`/`<Esc>` | Close node-info popup | always, once popup open |
-| `w` | Cycle tree window width (`sizes={30,50,15}`) | |
+| `w` | Cycle tree window width (`sizes={30,50,15}`) | With no count, single-step cycle (unchanged); with an explicit count N (`3w`), jumps directly to preset index N instead — a reachable-in-one-press shortcut a step-cycle alone can't express (since 2026-07-31) |
 | `<Esc>` | Reset tree UI state (preview, filter dim, live-search dim, watcher-quarantine, `:nohlsearch`) — each step pcall-guarded | |
 | `?` | Floating keymap cheatsheet (filtered to enabled features) | **non-neotree adapters only** — neo-tree gets this natively via `attach.lua`'s injection into its own `?` |
 | `q`/`<Esc>` | Close cheatsheet popup | |
@@ -106,4 +106,5 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 
 ## Notes
 
+- **Count support added 2026-07-31** for `-`/`+` (nav), `<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>` (preview scroll, both float and buffer mode), and `w` (window-size cycler, direct-index jump rather than a step multiplier — see the `ui` table above). None of these read a count before this date.
 - `bindings/keymaps.lua` itself has no live registration calls — it's a static catalog table consumed by `bindings/init.lua`'s `catalog()`, the cheatsheet feature, and the generated docs. It's missing a `pdf_open` entry (see above).

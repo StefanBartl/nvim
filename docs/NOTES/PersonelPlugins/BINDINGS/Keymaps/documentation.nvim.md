@@ -27,13 +27,13 @@ status line.
 | --- | --- | --- | --- |
 | `j` `k` | `move` | all | move; the detail pane follows. **Left native** — not bound, so counts and `scrolloff` behave. A `CursorMoved` autocmd drives the detail pane instead. |
 | `<CR>` | `enter` | all | descend a level, or follow the edge |
-| `-` `<BS>` | `up` | all | up a level |
-| `<C-o>` | `back` | all | back through the visit history |
-| `<C-i>` | `forward` | all | forward through the visit history |
+| `-` `<BS>` | `up` | all | up a level. `3-` climbs 3 levels (`vim.v.count1`, since 2026-07-31; `up()` has no native count param, so this loops it) — see the digit-collision caveat below for counts 1-6 |
+| `<C-o>` | `back` | all | back through the visit history. `3<C-o>` steps back 3 entries (`vim.v.count1`, since 2026-07-31; `history_step`'s delta is plain index arithmetic, so this multiplies rather than loops) |
+| `<C-i>` | `forward` | all | forward through the visit history. Same count support as `<C-o>` |
 | `h` | `dir_in` | deps, calls | direction: incoming edges |
 | `l` | `dir_out` | deps, calls | direction: outgoing edges |
-| `+` | `depth_inc` | deps | depth +1 |
-| `_` | `depth_dec` | deps | depth −1 |
+| `+` | `depth_inc` | deps | depth +1. `3+` moves depth by 3 (`vim.v.count1`, since 2026-07-31) — but see the digit-collision caveat below |
+| `_` | `depth_dec` | deps | depth −1. Same count support as `+` |
 | `gd` | `goto_source` | all | open the source at the line (closes) |
 | `gq` | `quickfix` | all | current list → quickfix (closes) |
 | `gI` | `impact` | all | blast radius → quickfix (closes) |
@@ -51,6 +51,17 @@ status line.
 
 Keys the current mode ignores are **marked**, not hidden, in the `?` overlay —
 "why did `+` do nothing" is precisely the question it is opened to answer.
+
+**Digit-key collision, counts 1–6 (found 2026-07-31):** `1`…`6` are themselves
+bound (see "Modes" above) to switch the active list. Neovim resolves a leading
+digit as *that* mapped command immediately if one is bound for it — it does
+**not** accumulate into `vim.v.count1` first the way an unmapped digit would.
+So `3+`/`3-`/`3<C-o>` in this buffer actually fires "switch to list 3", then
+`+`/`-`/`<C-o>` with count 1 — not "move by 3" as the count support above
+would suggest at a glance. Counts ≥ 7 (no colliding digit-key) reach the
+handler correctly, e.g. `9+` really does move depth by 9. This is a structural
+property of the `1`-`6` mode-switch bindings, not a bug in the count support
+itself, and restructuring those keys was out of scope for adding count.
 
 ## User-configurable
 

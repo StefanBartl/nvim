@@ -23,8 +23,8 @@ Built from an actions table, each action individually configurable via
 | Action | Default lhs | mode | action |
 | --- | --- | --- | --- |
 | `confirm` | `<CR>` | i | `prompt_input.on_enter()` |
-| `nav_up` | `<Up>` | n, i | Navigate list up, fetch README for newly-selected repo |
-| `nav_down` | `<Down>` | n, i | Navigate list down, fetch README |
+| `nav_up` | `<Up>` | n, i | Navigate list up, fetch README for newly-selected repo. `3<Up>` moves 3 rows in one call (`vim.v.count1`, since 2026-07-31, clamped to list bounds); harmless in insert mode since `vim.v.count1` never leaks a stale normal-mode count into an insert-mode mapping's dispatch (verified) |
+| `nav_down` | `<Down>` | n, i | Navigate list down, fetch README. Same count support as `nav_up` |
 | `focus_next` | `<C-w>`, `<C-l>`, `<Tab>` (list) | n, i | Focus next UI panel |
 | `focus_prev` | `<C-h>`, `<S-Tab>` (list) | n, i | Focus previous panel |
 | `open_viewer` | `<C-v>` | n, i | Open README viewer |

@@ -27,6 +27,11 @@ Attached only while a spell-check session is active on that buffer
 | `spell.keymaps.fix1` (`<leader>z1`) | n | `1z=` (accept first suggestion) then refresh + goto_next | "[language] Accept first suggestion & advance" |
 | `spell.keymaps.next` (`]s`) | n | Jump to next diagnostic in the `language.spell` namespace | "[language] Next spell error" |
 
+`]s`'s count support (since 2026-07-31): `4]s` jumps 4 spell errors forward
+(`goto_next(vim.v.count1)`). `M.goto_prev()` gained the matching `count`
+parameter too, but **no keymap calls it** — only `next`/`]s` is bound in this
+repo's config defaults, there is no `prev` binding to wire it to.
+
 ## Interactive translate window (buffer-local to the ephemeral input float)
 
 Actions are NORMAL-mode keys (press `<Esc>` first) so insert-mode typing

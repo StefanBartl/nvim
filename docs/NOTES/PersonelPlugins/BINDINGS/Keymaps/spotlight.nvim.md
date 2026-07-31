@@ -20,8 +20,8 @@ setting one to `false` frees that key while keeping the rest of the preset.
 | `<leader>mK` | n | `keymaps.list` | Open the spotlight list: color swatch + token + match count → jump |
 | `<leader>m<C-k>` | n | `keymaps.clear` | Remove every spotlight |
 | `<leader>mq` | n | `keymaps.quickfix` | Every line matching any spotlight → quickfix list |
-| `]k` | n | `keymaps.next` | Next occurrence (of the token under the cursor, if on one; else of any) |
-| `[k` | n | `keymaps.prev` | Previous occurrence |
+| `]k` | n | `keymaps.next` | Next occurrence (of the token under the cursor, if on one; else of any). `3]k` jumps 3 occurrences (`vim.v.count1`, since 2026-07-31), stopping early rather than erroring if fewer remain |
+| `[k` | n | `keymaps.prev` | Previous occurrence. Same count support as `]k` |
 
 ## Collision check
 
