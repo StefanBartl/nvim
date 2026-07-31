@@ -1,4 +1,4 @@
----@module 'usrcmds.plugin_repos.list'
+---@module 'plugins.personal.list'
 --- Repo list sourced directly from `plugins.personal` — the actual, fully
 --- resolved lazy spec (`plugins/personal/init.lua`'s `.add({...})`, with
 --- `plugins/personal/source.lua`'s per-repo mode already applied) — rather
@@ -17,10 +17,16 @@
 --- of the individual plugins' `config()` functions run (lazy.nvim invokes
 --- those itself, later, at load time) — so this is a plain, side-effect-free
 --- data read, not a partial plugin bootstrap.
+---
+--- Lives here rather than under `usrcmds.plugin_repos` (its original home):
+--- consumers now span both `usrcmds` (`:MyPluginsClone`/`:MyPluginsRemove`)
+--- and `wkdnvchad.ui.statusline` (`plugin_summary`'s own/external count
+--- badge), neither of which should reach into the other's namespace for
+--- shared data that is really just a derived view of `plugins.personal`.
 
 local M = {}
 
----@class Usrcmds.PluginRepos.Entry
+---@class Plugins.Personal.Entry
 ---@field repo string Full "owner/repo" exactly as declared in the spec, e.g. "StefanBartl/lib.nvim".
 ---@field name string Basename used as both the local folder name and source.lua's mode-table key, e.g. "lib.nvim" — derived the same way `plugins.control.mode` itself derives it, so a lookup here always agrees with what the spec loader decided.
 
@@ -30,7 +36,7 @@ local M = {}
 ---are "neither local nor remote" by explicit choice, not an oversight, so
 ---`:MyPluginsClone` should not fetch them and `:MyPluginsRemove` should not
 ---report on repos that were never supposed to be cloned in the first place.
----@return Usrcmds.PluginRepos.Entry[]|nil entries
+---@return Plugins.Personal.Entry[]|nil entries
 ---@return string|nil err
 function M.read()
   local ok, specs = pcall(require, "plugins.personal")
@@ -41,7 +47,7 @@ function M.read()
     return nil, "plugins.personal did not return a spec table"
   end
 
-  ---@type Usrcmds.PluginRepos.Entry[]
+  ---@type Plugins.Personal.Entry[]
   local entries = {}
   for _, spec in ipairs(specs) do
     local repo = spec[1]

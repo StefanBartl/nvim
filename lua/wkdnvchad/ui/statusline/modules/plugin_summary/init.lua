@@ -2,7 +2,7 @@
 --- Statusline segment: how many plugins lazy.nvim manages, split into "own"
 --- (the personal StefanBartl/*.nvim repos declared in `plugins.personal` —
 --- the same canonical, drift-proof list `:MyPluginsClone`/`:MyPluginsRemove`
---- use, see `usrcmds.plugin_repos.list`) and "external" (everything else).
+--- use, see `plugins.personal.list`) and "external" (everything else).
 --- Explicit by construction: the split can never silently drift out of sync
 --- with what is actually loaded, unlike a hand-maintained plugin name list in
 --- a comment (see the fix to this sibling module's own docstring).
@@ -22,7 +22,7 @@ local cached_text = ""
 ---@param total integer
 ---@return string
 local function compute_text(total)
-  local ok_list, list = pcall(require, "usrcmds.plugin_repos.list")
+  local ok_list, list = pcall(require, "plugins.personal.list")
   local entries = ok_list and select(1, list.read()) or nil
   local own = entries and #entries or 0
   return ("%d/%d"):format(own, math.max(total - own, 0))

@@ -3,7 +3,7 @@
 ---@description
 --- Registers `:MyPluginsClone [dir]` and `:MyPluginsRemove [dir]`. Both operate
 --- on the repos `plugins.personal` actually declares (see
---- `usrcmds.plugin_repos.list`) against `dir` (or `vim.env.REPOS_DIR` when
+--- `plugins.personal.list`) against `dir` (or `vim.env.REPOS_DIR` when
 --- no argument is given) — never on every directory found by scanning `dir`,
 --- unlike `:MyReposUpdate`, which fetches/pulls whatever git repos it finds
 --- regardless of what they are. Cloning everything found and removing
@@ -25,7 +25,7 @@
 
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos]")
 local usercmd = require("lib.nvim.usercmd")
-local plugin_list = require("usrcmds.plugin_repos.list")
+local plugin_list = require("plugins.personal.list")
 
 local M = {}
 
@@ -67,7 +67,7 @@ end
 -- Clone
 -- =============================================================================
 
----@param entry Usrcmds.PluginRepos.Entry
+---@param entry Plugins.Personal.Entry
 ---@param base_dir string
 ---@param on_done fun(status: "cloned"|"exists"|"failed", err: string|nil)
 local function clone_one(entry, base_dir, on_done)
