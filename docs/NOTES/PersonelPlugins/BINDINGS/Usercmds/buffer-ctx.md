@@ -50,7 +50,7 @@ Args not given on the command line are prompted via `vim.fn.input`.
 
 | Subcommand | Args | Action |
 | --- | --- | --- |
-| `column <N> [fill]` | target column, fill char | Align visual selection to column |
+| `column <N> [fill]` | target column, fill char | Align visual selection to column (charwise/blockwise only, since 2026-07-31) |
 | `table [ALIGN] [opts]` | `header=`, `cell=`, `skip=`, `scope=` | Format Markdown table(s) |
 | `textwidth <N\|max>` | number or `max` | Set `textwidth` and reflow text |
 | `filter [--remove] <pat>` | pattern(s) | Keep or remove matching lines |
@@ -108,6 +108,20 @@ Args not given on the command line are prompted via `vim.fn.input`.
   external process. Runs in the buffer's own directory (not cwd), so it stays
   correct after `:cd`. Detached HEAD reports an error for `branch` rather than
   the literal string `"HEAD"`.
+- **`column`'s submode detection was wrong for two ordinary shapes
+  (fixed 2026-07-31)**: `validate_selection()` used to *infer* charwise vs.
+  linewise vs. blockwise from mark geometry (same line → charwise, same
+  column → blockwise, else linewise) instead of asking Vim. Verified against
+  live selections: a charwise selection spanning two lines, and any blockwise
+  selection wider than one column, were both misreported as linewise — both
+  then took the single-line `align_single_line` branch instead of
+  `align_block_lines` (measured before/after: a 4-column-wide block align
+  touched 0 of 2 lines before the fix, 2 of 2 after). Now reads
+  `vim.fn.visualmode()` directly. Also gained `visual = { "charwise",
+  "blockwise" }` on the composer route (via a new `def.visual` passthrough in
+  `build_routes`), so a linewise selection is refused with a clear message —
+  its marks run from column 0 to `MAXCOL`, nothing for column alignment to
+  work with. Needs lib.nvim's `route.visual` (lib.nvim commit `84737e1`).
 - **`date` options (2026-07-21)**: `:Insert date`/`:Copy date` gained the same
   `[format] [--utc]` grammar as `:Insert timestamp` (previously it was a fixed
   `iso-date`, no args). `timestamp.lua` also gained 5 formats: `long`

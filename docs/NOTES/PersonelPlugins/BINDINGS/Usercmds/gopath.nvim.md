@@ -16,9 +16,9 @@ Docs: `docs/BINDINGS.md`, `docs/installation.md`, `README.md`
 | `:Gopath copy` | — | copy `path:line:col` |
 | `:Gopath debug` | — | resolution info |
 | `:Gopath check` | — | check existence / offer create |
-| `:Gopath probe [mode]` | `edit\|split\|vsplit` | suffix/visual probe |
+| `:[range]Gopath probe [mode]` | `edit\|split\|vsplit` | suffix/visual probe |
 | `:Gopath cache build\|info\|add-root <dir>` | — | only registered if `truncated.enable = true` |
-| `:GopathResolve` `:GopathOpen` `:GopathCopy` `:GopathDebug` `:GopathCheck` `:GopathProbe[!]` `:GopathCacheBuild` `:GopathCacheInfo` `:GopathCacheAddRoot` | — | compat aliases, unchanged, individually toggleable via `config.commands.*` |
+| `:GopathResolve` `:GopathOpen` `:GopathCopy` `:GopathDebug` `:GopathCheck` `:[range]GopathProbe[!]` `:GopathCacheBuild` `:GopathCacheInfo` `:GopathCacheAddRoot` | — | compat aliases, unchanged, individually toggleable via `config.commands.*` |
 
 ## Notes
 
@@ -59,3 +59,17 @@ Docs: `docs/BINDINGS.md`, `docs/installation.md`, `README.md`
   and a headless smoke test (`scripts/ci/headless_tests.lua`) that clones
   `lib.nvim` onto the runtimepath, calls `setup()`, and executes every
   `docs/TESTS/*.lua` fixture — supersedes the "No CI for this repo" note.
+- **`probe`'s visual selection was completely dead (fixed 2026-07-31)**:
+  `get_visual_selection()` gated on `nvim_get_mode()` being `v`/`V`/CTRL-V —
+  which can never hold at either call site (a `:Gopath probe` runs in command
+  mode; the visual keymap feeds `<Esc>` before its `vim.schedule`d callback),
+  so the guard was always false and every visual probe silently fell back to
+  `<cfile>`/`<cword>`. Fixed by dropping the guard (the `'<`/`'>` marks it
+  reads were fine all along) and having callers state whether a selection was
+  actually given — the marks alone can't say, they outlive whatever set them.
+  Both `:Gopath probe` and `:GopathProbe` now also declare `range = true` (they
+  didn't before, so `:'<,'>` never reached the handler at all) and pass
+  `selection = ctx.range.range > 0` / `opts.range > 0` respectively. Needs
+  lib.nvim's `composer.checkhealth`/`ctx.range` work (lib.nvim commit
+  `e2f018d`) to be present, though the fix itself doesn't depend on the new
+  `ctx.range.mode`/`col1`/`col2` fields — only on `range` being wired at all.

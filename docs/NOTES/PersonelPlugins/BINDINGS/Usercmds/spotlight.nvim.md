@@ -39,9 +39,21 @@ become valid and exactly when the live-position approach in
 `spotlight.cursor.selection()` stops working. The two paths read the selection
 from whichever source is correct at their own moment.
 
+**Updated 2026-07-31**: `range_text()` no longer queries `vim.fn.col("'<"/"'>")`
+itself — it reads `ctx.range.col1`/`col2`, which lib.nvim's composer computes
+off the same marks (one source for the geometry instead of two that could
+disagree). The route also declares `visual = { "charwise" }`
+(lib.nvim commit `84737e1`): a linewise or blockwise selection is now refused
+by composer itself, with its own error message, *before* reaching
+`range_text` — a spotlight is a piece of text within one line, so neither
+shape carries anything usable (linewise has no columns to read, blockwise
+spans several lines by definition).
+
 Multi-line ranges are refused with a message rather than joined: a pattern
 containing a newline cannot match anything `matchadd()` sees, so accepting one
-would silently produce a spotlight that highlights nothing.
+would silently produce a spotlight that highlights nothing. (This is
+`range_text`'s own single-line check, still needed for a multi-line *charwise*
+range — `visual = { "charwise" }` alone doesn't rule that out.)
 
 ## The `persist` route in detail
 

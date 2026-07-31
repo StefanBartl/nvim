@@ -94,3 +94,19 @@ Still in progress — more roadmap items to follow in later commits on
   interactively against the developer's own full plugin set (they already
   transitively require lib.nvim via `replacer.init`), not a minimal
   `-u NONE` sandbox. Nothing to fix there.
+- **`:Surround` narrows to the exact selection on a charwise range
+  (2026-07-31)**: previously `line_range` restricted matches by LINE only, so
+  a charwise selection of just "foo" in `foo bar foo baz` wrapped *every*
+  "foo" on that line, not just the selected one. A single-line charwise range
+  (`ctx.range.mode == "v"`, `line1 == line2`) now also filters by column via
+  a new `col_range_filter` composed with the existing `--nested` skip-filter
+  (`and_filters` — `RP_Request` has one `filter` slot). Linewise and
+  multi-line charwise ranges are unchanged (still whole-line-span) — narrowing
+  to columns only makes sense with exactly one line's worth of them. `:Replace`
+  itself was **not** touched — this is `:Surround`/`:Wrap` only. Needs
+  lib.nvim's `ctx.range.col1`/`col2` (lib.nvim commit `e2f018d`).
+- **`:Surround`/`:Wrap` are only reachable via `plugin/replacer.lua`**, not via
+  `require("replacer").setup()` — noticed while writing a headless
+  verification script for the above: `cmd.register`/`sur.register` are called
+  from the autoloaded `plugin/*.lua` entry point, `init.lua`'s own `setup()`
+  never calls them. Pre-existing, unrelated to the fix; not changed.
