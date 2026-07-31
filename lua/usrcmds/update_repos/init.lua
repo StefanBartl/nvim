@@ -19,11 +19,13 @@ local system, fnamemodify = vim.system, fn.fnamemodify
 -- Optional: per-repo progress, since fetch+pull over a whole directory of
 -- repos is exactly the kind of path-driven, potentially long-running
 -- operation that benefits from visible feedback. No-op (returns nil) when
--- lib.nvim's ui.kit progress module isn't available.
+-- lib.nvim's ui.kit progress module isn't available. "statusline" reports
+-- into the shared lib.nvim.progress registry, rendered by the statusline's
+-- "plugin_progress" module — same convention as the personal plugins.
 local ok_progress, progress_mod = pcall(require, "lib.nvim.progress")
 local function new_progress()
   if not ok_progress then return nil end
-  return progress_mod.create({ title = "[usrcmds.update_repos]" })
+  return progress_mod.create({ title = "[usrcmds.update_repos]", style = "statusline" })
 end
 
 ---Check whether a directory is a git repository.
@@ -107,9 +109,6 @@ local function update_all(path)
     notify.info("No git repositories found in " .. base_dir)
     return
   end
-
-  local ok_progress, progress_mod = pcall(require, "lib.nvim.progress")
-  local prog = ok_progress and progress_mod.create({ title = "[usrcmds.update_repos]" }) or nil
 
   ---@type string[]
   local errors = {}

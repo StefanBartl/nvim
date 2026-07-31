@@ -3,7 +3,7 @@
 ---@description
 --- Registers `:MyPluginsClone [dir]` and `:MyPluginsRemove [dir]`. Both operate
 --- on the repos `plugins.personal` actually declares (see
---- `usrcmds.plugin_repos.list`) against `dir` (or `vim.env.REPOS_DIR` when
+--- `plugins.personal.list`) against `dir` (or `vim.env.REPOS_DIR` when
 --- no argument is given) — never on every directory found by scanning `dir`,
 --- unlike `:MyReposUpdate`, which fetches/pulls whatever git repos it finds
 --- regardless of what they are. Cloning everything found and removing
@@ -25,20 +25,23 @@
 
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos]")
 local usercmd = require("lib.nvim.usercmd")
-local plugin_list = require("usrcmds.plugin_repos.list")
+local plugin_list = require("plugins.personal.list")
 
 local M = {}
 
 local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
 local system, fnamemodify = vim.system, fn.fnamemodify
 
+-- "statusline" reports into the shared lib.nvim.progress registry, rendered
+-- by the statusline's "plugin_progress" module — same convention as the
+-- personal plugins (see lua/plugins/personal/init.lua).
 local ok_progress, progress_mod = pcall(require, "lib.nvim.progress")
 ---@param title string
 local function new_progress(title)
   if not ok_progress then
     return nil
   end
-  return progress_mod.create({ title = title })
+  return progress_mod.create({ title = title, style = "statusline" })
 end
 
 ---@param override string|nil
@@ -64,7 +67,7 @@ end
 -- Clone
 -- =============================================================================
 
----@param entry Usrcmds.PluginRepos.Entry
+---@param entry Plugins.Personal.Entry
 ---@param base_dir string
 ---@param on_done fun(status: "cloned"|"exists"|"failed", err: string|nil)
 local function clone_one(entry, base_dir, on_done)

@@ -6,11 +6,14 @@
 --- That registry is not per-plugin, so neither is this component — it shows
 --- whatever is currently running in replacer.nvim, reposcope.nvim, sandbox.nvim,
 --- github_stats.nvim, filetree.nvim, language.nvim, buffer-ctx.nvim, or the
---- `:UpdateRepos`/`:PluginRepos` usercmds. Each entry already carries its own
---- plugin title (e.g. "[reposcope] updating 34 repositories"), so concurrent
---- operations stay distinguishable without this component knowing about any of
---- them. A new plugin needs no change here, only `progress_style = "statusline"`
---- in its spec (see lua/plugins/personal/init.lua).
+--- `:MyReposUpdate`/`:MyPluginsClone`/`:MyPluginsRemove` usercmds. Each entry
+--- already carries its own plugin title (e.g. "[reposcope] updating 34
+--- repositories"), so concurrent operations stay distinguishable without this
+--- component knowing about any of them. A new plugin needs no change here,
+--- only `progress_style = "statusline"` in its spec (see
+--- lua/plugins/personal/init.lua) — or, for a usercmd, `style = "statusline"`
+--- passed directly to `lib.nvim.progress.create` (see
+--- lua/usrcmds/plugin_repos/init.lua, lua/usrcmds/update_repos/init.lua).
 
 --- Operations can overlap — a `:Reposcope update` still running while a
 --- `:Replace` starts. Rendering only the first would silently hide the rest, so
