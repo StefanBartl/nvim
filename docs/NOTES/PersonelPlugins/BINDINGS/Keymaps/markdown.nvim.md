@@ -31,7 +31,7 @@ Buffer-local, installed on `FileType` for markdown/mdx/md (see
 | cursor_action_2click | n | `<2-LeftMouse>` | Open anchor/image/url/file under cursor (silent — a miss is a normal, frequent mouse-move outcome); double-click on a heading toggles its fold instead | — |
 | cursor_action_cclick | n | `<C-LeftMouse>` | Same | — |
 | cursor_action | n | `ma` | Same, non-silent | — |
-| open_image | n | `mi` | Open image | — |
+| open_image | n | `mi` | Open image. With snacks.nvim (`Snacks.image`) or image.nvim installed, offers an in-Neovim float preview vs. the system viewer; `image.preview` = `"ask"` (default) / `"preview"` / `"system"`. With neither installed, system viewer, no prompt. Remote images and failed previews always fall back to the system handler. | soft dep: snacks.nvim *or* image.nvim |
 | jump_anchor | n | `mj` | Jump to anchor | — |
 | heading_inc / _dec | n | `<C-Right>`/`<C-Left>` | Shift current line's heading level by `vim.v.count1` | — |
 | heading_inc_visual / _dec_visual | v,x | `<C-Right>`/`<C-Left>` | Shift visual selection's headings | — |
