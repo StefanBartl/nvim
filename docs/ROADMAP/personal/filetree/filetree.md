@@ -2,6 +2,8 @@
 
 autocmd, bei jeder änderung der tab bufferlist checken ob ein no name uffer ist oder nicht, nur wenn ausschließlich der no namebuffer existiert darf er bleiben, anstonst muss er geschlossen werden. Vielleicht gibt es noch ei fcnen besseren moment es einzuhängen..?
 
+- `A` - soll ddas gleiche wie `a` machen, nur das ein selection i mit tewmolatres zum aussuchen kommt, zb eine lua file mit den @modul und weiteren annotation bereits vorgefertig, usw... als iser soll man auch eigene templates h inzufügen und die reihung im ui ändern können.
+
 ## Table of content
 
   - [Bug](#bug)

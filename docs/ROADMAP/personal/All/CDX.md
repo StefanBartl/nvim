@@ -4,7 +4,7 @@
   - [ ] autocmds durchgehen ob man was optimeren kann
 
 - alle ci / stylua / tests grün?
-
+- documentation.nvim integration und Plugin annotiationen erweitern
 
 
 

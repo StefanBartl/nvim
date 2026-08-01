@@ -1,13 +1,6 @@
 # Roadmap
 
-- [x] Kannst du in nvim imlementieren, dass :MyPluginsRemove und MyPluginsCLone das lib.nvim progress stausline modul verwenden. dann cheke andere bindigns ob es sinn maht dort und implementiere es
-- [x] NeoTree git_status: Keys A und gr sind je doppelt definiert → git_add_all/git_revert_file aktuell unerreichbar (Lua "letzter Key gewinnt"). (kein Bug — schon vorher untersucht/gefixt, siehe `docs/NOTES/ExternPlugins/Bindings/TODO.md`: `A`/`gr` kommen in `git_status.lua` je nur einmal vor, bewusster `noop`-Override ggü. neo-tree-eigenen Defaults, keine Kollision im selben Table)
-- [x] Lazygit: :LazyGitLog fehlt inder cmd-Liste des Lazy-Specs — evtl. unbeabsichtigt. (schon gefixt — `LazyGitLog` steht in `lua/plugins/git.lua`s `cmd`-Liste)
-
 - [ ] > in markdown
-- [ ] Keymaps: Count implementieren; ev ein lib.nvim modul erweitereung ?
-  - [ ] indenting mit count: zb `3 leader ->` oder `leader 3 ->` indentn den markoeten bereich /zeile um 3 default weiten
-
 
    Warn  3:37:11 PM notify.warn [filetree.pdf] pdfport.nvim not installed — opening PDF in system viewer
 
@@ -20,6 +13,7 @@
 - [ ] `learn-cli.nvim` vielleicht doch ?
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
 - [ ] `nvim/lua/autocmds` analysieren
+- [ ] finish & checkists & review in nvim config durchjagen
 
 ## ZIEL
 
