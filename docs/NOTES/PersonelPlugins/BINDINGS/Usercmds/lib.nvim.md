@@ -36,11 +36,24 @@ a kit float; a bare namespace argument narrows it to one.
 | Form | Effect |
 | --- | --- |
 | `:LibTelemetry` | Report across all instances |
-| `:LibTelemetry lsp.nvim` | Report for that namespace only |
-| `:LibTelemetry start` / `stop` | Install / restore the wrappers on every instance |
-| `:LibTelemetry reset` | Drop collected data (memory **and** disk) |
+| `:LibTelemetry markdown.nvim` | Report for that namespace only |
+| `:LibTelemetry start [ns]` / `stop [ns]` | Install / restore the wrappers — every instance, or just one, for this session only |
+| `:LibTelemetry disable [ns]` / `enable [ns]` | Same, but **persisted** — survives a restart. Stops/resumes a running instance immediately too |
+| `:LibTelemetry disabled` | List every namespace currently disabled |
+| `:LibTelemetry reset [ns]` | Drop collected data (memory **and** disk) — every instance, or just one |
 | `:LibTelemetry coverage` | Which wrapped functions were called **zero** times |
 | `:LibTelemetry export [path]` | JSON snapshot (defaults under `stdpath("cache")`) |
+
+`start`/`stop`/`reset`/`disable`/`enable` all take the namespace as a second
+token (`:LibTelemetry stop markdown.nvim`); `<Tab>` after any of them
+completes namespaces only, not the subcommand list again.
+
+**`stop` vs. `disable`**: `stop` is for "pause it for now" — the next Neovim
+session starts it again exactly as `config/telemetry.lua` always has.
+`disable` is for "I'm done watching this one" — it survives restarts without
+touching that file, and works even before the plugin has loaded (disable it
+ahead of time, e.g. `:LibTelemetry disable markdown.nvim` right after
+opening Neovim, before any `.md` buffer triggers its `ft=markdown` load).
 
 Opt-in registration is deliberate — the module itself never claims a
 user-command name on its own; a library that did would collide with someone's
