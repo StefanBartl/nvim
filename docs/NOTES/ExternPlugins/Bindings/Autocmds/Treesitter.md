@@ -9,26 +9,50 @@ Aufgabe der Config (siehe Plugin-README, Abschnitt "Quickstart").
 
 Alle drei Autocmds sind ungruppierte `FileType`-Autocmds (`lib.nvim.autocmd`,
 kein eigener Augroup) und teilen sich dieselbe Guard-Bedingung
-`guards.is_enabled(args.buf)` aus
-[lib.nvim.treesitter.guard](../../../../../lua/lib/nvim/treesitter/guard.lua) —
-ist der Buffer/Filetype über den Guard ausgeschlossen, greift keiner der drei.
+`guards.is_enabled(args.buf)` aus `lib.nvim.treesitter.guard`
+(`lua/lib/nvim/treesitter/guard/init.lua` im `lib.nvim`-Repo, `E:\repos\lib.nvim`)
+— ist der Buffer/Filetype über den Guard ausgeschlossen, greift keiner der drei.
 
 | Event | Quelle | Zweck |
 |---|---|---|
-| `FileType` | treesitter.lua | `vim.treesitter.start(args.buf)` — aktiviert Treesitter-Highlighting für den Buffer. |
+| `FileType` | treesitter.lua | `parser_policy.ensure(lang, {...})` (s.u.) dann `vim.treesitter.start(args.buf)` — aktiviert Treesitter-Highlighting für den Buffer. |
 | `FileType` | treesitter.lua | Setzt `vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"` und `vim.wo.foldmethod = "expr"` — Treesitter-basiertes Folding. |
 | `FileType` | treesitter.lua | Setzt `vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"` — experimentelle Treesitter-Indentation. |
 
-## Konflikt-Hinweis: doppelte Konfiguration
+## Parser-Install-Policy (2026-08-01)
 
-Zusätzlich existiert [lua/lsp/core/treesitter.lua](../../../../../lua/lsp/core/treesitter.lua)
-(`M.setup`), aufgerufen aus [lua/lsp/init.lua](../../../../../lua/lsp/init.lua)
-noch vor dem LSP-Capabilities-Aufbau. Es benutzt die **alte**
-`require("nvim-treesitter.configs").setup({ highlight = { enable = true }, indent = { enable = true } })`-API,
-die auf dem modernen `main`-Branch dieses Plugins offiziell nicht mehr
-existiert (`pcall`-abgesichert, schlägt vermutlich still fehl bzw. ist ein
-Leftover aus einer älteren Konfiguration). Die tatsächlich wirksame
-Aktivierung läuft über die drei `FileType`-Autocmds oben.
+Die "moderne" `nvim-treesitter`-API (s.o.) installiert von sich aus **nie**
+einen Parser — nur die drei Autocmds oben aktivieren, was bereits auf der
+Platte liegt. Ohne einen expliziten Installationsschritt degradiert ein
+fehlender Parser stillschweigend zu "kein Highlighting", ohne jede
+Fehlermeldung. Genau das ist passiert: `luadoc.so` fehlte, wodurch
+`---@module`-Annotationen unhighlighted blieben (kein LSP-Problem — `lua_ls`
+war korrekt attached, s. Konzept-Chat 2026-08-01).
+
+Zwei unabhängige Mechanismen in `plugins/treesitter.lua`:
+
+1. **Injection-Parser-Bootstrap** (unbedingt, bei jedem Start): `luadoc` und
+   `vimdoc` sind nie der Filetype eines Buffers — sie tauchen nur über
+   Treesitter-*Injections* auf (LuaCATS-Doc-Kommentare, `:help`-Syntax) und
+   lösen daher nie das `FileType`-Event für sich selbst aus. Diese beiden
+   werden deshalb bedingungslos beim Plugin-`config()` geprüft und bei Bedarf
+   installiert (`INJECTION_PARSERS` in `plugins/treesitter.lua`).
+2. **`lib.nvim.treesitter.parser_policy`** (im `FileType`-Autocmd): für
+   normale Filetype-Parser (rust, go, …). Drei Modi, per `:TSParserPolicy`
+   umschaltbar — s. [Usercmds/Treesitter.md](../Usercmds/Treesitter.md).
+   Modul-Doku: `lua/lib/nvim/treesitter/parser_policy/README.md` im
+   `lib.nvim`-Repo (`E:\repos\lib.nvim`), Vimdoc `:h lib.nvim-treesitter-parser_policy`.
+
+## `lua/lsp/core/treesitter.lua` existiert nicht mehr
+
+Frühere Fassungen dieser Doku verwiesen hier auf eine (angeblich tote,
+`pcall`-abgesicherte) zweite Treesitter-Konfiguration in
+`lua/lsp/core/treesitter.lua`. Stand 2026-08-01 existiert diese Datei nicht
+mehr im Repo — vermutlich beim Aufräumen entfernt. `lua/lsp/init.lua` enthält
+weiterhin einen `pcall(require, "lsp.core.treesitter")`-Aufruf, der seither
+still ins Leere läuft (kein Fehler, kein Effekt — das ist der Zweck des
+`pcall`). Die tatsächlich wirksame Aktivierung läuft ausschließlich über die
+drei `FileType`-Autocmds oben.
 
 ## `nvim-treesitter-context`
 
