@@ -1,5 +1,0 @@
- M README.md
- M doc/cmdlog.nvim.txt
- M lua/cmdlog/core/favorites.lua
- M lua/cmdlog/health.lua
- M lua/cmdlog/ui/telescope-previewer.lua
