@@ -130,8 +130,13 @@ Library — nothing eager. Dynamic, opt-in-per-caller only:
 (kit picker query), `WinClosed` (kit surface lifecycle), `ColorScheme` (kit
 theme), `{TextChanged,TextChangedI}` (kit preview / cache auto-invalidation,
 opt-in), `BufWritePost` (cache auto-invalidation / docmap watch, both
-opt-in), `VimLeavePre` (logger flush), `{BufDelete,BufWipeout}` (debounce
-buffer cleanup), `User LazyDone` (nvim_usrcmds helptags, opt-in).
+opt-in), `VimLeavePre` (logger flush; telemetry counter flush),
+`VimEnter` (telemetry lifecycle reminder), `{BufDelete,BufWipeout}`
+(debounce buffer cleanup), `User LazyDone` (nvim_usrcmds helptags, opt-in).
+
+The two `VimLeavePre` rows and the `VimEnter` one register per
+`logger.new()` / `telemetry.new()` call, not at require time — augroups
+`lib_logger_<name>` and `lib_telemetry_<namespace>`.
 
 ## [markdown.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/markdown.nvim.md)
 

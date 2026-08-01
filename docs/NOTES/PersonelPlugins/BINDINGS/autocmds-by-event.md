@@ -19,8 +19,9 @@ See also: [by plugin](autocmds-by-plugin.md), [by filetype/scope](autocmds-by-fi
 | pickers.nvim | `pickers.nvim`/none (once) | only if `setup()` never called | Register default keymaps/commands |
 | sessions.nvim | `SessionsNvim` (once, nested) | `cfg.autoload` (default **off**) | Autoload contextual session |
 | spotlight.nvim | `spotlight_persist` | `persist.enable` (default **on**) | Restore the persisted spotlights (also self-schedules when `setup()` runs after startup) |
+| lib.nvim | `lib_telemetry_<namespace>` | only if `telemetry.new()` ran | Lifecycle-reminder check (fires at most twice ever, per namespace) |
 
-**Worth knowing**: six plugins hook Neovim startup. With `sessions.nvim`'s
+**Worth knowing**: seven plugins hook Neovim startup. With `sessions.nvim`'s
 autoload *and* `github_stats.nvim`'s dashboard auto-open both enabled, you'd
 get a restored session layout immediately followed by a dashboard window
 appearing on top of it (github_stats defers 1000ms, so it fires after
@@ -37,11 +38,15 @@ startup ever looks like two things fighting for the screen.
 | insights.nvim | `Insights_devserver` | Kill tracked dev servers |
 | sessions.nvim | `SessionsNvim` | Autosave session (default **on**) |
 | lib.nvim | `lib_logger_<name>` | Flush logger ring buffer (per logger instance) |
+| lib.nvim | `lib_telemetry_<namespace>` | Persist telemetry counters (per instance; re-reads and merges, so two Neovim instances sharing a namespace add up rather than clobber) |
 | pickers.nvim | `pickers.nvim` | Flush `smart.frecency` store to disk (opt-in, off by default; added 2026-07-26) |
 | spotlight.nvim | `spotlight_persist` | Flush a pending debounced spotlight-state save (default **on**) |
 
-Eight independent cleanup/save routines on exit — all cheap, none touch
-shared state, no ordering dependency between them.
+Nine independent cleanup/save routines on exit — none touch shared state, no
+ordering dependency between them. The one that is not merely cheap is
+lib.nvim's telemetry flush: it is a read-merge-write, not an append, which is
+the price of two Neovim instances being able to share a namespace without
+overwriting each other's counts.
 
 ## `BufWritePre`
 

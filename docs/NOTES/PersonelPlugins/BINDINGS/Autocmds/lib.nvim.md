@@ -18,11 +18,14 @@ lib.nvim is a **library** — almost nothing registers eagerly. No
 | `lua/lib/nvim/ui/kit/preview.lua` | `:KitPreview` | augroup `lib_kit_preview_<config_buf>`; `{TextChanged,TextChangedI}` re-render |
 | `lua/lib/nvim/cache/memory.lua` | **opt-in**: consumer calls `M.setup_auto_invalidation()` | augroup (default `"lib.nvim.cache.memory"`); `{TextChanged,TextChangedI}` prune stale entries, `BufWritePost` clears every namespace |
 | `lua/lib/nvim/logger/init.lua` | automatic, once per `logger.new()` call with a file sink (`opts.capture ~= false`, default true) | augroup `lib_logger_<name>`; `VimLeavePre` → flushes that logger's ring buffer |
+| `lua/lib/nvim/telemetry/init.lua` | automatic, once per `telemetry.new()` call | augroup `lib_telemetry_<namespace>`; `VimLeavePre` → merge-and-persist the counters collected this session, `VimEnter` → the lifecycle reminder check ("you've been collecting for 7 days, go read it") |
 | `lua/lib/nvim/docmap/registry.lua` | **opt-in**: `docmap.install({watch=true, ...})` | augroup `LibDocmapWatch:<root>`; `BufWritePost` pattern `*.lua` → debounced IR rescan when the written file is under the watched source dir (checked via `is_subpath`, not the autocmd glob — avoids a Windows backslash-path mismatch bug) |
 | `lua/lib/nvim/debounce/buffer/init.lua` | automatic, first `.call(bufnr)` for a new buffer | per-buffer cleanup autocmd (default `{BufDelete,BufWipeout}`) cancels that buffer's debounce timer |
 | `lua/lib/nvim_usrcmds/init.lua` | **opt-in**: consumer calls `require("lib.nvim_usrcmds").setup({helptags=true})` | `User` event, pattern `LazyDone`, once → `:helptags ALL` |
 
 ## Notes
 
-- None of the "opt-in" rows (`cache.memory` auto-invalidation, `docmap.install(watch=true)`, `nvim_usrcmds.setup()`) are ever called by lib.nvim's own dependents — they're features a *user's own config* would opt into.
+- The `cache.memory` auto-invalidation and `docmap.install(watch=true)` opt-in rows are still never called by lib.nvim's own dependents — they're features a *user's own config* would opt into. `nvim_usrcmds.setup({helptags=true})` breaks that pattern: it IS called, from this config's own `plugins/personal/init.lua` (the `StefanBartl/lib.nvim` spec's `config()`).
+- The two "automatic" rows (`logger.new()`, `telemetry.new()`) are automatic *given the constructor ran* — neither module registers anything at require time. As of 2026-08-01, `telemetry.new()` runs for real: `lua/config/telemetry.lua` calls it once for `lib.nvim` itself (`wrap_lib()`) and once per personal plugin, generically, right after each one loads — see [Usercmds/lib.nvim.md](../Usercmds/lib.nvim.md#libtelemetry) for the `:LibTelemetry` side of this and `lua/config/telemetry.lua`'s own doc-comment for why it must register before `lazy.setup()` runs.
+- `telemetry`'s `VimLeavePre` deliberately only flushes, it does not `stop()`. The invariant `stop()` protects is "no wrapper outlives the decision to collect", and at exit the process outlives nothing.
 - See [lib.nvim's Keymaps cheatsheet](../Keymaps/lib.nvim.md) for the keymap-side counterparts of these same UI components.

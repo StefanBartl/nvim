@@ -54,6 +54,13 @@ package.path = table.concat({
   package.path,
 }, ";")
 
+-- Activate lib.nvim.telemetry (opt-in call counting) for lib.nvim itself and
+-- every personal plugin. Must run BEFORE lazy.setup(): it registers a
+-- `User LazyLoad` listener, and `lazy=false` plugins (lib.nvim among them)
+-- fire that event DURING the lazy.setup() call below, not after it returns.
+-- See lua/config/telemetry.lua for the full reasoning.
+require("config.telemetry").setup()
+
 -- Setup lazy.nvim with plugins
 local lazy_config = require("config.lazy")
 require("lazy").setup({

@@ -14,6 +14,58 @@ repo, unlike published standalone plugins, opted for alongside not replace).
 Gated by `nvim_usrcmds.setup({ lib_verb = true })` (default: on). Set
 `lib_verb = false` to disable the `:Lib` verb and keep only the flat commands.
 
+## Module control commands (separate from the `:Lib` verb)
+
+Two modules ship their own flat control command. Neither goes through the
+composer — they predate/sit outside the verb and are about *runtime state of
+that module*, not about lib.nvim as a plugin.
+
+| Command | Registered when | Effect |
+| --- | --- | --- |
+| `:LibLogger [show\|on\|off\|level <l>\|dump\|clear\|tags]` | automatically, on the first `logger.new()` | Flip logging on/off, change level, inspect/dump/clear the ring buffer |
+| `:LibTelemetry [report\|start\|stop\|reset\|coverage\|export]` | **only** after `require("lib.nvim.telemetry.command").setup()` | Read/steer call-counting across every live telemetry instance |
+| `:KitPreview` | `require("lib.nvim.ui.kit")` dev-tool | Live theme playground (see the Keymaps cheatsheet for its in-buffer keys) |
+
+### `:LibTelemetry`
+
+`lib.nvim.telemetry` counts how often functions are called, persists the
+counts across restarts, and — with argument profiling on — tells you when one
+argument dominates. Bare `:LibTelemetry` reports across every live instance in
+a kit float; a bare namespace argument narrows it to one.
+
+| Form | Effect |
+| --- | --- |
+| `:LibTelemetry` | Report across all instances |
+| `:LibTelemetry lsp.nvim` | Report for that namespace only |
+| `:LibTelemetry start` / `stop` | Install / restore the wrappers on every instance |
+| `:LibTelemetry reset` | Drop collected data (memory **and** disk) |
+| `:LibTelemetry coverage` | Which wrapped functions were called **zero** times |
+| `:LibTelemetry export [path]` | JSON snapshot (defaults under `stdpath("cache")`) |
+
+Opt-in registration is deliberate — the module itself never claims a
+user-command name on its own; a library that did would collide with someone's
+own mapping. **This config does opt in**: `lua/config/telemetry.lua`, called
+from `init.lua` before `lazy.setup()`, registers `:LibTelemetry` and starts an
+instance for `lib.nvim` itself plus one for every personal plugin, generically,
+right after each one loads (namespace = the plugin's lazy.nvim name — see that
+file's own doc-comment for why it must run that early and how it avoids
+hardcoding a module name per plugin). Counting only, no argument profiling.
+
+Manual setup, for a plugin not covered by that generic pass (or to add
+argument profiling/timing on top of what's already running):
+
+```lua
+require("lib.nvim.telemetry.command").setup()  -- idempotent; already done above
+
+local t = require("lib.nvim.telemetry").new({ namespace = "my-thing" })
+t.wrap(require("my-thing"))
+t.start()   -- counting only; nothing is wrapped until this runs
+```
+
+Nothing is installed before `start()` — until then the shipped functions *are*
+the original functions, so leaving the module required costs nothing. Details:
+`lua/lib/nvim/telemetry/README.md` in the lib.nvim repo.
+
 ## The composer module itself
 
 `lua/lib/nvim/usercmd/composer/` — the actual reusable module every other

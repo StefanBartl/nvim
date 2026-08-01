@@ -24,6 +24,16 @@ return {
 
     build = ":TSUpdate",
 
+    -- Pinned: main@c82bf96f (2026-04-01, "feat!: drop support for Nvim 0.11")
+    -- rewrote get_available()/parser dedup to call vim.list.unique(), which
+    -- only exists on Neovim 0.12+. On 0.11.x that crashes EVERY parser
+    -- install ("attempt to index field 'list' (a nil value)"), regardless of
+    -- language - not a markdown-specific issue. f873ec29 is the last commit
+    -- before that health-check bump (still requires only nvim-0.11). Unpin
+    -- once this Neovim is on 0.12, or if nvim-treesitter restores 0.11
+    -- compat.
+    commit = "f873ec2955098fc4b7c3abfe891bdd49fa7947e2",
+
     config = function()
       -----------------------------------------------------------------------
       -- Guard module
