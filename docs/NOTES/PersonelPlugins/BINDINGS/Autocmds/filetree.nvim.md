@@ -98,8 +98,12 @@ doc is also missing `opened_sync`, `size_info`, `no_name_guard`,
 | `VimEnter` (once) | none | neotree adapter, race-condition fallback | Retries injecting `hide_by_name` into neo-tree's config if its own `setup()` hadn't run yet |
 | `BufEnter`, `TextChanged` | `filetree_ignore_list_dim` | **non-neotree adapters only** | Dims (Comment-highlight) lines matching the ignore list (dim-based fallback) |
 
-`hooks_api`, `project_root`, `safety`, `safety/backup`, `watcher_quarantine`
-register **no autocmds or keymaps at all** — pure logic/event-bus modules.
+`hooks_api`, `project_root`, `safety`, `safety/backup`, `watcher_quarantine`,
+`handle_guard` register **no autocmds or keymaps at all** — pure logic/
+event-bus modules. `handle_guard` (new 2026-08-01, opt-in, default **off**)
+installs via a one-shot `vim.defer_fn(…, 100)` on `setup()` (neo-tree +
+Windows/WSL only) — no `nvim_create_autocmd` call at all, same pattern
+`watcher_quarantine` already used for its own neo-tree `fs_watch` patch.
 
 ## Plugin-wide / util
 
@@ -114,6 +118,18 @@ register **no autocmds or keymaps at all** — pure logic/event-bus modules.
 
 ## Notes
 
+- **2026-08-01**: fixed a real bug in `cwd_sync`'s `BufEnter`/`WinEnter`
+  handler (row above) — entering the tree window called `pause(2000)`
+  unconditionally, meant only to stop cwd_sync's own reveal from racing the
+  tree's native reveal-on-open. With `reveal=false` (this user's config)
+  there's no reveal of ours left to race, so the pause was pure downside:
+  any file opened within 2s of last touching the tree — e.g. a picker
+  invoked with the cursor still in the tree — got its `chdir` silently
+  dropped. Now only pauses when `reveal ~= false`. Also new: `handle_guard`
+  (see the note at the bottom of the fileops/infra table above) and
+  `create_from_template`'s reversed prompt order (filename → filtered
+  picker, was picker → filename) — the picker itself has no NEW autocmds,
+  still purely tree-attach keymap-setup.
 - Resolved: the `compare/diff` inconsistency previously noted here (it being
   the sole `tree_attach` consumer while ~27 other features each owned their
   own `FileType` autocmd) is fixed — all keymap-setup features now route

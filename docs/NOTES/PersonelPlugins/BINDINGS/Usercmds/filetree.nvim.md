@@ -16,6 +16,14 @@ full per-group table.
 
 ## Notes
 
+- **2026-08-01**: new top-level `:Filetree handles` (no sub-args) — lists
+  neo-tree directory-watcher handles the new `handle_guard` feature is
+  tracking, flagging any pointing at a path that no longer exists (the
+  Windows watcher-leak signature). Bumps the ~64/31 counts below by one;
+  `M.command_paths()` picks it up automatically (it walks `TREE` live), no
+  registration-layer change needed. Also new: the `template` subcommand's
+  flow reversed — filename prompted before the (now extension-filtered)
+  template picker, `${module}` resolved against the real destination.
 - **`TREE` stays the single source of truth**: composer routes are now
   *derived* from `TREE` via a small recursive `walk_tree()` converter
   (called fresh inside `build_routes()` on every `M.setup()`), not

@@ -3,6 +3,24 @@
 
 local usercmd = require("lib.nvim.usercmd")
 
+
+--TEMP: nur temporär (wahrscheinlich
+local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "BINDINGS")
+usercmd.create('BindingsPath', function()
+  -- Kopiert den Pfad in das System-Register (+)
+  vim.fn.setreg('+', bindings_path)
+  vim.notify('Bindings-Pfad in Zwischenablage kopiert!', vim.log.levels.INFO)
+end, {
+  desc = 'Kopiert den spezifischen Bindings-Pfad in die Zwischenablage',
+})
+
+-- 2. Keymap <leader>BI erstellen
+vim.keymap.set('n', '<leader>BI', '<cmd>BindingsPath<CR>', {
+  noremap = true,
+  silent = true,
+  desc = 'Bindings-Pfad kopieren',
+})
+
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.
 usercmd.create("CwdHere", function()
   local bufname = vim.api.nvim_buf_get_name(0)
