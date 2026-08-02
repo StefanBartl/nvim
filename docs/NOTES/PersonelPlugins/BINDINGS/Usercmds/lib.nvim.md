@@ -137,6 +137,26 @@ Nothing is installed before `start()` — until then the shipped functions *are*
 the original functions, so leaving the module required costs nothing. Details:
 `lua/lib/nvim/telemetry/README.md` in the lib.nvim repo.
 
+### Reading a namespace from a different process
+
+`telemetry.load(namespace, opts)` reads a namespace's counts straight off
+disk — no live instance, no `t = telemetry.new(...)` needed. Returns `nil`
+when nothing was ever persisted for that namespace (distinct from a
+well-formed-but-empty table), so a caller can tell "never collected here"
+from "collected, zero calls". Built for a tool that only wants to *read*
+someone else's counts from a fresh Neovim process — e.g. documentation.nvim's
+planned `dead-function` cross-check (static "no caller found" vs. telemetry
+"actually called" — each blind spot is the other's evidence; see
+`docs/ROADMAP/telemetry-documentation-bridge.md` in the lib.nvim repo). Not
+consumed by anything in this config yet.
+
+Alongside it, a wrapped key can now resolve back to the real Lua module it
+came from: `wrap_loaded()` records this automatically (its keys already come
+from `package.loaded`), a plain `wrap()` only if given `opts.module_id`
+explicitly, and the map is queryable live (`t.resolved_modules()`) or off
+disk (`data.modules` from `telemetry.load()`). A key with no entry is
+*unmatched*, never "zero calls" — the two are different claims.
+
 ## The composer module itself
 
 `lua/lib/nvim/usercmd/composer/` — the actual reusable module every other
