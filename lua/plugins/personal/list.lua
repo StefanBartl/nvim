@@ -19,7 +19,7 @@
 --- data read, not a partial plugin bootstrap.
 ---
 --- Lives here rather than under `usrcmds.plugin_repos` (its original home):
---- consumers now span both `usrcmds` (`:MyPluginsClone`/`:MyPluginsRemove`)
+--- consumers now span both `usrcmds` (`:MyPlugins clone`/`remove`/`list`)
 --- and `wkdnvchad.ui.statusline` (`plugin_summary`'s own/external count
 --- badge), neither of which should reach into the other's namespace for
 --- shared data that is really just a derived view of `plugins.personal`.
@@ -34,7 +34,7 @@ local M = {}
 ---to be present on disk. A spec the resolver marked `enabled = false` —
 ---source.lua's "disabled" mode, e.g. `learn-cli.nvim` — is excluded: those
 ---are "neither local nor remote" by explicit choice, not an oversight, so
----`:MyPluginsClone` should not fetch them and `:MyPluginsRemove` should not
+---`:MyPlugins clone` should not fetch them and `:MyPlugins remove` should not
 ---report on repos that were never supposed to be cloned in the first place.
 ---@return Plugins.Personal.Entry[]|nil entries
 ---@return string|nil err
@@ -49,7 +49,7 @@ function M.read()
 
   -- One entry per repo, which is this function's whole contract: every caller
   -- either counts the result (the statusline's own/external badge) or iterates
-  -- it doing real work per entry (`:MyPluginsClone` cloning, `:MyPluginsRemove`
+  -- it doing real work per entry (`:MyPlugins clone` cloning, `:MyPlugins remove`
   -- listing candidates for confirmation). A repeated repo is a wrong number or
   -- triplicated work, never a harmless extra row.
   --

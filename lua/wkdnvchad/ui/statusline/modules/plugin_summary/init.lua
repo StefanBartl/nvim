@@ -1,8 +1,8 @@
 ---@module 'wkdnvchad.ui.statusline.modules.plugin_summary'
 --- Statusline segment: how many plugins lazy.nvim manages, split into "own"
 --- (the personal StefanBartl/*.nvim repos declared in `plugins.personal` —
---- the same canonical, drift-proof list `:MyPluginsClone`/`:MyPluginsRemove`
---- use, see `plugins.personal.list`) and "external" (everything else).
+--- the same canonical, drift-proof list `:MyPlugins clone`/`remove` use, see
+--- `plugins.personal.list`) and "external" (everything else).
 --- Explicit by construction: the split can never silently drift out of sync
 --- with what is actually loaded, unlike a hand-maintained plugin name list in
 --- a comment (see the fix to this sibling module's own docstring).

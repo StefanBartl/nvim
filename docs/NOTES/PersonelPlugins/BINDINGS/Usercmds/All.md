@@ -2,6 +2,12 @@
 
 All plugin user-command cheatsheets in this folder.
 
+**Config-internal** (not a plugin's own command — manages the list below):
+
+- [MyPlugins](./MyPlugins.md) — clone/remove/list the personal plugin checkouts, switch their dir/remote/auto source mode
+
+**Per plugin:**
+
 - [buffer-ctx.nvim](./buffer-ctx.md)
 - [cascade.nvim](./cascade.nvim.md)
 - [color_my_ascii.nvim](./color_my_ascii.nvim.md)
