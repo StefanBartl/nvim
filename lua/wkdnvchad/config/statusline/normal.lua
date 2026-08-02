@@ -34,7 +34,7 @@ local M = {}
 --
 -- If NvChad ever changes its own default order, update this list to match
 -- (see nvchad/stl/utils.lua).
-local order = { "mode", "file", "git", "filetree_cwd_mode", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "plugin_progress", "plugin_summary", "cwd", "cursor" }
+local order = { "mode", "file", "git", "filetree_cwd_mode", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "plugin_progress", "cwd", "cursor" }
 
 M.ui = {
   statusline = {
@@ -46,7 +46,7 @@ M.ui = {
       -- diagnostics/lsp/cwd/cursor), which `generate()` merges this table
       -- into rather than replaces.
       plugin_progress = require("wkdnvchad.ui.statusline.modules.plugin_progress"),
-      plugin_summary = require("wkdnvchad.ui.statusline.modules.plugin_summary"),
+      -- plugin_summary = require("wkdnvchad.ui.statusline.modules.plugin_summary"),
       filetree_cwd_mode = require("wkdnvchad.ui.statusline.modules.filetree_cwd_mode"),
 
       -- Overrides NvChad's built-in `cursor` (a fixed "%l/%v" string) with the
