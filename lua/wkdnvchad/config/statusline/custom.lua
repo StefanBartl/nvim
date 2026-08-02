@@ -46,8 +46,15 @@ return {
           return plugin_summary()
         end,
 
+        -- The label itself (PROJECT/PKG/LOCK/… vs P/N/L/… vs 1/2/3/… vs a
+        -- Nerd Font glyph) is filetree's own `features.cwd_mode.indicator.
+        -- style` (see lua/plugins/personal/init.lua) — this only controls
+        -- how THIS statusline renders whatever text that produces.
         filetree_cwd_mode = function()
-          return filetree_cwd_mode()
+          return filetree_cwd_mode({
+            badge_style = true, -- bg-filled capsule + fading separator, like `mode`. false = plain colored text.
+            -- colors = { lock = "orange" },  -- override the accent per cwd mode; see the module's DEFAULT_COLOR_BY_MODE.
+          })
         end,
 
         --- Mode (NvChad default überschreiben mit Separatoren)
