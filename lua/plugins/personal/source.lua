@@ -33,7 +33,9 @@ local control = require("plugins.control.mode")
 -- Repos, die dort explizit auf "disabled" stehen: eine Deaktivierung gewinnt
 -- immer, unabhängig von diesem Schalter (ein Repo, das man gar nicht braucht,
 -- soll weder lokal noch remote geladen werden). Zum Debuggen / Umschalten
--- einfach auf "dir" oder "remote" setzen:
+-- einfach auf "dir" oder "remote" setzen (oder `:MyPlugins mode <wert>` -
+-- schreibt exakt diese Zeile, s. lua/usrcmds/plugin_repos/init.lua; Neustart
+-- nötig, da require() diese Datei cached):
 --   "auto"     → nichts erzwingen (Maschinenrolle + MODE entscheiden, s. u.)
 --   "dir"      → ALLE lokal
 --   "remote"   → ALLE von GitHub
