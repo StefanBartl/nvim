@@ -47,11 +47,25 @@ function M.read()
     return nil, "plugins.personal did not return a spec table"
   end
 
+  -- One entry per repo, which is this function's whole contract: every caller
+  -- either counts the result (the statusline's own/external badge) or iterates
+  -- it doing real work per entry (`:MyPluginsClone` cloning, `:MyPluginsRemove`
+  -- listing candidates for confirmation). A repeated repo is a wrong number or
+  -- triplicated work, never a harmless extra row.
+  --
+  -- `plugins.control.mode.add()` is idempotent per repo as of the same change
+  -- that added this, so in practice `specs` no longer carries duplicates. This
+  -- stays as the guarantee at the boundary rather than an assumption about the
+  -- producer: the spec table is assembled across two files and re-evaluated an
+  -- unpredictable number of times per session (see that function's comment),
+  -- and this is the point where "one entry per repo" is actually promised.
   ---@type Plugins.Personal.Entry[]
   local entries = {}
+  local seen = {}
   for _, spec in ipairs(specs) do
     local repo = spec[1]
-    if type(repo) == "string" and spec.enabled ~= false then
+    if type(repo) == "string" and spec.enabled ~= false and not seen[repo] then
+      seen[repo] = true
       entries[#entries + 1] = { repo = repo, name = vim.fn.fnamemodify(repo, ":t") }
     end
   end

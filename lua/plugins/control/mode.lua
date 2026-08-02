@@ -44,6 +44,7 @@ end
 function M.new(opts)
   local modes = {} ---@type table<string, string>
   local specs = {} ---@type LazyPluginSpec[]
+  local index_by_repo = {} ---@type table<string, integer>
   local resolve = (opts and opts.resolve) or default_resolve
 
   ---@type Plugins.Control.ModeApi
@@ -59,9 +60,41 @@ function M.new(opts)
     end,
 
     --- Register this file's plugin specs. Chainable.
+    ---
+    --- IDEMPOTENT PER REPO, and that is load-bearing rather than tidiness.
+    --- This instance lives in a module-level closure of the *calling* spec
+    --- file's helper (e.g. plugins.personal.source), which `require` caches --
+    --- but the spec file itself is evaluated more than once per session:
+    --- lazy's `{ import = "plugins" }` loads it through lazy's own importer,
+    --- while a later `require("plugins.personal")` from ordinary Lua code is a
+    --- separate cache key and re-runs the file. Each evaluation called `add()`
+    --- again on the SAME accumulated list, so `specs` grew by one full set
+    --- every time -- measured at 84 entries for 28 plugins (3x).
+    ---
+    --- That was visible in three places: the statusline's own/external badge
+    --- counted 81 personal plugins instead of 27, `:MyPluginsClone` iterated
+    --- (and progress-reported) every repo three times, and
+    --- `:MyPluginsRemove` listed each candidate three times in its
+    --- confirmation. lazy itself was unaffected -- it merges same-name specs
+    --- into one plugin -- but it was doing three times the merging.
+    ---
+    --- Re-registering replaces in place rather than being ignored, so a
+    --- genuine second registration with changed content still wins while a
+    --- re-evaluation of identical content is a true no-op. A spec with no
+    --- `[1]` repo string (a bare `dir = ...` entry) has no identity to dedupe
+    --- on and is always appended.
     add = function(list)
       for _, spec in ipairs(list) do
-        specs[#specs + 1] = spec
+        local repo = spec[1]
+        local at = type(repo) == "string" and index_by_repo[repo] or nil
+        if at then
+          specs[at] = spec
+        else
+          specs[#specs + 1] = spec
+          if type(repo) == "string" then
+            index_by_repo[repo] = #specs
+          end
+        end
       end
       return api
     end,
