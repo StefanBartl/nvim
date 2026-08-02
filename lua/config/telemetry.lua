@@ -59,6 +59,10 @@
 
 local M = {}
 
+--- Plugin lists accept either the short name (`"markdown.nvim"` — what the
+--- namespace and `:LibTelemetry` show) or the full repo
+--- (`"StefanBartl/markdown.nvim"`). Both resolve to the same plugin, so a
+--- reasonable guess cannot silently match nothing.
 ---@class Config.Telemetry.Opts
 ---@field deep? boolean|string[]          # wrap the whole loaded subtree (default true)
 ---@field profile_args? boolean|string[]  # record argument fingerprints (default true)
@@ -75,32 +79,66 @@ local defaults = {
   lib_profile_args = false,
 }
 
----`true` / `false` / a list of plugin names -> does it apply to `name`?
+---`true` / `false` / a list of plugin names -> does it apply?
+---
+---A list entry matches either the short name (`"markdown.nvim"`) or the full
+---repo (`"StefanBartl/markdown.nvim"`). The short name is what the namespace
+---and every `:LibTelemetry` report show, so it is the natural thing to write;
+---accepting the repo too means copying a line out of the plugin spec also
+---works instead of silently matching nothing.
 ---@param spec boolean|string[]|nil
----@param name string
+---@param name string   # short name, e.g. "markdown.nvim"
+---@param repo string   # full repo, e.g. "StefanBartl/markdown.nvim"
 ---@return boolean
-local function applies(spec, name)
+local function applies(spec, name, repo)
   if spec == nil or spec == false then
     return false
   end
   if spec == true then
     return true
   end
-  if type(spec) == "table" then
-    return vim.tbl_contains(spec, name)
+  if type(spec) ~= "table" then
+    return false
+  end
+  for _, want in ipairs(spec) do
+    if want == name or want == repo then
+      return true
+    end
+  end
+  return false
+end
+
+---Is there anything of `main`'s module tree in `package.loaded` yet?
+---
+---Checked before creating an instance so a plugin that exposes nothing
+---wrappable does not leave an empty namespace cluttering `:LibTelemetry`.
+---@param main string
+---@return boolean
+local function anything_loaded(main)
+  if type(package.loaded[main]) == "table" then
+    return true
+  end
+  local dot = main .. "."
+  for name, value in pairs(package.loaded) do
+    if type(name) == "string" and type(value) == "table" and name:sub(1, #dot) == dot then
+      return true
+    end
   end
   return false
 end
 
 ---@param opts Config.Telemetry.Opts
 ---@param namespace string
+---@param repo string
 ---@param main string   # the plugin's root Lua module, per lazy.nvim
-local function wrap_and_start(opts, namespace, main)
+---@return boolean wrapped_anything
+local function wrap_and_start(opts, namespace, repo, main)
   local telemetry = require("lib.nvim.telemetry")
   local t = telemetry.new({ namespace = namespace })
 
-  if applies(opts.deep, namespace) then
-    t.wrap_loaded(main, {
+  local n
+  if applies(opts.deep, namespace, repo) then
+    n = t.wrap_loaded(main, {
       -- `@types` modules are pure LuaCATS annotation scaffolding; anything
       -- callable in them is a stub. Counting those is noise in every report.
       module_filter = function(name)
@@ -108,13 +146,20 @@ local function wrap_and_start(opts, namespace, main)
       end,
     })
   else
-    t.wrap(package.loaded[main])
+    -- `lua/<main>/init.lua` is reachable as both "<main>" and "<main>.init",
+    -- and which key lands in package.loaded depends on how the plugin's own
+    -- config required it. reposcope.nvim calls `require("reposcope.init")`,
+    -- so `package.loaded["reposcope"]` is nil while the module is very much
+    -- loaded -- gating on the bare name alone silently skipped it.
+    n = t.wrap(package.loaded[main] or package.loaded[main .. ".init"])
   end
 
   t.start({
-    profile_args = applies(opts.profile_args, namespace) or nil,
-    time = applies(opts.timing, namespace) or nil,
+    profile_args = applies(opts.profile_args, namespace, repo) or nil,
+    time = applies(opts.timing, namespace, repo) or nil,
   })
+
+  return n > 0
 end
 
 ---@param opts? Config.Telemetry.Opts
@@ -140,19 +185,29 @@ function M.setup(opts)
     return
   end
 
-  -- `lazy.core.util.normname` is what lazy.nvim itself uses to match a
-  -- plugin's declared name against the module names it finds on disk (it
-  -- strips "nvim-"/"vim-"/".nvim"/".lua" and non-letters) -- exactly the
-  -- normalization needed to bridge cases like reposcope.nvim, whose spec sets
-  -- `name = "reposcope"`: the LazyLoad event carries that override, not the
-  -- repo-derived "reposcope.nvim" this list reads. Both normalize alike.
-  local normname = require("lazy.core.util").normname
-
-  ---@type table<string, string> normalized name -> namespace to use
+  -- Keyed by the FULL repo ("StefanBartl/dap.nvim"), not by a normalized name.
+  --
+  -- The obvious-looking alternative -- `lazy.core.util.normname`, which strips
+  -- "nvim-"/"vim-"/".nvim" and non-letters -- is actively wrong here, and
+  -- silently so. It maps the *external* `mfussenegger/nvim-dap` and the
+  -- *personal* `StefanBartl/dap.nvim` to the same key "dap", so nvim-dap's
+  -- modules would be wrapped and reported under the "dap.nvim" namespace.
+  -- With both loaded that is two instances writing one cache file: merged,
+  -- wrong numbers, and nothing on screen saying so. (Verified, not
+  -- hypothetical -- firing a synthetic `LazyLoad` for "nvim-dap" produced
+  -- exactly that instance.)
+  --
+  -- The repo string is unique by construction, carries the owner, and is
+  -- present on every personal spec. It also removes the need to special-case
+  -- reposcope.nvim, whose spec sets `name = "reposcope"`: the LazyLoad event
+  -- carries that override, but `plugin[1]` is still the repo.
+  ---@type table<string, { name: string, repo: string }>
   local wanted = {}
   for _, entry in ipairs(entries) do
-    if entry.name ~= "lib.nvim" and not vim.tbl_contains(opts.exclude, entry.name) then
-      wanted[normname(entry.name)] = entry.name
+    local excluded = vim.tbl_contains(opts.exclude, entry.name)
+      or vim.tbl_contains(opts.exclude, entry.repo)
+    if entry.name ~= "lib.nvim" and not excluded then
+      wanted[entry.repo] = { name = entry.name, repo = entry.repo }
     end
   end
 
@@ -187,22 +242,24 @@ function M.setup(opts)
         return
       end
 
-      local namespace = wanted[normname(plugin_name)]
-      if not namespace then
-        return
-      end
-      started[plugin_name] = true
-
       pcall(function()
         local plugin = require("lazy.core.config").plugins[plugin_name]
         if not plugin then
           return
         end
-        local main = require("lazy.core.loader").get_main(plugin)
-        if not main or type(package.loaded[main]) ~= "table" then
+
+        -- `plugin[1]` is the repo as declared in the spec. Anything without
+        -- one (a bare `dir = ...` entry) is not a personal plugin of ours.
+        local target = type(plugin[1]) == "string" and wanted[plugin[1]] or nil
+        if not target then
           return
         end
-        wrap_and_start(opts, namespace, main)
+        local main = require("lazy.core.loader").get_main(plugin)
+        if not main or not anything_loaded(main) then
+          return
+        end
+        started[plugin_name] = true
+        wrap_and_start(opts, target.name, target.repo, main)
       end)
     end,
   })
