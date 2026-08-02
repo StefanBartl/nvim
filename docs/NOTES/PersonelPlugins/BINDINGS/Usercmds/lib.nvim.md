@@ -23,7 +23,7 @@ that module*, not about lib.nvim as a plugin.
 | Command | Registered when | Effect |
 | --- | --- | --- |
 | `:LibLogger [show\|on\|off\|level <l>\|dump\|clear\|tags]` | automatically, on the first `logger.new()` | Flip logging on/off, change level, inspect/dump/clear the ring buffer |
-| `:LibTelemetry [report\|start\|stop\|reset\|coverage\|export]` | **only** after `require("lib.nvim.telemetry.command").setup()` | Read/steer call-counting across every live telemetry instance |
+| `:LibTelemetry [report\|start\|stop\|reset\|coverage\|export\|open]` | **only** after `require("lib.nvim.telemetry.command").setup()` | Read/steer call-counting across every live telemetry instance |
 | `:KitPreview` | `require("lib.nvim.ui.kit")` dev-tool | Live theme playground (see the Keymaps cheatsheet for its in-buffer keys) |
 
 ### `:LibTelemetry`
@@ -42,10 +42,11 @@ a kit float; a bare namespace argument narrows it to one.
 | `:LibTelemetry disabled` | List every namespace currently disabled |
 | `:LibTelemetry reset [ns]` | Drop collected data (memory **and** disk) — every instance, or just one |
 | `:LibTelemetry coverage` | Which wrapped functions were called **zero** times |
-| `:LibTelemetry export [path]` | JSON snapshot (defaults under `stdpath("cache")`) |
+| `:LibTelemetry export [path]` | JSON snapshot (defaults under `stdpath("cache")`); Markdown instead if `path` ends `.md` |
+| `:LibTelemetry open [ns]` | Render + open externally — mdview browser tab if loadable, else the same kit float `report` shows |
 
-`start`/`stop`/`reset`/`disable`/`enable` all take the namespace as a second
-token (`:LibTelemetry stop markdown.nvim`); `<Tab>` after any of them
+`start`/`stop`/`reset`/`disable`/`enable`/`open` all take the namespace as a
+second token (`:LibTelemetry stop markdown.nvim`); `<Tab>` after any of them
 completes namespaces only, not the subcommand list again.
 
 **`stop` vs. `disable`**: `stop` is for "pause it for now" — the next Neovim
@@ -156,6 +157,36 @@ from `package.loaded`), a plain `wrap()` only if given `opts.module_id`
 explicitly, and the map is queryable live (`t.resolved_modules()`) or off
 disk (`data.modules` from `telemetry.load()`). A key with no entry is
 *unmatched*, never "zero calls" — the two are different claims.
+
+### Browser report (Markdown + `:LibTelemetry open`)
+
+New in lib.nvim: `t.markdown(opts)` / `telemetry.markdown_all(opts)` render
+the same report data as `t.lines()`/`:LibTelemetry`, but as a GFM table
+instead of terminal box-drawing — pastable into an issue, diffable across
+weeks. `:LibTelemetry export report.md` writes it (format is inferred from
+the `.md` extension, no separate flag).
+
+`report_file = true` on `telemetry.new({...})` keeps a namespace's Markdown
+report on disk, rewritten at every flush
+(`stdpath("cache")/lib.nvim/telemetry/<namespace>.md`). Point mdview.nvim's
+`:MDView standalone` at that same path — or just run `:LibTelemetry open
+<ns>` — and the browser tab becomes a **self-updating live dashboard**: the
+relay already watches a file for `:MDView standalone`, telemetry already
+flushes periodically, so nothing new is wired up on either side.
+
+`report_style` (module-level default, `telemetry.setup({ report_style =
+"auto" })`) picks what `:LibTelemetry open` renders with: `"auto"` (mdview if
+loadable, else the kit float — this config's plugins would resolve to mdview
+automatically, nothing to configure), `"kit"`, `"mdview"`, or `"file"`
+(write-only, no window). Verified against mdview.nvim's actual source while
+building this: **both** `:MDView start` and `:MDView standalone` self-install
+the same relay binary from GitHub Releases on first use (checksum-verified,
+mason.nvim-style) — no separate manual build step for either mode, contrary
+to an earlier assumption in this config's own notes. Not consumed by anything
+in this config yet — `config/telemetry.lua` would need `report_file = true`
+added per plugin (or just globally) to make it useful here. Details: the
+"Browser report" section of `lua/lib/nvim/telemetry/README.md` in the
+lib.nvim repo.
 
 ## The composer module itself
 
