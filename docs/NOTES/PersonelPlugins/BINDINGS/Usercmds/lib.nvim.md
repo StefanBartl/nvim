@@ -62,17 +62,75 @@ from `init.lua` before `lazy.setup()`, registers `:LibTelemetry` and starts an
 instance for `lib.nvim` itself plus one for every personal plugin, generically,
 right after each one loads (namespace = the plugin's lazy.nvim name — see that
 file's own doc-comment for why it must run that early and how it avoids
-hardcoding a module name per plugin). Counting only, no argument profiling.
+hardcoding a module name per plugin).
 
-Manual setup, for a plugin not covered by that generic pass (or to add
-argument profiling/timing on top of what's already running):
+### What this config actually collects
+
+**Depth.** Each plugin is wrapped with `wrap_loaded(<its main module>)`, not
+just its `init.lua`. That matters more than it sounds: a plugin's entry module
+is usually a thin façade, and the functions its keymaps really call sit in
+submodules. Measured on markdown.nvim — `require("markdown")` is 11 one-line
+delegators; the 35 loaded `markdown.*` modules hold **125** functions:
+
+| Plugin | wrapped |
+| --- | ---: |
+| filetree.nvim | 381 |
+| cascade.nvim | 138 |
+| markdown.nvim / mdview.nvim | 125 |
+| color_my_ascii.nvim | 94 |
+| lib.nvim (aggregate, see below) | 282 |
+
+**Arguments.** `profile_args` is on for personal plugins, so the report shows
+*which* arguments and how often — the part that turns a count into a decision:
+
+```
+config.feature_enabled                78 calls
+    └  64 %  ("keymaps")
+    └  26 %  ("fenced_scope")
+core.fold.foldexpr                    42 calls
+```
+
+**lib.nvim itself is counting-only.** Its instance uses `wrap_lib()` (the
+public aggregate — the interesting question there is which exported keys get
+used) and deliberately skips argument profiling: the aggregate reaches
+`lib.tables.core`-style primitives that genuinely run in loops. Measured,
+counting costs 0.014 µs/call while argument profiling costs 0.619 µs — nothing
+on a keypress-driven plugin surface, a real cost in an inner loop.
+
+Tune it in `init.lua`:
+
+```lua
+require("config.telemetry").setup({
+  deep         = true,                    -- or { "markdown.nvim", ... }
+  profile_args = { "markdown.nvim" },     -- narrow it if a plugin is hot
+  timing       = false,
+  exclude      = { "github_stats.nvim" }, -- skip a plugin entirely
+  lib_profile_args = false,               -- args for lib.nvim's aggregate
+})
+```
+
+### Blind spot worth knowing (verified, not theoretical)
+
+A keymap that captured a function reference **before** the wrap holds the raw
+function and is invisible. For `ft`-triggered plugins this permanently affects
+the **first** buffer of a session: lazy.nvim runs the plugin's FileType
+handlers — which bind the keymaps — *before* `User LazyLoad` fires, so even the
+earliest possible hook is too late for that one buffer. Every buffer after it
+is instrumented normally.
+
+Irrelevant for week-long counting, confusing if you press a key once and expect
+the counter to move. Open a second buffer and press again.
+
+### Manual setup
+
+For something not covered by the generic pass:
 
 ```lua
 require("lib.nvim.telemetry.command").setup()  -- idempotent; already done above
 
 local t = require("lib.nvim.telemetry").new({ namespace = "my-thing" })
-t.wrap(require("my-thing"))
-t.start()   -- counting only; nothing is wrapped until this runs
+t.wrap_loaded("my_thing", { module_filter = function(n) return not n:find("@types", 1, true) end })
+t.start({ profile_args = true })   -- nothing is wrapped until this runs
 ```
 
 Nothing is installed before `start()` — until then the shipped functions *are*
