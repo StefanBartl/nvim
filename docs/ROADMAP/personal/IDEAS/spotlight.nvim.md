@@ -84,9 +84,9 @@ wird literal escaped übernommen.
 ## Tier 2 — Log-Komfort
 
 7. **Quickfix-Filter**: alle Zeilen mit Treffer → Quickfix ("zeig mir nur die
-   Zeilen mit dieser Request-ID"). Verbleibt vorerst Tier 2 — ob es sich lohnt,
-   in Tier 1 vorzuziehen, wird beim Implementieren entschieden, wenn der
-   restliche Kern steht und der tatsächliche Bedarf sichtbar ist.
+   Zeilen mit dieser Request-ID"). Bleibt Tier 2: der Kernnutzen (Hervorhebung)
+   ist mit Tier 1 vollständig abgedeckt, Quickfix ist echtes Komfort-Feature
+   obendrauf, kein Blocker für einen nutzbaren ersten Wurf.
 8. **Trefferzahl** in der Liste (on-demand berechnet)
 
 ## Bewusst nicht
@@ -126,22 +126,30 @@ Die Ausnahme wird über den Dateipfad (relativ zum Projekt-Root) erfasst, nicht
 
 ### Datenmodell
 
+Die Ausnahme bezieht sich nicht auf "in welchen Dateien kommt das Pattern
+vor" (mehrdeutig — ein Pattern kann in beliebig vielen Dateien matchen),
+sondern auf den **Erstellungskontext**: In welcher Datei war der Cursor, als
+das Spotlight per Toggle angelegt wurde. Ein in einer ausgenommenen Datei
+erstelltes Spotlight wirkt die restliche Session ganz normal überall (Matches
+in jedem Fenster/jeder Datei) — es wird nur beim Speichern übersprungen.
+
 `lib.nvim.store.project`, Key `spotlight/state`:
 
 ```lua
 {
-  spotlights = { { pattern = "...", hl = "Spotlight3" }, ... },
+  spotlights = {
+    { pattern = "...", hl = "Spotlight3", origin_file = "logs/app.log" },
+    ...
+  },
   persist_exceptions = { ["logs/app-2026-07-27.log"] = false }, -- Datei → override
 }
 ```
 
-Speichern debounced (`lib.nvim.debounce`), Laden bei `VimEnter`. Beim Speichern
-werden Spotlights, die (global-Default XOR Datei-Override) ergeben "nicht
-persistieren", aus dem geschriebenen Snapshot ausgelassen — Details dazu beim
-Implementieren, da das Modell noch validiert werden muss, sobald der Kern
-steht (spotlights sind an sich global/session-weit, nicht an eine Datei
-gebunden — die Ausnahmeliste muss also präzise definieren, *was* sie
-unterdrückt).
+Speichern debounced (`lib.nvim.debounce`), Laden bei `VimEnter`. Beim
+Speichern wird pro Spotlight `origin_file` gegen `persist_exceptions`
+(mit Fallback auf den globalen `persist.default`) geprüft; Spotlights mit
+effektivem "nicht persistieren" werden aus dem geschriebenen Snapshot
+ausgelassen, bleiben aber für den Rest der laufenden Session aktiv.
 
 ## Farben
 
@@ -179,18 +187,21 @@ daher eigenes Plugin statt Feature dort.
 
 ## Keymaps
 
-Prefix `<leader>mk` (kollisionsfrei geprüft gegen die bestehende
-`<leader>m*`-Gruppe — Notes-Picker etc. — in der nvim-Config):
+Prefix `<leader>m` (kollisionsfrei geprüft gegen die bestehende
+`<leader>m*`-Gruppe — Notes-Picker etc. — in der nvim-Config; `<leader>mc`
+ist dort bereits belegt):
 
 - `<leader>mk` — Toggle Spotlight unter Cursor / Auswahl
 - `<leader>mK` — Liste öffnen
-- (weitere Bindings für next/prev/clear-all beim Implementieren final legen)
+- `<leader>mn` — nächstes Vorkommen
+- `<leader>mp` — voriges Vorkommen
+
+Kein eigener Top-Level-Keymap für "alle löschen" — lebt als Aktion in der
+Liste (`<leader>mK`), spart einen Keymap und vermeidet die Kollision mit dem
+bereits belegten `<leader>mc`.
 
 ## Offene Punkte
 
-- Genaues Verhalten der Persistenz-Ausnahme, wenn ein Spotlight-Pattern in
-  mehreren Dateien vorkommt, von denen nur eine ausgenommen ist (siehe
-  [Datenmodell](#datenmodell)) — beim Implementieren klären.
-- Ob Quickfix-Filter doch schon in Tier 1 gehört (siehe
-  [Tier 2](#tier-2--log-komfort)).
-- Exakte Zusatz-Keymaps für next/prev/clear-all.
+Keine mehr offen — alle drei Punkte aus der vorherigen Fassung wurden
+entschieden (siehe [Persistenz](#persistenz), [Tier 2](#tier-2--log-komfort),
+[Keymaps](#keymaps)).
