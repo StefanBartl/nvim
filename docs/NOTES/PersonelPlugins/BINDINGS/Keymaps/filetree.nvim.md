@@ -84,7 +84,7 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 
 | lhs | action | notes |
 | --- | --- | --- |
-| `<leader>fm` | Open node's directory in OS file manager | `vim.ui.open` preferred, manual per-OS spawn fallback |
+| `<leader>fm` | Open node's directory in OS file manager | `vim.ui.open` preferred, manual per-OS spawn fallback. `features.open_in_fm.debug=true` logs branch/argv/exit-code when a launch silently opens nothing; `reuse_existing=true` (Windows) navigates an already-open Explorer window instead of spawning another (added 2026-08-04) |
 | `<leader>sm` (+ per-app `app.keymap`) | Open with OS default handler, or a configured custom app | |
 | `<CR>`/`q`/`<Esc>` | Inside "open with" app picker | |
 | `gp` (+ `keymap_text`/`keymap_system`/`keymap_terminal`, all off by default) | Dispatch PDF under cursor to pdfport.nvim (soft dep) — text view / OS viewer / terminal | **missing from `docs/BINDINGS/KEYMAPS.md` and the source catalog** |

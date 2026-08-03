@@ -6,6 +6,10 @@
 -- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren, aber nach wkdoptions/ui oder ähnliches:
 require("autocmds.auto-center-fexplorer").setup()
 
+-- AUDIT: not exercised against a live neo-tree + snacks session yet — verify
+-- the open/close/reopen-once cascade (<A-l> vs <leader>.) before trusting it.
+require("autocmds.explorer-singleton").setup()
+
 ------------------------------------------------------
 --- General
 ------------------------------------------------------

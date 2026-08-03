@@ -30,7 +30,8 @@ doc is also missing `opened_sync`, `size_info`, `no_name_guard`,
 | `BufEnter`, `WinEnter` | `filetree_cwd_sync` | opt-in, default **off** ("aggressive, overlaps auto_reveal/tree_traverse") | Resolves target root (`.git` → project_root → parent dir), silently `chdir`s, reveals/scrolls tree to match |
 | `VimEnter` (once) | `filetree_cwd_sync` | same, only if `vim.v.vim_did_enter==0` at setup | "Startup catch-up" sync — no `BufEnter` fires for the already-current buffer |
 | `BufDelete`, `BufWipeout`, `WinClosed` | `filetree_layout_guard` | feature enabled | If only the tree window remains, opens a new empty editor split so the user is never trapped inside the tree |
-| `BufWinEnter` | `filetree_no_name_guard` | feature enabled | Redirects a stray `[No Name]` window to a real named buffer, wipes the stray buffer — scoped to the single triggering buf/win pair, not a tabpage-wide sweep (deliberate, to avoid racing the user's own navigation) |
+| `BufWinEnter` | `filetree_no_name_guard` | feature enabled | Redirects a stray `[No Name]` window to a real named buffer, wipes the stray buffer — scoped to the single triggering buf/win pair (deliberate, to avoid racing the user's own navigation) |
+| `BufAdd`, `BufDelete`, `BufWipeout` | `filetree_no_name_guard` | same (added 2026-08-04) | Same redirect, but swept across every window/tab — catches a stray `[No Name]` buffer sitting in some OTHER window that never itself refires `BufWinEnter`, which the row above alone would never revisit. Deferred + re-validated per window, same reasoning as above |
 | tree-attach | — | feature enabled | Keymap-setup for `B` (reveal_alt) and `-`/`+` (tree_traverse) |
 
 ## ui

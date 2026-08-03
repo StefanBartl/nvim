@@ -138,7 +138,7 @@ BufWritePost/VimEnter/TermOpen/TermRequest/VimLeavePre only). No shared
 concern beyond "several plugins re-check state when you switch buffers" —
 all cheap, debounced where it matters (auto_reveal, current_hl equivalents).
 
-## `BufDelete` / `BufWipeout`
+## `BufDelete` / `BufWipeout` (+ `BufAdd`)
 
 Universal cleanup event — used by buffer-ctx.nvim, color_my_ascii.nvim (×2),
 markdown.nvim, filetree.nvim (layout_guard, buffer cache), language.nvim,
@@ -146,6 +146,15 @@ lib.nvim (debounce buffer cleanup). Every single one of these is "drop my
 own per-buffer state table entry for the buffer that just went away" —
 textbook correct usage, zero overlap risk (each plugin only touches its own
 namespaced state).
+
+filetree.nvim's `no_name_guard` also hooks `BufAdd`/`BufDelete`/`BufWipeout`
+together (distinct from layout_guard's own use above — no overlap, different
+purpose): a tab-wide sweep for a stray [No Name] buffer sitting in a window
+that never itself refires `BufWinEnter` (its other, narrower trigger), so it
+doesn't persist indefinitely alongside real, usable buffers. Deferred one
+tick + re-validated per window, same as its BufWinEnter path, since these
+events fire mid-transition before Neovim settles a window's replacement
+buffer.
 
 ## `TextChanged` / `TextChangedI`
 
@@ -184,11 +193,25 @@ rather than for a window it owns:
 | --- | --- | --- | --- |
 | spotlight.nvim | `WinNew`, `BufWinEnter`, `TabNewEntered` | `spotlight_windows` | Apply every active spotlight to windows that have none yet, deferred one tick |
 | spotlight.nvim | `WinClosed` | `spotlight_windows` | Drop the closed window's match-ledger entry |
+| autocmds.explorer-singleton | `WinEnter` | `WkdExplorerSingleton` | Close neo-tree/snacks' `explorer` picker, whichever is the OTHER one, when either opens |
+| autocmds.explorer-singleton | `WinClosed` | `WkdExplorerSingleton` | Reopen the just-displaced one exactly once |
 
 That is unavoidable rather than greedy: `matchadd()` is window-local, so a
 `:split` would otherwise show the same buffer with no highlights. The callback
 skips windows that already carry the match, so the sweep is a no-op in the
 common case. Floating windows are excluded; the quickfix window is not.
+
+`autocmds.explorer-singleton` (this repo's own `lua/autocmds/explorer-
+singleton.lua`, wired from `autocmds/init.lua`) is the other genuinely global
+Win* hook here: neo-tree (`<A-l>`) and snacks.picker's `explorer` source
+(`<leader>.`, via pickers.nvim) have zero awareness of each other by
+default, so opening one leaves the other open alongside it unless something
+external coordinates them. Both handlers defer a tick before reading
+current win/buf — a newly created window (a floating picker especially) can
+still briefly report the PREVIOUS window's buffer at the instant `WinEnter`
+fires. See the module's own doc comment + its smoke test
+(`explorer-singleton.smoke.lua`, not wired into any CI — this repo has none)
+for the exact cascade contract and its known one-directional imprecision.
 
 ## `OptionSet`
 
