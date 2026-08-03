@@ -28,6 +28,7 @@ All plugin keymap cheatsheets in this folder.
 - [recommender.nvim](./recommender.nvim.md)
 - [replacer.nvim](./replacer.nvim.md)
 - [reposcope.nvim](./reposcope.nvim.md)
+- [runtime-analysis.nvim](./runtime-analysis.nvim.md)
 - [sessions.nvim](./sessions.nvim.md)
 - [spotlight.nvim](./spotlight.nvim.md)
 

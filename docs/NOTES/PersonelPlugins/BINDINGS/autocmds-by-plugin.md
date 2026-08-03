@@ -227,6 +227,10 @@ None.
 | `TextChangedI` | `reposcope_prompt_autocmds` | `*` | Store prompt field text |
 | `CursorMoved`,`CursorMovedI`,`InsertEnter`,`InsertLeave` | same | `*` | Force cursor to line 2 |
 
+## [runtime-analysis.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/runtime-analysis.nvim.md)
+
+None.
+
 ## [sessions.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/sessions.nvim.md)
 
 | Event(s) | Augroup | Pattern | Action |
