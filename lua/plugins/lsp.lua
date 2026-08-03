@@ -55,6 +55,13 @@ return {
         group_index = 0,
       })
 
+      -- Completes this config's personal StefanBartl/*.nvim plugin names
+      -- ("documentation.nvim", not just "documentation") as one atomic
+      -- candidate each, ranked by persisted use frequency. See that module's
+      -- doc comment for how it composes with cmp's own default sorting.
+      table.insert(opts.sources, { name = "personal_names", priority = 100 })
+      require("lsp.completion.personal_names").setup()
+
       require("config.copilot.cmp")
 
       -- Disable completion in any scratch/utility buffer (buftype ~= "" --
