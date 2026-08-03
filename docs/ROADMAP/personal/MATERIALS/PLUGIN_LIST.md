@@ -8,7 +8,7 @@
 |            `dap.nvim`            |
 |         `debugging.nvim`         |
 |           `diff.nvim`            |
-|           `documentation.nvim`            |
+|           `documentation.nvim`   |
 |          `emojis.nvim`           |
 |          `fileops.nvim`          |
 |         `filetree.nvim`          |
@@ -27,6 +27,7 @@
 |        `recommender.nvim`        |
 |         `replacer.nvim`          |
 |         `reposcope.nvim`         |
+|        `runtime-analysis.nvim`   |
 |        `sandbox.nvim`            |
 |         `sessions.nvim`          |
 

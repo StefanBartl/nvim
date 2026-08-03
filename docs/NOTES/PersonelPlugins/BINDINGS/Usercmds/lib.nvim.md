@@ -23,43 +23,43 @@ that module*, not about lib.nvim as a plugin.
 | Command | Registered when | Effect |
 | --- | --- | --- |
 | `:LibLogger [show\|on\|off\|level <l>\|dump\|clear\|tags]` | automatically, on the first `logger.new()` | Flip logging on/off, change level, inspect/dump/clear the ring buffer |
-| `:LibTelemetry [report\|start\|stop\|reset\|coverage\|export\|open]` | **only** after `require("lib.nvim.telemetry.command").setup()` | Read/steer call-counting across every live telemetry instance |
+| `:RATelemetry [report\|start\|stop\|reset\|coverage\|export\|open]` | **only** after `require("runtime-analysis.telemetry.command").setup()` | Read/steer call-counting across every live telemetry instance |
 | `:KitPreview` | `require("lib.nvim.ui.kit")` dev-tool | Live theme playground (see the Keymaps cheatsheet for its in-buffer keys) |
 
-### `:LibTelemetry`
+### `:RATelemetry`
 
-`lib.nvim.telemetry` counts how often functions are called, persists the
+`runtime-analysis.telemetry` counts how often functions are called, persists the
 counts across restarts, and — with argument profiling on — tells you when one
-argument dominates. Bare `:LibTelemetry` reports across every live instance in
+argument dominates. Bare `:RATelemetry` reports across every live instance in
 a kit float; a bare namespace argument narrows it to one.
 
 | Form | Effect |
 | --- | --- |
-| `:LibTelemetry` | Report across all instances |
-| `:LibTelemetry markdown.nvim` | Report for that namespace only |
-| `:LibTelemetry start [ns]` / `stop [ns]` | Install / restore the wrappers — every instance, or just one, for this session only |
-| `:LibTelemetry disable [ns]` / `enable [ns]` | Same, but **persisted** — survives a restart. Stops/resumes a running instance immediately too |
-| `:LibTelemetry disabled` | List every namespace currently disabled |
-| `:LibTelemetry reset [ns]` | Drop collected data (memory **and** disk) — every instance, or just one |
-| `:LibTelemetry coverage` | Which wrapped functions were called **zero** times |
-| `:LibTelemetry export [path]` | JSON snapshot (defaults under `stdpath("cache")`); Markdown instead if `path` ends `.md` |
-| `:LibTelemetry open [ns]` | Render + open externally — mdview browser tab if loadable, else the same kit float `report` shows |
+| `:RATelemetry` | Report across all instances |
+| `:RATelemetry markdown.nvim` | Report for that namespace only |
+| `:RATelemetry start [ns]` / `stop [ns]` | Install / restore the wrappers — every instance, or just one, for this session only |
+| `:RATelemetry disable [ns]` / `enable [ns]` | Same, but **persisted** — survives a restart. Stops/resumes a running instance immediately too |
+| `:RATelemetry disabled` | List every namespace currently disabled |
+| `:RATelemetry reset [ns]` | Drop collected data (memory **and** disk) — every instance, or just one |
+| `:RATelemetry coverage` | Which wrapped functions were called **zero** times |
+| `:RATelemetry export [path]` | JSON snapshot (defaults under `stdpath("cache")`); Markdown instead if `path` ends `.md` |
+| `:RATelemetry open [ns]` | Render + open externally — mdview browser tab if loadable, else the same kit float `report` shows |
 
 `start`/`stop`/`reset`/`disable`/`enable`/`open` all take the namespace as a
-second token (`:LibTelemetry stop markdown.nvim`); `<Tab>` after any of them
+second token (`:RATelemetry stop markdown.nvim`); `<Tab>` after any of them
 completes namespaces only, not the subcommand list again.
 
 **`stop` vs. `disable`**: `stop` is for "pause it for now" — the next Neovim
 session starts it again exactly as `config/telemetry.lua` always has.
 `disable` is for "I'm done watching this one" — it survives restarts without
 touching that file, and works even before the plugin has loaded (disable it
-ahead of time, e.g. `:LibTelemetry disable markdown.nvim` right after
+ahead of time, e.g. `:RATelemetry disable markdown.nvim` right after
 opening Neovim, before any `.md` buffer triggers its `ft=markdown` load).
 
 Opt-in registration is deliberate — the module itself never claims a
 user-command name on its own; a library that did would collide with someone's
 own mapping. **This config does opt in**: `lua/config/telemetry.lua`, called
-from `init.lua` before `lazy.setup()`, registers `:LibTelemetry` and starts an
+from `init.lua` before `lazy.setup()`, registers `:RATelemetry` and starts an
 instance for `lib.nvim` itself plus one for every personal plugin, generically,
 right after each one loads (namespace = the plugin's lazy.nvim name — see that
 file's own doc-comment for why it must run that early and how it avoids
@@ -91,9 +91,10 @@ config.feature_enabled                78 calls
 core.fold.foldexpr                    42 calls
 ```
 
-**lib.nvim itself is counting-only.** Its instance uses `wrap_lib()` (the
-public aggregate — the interesting question there is which exported keys get
-used) and deliberately skips argument profiling: the aggregate reaches
+**lib.nvim itself is counting-only.** Its instance uses lib.nvim's own thin
+caller, `lib.strategies.telemetry_wrap` (the public aggregate — the
+interesting question there is which exported keys get used) and
+deliberately skips argument profiling: the aggregate reaches
 `lib.tables.core`-style primitives that genuinely run in loops. Measured,
 counting costs 0.014 µs/call while argument profiling costs 0.619 µs — nothing
 on a keypress-driven plugin surface, a real cost in an inner loop.
@@ -127,16 +128,16 @@ the counter to move. Open a second buffer and press again.
 For something not covered by the generic pass:
 
 ```lua
-require("lib.nvim.telemetry.command").setup()  -- idempotent; already done above
+require("runtime-analysis.telemetry.command").setup()  -- idempotent; already done above
 
-local t = require("lib.nvim.telemetry").new({ namespace = "my-thing" })
+local t = require("runtime-analysis.telemetry").new({ namespace = "my-thing" })
 t.wrap_loaded("my_thing", { module_filter = function(n) return not n:find("@types", 1, true) end })
 t.start({ profile_args = true })   -- nothing is wrapped until this runs
 ```
 
 Nothing is installed before `start()` — until then the shipped functions *are*
 the original functions, so leaving the module required costs nothing. Details:
-`lua/lib/nvim/telemetry/README.md` in the lib.nvim repo.
+`lua/runtime-analysis/telemetry/README.md` in the runtime-analysis.nvim repo.
 
 ### Reading a namespace from a different process
 
@@ -158,24 +159,24 @@ explicitly, and the map is queryable live (`t.resolved_modules()`) or off
 disk (`data.modules` from `telemetry.load()`). A key with no entry is
 *unmatched*, never "zero calls" — the two are different claims.
 
-### Browser report (Markdown + `:LibTelemetry open`)
+### Browser report (Markdown + `:RATelemetry open`)
 
-New in lib.nvim: `t.markdown(opts)` / `telemetry.markdown_all(opts)` render
-the same report data as `t.lines()`/`:LibTelemetry`, but as a GFM table
+In runtime-analysis.telemetry: `t.markdown(opts)` / `telemetry.markdown_all(opts)` render
+the same report data as `t.lines()`/`:RATelemetry`, but as a GFM table
 instead of terminal box-drawing — pastable into an issue, diffable across
-weeks. `:LibTelemetry export report.md` writes it (format is inferred from
+weeks. `:RATelemetry export report.md` writes it (format is inferred from
 the `.md` extension, no separate flag).
 
 `report_file = true` on `telemetry.new({...})` keeps a namespace's Markdown
 report on disk, rewritten at every flush
-(`stdpath("cache")/lib.nvim/telemetry/<namespace>.md`). Point mdview.nvim's
-`:MDView standalone` at that same path — or just run `:LibTelemetry open
+(`stdpath("cache")/runtime-analysis.nvim/telemetry/<namespace>.md`). Point mdview.nvim's
+`:MDView standalone` at that same path — or just run `:RATelemetry open
 <ns>` — and the browser tab becomes a **self-updating live dashboard**: the
 relay already watches a file for `:MDView standalone`, telemetry already
 flushes periodically, so nothing new is wired up on either side.
 
 `report_style` (module-level default, `telemetry.setup({ report_style =
-"auto" })`) picks what `:LibTelemetry open` renders with: `"auto"` (mdview if
+"auto" })`) picks what `:RATelemetry open` renders with: `"auto"` (mdview if
 loadable, else the kit float — this config's plugins would resolve to mdview
 automatically, nothing to configure), `"kit"`, `"mdview"`, or `"file"`
 (write-only, no window). Verified against mdview.nvim's actual source while
@@ -185,8 +186,8 @@ mason.nvim-style) — no separate manual build step for either mode, contrary
 to an earlier assumption in this config's own notes. Not consumed by anything
 in this config yet — `config/telemetry.lua` would need `report_file = true`
 added per plugin (or just globally) to make it useful here. Details: the
-"Browser report" section of `lua/lib/nvim/telemetry/README.md` in the
-lib.nvim repo.
+"Browser report" section of `lua/runtime-analysis/telemetry/README.md` in
+the runtime-analysis.nvim repo.
 
 ## The composer module itself
 
