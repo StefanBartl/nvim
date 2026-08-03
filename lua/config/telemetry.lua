@@ -199,17 +199,17 @@ function M.setup(opts)
           return
         end
         started[plugin_name] = true
+        -- The aggregate, not the loaded subtree: `wrap_loaded("lib")` would
+        -- reach every internal helper in a ~250-file library, and the
+        -- question worth asking of lib.nvim is which of its PUBLIC keys get
+        -- used -- which is exactly what the aggregate is. lib.nvim's own
+        -- bridge module owns the whole lifecycle for this (creating the
+        -- instance, the metatable-materialize dance, starting it) -- see
+        -- lib.strategies.telemetry_wrap's doc-comment.
         pcall(function()
-          local telemetry = require("runtime-analysis.telemetry")
-          local t = telemetry.new({ namespace = "lib.nvim" })
-          -- The aggregate, not the loaded subtree: `wrap_loaded("lib")` would
-          -- reach every internal helper in a ~250-file library, and the
-          -- question worth asking of lib.nvim is which of its PUBLIC keys get
-          -- used -- which is exactly what the aggregate is. lib.nvim's own
-          -- thin caller knows how to reach it (metatable-hidden until
-          -- touched; see lib.strategies.telemetry_wrap's doc-comment).
-          require("lib.strategies.telemetry_wrap").wrap(t)
-          t.start({ profile_args = opts.lib_profile_args or nil })
+          require("lib.strategies.telemetry_wrap").setup({
+            profile_args = opts.lib_profile_args or nil,
+          })
         end)
         return
       end
