@@ -107,6 +107,7 @@ plugins.modes({
   ["sandbox.nvim"] = "dir",
   ["spotlight.nvim"] = "dir",
   ["documentation.nvim"] = "dir",
+  ["runtime-analysis.nvim"] = "dir",
 
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
   ["fileops.nvim"] = "dir",

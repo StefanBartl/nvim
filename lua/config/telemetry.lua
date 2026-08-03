@@ -1,5 +1,6 @@
 ---@module 'config.telemetry'
---- Activates lib.nvim.telemetry for lib.nvim itself and every personal plugin.
+--- Activates runtime-analysis.telemetry (moved there from lib.nvim) for
+--- lib.nvim itself and every personal plugin.
 ---
 --- The goal this is tuned for: switch it on once, forget about it, and a week
 --- later read which functions actually ran and with which arguments. That
@@ -10,9 +11,9 @@
 ---     delegators while the 35 loaded `markdown.*` modules hold 125 functions,
 ---     and the ones its keymaps actually call live only in the latter.
 ---     Wrapping the façade would measure the façade. So each plugin is wrapped
----     via `wrap_loaded(<main module>)`, which registers the whole loaded
----     subtree without `require`-ing anything itself (no forced eager loads,
----     lazy-loading plugins stay lazy).
+---     via `telemetry.auto({ deep = true, ... })`, which registers the whole
+---     loaded subtree without `require`-ing anything itself (no forced eager
+---     loads, lazy-loading plugins stay lazy).
 ---   * ARGUMENTS. Counting alone answers "how often", not "with what". Argument
 ---     profiling is enabled per plugin, which is what turns the report into
 ---     "91 % of these calls pass the same path -> memoize".
@@ -25,10 +26,12 @@
 --- 0.6 us on a plugin's own surface is nothing -- those functions run on
 --- keypresses and autocmds, not in inner loops. That is why `profile_args`
 --- defaults to on for personal plugins but NOT for lib.nvim's aggregate:
---- `wrap_lib()` covers `lib.tables.core`-style primitives that genuinely do
---- run in loops, where 0.6 us per call is a real cost for an answer nobody
---- asked. Timing is off by default for the same reason and because "how often"
---- was the question, not "how long".
+--- `lib.strategies.telemetry_wrap` (lib.nvim's own thin caller onto this
+--- module, instrumenting `require("lib")` specifically) covers
+--- `lib.tables.core`-style primitives that genuinely do run in loops, where
+--- 0.6 us per call is a real cost for an answer nobody asked. Timing is off
+--- by default for the same reason and because "how often" was the question,
+--- not "how long".
 ---
 --- MECHANISM
 --- No per-plugin boilerplate and no hardcoded module-name guessing: this reuses
@@ -55,12 +58,12 @@
 --- after it is instrumented normally. Irrelevant for week-long counting;
 --- confusing if you press a key once and expect the counter to move.
 ---
---- Read with `:LibTelemetry`, steer with `:LibTelemetry disable <namespace>`.
+--- Read with `:RATelemetry`, steer with `:RATelemetry disable <namespace>`.
 
 local M = {}
 
 --- Plugin lists accept either the short name (`"markdown.nvim"` — what the
---- namespace and `:LibTelemetry` show) or the full repo
+--- namespace and `:RATelemetry` show) or the full repo
 --- (`"StefanBartl/markdown.nvim"`). Both resolve to the same plugin, so a
 --- reasonable guess cannot silently match nothing.
 ---@class Config.Telemetry.Opts
@@ -83,7 +86,7 @@ local defaults = {
 ---
 ---A list entry matches either the short name (`"markdown.nvim"`) or the full
 ---repo (`"StefanBartl/markdown.nvim"`). The short name is what the namespace
----and every `:LibTelemetry` report show, so it is the natural thing to write;
+---and every `:RATelemetry` report show, so it is the natural thing to write;
 ---accepting the repo too means copying a line out of the plugin spec also
 ---works instead of silently matching nothing.
 ---@param spec boolean|string[]|nil
@@ -108,71 +111,38 @@ local function applies(spec, name, repo)
   return false
 end
 
----Is there anything of `main`'s module tree in `package.loaded` yet?
----
----Checked before creating an instance so a plugin that exposes nothing
----wrappable does not leave an empty namespace cluttering `:LibTelemetry`.
----@param main string
----@return boolean
-local function anything_loaded(main)
-  if type(package.loaded[main]) == "table" then
-    return true
-  end
-  local dot = main .. "."
-  for name, value in pairs(package.loaded) do
-    if type(name) == "string" and type(value) == "table" and name:sub(1, #dot) == dot then
-      return true
-    end
-  end
-  return false
-end
-
+---Resolve this plugin's settings against `opts`, then hand off to
+---`runtime-analysis.telemetry.auto()` for the actual new()+wrap()+start().
+---That helper owns the "is anything of `main` loaded yet" check (returns
+---nil if not, so no empty namespace is left cluttering `:RATelemetry`) and
+---the deep/shallow wrap mechanics; this function's whole job is translating
+---*our* per-plugin policy into its generic opts shape.
 ---@param opts Config.Telemetry.Opts
 ---@param namespace string
 ---@param repo string
 ---@param main string   # the plugin's root Lua module, per lazy.nvim
----@return boolean wrapped_anything
+---@return RA.Telemetry.Instance|nil
 local function wrap_and_start(opts, namespace, repo, main)
-  local telemetry = require("lib.nvim.telemetry")
-  local t = telemetry.new({ namespace = namespace })
-
-  local n
-  if applies(opts.deep, namespace, repo) then
-    n = t.wrap_loaded(main, {
-      -- `@types` modules are pure LuaCATS annotation scaffolding; anything
-      -- callable in them is a stub. Counting those is noise in every report.
-      module_filter = function(name)
-        return not name:find("@types", 1, true)
-      end,
-    })
-  else
-    -- `lua/<main>/init.lua` is reachable as both "<main>" and "<main>.init",
-    -- and which key lands in package.loaded depends on how the plugin's own
-    -- config required it. reposcope.nvim calls `require("reposcope.init")`,
-    -- so `package.loaded["reposcope"]` is nil while the module is very much
-    -- loaded -- gating on the bare name alone silently skipped it.
-    n = t.wrap(package.loaded[main] or package.loaded[main .. ".init"])
-  end
-
-  t.start({
-    profile_args = applies(opts.profile_args, namespace, repo) or nil,
-    time = applies(opts.timing, namespace, repo) or nil,
+  return require("runtime-analysis.telemetry").auto({
+    namespace = namespace,
+    main = main,
+    deep = applies(opts.deep, namespace, repo),
+    profile_args = applies(opts.profile_args, namespace, repo),
+    timing = applies(opts.timing, namespace, repo),
   })
-
-  return n > 0
 end
 
 ---@param opts? Config.Telemetry.Opts
 function M.setup(opts)
   opts = vim.tbl_extend("force", defaults, opts or {})
 
-  local ok_telemetry = pcall(require, "lib.nvim.telemetry")
+  local ok_telemetry = pcall(require, "runtime-analysis.telemetry")
   if not ok_telemetry then
     return
   end
 
   pcall(function()
-    require("lib.nvim.telemetry.command").setup()
+    require("runtime-analysis.telemetry.command").setup()
   end)
 
   -- `plugins.personal.list` only reads the already-built lazy spec table (a
@@ -230,13 +200,15 @@ function M.setup(opts)
         end
         started[plugin_name] = true
         pcall(function()
-          local telemetry = require("lib.nvim.telemetry")
+          local telemetry = require("runtime-analysis.telemetry")
           local t = telemetry.new({ namespace = "lib.nvim" })
           -- The aggregate, not the loaded subtree: `wrap_loaded("lib")` would
           -- reach every internal helper in a ~250-file library, and the
           -- question worth asking of lib.nvim is which of its PUBLIC keys get
-          -- used -- which is exactly what the aggregate is.
-          t.wrap_lib()
+          -- used -- which is exactly what the aggregate is. lib.nvim's own
+          -- thin caller knows how to reach it (metatable-hidden until
+          -- touched; see lib.strategies.telemetry_wrap's doc-comment).
+          require("lib.strategies.telemetry_wrap").wrap(t)
           t.start({ profile_args = opts.lib_profile_args or nil })
         end)
         return
@@ -255,11 +227,17 @@ function M.setup(opts)
           return
         end
         local main = require("lazy.core.loader").get_main(plugin)
-        if not main or not anything_loaded(main) then
+        if not main then
           return
         end
-        started[plugin_name] = true
-        wrap_and_start(opts, target.name, target.repo, main)
+        -- Only mark as started once something was actually wrapped -- auto()
+        -- returns nil if nothing of `main` is loaded yet, and a LazyLoad that
+        -- fires again later for the same plugin (uncommon, but not
+        -- impossible) should get another chance rather than being silently
+        -- skipped forever.
+        if wrap_and_start(opts, target.name, target.repo, main) then
+          started[plugin_name] = true
+        end
       end)
     end,
   })

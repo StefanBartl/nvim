@@ -54,11 +54,33 @@ package.path = table.concat({
   package.path,
 }, ";")
 
--- Activate lib.nvim.telemetry (opt-in call counting) for lib.nvim itself and
--- every personal plugin. Must run BEFORE lazy.setup(): it registers a
--- `User LazyLoad` listener, and `lazy=false` plugins (lib.nvim among them)
--- fire that event DURING the lazy.setup() call below, not after it returns.
--- See lua/config/telemetry.lua for the full reasoning.
+-- Bootstrap runtime-analysis.nvim
+-- Houses runtime-analysis.telemetry (moved there from lib.nvim) --
+-- config.telemetry requires it during the spec-import phase, same as
+-- lib.nvim itself, so it needs the identical early-bootstrap treatment.
+local ra_path = require("plugins.personal.utils").local_dev("runtime-analysis.nvim")
+  or (vim.fn.stdpath("data") .. "/lazy/runtime-analysis.nvim")
+if not vim.uv.fs_stat(ra_path) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/StefanBartl/runtime-analysis.nvim.git",
+    ra_path,
+  })
+end
+vim.opt.rtp:prepend(ra_path)
+package.path = table.concat({
+  ra_path .. "/lua/?.lua",
+  ra_path .. "/lua/?/init.lua",
+  package.path,
+}, ";")
+
+-- Activate runtime-analysis.telemetry (opt-in call counting) for lib.nvim
+-- itself and every personal plugin. Must run BEFORE lazy.setup(): it
+-- registers a `User LazyLoad` listener, and `lazy=false` plugins (lib.nvim
+-- among them) fire that event DURING the lazy.setup() call below, not after
+-- it returns. See lua/config/telemetry.lua for the full reasoning.
 require("config.telemetry").setup()
 
 -- Setup lazy.nvim with plugins
@@ -79,6 +101,7 @@ require("lazy").setup({
   -- plugins/personal/init.lua still owns the full spec (lazy=false,
   -- priority, config); this only pins `dir` early enough to avoid the race.
   { "StefanBartl/lib.nvim", dir = libpath },
+  { "StefanBartl/runtime-analysis.nvim", dir = ra_path },
   { import = "nvchad.plugins" },
   -- { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },

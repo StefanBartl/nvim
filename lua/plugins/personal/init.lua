@@ -199,6 +199,15 @@ plugins.add({
   },
 
   {
+    "StefanBartl/runtime-analysis.nvim",
+    lazy = false,
+    dependencies = { "StefanBartl/lib.nvim" },
+    config = function()
+      require("runtime-analysis").setup()
+    end,
+  },
+
+  {
     "StefanBartl/spotlight.nvim",
     dependencies = { "StefanBartl/lib.nvim" },
     event = "VeryLazy",
