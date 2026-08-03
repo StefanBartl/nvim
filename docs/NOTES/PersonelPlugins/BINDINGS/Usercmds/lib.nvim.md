@@ -58,12 +58,16 @@ opening Neovim, before any `.md` buffer triggers its `ft=markdown` load).
 
 Opt-in registration is deliberate — the module itself never claims a
 user-command name on its own; a library that did would collide with someone's
-own mapping. **This config does opt in**: `lua/config/telemetry.lua`, called
-from `init.lua` before `lazy.setup()`, registers `:RATelemetry` and starts an
-instance for `lib.nvim` itself plus one for every personal plugin, generically,
-right after each one loads (namespace = the plugin's lazy.nvim name — see that
-file's own doc-comment for why it must run that early and how it avoids
-hardcoding a module name per plugin).
+own mapping. **This config does opt in**, via `runtime-analysis.nvim`'s own
+plugin spec in `plugins/personal/init.lua`: its `opts.telemetry` (built by
+`lua/config/telemetry.lua`) drives `runtime-analysis.telemetry.lazy`, which
+registers `:RATelemetry`, does a catch-up scan of everything already loaded,
+then wraps+starts an instance for `lib.nvim` itself plus every personal
+plugin as each one loads (namespace = the plugin's lazy.nvim name). No
+special early-init.lua call, and no hardcoded module name per plugin — see
+that adapter's own doc-comment (in runtime-analysis.nvim) for the catch-up
+mechanism, and `lua/config/telemetry.lua`'s for the policy this config feeds
+it.
 
 ### What this config actually collects
 
@@ -99,16 +103,20 @@ deliberately skips argument profiling: the aggregate reaches
 counting costs 0.014 µs/call while argument profiling costs 0.619 µs — nothing
 on a keypress-driven plugin surface, a real cost in an inner loop.
 
-Tune it in `init.lua`:
+Tune it in `plugins/personal/init.lua`'s `runtime-analysis.nvim` spec entry
+— `opts` there calls straight into this policy:
 
 ```lua
-require("config.telemetry").setup({
-  deep         = true,                    -- or { "markdown.nvim", ... }
-  profile_args = { "markdown.nvim" },     -- narrow it if a plugin is hot
-  timing       = false,
-  exclude      = { "github_stats.nvim" }, -- skip a plugin entirely
-  lib_profile_args = false,               -- args for lib.nvim's aggregate
-})
+opts = function(_, opts)
+  opts.telemetry = require("config.telemetry").build({
+    deep         = true,                    -- or { "markdown.nvim", ... }
+    profile_args = { "markdown.nvim" },     -- narrow it if a plugin is hot
+    timing       = false,
+    exclude      = { "github_stats.nvim" }, -- skip a plugin entirely
+    lib_profile_args = false,               -- args for lib.nvim's aggregate
+  })
+  return opts
+end,
 ```
 
 ### Blind spot worth knowing (verified, not theoretical)

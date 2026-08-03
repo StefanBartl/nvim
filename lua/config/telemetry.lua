@@ -1,22 +1,26 @@
 ---@module 'config.telemetry'
---- Activates runtime-analysis.telemetry (moved there from lib.nvim) for
---- lib.nvim itself and every personal plugin.
+--- Builds the `opts.telemetry` table `runtime-analysis.nvim`'s own plugin
+--- spec (`plugins/personal/init.lua`) passes into `require("runtime-
+--- analysis").setup(opts)`. The mechanism -- catch-up scan + `User
+--- LazyLoad` autocmd, dispatch to `telemetry.auto()` / lib.nvim's
+--- `lib.strategies.telemetry_wrap` -- lives in that plugin's own
+--- `runtime-analysis.telemetry.lazy`; this file's only job is translating
+--- *this config's* policy (which of Stefan's plugins, with what settings)
+--- into the plain data shape that mechanism consumes.
 ---
---- The goal this is tuned for: switch it on once, forget about it, and a week
---- later read which functions actually ran and with which arguments. That
---- means two things beyond "it collects something":
+--- The goal that policy is tuned for: switch it on once, forget about it,
+--- and a week later read which functions actually ran and with which
+--- arguments. That means two things beyond "it collects something":
 ---
 ---   * DEPTH. A plugin's `init.lua` is usually a thin façade over the modules
 ---     that hold the real code -- `require("markdown")` exposes 11 one-line
 ---     delegators while the 35 loaded `markdown.*` modules hold 125 functions,
----     and the ones its keymaps actually call live only in the latter.
----     Wrapping the façade would measure the façade. So each plugin is wrapped
----     via `telemetry.auto({ deep = true, ... })`, which registers the whole
----     loaded subtree without `require`-ing anything itself (no forced eager
----     loads, lazy-loading plugins stay lazy).
+---     and the ones its keymaps actually call live only in the latter. So
+---     `deep = true` by default (wraps the whole loaded subtree, not just
+---     the façade).
 ---   * ARGUMENTS. Counting alone answers "how often", not "with what". Argument
----     profiling is enabled per plugin, which is what turns the report into
----     "91 % of these calls pass the same path -> memoize".
+---     profiling is enabled per plugin by default, which is what turns the
+---     report into "91 % of these calls pass the same path -> memoize".
 ---
 --- COST (measured, 200k calls, this machine)
 ---   counting only          0.014 us/call
@@ -25,29 +29,10 @@
 ---
 --- 0.6 us on a plugin's own surface is nothing -- those functions run on
 --- keypresses and autocmds, not in inner loops. That is why `profile_args`
---- defaults to on for personal plugins but NOT for lib.nvim's aggregate:
---- `lib.strategies.telemetry_wrap` (lib.nvim's own thin caller onto this
---- module, instrumenting `require("lib")` specifically) covers
+--- defaults to on for personal plugins but NOT for lib.nvim's aggregate
+--- (`lib_profile_args`, default false): the aggregate reaches
 --- `lib.tables.core`-style primitives that genuinely do run in loops, where
---- 0.6 us per call is a real cost for an answer nobody asked. Timing is off
---- by default for the same reason and because "how often" was the question,
---- not "how long".
----
---- MECHANISM
---- No per-plugin boilerplate and no hardcoded module-name guessing: this reuses
---- lazy.nvim's OWN module resolution (`lazy.core.loader.get_main`), the same
---- lookup lazy.nvim uses to call `require(main).setup(opts)` for plugins that
---- only declare `opts = {...}`. Guessing wrong (e.g. dap.nvim's Lua module is
---- "wkddap", not "dap") would wrap nothing, or `require()` a name that does not
---- exist -- so borrowing lazy's answer beats re-deriving it.
----
---- MUST be called before `require("lazy").setup(...)`, not from init.lua's
---- later `startup.now(...)`/`startup.on(...)` phases. `User LazyLoad` fires
---- once per plugin the moment ITS OWN config() finishes -- for every
---- `lazy=false` plugin (lib.nvim, sessions.nvim, insights.nvim, cmdlog.nvim)
---- that happens DURING the `lazy.setup()` call itself, so an autocmd
---- registered after that call returns would never see those events. lib.nvim
---- is already on `package.path` by then (init.lua's bootstrap block).
+--- 0.6 us per call is a real cost for an answer nobody asked.
 ---
 --- KNOWN BLIND SPOT (verified, not theoretical)
 --- A keymap that captured a function reference before the wrap holds the raw
@@ -111,136 +96,55 @@ local function applies(spec, name, repo)
   return false
 end
 
----Resolve this plugin's settings against `opts`, then hand off to
----`runtime-analysis.telemetry.auto()` for the actual new()+wrap()+start().
----That helper owns the "is anything of `main` loaded yet" check (returns
----nil if not, so no empty namespace is left cluttering `:RATelemetry`) and
----the deep/shallow wrap mechanics; this function's whole job is translating
----*our* per-plugin policy into its generic opts shape.
----@param opts Config.Telemetry.Opts
----@param namespace string
----@param repo string
----@param main string   # the plugin's root Lua module, per lazy.nvim
----@return RA.Telemetry.Instance|nil
-local function wrap_and_start(opts, namespace, repo, main)
-  return require("runtime-analysis.telemetry").auto({
-    namespace = namespace,
-    main = main,
-    deep = applies(opts.deep, namespace, repo),
-    profile_args = applies(opts.profile_args, namespace, repo),
-    timing = applies(opts.timing, namespace, repo),
-  })
-end
-
+---Build the `opts.telemetry` table for `runtime-analysis.nvim`'s own spec.
+---
+---Keyed by the FULL repo ("StefanBartl/dap.nvim"), not by a normalized name.
+---The obvious-looking alternative -- `lazy.core.util.normname`, which strips
+---"nvim-"/"vim-"/".nvim" and non-letters -- is actively wrong here, and
+---silently so. It maps the *external* `mfussenegger/nvim-dap` and the
+---*personal* `StefanBartl/dap.nvim` to the same key "dap", so nvim-dap's
+---modules would be wrapped and reported under the "dap.nvim" namespace. With
+---both loaded that is two instances writing one cache file: merged, wrong
+---numbers, and nothing on screen saying so. (Verified, not hypothetical --
+---firing a synthetic `LazyLoad` for "nvim-dap" produced exactly that
+---instance.) The repo string is unique by construction and present on every
+---personal spec; it also removes the need to special-case reposcope.nvim,
+---whose spec sets `name = "reposcope"` -- `plugin[1]` is still the repo.
 ---@param opts? Config.Telemetry.Opts
-function M.setup(opts)
+---@return RA.Telemetry.LazyOpts
+function M.build(opts)
   opts = vim.tbl_extend("force", defaults, opts or {})
 
-  local ok_telemetry = pcall(require, "runtime-analysis.telemetry")
-  if not ok_telemetry then
-    return
-  end
-
-  pcall(function()
-    require("runtime-analysis.telemetry.command").setup()
-  end)
-
-  -- `plugins.personal.list` only reads the already-built lazy spec table (a
-  -- plain data read, no side effects -- see its own doc-comment), so calling
-  -- it before `lazy.setup()` runs is safe.
+  -- A plain data read of the already-built lazy spec table, no side
+  -- effects (see that module's own doc-comment) -- safe from anywhere.
   local ok_list, entries = pcall(function()
     return require("plugins.personal.list").read()
   end)
-  if not ok_list or not entries then
-    return
-  end
 
-  -- Keyed by the FULL repo ("StefanBartl/dap.nvim"), not by a normalized name.
-  --
-  -- The obvious-looking alternative -- `lazy.core.util.normname`, which strips
-  -- "nvim-"/"vim-"/".nvim" and non-letters -- is actively wrong here, and
-  -- silently so. It maps the *external* `mfussenegger/nvim-dap` and the
-  -- *personal* `StefanBartl/dap.nvim` to the same key "dap", so nvim-dap's
-  -- modules would be wrapped and reported under the "dap.nvim" namespace.
-  -- With both loaded that is two instances writing one cache file: merged,
-  -- wrong numbers, and nothing on screen saying so. (Verified, not
-  -- hypothetical -- firing a synthetic `LazyLoad` for "nvim-dap" produced
-  -- exactly that instance.)
-  --
-  -- The repo string is unique by construction, carries the owner, and is
-  -- present on every personal spec. It also removes the need to special-case
-  -- reposcope.nvim, whose spec sets `name = "reposcope"`: the LazyLoad event
-  -- carries that override, but `plugin[1]` is still the repo.
-  ---@type table<string, { name: string, repo: string }>
-  local wanted = {}
-  for _, entry in ipairs(entries) do
-    local excluded = vim.tbl_contains(opts.exclude, entry.name)
-      or vim.tbl_contains(opts.exclude, entry.repo)
-    if entry.name ~= "lib.nvim" and not excluded then
-      wanted[entry.repo] = { name = entry.name, repo = entry.repo }
+  ---@type table<string, RA.Telemetry.LazyPluginOpts>
+  local plugins = {}
+  if ok_list and entries then
+    for _, entry in ipairs(entries) do
+      local excluded = vim.tbl_contains(opts.exclude, entry.name)
+        or vim.tbl_contains(opts.exclude, entry.repo)
+      if entry.name ~= "lib.nvim" and not excluded then
+        plugins[entry.repo] = {
+          namespace = entry.name,
+          deep = applies(opts.deep, entry.name, entry.repo),
+          profile_args = applies(opts.profile_args, entry.name, entry.repo),
+          timing = applies(opts.timing, entry.name, entry.repo),
+        }
+      end
     end
   end
 
-  ---@type table<string, boolean>
-  local started = {}
+  ---@type table|false
+  local lib_nvim = false
+  if not vim.tbl_contains(opts.exclude, "lib.nvim") then
+    lib_nvim = { profile_args = opts.lib_profile_args or nil }
+  end
 
-  vim.api.nvim_create_autocmd("User", {
-    pattern = "LazyLoad",
-    group = vim.api.nvim_create_augroup("config_telemetry_lazyload", { clear = true }),
-    desc = "config.telemetry: wrap+start a telemetry instance for each personal plugin as it loads",
-    callback = function(args)
-      local plugin_name = args.data
-      if type(plugin_name) ~= "string" or started[plugin_name] then
-        return
-      end
-
-      if plugin_name == "lib.nvim" then
-        if vim.tbl_contains(opts.exclude, "lib.nvim") then
-          return
-        end
-        started[plugin_name] = true
-        -- The aggregate, not the loaded subtree: `wrap_loaded("lib")` would
-        -- reach every internal helper in a ~250-file library, and the
-        -- question worth asking of lib.nvim is which of its PUBLIC keys get
-        -- used -- which is exactly what the aggregate is. lib.nvim's own
-        -- bridge module owns the whole lifecycle for this (creating the
-        -- instance, the metatable-materialize dance, starting it) -- see
-        -- lib.strategies.telemetry_wrap's doc-comment.
-        pcall(function()
-          require("lib.strategies.telemetry_wrap").setup({
-            profile_args = opts.lib_profile_args or nil,
-          })
-        end)
-        return
-      end
-
-      pcall(function()
-        local plugin = require("lazy.core.config").plugins[plugin_name]
-        if not plugin then
-          return
-        end
-
-        -- `plugin[1]` is the repo as declared in the spec. Anything without
-        -- one (a bare `dir = ...` entry) is not a personal plugin of ours.
-        local target = type(plugin[1]) == "string" and wanted[plugin[1]] or nil
-        if not target then
-          return
-        end
-        local main = require("lazy.core.loader").get_main(plugin)
-        if not main then
-          return
-        end
-        -- Only mark as started once something was actually wrapped -- auto()
-        -- returns nil if nothing of `main` is loaded yet, and a LazyLoad that
-        -- fires again later for the same plugin (uncommon, but not
-        -- impossible) should get another chance rather than being silently
-        -- skipped forever.
-        if wrap_and_start(opts, target.name, target.repo, main) then
-          started[plugin_name] = true
-        end
-      end)
-    end,
-  })
+  return { plugins = plugins, lib_nvim = lib_nvim }
 end
 
 return M

@@ -202,8 +202,17 @@ plugins.add({
     "StefanBartl/runtime-analysis.nvim",
     lazy = false,
     dependencies = { "StefanBartl/lib.nvim" },
-    config = function()
-      require("runtime-analysis").setup()
+    -- Telemetry auto-instrumentation (which of Stefan's plugins, with what
+    -- settings) lives here, on this plugin's own spec, not a separate
+    -- config file or a call before lazy.setup() -- see lua/config/
+    -- telemetry.lua for the policy, runtime-analysis.telemetry.lazy for
+    -- the mechanism this opts table drives.
+    opts = function(_, opts)
+      opts.telemetry = require("config.telemetry").build()
+      return opts
+    end,
+    config = function(_, opts)
+      require("runtime-analysis").setup(opts)
     end,
   },
 
