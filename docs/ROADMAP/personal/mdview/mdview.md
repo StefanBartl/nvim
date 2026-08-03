@@ -1,8 +1,18 @@
 # `mdview.nvim`
-:MDView blanklines
+
+## Features
+
+- zu `view.nvim` umwandeln: Das was es für markdown files macht, kann es doch auch für anderer textfiles anbierten, wenn es eine seziifkation gibt dann halten wir einfach ein schönes broser tab bieten wie markdown...
+
+## Bugs
+
+- [ ] `:MDView` blanklines
+
+
 ## FINISH
 
-- Alle features durchgehjen und die perform,anteste, ideale DEFAULT config zusammenstellen
+- Alle features durchgehen und die performance testen
+- ideale DEFAULT config zusammenstellen
 
 ---
 

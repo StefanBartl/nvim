@@ -26,8 +26,12 @@ All of the below is gated by the top-level switch `cfg.keymaps.preset`
 
 | lhs | mode | action |
 | --- | --- | --- |
-| `<A-Right>` | n, x | List-aware indent + renumber (native `>>` otherwise) |
-| `<A-Left>` | n, x | List-aware dedent + renumber |
+| `<A-Right>` | n | List-aware indent + renumber. No count (or 1): current line + its subtree. `N<A-Right>`: **N lines** starting at cursor, one level each. (native `>>` otherwise) |
+| `<A-Left>` | n | List-aware dedent + renumber. Same count-as-lines semantics as `<A-Right>`. |
+| `<A-Right>` | x | List-aware indent + renumber the selection |
+| `<A-Left>` | x | List-aware dedent + renumber the selection |
+| `<leader><A-Right>` | n | Indent the **current line only**, by `N` levels (`N<leader><A-Right>`) — the old count meaning of bare `<A-Right>`, moved here |
+| `<leader><A-Left>` | n | Dedent the current line only, by `N` levels |
 | `<A-Right>` | i | Native `<C-t>` (indent line) |
 | `<A-Left>` | i | Native `<C-d>` (dedent line) |
 

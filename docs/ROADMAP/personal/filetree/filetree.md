@@ -1,33 +1,20 @@
 # `filetree.nvim`
 
-autocmd, bei jeder änderung der tab bufferlist checken ob ein no name uffer ist oder nicht, nur wenn ausschließlich der no namebuffer existiert darf er bleiben, anstonst muss er geschlossen werden. Vielleicht gibt es noch ei fcnen besseren moment es einzuhängen..?
-
-- `A` - soll ddas gleiche wie `a` machen, nur das ein selection i mit tewmolatres zum aussuchen kommt, zb eine lua file mit den @modul und weiteren annotation bereits vorgefertig, usw... als iser soll man auch eigene templates h inzufügen und die reihung im ui ändern können.
-
 ## Table of content
 
+  - [Features](#features)
   - [Bug](#bug)
-  - [General](#general)
   - [Filetree Manager spezifische Features](#filetree-manager-spezifische-features)
     - [neotree spezifisch](#neotree-spezifisch)
       - [sources](#sources)
-  - [Später](#spter)
 
 ---
 
-- [ ] Sicherstellen, dass nur ein filetree offen ist, also zb wenn man alt l einen filetre öfnet und dann mit leader . denf iletree von snacks öffnet, danmn sollte filetree schließen vielleicht geht das über buffernamen auf die man prüft?
+## Features
 
 ---
 
 ## Bug
-
-- [ ] Refersh nachdem man eine datei verschoben hat; bzw bei allen aktionen, die eine änderung im filetree bewirken, also auch :File delete oder wenn man mit `TAB` von einem buffer zum nächsten geht, da sollte immer filetree sich updaten, also eigentlich immer, wenn der aktuelle context des buffers sich geändert hat, zb bei rename oder so..
-
----
-
-## General
-
-1. Alle keymaps prüfen
 
 ---
 
@@ -52,14 +39,6 @@ autocmd, bei jeder änderung der tab bufferlist checken ob ein no name uffer ist
 | **sources/ + icons/** | Lazy Source Registry, 3 Icon-Familien (nerd/codicons/common), responsive Größe |
 
 `sources`-Feature von neotree nachbilden — 🔲 **Phase 4, niedrige Priorität.** Verifiziert: `lua/config/neotree/sources/registry.lua` ist aktuell ein simpler Lazy-Loader (register/load/is_loaded/list), kein Template-System — der Wunsch existiert im Code noch nicht. Statt eines vollen Template-Engines: erstmal eine kleine Recipe-/Copy-Paste-Config-Sammlung (2-3 gängige Source-Setups) im `filetree.nvim`-README oder `docs/` — deckt den eigentlichen Schmerzpunkt ("Einrichtung war Pain") günstiger ab als ein neues System.
-
----
-
-## Später
-
-1. `?`-Cheatsheet mit allen Keymaps — ✅ **Phase 2 umgesetzt.**
-   - neotree: ✅ FIXED (native `?`/show_help bereits vollständig über `attach.lua`s `window.mappings`-Injection).
-   - **Recherche (Quellcode von nvim-tree.lua geklont und gelesen):** `g?`/`toggle_help` baut seine Liste, indem es `on_attach` erneut auf einem **Scratch-Buffer** ausführt und dessen Keymaps ausliest (`nvim-tree/keymap.lua:generate_keymap`) — keine Live-Buffer-Introspektion. filetree.nvim's Keys (separat per `FileType`-Autocmd gebunden) tauchen dort grundsätzlich nie auf, außer man hängt sich in nvim-trees `on_attach`-Callback selbst ein — das wäre ein Umbau der kompletten Keymap-Architektur des nvimtree-Adapters, kein Cheatsheet-Feature mehr. Netrw's `?` ist zudem eine statische Hilfeseite; oil/minifiles nicht verifiziert.
 
 ---
 

@@ -1,12 +1,7 @@
 # Roadmap
 
-- [ ] > in markdown
-:NyPlugibs usrcmd erstellen, dabi éi auch persistentes swwitchen der plugins dir/remote oder die modes - direktes schreiben in die file
-   Warn  3:37:11 PM notify.warn [filetree.pdf] pdfport.nvim not installed — opening PDF in system viewer
 
-
-
--  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
+- [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
 * [ ] Inline-Images in Markdown-Files einbinden: snacks?
   - checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen

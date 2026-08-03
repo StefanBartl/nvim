@@ -1,9 +1,5 @@
 # `lib.nvim`
 
-## Bestehende Module
-
-
-
 ## Neue Features implementieren
 
 > alle Cross-Platform!
@@ -11,7 +7,7 @@
 
 ---
 
-docmodler cli
+## Bestehende Module
 
 ---
 

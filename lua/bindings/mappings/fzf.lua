@@ -6,7 +6,10 @@ function M.setup()
   local map = vim.g.__map_helper
 
   map("n", "<leader>fth", ":FzfLua colorschemes<CR>", { desc = "[FzfLua] Colorschemes" })
-  map("n", "<leader>ffk", ":FzfLua keymaps<CR>", { desc = "[FzfLua] Keymaps" })
+  -- Was <leader>ffk: collided as a prefix of <leader>ff (pickers.nvim's
+  -- cwd-files), forcing Neovim to wait out timeoutlen (default 1000ms) on
+  -- every <leader>ff press to see if a "k" was coming.
+  map("n", "<leader>fK", ":FzfLua keymaps<CR>", { desc = "[FzfLua] Keymaps" })
 
   map("n", "<leader>fgs", ":FzfLua git_status<CR>", { desc = "[FzfLua] Git Status" })
 
