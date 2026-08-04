@@ -1,5 +1,6 @@
 # Roadmap
 
+- [x] `casedesk` (`:Case`/`:Cases`) — SAP-Support-Cases: [Konzept](casedesk/CONCEPT.md) · [Roadmap](casedesk/ROADMAP.md) · [Migration](casedesk/MIGRATION.md)
 
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
