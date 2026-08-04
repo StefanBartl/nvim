@@ -1,7 +1,8 @@
 ---@module 'bindings.usrcmds.case.doctor'
 --- Read-only bestand-consistency report (MIGRATION.md §4: the case-note
 --- file named five different ways, Research as a folder vs. a flat file,
---- Solution/Solutions naming variance, two known typo'd filenames). Never
+--- Solution/Solutions naming variance, two known typo'd filenames, and
+--- ROADMAP.md v6's NN_-prefix convention in Research/Replies). Never
 --- writes — but every finding carries the safe rename target `normalize.lua`
 --- (ROADMAP.md v6) would apply, or `to = nil` when the target already exists
 --- and an automatic fix would clobber something (normalize.lua then skips
@@ -20,6 +21,12 @@ local KNOWN_TYPOS = {
   ["00_Initital.md"] = "00_Initial.md",
   ["00_RequestInfrmations.md"] = "00_RequestInformations.md",
 }
+
+-- The two blueprint folders whose files are meant to carry a `NN_` prefix
+-- (Research/00_Research.md, Replies/00_PSO.md, and every file `:Case add`
+-- creates afterward follow suit) — Ressources/ is deliberately excluded,
+-- attachments there keep whatever name they arrived with.
+local NN_PREFIX_DIRS = { "Research", "Replies" }
 
 ---@class Lib.Case.DoctorFinding
 ---@field short string
@@ -62,6 +69,68 @@ local function top_level_dirs(dir)
     end
   end
   return names
+end
+
+---@param dir string
+---@return string[] direct child file basenames (no recursion)
+local function top_level_files(dir)
+  local names = {}
+  local fd = uv.fs_scandir(dir)
+  if not fd then
+    return names
+  end
+  while true do
+    local name, typ = uv.fs_scandir_next(fd)
+    if not name then
+      break
+    end
+    if typ == "file" then
+      names[#names + 1] = name
+    end
+  end
+  return names
+end
+
+--- Files directly inside Research/ or Replies/ with no `NN_` prefix. Numbers
+--- are assigned sequentially (alphabetical among the unprefixed files)
+--- starting right after the highest prefix already in use — the same
+--- "scan existing, take max+1" rule `ui.lua`'s `:Case add reply` already
+--- uses, just applied to a whole batch instead of one new file at a time.
+---@param e Lib.Case.RegistryEntry
+---@return Lib.Case.DoctorFinding[]
+local function nn_prefix_findings(e)
+  local out = {}
+  for _, sub in ipairs(NN_PREFIX_DIRS) do
+    local dir = e.dir .. "/" .. sub
+    local st = uv.fs_stat(dir)
+    if st and st.type == "directory" then
+      local max_n, unprefixed = -1, {}
+      for _, name in ipairs(top_level_files(dir)) do
+        local n = name:match("^(%d%d)_")
+        if n then
+          max_n = math.max(max_n, tonumber(n))
+        else
+          unprefixed[#unprefixed + 1] = name
+        end
+      end
+      table.sort(unprefixed)
+      local next_n = max_n + 1
+      for _, name in ipairs(unprefixed) do
+        local from = dir .. "/" .. name
+        local prefixed = ("%02d_%s"):format(next_n, name)
+        local to = dir .. "/" .. prefixed
+        out[#out + 1] = {
+          short = e.short,
+          kind = "missing-nn-prefix",
+          detail = ("%s/%s -> %s/%s"):format(sub, name, sub, prefixed),
+          from = from,
+          to = exists(to) and nil or to,
+        }
+        next_n = next_n + 1
+      end
+    end
+  end
+  return out
 end
 
 ---@return Lib.Case.DoctorFinding[]
@@ -145,6 +214,8 @@ function M.check()
         }
       end
     end
+
+    vim.list_extend(findings, nn_prefix_findings(e))
   end
 
   return findings

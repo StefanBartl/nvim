@@ -105,7 +105,20 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
       statt eines beim Anwenden das andere stillschweigend zu überschreiben.
       Gegen den realen Bestand geplant (noch nicht ausgeführt): 8 von 10
       Findings sicher normalisierbar, 2 (711373) bleiben mehrdeutig liegen.
-- [ ] `NN_`-Präfix erzwingen — Suffix ausdrücklich **nicht**
+- [x] `NN_`-Präfix erzwingen — Suffix ausdrücklich **nicht**. Neuer
+      Finding-Typ `missing-nn-prefix` in `doctor.lua`, nur für direkte
+      Dateien in `Research/`/`Replies/` (nicht `Ressources/` — Anhänge
+      behalten ihren Namen). Nummern werden fortlaufend ab dem höchsten
+      bereits vergebenen `NN_` vergeben (alphabetisch unter den
+      unpräfigierten Dateien derselben Fund-Runde), dasselbe „scan +
+      max+1"-Prinzip wie `:Case add reply`. `normalize.lua` brauchte dafür
+      **keine** Änderung — läuft rein über `from`/`to` der Findings, inkl.
+      der schon vorhandenen Kollisions-Absicherung. Gegen den realen
+      Bestand geplant: **12 neue Findings über 8 Cases** (u. a. 711373:
+      `Logfiles.md`/`Terminologie.md`, 888622: drei Dateien, 940561: zwei
+      Dateien), zusammen mit v6's ursprünglichen 10 macht das **22
+      Findings**, **20 davon sicher normalisierbar** (die 2 aus 711373
+      bleiben weiterhin mehrdeutig).
 
 ## v7 — Komfort
 

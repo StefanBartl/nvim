@@ -290,16 +290,18 @@ Optionale Integration über `pcall(require, …)`: `filetree.nvim` für
 
 ## 10. `:Cases doctor` (`doctor.lua`)
 
-Reiner Bericht — liest, schreibt nie. `M.check()` scannt jeden Case auf vier
-Muster (MIGRATION.md §4): Case-Notiz unter einem der vier bekannten
-Alias-Namen statt `Summary.md`, `Research.md` als Flat-File statt
-`Research/`-Ordner, `Solutions/`(Plural)/`Solution.md` statt `Solution/`,
-und zwei bekannte Tippfehler-Dateinamen. `M.describe()` rendert die Liste
-für `kit.viewer`.
+Reiner Bericht — liest, schreibt nie. `M.check()` scannt jeden Case auf fünf
+Muster: Case-Notiz unter einem der vier bekannten Alias-Namen statt
+`Summary.md`, `Research.md` als Flat-File statt `Research/`-Ordner,
+`Solutions/`(Plural)/`Solution.md` statt `Solution/`, zwei bekannte
+Tippfehler-Dateinamen (alle vier: MIGRATION.md §4), und fehlender
+`NN_`-Präfix auf Dateien direkt in `Research/`/`Replies/`. `M.describe()`
+rendert die Liste für `kit.viewer`.
 
-Gegen den migrierten Bestand am 2026-08-04: **10 Findings über 8 Cases**
-(genaue Aufschlüsselung in [ROADMAP.md](ROADMAP.md) v6) — deckt sich exakt
-mit der Analyse aus MIGRATION.md §4, jetzt als Code statt als Handzählung.
+Gegen den migrierten Bestand am 2026-08-04: **22 Findings über 8 Cases**
+(genaue Aufschlüsselung in [ROADMAP.md](ROADMAP.md) v6) — die ersten 10
+decken sich exakt mit der Analyse aus MIGRATION.md §4, die restlichen 12
+kamen mit dem `NN_`-Präfix-Check dazu.
 
 `:Cases normalize` (`normalize.lua`) ist der Fix-Teil und baut auf genau
 diesen `DoctorFinding`-Einträgen auf — derselbe Plan → Dry-Run → Confirm → Apply-
