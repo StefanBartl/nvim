@@ -71,8 +71,18 @@ local function state_verb_routes()
   return routes
 end
 
---- One `:Cases <field> [pattern]` per config.infocard_fields entry —
---- substring, case-insensitive; empty pattern means "field is set at all".
+--- Shared by every filter-shaped route (`:Cases <field>`, `:Cases find`,
+--- `:Cases grep`): `--exact`/`-e` narrows substring to full-string equality,
+--- `--re`/`-r` switches to a (case-sensitive) Lua pattern — see
+--- query.lua's `matches()` for why the two can't both fold case the same way.
+local MATCH_FLAGS = {
+  { name = "exact", short = "e", bool = true },
+  { name = "re", short = "r", bool = true },
+}
+
+--- One `:Cases <field> [pattern] [--exact|-e] [--re|-r]` per
+--- config.infocard_fields entry — substring, case-insensitive by default;
+--- empty pattern means "field is set at all".
 ---@return Lib.UserCmd.Composer.RouteSpec[]
 local function filter_routes()
   local routes = {}
@@ -80,19 +90,20 @@ local function filter_routes()
     routes[#routes + 1] = {
       path = { field },
       args = { { name = "pattern", type = "STRING", optional = true } },
+      flags = MATCH_FLAGS,
       desc = ("Filter cases by %s"):format(field),
       run = function(ctx)
-        ui.filter(field, ctx.args.pattern)
+        ui.filter(field, ctx.args.pattern, ctx.flags)
       end,
     }
   end
   return routes
 end
 
---- `:Cases find company=Scan year=2026` — AND-combination across several
---- fields at once, via composer's `kv` grammar (bare `key=value`, no
---- dashes). Every `config.infocard_fields` entry is a possible key;
---- `ctx.kv` only carries the ones actually passed.
+--- `:Cases find company=Scan year=2026 [--exact|-e] [--re|-r]` —
+--- AND-combination across several fields at once, via composer's `kv`
+--- grammar (bare `key=value`, no dashes). Every `config.infocard_fields`
+--- entry is a possible key; `ctx.kv` only carries the ones actually passed.
 ---@return Lib.UserCmd.Composer.RouteSpec
 local function find_route()
   local kv_specs = {}
@@ -102,9 +113,25 @@ local function find_route()
   return {
     path = { "find" },
     kv = kv_specs,
+    flags = MATCH_FLAGS,
     desc = "Filter cases by multiple fields at once (field=pattern field=pattern ...)",
     run = function(ctx)
-      ui.filter_many(ctx.kv)
+      ui.filter_many(ctx.kv, ctx.flags)
+    end,
+  }
+end
+
+--- `:Cases grep <pattern> [--re|-r]` — full-text search over every case's
+--- markdown files.
+---@return Lib.UserCmd.Composer.RouteSpec
+local function grep_route()
+  return {
+    path = { "grep" },
+    args = { { name = "pattern", type = "STRING" } },
+    flags = { { name = "re", short = "r", bool = true } },
+    desc = "Full-text search across every case's markdown files",
+    run = function(ctx)
+      ui.grep(ctx.args.pattern, ctx.flags)
     end,
   }
 end
@@ -212,7 +239,22 @@ function M.enable()
         ui.doctor()
       end,
     },
+    {
+      path = { "normalize" },
+      desc = "Fix bestand naming inconsistencies found by doctor (dry-run + confirm)",
+      run = function()
+        ui.normalize()
+      end,
+    },
     find_route(),
+    grep_route(),
+    {
+      path = { "pickers" },
+      desc = "Discovery menu: attachments, links, cases without .case.json",
+      run = function()
+        ui.pickers()
+      end,
+    },
   }
   vim.list_extend(cases_routes, filter_routes())
 

@@ -301,6 +301,6 @@ Gegen den migrierten Bestand am 2026-08-04: **10 Findings über 8 Cases**
 (genaue Aufschlüsselung in [ROADMAP.md](ROADMAP.md) v6) — deckt sich exakt
 mit der Analyse aus MIGRATION.md §4, jetzt als Code statt als Handzählung.
 
-`:Cases normalize` (der Fix-Teil, noch nicht gebaut) wird auf genau diesen
-`DoctorFinding`-Einträgen aufbauen — derselbe Plan → Dry-Run → Confirm → Apply-
+`:Cases normalize` (`normalize.lua`) ist der Fix-Teil und baut auf genau
+diesen `DoctorFinding`-Einträgen auf — derselbe Plan → Dry-Run → Confirm → Apply-
 Pfad wie `:Case new`, nur mit `rename` als Aktionstyp statt `write`.

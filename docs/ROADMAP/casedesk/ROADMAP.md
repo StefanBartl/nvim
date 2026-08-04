@@ -44,29 +44,67 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
 - [x] `:Cases recent [n]` — nach mtime der zuletzt angefassten Datei je Case
 - [x] `:Cases stats` — Anzahl nach Zustand/Company/Jahr
 - [x] `:Cases doctor` — Bericht (reale Zahlen: 10 Findings über 8 Cases, siehe unten)
-- [ ] `--exact` / `--re` als Flags (aktuell: immer Substring, case-insensitive)
-- [ ] `:Cases grep` — Volltextsuche über alle Cases
-- [ ] `:Cases normalize` — die von `doctor` gemeldeten Abweichungen beheben
+- [x] `--exact` / `--re` als Flags — `query.lua`s `matches()`, geteilt von
+      `by_field`/`by_fields`/`grep`. `--exact`/`-e`: volle Gleichheit statt
+      Substring, weiterhin case-insensitive. `--re`/`-r`: `pattern` als
+      Lua-Pattern — bewusst **case-sensitiv**, weil ein Klein-Schreiben des
+      Patterns Klassen wie `%A`/`%D`/`%S` (Groß-/Kleinschreibung ändert die
+      Bedeutung) zerstören würde. Composer-Flags auf `:Cases <field>` und
+      `:Cases find` verdrahtet (`init.lua`s `MATCH_FLAGS`).
+- [x] `:Cases grep <pattern> [--re|-r]` — Volltextsuche über die `.md`-Dateien
+      aller Cases (Anhänge in `Ressources/` bewusst ausgeklammert, s.
+      Doctor/v5), Ergebnis als `kit.viewer`-Bericht wie `doctor`/`stats`,
+      bei >500 Treffern gekappt mit Hinweiszeile. Gegen den realen Bestand
+      getestet: 547 Treffer für „the", 38 für `[Ee]rror` (`--re`).
+- [x] `:Cases normalize` — die von `doctor` gemeldeten Abweichungen beheben
 
 ## v5 — Picker-Übersicht (CONCEPT §-Nachfolger)
 
-- [ ] `:Cases pickers` — `kit.menu` als Entdeckungsoberfläche
-- [ ] Backend-Kaskade `pickers.nvim` → `snacks.picker` → `kit.select`
-- [ ] Anhänge-Picker (PNG/log/txt/PDF in `Ressources/`), nach Typ
-- [ ] Links-Picker pro Case → `open.nvim`
-- [ ] „Cases ohne `.case.json`"
+- [x] `:Cases pickers` — `kit.menu` als Entdeckungsoberfläche mit drei
+      Einträgen: Attachments, Links, „Cases ohne `.case.json`"
+- [ ] Backend-Kaskade `pickers.nvim` → `snacks.picker` → `kit.select` —
+      **zurückgestellt**: `pickers.nvim`s `actions/files.lua` erwartet ein
+      internes `Source`+`engine_mod`-Objekt aus seiner eigenen
+      Config-/Engine-Auflösung, keinen trivialen „Picker über diese
+      Pfad-/String-Liste"-Einstieg — eine echte Integration wäre ohne
+      Live-Test im echten Plugin zu riskant für einen Uncommitted-Merge.
+      `:Cases pickers` läuft deshalb komplett auf `kit.select`, demselben
+      Backend, das der Rest von `ui.lua` (`show_results`, `:Cases recent`,
+      …) schon überall benutzt — konsistent, aber ohne die Kaskade.
+- [x] Anhänge-Picker (`Ressources/`, rekursiv) — Text-Erweiterungen
+      (`md`/`txt`/`log`/`json`/`csv`) im Buffer geöffnet, alles andere
+      (PNG/PDF/Video/…) extern über `cross.open_default` (System-Standard-App).
+      Gegen den realen Bestand getestet (u. a. 711373: 9 Dateien inkl.
+      `image (28).png`; 859769: `Logs/ToscaCommander-....log` — verschachtelte
+      Pfade werden relativ zu `Ressources/` korrekt angezeigt).
+- [x] Links-Picker pro Case — `meta.links` falls gepflegt, sonst
+      `detect.links` als Fallback; Auswahl öffnet extern über
+      `cross.open_default` (Standard-Browser), fällt bei Fehlschlag auf
+      Zwischenablage zurück (dasselbe Muster wie `:Case snow`). Kein
+      `open.nvim` — `cross.open_default` deckt denselben Fall schon ab, eine
+      zweite optionale Abhängigkeit dafür wäre unnötig.
+- [x] „Cases ohne `.case.json`" — aktuell 0 im realen Bestand (alle 20
+      Cases haben durch `migrate.lua` ein Sidecar bekommen).
 
 ## v6 — Aufräumen (Bestands-Inkonsistenzen, unabhängig von der Struktur-Migration)
 
-- [x] `:Cases doctor` — reiner Bericht, `doctor.lua` (nur lesend, kein `normalize` noch)
+- [x] `:Cases doctor` — reiner Bericht, `doctor.lua` (nur lesend)
       Reale Zahlen (2026-08-04, gegen den migrierten Bestand): **10 Findings
       über 8 Cases** — 4× Summary-Alias (`CaseNote.md`×1 in 711373,
       `TillNow.md`×1 in 711373, `ProblemSummary.md` in 859769 neben einem
       bestehenden `Summary.md`, `WorkNote.md` in 888622), 2× `Research.md`
       als Flat-File (977283, 996010), 1× `Solutions/` (913070), 1×
       `Solution.md` als Flat-File (968475), 2× Tippfehler (941543, 977283).
-- [ ] `:Cases normalize` — Plan/Dry-Run/Confirm, Aktionstyp `rename`, auf
-      genau den Findings von `doctor.check()` aufbauend
+- [x] `:Cases normalize` — Plan/Dry-Run/Confirm, Aktionstyp `rename`, auf
+      genau den Findings von `doctor.check()` aufbauend. Jede Finding trägt
+      jetzt ein sicheres Ziel `to` (oder `nil` bei Mehrdeutigkeit, z. B.
+      Zieldatei existiert schon). `normalize.plan()` erkennt zusätzlich
+      Ziel-Kollisionen zwischen zwei Findings desselben Cases (z. B. 711373:
+      `CaseNote.md` UND `TillNow.md` gleichzeitig vorhanden, beide würden
+      auf `Summary.md` zeigen) und stuft dann beide als mehrdeutig zurück,
+      statt eines beim Anwenden das andere stillschweigend zu überschreiben.
+      Gegen den realen Bestand geplant (noch nicht ausgeführt): 8 von 10
+      Findings sicher normalisierbar, 2 (711373) bleiben mehrdeutig liegen.
 - [ ] `NN_`-Präfix erzwingen — Suffix ausdrücklich **nicht**
 
 ## v7 — Komfort

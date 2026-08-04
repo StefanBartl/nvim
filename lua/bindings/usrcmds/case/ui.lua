@@ -9,6 +9,7 @@ local fs_is_valid_filename = require("lib.nvim.fs.is_valid_filename")
 local mkdirp = require("lib.nvim.fs.mkdirp")
 local write_to_file = require("lib.nvim.fs.write.to_file")
 local read = require("lib.nvim.fs.read")
+local collect_recursive = require("lib.nvim.fs.collect_recursive")
 
 local config = require("bindings.usrcmds.case.config")
 local render = require("bindings.usrcmds.case.render")
@@ -558,15 +559,29 @@ local function show_results(results, label)
   })
 end
 
---- `:Cases <field> [pattern]` — one route per config.infocard_fields entry,
---- generated in init.lua. A single hit opens its infocard directly (the
---- search WAS the selection); several go through the same kit.select every
---- other multi-result flow in this module uses.
+---@param flags { exact: boolean|nil, re: boolean|nil }|nil
+---@return string
+local function flag_suffix(flags)
+  if flags and flags.exact then
+    return " [exact]"
+  end
+  if flags and flags.re then
+    return " [re]"
+  end
+  return ""
+end
+
+--- `:Cases <field> [pattern] [--exact|-e] [--re|-r]` — one route per
+--- config.infocard_fields entry, generated in init.lua. A single hit opens
+--- its infocard directly (the search WAS the selection); several go through
+--- the same kit.select every other multi-result flow in this module uses.
 ---@param field string
 ---@param pattern string|nil
-function M.filter(field, pattern)
-  local results = query.by_field(field, pattern)
-  show_results(results, ("%s = %s"):format(field, (pattern and pattern ~= "") and pattern or "*"))
+---@param flags { exact: boolean|nil, re: boolean|nil }|nil
+function M.filter(field, pattern, flags)
+  local results = query.by_field(field, pattern, flags)
+  local label = ("%s = %s%s"):format(field, (pattern and pattern ~= "") and pattern or "*", flag_suffix(flags))
+  show_results(results, label)
 end
 
 --- `:Cases list` — everything, grouped by state.
@@ -585,17 +600,19 @@ function M.list_all()
   kit.viewer({ title = "Cases", lines = lines })
 end
 
---- `:Cases find company=Scan year=2026` — AND-combination across several
---- `config.infocard_fields` at once, via composer's `kv` grammar.
+--- `:Cases find company=Scan year=2026 [--exact|-e] [--re|-r]` —
+--- AND-combination across several `config.infocard_fields` at once, via
+--- composer's `kv` grammar.
 ---@param kv table<string, string>
-function M.filter_many(kv)
+---@param flags { exact: boolean|nil, re: boolean|nil }|nil
+function M.filter_many(kv, flags)
   local parts = {}
   for k, v in pairs(kv) do
     parts[#parts + 1] = ("%s=%s"):format(k, v)
   end
   table.sort(parts)
-  local label = #parts > 0 and table.concat(parts, " ") or "find (no criteria given)"
-  show_results(query.by_fields(kv), label)
+  local label = (#parts > 0 and table.concat(parts, " ") or "find (no criteria given)") .. flag_suffix(flags)
+  show_results(query.by_fields(kv, flags), label)
 end
 
 --- `:Cases recent [n]` — most recently touched cases first.
@@ -654,6 +671,40 @@ function M.stats()
   kit.viewer({ title = "Cases — stats", lines = lines })
 end
 
+local GREP_HIT_CAP = 500
+
+--- `:Cases grep <pattern> [--re|-r]` — full-text search across every case's
+--- markdown files. Report-shaped like doctor/stats (kit.viewer), not a
+--- picker — a grep result set is read top-to-bottom, not picked from.
+---@param pattern string|nil
+---@param flags { re: boolean|nil }|nil
+function M.grep(pattern, flags)
+  if not pattern or pattern == "" then
+    notify.warn("grep: pattern required")
+    return
+  end
+  local hits = query.grep(pattern, flags)
+  local lines
+  if #hits == 0 then
+    lines = { "No matches." }
+  else
+    lines = {}
+    local shown = math.min(#hits, GREP_HIT_CAP)
+    for i = 1, shown do
+      local h = hits[i]
+      lines[#lines + 1] = ("%-10s %s:%d  %s"):format(h.short, h.path, h.line, h.text)
+    end
+    if #hits > GREP_HIT_CAP then
+      lines[#lines + 1] = ""
+      lines[#lines + 1] = ("(showing first %d of %d matches)"):format(GREP_HIT_CAP, #hits)
+    end
+  end
+  kit.viewer({
+    title = ("Cases — grep %q%s (%d)"):format(pattern, flag_suffix(flags), #hits),
+    lines = lines,
+  })
+end
+
 --- `:Cases doctor` — read-only bestand-consistency report (MIGRATION.md §4).
 function M.doctor()
   local doctor = require("bindings.usrcmds.case.doctor")
@@ -661,6 +712,173 @@ function M.doctor()
   kit.viewer({
     title = ("Cases — doctor (%d)"):format(#findings),
     lines = doctor.describe(findings),
+  })
+end
+
+--- `:Cases normalize` — dry-run + confirm fix-it counterpart to doctor
+--- (ROADMAP.md v6). Only ever acts on findings doctor.lua marked
+--- unambiguous; anything skipped is listed separately so nothing is
+--- silently left out of the report.
+function M.normalize()
+  local normalize = require("bindings.usrcmds.case.normalize")
+  local doctor = require("bindings.usrcmds.case.doctor")
+  local steps, skipped = normalize.plan()
+
+  local lines = normalize.describe(steps)
+  if #skipped > 0 then
+    vim.list_extend(lines, { "", ("Skipped (%d, ambiguous — target exists):"):format(#skipped) })
+    vim.list_extend(lines, doctor.describe(skipped))
+  end
+
+  kit.viewer({
+    title = ("Cases — normalize (%d)"):format(#steps),
+    lines = lines,
+  })
+
+  if #steps == 0 then
+    return
+  end
+
+  kit.confirm({
+    question = ("Rename %d item(s)?"):format(#steps),
+    on_answer = function(yes)
+      if not yes then
+        return
+      end
+      local results = normalize.run(steps)
+      local ok, errs = normalize.errors(results)
+      registry.invalidate()
+      if ok then
+        notify.info(("normalize: %d item(s) renamed"):format(#steps))
+      else
+        notify.error("normalize errors:\n" .. table.concat(errs, "\n"))
+      end
+    end,
+  })
+end
+
+-- ── :Cases pickers ──────────────────────────────────────────────────────
+-- ROADMAP.md v5: a kit.menu discovery surface over the picker-shaped flows.
+-- Backend is kit.select throughout, same as every other multi-result flow
+-- in this module (show_results, M.recent, ...) — the pickers.nvim/
+-- snacks.picker cascade v5 also lists is deliberately deferred rather than
+-- half-wired against an API this module hasn't otherwise touched; see
+-- ROADMAP.md.
+
+local TEXT_ATTACHMENT_EXTENSIONS = { md = true, txt = true, log = true, json = true, csv = true }
+
+---@param path string
+local function open_attachment(path)
+  local ext = vim.fn.fnamemodify(path, ":e"):lower()
+  if TEXT_ATTACHMENT_EXTENSIONS[ext] then
+    edit(path)
+    return
+  end
+  local ok, err = require("lib.nvim.cross.open_default")(path)
+  if not ok then
+    notify.error(("could not open %s: %s"):format(path, tostring(err)))
+  end
+end
+
+---@param entry Lib.Case.RegistryEntry
+local function pick_attachment(entry)
+  local dir = entry.dir .. "/Ressources"
+  local st = uv.fs_stat(dir)
+  if not (st and st.type == "directory") then
+    notify.warn(("%s has no Ressources/ folder"):format(entry.short))
+    return
+  end
+  local files = collect_recursive.files(dir)
+  if #files == 0 then
+    notify.warn(("%s: Ressources/ is empty"):format(entry.short))
+    return
+  end
+  kit.select({
+    message = ("Attachments — %s"):format(entry.short),
+    selection = files,
+    format_item = function(f)
+      return f:sub(#dir + 2)
+    end,
+    on_select = open_attachment,
+    on_cancel = function() end,
+  })
+end
+
+---@param entry Lib.Case.RegistryEntry
+local function pick_links(entry)
+  local m = meta.read(entry.dir)
+  local links = (m and m.links and #m.links > 0) and m.links or detect.links(entry.dir)
+  if #links == 0 then
+    notify.warn(("%s: no links found"):format(entry.short))
+    return
+  end
+  kit.select({
+    message = ("Links — %s"):format(entry.short),
+    selection = links,
+    format_item = function(l)
+      return l
+    end,
+    on_select = function(url)
+      local ok = require("lib.nvim.cross.open_default")(url)
+      if not ok then
+        require("lib.nvim.cross.copy_to_clipboard")(url)
+        notify.info(url .. " copied to clipboard (could not open a browser)")
+      end
+    end,
+    on_cancel = function() end,
+  })
+end
+
+--- Cases with no `.case.json` at all — distinct from `M.stats`'s per-field
+--- "unset" counts, which only look at fields WITHIN an existing sidecar.
+local function pick_missing_meta()
+  local missing = {}
+  for _, e in ipairs(registry.list()) do
+    if not meta.read(e.dir) then
+      missing[#missing + 1] = e
+    end
+  end
+  if #missing == 0 then
+    notify.info(("every case has a %s"):format(config.meta_filename))
+    return
+  end
+  show_results(missing, ("Cases without %s"):format(config.meta_filename))
+end
+
+--- `:Cases pickers` — the discovery menu itself.
+function M.pickers()
+  kit.menu({
+    title = "Cases — pickers",
+    items = {
+      {
+        label = "Attachments (Ressources/)",
+        action = function()
+          resolve.pick(nil, function(entry)
+            if entry then
+              pick_attachment(entry)
+            else
+              notify.warn("no case to show attachments for")
+            end
+          end)
+        end,
+      },
+      {
+        label = "Links",
+        action = function()
+          resolve.pick(nil, function(entry)
+            if entry then
+              pick_links(entry)
+            else
+              notify.warn("no case to show links for")
+            end
+          end)
+        end,
+      },
+      {
+        label = ("Cases without %s"):format(config.meta_filename),
+        action = pick_missing_meta,
+      },
+    },
   })
 end
 
