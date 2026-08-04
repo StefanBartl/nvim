@@ -3,6 +3,8 @@
 
 local usercmd = require("lib.nvim.usercmd")
 
+require("bindings.usrcmds.case").enable()
+
 
 --TEMP: nur temporär (wahrscheinlich
 local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "BINDINGS")

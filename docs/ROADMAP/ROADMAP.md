@@ -2,17 +2,8 @@
 
 - spotlight checken und lernen
 - images, das wäre für support wirklcih wichtig. eventuell en eigenses plugin bauen? das wäre
-
-
-
 - p und strg-v verhalten sihcv nun anders, kannst du das anschauen
-
--  nC:\Users\bartl\AppData\Local\nvim\lua\usrcmdsach /bindings/usrcmds
-
-
-
-
-
+- C:\Users\bartl\AppData\Local\nvim\lua\usrcmds nach /bindings/usrcmds
 
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
