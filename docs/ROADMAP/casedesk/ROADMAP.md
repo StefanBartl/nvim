@@ -33,16 +33,20 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
 - [x] `:Case close` / `:Case reassign` — generisch aus `config.states` erzeugt
 - [x] Templates als echte Dateien mit Tag (`templates.lua` + `templates/*.md`)
 
-## v4 — `:Cases` Querschnitt ✅ Basis implementiert
+## v4 — `:Cases` Querschnitt ✅ implementiert
 
 - [x] `:Cases` als zweites Verb, generischer Feld-Filter aus `infocard_fields`
 - [x] `:Cases company Scan` — Substring, case-insensitive
 - [x] Leeres Pattern = „Feld gesetzt"
 - [x] `:Cases list` — gruppiert nach Zustand
 - [x] Ein Treffer öffnet direkt, mehrere gehen in den Picker
-- [ ] `--exact` / `--re` als Flags
-- [ ] `key=value`-Kombination (`:Cases company Scan year 2026`) via `ctx.kv`
-- [ ] `:Cases recent` / `grep` / `stats`
+- [x] `:Cases find company=Scan year=2026` — Feld-Kombination via `ctx.kv` (composer)
+- [x] `:Cases recent [n]` — nach mtime der zuletzt angefassten Datei je Case
+- [x] `:Cases stats` — Anzahl nach Zustand/Company/Jahr
+- [x] `:Cases doctor` — Bericht (reale Zahlen: 10 Findings über 8 Cases, siehe unten)
+- [ ] `--exact` / `--re` als Flags (aktuell: immer Substring, case-insensitive)
+- [ ] `:Cases grep` — Volltextsuche über alle Cases
+- [ ] `:Cases normalize` — die von `doctor` gemeldeten Abweichungen beheben
 
 ## v5 — Picker-Übersicht (CONCEPT §-Nachfolger)
 
@@ -54,11 +58,15 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
 
 ## v6 — Aufräumen (Bestands-Inkonsistenzen, unabhängig von der Struktur-Migration)
 
-- [ ] `:Cases doctor` — reiner Bericht, jederzeit gefahrlos
-- [ ] `:Cases normalize` — Plan/Dry-Run/Confirm, Aktionstyp `rename`
-- [ ] Case-Notiz vereinheitlichen (`Summary.md` vs. `ProblemSummary`/`WorkNote`/`CaseNote`/`TillNow`)
-- [ ] `Research.md` → `Research/00_Research.md`; `Solution`-Schreibweisen
-- [ ] Zwei Tippfehler-Dateinamen (`00_Initital.md`, `00_RequestInfrmations.md`)
+- [x] `:Cases doctor` — reiner Bericht, `doctor.lua` (nur lesend, kein `normalize` noch)
+      Reale Zahlen (2026-08-04, gegen den migrierten Bestand): **10 Findings
+      über 8 Cases** — 4× Summary-Alias (`CaseNote.md`×1 in 711373,
+      `TillNow.md`×1 in 711373, `ProblemSummary.md` in 859769 neben einem
+      bestehenden `Summary.md`, `WorkNote.md` in 888622), 2× `Research.md`
+      als Flat-File (977283, 996010), 1× `Solutions/` (913070), 1×
+      `Solution.md` als Flat-File (968475), 2× Tippfehler (941543, 977283).
+- [ ] `:Cases normalize` — Plan/Dry-Run/Confirm, Aktionstyp `rename`, auf
+      genau den Findings von `doctor.check()` aufbauend
 - [ ] `NN_`-Präfix erzwingen — Suffix ausdrücklich **nicht**
 
 ## v7 — Komfort

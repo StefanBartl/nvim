@@ -38,6 +38,20 @@ local function case_files(case_dir)
   return files
 end
 
+--- mtime of the most recently touched non-`.case.json` file in the case —
+--- "when was this case last worked on" without a separate tracked field.
+---@param case_dir string
+---@return integer|nil epoch_seconds
+function M.last_touched(case_dir)
+  local files = case_files(case_dir)
+  if not files[1] then
+    return nil
+  end
+  local uv = vim.uv or vim.loop
+  local st = uv.fs_stat(files[1])
+  return st and st.mtime and st.mtime.sec or nil
+end
+
 ---@param case_dir string
 ---@return string|nil title  first level-1 heading found across the case's files
 function M.title(case_dir)

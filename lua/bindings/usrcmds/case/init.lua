@@ -89,6 +89,26 @@ local function filter_routes()
   return routes
 end
 
+--- `:Cases find company=Scan year=2026` — AND-combination across several
+--- fields at once, via composer's `kv` grammar (bare `key=value`, no
+--- dashes). Every `config.infocard_fields` entry is a possible key;
+--- `ctx.kv` only carries the ones actually passed.
+---@return Lib.UserCmd.Composer.RouteSpec
+local function find_route()
+  local kv_specs = {}
+  for _, field in ipairs(config.infocard_fields) do
+    kv_specs[#kv_specs + 1] = { key = field, type = "STRING" }
+  end
+  return {
+    path = { "find" },
+    kv = kv_specs,
+    desc = "Filter cases by multiple fields at once (field=pattern field=pattern ...)",
+    run = function(ctx)
+      ui.filter_many(ctx.kv)
+    end,
+  }
+end
+
 function M.enable()
   register_case_type()
 
@@ -170,6 +190,29 @@ function M.enable()
         ui.list_all()
       end,
     },
+    {
+      path = { "recent" },
+      args = { { name = "n", type = "STRING", optional = true } },
+      desc = "Most recently touched cases first",
+      run = function(ctx)
+        ui.recent(ctx.args.n)
+      end,
+    },
+    {
+      path = { "stats" },
+      desc = "Counts by state / company / year",
+      run = function()
+        ui.stats()
+      end,
+    },
+    {
+      path = { "doctor" },
+      desc = "Report bestand naming inconsistencies (read-only)",
+      run = function()
+        ui.doctor()
+      end,
+    },
+    find_route(),
   }
   vim.list_extend(cases_routes, filter_routes())
 

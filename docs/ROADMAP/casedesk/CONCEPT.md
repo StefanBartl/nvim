@@ -228,6 +228,10 @@ folgt der tatsächlichen Konvention.
 | `:Cases list`             | alle Cases, gruppiert nach Zustand                            |
 | `:Cases company [pattern]`| Substring, case-insensitive; leer = "Company ist gesetzt"     |
 | `:Cases title/name/notes [pattern]` | dieselbe generische Filter-Route, ein Feld pro Zeile in `config.infocard_fields` |
+| `:Cases find company=Scan year=2026` | Feld-Kombination via composer `kv` (bare `key=value`, kein `--`) |
+| `:Cases recent [n]`       | die `n` (Default 10) zuletzt angefassten Cases, neueste zuerst |
+| `:Cases stats`            | Anzahl nach Zustand / Company / Jahr                          |
+| `:Cases doctor`           | Bestands-Bericht, rein lesend (`doctor.lua`, §10)              |
 
 Ein Treffer öffnet direkt die Infokarte, mehrere gehen in `kit.select`.
 
@@ -281,3 +285,22 @@ shellt aus — funktioniert unabhängig vom Plugin-Modus (lokal/remote).
 
 Optionale Integration über `pcall(require, …)`: `filetree.nvim` für
 `:Case open`s Reveal (Fallback: netrw).
+
+---
+
+## 10. `:Cases doctor` (`doctor.lua`)
+
+Reiner Bericht — liest, schreibt nie. `M.check()` scannt jeden Case auf vier
+Muster (MIGRATION.md §4): Case-Notiz unter einem der vier bekannten
+Alias-Namen statt `Summary.md`, `Research.md` als Flat-File statt
+`Research/`-Ordner, `Solutions/`(Plural)/`Solution.md` statt `Solution/`,
+und zwei bekannte Tippfehler-Dateinamen. `M.describe()` rendert die Liste
+für `kit.viewer`.
+
+Gegen den migrierten Bestand am 2026-08-04: **10 Findings über 8 Cases**
+(genaue Aufschlüsselung in [ROADMAP.md](ROADMAP.md) v6) — deckt sich exakt
+mit der Analyse aus MIGRATION.md §4, jetzt als Code statt als Handzählung.
+
+`:Cases normalize` (der Fix-Teil, noch nicht gebaut) wird auf genau diesen
+`DoctorFinding`-Einträgen aufbauen — derselbe Plan → Dry-Run → Confirm → Apply-
+Pfad wie `:Case new`, nur mit `rename` als Aktionstyp statt `write`.

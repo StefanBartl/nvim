@@ -585,4 +585,83 @@ function M.list_all()
   kit.viewer({ title = "Cases", lines = lines })
 end
 
+--- `:Cases find company=Scan year=2026` — AND-combination across several
+--- `config.infocard_fields` at once, via composer's `kv` grammar.
+---@param kv table<string, string>
+function M.filter_many(kv)
+  local parts = {}
+  for k, v in pairs(kv) do
+    parts[#parts + 1] = ("%s=%s"):format(k, v)
+  end
+  table.sort(parts)
+  local label = #parts > 0 and table.concat(parts, " ") or "find (no criteria given)"
+  show_results(query.by_fields(kv), label)
+end
+
+--- `:Cases recent [n]` — most recently touched cases first.
+---@param n_arg string|nil
+function M.recent(n_arg)
+  local n = tonumber(n_arg) or 10
+  local rows = query.recent(n)
+  if #rows == 0 then
+    notify.warn("no cases with detectable activity")
+    return
+  end
+  kit.select({
+    message = ("Recent (%d)"):format(#rows),
+    selection = rows,
+    format_item = function(row)
+      local m = meta.read(row.entry.dir)
+      return ("%s  %-10s %s"):format(os.date("%Y-%m-%d", row.mtime), row.entry.short, (m and m.title) or "")
+    end,
+    on_select = function(item)
+      M.info(item.entry.short)
+    end,
+    on_cancel = function() end,
+  })
+end
+
+--- `:Cases stats` — counts by state / company / year.
+function M.stats()
+  local s = query.stats()
+  local lines = { "By state:" }
+  for _, state in ipairs(config.states) do
+    lines[#lines + 1] = ("  %-14s %d"):format(state, s.by_state[state] or 0)
+  end
+
+  lines[#lines + 1] = ""
+  lines[#lines + 1] = "By company:"
+  local companies = {}
+  for c in pairs(s.by_company) do
+    companies[#companies + 1] = c
+  end
+  table.sort(companies)
+  for _, c in ipairs(companies) do
+    lines[#lines + 1] = ("  %-20s %d"):format(c, s.by_company[c])
+  end
+
+  lines[#lines + 1] = ""
+  lines[#lines + 1] = "By year:"
+  local years = {}
+  for y in pairs(s.by_year) do
+    years[#years + 1] = y
+  end
+  table.sort(years)
+  for _, y in ipairs(years) do
+    lines[#lines + 1] = ("  %-8s %d"):format(y, s.by_year[y])
+  end
+
+  kit.viewer({ title = "Cases — stats", lines = lines })
+end
+
+--- `:Cases doctor` — read-only bestand-consistency report (MIGRATION.md §4).
+function M.doctor()
+  local doctor = require("bindings.usrcmds.case.doctor")
+  local findings = doctor.check()
+  kit.viewer({
+    title = ("Cases — doctor (%d)"):format(#findings),
+    lines = doctor.describe(findings),
+  })
+end
+
 return M
