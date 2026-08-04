@@ -118,22 +118,34 @@ namespaces only; `compare`'s third token (a day count) isn't completed,
 and `startup` takes no namespace at all (its second token is a `top`
 count).
 
-### Startup attribution needs one manual line, first
+### Startup attribution is opt-in, via the plugin's own `init` hook
 
-`:RATelemetry startup` reports nothing unless this runs as the **literal
-first line of `init.lua`**, before lazy.setup() or anything else:
+`:RATelemetry startup` reports nothing unless this is in the
+`runtime-analysis.nvim` spec (`lua/plugins/personal/init.lua`):
 
 ```lua
-require("runtime-analysis.telemetry.startup").autostart()
+{
+  "StefanBartl/runtime-analysis.nvim",
+  init = function()
+    require("runtime-analysis.telemetry.startup").autostart()
+  end,
+}
 ```
 
 It wraps the global `require` and times every cache miss; only modules
 required *after* it are ever seen (anything already in `package.loaded` is
-invisible, not free). Stops itself at `UIEnter`. Worth knowing *why* this
-isn't wired into `setup()`: by then most of a real config is already
-loaded, and lazy.nvim — despite the roadmap's original assumption — never
-times individual requires, so its `User LazyLoad` event (fires *after*
-`config()`, and is per-plugin) can't substitute.
+invisible, not free). Stops itself at `UIEnter`.
+
+**Why `init` and not `init.lua`** — lazy.nvim's `loader.M.startup` runs
+*every* plugin's `init` in one pass before it loads any plugin at all
+(step 1 of 4), so `init` is already the earliest per-plugin hook, and it
+lives in the spec — deleting the plugin deletes it too. A line in
+`init.lua` would have to be removed by hand forever, since an uninstalled
+plugin runs no code and could never take it back out. (Same reason the
+plugin doesn't write that line itself on install: tempting, unfixable.)
+And it can't ride `setup()` either — by then most of the config is loaded
+— nor lazy's `User LazyLoad`, which fires *after* `config()` and is
+per-plugin, not per-module.
 
 Also shipped 2026-08-04, no new command surface:
 - **Error fingerprinting (§3.4)** — `errors` now also records *what* a
