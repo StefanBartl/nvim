@@ -82,7 +82,11 @@ function M.create(short, title, company, name)
     snow = render.to_snow(short, year),
   }
 
-  local nodes = blueprint.get(config.default_blueprint)
+  -- ROADMAP.md v7: a company can be routed to its own blueprint; unmapped
+  -- (the common case today — the table starts empty) falls through to the
+  -- same default every case has always used.
+  local blueprint_name = (tokens.company and config.company_blueprints[tokens.company]) or config.default_blueprint
+  local nodes = blueprint.get(blueprint_name)
   local actions = plan.build(dir, nodes, tokens)
 
   kit.viewer({
@@ -107,7 +111,7 @@ function M.create(short, title, company, name)
         name = tokens.name,
         notes = "",
         links = {},
-        blueprint = config.default_blueprint,
+        blueprint = blueprint_name,
         created = os.date("!%Y-%m-%dT%H:%M:%SZ"),
       })
 
@@ -138,6 +142,8 @@ local function infocard_lines(entry, m)
     ("State     %s"):format(entry.state),
     ("Title     %s"):format(m.title or "—"),
     ("Company   %s"):format(m.company or "—"),
+    ("Priority  %s"):format(m.priority or "—"),
+    ("Tosca Ver %s"):format(m.tosca_version or "—"),
     ("Name      %s"):format(m.name or "—"),
     ("Notes     %s"):format((m.notes and m.notes ~= "") and m.notes or "—"),
     ("Links     %d"):format(m.links and #m.links or 0),
@@ -191,6 +197,8 @@ function M.edit_info(entry, m)
     fields = {
       { name = "title", label = "Title", default = m.title or guess.title or "" },
       { name = "company", label = "Company", default = m.company or "" },
+      { name = "priority", label = "Priority", default = m.priority or "" },
+      { name = "tosca_version", label = "Tosca-Version", default = m.tosca_version or "" },
       { name = "name", label = "Name", default = m.name or guess.name or "" },
       { name = "notes", label = "Notes", default = m.notes or "" },
     },
@@ -204,6 +212,8 @@ function M.edit_info(entry, m)
         year = m.year or os.date("%Y"),
         title = values.title,
         company = (values.company ~= "") and values.company or nil,
+        priority = (values.priority ~= "") and values.priority or nil,
+        tosca_version = (values.tosca_version ~= "") and values.tosca_version or nil,
         name = (values.name ~= "") and values.name or nil,
         notes = values.notes,
         links = links,
@@ -295,9 +305,35 @@ end
 
 -- ── :Case add ────────────────────────────────────────────────────────────
 
+--- "Scan the folder, take the highest `NN_` already there, +1" — the rule
+--- behind every auto-numbered file this module creates (Replies/ here,
+--- Research/ for `M.activity`). Zero-padded to 2 digits, matching every
+--- existing `NN_` file in the bestand.
+---@param dir string
+---@return string
+local function next_nn_prefix(dir)
+  local max_n = -1
+  local fd = uv.fs_scandir(dir)
+  if fd then
+    while true do
+      local fname = uv.fs_scandir_next(fd)
+      if not fname then
+        break
+      end
+      local n = fname:match("^(%d+)_")
+      if n then
+        max_n = math.max(max_n, tonumber(n))
+      end
+    end
+  end
+  return ("%02d"):format(max_n + 1)
+end
+
 ---@param name string
+---@param suffix string|nil  For `name == "reply"`: overrides the "Reply" stem
+---  (e.g. "AskForPDF" -> "NN_AskForPDF.md"). Ignored otherwise.
 ---@param case_arg string|nil
-function M.add(name, case_arg)
+function M.add(name, suffix, case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
       notify.warn("no case to add to")
@@ -307,25 +343,17 @@ function M.add(name, case_arg)
     if name == "reply" then
       local replies_dir = entry.dir .. "/Replies"
       mkdirp(replies_dir)
-      local max_n = -1
-      local fd = uv.fs_scandir(replies_dir)
-      if fd then
-        while true do
-          local fname = uv.fs_scandir_next(fd)
-          if not fname then
-            break
-          end
-          local n = fname:match("^(%d+)_")
-          if n then
-            max_n = math.max(max_n, tonumber(n))
-          end
-        end
+      local stem = (suffix and suffix ~= "") and suffix or "Reply"
+      local ok_name, err_name = fs_is_valid_filename(stem .. ".md")
+      if not ok_name then
+        notify.error("invalid reply name: " .. tostring(err_name))
+        return
       end
-      local next_n = ("%02d"):format(max_n + 1)
-      local filename = next_n .. "_Reply.md"
+      local next_n = next_nn_prefix(replies_dir)
+      local filename = next_n .. "_" .. stem .. ".md"
       local full = replies_dir .. "/" .. filename
       local m = meta.read(entry.dir)
-      local lines = { render.headline(entry.short, m and m.title, next_n .. "_Reply"), "" }
+      local lines = { render.headline(entry.short, m and m.title, next_n .. "_" .. stem), "" }
       local ok, err = write_to_file(full, table.concat(lines, "\n"))
       if not ok then
         notify.error("add reply failed: " .. tostring(err))
@@ -353,6 +381,40 @@ function M.add(name, case_arg)
       notify.error("add failed: " .. tostring(err))
       return
     end
+    edit(full)
+  end)
+end
+
+-- ── :Case activity ───────────────────────────────────────────────────────
+
+--- Paste the system clipboard — a ServiceNow Activity Stream, typically —
+--- into a new numbered Research/ file. Clipboard rather than a prompt: the
+--- point is copy-in-SNOW, run-the-command, nothing retyped.
+---@param case_arg string|nil
+function M.activity(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to add the activity stream to")
+      return
+    end
+    local content = vim.fn.getreg("+")
+    if not content or vim.trim(content) == "" then
+      notify.warn("clipboard is empty")
+      return
+    end
+    local research_dir = entry.dir .. "/Research"
+    mkdirp(research_dir)
+    local next_n = next_nn_prefix(research_dir)
+    local stem = next_n .. "_ActivityStream"
+    local full = research_dir .. "/" .. stem .. ".md"
+    local m = meta.read(entry.dir)
+    local lines = { render.headline(entry.short, m and m.title, stem), "", content }
+    local ok, err = write_to_file(full, table.concat(lines, "\n"))
+    if not ok then
+      notify.error("activity stream write failed: " .. tostring(err))
+      return
+    end
+    notify.info("activity stream saved: " .. stem .. ".md")
     edit(full)
   end)
 end
@@ -638,6 +700,30 @@ function M.recent(n_arg)
   })
 end
 
+--- `:Cases stale [days]` — open cases untouched for at least `days` (default
+--- 7), oldest first.
+---@param days_arg string|nil
+function M.stale(days_arg)
+  local days = tonumber(days_arg) or 7
+  local rows = query.stale(days)
+  if #rows == 0 then
+    notify.info(("no open case has been idle %d+ days"):format(days))
+    return
+  end
+  kit.select({
+    message = ("Stale %d+ days (%d)"):format(days, #rows),
+    selection = rows,
+    format_item = function(row)
+      local m = meta.read(row.entry.dir)
+      return ("%3d d idle  %-10s %s"):format(row.days_idle, row.entry.short, (m and m.title) or "")
+    end,
+    on_select = function(item)
+      M.info(item.entry.short)
+    end,
+    on_cancel = function() end,
+  })
+end
+
 --- `:Cases stats` — counts by state / company / year.
 function M.stats()
   local s = query.stats()
@@ -703,6 +789,41 @@ function M.grep(pattern, flags)
     title = ("Cases — grep %q%s (%d)"):format(pattern, flag_suffix(flags), #hits),
     lines = lines,
   })
+end
+
+--- `:Cases linkcheck [case]` — are this case's (or every case's)
+--- docs.tricentis.com links still alive? Async (bounded-concurrency HEAD
+--- requests via lib.nvim.net.curl) — the report only renders once every
+--- request has settled, there's no partial/streaming view.
+---@param case_arg string|nil
+function M.linkcheck(case_arg)
+  local linkcheck = require("bindings.usrcmds.case.linkcheck")
+  local short = (case_arg and case_arg ~= "") and render.to_short(case_arg) or nil
+  local targets = linkcheck.targets(short)
+  if #targets == 0 then
+    notify.info("no docs.tricentis.com links found" .. (short and (" for " .. short) or ""))
+    return
+  end
+  notify.info(("checking %d docs.tricentis.com link(s)…"):format(#targets))
+  linkcheck.run(targets, function(results)
+    vim.schedule(function()
+      local dead, uncertain = 0, 0
+      local lines = {}
+      for _, r in ipairs(results) do
+        local marker = r.status == "alive" and "OK" or (r.status == "dead" and "DEAD" or "??")
+        if r.status == "dead" then
+          dead = dead + 1
+        elseif r.status == "uncertain" then
+          uncertain = uncertain + 1
+        end
+        lines[#lines + 1] = ("%-10s %-4s %s  (%s)"):format(r.short, marker, r.url, r.detail)
+      end
+      kit.viewer({
+        title = ("Cases — link check (%d dead, %d uncertain / %d)"):format(dead, uncertain, #results),
+        lines = lines,
+      })
+    end)
+  end)
 end
 
 --- `:Cases doctor` — read-only bestand-consistency report (MIGRATION.md §4).

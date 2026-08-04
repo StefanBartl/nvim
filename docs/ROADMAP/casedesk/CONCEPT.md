@@ -119,7 +119,7 @@ auf. Ein vierter Zustand ist eine Zeile in dieser Liste, kein neuer Code-Pfad.
 ```
 lua/bindings/usrcmds/case/
   init.lua        enable() → CASE-Argtyp, :Case-Verb, :Cases-Verb
-  config.lua      cases_root, states, Headline-Format, Default-Blueprint
+  config.lua      cases_root, states, Headline-Format, Default-/Company-Blueprint
   templates.lua   Tag → Datei-Pfad, Token-Rendering (§4a)
   templates/      Summary.md, Research.md, Reply.md — echte Markdown-Files
   blueprint.lua   Zugriff auf config.blueprints + Datei-Verb-Erkennung
@@ -130,10 +130,18 @@ lua/bindings/usrcmds/case/
   detect.lua      Auto-Befüllung: Titel/Name/Links aus dem Case-Inhalt
   registry.lua    Cases/{Open,Closed,Reassigned}/<nr> scannen, gecacht
   resolve.lua     "welcher Case?" — Argument > Buffer > Auswahl
-  query.lua       :Cases-Feldfilter + Gruppierung nach Zustand
+  query.lua       :Cases-Feldfilter, -grep, -stale + Gruppierung nach Zustand
+  doctor.lua      Bestands-Bericht (Findings mit sicherem Rename-Ziel), rein lesend
+  normalize.lua   Fix-Teil zu doctor.lua — Plan/Dry-Run/Confirm/Apply
+  linkcheck.lua   docs.tricentis.com-Links prüfen (lib.nvim.net.curl, async)
   migrate.lua     einmaliger Umzug von der alten Struktur (siehe MIGRATION.md)
-  ui.lua          kit.form / kit.select / kit.viewer / kit.confirm-Verdrahtung
+  ui.lua          kit.form / kit.select / kit.viewer / kit.confirm / kit.menu-Verdrahtung
 ```
+
+Statusline-Badge (aktueller Case, ROADMAP.md v7) liegt bewusst außerhalb
+dieses Moduls, unter `lua/wkdnvchad/ui/statusline/modules/casedesk/` — casedesk
+selbst hat keine Statusline-Abhängigkeit, die Statusline liest nur
+`resolve.sync`/`meta.read` von außen.
 
 `resolve.lua` beantwortet "welcher Case?" an einer Stelle — Argument
 (schon durch `CASE` normalisiert) → Case des fokussierten Buffers
@@ -210,11 +218,12 @@ folgt der tatsächlichen Konvention.
 
 | Command                     | Wirkung                                                          |
 | --------------------------- | ------------------------------------------------------------------- |
-| `:Case new [nr]`            | Prompt-Kette + Scaffold                                              |
+| `:Case new [nr]`            | Prompt-Kette + Scaffold (respektiert `config.company_blueprints`)     |
 | `:Case info [nr]`           | Kurz-Infokarte — `e` edit · `s` summary · `o` open folder            |
 | `:Case summary/research/reply [nr]` | generiert aus dem Blueprint (jeder Node mit `key`)          |
 | `:Case open [nr]`           | Case-Ordner öffnen (Filetree-Reveal wenn verfügbar, sonst netrw)     |
-| `:Case add <name>`          | neue Markdown-Datei; `reply` nummeriert automatisch                 |
+| `:Case add <name> [suffix]` | neue Markdown-Datei; `reply [suffix]` nummeriert automatisch (`suffix` überschreibt den Namensteil, sonst `Reply`) |
+| `:Case activity [nr]`       | Zwischenablage (SNOW Activity Stream) als neue nummerierte `Research/`-Datei |
 | `:Case copy <src>`          | Datei in den Case kopieren, Zielordner per Auswahl                  |
 | `:Case sync [nr]`           | fehlende Blueprint-Teile nachziehen (nie überschreiben)              |
 | `:Case close [nr]`          | generiert aus `config.states` — nach `Closed/` verschieben           |
@@ -226,12 +235,17 @@ folgt der tatsächlichen Konvention.
 | Command                  | Wirkung                                                    |
 | ------------------------- | ------------------------------------------------------------ |
 | `:Cases list`             | alle Cases, gruppiert nach Zustand                            |
-| `:Cases company [pattern]`| Substring, case-insensitive; leer = "Company ist gesetzt"     |
-| `:Cases title/name/notes [pattern]` | dieselbe generische Filter-Route, ein Feld pro Zeile in `config.infocard_fields` |
-| `:Cases find company=Scan year=2026` | Feld-Kombination via composer `kv` (bare `key=value`, kein `--`) |
+| `:Cases company [pattern] [--exact\|-e] [--re\|-r]` | Substring (Default), volle Gleichheit oder Lua-Pattern; leer = "Company ist gesetzt" |
+| `:Cases title/name/notes/priority/tosca_version [pattern] [--exact\|-e] [--re\|-r]` | dieselbe generische Filter-Route, ein Feld pro Zeile in `config.infocard_fields` |
+| `:Cases find company=Scan year=2026 [--exact\|-e] [--re\|-r]` | Feld-Kombination via composer `kv` (bare `key=value`, kein `--`) |
+| `:Cases grep <pattern> [--re\|-r]` | Volltextsuche über alle `.md`-Dateien aller Cases              |
 | `:Cases recent [n]`       | die `n` (Default 10) zuletzt angefassten Cases, neueste zuerst |
+| `:Cases stale [days]`     | offene Cases seit `days` (Default 7) Tagen nicht angefasst, älteste zuerst |
 | `:Cases stats`            | Anzahl nach Zustand / Company / Jahr                          |
 | `:Cases doctor`           | Bestands-Bericht, rein lesend (`doctor.lua`, §10)              |
+| `:Cases normalize`        | behebt die von `doctor` gemeldeten Abweichungen (Dry-Run + Confirm) |
+| `:Cases linkcheck [nr]`   | prüft `docs.tricentis.com`-Links auf tote Seiten (`linkcheck.lua`) |
+| `:Cases pickers`          | `kit.menu`: Attachments / Links / Cases ohne `.case.json`      |
 
 Ein Treffer öffnet direkt die Infokarte, mehrere gehen in `kit.select`.
 
@@ -277,11 +291,15 @@ Elternordner abgeleitet) — beides bewusst, siehe §3.
 
 ## 9. Was aus lib.nvim benutzt wird
 
-`ui.kit` (`form`/`select`/`viewer`/`confirm`/`input`) für jede Interaktion,
-`usercmd.composer` für `:Case`/`:Cases` inkl. `CASE`-Argtyp und generierter
-Routen, `fs.mkdirp`/`write.to_file`/`read`/`json` fürs Dateisystem,
-`cross.open_default`/`copy_to_clipboard` für `:Case snow`. Nichts davon
-shellt aus — funktioniert unabhängig vom Plugin-Modus (lokal/remote).
+`ui.kit` (`form`/`select`/`viewer`/`confirm`/`input`/`menu`) für jede
+Interaktion, `usercmd.composer` für `:Case`/`:Cases` inkl. `CASE`-Argtyp,
+Flags und generierter Routen, `fs.mkdirp`/`write.to_file`/`read`/`json`/
+`collect_recursive` fürs Dateisystem, `cross.open_default`/
+`copy_to_clipboard` für `:Case snow` und die Attachment-/Links-Picker,
+`net.curl` für `:Cases linkcheck` (einziges Modul hier mit echtem
+Netzwerk-I/O — bewusst über den vorhandenen `vim.system`-Wrapper statt
+eigenem Shell-Aufruf). Nichts davon shellt direkt aus — funktioniert
+unabhängig vom Plugin-Modus (lokal/remote).
 
 Optionale Integration über `pcall(require, …)`: `filetree.nvim` für
 `:Case open`s Reveal (Fallback: netrw).

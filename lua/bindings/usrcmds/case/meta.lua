@@ -21,6 +21,8 @@ end
 ---@field company string|nil
 ---@field name string|nil
 ---@field notes string|nil
+---@field priority string|nil
+---@field tosca_version string|nil
 ---@field links string[]|nil
 ---@field blueprint string|nil
 ---@field created string|nil

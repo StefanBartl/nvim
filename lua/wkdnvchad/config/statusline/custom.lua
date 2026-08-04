@@ -11,6 +11,7 @@ local get_separators = lazy.require("wkdnvchad.ui.statusline.utils.get_separator
 local plugin_progress = lazy.require("wkdnvchad.ui.statusline.modules.plugin_progress")
 local plugin_summary = lazy.require("wkdnvchad.ui.statusline.modules.plugin_summary")
 local filetree_cwd_mode = lazy.require("wkdnvchad.ui.statusline.modules.filetree_cwd_mode")
+local casedesk = lazy.require("wkdnvchad.ui.statusline.modules.casedesk")
 
 -- ============================================================================
 -- Modules
@@ -33,6 +34,7 @@ return {
         "lsp",
         "plugin_progress",
         "plugin_summary",
+        "casedesk",
         "filetree_cwd_mode",
         "cursor",
       },
@@ -44,6 +46,12 @@ return {
 
         plugin_summary = function()
           return plugin_summary()
+        end,
+
+        -- Case-Kurzinfo (Nr · Company · N Replies), leer außerhalb eines
+        -- Case-Ordners — s. lua/bindings/usrcmds/case/, ROADMAP.md v7.
+        casedesk = function()
+          return casedesk()
         end,
 
         -- The label itself (PROJECT/PKG/LOCK/… vs P/N/L/… vs 1/2/3/… vs a

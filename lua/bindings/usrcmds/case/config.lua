@@ -54,13 +54,22 @@ M.snow_url_format = nil
 --- extension (e.g. "Research/00_Research.md" -> "00_Research").
 M.headline_format = "# %s - `%s` - %s"
 
---- Every entry here is, for free: an infocard row, a `kit.form` edit field,
---- and (via init.lua's filter-route generation) a `:Cases <field> [pattern]`
---- query. `case` is deliberately excluded — filtering "case number contains
---- X" is what CASE-argtype completion already does.
-M.infocard_fields = { "title", "company", "name", "notes" }
+--- Every entry here is, for free: a `:Cases <field> [pattern]` filter route
+--- (init.lua's filter-route generation) and — the ones `ui.lua`'s
+--- `infocard_lines`/`edit_info` also hand-list — an infocard row and
+--- `kit.form` edit field. `case` is deliberately excluded — filtering "case
+--- number contains X" is what CASE-argtype completion already does.
+M.infocard_fields = { "title", "company", "name", "notes", "priority", "tosca_version" }
 
 M.default_blueprint = "default"
+
+--- Company name (as stored in `.case.json`) -> a key in `M.blueprints`,
+--- consulted by `:Case new` before falling back to `default_blueprint`
+--- (ROADMAP.md v7). Empty by construction — no company needs a different
+--- scaffold yet, so this changes nothing until a case actually asks for
+--- one: add a `M.blueprints.<name>` table plus a line here, no code.
+---@type table<string, string>
+M.company_blueprints = {}
 
 ---@type table<string, Lib.Case.BlueprintNode[]>
 M.blueprints = {

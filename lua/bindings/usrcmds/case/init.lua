@@ -166,10 +166,21 @@ function M.enable()
     },
     {
       path = { "add" },
-      args = { { name = "name", type = "STRING" } },
-      desc = "Add a markdown file to the current case ('reply' auto-numbers)",
+      args = {
+        { name = "name", type = "STRING" },
+        { name = "suffix", type = "STRING", optional = true },
+      },
+      desc = "Add a markdown file ('reply [suffix]' auto-numbers, e.g. :Case add reply AskForPDF)",
       run = function(ctx)
-        ui.add(ctx.args.name, nil)
+        ui.add(ctx.args.name, ctx.args.suffix, nil)
+      end,
+    },
+    {
+      path = { "activity" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "Paste the clipboard (a SNOW Activity Stream) into a new Research/ file",
+      run = function(ctx)
+        ui.activity(ctx.args.case)
       end,
     },
     {
@@ -233,6 +244,14 @@ function M.enable()
       end,
     },
     {
+      path = { "stale" },
+      args = { { name = "days", type = "STRING", optional = true } },
+      desc = "Open cases untouched for at least N days (default 7)",
+      run = function(ctx)
+        ui.stale(ctx.args.days)
+      end,
+    },
+    {
       path = { "doctor" },
       desc = "Report bestand naming inconsistencies (read-only)",
       run = function()
@@ -248,6 +267,14 @@ function M.enable()
     },
     find_route(),
     grep_route(),
+    {
+      path = { "linkcheck" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "Check docs.tricentis.com links for dead pages (optionally one case)",
+      run = function(ctx)
+        ui.linkcheck(ctx.args.case)
+      end,
+    },
     {
       path = { "pickers" },
       desc = "Discovery menu: attachments, links, cases without .case.json",

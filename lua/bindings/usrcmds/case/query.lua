@@ -158,6 +158,35 @@ function M.stats()
   return { by_state = by_state, by_company = by_company, by_year = by_year }
 end
 
+local SECONDS_PER_DAY = 86400
+
+--- Open cases untouched for at least `days` (default 7), oldest first — for
+--- `:Cases stale`. Only `config.default_state` ("Open"): a closed/reassigned
+--- case going quiet is expected, not a signal.
+---@param days integer|nil
+---@return { entry: Lib.Case.RegistryEntry, mtime: integer, days_idle: integer }[]
+function M.stale(days)
+  days = days or 7
+  local cutoff = os.time() - days * SECONDS_PER_DAY
+  local rows = {}
+  for _, e in ipairs(registry.list()) do
+    if e.state == config.default_state then
+      local mtime = detect.last_touched(e.dir)
+      if mtime and mtime <= cutoff then
+        rows[#rows + 1] = {
+          entry = e,
+          mtime = mtime,
+          days_idle = math.floor((os.time() - mtime) / SECONDS_PER_DAY),
+        }
+      end
+    end
+  end
+  table.sort(rows, function(a, b)
+    return a.mtime < b.mtime
+  end)
+  return rows
+end
+
 ---@class Lib.Case.GrepHit
 ---@field short string
 ---@field path string  Relative to the case dir.

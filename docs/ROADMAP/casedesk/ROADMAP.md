@@ -120,15 +120,55 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
       Findings**, **20 davon sicher normalisierbar** (die 2 aus 711373
       bleiben weiterhin mehrdeutig).
 
-## v7 — Komfort
+## v7 — Komfort ✅ implementiert
 
-- [ ] Clipboard-Node: Activity-Stream aus SNOW direkt als `Research/01_ActivityStream.md`
-- [ ] Statusline-Badge: aktueller Case + Company + offene Replies
-- [ ] Case-Templates pro Company (jetzt als Feld, nicht als Ordner)
-- [ ] Infokarte: Feld `Priority` / `Tosca-Version` (eine Zeile `infocard_fields`)
-- [ ] `:Cases stale 7` — offen und seit 7 Tagen nicht angefasst
-- [ ] Link-Check: melden, wenn ein `docs.tricentis.com`-Link tot ist
-- [ ] `:Case add reply` — Namen beim Anlegen überschreibbar (`00_AskForPDF.md`)
+- [x] Clipboard-Node: Activity-Stream aus SNOW direkt als `Research/NN_ActivityStream.md`
+      — `:Case activity [nr]` liest `vim.fn.getreg("+")`, schreibt mit
+      Standard-Headline und automatischer `NN_`-Nummerierung
+      (`next_nn_prefix()`, jetzt geteilt mit `:Case add reply`, s. u.).
+      Isoliert gegen ein Scratch-Verzeichnis getestet (nicht den echten
+      Bestand): Inhalt landet byte-exakt in der neuen Datei.
+- [x] Statusline-Badge: aktueller Case + Company + Anzahl Replies —
+      `lua/wkdnvchad/ui/statusline/modules/casedesk/init.lua`, verdrahtet in
+      `custom.lua` (`order`/`modules`, wiederverwendete Highlight-Gruppe
+      `St_Lsp`, keine neue Theme-Farbe). Nach Buffername gecacht wie
+      `plugin_summary` — kein `.case.json`-Read/Directory-Scan bei jedem
+      Redraw, nur beim Buffer-Wechsel. Getestet: innerhalb eines
+      Case-Ordners `"1007631 · 0 replies"`, außerhalb leerer String.
+- [x] Case-Templates pro Company (jetzt als Feld, nicht als Ordner) —
+      `config.company_blueprints` (Company-Name → Blueprint-Key), von
+      `:Case new` vor dem Fallback auf `default_blueprint` konsultiert.
+      Bewusst leer: kein Case braucht bisher ein anderes Blueprint, ein
+      neues ist ab jetzt `M.blueprints.<name>` + eine Zeile in
+      `company_blueprints`, kein Code.
+- [x] Infokarte: Feld `Priority` / `Tosca-Version` — beide in
+      `infocard_fields` (macht automatisch `:Cases priority`/
+      `:Cases tosca_version` als Filter-Routen), plus manuell in
+      `infocard_lines`/`edit_info`s `kit.form` ergänzt (die Anzeige/Edit-Form
+      ist nicht generisch über `infocard_fields`, anders als die Filter-Routen).
+- [x] `:Cases stale [days]` (Default 7) — offene Cases seit `days` Tagen
+      nicht angefasst (`detect.last_touched`), älteste zuerst. Gegen den
+      realen Bestand getestet: **7 stale Cases bei 7 Tagen** (933790: 19
+      Tage, 968475: 18, 904938: 15, 977283: 13, 859769: 11, …).
+- [x] Link-Check: `linkcheck.lua`, `lib.nvim.net.curl.fetch_raw` (HEAD,
+      max. 4 gleichzeitig, 5 s Timeout), bewusst nur `docs.tricentis.com`
+      (die Doku-Seiten, die tatsächlich verschoben/entfernt werden — nicht
+      jeder Link, den ein Case zufällig erwähnt). 401/403/405 zählen
+      **nicht** als tot (Auth-Wall bzw. HEAD nicht erlaubt, Seite existiert).
+      `:Cases linkcheck [nr]`. **Test-Hinweis**: der `ok=false`-Pfad
+      (Netzwerkfehler → „dead") ist headless bestätigt; der `alive`-Pfad
+      (echtes 200) ließ sich in dieser Sandbox nicht sauber gegenprüfen —
+      `vim.system`-Aufrufe über `lib.nvim.net.curl` liefen in denselben
+      Requests konsequent in einen Timeout, während dieselbe URL per rohem
+      `curl` (Git-Bash **und** natives `C:\Windows\System32\curl.exe`)
+      sofort mit `200` antwortete. Deckt sich mit dem seit dieser Session
+      wiederkehrenden `runtime-analysis.nvim`-Stack-Overflow-Bug (unabhängig
+      von diesem Feature) — vor dem ersten echten Einsatz im Alltag einmal
+      gegenprüfen.
+- [x] `:Case add reply [suffix]` — Namen beim Anlegen überschreibbar
+      (`:Case add reply AskForPDF` → `NN_AskForPDF.md`, ohne Argument weiter
+      `NN_Reply.md`). Isoliert getestet: `00_AskForPDF.md` dann `01_Reply.md`
+      — Nummerierung korrekt fortlaufend, keine Kollision.
 
 ## v8 — Weiter gedacht
 
