@@ -111,14 +111,36 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 | `:RATelemetry export [path]` | JSON, or Markdown if `path` ends `.md` |
 | `:RATelemetry open [ns]` | render + open externally (`report_style`: `auto`/`kit`/`mdview`/`file`) |
 | `:RATelemetry compare [ns] [days]` | "this window vs the one before it" (default 7d) — newly-hot/gone-cold/changed functions. Shipped 2026-08-04 (§4.2). |
+| `:RATelemetry startup [top]` | Which *module* a plugin's startup cost sits in, as a waterfall (self vs. total time, grouped per module and per module root). Shipped 2026-08-04 (§3.3). **Needs the opt-in below.** |
 
 `<Tab>` after `start `/`stop `/`reset `/`open `/`compare ` completes
-namespaces only; `compare`'s third token (a day count) isn't completed.
-Also shipped 2026-08-04, no new command surface: error fingerprinting
-(§3.4) — `errors` now also records *what* a wrapped function raised
-(bounded, same machinery as argument profiling), visible in
-`entry.error_fp` and both renderers, riding entirely on the existing
-`errors` opt-in.
+namespaces only; `compare`'s third token (a day count) isn't completed,
+and `startup` takes no namespace at all (its second token is a `top`
+count).
+
+### Startup attribution needs one manual line, first
+
+`:RATelemetry startup` reports nothing unless this runs as the **literal
+first line of `init.lua`**, before lazy.setup() or anything else:
+
+```lua
+require("runtime-analysis.telemetry.startup").autostart()
+```
+
+It wraps the global `require` and times every cache miss; only modules
+required *after* it are ever seen (anything already in `package.loaded` is
+invisible, not free). Stops itself at `UIEnter`. Worth knowing *why* this
+isn't wired into `setup()`: by then most of a real config is already
+loaded, and lazy.nvim — despite the roadmap's original assumption — never
+times individual requires, so its `User LazyLoad` event (fires *after*
+`config()`, and is per-plugin) can't substitute.
+
+Also shipped 2026-08-04, no new command surface:
+- **Error fingerprinting (§3.4)** — `errors` now also records *what* a
+  wrapped function raised (bounded, same machinery as argument profiling),
+  in `entry.error_fp` and both renderers. Rides the existing `errors` opt-in.
+- **Sampling (§3.2)** — `sample = N` in `wrap()` opts: only every Nth call
+  pays for timing/arg-profiling/error-fingerprinting; `calls` stays exact.
 Full API this command is a front-end over (instances, `wrap`/`wrap_loaded`,
 `auto()`, the lazy.nvim adapter, argument profiling): see
 [lib.nvim.md's Telemetry section](./lib.nvim.md) for how this personal
