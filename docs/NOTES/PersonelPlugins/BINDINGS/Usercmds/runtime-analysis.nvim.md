@@ -112,6 +112,7 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 | `:RATelemetry open [ns]` | render + open externally (`report_style`: `auto`/`kit`/`mdview`/`file`) |
 | `:RATelemetry compare [ns] [days]` | "this window vs the one before it" (default 7d) — newly-hot/gone-cold/changed functions. Shipped 2026-08-04 (§4.2). |
 | `:RATelemetry startup [top]` | Which *module* a plugin's startup cost sits in, as a waterfall (self vs. total time, grouped per module and per module root). Shipped 2026-08-04 (§3.3). **Needs the opt-in below.** |
+| `:RATelemetry cost` | Startup cost vs. call count per namespace, worst (expensive, underused) first. Shipped 2026-08-04 (§7.2). Joins `startup`'s per-module-root data against each instance's own `resolved_modules()` on real module paths — never guesses a namespace ("markdown.nvim") matches a module root ("markdown") by string similarity. |
 
 `<Tab>` after `start `/`stop `/`reset `/`open `/`compare ` completes
 namespaces only; `compare`'s third token (a day count) isn't completed,
