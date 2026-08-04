@@ -16,11 +16,12 @@ moved here from lib.nvim (see [lib.nvim's own Usercmds sheet](./lib.nvim.md)
 for how a *consuming* plugin uses the telemetry module directly, as
 opposed to this file's `:RATelemetry` command surface).
 
-## `:RA {subcommand}` — request/send/yank/cancel/history/env/import/export
+## `:RA {subcommand}` — request/send/yank/cancel/history/env/import/export/provenance/usage
 
 Built via `lib.nvim.usercmd.composer` — same verb-first shape `:DocMap`/
 `:MDView` use, `<Tab>`-completed (`:RA <Tab>` →
-`request | send | yank | cancel | history | env | import | export`).
+`request | send | yank | cancel | history | env | import | export |
+provenance | usage`).
 `:RARequest`/`:RASend` still work too, unchanged: this plugin's oldest,
 most-referenced surface, kept as flat aliases calling the same handlers
 rather than replaced by `:RA`.
@@ -37,6 +38,7 @@ rather than replaced by `:RA`.
 | `:RA import` | Parses a `curl` command line — system clipboard by default, or a visual/line-range selection's own lines (`'<,'>RA import`) — into a new request buffer. See below. |
 | `:RA export` | The reverse: yanks the `###` block under the cursor as a shareable `curl` command to the unnamed register. See below. |
 | `:RA provenance <path>` | "Who wrapped this function" — e.g. `:RA provenance vim.notify`. Exact for this plugin's own telemetry wraps (named by namespace), best-effort otherwise (`debug.getinfo` source location). Shipped 2026-08-04 (§5.2). |
+| `:RA usage` / `:RA usage start` / `:RA usage stop` | Keymap/command press counts — opt-in, local-only, the one feature here recording *what you did* rather than *what the code did*. `start` wraps `vim.keymap.set` (function-callback mappings only) plus a `CmdlineLeave` hook for typed commands; bare `:RA usage` reports; `stop` ends collection. Built on `runtime-analysis.telemetry` itself. Shipped 2026-08-04 (§7.1). |
 
 Request shape (VS Code REST Client / IntelliJ HTTP Client's own convention,
 deliberately not invented here):
@@ -164,7 +166,7 @@ config actually wires `opts.telemetry` into the plugin's own spec
 `lua/runtime-analysis/telemetry/README.md` in the repo for the module's own
 full reference.
 
-## Global-surface collision check (2026-08-04, re-checked after `:RA import`/`:RA export` were added)
+## Global-surface collision check (2026-08-04, re-checked after `:RA usage` was added)
 
 Checked against every `Usercmds/*.md` in this folder: `RA`, `RARequest`,
 `RASend` and `RATelemetry` are unique — no other personal plugin registers
