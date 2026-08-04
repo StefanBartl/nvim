@@ -36,6 +36,7 @@ rather than replaced by `:RA`.
 | `:RA env [name]` | With `name` (`<Tab>`-completed), selects it as the active environment `{{var}}` placeholders resolve against. With none, `vim.ui.select` over every name the project's env files define. **Session-scoped, not persisted.** See below. |
 | `:RA import` | Parses a `curl` command line — system clipboard by default, or a visual/line-range selection's own lines (`'<,'>RA import`) — into a new request buffer. See below. |
 | `:RA export` | The reverse: yanks the `###` block under the cursor as a shareable `curl` command to the unnamed register. See below. |
+| `:RA provenance <path>` | "Who wrapped this function" — e.g. `:RA provenance vim.notify`. Exact for this plugin's own telemetry wraps (named by namespace), best-effort otherwise (`debug.getinfo` source location). Shipped 2026-08-04 (§5.2). |
 
 Request shape (VS Code REST Client / IntelliJ HTTP Client's own convention,
 deliberately not invented here):
