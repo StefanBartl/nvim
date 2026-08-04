@@ -49,9 +49,15 @@ namespaces included.
 | `:DocBrowse {module}` | centered on one module |
 | `:DocBrowse history` | the commit list |
 | `:DocBrowse trail` | the pinned positions |
+| `:DocBrowse endpoints` | every call-based route registration across the whole tree, not centered on any node. Enriched with coverage (`○` badge) when `runtime-analysis.nvim` is installed and has request history for this project — `gs` sends the selected route as a request. Shipped 2026-08-03/04. |
+| `:DocBrowse telemetry` | the static × runtime join against `runtime-analysis.telemetry` — `✕`/`!`/`○`/blank per function, soft dependency on `runtime-analysis.nvim`. Shipped 2026-08-03 (ECOSYSTEM.md step 8). |
+| `:DocBrowse loaded` | diff loaded-vs-declared against `runtime-analysis.loaded` (`runtime-analysis.nvim`'s own §5.3) — `✕` declared, not loaded this session; `!` loaded, not declared. Soft dependency. Shipped 2026-08-04. |
 
-`live` is a prefix a module name may follow; `history` and `trail` stand *where*
-a module name would.
+`live` is a prefix a module name may follow; `history`, `trail`, `endpoints`,
+`telemetry` and `loaded` stand *where* a module name would — none of them
+takes one, so anything typed after is meaningless. Modes are positional
+(`1`…`9` inside the browser): structure, deps, calls, types, history, trail,
+endpoints, telemetry, loaded.
 
 ## Global-surface collision check (2026-07-28)
 

@@ -12,6 +12,8 @@
 
 ## Features
 
+- [ ] Neue Keymap `C-M-w` - da,it springe ich in da sfiletre window mit dfme cursror und zwar genau zu filenode des buiffers (reveal)
+
 ---
 
 ## Bug

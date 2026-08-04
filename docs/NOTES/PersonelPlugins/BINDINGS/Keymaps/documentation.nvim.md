@@ -16,10 +16,11 @@ problem: a key can only shadow something *inside* that buffer.
 
 ## Modes
 
-`1`…`6` switch the list: `structure`, `deps`, `calls`, `types`, `history`,
-`trail`. Positional and deliberately **not** rebindable — `3` means "the third
-list", so renumbering them individually would desynchronise them from the
-status line.
+`1`…`9` switch the list: `structure`, `deps`, `calls`, `types`, `history`,
+`trail`, `endpoints`, `telemetry`, `loaded` (the last three shipped
+2026-08-03/04). Positional and deliberately **not** rebindable — `3` means
+"the third list", so renumbering them individually would desynchronise them
+from the status line.
 
 ## Keys
 
@@ -38,6 +39,7 @@ status line.
 | `gq` | `quickfix` | all | current list → quickfix (closes) |
 | `gI` | `impact` | all | blast radius → quickfix (closes) |
 | `gO` | `open_page` | all | open the generated HTML page |
+| `gs` | `send_request` | endpoints | send the selected route as a request via `runtime-analysis.nvim` (soft dependency). Shipped 2026-08-03. |
 | `gD` | `commit_diff` | history | the opened commit's diff |
 | `p` | `pin` | all | pin / unpin the entry under the cursor |
 | `d` | `unpin` | trail | unpin |
@@ -97,6 +99,7 @@ buffers:
 | `gd` | insights |
 | `p` `d` `f` | filetree, sandbox, github_stats |
 | `L` `X` | dap, sandbox |
+| `gs` | filetree (own live-search, checked 2026-08-04) |
 
 **No action needed.** documentation.nvim installs nothing globally, so none of
 these can shadow anything outside `:DocBrowse`. The only genuinely global

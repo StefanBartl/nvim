@@ -16,12 +16,12 @@ moved here from lib.nvim (see [lib.nvim's own Usercmds sheet](./lib.nvim.md)
 for how a *consuming* plugin uses the telemetry module directly, as
 opposed to this file's `:RATelemetry` command surface).
 
-## `:RA {subcommand}` — request/send/yank/cancel/history/env/import/export/provenance/usage
+## `:RA {subcommand}` — request/send/yank/cancel/history/env/import/export/provenance/inspect/usage
 
 Built via `lib.nvim.usercmd.composer` — same verb-first shape `:DocMap`/
 `:MDView` use, `<Tab>`-completed (`:RA <Tab>` →
 `request | send | yank | cancel | history | env | import | export |
-provenance | usage`).
+provenance | inspect | usage`).
 `:RARequest`/`:RASend` still work too, unchanged: this plugin's oldest,
 most-referenced surface, kept as flat aliases calling the same handlers
 rather than replaced by `:RA`.
@@ -29,7 +29,7 @@ rather than replaced by `:RA`.
 | Invocation | Does |
 | --- | --- |
 | `:RA request` / `:RARequest` | Opens a new scratch buffer (`filetype = "http"` by default), pre-filled with `GET https://`. One request per buffer — for a real, committed file with several, open it directly with `:e` instead (`###`-separated, see below). |
-| `:RA send` / `:RASend` | Parses and sends whichever `###` block the cursor is in (nearest above it), via `lib.nvim.net.curl.fetch_raw` — **non-blocking**: a "sending ..." placeholder shows immediately, replaced by the real response/error/cancelled once known. A second `:RA send` before the first replies supersedes it (a monotonic token, not a queue). Shows status/headers/body in a persistent split; JSON bodies pretty-print with real folding. A `# @expect status N` (or `// @expect status N`) comment anywhere in the block is checked once the response arrives — match notifies, mismatch (incl. transport failure) replaces the quickfix list with one entry. Shipped 2026-08-04 (§2.5). |
+| `:RA send` / `:RASend` | Parses and sends whichever `###` block the cursor is in (nearest above it), via `lib.nvim.net.curl.fetch_raw` — **non-blocking**: a "sending ..." placeholder shows immediately, replaced by the real response/error/cancelled once known. A second `:RA send` before the first replies supersedes it (a monotonic token, not a queue). Shows status/headers/body in a persistent split; JSON bodies pretty-print with real folding. A `# @expect status N` (or `// @expect status N`) comment anywhere in the block is checked once the response arrives — match notifies, mismatch (incl. transport failure) replaces the quickfix list with one entry. Shipped 2026-08-04 (§2.5). Also understands GraphQL and multipart/form-data bodies — see below (§2.6). |
 | `:RA yank` | Yanks just the last response's **body** (not status/headers) to the unnamed register. |
 | `:RA cancel` | Discards the in-flight request's eventual result (`✗ cancelled`) — a *logical* cancel, curl itself keeps running in the background; `lib.nvim.net.curl.fetch_raw` doesn't hand back a killable handle. |
 | `:RA history` | `vim.ui.select` over this project's recorded sends (method/url/status/timestamp — **no headers, no body, on either side**), newest first; picking one reopens it via `open_request`. Per-project via `lib.nvim.fs.project_key()` + `lib.nvim.cache.disk`. |
@@ -38,6 +38,7 @@ rather than replaced by `:RA`.
 | `:RA import` | Parses a `curl` command line — system clipboard by default, or a visual/line-range selection's own lines (`'<,'>RA import`) — into a new request buffer. See below. |
 | `:RA export` | The reverse: yanks the `###` block under the cursor as a shareable `curl` command to the unnamed register. See below. |
 | `:RA provenance <path>` | "Who wrapped this function" — e.g. `:RA provenance vim.notify`. Exact for this plugin's own telemetry wraps (named by namespace), best-effort otherwise (`debug.getinfo` source location). Shipped 2026-08-04 (§5.2). |
+| `:RA inspect <module>` | Walks a live `package.loaded[module]` table — functions (upvalue counts, source location), nested tables (own shape, cycle-safe, `max_depth=3` for readability), metatables, keys that *shadow* a table `__index`. `<Tab>`-completes against `package.loaded`, live. `__index` reported, never called — a pure read. Renders via `lib.nvim.ui.kit.viewer`, `vim.notify` fallback. Shipped 2026-08-04 (§5.1). |
 | `:RA usage` / `:RA usage start` / `:RA usage stop` | Keymap/command press counts — opt-in, local-only, the one feature here recording *what you did* rather than *what the code did*. `start` wraps `vim.keymap.set` (function-callback mappings only) plus a `CmdlineLeave` hook for typed commands; bare `:RA usage` reports; `stop` ends collection. Built on `runtime-analysis.telemetry` itself. Shipped 2026-08-04 (§7.1). |
 
 Request shape (VS Code REST Client / IntelliJ HTTP Client's own convention,
@@ -96,6 +97,19 @@ never resolves `{{var}}` placeholders — the identical §2.1 trap, closed
 the identical way, since exporting is sharing too. Shipped 2026-08-04
 (`docs/ROADMAP.md` §2.3, now `docs/FINISHED.md`).
 
+### GraphQL and multipart request bodies (§2.6, shipped 2026-08-04)
+
+Both VS Code REST Client's own conventions. `X-Request-Type: GraphQL`
+marks a body as query text + optional blank-line-separated JSON
+variables — `:RA send` builds the real `{"query":...,"variables":{...}}`
+payload and strips the directive header before sending; `:RA export`
+applies the same transform (never `{{var}}` resolution). A
+`Content-Type: multipart/form-data; boundary=...` body with `< ./path`
+part references gets those paths resolved to real file bytes on send
+(`lua/runtime-analysis/multipart.lua`), or turned into curl's own
+`-F "field=@path"` flags on export — never inlined as shell text, since
+a binary file's raw bytes are not safe shell-embeddable strings.
+
 ## `:RATelemetry`
 
 Stays a second, separate compound command rather than folding under
@@ -112,7 +126,7 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 | `:RATelemetry disabled` | list namespaces currently disabled |
 | `:RATelemetry coverage` | which wrapped functions were never called |
 | `:RATelemetry export [path]` | JSON, or Markdown if `path` ends `.md` |
-| `:RATelemetry open [ns]` | render + open externally (`report_style`: `auto`/`kit`/`mdview`/`file`) |
+| `:RATelemetry open [ns]` | render + open externally (`report_style`: `auto`/`kit`/`mdview`/`file`/`html`) |
 | `:RATelemetry compare [ns] [days]` | "this window vs the one before it" (default 7d) — newly-hot/gone-cold/changed functions. Shipped 2026-08-04 (§4.2). |
 | `:RATelemetry startup [top]` | Which *module* a plugin's startup cost sits in, as a waterfall (self vs. total time, grouped per module and per module root). Shipped 2026-08-04 (§3.3). **Needs the opt-in below.** |
 | `:RATelemetry cost` | Startup cost vs. call count per namespace, worst (expensive, underused) first. Shipped 2026-08-04 (§7.2). Joins `startup`'s per-module-root data against each instance's own `resolved_modules()` on real module paths — never guesses a namespace ("markdown.nvim") matches a module root ("markdown") by string similarity. |
@@ -157,6 +171,16 @@ Also shipped 2026-08-04, no new command surface:
   in `entry.error_fp` and both renderers. Rides the existing `errors` opt-in.
 - **Sampling (§3.2)** — `sample = N` in `wrap()` opts: only every Nth call
   pays for timing/arg-profiling/error-fingerprinting; `calls` stays exact.
+
+**HTML dashboard (§4.4, `report_style = "html"`)** — `:RATelemetry open`
+with this style renders a sortable/filterable HTML table (one row per
+function: calls, errors, mean timing, top argument/caller fingerprint,
+click to expand the full breakdown) and opens it in the system browser
+via `lib.nvim.fs.open.url.system_opener` — the same opener `:DocMap
+open` uses. New module `lua/runtime-analysis/telemetry/renderers/html.lua`
+— a small, self-contained page reusing documentation.nvim's own CSS
+design tokens (not its ~4,500-line renderer code).
+
 Full API this command is a front-end over (instances, `wrap`/`wrap_loaded`,
 `auto()`, the lazy.nvim adapter, argument profiling): see
 [lib.nvim.md's Telemetry section](./lib.nvim.md) for how this personal

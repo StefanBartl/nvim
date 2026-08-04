@@ -5,12 +5,9 @@
 
 - alle ci / stylua / tests grün?
 - documentation.nvim integration und Plugin annotiationen erweitern
+- Analyse: Gibt es ein sinnvolles kreuzfeatures von eines meiner anderen nvim plugins? Erstelle einel Liste zum abarbeiten..
 
 ## `documentation.nvim`
-
-- Alle Plugins sollen möglichst umfassend luals Annotationen in den Modulen verwenden um `documentation.nvim` gut vewrwenden zukönnen! [Annotationen - Tags]($REPOS_DIR\documentation.nvim\docs\ANNOTATION_TAGS.md)
-  INFO: [Annotationen INFO FILE]($REPOS_DIR\documentation.nvim\docs\ANNOTATIONS.md)
-
 
 ## `lib.nvim`
 
