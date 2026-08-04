@@ -28,7 +28,7 @@ rather than replaced by `:RA`.
 | Invocation | Does |
 | --- | --- |
 | `:RA request` / `:RARequest` | Opens a new scratch buffer (`filetype = "http"` by default), pre-filled with `GET https://`. One request per buffer — for a real, committed file with several, open it directly with `:e` instead (`###`-separated, see below). |
-| `:RA send` / `:RASend` | Parses and sends whichever `###` block the cursor is in (nearest above it), via `lib.nvim.net.curl.fetch_raw` — **non-blocking**: a "sending ..." placeholder shows immediately, replaced by the real response/error/cancelled once known. A second `:RA send` before the first replies supersedes it (a monotonic token, not a queue). Shows status/headers/body in a persistent split; JSON bodies pretty-print with real folding. |
+| `:RA send` / `:RASend` | Parses and sends whichever `###` block the cursor is in (nearest above it), via `lib.nvim.net.curl.fetch_raw` — **non-blocking**: a "sending ..." placeholder shows immediately, replaced by the real response/error/cancelled once known. A second `:RA send` before the first replies supersedes it (a monotonic token, not a queue). Shows status/headers/body in a persistent split; JSON bodies pretty-print with real folding. A `# @expect status N` (or `// @expect status N`) comment anywhere in the block is checked once the response arrives — match notifies, mismatch (incl. transport failure) replaces the quickfix list with one entry. Shipped 2026-08-04 (§2.5). |
 | `:RA yank` | Yanks just the last response's **body** (not status/headers) to the unnamed register. |
 | `:RA cancel` | Discards the in-flight request's eventual result (`✗ cancelled`) — a *logical* cancel, curl itself keeps running in the background; `lib.nvim.net.curl.fetch_raw` doesn't hand back a killable handle. |
 | `:RA history` | `vim.ui.select` over this project's recorded sends (method/url/status/timestamp — **no headers, no body, on either side**), newest first; picking one reopens it via `open_request`. Per-project via `lib.nvim.fs.project_key()` + `lib.nvim.cache.disk`. |
@@ -110,8 +110,15 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 | `:RATelemetry coverage` | which wrapped functions were never called |
 | `:RATelemetry export [path]` | JSON, or Markdown if `path` ends `.md` |
 | `:RATelemetry open [ns]` | render + open externally (`report_style`: `auto`/`kit`/`mdview`/`file`) |
+| `:RATelemetry compare [ns] [days]` | "this window vs the one before it" (default 7d) — newly-hot/gone-cold/changed functions. Shipped 2026-08-04 (§4.2). |
 
-`<Tab>` after `start `/`stop `/`reset `/`open ` completes namespaces only.
+`<Tab>` after `start `/`stop `/`reset `/`open `/`compare ` completes
+namespaces only; `compare`'s third token (a day count) isn't completed.
+Also shipped 2026-08-04, no new command surface: error fingerprinting
+(§3.4) — `errors` now also records *what* a wrapped function raised
+(bounded, same machinery as argument profiling), visible in
+`entry.error_fp` and both renderers, riding entirely on the existing
+`errors` opt-in.
 Full API this command is a front-end over (instances, `wrap`/`wrap_loaded`,
 `auto()`, the lazy.nvim adapter, argument profiling): see
 [lib.nvim.md's Telemetry section](./lib.nvim.md) for how this personal
