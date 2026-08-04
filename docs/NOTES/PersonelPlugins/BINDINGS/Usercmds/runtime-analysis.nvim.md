@@ -16,14 +16,14 @@ moved here from lib.nvim (see [lib.nvim's own Usercmds sheet](./lib.nvim.md)
 for how a *consuming* plugin uses the telemetry module directly, as
 opposed to this file's `:RATelemetry` command surface).
 
-## `:RA {subcommand}` — request/send/yank/cancel/history/env
+## `:RA {subcommand}` — request/send/yank/cancel/history/env/import/export
 
 Built via `lib.nvim.usercmd.composer` — same verb-first shape `:DocMap`/
 `:MDView` use, `<Tab>`-completed (`:RA <Tab>` →
-`request | send | yank | cancel | history | env`). `:RARequest`/`:RASend`
-still work too, unchanged: this plugin's oldest, most-referenced surface,
-kept as flat aliases calling the same handlers rather than replaced by
-`:RA`.
+`request | send | yank | cancel | history | env | import | export`).
+`:RARequest`/`:RASend` still work too, unchanged: this plugin's oldest,
+most-referenced surface, kept as flat aliases calling the same handlers
+rather than replaced by `:RA`.
 
 | Invocation | Does |
 | --- | --- |
@@ -34,6 +34,8 @@ kept as flat aliases calling the same handlers rather than replaced by
 | `:RA history` | `vim.ui.select` over this project's recorded sends (method/url/status/timestamp — **no headers, no body, on either side**), newest first; picking one reopens it via `open_request`. Per-project via `lib.nvim.fs.project_key()` + `lib.nvim.cache.disk`. |
 | `:RA history clear` | Clears this project's recorded history. No confirmation prompt. |
 | `:RA env [name]` | With `name` (`<Tab>`-completed), selects it as the active environment `{{var}}` placeholders resolve against. With none, `vim.ui.select` over every name the project's env files define. **Session-scoped, not persisted.** See below. |
+| `:RA import` | Parses a `curl` command line — system clipboard by default, or a visual/line-range selection's own lines (`'<,'>RA import`) — into a new request buffer. See below. |
+| `:RA export` | The reverse: yanks the `###` block under the cursor as a shareable `curl` command to the unnamed register. See below. |
 
 Request shape (VS Code REST Client / IntelliJ HTTP Client's own convention,
 deliberately not invented here):
@@ -78,6 +80,19 @@ once per session if the private file exists but isn't listed in this
 project's own `.gitignore`. Module: `lua/runtime-analysis/env.lua`.
 Shipped 2026-08-04 (`docs/ROADMAP.md` §2.1, now `docs/FINISHED.md`).
 
+### curl import/export (`:RA import` / `:RA export`)
+
+`lua/runtime-analysis/curl.lua` — a real, bounded `curl`-argument parser
+(own quote-aware tokenizer; no shared one existed anywhere in lib.nvim),
+not templating. Recognizes `-X`, `-H` (repeatable), `-d`/`--data-raw`/
+`--data-binary` (repeatable, joined with `&`), `-u` (→ base64 `Authorization:
+Basic`), `-b`, `-A`, `-e`, drops flags meaningless here (`-s`, `-v`, `-o`,
+timeouts, TLS material, ...) without eating the URL, and mirrors curl's
+own "`-d` with no `-X` implies POST" default. `:RA export` (the reverse)
+never resolves `{{var}}` placeholders — the identical §2.1 trap, closed
+the identical way, since exporting is sharing too. Shipped 2026-08-04
+(`docs/ROADMAP.md` §2.3, now `docs/FINISHED.md`).
+
 ## `:RATelemetry`
 
 Stays a second, separate compound command rather than folding under
@@ -106,7 +121,7 @@ config actually wires `opts.telemetry` into the plugin's own spec
 `lua/runtime-analysis/telemetry/README.md` in the repo for the module's own
 full reference.
 
-## Global-surface collision check (2026-08-04, re-checked after `:RA env` was added)
+## Global-surface collision check (2026-08-04, re-checked after `:RA import`/`:RA export` were added)
 
 Checked against every `Usercmds/*.md` in this folder: `RA`, `RARequest`,
 `RASend` and `RATelemetry` are unique — no other personal plugin registers
