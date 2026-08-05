@@ -133,6 +133,7 @@ lua/bindings/usrcmds/case/
   resolve.lua     "welcher Case?" — Argument > Buffer > Auswahl
   query.lua       :Cases-Feldfilter, -grep, -stale + Gruppierung nach Zustand
   similar.lua     TF-IDF-Ähnlichkeit über Titel + Summary/Notes, ohne KI
+  timeline.lua    Zeitachse pro Case aus Datei-mtimes, ohne Logbuch (§8h)
   doctor.lua      Bestands-Bericht (Findings mit sicherem Rename-Ziel), rein lesend
   normalize.lua   Fix-Teil zu doctor.lua — Plan/Dry-Run/Confirm/Apply
   linkcheck.lua   docs.tricentis.com-Links prüfen (lib.nvim.net.curl, async)
@@ -234,6 +235,7 @@ folgt der tatsächlichen Konvention.
 | `:Case template [name]`     | Reply-Baustein aus `Workflow/Templates/` an der Cursor-Position einfügen (§8b) |
 | `:Case reply check`         | Pre-Send-Gate auf dem aktuellen Buffer: Emojis, Markdown-Überschriften, tote Links, `s` startet `language.nvim`s Spellcheck (§8c) |
 | `:Case similar [nr] [n]`    | ähnliche Cases per TF-IDF über Titel + `Summary.md`/`Notes.md` |
+| `:Case timeline [nr]`       | Sitzungen aus Datei-mtimes, älteste zuerst, mit Gesamtdauer (`timeline.lua`, §8h) |
 | `:Case copy <src>`          | Datei in den Case kopieren, Zielordner per Auswahl                  |
 | `:Case sync [nr]`           | fehlende Blueprint-Teile nachziehen (nie überschreiben)              |
 | `:Case close [nr]`          | generiert aus `config.states` — nach `Closed/` verschieben           |
@@ -522,6 +524,33 @@ dieselbe Ebene wie `Summary.md`/`Notes.md`, weil es ein abgeleitetes
 Artefakt des Cases ist, kein eingehender Anhang. Isoliert gegen ein
 Scratch-Case getestet (nicht den echten Bestand): 46 KB PDF, Summary/
 Notes/Research korrekt zusammengeführt.
+
+---
+
+## 8h. Zeitachse pro Case (`timeline.lua`, `:Case timeline`)
+
+„Wann und wie lange wurde an diesem Case gearbeitet?" — rein aus den
+mtimes der Case-Dateien rekonstruiert, kein separates Logbuch, das aus dem
+Takt geraten könnte (dieselbe Begründung wie `detect.last_touched` und §3s
+„der Zustand IST der Ordner": ableiten statt eine zweite Kopie pflegen).
+
+`M.sessions(case_dir)` sammelt jede Datei-mtime unter dem Case-Ordner
+(`.case.json` eingeschlossen — ein Infokarten-Edit ist echte Aktivität) und
+gruppiert sie nach demselben Prinzip, mit dem ein Kalender aus reinen
+Klick-Zeitstempeln „wie lange ging dieses Meeting" ableitet: zwei Touches
+innerhalb von `config.timeline_session_gap_minutes` (Default 120) gelten
+als dieselbe Sitzung, ein größerer Abstand eröffnet eine neue. `:Case
+timeline [nr]` zeigt das chronologisch (älteste zuerst), pro Sitzung
+Zeitspanne, Dauer und die einzelnen Datei-Touches, plus eine Gesamtsumme.
+
+**Ehrlich benannte Grenze:** eine Sitzungsdauer ist eine **untere
+Schranke**. Eine mtime markiert den Speicherzeitpunkt, nicht den
+Bearbeitungsbeginn — eine Sitzung mit genau einem Touch zeigt „touched"
+(Dauer 0), obwohl davor real gearbeitet wurde. Für die grobe Frage „wann
+war ich an diesem Case dran, wie viele Sitzungen waren das" reicht das;
+für eine belastbare Stundenzahl bräuchte es echtes Fokus-Tracking (Buffer-
+Enter/Leave-Autocmds über die Case-Lebensdauer) — genau das separate
+Logbuch, das dieser Ansatz bewusst vermeidet.
 
 ---
 

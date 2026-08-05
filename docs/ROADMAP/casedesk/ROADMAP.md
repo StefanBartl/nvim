@@ -1,7 +1,7 @@
 # casedesk — Roadmap
 
 Nur was noch offen ist. Was schon gebaut ist, steht in
-[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8g) und in
+[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8h) und in
 [MIGRATION.md](MIGRATION.md) (Bestandsumbau + Namens-Aufräumen) — Details
 und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 
@@ -16,8 +16,6 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
       Brainstorming der Lösung?), dann bewerten. Zwei billigere
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
-- [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch — Aufzeichnung,
-      wie lange und wann Buffer innerhalb eines Cases fokussiert waren.
 - [ ] Backend-Kaskade `pickers.nvim` → `snacks.picker` → `kit.select` für
       `:Cases pickers` — **zurückgestellt**: `pickers.nvim`s
       `actions/files.lua` erwartet ein internes `Source`+`engine_mod`-Objekt

@@ -55,6 +55,12 @@ end
 
 M.meta_filename = ".case.json"
 
+--- Gap (minutes) between two file touches before `:Case timeline` starts a
+--- new work session — long enough that a coffee break within one sitting
+--- doesn't split it, short enough that yesterday afternoon and today
+--- morning don't merge into one.
+M.timeline_session_gap_minutes = 120
+
 --- The real SNOW ticket id is `SAP0000` + short-number + 4-digit year,
 --- concatenated with no separator (e.g. "SAP00009405612026"). Never stored
 --- — always derived from `case` + `year` via render.to_short/to_snow.

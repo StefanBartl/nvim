@@ -223,6 +223,14 @@ function M.enable()
       end,
     },
     {
+      path = { "timeline" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "Work sessions reconstructed from file mtimes, oldest first",
+      run = function(ctx)
+        ui.timeline(ctx.args.case)
+      end,
+    },
+    {
       path = { "copy" },
       args = { { name = "src", type = "PATH", optional = true } },
       desc = "Copy a file into the current case",

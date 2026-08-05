@@ -31,6 +31,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case activity [nr]` | — | Paste the system clipboard (a ServiceNow Activity Stream) into a new auto-numbered `Research/NN_ActivityStream.md` |
 | `:Case reply check` | — | Pre-send gate on the **current buffer**: emoji count (`c` removes), stray markdown headlines, dead links, `s` launches `language.nvim`'s spellcheck on the buffer |
 | `:Case similar [nr] [n]` | `n`, default 5 | Past cases whose title + `Summary.md` share the most distinctive vocabulary (TF-IDF cosine, no AI). Each hit shows the matched terms — the ranking is lexical, so seeing *why* it matched is how you judge it |
+| `:Case timeline [nr]` | — | Work sessions reconstructed from file mtimes, oldest first — touches within `config.timeline_session_gap_minutes` (default 120) of each other count as one sitting. Each session's duration is a **lower bound** (a save marks when editing stopped, not started) |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
 | `:Case close [nr]` | — | Move to `Closed/` |
@@ -162,6 +163,15 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   report instead of opening a second UI. Both integrations are optional
   (`pcall`-guarded) — missing either degrades that one line of the report,
   the rest still runs.
+- **`:Case timeline`'s session durations are a lower bound, stated
+  deliberately**: it groups file mtimes into sessions (gap ≤
+  `config.timeline_session_gap_minutes`, default 120), but an mtime is a
+  save point, not "editing started here" — a session with one touch shows
+  `touched` (0 duration) even though real work preceded that save. Good
+  enough for "when/how often was I in this case"; a trustworthy time-spent
+  number would need real focus tracking (buffer enter/leave over the
+  case's lifetime), which is exactly the separate logbook this approach
+  avoids — see `docs/ROADMAP/casedesk/CONCEPT.md` §8h.
 - **`:Cases export` needs `pandoc` and a Chrome/Edge on PATH/in a known
   install location** — neither ships with Neovim. `pandoc` isn't
   reimplemented (markdown → HTML) and neither is a PDF engine (a headless

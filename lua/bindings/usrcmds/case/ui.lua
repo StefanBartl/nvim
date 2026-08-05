@@ -653,6 +653,64 @@ function M.similar(case_arg, n_arg)
   end)
 end
 
+-- ── :Case timeline ───────────────────────────────────────────────────────
+
+--- `:Case timeline [nr]` — work sessions reconstructed from file mtimes
+--- (`timeline.lua`, CONCEPT.md §8h), oldest first. No separate logbook to
+--- keep in sync — same "derive it from what's already there" reasoning as
+--- `detect.last_touched`. Each session's span is a LOWER BOUND on time
+--- spent: an mtime marks when a save happened, not when editing began.
+---@param case_arg string|nil
+function M.timeline(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to show a timeline for")
+      return
+    end
+    local timeline = require("bindings.usrcmds.case.timeline")
+    local sessions = timeline.sessions(entry.dir)
+    if #sessions == 0 then
+      notify.info(("%s has no files to build a timeline from"):format(entry.short))
+      return
+    end
+
+    local total = 0
+    for _, s in ipairs(sessions) do
+      total = total + (s.finish - s.start)
+    end
+
+    local m = meta.read(entry.dir)
+    local lines = {
+      ("%s — %s"):format(entry.short, (m and m.title) or ""),
+      ("%d session%s, ~%s focused (lower bound — saves, not edit-start)"):format(
+        #sessions,
+        #sessions == 1 and "" or "s",
+        timeline.format_duration(total)
+      ),
+      "",
+    }
+
+    for _, s in ipairs(sessions) do
+      local day = os.date("%Y-%m-%d", s.start)
+      local span = s.start == s.finish and os.date("%H:%M", s.start)
+        or ("%s–%s"):format(os.date("%H:%M", s.start), os.date("%H:%M", s.finish))
+      lines[#lines + 1] = ("%s  %-13s (%s, %d file%s)"):format(
+        day,
+        span,
+        timeline.format_duration(s.finish - s.start),
+        #s.events,
+        #s.events == 1 and "" or "s"
+      )
+      for _, e in ipairs(s.events) do
+        lines[#lines + 1] = ("      %s  %s"):format(os.date("%H:%M", e.mtime), e.path)
+      end
+      lines[#lines + 1] = ""
+    end
+
+    kit.viewer({ title = ("Timeline — %s"):format(entry.short), lines = lines })
+  end)
+end
+
 -- ── :Case copy ───────────────────────────────────────────────────────────
 
 ---@param src string|nil

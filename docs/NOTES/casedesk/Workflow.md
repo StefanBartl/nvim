@@ -135,6 +135,19 @@ The statusline shows `<case> · <company> · N replies` the whole time you're
 inside a case buffer — a glance tells you which case you're in and how many
 reply drafts already exist, no command needed.
 
+Lost track of when you actually touched this case, or writing a status
+update and need "when did I last make progress here"?
+
+```
+:Case timeline
+```
+
+Groups every file touch into work sessions (a `:Case reply check` save five
+minutes after a `Research/` edit is the same sitting; three days of silence
+in between is a new one), oldest first, with a rough total. Read the total
+as a **floor**, not a real hour count — it only knows about save points, not
+how long you stared at the problem before the first one.
+
 ## 3. Wrapping up
 
 ```
