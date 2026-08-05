@@ -1,18 +1,13 @@
 # Roadmap
-
-pullen:
-  markdown.nvim
-
-
 - pdfport.nvim - pdf erstellings funkiton zb pandoc
 
 - spotlight checken und lernen
-- images, das wäre für support wirklcih wichtig. eventuell en eigenses plugin bauen? das wäre
-- C:\Users\bartl\AppData\Local\nvim\lua\usrcmds nach /bindings/usrcmds
+- documentation.nvim lernen
+
+Ein zusätzlicher Use-Case, den du nicht genannt hast und der für dich beruflich wahrscheinlich der wertvollste ist: Clipboard-Bild direkt in ein Markdown-File einfügen — Screenshot machen, :Image paste, das Bild landet als Datei neben dem Dokument und der Link wird geschrieben. Für Support-Dokumentation ist das der Alltagsfall schlechthin, und es ist weit einfacher zu bauen als das Renderin
 
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
-* [ ] Inline-Images in Markdown-Files einbinden: snacks?
   - checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
 - [ ] `github_stats.nvim` besser machen
 - [ ] `learn-cli.nvim` vielleicht doch ?

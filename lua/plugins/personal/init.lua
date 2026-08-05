@@ -167,6 +167,24 @@ plugins.add({
   },
 
   {
+    "StefanBartl/images.nvim",
+    -- Ersetzt snacks.image, das hier prinzipiell nicht funktionieren kann:
+    -- es sendet nur Kitty-APC, und das wird aus Neovim heraus in WezTerm nie
+    -- gezeichnet. images.nvim nutzt stattdessen OSC 1337.
+    --
+    -- Beide Namen nötig: `:Image` deckt den Command ab, die Filetypes sorgen
+    -- dafür, dass <leader>im und der Doppelklick auch ohne vorherigen
+    -- Command-Aufruf in Markdown-Buffern gesetzt sind.
+    cmd = { "Image" },
+    ft = { "markdown", "vimwiki", "norg", "text" },
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {},
+    config = function(_, opts)
+      require("images").setup(opts)
+    end,
+  },
+
+  {
     "StefanBartl/sandbox.nvim",
     event = "VeryLazy",
     dependencies = { "StefanBartl/lib.nvim" },

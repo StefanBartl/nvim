@@ -134,6 +134,7 @@ plugins.modes({
   ["color_my_ascii.nvim"] = "dir",
   ["recommender.nvim"] = "dir",
   ["mdview.nvim"] = "dir",
+  ["images.nvim"] = "dir",
 })
 
 return plugins

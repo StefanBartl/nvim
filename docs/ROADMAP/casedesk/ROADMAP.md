@@ -23,6 +23,9 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
       über diese Pfad-/String-Liste"-Einstieg. `:Cases pickers` läuft
       komplett auf `kit.select`.
 
+Heuristrik bei der Ähnlichketbewertung; zn gewichtung: gleiche wörter im title zählen ein wenig mehr; wörter ausnehmen wie artikel (der, die das..) oder füllwörter -> ziwk das nur wörter bewerrtet wwerden, die für die beschreibhungund solution des issues relevaant sind und nicht der begleittext ->uantität vorualität
+
+
 ---
 
 ## Plugin-Check — was die eigenen Plugins beisteuern könnten

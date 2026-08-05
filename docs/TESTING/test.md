@@ -1,7 +1,11 @@
-Hallo, wie gehts??
+Hallo, wie ![gehts??](../TESTING/IMG_0021.JPG)
+Hallo, wie ![gehts??](../TESTING/IMG_0021.JPG)
 
+Hallo, wie ![gehts??](../TESTING/IMG_0021.JPG)
 Was können wir heute gemeinsam alles erldigen?
+Hallo, wie ![gehts??](../TESTING/IMG_0021.JPG)
 Ich bin mir noch  nicht ganz sicher.
+Hallo, wie ![gehts??](../TESTING/IMG_0021.JPG)
 
 Was können wir heute gemeinsam alles erldigen?
 Ih bin mir noch  nicht ganz scher.
