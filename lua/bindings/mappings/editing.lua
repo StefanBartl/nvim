@@ -62,6 +62,27 @@ local function trim_edges(lines)
   return trimmed
 end
 
+---Resolve the unnamed register `"` to whatever `'clipboard'` actually backs
+---it. Native `p`/`y` redirect through the clipboard provider when
+---'clipboard' contains "unnamed"/"unnamedplus"; `vim.fn.getreg()` does not
+---do this redirection itself and returns Neovim's internal (stale) register
+---content instead of the live system clipboard, so callers going through
+---`getreg()` — like `put_trimmed` below — must resolve it manually.
+---@param regname string
+---@return string
+local function resolve_unnamed(regname)
+  if regname ~= '"' then
+    return regname
+  end
+  local cb = vim.o.clipboard
+  if cb:find("unnamedplus") then
+    return "+"
+  elseif cb:find("unnamed") then
+    return "*"
+  end
+  return regname
+end
+
 ---Read register `regname`, trim it (see `trim_edges`), and put it via
 ---`nvim_put` — never through the register system, so the register itself
 ---(and, with unnamedplus, the real system clipboard) is left untouched and
@@ -69,6 +90,7 @@ end
 ---@param regname string
 ---@param after boolean true = after cursor ("p"), false = before ("P")
 local function put_trimmed(regname, after)
+  regname = resolve_unnamed(regname)
   local lines = vim.fn.getreg(regname, 1, true) --[[@as string[] ]]
   local regtype = vim.fn.getregtype(regname)
   vim.api.nvim_put(trim_edges(lines), put_type(regtype), after, true)
@@ -98,8 +120,9 @@ function M.setup()
 
   -- Visual mode paste without overwriting the yank register, also trimmed.
   map("x", "p", function()
-    local lines = vim.fn.getreg('"', 1, true) --[[@as string[] ]]
-    local ptype = put_type(vim.fn.getregtype('"'))
+    local regname = resolve_unnamed('"')
+    local lines = vim.fn.getreg(regname, 1, true) --[[@as string[] ]]
+    local ptype = put_type(vim.fn.getregtype(regname))
     vim.cmd('normal! "_d')
     vim.api.nvim_put(trim_edges(lines), ptype, false, true)
   end, {
