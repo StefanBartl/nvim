@@ -85,11 +85,23 @@ buffer resolves it:
   Working two threads in parallel (e.g. one for a data request, one for the
   actual fix)? Name them: `:Case add reply AskForPDF` and
   `:Case add reply ProposeFix` instead of two generic `Reply.md`s.
+- `:Case template` — then fill that draft from the block library instead of
+  retyping: `RequestMoreInfo`, `CloseCase`, `GermanSpeaker`,
+  `Swarming/HandOverCase`, the whole `Wordings/` set. `<Tab>` completes the
+  names, the block lands at your cursor with `{case}`/`{name}` already
+  filled in. A new block is just a new `.md` under the work repo's
+  `Workflow/Templates/` — it shows up in the picker with no code change.
 - `:Case copy <path>` — pull a screenshot/log/attachment in; you pick the
   target folder (`Replies`/`Research`/`Ressources`/case root).
 - `:Case add <name>` — anything that isn't a reply, e.g.
   `:Case add Terminologie` for a case-local glossary note (see §5 below for
   why that one's worth reconsidering).
+- `:Case summary` / `:Case notes` — **two different documents, don't mix
+  them up.** `Summary.md` is what you paste into the ServiceNow ticket:
+  fixed four sections, plain text, no markdown (SNOW renders none of it, a
+  `**bold**` lands verbatim in the ticket). `Notes.md` is yours — what you
+  tried, what a coach said, tasks out of a meeting. Keeping them apart is
+  what lets you paste the summary without editing it first.
 - `:Case info` — the infocard. `e` to fill in Company/Priority/Tosca-Version/
   Name/Notes as they become known — nothing here is required up front,
   `:Case new`'s prompt chain only insists on a title.
@@ -140,11 +152,17 @@ Not a per-case action — a periodic sweep, the same spirit as `:Cases stale`:
 ```
 
 Worth running **occasionally** (monthly, or whenever something feels
-inconsistent), not after every single case — `doctor` catches: a case-note
-file under one of five historical alias names instead of `Summary.md`,
+inconsistent), not after every single case — `doctor` catches: work notes
+under one of four historical alias names instead of `Notes.md`,
 `Research`/`Solution` as a flat file instead of a folder, two known
-typo'd filenames, and any file directly in `Research/`/`Replies/` missing
-its `NN_` prefix. `normalize` fixes everything unambiguous automatically;
+typo'd filenames, any file directly in `Research`/`Replies` missing its
+`NN_` prefix, and a `Summary.md` that either isn't there, doesn't follow
+the SNOW template's four sections, or uses markdown SNOW won't render.
+
+The last two are **report-only** — no rename can produce text you have to
+write yourself, so `normalize` deliberately leaves them alone and the
+report says `[edit by hand]`. Treat them as a to-do list, not an error.
+`normalize` fixes everything unambiguous automatically;
 anything genuinely ambiguous (two files that would both land on the same
 target) is reported separately for a manual call — see `MIGRATION.md`'s
 711373 writeup for a worked example of exactly that.

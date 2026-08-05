@@ -420,6 +420,74 @@ function M.activity(case_arg)
   end)
 end
 
+-- ── :Case template ───────────────────────────────────────────────────────
+
+--- `:Case template [name]` — insert a reply block from the work repo's
+--- `Workflow/Templates/` at the cursor. Tokens are filled from the case the
+--- current buffer belongs to, so a block that says `{name}` arrives
+--- addressed; blocks that use `_____` blanks (most of them today) come
+--- through untouched for you to fill in.
+---
+--- Inserts into whatever buffer is focused rather than resolving a case
+--- first: the point is "I'm writing this reply right now, give me the
+--- boilerplate". A case only has to resolve for the token values, and not
+--- resolving one is fine — the block still goes in.
+---@param name_arg string|nil  Exact block name (as listed); prompts when omitted.
+function M.template(name_arg)
+  local blocks = require("bindings.usrcmds.case.blocks")
+  local available = blocks.list()
+  if #available == 0 then
+    notify.warn("no reply blocks found in " .. config.workflow_templates_dir)
+    return
+  end
+
+  local entry = resolve.sync(nil)
+  local m = entry and meta.read(entry.dir) or nil
+  local tokens = {
+    case = entry and entry.short or nil,
+    title = m and m.title or nil,
+    company = m and m.company or nil,
+    name = m and m.name or nil,
+    year = m and m.year or os.date("%Y"),
+    today = os.date("%Y-%m-%d"),
+  }
+  if entry then
+    tokens.snow = render.to_snow(entry.short, tokens.year)
+  end
+
+  local function insert(block)
+    local lines, err = blocks.render(block, tokens)
+    if not lines then
+      notify.error("could not read block: " .. tostring(err))
+      return
+    end
+    local row = vim.api.nvim_win_get_cursor(0)[1]
+    vim.api.nvim_buf_set_lines(0, row, row, false, lines)
+    notify.info(("inserted %s (%d lines)"):format(block.name, #lines))
+  end
+
+  if name_arg and name_arg ~= "" then
+    for _, b in ipairs(available) do
+      if b.name == name_arg then
+        insert(b)
+        return
+      end
+    end
+    notify.warn("unknown reply block: " .. name_arg)
+    return
+  end
+
+  kit.select({
+    message = ("Reply blocks (%d)"):format(#available),
+    selection = available,
+    format_item = function(b)
+      return b.name
+    end,
+    on_select = insert,
+    on_cancel = function() end,
+  })
+end
+
 -- ── :Case similar ────────────────────────────────────────────────────────
 
 --- `:Case similar [nr] [n]` — past cases whose title+Summary.md share the

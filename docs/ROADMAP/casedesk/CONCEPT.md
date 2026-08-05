@@ -119,9 +119,10 @@ auf. Ein vierter Zustand ist eine Zeile in dieser Liste, kein neuer Code-Pfad.
 ```
 lua/bindings/usrcmds/case/
   init.lua        enable() → CASE-Argtyp, :Case-Verb, :Cases-Verb
-  config.lua      cases_root, states, Headline-Format, Default-/Company-Blueprint
+  config.lua      repo_root/cases_root, states, Headline-Format, Blueprints
   templates.lua   Tag → Datei-Pfad, Token-Rendering (§4a)
-  templates/      Summary.md, Research.md, Reply.md — echte Markdown-Files
+  templates/      Summary.md, Notes.md, Research.md, Reply.md — echte Markdown-Files
+  blocks.lua      Reply-Bausteine aus dem Arbeits-Repo lesen (§8b)
   blueprint.lua   Zugriff auf config.blueprints + Datei-Verb-Erkennung
   render.lua      to_snow / to_short / headline — reine Funktionen
   plan.lua        Blueprint + Tokens → Aktionsliste (rein, nur fs_stat als I/O)
@@ -224,6 +225,9 @@ folgt der tatsächlichen Konvention.
 | `:Case open [nr]`           | Case-Ordner öffnen (Filetree-Reveal wenn verfügbar, sonst netrw)     |
 | `:Case add <name> [suffix]` | neue Markdown-Datei; `reply [suffix]` nummeriert automatisch (`suffix` überschreibt den Namensteil, sonst `Reply`) |
 | `:Case activity [nr]`       | Zwischenablage (SNOW Activity Stream) als neue nummerierte `Research/`-Datei |
+| `:Case notes [nr]`          | `Notes.md` öffnen (Arbeitsnotizen, §8a) |
+| `:Case template [name]`     | Reply-Baustein aus `Workflow/Templates/` an der Cursor-Position einfügen (§8b) |
+| `:Case similar [nr] [n]`    | ähnliche Cases per TF-IDF über Titel + `Summary.md`/`Notes.md` |
 | `:Case copy <src>`          | Datei in den Case kopieren, Zielordner per Auswahl                  |
 | `:Case sync [nr]`           | fehlende Blueprint-Teile nachziehen (nie überschreiben)              |
 | `:Case close [nr]`          | generiert aus `config.states` — nach `Closed/` verschieben           |
@@ -286,6 +290,57 @@ still gespeichert:
 
 Kein `snow`-Feld (aus `case`+`year` berechnet), kein `status`-Feld (aus dem
 Elternordner abgeleitet) — beides bewusst, siehe §3.
+
+---
+
+## 8a. `Summary.md` ≠ `Notes.md` — zwei Dokumente, zwei Adressaten
+
+Die wichtigste inhaltliche Unterscheidung im Case-Ordner:
+
+| Datei | Adressat | Form |
+| ----- | -------- | ---- |
+| `Summary.md` | **ServiceNow / Kunde** — wird ins Ticket kopiert | Festes Vier-Sektionen-Template aus `WKDBook-Tricentis/Workflow/Templates/SummaryTemplate.md`: `Problem statement`, `Case notes`, `Links`, `Solution or workaround`. **Keine Markdown-Syntax** — SNOW rendert sie nicht, ein `##` oder `**fett**` steht wörtlich im Ticket. |
+| `Notes.md` | **du selbst, Coaches, Team** | Frei. Was versucht wurde, was im Coaching besprochen wurde, Tasks aus Meetings. |
+
+`:Case new` legt beide an; `Summary.md` bekommt bewusst **keine** H1
+(`headline = false` im Blueprint), weil das SNOW-Template direkt mit
+`╓ Problem statement` beginnt und eine eingefügte Überschrift vor jedem
+Einfügen ins Ticket wieder gelöscht werden müsste.
+
+`:Cases doctor` prüft beides: `summary-not-snow` (fehlt ganz, oder eine der
+vier Sektionen fehlt) und `summary-markdown` (Markdown-Syntax drin).
+**Beide sind reine Berichte** — kein Rename kann Text erzeugen, den ein
+Mensch schreiben muss, deshalb fasst `:Cases normalize` sie nie an.
+
+> **Historie:** eine frühere `doctor`-Regel behandelte `ProblemSummary.md`,
+> `WorkNote.md`, `CaseNote.md` und `TillNow.md` als *Aliase* von
+> `Summary.md` und benannte sie dorthin um. Das war falsch — es sind
+> Arbeitsnotizen, also `Notes.md`. Der Fehler hat in einem Case ein echtes
+> SNOW-Summary überschrieben (aus Git wiederhergestellt, s. MIGRATION.md).
+> Die Regel heißt jetzt `notes-alias` und zielt auf `Notes.md`.
+
+---
+
+## 8b. Reply-Bausteine (`blocks.lua`)
+
+Unter `WKDBook-Tricentis/Workflow/Templates/` liegt eine gewachsene
+Bibliothek fertiger Reply-Textbausteine (`RequestMoreInfo`, `CloseCase`,
+`GermanSpeaker`, `Swarming/HandOverCase`, die `Wordings/`- und `CDX/`-Sätze
+— aktuell 34). `:Case template [name]` fügt einen davon an der
+Cursor-Position ein, mit `{case}`/`{name}`/`{title}`/`{today}`-Ersetzung aus
+dem Case des aktuellen Buffers.
+
+Nicht zu verwechseln mit `templates.lua`/`templates/` (§4a): das ist
+casedesks *eigenes* Scaffolding-Material, liegt in der nvim-Config und
+beschreibt, wie eine neue Case-Datei aussieht. `blocks.lua` liest fremdes,
+im Arbeits-Repo gepflegtes Material, das in einen Text eingefügt wird.
+Deshalb zwei Module statt einem.
+
+Die Discovery ist rekursiv und dateibasiert: ein neuer Baustein ist eine
+neue `.md`-Datei, kein Lua-Edit. Fehlt das Verzeichnis (Maschine ohne
+ausgechecktes Arbeits-Repo), liefert `blocks.list()` eine leere Liste statt
+eines Fehlers — `:Case template` sagt dann „no reply blocks found", der Rest
+von casedesk läuft normal weiter.
 
 ---
 

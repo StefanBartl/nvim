@@ -18,7 +18,9 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | --- | --- | --- |
 | `:Case new [nr]` | case number, prompts for the rest | Prompt chain (title/company/name) → dry-run plan → confirm → scaffold. Respects `config.company_blueprints` if the company entered maps to one. |
 | `:Case info [nr]` | — | Infocard (`kit.viewer`) — `e` edit, `s` summary, `o` open folder, `q` close |
-| `:Case summary [nr]` | — | Open `Summary.md` |
+| `:Case summary [nr]` | — | Open `Summary.md` — the **ServiceNow-facing** document (fixed four-section template, no markdown; see Notes below) |
+| `:Case notes [nr]` | — | Open `Notes.md` — your **private** work notes (what was tried, coach input, meeting tasks) |
+| `:Case template [name]` | block name, `<Tab>`-completed; prompts if omitted | Insert a reply block from the work repo's `Workflow/Templates/` at the cursor, with `{case}`/`{name}`/`{title}`/`{today}` filled from the current buffer's case |
 | `:Case research [nr]` | — | Open `Research/00_Research.md` |
 | `:Case reply [nr]` | — | Open the newest file in `Replies/` |
 | `:Case open [nr]` | — | Open the case folder (filetree reveal if `filetree.nvim` is loaded, else netrw) |
@@ -44,7 +46,7 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases recent [n]` | `n`, default 10 | The `n` most recently touched cases, newest first |
 | `:Cases stale [days]` | `days`, default 7 | Open cases idle for at least `days`, oldest first |
 | `:Cases stats` | — | Counts by state / company / year |
-| `:Cases doctor` | — | Bestand-consistency report (read-only) — summary-file aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes |
+| `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, and whether each `Summary.md` follows the SNOW template without markdown |
 | `:Cases normalize` | — | Fixes exactly what `doctor` found — dry-run plan (`kit.viewer`) + confirm, then applies. Skips (reports separately) anything ambiguous: target already exists, or two findings in the same case would land on the same target |
 | `:Cases linkcheck [nr]` | — | Checks `docs.tricentis.com` links (only that host) for dead pages, async bounded-concurrency HEAD requests |
 | `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`Ressources/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json` |
@@ -65,6 +67,26 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
 
 ## Notes
 
+- **`Summary.md` and `Notes.md` are different documents, not variants.**
+  `Summary.md` is what gets pasted into the ServiceNow ticket: the fixed
+  four-section template (`Problem statement` / `Case notes` / `Links` /
+  `Solution or workaround`) from
+  `WKDBook-Tricentis/Workflow/Templates/SummaryTemplate.md`, and **no
+  markdown** — SNOW renders none of it, so a `##` or `**bold**` shows up
+  verbatim in the ticket. `Notes.md` is yours: what you tried, what a coach
+  said, tasks out of a meeting. `:Cases doctor` reports on both
+  (`summary-not-snow`, `summary-markdown`) but never auto-fixes them —
+  no rename can write text a human has to write. Full rationale, including
+  the earlier rule that wrongly conflated the two:
+  `docs/ROADMAP/casedesk/CONCEPT.md` §8a.
+- **`:Case template` reads a different library than `templates/`.** The
+  blocks come from the *work repo* (`Workflow/Templates/`, 34 of them,
+  discovered recursively) and get inserted into text you're writing;
+  `lua/bindings/usrcmds/case/templates/` is casedesk's own scaffolding for
+  `:Case new`. Adding a block is dropping a `.md` file into the work repo —
+  no Lua edit, and `<Tab>` picks it up immediately. On a machine without
+  that repo checked out the command degrades to "no reply blocks found"
+  rather than erroring.
 - **File-verb routes are generated, not hand-written**: `init.lua`'s
   `file_verb_routes()` loops `blueprint.all_keyed_nodes()` (every blueprint
   node with a `key`) and emits one `:Case <key> [case]` route per node — the

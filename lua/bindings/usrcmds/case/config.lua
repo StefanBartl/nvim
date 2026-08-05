@@ -7,7 +7,25 @@ local templates = require("bindings.usrcmds.case.templates")
 
 local M = {}
 
-M.root = "C:/repos/WKDBook-Tricentis/Cases/SAP_Support"
+--- The whole work knowledge repo. `Cases/` is only one of its areas —
+--- `Workflow/`, `Notes/`, `Terminologie/`, `Tosca/` are siblings, and
+--- features that reach outside the case tree (the reply-block library
+--- below) anchor here rather than walking up from `M.root`.
+M.repo_root = "C:/repos/WKDBook-Tricentis"
+
+M.root = M.repo_root .. "/Cases/SAP_Support"
+
+--- The reply-block library `:Case template` offers: real, hand-written
+--- snippets (RequestMoreInfo, CloseCase, GermanSpeaker, …) kept as markdown
+--- in the work repo, NOT casedesk's own scaffolding templates — those live
+--- next to `templates.lua` and are a different thing entirely.
+M.workflow_templates_dir = M.repo_root .. "/Workflow/Templates"
+
+--- Files under `workflow_templates_dir` that are not reply blocks: the
+--- Summary scaffold (and its filled-in reference copy) belong to
+--- `Summary.md`'s own blueprint node, offering them as a snippet to paste
+--- into a reply would just be noise.
+M.workflow_template_excludes = { "SummaryTemplate.md", "SummaryTemplateBefüllt.md" }
 
 --- Every case lives at `<cases_root>/<state>/<short-number>` — a case's
 --- state IS which of these three folders it's in, not a stored field (see

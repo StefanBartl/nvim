@@ -174,6 +174,36 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
       `NN_Reply.md`). Isoliert getestet: `00_AskForPDF.md` dann `01_Reply.md`
       — Nummerierung korrekt fortlaufend, keine Kollision.
 
+## v7a — Summary/Notes-Trennung + Reply-Bausteine ✅ implementiert
+
+- [x] **`Summary.md` ist das SNOW-Dokument, `Notes.md` die Arbeitsnotizen**
+      (CONCEPT.md §8a). Die alte `summary-alias`-Regel war schlicht falsch:
+      `ProblemSummary`/`WorkNote`/`CaseNote`/`TillNow` sind Notizen, keine
+      Summary-Varianten — sie dorthin umzubenennen hat in 859769 ein echtes
+      SNOW-Summary überschrieben (aus Git wiederhergestellt, s. MIGRATION.md).
+      Regel heißt jetzt `notes-alias` und zielt auf `Notes.md`.
+- [x] Neue Doctor-Checks, beide **reine Berichte** (`to = nil`, `normalize`
+      fasst sie nie an — kein Rename erzeugt Text, den ein Mensch schreiben
+      muss): `summary-not-snow` (fehlt / eine der vier Sektionen fehlt) und
+      `summary-markdown` (Markdown, das SNOW wörtlich anzeigt). Gegen den
+      realen Bestand: 17 Findings, `normalize` plant korrekt 0 Schritte.
+      Markdown-Check bewusst nur Überschriften/Fettschrift/Code-Fences —
+      Aufzählungen und Links stehen im offiziellen `SummaryTemplateBefüllt.md`
+      und gelten damit als erlaubt.
+- [x] Blueprint scaffoldet `Summary.md` aus dem echten
+      `Workflow/Templates/SummaryTemplate.md`, mit `headline = false` (das
+      Template beginnt bei `╓ Problem statement`; eine eingefügte H1 müsste
+      vor jedem Einfügen ins Ticket wieder weg), plus neuer `Notes.md`-Node.
+- [x] **`:Case template [name]` — Reply-Bausteine** (`blocks.lua`,
+      CONCEPT.md §8b). Rekursive Discovery über
+      `Workflow/Templates/` (aktuell **34 Bausteine**: `RequestMoreInfo`,
+      `CloseCase`, `GermanSpeaker`, `Swarming/HandOverCase`, die `Wordings/`-
+      und `CDX/`-Sätze …), Einfügen an der Cursor-Position mit
+      Token-Ersetzung aus dem Case des aktuellen Buffers. `<Tab>`-Completion
+      über einen eigenen `BLOCK`-Argtyp. Ein neuer Baustein ist eine neue
+      `.md`-Datei, kein Lua-Edit; fehlt das Arbeits-Repo, meldet der Befehl
+      „no reply blocks found" statt zu scheitern.
+
 ## v8 — Weiter gedacht
 
 - [ ] Dashboard beim Start: offene Cases nach Liegezeit

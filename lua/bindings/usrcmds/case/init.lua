@@ -29,6 +29,26 @@ local function register_case_type()
       return registry.complete(render.to_short(arg_lead))
     end,
   })
+
+  -- `:Case template <Tab>` over the reply-block library. Validation is
+  -- deliberately permissive: the library lives in a separate repo that may
+  -- not be checked out on every machine, and a hard "unknown block" error
+  -- from the argtype would fire before `ui.template` can say the friendlier
+  -- "no reply blocks found in …".
+  composer.register_type("BLOCK", {
+    validate = function(raw)
+      return true, raw, nil
+    end,
+    complete = function(arg_lead)
+      local out = {}
+      for _, b in ipairs(require("bindings.usrcmds.case.blocks").list()) do
+        if arg_lead == "" or b.name:sub(1, #arg_lead) == arg_lead then
+          out[#out + 1] = b.name
+        end
+      end
+      return out
+    end,
+  })
 end
 
 ---@return Lib.UserCmd.Composer.RouteSpec[]
@@ -181,6 +201,14 @@ function M.enable()
       desc = "Paste the clipboard (a SNOW Activity Stream) into a new Research/ file",
       run = function(ctx)
         ui.activity(ctx.args.case)
+      end,
+    },
+    {
+      path = { "template" },
+      args = { { name = "name", type = "BLOCK", optional = true } },
+      desc = "Insert a reply block from Workflow/Templates at the cursor",
+      run = function(ctx)
+        ui.template(ctx.args.name)
       end,
     },
     {
