@@ -31,7 +31,7 @@ darunter, sofern relevant.
 | buffer-ctx.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | open.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | sandbox.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| spotlight.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| spotlight.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | documentation.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | runtime-analysis.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES |||||||
@@ -149,3 +149,49 @@ vollständig eingehalten, keine Änderung nötig. Gefunden und behoben:
   `cwd`-Pattern wie `util/git.lua` umgestellt.
 
 Alles committet (`4b85343` docs, `8accb5f` fix, `f5c5ab9` style) und nach `origin/main` gepusht.
+
+### spotlight.nvim
+
+Bereits durch eine eigene, ausführliche Checklisten-Runde gelaufen (siehe
+`docs/ROADMAP/Checklist.md`, `Arch&Coding.md`, `Zentral-Prinzipien.md` im Repo selbst,
+Stand 2026-07-30) — dieser Pass fand entsprechend kaum noch etwas: 31 Lua-Dateien, alle mit
+vollständigen `@module`/`@brief`/`@description`-Kopfannotationen und `@param`/`@return`,
+durchgängig `(value, err)`-Rückgaben statt stiller Fehler, `@types/init.lua` vollständig, eigener
+`config/DEFAULTS.lua` + `config/init.lua` mit Typvalidierung pro Key, `.luarc.json` (mit
+`diagnostics.globals=vim`, `workspace.library`) sowie `.luacheckrc`/`stylua.toml`/CI (stylua +
+luacheck + 164-Assertion-Testsuite in `TESTS/`) bereits vorhanden und grün (0 Warnings/Errors).
+Cross-Plattform bereits sauber über `lib.nvim.cross.platform.is_windows` und Forward-Slash-
+Normalisierung in `util/path.lua` gelöst.
+
+- **PERFORMANCE.md**: einziger echter Hotpath ist das `matchadd()`-Rendering selbst — bewusst in
+  C/Vim statt Lua gehalten (die zentrale Architekturentscheidung des Plugins, im README
+  dokumentiert). Der einzige O(Datei)-Scan (`core/count.lua`, Match-Zählung/Quickfix-Filter) läuft
+  bereits chunked (5000 Zeilen), nutzt `table.concat`/`t[#t+1]`, nie `table.insert`, und ist per
+  `count_max_lines`/`max_entries` gedeckelt. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig mit nativem Fallback
+  (`util/lib.lua`), Fehlerbehandlung strukturiert, Buffer/Window-Handles validiert (auch in
+  deferred `vim.schedule`-Callbacks), Importreihenfolge eingehalten. Keine Änderung nötig.
+- **REVIEW.md**: Schnell-Check und Detailprüfung sauber — kein globaler State, Single
+  Responsibility pro Modul, `.luarc.json` bereits vorhanden (leicht anderes Format als
+  `sessions.nvim`s `.luarc.json`, aber inhaltlich gleichwertig: `diagnostics.globals=["vim"]` +
+  `workspace.library` gesetzt — nicht angeglichen, um keine funktionslose Diff einzuführen).
+  **Ein Fund**: `qf.lua` (Quickfix-Filter) rief bei Trunkierung `lib.notify()` direkt auf, obwohl
+  alle anderen Feature-Module (`nav.lua`, `persist.lua`) konsequent nur Status zurückgeben und das
+  Melden der Fassade (`init.lua`) überlassen — Anti-Pattern-Check "notify() im Low-Level-Code".
+- **RELEASE.md**: README (Englisch, ASCII-Art, Badges, Level-2-only ToC, Schwesterplugin-Absatz
+  zu buffer-ctx.nvim), `doc/spotlight.txt`, `docs/BINDINGS.md`, `docs/ROADMAP/ROADMAP.md`,
+  `:checkhealth spotlight` (headless getestet, läuft fehlerfrei durch), Installationsblock mit
+  explizitem `event = "VeryLazy"`, Dependency auf `lib.nvim` korrekt deklariert — alles bereits
+  vollständig. GitHub-Metadaten (`gh repo view`) bereits gesetzt: Description, Homepage, 15 Topics,
+  Default-Branch `main`, keine LICENSE-Datei/-Referenz. Zentrale Bindings-Sammlung
+  (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/spotlight.nvim.md`)
+  bereits vorhanden. Keine Änderung nötig.
+- **Refactoring.md**: **Der einzige Codefix dieses Passes.** `qf.lua`s `M.fill()` notifizierte
+  selbst bei Trunkierung (`quickfix.max_entries` erreicht) statt nur einen `truncated`-Boolean
+  zurückzugeben; jetzt gibt `M.fill()` `(found, err, truncated)` zurück und `init.lua`s
+  `M.quickfix()` (die Fassade/Boundary) entscheidet über das Melden — konsistent mit
+  `nav.lua`/`persist.lua`, die dasselbe Muster bereits einhielten.
+
+Übersprungen/nicht verifizierbar: nichts — GitHub-Metadaten, `:checkhealth` und die zentrale
+Bindings-Sammlung waren alle direkt prüfbar und bereits vollständig. Alles committet (`c529cac`)
+und nach `origin/main` gepusht.
