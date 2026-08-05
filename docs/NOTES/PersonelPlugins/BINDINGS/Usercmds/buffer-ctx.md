@@ -12,6 +12,8 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `doc/buffer-ctx.txt`
 | --- | --- | --- |
 | `:Insert {subcmd} [args…]` | see catalog below | Insert context text at cursor |
 | `:Copy {subcmd} [args…]` | see catalog below | Copy context text to clipboard |
+| `:CopyFilepathAbsolute` | — | Compat alias for `:Copy filepath absolute` |
+| `:CopyFilepathRelative` | — | Compat alias for `:Copy filepath relative` |
 | `:Format {subcmd} [args…]` | see catalog below | Buffer/selection formatting |
 | `:Mark {subcmd}` | `toggle`\|`yank` | Toggle per-line marks / yank them |
 | `:MarkLineToggle` | — | Compat alias for `:Mark toggle` |
@@ -133,3 +135,9 @@ Args not given on the command line are prompted via `vim.fn.input`.
   locale renders `%a` as `"Di"`) — `long`/`weekday`/`rfc2822` now use a fixed
   English name table instead. `human` format is untouched (pre-existing,
   still locale-dependent via `%B`).
+- **`:CopyFilepathAbsolute` / `:CopyFilepathRelative` (2026-08-06)**: single-word
+  compat aliases for `:Copy filepath absolute` / `:Copy filepath relative`,
+  the most-used invocation of the command. Registered directly in
+  `commands.lua`'s `M.register()`, same pattern as `:Mark`'s
+  `MarkLineToggle`/`MarkLinesYank` — untouched by composer, dispatched
+  through the existing `M._dispatch("filepath", …, "clip")`.
