@@ -14,7 +14,7 @@ local M = {}
 
 --- Top-level areas of the work repo, in the order a case worker would
 --- reach for them — cases and own notes first. The key is the `scope`
---- argument `:Wkd links [scope]` accepts.
+--- argument `:Tricentis links [scope]` accepts.
 local AREAS = {
   { name = "cases", dir = "Cases" },
   { name = "notes", dir = "Notes" },

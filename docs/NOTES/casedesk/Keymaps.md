@@ -1,6 +1,6 @@
 # casedesk — Keymaps Cheatsheet
 
-No global keymaps. casedesk is command-driven (`:Case`/`:Cases`/`:Wkd`, see
+No global keymaps. casedesk is command-driven (`:Case`/`:Cases`/`:Tricentis`, see
 [`Usercmds.md`](./Usercmds.md)) — every binding it registers is buffer-local
 to a `kit.viewer` surface, set up fresh each time that surface opens and
 gone as soon as it closes.

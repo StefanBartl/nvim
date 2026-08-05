@@ -16,7 +16,7 @@ Three verbs, everything else follows from which one you reach for:
   work from wherever you already are.
 - **`:Cases`** — you're looking *across* cases. Filters, search, reports,
   bulk maintenance.
-- **`:Wkd`** — you're looking across the **whole work repo**, not just
+- **`:Tricentis`** — you're looking across the **whole work repo**, not just
   SAP_Support cases (`Notes/`, `Workflow/`, `Terminologie/`, `Tosca/` too).
   Currently just the link picker, but scoped separately from `:Cases` on
   purpose — it answers a different question ("where did I see that link,
@@ -155,7 +155,7 @@ the state IS the folder (`CONCEPT.md` §3).
 | "What's gone quiet?" | `:Cases stale` (7+ days idle, oldest first) — a Monday-morning check |
 | "Where's that PNG/log I attached three weeks ago?" | `:Cases pickers` → Attachments |
 | "That link I sent — did the docs page move?" | `:Cases linkcheck` (or `:Cases linkcheck <nr>` for just one case) |
-| "Where did I see that link — in a case, my notes, anywhere?" | `:Wkd links` (or `:Wkd links notes`/`cases`/… to narrow) — see below |
+| "Where did I see that link — in a case, my notes, anywhere?" | `:Tricentis links` (or `:Tricentis links notes`/`cases`/… to narrow) — see below |
 
 `--exact`/`-e` and `--re`/`-r` narrow any of the field filters, `:Cases
 find`, or `:Cases grep` beyond the substring default — reach for `--exact`
@@ -163,9 +163,9 @@ when a substring match is pulling in noise (`company Scan` also matching
 some unrelated "Scanner" mention, say), `--re` for an actual pattern
 (`:Cases grep "[Ee]rror" --re`).
 
-**`:Wkd links` is the one command that isn't case-scoped at all.**
+**`:Tricentis links` is the one command that isn't case-scoped at all.**
 `:Cases grep`/`linkcheck`/`pickers` only ever look inside
-`Cases/SAP_Support`; `:Wkd links` reads the whole work repo — `Notes/`,
+`Cases/SAP_Support`; `:Tricentis links` reads the whole work repo — `Notes/`,
 `Workflow/`, `Terminologie/`, `Tosca/` too, 617 links across all of it as
 of this writing. Reach for it instead of `Notes/Links.md`, the old
 hand-maintained collection: everything in there is already written
@@ -218,15 +218,15 @@ unlock something concrete, roughly cheapest-first:
   `:Cases grep` already searches it for free.
 - **A `category`/`tags` field in `.case.json`** — one line in
   `config.infocard_fields`, gets `:Cases category X` as a filter for free.
-  The actual payoff is downstream: ROADMAP.md v8's "ähnliche Cases
-  vorschlagen" / "Company-Historie" ideas need *some* signal to group cases
-  by, and there isn't one today beyond company and free-text.
+  The actual payoff is downstream: ROADMAP.md's "Company-Historie" idea
+  needs *some* signal to group cases by, and there isn't one today beyond
+  company and free-text.
 - **A fixed `Ressources/` subfolder taxonomy** (`Logs/`, `Screenshots/`,
-  rather than whatever a given case happened to create) — turns "Anhänge-
-  Picker nach Typ" (ROADMAP.md v5) from guessing-by-extension into a
+  rather than whatever a given case happened to create) — turns the
+  Attachments picker (`:Cases pickers`) from guessing-by-extension into a
   straight folder read, and would be the precondition for any future
-  automated log-scanning (the `spotlight.nvim` integration idea already
-  noted in ROADMAP.md's plugin-check section).
+  automated log-scanning (the `spotlight.nvim` integration idea in
+  ROADMAP.md's plugin-check section).
 
 The trade-off, in all three cases: every added field or convention is
 something `:Cases doctor` has to police from then on, and something you

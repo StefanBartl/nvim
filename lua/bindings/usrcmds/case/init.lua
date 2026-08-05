@@ -343,16 +343,17 @@ function M.enable()
     routes = cases_routes,
   })
 
-  -- `:Wkd` — deliberately its own verb, not a `:Cases` route: everything
-  -- above is scoped to `config.root` (Cases/SAP_Support only), this reaches
-  -- across the whole work repo (config.repo_root) — Notes/, Workflow/,
-  -- Terminologie/, Tosca/ too. Folding it into `:Cases` would silently
-  -- widen what that verb's name promises.
+  -- `:Tricentis` — deliberately its own verb, not a `:Cases` route:
+  -- everything above is scoped to `config.root` (Cases/SAP_Support only),
+  -- this reaches across the whole WKDBook-Tricentis repo
+  -- (config.repo_root) — Notes/, Workflow/, Terminologie/, Tosca/ too.
+  -- Folding it into `:Cases` would silently widen what that verb's name
+  -- promises; named after the repo it's scoped to, not "work" in general.
   local links = require("bindings.usrcmds.case.links")
-  composer.verb("Wkd", {
-    desc = "Cross-repo tools for the whole work knowledge base (not case-scoped)",
+  composer.verb("Tricentis", {
+    desc = "Cross-repo tools for the whole WKDBook-Tricentis knowledge base (not case-scoped)",
     default = function()
-      ui.wkd_links(nil)
+      ui.tricentis_links(nil)
     end,
     routes = {
       {
@@ -360,7 +361,7 @@ function M.enable()
         args = { { name = "scope", type = "STRING", optional = true, enum = links.scopes() } },
         desc = ("Search links across the work repo (scope: %s)"):format(table.concat(links.scopes(), "|")),
         run = function(ctx)
-          ui.wkd_links(ctx.args.scope)
+          ui.tricentis_links(ctx.args.scope)
         end,
       },
     },

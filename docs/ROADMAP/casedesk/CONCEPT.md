@@ -118,7 +118,7 @@ auf. Ein vierter Zustand ist eine Zeile in dieser Liste, kein neuer Code-Pfad.
 
 ```
 lua/bindings/usrcmds/case/
-  init.lua        enable() → CASE-/BLOCK-Argtyp, :Case-/:Cases-/:Wkd-Verb
+  init.lua        enable() → CASE-/BLOCK-Argtyp, :Case-/:Cases-/:Tricentis-Verb
   config.lua      repo_root/cases_root, states, Headline-Format, Blueprints
   templates.lua   Tag → Datei-Pfad, Token-Rendering (§4a)
   templates/      Summary.md, Notes.md, Research.md, Reply.md — echte Markdown-Files
@@ -142,7 +142,7 @@ lua/bindings/usrcmds/case/
   ui.lua          kit.form / kit.select / kit.viewer / kit.confirm / kit.menu-Verdrahtung
 ```
 
-Statusline-Badge (aktueller Case, ROADMAP.md v7) liegt bewusst außerhalb
+Statusline-Badge (aktueller Case) liegt bewusst außerhalb
 dieses Moduls, unter `lua/wkdnvchad/ui/statusline/modules/casedesk/` — casedesk
 selbst hat keine Statusline-Abhängigkeit, die Statusline liest nur
 `resolve.sync`/`meta.read` von außen.
@@ -257,15 +257,15 @@ folgt der tatsächlichen Konvention.
 
 Ein Treffer öffnet direkt die Infokarte, mehrere gehen in `kit.select`.
 
-### `:Wkd` — über SAP_Support hinaus, der ganze Arbeits-Repo
+### `:Tricentis` — über SAP_Support hinaus, der ganze Arbeits-Repo
 
 Eigener Verb, nicht `:Cases` — alles oben ist auf `config.root`
-(`Cases/SAP_Support`) beschränkt, `:Wkd` durchsucht `config.repo_root`
+(`Cases/SAP_Support`) beschränkt, `:Tricentis` durchsucht `config.repo_root`
 (`Notes/`, `Workflow/`, `Terminologie/`, `Tosca/` mit).
 
 | Command                | Wirkung                                                    |
 | ----------------------- | ------------------------------------------------------------ |
-| `:Wkd links [scope]`    | Link-Picker über den Bestand, `scope` narrowt auf `cases\|notes\|workflow\|terminologie\|tosca\|todo\|all` (`links.lua`) |
+| `:Tricentis links [scope]`    | Link-Picker über den Bestand, `scope` narrowt auf `cases\|notes\|workflow\|terminologie\|tosca\|todo\|all` (`links.lua`) |
 
 `[nr]` ist überall dieselbe optionale `CASE`-Arg mit `<Tab>`-Completion aus
 der Registry.
@@ -387,12 +387,12 @@ auf `Notes.md`).
 
 ---
 
-## 8d. Repo-weiter Link-Index (`links.lua`, `:Wkd links`)
+## 8d. Repo-weiter Link-Index (`links.lua`, `:Tricentis links`)
 
 Einziges Modul in casedesk, das bewusst über `config.root`
 (`Cases/SAP_Support`) hinausgeht — es liest `config.repo_root`: `Cases/`,
 `Notes/`, `Workflow/`, `Terminologie/`, `Tosca/`, `ToDo-Collection/`. Deshalb
-ein eigener `:Wkd`-Verb statt einer weiteren `:Cases`-Route — eine
+ein eigener `:Tricentis`-Verb statt einer weiteren `:Cases`-Route — eine
 `:Cases`-Route hätte stillschweigend erweitert, was der Name des Verbs
 verspricht (nur Cases).
 
@@ -412,10 +412,51 @@ das Modul existiert schon, siehe `PERFORMANCE.md`s Cache-Regeln.
 
 ---
 
+## 8e. Ähnliche Cases, ohne KI (`similar.lua`, `:Case similar`)
+
+TF-IDF-gewichtete Kosinus-Ähnlichkeit über Titel + `Summary.md` + `Notes.md`
+jedes Cases — bewusst kein Embedding-Modell, s. u. Begriffe, die in fast
+jedem Case vorkommen („SAP", „Tosca", „customer"), zählen fast nichts;
+seltene, diagnostische Begriffe (Fehlermeldungen, Komponentennamen)
+dominieren den Score. Jeder Treffer zeigt die Begriffe, die ihn verursacht
+haben — bei einem rein lexikalischen Verfahren muss sichtbar sein, *warum*
+etwas matcht, nicht nur *dass*.
+
+**Drei Bugs, die erst der Test gegen den echten Bestand zeigte** (2026-08-05):
+
+1. Box-Zeichen (`╓`, `╙───────`, in vielen Summaries als Trennlinien
+   verwendet) landeten als Top-„Begriffe" → ein Token braucht jetzt
+   mindestens einen ASCII-Buchstaben.
+2. Zwei fast leere Summaries mit genau einem gemeinsamen Wort („Research")
+   ergaben 87 % — zwei 1-Term-Vektoren sind zwangsläufig parallel → eine
+   Mindest-Dokumentlänge (8 Begriffe) und eine Mindest-Überlappung
+   (2 gemeinsame Begriffe), bevor überhaupt gewertet wird.
+3. Lineare Termfrequenz ließ ein 20× wiederholtes Wort ein selteneres,
+   diagnostisch wichtigeres überstimmen → sublinear (`1 + log(tf)`).
+
+**Ehrlicher Stand danach:** die Reihenfolge der Treffer wirkt plausibel
+(913070 ↔ 948965, beide DEX/Distributed Execution, 19 %; 711373 ↔ 859769,
+beide SAP-Fiori-Elementidentifikation, 12 % nach Einbeziehung von
+`Notes.md`), aber die Scores sind niedrig und mehrere Cases fallen ganz
+raus, weil ihre `Summary.md`/`Notes.md` zu dünn sind — kein
+Algorithmus-Problem, ein Bestands-Befund: das Verfahren kann nur so gut
+sein wie der Text, den es vergleicht. ~14 ms pro Aufruf gemessen, kein
+Cache (Kommando, kein Hotpath).
+
+**Warum (noch) keine KI:** ein Embedding-Modell würde den echten
+Schwachpunkt lösen — zwei Cases mit demselben Problem, aber komplett
+anderen Worten, ergeben hier Score 0 — kostet aber eine echte Abhängigkeit
+(lokales Modell oder API), Latenz und Nicht-Determinismus. Zwei billigere
+Stellschrauben stehen davor: bessere Summaries (der größte Hebel) und
+`Research/` mit einbeziehen. Die Entscheidung "reicht das, oder braucht es
+KI" ist offen — siehe [ROADMAP.md](ROADMAP.md).
+
+---
+
 ## 9. Was aus lib.nvim benutzt wird
 
 `ui.kit` (`form`/`select`/`viewer`/`confirm`/`input`/`menu`) für jede
-Interaktion, `usercmd.composer` für `:Case`/`:Cases`/`:Wkd` inkl.
+Interaktion, `usercmd.composer` für `:Case`/`:Cases`/`:Tricentis` inkl.
 `CASE`-/`BLOCK`-Argtyp, Flags, `enum` und generierter Routen,
 `fs.mkdirp`/`write.to_file`/`read`/`json`/`collect_recursive` fürs
 Dateisystem, `cross.fs.mutate.rename_file` für jedes Rename mit
@@ -446,9 +487,10 @@ Tippfehler-Dateinamen (alle vier: MIGRATION.md §4), und fehlender
 rendert die Liste für `kit.viewer`.
 
 Gegen den migrierten Bestand am 2026-08-04: **22 Findings über 8 Cases**
-(genaue Aufschlüsselung in [ROADMAP.md](ROADMAP.md) v6) — die ersten 10
-decken sich exakt mit der Analyse aus MIGRATION.md §4, die restlichen 12
-kamen mit dem `NN_`-Präfix-Check dazu.
+— die ersten 10 decken sich exakt mit der Analyse aus MIGRATION.md §4, die
+restlichen 12 kamen mit dem `NN_`-Präfix-Check dazu. Ablauf und Ergebnis
+des realen `:Cases normalize`-Laufs: [MIGRATION.md](MIGRATION.md)s
+„Namens-Aufräumen".
 
 `:Cases normalize` (`normalize.lua`) ist der Fix-Teil und baut auf genau
 diesen `DoctorFinding`-Einträgen auf — derselbe Plan → Dry-Run → Confirm → Apply-

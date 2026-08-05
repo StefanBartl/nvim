@@ -3,7 +3,7 @@
 Three composer verbs, built via `lib.nvim.usercmd.composer` — `:Case` acts
 on **one** case (always resolves to exactly one: explicit arg → buffer →
 `kit.select`), `:Cases` acts on a **set**, both scoped to `config.root`
-(`Cases/SAP_Support`). `:Wkd` is the odd one out: it reaches across the
+(`Cases/SAP_Support`). `:Tricentis` is the odd one out: it reaches across the
 **whole work repo** (`config.repo_root` — `Notes/`, `Workflow/`,
 `Terminologie/`, `Tosca/` too), which is exactly why it isn't a `:Cases`
 route. `[case]`/`[nr]` everywhere below is the same optional `CASE` arg
@@ -57,13 +57,13 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 
 Bare `:Cases` (no subcommand) runs `:Cases list`.
 
-## `:Wkd` — the whole work repo, not just SAP_Support
+## `:Tricentis` — the whole work repo, not just SAP_Support
 
 | Command | Args | What |
 | --- | --- | --- |
-| `:Wkd links [scope]` | `scope`, `<Tab>`-completed: `all\|cases\|notes\|workflow\|terminologie\|tosca\|todo` | Every link found under that area of the work repo, `kit.select`-picked, opened externally (falls back to clipboard). Supersedes hand-maintaining `Notes/Links.md` |
+| `:Tricentis links [scope]` | `scope`, `<Tab>`-completed: `all\|cases\|notes\|workflow\|terminologie\|tosca\|todo` | Every link found under that area of the work repo, `kit.select`-picked, opened externally (falls back to clipboard). Supersedes hand-maintaining `Notes/Links.md` |
 
-Bare `:Wkd` (no subcommand) runs `:Wkd links` with no scope (everything).
+Bare `:Tricentis` (no subcommand) runs `:Tricentis links` with no scope (everything).
 
 ## The `CASE` argument type
 
@@ -125,12 +125,12 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   (under 8 distinct terms after stopword removal), and needs at least 2
   shared terms before counting a hit at all — both thresholds exist because
   the first evaluation run produced an 87% "match" between two near-empty
-  summaries sharing the single word "Research". See
-  `docs/ROADMAP/casedesk/ROADMAP.md` v8 for the full evaluation and the
-  open question of whether this suffices or an embedding model is needed.
+  summaries sharing the single word "Research". Full evaluation:
+  `docs/ROADMAP/casedesk/CONCEPT.md` §8e; the open question of whether this
+  suffices or an embedding model is needed: `docs/ROADMAP/casedesk/ROADMAP.md`.
 - **`:Cases pickers` runs entirely on `kit.select`**, the same backend every
   other multi-result flow in `ui.lua` uses. The `pickers.nvim`/
-  `snacks.picker` backend cascade `docs/ROADMAP/casedesk/ROADMAP.md` v5 also
+  `snacks.picker` backend cascade `docs/ROADMAP/casedesk/ROADMAP.md` also
   lists is deliberately deferred — `pickers.nvim`'s public API expects an
   internal `Source`+`engine_mod` object from its own config/engine
   resolution, not a trivial "picker over this list" entry point.

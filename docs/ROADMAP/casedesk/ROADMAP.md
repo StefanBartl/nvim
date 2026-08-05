@@ -1,316 +1,53 @@
 # casedesk — Roadmap
 
-Feature-Ideen zu [CONCEPT.md](CONCEPT.md). Reihenfolge ≈ Nutzen/Aufwand.
-Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
+Nur was noch offen ist. Was schon gebaut ist, steht in
+[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8e) und in
+[MIGRATION.md](MIGRATION.md) (Bestandsumbau + Namens-Aufräumen) — Details
+und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 
 ---
 
-## v1 — Scaffolding ✅ implementiert
-
-- [x] `:Case new` — Prompt-Kette (Nr, Titel, Company, Name) → Ordner + Dateien
-- [x] Nur die **kurze** Nummer wird gespeichert; `SAP0000{short}{jahr}` abgeleitet
-- [x] Level-1-Headline zentral in `apply.lua`, nicht in Templates
-- [x] Dry-Run-Plan im `kit.viewer` + `kit.confirm` vor dem Schreiben
-- [x] `.case.json` als Sidecar
-- [x] Nie überschreiben — vorhandene Datei = übersprungene Aktion im Plan
-
-## v2 — Nachschlagen & Navigieren ✅ implementiert
-
-- [x] `CASE`-Argtyp: Completion über alle Case-Nummern, volle SNOW-Nr wird normalisiert
-- [x] `:Case info [nr]` — Kurz-Infokarte, editierbar als `kit.form`
-- [x] `detect.lua` — Auto-Befüllung aus H1, `Dear <X>,` und Links
-- [x] Generierte Datei-Verben aus `key` im Blueprint: `:Case summary|research|reply [nr]`
-- [x] `:Case open [nr]`, `:Case add`, `:Case copy`, `:Case sync`
-- [x] `:Case snow [nr]` — Ticket-ID (URL sobald `snow_url_format` gesetzt ist)
-
-## v3 — Flache Struktur ✅ implementiert (MIGRATION.md)
-
-- [x] `config.states = { "Open", "Closed", "Reassigned" }`, Zustand = Ordner
-- [x] `status` nicht in `.case.json` — wird aus dem Ordner abgeleitet
-- [x] `registry.lua` auf drei flache Ordner vereinfacht
-- [x] `migrate.lua`: Plan/Run/Cleanup, gegen Sandbox getestet, dann real ausgeführt
-- [x] Echter Umzug: 20/20 Cases, Company aus Alt-Pfaden gerettet, 0 Fehler
-- [x] `:Case close` / `:Case reassign` — generisch aus `config.states` erzeugt
-- [x] Templates als echte Dateien mit Tag (`templates.lua` + `templates/*.md`)
-
-## v4 — `:Cases` Querschnitt ✅ implementiert
-
-- [x] `:Cases` als zweites Verb, generischer Feld-Filter aus `infocard_fields`
-- [x] `:Cases company Scan` — Substring, case-insensitive
-- [x] Leeres Pattern = „Feld gesetzt"
-- [x] `:Cases list` — gruppiert nach Zustand
-- [x] Ein Treffer öffnet direkt, mehrere gehen in den Picker
-- [x] `:Cases find company=Scan year=2026` — Feld-Kombination via `ctx.kv` (composer)
-- [x] `:Cases recent [n]` — nach mtime der zuletzt angefassten Datei je Case
-- [x] `:Cases stats` — Anzahl nach Zustand/Company/Jahr
-- [x] `:Cases doctor` — Bericht (reale Zahlen: 10 Findings über 8 Cases, siehe unten)
-- [x] `--exact` / `--re` als Flags — `query.lua`s `matches()`, geteilt von
-      `by_field`/`by_fields`/`grep`. `--exact`/`-e`: volle Gleichheit statt
-      Substring, weiterhin case-insensitive. `--re`/`-r`: `pattern` als
-      Lua-Pattern — bewusst **case-sensitiv**, weil ein Klein-Schreiben des
-      Patterns Klassen wie `%A`/`%D`/`%S` (Groß-/Kleinschreibung ändert die
-      Bedeutung) zerstören würde. Composer-Flags auf `:Cases <field>` und
-      `:Cases find` verdrahtet (`init.lua`s `MATCH_FLAGS`).
-- [x] `:Cases grep <pattern> [--re|-r]` — Volltextsuche über die `.md`-Dateien
-      aller Cases (Anhänge in `Ressources/` bewusst ausgeklammert, s.
-      Doctor/v5), Ergebnis als `kit.viewer`-Bericht wie `doctor`/`stats`,
-      bei >500 Treffern gekappt mit Hinweiszeile. Gegen den realen Bestand
-      getestet: 547 Treffer für „the", 38 für `[Ee]rror` (`--re`).
-- [x] `:Cases normalize` — die von `doctor` gemeldeten Abweichungen beheben
-
-## v5 — Picker-Übersicht (CONCEPT §-Nachfolger)
-
-- [x] `:Cases pickers` — `kit.menu` als Entdeckungsoberfläche mit drei
-      Einträgen: Attachments, Links, „Cases ohne `.case.json`"
-- [ ] Backend-Kaskade `pickers.nvim` → `snacks.picker` → `kit.select` —
-      **zurückgestellt**: `pickers.nvim`s `actions/files.lua` erwartet ein
-      internes `Source`+`engine_mod`-Objekt aus seiner eigenen
-      Config-/Engine-Auflösung, keinen trivialen „Picker über diese
-      Pfad-/String-Liste"-Einstieg — eine echte Integration wäre ohne
-      Live-Test im echten Plugin zu riskant für einen Uncommitted-Merge.
-      `:Cases pickers` läuft deshalb komplett auf `kit.select`, demselben
-      Backend, das der Rest von `ui.lua` (`show_results`, `:Cases recent`,
-      …) schon überall benutzt — konsistent, aber ohne die Kaskade.
-- [x] Anhänge-Picker (`Ressources/`, rekursiv) — Text-Erweiterungen
-      (`md`/`txt`/`log`/`json`/`csv`) im Buffer geöffnet, alles andere
-      (PNG/PDF/Video/…) extern über `cross.open_default` (System-Standard-App).
-      Gegen den realen Bestand getestet (u. a. 711373: 9 Dateien inkl.
-      `image (28).png`; 859769: `Logs/ToscaCommander-....log` — verschachtelte
-      Pfade werden relativ zu `Ressources/` korrekt angezeigt).
-- [x] Links-Picker pro Case — `meta.links` falls gepflegt, sonst
-      `detect.links` als Fallback; Auswahl öffnet extern über
-      `cross.open_default` (Standard-Browser), fällt bei Fehlschlag auf
-      Zwischenablage zurück (dasselbe Muster wie `:Case snow`). Kein
-      `open.nvim` — `cross.open_default` deckt denselben Fall schon ab, eine
-      zweite optionale Abhängigkeit dafür wäre unnötig.
-- [x] „Cases ohne `.case.json`" — aktuell 0 im realen Bestand (alle 20
-      Cases haben durch `migrate.lua` ein Sidecar bekommen).
-
-## v6 — Aufräumen (Bestands-Inkonsistenzen, unabhängig von der Struktur-Migration)
-
-- [x] `:Cases doctor` — reiner Bericht, `doctor.lua` (nur lesend)
-      Reale Zahlen (2026-08-04, gegen den migrierten Bestand): **10 Findings
-      über 8 Cases** — 4× Summary-Alias (`CaseNote.md`×1 in 711373,
-      `TillNow.md`×1 in 711373, `ProblemSummary.md` in 859769 neben einem
-      bestehenden `Summary.md`, `WorkNote.md` in 888622), 2× `Research.md`
-      als Flat-File (977283, 996010), 1× `Solutions/` (913070), 1×
-      `Solution.md` als Flat-File (968475), 2× Tippfehler (941543, 977283).
-- [x] `:Cases normalize` — Plan/Dry-Run/Confirm, Aktionstyp `rename`, auf
-      genau den Findings von `doctor.check()` aufbauend. Jede Finding trägt
-      jetzt ein sicheres Ziel `to` (oder `nil` bei Mehrdeutigkeit, z. B.
-      Zieldatei existiert schon). `normalize.plan()` erkennt zusätzlich
-      Ziel-Kollisionen zwischen zwei Findings desselben Cases (z. B. 711373:
-      `CaseNote.md` UND `TillNow.md` gleichzeitig vorhanden, beide würden
-      auf `Summary.md` zeigen) und stuft dann beide als mehrdeutig zurück,
-      statt eines beim Anwenden das andere stillschweigend zu überschreiben.
-      Anfangs 8 von 10 Findings automatisch normalisierbar, die 2 aus
-      711373 blieben mehrdeutig (`CaseNote.md`/`TillNow.md`, beide hätten
-      auf `Summary.md` gezeigt) — von Hand entschieden (MIGRATION.md):
-      `TillNow.md` → `Summary.md`, `CaseNote.md` → `Notes.md`.
-- [x] `NN_`-Präfix erzwingen — Suffix ausdrücklich **nicht**. Neuer
-      Finding-Typ `missing-nn-prefix` in `doctor.lua`, nur für direkte
-      Dateien in `Research/`/`Replies/` (nicht `Ressources/` — Anhänge
-      behalten ihren Namen). Nummern werden fortlaufend ab dem höchsten
-      bereits vergebenen `NN_` vergeben (alphabetisch unter den
-      unpräfigierten Dateien derselben Fund-Runde), dasselbe „scan +
-      max+1"-Prinzip wie `:Case add reply`. `normalize.lua` brauchte dafür
-      **keine** Änderung — läuft rein über `from`/`to` der Findings, inkl.
-      der schon vorhandenen Kollisions-Absicherung.
-- [x] **`:Cases normalize` real gegen den Bestand ausgeführt (2026-08-05)**
-      — 22 Findings insgesamt (10 aus v6 + 12 `NN_`-Präfix), 20 automatisch,
-      2 (711373) von Hand wie oben. Zwei Durchgänge: der erste (20 Renames)
-      erzeugte durch seinen eigenen `Research.md`→`Research/Research.md`-Schritt
-      (977283, 996010) selbst eine neue `NN_`-Abweichung — vom zweiten
-      Durchgang (2 Renames) aufgefangen. `doctor.check()` meldet danach
-      **0 Findings**. Details: MIGRATION.md.
-
-## v7 — Komfort ✅ implementiert
-
-- [x] Clipboard-Node: Activity-Stream aus SNOW direkt als `Research/NN_ActivityStream.md`
-      — `:Case activity [nr]` liest `vim.fn.getreg("+")`, schreibt mit
-      Standard-Headline und automatischer `NN_`-Nummerierung
-      (`next_nn_prefix()`, jetzt geteilt mit `:Case add reply`, s. u.).
-      Isoliert gegen ein Scratch-Verzeichnis getestet (nicht den echten
-      Bestand): Inhalt landet byte-exakt in der neuen Datei.
-- [x] Statusline-Badge: aktueller Case + Company + Anzahl Replies —
-      `lua/wkdnvchad/ui/statusline/modules/casedesk/init.lua`, verdrahtet in
-      `custom.lua` (`order`/`modules`, wiederverwendete Highlight-Gruppe
-      `St_Lsp`, keine neue Theme-Farbe). Nach Buffername gecacht wie
-      `plugin_summary` — kein `.case.json`-Read/Directory-Scan bei jedem
-      Redraw, nur beim Buffer-Wechsel. Getestet: innerhalb eines
-      Case-Ordners `"1007631 · 0 replies"`, außerhalb leerer String.
-- [x] Case-Templates pro Company (jetzt als Feld, nicht als Ordner) —
-      `config.company_blueprints` (Company-Name → Blueprint-Key), von
-      `:Case new` vor dem Fallback auf `default_blueprint` konsultiert.
-      Bewusst leer: kein Case braucht bisher ein anderes Blueprint, ein
-      neues ist ab jetzt `M.blueprints.<name>` + eine Zeile in
-      `company_blueprints`, kein Code.
-- [x] Infokarte: Feld `Priority` / `Tosca-Version` — beide in
-      `infocard_fields` (macht automatisch `:Cases priority`/
-      `:Cases tosca_version` als Filter-Routen), plus manuell in
-      `infocard_lines`/`edit_info`s `kit.form` ergänzt (die Anzeige/Edit-Form
-      ist nicht generisch über `infocard_fields`, anders als die Filter-Routen).
-- [x] `:Cases stale [days]` (Default 7) — offene Cases seit `days` Tagen
-      nicht angefasst (`detect.last_touched`), älteste zuerst. Gegen den
-      realen Bestand getestet: **7 stale Cases bei 7 Tagen** (933790: 19
-      Tage, 968475: 18, 904938: 15, 977283: 13, 859769: 11, …).
-- [x] Link-Check: `linkcheck.lua`, `lib.nvim.net.curl.fetch_raw` (HEAD,
-      max. 4 gleichzeitig, 5 s Timeout), bewusst nur `docs.tricentis.com`
-      (die Doku-Seiten, die tatsächlich verschoben/entfernt werden — nicht
-      jeder Link, den ein Case zufällig erwähnt). 401/403/405 zählen
-      **nicht** als tot (Auth-Wall bzw. HEAD nicht erlaubt, Seite existiert).
-      `:Cases linkcheck [nr]`. **Test-Hinweis**: der `ok=false`-Pfad
-      (Netzwerkfehler → „dead") ist headless bestätigt; der `alive`-Pfad
-      (echtes 200) ließ sich in dieser Sandbox nicht sauber gegenprüfen —
-      `vim.system`-Aufrufe über `lib.nvim.net.curl` liefen in denselben
-      Requests konsequent in einen Timeout, während dieselbe URL per rohem
-      `curl` (Git-Bash **und** natives `C:\Windows\System32\curl.exe`)
-      sofort mit `200` antwortete. Deckt sich mit dem seit dieser Session
-      wiederkehrenden `runtime-analysis.nvim`-Stack-Overflow-Bug (unabhängig
-      von diesem Feature) — vor dem ersten echten Einsatz im Alltag einmal
-      gegenprüfen.
-- [x] `:Case add reply [suffix]` — Namen beim Anlegen überschreibbar
-      (`:Case add reply AskForPDF` → `NN_AskForPDF.md`, ohne Argument weiter
-      `NN_Reply.md`). Isoliert getestet: `00_AskForPDF.md` dann `01_Reply.md`
-      — Nummerierung korrekt fortlaufend, keine Kollision.
-
-## v7a — Summary/Notes-Trennung + Reply-Bausteine ✅ implementiert
-
-- [x] **`Summary.md` ist das SNOW-Dokument, `Notes.md` die Arbeitsnotizen**
-      (CONCEPT.md §8a). Die alte `summary-alias`-Regel war schlicht falsch:
-      `ProblemSummary`/`WorkNote`/`CaseNote`/`TillNow` sind Notizen, keine
-      Summary-Varianten — sie dorthin umzubenennen hat in 859769 ein echtes
-      SNOW-Summary überschrieben (aus Git wiederhergestellt, s. MIGRATION.md).
-      Regel heißt jetzt `notes-alias` und zielt auf `Notes.md`.
-- [x] Neue Doctor-Checks, beide **reine Berichte** (`to = nil`, `normalize`
-      fasst sie nie an — kein Rename erzeugt Text, den ein Mensch schreiben
-      muss): `summary-not-snow` (fehlt / eine der vier Sektionen fehlt) und
-      `summary-markdown` (Markdown, das SNOW wörtlich anzeigt). Gegen den
-      realen Bestand: 17 Findings, `normalize` plant korrekt 0 Schritte.
-      Markdown-Check bewusst nur Überschriften/Fettschrift/Code-Fences —
-      Aufzählungen und Links stehen im offiziellen `SummaryTemplateBefüllt.md`
-      und gelten damit als erlaubt.
-- [x] Blueprint scaffoldet `Summary.md` aus dem echten
-      `Workflow/Templates/SummaryTemplate.md`, mit `headline = false` (das
-      Template beginnt bei `╓ Problem statement`; eine eingefügte H1 müsste
-      vor jedem Einfügen ins Ticket wieder weg), plus neuer `Notes.md`-Node.
-- [x] **`:Case template [name]` — Reply-Bausteine** (`blocks.lua`,
-      CONCEPT.md §8b). Rekursive Discovery über
-      `Workflow/Templates/` (aktuell **34 Bausteine**: `RequestMoreInfo`,
-      `CloseCase`, `GermanSpeaker`, `Swarming/HandOverCase`, die `Wordings/`-
-      und `CDX/`-Sätze …), Einfügen an der Cursor-Position mit
-      Token-Ersetzung aus dem Case des aktuellen Buffers. `<Tab>`-Completion
-      über einen eigenen `BLOCK`-Argtyp. Ein neuer Baustein ist eine neue
-      `.md`-Datei, kein Lua-Edit; fehlt das Arbeits-Repo, meldet der Befehl
-      „no reply blocks found" statt zu scheitern.
-
-## v8 — Weiter gedacht
+## Offen
 
 - [ ] Dashboard beim Start: offene Cases nach Liegezeit
-- [x] **"Ähnliche Cases" — `:Case similar [nr] [n]`, TF-IDF ohne KI**
-      (`similar.lua`). Tokenisiert Titel + `Summary.md` jedes Cases,
-      gewichtet nach TF-IDF (Begriffe, die in fast jedem Case vorkommen —
-      „SAP", „Tosca", „customer" — zählen fast nichts; seltene, diagnostische
-      Begriffe dominieren), rankt per Kosinus-Ähnlichkeit. Zeigt zu jedem
-      Treffer **die passenden Begriffe mit an** — gerade weil das Verfahren
-      rein lexikalisch ist, muss man sehen können, *warum* etwas matcht.
-
-      **Erster Evaluierungslauf gegen den realen Bestand (2026-08-05)** —
-      die Rohfassung hatte drei Fehler, die erst der Test zeigte, alle
-      gefixt: (1) Box-Zeichen (`╓`, `╙───────`, in vielen Summaries als
-      Trennlinien) landeten als Top-„Begriffe" → Token braucht jetzt
-      mindestens einen ASCII-Buchstaben; (2) zwei fast leere Summaries mit
-      genau einem gemeinsamen Wort („Research") ergaben **87 %**, weil zwei
-      1-Term-Vektoren zwangsläufig parallel sind → Mindestlänge
-      (`MIN_DOC_TERMS = 8`) und Mindest-Überlappung (`MIN_SHARED_TERMS = 2`);
-      (3) lineare TF → sublinear (`1 + log(tf)`), damit ein 20× wiederholtes
-      Wort ein selteneres nicht überstimmt.
-
-      **Stand nach den Fixes, ehrlich:** die *Reihenfolge* wirkt plausibel —
-      913070 ↔ 948965 (19 %, beide DEX/Distributed Execution) und
-      711373 ↔ 859769 (8 %, beide SAP-Fiori-Element-Identifikation) sind
-      inhaltlich echte Treffer. Aber: die Absolutwerte sind niedrig (8–19 %),
-      die Begründungs-Terme oft noch generisch (`customer`, `tosca`,
-      `issue`), und **8 von 20 Cases fallen ganz raus**, weil ihre
-      `Summary.md` zu dünn ist. Letzteres ist kein Algorithmus-Problem,
-      sondern ein Bestands-Befund: das Verfahren kann nur so gut sein wie
-      die Summaries. Kosten: ~14 ms pro Aufruf über 20 Cases (gemessen) —
-      bewusst **kein** Cache, das ist ein Kommando, kein Hotpath.
-- [ ] **Danach entscheiden: reicht TF-IDF, oder braucht es KI?** Erst im
-      Alltag benutzen (v. a. beim Anlegen eines neuen Cases: hilft der
-      Vorschlag beim Brainstorming der Lösung?), dann bewerten. Zwei
-      Stellschrauben **vor** einem KI-Schritt: bessere Summaries schreiben
-      (s. o. — größter Hebel), und Volltext statt nur `Summary.md` (auch
-      `Research/` einbeziehen). Ein Embedding-Modell würde den echten
-      Schwachpunkt lösen (zwei Cases, dasselbe Problem, komplett andere
-      Worte → aktuell Score 0), kostet aber Abhängigkeit, Latenz und
-      Nicht-Determinismus — deshalb erst messen, dann greifen.
+- [ ] **Danach entscheiden: reicht `:Case similar`s TF-IDF, oder braucht es
+      KI?** Trade-off + Messwerte: CONCEPT.md §8e. Erst im Alltag benutzen
+      (v. a. beim Anlegen eines neuen Cases: hilft der Vorschlag beim
+      Brainstorming der Lösung?), dann bewerten. Zwei billigere
+      Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
+      `Research/` mit einbeziehen.
 - [ ] Company-Historie: "was hatten wir mit Scania schon"
-- [x] **Reply-Gate — `:Case reply check`** (`replygate.lua`). Prüft den
-      **aktuellen Buffer** (nicht zwingend eine Reply — läuft auf allem,
-      auch `Notes.md`): Emoji-Anzahl (`emojis.nvim`s pure `ops().count()`/
-      `ops().clear()`, optional per `pcall`), Markdown-Überschriften
-      (dieselbe `^#+%s`-Regel wie `doctor.lua`s `summary-markdown`), tote
-      Links (Wiederverwendung von `linkcheck.lua`s bereits generischem
-      `M.run(targets, on_done)` — kein Duplikat der Curl-Logik). Grammatik/
-      Rechtschreibung wird **nicht neu gebaut** — ein Tastendruck (`s`)
-      startet `language.nvim`s eigenes `:Spellcheck` auf dem Buffer, das
-      Ergebnis ist Buffer-Highlighting, kein Datenwert, den man
-      zurückgeben könnte. Isoliert getestet: 2 Emojis erkannt + entfernt
-      (Leerzeichen sauber kollabiert), Überschrift auf der richtigen Zeile
-      gefunden. `:Case reply check` koexistiert als Zwei-Segment-Pfad neben
-      dem generierten `:Case reply [nr]` (Composer-Trie probiert den
-      längeren literalen Pfad zuerst) — beides gegeneinander getestet, keine
-      Kollision.
-- [ ] Terminologie-Sammler: verstreute `Terminologie.md` → `Terminologie/`; Terminologie könnte ein wissespeicher werden, der mit einen picker dursuchbar ist: also das man hgezielt die einträge in allen Terminologie.md files innerhalb des repos zusammenholt und mit picker durchsuchbar macht. `:Cases terminology` bzw `:Cases pickers terminology` beide sollten gehen.
+- [ ] Terminologie-Sammler: verstreute `Terminologie.md` → `Terminologie/`;
+      Terminologie könnte ein Wissensspeicher werden, der mit einem Picker
+      durchsuchbar ist: gezielt die Einträge in allen `Terminologie.md`-Files
+      im Repo zusammenholen und mit Picker durchsuchbar machen.
+      `:Cases terminology` bzw. `:Cases pickers terminology` sollten beide
+      gehen.
 - [ ] `:Cases export <nr>` — Case als ein PDF bündeln (`pdfport.nvim`)
-- [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch; Das wäre super cool, wenn ich sowas wie eine aufzeichnug hötte, wie lange ich und wann buffers innerhalb eines cases foksuiert hatte
-
-## v9 — Repo-weit, über SAP_Support hinaus ✅ implementiert
-
-- [x] **`:Wkd links [scope]` — Link-Picker über den ganzen Bestand**
-      (`links.lua`, neuer `Wkd`-Verb — bewusst **nicht** unter `:Cases`,
-      weil alles dort auf `config.root` = `Cases/SAP_Support` beschränkt
-      ist, das hier aber `config.repo_root` durchsucht: `Cases/`, `Notes/`,
-      `Workflow/`, `Terminologie/`, `Tosca/`, `ToDo-Collection/`).
-      `scope` narrowt auf einen Bereich (`<Tab>`-Completion über einen
-      `enum`). Gegen den realen Bestand gemessen: **617 einzigartige Links**
-      (Cases 145, Notes 81, Workflow 35, Terminologie 8, Tosca 338, ToDo 10),
-      **117 ms** für den vollen Scan — kein Cache (Kommando, kein Hotpath,
-      PERFORMANCE.md: erst messen). Macht `Notes/Links.md` (die
-      handgepflegte Sammlung) überflüssig — liest, was ohnehin schon überall
-      steht.
-- [x] **Renames laufen über `lib.nvim.cross.fs.mutate.rename_file`**, nicht
-      mehr über ein rohes `uv.fs_rename` — `normalize.lua` und
-      `:Case close`/`reassign` betroffen. Grund: auf Windows kann ein
-      Verzeichnis-Watcher (neo-tree hat nachweislich einen Handle-Leak,
-      siehe die Workstation-Notizen zum Filetree-Handle-Guard) oder ein
-      AV-/Index-Scan einen transienten Lock auf genau die Datei/den Ordner
-      halten, der gerade umbenannt wird — `mutate.rename_file` versucht es
-      auf Windows bis zu 3× mit Backoff, bevor es aufgibt, ein einzelner
-      `uv.fs_rename`-Aufruf bekam diese Chance nie. `fileops.nvim` selbst
-      passte nicht (seine `rename`/`move`-API arbeitet auf „der aktuellen
-      Datei", nicht auf beliebigen Pfaden quer über den Bestand) — die
-      eigentlich wiederverwendbare Stelle ist die Schicht darunter, die
-      `fileops.nvim` selbst benutzt. Isoliert gegen ein Scratch-Verzeichnis
-      getestet: Drop-in-Ersatz, identisches `ok, err`-Verhalten.
+- [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch — Aufzeichnung,
+      wie lange und wann Buffer innerhalb eines Cases fokussiert waren.
+- [ ] Backend-Kaskade `pickers.nvim` → `snacks.picker` → `kit.select` für
+      `:Cases pickers` — **zurückgestellt**: `pickers.nvim`s
+      `actions/files.lua` erwartet ein internes `Source`+`engine_mod`-Objekt
+      aus seiner eigenen Config-/Engine-Auflösung, keinen trivialen „Picker
+      über diese Pfad-/String-Liste"-Einstieg. `:Cases pickers` läuft
+      komplett auf `kit.select`.
 
 ---
 
 ## Plugin-Check — was die eigenen Plugins beisteuern könnten
 
 Durchgegangen: alle Repos in `C:/repos/*.nvim` bzw. der Spec aus
-`lua/plugins/personal/list.lua` + `source.lua`.
+`lua/plugins/personal/list.lua` + `source.lua`. `language.nvim`,
+`emojis.nvim` sind verdrahtet (CONCEPT.md §8c); `fileops.nvim` wurde
+geprüft und passt nicht (CONCEPT.md §8d/§9) — beide nicht mehr hier.
 
 ### Hoher Nutzen — dafür lohnt sich eine echte Integration
 
 | Plugin              | Beitrag                                                                                                                                                   |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **language.nvim**   | ✅ **implementiert** (v9) — `:Case reply check`s `s`-Taste startet `language.spellcheck(nil, "buffer")`. Übersetzung (`M.translate`) noch ungenutzt. |
-| **emojis.nvim**     | ✅ **implementiert** (v9) — `:Case reply check` nutzt `require("emojis").ops().count()`/`.clear()` (die pure, skriptbare API, nicht das interaktive `:Emojis`-Kommando). |
 | **open.nvim**       | `:Case snow` (Ticket im Browser), Doku-Links aus Replies (`docs.tricentis.com`).             |
-| **pickers.nvim**    | Case-Picker statt `kit.select`, sobald die Case-Zahl weiter wächst — inkl. Preview der `.case.json`.                                                        |
-| ~~**fileops.nvim**~~ | **Passt nicht** — geprüft (v9): seine `rename`/`move`-API arbeitet auf „der aktuellen Datei" (Buffer-zentriert), nicht auf beliebigen Pfaden quer über den Bestand, wie `normalize.lua` sie braucht. Die eigentlich richtige, wiederverwendbare Stelle war eine Ebene tiefer: `lib.nvim.cross.fs.mutate.rename_file`, das `fileops.nvim` selbst intern benutzt. |
+| **pickers.nvim**    | Case-Picker statt `kit.select`, sobald die Case-Zahl weiter wächst — inkl. Preview der `.case.json`. Selbe Einschränkung wie die Backend-Kaskade oben. |
 | **sessions.nvim**   | Eine Session pro Case: Case wieder aufmachen = Buffer-Layout von letzter Woche zurück. |
 
 ### Mittlerer Nutzen
@@ -327,8 +64,8 @@ mdview.nvim** (Reply-Preview), **pdfport.nvim** (Case-Export), **replacer.nvim**
 `insights.nvim`, `github_stats.nvim`, `reposcope.nvim`, `sandbox.nvim`,
 `dap.nvim`, `debugging.nvim`, `lsp.nvim`, `documentation.nvim`,
 `color_my_ascii.nvim`, `spotlight.nvim` (Ausnahme: Log-Highlighting für
-Tosca-Logfiles in `Ressources/`, v5-Idee), `cmdlog.nvim`, `recommender.nvim`
-(Ausnahme: Grundlage für "ähnliche Cases", v8).
+Tosca-Logfiles in `Ressources/`), `cmdlog.nvim`, `recommender.nvim`
+(Ausnahme: Grundlage für "ähnliche Cases", falls TF-IDF nicht reicht).
 
 ### Abhängigkeits-Politik
 

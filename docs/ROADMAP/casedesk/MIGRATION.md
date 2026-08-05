@@ -64,7 +64,7 @@ waren nie Teil der Migration und blieben unberührt.
 ## Namens-Aufräumen (2026-08-05, `:Cases doctor`/`normalize`)
 
 Die Namens-Inkonsistenzen aus dem vorigen Abschnitt sind jetzt behoben —
-siehe [ROADMAP.md](ROADMAP.md) v6 für die Mechanik (`doctor.lua`/
+siehe [CONCEPT.md](CONCEPT.md) §10 für die Mechanik (`doctor.lua`/
 `normalize.lua`). Ablauf:
 
 1. **711373-Sonderfall von Hand entschieden**: der Case hatte gleichzeitig
@@ -72,7 +72,7 @@ siehe [ROADMAP.md](ROADMAP.md) v6 für die Mechanik (`doctor.lua`/
    (die eigentliche Chronologie: Problembeschreibung, Meilensteine
    Mai–Juli, letzter Kundenkontakt) — beide hätten automatisch auf
    `Summary.md` gezeigt, `normalize.plan()` stufte das korrekt als
-   mehrdeutig ein (s. ROADMAP.md v6). Entscheidung: `TillNow.md` →
+   mehrdeutig ein (s. CONCEPT.md §10). Entscheidung: `TillNow.md` →
    `Summary.md`, `CaseNote.md` → `Notes.md` (beide Dateien bleiben
    erhalten, nichts wurde gelöscht).
 2. **`:Cases normalize` real ausgeführt**, zwei Durchgänge: der erste (20

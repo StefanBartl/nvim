@@ -507,14 +507,14 @@ function M.activity(case_arg)
   end)
 end
 
--- ── :Wkd links ───────────────────────────────────────────────────────────
+-- ── :Tricentis links ─────────────────────────────────────────────────────
 
---- `:Wkd links [scope]` — every link across the work repo (or one area of
---- it), picked and opened externally. Supersedes hand-maintaining
+--- `:Tricentis links [scope]` — every link across the work repo (or one
+--- area of it), picked and opened externally. Supersedes hand-maintaining
 --- `Notes/Links.md`: this reads what's already written everywhere else
 --- instead of asking you to copy it a second time.
 ---@param scope string|nil
-function M.wkd_links(scope)
+function M.tricentis_links(scope)
   local links = require("bindings.usrcmds.case.links")
   local hits = links.find(scope)
   if #hits == 0 then
