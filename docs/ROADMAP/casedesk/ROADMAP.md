@@ -1,7 +1,7 @@
 # casedesk — Roadmap
 
 Nur was noch offen ist. Was schon gebaut ist, steht in
-[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8h) und in
+[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8i) und in
 [MIGRATION.md](MIGRATION.md) (Bestandsumbau + Namens-Aufräumen) — Details
 und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 

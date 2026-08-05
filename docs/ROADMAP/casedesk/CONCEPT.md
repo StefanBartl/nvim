@@ -134,6 +134,7 @@ lua/bindings/usrcmds/case/
   query.lua       :Cases-Feldfilter, -grep, -stale + Gruppierung nach Zustand
   similar.lua     TF-IDF-Ähnlichkeit über Titel + Summary/Notes, ohne KI
   timeline.lua    Zeitachse pro Case aus Datei-mtimes, ohne Logbuch (§8h)
+  ki.lua          KI-Prompt bauen + Antwort aufteilen, kein API-Call (§8i)
   doctor.lua      Bestands-Bericht (Findings mit sicherem Rename-Ziel), rein lesend
   normalize.lua   Fix-Teil zu doctor.lua — Plan/Dry-Run/Confirm/Apply
   linkcheck.lua   docs.tricentis.com-Links prüfen (lib.nvim.net.curl, async)
@@ -236,6 +237,8 @@ folgt der tatsächlichen Konvention.
 | `:Case reply check`         | Pre-Send-Gate auf dem aktuellen Buffer: Emojis, Markdown-Überschriften, tote Links, `s` startet `language.nvim`s Spellcheck (§8c) |
 | `:Case similar [nr] [n]`    | ähnliche Cases per TF-IDF über Titel + `Summary.md`/`Notes.md` |
 | `:Case timeline [nr]`       | Sitzungen aus Datei-mtimes, älteste zuerst, mit Gesamtdauer (`timeline.lua`, §8h) |
+| `:Case ki [nr]`             | KI-Analyse-Prompt aus dem Activity Stream (Zwischenablage) bauen, zurück in die Zwischenablage (`ki.lua`, §8i) |
+| `:Case ki import [nr]`      | eingefügte KI-Antwort auf Research/Replies/Notes verteilen (`ki.lua`, §8i) |
 | `:Case copy <src>`          | Datei in den Case kopieren, Zielordner per Auswahl                  |
 | `:Case sync [nr]`           | fehlende Blueprint-Teile nachziehen (nie überschreiben)              |
 | `:Case close [nr]`          | generiert aus `config.states` — nach `Closed/` verschieben           |
@@ -551,6 +554,56 @@ war ich an diesem Case dran, wie viele Sitzungen waren das" reicht das;
 für eine belastbare Stundenzahl bräuchte es echtes Fokus-Tracking (Buffer-
 Enter/Leave-Autocmds über die Case-Lebensdauer) — genau das separate
 Logbuch, das dieser Ansatz bewusst vermeidet.
+
+---
+
+## 8i. KI-Analyse-Runde (`ki.lua`, `:Case ki` / `:Case ki import`)
+
+Bisheriger Ablauf (`WKDBook-Tricentis/Workflow/CDX/StartChat.md`): vor
+jedem KI-Chat von Hand den Rollen-/Task-Block plus drei Policy-Pfade
+kopieren, den Activity Stream dazu, und die Antwort danach von Hand in
+Reply-Entwurf/interne Notiz/Rest aufteilen — fehleranfällig (ein Pfad
+vergessen) und für jeden Case neu getippt. `ki.lua` macht aus beiden
+Enden dieses Copy-Paste-Vorgangs ein Kommando, **ohne** selbst mit einer
+KI zu sprechen — bewusst kein API-Call, dieselbe Begründung wie bei
+`:Case similar` (§8e): keine externe Abhängigkeit, keine Latenz, kein
+Nicht-Determinismus im Modul selbst. Der Nutzer postet weiter in den
+Chat seiner Wahl (Gemini, Claude, …) und pastet die Antwort zurück; das
+Modul sorgt nur dafür, dass Prompt-Aufbau und Antwort-Aufteilung an
+beiden Enden gleich bleiben.
+
+**`:Case ki [nr]`** liest den Activity Stream aus der Zwischenablage
+(dieselbe Quelle wie `M.activity`), rendert `templates/KiPrompt.md`
+(Rollenblock, Case-Kontext, Policy-Pfade, ein fest vorgegebenes
+Antwortformat) über `templates.render` — derselbe Mechanismus wie
+`Summary.md`/`Reply.md` (§4a) — legt das Ergebnis als
+`Research/NN_KiPrompt.md` ab und kopiert es zurück in die
+Zwischenablage, einfügefertig für den Chat.
+
+**`:Case ki import [nr]`** liest eine eingefügte KI-Antwort aus der
+Zwischenablage und verteilt sie:
+
+| Abschnitt der Antwort | Ziel |
+| --- | --- |
+| 1. Activity Stream Analysis, 2. Difficulty Assessment, 3. Solution/Next Steps | zusammen in `Research/NN_KiAnalysis.md` |
+| 4. Reply Draft (English) | neuer `Replies/NN_Reply.md` — Entwurf, läuft wie jeder andere Reply durch `:Case reply check`, geht nie automatisch raus |
+| 5. Internal Notes (German) | an `Notes.md` angehängt, mit Zeitstempel-Trenner |
+
+`M.parse_response()` matcht **nur auf die führende Ziffer** einer
+`## N. …`-Überschrift, nicht auf den genauen Wortlaut danach — ein LLM
+hält eine durchnummerierte Gliederung deutlich zuverlässiger ein als
+einen exakten Überschriftentext, also stützt sich der Parser auf die
+billigere Invariante. Eine fehlende Sektion (z. B. keine Notiz) wird
+einfach ausgelassen, kein Fehler.
+
+**Ein echter Bug im ersten Testlauf:** `{activitystream}` (ursprünglich
+mit Unterstrich `{activity_stream}`) wurde nicht ersetzt — `templates.lua`s
+Substitutions-Pattern `%{(%w+)%}` matcht nur alphanumerische Zeichen,
+`%w` schließt in Lua keinen Unterstrich ein. Statt das geteilte Pattern
+anzufassen (Blast Radius: jedes Template) heißt der Token jetzt
+`activitystream`, ohne Unterstrich. Isoliert gegen einen Scratch-Case
+getestet (nicht den echten Bestand): beide Kommandos fehlerfrei, alle
+drei Zieldateien korrekt befüllt.
 
 ---
 

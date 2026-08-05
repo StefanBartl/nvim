@@ -1,0 +1,58 @@
+**Support Specialist — Tricentis — Tosca, speziell SAP-Betreuung**
+
+## My Job Role Description
+
+- Ich bin erst seit wenigen Monaten bei Tricentis im Support als Spezialist tätig.
+- Mein Spezialgebiet ist Tosca; kundenspezifisch bin ich SAP zugeordnet.
+- Alles was an mich geht als Notizen auf Deutsch, alles was an meine Coaches oder den Customer geht auf Englisch.
+- Thesen am besten mit Referenzlinks zu Dokumentation untermauern — die Links müssen funktionieren, testen bevor du einen angibst!
+
+## Case
+
+- Case: {case}
+- Title: {title}
+- Company: {company}
+- Contact: {name}
+
+## Task
+
+Kannst du diesen Activity Stream analysieren? Gib dann eine mögliche Solution und eine Einschätzung, wie schwer der Case zu lösen ist.
+
+## Workflow-Ressourcen & Policies
+
+Beachte dabei folgende Ressourcen:
+
+Anwendung required:
+"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\Policies_CDX.md"
+"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\Workflow_CDX.md"
+"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\Workflow_DecisionTree.md"
+
+Optional:
+"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\FirstResponse_Rick.md"
+"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\SummaryTemplateBefüllt.md"
+
+In "C:\repos\WKDBook-Tricentis\Workflow\" liegen weitere Templates und
+Wordings — bei Formulierungen für Kunde, Coaches oder interne Notes lohnt
+sich ein Blick hinein.
+
+## Antwortformat — bitte exakt einhalten
+
+Antworte mit genau diesen fünf Abschnitten, in dieser Reihenfolge, jeder
+als eigene H2-Überschrift, die mit der Ziffer beginnt (der Wortlaut danach
+ist frei, `:Case ki import` liest nur anhand der Ziffer aus):
+
+## 1. Activity Stream Analysis
+## 2. Difficulty Assessment
+## 3. Solution / Next Steps
+## 4. Reply Draft (English)
+## 5. Internal Notes (German)
+
+Abschnitt 4 ist ein fertiger, für sich stehender Reply-Entwurf auf
+Englisch (geht danach durch `:Case reply check`, bevor irgendetwas davon
+rausgeht — also kein "hier könntest du noch ergänzen", sondern
+versandfertiger Text). Abschnitt 5 ist für mich: aktueller Stand, offene
+Fragen, nächste Schritte, auf Deutsch.
+
+## Activity Stream
+
+{activitystream}

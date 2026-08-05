@@ -507,6 +507,142 @@ function M.activity(case_arg)
   end)
 end
 
+-- ── :Case ki / :Case ki import ───────────────────────────────────────────
+
+--- `:Case ki [nr]` — build the AI-analysis prompt for this case (role +
+--- policies + this case's activity stream from the clipboard, `ki.lua`,
+--- CONCEPT.md §8i) and put it back on the clipboard, ready to paste into
+--- whichever AI chat is open. Also saved as a numbered Research/ file — the
+--- same "clipboard in, numbered record out" shape as `M.activity`.
+---@param case_arg string|nil
+function M.ki(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to build a prompt for")
+      return
+    end
+    local content = vim.fn.getreg("+")
+    if not content or vim.trim(content) == "" then
+      notify.warn("clipboard is empty — copy the activity stream first")
+      return
+    end
+    local ki = require("bindings.usrcmds.case.ki")
+    local m = meta.read(entry.dir)
+    local prompt = ki.build_prompt({
+      case = entry.short,
+      title = m and m.title,
+      company = m and m.company,
+      name = m and m.name,
+    }, content)
+    if prompt == "" then
+      notify.error("ki: prompt template missing or empty (templates/KiPrompt.md)")
+      return
+    end
+
+    local research_dir = entry.dir .. "/Research"
+    mkdirp(research_dir)
+    local next_n = next_nn_prefix(research_dir)
+    local stem = next_n .. "_KiPrompt"
+    local full = research_dir .. "/" .. stem .. ".md"
+    local lines = { render.headline(entry.short, m and m.title, stem), "", prompt }
+    local ok, err = write_to_file(full, table.concat(lines, "\n"))
+    if not ok then
+      notify.error("ki: write failed: " .. tostring(err))
+      return
+    end
+
+    require("lib.nvim.cross.copy_to_clipboard")(prompt)
+    notify.info("prompt copied to clipboard, saved as " .. stem .. ".md — paste it into your AI chat")
+    edit(full)
+  end)
+end
+
+--- `:Case ki import [nr]` — paste an AI answer (in the format `:Case ki`
+--- asked for) from the clipboard and file its three parts: analysis +
+--- difficulty + solution into a numbered Research/ file (the record), the
+--- reply draft into a new numbered Replies/ file (still has to pass
+--- `:Case reply check` like any other draft — never auto-sent), the
+--- internal notes appended to Notes.md.
+---@param case_arg string|nil
+function M.ki_import(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to import into")
+      return
+    end
+    local content = vim.fn.getreg("+")
+    if not content or vim.trim(content) == "" then
+      notify.warn("clipboard is empty — copy the AI's answer first")
+      return
+    end
+    local ki = require("bindings.usrcmds.case.ki")
+    local sections, err = ki.parse_response(content)
+    if not sections then
+      notify.warn("ki import: " .. err)
+      return
+    end
+
+    local m = meta.read(entry.dir)
+    local written = {}
+
+    if sections.analysis or sections.difficulty or sections.solution then
+      local research_dir = entry.dir .. "/Research"
+      mkdirp(research_dir)
+      local next_n = next_nn_prefix(research_dir)
+      local stem = next_n .. "_KiAnalysis"
+      local full = research_dir .. "/" .. stem .. ".md"
+      local parts = { render.headline(entry.short, m and m.title, stem), "" }
+      if sections.analysis then
+        vim.list_extend(parts, { "## Activity Stream Analysis", "", sections.analysis, "" })
+      end
+      if sections.difficulty then
+        vim.list_extend(parts, { "## Difficulty Assessment", "", sections.difficulty, "" })
+      end
+      if sections.solution then
+        vim.list_extend(parts, { "## Solution / Next Steps", "", sections.solution, "" })
+      end
+      local ok, werr = write_to_file(full, table.concat(parts, "\n"))
+      if ok then
+        written[#written + 1] = stem .. ".md"
+      else
+        notify.error("ki import: research write failed: " .. tostring(werr))
+      end
+    end
+
+    if sections.reply then
+      local replies_dir = entry.dir .. "/Replies"
+      mkdirp(replies_dir)
+      local next_n = next_nn_prefix(replies_dir)
+      local stem = next_n .. "_Reply"
+      local full = replies_dir .. "/" .. stem .. ".md"
+      local body = render.headline(entry.short, m and m.title, stem) .. "\n\n" .. sections.reply
+      local ok, werr = write_to_file(full, body)
+      if ok then
+        written[#written + 1] = stem .. ".md"
+      else
+        notify.error("ki import: reply write failed: " .. tostring(werr))
+      end
+    end
+
+    if sections.notes then
+      local append = require("lib.nvim.fs.write.append")
+      local block = ("\n---\n## KI-Analyse — %s\n\n%s\n"):format(os.date("%Y-%m-%d %H:%M"), sections.notes)
+      local ok, werr = append(entry.dir .. "/Notes.md", block)
+      if ok then
+        written[#written + 1] = "Notes.md (appended)"
+      else
+        notify.error("ki import: notes append failed: " .. tostring(werr))
+      end
+    end
+
+    if #written == 0 then
+      notify.warn("ki import: nothing recognized in the clipboard")
+      return
+    end
+    notify.info("ki import: " .. table.concat(written, ", "))
+  end)
+end
+
 -- ── :Tricentis links ─────────────────────────────────────────────────────
 
 --- `:Tricentis links [scope]` — every link across the work repo (or one

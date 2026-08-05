@@ -223,6 +223,24 @@ function M.enable()
       end,
     },
     {
+      path = { "ki" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "Build the AI-analysis prompt from the clipboard's activity stream, copy it back",
+      run = function(ctx)
+        ui.ki(ctx.args.case)
+      end,
+    },
+    {
+      -- Two-segment path, same trie-dispatch trick as "reply check" above:
+      -- tried before the single-segment CASE arg of ":Case ki [nr]".
+      path = { "ki", "import" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "File a pasted AI answer into Research/Replies/Notes",
+      run = function(ctx)
+        ui.ki_import(ctx.args.case)
+      end,
+    },
+    {
       path = { "timeline" },
       args = { { name = "case", type = "CASE", optional = true } },
       desc = "Work sessions reconstructed from file mtimes, oldest first",

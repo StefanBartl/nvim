@@ -99,6 +99,15 @@ buffer resolves it:
   `Workflow/Templates/` — it shows up in the picker with no code change.
 - `:Case copy <path>` — pull a screenshot/log/attachment in; you pick the
   target folder (`Replies`/`Research`/`Ressources`/case root).
+- `:Case ki` — copied the SNOW Activity Stream? This builds the full
+  analysis prompt (role, policies, the stream, a fixed answer format) and
+  puts it back on the clipboard, ready to paste into whatever AI chat you
+  have open — no more hand-copying `StartChat.md` and three resource
+  paths per case. Once you paste the answer back into the clipboard,
+  `:Case ki import` files it: analysis into `Research/`, the English reply
+  draft into a new `Replies/` file (still goes through `:Case reply check`
+  before it's sent — nothing here bypasses that gate), the German
+  internal notes onto the end of `Notes.md`.
 - `:Case add <name>` — anything that isn't a reply, e.g.
   `:Case add Terminologie` for a case-local glossary note. Whatever you
   write there is automatically findable from every other case too, via

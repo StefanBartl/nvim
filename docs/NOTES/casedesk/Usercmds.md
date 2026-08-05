@@ -32,6 +32,8 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case reply check` | — | Pre-send gate on the **current buffer**: emoji count (`c` removes), stray markdown headlines, dead links, `s` launches `language.nvim`'s spellcheck on the buffer |
 | `:Case similar [nr] [n]` | `n`, default 5 | Past cases whose title + `Summary.md` share the most distinctive vocabulary (TF-IDF cosine, no AI). Each hit shows the matched terms — the ranking is lexical, so seeing *why* it matched is how you judge it |
 | `:Case timeline [nr]` | — | Work sessions reconstructed from file mtimes, oldest first — touches within `config.timeline_session_gap_minutes` (default 120) of each other count as one sitting. Each session's duration is a **lower bound** (a save marks when editing stopped, not started) |
+| `:Case ki [nr]` | — | Build the AI-analysis prompt (role + policies + this case's activity stream, from the clipboard) and copy it back to the clipboard, ready to paste into an AI chat. Also saved as `Research/NN_KiPrompt.md` |
+| `:Case ki import [nr]` | — | Paste an AI answer (in the format `:Case ki` asked for) from the clipboard and file it: analysis/difficulty/next-steps → `Research/NN_KiAnalysis.md`, English reply draft → new `Replies/NN_Reply.md` (still goes through `:Case reply check`, never auto-sent), internal German notes → appended to `Notes.md` |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
 | `:Case close [nr]` | — | Move to `Closed/` |
@@ -172,6 +174,17 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   number would need real focus tracking (buffer enter/leave over the
   case's lifetime), which is exactly the separate logbook this approach
   avoids — see `docs/ROADMAP/casedesk/CONCEPT.md` §8h.
+- **`:Case ki import` matches sections by their leading digit, not exact
+  wording.** The prompt `:Case ki` builds asks for five `## N. …` headings
+  in a fixed order (see `templates/KiPrompt.md`), but the parser
+  (`ki.lua`'s `M.parse_response`) only looks at the `N.` — an LLM is far
+  more reliable at keeping a numbered list's numbers straight than at
+  reproducing an exact heading string. A missing section is silently
+  skipped, not an error; only "no numbered section found at all" is. Note
+  the token spelling in the template: `{activitystream}`, no underscore —
+  `templates.lua`'s substitution pattern (`%{(%w+)%}`) doesn't match one,
+  the same first-run bug documented in `docs/ROADMAP/casedesk/CONCEPT.md`
+  §8i.
 - **`:Cases export` needs `pandoc` and a Chrome/Edge on PATH/in a known
   install location** — neither ships with Neovim. `pandoc` isn't
   reimplemented (markdown → HTML) and neither is a PDF engine (a headless

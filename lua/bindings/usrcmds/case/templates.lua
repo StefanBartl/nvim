@@ -21,6 +21,7 @@ M.SUMMARY = "$Summary"
 M.NOTES = "$Notes"
 M.RESEARCH = "$Research"
 M.REPLY = "$Reply"
+M.KI_PROMPT = "$KiPrompt"
 
 local TEMPLATE_DIR = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "bindings", "usrcmds", "case", "templates")
 
@@ -30,6 +31,7 @@ local FILES = {
   [M.NOTES] = "Notes.md",
   [M.RESEARCH] = "Research.md",
   [M.REPLY] = "Reply.md",
+  [M.KI_PROMPT] = "KiPrompt.md",
 }
 
 --- Point a tag at a file (absolute path, or a filename resolved under
