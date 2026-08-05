@@ -15,6 +15,37 @@ Both names are configurable (`opts.command_name`, `opts.browse_command_name`),
 which is what lets a *consuming* plugin generate its own map without
 overwriting these.
 
+## Which repo do they act on? (2026-08-05)
+
+**Per invocation, from the current buffer's file** — up to the nearest `.git`
+(`opts.root_markers`), falling back to `:pwd` for a buffer with no file. Our
+spec sets no `root` on purpose (the comment in `plugins/personal/init.lua` says
+why: the repos here sit side by side), so this is the path we take.
+
+Setting `opts.root` pins instead.
+
+### The bug this replaced — worth remembering, it cost a night
+
+The root used to be resolved **once, in `setup()`**. Our spec is
+`cmd = { "DocMap", "DocBrowse" }`, so "once" meant *the first `:DocMap` of the
+session*, and every later invocation regenerated **that first repo** no matter
+which tree was open. Hit live: `:DocMap full` in `documentation.nvim` worked,
+then the same command with a `lib.nvim` file open silently rewrote
+`documentation.nvim`'s map a second time and reported success.
+
+Two things hid it, and both are fixed:
+
+- Switching buffers does not change `:pwd`, so even *per-invocation* `getcwd()`
+  would have been wrong. The question is a buffer question, which is how every
+  other plugin that has to answer it (LSP roots, gitsigns, pickers) answers it.
+- **The report named no repo.** `Wrote 3 artifacts (4 modules, 0 errors)` — the
+  giveaway was that "4 modules" was `documentation.nvim`'s own count both times.
+  Now every report leads with the repo: `lib.nvim: wrote 3 artifacts (…)`.
+
+Handles are cached per root, so bouncing between repos scans each once.
+Completion deliberately never installs one — `<Tab>` in an unscanned repo
+offers action names only, instead of blocking on a full scan.
+
 ## `:DocMap`
 
 | Invocation | Does | Writes? |
@@ -35,6 +66,8 @@ overwriting these.
 **Only a genuinely empty argument regenerates.** An unknown action reports what
 it expected. (Until 2026-07-28 the old if-chain fell through to the default, so
 `:DocMap graph` with a missing argument — or any typo — silently rewrote files.)
+An unknown verb is now rejected *before* a root is resolved, so a typo cannot
+trigger a scan of a repo you never got to act on.
 
 Completion is two-level: the action first, then real module paths once an
 action that takes one is typed. It offers exactly what `find_node` resolves,
@@ -58,6 +91,33 @@ namespaces included.
 takes one, so anything typed after is meaningless. Modes are positional
 (`1`…`9` inside the browser): structure, deps, calls, types, history, trail,
 endpoints, telemetry, loaded.
+
+## Two new tabs on the generated page (2026-08-05)
+
+Nothing to bind — no command reaches them, they are in `index.html` — but worth
+knowing they exist, because neither is discoverable from `:DocMap`'s help text.
+
+**Quicks** (leads the tab bar, but the page still *lands* on Tree so old links
+and habits are untouched). The tree stated in sentences: *"Most of your
+published API is never named in a spec — 12% — 9 of 72"*. Negatives first, five
+of each polarity. Every verdict prints what it actually measured and links to
+the panel with the rows — the plugin refuses confident-but-uncheckable numbers
+everywhere else (`calls_heuristic`, `dead_code` off by default), so a prose
+verdict has to carry its own basis or it breaks that rule. Empty tab = every
+measure landed between its cut points = fine, not broken. Tune with
+`opts.quicks.thresholds`.
+
+Purity ("N% pure functions") is deliberately absent — not derivable from the
+IR, and guessing it is exactly what the paragraph above rules out.
+
+**Compare**. The `+` next to the `ⓘ` on any function or module marks it; the
+`Compare (N)` button by the filter opens them. Matrix layout (attributes down,
+objects across, differing rows lit) is the one worth using — Columns/Stacked
+are just the annotation cards side by side. Marks live in the URL *and*
+`localStorage`, so a set is shareable and survives a `:DocMap` regenerate.
+
+The `+` is a separate control on purpose: clicking the `ⓘ` already pins the
+annotation popup, which is what makes a long `@example` readable.
 
 ## Global-surface collision check (2026-07-28)
 
