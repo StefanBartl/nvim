@@ -24,6 +24,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case open [nr]` | — | Open the case folder (filetree reveal if `filetree.nvim` is loaded, else netrw) |
 | `:Case add <name> [suffix]` | `name`, optional `suffix` | New `<name>.md` in the case root. `name == "reply"` is special: auto-numbers into `Replies/`, `[suffix]` overrides the stem (`:Case add reply AskForPDF` → `NN_AskForPDF.md`; omitted → `NN_Reply.md`) |
 | `:Case activity [nr]` | — | Paste the system clipboard (a ServiceNow Activity Stream) into a new auto-numbered `Research/NN_ActivityStream.md` |
+| `:Case similar [nr] [n]` | `n`, default 5 | Past cases whose title + `Summary.md` share the most distinctive vocabulary (TF-IDF cosine, no AI). Each hit shows the matched terms — the ranking is lexical, so seeing *why* it matched is how you judge it |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
 | `:Case close [nr]` | — | Move to `Closed/` |
@@ -84,6 +85,15 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   screenshots hosted elsewhere would just be noise). 401/403/405 responses
   are reported as "uncertain"/"alive", not "dead" — an auth wall or a
   HEAD-unfriendly server doesn't mean the page is gone.
+- **`:Case similar` is lexical, not semantic**: it matches *words*, not
+  meaning — two cases describing the same problem in entirely different
+  wording score 0. It also skips any case whose `Summary.md` is too thin
+  (under 8 distinct terms after stopword removal), and needs at least 2
+  shared terms before counting a hit at all — both thresholds exist because
+  the first evaluation run produced an 87% "match" between two near-empty
+  summaries sharing the single word "Research". See
+  `docs/ROADMAP/casedesk/ROADMAP.md` v8 for the full evaluation and the
+  open question of whether this suffices or an embedding model is needed.
 - **`:Cases pickers` runs entirely on `kit.select`**, the same backend every
   other multi-result flow in `ui.lua` uses. The `pickers.nvim`/
   `snacks.picker` backend cascade `docs/ROADMAP/casedesk/ROADMAP.md` v5 also

@@ -419,6 +419,51 @@ function M.activity(case_arg)
   end)
 end
 
+-- ── :Case similar ────────────────────────────────────────────────────────
+
+--- `:Case similar [nr] [n]` — past cases whose title+Summary.md share the
+--- most distinctive vocabulary with this one (ROADMAP.md v8). The matched
+--- terms are shown alongside each hit precisely because the ranking is
+--- lexical: seeing WHY something matched is what tells you whether the hit
+--- is real or a coincidence of shared jargon.
+---@param case_arg string|nil
+---@param n_arg string|nil
+function M.similar(case_arg, n_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to compare")
+      return
+    end
+    local similar = require("bindings.usrcmds.case.similar")
+    local hits, err = similar.rank(entry.short, tonumber(n_arg) or 5)
+    if err then
+      notify.warn(err)
+      return
+    end
+    if #hits == 0 then
+      notify.info(("no case shares distinctive terms with %s"):format(entry.short))
+      return
+    end
+    kit.select({
+      message = ("Similar to %s (%d)"):format(entry.short, #hits),
+      selection = hits,
+      format_item = function(hit)
+        local m = meta.read(hit.entry.dir)
+        return ("%3d%%  %-10s %-34s %s"):format(
+          math.floor(hit.score * 100 + 0.5),
+          hit.entry.short,
+          ((m and m.title) or ""):sub(1, 34),
+          table.concat(hit.terms, ", ")
+        )
+      end,
+      on_select = function(hit)
+        M.info(hit.entry.short)
+      end,
+      on_cancel = function() end,
+    })
+  end)
+end
+
 -- ── :Case copy ───────────────────────────────────────────────────────────
 
 ---@param src string|nil

@@ -184,6 +184,17 @@ function M.enable()
       end,
     },
     {
+      path = { "similar" },
+      args = {
+        { name = "case", type = "CASE", optional = true },
+        { name = "n", type = "STRING", optional = true },
+      },
+      desc = "Past cases with similar title/Summary wording (TF-IDF, no AI)",
+      run = function(ctx)
+        ui.similar(ctx.args.case, ctx.args.n)
+      end,
+    },
+    {
       path = { "copy" },
       args = { { name = "src", type = "PATH", optional = true } },
       desc = "Copy a file into the current case",

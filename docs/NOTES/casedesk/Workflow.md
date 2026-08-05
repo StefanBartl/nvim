@@ -1,3 +1,4 @@
+
 # casedesk — Workflow & Use Cases
 
 How to actually use `:Case`/`:Cases` day to day, now that the bestand is
@@ -41,6 +42,33 @@ one.
 
 Already pasted the SNOW ticket URL and don't want to retype the number?
 `:Case new` also accepts the number directly: `:Case new 1012345`.
+
+**Then, before you start digging:**
+
+```
+:Case similar
+```
+
+Ranks past cases by how much distinctive vocabulary they share with this
+one's title + `Summary.md`, and shows the matching terms next to each hit.
+The point is brainstorming: "have I solved something like this before?" —
+a DEX setup problem surfacing the other DEX case, an SAP Fiori element
+issue surfacing the other Fiori one.
+
+Two things to know so the results aren't misleading:
+
+- It matches **words, not meaning**. A past case about the same problem
+  described in completely different wording won't show up. The displayed
+  terms are there for exactly this reason — glance at them to judge whether
+  a hit is real or just shared jargon (`customer`, `tosca` matching means
+  nothing; `dex execution` matching means something).
+- It only works as well as your summaries. Cases with a near-empty
+  `Summary.md` are skipped entirely (currently 8 of 20), and thin ones on
+  both sides produce weak scores. **This is the single biggest lever**: a
+  few sentences of real problem description in `Summary.md` — the actual
+  error message, the component, the symptom — makes every future
+  `:Case similar` better. Writing it also costs nothing extra, since you'd
+  summarize the case anyway.
 
 ## 2. Working a case
 

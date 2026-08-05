@@ -177,7 +177,44 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
 ## v8 — Weiter gedacht
 
 - [ ] Dashboard beim Start: offene Cases nach Liegezeit
-- [ ] "Ähnliche Cases" beim Anlegen vorschlagen
+- [x] **"Ähnliche Cases" — `:Case similar [nr] [n]`, TF-IDF ohne KI**
+      (`similar.lua`). Tokenisiert Titel + `Summary.md` jedes Cases,
+      gewichtet nach TF-IDF (Begriffe, die in fast jedem Case vorkommen —
+      „SAP", „Tosca", „customer" — zählen fast nichts; seltene, diagnostische
+      Begriffe dominieren), rankt per Kosinus-Ähnlichkeit. Zeigt zu jedem
+      Treffer **die passenden Begriffe mit an** — gerade weil das Verfahren
+      rein lexikalisch ist, muss man sehen können, *warum* etwas matcht.
+
+      **Erster Evaluierungslauf gegen den realen Bestand (2026-08-05)** —
+      die Rohfassung hatte drei Fehler, die erst der Test zeigte, alle
+      gefixt: (1) Box-Zeichen (`╓`, `╙───────`, in vielen Summaries als
+      Trennlinien) landeten als Top-„Begriffe" → Token braucht jetzt
+      mindestens einen ASCII-Buchstaben; (2) zwei fast leere Summaries mit
+      genau einem gemeinsamen Wort („Research") ergaben **87 %**, weil zwei
+      1-Term-Vektoren zwangsläufig parallel sind → Mindestlänge
+      (`MIN_DOC_TERMS = 8`) und Mindest-Überlappung (`MIN_SHARED_TERMS = 2`);
+      (3) lineare TF → sublinear (`1 + log(tf)`), damit ein 20× wiederholtes
+      Wort ein selteneres nicht überstimmt.
+
+      **Stand nach den Fixes, ehrlich:** die *Reihenfolge* wirkt plausibel —
+      913070 ↔ 948965 (19 %, beide DEX/Distributed Execution) und
+      711373 ↔ 859769 (8 %, beide SAP-Fiori-Element-Identifikation) sind
+      inhaltlich echte Treffer. Aber: die Absolutwerte sind niedrig (8–19 %),
+      die Begründungs-Terme oft noch generisch (`customer`, `tosca`,
+      `issue`), und **8 von 20 Cases fallen ganz raus**, weil ihre
+      `Summary.md` zu dünn ist. Letzteres ist kein Algorithmus-Problem,
+      sondern ein Bestands-Befund: das Verfahren kann nur so gut sein wie
+      die Summaries. Kosten: ~14 ms pro Aufruf über 20 Cases (gemessen) —
+      bewusst **kein** Cache, das ist ein Kommando, kein Hotpath.
+- [ ] **Danach entscheiden: reicht TF-IDF, oder braucht es KI?** Erst im
+      Alltag benutzen (v. a. beim Anlegen eines neuen Cases: hilft der
+      Vorschlag beim Brainstorming der Lösung?), dann bewerten. Zwei
+      Stellschrauben **vor** einem KI-Schritt: bessere Summaries schreiben
+      (s. o. — größter Hebel), und Volltext statt nur `Summary.md` (auch
+      `Research/` einbeziehen). Ein Embedding-Modell würde den echten
+      Schwachpunkt lösen (zwei Cases, dasselbe Problem, komplett andere
+      Worte → aktuell Score 0), kostet aber Abhängigkeit, Latenz und
+      Nicht-Determinismus — deshalb erst messen, dann greifen.
 - [ ] Company-Historie: "was hatten wir mit Scania schon"
 - [ ] Reply-Gate vor dem Versand (Emojis raus, Grammatik, Links leben, keine markdown headlines (`##`))
 - [ ] Terminologie-Sammler: verstreute `Terminologie.md` → `Terminologie/`; Terminologie könnte ein wissespeicher werden, der mit einen picker dursuchbar ist: also das man hgezielt die einträge in allen Terminologie.md files innerhalb des repos zusammenholt und mit picker durchsuchbar macht. `:Cases terminology` bzw `:Cases pickers terminology` beide sollten gehen.
