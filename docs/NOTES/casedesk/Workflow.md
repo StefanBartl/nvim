@@ -76,6 +76,44 @@ Two things to know so the results aren't misleading:
   `:Case similar` better. Writing it also costs nothing extra, since you'd
   summarize the case anyway.
 
+**Got the SNOW Activity Stream copied and want a second opinion before you
+dig in yourself?**
+
+```
+:Case activity     " optional: save the raw stream as a Research/ record first
+:Case ki           " build the analysis prompt, copy it to the clipboard
+```
+
+Paste into whatever AI chat you have open (Gemini, Claude, …) and send it.
+`:Case ki` reads the same clipboard `:Case activity` reads — running both is
+"keep the raw record, then also analyze it," not two different sources.
+The prompt it builds (`templates/KiPrompt.md`) bundles your role
+description, the CDX policy/workflow docs, this case's title/company/
+contact, the activity stream, and a fixed five-part answer format — the
+same content you used to hand-copy from `StartChat.md` plus three resource
+paths, every single case.
+
+Once the AI answers, copy its full reply and:
+
+```
+:Case ki import
+```
+
+Splits it by the numbered sections and files each one:
+
+| Section | Goes to |
+| --- | --- |
+| 1–3: analysis, difficulty, solution/next steps | `Research/NN_KiAnalysis.md` |
+| 4: reply draft (English) | new `Replies/NN_Reply.md` |
+| 5: internal notes (German) | appended to `Notes.md` |
+
+**The reply draft is still just a draft** — it lands in `Replies/` like any
+other, and goes through `:Case reply check` (§2) before anything is sent.
+Nothing about this round trip talks to an AI on its own or sends anything
+automatically; it only makes the copy-paste in both directions reliable.
+If the pasted answer doesn't follow the numbered format (or you paste the
+wrong thing), `:Case ki import` says so instead of silently filing garbage.
+
 ## 2. Working a case
 
 You're inside `Research/00_Research.md` (or any file under the case) — every
@@ -99,15 +137,11 @@ buffer resolves it:
   `Workflow/Templates/` — it shows up in the picker with no code change.
 - `:Case copy <path>` — pull a screenshot/log/attachment in; you pick the
   target folder (`Replies`/`Research`/`Ressources`/case root).
-- `:Case ki` — copied the SNOW Activity Stream? This builds the full
-  analysis prompt (role, policies, the stream, a fixed answer format) and
-  puts it back on the clipboard, ready to paste into whatever AI chat you
-  have open — no more hand-copying `StartChat.md` and three resource
-  paths per case. Once you paste the answer back into the clipboard,
-  `:Case ki import` files it: analysis into `Research/`, the English reply
-  draft into a new `Replies/` file (still goes through `:Case reply check`
-  before it's sent — nothing here bypasses that gate), the German
-  internal notes onto the end of `Notes.md`.
+- `:Case ki` / `:Case ki import` — the AI-analysis round trip, covered in
+  §1 above (usually the very first thing you run on a new ticket, but
+  nothing stops you running it again mid-case with a fresh activity
+  stream — a swarming request, an escalation reply, anything worth a
+  second read).
 - `:Case add <name>` — anything that isn't a reply, e.g.
   `:Case add Terminologie` for a case-local glossary note. Whatever you
   write there is automatically findable from every other case too, via
