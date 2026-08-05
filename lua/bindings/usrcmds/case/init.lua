@@ -327,9 +327,16 @@ function M.enable()
     },
     {
       path = { "pickers" },
-      desc = "Discovery menu: attachments, links, cases without .case.json",
+      desc = "Discovery menu: attachments, links, cases without .case.json, terminology",
       run = function()
         ui.pickers()
+      end,
+    },
+    {
+      path = { "terminology" },
+      desc = "Every term collected from every Terminologie.md across the work repo",
+      run = function()
+        ui.terminology()
       end,
     },
   }

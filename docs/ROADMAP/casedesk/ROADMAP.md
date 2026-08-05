@@ -1,7 +1,7 @@
 # casedesk — Roadmap
 
 Nur was noch offen ist. Was schon gebaut ist, steht in
-[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8e) und in
+[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8f) und in
 [MIGRATION.md](MIGRATION.md) (Bestandsumbau + Namens-Aufräumen) — Details
 und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 
@@ -17,12 +17,6 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 - [ ] Company-Historie: "was hatten wir mit Scania schon"
-- [ ] Terminologie-Sammler: verstreute `Terminologie.md` → `Terminologie/`;
-      Terminologie könnte ein Wissensspeicher werden, der mit einem Picker
-      durchsuchbar ist: gezielt die Einträge in allen `Terminologie.md`-Files
-      im Repo zusammenholen und mit Picker durchsuchbar machen.
-      `:Cases terminology` bzw. `:Cases pickers terminology` sollten beide
-      gehen.
 - [ ] `:Cases export <nr>` — Case als ein PDF bündeln (`pdfport.nvim`)
 - [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch — Aufzeichnung,
       wie lange und wann Buffer innerhalb eines Cases fokussiert waren.

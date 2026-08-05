@@ -53,7 +53,8 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, and whether each `Summary.md` follows the SNOW template without markdown |
 | `:Cases normalize` | — | Fixes exactly what `doctor` found — dry-run plan (`kit.viewer`) + confirm, then applies. Skips (reports separately) anything ambiguous: target already exists, or two findings in the same case would land on the same target |
 | `:Cases linkcheck [nr]` | — | Checks `docs.tricentis.com` links (only that host) for dead pages, async bounded-concurrency HEAD requests |
-| `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`Ressources/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json` |
+| `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`Ressources/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json`, Terminology |
+| `:Cases terminology` | — | Every `## `/`### ` term collected from every `Terminologie.md` across the whole work repo (`terminology.lua`), `kit.select`-picked; selecting one jumps to it in its source file. Same entry point as `:Cases pickers` → Terminology |
 
 Bare `:Cases` (no subcommand) runs `:Cases list`.
 
@@ -119,6 +120,14 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   screenshots hosted elsewhere would just be noise). 401/403/405 responses
   are reported as "uncertain"/"alive", not "dead" — an auth wall or a
   HEAD-unfriendly server doesn't mean the page is gone.
+- **`:Cases terminology` parses both `## ` and `### ` as term boundaries**,
+  not just `## `: most `Terminologie.md` files are flat (H1 title, H2 =
+  term), but at least one (a Tosca onboarding doc) groups terms under a
+  numbered H2 with the actual terms one level down as H3 — a bare group
+  heading has no prose before its first H3 child, so it's dropped
+  automatically (empty body), no separate "is this a group" check needed.
+  Headings written as a markdown link (`## [Term](url)`, throughout the OSV
+  glossary) have the link stripped to just the term text.
 - **`:Case similar` is lexical, not semantic**: it matches *words*, not
   meaning — two cases describing the same problem in entirely different
   wording score 0. It also skips any case whose `Summary.md` is too thin

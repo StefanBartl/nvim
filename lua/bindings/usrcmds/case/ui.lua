@@ -1205,6 +1205,33 @@ local function pick_missing_meta()
   show_results(missing, ("Cases without %s"):format(config.meta_filename))
 end
 
+--- `:Cases terminology` — every term collected from every `Terminologie.md`
+--- across the whole work repo (`terminology.lua`), `kit.select`-picked.
+--- Selecting one opens its source file with the cursor on the heading —
+--- the point is reading the full entry in context, not just the preview
+--- line, and jumping straight there beats a second "now open it" step.
+function M.terminology()
+  local terminology = require("bindings.usrcmds.case.terminology")
+  local entries = terminology.list()
+  if #entries == 0 then
+    notify.warn("no Terminologie.md entries found")
+    return
+  end
+  kit.select({
+    message = ("Terminology (%d)"):format(#entries),
+    selection = entries,
+    format_item = function(e)
+      local preview = e.body:gsub("%s+", " ")
+      return ("%-30s  %s"):format(e.term, preview:sub(1, 80))
+    end,
+    on_select = function(e)
+      edit(e.path)
+      pcall(vim.api.nvim_win_set_cursor, 0, { e.line, 0 })
+    end,
+    on_cancel = function() end,
+  })
+end
+
 --- `:Cases pickers` — the discovery menu itself.
 function M.pickers()
   kit.menu({
@@ -1237,6 +1264,10 @@ function M.pickers()
       {
         label = ("Cases without %s"):format(config.meta_filename),
         action = pick_missing_meta,
+      },
+      {
+        label = "Terminology",
+        action = M.terminology,
       },
     },
   })

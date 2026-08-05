@@ -100,8 +100,9 @@ buffer resolves it:
 - `:Case copy <path>` — pull a screenshot/log/attachment in; you pick the
   target folder (`Replies`/`Research`/`Ressources`/case root).
 - `:Case add <name>` — anything that isn't a reply, e.g.
-  `:Case add Terminologie` for a case-local glossary note (see §5 below for
-  why that one's worth reconsidering).
+  `:Case add Terminologie` for a case-local glossary note. Whatever you
+  write there is automatically findable from every other case too, via
+  `:Cases terminology` (§4) — no need to move it anywhere yourself.
 - `:Case summary` / `:Case notes` — **two different documents, don't mix
   them up.** `Summary.md` is what you paste into the ServiceNow ticket:
   fixed four sections, plain text, no markdown (SNOW renders none of it, a
@@ -156,6 +157,7 @@ the state IS the folder (`CONCEPT.md` §3).
 | "Where's that PNG/log I attached three weeks ago?" | `:Cases pickers` → Attachments |
 | "That link I sent — did the docs page move?" | `:Cases linkcheck` (or `:Cases linkcheck <nr>` for just one case) |
 | "Where did I see that link — in a case, my notes, anywhere?" | `:Tricentis links` (or `:Tricentis links notes`/`cases`/… to narrow) — see below |
+| "What was that term again — didn't I explain it in some other case?" | `:Cases terminology` (or `:Cases pickers` → Terminology) |
 
 `--exact`/`-e` and `--re`/`-r` narrow any of the field filters, `:Cases
 find`, or `:Cases grep` beyond the substring default — reach for `--exact`
@@ -208,14 +210,9 @@ again.
 At the current scale (~20 cases) nothing here is performance-bound; every
 `:Cases` command completes in well under a second. The interesting
 question isn't "faster," it's "what new command becomes possible if the
-bestand carried one more piece of structure." Three ideas that would each
+bestand carried one more piece of structure." Two ideas that would each
 unlock something concrete, roughly cheapest-first:
 
-- **Consolidate scattered per-case `Terminologie.md` files into the
-  existing shared `Terminologie/`** (already a sibling of `Cases/`, never
-  part of the migration). Right now a term explained in one case's local
-  `Terminologie.md` is invisible to every other case. Once shared,
-  `:Cases grep` already searches it for free.
 - **A `category`/`tags` field in `.case.json`** — one line in
   `config.infocard_fields`, gets `:Cases category X` as a filter for free.
   The actual payoff is downstream: ROADMAP.md's "Company-Historie" idea

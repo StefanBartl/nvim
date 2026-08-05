@@ -138,6 +138,7 @@ lua/bindings/usrcmds/case/
   linkcheck.lua   docs.tricentis.com-Links prüfen (lib.nvim.net.curl, async)
   replygate.lua   Pre-Send-Checks: Emojis, Markdown-Überschriften, tote Links
   links.lua       Link-Index über den ganzen Arbeits-Repo (repo_root, nicht nur Cases)
+  terminology.lua Terminologie-Einträge über den ganzen Arbeits-Repo sammeln
   migrate.lua     einmaliger Umzug von der alten Struktur (siehe MIGRATION.md)
   ui.lua          kit.form / kit.select / kit.viewer / kit.confirm / kit.menu-Verdrahtung
 ```
@@ -450,6 +451,40 @@ anderen Worten, ergeben hier Score 0 — kostet aber eine echte Abhängigkeit
 Stellschrauben stehen davor: bessere Summaries (der größte Hebel) und
 `Research/` mit einbeziehen. Die Entscheidung "reicht das, oder braucht es
 KI" ist offen — siehe [ROADMAP.md](ROADMAP.md).
+
+---
+
+## 8f. Terminologie-Sammler (`terminology.lua`, `:Cases terminology`)
+
+Sammelt jeden `## `/`### `-Begriff aus jeder `Terminologie.md` im ganzen
+Arbeits-Repo (`config.repo_root` — Cases, `Tosca/Onboarding/`,
+`Tosca/Notes/`, jede Company-Terminologie …) in einen durchsuchbaren Index,
+statt sie in den geteilten `Terminologie/`-Ordner zu verschieben: ein
+Begriff, den du lokal in einem Case erklärst, ist damit sofort aus jedem
+anderen Case heraus auffindbar, ohne dass du ihn irgendwohin verschieben
+musst. Erreichbar über `:Cases terminology` und `:Cases pickers` →
+Terminology — beide rufen denselben `ui.terminology()` auf.
+
+Zwei Eigenheiten, die erst der Lauf gegen den echten Bestand zeigte
+(2026-08-06):
+
+- **Nicht jede Datei ist flach.** Die meisten haben H1-Titel + H2-Begriffe,
+  aber mindestens eine (ein Tosca-Onboarding-Dokument) gruppiert Begriffe
+  unter einer nummerierten H2 (`## 1. Kernkonzepte & Infrastruktur`) mit
+  den eigentlichen Begriffen eine Ebene tiefer als H3. `parse_file()`
+  behandelt deshalb **sowohl** `## ` **als auch** `### ` als
+  Begriff-Grenze — eine reine Gruppen-Überschrift hat keinen Fließtext vor
+  ihrem ersten H3-Kind, fällt also automatisch durch den ohnehin
+  vorhandenen „leerer Body" Filter raus, ohne eigene Sonderlogik.
+- **Manche Überschriften sind selbst Markdown-Links** —
+  `## [Completed Scenario](https://docs.tricentis.com/...)`, durchgängig in
+  `Tosca/Notes/OSV/Terminologie.md`. `clean_heading()` extrahiert nur den
+  Linktext als Begriff.
+
+Ein Begriff, der in mehreren Dateien unterschiedlich erklärt wird,
+erscheint absichtlich mehrfach — eine „Gewinner"-Deduplizierung würde genau
+die Nuance verstecken, die der zweite Eintrag hinzufügt. Gegen den echten
+Bestand gemessen: 122 Einträge, 27 ms.
 
 ---
 
