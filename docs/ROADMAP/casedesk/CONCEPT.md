@@ -139,6 +139,7 @@ lua/bindings/usrcmds/case/
   replygate.lua   Pre-Send-Checks: Emojis, Markdown-Überschriften, tote Links
   links.lua       Link-Index über den ganzen Arbeits-Repo (repo_root, nicht nur Cases)
   terminology.lua Terminologie-Einträge über den ganzen Arbeits-Repo sammeln
+  export.lua      Case als ein PDF bündeln (pandoc + headless Browser)
   migrate.lua     einmaliger Umzug von der alten Struktur (siehe MIGRATION.md)
   ui.lua          kit.form / kit.select / kit.viewer / kit.confirm / kit.menu-Verdrahtung
 ```
@@ -257,6 +258,7 @@ folgt der tatsächlichen Konvention.
 | `:Cases linkcheck [nr]`   | prüft `docs.tricentis.com`-Links auf tote Seiten (`linkcheck.lua`) |
 | `:Cases pickers`          | `kit.menu`: Attachments / Links / Cases ohne `.case.json` / Terminology |
 | `:Cases terminology`      | jeder Begriff aus jeder `Terminologie.md` im Arbeits-Repo (`terminology.lua`, §8f) |
+| `:Cases export [nr]`      | Summary/Notes/Research/Replies als ein PDF bündeln (`export.lua`, §8g) |
 
 Ein Treffer öffnet direkt die Infokarte, mehrere gehen in `kit.select`.
 
@@ -487,6 +489,39 @@ Ein Begriff, der in mehreren Dateien unterschiedlich erklärt wird,
 erscheint absichtlich mehrfach — eine „Gewinner"-Deduplizierung würde genau
 die Nuance verstecken, die der zweite Eintrag hinzufügt. Gegen den echten
 Bestand gemessen: 122 Einträge, 27 ms.
+
+---
+
+## 8g. PDF-Export (`export.lua`, `:Cases export`)
+
+`pdfport.nvim` war das Plugin, das ROADMAP.md ursprünglich dafür vorsah —
+geprüft und verworfen: seine API liest/öffnet nur *bestehende* PDFs
+(`M.open`/`M.extract`), keine Erzeugungsfunktion. Stattdessen zwei externe
+Tools, keins davon neu implementiert:
+
+1. **`pandoc`** wandelt das gebündelte Markdown (`Summary.md`, `Notes.md`,
+   `Research/*.md`, `Replies/*.md`, sortiert) in eigenständiges HTML —
+   Tabellen, verschachtelte Listen, Links, alles, was ein selbstgebauter
+   Konverter falsch machen würde.
+2. Ein **headless Chrome/Edge** (auf dieser Maschine bereits installiert)
+   druckt dieses HTML per `--print-to-pdf` zu PDF — keine LaTeX-Engine
+   (`pdflatex`, mehrere GB) nötig, die `pandoc` für den direkten
+   Markdown→PDF-Weg verlangen würde.
+
+`pandoc` war auf dieser Maschine nicht vorinstalliert — per `winget install
+--id JohnMacFarlane.Pandoc` nachinstalliert (Nutzer-Bestätigung vorher
+eingeholt, s. Commit-Historie). `M.export()` prüft beide Werkzeuge zur
+Laufzeit (`vim.fn.executable("pandoc")`, dann eine feste Liste üblicher
+Chrome-/Edge-Installationspfade) und meldet **welches** fehlt, statt eines
+generischen Fehlers — „pandoc fehlt" und „kein Browser gefunden" brauchen
+unterschiedliche Abhilfe.
+
+Läuft komplett async (`vim.system`, zwei verkettete Prozessaufrufe) und
+schreibt nach `<case-dir>/Export.pdf` — Case-Root, nicht `Ressources/`,
+dieselbe Ebene wie `Summary.md`/`Notes.md`, weil es ein abgeleitetes
+Artefakt des Cases ist, kein eingehender Anhang. Isoliert gegen ein
+Scratch-Case getestet (nicht den echten Bestand): 46 KB PDF, Summary/
+Notes/Research korrekt zusammengeführt.
 
 ---
 

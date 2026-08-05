@@ -1,7 +1,7 @@
 # casedesk — Roadmap
 
 Nur was noch offen ist. Was schon gebaut ist, steht in
-[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8f) und in
+[CONCEPT.md](CONCEPT.md) (Modulaufbau, Command-Tabellen, §8a–8g) und in
 [MIGRATION.md](MIGRATION.md) (Bestandsumbau + Namens-Aufräumen) — Details
 und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 
@@ -16,7 +16,6 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
       Brainstorming der Lösung?), dann bewerten. Zwei billigere
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
-- [ ] `:Cases export <nr>` — Case als ein PDF bündeln (`pdfport.nvim`)
 - [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch — Aufzeichnung,
       wie lange und wann Buffer innerhalb eines Cases fokussiert waren.
 - [ ] Backend-Kaskade `pickers.nvim` → `snacks.picker` → `kit.select` für
@@ -49,8 +48,10 @@ geprüft und passt nicht (CONCEPT.md §8d/§9) — beide nicht mehr hier.
 (durch Case-Dateien zyklen), **buffer-ctx.nvim** (Case-Kontext am Buffer),
 **filetree.nvim** (Case-Ordner nach `:Case new` revealen — bereits als
 optionale Integration in `ui.open_dir` verdrahtet), **markdown.nvim/
-mdview.nvim** (Reply-Preview), **pdfport.nvim** (Case-Export), **replacer.nvim**
-(Platzhalter über einen Case ersetzen), **diff.nvim** (Reply-Drafts diffen).
+mdview.nvim** (Reply-Preview), **replacer.nvim** (Platzhalter über einen
+Case ersetzen), **diff.nvim** (Reply-Drafts diffen). `pdfport.nvim` nicht
+mehr hier — geprüft und verworfen für Case-Export, s. CONCEPT.md §8g
+(seine API liest nur bestehende PDFs, erzeugt keine).
 
 ### Geringer / kein Bezug
 

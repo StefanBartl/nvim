@@ -334,6 +334,14 @@ function M.enable()
       end,
     },
     {
+      path = { "export" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "Bundle Summary/Notes/Research/Replies into one PDF (pandoc + headless browser)",
+      run = function(ctx)
+        ui.export(ctx.args.case)
+      end,
+    },
+    {
       path = { "pickers" },
       desc = "Discovery menu: attachments, links, cases without .case.json, terminology",
       run = function()

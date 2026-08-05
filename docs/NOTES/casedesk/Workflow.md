@@ -145,6 +145,18 @@ reply drafts already exist, no command needed.
 Both are plain folder moves — nothing else in `.case.json` needs updating,
 the state IS the folder (`CONCEPT.md` §3).
 
+Handing a case off, or want one file to archive/attach elsewhere instead of
+a folder of loose markdown?
+
+```
+:Cases export
+```
+
+Bundles `Summary.md`/`Notes.md`/`Research/`/`Replies/` into a single PDF
+(`<case-dir>/Export.pdf`), opened automatically once it's done. Needs
+`pandoc` and a Chrome/Edge install — see Usercmds.md if it complains about
+either being missing.
+
 ## 4. Finding things across cases
 
 | You want... | Run |

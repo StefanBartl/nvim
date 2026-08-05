@@ -1133,6 +1133,37 @@ function M.linkcheck(case_arg)
   end)
 end
 
+--- `:Cases export [nr]` — bundle Summary/Notes/Research/Replies into one
+--- PDF via `export.lua` (pandoc + headless Chrome/Edge). Async, both
+--- external tools; reports whichever step failed rather than a generic
+--- error, since "pandoc missing" and "no browser found" need different
+--- fixes from the user.
+---@param case_arg string|nil
+function M.export(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to export")
+      return
+    end
+    local export = require("bindings.usrcmds.case.export")
+    local m = meta.read(entry.dir)
+    notify.info(("exporting %s…"):format(entry.short))
+    export.export(entry, m, function(result)
+      vim.schedule(function()
+        if not result.ok then
+          notify.error("export failed: " .. tostring(result.err))
+          return
+        end
+        notify.info("exported: " .. result.path)
+        local ok = require("lib.nvim.cross.open_default")(result.path)
+        if not ok then
+          notify.warn("PDF written but could not open it automatically: " .. result.path)
+        end
+      end)
+    end)
+  end)
+end
+
 --- `:Cases doctor` — read-only bestand-consistency report (MIGRATION.md §4).
 function M.doctor()
   local doctor = require("bindings.usrcmds.case.doctor")

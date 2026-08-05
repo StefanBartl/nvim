@@ -55,6 +55,7 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases normalize` | — | Fixes exactly what `doctor` found — dry-run plan (`kit.viewer`) + confirm, then applies. Skips (reports separately) anything ambiguous: target already exists, or two findings in the same case would land on the same target |
 | `:Cases linkcheck [nr]` | — | Checks `docs.tricentis.com` links (only that host) for dead pages, async bounded-concurrency HEAD requests |
 | `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`Ressources/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json`, Terminology |
+| `:Cases export [nr]` | — | Bundles `Summary.md`/`Notes.md`/`Research/`/`Replies/` into one PDF at `<case-dir>/Export.pdf` (`pandoc` → HTML, then a headless Chrome/Edge → PDF), opened automatically on success |
 | `:Cases terminology` | — | Every `## `/`### ` term collected from every `Terminologie.md` across the whole work repo (`terminology.lua`), `kit.select`-picked; selecting one jumps to it in its source file. Same entry point as `:Cases pickers` → Terminology |
 
 Bare `:Cases` (no subcommand) runs `:Cases list`.
@@ -161,3 +162,10 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   report instead of opening a second UI. Both integrations are optional
   (`pcall`-guarded) — missing either degrades that one line of the report,
   the rest still runs.
+- **`:Cases export` needs `pandoc` and a Chrome/Edge on PATH/in a known
+  install location** — neither ships with Neovim. `pandoc` isn't
+  reimplemented (markdown → HTML) and neither is a PDF engine (a headless
+  browser's own `--print-to-pdf` is used instead of pulling in `pdflatex`,
+  which is a multi-GB LaTeX install for this one use). If `pandoc` was just
+  installed, restart Neovim — `vim.fn.executable()` only sees `$PATH` as of
+  process start, not a PATH change made after.
