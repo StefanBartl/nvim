@@ -1,21 +1,59 @@
 ---@module 'bindings.usrcmds.case.doctor'
---- Read-only bestand-consistency report (MIGRATION.md §4: the case-note
---- file named five different ways, Research as a folder vs. a flat file,
---- Solution/Solutions naming variance, two known typo'd filenames, and
---- ROADMAP.md v6's NN_-prefix convention in Research/Replies). Never
---- writes — but every finding carries the safe rename target `normalize.lua`
---- (ROADMAP.md v6) would apply, or `to = nil` when the target already exists
---- and an automatic fix would clobber something (normalize.lua then skips
---- it, reported as ambiguous rather than silently guessed at).
+--- Read-only bestand-consistency report: the personal work-notes file named
+--- four different ways, Research as a folder vs. a flat file, Solution/
+--- Solutions naming variance, two known typo'd filenames, ROADMAP.md v6's
+--- NN_-prefix convention in Research/Replies, and whether `Summary.md`
+--- actually follows the mandated ServiceNow template.
+---
+--- Two documents, deliberately kept apart (see CONCEPT.md §8a):
+---   Summary.md — the SNOW-facing document, fixed four-section template
+---                from Workflow/Templates/SummaryTemplate.md
+---   Notes.md   — private work notes: what was tried, coach input, tasks
+---
+--- Never writes. Every finding carries the safe rename target
+--- `normalize.lua` would apply, or `to = nil` when no rename can fix it —
+--- either because the target already exists (ambiguous) or because the
+--- finding is about missing human-written content, which no rename
+--- produces. normalize.lua acts on `to ~= nil` only.
 
 local registry = require("bindings.usrcmds.case.registry")
 local collect_recursive = require("lib.nvim.fs.collect_recursive")
+local read = require("lib.nvim.fs.read")
 
 local M = {}
 
 local uv = vim.uv or vim.loop
 
-local SUMMARY_ALIASES = { "ProblemSummary.md", "WorkNote.md", "CaseNote.md", "TillNow.md" }
+--- Historical names for the case's *personal work notes* — the running
+--- log of what was tried, what the coach said, what to do next.
+---
+--- These are NOT alternative names for `Summary.md`, and treating them as
+--- such was a real bug: `Summary.md` is the ServiceNow-facing document and
+--- follows a fixed four-section template (see `SNOW_SECTIONS`), whereas
+--- these are private notes in whatever shape the day demanded. An earlier
+--- version of this file renamed all four into `Summary.md`, which in one
+--- case overwrote the actual SNOW summary (recovered from git; see
+--- MIGRATION.md). They normalize to `Notes.md` instead.
+local NOTES_ALIASES = { "ProblemSummary.md", "WorkNote.md", "CaseNote.md", "TillNow.md" }
+
+--- The section headings `Workflow/Templates/SummaryTemplate.md` mandates.
+--- A `Summary.md` missing any of them is reported, never auto-fixed —
+--- the content is human-written and no rename can produce it.
+local SNOW_SECTIONS = { "Problem statement", "Case notes", "Links", "Solution or workaround" }
+
+--- Summary.md is pasted into ServiceNow, which renders none of this — a
+--- `##` or `**bold**` shows up verbatim in the ticket. The box-drawing
+--- rules the template itself uses are not markdown and stay.
+---
+--- Scope note: bullets (`*`/`-`) and inline links are NOT flagged, because
+--- `Workflow/Templates/SummaryTemplateBefüllt.md` — the reference filled-in
+--- example — uses both throughout. Only constructs that example never uses
+--- are treated as mistakes.
+local MARKDOWN_PATTERNS = {
+  { pattern = "^#+%s", desc = "heading (#)" },
+  { pattern = "%*%*[^%*]+%*%*", desc = "bold (**)" },
+  { pattern = "^```", desc = "code fence (```)" },
+}
 
 local KNOWN_TYPOS = {
   ["00_Initital.md"] = "00_Initial.md",
@@ -139,19 +177,73 @@ function M.check()
 
   for _, e in ipairs(registry.list()) do
     local basenames = basenames_of(e.dir)
-    local has_summary = exists(e.dir .. "/Summary.md")
+    local has_notes = exists(e.dir .. "/Notes.md")
 
-    -- summary-alias: flat file at case root, target is the case root's Summary.md.
-    for _, alias in ipairs(SUMMARY_ALIASES) do
+    -- notes-alias: personal work notes under a historical name, at the case
+    -- root. Target is Notes.md — never Summary.md, which is the SNOW
+    -- document and a different thing entirely.
+    for _, alias in ipairs(NOTES_ALIASES) do
       local from = e.dir .. "/" .. alias
       if exists(from) then
         findings[#findings + 1] = {
           short = e.short,
-          kind = "summary-alias",
-          detail = has_summary and (alias .. " (alongside an existing Summary.md)") or alias,
+          kind = "notes-alias",
+          detail = has_notes and (alias .. " (alongside an existing Notes.md)") or alias,
           from = from,
-          to = has_summary and nil or (e.dir .. "/Summary.md"),
+          to = has_notes and nil or (e.dir .. "/Notes.md"),
         }
+      end
+    end
+
+    -- summary-not-snow: report-only (`to = nil` always). Neither a missing
+    -- Summary.md nor an off-template one can be fixed by renaming
+    -- something, so normalize.lua must never pick these up.
+    do
+      local summary_path = e.dir .. "/Summary.md"
+      local content = exists(summary_path) and read(summary_path) or nil
+      if not content then
+        findings[#findings + 1] = {
+          short = e.short,
+          kind = "summary-not-snow",
+          detail = "no Summary.md (SummaryTemplate.md's four sections expected)",
+          from = summary_path,
+          to = nil,
+        }
+      else
+        local missing = {}
+        for _, section in ipairs(SNOW_SECTIONS) do
+          if not content:find(section, 1, true) then
+            missing[#missing + 1] = section
+          end
+        end
+        if #missing > 0 then
+          findings[#findings + 1] = {
+            short = e.short,
+            kind = "summary-not-snow",
+            detail = ("Summary.md missing section(s): %s"):format(table.concat(missing, ", ")),
+            from = summary_path,
+            to = nil,
+          }
+        end
+
+        local seen_md, md_hits = {}, {}
+        for line in (content:gsub("\r", "") .. "\n"):gmatch("([^\n]*)\n") do
+          for _, m in ipairs(MARKDOWN_PATTERNS) do
+            if not seen_md[m.desc] and line:find(m.pattern) then
+              seen_md[m.desc] = true
+              md_hits[#md_hits + 1] = m.desc
+            end
+          end
+        end
+        if #md_hits > 0 then
+          findings[#findings + 1] = {
+            short = e.short,
+            kind = "summary-markdown",
+            detail = ("Summary.md uses markdown SNOW won't render: %s"):format(table.concat(md_hits, ", ")),
+            from = summary_path,
+            to = nil,
+          }
+        end
       end
     end
 
@@ -229,7 +321,17 @@ function M.describe(findings)
   end
   local lines = {}
   for _, f in ipairs(findings) do
-    local suffix = f.to and "" or "  [ambiguous — target exists, needs manual fix]"
+    -- Both cases below are "normalize.lua won't touch this", but for
+    -- different reasons, and saying which one is the difference between a
+    -- useful report and a confusing one.
+    local suffix = ""
+    if not f.to then
+      if f.kind == "summary-not-snow" or f.kind == "summary-markdown" then
+        suffix = "  [edit by hand — no rename can fix this]"
+      else
+        suffix = "  [ambiguous — target exists, needs manual fix]"
+      end
+    end
     lines[#lines + 1] = ("%-10s %-16s %s%s"):format(f.short, f.kind, f.detail, suffix)
   end
   return lines

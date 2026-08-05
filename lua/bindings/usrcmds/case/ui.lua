@@ -79,6 +79,7 @@ function M.create(short, title, company, name)
     company = (company and company ~= "") and company or nil,
     name = (name and name ~= "") and name or nil,
     year = year,
+    today = os.date("%Y-%m-%d"),
     snow = render.to_snow(short, year),
   }
 
@@ -536,6 +537,7 @@ function M.sync(case_arg)
       company = m and m.company,
       name = m and m.name,
       year = m and m.year or os.date("%Y"),
+      today = os.date("%Y-%m-%d"),
     }
     local actions = plan.build(entry.dir, nodes, tokens)
 

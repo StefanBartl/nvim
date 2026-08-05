@@ -101,6 +101,13 @@ local function tokenize(text)
   return tokens
 end
 
+--- Both documents feed the comparison, for different reasons: `Summary.md`
+--- carries the SNOW problem statement and solution (the most diagnostic
+--- text a case has), `Notes.md` the private working notes (often the only
+--- text at all, on a case whose SNOW summary was never filled in). Reading
+--- just one would miss half the bestand — see CONCEPT.md §8a.
+local SOURCE_FILES = { "Summary.md", "Notes.md" }
+
 ---@param entry Lib.Case.RegistryEntry
 ---@return string
 local function document_text(entry)
@@ -109,9 +116,11 @@ local function document_text(entry)
   if m and m.title then
     parts[#parts + 1] = m.title
   end
-  local summary = read(entry.dir .. "/Summary.md")
-  if summary then
-    parts[#parts + 1] = summary
+  for _, name in ipairs(SOURCE_FILES) do
+    local content = read(entry.dir .. "/" .. name)
+    if content then
+      parts[#parts + 1] = content
+    end
   end
   return table.concat(parts, "\n")
 end

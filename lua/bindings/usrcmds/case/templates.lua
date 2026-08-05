@@ -18,6 +18,7 @@ local M = {}
 --- Tags. The `$`-prefix is cosmetic (matches how they'd be typed/referenced
 --- outside Lua too) but any string works as a tag — `M.register` accepts one.
 M.SUMMARY = "$Summary"
+M.NOTES = "$Notes"
 M.RESEARCH = "$Research"
 M.REPLY = "$Reply"
 
@@ -26,6 +27,7 @@ local TEMPLATE_DIR = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "bindings"
 ---@type table<string, string>
 local FILES = {
   [M.SUMMARY] = "Summary.md",
+  [M.NOTES] = "Notes.md",
   [M.RESEARCH] = "Research.md",
   [M.REPLY] = "Reply.md",
 }
