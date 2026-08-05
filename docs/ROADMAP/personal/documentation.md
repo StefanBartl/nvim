@@ -6,9 +6,5 @@
 
 ## Neue Features
 
-- Sicherstellen, dass man `documentation.nvim` auch von der cli aus starten kann.
-- Quicks: Neuer tab bei dem ein aar analyse phrassen ausgegebn werden, weie gu hast über 90% der files gut anotiertr oder 50% deiner funkti onen s ind pure funstins oder sowas. und auch 5 negative wuivcks wie zb du hast nur 10 prozent deines pluigns testabdeckung usw...
-
-
 ---
 

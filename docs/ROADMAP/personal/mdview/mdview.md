@@ -8,7 +8,6 @@
 
 - [ ] `:MDView` blanklines
 
-
 ## FINISH
 
 - Alle features durchgehen und die performance testen
