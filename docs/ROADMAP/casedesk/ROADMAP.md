@@ -103,8 +103,10 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
       `CaseNote.md` UND `TillNow.md` gleichzeitig vorhanden, beide würden
       auf `Summary.md` zeigen) und stuft dann beide als mehrdeutig zurück,
       statt eines beim Anwenden das andere stillschweigend zu überschreiben.
-      Gegen den realen Bestand geplant (noch nicht ausgeführt): 8 von 10
-      Findings sicher normalisierbar, 2 (711373) bleiben mehrdeutig liegen.
+      Anfangs 8 von 10 Findings automatisch normalisierbar, die 2 aus
+      711373 blieben mehrdeutig (`CaseNote.md`/`TillNow.md`, beide hätten
+      auf `Summary.md` gezeigt) — von Hand entschieden (MIGRATION.md):
+      `TillNow.md` → `Summary.md`, `CaseNote.md` → `Notes.md`.
 - [x] `NN_`-Präfix erzwingen — Suffix ausdrücklich **nicht**. Neuer
       Finding-Typ `missing-nn-prefix` in `doctor.lua`, nur für direkte
       Dateien in `Research/`/`Replies/` (nicht `Ressources/` — Anhänge
@@ -113,12 +115,14 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
       unpräfigierten Dateien derselben Fund-Runde), dasselbe „scan +
       max+1"-Prinzip wie `:Case add reply`. `normalize.lua` brauchte dafür
       **keine** Änderung — läuft rein über `from`/`to` der Findings, inkl.
-      der schon vorhandenen Kollisions-Absicherung. Gegen den realen
-      Bestand geplant: **12 neue Findings über 8 Cases** (u. a. 711373:
-      `Logfiles.md`/`Terminologie.md`, 888622: drei Dateien, 940561: zwei
-      Dateien), zusammen mit v6's ursprünglichen 10 macht das **22
-      Findings**, **20 davon sicher normalisierbar** (die 2 aus 711373
-      bleiben weiterhin mehrdeutig).
+      der schon vorhandenen Kollisions-Absicherung.
+- [x] **`:Cases normalize` real gegen den Bestand ausgeführt (2026-08-05)**
+      — 22 Findings insgesamt (10 aus v6 + 12 `NN_`-Präfix), 20 automatisch,
+      2 (711373) von Hand wie oben. Zwei Durchgänge: der erste (20 Renames)
+      erzeugte durch seinen eigenen `Research.md`→`Research/Research.md`-Schritt
+      (977283, 996010) selbst eine neue `NN_`-Abweichung — vom zweiten
+      Durchgang (2 Renames) aufgefangen. `doctor.check()` meldet danach
+      **0 Findings**. Details: MIGRATION.md.
 
 ## v7 — Komfort ✅ implementiert
 
@@ -175,11 +179,10 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
 - [ ] Dashboard beim Start: offene Cases nach Liegezeit
 - [ ] "Ähnliche Cases" beim Anlegen vorschlagen
 - [ ] Company-Historie: "was hatten wir mit Scania schon"
-- [ ] Reply-Gate vor dem Versand (Emojis raus, Grammatik, Links leben)
-- [ ] Terminologie-Sammler: verstreute `Terminologie.md` → `Terminologie/`
+- [ ] Reply-Gate vor dem Versand (Emojis raus, Grammatik, Links leben, keine markdown headlines (`##`))
+- [ ] Terminologie-Sammler: verstreute `Terminologie.md` → `Terminologie/`; Terminologie könnte ein wissespeicher werden, der mit einen picker dursuchbar ist: also das man hgezielt die einträge in allen Terminologie.md files innerhalb des repos zusammenholt und mit picker durchsuchbar macht. `:Cases terminology` bzw `:Cases pickers terminology` beide sollten gehen.
 - [ ] `:Cases export <nr>` — Case als ein PDF bündeln (`pdfport.nvim`)
-- [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch
-- [ ] Templates aus den vorhandenen `Summary.md`-Dateien lernen
+- [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch; Das wäre super cool, wenn ich sowas wie eine aufzeichnug hötte, wie lange ich und wann buffers innerhalb eines cases foksuiert hatte
 
 ---
 

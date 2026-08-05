@@ -61,9 +61,31 @@ Cases/SAP_Support/Cases/
 `Notes/` und `Terminologie/` (Geschwister von `Cases/`, case-übergreifend)
 waren nie Teil der Migration und blieben unberührt.
 
-## Was noch offen ist
+## Namens-Aufräumen (2026-08-05, `:Cases doctor`/`normalize`)
 
-Die Namens-Inkonsistenzen im Bestand (Case-Notiz heißt an 5 Stellen anders,
-`Research` als Ordner *und* Datei, zwei Tippfehler) sind unverändert — siehe
-[ROADMAP.md](ROADMAP.md) v6 (`:Cases doctor`/`normalize`). Die Struktur-
-Migration war Voraussetzung dafür, nicht dasselbe wie das Aufräumen selbst.
+Die Namens-Inkonsistenzen aus dem vorigen Abschnitt sind jetzt behoben —
+siehe [ROADMAP.md](ROADMAP.md) v6 für die Mechanik (`doctor.lua`/
+`normalize.lua`). Ablauf:
+
+1. **711373-Sonderfall von Hand entschieden**: der Case hatte gleichzeitig
+   `CaseNote.md` (knappe, größtenteils leere Checkliste) und `TillNow.md`
+   (die eigentliche Chronologie: Problembeschreibung, Meilensteine
+   Mai–Juli, letzter Kundenkontakt) — beide hätten automatisch auf
+   `Summary.md` gezeigt, `normalize.plan()` stufte das korrekt als
+   mehrdeutig ein (s. ROADMAP.md v6). Entscheidung: `TillNow.md` →
+   `Summary.md`, `CaseNote.md` → `Notes.md` (beide Dateien bleiben
+   erhalten, nichts wurde gelöscht).
+2. **`:Cases normalize` real ausgeführt**, zwei Durchgänge: der erste (20
+   Renames) behob die ursprünglichen Funde; einer seiner eigenen Schritte
+   (`Research.md` flach → `Research/Research.md`) erzeugte dabei selbst
+   eine neue `NN_`-Präfix-Abweichung (977283, 996010) — vom zweiten
+   Durchgang (2 Renames) sauber aufgefangen, `doctor.check()` meldet
+   danach **0 Findings**.
+3. **Sicherheits-Commit vorher**: der Bestand hatte seit der
+   Struktur-Migration 140 uncommittete Löschungen/untrackte Pfade
+   angesammelt (nie committet) — vor dem Namens-Aufräumen vom Nutzer
+   selbst committet (`b626e2a restructure for :Cases`).
+
+Bestand ist damit vollständig konventionskonform: kein Summary-Alias, kein
+`Research.md`/`Solution.md`/`Solutions/` als Abweichung, keine bekannten
+Tippfehler, jede Datei in `Research/`/`Replies/` trägt ihr `NN_`-Präfix.
