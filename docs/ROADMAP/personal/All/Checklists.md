@@ -35,7 +35,7 @@ darunter, sofern relevant.
 | documentation.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | runtime-analysis.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES |||||||
-| fileops.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| fileops.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | gopath.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | replacer.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | insights.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -105,3 +105,47 @@ Gefunden und behoben:
 Übersprungen/nicht verifizierbar: CI-Setup (kein `.github/workflows`, keine `.stylua.toml`/
 `.luacheckrc`) wurde nicht neu angelegt — außerhalb des Scopes eines reinen Checklisten-Passes
 ohne expliziten Auftrag. Alles committet (`d5484e3`, `7736eb2`) und nach `origin/main` gepusht.
+
+### fileops.nvim
+
+Bereits das mit Abstand sauberste geprüfte Plugin bisher: `.luarc.json` (identisch zu
+sessions.nvim), `.luacheckrc`, `stylua.toml` und `.github/workflows/ci.yml` (Headless-Testsuite +
+stylua/luacheck-Lint) waren schon vorhanden; `luacheck lua` lief mit 0 Warnings/Errors über alle
+17 Quelldateien, die Headless-Suite (`docs/TESTS/run.lua`, 6 Specs) lief grün. Durchgängig
+`(ok, msg)`-Rückgaben statt stiller Fehler, keine `notify()`-Aufrufe außerhalb von
+`util/notify.lua` (der dedizierten Boundary-Schicht) — Refactoring.md/Fail-late war bereits
+vollständig eingehalten, keine Änderung nötig. Gefunden und behoben:
+
+- **PERFORMANCE.md**: kein echter Hotpath über das übliche Directory-Scanning hinaus (`ops/cycle`
+  füllt Arrays bereits per `acc[#acc+1]`, kein `..`-Loop-Concat) — keine Änderung.
+- **LUA_NVIM.md**: alle Dateien tragen bereits `@module`; `@class`/`@brief`/`@description` fehlen
+  in einigen (nur 🟡 empfohlen) — bewusst nicht nachgerüstet, um den bestehenden knappen
+  Kommentarstil nicht zu verwässern. `@types`-Konvention: ein einziger konsolidierter
+  `@types/init.lua` statt pro Unterordner ein eigener `types/`-Ordner — Abweichung von der
+  Buchstaben-Regel in LUA_NVIM.md, aber die Datei ist sauber nach Quelldatei gruppiert und bei nur
+  26 Lua-Dateien insgesamt sinnvoller als eine Fragmentierung in sechs Mini-Ordner; als bewusste
+  Ausnahme belassen.
+- **REVIEW.md §8 Tooling**: `stylua --check .` fand 11 Dateien mit CRLF-Zeilenenden entgegen
+  `stylua.toml`s `line_endings = "Unix"` (vermutlich durch `core.autocrlf=true` bei früheren
+  Commits eingeschlichen). `stylua .` normalisiert, danach `stylua --check`/`luacheck`/Testsuite
+  erneut grün — reine Whitespace-Änderung, kein Logikunterschied.
+- **RELEASE.md**: README hatte ASCII-Art, Badges, Schwesterplugin-Absatz (sessions.nvim) und
+  Installationsblock mit explizitem `event = "VeryLazy"` bereits korrekt — nur das geforderte
+  Table of Contents (nur Level-2-Überschriften) fehlte, ergänzt. `doc/fileops.txt`,
+  `docs/BINDINGS.md`, `:checkhealth fileops` waren bereits vollständig und akkurat.
+  `docs/ROADMAP.md` war nach einem früheren "drop completed-tasks"-Commit komplett leer (nur
+  Überschrift) — das zählt als verwaist, daher mit einer echten Implemented/Planned-Übersicht
+  gefüllt. `gh repo edit` gesetzt: Description, Homepage (`https://github.com/StefanBartl/
+  fileops.nvim`), Topics (neovim, neovim-plugin, lua, file-management, libuv) — vorher alle leer.
+  Default-Branch war bereits `main`, keine LICENSE-Datei/-Referenz vorhanden.
+  Cross-Plattform-Check: keine hartkodierten Pfadtrenner gefunden (die wenigen `\\`-Vorkommen sind
+  Lua-Pattern-Matches zum *Erkennen* von Trennern, keine Joins; Joins laufen konsequent über `/`,
+  das libuv auch unter Windows akzeptiert).
+- **Refactoring.md**: siehe oben — bereits vollständig eingehalten.
+- **Bonus-Fix außerhalb der Checkliste, aber beim Lesen aufgefallen**: `features/on_hold.lua`
+  rief `git rev-parse`/`git blame`/`git show` ohne `cwd` auf (lief also in Neovims globalem cwd
+  statt im Verzeichnis der Datei) — bei einer Datei außerhalb des aktuellen cwd meldete
+  `in_git_repo()` fälschlich "kein Repo" und die Preview blieb stumm. Auf das gleiche
+  `cwd`-Pattern wie `util/git.lua` umgestellt.
+
+Alles committet (`4b85343` docs, `8accb5f` fix, `f5c5ab9` style) und nach `origin/main` gepusht.
