@@ -180,7 +180,13 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   (`ki.lua`'s `M.parse_response`) only looks at the `N.` — an LLM is far
   more reliable at keeping a numbered list's numbers straight than at
   reproducing an exact heading string. A missing section is silently
-  skipped, not an error; only "no numbered section found at all" is. Note
+  skipped, not an error; "no numbered section found at all" and "sections
+  1-3 all empty" are. The second case exists because `KiPrompt.md` spells
+  the requested format out verbatim, so **the prompt itself parses as a
+  well-formed, entirely empty answer** — pasting it back (clipboard still
+  holds what `:Case ki` put there) used to file three headline-only files
+  and append the whole activity stream to `Notes.md`. Now it says
+  "that's the prompt, not the answer". Note
   the token spelling in the template: `{activitystream}`, no underscore —
   `templates.lua`'s substitution pattern (`%{(%w+)%}`) doesn't match one,
   the same first-run bug documented in `docs/ROADMAP/casedesk/CONCEPT.md`

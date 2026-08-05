@@ -60,13 +60,26 @@ end
 ---@field reply string|nil
 ---@field notes string|nil
 
+--- Headings that only ever appear in the prompt `M.build_prompt` writes,
+--- never in an answer to it. `KiPrompt.md` spells the requested answer
+--- format out verbatim (`## 1. Activity Stream Analysis` … `## 5. …`), so
+--- the prompt parses as a perfectly well-formed — and completely empty —
+--- response. Used solely to word the error when that happens.
+local PROMPT_MARKERS = {
+  "## Antwortformat",
+  "## My Job Role Description",
+  "## Workflow-Ressourcen & Policies",
+}
+
 --- Split a pasted AI answer into its five sections by the leading digit of
 --- each `## N. ...` heading. A missing section is simply absent from the
 --- result (nil), not an error — the caller decides whether e.g. a missing
 --- reply draft is fatal for what it's about to do.
 ---@param text string
 ---@return Lib.Case.KiResponse|nil sections
----@return string|nil err  Set only when NO numbered section was found at all.
+---@return string|nil err  Set when no numbered section was found at all, or
+--- when sections 1-3 are all empty (nothing worth filing — typically the
+--- prompt itself pasted back).
 function M.parse_response(text)
   text = (text or ""):gsub("\r", "")
   local lines = vim.split(text, "\n", { plain = true })
@@ -98,6 +111,26 @@ function M.parse_response(text)
     end
     sections[h.key] = table.concat(body, "\n")
   end
+
+  -- An answer always fills 1-3; only the prompt's own format spec matches
+  -- the headings with nothing under them. Refuse rather than file three
+  -- headline-only files and append the whole activity stream to Notes.md.
+  local has_body = false
+  for _, key in ipairs({ "analysis", "difficulty", "solution" }) do
+    if vim.trim(sections[key] or "") ~= "" then
+      has_body = true
+      break
+    end
+  end
+  if not has_body then
+    for _, marker in ipairs(PROMPT_MARKERS) do
+      if text:find(marker, 1, true) then
+        return nil, "that's the prompt, not the answer — paste it into your AI chat first, then copy the reply"
+      end
+    end
+    return nil, "sections 1-3 are empty — paste the AI's full answer, in the requested format"
+  end
+
   return sections, nil
 end
 

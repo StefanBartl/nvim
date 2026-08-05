@@ -1,8 +1,13 @@
 # Roadmap
 
+pullen:
+  markdown.nvim
+
+
+- pdfport.nvim - pdf erstellings funkiton zb pandoc
+
 - spotlight checken und lernen
 - images, das wäre für support wirklcih wichtig. eventuell en eigenses plugin bauen? das wäre
-- p und strg-v verhalten sihcv nun anders, kannst du das anschauen
 - C:\Users\bartl\AppData\Local\nvim\lua\usrcmds nach /bindings/usrcmds
 
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
@@ -19,7 +24,7 @@
 
 1. Alle plugin fähigen Module augliedern
 2. Funktionen/Module/ganze Custom Plugins, die man mit ffi über vc performanter machen könnte?
-  1.  Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufen lassen, die mit nvim gemeinsam gestartet wir Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufen lassen, die mit nvim gemeinsam gestartet wirdd
+  1.  Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufen lassen, die mit nvim gemeinsam gestartet wir Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufe n lassen, die mit nvim gemeinsam gestartet wirdd
 3. `BINDINGS.lua`: In der Descrtiptionder Keymaps und Usrcmds: Das plugin selbst nicht nennen,, wie zb.: "[iletree]:" in fileteree.nvim keymap descreiption
 4. `/autcmds`
   1. passt zu `/bindings` ?

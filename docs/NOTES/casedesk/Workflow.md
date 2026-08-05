@@ -1,10 +1,4 @@
-
 # casedesk — Workflow & Use Cases
-
-How to actually use `:Case`/`:Cases` day to day, now that the bestand is
-migrated and cleaned up (0 `:Cases doctor` findings as of 2026-08-05, see
-[`MIGRATION.md`](../../ROADMAP/casedesk/MIGRATION.md)). Command reference:
-[`Usercmds.md`](./Usercmds.md).
 
 ## Mental model
 
@@ -112,7 +106,9 @@ other, and goes through `:Case reply check` (§2) before anything is sent.
 Nothing about this round trip talks to an AI on its own or sends anything
 automatically; it only makes the copy-paste in both directions reliable.
 If the pasted answer doesn't follow the numbered format (or you paste the
-wrong thing), `:Case ki import` says so instead of silently filing garbage.
+wrong thing), `:Case ki import` says so instead of silently filing garbage
+— including the easy mistake of importing straight after `:Case ki`, with
+the prompt still in the clipboard and no chat in between.
 
 ## 2. Working a case
 

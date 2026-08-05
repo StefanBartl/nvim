@@ -709,11 +709,16 @@ plugins.add({
 
           cursor_marker = "caret",
         },
-        dev = {
-          binary_path = "E:/repos/mdview.nvim/native/server/mdview-server.exe",
-          web_root = "E:/repos/mdview.nvim/dist/client",
-        },
-        standalone = { binary_path = "E:/repos/mdview.nvim/native/server/mdview-server.exe" },
+        -- Release-Variante (v0.3.0 von GitHub Releases, kein Toolchain nötig).
+        -- Die dev/standalone-Overrides zeigten auf E:/repos (Checkout liegt jetzt
+        -- unter C:/repos) und auf mdview-server.exe - `npm run build:go` erzeugt
+        -- unter Windows aber mdview-server OHNE .exe. Zum Testen eines lokal
+        -- gebauten Relays (siehe docs/development.md) wieder einkommentieren:
+        --   dev = {
+        --     binary_path = "C:/repos/mdview.nvim/native/server/mdview-server",
+        --     web_root = "C:/repos/mdview.nvim/dist/client", -- braucht wasm-pack
+        --   },
+        --   standalone = { binary_path = "C:/repos/mdview.nvim/native/server/mdview-server" },
         experimental = {
           line_diff = true, -- P?: nur geänderte Zeilen senden -> FUnktnioert -> postives/negatives abwägen ob default
           click_navigate = true, -- P0-3: relativer Link öffnet Datei in nvim -> FUNKTIONERT -> als Default setzen

@@ -6,7 +6,7 @@
 
 ## Bugs
 
-- [ ] `:MDView` blanklines
+- [ ] `:MDView` blankline
 
 ## FINISH
 
