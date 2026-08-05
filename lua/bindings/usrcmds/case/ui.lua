@@ -304,6 +304,93 @@ function M.open_dir(case_arg)
   end)
 end
 
+-- ── :Case reply check ────────────────────────────────────────────────────
+
+--- `:Case reply check` — the pre-send gate (ROADMAP.md v8): emoji count,
+--- stray markdown headlines (a plain-text reply shouldn't carry `##`, same
+--- reasoning as `doctor.lua`'s `summary-markdown` check), dead links, and a
+--- native spellcheck launched on request.
+---
+--- Operates on the CURRENT buffer — not "the case's newest reply" via
+--- `resolve.pick`, deliberately: the point is checking what's on screen
+--- right now, whatever that is (a reply, but nothing stops it running on
+--- Notes.md too).
+function M.reply_check()
+  local replygate = require("bindings.usrcmds.case.replygate")
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  notify.info("checking reply…")
+  replygate.check(bufnr, function(report)
+    vim.schedule(function()
+      local lines = {}
+
+      if report.emoji_count == nil then
+        lines[#lines + 1] = "Emojis      (emojis.nvim not installed, skipped)"
+      elseif report.emoji_count > 0 then
+        lines[#lines + 1] = ("Emojis      %d found — press 'c' to remove"):format(report.emoji_count)
+      else
+        lines[#lines + 1] = "Emojis      none"
+      end
+
+      if #report.headline_lines > 0 then
+        lines[#lines + 1] =
+          ("Headlines   markdown heading on line(s): %s"):format(table.concat(report.headline_lines, ", "))
+      else
+        lines[#lines + 1] = "Headlines   none"
+      end
+
+      if #report.link_results == 0 then
+        lines[#lines + 1] = "Links       none found"
+      else
+        local dead = 0
+        for _, r in ipairs(report.link_results) do
+          if r.status == "dead" then
+            dead = dead + 1
+          end
+        end
+        lines[#lines + 1] = ("Links       %d checked, %d dead"):format(#report.link_results, dead)
+        for _, r in ipairs(report.link_results) do
+          if r.status ~= "alive" then
+            lines[#lines + 1] = ("  %-4s %s (%s)"):format(r.status, r.url, r.detail)
+          end
+        end
+      end
+
+      lines[#lines + 1] = ""
+      lines[#lines + 1] = "s: run spellcheck on this buffer (language.nvim) · q: close"
+
+      local surf = kit.viewer({ title = "Reply check", lines = lines })
+      if not surf then
+        return
+      end
+
+      local map = require("lib.nvim.map")
+      local mo = { buffer = surf.bufnr, nowait = true }
+      if report.emoji_count and report.emoji_count > 0 then
+        map("n", "c", function()
+          surf:close()
+          local removed, err = replygate.clear_emojis(bufnr)
+          if removed then
+            notify.info(("removed %d emoji(s)"):format(removed))
+          else
+            notify.error("could not clear emojis: " .. tostring(err))
+          end
+        end, mo)
+      end
+      map("n", "s", function()
+        surf:close()
+        local ok_lang, language = pcall(require, "language")
+        if not ok_lang then
+          notify.warn("language.nvim not installed")
+          return
+        end
+        vim.api.nvim_set_current_buf(bufnr)
+        language.spellcheck(nil, "buffer")
+      end, mo)
+    end)
+  end)
+end
+
 -- ── :Case add ────────────────────────────────────────────────────────────
 
 --- "Scan the folder, take the highest `NN_` already there, +1" — the rule
@@ -418,6 +505,39 @@ function M.activity(case_arg)
     notify.info("activity stream saved: " .. stem .. ".md")
     edit(full)
   end)
+end
+
+-- ── :Wkd links ───────────────────────────────────────────────────────────
+
+--- `:Wkd links [scope]` — every link across the work repo (or one area of
+--- it), picked and opened externally. Supersedes hand-maintaining
+--- `Notes/Links.md`: this reads what's already written everywhere else
+--- instead of asking you to copy it a second time.
+---@param scope string|nil
+function M.wkd_links(scope)
+  local links = require("bindings.usrcmds.case.links")
+  local hits = links.find(scope)
+  if #hits == 0 then
+    notify.warn(("no links found%s"):format(scope and scope ~= "" and (" in " .. scope) or ""))
+    return
+  end
+
+  kit.select({
+    message = ("Links%s (%d)"):format(scope and scope ~= "" and (" — " .. scope) or "", #hits),
+    selection = hits,
+    format_item = function(h)
+      local rel = h.path:sub(#config.repo_root + 2)
+      return ("[%s] %s:%d  %s"):format(h.area, rel, h.line, h.url)
+    end,
+    on_select = function(h)
+      local ok = require("lib.nvim.cross.open_default")(h.url)
+      if not ok then
+        require("lib.nvim.cross.copy_to_clipboard")(h.url)
+        notify.info(h.url .. " copied to clipboard (could not open a browser)")
+      end
+    end,
+    on_cancel = function() end,
+  })
 end
 
 -- ── :Case template ───────────────────────────────────────────────────────
@@ -668,7 +788,11 @@ function M.move_state(case_arg, state)
         end
         mkdirp(config.state_dir(state))
         local dest = config.state_dir(state) .. "/" .. entry.short
-        local ok, err = uv.fs_rename(entry.dir, dest)
+        -- mutate.rename_file, not a bare uv.fs_rename: a Windows directory
+        -- watcher (neo-tree's leaked fs_event handles are the known
+        -- offender) can hold a transient lock on the case folder being
+        -- moved — see normalize.lua's identical reasoning.
+        local ok, err = require("lib.nvim.cross.fs.mutate").rename_file(entry.dir, dest)
         if not ok then
           notify.error(("move to %s failed: %s"):format(state, tostring(err)))
           return

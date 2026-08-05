@@ -1,20 +1,33 @@
 # casedesk — Keymaps Cheatsheet
 
-No global keymaps. casedesk is command-driven (`:Case`/`:Cases`, see
-[`Usercmds.md`](./Usercmds.md)) — the only bindings it registers are three
-buffer-local ones inside the infocard's `kit.viewer` surface, set up fresh
-each time `:Case info [nr]` opens one.
+No global keymaps. casedesk is command-driven (`:Case`/`:Cases`/`:Wkd`, see
+[`Usercmds.md`](./Usercmds.md)) — every binding it registers is buffer-local
+to a `kit.viewer` surface, set up fresh each time that surface opens and
+gone as soon as it closes.
+
+### `:Case info [nr]` — the infocard
 
 Source: `lua/bindings/usrcmds/case/ui.lua`, `M.info()`.
 
-| lhs | mode | scope | action |
-| --- | --- | --- | --- |
-| `e` | n | buffer-local (infocard surface) | Close the infocard, open `M.edit_info` (the `kit.form` to edit title/company/priority/tosca-version/name/notes) |
-| `s` | n | buffer-local (infocard surface) | Close the infocard, open the case's `Summary.md` |
-| `o` | n | buffer-local (infocard surface) | Close the infocard, open the case folder (filetree reveal if available, else netrw) |
+| lhs | mode | action |
+| --- | --- | --- |
+| `e` | n | Close the infocard, open `M.edit_info` (the `kit.form` to edit title/company/priority/tosca-version/name/notes) |
+| `s` | n | Close the infocard, open the case's `Summary.md` |
+| `o` | n | Close the infocard, open the case folder (filetree reveal if available, else netrw) |
+
+### `:Case reply check` — the reply-gate report
+
+Source: `lua/bindings/usrcmds/case/ui.lua`, `M.reply_check()`. Both keys
+are conditional — set up only when the report has something for them to
+act on.
+
+| lhs | mode | action |
+| --- | --- | --- |
+| `c` | n | Only if emojis were found. Close the report, call `replygate.clear_emojis` on the buffer that was checked (not the report itself) |
+| `s` | n | Always present. Close the report, switch to the checked buffer, run `language.spellcheck(nil, "buffer")` |
 
 Registered via `lib.nvim.map` with `{ buffer = surf.bufnr, nowait = true }` —
-gone as soon as the infocard closes, never leak into any other buffer.
+gone as soon as its surface closes, never leak into any other buffer.
 
 ## Not casedesk's own
 

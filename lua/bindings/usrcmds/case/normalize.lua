@@ -7,10 +7,9 @@
 
 local doctor = require("bindings.usrcmds.case.doctor")
 local mkdirp = require("lib.nvim.fs.mkdirp")
+local mutate = require("lib.nvim.cross.fs.mutate")
 
 local M = {}
-
-local uv = vim.uv or vim.loop
 
 ---@class Lib.Case.NormalizeStep
 ---@field short string
@@ -71,13 +70,20 @@ end
 ---@field ok boolean
 ---@field err string|nil
 
+--- Renames go through `lib.nvim.cross.fs.mutate`, not a bare `uv.fs_rename`:
+--- on Windows, a directory watcher (neo-tree's own leaked `fs_event`
+--- handles are the known repeat offender — see the workstation's
+--- filetree-handle-guard notes) or an AV/indexer scan can hold a
+--- transient, spurious lock on exactly the file being renamed.
+--- `mutate.rename_file` retries a few times with backoff before giving up,
+--- which a single direct `fs_rename` call never gets the chance to do.
 ---@param steps Lib.Case.NormalizeStep[]
 ---@return Lib.Case.NormalizeResult[]
 function M.run(steps)
   local results = {}
   for _, s in ipairs(steps) do
     mkdirp(vim.fn.fnamemodify(s.to, ":h"))
-    local ok, err = uv.fs_rename(s.from, s.to)
+    local ok, err = mutate.rename_file(s.from, s.to)
     results[#results + 1] = { step = s, ok = ok and true or false, err = err }
   end
   return results

@@ -246,6 +246,17 @@ function M.enable()
         ui.snow(ctx.args.case)
       end,
     },
+    {
+      -- Two-segment path alongside the generated `:Case reply [nr]` route
+      -- (single segment, from file_verb_routes()) — composer's trie
+      -- dispatch tries the longer literal match first, so `:Case reply
+      -- check` reaches this and `:Case reply <nr>` still reaches that one.
+      path = { "reply", "check" },
+      desc = "Pre-send gate on the current buffer: emojis, stray markdown headlines, dead links",
+      run = function()
+        ui.reply_check()
+      end,
+    },
   }
 
   vim.list_extend(routes, file_verb_routes())
@@ -330,6 +341,29 @@ function M.enable()
       ui.list_all()
     end,
     routes = cases_routes,
+  })
+
+  -- `:Wkd` — deliberately its own verb, not a `:Cases` route: everything
+  -- above is scoped to `config.root` (Cases/SAP_Support only), this reaches
+  -- across the whole work repo (config.repo_root) — Notes/, Workflow/,
+  -- Terminologie/, Tosca/ too. Folding it into `:Cases` would silently
+  -- widen what that verb's name promises.
+  local links = require("bindings.usrcmds.case.links")
+  composer.verb("Wkd", {
+    desc = "Cross-repo tools for the whole work knowledge base (not case-scoped)",
+    default = function()
+      ui.wkd_links(nil)
+    end,
+    routes = {
+      {
+        path = { "links" },
+        args = { { name = "scope", type = "STRING", optional = true, enum = links.scopes() } },
+        desc = ("Search links across the work repo (scope: %s)"):format(table.concat(links.scopes(), "|")),
+        run = function(ctx)
+          ui.wkd_links(ctx.args.scope)
+        end,
+      },
+    },
   })
 end
 

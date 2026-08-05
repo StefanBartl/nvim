@@ -246,10 +246,54 @@ Der Bestandsumbau ist abgeschlossen: [MIGRATION.md](MIGRATION.md).
       Worte → aktuell Score 0), kostet aber Abhängigkeit, Latenz und
       Nicht-Determinismus — deshalb erst messen, dann greifen.
 - [ ] Company-Historie: "was hatten wir mit Scania schon"
-- [ ] Reply-Gate vor dem Versand (Emojis raus, Grammatik, Links leben, keine markdown headlines (`##`))
+- [x] **Reply-Gate — `:Case reply check`** (`replygate.lua`). Prüft den
+      **aktuellen Buffer** (nicht zwingend eine Reply — läuft auf allem,
+      auch `Notes.md`): Emoji-Anzahl (`emojis.nvim`s pure `ops().count()`/
+      `ops().clear()`, optional per `pcall`), Markdown-Überschriften
+      (dieselbe `^#+%s`-Regel wie `doctor.lua`s `summary-markdown`), tote
+      Links (Wiederverwendung von `linkcheck.lua`s bereits generischem
+      `M.run(targets, on_done)` — kein Duplikat der Curl-Logik). Grammatik/
+      Rechtschreibung wird **nicht neu gebaut** — ein Tastendruck (`s`)
+      startet `language.nvim`s eigenes `:Spellcheck` auf dem Buffer, das
+      Ergebnis ist Buffer-Highlighting, kein Datenwert, den man
+      zurückgeben könnte. Isoliert getestet: 2 Emojis erkannt + entfernt
+      (Leerzeichen sauber kollabiert), Überschrift auf der richtigen Zeile
+      gefunden. `:Case reply check` koexistiert als Zwei-Segment-Pfad neben
+      dem generierten `:Case reply [nr]` (Composer-Trie probiert den
+      längeren literalen Pfad zuerst) — beides gegeneinander getestet, keine
+      Kollision.
 - [ ] Terminologie-Sammler: verstreute `Terminologie.md` → `Terminologie/`; Terminologie könnte ein wissespeicher werden, der mit einen picker dursuchbar ist: also das man hgezielt die einträge in allen Terminologie.md files innerhalb des repos zusammenholt und mit picker durchsuchbar macht. `:Cases terminology` bzw `:Cases pickers terminology` beide sollten gehen.
 - [ ] `:Cases export <nr>` — Case als ein PDF bündeln (`pdfport.nvim`)
 - [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch; Das wäre super cool, wenn ich sowas wie eine aufzeichnug hötte, wie lange ich und wann buffers innerhalb eines cases foksuiert hatte
+
+## v9 — Repo-weit, über SAP_Support hinaus ✅ implementiert
+
+- [x] **`:Wkd links [scope]` — Link-Picker über den ganzen Bestand**
+      (`links.lua`, neuer `Wkd`-Verb — bewusst **nicht** unter `:Cases`,
+      weil alles dort auf `config.root` = `Cases/SAP_Support` beschränkt
+      ist, das hier aber `config.repo_root` durchsucht: `Cases/`, `Notes/`,
+      `Workflow/`, `Terminologie/`, `Tosca/`, `ToDo-Collection/`).
+      `scope` narrowt auf einen Bereich (`<Tab>`-Completion über einen
+      `enum`). Gegen den realen Bestand gemessen: **617 einzigartige Links**
+      (Cases 145, Notes 81, Workflow 35, Terminologie 8, Tosca 338, ToDo 10),
+      **117 ms** für den vollen Scan — kein Cache (Kommando, kein Hotpath,
+      PERFORMANCE.md: erst messen). Macht `Notes/Links.md` (die
+      handgepflegte Sammlung) überflüssig — liest, was ohnehin schon überall
+      steht.
+- [x] **Renames laufen über `lib.nvim.cross.fs.mutate.rename_file`**, nicht
+      mehr über ein rohes `uv.fs_rename` — `normalize.lua` und
+      `:Case close`/`reassign` betroffen. Grund: auf Windows kann ein
+      Verzeichnis-Watcher (neo-tree hat nachweislich einen Handle-Leak,
+      siehe die Workstation-Notizen zum Filetree-Handle-Guard) oder ein
+      AV-/Index-Scan einen transienten Lock auf genau die Datei/den Ordner
+      halten, der gerade umbenannt wird — `mutate.rename_file` versucht es
+      auf Windows bis zu 3× mit Backoff, bevor es aufgibt, ein einzelner
+      `uv.fs_rename`-Aufruf bekam diese Chance nie. `fileops.nvim` selbst
+      passte nicht (seine `rename`/`move`-API arbeitet auf „der aktuellen
+      Datei", nicht auf beliebigen Pfaden quer über den Bestand) — die
+      eigentlich wiederverwendbare Stelle ist die Schicht darunter, die
+      `fileops.nvim` selbst benutzt. Isoliert gegen ein Scratch-Verzeichnis
+      getestet: Drop-in-Ersatz, identisches `ok, err`-Verhalten.
 
 ---
 
@@ -262,11 +306,11 @@ Durchgegangen: alle Repos in `C:/repos/*.nvim` bzw. der Spec aus
 
 | Plugin              | Beitrag                                                                                                                                                   |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **language.nvim**   | Rechtschreib-/Grammatikprüfung **und** Übersetzung. Kunden-Replies sind englisch, geschrieben von einem deutschen Muttersprachler — `:Case reply check` als Pflicht-Gate vor dem Versand. |
-| **emojis.nvim**     | `:Emojis remove` scope-basiert. Research-Notes und LLM-Output enthalten regelmäßig Emojis, Kunden-Replies dürfen keine haben. |
+| **language.nvim**   | ✅ **implementiert** (v9) — `:Case reply check`s `s`-Taste startet `language.spellcheck(nil, "buffer")`. Übersetzung (`M.translate`) noch ungenutzt. |
+| **emojis.nvim**     | ✅ **implementiert** (v9) — `:Case reply check` nutzt `require("emojis").ops().count()`/`.clear()` (die pure, skriptbare API, nicht das interaktive `:Emojis`-Kommando). |
 | **open.nvim**       | `:Case snow` (Ticket im Browser), Doku-Links aus Replies (`docs.tricentis.com`).             |
 | **pickers.nvim**    | Case-Picker statt `kit.select`, sobald die Case-Zahl weiter wächst — inkl. Preview der `.case.json`.                                                        |
-| **fileops.nvim**    | Copy/Move/Rename inkl. Windows-Lock-Absicherung — `:Case copy`/`close`/`reassign` sollten darauf laufen statt eigene `uv`-Aufrufe. |
+| ~~**fileops.nvim**~~ | **Passt nicht** — geprüft (v9): seine `rename`/`move`-API arbeitet auf „der aktuellen Datei" (Buffer-zentriert), nicht auf beliebigen Pfaden quer über den Bestand, wie `normalize.lua` sie braucht. Die eigentlich richtige, wiederverwendbare Stelle war eine Ebene tiefer: `lib.nvim.cross.fs.mutate.rename_file`, das `fileops.nvim` selbst intern benutzt. |
 | **sessions.nvim**   | Eine Session pro Case: Case wieder aufmachen = Buffer-Layout von letzter Woche zurück. |
 
 ### Mittlerer Nutzen

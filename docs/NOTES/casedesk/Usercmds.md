@@ -1,11 +1,14 @@
 # casedesk — User Commands Cheatsheet
 
-Two composer verbs, built via `lib.nvim.usercmd.composer` — `:Case` acts on
-**one** case (always resolves to exactly one: explicit arg → buffer →
-`kit.select`), `:Cases` acts on a **set**. `[case]`/`[nr]` everywhere below
-is the same optional `CASE` arg type, `<Tab>`-completed from the on-disk
-registry; typing the full SNOW ticket id works too, it's normalized down to
-the short number.
+Three composer verbs, built via `lib.nvim.usercmd.composer` — `:Case` acts
+on **one** case (always resolves to exactly one: explicit arg → buffer →
+`kit.select`), `:Cases` acts on a **set**, both scoped to `config.root`
+(`Cases/SAP_Support`). `:Wkd` is the odd one out: it reaches across the
+**whole work repo** (`config.repo_root` — `Notes/`, `Workflow/`,
+`Terminologie/`, `Tosca/` too), which is exactly why it isn't a `:Cases`
+route. `[case]`/`[nr]` everywhere below is the same optional `CASE` arg
+type, `<Tab>`-completed from the on-disk registry; typing the full SNOW
+ticket id works too, it's normalized down to the short number.
 
 Source: `lua/bindings/usrcmds/case/init.lua` (routes), `ui.lua` (handlers).
 Concept: [`docs/ROADMAP/casedesk/CONCEPT.md`](../../ROADMAP/casedesk/CONCEPT.md).
@@ -26,6 +29,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case open [nr]` | — | Open the case folder (filetree reveal if `filetree.nvim` is loaded, else netrw) |
 | `:Case add <name> [suffix]` | `name`, optional `suffix` | New `<name>.md` in the case root. `name == "reply"` is special: auto-numbers into `Replies/`, `[suffix]` overrides the stem (`:Case add reply AskForPDF` → `NN_AskForPDF.md`; omitted → `NN_Reply.md`) |
 | `:Case activity [nr]` | — | Paste the system clipboard (a ServiceNow Activity Stream) into a new auto-numbered `Research/NN_ActivityStream.md` |
+| `:Case reply check` | — | Pre-send gate on the **current buffer**: emoji count (`c` removes), stray markdown headlines, dead links, `s` launches `language.nvim`'s spellcheck on the buffer |
 | `:Case similar [nr] [n]` | `n`, default 5 | Past cases whose title + `Summary.md` share the most distinctive vocabulary (TF-IDF cosine, no AI). Each hit shows the matched terms — the ranking is lexical, so seeing *why* it matched is how you judge it |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
@@ -52,6 +56,14 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`Ressources/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json` |
 
 Bare `:Cases` (no subcommand) runs `:Cases list`.
+
+## `:Wkd` — the whole work repo, not just SAP_Support
+
+| Command | Args | What |
+| --- | --- | --- |
+| `:Wkd links [scope]` | `scope`, `<Tab>`-completed: `all\|cases\|notes\|workflow\|terminologie\|tosca\|todo` | Every link found under that area of the work repo, `kit.select`-picked, opened externally (falls back to clipboard). Supersedes hand-maintaining `Notes/Links.md` |
+
+Bare `:Wkd` (no subcommand) runs `:Wkd links` with no scope (everything).
 
 ## The `CASE` argument type
 
@@ -122,3 +134,20 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   lists is deliberately deferred — `pickers.nvim`'s public API expects an
   internal `Source`+`engine_mod` object from its own config/engine
   resolution, not a trivial "picker over this list" entry point.
+- **Renames go through `lib.nvim.cross.fs.mutate.rename_file`, not a bare
+  `uv.fs_rename`** (`normalize.lua`, `:Case close`/`reassign`) — retries a
+  few times with backoff on Windows when a directory watcher or AV/indexer
+  scan holds a transient lock on the file/folder being renamed. Looked at
+  `fileops.nvim` for this first; its `rename`/`move` API turned out to
+  operate on "the current buffer's file" only, not an arbitrary path, so it
+  doesn't fit a bulk rename across the bestand — `mutate.rename_file` is
+  the layer underneath that `fileops.nvim` itself uses.
+- **`:Case reply check` doesn't reimplement spelling/grammar.** `s` in its
+  report just launches `language.nvim`'s own `:Spellcheck` on the buffer —
+  that plugin already owns the domain, and its result (buffer highlighting)
+  isn't data this module could usefully return anyway. Emoji count/removal
+  goes through `emojis.nvim`'s pure `ops().count()`/`ops().clear()`, not
+  the interactive `:Emojis` command, so it composes into one combined
+  report instead of opening a second UI. Both integrations are optional
+  (`pcall`-guarded) — missing either degrades that one line of the report,
+  the rest still runs.

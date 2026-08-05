@@ -8,7 +8,7 @@ migrated and cleaned up (0 `:Cases doctor` findings as of 2026-08-05, see
 
 ## Mental model
 
-Two verbs, everything else follows from which one you reach for:
+Three verbs, everything else follows from which one you reach for:
 
 - **`:Case`** — you're *in* a case. Every route resolves to exactly one
   case: explicit `[nr]` → the case owning your current buffer → a
@@ -16,6 +16,11 @@ Two verbs, everything else follows from which one you reach for:
   work from wherever you already are.
 - **`:Cases`** — you're looking *across* cases. Filters, search, reports,
   bulk maintenance.
+- **`:Wkd`** — you're looking across the **whole work repo**, not just
+  SAP_Support cases (`Notes/`, `Workflow/`, `Terminologie/`, `Tosca/` too).
+  Currently just the link picker, but scoped separately from `:Cases` on
+  purpose — it answers a different question ("where did I see that link,
+  anywhere") than `:Cases` does ("which of my cases…").
 
 ## 1. A new ticket lands
 
@@ -28,7 +33,8 @@ company, name. Shows the dry-run plan, confirm, and it scaffolds:
 
 ```
 Cases/Open/1012345/
-  Summary.md
+  Summary.md                (SNOW-facing, no H1 — see §2)
+  Notes.md                  (yours — see §2)
   Research/00_Research.md   (opened automatically)
   Replies/00_PSO.md
   Ressources/
@@ -110,6 +116,20 @@ buffer resolves it:
   by accident)? This adds back whatever blueprint pieces are missing,
   without touching what's already there.
 
+**Before you send that reply:**
+
+```
+:Case reply check
+```
+
+Runs on whatever buffer you're looking at — normally the reply draft, no
+reason it couldn't be `Notes.md` too. Reports emoji count (`c` removes
+them), any stray `##` (a reply is plain text, SNOW/email doesn't render
+markdown), and whether the links you're about to send are still alive.
+`s` then launches `language.nvim`'s own spellcheck on the buffer — this
+module doesn't reimplement grammar checking, it just gives you one place to
+trigger it from alongside the other checks.
+
 The statusline shows `<case> · <company> · N replies` the whole time you're
 inside a case buffer — a glance tells you which case you're in and how many
 reply drafts already exist, no command needed.
@@ -135,12 +155,21 @@ the state IS the folder (`CONCEPT.md` §3).
 | "What's gone quiet?" | `:Cases stale` (7+ days idle, oldest first) — a Monday-morning check |
 | "Where's that PNG/log I attached three weeks ago?" | `:Cases pickers` → Attachments |
 | "That link I sent — did the docs page move?" | `:Cases linkcheck` (or `:Cases linkcheck <nr>` for just one case) |
+| "Where did I see that link — in a case, my notes, anywhere?" | `:Wkd links` (or `:Wkd links notes`/`cases`/… to narrow) — see below |
 
 `--exact`/`-e` and `--re`/`-r` narrow any of the field filters, `:Cases
 find`, or `:Cases grep` beyond the substring default — reach for `--exact`
 when a substring match is pulling in noise (`company Scan` also matching
 some unrelated "Scanner" mention, say), `--re` for an actual pattern
 (`:Cases grep "[Ee]rror" --re`).
+
+**`:Wkd links` is the one command that isn't case-scoped at all.**
+`:Cases grep`/`linkcheck`/`pickers` only ever look inside
+`Cases/SAP_Support`; `:Wkd links` reads the whole work repo — `Notes/`,
+`Workflow/`, `Terminologie/`, `Tosca/` too, 617 links across all of it as
+of this writing. Reach for it instead of `Notes/Links.md`, the old
+hand-maintained collection: everything in there is already written
+somewhere else, this just finds it instead of asking you to copy it twice.
 
 ## 5. Bestand hygiene
 

@@ -118,7 +118,7 @@ auf. Ein vierter Zustand ist eine Zeile in dieser Liste, kein neuer Code-Pfad.
 
 ```
 lua/bindings/usrcmds/case/
-  init.lua        enable() → CASE-Argtyp, :Case-Verb, :Cases-Verb
+  init.lua        enable() → CASE-/BLOCK-Argtyp, :Case-/:Cases-/:Wkd-Verb
   config.lua      repo_root/cases_root, states, Headline-Format, Blueprints
   templates.lua   Tag → Datei-Pfad, Token-Rendering (§4a)
   templates/      Summary.md, Notes.md, Research.md, Reply.md — echte Markdown-Files
@@ -132,9 +132,12 @@ lua/bindings/usrcmds/case/
   registry.lua    Cases/{Open,Closed,Reassigned}/<nr> scannen, gecacht
   resolve.lua     "welcher Case?" — Argument > Buffer > Auswahl
   query.lua       :Cases-Feldfilter, -grep, -stale + Gruppierung nach Zustand
+  similar.lua     TF-IDF-Ähnlichkeit über Titel + Summary/Notes, ohne KI
   doctor.lua      Bestands-Bericht (Findings mit sicherem Rename-Ziel), rein lesend
   normalize.lua   Fix-Teil zu doctor.lua — Plan/Dry-Run/Confirm/Apply
   linkcheck.lua   docs.tricentis.com-Links prüfen (lib.nvim.net.curl, async)
+  replygate.lua   Pre-Send-Checks: Emojis, Markdown-Überschriften, tote Links
+  links.lua       Link-Index über den ganzen Arbeits-Repo (repo_root, nicht nur Cases)
   migrate.lua     einmaliger Umzug von der alten Struktur (siehe MIGRATION.md)
   ui.lua          kit.form / kit.select / kit.viewer / kit.confirm / kit.menu-Verdrahtung
 ```
@@ -227,6 +230,7 @@ folgt der tatsächlichen Konvention.
 | `:Case activity [nr]`       | Zwischenablage (SNOW Activity Stream) als neue nummerierte `Research/`-Datei |
 | `:Case notes [nr]`          | `Notes.md` öffnen (Arbeitsnotizen, §8a) |
 | `:Case template [name]`     | Reply-Baustein aus `Workflow/Templates/` an der Cursor-Position einfügen (§8b) |
+| `:Case reply check`         | Pre-Send-Gate auf dem aktuellen Buffer: Emojis, Markdown-Überschriften, tote Links, `s` startet `language.nvim`s Spellcheck (§8c) |
 | `:Case similar [nr] [n]`    | ähnliche Cases per TF-IDF über Titel + `Summary.md`/`Notes.md` |
 | `:Case copy <src>`          | Datei in den Case kopieren, Zielordner per Auswahl                  |
 | `:Case sync [nr]`           | fehlende Blueprint-Teile nachziehen (nie überschreiben)              |
@@ -252,6 +256,16 @@ folgt der tatsächlichen Konvention.
 | `:Cases pickers`          | `kit.menu`: Attachments / Links / Cases ohne `.case.json`      |
 
 Ein Treffer öffnet direkt die Infokarte, mehrere gehen in `kit.select`.
+
+### `:Wkd` — über SAP_Support hinaus, der ganze Arbeits-Repo
+
+Eigener Verb, nicht `:Cases` — alles oben ist auf `config.root`
+(`Cases/SAP_Support`) beschränkt, `:Wkd` durchsucht `config.repo_root`
+(`Notes/`, `Workflow/`, `Terminologie/`, `Tosca/` mit).
+
+| Command                | Wirkung                                                    |
+| ----------------------- | ------------------------------------------------------------ |
+| `:Wkd links [scope]`    | Link-Picker über den Bestand, `scope` narrowt auf `cases\|notes\|workflow\|terminologie\|tosca\|todo\|all` (`links.lua`) |
 
 `[nr]` ist überall dieselbe optionale `CASE`-Arg mit `<Tab>`-Completion aus
 der Registry.
@@ -344,17 +358,77 @@ von casedesk läuft normal weiter.
 
 ---
 
+## 8c. Reply-Gate (`replygate.lua`)
+
+`:Case reply check` prüft den **aktuellen Buffer** vor dem Versand:
+
+- **Emojis** — `require("emojis").ops().count()`/`.clear()`, die pure,
+  skriptbare API (nicht das interaktive `:Emojis`-Kommando). `c` im Report
+  löscht sie, Leerzeichen werden dabei sauber kollabiert (emojis.nvims
+  eigene Garantie).
+- **Markdown-Überschriften** — dieselbe `^#+%s`-Regel wie `doctor.lua`s
+  `summary-markdown` (§8a): eine Reply ist Klartext, keine `##`.
+- **Tote Links** — wiederverwendet `linkcheck.lua`s bereits generisches
+  `M.run(targets, on_done)` direkt auf die im Buffer gefundenen URLs, statt
+  die Curl-Logik zu duplizieren.
+- **Grammatik/Rechtschreibung** — bewusst nicht neu gebaut. `s` im Report
+  startet `language.nvim`s eigenes `:Spellcheck` auf dem Buffer
+  (`language.spellcheck(nil, "buffer")`) — das Ergebnis ist natives
+  Buffer-Highlighting, kein Datenwert, den `replygate.lua` sinnvoll
+  zurückgeben könnte.
+
+Jede Integration ist `pcall`-abgesichert und optional: ohne `emojis.nvim`
+laufen Überschriften- und Link-Check trotzdem, nur ohne Emoji-Zeile.
+
+Läuft absichtlich auf `bufnr = vim.api.nvim_get_current_buf()`, nicht über
+`resolve.pick` auf "die neueste Reply" — der Punkt ist, das zu prüfen, was
+gerade auf dem Schirm ist, nicht zwingend eine Reply (funktioniert genauso
+auf `Notes.md`).
+
+---
+
+## 8d. Repo-weiter Link-Index (`links.lua`, `:Wkd links`)
+
+Einziges Modul in casedesk, das bewusst über `config.root`
+(`Cases/SAP_Support`) hinausgeht — es liest `config.repo_root`: `Cases/`,
+`Notes/`, `Workflow/`, `Terminologie/`, `Tosca/`, `ToDo-Collection/`. Deshalb
+ein eigener `:Wkd`-Verb statt einer weiteren `:Cases`-Route — eine
+`:Cases`-Route hätte stillschweigend erweitert, was der Name des Verbs
+verspricht (nur Cases).
+
+`M.find(scope)` sammelt jeden `https?://`-Link aus jeder `.md`-Datei im
+gewählten Bereich (oder überall, `scope = nil`/`"all"`), pro Datei
+dedupliziert (dieselbe URL fünfmal in einer Datei ist ein Treffer, nicht
+fünf — Cross-Datei-Duplikate bleiben, derselbe Link in zwei Cases ist zwei
+nützliche Treffer). Ersetzt `Notes/Links.md`, die handgepflegte
+Link-Sammlung — liest, was ohnehin schon überall steht, statt eine zweite
+Kopie zu pflegen.
+
+Gegen den realen Bestand gemessen: 617 einzigartige Links, 117 ms für den
+vollen Scan. Kein Cache — ein Kommando, kein Hotpath (`PERFORMANCE.md`:
+erst messen, dann optimieren). Sollte der Bestand deutlich wachsen, wäre
+`lib.nvim.cache.memory.namespace(name, { ttl = … })` die nächste Stufe —
+das Modul existiert schon, siehe `PERFORMANCE.md`s Cache-Regeln.
+
+---
+
 ## 9. Was aus lib.nvim benutzt wird
 
 `ui.kit` (`form`/`select`/`viewer`/`confirm`/`input`/`menu`) für jede
-Interaktion, `usercmd.composer` für `:Case`/`:Cases` inkl. `CASE`-Argtyp,
-Flags und generierter Routen, `fs.mkdirp`/`write.to_file`/`read`/`json`/
-`collect_recursive` fürs Dateisystem, `cross.open_default`/
-`copy_to_clipboard` für `:Case snow` und die Attachment-/Links-Picker,
-`net.curl` für `:Cases linkcheck` (einziges Modul hier mit echtem
-Netzwerk-I/O — bewusst über den vorhandenen `vim.system`-Wrapper statt
-eigenem Shell-Aufruf). Nichts davon shellt direkt aus — funktioniert
-unabhängig vom Plugin-Modus (lokal/remote).
+Interaktion, `usercmd.composer` für `:Case`/`:Cases`/`:Wkd` inkl.
+`CASE`-/`BLOCK`-Argtyp, Flags, `enum` und generierter Routen,
+`fs.mkdirp`/`write.to_file`/`read`/`json`/`collect_recursive` fürs
+Dateisystem, `cross.fs.mutate.rename_file` für jedes Rename mit
+Windows-Lock-Retry (`normalize.lua`, `:Case close`/`reassign` — s. u.),
+`cross.open_default`/`copy_to_clipboard` für `:Case snow` und die
+Attachment-/Links-Picker, `net.curl` für `:Cases linkcheck` (einziges Modul
+hier mit echtem Netzwerk-I/O — bewusst über den vorhandenen
+`vim.system`-Wrapper statt eigenem Shell-Aufruf). Nichts davon shellt
+direkt aus — funktioniert unabhängig vom Plugin-Modus (lokal/remote).
+
+Optionale Integrationen über `pcall(require, …)`, mit Fallback statt hartem
+Fehler, wenn das Plugin fehlt: `filetree.nvim` (`:Case open`s Reveal),
+`emojis.nvim` und `language.nvim` (`:Case reply check`, §8c).
 
 Optionale Integration über `pcall(require, …)`: `filetree.nvim` für
 `:Case open`s Reveal (Fallback: netrw).
