@@ -302,6 +302,14 @@ function M.enable()
       end,
     },
     {
+      path = { "history" },
+      args = { { name = "company", type = "STRING", optional = true } },
+      desc = "Every case for a company, grouped by state (default: current buffer's company)",
+      run = function(ctx)
+        ui.company_history(ctx.args.company)
+      end,
+    },
+    {
       path = { "doctor" },
       desc = "Report bestand naming inconsistencies (read-only)",
       run = function()

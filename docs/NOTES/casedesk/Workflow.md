@@ -158,6 +158,7 @@ the state IS the folder (`CONCEPT.md` §3).
 | "That link I sent — did the docs page move?" | `:Cases linkcheck` (or `:Cases linkcheck <nr>` for just one case) |
 | "Where did I see that link — in a case, my notes, anywhere?" | `:Tricentis links` (or `:Tricentis links notes`/`cases`/… to narrow) — see below |
 | "What was that term again — didn't I explain it in some other case?" | `:Cases terminology` (or `:Cases pickers` → Terminology) |
+| "What have we had with this company before?" | `:Cases history` (drops the company from your current case) or `:Cases history Scan` |
 
 `--exact`/`-e` and `--re`/`-r` narrow any of the field filters, `:Cases
 find`, or `:Cases grep` beyond the substring default — reach for `--exact`
@@ -215,9 +216,10 @@ unlock something concrete, roughly cheapest-first:
 
 - **A `category`/`tags` field in `.case.json`** — one line in
   `config.infocard_fields`, gets `:Cases category X` as a filter for free.
-  The actual payoff is downstream: ROADMAP.md's "Company-Historie" idea
-  needs *some* signal to group cases by, and there isn't one today beyond
-  company and free-text.
+  `:Cases history` shipped without needing this (company + state + last-
+  touched was enough), but a "which cases are network-config issues vs.
+  data problems" grouping would need *some* signal beyond company and
+  free-text, and there isn't one today.
 - **A fixed `Ressources/` subfolder taxonomy** (`Logs/`, `Screenshots/`,
   rather than whatever a given case happened to create) — turns the
   Attachments picker (`:Cases pickers`) from guessing-by-extension into a

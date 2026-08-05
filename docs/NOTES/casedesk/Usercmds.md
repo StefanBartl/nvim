@@ -49,6 +49,7 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases grep <pattern> [--re\|-r]` | — | Full-text search across every case's `.md` files (not `Ressources/` attachments). Report via `kit.viewer`, capped at 500 hits |
 | `:Cases recent [n]` | `n`, default 10 | The `n` most recently touched cases, newest first |
 | `:Cases stale [days]` | `days`, default 7 | Open cases idle for at least `days`, oldest first |
+| `:Cases history [company]` | `company`, defaults to the current buffer's case's company | Every matching case in one screen, grouped by state, most-recently-touched first within each group (`kit.viewer`, not a picker) |
 | `:Cases stats` | — | Counts by state / company / year |
 | `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, and whether each `Summary.md` follows the SNOW template without markdown |
 | `:Cases normalize` | — | Fixes exactly what `doctor` found — dry-run plan (`kit.viewer`) + confirm, then applies. Skips (reports separately) anything ambiguous: target already exists, or two findings in the same case would land on the same target |

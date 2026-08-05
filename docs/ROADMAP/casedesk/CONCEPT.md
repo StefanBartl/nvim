@@ -250,11 +250,13 @@ folgt der tatsächlichen Konvention.
 | `:Cases grep <pattern> [--re\|-r]` | Volltextsuche über alle `.md`-Dateien aller Cases              |
 | `:Cases recent [n]`       | die `n` (Default 10) zuletzt angefassten Cases, neueste zuerst |
 | `:Cases stale [days]`     | offene Cases seit `days` (Default 7) Tagen nicht angefasst, älteste zuerst |
+| `:Cases history [company]` | alle Cases einer Company auf einen Blick, nach Zustand gruppiert; ohne Argument die Company des aktuellen Case-Buffers |
 | `:Cases stats`            | Anzahl nach Zustand / Company / Jahr                          |
 | `:Cases doctor`           | Bestands-Bericht, rein lesend (`doctor.lua`, §10)              |
 | `:Cases normalize`        | behebt die von `doctor` gemeldeten Abweichungen (Dry-Run + Confirm) |
 | `:Cases linkcheck [nr]`   | prüft `docs.tricentis.com`-Links auf tote Seiten (`linkcheck.lua`) |
-| `:Cases pickers`          | `kit.menu`: Attachments / Links / Cases ohne `.case.json`      |
+| `:Cases pickers`          | `kit.menu`: Attachments / Links / Cases ohne `.case.json` / Terminology |
+| `:Cases terminology`      | jeder Begriff aus jeder `Terminologie.md` im Arbeits-Repo (`terminology.lua`, §8f) |
 
 Ein Treffer öffnet direkt die Infokarte, mehrere gehen in `kit.select`.
 

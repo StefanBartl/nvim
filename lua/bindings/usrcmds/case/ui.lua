@@ -963,6 +963,74 @@ function M.stale(days_arg)
   })
 end
 
+--- `:Cases history [company]` — "what have we had with this company
+--- before": every matching case (same substring match as `:Cases company`)
+--- in one screen, grouped by state, most-recently-touched first within
+--- each group — instead of picking through `:Cases company`'s
+--- `kit.select` one case at a time. Omit `company` to use the company of
+--- the case owning the current buffer, same optional-arg idiom every
+--- `:Case` route uses (`resolve.sync`, no UI fallback — a report has
+--- nothing to prompt into if that fails).
+---@param pattern string|nil
+function M.company_history(pattern)
+  if not pattern or pattern == "" then
+    local entry = resolve.sync(nil)
+    local m = entry and meta.read(entry.dir)
+    pattern = m and m.company
+    if not pattern then
+      notify.warn("company_history: no company given and current buffer has none set")
+      return
+    end
+  end
+
+  local matches = query.by_field("company", pattern)
+  if #matches == 0 then
+    notify.info(("no cases found for company matching %q"):format(pattern))
+    return
+  end
+
+  -- Distinct company spellings actually matched, for the header — a
+  -- substring match can pull in more than one (e.g. "Scania" and a typo'd
+  -- variant), worth surfacing rather than silently picking one.
+  local companies, seen = {}, {}
+  for _, e in ipairs(matches) do
+    local c = (meta.read(e.dir) or {}).company
+    if c and not seen[c] then
+      seen[c] = true
+      companies[#companies + 1] = c
+    end
+  end
+  table.sort(companies)
+
+  local lines = {
+    ("%s — %d case%s"):format(table.concat(companies, ", "), #matches, #matches == 1 and "" or "s"),
+    "",
+  }
+
+  for _, state in ipairs(config.states) do
+    local rows = {}
+    for _, e in ipairs(matches) do
+      if e.state == state then
+        rows[#rows + 1] = { entry = e, mtime = detect.last_touched(e.dir) or 0 }
+      end
+    end
+    if #rows > 0 then
+      table.sort(rows, function(a, b)
+        return a.mtime > b.mtime
+      end)
+      lines[#lines + 1] = ("%s (%d)"):format(state, #rows)
+      for _, r in ipairs(rows) do
+        local m = meta.read(r.entry.dir)
+        local touched = r.mtime > 0 and os.date("%Y-%m-%d", r.mtime) or "—"
+        lines[#lines + 1] = ("  %-10s %s  %s"):format(r.entry.short, touched, (m and m.title) or "")
+      end
+      lines[#lines + 1] = ""
+    end
+  end
+
+  kit.viewer({ title = "Company history", lines = lines })
+end
+
 --- `:Cases stats` — counts by state / company / year.
 function M.stats()
   local s = query.stats()

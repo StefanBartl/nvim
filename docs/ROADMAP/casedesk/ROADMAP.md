@@ -16,7 +16,6 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
       Brainstorming der Lösung?), dann bewerten. Zwei billigere
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
-- [ ] Company-Historie: "was hatten wir mit Scania schon"
 - [ ] `:Cases export <nr>` — Case als ein PDF bündeln (`pdfport.nvim`)
 - [ ] Zeitachse pro Case aus mtime, ohne separates Logbuch — Aufzeichnung,
       wie lange und wann Buffer innerhalb eines Cases fokussiert waren.
