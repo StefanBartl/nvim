@@ -1,4 +1,4 @@
-# `usrcmds.plugin_repos` — `:MyPlugins`
+# `bindings.usrcmds.plugin_repos` — `:MyPlugins`
 
 Manages the repo checkouts for `plugins.personal` (the ~28 `StefanBartl/*.nvim`
 plugins declared in [`lua/plugins/personal/init.lua`](../../plugins/personal/init.lua))
@@ -8,7 +8,7 @@ GitHub. Everything lives under one command, built with
 — the same composer every other personal plugin here uses for its own
 `:Verb <subcommand>` (see `reposcope.nvim`, `replacer.nvim`, `lib.nvim`'s own
 `:Lib`, ...). Registered eagerly at startup, see `init.lua` in this config's
-`init.lua` (`require("usrcmds.plugin_repos").enable()`).
+`init.lua` (`require("bindings.usrcmds.plugin_repos").enable()`).
 
 Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]` —
 those names no longer exist.

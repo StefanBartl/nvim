@@ -1,4 +1,4 @@
----@module 'usrcmds.plugin_repos'
+---@module 'bindings.usrcmds.plugin_repos'
 ---@brief Clone, remove, list or switch the source mode of the personal plugin list.
 ---@description
 --- Registers a single `:MyPlugins {clone|remove|mode|list} [args]` command via

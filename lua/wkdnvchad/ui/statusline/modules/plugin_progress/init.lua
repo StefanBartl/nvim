@@ -13,7 +13,7 @@
 --- only `progress_style = "statusline"` in its spec (see
 --- lua/plugins/personal/init.lua) — or, for a usercmd, `style = "statusline"`
 --- passed directly to `lib.nvim.progress.create` (see
---- lua/usrcmds/plugin_repos/init.lua, lua/usrcmds/update_repos/init.lua).
+--- lua/bindings/usrcmds/plugin_repos/init.lua, lua/bindings/usrcmds/update_repos/init.lua).
 
 --- Operations can overlap — a `:Reposcope update` still running while a
 --- `:Replace` starts. Rendering only the first would silently hide the rest, so

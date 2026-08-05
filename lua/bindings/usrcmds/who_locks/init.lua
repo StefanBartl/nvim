@@ -1,4 +1,4 @@
----@module 'usrcmds.who_locks'
+---@module 'bindings.usrcmds.who_locks'
 ---@brief Diagnose a Windows file lock (EBUSY/EPERM/EACCES) on any path.
 ---@description
 --- Registers `:WhoLocks [path]`. Run it right after a file op failed with

@@ -102,9 +102,9 @@ pcall(dofile, vim.g.base46_cache .. "statusline")
 -- did nothing.
 local startup = require("startup")
 startup.setup_usercmds()
-require("usrcmds.update_repos").enable()
-require("usrcmds.plugin_repos").enable()
-require("usrcmds.who_locks").enable()
+require("bindings.usrcmds.update_repos").enable()
+require("bindings.usrcmds.plugin_repos").enable()
+require("bindings.usrcmds.who_locks").enable()
 
 -- --- synchronous ------------------------------------------------------------
 

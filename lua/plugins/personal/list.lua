@@ -18,8 +18,8 @@
 --- those itself, later, at load time) — so this is a plain, side-effect-free
 --- data read, not a partial plugin bootstrap.
 ---
---- Lives here rather than under `usrcmds.plugin_repos` (its original home):
---- consumers now span both `usrcmds` (`:MyPlugins clone`/`remove`/`list`)
+--- Lives here rather than under `bindings.usrcmds.plugin_repos` (its original home):
+--- consumers now span both `bindings.usrcmds` (`:MyPlugins clone`/`remove`/`list`)
 --- and `wkdnvchad.ui.statusline` (`plugin_summary`'s own/external count
 --- badge), neither of which should reach into the other's namespace for
 --- shared data that is really just a derived view of `plugins.personal`.

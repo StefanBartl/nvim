@@ -1,4 +1,4 @@
----@module 'usrcmds.update_repos'
+---@module 'bindings.usrcmds.update_repos'
 ---@brief Update all git repositories inside a given directory.
 ---@description
 --- Registers `:MyReposUpdate [path]`. Scans `path` (or `vim.env.REPOS_DIR` when
