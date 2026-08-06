@@ -1,6 +1,6 @@
 # markdown.nvim — User Commands Cheatsheet
 
-`:Markdown` (global, 11 subcommands) plus 8 buffer-local commands
+`:Markdown` (global, 12 subcommands) plus 8 buffer-local commands
 (`OpenWithSystemApplication`, `TableViewToggle`, `TableViewMarkdown`,
 `TableViewBox`, `TableViewSelect`, `TableViewClose`, `TableViewOpenBrowser`,
 `TableViewOpenBrowserNice`) rebuilt via `lib.nvim.usercmd.composer` (migrated
@@ -12,7 +12,7 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 | Command | Scope | Grammar |
 | --- | --- | --- |
-| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|headline_spacing\|gaps} [args…]` | global | see `commands/*.lua` per-subcommand grammar |
+| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|headline_spacing\|gaps\|image} [args…]` | global | see `commands/*.lua` per-subcommand grammar |
 | `:OpenWithSystemApplication` | buffer-local | open image/url/file under cursor |
 | `:TableViewToggle\|Markdown\|Box [scope]` | buffer-local | toggle table preview (config/markdown/box style) |
 | `:TableViewSelect` / `:TableViewClose` | buffer-local | select+preview / close persistent preview |
@@ -20,6 +20,26 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 ## Notes
 
+- **2026-08-07: added `:Markdown image [paste|screenshot]`** (12th
+  subcommand, `commands/image.lua`) — thin delegator to images.nvim's
+  `:Image paste`/`:Image screenshot` (soft dep, pcall-guarded), for
+  discoverability from `:Markdown <Tab>` rather than a reimplementation.
+  Also gave `:Markdown links show` a live image preview: when the scanned
+  links include an image and both `snacks.picker` + images.nvim are
+  installed, it now routes through a dedicated snacks picker
+  (`images.browse.draw_in_window()` for the per-item preview) instead of
+  the generic `links.picker`-selected backend, none of which support a
+  cross-backend live preview — same constraint images.nvim's own
+  `docs/ROADMAP/CROSS-PLUGIN.md` documents for `pickers.nvim`. Falls back
+  to the unchanged picker without both deps or with no image link.
+  **Side fix while there**: `mi`'s existing in-Neovim image preview
+  (`markdown/util/image_preview.lua`) used only snacks.nvim/image.nvim as
+  providers — both Kitty-APC-only, which native Windows Neovim in WezTerm
+  never draws (same root cause as images.nvim's whole reason for existing,
+  see its README's "Why not snacks.image or image.nvim"). images.nvim is
+  now the preferred provider there too, via the same `draw_in_window()`
+  helper; snacks/image.nvim stay as fallback for Kitty-capable terminals.
+  From images.nvim's `docs/ROADMAP/CROSS-PLUGIN.md` (markdown.nvim entry).
 - **2026-07-26: worked through `docs/ROADMAP.md` end to end** (branch
   `claude/markdown-nvim-roadmap-bindings-194495`, merged/pushed straight to
   `main` — does **not** include the `sanitize`/`gaps` work below, which are

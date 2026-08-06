@@ -31,7 +31,7 @@ Buffer-local, installed on `FileType` for markdown/mdx/md (see
 | cursor_action_2click | n | `<2-LeftMouse>` | Open anchor/image/url/file under cursor (silent — a miss is a normal, frequent mouse-move outcome); double-click on a heading toggles its fold instead | — |
 | cursor_action_cclick | n | `<C-LeftMouse>` | Same | — |
 | cursor_action | n | `ma` | Same, non-silent | — |
-| open_image | n | `mi` | Open image. With snacks.nvim (`Snacks.image`) or image.nvim installed, offers an in-Neovim float preview vs. the system viewer; `image.preview` = `"ask"` (default) / `"preview"` / `"system"`. With neither installed, system viewer, no prompt. Remote images and failed previews always fall back to the system handler. | soft dep: snacks.nvim *or* image.nvim |
+| open_image | n | `mi` | Open image. With images.nvim, snacks.nvim (`Snacks.image`) or image.nvim installed, offers an in-Neovim float preview vs. the system viewer; `image.preview` = `"ask"` (default) / `"preview"` / `"system"`. With none installed, system viewer, no prompt. Remote images and failed previews always fall back to the system handler. images.nvim preferred when several are installed (2026-08-07) — the only one of the three that draws on native Windows Neovim in WezTerm, via `images.browse.draw_in_window()`. | soft dep: images.nvim *or* snacks.nvim *or* image.nvim |
 | jump_anchor | n | `mj` | Jump to anchor | — |
 | heading_inc / _dec | n | `<C-Right>`/`<C-Left>` | Shift current line's heading level by `vim.v.count1` | — |
 | heading_inc_visual / _dec_visual | v,x | `<C-Right>`/`<C-Left>` | Shift visual selection's headings | — |
