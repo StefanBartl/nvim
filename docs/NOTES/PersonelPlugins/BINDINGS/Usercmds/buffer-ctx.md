@@ -141,3 +141,20 @@ Args not given on the command line are prompted via `vim.fn.input`.
   `commands.lua`'s `M.register()`, same pattern as `:Mark`'s
   `MarkLineToggle`/`MarkLinesYank` — untouched by composer, dispatched
   through the existing `M._dispatch("filepath", …, "clip")`.
+- **`:checkhealth buffer_ctx` no longer crashes without lib.nvim (2026-08-06)**:
+  `health.lua` called `lib.nvim.usercmd.composer.checkhealth(...)` at four
+  spots with no guard, even though it separately `pcall`-checks for
+  `lib.nvim.usercmd.composer` two lines above and warns gracefully if absent.
+  Without lib.nvim installed, `:checkhealth buffer_ctx` raised an uncaught
+  error partway through and never reached the Format/Mark sections — now
+  gated behind the same `pcall` result; verified both with and without
+  lib.nvim on the runtimepath.
+- **`:Copy`/keymap-copy notifications moved to the caller (2026-08-06)**:
+  `util/clip.lua`'s `M.copy` used to notify (`info`/`warn`) on its own; a
+  shared low-level sink notifying internally meant a caller passing `{ silent
+  = true }` (e.g. `:Mark yank`) still saw `clip`'s own `warn` fire regardless.
+  `M.copy` is now a pure sink returning `(ok, err, preview)`; every call site
+  (`commands.lua`'s `sink_text`/`sink_lines`, all three keymaps in
+  `keymaps.lua`, `mark.yank`) now decides itself whether/how to report. No
+  user-visible change in the success/failure messages themselves, just where
+  they're issued from.

@@ -28,7 +28,7 @@ darunter, sofern relevant.
 | lib.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | sessions.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | pickers.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| buffer-ctx.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| buffer-ctx.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | open.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | sandbox.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | spotlight.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -800,3 +800,92 @@ der `platform.is_windows()`-Verzweigungen in `compress/init.lua` und `util/platf
 Windows-only-Annahmen im POSIX-Zweig. Zentrale Bindings-Sammlung geprüft und aktualisiert, siehe
 `nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/insights.nvim.md`. Alles
 committet (`6445452`) und nach `origin/main` gepusht.
+
+### buffer-ctx.nvim
+
+Bereits solide (54 Lua-Dateien): durchgängig `@module`, `@types.lua` als einzelne konsolidierte
+Datei (bewusste Ausnahme wie bei fileops.nvim/emojis.nvim — sauber nach Quelldatei gruppiert),
+`config/DEFAULTS.lua` + `config/init.lua`, `.luarc.json` (identisch zu `sessions.nvim`s Referenz),
+`.luacheckrc`, `.stylua.toml`, `.github/workflows/ci.yml` (stylua + luacheck + headless
+`docs/TESTS/run.lua`, 5 Specs + separater `:checkhealth`-Job) bereits vorhanden. `gh run list`
+zeigte die letzten 5 CI-Runs auf `main` als `failure` — dieser Pass hat das behoben, siehe unten.
+
+- **PERFORMANCE.md**: kein echter Hotpath — jedes `:Insert`/`:Copy`/`:Format`/`:Mark`-Subcommand
+  läuft einmal pro Nutzeraktion, kein Cursor-move-Autocmd, keine Statusline-Komponente.
+  `format/table_fmt.lua`s Zeilen-Scan über einen ganzen Buffer/mehrere Markdown-Dateien ist der
+  einzige nennenswerte Kandidat und baut Zeilen bereits per `t[#t+1]`/`table.concat` auf — bis auf
+  einen Fund (`parse_row`, siehe REVIEW.md unten) keine Änderung nötig.
+- **LUA_NVIM.md**: `lib.nvim` wird über den Commandlayer (`lib.nvim.usercmd.composer`) tatsächlich
+  als **harte** Abhängigkeit genutzt (unconditional `require`, kein `pcall`) — anders als in der
+  Aufgabenstellung vermutet ("soft dependency, unlike most siblings"); README/`docs/installation.md`
+  dokumentieren das bereits korrekt (`-- required`), nur `notify`/`map`/`which_key` bleiben weich
+  mit nativem Fallback. Die GitHub-Repo-Description behauptete dagegen noch "No hard dependencies,
+  standalone" (stammt vermutlich von vor der composer-Migration) — mit `gh repo edit --description`
+  korrigiert. `config/init.lua`s `M.setup()` akzeptierte jeden `user_opts`-Wert ohne Typprüfung vor
+  `vim.tbl_deep_extend` (hätte bei einem Nicht-Tabellen-Wert dort gecrasht) — Guard ergänzt.
+  `@types.lua`s `Config.format`-Feld war ein anonymer Inline-Typ statt einer benannten Klasse (im
+  Gegensatz zu `Config.mark`) — `BufferCtx.FormatConfig` ergänzt.
+- **REVIEW.md — mehrere echte Funde**: (1) systematischer `@return`-Arität-Fehler in acht
+  `ops/*`/`format/*`-Dateien (`annotation.lua`, `bufinfo.lua`, `env.lua`, `filepath.lua`,
+  `location.lua`, `module.lua`, `snippet.lua`, `boilerplate/init.lua`,
+  `blank_lines.lua`s `squeeze_buffer`): als `(result, err)` annotierte Funktionen ließen das
+  abschließende `nil` auf dem Erfolgspfad weg (in Lua harmlos, aber eine echte Doku-/Aritäts-
+  Abweichung) — überall ergänzt. (2) `format/table_fmt.lua`s `parse_row` baute jede Tabellenzelle
+  zeichenweise per `..` auf (O(n²) in der Zeilenlänge) — auf `gmatch`-Split umgestellt. (3)
+  `format/text_width.lua`s `reflow_buffer`/`reflow_range` prüften den übergebenen `bufnr` nie mit
+  `nvim_buf_is_valid` — ergänzt. (4) `format/column_align.lua`s modul-globaler `state`-Tisch
+  (letzte Zielspalte/Füllzeichen) wurde direkt gelesen/geschrieben — jetzt über `get_last()`/
+  `set_last()` gekapselt. (5) `mark/init.lua`s `marked`-Tabelle (Buffer → Extmark-IDs) wurde von
+  vier Stellen direkt manipuliert — jetzt über `get_marks()`/`add_mark()`/`remove_mark()`/
+  `clear_marks()` gekapselt. (6) `telescope/_extensions/buffer_ctx.lua`s Preview schrieb in den
+  Previewer-Buffer ohne `nvim_buf_is_valid`-Guard — ergänzt (geringes Risiko dank Telescopes
+  synchronem Preview-Vertrag, aber ein echter fehlender Guard). `.luarc.json`/`.luacheckrc`/
+  `.stylua.toml` (§8 Tooling) waren bereits vorhanden und korrekt — keine Änderung.
+- **RELEASE.md**: README hatte ASCII-Art, Badges, Schwesterplugin-Absatz (gopath.nvim) und einen
+  Installationsblock mit explizitem `event = "VeryLazy"` bereits korrekt — nur das geforderte
+  Table of Contents (nur Level-2-Überschriften) fehlte, ergänzt. `doc/buffer-ctx.txt`,
+  `docs/BINDINGS.md`, `docs/ROADMAP/ROADMAP.md` waren bereits vollständig und aktuell — gegen den
+  tatsächlichen Code verifiziert (Keymaps/Usercmds/Autocmds decken sich exakt). `:checkhealth
+  buffer_ctx` per Headless-Smoke-Test verifiziert, sowohl mit als auch **ohne** lib.nvim auf dem
+  Runtimepath (siehe LUA_NVIM.md-Fund/echter Crash-Fix unten). GitHub-Metadaten (`gh repo view`)
+  bereits gesetzt: 6 Topics, Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-
+  Konvention), keine LICENSE-Datei/-Referenz; nur die Description war stale (siehe LUA_NVIM.md
+  oben), korrigiert. Cross-Plattform: `util/path.lua`s Soft-Fallback (ohne `lib.nvim.cross`) ist
+  bereits genuin plattformübergreifend (`gsub("\\","/")`-Normalisierung vor jeder Segmentierung,
+  parametrischer `sep` statt hartkodiertem Trenner); `ops/filepath.lua`s `\\`/`package.config`-
+  Vorkommen sind bewusste, nutzerangeforderte Ausgabeformat-Schalter (`format=win`), keine
+  OS-Erkennungs-Bugs.
+- **Refactoring.md — zwei echte Funde**: (1) `util/clip.lua`s `M.copy` (geteilte Low-Level-Utility,
+  von `commands.lua`, `bindings/keymaps.lua` und `mark/init.lua` genutzt) notifizierte selbst
+  (`info`/`warn`) statt nur Status zurückzugeben — problematisch, weil `warn` dabei nie
+  unterdrückbar war, selbst wenn ein Aufrufer `{ silent = true }` übergab (`mark.yank` tat genau
+  das). Umgebaut auf `(ok, err, preview)`-Rückgabe ohne Seiteneffekt; alle vier Aufrufer (zwei Sinks
+  in `commands.lua`, drei Keymaps in `bindings/keymaps.lua`, `mark.yank`) entscheiden jetzt selbst
+  über das Melden. (2) `format/table_fmt.lua`s `resolve_overrides` (eine Parsing-Hilfsfunktion,
+  zwei bis drei Aufrufebenen von jedem Command-Handler entfernt) notifizierte direkt bei
+  unauflösbaren `col_overrides` — gibt jetzt `(map, warnings)` zurück, die beiden echten Aufrufer
+  (`format_table_at_cursor`, `format_tables_in_buffer`) melden die Warnungen selbst.
+  `format_tables_in_scope`s eigene `notify()`-Aufrufe (Batch-Fortschritt über mehrere Dateien) sind
+  bewusst unangetastet geblieben — das ist bereits eine "Orchestrator"-Ebene mit eigener
+  Fortschritts-/Aggregations-Verantwortung, kein reiner Low-Level-Helfer, und der einzige Ort mit
+  Sicht auf den Gesamtfortschritt über mehrere Dateien.
+- **Echter CI-Regressions-Fix, beim Verifizieren gefunden**: `docs/TESTS/format_spec.lua` prüfte
+  `column_align` mit handgeschriebenen `'</'>'`-Marks statt einer echten Visual-Selektion — seit
+  dem submode-detection-Fix (`5ef85b6`, liest `vim.fn.visualmode()` statt Mark-Geometrie zu raten)
+  lieferte `visualmode()` dabei immer `""`, also schlug `align_to_column` in der Suite immer mit
+  "No valid visual selection found" fehl. Beide Stellen simulieren jetzt eine echte
+  Ein-Zeichen-Visual-Selektion per `normal! v<Esc>`. **Echter Crash-Fix**: `health.lua` rief
+  `lib.nvim.usercmd.composer.checkhealth(...)` an vier Stellen ungeschützt auf, obwohl die Datei
+  zwei Zeilen darüber selbst per `pcall` prüft, ob lib.nvim fehlt — ohne lib.nvim brach
+  `:checkhealth buffer_ctx` mit einem unabgefangenen Fehler ab, bevor die Format-/Mark-Abschnitte
+  erreicht wurden. Jetzt hinter demselben `pcall`-Ergebnis gated; mit und ohne lib.nvim verifiziert.
+
+Übersprungen/nicht verifizierbar: nichts — GitHub-Metadaten, `:checkhealth` (beide Varianten),
+CI-Status (`gh run list`, vor und nach dem Fix geprüft, jetzt grün) und die zentrale
+Bindings-Sammlung waren alle direkt prüfbar. Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/buffer-ctx.md`) war
+inhaltlich größtenteils bereits aktuell; `Autocmds/buffer-ctx.md`s "Known issue"-Abschnitt behauptete
+noch, `:Mark` schlüssle nach roher Zeilennummer statt Extmark-ID — das war bereits gefixt
+(`docs/ROADMAP/anchor-stable-marks.md`, Status "implemented"), korrigiert zu einem
+"Previously an issue, now fixed"-Abschnitt; `Usercmds/buffer-ctx.md` um die beiden obigen
+Refactoring-Funde ergänzt. Alles committet (`91f7d5b`) und nach `origin/main` gepusht.
