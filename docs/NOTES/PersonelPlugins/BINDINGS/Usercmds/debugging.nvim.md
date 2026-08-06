@@ -59,4 +59,5 @@ Docs: `docs/commands.md`, `doc/debugging.txt`
   test-suite dependency ("Unlike buffer-ctx.nvim, lib.nvim is a HARD
   dependency here") with its own sibling-checkout auto-detection — no
   changes needed.
-- No CI for this repo — pre-existing, not part of this migration's scope.
+- CI (`.github/workflows/ci.yml`, stylua/luacheck/headless test suite) was
+  added on 2026-07-30, after this migration — stale "no CI" note superseded.

@@ -42,7 +42,7 @@ darunter, sofern relevant.
 | filetree.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | reposcope.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY |||||||
-| debugging.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| debugging.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | dap.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | diff.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | language.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -426,3 +426,73 @@ wie lokal — `tests/feature_smoke.lua`s "history: pick() re-runs the newest ent
 stattdessen über CI (`ubuntu-latest`, luacheck + stylua + 3 Headless-Testsuiten), die bei jedem
 Push läuft; genau diese CI deckte den zweiten Fund oben erst auf, nachdem der stylua-Fix bereits
 grün war. Alles committet (`34f64a1`, `4e71144`) und nach `origin/main` gepusht.
+
+### debugging.nvim
+
+Bei weitem das sauberste bisher geprüfte Plugin: 42 Lua-Dateien, durchgängig `@module`/`@brief`/
+`@description`, vollständige `@param`/`@return` (Arität stichprobenartig gegen die tatsächlichen
+`return`-Statements verifiziert, keine Abweichung gefunden), `@types/init.lua` pro Unterverzeichnis
+mit echten mehrfeldrigen Strukturen (bewusst ausgelassen für `actions/`, `terminals/`,
+`nvim_options/` — dort nur Primitive, dokumentiert im Kopf von `tools/@types/init.lua` und in
+`docs/ROADMAP/Checklist.md`), `config/DEFAULTS.lua` + `config/init.lua`, `.luarc.json`/
+`.luacheckrc`/`stylua.toml`/CI (stylua + luacheck + headless `docs/TESTS/run.lua`, 4 Specs) bereits
+vorhanden und grün. Das Repo hat außerdem schon drei eigene Audit-Dateien unter `docs/ROADMAP/`
+(`Checklist.md`, `Arch&Coding.md`, `Zentral-Prinzipien.md`), die frühere Checklisten-Läufe gegen
+exakt dieselben Quell-Checklisten dokumentieren, inklusive begründeter bewusster Abweichungen.
+Ein vorheriger (durch ein Session-Limit unterbrochener) Anlauf hatte bereits den einzigen
+gefundenen **Refactoring.md**-Verstoß behoben und gepusht (Commit `0e75b46`): `views/capture/
+init.lua`s `capture_messages()` notifizierte vormals selbst; jetzt gibt sie ausschließlich
+`(ok, content, detail)` zurück, die beiden Call-Sites (`debugging.views.messages_capture`,
+`bindings/keymaps.lua`s `<lt>c`) entscheiden über das Melden — verifiziert mit stylua/luacheck/
+Testsuite grün. Dieser Pass deckte die restlichen vier Checklisten vollständig ab und fand sonst
+nur eine einzige Lücke:
+
+- **PERFORMANCE.md**: kein Hotpath vorhanden (alles läuft on-demand über `:Debug`, plus zwei
+  Auto-Refresh-Autocmds für offene Debug-Fenster) — bereits explizit in
+  `docs/ROADMAP/Zentral-Prinzipien.md` und `Checklist.md` begründet. `autocmds/sources.lua`, die
+  einzige nennenswerte Iteration (rekursiver Verzeichnis-Scan), nutzt bereits lokale
+  `table.insert`/`concat`/`sort`-Aliase, `table.concat` statt Verkettung, und einen 5s-TTL-Cache
+  (`lib.nvim.cache.memory`) pro Root. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig (`notify`, `window`,
+  `buf_win_tab.*`, `fs.collect_recursive`, `cache.memory`, `cross.copy_to_clipboard`, `usercmd.
+  composer`, `autocmd.create`, `lua_ls.get_module_path`, `lazy`), Buffer/Window-Handles überall
+  validiert (auch in `vim.defer_fn`-Callbacks in `bindings/autocmds.lua`/`views/utils.lua`), saubere
+  Importreihenfolge, `Dbg.Config` vollständig typisiert. Keine Änderung nötig.
+- **REVIEW.md**: Schnell-Check und Detailprüfung sauber — kein globaler State (das einzige
+  `_G[varname]`-Lesen in `tools/vardump/init.lua` ist die dokumentierte Kernfunktion des Befehls,
+  kein Zustands-Anti-Pattern), Single Responsibility pro Modul, `bindings/usercmds.lua` als einzige
+  Registrierungsstelle für `:Debug`. `.luarc.json`/`.luacheckrc`/`stylua.toml` bereits korrekt und
+  unverändert übernommen (§8 Tooling). `stylua --check .`/`luacheck lua`/Headless-Testsuite liefen
+  bereits vor jeder Änderung grün (0 Findings) — ungewöhnlich für einen ersten Checklisten-Pass,
+  aber durch die dokumentierte Vorgeschichte (drei eigene Audit-Runden, sieben grüne CI-Runs)
+  erklärt.
+- **RELEASE.md — der einzige Fund dieses Passes**: README.md hatte ASCII-Art, Badges, den
+  Schwesterplugin-Absatz (insights.nvim) und einen Installationsblock mit explizitem `cmd = "Debug"`
+  bereits korrekt — nur das geforderte Table of Contents (nur Level-2-Überschriften) fehlte,
+  ergänzt (`## Table of Contents` mit Ankern auf `Quick Start`/`Documentation`). `doc/debugging.txt`,
+  `docs/BINDINGS.md`, `docs/ROADMAP.md`, `docs/{architecture,commands,configuration,installation,
+  troubleshooting}.md` waren bereits vollständig und aktuell — Cross-Check gegen den tatsächlichen
+  Code (`bindings/keymaps.lua`, `bindings/autocmds.lua`, `commands.lua`s Registry) ergab keine
+  Abweichung. `:checkhealth debugging` headless getestet (`setup({all=true})` +
+  `:checkhealth debugging` lief fehlerfrei durch). GitHub-Metadaten (`gh repo view`) bereits
+  vollständig gesetzt: Description, 5 Topics, Default-Branch `main`, leeres Homepage-Feld
+  (Schwester-Plugin-Konvention), keine LICENSE-Datei/-Referenz — keine Änderung nötig.
+  Cross-Plattform: keine hartkodierten Pfadtrenner (`debug_helper.lua`s einziger `\\`-Treffer ist
+  reines Reporting von `package.config`, kein Join). CI (`gh run list`) war vor und nach dem Fix
+  grün.
+- **Refactoring.md**: siehe oben — der einzige Fund war bereits durch den unterbrochenen Vorlauf
+  (Commit `0e75b46`) behoben; dieser Pass fand keine weiteren `notify()`-Aufrufe in Low-Level-Code.
+  Alle verbleibenden `notify()`-Stellen sitzen entweder an der Dispatch-Grenze (von
+  `commands.lua`s Registry direkt aufgerufene Action-Funktionen in `actions/*`, `tools/*`,
+  `autocmds/runtime.lua`, `terminals/keylogger.lua`, `nvim_options/indent_helpers.lua`,
+  `markdown/inline_debug.lua`) oder sind explizit Opt-in-Diagnostik (`debug=true` in
+  `views/capture/init.lua`, `views/capture/clipboard/init.lua`, `views/debug_helper.lua` — letzteres
+  ein eigenständiges, nicht in `:Debug` verdrahtetes Entwickler-Tool).
+
+Übersprungen/nicht verifizierbar: nichts — GitHub-Metadaten, `:checkhealth`, CI-Status und die
+zentrale Bindings-Sammlung waren alle direkt prüfbar. Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/debugging.nvim.md`) war
+inhaltlich bereits aktuell und deckungsgleich mit `docs/BINDINGS.md`; korrigiert wurde nur eine
+stale Aussage in `Usercmds/debugging.nvim.md` ("No CI for this repo" — CI wurde am 2026-07-30
+ergänzt, nach der dort dokumentierten `usercmd.composer`-Migration). Alles committet (`0e75b46`
+aus dem unterbrochenen Vorlauf, `8e2c080` aus diesem Pass) und nach `origin/main` gepusht.
