@@ -48,7 +48,7 @@ darunter, sofern relevant.
 | language.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | cmdlog.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | emojis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| github_stats.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| github_stats.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4. FILE TYPES (MARKDOWN & DOCUMENTS) |||||||
 | cascade.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | pdfport.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -675,3 +675,77 @@ zentrale Bindings-Sammlung waren alle direkt prüfbar oder per `stylua`/`luachec
 Headless-Suite lokal verifizierbar (POSIX selbst nicht lokal testbar, Windows-Umgebung — wie bei
 den anderen Plugins über die `ubuntu-latest`-CI abgedeckt). Alles committet (`6602ae3`) und nach
 `origin/main` gepusht.
+
+### github_stats.nvim
+
+45 Lua-Dateien. Kein `stylua.toml`/`.luacheckrc` im Repo vorhanden (einziges bisher geprüftes
+Plugin ohne beides) — beide neu angelegt (angelehnt an `cascade.nvim`s `stylua.toml`;
+`.luacheckrc` mit `std = "luajit"`, `globals = { "vim" }`, Ignores für `_`-präfigierte/`self`-
+Parameter und read-only-Global-Field-Writes). `stylua .` fand daraufhin echte Formatierungs-
+Abweichungen in ~10 Dateien (Tabs statt der konfigurierten 2 Spaces — kein reiner CRLF-Fund wie
+bei den meisten anderen Plugins dieses Rollouts, das Repo ist durchgängig CRLF-eingecheckt, daher
+`line_endings = "Windows"` statt `"Unix"` gesetzt, um keine unnötige Zeilenenden-Churn einzuführen).
+Nach `stylua .`/`luacheck lua .luacheckrc` beide grün (0 Findings); zwei echte `luacheck`-Warnungen
+(unbenutzte `fetch_time` in `analytics.lua`, ein sofort überschriebener Initialwert in
+`fetcher.lua`s `fetch_all`) behoben.
+
+- **PERFORMANCE.md**: kein echter Hotpath — alles läuft on-demand über `:GithubStats`-Subcommands,
+  Dashboard-Keymaps oder den periodischen Background-Fetch (kein Redraw-/Keystroke-Hotpath). Keine
+  Änderung nötig.
+- **LUA_NVIM.md — der größte Fund dieses Passes**: sechs Dateien unter `bindings/usrcmds/`
+  (`debug.lua`, `diff.lua`, `export.lua`, `paths.lua`, `referrers.lua`, `summary.lua`) riefen
+  rohes `vim.notify()` auf statt wie der Rest des Plugins (`chart.lua`, `show.lua`,
+  `keymaps.lua`) über `config.notify()` zu gehen (die zentrale `lib.nvim.notify`-Fassade mit
+  `notification_level`-Filterung) — auf `config.notify(msg, "info"|"warn"|"error")`
+  vereinheitlicht. `health.lua`s `command_exists()` enthielt zusätzlich **echten Duplicate-Code**:
+  zwei komplette, identische Windows-PowerShell-Erkennungsblöcke hintereinander (einer über
+  `vim.fn`/`vim.v.shell_error` direkt, einer über lokale Aliase) — durch einen einzigen Aufruf von
+  `lib.nvim.cross.executable.exists(cmd)` ersetzt (vorhandene `lib.nvim`-Funktionalität, die exakt
+  dasselbe robuster leistet). Ansonsten `lib.nvim` bereits breit genutzt (`notify`, `map`, `window`,
+  `net.curl`, `fs.json`, `usercmd.composer`, `ui.kit.note`, `lua.strings.format`, `lua.tables`) —
+  in 41 von 45 Dateien nachgewiesen.
+- **REVIEW.md**: Schnell-Check/Detailprüfung sauber bis auf die beiden LUA_NVIM-Funde oben.
+  **Ein echter Korrektheits-Bug gefunden und gefixt** (Buffer/Window-Abschnitt, Line-Height-
+  Berechnung): `dashboard/render.lua`s `build_entry()` gibt 5 Zeilen pro Repo aus (Titel, Clones,
+  Views, Period, Trenner), aber `dashboard/state.lua` und `dashboard/render.lua` hatten mehrere
+  hartkodierte `* 6`-Annahmen (plus eine dritte, unabhängige und nirgends aufgerufene `2 + 3*N`-
+  Formel in totem Code in `dashboard/movement.lua`) — jede Scroll-/Cursor-Berechnung war dadurch
+  pro Eintrag um eine Zeile versetzt, kumulierend mit der Repo-Anzahl (bereits in `docs/devs/
+  BUGS.md`/`docs/ROADMAP.md` als offener Priority-0-Bug dokumentiert). `render.lua` exportiert
+  jetzt `M.ENTRY_LINES = 5` als einzige Quelle der Wahrheit; alle Stellen referenzieren sie.
+  Der tote `move_to_index`/`move_down`/`move_up`/`move_first`/`move_last`-Code in
+  `dashboard/movement.lua` (nirgends aufgerufen, trug seine eigene dritte falsche Formel) wurde
+  entfernt statt gefixt. `.luarc.json` war bereits vorhanden und korrekt (`diagnostics.globals`
+  inkl. `vim`/Busted-Globals, `workspace.library` für `luv`/`busted`) — keine Änderung nötig.
+- **RELEASE.md**: README hatte ASCII-Art, Badges, Schwesterplugin-Absatz (reposcope.nvim) und
+  einen Installationsblock mit explizitem `event = "VimEnter"` bereits korrekt — nur das
+  geforderte Table of Contents (nur Level-2-Überschriften) fehlte, ergänzt. `doc/github_stats.
+  nvim.txt` trug den Haupttag `*github_stats.txt*` in einer Datei, die nicht `github_stats.txt`
+  hieß (abweichend von der Schwester-Plugin-Konvention `doc/<name>.txt`, z. B. `cascade.nvim` →
+  `doc/cascade.txt`) — auf `doc/github_stats.txt` umbenannt. `docs/BINDINGS.md` gegen den
+  tatsächlichen Code in `bindings/{keymaps,usrcmds/init,autocmds}.lua` verifiziert — bereits
+  vollständig und deckungsgleich. `docs/ROADMAP.md`/`docs/devs/BUGS.md` aktualisiert, um die in
+  dieser Session gefixten Priority-0-Bugs als erledigt zu markieren (vorher als offen
+  dokumentiert). `:checkhealth github_stats` per Headless-Smoke-Test verifiziert (`health.check()`
+  läuft ohne Fehler durch). GitHub-Metadaten (`gh repo view`) bereits vollständig gesetzt:
+  Description, 7 Topics, Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention),
+  keine LICENSE-Datei/-Referenz — keine Änderung nötig. Cross-Plattform: keine hartkodierten
+  Pfadtrenner; Authentifizierung gegen die GitHub-API läuft über `config.get_token()`
+  (Env-Var `GITHUB_TOKEN` oder `token_file`, kein `gh`-CLI-Aufruf, kein hartkodiertes Token) —
+  Token wird nirgends geloggt/committet (`debug.lua` zeigt nur `#token` Zeichen, nie den Wert
+  selbst).
+- **Refactoring.md**: siehe LUA_NVIM-Fund oben (`vim.notify()` → `config.notify()` in sechs
+  Usercommand-Dateien) — das war der einzige Fail-late-Verstoß; alle Low-Level-Module
+  (`api.lua`, `storage.lua`, `analytics.lua`, `date_presets.lua`, `diff.lua`, `export.lua`,
+  `visualization.lua`) geben durchweg nur `(data, err)`/`(ok, err)` zurück, kein `notify()`.
+
+Übersprungen/nicht verifizierbar: Keine `busted`/`plenary`-Runtime in dieser Umgebung installiert
+(`luarocks` ohne konfiguriertes Lua-Interpreter-Binary) — die drei `tests/*_spec.lua`-Dateien
+konnten nicht tatsächlich ausgeführt werden. Zwei defekte `require()`-Pfade darin
+(`dashboard.renderer`/`dashboard.navigator` statt `dashboard.render`/`bindings.keymaps`) wurden
+trotzdem gefixt und stattdessen per Headless-`require()`-Smoke-Test aller 45 Produktionsmodule
+verifiziert (0 Fehler). Kein `.github/workflows/` im Repo, daher kein `gh run list`-CI-Status
+verfügbar. POSIX-Test nicht lokal möglich (Windows-Umgebung) — Code-Review ergab keine
+Windows-only-Annahmen außerhalb der bereits korrekt `has("win32")`-gegatterten Zweige in
+`health.lua`. Zentrale Bindings-Sammlung geprüft und aktualisiert, siehe unten. Alles committet
+(`db8d8cb`) und nach `origin/main` gepusht.

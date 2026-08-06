@@ -37,20 +37,20 @@ floating buffer.
 
 ## Notes
 
-- **`navigate_down`/`navigate_up` deliberately do NOT use this module's
-  existing `move_down(state, count)`/`move_up(state, count)` helpers**
-  (found 2026-07-31 while adding count support). Those delegate to
-  `move_to_index()`, which assumes 3 lines per repo entry
-  (`target_line = 2 + 3*target_index`) while entries actually render 5-6
-  lines — a real, pre-existing bug already flagged as Priority-0 in this
-  repo's own `docs/ROADMAP.md`. Confirmed with a headless test: for the
-  identical single step, `move_down(state,1)` lands on a different
-  `scroll_offset` than the currently-shipped single-step function. Instead,
-  a `count` parameter was added directly to the shipped, correct
-  `move_cursor_down`/`move_cursor_up` (loops their existing single-step
-  body) — behavior-identical to before for `count=1` by construction, and
-  doesn't inherit the line-height bug. If `move_down`/`move_up` are ever
-  fixed for the ROADMAP item, `navigate_down`/`up` could switch to them.
+- **`navigate_down`/`navigate_up` deliberately do NOT use `move_down(state,
+  count)`/`move_up(state, count)`** (found 2026-07-31 while adding count
+  support) — those delegated to a private `move_to_index()` that assumed 3
+  lines per repo entry (`target_line = 2 + 3*target_index`) while entries
+  actually render 5 lines, a real bug flagged as Priority-0 in this repo's
+  `docs/ROADMAP.md`. A `count` parameter was added directly to the shipped,
+  correct `move_cursor_down`/`move_cursor_up` instead. **Update (checklist
+  pass, 2026-08-06)**: `move_to_index`/`move_down`/`move_up`/`move_first`/
+  `move_last` were confirmed dead (never called from anywhere) and removed
+  from `dashboard/movement.lua` entirely, so this is no longer a live
+  landmine — only `move_cursor_down`/`move_cursor_up` remain. The
+  line-height bug they carried is separately fixed: `dashboard/render.lua`
+  now exports `M.ENTRY_LINES = 5` as the single source of truth for every
+  scroll/cursor calculation in `dashboard/{state,render,movement}.lua`.
 
 ## which-key
 

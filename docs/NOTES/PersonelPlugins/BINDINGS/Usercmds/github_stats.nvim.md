@@ -5,7 +5,9 @@ Replaces 10 independent flat `:GithubStatsX` commands — breaking change, no
 compat aliases.
 
 Source: `lua/github_stats/bindings/usrcmds/init.lua`
-Docs: `docs/usercommands.md`, `docs/BINDINGS.md`, `doc/github_stats.nvim.txt`
+Docs: `docs/usercommands.md`, `docs/BINDINGS.md`, `doc/github_stats.txt`
+(renamed from `doc/github_stats.nvim.txt` in the 2026-08-06 checklist pass,
+to match the sibling-plugin `doc/<name>.txt` convention)
 
 | Command | Args | Effect |
 | --- | --- | --- |
