@@ -99,8 +99,28 @@ Der Command-Name folgt der Option `command`.
   schwärzt Rechtecke in einer neuen Datei (`magick bild.png -fill black
   -draw "rectangle …" bild.redacted.png`), ebenfalls kein Cache. Alle drei
   ohne Terminal-native Alternative — ohne ImageMagick kommt in jedem Fall
-  ein klarer Fehler statt eines stillen Fehlschlags. Das sind bewusst die
-  einzigen drei Fälle, in denen ImageMagick Voraussetzung statt Zugabe ist.
+  ein klarer Fehler statt eines stillen Fehlschlags. Der ASCII-Fallback
+  (`images.ascii`, siehe unten) ist der vierte, aus demselben Grund:
+  Pixelfarben lassen sich ohne echten Decoder nicht lesen. Das sind bewusst
+  die einzigen vier Fälle, in denen ImageMagick Voraussetzung statt Zugabe
+  ist.
+
+- **ASCII-Fallback (`display.ascii_fallback`, `images.ascii`)**: Wenn die
+  Terminal-Fähigkeitsprüfung fehlschlägt, zeichnen `:Image show`/Hover eine
+  farbige Blockgrafik statt der wirkungslosen OSC-1337-Sequenz — jede Zelle
+  ein "█" mit eigener Truecolor-Vordergrundfarbe (`nvim_set_hl` + Extmarks),
+  gesampelt via ImageMagick (`magick … -resize WxH! -alpha off -depth 8
+  RGB:-`), nicht ein Helligkeits-Zeichensatz. Braucht ImageMagick zwingend —
+  vierte bewusste Ausnahme neben SVG/`:Image export`/`:Image redact`. Ohne
+  ImageMagick oder mit `display.ascii_fallback.enabled = false` bleibt das
+  bisherige Verhalten (Warnung einmal pro Sitzung, Zeichenversuch trotzdem).
+  Nur der Einzelbild-Pfad (`show`/Hover), dieselbe Scope-Grenze wie bei
+  Remote-Bildern — `gallery`/`compare`/`pickers`/`zen` bekommen es (noch)
+  nicht. Ursprünglich als `docs/ROADMAP/CROSS-PLUGIN.md`-Idee mit
+  color_my_ascii.nvim als Färbe-Backend angedacht; dessen Highlighter färbt
+  aber Muster-basiert bekannte Zeichenklassen gegen ein Schema, nicht
+  beliebige Pixel-RGB pro Zelle — passt architektonisch nicht, deshalb ein
+  eigener Pfad ohne die Abhängigkeit.
 
 - **Kein Inline-Rendering**: Bilder liegen über dem Text und verschwinden bei
   der nächsten Cursorbewegung (außer nach `:Image pin`). Echtes Inline setzt
@@ -218,3 +238,10 @@ Der Command-Name folgt der Option `command`.
   Rasterisierung stattdessen selbst als API anbieten, siehe
   `docs/ROADMAP/CROSS-PLUGIN.md` (Eintrag entfernt) und pdfport.nvims
   eigene `docs/ROADMAP.md`.
+- 2026-08-07: ASCII-Fallback ergänzt (siehe oben, `images.ascii`,
+  `display.ascii_fallback`) — erstes umgesetztes Item aus
+  `docs/ROADMAP/CROSS-PLUGIN.md` (color_my_ascii.nvim-Abschnitt). Die dort
+  angedachte color_my_ascii-Integration erwies sich beim Bauen als
+  Fehlgriff (Muster-basierte Zeichenklassen-Färbung, keine beliebige
+  Pixel-RGB pro Zelle) — stattdessen ein eigener Pfad über `nvim_set_hl`/
+  Extmarks, ImageMagick-Sampling bleibt die einzige echte Abhängigkeit.
