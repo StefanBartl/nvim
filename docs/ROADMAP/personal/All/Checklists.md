@@ -51,7 +51,7 @@ darunter, sofern relevant.
 | github_stats.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4. FILE TYPES (MARKDOWN & DOCUMENTS) |||||||
 | cascade.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| pdfport.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| pdfport.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | markdown.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | color_my_ascii.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | recommender.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -555,3 +555,56 @@ selbst nicht lokal testbar, Windows-Umgebung — wie bei den anderen Plugins üb
 (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/dap.nvim.md`) war noch gar
 nicht angelegt (keine der drei Dateien existierte) — alle drei neu erstellt aus
 `docs/BINDINGS.md`. Alles committet (`467fb1b`) und nach `origin/main` gepusht.
+
+### pdfport.nvim
+
+Bereits das sauberste bisher geprüfte Plugin: 36 Lua-Dateien, alle 36 einzeln gelesen (nicht nur
+gegrept) — durchgängig `@module`/`@brief`/`@description`, vollständige `@param`/`@return` (Arität
+gegen die tatsächlichen `return`-Statements aller Funktionen mit mehreren Rückgabewerten
+verifiziert, kein Fund), `@types/init.lua` (eine Datei statt Ordner-pro-Unterverzeichnis — gleiche
+bewusste Ausnahme wie bei fileops.nvim/emojis.nvim/dap.nvim), `config/DEFAULTS.lua` +
+`config/init.lua`, `.luarc.json` (inhaltlich äquivalent zu sessions.nvim: `diagnostics.globals=
+["vim"]`, `workspace.library`), `.luacheckrc`/`stylua.toml`/CI (stylua + luacheck + headless
+`TESTS/run.lua`, 4 Specs) bereits vorhanden. Kein einziger `notify()`-Aufruf außerhalb der
+UI-Schicht (`renderers/*`, `bindings/usrcmds.lua`, `integrations/*`, `util/batch.lua`) —
+`core/*`, `backends/*`, `util/cache.lua`, `util/page_range.lua`, `platform/init.lua` geben
+durchweg nur `(status, err)`/`Result`-Tabellen zurück. Cross-Plattform bereits vollständig über
+`lib.nvim.cross.platform.is_*`/`lib.nvim.cross.uv.spawn_capture` gelöst, keine hartkodierten
+Pfadtrenner (die einzigen `\\`-Treffer sind bewusste `gsub("\\", "/")`-Normalisierungen in
+`marker.lua` bzw. Zeichenklassen-Checks `dir:sub(-1) == "\\"` in `netrw.lua`/`integrations/
+init.lua`, keine Windows-only-Joins).
+
+- **PERFORMANCE.md**: kein Hotpath — bereits so in `docs/ROADMAP/Checklist.md` dokumentiert; alles
+  läuft on-demand pro `:PdfPort`-Aufruf, jede Subprozess-Ausgabe läuft über `spawn_capture` +
+  `table.concat`. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig (`notify`, `map`, `autocmd`,
+  `usercmd.composer`, `window.make_scratch`, `cache.disk`, `progress`, `ui.kit`, `cross.*`),
+  Buffer/Window-Handles validiert auch in `vim.schedule`/`vim.defer_fn`-Callbacks
+  (`renderers/buffer.lua`, `terminal.lua`, `integrations/telescope.lua`/`fzf.lua`). Keine
+  Änderung nötig.
+- **REVIEW.md**: Schnell-Check/Detailprüfung sauber, kein globaler State, Single Responsibility
+  pro Modul, `.luarc.json`/`.luacheckrc`/`stylua.toml` bereits korrekt (§8 Tooling). `stylua
+  --check`/`luacheck`/die Headless-Suite liefen erst nach einem lokalen `core.autocrlf=true`-
+  bedingten CRLF-Checkout-Effekt (gleiche Ursache wie bei emojis.nvim/replacer.nvim/dap.nvim,
+  reiner lokaler Checkout-Artefakt, CI läuft auf `ubuntu-latest` und war nie betroffen) sauber
+  durch, nach lokaler LF-Normalisierung ohne inhaltliche Diffs. Keine Codefix nötig.
+- **RELEASE.md**: README hatte ASCII-Art/Badges bereits, aber kein Level-2-only Table of Contents
+  und keinen Schwesterplugin-Absatz — beides ergänzt (Schwesterplugin: mdview.nvim, da mehrere
+  Backends Markdown erzeugen). `doc/pdfport.nvim.txt` trug nur `pdfport.nvim-*`-Subtags, keinen
+  bloßen `*pdfport*`-Treffer — nach `doc/pdfport.txt` umbenannt und alle Tags auf `pdfport-*`
+  umgestellt, analog zu `fileops.txt`/`replacer.txt`, damit `:h pdfport` wie bei den anderen
+  Plugins auffindbar ist. `docs/BINDINGS.md`/`docs/ROADMAP.md`/`:checkhealth pdfport` bereits
+  vollständig und aktuell. Ein `test/`-Verzeichnis (`smoke.lua` + `README.md`) war ein Überbleibsel
+  der Vor-`TESTS/`-Ära, nirgends mehr aus CI erreichbar und laut `docs/ROADMAP/Arch&Coding.md`
+  selbst als abgelöst dokumentiert — entfernt, zwei dangling Links in `docs/ROADMAP.md`/
+  `docs/ROADMAP/NEOTREE_FEATURES.md` korrigiert. GitHub-Metadaten (`gh repo view`) bereits
+  vollständig gesetzt: Description, 6 Topics, Default-Branch `main`, leeres Homepage-Feld
+  (Schwester-Plugin-Konvention), keine LICENSE-Datei/-Referenz — keine Änderung nötig.
+- **Refactoring.md**: Fail-late/Report-at-boundary war bereits vollständig eingehalten — kein
+  Codefix nötig, siehe `notify()`-Grep oben.
+
+Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — verifiziert
+stattdessen per `gh run list` gegen die bestehende `ubuntu-latest`-CI (grün vor und nach diesem
+Pass). Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/pdfport.nvim.md`) geprüft
+und aktualisiert — siehe unten. Alles committet (`8781b98`) und nach `origin/main` gepusht.

@@ -7,7 +7,7 @@ logic verbatim). Replaces the old 6 flat `:PdfPortX` commands (fully removed,
 no alongside period).
 
 Source: `lua/pdfport/bindings/usrcmds.lua`
-Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `doc/pdfport.nvim.txt`
+Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `doc/pdfport.txt`
 
 | Command | Effect |
 | --- | --- |
@@ -50,6 +50,14 @@ name when `[path]` is omitted — unchanged from the original.
   docs" policy), but README/installation.md/vimdoc/health.lua all updated
   to reflect the new reality (`:PdfPort` needs `lib.nvim.usercmd.composer`).
   `lib.nvim.ui.kit` (the picker enhancement) stays legitimately soft.
-- No test suite and no CI exist for this repo, so no fix needed there.
 - Keymaps are per-file-tree-integration and call `pdfport.open()` directly as
   a Lua function (like dap.nvim) — no command-string coupling, unaffected.
+
+## Notes (2026-08 checklist pass)
+
+- A headless test suite and CI now exist (`TESTS/run.lua`, gated in
+  `.github/workflows/ci.yml` alongside stylua/luacheck) — the "no test suite and no CI"
+  note above from the composer-migration pass is stale/superseded, left in place as a
+  historical snapshot rather than rewritten.
+- `doc/pdfport.nvim.txt` was renamed to `doc/pdfport.txt` (tags `pdfport.nvim-*` ->
+  `pdfport-*`) so `:h pdfport` resolves, matching `fileops.txt`/`replacer.txt`.
