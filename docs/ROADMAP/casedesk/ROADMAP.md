@@ -12,6 +12,14 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 - [ ] **SLA-Überwachung** — eigenes Konzept: [SLA.md](SLA.md). Priorität aus
       dem Activity Stream, `config.sla`, Geschäftszeit-Rechnung, `:Case sla`
       / `:Cases sla`, Statusline-Badge, Warnungen für P1/P2.
+- [ ] **Session pro Case** — eigenes Konzept: [SESSIONS.md](SESSIONS.md).
+      Case-Nummer als Session-Name, Auto-Save bei `:Case new`, `<leader>cs`
+      als einziger neuer Keymap (case-aware: speichert unter der Case-Nummer
+      wenn der Buffer zu einem Case gehört, sonst `sessions.nvim`s eigenes
+      Auto-Resolve), `nvim -c "Session load {nr}"` bzw. eine
+      PowerShell-Wrapper-Funktion fürs schnelle Öffnen, Invalidierung über
+      einen neuen `:Cases doctor`-Fund-Typ (Session existiert für einen
+      nicht mehr offenen Case) statt einer eigenen Prune-Mechanik.
 - [ ] Dashboard beim Start: offene Cases nach Liegezeit — wird von
       `:Cases sla` (SLA.md §6B) mit abgedeckt, dort ist die Sortierung nach
       Restfrist statt nach Liegezeit die schärfere Frage
@@ -48,7 +56,7 @@ geprüft und passt nicht (CONCEPT.md §8d/§9) — beide nicht mehr hier.
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **open.nvim**       | `:Case snow` (Ticket im Browser), Doku-Links aus Replies (`docs.tricentis.com`).             |
 | **pickers.nvim**    | Case-Picker statt `kit.select`, sobald die Case-Zahl weiter wächst — inkl. Preview der `.case.json`. Selbe Einschränkung wie die Backend-Kaskade oben. |
-| **sessions.nvim**   | Eine Session pro Case: Case wieder aufmachen = Buffer-Layout von letzter Woche zurück. |
+| **sessions.nvim**   | Eine Session pro Case: Case wieder aufmachen = Buffer-Layout von letzter Woche zurück. Konzept: [SESSIONS.md](SESSIONS.md). |
 
 ### Mittlerer Nutzen
 
