@@ -55,6 +55,17 @@ end
 
 M.meta_filename = ".case.json"
 
+--- Plausibility range for a short case number (render.is_plausible_case_number).
+--- Deliberately generous rather than pinned to one exact width: seen so far
+--- is 6 digits (977392), but the real thing this guards against isn't "not
+--- exactly 6" — it's empty/near-empty input slipping past `:Case new`'s
+--- prompt and being used as a folder name. An unvalidated case number used
+--- to be able to land as `config.cases_root .. "/Open/" .. ""`, i.e. the
+--- blueprint's files (Replies/, Research/, Summary.md, ...) getting created
+--- DIRECTLY inside `Cases/Open/` itself — every other case's parent folder.
+M.case_number_min_digits = 4
+M.case_number_max_digits = 8
+
 --- Gap (minutes) between two file touches before `:Case timeline` starts a
 --- new work session — long enough that a coffee break within one sitting
 --- doesn't split it, short enough that yesterday afternoon and today

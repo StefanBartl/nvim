@@ -22,8 +22,11 @@ Three verbs, everything else follows from which one you reach for:
 :Case new
 ```
 
-Prompts for case number (the short SNOW number, e.g. `1012345`), title,
-company, name. Shows the dry-run plan, confirm, and it scaffolds:
+Prompts for case number (the short SNOW number, e.g. `1012345` — the only
+field that's actually validated, digits within `config.case_number_min_
+digits`–`_max_digits`), then title, company, name, link — all four
+optional, Enter on empty just leaves them blank. Shows the dry-run plan,
+confirm, and it scaffolds:
 
 ```
 Cases/Open/1012345/
@@ -149,8 +152,11 @@ buffer resolves it:
   tried, what a coach said, tasks out of a meeting. Keeping them apart is
   what lets you paste the summary without editing it first.
 - `:Case info` — the infocard. `e` to fill in Company/Priority/Tosca-Version/
-  Name/Notes as they become known — nothing here is required up front,
-  `:Case new`'s prompt chain only insists on a title.
+  Name/Notes as they become known — nothing here is required up front.
+  `:Case new`'s prompt chain doesn't insist on anything either besides the
+  case number itself (title/company/name/link can all be left blank, Enter
+  on empty) — the only value that has to be real is the one the folder gets
+  named after.
 - `:Case sync` — jumped straight into `Replies/` without ever running
   `:Case new` (e.g. a case that predates casedesk, or you deleted something
   by accident)? This adds back whatever blueprint pieces are missing,

@@ -35,6 +35,24 @@ end
 ---@param case_arg string|nil
 function M.new(case_arg)
   local function with_case(short)
+    -- The only truly required input: without a plausible number there's no
+    -- folder name to create. `kit.form`'s `required` only guards `<Esc>`
+    -- (see form.lua) — hitting Enter on an empty field submits "" and moves
+    -- on, so title/company/name/link are validated by their own absence
+    -- being harmless downstream, not by blocking here. An implausible
+    -- number (empty, "12", a stray word) used to reach `registry.new_dir`
+    -- unchecked and could land blueprint files straight in `Cases/Open/`
+    -- itself (see config.lua's `case_number_min_digits` comment).
+    if not render.is_plausible_case_number(short) then
+      notify.error(
+        ("not a case number: %q (expected %d-%d digits)"):format(
+          tostring(short),
+          config.case_number_min_digits,
+          config.case_number_max_digits
+        )
+      )
+      return
+    end
     if not fs_is_valid_filename(short) then
       notify.error("invalid case number: " .. tostring(short))
       return
@@ -46,12 +64,13 @@ function M.new(case_arg)
 
     kit.form({
       fields = {
-        { name = "title", label = "Title", required = true },
+        { name = "title", label = "Title" },
         { name = "company", label = "Company" },
         { name = "name", label = "Name" },
+        { name = "link", label = "Link (optional, e.g. SNOW ticket URL)" },
       },
       on_submit = function(values)
-        M.create(short, values.title, values.company, values.name)
+        M.create(short, values.title, values.company, values.name, values.link)
       end,
     })
   end
@@ -67,15 +86,16 @@ function M.new(case_arg)
 end
 
 ---@param short string
----@param title string
+---@param title string|nil
 ---@param company string|nil
 ---@param name string|nil
-function M.create(short, title, company, name)
+---@param link string|nil
+function M.create(short, title, company, name, link)
   local dir = registry.new_dir(short)
   local year = os.date("%Y")
   local tokens = {
     case = short,
-    title = title,
+    title = (title and title ~= "") and title or nil,
     company = (company and company ~= "") and company or nil,
     name = (name and name ~= "") and name or nil,
     year = year,
@@ -107,11 +127,11 @@ function M.create(short, title, company, name)
       meta.write(dir, {
         case = short,
         year = year,
-        title = title,
+        title = tokens.title,
         company = tokens.company,
         name = tokens.name,
         notes = "",
-        links = {},
+        links = (link and link ~= "") and { link } or {},
         blueprint = blueprint_name,
         created = os.date("!%Y-%m-%dT%H:%M:%SZ"),
       })

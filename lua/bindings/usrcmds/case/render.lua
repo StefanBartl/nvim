@@ -38,6 +38,24 @@ function M.to_short(raw)
   return short or raw
 end
 
+--- Plausibility check for a short case number — all-digit, within
+--- `config.case_number_min_digits`/`_max_digits`. NOT a check that the
+--- number exists in SNOW (that's `registry.exists`); this only guards
+--- against garbage (empty, "12", a stray word) reaching `registry.new_dir`
+--- and being used as a folder name.
+---@param short string|nil
+---@return boolean
+function M.is_plausible_case_number(short)
+  if not short or short == "" then
+    return false
+  end
+  if not short:match("^%d+$") then
+    return false
+  end
+  local len = #short
+  return len >= config.case_number_min_digits and len <= config.case_number_max_digits
+end
+
 --- The mandated level-1 headline for a case markdown file.
 ---@param case string
 ---@param title string|nil

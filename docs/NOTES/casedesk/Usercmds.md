@@ -19,7 +19,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 
 | Command | Args | What |
 | --- | --- | --- |
-| `:Case new [nr]` | case number, prompts for the rest | Prompt chain (title/company/name) → dry-run plan → confirm → scaffold. Respects `config.company_blueprints` if the company entered maps to one. |
+| `:Case new [nr]` | case number, prompts for the rest | Prompt chain (title/company/name/link) → dry-run plan → confirm → scaffold. Respects `config.company_blueprints` if the company entered maps to one. Only the case number is actually required (`config.case_number_min_digits`–`_max_digits` plausible digits) — every other field can be left blank (Enter on empty) without crashing or half-creating anything |
 | `:Case info [nr]` | — | Infocard (`kit.viewer`) — `e` edit, `s` summary, `o` open folder, `q` close |
 | `:Case summary [nr]` | — | Open `Summary.md` — the **ServiceNow-facing** document (fixed four-section template, no markdown; see Notes below) |
 | `:Case notes [nr]` | — | Open `Notes.md` — your **private** work notes (what was tried, coach input, meeting tasks) |
