@@ -1,6 +1,5 @@
 # Roadmap
 
-`:MyPlugins check` bzw wei icg es so oft brauce `:MyPluginsCheck` -> soll das gleivhe machen wie `:Reposcope status $REPOS_DIR`
 :Image show oder leader im funkltnieren und zeigen das image under einem markdwon link, aber filetree.nvim weder tab nch cr machen irgendwas, gar kein respoponse wnenn die file ode ein iimage ist
 
 - pdfport.nvim - pdf erstellings funkiton zb pandoc
