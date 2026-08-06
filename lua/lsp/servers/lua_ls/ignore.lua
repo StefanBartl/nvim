@@ -13,6 +13,8 @@
 --- - Comments in code are in English as requested.
 --- - This module does textual normalization only; it does not perform IO.
 
+local sys_env = require("lib.nvim.system.env")
+
 local M = {}
 
 --- Raw list of directory names commonly ignored.
@@ -36,8 +38,7 @@ local function normalize_for_platform(s)
   s = s:gsub("[/\\]+$", "")
 
   -- On Windows, lower-case for case-insensitive comparison
-  -- package.config:sub(1,1) returns '\' on Windows, '/' on Unix
-  if package.config:sub(1, 1) == "\\" then
+  if sys_env.get().is_windows then
     s = s:lower()
   end
 

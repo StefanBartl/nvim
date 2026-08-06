@@ -4,6 +4,7 @@
 --- Linux/macOS focused; works when Conform is available.
 
 local notify = require("lib.nvim.notify").create("[lsp.formatter.conform]")
+local sys_env = require("lib.nvim.system.env")
 
 local api = vim.api
 local fn = vim.fn
@@ -16,7 +17,7 @@ local M = {}
 -- Add mason/bin to PATH defensively (works even if mason isn't loaded yet)
 -- Keeps the user's PATH untouched beyond prepending a single path once.
 local function ensure_mason_in_path()
-  local sep = (package.config:sub(1, 1) == "\\") and ";" or ":"
+  local sep = sys_env.get().is_windows and ";" or ":"
   local mason_bin = fn.stdpath("data") .. "/mason/bin"
   local PATH = env.PATH or ""
   if not string.find(PATH, mason_bin, 1, true) then
@@ -36,7 +37,7 @@ local function resolve(cmd)
   local home = (uv.os_homedir and uv.os_homedir()) or os.getenv("HOME") or os.getenv("USERPROFILE") or ""
   ---@type string[]
   local candidates = {
-    fn.stdpath("data") .. "/mason/bin/" .. cmd .. (package.config:sub(1, 1) == "\\" and ".cmd" or ""),
+    fn.stdpath("data") .. "/mason/bin/" .. cmd .. (sys_env.get().is_windows and ".cmd" or ""),
     home .. "/.local/bin/" .. cmd,
     home .. "/.pyenv/shims/" .. cmd,
     home .. "/AppData/Roaming/Python/Scripts/" .. cmd .. ".exe",

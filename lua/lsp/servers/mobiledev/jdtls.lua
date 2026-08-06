@@ -3,28 +3,14 @@
 --- Requires Java runtime.
 
 local notify = require("lib.nvim.notify").create("[lsp.servers.jdtls]")
+local executable = require("lib.nvim.cross.executable")
 
 local M = {}
 
 ---Find jdtls installation path
 ---@return string|nil
 local function find_jdtls()
-  local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
-  local sep = package.config:sub(1, 1) == "\\" and "\\" or "/"
-
-  local candidates = {
-    mason_bin .. sep .. "jdtls",
-    mason_bin .. sep .. "jdtls.cmd",  -- Windows
-    mason_bin .. "/jdtls",
-    vim.fn.exepath("jdtls"),
-  }
-
-  for _, path in ipairs(candidates) do
-    if path ~= "" and (vim.uv or vim.loop).fs_stat(path) then
-      return path
-    end
-  end
-  return nil
+  return executable.mason_bin("jdtls") or executable.path("jdtls")
 end
 
 ---Check if Java runtime is available

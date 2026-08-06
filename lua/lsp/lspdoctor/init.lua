@@ -26,7 +26,7 @@ require("lsp.lspdoctor.@types")
 
 local notify = require("lib.nvim.notify").create("[lspdoctor]")
 local map = require("lib.nvim.map")
-local usercmd = require("lib.nvim.usercmd")
+local composer = require("lib.nvim.usercmd.composer")
 
 local M = {}
 
@@ -212,33 +212,34 @@ function M.all(bufnr, use_scratch)
   }
 end
 
----Enable :LspDoctor user command
+---Enable :LspDoctor user command. `path = {}` is the verb's root route (no
+---literal subcommand word, matching the flat `:LspDoctor [mode]` grammar);
+---the composer's own enum validation replaces the hand-written "Unknown
+---mode" warning.
 ---@return nil
 function M.enable_usercmd()
-  usercmd.create("LspDoctor", function(ctx)
-    local arg = (ctx.args or ""):gsub("^%s+", ""):gsub("%s+$", "")
-    local use_scratch = ctx.bang
-
-    if arg == "" or arg == "all" then
-      M.all(0, use_scratch)
-    elseif arg == "health" then
-      M.health(0, use_scratch)
-    elseif arg == "debug" then
-      M.debug(0, use_scratch)
-    elseif arg == "quick" then
-      M.quick(0, use_scratch)
-    elseif arg == "deep" then
-      M.deep(0, use_scratch)
-    else
-      notify.warn("Unknown mode: " .. arg .. " (use: health|debug|quick|deep|all)")
-    end
-  end, {
+  composer.verb("LspDoctor", {
     bang = true,
-    nargs = "?",
-    complete = function()
-      return { "health", "debug", "quick", "deep", "all" }
-    end,
     desc = "[LSP Doctor] Comprehensive LSP diagnostics (add ! for scratch buffer)",
+    routes = {
+      { path = {},
+        args = { { name = "mode", type = "STRING", enum = { "health", "debug", "quick", "deep", "all" }, optional = true } },
+        run = function(ctx)
+          local mode = ctx.args.mode or "all"
+          local use_scratch = ctx.bang
+          if mode == "all" then
+            M.all(0, use_scratch)
+          elseif mode == "health" then
+            M.health(0, use_scratch)
+          elseif mode == "debug" then
+            M.debug(0, use_scratch)
+          elseif mode == "quick" then
+            M.quick(0, use_scratch)
+          elseif mode == "deep" then
+            M.deep(0, use_scratch)
+          end
+        end },
+    },
   })
 end
 

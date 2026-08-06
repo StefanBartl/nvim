@@ -1,53 +1,35 @@
 ---@module 'lsp.tools.eslint_prettier.eslint.fix'
 --- Run eslint_d --fix on current file (uses resolved bin)
 local notify = require("lib.nvim.notify").create("[lsp.tools.eslint_prettier.eslint.fix]")
+local spawn_capture = require("lib.nvim.cross.uv.spawn_capture")
 
 local api = vim.api
 local eslint = require("lsp.tools.eslint_prettier.eslint")
 
 local M = {}
 
+---@param text string
+---@return string[] non-empty lines
+local function non_empty_lines(text)
+  local out = {}
+  for _, l in ipairs(vim.split(text, "\n", { plain = true })) do
+    if l ~= "" then
+      out[#out + 1] = l
+    end
+  end
+  return out
+end
+
 --- run async command and collect stdout/stderr
 ---@param argv string[] list of command + args
 ---@param opts table|nil
 local function run_cmd_collect(argv, opts)
   opts = opts or {}
-  local stdout = {}
-  local stderr = {}
-  local on_exit = opts.on_exit
-  local cwd = opts.cwd or nil
-
-  local jid = vim.fn.jobstart(argv, {
-    stdout_buffered = true,
-    stderr_buffered = true,
-    cwd = cwd,
-    on_stdout = function(_, data)
-      if data then
-        for _, l in ipairs(data) do
-          if l ~= "" then
-            table.insert(stdout, l)
-          end
-        end
-      end
-    end,
-    on_stderr = function(_, data)
-      if data then
-        for _, l in ipairs(data) do
-          if l ~= "" then
-            table.insert(stderr, l)
-          end
-        end
-      end
-    end,
-    on_exit = function(_, code)
-      if on_exit then
-        vim.schedule(function()
-          on_exit(code, stdout, stderr)
-        end)
-      end
-    end,
-  })
-  return jid
+  spawn_capture(argv, { cwd = opts.cwd }, function(result)
+    if opts.on_exit then
+      opts.on_exit(result.code, non_empty_lines(result.stdout), non_empty_lines(result.stderr))
+    end
+  end)
 end
 
 ---@param bufnr number|nil

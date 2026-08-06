@@ -1,6 +1,6 @@
 ---@module 'lsp.tools.eslint_prettier.eslint'
 --- eslint utilities and bin resolution
-local fn = vim.fn
+local executable = require("lib.nvim.cross.executable")
 
 local M = {
   eslint_bin = nil, -- resolved executable (string)
@@ -10,30 +10,7 @@ local M = {
 ---@param name string
 ---@return string|nil
 local function resolve_executable(name)
-  -- check direct in PATH
-  if fn.executable(name) == 1 then
-    return name
-  end
-
-  -- mason bin path: stdpath('data') .. '/mason/bin'
-  local mason_bin = fn.stdpath("data") .. "/mason/bin"
-  local platform_suffix = ""
-  if vim.uv.os_uname().sysname:match("Windows") or vim.fn.has("win32") == 1 then
-    platform_suffix = ".cmd"
-  end
-
-  local candidate = mason_bin .. "/" .. name .. platform_suffix
-  if fn.executable(candidate) == 1 then
-    return candidate
-  end
-
-  -- fallback try without suffix
-  candidate = mason_bin .. "/" .. name
-  if fn.executable(candidate) == 1 then
-    return candidate
-  end
-
-  return nil
+  return executable.exists(name) and name or executable.mason_bin(name)
 end
 
 function M.get_eslint_bin()

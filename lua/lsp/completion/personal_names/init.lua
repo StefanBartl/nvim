@@ -25,6 +25,7 @@
 local M = {}
 
 local notify = require("lib.nvim.notify").create("[lsp.completion.personal_names]")
+local json = require("lib.nvim.fs.json")
 
 local SOURCE_NAME = "personal_names"
 local STATE_FILE = vim.fs.joinpath(vim.fn.stdpath("state"), "personal_names_usage.json")
@@ -42,21 +43,14 @@ local function load_counts()
     return
   end
   counts_loaded = true
-  local ok, lines = pcall(vim.fn.readfile, STATE_FILE)
-  if not ok then
-    return
-  end
-  local ok2, decoded = pcall(vim.fn.json_decode, table.concat(lines, "\n"))
-  if ok2 and type(decoded) == "table" then
+  local decoded = json.read(STATE_FILE)
+  if type(decoded) == "table" then
     counts = decoded
   end
 end
 
 local function save_counts()
-  local ok, encoded = pcall(vim.fn.json_encode, counts)
-  if ok then
-    pcall(vim.fn.writefile, { encoded }, STATE_FILE)
-  end
+  json.write(STATE_FILE, counts)
 end
 
 ---Bump a label's use count and persist immediately — picking a completion is

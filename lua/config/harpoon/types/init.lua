@@ -34,7 +34,7 @@
 ---@type uv uv
 
 ---@class Cfg.Harpoon.HardeningState
----@field timer uv.uv_timer_t|nil        -- reusable libuv timer handle
+---@field handle Lib.Debounce.Handle|nil -- reusable lib.nvim.debounce handle
 ---@field debounce_ms integer            -- current debounce interval (ms)
 ---@field pending boolean                -- whether there is pending work
 

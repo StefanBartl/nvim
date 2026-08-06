@@ -3,7 +3,7 @@
 --- Commands accept an optional argument; when omitted the current word (`<cword>`) is used.
 local notify = require("lib.nvim.notify").create("[lsp.tools.ts_type_lookup.cmds]")
 local usercmd = require("lib.nvim.usercmd")
-local window = require("lib.nvim.window")
+local viewer = require("lib.nvim.ui.kit.viewer")
 
 local api = vim.api
 local lsp = vim.lsp
@@ -139,37 +139,29 @@ function M.peek_type_definition_for(symbol)
     local start_line = math.max(1, srow - 2)
     local end_line = math.min(#content, erow + 2)
     local lines = {}
-    table.insert(
-      lines,
-      ("[peek] %s:%d  — press 'o' to open in split, 'q' to close"):format(fn.fnamemodify(fname, ":."), srow)
-    )
     for i = start_line, end_line do
       table.insert(lines, content[i])
     end
-    local buf = api.nvim_create_buf(false, true)
-    api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     local width = math.min(120, math.max(60, math.floor(vim.o.columns * 0.6)))
     local height = math.min(20, #lines)
-    local opts = {
-      relative = "editor",
+    local surf = viewer.open({
+      lines = lines,
+      title = ("[peek] %s:%d — 'o' open in split, 'q' close"):format(fn.fnamemodify(fname, ":."), srow),
       width = width,
       height = height,
-      row = math.floor((vim.o.lines - height) / 2),
-      col = math.floor((vim.o.columns - width) / 2),
-      style = "minimal",
-      border = "rounded",
-    }
-    local win = api.nvim_open_win(buf, true, opts)
+    })
+    if not surf then
+      return
+    end
     -- map 'o' in preview to open actual location in vsplit
     -- ...use the correct module path here to call the internal helper.
     api.nvim_buf_set_keymap(
-      buf,
+      surf.bufnr,
       "n",
       "o",
       ("<cmd>lua require('lsp.tools.ts_type_lookup.cmds')._open_loc_in_split(%q,%d)<CR>"):format(fname, srow),
       { nowait = true, noremap = true, silent = true }
     )
-    window.nice_quit(win)
   end)
 end
 

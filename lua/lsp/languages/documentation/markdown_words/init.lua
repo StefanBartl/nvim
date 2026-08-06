@@ -20,6 +20,7 @@ local M = {}
 local Autocmd = require("lib.nvim.autocmd")
 local notify = require("lib.nvim.notify").create("[lsp.languages.documentation.markdown_words]")
 local usercmd = require("lib.nvim.usercmd")
+local debounce = require("lib.nvim.debounce")
 
 -- ============================================================================
 -- Guard: prevent double-setup
@@ -423,32 +424,19 @@ function M.setup(opts)
   -- -------------------------------------------------------------------------
   -- Debounced rebuild on directory change
   -- -------------------------------------------------------------------------
-  local debounce_timer = nil
+  local dir_changed_debounce = debounce.new(function()
+    -- Respect explicit user-set root
+    if state._user_root then return end
+
+    local new_root = (uv.cwd and uv.cwd()) or vim.fn.getcwd()
+    if new_root ~= state.root then
+      state.items = nil
+      rebuild_async(new_root, nil)
+    end
+  end, cfg.debounce_ms)
 
   Autocmd.create("DirChanged", function()
-    -- Cancel pending timer
-    if debounce_timer then
-      pcall(function()
-        debounce_timer:stop()
-        debounce_timer:close()
-      end)
-      debounce_timer = nil
-    end
-
-    debounce_timer = uv.new_timer()
-    if not debounce_timer then return end
-
-    debounce_timer:start(cfg.debounce_ms, 0, vim.schedule_wrap(function()
-      debounce_timer = nil
-      -- Respect explicit user-set root
-      if state._user_root then return end
-
-      local new_root = (uv.cwd and uv.cwd()) or vim.fn.getcwd()
-      if new_root ~= state.root then
-        state.items = nil
-        rebuild_async(new_root, nil)
-      end
-    end))
+    dir_changed_debounce.call()
   end, {
     group    = Autocmd.group("MdWordsDirChanged", true),
     desc = "[md_words] Debounced rebuild on cwd change",

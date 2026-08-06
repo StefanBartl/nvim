@@ -23,6 +23,7 @@ local notify = require("lib.nvim.notify").create("[config.harpoon.persist_paths]
 local M = {}
 
 local normkey = require("lib.nvim.fs.normkey")
+local json = require("lib.nvim.fs.json")
 local uv = vim.uv or vim.loop
 local ok_path, Path = pcall(require, "plenary.path")
 local sani = require("config.harpoon.utils.sanitize")
@@ -76,22 +77,12 @@ local USER_PINS_FILE = vim.fs.joinpath(vim.fn.stdpath("state"), "harpoon_user_pi
 
 ---@return string[]
 local function load_user_pins()
-  local st = uv.fs_stat(USER_PINS_FILE)
-  if not st or st.type ~= "file" then
+  if uv.fs_stat(USER_PINS_FILE) == nil then
     return {}
   end
-  local fd = uv.fs_open(USER_PINS_FILE, "r", 420)
-  if not fd then
-    return {}
-  end
-  local data = uv.fs_read(fd, st.size, 0) or ""
-  uv.fs_close(fd)
-  if data == "" then
-    return {}
-  end
-  local ok, decoded = pcall(vim.json.decode, data)
-  if not ok or type(decoded) ~= "table" then
-    notify.warn("[harpoon] user pins file is corrupt, ignoring: " .. USER_PINS_FILE)
+  local decoded, err = json.read(USER_PINS_FILE)
+  if type(decoded) ~= "table" then
+    notify.warn(("[harpoon] user pins file is corrupt, ignoring: %s (%s)"):format(USER_PINS_FILE, tostring(err)))
     return {}
   end
   local out = {} ---@type string[]
@@ -106,17 +97,11 @@ end
 ---@param pins string[]
 ---@return boolean ok
 local function save_user_pins(pins)
-  local dir = vim.fn.stdpath("state")
-  if uv.fs_stat(dir) == nil then
-    vim.fn.mkdir(dir, "p")
-  end
-  local fd = uv.fs_open(USER_PINS_FILE, "w", 420)
-  if not fd then
-    notify.error("[harpoon] could not write user pins file: " .. USER_PINS_FILE)
+  local ok, err = json.write(USER_PINS_FILE, pins)
+  if not ok then
+    notify.error(("[harpoon] could not write user pins file: %s (%s)"):format(USER_PINS_FILE, tostring(err)))
     return false
   end
-  uv.fs_write(fd, vim.json.encode(pins), 0)
-  uv.fs_close(fd)
   return true
 end
 

@@ -1,5 +1,7 @@
 ---@module 'bindings.mappings.terminal'
 
+local env = require("lib.nvim.system.env")
+
 local M = {}
 
 function M.setup()
@@ -23,7 +25,7 @@ function M.setup()
   map("t", "<C-l>", function()
     local term_id = vim.b.terminal_job_id
     if term_id then
-      local cmd = vim.fn.has("win32") == 1 and "cls" or "clear"
+      local cmd = env.get().is_windows and "cls" or "clear"
       vim.fn.chansend(term_id, { cmd, "" } )
     end
   end, { desc = "[term] terminal-insert-mode ctrl-l (clear) mapping" })

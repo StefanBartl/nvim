@@ -5,6 +5,7 @@
 ---   2. Individual files named "@types.lua" or "types.lua" outside those directories
 
 local notify = require("lib.nvim.notify").create("[lsp.servers.lua_ls.find_type_dirs]")
+local sys_env = require("lib.nvim.system.env")
 
 local uv = vim.loop or vim.uv
 local norm = vim.fs.normalize
@@ -55,11 +56,11 @@ return function(root, opts)
             goto inner_continue
           end
 
-          local sep = package.config:sub(1, 1) == "\\" and "\\" or "/"
+          local sep = sys_env.get().pathsep
           local child = norm(node.path .. sep .. name)
 
           if kind == "directory" then
-            local key = package.config:sub(1, 1) == "\\" and name:lower() or name
+            local key = sys_env.get().is_windows and name:lower() or name
 
             -- Skip ignored directories
             if ignore_set[key] then

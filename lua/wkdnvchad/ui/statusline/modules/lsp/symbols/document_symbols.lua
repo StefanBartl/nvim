@@ -1,8 +1,8 @@
 ---@module 'wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols'
 --- Fully async LSP document symbols with debouncing and proper error handling
 
-local notify = require("lib.nvim.notify").create("[wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols]")
 local Autocmd = require("lib.nvim.autocmd")
+local debounce_buffer = require("lib.nvim.debounce.buffer")
 
 local M = {}
 
@@ -36,10 +36,6 @@ local DEFAULT_KEEP_KINDS = {
 
 ---@type table<integer, WkdNvC.UI.Status.Modules.Lsp.Symbols.Doc.SymCache>
 M.__lsp_doc_cache = M.__lsp_doc_cache or {}
-
--- Debounce timer per buffer
----@type table<integer, uv.uv_timer_t>
-local debounce_timers = {}
 
 ---@nodiscard
 ---@param bufnr integer
@@ -177,6 +173,25 @@ local function request_doc_symbols_async(bufnr)
   end
 end
 
+---Per-buffer debounced trigger for `request_doc_symbols_async` — one
+---independent timer per bufnr, auto-cancelled on BufDelete/BufWipeout by
+---`lib.nvim.debounce.buffer` itself (see the module's own README), so the
+---manual `BufDelete` timer cleanup below is no longer needed.
+---@type Lib.Debounce.BufferHandle|nil
+local doc_symbols_debounce
+---@return Lib.Debounce.BufferHandle
+local function get_doc_symbols_debounce()
+  if not doc_symbols_debounce then
+    doc_symbols_debounce = debounce_buffer.new(function(bufnr)
+      local ok_valid, is_valid = pcall(api.nvim_buf_is_valid, bufnr)
+      if ok_valid and is_valid then
+        request_doc_symbols_async(bufnr)
+      end
+    end, { ms = get_options().debounce_ms or 250 })
+  end
+  return doc_symbols_debounce
+end
+
 ---@param bufnr integer
 local function ensure_doc_symbols_in_bg(bufnr)
   local opts = get_options()
@@ -199,35 +214,7 @@ local function ensure_doc_symbols_in_bg(bufnr)
     return
   end
 
-  -- Cancel existing timer
-  if debounce_timers[bufnr] then
-    debounce_timers[bufnr]:stop()
-    debounce_timers[bufnr]:close()
-    debounce_timers[bufnr] = nil
-  end
-
-  -- Create debounced timer
-  local timer = vim.uv.new_timer()
-  if not timer then
-    notify.warn("[wkdnvchad.statusline.modules.lsp.symbols.doc] timer is nil")
-    return nil
-  end
-  debounce_timers[bufnr] = timer
-
-  timer:start(opts.debounce_ms or 250, 0, vim.schedule_wrap(function()
-    -- Validate buffer still exists
-    local ok_valid, is_valid = pcall(api.nvim_buf_is_valid, bufnr)
-    if ok_valid and is_valid then
-      request_doc_symbols_async(bufnr)
-    end
-
-    -- Clean up timer
-    if debounce_timers[bufnr] then
-      debounce_timers[bufnr]:stop()
-      debounce_timers[bufnr]:close()
-      debounce_timers[bufnr] = nil
-    end
-  end))
+  get_doc_symbols_debounce().call(bufnr)
 end
 
 -- Auto-update setup
@@ -398,14 +385,11 @@ function M.symbol_context_smart()
   return nil
 end
 
--- Clean up on buffer delete
+-- Clean up on buffer delete. The debounce timer itself needs no cleanup
+-- here — lib.nvim.debounce.buffer cancels it via its own BufDelete/
+-- BufWipeout autocmd (see get_doc_symbols_debounce above).
 Autocmd.create("BufDelete", function(args)
   M.__lsp_doc_cache[args.buf] = nil
-  if debounce_timers[args.buf] then
-    debounce_timers[args.buf]:stop()
-    debounce_timers[args.buf]:close()
-    debounce_timers[args.buf] = nil
-  end
 end, {
   group = vim.api.nvim_create_augroup("WkdNvChadLspSymbolsCache", { clear = true }),
   desc = "Clear LSP symbols cache on buffer delete"

@@ -3,9 +3,8 @@
 --- This module tries multiple candidate executables and falls back to Mason's bin folder.
 --- It disables server formatting by default to avoid conflicts with external formatters.
 
-local loop = vim.loop
-local fn = vim.fn
 local lsp = vim.lsp
+local executable = require("lib.nvim.cross.executable")
 
 ---@class HtmlServer
 local M = {}
@@ -29,26 +28,7 @@ function M.setup(shared, opts)
     if not name or name == "" then
       return nil
     end
-    local path = fn.exepath(name)
-    if path and path ~= "" then
-      return path
-    end
-
-    -- mason bin fallback
-    local mason_bin = fn.stdpath("data") .. "/mason/bin/"
-    -- on windows, mason creates .CMD shims; test possible suffixes
-    if package.config:sub(1, 1) == "\\" then
-      if loop.fs_stat(mason_bin .. name .. ".cmd") then
-        return mason_bin .. name .. ".cmd"
-      end
-      if loop.fs_stat(mason_bin .. name .. ".exe") then
-        return mason_bin .. name .. ".exe"
-      end
-    end
-    if loop.fs_stat(mason_bin .. name) then
-      return mason_bin .. name
-    end
-    return nil
+    return executable.path(name) or executable.mason_bin(name)
   end
 
   local exe = nil

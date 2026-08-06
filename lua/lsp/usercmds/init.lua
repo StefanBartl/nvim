@@ -3,6 +3,7 @@
 --- Delegates to specialized submodules for each command
 
 local notify = require("lib.nvim.notify").create("[lsp.usrcmds] ")
+local composer = require("lib.nvim.usercmd.composer")
 
 local M = {}
 
@@ -118,28 +119,29 @@ function M.attach()
     desc = desc_tag .. "Show LSP information for current buffer",
   })
 
-  -- LspMdHints: toggle marksman's Hint-severity diagnostics ("lightbulb")
-  pcall(nvim_create_user_command, "LspMdHints", function(args)
-    local hints = require("lsp.servers.marksman.hints")
-    local arg = (args.args or ""):lower()
-
-    if arg == "" or arg == "toggle" then
-      hints.toggle()
-    elseif arg == "on" then
-      hints.set(true)
-    elseif arg == "off" then
-      hints.set(false)
-    elseif arg == "status" then
-      notify.info("Markdown hints: " .. (hints.enabled() and "on" or "off"))
-    else
-      notify.warn("Usage: :LspMdHints [on|off|toggle|status]")
-    end
-  end, {
-    nargs = "?",
-    complete = function()
-      return { "on", "off", "toggle", "status" }
-    end,
+  -- LspMdHints: toggle marksman's Hint-severity diagnostics ("lightbulb").
+  -- `path = {}` is the verb's root route (no literal subcommand word,
+  -- matching the flat `:LspMdHints [on|off|toggle|status]` grammar) — the
+  -- composer's own enum validation replaces the hand-written usage warning.
+  composer.verb("LspMdHints", {
     desc = desc_tag .. "Toggle marksman Hint-severity diagnostics (markdown 'lightbulb')",
+    routes = {
+      { path = {},
+        args = { { name = "mode", type = "STRING", enum = { "on", "off", "toggle", "status" }, optional = true } },
+        run = function(ctx)
+          local hints = require("lsp.servers.marksman.hints")
+          local mode = ctx.args.mode or "toggle"
+          if mode == "toggle" then
+            hints.toggle()
+          elseif mode == "on" then
+            hints.set(true)
+          elseif mode == "off" then
+            hints.set(false)
+          elseif mode == "status" then
+            notify.info("Markdown hints: " .. (hints.enabled() and "on" or "off"))
+          end
+        end },
+    },
   })
 end
 

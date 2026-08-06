@@ -1,25 +1,11 @@
 ---@module 'lsp.tools.eslint_prettier.prettier'
-local fn = vim.fn
+local executable = require("lib.nvim.cross.executable")
 local M = { prettier_bin = nil }
 
+---@param name string
+---@return string|nil
 local function resolve_executable(name)
-  if fn.executable(name) == 1 then
-    return name
-  end
-  local mason_bin = fn.stdpath("data") .. "/mason/bin"
-  local suffix = ""
-  if vim.uv.os_uname().sysname:match("Windows") or fn.has("win32") == 1 then
-    suffix = ".cmd"
-  end
-  local candidate = mason_bin .. "/" .. name .. suffix
-  if fn.executable(candidate) == 1 then
-    return candidate
-  end
-  candidate = mason_bin .. "/" .. name
-  if fn.executable(candidate) == 1 then
-    return candidate
-  end
-  return nil
+  return executable.exists(name) and name or executable.mason_bin(name)
 end
 
 function M.get_prettier_bin()

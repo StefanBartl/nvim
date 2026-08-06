@@ -21,6 +21,8 @@
 --- Core's `vim.ui.open(path, { cmd = ... })` option lets us swap the
 --- launcher per call instead of globally, so paths keep the default.
 
+local env = require("lib.nvim.system.env")
+
 local M = {}
 
 ---Whether `target` is a URL/URI rather than a filesystem path. Requires a
@@ -33,7 +35,7 @@ local function is_url(target)
 end
 
 function M.setup()
-  if vim.fn.has("win32") == 0 then
+  if not env.get().is_windows then
     return
   end
 

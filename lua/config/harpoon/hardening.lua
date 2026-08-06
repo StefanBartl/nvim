@@ -12,17 +12,16 @@
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.hardening]")
 local Autocmd = require("lib.nvim.autocmd")
+local debounce = require("lib.nvim.debounce")
 
 local M = {}
 
----@type uv uv
-local uv = vim.uv or vim.loop
 local api = vim.api
 
 -- Internal state (local to avoid polluting globals)
 local STATE = { ---@type Cfg.Harpoon.HardeningState
   wrapped_ui = false,
-  timer = nil,
+  handle = nil,
   pending = false,
   debounce_ms = 200,
   augroup = nil,
@@ -64,40 +63,32 @@ local function _save_now()
   return false
 end
 
---- Create or reuse a single uv timer for debouncing
+--- Create or reuse a single debounce handle.
 ---@param ms integer
 local function _ensure_timer(ms)
-  if STATE.timer and not STATE.timer:is_closing() then
-    STATE.debounce_ms = ms
+  if STATE.handle then
     return
   end
-
-  STATE.timer = uv.new_timer()
   STATE.debounce_ms = ms
+  STATE.handle = debounce.new(function()
+    STATE.pending = false
+    _save_now()
+  end, ms)
 end
 
 --- Schedule a debounced save
 local function _debounced_save()
-  if not STATE.timer then
+  if not STATE.handle then
     _ensure_timer(STATE.debounce_ms)
   end
   STATE.pending = true
-  STATE.timer:stop()
-  STATE.timer:start(STATE.debounce_ms, 0, function()
-    if not STATE.pending then
-      return
-    end
-    STATE.pending = false
-    vim.schedule(function()
-      _save_now()
-    end)
-  end)
+  STATE.handle.call()
 end
 
 --- Flush pending debounced save immediately (used on VimLeavePre).
 local function _flush_now()
-  if STATE.timer and not STATE.timer:is_closing() then
-    STATE.timer:stop()
+  if STATE.handle then
+    STATE.handle.cancel()
   end
   if STATE.pending then
     STATE.pending = false

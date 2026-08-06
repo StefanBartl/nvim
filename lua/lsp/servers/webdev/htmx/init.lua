@@ -2,32 +2,14 @@
 --- HTMX Language Server für HTMX-Attribute
 
 local notify = require("lib.nvim.notify").create("[lsp.servers.webdev.htmx_lsp]")
+local executable = require("lib.nvim.cross.executable")
 
 local M = {}
 
 ---Find htmx-lsp executable
 ---@return string|nil
 local function find_htmx_lsp()
-  if vim.fn.executable("htmx-lsp") == 1 then
-    return vim.fn.exepath("htmx-lsp")
-  end
-
-  local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
-  local sep = package.config:sub(1, 1) == "\\" and "\\" or "/"
-
-  local candidates = {
-    mason_bin .. sep .. "htmx-lsp",
-    mason_bin .. sep .. "htmx-lsp.exe",
-    mason_bin .. sep .. "htmx-lsp.cmd",
-  }
-
-  for _, path in ipairs(candidates) do
-    if (vim.uv or vim.loop).fs_stat(path) then
-      return path
-    end
-  end
-
-  return nil
+  return executable.path("htmx-lsp") or executable.mason_bin("htmx-lsp")
 end
 
 ---@param shared {capabilities?:table,on_attach?:fun(client,bufnr),on_init?:fun(client,init_result):boolean}|nil
