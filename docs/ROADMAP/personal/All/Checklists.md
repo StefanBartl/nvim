@@ -56,7 +56,7 @@ darunter, sofern relevant.
 | color_my_ascii.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | recommender.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | mdview.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| images.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| images.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 
 ---
 
@@ -239,3 +239,63 @@ durchgängig `@module`/`@brief`/`@description`, `@param`/`@return`, `@types/init
 Schwester-Plugin-Konvention); zentrale Bindings-Sammlung unter
 `nvim/docs/NOTES/PersonelPlugins/BINDINGS/` wurde nicht neu geprüft (aus Zeitgründen, `docs/BINDINGS.md`
 im Repo selbst ist bereits vollständig). Alles committet (`fc3a4a4`) und nach `origin/main` gepusht.
+
+### images.nvim
+
+Von allen bisher geprüften Plugins das sauberste: 34 Lua-Dateien, durchgängig `@module`/`@brief`/
+`@description`, vollständige `@param`/`@return` mit `@types/init.lua`, `config/DEFAULTS.lua` +
+`config/init.lua`, `.luarc.json` (`diagnostics.globals=["vim"]`, `workspace.library`), CI
+(luacheck + headless `TESTS/run.lua`, 10 Specs, + ein `gen_map.lua --check`-Job für die
+`documentation.nvim`-Modulkarte) bereits vorhanden — und explizit im Quellcode selbst dokumentiert
+(`init.lua`s Kopfkommentar beschreibt das Fail-late-Muster wörtlich, `docs/ROADMAP/README.md` nennt
+"Low-Level meldet nicht" als eine von drei festen Leitplanken). Dieser Pass fand entsprechend nur
+Tooling-/Doku-Lücken, keinen einzigen Codefix:
+
+- **PERFORMANCE.md**: kein echter Hotpath — `:Image`-Befehle laufen je einmal pro Aufruf,
+  `gallery.lua`/`terminal.lua` bauen Platzierungen bzw. den OSC-Payload bereits per `t[#t+1]`/
+  `table.concat` statt `table.insert`/`..`-Loop auf. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig mit dokumentierten Soft-
+  Dependency-Fallbacks (`lib.nvim.ui.kit`, `markdown.nvim`, `snacks.picker`, `which-key`), saubere
+  Importreihenfolge, `ImagesNvim.Config` vollständig typisiert inkl. `string|false` für abschaltbare
+  Keymaps. Keine Änderung nötig.
+- **REVIEW.md §8 Tooling**: `.luarc.json` vorhanden und äquivalent zu `sessions.nvim`s, aber
+  `.luacheckrc` und `stylua.toml` fehlten komplett (jedes andere geprüfte Plugin mit CI hat beide) —
+  ergänzt, angelehnt an `markdown.nvim`/`cascade.nvim` (`collapse_simple_statement =
+  "ConditionalOnly"`, passend zum bereits im Code verwendeten Guard-Clause-Stil). `stylua --write`
+  mit dieser Config über `lua/`, `plugin/`, `scripts/`, `TESTS/` laufen lassen (reine Formatierung,
+  Logik unverändert) und einen `stylua --check`-Schritt in `.github/workflows/ci.yml`s `lint`-Job
+  ergänzt (vorher nur `luacheck`). `luacheck`/`stylua --check`/Testsuite (10/10) danach grün;
+  `gen_map.lua --check` initial "stale" (Map bettet Quelltext ein, das sich durch die Reformatierung
+  geändert hatte) — mit `gen_map.lua` neu erzeugt und committet.
+- **RELEASE.md**: README (Englisch, ASCII-Art, Badges, Schwesterplugin-Absatz zu markdown.nvim,
+  Installationsblock mit explizitem `ft = {...}`, `lib.nvim`-Dependency deklariert) war bereits
+  release-reif — nur das Level-2-only Table of Contents fehlte, ergänzt. `doc/images.txt` (9
+  Abschnitte, jeder Befehl/jede Lua-API-Funktion dokumentiert), `docs/BINDINGS.md` (alle 19
+  Subcommands, 6 Keymaps, 5 Autocmd-Einträge), `docs/ROADMAP/{README,FEATURES,CROSS-PLUGIN,
+  TERMINALS}.md`, `:checkhealth images` (Terminal-Ausgabe, Terminal-Erkennung, Clipboard-Tool pro
+  Plattform, lib.nvim/markdown.nvim-Deps) bereits vollständig und aktuell. GitHub-Metadaten
+  (`gh repo view`) bereits vollständig gesetzt: Description, 10 Topics, Default-Branch `main`, leeres
+  Homepage-Feld (Schwester-Plugin-Konvention), keine LICENSE-Datei/-Referenz — keine Änderung nötig.
+  Cross-Plattform: keine hartkodierten Backslash-Pfadtrenner; alle Pfad-Joins laufen über `/`
+  (Windows-tauglich), die einzigen `\\`-Vorkommen sind bewusste `gsub("\\", "/")`-Normalisierungen
+  in `resolve.lua`/`paste.lua` (mit ausführlichem Kommentar, warum `fnamemodify` unter Windows
+  gemischte Trenner liefern kann) — kein `lib.nvim.cross`-Bedarf, da nichts plattformspezifisch
+  verzweigt außer `paste.lua`/`health.lua`s bereits korrekten `has("win32")`/`has("mac")`-Zweigen für
+  das Clipboard-Tool.
+- **Refactoring.md**: Fail-late/Report-at-boundary bereits vollständig eingehalten — geprüft in
+  `browse.lua`, `compare.lua`, `zen.lua`, `guard.lua`, `paste.lua`, `init.lua`: alle `notify()`-
+  Aufrufe sitzen an der Befehls-Einstiegsstelle (`M.open`/`M.run`/`M.replace`/`M.check`/die
+  öffentlichen `images.*`-Funktionen), nie in `terminal.lua`, `gallery.lua`, `scan.lua`,
+  `resolve.lua`, `info.lua`, `orphans.lua` — die geben durchweg nur `ok, err` zurück. `guard.lua`
+  zentralisiert das `warned`-Flag bewusst für drei Aufrufer (`init`, `browse`, `zen`) statt jeder
+  Aufrufer sein eigenes mitschleppt — im Modulkommentar selbst begründet. Keine Änderung nötig.
+
+Zusätzlich zentrale Bindings-Sammlung (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/`) geprüft und
+korrigiert: `Keymaps/images.nvim.md` war aktuell; `Usercmds/images.nvim.md` fehlten sechs
+Subcommands (`replace`, `orphans`, `pickers`, `compare`, `zen`, `check` — das Plugin ist seit der
+ersten Fassung des Sheets gewachsen), ergänzt; `Autocmds/images.nvim.md` existierte noch gar nicht,
+neu angelegt (5 Einträge, deckungsgleich mit `docs/BINDINGS.md` im Repo).
+
+Übersprungen/nicht verifizierbar: nichts — alle Prüfpunkte waren direkt einsehbar oder per
+`luacheck`/`stylua`/`nvim --headless -l TESTS/run.lua`/`nvim --headless -l scripts/gen_map.lua
+--check` lokal verifizierbar. Alles committet (`07e9f18`) und nach `origin/main` gepusht.

@@ -3,6 +3,7 @@
 Buffer-lokal registriert für die Filetypes aus `keymaps.filetypes`
 (default: `markdown`, `vimwiki`, `norg`, `text`).
 Source: `lua/images/bindings/keymaps.lua`
+Cross-reference: `docs/BINDINGS.md` (current, includes autocmds/usercmds too).
 
 | Key | Mode | Effect | Option |
 | --- | --- | --- | --- |
@@ -42,3 +43,11 @@ require("images").setup({
 - **`<leader>iv` statt `<leader>ip` für paste**: `ip` ist bereits die
   Rückwärts-Navigation, und `v` liegt näher an „einfügen" als das doppelt
   belegte `p`.
+
+- **Nur fünf Keymaps trotz vielen Subcommands**: `:Image replace/orphans/
+  pickers/compare/zen/check` sind bewusst nicht verdrahtet — seltener
+  gebrauchte oder Argument-tragende Befehle (Pfad/Scope) eignen sich schlecht
+  für eine feste Taste; sie bleiben Usercommand-only (siehe Usercmds-Sheet).
+
+- 2026-08-06: bei der Checklisten-Runde gegengeprüft — Inhalt stimmt weiterhin
+  mit `bindings/keymaps.lua` überein, keine Änderung nötig.

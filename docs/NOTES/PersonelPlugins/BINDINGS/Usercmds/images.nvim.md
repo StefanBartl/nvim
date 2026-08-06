@@ -17,8 +17,14 @@ Docs: `docs/BINDINGS.md`, `docs/ROADMAP/`, `README.md`, `doc/images.txt`
 | `:Image prev` | — | Rückwärts; beide laufen um |
 | `:Image info [path]` | — | Format, Abmessungen, Dateigröße |
 | `:Image paste` | — | Bild aus der Zwischenablage ablegen und verlinken |
+| `:Image replace [path]` | — | Bestehendes Bild durch Zwischenablage ersetzen, Link bleibt gleich |
+| `:Image orphans` | — | Unverlinkte Bilder in `paste.dir` finden, mit Bestätigung löschen |
+| `:Image pickers [cfile\|cwd\|path] [dir]` | — | Bilder unterhalb eines Scopes durchsuchen, Live-Vorschau mit snacks.picker |
+| `:Image compare [cfile\|cwd\|path] [dir]` | — | Zwei Bilder aus einem Scan auswählen, nebeneinander vergleichen |
+| `:Image zen [path]` | — | Bild groß in einem editierbaren Fenster zeigen (kein Preview-Float) |
 | `:Image pin` | — | Anzeige festhalten statt bei Cursorbewegung aufzuräumen |
-| `:Image clear` | — | Angezeigte Bilder entfernen, Pin lösen |
+| `:Image check` | — | Terminal-Fähigkeit neu prüfen und melden |
+| `:Image clear` | — | Angezeigte Bilder entfernen, Pin lösen, offenes Zen-Fenster schließen |
 
 Der Command-Name folgt der Option `command`.
 
@@ -54,3 +60,19 @@ Der Command-Name folgt der Option `command`.
   der nächsten Cursorbewegung (außer nach `:Image pin`). Echtes Inline setzt
   Unicode-Placeholders voraus, die nur Kitty und Ghostty können; beide gibt es
   für Windows nicht.
+
+- **`:Image pickers`/`:Image compare`** durchsuchen das Dateisystem selbst
+  (anders als `list`, das nur Bildlinks *im Buffer* sammelt) — mit
+  Live-Vorschau über `snacks.picker`, falls installiert, sonst ein einfacher
+  `vim.ui.select`-Fallback ohne Vorschau. `<Tab>` multi-selektiert in snacks;
+  mehr als eine Auswahl zeigt eine Galerie statt eines Einzelbilds.
+
+- **`:Image zen`** öffnet ein echtes, editierbares Fenster (`lib.nvim.window.
+  make_scratch`) statt eines Preview-Floats — bleibt bestehen, auch wenn
+  daneben ein snacks-Hover-Popup aufgeht, das an Fokusverlust gekoppelt wäre.
+
+- 2026-08-06: Sheet war seit der ersten Fassung veraltet — `replace`,
+  `orphans`, `pickers`, `compare`, `zen` und `check` fehlten komplett (das
+  Plugin ist seither um diese Subcommands gewachsen). Bei der
+  Checklisten-Runde gegen `bindings/usrcmds.lua` und `docs/BINDINGS.md`
+  nachgezogen.
