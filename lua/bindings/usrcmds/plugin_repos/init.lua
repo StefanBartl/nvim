@@ -414,6 +414,86 @@ local function update_all(path, only_name)
 end
 
 -- =============================================================================
+-- Check (read-only git-status overview, scoped to the listed plugins)
+-- =============================================================================
+
+---Same job as `reposcope.nvim`'s `:Reposcope status $REPOS_DIR`, but scoped
+---to `plugins.personal.list` like every other `:MyPlugins` subcommand —
+---never a directory scan (see the module-level note on why that distinction
+---matters for `$REPOS_DIR`). Runs `git status` on every present listed repo
+---in parallel (read-only, so unlike fetch/pull/clone there's no shared
+---network/disk budget worth serializing for) and shows the aligned overview
+---in a `kit.viewer` popup.
+---@param path string|nil
+---@param only_name string|nil
+local function check_all(path, only_name)
+  local present, base_dir = present_listed_names(path, only_name)
+  if not present then
+    return
+  end
+  if #present == 0 then
+    notify.info("None of the listed plugins are present in " .. tostring(base_dir))
+    return
+  end
+
+  local prog = new_progress("[usrcmds.plugin_repos] checking status")
+  notify.info(("Reading status of %d plugin(s) in %s..."):format(#present, base_dir))
+
+  ---@type table<integer, PluginRepoStatusRecord>
+  local indexed = {}
+  ---@type string[]
+  local errors = {}
+  local total = #present
+  local remaining = total
+
+  local function finish()
+    remaining = remaining - 1
+    if prog then
+      prog:update({ text = ("%d of %d read"):format(total - remaining, total), current = total - remaining, total = total })
+    end
+    if remaining > 0 then
+      return
+    end
+    if prog then
+      prog:finish(("read %d of %d repositories"):format(total - #errors, total))
+    end
+
+    ---@type PluginRepoStatusRecord[]
+    local records = {}
+    for i = 1, total do
+      if indexed[i] then
+        records[#records + 1] = indexed[i]
+      end
+    end
+
+    if #records == 0 then
+      notify.error("Failed to read status of every plugin:\n" .. table.concat(errors, "\n"))
+      return
+    end
+
+    local lines = ops.render_status(records)
+    if #errors > 0 then
+      lines[#lines + 1] = ""
+      lines[#lines + 1] = "Failed:"
+      vim.list_extend(lines, errors)
+    end
+
+    require("lib.nvim.ui.kit").viewer({ title = "MyPlugins check", lines = lines })
+  end
+
+  for i, name in ipairs(present) do
+    ops.status_one(base_dir .. "/" .. name, name, function(record, err)
+      if record then
+        indexed[i] = record
+      else
+        errors[#errors + 1] = name .. ": " .. (err or "unknown error")
+      end
+      finish()
+    end)
+  end
+end
+
+-- =============================================================================
 -- Reclone (delete-if-clean + fresh clone; clone outright if not present)
 -- =============================================================================
 
@@ -783,6 +863,12 @@ function M.enable()
         desc = "Fetch + fast-forward pull every present listed plugin (or just --only=<name>) — brings this machine level with another machine's pushed commits",
         run = function(ctx) update_all(ctx.args.dir, ctx.flags.only) end },
 
+      { path = { "check" },
+        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+        flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+        desc = "Show a read-only git-status overview (branch, ahead/behind, dirty) of every present listed plugin (or just --only=<name>) — same idea as reposcope.nvim's :Reposcope status, scoped to the listed plugins",
+        run = function(ctx) check_all(ctx.args.dir, ctx.flags.only) end },
+
       { path = { "reclone" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
         flags = { { name = "only", type = "MYPLUGINS_NAME" } },
@@ -804,6 +890,24 @@ function M.enable()
         desc = "List every plugin in plugins.personal.list and whether it's present in dir/$REPOS_DIR",
         run = function(ctx) list_all(ctx.args.dir) end },
     },
+  })
+
+  -- Flat shorthand for the subcommand used often enough to want a single
+  -- word: `:MyPluginsCheck [dir]` is exactly `:MyPlugins check [dir]`, same
+  -- as `:Reposcope status $REPOS_DIR` but scoped to the listed plugins.
+  vim.api.nvim_create_user_command("MyPluginsCheck", function(cmd_opts)
+    check_all(cmd_opts.args ~= "" and expand_path(cmd_opts.args) or nil, nil)
+  end, {
+    nargs = "?",
+    complete = function(arg_lead)
+      local candidates = {}
+      if env.REPOS_DIR and env.REPOS_DIR ~= "" and ("$REPOS_DIR"):sub(1, #arg_lead) == arg_lead then
+        candidates[#candidates + 1] = "$REPOS_DIR"
+      end
+      vim.list_extend(candidates, fn.getcompletion(arg_lead, "dir"))
+      return candidates
+    end,
+    desc = "Shorthand for :MyPlugins check [dir] — git-status overview of the listed plugins",
   })
 end
 
