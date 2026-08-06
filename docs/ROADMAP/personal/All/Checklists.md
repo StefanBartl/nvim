@@ -50,7 +50,7 @@ darunter, sofern relevant.
 | emojis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | github_stats.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4. FILE TYPES (MARKDOWN & DOCUMENTS) |||||||
-| cascade.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| cascade.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | pdfport.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | markdown.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | color_my_ascii.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -608,3 +608,70 @@ stattdessen per `gh run list` gegen die bestehende `ubuntu-latest`-CI (grün vor
 Pass). Zentrale Bindings-Sammlung
 (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/pdfport.nvim.md`) geprüft
 und aktualisiert — siehe unten. Alles committet (`8781b98`) und nach `origin/main` gepusht.
+
+### cascade.nvim
+
+Bereits mehrfach eigenständig auditiert (siehe `docs/ROADMAP/ROADMAP.md`s "Qualität &
+Checklist-Audits"-Abschnitt: gegen "Arch&Coding", die Master-Checklist und den
+Filetree-Feature-Katalog — alle drei abgeschlossen, die zugehörigen Audit-Dateien inzwischen
+entfernt). 45 Lua-Dateien, durchgängig `@module`/`@brief`/`@description`, vollständige
+`@param`/`@return` (Arität der geänderten Funktionen gegen die tatsächlichen `return`-Statements
+verifiziert), ein konsolidiertes `@types/init.lua` pro Verzeichnisebene (`lua/cascade/@types/`,
+`lists/types/`, `cycle/types/` — bereits sauber nach Quelldatei gruppiert, keine Änderung nötig),
+`config/DEFAULTS.lua` + `config/init.lua` mit typisierten Keys, `.luarc.json`
+(`diagnostics.globals=["vim"]`, `workspace.library` — inhaltlich äquivalent zu sessions.nvim),
+`.luacheckrc`/`stylua.toml`/CI (stylua + luacheck + headless `docs/TESTS/run.lua` mit
+lib.nvim-Sibling-Checkout, 6 Specs) bereits vorhanden und grün. Dieser Pass fand entsprechend
+keinen einzigen Anti-Pattern-Fund in Fehlerbehandlung/Modularität/Buffer-Validierung/Cross-Plattform
+und keinen `notify()`-Verstoß (kein Aufrufer von `util/lib.lua`s `M.notify` existiert überhaupt im
+Plugin derzeit — die Funktion ist ein bereitstehender, ungenutzter Utility-Wrapper, kein
+Low-Level-Verstoß). Gefunden und behoben:
+
+- **PERFORMANCE.md — der einzige Codefix dieses Passes**: `lists/indent.lua`s `shift_line`
+  (Indent/Dedent + Subtree) und `shift_range` (Visual-Range-Shift) sowie `lists/transform.lua`s
+  `rotate`/`apply_order` (genutzt von `sort`/`reverse`)/`strip` riefen pro geänderter Zeile einen
+  eigenen `nvim_buf_set_lines`-Call auf — ein echter Hotpath, da ein Indent/Rotate/Sort/Strip über
+  einen großen Block/eine große Visual-Selection potenziell viele Zeilen trifft. `lists/renumber.lua`
+  im selben Verzeichnis hatte genau dieses Muster bereits vorher gelöst (im Kommentar dort explizit
+  begründet: ein `nvim_buf_set_lines`-Call ist billiger und gibt dem Markdown-Treesitter-Highlighter
+  einen sauberen zusammenhängenden Edit statt vieler verstreuter). Alle fünf Funktionen auf dasselbe
+  "im Speicher zusammenbauen, einmal committen"-Muster umgestellt — bei `transform.lua` zusätzlich
+  der Fall behandelt, dass Basis-Indent-Zeilen nicht zusammenhängend sind (tiefer eingerückte
+  Kind-Zeilen können dazwischenliegen). Mit manuellen Headless-Buffer-Tests verifiziert (Subtree-Shift
+  mit Gap-Closing, Rotate/Sort/Reverse/Strip mit dazwischenliegenden Kind-Zeilen, Blank-Line-Handling
+  — alle identisch zum vorherigen Verhalten).
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig über `util/lib.lua`s
+  geführte Brücke (`lib.map`, `lib.notify`, `lib.augroup`, Roman/Alpha-Konvertierung,
+  Case-Shape — alle mit dokumentiertem nativem Fallback), Buffer/Window-Handles validiert
+  (`core.context.writable`), Importreihenfolge eingehalten, Konfigurierbarkeit vollständig
+  (jeder Config-Key hat einen `@types`-Typ). Keine Änderung nötig.
+- **REVIEW.md**: Schnell-Check/Detailprüfung/Anti-Pattern-Check sauber — kein globaler State,
+  Single Responsibility pro Modul, `.luarc.json`/`.luacheckrc`/`stylua.toml` bereits korrekt
+  (§8 Tooling, identisch zum sessions.nvim-Muster). `stylua --check .`/`luacheck lua scripts
+  docs/TESTS`/die Headless-Suite liefen bereits vor jeder Änderung grün (0 Findings) und blieben es
+  danach.
+- **RELEASE.md**: README (Englisch, ASCII-Art, Badges, Level-2-only ToC, Schwesterplugin-Absatz zu
+  pickers.nvim), `docs/BINDINGS.md` (gegen den tatsächlichen Code in `bindings/{keymaps,usrcmds,
+  autocmds}.lua` verifiziert — deckungsgleich), `docs/ROADMAP/ROADMAP.md`, `:checkhealth cascade`
+  waren bereits vollständig und aktuell. **Ein Fund**: `doc/cascade.txt`s CONFIGURATION-Beispiel war
+  gegenüber `cascade.config.DEFAULTS` verwaist (fehlende `features`-Tabellen für `lists`/`cycle`,
+  fehlendes `cycle.features.date`, `precision`/`precision_nodes` fehlten komplett, `lists.renumber`
+  noch als bloßes Boolean statt der aktuellen Tabellenform) — korrigiert. GitHub-Metadaten
+  (`gh repo view`) bereits vollständig gesetzt: Description, 8 Topics, Default-Branch `main`, leeres
+  Homepage-Feld (Schwester-Plugin-Konvention), keine LICENSE-Datei/-Referenz. Cross-Plattform: keine
+  hartkodierten Pfadtrenner (der einzige `\\`-Treffer in `config/DEFAULTS.lua` ist ein Markdown-
+  Escape-Zeichen in einer Marker-Liste, kein Pfad-Join). CI (`gh run list`) war vor und nach diesem
+  Pass grün.
+- **Refactoring.md**: Fail-late/Report-at-boundary war bereits vollständig eingehalten — kein
+  Codefix nötig (siehe `notify()`-Befund oben).
+
+Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/cascade.nvim.md`) geprüft:
+alle drei bereits vollständig und deckungsgleich mit `docs/BINDINGS.md` im Repo (inkl. `<leader>cp`
+cycle_pick und der `:Cascade`-Bang-Positions-Historie) — keine Änderung nötig.
+
+Übersprungen/nicht verifizierbar: nichts — GitHub-Metadaten, `:checkhealth`, CI-Status und die
+zentrale Bindings-Sammlung waren alle direkt prüfbar oder per `stylua`/`luacheck`/der vollen
+Headless-Suite lokal verifizierbar (POSIX selbst nicht lokal testbar, Windows-Umgebung — wie bei
+den anderen Plugins über die `ubuntu-latest`-CI abgedeckt). Alles committet (`6602ae3`) und nach
+`origin/main` gepusht.
