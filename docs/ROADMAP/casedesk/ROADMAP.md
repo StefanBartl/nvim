@@ -12,6 +12,14 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 - [ ] **SLA-Überwachung** — eigenes Konzept: [SLA.md](SLA.md). Priorität aus
       dem Activity Stream, `config.sla`, Geschäftszeit-Rechnung, `:Case sla`
       / `:Cases sla`, Statusline-Badge, Warnungen für P1/P2.
+      Paket 1 steht; §3-Nachtrag (Uhr pausiert bei `Awaiting User Info`)
+      und §9.6 sind offen.
+- [ ] **Artefakt-Extraktion** — eigenes Konzept: [EXTRACTION.md](EXTRACTION.md).
+      `:Case versions [component]` aus `ToscaSupportInfo*.txt` (Digest statt
+      1600-Zeilen-Liste, Custom-DLL-Erkennung), Stream-Signale jenseits der
+      SLA-Uhr (Server-Version, Zustandshistorie, SAP Component, Fehlercodes,
+      KBAs), `:Case doclinks` als Versionsabgleich der Tricentis-Doku-Links,
+      und der Faktenblock als Fundament für die KI-Anbindung.
 - [ ] **Session pro Case** — eigenes Konzept: [SESSIONS.md](SESSIONS.md).
       Case-Nummer als Session-Name, Auto-Save bei `:Case new`, `<leader>cs`
       als einziger neuer Keymap (case-aware: speichert unter der Case-Nummer
@@ -42,6 +50,13 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 
 - [ ] casedesk: wenn ki weingebunden wird, dann soll immer gleidch passende refrenezen aius den tricentis docs paswend zu case gfunden werden und unter einer headline Links gesammelt. es soll agenau der abschnit und wrtlaut ausdem page zitiert werden, das brauhe ich für meine internen notizen mit den voahces, da soll der link headline abschnitt hin. Außerdem: Refrenzen zu bekannten standarwerken vorschoagen, primär auf englishc, gerne abe auhdeutsch also zb wenn es uj ceritifcaes bei tosca server geht, dann halt standard fachliteratur wie zertifikate genrelel und in windows im besinderen funktienren.. auch unter enen eigenen healine abshnitt "learning referenzen"
   - [ ] die farge nach ki einbindung sollten wir uns stellen: es gibt j a zwei variaten, einmlaml nur sprachbasiertes und heuritsik, und anderer ist die ki. ich habe in meiner nvim config C:\Users\StefanBartl\AppData\Local\nvim\lua\config\ai\ und  C:/Users/StefanBartl/AppData/Local/nvim/lua/plugins/ai/ wo ich schon mit ai konfiguriert habe. dementsprechend, ich habe auf meiner workstation und pc zugang zu meinen gemini, chat gpt und claude account, claude pro lizenz. eventuell ins konzept mitdenke
+  - → **Teilantwort in [EXTRACTION.md](EXTRACTION.md) §7:** kein
+    Entweder-oder. Was deterministisch parsebar ist (Versionen, Fristen,
+    Priorität, Zustände), gehört als Faktenblock in den Prompt statt in die
+    Verantwortung des Modells — und dient danach als Widerspruchsprüfung
+    für dessen Antwort. Die im Stream **bereits zitierten** Doku-Links sind
+    zudem eine Referenzsammlung ohne jeden KI-Aufruf; erst darüber hinaus
+    neue Quellen zu finden, ist die eigentliche KI-Aufgabe.
 
 ## Plugin-Check — was die eigenen Plugins beisteuern könnten
 

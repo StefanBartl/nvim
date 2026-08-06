@@ -14,6 +14,7 @@ Vorarbeit für einen eigenen `sla.lua`-Baustein.
 - [1. Warum das nicht aus dem Bestehenden fällt](#1-warum-das-nicht-aus-dem-bestehenden-fällt)
 - [2. Datenlage](#2-datenlage)
 - [3. Drei Uhren, nicht eine](#3-drei-uhren-nicht-eine)
+  - [Nachtrag: die Uhr steht nicht immer](#nachtrag-die-uhr-steht-nicht-immer)
 - [4. Geschäftszeit-Rechnung (der einzige echte Algorithmus)](#4-geschäftszeit-rechnung-der-einzige-echte-algorithmus)
 - [5. Datenmodell](#5-datenmodell)
   - [`config.sla`](#configsla)
@@ -64,16 +65,25 @@ Fast alles Nötige liegt bereits im Case-Ordner, es wird nur nicht ausgewertet.
 | **Letzte Kundennachricht** | Stream-Block: `Comment` + Timestamp + `Customer added a memo` + `from: <Name>` | sauber strukturiert, parsebar |
 | Zuweisung an mich | `Field changes` → `Assigned to` / `Stefan Bartl was Empty` | parsebar |
 | Produktfehler ja/nein | — | nicht ableitbar, entscheidet aber den Rückmeldetakt bei P3/P4 |
-| **Letzte gesendete Antwort** | — | **existiert nicht** |
+| **Zustandshistorie** | `Field changes` → `State` / `Active was Awaiting User Info` | parsebar; nachgetragen, siehe §3-Nachtrag |
+| **Letzte gesendete Antwort** | Stream: `Send to Customer, updates that transfer case ownership to the customer` | teilweise ableitbar, nachgetragen — siehe unten |
 
-Die letzte Zeile ist die einzige echte Lücke. `Replies/NN_Reply.md` ist ein
-*Entwurf*; seine mtime sagt, wann getippt wurde, nicht wann gesendet — und
-laut CONCEPT.md §8c/§8i geht bewusst nichts automatisch raus.
+Die letzte Zeile war ursprünglich als „existiert nicht" eingeschätzt. Die
+Stream-Analyse (EXTRACTION.md §4) hat einen brauchbaren Marker gefunden:
+`Send to Customer, updates that transfer case ownership to the customer`
+kennzeichnet genau die Antworten, mit denen der Ball zurück zum Kunden geht.
 
-**Billigste Lösung mit dem größten Hebel:** ein Zeitstempel `last_reply_sent`
-in `.case.json`, gesetzt durch `:Case sent` — oder, ohne neuen Befehl, durch
-eine Abschlussfrage in `:Case reply check`: „rausgeschickt? [y]". Ein Feld,
-ein Prompt, und die gesamte SLA-Mechanik wird exakt statt geraten.
+Das ersetzt den manuellen Stempel trotzdem **nicht** — der Stream ist nur so
+aktuell wie sein letztes Einfügen, und `Replies/NN_Reply.md` ist ein
+*Entwurf*, dessen mtime sagt, wann getippt wurde, nicht wann gesendet
+(CONCEPT.md §8c/§8i: es geht bewusst nichts automatisch raus). Der Marker
+ist die **Rückfallquelle**, wenn der Stempel fehlt.
+
+**Billigste Lösung mit dem größten Hebel** bleibt daher: ein Zeitstempel
+`last_reply_sent` in `.case.json`, gesetzt durch `:Case sent` — oder, ohne
+neuen Befehl, durch eine Abschlussfrage in `:Case reply check`:
+„rausgeschickt? [y]". Ein Feld, ein Prompt, und die SLA-Mechanik wird exakt
+statt geraten.
 
 ## 3. Drei Uhren, nicht eine
 
@@ -97,6 +107,28 @@ kann, dann diese.
 Korrekturmaßnahme sind Einmal-Deadlines ab Ticket-Eingang; die Rückmeldung
 setzt sich mit jeder gesendeten Antwort zurück. Das Datenmodell muss beide
 Formen tragen.
+
+### Nachtrag: die Uhr steht nicht immer
+
+Aus der Stream-Analyse in [EXTRACTION.md](EXTRACTION.md) §5 — dieses Kapitel
+war zu einfach gedacht. Cases stehen regelmäßig auf **`Awaiting User Info`**
+(in zwei der vier untersuchten Streams je zweimal hin und zurück). Solange
+sie das tun, liegt der Ball beim Kunden, und die Rückmeldungs-Uhr sollte
+**pausieren**:
+
+```
+Uhr läuft    in State = New | Active
+Uhr pausiert in State = Awaiting User Info
+```
+
+Ohne das zeigt das Tool gerissene Fristen an, obwohl korrekt gearbeitet
+wurde — und wird nach zwei Wochen nicht mehr angeschaut. Das ist exakt das
+Alarm-Müdigkeits-Risiko aus §8, nur mit konkreter Ursache.
+
+Die Zustandshistorie dafür ist vollständig aus dem Activity Stream
+ableitbar (`State` / `<neu> was <alt>`), kostet also kein neues Pflegefeld.
+Umsetzung: `states`-Liste in `sla/stream.lua`, Intervall-Filter in
+`clock.elapsed`. **Vorher** aber §9.6 klären.
 
 ## 4. Geschäftszeit-Rechnung (der einzige echte Algorithmus)
 
@@ -334,6 +366,16 @@ dem sich ein Rechenfehler lautlos versteckt.
    `last_reply_sent` bei *jeder* Antwort gesetzt wird.
 5. Soll `:Cases sla` auch `Closed/` einbeziehen (für den Report ja, für das
    Dashboard nein)?
+6. **Pausiert die Uhr bei `Awaiting User Info`?** (§3, Nachtrag) Fachlich
+   plausibel und in jedem Ticketsystem üblich — aber
+   `SLA_ServiceLevelAgreement.md` sagt dazu nichts Explizites. Bis das
+   geklärt ist, rechnet das Tool die Pausen **nicht** heraus und zeigt
+   stattdessen die Zustandshistorie mit an, damit der Unterschied sichtbar
+   bleibt statt versteckt zu werden. Gleiche Haltung wie bei §9.1.
+7. Zählt die **Zeitzone des Kunden** in die Bewertung hinein? In den
+   Streams stehen Arbeitszeiten wie `10:00 A.m-19:00 P.M [IST]`
+   (EXTRACTION.md §4.9) — eine Antwort um 17:00 CET erreicht IST niemanden
+   mehr. Für die SLA formal irrelevant, für die Praxis nicht.
 
 ## 10. Reihenfolge
 
