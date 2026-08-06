@@ -6,7 +6,7 @@
 
 ## Bugs
 
-- [ ] `:MDView` blankline
+- [ ] `:MDView` cursor funkltionert, aber nachdem ich ein paar files wechselte hat es dann nicht mehr geklappt, also auch nicht als ichMDView cursor off und dan nwieder on geamcht habe... apropops: eine toggle option mit default section wäre super
 
 ## FINISH
 

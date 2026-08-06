@@ -1,4 +1,8 @@
 # Roadmap
+
+`:MyPlugins check` bzw wei icg es so oft brauce `:MyPluginsCheck` -> soll das gleivhe machen wie `:Reposcope status $REPOS_DIR`
+:Image show oder leader im funkltnieren und zeigen das image under einem markdwon link, aber filetree.nvim weder tab nch cr machen irgendwas, gar kein respoponse wnenn die file ode ein iimage ist
+
 - pdfport.nvim - pdf erstellings funkiton zb pandoc
 
 - spotlight checken und lernen
@@ -20,11 +24,11 @@ Ein zusätzlicher Use-Case, den du nicht genannt hast und der für dich beruflic
 1. Alle plugin fähigen Module augliedern
 2. Funktionen/Module/ganze Custom Plugins, die man mit ffi über vc performanter machen könnte?
   1.  Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufen lassen, die mit nvim gemeinsam gestartet wir Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufe n lassen, die mit nvim gemeinsam gestartet wirdd
-3. `BINDINGS.lua`: In der Descrtiptionder Keymaps und Usrcmds: Das plugin selbst nicht nennen,, wie zb.: "[iletree]:" in fileteree.nvim keymap descreiption
-4. `/autcmds`
+-2. `BINDINGS.lua`: In der Descrtiptionder Keymaps und Usrcmds: Das plugin selbst nicht nennen,, wie zb.: "[iletree]:" in fileteree.nvim keymap descreiption
+3. `/autcmds`
   1. passt zu `/bindings` ?
   2. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
-5. Checklisten anwenden
+4. Checklisten anwenden
   1. ToDo's duchgehen
 
 ---
