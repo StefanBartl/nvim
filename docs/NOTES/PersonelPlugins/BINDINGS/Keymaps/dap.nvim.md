@@ -3,12 +3,17 @@
 Source: `lua/wkddap/bindings/keymaps/init.lua`, `M.setup(opts)`
 Cross-reference: `docs/BINDINGS.md` in this repo — verified accurate and complete.
 
-No-op unless `opts.enable` (`config.keymaps.enable`, default on). Uses bare
-`vim.keymap.set`, prefix `opts.prefix` (default `<leader>d`). Every mapping:
+No-op unless `opts.enable` (`config.keymaps.enable`, default on). Maps via
+`lib.nvim.map` when available, falling back to bare `vim.keymap.set`
+otherwise (since 2026-08-06 — `lib.nvim.map` doesn't ship yet; same
+`pcall(require, "lib.nvim.map")`-with-fallback pattern as `sessions.nvim`'s
+`bindings/keymaps/init.lua`; `health.lua` reports which one is active).
+Prefix `opts.prefix` (default `<leader>d`). Every mapping:
 `desc = "[DAP] " .. d, silent = true`. Wired from `bindings/init.lua` inside a
 `pcall`, since `keymaps.setup()` `require("dap")`s eagerly to bind functions
 directly — a missing nvim-dap degrades gracefully instead of aborting the
-rest of `setup()` (which-key/autocmds still get wired).
+rest of `setup()` (which-key/autocmds still get wired). `B`/`L` prompt via
+`lib.nvim.ui.kit.input` (non-blocking), not `vim.fn.input`.
 
 | lhs (after prefix) | mode | action | desc |
 | --- | --- | --- | --- |

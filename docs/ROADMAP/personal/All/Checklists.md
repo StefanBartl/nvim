@@ -43,7 +43,7 @@ darunter, sofern relevant.
 | reposcope.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY |||||||
 | debugging.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| dap.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| dap.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | diff.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | language.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | cmdlog.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -496,3 +496,62 @@ inhaltlich bereits aktuell und deckungsgleich mit `docs/BINDINGS.md`; korrigiert
 stale Aussage in `Usercmds/debugging.nvim.md` ("No CI for this repo" — CI wurde am 2026-07-30
 ergänzt, nach der dort dokumentierten `usercmd.composer`-Migration). Alles committet (`0e75b46`
 aus dem unterbrochenen Vorlauf, `8e2c080` aus diesem Pass) und nach `origin/main` gepusht.
+
+### dap.nvim
+
+Bereits sehr sauber: 43 Lua-Dateien, durchgängig `@module`, `@param`/`@return` (Arität gegen die
+tatsächlichen `return`-Statements der geänderten Funktionen verifiziert), `@types/init.lua`
+(einzelne Datei statt Ordner-pro-Unterverzeichnis — bei nur einer Config-Types-Datei sinnvoll,
+gleiche bewusste Ausnahme wie bei fileops.nvim/emojis.nvim), `config/DEFAULTS.lua` +
+`config/init.lua`, `.luarc.json` (inhaltlich über sessions.nvims Version hinaus: zusätzlich
+`workspace.ignoreDir`, `hint.*`), `.luacheckrc`/`stylua.toml`/CI (stylua + luacheck + headless
+plenary-Suite, 23 Specs über 4 Dateien) bereits vorhanden.
+
+- **PERFORMANCE.md**: kein echter Hotpath — alles läuft on-demand über Keymaps/`:Dap`-Subcommands
+  einmal pro Aufruf; die einzige Iteration mit Nutzer-Interaktion (`counted_step()`s DAP-
+  Listener-Kette für `vim.v.count1`) ist bereits auf `MAX_CHAINED_STEPS = 1000` gedeckelt und
+  räumt sich selbst über `event_terminated`/`event_exited` auf. Keine Änderung nötig.
+- **LUA_NVIM.md — zwei echte Funde**: `bindings/keymaps/init.lua` nutzte `vim.keymap.set` direkt
+  statt `lib.nvim.map` (das Modul existiert in `lib.nvim` noch gar nicht) — auf denselben
+  `pcall(require, "lib.nvim.map")`-mit-Fallback ergänzt, den `sessions.nvim`s
+  `bindings/keymaps/init.lua` bereits für genau diesen Fall etabliert hat; `health.lua` meldet
+  jetzt zusätzlich, ob `lib.nvim.map` verfügbar ist. `bindings/usercmds/init.lua`s
+  `conditional-breakpoint`/`log-point`-Routen benutzten noch blockierendes `vim.fn.input()`,
+  obwohl dieselben Prompts in `bindings/keymaps/init.lua` und `languages/*.lua` längst auf
+  `lib.nvim.ui.kit.input` migriert sind (siehe Git-Historie) — nachgezogen.
+- **REVIEW.md**: Schnell-Check/Detailprüfung sauber; `.luarc.json`/`.luacheckrc`/`stylua.toml`
+  bereits vorhanden und korrekt (§8 Tooling, kein Vergleich mit sessions.nvim nötig gewesen).
+  `stylua --check .` schlug initial auf `tests/wkddap/languages/program_prompt_spec.lua` fehl —
+  dieselbe Klasse von Fund wie bei replacer.nvim: `gh run list` zeigte die CI seit mehreren Commits
+  durchgehend `failure` auf exakt diesem stylua-Schritt. `stylua .` normalisiert (reine
+  Whitespace-Änderung); `luacheck`/`stylua --check`/die volle Headless-Suite (23/23) liefen danach
+  grün, und der nächste CI-Lauf war zum ersten Mal seit mehreren Commits wieder grün.
+- **RELEASE.md**: README (Englisch, ASCII-Art, Badges, Schwesterplugin-Absatz zu debugging.nvim —
+  bewusst beibehalten statt auf sessions.nvim/language.nvim umgestellt, da debugging.nvim
+  technisch näher verwandt ist: DAP-Sessions vs. Live-Editor-Introspektion desselben Debugging-
+  Workflows) fehlte nur das Level-2-only Table of Contents, ergänzt. `doc/wkddap.txt` trug bisher
+  nur `*wkddap.txt*`/`*dap.nvim*` als Tags, kein bloßes `*wkddap*` — `:h wkddap` lief damit ins
+  Leere; ergänzt. `docs/BINDINGS.md`/`docs/ROADMAP.md`/`:checkhealth wkddap` bereits vollständig
+  und aktuell. GitHub-Metadaten (`gh repo view`) bereits vollständig gesetzt: Description, 7
+  Topics, Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention), keine
+  LICENSE-Datei/-Referenz — keine Änderung nötig. Cross-Plattform — **ein echter Fund**:
+  `languages/python.lua`s `pythonPath` hängte hartkodiert `/bin/python` an `$VIRTUAL_ENV` an, was
+  unter Windows (`Scripts\python.exe`) bricht — jetzt über `lib.nvim.cross.is_windows()`
+  verzweigt und über `utils/paths.join()` zusammengesetzt. `languages/rust.lua`/`languages/zig.lua`
+  bauten ihren Default-Pfad-Vorschlag (`target/debug`, `zig-out/bin`) noch per `..`-Konkatenation
+  statt `utils/paths.join()` wie `c.lua`/`assembly.lua` — vereinheitlicht.
+- **Refactoring.md — der einzige weitere Codefix**: `registry.lua`s `register()` rief
+  `notify.warn`/`notify.error` selbst auf *und* gab `(false, err)` zurück; sein einziger Aufrufer
+  `adapters/init.lua` notifiziert bei `not ok` bereits selbst — jeder Registrierungsfehler wurde
+  also doppelt gemeldet. `register()`/`unregister()` geben jetzt nur noch Status zurück;
+  `register_all()` (ein eigenständiger, unbenutzter Public-API-Aggregationseinstieg ohne weiteren
+  Wrapper) behält sein `notify.warn` bewusst, da dort sonst niemand meldet.
+
+Übersprungen/nicht verifizierbar: nichts — GitHub-Metadaten, `:checkhealth`-Code, CI-Status (vor
+und nach dem Push per `gh run list` verifiziert) und die zentrale Bindings-Sammlung waren alle
+direkt prüfbar oder per `stylua`/`luacheck`/der vollen Plenary-Suite lokal verifizierbar (POSIX
+selbst nicht lokal testbar, Windows-Umgebung — wie bei den anderen Plugins über die
+`ubuntu-latest`-CI abgedeckt). Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/dap.nvim.md`) war noch gar
+nicht angelegt (keine der drei Dateien existierte) — alle drei neu erstellt aus
+`docs/BINDINGS.md`. Alles committet (`467fb1b`) und nach `origin/main` gepusht.
