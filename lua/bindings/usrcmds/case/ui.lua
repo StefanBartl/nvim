@@ -1044,6 +1044,198 @@ function M.snow(case_arg)
   end)
 end
 
+-- ── :Case insert / :Cases insert ────────────────────────────────────────
+
+--- `:Case insert [field] [case]` — a case's token (number, title, company,
+--- ...) needs to land somewhere OUTSIDE a casedesk file just as often as
+--- inside one: a SNOW comment, a Teams message, an email subject. Every
+--- other command in this module either opens a file or shows a report;
+--- this is the "just give me the text, here and on the clipboard" one —
+--- insert at the cursor AND copy in the same keypress, so whichever one
+--- you actually need (paste target inside vs. outside Neovim) is covered
+--- without picking in advance.
+---@type { key: string, label: string }[]
+M.INSERT_FIELDS = {
+  { key = "case", label = "Case number" },
+  { key = "snow", label = "SNOW ticket id" },
+  { key = "link", label = "SNOW ticket URL (falls back to id if snow_url_format unset)" },
+  { key = "title", label = "Title" },
+  { key = "company", label = "Company" },
+  { key = "name", label = "Contact name" },
+  { key = "priority", label = "Priority" },
+  { key = "summary", label = "One-line summary (case — title — company — name)" },
+  { key = "mail-subject", label = "Email subject: [case] title" },
+}
+
+---@param entry Lib.Case.RegistryEntry
+---@param m Lib.Case.Meta|nil
+---@param key string
+---@return string|nil
+local function insert_value(entry, m, key)
+  if key == "case" then
+    return entry.short
+  elseif key == "snow" then
+    return render.to_snow(entry.short, (m and m.year) or os.date("%Y"))
+  elseif key == "link" then
+    local snow = render.to_snow(entry.short, (m and m.year) or os.date("%Y"))
+    return (config.snow_url_format and (config.snow_url_format .. snow)) or snow
+  elseif key == "title" then
+    return m and m.title
+  elseif key == "company" then
+    return m and m.company
+  elseif key == "name" then
+    return m and m.name
+  elseif key == "priority" then
+    return m and m.priority
+  elseif key == "summary" then
+    local parts = { entry.short }
+    for _, field in ipairs({ "title", "company", "name" }) do
+      if m and m[field] and m[field] ~= "" then
+        parts[#parts + 1] = m[field]
+      end
+    end
+    return table.concat(parts, " — ")
+  elseif key == "mail-subject" then
+    if not (m and m.title and m.title ~= "") then
+      return nil
+    end
+    return ("[%s] %s"):format(entry.short, m.title)
+  end
+  return nil
+end
+
+--- Insert `value` at the cursor (byte-column, so multibyte titles/company
+--- names land correctly) and mirror it to the system clipboard in the same
+--- action.
+---@param value string
+local function insert_and_copy(value)
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  local line = vim.api.nvim_get_current_line()
+  local before, after = line:sub(1, col), line:sub(col + 1)
+  vim.api.nvim_set_current_line(before .. value .. after)
+  vim.api.nvim_win_set_cursor(0, { row, col + #value })
+  require("lib.nvim.cross.copy_to_clipboard")(value)
+  notify.info("inserted + copied: " .. value)
+end
+
+--- Replace whatever a Visual selection covered with `value`, instead of
+--- inserting at the cursor — `:'<,'>Case insert case` on a placeholder like
+--- `<CASE>` replaces it in place. Charwise + single-line uses the exact
+--- column span (`ctx.range.col1`/`col2`); linewise, blockwise, or a
+--- multi-line charwise span all fall back to "replace the whole line
+--- range with one line" — precise per-column blockwise editing isn't
+--- worth the complexity for a single-token replacement.
+---@param range Lib.UserCmd.Composer.RangeInfo
+---@param value string
+local function replace_range_and_copy(range, value)
+  if range.mode == "v" and range.line1 == range.line2 and range.col1 and range.col2 then
+    local line = vim.api.nvim_buf_get_lines(0, range.line1 - 1, range.line1, false)[1] or ""
+    local before = line:sub(1, range.col1 - 1)
+    local after = line:sub(range.col2 + 1)
+    vim.api.nvim_buf_set_lines(0, range.line1 - 1, range.line1, false, { before .. value .. after })
+    vim.api.nvim_win_set_cursor(0, { range.line1, #before + #value })
+  else
+    vim.api.nvim_buf_set_lines(0, range.line1 - 1, range.line2, false, { value })
+    vim.api.nvim_win_set_cursor(0, { range.line1, 0 })
+  end
+  require("lib.nvim.cross.copy_to_clipboard")(value)
+  notify.info("replaced selection + copied: " .. value)
+end
+
+---@param field_arg string|nil
+---@param case_arg string|nil
+---@param range Lib.UserCmd.Composer.RangeInfo|nil  present + `.range > 0` -> replace the Visual selection instead of inserting at the cursor
+function M.insert(field_arg, case_arg, range)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to insert from")
+      return
+    end
+    local m = meta.read(entry.dir)
+
+    local function with_field(key)
+      local value = insert_value(entry, m, key)
+      if not value or value == "" then
+        notify.warn(("%s has no %s set"):format(entry.short, key))
+        return
+      end
+      if key == "link" and not config.snow_url_format then
+        notify.info("config.snow_url_format not set — inserting the ticket id instead of a URL")
+      end
+      if range and (range.range or 0) > 0 then
+        replace_range_and_copy(range, value)
+      else
+        insert_and_copy(value)
+      end
+    end
+
+    if field_arg and field_arg ~= "" then
+      with_field(field_arg)
+      return
+    end
+
+    kit.select({
+      message = ("Insert — %s"):format(entry.short),
+      selection = M.INSERT_FIELDS,
+      format_item = function(f)
+        return ("%-13s %s"):format(f.key, insert_value(entry, m, f.key) or "—")
+      end,
+      on_select = function(f)
+        with_field(f.key)
+      end,
+      on_cancel = function() end,
+    })
+  end)
+end
+
+--- `:Cases insert [pattern]` — same insert-and-copy, but for a case OTHER
+--- than the one you're in: writing a reply that references "see also case
+--- 977123" doesn't want you to leave your current buffer's case context to
+--- go look that number up. Narrows by number/title/company/name substring;
+--- 0 matches warns, 1 match skips straight to the field picker, several go
+--- through a case picker first.
+---@param pattern string|nil
+---@param range Lib.UserCmd.Composer.RangeInfo|nil
+function M.cases_insert(pattern, range)
+  local candidates
+  if pattern and pattern ~= "" then
+    candidates = {}
+    local needle = pattern:lower()
+    for _, e in ipairs(registry.list()) do
+      local m = meta.read(e.dir)
+      local haystack =
+        table.concat({ e.short, (m and m.title) or "", (m and m.company) or "", (m and m.name) or "" }, " "):lower()
+      if haystack:find(needle, 1, true) then
+        candidates[#candidates + 1] = e
+      end
+    end
+  else
+    candidates = registry.list()
+  end
+
+  if #candidates == 0 then
+    notify.warn(("insert: no case matches %q"):format(pattern or ""))
+    return
+  end
+  if #candidates == 1 then
+    M.insert(nil, candidates[1].short, range)
+    return
+  end
+
+  kit.select({
+    message = ("Insert from case (%d)"):format(#candidates),
+    selection = candidates,
+    format_item = function(e)
+      local m = meta.read(e.dir)
+      return ("%-10s %s"):format(e.short, (m and m.title) or "")
+    end,
+    on_select = function(e)
+      M.insert(nil, e.short, range)
+    end,
+    on_cancel = function() end,
+  })
+end
+
 -- ── :Cases — field filters & listing ──────────────────────────────────────
 
 local query = require("bindings.usrcmds.case.query")

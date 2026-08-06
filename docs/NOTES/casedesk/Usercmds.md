@@ -39,6 +39,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case close [nr]` | — | Move to `Closed/` |
 | `:Case reassign [nr]` | — | Move to `Reassigned/` |
 | `:Case snow [nr]` | — | Open the ServiceNow ticket URL (if `config.snow_url_format` is set) or copy the ticket id |
+| `:Case insert [field] [nr]` | `field` `<Tab>`-completed: `case\|snow\|link\|title\|company\|name\|priority\|summary\|mail-subject`; prompts via `kit.select` (showing live values) if omitted | Insert that token at the cursor AND copy it to the clipboard, one action. `link` is the SNOW ticket URL (falls back to the plain id if `config.snow_url_format` isn't set), `mail-subject` is `[case] title`. With a Visual range (`:'<,'>Case insert [field]`) replaces the selection instead of inserting at the cursor — handy on a `<CASE>` placeholder |
 
 Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 
@@ -60,6 +61,7 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`Ressources/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json`, Terminology |
 | `:Cases export [nr]` | — | Bundles `Summary.md`/`Notes.md`/`Research/`/`Replies/` into one PDF at `<case-dir>/Export.pdf` (`pandoc` → HTML, then a headless Chrome/Edge → PDF), opened automatically on success |
 | `:Cases terminology` | — | Every `## `/`### ` term collected from every `Terminologie.md` across the whole work repo (`terminology.lua`), `kit.select`-picked; selecting one jumps to it in its source file. Same entry point as `:Cases pickers` → Terminology |
+| `:Cases insert [pattern]` | substring over number/title/company/name | Same as `:Case insert` but for a case OTHER than the one you're in — e.g. referencing "see also case 977123" from a different case's reply. 0 matches warns, 1 skips straight to the field picker, several go through a case picker first. Same Visual-range replace as `:Case insert` |
 
 Bare `:Cases` (no subcommand) runs `:Cases list`.
 

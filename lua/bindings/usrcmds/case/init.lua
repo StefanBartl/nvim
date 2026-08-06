@@ -141,6 +141,15 @@ local function find_route()
   }
 end
 
+---@return string[]
+local function insert_field_keys()
+  local keys = {}
+  for _, f in ipairs(ui.INSERT_FIELDS) do
+    keys[#keys + 1] = f.key
+  end
+  return keys
+end
+
 --- `:Cases grep <pattern> [--re|-r]` — full-text search over every case's
 --- markdown files.
 ---@return Lib.UserCmd.Composer.RouteSpec
@@ -273,6 +282,20 @@ function M.enable()
       end,
     },
     {
+      path = { "insert" },
+      args = {
+        { name = "field", type = "STRING", optional = true, enum = insert_field_keys() },
+        { name = "case", type = "CASE", optional = true },
+      },
+      -- With a Visual range (`:'<,'>Case insert ...`), replaces the
+      -- selection instead of inserting at the cursor — see ui.insert.
+      range = true,
+      desc = "Insert a case token (number/title/company/name/...) at the cursor and copy it",
+      run = function(ctx)
+        ui.insert(ctx.args.field, ctx.args.case, ctx.range)
+      end,
+    },
+    {
       -- Two-segment path alongside the generated `:Case reply [nr]` route
       -- (single segment, from file_verb_routes()) — composer's trie
       -- dispatch tries the longer literal match first, so `:Case reply
@@ -379,6 +402,15 @@ function M.enable()
       desc = "Every term collected from every Terminologie.md across the work repo",
       run = function()
         ui.terminology()
+      end,
+    },
+    {
+      path = { "insert" },
+      args = { { name = "pattern", type = "STRING", optional = true } },
+      range = true,
+      desc = "Insert a token from ANOTHER case (number/title/company/name match) at the cursor and copy it",
+      run = function(ctx)
+        ui.cases_insert(ctx.args.pattern, ctx.range)
       end,
     },
   }
