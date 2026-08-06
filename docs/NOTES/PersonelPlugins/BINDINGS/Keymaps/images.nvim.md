@@ -12,6 +12,7 @@ Cross-reference: `docs/BINDINGS.md` (current, includes autocmds/usercmds too).
 | `<leader>in` | n | Nächstes Bild | `keymaps.next` |
 | `<leader>ip` | n | Vorheriges Bild | `keymaps.prev` |
 | `<leader>iv` | n | Bild aus der Zwischenablage einfügen | `keymaps.paste` |
+| `<leader>is` | n | Bildschirmausschnitt aufnehmen und einfügen | `keymaps.screenshot` |
 | `<2-LeftMouse>` | n | Doppelklick auf einen Markdown-Link zeigt das Bild | `keymaps.double_click` |
 
 Jeder Eintrag akzeptiert `false` zum Abschalten der einzelnen Bindung.
@@ -24,6 +25,7 @@ require("images").setup({
     next = "<leader>in",
     prev = "<leader>ip",
     paste = "<leader>iv",
+    screenshot = "<leader>is",
     double_click = true,
     filetypes = { "markdown", "vimwiki", "norg", "text" },
   },
@@ -44,10 +46,22 @@ require("images").setup({
   Rückwärts-Navigation, und `v` liegt näher an „einfügen" als das doppelt
   belegte `p`.
 
-- **Nur fünf Keymaps trotz vielen Subcommands**: `:Image replace/orphans/
-  pickers/compare/zen/check` sind bewusst nicht verdrahtet — seltener
-  gebrauchte oder Argument-tragende Befehle (Pfad/Scope) eignen sich schlecht
-  für eine feste Taste; sie bleiben Usercommand-only (siehe Usercmds-Sheet).
+- **Nur sechs Keymaps trotz vielen Subcommands**: `:Image replace/export/
+  redact/orphans/pickers/compare/zen/check` sind bewusst nicht verdrahtet —
+  seltener gebrauchte oder Argument-tragende Befehle (Pfad/Scope) eignen
+  sich schlecht für eine feste Taste; sie bleiben Usercommand-only (siehe
+  Usercmds-Sheet). `screenshot` dagegen ist genauso alltäglich wie `paste`
+  und braucht kein Argument, deshalb eine Bindung. `:Image redact` hat
+  zusätzlich eigene, aber *fensterlokale* Tasten (`w`/`u`, Visual-Mode
+  `<CR>`) innerhalb des Zensur-Fensters selbst — die stehen nicht hier,
+  sondern im Usercmds-Sheet, weil sie nicht über `keymaps.*`/
+  `keymaps.filetypes` laufen wie der Rest dieser Tabelle.
 
 - 2026-08-06: bei der Checklisten-Runde gegengeprüft — Inhalt stimmt weiterhin
   mit `bindings/keymaps.lua` überein, keine Änderung nötig.
+- 2026-08-06 (2): `<leader>is` für `:Image screenshot` ergänzt.
+- 2026-08-06 (3): `:Image export` ergänzt (Usercommand-only, siehe oben) —
+  kein neues Keymap nötig, keine Änderung an dieser Datei sonst.
+- 2026-08-06 (4): `:Image redact` ergänzt (Usercommand-only, mit
+  fensterlokalen Tasten statt `keymaps.*`, siehe oben) — kein neues
+  `keymaps.*`-Feld.
