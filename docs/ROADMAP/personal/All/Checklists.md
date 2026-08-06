@@ -38,7 +38,7 @@ darunter, sofern relevant.
 | fileops.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | gopath.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | replacer.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| insights.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| insights.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | filetree.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | reposcope.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY |||||||
@@ -749,3 +749,54 @@ verfügbar. POSIX-Test nicht lokal möglich (Windows-Umgebung) — Code-Review e
 Windows-only-Annahmen außerhalb der bereits korrekt `has("win32")`-gegatterten Zweige in
 `health.lua`. Zentrale Bindings-Sammlung geprüft und aktualisiert, siehe unten. Alles committet
 (`db8d8cb`) und nach `origin/main` gepusht.
+
+### insights.nvim
+
+- **PERFORMANCE.md**: kein echter Hotpath betroffen — `scan.rg`/`rg_index` laufen synchron über
+  `vim.wait`, aber je einmal pro Nutzeraktion, nicht pro Tastendruck/Render; keine Änderung.
+- **LUA_NVIM.md**: bereits stark `lib.nvim`-basiert (`lib.nvim.notify`, `lib.nvim.cross.*` für
+  Plattform-/Pfad-/Shell-Fragen in `util/platform.lua`, `lib.nvim.usercmd.composer`,
+  `lib.nvim.progress`) und sauber typisiert (`config/@types/init.lua`, `config/DEFAULTS.lua`,
+  `Insights.CompressEngine`-Alias). Keine Verstöße gefunden, die einen Code-Fix erforderten.
+- **REVIEW.md**: Schnell-Check größtenteils grün. Einziger konkreter Fund: `.luarc.json` war
+  bereits inhaltlich identisch zu `sessions.nvim`s Referenz — keine Änderung nötig. `stylua.toml`
+  und `.luacheckrc` fehlten komplett (§8 Tooling) — beide neu angelegt (`line_endings = "Windows"`,
+  da das Repo konsistent CRLF ist; `std = "lua51+lua52"` für LuaJITs `package.searchpath`;
+  `max_line_length` deaktiviert, da `stylua`s `column_width` das Codeformat bereits regelt und die
+  verbleibenden langen Zeilen Regex-Patterns/Doc-Kommentare sind). `stylua .` einmal über den ganzen
+  Baum laufen lassen (rein mechanisch, keine Verhaltensänderung) und zwei echte `luacheck`-Warnungen
+  gefixt (toter `notify`-Import in `tree/init.lua`, ungenutztes `rg_msg` in `symbols/init.lua`).
+  `stylua --check .` und `luacheck .` laufen jetzt beide grün (0/0).
+- **RELEASE.md**: README hatte ASCII-Art, Badges, Schwesterplugin-Absatz (buffer-ctx.nvim) und
+  einen Installationsblock mit explizitem `cmd = "Insights"` bereits korrekt — nur das geforderte
+  Table of Contents (nur Level-2-Überschriften) fehlte, ergänzt. `doc/insights.txt`,
+  `docs/BINDINGS.md`, `docs/ROADMAP.md` waren bereits vollständig und aktuell — gegen den
+  tatsächlichen Code (`bindings/{keymaps,usrcmds,autocmds}.lua`) verifiziert, keine Abweichung.
+  `compress`-Feature (`Insights.CompressEngine "auto"|"tar"|"zip"|"powershell"`): `auto`-Auflösung
+  (tar auf Unix, PowerShell Compress-Archive auf Windows) wird bereits in `health.lua`s
+  `check_compress()` gegen tatsächlich verfügbare Tools geprüft — keine Änderung nötig.
+  `:checkhealth insights` per Headless-Smoke-Test verifiziert (`health.check()` läuft fehlerfrei
+  durch), zusätzlich ein Headless-`require()`-Smoke-Test aller 44 Produktionsmodule (0 Fehler) als
+  Ersatz für eine fehlende Testsuite (kein `tests/`-Ordner, kein `.github/workflows/`, daher kein
+  `gh run list`-CI-Status verfügbar). GitHub-Metadaten (`gh repo view`) bereits vollständig gesetzt:
+  Description, 7 Topics, Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention),
+  keine LICENSE-Datei/-Referenz — keine Änderung nötig. Cross-Plattform: `util/platform.lua`
+  delegiert bereits vollständig an `lib.nvim.cross` (OS-Erkennung, Shell-Ausführung, Clipboard);
+  keine hartkodierten Pfadtrenner außerhalb der bewusst plattformverzweigten Stellen in
+  `compress/init.lua`.
+- **Refactoring.md**: ein echter Fund — `insights.scan.rg`s `M.run()` (geteilte Low-Level-Utility,
+  von `symbols/rg_index.lua` und `symbols/init.lua` genutzt) rief bei fehlendem `rg`-Binary bzw.
+  einem unerwarteten Exit-Code direkt `notify.error`/`notify.debug` auf. Umgebaut auf
+  `(lines, err)`-Rückgabe ohne Seiteneffekt; beide Aufrufer sammeln den Fehler jetzt genauso wie
+  bereits vorhandene Parse-Fehler und melden ihn an ihrer eigenen Grenze. Die übrigen `notify()`-
+  Aufrufe (in `compress`, `conflicts`, `imports`, den `symbols`-Scannern, `devserver`, `unimported`)
+  sind bewusst unangetastet geblieben: jede dieser Funktionen ist der von `bindings/usrcmds.lua`
+  direkt aufgerufene Einstiegspunkt für genau ein `:Insights <sub>`-Kommando, also bereits die
+  UI-Grenze für diese vertikale Slice — anders als `scan.rg`, das von mehreren Features geteilt wird.
+
+Übersprungen/nicht verifizierbar: CI-Status (`gh run list`) nicht anwendbar — kein
+`.github/workflows/` im Repo. POSIX-Verhalten nicht lokal nachstellbar (Windows-Umgebung); Review
+der `platform.is_windows()`-Verzweigungen in `compress/init.lua` und `util/platform.lua` ergab keine
+Windows-only-Annahmen im POSIX-Zweig. Zentrale Bindings-Sammlung geprüft und aktualisiert, siehe
+`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/insights.nvim.md`. Alles
+committet (`6445452`) und nach `origin/main` gepusht.
