@@ -15,13 +15,39 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | --- | --- |
 | `:MyPlugins clone [dir] [--only=<name>]` | Clone every repo in `plugins.personal.list` not yet present in `dir` (default `$REPOS_DIR`); `--only` limits to one |
 | `:MyPlugins remove [dir] [--only=<name>]` | Remove clean (no uncommitted/unpushed work) listed repos from `dir`, after a confirmation naming exactly what will be deleted |
+| `:MyPlugins fetch [dir] [--only=<name>]` | `git fetch --all --prune` on every present listed repo |
+| `:MyPlugins pull [dir] [--only=<name>]` | `git pull --ff-only` on every present listed repo |
+| `:MyPlugins update [dir] [--only=<name>]` | `fetch` + `pull` on every present listed repo — the two-machine sync command, see below |
+| `:MyPlugins reclone [dir] [--only=<name>]` | Delete-if-clean + fresh clone for present repos (same safety check as `remove`); plain clone for anything missing |
 | `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |
+| `:MyPlugins picker [dir]` | Interactive: `<Tab>` assigns clone/update/pull/fetch/remove/reclone per plugin, `<CR>` runs the whole batch |
 
 `<Tab>` completes the subcommand, `dir` (real directories, plus a
 `$REPOS_DIR` keyword when that env var is set), `--only`'s value (every name
 in the live personal-plugin list), and `mode`'s value. Bare `:MyPlugins`
 prints this subcommand list.
+
+## Keeping two machines in sync (`dir`-mode checkouts)
+
+Every personal plugin is a real git checkout under `$REPOS_DIR` in `dir`
+mode, present on more than one machine. Work happens on whichever machine
+you're sitting at; the other one is left behind at an older commit. Before
+relying on a plugin there, bring it level:
+
+```vim
+:MyPlugins update              " fetch + ff-only pull every present listed plugin
+:MyPlugins update --only=x     " just one
+```
+
+If a checkout ever gets into a state a plain `pull` can't fix (diverged
+history, corrupted `.git`, ...), `:MyPlugins reclone --only=<name>` deletes
+it (after the same safety check `remove` uses) and clones it fresh. For
+handling several plugins at once with different actions each — say, `update`
+most of them but `reclone` one that's acting up — `:MyPlugins picker` opens
+an interactive list: `<Tab>` on a plugin cycles it through
+update/pull/fetch/remove/reclone (or just `clone` for one that's missing
+entirely), `<CR>` runs everything assigned in a single batch.
 
 ## Why `dir` never means "scan this folder"
 
@@ -62,6 +88,9 @@ re-runs a plugin's `config()`, not the spec files, so it will not pick up a
 :MyPlugins clone --only=language.nvim    " clone just one
 :MyPlugins clone $REPOS_DIR --only=cascade.nvim
 :MyPlugins remove --only=learn-cli.nvim  " remove one, if clean
+:MyPlugins update                        " bring this machine level with what got pushed elsewhere
+:MyPlugins reclone --only=filetree.nvim  " nuke and re-clone a checkout that's misbehaving
+:MyPlugins picker                        " assign different actions to different plugins, run as one batch
 :MyPlugins mode                          " show current OVERRIDE
 :MyPlugins mode remote                   " switch all personal plugins to GitHub, then restart
 ```
