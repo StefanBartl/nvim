@@ -57,6 +57,9 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
     für dessen Antwort. Die im Stream **bereits zitierten** Doku-Links sind
     zudem eine Referenzsammlung ohne jeden KI-Aufruf; erst darüber hinaus
     neue Quellen zu finden, ist die eigentliche KI-Aufgabe.
+- [ ] ai soll WKDBook-Tricentis/Notes als wissensspeicher verwendne, einerseits - das wkdbboolk-tricentis Notes sind meine notizen aus der onboarding phase VOR ALLEM AUS KURSEN DER TRICENTIS academy "level-up", tricentis confluesnce und tosca official  documenation - das wasa darin steht hat hohen semantischen wert, nur referenzen aus der offiziellen tosca doc und gleichwertiges steht im wert für case solkutions als Quelle darüber -
+
+- [ ] verwendet es eh `languages.nvim` spellcheck funktion (mit korrekten ignore listen bereits) wenn der check der customer reply ausgefphrt wird per usrcnd?
 
 ## Plugin-Check — was die eigenen Plugins beisteuern könnten
 

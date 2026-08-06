@@ -2,9 +2,10 @@
 
 - [ ] BINDINGS
   - [ ] autocmds durchgehen ob man was optimeren kann
-
-- alle ci / stylua / tests grün?
-- Analyse: Gibt es ein sinnvolles kreuzfeatures von eines meiner anderen nvim plugins? Erstelle einel Liste zum abarbeiten..
+- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ARCHITECTURE\startup.md
+- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\Roadmap-Effort-Overview.md
+- [ ] alle ci / stylua / tests grün?
+- [ ] Analyse: Gibt es ein sinnvolles kreuzfeatures von eines meiner anderen nvim plugins? Erstelle einel Liste zum abarbeiten..
 
 ## `documentation.nvim`
 
@@ -23,5 +24,5 @@
 
   umstellen
 
---
+---
 

@@ -12,6 +12,8 @@
          1. docmudule implementieren
        3. analysiere das plugin auf security optimierungen
 
+- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\IDEAS
+
 
 ---
 
