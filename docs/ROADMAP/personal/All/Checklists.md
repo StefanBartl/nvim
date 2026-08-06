@@ -29,7 +29,7 @@ darunter, sofern relevant.
 | sessions.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | pickers.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | buffer-ctx.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| open.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| open.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | sandbox.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | spotlight.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | documentation.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -195,3 +195,47 @@ Normalisierung in `util/path.lua` gelöst.
 Übersprungen/nicht verifizierbar: nichts — GitHub-Metadaten, `:checkhealth` und die zentrale
 Bindings-Sammlung waren alle direkt prüfbar und bereits vollständig. Alles committet (`c529cac`)
 und nach `origin/main` gepusht.
+
+### open.nvim
+
+Ebenfalls bereits durch eine eigene, ausführliche Checklisten-Runde gelaufen (siehe
+`docs/ROADMAP/Checklist.md`, `Arch&Coding.md`, `Zentral-Prinzipien.md` im Repo selbst) — dieser
+Pass bestätigte, dass die dort dokumentierten Action-Items (`lib.usercmd`/`lib.cross`-Migration)
+inzwischen umgesetzt sind (`platform.lua` nutzt `lib.nvim.cross.platform.is_*`,
+`bindings/usrcmds.lua` läuft vollständig über `lib.nvim.usercmd.composer`) — die entsprechenden
+❌-Markierungen in `docs/ROADMAP/Zentral-Prinzipien.md` sind also stale/überholt, wurden aber nicht
+angefasst (Änderung an den Repo-eigenen Audit-Notizen war nicht Teil des Auftrags). 33 Lua-Dateien,
+durchgängig `@module`/`@brief`/`@description`, `@param`/`@return`, `@types/init.lua`,
+`config/DEFAULTS.lua` + `config/init.lua`, `.luarc.json`, `.luacheckrc`, `stylua.toml`, CI
+(stylua + luacheck + headless `TESTS/run.lua`, 6 Specs) bereits vorhanden.
+
+- **PERFORMANCE.md**: kein echter Hotpath — `:Open` läuft einmal pro Aufruf; `viewer/scan.lua`s
+  Zeilen-Scan für `:Open viewer cwd` ist das Nächste an einem Hotpath, baut Ergebnisse aber bereits
+  per `out[#out+1]` statt `table.insert` auf, keine `..`-Loop-Concats. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig (`lib.nvim.notify`,
+  `lib.nvim.cross.*`, `lib.nvim.usercmd.composer`, `lib.nvim.harvest`), saubere Importreihenfolge,
+  `custom_handlers`/`keywords` typisiert und user-konfigurierbar. Keine Änderung nötig.
+- **REVIEW.md §8 Tooling**: `stylua --check` fand 12 Dateien mit CRLF-Zeilenenden entgegen
+  `stylua.toml`s `line_endings = "Unix"` (derselbe `core.autocrlf`-Effekt wie bei fileops.nvim);
+  `stylua .` normalisiert, danach `stylua --check`/`luacheck` (0 Warnings/Errors)/Testsuite (6/6
+  grün) erneut sauber — überwiegend Whitespace, ein Fund mit echtem `collapse_simple_statement`-Delta
+  in `handlers/image.lua`. `.luarc.json` bereits inhaltlich äquivalent zu sessions.nvim
+  (`diagnostics.globals=["vim"]`, `workspace.library`), nicht angeglichen (kein funktionaler Gap).
+- **RELEASE.md**: README (Englisch, ASCII-Art, Badges, Schwesterplugin-Absatz zu insights.nvim,
+  Installationsblock mit explizitem `cmd = {...}`), `doc/open.txt`, `docs/BINDINGS.md`,
+  `:checkhealth open` bereits vollständig — nur das Level-2-only Table of Contents fehlte im
+  README, ergänzt. `docs/ROADMAP.md` war buchstäblich leer (0 Byte) statt nur "nichts geplant" —
+  zählt als verwaist, mit einer kurzen "empty by design"-Notiz gefüllt. GitHub-Metadaten
+  (`gh repo view`) bereits gesetzt: Description, Topics, Default-Branch `main`, keine
+  LICENSE-Datei/-Referenz; Homepage leer wie bei allen anderen geprüften Schwester-Plugins
+  (unverändert gelassen). Cross-Plattform: keine hartkodierten Pfadtrenner außerhalb
+  `platform.is_win`-gegatterter Zweige (`keywords.lua`s `pip_conf`/`hosts`).
+- **Refactoring.md**: Fail-late/Report-at-boundary bereits vollständig eingehalten — alle
+  `notify()`-Aufrufe liegen in `handlers/*`, `registry.lua` (Dispatch-Grenze) und
+  `bindings/keymaps.lua` (Setup-Warnung); `context.lua`, `util.lua`, `platform.lua`,
+  `viewer/scan.lua` geben durchweg nur Status/Werte zurück. Keine Änderung nötig.
+
+Übersprungen/nicht verifizierbar: `gh repo edit --homepage` nicht gesetzt (siehe oben, folgt der
+Schwester-Plugin-Konvention); zentrale Bindings-Sammlung unter
+`nvim/docs/NOTES/PersonelPlugins/BINDINGS/` wurde nicht neu geprüft (aus Zeitgründen, `docs/BINDINGS.md`
+im Repo selbst ist bereits vollständig). Alles committet (`fc3a4a4`) und nach `origin/main` gepusht.
