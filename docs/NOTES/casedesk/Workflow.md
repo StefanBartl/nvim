@@ -44,11 +44,20 @@ confirm, and it scaffolds:
 Cases/Open/1012345/
   Summary.md                (SNOW-facing, no H1 — see §2)
   Notes.md                  (yours — see §2)
-  Research/00_Research.md   (opened automatically)
+  Research/00_Research.md   (opened automatically, links to the reply draft)
   Replies/00_PSO.md
   Ressources/
   .case.json
 ```
+
+`Research/00_Research.md` opens with a `[→ Reply draft](../Replies/00_PSO.md)`
+link right under the headline — `gf` (or your file picker of choice) jumps
+straight to the draft. Deliberately **one-directional**: `Replies/00_PSO.md`
+stays free of any markdown, since its content is what actually goes out to
+the customer and `:Case reply check` already flags a stray `##` for exactly
+that reason — a permanent link back would be one more thing to remember to
+strip before sending. `gopath.nvim`/your buffer list cover the reverse hop
+for now (ROADMAP.md's plugin-check has a note to wire it in properly).
 
 If `config.company_blueprints` has an entry for the company you typed, that
 blueprint is used instead of the default — today the table is empty, so
