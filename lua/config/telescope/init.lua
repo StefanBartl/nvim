@@ -32,6 +32,20 @@ local function adapt_max_len(picker_opts, default)
   return default or 60
 end
 
+---PDF preview across every picker, if pdfport.nvim is on the runtime path
+---(pcall-guarded: this config's personal plugins are optional/mode-switched,
+---see plugins.personal.source). Pulls pdfport.nvim in as soon as telescope
+---itself loads (telescope is already `cmd`-lazy) — same trade-off pdfport's
+---own integrations doc accepts for its global filetype_hook example.
+---@return fun(filepath: string, bufnr: integer, opts: table): boolean|nil
+local function pdf_filetype_hook()
+  local ok, pdfport_tel = pcall(require, "pdfport.integrations.telescope")
+  if not ok then
+    return nil
+  end
+  return pdfport_tel.filetype_hook
+end
+
 -- Returns merged default options for telescope.setup
 ---@return table opts
 function M.defaults()
@@ -48,6 +62,7 @@ function M.defaults()
     layout_config = { prompt_position = "top" },
     preview = {
       wrap = false,
+      filetype_hook = pdf_filetype_hook(),
     },
     mappings = km,
   }

@@ -685,6 +685,18 @@ plugins.add({
   },
 
   {
+    -- Finds/rewrites deprecated Neovim API calls (vim.highlight.* ->
+    -- vim.hl.*, vim.lsp.buf_get_clients() -> vim.lsp.get_clients(), ...) in
+    -- the current line, a range, the whole buffer, or cwd, with a Telescope
+    -- picker+preview past single-line scope. Useful directly on this
+    -- config's own Lua as it moves across Neovim versions.
+    "StefanBartl/migrate.nvim",
+    dependencies = { "StefanBartl/lib.nvim" },
+    cmd = { "MigrateOpt", "MigrateNotify", "MigrateHl", "MigrateLsp" },
+    opts = {}, -- opt + notify + hl + lsp all enabled by default
+  },
+
+  {
     "StefanBartl/markdown.nvim",
     ft = { "markdown", "mdx", "md" },
     -- Soft dependency: markdown.nvim's fenced_scope feature consumes
@@ -769,6 +781,15 @@ plugins.add({
           -- diagnostics + quickfix session flow instead.
           ui = { view = "picker", preview = true },
           programming_dict = true,
+        },
+        -- The commands (:Translate/:TranslateReplace/...) already work with
+        -- zero config (engine = "google", keyless, is the plugin's own
+        -- default) — this just claims the motion/visual keymaps, off by
+        -- default upstream "to avoid claiming keys". <leader>lt sits next to
+        -- this config's other <leader>l* (LSP/language) bindings; <leader>t*
+        -- itself is already all tab-navigation here.
+        translate = {
+          keymaps = { operator = "<leader>lt", visual = "<leader>lt" },
         },
       })
     end,
