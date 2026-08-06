@@ -1,5 +1,12 @@
 # casedesk — Workflow & Use Cases
 
+## info section
+
+Neben Name, Case Number, title und company kann noch extrahiert werden:
+- version number of tosca     (support info fil e), Benneung ist zb "C:\repos\WKDBook-Tricentis\Cases\SAP_Support\Cases\Open\1041708\Ressources\ToscaSupportInfo (1).txt also ToscaSupportInfo (1).txt  oder ToscaSupportInfo.txt usw...
+
+- in den Dateien `00_PSO.md` oder ?00_Research.md die mit :Case new angelegt werden, dort sollten die angelgten files mit markdown links miteindner verlinkt werden, sodass ich schnell zwischen ihnen hin und herspringen kann
+
 ## Mental model
 
 Three verbs, everything else follows from which one you reach for:
