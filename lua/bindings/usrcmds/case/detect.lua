@@ -128,14 +128,36 @@ function M.links(case_dir)
   return out
 end
 
+--- Tricentis's own TCSupportInfo dump (`Ressources/ToscaSupportInfo*.txt`,
+--- attached to a case by the customer) states the exact Tosca Testsuite
+--- version the customer is running near the top of the file — no need to
+--- ask them or dig through the Activity Stream for it.
+---@param case_dir string
+---@return string|nil version  e.g. "25.1.2"
+function M.tosca_version(case_dir)
+  for _, path in ipairs(case_files(case_dir)) do
+    if path:match("[Tt]osca[Ss]upport[Ii]nfo.*%.txt$") then
+      local content = read(path)
+      if content then
+        local version = content:match("Tosca Testsuite Version:%s*([%d%.]+)")
+        if version then
+          return version
+        end
+      end
+    end
+  end
+  return nil
+end
+
 --- Everything at once — what the infocard's edit form pre-fills with.
 ---@param case_dir string
----@return { title: string|nil, name: string|nil, links: string[] }
+---@return { title: string|nil, name: string|nil, links: string[], tosca_version: string|nil }
 function M.guess(case_dir)
   return {
     title = M.title(case_dir),
     name = M.name(case_dir),
     links = M.links(case_dir),
+    tosca_version = M.tosca_version(case_dir),
   }
 end
 

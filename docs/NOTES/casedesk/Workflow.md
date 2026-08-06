@@ -1,11 +1,16 @@
 # casedesk — Workflow & Use Cases
 
-## info section
+## Auto-detected fields (`detect.lua`)
 
-Neben Name, Case Number, title und company kann noch extrahiert werden:
-- version number of tosca     (support info fil e), Benneung ist zb "C:\repos\WKDBook-Tricentis\Cases\SAP_Support\Cases\Open\1041708\Ressources\ToscaSupportInfo (1).txt also ToscaSupportInfo (1).txt  oder ToscaSupportInfo.txt usw...
+Best-effort guesses from a case's own files, never written without going
+through `:Case info`'s `e` edit form first (same "suggestion, not autopilot"
+contract as `title`/`name`):
 
-- in den Dateien `00_PSO.md` oder ?00_Research.md die mit :Case new angelegt werden, dort sollten die angelgten files mit markdown links miteindner verlinkt werden, sodass ich schnell zwischen ihnen hin und herspringen kann
+- **Tosca version** — `detect.tosca_version` scans for a
+  `Ressources/ToscaSupportInfo*.txt` (SAP support attaches this) and pulls
+  the `Tosca Testsuite Version: X.Y.Z` line. Pre-fills the `tosca_version`
+  field in `e` when present.
+- Title, contact name, links — see `detect.lua`'s existing doc comments.
 
 ## Mental model
 

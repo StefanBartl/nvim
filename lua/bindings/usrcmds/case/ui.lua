@@ -219,7 +219,7 @@ function M.edit_info(entry, m)
       { name = "title", label = "Title", default = m.title or guess.title or "" },
       { name = "company", label = "Company", default = m.company or "" },
       { name = "priority", label = "Priority", default = m.priority or "" },
-      { name = "tosca_version", label = "Tosca-Version", default = m.tosca_version or "" },
+      { name = "tosca_version", label = "Tosca-Version", default = m.tosca_version or guess.tosca_version or "" },
       { name = "name", label = "Name", default = m.name or guess.name or "" },
       { name = "notes", label = "Notes", default = m.notes or "" },
     },
