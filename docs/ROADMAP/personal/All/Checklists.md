@@ -47,7 +47,7 @@ darunter, sofern relevant.
 | diff.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | language.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | cmdlog.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| emojis.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| emojis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | github_stats.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4. FILE TYPES (MARKDOWN & DOCUMENTS) |||||||
 | cascade.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -299,3 +299,62 @@ neu angelegt (5 Einträge, deckungsgleich mit `docs/BINDINGS.md` im Repo).
 Übersprungen/nicht verifizierbar: nichts — alle Prüfpunkte waren direkt einsehbar oder per
 `luacheck`/`stylua`/`nvim --headless -l TESTS/run.lua`/`nvim --headless -l scripts/gen_map.lua
 --check` lokal verifizierbar. Alles committet (`07e9f18`) und nach `origin/main` gepusht.
+
+### emojis.nvim
+
+Ebenfalls eines der saubersten geprüften Plugins: 37 Lua-Dateien, durchgängig `@module`/
+`@brief`/`@description`, vollständige `@param`/`@return`, ein zentrales `@types.lua` (statt
+Ordner-pro-Unterverzeichnis — bewusste Ausnahme, siehe unten), `config/DEFAULTS.lua` +
+`config/init.lua` mit typisierten Keys, `.luacheckrc`/`stylua.toml`/CI (stylua + luacheck +
+headless `docs/TESTS/run.lua`, 7 Specs) bereits vorhanden. Dieser Pass fand keinen einzigen
+Codefix — nur Tooling-/Doku-Lücken:
+
+- **PERFORMANCE.md**: kein Hotpath-Fund über den Tokenizer/Ops hinaus, der bereits sauber ist —
+  `core/patterns.lua`/`core/ops.lua` nutzen durchweg lokale Refs, `table.concat` statt
+  `..`-Loop-Concat, und bauen Ergebnistabellen per `t[#t+1]` auf. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` ist seit der `usercmd.composer`-Migration
+  Pflichtabhängigkeit für die `:Emojis`-Registrierung, `notify`/`map` bleiben bewusst weich mit
+  nativem Fallback (`util/lib.lua`), Importreihenfolge sauber, Buffer/Window-Handles überall
+  validiert (auch in `vim.schedule`-Callbacks des Overlays). Keine Änderung nötig.
+- **REVIEW.md §8 Tooling**: `.luarc.json` fehlte komplett (einziges bisher geprüftes Plugin ohne
+  eins) — ergänzt, identisch zu `sessions.nvim`s Version (`diagnostics.globals=["vim"]`,
+  `workspace.library`). `luacheck lua docs/TESTS` lief mit 0 Warnings/Errors; headless Testsuite
+  (7/7 Specs) lief grün. `stylua --check` zeigte einen vollständigen Diff über alle Dateien — kein
+  echtes Formatproblem, sondern der in `.gitattributes` selbst dokumentierte CRLF-Checkout-Effekt
+  (`core.autocrlf=true` lokal vs. LF in CI); nicht angefasst, da Reformatierung hier nur Churn ohne
+  Nutzen erzeugt hätte.
+- **RELEASE.md**: `doc/emojis.txt` (13 Abschnitte), `docs/BINDINGS.md`, `docs/{installation,
+  configuration,commands,keymaps,api,architecture}.md`, `:checkhealth emojis`, Installationsblock
+  mit explizitem `cmd = "Emojis"` waren bereits vollständig und aktuell — nur README.md fehlten
+  ASCII-Art/Badges/Level-2-only-ToC/Schwesterplugin-Absatz, ergänzt (Schwesterplugin: cascade.nvim,
+  dessen `cycle.groups`-Bridge über `cascade_groups()` im Code bereits existierte, im README aber
+  nicht erwähnt war). **`docs/ROADMAP.md` war leer** — absichtlich am 2026-07-24 geleert (alle
+  Punkte umgesetzt), aber `lua/emojis/bindings/autocmds.lua`s Modulkommentar verweist weiterhin
+  namentlich auf deren "Nicht geplant"-Abschnitt für die No-Autocmds-Design-Entscheidung → totes
+  Cross-Reference. Mit kurzer Status-Zusammenfassung + demselben "Nicht geplant"-Abschnitt wie vor
+  dem Leeren wiederhergestellt (Quellcode nicht angefasst). GitHub-Metadaten (`gh repo view`) waren
+  komplett leer (Description, Topics) — gesetzt: Description, 4 Topics (neovim, neovim-plugin, lua,
+  emoji); Homepage bewusst leer gelassen (Schwester-Plugin-Konvention), Default-Branch bereits
+  `main`, keine LICENSE-Datei/-Referenz. Cross-Plattform: keine hartkodierten Pfadtrenner (die
+  einzigen `\`-Vorkommen sind Lua-Escapes wie `"\t"`/`"\27"` oder das ripgrep-Unicode-Pattern
+  `\x{...}`, keine Pfad-Joins; `overlay/frecency.lua` joint konsequent über `/`).
+- **Refactoring.md**: Fail-late/Report-at-boundary war bereits vollständig eingehalten —
+  `core/*` (patterns/ops/scope/checkbox/insert) und `util/lib.lua` geben durchweg nur
+  Werte/Status/`(ok, err)` zurück, `notify()` sitzt ausschließlich in `actions.lua`, `commands.lua`,
+  `init.lua`, `search.lua`, `picker.lua`, `overlay/init.lua`, `health.lua`, `config/init.lua`
+  (Dispatch-/UI-/Setup-Grenze). Keine Änderung nötig.
+
+Bewusste Abweichung: `lua/emojis/@types.lua` bleibt eine einzelne Datei statt eines
+`@types/init.lua`-Baums pro Unterverzeichnis — sie gruppiert bereits sauber nach Quelldatei und
+gibt `{}` zurück; bei diesem Plugin-Umfang wäre eine Aufsplittung in sechs Mini-Ordner reine
+Fragmentierung ohne Mehrwert (gleiche Ausnahme wie bei fileops.nvim).
+
+Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — verifiziert
+stattdessen über die bestehende GitHub-Actions-CI (`ubuntu-latest`, stylua + luacheck + Testsuite),
+die bei jedem Push läuft. Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/emojis.nvim.md`) war
+inhaltlich bereits aktuell (Keymaps/Usercmds-Tabellen stimmten mit `docs/BINDINGS.md` überein);
+korrigiert wurde nur die stale Behauptung in `Usercmds/emojis.nvim.md` und
+`Autocmds/emojis.nvim.md`, die `docs/ROADMAP.md`s "Nicht geplant"-Cross-Reference sei bereits
+repo-weit bereinigt worden — war sie nicht, siehe RELEASE.md-Fund oben. Alles committet
+(`824b6ba`) und nach `origin/main` gepusht.

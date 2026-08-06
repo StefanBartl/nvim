@@ -86,5 +86,16 @@ Command name is configurable (`setup({ command = "Emo" })`) — `composer.verb(c
   second CLI token as something other than a scope (interaction mode /
   set name respectively), same `NO_SCOPE`-style bypass pattern as
   `insert`/`first`/`next`. `docs/ROADMAP.md` was emptied the same day (all
-  prior roadmap items shipped, nothing pending) — cross-references to its
-  now-removed "Nicht geplant" section were also cleaned up repo-wide.
+  prior roadmap items shipped, nothing pending); the "Nicht geplant"
+  cross-references repo-wide were *not* actually cleaned up, though — see
+  the 2026-08-06 correction below.
+- **2026-08-06 (checklist compliance pass)**: `docs/ROADMAP.md` was still
+  empty and `lua/emojis/bindings/autocmds.lua` still pointed at its "Nicht
+  geplant" section — a dead cross-reference, not a cleaned-up one as the
+  note above claimed. Restored `docs/ROADMAP.md` with a short "Status"
+  summary (everything through v0.3.0 implemented, nothing currently
+  pending) and the "Nicht geplant" section (autocmd-driven auto-clear, own
+  Unicode DB, font/rendering — unchanged content). No source code changed
+  by this; `.luarc.json` was also added at the repo root (was missing) and
+  `README.md` gained ASCII art/badges/ToC/a sister-plugin paragraph per the
+  RELEASE.md gate.
