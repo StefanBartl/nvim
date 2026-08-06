@@ -90,10 +90,12 @@ Still in progress — more roadmap items to follow in later commits on
   another. Fixed both to consistently say "required" as part of this
   migration's doc sweep (also now true for an additional reason: the
   command layer itself).
-- **No CI, no headless test runner** for this repo — `tests/*.lua` are run
-  interactively against the developer's own full plugin set (they already
-  transitively require lib.nvim via `replacer.init`), not a minimal
-  `-u NONE` sandbox. Nothing to fix there.
+- **Stale as of 2026-08-06 — now has CI**: this note used to say "No CI, no
+  headless test runner". That's no longer true: `.github/workflows/ci.yml`
+  now runs `luacheck` + `stylua --check` + three headless suites
+  (`tests/feature_smoke.lua`, `tests/surround_smoke.lua`,
+  `tests/async_utf8.lua`) against `-u NONE` with `lib.nvim` checked out
+  alongside on every push/PR to `main`.
 - **`:Surround` narrows to the exact selection on a charwise range
   (2026-07-31)**: previously `line_range` restricted matches by LINE only, so
   a charwise selection of just "foo" in `foo bar foo baz` wrapped *every*

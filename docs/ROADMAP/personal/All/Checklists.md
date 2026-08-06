@@ -37,7 +37,7 @@ darunter, sofern relevant.
 | 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES |||||||
 | fileops.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | gopath.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| replacer.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| replacer.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | insights.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | filetree.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | reposcope.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -358,3 +358,71 @@ korrigiert wurde nur die stale Behauptung in `Usercmds/emojis.nvim.md` und
 `Autocmds/emojis.nvim.md`, die `docs/ROADMAP.md`s "Nicht geplant"-Cross-Reference sei bereits
 repo-weit bereinigt worden — war sie nicht, siehe RELEASE.md-Fund oben. Alles committet
 (`824b6ba`) und nach `origin/main` gepusht.
+
+### replacer.nvim
+
+Bei weitem das größte bisher geprüfte Plugin (41 Lua-Dateien, ~7900 Zeilen) und auch inhaltlich
+sehr ausgereift: durchgängig `@module`-Kopfzeilen, vollständige `@param`/`@return`, ein eigenes
+`@types`-Verzeichnis (`config.lua`, `pickers.lua`, `init.lua`), `config/DEFAULTS.lua` +
+`config/init.lua`, `.luarc.json`, `.luacheckrc`, `stylua.toml`, `.github/workflows/ci.yml`
+(luacheck + stylua + drei Headless-Testsuiten) sowie `doc/replacer.txt`, `docs/BINDINGS.md`
+(vollständig, inkl. expliziter "keine Autocmds"-Aussage) und `docs/ROADMAP.md` (gepflegt) waren
+bereits vollständig und aktuell vor diesem Pass — offensichtlich Ergebnis einer eigenen früheren
+Aufräum-Serie (`git log` zeigt u. a. "feat(health): wire composer.checkhealth", "docs: add LuaLS
+annotations for documentation.nvim").
+
+- **PERFORMANCE.md**: kein neuer Hotpath-Fund — `rg.lua`s Match-Sammlung (der einzige Kandidat,
+  läuft über potenziell viele Dateien) nutzt bereits durchgängig `t[#t+1]`/explizite Indizes statt
+  `table.insert`, `apply.lua`s bottom-up-Edits sortieren einmal statt pro Iteration neu. Keine
+  Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig (`lib.nvim.notify`,
+  `lib.nvim.usercmd.composer`, `lib.nvim.progress`, `lib.nvim.ui.kit`), saubere Trennung
+  pure/side-effecting (`apply.lua`s `compute_file_edits` vs. `apply_matches`), `RP_Config` in
+  `types/config.lua` vollständig typisiert mit Kommentar pro Key. Keine Änderung nötig.
+- **REVIEW.md §8 Tooling — der einzige echte Fund dieses Passes**: `stylua --check` (wie von CI
+  ausgeführt) schlug seit mehreren Commits in Folge fehl (`gh run list` zeigte 5/5 letzte Runs
+  `failure`) — ein `stylua`-Versions-Bump hatte begonnen, den im gesamten Repo konsequent
+  genutzten kompakten Guard-Clause-Stil (`if x then return y end`) unter
+  `collapse_simple_statement = "Never"` in Mehrzeiler zu expandieren, was vom tatsächlich
+  committeten (kompakten) Stil abwich. Mit `stylua lua/ plugin/` neu formatiert (reine
+  Whitespace-Änderung; verifiziert per `luacheck` [0 Warnings/Errors] und der vollständigen
+  Headless-Testsuite: 153/154 vor und nach dem Reformat identisch — die eine verbleibende
+  Fehlschlag "history: pick() re-runs the newest entry" ist reproduzierbar unabhängig von diesem
+  Commit und stammt aus altem lokalen `stdpath("data")/replacer/history.json`-Zustand auf dieser
+  Maschine, kein Regressions-Bug). `.luarc.json` war inhaltlich äquivalent zu `sessions.nvim`s,
+  aber ohne `runtime.path`/`workspace.library`/`workspace.useGitIgnore` — ergänzt zur
+  Vereinheitlichung mit dem Schwester-Plugin-Muster.
+- **RELEASE.md**: README fehlten ASCII-Art und der Schwesterplugin-Absatz (jetzt: fileops.nvim,
+  wegen der thematischen Nähe Datei-/Verzeichnis-Operationen ↔ Inhalts-Ersetzung/-Umbenennung) —
+  ergänzt; das inline `## Roadmap`-Kapitel war veraltet (Punkte als offen markiert, die laut
+  `docs/ROADMAP.md` längst umgesetzt sind) und hatte zudem einen doppelten `___`-Trenner — durch
+  einen Verweis auf das gepflegte `docs/ROADMAP.md` ersetzt. `doc/replacer.txt`,
+  `docs/BINDINGS.md`, `:checkhealth replacer` (inkl. `composer.checkhealth`-Preflight für
+  `:Replace`/`:Surround`) bereits vollständig. GitHub-Metadaten (`gh repo view`) bereits gesetzt:
+  Description, 13 Topics, Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention),
+  keine LICENSE-Datei/-Referenz — keine Änderung nötig. Cross-Plattform: keine hartkodierten
+  Pfadtrenner; die einzigen `[/\\]`-Vorkommen sind bewusste Zeichenklassen zum *Erkennen* beider
+  Trenner beim Normalisieren (`root.lua`, `fnames.lua`, `checkpoint.lua`, `rg.lua`), keine
+  Windows-only-Joins.
+- **Refactoring.md**: bereits vollständig eingehalten — geprüft in `apply.lua`, `rg.lua`,
+  `checkpoint.lua`, `fnames.lua`, `batch.lua`, `presets.lua`, `root.lua`, `surround.lua`,
+  `init.lua`: alle `notify()`-Aufrufe sitzen an der jeweiligen Befehls-Einstiegsstelle/
+  Boundary-Funktion des Moduls, nie in echt-low-level/pure Helfern — `root.lua`s
+  `detect`/`detect_best`, `gitfiles.lua` (komplett) und `casing.lua` (komplett) enthalten
+  überhaupt kein `notify()`. Bewusst keine weitere Schichtentrennung eingeführt: Module wie
+  `apply.lua`/`fnames.lua`/`checkpoint.lua` SIND bereits die Befehls-Handler ohne separate
+  UI-Zwischenschicht — eine zusätzliche Indirektion nur zum Verschieben von `notify()`-Aufrufen
+  hätte hier keinen Boundary-Gewinn, nur Overhead in einem 41-Datei-Repo erzeugt.
+
+**Zweiter Fund, erst nach dem ersten Push per echtem CI-Lauf sichtbar geworden**: die
+Headless-Testsuite schlug auf `ubuntu-latest` reproduzierbar mit demselben einen Fehlschlag fehl
+wie lokal — `tests/feature_smoke.lua`s "history: pick() re-runs the newest entry" stubbte noch
+`vim.ui.select`, obwohl `history.lua`s `M.pick()` bereits vor mehreren Commits (`0b3d1a5`) auf
+`lib.nvim.ui.kit.select` migriert wurde; der Stub griff seither nie mehr. Auf denselben
+`package.loaded`-Stub-und-Reload-Pattern umgestellt, den derselbe Testfile bereits für
+`lib.nvim.ui.kit.confirm` nutzt — Suite danach 154/154 statt 153/154.
+
+Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — verifiziert
+stattdessen über CI (`ubuntu-latest`, luacheck + stylua + 3 Headless-Testsuiten), die bei jedem
+Push läuft; genau diese CI deckte den zweiten Fund oben erst auf, nachdem der stylua-Fix bereits
+grün war. Alles committet (`34f64a1`, `4e71144`) und nach `origin/main` gepusht.
