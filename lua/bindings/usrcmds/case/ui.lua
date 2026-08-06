@@ -377,7 +377,7 @@ function M.reply_check()
       end
 
       lines[#lines + 1] = ""
-      lines[#lines + 1] = "s: run spellcheck on this buffer (language.nvim) · q: close"
+      lines[#lines + 1] = "s: run spellcheck on this buffer (language.nvim) · m: mark as sent (SLA) · q: close"
 
       local surf = kit.viewer({ title = "Reply check", lines = lines })
       if not surf then
@@ -406,6 +406,25 @@ function M.reply_check()
         end
         vim.api.nvim_set_current_buf(bufnr)
         language.spellcheck(nil, "buffer")
+      end, mo)
+      -- SLA.md §6A: the ONE signal the cadence clock can't derive from the
+      -- Activity Stream — the buffer being checked is not necessarily
+      -- what's about to be sent (could be Notes.md too), so this stays a
+      -- deliberate keypress rather than firing on every `:Case reply check`.
+      map("n", "m", function()
+        surf:close()
+        local entry = resolve.sync(nil)
+        if not entry then
+          notify.warn("mark as sent: buffer doesn't belong to a known case")
+          return
+        end
+        local ok_meta, err_meta =
+          meta.patch(entry.dir, entry.short, { last_reply_sent = os.date("!%Y-%m-%dT%H:%M:%SZ") })
+        if ok_meta then
+          notify.info(("%s: marked as sent — SLA cadence clock reset"):format(entry.short))
+        else
+          notify.error("mark as sent failed: " .. tostring(err_meta))
+        end
       end, mo)
     end)
   end)
@@ -523,6 +542,21 @@ function M.activity(case_arg)
       return
     end
     notify.info("activity stream saved: " .. stem .. ".md")
+
+    -- SLA.md §6A: pull Priority straight off the fresh stream into
+    -- .case.json — the field :Case sla/the statusline badge need, filled
+    -- without a manual step every single case.
+    local sla_stream = require("bindings.usrcmds.case.sla.stream")
+    local parsed = sla_stream.parse(content)
+    if parsed.priority and parsed.priority ~= (m and m.priority) then
+      local ok_meta, err_meta = meta.patch(entry.dir, entry.short, { priority = parsed.priority })
+      if ok_meta then
+        notify.info("priority detected: " .. parsed.priority)
+      else
+        notify.warn("could not save detected priority: " .. tostring(err_meta))
+      end
+    end
+
     edit(full)
   end)
 end
@@ -864,6 +898,89 @@ function M.timeline(case_arg)
     end
 
     kit.viewer({ title = ("Timeline — %s"):format(entry.short), lines = lines })
+  end)
+end
+
+-- ── :Case sla ────────────────────────────────────────────────────────────
+
+--- `:Case sla [nr]` — SLA.md §6B. Which of the three SAP-SLA clocks apply
+--- and how much of each is left, as an absolute deadline (not just a
+--- duration — SLA.md §6B's whole point: "2h übrig" makes you do the
+--- business-hours math yourself and you'll get it wrong).
+---@param case_arg string|nil
+function M.sla(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to show SLA status for")
+      return
+    end
+    local sla = require("bindings.usrcmds.case.sla")
+    local status = sla.status(entry)
+    if not status then
+      notify.warn(
+        ("%s: no parseable priority set — :Case activity pulls one from the stream automatically, or set it via :Case info 'e'"):format(
+          entry.short
+        )
+      )
+      return
+    end
+
+    local lines = {
+      ("%s · P%s %s · %s"):format(
+        entry.short,
+        status.digit,
+        status.level.label,
+        status.level.window == "24x7" and "24x7" or "10x5 (08-18 CET)"
+      ),
+      "SAP-SLA — SolEx contracts can differ, never quote this to a customer",
+      "",
+    }
+
+    ---@param c Lib.Case.SlaClockStatus
+    local function clock_line(c)
+      local state = c.remaining < 0 and "OVERDUE" or (c.done and "erfüllt" or "fällig")
+      lines[#lines + 1] = ("  %-18s %-8s %s  (%s%s)"):format(
+        c.label,
+        state,
+        os.date("%a %d.%m. %H:%M", c.deadline),
+        c.remaining < 0 and "" or "in ",
+        sla.format_duration(c.remaining)
+      )
+    end
+
+    lines[#lines + 1] = "Erstreaktion"
+    if #status.first_response == 0 then
+      lines[#lines + 1] = "  unbekannt — weder .case.json 'created' noch ein Stream-Ereignis"
+    end
+    for _, c in ipairs(status.first_response) do
+      clock_line(c)
+    end
+
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "Rückmeldung"
+    if status.cadence then
+      clock_line(status.cadence)
+    else
+      lines[#lines + 1] = "  unbekannt"
+    end
+
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "Korrekturmaßnahme"
+    if status.fix then
+      clock_line(status.fix)
+    else
+      lines[#lines + 1] = "  unbekannt"
+    end
+
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = status.last_customer_at
+        and ("Letzte Kundennachricht:   %s"):format(os.date("%d.%m. %H:%M", status.last_customer_at))
+      or "Letzte Kundennachricht:   unbekannt"
+    lines[#lines + 1] = status.last_reply_sent
+        and ("Letzte gesendete Antwort: %s"):format(os.date("%d.%m. %H:%M", status.last_reply_sent))
+      or "Letzte gesendete Antwort: unbekannt — 'm' in :Case reply check setzt sie"
+
+    kit.viewer({ title = ("SLA — %s"):format(entry.short), lines = lines })
   end)
 end
 

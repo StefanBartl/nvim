@@ -258,6 +258,14 @@ function M.enable()
       end,
     },
     {
+      path = { "sla" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "SAP-SLA clocks (first reaction, cadence, correction) and how much of each is left",
+      run = function(ctx)
+        ui.sla(ctx.args.case)
+      end,
+    },
+    {
       path = { "copy" },
       args = { { name = "src", type = "PATH", optional = true } },
       desc = "Copy a file into the current case",

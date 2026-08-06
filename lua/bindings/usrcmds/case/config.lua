@@ -96,6 +96,82 @@ M.headline_format = "# %s - `%s` - %s"
 --- number contains X" is what CASE-argtype completion already does.
 M.infocard_fields = { "title", "company", "name", "notes", "priority", "tosca_version" }
 
+-- ── SLA (docs/ROADMAP/casedesk/SLA.md) ──────────────────────────────────
+-- Source: C:/repos/WKDBook-Tricentis/Workflow/SLA_ServiceLevelAgreement.md
+-- — these are SAP's SLAs TOWARDS Tricentis, not necessarily a given SolEx
+-- customer's own contract (see that file's own warning). Never surface
+-- these numbers to a customer as binding.
+
+local HOUR = 3600
+local DAY = 24 * HOUR
+local WEEK = 7 * DAY
+
+--- 08:00-18:00 CET, Mon-Fri (`os.date("*t").wday`: 1=Sun..7=Sat).
+---@type Lib.Case.SlaWindow
+M.sla_business_hours = { from = 8, to = 18, days = { 2, 3, 4, 5, 6 } }
+
+local BUSINESS_DAY = (M.sla_business_hours.to - M.sla_business_hours.from) * HOUR -- 10h
+
+---@class Lib.Case.SlaLevel
+---@field label string
+---@field window Lib.Case.SlaWindow|"24x7"        used for Erstreaktion + Rückmeldung
+---@field first_response integer                  seconds
+---@field cadence integer[]                        [ohne Produktfehler, mit Produktfehler]; [1] used until that signal exists (SLA.md §9.3)
+---@field fix integer                              seconds
+---@field fix_window Lib.Case.SlaWindow|"24x7"     Korrekturmaßnahme has its own unit per level (Std./Arbeitstage/Kalenderwochen) — see below
+
+--- `fix_window` is a judgment call, not a literal reading of the source
+--- table: "Max. 4 Std." (P1) and "6 Kalenderwochen" (P3/P4) are plainly
+--- wall-clock, so `fix_window = "24x7"` even though P3/P4's OWN window is
+--- 10x5. "Max. 3 Arbeitstage" (P2) is the one that reads as business days,
+--- so `fix_window = M.sla_business_hours` even though P2's own window is
+--- 24x7. Flagged, not hidden: SLA.md's open questions list this.
+---@type table<string, Lib.Case.SlaLevel>
+M.sla = {
+  ["1"] = {
+    label = "Very High",
+    window = "24x7",
+    first_response = 1 * HOUR,
+    cadence = { 1 * HOUR },
+    fix = 4 * HOUR,
+    fix_window = "24x7",
+  },
+  ["2"] = {
+    label = "High",
+    window = "24x7",
+    first_response = 2 * HOUR,
+    cadence = { 6 * HOUR },
+    fix = 3 * BUSINESS_DAY,
+    fix_window = M.sla_business_hours,
+  },
+  ["3"] = {
+    label = "Medium",
+    window = M.sla_business_hours,
+    first_response = 4 * HOUR,
+    cadence = { 3 * DAY, 14 * DAY },
+    fix = 6 * WEEK,
+    fix_window = "24x7",
+  },
+  ["4"] = {
+    label = "Low",
+    window = M.sla_business_hours,
+    first_response = 1 * BUSINESS_DAY,
+    cadence = { 7 * DAY, 21 * DAY },
+    fix = 6 * WEEK,
+    fix_window = "24x7",
+  },
+}
+
+--- Fraction of a clock's budget remaining below which `:Case sla`/the
+--- statusline badge treat it as urgent (also true for negative, i.e.
+--- already overdue).
+M.sla_warn_at = 0.25
+
+--- Priorities the statusline badge and any future active notification
+--- (SLA.md §6C, not built yet) fire for. P3/P4 have week-plus budgets —
+--- a badge for those would be near-permanent noise, not a signal.
+M.sla_active_priorities = { "1", "2" }
+
 M.default_blueprint = "default"
 
 --- Company name (as stored in `.case.json`) -> a key in `M.blueprints`,

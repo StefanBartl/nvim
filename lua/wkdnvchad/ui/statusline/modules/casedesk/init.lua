@@ -1,23 +1,32 @@
 ---@module 'wkdnvchad.ui.statusline.modules.casedesk'
 --- Statusline segment: current case's short number + company + how many
---- files sit in its Replies/ folder — empty string whenever the focused
---- buffer isn't inside a known case (ROADMAP.md v7's "Statusline-Badge").
+--- files sit in its Replies/ folder, plus an SLA badge when a P1/P2 clock
+--- is urgent (docs/ROADMAP/casedesk/SLA.md §6C) — empty string whenever the
+--- focused buffer isn't inside a known case (ROADMAP.md v7's
+--- "Statusline-Badge").
 ---
 --- `bindings.usrcmds.case.resolve.sync` is the same buffer -> case lookup
 --- `:Case`'s routes use (registry membership, not a marker file), just
 --- called for its synchronous half only — no kit.select fallback, a
 --- statusline redraw can't prompt.
 ---
---- Cached by buffer name, same "recompute only when the cheap key changes"
---- shape as the sibling `plugin_summary` module: a redraw happens on nearly
---- every keystroke, but the buffer you're in changes far less often, so the
---- `.case.json` read + a directory scan only have to happen once per buffer
---- switch, not once per redraw.
+--- Cached by buffer name AND a coarse time bucket: the base label only
+--- changes on a buffer switch (same "recompute only when the cheap key
+--- changes" shape as the sibling `plugin_summary` module), but an SLA
+--- deadline keeps ticking while you sit in the same buffer — without a
+--- time component the badge would freeze at whatever it showed when you
+--- last switched in, which defeats the point for a P1 case worked for an
+--- hour straight. `SLA_REFRESH_SECONDS` bounds how stale it can get without
+--- recomputing (meta read + a stream reparse) on every single redraw.
 
 local uv = vim.uv or vim.loop
 
+local SLA_REFRESH_SECONDS = 60
+
 ---@type string|nil bufname the cached text was last derived from
 local cached_bufname = nil
+---@type integer time bucket the cached text was last derived from
+local cached_bucket = -1
 local cached_text = ""
 
 ---@param dir string
@@ -39,6 +48,46 @@ local function count_files(dir)
   return n
 end
 
+--- SLA.md §6C: only P1/P2 (config.sla_active_priorities) and only once a
+--- clock is under config.sla_warn_at of its budget — a badge that's always
+--- on for a 6-week Korrekturmaßnahme budget is just noise, and stops being
+--- looked at within a week (same reasoning SLA.md §6C gives for capping
+--- active notifications to one per threshold).
+---@param entry Lib.Case.RegistryEntry
+---@return string
+local function sla_badge(entry)
+  local ok_sla, sla = pcall(require, "bindings.usrcmds.case.sla")
+  if not ok_sla then
+    return ""
+  end
+  local ok_status, status = pcall(sla.status, entry)
+  if not ok_status or not status then
+    return ""
+  end
+
+  local config = require("bindings.usrcmds.case.config")
+  local active = false
+  for _, p in ipairs(config.sla_active_priorities) do
+    if p == status.digit then
+      active = true
+      break
+    end
+  end
+  if not active then
+    return ""
+  end
+
+  local worst = sla.most_urgent(status)
+  if not worst or not sla.under_threshold(worst, config.sla_warn_at) then
+    return ""
+  end
+
+  local marker = worst.remaining < 0 and "SLA!" or "SLA"
+  -- DiagnosticError: an existing group carrying the theme's error color,
+  -- same "no new highlight group" convention the base label follows below.
+  return " %#DiagnosticError#" .. marker .. " " .. sla.format_duration(worst.remaining) .. " "
+end
+
 ---@param entry Lib.Case.RegistryEntry
 ---@return string
 local function compute(entry)
@@ -51,15 +100,17 @@ local function compute(entry)
 
   -- Same highlight convention as the `lsp` segment (custom.lua) — no new
   -- theme color, this reuses an existing group.
-  return " %#St_Lsp#" .. label .. " · " .. count .. " " .. reply_word .. " "
+  return " %#St_Lsp#" .. label .. " · " .. count .. " " .. reply_word .. " " .. sla_badge(entry)
 end
 
 return function()
   local bufname = vim.api.nvim_buf_get_name(0)
-  if bufname == cached_bufname then
+  local bucket = math.floor(os.time() / SLA_REFRESH_SECONDS)
+  if bufname == cached_bufname and bucket == cached_bucket then
     return cached_text
   end
   cached_bufname = bufname
+  cached_bucket = bucket
 
   local ok_resolve, resolve = pcall(require, "bindings.usrcmds.case.resolve")
   if not ok_resolve then
