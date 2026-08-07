@@ -157,6 +157,10 @@ Der Command-Name folgt der Option `command`.
 - **`:Image zen`** öffnet ein echtes, editierbares Fenster (`lib.nvim.window.
   make_scratch`) statt eines Preview-Floats — bleibt bestehen, auch wenn
   daneben ein snacks-Hover-Popup aufgeht, das an Fokusverlust gekoppelt wäre.
+  Genau daran hing ein Bug: Fenster auf, Bild im selben Tick hineingezeichnet,
+  Neovim malt danach die leeren Zellen des Fensters darüber — Popup da, Bild
+  weg. `images.terminal.draw` erzwingt jetzt den ausstehenden Repaint, bevor
+  die Payload rausgeht; das gilt für jeden Zeichenpfad, nicht nur zen.
 
 - **`:Image redact`** löst einen echten Konflikt: ein per OSC 1337
   gezeichnetes Bild ist für Neovim nicht interaktiv, Maus/Cursor liefern nur
@@ -245,3 +249,13 @@ Der Command-Name folgt der Option `command`.
   Fehlgriff (Muster-basierte Zeichenklassen-Färbung, keine beliebige
   Pixel-RGB pro Zelle) — stattdessen ein eigener Pfad über `nvim_set_hl`/
   Extmarks, ImageMagick-Sampling bleibt die einzige echte Abhängigkeit.
+- 2026-08-07 (2): `:Image zen` zeigte ein leeres Popup — Bild wurde gesendet,
+  aber sofort wieder überschrieben. Ursache war die Reihenfolge, nicht das
+  Protokoll: `nvim_ui_send` schreibt sofort ans Terminal, Neovims eigener
+  Repaint läuft erst beim Rücksprung in die Hauptschleife, also nach der
+  Payload. Betraf jeden Pfad, der ein Fenster öffnet und im selben Tick
+  hineinzeichnet (`zen`, `hover_float`, `redact`) — nicht aber `show`
+  (zeichnet über bestehenden Text) oder `pickers`/`compare` (zeichnen in ein
+  bereits gemaltes Fenster, aus einem späteren Callback). Fix sitzt deshalb
+  in `images.terminal.draw`/`draw_many` statt bei den Aufrufern, mit
+  Regressionstest (`TESTS/terminal_draw_spec.lua`).
