@@ -25,8 +25,6 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
-- [ ] Harpoon UI Menu mit wichtisgten files anpassen für die arbeit. cool wäre, wenn ich zwei unterchiedliche hätte, eines für a´wenn ich auf der worksation bin (ein funktion die das checkt gibt es schon bzw wäre es warsch egut ein env var oder nvim var z usetzen, dass nicht jedes mal beim start oder ienen unsrcmd cheled werden muss auf welche maschine ich bin)
-
 - [ ] **Session pro Case** — eigenes Konzept: [SESSIONS.md](SESSIONS.md).
       Case-Nummer als Session-Name, Auto-Save bei `:Case new`, `<leader>cs`
       als einziger neuer Keymap (case-aware: speichert unter der Case-Nummer
