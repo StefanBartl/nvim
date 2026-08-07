@@ -259,3 +259,10 @@ Der Command-Name folgt der Option `command`.
   bereits gemaltes Fenster, aus einem späteren Callback). Fix sitzt deshalb
   in `images.terminal.draw`/`draw_many` statt bei den Aufrufern, mit
   Regressionstest (`TESTS/terminal_draw_spec.lua`).
+- 2026-08-07 (3): Nachschlag — der Flush allein reichte nicht, danach
+  rendeten nur noch die ersten Zeilen. Er räumt weg, was VOR dem Senden
+  anstand; den Repaint, den das Öffnen des Fensters selbst einreiht,
+  kann er nicht abfangen. `zen`/`hover_float`/`redact` zeichnen deshalb
+  jetzt per `vim.schedule` erst im nächsten Tick, also nachweislich nach
+  Neovims eigener Farbe. `show`/Hover bleiben synchron (kein Fenster,
+  nichts malt darüber).
