@@ -61,13 +61,6 @@ Notiert an `lib.nvim.cross.run.run_detached`.
       vorn, der Lua-Aufruf kehrt in ~16 ms zurueck.
 - [ ] Auf der Workstation gegenpruefen (dort trat es ebenfalls auf).
 
-## Offen: Reveal-Pfade ausserhalb Windows ungeprueft
-
-`reveal_in_fm` waehlt auf Linux jetzt gezielt select-faehige Manager
-(nautilus, nemo, `dolphin --select`, thunar, caja) und haelt `xdg-open` von
-Dateien fern (das startet sonst die Standard-App statt eines Dateimanagers).
-Mangels Linux-/macOS-Host hier ist das **nur** aus der Doku der Manager
-abgeleitet, nicht ausgefuehrt.
-
-- [ ] Auf einem Linux-Host verifizieren, mindestens nautilus + dolphin.
-- [ ] macOS `open -R` verifizieren.
+Linux-/macOS-Verifikation von `reveal_in_fm` steht in lib.nvims eigener
+[`CROSS_PLATFORM_CHECKLIST.md`](https://github.com/StefanBartl/lib.nvim/blob/main/docs/ROADMAP/CROSS_PLATFORM_CHECKLIST.md),
+nicht mehr hier — betrifft das Modul, nicht dieses Plugin.

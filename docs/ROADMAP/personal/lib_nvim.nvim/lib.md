@@ -31,8 +31,10 @@ je nur in einer Kopie steckten: Forward-Slashes an `explorer.exe /select,`
       GUI-Prozesse — ein detached gestartetes Konsolenprogramm
       (powershell.exe) laeuft auf Windows gar nicht erst an, meldet aber eine
       gueltige Job-ID.
-- [ ] **Offen:** Linux-/macOS-Zweige sind aus der Manager-Doku abgeleitet,
-      nicht ausgefuehrt. Auf einem Linux-Host verifizieren.
+
+Linux-/macOS-Verifikationsstatus steht nicht mehr hier, sondern in lib.nvims
+eigener [`CROSS_PLATFORM_CHECKLIST.md`](https://github.com/StefanBartl/lib.nvim/blob/main/docs/ROADMAP/CROSS_PLATFORM_CHECKLIST.md)
+— dort auch fuer kuenftige `cross.*`-Module.
 
 ### `usercmd.composer.complete` — Root-Route neben Literal-Kindern (gefixt, 2026-08-07)
 
