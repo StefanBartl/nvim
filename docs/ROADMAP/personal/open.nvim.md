@@ -2,11 +2,11 @@
 
 ---
 
-## Offen: Dateimanager-Fenster kommt nicht nach vorne (Windows)
+## Erledigt: Dateimanager-Fenster kommt nicht nach vorne (Windows)
 
-Stand 2026-08-07. Betrifft `:Open filemanager` **und** filetree.nvims
-`<leader>fm` gleichermassen, weil beide seit heute auf
-`lib.nvim.cross.reveal_in_fm` laufen.
+Gefixt 2026-08-07 in `lib.nvim.cross.reveal_in_fm`. Betraf `:Open filemanager`
+**und** filetree.nvims `<leader>fm` gleichermassen, weil beide auf demselben
+Modul laufen.
 
 **Symptom:** Beide melden `Opening in file manager: <pfad>`, augenscheinlich
 passiert nichts.
@@ -27,20 +27,39 @@ Fenster (Exit-Code 1 ist bei explorer.exe normal und kein Fehlersignal). Das
 Fenster oeffnet also — nur im Hintergrund, hinter Neovim. Der Bug ist
 **Fokus**, nicht Start.
 
-**Zu klaeren:**
+**Ursache (bestaetigt):** Windows' Foreground-Lock. `SetForegroundWindow` darf
+nur der Prozess, dem das Vordergrundfenster gehoert — im Terminal ist das der
+Terminal-Host (WindowsTerminal.exe, wezterm.exe), nicht `nvim.exe`. Also
+werden nvim *und* der von ihm gestartete Explorer abgewiesen, und das Fenster
+entsteht hinter allem anderen. Unter einem GUI-Neovim (Neovide, nvim-qt) *ist*
+`nvim.exe` der Vordergrundprozess — derselbe Code funktionierte dort. Genau das
+war das "mal geht's, mal nicht" ueber Monate: es haing am Frontend, nicht an
+diesem Modul.
 
-- [ ] Warum uebernimmt das neue Explorer-Fenster den Fokus nicht? Verdacht:
-      Windows' Foreground-Lock — ein Prozess, der selbst nicht im Vordergrund
-      ist, darf keinen Fokus setzen; `jobstart` haengt explorer.exe unter
-      nvim, das im Terminal-Host laeuft.
-- [ ] Fix-Kandidaten, in dieser Reihenfolge testen:
-      `AllowSetForegroundWindow` vor dem Spawn · `SetForegroundWindow` auf das
-      neue Fenster nachziehen (die Logik existiert schon in filetrees
-      `open_in_fm/reuse_win.lua`) · Start ueber
-      `(New-Object -ComObject Shell.Application).Explore(path)` statt
-      `explorer.exe`.
-- [ ] Fix gehoert nach `lib.nvim.cross.reveal_in_fm`, damit beide Plugins ihn
-      bekommen.
+Messung, die es festnagelt: Vordergrundfenster vor und nach dem Spawn per
+`GetForegroundWindow()` verglichen — blieb unveraendert Chrome, waehrend
+`Shell.Application.Windows()` von 2 auf 3 Fenster ging.
+
+**Fix:** `reveal_in_fm/win_reveal.ps1` startet explorer.exe, sucht das
+entstandene Fenster ueber COM und hebt es per `AttachThreadInput`-Sequenz nach
+vorne (dieselbe Mechanik, die `WScript.Shell`s `AppActivate` intern nutzt).
+Ein blankes `SetForegroundWindow` reicht nicht — genau daran scheiterte auch
+die alte `reuse_win.lua`, die deshalb ersatzlos entfaellt.
+
+**Stolperstein dabei, der die erste Fix-Version still verschluckt hat:**
+`jobstart(argv, { detach = true })` fuehrt auf Windows **kein Konsolenprogramm**
+aus. libuvs DETACHED_PROCESS laesst das Kind ohne Standard-Handles zurueck,
+powershell.exe beendet sich vor der ersten Anweisung — die Job-ID ist trotzdem
+gueltig, es sieht also nach Erfolg aus. GUI-Prozesse wie explorer.exe stoert
+das nicht. Der Helper laeuft deshalb ueber `vim.system(argv, {})` ohne Warten.
+Notiert an `lib.nvim.cross.run.run_detached`.
+
+- [x] Ursache bestaetigt, Fix in `lib.nvim.cross.reveal_in_fm`, beide Plugins
+      bekommen ihn.
+- [x] Verifiziert auf diesem Host: Datei-Reveal, Ordner-Ziel, Pfade mit
+      Leerzeichen und `&`, sowie `reuse` — jedes Mal kam das Fenster nach
+      vorn, der Lua-Aufruf kehrt in ~16 ms zurueck.
+- [ ] Auf der Workstation gegenpruefen (dort trat es ebenfalls auf).
 
 ## Offen: Reveal-Pfade ausserhalb Windows ungeprueft
 

@@ -19,9 +19,18 @@ je nur in einer Kopie steckten: Forward-Slashes an `explorer.exe /select,`
 (oeffnet still den falschen Ordner) und `xdg-open` auf eine Datei beim Reveal
 (startet die Standard-App der Datei statt eines Dateimanagers).
 
-- [ ] **Offen:** Auf Windows oeffnet das Fenster ohne Fokus. Analyse und
-      Fix-Kandidaten in [open.nvim.md](../open.nvim.md) — der Fix gehoert in
-      dieses Modul, damit beide Plugins ihn bekommen.
+- [x] **Gefixt:** Auf Windows oeffnete das Fenster ohne Fokus. Ursache war
+      Windows' Foreground-Lock, nicht der Start; Analyse in
+      [open.nvim.md](../open.nvim.md). Das Modul startet auf Windows/WSL jetzt
+      `win_reveal.ps1`, das explorer.exe aufruft, das entstandene Fenster ueber
+      COM sucht und per `AttachThreadInput` nach vorne holt. Faellt auf den
+      blanken explorer.exe-Spawn zurueck, wenn PowerShell oder das Skript
+      fehlen. Neue Option `reuse` (Windows/WSL) ersetzt filetrees
+      `reuse_win.lua`.
+      Wichtig fuer kuenftige Module: `run.run_detached` taugt **nur** fuer
+      GUI-Prozesse — ein detached gestartetes Konsolenprogramm
+      (powershell.exe) laeuft auf Windows gar nicht erst an, meldet aber eine
+      gueltige Job-ID.
 - [ ] **Offen:** Linux-/macOS-Zweige sind aus der Manager-Doku abgeleitet,
       nicht ausgefuehrt. Auf einem Linux-Host verifizieren.
 

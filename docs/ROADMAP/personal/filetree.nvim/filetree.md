@@ -47,20 +47,23 @@
 
 ---
 
-## Offen: `<leader>fm` — Fenster oeffnet ohne Fokus (Windows)
+## Erledigt: `<leader>fm` — Fenster oeffnet ohne Fokus (Windows)
 
-Stand 2026-08-07. `open_in_fm` delegiert seit heute an
-`lib.nvim.cross.reveal_in_fm`, teilt sich den Bug also mit open.nvims
-`:Open filemanager`. Vollstaendige Analyse dort:
-[open.nvim.md](../open.nvim.md). Kurzfassung: das Explorer-Fenster entsteht,
-kommt aber nicht in den Vordergrund — Fokus-Problem, kein Start-Problem.
+Gefixt 2026-08-07. `open_in_fm` delegiert an `lib.nvim.cross.reveal_in_fm`,
+teilte sich den Bug also mit open.nvims `:Open filemanager`. Vollstaendige
+Analyse und Ursache dort: [open.nvim.md](../open.nvim.md). Kurzfassung: das
+Explorer-Fenster entstand, kam aber wegen Windows' Foreground-Lock nie nach
+vorn; der Fix hebt es jetzt aktiv per `AttachThreadInput`.
 
-Zusaetzlich hier offen:
-
-- [ ] `reuse_existing` (Explorer-Fenster-Wiederverwendung via COM) ist laut
-      eigenem Modulkommentar nie gegen eine echte Explorer-Instanz getestet
-      worden. Wenn der Fokus-Fix ueber `SetForegroundWindow` laeuft, faellt
-      dieser Test ohnehin an — dann gleich mit erledigen.
+- [x] `reuse_existing` (Explorer-Fenster-Wiederverwendung via COM) war laut
+      eigenem Modulkommentar nie gegen eine echte Explorer-Instanz getestet.
+      Jetzt erledigt: `reuse_win.lua` ist entfallen — es machte das Navigate2
+      und danach ein blankes `SetForegroundWindow`, das Windows fuer einen
+      Hintergrundprozess still verwirft, das Fenster blieb also begraben.
+      `reuse_existing` geht jetzt als Option `reuse` an `reveal_in_fm`, das
+      Wiederverwenden und Hervorholen in einem Schritt macht — gegen eine echte
+      Explorer-Instanz verifiziert (kein neues Fenster, das bestehende wurde
+      navigiert *und* nach vorn geholt).
 - [ ] Neu: `reveal = true` ist ab jetzt Default, ein Datei-Knoten wird also im
       Explorer selektiert statt nur den Ordner zu oeffnen. Im Alltag
       gegenpruefen, ob das fuer `<leader>fm` wirklich das gewuenschte
