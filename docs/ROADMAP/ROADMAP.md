@@ -1,8 +1,12 @@
 # Roadmap
 
+- `MyPlugins update` und die anderen options - habe ich ja via statusline eingebunden, es wäre cool wenn es zum asbchluss dann via more eine summary gibtm welche upgedatet worden sind bzw bei der clone option wieviele neue gekloint worden sind, wieviele upgedatet usw...
+- lazyvim background open mit Shift Enter funktioniert nicht mehr
+
 :Image show oder leader im funkltnieren und zeigen das image under einem markdwon link, aber filetree.nvim weder tab nch cr machen irgendwas, gar kein respoponse wnenn die file ode ein iimage ist
 
-- pdfport.nvim - pdf erstellings funkiton zb pandoc
+- pdfport.nvim - pdf erstellings funkiton zb pandoc; im filetree wöre dass dan auch super: diese file/image als pdf erstellen, dann kann ich die pdf gleich im system app viewer aufmachen...
+
 
 - spotlight checken und lernen
 - documentation.nvim lernen

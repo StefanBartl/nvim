@@ -1,5 +1,4 @@
 # `markdown.nvim`
 
-> ldöl
 ---
 
