@@ -1,8 +1,10 @@
 # bindings-explorer — Konzept: Picker über die eigenen BINDINGS-Cheatsheets
 
-> **Status: Phase 1 implementiert** (2026-08-07) — `:Bindings search
-> [query]`, siehe `lua/bindings/usrcmds/bindings_explorer/`. Phase 2/3
-> unten sind weiterhin nur Konzept.
+> **Status: Phase 1 implementiert** (2026-08-07, erweitert nach direktem
+> User-Feedback) — `:Bindings search [keymaps|usercmds|autocmds] [query]`
+> und `:Bindings path [personal|extern]`, siehe
+> `lua/bindings/usrcmds/bindings_explorer/`. Phase 2/3 unten sind
+> weiterhin nur Konzept.
 
 Auslöser: beim Aufräumen von `docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/
 images.nvim.md` diese Sitzung fiel auf, dass das Sheet seit der ersten
@@ -68,32 +70,52 @@ zweigleisig statt einer einzigen "richtigen" Parse-Strategie.
 
 ### Phase 1 — Volltextsuche ✅ implementiert (2026-08-07)
 
-`:Bindings search [query]` (`lua/bindings/usrcmds/bindings_explorer/`,
-`M.enable()` in `bindings.usrcmds.init` neben casedesk registriert).
+`lua/bindings/usrcmds/bindings_explorer/` (`M.enable()` in
+`bindings.usrcmds.init` neben casedesk registriert):
 
-**Kein `ripgrep`**, wie ursprünglich hier skizziert — stattdessen exakt
-casedesks eigenes Muster übernommen (`case.query.M.grep`s
-`collect_recursive.files()` + `lib.nvim.fs.read` + reines Lua-Pattern-
-Matching, kein externer Prozess): dieselbe Aufgabe, dasselbe Werkzeug,
-schon vorhandener Präzedenzfall im selben Repo, keine zusätzliche
-Abhängigkeit (ripgrep-Verfügbarkeit wäre eine neue Voraussetzung gewesen,
-die dieses Config-Modul sonst nirgends hat).
+- `:Bindings search [query]` — beide BINDINGS-Bäume.
+- `:Bindings search keymaps|usercmds|autocmds [query]` — auf eine
+  Unterkategorie gescopt (`config.roots_for(folder)`, beide Bäume
+  verwenden dieselben drei Ordnernamen).
+- `:Bindings path [personal|extern]` — Wurzel(n) in die Zwischenablage,
+  derselbe Zweck wie das ältere `:BindingsPath`
+  (`lua/bindings/usrcmds/init.lua`), aber mit den tatsächlichen zwei
+  Pfaden statt dessen einzelnem, nie existierenden `docs/NOTES/BINDINGS`.
+  `:BindingsPath` selbst bleibt unverändert (nicht Teil dieses Auftrags,
+  bewusst nicht "nebenbei" mitgefixt).
 
-**Picker-Backend: `lib.nvim.ui.kit.select`, nicht `pickers.nvim`** — die
-hier vorher offene Frage ist geklärt: `pickers.nvim/lua/pickers/sources/`
-ist ausschließlich Dateisystem-Quellen (cwd/folder/repos/drives/system),
-kein generischer "Picker über eine beliebige Liste"-Einstieg. Genau das
-bereits dokumentierte Ergebnis aus casedesks eigener Prüfung
-(`ROADMAP.md`, "Backend-Kaskade… zurückgestellt") — hier bestätigt, nicht
-neu herausgefunden. `kit.select.open({ items, format_item, on_select })`
-übernimmt stattdessen, mit `<CR>` → Datei öffnen + Cursor auf die
-Fundzeile.
+**Live-Grep-in-Picker, nach direktem Feedback nachgezogen** — die erste
+Fassung hier war ein zweistufiger Prompt-dann-Liste-Fluss
+(`kit.input` → `kit.select`), kein tippen-und-live-filtern wie man es von
+Telescopes `live_grep` kennt. `live.lua` löst das über `pickers.nvim`s
+**Engine**-Schicht (`pickers.engines.load()`, dann `engine.live_grep({
+roots, prompt, query })`) — bewusst *nicht* die `sources/*`-Schicht, die
+weiterhin (bestätigt, siehe unten) nur Dateisystem-Quellen kennt. Die
+Engine-Schicht darunter ist dagegen generisch: `live_grep(opts)` nimmt
+`opts.roots` als beliebige Verzeichnisliste, einheitlich über
+telescope/fzf-lua/snacks hinweg (`Pickers.EngineOpts`,
+`lua/pickers/engines/{telescope,fzf,snacks}.lua`) — genau der Baustein,
+der für eine beliebige Zwei-Wurzel-Suche wie diese hier fehlte. `roots`
+wird direkt durchgereicht (voll oder Kategorie-gescopt), `query` wird zu
+telescopes `default_text`/fzf-luas `query`/snacks' Prompt-Vorbelegung —
+oder bleibt leer, dann tippt man im Picker selbst.
 
-Headless end-to-end verifiziert: `search.M.search("which-key")` liefert
-86 echte Treffer aus dem gerade frisch überarbeiteten Korpus,
-`nvim_get_commands()` bestätigt `:Bindings` als registriert. Die
-interaktive Picker-UI selbst (`kit.select`/`kit.input`) bleibt ungeprüft
-wie überall in diesem Ökosystem — braucht ein echtes Fenster.
+`search.lua`/`ui.lua` (`kit.select`) bleiben der **Fallback**, wenn keine
+Picker-Engine verfügbar ist (`live.open()` gibt dann `false` zurück,
+`init.lua`s `search_scoped()` wechselt automatisch um) — genau die
+statische Phase-1-Suche, die vor diesem Nachzug die einzige war.
+
+Headless end-to-end verifiziert: `config.roots_for("Keymaps")` liefert
+beide echten Unterpfade, eine Kategorie-gescopte Suche liefert
+ausschließlich Treffer unterhalb `Keymaps/`, `live.open()` gibt in dieser
+(pickers.nvim-losen) Testumgebung korrekt `false` zurück und fällt durch,
+`:Bindings search keymaps <query>` dispatcht über den echten Composer
+nachweislich auf die Kategorie-Route (nicht die allgemeine mit `"keymaps"`
+als Suchbegriff — Mehrsegment-Pfade schlagen die Ein-Segment-Route mit
+Arg, wie überall sonst in diesem Composer). Die tatsächliche Live-Grep-UI
+selbst (`engine.live_grep`) bleibt ungeprüft wie überall in diesem
+Ökosystem — braucht ein echtes Fenster plus eine echte
+telescope/fzf-lua/snacks-Installation.
 
 ### Phase 2 — Tabellenzeilen als durchsuchbare Datensätze
 
