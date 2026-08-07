@@ -15,9 +15,11 @@ Optional, **off by default** (`config.keymaps = false`). If the user sets
 | `km.hl` | n | `:MigrateHl` (current-line mode) | "migrate: run :MigrateHl (current line)" |
 | `km.lsp` | n | `:MigrateLsp` (current-line mode) | "migrate: run :MigrateLsp (current line)" |
 
-Which-key picks up `desc` automatically since there's no fixed prefix;
-`bindings/which_key.lua` registers no groups, only reports which-key's
-presence for `:checkhealth`.
+## which-key
+
+No group registration — no fixed prefix to label, so `bindings/which_key.lua`
+only reports which-key's presence for `:checkhealth`. which-key still picks
+up each `desc` automatically and labels them individually.
 
 ## Telescope picker keys (active only while a migration picker is open)
 

@@ -9,6 +9,10 @@ Alle Kommandos sind dünne Wrapper um
 API, die auch die Keymaps benutzen. Keymap und Command können also nicht
 auseinanderlaufen.
 
+**Status: durchgehend [custom]**, keine Zeilen-Markierung nötig — `harpoon.
+nvim` selbst bringt keine `:Harpoon…`-Commands mit, es gibt also keinen
+Plugin-Default, gegen den "custom" hier kontrastieren würde.
+
 ---
 
 ## 1. Unified Verb `:Harpoon`

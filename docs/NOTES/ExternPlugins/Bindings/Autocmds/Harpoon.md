@@ -1,5 +1,10 @@
 # Harpoon — Autocmds
 
+**Status: durchgehend [custom]**, keine Zeilen-Markierung nötig —
+`harpoon.nvim` selbst registriert keine eigenen Autocmds, gegen die
+"custom" hier kontrastieren würde; alle vier Gruppen sind vollständig
+eigener Code obendrauf.
+
 | Gruppe | Event(s) | Quelle | Zweck |
 |---|---|---|---|
 | `HarpoonHardening` | `BufLeave`, `FocusLost` (konfigurierbar via `autocmd_events`) | [config/harpoon/hardening.lua](../../../../../lua/config/harpoon/hardening.lua) | Debounced Save (Default 200 ms, `debounce_ms`), damit Änderungen nicht erst beim Beenden landen. |

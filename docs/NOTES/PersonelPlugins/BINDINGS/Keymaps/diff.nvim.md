@@ -20,3 +20,4 @@ Module doc: "The only keymap diff.nvim ships is the 'leave diffmode' key."
 
 - **Why buffer scope is the default**: the original global `<Esc><Esc>` mapping noticeably delayed a normal `<Esc>` everywhere, since Neovim had to wait for a possible second key. Scoping the mapping to buffers diff.nvim itself diffs avoids that global cost.
 - The float-close key exists separately because split/inline views rely on `:q`/`:DiffClear` instead — a float wants an obvious dedicated close key.
+- No which-key group — confirmed against source: no `bindings/which_key.lua` (or equivalent) exists. `desc` is set on every key, so which-key still discovers them individually if installed; there's just no leader-prefixed group to label.

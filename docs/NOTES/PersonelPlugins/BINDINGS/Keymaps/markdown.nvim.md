@@ -57,6 +57,14 @@ Buffer-local, installed on `FileType` for markdown/mdx/md (see
 | `<CR>` | n | `tableview/views/table_selector.lua` — renders chosen table + closes selector |
 | `q`/`<Esc>` | n | same — closes selector |
 
+## which-key
+
+`bindings/which_key.lua`, `M.setup()` — labels `<leader>t` as "Markdown"
+and `<leader>tv` as "Markdown TableView" (the two leader-prefixed groups;
+every other default key is a bare motion/bracket pair with its own `desc`,
+no group needed). Soft-guarded, no-op if which-key is absent. Handles v3
+(`wk.add`) and v2 (`wk.register`).
+
 ## Notes
 
 - `docs/BINDINGS.lua`'s `default_keys.editing`/`.tableview` tables match `DEFAULT_KEYMAPS`/`apply_tableview` id-for-id.

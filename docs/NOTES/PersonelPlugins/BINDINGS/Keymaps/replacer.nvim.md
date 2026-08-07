@@ -40,5 +40,13 @@ hood.
 | `keys.quit` (`<Esc>`) | n | Actually closes the picker |
 | `<CR>` (Telescope's own default select, not remappable) | — | Multi-select aware: applies to all multi-selected entries if any, else the single entry under cursor |
 
-`common.register_which_key` (both pickers) is a soft, guarded which-key
-label registration — no-op if which-key.nvim isn't installed or lacks `.add()`.
+## which-key
+
+`common.register_which_key` (shared by both pickers) is a soft, guarded
+which-key label registration — no-op if which-key.nvim isn't installed or
+lacks `.add()`. No fixed group prefix (these are ephemeral, picker-local
+keymaps, not a global namespace); each picker key gets its own label
+instead. The fzf-lua picker's `--bind` actions (`apply_all`/
+`toggle_select*`/`replace_and_reopen`, table above) are the exception —
+they never reach which-key at all, since they're fzf's own terminal-native
+binding mechanism, not real `vim.keymap.set` calls.

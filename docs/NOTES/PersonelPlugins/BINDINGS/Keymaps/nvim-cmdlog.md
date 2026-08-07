@@ -3,18 +3,26 @@
 No global/normal-mode keymaps **by default**. Since 2026-07-25, `setup()`
 accepts an optional `keymaps` table (`{ [subcommand] = lhs }`, `""` for bare
 `:Cmdlog`) that registers real normal-mode `vim.keymap.set` bindings for
-`:Cmdlog <subcommand>`, picked up by which-key.nvim's `add()` when it's
-installed — see `lua/cmdlog/integrations/which_key.lua` and
-`docs/OPTIONS.md`. Not configured in this config as of this writing (no
-`keymaps` passed to `setup()`), so the point below still holds in practice:
-all *active* keymaps remain prompt-buffer-local, inside picker
-`attach_mappings` — different per backend (`config.options.picker`:
-`"telescope"` or `"fzf"`).
+`:Cmdlog <subcommand>` — see `docs/OPTIONS.md`. Not configured in this
+config as of this writing (no `keymaps` passed to `setup()`), so the point
+below still holds in practice: all *active* keymaps remain
+prompt-buffer-local, inside picker `attach_mappings` — different per
+backend (`config.options.picker`: `"telescope"` or `"fzf"`).
 
 Cross-reference: no `docs/BINDINGS.md`. `README.md`'s "Shortcuts (inside
 pickers)" section is accurate for the Telescope backend but incomplete (see
 Notes below); `docs/ADD_PICKER.md` documents the extension pattern for
 plugin authors, not end-user keys.
+
+## which-key
+
+Only relevant once the optional `keymaps` table above is actually
+configured (not the case in this config currently) — those global bindings
+get picked up by which-key.nvim's `add()` when installed, see
+`lua/cmdlog/integrations/which_key.lua`. No-op if which-key is absent. The
+prompt-buffer-local picker keys (Telescope/fzf-lua sections below) are not
+which-key's domain — they live inside `attach_mappings`, not the global
+keymap namespace.
 
 ## Telescope backend — shared module `lua/cmdlog/ui/mappings.lua`
 

@@ -52,3 +52,4 @@ Built from an actions table, each action individually configurable via
 
 - Opening the README viewer explicitly tears down the prompt autocmds and prompt keymaps before installing its own `q` keymap; `close_viewer()` restores them — the two keymap sets are mutually exclusive **by design**, not overlapping accidentally.
 - See [Autocmds cheatsheet](../Autocmds/reposcope.nvim.md) for the prompt-buffer autocmds these keymaps interact with.
+- **No which-key integration at all** — confirmed against source: no `require("which-key")`/`wk.add`/`wk.register` anywhere in the repo. Notably different from the "no group needed" case elsewhere in this corpus: `<leader>r` genuinely is a shared prefix (`<leader>rs`/`<leader>rc`) that a group label could cover, it just isn't wired up.

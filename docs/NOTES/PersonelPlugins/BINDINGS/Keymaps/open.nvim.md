@@ -30,3 +30,10 @@ Cross-reference: `docs/BINDINGS.md`'s Keymaps section now documents the
 `keymaps` option (previously it only listed the manual `vim.keymap.set`
 example and noted built-in keymap config as an unimplemented roadmap idea —
 that idea has since shipped).
+
+## Notes
+
+- No which-key integration — confirmed against source: no `which_key`/
+  `which-key` reference anywhere in `lua/open/`. `<leader>o` is a shared
+  prefix across all three configured keys, so there'd be something real to
+  group-label if this plugin grows a which-key module later.

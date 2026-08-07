@@ -22,4 +22,5 @@ here (reasonable — there's nothing default-active to document).
 ## Notes
 
 - None of these are active until a consuming plugin (or your own config) actually calls the enclosing function — they're building blocks, not standing keymaps.
+- No which-key integration — confirmed against source: zero `which_key`/`which-key` references in the whole tree. Makes sense for a library: which-key group labeling is each *consumer's* job (see `debugging.nvim.md`/`language.nvim.md`/`markdown.nvim.md`/`filetree.nvim.md`/`pickers.nvim.md` for real examples built on top of `lib.nvim.map`), not something lib.nvim itself would register.
 - See [lib.nvim's Autocmds cheatsheet](../Autocmds/lib.nvim.md) for the autocmd-driven counterparts (surface lifecycle, theme re-materialization, etc.) that back these same UI components.

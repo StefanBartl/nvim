@@ -46,6 +46,15 @@ keeps its native keys.
 | `<C-h>` | n | Open translate-history picker, load chosen entry |
 | `<C-y>` | n | Copy output to `+`/`"` registers, record history entry, notify |
 
+## which-key
+
+`bindings/which_key/init.lua`, `M.setup(cfg)` — labels the `spell.keymaps.
+panel`/`spell.keymaps.fix` prefixes as "Spell"/"Grammar fix" groups (only
+the ones actually configured to a non-empty string; skips silently
+otherwise). Soft-guarded, no-op if which-key is absent. `translate.keymaps.
+*`/`thesaurus.keymap` have no group (single keys, off by default, `desc`
+carries them).
+
 ## Notes
 
 - Every `kit.select`/`kit.menu` call (spell review panel, per-issue action menu, retarget/history pickers) opens a `lib.nvim.ui.kit` component, which supplies its own `<CR>`/`<C-n>`/`<C-p>`/`<Up>`/`<Down>`/`<Esc>` keys — see [lib.nvim's cheatsheet](./lib.nvim.md) for those.

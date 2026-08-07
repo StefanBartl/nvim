@@ -16,7 +16,7 @@ Docs: `docs/BINDINGS.md`, `docs/ROADMAP/`, `README.md`, `doc/images.txt`
 | `:Image next` | — | Zum nächsten Bild springen und es zeigen |
 | `:Image prev` | — | Rückwärts; beide laufen um |
 | `:Image info [path]` | — | Format, Abmessungen, Dateigröße |
-| `:Image paste` | — | Bild aus der Zwischenablage ablegen und verlinken |
+| `:Image paste [name]` | — | Bild aus der Zwischenablage ablegen und verlinken; mit `name` direkt benannt statt Abfrage/Template |
 | `:Image screenshot` | — | Bildschirmausschnitt interaktiv aufnehmen und verlinken — spart die Zwischenablage als Zwischenschritt |
 | `:Image replace [path]` | — | Bestehendes Bild durch Zwischenablage ersetzen, Link bleibt gleich |
 | `:Image export [path]` | — | Bild als PDF exportieren, neben der Quelldatei (braucht ImageMagick) |
@@ -50,7 +50,7 @@ Der Command-Name folgt der Option `command`.
   werden die Kacheln in einem üblichen Terminal zu schmal. Bei zu wenig Platz
   kommt eine Meldung statt unlesbarer Miniaturen.
 
-- **`:Image paste`** ist der Alltagsfall für Support-Dokumentation:
+- **`:Image paste [name]`** ist der Alltagsfall für Support-Dokumentation:
   Screenshot machen, Command ausführen, das PNG landet unter
   `assets/<dokument>-<zeitstempel>.png` und `![](assets/…)` steht an der
   Cursorposition. Braucht Bilddaten in der Zwischenablage — eine *kopierte
@@ -63,6 +63,21 @@ Der Command-Name folgt der Option `command`.
   dieser Stelle wurde noch nichts aus der Zwischenablage gelesen, ein Abbruch
   bedeutet also wirklich "nichts tun". Beide Abfragen sind default `false`,
   damit der schnelle Fall ohne Unterbrechung bleibt.
+
+  `:Image paste {name}` (das optionale Argument) sanitisiert `{name}` genauso
+  wie die Abfrage und verwendet es direkt — überspringt sowohl die
+  interaktive Abfrage als auch `paste.ask_filename`, weil ein am Aufruf schon
+  mitgegebener Name nichts mehr zu erfragen übrig lässt.
+
+  Zielverzeichnis: existiert im Dokumentverzeichnis bereits ein Ordner namens
+  `Resources` oder `Ressourcen` (case-insensitiv, `paste.existing_dir_names`),
+  wird dieser statt `paste.dir` verwendet — kein zweiter, paralleler
+  `assets`-Ordner. Und: die Zielverzeichnis-Auflösung (inkl. `mkdir`) läuft
+  jetzt erst NACH einer erfolgreichen Aufnahme, nicht mehr davor — vorher legte
+  `:Image paste` bei leerer Zwischenablage trotzdem ein leeres `assets`
+  an, weil `target_paths()` vor dem eigentlichen Zwischenablage-Lesen lief.
+  Betrifft auch `:Image screenshot` (teilt denselben Pfad) — ein abgebrochener
+  Screenshot (`<Esc>`) legt jetzt ebenfalls kein Verzeichnis mehr an.
 
 - **`:Image screenshot`** nimmt die Bildschirmauswahl selbst auf, statt die
   Zwischenablage zu lesen — sonst identisch zu `:Image paste` (Zielpfad,
@@ -191,6 +206,8 @@ Der Command-Name folgt der Option `command`.
   seinen Vergleichspartner noch nicht kannte. Reine Berechnung in
   `images.scale`, ohne Terminal testbar.
 
+## Changelog
+
 - 2026-08-06: Sheet war seit der ersten Fassung veraltet — `replace`,
   `orphans`, `pickers`, `compare`, `zen` und `check` fehlten komplett (das
   Plugin ist seither um diese Subcommands gewachsen). Bei der
@@ -266,3 +283,20 @@ Der Command-Name folgt der Option `command`.
   jetzt per `vim.schedule` erst im nächsten Tick, also nachweislich nach
   Neovims eigener Farbe. `show`/Hover bleiben synchron (kein Fenster,
   nichts malt darüber).
+- 2026-08-07 (4): Drei `:Image paste`-Verbesserungen (User-Feedback nach
+  echtem Gebrauch). Erstens ein echter Bug: bei leerer Zwischenablage
+  entstand trotzdem ein leeres `assets`-Verzeichnis, weil `target_paths()`
+  (inkl. `mkdir`) vor dem Zwischenablage-Lesen lief statt danach — jetzt
+  schreibt `capture()` erst in eine Temp-Datei, das Zielverzeichnis wird nur
+  bei Erfolg aufgelöst/angelegt und die Datei dorthin verschoben (betrifft
+  auch `:Image screenshot`, teilt denselben Pfad). Zweitens
+  `paste.existing_dir_names` (Default `{ "Resources", "Ressourcen" }`):
+  existiert im Dokumentverzeichnis bereits so ein Ordner, wird der statt
+  `paste.dir` verwendet, kein zweiter `assets` daneben. Drittens
+  `:Image paste {name}` als optionales Argument — sanitisiert wie die
+  `ask_filename`-Abfrage, überspringt aber jede Abfrage, weil der Name schon
+  beim Aufruf feststeht. Neue Tests: `TESTS/paste_target_spec.lua` (Fake-
+  `capture`, kein echtes Clipboard nötig — dieselbe Technik wie
+  `orphans_spec.lua` für Dateisystem-Tests ohne Terminal).
+- 2026-08-07 (5): Changelog in eine eigene Überschrift gezogen, per
+  `docs/NOTES/BINDINGS-FORMAT.md`.

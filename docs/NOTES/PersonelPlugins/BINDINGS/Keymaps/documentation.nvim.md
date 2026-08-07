@@ -82,6 +82,17 @@ Keyed by **action id**, not by the default lhs, so a rebinding survives a change
 of defaults. A disabled action still appears in the `?` overlay marked
 `(disabled)`. An unknown action id is reported, not silently ignored.
 
+## which-key
+
+Optional, buffer-local to `:DocBrowse` (`opts.which_key ~= false`, default
+on) — `lua/documentation/editor/browse/whichkey.lua`, lazily required from
+`bind()` so a headless `--check` run never loads a UI plugin. **Descriptive,
+not authoritative**: every key already carries its own `desc` from `bind()`,
+which-key would discover them on its own regardless — this only adds the
+grouping and guarantees the popup names an action the same way the `?`
+cheatsheet does. Handles both which-key v3 (`wk.add`) and v2 (`wk.register`)
+by presence-of-function, not version number. No-op if which-key is absent.
+
 ## Collision check vs. the other personal plugins (2026-07-28)
 
 Run against every `Keymaps/*.md` in this folder. Nominal overlaps exist and are

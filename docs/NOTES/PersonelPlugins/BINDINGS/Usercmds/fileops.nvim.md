@@ -67,11 +67,6 @@ own built-in `:mksession`.
 
 ## Notes
 
-- 2026-07-21: extended from the original 11 subcommands to 19 in one session
-  — `open`, `path`, `info`, `bulk rename` are new subcommands; `copy`,
-  `touch`, `first`, `last` were added just before that. `bulk rename` is a
-  two-segment composer route (`path = { "bulk", "rename" }`), same mechanism
-  as any other subcommand, dispatched through a synthetic `"bulk_rename"` key.
 - `next`/`prev`'s first arg can't be a strict enum anymore now that it may
   be a glob pattern instead of a target keyword (`:File next *.lua`) — a
   custom `FILEOPS_CYCLE_ARG` composer type validates anything but still
@@ -113,6 +108,14 @@ own built-in `:mksession`.
 - `resolve_dest`'s `[%] {dest}` two-shape argument (implicit `%` when one
   arg given, explicit when two) is preserved by forwarding composer's bound
   positionals straight into `resolve_dest(fargs)`/`dispatch()`.
+
+## Changelog
+
+- 2026-07-21: extended from the original 11 subcommands to 19 in one session
+  — `open`, `path`, `info`, `bulk rename` are new subcommands; `copy`,
+  `touch`, `first`, `last` were added just before that. `bulk rename` is a
+  two-segment composer route (`path = { "bulk", "rename" }`), same mechanism
+  as any other subcommand, dispatched through a synthetic `"bulk_rename"` key.
 - 2026-07-23: the feature branch that did the 2026-07-21 work above
   (`claude/session-ccf9cf`) had branched *before* `d803686`
   ("refactor: drop `_nvim` suffix from lua module root") landed on `main`,
@@ -126,7 +129,7 @@ own built-in `:mksession`.
   git placed them at the right new path automatically). This is why the
   Autocmds cheatsheet's augroup names had a stale `fileops_nvim_*` infix
   until the same pass fixed it.
-- 2026-07-23: implemented the one item the merged branch had legitimately
+- 2026-07-23 (2): implemented the one item the merged branch had legitimately
   left undone — "Session-Kompatibilität" (`session_compat`, see above) — and
   caught a real bug in the first draft via the new `file_spec.lua` test:
   bare `vim.cmd("mksession!")` does **not** reuse `v:this_session`, it

@@ -218,6 +218,16 @@ builtin mappings specifically. An unresolvable name or malformed entry
 (`{ lhs, engine? }` expected) is skipped with a `notify.warn`, never a
 throw or a dead keymap.
 
+## which-key
+
+`bindings/whichkey.lua` — no shared leader-prefix group (built-in keymaps
+and each collection's `files`/`grep`/`smart` keys are scattered, not one
+prefix), so `M.register()`/`M.register_collection()` label every configured
+key individually instead (`"Pickers: …"`/`"Pickers[<collection>]: …"`).
+Soft-guarded via `wk.add` presence check, no-op if which-key is absent or
+only the v2 API is available (v3-only here, unlike most other personal
+plugins' which-key modules).
+
 ## Notes
 
 - `lua/pickers/entry_actions/README.md` and `lua/pickers/keys/`'s own module

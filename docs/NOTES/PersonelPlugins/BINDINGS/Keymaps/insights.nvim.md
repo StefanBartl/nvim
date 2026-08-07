@@ -3,8 +3,13 @@
 Source: `lua/insights/bindings/keymaps.lua`, `ui/scratch.lua`, `imports/init.lua`
 Cross-reference: `docs/BINDINGS.md` — comprehensive, verified to match source exactly; very good cross-reference.
 
-Plain `vim.keymap.set(...)`, no wrapper. Every mapping carries a `desc`, so
-which-key.nvim discovers them automatically.
+Plain `vim.keymap.set(...)`, no wrapper.
+
+## which-key
+
+No explicit group registration — every mapping carries a `desc`, so
+which-key.nvim discovers and labels them individually on its own. No-op
+if which-key is absent (nothing here depends on it).
 
 | lhs (config key, default) | mode | action | desc | condition |
 | --- | --- | --- | --- | --- |

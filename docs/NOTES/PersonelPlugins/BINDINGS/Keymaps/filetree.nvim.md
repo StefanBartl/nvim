@@ -105,6 +105,14 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 | `/` (neo-tree's `?` help popup) | Removed (`vim.keymap.del`) so native Vim search works there | `adapter.name == "neotree"` |
 | `y`/`Y`/`<CR>` and `n`/`N`/`q`/`<Esc>` | Confirm/cancel a generic yes-no popup (used by e.g. trash confirm) | whenever `filetree.util.confirm(opts)` is invoked |
 
+## which-key
+
+`bindings/init.lua`'s `M.setup_which_key()` — only one group registered:
+`<leader>m` → "filetree: marks" (`WK_GROUPS` table, currently a single
+entry). Every other tree-buffer key already carries its own `desc`, so no
+further groups are needed. Soft-guarded, no-op if which-key is absent.
+Handles v3 (`wk.add`) and v2 (`wk.register`).
+
 ## Notes
 
 - **Count support added 2026-07-31** for `-`/`+` (nav), `<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>` (preview scroll, both float and buffer mode), and `w` (window-size cycler, direct-index jump rather than a step multiplier — see the `ui` table above). None of these read a count before this date.

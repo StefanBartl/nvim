@@ -23,6 +23,15 @@ Prefix `km.prefix` defaults to `<lt>` (the literal `<` key).
 | `q` / `<Esc>` | n | Inside the `FileType` autocmd (pattern `messages`/`noice`) — see [Autocmds cheatsheet](../Autocmds/debugging.nvim.md) | Closes the debug window showing that buffer |
 | `q` / `<Esc>` | n | `commands.lua`'s `overview_float()` (bare `:Debug` when `config.overview == "float"`, the default) | Closes the floating overview window — a **separate** close-keymap site from the one above, no `desc` given here |
 
+## which-key
+
+`bindings/which_key.lua`, `M.setup(prefix)` — registers a single group
+label ("Debug views") for the configured `km.prefix` (default `<lt>`),
+soft-guarded (`pcall(require, "which-key")`, no-op if absent). Individual
+keys already carry their own `desc`; only the shared-prefix group needs
+explicit labeling. Handles both which-key v3 (`wk.add`) and v2
+(`wk.register`) APIs.
+
 ## Notes
 
 - All static keymaps use `km.map` (resolved as `vim.keymap.set`, or a no-op if `vim.keymap` is unavailable).

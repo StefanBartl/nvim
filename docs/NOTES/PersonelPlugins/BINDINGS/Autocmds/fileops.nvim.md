@@ -23,6 +23,9 @@ gated by `config.explorer.refresh_on_change`.
 
 - `on_hold` is opt-in — most invasive feature here (changes `updatetime` globally while enabled).
 - `conflict_marks` uses window-local match IDs (`vim.w._fileops_conflict_match_ids`), cleaned up symmetrically on enter/leave.
+
+## Changelog
+
 - 2026-07-23: fixed the `_nvim` infix throughout this file (`fileops_nvim_*` →
   `fileops_*`) — stale from before the `lua/fileops_nvim` → `lua/fileops`
   module rename (`d803686`, see git log). The session-ccf9cf branch that

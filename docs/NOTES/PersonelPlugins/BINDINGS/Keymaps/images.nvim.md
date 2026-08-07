@@ -32,6 +32,17 @@ require("images").setup({
 })
 ```
 
+## which-key
+
+`<leader>i` — **hergeleiteter**, nicht fest konfigurierter Präfix: die
+Gruppe ergibt sich aus dem längsten gemeinsamen Präfix der tatsächlich
+konfigurierten `keymaps.*`-Werte, nicht aus einer eigenen
+`which_key.prefix`-Option — ein vollständig umgemapptes Set gruppiert
+also weiterhin korrekt. Übersprungen, wenn weniger als zwei Keys einen
+Präfix teilen, oder wenn der Präfix selbst einer der gemappten Keys wäre
+(sonst zeigte which-key an derselben Taste sowohl eine Aktion als auch
+eine Gruppe). Nur mit which-key.nvim installiert, sonst kein Effekt.
+
 ## Notes
 
 - **Der `i`-Präfix war komplett frei**: Vor der Vergabe gegen den gesamten
@@ -57,6 +68,8 @@ require("images").setup({
   sondern im Usercmds-Sheet, weil sie nicht über `keymaps.*`/
   `keymaps.filetypes` laufen wie der Rest dieser Tabelle.
 
+## Changelog
+
 - 2026-08-06: bei der Checklisten-Runde gegengeprüft — Inhalt stimmt weiterhin
   mit `bindings/keymaps.lua` überein, keine Änderung nötig.
 - 2026-08-06 (2): `<leader>is` für `:Image screenshot` ergänzt.
@@ -65,3 +78,6 @@ require("images").setup({
 - 2026-08-06 (4): `:Image redact` ergänzt (Usercommand-only, mit
   fensterlokalen Tasten statt `keymaps.*`, siehe oben) — kein neues
   `keymaps.*`-Feld.
+- 2026-08-06 (5): `## which-key`-Abschnitt ergänzt und Changelog in eine
+  eigene Überschrift gezogen, per `docs/NOTES/BINDINGS-FORMAT.md` (erste
+  Korrektur nach dessen Regeln).

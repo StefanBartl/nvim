@@ -25,6 +25,12 @@ Zwei Details zur which-key-Anbindung:
 
 ---
 
+**Status: durchgehend [custom]**, keine Zeilen-Markierung nötig — anders als
+bei den meisten anderen Extern-Sheets bringt `harpoon.nvim` selbst keine
+Leader-Keymaps mit, die hier überschrieben werden könnten (Regel 1 oben:
+jede Map ist ein eigener `<cmd>Harpoon …<cr>`-Wrapper). Es gibt also nichts,
+wogegen "custom" hier kontrastieren würde.
+
 ## Gruppe `<leader>h` — "Harpoon"
 
 | Mapping | Aktion | = Command |

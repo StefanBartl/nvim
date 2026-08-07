@@ -4,6 +4,7 @@
 local usercmd = require("lib.nvim.usercmd")
 
 require("bindings.usrcmds.case").enable()
+require("bindings.usrcmds.bindings_explorer").enable()
 
 
 --TEMP: nur temporär (wahrscheinlich

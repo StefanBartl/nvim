@@ -19,3 +19,7 @@ Worth binding yourself, e.g.:
 vim.keymap.set("n", "<leader>rr", "<Cmd>RARequest<CR>")
 vim.keymap.set("n", "<leader>rs", "<Cmd>RASend<CR>")
 ```
+
+No which-key integration — confirmed against source: no `which_key`/
+`which-key` reference anywhere. Nothing to label since the plugin ships no
+keymaps of its own.

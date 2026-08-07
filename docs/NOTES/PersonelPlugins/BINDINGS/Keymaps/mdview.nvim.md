@@ -25,3 +25,7 @@ vim.keymap.set("n", "<leader>ms", "<Cmd>MDView sync toggle<CR>",
 Cross-reference: `docs/BINDINGS.md` is the best-maintained doc among all
 audited repos — correctly states "no keymaps" with this exact suggestion, no
 corrections needed.
+
+No which-key integration — confirmed against source: no `which_key`/
+`which-key` reference anywhere. Nothing to label since mdview.nvim ships no
+keymaps of its own to begin with.
