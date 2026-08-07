@@ -444,6 +444,17 @@ etwas matcht, nicht nur *dass*.
 3. Lineare Termfrequenz ließ ein 20× wiederholtes Wort ein selteneres,
    diagnostisch wichtigeres überstimmen → sublinear (`1 + log(tf)`).
 
+**Nachtrag (2026-08-07): Titel-Gewichtung.** Ein Wort, das im Titel steht
+(einem Satz, den man selbst als Zusammenfassung gewählt hat), sagt mehr
+über das eigentliche Thema aus als dasselbe Wort irgendwo in drei Absätzen
+Korrespondenz mit Grußformeln und SNOW-Boilerplate. `term_counts` zählt
+Titel-Begriffe deshalb `TITLE_BOOST = 2`-fach zusätzlich zu ihrem
+natürlichen Vorkommen im Volltext — die sublineare TF-IDF-Gewichtung
+verhindert, dass das den Score dominiert, hebt Titel-Begriffe aber
+sichtbar an. Ergänzt die bereits vorhandene zweisprachige Stopwortliste
+(Artikel, Füllwörter), die genau denselben „Menge schlägt Relevanz
+nicht"-Zweck schon für häufige Funktionswörter erfüllt.
+
 **Ehrlicher Stand danach:** die Reihenfolge der Treffer wirkt plausibel
 (913070 ↔ 948965, beide DEX/Distributed Execution, 19 %; 711373 ↔ 859769,
 beide SAP-Fiori-Elementidentifikation, 12 % nach Einbeziehung von

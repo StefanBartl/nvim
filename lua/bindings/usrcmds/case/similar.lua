@@ -108,13 +108,29 @@ end
 --- just one would miss half the bestand — see CONCEPT.md §8a.
 local SOURCE_FILES = { "Summary.md", "Notes.md" }
 
+--- A term that's part of the TITLE gets counted this many times ON TOP OF
+--- its natural occurrences in the combined text (ROADMAP.md v9: "gleiche
+--- wörter im title zählen ein wenig mehr"). The title is a one-sentence
+--- human summary of what the case IS ("Unmapped Control after Fiori
+--- Update"); the body is a transcript of the whole back-and-forth,
+--- including greetings, SNOW boilerplate, and "Best Regards" — a word the
+--- author chose to put in the title is far more likely to be the actual
+--- topic than a word that merely occurs somewhere in three paragraphs of
+--- correspondence. Sublinear TF-IDF (`tfidf_vector` below) means this
+--- doesn't dominate the score outright — log(1+count) flattens the boost —
+--- it nudges title terms up without letting a two-word title out-rank a
+--- detailed Summary.md on its own.
+local TITLE_BOOST = 2
+
 ---@param entry Lib.Case.RegistryEntry
----@return string
-local function document_text(entry)
+---@return string title  raw, untokenized (caller tokenizes)
+---@return string body  title + Summary.md + Notes.md, concatenated
+local function document_parts(entry)
   local m = meta.read(entry.dir)
+  local title = (m and m.title) or ""
   local parts = {}
-  if m and m.title then
-    parts[#parts + 1] = m.title
+  if title ~= "" then
+    parts[#parts + 1] = title
   end
   for _, name in ipairs(SOURCE_FILES) do
     local content = read(entry.dir .. "/" .. name)
@@ -122,15 +138,21 @@ local function document_text(entry)
       parts[#parts + 1] = content
     end
   end
-  return table.concat(parts, "\n")
+  return title, table.concat(parts, "\n")
 end
 
----@param tokens string[]
+---@param tokens string[]  the full document (title already included once)
+---@param title_tokens string[]|nil  same terms again, to weight them up
 ---@return table<string, number> term -> raw count
-local function term_counts(tokens)
+local function term_counts(tokens, title_tokens)
   local tf = {}
   for _, t in ipairs(tokens) do
     tf[t] = (tf[t] or 0) + 1
+  end
+  if title_tokens then
+    for _, t in ipairs(title_tokens) do
+      tf[t] = (tf[t] or 0) + TITLE_BOOST
+    end
   end
   return tf
 end
@@ -153,7 +175,8 @@ function M.rank(short, n)
   local entries = registry.list()
   local docs, target_idx = {}, nil
   for i, e in ipairs(entries) do
-    docs[i] = term_counts(tokenize(document_text(e)))
+    local title, body = document_parts(e)
+    docs[i] = term_counts(tokenize(body), tokenize(title))
     if e.short == short then
       target_idx = i
     end
