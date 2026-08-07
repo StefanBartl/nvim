@@ -44,7 +44,7 @@ darunter, sofern relevant.
 | 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY |||||||
 | debugging.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | dap.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| diff.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| diff.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | language.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | cmdlog.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | emojis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -889,3 +889,50 @@ noch, `:Mark` schlüssle nach roher Zeilennummer statt Extmark-ID — das war be
 (`docs/ROADMAP/anchor-stable-marks.md`, Status "implemented"), korrigiert zu einem
 "Previously an issue, now fixed"-Abschnitt; `Usercmds/buffer-ctx.md` um die beiden obigen
 Refactoring-Funde ergänzt. Alles committet (`91f7d5b`) und nach `origin/main` gepusht.
+
+### diff.nvim
+
+Größtes bisher geprüftes Plugin (72 Lua-Dateien). Ein Durchlauf wurde durch ein Session-Limit
+unterbrochen, direkt nachdem der erste Push bereits erfolgreich war ("Let's watch the new CI
+run" war die letzte Nachricht) — der eigentliche Checklisten-Pass war zu diesem Zeitpunkt
+bereits vollständig abgeschlossen und gepusht (mehrere Commits, u. a. README-ToC, `stylua.toml`/
+`.luacheckrc` neu angelegt + CI-Lint ergänzt, ein In-Memory-Fake-Clipboard für die Headless-Suite,
+Typkorrekturen für Source/Target-Params, sowie als Bonus die letzte offene Cross-Plugin-Roadmap-
+Aufgabe aus `images.nvim`s `docs/ROADMAP/CROSS-PLUGIN.md`: `:Diff` erkennt jetzt zwei Rasterbild-
+Pfade und zeigt sie über `images.nvim`s `gallery()` nebeneinander statt sie sinnlos byteweise zu
+text-diffen).
+
+Bei der Fortsetzung fiel auf, dass **CI seit mindestens zehn aufeinanderfolgenden Commits durchgängig
+rot war** (`gh run list`, zurück bis 2026-07-31) — zwei echte, vom eigentlichen Checklisten-Pass
+unabhängige Infrastruktur-Bugs, nicht durch diesen Rollout verursacht, aber dabei gefunden und
+behoben:
+
+- **CI-Fund 1**: `JohnnyMorganz/stylua-action@v4` im `lint`-Job hatte keinen `token`-Parameter
+  ("Parameter token or opts.auth is required") — `replacer.nvim`s Workflow hat ihn bereits korrekt
+  gesetzt, als Vorlage übernommen.
+- **CI-Fund 2**: `stylua.toml` behauptete `line_endings = "Windows"`, aber die tatsächlich in Git
+  gespeicherten Blobs sind LF (verifiziert: `git show HEAD:<file> | grep -c $'\r'` == 0 auf
+  mehreren Dateien) — auf dem lokalen Windows-Checkout mit `core.autocrlf=true` unsichtbar (Git
+  wandelt beim Checkout in CRLF um und beim Commit automatisch zurück in LF), auf dem
+  Linux-CI-Runner (kein autocrlf) aber ein Fehlschlag auf buchstäblich jeder Datei. Auf `"Unix"`
+  korrigiert.
+- **CI-Fund 3**: selbst danach schlug der `tests`-Job weiter fehl, obwohl die Suite sichtbar
+  `DIFF_NVIM_TESTS_OK` ausgab (13/13 Specs grün) — der rohe Exitcode von `nvim --headless` selbst
+  war auf dem Runner ungleich 0 (Deprecation-Warnungen o. ä., kein Testfehler) und leckte durch die
+  Pipe durch. Workflow umgebaut: `nvim ... > out.log 2>&1` statt `| tee out.log`, `set +e` davor,
+  einzig `grep -q DIFF_NVIM_TESTS_OK out.log` entscheidet über Erfolg — derselbe Marker-Ansatz wie
+  bei allen Schwester-Plugins, nur ohne die Pipe, die den nvim-eigenen Exitcode durchließ. CI danach
+  grün (beide Jobs).
+
+Ansonsten deckte der ursprüngliche Pass alle fünf Checklisten ab (PERFORMANCE: kein Hotpath über
+das übliche Rendering hinaus; LUA_NVIM: `lib.nvim` durchgängig, `@types` vollständig; REVIEW:
+Tooling ergänzt, `@return`-Aritäten stichprobenartig verifiziert; RELEASE: README/doc/BINDINGS/
+ROADMAP/`:checkhealth`/GitHub-Metadaten bereits vollständig oder ergänzt, inkl. der
+Vimdoc-Tag-Kollisionsprüfung gegen Neovims eingebautes `:h diff`; Refactoring: `notify()`
+ausschließlich an Boundary-Stellen). Details zu den einzelnen Codefixen liegen in den
+Commit-Messages der oben genannten Commits, nicht redundant hier repliziert.
+
+Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — jetzt aber
+tatsächlich über die reparierte CI grün verifiziert. Alles committet (u. a. `592f202`, `eddbc41`,
+`4cb35d4`, `9ceccc6`, `5a98f20`, `daf7173`, `5d8abd8`, `eb0f0f1`, `91316a6`, `ee7b14f`) und nach
+`origin/main` gepusht; CI-Status abschließend grün geprüft.
