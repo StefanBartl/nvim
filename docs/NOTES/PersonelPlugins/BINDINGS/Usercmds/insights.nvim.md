@@ -15,7 +15,7 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/insights.txt`
 | `:Insights tree` \| `count` \| `clipboard` \| `fileinfo` | — | File tree / count / clipboard / fs.stat float |
 | `:Insights cache {build\|info\|clear}` | — | Symbol index cache |
 | `:Insights compress` | `[path] [outdir]` | Archive a directory |
-| `:Insights imports` | `[filter/lang...] [telescope\|fzf]` | Import/require usage report across Lua, Python, JS/TS, Go, Rust, C/C++ — filterable by group, module prefix, or language; optional picker view |
+| `:Insights imports` | `[filter/lang...] [telescope\|fzf\|graph]` | Import/require usage report across Lua, Python, JS/TS, Go, Rust, C/C++ — filterable by group, module prefix, or language; optional picker view; `graph` renders a Graphviz dependency PNG via images.nvim |
 | `:Insights imports reverse` | `<module>` | Every file that imports `<module>` |
 | `:Insights imports unused` | `[filter/lang...]` | Bound import names never referenced again in their file |
 | `:Insights conflicts` \| `unimported` | — | Quickfix conflicts / unimported-component check |
@@ -23,6 +23,22 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/insights.txt`
 
 ## Notes
 
+- **2026-08-07 — `imports graph` added**: new `"graph"` UI token on the base
+  `imports` route (`lua/insights/imports/graph.lua`), same filter args as
+  the text report. `insights.imports`'s entries were already a full edge
+  list (`filename` imports `module`) — the graph is `M.build_dot` turning
+  that into a Graphviz `digraph` (files filled blue, external modules
+  dashed grey and off by default — `imports.graph.include_external`), then
+  `dot -Tpng` (or whichever `imports.graph.layout` names) and
+  `images.nvim`'s `show()` (soft dep — without it, just reports the PNG
+  path). Needs Graphviz on PATH, reported as a clear error rather than a
+  silent no-op when missing — matches images.nvim's own ImageMagick stance.
+  From images.nvim's `docs/ROADMAP/CROSS-PLUGIN.md` (insights.nvim entry).
+  Deliberately scoped to the dependency graph only, the one place in
+  insights.nvim where the data is already graph-shaped — the roadmap's
+  wider "call trees, symbol distribution" idea would need new analysis
+  this plugin doesn't have (symbols.lua is a flat, uncorrelated list), not
+  just a new view over data that already exists.
 - **2026-07-25 — imports went multi-language**: `insights/imports/init.lua` now
   dispatches across a `langs/` registry (Lua, Python, JS/TS, Go, Rust, C/C++;
   Lua keeps its Tree-sitter/ripgrep dual backend, the other five are
