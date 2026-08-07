@@ -4,9 +4,14 @@ Grundlage: `sessions.nvim`, bereits in `plugins/personal/init.lua` verdrahtet
 (aktuell `opts = {}` — keine Keymaps, kein `autoload`, `autosave = true` auf
 den fixen Namen `"last"`, siehe `sessions.nvim/docs/configuration.md`).
 
-Noch nicht gebaut. Fertige Features stehen in [CONCEPT.md](CONCEPT.md),
-weitere offene Punkte in [ROADMAP.md](ROADMAP.md) — dieses Dokument ist die
-Vorarbeit für die Integration.
+> **Paket 1 steht** (2026-08-07): `<leader>cs` (§5) und der `:Case
+> new`-Hook (§3) sind gebaut und headless getestet — siehe
+> [Keymaps.md](../../NOTES/casedesk/Keymaps.md). Paket 2 (Start-Komfort)
+> und Paket 3 (Hygiene) sind offen, siehe §10.
+
+Fertige Features stehen sonst in [CONCEPT.md](CONCEPT.md), weitere offene
+Punkte in [ROADMAP.md](ROADMAP.md) — dieses Dokument bleibt die Vorarbeit
+für den Rest der Integration.
 
 ---
 
@@ -206,8 +211,10 @@ lua/bindings/usrcmds/case/
 
 ## 10. Reihenfolge
 
-**Paket 1 — Fundament:** `<leader>cs` (§5), `:Case new`-Hook (§3).
-Funktioniert für sich, ohne §4/§6.
+**Paket 1 — Fundament (steht):** `<leader>cs` (§5,
+`bindings/mappings/custom.lua`), `:Case new`-Hook (§3, `ui.lua`s
+`M.create`). Funktioniert für sich, ohne §4/§6 — Frage 3 aus §9 wurde dabei
+mitentschieden: `opts.keymaps` bleibt leer.
 
 **Paket 2 — Start-Komfort:** PowerShell-`case`-Funktion (§4.2) einrichten
 (liegt im `$PROFILE`, nicht in diesem Repo — nur dokumentiert, nicht von

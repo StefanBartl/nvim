@@ -147,6 +147,14 @@ function M.create(short, title, company, name, link)
       for _, path in ipairs(opens) do
         edit(path)
       end
+
+      -- SESSIONS.md §3: every case gets a session from birth, not just
+      -- after the first manual <leader>cs save. Optional dependency, same
+      -- pcall-guard pattern as every other plugin integration (CONCEPT.md §9).
+      local ok_sessions, sessions = pcall(require, "sessions")
+      if ok_sessions then
+        sessions.save(short)
+      end
     end,
   })
 end

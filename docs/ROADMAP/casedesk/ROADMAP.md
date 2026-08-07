@@ -25,14 +25,11 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
-- [ ] **Session pro Case** — eigenes Konzept: [SESSIONS.md](SESSIONS.md).
-      Case-Nummer als Session-Name, Auto-Save bei `:Case new`, `<leader>cs`
-      als einziger neuer Keymap (case-aware: speichert unter der Case-Nummer
-      wenn der Buffer zu einem Case gehört, sonst `sessions.nvim`s eigenes
-      Auto-Resolve), `nvim -c "Session load {nr}"` bzw. eine
-      PowerShell-Wrapper-Funktion fürs schnelle Öffnen, Invalidierung über
-      einen neuen `:Cases doctor`-Fund-Typ (Session existiert für einen
-      nicht mehr offenen Case) statt einer eigenen Prune-Mechanik.
+- [ ] **Session pro Case (Rest)** — eigenes Konzept: [SESSIONS.md](SESSIONS.md).
+      Paket 1 (`<leader>cs`, Auto-Save bei `:Case new`) steht. Offen: Paket 2
+      (`nvim -c "Session load {nr}"`-Kurzform per PowerShell-Wrapper,
+      `autoload` aktivieren) und Paket 3 (Invalidierung über einen neuen
+      `:Cases doctor`-Fund-Typ für Sessions geschlossener Cases).
 
 - [ ] **SLA-Überwachung** — eigenes Konzept: [SLA.md](SLA.md). Priorität aus
       dem Activity Stream, `config.sla`, Geschäftszeit-Rechnung, `:Case sla`

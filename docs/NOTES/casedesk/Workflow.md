@@ -64,6 +64,13 @@ blueprint is used instead of the default — today the table is empty, so
 every case gets the same scaffold until you actually add a company-specific
 one.
 
+Also saves a Neovim session under the case number right after scaffolding —
+picking the case back up tomorrow is `<leader>cs`'s counterpart, `:Session
+load 1012345` (or `nvim -c "Session load 1012345"` from a fresh shell), not
+re-opening the folder and rebuilding whatever split layout you had. See
+[Keymaps.md](./Keymaps.md) and
+[docs/ROADMAP/casedesk/SESSIONS.md](../../ROADMAP/casedesk/SESSIONS.md).
+
 Already pasted the SNOW ticket URL and don't want to retype the number?
 `:Case new` also accepts the number directly: `:Case new 1012345`.
 

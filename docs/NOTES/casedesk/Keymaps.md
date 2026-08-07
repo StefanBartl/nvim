@@ -1,9 +1,30 @@
 # casedesk — Keymaps Cheatsheet
 
-No global keymaps. casedesk is command-driven (`:Case`/`:Cases`/`:Tricentis`, see
-[`Usercmds.md`](./Usercmds.md)) — every binding it registers is buffer-local
-to a `kit.viewer` surface, set up fresh each time that surface opens and
-gone as soon as it closes.
+Almost no global keymaps. casedesk is command-driven
+(`:Case`/`:Cases`/`:Tricentis`, see [`Usercmds.md`](./Usercmds.md)) — every
+binding it registers besides the one below is buffer-local to a
+`kit.viewer` surface, set up fresh each time that surface opens and gone as
+soon as it closes.
+
+## `<leader>cs` — case-aware session save (global)
+
+Source: `lua/bindings/mappings/custom.lua` (not `lua/bindings/usrcmds/case/`
+— it's casedesk-aware but lives with the config's other `<leader>c*`
+utility keymaps rather than in casedesk's own module tree; kept out of
+`sessions.nvim`'s own `keymaps` block so that one stays generic). Concept:
+[docs/ROADMAP/casedesk/SESSIONS.md](../../ROADMAP/casedesk/SESSIONS.md) §5.
+
+Saves the current Neovim session under the case number
+(`resolve.sync(nil)`, the same buffer→case lookup `:Case snow`/`:Case
+activity`/etc. all use) when the focused buffer belongs to a case,
+otherwise falls through to `sessions.nvim`'s own auto-resolve (project/
+branch-aware name, not a hardcoded `"last"`). Explicit-only — no autosave
+hook overwrites a case session on exit, so a stray split from an unrelated
+task never silently clobbers a case's saved layout.
+
+Every case also gets this run once automatically right after `:Case new`
+finishes scaffolding (SESSIONS.md §3) — a case has a session from the
+moment it's created, not only after the first manual `<leader>cs`.
 
 ### `:Case info [nr]` — the infocard
 
