@@ -36,8 +36,8 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case ki import [nr]` | — | Paste an AI answer (in the format `:Case ki` asked for) from the clipboard and file it: analysis/difficulty/next-steps → `Research/NN_KiAnalysis.md`, English reply draft → new `Replies/NN_Reply.md` (still goes through `:Case reply check`, never auto-sent), internal German notes → appended to `Notes.md` |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
-| `:Case close [nr]` | — | Move to `Closed/` |
-| `:Case reassign [nr]` | — | Move to `Reassigned/` |
+| `:Case close [nr]` | — | Move to `Closed/`, delete its saved session if it had one (SESSIONS.md §6) |
+| `:Case reassign [nr]` | — | Move to `Reassigned/`, delete its saved session if it had one (SESSIONS.md §6) |
 | `:Case snow [nr]` | — | Open the ServiceNow ticket URL (if `config.snow_url_format` is set) or copy the ticket id |
 | `:Case sla [nr]` | — | SAP-SLA status (see [SLA.md](../../ROADMAP/casedesk/SLA.md)): Erstreaktion/Rückmeldung/Korrekturmaßnahme, each as an absolute deadline + remaining time. `nil` when the case has no parseable priority yet |
 | `:Case insert [field] [nr]` | `field` `<Tab>`-completed: `case\|snow\|link\|title\|company\|name\|priority\|summary\|mail-subject`; prompts via `kit.select` (showing live values) if omitted | Insert that token at the cursor AND copy it to the clipboard, one action. `link` is the SNOW ticket URL (falls back to the plain id if `config.snow_url_format` isn't set), `mail-subject` is `[case] title`. With a Visual range (`:'<,'>Case insert [field]`) replaces the selection instead of inserting at the cursor — handy on a `<CASE>` placeholder |

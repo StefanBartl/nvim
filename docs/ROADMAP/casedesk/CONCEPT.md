@@ -112,6 +112,10 @@ M.state_verbs = { Closed = "close", Reassigned = "reassign" }
 `:Case reassign [nr]` — beide rufen denselben `ui.move_state(case, state)`
 auf. Ein vierter Zustand ist eine Zeile in dieser Liste, kein neuer Code-Pfad.
 
+`move_state` löscht nach jedem Umzug weg von `default_state` außerdem eine
+eventuell gespeicherte Session zu diesem Case (`pcall(require,
+"sessions")`, optional) — Details und Begründung: SESSIONS.md §6.
+
 ---
 
 ## 4. Modulaufbau

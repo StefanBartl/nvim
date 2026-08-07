@@ -6,8 +6,10 @@ den fixen Namen `"last"`, siehe `sessions.nvim/docs/configuration.md`).
 
 > **Paket 1 steht** (2026-08-07): `<leader>cs` (§5) und der `:Case
 > new`-Hook (§3) sind gebaut und headless getestet — siehe
-> [Keymaps.md](../../NOTES/casedesk/Keymaps.md). Paket 2 (Start-Komfort)
-> und Paket 3 (Hygiene) sind offen, siehe §10.
+> [Keymaps.md](../../NOTES/casedesk/Keymaps.md). Der aktive Teil von §6
+> (Session löschen bei `:Case close`/`reassign`) ist ebenfalls schon
+> gebaut. Paket 2 (Start-Komfort) und der `:Cases doctor`-Sicherheitsnetz-
+> Teil von §6 sind offen, siehe §10.
 
 Fertige Features stehen sonst in [CONCEPT.md](CONCEPT.md), weitere offene
 Punkte in [ROADMAP.md](ROADMAP.md) — dieses Dokument bleibt die Vorarbeit
@@ -22,7 +24,7 @@ für den Rest der Integration.
 - [3. Automatische Erstellung](#3-automatische-erstellung)
 - [4. Start: direkt in eine Case-Session](#4-start-direkt-in-eine-case-session)
 - [5. Der eine Keymap](#5-der-eine-keymap)
-- [6. Invalidierung — keine neue Mechanik](#6-invalidierung--keine-neue-mechanik)
+- [6. Invalidierung](#6-invalidierung)
 - [7. Modulaufbau](#7-modulaufbau)
 - [8. Risiken und Fallen](#8-risiken-und-fallen)
 - [9. Offene Fragen](#9-offene-fragen)
@@ -134,22 +136,44 @@ war. Das ist ein reines Sicherheitsnetz und bewusst nicht case-aware
 Case-Sessions werden ausschließlich über `<leader>cs` und den
 Auto-Save bei `:Case new` (§3) geschrieben — explizit, nie beim Beenden.
 
-## 6. Invalidierung — keine neue Mechanik
-
-`sessions.nvim` hat kein eingebautes Pruning, aber alles Nötige dafür in
-seiner API (`docs/api.md`): `S.list()`, `S.metadata(name)` (`saved_at`),
-`S.delete(name)`. Statt einer neuen Mechanik: `doctor.lua`/`normalize.lua`
-(CONCEPT.md §10, derselbe Plan → Dry-Run → Confirm → Apply-Pfad, den
-`:Cases doctor`/`normalize` schon für Case-Hygiene nutzen) um einen neuen
-Finding-Typ erweitern.
+## 6. Invalidierung
 
 **Regel, kein Alters-Schwellwert:** eine Session, deren Name auf einen
 bekannten Case (`registry.find(name)`) zeigt, dessen aktueller Zustand aber
-nicht `config.default_state` ("Open") ist, ist ein Fund. Folgt direkt aus
-CONCEPT.md §3 ("der Zustand IST der Ordner"): sobald ein Case zu ist,
-gehört seine aktive Session zu den überflüssigen — kein separates
-`session_prune_days` nötig, ein Case, der geschlossen wird, braucht seine
-Session nicht mehr aktiv.
+nicht `config.default_state` ("Open") ist, ist überflüssig. Folgt direkt
+aus CONCEPT.md §3 ("der Zustand IST der Ordner"): sobald ein Case zu ist,
+braucht seine Session niemand mehr — kein separates `session_prune_days`
+nötig.
+
+**Primärmechanismus (steht, 2026-08-07): aktiv, direkt bei `:Case
+close`/`:Case reassign`.** `M.move_state` — die eine geteilte Grundlage
+hinter jedem generierten State-Move-Verb (`init.lua` baut einen pro
+Nicht-Default-Eintrag in `config.states`) — löscht die Session sofort nach
+dem erfolgreichen Ordner-Umzug, wenn `state ~= config.default_state`:
+
+```lua
+-- ui.lua, M.move_state, nach registry.invalidate()
+if state ~= config.default_state then
+  local ok_sessions, sessions = pcall(require, "sessions")
+  if ok_sessions then
+    sessions.delete(entry.short)
+  end
+end
+```
+
+`sessions.delete` liefert `false, "session not found: …"` wenn keine
+existiert (kein Fehler, kein Wurf) — der häufige Fall, da die meisten
+Cases nie eine Session hatten. Kein Threshold, kein Bestätigungsdialog:
+der Umzug selbst wurde schon per `kit.confirm` bestätigt, das Löschen der
+dazugehörigen Session ist Teil derselben Aktion, kein zweiter
+Entscheidungspunkt.
+
+**Sicherheitsnetz: `doctor.lua`/`normalize.lua`** (CONCEPT.md §10, derselbe
+Plan → Dry-Run → Confirm → Apply-Pfad, den `:Cases doctor`/`normalize`
+schon für Case-Hygiene nutzen), für zwei Fälle, die der aktive Hook nicht
+abdeckt: Cases, die schon vor diesem Feature geschlossen wurden, und ein
+Ordner-Umzug außerhalb von `M.move_state` (von Hand, oder ein zukünftiger
+Pfad). Noch nicht gebaut (Paket 3, §10):
 
 ```lua
 -- doctor.lua, neuer Check
@@ -178,10 +202,13 @@ Kein neues Untermodul nötig — Umfang ist klein genug für drei Stellen:
 
 ```
 lua/bindings/usrcmds/case/
-  ui.lua      -- :Case new-Hook (§3), Keymap-Registrierung (§5)
-  doctor.lua  -- neuer Finding-Typ "stale-session" (§6)
-  normalize.lua -- Fix-Zweig für "stale-session" (§6)
+  ui.lua      -- :Case new-Hook (§3), M.move_state-Hook (§6, aktiv)
+  doctor.lua  -- neuer Finding-Typ "stale-session" (§6, Sicherheitsnetz)
+  normalize.lua -- Fix-Zweig für "stale-session" (§6, Sicherheitsnetz)
 ```
+
+`<leader>cs` selbst lebt bewusst außerhalb dieses Baums, in
+`bindings/mappings/custom.lua` (§5 begründet warum).
 
 ## 8. Risiken und Fallen
 
@@ -191,6 +218,7 @@ lua/bindings/usrcmds/case/
 | `autosave` (fix `"last"`) und Case-Sessions könnten verwechselt werden | Bewusst getrennt gehalten (§5) — `"last"` ist nie eine Case-Nummer, Verwechslung filesystem-seitig ausgeschlossen |
 | `doctor`s neuer Check bricht, wenn `sessions.nvim` nicht geladen ist (remote-Modus, andere Plugin-Auswahl) | `pcall(require, "sessions")`, Fallback: Check einfach überspringen — gleiches Muster wie jede andere optionale Integration in CONCEPT.md §9 |
 | Session-Datei zeigt auf Buffer, die nicht mehr existieren (Case wurde inzwischen `normalize`t, Dateien umbenannt) | Bestehendes `sessions.nvim`-Verhalten (`S.load` meldet "hidden_bufs" für nicht mehr vorhandene Pfade), kein zusätzlicher Schutz hier nötig |
+| Aktives Löschen in `M.move_state` (§6) trifft die falsche Session — z. B. ein Case wird versehentlich `reassign`t und die Session ist weg | Kein zusätzlicher Dialog *für die Session*, aber der Ordner-Umzug selbst läuft schon durch `kit.confirm` — wer den Umzug bestätigt, bestätigt implizit auch das. Die Session-Datei selbst ist jederzeit aus einem frischen `<leader>cs` neu erzeugbar, kein Datenverlust im engeren Sinn (Buffer-Layout, kein Inhalt) |
 
 ## 9. Offene Fragen
 
@@ -213,17 +241,20 @@ lua/bindings/usrcmds/case/
 
 **Paket 1 — Fundament (steht):** `<leader>cs` (§5,
 `bindings/mappings/custom.lua`), `:Case new`-Hook (§3, `ui.lua`s
-`M.create`). Funktioniert für sich, ohne §4/§6 — Frage 3 aus §9 wurde dabei
-mitentschieden: `opts.keymaps` bleibt leer.
+`M.create`), aktives Session-Löschen bei `:Case close`/`reassign` (§6,
+`ui.lua`s `M.move_state`). Funktioniert für sich, ohne §4/den
+Sicherheitsnetz-Teil von §6 — Frage 3 aus §9 wurde dabei mitentschieden:
+`opts.keymaps` bleibt leer.
 
 **Paket 2 — Start-Komfort:** PowerShell-`case`-Funktion (§4.2) einrichten
 (liegt im `$PROFILE`, nicht in diesem Repo — nur dokumentiert, nicht von
 casedesk aus gebaut), `autoload` in `plugins/personal/init.lua`s
 `sessions.nvim`-Spec aktivieren (§4.3).
 
-**Paket 3 — Hygiene:** `doctor.lua`/`normalize.lua`-Erweiterung (§6).
-Zuletzt, weil erst relevant, sobald es überhaupt genug Case-Sessions gibt,
-die stale werden können.
+**Paket 3 — Hygiene-Sicherheitsnetz:** `doctor.lua`/`normalize.lua`-Erweiterung
+(§6) für Cases, die schon vor Paket 1 geschlossen wurden, oder deren Ordner
+außerhalb von `M.move_state` verschoben wurde. Zuletzt, weil der aktive
+Hook den Regelfall bereits abdeckt.
 
 ## Siehe auch
 

@@ -1138,6 +1138,20 @@ function M.move_state(case_arg, state)
         end
         registry.invalidate()
         notify.info(("case %s moved to %s"):format(entry.short, state))
+
+        -- SESSIONS.md §6: a case's session is only useful while it's
+        -- actively worked. The state IS the folder (comment above), so the
+        -- move above already IS "closing" the case in every sense that
+        -- matters — this just also drops the now-stale session immediately
+        -- instead of waiting for the next :Cases doctor pass to flag it.
+        -- Optional dependency, silent on "no such session" (the common
+        -- case: most cases never had one saved).
+        if state ~= config.default_state then
+          local ok_sessions, sessions = pcall(require, "sessions")
+          if ok_sessions then
+            sessions.delete(entry.short)
+          end
+        end
       end,
     })
   end)
