@@ -160,29 +160,76 @@ end
 
 local SECONDS_PER_DAY = 86400
 
---- Open cases untouched for at least `days` (default 7), oldest first — for
+--- Open cases untouched for at least their threshold, oldest first — for
 --- `:Cases stale`. Only `config.default_state` ("Open"): a closed/reassigned
 --- case going quiet is expected, not a signal.
+---
+--- `days` explicit -> that flat cutoff for every case, same as before
+--- (SLA.md §6C didn't touch the "I want to ask a specific question" path).
+--- `days` nil -> each case gets ITS OWN threshold from `config.sla_stale_days`,
+--- keyed by its own parsed priority (`config.stale_days_default` for a case
+--- with none) — a P2 sitting quiet for 7 days is a very different signal
+--- than a P4 doing the same.
 ---@param days integer|nil
----@return { entry: Lib.Case.RegistryEntry, mtime: integer, days_idle: integer }[]
+---@return { entry: Lib.Case.RegistryEntry, mtime: integer, days_idle: integer, threshold_days: integer }[]
 function M.stale(days)
-  days = days or 7
-  local cutoff = os.time() - days * SECONDS_PER_DAY
+  local now = os.time()
   local rows = {}
   for _, e in ipairs(registry.list()) do
     if e.state == config.default_state then
+      local threshold = days
+      if not threshold then
+        local m = meta.read(e.dir)
+        local digit = m and m.priority and m.priority:match("^%s*(%d)")
+        threshold = (digit and config.sla_stale_days[digit]) or config.stale_days_default
+      end
+      local cutoff = now - threshold * SECONDS_PER_DAY
       local mtime = detect.last_touched(e.dir)
       if mtime and mtime <= cutoff then
         rows[#rows + 1] = {
           entry = e,
           mtime = mtime,
-          days_idle = math.floor((os.time() - mtime) / SECONDS_PER_DAY),
+          days_idle = math.floor((now - mtime) / SECONDS_PER_DAY),
+          threshold_days = threshold,
         }
       end
     end
   end
   table.sort(rows, function(a, b)
     return a.mtime < b.mtime
+  end)
+  return rows
+end
+
+---@class Lib.Case.SlaDashboardRow
+---@field entry Lib.Case.RegistryEntry
+---@field status Lib.Case.SlaStatus
+---@field worst Lib.Case.SlaClockStatus  the clock `sla.most_urgent` picked
+
+--- Every open case with a parseable priority AND at least one clock that
+--- could be anchored, sorted by remaining time on its most urgent clock —
+--- SLA.md §6B: "what breaches next" (a P3 close to its deadline can be more
+--- urgent right now than a fine P1), not grouped by priority label. A case
+--- missing a priority, or one whose only clocks have nothing to anchor on
+--- yet, is omitted rather than sorted to one end — `:Case activity`/
+--- `:Case sla` on it directly explains why, a dashboard row can't.
+---@return Lib.Case.SlaDashboardRow[]
+function M.sla_dashboard()
+  local sla = require("bindings.usrcmds.case.sla")
+  local rows = {}
+  for _, e in ipairs(registry.list()) do
+    if e.state == config.default_state then
+      local status = sla.status(e)
+      if status then
+        local worst = sla.most_urgent(status)
+        if worst then
+          rows[#rows + 1] = { entry = e, status = status, worst = worst }
+        end
+      end
+    end
+  end
+  table.sort(rows, function(a, b)
+    return a.worst.remaining < b.worst.remaining
   end)
   return rows
 end

@@ -39,7 +39,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case close [nr]` | — | Move to `Closed/`, delete its saved session if it had one (SESSIONS.md §6) |
 | `:Case reassign [nr]` | — | Move to `Reassigned/`, delete its saved session if it had one (SESSIONS.md §6) |
 | `:Case snow [nr]` | — | Open the ServiceNow ticket URL (if `config.snow_url_format` is set) or copy the ticket id |
-| `:Case sla [nr]` | — | SAP-SLA status (see [SLA.md](../../ROADMAP/casedesk/SLA.md)): Erstreaktion/Rückmeldung/Korrekturmaßnahme, each as an absolute deadline + remaining time. `nil` when the case has no parseable priority yet |
+| `:Case sla [nr] [--doc]` | — | SAP-SLA status (see [SLA.md](../../ROADMAP/casedesk/SLA.md)): Erstreaktion/Rückmeldung/Korrekturmaßnahme, each as an absolute deadline + remaining time. Rückmeldung shows "wartet auf Kunden" instead of a countdown while the case sits in SNOW's own "Awaiting User Info" — it resets to a full fresh budget once they reply, not resumed from wherever it stood. `nil`/no line when the case has no parseable priority yet. `--doc` opens the source `SLA_ServiceLevelAgreement.md` instead, no case needed |
 | `:Case insert [field] [nr]` | `field` `<Tab>`-completed: `case\|snow\|link\|title\|company\|name\|priority\|summary\|mail-subject`; prompts via `kit.select` (showing live values) if omitted | Insert that token at the cursor AND copy it to the clipboard, one action. `link` is the SNOW ticket URL (falls back to the plain id if `config.snow_url_format` isn't set), `mail-subject` is `[case] title`. With a Visual range (`:'<,'>Case insert [field]`) replaces the selection instead of inserting at the cursor — handy on a `<CASE>` placeholder |
 
 Bare `:Case` (no subcommand) runs `:Case info` with no argument.
@@ -53,7 +53,8 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases find key=value ... [--exact\|-e] [--re\|-r]` | bare `key=value` pairs, no dashes | AND-combination across several `infocard_fields` at once, e.g. `:Cases find company=Scan year=2026` |
 | `:Cases grep <pattern> [--re\|-r]` | — | Full-text search across every case's `.md` files (not `Ressources/` attachments). Report via `kit.viewer`, capped at 500 hits |
 | `:Cases recent [n]` | `n`, default 10 | The `n` most recently touched cases, newest first |
-| `:Cases stale [days]` | `days`, default 7 | Open cases idle for at least `days`, oldest first |
+| `:Cases stale [days]` | `days` optional | Open cases idle at least that long, oldest first. Omitted: each case uses its own priority-derived threshold (`config.sla_stale_days` — a P2 gets 2 days, a P4 gets 10; a case with no priority falls back to the old flat 7) instead of one number for everyone |
+| `:Cases sla` | — | SLA dashboard: every open case with a parseable priority, sorted by remaining time on its most urgent clock — "what breaches next", not grouped by priority label. `!!`/`!` mark overdue / under warning threshold. Selecting a row opens that case's `:Case sla` |
 | `:Cases history [company]` | `company`, defaults to the current buffer's case's company | Every matching case in one screen, grouped by state, most-recently-touched first within each group (`kit.viewer`, not a picker) |
 | `:Cases stats` | — | Counts by state / company / year |
 | `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, and whether each `Summary.md` follows the SNOW template without markdown |

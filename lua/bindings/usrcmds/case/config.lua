@@ -102,6 +102,9 @@ M.infocard_fields = { "title", "company", "name", "notes", "priority", "tosca_ve
 -- customer's own contract (see that file's own warning). Never surface
 -- these numbers to a customer as binding.
 
+--- `:Case sla --doc` opens this.
+M.sla_doc_path = M.repo_root .. "/Workflow/SLA_ServiceLevelAgreement.md"
+
 local HOUR = 3600
 local DAY = 24 * HOUR
 local WEEK = 7 * DAY
@@ -171,6 +174,21 @@ M.sla_warn_at = 0.25
 --- (SLA.md §6C, not built yet) fire for. P3/P4 have week-plus budgets —
 --- a badge for those would be near-permanent noise, not a signal.
 M.sla_active_priorities = { "1", "2" }
+
+--- `:Cases stale`'s per-priority idle threshold, in days (SLA.md §6C:
+--- "für einen P2 sind 7 Tage absurd spät, für einen P4 normal"). Tuned by
+--- hand, NOT a formula off `M.sla`'s cadence budgets — P1's 1h cadence
+--- would produce an unusably low number that way. `M.stale_days_default`
+--- covers a case with no parseable priority yet, same flat 7 the command
+--- always used.
+---@type table<string, integer>
+M.sla_stale_days = {
+  ["1"] = 1,
+  ["2"] = 2,
+  ["3"] = 5,
+  ["4"] = 10,
+}
+M.stale_days_default = 7
 
 M.default_blueprint = "default"
 

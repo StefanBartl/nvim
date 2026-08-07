@@ -31,10 +31,10 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       `autoload` aktivieren) und Paket 3 (Invalidierung über einen neuen
       `:Cases doctor`-Fund-Typ für Sessions geschlossener Cases).
 
-- [ ] **SLA-Überwachung (Rest)** — eigenes Konzept: [SLA.md](SLA.md). Paket 1
-      steht, inkl. des §3-Nachtrags (Rückmeldung resettet statt pausiert bei
-      `Awaiting User Info`, §9.6 geklärt). Offen: Paket 2 (`:Cases sla`
-      Dashboard, prioritätsabhängiges `:Cases stale`, `:Case sla --doc`),
+- [ ] **SLA-Überwachung (Rest)** — eigenes Konzept: [SLA.md](SLA.md). Pakete
+      1+2 stehen (inkl. §3-Nachtrag: Rückmeldung resettet statt pausiert bei
+      `Awaiting User Info`, §9.6 geklärt; `:Cases sla` Dashboard,
+      prioritätsabhängiges `:Cases stale`, `:Case sla --doc`). Offen:
       Paket 3 (`:Cases sla report`), Paket 4 (Notifications, KI-Kontext).
 
 - [ ] **Artefakt-Extraktion** — eigenes Konzept: [EXTRACTION.md](EXTRACTION.md).

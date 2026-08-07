@@ -911,12 +911,18 @@ end
 
 -- ── :Case sla ────────────────────────────────────────────────────────────
 
---- `:Case sla [nr]` — SLA.md §6B. Which of the three SAP-SLA clocks apply
---- and how much of each is left, as an absolute deadline (not just a
---- duration — SLA.md §6B's whole point: "2h übrig" makes you do the
---- business-hours math yourself and you'll get it wrong).
+--- `:Case sla [nr] [--doc]` — SLA.md §6B. Which of the three SAP-SLA
+--- clocks apply and how much of each is left, as an absolute deadline (not
+--- just a duration — SLA.md §6B's whole point: "2h übrig" makes you do the
+--- business-hours math yourself and you'll get it wrong). `--doc` opens
+--- the source SLA agreement instead — no case needed for that one.
 ---@param case_arg string|nil
-function M.sla(case_arg)
+---@param flags { doc: boolean }|nil
+function M.sla(case_arg, flags)
+  if flags and flags.doc then
+    edit(config.sla_doc_path)
+    return
+  end
   resolve.pick(case_arg, function(entry)
     if not entry then
       notify.warn("no case to show SLA status for")
@@ -1486,25 +1492,57 @@ function M.recent(n_arg)
   })
 end
 
---- `:Cases stale [days]` — open cases untouched for at least `days` (default
---- 7), oldest first.
+--- `:Cases stale [days]` — open cases untouched at least as long as their
+--- threshold, oldest first. Explicit `days` overrides that threshold flat
+--- for every case; omitted, each case uses its own priority-derived one
+--- (SLA.md §6C, `config.sla_stale_days`) — so the header can't just say
+--- "N+ days" the way it used to when there was one N for everyone.
 ---@param days_arg string|nil
 function M.stale(days_arg)
-  local days = tonumber(days_arg) or 7
+  local days = tonumber(days_arg)
   local rows = query.stale(days)
   if #rows == 0 then
-    notify.info(("no open case has been idle %d+ days"):format(days))
+    notify.info(days and ("no open case has been idle %d+ days"):format(days) or "no open case is stale for its priority")
     return
   end
   kit.select({
-    message = ("Stale %d+ days (%d)"):format(days, #rows),
+    message = days and ("Stale %d+ days (%d)"):format(days, #rows) or ("Stale (%d, priority-based threshold)"):format(#rows),
     selection = rows,
     format_item = function(row)
       local m = meta.read(row.entry.dir)
-      return ("%3d d idle  %-10s %s"):format(row.days_idle, row.entry.short, (m and m.title) or "")
+      return ("%3d/%-2d d idle  %-10s %s"):format(row.days_idle, row.threshold_days, row.entry.short, (m and m.title) or "")
     end,
     on_select = function(item)
       M.info(item.entry.short)
+    end,
+    on_cancel = function() end,
+  })
+end
+
+--- `:Cases sla` — SLA.md §6B dashboard: every open case with a priority,
+--- sorted by remaining time on its most urgent clock — "what breaches
+--- next" is the actual morning question, not grouped by priority label.
+--- Selecting a row opens that case's own `:Case sla` (not the infocard —
+--- this dashboard exists specifically to get to the SLA detail, not the
+--- general one).
+function M.cases_sla()
+  local rows = query.sla_dashboard()
+  if #rows == 0 then
+    notify.info("no open case has a parseable priority with an anchored clock yet")
+    return
+  end
+  local sla = require("bindings.usrcmds.case.sla")
+  kit.select({
+    message = ("SLA dashboard (%d open, by urgency)"):format(#rows),
+    selection = rows,
+    format_item = function(row)
+      local m = meta.read(row.entry.dir)
+      local marker = row.worst.remaining < 0 and "!!"
+        or (sla.under_threshold(row.worst, config.sla_warn_at) and "! " or "  ")
+      return ("%s P%s %-18s %-10s %s"):format(marker, row.status.digit, row.worst.label, row.entry.short, (m and m.title) or "")
+    end,
+    on_select = function(item)
+      M.sla(item.entry.short)
     end,
     on_cancel = function() end,
   })

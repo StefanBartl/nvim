@@ -414,11 +414,15 @@ dem sich ein Rechenfehler lautlos versteckt.
 
 ## 10. Reihenfolge
 
-> **Paket 1 ist umgesetzt** (2026-08-06): `sla/clock.lua`, `sla/stream.lua`,
-> `sla/init.lua`, `:Case sla`, Priorität-Auto-Parse in `:Case activity`,
-> `last_reply_sent` via `m` in `:Case reply check`, Statusline-Badge.
-> Details, Abweichungen von diesem Konzept und offene Punkte: siehe unten
-> **„Notizen zur Umsetzung"**. Pakete 2–4 weiterhin offen.
+> **Paket 1 ist umgesetzt** (2026-08-06, plus §3-Nachtrag am 2026-08-07):
+> `sla/clock.lua`, `sla/stream.lua`, `sla/init.lua`, `:Case sla`,
+> Priorität-Auto-Parse in `:Case activity`, `last_reply_sent` via `m` in
+> `:Case reply check`, Statusline-Badge, Rückmeldung-Reset bei
+> `Awaiting User Info`.
+>
+> **Paket 2 ist umgesetzt** (2026-08-07): `:Cases sla` Dashboard,
+> `:Cases stale` prioritätsabhängig, `:Case sla --doc`. Details: siehe unten
+> **„Notizen zur Umsetzung"**. Pakete 3–4 weiterhin offen.
 
 **Paket 1 — Fundament + Sichtbarkeit** (das eigentliche „im Auge behalten"):
 Priorität aus dem Stream parsen · `config.sla` · `clock.lua` + `stream.lua` ·
@@ -488,6 +492,30 @@ Bauen sichtbar wurden:
   aufgefallen (falscher Anker `2026-07-22` statt `2026-08-05`), gegen
   denselben Stream sowie einen synthetischen "gerade in Awaiting User
   Info"-Fall verifiziert.
+
+### Paket 2 (2026-08-07)
+
+- **`config.sla_stale_days` ist von Hand getunt, keine Formel über
+  `config.sla`s Cadence-Budgets** — P1s 1h-Cadence würde formelbasiert eine
+  unbrauchbar niedrige Stale-Schwelle ergeben (Bruchteile eines Tages).
+  Stattdessen eigene, an den Cadence-Stufen orientierte Werte:
+  P1 1 Tag · P2 2 Tage · P3 5 Tage · P4 10 Tage. Kein Prioritäts-Wert →
+  der alte flache Default (7).
+- **`:Cases stale` explizites `[days]` bleibt unverändert** (ein Wert für
+  alle Cases) — nur der Default wechselt von "immer 7" auf "pro Case, aus
+  `config.sla_stale_days`". `query.stale`s Rückgabe trägt jetzt zusätzlich
+  `threshold_days`, damit `:Cases stale`s Anzeige `Tage-still/Schwelle`
+  zeigen kann statt nur `Tage-still`.
+- **`:Cases sla` sortiert nach `sla.most_urgent(status).remaining`**, nicht
+  nach Priorität-Label — ein P3 kurz vor der Frist steht über einem
+  entspannten P1, exakt wie §6B beschreibt. Cases ohne parsbare Priorität
+  ODER ohne jeden anker­baren Wert fallen komplett raus (kein "ans Ende
+  sortiert") — dieselbe Begründung wie bei `:Case sla` selbst: eine
+  Dashboard-Zeile kann nicht erklären, warum eine Frist fehlt, `:Case
+  activity`/`:Case sla` direkt am Case schon.
+- Getestet headless: synthetische P1 (overdue, `!!`) und P4 (entspannt,
+  kein Marker) Cases, korrekte Sortierung überprüft, `:Case sla --doc`
+  öffnet nachweislich die echte `SLA_ServiceLevelAgreement.md`.
 
 ## Literatur und Referenzen
 

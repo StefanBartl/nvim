@@ -260,9 +260,10 @@ function M.enable()
     {
       path = { "sla" },
       args = { { name = "case", type = "CASE", optional = true } },
-      desc = "SAP-SLA clocks (first reaction, cadence, correction) and how much of each is left",
+      flags = { { name = "doc", bool = true } },
+      desc = "SAP-SLA clocks (first reaction, cadence, correction) and how much of each is left; --doc opens the source agreement",
       run = function(ctx)
-        ui.sla(ctx.args.case)
+        ui.sla(ctx.args.case, ctx.flags)
       end,
     },
     {
@@ -353,9 +354,16 @@ function M.enable()
     {
       path = { "stale" },
       args = { { name = "days", type = "STRING", optional = true } },
-      desc = "Open cases untouched for at least N days (default 7)",
+      desc = "Open cases untouched for at least N days, or per-priority threshold if N omitted",
       run = function(ctx)
         ui.stale(ctx.args.days)
+      end,
+    },
+    {
+      path = { "sla" },
+      desc = "SLA dashboard: every open case with a priority, sorted by what breaches next",
+      run = function()
+        ui.cases_sla()
       end,
     },
     {
