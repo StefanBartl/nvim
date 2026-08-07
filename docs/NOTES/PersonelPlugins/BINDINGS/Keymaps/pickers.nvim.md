@@ -7,13 +7,12 @@ Sources: `lua/pickers/bindings/keymaps.lua`, `bindings/collections.lua`, `select
 `tab`, and the new declarative `mappings` config surface (§6 below). Moved
 `selected_index` config to `cfg.experimental.selected_index` (§3 below).
 
-**⚠️ pickers.nvim's own `docs/BINDINGS.md`/`CHEATSHEET.md` still only list the
-5 base keymaps and share the same gaps** — `docs/KEYMAPS.md` was updated
-2026-07-22 and is now reasonably current (base table incl. the disabled
-opt-ins, plus a full in-picker-keys section), but `BINDINGS.md`/
-`CHEATSHEET.md` were not touched. None of the three mention the
-`selected_index` overlay keys. Treat this file (and source) as authoritative
-regardless.
+**2026-08-07 checklist pass: `docs/BINDINGS.md` gap closed.** It now has a
+§5 "In-picker keys (`keys`)" table (all 12 actions) and a §6 for
+`experimental.selected_index.toggle_key`, on top of the base keymaps table
+in §1 — brought in line with `docs/KEYMAPS.md`. `CHEATSHEET.md` was not
+touched and may still be behind; treat this file (and source) as
+authoritative if it disagrees.
 
 ## 1. Base default keymaps
 

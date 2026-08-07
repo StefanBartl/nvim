@@ -1,7 +1,7 @@
 # pickers.nvim — Autocmds Cheatsheet
 
 Sources: `lua/pickers/bindings/autocmds.lua`, `plugin/pickers.lua`, `selected_index/init.lua`, `smart/frecency.lua`
-Cross-reference: `docs/BINDINGS.md` documents the `VimEnter` fallback accurately, but is missing the `selected_index` overlay's three autocmds entirely.
+Cross-reference: **2026-08-07 checklist pass** — `docs/BINDINGS.md` now documents all three autocmd groups (`VimEnter` fallback, the `selected_index` overlay's 3 autocmds, `smart.frecency`'s 2 autocmds); previously it only had the `VimEnter` fallback.
 
 **2026-07-26 roadmap pass**: `selected_index` moved config from top-level
 `cfg.selected_index` to `cfg.experimental.selected_index` (opt-in namespace,

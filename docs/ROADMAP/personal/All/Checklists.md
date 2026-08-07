@@ -27,7 +27,7 @@ darunter, sofern relevant.
 | 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM |||||||
 | lib.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | sessions.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| pickers.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| pickers.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | buffer-ctx.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | open.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | sandbox.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -995,3 +995,79 @@ Headless-`require()`-Smoke-Test aller 22 `lua/recommender/**`-Module plus `setup
 `health.check()` ersetzt, alle grün. POSIX-Test nicht lokal möglich (Windows-Umgebung) —
 über die (jetzt grüne) `ubuntu-latest`-CI verifiziert. Alles committet (`65b4c19`) und nach
 `origin/main` gepusht; CI-Status abschließend grün geprüft.
+
+### pickers.nvim
+
+Größtes bisher geprüftes Plugin nach diff.nvim (77 Lua-Dateien) und bereits durch mehrere eigene
+Checklisten-Runden gelaufen (`docs/ROADMAP/{schnell-check,arch-coding,zentrale-prinzipien}.md`,
+alle mit Datum/Begründung) — `@module`/`@brief`/`@description` durchgängig, `@param`/`@return`
+vollständig, `@types` pro Unterverzeichnis, `config/DEFAULTS.lua` + `config/init.lua` mit
+typisierten Keys, `.luarc.json` (`diagnostics.globals=["vim"]`, `workspace.library`, identisch zum
+`sessions.nvim`-Muster), `.luacheckrc`, `stylua.toml`, CI (stylua + luacheck + headless
+`docs/TESTS/pickers_spec.lua`, 296 Assertions) bereits vorhanden.
+
+- **CI war seit mindestens 5 Commits durchgängig rot** (`gh run list`) — derselbe Infra-Bug-Typ wie
+  bei `diff.nvim`/`recommender.nvim`, aber eine dritte Variante: `stylua-action@v4` war auf
+  `version: latest` gepinnt, und ein neuerer stylua (2.5.2 lokal) formatiert einige Konstrukte
+  (Single-Line-`if`-Bodies, `kit.input`-Call-Argumente) anders als die Version, mit der zuletzt
+  committet wurde — reproduziert via `git show HEAD:<file> | stylua --check -` (CRLF-frei, damit
+  kein `core.autocrlf`-Rauschen). Mit dem lokal installierten stylua neu formatiert (17 Dateien
+  mit echtem Diff, verifiziert gegen `git diff --stat`) und die CI-Action auf `v2.5.2` gepinnt,
+  damit das nicht erneut lautlos drifted. Danach deckte der jetzt tatsächlich laufende
+  `luacheck`-Schritt (vorher durch den fehlschlagenden stylua-Schritt maskiert, da beide Schritte
+  im selben `lint`-Job liegen) einen zweiten, unabhängigen Fund auf: `docs/TESTS/pickers_spec.lua`
+  stubbt `vim.fn.executable` (read-only field) für den `sources.system`-Test — mit
+  `-- luacheck: push/pop ignore 122` lokal um genau den Stub-Block eingegrenzt, statt einer
+  Repo-weiten `.luacheckrc`-Regel. CI danach zweimal grün geprüft.
+- **PERFORMANCE.md**: einziger ernsthafte Hotpath-Kandidat ist `pickers.smart.query`
+  (`lua/pickers/smart/{init,score,search}.lua`) — läuft pro Tastenanschlag der "smart"-Aktion
+  (kombiniertes Grep+Find, live). Bereits sauber: `items[#items+1]` statt `table.insert` überall,
+  `string.format`/`table.concat` statt `..`-Loops, kein unnötiges Pre-Allocate nötig (Größe
+  hängt von Query ab). Die fd/rg-Subprozessaufrufe sind bewusst synchron
+  (`vim.system():wait(timeout)`, im Modulkommentar begründet: die Engines selbst debouncen die
+  Live-Eingabe, ein geteilter synchroner Kern ist portabler als drei Async-Streaming-
+  Integrationen). Keine Änderung nötig — sonst kein Hotpath (alles läuft on-demand über
+  `:Pickers`).
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig (`notify`, `map` über
+  `bindings/util.lua`, `usercmd.composer`, `autocmd`, `cross`), saubere Importreihenfolge,
+  `Pickers.Config` vollständig typisiert. Keine Änderung nötig.
+- **REVIEW.md**: Schnell-Check/Detailprüfung bereits sauber laut eigenen Audit-Dateien, stichprobenartig
+  gegencheckt — kein globaler State (nur die zwei dokumentierten `vim.g.pickers_nvim_*`-Load-Guards),
+  Single Responsibility pro Modul. §8 Tooling: `.luarc.json` bereits vorhanden und äquivalent zu
+  `sessions.nvim`s Version — nicht angeglichen (kein funktionaler Gap). Der einzige echte Fund war
+  der CI-Drift oben (§8 Tooling: Formatter/Linter im CI).
+- **RELEASE.md**: README hatte ASCII-Art, Badges und den Schwesterplugin-Absatz (insights.nvim)
+  bereits korrekt — nur das Level-2-only Table of Contents fehlte, ergänzt. `doc/pickers.txt` (15
+  Abschnitte), `docs/ROADMAP.md` (aktiv gepflegt, sehr ausführlich), `:checkhealth pickers`
+  (headless verifiziert, läuft fehlerfrei durch, differenziert korrekt zwischen `ok`/`warn`/`error`)
+  bereits vollständig. **`docs/BINDINGS.md` war unvollständig** (RELEASE.md §1, KRITISCH) — fehlten:
+  drei Usercmds (`:PickersRepeat`/`:PickersScopes`/`:PickersResume`, in `ROADMAP.md`/`usrcmds.lua`
+  längst vorhanden, aber nie ins Bindings-Sheet übernommen), die komplette `keys`-In-Picker-Namespace
+  (12 Aktionen: preview scroll/history/entry actions/preview_toggle/split/vsplit/tab — nur in
+  `docs/KEYMAPS.md` dokumentiert), `experimental.selected_index.toggle_key`, sowie die
+  `selected_index`- (3 Autocmds) und `smart.frecency`-Autocmd-Gruppen (2 Autocmds) — nur der
+  `VimEnter`-Fallback war gelistet. Alle ergänzt (Details unten). GitHub-Metadaten (`gh repo view`)
+  bereits vollständig: Description, 8 Topics, Default-Branch `main`, leeres Homepage-Feld
+  (Schwester-Plugin-Konvention), keine LICENSE-Datei/-Referenz. Cross-Plattform: keine hartkodierten
+  Pfadtrenner (Grep über `lua/` negativ); Pfad-Joins laufen konsequent über `vim.fs.normalize`.
+- **Refactoring.md**: Fail-late/Report-at-boundary bereits eingehalten laut eigener Audit-Datei
+  (`docs/ROADMAP/arch-coding.md`) — stichprobenartig gegen `engines/*`, `sources/*`,
+  `entry_actions/*`, `config/init.lua` gegengecheckt: alle `notify()`-Aufrufe sitzen an der
+  jeweiligen Dispatch-/Setup-Grenze (Engine-Wrapper-Funktionen, die direkt vom Command-Dispatcher
+  aufgerufen werden; Config-Normalisierung, die einmalig bei `setup()` läuft), nie in echten
+  Low-Level-Helfern wie `smart/score.lua`/`smart/search.lua` (rein pure/`(ok, err)`-Rückgaben,
+  kein `notify()`). Keine Änderung nötig.
+
+Zusätzlich zentrale Bindings-Sammlung (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/`) geprüft: alle
+drei Dateien (`Keymaps`/`Usercmds`/`Autocmds`/`pickers.nvim.md`) waren bereits von einer eigenen,
+sehr ausführlichen `2026-07-26`-Roadmap-Runde gepflegt und inhaltlich vollständig — sie hatten den
+`docs/BINDINGS.md`-Rückstand oben bereits selbst als offenen Punkt vermerkt (⚠️-Hinweise in
+`Keymaps/pickers.nvim.md` und `Autocmds/pickers.nvim.md`). Diese Hinweise auf "jetzt behoben"
+aktualisiert, keine inhaltlichen Ergänzungen nötig (die zentralen Dateien waren bereits
+vollständiger als das Repo-eigene `docs/BINDINGS.md`).
+
+Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — über die
+(jetzt grüne) `ubuntu-latest`-CI verifiziert. `CHEATSHEET.md` (erwähnt in `docs/KEYMAPS.md`'s
+Cross-Reference als evtl. veraltet) nicht geprüft — außerhalb des RELEASE.md-Pflichtumfangs
+(nur `BINDINGS.md` ist dort explizit gefordert). Alles committet (`fde104d`, `e273eb9`, `8f96abb`)
+und nach `origin/main` gepusht; CI-Status abschließend zweimal grün geprüft.
