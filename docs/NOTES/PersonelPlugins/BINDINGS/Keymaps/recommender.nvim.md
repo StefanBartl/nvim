@@ -3,7 +3,7 @@
 Source: `lua/recommender/bindings/keymaps.lua`, `lua/recommender/float/keymaps.lua`
 (module root renamed from `recommender_nvim` -> `recommender`, 2026-07 refactor)
 Bridge: `lib.map()` in `util/lib.lua` — tries `lib.nvim.map`, falls back to `vim.keymap.set`.
-Cross-reference: `docs/BINDINGS.md` — thorough and accurate, matches source exactly; also points to `doc/recommender.nvim.txt` §8 for the vimdoc version.
+Cross-reference: `docs/BINDINGS.md` — thorough and accurate, matches source exactly; also points to `doc/recommender.txt` §8 for the vimdoc version (renamed from `doc/recommender.nvim.txt` in the 2026-08 checklist pass, retagged `recommender-*`/`:h recommender`).
 
 ## Global (`cfg.keymaps ~= false`, default enabled)
 

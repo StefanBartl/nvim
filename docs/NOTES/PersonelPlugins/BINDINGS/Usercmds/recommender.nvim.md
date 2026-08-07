@@ -7,7 +7,8 @@ One command tree, built via `lib.nvim.usercmd.composer` (migrated
 
 Source: `lua/recommender/bindings/usrcmds.lua`
 (module root renamed from `recommender_nvim` -> `recommender`, 2026-07 refactor)
-Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/recommender.nvim.txt`
+Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/recommender.txt` (renamed from
+`doc/recommender.nvim.txt` in the 2026-08 checklist pass; `:h recommender` now resolves directly)
 
 | Command | Args | Effect |
 | --- | --- | --- |

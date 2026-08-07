@@ -54,7 +54,7 @@ darunter, sofern relevant.
 | pdfport.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | markdown.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | color_my_ascii.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| recommender.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| recommender.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | mdview.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | images.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 
@@ -935,4 +935,63 @@ Commit-Messages der oben genannten Commits, nicht redundant hier repliziert.
 Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — jetzt aber
 tatsächlich über die reparierte CI grün verifiziert. Alles committet (u. a. `592f202`, `eddbc41`,
 `4cb35d4`, `9ceccc6`, `5a98f20`, `daf7173`, `5d8abd8`, `eb0f0f1`, `91316a6`, `ee7b14f`) und nach
+`origin/main` gepusht; CI-Status abschließend grün geprüft.
+
+### recommender.nvim
+
+Kleines, bereits sehr sauberes Plugin (24 Lua-Dateien inkl. `plugin/`): durchgängig
+`@module`/`@brief`/`@description`, vollständige `@param`/`@return`, ein konsolidiertes
+`@types.lua` (bewusste Ausnahme wie bei fileops.nvim/emojis.nvim/dap.nvim — bei diesem Umfang
+sinnvoller als Ordner-pro-Unterverzeichnis), `config/DEFAULTS.lua` + `config/init.lua`,
+`.luarc.json`/`.luacheckrc`/`stylua.toml`/CI (stylua + luacheck) bereits vorhanden.
+
+- **CI war seit den letzten zwei Pushes durchgängig rot** (`gh run list`) — echter Fund, kein
+  Infra-Ghost: `health.lua` hatte eine 180-Zeichen-Zeile (`luacheck`s `max_line_length = 130`
+  und `stylua`s `column_width = 130` schlugen beide auf exakt dieselbe Zeile fehl). Umgebrochen
+  (String-Konkatenation über zwei Zeilen), danach `stylua --check`/`luacheck` lokal gegen eine
+  LF-normalisierte Kopie verifiziert grün (die Windows-Checkout-CRLF-Diskrepanz war sonst
+  irreführend — `git show HEAD:<file> | grep -c $'\r'` bestätigte, dass die gespeicherten Blobs
+  bereits LF sind, passend zu `stylua.toml`s `line_endings = "Unix"`, keine Config-Änderung
+  nötig). Push danach: CI grün (`gh run list`).
+- **PERFORMANCE.md**: kein echter Hotpath — `:Recommender` läuft einmal pro Aufruf, auch der
+  `-c`/`--cwd`-Projekt-Scan ist ein einmaliger, nutzergetriggerter Vorgang, kein Redraw-/
+  Keystroke-Handler. Alle Analyzer bauen Ergebnistabellen bereits per `out[#out+1]` statt
+  `table.insert` auf und nutzen `require("lib.lua.tables").dedup_list`. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` ist seit der `usercmd.composer`-Migration
+  Pflichtabhängigkeit für `:Recommender`, `notify`/`map` bleiben bewusst weich mit nativem
+  Fallback (`util/lib.lua`), Buffer/Window-Handles werden überall validiert (auch in
+  `vim.schedule`-Callbacks in `float/keymaps.lua`/`float/autocmds.lua`), `Recommender.Config`
+  vollständig typisiert. Keine Änderung nötig.
+- **REVIEW.md**: Schnell-Check und Detailprüfung sauber — kein globaler State, Single
+  Responsibility pro Modul. §8 Tooling bereits vollständig (`.luarc.json` mit
+  `diagnostics.globals=["vim"]`/`workspace.library`, `.luacheckrc`, `stylua.toml`, CI) —
+  Vergleich gegen `sessions.nvim`s `.luarc.json` ergab keine funktionale Lücke, nicht angeglichen.
+- **RELEASE.md**: `doc/recommender.nvim.txt` → umbenannt zu `doc/recommender.txt` mit
+  retagten Abschnitten (`recommender-*` statt `recommender.nvim-*`) plus expliziten
+  `*recommender.nvim*`/`*recommender*`-Tags, damit `:h recommender` direkt trifft statt nur
+  `:h recommender.nvim-*` (Referenzen in `docs/BINDINGS.md`/`docs/architecture.md` mitgezogen,
+  `doc/tags` neu erzeugt). README bekam ein Level-2-only Table of Contents; der
+  Schwesterplugin-Absatz (bereits vorhanden: replacer.nvim, wegen `:Replace` in Replace-Mode —
+  die im Auftrag vermuteten Kandidaten markdown.nvim/reposcope.nvim treffen laut Code nicht zu)
+  wurde direkt nach ASCII-Art/Badges verschoben statt nach dem Beschreibungsabsatz.
+  `docs/BINDINGS.md`, `docs/ROADMAP.md` (bewusst leer — "every previously tracked idea has
+  shipped"), `:checkhealth recommender` (headless verifiziert: `setup()` + `health.check()`
+  liefen fehlerfrei durch) bereits vollständig. GitHub-Metadaten (`gh repo view`) bereits gesetzt:
+  Description, 6 Topics, Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention),
+  keine LICENSE-Datei/-Referenz. Cross-Plattform: keine hartkodierten Pfadtrenner —
+  `project.lua`s einziger `[/\\]`-Treffer ist eine Zeichenklasse zum *Erkennen* beider Trenner in
+  `vim.split`, kein Join; `vim.fn.globpath`/`vim.fn.readfile` sind bereits plattformneutral.
+  Ebenfalls stylua-only gefixt: `plugin/recommender.lua` (One-Liner-Guard → Mehrzeiler) und
+  `plugin/recommender_autodoc.lua` (inline `pcall`-Closure → Mehrzeiler) — beide erst nach
+  Ausschluss der CRLF-Artefakte als echte Findings sichtbar.
+- **Refactoring.md**: Fail-late/Report-at-boundary war bereits vollständig eingehalten — alle
+  `notify()`-Aufrufe sitzen ausschließlich in `bindings/usrcmds.lua` (Command-Dispatch) und
+  `float/keymaps.lua` (UI-Schicht); `blacklist.lua`, `project.lua`, `custom_aliases.lua`,
+  `config/*`, alle `analyzers/*` geben durchweg nur Werte/Status zurück, kein `notify()`. Keine
+  Änderung nötig.
+
+Übersprungen/nicht verifizierbar: kein Test-Runner im Repo (kein `tests/`/`TESTS/`) — per
+Headless-`require()`-Smoke-Test aller 22 `lua/recommender/**`-Module plus `setup()`/
+`health.check()` ersetzt, alle grün. POSIX-Test nicht lokal möglich (Windows-Umgebung) —
+über die (jetzt grüne) `ubuntu-latest`-CI verifiziert. Alles committet (`65b4c19`) und nach
 `origin/main` gepusht; CI-Status abschließend grün geprüft.
