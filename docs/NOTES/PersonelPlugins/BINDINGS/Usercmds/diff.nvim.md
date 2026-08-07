@@ -20,6 +20,22 @@ Docs: `doc/diff.txt`, `docs/installation.md`, `README.md`
 
 ## Notes
 
+- **2026-08-07 — image-file comparison added** (`diff.image_compare`,
+  `lua/diff/features/image_compare.lua`): `:Diff target=a.png
+  source=b.png` used to text-diff raw binary bytes via
+  `vim.fn.readfile` (meaningless output, not even an error). Both sides
+  being readable raster-image paths (`.svg` excluded — it's text, diffs
+  fine as text) now shows them side by side via images.nvim's `gallery`
+  instead — `view=`/`output=` are ignored in that case. Without
+  images.nvim, a clear warning replaces the silent meaningless-diff
+  fallback. No relative scaling between the two images (unlike
+  images.nvim's own `:Image compare`, which needs `lib.nvim.ui.kit.
+  compare`'s scan-and-pick flow to get both images known at once) —
+  `:Diff` already has both exact paths from its own arguments, so
+  `images.gallery({a, b}, 2)` is the right primitive, no new API needed
+  anywhere. `diff.image_compare = false` restores the old behavior. From
+  images.nvim's `docs/ROADMAP/CROSS-PLUGIN.md` (diff.nvim entry, the last
+  of six). New `docs/TESTS/image_compare_spec.lua`.
 - **`Route.kv` used for real** (the case Phase 7 was built for) — but
   dispatch bypasses composer's own bound `ctx.kv` and calls the ORIGINAL,
   unmodified `core.run(ctx.raw.args, range)` / `core.run_buffers(ctx.raw.args)`
