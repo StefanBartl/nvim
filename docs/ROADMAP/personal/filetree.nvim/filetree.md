@@ -44,3 +44,24 @@
 
 ---
 
+
+---
+
+## Offen: `<leader>fm` — Fenster oeffnet ohne Fokus (Windows)
+
+Stand 2026-08-07. `open_in_fm` delegiert seit heute an
+`lib.nvim.cross.reveal_in_fm`, teilt sich den Bug also mit open.nvims
+`:Open filemanager`. Vollstaendige Analyse dort:
+[open.nvim.md](../open.nvim.md). Kurzfassung: das Explorer-Fenster entsteht,
+kommt aber nicht in den Vordergrund — Fokus-Problem, kein Start-Problem.
+
+Zusaetzlich hier offen:
+
+- [ ] `reuse_existing` (Explorer-Fenster-Wiederverwendung via COM) ist laut
+      eigenem Modulkommentar nie gegen eine echte Explorer-Instanz getestet
+      worden. Wenn der Fokus-Fix ueber `SetForegroundWindow` laeuft, faellt
+      dieser Test ohnehin an — dann gleich mit erledigen.
+- [ ] Neu: `reveal = true` ist ab jetzt Default, ein Datei-Knoten wird also im
+      Explorer selektiert statt nur den Ordner zu oeffnen. Im Alltag
+      gegenpruefen, ob das fuer `<leader>fm` wirklich das gewuenschte
+      Verhalten ist, oder ob der Ordner ohne Selektion angenehmer war.
