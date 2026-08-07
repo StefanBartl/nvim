@@ -61,3 +61,18 @@ name when `[path]` is omitted — unchanged from the original.
   historical snapshot rather than rewritten.
 - `doc/pdfport.nvim.txt` was renamed to `doc/pdfport.txt` (tags `pdfport.nvim-*` ->
   `pdfport-*`) so `:h pdfport` resolves, matching `fileops.txt`/`replacer.txt`.
+
+## Notes (2026-08 deps pass)
+
+- `docs/install.json` declares pdfport.nvim's 6 optional external tools
+  (pdftotext, pdftoppm, tesseract, curl, ollama, chafa) for
+  `lib.nvim.deps` — the first plugin to ship one. Each entry carries a
+  required `why` (see the `lib.nvim.md` cheatsheet's `:Lib deps` section for
+  the mechanism); `:PdfPort health`'s own `:checkhealth` output is
+  unchanged, this is a separate, cross-plugin-aware surface
+  (`:Lib deps show pdfport.nvim`), not a replacement for it.
+- `pdftotext` and `pdftoppm` are declared as two tool entries sharing one
+  `poppler-utils`/`poppler` package on most managers — worth knowing if this
+  file is used as a template: `lib.nvim.deps.install.plan` de-duplicates the
+  package name in the composed command, but both tools still show
+  individually in `:Lib deps show`.

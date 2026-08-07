@@ -10,9 +10,55 @@ repo, unlike published standalone plugins, opted for alongside not replace).
 | `:Lib cwd-here` | lcd to the current buffer's directory | `:CwdHere` (still works) |
 | `:Lib ps-profile` | Open the active PowerShell profile | `:PowershellProfile` (still works, Windows only) |
 | `:Lib helptags` | Regenerate all helptags now | (was autocmd-only before) |
+| `:Lib deps show [plugin]` | Declared external tools for `plugin` (why each matters, present/missing), or every plugin shipping a spec if omitted | none — new surface |
+| `:Lib deps install plugin` | Compose an install command for whatever `plugin` is missing, confirm, hand off to a terminal | none — new surface |
 
 Gated by `nvim_usrcmds.setup({ lib_verb = true })` (default: on). Set
 `lib_verb = false` to disable the `:Lib` verb and keep only the flat commands.
+`deps = false` disables just the `deps` routes and keeps the rest of `:Lib`.
+
+### `:Lib deps` — declared external tools (`lib.nvim.deps`)
+
+A plugin that needs an optional CLI tool (pandoc, ImageMagick, tesseract,
+poppler-utils, …) to unlock a feature can declare it in its own
+`docs/INSTALL.md` or `docs/install.json`, instead of only warning about it
+in `:checkhealth`. Each declared tool carries a **required** `why` — "install
+X because it enables Y" — not just a bare "X is missing".
+
+```
+:Lib deps show pdfport.nvim
+```
+```
+# pdfport.nvim — external tools
+
+Package manager: scoop
+Tools declared: 6  ·  present: 5  ·  missing: 1
+
+[missing] tesseract
+    Enables OCR extraction for scanned or image-only PDFs...
+    scoop install tesseract
+...
+```
+
+`pdfport.nvim` is the first plugin to ship a spec
+(`docs/install.json`, six tools). Nothing installs on its own:
+`:Lib deps install` composes the command for whatever package manager is on
+this host (winget/scoop/choco here, apt/dnf/pacman/zypper/apk on Linux,
+brew on macOS), asks for confirmation, then **types** the command into a
+terminal split without submitting it — the sudo/UAC prompt, if any, is
+answered at that real terminal, not by a backgrounded job.
+
+Under the hood this needed a fix that's worth knowing about if `:Lib deps`
+ever looks like it's missing a plugin: `runtimepath` alone only sees
+plugins lazy.nvim has actually **loaded**. Measured on this config while
+building it — 120 plugins configured, 44 loaded at startup, 76 pending —
+`lib.nvim.deps.spec.find`/`plugins` therefore also consults
+`lazy.core.config`'s registry (via `pcall`, no hard dependency) for
+plugins that are installed but not yet loaded.
+
+Full design, the format spec, and the package-manager list:
+`lua/lib/nvim/deps/README.md` and `docs/ROADMAP/dependency-installer.md` in
+the lib.nvim repo, `:help lib.nvim-deps`.
 
 ## Module control commands (separate from the `:Lib` verb)
 
