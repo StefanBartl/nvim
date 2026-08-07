@@ -71,10 +71,11 @@ end
 ---Runs `fetch_one`/`pull_one`/`update_one` over a plain list of `{name=...}`
 ---planned entries, notifying one summary. Mirrors `init.lua`'s
 ---`run_listed_op`, just against an already-known set instead of re-deriving
----presence from disk.
+---presence from disk — including its "changed vs already up to date"
+---breakdown, when `op_fn` reports it (fetch/pull/update all do).
 ---@param gerund string
 ---@param past string
----@param op_fn fun(path: string, on_done: fun(ok: boolean, err: string|nil))
+---@param op_fn fun(path: string, on_done: fun(ok: boolean, err: string|nil, changed: boolean|nil))
 ---@param planned {name: string}[]
 ---@param base_dir string
 ---@param on_done fun()
@@ -85,22 +86,40 @@ local function run_git_phase(gerund, past, op_fn, planned, base_dir, on_done)
   end
   local prog = new_progress(("[usrcmds.plugin_repos.picker] %s"):format(gerund:lower()))
   notify.info(("%s %d plugin(s)..."):format(gerund, #planned))
+
+  local changed_count, unchanged_count = 0, 0
+
   ops.run_sequential(
     planned,
-    function(p, cb) op_fn(base_dir .. "/" .. p.name, cb) end,
+    function(p, cb)
+      op_fn(base_dir .. "/" .. p.name, function(ok, err, changed)
+        if ok and changed ~= nil then
+          if changed then
+            changed_count = changed_count + 1
+          else
+            unchanged_count = unchanged_count + 1
+          end
+        end
+        cb(ok, err)
+      end)
+    end,
     function(p) return p.name end,
     function(ok_items, failed)
       if prog then
         prog:finish(("%d %s, %d failed"):format(#ok_items, past, #failed))
+      end
+      local detail = ""
+      if changed_count + unchanged_count > 0 then
+        detail = (" (%d changed, %d already up to date)"):format(changed_count, unchanged_count)
       end
       if #failed > 0 then
         local lines = {}
         for _, f in ipairs(failed) do
           lines[#lines + 1] = f.item.name .. ": " .. f.err
         end
-        notify.warn(("%d %s, failed:\n%s"):format(#ok_items, past, table.concat(lines, "\n")))
+        notify.warn(("%d %s%s, failed:\n%s"):format(#ok_items, past, detail, table.concat(lines, "\n")))
       else
-        notify.info(("%d repositor%s %s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past))
+        notify.info(("%d repositor%s %s%s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past, detail))
       end
       on_done()
     end,

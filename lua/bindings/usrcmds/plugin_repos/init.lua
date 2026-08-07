@@ -351,9 +351,15 @@ end
 ---repos, runs `op_fn` on each sequentially (via `ops.run_sequential`) and
 ---reports one combined summary. `gerund`/`past` only drive the notify text
 ---(e.g. "Fetching"/"fetched"), never the git call itself.
+---
+---`op_fn` may report a third `changed` boolean to its `on_done` (all of
+---`ops.fetch_one`/`pull_one`/`update_one` do) — when at least one item
+---reports it, the final summary breaks the success count down into
+---"changed" vs "already up to date" instead of just a bare total, so
+---`:MyPlugins update` (etc.) actually says whether anything happened.
 ---@param gerund string
 ---@param past string
----@param op_fn fun(path: string, on_done: fun(ok: boolean, err: string|nil))
+---@param op_fn fun(path: string, on_done: fun(ok: boolean, err: string|nil, changed: boolean|nil))
 ---@param path string|nil
 ---@param only_name string|nil
 local function run_listed_op(gerund, past, op_fn, path, only_name)
@@ -369,22 +375,41 @@ local function run_listed_op(gerund, past, op_fn, path, only_name)
   local prog = new_progress(("[usrcmds.plugin_repos] %s"):format(gerund:lower()))
   notify.info(("%s %d plugin(s) in %s..."):format(gerund, #present, base_dir))
 
+  local changed_count, unchanged_count = 0, 0
+
   ops.run_sequential(
     present,
-    function(name, on_done) op_fn(base_dir .. "/" .. name, on_done) end,
+    function(name, on_done)
+      op_fn(base_dir .. "/" .. name, function(ok, err, changed)
+        if ok and changed ~= nil then
+          if changed then
+            changed_count = changed_count + 1
+          else
+            unchanged_count = unchanged_count + 1
+          end
+        end
+        on_done(ok, err)
+      end)
+    end,
     function(name) return name end,
     function(ok_items, failed)
       if prog then
         prog:finish(("%d %s, %d failed"):format(#ok_items, past, #failed))
+      end
+      -- Only op_fns that report `changed` (fetch/pull/update) populate these
+      -- counters; clone/remove/reclone go through their own reporting.
+      local detail = ""
+      if changed_count + unchanged_count > 0 then
+        detail = (" (%d changed, %d already up to date)"):format(changed_count, unchanged_count)
       end
       if #failed > 0 then
         local lines = {}
         for _, f in ipairs(failed) do
           lines[#lines + 1] = f.item .. ": " .. f.err
         end
-        notify.warn(("%d %s, failed:\n%s"):format(#ok_items, past, table.concat(lines, "\n")))
+        notify.warn(("%d %s%s, failed:\n%s"):format(#ok_items, past, detail, table.concat(lines, "\n")))
       else
-        notify.info(("%d repositor%s %s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past))
+        notify.info(("%d repositor%s %s%s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past, detail))
       end
     end,
     prog
