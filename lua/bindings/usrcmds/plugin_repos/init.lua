@@ -454,31 +454,40 @@ local function check_all(path, only_name)
     if remaining > 0 then
       return
     end
-    if prog then
-      prog:finish(("read %d of %d repositories"):format(total - #errors, total))
-    end
 
-    ---@type PluginRepoStatusRecord[]
-    local records = {}
-    for i = 1, total do
-      if indexed[i] then
-        records[#records + 1] = indexed[i]
+    -- Every `status_one` callback fires straight out of its `vim.system`
+    -- completion handler — a fast-event/libuv context where API calls like
+    -- `nvim_create_buf`/`nvim_open_win` (which `kit.viewer` needs) aren't
+    -- allowed. `vim.schedule` defers the rest of this onto the main loop,
+    -- same as `run_sequential`'s own `on_finish` dispatch does for
+    -- fetch/pull/update.
+    vim.schedule(function()
+      if prog then
+        prog:finish(("read %d of %d repositories"):format(total - #errors, total))
       end
-    end
 
-    if #records == 0 then
-      notify.error("Failed to read status of every plugin:\n" .. table.concat(errors, "\n"))
-      return
-    end
+      ---@type PluginRepoStatusRecord[]
+      local records = {}
+      for i = 1, total do
+        if indexed[i] then
+          records[#records + 1] = indexed[i]
+        end
+      end
 
-    local lines = ops.render_status(records)
-    if #errors > 0 then
-      lines[#lines + 1] = ""
-      lines[#lines + 1] = "Failed:"
-      vim.list_extend(lines, errors)
-    end
+      if #records == 0 then
+        notify.error("Failed to read status of every plugin:\n" .. table.concat(errors, "\n"))
+        return
+      end
 
-    require("lib.nvim.ui.kit").viewer({ title = "MyPlugins check", lines = lines })
+      local lines = ops.render_status(records)
+      if #errors > 0 then
+        lines[#lines + 1] = ""
+        lines[#lines + 1] = "Failed:"
+        vim.list_extend(lines, errors)
+      end
+
+      require("lib.nvim.ui.kit").viewer({ title = "MyPlugins check", lines = lines })
+    end)
   end
 
   for i, name in ipairs(present) do
