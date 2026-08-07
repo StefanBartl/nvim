@@ -968,6 +968,8 @@ function M.sla(case_arg)
     lines[#lines + 1] = "Rückmeldung"
     if status.cadence then
       clock_line(status.cadence)
+    elseif status.awaiting_customer then
+      lines[#lines + 1] = "  wartet auf Kunden (Awaiting User Info) — keine Frist, bis er antwortet"
     else
       lines[#lines + 1] = "  unbekannt"
     end

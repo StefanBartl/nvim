@@ -80,13 +80,43 @@ end
 local function stream_data(dir)
   local path = newest_activity_stream(dir)
   if not path then
-    return { customer = {}, assignments = {} }
+    return { customer = {}, assignments = {}, states = {} }
   end
   local content = read(path)
   if not content then
-    return { customer = {}, assignments = {} }
+    return { customer = {}, assignments = {}, states = {} }
   end
   return stream.parse(content)
+end
+
+--- Is the case, right now, sitting in "Awaiting User Info" — the
+--- customer's turn, nothing pending for the agent? Just the most recent
+--- state event's `to`; SNOW's own state, not casedesk's Open/Closed/
+--- Reassigned folder state.
+---@param states Lib.Case.SlaStateEvent[]  ascending by `at`
+---@return boolean
+local function awaiting_customer(states)
+  local latest = states[#states]
+  return latest ~= nil and latest.to == "Awaiting User Info"
+end
+
+---@param ... integer|nil
+---@return integer|nil  the largest non-nil argument, or nil if all are nil
+local function latest_of(...)
+  -- NOT `for _, v in ipairs({ ... })`: a leading nil (last_reply_sent is
+  -- nil far more often than not — most cases never get :Case reply
+  -- check's "sent" stamp) makes `{...}` a table with a hole at index 1,
+  -- and ipairs stops at the first hole — silently skipping every argument
+  -- after it. select() has no such gap-stopping behavior.
+  local best = nil
+  local n = select("#", ...)
+  for i = 1, n do
+    local v = select(i, ...)
+    if v and (not best or v > best) then
+      best = v
+    end
+  end
+  return best
 end
 
 ---@class Lib.Case.SlaClockStatus
@@ -106,8 +136,14 @@ end
 ---@field last_customer_at integer|nil
 ---@field last_reply_sent integer|nil
 ---@field first_response Lib.Case.SlaClockStatus[]  one per available anchor
----@field cadence Lib.Case.SlaClockStatus|nil
+---@field cadence Lib.Case.SlaClockStatus|nil  nil while `awaiting_customer` — see that field
 ---@field fix Lib.Case.SlaClockStatus|nil
+---@field awaiting_customer boolean  case is sitting in SNOW's "Awaiting
+---  User Info" right now: no cadence obligation pending (nothing to give
+---  an update ON), `cadence` is nil FOR THIS REASON, not because there's
+---  no data. Confirmed against real casework: the clock resets — not
+---  pauses-and-resumes — to a FULL fresh budget once the customer replies,
+---  dated from that reply, not from whatever was left when it stopped.
 
 ---@param entry Lib.Case.RegistryEntry
 ---@return Lib.Case.SlaStatus|nil  nil when no parseable priority is set
@@ -146,20 +182,32 @@ function M.status(entry)
   fr_clock("ab Ticket-Eingang", opened_stream)
   fr_clock("ab Zuweisung", assigned_at)
 
+  -- Confirmed against real casework (SLA.md §3 Nachtrag): while the case
+  -- sits in "Awaiting User Info", the agent owes no update, so there is no
+  -- cadence deadline to show. The moment the customer replies (or the
+  -- state moves off Awaiting User Info some other way), a FRESH cadence
+  -- period starts from THAT timestamp — not resumed from wherever the
+  -- clock stood when it stopped. `last_reply_sent`/`last_customer_at`
+  -- whichever is more recent covers both directions: my own reply resets
+  -- it same as before, and the customer's reply now does too.
+  local is_awaiting = awaiting_customer(data.states)
+
   ---@type Lib.Case.SlaClockStatus|nil
   local cadence = nil
-  local cadence_since = last_reply_sent or assigned_at or opened_stream or opened_created
-  local cadence_budget = level.cadence[1]
-  if cadence_since and cadence_budget then
-    local dl = clock.deadline(cadence_since, cadence_budget, level.window)
-    cadence = {
-      label = "Rückmeldung",
-      since = cadence_since,
-      deadline = dl,
-      remaining = dl - now,
-      budget = cadence_budget,
-      done = false,
-    }
+  if not is_awaiting then
+    local cadence_since = latest_of(last_reply_sent, last_customer_at) or assigned_at or opened_stream or opened_created
+    local cadence_budget = level.cadence[1]
+    if cadence_since and cadence_budget then
+      local dl = clock.deadline(cadence_since, cadence_budget, level.window)
+      cadence = {
+        label = "Rückmeldung",
+        since = cadence_since,
+        deadline = dl,
+        remaining = dl - now,
+        budget = cadence_budget,
+        done = false,
+      }
+    end
   end
 
   ---@type Lib.Case.SlaClockStatus|nil
@@ -188,6 +236,7 @@ function M.status(entry)
     first_response = first_response,
     cadence = cadence,
     fix = fix,
+    awaiting_customer = is_awaiting,
   }
 end
 

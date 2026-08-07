@@ -3,9 +3,9 @@
 Grundlage: `C:\repos\WKDBook-Tricentis\Workflow\SLA_ServiceLevelAgreement.md`
 ([Confluence](https://tricentis.atlassian.net/wiki/spaces/SUP/pages/320726887/SAP+Service+Level+Agreements+SLAs)).
 
-Noch nicht gebaut. Fertige Features stehen in [CONCEPT.md](CONCEPT.md),
-offene Punkte in [ROADMAP.md](ROADMAP.md) — dieses Dokument ist die
-Vorarbeit für einen eigenen `sla.lua`-Baustein.
+Paket 1 steht (§10). Fertige Features stehen sonst in [CONCEPT.md](CONCEPT.md),
+offene Punkte in [ROADMAP.md](ROADMAP.md) — dieses Dokument bleibt die
+Vorarbeit für den Rest der `sla/`-Bausteine.
 
 ---
 
@@ -14,7 +14,7 @@ Vorarbeit für einen eigenen `sla.lua`-Baustein.
 - [1. Warum das nicht aus dem Bestehenden fällt](#1-warum-das-nicht-aus-dem-bestehenden-fällt)
 - [2. Datenlage](#2-datenlage)
 - [3. Drei Uhren, nicht eine](#3-drei-uhren-nicht-eine)
-  - [Nachtrag: die Uhr steht nicht immer](#nachtrag-die-uhr-steht-nicht-immer)
+  - [Nachtrag: die Uhr steht nicht immer — und sie pausiert nicht, sie resettet (gebaut, 2026-08-07)](#nachtrag-die-uhr-steht-nicht-immer--und-sie-pausiert-nicht-sie-resettet-gebaut-2026-08-07)
 - [4. Geschäftszeit-Rechnung (der einzige echte Algorithmus)](#4-geschäftszeit-rechnung-der-einzige-echte-algorithmus)
 - [5. Datenmodell](#5-datenmodell)
   - [`config.sla`](#configsla)
@@ -108,27 +108,63 @@ Korrekturmaßnahme sind Einmal-Deadlines ab Ticket-Eingang; die Rückmeldung
 setzt sich mit jeder gesendeten Antwort zurück. Das Datenmodell muss beide
 Formen tragen.
 
-### Nachtrag: die Uhr steht nicht immer
+### Nachtrag: die Uhr steht nicht immer — und sie pausiert nicht, sie resettet (gebaut, 2026-08-07)
 
 Aus der Stream-Analyse in [EXTRACTION.md](EXTRACTION.md) §5 — dieses Kapitel
 war zu einfach gedacht. Cases stehen regelmäßig auf **`Awaiting User Info`**
 (in zwei der vier untersuchten Streams je zweimal hin und zurück). Solange
-sie das tun, liegt der Ball beim Kunden, und die Rückmeldungs-Uhr sollte
-**pausieren**:
+sie das tun, liegt der Ball beim Kunden.
+
+**§9.6 ist geklärt** (Rückmeldung aus dem echten Arbeitsalltag, nicht aus
+dem Text der SAP-SLA-Vereinbarung — die schweigt dazu): kein Pause/Resume
+mit Restbudget, sondern ein **Reset auf volles Budget**, sobald der Kunde
+wieder antwortet:
 
 ```
-Uhr läuft    in State = New | Active
-Uhr pausiert in State = Awaiting User Info
+Kunde erstellt Ticket → Erstreaktion läuft
+Ich antworte             → Rückmeldungs-Uhr steht still (nichts zu melden,
+                            solange ich nichts Neues vom Kunden habe)
+Kunde antwortet          → NEUE Rückmeldungsfrist beginnt, volles Budget,
+                            ab dem Zeitpunkt der Kundenantwort — nicht ab
+                            dem Rest, der vor der Pause übrig war
 ```
 
-Ohne das zeigt das Tool gerissene Fristen an, obwohl korrekt gearbeitet
-wurde — und wird nach zwei Wochen nicht mehr angeschaut. Das ist exakt das
-Alarm-Müdigkeits-Risiko aus §8, nur mit konkreter Ursache.
+Ausdrücklich **nur die Rückmeldung** betrifft das — Erstreaktion und
+Korrekturmaßnahme bleiben Einmal-Deadlines ab Ticket-Eingang, unverändert.
+Nebenbefund aus derselben Klärung: der Kunde kann den Case selbst
+schließen (SNOW-seitig), der Agent kann das nicht — noch nicht ausgewertet,
+möglicher künftiger Stream-Signal in EXTRACTION.md.
 
-Die Zustandshistorie dafür ist vollständig aus dem Activity Stream
-ableitbar (`State` / `<neu> was <alt>`), kostet also kein neues Pflegefeld.
-Umsetzung: `states`-Liste in `sla/stream.lua`, Intervall-Filter in
-`clock.elapsed`. **Vorher** aber §9.6 klären.
+**Umsetzung** (`sla/stream.lua` + `sla/init.lua`, headless gegen die vier
+echten Streams aus EXTRACTION.md getestet):
+
+- `stream.lua` parst jetzt zusätzlich `states` (`State` / `<neu> was
+  <alt>`-Blöcke, dieselbe Struktur wie `Assigned to`) — SNOW's eigener
+  Ticket-Status, nicht zu verwechseln mit casedesks Open/Closed/Reassigned
+  (Ordner-Zustand).
+- `awaiting_customer(states)`: `true`, wenn das jüngste State-Ereignis
+  `to == "Awaiting User Info"` ist.
+- Ist das der Fall, ist `status.cadence` `nil` **und** `status.
+  awaiting_customer` `true` — zwei getrennte Signale, damit die UI „keine
+  Frist gerade" von „keine Daten vorhanden" unterscheiden kann (`M.sla`s
+  Viewer zeigt dafür „wartet auf Kunden (Awaiting User Info)" statt
+  „unbekannt").
+- Sonst: `cadence_since = latest_of(last_reply_sent, last_customer_at)`
+  (welches Ereignis auch immer zuletzt den Ball zurückgegeben hat —
+  meine Antwort oder die Antwort des Kunden), mit dem alten Fallback
+  (`assigned_at`/`opened_stream`/`opened_created`) falls noch keins von
+  beiden existiert.
+
+**Stolperfalle beim Bauen, dokumentiert weil sie leicht wiederkehrt:**
+`latest_of(...)` zuerst als `for _, v in ipairs({ ... }) do` geschrieben —
+`last_reply_sent` ist bei den meisten Cases `nil` (kein `:Case reply
+check`-Stempel), macht `{...}` zu einer Tabelle mit einem Loch an Index 1,
+und `ipairs` bricht am ersten Loch ab, **bevor** es `last_customer_at`
+überhaupt sieht. Ergebnis lautlos falsch: `cadence_since` fiel auf
+`assigned_at` zurück, obwohl ein neuerer Kunden-Zeitstempel da war — beim
+Test gegen Case 989508s echten Stream als falsches `2026-07-22` statt
+`2026-08-05` aufgefallen. Fix: `select("#", ...)`/`select(i, ...)` statt
+`ipairs({...})`, das kennt keine Lochstopp-Regel.
 
 ## 4. Geschäftszeit-Rechnung (der einzige echte Algorithmus)
 
@@ -366,12 +402,11 @@ dem sich ein Rechenfehler lautlos versteckt.
    `last_reply_sent` bei *jeder* Antwort gesetzt wird.
 5. Soll `:Cases sla` auch `Closed/` einbeziehen (für den Report ja, für das
    Dashboard nein)?
-6. **Pausiert die Uhr bei `Awaiting User Info`?** (§3, Nachtrag) Fachlich
-   plausibel und in jedem Ticketsystem üblich — aber
-   `SLA_ServiceLevelAgreement.md` sagt dazu nichts Explizites. Bis das
-   geklärt ist, rechnet das Tool die Pausen **nicht** heraus und zeigt
-   stattdessen die Zustandshistorie mit an, damit der Unterschied sichtbar
-   bleibt statt versteckt zu werden. Gleiche Haltung wie bei §9.1.
+6. ~~Pausiert die Uhr bei `Awaiting User Info`?~~ **Geklärt (2026-08-07,
+   §3-Nachtrag):** kein Pause/Resume, ein Reset auf volles Budget ab
+   Kundenantwort, nur die Rückmeldung betroffen. `SLA_ServiceLevelAgreement.md`
+   sagt dazu weiterhin nichts Explizites — die Antwort kommt aus der
+   gelebten Praxis, nicht aus dem Dokument. Gebaut und headless getestet.
 7. Zählt die **Zeitzone des Kunden** in die Bewertung hinein? In den
    Streams stehen Arbeitszeiten wie `10:00 A.m-19:00 P.M [IST]`
    (EXTRACTION.md §4.9) — eine Antwort um 17:00 CET erreicht IST niemanden
@@ -445,6 +480,14 @@ Bauen sichtbar wurden:
   bleibt offen, nichts wurde stillschweigend entschieden.
 - Getestet gegen den echten Stream von 977392 (`clock.lua`, `stream.lua`,
   `sla/init.lua` end-to-end, headless) — siehe Werte in §11.
+- **Nachtrag (2026-08-07): Rückmeldung-Reset statt Pause**, §3-Nachtrag.
+  `latest_of(...)` zuerst mit `ipairs({ ... })` geschrieben, was bei einem
+  `nil` an erster Stelle (der Normalfall für `last_reply_sent`) lautlos
+  jedes weitere Argument verschluckt — `select("#", ...)`/`select(i, ...)`
+  verwenden `ipairs` bricht bei Lücken ab. Gegen Case 989508s echten Stream
+  aufgefallen (falscher Anker `2026-07-22` statt `2026-08-05`), gegen
+  denselben Stream sowie einen synthetischen "gerade in Awaiting User
+  Info"-Fall verifiziert.
 
 ## Literatur und Referenzen
 

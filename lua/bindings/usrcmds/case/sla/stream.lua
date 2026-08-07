@@ -21,12 +21,20 @@ local M = {}
 ---@field at integer     epoch (UTC)
 ---@field actor string|nil
 
+---@class Lib.Case.SlaStateEvent
+---@field at integer
+---@field to string
+---@field from string|nil
+
 ---@class Lib.Case.SlaStreamData
 ---@field priority string|nil    raw value as SNOW shows it, e.g. "3 - Moderate"
 ---@field impact string|nil
 ---@field earliest integer|nil   epoch of the oldest timestamped event found
 ---@field customer Lib.Case.SlaEvent[]  ascending by `at`
 ---@field assignments Lib.Case.SlaEvent[]  ascending by `at`
+---@field states Lib.Case.SlaStateEvent[]  ascending by `at` — SNOW's OWN
+---  ticket state ("New"/"Active"/"Awaiting User Info"), not to be confused
+---  with casedesk's Open/Closed/Reassigned folder state (registry.lua)
 
 ---@param value string  e.g. "2026-08-05 05:58:36 GMT"
 ---@return integer|nil
@@ -64,7 +72,7 @@ function M.parse(text)
   local n = #lines
 
   ---@type Lib.Case.SlaStreamData
-  local out = { priority = nil, impact = nil, earliest = nil, customer = {}, assignments = {} }
+  local out = { priority = nil, impact = nil, earliest = nil, customer = {}, assignments = {}, states = {} }
 
   local function note_earliest(epoch)
     if epoch and (not out.earliest or epoch < out.earliest) then
@@ -115,12 +123,38 @@ function M.parse(text)
         note_earliest(at)
       end
     end
+
+    -- `State` / `<to> was <from>` — same block shape as `Assigned to`
+    -- above. Doesn't match the trailing `State`/`New` pair in the
+    -- Field-changes-less metadata dump at the very end of a stream: that
+    -- value line has no " was ", so `to` stays nil and the block is
+    -- skipped. SLA.md §3 Nachtrag: the cadence clock needs to know whether
+    -- the case is currently sitting in "Awaiting User Info" (the
+    -- customer's turn — nothing pending for the agent) or was handed back.
+    if line == "State" then
+      local target_line = lines[i + 1] and vim.trim(lines[i + 1]) or ""
+      local to, from = target_line:match("^(.-) was (.+)$")
+      local at = nil
+      for j = i - 1, math.max(1, i - 4), -1 do
+        at = parse_local(vim.trim(lines[j]))
+        if at then
+          break
+        end
+      end
+      if at and to then
+        out.states[#out.states + 1] = { at = at, to = to, from = from }
+        note_earliest(at)
+      end
+    end
   end
 
   table.sort(out.customer, function(a, b)
     return a.at < b.at
   end)
   table.sort(out.assignments, function(a, b)
+    return a.at < b.at
+  end)
+  table.sort(out.states, function(a, b)
     return a.at < b.at
   end)
 
