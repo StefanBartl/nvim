@@ -220,9 +220,12 @@ function M.setup()
   --   require("snacks").picker.resume()
   -- end, { desc = "[snacks] Resume Picker" })
 
-  -- Undo History -> moved to bindings.mappings.custom (this file isn't
-  -- required anywhere from bindings.mappings.init.setup(), see its module
-  -- comment above — anything added here silently never takes effect).
+  -- Undo History -> configured via pickers.setup({ mappings = { undo = {...} } })
+  -- in plugins/personal/init.lua instead (pickers.builtins already has an
+  -- engine-agnostic "undo" entry, dispatched through pickers.nvim rather
+  -- than a raw snacks call here — see plugins/personal/init.lua). This file
+  -- isn't required anywhere from bindings.mappings.init.setup() either way
+  -- (see its module comment above), so anything added here never takes effect.
 
   map("n", "<leader>ch", function()
     require("snacks").picker.colorschemes()

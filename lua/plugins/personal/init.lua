@@ -107,6 +107,15 @@ plugins.add({
           config_smart = "<leader>cf", -- smart grep+find in nvim config
         },
 
+        -- Declarative `mappings`: any pickers.builtins name -> { lhs, engine? }.
+        -- Engine-agnostic (dispatches through the configured/resolved engine,
+        -- snacks here — see pickers.builtins.REGISTRY.undo for the
+        -- snacks/fzf-lua dispatch table), unlike calling
+        -- require("snacks").picker.undo() directly.
+        mappings = {
+          undo = { "<leader>UN" },
+        },
+
         history = {
           enabled = true,
           fzf_scope = "patch", -- patches telescope + fzf-lua setup() itself, no config change needed elsewhere
