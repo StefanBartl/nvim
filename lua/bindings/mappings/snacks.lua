@@ -220,12 +220,11 @@ function M.setup()
   --   require("snacks").picker.resume()
   -- end, { desc = "[snacks] Resume Picker" })
 
-  -- Undo History -> configured via pickers.setup({ mappings = { undo = {...} } })
-  -- in plugins/personal/init.lua instead (pickers.builtins already has an
-  -- engine-agnostic "undo" entry, dispatched through pickers.nvim rather
-  -- than a raw snacks call here — see plugins/personal/init.lua). This file
-  -- isn't required anywhere from bindings.mappings.init.setup() either way
-  -- (see its module comment above), so anything added here never takes effect.
+  -- Undo History -> config/snacks/mappings/standard.lua's builtin("undo"),
+  -- same pattern as gb/gl/gs/sM/GD/... below (routed through pickers.nvim,
+  -- not a raw snacks call). This file isn't required anywhere from
+  -- bindings.mappings.init.setup() either way (see its module comment
+  -- above), so anything added here never takes effect regardless.
 
   map("n", "<leader>ch", function()
     require("snacks").picker.colorschemes()

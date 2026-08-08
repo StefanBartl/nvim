@@ -236,7 +236,12 @@ plugins' which-key modules).
 - `:Pickers builtin <name>` (51-entry registry of native picker-engine
   functions — git/LSP/help/vim-intrinsics/diagnostics/…) is a *command*, not
   a keymap — see the [Usercmds cheatsheet](../Usercmds/pickers.nvim.md).
-  None of its entries ship a default keymap; bind your own via
-  `builtin("name")`-style wrappers if you want one (see the user config's
-  `config/snacks/mappings/standard.lua` for the pattern this repo's own
-  config uses).
+  pickers.nvim itself ships none of them with a default keymap; the user
+  config's `config/snacks/mappings/standard.lua` binds the ones it wants via
+  its own `builtin("name")`-style wrappers (fed into `plugins/snacks.lua`'s
+  lazy spec `keys`, not `pickers.setup()`), e.g. `git_branches`, `sM`→`man`,
+  `GD`→`lsp_definitions`, and (2026-08-08) `undo`→`<leader>UN` (Undo
+  History — the classic bug hunting it hit first: it was written into
+  `bindings/mappings/snacks.lua`, a file that's dead code — never required
+  from `bindings/mappings/init.lua` — so the keys silently fell through to
+  native `U`/`N` instead of opening a picker).

@@ -263,6 +263,13 @@ function M.keys()
     desc = "[pickers] Colorschemes",
   }
 
+  maps[#maps + 1] = {
+    "<leader>UN",
+    builtin("undo"),
+    mode = "n",
+    desc = "[pickers] Undo History",
+  }
+
   ---------------------------------------------------------------------------
   -- LSP
   ---------------------------------------------------------------------------
