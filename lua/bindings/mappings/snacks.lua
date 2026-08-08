@@ -2,6 +2,14 @@
 --- Centralized key mappings for folke/snacks.nvim.
 --- Active mappings are defined normally, inactive mappings are kept commented
 --- at their original logical positions for easy activation later.
+---@description
+--- NOT currently wired up: bindings.mappings.init.setup() doesn't require
+--- this module, so M.setup() below is never called and every mapping in
+--- here — "active"-looking or not — is dead. Likely superseded by
+--- pickers.nvim's own snacks integration (see config/snacks/picker/init.lua)
+--- for the picker-related ones; git.lua/lsp.lua/fzf.lua/telescope.lua may
+--- already cover the rest. Before wiring this back in, check for overlap
+--- with those instead of assuming it's a simple oversight.
 
 local M = {}
 
@@ -212,9 +220,9 @@ function M.setup()
   --   require("snacks").picker.resume()
   -- end, { desc = "[snacks] Resume Picker" })
 
-  -- map("n", "<leader>su", function()
-  --   require("snacks").picker.undo()
-  -- end, { desc = "[snacks] Undo History" })
+  -- Undo History -> moved to bindings.mappings.custom (this file isn't
+  -- required anywhere from bindings.mappings.init.setup(), see its module
+  -- comment above — anything added here silently never takes effect).
 
   map("n", "<leader>ch", function()
     require("snacks").picker.colorschemes()

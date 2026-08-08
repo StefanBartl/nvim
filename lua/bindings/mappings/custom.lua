@@ -26,6 +26,15 @@ function M.setup()
     sessions.save(entry and entry.short or nil)
   end, { desc = "[casedesk] Save session (case-aware)" })
 
+  -- Moved from bindings.mappings.snacks — that file is never required from
+  -- bindings.mappings.init.setup(), so anything added there is dead: the
+  -- keys silently fall through to native Nvim commands instead (this exact
+  -- mapping did, which is how "<leader>UN" turned into plain "U" + "N" and
+  -- threw E486 off a stale search register).
+  map("n", "<leader>UN", function()
+    require("snacks").picker.undo()
+  end, { desc = "[snacks] Undo History" })
+
 end
 
 return M
