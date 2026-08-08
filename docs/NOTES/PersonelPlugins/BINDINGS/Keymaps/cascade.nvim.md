@@ -44,12 +44,17 @@ All of the below is gated by the top-level switch `cfg.keymaps.preset`
 | `<A-Up>` | i | `<C-o>:m .-2<CR><C-o>==` |
 | `<A-Down>` | i | `<C-o>:m .+1<CR><C-o>==` |
 
-### Transpose (`cfg.transpose.enable and features.char`)
+### Transpose (`cfg.transpose.enable`, each row also gated by its own `features.char`/`features.word`)
 
-| lhs | mode | action |
-| --- | --- | --- |
-| `<leader><Right>` | n, x | Swap char/selection with right neighbor |
-| `<leader><Left>` | n, x | Swap char/selection with left neighbor |
+`N<lhs>` repeats the swap `N` times (drags the char/word/selection `N`
+positions over); stops early at a line boundary or when no neighbor is left.
+
+| lhs | mode | feature gate | action |
+| --- | --- | --- | --- |
+| `<leader><Right>` | n, x | `char` | Swap char/selection with right neighbor char |
+| `<leader><Left>` | n, x | `char` | Swap char/selection with left neighbor char |
+| `<leader><C-Right>` | n, x | `word` | Swap word/selection with right neighbor word (`'iskeyword'`-based; separator between the two moves as an untouched block) |
+| `<leader><C-Left>` | n, x | `word` | Swap word/selection with left neighbor word |
 
 ## Buffer-local list keymaps (`cfg.lists.filetypes` buffers only)
 
@@ -82,3 +87,9 @@ installed and preset keymaps are enabled. No-op otherwise.
 
 - Every preset keymap is individually gated by its own `cfg.<area>.features.<name>` flag as well as the group-level `cfg.<area>.enable` — disabling a feature drops just that pair of keymaps, not the whole group.
 - `docs/BINDINGS.md` in the repo is the maintained source of truth; this file mirrors it.
+
+## Changelog
+
+- 2026-08-08: added word swap (`<leader><C-Right>`/`<leader><C-Left>`, n+x,
+  new `features.word`) and count support (`N<lhs>` = swap N times) on both
+  char and word transpose, normal and visual.
