@@ -30,7 +30,7 @@ darunter, sofern relevant.
 | pickers.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | buffer-ctx.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | open.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| sandbox.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| sandbox.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | spotlight.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | documentation.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | runtime-analysis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1650,3 +1650,34 @@ nötig; unverändert gelassen, da eine parallele Session diese Dateien laut Arbe
 offenbar bereits selbst gepflegt hat und ein Diff hier nur Konfliktrisiko ohne Mehrwert gewesen
 wäre. Alles committet (`62dd545` Tooling, `66213a0` luacheck-Cleanup, `cab67de` Perf-Fix, `baa78af`
 + `8239bf1` Test-Cross-Plattform-Fixes) und nach `origin/main` gepusht.
+
+### sandbox.nvim
+
+284 Lua-Dateien, größtes bisher geprüfte Plugin nach `documentation.nvim`/`lib.nvim`. Der
+ursprüngliche Durchlauf wurde durch ein Session-Limit unterbrochen, mit ~55 Dateien echt
+geänderter, aber noch nicht committeter Arbeit im Working Tree. Vor dem Übernehmen verifiziert:
+`luacheck` 0 Warnings/Errors über 268 Dateien, `stylua --check .` sauber — dann committet
+(`3cc1b32`) und gepusht. CI (`gh run list`) grün bestätigt, inkl. der im selben Commit neu
+verdrahteten `stylua --check`-Stufe (fehlender `token`-Parameter ergänzt, gleiches Muster wie bei
+mehreren anderen Plugins in diesem Rollout).
+
+Inhaltlich (aus dem Diff rekonstruiert, da der ursprüngliche Checklisten-Fortschrittsbericht durch
+das Session-Limit verlorenging): CI-Lint um `stylua --check` erweitert, `stylua.toml`/
+`.gitattributes` neu angelegt, **Refactoring.md**-Fund: zahlreiche `notify()`-Aufrufe in
+`adapters/wsl/*`, `telescope/*` und `ui/list_view.lua` lagen in Low-Level-Code — auf
+Status-Rückgabe statt direkter Benachrichtigung umgestellt, `bindings/usrcmds/init.lua` entsprechend
+mit angepasst (554-Zeilen-Diff). GitHub-Metadaten waren laut Live-Fortschritt des unterbrochenen
+Agenten bereits vollständig gesetzt (Description, Topics, `main`, kein License-File, leeres
+Homepage-Feld) — keine Änderung nötig. Nach der Übernahme selbst ergänzt: README fehlte die
+ASCII-Art (RELEASE.md) — nachgetragen; **kein** Schwesterplugin-Absatz, da sandbox.nvim (Container-/
+WSL-Verwaltung) mit keinem anderen personal Plugin in diesem Ökosystem direkt integriert ist —
+ein erzwungener Verweis wäre eine erfundene Querreferenz gewesen, bewusst weggelassen.
+
+Nicht abschließend geprüft/übersprungen: der volle Plenary-Testlauf (`tests/sandbox/**`) konnte
+lokal nicht verifiziert werden (Aufruf-Konfigurationsproblem, `PlenaryBustedDirectory` wurde nicht
+als Command erkannt — kein Hang, sondern ein fehlerhafter lokaler Testaufruf meinerseits); stattdessen
+über die grüne GitHub-CI (die genau diese Suite ausführt) verifiziert. `docs/ADD_USECASE.md`,
+`docs/CONTRIBUTING.md`, `docs/GENERATED_COMMANDS.md`, `doc/sandbox.txt` wurden vom unterbrochenen
+Agenten bereits mitgeändert (Teil des committeten Diffs) — nicht einzeln nachverifiziert, da
+inhaltlich konsistent mit den Code-Änderungen und `luacheck`/`stylua`/CI grün. Alles committet
+(`3cc1b32`, `cfbddf1`) und nach `origin/main` gepusht.
