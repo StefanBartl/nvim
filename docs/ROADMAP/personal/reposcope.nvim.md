@@ -2,32 +2,6 @@
 
 ---
 
-## Aus `MyPlugin-Notes/reposcope/` (Analyse 2026-08-08)
-
-Quelle: `E:/repos/Notes/MyPlugin-Notes/reposcope/` (`reposcope-Notes.md`,
-`Workpaket.md`, `Meilensteine/00_Roadmap.md`, `CLI-Tools.md`,
-`Github/raw-vs-blob.md`, `Refactoring_1/**`).
-
-**Gegen den Code geprüft** (`E:/repos/reposcope.nvim/lua/reposcope/`): Die
-Meilenstein-Roadmap und das Workpaket sind vollständig umgesetzt und deutlich
-überholt — statt nur GitHub gibt es heute drei Provider (GitHub, GitLab,
-Codeberg), alle drei Request-Tools (`gh`/`curl`/`wget`) sind gebaut, es gibt
-`cache/readme_cache.lua` und `cache/repository_cache.lua`, `health.lua`,
-Clone-Executor, Stats-Popup und ein durchgezogenes `@types/`-System.
-
-Auch der schmerzhafteste Befund der Notizen ist verarbeitet: `uv.spawn()` erbt
-die Shell-Umgebung nicht, weshalb ein per `gh auth login` im Keyring liegender
-Login für Subprozesse unsichtbar ist und `GITHUB_TOKEN` explizit über `env`
-gesetzt werden **muss**. Das steht in `reposcope-Notes.md` sauber analysiert.
-
-> Diese Erkenntnis ist nicht reposcope-spezifisch. Sie gilt für **jedes**
-> eigene Plugin, das ein CLI über `vim.system`/`uv.spawn` aufruft und sich auf
-> Shell-Zustand verlässt — siehe `00_MISC.md`.
-
-Offen geblieben sind die folgenden Punkte aus dem `## Ideas`-Block.
-
----
-
 ### 1. Favoriten für Repositories
 
 Im Code gibt es keinerlei Favoriten (grep über `lua/` liefert keinen Treffer).

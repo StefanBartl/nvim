@@ -9,18 +9,21 @@ E:\repos\Notes\ProjectIdeas: Durcgehen und anlysieren lassen
 
 case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum ziel. case delete
 
-- pdfport.nvim - pdf erstellings funkiton zb pandoc; im filetree wöre dass dan auch super: diese file/image als pdf erstellen, dann kann ich die pdf gleich im system app viewer aufmachen...
 - spotlight checken und lernen
 - documentation.nvim lernen
-
-
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
-
-  - checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
 - [ ] `learn-cli.nvim` vielleicht doch ?
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
 - [ ] `nvim/lua/autocmds` analysieren
 - [ ] finish & checkists & review in nvim config durchjagen
+
+## nach /RULES implementieren
+
+### ui
+
+| Punkt | Aufwand | Nutzen |
+|---|---|---|
+| `?` öffnet eine Keybinding-Übersicht | Quick Win | mittel — Muster existiert in `filetree.nvim`s neo-tree-Cheatsheet |
 
 ## ZIEL
 

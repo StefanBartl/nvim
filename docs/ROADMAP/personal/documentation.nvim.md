@@ -1,18 +1,23 @@
 # `documentation.nvim`
 
-## Notes für mich (nicht implementieren)
+## Long term (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
-- [ ] documentation.nvim lernen
+- Eine Desktop/Webapp version, in der auf dieses konmzept aufgesetz wird, aber alles verfeinert wird, auch mit profiler und besserer view/ui/feature ausstattung
+
+---
 
 ## Generell
 
 - [ ] Kann ich,wenn das plugin `documentation.nvim` nutzt, etwas für
   - meinen Workflow gewinnen
   - etwas vom Kontext, über das Projekt in dem ich gerade arbeite, dazu verwenden um das Linting, LSP Diagnostic oder vielleicht das fehlende `in/outgoing calls` feature von luals, beisteurn kann das es  (besser) funktionert?
-  Also sprich: uisecase dateen bzw workflow files mit tipps, wie man documentation.nvim effiziehnt nutzt, wie man die aufbereitetein daten inm browser gut nutzt, was man wo findet, was man wie kombinieren kann usw...
+  Also sprich: uisecase dateen bzw workflow files mit tipps, wie man documentation.nvim effiziehnt nutzt, wie man die aufbereitetein daten inm browser gut nutzt, was man wo findet, was man wie kombinieren kann usw... am besten in die /docs geben
 
 - [ ] Jedes plugin das documentation.nvim verwendet, könnte doch in der eigenen README.md auf die entstandenen files hinweißemn, dass s man die im browser anschauen kann. als auf die art "dieses plugin verewndet documentatiion.nim und du kannst dir die maps /views usw hier anschauen: PFAD/" (wobei ich gerade nicht sicher bin, ob da süheer diesen weg auch geht, denn der übliche weg ist ja glaube ich in der documentation.nvim indtallations spec andzugeben, welche projekte man analyisert haben will; daher würde der punkt wrsch nur begrnezt sinn machen oder?)
 - [ ] In den plugins werden gerade doc regeln implementiert wie: einen docs/FEATURES Folder oder zumindest eine file in der alle features beschreiben werden in einen bestimmten format/regeln. auch docs/BINDINGS wo alle autocmds, usrcmds und keymaps aufgelistet sind. Das kann documentation.nvim nutzen, um eigene tabs dafür anzuzeigen. Das diese, wie jene tabs von runtime-anylsis.nvim nicht direkt von documentation.nvim kommen, sollten sie farblich/icon/form abweichen vom standard; Es wäre gut, eine Spezifikation für FEATURES und BINDINGS zu analysiren und ziu chcken, ob etwas anders gemahct werden soll, um es gut verwenden zu können. Hier könnte man auch ein feature anbieten, dass man sowas macht wie wenn im FEATURES folder ein file drinnen isst die ein features ausführlich beschriebt (und bewirbt), dann bekommt das einen eigenen tab; als idee
+   -->  Regelvideen: In /FEATURES ordner werden thematisch files angelget wie UI, PERFORMANCE, SECURITY oder XY, dort werden die freatures eingetreagen. Wenn ein Feature in ein Bindfing mündet oder teil davopn ist, dann wird das kurz refreneziert (kann dan velrinkt werden in documentaiton.nvim zur entsprechenden Bindings page)
+   --> Ein Feature kann auch zb, ein spezieller cache sein oä..
+   --> Dasd weäre weiterfednkend auch desweghen cool, denn dann könnte man als zweiteres zusatzfeature im source code in der broiwser view, wenn man über eine funkltin oder table hovert oder in einer trefferliste findet, dann kann es dort wien wetieres icon geben, windem steht in welchen feratures der teil gerade eingesetzt wird.
 
 ## Neue Features
 
@@ -22,6 +27,8 @@
 - [ ] hirachie view:einzelne module auslenden/verdunkeln und einblenden
 - [ ] Alternative ansichten von modulen: view wie hierarchie, aber man ann verschiednee "daten" oder "filter auf da modul view legen wie zb welche calls macht das modul, dan weren alle module die calls empfangen rundherum eingeblendet und verbunden mit pfelen und gewuchtet darewtekltllt: ciele calls dickerer streich oder so ähnlch. und dda vercshiedne varianten davon auswählbar machen brainstorm, welche views man mache kölnte mit den daten ,  ich wwürde einen eigenen tab dafür machen nicht im hirarchie tab
 - [ ] einen tab, indem der source code des projekts in https://godbolt.org/ geladen ist; bei den modulen / funktinen / tables usw... ein icon, bei dem einpopup aufgeht in der der code in  geladen ist ( wenn das sinn macht) oder zumimdnest ein icon, wenn man den klickt schickt er den funkltine/table usw.. in desas compiler explorer tab
+- [ ] Neues Feature: Erkennung von externen calls/plugins: zb man hat plenary eingebunfdne, und zwar called man zweimal eine funklti dort, auch pdfport.nvim wird mit einer api calöl called; jetzt wäre es super, wen es einen subpunkt in der dependecy ansicht gibt, dercalls zu plugin exzernen cpde aufzeigt, damit man dann agleich sieht: aha, plenary ist eignebunden wegen deieser zwei funktionen;
+  - [ ] Erweiterung: Externer source code liegt ja nicht vor, daher mus er via github repo gezigt werden, das könnte man so machen, wenn man auf eine externe funkltnie / table oder was auch immer zugreift, diese funkltnin irgendo in documentation.nvim gezeigt wird, dass man wenn man auf einen icon klickt den source code von github fetched und zeigt bzw auch gleich auf github weiterleiten kann auf die korrekte page; so kann man den externen source schenll finden;
 
 ---
 
