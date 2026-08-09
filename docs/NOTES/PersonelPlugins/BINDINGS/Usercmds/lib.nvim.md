@@ -32,7 +32,7 @@ X because it enables Y" — not just a bare "X is missing".
 # pdfport.nvim — external tools
 
 Package manager: scoop
-Tools declared: 6  ·  present: 5  ·  missing: 1
+Tools declared: 14  ·  present: 9  ·  missing: 5
 
 [missing] tesseract
     Enables OCR extraction for scanned or image-only PDFs...
@@ -41,7 +41,10 @@ Tools declared: 6  ·  present: 5  ·  missing: 1
 ```
 
 `pdfport.nvim` is the first plugin to ship a spec
-(`docs/install.json`, six tools). Nothing installs on its own:
+(`docs/install.json`, 6 tools originally for the extraction backends; grew
+to 14 on 2026-08-09 when the create()/merge() producers — img2pdf, magick,
+pandoc, weasyprint, soffice, qpdf, pdftk, ghostscript — got their own
+entries alongside the extraction ones). Nothing installs on its own:
 `:Lib deps install` composes the command for whatever package manager is on
 this host (winget/scoop/choco here, apt/dnf/pacman/zypper/apk on Linux,
 brew on macOS), asks for confirmation, then **types** the command into a
