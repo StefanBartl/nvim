@@ -43,7 +43,11 @@ plugins.add({
     "stefanbartl/sessions.nvim",
     lazy = false,
     dependencies = { "stefanbartl/lib.nvim" },
-    opts = {},
+    opts = {
+      -- Bare `nvim` (no file args) resumes the last-loaded session — see
+      -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
+      autoload = true,
+    },
   },
 
   {

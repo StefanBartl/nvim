@@ -26,10 +26,10 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       `Research/` mit einbeziehen.
 
 - [ ] **Session pro Case (Rest)** — eigenes Konzept: [SESSIONS.md](SESSIONS.md).
-      Paket 1 (`<leader>cs`, Auto-Save bei `:Case new`) steht. Offen: Paket 2
-      (`nvim -c "Session load {nr}"`-Kurzform per PowerShell-Wrapper,
-      `autoload` aktivieren) und Paket 3 (Invalidierung über einen neuen
-      `:Cases doctor`-Fund-Typ für Sessions geschlossener Cases).
+      Paket 1 (`<leader>cs`, Auto-Save bei `:Case new`) und Paket 2
+      (PowerShell-`case`-Kurzform, `autoload` aktiviert) stehen. Offen:
+      Paket 3 (Invalidierung über einen neuen `:Cases doctor`-Fund-Typ für
+      Sessions geschlossener Cases).
 
 - [ ] **SLA-Überwachung (Rest)** — eigenes Konzept: [SLA.md](SLA.md). Pakete
       1+2 stehen (inkl. §3-Nachtrag: Rückmeldung resettet statt pausiert bei

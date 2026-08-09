@@ -66,8 +66,10 @@ one.
 
 Also saves a Neovim session under the case number right after scaffolding —
 picking the case back up tomorrow is `<leader>cs`'s counterpart, `:Session
-load 1012345` (or `nvim -c "Session load 1012345"` from a fresh shell), not
-re-opening the folder and rebuilding whatever split layout you had. See
+load 1012345` from inside Neovim, `case 1012345` from a fresh shell
+(PowerShell-Funktion, `$PROFILE`), or just plain `nvim` (`autoload = true`
+resumes whatever session you loaded last) — not re-opening the folder and
+rebuilding whatever split layout you had. See
 [Keymaps.md](./Keymaps.md) and
 [docs/ROADMAP/casedesk/SESSIONS.md](../../ROADMAP/casedesk/SESSIONS.md).
 

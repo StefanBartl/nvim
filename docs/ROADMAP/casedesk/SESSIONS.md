@@ -8,8 +8,14 @@ den fixen Namen `"last"`, siehe `sessions.nvim/docs/configuration.md`).
 > new`-Hook (§3) sind gebaut und headless getestet — siehe
 > [Keymaps.md](../../NOTES/casedesk/Keymaps.md). Der aktive Teil von §6
 > (Session löschen bei `:Case close`/`reassign`) ist ebenfalls schon
-> gebaut. Paket 2 (Start-Komfort) und der `:Cases doctor`-Sicherheitsnetz-
-> Teil von §6 sind offen, siehe §10.
+> gebaut.
+>
+> **Paket 2 steht** (2026-08-09): PowerShell-`case`-Funktion im `$PROFILE`
+> eingerichtet (`Configs/Windows/DOTFILES/WindowsPowerShell/
+> Microsoft.PowerShell_profile.ps1`, außerhalb dieses Repos) und `autoload
+> = true` in `plugins/personal/init.lua`s `sessions.nvim`-Spec aktiviert.
+> Offen: nur noch der `:Cases doctor`-Sicherheitsnetz-Teil von §6 (Paket 3),
+> siehe §10.
 
 Fertige Features stehen sonst in [CONCEPT.md](CONCEPT.md), weitere offene
 Punkte in [ROADMAP.md](ROADMAP.md) — dieses Dokument bleibt die Vorarbeit
@@ -246,10 +252,10 @@ lua/bindings/usrcmds/case/
 Sicherheitsnetz-Teil von §6 — Frage 3 aus §9 wurde dabei mitentschieden:
 `opts.keymaps` bleibt leer.
 
-**Paket 2 — Start-Komfort:** PowerShell-`case`-Funktion (§4.2) einrichten
-(liegt im `$PROFILE`, nicht in diesem Repo — nur dokumentiert, nicht von
-casedesk aus gebaut), `autoload` in `plugins/personal/init.lua`s
-`sessions.nvim`-Spec aktivieren (§4.3).
+**Paket 2 — Start-Komfort (steht, 2026-08-09):** PowerShell-`case`-Funktion
+(§4.2) im `$PROFILE` eingerichtet (liegt außerhalb dieses Repos, im
+DOTFILES-Repo), `autoload = true` in `plugins/personal/init.lua`s
+`sessions.nvim`-Spec aktiviert (§4.3).
 
 **Paket 3 — Hygiene-Sicherheitsnetz:** `doctor.lua`/`normalize.lua`-Erweiterung
 (§6) für Cases, die schon vor Paket 1 geschlossen wurden, oder deren Ordner
