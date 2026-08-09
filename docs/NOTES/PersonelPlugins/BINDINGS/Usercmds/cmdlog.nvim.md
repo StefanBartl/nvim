@@ -22,6 +22,8 @@ Docs: `docs/BINDINGS.md`, `docs/COMMANDS.md`, `README.md`, `doc/cmdlog.txt`
 | `:Cmdlog project` | History recorded while inside the current Git project (`.git` root) |
 | `:Cmdlog lua` | Lua-mode history only (`:lua`, `:lua=`, `:=`), deduplicated |
 | `:Cmdlog stats` | Commands sorted by usage frequency, annotated with count + last-used date |
+| `:Cmdlog export [path]` | Exports favorites to a JSON file (default: favorites path + `.export.json`). **Added 2026-08-09.** |
+| `:Cmdlog import path` | Imports favorites from a JSON file, merged with the current list. **Added 2026-08-09.** |
 
 Three new subcommands added 2026-07-25 (roadmap pass): `project`, `lua`,
 `stats`. All three read from new persistent JSON stores
@@ -30,6 +32,15 @@ Three new subcommands added 2026-07-25 (roadmap pass): `project`, `lua`,
 `docs/OPTIONS.md`'s `track_commands` option. `project` and `stats` only
 reflect commands run since that tracker was introduced; there is no
 retroactive attribution of older `:history` entries.
+
+`export`/`import` (2026-08-09) are registered directly in
+`M.register()`, not via `M.catalog` — every catalog entry is a zero-arg
+picker function that `bindings.keymaps` can wire up to a normal-mode
+`lhs` unmodified, but `export`/`import` take a path argument, so they
+have no `keymaps` entry-point. Same pass also added `redact_patterns`
+(privacy filter, checked in `core/tracker.lua` before any of
+project-history/stats/errors are written) and `extra_files` (extra
+read-only command files folded into the pickers).
 
 ## Notes
 

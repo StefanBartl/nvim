@@ -35,10 +35,17 @@ Used by every picker except `favorites_picker`.
 | `<Tab>` | i | Toggles favorite for the selected entry, closes + refreshes the picker |
 | `<C-r>` | i | Closes + manually refreshes the picker |
 | `<C-x>` | i | Deletes the selected entry from its underlying history (Neovim `:` history via `histdel()`, or the shell history file with a confirmation prompt). Only bound where the caller passes a `delete_fn` — not in `favorites_picker` (`<Tab>` already removes a favorite there) |
+| `<C-s>` | i | Rotates to the next picker (nvim → shell → favorites → project → …), keeping the current prompt text. Implemented in `lua/cmdlog/ui/cycle.lua`, bound in `nvim`/`shell`/`favorites`/`project` pickers only. Telescope only. **Added 2026-08-09.** |
+| `<C-z>` | i | Undoes the most recent favorite toggle (single-level, session-local). Bound wherever `<Tab>` is (any picker with `toggle_favorite`). **Added 2026-08-09.** |
+| `<C-Up>` | i | Moves the selected favorite up one slot in the persisted order. Favorites picker only (`opts.reorder = true`). **Added 2026-08-09.** |
+| `<C-Down>` | i | Moves the selected favorite down one slot in the persisted order. Favorites picker only. **Added 2026-08-09.** |
 
-All four are configurable/disableable via `setup({ mappings = { ... } })`
-(`select`/`toggle_favorite`/`refresh`/`delete`, each `string|false`), see
-`docs/OPTIONS.md`.
+All eight are configurable/disableable via `setup({ mappings = { ... } })`
+(`select`/`toggle_favorite`/`refresh`/`delete`/`cycle_source`/
+`undo_favorite`/`move_favorite_up`/`move_favorite_down`, each
+`string|false`), see `docs/OPTIONS.md`. A legend of the active ones is
+generated from `config.options.mappings` and shown in the Telescope
+prompt title (`ui/picker_utils.lua`'s `build_legend()`).
 
 `lua/cmdlog/ui/favorites_picker.lua` has its own inline `attach_mappings`
 duplicating the `<CR>`/`<Tab>` behavior above, plus one addition (since
