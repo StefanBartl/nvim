@@ -30,17 +30,27 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       an EXTRACTION.md §11.1s offener Fachfrage), Paket 5 (Faktenblock als
       Fundament für die KI-Anbindung).
 
-- [ ] casedesk: wenn ki weingebunden wird, dann soll immer gleidch passende refrenezen aius den tricentis docs paswend zu case gfunden werden und unter einer headline Links gesammelt. es soll agenau der abschnit und wrtlaut ausdem page zitiert werden, das brauhe ich für meine internen notizen mit den voahces, da soll der link headline abschnitt hin. Außerdem: Refrenzen zu bekannten standarwerken vorschoagen, primär auf englishc, gerne abe auhdeutsch also zb wenn es uj ceritifcaes bei tosca server geht, dann halt standard fachliteratur wie zertifikate genrelel und in windows im besinderen funktienren.. auch unter enen eigenen healine abshnitt "learning referenzen"
-  - [ ] die farge nach ki einbindung sollten wir uns stellen: es gibt j a zwei variaten, einmlaml nur sprachbasiertes und heuritsik, und anderer ist die ki. ich habe in meiner nvim config C:\Users\StefanBartl\AppData\Local\nvim\lua\config\ai\ und  C:/Users/StefanBartl/AppData/Local/nvim/lua/plugins/ai/ wo ich schon mit ai konfiguriert habe. dementsprechend, ich habe auf meiner workstation und pc zugang zu meinen gemini, chat gpt und claude account, claude pro lizenz. eventuell ins konzept mitdenke
-  - → **Teilantwort in [EXTRACTION.md](EXTRACTION.md) §7:** kein
-    Entweder-oder. Was deterministisch parsebar ist (Versionen, Fristen,
-    Priorität, Zustände), gehört als Faktenblock in den Prompt statt in die
-    Verantwortung des Modells — und dient danach als Widerspruchsprüfung
-    für dessen Antwort. Die im Stream **bereits zitierten** Doku-Links sind
-    zudem eine Referenzsammlung ohne jeden KI-Aufruf; erst darüber hinaus
-    neue Quellen zu finden, ist die eigentliche KI-Aufgabe.
-
-- [ ] ai soll WKDBook-Tricentis/Notes als wissensspeicher verwendne, einerseits - das wkdbboolk-tricentis Notes sind meine notizen aus der onboarding phase VOR ALLEM AUS KURSEN DER TRICENTIS academy "level-up", tricentis confluesnce und tosca official  documenation - das wasa darin steht hat hohen semantischen wert, nur referenzen aus der offiziellen tosca doc und gleichwertiges steht im wert für case solkutions als Quelle darüber -
+- [ ] **KI-Anbindung** — hängt an einem eigenen `ai.nvim`-Plugin (noch
+      nicht gebaut; Config-Grundlage existiert bereits:
+      `lua/config/ai/`, `lua/plugins/ai/`, Zugang zu Gemini/ChatGPT/Claude
+      Pro). Sobald das steht, drei casedesk-Features darauf aufbauen:
+      - **Doku-Referenzen sammeln**: zu jedem Case passende
+        Tricentis-Doku-Links automatisch finden, mit Zitat des genauen
+        Abschnitts/Wortlauts (für interne Notizen), unter einer Headline
+        "Links" gesammelt. Teilantwort schon in
+        [EXTRACTION.md](EXTRACTION.md) §7: die im Activity Stream
+        bereits zitierten Links sind eine Referenzsammlung ganz ohne
+        KI-Aufruf (EXTRACTION.md Paket 2/5) — erst darüber hinaus neue
+        Quellen zu finden, ist die eigentliche KI-Aufgabe.
+      - **Standardwerke per Websuche**: zu technischen Themen des Cases
+        (z. B. Zertifikate bei Tosca Server) Referenzen zu bekannter
+        Fachliteratur vorschlagen — primär Englisch, gerne auch Deutsch —
+        unter einer eigenen Headline "Learning Referenzen".
+      - **WKDBook-Tricentis/Notes als Wissensspeicher**: die eigenen
+        Onboarding-Notizen (Tricentis-Academy-Kurse "Level-Up",
+        Tricentis-Confluence, offizielle Tosca-Doku) haben hohen
+        semantischen Wert — nur Referenzen aus der offiziellen Tosca-Doku
+        und Gleichwertigem zählen als Quelle für Case-Lösungen.
 
 ## Plugin-Check — was die eigenen Plugins beisteuern könnten
 
