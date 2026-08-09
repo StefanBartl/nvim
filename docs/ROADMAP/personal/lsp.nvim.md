@@ -863,3 +863,45 @@ Für `docs/ROADMAP.md` des neuen Plugins — nicht alles sofort umsetzen:
 7. **Umfang von Phase 1**: Pack sofort oder erst nach bewährtem Kern-Umzug?
    — *Vorschlag: Pack erst in Phase 5, damit ein Fehler im Pack nicht die
    Kern-Migration blockiert.*
+
+---
+
+## Aus `MyPlugin-Notes/LSPDoctor/` (Analyse 2026-08-08)
+
+Quelle: `E:/repos/Notes/MyPlugin-Notes/LSPDoctor/{lspdoctor,lsprelive}.md`.
+
+**Befund: die Notiz ist überholt.** Sie entwirft eine ~30-zeilige `M.check()`
+(Mason da? LSP attached? Diagnostics vorhanden? trouble geladen?). Der reale
+Stand ist `lspdoctor/**` mit 948 Zeilen und fünf Modi
+(`:LspDoctor {health,debug,quick,deep,all}`) — siehe §11 dieses Dokuments.
+
+Aufgehoben, weil sie zwei Dinge enthält, die im Konzept noch nicht stehen:
+
+### 1. Kennzahl „installiert vs. attached"
+
+`lsprelive.md` hält fest, warum die häufige Sorge unbegründet ist: Ein
+installierter Server kostet nichts, solange er an keinen Buffer attached ist.
+Teuer wird erst „viele grosse Buffer × schwerer Server" (tsserver, pyright).
+
+- [ ] Als Zeile im `:checkhealth lsp`-Report ausgeben: *installiert: N,
+      aktuell attached: M, davon in diesem Buffer: K* — plus Warnung erst, wenn
+      ein bekannt schwerer Server über vielen Buffern hängt.
+
+Das beantwortet die Frage, die man tatsächlich stellt, statt nur zu listen.
+
+**Aufwand:** Quick Win
+**Nutzen:** mittel.
+
+### 2. Fehlerprovokation als Testhilfe
+
+Die Notiz enthält absichtlich kaputte Snippets (Go: fehlende Klammer, JS:
+`const x =`), um zu prüfen, ob Diagnostics überhaupt ankommen.
+
+- [ ] In die Testsuite bzw. in `:LspDoctor deep` übernehmen: einen Scratch-Buffer
+      mit garantiert fehlerhaftem Inhalt anlegen und prüfen, ob binnen Timeout
+      Diagnostics eintreffen. Das unterscheidet „keine Fehler" von „Diagnostics
+      kommen gar nicht an" — genau der Fall, der sonst stundenlang Zeit kostet.
+
+**Aufwand:** Mittel
+**Nutzen:** hoch — der einzige Check, der die Kette End-to-End verifiziert
+statt nur Zustände abzufragen.

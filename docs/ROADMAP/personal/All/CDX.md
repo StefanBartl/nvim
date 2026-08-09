@@ -6,6 +6,10 @@
 - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\Roadmap-Effort-Overview.md
 - [ ] alle ci / stylua / tests grün?
 - [ ] Analyse: Gibt es ein sinnvolles kreuzfeatures von eines meiner anderen nvim plugins? Erstelle einel Liste zum abarbeiten..
+- [ ] jedes plugin soll eine docs/FEATURES.md haben in der alle features aufgelistet sind
+
+- [ ] Über alle Bindings der plugins drüber gehen und Regeln ableiten, also zb.: Autocompletion Pflicht; `count` bei jedem Keymap prüfen, also zu `leader xy` auch `2 leader xy`, `3 leader xy` -> `X leader xy`; Ideen für Flags/Optionen nennen;
+- [ ] Mene nvim-config; dann die plugins, durchgehen und aus den realen source code Richtlinen, Vorgaben,Regeln; Ideas für andere Plugins, usw... aufschreiben; AUch zb.: wenn ein bestimmeter algorithmus eingesetz wurde oder ein obnjekt/funkltin ein bestimmtes Problem auf besondere art löst (zb security oder performance adaptierungen) bzw auf "nicht-standard"-Art;
 
 ## `documentation.nvim`
 

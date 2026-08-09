@@ -42,32 +42,6 @@ local function markdown_menu_source(buf)
   return composed
 end
 
---- Build the Neo-tree context menu from filetree.nvim's plugin-owned entries
---- (create/rename/copy/trash/open/paths/search — filetree owns them now),
---- optionally followed by nvzone's built-in neo-tree base menu. Returns nil when
---- filetree/its integration is absent, so the caller can fall back to the legacy
---- `config.menu.neotree` menu.
----@return table|nil
-local function neotree_menu_source()
-  local ok, ftmenu = pcall(require, "filetree.integrations.menu")
-  if not ok then return nil end
-
-  local items = ftmenu.items()
-  if type(items) ~= "table" or #items == 0 then return nil end
-
-  local composed = {}
-  vim.list_extend(composed, items)
-
-  -- Append nvzone's generic neo-tree entries (open/close/…) beneath a divider.
-  local ok_base, base = pcall(require, "menus.neo-tree")
-  if ok_base and type(base) == "table" and #base > 0 then
-    table.insert(composed, { name = "separator" })
-    vim.list_extend(composed, base)
-  end
-
-  return composed
-end
-
 function M.setup()
   local map = vim.g.__map_helper or function(mode, lhs, rhs, opts)
     map(mode, lhs, rhs, opts or {})
@@ -91,7 +65,9 @@ function M.setup()
     end
   end, {})
 
-  -- RightMouse: tries to detect NeoTree / NvimTree
+  -- RightMouse: markdown-aware, detects NvimTree. Neo-tree is NOT handled
+  -- here — filetree.nvim's own context_menu feature binds a buffer-local
+  -- <RightMouse> on the tree buffer itself (shadows this global one there).
   map({ "n", "v" }, "<RightMouse>", function()
     local ok_utils, utils = pcall(require, "menu.utils")
     if ok_utils then
@@ -127,17 +103,12 @@ function M.setup()
       return
     end
 
-    -- Neo-tree: prefer filetree.nvim's plugin-owned entries; fall back to the
-    -- legacy config.menu.neotree menu when filetree/its integration is absent.
-    if ft == "neo-tree" or ft == "neo_tree" then
-      local src = neotree_menu_source()
-      if src then
-        menu.open(src, { mouse = true })
-      else
-        menu.open(require("config.menu.neotree"), { mouse = true })
-      end
-      return
-    end
+    -- Neo-tree: filetree.nvim's own context_menu feature binds a buffer-local
+    -- <RightMouse> directly on the tree buffer (using this same
+    -- filetree.integrations.menu.items() source) — a buffer-local mapping
+    -- always shadows this global one, so this handler's body never actually
+    -- runs for ft == "neo-tree"/"neo_tree" and no special case is needed here
+    -- anymore. See filetree.nvim's docs/menu.md.
 
     local options = "default"
     if ft == "NvimTree" or ft:match("^NvimTree") then

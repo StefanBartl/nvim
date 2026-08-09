@@ -57,6 +57,61 @@ Buffer-local, installed on `FileType` for markdown/mdx/md (see
 | `<CR>` | n | `tableview/views/table_selector.lua` — renders chosen table + closes selector |
 | `q`/`<Esc>` | n | same — closes selector |
 
+## TableView popup keys (interactive resize/reorder + write-back, `tableview/renderer.lua`)
+
+Buffer-local to the floating preview buffer ITSELF (not markdown buffers),
+Normal mode only. Set once in `ensure_view()` when the popup buffer is
+created; not gated by `enable_keymaps` (same rationale as the `q`/`<Esc>`
+close keys above — this popup has no "editing surface" config flag to
+opt out of). No-op when the cursor is on a border/separator/label line
+(`resolve_cursor_target()` returns nil via `state.row_map`).
+
+Column widening is applied to the in-memory parsed table's per-column
+width-override map (`state.col_overrides`) — display-only, never written
+back. Row moves mutate `state.tables[i].rows` in place (a real reorder, not
+display-only) and DO get written back on `:w`.
+
+| lhs | action |
+| --- | --- |
+| `<M-Right>` / `<M-l>` | `resize_current_column(1)` — widen the column under the cursor |
+| `<M-Left>` / `<M-h>` | `resize_current_column(-1)` — narrow it; floors at the column's natural content width (never truncates — would misalign `\|` down the column) |
+| `<M-Up>` / `<M-k>` | `move_current_row(-1)` — swap the row under the cursor with the row above |
+| `<M-Down>` / `<M-j>` | `move_current_row(1)` — swap the row under the cursor with the row below |
+| `:w` | `write_back()` (via `BufWriteCmd`) — write the current row order to the source |
+
+**h/j/k/l exist because `<M-Up>`/`<M-Down>` didn't reliably reach Neovim**
+(reported 2026-08-08: resize with `<M-Left>`/`<M-Right>` worked, but the
+row keys "didn't really work") — the working theory is a
+terminal/multiplexer intercepting Alt+Up/Down (common for scrollback/pane
+nav) before it becomes a keycode Neovim sees, same class of issue as
+Alt+Arrow conflicts elsewhere. Not confirmed against this machine's
+WezTerm config specifically; if h/j/k/l also fail, the keycodes likely
+aren't reaching Neovim at all (check `:map <M-Up>` for a mapping, and
+whether WezTerm even sends a distinct sequence for it).
+
+**`write_back()`** (bound to `:w`): serializes each shown table (via
+`build_lines_from_markdowntable`, NATURAL widths — `col_overrides` is
+intentionally ignored) and replaces the original line range
+(`mt.start_line`/`mt.end_line`) at its source:
+- `mt.bufnr` (tagged by `parser.get_tables`, resolved from the `0` "current
+  buffer" sentinel) if that buffer is still valid → `nvim_buf_set_lines`,
+  marks the buffer modified, does NOT save it.
+- else `mt.source` (tagged by `parser.get_tables_from_file`, the
+  `%`/`cwd`/`<path>` TableView scopes reading files not open as buffers) →
+  `readfile`/`writefile` directly to disk, immediately.
+- else (no known origin, e.g. a hand-built `mt`) → skipped, silently.
+
+This only works because the popup buffer's `buftype` is `"acwrite"`, not
+`"nofile"`: Neovim's `:write` hard-errors (`E382`) on a `nofile` buffer
+REGARDLESS of a registered `BufWriteCmd` autocommand — `acwrite` is the
+one buftype `:write` will actually dispatch to `BufWriteCmd` for, and even
+then only once the buffer has a name (`E32` otherwise, hence
+`nvim_buf_set_name(buf, "markdown-tableview://" .. buf)` in
+`ensure_view()`). `q`/`<Esc>` still force-close via `nice_quit(..., {
+force = true })` regardless, so unsaved popup edits are silently
+discardable as before — `acwrite` only changes what `:w` does, not what
+closing does.
+
 ## which-key
 
 `bindings/which_key.lua`, `M.setup()` — labels `<leader>t` as "Markdown"
@@ -67,4 +122,9 @@ no group needed). Soft-guarded, no-op if which-key is absent. Handles v3
 
 ## Notes
 
-- `docs/BINDINGS.lua`'s `default_keys.editing`/`.tableview` tables match `DEFAULT_KEYMAPS`/`apply_tableview` id-for-id.
+- `docs/BINDINGS.lua`'s `default_keys.editing`/`.tableview`/`.tableview_popup` tables match `DEFAULT_KEYMAPS`/`apply_tableview`/`ensure_view`'s Alt-key mappings id-for-id.
+
+## Changelog
+
+- 2026-08-08: added the "TableView popup keys" section — `<M-Right>`/`<M-Left>`/`<M-Up>`/`<M-Down>` interactive column-resize and row-insert/remove keymaps, buffer-local to the floating preview.
+- 2026-08-08 (2): row keys reported not working; changed from insert/remove-row to move-row (swap with the row above/below) per feedback, added `<M-h>`/`<M-j>`/`<M-k>`/`<M-l>` as terminal-safe alternates, and added `:w` write-back (row order only, to the source buffer or file — see the popup-keys section above for the `acwrite`/`BufWriteCmd` mechanism).

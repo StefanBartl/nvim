@@ -119,14 +119,6 @@ plugins.add({
           preview_scroll_left = "<M-Left>",
           preview_scroll_right = "<M-Right>",
         },
-
-        experimental = {
-          selected_index = {
-            enabled = true,
-            position = "right_align", -- "overlay" | "right_align" | "eol" | "top" | "down"
-            highlight = { preset = "accent" },
-          },
-        },
       })
     end,
   },
@@ -407,6 +399,14 @@ plugins.add({
           -- happen (watcher_quarantine only hides the error). Opt-in / default
           -- off; enabled here to test whether the sporadic lock stops recurring.
           handle_guard = { enabled = true },
+          -- context_menu: left on its default (<RightMouse>, opt-out) -
+          -- filetree.nvim is now the sole right-click implementation for the
+          -- tree. config/menu/neotree/ (the old hand-maintained entries) is
+          -- gone, and config/menu/mappings.lua's global RightMouse handler no
+          -- longer special-cases neo-tree - filetree's own buffer-local
+          -- binding shadows it inside the tree, same items() source either
+          -- way. Non-tree right-click (markdown, everything else) still goes
+          -- through the global handler, unaffected.
           -- statusline defaults to true, but that blanks the tree window's
           -- local 'statusline' — harmless under laststatus=2 (per-window),
           -- but with laststatus=3 (global statusline, see options.lua) that

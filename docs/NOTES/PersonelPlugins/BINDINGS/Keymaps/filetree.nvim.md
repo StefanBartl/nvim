@@ -113,6 +113,28 @@ entry). Every other tree-buffer key already carries its own `desc`, so no
 further groups are needed. Soft-guarded, no-op if which-key is absent.
 Handles v3 (`wk.add`) and v2 (`wk.register`).
 
+## ui (context_menu, new 2026-08-01, architecture settled same day)
+
+| lhs | action | notes |
+| --- | --- | --- |
+| `<RightMouse>` | Opens a context menu via nvzone/menu, populated from `filetree.integrations.menu.items()` | **Sole right-click implementation for the tree**, left on filetree's default. Buffer-local, so it shadows `config/menu/mappings.lua`'s global `<RightMouse>` while inside the tree window |
+
+**`config/menu/neotree/` deleted 2026-08-01** (`entries.lua` + `init.lua`) —
+was dated 2026-02-02, referenced `config.neotree.keymaps.filesystem.*`
+modules already removed by the filetree.nvim migration; was only ever reached
+as a fallback in `neotree_menu_source()` when `filetree.integrations.menu`
+was absent/empty, which it never was — dead code, deliberately removed
+outright rather than fixed. `config/menu/mappings.lua`'s `neotree_menu_source()`
+helper and the `ft == "neo-tree"` branch in its `<RightMouse>` handler were
+removed too, for the same reason: filetree.nvim's own buffer-local binding
+(above) always wins inside the tree now, so that branch's body could never
+run. The global handler still covers markdown buffers, NvimTree, and
+everything else non-tree — unaffected.
+
+**Longer-term goal (stated, not yet built)**: move non-tree right-click
+(markdown + general buffers) out of personal config into either a not-yet-
+built custom UI plugin, or `buffer-ctx.nvim` — undecided as of 2026-08-01.
+
 ## Notes
 
 - **Count support added 2026-07-31** for `-`/`+` (nav), `<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>` (preview scroll, both float and buffer mode), and `w` (window-size cycler, direct-index jump rather than a step multiplier — see the `ui` table above). None of these read a count before this date.

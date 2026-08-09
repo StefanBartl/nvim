@@ -1,2 +1,4 @@
+# `cascade.nvim`
 
-- [ ] `leader RightArrow` Tausch ja den char unter dem cursor mit dem rechts davon. wäre es auch möglich ,das für ganze wörter zu machen? also ideal wäre markierter text, aber mit was soll das dann nach rechts tauschenb - oder hast du eine idee, was wäre logisch? Wenn man neue keymapos brasuchen würde, knnte man `leader C-RightArrow` oder `leader M-RightArrow` aber auch `leader UpArrow` wäre denkbar. All das in den punkt gilt natürlich auch in die andere richtung-
+---
+

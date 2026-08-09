@@ -1,22 +1,25 @@
 # Roadmap
 
-- `MyPlugins update` und die anderen options - habe ich ja via statusline eingebunden, es wäre cool wenn es zum asbchluss dann via more eine summary gibtm welche upgedatet worden sind bzw bei der clone option wieviele neue gekloint worden sind, wieviele upgedatet usw...
-- lazyvim background open mit Shift Enter funktioniert nicht mehr
+- [ ] `nvim/lua/autocmds`  nach `nvim/lua/Bindings`
 
-:Image show oder leader im funkltnieren und zeigen das image under einem markdwon link, aber filetree.nvim weder tab nch cr machen irgendwas, gar kein respoponse wnenn die file ode ein iimage ist
+case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum ziel. case delete
+
+- [ ] `bindings-explorer.nvim` — Phase 1 (`:Bindings search`/`path`) ist
+  fertig. Offen: Phase 2 (jede Tabellenzeile aus den BINDINGS-Cheatsheets
+  als durchsuchbarer Datensatz, `:Bindings browse`) und Phase 3
+  (Drift-Erkennung: dokumentierte Keymaps/Usercmds gegen tatsächlich
+  registrierte via `nvim_get_keymap`/`nvim_get_commands` abgleichen).
+  Volles Konzept: `docs/ROADMAP/personal/bindings-explorer.nvim.md`.
+
 
 - pdfport.nvim - pdf erstellings funkiton zb pandoc; im filetree wöre dass dan auch super: diese file/image als pdf erstellen, dann kann ich die pdf gleich im system app viewer aufmachen...
-
-
 - spotlight checken und lernen
 - documentation.nvim lernen
 
-Ein zusätzlicher Use-Case, den du nicht genannt hast und der für dich beruflich wahrscheinlich der wertvollste ist: Clipboard-Bild direkt in ein Markdown-File einfügen — Screenshot machen, :Image paste, das Bild landet als Datei neben dem Dokument und der Link wird geschrieben. Für Support-Dokumentation ist das der Alltagsfall schlechthin, und es ist weit einfacher zu bauen als das Renderin
 
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
   - checken, ob mit Snacks/image.nvim es nicht möglich ist, images zu öffnen
-- [ ] `github_stats.nvim` besser machen
 - [ ] `learn-cli.nvim` vielleicht doch ?
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
 - [ ] `nvim/lua/autocmds` analysieren
@@ -49,3 +52,31 @@ Ein zusätzlicher Use-Case, den du nicht genannt hast und der für dich beruflic
 
 ---
 
+
+---
+
+## MyPlugin-Notes ausgewertet (2026-08-08)
+
+`E:/repos/Notes/MyPlugin-Notes/` (125 Dateien) wurde vollstaendig gegen den
+aktuellen Code geprueft und in die Roadmaps verteilt. Neu bzw. ergaenzt:
+
+- `personal/gopath.nvim.md`, `personal/cmdlog.nvim.md`, `personal/markdown.nvim.md`,
+  `personal/pickers.nvim.md`, `personal/replacer.nvim.md`, `personal/reposcope.nvim.md`,
+  `personal/documentation.nvim.md`, `personal/lsp.nvim.md`,
+  `personal/color_my_ascii.nvim/color_my_ascii.md`
+- neu: `personal/learn-cli.nvim.md`, `personal/IDEAS/slots.nvim.md`,
+  `personal/IDEAS/typepilot.nvim.md`
+- uebergreifend: `personal/00_MISC.md` (Spawn-/Env-Falle, API-Key-Regel,
+  README-Videos, Quickfix-Ausgang)
+- extern: `telescope.nvim.md`
+
+Bestaetigt sich der Befund aus `personal/All/Roadmap-Effort-Overview.md`: der
+groessere Teil der Notizen war laengst gebaut. Bei `replacer.nvim` waren 26 von
+27 Wuenschen umgesetzt. Was jeweils erledigt ist, steht in den Dateien mit drin,
+damit es nicht erneut als offen gelesen wird.
+
+`nvim-containers` aus den Notizen ist `sandbox.nvim` (drei Engines inkl.
+nerdctl, Volumes, Compose, Registry, Telescope-Extension — laut eigener
+`docs/ROADMAP.md` dort bereits vollstaendig abgearbeitet); kein separater
+Eintrag hier noetig. Das Patch-System aus den Notizen wird nicht
+weiterverfolgt.

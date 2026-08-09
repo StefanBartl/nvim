@@ -1,6 +1,5 @@
 # nvim
 
-- Redu/Undo usrcmd eventuell mit (pickers) history
 
 ## nvim config autocmds
 
@@ -36,19 +35,11 @@ It stays off in the nvim-config itself until "Liste 1" (the neo-tree→filetree.
 
 ## 2. Autocmd → plugin mapping
 
-
-
 **No good fit among the 24** (stay host-level, since nothing in the list covers their domain): kitty padding/margin tweaks (general + terminals, duplicated in both!), cursorline-on-focus, `last_loc` (duplicated near-identically in *both* `general` and `text` — worth deduping regardless of plugin extraction), terminal `numbers`/`auto_insert`, `git.commit_ft` (trivial filetype-local opts), `git.gitsigns_refresh`/`blame_on_hold` (thin gitsigns wrappers, not worth a standalone plugin), neotest auto-discovery, eslint/prettier BufWritePre, snacks dashboard opener.
 
 Two duplication findings worth a follow-up independent of the plugin question: **(a)** kitty spacing setup is implemented twice, verbatim, in `general` and `terminals`; **(b)** `last_loc` is implemented twice, near-verbatim, in `general` and `text`.
 
-
-
 ## Neues Plugin: `opts.nvim` oder `options.nvim` oder `config.nvim` oder ...
-
-| Modul | Ziel-Plugin | Warum | Konfidenz |
-|---|---|---|---|
-| `config/lazygit/actions/{badd,replace}`, `resolve_path` | pickers / buffer-ctx / lib | Badd = Background-Buffer (dupliziert, s. Liste 2) | mittel |
 
 ### → Eigene *neue* Plugins (passen in KEINES der bestehenden)
 
@@ -58,25 +49,38 @@ Der Vollständigkeit halber, da du „auslagern" fragst — diese Domänen haben
 | `config/neotest/**` | eigenes / dap-kit-Sibling | Test-Runner-Adapter, große eigenständige Einheit |
 | `lua/lsp/**` | eigenes `lsp.nvim` (dap.nvim-Sibling) | Stateful Subsystem — Registry, Capabilities, Attach-Handler, Formatter-Toggle, Workspace-Diagnostics-Toggle — nicht deklarative Settings. Gehört NICHT in `options.nvim`. |
 
-## `lsp.nvim` vs. `options.nvim`
+---
 
-Frage vom 2026-07-17: gehört `lua/lsp/` eher in ein eigenes `lsp.nvim` oder in das
-geplante `options.nvim` (Sammelbecken für generelle Optionen)?
+## Neues Plugin: künftiges UI-Plugin (Name offen) — 2026-08-01
 
-**Antwort: eigenes `lsp.nvim`.** `lua/lsp/` ist strukturell dasselbe wie
-`dap.nvim` ("a config layer on top of X") — Registry (`lsp/core/registry.lua`),
-Capabilities, `on_attach`/`on_init`, Formatter-Toggle (`:LspFormat*`), und seit
-heute der Workspace-Diagnostics-Toggle (`:LspWorkspaceDiagnostics*`,
-`lsp/core/workspace_diagnostics.lua`) — alles stateful, mit eigenen Commands.
-`options.nvim` sollte dagegen eng auf deklarative `vim.opt`/`vim.g`-Settings
-begrenzt bleiben (siehe `lua/options.lua` heutiger Inhalt); sobald stateful
-Subsysteme wie LSP/DAP/Formatter dort reinwandern, wird es zur Mini-Kopie der
-Config und die Extraktion verliert ihren Sinn.
+Noch nicht gebaut, nicht mal Repo-Name entschieden. Entstanden aus der
+filetree.nvim-Rechtsklick-Session: filetree.nvim hat jetzt sein eigenes
+`context_menu`-Feature (opt-out, `<RightMouse>` im Tree, nvzone/menu als
+Soft-Dependency) — das ist die alleinige Implementierung für den Tree-Bereich,
+`config/menu/neotree/` + der neo-tree-Zweig in `config/menu/mappings.lua`
+wurden deshalb entfernt (2026-08-01).
 
-Größerer Umbau als `options.nvim` (Registry/Capabilities/NvChad-Kopplung
-hängen dran — `nvchad.config.lspconfig` wird aktuell direkt referenziert), aber
-symmetrisch zu `dap.nvim` und wirklich wiederverwendbar. Noch nicht begonnen —
-offener Punkt, falls/wenn die Extraktion angegangen wird.
+Offen geblieben: das **allgemeine** (Nicht-Tree) Rechtsklick-Menü — heute in
+`config/menu/mappings.lua` (Markdown-Buffer via `markdown.integrations.menu`,
+NvimTree, `<A-b>`-Fallback-Menü) — lebt noch in der persönlichen Config statt
+in einem Plugin.
+
+- [ ] Entscheiden: eigenständiges neues Plugin, oder Teil eines breiteren
+      künftigen UI-Plugins (falls eines für andere Zwecke ohnehin geplant
+      ist)? **Explizit NICHT `buffer-ctx.nvim`** — passt inhaltlich zwar
+      (Insert/Copy/Format-Aktionen als Menüpunkte), wäre aber eine neue
+      Domäne (UI/Popup) für ein bisher rein command-basiertes Tool.
+- [ ] `config/menu/mappings.lua`s `markdown_menu_source()` +
+      `<A-b>`/`<RightMouse>`-Dispatch-Logik dorthin migrieren.
+- [ ] nvzone/menu bleibt vermutlich die richtige Basis (bereits Dependency,
+      API bekannt — siehe filetree.nvim's `context_menu`-Feature und
+      `docs/menu.md` als Referenzimplementierung für den Aufbau: Soft-
+      Dependency-Pattern, `{name,cmd,rtxt}`-Item-Shape, `mouse=true`).
+- [ ] `markdown.integrations.menu` (bereits vorhanden, liefert `items()`)
+      bliebe die Quelle für Markdown-Einträge — nur der Trigger/Dispatch
+      wandert, nicht die Entries selbst.
+
+- [ ] wie filetre.nvim bereitws ewin modul für das /menu plugin bietet, sammeln weiterer möglichen entries,aus alen meien plugins. idee: ein ktesxteintrag "MyPlugns" -> Jedes Plgin ien entry -> aktion
 
 ---
 

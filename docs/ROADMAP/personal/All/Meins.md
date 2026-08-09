@@ -13,7 +13,8 @@
        3. analysiere das plugin auf security optimierungen
 
 - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\IDEAS
-
+- [ ] README.md mit viedeo demo oder gif ausstatten
+- [ ] In den README.md der plugins irgendwie auf die anderen pluins hinweißen entweder übersihct, oder ein auszug+link zu einer website oder übersichts-repo redme
 
 ---
 

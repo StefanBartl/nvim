@@ -55,6 +55,7 @@ doc is also missing `opened_sync`, `size_info`, `no_name_guard`,
 | `CursorHold` | `filetree_size_info` | same | Re-renders cached sizes; kicks off async `du`/PowerShell dir-size queries |
 | `BufAdd`, `BufDelete`, `BufWipeout`, `BufWinEnter`, `BufWinLeave` | `filetree_opened_sync` | feature enabled, adapter exposes `redraw` | Debounced cheap redraw so "opened files" decoration stays in sync (deliberately **not** `BufEnter` — "far too chatty") |
 | tree-attach | — | feature enabled | Keymap-setup for `<Esc>`, `w`, `?` (tree_reset, window_size_cycler, cheatsheet: non-neotree only) |
+| tree-attach | — | feature enabled, `keymap` truthy | Keymap-setup for `<RightMouse>` (context_menu, new 2026-08-01) — left on default; is now the sole right-click implementation for the tree (personal config's own `config/menu/neotree/` + `mappings.lua`'s neo-tree branch removed same day, see Keymaps cheatsheet) |
 | `BufLeave`, `WinLeave` | none (buffer-scoped) | popup open | Auto-closes cheatsheet popup / node-info popup |
 
 ## fileops
