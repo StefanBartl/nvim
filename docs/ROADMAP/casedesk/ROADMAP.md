@@ -47,6 +47,7 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
         (z. B. Zertifikate bei Tosca Server) Referenzen zu bekannter
         Fachliteratur vorschlagen — primär Englisch, gerne auch Deutsch —
         unter einer eigenen Headline "Learning Referenzen".
+        `$REPOS_DIR/Literatur` als zuerst durchssuchende Literaturliste implemeniteren, aber als user condif in der spec, also man soll das als user angebn könenn lksiten die man dursucht dafür. zusatz: weventuell kann man nauch eine literaliuste mit kurzen beschreibungen und keywords anlegen, die dann verewndet werden können, dazu bräuchte es einen parserer/buw attaher der infos zum auswerten für die ki bzw köbnbte mnan auch prüfen, ob wen man keywords verewndet auch ohne ki nur mit heuristik sinnvollerer matrchingfs schaffen lkönnte1
       - **WKDBook-Tricentis/Notes als Wissensspeicher**: die eigenen
         Onboarding-Notizen (Tricentis-Academy-Kurse "Level-Up",
         Tricentis-Confluence, offizielle Tosca-Doku) haben hohen

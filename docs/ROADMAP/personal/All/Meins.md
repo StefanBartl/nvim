@@ -1,5 +1,7 @@
 # Tasks, die wrsch nur ich manuell erledigen kann
 
+Note: `nvim\lua\bindings\usrcmds\case` mitdenken/wie ein plugin behandeln soweit sinnvoll
+
 - [ ] `Insights stats lib` über alle Repositories ausführen und eine gesammelte Übersicht erstellen.
   - [ ] cwd/oath scope implementieren
 - [ ] `:Recommender` durch alle Module durchlaufen lassen
