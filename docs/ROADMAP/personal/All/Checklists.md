@@ -25,7 +25,7 @@ darunter, sofern relevant.
 | Plugin | Performance | Lua/Nvim | Review | Release | Refactoring | Committed & Pushed |
 | ------ | :---------: | :------: | :----: | :-----: | :----------: | :-----------------: |
 | 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM |||||||
-| lib.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| lib.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [x] |
 | sessions.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | pickers.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | buffer-ctx.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1744,3 +1744,73 @@ verifizierbar; CI vor und nach dem Fix grün bestätigt (`gh run list`). Zentral
 bereits inhaltlich aktuell und deckungsgleich mit dem Repo-eigenen `docs/BINDINGS.md` (datiert
 2026-08-05, deckt den `per-invocation root`-Commit bereits ab) — keine Änderung nötig. Alles
 committet (`81631dd`) und nach `origin/main` gepusht.
+
+### lib.nvim
+
+Größtes und höchstriskantestes Repo dieses Rollouts (1272 Lua-Dateien, geteilte Dependency aller
+28 anderen personal plugins) — bewusst **kein** vollständiger Pass über alle Dateien, sondern
+gezielte Tiefenprüfung der am stärksten genutzten Module (`notify`, `safe_api`, `cache.memory`,
+`debounce`) plus CI/Tooling-Gate. Alle Checkbox-Spalten außer "Committed & Pushed" bleiben daher
+bewusst **leer** — geprüft wurde nur ein kleiner, aber realer Ausschnitt, keine Vollabdeckung; ein
+Häkchen wäre hier irreführend.
+
+- **Echter CI-Fund (der wichtigste Fund dieses Passes)**: `gh run list` zeigte CI seit dem
+  `kit.compare`-Feature (mehrere Commits, mehrere Tage) durchgehend `failure` auf dem `stylua`-Job.
+  `gh run view --log-failed` zeigte den echten Diff (Ubuntu-Runner, also LF, keine
+  Windows-Verwechslung): `lua/lib/nvim/ui/kit/compare.lua` und `docs/TESTS/ui_kit_spec.lua` waren
+  vor dem Commit nie durch `stylua` gelaufen. Mit `stylua` neu formatiert (reine Whitespace-Änderung,
+  11 Zeilen). Separat lokal verwirrend: `core.autocrlf=true` checkte lokal alle `.lua`-Dateien als
+  CRLF aus, ohne `.gitattributes`-Override — das ließ `stylua --check .` lokal 19-26 Dateien als
+  "kaputt" melden, die auf CI (LF) tatsächlich sauber waren, und hätte den echten Fund fast
+  verdeckt. `*.lua text eol=lf` zu `.gitattributes` ergänzt (gleiches Muster wie das bestehende
+  `*.sh`-Attribut) und alle betroffenen Dateien lokal auf LF normalisiert — das ergab keinen
+  eigenen Commit-Diff (die Git-Blobs waren bereits LF, nur die lokale Working-Copy war betroffen).
+  Nach Push: CI grün (`31316630675`). Der `luacheck`-Job schlug in denselben alten Runs zusätzlich
+  mit einem `Request timeout: /ftp/lua-5.4.4.tar.gz`-Fehler fehl — klassischer transienter
+  `leafo/gh-actions-lua`-Flake (siehe Lessons-Learned dieses Rollouts), kein Codefund, durch den
+  neuen grünen Run ohnehin überholt.
+- **REVIEW.md §8 Tooling**: `.luarc.json` existierte im Repo, war aber in `.gitignore` gelistet
+  (einziges bisher geprüftes Plugin mit diesem Zustand — `sessions.nvim`s äquivalente Datei ist
+  getrackt). Aus `.gitignore` entfernt und mit `git add -f` committet, Inhalt identisch zu
+  `sessions.nvim`s Referenz. `.luacheckrc`/`.stylua.toml`/`.github/workflows/ci.yml` waren bereits
+  vorbildlich (stylua auf `v2.5.2` gepinnt mit dokumentierter Begründung, luacheck mit
+  begründeten `ignore`-Einträgen und `exclude_files` für `@types`) — keine Änderung nötig.
+  `luacheck lua docs/TESTS` lief mit 0 Warnings/Errors über 287 Dateien; die headless Testsuite
+  (`nvim --headless -u NONE -l docs/TESTS/run.lua`) lief vollständig durch bis `LIB_TESTS_OK`,
+  Exit-Code 0.
+- **Stichprobenprüfung `notify`/`safe_api`**: beide sind bereits vorbildlich — `safe_api` validiert
+  jedes Handle vor jedem `vim.api`-Call, einheitliche `(ok, result, err)`-Rückgabe, `@param`/
+  `@return`-Arität stimmt überall mit den tatsächlichen `return`-Statements überein, kein
+  `notify()`-Aufruf irgendwo im Modul. `notify` selbst IST die sanktionierte Boundary-Schicht (siehe
+  Refactoring.md-Ausnahme). Grep nach `vim.notify(`/`print(` außerhalb dieser beiden Module fand nur
+  neun Treffer, davon sieben reine Doku-Kommentare (Usage-Beispiele in `debounce`/`fs.*`/`net.curl`)
+  und zwei echte Aufrufe in `lib/config/init.lua`s `M.setup()` — das ist der Konfigurations-
+  Einstiegspunkt der Library selbst und damit die Boundary, keine Verletzung.
+- **Stichprobenprüfung `cache.memory`/`debounce`**: beide Hotpath-Kandidaten (laufen auf
+  `TextChanged`/`BufWritePost`/Timer-Callbacks) bereits sauber — Weak-Table-Backing-Stores,
+  In-Place-Clear statt Tabellen-Neuzuweisung (damit alle Namespace-Accessor-Referenzen konsistent
+  bleiben), `uv.hrtime()` statt `os.clock()` für TTL, `vim.schedule` um jeden Timer-Callback (libuv
+  läuft off-main-loop). Kein Fund.
+- Grep nach dem in `pickers.nvim`/`mdview.nvim`/`markdown.nvim` gefundenen `fun(TYPE)`-ohne-Namen-
+  Copy-Paste-Bug (stichprobenartig über `@field ... fun(` in mehreren `@types`-Dateien) ergab keinen
+  Treffer.
+- Vorbestehender, unfertiger WIP-Zustand im Arbeitsverzeichnis vorgefunden (drei modifizierte
+  Dateien + eine neue `lua/lib/nvim/deps/first_run.lua`, erkennbar an Zeitstempel/Feature-Kohärenz
+  als eigene, in Arbeit befindliche Session — nicht Teil dieses Checklisten-Passes): bewusst
+  **nicht angefasst**, weder committet noch verworfen, um keine fremde unfertige Arbeit
+  unautorisiert zu beeinflussen.
+- Zentrale Bindings-Sammlung (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,
+  Autocmds}/lib.nvim.md`) existiert für alle drei Kategorien und ist bereits ausführlich und aktuell
+  (`:Lib`-Composer-Verben, `deps show|install`, `LibLogger`, `RATelemetry`) — keine Änderung nötig.
+
+**Bewusst außerhalb des Scopes dieses Passes** (explizit im Auftrag als zu groß für einen
+Einzelpass benannt): `lib.nvim.cross`, `lib.nvim.usercmd.composer`, `lib.nvim.window`,
+`lib.nvim.buf_win_tab`, `lib.nvim.require`, `lib.lua.error`, `lib.nvim.progress`,
+`lib.nvim.harvest`, `lib.nvim.ui.kit` wurden **nicht** im Detail geprüft (nur oberflächlich per
+Verzeichnisstruktur/Modulkatalog erfasst); README/RELEASE.md-Gate (ASCII-Art, Badges,
+Schwesterplugin-Absatz, `doc/lib.nvim.txt`, GitHub-Metadaten) wurde nicht neu verifiziert — beim
+Überfliegen des README bereits vollständig wirkend (ASCII-Art, Badges, Schwesterplugin-Absatz zu
+insights.nvim, klare "no stability guarantee"-Warnung), aber nicht Punkt für Punkt gegengeprüft.
+Keine per-Datei-Annotation-Auffrischung über die geprüften Module hinaus — bei 1272 Dateien
+explizit nicht Ziel dieses Passes. Alles committet (`6b948bd`, `8cd30be`) und nach `origin/main`
+gepusht; CI nach beiden Commits grün verifiziert.
