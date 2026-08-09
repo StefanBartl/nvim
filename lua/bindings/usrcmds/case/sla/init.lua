@@ -100,6 +100,33 @@ local function awaiting_customer(states)
   return latest ~= nil and latest.to == "Awaiting User Info"
 end
 
+--- Total wall-clock time this case has spent sitting in "Awaiting User
+--- Info" (EXTRACTION.md §5, decided 2026-08-10): unlike the cadence
+--- clock above (which RESETS to a fresh full budget once the customer
+--- replies — a periodic "give an update" obligation, so a reset is the
+--- right model), the fix/Korrekturmaßnahme clock is a single cumulative
+--- deadline, where resetting on every customer reply would effectively
+--- give it unlimited budget across a multi-round exchange. A true
+--- pause — extend the deadline by exactly how long the customer sat on
+--- it — is what "the agent's clock doesn't run while it's the
+--- customer's turn" actually means for a one-time deadline. Sums every
+--- `Awaiting User Info` interval in the state history, not just whether
+--- the case happens to be sitting there right now — an ongoing one
+--- (no state change since) counts up to `now`.
+---@param states Lib.Case.SlaStateEvent[]  ascending by `at`
+---@param now integer
+---@return integer seconds
+local function total_awaiting_seconds(states, now)
+  local total = 0
+  for i, s in ipairs(states) do
+    if s.to == "Awaiting User Info" then
+      local resumed_at = states[i + 1] and states[i + 1].at or now
+      total = total + math.max(0, resumed_at - s.at)
+    end
+  end
+  return total
+end
+
 ---@param ... integer|nil
 ---@return integer|nil  the largest non-nil argument, or nil if all are nil
 local function latest_of(...)
@@ -214,13 +241,22 @@ function M.status(entry)
   local fix = nil
   local fix_since = opened_stream or opened_created
   if fix_since then
-    local dl = clock.deadline(fix_since, level.fix, level.fix_window)
+    -- EXTRACTION.md §5: extend both the deadline AND the budget by
+    -- however long the case has sat in Awaiting User Info — see
+    -- total_awaiting_seconds' doc comment for why this is a pause/extend,
+    -- not the cadence clock's reset. `budget` grows too, not just
+    -- `deadline`, so M.under_threshold's percentage stays meaningful
+    -- against the case's REAL available time instead of flagging a
+    -- long-paused P1 as falsely near-breach.
+    local awaiting_seconds = total_awaiting_seconds(data.states, now)
+    local effective_budget = level.fix + awaiting_seconds
+    local dl = clock.deadline(fix_since, level.fix, level.fix_window) + awaiting_seconds
     fix = {
       label = "Korrekturmaßnahme",
       since = fix_since,
       deadline = dl,
       remaining = dl - now,
-      budget = level.fix,
+      budget = effective_budget,
       done = false,
     }
   end

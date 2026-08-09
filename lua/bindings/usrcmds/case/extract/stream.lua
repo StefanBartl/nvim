@@ -19,6 +19,7 @@
 
 local render = require("bindings.usrcmds.case.render")
 local config = require("bindings.usrcmds.case.config")
+local clock = require("bindings.usrcmds.case.sla.clock")
 
 local M = {}
 
@@ -255,6 +256,38 @@ function M.completeness(text)
   return declared, actual
 end
 
+--- Latest `Send to Customer, updates that transfer case ownership to the
+--- customer` event — EXTRACTION.md §5's second finding: the one memo
+--- type that unambiguously means "my reply is out, ball's with the
+--- customer", the same signal `:Case reply check`'s manual "sent?" prompt
+--- already sets `last_reply_sent` from (SLA.md §2). Same two-timestamp
+--- shape every comment block has (`sla/stream.lua`'s own `parse_gmt`) —
+--- GMT preferred over the local-time line above it. Not independently
+--- validated against a real occurrence: this session's one real stream
+--- doesn't use this exact memo type, only "Customer added a memo"/"SAP
+--- added a memo for the partner"/"...for the customer, not visible to
+--- the customer" — built to EXTRACTION.md §4's own documented wording.
+---@param text string
+---@return integer|nil epoch (UTC), the most recent occurrence
+function M.last_reply_sent_at(text)
+  local latest = nil
+  local ls = lines_of(text)
+  for i, line in ipairs(ls) do
+    if vim.trim(line) == "Send to Customer, updates that transfer case ownership to the customer" then
+      local at_line = ls[i + 1] and vim.trim(ls[i + 1]) or ""
+      local gmt = at_line:match("^at:%s*(%d+%-%d+%-%d+ %d+:%d+:%d+)%s*GMT$")
+      if gmt then
+        local y, mo, d, h, mi, s = gmt:match("(%d+)%-(%d+)%-(%d+) (%d+):(%d+):(%d+)")
+        local epoch = clock.utc(tonumber(y), tonumber(mo), tonumber(d), tonumber(h), tonumber(mi), tonumber(s))
+        if not latest or epoch > latest then
+          latest = epoch
+        end
+      end
+    end
+  end
+  return latest
+end
+
 ---@class Lib.Case.StreamSignals
 ---@field versions { server: string|nil, commander: string|nil }
 ---@field kbas Lib.Case.KbaHit[]
@@ -266,6 +299,7 @@ end
 ---@field declared_activities integer|nil
 ---@field actual_activities integer
 ---@field case_short string|nil  Stammdaten's `Number` (a full SNOW id) normalized via render.to_short.
+---@field last_reply_sent_at integer|nil  See M.last_reply_sent_at above.
 
 ---@param text string
 ---@return Lib.Case.StreamSignals
@@ -284,6 +318,7 @@ function M.parse(text)
     declared_activities = declared,
     actual_activities = actual,
     case_short = stammdaten["Number"] and render.to_short(stammdaten["Number"]) or nil,
+    last_reply_sent_at = M.last_reply_sent_at(text),
   }
 end
 

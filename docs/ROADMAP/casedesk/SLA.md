@@ -16,6 +16,7 @@ der Design-Hintergrund für die `sla/`-Bausteine.
 - [2. Datenlage](#2-datenlage)
 - [3. Drei Uhren, nicht eine](#3-drei-uhren-nicht-eine)
   - [Nachtrag: die Uhr steht nicht immer — und sie pausiert nicht, sie resettet (gebaut, 2026-08-07)](#nachtrag-die-uhr-steht-nicht-immer--und-sie-pausiert-nicht-sie-resettet-gebaut-2026-08-07)
+  - [Zweiter Nachtrag: Korrekturmaßnahme pausiert auch (EXTRACTION.md Paket 4, 2026-08-10)](#zweiter-nachtrag-korrekturmaßnahme-pausiert-auch-extractionmd-paket-4-2026-08-10)
 - [4. Geschäftszeit-Rechnung (der einzige echte Algorithmus)](#4-geschäftszeit-rechnung-der-einzige-echte-algorithmus)
 - [5. Datenmodell](#5-datenmodell)
   - [`config.sla`](#configsla)
@@ -130,11 +131,41 @@ Kunde antwortet          → NEUE Rückmeldungsfrist beginnt, volles Budget,
                             dem Rest, der vor der Pause übrig war
 ```
 
-Ausdrücklich **nur die Rückmeldung** betrifft das — Erstreaktion und
-Korrekturmaßnahme bleiben Einmal-Deadlines ab Ticket-Eingang, unverändert.
-Nebenbefund aus derselben Klärung: der Kunde kann den Case selbst
-schließen (SNOW-seitig), der Agent kann das nicht — noch nicht ausgewertet,
-möglicher künftiger Stream-Signal in EXTRACTION.md.
+Ausdrücklich **nur die Rückmeldung** betrifft das hier — Erstreaktion
+bleibt eine Einmal-Deadline ab Ticket-Eingang, unverändert (die Frage
+stellt sich für sie praktisch nicht: die erste Antwort geht typischerweise
+raus, bevor überhaupt ein Awaiting-User-Info-Zyklus beginnt). ~~Korrektur-
+maßnahme bleibt ebenfalls unverändert~~ — **das galt bis 2026-08-10, s.
+den zweiten Nachtrag unten** (nicht zu verwechseln mit „Paket 4" weiter
+unten in diesem Dokument — das ist SLA.md's eigenes viertes Paket, die
+aktiven Notifications; die Korrekturmaßnahme-Änderung hier ist
+EXTRACTION.md's eigenes, anders nummeriertes Paket 4): bei P1s knappem
+4h-Budget zählt jede Kundenwartezeit sonst spürbar gegen die Frist, obwohl
+niemand untätig war. Nebenbefund aus derselben Klärung: der Kunde kann den
+Case selbst schließen (SNOW-seitig), der Agent kann das nicht — noch
+nicht ausgewertet, möglicher künftiger Stream-Signal in EXTRACTION.md.
+
+### Zweiter Nachtrag: Korrekturmaßnahme pausiert auch (EXTRACTION.md Paket 4, 2026-08-10)
+
+Dieselbe Awaiting-User-Info-Frage wie oben, aber für `fix`
+(Korrekturmaßnahme) statt `cadence` (Rückmeldung) — und mit einer
+**anderen Antwort**, bewusst: `cadence` ist eine periodische
+„gib ein Update"-Pflicht, ein Reset auf volles Budget bei Kundenantwort
+ist dafür das richtige Modell. `fix` ist eine **einmalige, kumulative**
+Deadline — sie bei jeder Kundenantwort auf volles Budget zurückzusetzen
+würde bei mehrfachem Hin und Her effektiv unbegrenztes Budget geben, viel
+zu großzügig. Richtig ist eine echte **Pause**: die Deadline (und das
+effektive Budget, damit `under_threshold`s Prozentrechnung stimmt) wächst
+um genau die Zeit, die der Case in `Awaiting User Info` verbracht hat —
+nicht mehr, nicht weniger.
+
+`sla/init.lua`s neue `total_awaiting_seconds(states, now)` summiert **jedes**
+`Awaiting User Info`-Intervall aus der vollständigen Zustandshistorie
+(nicht nur „ist der Case gerade dort"), ein noch laufendes Intervall zählt
+bis `now`. Isoliert getestet (kein echter Stream mit echter
+Awaiting-User-Info-Historie im Bestand verfügbar): 2h Pause →
+`fix.budget`/`fix.deadline` wachsen von 4h exakt auf 6h; ohne Pause bleibt
+`fix.budget` exakt bei den nominalen 4h.
 
 **Umsetzung** (`sla/stream.lua` + `sla/init.lua`, headless gegen die vier
 echten Streams aus EXTRACTION.md getestet):

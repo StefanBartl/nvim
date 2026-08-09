@@ -37,8 +37,25 @@ und `Research/NN_ActivityStream.md` (aus SNOW kopiert).
 > Support-Info auf `25.1.2`, ein Reply verlinkt `tosca-2026.1` — genau der
 > Fehler, den EXTRACTION.md §6 als Motivation nennt, real im eigenen
 > Bestand gefunden, nicht nur im Worked Example nachgestellt.
+>
+> **Paket 4 steht** (2026-08-10): §11.1 war schon entschieden (Uhr
+> pausiert), aber die tatsächliche Umsetzung betraf nur die Rückmeldung
+> (SLA.md §3-Nachtrag, 2026-08-07) — Korrekturmaßnahme lief unverändert
+> als Einmal-Deadline durch. Anders als bei der Rückmeldung ist ein
+> **Reset kein passendes Modell** für Korrekturmaßnahme (eine einmalige,
+> kumulative Frist würde bei mehrfachem Kunden-Hin-und-Her effektiv
+> unbegrenztes Budget bekommen) — stattdessen eine echte **Pause**:
+> `sla/init.lua`s neue `total_awaiting_seconds` summiert jedes
+> Awaiting-User-Info-Intervall aus der vollen Zustandshistorie und
+> verlängert Deadline UND effektives Budget um exakt diese Zeit. Isoliert
+> getestet (kein echter Stream mit echter Awaiting-User-Info-Historie im
+> Bestand): 2h Pause → 4h-Budget wächst auf 6h, ohne Pause bleibt es bei
+> 4h. Details: SLA.md, zweiter Nachtrag zu §3. Dazu `:Case activity`
+> erkennt jetzt auch `last_reply_sent` aus einem "Send to Customer"-Memo
+> automatisch (§5s zweiter Fund) — regressiert dabei nie einen neueren
+> manuellen Stempel aus `:Case reply check`.
 
-Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Offene Pakete 4–5:
+Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Offenes Paket 5:
 [ROADMAP.md](ROADMAP.md). Der SLA-Teil des Stream-Parsers
 (`sla/stream.lua`) steht bereits eigenständig, siehe [SLA.md](SLA.md).
 
@@ -565,9 +582,13 @@ check`. Kundenversion dreistufig aufgelöst (`.case.json` →
 (`25.1.7`/`2026.1`) auf Doc-Link-Form normalisiert. Realer Fund: Case
 1041708 läuft auf `25.1.2`, ein Reply verlinkt `tosca-2026.1`.
 
-**Paket 4 — SLA-Korrektur (entsperrt, §11.1 entschieden):** `states` in
-`sla/stream.lua` · Pausen-Intervalle in `clock.elapsed` ·
-`last_reply_sent` aus dem „Send to Customer"-Marker.
+**Paket 4 — SLA-Korrektur (steht, 2026-08-10):** `states` in
+`sla/stream.lua` (stand schon, Paket 1 der SLA.md-eigenen Zählung) ·
+Pausen-Intervalle für `fix` in `sla/init.lua`s neuer
+`total_awaiting_seconds` (Pause, nicht Reset — anderes Modell als
+`cadence` mit Absicht, s. SLA.md) · `last_reply_sent` aus dem „Send to
+Customer"-Marker (`extract/stream.lua`s `M.last_reply_sent_at`, via
+`:Case activity`).
 
 **Paket 5 — KI-Kopplung** · `{facts}`-Token in `KiPrompt.md` ·
 Faktenblock-Renderer · Widerspruchsprüfung in `:Case ki import` ·

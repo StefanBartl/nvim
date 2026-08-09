@@ -19,17 +19,18 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       `Research/` mit einbeziehen.
 
 - [ ] **Artefakt-Extraktion (Rest)** — eigenes Konzept:
-      [EXTRACTION.md](EXTRACTION.md). Pakete 1–3 stehen (`:Case versions
-      [component] [nr] [--all] [--raw]` inkl. Stream-Fallback für
-      `server`; `extract/stream.lua` für Versionen im
-      Fließtext/KBA-Nummern/Anhänge/Stammdaten, `sap_component`/`versions`
-      automatisch nach `.case.json`; `:Case doclinks [nr]` +
-      Einbau in `:Case reply check`, dreistufige Versionsauflösung — real
-      an Case 1041708 einen echten Doku-Link auf falscher Version
-      gefunden. Alles gegen echte Bestandsdaten verifiziert). Offen:
-      Paket 4 (SLA-Korrektur: Uhr pausiert bei `Awaiting User Info` —
-      entschieden, noch nicht gebaut), Paket 5 (Faktenblock als Fundament
-      für die KI-Anbindung).
+      [EXTRACTION.md](EXTRACTION.md). Pakete 1–4 stehen (`:Case versions`
+      inkl. Stream-Fallback für `server`; `extract/stream.lua` für
+      Versionen im Fließtext/KBA-Nummern/Anhänge/Stammdaten,
+      `sap_component`/`versions`/`last_reply_sent` automatisch nach
+      `.case.json`; `:Case doclinks [nr]` + Einbau in `:Case reply check`,
+      dreistufige Versionsauflösung — real an Case 1041708 einen echten
+      Doku-Link auf falscher Version gefunden; Korrekturmaßnahme-Uhr
+      pausiert jetzt während `Awaiting User Info` genau wie die
+      Rückmeldung, nur als Verlängerung statt Reset. Alles gegen echte
+      Bestandsdaten verifiziert, wo welche vorlagen). Offen: Paket 5
+      (Faktenblock als Fundament für die KI-Anbindung — hängt an der noch
+      nicht gebauten KI-Anbindung selbst).
 
 - [ ] **KI-Anbindung** — hängt an einem eigenen `ai.nvim`-Plugin (noch
       nicht gebaut; Config-Grundlage existiert bereits:

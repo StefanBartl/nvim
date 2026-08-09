@@ -12,6 +12,33 @@ listed here only as a pointer.
 
 Module: `lua/bindings/usrcmds/case/`.
 
+## Korrekturmaßnahme-Pause + auto `last_reply_sent` (EXTRACTION.md Paket 4)
+
+Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+§5, §12, and [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md)'s
+second Nachtrag to §3 (Paket 4, steht seit 2026-08-10 — letztes offenes
+Stück von Artefakt-Extraktion, außer Paket 5).
+
+- **`sla/init.lua`'s `fix` clock now extends for Awaiting-User-Info time**
+  — deliberately a PAUSE (deadline + budget both grow by the paused
+  duration), not the `cadence` clock's RESET, since `fix` is a one-time
+  cumulative deadline: resetting it on every customer reply would give
+  effectively unlimited budget across a multi-round exchange. New
+  `total_awaiting_seconds(states, now)` sums every `Awaiting User Info`
+  interval from the full state history (an ongoing one counts to `now`).
+  Isolated test (no real stream with a real Awaiting-User-Info history in
+  the bestand): 2h paused → a P1's 4h budget becomes 6h; unpaused stays
+  exactly 4h.
+- **`:Case activity` auto-detects `last_reply_sent`** from a stream's
+  "Send to Customer, updates that transfer case ownership to the
+  customer" memo — the same field `:Case reply check`'s manual "sent?"
+  prompt sets. Only ever advances it, never regresses a newer manual
+  stamp with an older stream-detected one.
+- Both pieces are built to EXTRACTION.md §5's documented wording but not
+  independently re-verified against a real occurrence — the one real
+  stream in the bestand uses neither an Awaiting-User-Info cycle nor a
+  "Send to Customer" memo.
+
 ## `:Case doclinks` (EXTRACTION.md Paket 3)
 
 Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)

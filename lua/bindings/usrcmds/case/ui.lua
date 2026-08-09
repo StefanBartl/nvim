@@ -619,6 +619,19 @@ function M.activity(case_arg)
         facts.versions = merged
       end
     end
+    -- EXTRACTION.md §5/Paket 4: "Send to Customer" is the one memo type
+    -- that unambiguously means the reply is already out — auto-fills the
+    -- same last_reply_sent field :Case reply check's manual "sent?" prompt
+    -- sets (SLA.md §2). Only ever advances it: a manual stamp newer than
+    -- what this stream detects must not be regressed by an older-looking
+    -- auto-detection (ISO-8601 UTC strings sort chronologically as text).
+    if signals.last_reply_sent_at then
+      local detected_iso = os.date("!%Y-%m-%dT%H:%M:%SZ", signals.last_reply_sent_at)
+      local existing_iso = m and m.last_reply_sent
+      if not existing_iso or detected_iso > existing_iso then
+        facts.last_reply_sent = detected_iso
+      end
+    end
     if next(facts) then
       local ok_facts, err_facts = meta.patch(entry.dir, entry.short, facts)
       if not ok_facts then
