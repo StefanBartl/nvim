@@ -1,15 +1,16 @@
 # markdown.nvim — User Commands Cheatsheet
 
-`:Markdown` (global, 12 subcommands) plus 9 buffer-local commands
+`:Markdown` (global, 12 subcommands) plus 25 buffer-local commands
 (`OpenWithSystemApplication`, `MarkdownNvimUnderlineHeadings`,
 `TableViewToggle`, `TableViewMarkdown`,
 `TableViewBox`, `TableViewSelect`, `TableViewClose`, `TableViewOpenBrowser`,
-`TableViewOpenBrowserNice`) rebuilt via `lib.nvim.usercmd.composer` (migrated
+`TableViewOpenBrowserNice`, plus 16 `:MDTable*` width-limited-wrapping
+commands — see below) rebuilt via `lib.nvim.usercmd.composer` (migrated
 2026-07-19) — the plugin that originally motivated Phase 7's
 `spec.buffer = true|bufnr` buffer-local support. **No syntax change**.
 
 Source: `lua/markdown/bindings/usrcmds.lua`
-Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health.md`
+Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health.md`, `docs/table-wrap.md`
 
 | Command | Scope | Grammar |
 | --- | --- | --- |
@@ -19,9 +20,54 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 | `:TableViewToggle\|Markdown\|Box [scope]` | buffer-local | toggle table preview (config/markdown/box style) |
 | `:TableViewSelect` / `:TableViewClose` | buffer-local | select+preview / close persistent preview |
 | `:TableViewOpenBrowser[Nice] [reopen]` | buffer-local | open table in browser (basic/nice HTML) |
+| `:MDTableWrap` / `:MDTableUnwrap` | buffer-local | wrap/unwrap the table at cursor to/from the width plan |
+| `:MDTableWrapVisual[!]` (range) / `:MDTableWrapVisible[!]` | buffer-local | wrap tables in selection / visible window; `!` unwraps first |
+| `:MDTableReflowHeader` | buffer-local | reflow only header+separator, body untouched |
+| `:MDTableFoldRow` / `:MDTableFoldAll` | buffer-local | fold continuation block(s) via `core/fold.lua`'s foldexpr |
+| `:MDTableProfile {compact\|docs\|wide}` | buffer-local | load a named width-profile preset |
+| `:MDTableCol {inc\|dec} [n]` | buffer-local | nudge column width under cursor, preserving row total |
+| `:MDTableAlign {cycle\|left\|center\|right}` | buffer-local | cycle/set alignment of column under cursor |
+| `:MDTableFlavor {github\|loose}` | buffer-local | strict GFM vs. loose separator style |
+| `:MDTableLint` / `:MDTableFixMissingSeparator` | buffer-local | vim.diagnostic table lint / auto-fix missing separators |
+| `:MDTableDebug` | buffer-local | print resolved column-width plan |
+| `:MDTableToCSV [path]` / `:MDTableFromCSV [path]` | buffer-local | CSV export/import roundtrip |
 
 ## Notes
 
+- **2026-08-09: added the `:MDTable*` width-limited table-wrapping family**
+  (16 new buffer-local commands, feature `table_wrap`, default on) — the
+  Kernfeature from `docs/ROADMAP/personal/markdown.nvim.md`'s
+  `md_tablewrap` analysis. New modules: `lua/markdown/core/table_wrap.lua`
+  (plan/wrap_cell/render/unwrap_rows/find_issues/fix_missing_separators/
+  to_csv/from_csv/on-hooks — builds on `table_fmt.lua`'s now-exported
+  parse/format primitives rather than duplicating them) and
+  `lua/markdown/commands/mdtable.lua` (opt resolution: config ->
+  `wrap_profiles[b:mdtable_profile]` -> per-table `<!-- mdwrap: ... -->`
+  directive -> explicit overrides; cursor/logical-cell restore after
+  reflow; `↳` continuation-row gutter signs via extmarks, virtual only —
+  the buffer text stays clean GFM). `core/fold.lua`'s existing
+  heading-foldexpr got a small extension (buffer-local
+  `vim.b.mdtable_fold_continuations`) rather than a competing manual-fold
+  pass, so `:MDTableFoldRow`/`FoldAll` nest continuation blocks one level
+  under their heading section. Debounced `VimResized`/`WinResized` reflow
+  and a `BufWritePre` selective-reflow (only tables whose text actually
+  changed since last save) are wired in `bindings/autocmds.lua`, both
+  opt-in via `config.table.wrap.auto_resize`/`.selective_reflow` (default
+  off). Two real bugs caught by headless tests during implementation: (1)
+  a single unbreakable token wider than the planned column width overflowed
+  the cell but the separator line still used the smaller planned width,
+  misaligning the column — fixed with a two-pass render (wrap everything
+  first, then compute the *effective* width per column from the actual
+  wrapped output); (2) the `↳` gutter-sign extmark silently failed to place
+  because `marker:sub(1,2)` byte-sliced the multi-byte UTF-8 arrow mid-
+  codepoint — fixed with `vim.fn.strcharpart` (character-, not byte-,
+  based). Vim user-command names can't contain `+`/`-`, so the roadmap's
+  `:MDTableCol+`/`:MDTableCol-` became `:MDTableCol inc|dec [n]`. Unwrap
+  detects continuation rows structurally (≤1 non-empty cell, directly after
+  another row of the same table) since no marker is written to the buffer
+  — documented caveat: a genuine one-cell data row right after another row
+  is indistinguishable and gets merged too. Details: `docs/table-wrap.md`
+  in the markdown.nvim repo.
 - **2026-08-09: added `:MarkdownNvimUnderlineHeadings`** (buffer-local, off
   `docs/ROADMAP/personal/markdown.nvim.md`'s "Randnotiz" item — an old
   NvChad snippet: under every ATX heading, insert/correct a line of `=`
