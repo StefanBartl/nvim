@@ -36,7 +36,7 @@ darunter, sofern relevant.
 | runtime-analysis.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES |||||||
 | fileops.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| gopath.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| gopath.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | replacer.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | insights.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | filetree.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -1071,3 +1071,52 @@ vollständiger als das Repo-eigene `docs/BINDINGS.md`).
 Cross-Reference als evtl. veraltet) nicht geprüft — außerhalb des RELEASE.md-Pflichtumfangs
 (nur `BINDINGS.md` ist dort explizit gefordert). Alles committet (`fde104d`, `e273eb9`, `8f96abb`)
 und nach `origin/main` gepusht; CI-Status abschließend zweimal grün geprüft.
+
+### gopath.nvim
+
+79 Lua-Dateien, bereits durch eine eigene, ausführliche Checklisten-Runde gelaufen (siehe
+`docs/ROADMAP.md`s "Qualität & Checklist-Audits", Stand 2026-07-04, plus mehrere Folge-Commits
+bis 2026-08-04) — dieser Pass fand entsprechend fast nichts mehr offen: `@module`-Kopfzeilen
+durchgängig, `@param`/`@return` vollständig (jedes `fun(...)`-Annotation im Repo bereits mit
+benannten Parametern — kein `fun(Type)`-Bug wie zuvor bei pickers.nvim gefunden), `@types` pro
+Unterverzeichnis, `config/DEFAULTS.lua` + `config/init.lua` mit vollständig typisierten Keys
+(`@types/config.lua`), `.luarc.json` (identisch zu `sessions.nvim`s Version), `.luacheckrc`,
+`stylua.toml`, CI (stylua + luacheck + headless `scripts/ci/headless_tests.lua`, klont `lib.nvim`
+und führt jedes `docs/TESTS/*.lua`-Fixture aus) bereits vorhanden und grün.
+
+- **PERFORMANCE.md**: kein neuer Hotpath-Fund — `truncated/cache.lua`/`finder.lua`s
+  Dateisystem-Scans laufen asynchron beim (gedrosselten) Cache-Build, nicht pro Tastenanschlag;
+  `env_path.lua`/`linepath.lua` laufen einmal pro Resolve-Aufruf. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig (`map`, `autocmd`,
+  `usercmd.composer`, `ui.kit`, `cross`), `util/cross.lua`/`util/log.lua` degradieren bewusst
+  dokumentiert auf eingebaute Fallbacks statt zu erroren, GOPATH/GOROOT- bzw. `$VAR`-Auflösung in
+  `resolvers/common/env_path.lua` prüft sowohl `vim.env` als auch `os.getenv` und normalisiert
+  Backslash/Forward-Slash beidseitig. Keine Änderung nötig.
+- **REVIEW.md**: Schnell-Check/Detailprüfung sauber — `notify()` beschränkt sich bereits auf
+  `util/log.lua`/`util/safe_notify.lua` (die dedizierten Wrapper-Module selbst), kein
+  Low-Level-Fund. `luacheck lua plugin` lief mit 0 Warnings/Errors über 73 Dateien;
+  `stylua --check .` fand nur einen Diff in `docs/TESTS/02_tailsearch.lua` (Test-Fixture mit
+  Kommentar-Doku-Stil, außerhalb des CI-Scopes `stylua --check lua/ plugin/`) — nicht angefasst,
+  da nicht Teil des tatsächlichen CI-Checks und der abweichende Stil dort absichtlich lesbarer
+  Dokumentationstext ist.
+- **RELEASE.md — die beiden einzigen echten Funde dieses Passes**: `doc/gopath.txt`s
+  Installationsblock hatte die `StefanBartl/lib.nvim`-Dependency vergessen (README.md hatte sie
+  korrekt) — ergänzt. README.md fehlte das geforderte Level-2-only Table of Contents — ergänzt.
+  `docs/BINDINGS.md`, `docs/ROADMAP.md`, `:checkhealth gopath` bereits vollständig und aktuell.
+  GitHub-Metadaten (`gh repo view`) bereits vollständig gesetzt: Description, 7 Topics,
+  Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention), keine
+  LICENSE-Datei/-Referenz. Cross-Plattform: `util/cross.lua` delegiert an `lib.nvim.cross` mit
+  dokumentiertem Fallback; `env_path.lua` behandelt Windows-Laufwerksbuchstaben und
+  POSIX-`$VAR`-Auflösung explizit und symmetrisch.
+- **Refactoring.md**: Fail-late/Report-at-boundary bereits vollständig eingehalten (laut
+  `docs/ROADMAP.md` bereits 2026-07-04 durchgeführt) — verifiziert per Grep: `notify()`
+  ausschließlich in den beiden Wrapper-Modulen, alle Resolver/Util-Module geben nur
+  `GopathResult|nil` bzw. Status zurück. Keine Änderung nötig.
+
+Zusätzlich zentrale Bindings-Sammlung (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/`) geprüft: alle
+drei Dateien (`Keymaps`/`Usercmds`/`Autocmds`/`gopath.nvim.md`) waren bereits aktuell und
+kreuzreferenziert gegen `docs/BINDINGS.md` (Stand 2026-07-31), keine Änderung nötig.
+
+Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — über die
+(grüne) `ubuntu-latest`-CI verifiziert. Alles committet (`fb7ae24`) und nach `origin/main`
+gepusht; CI-Status vor und nach dem Push grün geprüft.
