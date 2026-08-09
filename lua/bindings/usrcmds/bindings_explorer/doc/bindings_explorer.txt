@@ -1,0 +1,104 @@
+*bindings_explorer.txt*  Picker über die eigenen BINDINGS-Cheatsheets
+
+Author:  Stefan Bartl
+License: MIT
+
+==============================================================================
+CONTENTS                                            *bindings_explorer-contents*
+
+    1. Introduction ........................ |bindings_explorer-introduction|
+    2. Commands ............................. |bindings_explorer-commands|
+        2.1 :Bindings search ................ |bindings_explorer-search|
+        2.2 :Bindings browse ................ |bindings_explorer-browse|
+        2.3 :Bindings path ................... |bindings_explorer-path|
+    3. Architecture .......................... |bindings_explorer-architecture|
+    4. Roadmap / not yet implemented ......... |bindings_explorer-roadmap|
+
+==============================================================================
+1. INTRODUCTION                                 *bindings_explorer-introduction*
+
+`:Bindings` searches and browses the hand-written BINDINGS cheatsheets
+under `docs/NOTES/PersonelPlugins/BINDINGS/` and
+`docs/NOTES/ExternPlugins/Bindings/` (Keymaps/Usercmds/Autocmds, one file
+per plugin). Unlike a live keymap picker (Telescope's own, snacks.picker's
+equivalent), these cheatsheets carry rationale, cross-references, changelog
+entries and `[default]`/`[custom]` markers that pure `vim.keymap.set`
+introspection can never show.
+
+Full feature list with examples: `docs/FEATURES.md` next to this file.
+Concept and open work: |bindings_explorer-roadmap|.
+
+==============================================================================
+2. COMMANDS                                          *bindings_explorer-commands*
+
+------------------------------------------------------------------------------
+2.1 :BINDINGS SEARCH                                    *bindings_explorer-search*
+
+:Bindings search [{query}]
+:Bindings search keymaps|usercmds|autocmds [{query}]
+    Full-text search across both BINDINGS trees, or one category. Opens a
+    live-grep picker via pickers.nvim's engine layer when one is available
+    (telescope/fzf-lua/snacks); falls back to a prompt + static list
+    (`kit.input` + `kit.select`) otherwise.
+
+    Examples: >vim
+        :Bindings search <leader>iv
+        :Bindings search keymaps redact
+        :Bindings search autocmds BufEnter
+<
+
+------------------------------------------------------------------------------
+2.2 :BINDINGS BROWSE                                    *bindings_explorer-browse*
+
+:Bindings browse [{scope}]
+:Bindings browse keymaps|usercmds|autocmds [{scope}]
+    ({scope} is "personal" or "extern")
+
+    Picker over parsed table ROWS instead of raw text lines. Every `|…|…|`
+    line found under the nearest heading becomes a record (scope, category,
+    plugin, heading, columns, cells, file, line) — see `records.lua`.
+    Selecting a row jumps to its source line.
+
+    Examples: >vim
+        :Bindings browse
+        :Bindings browse keymaps
+        :Bindings browse keymaps personal
+        :Bindings browse usercmds extern
+<
+
+------------------------------------------------------------------------------
+2.3 :BINDINGS PATH                                        *bindings_explorer-path*
+
+:Bindings path [personal|extern]
+    Copy the BINDINGS root path(s) to the clipboard. Without an argument,
+    copies both, newline-separated.
+
+    Examples: >vim
+        :Bindings path
+        :Bindings path personal
+<
+
+==============================================================================
+3. ARCHITECTURE                                 *bindings_explorer-architecture*
+
+Module: `lua/bindings/usrcmds/bindings_explorer/`
+
+  • config.lua   - the two BINDINGS roots, and per-category subpaths
+  • search.lua   - static substring search (Phase 1 fallback)
+  • live.lua     - live-grep via pickers.nvim's engine layer (Phase 1)
+  • ui.lua       - kit.select wiring for search.lua's hits
+  • records.lua  - tolerant table-row scraper (Phase 2)
+  • browse.lua   - kit.select wiring for records.lua's rows
+  • init.lua     - composer verb ":Bindings" + all routes
+
+==============================================================================
+4. ROADMAP / NOT YET IMPLEMENTED                     *bindings_explorer-roadmap*
+
+Phase 3 — drift detection (`:Bindings check [plugin]`): compare documented
+bindings against what's actually registered
+(`vim.api.nvim_get_keymap()`/`nvim_get_commands()`), report-only, no
+autofix. Concept only, not built — see
+`docs/ROADMAP/personal/bindings-explorer.nvim.md` §3.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

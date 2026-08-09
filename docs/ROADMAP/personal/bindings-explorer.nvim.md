@@ -1,10 +1,12 @@
 # bindings-explorer — Konzept: Picker über die eigenen BINDINGS-Cheatsheets
 
-> **Status: Phase 1 implementiert** (2026-08-07, erweitert nach direktem
-> User-Feedback) — `:Bindings search [keymaps|usercmds|autocmds] [query]`
-> und `:Bindings path [personal|extern]`, siehe
-> `lua/bindings/usrcmds/bindings_explorer/`. Phase 2/3 unten sind
-> weiterhin nur Konzept.
+> **Status: Phase 1+2 implementiert** (Phase 1: 2026-08-07; Phase 2:
+> 2026-08-09) — `lua/bindings/usrcmds/bindings_explorer/`. Vollständige
+> Feature-/Command-Liste inkl. Beispielen:
+> [`FEATURES.md`](../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md).
+> Vimdoc: `:help bindings_explorer`
+> (`lua/bindings/usrcmds/bindings_explorer/doc/bindings_explorer.txt`).
+> Phase 3 unten ist weiterhin nur Konzept — das eigentliche offene Stück.
 
 Auslöser: beim Aufräumen von `docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/
 images.nvim.md` diese Sitzung fiel auf, dass das Sheet seit der ersten
@@ -70,66 +72,20 @@ zweigleisig statt einer einzigen "richtigen" Parse-Strategie.
 
 ### Phase 1 — Volltextsuche ✅ implementiert (2026-08-07)
 
-`lua/bindings/usrcmds/bindings_explorer/` (`M.enable()` in
-`bindings.usrcmds.init` neben casedesk registriert):
+`:Bindings search [keymaps|usercmds|autocmds] [query]` (Live-Grep über
+`pickers.nvim`s Engine-Schicht, statische Prompt+Liste als Fallback) und
+`:Bindings path [personal|extern]`. Details, Beispiele, Testnachweis:
+[`FEATURES.md`](../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md).
 
-- `:Bindings search [query]` — beide BINDINGS-Bäume.
-- `:Bindings search keymaps|usercmds|autocmds [query]` — auf eine
-  Unterkategorie gescopt (`config.roots_for(folder)`, beide Bäume
-  verwenden dieselben drei Ordnernamen).
-- `:Bindings path [personal|extern]` — Wurzel(n) in die Zwischenablage,
-  derselbe Zweck wie das ältere `:BindingsPath`
-  (`lua/bindings/usrcmds/init.lua`), aber mit den tatsächlichen zwei
-  Pfaden statt dessen einzelnem, nie existierenden `docs/NOTES/BINDINGS`.
-  `:BindingsPath` selbst bleibt unverändert (nicht Teil dieses Auftrags,
-  bewusst nicht "nebenbei" mitgefixt).
+### Phase 2 — Tabellenzeilen als durchsuchbare Datensätze ✅ implementiert (2026-08-09)
 
-**Live-Grep-in-Picker, nach direktem Feedback nachgezogen** — die erste
-Fassung hier war ein zweistufiger Prompt-dann-Liste-Fluss
-(`kit.input` → `kit.select`), kein tippen-und-live-filtern wie man es von
-Telescopes `live_grep` kennt. `live.lua` löst das über `pickers.nvim`s
-**Engine**-Schicht (`pickers.engines.load()`, dann `engine.live_grep({
-roots, prompt, query })`) — bewusst *nicht* die `sources/*`-Schicht, die
-weiterhin (bestätigt, siehe unten) nur Dateisystem-Quellen kennt. Die
-Engine-Schicht darunter ist dagegen generisch: `live_grep(opts)` nimmt
-`opts.roots` als beliebige Verzeichnisliste, einheitlich über
-telescope/fzf-lua/snacks hinweg (`Pickers.EngineOpts`,
-`lua/pickers/engines/{telescope,fzf,snacks}.lua`) — genau der Baustein,
-der für eine beliebige Zwei-Wurzel-Suche wie diese hier fehlte. `roots`
-wird direkt durchgereicht (voll oder Kategorie-gescopt), `query` wird zu
-telescopes `default_text`/fzf-luas `query`/snacks' Prompt-Vorbelegung —
-oder bleibt leer, dann tippt man im Picker selbst.
+`:Bindings browse [keymaps|usercmds|autocmds] [personal|extern]` — ein
+toleranter Scraper (`records.lua`) macht jede `|…|…|`-Zeile unter einer
+Überschrift zu einem flachen Datensatz, Picker darüber in `browse.lua`.
+Details, Beispiele, Testnachweis:
+[`FEATURES.md`](../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md).
 
-`search.lua`/`ui.lua` (`kit.select`) bleiben der **Fallback**, wenn keine
-Picker-Engine verfügbar ist (`live.open()` gibt dann `false` zurück,
-`init.lua`s `search_scoped()` wechselt automatisch um) — genau die
-statische Phase-1-Suche, die vor diesem Nachzug die einzige war.
-
-Headless end-to-end verifiziert: `config.roots_for("Keymaps")` liefert
-beide echten Unterpfade, eine Kategorie-gescopte Suche liefert
-ausschließlich Treffer unterhalb `Keymaps/`, `live.open()` gibt in dieser
-(pickers.nvim-losen) Testumgebung korrekt `false` zurück und fällt durch,
-`:Bindings search keymaps <query>` dispatcht über den echten Composer
-nachweislich auf die Kategorie-Route (nicht die allgemeine mit `"keymaps"`
-als Suchbegriff — Mehrsegment-Pfade schlagen die Ein-Segment-Route mit
-Arg, wie überall sonst in diesem Composer). Die tatsächliche Live-Grep-UI
-selbst (`engine.live_grep`) bleibt ungeprüft wie überall in diesem
-Ökosystem — braucht ein echtes Fenster plus eine echte
-telescope/fzf-lua/snacks-Installation.
-
-### Phase 2 — Tabellenzeilen als durchsuchbare Datensätze
-
-Ein toleranter Scraper: jede `|…|…|`-Zeile unter einer Überschrift wird zu
-einem flachen Datensatz
-`{ scope = "Personal"|"Extern", category = "Keymaps"|"Usercmds"|"Autocmds",
-plugin, heading, columns = {…}, file, lnum }` — Spaltenzahl/-namen bleiben
-Freitext, keine feste Schema-Annahme. Ein zweiter Picker-Modus ("nach Zeile
-statt nach Zeile-im-Fließtext filtern") baut direkt darauf. Dateien ohne
-saubere Tabellen (Telescope.md streckenweise) liefern hier einfach weniger
-Treffer, bleiben aber über Phase 1 weiter auffindbar — kein Totalausfall,
-nur ein graduell schwächerer Signal.
-
-### Phase 3 — Drift-Erkennung (der eigentliche Mehrwert, am aufwändigsten)
+### Phase 3 — Drift-Erkennung (der eigentliche Mehrwert, am aufwändigsten) — offen
 
 Das, was heute manuell und zufällig passiert (wie bei `images.nvim.md`
 diese Sitzung), automatisch: dokumentierte gegen tatsächlich registrierte
@@ -161,9 +117,9 @@ Ein Verb, analog zu `:Case`/`:Cases` und `:Image`, nicht drei Flat-Commands:
 
 | Command | Phase | Wirkung |
 | --- | --- | --- |
-| `:Bindings search [query]` | 1 | Volltextsuche über beide BINDINGS-Bäume, Picker |
-| `:Bindings browse [keymaps\|usercmds\|autocmds] [personal\|extern]` | 2 | Tabellenzeilen als Picker, optional gescoped |
-| `:Bindings check [plugin]` | 3 | Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert |
+| `:Bindings search [query]` | 1 ✅ | Volltextsuche über beide BINDINGS-Bäume, Picker |
+| `:Bindings browse [keymaps\|usercmds\|autocmds] [personal\|extern]` | 2 ✅ | Tabellenzeilen als Picker, optional gescoped |
+| `:Bindings check [plugin]` | 3 (offen) | Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert |
 
 ## 5. Wo das hingehört
 
@@ -179,14 +135,10 @@ lief.
 
 | Teil | Vergleichbar mit | Aufwand |
 | --- | --- | --- |
-| Phase 1 (ripgrep + Picker) | `casedesk.query`s `:Cases grep` (existiert bereits, dieselbe Grep-über-Markdown-Idee) | **klein** — im Kern eine dünne Picker-Verdrahtung um einen vorhandenen ripgrep-Aufruf |
-| Phase 2 (toleranter Tabellen-Scraper) | `casedesk.terminology`s Parser (sammelt `## `/`### `-Begriffe über einen ganzen Doku-Baum, mit genau demselben "nicht jede Datei ist gleich strukturiert"-Problem, siehe dessen Moduldoc) | **mittel** — der Scraper selbst ist einfach, die Zahl der Randfälle (wie viele verschiedene Tabellenformen wirklich vorkommen) zeigt sich erst beim Testen gegen den echten Bestand |
-| Phase 3 (Drift-Erkennung) | `casedesk.doctor` (Scan → Findings-Liste, rein lesend, kein Autofix) | **am größten** — Matching von Freitext-Bindings-Notation (`<leader>iv`, `:Image redact [path]`) gegen `nvim_get_keymap`/`nvim_get_commands`-Ausgabe ist die eigentliche Fleißarbeit, plus die Filetype-Scoping-Falle oben |
+| Phase 1 ✅ (Grep + Picker) | `casedesk.query`s `:Cases grep` | **klein** — dünne Picker-Verdrahtung, siehe FEATURES.md |
+| Phase 2 ✅ (toleranter Tabellen-Scraper) | `casedesk.terminology`s Parser | **mittel** — abgeschlossen, `records.lua`/`browse.lua`, gegen den echten 137-Datei-Bestand verifiziert (1641 Zeilen geparst) |
+| Phase 3 (Drift-Erkennung) — offen | `casedesk.doctor` (Scan → Findings-Liste, rein lesend, kein Autofix) | **am größten** — Matching von Freitext-Bindings-Notation (`<leader>iv`, `:Image redact [path]`) gegen `nvim_get_keymap`/`nvim_get_commands`-Ausgabe ist die eigentliche Fleißarbeit, plus die Filetype-Scoping-Falle oben |
 
-**Reihenfolge-Vorschlag:** Phase 1 zuerst und für sich allein schon nützlich
-lassen — sie deckt den ganzen Korpus ab, ohne dass irgendein Parsing-Risiko
-eingegangen wird. Phase 2 nur, wenn sich Phase 1 im Alltag als "ich will
-öfter nach einer bestimmten Taste/Command filtern, nicht nur nach Text
-suchen" zeigt. Phase 3 ist der eigentliche Grund, warum diese Idee mehr ist
-als ein Telescope-Ersatz — aber auch der Teil, bei dem sich der Aufwand erst
-beim Bauen genau zeigt.
+**Offen bleibt nur noch Phase 3** — der eigentliche Grund, warum diese Idee
+mehr ist als ein Telescope-Ersatz, aber auch der Teil, bei dem sich der
+Aufwand erst beim Bauen genau zeigt.

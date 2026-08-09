@@ -14,15 +14,19 @@
 --- Wurzeln statt dessen einzelnem, nicht existierenden `docs/NOTES/
 --- BINDINGS`-Pfad.
 ---
---- Phase 2 (Tabellenzeilen als Datensätze) und Phase 3 (Drift-Erkennung
---- gegen `nvim_get_keymap`/`nvim_get_commands`) sind im Konzept skizziert,
---- noch nicht gebaut.
+--- Phase 2 (diese Datei + `records.lua`/`browse.lua`): `:Bindings browse
+--- [keymaps|usercmds|autocmds] [personal|extern]` — Picker über geparste
+--- Tabellenzeilen statt Volltext, siehe `records.lua`s Scraper.
+---
+--- Phase 3 (Drift-Erkennung gegen `nvim_get_keymap`/`nvim_get_commands`)
+--- ist im Konzept skizziert, noch nicht gebaut.
 
 local composer = require("lib.nvim.usercmd.composer")
 local config = require("bindings.usrcmds.bindings_explorer.config")
 local search = require("bindings.usrcmds.bindings_explorer.search")
 local live = require("bindings.usrcmds.bindings_explorer.live")
 local ui = require("bindings.usrcmds.bindings_explorer.ui")
+local browse = require("bindings.usrcmds.bindings_explorer.browse")
 
 local M = {}
 
@@ -87,6 +91,14 @@ function M.path(scope)
   notify().info("Pfad(e) kopiert: " .. text)
 end
 
+--- Picker über geparste Tabellenzeilen (`records.lua`) statt Volltext.
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = alle drei
+---@param scope ("personal"|"extern")|nil nil = beide
+---@return nil
+function M.browse(category, scope)
+  browse.open(category, scope)
+end
+
 ---@return nil
 function M.enable()
   composer.verb("Bindings", {
@@ -133,6 +145,38 @@ function M.enable()
         desc = "BINDINGS-Wurzel(n) in die Zwischenablage kopieren",
         run = function(ctx)
           M.path(ctx.args.scope)
+        end,
+      },
+      {
+        path = { "browse" },
+        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        desc = "Picker über alle Tabellenzeilen (Keymaps+Usercmds+Autocmds)",
+        run = function(ctx)
+          M.browse(nil, ctx.args.scope)
+        end,
+      },
+      {
+        path = { "browse", "keymaps" },
+        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        desc = "Picker über Keymaps-Tabellenzeilen",
+        run = function(ctx)
+          M.browse("Keymaps", ctx.args.scope)
+        end,
+      },
+      {
+        path = { "browse", "usercmds" },
+        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        desc = "Picker über Usercmds-Tabellenzeilen",
+        run = function(ctx)
+          M.browse("Usercmds", ctx.args.scope)
+        end,
+      },
+      {
+        path = { "browse", "autocmds" },
+        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        desc = "Picker über Autocmds-Tabellenzeilen",
+        run = function(ctx)
+          M.browse("Autocmds", ctx.args.scope)
         end,
       },
     },
