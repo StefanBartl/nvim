@@ -226,12 +226,28 @@ how long you stared at the problem before the first one.
 ## 3. Wrapping up
 
 ```
-:Case close       " -> Cases/Closed/<nr>
-:Case reassign     " -> Cases/Reassigned/<nr>, someone else picked it up
+:Case close        " asks where: Closed, Reassigned, or Delete permanently
+:Case reassign     " -> Cases/Reassigned/<nr>, someone else picked it up (no asking)
 ```
 
-Both are plain folder moves — nothing else in `.case.json` needs updating,
-the state IS the folder (`CONCEPT.md` §3).
+`:Case close` doesn't assume "Closed" — it opens a `kit.select` over every
+other state plus "Delete permanently", so it's really "move this case
+somewhere, you pick." `:Case reassign` stays a direct one-step move for the
+common "someone else picked it up" case. Both a real move: nothing else in
+`.case.json` needs updating, the state IS the folder (`CONCEPT.md` §3).
+Deleting is the one irreversible option — it asks you to type the case
+number back, not just confirm y/n.
+
+**Closing several at once:**
+
+```
+:Cases list        " mark cases with `m` (or a Visual-line range + `m`)
+:Cases close        " uses the marks; asks the destination ONCE for all of them
+```
+
+No marks set? `:Cases close` opens its own `<Tab>`-multi-select/`<CR>`-confirm
+picker instead — mark first only when you're browsing `:Cases list` anyway,
+otherwise just run `:Cases close` directly.
 
 Handing a case off, or want one file to archive/attach elsewhere instead of
 a folder of loose markdown?

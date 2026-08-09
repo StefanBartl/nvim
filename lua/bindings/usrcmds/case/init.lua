@@ -68,10 +68,16 @@ local function file_verb_routes()
 end
 
 --- One `:Case <verb> [case]` per non-default state (config.states), moving
---- the case into that state — `:Case close`, `:Case reassign`, and whatever
---- a future fourth state adds, all from the same loop. `config.state_verbs`
---- names the imperative command; a state without an entry there falls back
---- to its own lowercased name.
+--- the case into that state — `:Case reassign`, and whatever a future
+--- fourth state adds, all from the same loop. `config.state_verbs` names
+--- the imperative command; a state without an entry there falls back to its
+--- own lowercased name.
+---
+--- The "close" verb (state "Closed") is special-cased to `ui.close` instead
+--- of a direct `ui.move_state`: ROADMAP.md's `:Case(s) close` request wants
+--- `:Case close` to ask WHERE first (any other state, or permanent delete),
+--- not assume "Closed" — every other state-move verb keeps the old direct
+--- behavior.
 ---@return Lib.UserCmd.Composer.RouteSpec[]
 local function state_verb_routes()
   local routes = {}
@@ -81,9 +87,14 @@ local function state_verb_routes()
       routes[#routes + 1] = {
         path = { verb },
         args = { { name = "case", type = "CASE", optional = true } },
-        desc = ("Move the case to %s"):format(state),
+        desc = verb == "close" and "Move the case somewhere (pick a destination, or delete)"
+          or ("Move the case to %s"):format(state),
         run = function(ctx)
-          ui.move_state(ctx.args.case, state)
+          if verb == "close" then
+            ui.close(ctx.args.case)
+          else
+            ui.move_state(ctx.args.case, state)
+          end
         end,
       }
     end
@@ -372,6 +383,13 @@ function M.enable()
       desc = "Every case for a company, grouped by state (default: current buffer's company)",
       run = function(ctx)
         ui.company_history(ctx.args.company)
+      end,
+    },
+    {
+      path = { "close" },
+      desc = "Close multiple cases at once (marks from :Cases list, or an interactive multi-select), then pick one destination",
+      run = function()
+        ui.cases_close()
       end,
     },
     {

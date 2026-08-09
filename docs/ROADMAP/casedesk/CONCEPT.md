@@ -94,7 +94,9 @@ Cases/SAP_Support/Cases/
 `case`+`year` abgeleitet wird, wird der Zustand aus dem Elternordner
 abgeleitet. Ein Wert an zwei Stellen driftet; das ist im Bestand schon einmal
 passiert (ein Ordner wurde umbenannt, ohne eine Notiz nachzuziehen, die
-darauf verlinkte). `:Case close` ist damit ein reiner `fs_rename`.
+darauf verlinkte). Ein Umzug in einen anderen Zustand ist damit ein reiner
+`fs_rename` — außer der einen Ausnahme, die keinen Zielordner hat:
+permanentes Löschen (`:Case close`s Zielauswahl, s. u.).
 
 **`Reassigned/`** ersetzt das frühere `OtherAgentTookIt/`: der eine Ordner,
 in den ein Case geschoben wird, wenn ein anderer Agent ihn übernimmt — nicht
@@ -109,12 +111,36 @@ M.state_verbs = { Closed = "close", Reassigned = "reassign" }
 ```
 
 `init.lua`s `state_verb_routes()` generiert daraus `:Case close [nr]` und
-`:Case reassign [nr]` — beide rufen denselben `ui.move_state(case, state)`
-auf. Ein vierter Zustand ist eine Zeile in dieser Liste, kein neuer Code-Pfad.
+`:Case reassign [nr]`. `reassign` ruft weiterhin direkt `ui.move_state(case,
+"Reassigned")` — sofortiger Umzug, ein `kit.confirm` y/n. `close` ist die
+einzige Ausnahme in dieser generierten Schleife: statt fest nach `Closed/`
+zu verschieben, öffnet `ui.close` erst `kit.select` über jeden
+Nicht-Default-Zustand PLUS einen Sentinel-Eintrag "Delete permanently" —
+"wohin soll der Case?" ist damit eine echte Frage, nicht impliziert vom
+Verb-Namen. Ein vierter echter Zustand bleibt trotzdem eine Zeile in
+`config.states`, kein neuer Code-Pfad — nur die Sonderbehandlung des
+`"close"`-Verbs selbst ist hartcodiert (`init.lua`s `state_verb_routes()`,
+`verb == "close"`).
 
-`move_state` löscht nach jedem Umzug weg von `default_state` außerdem eine
+`ui.lua`s `do_move` (der gemeinsame Kern hinter `move_state` UND `close`s
+Zielauswahl) löscht nach jedem Umzug weg von `default_state` außerdem eine
 eventuell gespeicherte Session zu diesem Case (`pcall(require,
-"sessions")`, optional) — Details und Begründung: SESSIONS.md §6.
+"sessions")`, optional) — Details und Begründung: SESSIONS.md §6. `do_delete`
+(der Sentinel-Zweig) tut dasselbe, da ein gelöschter Case dieselbe
+Sicherheitsnetz-Logik braucht wie ein verschobener.
+
+**Bulk-Variante `:Cases close`** — für mehrere Cases auf einmal, zwei Wege
+zur Auswahl-Menge: bereits gesetzte Marks (`marks.lua`, `m`/Visual-`m` in
+`:Cases list`, "wie in filetree.nvim" — ein flaches, session-globales Set
+von Kurznummern, überlebt das Schließen der `:Cases list`-View) haben
+Vorrang; ohne Marks öffnet sich `kit.select({multi = true, ...})` — dessen
+nativer `<Tab>`-Toggle/`<CR>`-Bestätigen-Chooser deckt genau das ab, was
+ROADMAP.md dafür vorsah, ganz ohne `pickers.nvim`. Beide Wege münden in
+`close_many`, das EINMAL nach dem Ziel fragt und es auf jeden Case
+anwendet — Löschen verlangt dabei `DELETE` tippen (statt pro Case die
+Nummer, das wäre bei mehreren Cases unzumutbar), ein einzelner Case in
+`:Case close` verlangt seine eigene Nummer zurückgetippt (kein bloßes
+y/n — irreversibel).
 
 ---
 
@@ -245,7 +271,7 @@ folgt der tatsächlichen Konvention.
 | `:Case ki import [nr]`      | eingefügte KI-Antwort auf Research/Replies/Notes verteilen (`ki.lua`, §8i) |
 | `:Case copy <src>`          | Datei in den Case kopieren, Zielordner per Auswahl                  |
 | `:Case sync [nr]`           | fehlende Blueprint-Teile nachziehen (nie überschreiben)              |
-| `:Case close [nr]`          | generiert aus `config.states` — nach `Closed/` verschieben           |
+| `:Case close [nr]`          | Zielauswahl (`kit.select`): jeder Nicht-Default-Zustand, oder "Delete permanently" (Nummer zurücktippen zum Bestätigen) |
 | `:Case reassign [nr]`       | generiert aus `config.states` — nach `Reassigned/` verschieben       |
 | `:Case snow [nr]`           | Ticket-ID öffnen (falls `snow_url_format` gesetzt) oder kopieren     |
 
@@ -253,7 +279,8 @@ folgt der tatsächlichen Konvention.
 
 | Command                  | Wirkung                                                    |
 | ------------------------- | ------------------------------------------------------------ |
-| `:Cases list`             | alle Cases, gruppiert nach Zustand                            |
+| `:Cases list`             | alle Cases, gruppiert nach Zustand — auch die Mark-View: `m`/Visual-`m` markiert, `c` schließt die Marks |
+| `:Cases close`            | mehrere Cases auf einmal: Marks (falls gesetzt) oder `kit.select({multi=true})`, dann EINE Zielauswahl für alle |
 | `:Cases company [pattern] [--exact\|-e] [--re\|-r]` | Substring (Default), volle Gleichheit oder Lua-Pattern; leer = "Company ist gesetzt" |
 | `:Cases title/name/notes/priority/tosca_version [pattern] [--exact\|-e] [--re\|-r]` | dieselbe generische Filter-Route, ein Feld pro Zeile in `config.infocard_fields` |
 | `:Cases find company=Scan year=2026 [--exact\|-e] [--re\|-r]` | Feld-Kombination via composer `kv` (bare `key=value`, kein `--`) |
@@ -628,8 +655,9 @@ drei Zieldateien korrekt befüllt.
 Interaktion, `usercmd.composer` für `:Case`/`:Cases`/`:Tricentis` inkl.
 `CASE`-/`BLOCK`-Argtyp, Flags, `enum` und generierter Routen,
 `fs.mkdirp`/`write.to_file`/`read`/`json`/`collect_recursive` fürs
-Dateisystem, `cross.fs.mutate.rename_file` für jedes Rename mit
-Windows-Lock-Retry (`normalize.lua`, `:Case close`/`reassign` — s. u.),
+Dateisystem, `cross.fs.mutate.rename_file`/`.retry` für jedes Rename UND
+jedes Löschen mit Windows-Lock-Retry (`normalize.lua`, `:Case(s) close`/
+`reassign` — s. u.),
 `cross.open_default`/`copy_to_clipboard` für `:Case snow` und die
 Attachment-/Links-Picker, `net.curl` für `:Cases linkcheck` (einziges Modul
 hier mit echtem Netzwerk-I/O — bewusst über den vorhandenen

@@ -1109,11 +1109,76 @@ end
 
 -- ── moving a case between states (:Case close / :Case reassign / ...) ────
 
+--- Session cleanup shared by every path that removes a case from
+--- `config.default_state` (a plain move OR a delete): SESSIONS.md §6 — a
+--- case's session is only useful while it's actively worked, so this drops
+--- the now-stale session immediately instead of waiting for the next
+--- `:Cases doctor` pass to flag it. Optional dependency, silent on "no such
+--- session" (the common case: most cases never had one saved).
+---@param entry Lib.Case.RegistryEntry
+local function drop_session_if_left_open(entry)
+  local ok_sessions, sessions = pcall(require, "sessions")
+  if ok_sessions then
+    sessions.delete(entry.short)
+  end
+end
+
 --- The general primitive behind every generated state-move verb (init.lua
 --- builds one per non-default entry in config.states, using
---- config.state_verbs for the command name). The case's state IS the
+--- config.state_verbs for the command name) AND the interactive `:Case
+--- close`/`:Cases close` destination picker below. The case's state IS the
 --- folder it's in (MIGRATION.md §1), so this is a plain rename — no
 --- `status` field to keep in sync.
+---@param entry Lib.Case.RegistryEntry
+---@param state string  One of config.states.
+---@return boolean ok
+local function do_move(entry, state)
+  mkdirp(config.state_dir(state))
+  local dest = config.state_dir(state) .. "/" .. entry.short
+  -- mutate.rename_file, not a bare uv.fs_rename: a Windows directory
+  -- watcher (neo-tree's leaked fs_event handles are the known offender) can
+  -- hold a transient lock on the case folder being moved — see
+  -- normalize.lua's identical reasoning.
+  local ok, err = require("lib.nvim.cross.fs.mutate").rename_file(entry.dir, dest)
+  if not ok then
+    notify.error(("move to %s failed: %s"):format(state, tostring(err)))
+    return false
+  end
+  registry.invalidate()
+  notify.info(("case %s moved to %s"):format(entry.short, state))
+  if state ~= config.default_state then
+    drop_session_if_left_open(entry)
+  end
+  return true
+end
+
+--- Permanently remove a case folder — the "LÖSCHEN" destination in
+--- ROADMAP.md's `:Case(s) close` request. Same Windows transient-lock risk
+--- as `do_move` above (a directory watcher/AV/indexer can hold the folder
+--- open a few ms after the last buffer touching it closes), so this goes
+--- through the same `mutate.retry` rather than a bare `vim.fn.delete`.
+--- Irreversible: callers MUST get an explicit, deliberate confirmation
+--- before calling this — see `M.close`/`close_many` below, both require
+--- typing the case number (or "DELETE" for a batch) back, not just y/n.
+---@param entry Lib.Case.RegistryEntry
+---@return boolean ok
+local function do_delete(entry)
+  local ok = require("lib.nvim.cross.fs.mutate").retry(function()
+    if vim.fn.delete(entry.dir, "rf") == 0 then
+      return true
+    end
+    return false, "EBUSY: delete failed"
+  end)
+  if not ok then
+    notify.error(("delete of %s failed"):format(entry.short))
+    return false
+  end
+  registry.invalidate()
+  notify.info(("case %s deleted"):format(entry.short))
+  drop_session_if_left_open(entry)
+  return true
+end
+
 ---@param case_arg string|nil
 ---@param state string  One of config.states.
 function M.move_state(case_arg, state)
@@ -1126,45 +1191,209 @@ function M.move_state(case_arg, state)
       notify.warn(("%s is already %s"):format(entry.short, state))
       return
     end
-
     kit.confirm({
       question = ("Move case %s to %s?"):format(entry.short, state),
       on_answer = function(yes)
-        if not yes then
-          return
-        end
-        mkdirp(config.state_dir(state))
-        local dest = config.state_dir(state) .. "/" .. entry.short
-        -- mutate.rename_file, not a bare uv.fs_rename: a Windows directory
-        -- watcher (neo-tree's leaked fs_event handles are the known
-        -- offender) can hold a transient lock on the case folder being
-        -- moved — see normalize.lua's identical reasoning.
-        local ok, err = require("lib.nvim.cross.fs.mutate").rename_file(entry.dir, dest)
-        if not ok then
-          notify.error(("move to %s failed: %s"):format(state, tostring(err)))
-          return
-        end
-        registry.invalidate()
-        notify.info(("case %s moved to %s"):format(entry.short, state))
-
-        -- SESSIONS.md §6: a case's session is only useful while it's
-        -- actively worked. The state IS the folder (comment above), so the
-        -- move above already IS "closing" the case in every sense that
-        -- matters — this just also drops the now-stale session immediately
-        -- instead of waiting for the next :Cases doctor pass to flag it.
-        -- Optional dependency, silent on "no such session" (the common
-        -- case: most cases never had one saved).
-        if state ~= config.default_state then
-          local ok_sessions, sessions = pcall(require, "sessions")
-          if ok_sessions then
-            sessions.delete(entry.short)
-          end
+        if yes then
+          do_move(entry, state)
         end
       end,
     })
   end)
 end
 
+-- ── :Case close / :Cases close — destination picker + marks ──────────────
+
+--- Sentinel target for M.close/close_many's destination kit.select — not a
+--- config.states entry, so it can never collide with a real state name.
+local DELETE_TARGET = "__delete__"
+
+---@return { label: string, target: string }[]
+local function close_targets()
+  local out = {}
+  for _, state in ipairs(config.states) do
+    if state ~= config.default_state then
+      out[#out + 1] = { label = state, target = state }
+    end
+  end
+  out[#out + 1] = { label = "Delete permanently", target = DELETE_TARGET }
+  return out
+end
+
+---@param message string
+---@param cb fun(target: string|nil)  A config.states entry, DELETE_TARGET, or nil on cancel.
+local function pick_close_target(message, cb)
+  kit.select({
+    message = message,
+    selection = close_targets(),
+    format_item = function(t)
+      return t.label
+    end,
+    on_select = function(t)
+      cb(t.target)
+    end,
+    on_cancel = function()
+      cb(nil)
+    end,
+  })
+end
+
+--- Shared bulk-apply for the marks path and the multi-select path of
+--- `:Cases close`: one destination picked once, applied to every entry.
+---@param entries Lib.Case.RegistryEntry[]
+local function close_many(entries)
+  if #entries == 0 then
+    notify.warn("no cases to close")
+    return
+  end
+  local shorts = {}
+  for _, e in ipairs(entries) do
+    shorts[#shorts + 1] = e.short
+  end
+  table.sort(shorts)
+  local label = table.concat(shorts, ", ")
+
+  pick_close_target(("Move %d case(s) to...\n%s"):format(#entries, label), function(target)
+    if not target then
+      return
+    end
+    local movable = {}
+    for _, e in ipairs(entries) do
+      if e.state ~= target then
+        movable[#movable + 1] = e
+      end
+    end
+    if #movable == 0 then
+      notify.warn("all selected cases are already in that state")
+      return
+    end
+
+    if target == DELETE_TARGET then
+      kit.input({
+        title = ("Type DELETE to permanently remove %d case(s): %s"):format(#movable, label),
+        on_submit = function(typed)
+          if typed ~= "DELETE" then
+            notify.warn("bulk delete cancelled")
+            return
+          end
+          local n = 0
+          for _, e in ipairs(movable) do
+            if do_delete(e) then
+              n = n + 1
+            end
+          end
+          notify.info(("%d/%d case(s) deleted"):format(n, #movable))
+          require("bindings.usrcmds.case.marks").clear()
+        end,
+      })
+      return
+    end
+
+    kit.confirm({
+      question = ("Move %d case(s) to %s?\n%s"):format(#movable, target, label),
+      on_answer = function(yes)
+        if not yes then
+          return
+        end
+        local n = 0
+        for _, e in ipairs(movable) do
+          if do_move(e, target) then
+            n = n + 1
+          end
+        end
+        notify.info(("%d/%d case(s) moved to %s"):format(n, #movable, target))
+        require("bindings.usrcmds.case.marks").clear()
+      end,
+    })
+  end)
+end
+
+--- `:Case close [nr]` — ROADMAP.md's requested behavior: instead of moving
+--- straight to "Closed" (that's still what `:Case reassign` etc. do for
+--- their own state via M.move_state above), open a destination picker —
+--- any other state, or permanent deletion.
+---@param case_arg string|nil
+function M.close(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to close")
+      return
+    end
+    pick_close_target(("Move case %s to..."):format(entry.short), function(target)
+      if not target then
+        return
+      end
+      if target == entry.state then
+        notify.warn(("%s is already %s"):format(entry.short, target))
+        return
+      end
+      if target == DELETE_TARGET then
+        kit.input({
+          title = ("Type %s to permanently delete"):format(entry.short),
+          on_submit = function(typed)
+            if typed ~= entry.short then
+              notify.warn("delete cancelled (number didn't match)")
+              return
+            end
+            do_delete(entry)
+          end,
+        })
+        return
+      end
+      kit.confirm({
+        question = ("Move case %s to %s?"):format(entry.short, target),
+        on_answer = function(yes)
+          if yes then
+            do_move(entry, target)
+          end
+        end,
+      })
+    end)
+  end)
+end
+
+--- `:Cases close` — bulk version of M.close above. Prefers whatever's
+--- already marked (`:Cases list`'s `m`/Visual-`m`, ROADMAP.md's "marking
+--- system wie in filetree.nvim"); with nothing marked, falls back to an
+--- interactive `<Tab>`-multi-select/`<CR>`-confirm picker over open cases
+--- (kit.select's native `multi = true` chooser). Either way, close_many
+--- then asks ONCE where they all go.
+function M.cases_close()
+  local marks = require("bindings.usrcmds.case.marks")
+  if marks.count() > 0 then
+    local entries = {}
+    for _, short in ipairs(marks.list()) do
+      local e = registry.find(short)
+      if e then
+        entries[#entries + 1] = e
+      end
+    end
+    close_many(entries)
+    return
+  end
+
+  local open_entries = {}
+  for _, e in ipairs(registry.list()) do
+    if e.state == config.default_state then
+      open_entries[#open_entries + 1] = e
+    end
+  end
+  if #open_entries == 0 then
+    notify.warn("no open cases")
+    return
+  end
+  kit.select({
+    message = "Which case(s) to close? (<Tab> to multi-select, <CR> to confirm)",
+    selection = open_entries,
+    multi = true,
+    format_item = function(e)
+      local m = meta.read(e.dir)
+      return (m and m.title and m.title ~= "") and ("%s  %s"):format(e.short, m.title) or e.short
+    end,
+    on_select = close_many,
+    on_cancel = function() end,
+  })
+end
 
 -- ── :Case snow ───────────────────────────────────────────────────────────
 
@@ -1438,20 +1667,82 @@ function M.filter(field, pattern, flags)
   show_results(results, label)
 end
 
---- `:Cases list` — everything, grouped by state.
+--- `:Cases list` — everything, grouped by state. Also the marking view for
+--- ROADMAP.md's "marking system wie in filetree.nvim": `m` toggles the case
+--- under the cursor, a Visual-line range + `m` toggles every case in it,
+--- `c` runs `:Cases close` on whatever ends up marked. Marks persist after
+--- this view closes (marks.lua is a flat set, not buffer-scoped) — mark a
+--- few cases here, close the view, run `:Cases close` whenever, from
+--- anywhere.
 function M.list_all()
   local groups = query.by_state()
-  local lines = {}
+  local marks = require("bindings.usrcmds.case.marks")
+
+  -- Parallel to `lines`: line_rows[i] is the case entry rendered on line i,
+  -- or nil for a header/blank line — built once, stays valid across re-
+  -- renders below since marking only changes a line's `[x]`/`[ ]` prefix,
+  -- never the line count or order.
+  local lines, line_rows = {}, {}
   for _, state in ipairs(config.states) do
     local entries = groups[state] or {}
     lines[#lines + 1] = ("%s (%d)"):format(state, #entries)
     for _, e in ipairs(entries) do
       local m = meta.read(e.dir)
-      lines[#lines + 1] = ("  %-10s %s"):format(e.short, (m and m.title) or "")
+      lines[#lines + 1] = ("%-10s %s"):format(e.short, (m and m.title) or "")
+      line_rows[#lines] = e
     end
     lines[#lines + 1] = ""
   end
-  kit.viewer({ title = "Cases", lines = lines })
+
+  local function render_lines()
+    local out = {}
+    for i, text in ipairs(lines) do
+      local e = line_rows[i]
+      out[i] = e and ((marks.is_marked(e.short) and "[x] " or "[ ] ") .. text) or text
+    end
+    return out
+  end
+
+  local surf = kit.viewer({ title = "Cases  (m mark, V+m mark range, c close marked)", lines = render_lines() })
+  if not surf then
+    return
+  end
+
+  ---@param lineno integer
+  local function toggle_line(lineno)
+    local e = line_rows[lineno]
+    if e then
+      marks.toggle(e.short)
+    end
+  end
+
+  local map = require("lib.nvim.map")
+  local mo = { buffer = surf.bufnr, nowait = true }
+
+  map("n", "m", function()
+    toggle_line(vim.api.nvim_win_get_cursor(surf.winid)[1])
+    surf:set_lines(render_lines())
+  end, mo)
+
+  map("x", "m", function()
+    local from, to = vim.fn.line("v"), vim.fn.line(".")
+    if from > to then
+      from, to = to, from
+    end
+    for lineno = from, to do
+      toggle_line(lineno)
+    end
+    surf:set_lines(render_lines())
+  end, mo)
+
+  map("n", "c", function()
+    if marks.count() == 0 then
+      notify.warn("no cases marked (press m on a case line first)")
+      return
+    end
+    surf:close()
+    M.cases_close()
+  end, mo)
 end
 
 --- `:Cases find company=Scan year=2026 [--exact|-e] [--re|-r]` —

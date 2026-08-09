@@ -36,7 +36,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case ki import [nr]` | — | Paste an AI answer (in the format `:Case ki` asked for) from the clipboard and file it: analysis/difficulty/next-steps → `Research/NN_KiAnalysis.md`, English reply draft → new `Replies/NN_Reply.md` (still goes through `:Case reply check`, never auto-sent), internal German notes → appended to `Notes.md` |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
-| `:Case close [nr]` | — | Move to `Closed/`, delete its saved session if it had one (SESSIONS.md §6) |
+| `:Case close [nr]` | — | Pick a destination (`kit.select`): any other state, or "Delete permanently" (types the case number back to confirm — irreversible, not a bare y/n). Moving deletes the case's saved session too, if it had one (SESSIONS.md §6) |
 | `:Case reassign [nr]` | — | Move to `Reassigned/`, delete its saved session if it had one (SESSIONS.md §6) |
 | `:Case snow [nr]` | — | Open the ServiceNow ticket URL (if `config.snow_url_format` is set) or copy the ticket id |
 | `:Case sla [nr] [--doc]` | — | SAP-SLA status (see [SLA.md](../../ROADMAP/casedesk/SLA.md)): Erstreaktion/Rückmeldung/Korrekturmaßnahme, each as an absolute deadline + remaining time. Rückmeldung shows "wartet auf Kunden" instead of a countdown while the case sits in SNOW's own "Awaiting User Info" — it resets to a full fresh budget once they reply, not resumed from wherever it stood. `nil`/no line when the case has no parseable priority yet. `--doc` opens the source `SLA_ServiceLevelAgreement.md` instead, no case needed |
@@ -48,7 +48,8 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 
 | Command | Args | What |
 | --- | --- | --- |
-| `:Cases list` | — | Every case, grouped by state |
+| `:Cases list` | — | Every case, grouped by state. Also the mark view: `m` toggles the case under the cursor, a Visual-line range + `m` toggles every case in it, `c` runs `:Cases close` on whatever's marked |
+| `:Cases close` | — | Close several cases at once. Uses existing marks (`:Cases list`'s `m`) if any; otherwise opens `kit.select({multi=true})` — `<Tab>` toggles cases, `<CR>` confirms the set. Either way, asks ONCE where they all go (same destination picker as `:Case close`, incl. delete — bulk delete types `DELETE` to confirm) |
 | `:Cases title/company/name/notes/priority/tosca_version [pattern] [--exact\|-e] [--re\|-r]` | one route per `config.infocard_fields` entry | Substring case-insensitive by default; `--exact`/`-e` = full-string equality; `--re`/`-r` = Lua pattern (case-**sensitive**, see Notes below). Empty pattern = "field is set at all". One hit opens its infocard directly, several go to `kit.select` |
 | `:Cases find key=value ... [--exact\|-e] [--re\|-r]` | bare `key=value` pairs, no dashes | AND-combination across several `infocard_fields` at once, e.g. `:Cases find company=Scan year=2026` |
 | `:Cases grep <pattern> [--re\|-r]` | — | Full-text search across every case's `.md` files (not `Ressources/` attachments). Report via `kit.viewer`, capped at 500 hits |
@@ -153,13 +154,26 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   internal `Source`+`engine_mod` object from its own config/engine
   resolution, not a trivial "picker over this list" entry point.
 - **Renames go through `lib.nvim.cross.fs.mutate.rename_file`, not a bare
-  `uv.fs_rename`** (`normalize.lua`, `:Case close`/`reassign`) — retries a
-  few times with backoff on Windows when a directory watcher or AV/indexer
+  `uv.fs_rename`** (`normalize.lua`, `:Case(s) close`/`reassign`) — retries
+  a few times with backoff on Windows when a directory watcher or AV/indexer
   scan holds a transient lock on the file/folder being renamed. Looked at
   `fileops.nvim` for this first; its `rename`/`move` API turned out to
   operate on "the current buffer's file" only, not an arbitrary path, so it
   doesn't fit a bulk rename across the bestand — `mutate.rename_file` is
-  the layer underneath that `fileops.nvim` itself uses.
+  the layer underneath that `fileops.nvim` itself uses. `:Case(s) close`'s
+  "Delete permanently" destination goes through the same `mutate.retry`
+  (wrapping `vim.fn.delete(dir, "rf")`, the same Windows-lock risk as a
+  rename) — deliberately behind a stronger confirm than every other
+  mutation here, since it's the one action in this module with no undo:
+  typing the case number back for one case, `DELETE` for a batch, never a
+  plain y/n.
+- **Marks (`marks.lua`) are a flat, session-global set of case numbers, not
+  tied to any buffer or window.** Mark a few cases in `:Cases list`, close
+  that view, run `:Cases close` five minutes (or five other commands)
+  later — the marks are still there. `:Cases close` clears them after a
+  successful apply, not before (a cancelled destination picker or bulk
+  delete leaves the marks exactly as they were, so nothing is lost to a
+  changed mind).
 - **`:Case reply check` doesn't reimplement spelling/grammar.** `s` in its
   report just launches `language.nvim`'s own `:Spellcheck` on the buffer —
   that plugin already owns the domain, and its result (buffer highlighting)

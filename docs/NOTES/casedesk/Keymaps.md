@@ -26,6 +26,23 @@ Every case also gets this run once automatically right after `:Case new`
 finishes scaffolding (SESSIONS.md §3) — a case has a session from the
 moment it's created, not only after the first manual `<leader>cs`.
 
+### `:Cases list` — the mark view
+
+Source: `lua/bindings/usrcmds/case/ui.lua`, `M.list_all()`, backed by
+`marks.lua` (a flat, session-global set of case numbers — not buffer-local,
+survives this view closing). ROADMAP.md's "marking system wie in
+filetree.nvim": mark cases here, run `:Cases close` whenever afterward.
+
+| lhs | mode | action |
+| --- | --- | --- |
+| `m` | n | Toggle the mark on the case under the cursor, re-render (`[x]`/`[ ]` prefix) |
+| `m` | x (Visual-line) | Toggle the mark on every case in the selected line range |
+| `c` | n | If anything is marked: close the view and run `:Cases close` (§ below) on the marks. Otherwise: warn, no-op |
+
+`q`/`<Esc>` close the view without touching marks — same generic
+`kit.viewer` behavior as the infocard below, not something this view sets
+up itself.
+
 ### `:Case info [nr]` — the infocard
 
 Source: `lua/bindings/usrcmds/case/ui.lua`, `M.info()`.
