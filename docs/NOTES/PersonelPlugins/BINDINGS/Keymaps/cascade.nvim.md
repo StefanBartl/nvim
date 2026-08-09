@@ -90,6 +90,13 @@ installed and preset keymaps are enabled. No-op otherwise.
 
 ## Changelog
 
+- 2026-08-09: added `<leader>cp` (`cycle_pick`, interactive `vim.ui.select`
+  over a cycle group's entries); `+`/`-` extended to also flip operator
+  groups and step ISO date segments.
 - 2026-08-08: added word swap (`<leader><C-Right>`/`<leader><C-Left>`, n+x,
   new `features.word`) and count support (`N<lhs>` = swap N times) on both
-  char and word transpose, normal and visual.
+  char and word transpose, normal and visual. Written 2026-08-08 from a
+  feature branch that wasn't actually merged into cascade.nvim's `main` at
+  the time — merged 2026-08-09 (the branch's own count-fix bug was, by
+  coincidence, independently rediscovered and fixed the same way while it
+  sat unmerged; the two were reconciled into one merge commit).
