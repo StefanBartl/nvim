@@ -19,14 +19,14 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       `Research/` mit einbeziehen.
 
 - [ ] **Artefakt-Extraktion (Rest)** — eigenes Konzept:
-      [EXTRACTION.md](EXTRACTION.md). Pakete 1+2 stehen (`:Case versions
-      [component] [nr] [--all] [--raw]` aus `ToscaSupportInfo*.txt` +
-      Stream-Fallback für `server`; `extract/stream.lua` für Versionen im
+      [EXTRACTION.md](EXTRACTION.md). Pakete 1–3 stehen (`:Case versions
+      [component] [nr] [--all] [--raw]` inkl. Stream-Fallback für
+      `server`; `extract/stream.lua` für Versionen im
       Fließtext/KBA-Nummern/Anhänge/Stammdaten, `sap_component`/`versions`
-      automatisch nach `.case.json` via `:Case activity`,
-      Vollständigkeits-Check als `:Cases doctor`-Fund `stream-incomplete`
-      — gegen echte Support-Infos und Stream verifiziert). Offen: Paket 3
-      (`:Case doclinks` als Versionsabgleich der Tricentis-Doku-Links),
+      automatisch nach `.case.json`; `:Case doclinks [nr]` +
+      Einbau in `:Case reply check`, dreistufige Versionsauflösung — real
+      an Case 1041708 einen echten Doku-Link auf falscher Version
+      gefunden. Alles gegen echte Bestandsdaten verifiziert). Offen:
       Paket 4 (SLA-Korrektur: Uhr pausiert bei `Awaiting User Info` —
       entschieden, noch nicht gebaut), Paket 5 (Faktenblock als Fundament
       für die KI-Anbindung).

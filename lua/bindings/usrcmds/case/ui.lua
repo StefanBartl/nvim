@@ -347,6 +347,22 @@ function M.reply_check()
   local replygate = require("bindings.usrcmds.case.replygate")
   local bufnr = vim.api.nvim_get_current_buf()
 
+  -- EXTRACTION.md §6/§11 Q5: doc-link version check, resolved synchronously
+  -- up front (unlike replygate's async link-liveness check below, this is
+  -- pure local file scanning, no network) so it lands in the same report.
+  -- Not reused by the `m` keymap below, which deliberately re-resolves its
+  -- own case from whatever buffer is current when it's actually pressed.
+  local doclink_mismatches, doclink_customer_version, doclink_source
+  do
+    local report_entry = resolve.sync(nil)
+    if report_entry then
+      local doclinks = require("bindings.usrcmds.case.extract.doclinks")
+      local case_meta = meta.read(report_entry.dir)
+      doclink_mismatches, doclink_customer_version, doclink_source =
+        doclinks.check(report_entry.dir, case_meta and case_meta.tosca_version)
+    end
+  end
+
   notify.info("checking reply…")
   replygate.check(bufnr, function(report)
     vim.schedule(function()
@@ -381,6 +397,23 @@ function M.reply_check()
           if r.status ~= "alive" then
             lines[#lines + 1] = ("  %-4s %s (%s)"):format(r.status, r.url, r.detail)
           end
+        end
+      end
+
+      -- EXTRACTION.md §6: a live doc link on the WRONG Tosca version is
+      -- worse than a dead one — the customer follows it.
+      if doclink_customer_version then
+        if #doclink_mismatches > 0 then
+          lines[#lines + 1] = ("Doc links   %d on the wrong version (customer: %s, %s)"):format(
+            #doclink_mismatches,
+            doclink_customer_version,
+            doclink_source
+          )
+          for _, mm in ipairs(doclink_mismatches) do
+            lines[#lines + 1] = ("  tosca-%s  %s"):format(mm.found_version, mm.file)
+          end
+        else
+          lines[#lines + 1] = ("Doc links   none on a different version (customer: %s)"):format(doclink_customer_version)
         end
       end
 
@@ -1112,6 +1145,48 @@ function M.copy(src, case_arg)
     else
       kit.input({ prompt = "Source file", completion = "file", on_submit = with_src })
     end
+  end)
+end
+
+-- ── :Case doclinks ───────────────────────────────────────────────────────
+
+--- `:Case doclinks [nr]` — EXTRACTION.md §6: every `docs.tricentis.com`
+--- link in the case (Activity Streams + Replies) pointing at a DIFFERENT
+--- Tosca version than the customer's own. Also woven into `:Case reply
+--- check` below (EXTRACTION.md §11 Q5 answered "both, not either/or" —
+--- catching this BEFORE sending is the actual point).
+---@param case_arg string|nil
+function M.doclinks(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to check doc links for")
+      return
+    end
+    local doclinks = require("bindings.usrcmds.case.extract.doclinks")
+    local m = meta.read(entry.dir)
+    local mismatches, customer_version, source = doclinks.check(entry.dir, m and m.tosca_version)
+    if not customer_version then
+      notify.warn(
+        ("%s: no Tosca version known (set it via :Case info's edit form, or paste an Activity Stream first)"):format(
+          entry.short
+        )
+      )
+      return
+    end
+    local lines = {
+      ("%s · customer version %s (%s)"):format(entry.short, customer_version, source),
+      "",
+    }
+    if #mismatches == 0 then
+      lines[#lines + 1] = "No doc links pointing at a different version."
+    else
+      lines[#lines + 1] = ("%d doc link(s) pointing at a different version:"):format(#mismatches)
+      for _, mm in ipairs(mismatches) do
+        lines[#lines + 1] = ("  tosca-%s  %s"):format(mm.found_version, mm.file)
+        lines[#lines + 1] = ("           %s"):format(mm.url)
+      end
+    end
+    kit.viewer({ title = "Doc links", lines = lines })
   end)
 end
 

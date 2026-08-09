@@ -27,8 +27,18 @@ und `Research/NN_ActivityStream.md` (aus SNOW kopiert).
 > `docs.tricentis.com`-Links aus anderen Case-Dateien verifiziert (nicht
 > aus einem Stream), `error_codes`/`escalations` bleiben ungetestet gegen
 > echten Treffer.
+>
+> **Paket 3 steht** (2026-08-10): `extract/doclinks.lua`, `:Case doclinks
+> [nr]`, Einbau in `:Case reply check`. Kundenversion wird dreistufig
+> aufgelöst (`.case.json` → Support-Info über `detect.tosca_version` →
+> Stream-Commander-Version, zuverlässigste Quelle zuerst) und auf
+> Doc-Link-Form normalisiert (`25.1.7`/`2026.1` beide → `2025.1`/`2026.1`).
+> Gegen einen echten Fund verifiziert: Case 1041708 läuft laut
+> Support-Info auf `25.1.2`, ein Reply verlinkt `tosca-2026.1` — genau der
+> Fehler, den EXTRACTION.md §6 als Motivation nennt, real im eigenen
+> Bestand gefunden, nicht nur im Worked Example nachgestellt.
 
-Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Offene Pakete 3–5:
+Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Offene Pakete 4–5:
 [ROADMAP.md](ROADMAP.md). Der SLA-Teil des Stream-Parsers
 (`sla/stream.lua`) steht bereits eigenständig, siehe [SLA.md](SLA.md).
 
@@ -526,8 +536,10 @@ importiert, nicht umgekehrt.
    einen echten Stream ohne Support-Info verifiziert (Case 977392).
 4. Sollen Custom-DLLs in `Summary.md` einfließen (SNOW-sichtbar) oder nur
    in `Notes.md` (intern)?
-5. `:Case doclinks` eigenständig oder nur als Prüfschritt in
-   `:Case reply check`?
+5. ~~`:Case doclinks` eigenständig oder nur als Prüfschritt in `:Case
+   reply check`?~~ **Entschieden (Paket 3): beides.** Eigener Befehl für
+   den gezielten Check, plus eine zusätzliche Zeile im bestehenden
+   `:Case reply check`-Report — kein Entweder-oder.
 
 ## 12. Reihenfolge
 
@@ -546,8 +558,12 @@ Vollständigkeits-Check als `:Cases doctor`-Fund `stream-incomplete`.
 kein reales Vorkommen zum Prüfen), `custom_dlls` nach `.case.json`
 (Paket 1s Digest berechnet es live, schreibt aber noch nichts weg).
 
-**Paket 3 — Doku-Versionsprüfung** · `extract/doclinks.lua` ·
-`:Case doclinks` · Einbau in `:Case reply check`.
+**Paket 3 — Doku-Versionsprüfung (steht, 2026-08-10):**
+`extract/doclinks.lua` · `:Case doclinks [nr]` · Einbau in `:Case reply
+check`. Kundenversion dreistufig aufgelöst (`.case.json` →
+`detect.tosca_version` → Stream-Commander), beide Versionsformate
+(`25.1.7`/`2026.1`) auf Doc-Link-Form normalisiert. Realer Fund: Case
+1041708 läuft auf `25.1.2`, ein Reply verlinkt `tosca-2026.1`.
 
 **Paket 4 — SLA-Korrektur (entsperrt, §11.1 entschieden):** `states` in
 `sla/stream.lua` · Pausen-Intervalle in `clock.elapsed` ·

@@ -292,6 +292,14 @@ function M.enable()
       end,
     },
     {
+      path = { "doclinks" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "docs.tricentis.com links (Activity Streams + Replies) pointing at a different Tosca version than the customer's own",
+      run = function(ctx)
+        ui.doclinks(ctx.args.case)
+      end,
+    },
+    {
       path = { "versions" },
       args = {
         { name = "component", type = "STRING", optional = true },

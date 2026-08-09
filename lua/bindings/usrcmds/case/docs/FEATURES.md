@@ -12,6 +12,30 @@ listed here only as a pointer.
 
 Module: `lua/bindings/usrcmds/case/`.
 
+## `:Case doclinks` (EXTRACTION.md Paket 3)
+
+Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+§6, §12 (Paket 3, steht seit 2026-08-10). `extract/doclinks.lua` compares
+every `docs.tricentis.com/tosca-<version>/` link found in a case (Activity
+Streams + Replies) against the customer's actual Tosca version — a live
+doc link on the wrong product version is worse than a dead one, because
+the customer follows it.
+
+- **Three-tier version resolution**, most reliable first: `.case.json`'s
+  `tosca_version` (hand-confirmed) → the support-info header
+  (`detect.tosca_version`) → the newest Activity Stream's Commander
+  version (`extract.stream`, prose, last resort).
+- **Both Tosca version shapes normalized to the doc-link's own form**
+  (`<4-digit-year>.<minor>`) before comparing — `25.1.7` and `2026.1` both
+  need to become `2025.1`/`2026.1`, since a doc URL never carries a patch
+  digit. Comparing raw strings would flag every case as a false mismatch.
+- **Real find, not just the worked example**: case 1041708 runs `25.1.2`
+  per its own support-info; a reply in that same case links `tosca-2026.1`
+  — exactly the class of mistake EXTRACTION.md §6 was written to catch,
+  present in the actual bestand.
+- **`:Case doclinks [nr]`** stands alone AND is folded into `:Case reply
+  check`'s report (EXTRACTION.md §11 Q5 — decided "both, not either/or").
+
 ## `:Case versions` (EXTRACTION.md Paket 1)
 
 Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)

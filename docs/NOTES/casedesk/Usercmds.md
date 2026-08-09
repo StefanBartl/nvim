@@ -29,12 +29,13 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case open [nr]` | — | Open the case folder (filetree reveal if `filetree.nvim` is loaded, else netrw) |
 | `:Case add <name> [suffix]` | `name`, optional `suffix` | New `<name>.md` in the case root. `name == "reply"` is special: auto-numbers into `Replies/`, `[suffix]` overrides the stem (`:Case add reply AskForPDF` → `NN_AskForPDF.md`; omitted → `NN_Reply.md`) |
 | `:Case activity [nr]` | — | Paste the system clipboard (a ServiceNow Activity Stream) into a new auto-numbered `Research/NN_ActivityStream.md`. Also auto-detects Priority (SLA.md §6A), `sap_component`, and `versions.server`/`versions.commander` (EXTRACTION.md §8) straight into `.case.json` — no manual step |
-| `:Case reply check` | — | Pre-send gate on the **current buffer**: emoji count (`c` removes), stray markdown headlines, dead links, `s` launches `language.nvim`'s spellcheck on the buffer |
+| `:Case reply check` | — | Pre-send gate on the **current buffer**: emoji count (`c` removes), stray markdown headlines, dead links, doc links on a different Tosca version than the customer's own (EXTRACTION.md §6), `s` launches `language.nvim`'s spellcheck on the buffer |
 | `:Case similar [nr] [n]` | `n`, default 5 | Past cases whose title + `Summary.md` share the most distinctive vocabulary (TF-IDF cosine, no AI). Each hit shows the matched terms — the ranking is lexical, so seeing *why* it matched is how you judge it |
 | `:Case timeline [nr]` | — | Work sessions reconstructed from file mtimes, oldest first — touches within `config.timeline_session_gap_minutes` (default 120) of each other count as one sitting. Each session's duration is a **lower bound** (a save marks when editing stopped, not started) |
 | `:Case ki [nr]` | — | Build the AI-analysis prompt (role + policies + this case's activity stream, from the clipboard, PLUS one line of SLA urgency context so the model scopes its answer accordingly — SLA.md §6E) and copy it back to the clipboard, ready to paste into an AI chat. Also saved as `Research/NN_KiPrompt.md` |
 | `:Case ki import [nr]` | — | Paste an AI answer (in the format `:Case ki` asked for) from the clipboard and file it: analysis/difficulty/next-steps → `Research/NN_KiAnalysis.md`, English reply draft → new `Replies/NN_Reply.md` (still goes through `:Case reply check`, never auto-sent), internal German notes → appended to `Notes.md` |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
+| `:Case doclinks [nr]` | — | Every `docs.tricentis.com/tosca-<version>/` link in the case (Activity Streams + Replies) pointing at a version other than the customer's own. Customer version resolved most-reliable-first: `.case.json` → support-info (`detect.tosca_version`) → newest Activity Stream's Commander version. Also folded into `:Case reply check` (EXTRACTION.md §6) |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
 | `:Case versions [component] [nr] [--all] [--raw]` | `component` — a `config.version_components` name, `server`, or any substring of any filename in the report | No args: curated digest (Testsuite/TBox build/Api Core/Install-Root + the "Auffällig" custom-DLL section) from `Ressources/ToscaSupportInfo*.txt`. A `component` copies its version to the clipboard (several matches → `kit.select`). `component = server` falls back to the newest Activity Stream's "Tosca Server - v…" prose — the support-info never has it, EXTRACTION.md §4.1 — and works even with no support-info file at all. `--all` lists every entry, grouped by directory. `--raw` opens the file itself |
 | `:Case close [nr]` | — | Pick a destination (`kit.select`): any other state, or "Delete permanently" (types the case number back to confirm — irreversible, not a bare y/n). Moving deletes the case's saved session too, if it had one (SESSIONS.md §6) |
@@ -187,6 +188,13 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   same header — EXTRACTION.md §2. `report_created` is the same story:
   two locale-dependent formats (12h vs. 24h) with no field telling you
   which, so it's shown verbatim and never fed to a date parser.
+- **`:Case doclinks` normalizes both Tosca version shapes to the doc-link's
+  own form before comparing** — a doc URL only ever carries
+  `<4-digit-year>.<minor>` (`tosca-2025.1`, never a patch digit), while the
+  Testsuite version itself can be `25.1.7` (2-digit year) or `2026.1`
+  (4-digit year, no patch, EXTRACTION.md §2). Comparing raw strings would
+  flag every single case as a false mismatch. Real find: case 1041708 runs
+  `25.1.2` per its support-info, one reply links `tosca-2026.1`.
 - **A curated `version_components` entry (e.g. `tbox`) can genuinely exist
   in the support-info under two different paths with two different
   versions** — `Tricentis.AutomationBase.dll` ships its own copy under
