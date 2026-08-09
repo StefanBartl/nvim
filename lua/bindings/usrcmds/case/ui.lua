@@ -571,6 +571,37 @@ end
 
 -- ── :Case ki / :Case ki import ───────────────────────────────────────────
 
+--- SLA.md §6E: one line of urgency context for `:Case ki`'s prompt (the
+--- `{sla}` token, KiPrompt.md) — so the model scopes its answer to how much
+--- time this case actually has, instead of always defaulting to an
+--- exhaustive write-up. Never fails: no priority or no anchored clock both
+--- degrade to a plain sentence saying so, rather than omitting the line.
+---@param entry Lib.Case.RegistryEntry
+---@return string
+local function sla_context_line(entry)
+  local ok_sla, sla = pcall(require, "bindings.usrcmds.case.sla")
+  if not ok_sla then
+    return "not available"
+  end
+  local ok_status, status = pcall(sla.status, entry)
+  if not ok_status or not status then
+    return "Priorität nicht gesetzt"
+  end
+  local worst = sla.most_urgent(status)
+  if not worst then
+    return ("Priorität %s (%s) — keine Frist anker-bar (fehlende Zeitangaben im Stream)"):format(
+      status.digit,
+      status.level.label
+    )
+  end
+  return ("Priorität %s (%s) — dringlichste Frist: %s in %s"):format(
+    status.digit,
+    status.level.label,
+    worst.label,
+    sla.format_duration(worst.remaining)
+  )
+end
+
 --- `:Case ki [nr]` — build the AI-analysis prompt for this case (role +
 --- policies + this case's activity stream from the clipboard, `ki.lua`,
 --- CONCEPT.md §8i) and put it back on the clipboard, ready to paste into
@@ -595,6 +626,7 @@ function M.ki(case_arg)
       title = m and m.title,
       company = m and m.company,
       name = m and m.name,
+      sla = sla_context_line(entry),
     }, content)
     if prompt == "" then
       notify.error("ki: prompt template missing or empty (templates/KiPrompt.md)")

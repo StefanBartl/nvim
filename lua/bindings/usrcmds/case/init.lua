@@ -179,6 +179,12 @@ end
 function M.enable()
   register_case_type()
 
+  -- SLA.md §6C Paket 4: active push notifications for P1/P2 breaches, on
+  -- top of the passive statusline badge. Guarded internally by
+  -- config.sla_notifications_enabled and idempotent, same as every other
+  -- optional integration this module wires up.
+  require("bindings.usrcmds.case.sla.notify").setup()
+
   local routes = {
     {
       path = { "new" },

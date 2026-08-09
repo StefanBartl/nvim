@@ -170,10 +170,25 @@ M.sla = {
 --- already overdue).
 M.sla_warn_at = 0.25
 
---- Priorities the statusline badge and any future active notification
---- (SLA.md §6C, not built yet) fire for. P3/P4 have week-plus budgets —
---- a badge for those would be near-permanent noise, not a signal.
+--- Priorities the statusline badge AND the active notifications below
+--- (SLA.md §6C) fire for. P3/P4 have week-plus budgets — a badge/warning
+--- for those would be near-permanent noise, not a signal.
 M.sla_active_priorities = { "1", "2" }
+
+--- SLA.md §6C Paket 4: push notifications on top of the passive statusline
+--- badge, for `sla_active_priorities` only. One notification per (case,
+--- clock, deadline) — `sla/notify.lua` never repeats it for the same
+--- breach, but re-arms once a clock resets to a fresh period (e.g. cadence
+--- after a customer reply changes the deadline). Off entirely: set false.
+M.sla_notifications_enabled = true
+
+--- How often the background timer re-checks every open, active-priority
+--- case, in seconds. A `FocusGained` autocmd checks immediately on top of
+--- this — "im Auge behalten" shouldn't need to wait out a stale interval
+--- right when you sit back down. 15 min is deliberately loose: this is a
+--- safety net for "case sat untouched", not a live countdown (the
+--- statusline badge already covers that while the buffer is focused).
+M.sla_notify_interval_seconds = 900
 
 --- `:Cases stale`'s per-priority idle threshold, in days (SLA.md §6C:
 --- "für einen P2 sind 7 Tage absurd spät, für einen P4 normal"). Tuned by

@@ -36,6 +36,7 @@ local DIGIT_KEY = {
 ---@field title string|nil
 ---@field company string|nil
 ---@field name string|nil
+---@field sla string|nil  One-line SLA context (SLA.md §6E) — priority + the most urgent clock's remaining time, so the AI scopes its answer to how much time this actually has. `{sla}`, deliberately no underscore: templates.lua's `%{(%w+)%}` substitution pattern doesn't match one (see `{activitystream}`'s own comment below).
 
 --- Assemble the full prompt for this case's activity stream.
 ---@param tokens Lib.Case.KiTokens
@@ -47,6 +48,7 @@ function M.build_prompt(tokens, activity_stream)
     title = tokens.title,
     company = tokens.company,
     name = tokens.name,
+    sla = tokens.sla,
     activitystream = vim.trim(activity_stream or ""),
   }
   local lines = templates.render(templates.KI_PROMPT, render_tokens)

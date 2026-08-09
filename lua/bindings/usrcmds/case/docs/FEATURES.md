@@ -12,6 +12,33 @@ listed here only as a pointer.
 
 Module: `lua/bindings/usrcmds/case/`.
 
+## Active SLA notifications + KI-prompt context (SLA.md Paket 4, last one)
+
+Konzept: [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md) §6C, §6E,
+§10 (Paket 4, steht seit 2026-08-10 — mit diesem Paket ist SLA-Überwachung
+komplett fertig, kein ROADMAP.md-Eintrag mehr).
+
+- **`sla/notify.lua`** — Timer (`config.sla_notify_interval_seconds`,
+  Default 15 min) + `FocusGained`-Autocmd prüfen jeden offenen
+  `sla_active_priorities`-Case gegen `sla_warn_at` und warnen je Bruch
+  genau einmal (Dedup-Key `short|label|deadline`) — auf dem bestehenden
+  Statusline-Badge oben drauf, das nur hilft, solange der Case-Buffer
+  fokussiert ist. Ein Zustandswechsel, der `deadline` ändert (z. B.
+  Rückmeldung-Reset nach Kundenantwort), bewaffnet die Warnung automatisch
+  neu — kein separater Reset-Schritt. `config.sla_notifications_enabled
+  = false` schaltet alles ab.
+- **SLA-Kontext im KI-Prompt** — neuer `{sla}`-Token (kein Unterstrich,
+  `templates.lua`s `%{(%w+)%}` matcht keinen) in `templates/KiPrompt.md`,
+  gefüllt von `ui.lua`s `sla_context_line` (`ki.lua`s `M.build_prompt`
+  reicht ihn nur durch). Eine Zeile Priorität + dringlichste Frist, damit
+  das Modell seine Antwort danach skaliert (Aktionsplan bei Stunden,
+  ausführlichere Lösung bei Wochen).
+- **Wordings-Baustein „laufende Rückmeldung"** — neues
+  `Workflow/Templates/Wordings/OngoingUpdate.md` im Arbeits-Repo (drei
+  Varianten: ohne neue Info, mit Zwischenschritt, mit Engineering-
+  Eskalation), taucht in `:Case template` ohne Codeänderung auf
+  (CONCEPT.md §8b).
+
 ## `:Cases sla report [--year N]` (SLA.md Paket 3)
 
 Konzept: [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md) §6D, §10

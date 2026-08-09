@@ -3,9 +3,10 @@
 Grundlage: `C:\repos\WKDBook-Tricentis\Workflow\SLA_ServiceLevelAgreement.md`
 ([Confluence](https://tricentis.atlassian.net/wiki/spaces/SUP/pages/320726887/SAP+Service+Level+Agreements+SLAs)).
 
-Paket 1 steht (§10). Fertige Features stehen sonst in [CONCEPT.md](CONCEPT.md),
-offene Punkte in [ROADMAP.md](ROADMAP.md) — dieses Dokument bleibt die
-Vorarbeit für den Rest der `sla/`-Bausteine.
+**Alle vier Pakete stehen** (§10, Paket 4 zuletzt am 2026-08-10) — SLA-
+Überwachung ist fertig, deshalb kein Eintrag mehr in ROADMAP.md. Fertige
+Features stehen sonst in [CONCEPT.md](CONCEPT.md) — dieses Dokument bleibt
+der Design-Hintergrund für die `sla/`-Bausteine.
 
 ---
 
@@ -362,9 +363,16 @@ lua/bindings/usrcmds/case/
     init.lua      -- öffentliche API: status(case), most_urgent(), under_threshold()
     clock.lua     -- elapsed/deadline, Geschäftszeit-Rechnung (rein, testbar)
     stream.lua    -- Activity-Stream -> Lib.Case.SlaEvent[]
+    notify.lua    -- Paket 4: Timer + FocusGained, Dedup-Set, eigener Lifecycle (setup())
   query.lua       -- sla_dashboard(), sla_report(year) — Datensammlung, kein eigenes render.lua
   ui.lua          -- M.sla/M.cases_sla/M.cases_sla_report — kit.viewer/kit.select-Rendering
 ```
+
+`notify.lua` bekam sein eigenes Untermodul (anders als der Report, der ganz
+ohne neue Datei auskam) — es braucht einen echten Lifecycle (Timer starten/
+laufen lassen) und eigenen Zustand (das Dedup-Set), beides passt weder in
+`ui.lua`s zustandslose kit-Wiring-Funktionen noch in `query.lua`s reine
+Datensammlung.
 
 Kein separates `render.lua` geworden — anders als hier ursprünglich
 skizziert, landete die Report-Aggregation in `query.lua` (Datensammlung)
@@ -438,7 +446,21 @@ dem sich ein Rechenfehler lautlos versteckt.
 > Priorität (beide Anker, §9.1 bleibt offen), Ausreißer mit Delta,
 > Ehrlichkeitsklausel als zweite Zeile im Report selbst. Anders als
 > `:Cases sla` (nur offene Cases) zieht der Report über **jeden** Zustand
-> (§9 Q5). Nur Paket 4 bleibt offen.
+> (§9 Q5).
+>
+> **Paket 4 ist umgesetzt** (2026-08-10, letztes Paket — SLA-Überwachung
+> ist damit fertig): `sla/notify.lua` — Timer (`config.
+> sla_notify_interval_seconds`, Default 15 min) + `FocusGained`-Autocmd,
+> die jeden offenen `sla_active_priorities`-Case gegen `sla_warn_at` prüfen
+> und je Bruch genau einmal warnen (Dedup-Key `short|label|deadline` — ein
+> Reset auf eine neue Periode, z. B. Rückmeldung nach Kundenantwort, ändert
+> `deadline` und bewaffnet die Warnung dadurch automatisch neu, ohne
+> eigenen Reset-Schritt). Ganz abschaltbar über `config.
+> sla_notifications_enabled = false`. SLA-Kontext im KI-Prompt (`{sla}` in
+> `KiPrompt.md`, kein Unterstrich — dieselbe Regel wie `{activitystream}`)
+> und der neue Wordings-Baustein „laufende Rückmeldung"
+> (`Workflow/Templates/Wordings/OngoingUpdate.md`, drei Varianten) kamen
+> im selben Durchgang dazu.
 
 **Paket 1 — Fundament + Sichtbarkeit** (das eigentliche „im Auge behalten"):
 Priorität aus dem Stream parsen · `config.sla` · `clock.lua` + `stream.lua` ·
@@ -450,11 +472,13 @@ prioritätsabhängig · `:Case sla --doc`.
 **Paket 3 — Exaktheit (steht, 2026-08-10):** `last_reply_sent` via `:Case
 reply check` (kam bereits mit Paket 1) · `:Cases sla report`.
 
-**Paket 4 — Aktiv:** Notifications für P1/P2 · Rückmeldetakt-Wecker ·
-SLA-Kontext im KI-Prompt · Wordings-Baustein.
+**Paket 4 — Aktiv (steht, 2026-08-10):** Notifications für P1/P2 ·
+Rückmeldetakt-Wecker (dieselbe Prüfung, `cadence` ist einfach einer der
+geprüften Clocks — keine zwei Mechanismen) · SLA-Kontext im KI-Prompt ·
+Wordings-Baustein.
 
 Paket 1 ist für sich nützlich und ohne die offenen Fragen aus §9 baubar
-(solange beide Startzeitpunkte angezeigt werden). Paket 4 zuletzt, weil
+(solange beide Startzeitpunkte angezeigt werden). Paket 4 kam zuletzt, weil
 Warnungen erst Sinn ergeben, wenn die Zahlen dahinter stimmen.
 
 ## 11. Worked Example: 977392

@@ -25,13 +25,6 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
-- [ ] **SLA-Überwachung (Rest)** — eigenes Konzept: [SLA.md](SLA.md). Pakete
-      1–3 stehen (inkl. §3-Nachtrag: Rückmeldung resettet statt pausiert bei
-      `Awaiting User Info`, §9.6 geklärt; `:Cases sla` Dashboard,
-      prioritätsabhängiges `:Cases stale`, `:Case sla --doc`,
-      `:Cases sla report [--year N]`). Offen: Paket 4 (Notifications,
-      Rückmeldetakt-Wecker, SLA-Kontext im KI-Prompt, Wordings-Baustein).
-
 - [ ] **Artefakt-Extraktion** — eigenes Konzept: [EXTRACTION.md](EXTRACTION.md).
       `:Case versions [component]` aus `ToscaSupportInfo*.txt` (Digest statt
       1600-Zeilen-Liste, Custom-DLL-Erkennung), Stream-Signale jenseits der
