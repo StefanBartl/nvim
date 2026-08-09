@@ -29,7 +29,7 @@ plugins.add({
       local target_specs = {
         { vim.fn.stdpath("config"), "lua", "plugins", "personal", "init.lua" },
         { vim.fn.stdpath("config"), "docs", "ROADMAP", "ROADMAP.md" },
-        { "$REPOS_DIR", "Notes", "spickzettel", "spickzettel.md" },
+        { "$REPOS_DIR", "WKDBooks", "Spickzettel", "spickzettel.md" },
       }
 
       -- Work-specific Harpoon targets: only exist/matter on the workstation.

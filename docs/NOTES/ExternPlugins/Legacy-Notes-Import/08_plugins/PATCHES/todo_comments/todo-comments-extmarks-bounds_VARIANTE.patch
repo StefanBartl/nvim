@@ -1,0 +1,37 @@
+diff --git a/lua/todo-comments/highlight.lua b/lua/todo-comments/highlight.lua
+index 6b7e0d1..patched 100644
+--- a/lua/todo-comments/highlight.lua
++++ b/lua/todo-comments/highlight.lua
+@@
+ local function add_highlight(buf, ns, hl, line, from, to)
+-  vim.api.nvim_buf_set_extmark(buf, ns, line, from, {
+-    end_col = to,
+-    hl_group = hl,
+-    priority = 500,
+-  })
++  -- Defensive bounds checks: ensure from/to are within the actual line length.
++  local ok, text = pcall(vim.api.nvim_buf_get_lines, buf, line, line + 1, false)
++  if not ok or type(text) ~= "table" or text[1] == nil then
++    return
++  end
++
++  local line_text = text[1]
++  local max_col = #line_text
++
++  if type(from) ~= "number" or type(to) ~= "number" then
++    return
++  end
++
++  from = math.max(0, from)
++  to = math.min(max_col, to)
++
++  if from > to then
++    return
++  end
++
++  vim.api.nvim_buf_set_extmark(buf, ns, line, from, {
++    end_col = to,
++    hl_group = hl,
++    priority = 500,
++  })
+ end

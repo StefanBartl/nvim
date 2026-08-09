@@ -1,0 +1,187 @@
+--- C:\Users\bartl\AppData\Local\nvim\patches\nvchad\tabufline\init\old.lua	2025-12-18 01:23:27.000000000 +0100
++++ C:\Users\bartl\AppData\Local\nvim-data\ui\lua\nvchad\tabufline\init.lua	2025-12-11 16:11:34.000000000 +0100
+@@ -1,46 +1,75 @@
++---@module 'nvchad.tabufline.init'
++--- Tabufline buffer management for NvChad
+ local M = {}
+ local api = vim.api
+ local cur_buf = api.nvim_get_current_buf
+ local set_buf = api.nvim_set_current_buf
+ local get_opt = api.nvim_get_option_value
+ 
++---Find index of buffer in tab-local buffer list
++---@param bufnr number Buffer number to find
++---@return number|nil Index of buffer or nil if not found
+ local function buf_index(bufnr)
+   for i, value in ipairs(vim.t.bufs) do
+     if value == bufnr then
+       return i
+     end
+   end
+ end
+ 
++---Switch to next buffer in list
++---@return nil
+ M.next = function()
+   local bufs = vim.t.bufs
+   local curbufIndex = buf_index(cur_buf())
+ 
+   if not curbufIndex then
+     set_buf(vim.t.bufs[1])
+     return
+   end
+ 
+   set_buf((curbufIndex == #bufs and bufs[1]) or bufs[curbufIndex + 1])
+ end
+ 
++---Switch to previous buffer in list
++---@return nil
+ M.prev = function()
+   local bufs = vim.t.bufs
+   local curbufIndex = buf_index(cur_buf())
+ 
+   if not curbufIndex then
+     set_buf(vim.t.bufs[1])
+     return
+   end
+ 
+   set_buf((curbufIndex == 1 and bufs[#bufs]) or bufs[curbufIndex - 1])
+ end
+ 
++---Close a buffer with proper cleanup
++---@param bufnr number|nil Buffer number to close, defaults to current buffer
++---@return nil
+ M.close_buffer = function(bufnr)
+   bufnr = bufnr or cur_buf()
++  -- ============================================================================
++  -- FIX #1: Validate buffer exists before any operations
++  -- Problem: Preview buffers can become invalid but remain in vim.t.bufs
++  -- Solution: Check validity and remove from tracking if invalid
++  -- ============================================================================
++  if not api.nvim_buf_is_valid(bufnr) then
++    -- Remove invalid buffer from tracking list
++    local index = buf_index(bufnr)
++    if index then
++      table.remove(vim.t.bufs, index)
++      vim.cmd "redrawtabline"
++    end
++    return
++  end
++  -- ============================================================================
+ 
+   if vim.bo[bufnr].buftype == "terminal" then
+     vim.cmd(vim.bo.buflisted and "set nobl | enew" or "hide")
+   else
+     local curBufIndex = buf_index(bufnr)
+     local bufhidden = vim.bo.bufhidden
+@@ -50,22 +79,47 @@
+       vim.cmd "bw"
+       return
+ 
+       -- handle listed bufs
+     elseif curBufIndex and #vim.t.bufs > 1 then
+       local newBufIndex = curBufIndex == #vim.t.bufs and -1 or 1
+-      vim.cmd("b" .. vim.t.bufs[curBufIndex + newBufIndex])
++      local targetBuf = vim.t.bufs[curBufIndex + newBufIndex]
+ 
++      -- ========================================================================
++      -- FIX #2: Validate target buffer before switching
++      -- Problem: Target buffer might be invalid (e.g., preview buffer)
++      -- Solution: Check validity, fallback to first valid buffer
++      -- ========================================================================
++      if api.nvim_buf_is_valid(targetBuf) then
++        vim.cmd("b" .. targetBuf)
++      else
++        -- Find first valid buffer as fallback
++        for _, buf in ipairs(vim.t.bufs) do
++          if buf ~= bufnr and api.nvim_buf_is_valid(buf) then
++            vim.cmd("b" .. buf)
++            break
++          end
++        end
++      end
++      -- ========================================================================
+       -- handle unlisted
+     elseif not vim.bo.buflisted then
+       local tmpbufnr = vim.t.bufs[1]
+-      if tmpbufnr then
++
++      -- ========================================================================
++      -- FIX #3: Validate temporary buffer before accessing
++      -- Problem: First buffer in list might be invalid
++      -- Solution: Check validity before window/buffer operations
++      -- ========================================================================
++      if tmpbufnr and api.nvim_buf_is_valid(tmpbufnr) then
+         local winid = vim.fn.bufwinid(tmpbufnr)
+         winid = winid ~= -1 and winid or 0
+         api.nvim_set_current_win(winid)
+         api.nvim_set_current_buf(tmpbufnr)
+       end
++      -- ========================================================================
+       vim.cmd("bw" .. bufnr)
+       return
+     else
+       vim.cmd "enew"
+     end
+@@ -75,36 +129,43 @@
+     end
+   end
+ 
+   vim.cmd "redrawtabline"
+ end
+ 
+--- closes tab + all of its buffers
++---Close tab and all of its buffers
++---@param include_cur_buf boolean|nil Whether to include current buffer
++---@return nil
+ M.closeAllBufs = function(include_cur_buf)
+   local bufs = vim.t.bufs
+ 
+   if include_cur_buf ~= nil and not include_cur_buf then
+     table.remove(bufs, buf_index(cur_buf()))
+   end
+ 
+   for _, buf in ipairs(bufs) do
+     M.close_buffer(buf)
+   end
+ end
+ 
+--- closes all other buffers right or left
++---Close all buffers in a direction (left or right of current)
++---@param x string Direction: "left" or "right"
++---@return nil
+ M.closeBufs_at_direction = function(x)
+   local buf_i = buf_index(cur_buf())
+ 
+   for i, bufnr in ipairs(vim.t.bufs) do
+     if (x == "left" and i < buf_i) or (x == "right" and i > buf_i) then
+       M.close_buffer(bufnr)
+     end
+   end
+ end
+ 
++---Move buffer position in list
++---@param n number Direction to move: -1 for left, 1 for right
++---@return nil
+ M.move_buf = function(n)
+   local bufs = vim.t.bufs
+ 
+   for i, bufnr in ipairs(bufs) do
+     if bufnr == cur_buf() then
+       if n < 0 and i == 1 or n > 0 and i == #bufs then
+@@ -118,12 +178,15 @@
+   end
+ 
+   vim.t.bufs = bufs
+   vim.cmd "redrawtabline"
+ end
+ 
++---Go to specific buffer
++---@param bufnr number Buffer number to switch to
++---@return nil
+ M.goto_buf = function(bufnr)
+   local cur_win = api.nvim_get_current_win()
+   local fixedbuf = api.nvim_get_option_value("winfixbuf", { win = cur_win })
+ 
+   if fixedbuf then
+     for _, v in ipairs(api.nvim_list_wins()) do

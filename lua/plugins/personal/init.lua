@@ -63,22 +63,22 @@ plugins.add({
           },
           {
             name = "notes_lua",
-            dir = repos .. "/Notes/MyNotes/Lua",
+            dir = repos .. "/WKDBooks/Development/wkdbook-Lua",
             keys = { files = "<leader>mlf", grep = "<leader>mlg" },
           },
           {
             name = "notes_nvim",
-            dir = repos .. "/Notes/MyNotes/Neovim",
+            dir = repos .. "/WKDBooks/Development/wkdbook-Neovim",
             keys = { files = "<leader>mvf", grep = "<leader>mvg" },
           },
           {
             name = "checklists",
-            dir = repos .. "/Notes/MyNotes/Checklists",
+            dir = repos .. "/WKDBooks/Development/wkdbook-Lua/Checklists",
             keys = { files = "<leader>chf", grep = "<leader>chg" },
           },
           {
             name = "spickzettel",
-            dir = repos .. "/Notes/spickzettel",
+            dir = repos .. "/WKDBooks/Spickzettel",
             keys = { files = "<leader>spf", grep = "<leader>spg" },
           },
           {

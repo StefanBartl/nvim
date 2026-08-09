@@ -48,7 +48,7 @@ Datei: [lua/config/harpoon/persist_paths.lua](../../lua/config/harpoon/persist_p
    Aktuell in [misc.lua](../../lua/plugins/misc.lua):
    - `stdpath("config")/lua/plugins/personal/init.lua`
    - `stdpath("config")/docs/ROADMAP/ROADMAP.md`
-   - `$REPOS_DIR/Notes/spickzettel/spickzettel.md`
+   - `$REPOS_DIR/WKDBooks/Spickzettel/spickzettel.md`
 
    **Nur auf der Workstation** (`machine.is("workstation")`, siehe
    [lua/machine.lua](../../lua/machine.lua)) werden zusätzlich, in dieser
