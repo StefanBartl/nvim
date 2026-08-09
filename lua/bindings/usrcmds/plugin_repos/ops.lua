@@ -52,34 +52,44 @@ function M.clone_one(entry, base_dir, on_done)
   end)
 end
 
+---`changed` reports whether the fetch actually moved any remote-tracking
+---ref: `git fetch` prints ref updates ("<old>..<new> main -> origin/main")
+---to stderr and stays silent there when nothing was new, so an empty
+---stderr is the "nothing changed" signal (a fetch that fails never reaches
+---here since `on_done` short-circuits on `res.code ~= 0` first).
 ---@param path string
----@param on_done fun(ok: boolean, err: string|nil)
+---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
 function M.fetch_one(path, on_done)
   system({ "git", "fetch", "--all", "--prune" }, { cwd = path, text = true }, function(res)
     if res.code ~= 0 then
       on_done(false, res.stderr or "git fetch failed")
     else
-      on_done(true, nil)
+      on_done(true, nil, (res.stderr or ""):match("%S") ~= nil)
     end
   end)
 end
 
+---`changed` reports whether the pull actually fast-forwarded: git prints
+---"Already up to date." to stdout when there was nothing to merge, and a
+---"Updating <old>..<new>" / "Fast-forward" summary otherwise.
 ---@param path string
----@param on_done fun(ok: boolean, err: string|nil)
+---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
 function M.pull_one(path, on_done)
   system({ "git", "pull", "--ff-only" }, { cwd = path, text = true }, function(res)
     if res.code ~= 0 then
       on_done(false, res.stderr or "git pull failed")
     else
-      on_done(true, nil)
+      on_done(true, nil, not (res.stdout or ""):lower():match("already up.to.date"))
     end
   end)
 end
 
 ---Fetch then fast-forward pull — same sequence `:MyReposUpdate` runs, scoped
----to a single already-resolved path.
+---to a single already-resolved path. `changed` mirrors the pull's own —
+---that's what "did this checkout actually move forward" means for the
+---combined operation.
 ---@param path string
----@param on_done fun(ok: boolean, err: string|nil)
+---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
 function M.update_one(path, on_done)
   M.fetch_one(path, function(ok, err)
     if not ok then
