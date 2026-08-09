@@ -1,11 +1,11 @@
 # reposcope.nvim — Keymaps Cheatsheet
 
-Sources: `lua/reposcope/bindings/keymaps.lua`, `ui/actions/readme_viewer.lua`, `utils/stats.lua`
+Sources: `lua/reposcope/bindings/keymaps.lua`, `ui/actions/readme_viewer.lua`, `utils/stats.lua`, `ui/actions/status_view.lua`
 
-**2026-08-09: `docs/BINDINGS.md` no longer omits the two component-local
-keymaps below** — both are now documented there too, in a dedicated
+**2026-08-09: `docs/BINDINGS.md` no longer omits the component-local
+keymaps below** — all are now documented there too, in a dedicated
 "Close-UI" adjacent section. This file's own "Component-local" table below
-is kept as the one place both are shown side by side.
+is kept as the one place they're all shown side by side.
 
 ## Global open/close (`M.set_user_keymaps`, only if `config.get_option("keymaps") ~= false`)
 
@@ -57,6 +57,7 @@ its own component whenever it opens/closes.
 | `q` | n | `ui/actions/readme_viewer.lua` (`nvim_buf_set_keymap`) | Closes the README viewer, restores prompt autocmds + prompt keymaps |
 | `q` / `<Esc>` | n | `utils/stats.lua` | Closes the stats popup buffer/window |
 | `q` / `<Esc>` | n | `ui/actions/help_view.lua`, via `lib.nvim.ui.kit`'s `nice_quit` | Closes the `?` keymap cheatsheet |
+| `<CR>` / `<2-LeftMouse>` | n | `ui/actions/status_view.lua` (`lib.nvim.map`, buffer-local, every interactive `--out` backend of `:Reposcope status`) | Row under cursor → `lib.nvim.ui.kit.confirm` prompt → on yes, `:edit`s that repository's `README.md`. No readable README.md just notifies, no prompt |
 
 ## which-key
 
@@ -77,6 +78,9 @@ call could label as a group, and nothing does.
 
 ## Changelog
 
+- 2026-08-09 (3): Added the `status_view.lua` component-local row: `<CR>`/
+  `<2-LeftMouse>` on a `:Reposcope status` row opens that repository's
+  `README.md`, gated behind a `lib.nvim.ui.kit.confirm` yes/no prompt.
 - 2026-08-09 (2): Added `toggle_favorite` (`<C-f>`) — toggles the selected
   repository's favorite status via the new `state/favorites_state.lua`
   (roadmap item "Favoriten für Repositories", `personal/reposcope.nvim.md`).
