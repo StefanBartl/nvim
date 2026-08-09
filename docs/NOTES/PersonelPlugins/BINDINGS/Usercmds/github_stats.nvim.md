@@ -17,7 +17,7 @@ to match the sibling-plugin `doc/<name>.txt` convention)
 | `:GithubStats referrers` | `{repo} [limit]` | Top referrers |
 | `:GithubStats paths` | `{repo} [limit]` | Top paths |
 | `:GithubStats chart` | `{repo} {clones\|views\|both} [start\|range] [end]` | Sparkline/comparison chart |
-| `:GithubStats export` | `{repo\|all} {clones\|views\|both} {filepath}` | Export to CSV/Markdown |
+| `:GithubStats export` | `{repo\|all} {clones\|views\|both} {filepath}` | Export to CSV/Markdown/PDF |
 | `:GithubStats diff` | `{repo} {metric} {period1} {period2}` | Compare two periods |
 | `:GithubStats debug` | — | Diagnostic dump |
 | `:GithubStats[!] dashboard` | — | Open dashboard (`!` forces refresh) |
@@ -87,3 +87,15 @@ to match the sibling-plugin `doc/<name>.txt` convention)
   exports (single-repo or `all`) also gained a "Highlights" section (top
   repo, best month, best single day), computed by the new
   `analytics.compute_highlights`.
+- 2026-08-09: `export`'s `.pdf` extension now routes through pdfport.nvim
+  (`github_stats.export`'s `export_markdown_pdf`/`export_combined_markdown_pdf`/
+  `export_summary_markdown_pdf`/`export_combined_summary_markdown_pdf`, soft
+  dependency, `pcall`-guarded) — the exact same report Markdown export builds
+  is handed to `pdfport.create({ text = ..., from = "markdown" })` instead of
+  written to a `.md` file. Async, unlike the sync csv/markdown writers, so
+  `bindings/usrcmds/export.lua` gained a shared `report(ok, err)` callback
+  used by both the sync and async branches. Added test coverage in
+  `lua/github_stats/tests/export_spec.lua` (stubs `package.loaded["pdfport"]`,
+  same pattern as `markdown.nvim/tests/handler_pdf_spec.lua`) — still no local
+  runner for this repo's busted specs, verified manually via headless
+  `nvim --headless` dispatch instead.

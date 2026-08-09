@@ -122,3 +122,33 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/insights.txt`
   section flatly contradicted `bindings/autocmds.lua`, which registers three
   gated autocmds (`VimEnter`/`BufWritePost`/`TermOpen`+`TermRequest`+
   `VimLeavePre`). Both corrected.
+
+## `metrics.output_file` — PDF export via pdfport.nvim (2026-08-09)
+
+`:Insights metrics`' report already gets written to `cfg.metrics.output_file`
+(default `{state}/insights/metrics.md`) alongside the scratch buffer.
+Ending that path in `.pdf` now routes it through
+[pdfport.nvim](https://github.com/StefanBartl/pdfport.nvim) (optional
+dependency, `pcall`-guarded — needs pandoc + a PDF engine,
+`pdfport.can_create("text")`) instead of writing plain text — same report
+content either way, just `from = "text"` (the report is fixed-width ASCII
+tables, not real Markdown, despite the `.md` default extension — `"text"`
+is the honest kind for it, `pdfport`'s pandoc producer treats both the same
+today since no `-f` flag is set).
+
+No config-surface change: only `output_file`'s extension decides the
+format, same as the other three plugins' `.pdf` export additions this same
+session (`github_stats.nvim`, `documentation.nvim`, `runtime-analysis.nvim`)
+— there is no per-invocation flag for it (`:Insights metrics` has no
+`--output`/`--pdf` flag, unlike its many display-toggle flags). New
+`insights.metrics.write_report_pdf(lines, out_path, callback)`, async
+unlike the existing sync `write_report()`; `present()` branches on the
+extension. `:checkhealth insights` gained an "Optional: PDF export"
+section. No test suite exists in this repo to extend (verified manually,
+headless, with a stubbed `package.loaded["pdfport"]`).
+
+This was the "Mittel, kein Quick-Win" candidate from the pdf_create
+candidate survey — confirmed non-Markdown report content going in, so the
+result is "good enough" rather than polished (ASCII-table alignment may not
+survive pandoc's default reader as cleanly as a real Markdown report
+would).

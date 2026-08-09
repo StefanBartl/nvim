@@ -125,7 +125,7 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 | `:RATelemetry disable [ns]` / `enable [ns]` | stop + persist "off" across restarts / clear that |
 | `:RATelemetry disabled` | list namespaces currently disabled |
 | `:RATelemetry coverage` | which wrapped functions were never called |
-| `:RATelemetry export [path]` | JSON, or Markdown if `path` ends `.md` |
+| `:RATelemetry export [path]` | JSON; Markdown if `path` ends `.md`; PDF if `.pdf` (via pdfport.nvim, optional dependency) |
 | `:RATelemetry open [ns]` | render + open externally (`report_style`: `auto`/`kit`/`mdview`/`file`/`html`) |
 | `:RATelemetry compare [ns] [days]` | "this window vs the one before it" (default 7d) — newly-hot/gone-cold/changed functions. Shipped 2026-08-04 (§4.2). |
 | `:RATelemetry startup [top]` | Which *module* a plugin's startup cost sits in, as a waterfall (self vs. total time, grouped per module and per module root). Shipped 2026-08-04 (§3.3). **Needs the opt-in below.** |
@@ -135,6 +135,33 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 namespaces only; `compare`'s third token (a day count) isn't completed,
 and `startup` takes no namespace at all (its second token is a `top`
 count).
+
+### `export .pdf` via pdfport.nvim (2026-08-09)
+
+`:RATelemetry export report.pdf` and `nvim --headless -l scripts/telemetry.lua
+export <ns> report.pdf` both route through
+[pdfport.nvim](https://github.com/StefanBartl/pdfport.nvim) (optional
+dependency, `pcall`-guarded) — the exact same combined Markdown document the
+`.md` export writes (`telemetry.markdown_all()`) is handed to
+`pdfport.create()` as text instead of written to a `.md` file first. Fails
+clearly if pdfport.nvim isn't installed or has no available markdown
+producer (pandoc + a PDF engine), rather than silently falling back to
+another format.
+
+Asynchronous, unlike `.md`/`.json` — `lua/runtime-analysis/telemetry/
+command.lua`'s `export()` gained a `pdf_callback` param used only by the
+`.pdf` branch (`export_pdf()`), and the `:RATelemetry export` dispatcher
+now branches on the extension before deciding sync-return vs.
+callback-based reporting. The headless CLI (`scripts/telemetry.lua`)
+mirrors `add_lib_nvim()`'s three-candidate rtp search
+(`PDFPORT_DIR`/`.deps/pdfport.nvim`/sibling checkout) as a new
+`try_add_pdfport()` — best-effort, unlike the mandatory `add_lib_nvim()`,
+since only `export ... .pdf` needs it — then blocks on `vim.wait()` for
+pdfport's async callback before the script can exit. `:checkhealth
+runtime-analysis` gained an "optional tools" line for pdfport.nvim
+availability. Test coverage in `docs/TESTS/telemetry_spec.lua` (stubs
+`package.loaded["pdfport"]`, same pattern as `github_stats.nvim`/
+`documentation.nvim`/`markdown.nvim`).
 
 ### Startup attribution is opt-in, via the plugin's own `init` hook
 

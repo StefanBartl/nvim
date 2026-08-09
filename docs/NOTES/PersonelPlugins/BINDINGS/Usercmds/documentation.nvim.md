@@ -127,3 +127,24 @@ other personal plugin registers either name or a `Doc`-prefixed command.
 
 Note `:checkhealth documentation` is also registered, implicitly, by the
 presence of `lua/documentation/editor/health.lua`.
+
+## `opts.pdf` — overview.pdf via pdfport.nvim (2026-08-09)
+
+Fourth artifact alongside `index.html`/`overview.md`/`module_map.json`
+(and the existing opt-in `coverage.svg`/`opts.badge`): set
+`opts.pdf = true` and a bare `:DocMap`/`:DocMap full` also writes
+`docs/map/overview.pdf` — byte-for-byte the same content `overview.md`
+gets, handed to [pdfport.nvim](https://github.com/StefanBartl/pdfport.nvim)
+(optional dependency, `pcall`-guarded) as text via `pdfport.create()`
+instead of read back from a written `.md` file.
+
+Off by default, and **asynchronous** unlike every other artifact — pdfport's
+markdown producer shells out to `pandoc`, so it cannot be folded into
+`write_artifacts()`'s synchronous `written` list. `bindings/usrcmds/generate.lua`
+fires it as a second step after the normal "wrote N artifacts" notification
+and reports it separately once pdfport's callback returns
+(`documentation.write_pdf_artifact(ir, findings, ctx.cfg, callback)`, new
+function in `init.lua`). `:checkhealth documentation` gained a line for it
+in the "optional tools" section. Test coverage in
+`TESTS/pdf_artifact_spec.lua`, same stub-`package.loaded["pdfport"]` pattern
+as `github_stats.nvim`/`markdown.nvim`.
