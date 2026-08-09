@@ -43,6 +43,21 @@
 ---    mapping module) is treated as always-loaded, since those load
 ---    unconditionally at startup. Skipped plugins are reported by name,
 ---    not silently dropped — see `M.check`'s second return value.
+--- 5. **A loaded plugin can still lazily register a command on first API
+---    use, not at load time** — a narrower case than point 4, and NOT
+---    covered by the `lazy.nvim`-loaded check there. Confirmed against a
+---    real example: `Usercmds/lib.nvim.md` documents `:LibLogger` as
+---    "Registered when: automatically, on the first `logger.new()`" — in
+---    a fresh session where nothing has called `logger.new()` yet, this
+---    reports as `usercmd-not-live` even though nothing is broken.
+---    Verified headless: the command is genuinely absent from
+---    `nvim_get_commands({})` beforehand and appears the instant
+---    `logger.new({name=...})` runs. No general fix here — a "Registered
+---    when" column, when a cheatsheet documents one at all, is free text,
+---    not a machine-checkable condition. Treat any single
+---    `usercmd-not-live` finding for a documented-lazy command as
+---    suspect; re-run `:Bindings check` after actually exercising that
+---    plugin's feature before trusting the finding.
 ---
 --- Usercmds are checked BOTH directions, since `nvim_get_commands({})`
 --- only ever returns user-defined commands (no vim-default flood): the

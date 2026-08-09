@@ -174,10 +174,12 @@ als die anfängliche Compliance-Zählung (§0 oben) nahelegte:
 **Zwei Funde außerhalb des Formats, nicht behoben (nicht Teil dieser
 Aufgabe)**: `Usercmds/Case.md` und `Usercmds/lib.nvim.md`/`MyPlugins.md`
 sind bewusste dünne Verweis-Dateien (casedesk/lib.nvim haben ihre
-Command-Referenz woanders) — kein Fehler. `Usercmds/dap.nvimMERGE.md`
-sieht dagegen nach einem echten Merge-Artefakt aus: eine ältere Fassung
-von `dap.nvim.md`, die unter einem Tippfehler-Namen als eigene Datei
-überlebt hat, mit einigen Sätzen, die in der aktuellen `dap.nvim.md` gar
-nicht mehr vorkommen (Adapter/Launch-Config-Ablage, `auto_install`-
-Verhalten) — sollte geprüft werden, ob dort noch unzusammengeführter
-Inhalt steckt, bevor die Datei gelöscht wird.
+Command-Referenz woanders) — kein Fehler. `Usercmds/dap.nvimMERGE.md` war
+dagegen ein echtes Merge-Artefakt: eine ältere Fassung von `dap.nvim.md`,
+die unter einem Tippfehler-Namen als eigene Datei überlebt hatte, mit drei
+Sätzen, die in der aktuellen `dap.nvim.md` nicht mehr vorkamen (der
+`languages/<lang>.lua`-Merge aus vormals getrennten `adapters/`/
+`configurations/`-Dateien, `auto_install`s `:MasonInstall`-Verhalten,
+`configurations`s `replace = true`) — gegen den echten dap.nvim-Quellcode
+geprüft (alle drei noch zutreffend), in `dap.nvim.md` nachgezogen, die
+Datei gelöscht (2026-08-09, ausgelöst durch einen `:Bindings check`-Fund).

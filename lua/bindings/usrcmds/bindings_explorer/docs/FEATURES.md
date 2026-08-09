@@ -135,14 +135,27 @@ Begründung):
   (live-aber-undokumentiert) zieht zur Rauschreduktion auch Extern-Doku
   heran, zeigt aber weiterhin Infra-/Plugin-Manager-Commands (`:Lazy`,
   `:Mason`, ...) an, für die keine Ignore-Liste gepflegt wird.
+- **Ein geladenes Plugin kann ein Command trotzdem erst bei erster
+  API-Nutzung registrieren, nicht beim Laden** — enger als der
+  Lazy-Plugin-Fall oben, siehe `drift.lua`s Moduldoc Punkt 5. Ein
+  einzelner `usercmd-not-live`-Fund für ein als "lazy" dokumentiertes
+  Command (z. B. eine "Registered when: ..."-Spalte) ist verdächtig —
+  erst das Feature einmal auslösen, dann erneut prüfen.
 
 Gegen den echten, voll geladenen Bestand verifiziert (headless, über einen
 `XDG_CONFIG_HOME`-Junction-Trick, der `stdpath("config")` auf diesen
 Branch zeigen lässt, ohne `stdpath("data")`/die echten Plugin-Installationen
 anzufassen — siehe git-Historie dieser Datei für die Kommandos): fand u.a.
 `Usercmds/dap.nvimMERGE.md`s bereits in `BINDINGS-FORMAT.md` §5 als
-Merge-Artefakt vermuteten `:Dap` und ein verwaistes `:LibLogger` in
-`lib.nvim.md`.
+Merge-Artefakt vermuteten `:Dap` (mittlerweile geprüft: enthielt echten,
+nirgends sonst dokumentierten Inhalt zum `languages/<lang>.lua`-Merge und
+`auto_install`/`replace = true` — in `dap.nvim.md` nachgezogen, Datei
+gelöscht) und ein vermeintlich verwaistes `:LibLogger` in `lib.nvim.md`
+(headless nachgestellt: genau der oben neu dokumentierte Fall 5 — die
+Cheatsheet-Zeile sagt selbst "Registered when: automatically, on the
+first `logger.new()`"; nach einem echten `logger.new({name=...})`-Aufruf
+taucht `:LibLogger` sofort in `nvim_get_commands({})` auf — bestätigter
+False Positive, kein Bug).
 
 Beispiele:
 

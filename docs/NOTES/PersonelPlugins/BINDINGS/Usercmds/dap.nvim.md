@@ -26,7 +26,7 @@ blocking `vim.fn.input` before).
 | `:Dap list-breakpoints` | List Breakpoints |
 | `:Dap toggle-ui` | Toggle UI (active panel provider: nvim-dap-view / nvim-dap-ui) |
 | `:Dap eval` | Evaluate Expression (normal + visual) |
-| `:Dap repl` | Open REPL |
+| `:Dap repl` | Open REPL (`dap.repl.open()`, matches upstream nvim-dap's suggested mapping) |
 
 ## Notes
 
@@ -36,3 +36,17 @@ blocking `vim.fn.input` before).
 - CI (`.github/workflows/ci.yml`) runs stylua + luacheck + the headless
   plenary suite (`tests/wkddap/**`) on every push/PR — the "no CI" note this
   used to carry is stale, corrected 2026-08-06.
+- **Adapter + launch-config definitions live together per language**,
+  `lua/wkddap/languages/<lang>.lua` (`setup()` + `load()`) — merged from
+  the former separate `adapters/<lang>.lua`/`configurations/<lang>.lua`
+  pair since the two were always in lockstep. `adapters/init.lua` and
+  `configurations/init.lua` still exist as the shared registry glue, just
+  no longer one file per language.
+- **`auto_install = true`** (default off) drives `:MasonInstall` for
+  required adapter binaries that are currently unresolvable
+  (`utils/mason.lua`) — warns instead if `auto_install` is on but
+  mason.nvim isn't installed.
+- **`configurations` overrides append by default**; set `replace = true`
+  on the override list to fully replace a language's existing
+  configurations instead (`configurations/init.lua`), e.g.
+  `{ replace = true, { type = "python", request = "launch", name = "…" } }`.
