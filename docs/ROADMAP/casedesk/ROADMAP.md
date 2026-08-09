@@ -11,13 +11,6 @@ und Testzahlen zu jedem fertigen Feature dort, nicht hier.
 
 Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
 
-- [ ] Backend-Kaskade `pickers.nvim` → `snacks.picker` → `kit.select` für
-      `:Cases pickers` — **zurückgestellt**: `pickers.nvim`s
-      `actions/files.lua` erwartet ein internes `Source`+`engine_mod`-Objekt
-      aus seiner eigenen Config-/Engine-Auflösung, keinen trivialen „Picker
-      über diese Pfad-/String-Liste"-Einstieg. `:Cases pickers` läuft
-      komplett auf `kit.select`.
-
 - [ ] **Danach entscheiden: reicht `:Case similar`s TF-IDF, oder braucht es
       KI?** Trade-off + Messwerte: CONCEPT.md §8e. Erst im Alltag benutzen
       (v. a. beim Anlegen eines neuen Cases: hilft der Vorschlag beim
@@ -61,7 +54,7 @@ geprüft und passt nicht (CONCEPT.md §8d/§9) — beide nicht mehr hier.
 | Plugin              | Beitrag                                                                                                                                                   |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **open.nvim**       | `:Case snow` (Ticket im Browser), Doku-Links aus Replies (`docs.tricentis.com`).             |
-| **pickers.nvim**    | Case-Picker statt `kit.select`, sobald die Case-Zahl weiter wächst — inkl. Preview der `.case.json`. Selbe Einschränkung wie die Backend-Kaskade oben. |
+| **pickers.nvim**    | Case-Picker statt `kit.select`, sobald die Case-Zahl weiter wächst — inkl. Preview der `.case.json`. Verworfen: `pickers.nvim`s `actions/files.lua` erwartet ein internes `Source`+`engine_mod`-Objekt aus seiner eigenen Config-/Engine-Auflösung, keinen trivialen "Picker über diese Pfad-/String-Liste"-Einstieg — bräuchte eine neue, generische API in `pickers.nvim` selbst. `:Cases pickers` läuft komplett auf `kit.select`. |
 | **sessions.nvim**   | Eine Session pro Case: Case wieder aufmachen = Buffer-Layout von letzter Woche zurück. Konzept: [SESSIONS.md](SESSIONS.md). |
 
 ### Mittlerer Nutzen
