@@ -19,7 +19,7 @@ Docs: `docs/BINDINGS.md`, `docs/ROADMAP/`, `README.md`, `doc/images.txt`
 | `:Image paste [name]` | — | Bild aus der Zwischenablage ablegen und verlinken; mit `name` direkt benannt statt Abfrage/Template |
 | `:Image screenshot` | — | Bildschirmausschnitt interaktiv aufnehmen und verlinken — spart die Zwischenablage als Zwischenschritt |
 | `:Image replace [path]` | — | Bestehendes Bild durch Zwischenablage ersetzen, Link bleibt gleich |
-| `:Image export [path]` | — | Bild als PDF exportieren, neben der Quelldatei (braucht ImageMagick) |
+| `:Image export [path]` | — | Bild als PDF exportieren, neben der Quelldatei (über pdfport.nvim, falls installiert, sonst braucht ImageMagick) |
 | `:Image redact [path]` | — | Zensur-Modus: Boxen markieren (Visual-Mode + `<CR>`), `w` schwärzt in eine neue Datei (braucht ImageMagick) |
 | `:Image orphans` | — | Unverlinkte Bilder in `paste.dir` finden, mit Bestätigung löschen |
 | `:Image pickers [cfile\|cwd\|path] [dir]` | — | Bilder unterhalb eines Scopes durchsuchen, Live-Vorschau mit snacks.picker |
@@ -103,14 +103,16 @@ Der Command-Name folgt der Option `command`.
 - **`:Image info`** zeigt Abmessungen nur mit ImageMagick; ohne bleiben Größe
   und Änderungsdatum. ImageMagick ist bewusst nirgends Voraussetzung —
 
-  **außer bei SVG, `:Image export` und `:Image redact`.** WezTerm dekodiert
+  **außer bei SVG und `:Image redact`; `:Image export` seit 2026-08-09 nur
+  noch OHNE pdfport.nvim.** WezTerm dekodiert
   PNG/JPEG/GIF/WebP/BMP selbst, aber kein SVG. `.svg` wird deshalb vor dem
   Zeichnen automatisch nach PNG konvertiert (`images.convert`, `magick
   datei.svg -background none out.png`, Cache in
   `stdpath("cache")/images.nvim/svg` benannt nach Pfad+mtime). `:Image
   export` exportiert umgekehrt ein Bild als PDF neben der Quelldatei
-  (`bild.png` → `bild.pdf`, `magick datei.png out.pdf`, kein Cache —
-  einmaliger Export statt wiederholtem Zeichenpfad). `:Image redact`
+  (`bild.png` → `bild.pdf`) — über pdfport.nvim (asynchron, verlustfrei),
+  falls installiert, sonst `magick datei.png out.pdf`; kein Cache in beiden
+  Fällen — einmaliger Export statt wiederholtem Zeichenpfad. `:Image redact`
   schwärzt Rechtecke in einer neuen Datei (`magick bild.png -fill black
   -draw "rectangle …" bild.redacted.png`), ebenfalls kein Cache. Alle drei
   ohne Terminal-native Alternative — ohne ImageMagick kommt in jedem Fall
@@ -208,6 +210,17 @@ Der Command-Name folgt der Option `command`.
 
 ## Changelog
 
+- 2026-08-09: `:Image export`/`images.convert.to_pdf` bekamen eine
+  pdfport.nvim-Weiche (soft dep, `pcall`'d): ist pdfport installiert und
+  meldet `can_create("image")` einen Producer, läuft der Export asynchron
+  darüber (verlustfrei via `img2pdf`, sonst `magick` — welcher Producer
+  greift, entscheidet pdfports eigene `create_chain`, nicht images.nvim
+  selbst). Ohne pdfport.nvim bleibt der bisherige synchrone `magick`-Pfad
+  unverändert. `to_pdf()` bekam dafür ein `on_done(ok, out_or_err)`-Callback
+  als einzigen verlässlichen Weg, das Ergebnis über beide Pfade einheitlich
+  zu beobachten — der Rückgabewert allein reicht seither nicht mehr (der
+  pdfport-Pfad liefert synchron `nil, nil`). Aus pdfport.nvims eigenem
+  `docs/ROADMAP/PDF_CREATE.md` (P2, Aufrufer-Anbindung).
 - 2026-08-06: Sheet war seit der ersten Fassung veraltet — `replace`,
   `orphans`, `pickers`, `compare`, `zen` und `check` fehlten komplett (das
   Plugin ist seither um diese Subcommands gewachsen). Bei der

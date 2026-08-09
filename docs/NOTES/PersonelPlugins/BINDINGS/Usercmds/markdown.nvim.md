@@ -14,7 +14,7 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 | Command | Scope | Grammar |
 | --- | --- | --- |
-| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|headline_spacing\|gaps\|image} [args…]` | global | see `commands/*.lua` per-subcommand grammar |
+| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|headline_spacing\|image\|export} [args…]` | global | see `commands/*.lua` per-subcommand grammar (list corrected 2026-08-09 — `gaps` no longer exists as a separate top-level subcommand, was stale; `export` is new) |
 | `:OpenWithSystemApplication` | buffer-local | open image/url/file under cursor |
 | `:MarkdownNvimUnderlineHeadings` | buffer-local | underline every ATX heading's text with `=` (Setext-style decoration, idempotent) |
 | `:TableViewToggle\|Markdown\|Box [scope]` | buffer-local | toggle table preview (config/markdown/box style) |
@@ -34,6 +34,16 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 ## Notes
 
+- **2026-08-09: added `:Markdown export pdf`** (new subcommand,
+  `commands/export.lua`) — thin delegator to pdfport.nvim's `create()`
+  (soft dep, `pcall`-guarded), exactly the same pattern as `:Markdown image`
+  for images.nvim: `pdfport.can_create("markdown")` gates whether the
+  subcommand does anything; an unmodified buffer with a file on disk exports
+  that file directly, an unsaved/new buffer exports the live buffer content
+  instead. Gated by the new `export` feature name (`FEATURES` in
+  `config/init.lua`). From pdfport.nvim's own `docs/ROADMAP/PDF_CREATE.md`
+  (P2, caller wiring) — the third and last of its three callers
+  (`filetree.nvim`/`images.nvim`/`markdown.nvim`) to get wired.
 - **2026-08-09: added the `:MDTable*` width-limited table-wrapping family**
   (16 new buffer-local commands, feature `table_wrap`, default on) — the
   Kernfeature from `docs/ROADMAP/personal/markdown.nvim.md`'s
