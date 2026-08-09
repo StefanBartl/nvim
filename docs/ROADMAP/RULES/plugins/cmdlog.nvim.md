@@ -108,6 +108,18 @@ Fehlende Flags/Optionen (Ideen):
 - Shell-History-Parser für zsh/fish/bash sind hart codiert; kein Escape-Hatch für exotische
   History-Formate (z.B. benutzerdefinierte `HISTTIMEFORMAT`).
 
+## Bekannte Sicherheitslücke
+
+cmdlog schreibt aktuell **jeden** `:`-Befehl im Klartext nach
+`stdpath("data")` — inklusive z. B. `:!curl -H "Authorization: Bearer …"`.
+Ein `redact_patterns`-Filter (Konfigurations-Liste von Lua-Patterns, deren
+Treffer vor dem Schreiben durch einen Platzhalter ersetzt werden) fehlt.
+
+- [ ] `redact_patterns`-Option ergänzen (Default-Liste mit gängigen
+      Auth-Header-/Token-Mustern, user-erweiterbar), angewendet direkt vor
+      dem Schreiben in `core/tracker.lua`/`core/store.lua` — nie danach, nie
+      nur in der Anzeige.
+
 ## Ideen für andere Plugins
 
 - Das "ein zentrales Autocmd speist mehrere unabhängige Feature-Module"-Muster

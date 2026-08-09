@@ -51,6 +51,14 @@ external process call is built as an argv array, never a shell string.**
   acceptable as "cheap insurance" even when known-incomplete (documented, not
   hidden) — from [runtime-analysis.nvim](../plugins/runtime-analysis.nvim.md)
   (`env.lua:80-99`, `warn_if_not_gitignored`).
+- A plugin must never manage API keys itself — no central key store, no
+  persistence of the value anywhere the plugin controls. The key comes from
+  the environment (e.g. `os.getenv("OPENAI_API_KEY")`); `:checkhealth`
+  reports at most *present yes/no* and which provider is active, never the
+  value itself — binding rule for every plugin with API access, not just the
+  one it was first written against — from
+  [typepilot.nvim](../../IDEAS/typepilot.nvim.md) (concept doc, not yet a
+  built plugin with its own audit report here).
 
 ## Downloaded / remote content
 

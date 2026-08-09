@@ -102,6 +102,21 @@ buffer/UI/IO mutation into a separate outer layer.
   (`commands.lua` as the sole category→action registry; leaf modules never
   register commands themselves).
 
+## Shared output surfaces (quickfix)
+
+Plugins that produce hit lists (search results, symbol lists, link
+diagnostics) should offer the quickfix list as a common export target
+rather than only their own picker UI — `:cdo` then makes any such list
+batch-editable, and two otherwise-unrelated plugins become combinable
+without either knowing the other exists. [replacer.nvim](../plugins/replacer.nvim.md)
+already has this via `export.lua`'s quickfix export. Candidates still
+missing it: [pickers.nvim](../plugins/pickers.nvim.md) (including its marks
+feature), [documentation.nvim](../plugins/documentation.nvim.md),
+[markdown.nvim](../plugins/markdown.nvim.md)'s link diagnostics.
+
+- [ ] Audit which of the above already expose a quickfix export and which
+      don't, before adding one blind to each.
+
 ## Command/completion single-source-of-truth
 
 - A single declarative route table should drive dispatch, Tab-completion, AND
