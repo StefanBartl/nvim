@@ -88,6 +88,7 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 | `<leader>sm` (+ per-app `app.keymap`) | Open with OS default handler, or a configured custom app | |
 | `<CR>`/`q`/`<Esc>` | Inside "open with" app picker | |
 | `gp` (+ `keymap_text`/`keymap_system`/`keymap_terminal`, all off by default) | Dispatch PDF under cursor to pdfport.nvim (soft dep) — text view / OS viewer / terminal | **missing from `docs/BINDINGS/KEYMAPS.md` and the source catalog** |
+| `gP` | Create PDF(s) from current node/marked nodes/folder via pdfport.nvim (soft dep); always confirms first via `filetree.util.confirm` | New 2026-08-09 (`pdf_create` feature) — write-direction counterpart to `gp`. One PDF per input file (not a merge); a folder expands to its direct child files only (non-recursive); files pdfport has no producer for are silently skipped and reported in the summary. Present in `docs/BINDINGS/KEYMAPS.md` and the source catalog (unlike `gp` above). |
 | `i` | Prompt for a shell command, run it in a terminal split with `cwd` = node's directory | Known conflict with neo-tree's built-in `i` (toggle node info) — recommend noop via `adapter_keymaps` |
 
 ## compare
@@ -138,5 +139,14 @@ built custom UI plugin, or `buffer-ctx.nvim` — undecided as of 2026-08-01.
 ## Notes
 
 - **Count support added 2026-07-31** for `-`/`+` (nav), `<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>` (preview scroll, both float and buffer mode), and `w` (window-size cycler, direct-index jump rather than a step multiplier — see the `ui` table above). None of these read a count before this date.
+- **2026-08-09**: New `system/pdf_create` feature (default keymap `gP`) —
+  turns the current node/marked nodes/a folder's direct child files into
+  PDF(s) via pdfport.nvim's new `create()` API (soft dep, no-op with a
+  warning if pdfport.nvim is absent or lacks `create()`). Always confirms
+  via `filetree.util.confirm` (`lib.nvim.ui.kit.confirm`) before writing
+  anything — single file gets a Yes/No, multiple files get a preview of the
+  first few names. See `filetree.util.pdf.create()`/`guess_kind()`/
+  `can_create()` and `docs/ROADMAP/PDFPORT_INTEGRATION.md`'s 2026-08-09
+  addendum.
 - **2026-08-01**: `create_from_template`'s default keymap changed `t` → `A`; the picker now prompts for the filename before the template (previously the other way round) so ${module} resolves against the real destination, and templates can be reordered in-picker with `<M-j>`/`<M-k>`. `${module}` itself now defers to `lib.nvim.lua_ls.get_module_path` (the same canonical resolver `lua_require_copy`/`rq` conceptually reimplements by hand — not migrated to it in this pass, flagged separately) rather than a locally-reinvented version.
 - `bindings/keymaps.lua` itself has no live registration calls — it's a static catalog table consumed by `bindings/init.lua`'s `catalog()`, the cheatsheet feature, and the generated docs. It's missing a `pdf_open` entry (see above). **Caught drifting again 2026-08-01**: its `create_from_template` row still said `lhs = "t"` after the feature's own default moved to `"A"` — this catalog is hand-maintained, not derived from each feature's actual `_cfg.keymap`, so a code-level default change never propagates here automatically. Fixed upstream; worth remembering next time a default keymap changes.

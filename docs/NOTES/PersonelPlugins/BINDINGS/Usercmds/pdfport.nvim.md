@@ -17,7 +17,8 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `doc/pdfport.txt`
 | `:PdfPort system [path]` | Open with system application |
 | `:PdfPort terminal [path]` | Render as terminal image (prompts for a page range) |
 | `:PdfPort backends` | List all registered backends with live availability (float) |
-| `:PdfPort create [path]` | Create a PDF from an image (path arg, `<cfile>`, or current buffer) |
+| `:PdfPort create [path]` | Create a PDF from an image/markdown/text/html/office file (path arg, `<cfile>`, or current buffer) |
+| `:PdfPort merge {output} {input1} {input2} ...` | Merge two or more existing PDFs into one |
 | `:PdfPort producers` | List all registered creation producers with live availability (float) |
 | `:PdfPort health` | Run `:checkhealth pdfport` |
 
@@ -84,6 +85,30 @@ name when `[path]` is omitted — unchanged from the original.
 - Full design + P1-P3 (Markdown/HTML/Office producers, caller wiring into
   `images.nvim`/`markdown.nvim`/`filetree.nvim`) in
   `docs/ROADMAP/PDF_CREATE.md`; shipped-feature summary in `docs/FEATURES.md`.
+
+## Notes (2026-08-09 pdf_create P2-P3 pass)
+
+- **P3 shipped**: `producers/weasyprint.lua` + `producers/chromium.lua` (html),
+  `producers/soffice.lua` (office), and three merge producers —
+  `producers/qpdf.lua` + `producers/pdftk.lua` + `producers/ghostscript.lua` —
+  registered as ordinary `"pdf"`-kind producers (input kind `"pdf"` already
+  existed in `PdfPort.InputKind`, unused until now) rather than a bespoke
+  merge subsystem: `require("pdfport").merge({inputs, output, ...})` is a
+  thin wrapper that calls `composer.create()` with `from = "pdf"`, reusing
+  the exact same resolve/on_conflict/progress machinery as every other
+  input kind. New `:PdfPort merge {output} {input1} {input2} ...` route
+  reads the input list via `ctx.rest` (lib.nvim usercmd composer's
+  leftover-tokens field) rather than a fixed positional-arg schema.
+- **Of P2** (caller wiring into `images.nvim`/`markdown.nvim`/`filetree.nvim`),
+  only `filetree.nvim`'s side is in scope of this repo/session —
+  `filetree.util.pdf.create()` + the new `pdf_create` feature (`gP` keymap)
+  call straight into `pdfport.create()`, documented in filetree.nvim's own
+  `Keymaps/filetree.nvim.md` and `docs/ROADMAP/PDFPORT_INTEGRATION.md`.
+  `images.nvim`/`markdown.nvim` wiring remains open — separate repos, not
+  touched this pass.
+- `create_chain.pdf = { "qpdf", "pdftk", "ghostscript" }` added to
+  `config/DEFAULTS.lua` — the merge fallback chain, same shape as every
+  other `create_chain` entry, not a new top-level config key.
 
 ## Notes (2026-08 deps pass)
 
