@@ -1,9 +1,0 @@
----@module '{FILKETREE.TEMPLATE-A-SHOULD.INSERT.RELATIVE.FILEPATH.In.CORECT.FORMAT}'
----@brief
----@desc {CORRECT?}
-
-
-local M = {}
-
-return M
-

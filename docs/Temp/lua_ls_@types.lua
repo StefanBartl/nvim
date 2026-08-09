@@ -1,6 +1,0 @@
----@meta
----@module '{FILKETREE.TEMPLATE-A-SHOULD.INSERT.RELATIVE.FILEPATH.In.CORECT.FORMAT}'
----@brief
-
-return {}
-
