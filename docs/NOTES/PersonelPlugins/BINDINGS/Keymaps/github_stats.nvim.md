@@ -27,6 +27,7 @@ fixed/always-on bindings.
 | `force_refresh` (`f`) | Force-fetch only the selected repo | "GitHub Stats: force refresh selected repository" | disable-able |
 | `cycle_sort` (`s`) | Cycle `clones→views→name→trend` | "GitHub Stats: cycle sort criteria" | disable-able |
 | `cycle_time_range` (`t`) | Cycle `7d→30d→90d→all` | "GitHub Stats: cycle time range" | disable-able |
+| `custom_time_range` (`T`) | Prompt (`vim.fn.input`) for a free-form time range (e.g. `3m`, `since:2025-01-01`, a `date_presets` name); rejected with an error notification if unrecognized by `analytics.parse_time_range` | "GitHub Stats: enter custom time range" | disable-able; added 2026-08-09 |
 | `quit` (`q`) | Close dashboard | "GitHub Stats: quit dashboard" | only if `keybindings.quit ~= ""` |
 | `<Esc>` (fixed) | Close dashboard (fallback, regardless of `quit` config) | "GitHub Stats: quit dashboard" | always |
 | `show_help` (`?`) | `vim.notify` overlay listing every current keybinding | "GitHub Stats: show help" | disable-able |
@@ -57,3 +58,11 @@ floating buffer.
 Collects `{key, desc, buffer}` as keymaps are registered, one `pcall`
 `which_key.add` call at the end. **v3 `add` API only** — no v2 `register`
 fallback (unlike emojis/fileops/filetree/gopath, which support both).
+
+## Changelog
+
+- 2026-08-09: added `custom_time_range` (default `T`), a free-form time
+  range prompt alongside the existing `cycle_time_range` (`t`) 7d/30d/90d/all
+  cycle. New `analytics.parse_time_range` accepts `Nd`/`Nw`/`Nm`/`Ny`,
+  `since:YYYY-MM-DD`, a bare ISO date, `all`, or any `date_presets` name
+  (built-in or user-custom).

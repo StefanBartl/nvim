@@ -17,7 +17,7 @@ to match the sibling-plugin `doc/<name>.txt` convention)
 | `:GithubStats referrers` | `{repo} [limit]` | Top referrers |
 | `:GithubStats paths` | `{repo} [limit]` | Top paths |
 | `:GithubStats chart` | `{repo} {clones\|views\|both} [start\|range] [end]` | Sparkline/comparison chart |
-| `:GithubStats export` | `{repo\|all} {metric} {filepath}` | Export to CSV/Markdown |
+| `:GithubStats export` | `{repo\|all} {clones\|views\|both} {filepath}` | Export to CSV/Markdown |
 | `:GithubStats diff` | `{repo} {metric} {period1} {period2}` | Compare two periods |
 | `:GithubStats debug` | — | Diagnostic dump |
 | `:GithubStats[!] dashboard` | — | Open dashboard (`!` forces refresh) |
@@ -74,3 +74,16 @@ to match the sibling-plugin `doc/<name>.txt` convention)
   hint strings inside health.lua's error messages) — merged in a follow-up
   commit (`6f1660c fix(health): merge duplicate GitHub Stats Dashboard
   health sections`), already pushed.
+
+## Changelog
+
+- 2026-08-09: `export`'s `{metric}` slot gained a third value, `both`
+  (combined clones+views report; composer enum updated to
+  `{ "clones", "views", "both" }`, no longer sharing the plain `METRIC`
+  local with `show`/`summary`/`diff`). Two export bugs fixed at the same
+  time: a missing filepath extension now defaults to `.csv` (`.md` for the
+  `all` target) instead of erroring, and a non-existent parent directory is
+  now created automatically instead of failing with a raw `E482`. Summary
+  exports (single-repo or `all`) also gained a "Highlights" section (top
+  repo, best month, best single day), computed by the new
+  `analytics.compute_highlights`.
