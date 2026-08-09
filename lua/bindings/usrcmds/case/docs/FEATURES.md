@@ -12,6 +12,34 @@ listed here only as a pointer.
 
 Module: `lua/bindings/usrcmds/case/`.
 
+## `:Case versions` (EXTRACTION.md Paket 1)
+
+Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+§2, §3, §12 (Paket 1, steht seit 2026-08-10). `extract/supportinfo.lua`
+parses `Ressources/ToscaSupportInfo*.txt` — validated against all four
+real support-info files EXTRACTION.md's own analysis is based on, not just
+the design doc's mockups: the digest correctly finds the one real
+customer-added DLL (`Achmea_Tosca_Custom_Controls.dll`) in the one case
+that has it, and zero false positives across the other three.
+
+- **Digest, not the 1600-line list** (`:Case versions [nr]`) — Testsuite/
+  TBox build/Api Core/Install-Root, plus "Auffällig": TBox-root `.dll`/
+  `.exe` entries not matching `config.known_vendor_prefixes`. That
+  filter list was built by extracting every real filename from a real
+  TBox root, not guessed — same "extend the config, not the parser"
+  shape as `version_components`.
+- **`:Case versions <component>`** copies a version straight to the
+  clipboard — resolves via `config.version_components` (curated friendly
+  names) first, then falls back to a case-insensitive substring over
+  every filename in the report, so anything in the file is reachable even
+  without a table entry.
+- **`--all`** lists everything, grouped by directory; **`--raw`** opens
+  the file itself.
+- **Not built**: the stream fallback for `server` (EXTRACTION.md §11 Q3)
+  — the server version only appears in the Activity Stream, and no real
+  sample with that exact line was available to verify a parser against.
+  Deferred to Paket 2, which builds the stream extractor properly.
+
 ## Active SLA notifications + KI-prompt context (SLA.md Paket 4, last one)
 
 Konzept: [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md) §6C, §6E,

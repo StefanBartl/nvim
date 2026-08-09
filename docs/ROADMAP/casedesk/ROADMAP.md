@@ -25,12 +25,17 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
-- [ ] **Artefakt-Extraktion** — eigenes Konzept: [EXTRACTION.md](EXTRACTION.md).
-      `:Case versions [component]` aus `ToscaSupportInfo*.txt` (Digest statt
-      1600-Zeilen-Liste, Custom-DLL-Erkennung), Stream-Signale jenseits der
-      SLA-Uhr (Server-Version, Zustandshistorie, SAP Component, Fehlercodes,
-      KBAs), `:Case doclinks` als Versionsabgleich der Tricentis-Doku-Links,
-      und der Faktenblock als Fundament für die KI-Anbindung.
+- [ ] **Artefakt-Extraktion (Rest)** — eigenes Konzept:
+      [EXTRACTION.md](EXTRACTION.md). Paket 1 steht (`:Case versions
+      [component] [nr] [--all] [--raw]` aus `ToscaSupportInfo*.txt` — Digest
+      statt 1600-Zeilen-Liste, Custom-DLL-Erkennung; gegen alle vier
+      analysierten Support-Infos verifiziert, kein False Positive). Offen:
+      Paket 2 (Stream-Signale jenseits der SLA-Uhr: Server-Version,
+      Zustandshistorie, SAP Component, Fehlercodes, KBAs), Paket 3
+      (`:Case doclinks` als Versionsabgleich der Tricentis-Doku-Links),
+      Paket 4 (SLA-Korrektur: Uhr pausiert bei `Awaiting User Info` — hängt
+      an EXTRACTION.md §11.1s offener Fachfrage), Paket 5 (Faktenblock als
+      Fundament für die KI-Anbindung).
 
 - [ ] casedesk: wenn ki weingebunden wird, dann soll immer gleidch passende refrenezen aius den tricentis docs paswend zu case gfunden werden und unter einer headline Links gesammelt. es soll agenau der abschnit und wrtlaut ausdem page zitiert werden, das brauhe ich für meine internen notizen mit den voahces, da soll der link headline abschnitt hin. Außerdem: Refrenzen zu bekannten standarwerken vorschoagen, primär auf englishc, gerne abe auhdeutsch also zb wenn es uj ceritifcaes bei tosca server geht, dann halt standard fachliteratur wie zertifikate genrelel und in windows im besinderen funktienren.. auch unter enen eigenen healine abshnitt "learning referenzen"
   - [ ] die farge nach ki einbindung sollten wir uns stellen: es gibt j a zwei variaten, einmlaml nur sprachbasiertes und heuritsik, und anderer ist die ki. ich habe in meiner nvim config C:\Users\StefanBartl\AppData\Local\nvim\lua\config\ai\ und  C:/Users/StefanBartl/AppData/Local/nvim/lua/plugins/ai/ wo ich schon mit ai konfiguriert habe. dementsprechend, ich habe auf meiner workstation und pc zugang zu meinen gemini, chat gpt und claude account, claude pro lizenz. eventuell ins konzept mitdenke

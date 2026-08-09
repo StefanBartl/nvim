@@ -1087,6 +1087,122 @@ function M.copy(src, case_arg)
   end)
 end
 
+-- ── :Case versions ───────────────────────────────────────────────────────
+
+--- `:Case versions [component] [nr] [--all] [--raw]` — EXTRACTION.md §3.
+--- No `component`: the curated digest (testsuite/TBox build/Api Core/
+--- install-root + the "Auffällig" custom-DLL section — the point of the
+--- digest, not the number list, EXTRACTION.md §2). A `component` copies
+--- its version straight to the clipboard, same "one action" shape as
+--- `M.insert` — resolves via `config.version_components` first, then any
+--- substring of any filename in the report (`extract.supportinfo.lookup`).
+---@param component_arg string|nil
+---@param case_arg string|nil
+---@param flags { all: boolean|nil, raw: boolean|nil }|nil
+function M.versions(component_arg, case_arg, flags)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to show versions for")
+      return
+    end
+    local supportinfo = require("bindings.usrcmds.case.extract.supportinfo")
+    local path = supportinfo.find(entry.dir)
+    if not path then
+      notify.warn(("%s: no ToscaSupportInfo*.txt found under Ressources/"):format(entry.short))
+      return
+    end
+
+    if flags and flags.raw then
+      edit(path)
+      return
+    end
+
+    local content = read(path)
+    if not content then
+      notify.error("could not read " .. path)
+      return
+    end
+    local parsed = supportinfo.parse(content)
+    local file_label = vim.fn.fnamemodify(path, ":t")
+
+    if flags and flags.all then
+      local lines = { ("%s · %s (full listing)"):format(entry.short, file_label), "" }
+      local last_dir = nil
+      for _, e in ipairs(parsed.entries) do
+        if e.dir ~= last_dir then
+          lines[#lines + 1] = ""
+          lines[#lines + 1] = e.dir or "(unknown directory)"
+          last_dir = e.dir
+        end
+        lines[#lines + 1] = e.version and ("  %-50s %s"):format(e.name, e.version) or ("  " .. e.name)
+      end
+      kit.viewer({ title = "Versions (all)", lines = lines })
+      return
+    end
+
+    if not component_arg or component_arg == "" then
+      local d = supportinfo.digest(parsed)
+      local lines = {
+        ("%s · %s · report %s"):format(entry.short, file_label, d.report_created or "unknown"),
+        "",
+        ("  Testsuite        %s"):format(d.testsuite or "unknown"),
+        ("  TBox build       %s"):format(d.tbox_build or "unknown"),
+        ("  Api Core         %s"):format(d.api_core or "unknown"),
+        ("  Install-Root     %s"):format(d.install_root or "unknown"),
+        "",
+        "  Auffällig",
+      }
+      if #d.unusual > 0 then
+        for _, e in ipairs(d.unusual) do
+          lines[#lines + 1] = ("    %s%s"):format(e.name, e.version and (" · " .. e.version) or "")
+        end
+      else
+        lines[#lines + 1] = "    (keine kundeneigenen DLLs im TBox-Wurzelverzeichnis)"
+      end
+      if #d.watched > 0 then
+        local parts = {}
+        for _, e in ipairs(d.watched) do
+          parts[#parts + 1] = ("%s %s"):format((e.name:gsub("%.dll$", "")), e.version or "?")
+        end
+        lines[#lines + 1] = ""
+        lines[#lines + 1] = "  Ausgewählt        " .. table.concat(parts, " · ")
+      end
+      kit.viewer({ title = ("Versions %s"):format(entry.short), lines = lines })
+      return
+    end
+
+    local header_hits, entry_hits = supportinfo.lookup(parsed, component_arg)
+    if #header_hits == 1 and #entry_hits == 0 then
+      local h = header_hits[1]
+      require("lib.nvim.cross.copy_to_clipboard")(h.value)
+      notify.info(("%s: %s (copied)"):format(h.label, h.value))
+      return
+    end
+    if #entry_hits == 0 then
+      notify.warn(("versions: no match for %q in %s"):format(component_arg, file_label))
+      return
+    end
+    if #entry_hits == 1 then
+      local e = entry_hits[1]
+      require("lib.nvim.cross.copy_to_clipboard")(e.version or "")
+      notify.info(("%s: %s (copied)"):format(e.name, e.version or "no version line"))
+      return
+    end
+    kit.select({
+      message = ("%d matches for %q"):format(#entry_hits, component_arg),
+      selection = entry_hits,
+      format_item = function(e)
+        return ("%-50s %s"):format(e.name, e.version or "")
+      end,
+      on_select = function(e)
+        require("lib.nvim.cross.copy_to_clipboard")(e.version or "")
+        notify.info(("%s: %s (copied)"):format(e.name, e.version or "no version line"))
+      end,
+      on_cancel = function() end,
+    })
+  end)
+end
+
 -- ── :Case sync ───────────────────────────────────────────────────────────
 
 ---@param case_arg string|nil

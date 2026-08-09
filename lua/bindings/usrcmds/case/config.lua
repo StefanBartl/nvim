@@ -205,6 +205,132 @@ M.sla_stale_days = {
 }
 M.stale_days_default = 7
 
+-- ── Artefakt-Extraktion (docs/ROADMAP/casedesk/EXTRACTION.md) ───────────
+-- `:Case versions` — Paket 1. Validated against four real
+-- ToscaSupportInfo*.txt files across three Tosca generations (EXTRACTION.md
+-- §1); every entry below traces back to a real filename in those, not a
+-- guess.
+
+--- Friendly name -> the entry that actually answers "which version is X?"
+--- for `:Case versions <component>`. The list only shortcuts the common
+--- questions; ANY substring of ANY filename in the report works as
+--- `component` too (`extract/supportinfo.lua`'s `M.lookup` falls back to a
+--- substring scan), so an entry missing here is a missing convenience,
+--- never a missing capability. `server` deliberately isn't here — the
+--- server version doesn't appear in the support-info at all, only in the
+--- Activity Stream (EXTRACTION.md §4.1's Paket 2 territory, not built yet).
+---@type table<string, { header: string }|{ file: string }>
+M.version_components = {
+  commander = { header = "Tosca Testsuite Version" },
+  testsuite = { header = "Tosca Testsuite Version" },
+  tbox = { file = "Tricentis.AutomationBase.dll" },
+  api = { file = "Tricentis.Automation.Api.Core.dll" },
+  sap = { file = "Tricentis.Automation.SapEngine.dll" },
+  sapui5 = { file = "Tricentis.Automation.SAP.SAPUI5.dll" },
+  html = { file = "Tricentis.Automation.HtmlEngine.dll" },
+  chrome = { file = "Tricentis.Automation.ChromeEngine.dll" },
+  edge = { file = "Tricentis.Automation.EdgeEngine.dll" },
+  uia = { file = "Tricentis.Automation.UiaEngine.dll" },
+  mobile = { file = "Tricentis.Automation.Mobile30Engine.dll" },
+  webdriver = { file = "WebDriver.dll" },
+  excel = { file = "Tricentis.Automation.ExcelEngine.dll" },
+  pdf = { file = "Tricentis.Automation.PdfEngine.dll" },
+  database = { file = "Tricentis.Automation.DatabaseEngine.dll" },
+  ocr = { file = "Tesseract.dll" },
+  licensing = { file = "CloudLicensingIntegrationService.dll" },
+}
+
+--- The digest's "Ausgewählt" line — libraries known to drift independently
+--- of the TBox build number and worth a permanent line even when nothing's
+--- unusual (EXTRACTION.md §2: Tesseract jumped 3.3.0.0 -> 5.2.0 between
+--- 25.1 and 2026.1 while every `Tricentis.Automation.*` engine stayed on
+--- the same build — exactly the kind of drift a flat "Auffällig" section
+--- would miss, since these ARE known/expected files).
+M.version_watch = { "Tesseract.dll", "WebDriver.dll" }
+
+--- Filename prefixes the digest's "Auffällig" section treats as "a known
+--- dependency, not a support signal" — everything else found directly in
+--- the TBox root gets surfaced (EXTRACTION.md §2's second finding: a
+--- customer-authored `Achmea_Tosca_Custom_Controls.dll` sitting among
+--- ~330 legitimate files was invisible in the raw list, obvious once
+--- filtered). Built empirically from a real 2026.1 support-info's full
+--- TBox root listing — not exhaustive for every Tosca version or every
+--- customer's dependency set, and it doesn't need to be: a legitimate
+--- library missing from this list just shows up once in "Auffällig" and
+--- gets added here, the same "config as data, extend without touching the
+--- parser" pattern `M.version_components` above already uses. A FALSE
+--- negative (a genuine custom DLL slipping through because it happens to
+--- match a prefix here) is the risk worth watching — prefixes here are
+--- deliberately specific namespace roots, not single-letter shortcuts.
+---@type string[]
+M.known_vendor_prefixes = {
+  "amqm",
+  "Amqp.",
+  "Antlr4.",
+  "Apache.",
+  "Avro",
+  "AWSSDK.",
+  "Azure.",
+  "BouncyCastle.",
+  "Castle.",
+  "CloudLicensing",
+  "CloudTestData",
+  "CommandLine",
+  "Commander",
+  "Confluent.",
+  "DevExpress.",
+  "DocumentFormat.",
+  "Duende.",
+  "Experimental.",
+  "ExtensionManager",
+  "Fare",
+  "Flexera",
+  "Flx",
+  "GdPicture.",
+  "Gma.",
+  "Google.",
+  "Grpc.",
+  "ICSharpCode.",
+  "IdentityModel",
+  "Interop.",
+  "libcrypto",
+  "libssl",
+  "log4net",
+  "LogViewer",
+  "MailKit",
+  "ManualExecution",
+  "Microsoft.",
+  "MimeKit",
+  "Mobile.Connections",
+  "ModelContextProtocol.",
+  "NativeSDK.",
+  "NCalc",
+  "Newtonsoft.",
+  "NHotkey.",
+  "Open3270",
+  "OpenMcdf",
+  "Otp.NET",
+  "Polly",
+  "protobuf-net",
+  "RabbitMQ.",
+  "RestSharp.",
+  "RtfPipe",
+  "ServicesCPP",
+  "Std.UriTemplate",
+  "System.",
+  "Tesseract",
+  "TestData",
+  "TestStepForm",
+  "TOSCA",
+  "Tricentis", -- no trailing dot: also catches names without one, e.g. "TricentisHtmlEngineExtensionHelper"
+  "UIAComWrapper",
+  "UIHelper",
+  "WebDriver",
+  "WpfAnimatedGif",
+  "XamlAnimatedGif",
+  "XmlDiffPatch.",
+}
+
 M.default_blueprint = "default"
 
 --- Company name (as stored in `.case.json`) -> a key in `M.blueprints`,

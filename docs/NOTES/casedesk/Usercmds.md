@@ -36,6 +36,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case ki import [nr]` | — | Paste an AI answer (in the format `:Case ki` asked for) from the clipboard and file it: analysis/difficulty/next-steps → `Research/NN_KiAnalysis.md`, English reply draft → new `Replies/NN_Reply.md` (still goes through `:Case reply check`, never auto-sent), internal German notes → appended to `Notes.md` |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
+| `:Case versions [component] [nr] [--all] [--raw]` | `component` — a `config.version_components` name, or any substring of any filename in the report | No args: curated digest (Testsuite/TBox build/Api Core/Install-Root + the "Auffällig" custom-DLL section) from `Ressources/ToscaSupportInfo*.txt`. A `component` copies its version to the clipboard (several matches → `kit.select`). `--all` lists every entry, grouped by directory. `--raw` opens the file itself |
 | `:Case close [nr]` | — | Pick a destination (`kit.select`): any other state, or "Delete permanently" (types the case number back to confirm — irreversible, not a bare y/n). Moving deletes the case's saved session too, if it had one (SESSIONS.md §6) |
 | `:Case reassign [nr]` | — | Move to `Reassigned/`, delete its saved session if it had one (SESSIONS.md §6) |
 | `:Case snow [nr]` | — | Open the ServiceNow ticket URL (if `config.snow_url_format` is set) or copy the ticket id |
@@ -168,6 +169,27 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   mutation here, since it's the one action in this module with no undo:
   typing the case number back for one case, `DELETE` for a batch, never a
   plain y/n.
+- **`:Case versions` never parses a version number, only compares
+  strings.** Real formats seen across four support-info files:
+  `34.8.0.280 (280)`, `2, 8, 0`, `3.3.0`, `2026.1` next to `25.1.7` on the
+  same header — EXTRACTION.md §2. `report_created` is the same story:
+  two locale-dependent formats (12h vs. 24h) with no field telling you
+  which, so it's shown verbatim and never fed to a date parser.
+- **A curated `version_components` entry (e.g. `tbox`) can genuinely exist
+  in the support-info under two different paths with two different
+  versions** — `Tricentis.AutomationBase.dll` ships its own copy under
+  `ToscaCommander\` in addition to the `TBox\` root, real and confirmed,
+  not a hypothetical. `extract/supportinfo.lua`'s lookup always prefers
+  the TBox-root occurrence for a curated component; an uncurated substring
+  search returns every match instead, since there's no single "main"
+  answer to prefer there.
+- **`config.known_vendor_prefixes` (the "Auffällig" filter) was built by
+  extracting every real filename from a real TBox root, not guessed** —
+  and it's expected to need occasional additions as Tosca versions add new
+  dependencies, same "config as data, extend without touching the parser"
+  shape as `version_components` itself. A legitimate library missing from
+  the list shows up once as a false "Auffällig" hit; add its prefix and
+  it's gone.
 - **Active SLA notifications aren't a command — they run in the
   background.** For `config.sla_active_priorities` (P1/P2 by default), a
   15-min timer plus a `FocusGained` check (`sla/notify.lua`) warn once per

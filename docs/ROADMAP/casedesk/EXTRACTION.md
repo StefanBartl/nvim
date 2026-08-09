@@ -4,9 +4,16 @@ Was sich aus den beiden Artefakten holen lässt, die in fast jedem Case
 liegen: `Ressources/ToscaSupportInfo*.txt` (vom Tosca Commander generiert)
 und `Research/NN_ActivityStream.md` (aus SNOW kopiert).
 
-Noch nicht gebaut, bis auf den SLA-Teil des Stream-Parsers
-(`sla/stream.lua`, siehe [SLA.md](SLA.md)). Fertige Features:
-[CONCEPT.md](CONCEPT.md). Offene Punkte: [ROADMAP.md](ROADMAP.md).
+> **Paket 1 steht** (2026-08-10): `:Case versions [component] [nr] [--all]
+> [--raw]`, `extract/supportinfo.lua` (Kopf + Digest + Substring-Lookup),
+> `config.version_components`/`version_watch`/`known_vendor_prefixes`.
+> Gegen alle vier analysierten Support-Infos verifiziert (§1) — die
+> Achmea-Custom-DLL wird korrekt als einziger "Auffällig"-Fund über alle
+> vier gefunden, kein False Positive. Details: §12.
+
+Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Offene Pakete 2–5:
+[ROADMAP.md](ROADMAP.md). Der SLA-Teil des Stream-Parsers
+(`sla/stream.lua`) steht bereits eigenständig, siehe [SLA.md](SLA.md).
 
 ---
 
@@ -454,12 +461,18 @@ Neben dem bestehenden `sla/`:
 ```
 lua/bindings/usrcmds/case/
   extract/
-    init.lua           -- öffentliche API: facts(case) -> alle Signale
-    supportinfo.lua    -- ToscaSupportInfo*.txt: Kopf, Digest, Lookup
-    stream.lua         -- Stream-Signale JENSEITS der SLA-Uhr
-    doclinks.lua       -- docs.tricentis.com-URLs + Versionsabgleich
-    render.lua         -- Digest-/Faktenblock-Ausgabe
+    supportinfo.lua    -- Paket 1 (steht): ToscaSupportInfo*.txt — Kopf, Digest, Lookup
+    stream.lua         -- Paket 2: Stream-Signale JENSEITS der SLA-Uhr
+    doclinks.lua       -- Paket 3: docs.tricentis.com-URLs + Versionsabgleich
+  ui.lua                -- M.versions — Digest/`--all`-Rendering (kein eigenes extract/render.lua)
 ```
+
+Kein `extract/init.lua`/`render.lua` geworden — Paket 1 brauchte weder eine
+Fassaden-API (`ui.lua` ruft `supportinfo.lua` direkt) noch ein separates
+Render-Modul (`M.versions` in `ui.lua` rendert selbst, derselbe
+Datensammlung/Rendering-Split wie `sla/`s Report, CONCEPT.md §4). Ob
+Paket 5 (KI-Faktenblock) einen eigenen `render.lua` braucht, entscheidet
+sich, wenn `{facts}` mehr als `:Case versions`s Digest zusammenfasst.
 
 `sla/stream.lua` bleibt, wo es ist, und wird **nicht** verschmolzen: es hat
 einen anderen Vertrag (nur was die Uhr braucht, garantiert fehlertolerant)
@@ -491,7 +504,9 @@ importiert, nicht umgekehrt.
 3. **Soll `:Case versions` ohne Support-Info auf den Stream zurückfallen?**
    Dafür: Server-Version gibt es nur dort. Dagegen: Fließtext-Fund ist
    unsicherer als eine Header-Zeile. Vorschlag: ja, aber mit sichtbarer
-   Quellenangabe.
+   Quellenangabe. **Weiterhin offen** — Paket 1 hat das bewusst nicht
+   gebaut (s. §12): kein reales Stream-Sample mit dem Muster im Bestand,
+   um den Fallback zu verifizieren, bevor er scharf geschaltet wird.
 4. Sollen Custom-DLLs in `Summary.md` einfließen (SNOW-sichtbar) oder nur
    in `Notes.md` (intern)?
 5. `:Case doclinks` eigenständig oder nur als Prüfschritt in
@@ -499,9 +514,14 @@ importiert, nicht umgekehrt.
 
 ## 12. Reihenfolge
 
-**Paket 1 — `:Case versions`** · `extract/supportinfo.lua` (Kopf + Digest +
-Substring-Lookup) · `config.version_components` · Digest-Viewer ·
-`--all`/`--raw` · Fallback auf Stream für `server`.
+**Paket 1 — `:Case versions` (steht, 2026-08-10):** `extract/supportinfo.lua`
+(Kopf + Digest + Substring-Lookup) · `config.version_components` ·
+Digest-Viewer · `--all`/`--raw`. **Fallback auf Stream für `server` NICHT
+gebaut** — kein reales Aktivstream-Sample mit dem `Tosca server version -
+…`-Muster war zum Verifizieren greifbar (nur ein Stream im Bestand, ohne
+diese Zeile), und §11 Frage 3 war ohnehin nur ein Vorschlag, keine
+Entscheidung. `:Case versions server` liefert bis dahin "kein Treffer"
+statt eines ungetesteten Regex-Rateversuchs.
 
 **Paket 2 — Stream-Signale** · `extract/stream.lua` (Zustandshistorie,
 Versionen im Text, SAP Component, Fehlercodes, Anhangsnamen, KBAs) ·

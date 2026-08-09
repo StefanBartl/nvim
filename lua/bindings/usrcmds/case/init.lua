@@ -292,6 +292,21 @@ function M.enable()
       end,
     },
     {
+      path = { "versions" },
+      args = {
+        { name = "component", type = "STRING", optional = true },
+        { name = "case", type = "CASE", optional = true },
+      },
+      flags = {
+        { name = "all", bool = true },
+        { name = "raw", bool = true },
+      },
+      desc = "Curated version digest from ToscaSupportInfo*.txt (EXTRACTION.md); a component copies its version, --all lists everything, --raw opens the file",
+      run = function(ctx)
+        ui.versions(ctx.args.component, ctx.args.case, ctx.flags)
+      end,
+    },
+    {
       path = { "sync" },
       args = { { name = "case", type = "CASE", optional = true } },
       desc = "Add missing blueprint pieces to an existing case",
