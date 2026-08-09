@@ -1,21 +1,27 @@
 # `documentation.nvim`
 
-## Generell
+## Notes für mich (nicht implementieren)
 
 - [ ] documentation.nvim lernen
+
+## Generell
+
 - [ ] Kann ich,wenn das plugin `documentation.nvim` nutzt, etwas für
   - meinen Workflow gewinnen
   - etwas vom Kontext, über das Projekt in dem ich gerade arbeite, dazu verwenden um das Linting, LSP Diagnostic oder vielleicht das fehlende `in/outgoing calls` feature von luals, beisteurn kann das es  (besser) funktionert?
+  Also sprich: uisecase dateen bzw workflow files mit tipps, wie man documentation.nvim effiziehnt nutzt, wie man die aufbereitetein daten inm browser gut nutzt, was man wo findet, was man wie kombinieren kann usw...
+
+- [ ] Jedes plugin das documentation.nvim verwendet, könnte doch in der eigenen README.md auf die entstandenen files hinweißemn, dass s man die im browser anschauen kann. als auf die art "dieses plugin verewndet documentatiion.nim und du kannst dir die maps /views usw hier anschauen: PFAD/" (wobei ich gerade nicht sicher bin, ob da süheer diesen weg auch geht, denn der übliche weg ist ja glaube ich in der documentation.nvim indtallations spec andzugeben, welche projekte man analyisert haben will; daher würde der punkt wrsch nur begrnezt sinn machen oder?)
+- [ ] In den plugins werden gerade doc regeln implementiert wie: einen docs/FEATURES Folder oder zumindest eine file in der alle features beschreiben werden in einen bestimmten format/regeln. auch docs/BINDINGS wo alle autocmds, usrcmds und keymaps aufgelistet sind. Das kann documentation.nvim nutzen, um eigene tabs dafür anzuzeigen. Das diese, wie jene tabs von runtime-anylsis.nvim nicht direkt von documentation.nvim kommen, sollten sie farblich/icon/form abweichen vom standard; Es wäre gut, eine Spezifikation für FEATURES und BINDINGS zu analysiren und ziu chcken, ob etwas anders gemahct werden soll, um es gut verwenden zu können. Hier könnte man auch ein feature anbieten, dass man sowas macht wie wenn im FEATURES folder ein file drinnen isst die ein features ausführlich beschriebt (und bewirbt), dann bekommt das einen eigenen tab; als idee
 
 ## Neue Features
 
 - [ ] lib.nvim nvim.deps als tab einbinden
-- [ ] Spezielle tabs die vonm anderenr plugins komen wie runtime-anylsis.nvim oder lib.nvim.nvim.deps, dann werden die ja in der tablesite angheeikgt, wenn siue nxht isntalliert sind, dann ncht. es wäre suuper, wenn sie isntlliert ud in dedr tagleiste sind, das sich die tab iccons ein wenig vonden normalen abheben, l eichtende bg odeer so...O
-- [ ] In mder hriachie level auslednen/einblenden also zb root level ausbelnden sodass die level 2 folder als root ebeene dargestellt weren,.
-- [ ] hirachie view:einzelne module auslenden und einblenden
+- [ ] Spezielle tabs die vonm anderenr plugins komen wie runtime-anylsis.nvim oder lib.nvim.nvim.deps, dann werden die ja in der tablesite angheeikgt, wenn siue nxht isntalliert sind, dann ncht. es wäre suuper, wenn sie isntlliert ud in dedr tagleiste sind, das sich die tab iccons ein wenig vonden normalen abheben, leichtende bg odeer, hl und so...
+- [ ] In der hriachie level auslednen/einblenden also zb root level ausbelnden sodass die level 2 folder als root ebeene dargestellt weren,.. viellei cht muit : an der seite ein so ein horizontaler strich it veikalen linien wie bnei einen masstatb, dass man poft hat bei google maps usw.. um den zoom level z bestmmten, da gibt es dann ein + zeichen bei top und ein minus bbei botomm oider so öhnlich
+- [ ] hirachie view:einzelne module auslenden/verdunkeln und einblenden
 - [ ] Alternative ansichten von modulen: view wie hierarchie, aber man ann verschiednee "daten" oder "filter auf da modul view legen wie zb welche calls macht das modul, dan weren alle module die calls empfangen rundherum eingeblendet und verbunden mit pfelen und gewuchtet darewtekltllt: ciele calls dickerer streich oder so ähnlch. und dda vercshiedne varianten davon auswählbar machen brainstorm, welche views man mache kölnte mit den daten ,  ich wwürde einen eigenen tab dafür machen nicht im hirarchie tab
-- [ ] einen ne en tab mit birwowser explorer gleich mit dem projekt geladen
-
+- [ ] einen tab, indem der source code des projekts in https://godbolt.org/ geladen ist; bei den modulen / funktinen / tables usw... ein icon, bei dem einpopup aufgeht in der der code in  geladen ist ( wenn das sinn macht) oder zumimdnest ein icon, wenn man den klickt schickt er den funkltine/table usw.. in desas compiler explorer tab
 
 ---
 
@@ -89,4 +95,6 @@ Verlinkung generieren zu lassen statt sie von Hand zu pflegen.
 
 **Aufwand:** Quick Win je Annotation
 **Nutzen:** mittel.
+Sollten eigenkreationen notwendig werden, bin ich gerundsätzlkich offen dafür wenn sie nicht zwingend für kernfeatures notwenidig gemacht werden
+
 

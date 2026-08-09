@@ -125,7 +125,16 @@ plugins.add({
 
   {
     "StefanBartl/buffer-ctx.nvim",
-    cmd = { "Insert", "Copy", "Format", "Mark", "MarkLineToggle", "MarkLinesYank" },
+    cmd = {
+      "Insert",
+      "Copy",
+      "Format",
+      "Mark",
+      "MarkLineToggle",
+      "MarkLinesYank",
+      "CopyFilepathAbsolute",
+      "CopyFilepathRelative",
+    },
     keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>", "<C-p>" },
     opts = {
       commands = true,
