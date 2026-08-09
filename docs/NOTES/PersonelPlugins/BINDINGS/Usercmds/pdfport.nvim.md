@@ -17,6 +17,8 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `doc/pdfport.txt`
 | `:PdfPort system [path]` | Open with system application |
 | `:PdfPort terminal [path]` | Render as terminal image (prompts for a page range) |
 | `:PdfPort backends` | List all registered backends with live availability (float) |
+| `:PdfPort create [path]` | Create a PDF from an image (path arg, `<cfile>`, or current buffer) |
+| `:PdfPort producers` | List all registered creation producers with live availability (float) |
 | `:PdfPort health` | Run `:checkhealth pdfport` |
 
 All path-taking subcommands fall back to `<cfile>` then the current buffer
@@ -61,6 +63,27 @@ name when `[path]` is omitted — unchanged from the original.
   historical snapshot rather than rewritten.
 - `doc/pdfport.nvim.txt` was renamed to `doc/pdfport.txt` (tags `pdfport.nvim-*` ->
   `pdfport-*`) so `:h pdfport` resolves, matching `fileops.txt`/`replacer.txt`.
+
+## Notes (2026-08-09 pdf_create P0 pass)
+
+- **New creation ("write") direction**, mirroring the read path exactly:
+  `core/composer.lua` resolves a **producer** (not a backend) through a
+  per-input-kind `create_chain`, same shape as `core/resolver.lua` for
+  backends. `producers/img2pdf.lua` + `producers/magick.lua` are the only
+  shipped producers (image input only); lazy-registered via
+  `producers/init.lua` exactly like `backends/init.lua`.
+- **`create`/`producers` routes added**, same `show_diagnostics()` helper
+  reused by both `backends` and `producers` (previously duplicated inline in
+  the `backends` route).
+- `require("pdfport").create({ inputs = {...} })` / `can_create(kind)` /
+  `register_producer(p)` are the new public Lua API, mirroring
+  `open`/`extract`/`register_backend`.
+- The `filetree.nvim` `require("pdfport_nvim")` bug noted in the personal
+  ROADMAP (`filetree/util/pdf.lua`) was found already fixed on disk — no code
+  change needed there.
+- Full design + P1-P3 (Markdown/HTML/Office producers, caller wiring into
+  `images.nvim`/`markdown.nvim`/`filetree.nvim`) in
+  `docs/ROADMAP/PDF_CREATE.md`; shipped-feature summary in `docs/FEATURES.md`.
 
 ## Notes (2026-08 deps pass)
 
