@@ -9,14 +9,6 @@ E:\repos\Notes\ProjectIdeas: Durcgehen und anlysieren lassen
 
 case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum ziel. case delete
 
-- [ ] `bindings-explorer.nvim` — Phase 1 (`:Bindings search`/`path`) ist
-  fertig. Offen: Phase 2 (jede Tabellenzeile aus den BINDINGS-Cheatsheets
-  als durchsuchbarer Datensatz, `:Bindings browse`) und Phase 3
-  (Drift-Erkennung: dokumentierte Keymaps/Usercmds gegen tatsächlich
-  registrierte via `nvim_get_keymap`/`nvim_get_commands` abgleichen).
-  Volles Konzept: `docs/ROADMAP/personal/bindings-explorer.nvim.md`.
-
-
 - pdfport.nvim - pdf erstellings funkiton zb pandoc; im filetree wöre dass dan auch super: diese file/image als pdf erstellen, dann kann ich die pdf gleich im system app viewer aufmachen...
 - spotlight checken und lernen
 - documentation.nvim lernen

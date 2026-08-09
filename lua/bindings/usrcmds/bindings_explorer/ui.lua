@@ -2,8 +2,8 @@
 --- Picker-Verdrahtung für `:Bindings search` — `lib.nvim.ui.kit.select`,
 --- nicht `pickers.nvim`: dessen `sources/*` sind Dateisystem-Source-Objekte
 --- (cwd/folder/repos/drives), kein trivialer "Picker über diese Liste"-
---- Einstieg — siehe docs/ROADMAP/personal/bindings-explorer.nvim.md §3 für
---- die Begründung. `kit.select` ist derselbe Fallback, den images.nvim und
+--- Einstieg — siehe dieses Moduls docs/FEATURES.md für die Begründung.
+--- `kit.select` ist derselbe Fallback, den images.nvim und
 --- casedesk in genau dieser Lage auch nehmen.
 
 local M = {}

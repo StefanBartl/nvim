@@ -26,7 +26,6 @@ entries and `[default]`/`[custom]` markers that pure `vim.keymap.set`
 introspection can never show.
 
 Full feature list with examples: `docs/FEATURES.md` next to this file.
-Concept and open work: |bindings_explorer-roadmap|.
 
 ==============================================================================
 2. COMMANDS                                          *bindings_explorer-commands*

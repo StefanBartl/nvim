@@ -5,7 +5,7 @@
 --- repos/drives) und hat keinen generischen "Picker über diese
 --- Verzeichnisliste"-Einstieg — genau die Einschränkung, die casedesks
 --- eigene Prüfung von `pickers.nvim` schon für `actions/files.lua` notierte
---- (siehe docs/ROADMAP/personal/bindings-explorer.nvim.md §3). Die
+--- (siehe dieses Moduls docs/FEATURES.md). Die
 --- Engine-Schicht darunter ist dagegen bewusst generisch: `live_grep(opts)`
 --- nimmt `opts.roots` als beliebige Verzeichnisliste, einheitlich über
 --- telescope/fzf-lua/snacks hinweg — genau der fehlende Baustein.

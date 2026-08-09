@@ -1,5 +1,5 @@
 ---@module 'bindings.usrcmds.bindings_explorer.drift'
---- Phase 3 (docs/ROADMAP/personal/bindings-explorer.nvim.md §3): drift
+--- Phase 3 (see this module's own docs/FEATURES.md, "Drift-Bericht"): drift
 --- report between documented bindings (`records.lua`'s parsed rows) and
 --- what's actually registered right now (`nvim_get_keymap`/
 --- `nvim_get_commands`). Read-only, no autofix — same stance as

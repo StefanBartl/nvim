@@ -1,5 +1,5 @@
 ---@module 'bindings.usrcmds.bindings_explorer.records'
---- Phase 2 (docs/ROADMAP/personal/bindings-explorer.nvim.md §3): tolerant
+--- Phase 2 (see this module's own docs/FEATURES.md): tolerant
 --- table-row scraper. Every `|…|…|` line found under the nearest preceding
 --- `##`/`###` heading becomes a flat record — column names and count stay
 --- free-form (`docs/NOTES/BINDINGS-FORMAT.md` only mandates a heading right

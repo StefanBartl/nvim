@@ -1,7 +1,11 @@
 ---@module 'bindings.usrcmds.bindings_explorer'
 --- `:Bindings` — Picker über die BINDINGS-Cheatsheets (docs/NOTES/
---- PersonelPlugins/BINDINGS + docs/NOTES/ExternPlugins/Bindings). Konzept:
---- docs/ROADMAP/personal/bindings-explorer.nvim.md.
+--- PersonelPlugins/BINDINGS + docs/NOTES/ExternPlugins/Bindings). Doku:
+--- docs/FEATURES.md (dieses Moduls), `:help bindings_explorer`. Der
+--- ursprüngliche Konzept-Entwurf unter docs/ROADMAP/personal/
+--- bindings-explorer.nvim.md wurde beim Aufräumen der Roadmap gelöscht
+--- (Feature ist längst umgesetzt) — docs/FEATURES.md ist die aktuelle
+--- Quelle, nicht dieser Pfad.
 ---
 --- Phase 1 (diese Datei): `:Bindings search [query]`, Live-Grep-in-Picker
 --- über `pickers.nvim`s Engine-Schicht (`live.lua`), mit einer statischen

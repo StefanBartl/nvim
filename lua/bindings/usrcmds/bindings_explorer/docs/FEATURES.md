@@ -2,9 +2,11 @@
 
 `:Bindings` — Picker über die eigenen BINDINGS-Cheatsheets
 (`docs/NOTES/PersonelPlugins/BINDINGS/` + `docs/NOTES/ExternPlugins/Bindings/`,
-137 Dateien, drei Kategorien: Keymaps/Usercmds/Autocmds). Konzept & offene
-Punkte: [`docs/ROADMAP/personal/bindings-explorer.nvim.md`](../../../../../docs/ROADMAP/personal/bindings-explorer.nvim.md).
+137 Dateien, drei Kategorien: Keymaps/Usercmds/Autocmds).
 Vimdoc: `:help bindings_explorer` (siehe [`doc/bindings_explorer.txt`](../doc/bindings_explorer.txt)).
+Diese Datei ist die aktuelle Doku — der ursprüngliche Konzept-Entwurf unter
+`docs/ROADMAP/personal/bindings-explorer.nvim.md` wurde beim Aufräumen der
+Roadmap gelöscht (Feature ist längst umgesetzt, Phase 1–3 alle fertig).
 
 Module: `lua/bindings/usrcmds/bindings_explorer/` — `init.lua` (Composer-
 Verb + Routen), `config.lua` (die zwei BINDINGS-Wurzeln), `search.lua` +
