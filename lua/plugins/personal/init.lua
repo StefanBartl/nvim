@@ -780,7 +780,15 @@ plugins.add({
           -- Panel is the default UI; set view = "quickfix" for the classic
           -- diagnostics + quickfix session flow instead.
           ui = { view = "picker", preview = true },
+          -- Covers general nvim/Lua plugin-dev vocabulary (nvim, buffer,
+          -- function, table, bindings, ...) so `:Spellcheck de` stops
+          -- flagging it in German notes about plugin development.
           programming_dict = true,
+          -- Tricentis/TOSCA support vocabulary, same reasoning — see
+          -- lua/spell_wordlists.lua. Load unconditionally: a few hundred
+          -- `:spellgood!` calls, scheduled off the hot path, is not worth
+          -- gating behind machine.is("workstation").
+          extra_wordlists = require("spell_wordlists"),
         },
         -- The commands (:Translate/:TranslateReplace/...) already work with
         -- zero config (engine = "google", keyless, is the plugin's own
