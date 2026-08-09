@@ -6,6 +6,17 @@
 
 ---
 
+## Prompt
+
+arbeite 
+`C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/documentation.nvim.md`
+ab:
+  - Sortiere die Liste nach Aufwendigkeit und Nutzen
+  - Als erster implementiere Quick wins
+  - wenn erledigt, entferne die task dann aus der liste und trage sie im project documentation.nvim unter docs/FEATURES ein
+update die docs/vimdoc und ggf. auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS
+comitte und pushe nach main; ggf pull wenn behind
+
 ## Generell
 
 - [ ] Kann ich,wenn das plugin `documentation.nvim` nutzt, etwas für
@@ -29,6 +40,7 @@
 - [ ] einen tab, indem der source code des projekts in https://godbolt.org/ geladen ist; bei den modulen / funktinen / tables usw... ein icon, bei dem einpopup aufgeht in der der code in  geladen ist ( wenn das sinn macht) oder zumimdnest ein icon, wenn man den klickt schickt er den funkltine/table usw.. in desas compiler explorer tab
 - [ ] Neues Feature: Erkennung von externen calls/plugins: zb man hat plenary eingebunfdne, und zwar called man zweimal eine funklti dort, auch pdfport.nvim wird mit einer api calöl called; jetzt wäre es super, wen es einen subpunkt in der dependecy ansicht gibt, dercalls zu plugin exzernen cpde aufzeigt, damit man dann agleich sieht: aha, plenary ist eignebunden wegen deieser zwei funktionen;
   - [ ] Erweiterung: Externer source code liegt ja nicht vor, daher mus er via github repo gezigt werden, das könnte man so machen, wenn man auf eine externe funkltnie / table oder was auch immer zugreift, diese funkltnin irgendo in documentation.nvim gezeigt wird, dass man wenn man auf einen icon klickt den source code von github fetched und zeigt bzw auch gleich auf github weiterleiten kann auf die korrekte page; so kann man den externen source schenll finden;
+- [ ] Einblick in daten, die das plugin persistnetnt schreibt, normalerweiße in stdpath('data') usw.. aber schön aufbereitet; Voher noch abklärung, ob es besser in ruintima-analyssis.nvm als feature passen würde, wenn ja, dann dorthin in die roadmap schreiben; Addon: selbst wenn es in runtime-analysis.nvim besser passen würde, kann es dennoch einen eigenen tab im runtime tab bekomen;
 
 ---
 

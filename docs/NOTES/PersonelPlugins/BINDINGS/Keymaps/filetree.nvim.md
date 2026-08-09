@@ -14,6 +14,8 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 | `-` | Set tree root to parent dir | `3-` climbs 3 levels (`vim.v.count1`, since 2026-07-31) |
 | `+` | Set tree root to node under cursor | Both call adapter `set_root`, optionally sync cwd if `sync_cwd=true` |
 | `B` | Reveal alternate buffer (`#`) in tree | default **on** |
+| `<C-n>` | Next buffer in the adjacent editor window (`:bnext`, run via `nvim_win_call` so the tree keeps focus) | new `nav/buffer_cycle` feature, 2026-08-09 |
+| `<C-p>` | Previous buffer in the adjacent editor window (`:bprevious`, same mechanism) | same feature |
 
 ## ui
 
@@ -138,6 +140,24 @@ built custom UI plugin, or `buffer-ctx.nvim` — undecided as of 2026-08-01.
 
 ## Notes
 
+- **2026-08-09**: New `nav/buffer_cycle` feature — `<C-n>`/`<C-p>` cycle the
+  adjacent editor window's buffer (next/previous) while the tree keeps focus,
+  mirroring what switching buffers would do if you were actually in that
+  editor window. Reuses `filetree.util.buffer.find_editor_win()` (the same
+  adjacent-window lookup `buffer_save`'s `<C-s>` uses) and runs
+  `bnext`/`bprevious` via `nvim_win_call` — no focus change, no dependency on
+  the adapter. Went through two default-key revisions same-day:
+  `<S-Tab>`/`<M-Tab>` (original, unreliable in a terminal) →
+  `<C-f>`/`<C-p>` (still bad — `<C-f>` turned out to collide with **neo-tree's
+  own native default** `scroll_preview`, not just filetree's own
+  float-mode preview scroll; confirmed live via
+  `vim.api.nvim_buf_get_keymap(neotree_buf, "n")` against a real tree
+  buffer, which listed `<C-F>`/`<C-B>` as neo-tree-bound even with no
+  override in `config.neotree.keymaps*`) → `<C-n>`/`<C-p>`, verified absent
+  from that same live dump (109 keys total in the real buffer). Lesson: for
+  neo-tree specifically, a grep of filetree's own source isn't enough to
+  clear a key — check `neo-tree.nvim/lua/neo-tree/defaults.lua`'s own
+  `mappings` table too, or better, dump the live buffer's keymap.
 - **Count support added 2026-07-31** for `-`/`+` (nav), `<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>` (preview scroll, both float and buffer mode), and `w` (window-size cycler, direct-index jump rather than a step multiplier — see the `ui` table above). None of these read a count before this date.
 - **2026-08-09**: New `system/pdf_create` feature (default keymap `gP`) —
   turns the current node/marked nodes/a folder's direct child files into

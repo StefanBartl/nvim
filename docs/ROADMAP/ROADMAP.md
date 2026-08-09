@@ -1,23 +1,31 @@
 # Roadmap
 
-filetree.nvim: Shift tab -> nöchster buffer, als wprde man wie im buiffer sein (nicht im filetree) und man wrde rtab eingeben. mit alt tab voriger buffer
+## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
-E:\repos\Notes\ProjectIdeas: Durcgehen und anlysieren lassen
-
-
-- [ ] `nvim/lua/autocmds`  nach `nvim/lua/Bindings`
-
-case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum ziel. case delete
-
+- [ ] case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum ziel. case delete
 - spotlight checken und lernen
 - documentation.nvim lernen
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
+  - [ ] recommender.nvimmus nicht mitggeshipped werdem; vielleicht verwchiedene ausbaustufen bereitstellen: Base mit lib.nvim und wenigen wichtigen, dann eine versoin wo zusätliche oplugins dabei sind. usw.. als idee
 - [ ] `learn-cli.nvim` vielleicht doch ?
-- [ ] `lua/config/menu` nach `lua/wkdnvchad`?
-- [ ] `nvim/lua/autocmds` analysieren
+- [ ] E:\repos\Notes\ProjectIdeas: Durchgehen und anlysieren lassen
 - [ ] finish & checkists & review in nvim config durchjagen
 
-## nach /RULES implementieren
+## Implementieren
+
+- [ ] `nvim/lua/autocmds` analysieren:
+  - [ ] Refactoring?
+    - [ ] `nvim/lua/autocmds` nach `nvim/lua/Bindings`
+  - [ ] Welche automcds gehören in ein projet von  einen in C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\IDEAS?
+
+- wenn man eine ganzeu zeile markiert, also shiift v im nomralmode, und dann diese in backticks umhüllen will, dabn macht man danach `` aber es umhült nicht sonder macht:
+    C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/documentation.nvim.md
+    ```
+  also hängt in der nächsten zeile eiunfach dreio backticks an
+
+- [ ] `lua/config/menu` nach `lua/wkdnvchad`?
+
+## nach docs/ROADMAP/RULES integrieren und dann hier ersatzlos entfernen
 
 ### ui
 
@@ -51,32 +59,3 @@ case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum
   - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
 
 ---
-
-
----
-
-## MyPlugin-Notes ausgewertet (2026-08-08)
-
-`E:/repos/Notes/MyPlugin-Notes/` (125 Dateien) wurde vollstaendig gegen den
-aktuellen Code geprueft und in die Roadmaps verteilt. Neu bzw. ergaenzt:
-
-- `personal/gopath.nvim.md`, `personal/cmdlog.nvim.md`, `personal/markdown.nvim.md`,
-  `personal/pickers.nvim.md`, `personal/replacer.nvim.md`, `personal/reposcope.nvim.md`,
-  `personal/documentation.nvim.md`, `personal/lsp.nvim.md`,
-  `personal/color_my_ascii.nvim/color_my_ascii.md`
-- neu: `personal/learn-cli.nvim.md`, `personal/IDEAS/slots.nvim.md`,
-  `personal/IDEAS/typepilot.nvim.md`
-- uebergreifend: `personal/00_MISC.md` (Spawn-/Env-Falle, API-Key-Regel,
-  README-Videos, Quickfix-Ausgang)
-- extern: `telescope.nvim.md`
-
-Bestaetigt sich der Befund aus `personal/All/Roadmap-Effort-Overview.md`: der
-groessere Teil der Notizen war laengst gebaut. Bei `replacer.nvim` waren 26 von
-27 Wuenschen umgesetzt. Was jeweils erledigt ist, steht in den Dateien mit drin,
-damit es nicht erneut als offen gelesen wird.
-
-`nvim-containers` aus den Notizen ist `sandbox.nvim` (drei Engines inkl.
-nerdctl, Volumes, Compose, Registry, Telescope-Extension — laut eigener
-`docs/ROADMAP.md` dort bereits vollstaendig abgearbeitet); kein separater
-Eintrag hier noetig. Das Patch-System aus den Notizen wird nicht
-weiterverfolgt.

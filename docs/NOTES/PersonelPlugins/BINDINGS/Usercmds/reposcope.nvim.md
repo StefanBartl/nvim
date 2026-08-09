@@ -2,18 +2,49 @@
 
 `:Reposcope` rebuilt via `lib.nvim.usercmd.composer` (migrated 2026-07-19).
 **No syntax change**: same `:Reposcope <subcommand> [args]` grammar, now
-15 subcommands (was 14 — `session` added 2026-07-25).
+17 subcommands (was 14 — `session` added 2026-07-25; `favorites`/`queries`
+added 2026-08-09).
 
 Source: `lua/reposcope/bindings/usrcmds.lua`
 Docs: `docs/COMMANDS.md`, `README.md`, `doc/reposcope.txt`
 
 `start`, `close`, `sort`, `filter`, `filter-prompt`, `filter-clear`,
-`update [dir]`, `status [dir]`, `providers`, `session save|restore|clear`,
+`update [dir]`, `status [dir] [--out] [--to]`, `providers`,
+`session save|restore|clear`, `favorites list|clear`, `queries list|clear`,
 `stats`, `skipped-readmes`, `toggle-dev`, `print-dev`, `prompt [fields...]`
 — see `docs/COMMANDS.md` for the full per-subcommand reference.
 
 ## Notes
 
+- **2026-08-09 (2) — `favorites`/`queries` added (roadmap item "Favoriten
+  für Repositories")**: two new generic-wrapper subcommands (both go
+  through the same `build_routes()` machinery as `session`/`providers`, no
+  custom composer route needed since neither takes flags). `favorites
+  list|clear` fronts the new `state/favorites_state.lua` (persisted
+  metadata + README snapshot per favorite, toggled via the `toggle_favorite`
+  prompt keymap — see the Keymaps cheatsheet — not a separate add command).
+  `queries list|clear` fronts `state/query_stats.lua`, which
+  `prompt_input.on_enter()` now calls on every real search
+  (`record_query(query)`, right after `_last_query = query`) — recording is
+  unconditional, no config flag, since it's local-only and mirrors how
+  `session_state` already works with no opt-in. Both new state modules
+  copy `session_state.lua`'s persistence idiom exactly (raw `io.open` +
+  `vim.json`, `safe_mkdir`, `utils.debug.notify` on error) rather than
+  `cmdlog.nvim`'s `lib.nvim.fs`-based `core/favorites.lua` this task was
+  pattern-sourced from — consistency with this repo's own established
+  convention won over cross-repo pattern matching.
+- **2026-08-09 — `status` gained multi-backend output + `$REPOS_DIR`
+  completion**: `vim.notify` truncated and couldn't be scrolled, unusable
+  past a handful of repos. `status` is now its own hand-built composer
+  route (not going through the generic per-subcommand wrapper the rest of
+  the table uses) specifically so it can declare `--out`/`--to` flags —
+  `--out=popup` (default, scrollable float via `lib.nvim.ui.kit.surface`),
+  `buffer`, `split`, `vsplit`, `clipboard`, `path` (`--to=<file>`); see
+  `lua/reposcope/ui/actions/status_view.lua`. Separately, `[dir]`'s
+  completion type (`REPOSCOPE_STATUS_DIR`) now offers `$REPOS_DIR` and `~`
+  ahead of real directory listings — `$REPOS_DIR` is a `lib.nvim.system.env`
+  convention, previously invisible on `<Tab>` since plain directory
+  completion has no notion of env vars.
 - **2026-07-25 — persistent session save/restore landed**: new
   `lua/reposcope/state/session_state.lua` (`save`/`restore`/`clear`) persists
   the active provider, visible prompt fields + their typed text, the last

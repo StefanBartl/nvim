@@ -2,8 +2,10 @@
 
 Sources: `lua/reposcope/bindings/keymaps.lua`, `ui/actions/readme_viewer.lua`, `utils/stats.lua`
 
-**⚠️ `docs/BINDINGS.md` omits two real keymaps** (see below) — everything
-else in it matches source closely.
+**2026-08-09: `docs/BINDINGS.md` no longer omits the two component-local
+keymaps below** — both are now documented there too, in a dedicated
+"Close-UI" adjacent section. This file's own "Component-local" table below
+is kept as the one place both are shown side by side.
 
 ## Global open/close (`M.set_user_keymaps`, only if `config.get_option("keymaps") ~= false`)
 
@@ -31,6 +33,10 @@ Built from an actions table, each action individually configurable via
 | `open_editor` | `<C-b>` | n, i | Open README editor |
 | `clone` | `<C-c>` | n, i | Prompt and clone selected repo |
 | `backspace` | `<BS>` | n, i | Custom: suppressed at column 0, line 2 of the `keywords` prompt buffer (notifies "Backspace disabled..."); otherwise feeds a real `<BS>` |
+| `preview_scroll_up` | `<C-u>` | n, i | `preview_manager.scroll(-1)` — half-page up in the preview window, focus stays in the prompt (Telescope-style peek scroll) |
+| `preview_scroll_down` | `<C-d>` | n, i | `preview_manager.scroll(1)` — same, half-page down |
+| `help` | `?` | n only | Opens the `?` keymap cheatsheet (`ui/actions/help_view.lua`); deliberately normal-mode only so `?` still types in insert mode |
+| `toggle_favorite` | `<C-f>` | n, i | Toggles favorite status for `repository_cache.get_selected()`, via `state/favorites_state.lua` |
 
 ## Close-UI keymaps (`M.set_close_ui_keymaps`, over background/preview/list/all-prompt buffers, tagged `"reposcope_ui"`)
 
@@ -41,15 +47,41 @@ Built from an actions table, each action individually configurable via
 | `<C-w>` | n | `close_ui()` | "Close Reposcope" |
 | `<C-w>` | i, t, v | `<Nop>` | "Disabled" |
 
-## Component-local (not in `docs/BINDINGS.md`)
+## Component-local
+
+Not part of `set_ui_keymaps()`/`set_prompt_keymaps()`; each is set/unset by
+its own component whenever it opens/closes.
 
 | lhs | mode | Where | action |
 | --- | --- | --- | --- |
 | `q` | n | `ui/actions/readme_viewer.lua` (`nvim_buf_set_keymap`) | Closes the README viewer, restores prompt autocmds + prompt keymaps |
 | `q` / `<Esc>` | n | `utils/stats.lua` | Closes the stats popup buffer/window |
+| `q` / `<Esc>` | n | `ui/actions/help_view.lua`, via `lib.nvim.ui.kit`'s `nice_quit` | Closes the `?` keymap cheatsheet |
+
+## which-key
+
+No dedicated which-key module/group registration (`wk.add`/`wk.register`) —
+confirmed against source, still true as of 2026-08-09. But **every** keymap
+set via `bindings/keymaps.lua` (global open/close, every prompt action,
+close-UI) now carries a `desc`, which which-key auto-lists without any
+explicit registration needed — a real, if passive, form of support that
+didn't exist when this file previously said "no which-key integration at
+all". The one thing still missing: `<leader>r` is a genuine shared prefix
+(`<leader>rs`/`<leader>rc`) that a `wk.add({ { "<leader>r", group = "..." } })`
+call could label as a group, and nothing does.
 
 ## Notes
 
 - Opening the README viewer explicitly tears down the prompt autocmds and prompt keymaps before installing its own `q` keymap; `close_viewer()` restores them — the two keymap sets are mutually exclusive **by design**, not overlapping accidentally.
 - See [Autocmds cheatsheet](../Autocmds/reposcope.nvim.md) for the prompt-buffer autocmds these keymaps interact with.
-- **No which-key integration at all** — confirmed against source: no `require("which-key")`/`wk.add`/`wk.register` anywhere in the repo. Notably different from the "no group needed" case elsewhere in this corpus: `<leader>r` genuinely is a shared prefix (`<leader>rs`/`<leader>rc`) that a group label could cover, it just isn't wired up.
+
+## Changelog
+
+- 2026-08-09 (2): Added `toggle_favorite` (`<C-f>`) — toggles the selected
+  repository's favorite status via the new `state/favorites_state.lua`
+  (roadmap item "Favoriten für Repositories", `personal/reposcope.nvim.md`).
+- 2026-08-09: Added `preview_scroll_up`/`preview_scroll_down` (`<C-u>`/`<C-d>`,
+  Telescope-style peek-scroll of the README preview without leaving the
+  prompt) and `help` (`?`, keymap cheatsheet) prompt actions. Corrected the
+  which-key note (see above) and confirmed `docs/BINDINGS.md` now documents
+  the two component-local keymaps this file already tracked.
