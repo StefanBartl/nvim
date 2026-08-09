@@ -25,12 +25,6 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
-- [ ] **Session pro Case (Rest)** — eigenes Konzept: [SESSIONS.md](SESSIONS.md).
-      Paket 1 (`<leader>cs`, Auto-Save bei `:Case new`) und Paket 2
-      (PowerShell-`case`-Kurzform, `autoload` aktiviert) stehen. Offen:
-      Paket 3 (Invalidierung über einen neuen `:Cases doctor`-Fund-Typ für
-      Sessions geschlossener Cases).
-
 - [ ] **SLA-Überwachung (Rest)** — eigenes Konzept: [SLA.md](SLA.md). Pakete
       1+2 stehen (inkl. §3-Nachtrag: Rückmeldung resettet statt pausiert bei
       `Awaiting User Info`, §9.6 geklärt; `:Cases sla` Dashboard,

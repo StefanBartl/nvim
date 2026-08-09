@@ -58,8 +58,8 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases sla` | — | SLA dashboard: every open case with a parseable priority, sorted by remaining time on its most urgent clock — "what breaches next", not grouped by priority label. `!!`/`!` mark overdue / under warning threshold. Selecting a row opens that case's `:Case sla` |
 | `:Cases history [company]` | `company`, defaults to the current buffer's case's company | Every matching case in one screen, grouped by state, most-recently-touched first within each group (`kit.viewer`, not a picker) |
 | `:Cases stats` | — | Counts by state / company / year |
-| `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, and whether each `Summary.md` follows the SNOW template without markdown |
-| `:Cases normalize` | — | Fixes exactly what `doctor` found — dry-run plan (`kit.viewer`) + confirm, then applies. Skips (reports separately) anything ambiguous: target already exists, or two findings in the same case would land on the same target |
+| `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, whether each `Summary.md` follows the SNOW template without markdown, and a saved session for a case that's no longer open (`stale-session`, SESSIONS.md §6) |
+| `:Cases normalize` | — | Fixes exactly what `doctor` found — dry-run plan (`kit.viewer`) + confirm, then applies. Skips (reports separately) anything ambiguous: target already exists, or two findings in the same case would land on the same target. `stale-session` findings delete the session instead of renaming anything |
 | `:Cases linkcheck [nr]` | — | Checks `docs.tricentis.com` links (only that host) for dead pages, async bounded-concurrency HEAD requests |
 | `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`Ressources/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json`, Terminology |
 | `:Cases export [nr]` | — | Bundles `Summary.md`/`Notes.md`/`Research/`/`Replies/` into one PDF at `<case-dir>/Export.pdf` (`pandoc` → HTML, then a headless Chrome/Edge → PDF), opened automatically on success |
@@ -167,6 +167,13 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   mutation here, since it's the one action in this module with no undo:
   typing the case number back for one case, `DELETE` for a batch, never a
   plain y/n.
+- **A `doctor.lua` finding carries either `to` (a rename target) or
+  `action` (a `fun(): ok, err` closure for a fix that isn't a rename),
+  never both.** `stale-session` is the first `action` finding — it calls
+  `sessions.delete(name)` instead of `mutate.rename_file`. `normalize.lua`
+  treats both as equally "safe to auto-apply"; only `to`-findings go
+  through the target-collision check (two findings landing on the same
+  path), since an `action` finding has no path to collide on.
 - **Marks (`marks.lua`) are a flat, session-global set of case numbers, not
   tied to any buffer or window.** Mark a few cases in `:Cases list`, close
   that view, run `:Cases close` five minutes (or five other commands)

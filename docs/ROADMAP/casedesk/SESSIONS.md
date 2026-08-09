@@ -1,25 +1,23 @@
 # casedesk — Session-pro-Case (Konzept)
 
-Grundlage: `sessions.nvim`, bereits in `plugins/personal/init.lua` verdrahtet
-(aktuell `opts = {}` — keine Keymaps, kein `autoload`, `autosave = true` auf
-den fixen Namen `"last"`, siehe `sessions.nvim/docs/configuration.md`).
+Grundlage: `sessions.nvim`, verdrahtet in `plugins/personal/init.lua`
+(`opts = { autoload = true }` — kein `keymaps`-Block, `autosave = true` auf
+den fixen Namen `"last"` bleibt Default, siehe
+`sessions.nvim/docs/configuration.md`).
 
-> **Paket 1 steht** (2026-08-07): `<leader>cs` (§5) und der `:Case
-> new`-Hook (§3) sind gebaut und headless getestet — siehe
-> [Keymaps.md](../../NOTES/casedesk/Keymaps.md). Der aktive Teil von §6
-> (Session löschen bei `:Case close`/`reassign`) ist ebenfalls schon
-> gebaut.
->
-> **Paket 2 steht** (2026-08-09): PowerShell-`case`-Funktion im `$PROFILE`
-> eingerichtet (`Configs/Windows/DOTFILES/WindowsPowerShell/
-> Microsoft.PowerShell_profile.ps1`, außerhalb dieses Repos) und `autoload
-> = true` in `plugins/personal/init.lua`s `sessions.nvim`-Spec aktiviert.
-> Offen: nur noch der `:Cases doctor`-Sicherheitsnetz-Teil von §6 (Paket 3),
-> siehe §10.
+> **Alle drei Pakete stehen** (Paket 3 zuletzt, 2026-08-10) — dieses
+> Feature ist fertig. Paket 1 (2026-08-07): `<leader>cs` (§5), der `:Case
+> new`-Hook (§3), aktives Session-Löschen bei `:Case close`/`reassign`
+> (§6). Paket 2 (2026-08-09): PowerShell-`case`-Funktion im `$PROFILE`
+> (außerhalb dieses Repos), `autoload = true`. Paket 3 (2026-08-10): der
+> `stale-session`-Fund-Typ in `:Cases doctor`/`normalize` (§6,
+> Sicherheitsnetz für Cases, die vor Paket 1 geschlossen wurden, oder deren
+> Ordner außerhalb von `M.move_state`/`M.close` verschoben wurde) — siehe
+> §10 für Details.
 
-Fertige Features stehen sonst in [CONCEPT.md](CONCEPT.md), weitere offene
-Punkte in [ROADMAP.md](ROADMAP.md) — dieses Dokument bleibt die Vorarbeit
-für den Rest der Integration.
+Fertige Features stehen sonst in [CONCEPT.md](CONCEPT.md) (§10 hat jetzt
+auch den `stale-session`-Fund-Typ), weitere offene Punkte in
+[ROADMAP.md](ROADMAP.md) — dieses Dokument bleibt der Design-Hintergrund.
 
 ---
 
@@ -178,23 +176,36 @@ Entscheidungspunkt.
 Plan → Dry-Run → Confirm → Apply-Pfad, den `:Cases doctor`/`normalize`
 schon für Case-Hygiene nutzen), für zwei Fälle, die der aktive Hook nicht
 abdeckt: Cases, die schon vor diesem Feature geschlossen wurden, und ein
-Ordner-Umzug außerhalb von `M.move_state` (von Hand, oder ein zukünftiger
-Pfad). Noch nicht gebaut (Paket 3, §10):
+Ordner-Umzug außerhalb von `M.move_state`/`M.close` (von Hand, oder ein
+zukünftiger Pfad). **Gebaut (Paket 3, 2026-08-10):**
 
 ```lua
--- doctor.lua, neuer Check
-for _, name in ipairs(require("sessions").list_names()) do -- oder S.list() + Namens-Extraktion
-  local entry = registry.find(name)
-  if entry and entry.state ~= config.default_state then
-    findings[#findings + 1] = {
-      kind = "stale-session",
-      case = entry.short,
-      detail = ("session '%s' exists for a %s case"):format(name, entry.state),
-      fix = function() require("sessions").delete(name) end,
-    }
+-- doctor.lua, tatsächlicher Check — sessions.nvim hat kein list_names(),
+-- also S.list() (Pfade) + fnamemodify(":t:r") für die Namen
+local ok_sessions, sessions = pcall(require, "sessions")
+if ok_sessions then
+  for _, path in ipairs(sessions.list()) do
+    local name = vim.fn.fnamemodify(path, ":t:r")
+    local entry = registry.find(name)
+    if entry and entry.state ~= config.default_state then
+      findings[#findings + 1] = {
+        short = entry.short,
+        kind = "stale-session",
+        detail = ("session '%s' exists for a %s case"):format(name, entry.state),
+        from = path,
+        to = nil,
+        action = function() return sessions.delete(name) end,
+      }
+    end
   end
 end
 ```
+
+`action` statt `fix`, um an `Lib.Case.DoctorFinding`s bestehenden Feldnamen
+anzuknüpfen — `normalize.lua`s `M.plan()`/`M.run()` mussten dafür lernen,
+ein Finding entweder über `to` (Rename) oder über `action` (beliebiger
+Fix) anzuwenden; die Kollisions-Prüfung ("zwei Findings, ein Ziel") gilt
+nur für `to`. Details: CONCEPT.md §10.
 
 Sessions, deren Name **gar keinem** bekannten Case entspricht (händisch
 benannt, oder ein Case, der aus der Registry verschwunden ist), sind ein
@@ -208,9 +219,9 @@ Kein neues Untermodul nötig — Umfang ist klein genug für drei Stellen:
 
 ```
 lua/bindings/usrcmds/case/
-  ui.lua      -- :Case new-Hook (§3), M.move_state-Hook (§6, aktiv)
-  doctor.lua  -- neuer Finding-Typ "stale-session" (§6, Sicherheitsnetz)
-  normalize.lua -- Fix-Zweig für "stale-session" (§6, Sicherheitsnetz)
+  ui.lua      -- :Case new-Hook (§3), do_move/do_delete-Hooks (§6, aktiv)
+  doctor.lua  -- Finding-Typ "stale-session" (§6, Sicherheitsnetz)
+  normalize.lua -- action-Zweig für "stale-session" (§6, Sicherheitsnetz)
 ```
 
 `<leader>cs` selbst lebt bewusst außerhalb dieses Baums, in
@@ -232,10 +243,11 @@ lua/bindings/usrcmds/case/
    nachziehen") auch "Session existiert noch nicht" nachziehen, oder bleibt
    das exklusiv `<leader>cs`/§3? Tendenz: `:Case sync` mit erledigen, da es
    ohnehin "diesen Case auf den erwarteten Stand bringen" bedeutet.
-2. `:Cases sessions` als Übersicht (welcher offene Case hat noch keine
-   Session, welcher hat eine) — eigener Befehl oder ein Fund-Typ mehr in
-   `:Cases doctor`? Tendenz: kein neuer Befehl für eine Frage, die `doctor`
-   sowieso schon beantwortet.
+2. ~~`:Cases sessions` als Übersicht...~~ **Entschieden (Paket 3):** kein
+   neuer Befehl — `:Cases doctor`s `stale-session`-Fund beantwortet die
+   eine Hälfte der Frage (welcher NICHT-offene Case hat noch eine Session),
+   die andere Hälfte (welcher offene Case hat noch KEINE) wäre reines
+   Nice-to-have ohne Hygiene-Zweck, nicht gebaut.
 3. Reihenfolge von `<leader>cs` vs. dem bestehenden `sessions.nvim`-eigenen
    `keymaps`-Block (`opts.keymaps`) — bleibt der leer (nur casedesks
    eigener Keymap), oder aktiviert man zusätzlich generische
@@ -257,10 +269,11 @@ Sicherheitsnetz-Teil von §6 — Frage 3 aus §9 wurde dabei mitentschieden:
 DOTFILES-Repo), `autoload = true` in `plugins/personal/init.lua`s
 `sessions.nvim`-Spec aktiviert (§4.3).
 
-**Paket 3 — Hygiene-Sicherheitsnetz:** `doctor.lua`/`normalize.lua`-Erweiterung
-(§6) für Cases, die schon vor Paket 1 geschlossen wurden, oder deren Ordner
-außerhalb von `M.move_state` verschoben wurde. Zuletzt, weil der aktive
-Hook den Regelfall bereits abdeckt.
+**Paket 3 — Hygiene-Sicherheitsnetz (steht, 2026-08-10):**
+`doctor.lua`/`normalize.lua`-Erweiterung (§6) für Cases, die schon vor
+Paket 1 geschlossen wurden, oder deren Ordner außerhalb von
+`M.move_state`/`M.close` verschoben wurde. Zuletzt gebaut, weil der aktive
+Hook den Regelfall bereits abdeckte.
 
 ## Siehe auch
 

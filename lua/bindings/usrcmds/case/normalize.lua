@@ -15,20 +15,25 @@ local M = {}
 ---@field short string
 ---@field kind string
 ---@field from string
----@field to string
+---@field to string|nil
+---@field action (fun(): boolean, string|nil)|nil  Set instead of `to` — see doctor.lua's Lib.Case.DoctorFinding.
 
---- What WOULD be renamed, split from what doctor found but can't safely fix.
---- Two findings in the same case can independently compute the same `to`
---- (e.g. a case with BOTH CaseNote.md and TillNow.md present, neither
---- Summary.md yet — doctor.lua checks each alias in isolation) — applying
---- both would have the second rename silently clobber the first, so any
---- target claimed by more than one finding is treated as ambiguous too.
+--- What WOULD be fixed, split from what doctor found but can't safely fix
+--- automatically. A finding is a candidate when it has a rename target
+--- (`to`) OR a self-contained fix (`action`, e.g. deleting a stale session —
+--- not every fix is a rename). Two findings in the same case can
+--- independently compute the same `to` (e.g. a case with BOTH CaseNote.md
+--- and TillNow.md present, neither Summary.md yet — doctor.lua checks each
+--- alias in isolation) — applying both would have the second rename
+--- silently clobber the first, so any target claimed by more than one
+--- finding is treated as ambiguous too. `action` findings have no `to` to
+--- collide on, so they skip that check entirely.
 ---@return Lib.Case.NormalizeStep[] steps
----@return Lib.Case.DoctorFinding[] skipped  Ambiguous findings (to == nil, or to claimed by >1 finding).
+---@return Lib.Case.DoctorFinding[] skipped  Ambiguous findings (to == nil and no action, or to claimed by >1 finding).
 function M.plan()
   local candidates, skipped = {}, {}
   for _, f in ipairs(doctor.check()) do
-    if f.to then
+    if f.to or f.action then
       candidates[#candidates + 1] = f
     else
       skipped[#skipped + 1] = f
@@ -37,15 +42,17 @@ function M.plan()
 
   local target_count = {}
   for _, f in ipairs(candidates) do
-    target_count[f.to] = (target_count[f.to] or 0) + 1
+    if f.to then
+      target_count[f.to] = (target_count[f.to] or 0) + 1
+    end
   end
 
   local steps = {}
   for _, f in ipairs(candidates) do
-    if target_count[f.to] > 1 then
+    if f.to and target_count[f.to] > 1 then
       skipped[#skipped + 1] = f
     else
-      steps[#steps + 1] = { short = f.short, kind = f.kind, from = f.from, to = f.to }
+      steps[#steps + 1] = { short = f.short, kind = f.kind, from = f.from, to = f.to, action = f.action }
     end
   end
 
@@ -60,7 +67,11 @@ function M.describe(steps)
   end
   local lines = {}
   for _, s in ipairs(steps) do
-    lines[#lines + 1] = ("%-10s rename  %s  ->  %s"):format(s.short, s.from, s.to)
+    if s.action then
+      lines[#lines + 1] = ("%-10s %-8s %s"):format(s.short, s.kind, s.from)
+    else
+      lines[#lines + 1] = ("%-10s rename  %s  ->  %s"):format(s.short, s.from, s.to)
+    end
   end
   return lines
 end
@@ -82,9 +93,14 @@ end
 function M.run(steps)
   local results = {}
   for _, s in ipairs(steps) do
-    mkdirp(vim.fn.fnamemodify(s.to, ":h"))
-    local ok, err = mutate.rename_file(s.from, s.to)
-    results[#results + 1] = { step = s, ok = ok and true or false, err = err }
+    if s.action then
+      local ok, err = s.action()
+      results[#results + 1] = { step = s, ok = ok and true or false, err = err }
+    else
+      mkdirp(vim.fn.fnamemodify(s.to, ":h"))
+      local ok, err = mutate.rename_file(s.from, s.to)
+      results[#results + 1] = { step = s, ok = ok and true or false, err = err }
+    end
   end
   return results
 end
@@ -96,7 +112,8 @@ function M.errors(results)
   local errs = {}
   for _, r in ipairs(results) do
     if not r.ok then
-      errs[#errs + 1] = ("%s -> %s: %s"):format(r.step.from, r.step.to, r.err or "unknown error")
+      local label = r.step.to and ("%s -> %s"):format(r.step.from, r.step.to) or r.step.from
+      errs[#errs + 1] = ("%s: %s"):format(label, r.err or "unknown error")
     end
   end
   return #errs == 0, errs

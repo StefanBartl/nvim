@@ -675,13 +675,15 @@ Optionale Integration über `pcall(require, …)`: `filetree.nvim` für
 
 ## 10. `:Cases doctor` (`doctor.lua`)
 
-Reiner Bericht — liest, schreibt nie. `M.check()` scannt jeden Case auf fünf
-Muster: Case-Notiz unter einem der vier bekannten Alias-Namen statt
+Reiner Bericht — liest, schreibt nie. `M.check()` scannt jeden Case auf
+sechs Muster: Case-Notiz unter einem der vier bekannten Alias-Namen statt
 `Summary.md`, `Research.md` als Flat-File statt `Research/`-Ordner,
 `Solutions/`(Plural)/`Solution.md` statt `Solution/`, zwei bekannte
-Tippfehler-Dateinamen (alle vier: MIGRATION.md §4), und fehlender
-`NN_`-Präfix auf Dateien direkt in `Research/`/`Replies/`. `M.describe()`
-rendert die Liste für `kit.viewer`.
+Tippfehler-Dateinamen (alle vier: MIGRATION.md §4), fehlender `NN_`-Präfix
+auf Dateien direkt in `Research/`/`Replies/`, und (SESSIONS.md §6, Paket 3)
+eine gespeicherte `sessions.nvim`-Session zu einem Case, der nicht mehr
+`config.default_state` ist (`stale-session`). `M.describe()` rendert die
+Liste für `kit.viewer`.
 
 Gegen den migrierten Bestand am 2026-08-04: **22 Findings über 8 Cases**
 — die ersten 10 decken sich exakt mit der Analyse aus MIGRATION.md §4, die
@@ -691,4 +693,12 @@ des realen `:Cases normalize`-Laufs: [MIGRATION.md](MIGRATION.md)s
 
 `:Cases normalize` (`normalize.lua`) ist der Fix-Teil und baut auf genau
 diesen `DoctorFinding`-Einträgen auf — derselbe Plan → Dry-Run → Confirm → Apply-
-Pfad wie `:Case new`, nur mit `rename` als Aktionstyp statt `write`.
+Pfad wie `:Case new`, nur mit `rename` als Aktionstyp statt `write`. Ein
+Finding trägt entweder `to` (Rename-Ziel, `from -> to`) ODER `action`
+(eine `fun(): ok, err`-Closure für einen Fix, der kein Rename ist) — nie
+beide. `stale-session` ist der erste `action`-Finding-Typ: `action` ruft
+`sessions.delete(name)` statt `mutate.rename_file(from, to)`. Damit ein
+Finding zum `Lib.Case.NormalizeStep` wird (statt in `skipped` zu landen),
+reicht entweder `to` oder `action`; die Kollisions-Prüfung ("zwei Findings
+zielen auf denselben `to`") betrifft nur `to`-Findings — `action`-Findings
+haben nichts, worauf sie kollidieren könnten.

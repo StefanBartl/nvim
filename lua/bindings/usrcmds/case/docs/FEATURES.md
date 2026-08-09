@@ -55,6 +55,12 @@ auf — Paket 2 macht den Wiedereinstieg selbst bequem:
   aktiven (`nvim -c "Session load 1007631"` unquotiert per Shell-Wrapper).
   Ohne Nummer: normales `nvim` (greift dann `autoload`).
 
-Offen bleibt nur noch Paket 3 (Sicherheitsnetz gegen verwaiste Sessions
-geschlossener Cases über einen neuen `:Cases doctor`-Fund-Typ) — s.
-[ROADMAP.md](../../../../../docs/ROADMAP/casedesk/ROADMAP.md).
+**Paket 3 (2026-08-10, letztes Paket — Session-pro-Case ist damit fertig):**
+`:Cases doctor`s neuer `stale-session`-Fund-Typ — meldet eine gespeicherte
+Session zu einem Case, der nicht mehr offen ist (der aktive Lösch-Hook in
+`:Case(s) close`/`reassign` deckt nur Umzüge ab, die durch diese Commands
+laufen; ein vor Paket 1 geschlossener Case, oder ein von Hand verschobener
+Ordner, hinterlässt eine Session, die niemand mehr braucht). `:Cases
+normalize` räumt sie weg — der erste Fund-Typ, der `doctor.lua`s neues
+`action`-Feld statt `to` nutzt (ein `fun(): ok, err` für "kein Rename",
+hier `sessions.delete(name)`). Details: CONCEPT.md §10.

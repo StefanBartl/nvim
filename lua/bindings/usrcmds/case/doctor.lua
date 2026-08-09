@@ -17,6 +17,7 @@
 --- produces. normalize.lua acts on `to ~= nil` only.
 
 local registry = require("bindings.usrcmds.case.registry")
+local config = require("bindings.usrcmds.case.config")
 local collect_recursive = require("lib.nvim.fs.collect_recursive")
 local read = require("lib.nvim.fs.read")
 
@@ -70,8 +71,9 @@ local NN_PREFIX_DIRS = { "Research", "Replies" }
 ---@field short string
 ---@field kind string
 ---@field detail string
----@field from string  Absolute path of the file or directory as it exists now.
----@field to string|nil  Absolute path normalize.lua would rename/move `from` to. `nil` means the target already exists — ambiguous, normalize.lua skips it.
+---@field from string  Absolute path of the file/dir as it exists now, OR (when `action` is set) a human-readable label for display only.
+---@field to string|nil  Absolute path normalize.lua would rename/move `from` to. `nil` means either the target already exists (ambiguous, normalize.lua skips it) or the finding uses `action` instead of a rename.
+---@field action (fun(): boolean, string|nil)|nil  Set instead of `to` for a fix that isn't a rename (e.g. deleting a stale session) — normalize.lua calls this rather than mutate.rename_file. Mutually exclusive with `to`.
 
 ---@param path string
 ---@return boolean
@@ -310,6 +312,38 @@ function M.check()
     vim.list_extend(findings, nn_prefix_findings(e))
   end
 
+  -- stale-session (SESSIONS.md §6, Paket 3): the safety net behind the
+  -- ACTIVE hook in ui.lua's do_move/do_delete, which only deletes a case's
+  -- session when the move happens THROUGH :Case(s) close/reassign. A case
+  -- closed before that hook existed, or moved/deleted by hand outside
+  -- casedesk, leaves an orphaned session sessions.nvim would still happily
+  -- offer to load. Not a rename — `action` runs sessions.delete() instead
+  -- of normalize.lua's usual mutate.rename_file(from, to).
+  --
+  -- Optional dependency (`pcall`), same pattern as every other sessions.nvim
+  -- touchpoint in this module (CONCEPT.md §9): silently skipped, not an
+  -- error, when sessions.nvim isn't loaded (remote mode, different plugin
+  -- selection).
+  local ok_sessions, sessions = pcall(require, "sessions")
+  if ok_sessions then
+    for _, path in ipairs(sessions.list()) do
+      local name = vim.fn.fnamemodify(path, ":t:r")
+      local entry = registry.find(name)
+      if entry and entry.state ~= config.default_state then
+        findings[#findings + 1] = {
+          short = entry.short,
+          kind = "stale-session",
+          detail = ("session '%s' exists for a %s case"):format(name, entry.state),
+          from = path,
+          to = nil,
+          action = function()
+            return sessions.delete(name)
+          end,
+        }
+      end
+    end
+  end
+
   return findings
 end
 
@@ -321,11 +355,12 @@ function M.describe(findings)
   end
   local lines = {}
   for _, f in ipairs(findings) do
-    -- Both cases below are "normalize.lua won't touch this", but for
-    -- different reasons, and saying which one is the difference between a
-    -- useful report and a confusing one.
+    -- Three cases: `to` set (normalize.lua renames it), `action` set
+    -- (normalize.lua runs it — no rename target to show), or neither (never
+    -- touched, for one of two different reasons — saying which one is the
+    -- difference between a useful report and a confusing one).
     local suffix = ""
-    if not f.to then
+    if not f.to and not f.action then
       if f.kind == "summary-not-snow" or f.kind == "summary-markdown" then
         suffix = "  [edit by hand — no rename can fix this]"
       else
