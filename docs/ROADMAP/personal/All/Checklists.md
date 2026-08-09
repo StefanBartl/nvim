@@ -52,7 +52,7 @@ darunter, sofern relevant.
 | 4. FILE TYPES (MARKDOWN & DOCUMENTS) |||||||
 | cascade.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | pdfport.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| markdown.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| markdown.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | color_my_ascii.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | recommender.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | mdview.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1184,3 +1184,76 @@ Lua-Specs unter `tests/lua/` liefen daher nicht lokal, nur über CI (grün). Üb
 verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — über die grüne
 `ubuntu-latest`-CI verifiziert. Alles committet (`7f1cc17`) und nach `origin/main` gepusht;
 CI-Status vor und nach dem Push grün geprüft (Laufzeit ca. 2 Minuten).
+
+### markdown.nvim
+
+91 Lua-Dateien. Codebase war größtenteils bereits sehr sauber (durchgängiges `lib.nvim`, saubere
+`@module`/`@class`/`@param`/`@return`-Annotationen, konsolidierte `@types/init.lua` nach
+Quelldatei gruppiert, typisierte Config-Keys, `config/init.lua` + `config/DEFAULTS.lua`) —
+CI stand aber bei jedem Push der letzten Woche auf Rot (`gh run list` zeigte durchgängig
+`failure`), das war der eigentliche Kern der Arbeit.
+
+- **PERFORMANCE.md**: keine echten neuen Hotpaths gefunden, die nicht schon behandelt sind
+  (`core/table_mode.lua` debounced bereits über `lib.nvim.debounce`). Keine Änderung.
+- **LUA_NVIM.md**: bereits konform; `fun(` Grep über `lua/` ergab keine bare-type-Treffer (der in
+  diesem Rollout achtfach in `pickers.nvim` und einmal bereits in mdview.nvim gefundene
+  Annotations-Bug trat hier nicht auf).
+- **REVIEW.md**: `.luarc.json` (`diagnostics.globals=vim`, passend zu `sessions.nvim`) und
+  `.luacheckrc` bereits vorhanden. `luacheck lua` lieferte 7 echte Warnings — behoben: zwei
+  Dead-Stores in `core/toc.lua`/`core/headline_spacing/init.lua` (Werte berechnet, nie gelesen),
+  drei `path`-Parameter, die den modulweiten `path`-Require in `handler/file.lua`/`handler/init.lua`
+  verschatteten (umbenannt zu `p`), zwei ungenutzte `pcall`-Rückgaben in `util/platform.lua`
+  (`_`-Präfix + neue `211/_.*`-Ignore-Regel in `.luacheckrc`, analog zur bestehenden `212/_.*`).
+  Zwei absichtlich leere `if`-Zweige in `util/path.lua` (selbstdokumentierender No-op, exakt wie
+  im lib.nvim-Original) per gezieltem `-- luacheck: push/pop ignore 542` stehen gelassen statt
+  umgebaut. `stylua --check .` schlug lokal **für fast das gesamte Repo** fehl — `stylua.toml`
+  fehlte `collapse_simple_statement`, dessen Default (nie kollabieren) dem tatsächlich
+  durchgängig genutzten Ein-Zeilen-`if`-Stil widersprach; `collapse_simple_statement = "Always"`
+  ergänzt und mit `stylua .` neu formatiert (79 Dateien, reiner Formatierungs-Commit getrennt vom
+  Bugfix-Commit).
+- **RELEASE.md**: README bereits vollständig (ASCII-Art, Badges, ToC nur Level-2, `>`-Absatz mit
+  Verweis auf `cascade.nvim` als Schwesterplugin — laut Code teilen sie sich die Dokumentstruktur:
+  markdown.nvim rendert/strukturiert, cascade.nvim editiert Listeninhalte). `doc/markdown.nvim.txt`
+  vermeidet den bloßen `markdown`-Tag bewusst (`markdown.nvim-*`-Namespace, Dateiname
+  `markdown.nvim.txt`) — keine Kollision mit Neovims eingebautem `:h markdown`. `docs/BINDINGS.lua`
+  (bewusste `.lua`- statt `.md`-Form, maschinenlesbar) bereits aktuell bis zum letzten Feature-Commit
+  (TableView-Row-Move + `:w`-Write-back). `docs/ROADMAP.md` gepflegt (erledigte Punkte durchgestrichen
+  markiert). `:checkhealth markdown` per Headless-Smoke-Test verifiziert: mit geladenem
+  `filetype plugin` + geöffnetem `.md`-Puffer vollständig grün (11/11 `:Markdown`-Routen `OK`); ohne
+  Dateityp-Erkennung (reiner `-u NONE`-Automatisierungsartefakt, kein Plugin-Bug) meldet es korrekt
+  "verb 'Markdown' is not registered", weil die Registrierung absichtlich `FileType`-gated ist
+  (siehe README: "Pure FileType-scoped — zero side effects on non-Markdown buffers"). GitHub-Metadaten
+  bereits vollständig (Description, 10 Topics, Default-Branch `main`, leeres Homepage-Feld, keine
+  Lizenzdatei). Cross-Plattform: kein hartkodierter Pfadtrenner gefunden; ein echter
+  Cross-Plattform-Bug in `util/path.lua` behoben (siehe Refactoring/Bugfix-Absatz unten).
+- **Refactoring.md**: `notify()`-Aufrufe durchgesehen — die gefundenen Stellen sitzen bereits in
+  Controller-/Boundary-Schicht (`handler/*.lua`s öffentliche `M.open`/`M.jump`-Einstiegspunkte,
+  `commands/*.lua`), nicht in echten Low-Level-Utilities; `util/path.lua` (das eigentliche
+  Low-Level-Modul für Pfadauflösung) hat konsequent keinen einzigen `notify()`-Aufruf. Keine
+  Verschiebung nötig.
+
+**Echte Bugs gefunden und behoben** (nicht nur Stil): `util/path.lua`s `normalize()`/`resolve()`/
+`resolve_traced()` riefen `vim.fn.expand()` **vor** der Backslash→Slash-Vereinheitlichung auf —
+`expand()` behandelt einen nackten Backslash als Escape-Zeichen (verschluckt ihn, behält das
+Folgezeichen), wodurch `"a\b\c"` zu `"abc"` statt `"a/b/c"` wurde; von `TESTS/path_spec.lua` in CI
+aufgedeckt (Linux-Runner, daher nicht durch lokales `core.autocrlf` maskiert). Reihenfolge getauscht.
+Zweiter Fund: ein absoluter Pfad mit Windows-Laufwerksbuchstaben (`C:/...`) hatte auf Nicht-Windows
+keinen Fallback — ein Link, der `C:/...` referenziert (z. B. von Windows übernommene Notizen), schlug
+auf POSIX immer fehl, selbst wenn dieselbe Datei ohne Laufwerksbuchstaben existiert; neue
+`drive_fallback_if_exists()` behandelt das (nur auf Nicht-Windows, nur wenn der Pfad mit
+Laufwerksbuchstabe selbst nicht existiert). Beide von `TESTS/handler_spec.lua`/`path_spec.lua`
+aufgedeckt und jetzt grün. Dritter Fund, der eigentliche Ursache für die rote CI: `.github/
+workflows/ci.yml`s `stylua-action@v4` fehlte der inzwischen von der Action geforderte `token`-Input
+— schlug mit "Parameter token or opts.auth is required" fehl, bevor `stylua` überhaupt lief; `token`
+ergänzt und Version von `latest` auf die lokal installierte `v2.5.2` gepinnt (Lehre aus diesem
+Rollout: `latest` driftet sonst unbemerkt vom committeten Stil).
+
+Zentrale Bindings-Sammlung (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/
+markdown.nvim.md`) geprüft: alle drei Dateien bereits vollständig und aktuell bis zum letzten
+Feature-Commit (TableView-Row-Move/`:w`-Write-back vom 2026-08-08), keine Änderung nötig.
+
+Verifiziert: `stylua --check .` grün, `luacheck lua` 0 Warnings/0 Errors, headless-nvim-Testsuite
+(`TESTS/run.lua`, 20 Specs inkl. der beiden zuvor roten) grün. `:checkhealth markdown` grün (siehe
+oben). Zwei Commits (`0dc5a46` Formatierung, `d8e05fb` Bugfixes) nach `origin/main` gepusht;
+CI-Status vor (rot, seit mind. acht aufeinanderfolgenden Pushes) und nach dem Push (grün, beide Jobs
+`tests`/`lint`) verifiziert.
