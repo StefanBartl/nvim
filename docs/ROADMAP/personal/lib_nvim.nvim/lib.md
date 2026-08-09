@@ -10,6 +10,8 @@
 
 ---
 
+nvim.copmposer hat als prefix immer lib.nvim.composer bei den notifyes, danbei wäre es aber gt wenn das plugin das die lib odul benutzt hier genangt weren würde
+
 ## Bestehende Module
 
 ### `cross.reveal_in_fm` (neu, 2026-08-07)

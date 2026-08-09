@@ -2,5 +2,5 @@
 
 - [ ] `github_stats.nvim` besser machen
 
----
+--
 
