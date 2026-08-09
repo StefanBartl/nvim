@@ -25,6 +25,7 @@ Docs: `docs/BINDINGS.md`, `docs/ROADMAP/`, `README.md`, `doc/images.txt`
 | `:Image pickers [cfile\|cwd\|path] [dir]` | — | Bilder unterhalb eines Scopes durchsuchen, Live-Vorschau mit snacks.picker |
 | `:Image compare [cfile\|cwd\|path] [dir]` | — | Zwei Bilder auswählen, in echter relativer Größe vergleichen (braucht ImageMagick; sonst gleich groß nebeneinander) |
 | `:Image zen [path]` | — | Bild groß in einem editierbaren Fenster zeigen (kein Preview-Float) |
+| `:Image draw <position> [path]` | — | Bild an einer benannten Position im aktuellen Fenster zeichnen ("full" oder eine von acht Ecken/Kanten), auch als `images.draw()` |
 | `:Image pin` | — | Anzeige festhalten statt bei Cursorbewegung aufzuräumen |
 | `:Image check` | — | Terminal-Fähigkeit neu prüfen und melden |
 | `:Image clear` | — | Angezeigte Bilder entfernen, Pin lösen, offenes Zen-Fenster schließen |
@@ -208,8 +209,38 @@ Der Command-Name folgt der Option `command`.
   seinen Vergleichspartner noch nicht kannte. Reine Berechnung in
   `images.scale`, ohne Terminal testbar.
 
+- **`:Image draw`/`images.draw()`** ist die eine kanonische Stelle für "Bild
+  zuverlässig in einem Fenster (oder dem Fenster, das einen Buffer zeigt) an
+  einer benannten Position zeichnen" — `images.anchor.draw(target, position,
+  file, opts)`. `target`: Fenster-Handle, Buffer-Handle (aufgelöst auf ein
+  Fenster, das ihn zeigt) oder nil/0 für das aktuelle Fenster. `position`:
+  `"full"` (füllt das Fenster) oder eine der acht Ecken/Kanten
+  (`"top-left"`, `"center"`, `"bottom-right"`, …), die eine skalierte,
+  zentrierte Box an diesem Anker platzieren statt das ganze Fenster zu
+  füllen (`images.scale.anchor_box`, ersetzt das frühere `images.scale.box`).
+  `opts.defer = true` verschiebt das Zeichnen per `vim.schedule` auf den
+  nächsten Tick — nötig, wenn `target` im selben Aufruf erst geöffnet wurde
+  (siehe unten, derselbe Fehler wie beim ursprünglichen `:Image zen`-Bug).
+  `opts.on_done(ok, err)` läuft garantiert genau einmal, synchron oder
+  verzögert. `:Image zen`, der Hover-Float, `:Image redact` und die
+  Picker-Vorschau (`images.browse`) bauten das Muster vorher jeweils
+  unabhängig nach — mit leicht unterschiedlicher Sorgfalt, nur drei der vier
+  hatten den `vim.schedule`-Fix. Alle vier laufen jetzt über `images.anchor`;
+  `images.browse.draw_in_window()` bleibt als namensgleicher Wrapper
+  bestehen, weil markdown.nvim das bereits als API konsumiert.
+
 ## Changelog
 
+- 2026-08-09 (2): `:Image draw`/`images.draw()` ergänzt (siehe oben,
+  `images.anchor`, `images.scale.anchor_box`). Konsolidiert eine vierfach
+  unabhängig nachgebaute Stelle (`zen`, `hover_float`, `redact`,
+  `browse`s Picker-Vorschau) in ein einziges, getestetes Modul —
+  `images.scale.box` (nur zentriert) wurde dabei durch das allgemeinere
+  `anchor_box` (neun benannte Positionen + "full") ersetzt, sein einziger
+  bisheriger Aufrufer (`browse.draw_in_window`) ist jetzt selbst ein
+  dünner Wrapper um `images.anchor.draw`. Neue Tests: `TESTS/anchor_spec.lua`
+  (Fenster-/Buffer-Auflösung, defer/sofort-Timing per `nvim_ui_send`-Mock,
+  dieselbe Technik wie `terminal_draw_spec.lua`).
 - 2026-08-09: `:Image export`/`images.convert.to_pdf` bekamen eine
   pdfport.nvim-Weiche (soft dep, `pcall`'d): ist pdfport installiert und
   meldet `can_create("image")` einen Producer, läuft der Export asynchron
