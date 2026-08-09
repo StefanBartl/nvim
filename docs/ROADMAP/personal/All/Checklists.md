@@ -55,7 +55,7 @@ darunter, sofern relevant.
 | markdown.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | color_my_ascii.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | recommender.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| mdview.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| mdview.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | images.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 
 ---
@@ -1120,3 +1120,67 @@ kreuzreferenziert gegen `docs/BINDINGS.md` (Stand 2026-07-31), keine Änderung n
 Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — über die
 (grüne) `ubuntu-latest`-CI verifiziert. Alles committet (`fb7ae24`) und nach `origin/main`
 gepusht; CI-Status vor und nach dem Push grün geprüft.
+
+### mdview.nvim
+
+87 Lua-Dateien (Neovim-Seite eines größeren Go-Relay/Rust-WASM/TypeScript-Projekts).
+`stylua --check .`/`luacheck lua/mdview --no-color` liefen vorher bereits grün, aber CI hatte
+gar keinen Format-Check-Job — nur `luacheck` + `busted` + headless-nvim-Specs. Beim lokalen
+`stylua`-Lauf stellte sich heraus, dass rund 35 Dateien tatsächlich auf 2-Space-Einrückung statt
+der im restlichen Repo durchgängigen Tabs gedriftet waren (kein `stylua.toml` vorhanden, also kein
+verbindlicher Maßstab) — mit `stylua.toml` (Tabs, matching Konvention) neu formatiert, plus
+eigenem `stylua`-CI-Job (`JohnnyMorganz/stylua-action@v4` inkl. `token`, um den in diesem Rollout
+schon einmal gefundenen Bug von Anfang an zu vermeiden).
+
+- **PERFORMANCE.md**: zwei echte Hotpaths — `live_push.lua` (`TextChanged`/`TextChangedI`) und
+  `scroll_sync.lua` (`CursorMoved`/`CursorMovedI`); beide bereits throttled/debounced aus einem
+  vorherigen Commit (`perf(live-push): throttle TextChanged/TextChangedI pushes`), inkl. Trailing-
+  Timer statt Drop, damit kein Content-Push verloren geht. `breadcrumbs.lua`s Autocmd (ebenfalls
+  auf `CursorMoved`) ist laut eigenem Docstring ebenfalls throttled. Keine Änderung nötig.
+- **LUA_NVIM.md**: `lib.nvim` durchgängig genutzt (`notify`, `usercmd.composer`, u. a.). Gefundener
+  echter Bug: `types/adapter.lua`s `try_resolve fun(string): boolean` — bare-type ohne Namen vor
+  dem Typ (derselbe Bug-Musterfund wie zuvor achtfach in `pickers.nvim`), zu
+  `fun(cmd: string): boolean` korrigiert. Repo-weiter Grep nach weiteren `fun(<Type>` ohne Namen
+  ergab keine weiteren Treffer.
+- **REVIEW.md**: Schnell-Check größtenteils sauber; `.luarc.json` mit `diagnostics.globals=vim`
+  bereits vorhanden, keine Änderung nötig.
+- **RELEASE.md**: README bekam ein fehlendes Level-2-only Table of Contents sowie (nach der
+  ASCII-Art) einen `>`-Absatz mit Verweis auf das Schwesterplugin `markdown.nvim` (laut
+  `docs/companion-plugins.md` der offizielle "recommended companion"). `docs/BINDINGS.md` fehlten
+  zwei Befehle (`:MDView standalone`, `:MDView blanklines`) — ergänzt; alles andere (Autocmds,
+  Keymaps-Aussage "keine") war bereits vollständig. `docs/ROADMAP.md` neu angelegt (bisher gab es
+  nur das ausführliche deutsche Ingenieurslog unter `docs/Roadmap/Roadmap.md`, das unverändert
+  bleibt und von der neuen Datei aus verlinkt wird). `:checkhealth mdview` per Headless-Smoke-Test
+  verifiziert (keine ERROR-Zeilen). GitHub-Metadaten bereits vollständig (Description, 20 Topics,
+  Default-Branch `main`, leeres Homepage-Feld). Einzige echte Abweichung von der
+  Schwesterplugin-Konvention: eine `LICENSE`-Datei (MIT) samt `"license": "MIT"` in `package.json`
+  existierte noch — beides entfernt, damit das Repo der repo-übergreifenden
+  "keine Lizenzdatei/-referenz"-Konvention entspricht (verifiziert: `sessions.nvim`/`pickers.nvim`
+  haben ebenfalls keine). Cross-Plattform: kein hartkodierter Pfadtrenner im Lua-Code gefunden.
+- **Refactoring.md**: zwei echte Funde in `core/state.lua` (Low-Level-Statusmodul) —
+  `update_web()` notifizierte bei einem fehlgeschlagenen Callback direkt statt den Fehler
+  zurückzugeben (keine externen Aufrufer betroffen, daher gefahrlos auf `(state, err)` erweitert);
+  `ensure_proc_started()` notifizierte redundant zusätzlich zum Aufrufer
+  (`bindings/usrcmds/start/init.lua`), der bei `nil` bereits selbst notifiziert — Notify entfernt,
+  `err` als zweiten Rückgabewert durchgereicht, Aufrufer nutzt ihn jetzt für eine präzisere
+  Meldung. Beide Male Rückgabe-Arität nach der Änderung gegen jeden tatsächlichen `return` erneut
+  geprüft. `adapter/runner.lua`s zwei `notify()`-Aufrufe (Prozess-Spawn-Fehler) waren ebenfalls
+  redundant zum Aufrufer und wurden auf `log.append()` umgestellt. Bewusst NICHT angefasst:
+  `adapter/runner.lua`s übrige `notify()`-Aufrufe in den async Exit/stdout/stderr-Callbacks (keine
+  wartende aufrufende Funktion vorhanden — dort ist der Callback selbst die Grenze) sowie
+  `adapter/preview_tab.lua`/`adapter/inbound_poll.lua` (einzelne, klar umrissene Aktionsfunktionen
+  ohne weitere Aufrufer-Kette).
+
+Zentrale Bindings-Sammlung (`nvim/docs/NOTES/PersonelPlugins/BINDINGS/`) geprüft: alle drei
+Dateien (`Keymaps`/`Usercmds`/`Autocmds`/`mdview.nvim.md`) bereits vollständig und aktuell
+(inkl. `standalone`/`blanklines`), keine Änderung nötig.
+
+Verifiziert: `stylua --check lua tests` grün, `luacheck lua/mdview --no-color` 0 Warnings/0
+Errors, headless-nvim-Testsuite (`tests/nvim/harness.lua`, 24 Specs) grün, Modul-Require-Smoketest
+über alle 87 Dateien unter `lua/mdview/` (einzige "Failure": `mdview.lps`, das optionale
+`lspconfig` erwartet — erwartetes Verhalten, kein Bug), `:checkhealth mdview` ohne ERROR-Zeilen.
+`busted` selbst war lokal nicht installierbar (Windows, kein `luarocks`-Setup) — die reinen
+Lua-Specs unter `tests/lua/` liefen daher nicht lokal, nur über CI (grün). Übersprungen/nicht
+verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — über die grüne
+`ubuntu-latest`-CI verifiziert. Alles committet (`7f1cc17`) und nach `origin/main` gepusht;
+CI-Status vor und nach dem Push grün geprüft (Laufzeit ca. 2 Minuten).
