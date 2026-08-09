@@ -28,6 +28,9 @@ end
 ---@field created string|nil
 ---@field status string|nil
 ---@field last_reply_sent string|nil  ISO-8601 UTC, set by `:Case reply check`'s "sent?" prompt (SLA.md §6A) — the one signal the SLA cadence clock can't derive from the Activity Stream alone.
+---@field sap_component string|nil  e.g. "XX-PART-TRI-ECT" (EXTRACTION.md §8), auto-detected from the Activity Stream's Stammdaten block by `:Case activity`.
+---@field versions { server: string|nil, commander: string|nil }|nil  EXTRACTION.md §8. `server` only ever comes from the stream (the support-info doesn't have it); `commander` duplicates `tosca_version`/the support-info header but is cheap to also cache here.
+---@field custom_dlls string[]|nil  EXTRACTION.md §8 — not yet written by anything (Paket 1's supportinfo digest computes this live, doesn't persist it).
 
 --- Read a case's sidecar. `nil` (not an error) when it doesn't exist yet —
 --- true for every one of the 19 pre-existing cases.

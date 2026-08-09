@@ -131,6 +131,47 @@ local function top_level_files(dir)
   return names
 end
 
+--- stream-incomplete (EXTRACTION.md §4, Paket 2): every `NN_ActivityStream.md`
+--- under a case, checked against its own declared "`<N>` / `<N> total
+--- activities.`" header count. A mismatch means the SNOW view wasn't
+--- fully expanded before copying ("Show less"/"Show more" left
+--- collapsed) — report-only, no rename can fix missing content, the fix
+--- is re-pasting from SNOW.
+---@param e Lib.Case.RegistryEntry
+---@return Lib.Case.DoctorFinding[]
+local function stream_completeness_findings(e)
+  local out = {}
+  local research_dir = e.dir .. "/Research"
+  local st = uv.fs_stat(research_dir)
+  if not (st and st.type == "directory") then
+    return out
+  end
+  local stream = require("bindings.usrcmds.case.extract.stream")
+  for _, name in ipairs(top_level_files(research_dir)) do
+    if name:match("_ActivityStream%.md$") then
+      local path = research_dir .. "/" .. name
+      local content = read(path)
+      if content then
+        local declared, actual = stream.completeness(content)
+        if declared and declared ~= actual then
+          out[#out + 1] = {
+            short = e.short,
+            kind = "stream-incomplete",
+            detail = ("%s: declared %d activities, found %d — re-expand \"Show more\" in SNOW before copying"):format(
+              name,
+              declared,
+              actual
+            ),
+            from = path,
+            to = nil,
+          }
+        end
+      end
+    end
+  end
+  return out
+end
+
 --- Files directly inside Research/ or Replies/ with no `NN_` prefix. Numbers
 --- are assigned sequentially (alphabetical among the unprefixed files)
 --- starting right after the highest prefix already in use — the same
@@ -310,6 +351,7 @@ function M.check()
     end
 
     vim.list_extend(findings, nn_prefix_findings(e))
+    vim.list_extend(findings, stream_completeness_findings(e))
   end
 
   -- stale-session (SESSIONS.md §6, Paket 3): the safety net behind the

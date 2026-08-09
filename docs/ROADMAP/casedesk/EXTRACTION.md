@@ -9,9 +9,26 @@ und `Research/NN_ActivityStream.md` (aus SNOW kopiert).
 > `config.version_components`/`version_watch`/`known_vendor_prefixes`.
 > Gegen alle vier analysierten Support-Infos verifiziert (§1) — die
 > Achmea-Custom-DLL wird korrekt als einziger "Auffällig"-Fund über alle
-> vier gefunden, kein False Positive. Details: §12.
+> vier gefunden, kein False Positive.
+>
+> **Paket 2 steht** (2026-08-10): `extract/stream.lua` — Versionen im
+> Fließtext (Server/Commander), KBA-Nummern, Anhangsnamen, der
+> Stammdaten-Schlussblock (`config.stream_stammdaten_labels`), und der
+> Vollständigkeits-Check als neuer `:Cases doctor`-Fund `stream-incomplete`.
+> `:Case activity` schreibt `sap_component`/`versions` jetzt automatisch
+> nach `.case.json`, `:Case versions server` nutzt den Stream als Fallback
+> (Paket 1 hatte das noch offen gelassen). Gegen den einen echten Stream im
+> Bestand (Case 977392) verifiziert — dabei zwei echte Bugs gefunden und
+> gefixt (s. §12): Attachments durch Leerzeilen getrennt statt terminiert,
+> `error_codes` zu lockeres Pattern (`HEC_ABAP`/ein Dateiname-Fragment als
+> falsche Treffer). `error_codes`/`doc_links`/`escalations` selbst kommen
+> in diesem einen Stream nicht vor — Pattern gegen EXTRACTION.md §4s
+> dokumentierte Beispiele gebaut, `doc_links` zusätzlich gegen echte
+> `docs.tricentis.com`-Links aus anderen Case-Dateien verifiziert (nicht
+> aus einem Stream), `error_codes`/`escalations` bleiben ungetestet gegen
+> echten Treffer.
 
-Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Offene Pakete 2–5:
+Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Offene Pakete 3–5:
 [ROADMAP.md](ROADMAP.md). Der SLA-Teil des Stream-Parsers
 (`sla/stream.lua`) steht bereits eigenständig, siehe [SLA.md](SLA.md).
 
@@ -494,19 +511,19 @@ importiert, nicht umgekehrt.
 
 ## 11. Offene Fragen
 
-1. **Pausiert die SLA-Uhr bei `Awaiting User Info` wirklich?** Fachlich
-   plausibel und in jedem Ticket-System so üblich — aber die
-   SAP-gegenüber-Tricentis-SLA sagt dazu nichts Explizites. Vor der
-   Implementierung klären, sonst rechnet das Tool selbstbewusst falsch.
+1. ~~Pausiert die SLA-Uhr bei `Awaiting User Info` wirklich?~~
+   **Entschieden (2026-08-10): ja, pausieren.** Sonst zeigt das Tool eine
+   gerissene Frist an, obwohl korrekt gearbeitet wurde — Alarm-
+   Müdigkeits-Risiko aus SLA.md §8. Damit ist Paket 4 entsperrt.
 2. **Ist `SAP Component` als Kategorie brauchbar?** Bei vier Streams:
    3× `XX-PART-TRI-ECT`, 1× `XX-PART-TRI-TTA-CLD`. Über 20 Cases erst zu
    beurteilen — aber es kostet nichts, es schon mal mitzuschreiben.
-3. **Soll `:Case versions` ohne Support-Info auf den Stream zurückfallen?**
-   Dafür: Server-Version gibt es nur dort. Dagegen: Fließtext-Fund ist
-   unsicherer als eine Header-Zeile. Vorschlag: ja, aber mit sichtbarer
-   Quellenangabe. **Weiterhin offen** — Paket 1 hat das bewusst nicht
-   gebaut (s. §12): kein reales Stream-Sample mit dem Muster im Bestand,
-   um den Fallback zu verifizieren, bevor er scharf geschaltet wird.
+   `:Case activity` schreibt es seit Paket 2 automatisch nach
+   `.case.json`.
+3. ~~Soll `:Case versions` ohne Support-Info auf den Stream
+   zurückfallen?~~ **Gebaut (Paket 2, 2026-08-10):** ja, mit sichtbarer
+   Quellenangabe (`(copied, from NN_ActivityStream.md)`) — jetzt gegen
+   einen echten Stream ohne Support-Info verifiziert (Case 977392).
 4. Sollen Custom-DLLs in `Summary.md` einfließen (SNOW-sichtbar) oder nur
    in `Notes.md` (intern)?
 5. `:Case doclinks` eigenständig oder nur als Prüfschritt in
@@ -516,32 +533,33 @@ importiert, nicht umgekehrt.
 
 **Paket 1 — `:Case versions` (steht, 2026-08-10):** `extract/supportinfo.lua`
 (Kopf + Digest + Substring-Lookup) · `config.version_components` ·
-Digest-Viewer · `--all`/`--raw`. **Fallback auf Stream für `server` NICHT
-gebaut** — kein reales Aktivstream-Sample mit dem `Tosca server version -
-…`-Muster war zum Verifizieren greifbar (nur ein Stream im Bestand, ohne
-diese Zeile), und §11 Frage 3 war ohnehin nur ein Vorschlag, keine
-Entscheidung. `:Case versions server` liefert bis dahin "kein Treffer"
-statt eines ungetesteten Regex-Rateversuchs.
+Digest-Viewer · `--all`/`--raw`. Stream-Fallback für `server` kam mit
+Paket 2 nach, nicht hier — s. u.
 
-**Paket 2 — Stream-Signale** · `extract/stream.lua` (Zustandshistorie,
-Versionen im Text, SAP Component, Fehlercodes, Anhangsnamen, KBAs) ·
-`versions`/`sap_component`/`custom_dlls` nach `.case.json` ·
-Vollständigkeits-Check (Blockzahl vs. Kopfzahl) als `:Cases doctor`-Fund.
+**Paket 2 — Stream-Signale (steht, 2026-08-10):** `extract/stream.lua`
+(Versionen im Text, KBA-Nummern, Anhangsnamen, Stammdaten-Schlussblock) ·
+`sap_component`/`versions` nach `.case.json` (`:Case activity`) ·
+`:Case versions server`-Fallback (schließt §11 Frage 3) ·
+Vollständigkeits-Check als `:Cases doctor`-Fund `stream-incomplete`.
+**Nicht gebaut/nicht verdrahtet:** Zustandshistorie (steckt bereits in
+`sla/stream.lua`, nicht dupliziert), Eskalation/Swarming (`SWTASK…`,
+kein reales Vorkommen zum Prüfen), `custom_dlls` nach `.case.json`
+(Paket 1s Digest berechnet es live, schreibt aber noch nichts weg).
 
 **Paket 3 — Doku-Versionsprüfung** · `extract/doclinks.lua` ·
 `:Case doclinks` · Einbau in `:Case reply check`.
 
-**Paket 4 — SLA-Korrektur** · `states` in `sla/stream.lua` ·
-Pausen-Intervalle in `clock.elapsed` · `last_reply_sent` aus dem
-„Send to Customer"-Marker.
+**Paket 4 — SLA-Korrektur (entsperrt, §11.1 entschieden):** `states` in
+`sla/stream.lua` · Pausen-Intervalle in `clock.elapsed` ·
+`last_reply_sent` aus dem „Send to Customer"-Marker.
 
 **Paket 5 — KI-Kopplung** · `{facts}`-Token in `KiPrompt.md` ·
 Faktenblock-Renderer · Widerspruchsprüfung in `:Case ki import` ·
 zitierte Doku-Links als deterministische Referenzsammlung.
 
-Paket 1 und 2 sind unabhängig voneinander nützlich. Paket 4 hängt an der
-Klärung von §11.1. Paket 5 setzt 1–3 voraus — genau deshalb steht es
-hinten: der Faktenblock ist nur so gut wie die Extraktoren darunter.
+Paket 1 und 2 sind unabhängig voneinander nützlich. Paket 5 setzt 1–3
+voraus — genau deshalb steht es hinten: der Faktenblock ist nur so gut
+wie die Extraktoren darunter.
 
 ## Literatur und Referenzen
 

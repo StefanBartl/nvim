@@ -28,7 +28,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case reply [nr]` | — | Open the newest file in `Replies/` |
 | `:Case open [nr]` | — | Open the case folder (filetree reveal if `filetree.nvim` is loaded, else netrw) |
 | `:Case add <name> [suffix]` | `name`, optional `suffix` | New `<name>.md` in the case root. `name == "reply"` is special: auto-numbers into `Replies/`, `[suffix]` overrides the stem (`:Case add reply AskForPDF` → `NN_AskForPDF.md`; omitted → `NN_Reply.md`) |
-| `:Case activity [nr]` | — | Paste the system clipboard (a ServiceNow Activity Stream) into a new auto-numbered `Research/NN_ActivityStream.md` |
+| `:Case activity [nr]` | — | Paste the system clipboard (a ServiceNow Activity Stream) into a new auto-numbered `Research/NN_ActivityStream.md`. Also auto-detects Priority (SLA.md §6A), `sap_component`, and `versions.server`/`versions.commander` (EXTRACTION.md §8) straight into `.case.json` — no manual step |
 | `:Case reply check` | — | Pre-send gate on the **current buffer**: emoji count (`c` removes), stray markdown headlines, dead links, `s` launches `language.nvim`'s spellcheck on the buffer |
 | `:Case similar [nr] [n]` | `n`, default 5 | Past cases whose title + `Summary.md` share the most distinctive vocabulary (TF-IDF cosine, no AI). Each hit shows the matched terms — the ranking is lexical, so seeing *why* it matched is how you judge it |
 | `:Case timeline [nr]` | — | Work sessions reconstructed from file mtimes, oldest first — touches within `config.timeline_session_gap_minutes` (default 120) of each other count as one sitting. Each session's duration is a **lower bound** (a save marks when editing stopped, not started) |
@@ -36,7 +36,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case ki import [nr]` | — | Paste an AI answer (in the format `:Case ki` asked for) from the clipboard and file it: analysis/difficulty/next-steps → `Research/NN_KiAnalysis.md`, English reply draft → new `Replies/NN_Reply.md` (still goes through `:Case reply check`, never auto-sent), internal German notes → appended to `Notes.md` |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
-| `:Case versions [component] [nr] [--all] [--raw]` | `component` — a `config.version_components` name, or any substring of any filename in the report | No args: curated digest (Testsuite/TBox build/Api Core/Install-Root + the "Auffällig" custom-DLL section) from `Ressources/ToscaSupportInfo*.txt`. A `component` copies its version to the clipboard (several matches → `kit.select`). `--all` lists every entry, grouped by directory. `--raw` opens the file itself |
+| `:Case versions [component] [nr] [--all] [--raw]` | `component` — a `config.version_components` name, `server`, or any substring of any filename in the report | No args: curated digest (Testsuite/TBox build/Api Core/Install-Root + the "Auffällig" custom-DLL section) from `Ressources/ToscaSupportInfo*.txt`. A `component` copies its version to the clipboard (several matches → `kit.select`). `component = server` falls back to the newest Activity Stream's "Tosca Server - v…" prose — the support-info never has it, EXTRACTION.md §4.1 — and works even with no support-info file at all. `--all` lists every entry, grouped by directory. `--raw` opens the file itself |
 | `:Case close [nr]` | — | Pick a destination (`kit.select`): any other state, or "Delete permanently" (types the case number back to confirm — irreversible, not a bare y/n). Moving deletes the case's saved session too, if it had one (SESSIONS.md §6) |
 | `:Case reassign [nr]` | — | Move to `Reassigned/`, delete its saved session if it had one (SESSIONS.md §6) |
 | `:Case snow [nr]` | — | Open the ServiceNow ticket URL (if `config.snow_url_format` is set) or copy the ticket id |
@@ -60,7 +60,7 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases sla report [--year N]` | — | Retrospective, EVERY state (not just open — SLA.md §9 Q5): ratio of first-response deadlines met per priority, both anchors ("ab Ticket-Eingang"/"ab Zuweisung", SLA.md §9.1). Outliers listed with how late. A case with no `last_reply_sent` stamp yet is excluded from the ratio, not counted as missed, and reported as its own "ohne last_reply_sent" count. States up front it's "meine Sicht, keine SNOW-Wahrheit" (SLA.md §6D's honesty clause) |
 | `:Cases history [company]` | `company`, defaults to the current buffer's case's company | Every matching case in one screen, grouped by state, most-recently-touched first within each group (`kit.viewer`, not a picker) |
 | `:Cases stats` | — | Counts by state / company / year |
-| `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, whether each `Summary.md` follows the SNOW template without markdown, and a saved session for a case that's no longer open (`stale-session`, SESSIONS.md §6) |
+| `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, whether each `Summary.md` follows the SNOW template without markdown, a saved session for a case that's no longer open (`stale-session`, SESSIONS.md §6), and an Activity Stream whose block count doesn't match its own declared total (`stream-incomplete`, EXTRACTION.md §4 — the SNOW view wasn't fully expanded before copying) |
 | `:Cases normalize` | — | Fixes exactly what `doctor` found — dry-run plan (`kit.viewer`) + confirm, then applies. Skips (reports separately) anything ambiguous: target already exists, or two findings in the same case would land on the same target. `stale-session` findings delete the session instead of renaming anything |
 | `:Cases linkcheck [nr]` | — | Checks `docs.tricentis.com` links (only that host) for dead pages, async bounded-concurrency HEAD requests |
 | `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`Ressources/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json`, Terminology |
@@ -169,6 +169,18 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   mutation here, since it's the one action in this module with no undo:
   typing the case number back for one case, `DELETE` for a batch, never a
   plain y/n.
+- **`extract/stream.lua`'s attachment names are separated by blank
+  lines, not terminated by the first one** — a real stream had
+  `FileServices Properties.png`, a blank line, then `ToscaSupportInfo.txt`
+  as a SECOND attachment on the same "New attachment(s) added" block; an
+  earlier version of this parser stopped at the first blank line and
+  silently dropped the second file. Now scans until the block's own
+  `Show less` line instead.
+- **`extract/stream.lua`'s error-code pattern requires two underscores
+  (3+ segments), not one** — one underscore caught `HEC_ABAP` (a real SAP
+  `Cloud System Type` value, not an error code) and a truncated `SE_A`
+  fragment cut out of a mixed-case filename mid-match. Both were real
+  false positives against real data, not hypothetical.
 - **`:Case versions` never parses a version number, only compares
   strings.** Real formats seen across four support-info files:
   `34.8.0.280 (280)`, `2, 8, 0`, `3.3.0`, `2026.1` next to `25.1.7` on the

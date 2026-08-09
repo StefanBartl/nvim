@@ -19,16 +19,17 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       `Research/` mit einbeziehen.
 
 - [ ] **Artefakt-Extraktion (Rest)** — eigenes Konzept:
-      [EXTRACTION.md](EXTRACTION.md). Paket 1 steht (`:Case versions
-      [component] [nr] [--all] [--raw]` aus `ToscaSupportInfo*.txt` — Digest
-      statt 1600-Zeilen-Liste, Custom-DLL-Erkennung; gegen alle vier
-      analysierten Support-Infos verifiziert, kein False Positive). Offen:
-      Paket 2 (Stream-Signale jenseits der SLA-Uhr: Server-Version,
-      Zustandshistorie, SAP Component, Fehlercodes, KBAs), Paket 3
+      [EXTRACTION.md](EXTRACTION.md). Pakete 1+2 stehen (`:Case versions
+      [component] [nr] [--all] [--raw]` aus `ToscaSupportInfo*.txt` +
+      Stream-Fallback für `server`; `extract/stream.lua` für Versionen im
+      Fließtext/KBA-Nummern/Anhänge/Stammdaten, `sap_component`/`versions`
+      automatisch nach `.case.json` via `:Case activity`,
+      Vollständigkeits-Check als `:Cases doctor`-Fund `stream-incomplete`
+      — gegen echte Support-Infos und Stream verifiziert). Offen: Paket 3
       (`:Case doclinks` als Versionsabgleich der Tricentis-Doku-Links),
-      Paket 4 (SLA-Korrektur: Uhr pausiert bei `Awaiting User Info` — hängt
-      an EXTRACTION.md §11.1s offener Fachfrage), Paket 5 (Faktenblock als
-      Fundament für die KI-Anbindung).
+      Paket 4 (SLA-Korrektur: Uhr pausiert bei `Awaiting User Info` —
+      entschieden, noch nicht gebaut), Paket 5 (Faktenblock als Fundament
+      für die KI-Anbindung).
 
 - [ ] **KI-Anbindung** — hängt an einem eigenen `ai.nvim`-Plugin (noch
       nicht gebaut; Config-Grundlage existiert bereits:

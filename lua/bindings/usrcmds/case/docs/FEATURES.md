@@ -35,10 +35,42 @@ that has it, and zero false positives across the other three.
   without a table entry.
 - **`--all`** lists everything, grouped by directory; **`--raw`** opens
   the file itself.
-- **Not built**: the stream fallback for `server` (EXTRACTION.md §11 Q3)
-  — the server version only appears in the Activity Stream, and no real
-  sample with that exact line was available to verify a parser against.
-  Deferred to Paket 2, which builds the stream extractor properly.
+- **`server` component**: falls back to the newest Activity Stream's
+  "Tosca Server - v…" prose (EXTRACTION.md §11 Q3, resolved with
+  Paket 2) — works even when the case has no support-info file at all
+  (confirmed for real: case 977392).
+
+## Stream signals: `extract/stream.lua` (EXTRACTION.md Paket 2)
+
+Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+§4, §12 (Paket 2, steht seit 2026-08-10). A second, independent pass over
+`Research/NN_ActivityStream.md` — `sla/stream.lua` stays narrow (only
+what the three SLA clocks need), this reads everything else. Validated
+against the one real stream in the bestand (case 977392): server/commander
+versions, KBA numbers, attachment names, and the full Stammdaten block
+all matched EXTRACTION.md's own documented examples exactly. Two real
+bugs were caught and fixed in the process (see Usercmds.md's Notes) —
+attachments separated by blank lines rather than terminated by the first
+one, and an error-code pattern loose enough to flag a real SAP field
+value (`HEC_ABAP`) as a false positive.
+
+- **`:Case activity`** now auto-detects `sap_component` and
+  `versions.server`/`versions.commander` into `.case.json`, same "no
+  manual step" pattern Priority already used (SLA.md §6A).
+- **`:Case versions server`** — see above.
+- **`:Cases doctor`**'s new `stream-incomplete` finding: an Activity
+  Stream's declared `"<N> total activities."` header not matching its
+  actual block count means the SNOW view wasn't fully expanded before
+  copying. Report-only (no rename fixes missing content) — the fix is
+  re-pasting from SNOW.
+- **Built but not independently re-validated against a real hit** this
+  session (none of the available data contains one): `error_codes`
+  (`TRICENTIS_ERROR_...`-shaped tokens), `doc_links` in-stream (the
+  pattern itself IS validated, just against other case files, not a
+  stream), `escalations` (`SWTASK...` tier changes).
+- **Not built**: writing `custom_dlls` to `.case.json` (Paket 1's digest
+  computes it live but doesn't persist it), state-history duplication
+  (already lives in `sla/stream.lua`, not re-parsed here on purpose).
 
 ## Active SLA notifications + KI-prompt context (SLA.md Paket 4, last one)
 

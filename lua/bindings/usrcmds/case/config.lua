@@ -331,6 +331,37 @@ M.known_vendor_prefixes = {
   "XmlDiffPatch.",
 }
 
+--- `extract/stream.lua`'s `M.stammdaten` — every known SNOW field-label
+--- line in the trailing Stammdaten dump of an Activity Stream. Built from
+--- one real, fully expanded stream (case 977392) — `Description` is
+--- deliberately included even though its value is multi-line prose (the
+--- parser stops a value at the next KNOWN label, not at the first blank
+--- line, so a multi-line value works the same as a one-line one). A field
+--- from a different case type not in this list simply isn't captured
+--- (never mis-attributed to a neighboring field) — extend the list, same
+--- "config as data" pattern as `version_components` above.
+---@type string[]
+M.stream_stammdaten_labels = {
+  "Account",
+  "Assignment group",
+  "Business Impact",
+  "Cloud System Type",
+  "Component Change Request GPS",
+  "Contact",
+  "Description",
+  "Escalation Request GPS",
+  "Global MCC Escalation",
+  "Impact",
+  "Number",
+  "Opened by",
+  "Priority",
+  "Priority raise request",
+  "SAP Component",
+  "Speedup Request GPS",
+  "State",
+  "Title",
+}
+
 M.default_blueprint = "default"
 
 --- Company name (as stored in `.case.json`) -> a key in `M.blueprints`,

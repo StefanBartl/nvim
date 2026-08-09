@@ -565,6 +565,34 @@ function M.activity(case_arg)
       end
     end
 
+    -- EXTRACTION.md §8/Paket 2: SAP Component and the Tosca Server version
+    -- — the server version exists NOWHERE else, not even the support-info
+    -- (that only knows the Commander, EXTRACTION.md §4.1) — cached into
+    -- .case.json the same way, for free on every :Case activity.
+    local extract_stream = require("bindings.usrcmds.case.extract.stream")
+    local signals = extract_stream.parse(content)
+    local facts = {}
+    local sap_component = signals.stammdaten["SAP Component"]
+    if sap_component and sap_component ~= (m and m.sap_component) then
+      facts.sap_component = sap_component
+    end
+    if signals.versions.server or signals.versions.commander then
+      local existing = (m and m.versions) or {}
+      local merged = {
+        server = signals.versions.server or existing.server,
+        commander = signals.versions.commander or existing.commander,
+      }
+      if merged.server ~= existing.server or merged.commander ~= existing.commander then
+        facts.versions = merged
+      end
+    end
+    if next(facts) then
+      local ok_facts, err_facts = meta.patch(entry.dir, entry.short, facts)
+      if not ok_facts then
+        notify.warn("could not save detected facts: " .. tostring(err_facts))
+      end
+    end
+
     edit(full)
   end)
 end
@@ -1105,6 +1133,27 @@ function M.versions(component_arg, case_arg, flags)
       notify.warn("no case to show versions for")
       return
     end
+
+    -- EXTRACTION.md §4.1: the server version exists NOWHERE in the
+    -- support-info (that only knows the Commander) — the newest Activity
+    -- Stream's "Tosca Server - v…" prose is the only source. Checked
+    -- first and returns early: a case can have a stream but no
+    -- support-info at all (confirmed for real — case 977392), so this
+    -- can't wait behind the "no ToscaSupportInfo*.txt found" bailout below.
+    if component_arg and component_arg:lower() == "server" then
+      local stream_mod = require("bindings.usrcmds.case.extract.stream")
+      local stream_path = stream_mod.find(entry.dir)
+      local stream_content = stream_path and read(stream_path)
+      local server = stream_content and stream_mod.versions_in_text(stream_content).server
+      if server then
+        require("lib.nvim.cross.copy_to_clipboard")(server)
+        notify.info(("Tosca Server: %s (copied, from %s)"):format(server, vim.fn.fnamemodify(stream_path, ":t")))
+      else
+        notify.warn("versions: no server version found (needs an Activity Stream with 'Tosca Server - v...')")
+      end
+      return
+    end
+
     local supportinfo = require("bindings.usrcmds.case.extract.supportinfo")
     local path = supportinfo.find(entry.dir)
     if not path then
