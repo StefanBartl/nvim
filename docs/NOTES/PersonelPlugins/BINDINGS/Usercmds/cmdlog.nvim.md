@@ -5,8 +5,10 @@ Replaces 7 independent flat commands — breaking change, no compat aliases.
 The only repo in the migration series with **zero prior lib.nvim
 dependency** — added as part of this migration, per the roadmap plan.
 
-Source: `lua/cmdlog/ui/picker.lua`
-Docs: `docs/COMMANDS.md`, `README.md`, `doc/cmdlog.txt`
+Source: `lua/cmdlog/bindings/usrcmds.lua` (moved out of `ui/picker.lua`
+since this file was written, specifically so `docs/BINDINGS.md` and the
+code can't drift apart)
+Docs: `docs/BINDINGS.md`, `docs/COMMANDS.md`, `README.md`, `doc/cmdlog.txt`
 
 | Command | Effect |
 | --- | --- |
@@ -51,5 +53,7 @@ retroactive attribution of older `:history` entries.
   etc.) is unchanged — all take zero arguments and ignore whatever's passed
   to them, so using them directly as composer `run`/`default` handlers
   (which receive a `ctx` table) required no adapter code at all.
-- No health.lua, no CI in this repo — pre-existing, not part of this
-  migration's scope.
+- **Stale as of the 2026-08-09 checklist pass**: `cmdlog.health`
+  (`:checkhealth cmdlog`) and a `.github/workflows/ci.yml` (stylua +
+  luacheck + a headless smoke test) both now exist — the "no health.lua,
+  no CI" note above no longer applies.

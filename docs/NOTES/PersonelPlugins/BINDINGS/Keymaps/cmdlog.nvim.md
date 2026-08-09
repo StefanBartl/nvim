@@ -9,10 +9,11 @@ below still holds in practice: all *active* keymaps remain
 prompt-buffer-local, inside picker `attach_mappings` — different per
 backend (`config.options.picker`: `"telescope"` or `"fzf"`).
 
-Cross-reference: no `docs/BINDINGS.md`. `README.md`'s "Shortcuts (inside
-pickers)" section is accurate for the Telescope backend but incomplete (see
-Notes below); `docs/ADD_PICKER.md` documents the extension pattern for
-plugin authors, not end-user keys.
+Cross-reference: `docs/BINDINGS.md` in the repo is now the source of truth
+(added after this file was last written) and matches the tables below;
+`README.md`'s "Shortcuts (inside pickers)" section is accurate for the
+Telescope backend. `docs/ADD_PICKER.md` documents the extension pattern
+for plugin authors, not end-user keys.
 
 ## which-key
 
@@ -33,6 +34,11 @@ Used by every picker except `favorites_picker`.
 | `<CR>` | i | Closes picker, feeds the selected entry back into the command-line for editing (does **not** execute it) |
 | `<Tab>` | i | Toggles favorite for the selected entry, closes + refreshes the picker |
 | `<C-r>` | i | Closes + manually refreshes the picker |
+| `<C-x>` | i | Deletes the selected entry from its underlying history (Neovim `:` history via `histdel()`, or the shell history file with a confirmation prompt). Only bound where the caller passes a `delete_fn` — not in `favorites_picker` (`<Tab>` already removes a favorite there) |
+
+All four are configurable/disableable via `setup({ mappings = { ... } })`
+(`select`/`toggle_favorite`/`refresh`/`delete`, each `string|false`), see
+`docs/OPTIONS.md`.
 
 `lua/cmdlog/ui/favorites_picker.lua` has its own inline `attach_mappings`
 duplicating the `<CR>`/`<Tab>` behavior above, plus one addition (since

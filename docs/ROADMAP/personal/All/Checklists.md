@@ -46,7 +46,7 @@ darunter, sofern relevant.
 | dap.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | diff.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | language.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| cmdlog.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| cmdlog.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | emojis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | github_stats.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4. FILE TYPES (MARKDOWN & DOCUMENTS) |||||||
@@ -1257,3 +1257,76 @@ Verifiziert: `stylua --check .` grün, `luacheck lua` 0 Warnings/0 Errors, headl
 oben). Zwei Commits (`0dc5a46` Formatierung, `d8e05fb` Bugfixes) nach `origin/main` gepusht;
 CI-Status vor (rot, seit mind. acht aufeinanderfolgenden Pushes) und nach dem Push (grün, beide Jobs
 `tests`/`lint`) verifiziert.
+
+### cmdlog.nvim
+
+Kein `.github/workflows`, `stylua.toml`, `.luacheckrc` oder Testsuite vorhanden — komplett neu
+angelegt (angelehnt an `pickers.nvim`, das nächstähnliche Schwester-Plugin: gleiche
+`stylua.toml`-Werte, `lint`/`test`-Zweiteilung in der CI). 38 Lua-Dateien (nicht 94 wie ursprünglich
+angenommen), `.luarc.json` war bereits vorhanden und korrekt.
+
+- **PERFORMANCE.md — einziger echter Hotpath**: `core/tracker.lua`s `CmdlineLeave`-Autocmd feuert
+  bei jedem `:`-Befehl. Zwei Funde: `project_history.get_git_root()` rief synchron `git rev-parse
+  --show-toplevel` als Subprozess auf `bei jedem einzelnen Befehl` auf — jetzt per cwd über
+  `lib.nvim.cache.memory` (ttl=3s) gecacht, wie in PERFORMANCE.md unter "Cache-Regeln" gefordert.
+  Zusätzlich liefen `project_history.record()`/`stats.record()` (je ein synchroner JSON-Encode +
+  Disk-Write) inline im Autocmd-Callback — jetzt in denselben `vim.schedule()` verschoben, der
+  ohnehin schon für den `v:errmsg`-Check nötig war (Timing/Verhalten unverändert, nur nicht mehr auf
+  dem synchronen Pfad).
+- **LUA_NVIM.md**: `lua/cmdlog/@types/init.lua` fehlten `favorite_tags_path`/`project_history_path`/
+  `stats_path`/`errors_path`/`track_commands` komplett in `CmdlogConfig`, `CmdlogMappingsConfig`
+  fehlte `tag`, und `CmdlogKeymapsConfig` beschrieb noch die alte Fixed-Field-Form
+  (`enabled`/`cmdlog`/`cmdlog_full`/...) statt der tatsächlichen `table<string,string>`-Subcommand-
+  Map nach dem entsprechenden Refactor — alle vier behoben. Direkte `vim.notify()`/`vim.keymap.set()`-
+  Aufrufe (3 Picker-Module, `integrations/which_key.lua`) auf `lib.nvim.notify`/`lib.nvim.map`
+  umgestellt.
+- **REVIEW.md §8 Tooling**: siehe oben (komplett neu angelegt). `stylua`/`luacheck` liefen danach
+  sauber, bis auf zwei echte Funde beim ersten `luacheck`-Lauf: `ui/telescope-previewer.lua` rief
+  ein nirgends definiertes globales `Job:new(...):start()` auf — ein Überbleibsel der
+  plenary.nvim-Entfernung (der Rest der Datei nutzt bereits `local job =
+  require("lib.nvim.system.job")`), hätte bei der ersten `:help`-/`:term`-Preview mit "attempt to
+  index a nil value" abgestürzt; auf `job.start(...)` umgestellt. `ui/telescope/notes_picker.lua`
+  enthielt toten Code (`attach_notes`/`get_selected_command`, nirgends aufgerufen — das Modul selbst
+  ist komplett unverdrahtet, `M.open()` wird von keiner anderen Datei referenziert; als eigenständige
+  Funktion belassen statt entfernt, da das eine Produktentscheidung wäre, keine reine
+  Compliance-Frage) — die beiden toten privaten Funktionen entfernt, dadurch wurde auch der lokale
+  `api`/`action_state`-Alias ungenutzt und mit entfernt.
+- **RELEASE.md**: `doc/cmdlog.nvim.txt` → `doc/cmdlog.txt` umbenannt, alle `*nvim-cmdlog-*`-Tags zu
+  `*cmdlog-*` (plus `*cmdlog.nvim*`) — `:h cmdlog` funktionierte vorher nicht, da nur `nvim-cmdlog*`-
+  Tags existierten; `doc/tags` per `:helptags doc` neu erzeugt. LICENSE-Datei und alle
+  Lizenz-Referenzen (README-Badge/-Abschnitt, `doc/cmdlog.txt`s LICENSE-Block) entfernt — kein
+  anderes Plugin im Ökosystem hat eine. Stale `favorites.json`-Pfadangabe (`nvim-cmdlog/` bzw.
+  `cmdlog.nvim/` statt des tatsächlichen `cmdlog/`) in README/`docs/COMMANDS.md`/`docs/OPTIONS.md`/
+  `doc/cmdlog.txt` korrigiert. README hatte unter "Option 3: Lazy-load on specific event" einen
+  kaputten Lua-Codeblock (fehlendes `end,` und schließende `}` — wäre als lazy.nvim-Spec nicht
+  geladen worden), repariert. `ui/fzf-previewer.lua` implementiert tatsächlich Previews (über
+  externe Shell-Kommandos wie `head`/`nvim -u NONE | redir`) — README/`doc/cmdlog.txt` behaupteten
+  fälschlich, fzf hätte gar keine Preview-Unterstützung; korrigiert zu "POSIX only", und der
+  Previewer selbst gibt jetzt unter Windows `nil` zurück statt ein kaputtes Shell-Kommando
+  auszuliefern (kein `head`/`tail`-Äquivalent garantiert). `gh repo edit --homepage ""` — zeigte
+  vorher auf die eigene alte "nvim-cmdlog"-URL des Repos selbst; Description/Topics/Default-Branch
+  (`main`) waren bereits korrekt.
+- **Refactoring.md**: `core/shell.lua`s `get_shell_history_path()` rief bei Erkennungsfehlern
+  `notify.warn()` direkt auf, obwohl das Modul sowohl von Pickern als auch von `cmdlog.health`
+  wiederverwendet wird — `:checkhealth cmdlog` hätte bei fehlgeschlagener Shell-Erkennung sowohl ein
+  `vim.notify` als auch ein `health.warn` für denselben Zustand ausgelöst. Alle vier `notify.warn()`-
+  Aufrufe entfernt, Funktion gibt jetzt nur noch Status (`""`) zurück; `cmdlog.health` hat bereits
+  sein eigenes `vim.health.warn()` für exakt diesen Fall. `core/store.lua`/`core/favorites.lua`s
+  `notify.error()` bei Schreibfehlern bewusst nicht verschoben — beides sind fire-and-forget-
+  Autocmd-Handler ohne Rückgabewert-Prüfung an den Call-Sites; ein echtes Verschieben an die Grenze
+  hätte entweder mehrschichtiges Plumbing durch mehrere Aufrufer oder stillschweigend verschluckte
+  I/O-Fehler bedeutet — als bewusste Ausnahme belassen und im Abschlussbericht vermerkt.
+
+Kein `docs/TESTS`/Testframework vorhanden — `docs/TESTS/smoke_spec.lua` neu angelegt
+(`require()` aller 38 Module, `setup({})`, `bindings.catalog()`, `core.utils`-Pure-Functions,
+`cmdlog.health.check()`); die beiden telescope-abhängigen Module werden geskippt statt zu scheitern,
+wenn telescope.nvim nicht im Runtimepath liegt (lazy-required, kein Hard-Dependency zur Ladezeit).
+CI checkt zusätzlich telescope.nvim + plenary.nvim als Siblings aus, damit diese beiden Module dort
+tatsächlich mitgetestet werden. Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/cmdlog.nvim.md`) geprüft und
+bereits deckungsgleich mit `docs/BINDINGS.md` im Repo befunden — keine Änderung nötig.
+
+Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — verifiziert
+über CI (`ubuntu-latest`, 2 Jobs `lint`/`test`), die nach dem Push grün lief. Vier Commits
+(`9dd3af5` Tooling/CI/Tests, `7e1c1c2` Bugfixes, `f0c7616` Performance, `0d67271` Refactoring/Docs)
+nach `origin/main` gepusht; CI-Status nach dem Push verifiziert grün (beide Jobs).
