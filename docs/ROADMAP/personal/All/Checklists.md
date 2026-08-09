@@ -33,7 +33,7 @@ darunter, sofern relevant.
 | sandbox.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | spotlight.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | documentation.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| runtime-analysis.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| runtime-analysis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES |||||||
 | fileops.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | gopath.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1490,3 +1490,71 @@ CI zum Gegenchecken vorhanden. Alles committet (`47994ed`) und nach `origin/main
 
 Übersprungen/nicht verifizierbar: POSIX-Verhalten nicht lokal testbar (Windows-Umgebung), keine
 CI zum Gegenchecken vorhanden. Alles committet (`3f09164`) und nach `origin/main` gepusht.
+
+### runtime-analysis.nvim
+
+Das mit Abstand sauberste bisher geprüfte Plugin: 34 Lua-Dateien, durchgängig ausführliche
+`@module`-Kopfkommentare, vollständige `@param`/`@return` mit Aliasen statt Inline-Monstern,
+ein konsolidiertes `@types/init.lua` pro Verzeichnis (`lua/runtime-analysis/@types/init.lua`,
+`telemetry/@types/init.lua`), `config/DEFAULTS.lua` + `config/init.lua`, `.luarc.json`
+(`diagnostics.globals=["vim"]`, identisch zu `sessions.nvim`s Version), `.luacheckrc`,
+`.stylua.toml`, `.gitattributes` (erzwingt `eol=lf` für `.lua`/Map-Artefakte — genau das später
+in dieser Liste mehrfach gefundene CRLF-Problem hier bereits präventiv gelöst) und CI
+(stylua + luacheck + headless `docs/TESTS/run.lua`, 20 Specs, + ein `gen_map.lua --check`-Job
+für die `documentation.nvim`-Modulkarte) bereits vollständig vorhanden. `PERFORMANCE.md` wurde
+besonders sorgfältig gegen den einzigen echten Hotpath geprüft (`telemetry/registry.lua`s
+Funktions-Wrapper, läuft bei jedem instrumentierten Aufruf) und war bereits vorbildlich: der
+Kommentarkopf der Datei benennt selbst "exactly two things per call in the cheapest mode: index
+a table and add one integer", Sampling/`outermost_only` sind explizit opt-in gegen die Kosten von
+`pcall`/`debug.getinfo`, und `registry.dispatch`/`make_wrapper` vermeiden jede Tabellenallokation
+im Cheap-Path. Keine Änderung an diesem Modul nötig.
+
+- **PERFORMANCE.md**: siehe oben — einziger Hotpath ist bereits vorbildlich optimiert und
+  dokumentiert. Keine Änderung nötig.
+- **LUA_NVIM.md — der einzige Codefix dieses Passes**: `view.lua`, `env.lua` und
+  `bindings/usrcmds.lua` riefen `vim.notify()` direkt mit einem handgestrickten
+  `"runtime-analysis: "`-Präfix pro Aufruf auf, statt wie `telemetry/init.lua` und
+  `telemetry/command.lua` bereits vormachen `require("lib.nvim.notify").create(prefix)` zu
+  nutzen — auf denselben Factory-Wrapper umgestellt (`notify.info`/`.warn`/`.error`, plus
+  `notify.notify(msg, level)` für die zwei Stellen mit dynamischem Level in `do_usage`).
+  Rein mechanisch, Nachrichtentext inhaltlich unverändert; gegen die volle Headless-Testsuite
+  verifiziert (die Specs fangen `vim.notify` selbst ab, das `lib.nvim.notify` intern weiter
+  aufruft, und prüfen nur den Level, nie den exakten Präfix-String). Keine `fun(type)`-ohne-Name-
+  Bugs gefunden (anders als bei `pickers.nvim`/`mdview.nvim`/`markdown.nvim` in dieser Rollout-
+  Serie) — alle `fun(...)`-Annotationen in `@types/init.lua` und den Modulen selbst benennen ihre
+  Parameter korrekt.
+- **REVIEW.md §8 Tooling**: `.luarc.json`/`.luacheckrc`/`.stylua.toml` bereits vollständig und
+  identisch im Format zu `sessions.nvim`s Version — keine Änderung nötig. `stylua --check .` und
+  `luacheck lua docs/TESTS scripts ftdetect` liefen nach dem Notify-Fix beide grün (0/0 über 59
+  Dateien).
+- **RELEASE.md**: README (Englisch, ASCII-Art, Badges, Level-2-only Table of Contents,
+  Schwesterplugin-Absatz zu documentation.nvim, Installationsblock mit explizitem `lazy = false`
+  und Begründung dafür, `lib.nvim`-Dependency deklariert), `doc/runtime-analysis.txt`,
+  `docs/BINDINGS.md` (vollständig, inkl. expliziter "keine Keymaps"-Aussage und Autocmd-Tabelle),
+  `docs/ROADMAP.md` (aktiv gepflegt, mit `docs/FINISHED.md`-Archiv-Verweis), `:checkhealth
+  runtime-analysis` (headless gegen `setup({})` getestet, läuft grün durch) waren bereits
+  vollständig und aktuell. GitHub-Metadaten (`gh repo view`) bereits vollständig gesetzt:
+  Description, 8 Topics, Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention),
+  keine LICENSE-Datei/-Referenz — keine Änderung nötig. Cross-Plattform: keine hartkodierten
+  Pfadtrenner gefunden.
+- **Refactoring.md**: Fail-late/Report-at-boundary war bereits fast vollständig eingehalten —
+  praktisch jeder `notify()`-Aufruf sitzt in `bindings/usrcmds.lua` (Command-Handler, die
+  eigentliche Boundary) oder `view.lua`/`telemetry/command.lua` (UI-Schicht). Einzige Ausnahme:
+  `env.lua`s `warn_if_not_gitignored()` (aufgerufen aus `load_all()`, einer Low-Level-Datenlade-
+  Funktion) notifiziert selbst — bewusst NICHT weiter nach oben verschoben: es ist ein einzelner,
+  ausführlich im Modulkommentar begründeter "best-effort nudge" (max. einmal pro Session, kein
+  Fehlerpfad, keine Rückgabe, die ein Caller ohnehin auswerten würde), kein systematisches Muster
+  wie bei `reposcope.nvim`s ~70 Fundstellen weiter oben in dieser Liste — eine zusätzliche
+  Rückgabe-Ebene nur für diese eine Stelle hätte keinen echten Boundary-Gewinn gebracht.
+- **Zusätzlicher Fund außerhalb der fünf Checklisten, beim `gh run list`-Verifikationsschritt**:
+  der letzte `main`-Push vor diesem Pass hatte `docs/map/` (die von `documentation.nvim` erzeugte
+  Modulkarte) stale hinterlassen — der `map`-CI-Job schlug fehl. Mit
+  `nvim --headless -l scripts/gen_map.lua` neu erzeugt und committet; `--check` lief danach grün.
+  Ein einzelner CI-Fehlschlag (`usrcmds_spec.lua`, ein `vim.wait`-Race gegen einen lokalen
+  150-ms-Delay-Server) auf dem ersten Rerun war ein reiner Timing-Flake — lokal dreimal
+  hintereinander grün, `gh run rerun --failed` lief beim zweiten Versuch grün durch.
+
+Übersprungen/nicht verifizierbar: nichts — GitHub-Metadaten, `:checkhealth`, CI-Status (vor und
+nach den Änderungen per `gh run list`/`gh run view` geprüft) und die zentrale Bindings-Sammlung
+waren alle direkt prüfbar. Alles committet (`794c659` Notify-Refactor, `3ab1324` Map-Regenerierung)
+und nach `origin/main` gepusht.
