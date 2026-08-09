@@ -616,7 +616,7 @@ Komposition · Export/PDF · Kontext-Vorschlag.
   [`Zentrale-Prinzipien.md`](../MATERIALS/Zentrale-Prinzipien.md) ·
   [`Checklist.md`](../MATERIALS/Checklist.md) ·
   [`NEW_PROJECT.md`](../MATERIALS/NEW_Project.md) · `REVIEW.md` · `PERFORMANCE.md`
-  (`C:\repos\Notes\MyNotes\Checklists\Lua\`)
+  (`C:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\`)
 - Eigene Plugins: [`lib.nvim`](https://github.com/StefanBartl/lib.nvim) ·
   [`pickers.nvim`](https://github.com/StefanBartl/pickers.nvim) ·
   [`documentation.nvim`](https://github.com/StefanBartl/documentation.nvim) ·

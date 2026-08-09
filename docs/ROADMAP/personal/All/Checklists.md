@@ -8,11 +8,11 @@ Trackt die vollständige Anwendung der Lua/Neovim-Checklisten auf jedes personal
 Jedes Repo liegt unter `E:\repos\<name>`. Angewendete Checklisten (immer in dieser
 Reihenfolge, siehe jeweilige Datei für Details):
 
-1. [PERFORMANCE.md](E:/repos/Notes/MyNotes/Checklists/Lua/PERFORMANCE.md) — nur bei betroffenen Hotpaths
-2. [LUA_NVIM.md](E:/repos/Notes/MyNotes/Checklists/Lua/LUA_NVIM.md) — Lua-/Neovim-Regeln
-3. [REVIEW.md](E:/repos/Notes/MyNotes/Checklists/Lua/REVIEW.md) — Review-Checkliste vor Merge
-4. [RELEASE.md](E:/repos/Notes/MyNotes/Checklists/Lua/RELEASE.md) — Release-Gate
-5. [Refactoring..md](E:/repos/Notes/MyNotes/Checklists/Refactoring..md) — Fail-late / Report-at-boundary
+1. [PERFORMANCE.md](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/PERFORMANCE.md) — nur bei betroffenen Hotpaths
+2. [LUA_NVIM.md](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/LUA_NVIM.md) — Lua-/Neovim-Regeln
+3. [REVIEW.md](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/REVIEW.md) — Review-Checkliste vor Merge
+4. [RELEASE.md](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/RELEASE.md) — Release-Gate
+5. [Refactoring..md](E:/repos/WKDBooks/Development/wkdbook-SoftwareDevelopment/Optimization-CleanCode/Refactoring.md) — Fail-late / Report-at-boundary
 
 Ein Häkchen (`[x]`) in einer Spalte heißt: Checkliste für dieses Plugin durchgearbeitet,
 Ergebnisse committet und auf `main` gepusht. Details/Abweichungen je Plugin im Abschnitt

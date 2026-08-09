@@ -1,5 +1,10 @@
 # Roadmap
 
+filetree.nvim: Shift tab -> nöchster buffer, als wprde man wie im buiffer sein (nicht im filetree) und man wrde rtab eingeben. mit alt tab voriger buffer
+
+E:\repos\Notes\ProjectIdeas: Durcgehen und anlysieren lassen
+
+
 - [ ] `nvim/lua/autocmds`  nach `nvim/lua/Bindings`
 
 case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum ziel. case delete

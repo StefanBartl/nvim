@@ -10,7 +10,7 @@ Diese Datei enthält keine Regeln mehr. Kanonische Fassung liegt im `Notes`-Repo
 - [`README.md`](https://github.com/StefanBartl/Notes/blob/master/MyNotes/Checklists/Lua/README.md) —
   Übersicht, welche Datei wann gilt
 
-Lokaler Pfad: `E:\repos\Notes\MyNotes\Checklists\Lua\`
+Lokaler Pfad: `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\`
 
 Grund: Die Regeln waren über drei Dateien (`Arch&Coding-Regeln.md`, `Checklist.md`,
 `Zentrale-Prinzipien.md`) mit erheblicher Redundanz verteilt und teils fachlich veraltet

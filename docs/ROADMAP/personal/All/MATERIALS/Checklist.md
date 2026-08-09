@@ -16,7 +16,7 @@ Diese Datei enthält keine Checklisten mehr. Kanonische Fassung liegt im `Notes`
 - [`README.md`](https://github.com/StefanBartl/Notes/blob/master/MyNotes/Checklists/Lua/README.md) —
   Übersicht, welche Datei wann gilt
 
-Lokaler Pfad: `E:\repos\Notes\MyNotes\Checklists\Lua\`
+Lokaler Pfad: `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\`
 
 Grund: Die 776 Zeilen dieser Datei mischten Alltags-Checks (Schnell-Check, PR-Review) mit
 ~420 Zeilen Nachschlagewerk (Algorithmen, Datenstrukturen, Bitops, Komplexität), das nie vor
