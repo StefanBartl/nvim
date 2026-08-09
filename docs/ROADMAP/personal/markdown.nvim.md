@@ -84,17 +84,3 @@ CSV/Hooks niedrig.
 - **Soft-Hyphenation (`\u00AD`)**: hängt vollständig am Renderer der Gegenseite
   und ist in Plain-Text-Diffs unsichtbar — hohe Verwirrungsgefahr, geringer Nutzen.
 
----
-
-## Randnotiz aus `PluginsDoc/underline_headings.md`
-
-Ein altes NvChad-Snippet, das unter jede `#`-Überschrift eine `=`-Zeile in
-Textlänge einfügt (Setext-Stil).
-
-- [ ] Prüfen, ob das als kleine Ergänzung zu `core/headings.lua` /
-      `core/headline_spacing/` sinnvoll ist (`:MarkdownNvimUnderlineHeadings`) —
-      oder bewusst verwerfen, weil ATX (`#`) im gesamten eigenen Doc-Bestand
-      der Standard ist und Setext dort nur inkonsistent wäre.
-
-**Aufwand:** Quick Win
-**Nutzen:** niedrig — eher eine Entscheidung als ein Feature.

@@ -1,7 +1,8 @@
 # markdown.nvim — User Commands Cheatsheet
 
-`:Markdown` (global, 12 subcommands) plus 8 buffer-local commands
-(`OpenWithSystemApplication`, `TableViewToggle`, `TableViewMarkdown`,
+`:Markdown` (global, 12 subcommands) plus 9 buffer-local commands
+(`OpenWithSystemApplication`, `MarkdownNvimUnderlineHeadings`,
+`TableViewToggle`, `TableViewMarkdown`,
 `TableViewBox`, `TableViewSelect`, `TableViewClose`, `TableViewOpenBrowser`,
 `TableViewOpenBrowserNice`) rebuilt via `lib.nvim.usercmd.composer` (migrated
 2026-07-19) — the plugin that originally motivated Phase 7's
@@ -14,12 +15,25 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 | --- | --- | --- |
 | `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|headline_spacing\|gaps\|image} [args…]` | global | see `commands/*.lua` per-subcommand grammar |
 | `:OpenWithSystemApplication` | buffer-local | open image/url/file under cursor |
+| `:MarkdownNvimUnderlineHeadings` | buffer-local | underline every ATX heading's text with `=` (Setext-style decoration, idempotent) |
 | `:TableViewToggle\|Markdown\|Box [scope]` | buffer-local | toggle table preview (config/markdown/box style) |
 | `:TableViewSelect` / `:TableViewClose` | buffer-local | select+preview / close persistent preview |
 | `:TableViewOpenBrowser[Nice] [reopen]` | buffer-local | open table in browser (basic/nice HTML) |
 
 ## Notes
 
+- **2026-08-09: added `:MarkdownNvimUnderlineHeadings`** (buffer-local, off
+  `docs/ROADMAP/personal/markdown.nvim.md`'s "Randnotiz" item — an old
+  NvChad snippet: under every ATX heading, insert/correct a line of `=`
+  matching the heading text's length. Purely visual Setext-style decoration
+  (the `#` marker stays; applies at every level, not just H1/H2, unlike real
+  Setext). Idempotent — a correctly-sized underline is left alone, a
+  wrongly-sized one corrected, fenced-code interiors skipped. New module
+  `lua/markdown/core/underline_headings.lua` (`apply`/`apply_range`).
+  New `config.underline_headings.char` (default `"="`); new gateable feature
+  name `underline_headings` (`features.disable = { "underline_headings" }`
+  turns the command off). Registered in `bindings/usrcmds.lua` alongside
+  `OpenWithSystemApplication`, gated by the new feature flag.
 - **2026-08-07: added `:Markdown image [paste|screenshot]`** (12th
   subcommand, `commands/image.lua`) — thin delegator to images.nvim's
   `:Image paste`/`:Image screenshot` (soft dep, pcall-guarded), for
