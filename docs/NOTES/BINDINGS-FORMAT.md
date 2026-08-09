@@ -23,14 +23,15 @@ und macht images.nvim.md gleich zum ersten Korrekturfall.
 
 Zweiter Grund: das hier gebaute Schema ist genau das, was
 [bindings-explorer.nvim.md](ROADMAP/personal/bindings-explorer.nvim.md)s
-Phase 2 (Tabellenzeilen als Datensätze, seit 2026-08-09 implementiert als
-`:Bindings browse`, siehe dessen
-[FEATURES.md](../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md))
-und Phase 3 (Drift-Erkennung, noch offen) braucht. Mit festen Überschriften
-statt freier Prosa wurde aus dem dort skizzierten *toleranten* Scraper ein
-einfacher, verlässlicher Parser (`records.lua`) — die "eigene Überschrift
-über jeder Tabelle"-Pflicht aus §1 unten ist genau das Scope-Label, das der
-Scraper pro Zeile braucht.
+Phase 2 (Tabellenzeilen als Datensätze) und Phase 3 (Drift-Erkennung)
+brauchten — beide seit 2026-08-09 implementiert (`:Bindings browse`/
+`:Bindings check`, siehe dessen
+[FEATURES.md](../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md)).
+Mit festen Überschriften statt freier Prosa wurde aus dem dort skizzierten
+*toleranten* Scraper ein einfacher, verlässlicher Parser (`records.lua`,
+weiterverarbeitet von `drift.lua`) — die "eigene Überschrift über jeder
+Tabelle"-Pflicht aus §1 unten ist genau das Scope-Label, das der Scraper
+pro Zeile braucht.
 
 ---
 

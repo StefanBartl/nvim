@@ -95,10 +95,56 @@ Gegen den echten Bestand verifiziert (headless, 2026-08-09):
 `records.list()` liefert 1641 Datensätze über den ganzen Korpus, davon 414
 für `Keymaps personal` allein.
 
-## Noch nicht implementiert
+## Drift-Bericht (`:Bindings check`)
 
-**Phase 3 — Drift-Erkennung** (`:Bindings check [plugin]`): dokumentierte
-gegen tatsächlich registrierte Keymaps/Usercmds abgleichen
-(`vim.api.nvim_get_keymap`/`nvim_get_commands`). Konzept in
-[`docs/ROADMAP/personal/bindings-explorer.nvim.md`](../../../../../docs/ROADMAP/personal/bindings-explorer.nvim.md)
-§3, noch nicht gebaut.
+`:Bindings check [plugin]`
+
+Read-only, kein Autofix (gleiche Haltung wie casedesks `:Cases doctor`) —
+vergleicht dokumentierte Personal-Bindings gegen das, was gerade tatsächlich
+registriert ist (`vim.api.nvim_get_keymap`/`nvim_get_commands`).
+`drift.lua` parst dafür `records.lua`s Tabellenzeilen weiter: die lhs-Zelle
+wird über `nvim_replace_termcodes` in die rohe Byte-Form gebracht (dieselbe
+Form, die `nvim_get_keymap`s `.lhsraw`-Feld liefert — `<leader>` wird dabei
+mit dem tatsächlichen `mapleader` expandiert), Usercmd-Zellen über ein
+`:(%u[%w_]*)`-Pattern auf den Basisbefehl reduziert.
+
+Bewusst eingeschränkter Scope (siehe `drift.lua`s Moduldoc für die volle
+Begründung):
+
+- **Keymaps: nur eine Richtung** (dokumentiert-aber-nicht-live). Die
+  Rückrichtung würde gegen JEDEN globalen Keymap abgleichen (jedes Plugin,
+  jeder Vim-Default) und wäre Rauschen ohne Ende.
+- **Nur Personal, nicht Extern** — Extern dokumentiert fremde
+  Plugin-Defaults, die dieses Config selbst meist nie registriert.
+- **Buffer-lokale/filetype-gescopte Keymaps sind ein bekannter
+  False-Positive-Fall**: `nvim_get_keymap` sieht nur globale Maps. UI-Plugins
+  mit eigenem Buffer (filetree.nvim, github_stats.nvim, pickers.nvim, ...)
+  tauchen deshalb systematisch als "missing" auf, obwohl sie korrekt
+  registriert sind — manuell verifizieren, nicht blind vertrauen.
+- **Noch nicht geladene Plugins werden übersprungen, nicht fälschlich als
+  fehlend gemeldet**: `records.lua`s `plugin`-Feld wird gegen
+  `require("lazy.core.config").plugins[name]._.loaded` geprüft; ein
+  Plugin, das lazy.nvim in dieser Session noch nicht geladen hat, wird
+  namentlich als "skipped" aufgeführt statt Falschalarme zu erzeugen.
+  Empirisch wichtig: in einer frisch gestarteten Session war das kein
+  Randfall — die Mehrheit der Personal-Keymaps-Plugins war noch ungeladen.
+- **Usercmds: beide Richtungen**, da `nvim_get_commands({})` nie
+  Vim-Defaults enthält (kein Rauschen von dort). Die Rückrichtung
+  (live-aber-undokumentiert) zieht zur Rauschreduktion auch Extern-Doku
+  heran, zeigt aber weiterhin Infra-/Plugin-Manager-Commands (`:Lazy`,
+  `:Mason`, ...) an, für die keine Ignore-Liste gepflegt wird.
+
+Gegen den echten, voll geladenen Bestand verifiziert (headless, über einen
+`XDG_CONFIG_HOME`-Junction-Trick, der `stdpath("config")` auf diesen
+Branch zeigen lässt, ohne `stdpath("data")`/die echten Plugin-Installationen
+anzufassen — siehe git-Historie dieser Datei für die Kommandos): fand u.a.
+`Usercmds/dap.nvimMERGE.md`s bereits in `BINDINGS-FORMAT.md` §5 als
+Merge-Artefakt vermuteten `:Dap` und ein verwaistes `:LibLogger` in
+`lib.nvim.md`.
+
+Beispiele:
+
+```vim
+:Bindings check
+:Bindings check images.nvim
+```

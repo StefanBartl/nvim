@@ -1,12 +1,12 @@
 # bindings-explorer — Konzept: Picker über die eigenen BINDINGS-Cheatsheets
 
-> **Status: Phase 1+2 implementiert** (Phase 1: 2026-08-07; Phase 2:
-> 2026-08-09) — `lua/bindings/usrcmds/bindings_explorer/`. Vollständige
-> Feature-/Command-Liste inkl. Beispielen:
+> **Status: Phase 1+2+3 implementiert** (Phase 1: 2026-08-07; Phase 2+3:
+> 2026-08-09) — `lua/bindings/usrcmds/bindings_explorer/`. Damit ist das
+> gesamte Konzept unten umgesetzt; diese Datei bleibt als Architektur-
+> Begründung stehen. Vollständige Feature-/Command-Liste inkl. Beispielen:
 > [`FEATURES.md`](../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md).
 > Vimdoc: `:help bindings_explorer`
 > (`lua/bindings/usrcmds/bindings_explorer/doc/bindings_explorer.txt`).
-> Phase 3 unten ist weiterhin nur Konzept — das eigentliche offene Stück.
 
 Auslöser: beim Aufräumen von `docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/
 images.nvim.md` diese Sitzung fiel auf, dass das Sheet seit der ersten
@@ -85,31 +85,24 @@ toleranter Scraper (`records.lua`) macht jede `|…|…|`-Zeile unter einer
 Details, Beispiele, Testnachweis:
 [`FEATURES.md`](../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md).
 
-### Phase 3 — Drift-Erkennung (der eigentliche Mehrwert, am aufwändigsten) — offen
+### Phase 3 — Drift-Erkennung ✅ implementiert (2026-08-09)
 
-Das, was heute manuell und zufällig passiert (wie bei `images.nvim.md`
-diese Sitzung), automatisch: dokumentierte gegen tatsächlich registrierte
-Bindings abgleichen.
-
-- **Usercmds**: `vim.api.nvim_get_commands({})` liefert jeden aktuell
-  registrierten User-Command. Jede `Usercmds/*.md`-Zeile, die ein Command
-  wie `:Image redact` nennt, wird gegen diese Liste geprüft.
-- **Keymaps**: `vim.api.nvim_get_keymap(mode)` (global) plus
-  `vim.api.nvim_buf_get_keymap(bufnr, mode)` (buffer-lokal, filetype-
-  gescoped — ein `<leader>im` aus `keymaps.filetypes = {"markdown",…}`
-  taucht nur auf, wenn der Vergleichsbuffer diesen Filetype hat, was der
-  Report explizit berücksichtigen muss, sonst wird jede filetype-gescopte
-  Bindung als "fehlt" gemeldet).
-- Zwei Richtungen, beide interessant: **dokumentiert, aber nicht (mehr) live**
-  (genau der Fund von heute — ein gestrichenes oder umbenanntes Feature, das
-  im Cheatsheet übrig blieb) und **live, aber undokumentiert** (ein Keymap/
-  Command, das im Code existiert, aber nie ins Sheet nachgezogen wurde — die
-  Umkehrung desselben Problems).
-- Bewusst **nur ein Bericht**, kein Autofix — dieselbe Haltung wie casedesks
-  `:Cases doctor` (reine Findings-Liste, `:Cases normalize` ist der separate
-  Fix-Schritt mit Dry-Run/Confirm). Ein Cheatsheet automatisch umschreiben
-  würde die handgeschriebene Rationale zerstören, die der ganze Sinn dieses
-  Korpus ist.
+`:Bindings check [plugin]` (`drift.lua`) — dokumentierte gegen tatsächlich
+registrierte Bindings abgleichen, read-only, kein Autofix (dieselbe
+Haltung wie casedesks `:Cases doctor`). Der reale Scope ist enger als
+ursprünglich hier skizziert — siehe `drift.lua`s Moduldoc und
+[`FEATURES.md`](../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md)
+für die vollständige, verifizierte Begründung: Keymaps nur eine Richtung
+(dokumentiert-aber-nicht-live, Personal only), Usercmds beide Richtungen.
+Zwei reale Bugs unterwegs gefunden und gefixt (Config-Key-Name statt
+literalem Key extrahiert; `.lhs`/`keytrans()`-Vergleich statt exaktem
+`.lhsraw` verwendet — beide nur durch Testen gegen den echten, voll
+geladenen Bestand sichtbar geworden, nicht durch Code-Lesen). Die
+Filetype-Scoping-Falle unten erwies sich als noch breiter als gedacht:
+buffer-lokale UI-Plugins (filetree.nvim, github_stats.nvim, ...) sind
+strukturell nie über globale `nvim_get_keymap` sichtbar, nicht nur
+filetype-gescopte Einzelfälle — jetzt explizit im Report benannt statt
+stillschweigend falsch gemeldet.
 
 ## 4. Command-Oberfläche (Skizze)
 
@@ -119,7 +112,7 @@ Ein Verb, analog zu `:Case`/`:Cases` und `:Image`, nicht drei Flat-Commands:
 | --- | --- | --- |
 | `:Bindings search [query]` | 1 ✅ | Volltextsuche über beide BINDINGS-Bäume, Picker |
 | `:Bindings browse [keymaps\|usercmds\|autocmds] [personal\|extern]` | 2 ✅ | Tabellenzeilen als Picker, optional gescoped |
-| `:Bindings check [plugin]` | 3 (offen) | Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert |
+| `:Bindings check [plugin]` | 3 ✅ | Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert |
 
 ## 5. Wo das hingehört
 
@@ -137,8 +130,8 @@ lief.
 | --- | --- | --- |
 | Phase 1 ✅ (Grep + Picker) | `casedesk.query`s `:Cases grep` | **klein** — dünne Picker-Verdrahtung, siehe FEATURES.md |
 | Phase 2 ✅ (toleranter Tabellen-Scraper) | `casedesk.terminology`s Parser | **mittel** — abgeschlossen, `records.lua`/`browse.lua`, gegen den echten 137-Datei-Bestand verifiziert (1641 Zeilen geparst) |
-| Phase 3 (Drift-Erkennung) — offen | `casedesk.doctor` (Scan → Findings-Liste, rein lesend, kein Autofix) | **am größten** — Matching von Freitext-Bindings-Notation (`<leader>iv`, `:Image redact [path]`) gegen `nvim_get_keymap`/`nvim_get_commands`-Ausgabe ist die eigentliche Fleißarbeit, plus die Filetype-Scoping-Falle oben |
+| Phase 3 ✅ (Drift-Erkennung) | `casedesk.doctor` (Scan → Findings-Liste, rein lesend, kein Autofix) | **war am größten, wie erwartet** — abgeschlossen, `drift.lua`; die reale Fleißarbeit war nicht das Freitext-Matching selbst, sondern zwei durch echte Verifikation gefundene Bugs (siehe Phase-3-Abschnitt oben) plus die breiter als gedacht ausgefallene Filetype/Buffer-Scoping-Falle |
 
-**Offen bleibt nur noch Phase 3** — der eigentliche Grund, warum diese Idee
-mehr ist als ein Telescope-Ersatz, aber auch der Teil, bei dem sich der
-Aufwand erst beim Bauen genau zeigt.
+Alle drei Phasen sind jetzt umgesetzt — der eigentliche Wert (Drift zwischen
+Doku und Realität sichtbar machen, wie beim `images.nvim.md`-Fund, der die
+ganze Idee ausgelöst hat) ist damit vollständig eingelöst.

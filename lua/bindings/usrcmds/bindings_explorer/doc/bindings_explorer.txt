@@ -11,8 +11,8 @@ CONTENTS                                            *bindings_explorer-contents*
         2.1 :Bindings search ................ |bindings_explorer-search|
         2.2 :Bindings browse ................ |bindings_explorer-browse|
         2.3 :Bindings path ................... |bindings_explorer-path|
+        2.4 :Bindings check .................. |bindings_explorer-check|
     3. Architecture .......................... |bindings_explorer-architecture|
-    4. Roadmap / not yet implemented ......... |bindings_explorer-roadmap|
 
 ==============================================================================
 1. INTRODUCTION                                 *bindings_explorer-introduction*
@@ -78,6 +78,30 @@ Concept and open work: |bindings_explorer-roadmap|.
         :Bindings path personal
 <
 
+------------------------------------------------------------------------------
+2.4 :BINDINGS CHECK                                     *bindings_explorer-check*
+
+:Bindings check [{plugin}]
+    Read-only drift report between documented Personal bindings and what's
+    actually registered right now (`nvim_get_keymap()`/`nvim_get_commands()`).
+    No autofix, same stance as casedesk's `:Cases doctor`. Deliberately
+    narrow scope — see `drift.lua`'s module doc for the full rationale:
+
+    • Keymaps: documented-but-not-live only (the reverse would flood the
+      report with every plugin's own default bindings).
+    • Personal only, not Extern.
+    • Buffer-local/filetype-scoped keymaps are a known false-positive
+      source — `nvim_get_keymap()` only sees GLOBAL maps.
+    • Plugins not yet loaded this session (lazy.nvim) are skipped, listed
+      by name, not reported as false "missing".
+    • Usercmds are checked both directions (much lower noise, since
+      `nvim_get_commands({})` never includes vim/plugin defaults).
+
+    Examples: >vim
+        :Bindings check
+        :Bindings check images.nvim
+<
+
 ==============================================================================
 3. ARCHITECTURE                                 *bindings_explorer-architecture*
 
@@ -89,16 +113,8 @@ Module: `lua/bindings/usrcmds/bindings_explorer/`
   • ui.lua       - kit.select wiring for search.lua's hits
   • records.lua  - tolerant table-row scraper (Phase 2)
   • browse.lua   - kit.select wiring for records.lua's rows
+  • drift.lua    - documented-vs-live comparison (Phase 3)
   • init.lua     - composer verb ":Bindings" + all routes
-
-==============================================================================
-4. ROADMAP / NOT YET IMPLEMENTED                     *bindings_explorer-roadmap*
-
-Phase 3 — drift detection (`:Bindings check [plugin]`): compare documented
-bindings against what's actually registered
-(`vim.api.nvim_get_keymap()`/`nvim_get_commands()`), report-only, no
-autofix. Concept only, not built — see
-`docs/ROADMAP/personal/bindings-explorer.nvim.md` §3.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

@@ -18,8 +18,10 @@
 --- [keymaps|usercmds|autocmds] [personal|extern]` — Picker über geparste
 --- Tabellenzeilen statt Volltext, siehe `records.lua`s Scraper.
 ---
---- Phase 3 (Drift-Erkennung gegen `nvim_get_keymap`/`nvim_get_commands`)
---- ist im Konzept skizziert, noch nicht gebaut.
+--- Phase 3 (diese Datei + `drift.lua`): `:Bindings check [plugin]` —
+--- Drift-Bericht (dokumentiert-aber-nicht-live / live-aber-undokumentiert)
+--- gegen `nvim_get_keymap`/`nvim_get_commands`, siehe `drift.lua`s
+--- Moduldoc für den genauen (bewusst eingeschränkten) Scope.
 
 local composer = require("lib.nvim.usercmd.composer")
 local config = require("bindings.usrcmds.bindings_explorer.config")
@@ -27,6 +29,7 @@ local search = require("bindings.usrcmds.bindings_explorer.search")
 local live = require("bindings.usrcmds.bindings_explorer.live")
 local ui = require("bindings.usrcmds.bindings_explorer.ui")
 local browse = require("bindings.usrcmds.bindings_explorer.browse")
+local drift = require("bindings.usrcmds.bindings_explorer.drift")
 
 local M = {}
 
@@ -97,6 +100,17 @@ end
 ---@return nil
 function M.browse(category, scope)
   browse.open(category, scope)
+end
+
+--- Drift-Bericht (`drift.lua`) in einem read-only Viewer anzeigen.
+---@param plugin string|nil
+---@return nil
+function M.check(plugin)
+  local findings, skipped = drift.check(plugin)
+  require("lib.nvim.ui.kit.viewer").open({
+    title = ("Bindings — check (%d)"):format(#findings),
+    lines = drift.describe(findings, skipped),
+  })
 end
 
 ---@return nil
@@ -177,6 +191,14 @@ function M.enable()
         desc = "Picker über Autocmds-Tabellenzeilen",
         run = function(ctx)
           M.browse("Autocmds", ctx.args.scope)
+        end,
+      },
+      {
+        path = { "check" },
+        args = { { name = "plugin", type = "STRING", optional = true } },
+        desc = "Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert (Personal, read-only)",
+        run = function(ctx)
+          M.check(ctx.args.plugin)
         end,
       },
     },
