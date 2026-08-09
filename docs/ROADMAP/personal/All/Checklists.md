@@ -40,7 +40,7 @@ darunter, sofern relevant.
 | replacer.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | insights.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | filetree.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| reposcope.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| reposcope.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY |||||||
 | debugging.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | dap.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1432,3 +1432,61 @@ committet (`2f17c82`) und nach `origin/main` gepusht.
 
 Übersprungen/nicht verifizierbar: POSIX-Verhalten nicht lokal testbar (Windows-Umgebung), keine
 CI zum Gegenchecken vorhanden. Alles committet (`47994ed`) und nach `origin/main` gepusht.
+
+### reposcope.nvim
+
+- **Ausgangslage**: Repo war bereits sehr gut vorgearbeitet — README (ASCII-Art, Badges,
+  Schwesterplugin-Absatz zu `filetree.nvim`), vollständiges `doc/reposcope.txt`, ausführliches
+  `docs/BINDINGS.md`, gepflegtes `docs/ROADMAP.md`, typisierte `/config/init.lua` +
+  `/config/DEFAULTS.lua`, `health.lua` durchgängig über `lib.nvim` implementiert. Kein `fun(type)`-
+  ohne-Namen-Bug gefunden (anders als bei `pickers.nvim`/`mdview.nvim`/`markdown.nvim`).
+- **PERFORMANCE.md**: kein neuer Hotpath-Fund über die bereits vorhandene README-Cache-Logik
+  (`cache/readme_cache.lua`, RAM + File-Cache) hinaus; keine Änderung nötig.
+- **LUA_NVIM.md/REVIEW.md §8 Tooling — Hauptfund dieses Passes**: weder `.luacheckrc` noch
+  `stylua.toml` existierten. Beide ergänzt (Stil an `sessions.nvim`/`mdview.nvim` angelehnt, aber
+  mit `indent_type = "Spaces"`/`indent_width = 2`, da der Code tatsächlich mit 2 Spaces eingerückt
+  ist, nicht mit Tabs). `.luarc.json` um `runtime.version = "LuaJIT"`, `runtime.path` und
+  `$VIMRUNTIME/lua` ergänzt. Größerer Nebenfund: das gesamte Arbeitsverzeichnis war mit CRLF
+  ausgecheckt (lokales `core.autocrlf=true`), obwohl jeder Git-Blob bereits LF war — das ließ
+  `stylua --check .` bei jeder Datei einen Full-File-Diff melden. `.gitattributes`
+  (`* text=auto eol=lf`) ergänzt und alle 117 Textdateien im Arbeitsverzeichnis von CRLF auf LF
+  normalisiert (reiner Zeilenenden-Fix, keine Inhaltsänderung). `luacheck lua plugin` meldete 7
+  Warnings, davon 2 echte Bugs: `ui/background/background_window.lua` erzeugte bei jedem
+  `open_window()` bedingungslos neuen Buffer/Fenster statt (wie `preview_window.lua`/
+  `list_window.lua`) ein noch gültiges wiederzuverwenden — behoben. `ui/preview/preview_window.lua`s
+  `close_window()` setzte eine tote lokale `win`-Variable auf `nil` statt `ui_state.windows.preview`
+  — das Fenster-Handle wurde nie tatsächlich aus dem State entfernt — behoben, analog zu
+  `list_window.lua`. Weitere Funde: `network/clients/api_client.lua` nahm den `context`-Parameter
+  entgegen, hat ihn aber nie an `http_client.request` als `metrics_context` durchgereicht — jetzt
+  durchgereicht. Totes `debug_parts`-Tracking in `providers/github/query_builder.lua` und eine
+  wirkungslose `selected = 1`-Zuweisung direkt vor `return nil` in `cache/repository_cache.lua`
+  entfernt. `utils/debug.lua`: Parameter `_schedule` (führender Unterstrich = "unused"-Hinweis für
+  Luacheck, wird aber tatsächlich benutzt) zu `schedule` umbenannt; `is_dev_mode()` war mit
+  `@return nil` annotiert, gibt aber einen `boolean` zurück — Annotation korrigiert. `stylua --check
+  .` und `luacheck lua plugin` liefen danach beide grün (0/0 über 105 Dateien).
+- **RELEASE.md**: README bekam ein fehlendes Table of Contents (nur Level-2, ASCII-Art/Badges/
+  Schwesterplugin-Absatz/Installationsblock mit `event = "VeryLazy"` und `lib.nvim`-Dependency
+  waren bereits vorhanden). GitHub-Metadaten: Description war veraltet (beschrieb eine
+  "Telescope-Extension" und listete GitLab/Codeberg-Support fälschlich als "future planned",
+  obwohl beides implementiert ist) — aktualisiert; `homepage` stand auf der GitHub-Repo-URL selbst
+  — geleert (Konvention über die Schwesterplugins hinweg). Keine LICENSE-Datei/-Referenz, Default-
+  Branch `main`, Topics bereits sinnvoll gesetzt.
+- **Refactoring.md**: `notify(`-Aufrufe durchsucht — anders als bei den bisherigen Plugins ist die
+  Verletzung hier tief im Code verankert: ca. 70 `notify()`-Aufrufe direkt in Low-Level-Modulen
+  (`utils/*`, `cache/*`, `network/*`, `state/*`), nicht nur an der UI-Boundary. Bewusst NICHT
+  refaktoriert: eine Umstellung dieser Größenordnung über ~20 Dateien hinweg, ohne vorhandene
+  Testabdeckung, hätte ein reales Risiko für Verhaltensregressionen bei einem Plugin, das direkt
+  ohne Review nach `main` gepusht wird — das Risiko/Nutzen-Verhältnis sprach dagegen. Aus demselben
+  Grund wurde auch der eigene `reposcope.utils.debug.notify`-Wrapper (statt `lib.nvim.notify`)
+  nicht angetastet — er bündelt Dev-Mode-Gating bereits konsistent, ein Austausch wäre eine
+  vergleichbar breite Verhaltensänderung ohne klaren Mehrwert für dieses Ausmaß an Risiko.
+- **Kein CI vorhanden**: Das Repo hat kein `.github/workflows/`. `gh run list` liefert entsprechend
+  keine Runs — nichts zu prüfen/reparieren.
+- **Verifikation**: `stylua --check .` grün, `luacheck lua plugin` 0/0 über 105 Dateien, sowie ein
+  headless Smoke-Test (requires alle Module unter `lua/reposcope`, ruft `setup({})` und
+  `health.check()` auf) lief erfolgreich, ebenso `:checkhealth reposcope` (grün bis auf ein lokal
+  fehlendes `wget`-Binary — `gh`/`curl` sind vorhanden und ausreichend, kein Plugin-Bug). Kein
+  vorhandener Testrunner im Repo, daher Ad-hoc-Verifikation statt eines dauerhaften Test-Artefakts.
+
+Übersprungen/nicht verifizierbar: POSIX-Verhalten nicht lokal testbar (Windows-Umgebung), keine
+CI zum Gegenchecken vorhanden. Alles committet (`3f09164`) und nach `origin/main` gepusht.
