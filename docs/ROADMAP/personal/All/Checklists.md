@@ -32,7 +32,7 @@ darunter, sofern relevant.
 | open.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | sandbox.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | spotlight.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| documentation.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| documentation.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | runtime-analysis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES |||||||
 | fileops.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1681,3 +1681,66 @@ als Command erkannt — kein Hang, sondern ein fehlerhafter lokaler Testaufruf m
 Agenten bereits mitgeändert (Teil des committeten Diffs) — nicht einzeln nachverifiziert, da
 inhaltlich konsistent mit den Code-Änderungen und `luacheck`/`stylua`/CI grün. Alles committet
 (`3cc1b32`, `cfbddf1`) und nach `origin/main` gepusht.
+
+### documentation.nvim
+
+Das Plugin, das diese Konventionen selbst durchsetzt (`:DocMap` prüft u. a. auf `@module`-Drift und
+tote `@see`-Ziele) — entsprechend hoher Maßstab angelegt, und entsprechend wenig gefunden: 74
+geprüfte Lua-Dateien (`lua/`, `TESTS/`, `scripts/`), bereits durchgängig `@module`/`@brief`/
+`@description`, vollständige `@param`/`@return`, ein einziges konsolidiertes `@types/init.lua` pro
+Verzeichnisebene (sauber nach Quelldatei gruppiert, `return {}` überall vorhanden), `config/
+DEFAULTS.lua` + `config/init.lua`, `.luarc.json`/`.luacheckrc`/`.stylua.toml`/`.gitattributes`
+(inkl. der dokumentierten `eol=lf`-Begründung für generierte Artefakte) bereits vorhanden. CI besteht
+aus vier parallelen Jobs (`stylua`, `luacheck`, `tests`, `map`) über `scripts/ci.sh`/`scripts/ci.lua`,
+lief vor diesem Pass bereits grün (`gh run list`), und alle vier Gates liefen lokal ebenfalls grün
+(`stylua --check .`: 0 Diffs; `luacheck`: 0 Warnings/Errors über 84 Dateien; Headless-Testsuite:
+10/10 Specs, `DOCUMENTATION_TESTS_OK`; `scripts/ci.lua map --check`: Map aktuell, ein `info`-Fund
+ist absichtliches Pseudo-Code-Beispiel in `docs/ROADMAP/IDEAS.md`, kein echter toter `@see`-Verweis).
+
+- **PERFORMANCE.md**: `:DocMap`s Scan/Parse/Graph-Build ist wie erwartet ein One-Shot-Batch-Vorgang,
+  kein Hotpath — `core/scan.lua` baut Pfade per einfacher String-Konkatenation (kein `..`-Loop über
+  große Datenmengen), keine Autocmd-Re-Render-Schleife im Scan-Pfad selbst. Der einzige potenzielle
+  Hotpath-Kandidat, die `CursorMoved`-Autocmd der Browser-Detailansicht
+  (`lua/documentation/editor/browse/init.lua`), ist bereits korrekt `buffer = st.slots.list.bufnr`-
+  gescoped statt auf `pattern = "*"` — genau das in früheren Plugins dieses Rollouts gefundene
+  Anti-Pattern liegt hier nicht vor. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig mit dokumentierten Soft-
+  Dependency-Fallbacks (`pcall(require, "lib.nvim.progress")` in `bindings/progress.lua`, bewusst
+  so belassen, siehe Refactoring-Notiz zum `pcall(require)`-Idiom), Buffer/Window-Handling im
+  Browser sauber, Importreihenfolge eingehalten, `@types`-Ordner pro Verzeichnisebene vorhanden.
+  Grep nach `fun(` ohne Namen vor dem Typ (das in `pickers.nvim`/`mdview.nvim`/`markdown.nvim`
+  gefundene Copy-Paste-Bug-Muster) ergab **einen** Treffer, `core/render/html.lua:820` — aber das ist
+  eine eingebettete JS-String-Literal-Doku ("fun(string)" beschreibt eine anonyme LuaCATS-Param-
+  Notation für die HTML-Renderer-Ausgabe, kein echtes `---@param`), kein echter Annotation-Bug. Keine
+  Änderung nötig.
+- **REVIEW.md §8 Tooling — die beiden einzigen Codefixe dieses Passes**: `.github/workflows/ci.yml`s
+  `stylua`-Job war auf `version: latest` gepinnt statt auf eine konkrete Version — dasselbe
+  Drift-Risiko, das in `sandbox.nvim`/`filetree.nvim` bereits als reales Problem aufgetreten ist
+  (lokal installiertes `stylua 2.5.2` vs. ein zukünftiges Latest mit anderem Default-Verhalten); auf
+  `v2.5.2` gepinnt. `.luarc.json` hatte nur `diagnostics.globals`/`checkThirdParty`, ohne
+  `runtime.path`/`workspace.library` (`${3rd}/luv/library`)/`useGitIgnore` — an das etablierte
+  Referenzmuster aus `sessions.nvim`s `.luarc.json` angeglichen für ein vollständigeres LSP-Erlebnis.
+  Sonst keine Abweichungen: kein globaler State, `_G.*`-Treffer sind nur Doku-Kommentare zu
+  `_G.arg`, keine hartkodierten Pfadtrenner außerhalb von `gsub`-Normalisierungen.
+- **RELEASE.md**: bereits vollständig release-reif, keine Änderung nötig. README (Englisch,
+  ASCII-Art, Badges, Schwesterplugin-Absatz zu lib.nvim, Table of Contents nur Level-2, Install-Block
+  mit explizitem `cmd = { "DocMap", "DocBrowse" }`, vier Package-Manager abgedeckt), `doc/
+  documentation.txt` (Haupt-Tag `*documentation.nvim*`, kein Namenskonflikt mit einem generischen
+  `documentation`-Builtin-Tag — per `getcompletion("documentation", "help")` gegen ein `--clean`-Nvim
+  ohne dieses Plugin verifiziert: kein exakter `documentation`-Tag existiert builtin), `docs/
+  BINDINGS.md` (generiert, vollständig, deckungsgleich mit dem tatsächlichen Code), `docs/ROADMAP/
+  ROADMAP.md` (aktiv gepflegt, klare Trennung offen/erledigt), `:checkhealth documentation`
+  implementiert (Versions-Check, `lib.nvim`-Teilmodul-Probes, Root-Auflösung). GitHub-Metadaten
+  (`gh repo view`) bereits vollständig: Description, 10 Topics, Default-Branch `main`, leeres
+  Homepage-Feld (Schwester-Plugin-Konvention), keine LICENSE-Datei/-Referenz.
+- **Refactoring.md**: Fail-late/Report-at-boundary bereits vollständig eingehalten — kein einziger
+  `notify()`-Aufruf in `lua/documentation/core/**` oder `lua/documentation/@types/**` gefunden; alle
+  Meldungen sitzen in `bindings/`, `editor/` (Befehls-/UI-Schicht). Keine Änderung nötig.
+
+Übersprungen/nicht verifizierbar: nichts Wesentliches — alle Prüfpunkte waren direkt einsehbar oder
+lokal per `stylua`/`luacheck`/`nvim --headless -l scripts/ci.lua {stylua,luacheck,tests,map}`
+verifizierbar; CI vor und nach dem Fix grün bestätigt (`gh run list`). Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/documentation.nvim.md`) war
+bereits inhaltlich aktuell und deckungsgleich mit dem Repo-eigenen `docs/BINDINGS.md` (datiert
+2026-08-05, deckt den `per-invocation root`-Commit bereits ab) — keine Änderung nötig. Alles
+committet (`81631dd`) und nach `origin/main` gepusht.
