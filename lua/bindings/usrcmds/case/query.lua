@@ -234,6 +234,50 @@ function M.sla_dashboard()
   return rows
 end
 
+---@class Lib.Case.SlaReportRow
+---@field entry Lib.Case.RegistryEntry
+---@field digit string
+---@field label string           first_response clock label, e.g. "ab Ticket-Eingang"
+---@field deadline integer
+---@field met boolean|nil        true = replied before deadline, false = replied late, nil = no last_reply_sent stamp yet (excluded from the quote — SLA.md §6D's honesty clause)
+---@field delta integer|nil      seconds late; only set when met == false
+
+--- SLA.md §6D's `:Cases sla report [--year N]`: one row per case per
+--- first_response anchor (both "ab Ticket-Eingang" and "ab Zuweisung" —
+--- SLA.md §9.1 leaves picking one unresolved, same "show both" stance
+--- `sla.status` itself takes), across EVERY state — unlike
+--- `sla_dashboard` above, a report is retrospective, so a Closed/
+--- Reassigned case belongs in it (SLA.md §9 Q5).
+---@param year string|nil  Filter by `.case.json`'s `year` field; nil = every year.
+---@return Lib.Case.SlaReportRow[]
+function M.sla_report(year)
+  local sla = require("bindings.usrcmds.case.sla")
+  local rows = {}
+  for _, e in ipairs(registry.list()) do
+    local m = meta.read(e.dir)
+    if not year or (m and m.year == year) then
+      local status = sla.status(e)
+      if status then
+        for _, c in ipairs(status.first_response) do
+          local met = nil
+          if status.last_reply_sent then
+            met = status.last_reply_sent <= c.deadline
+          end
+          rows[#rows + 1] = {
+            entry = e,
+            digit = status.digit,
+            label = c.label,
+            deadline = c.deadline,
+            met = met,
+            delta = (met == false) and (status.last_reply_sent - c.deadline) or nil,
+          }
+        end
+      end
+    end
+  end
+  return rows
+end
+
 ---@class Lib.Case.GrepHit
 ---@field short string
 ---@field path string  Relative to the case dir.

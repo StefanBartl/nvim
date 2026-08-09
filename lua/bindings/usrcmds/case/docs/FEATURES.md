@@ -12,6 +12,26 @@ listed here only as a pointer.
 
 Module: `lua/bindings/usrcmds/case/`.
 
+## `:Cases sla report [--year N]` (SLA.md Paket 3)
+
+Konzept: [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md) §6D, §10
+(Paket 3, steht seit 2026-08-10 — letztes offenes Stück war nur der Report
+selbst, `last_reply_sent` kam schon mit Paket 1). Retrospektiv über **jeden**
+Zustand, nicht nur offene Cases wie `:Cases sla`s Dashboard (SLA.md §9 Q5):
+Quote erfüllter Erstreaktionsfristen je Priorität, für beide Anker
+("ab Ticket-Eingang"/"ab Zuweisung", §9.1 weiterhin offen) getrennt.
+Ausreißer namentlich mit Delta (`clock.format_duration`). Ein Case ohne
+`last_reply_sent`-Stempel zählt nicht als verpasst — er fällt aus der Quote
+raus und wird separat als "ohne last_reply_sent" gezählt, sonst würde ein
+schlicht nicht nachgetragener Wert die Zahl schlechter aussehen lassen als
+sie ist. Ehrlichkeitsklausel steht als zweite Zeile im Report selbst, nicht
+nur in der Doku.
+
+`query.lua`s `sla_report(year)` sammelt (kein `--year` = alle Jahre, Filter
+auf `.case.json`s `year`-Feld), `ui.lua`s `M.cases_sla_report` gruppiert und
+rendert — kein eigenes `sla/render.lua` wie ursprünglich skizziert, gleicher
+Datensammlung/Rendering-Split wie jeder andere `:Cases`-Befehl.
+
 ## `:Case(s) close` destination picker + marking system
 
 Was ROADMAP.md's `:Case(s) close & mark system` entry (removed from

@@ -378,6 +378,17 @@ function M.enable()
       end,
     },
     {
+      -- Two-segment path, tried before the single-segment ":Cases sla"
+      -- route above by composer's trie dispatch — same "ki"/"ki import"
+      -- precedent (init.lua's file_verb_routes comment).
+      path = { "sla", "report" },
+      flags = { { name = "year", type = "STRING" } },
+      desc = "SLA compliance report across every case (not just open): first-response quote per priority, outliers with delta. --year filters by .case.json's year",
+      run = function(ctx)
+        ui.cases_sla_report(ctx.flags.year)
+      end,
+    },
+    {
       path = { "history" },
       args = { { name = "company", type = "STRING", optional = true } },
       desc = "Every case for a company, grouped by state (default: current buffer's company)",

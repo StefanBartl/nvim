@@ -26,10 +26,11 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       `Research/` mit einbeziehen.
 
 - [ ] **SLA-Überwachung (Rest)** — eigenes Konzept: [SLA.md](SLA.md). Pakete
-      1+2 stehen (inkl. §3-Nachtrag: Rückmeldung resettet statt pausiert bei
+      1–3 stehen (inkl. §3-Nachtrag: Rückmeldung resettet statt pausiert bei
       `Awaiting User Info`, §9.6 geklärt; `:Cases sla` Dashboard,
-      prioritätsabhängiges `:Cases stale`, `:Case sla --doc`). Offen:
-      Paket 3 (`:Cases sla report`), Paket 4 (Notifications, KI-Kontext).
+      prioritätsabhängiges `:Cases stale`, `:Case sla --doc`,
+      `:Cases sla report [--year N]`). Offen: Paket 4 (Notifications,
+      Rückmeldetakt-Wecker, SLA-Kontext im KI-Prompt, Wordings-Baustein).
 
 - [ ] **Artefakt-Extraktion** — eigenes Konzept: [EXTRACTION.md](EXTRACTION.md).
       `:Case versions [component]` aus `ToscaSupportInfo*.txt` (Digest statt

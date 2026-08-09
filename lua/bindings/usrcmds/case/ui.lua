@@ -1839,6 +1839,95 @@ function M.cases_sla()
   })
 end
 
+--- Both first_response anchors, in a fixed order — `pairs()` iteration
+--- order isn't stable, and this report benefits from stable output more
+--- than a growing-config-driven list would (there are exactly two, SLA.md
+--- §9.1's open question, not something a future state could add a third
+--- of the way `config.states` does elsewhere in this module).
+local SLA_REPORT_ANCHORS = { "ab Ticket-Eingang", "ab Zuweisung" }
+
+--- `:Cases sla report [--year N]` — SLA.md §6D: ratio of Erstreaktion
+--- clocks met per priority (both anchors — SLA.md §9.1 leaves picking one
+--- unresolved), outliers named with how late. Unlike `:Cases sla` above,
+--- covers every state, not just open cases (SLA.md §9 Q5: a report is
+--- retrospective).
+---
+--- The honesty clause SLA.md §6D calls for isn't a footnote here — it's
+--- the report's own second line: this number is only as good as
+--- `last_reply_sent` being stamped (`:Case reply check`'s "sent?" prompt),
+--- and a case with no stamp yet doesn't count as "missed" — it's excluded
+--- from the ratio entirely and reported separately, since counting an
+--- un-stamped case as a miss would overstate how bad things actually are.
+---@param year_arg string|nil
+function M.cases_sla_report(year_arg)
+  local rows = query.sla_report(year_arg)
+  if #rows == 0 then
+    notify.warn(
+      year_arg and ("no case with a parseable priority in %s"):format(year_arg)
+        or "no case with a parseable priority"
+    )
+    return
+  end
+
+  local sla = require("bindings.usrcmds.case.sla")
+  ---@type table<string, table<string, { met: integer, missed: integer, nodata: integer }>>
+  local groups = {}
+  local outliers = {}
+  for _, r in ipairs(rows) do
+    groups[r.digit] = groups[r.digit] or {}
+    groups[r.digit][r.label] = groups[r.digit][r.label] or { met = 0, missed = 0, nodata = 0 }
+    local g = groups[r.digit][r.label]
+    if r.met == nil then
+      g.nodata = g.nodata + 1
+    elseif r.met then
+      g.met = g.met + 1
+    else
+      g.missed = g.missed + 1
+      outliers[#outliers + 1] = r
+    end
+  end
+
+  local lines = {
+    ("SLA report — %s"):format(year_arg or "all years"),
+    "Meine Sicht, keine SNOW-Wahrheit — nur so gut wie last_reply_sent gepflegt ist.",
+    "",
+  }
+  for _, digit in ipairs({ "1", "2", "3", "4" }) do
+    local by_label = groups[digit]
+    if by_label then
+      lines[#lines + 1] = ("P%s %s"):format(digit, config.sla[digit].label)
+      for _, label in ipairs(SLA_REPORT_ANCHORS) do
+        local g = by_label[label]
+        if g then
+          local total = g.met + g.missed
+          local pct = total > 0 and (100 * g.met / total) or 0
+          lines[#lines + 1] = ("  %-18s %d/%d (%.0f%%) met, %d ohne last_reply_sent"):format(
+            label,
+            g.met,
+            total,
+            pct,
+            g.nodata
+          )
+        end
+      end
+      lines[#lines + 1] = ""
+    end
+  end
+
+  if #outliers > 0 then
+    table.sort(outliers, function(a, b)
+      return (a.delta or 0) > (b.delta or 0)
+    end)
+    lines[#lines + 1] = "Ausreißer (verpasst):"
+    for _, r in ipairs(outliers) do
+      lines[#lines + 1] =
+        ("  %-10s P%s %-18s +%s"):format(r.entry.short, r.digit, r.label, sla.format_duration(r.delta))
+    end
+  end
+
+  kit.viewer({ title = "SLA report", lines = lines })
+end
+
 --- `:Cases history [company]` — "what have we had with this company
 --- before": every matching case (same substring match as `:Cases company`)
 --- in one screen, grouped by state, most-recently-touched first within

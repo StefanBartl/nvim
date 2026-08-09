@@ -359,11 +359,17 @@ Passend zu CONCEPT.md §4 (ein Modul, eine Frage):
 ```
 lua/bindings/usrcmds/case/
   sla/
-    init.lua      -- öffentliche API: status(case), overdue(), report()
+    init.lua      -- öffentliche API: status(case), most_urgent(), under_threshold()
     clock.lua     -- elapsed/deadline, Geschäftszeit-Rechnung (rein, testbar)
     stream.lua    -- Activity-Stream -> Lib.Case.SlaEvent[]
-    render.lua    -- Ausgabeformate: Infocard, Dashboard-Zeile, Badge
+  query.lua       -- sla_dashboard(), sla_report(year) — Datensammlung, kein eigenes render.lua
+  ui.lua          -- M.sla/M.cases_sla/M.cases_sla_report — kit.viewer/kit.select-Rendering
 ```
+
+Kein separates `render.lua` geworden — anders als hier ursprünglich
+skizziert, landete die Report-Aggregation in `query.lua` (Datensammlung)
+und das Rendern in `ui.lua` (`M.cases_sla_report`), derselbe Split wie
+jeder andere `:Cases`-Befehl in diesem Modul (CONCEPT.md §4).
 
 `clock.lua` ist bewusst frei von Neovim-APIs — reine Zeitarithmetik, damit
 sie ohne laufendes Neovim geprüft werden kann. Das ist der einzige Teil, in
@@ -400,8 +406,10 @@ dem sich ein Rechenfehler lautlos versteckt.
 4. **Zählt eine Rückfrage an den Kunden als „Rückmeldung"** im Sinne des
    Takts, oder nur eine inhaltliche Statusmeldung? Betrifft, ob
    `last_reply_sent` bei *jeder* Antwort gesetzt wird.
-5. Soll `:Cases sla` auch `Closed/` einbeziehen (für den Report ja, für das
-   Dashboard nein)?
+5. ~~Soll `:Cases sla` auch `Closed/` einbeziehen...~~ **Entschieden
+   (Paket 3):** genau wie vorgeschlagen — `:Cases sla` (Dashboard) bleibt
+   `config.default_state`-only, `:Cases sla report` läuft über
+   `registry.list()` ungefiltert.
 6. ~~Pausiert die Uhr bei `Awaiting User Info`?~~ **Geklärt (2026-08-07,
    §3-Nachtrag):** kein Pause/Resume, ein Reset auf volles Budget ab
    Kundenantwort, nur die Rückmeldung betroffen. `SLA_ServiceLevelAgreement.md`
@@ -422,7 +430,15 @@ dem sich ein Rechenfehler lautlos versteckt.
 >
 > **Paket 2 ist umgesetzt** (2026-08-07): `:Cases sla` Dashboard,
 > `:Cases stale` prioritätsabhängig, `:Case sla --doc`. Details: siehe unten
-> **„Notizen zur Umsetzung"**. Pakete 3–4 weiterhin offen.
+> **„Notizen zur Umsetzung"**.
+>
+> **Paket 3 ist umgesetzt** (2026-08-10): `last_reply_sent` war bereits
+> Teil von Paket 1 (`m` in `:Case reply check`) — was noch offen war, war
+> nur `:Cases sla report [--year N]`: Quote erfüllter Erstreaktionen je
+> Priorität (beide Anker, §9.1 bleibt offen), Ausreißer mit Delta,
+> Ehrlichkeitsklausel als zweite Zeile im Report selbst. Anders als
+> `:Cases sla` (nur offene Cases) zieht der Report über **jeden** Zustand
+> (§9 Q5). Nur Paket 4 bleibt offen.
 
 **Paket 1 — Fundament + Sichtbarkeit** (das eigentliche „im Auge behalten"):
 Priorität aus dem Stream parsen · `config.sla` · `clock.lua` + `stream.lua` ·
@@ -431,8 +447,8 @@ Priorität aus dem Stream parsen · `config.sla` · `clock.lua` + `stream.lua` �
 **Paket 2 — Querschnitt:** `:Cases sla` Dashboard · `:Cases stale`
 prioritätsabhängig · `:Case sla --doc`.
 
-**Paket 3 — Exaktheit:** `last_reply_sent` via `:Case reply check` ·
-`:Cases sla report`.
+**Paket 3 — Exaktheit (steht, 2026-08-10):** `last_reply_sent` via `:Case
+reply check` (kam bereits mit Paket 1) · `:Cases sla report`.
 
 **Paket 4 — Aktiv:** Notifications für P1/P2 · Rückmeldetakt-Wecker ·
 SLA-Kontext im KI-Prompt · Wordings-Baustein.
