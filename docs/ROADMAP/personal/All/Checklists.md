@@ -39,7 +39,7 @@ darunter, sofern relevant.
 | gopath.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | replacer.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | insights.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| filetree.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| filetree.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | reposcope.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY |||||||
 | debugging.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1558,3 +1558,95 @@ im Cheap-Path. Keine Änderung an diesem Modul nötig.
 nach den Änderungen per `gh run list`/`gh run view` geprüft) und die zentrale Bindings-Sammlung
 waren alle direkt prüfbar. Alles committet (`794c659` Notify-Refactor, `3ab1324` Map-Regenerierung)
 und nach `origin/main` gepusht.
+
+### filetree.nvim
+
+Größtes bisher geprüftes Plugin (112 Lua-Dateien) und inhaltlich bereits sehr weit: durchgängige
+`@module`-Kopfzeilen, vollständige `@param`/`@return`, `@types/`-Ordner (`adapter.lua`,
+`config.lua`, `node.lua`, `init.lua`), `config/DEFAULTS.lua` + `config/init.lua`, `.luarc.json`
+(bereits vorhanden, äquivalent zu `sessions.nvim`s), README (Englisch, ASCII-Art, Badges,
+Schwesterplugin-Absatz zu fileops.nvim, Installationsblock mit explizitem `event = "VeryLazy"`),
+`doc/filetree.txt`, `docs/BINDINGS/{KEYMAPS,USERCOMMANDS,AUTOCMDS}.md` + maschinenlesbares
+`docs/BINDINGS.lua` (bewusste Abweichung vom `docs/BINDINGS.md`-Dateinamen aus RELEASE.md — Inhalt
+und Vollständigkeit sind identisch, nur auf drei Dateien aufgeteilt, und die Live-Korrektheit wird
+von `test/smoke.lua` gegen den tatsächlichen Katalog verifiziert), `docs/ROADMAP/*.md` (mehrteilig,
+gepflegt, inkl. bereits abgeschlossener `NEOTREE_FEATURES.md`-Migrationsaufgabe aus RELEASE.md),
+`health.lua` (209 Zeilen), und eine bereits vorhandene, gut strukturierte Headless-Testsuite
+(`test/{smoke,units,menu,cwd_mode}.lua`, 356 Assertions) — aber **kein CI, kein `.luacheckrc`, kein
+`stylua.toml`**, alle drei neu ergänzt.
+
+- **PERFORMANCE.md — der einzige echte Hotpath-Fund dieses Passes**: `features/git/git_status/
+  init.lua` re-renderte seine Git-Status-Extmarks (vollständiges `clear_namespace` +
+  Zeile-für-Zeile-Rebuild) über ein **globales** `CursorMoved`-Autocmd (`pattern = "*"`) — eines
+  der am häufigsten feuernden Events in Neovim überhaupt, hier bei jedem Cursor-Schritt in *jedem*
+  Fenster im gesamten Editor (mit anschließendem `vim.bo.filetype`-Gate). Innerhalb des Tree-Fensters
+  bedeutete das: jeder einzelne j/k-Tastendruck löste einen vollständigen Extmark-Rebuild aus, obwohl
+  Extmarks ihre Position bei reiner Cursor-Bewegung automatisch beibehalten und sich am Inhalt nichts
+  ändert. Umgestellt auf ein buffer-lokales `CursorMoved` (gebunden pro Tree-Buffer in
+  `tree_attach.on_attach`, `buffer = buf`) plus 50ms-Debounce für den Render-Call — folgt damit
+  demselben Muster, das `features/ui/opened_sync/init.lua` bereits bewusst für denselben Zweck nutzt
+  (Kommentar dort: "far too chatty for a redraw"). Kein weiterer Hotpath-Fund (Icon-Lookups laufen im
+  Adapter, nicht im Plugin selbst; kein sonstiges Polling).
+- **LUA_NVIM.md**: vollständig eingehalten — `lib.nvim` durchgängig mit dokumentierten Soft-
+  Dependency-Fallbacks, saubere Importreihenfolge, Config-Keys typisiert. `fun(...)`-Annotationen
+  repo-weit gegrept — keine Instanz des in `pickers.nvim`/`mdview.nvim`/`markdown.nvim` gefundenen
+  "fehlender Parametername"-Bugs (`fun(type)` statt `fun(name: type)`). Keine Änderung nötig.
+- **REVIEW.md §8 Tooling — der Hauptfund dieses Passes**: kein `.github/workflows`, kein
+  `.luacheckrc`, kein `stylua.toml` vorhanden (trotz vorhandener, guter Testsuite, die nie in CI
+  lief). Alle drei ergänzt, angelehnt an `pickers.nvim`s aktuelles Muster (stylua `v2.5.2` gepinnt,
+  luacheck als echtes Gate, Headless-Testsuite gegen einen Sibling-`lib.nvim`-Checkout als zweiter
+  Job). `stylua --check` deckte zusätzlich auf, dass `core.autocrlf=true` den Checkout als CRLF
+  auslieferte, obwohl die committeten Blobs LF waren (falscher Vollfile-Diff bei jedem `--check`) —
+  `.gitattributes` um `* text=auto eol=lf` ergänzt (bereits vorhandene templates-spezifische Regel
+  blieb bestehen) und den Working-Tree per `git rm -r --cached . && git add -A` neu normalisiert.
+  stylua bleibt bewusst `continue-on-error` in CI (77 von 112 Dateien wichen vom neuen Format ab —
+  ein blindes Repo-weites Reformat ist bei einem 221-Datei-Plugin ohne lückenlose Testabdeckung zu
+  riskant für diesen Pass; dieselbe Entscheidung wie bei `fileops.nvim` dokumentiert). `luacheck`
+  fand 23 Warnings/1 Error (Error: ein Datei-Template mit Platzhalter-Syntax `$1`/`$name`, das kein
+  gültiges eigenständiges Lua ist — von `luacheck` ausgeschlossen); die 23 Warnings (tote
+  `notify`/`platform`-Requires, ungenutztes Modul-level-State in `handle_guard`/`cheatsheet`/
+  `node_info`, Variablen-Shadowing in `util/buffer.lua`/`test/units.lua`) behoben, jetzt 0/0. Dabei
+  auch ein echter (kleiner) Bug in `search/find_files/init.lua`s `via_builtin`-Fallback gefunden: die
+  `_cfg.hidden`-Option wurde in ein nie verwendetes `pattern`-Local berechnet und danach ignoriert —
+  `globpath`s `**/*` matcht auf Punktdateien grundsätzlich nicht, wodurch versteckte Dateien im
+  Picker-losen Fallback-Pfad nie erschienen, unabhängig von der Konfiguration. Jetzt ein zweiter
+  `**/.*`-Glob-Pass, der bei `hidden=true` gemergt wird. `fun(...)`-Annotationen bereits sauber (s.
+  oben).
+- **RELEASE.md**: alles bereits vollständig (siehe oben) bis auf CI (behoben, s. §8 Tooling). Kein
+  README-Table-of-Contents vorhanden — bei nur drei Level-2-Abschnitten (`Requirements`,
+  `Quick start`, `Documentation`) bewusst nicht nachgerüstet, ein ToC für drei Einträge wäre reine
+  Redundanz. GitHub-Metadaten (`gh repo view`) bereits vollständig gesetzt: Description, 9 Topics,
+  Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention), keine
+  LICENSE-Datei/-Referenz. Cross-Plattform: keine hartkodierten Pfadtrenner-Joins gefunden (nur
+  dokumentierte `gsub`-Normalisierungen und bewusste Windows-Zweige über `util/platform.lua`).
+- **Refactoring.md**: `notify()` in Low-Level-Utils gefunden (`util/buffer.lua`, `util/pdf.lua`,
+  `util/platform.lua` [nur im Kommentar erwähnt, kein echter Call], `util/refs_picker.lua`) — bewusst
+  **nicht** angefasst: `refs_picker.lua` ist selbst eine interaktive Picker-UI (keine reine
+  Low-Level-Funktion trotz `util/`-Pfad), `pdf.lua`s Notifies sind Fallback-Feedback beim Öffnen
+  externer Viewer (grenzwertig, aber eng an die eine aufrufende Stelle gekoppelt), und
+  `buffer.lua`s einzelner Call sitzt in einer öffentlichen Utility-Funktion ohne separate
+  Boundary-Schicht darüber. Ein systematisches Repo-weites Verschieben dieser vier Fundstellen in
+  einem 112-Datei-Plugin ohne lückenlose Testabdeckung wäre ein riskanter Blind-Refactor für einen
+  reinen Checklisten-Pass — dieselbe bewusste Scope-Entscheidung wie bei `reposcope.nvim` (~70
+  Fundstellen) weiter oben in dieser Liste, hier nur in kleinerem Maßstab.
+- **CI-Verifikation**: da CI in diesem Pass neu angelegt wurde, gab es naturgemäß keinen
+  Vorher-Zustand zu vergleichen. Der erste Push deckte zwei echte, bislang unentdeckte
+  POSIX-Bugs in `test/units.lua` auf (nie auf einem Linux-Runner gelaufen): `vim.env.TEMP` ist
+  Windows-only (Runner-Absturz "attempt to concatenate a nil value"), und eine `path.to_unix`-
+  Assertion hartcodierte einen Windows-Laufwerksbuchstaben-Pfad. Nach der Behebung ein dritter
+  Fund: der Headless-Ubuntu-Runner hat keinen Clipboard-Provider, wodurch sechs Assertions in
+  zwei clipboard-abhängigen Fixtures (`smart_create`-Paste, `markdown_links`-Copy) fehlschlugen —
+  kein Plugin-Bug, sondern eine Umgebungslücke; per Probe (`HAS_CLIPBOARD`) erkannt und die
+  Content-Assertionen entsprechend übersprungen (Call-Pfad bleibt über `pcall` weiter abgedeckt).
+  Nach allen drei Fixes: CI grün (`lint` + `tests`).
+
+Übersprungen/nicht verifizierbar: repo-weites `stylua .`-Reformat (siehe oben, bewusst
+`continue-on-error` belassen); ein systematisches Verschieben der vier gefundenen Low-Level-
+`notify()`-Aufrufe (siehe Refactoring.md oben). Zentrale Bindings-Sammlung
+(`nvim/docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/filetree.nvim.md`) war
+bereits vorhanden und bei Stichprobe (context_menu-Feature, datiert 2026-08-01) inhaltlich aktuell
+und deckungsgleich mit `docs/BINDINGS/KEYMAPS.md`/`AUTOCMDS.md` im Repo selbst — keine Änderung
+nötig; unverändert gelassen, da eine parallele Session diese Dateien laut Arbeitsverzeichnis
+offenbar bereits selbst gepflegt hat und ein Diff hier nur Konfliktrisiko ohne Mehrwert gewesen
+wäre. Alles committet (`62dd545` Tooling, `66213a0` luacheck-Cleanup, `cab67de` Perf-Fix, `baa78af`
++ `8239bf1` Test-Cross-Plattform-Fixes) und nach `origin/main` gepusht.
