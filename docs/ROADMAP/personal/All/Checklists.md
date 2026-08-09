@@ -45,7 +45,7 @@ darunter, sofern relevant.
 | debugging.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | dap.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | diff.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| language.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| language.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | cmdlog.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | emojis.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | github_stats.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1382,3 +1382,53 @@ haben bereits benannte Parameter.
 Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — verifiziert
 stattdessen über CI (`ubuntu-latest`, `stylua`+`luacheck`), die nach dem Push grün lief. Alles
 committet (`2f17c82`) und nach `origin/main` gepusht.
+
+### language.nvim
+
+- **Ausgangslage**: Repo war bereits durch mehrere frühere Claude-Pässe (siehe eigener Git-Log)
+  stark vorgearbeitet — `doc/language.txt`, `docs/BINDINGS.md`, `docs/ROADMAP/ROADMAP.md` waren
+  bereits vollständig und aktuell, `health.lua` implementiert `lib.nvim`-durchgängig genutzt.
+- **PERFORMANCE.md**: kein neuer Hotpath-Fund. `spell/live.lua` (Live-Scan auf `TextChanged`)
+  nutzt bereits Debounce + `changedtick`-Cache (`spell/core/cache.lua`); keine Änderung nötig.
+- **LUA_NVIM.md/REVIEW.md §8 Tooling — der eigentliche Fund dieses Passes**: `.luarc.json` und
+  `stylua.toml` existierten bereits (Vorbild-konform zu `sessions.nvim`), aber es fehlte ein
+  `.luacheckrc` komplett — dadurch meldete `luacheck` 215 falsch-positive "accessing undefined
+  variable 'vim'"-Warnings über alle 51 Dateien. `.luacheckrc` (`std = "luajit"`,
+  `globals = { "vim" }`, `max_line_length = 160` für die callback-lastigen `fun(...)`-Type-
+  Annotationen) ergänzt. Danach blieben 4 echte Funde: ein ungenutztes Argument in
+  `spell/core/collect.lua`s `provider_enabled` (entfernt, beide Call-Sites angepasst), ein leerer
+  `elseif`-Zweig in `translate/filter.lua` (Logik zu `elseif not in_fence then` umstrukturiert,
+  keine Verhaltensänderung), sowie zwei zu lange `@field`/`@alias`-Zeilen in
+  `config/@types/init.lua` und `translate/@types/init.lua` (in benannte Sub-Aliase aufgeteilt
+  bzw. gekürzt). `luacheck lua plugin` läuft jetzt mit 0 Warnings/Errors über 51 Dateien,
+  `stylua --check .` war und blieb grün. `fun(...)`-Annotationen durchsucht — kein Fall des
+  bekannten `fun(type)`-ohne-Namen-Bugs aus `pickers.nvim`/`mdview.nvim`/`markdown.nvim` gefunden.
+- **RELEASE.md**: README bekam ASCII-Art, Neovim-Badge, Table of Contents (nur Level-2) und den
+  Schwesterplugin-Absatz zu `sessions.nvim` (Installationsblock mit `event = "VeryLazy"` und
+  `lib.nvim`-Dependency war bereits vorhanden). Ein echter Verstoß gegen die Konvention "keine
+  Lizenzdatei/-referenz" gefunden und behoben: `doc/language.txt` enthielt eine Kopfzeile
+  `License: MIT` ohne zugehörige LICENSE-Datei — Zeile entfernt. GitHub-Metadaten (`gh repo view`)
+  bereits vollständig: Description, 7 Topics, Default-Branch `main`, leeres Homepage-Feld, keine
+  LICENSE-Datei — keine Änderung nötig. Cross-Plattform: `util/job/init.lua` behandelt den
+  Windows-`.cmd`/`.bat`-Shim-Fall (npm-globale `cspell`) bereits explizit und korrekt über
+  `cmd.exe /c`; das Modul nutzt `vim.system` direkt statt `lib.nvim.cross.spawn_*` — als
+  bewusste Ausnahme belassen, da die vorhandene Cancel/Timeout/Dual-Fallback-Logik ohne Einsicht
+  in die exakte `lib.nvim.cross`-API nicht risikofrei migrierbar war. Keine hartkodierten
+  Backslash-Pfadtrenner gefunden (alle Joins nutzen `"/"`, was `vim.fn.fnamemodify` auch unter
+  Windows normalisiert).
+- **Refactoring.md**: `notify(`-Aufrufe durchsucht — bis auf einen Fall ausschließlich in
+  Top-Level-/UI-Modulen (`health.lua`, `spell/init.lua`, `translate/init.lua`,
+  `translate/window.lua`, UI-Panels), also bereits an der richtigen Boundary. Einzige Ausnahme:
+  `spell/providers/cspell_server.lua` (Low-Level-Provider) notifiziert direkt, wenn der
+  persistente Node-Sidecar abstürzt — bewusst belassen, da dieser Fehler asynchron/ohne
+  wartenden Caller auftritt (Prozess-Lifecycle-Event, kein Request-Response-Pfad) und es daher
+  keine sinnvolle synchrone Boundary gibt, die ihn stattdessen melden könnte.
+- **Kein CI vorhanden**: Das Repo hat kein `.github/workflows/`. `gh run list` liefert entsprechend
+  keine Runs — nichts zu prüfen/reparieren.
+- **Verifikation**: `stylua --check .` grün, `luacheck lua plugin` 0/0, sowie ein neuer headless
+  Smoke-Test (requires alle Module unter `lua/language`, ruft `setup({})` und `health.check()`
+  auf) lief erfolgreich (`SMOKE_TEST_OK`, exit 0) — kein vorhandener Testrunner im Repo, daher
+  als Ad-hoc-Verifikation statt eines dauerhaften Test-Artefakts ausgeführt.
+
+Übersprungen/nicht verifizierbar: POSIX-Verhalten nicht lokal testbar (Windows-Umgebung), keine
+CI zum Gegenchecken vorhanden. Alles committet (`47994ed`) und nach `origin/main` gepusht.
