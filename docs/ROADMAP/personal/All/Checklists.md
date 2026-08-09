@@ -53,7 +53,7 @@ darunter, sofern relevant.
 | cascade.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | pdfport.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | markdown.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
-| color_my_ascii.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| color_my_ascii.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | recommender.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | mdview.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | images.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
@@ -1330,3 +1330,55 @@ bereits deckungsgleich mit `docs/BINDINGS.md` im Repo befunden — keine Änderu
 über CI (`ubuntu-latest`, 2 Jobs `lint`/`test`), die nach dem Push grün lief. Vier Commits
 (`9dd3af5` Tooling/CI/Tests, `7e1c1c2` Bugfixes, `f0c7616` Performance, `0d67271` Refactoring/Docs)
 nach `origin/main` gepusht; CI-Status nach dem Push verifiziert grün (beide Jobs).
+
+### color_my_ascii.nvim
+
+Bereits eines der saubersten geprüften Plugins: 100 Lua-Dateien, durchgängig `@module`-Kopfzeilen
+mit vollständigen `@param`/`@return`, ein konsolidiertes `lua/color_my_ascii/@types.lua`
+(bewusste Ausnahme wie bei fileops.nvim/emojis.nvim, sauber nach Quelldatei gruppiert),
+`config/DEFAULTS.lua` + `config/init.lua` mit vollständig typisierter `ColorMyAscii.Config`,
+`.luarc.json` (identisch zu `sessions.nvim`s), `.luacheckrc`/`stylua.toml`/CI (`stylua` +
+`luacheck`) bereits vorhanden, `lua/color_my_ascii/utils/safe_api.lua` bereits ein reiner
+Re-Export von `lib.nvim.safe_api` (kein Eigenbau). Kein `fun(type)`-ohne-Namen-Fund (der
+copy-paste-Bug aus pickers.nvim/mdview.nvim/markdown.nvim) — alle `fun(...)`-Annotationen hier
+haben bereits benannte Parameter.
+
+- **PERFORMANCE.md**: kein neuer Hotpath-Fund über den bestehenden Debounce/Extmark-Pfad hinaus
+  (`highlighter.lua`/`debounce_manager.lua`) — bereits sauber implementiert. Keine Änderung nötig.
+- **LUA_NVIM.md**: vollständig eingehalten. Keine Änderung nötig.
+- **REVIEW.md §8 Tooling — der einzige echte CI-Fund dieses Passes**: `gh run list` zeigte die
+  letzten zehn `Lint`-Runs auf `main` durchgehend `failure` (seit dem Commit vom 2026-08-04).
+  Ursache war kein CRLF/`.stylua.toml`-Problem (Blobs waren bereits reines LF; die lokale
+  CRLF-Anzeige kam nur vom Windows-Checkout mit globalem `core.autocrlf=true` — durch temporäres
+  `core.autocrlf=false` + `git checkout` lokal reproduziert, um echte von Checkout-bedingten Diffs
+  zu trennen), sondern ein echter `stylua`-Fund: `debug/commands.lua` hatte kollabierte
+  Tabellen-Literale (`{ path = {...}, ... }` einzeilig) entgegen `.stylua.toml`s
+  `collapse_simple_statement = "Never"`. Mit `stylua lua/ plugin/` reformatiert (nur diese eine
+  Datei änderte sich inhaltlich). Zusätzlich `stylua-action` von `version: latest` auf die lokal
+  installierte `v2.5.2` gepinnt (bekanntes Drift-Risiko aus früheren Pässen). `.gitattributes`
+  (`*.lua text eol=lf`, ...) ergänzt, damit künftige Commits nicht erneut plattformabhängig
+  divergieren. `luacheck lua plugin` lief mit 0 Warnings/Errors über alle 95 Dateien; die
+  vollständige Headless-Testsuite (`TESTS/run.lua`, 13 Specs) lief vor und nach der Änderung grün.
+- **RELEASE.md**: README (Englisch, ASCII-Art, Badges, Schwesterplugin-Absatz zu markdown.nvim,
+  Installationsblock mit explizitem `ft = 'markdown'`, `lib.nvim`-Dependency deklariert) war
+  bereits fast vollständig — nur das Level-2-only Table of Contents fehlte, ergänzt; eine
+  überflüssige Emoji ("🔧 Beta stage") aus der Status-Zeile entfernt (Markdown-Stilkonvention:
+  keine Emojis). `doc/color_my_ascii.txt`, `docs/BINDINGS.md` (vollständig, alle Usercmds/Keymaps/
+  Autocmds), `docs/ROADMAP.md` (aktuell, zuletzt selbst am 2026-08-08 gepflegt) waren bereits
+  vollständig. `:checkhealth color_my_ascii` headless über einen echten `plugin/color_my_ascii.lua`-
+  Bootstrap getestet (inkl. `usercmd.composer`-Routen) — läuft komplett grün, keine Warnings/Errors.
+  GitHub-Metadaten (`gh repo view`) bereits vollständig gesetzt: Description, 8 Topics,
+  Default-Branch `main`, leeres Homepage-Feld (Schwester-Plugin-Konvention), keine
+  LICENSE-Datei/-Referenz — keine Änderung nötig. Cross-Plattform: keine hartkodierten
+  Pfadtrenner; die einzigen `\\`-Vorkommen in `commands/fence/export.lua` sind bewusste
+  `gsub('\\', '/')`-Normalisierungen für den Pfadvergleich, keine Windows-only-Joins.
+- **Refactoring.md — zweiter Codefix**: `config/init.lua`s `load_languages()`/`load_groups()`/
+  `merge_user_languages()` riefen `notify()` direkt auf, obwohl sie bereits eine `errors`-Liste
+  aufbauten und zurückgaben — klassischer Fail-late-Verstoß. Alle drei geben jetzt nur noch Status
+  zurück; `M.setup()` (die einzige Boundary) sammelt die Fehler/Warnungen und entscheidet über das
+  Melden. `commands/fence/import.lua`s `vim.fn.readfile()` (Dateisystem-Grenze) lief ungeschützt
+  ohne `pcall` — jetzt abgesichert mit klarer Fehlermeldung statt eines rohen Lua-Errors.
+
+Übersprungen/nicht verifizierbar: POSIX-Test nicht lokal möglich (Windows-Umgebung) — verifiziert
+stattdessen über CI (`ubuntu-latest`, `stylua`+`luacheck`), die nach dem Push grün lief. Alles
+committet (`2f17c82`) und nach `origin/main` gepusht.
