@@ -1,13 +1,7 @@
 # Roadmap
 
-- [ ] Hrpoon persist paths für UI: Die Checkllists in WKDBpopks-Lua sowie wkdook-neovim als persist paths hinzufügen für nivhgt workstation, alle pfade chekcen ob sie existeren in persist paths
-
-- [ ] casedesk aworkflow optimeiren: Ich eröffne einen caseso: ich kopiere den aactivity stream in die zwischenablage, sdann :Case new, dort gebe ich daten ewie name, tile usw wien, dann legt es automatisch folder usw.. an. es soll ja auch ein ki prompt vorberieten, ibn dieser  soll acuh enthalten sein:
-  - [ ] Datenpunkte für activity wstream analyse: welche attachments hat der customer beretis attached? Wenn KI enabled,dann checklisten wie "was haebn wir den cuistomer vorgeschlagen soller achen" und " was hat er zurückgemeldetund wie gemacht";
-
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
-- [ ] case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum ziel. case delete
 - spotlight checken und lernen
 - documentation.nvim lernen
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
@@ -43,15 +37,7 @@
   also hängt in der nächsten zeile eiunfach dreio backticks an
 
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
-- [ ] Autocompletion beim schreiben funktiert schon mit zusätzlichen dictionary bvon mir, jetzt wäre es noch toll, wenn oft verwendete hher geranked werden bei den vorschlägen
-
-## nach docs/ROADMAP/RULES integrieren und dann hier ersatzlos entfernen
-
-### ui
-
-| Punkt | Aufwand | Nutzen |
-|---|---|---|
-| `?` öffnet eine Keybinding-Übersicht | Quick Win | mittel — Muster existiert in `filetree.nvim`s neo-tree-Cheatsheet |
+- [ ] Autocompletion beim schreiben funktiert schon mit zusätzlichen dictionary bvon mir, jetzt wäre es noch toll, wenn oft verwendete höher geranked werden bei den vorschlägen
 
 ## ZIEL
 

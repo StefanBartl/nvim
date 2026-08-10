@@ -6,7 +6,7 @@
   aber alles verfeinert wird, auch mit Profiler und besserer View/UI/Feature-
   Ausstattung.
 - [ ] Root-Level Slider auch frü andere views als hirarchie intereesant?
-- [ ] @free chat. hast du alle features in docs/FEATURES eingetragen, docs/vimdci und ggf. C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS updatet udn alles in main comiited und poushed?
+- [ ] 16:00 @free chat. hast du alle features in docs/FEATURES eingetragen, docs/vimdci und ggf. C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS updatet udn alles in main comiited und poushed?
 
 ---
 
@@ -29,6 +29,3 @@
 
     > Feedback: Es geht mir darum, dass wir zb. einen deps tab haben mit dependecys so haben wir auch einen tab für runtime anaylse.nvim feature(s) als auch für vl andere; diese soll en dann idealweriße in der tab design ein wenig hervorstehcen, weil es ja azch tabs /submenus sind, die nur sichtbar sind, wenn auch diese plugins isntalliert sind
 
-### Mittel
-
-### Hoch / größere Vorhaben

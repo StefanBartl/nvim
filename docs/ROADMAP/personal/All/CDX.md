@@ -4,7 +4,9 @@ Note: `nvim\lua\bindings\usrcmds\case` mitdenken/wie ein plugin behandeln soweit
   - [ ] Alle checlsts (new project, review, performance usw..) darafuf anwenden und sinnvoll implementieren
 Note: Wenn ich anschließend "Alle Plugins" oder "Jedes Plugin" oä. verwende, meine ich alle meine custom personal nvim plugins, die liste findest du hier: C:\Users\bartl\AppData\Local\nvim\lua\plugins\personal\source.lua
 
-- [ ] Roadmaps abarbeiten
+- [ ] Roadmaps
+  - [ ] Analyse aller Roadmaps -> C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/ROADMAP_FINISHED.md
+  - [ ] abarbeiten
 - [ ] BINDINGS
   - [ ] autocmds durchgehen ob man was optimeren kann
 - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ARCHITECTURE\startup.md
