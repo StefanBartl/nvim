@@ -28,8 +28,6 @@
 
     > Feedback: Es geht mir darum, dass wir zb. einen deps tab haben mit dependecys so haben wir auch einen tab für runtime anaylse.nvim feature(s) als auch für vl andere; diese soll en dann idealweriße in der tab design ein wenig hervorstehcen, weil es ja azch tabs /submenus sind, die nur sichtbar sind, wenn auch diese plugins isntalliert sind
 
-- [ ] Analyse, welche usrcmds für reports alle ein pdfport.nvim create pdf modul implementieren könnten, also zb.: call graph oder deps tab oer.. bzw. generell bei den tabs bei denn es sinn macht, einen icon it "erstrelle pdf" implementieren (frage ob man da pdfport.nvim brauchent, wenn man eh schon im browser ist)
-
 ### Mittel
 
 ### Hoch / größere Vorhaben
