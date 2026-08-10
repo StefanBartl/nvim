@@ -18,32 +18,25 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
-- [ ] **Artefakt-Extraktion (Rest)** — eigenes Konzept:
-      [EXTRACTION.md](EXTRACTION.md). Pakete 1–4 stehen (`:Case versions`
-      inkl. Stream-Fallback für `server`; `extract/stream.lua` für
-      Versionen im Fließtext/KBA-Nummern/Anhänge/Stammdaten,
-      `sap_component`/`versions`/`last_reply_sent` automatisch nach
-      `.case.json`; `:Case doclinks [nr]` + Einbau in `:Case reply check`,
-      dreistufige Versionsauflösung — real an Case 1041708 einen echten
-      Doku-Link auf falscher Version gefunden; Korrekturmaßnahme-Uhr
-      pausiert jetzt während `Awaiting User Info` genau wie die
-      Rückmeldung, nur als Verlängerung statt Reset. Alles gegen echte
-      Bestandsdaten verifiziert, wo welche vorlagen). Offen: Paket 5
-      (Faktenblock als Fundament für die KI-Anbindung — hängt an der noch
-      nicht gebauten KI-Anbindung selbst).
-
 - [ ] **KI-Anbindung** — hängt an einem eigenen `ai.nvim`-Plugin (noch
       nicht gebaut; Config-Grundlage existiert bereits:
       `lua/config/ai/`, `lua/plugins/ai/`, Zugang zu Gemini/ChatGPT/Claude
-      Pro). Sobald das steht, drei casedesk-Features darauf aufbauen:
+      Pro). Artefakt-Extraktion ist als Fundament dafür bereits komplett
+      fertig (alle 5 Pakete, s. [EXTRACTION.md](EXTRACTION.md)) —
+      `:Case ki`s Prompt bekommt schon einen `{facts}`-Faktenblock
+      (Priorität, SAP Component, Versionen, SLA-Status, Doku-Link-
+      Versionsabgleich) und `:Case ki import` prüft Antworten schon gegen
+      diese Fakten. Sobald `ai.nvim` steht, weitere Features darauf
+      aufbauen:
       - **Doku-Referenzen sammeln**: zu jedem Case passende
         Tricentis-Doku-Links automatisch finden, mit Zitat des genauen
         Abschnitts/Wortlauts (für interne Notizen), unter einer Headline
-        "Links" gesammelt. Teilantwort schon in
-        [EXTRACTION.md](EXTRACTION.md) §7: die im Activity Stream
-        bereits zitierten Links sind eine Referenzsammlung ganz ohne
-        KI-Aufruf (EXTRACTION.md Paket 2/5) — erst darüber hinaus neue
-        Quellen zu finden, ist die eigentliche KI-Aufgabe.
+        "Links" gesammelt. Der Faktenblock aggregiert bereits die im Case
+        zitierten Links nach Version (`extract/doclinks.lua`s
+        `all_links`) — was noch fehlt, ist die Zitat-mit-Kontext-Sammlung
+        pro einzelnem Link, ein eigenständig größeres Stück (Textauszüge
+        um jeden Fund extrahieren). Erst darüber hinaus neue Quellen zu
+        finden, ist die eigentliche KI-Aufgabe.
       - **Standardwerke per Websuche**: zu technischen Themen des Cases
         (z. B. Zertifikate bei Tosca Server) Referenzen zu bekannter
         Fachliteratur vorschlagen — primär Englisch, gerne auch Deutsch —

@@ -695,12 +695,14 @@ function M.ki(case_arg)
     end
     local ki = require("bindings.usrcmds.case.ki")
     local m = meta.read(entry.dir)
+    local ok_facts, facts_lines = pcall(require("bindings.usrcmds.case.extract.facts").render, entry)
     local prompt = ki.build_prompt({
       case = entry.short,
       title = m and m.title,
       company = m and m.company,
       name = m and m.name,
       sla = sla_context_line(entry),
+      facts = ok_facts and table.concat(facts_lines, "\n") or nil,
     }, content)
     if prompt == "" then
       notify.error("ki: prompt template missing or empty (templates/KiPrompt.md)")
@@ -808,6 +810,42 @@ function M.ki_import(case_arg)
       return
     end
     notify.info("ki import: " .. table.concat(written, ", "))
+
+    -- EXTRACTION.md §7 Richtung 2: a second line of defense beyond the
+    -- prompt-guard above — if the answer's own solution/reply text cites a
+    -- docs.tricentis.com link on a DIFFERENT Tosca version than the
+    -- customer's own, flag it now, before it's read as ready-to-send
+    -- (M.ki_import already wrote it to Replies/ — `:Case reply check`
+    -- catches this too on save, but a warning here is immediate, not
+    -- deferred to the next check).
+    local doclinks = require("bindings.usrcmds.case.extract.doclinks")
+    local customer_version = doclinks.resolve_customer_version(entry.dir, m and m.tosca_version)
+    if customer_version then
+      local stream_extract = require("bindings.usrcmds.case.extract.stream")
+      local contradictions = {}
+      for _, text in ipairs({ sections.solution, sections.reply }) do
+        if text then
+          for _, link in ipairs(stream_extract.doc_links(text)) do
+            local norm = doclinks.normalize_version(link.version)
+            if norm and norm ~= customer_version then
+              contradictions[#contradictions + 1] = link
+            end
+          end
+        end
+      end
+      if #contradictions > 0 then
+        local urls = {}
+        for _, c in ipairs(contradictions) do
+          urls[#urls + 1] = ("tosca-%s"):format(c.version)
+        end
+        notify.warn(
+          ("ki import: answer cites %s, but the customer runs %s — check before sending"):format(
+            table.concat(urls, ", "),
+            customer_version
+          )
+        )
+      end
+    end
   end)
 end
 

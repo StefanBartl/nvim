@@ -37,6 +37,7 @@ local DIGIT_KEY = {
 ---@field company string|nil
 ---@field name string|nil
 ---@field sla string|nil  One-line SLA context (SLA.md §6E) — priority + the most urgent clock's remaining time, so the AI scopes its answer to how much time this actually has. `{sla}`, deliberately no underscore: templates.lua's `%{(%w+)%}` substitution pattern doesn't match one (see `{activitystream}`'s own comment below).
+---@field facts string|nil  The "Ermittelte Fakten" block (EXTRACTION.md §7 Richtung 1, `extract.facts.render`) — everything deterministically parsable (versions, SAP Component, SLA state, doc-link versions) as ground truth in the prompt instead of left for the model to guess. `{facts}`, same no-underscore reason as `{sla}`.
 
 --- Assemble the full prompt for this case's activity stream.
 ---@param tokens Lib.Case.KiTokens
@@ -49,6 +50,7 @@ function M.build_prompt(tokens, activity_stream)
     company = tokens.company,
     name = tokens.name,
     sla = tokens.sla,
+    facts = tokens.facts,
     activitystream = vim.trim(activity_stream or ""),
   }
   local lines = templates.render(templates.KI_PROMPT, render_tokens)

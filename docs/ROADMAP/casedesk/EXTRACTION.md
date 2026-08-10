@@ -54,10 +54,28 @@ und `Research/NN_ActivityStream.md` (aus SNOW kopiert).
 > erkennt jetzt auch `last_reply_sent` aus einem "Send to Customer"-Memo
 > automatisch (§5s zweiter Fund) — regressiert dabei nie einen neueren
 > manuellen Stempel aus `:Case reply check`.
+>
+> **Paket 5 steht** (2026-08-10, letztes Paket — Artefakt-Extraktion ist
+> damit komplett fertig): `extract/facts.lua` rendert §7s "Ermittelte
+> Fakten"-Block rein aus bereits gebauten Extraktoren (kein neues
+> Parsing) — `{facts}`-Token in `KiPrompt.md`, gefüllt von `ui.lua`s
+> `M.ki`. Gegen drei echte Cases verifiziert, kein Absturz, sinnvolle
+> Degradation bei fehlenden Daten — und der Block fasst automatisch
+> zusammen, was Paket 1/2/3 einzeln schon real gefunden hatten (996010s
+> Custom-DLL, 1041708s Doku-Link-Mismatch, 977392s Impact-Feld) in
+> **einer** Stelle. `:Case ki import` bekommt eine Widerspruchsprüfung
+> (Richtung 2): zitiert die KI-Antwort einen `docs.tricentis.com`-Link
+> auf einer anderen Version als der Kunde fährt, warnt es sofort beim
+> Import, nicht erst beim nächsten `:Case reply check`. Richtung 3
+> (zitierte Doku-Links als Referenzsammlung) ist nur teilweise gebaut —
+> die Aggregation nach Version steckt in der Faktenblock-Zeile "Doku-Links
+> im Case", aber keine Sammlung mit Zitat/Kontext pro Link (bräuchte
+> Auszüge aus dem Case-Text um jeden Fund, ein eigenständig größeres
+> Stück — s. ROADMAP.md's KI-Anbindung-Punkt).
 
-Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Offenes Paket 5:
-[ROADMAP.md](ROADMAP.md). Der SLA-Teil des Stream-Parsers
-(`sla/stream.lua`) steht bereits eigenständig, siehe [SLA.md](SLA.md).
+Fertige Features sonst: [CONCEPT.md](CONCEPT.md). Der SLA-Teil des
+Stream-Parsers (`sla/stream.lua`) steht bereits eigenständig, siehe
+[SLA.md](SLA.md).
 
 ---
 
@@ -590,12 +608,15 @@ Pausen-Intervalle für `fix` in `sla/init.lua`s neuer
 Customer"-Marker (`extract/stream.lua`s `M.last_reply_sent_at`, via
 `:Case activity`).
 
-**Paket 5 — KI-Kopplung** · `{facts}`-Token in `KiPrompt.md` ·
-Faktenblock-Renderer · Widerspruchsprüfung in `:Case ki import` ·
-zitierte Doku-Links als deterministische Referenzsammlung.
+**Paket 5 — KI-Kopplung (steht, 2026-08-10):** `extract/facts.lua` ·
+`{facts}`-Token in `KiPrompt.md` · Widerspruchsprüfung in `:Case ki
+import`. **Teilweise:** zitierte Doku-Links stecken nur als
+Versions-Aggregat im Faktenblock, keine eigenständige
+Zitat-mit-Kontext-Sammlung (bräuchte Textauszüge um jeden Fund, ein
+eigenes, größeres Stück — s. ROADMAP.md's KI-Anbindung-Punkt).
 
-Paket 1 und 2 sind unabhängig voneinander nützlich. Paket 5 setzt 1–3
-voraus — genau deshalb steht es hinten: der Faktenblock ist nur so gut
+Paket 1 und 2 sind unabhängig voneinander nützlich. Paket 5 setzte 1–3
+voraus — genau deshalb stand es hinten: der Faktenblock ist nur so gut
 wie die Extraktoren darunter.
 
 ## Literatur und Referenzen

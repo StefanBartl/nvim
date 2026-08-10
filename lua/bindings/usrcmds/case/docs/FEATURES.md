@@ -12,6 +12,37 @@ listed here only as a pointer.
 
 Module: `lua/bindings/usrcmds/case/`.
 
+## KI-Faktenblock + Widerspruchsprüfung (EXTRACTION.md Paket 5 — letztes Paket)
+
+Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+§7, §12 (Paket 5, steht seit 2026-08-10 — mit diesem Paket ist
+Artefakt-Extraktion komplett fertig, alle 5 Pakete).
+
+- **`extract/facts.lua`** rendert das "Ermittelte Fakten"-Markdown-Block
+  aus §7s Worked Example — reiner Aggregator, kein neues Parsing:
+  liest aus `extract.supportinfo` (TBox-Build/Api-Core/Custom-DLLs),
+  `extract.stream`/`sla.stream` (aktueller SNOW-Zustand, Impact,
+  Awaiting-User-Info-Historie), `sla` (Clock-Status), `extract.doclinks`
+  (Versions-Tally der zitierten Doku-Links), und `.case.json` selbst
+  (Priorität, SAP Component, Versionen). Gegen drei echte Cases
+  verifiziert (977392, 1041708, 996010) — kombiniert dabei automatisch
+  Funde aus Paket 1/2/3 (996010s Custom-DLL, 1041708s
+  Doku-Link-Mismatch, 977392s Impact) an einer Stelle, ohne Absturz bei
+  fehlenden Daten.
+- **`{facts}`-Token** in `templates/KiPrompt.md`, gefüllt von `ui.lua`s
+  `M.ki` — landet vor der eigentlichen Analyse-Aufgabe im Prompt, mit
+  der Anweisung, den Fakten nicht zu widersprechen.
+- **Widerspruchsprüfung in `:Case ki import`** (§7 Richtung 2): scannt
+  die importierte Solution/Reply-Sektion nach `docs.tricentis.com`-Links
+  und warnt sofort, wenn einer auf eine andere Version zeigt als der
+  Kunde tatsächlich fährt — die zweite Verteidigungslinie neben dem
+  Prompt-Wächter selbst.
+- **Teilweise gebaut**: §7 Richtung 3 (zitierte Doku-Links als
+  Referenzsammlung mit Zitat/Kontext) steckt nur als
+  Versions-Aggregat im Faktenblock (`extract.doclinks.all_links`) — eine
+  echte Zitat-mit-Kontext-Sammlung pro Link (Textauszüge um jeden Fund)
+  ist ein eigenständig größeres Stück, nicht gebaut.
+
 ## Korrekturmaßnahme-Pause + auto `last_reply_sent` (EXTRACTION.md Paket 4)
 
 Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)

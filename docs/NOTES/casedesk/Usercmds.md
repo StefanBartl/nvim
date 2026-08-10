@@ -32,8 +32,8 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case reply check` | — | Pre-send gate on the **current buffer**: emoji count (`c` removes), stray markdown headlines, dead links, doc links on a different Tosca version than the customer's own (EXTRACTION.md §6), `s` launches `language.nvim`'s spellcheck on the buffer |
 | `:Case similar [nr] [n]` | `n`, default 5 | Past cases whose title + `Summary.md` share the most distinctive vocabulary (TF-IDF cosine, no AI). Each hit shows the matched terms — the ranking is lexical, so seeing *why* it matched is how you judge it |
 | `:Case timeline [nr]` | — | Work sessions reconstructed from file mtimes, oldest first — touches within `config.timeline_session_gap_minutes` (default 120) of each other count as one sitting. Each session's duration is a **lower bound** (a save marks when editing stopped, not started) |
-| `:Case ki [nr]` | — | Build the AI-analysis prompt (role + policies + this case's activity stream, from the clipboard, PLUS one line of SLA urgency context so the model scopes its answer accordingly — SLA.md §6E) and copy it back to the clipboard, ready to paste into an AI chat. Also saved as `Research/NN_KiPrompt.md` |
-| `:Case ki import [nr]` | — | Paste an AI answer (in the format `:Case ki` asked for) from the clipboard and file it: analysis/difficulty/next-steps → `Research/NN_KiAnalysis.md`, English reply draft → new `Replies/NN_Reply.md` (still goes through `:Case reply check`, never auto-sent), internal German notes → appended to `Notes.md` |
+| `:Case ki [nr]` | — | Build the AI-analysis prompt (role + policies + this case's activity stream, from the clipboard, one line of SLA urgency context — SLA.md §6E — PLUS a full "Ermittelte Fakten" block: priority/impact, SAP Component, Commander/Server versions, TBox-Build/Api-Core, custom DLLs, current SNOW state, SLA clocks, and a doc-link version tally — EXTRACTION.md §7) and copy it back to the clipboard, ready to paste into an AI chat. Also saved as `Research/NN_KiPrompt.md` |
+| `:Case ki import [nr]` | — | Paste an AI answer (in the format `:Case ki` asked for) from the clipboard and file it: analysis/difficulty/next-steps → `Research/NN_KiAnalysis.md`, English reply draft → new `Replies/NN_Reply.md` (still goes through `:Case reply check`, never auto-sent), internal German notes → appended to `Notes.md`. Also checks the solution/reply text for a `docs.tricentis.com` link on a different Tosca version than the customer's own and warns immediately if found (EXTRACTION.md §7 Richtung 2) |
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`Ressources`/root) via `kit.select` |
 | `:Case doclinks [nr]` | — | Every `docs.tricentis.com/tosca-<version>/` link in the case (Activity Streams + Replies) pointing at a version other than the customer's own. Customer version resolved most-reliable-first: `.case.json` → support-info (`detect.tosca_version`) → newest Activity Stream's Commander version. Also folded into `:Case reply check` (EXTRACTION.md §6) |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
@@ -188,6 +188,13 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   same header — EXTRACTION.md §2. `report_created` is the same story:
   two locale-dependent formats (12h vs. 24h) with no field telling you
   which, so it's shown verbatim and never fed to a date parser.
+- **`extract/facts.lua` is a pure aggregator, not a new parser.** Every
+  line of the "Ermittelte Fakten" block reads from an extractor that
+  already existed (`supportinfo`/`stream`/`sla`/`doclinks`/`meta`) — the
+  module's only job is assembling and formatting. A missing signal
+  degrades that one line to "unbekannt" (or the line is skipped
+  entirely for TBox-Build/Api-Core/Custom-Controls when there's no
+  support-info at all) rather than erroring.
 - **`:Case doclinks` normalizes both Tosca version shapes to the doc-link's
   own form before comparing** — a doc URL only ever carries
   `<4-digit-year>.<minor>` (`tosca-2025.1`, never a patch digit), while the

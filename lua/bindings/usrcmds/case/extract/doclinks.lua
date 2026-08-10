@@ -77,14 +77,50 @@ function M.resolve_customer_version(case_dir, meta_tosca_version)
   return nil, nil
 end
 
+---@class Lib.Case.DocLink
+---@field url string
+---@field version string  as it appeared in the URL, e.g. "2025.1"
+---@field file string  relative path within the case dir
+
+--- Every `docs.tricentis.com/tosca-<version>/` link found across a case's
+--- Activity Streams and `Replies/*`, deduplicated by (url, file) — the raw
+--- material both `M.check` (below) and EXTRACTION.md §7's Faktenblock
+--- (`extract.facts`) build on. Factored out of `M.check` so both can reuse
+--- the same scan instead of walking the case twice.
+---@param case_dir string
+---@return Lib.Case.DocLink[]
+function M.all_links(case_dir)
+  local scan_files = {}
+  for _, f in ipairs(collect_recursive.files(case_dir .. "/Research")) do
+    if f:match("_ActivityStream%.md$") then
+      scan_files[#scan_files + 1] = f
+    end
+  end
+  vim.list_extend(scan_files, collect_recursive.files(case_dir .. "/Replies"))
+
+  local out, seen = {}, {}
+  for _, path in ipairs(scan_files) do
+    local content = read(path)
+    if content then
+      for _, link in ipairs(stream.doc_links(content)) do
+        local key = link.url .. "|" .. path
+        if not seen[key] then
+          seen[key] = true
+          out[#out + 1] = { url = link.url, version = link.version, file = path:sub(#case_dir + 2) }
+        end
+      end
+    end
+  end
+  return out
+end
+
 ---@class Lib.Case.DocLinkMismatch
 ---@field url string
 ---@field found_version string  as it appeared in the URL, e.g. "2025.1"
 ---@field file string  relative path within the case dir
 
---- Scan every Activity Stream and `Replies/*` for a versioned
---- `docs.tricentis.com` link, and report any whose version doesn't match
---- the customer's own.
+--- Every link from `M.all_links` whose version doesn't match the
+--- customer's own.
 ---@param case_dir string
 ---@param meta_tosca_version string|nil
 ---@return Lib.Case.DocLinkMismatch[] mismatches
@@ -97,30 +133,10 @@ function M.check(case_dir, meta_tosca_version)
     return mismatches, nil, nil
   end
 
-  local scan_files = {}
-  for _, f in ipairs(collect_recursive.files(case_dir .. "/Research")) do
-    if f:match("_ActivityStream%.md$") then
-      scan_files[#scan_files + 1] = f
-    end
-  end
-  vim.list_extend(scan_files, collect_recursive.files(case_dir .. "/Replies"))
-
-  local seen = {}
-  for _, path in ipairs(scan_files) do
-    local content = read(path)
-    if content then
-      for _, link in ipairs(stream.doc_links(content)) do
-        local norm = M.normalize_version(link.version)
-        local key = link.url .. "|" .. path
-        if norm and norm ~= customer_version and not seen[key] then
-          seen[key] = true
-          mismatches[#mismatches + 1] = {
-            url = link.url,
-            found_version = link.version,
-            file = path:sub(#case_dir + 2),
-          }
-        end
-      end
+  for _, link in ipairs(M.all_links(case_dir)) do
+    local norm = M.normalize_version(link.version)
+    if norm and norm ~= customer_version then
+      mismatches[#mismatches + 1] = { url = link.url, found_version = link.version, file = link.file }
     end
   end
 
