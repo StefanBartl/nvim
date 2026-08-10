@@ -1,10 +1,5 @@
 # `lib.nvim`
 
-## Research
-
-- [ ] plenary: was fehlt um es zu ersetzen? zu optimieren? zu erweitern?
-- [ ] libuv: eigenee, optimierte Implementierung
-
 ## Neue Features implementieren
 
 > alle Cross-Platform!

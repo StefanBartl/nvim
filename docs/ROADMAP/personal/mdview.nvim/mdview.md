@@ -6,7 +6,6 @@
 
 ## Bugs
 
-
 ## FINISH
 
 - Alle features durchgehen und die performance testen
