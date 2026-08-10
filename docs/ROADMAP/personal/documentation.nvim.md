@@ -34,14 +34,6 @@
 
 ### Hoch / größere Vorhaben
 
-- [ ] **Hierarchie: Root-Level aus-/einblenden mit Zoom-Slider**
-      (Aufwand: Hoch — neues UI-Widget + Re-Rooting-Logik im bestehenden
-      Renderer · Nutzen: mittel — Navigationshilfe bei sehr tiefen Bäumen)
-      Root-Level ausblenden können, sodass Level-2-Ordner als neue
-      Root-Ebene erscheinen — als Idee mit einem seitlichen, vertikalen
-      Maßstab-Slider (wie der Zoom-Regler bei Google Maps, `+` oben,
-      `-` unten).
-
 - [ ] **LuaLS' fehlendes „in/outgoing calls"-Feature mitbedienen**
       (Aufwand: Hoch — unklar, ob/wie LuaLS überhaupt eine passende
       Erweiterungsschnittstelle anbietet · Nutzen: spekulativ, potenziell
