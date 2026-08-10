@@ -163,6 +163,22 @@ availability. Test coverage in `docs/TESTS/telemetry_spec.lua` (stubs
 `package.loaded["pdfport"]`, same pattern as `github_stats.nvim`/
 `documentation.nvim`/`markdown.nvim`).
 
+### `scripts/bench_overhead.lua` — instrumentation overhead, not a usercmd (2026-08-10)
+
+Not bound to anything, deliberately — a one-time (or occasional) dev-side
+benchmark (`nvim --headless -l scripts/bench_overhead.lua [--calls=N]`),
+same posture `scripts/telemetry.lua` above already has as a headless
+companion to a real command. Answers docs/ROADMAP.md §3.7 ("measuring
+this module's own instrumentation overhead"): unwrapped baseline vs.
+counting/+timing/+argument profiling/+`call_tree`/+`errors`, timed via
+`vim.uv.hrtime()`. Explicitly not a `:RATelemetry` subcommand or anything
+user-toggleable — that exclusion is what lets it exist without reopening
+§3.5's "not a general profiler" rejection; see the decision record in
+`docs/FINISHED.md` for the full reasoning. Numbers feed
+`lua/runtime-analysis/telemetry/README.md`'s own overhead table, which now
+points back at the script rather than citing bare decimals with nothing
+backing them.
+
 ### Startup attribution is opt-in, via the plugin's own `init` hook
 
 `:RATelemetry startup` reports nothing unless this is in the
