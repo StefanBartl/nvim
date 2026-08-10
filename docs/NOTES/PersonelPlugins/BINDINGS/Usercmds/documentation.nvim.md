@@ -185,3 +185,34 @@ honest substitute, and it is explicitly disclosed (in the client-side code
 comment) as an approximation rather than a byte-perfect file reconstruction —
 which is also the stated reason this ships marked experimental rather than
 promoted to a default-on artifact like `opts.pdf`.
+
+## `opts.mdview` — live preview via mdview.nvim (2026-08-10)
+
+Closed the roadmap's long-standing "mdview.nvim integration — never built"
+item. `install()`-scoped, off by default, same posture as `opts.watch`/
+`opts.callhierarchy`/`opts.diagnostics`: pushes a live Markdown rendering of
+the in-memory IR into an already-running
+[mdview.nvim](https://github.com/StefanBartl/mdview.nvim) session on every
+`on_change`, so a browser tab previewing this root's `overview.md` stays in
+sync with the tree as it changes instead of only with whatever `generate()`
+last wrote to disk.
+
+**No new command, no new binding.** The room a browser tab watches is just
+`<root>/<out_dir>/overview.md`'s absolute path — the same file `generate()`
+already writes — so the whole setup is: open that file, run mdview's own
+`:MDViewStart`. Nothing here adds a usercmd or an autocmd of its own (no
+entry in `Autocmds/documentation.nvim.md` — it subscribes to `handle.
+on_change`, not a Neovim event).
+
+**Soft dependency**, same `pcall`-guarded posture `opts.pdf`'s pdfport.nvim
+already has: silent no-op if mdview.nvim is not installed, and a per-push
+check (`mdview.core.state.is_attached()`/`get_server()`) skips instead of
+queuing a doomed request when installed but no session is attached — not
+turned on in our own `plugins/personal/init.lua` spec, so it stays inert
+here unless explicitly enabled per-project.
+
+Only Tier A of the original roadmap concept (a Markdown render shaped for
+what mdview's `ammonia` sanitizer keeps — no Mermaid, no custom classes)
+shipped; Tier B (a real diagram inside mdview's own tab) needs a protocol
+change on mdview.nvim's own side and stays that repo's decision, not
+documentation.nvim's.
