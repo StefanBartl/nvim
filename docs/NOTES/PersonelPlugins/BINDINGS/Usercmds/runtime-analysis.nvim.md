@@ -16,12 +16,12 @@ moved here from lib.nvim (see [lib.nvim's own Usercmds sheet](./lib.nvim.md)
 for how a *consuming* plugin uses the telemetry module directly, as
 opposed to this file's `:RATelemetry` command surface).
 
-## `:RA {subcommand}` — request/send/yank/cancel/history/env/import/export/provenance/inspect/usage
+## `:RA {subcommand}` — request/send/yank/cancel/history/env/import/export/provenance/inspect/usage/loaded
 
 Built via `lib.nvim.usercmd.composer` — same verb-first shape `:DocMap`/
 `:MDView` use, `<Tab>`-completed (`:RA <Tab>` →
 `request | send | yank | cancel | history | env | import | export |
-provenance | inspect | usage`).
+provenance | inspect | usage | loaded`).
 `:RARequest`/`:RASend` still work too, unchanged: this plugin's oldest,
 most-referenced surface, kept as flat aliases calling the same handlers
 rather than replaced by `:RA`.
@@ -40,6 +40,8 @@ rather than replaced by `:RA`.
 | `:RA provenance <path>` | "Who wrapped this function" — e.g. `:RA provenance vim.notify`. Exact for this plugin's own telemetry wraps (named by namespace), best-effort otherwise (`debug.getinfo` source location). Shipped 2026-08-04 (§5.2). |
 | `:RA inspect <module>` | Walks a live `package.loaded[module]` table — functions (upvalue counts, source location), nested tables (own shape, cycle-safe, `max_depth=3` for readability), metatables, keys that *shadow* a table `__index`. `<Tab>`-completes against `package.loaded`, live. `__index` reported, never called — a pure read. Renders via `lib.nvim.ui.kit.viewer`, `vim.notify` fallback. Shipped 2026-08-04 (§5.1). |
 | `:RA usage` / `:RA usage start` / `:RA usage stop` | Keymap/command press counts — opt-in, local-only, the one feature here recording *what you did* rather than *what the code did*. `start` wraps `vim.keymap.set` (function-callback mappings only) plus a `CmdlineLeave` hook for typed commands; bare `:RA usage` reports; `stop` ends collection. Built on `runtime-analysis.telemetry` itself. Shipped 2026-08-04 (§7.1). |
+| `:RA loaded snapshot <prefix> [name]` | Persists every currently-loaded module under `<prefix>` (itself, or anything beginning `<prefix>.` — same scoping `wrap_loaded(prefix)` uses) as a named snapshot, so it can be read later or from a different process — documentation.nvim's Loaded Analysis panel (`:DocMap serve`) is exactly that. `name` defaults to a timestamp. Always explicit — nothing here ever snapshots on its own. Shipped 2026-08-10 (§5.4). |
+| `:RA loaded snapshots <prefix>` | Lists every saved snapshot for `<prefix>`, newest first. |
 
 Request shape (VS Code REST Client / IntelliJ HTTP Client's own convention,
 deliberately not invented here):
