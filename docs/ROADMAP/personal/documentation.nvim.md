@@ -116,35 +116,51 @@ Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert.
 
 ### Hoch / größere Vorhaben
 
-- [ ] **FEATURES-/BINDINGS-Ordner-Konvention + eigener Tab** (Aufwand:
-      Hoch — Format-Spezifikation, Parser, neuer Tab, Cross-Linking ·
-      Nutzen: hoch — Organisationsklarheit über alle ~30 Repos hinweg)
-      Mehrere eigene Plugins führen bereits `docs/BINDINGS.md`
-      (Autocmds/Usrcmds/Keymaps) und teils schon `docs/FEATURES`-artige
-      Dateien. documentation.nvim könnte daraus eigene Tabs bauen — analog
-      zu den Tabs, die schon heute von `runtime-analysis.nvim` kommen,
-      aber farblich/optisch als „nicht Kern-documentation.nvim" markiert
-      (siehe Quick-Win-Punkt oben zu Fremd-Plugin-Tabs).
-      Konkrete Bausteine:
-      - Ein `/FEATURES`-Ordner, thematisch aufgeteilt (`UI.md`,
-        `PERFORMANCE.md`, `SECURITY.md`, ...), in dem Features eingetragen
-        werden. Mündet ein Feature in ein Binding oder ist Teil davon,
-        wird kurz referenziert und in documentation.nvim zur passenden
-        Bindings-Seite verlinkt.
-      - Ein Feature muss keine sichtbare Aktion sein — z. B. ein
-        spezieller Cache zählt auch.
-      - Erst die Spezifikation für `FEATURES`/`BINDINGS` selbst entwerfen
-        und gegenprüfen, bevor der Parser/Tab gebaut wird — dafür ist
-        `All/Checklists.md` ein brauchbarer Ausgangspunkt (wie man
-        Neovim-Plugins auf technischer Ebene beschreibt, was für
-        Architektur-/Design-Leitlinien wichtig ist). Ein eigener
-        Leitlinien-Tab (Prinzipien/Architektur-Dokumente, nicht nur
-        Features) ist eine denkbare Erweiterung derselben Infrastruktur.
-      - **Spekulativer Folgeschritt, separat zu bewerten, wenn die
-        Basis steht:** beim Hovern über eine Funktion/Table in der
-        Source-/Browser-Ansicht ein Icon zeigen, welche Feature(s) diesen
-        Code-Teil gerade einsetzen — braucht eine Position-zu-Feature-
-        Zuordnung, die es noch nirgends gibt.
+- [x] **FEATURES-/BINDINGS-Ordner-Konvention + eigener Tab** — erledigt
+      2026-08-10. Vorab geprüft statt angenommen: eine Bestandsaufnahme
+      über ~30 eigene Repos zeigte, dass `docs/BINDINGS.md` bereits
+      durchgängig konsistent ist (documentation.nvims eigener Generator),
+      "FEATURES" aber tatsächlich drei unabhängig entstandene,
+      inkompatible Formen hatte (lib.nvim: Essay-Write-ups; markdown.nvim:
+      kompakte Pro-Feature-Metadatenblöcke; color_my_ascii.nvim: volle
+      User-Manuals) — keine der drei war die im Punkt angenommene
+      thematische `UI.md`/`PERFORMANCE.md`-Aufteilung. Format- und
+      Speicherort-Entscheidung dem Nutzer vorgelegt (kompakt-strukturiert
+      nach markdown.nvim-Vorbild, `docs/FEATURES/`-Ordner thematisch
+      aufgeteilt), bevor Parser/Tab gebaut wurden — genau die im Punkt
+      selbst geforderte Reihenfolge. Neu: `core/features.lua` (Parser,
+      gegen markdown.nvims echte `docs/FEATURES/headings.md` verifiziert —
+      ein mehrzeilig umgebrochenes Bullet-Value deckte einen echten
+      Parser-Bug auf, keinen synthetischen), `ir.features`, ein neunter
+      Tab in `core/render/html.lua`, `docs/FEATURES_FORMAT.md` (die
+      Spezifikation selbst — kein festes Metadaten-Vokabular, da
+      markdown.nvims eigene Datei bereits bekannte und Ad-hoc-Keys mischt).
+      Dogfooding: documentation.nvims eigenes `docs/FEATURES/` (4 echte
+      Einträge), Ende-zu-Ende im echten Browser verifiziert.
+      Cross-Linking zu Bindings über normale Markdown-Links in den
+      Metadata-Bullets (`Keymaps:`/`Usercmds:` → `../BINDINGS.md#...`),
+      keine Pro-Zeile-Anchors — GitHub-Markdown ankert nur Überschriften,
+      nicht Tabellenzeilen. Bewusst nicht umgesetzt, wie im Punkt selbst
+      als spekulativ markiert: eigener Leitlinien-Tab, Hover-Icon
+      "welches Feature nutzt diesen Code". Die Fremd-Plugin-Tab-Markierung
+      selbst bleibt weiterhin zurückgestellt (siehe Quick-Win-Punkt oben)
+      — es existiert nach wie vor kein Fremd-Plugin-Tab in der generierten
+      Seite, den man markieren könnte; documentation.nvims eigenes
+      `docs/FEATURES/` ist kein Fremd-Plugin-Inhalt, sondern der
+      analysierte Repo selbst.
+      **Nebenbei gefunden und behoben, betrifft auch den `:DocMap
+      tools`-Punkt oben:** `core/render/html.lua`s `M.render` baut das in
+      die Seite eingebettete IR-JSON unabhängig von
+      `documentation.to_json` (`module_map.json`s Writer) — ein
+      Kommentar-Thread genau in dieser Funktion dokumentierte das bereits,
+      zweimal zuvor an `duplicates`/`docs` passiert. `ir.tools` und
+      `ir.features` waren im gescannten IR und in `module_map.json`
+      vorhanden, fehlten aber in der Seite selbst — das Tools-Analysis-Panel
+      zeigte seit dem Ship "kein Manifest gefunden" unabhängig davon, ob
+      eines existierte. Beim Prüfen von `module_map.json`s tatsächlichen
+      Keys gegen ein echtes Repo aufgefallen, nicht beim bloßen Vertrauen
+      auf `scan_full`. Commit
+      [`3eeb6a8`](https://github.com/StefanBartl/documentation.nvim/commit/3eeb6a8).
 
 - [ ] **Externe Calls/Plugins gezielt sichtbar machen** (Aufwand: Hoch —
       Call-Site-zu-externem-Symbol-Auflösung + GitHub-Fetch-Integration ·
