@@ -70,18 +70,6 @@ Entscheidungsrecord lebt in `documentation.nvim`s eigenem
       wenn `docs/FEATURES/` in echten Repos genutzt wird und sich zeigt,
       ob der Bedarf real ist.
 
-- [ ] **Externe Calls/Plugins gezielt sichtbar machen** (Aufwand: Hoch —
-      Call-Site-zu-externem-Symbol-Auflösung + GitHub-Fetch-Integration ·
-      Nutzen: hoch — „warum ist diese Dependency überhaupt drin" auf
-      einen Blick)
-      In der Dependency-Ansicht einen Unterpunkt, der zeigt, *welche*
-      Funktionen aus einer externen Dependency tatsächlich aufgerufen
-      werden — nicht nur „plenary ist eingebunden", sondern "wegen
-      `plenary.async.run` (2×) und `plenary.job.new` (1×)". Da der externe
-      Source lokal nicht vorliegt: bei Klick auf ein Icon den Code von
-      GitHub nachladen und anzeigen, oder direkt auf die passende
-      GitHub-Seite weiterleiten.
-
 - [ ] **Gewichtete Alternativ-Ansicht des Call-Graphen, eigener Tab**
       (Aufwand: Hoch — neue Rendering-Logik ohne externe Graph-Bibliothek
       · Nutzen: hoch — echtes Analysewerkzeug, kein Spielerei-Feature)
