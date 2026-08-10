@@ -95,11 +95,24 @@ Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert.
       [`67fd074`](https://github.com/StefanBartl/documentation.nvim/commit/67fd074),
       CI grün.
 
-- [ ] **Hierarchie-Ansicht: einzelne Module ein-/ausblenden** (Aufwand:
-      Mittel-Hoch — Änderung an der bestehenden Graph-Rendering-Logik ·
-      Nutzen: mittel)
-      In der Hierarchie einzelne Module gezielt ausblenden/abdunkeln und
-      wieder einblenden können, um große Bäume lesbarer zu machen.
+- [x] **Hierarchie-Ansicht: einzelne Module ein-/ausblenden** — erledigt
+      2026-08-10: Rechtsklick auf eine Hierarchie-Box → "Dim this box" /
+      "Show this box", dazu eine "Hidden (N) — show all"-Pille in der
+      Toolbar, die alle auf einmal wieder einblendet. Bewusst nur
+      Abdunkeln (`opacity:.08` + `pointer-events:none`, dasselbe
+      Mechanismus wie der bestehende Hover-Fokus, nur persistent und pro
+      Box statt transient), kein echtes Entfernen aus dem Layout — ein
+      entfernter Knoten müsste seine Kinder reparentieren oder eine Lücke
+      lassen, unnötige Komplexität für das eigentliche Ziel ("großen Baum
+      weniger unübersichtlich machen"). Die strukturelle Variante bleibt
+      bewusst der separate, größere Punkt weiter unten (Root-Level
+      aus-/einblenden mit Zoom-Slider). State-Design 1:1 von den
+      bestehenden Compare-Marks übernommen (`state.hidden`, eigener
+      `localStorage`-Key, Hash gewinnt beim Laden gegen `localStorage`),
+      aber Hierarchy-scoped statt global. Reiner Client-JS-Change in
+      `core/render/html.lua`, keine IR-/Pipeline-Änderung. Verifiziert im
+      echten Browser gegen das generierte `docs/map/index.html`. Commit
+      [`41db728`](https://github.com/StefanBartl/documentation.nvim/commit/41db728).
 
 ### Hoch / größere Vorhaben
 
