@@ -15,10 +15,10 @@ Three verbs, one line each:
 
 - **`:Case`** — always resolves to exactly **one** case (explicit arg →
   current buffer → `kit.select`): `new`/`info`/`summary`/`notes`/
-  `similar`/`timeline`/`ki`/`ki import`/`copy`/`sync`/`close`/`reassign`/
-  `snow`/`reply check`/…
-- **`:Cases`** — the cross-case querschnitt: `list`/`find`/`grep`/`stale`/
-  `history`/`recent`/`stats`/`doctor`/`normalize`/`linkcheck`/`pickers`/
-  `terminology`/`export`.
+  `similar`/`timeline`/`ki`/`ki import`/`copy`/`sync`/`versions`/
+  `doclinks`/`close`/`reassign`/`snow`/`sla`/`reply check`/…
+- **`:Cases`** — the cross-case querschnitt: `list`/`close`/`find`/`grep`/
+  `stale`/`sla`/`sla report`/`history`/`recent`/`stats`/`doctor`/
+  `normalize`/`linkcheck`/`pickers`/`terminology`/`export`.
 - **`:Tricentis`** — reaches across the whole work repo (`Notes/`,
   `Workflow/`, `Terminologie/`, `Tosca/`), not just `Cases/SAP_Support`.
