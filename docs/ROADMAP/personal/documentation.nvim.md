@@ -6,7 +6,6 @@
   aber alles verfeinert wird, auch mit Profiler und besserer View/UI/Feature-
   Ausstattung.
 - [ ] Root-Level Slider auch frü andere views als hirarchie intereesant?
-- [ ] 16:00 @free chat. hast du alle features in docs/FEATURES eingetragen, docs/vimdci und ggf. C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS updatet udn alles in main comiited und poushed?
 
 ---
 

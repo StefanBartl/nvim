@@ -215,6 +215,11 @@ plugins.add({
       -- `:DocMap full` (LuaLS over the whole tree) and `:DocMap churn` (walks
       -- the repo history) both report into the shared progress registry.
       progress_style = "statusline",
+      -- Experimental (2026-08-10): a "Compiler Explorer" link next to every
+      -- module/function in the generated page, real luac -l -l -p bytecode
+      -- disassembly, not a workaround for Lua. Off by default upstream;
+      -- turned on here explicitly per request.
+      godbolt = true,
     },
     config = function(_, opts)
       require("documentation").setup(opts)

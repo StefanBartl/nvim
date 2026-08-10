@@ -150,3 +150,38 @@ function in `init.lua`). `:checkhealth documentation` gained a line for it
 in the "optional tools" section. Test coverage in
 `TESTS/pdf_artifact_spec.lua`, same stub-`package.loaded["pdfport"]` pattern
 as `github_stats.nvim`/`markdown.nvim`.
+
+## `opts.godbolt` — Compiler Explorer links, experimental (2026-08-10)
+
+Reopened from the roadmap after feedback corrected an earlier wrong premise:
+Compiler Explorer (godbolt.org) does compile Lua — its `lua` compiler class
+runs `luac -l -l -p` and shows real, verbose bytecode disassembly with
+source-line association, a genuine analog to assembly output for a compiled
+language. Off by default upstream (**experimental**, opt-in); set to `true`
+in our own `plugins/personal/init.lua` spec.
+
+Unlike `opts.pdf`, this is `generate()`/`scan_full()`-scoped, not
+`install()`-scoped: it bakes `meta.godbolt` into the generated static HTML
+itself (mirroring the existing render-time-only `meta.out_depth` pattern), so
+the link works for anyone opening the committed `docs/map/index.html` cold —
+no live Neovim session or watch handle required.
+
+**What it does**: a small icon (`godboltTrigger`, modeled on the existing
+`sigTrigger`/`docTrigger` click-icon idiom) appears next to a module heading
+and next to each function in the detail pane, when `opts.godbolt` is on. It
+opens a `https://godbolt.org/clientstate/<base64(JSON)>` link in a new tab,
+pre-loaded with that function's source (or, at module level, that module's
+functions concatenated in declaration order) and the `lua547` compiler
+selected. No new IR field: it reuses `fn.snippet`, already serialized for the
+hover-preview feature and already bounded by `core/snippet.lua`'s own line
+cap.
+
+**"Whole project" loading — investigated, not implemented.** Compiler
+Explorer's multi-file project support is build-system-specific (CMake) and
+scoped to C/C++/Java; there is no Lua-specific multi-file mechanism to hook
+into, so a genuine "load the whole project" feature does not exist on the
+target site to build against. The per-function/per-module snippet link is the
+honest substitute, and it is explicitly disclosed (in the client-side code
+comment) as an approximation rather than a byte-perfect file reconstruction —
+which is also the stated reason this ships marked experimental rather than
+promoted to a default-on artifact like `opts.pdf`.
