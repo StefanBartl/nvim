@@ -32,17 +32,6 @@
 
 ### Hoch / größere Vorhaben
 
-- [ ] **LuaLS' fehlendes „in/outgoing calls"-Feature mitbedienen**
-      (Aufwand: Hoch — unklar, ob/wie LuaLS überhaupt eine passende
-      Erweiterungsschnittstelle anbietet · Nutzen: spekulativ, potenziell
-      hoch)
-      Prüfen, ob documentation.nvims eigene, bereits vorhandene
-      Call-Graph-Daten genutzt werden könnten, um LuaLS' fehlendes
-      Incoming/Outgoing-Calls-Feature zu ergänzen (z. B. über CodeLens
-      oder Hover). Erster Schritt wäre reine Recherche: gibt es dafür
-      überhaupt einen sinnvollen Erweiterungspunkt in LuaLS oder im LSP
-      selbst.
-
 - [ ] **Eigene Findings als `vim.diagnostic` statt nur Quickfix** (Aufwand:
       unklar, erst Recherche nötig · Nutzen: spekulativ, potenziell hoch)
       Die "Linting/LSP-Diagnostic"-Hälfte des allerersten, ganz frühen
