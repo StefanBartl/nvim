@@ -1,115 +1,190 @@
 # `documentation.nvim`
 
-## Long term (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
+## Long term (AN CLAUDE: NOCH NICHT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
-- Eine Desktop/Webapp version, in der auf dieses konmzept aufgesetz wird, aber alles verfeinert wird, auch mit profiler und besserer view/ui/feature ausstattung
-
----
-
-arbeite 
-`C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/documentation.nvim.md`
-ab:
-  - Sortiere die Liste nach Aufwendigkeit und Nutzen
-  - Als erster implementiere Quick wins
-
-## Generell
-
-- [ ] Kann ich,wenn das plugin `documentation.nvim` nutzt, etwas für
-  - meinen Workflow gewinnen
-  - etwas vom Kontext, über das Projekt in dem ich gerade arbeite, dazu verwenden um das Linting, LSP Diagnostic oder vielleicht das fehlende `in/outgoing calls` feature von luals, beisteurn kann das es  (besser) funktionert?
-  Also sprich: uisecase dateen bzw workflow files mit tipps, wie man documentation.nvim effiziehnt nutzt, wie man die aufbereitetein daten inm browser gut nutzt, was man wo findet, was man wie kombinieren kann usw... am besten in die /docs geben
-
-- [ ] Jedes plugin das documentation.nvim verwendet, könnte doch in der eigenen README.md auf die entstandenen files hinweißemn, dass s man die im browser anschauen kann. als auf die art "dieses plugin verewndet documentatiion.nim und du kannst dir die maps /views usw hier anschauen: PFAD/" (wobei ich gerade nicht sicher bin, ob da süheer diesen weg auch geht, denn der übliche weg ist ja glaube ich in der documentation.nvim indtallations spec andzugeben, welche projekte man analyisert haben will; daher würde der punkt wrsch nur begrnezt sinn machen oder?)
-- [ ] In den plugins werden gerade doc regeln implementiert wie: einen docs/FEATURES Folder oder zumindest eine file in der alle features beschreiben werden in einen bestimmten format/regeln. auch docs/BINDINGS wo alle autocmds, usrcmds und keymaps aufgelistet sind. Das kann documentation.nvim nutzen, um eigene tabs dafür anzuzeigen. Das diese, wie jene tabs von runtime-anylsis.nvim nicht direkt von documentation.nvim kommen, sollten sie farblich/icon/form abweichen vom standard; Es wäre gut, eine Spezifikation für FEATURES und BINDINGS zu analysiren und ziu chcken, ob etwas anders gemahct werden soll, um es gut verwenden zu können. Hier könnte man auch ein feature anbieten, dass man sowas macht wie wenn im FEATURES folder ein file drinnen isst die ein features ausführlich beschriebt (und bewirbt), dann bekommt das einen eigenen tab; als idee
-   -->  Regelvideen: In /FEATURES ordner werden thematisch files angelget wie UI, PERFORMANCE, SECURITY oder XY, dort werden die freatures eingetreagen. Wenn ein Feature in ein Bindfing mündet oder teil davopn ist, dann wird das kurz refreneziert (kann dan velrinkt werden in documentaiton.nvim zur entsprechenden Bindings page)
-   --> Ein Feature kann auch zb, ein spezieller cache sein oä..
-   --> Dasd weäre weiterfednkend auch desweghen cool, denn dann könnte man als zweiteres zusatzfeature im source code in der broiwser view, wenn man über eine funkltin oder table hovert oder in einer trefferliste findet, dann kann es dort wien wetieres icon geben, windem steht in welchen feratures der teil gerade eingesetzt wird.
-
-## Neue Features
-
-- [ ] lib.nvim nvim.deps als tab einbinden
-- [ ] Spezielle tabs die vonm anderenr plugins komen wie runtime-anylsis.nvim oder lib.nvim.nvim.deps, dann werden die ja in der tablesite angheeikgt, wenn siue nxht isntalliert sind, dann ncht. es wäre suuper, wenn sie isntlliert ud in dedr tagleiste sind, das sich die tab iccons ein wenig vonden normalen abheben, leichtende bg odeer, hl und so...
-- [ ] In der hriachie level auslednen/einblenden also zb root level ausbelnden sodass die level 2 folder als root ebeene dargestellt weren,.. viellei cht muit : an der seite ein so ein horizontaler strich it veikalen linien wie bnei einen masstatb, dass man poft hat bei google maps usw.. um den zoom level z bestmmten, da gibt es dann ein + zeichen bei top und ein minus bbei botomm oider so öhnlich
-- [ ] hirachie view:einzelne module auslenden/verdunkeln und einblenden
-- [ ] Alternative ansichten von modulen: view wie hierarchie, aber man ann verschiednee "daten" oder "filter auf da modul view legen wie zb welche calls macht das modul, dan weren alle module die calls empfangen rundherum eingeblendet und verbunden mit pfelen und gewuchtet darewtekltllt: ciele calls dickerer streich oder so ähnlch. und dda vercshiedne varianten davon auswählbar machen brainstorm, welche views man mache kölnte mit den daten ,  ich wwürde einen eigenen tab dafür machen nicht im hirarchie tab
-- [ ] einen tab, indem der source code des projekts in https://godbolt.org/ geladen ist; bei den modulen / funktinen / tables usw... ein icon, bei dem einpopup aufgeht in der der code in  geladen ist ( wenn das sinn macht) oder zumimdnest ein icon, wenn man den klickt schickt er den funkltine/table usw.. in desas compiler explorer tab
-- [ ] Neues Feature: Erkennung von externen calls/plugins: zb man hat plenary eingebunfdne, und zwar called man zweimal eine funklti dort, auch pdfport.nvim wird mit einer api calöl called; jetzt wäre es super, wen es einen subpunkt in der dependecy ansicht gibt, dercalls zu plugin exzernen cpde aufzeigt, damit man dann agleich sieht: aha, plenary ist eignebunden wegen deieser zwei funktionen;
-  - [ ] Erweiterung: Externer source code liegt ja nicht vor, daher mus er via github repo gezigt werden, das könnte man so machen, wenn man auf eine externe funkltnie / table oder was auch immer zugreift, diese funkltnin irgendo in documentation.nvim gezeigt wird, dass man wenn man auf einen icon klickt den source code von github fetched und zeigt bzw auch gleich auf github weiterleiten kann auf die korrekte page; so kann man den externen source schenll finden;
-- [ ] Einblick in daten, die das plugin persistnetnt schreibt, normalerweiße in stdpath('data') usw.. aber schön aufbereitet; Voher noch abklärung, ob es besser in ruintima-analyssis.nvm als feature passen würde, wenn ja, dann dorthin in die roadmap schreiben; Addon: selbst wenn es in runtime-analysis.nvim besser passen würde, kann es dennoch einen eigenen tab im runtime tab bekomen;
-- [ ] `C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Checklists.md` kann als Datenpunkt hilfreich sein: Für `docs/FEATURES` Listen Integrität: Hier kann etwas gelernt werden, wie njvim plugins beschrieben werden können auf der technischen ebene, was wichtig ist für devs evetntuell, für Detailbeschreibungen von Implementierten KOnzepten/Architektur/Grundsätzen - Dafür kännte es einen eigenen bereich/ta geben, in der dokuemnjte eingelesen weren, die wie features es schon gibt hier eben leitlininen und weiters sarcvhitektonische / design technische leitlinienn
+- Eine Desktop/Webapp-Version, in der auf dieses Konzept aufgesetzt wird,
+  aber alles verfeinert wird, auch mit Profiler und besserer View/UI/Feature-
+  Ausstattung.
 
 ---
 
-## Aus `MyPlugin-Notes/LuaAnnotzGen/` (Analyse 2026-08-08)
+## Taskliste — sortiert nach Aufwand, Quick Wins zuerst
 
-Quelle: `E:/repos/Notes/MyPlugin-Notes/LuaAnnotzGen/`
-(`Beschreibung.md`, `Architektur.md`, `Ideas.md`, `AI.md`).
+Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert.
 
-Das Konzept beschreibt ein eigenständiges Go-CLI (`annotgen`), das Lua-Dateien
-scannt und **Modul-Header schreibt**: `@module`, `@brief`, `@desc`, dazu
-`@class`/`@field`-Blöcke aus den gefundenen `M.<name>`-Exporten — unter
-Übernahme bereits vorhandener Annotationen an den Exporten selbst.
+### Quick Wins
 
-**Warum das hierher gehört und nicht in ein neues Repo:** `documentation.nvim`
-macht heute exakt die Gegenrichtung. Es *liest* LuaCATS-Annotationen
-(`core/luals.lua` wertet `lua-language-server --doc` aus, inkl. `@class`/`@alias`
-samt Feldern) und misst deren Vollständigkeit (`core/doccoverage.lua`,
-`core/check.lua`, `:DocMap check`). Was fehlt, ist der Schreibpfad: Es kann
-sagen „hier fehlt ein Header", aber ihn nicht erzeugen.
+- [x] **`@type`-vs-`@class`-Befund als Lint-Regel** — erledigt 2026-08-10:
+      neuer Check `type-vs-class` (`warn`) in `core/check.lua`, liest den
+      bereits vorhandenen Header-Scan (`scan.parse_header`), feuert nur,
+      wenn dem Modul-Table tatsächlich Felder zugewiesen wurden. Eigene
+      Testdatei `TESTS/check_type_vs_class_spec.lua`, in
+      `docs/PIPELINE.md`, `README.md`, `doc/documentation.txt` und
+      `docs/MULTILANG.md`s Check-Zählung dokumentiert. Commit `c2bec69`.
 
-Ein separates Go-Binary wäre zusätzlich ein Rückschritt gegenüber dem
-Ist-Zustand — Scanner, Sprach-Adapter (`core/lang/{lua,js,ts,tsx,ecma}.lua`),
-Symbol-Modell (`core/symbols.lua`, `core/functions.lua`) und IR existieren
-bereits in Lua.
+- [x] **Workflow-/Usecase-Doku für documentation.nvim selbst** — erledigt
+      2026-08-10: neues `docs/WORKFLOW.md`, in README verlinkt. Konkret:
+      Hierarchy-vs-Analysis, Churn+Impact vor Refactors, die
+      Telemetry-Join-Badge-Tabelle (✕/!/○/blank) inkl. der Falle, die sie
+      verhindert, Trail als Session-Tool vs. benannte gespeicherte Trails,
+      `f` vs. `/` vs. `tag_files` über Repos hinweg. Commit `a4d8417`.
 
- KI-Implementierung mögich?
+- [x] **Erweiterte Annotationen: `@see`, `@generic`, `@deprecated`** —
+      geprüft 2026-08-10: alle drei sind bereits vollständig implementiert,
+      nicht nur geparst. `@see` wird gegen den echten Modul-/Funktionsindex
+      validiert (`dead-see-target`-Check, `check_see_targets`) und im
+      Browser als klickbarer Link gerendert. `@deprecated` hat eine eigene
+      Badge, einen eigenen Analysis-Index-Eintrag und wird im
+      Annotation-Popup mit dem Migrationshinweis angezeigt. `@generic`
+      wird geparst und in die Funktionssignatur übernommen. Die
+      eigentlich offene Idee dahinter — `@see`-Verlinkung automatisch
+      *generieren* lassen statt von Hand zu pflegen — ist ein anderes,
+      deutlich größeres Feature (Ähnlichkeits-/Bezugs-Heuristik zwischen
+      Funktionen) und kein Quick Win; nicht umgesetzt, aber als bewusst
+      unterschiedene, offene Idee hier festgehalten.
 
-### 1. `:DocMap annotate` — Header generieren statt nur bemängeln
+- [ ] **Sichtbare Kennzeichnung von Fremd-Plugin-Modi** (Aufwand-Neubewertung
+      2026-08-10: **nicht Quick Win** — Mittel, da neue UI-Infrastruktur
+      nötig · Nutzen: niedrig-mittel)
+      Geprüft: die Prämisse "Tabs" trifft die aktuelle Architektur nicht.
+      Telemetry/Loaded sind **`:DocBrowse`-Modi** (Terminal-Float, `1`–`9`
+      im Mode-Switcher), keine HTML-Tabs der generierten Seite — dort
+      existieren aktuell überhaupt keine Fremd-Plugin-Tabs. Die
+      Statuszeile, die `[telemetry]`/`[loaded]` anzeigt
+      (`browse/view.lua`), ist reiner Text ohne jede
+      Highlight-/Extmark-Infrastruktur — eine visuelle Abhebung bräuchte
+      erst ein neues Highlighting-Konzept für die Statuszeile, kein
+      CSS-Detail. Zurückgestellt zu Mittel, bis sich das lohnt.
 
-- [ ] Für Dateien ohne Modul-Header: `@module 'pfad.zum.modul'` aus dem
-      Dateipfad ableiten, `@brief`/`@desc` als leere Platzhalter setzen.
-- [ ] `@field`-Zeilen aus den `M.<name>`-Exporten erzeugen; ein am Export
-      bereits stehender `@class`-Block wird **referenziert**
-      (`---@field rate_limits RateLimits`), nicht dupliziert.
-- [ ] Alles unterhalb von `local M = {}` bleibt unangetastet — das ist die
-      wichtigste Regel des Konzepts.
-- [ ] Flags analog zum CLI-Entwurf: `--dry-run` (nur anzeigen), Schreiben in die
-      Datei oder in `*.annot.lua` daneben.
-- [ ] Die Kandidatenliste kommt gratis aus `doccoverage`/`check`.
+- [x] **README-Hinweis auf die generierte Map, pro Plugin** — erledigt
+      2026-08-10, Prämisse dabei korrigiert: die Annahme "Nutzen: niedrig,
+      solange Pages fehlt" galt nur für `index.html` (echtes HTML, GitHub
+      rendert das als Quelltext, nicht als Seite). `docs/map/overview.md`
+      dagegen rendert schon heute direkt im GitHub-Repo-View — kein Pages
+      nötig, kein Warten auf `publish_map.sh`. Konvention jetzt in
+      `documentation.nvim`s `docs/REUSE.md` ("Linking to your own map from
+      your README") dokumentiert und in beiden aktiven Repos umgesetzt:
+      documentation.nvim ([`da4b351`](https://github.com/StefanBartl/documentation.nvim/commit/da4b351))
+      und runtime-analysis.nvim ([`e5768b4`](https://github.com/StefanBartl/runtime-analysis.nvim/commit/e5768b4))
+      verlinken jeweils ihre eigene `overview.md`. Auf die übrigen ~30
+      Repos noch nicht ausgerollt — die Konvention steht jetzt, das
+      Nachziehen pro Repo ist mechanisch und kein eigener Punkt hier wert.
 
-**Aufwand:** Mittel
-**Nutzen:** hoch — schliesst die Lücke zwischen „Coverage-Report" und
-„Coverage-Fix" und trifft die eigenen ~30 Repos direkt.
+- [x] **Persistente Laufzeitdaten eines Plugins einsehbar machen — Triage,
+      nicht Umsetzung hier** — erledigt 2026-08-10: als Kandidat in
+      `runtime-analysis.nvim`s eigenes `docs/IDEAS.md` §3.2 (Runtime-Tab)
+      verschoben, mit Notiz, dass ein eigener Tab dafür trotzdem hier
+      denkbar bleibt, sobald der Runtime-Tab existiert.
 
-### 2. Der `@type`-vs-`@class`-Befund als Lint-Regel
+### Mittel
 
-`Beschreibung.md` enthält eine Erkenntnis, die mehr wert ist als das Tool selbst:
+- [x] **`:DocMap annotate` — Modul-Header generieren statt nur
+      bemängeln** — erledigt 2026-08-10, Prämisse an einer Stelle
+      korrigiert: `@brief`/`@desc` sind laut `docs/ANNOTATION_TAGS.md`
+      selbst nur ein Fallback ("prefer plain prose"), also generiert der
+      Header stattdessen eine `TODO`-Prosa-Zeile, keine erfundenen Tags.
+      `@field`-Referenzierung eines bereits vorhandenen `@class`-Blocks
+      funktioniert wie gedacht (`---@field rate_limits t.x.RateLimits`
+      statt `table`), ebenso `fun(...)`-Rekonstruktion aus bereits
+      geparsten `@param`/`@return` für Funktionsfelder. Neu:
+      `core/annotate.lua` (Kernlogik), `bindings/usrcmds/annotate.lua`
+      (`:DocMap annotate [--write|--sidecar]`, Default reine Vorschau in
+      einem Scratch-Buffer, nichts wird ungefragt geschrieben), Tests mit
+      echten Fixture-Dateien (`TESTS/annotate_spec.lua`), Doku in
+      `docs/COMMANDS.md`/README/vimdoc. Commit
+      [`67fd074`](https://github.com/StefanBartl/documentation.nvim/commit/67fd074),
+      CI grün.
 
-> `---@type Foo` an einem `local M = {}`, dem danach Felder zugewiesen werden,
-> erzeugt in LuaLS `missing-fields` und „fields cannot be injected". Richtig ist
-> `---@class M : FooDef` plus ein `@see` auf die Typdatei.
+- [ ] **Hierarchie-Ansicht: einzelne Module ein-/ausblenden** (Aufwand:
+      Mittel-Hoch — Änderung an der bestehenden Graph-Rendering-Logik ·
+      Nutzen: mittel)
+      In der Hierarchie einzelne Module gezielt ausblenden/abdunkeln und
+      wieder einblenden können, um große Bäume lesbarer zu machen.
 
-Das ist mechanisch prüfbar und kein Einzelfall.
+### Hoch / größere Vorhaben
 
-- [ ] Als Check in `core/check.lua` aufnehmen: `@type` an einem Modul-Table, dem
-      später Felder zugewiesen werden → Befund samt Fix-Vorschlag.
-- [ ] Falls es hier keinen passenden Ort gibt, gehört die Regel in den Lint-Teil
-      der eigenen Checklisten — aber sie darf nicht in einer Notizdatei versanden.
+- [ ] **FEATURES-/BINDINGS-Ordner-Konvention + eigener Tab** (Aufwand:
+      Hoch — Format-Spezifikation, Parser, neuer Tab, Cross-Linking ·
+      Nutzen: hoch — Organisationsklarheit über alle ~30 Repos hinweg)
+      Mehrere eigene Plugins führen bereits `docs/BINDINGS.md`
+      (Autocmds/Usrcmds/Keymaps) und teils schon `docs/FEATURES`-artige
+      Dateien. documentation.nvim könnte daraus eigene Tabs bauen — analog
+      zu den Tabs, die schon heute von `runtime-analysis.nvim` kommen,
+      aber farblich/optisch als „nicht Kern-documentation.nvim" markiert
+      (siehe Quick-Win-Punkt oben zu Fremd-Plugin-Tabs).
+      Konkrete Bausteine:
+      - Ein `/FEATURES`-Ordner, thematisch aufgeteilt (`UI.md`,
+        `PERFORMANCE.md`, `SECURITY.md`, ...), in dem Features eingetragen
+        werden. Mündet ein Feature in ein Binding oder ist Teil davon,
+        wird kurz referenziert und in documentation.nvim zur passenden
+        Bindings-Seite verlinkt.
+      - Ein Feature muss keine sichtbare Aktion sein — z. B. ein
+        spezieller Cache zählt auch.
+      - Erst die Spezifikation für `FEATURES`/`BINDINGS` selbst entwerfen
+        und gegenprüfen, bevor der Parser/Tab gebaut wird — dafür ist
+        `All/Checklists.md` ein brauchbarer Ausgangspunkt (wie man
+        Neovim-Plugins auf technischer Ebene beschreibt, was für
+        Architektur-/Design-Leitlinien wichtig ist). Ein eigener
+        Leitlinien-Tab (Prinzipien/Architektur-Dokumente, nicht nur
+        Features) ist eine denkbare Erweiterung derselben Infrastruktur.
+      - **Spekulativer Folgeschritt, separat zu bewerten, wenn die
+        Basis steht:** beim Hovern über eine Funktion/Table in der
+        Source-/Browser-Ansicht ein Icon zeigen, welche Feature(s) diesen
+        Code-Teil gerade einsetzen — braucht eine Position-zu-Feature-
+        Zuordnung, die es noch nirgends gibt.
 
-**Aufwand:** Quick Win
-**Nutzen:** hoch — verhindert eine Fehlerklasse, die man sonst pro Repo einmal
-neu entdeckt.
+- [ ] **Externe Calls/Plugins gezielt sichtbar machen** (Aufwand: Hoch —
+      Call-Site-zu-externem-Symbol-Auflösung + GitHub-Fetch-Integration ·
+      Nutzen: hoch — „warum ist diese Dependency überhaupt drin" auf
+      einen Blick)
+      In der Dependency-Ansicht einen Unterpunkt, der zeigt, *welche*
+      Funktionen aus einer externen Dependency tatsächlich aufgerufen
+      werden — nicht nur „plenary ist eingebunden", sondern "wegen
+      `plenary.async.run` (2×) und `plenary.job.new` (1×)". Da der externe
+      Source lokal nicht vorliegt: bei Klick auf ein Icon den Code von
+      GitHub nachladen und anzeigen, oder direkt auf die passende
+      GitHub-Seite weiterleiten.
 
-### 3. Erweiterte Annotationen
+- [ ] **Gewichtete Alternativ-Ansicht des Call-Graphen, eigener Tab**
+      (Aufwand: Hoch — neue Rendering-Logik ohne externe Graph-Bibliothek
+      · Nutzen: hoch — echtes Analysewerkzeug, kein Spielerei-Feature)
+      Wie die Hierarchie, aber mit wählbaren Datenfiltern auf der
+      Modul-Ansicht: z. B. welche Calls macht dieses Modul — alle
+      Module, die diese Calls empfangen, werden ringsherum eingeblendet
+      und mit gewichteten Pfeilen verbunden (mehr Calls = dickerer
+      Strich). Mehrere Varianten denkbar, verdient einen eigenen Tab statt
+      eine Erweiterung des bestehenden Hierarchy-Tabs.
 
-Aus `Ideas.md`: `---@see` (Querverweise), `---@generic`, `---@deprecated`.
+- [ ] **Hierarchie: Root-Level aus-/einblenden mit Zoom-Slider**
+      (Aufwand: Hoch — neues UI-Widget + Re-Rooting-Logik im bestehenden
+      Renderer · Nutzen: mittel — Navigationshilfe bei sehr tiefen Bäumen)
+      Root-Level ausblenden können, sodass Level-2-Ordner als neue
+      Root-Ebene erscheinen — als Idee mit einem seitlichen, vertikalen
+      Maßstab-Slider (wie der Zoom-Regler bei Google Maps, `+` oben,
+      `-` unten).
 
-`@see` ist der interessante Fall: In `debugging.nvim` war „`@see`-Verlinkung"
-ein eigenes (inzwischen erledigtes) Roadmap-Item — hier ginge es darum, die
-Verlinkung generieren zu lassen statt sie von Hand zu pflegen.
+- [ ] **LuaLS' fehlendes „in/outgoing calls"-Feature mitbedienen**
+      (Aufwand: Hoch — unklar, ob/wie LuaLS überhaupt eine passende
+      Erweiterungsschnittstelle anbietet · Nutzen: spekulativ, potenziell
+      hoch)
+      Prüfen, ob documentation.nvims eigene, bereits vorhandene
+      Call-Graph-Daten genutzt werden könnten, um LuaLS' fehlendes
+      Incoming/Outgoing-Calls-Feature zu ergänzen (z. B. über CodeLens
+      oder Hover). Erster Schritt wäre reine Recherche: gibt es dafür
+      überhaupt einen sinnvollen Erweiterungspunkt in LuaLS oder im LSP
+      selbst.
 
-**Aufwand:** Quick Win je Annotation
-**Nutzen:** mittel.
-Sollten eigenkreationen notwendig werden, bin ich gerundsätzlkich offen dafür wenn sie nicht zwingend für kernfeatures notwenidig gemacht werden
+### Fragwürdig — eher nicht umsetzen
 
-
+- [ ] **Compiler-Explorer-(godbolt.org)-Tab** (Aufwand: Mittel — iframe/
+      Link-Einbindung ist technisch nicht schwer · Nutzen: sehr niedrig,
+      Prämisse fraglich)
+      Idee war ein Tab, der den Projekt-Source in godbolt.org lädt, mit
+      einem Icon an Modulen/Funktionen/Tables, das ein Popup mit dem dort
+      geladenen Code öffnet. Compiler Explorer ist für **kompilierte**
+      Sprachen gedacht — sein Wert liegt im Vergleich von Quelltext gegen
+      erzeugten Assembler-Code. Für Lua (interpretiert, kein
+      Assembler-Output, den man sinnvoll inspizieren würde) fehlt der
+      eigentliche Nutzen der Seite fast komplett. Nur wieder aufgreifen,
+      falls sich ein konkreter, anderer Anwendungsfall für die Integration
+      findet, der nicht auf „Assembler ansehen" beruht.

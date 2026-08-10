@@ -60,6 +60,8 @@ offers action names only, instead of blocking on a full scan.
 | `:DocMap diff [ref]` | What changed about the tree's *shape* since `ref` (default HEAD) | no |
 | `:DocMap impact [ref]` | Where changed *lines* radiate to: functions → callers → quickfix | no |
 | `:DocMap churn [range]` | Churn × complexity, hottest first → quickfix | no |
+| `:DocMap plugins` | Every recognized lazy.nvim spec in the tree → quickfix, sorted by repo | no |
+| `:DocMap tools` | This repo's own `lib.nvim.deps` manifest (`docs/install.json`/`docs/INSTALL.md`) → quickfix. Declared only — never a live "is it installed here" probe. Shipped 2026-08-10. | no |
 | `:DocMap serve [stop]` | Local map server on `127.0.0.1`, OS-assigned port. Enables the History tab. | no |
 | `:DocMap helptags` | Regenerate this plugin's own `doc/tags` | writes `doc/tags` |
 
