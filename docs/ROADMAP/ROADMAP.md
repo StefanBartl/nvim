@@ -1,7 +1,9 @@
 # Roadmap
 
-casedesk aworkflow optimeiren: Ich eröffne einen caseso: ich kopiere den aactivity stream in die zwischenablage, sdann :Case new, dort gebe ich daten ewie name, tile usw wien, dann legt es automatisch folder usw.. an. es soll ja auch ein ki prompt vorberieten, ibn dieser  soll acuh enthalten sein:
-Datenpunkte für activity wstream analyse: welche attachments hat der customer beretis attached? Wenn KI enabled,dann checklisten wie "was haebn wir den cuistomer vorgeschlagen soller achen" und " was hat er zurückgemeldetund wie gemacht";
+- [ ] Hrpoon persist paths für UI: Die Checkllists in WKDBpopks-Lua sowie wkdook-neovim als persist paths hinzufügen für nivhgt workstation, alle pfade chekcen ob sie existeren in persist paths
+
+- [ ] casedesk aworkflow optimeiren: Ich eröffne einen caseso: ich kopiere den aactivity stream in die zwischenablage, sdann :Case new, dort gebe ich daten ewie name, tile usw wien, dann legt es automatisch folder usw.. an. es soll ja auch ein ki prompt vorberieten, ibn dieser  soll acuh enthalten sein:
+  - [ ] Datenpunkte für activity wstream analyse: welche attachments hat der customer beretis attached? Wenn KI enabled,dann checklisten wie "was haebn wir den cuistomer vorgeschlagen soller achen" und " was hat er zurückgemeldetund wie gemacht";
 
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
@@ -13,6 +15,19 @@ Datenpunkte für activity wstream analyse: welche attachments hat der customer b
 - [ ] `learn-cli.nvim` vielleicht doch ?
 - [ ] E:\repos\Notes\ProjectIdeas: Durchgehen und anlysieren lassen
 - [ ] finish & checkists & review in nvim config durchjagen
+
+1. `leader wq`: Alle issues lösen
+  1. dass was wq macht in einem `lib.nvim / lib.nvim.ui` ausgeben
+2. `/wkdoptions`
+  1. UI Linemarker gehört README
+  2. `wkdoptions` mit `options.lua` verheiraten (vielleicht als default_options)
+3. `nvim/init.lua` durchgehen
+4. [ ] Funktionen/Module identifizieren, die man mit FFI/C performanter machen könnte
+  - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
+
+- `z` - zoxide soll $REPOS_DIR auflösen können; Powershell soll alle meine repo ordner auflösen können. also wkdbooks -> cd $REPOS_DIR/wkdbooks usw..
+
+---
 
 ## Implementieren
 
@@ -50,15 +65,3 @@ Datenpunkte für activity wstream analyse: welche attachments hat der customer b
 
 ---
 
-## High
-
-6. `leader wq`: Alle issues lösen
-  1. dass was wq macht in einem `lib.nvim / lib.nvim.ui` ausgeben
-7. `/wkdoptions`
-  1. UI Linemarker gehört README
-  2. `wkdoptions` mit `options.lua` verheiraten (vielleicht als default_options)
-8. `nvim/init.lua` durchgehen
-9. [ ] Funktionen/Module identifizieren, die man mit FFI/C performanter machen könnte
-  - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
-
----

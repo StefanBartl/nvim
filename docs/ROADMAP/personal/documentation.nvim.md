@@ -2,19 +2,14 @@
 
 ## Long term (AN CLAUDE: NOCH NICHT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
-- Eine Desktop/Webapp-Version, in der auf dieses Konzept aufgesetzt wird,
+- [ ] Eine Desktop/Webapp-Version, in der auf dieses Konzept aufgesetzt wird,
   aber alles verfeinert wird, auch mit Profiler und besserer View/UI/Feature-
   Ausstattung.
+- [ ] Root-Level Slider auch frü andere views als hirarchie intereesant?
 
 ---
 
 ## Taskliste — sortiert nach Aufwand, Quick Wins zuerst
-
-Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert. Erledigte
-Punkte werden ersatzlos entfernt, sobald sie umgesetzt sind — der
-Entscheidungsrecord lebt in `documentation.nvim`s eigenem
-`docs/ROADMAP/FEATURES.md`, echte Features zusätzlich in dessen
-`docs/FEATURES/`.
 
 ### Quick Wins
 
@@ -30,6 +25,10 @@ Entscheidungsrecord lebt in `documentation.nvim`s eigenem
       Highlight-/Extmark-Infrastruktur — eine visuelle Abhebung bräuchte
       erst ein neues Highlighting-Konzept für die Statuszeile, kein
       CSS-Detail. Zurückgestellt zu Mittel, bis sich das lohnt.
+
+    > Feedback: Es geht mir darum, dass wir zb. einen deps tab haben mit dependecys so haben wir auch einen tab für runtime anaylse.nvim feature(s) als auch für vl andere; diese soll en dann idealweriße in der tab design ein wenig hervorstehcen, weil es ja azch tabs /submenus sind, die nur sichtbar sind, wenn auch diese plugins isntalliert sind
+
+- [ ] Analyse, welche usrcmds für reports alle ein pdfport.nvim create pdf modul implementieren könnten, also zb.: call graph oder deps tab oer.. bzw. generell bei den tabs bei denn es sinn macht, einen icon it "erstrelle pdf" implementieren (frage ob man da pdfport.nvim brauchent, wenn man eh schon im browser ist)
 
 ### Mittel
 

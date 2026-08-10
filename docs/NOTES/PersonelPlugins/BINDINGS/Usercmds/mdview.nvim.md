@@ -29,7 +29,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 | Command | Effect |
 | --- | --- |
 | `:MDView theme [name]` | Switch preview theme (tab-completed) |
-| `:MDView cursor [line\|caret\|section\|off]` | Cursor marker mode in the preview |
+| `:MDView cursor [line\|caret\|section\|off\|toggle]` | Cursor marker mode in the preview; `toggle` flips section on/off specifically |
 | `:MDView sync [action]` | Pause/resume nvim→browser scroll sync (paused ⇒ "⏸ paused" pill in the tab) |
 | `:MDView zoom [+\|-\|reset\|<factor>]` | Preview font-size zoom |
 | `:MDView reveal [action]` | Reveal/hide ```private blocks |
@@ -166,3 +166,21 @@ uses its `spawn`/`resolve_target`. Rationale preserved in
   stayed `blankLines` (camelCase) even though the config field is
   `preserve_blank_lines` — matches the existing `cursor_marker` → `cursor`
   pattern (config name and wire key aren't required to match).
+- **Bug found + fixed: cursor marker stopped updating after switching
+  buffers a few times, even after `:MDView cursor off` + `on` again.**
+  `scroll_sync.lua` always sent the outgoing scroll/cursor ping to the
+  *buffer's own path*, but `live_push`/`buffer_switch`/`control.lua` all
+  route to `state.preview_key` (the room the open tab actually watches) in
+  `browser.behavior = "reuse"` (the default). After a buffer switch the ping
+  landed in a room nobody was listening to, so the marker (which "rides the
+  scroll-sync ping") silently went stale — toggling the mode didn't help
+  because `control.lua` routed correctly, the mode DID change, it just never
+  got a position ping to draw. Extracted the shared routing rule into
+  `lua/mdview/helper/target_key.lua` (this was the third independent inline
+  copy of the same logic — exactly why it drifted) and pointed `scroll_sync`,
+  `live_push`, and `control.lua` at it. Repro'd and verified with a script
+  that stubs `ws_client.send_scroll`/`send_control` and asserts the room key
+  before/after a buffer switch; regression test added
+  (`tests/nvim/scroll_sync_routing_spec.lua`, mirrors `buffer_switch_spec.lua`).
+  Also added `:MDView cursor toggle` (flips `section` on/off specifically) per
+  request.
