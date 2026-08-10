@@ -35,24 +35,6 @@ Entscheidungsrecord lebt in `documentation.nvim`s eigenem
 
 ### Hoch / größere Vorhaben
 
-- [ ] **Leitlinien-Tab (Architektur-/Prinzipien-Dokumente)** (Aufwand: Mittel
-      — dieselbe Infrastruktur wie der Features-Tab, nur mit anderem
-      Quellordner · Nutzen: mittel, projektspezifisch)
-      Aus dem ursprünglichen FEATURES-Punkt herausgelöst, wo es nur als
-      "denkbare Erweiterung derselben Infrastruktur" erwähnt, aber nie als
-      eigene Aufgabe festgehalten war. Ein eigener Tab, der
-      Architektur-/Design-Leitliniendokumente einliest — nicht "was macht
-      das Plugin" (das ist der Features-Tab), sondern "wie/warum ist es so
-      gebaut". Für dieses Repo z. B. genau die Dokumente unter
-      `docs/ROADMAP/{ARCH_AND_CODING,Zentral-Prinzipien}.md`, wie sie
-      mehrere eigene Plugins bereits führen (siehe `All/Checklists.md`).
-      Technisch dieselbe Parser-/Tab-Infrastruktur wie `core/features.lua`/
-      der Features-Tab, nur auf einen anderen Quellordner (z. B.
-      `docs/PRINCIPLES/`) angewendet — `docs/FEATURES_FORMAT.md`s Schema
-      ist wahrscheinlich unverändert wiederverwendbar. Aufwand entsprechend
-      niedriger als beim ursprünglichen FEATURES-Punkt, da Format- und
-      Parser-Fragen bereits beantwortet sind.
-
 - [ ] **Einzelnes Feature bekommt eigenen Tab statt nur Karte im
       Features-Tab** (Aufwand: Mittel — eine Aufwertungsregel plus
       dynamisches Tab-Registrieren · Nutzen: niedrig-mittel, für sehr
