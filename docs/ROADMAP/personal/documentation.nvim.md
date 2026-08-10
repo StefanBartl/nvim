@@ -32,23 +32,6 @@
 
 ### Hoch / größere Vorhaben
 
-- [ ] **Eigene Findings als `vim.diagnostic` statt nur Quickfix** (Aufwand:
-      unklar, erst Recherche nötig · Nutzen: spekulativ, potenziell hoch)
-      Die "Linting/LSP-Diagnostic"-Hälfte des allerersten, ganz frühen
-      "Generell"-Punktes zu diesem Repo — bisher nirgends als eigene
-      Aufgabe festgehalten, verwandt mit dem LuaLS-in/outgoing-calls-Punkt
-      oben, aber eigenständig. Könnten documentation.nvims eigene, bereits
-      berechnete Daten — Drift-Findings (`check.lua`), der Call-/
-      Require-Graph, Coverage — nicht nur als |quickfix| dienen, sondern
-      direkt als native `vim.diagnostic`-Einträge im Buffer erscheinen
-      (z. B. `missing-summary`/`dead-see-target` als echte Diagnostic statt
-      nur im `:DocMap check`-Quickfix)? Erster Schritt auch hier reine
-      Recherche: wo würde ein `vim.diagnostic.set()`-Aufruf aus den
-      bestehenden `Documentation.Finding[]`-Daten am saubersten sitzen —
-      vermutlich ein neuer, optionaler Baustein in `bindings/`, nicht
-      `core/`, damit die Kernregel "Pipeline läuft ohne Editor" (siehe
-      `docs/PORTABILITY.md`) nicht verletzt wird.
-
 ### Fragwürdig — eher nicht umsetzen
 
 - [ ] **Compiler-Explorer-(godbolt.org)-Tab** (Aufwand: Mittel — iframe/
