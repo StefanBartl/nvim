@@ -35,23 +35,6 @@ Entscheidungsrecord lebt in `documentation.nvim`s eigenem
 
 ### Hoch / größere Vorhaben
 
-- [ ] **Einzelnes Feature bekommt eigenen Tab statt nur Karte im
-      Features-Tab** (Aufwand: Mittel — eine Aufwertungsregel plus
-      dynamisches Tab-Registrieren · Nutzen: niedrig-mittel, für sehr
-      wenige, besonders wichtige Features gedacht)
-      Ursprüngliche Idee aus dem FEATURES-Punkt, dort bewusst nicht
-      umgesetzt: wenn eine `docs/FEATURES/`-Datei ein Feature besonders
-      ausführlich beschreibt ("bewirbt"), bekommt genau dieses Feature
-      einen eigenen Tab statt nur einen Eintrag in der Features-Liste. Der
-      gebaute Features-Tab ist bewusst ein einheitlicher Katalog (alle
-      Features gleich behandelt, kein Promotion-Mechanismus) — diese Idee
-      bräuchte eine explizite Markierung im Format (z. B. ein
-      `- **Tab:** true`-Bullet) und dynamisches Tab-Registrieren in
-      `core/render/html.lua`, was heute nirgends existiert (die neun Tabs
-      sind aktuell alle statisch im Markup). Erst sinnvoll zu bewerten,
-      wenn `docs/FEATURES/` in echten Repos genutzt wird und sich zeigt,
-      ob der Bedarf real ist.
-
 - [ ] **Hierarchie: Root-Level aus-/einblenden mit Zoom-Slider**
       (Aufwand: Hoch — neues UI-Widget + Re-Rooting-Logik im bestehenden
       Renderer · Nutzen: mittel — Navigationshilfe bei sehr tiefen Bäumen)
