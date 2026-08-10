@@ -52,16 +52,6 @@ Entscheidungsrecord lebt in `documentation.nvim`s eigenem
       wenn `docs/FEATURES/` in echten Repos genutzt wird und sich zeigt,
       ob der Bedarf real ist.
 
-- [ ] **Gewichtete Alternativ-Ansicht des Call-Graphen, eigener Tab**
-      (Aufwand: Hoch — neue Rendering-Logik ohne externe Graph-Bibliothek
-      · Nutzen: hoch — echtes Analysewerkzeug, kein Spielerei-Feature)
-      Wie die Hierarchie, aber mit wählbaren Datenfiltern auf der
-      Modul-Ansicht: z. B. welche Calls macht dieses Modul — alle
-      Module, die diese Calls empfangen, werden ringsherum eingeblendet
-      und mit gewichteten Pfeilen verbunden (mehr Calls = dickerer
-      Strich). Mehrere Varianten denkbar, verdient einen eigenen Tab statt
-      eine Erweiterung des bestehenden Hierarchy-Tabs.
-
 - [ ] **Hierarchie: Root-Level aus-/einblenden mit Zoom-Slider**
       (Aufwand: Hoch — neues UI-Widget + Re-Rooting-Logik im bestehenden
       Renderer · Nutzen: mittel — Navigationshilfe bei sehr tiefen Bäumen)
