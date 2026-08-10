@@ -6,16 +6,11 @@
 
 ---
 
-## Prompt
-
 arbeite 
 `C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/documentation.nvim.md`
 ab:
   - Sortiere die Liste nach Aufwendigkeit und Nutzen
   - Als erster implementiere Quick wins
-  - wenn erledigt, entferne die task dann aus der liste und trage sie im project documentation.nvim unter docs/FEATURES ein
-update die docs/vimdoc und ggf. auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS
-comitte und pushe nach main; ggf pull wenn behind
 
 ## Generell
 

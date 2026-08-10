@@ -1,5 +1,8 @@
 # Roadmap
 
+casedesk aworkflow optimeiren: Ich eröffne einen caseso: ich kopiere den aactivity stream in die zwischenablage, sdann :Case new, dort gebe ich daten ewie name, tile usw wien, dann legt es automatisch folder usw.. an. es soll ja auch ein ki prompt vorberieten, ibn dieser  soll acuh enthalten sein:
+Datenpunkte für activity wstream analyse: welche attachments hat der customer beretis attached? Wenn KI enabled,dann checklisten wie "was haebn wir den cuistomer vorgeschlagen soller achen" und " was hat er zurückgemeldetund wie gemacht";
+
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
 - [ ] case: move solved/assigned/unaasiugend/OtherAgent/... -> verschiednt ordner  zum ziel. case delete
