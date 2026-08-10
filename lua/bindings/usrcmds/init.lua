@@ -6,6 +6,33 @@ local usercmd = require("lib.nvim.usercmd")
 require("bindings.usrcmds.case").enable()
 require("bindings.usrcmds.bindings_explorer").enable()
 
+usercmd.create('CopyLocation', function()
+  -- Absoluter Pfad der aktuellen Datei
+  local path = vim.fn.expand('%:p')
+
+  -- Falls der Buffer noch nicht auf der Festplatte gespeichert ist
+  if path == '' then
+    vim.notify('Keine Datei geladen / kein Pfad vorhanden', vim.log.levels.WARN)
+    return
+  end
+
+  -- Cursorposition holen (Zeile ist 1-basiert, Spalte ist 0-basiert)
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local line = cursor[1]
+  local col = cursor[2] + 1 -- 1-basiert machen
+
+  -- Text formatieren (Pfad:Zeile:Spalte)
+  local result = string.format('%s:%d:%d', path, line, col)
+
+  -- In das "+ Register (System-Zwischenablage) kopieren
+  vim.fn.setreg('+', result)
+
+  -- Rückmeldung anzeigen
+  vim.notify('Kopiert: ' .. result, vim.log.levels.INFO)
+end, {
+  desc = 'Kopiert absoluten Pfad, Zeile und Spalte in die Zwischenablage',
+})
+
 
 --TEMP: nur temporär (wahrscheinlich
 local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "BINDINGS")

@@ -25,7 +25,7 @@ darunter, sofern relevant.
 | Plugin | Performance | Lua/Nvim | Review | Release | Refactoring | Committed & Pushed |
 | ------ | :---------: | :------: | :----: | :-----: | :----------: | :-----------------: |
 | 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM |||||||
-| lib.nvim | [ ] | [ ] | [ ] | [ ] | [ ] | [x] |
+| lib.nvim (nicht deep) | [x] | [x] | [x] | [x] | [x] | [x] |
 | sessions.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | pickers.nvim | [x] | [x] | [x] | [x] | [x] | [x] |
 | buffer-ctx.nvim | [x] | [x] | [x] | [x] | [x] | [x] |

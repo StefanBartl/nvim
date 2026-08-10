@@ -1,8 +1,5 @@
 # `sandbox.nvim`
 
----
-
-
 ## Subprozess-Umgebung auf `lib.nvim.cross.run.env` umstellen
 
 Ein Subprozess aus `vim.system()`/`vim.uv.spawn()`/`jobstart()` erbt exakt
@@ -13,3 +10,5 @@ existiert seit dem `cross.run.env`-Commit in `lib.nvim` (siehe dort
 
 - [ ] Spawn-Aufrufe auf `env = require("lib.nvim.cross.run.env").build()` bzw.
       `env.apply(spawn_opts)` umstellen — betroffen: `docker`, `podman`, `nerdctl` — Socket-Pfad/Context hängen an Session-Variablen.
+
+---
