@@ -29,7 +29,7 @@ keine davon rechtfertigt aktuell größere neue Arbeit ohne konkreten Bedarfsfal
 | Bereich | Status | Begründung |
 |---|---|---|
 | async (`plenary/async`, `async_lib`) | **Lücke, niedrige Priorität** | Kein Coroutine-Async über libuv in lib.nvim. `debounce/init.lua` und `cross/uv/spawn_stream` lösen die üblichen Anwendungsfälle (Debounce, Streaming-Spawn) bereits mit Callbacks/`vim.schedule`. `a.wrap`/`Condvar`/`Semaphore` nachzubauen wäre aufwändig und ohne konkreten Callback-Pyramiden-Schmerzpunkt nicht klar nötig — beobachten, nicht bauen.
-| job control (`plenary/job.lua`) | **Ersetzbar, aber bewusst schmaler** | `system/job.lua` (zeilenweises `on_stdout`/`on_stderr` über `vim.system`) plus `cross/uv/spawn_stream` und `cross/uv/spawn_capture` decken Start/Stream/Capture/Kill/Timeout ab. Fehlt gegenüber plenary: `Job.chain`/`and_then*`/`after_success`-Verkettung, `Job:sync()` (Start+Wait kombiniert), Stdin-Writer-Chaining. **Bestätigte Env-Lücke** (siehe `lib.md`): `cross/run/init.lua`s `M.run`/`M.run_blocking` reichen gar kein `env` durch; `cross/uv/spawn_capture`/`spawn_stream` akzeptieren zwar rohes `env` (Array `"K=V"`, keine Dict-Konvertierung wie bei plenary), aber `cross/run/env/init.lua` (PATH-Vervollständigung, Login-Shell-Recovery, Session-Variablen — stärker als plenarys Äquivalent) ist bisher nirgends standardmäßig verdrahtet.
+| job control (`plenary/job.lua`) | **Ersetzbar, aber bewusst schmaler** | `system/job.lua` (zeilenweises `on_stdout`/`on_stderr` über `vim.system`) plus `cross/uv/spawn_stream` und `cross/uv/spawn_capture` decken Start/Stream/Capture/Kill/Timeout ab. Fehlt gegenüber plenary: `Job.chain`/`and_then*`/`after_success`-Verkettung, `Job:sync()` (Start+Wait kombiniert), Stdin-Writer-Chaining. **Env-Lücke behoben** (siehe `lib.md`, jetzt entfernt): `cross/run/env/init.lua` existiert (PATH-Vervollständigung, Login-Shell-Recovery, Session-Variablen — stärker als plenarys Äquivalent) und ist seit dem `cross.run`-Env-Enrichment-Commit standardmäßig in `cross/run.M.run`/`M.run_blocking` verdrahtet (siehe Abschnitt 3 unten).
 | path/fs/scandir | **Ersetzbar, eine echte Lücke** | Stärkster Bereich von lib.nvim: `fs/collect_recursive`, `fs/scan_cached`, `fs/scan_roots`, `fs/find_root`, `fs/find_upward_dir`, `fs/mkdirp`, `fs/is_dir`, `fs/trash`, `cross/fs/*` (Separatoren, wslpath, Lock, Mutate) übertreffen `plenary/path.lua` + `plenary/scandir.lua` in Cross-Platform-Korrektheit — Windows/WSL-Pfadnormalisierung hat bei plenary kein Äquivalent. **Lücke:** kein OOP-`Path`-Objekt; `fs/path/init.lua` ist eine flache Funktionstabelle statt eines verkettbaren `:exists()`/`:read()`/`:joinpath()`/`:iter()`-Objekts wie `plenary.Path`. Niedrige Priorität — der funktionale Stil ist ohnehin lib.nvim-Konvention.
 | curl/HTTP | **Teilweise** | `net/curl/init.lua` (`fetch_json`/`fetch_raw` + `_blocking`-Varianten) deckt Method/Headers/Query/Body/Bearer-Token/Timeout ab und ist mit dem expliziten ok/data/raw-Contract eher klarer als plenary. Fehlt: Multipart `form`, `auth` (Basic), `raw`-Passthrough-Args, `output` (Download-in-Datei), `http_version`, `proxy`, `insecure`. Nur bei konkretem Bedarf ergänzen.
 | testing (busted/test_harness) | **Nicht übernommen — muss auch nicht** | Eigener, schlanker Harness bereits vorhanden: `docs/TESTS/harness.lua` (`H.eq`/`H.ok`/`H.tmpfile`) + `docs/TESTS/run.lua`, führt headless 24 `*_spec.lua`-Dateien aus, ohne `plenary.busted`-Abhängigkeit. Kein neotest-plenary-Lock-in zu befürchten.
@@ -54,20 +54,23 @@ keine davon rechtfertigt aktuell größere neue Arbeit ohne konkreten Bedarfsfal
 - Env-Aufbau für Spawns: `cross/run/env/init.lua` — deutlich ausgereifter als
   alles, was plenary bietet (s. o.).
 
-**Bestätigte, konkrete Lücken:**
+**Ehemals bestätigte, konkrete Lücken — Stand nach Abschnitt 3:**
 
-1. **Async-Filesystem fehlt.** `cross/uv/fs/init.lua` wrapt nur `uv.cwd()`.
-   `fs/read/init.lua` nutzt blockierendes `io.open`/`f:read("*a")`;
-   `fs/collect_recursive/init.lua:28` nutzt **synchrones**
-   `uv.fs_scandir`/`uv.fs_scandir_next` — blockiert den Main-Loop bei großen
-   Bäumen (z. B. `node_modules`). Ein Coroutine-gewrapptes async
-   scandir/stat/read direkt auf `vim.uv` (kein plenary-Nachbau nötig) wäre ein
-   echter Gewinn für `scan_roots`/`scan_cached` bei großen Repos.
+1. **Async-Filesystem — geschlossen.** `fs/collect_recursive` bot bislang nur
+   den **synchronen** `walk` (blockierender `uv.fs_scandir`/`fs_scandir_next`,
+   blockiert den Main-Loop bei großen Bäumen wie `node_modules`). Jetzt ergänzt
+   um `collect_async`/`files_async`/`dirs_async` — Coroutine-getriebener,
+   nicht-blockierender Walk über die Async-Form derselben libuv-Aufrufe (siehe
+   Abschnitt 3). `scan_cached`/`scan_roots` haben passend `scan_async`
+   bekommen. `fs/read/init.lua`s blockierendes `io.open`/`f:read("*a")` bleibt
+   unverändert — kein Konsument mit erkennbarem Bedarf für Async-Read bislang.
 2. **`fs/write/async/init.lua:44-55` ist Callback-Pyramide statt Coroutine**
    (`uv.fs_open` → verschachteltes `uv.fs_write` → verschachteltes
    `uv.fs_close`). Funktioniert heute korrekt; ein Coroutine-Wrapper würde vor
    allem helfen, sobald mehr async-fs-Ketten dazukommen — nicht dringend für
-   sich allein.
+   sich allein. Noch offen; der `await`/`run_async`-Baustein aus
+   `collect_recursive` (Abschnitt 3) ist bewusst privat/modul-lokal gehalten,
+   könnte aber bei Bedarf als gemeinsamer Helfer extrahiert werden.
 3. **Kein generischer File-/Dir-Watch-Primitiv.** Einzig
    `neotree/watch/init.lua` existiert — ein neo-tree-spezifischer
    `fs_event`-Handle-Leak-Workaround, kein wiederverwendbarer "watch this
@@ -75,7 +78,7 @@ keine davon rechtfertigt aktuell größere neue Arbeit ohne konkreten Bedarfsfal
    sind sonst ungewrapt. Da `debounce/init.lua` bereits existiert, wäre ein
    `fs.watch` aus `uv.new_fs_event()` + vorhandenem Debounce-Handle ein
    naheliegender, kleiner Baustein — aber nur bei konkretem Konsumenten bauen
-   (z. B. Config-Datei-Live-Reload).
+   (z. B. Config-Datei-Live-Reload). Noch offen.
 4. **Pipes/IPC:** `system/rpc_pipe.lua` ist ein schmaler, zweckgebundener
    Windows-Named-Pipe-RPC-Bootstrap für neotest-Kompatibilität — kein
    allgemeiner Pipe/Socket-Wrapper und muss auch keiner werden.
@@ -84,17 +87,27 @@ keine davon rechtfertigt aktuell größere neue Arbeit ohne konkreten Bedarfsfal
 
 ## 3. Priorisierte nächste Schritte
 
-- [ ] `cross/run.M.run`/`run_blocking` um optionales `env` erweitern und
+> Stand 2026-08-10: beide Punkte umgesetzt, siehe lib.nvim-Commit
+> `feat(cross,fs): default env-enriched run/run_blocking + async directory walk`.
+
+- [x] `cross/run.M.run`/`run_blocking` um optionales `env` erweitern und
       standardmäßig durch `cross/run/env` anreichern lassen (deckt sich mit
       dem bereits in `lib.md` offenen `cross.run`-Env-Punkt — beide dort
-      zusammenführen).
-- [ ] Async-Scandir/Stat/Read (Coroutine über `vim.uv`) für
+      zusammengeführt). Umgesetzt als `opts.env` (Overrides, oder `false` zum
+      Opt-out) + `opts.env_opts` (durchgereicht an `env.build()`); Details:
+      `lua/lib/nvim/cross/run/README.md`,
+      `docs/FEATURES/subprocess-env.md` (Abschnitt "Wired in by default").
+- [x] Async-Scandir/Stat/Read (Coroutine über `vim.uv`) für
       `fs/collect_recursive`, `fs/scan_cached`, `fs/scan_roots` — größter
-      real messbarer Nutzen aus diesem Research.
-- [ ] `fs.watch`-Helfer (`uv.new_fs_event()` + `debounce`) — erst bauen, wenn
-      ein erster Konsument (z. B. Config-Reload) konkret ansteht.
-- [ ] Bei Bedarf: `net/curl` um `form`/`auth`/`output` erweitern.
-- [ ] Kein Handlungsbedarf, nur zur Kenntnis: plenary-Migration ist
-      abgeschlossen (0 funktionale `require("plenary...")`-Aufrufe in
-      `E:/repos/lib.nvim`), `class.lua`/`context_manager.lua`-Äquivalente
-      bewusst nicht gebaut (passt nicht zum Funktionstabellen-Stil).
+      real messbarer Nutzen aus diesem Research. Umgesetzt als
+      `collect_async`/`files_async`/`dirs_async` (`collect_recursive`) sowie
+      `scan_async` auf beiden Wrappern; Coroutine-Async/Await (`await`/
+      `run_async`), keine Parallelisierung (ein Verzeichnis nach dem
+      anderen — Fix für Main-Loop-Stalls, kein Wall-Clock-Speedup),
+      `cancel()`-Funktion. Details: `docs/FEATURES/async-directory-walk.md`.
+      "Read" (`fs/read`) blieb bewusst außen vor — kein erkennbarer Bedarf.
+
+Verbleibend aus Abschnitt 2, bewusst zurückgestellt (kein konkreter
+Konsument): `fs/write/async`-Coroutine-Wrapper, generischer `fs.watch`-Helfer.
+
+---
