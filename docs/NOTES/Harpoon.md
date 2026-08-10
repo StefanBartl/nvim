@@ -49,15 +49,21 @@ Datei: [lua/config/harpoon/persist_paths.lua](../../lua/config/harpoon/persist_p
    - `stdpath("config")/lua/plugins/personal/init.lua`
    - `stdpath("config")/docs/ROADMAP/ROADMAP.md`
    - `$REPOS_DIR/WKDBooks/Spickzettel/spickzettel.md`
+   - `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Notes/LuaNotes.md`
+   - `$REPOS_DIR/WKDBooks/Development/wkdbook-Neovim/Referenz_Notes/98_cheatsheets/tastaturkuerzel-konsolidiert.md`
 
    **Nur auf der Workstation** (`machine.is("workstation")`, siehe
-   [lua/machine.lua](../../lua/machine.lua)) werden zusätzlich, in dieser
-   Reihenfolge VOR den drei obigen, eingefügt:
+   [lua/machine.lua](../../lua/machine.lua)) wird die Basisliste komplett
+   ERSETZT (nicht ergänzt) durch die fünf Tricentis-Pfade unten plus genau
+   die ersten drei der obigen Liste (`target_specs[1..3]`, per Index
+   wiederverwendet) — die beiden neuen wkdbook-Lua/-Neovim-Einträge sind
+   also bewusst **nur auf Nicht-Workstation-Maschinen** aktiv:
    - `$REPOS_DIR/WKDBook-Tricentis/Cases/Workflow/Workflow.md`
    - `.../Cases/Workflow/Templates/FirstResponse_Rick.md`
    - `.../Cases/Workflow/Templates/SAP_TBox_RequestInfos.md`
    - `.../Cases/Workflow/Templates/RequestMoreInfo.md`
    - `.../ToDo-Collection/SAP_Support_ToDo.md`
+   - (plus `personal/init.lua`, `ROADMAP.md`, `spickzettel.md` von oben)
 
 2. **User-Pins** — maschinenlokal, per `:HarpoonPin` gesetzt, gespeichert als
    JSON-Array unter `stdpath("state")/harpoon_user_pins.json`. **Nicht

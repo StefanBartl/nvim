@@ -30,6 +30,16 @@ plugins.add({
         { vim.fn.stdpath("config"), "lua", "plugins", "personal", "init.lua" },
         { vim.fn.stdpath("config"), "docs", "ROADMAP", "ROADMAP.md" },
         { "$REPOS_DIR", "WKDBooks", "Spickzettel", "spickzettel.md" },
+        { "$REPOS_DIR", "WKDBooks", "Development", "wkdbook-Lua", "Notes", "LuaNotes.md" },
+        {
+          "$REPOS_DIR",
+          "WKDBooks",
+          "Development",
+          "wkdbook-Neovim",
+          "Referenz_Notes",
+          "98_cheatsheets",
+          "tastaturkuerzel-konsolidiert.md",
+        },
       }
 
       -- Work-specific Harpoon targets: only exist/matter on the workstation.
