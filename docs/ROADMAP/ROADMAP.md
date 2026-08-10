@@ -26,6 +26,7 @@
   - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
 
 - `z` - zoxide soll $REPOS_DIR auflösen können; Powershell soll alle meine repo ordner auflösen können. also wkdbooks -> cd $REPOS_DIR/wkdbooks usw..
+- Alle claud ebranches in allen plugins entfernen
 
 ---
 
@@ -42,6 +43,7 @@
   also hängt in der nächsten zeile eiunfach dreio backticks an
 
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
+- [ ] Autocompletion beim schreiben funktiert schon mit zusätzlichen dictionary bvon mir, jetzt wäre es noch toll, wenn oft verwendete hher geranked werden bei den vorschlägen
 
 ## nach docs/ROADMAP/RULES integrieren und dann hier ersatzlos entfernen
 

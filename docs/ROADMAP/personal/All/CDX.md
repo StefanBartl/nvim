@@ -20,6 +20,7 @@ Note: Wenn ich anschließend "Alle Plugins" oder "Jedes Plugin" oä. verwende, m
 ## `documentation.nvim`
 
 - [ ] documentation.nvim integration: Jedes Plugin soll es verwenden
+  - [ ] E:/repos/documentation.nvim/docs/FEATURES_FORMAT.md; E:/repos/documentation.nvim/docs/ANNOATIONS.md und andere features in `documentation.nvim` die Vorlagen/Templates bereitstellen, die man in Pugins implementieren kann, in jeden Pluginauch implementieren
 
 ## `runtime-analysis.nvim`
 

@@ -6,6 +6,7 @@
   aber alles verfeinert wird, auch mit Profiler und besserer View/UI/Feature-
   Ausstattung.
 - [ ] Root-Level Slider auch frü andere views als hirarchie intereesant?
+- [ ] @free chat. hast du alle features in docs/FEATURES eingetragen, docs/vimdci und ggf. C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS updatet udn alles in main comiited und poushed?
 
 ---
 
@@ -31,18 +32,3 @@
 ### Mittel
 
 ### Hoch / größere Vorhaben
-
-### Fragwürdig — eher nicht umsetzen
-
-- [ ] **Compiler-Explorer-(godbolt.org)-Tab** (Aufwand: Mittel — iframe/
-      Link-Einbindung ist technisch nicht schwer · Nutzen: sehr niedrig,
-      Prämisse fraglich)
-      Idee war ein Tab, der den Projekt-Source in godbolt.org lädt, mit
-      einem Icon an Modulen/Funktionen/Tables, das ein Popup mit dem dort
-      geladenen Code öffnet. Compiler Explorer ist für **kompilierte**
-      Sprachen gedacht — sein Wert liegt im Vergleich von Quelltext gegen
-      erzeugten Assembler-Code. Für Lua (interpretiert, kein
-      Assembler-Output, den man sinnvoll inspizieren würde) fehlt der
-      eigentliche Nutzen der Seite fast komplett. Nur wieder aufgreifen,
-      falls sich ein konkreter, anderer Anwendungsfall für die Integration
-      findet, der nicht auf „Assembler ansehen" beruht.

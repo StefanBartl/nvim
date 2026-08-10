@@ -77,6 +77,8 @@ unten.
 Cross-Referenz eingetragen: `typepilot.nvim.md`s offene `loomAI`-Frage ist
 für den *Provider-Abstraktions*-Teil hiermit beantwortet — siehe dort.
 
+> Wenn loomAi weiterverwendet wrd; dann umbennen auf github.com/StefanBartl/ai.nvim
+
 ---
 
 ## Architektur: zwei Schichten, wie bei `lsp.nvim`
