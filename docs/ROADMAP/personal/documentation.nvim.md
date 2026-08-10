@@ -10,38 +10,13 @@
 
 ## Taskliste — sortiert nach Aufwand, Quick Wins zuerst
 
-Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert.
+Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert. Erledigte
+Punkte werden ersatzlos entfernt, sobald sie umgesetzt sind — der
+Entscheidungsrecord lebt in `documentation.nvim`s eigenem
+`docs/ROADMAP/FEATURES.md`, echte Features zusätzlich in dessen
+`docs/FEATURES/`.
 
 ### Quick Wins
-
-- [x] **`@type`-vs-`@class`-Befund als Lint-Regel** — erledigt 2026-08-10:
-      neuer Check `type-vs-class` (`warn`) in `core/check.lua`, liest den
-      bereits vorhandenen Header-Scan (`scan.parse_header`), feuert nur,
-      wenn dem Modul-Table tatsächlich Felder zugewiesen wurden. Eigene
-      Testdatei `TESTS/check_type_vs_class_spec.lua`, in
-      `docs/PIPELINE.md`, `README.md`, `doc/documentation.txt` und
-      `docs/MULTILANG.md`s Check-Zählung dokumentiert. Commit `c2bec69`.
-
-- [x] **Workflow-/Usecase-Doku für documentation.nvim selbst** — erledigt
-      2026-08-10: neues `docs/WORKFLOW.md`, in README verlinkt. Konkret:
-      Hierarchy-vs-Analysis, Churn+Impact vor Refactors, die
-      Telemetry-Join-Badge-Tabelle (✕/!/○/blank) inkl. der Falle, die sie
-      verhindert, Trail als Session-Tool vs. benannte gespeicherte Trails,
-      `f` vs. `/` vs. `tag_files` über Repos hinweg. Commit `a4d8417`.
-
-- [x] **Erweiterte Annotationen: `@see`, `@generic`, `@deprecated`** —
-      geprüft 2026-08-10: alle drei sind bereits vollständig implementiert,
-      nicht nur geparst. `@see` wird gegen den echten Modul-/Funktionsindex
-      validiert (`dead-see-target`-Check, `check_see_targets`) und im
-      Browser als klickbarer Link gerendert. `@deprecated` hat eine eigene
-      Badge, einen eigenen Analysis-Index-Eintrag und wird im
-      Annotation-Popup mit dem Migrationshinweis angezeigt. `@generic`
-      wird geparst und in die Funktionssignatur übernommen. Die
-      eigentlich offene Idee dahinter — `@see`-Verlinkung automatisch
-      *generieren* lassen statt von Hand zu pflegen — ist ein anderes,
-      deutlich größeres Feature (Ähnlichkeits-/Bezugs-Heuristik zwischen
-      Funktionen) und kein Quick Win; nicht umgesetzt, aber als bewusst
-      unterschiedene, offene Idee hier festgehalten.
 
 - [ ] **Sichtbare Kennzeichnung von Fremd-Plugin-Modi** (Aufwand-Neubewertung
       2026-08-10: **nicht Quick Win** — Mittel, da neue UI-Infrastruktur
@@ -56,111 +31,9 @@ Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert.
       erst ein neues Highlighting-Konzept für die Statuszeile, kein
       CSS-Detail. Zurückgestellt zu Mittel, bis sich das lohnt.
 
-- [x] **README-Hinweis auf die generierte Map, pro Plugin** — erledigt
-      2026-08-10, Prämisse dabei korrigiert: die Annahme "Nutzen: niedrig,
-      solange Pages fehlt" galt nur für `index.html` (echtes HTML, GitHub
-      rendert das als Quelltext, nicht als Seite). `docs/map/overview.md`
-      dagegen rendert schon heute direkt im GitHub-Repo-View — kein Pages
-      nötig, kein Warten auf `publish_map.sh`. Konvention jetzt in
-      `documentation.nvim`s `docs/REUSE.md` ("Linking to your own map from
-      your README") dokumentiert und in beiden aktiven Repos umgesetzt:
-      documentation.nvim ([`da4b351`](https://github.com/StefanBartl/documentation.nvim/commit/da4b351))
-      und runtime-analysis.nvim ([`e5768b4`](https://github.com/StefanBartl/runtime-analysis.nvim/commit/e5768b4))
-      verlinken jeweils ihre eigene `overview.md`. Auf die übrigen ~30
-      Repos noch nicht ausgerollt — die Konvention steht jetzt, das
-      Nachziehen pro Repo ist mechanisch und kein eigener Punkt hier wert.
-
-- [x] **Persistente Laufzeitdaten eines Plugins einsehbar machen — Triage,
-      nicht Umsetzung hier** — erledigt 2026-08-10: als Kandidat in
-      `runtime-analysis.nvim`s eigenes `docs/IDEAS.md` §3.2 (Runtime-Tab)
-      verschoben, mit Notiz, dass ein eigener Tab dafür trotzdem hier
-      denkbar bleibt, sobald der Runtime-Tab existiert.
-
 ### Mittel
 
-- [x] **`:DocMap annotate` — Modul-Header generieren statt nur
-      bemängeln** — erledigt 2026-08-10, Prämisse an einer Stelle
-      korrigiert: `@brief`/`@desc` sind laut `docs/ANNOTATION_TAGS.md`
-      selbst nur ein Fallback ("prefer plain prose"), also generiert der
-      Header stattdessen eine `TODO`-Prosa-Zeile, keine erfundenen Tags.
-      `@field`-Referenzierung eines bereits vorhandenen `@class`-Blocks
-      funktioniert wie gedacht (`---@field rate_limits t.x.RateLimits`
-      statt `table`), ebenso `fun(...)`-Rekonstruktion aus bereits
-      geparsten `@param`/`@return` für Funktionsfelder. Neu:
-      `core/annotate.lua` (Kernlogik), `bindings/usrcmds/annotate.lua`
-      (`:DocMap annotate [--write|--sidecar]`, Default reine Vorschau in
-      einem Scratch-Buffer, nichts wird ungefragt geschrieben), Tests mit
-      echten Fixture-Dateien (`TESTS/annotate_spec.lua`), Doku in
-      `docs/COMMANDS.md`/README/vimdoc. Commit
-      [`67fd074`](https://github.com/StefanBartl/documentation.nvim/commit/67fd074),
-      CI grün.
-
-- [x] **Hierarchie-Ansicht: einzelne Module ein-/ausblenden** — erledigt
-      2026-08-10: Rechtsklick auf eine Hierarchie-Box → "Dim this box" /
-      "Show this box", dazu eine "Hidden (N) — show all"-Pille in der
-      Toolbar, die alle auf einmal wieder einblendet. Bewusst nur
-      Abdunkeln (`opacity:.08` + `pointer-events:none`, dasselbe
-      Mechanismus wie der bestehende Hover-Fokus, nur persistent und pro
-      Box statt transient), kein echtes Entfernen aus dem Layout — ein
-      entfernter Knoten müsste seine Kinder reparentieren oder eine Lücke
-      lassen, unnötige Komplexität für das eigentliche Ziel ("großen Baum
-      weniger unübersichtlich machen"). Die strukturelle Variante bleibt
-      bewusst der separate, größere Punkt weiter unten (Root-Level
-      aus-/einblenden mit Zoom-Slider). State-Design 1:1 von den
-      bestehenden Compare-Marks übernommen (`state.hidden`, eigener
-      `localStorage`-Key, Hash gewinnt beim Laden gegen `localStorage`),
-      aber Hierarchy-scoped statt global. Reiner Client-JS-Change in
-      `core/render/html.lua`, keine IR-/Pipeline-Änderung. Verifiziert im
-      echten Browser gegen das generierte `docs/map/index.html`. Commit
-      [`41db728`](https://github.com/StefanBartl/documentation.nvim/commit/41db728).
-
 ### Hoch / größere Vorhaben
-
-- [x] **FEATURES-/BINDINGS-Ordner-Konvention + eigener Tab** — erledigt
-      2026-08-10. Vorab geprüft statt angenommen: eine Bestandsaufnahme
-      über ~30 eigene Repos zeigte, dass `docs/BINDINGS.md` bereits
-      durchgängig konsistent ist (documentation.nvims eigener Generator),
-      "FEATURES" aber tatsächlich drei unabhängig entstandene,
-      inkompatible Formen hatte (lib.nvim: Essay-Write-ups; markdown.nvim:
-      kompakte Pro-Feature-Metadatenblöcke; color_my_ascii.nvim: volle
-      User-Manuals) — keine der drei war die im Punkt angenommene
-      thematische `UI.md`/`PERFORMANCE.md`-Aufteilung. Format- und
-      Speicherort-Entscheidung dem Nutzer vorgelegt (kompakt-strukturiert
-      nach markdown.nvim-Vorbild, `docs/FEATURES/`-Ordner thematisch
-      aufgeteilt), bevor Parser/Tab gebaut wurden — genau die im Punkt
-      selbst geforderte Reihenfolge. Neu: `core/features.lua` (Parser,
-      gegen markdown.nvims echte `docs/FEATURES/headings.md` verifiziert —
-      ein mehrzeilig umgebrochenes Bullet-Value deckte einen echten
-      Parser-Bug auf, keinen synthetischen), `ir.features`, ein neunter
-      Tab in `core/render/html.lua`, `docs/FEATURES_FORMAT.md` (die
-      Spezifikation selbst — kein festes Metadaten-Vokabular, da
-      markdown.nvims eigene Datei bereits bekannte und Ad-hoc-Keys mischt).
-      Dogfooding: documentation.nvims eigenes `docs/FEATURES/` (4 echte
-      Einträge), Ende-zu-Ende im echten Browser verifiziert.
-      Cross-Linking zu Bindings über normale Markdown-Links in den
-      Metadata-Bullets (`Keymaps:`/`Usercmds:` → `../BINDINGS.md#...`),
-      keine Pro-Zeile-Anchors — GitHub-Markdown ankert nur Überschriften,
-      nicht Tabellenzeilen. Bewusst nicht umgesetzt, wie im Punkt selbst
-      als spekulativ markiert: eigener Leitlinien-Tab, Hover-Icon
-      "welches Feature nutzt diesen Code". Die Fremd-Plugin-Tab-Markierung
-      selbst bleibt weiterhin zurückgestellt (siehe Quick-Win-Punkt oben)
-      — es existiert nach wie vor kein Fremd-Plugin-Tab in der generierten
-      Seite, den man markieren könnte; documentation.nvims eigenes
-      `docs/FEATURES/` ist kein Fremd-Plugin-Inhalt, sondern der
-      analysierte Repo selbst.
-      **Nebenbei gefunden und behoben, betrifft auch den `:DocMap
-      tools`-Punkt oben:** `core/render/html.lua`s `M.render` baut das in
-      die Seite eingebettete IR-JSON unabhängig von
-      `documentation.to_json` (`module_map.json`s Writer) — ein
-      Kommentar-Thread genau in dieser Funktion dokumentierte das bereits,
-      zweimal zuvor an `duplicates`/`docs` passiert. `ir.tools` und
-      `ir.features` waren im gescannten IR und in `module_map.json`
-      vorhanden, fehlten aber in der Seite selbst — das Tools-Analysis-Panel
-      zeigte seit dem Ship "kein Manifest gefunden" unabhängig davon, ob
-      eines existierte. Beim Prüfen von `module_map.json`s tatsächlichen
-      Keys gegen ein echtes Repo aufgefallen, nicht beim bloßen Vertrauen
-      auf `scan_full`. Commit
-      [`3eeb6a8`](https://github.com/StefanBartl/documentation.nvim/commit/3eeb6a8).
 
 - [ ] **Leitlinien-Tab (Architektur-/Prinzipien-Dokumente)** (Aufwand: Mittel
       — dieselbe Infrastruktur wie der Features-Tab, nur mit anderem
