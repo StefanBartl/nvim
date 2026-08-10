@@ -285,7 +285,7 @@ end
 ---@field text string
 
 --- Full-text search across every case's markdown files, for `:Cases grep`.
---- Markdown only — the same reasoning `doctor.lua`'s Ressources/ handling
+--- Markdown only — the same reasoning `doctor.lua`'s assets/ handling
 --- implies: binary attachments (PNG/PDF/log dumps) would just produce
 --- garbage matches, and the actual case content always lives in
 --- Summary/Research/Replies.

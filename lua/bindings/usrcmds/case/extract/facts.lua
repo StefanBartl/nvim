@@ -77,6 +77,26 @@ local function stream_facts(entry)
   return parsed.impact, current_state, since, awaiting_count
 end
 
+--- Filenames the customer's own Activity Stream says they attached
+--- (`extract/stream.lua`'s `M.attachments`, parsed off "New attachment(s)
+--- added…" lines) — not what's actually sitting in `assets/`. Answers
+--- "what did the customer say they sent" as its own fact, independent of
+--- whether it was ever downloaded in; a mismatch between the two is for a
+--- human to notice, not something this line judges.
+---@param entry Lib.Case.RegistryEntry
+---@return string[] attachments
+local function stream_attachments(entry)
+  local path = stream_extract.find(entry.dir)
+  if not path then
+    return {}
+  end
+  local content = read(path)
+  if not content then
+    return {}
+  end
+  return stream_extract.attachments(content)
+end
+
 ---@param status Lib.Case.SlaStatus
 ---@return string
 local function sla_line(status)
@@ -170,6 +190,11 @@ function M.render(entry)
   end
 
   lines[#lines + 1] = ("- Doku-Links im Case: %s"):format(doclinks_line(entry.dir, m))
+
+  local attachments = stream_attachments(entry)
+  lines[#lines + 1] = ("- Attachments laut Activity Stream: %s"):format(
+    #attachments > 0 and table.concat(attachments, ", ") or "keine"
+  )
 
   return lines
 end

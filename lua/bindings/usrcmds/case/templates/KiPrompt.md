@@ -32,15 +32,15 @@ Kannst du diesen Activity Stream analysieren? Gib dann eine mögliche Solution u
 Beachte dabei folgende Ressourcen:
 
 Anwendung required:
-"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\Policies_CDX.md"
-"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\Workflow_CDX.md"
-"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\Workflow_DecisionTree.md"
+"{reporoot}\Workflow\CDX\CDX_Ressourcen\Policies_CDX.md"
+"{reporoot}\Workflow\CDX\CDX_Ressourcen\Workflow_CDX.md"
+"{reporoot}\Workflow\CDX\CDX_Ressourcen\Workflow_DecisionTree.md"
 
 Optional:
-"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\FirstResponse_Rick.md"
-"C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen\SummaryTemplateBefüllt.md"
+"{reporoot}\Workflow\CDX\CDX_Ressourcen\FirstResponse_Rick.md"
+"{reporoot}\Workflow\CDX\CDX_Ressourcen\SummaryTemplateBefüllt.md"
 
-In "C:\repos\WKDBook-Tricentis\Workflow\" liegen weitere Templates und
+In "{reporoot}\Workflow\" liegen weitere Templates und
 Wordings — bei Formulierungen für Kunde, Coaches oder interne Notes lohnt
 sich ein Blick hinein.
 

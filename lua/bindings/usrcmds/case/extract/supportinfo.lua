@@ -1,5 +1,5 @@
 ---@module 'bindings.usrcmds.case.extract.supportinfo'
---- `Ressources/ToscaSupportInfo*.txt` — the Tosca Commander-generated
+--- `assets/ToscaSupportInfo*.txt` — the Tosca Commander-generated
 --- dump: a fixed header block (EXTRACTION.md §2 "Kopfblock", the only
 --- exactly-positioned part) followed by ~1600 alternating directory
 --- headers and file entries. Parsed once per `:Case versions` call, no

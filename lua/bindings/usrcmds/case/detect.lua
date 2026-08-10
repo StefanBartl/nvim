@@ -128,7 +128,7 @@ function M.links(case_dir)
   return out
 end
 
---- Tricentis's own TCSupportInfo dump (`Ressources/ToscaSupportInfo*.txt`,
+--- Tricentis's own TCSupportInfo dump (`assets/ToscaSupportInfo*.txt`,
 --- attached to a case by the customer) states the exact Tosca Testsuite
 --- version the customer is running near the top of the file — no need to
 --- ask them or dig through the Activity Stream for it.

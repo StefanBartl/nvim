@@ -155,6 +155,34 @@ function M.create(short, title, company, name, link)
       if ok_sessions then
         sessions.save(short)
       end
+
+      -- ROADMAP.md: offer to pull in whatever the customer already sent —
+      -- Windows-only (no cross-platform equivalent of a native multi-select
+      -- file dialog exists here), and silently skipped elsewhere rather
+      -- than asking a question that can't be answered.
+      if require("lib.nvim.system.env").get().is_windows then
+        kit.confirm({
+          question = "Attachments aus Downloads laden?",
+          on_answer = function(load_attachments)
+            if not load_attachments then
+              return
+            end
+            local attachments = require("bindings.usrcmds.case.attachments")
+            attachments.pick_from_downloads(function(paths)
+              if #paths == 0 then
+                return
+              end
+              local result = attachments.ingest({ dir = dir, short = short, state = config.default_state }, paths)
+              if result.ok > 0 then
+                notify.info(("%d attachment(s) moved into %s/initial"):format(result.ok, config.assets_dirname))
+              end
+              if #result.errors > 0 then
+                notify.error("attachment move failed:\n" .. table.concat(result.errors, "\n"))
+              end
+            end)
+          end,
+        })
+      end
     end,
   })
 end
@@ -1167,7 +1195,7 @@ function M.copy(src, case_arg)
 
       kit.select({
         message = "Target folder",
-        selection = { "Replies", "Research", "Ressources", "." },
+        selection = { "Replies", "Research", config.assets_dirname, "." },
         format_item = function(s)
           return s == "." and "(case root)" or s
         end,
@@ -1283,7 +1311,7 @@ function M.versions(component_arg, case_arg, flags)
     local supportinfo = require("bindings.usrcmds.case.extract.supportinfo")
     local path = supportinfo.find(entry.dir)
     if not path then
-      notify.warn(("%s: no ToscaSupportInfo*.txt found under Ressources/"):format(entry.short))
+      notify.warn(("%s: no ToscaSupportInfo*.txt found under %s/"):format(entry.short, config.assets_dirname))
       return
     end
 
@@ -1631,6 +1659,23 @@ local function close_many(entries)
   end)
 end
 
+--- Shared by `M.close`'s "Delete permanently" target and `M.delete` below —
+--- the case number typed back, not a bare y/n, since `do_delete` is
+--- irreversible.
+---@param entry Lib.Case.RegistryEntry
+local function confirm_and_delete(entry)
+  kit.input({
+    title = ("Type %s to permanently delete"):format(entry.short),
+    on_submit = function(typed)
+      if typed ~= entry.short then
+        notify.warn("delete cancelled (number didn't match)")
+        return
+      end
+      do_delete(entry)
+    end,
+  })
+end
+
 --- `:Case close [nr]` — ROADMAP.md's requested behavior: instead of moving
 --- straight to "Closed" (that's still what `:Case reassign` etc. do for
 --- their own state via M.move_state above), open a destination picker —
@@ -1651,16 +1696,7 @@ function M.close(case_arg)
         return
       end
       if target == DELETE_TARGET then
-        kit.input({
-          title = ("Type %s to permanently delete"):format(entry.short),
-          on_submit = function(typed)
-            if typed ~= entry.short then
-              notify.warn("delete cancelled (number didn't match)")
-              return
-            end
-            do_delete(entry)
-          end,
-        })
+        confirm_and_delete(entry)
         return
       end
       kit.confirm({
@@ -1672,6 +1708,21 @@ function M.close(case_arg)
         end,
       })
     end)
+  end)
+end
+
+--- `:Case delete [nr]` — ROADMAP.md's request for a direct path to permanent
+--- deletion, without going through `:Case close`'s destination picker first.
+--- Same irreversible, typed-confirmation gate as `:Case close`'s "Delete
+--- permanently" target — `confirm_and_delete` above, not a new safety check.
+---@param case_arg string|nil
+function M.delete(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to delete")
+      return
+    end
+    confirm_and_delete(entry)
   end)
 end
 
@@ -2529,15 +2580,15 @@ end
 
 ---@param entry Lib.Case.RegistryEntry
 local function pick_attachment(entry)
-  local dir = entry.dir .. "/Ressources"
+  local dir = entry.dir .. "/" .. config.assets_dirname
   local st = uv.fs_stat(dir)
   if not (st and st.type == "directory") then
-    notify.warn(("%s has no Ressources/ folder"):format(entry.short))
+    notify.warn(("%s has no %s/ folder"):format(entry.short, config.assets_dirname))
     return
   end
   local files = collect_recursive.files(dir)
   if #files == 0 then
-    notify.warn(("%s: Ressources/ is empty"):format(entry.short))
+    notify.warn(("%s: %s/ is empty"):format(entry.short, config.assets_dirname))
     return
   end
   kit.select({
@@ -2549,6 +2600,20 @@ local function pick_attachment(entry)
     on_select = open_attachment,
     on_cancel = function() end,
   })
+end
+
+--- `:Case attachments [nr]` — same picker `:Cases pickers` → Attachments
+--- menu entry uses, reachable directly instead of through the discovery
+--- menu.
+---@param case_arg string|nil
+function M.attachments(case_arg)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to show attachments for")
+      return
+    end
+    pick_attachment(entry)
+  end)
 end
 
 ---@param entry Lib.Case.RegistryEntry
@@ -2625,15 +2690,9 @@ function M.pickers()
     title = "Cases — pickers",
     items = {
       {
-        label = "Attachments (Ressources/)",
+        label = ("Attachments (%s/)"):format(config.assets_dirname),
         action = function()
-          resolve.pick(nil, function(entry)
-            if entry then
-              pick_attachment(entry)
-            else
-              notify.warn("no case to show attachments for")
-            end
-          end)
+          M.attachments(nil)
         end,
       },
       {

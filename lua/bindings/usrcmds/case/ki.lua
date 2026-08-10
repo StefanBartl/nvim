@@ -15,6 +15,7 @@
 --- that copy-paste reliable and format-stable.
 
 local templates = require("bindings.usrcmds.case.templates")
+local config = require("bindings.usrcmds.case.config")
 
 local M = {}
 
@@ -52,6 +53,12 @@ function M.build_prompt(tokens, activity_stream)
     sla = tokens.sla,
     facts = tokens.facts,
     activitystream = vim.trim(activity_stream or ""),
+    -- `{reporoot}`, deliberately no underscore: templates.lua's
+    -- `%{(%w+)%}` substitution pattern doesn't match one (see `{sla}`'s
+    -- own comment above for the same reason). Machine-specific
+    -- (config.repo_root derives from $REPOS_DIR) rather than the
+    -- workstation's own hardcoded drive letter.
+    reporoot = config.repo_root,
   }
   local lines = templates.render(templates.KI_PROMPT, render_tokens)
   return table.concat(lines, "\n")

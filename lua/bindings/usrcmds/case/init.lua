@@ -211,6 +211,22 @@ function M.enable()
       end,
     },
     {
+      path = { "delete" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "Permanently delete a case (types the case number back to confirm)",
+      run = function(ctx)
+        ui.delete(ctx.args.case)
+      end,
+    },
+    {
+      path = { "attachments" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      desc = "List and open this case's attachments (assets/)",
+      run = function(ctx)
+        ui.attachments(ctx.args.case)
+      end,
+    },
+    {
       path = { "add" },
       args = {
         { name = "name", type = "STRING" },

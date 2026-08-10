@@ -11,7 +11,14 @@ local M = {}
 --- `Workflow/`, `Notes/`, `Terminologie/`, `Tosca/` are siblings, and
 --- features that reach outside the case tree (the reply-block library
 --- below) anchor here rather than walking up from `M.root`.
-M.repo_root = "C:/repos/WKDBook-Tricentis"
+---
+--- Derived from `$REPOS_DIR` (the convention every other module already uses
+--- — `plugin_repos/*`, `harpoon/persist_paths.lua`) rather than a hardcoded
+--- drive letter, since where repos live varies per machine (e.g. `C:/repos`
+--- on the workstation, `E:/repos` elsewhere). Falls back to `C:/repos` when
+--- unset, matching the workstation's own default.
+local repos_dir = (vim.env.REPOS_DIR or "C:/repos"):gsub("\\", "/")
+M.repo_root = repos_dir .. "/WKDBook-Tricentis"
 
 M.root = M.repo_root .. "/Cases/SAP_Support"
 
@@ -39,8 +46,12 @@ M.cases_root = M.root .. "/Cases"
 --- generated `:Case <verb> [nr]` move-command for every OTHER state (falls
 --- back to the lowercased state name if a state has no entry here) — see
 --- init.lua's state-verb generation loop, the same "add a line, get a
---- command for free" pattern as the file-verbs.
-M.states = { "Open", "Closed", "Reassigned" }
+--- command for free" pattern as the file-verbs. `Solved`/`Assigned`/
+--- `Unassigned`/`OtherAgent` (ROADMAP.md's `:Case move` request) ride this
+--- same mechanism — adding them here is the entire feature: a
+--- `:Case <verb>` per state, AND all four show up in `:Case close`'s
+--- destination picker (ui.lua's `close_targets`) for free too.
+M.states = { "Open", "Closed", "Reassigned", "Solved", "Assigned", "Unassigned", "OtherAgent" }
 M.default_state = "Open"
 M.state_verbs = {
   Closed = "close",
@@ -54,6 +65,17 @@ function M.state_dir(state)
 end
 
 M.meta_filename = ".case.json"
+
+--- Case-local folder for attachments (support-info dumps, screenshots, logs
+--- the customer or we send back and forth). Historically "Ressources" —
+--- renamed to the plain English "assets" (docs/ROADMAP/casedesk/ROADMAP.md);
+--- existing on-disk folders migrate via the same `:Cases doctor`/`normalize`
+--- naming-drift mechanism as every other bestand inconsistency, not a
+--- one-off script. `:Case new`'s attachment-ingestion step drops what it
+--- moves in from Downloads under `<assets_dirname>/initial/` specifically —
+--- everything else placed here directly keeps whatever name/location it
+--- arrived with.
+M.assets_dirname = "assets"
 
 --- Plausibility range for a short case number (render.is_plausible_case_number).
 --- Deliberately generous rather than pinned to one exact width: seen so far
@@ -377,7 +399,7 @@ M.blueprints = {
   default = {
     { type = "dir", path = "Replies" },
     { type = "dir", path = "Research" },
-    { type = "dir", path = "Ressources" },
+    { type = "dir", path = M.assets_dirname },
 
     -- Summary.md is the ServiceNow-facing document and reproduces
     -- `Workflow/Templates/SummaryTemplate.md` verbatim — hence

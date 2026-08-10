@@ -63,7 +63,7 @@ local KNOWN_TYPOS = {
 
 -- The two blueprint folders whose files are meant to carry a `NN_` prefix
 -- (Research/00_Research.md, Replies/00_PSO.md, and every file `:Case add`
--- creates afterward follow suit) — Ressources/ is deliberately excluded,
+-- creates afterward follow suit) — assets/ is deliberately excluded,
 -- attachments there keep whatever name they arrived with.
 local NN_PREFIX_DIRS = { "Research", "Replies" }
 
@@ -299,6 +299,24 @@ function M.check()
           short = e.short,
           kind = "research-as-file",
           detail = "Research.md (Research/ folder is the convention)",
+          from = from,
+          to = exists(to) and nil or to,
+        }
+      end
+    end
+
+    -- naming-variant: the case-local attachments folder used to be called
+    -- "Ressources" (a typo'd loanword, never actually "Ressourcen" despite
+    -- how it's usually pronounced) — target renames it to the current
+    -- convention, config.assets_dirname ("assets", ROADMAP.md).
+    for _, dirname in ipairs(top_level_dirs(e.dir)) do
+      if dirname:lower() == "ressources" and dirname ~= config.assets_dirname then
+        local from = e.dir .. "/" .. dirname
+        local to = e.dir .. "/" .. config.assets_dirname
+        findings[#findings + 1] = {
+          short = e.short,
+          kind = "naming-variant",
+          detail = ("%s/ (%s/ is the convention)"):format(dirname, config.assets_dirname),
           from = from,
           to = exists(to) and nil or to,
         }

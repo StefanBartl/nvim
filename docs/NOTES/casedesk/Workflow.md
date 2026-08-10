@@ -7,7 +7,7 @@ through `:Case info`'s `e` edit form first (same "suggestion, not autopilot"
 contract as `title`/`name`):
 
 - **Tosca version** — `detect.tosca_version` scans for a
-  `Ressources/ToscaSupportInfo*.txt` (SAP support attaches this) and pulls
+  `assets/ToscaSupportInfo*.txt` (SAP support attaches this) and pulls
   the `Tosca Testsuite Version: X.Y.Z` line. Pre-fills the `tosca_version`
   field in `e` when present.
 - Title, contact name, links — see `detect.lua`'s existing doc comments.
@@ -46,7 +46,7 @@ Cases/Open/1012345/
   Notes.md                  (yours — see §2)
   Research/00_Research.md   (opened automatically, links to the reply draft)
   Replies/00_PSO.md
-  Ressources/
+  assets/
   .case.json
 ```
 
@@ -165,7 +165,7 @@ buffer resolves it:
   filled in. A new block is just a new `.md` under the work repo's
   `Workflow/Templates/` — it shows up in the picker with no code change.
 - `:Case copy <path>` — pull a screenshot/log/attachment in; you pick the
-  target folder (`Replies`/`Research`/`Ressources`/case root).
+  target folder (`Replies`/`Research`/`assets`/case root).
 - `:Case ki` / `:Case ki import` — the AI-analysis round trip, covered in
   §1 above (usually the very first thing you run on a new ticket, but
   nothing stops you running it again mid-case with a fresh activity
@@ -336,7 +336,7 @@ unlock something concrete, roughly cheapest-first:
   touched was enough), but a "which cases are network-config issues vs.
   data problems" grouping would need *some* signal beyond company and
   free-text, and there isn't one today.
-- **A fixed `Ressources/` subfolder taxonomy** (`Logs/`, `Screenshots/`,
+- **A fixed `assets/` subfolder taxonomy** (`Logs/`, `Screenshots/`,
   rather than whatever a given case happened to create) — turns the
   Attachments picker (`:Cases pickers`) from guessing-by-extension into a
   straight folder read, and would be the precondition for any future

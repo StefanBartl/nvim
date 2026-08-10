@@ -4,6 +4,19 @@
 
 Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
 
+- [ ] **KI-Checklisten im Copy-Paste-Roundtrip** — zwei zusätzliche
+      Abschnitte in `templates/KiPrompt.md`s Antwortformat ("Was haben wir
+      dem Kunden vorgeschlagen?" / "Was hat er zurückgemeldet, und wie?"),
+      plus die passende Ablage in `:Case ki import` (`ki.lua`s `DIGIT_KEY`
+      um zwei Einträge erweitern, Ablageort vermutlich `Notes.md` — analog
+      zum bestehenden "Internal Notes"-Abschnitt). Anders als die
+      KI-Anbindung unten hängt das an NICHTS Neuem: der bestehende
+      Copy-Paste-KI-Workflow (`:Case ki` / `:Case ki import`) trägt das
+      schon, kein `ai.nvim` nötig. Zurückgestellt, weil im Wunschzettel
+      selbst nur ein vages "wäre nice", kein ausgearbeitetes Format — erst
+      konkretisieren (welche Headline, welcher Ablageort, wie oft
+      aktualisiert über die Laufzeit eines Cases) bevor implementiert wird.
+
 - [ ] **Danach entscheiden: reicht `:Case similar`s TF-IDF, oder braucht es
       KI?** Trade-off + Messwerte: CONCEPT.md §8e. Erst im Alltag benutzen
       (v. a. beim Anlegen eines neuen Cases: hilft der Vorschlag beim

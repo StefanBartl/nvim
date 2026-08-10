@@ -98,7 +98,7 @@ the customer follows it.
 
 Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
 §2, §3, §12 (Paket 1, steht seit 2026-08-10). `extract/supportinfo.lua`
-parses `Ressources/ToscaSupportInfo*.txt` — validated against all four
+parses `assets/ToscaSupportInfo*.txt` — validated against all four
 real support-info files EXTRACTION.md's own analysis is based on, not just
 the design doc's mockups: the digest correctly finds the one real
 customer-added DLL (`Achmea_Tosca_Custom_Controls.dll`) in the one case
