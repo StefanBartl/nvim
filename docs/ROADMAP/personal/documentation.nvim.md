@@ -162,6 +162,41 @@ Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert.
       auf `scan_full`. Commit
       [`3eeb6a8`](https://github.com/StefanBartl/documentation.nvim/commit/3eeb6a8).
 
+- [ ] **Leitlinien-Tab (Architektur-/Prinzipien-Dokumente)** (Aufwand: Mittel
+      — dieselbe Infrastruktur wie der Features-Tab, nur mit anderem
+      Quellordner · Nutzen: mittel, projektspezifisch)
+      Aus dem ursprünglichen FEATURES-Punkt herausgelöst, wo es nur als
+      "denkbare Erweiterung derselben Infrastruktur" erwähnt, aber nie als
+      eigene Aufgabe festgehalten war. Ein eigener Tab, der
+      Architektur-/Design-Leitliniendokumente einliest — nicht "was macht
+      das Plugin" (das ist der Features-Tab), sondern "wie/warum ist es so
+      gebaut". Für dieses Repo z. B. genau die Dokumente unter
+      `docs/ROADMAP/{ARCH_AND_CODING,Zentral-Prinzipien}.md`, wie sie
+      mehrere eigene Plugins bereits führen (siehe `All/Checklists.md`).
+      Technisch dieselbe Parser-/Tab-Infrastruktur wie `core/features.lua`/
+      der Features-Tab, nur auf einen anderen Quellordner (z. B.
+      `docs/PRINCIPLES/`) angewendet — `docs/FEATURES_FORMAT.md`s Schema
+      ist wahrscheinlich unverändert wiederverwendbar. Aufwand entsprechend
+      niedriger als beim ursprünglichen FEATURES-Punkt, da Format- und
+      Parser-Fragen bereits beantwortet sind.
+
+- [ ] **Einzelnes Feature bekommt eigenen Tab statt nur Karte im
+      Features-Tab** (Aufwand: Mittel — eine Aufwertungsregel plus
+      dynamisches Tab-Registrieren · Nutzen: niedrig-mittel, für sehr
+      wenige, besonders wichtige Features gedacht)
+      Ursprüngliche Idee aus dem FEATURES-Punkt, dort bewusst nicht
+      umgesetzt: wenn eine `docs/FEATURES/`-Datei ein Feature besonders
+      ausführlich beschreibt ("bewirbt"), bekommt genau dieses Feature
+      einen eigenen Tab statt nur einen Eintrag in der Features-Liste. Der
+      gebaute Features-Tab ist bewusst ein einheitlicher Katalog (alle
+      Features gleich behandelt, kein Promotion-Mechanismus) — diese Idee
+      bräuchte eine explizite Markierung im Format (z. B. ein
+      `- **Tab:** true`-Bullet) und dynamisches Tab-Registrieren in
+      `core/render/html.lua`, was heute nirgends existiert (die neun Tabs
+      sind aktuell alle statisch im Markup). Erst sinnvoll zu bewerten,
+      wenn `docs/FEATURES/` in echten Repos genutzt wird und sich zeigt,
+      ob der Bedarf real ist.
+
 - [ ] **Externe Calls/Plugins gezielt sichtbar machen** (Aufwand: Hoch —
       Call-Site-zu-externem-Symbol-Auflösung + GitHub-Fetch-Integration ·
       Nutzen: hoch — „warum ist diese Dependency überhaupt drin" auf
@@ -202,6 +237,23 @@ Innerhalb einer Aufwandsstufe nach Nutzen absteigend sortiert.
       oder Hover). Erster Schritt wäre reine Recherche: gibt es dafür
       überhaupt einen sinnvollen Erweiterungspunkt in LuaLS oder im LSP
       selbst.
+
+- [ ] **Eigene Findings als `vim.diagnostic` statt nur Quickfix** (Aufwand:
+      unklar, erst Recherche nötig · Nutzen: spekulativ, potenziell hoch)
+      Die "Linting/LSP-Diagnostic"-Hälfte des allerersten, ganz frühen
+      "Generell"-Punktes zu diesem Repo — bisher nirgends als eigene
+      Aufgabe festgehalten, verwandt mit dem LuaLS-in/outgoing-calls-Punkt
+      oben, aber eigenständig. Könnten documentation.nvims eigene, bereits
+      berechnete Daten — Drift-Findings (`check.lua`), der Call-/
+      Require-Graph, Coverage — nicht nur als |quickfix| dienen, sondern
+      direkt als native `vim.diagnostic`-Einträge im Buffer erscheinen
+      (z. B. `missing-summary`/`dead-see-target` als echte Diagnostic statt
+      nur im `:DocMap check`-Quickfix)? Erster Schritt auch hier reine
+      Recherche: wo würde ein `vim.diagnostic.set()`-Aufruf aus den
+      bestehenden `Documentation.Finding[]`-Daten am saubersten sitzen —
+      vermutlich ein neuer, optionaler Baustein in `bindings/`, nicht
+      `core/`, damit die Kernregel "Pipeline läuft ohne Editor" (siehe
+      `docs/PORTABILITY.md`) nicht verletzt wird.
 
 ### Fragwürdig — eher nicht umsetzen
 
