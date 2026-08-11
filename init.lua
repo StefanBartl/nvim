@@ -105,6 +105,7 @@ startup.setup_usercmds()
 require("bindings.usrcmds.update_repos").enable()
 require("bindings.usrcmds.plugin_repos").enable()
 require("bindings.usrcmds.who_locks").enable()
+require("bindings.usrcmds.docmap_all").enable()
 
 -- --- synchronous ------------------------------------------------------------
 
