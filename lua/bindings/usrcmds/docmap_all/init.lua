@@ -1,16 +1,24 @@
 ---@module 'bindings.usrcmds.docmap_all'
 ---@brief Generate documentation.nvim's map for every enabled personal plugin.
 ---@description
---- Registers `:DocMapAll`. Runs `require("documentation").generate({root =
---- ..., luals = true, title = <plugin name>})` for every entry
---- `plugins.personal.export.projects()` returns — every personal plugin
---- that is enabled (source.lua's mode is not "disabled") and has a local
---- checkout on this machine. Sequential, not parallel, for the same reason
---- `:MyReposUpdate` and docmap-desktop's own "Generate all" button both
---- are: each run is a real CPU-bound process (documentation.nvim's own
---- LuaLS enrichment pass, `full` mode), and a dozen at once would not
---- finish sooner while making the editor genuinely unresponsive rather
---- than just slow.
+--- Registers `:DocMapAll`. A thin wrapper over `documentation.nvim`'s own
+--- `require("documentation").generate_all()` (added there specifically for
+--- this use case — see `lua/documentation/editor/generate_all.lua`'s own
+--- header): this file supplies the one thing only this config can know
+--- (`plugins.personal.export.projects()`, the enabled personal plugins
+--- with a local checkout on this machine) and the UI (statusline
+--- progress, a closing notification); `generate_all()` supplies the
+--- actual orchestration — one real headless Neovim subprocess per
+--- project, chained sequentially, never blocking this session.
+---
+--- **Not this file's own async loop any more.** It used to hand-roll the
+--- same `vim.system()`-per-project chaining `generate_all()` now does —
+--- built here first because the bug that motivated it (`documentation.
+--- generate()` in a plain synchronous loop freezing the file explorer for
+--- the length of a multi-project run) was found and fixed here first.
+--- Moved once the fix proved out, so every documentation.nvim consumer
+--- gets it, not just this config — the logic had no dependency on
+--- anything personal-config-shaped to begin with.
 ---
 --- `title` is set to the plugin's own short name on purpose rather than
 --- left to documentation.nvim's own default — that name is also the exact
@@ -20,9 +28,10 @@
 --- Telemetry panel is joined to real, already-collected data with no
 --- extra wiring on either side.
 ---
---- One project failing (a scan error, a LuaLS timeout) does not abort the
---- rest; the closing report names every one that failed once the whole
---- batch finishes — same posture as `:MyReposUpdate`.
+--- One project failing (a scan error, a LuaLS timeout, a non-zero exit)
+--- does not abort the rest; the closing report names every one that
+--- failed once the whole batch finishes — same posture as
+--- `:MyReposUpdate`.
 ---
 --- Deliberately never fires on its own. Generation writes into `docs/map`
 --- *inside* each project's own repository, and running that unasked
@@ -74,41 +83,42 @@ local function generate_all()
 
   local total = #projects
   local prog = new_progress()
-  ---@type string[]
-  local failed = {}
 
-  -- A plain synchronous loop, not update_repos's own async run_next()
-  -- chain: that pattern exists there because vim.system's callback is the
-  -- only shape available at that layer. documentation.generate() is
-  -- already a blocking-but-event-loop-friendly call one level up (its own
-  -- LuaLS subprocess uses spawn_capture + vim.wait internally, the same
-  -- fix this session's own documentation.nvim work already applied for
-  -- exactly this reason — plain :wait() does not drain scheduled
-  -- callbacks, vim.wait does), so nothing here needs to re-solve that.
-  for i, project in ipairs(projects) do
-    if prog then
-      prog:update({ text = project.name, current = i, total = total })
-    end
-
-    local ok_gen, gen_err = pcall(docmap.generate, {
-      root = project.dir,
-      title = project.name,
-      luals = true,
-    })
-    if not ok_gen then
-      failed[#failed + 1] = project.name .. ": " .. tostring(gen_err)
-    end
+  -- generate_all() wants {root, title}; export_mod.projects() hands back
+  -- {name, repo, dir} — one field rename, done here rather than teaching
+  -- documentation.nvim this config's own project shape.
+  local gen_projects = {}
+  for _, p in ipairs(projects) do
+    gen_projects[#gen_projects + 1] = { root = p.dir, title = p.name }
   end
 
-  if prog then
-    prog:finish(("%d/%d generated"):format(total - #failed, total))
-  end
+  notify.info("Generating maps asynchronously...")
+  docmap.generate_all.run(gen_projects, {
+    on_progress = function(index, index_total, project)
+      if prog then
+        prog:update({ text = project.title, current = index, total = index_total })
+      end
+    end,
+    on_done = function(results)
+      ---@type string[]
+      local failed = {}
+      for _, r in ipairs(results) do
+        if not r.ok then
+          failed[#failed + 1] = r.project.title .. ": " .. tostring(r.err)
+        end
+      end
 
-  if #failed > 0 then
-    notify.error("Finished with errors:\n\n" .. table.concat(failed, "\n\n"))
-  else
-    notify.info(("All %d project map(s) generated"):format(total))
-  end
+      if prog then
+        prog:finish(("%d/%d generated"):format(total - #failed, total))
+      end
+
+      if #failed > 0 then
+        notify.error("Finished with errors:\n\n" .. table.concat(failed, "\n\n"))
+      else
+        notify.info(("All %d project map(s) generated"):format(total))
+      end
+    end,
+  })
 end
 
 ---Register :DocMapAll.
