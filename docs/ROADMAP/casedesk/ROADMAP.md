@@ -1,5 +1,12 @@
 # casedesk — Roadmap
 
+## Praxis-Feedback
+
+- Nach anlegen des cases und aufrufen der ai in casedesk, soll diese nicht nur vorschläge / solutions formulieren, sondern diese acuh mit Referenzen zu echten docs / tricentis docs belegen. https://docs.tricentis.com/tosca-2026.1/en-us/content/resources/webhelp/cover_web.htm (korrekte Version wählen für case!)
+- Es solte eine option geben, Case ki logs oder so ähnlich, mitdenn man die logdatein im assets ordner auswhlen kann (selectionlist mit tab oder pickers.nvim) und dan wird eine analyse der logdateien erstellt in /Research abgelegt
+
+- KB-Artikel: Als Standard such tool verwenden wir `https://tricentis.atlassian.net/issues?wildcardFlag=true&filter=40563` - das ist eineJira jql search; Es wäre natürkcih super, wenn beim case new auch zumindest eine liste mit passenden jql such strings mit ausgegeben wird für research, idealrweiße würde aber dieses auch mit ai automatisch durcucht werden können
+
 ## Offen
 
 Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
