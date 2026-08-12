@@ -16,8 +16,9 @@ is incorrect without them.
 
 | Event(s) | Augroup | Pattern | Condition | Action |
 | --- | --- | --- | --- | --- |
-| `WinNew`, `BufWinEnter`, `TabNewEntered` | `spotlight_windows` | `*` | always | Applies every active spotlight to windows that have none yet |
+| `WinNew`, `BufWinEnter`, `TabNewEntered` | `spotlight_windows` | `*` | always | Reconciles then applies: drops any "this occurrence only" match left over from a window's previous buffer, then applies every active spotlight to windows that have none yet |
 | `WinClosed` | `spotlight_windows` | `*` | always | Drops the closed window's ledger entry |
+| `BufWipeout`, `BufDelete` | `spotlight_windows` | `*` | always | Drops every "this occurrence only" spotlight pinned to the buffer that just disappeared (`registry.remove_for_buffer`) |
 | `ColorScheme` | `spotlight_highlights` | `*` | `palette.reapply_on_colorscheme` (default true) | Redefines `Spotlight1..8` |
 | `OptionSet` | `spotlight_highlights` | `background` | always | Switches between `palette.colors` and `palette.colors_light` |
 | `VimEnter` | `spotlight_persist` | `*` | `persist.enable` (default true) | Loads the persisted snapshot, once |
@@ -53,9 +54,24 @@ explicit command rather than something continuous.
   nothing. The **quickfix window is not skipped** — seeing the spotlight colors in
   the filtered view is the point of `:Spotlight qf`.
 
+  The **reconcile pass** (`core.match.reconcile_window`, added 2026-08-12) runs
+  first, before the fill sweep: `BufWinEnter` also fires when a window switches
+  to a *different* buffer, and `matchadd()` matches belong to the window, not
+  the buffer — a "this occurrence only" match added while a window showed
+  buffer A stays active if that window is later reused for buffer B. Left
+  alone, a coincidentally matching line/column in B could light up. Global
+  spotlights are untouched by this — staying visible across whatever buffer a
+  window shows is their whole design.
+
 - **`WinClosed`** — forgets the ledger entry without touching Vim state. The
   matches died with the window, so `matchdelete()` on those ids would only fail.
   The window id arrives as a *string* in `args.match` and is `tonumber`'d.
+
+- **`BufWipeout`/`BufDelete`** (added 2026-08-12) — a "this occurrence only"
+  spotlight's line/column stops meaning anything the moment its buffer is
+  gone, so the registry entry is dropped outright (not just its render), via
+  `registry.remove_for_buffer(buf)`. The buffer number arrives in `args.buf`.
+  Global spotlights are unaffected — they carry no buffer reference.
 
 - **`ColorScheme`** — a colorscheme clears highlight groups it does not know
   about, so the `SpotlightN` groups have to be re-defined afterwards. Definition
@@ -83,3 +99,11 @@ explicit command rather than something continuous.
   because a burst of toggles is one logical change. Without this flush the debounce
   timer would never fire on `:qa` and the last toggle before quitting would be
   exactly the one lost. `flush()` cancels the pending timer and writes synchronously.
+
+## Changelog
+
+- 2026-08-12: Added `BufWipeout`/`BufDelete` (drop "this occurrence only"
+  spotlights pinned to a wiped buffer) and a reconcile pass ahead of the
+  existing `WinNew`/`BufWinEnter`/`TabNewEntered` fill sweep (drop a stale
+  "this occurrence only" match when a window's buffer changes away from it).
+  Both support the new `<leader>mk` "this occurrence only" spotlight kind.

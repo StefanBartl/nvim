@@ -12,8 +12,9 @@ layer fails to load. `:checkhealth spotlight` reports it as an error, not a warn
 
 | Command | Args | Range | Effect |
 | --- | --- | --- | --- |
-| `:Spotlight` | — | no | **Default route**: toggle the token under the cursor |
-| `:Spotlight toggle [text]` | `STRING?` | yes | Cursor token, a `'<,'>` range selection, or the explicit `text` |
+| `:Spotlight` | — | no | **Default route**: toggle every occurrence of the token under the cursor |
+| `:Spotlight toggle [text]` | `STRING?` | yes | Every occurrence: cursor token, a `'<,'>` range selection, or the explicit `text` |
+| `:Spotlight here` | — | yes | Only this occurrence: cursor token, or a `'<,'>` range selection — the `:Spotlight here` counterpart of `<leader>mk` |
 | `:Spotlight add {text}` | `STRING` | no | Add a spotlight for the literal `text` |
 | `:Spotlight remove {text}` | `STRING` | no | Remove the spotlight matching `text` exactly |
 | `:Spotlight clear` | — | no | Remove every spotlight |
@@ -29,9 +30,9 @@ No bang on any route: nothing here has a natural inverse that `!` would express
 
 ## Range handling
 
-`toggle` is the only range-aware route. `:'<,'>Spotlight toggle` reads the
-selection from the `'<`/`'>` marks, **not** from the live cursor positions the way
-the visual-mode keymap does.
+`toggle` and `here` are the range-aware routes. `:'<,'>Spotlight toggle` (or
+`here`) reads the selection from the `'<`/`'>` marks, **not** from the live
+cursor positions the way the visual-mode keymap does.
 
 That difference is not an inconsistency — it is required. By the time a `:`
 command runs, Visual mode has already ended, which is exactly when `'<`/`'>`
@@ -90,7 +91,19 @@ there is no stable identity to hang an override on.
   current window's matches with `clearmatches()`.
 - **`:Spotlight toggle {text}`** with explicit text dispatches to add/remove by
   exact-text lookup, so it is idempotent in the same way the keymap is.
+- **`:Spotlight here`** toggles by exact buffer position (`registry.find_at`),
+  not by text — pressing it twice on the *same* occurrence removes it, but a
+  different occurrence of the same text is a separate spotlight. Session-only:
+  never written to the persisted snapshot, and dropped if its buffer is wiped
+  or a window switches away from it.
 
 Every subcommand has a facade function (`require("spotlight").<action>`) and, for
 the common ones, a preset keymap — see
 [Keymaps/spotlight.nvim.md](../Keymaps/spotlight.nvim.md).
+
+## Changelog
+
+- 2026-08-12: Added `:Spotlight here` (range-aware, mirrors `toggle`) for
+  "this occurrence only" spotlights — the `:Spotlight` counterpart of the new
+  `<leader>mk` behavior. `toggle`/`:Spotlight` bare default unchanged (still
+  every occurrence).
