@@ -1,4 +1,0 @@
-# `fileops.nvim`
-
----
-

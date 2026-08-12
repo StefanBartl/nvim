@@ -43,28 +43,6 @@ separat gezählt, nicht in die Roadmap-Zahlen gemischt.
 
 ---
 
-## Sauber — 0 offene Punkte (15 Repos)
-
-| Repo | Erledigt | Status |
-|---|---:|---|
-| `replacer.nvim` | ~34 | Reines "bereits geshippt"-Changelog, nichts offen |
-| `reposcope.nvim` | 24 | "Kein offener Backlog aktuell" |
-| `language.nvim` | 24 | "Alle Roadmap-Punkte implementiert. Neue Ideen willkommen." |
-| `debugging.nvim` | 23 | v0.1–v0.3 vollständig; restliche Ideen explizit "nicht geplant" |
-| `open.nvim` | ~5 | Alle Action-Items geschlossen; ROADMAP.md selbst ist leer |
-| `pickers.nvim` | ~4 | Alle Audit-Zeilen ✅, inkl. der CI-Tooling-Lücke |
-| `buffer-ctx.nvim` | 1 | Einziger offener Punkt (Mark-Anchoring) bereits geshippt |
-| `gopath.nvim` | 0 | Nur Principles-Docs + unausgefülltes generisches Checklist-Template — keine plugin-spezifischen Tasks |
-| `dap.nvim` | 0 | "Nothing currently planned" |
-| `emojis.nvim` | 0 | Alle geplanten Features seit v0.3.0 geshippt |
-| `recommender.nvim` | 0 | "No open items" |
-| `sessions.nvim` | 0 | "Nothing currently planned" |
-| `insights.nvim` | 0 | Einziges Doc ist eine Feature-Referenz zum Portieren *nach* filetree.nvim — keine eigene Taskliste |
-| `runtime-analysis.nvim` | 0 | Roadmap selbst dokumentiert nur ein bewusstes Non-Goal (kein General-Profiler); IDEAS-Backlog separat unten |
-| `sandbox.nvim` | 0 | "Every item that was on this list has shipped" |
-
----
-
 ## IDEAS-Backlogs (separat gezählt, wie gewünscht)
 
 | Repo | Offen | Erledigt | Aufwand | Wichtigste offene Punkte |
@@ -77,20 +55,3 @@ Sonst hat kein weiteres Repo einen IDEAS-Ordner — case-insensitiv über alle 3
 
 ---
 
-## Kein Roadmap-Doc gefunden
-
-- `learn-cli.nvim`
-- `lsp.nvim`
-- `neotree-fs-refactor.nvim`
-
----
-
-## Methodik
-
-- Jedes `docs/ROADMAP` (Datei oder Ordner) komplett gelesen.
-- Offen/Erledigt gezählt über Checkbox-Syntax (`- [ ]` / `- [x]`), wo genutzt; sonst über Prosa-/Emoji-Statusmarker
-  (✅/🟡/❌, "erledigt", "offen") — `open.nvim`, `pdfport.nvim`, `pickers.nvim`, `recommender.nvim`, `replacer.nvim`
-  tracken Status so statt mit echten Checkboxen.
-- Architektur-Prinzipien-Docs (`Zentral-Prinzipien.md`, `Arch&Coding.md`) und unausgefüllte generische
-  Checklist-Templates wurden nicht als Tasks gezählt.
-- `dm-scratch-out2` ist ein leeres Verzeichnis und wurde nicht als Repo gewertet.

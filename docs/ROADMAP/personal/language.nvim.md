@@ -1,6 +1,0 @@
-# language.nvim-
-
-- [ ] Anwenden lernen
-
----
-
