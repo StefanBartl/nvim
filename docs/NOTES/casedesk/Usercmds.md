@@ -19,7 +19,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 
 | Command | Args | What |
 | --- | --- | --- |
-| `:Case new [nr]` | case number, prompts for the rest | Prompt chain (title/company/name/link) → dry-run plan → confirm → scaffold. Respects `config.company_blueprints` if the company entered maps to one. Only the case number is actually required (`config.case_number_min_digits`–`_max_digits` plausible digits) — every other field can be left blank (Enter on empty) without crashing or half-creating anything |
+| `:Case new [nr]` | case number, prompts for the rest | Prompt chain (title/company/name/SNOW link/SAP Resolve link) → dry-run plan → confirm → scaffold. Both links, if given, land together in `.case.json`'s `links`. Respects `config.company_blueprints` if the company entered maps to one. Only the case number is actually required (`config.case_number_min_digits`–`_max_digits` plausible digits) — every other field can be left blank (Enter on empty) without crashing or half-creating anything |
 | `:Case info [nr]` | — | Infocard (`kit.viewer`) — `e` edit, `s` summary, `o` open folder, `q` close |
 | `:Case summary [nr]` | — | Open `Summary.md` — the **ServiceNow-facing** document (fixed four-section template, no markdown; see Notes below) |
 | `:Case notes [nr]` | — | Open `Notes.md` — your **private** work notes (what was tried, coach input, meeting tasks) |
@@ -288,3 +288,9 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   which is a multi-GB LaTeX install for this one use). If `pandoc` was just
   installed, restart Neovim — `vim.fn.executable()` only sees `$PATH` as of
   process start, not a PATH change made after.
+- **A trailing "Best regards, …" sign-off is stripped automatically**
+  (`replygate.strip_signature`), both when `:Case template` inserts a
+  block and when `:Case ki import` files the AI's reply draft — not a
+  manual cleanup step, the line just never appears. Only the last 5 lines
+  of the text are scanned, so a quoted "Best regards" deep in a pasted
+  earlier email is left alone.

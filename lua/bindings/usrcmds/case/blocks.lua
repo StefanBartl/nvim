@@ -13,6 +13,7 @@
 local config = require("bindings.usrcmds.case.config")
 local collect_recursive = require("lib.nvim.fs.collect_recursive")
 local read = require("lib.nvim.fs.read")
+local replygate = require("bindings.usrcmds.case.replygate")
 
 local M = {}
 
@@ -55,6 +56,9 @@ function M.list()
 end
 
 --- A block's body, with `{case}`/`{name}`/`{title}`/`{today}`/… substituted.
+--- The trailing "Best regards, ..." sign-off several blocks end with is
+--- stripped too (`replygate.strip_signature`, 2026-08-11 feedback) — every
+--- insertion point, not a per-block edit of the source library.
 ---
 --- Today's blocks are plain prose with `_____` blanks rather than tokens, so
 --- substitution is usually a no-op — it runs anyway so a block CAN use the
@@ -74,6 +78,7 @@ function M.render(block, tokens)
     local v = (tokens or {})[key]
     return v ~= nil and tostring(v) or ("{" .. key .. "}")
   end))
+  content = replygate.strip_signature(content)
 
   local lines = vim.split(content, "\n", { plain = true })
   if lines[#lines] == "" then

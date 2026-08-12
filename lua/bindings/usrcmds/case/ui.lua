@@ -67,10 +67,11 @@ function M.new(case_arg)
         { name = "title", label = "Title" },
         { name = "company", label = "Company" },
         { name = "name", label = "Name" },
-        { name = "link", label = "Link (optional, e.g. SNOW ticket URL)" },
+        { name = "snow_link", label = "SNOW Link (optional)" },
+        { name = "resolve_link", label = "SAP Resolve Link (optional)" },
       },
       on_submit = function(values)
-        M.create(short, values.title, values.company, values.name, values.link)
+        M.create(short, values.title, values.company, values.name, values.snow_link, values.resolve_link)
       end,
     })
   end
@@ -89,8 +90,9 @@ end
 ---@param title string|nil
 ---@param company string|nil
 ---@param name string|nil
----@param link string|nil
-function M.create(short, title, company, name, link)
+---@param snow_link string|nil
+---@param resolve_link string|nil
+function M.create(short, title, company, name, snow_link, resolve_link)
   local dir = registry.new_dir(short)
   local year = os.date("%Y")
   local tokens = {
@@ -124,6 +126,14 @@ function M.create(short, title, company, name, link)
       local results, opens = apply.run(actions)
       local ok, errs = apply.errors(results)
 
+      local links = {}
+      if snow_link and snow_link ~= "" then
+        links[#links + 1] = snow_link
+      end
+      if resolve_link and resolve_link ~= "" then
+        links[#links + 1] = resolve_link
+      end
+
       meta.write(dir, {
         case = short,
         year = year,
@@ -131,7 +141,7 @@ function M.create(short, title, company, name, link)
         company = tokens.company,
         name = tokens.name,
         notes = "",
-        links = (link and link ~= "") and { link } or {},
+        links = links,
         blueprint = blueprint_name,
         created = os.date("!%Y-%m-%dT%H:%M:%SZ"),
       })

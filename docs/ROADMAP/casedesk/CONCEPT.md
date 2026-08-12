@@ -27,23 +27,30 @@ Markdown-Datei mit einem Tag (§4a), keine Inline-Strings im Lua-Code.
 
 ```
 :Case new
-   ┌ kit.form ────────────────────────────┐
-   │ Case-Nr   › 1007631                  │  (kurz, Ordnername, Pflicht)
-   │ Titel     › Restore deleted objects  │  (Pflicht, geht in jede Headline)
-   │ Company   › Scania                   │  (optional)
-   │ Name      › Anuhya                   │  (optional, Ansprechpartner)
-   └──────────────────────────────────────┘
+   ┌ kit.form ──────────────────────────────────────┐
+   │ Case-Nr        › 1007631                       │  (Pflicht — ohne Nummer kein Ordnername)
+   │ Title          › Restore deleted objects        │  (optional, aber geht in jede Headline)
+   │ Company        › Scania                         │  (optional)
+   │ Name           › Anuhya                          │  (optional, Ansprechpartner)
+   │ SNOW Link      › https://…service-now.com/…      │  (optional, → .case.json links)
+   │ SAP Resolve Link › https://…resolve.sap.com/…    │  (optional, → .case.json links)
+   └──────────────────────────────────────────────────┘
         ↓
    kit.viewer: Dry-Run-Plan
         mkdir  Cases/Open/1007631/Replies
         mkdir  Cases/Open/1007631/Research
-        mkdir  Cases/Open/1007631/Ressources
+        mkdir  Cases/Open/1007631/assets
         write  Cases/Open/1007631/Summary.md
         write  Cases/Open/1007631/Research/00_Research.md
         write  Cases/Open/1007631/Replies/00_PSO.md
         ↓ kit.confirm  [ Anlegen ] [ Abbrechen ]
-   → angelegt + .case.json geschrieben, `00_Research.md` wird geöffnet
+   → angelegt + .case.json geschrieben (beide Links, falls angegeben,
+     landen zusammen in `links`), `00_Research.md` wird geöffnet
 ```
+
+Nur die Case-Nummer blockiert wirklich auf `<Esc>`/eine unplausible Eingabe
+(`render.is_plausible_case_number`) — jedes andere Feld leer lassen und
+Enter drücken reicht, `kit.form`s `required` greift nur beim Abbrechen.
 
 Jede erzeugte Markdown-File beginnt mit exakt einer Level-1-Headline:
 
@@ -397,6 +404,12 @@ ausgechecktes Arbeits-Repo), liefert `blocks.list()` eine leere Liste statt
 eines Fehlers — `:Case template` sagt dann „no reply blocks found", der Rest
 von casedesk läuft normal weiter.
 
+`M.render()` schneidet dabei automatisch ein abschließendes „Best
+regards, …"-Sign-off ab (`replygate.strip_signature`, 2026-08-11 Feedback:
+die Reply spricht für sich, die Grußzeile fällt immer weg) — mehrere
+Bausteine in der Bibliothek enden noch damit, aber der Fix sitzt an der
+Einfügestelle, nicht an jeder einzelnen Quelldatei.
+
 ---
 
 ## 8c. Reply-Gate (`replygate.lua`)
@@ -425,6 +438,17 @@ Läuft absichtlich auf `bufnr = vim.api.nvim_get_current_buf()`, nicht über
 `resolve.pick` auf "die neueste Reply" — der Punkt ist, das zu prüfen, was
 gerade auf dem Schirm ist, nicht zwingend eine Reply (funktioniert genauso
 auf `Notes.md`).
+
+`M.strip_signature(text)` lebt ebenfalls hier — eine reine String→String-
+Funktion (kein Buffer-Bezug wie der Rest des Moduls), die ein
+abschließendes „Best regards, …" erkennt und samt allem danach entfernt.
+Anders als der Emoji-Fund/Fix-Zyklus oben ist das kein "gefunden, `c` zum
+Entfernen"-Schritt im Report — sie läuft an den Erzeugungsstellen selbst
+(`blocks.lua`s `M.render`, `ki.lua`s `M.parse_response` für den
+Reply-Abschnitt), damit die Zeile gar nicht erst entsteht. Nur die letzten
+5 Zeilen werden geprüft, damit ein zitiertes „Best regards" tief im
+Fließtext (z. B. eine eingefügte alte E-Mail) nicht versehentlich
+mitgestrichen wird.
 
 ---
 
@@ -637,6 +661,11 @@ hält eine durchnummerierte Gliederung deutlich zuverlässiger ein als
 einen exakten Überschriftentext, also stützt sich der Parser auf die
 billigere Invariante. Eine fehlende Sektion (z. B. keine Notiz) wird
 einfach ausgelassen, kein Fehler.
+
+Abschnitt 4 (der Reply-Entwurf) läuft zusätzlich durch
+`replygate.strip_signature` (§8c) — manche KIs signieren den Entwurf mit
+einem „Best regards, …" trotz Prompt, der das nie verlangt; dieselbe
+2026-08-11-Regel wie bei `blocks.lua`.
 
 **Ein echter Bug im ersten Testlauf:** `{activitystream}` (ursprünglich
 mit Unterstrich `{activity_stream}`) wurde nicht ersetzt — `templates.lua`s

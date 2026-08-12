@@ -16,6 +16,7 @@
 
 local templates = require("bindings.usrcmds.case.templates")
 local config = require("bindings.usrcmds.case.config")
+local replygate = require("bindings.usrcmds.case.replygate")
 
 local M = {}
 
@@ -121,6 +122,14 @@ function M.parse_response(text)
       table.remove(body)
     end
     sections[h.key] = table.concat(body, "\n")
+  end
+
+  -- The AI sometimes signs the reply draft anyway despite the prompt never
+  -- asking for one — same "always leave it out" feedback (2026-08-11) that
+  -- `blocks.lua` handles for the hand-written block library. Only the
+  -- customer-facing section, not analysis/difficulty/solution/notes.
+  if sections.reply then
+    sections.reply = replygate.strip_signature(sections.reply)
   end
 
   -- An answer always fills 1-3; only the prompt's own format spec matches

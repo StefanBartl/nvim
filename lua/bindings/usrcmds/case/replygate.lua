@@ -52,6 +52,49 @@ local function headline_lines(lines)
   return out
 end
 
+--- Strip a trailing "Best regards, ..." sign-off (2026-08-11 feedback: the
+--- reply speaks for itself, the closing line gets left out every time).
+--- Only ever looks at the last few lines — a "Best regards," found deep in
+--- the body would most likely be a quoted earlier email, not the draft's
+--- own sign-off, and stripping that would eat real content.
+---
+--- Pure string -> string, not buffer-shaped: this runs at GENERATION time
+--- (`blocks.lua`'s block insertion, `ki.lua`'s parsed reply section) so the
+--- line never appears in the first place, rather than being detected and
+--- manually removed afterward the way `M.clear_emojis` handles emojis —
+--- there's nothing to opt into removing if it was never written.
+---@param text string
+---@return string
+local SIGNATURE_SCAN_LINES = 5
+
+function M.strip_signature(text)
+  local lines = vim.split((text or ""):gsub("\r", ""), "\n", { plain = true })
+
+  local function is_noise(l)
+    local t = vim.trim(l)
+    return t == "" or t == "---" or t == "```"
+  end
+  while #lines > 0 and is_noise(lines[#lines]) do
+    table.remove(lines)
+  end
+
+  local scan_from = math.max(1, #lines - SIGNATURE_SCAN_LINES + 1)
+  for i = #lines, scan_from, -1 do
+    if vim.trim(lines[i]):lower():match("^best regards,?$") then
+      local out = {}
+      for j = 1, i - 1 do
+        out[j] = lines[j]
+      end
+      while #out > 0 and vim.trim(out[#out]) == "" do
+        table.remove(out)
+      end
+      return table.concat(out, "\n")
+    end
+  end
+
+  return table.concat(lines, "\n")
+end
+
 ---@param lines string[]
 ---@return string[]  deduplicated URLs, in first-seen order.
 local function extract_urls(lines)
