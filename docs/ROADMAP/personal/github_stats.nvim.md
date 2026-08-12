@@ -1,9 +1,7 @@
 # `github_stats.ndim`
 
 - [ ] `github_stats.nvim` besser machen
-
---
-
+- [ ] Dashboard mit stats maxi male zeitdauer?
 
 ## Subprozess-Umgebung auf `lib.nvim.cross.run.env` umstellen
 
@@ -15,3 +13,6 @@ existiert seit dem `cross.run.env`-Commit in `lib.nvim` (siehe dort
 
 - [ ] Spawn-Aufrufe auf `env = require("lib.nvim.cross.run.env").build()` bzw.
       `env.apply(spawn_opts)` umstellen — betroffen: prüfen, ob eigene Spawns existieren (aktuell keine gefunden) — sonst Eintrag streichen.
+
+---
+

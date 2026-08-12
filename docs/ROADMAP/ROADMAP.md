@@ -34,7 +34,8 @@
 - wenn man eine ganzeu zeile markiert, also shiift v im nomralmode, und dann diese in backticks umhüllen will, dabn macht man danach `` aber es umhült nicht sonder macht:
     C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/documentation.nvim.md
     ```
-  also hängt in der nächsten zeile eiunfach dreio backticks an
+  also hängt in der nächsten zeile eiunfach dreio backticks an.
+- [ ] strg+v soll trimmen
 
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
 - [ ] Autocompletion beim schreiben funktiert schon mit zusätzlichen dictionary bvon mir, jetzt wäre es noch toll, wenn oft verwendete höher geranked werden bei den vorschlägen
