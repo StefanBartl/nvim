@@ -7,11 +7,15 @@
 
 ## Table of content
 
-- [Root Cause](#root-cause)
-- [Architektur-Entscheidung](#architektur-entscheidung)
-- [Implementationsstand](#implementationsstand)
-- [Was noch fehlt](#was-noch-fehlt)
-- [Nebenfunde / Notizen](#nebenfunde--notizen)
+  - [Root Cause](#root-cause)
+  - [Architektur-Entscheidung](#architektur-entscheidung)
+  - [Implementationsstand](#implementationsstand)
+    - [✅ Schritt 2 — Retry-Layer in `lib.nvim.cross.fs.mutate` (fertig, ungetestet im echten Windows-Lock-Fall)](#schritt-2-retry-layer-in-libnvimcrossfsmutate-fertig-ungetestet-im-echten-windows-lock-fall)
+    - [✅ Schritt 3 — filetree.nvim auf `cross.fs.mutate` umgestellt (fertig)](#schritt-3-filetreenvim-auf-crossfsmutate-umgestellt-fertig)
+  - [Was noch fehlt](#was-noch-fehlt)
+    - [🔲 Schritt 1 — Diagnose-Bestätigung (kein Code)](#schritt-1-diagnose-besttigung-kein-code)
+    - [🟡 Schritt 4 — `lib.nvim/neotree/watch`-Registry + `handle_guard`-Feature (Kern fertig, Reste offen)](#schritt-4-libnvimneotreewatch-registry-handle_guard-feature-kern-fertig-reste-offen)
+  - [Nebenfunde / Notizen](#nebenfunde-notizen)
 
 ---
 
@@ -54,6 +58,8 @@ Reihenfolge (unabhängig verwertbar, nicht strikt sequentiell):
 
 ## Implementationsstand
 
+---
+
 ### ✅ Schritt 2 — Retry-Layer in `lib.nvim.cross.fs.mutate` (fertig, ungetestet im echten Windows-Lock-Fall)
 
 Repo: `c:\repos\lib.nvim`, committet & gepusht (`96afd50`).
@@ -71,6 +77,8 @@ Repo: `c:\repos\lib.nvim`, committet & gepusht (`96afd50`).
 
 **Bekannte Grenze:** Der Retry hilft gegen spurious Windows-Locks (Defender/Indexer/OneDrive). Gegen die eigentliche Ursache (neo-tree schließt Watcher-Handles nie) hilft er nur zufällig, wenn der GC dazwischenkommt — das ist erst mit Schritt 4 wirklich behoben.
 
+---
+
 ### ✅ Schritt 3 — filetree.nvim auf `cross.fs.mutate` umgestellt (fertig)
 
 Repo: `E:\repos\filetree.nvim`, committet & gepusht (`fix(fileops): route rename/copy through lib.nvim.cross.fs.mutate`).
@@ -86,9 +94,13 @@ Repo: `E:\repos\filetree.nvim`, committet & gepusht (`fix(fileops): route rename
 
 ## Was noch fehlt
 
+---
+
 ### 🔲 Schritt 1 — Diagnose-Bestätigung (kein Code)
 
 `use_libuv_file_watcher = false` in [`neotree.lua:168`](../../../../lua/plugins/neotree.lua) testen, über mehrere Tage (Fehler ist sporadisch). Bestätigt oder widerlegt die Root-Cause-Analyse, bevor weiter Arbeit in Schritt 4 fließt. **Vom User noch nicht zurückgemeldet.**
+
+---
 
 ### 🟡 Schritt 4 — `lib.nvim/neotree/watch`-Registry + `handle_guard`-Feature (Kern fertig, Reste offen)
 

@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] spotlight: warum `leader mk`? Und nicht `leader s*`? itte umstelen. sofdern nichts dagegen spricht (andere mappings). update doe docs und auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS  (hier kajnn man auch checken ob eine keymaps schon besetzte ist=)
+- [ ] Ein mappings wie `M-o` (alternate open), mit dem ich so sachen wie `markdown.nvim`'s `:TableView toggle` in md-files toggle, aber auch, je nach kontext, `gopath.nvim`'s `gF` oder `open.nvim`s doppelcklick handler usw... ausfphrt - je nachem, waas gerade halt unter dem cursor ist. wenn mehrere Möglichkeiten bestehen, dann einfach nachfragen. `lib.nvim nvim.ui.ki` hat da  eine passende prompt/selection
+
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
 - spotlight checken und lernen

@@ -4,7 +4,8 @@ Note: `nvim\lua\bindings\usrcmds\case` mitdenken/wie ein plugin behandeln soweit
   - [ ] Alle checlsts (new project, review, performance usw..) darafuf anwenden und sinnvoll implementieren
 Note: Wenn ich anschließend "Alle Plugins" oder "Jedes Plugin" oä. verwende, meine ich alle meine custom personal nvim plugins, die liste findest du hier: C:\Users\bartl\AppData\Local\nvim\lua\plugins\personal\source.lua
 
-
+- [ ] `documentation.nvim` && `runtime-analysis.nvim` -> Roamdap, Checklists,...
+- IDEAS in den docs der plugins analysieren -> aufwandscätzung, qucik wins?
 - [ ] In den README.md der plugins irgendwie auf die anderen pluins hinweißen entweder übersihct, oder ein auszug+link zu einer website oder übersichts-repo redme; Das darf aber natürlich nicht störend sein, also 25 plugins mit beschreibung einfach am anfang eins üölugins readmes.md ist ein no go
 - [ ] Roadmaps
   - [ ] Analyse aller Roadmaps -> C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/ROADMAP_FINISHED.md
