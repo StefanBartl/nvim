@@ -64,11 +64,23 @@ cursor there and runs the same action `M-o` would have. Entries pointing at
 an image or a `.pdf` file are tagged and routed to `images.show()` /
 `:PdfPort text` instead of the generic open.nvim dispatch.
 
-**Not included:** gopath-resolvable code identifiers (symbols, imports).
-There is no cheap whole-buffer API for those (gopath resolves at the cursor,
-via treesitter/LSP), and a flat list of every resolvable identifier in a
-code file would not be a usable picker anyway. Use `M-o` at the cursor for
-those, same as plain `gF`.
+**gopath imports, scoped.** `gopath.resolve()` has no position-parameter API
+— it always reads the real cursor (`nvim_win_get_cursor`) internally, so
+there is no cheap way to ask it "what's resolvable at line N" without
+actually moving there. `buffer_targets` does exactly that, but only for
+lines that *look* like an import/require/include statement (a handful per
+file, matched by a plain pattern list in `scan.lua`'s
+`gopath_import_candidates`) — not every identifier in the buffer. That
+scoping matters because this config runs gopath in `mode = "hybrid"`
+(`order = {"lsp","treesitter","builtin"}`, `lsp_timeout_ms = 200`): a
+resolve that falls through to the LSP stage is a real synchronous
+round-trip, and import lines are almost always caught by gopath's cheap
+filetoken/linepath steps first. Probing every token in a code file would
+not stay cheap, and would flicker the cursor across the whole buffer while
+`M-O` is still deciding what to show — so arbitrary code identifiers
+(function calls, variable references, …) still aren't listed; use `M-o` at
+the cursor for those, same as plain `gF`. The cursor is restored to its
+original position once the scan finishes.
 
 ## Line-search fallback (`M-o`, zero candidates under the cursor)
 

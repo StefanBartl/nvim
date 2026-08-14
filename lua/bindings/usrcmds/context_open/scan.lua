@@ -5,9 +5,9 @@
 ---   - `context_open.list()` / M-O (searches the whole buffer)
 --- Built on `open.viewer.scan` (open.nvim's own link/URL/path extractor)
 --- rather than a second implementation of the same regexes, plus one entry
---- per markdown table. Does NOT include gopath-resolvable code identifiers --
---- there is no cheap whole-buffer API for those, and a flat list of every
---- resolvable symbol in a code file would not make a usable picker anyway.
+--- per markdown table and one per gopath-resolvable import/require/include
+--- line (see `gopath_import_candidates` for why it stops at import lines
+--- and does not probe every identifier in the buffer).
 
 local util = require("bindings.usrcmds.context_open.util")
 
@@ -112,6 +112,106 @@ local function table_candidates(bufnr)
   return out
 end
 
+---Lines that look like an import/require/include statement across the
+---languages gopath.nvim's `languages` config table knows about. A cheap,
+---deliberately approximate pre-filter -- see `gopath_import_candidates` for
+---why the actual resolution stays scoped to just these lines.
+---@internal
+local IMPORT_PATTERNS = {
+  "^%s*import%s",
+  "^%s*from%s+%S+%s+import%s",
+  "require%s*%(",
+  "require%s+[\"']",
+  '^%s*#include%s*[<"]',
+  "^%s*use%s+",
+  "^%s*using%s+",
+}
+
+---Column (0-indexed) to place the cursor on for `gopath.resolve()` to see
+---the actual module/path token, not the `import`/`require`/`use` keyword
+---itself -- landing on the keyword resolves to nonsense (e.g. "local", the
+---preceding Lua keyword, treated as a bogus non-existent file). Prefers the
+---first quote or `<` on the line (covers `require("x")`, `import "x"`,
+---`#include <x>`/`"x"`, `@import("x")`); falls back to the first non-space
+---character after the matched keyword for unquoted styles (Rust `use`,
+---Python `import`, C# `using`).
+---@internal
+---@param line string
+---@return integer|nil col  nil when the line doesn't look like an import at all
+local function import_target_col(line)
+  for _, pat in ipairs(IMPORT_PATTERNS) do
+    local s, e = line:find(pat)
+    if s then
+      local quote = line:find("[\"'<]", s)
+      if quote then
+        return quote
+      end
+      local rest = line:sub(e + 1)
+      local ws = rest:match("^%s*") or ""
+      return e + #ws
+    end
+  end
+  return nil
+end
+
+---gopath-resolvable import/require/include lines in `bufnr`.
+---
+---Unlike every other M-O source, this genuinely moves the real cursor:
+---`gopath.resolve()` has no position-parameter API, it always reads
+---`nvim_win_get_cursor` internally (see gopath.nvim's `resolve_at_cursor`).
+---The original cursor position is restored once scanning finishes.
+---
+---Deliberately scoped to lines that look like an import rather than every
+---token in the buffer: this config runs gopath in `mode = "hybrid"`
+---(`order = {"lsp","treesitter","builtin"}`, `lsp_timeout_ms = 200`), so a
+---resolve() that falls through to the LSP stage costs a real synchronous
+---round-trip. Import lines are almost always caught by gopath's cheap
+---filetoken/linepath steps before that stage is ever reached; probing every
+---identifier in a code file would not be, and could block M-O opening on
+---dozens of LSP calls.
+---@internal
+---@param bufnr integer
+---@return ContextOpen.Candidate[]
+local function gopath_import_candidates(bufnr)
+  if bufnr ~= vim.api.nvim_get_current_buf() then
+    return {} -- resolve_at_cursor only ever sees the current window/buffer
+  end
+  local ok_gopath, gopath = pcall(require, "gopath")
+  if not ok_gopath then
+    return {}
+  end
+
+  local win = vim.api.nvim_get_current_win()
+  local original = vim.api.nvim_win_get_cursor(win)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  local out = {}
+  for lnum, line in ipairs(lines) do
+    local col = import_target_col(line)
+    if col then
+      if pcall(vim.api.nvim_win_set_cursor, win, { lnum, col }) then
+        local ok_res, res = pcall(gopath.resolve)
+        -- `exists == false` is gopath's own last-resort "raw cfile, nothing
+        -- actually found" fallback (see gopath.resolve's step 6) -- not
+        -- worth surfacing as an openable target.
+        if ok_res and res and res.exists ~= false then
+          out[#out + 1] = {
+            label = ("%d: gopath  %s"):format(lnum, res.path or res.subject or "?"),
+            lnum = lnum,
+            col = col,
+            run = function()
+              gopath.commands.resolve_and_open("edit")
+            end,
+          }
+        end
+      end
+    end
+  end
+
+  pcall(vim.api.nvim_win_set_cursor, win, original)
+  return out
+end
+
 ---Every openable target in `bufnr`, sorted by line.
 ---@param bufnr integer|nil
 ---@return ContextOpen.Candidate[]
@@ -130,6 +230,7 @@ function M.buffer_targets(bufnr)
   end
 
   vim.list_extend(out, table_candidates(bufnr))
+  vim.list_extend(out, gopath_import_candidates(bufnr))
 
   table.sort(out, function(a, b)
     return (a.lnum or 0) < (b.lnum or 0)
