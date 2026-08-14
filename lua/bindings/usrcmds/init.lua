@@ -5,6 +5,7 @@ local usercmd = require("lib.nvim.usercmd")
 
 require("bindings.usrcmds.case").enable()
 require("bindings.usrcmds.bindings_explorer").enable()
+require("bindings.usrcmds.context_open").enable()
 
 usercmd.create('CopyLocation', function()
   -- Absoluter Pfad der aktuellen Datei
