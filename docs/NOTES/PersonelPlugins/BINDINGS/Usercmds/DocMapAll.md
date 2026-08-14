@@ -1,10 +1,29 @@
 # `:DocMapAll` — generate documentation.nvim's map for every personal plugin
 
-Not a plugin's own command — `:DocMapAll` lives in this config itself
-(`lua/bindings/usrcmds/docmap_all/`, alongside `:MyPlugins`, `:MyReposUpdate`
-and `:WhoLocks` under `lua/bindings/usrcmds/`), not under any one plugin's
-own file. Listed here for the same reason [`MyPlugins.md`](MyPlugins.md) is:
-it is about the personal-plugin *list itself*, not any one plugin.
+**Superseded 2026-08-14 — read [`documentation.nvim.md`](./documentation.nvim.md)
+first.** `:DocMapAll` (and `:DocMap all`) is now `documentation.nvim`'s own
+command, registered by its own `setup()` when `opts.generate_all.projects`
+is configured — not a config-internal usercmd any more.
+`lua/bindings/usrcmds/docmap_all/` (referenced throughout this file below)
+has been deleted; the two `.enable()` lines it needed in `init.lua` are
+gone too. Everything below this point describes the **old**
+personal-config-only design — kept for the history (why a project list,
+why sequential, why "never fires on its own" used to be absolute), not as
+current fact. The one thing that changed in substance, not just location:
+our own spec now sets `opts.generate_all.autoload = true`, so "never fires
+on its own" is no longer quite true — see `documentation.nvim.md`'s own
+section on this.
+
+---
+
+*Historical, pre-2026-08-14 description follows:*
+
+Used to not be a plugin's own command — `:DocMapAll` lived in this config
+itself (`lua/bindings/usrcmds/docmap_all/`, alongside `:MyPlugins`,
+`:MyReposUpdate` and `:WhoLocks` under `lua/bindings/usrcmds/`), not under
+any one plugin's own file. Listed here for the same reason
+[`MyPlugins.md`](MyPlugins.md) is: it was about the personal-plugin *list
+itself*, not any one plugin.
 
 | Command | Effect |
 | --- | --- |
@@ -76,6 +95,11 @@ caller can check `.code` without parsing stdout in the failure case.
   infer.
 
 ## Changelog
+
+- 2026-08-14 — superseded. `:DocMapAll`/`:DocMap all` moved into
+  `documentation.nvim` itself (`opts.generate_all`); this config's own spec
+  additionally turned `autoload` on, which the "never fires on its own"
+  note above no longer describes. See `documentation.nvim.md`.
 
 - 2026-08-11 — added, alongside `plugins.personal.export` and
   `scripts/docmap_projects.lua`, to back `docmap-desktop`'s spec-import

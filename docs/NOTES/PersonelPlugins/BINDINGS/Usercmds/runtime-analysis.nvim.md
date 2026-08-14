@@ -128,15 +128,58 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 | `:RATelemetry disabled` | list namespaces currently disabled |
 | `:RATelemetry coverage` | which wrapped functions were never called |
 | `:RATelemetry export [path]` | JSON; Markdown if `path` ends `.md`; PDF if `.pdf` (via pdfport.nvim, optional dependency) |
+| `:RATelemetry export-all <dir>` | one Markdown file per namespace found **on disk**, into `<dir>` — unlike `export`, not limited to this session's live instances (`telemetry.export_all()`, `store.namespaces()` scans the cache dir directly). Shipped 2026-08-12. |
 | `:RATelemetry open [ns]` | render + open externally (`report_style`: `auto`/`kit`/`mdview`/`file`/`html`) |
 | `:RATelemetry compare [ns] [days]` | "this window vs the one before it" (default 7d) — newly-hot/gone-cold/changed functions. Shipped 2026-08-04 (§4.2). |
 | `:RATelemetry startup [top]` | Which *module* a plugin's startup cost sits in, as a waterfall (self vs. total time, grouped per module and per module root). Shipped 2026-08-04 (§3.3). **Needs the opt-in below.** |
 | `:RATelemetry cost` | Startup cost vs. call count per namespace, worst (expensive, underused) first. Shipped 2026-08-04 (§7.2). Joins `startup`'s per-module-root data against each instance's own `resolved_modules()` on real module paths — never guesses a namespace ("markdown.nvim") matches a module root ("markdown") by string similarity. |
+| `:RATelemetry snapshot <ns> [name]` | Save a named, device-tagged capture of `ns`'s current aggregate, without resetting the live counters. Always explicit — nothing here ever snapshots on its own. |
+| `:RATelemetry snapshots <ns>` | List `ns`'s saved snapshots, newest first. |
+| `:RATelemetry snapshot-compare <ns> <a> <b>` | Diff two named snapshots' call counts directly — **not** a calendar window like `compare` above. See "Snapshot device tagging + snapshot-compare" below. Shipped 2026-08-14. |
+| `:RATelemetryStartAll` / `:RATelemetryStopAll` | Standalone aliases for bare `start`/`stop` above — see below. Shipped 2026-08-14. |
 
-`<Tab>` after `start `/`stop `/`reset `/`open `/`compare ` completes
-namespaces only; `compare`'s third token (a day count) isn't completed,
-and `startup` takes no namespace at all (its second token is a `top`
-count).
+`<Tab>` after `start `/`stop `/`reset `/`open `/`compare `/`snapshot `/
+`snapshots `/`snapshot-compare ` completes namespaces only; `compare`'s
+third token (a day count) isn't completed, and `startup` takes no
+namespace at all (its second token is a `top` count).
+
+### `:RATelemetryStartAll` / `:RATelemetryStopAll` (2026-08-14)
+
+Standalone alias commands, registered by the same `command.setup()` call as
+`:RATelemetry` itself, for exactly what bare `:RATelemetry start`/`stop`
+(no namespace) already do — every live instance in this process, at once.
+Used to be a personal-config-only usercmd
+(`lua/bindings/usrcmds/ratelemetry_all/`, now removed); moved into
+`runtime-analysis.nvim` itself once it became clear the underlying
+operation (`telemetry.start_all()`/`stop_all()`, both iterating the
+module-level `instances` registry) needs **zero** personal-config
+knowledge — unlike `:DocMapAll` (see `documentation.nvim.md`), which
+genuinely does need a caller-supplied repo list. `telemetry.start_all()`
+is new too, symmetric with the pre-existing `stop_all()` — the bare
+`:RATelemetry start` case used to have its "every instance" loop written
+inline in the command dispatcher instead of calling a real function.
+
+### Snapshot device tagging + `snapshot-compare` (2026-08-14)
+
+`telemetry.snapshot(ns, name, opts)` gained a third argument: `opts.device`
+tags the capture (default `vim.uv.os_gethostname()`, an explicit string to
+override, or `false` for no tag at all), stored in the snapshot's own
+`Data.info.device` — rendered wherever `info` already renders, no new UI.
+The motivating case: read data, change something, read data again —
+possibly on a different machine — compare, and know which snapshot came
+from where.
+
+`telemetry.compare_snapshots(ns, name_a, name_b)` / `:RATelemetry
+snapshot-compare <ns> <a> <b>` diffs two named snapshots' function call
+counts directly. **Not** the same as `compare` (`this week vs last week`,
+reading one dataset's own rolling day buckets) — two snapshots are
+independent captures, `Data.functions[key].calls` a lifetime total in
+each. Classifies by the **A→B delta**, not raw totals: a lifetime counter
+only ever grows, so "silent since `name_a`" can never fire between two
+chronologically ordered snapshots — "no new calls happened in this
+period" is the question that actually has an answer. New report functions
+`report.compare_snapshots_lines()`/`compare_snapshots_markdown()`, same
+shape as the existing `compare_lines()`/`compare_markdown()` pair.
 
 ### `export .pdf` via pdfport.nvim (2026-08-09)
 
@@ -235,8 +278,9 @@ config actually wires `opts.telemetry` into the plugin's own spec
 `lua/runtime-analysis/telemetry/README.md` in the repo for the module's own
 full reference.
 
-## Global-surface collision check (2026-08-04, re-checked after `:RA usage` was added)
+## Global-surface collision check (2026-08-14, re-checked after `:RATelemetryStartAll`/`StopAll` were added)
 
 Checked against every `Usercmds/*.md` in this folder: `RA`, `RARequest`,
-`RASend` and `RATelemetry` are unique — no other personal plugin registers
-any of the four, and no other plugin owns an `RA`-prefixed command.
+`RASend`, `RATelemetry`, `RATelemetryStartAll` and `RATelemetryStopAll`
+are unique — no other personal plugin registers any of the six, and no
+other plugin owns an `RA`-prefixed command.

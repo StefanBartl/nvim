@@ -64,6 +64,7 @@ offers action names only, instead of blocking on a full scan.
 | `:DocMap tools` | This repo's own `lib.nvim.deps` manifest (`docs/install.json`/`docs/INSTALL.md`) → quickfix. Declared only — never a live "is it installed here" probe. Shipped 2026-08-10. | no |
 | `:DocMap serve [stop]` | Local map server on `127.0.0.1`, OS-assigned port. Enables the History tab. | no |
 | `:DocMap helptags` | Regenerate this plugin's own `doc/tags` | writes `doc/tags` |
+| `:DocMap all` | Generate every project in `opts.generate_all.projects` — one real headless subprocess each. Only registered when that option is configured. See "opts.generate_all" below. Shipped 2026-08-14. | **yes**, per project |
 
 **Only a genuinely empty argument regenerates.** An unknown action reports what
 it expected. (Until 2026-07-28 the old if-chain fell through to the default, so
@@ -121,11 +122,47 @@ are just the annotation cards side by side. Marks live in the URL *and*
 The `+` is a separate control on purpose: clicking the `ⓘ` already pins the
 annotation popup, which is what makes a long `@example` readable.
 
-## Global-surface collision check (2026-07-28)
+## `opts.generate_all` — `:DocMap all` / `:DocMapAll`, now the plugin's own (2026-08-14)
+
+Cross-repo generation used to be entirely config-internal
+(`lua/bindings/usrcmds/docmap_all/`, see the now-mostly-historical
+[`DocMapAll.md`](./DocMapAll.md) for the full backstory) — a personal
+usercmd reaching into `documentation.generate_all.run()` directly and
+reimplementing the progress/notify glue by hand. Moved into
+`documentation.nvim` itself: `opts.generate_all = { projects = {{root,
+title}, ...}, autoload? }` is plain data our own spec's `opts` function
+still builds (from `plugins.personal.export.projects()`, unchanged), but
+`setup()` now registers `:DocMap all` and a standalone `:DocMapAll` alias
+itself — only when `projects` is non-empty, so an unconfigured `setup()`
+elsewhere gains neither command. The plugin's own source still never
+reads a config's plugin list; the list only ever arrives as data through
+`opts`, the same way `runtime-analysis.nvim`'s `opts.telemetry` already
+works one repo over.
+
+**`autoload = true` in our own spec.** New option, off by default upstream
+— checks each configured project for an existing `module_map.json` once,
+at `setup()` time, and generates (async, non-blocking) only the ones
+missing. Turned on here because listing a plugin in `plugins/personal/
+init.lua` is already the active signal its data is wanted. Consequence
+worth remembering: the **next `:DocMap` of any kind, in any repo**, is
+what actually triggers `setup()` for a `cmd`-lazy plugin — so the first
+time `:DocMap`/`:DocBrowse`/`:DocMapAll` gets typed after this shipped,
+autoload silently ran once in the background and may have written new
+`docs/map/` directories into any of the ~30 personal plugins that did not
+have one yet.
+
+Cross-reference: `documentation.nvim`'s own `docs/COMMANDS.md` (`:DocMap
+all` / `:DocMapAll` section) and `README.md`/`doc/documentation.txt` for
+the published, plugin-owned version of this — this note is the "what did
+*I* configure" layer on top, not the source of truth for how the feature
+itself works.
+
+## Global-surface collision check (2026-08-14, re-checked after `:DocMapAll` moved into the plugin)
 
 The command names are this plugin's only global surface. Checked against every
-`Usercmds/*.md` in this folder: **`DocMap` and `DocBrowse` are unique** — no
-other personal plugin registers either name or a `Doc`-prefixed command.
+`Usercmds/*.md` in this folder: **`DocMap`, `DocBrowse` and `DocMapAll` are
+unique** — no other personal plugin registers any of the three or a
+`Doc`-prefixed command.
 
 Note `:checkhealth documentation` is also registered, implicitly, by the
 presence of `lua/documentation/editor/health.lua`.

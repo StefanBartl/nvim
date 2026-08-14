@@ -105,7 +105,10 @@ startup.setup_usercmds()
 require("bindings.usrcmds.update_repos").enable()
 require("bindings.usrcmds.plugin_repos").enable()
 require("bindings.usrcmds.who_locks").enable()
-require("bindings.usrcmds.docmap_all").enable()
+-- :DocMapAll / :RATelemetryStartAll+StopAll (2026-08-14): moved into
+-- documentation.nvim / runtime-analysis.nvim themselves -- see
+-- plugins/personal/init.lua's opts.generate_all for the data this config
+-- still supplies. No usrcmd wrapper needed here any more.
 
 -- --- synchronous ------------------------------------------------------------
 

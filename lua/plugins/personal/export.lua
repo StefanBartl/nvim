@@ -1,8 +1,10 @@
 ---@module 'plugins.personal.export'
---- The shared interface `:DocMapAll` (this config, see
---- `bindings.usrcmds.docmap_all`) and docmap-desktop's own spec-import
---- feature are both meant to be built against: which personal plugins are
---- enabled right now, and where each one's local checkout actually is.
+--- The shared interface `:DocMapAll` (fed through `opts.generate_all` on
+--- documentation.nvim's own plugin spec, `plugins/personal/init.lua` —
+--- the command itself lives in documentation.nvim now, not here) and
+--- docmap-desktop's own spec-import feature are both meant to be built
+--- against: which personal plugins are enabled right now, and where each
+--- one's local checkout actually is.
 ---
 --- Built on `plugins.personal.list` — the same drift-proof, fully-resolved
 --- entry list `:MyPlugins clone`/`remove` and the statusline's own/external

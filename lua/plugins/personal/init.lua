@@ -205,22 +205,46 @@ plugins.add({
 
   {
     "StefanBartl/documentation.nvim",
-    cmd = { "DocMap", "DocBrowse" },
+    cmd = { "DocMap", "DocBrowse", "DocMapAll" },
     dependencies = { "StefanBartl/lib.nvim" },
     -- Kein `root`: die Commands mappen bewusst das aktuelle Arbeitsverzeichnis,
     -- weil hier reihenweise Repos nebeneinander liegen und ein fixes Ziel genau
     -- das Falsche waere. `source` leitet documentation.config aus dem Root ab
     -- (lua/<name>, wenn lua/ genau einen Kandidaten enthaelt).
-    opts = {
-      -- `:DocMap full` (LuaLS over the whole tree) and `:DocMap churn` (walks
-      -- the repo history) both report into the shared progress registry.
-      progress_style = "statusline",
+    opts = function(_, opts)
+      opts.progress_style = "statusline"
       -- Experimental (2026-08-10): a "Compiler Explorer" link next to every
       -- module/function in the generated page, real luac -l -l -p bytecode
       -- disassembly, not a workaround for Lua. Off by default upstream;
       -- turned on here explicitly per request.
-      godbolt = true,
-    },
+      opts.godbolt = true
+
+      -- `:DocMap all` / `:DocMapAll` (2026-08-14): documentation.nvim owns
+      -- the command, this config supplies only the data -- the same split
+      -- runtime-analysis.nvim's own `opts.telemetry` already draws one
+      -- entry below. `plugins.personal.export.projects()` is the same
+      -- resolved entry list `config.telemetry.build()` reads, so nothing
+      -- here has to be kept in sync with `plugins/personal/init.lua` by
+      -- hand -- add a plugin to the spec below and both wirings pick it up.
+      local export = require("plugins.personal.export")
+      local projects = export.projects()
+      if #projects > 0 then
+        local gen_projects = {}
+        for _, p in ipairs(projects) do
+          gen_projects[#gen_projects + 1] = { root = p.dir, title = p.name }
+        end
+        opts.generate_all = {
+          projects = gen_projects,
+          -- Listing a plugin in the spec below is already the active signal
+          -- that its data is wanted -- see bindings.usrcmds.docmap_all's old
+          -- header (now removed) for the "never infer" reasoning this
+          -- overrides deliberately, once, here.
+          autoload = true,
+        }
+      end
+
+      return opts
+    end,
     config = function(_, opts)
       require("documentation").setup(opts)
     end,
