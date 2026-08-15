@@ -1,4 +1,4 @@
----@module 'wkdoptions.hl_config.breadcrumbs.ctx.providers.lsp'
+---@module 'wkdoptions.hl_config.breadcrumbs.ctx.providers.lsp_func'
 ---@brief LSP function name provider (b:lsp_current_function)
 ---
 --- Very cheap provider - just reads buffer variable
