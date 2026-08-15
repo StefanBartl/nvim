@@ -1,4 +1,4 @@
----@module 'config/menu/init.lua'
+---@module 'config.menu'
 -- Orchestrates submodules and exposes a setup() that controls which top-level menu entries are enabled.
 
 local custom_menu = require("config.menu.custom_menu")

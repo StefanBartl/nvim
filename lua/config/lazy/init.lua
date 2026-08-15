@@ -1,4 +1,4 @@
----@module 'config.lazy_config'
+---@module 'config.lazy'
 
 local machine = require("machine")
 

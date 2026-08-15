@@ -1,4 +1,4 @@
----@module 'lsp.tools.deprecated_help'
+---@module 'lsp.tools.deprecated_help.__init'
 --- Utilities to augment Neovim LSP diagnostics for deprecated API usage
 --- and to provide a quick mapping to open the help (:help) page for the
 --- symbol under the cursor. Install and call `require('nvim.deprecated_help').setup()` from init.lua.

@@ -1,4 +1,4 @@
----@module 'plugins.avante'
+---@module 'plugins.ai.avante'
 ---
 --- Lazy.nvim specification for Avante.
 --- The complete provider configuration is located in plugins.ai.

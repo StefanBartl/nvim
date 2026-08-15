@@ -1,4 +1,4 @@
----@module 'lsp.tools.deprecated_help.init'
+---@module 'lsp.tools.deprecated_help'
 --- Initialization entry for the modularized deprecated-warning helper.
 --- Example usage:
 ---   require('myplugin.init').setup({

@@ -1,4 +1,4 @@
----@module 'custom.smart_edit'
+---@module 'bindings.mappings.smart_del_key'
 --- Small local helpers to improve Normal-mode ergonomics.
 --- Features:
 ---   - Smart <Del>:

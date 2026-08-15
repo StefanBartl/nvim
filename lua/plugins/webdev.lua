@@ -1,4 +1,4 @@
----@module 'plugins/webdev.lua'
+---@module 'plugins.webdev'
 
 return {
   {

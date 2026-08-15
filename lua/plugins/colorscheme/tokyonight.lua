@@ -1,4 +1,4 @@
----@module 'plugins.colorscheme'
+---@module 'plugins.colorscheme.tokyonight'
 ---@type LazyPluginSpec[]
 
 return {

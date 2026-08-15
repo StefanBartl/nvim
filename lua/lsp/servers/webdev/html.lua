@@ -1,4 +1,4 @@
----@module 'lsp.servers.html'
+---@module 'lsp.servers.webdev.html'
 --- Robust HTML language server definition with Mason/Windows fallbacks.
 --- This module tries multiple candidate executables and falls back to Mason's bin folder.
 --- It disables server formatting by default to avoid conflicts with external formatters.

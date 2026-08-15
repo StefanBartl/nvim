@@ -1,4 +1,4 @@
----@module 'config.snacks.mappings.init'
+---@module 'config.snacks.mappings'
 --- Keymap definitions for folke/snacks.nvim.
 --- Exposes keys() returning the array format expected by lazy.nvim plugin specs.
 

@@ -1,4 +1,4 @@
----@module 'config/menu/custom_menu.lua'
+---@module 'config.menu.custom_menu'
 --- Returns the menu table for quick requires if desired
 ---
 --- Enhanced with:

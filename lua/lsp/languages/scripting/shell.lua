@@ -1,4 +1,4 @@
----@module 'lsp.servers.bashls'
+---@module 'lsp.languages.scripting.shell'
 --- Bash/sh/zsh language server via native LSP config/enable.
 --- Requires bash-language-server in PATH (Mason: bash-language-server).
 --- Diagnostics are powered by shellcheck when available.

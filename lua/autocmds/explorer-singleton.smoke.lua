@@ -1,3 +1,4 @@
+---@module 'autocmds.explorer-singleton.smoke'
 -- Ad hoc smoke test for autocmds/explorer-singleton.lua's state machine.
 -- Not wired into any CI (this repo has no Lua test runner) — run manually
 -- after touching that module:

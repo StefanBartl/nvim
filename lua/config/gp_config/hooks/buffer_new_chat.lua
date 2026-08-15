@@ -1,4 +1,4 @@
----@module 'config.gp.hooks.buffer_new_chat'
+---@module 'config.gp_config.hooks.buffer_new_chat'
 ---@brief `:BufferGpChatNew` is a dedicated command for `gp.nvim` which
 --- opens a new chat with the entire current buffer as context
 

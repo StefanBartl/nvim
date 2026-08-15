@@ -1,4 +1,4 @@
----@module 'utils.copilot.nes_guard'
+---@module 'config.copilot.nes_guard'
 --- Small helpers to guard calls into copilot-lsp.nes safely.
 
 local M = {}

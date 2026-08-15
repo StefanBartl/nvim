@@ -1,4 +1,4 @@
----@module 'mappings.lsp_signature'
+---@module 'lsp.tools.lsp_signature'
 --- Provides Insert- and Normal-mode mapping for LSP signature help / hover preview.
 --- Toggle: <C-b>
 --- - Normalmodus: Popup öffnet, Fokus direkt auf Floating-Window für Scroll/Copy

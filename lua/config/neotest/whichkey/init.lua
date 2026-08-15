@@ -1,4 +1,4 @@
----@module 'config.neotest.which_key'
+---@module 'config.neotest.whichkey'
 --- Which-key integration for Neotest actions (new spec)
 
 local M = {}

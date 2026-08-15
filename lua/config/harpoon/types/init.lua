@@ -1,5 +1,5 @@
 ---@meta
----@module 'types.harpoon'
+---@module 'config.harpoon.types'
 -- Add these or adapt your existing type file accordingly.
 
 ---@alias Cfg.Harpoon.Value string

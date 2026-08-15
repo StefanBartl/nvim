@@ -1,3 +1,4 @@
+---@module 'lsp.tools.lsp_signature.open_floating_preview'
 -- changes for custom/lsp_signature/open_floating_preview.lua
 -- Accept opts.orig_fname / orig_line / orig_col and use them to set buffer name and a compact title.
 local api = vim.api

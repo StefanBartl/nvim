@@ -1,4 +1,4 @@
----@module 'lsp.tools.deprecated_help.lsp_lua_ls.lua_ls'
+---@module 'lsp.tools.deprecated_help.lsp.lua_ls.lua_ls'
 --- lua_ls specific handling for deprecated diagnostics.
 --- Responsibilities:
 ---  - Detect deprecated warnings emitted by lua_ls (and only lua_ls).

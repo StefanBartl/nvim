@@ -1,4 +1,4 @@
----@module 'bindings.mappings.surround'
+---@module 'bindings.mappings.sourrounding'
 --- Visual-mode mappings to surround the current selection.
 --- This version binds the bracket pairs to single-tap sequences:
 ---   []  -> surround with [ ... ]

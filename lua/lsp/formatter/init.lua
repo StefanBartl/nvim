@@ -1,4 +1,4 @@
----@module 'lsp.formatter.init'
+---@module 'lsp.formatter'
 --- Formatter API with on-save toggle, Conform-first strategy, and view preservation.
 --- Linux/macOS only; no Windows-specific branches.
 

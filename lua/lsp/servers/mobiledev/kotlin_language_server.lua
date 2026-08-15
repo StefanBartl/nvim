@@ -1,4 +1,4 @@
----@module 'lsp.servers.kotlin_language_server'
+---@module 'lsp.servers.mobiledev.kotlin_language_server'
 --- Kotlin Language Server for Android development.
 --- Requires JAVA_HOME to be set.
 

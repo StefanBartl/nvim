@@ -1,4 +1,4 @@
----@module 'wkdnvchad.ui.usrcmd'
+---@module 'wkdnvchad.usrcmd'
 ---Provides :UI usercommand for runtime UI configuration (Base46, editor UI).
 
 local notify = require("lib.nvim.notify").create("[wkdnvchad.usrcmd]")

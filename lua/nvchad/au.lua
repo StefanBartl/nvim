@@ -1,3 +1,4 @@
+---@module 'nvchad.au'
 -- Override of NvChad's ui/lua/nvchad/au.lua.
 --
 -- The upstream version builds the "reload config on save" BufWritePost

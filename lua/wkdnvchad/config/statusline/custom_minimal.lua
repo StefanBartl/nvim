@@ -1,4 +1,4 @@
----@module 'wkdnvchad.config.statusline.custom'
+---@module 'wkdnvchad.config.statusline.custom_minimal'
 --- Statusline using NvChad's gen_block pattern
 
 local lazy = require("lib.lua.lazy")

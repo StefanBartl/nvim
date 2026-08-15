@@ -1,4 +1,4 @@
----@module 'mypotions.set_diff_profile.profiles'
+---@module 'wkdoptions.set_diff_profile.profiles'
 ---@description
 -- This module defines different diff profiles for Neovim.
 

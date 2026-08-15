@@ -1,3 +1,4 @@
+---@module 'plugins.markdown'
 -- markdown.lua
 return {
 

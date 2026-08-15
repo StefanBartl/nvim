@@ -1,5 +1,5 @@
 ---@meta
----@module 'lsp.lspdoctor.types'
+---@module 'lsp.lspdoctor.@types'
 
 ---@class Lsp.Doctor.Options
 ---@field use_notify? boolean Render via vim.notify instead of print (default: false)

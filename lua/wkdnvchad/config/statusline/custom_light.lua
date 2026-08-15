@@ -1,4 +1,4 @@
----@module 'wkdnvchad.config.chadrc'
+---@module 'wkdnvchad.config.statusline.custom_light'
 --- Central configuration setup for WkdNvChad UI modules.
 --- Provides a setup function that merges user config with base defaults.
 

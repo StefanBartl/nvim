@@ -1,4 +1,4 @@
----@module 'plugins/nvdash.lua'
+---@module 'plugins.nvchad'
 -- Lazy plugin spec file for your NVDash (or any plugin that should bring menu support).
 -- Adapt the plugin name and event as you use lazy.nvim
 

@@ -1,4 +1,4 @@
----@module 'custom.ctrl_cycle'
+---@module 'bindings.mappings.ctrl_cycle'
 ---@brief Cycle words (incl. booleans) under <cword> via <C-a>/<C-x>; fall back to native number inc/dec.
 
 ---@class CWCCycles

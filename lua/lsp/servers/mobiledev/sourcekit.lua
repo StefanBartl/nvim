@@ -1,4 +1,4 @@
----@module 'lsp.servers.sourcekit'
+---@module 'lsp.servers.mobiledev.sourcekit'
 --- SourceKit-LSP for Swift and iOS development.
 --- macOS only - gracefully skips on other platforms.
 

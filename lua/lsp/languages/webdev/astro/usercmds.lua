@@ -1,4 +1,4 @@
----@module 'lsp.languages.webdev.astro.commands'
+---@module 'lsp.languages.webdev.astro.usercmds'
 
 local notify = require("lib.nvim.notify").create("[lsp.languages.webdev.astro.commands]")
 local usercmd = require("lib.nvim.usercmd")

@@ -1,4 +1,4 @@
----@module 'config.neotree.open.keymaps_only_ls'
+---@module 'config.neotree.window.open.keymaps.only_lhs'
 ---Neo-tree window keymaps using direct Neo-tree command execution.
 ---This module attaches normal-mode mappings that toggle Neo-tree
 ---in different window positions without any opener factory abstraction.

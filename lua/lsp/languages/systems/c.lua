@@ -1,4 +1,4 @@
----@module 'lsp.languages.c'
+---@module 'lsp.languages.systems.c'
 ---@class LangCQoL
 
 local Autocmd = require("lib.nvim.autocmd")

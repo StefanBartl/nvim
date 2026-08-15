@@ -1,3 +1,4 @@
+---@module 'bindings.mappings.archive'
 local map = {} -- dummy table for lsp
 
 --------------------------

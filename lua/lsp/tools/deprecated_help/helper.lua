@@ -1,4 +1,4 @@
----@module 'lps.tools.deprecated_help.helper'
+---@module 'lsp.tools.deprecated_help.helper'
 --- Helper utilities used by other modules.
 --- Provides safe buffer/diagnostic helpers and small caches.
 

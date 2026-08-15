@@ -1,4 +1,4 @@
----@module 'dap'
+---@module 'lsp.debug_adapters'
 
 local M = {}
 

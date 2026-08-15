@@ -1,4 +1,4 @@
----@module 'lsp.tools.deprecated_help.catch'
+---@module 'lsp.tools.deprecated_help.lsp.lua_ls.catch'
 --- Diagnostic "catcher" utilities.
 --- Responsible for deciding whether a diagnostic is the one of interest,
 --- extracting the relevant token/symbol and normalizing detection logic.

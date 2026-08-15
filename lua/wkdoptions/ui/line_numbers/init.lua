@@ -1,4 +1,4 @@
----@module 'wkdoptions.ui.line_number
+---@module 'wkdoptions.ui.line_numbers'
 ---@brief Viewport-aware hybrid line numbers using centralized ignore list.
 
 vim.opt.number = true

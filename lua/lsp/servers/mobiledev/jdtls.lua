@@ -1,4 +1,4 @@
----@module 'lsp.servers.jdtls'
+---@module 'lsp.servers.mobiledev.jdtls'
 --- Eclipse JDT Language Server for Java (Android development).
 --- Requires Java runtime.
 

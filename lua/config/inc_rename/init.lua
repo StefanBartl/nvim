@@ -1,3 +1,4 @@
+---@module 'config.inc_rename'
 --- @module 'config.inc_rename'
 --- Incremental LSP rename with Noice cmdline UI and automatic save of edited buffers.
 --- Press <leader>rn to start a workspace-aware rename pre-filled with <cword>.

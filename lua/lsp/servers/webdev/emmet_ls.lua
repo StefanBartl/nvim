@@ -1,4 +1,4 @@
----@module 'lsp.servers.emmet_ls'
+---@module 'lsp.servers.webdev.emmet_ls'
 --- Emmet LSP for fast HTML/CSS abbreviation completions.
 
 local lsp = vim.lsp

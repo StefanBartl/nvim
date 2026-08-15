@@ -1,4 +1,4 @@
----@module 'mapings.utils.window_zoom'
+---@module 'bindings.mappings.utils.window_zoom'
 -- Toggle maximize current window and restore previous layout sizes.
 -- Uses Vim's winrestcmd() to capture/restore the full layout.
 -- Stores per tabpage to avoid cross-tab interference.

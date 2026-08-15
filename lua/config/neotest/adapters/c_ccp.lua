@@ -1,4 +1,4 @@
----@module 'config.neotest.adapters.c_cpp'
+---@module 'config.neotest.adapters.c_ccp'
 ---@brief Neotest adapter configuration for C/C++ testing with Google Test, Catch2, or CTest
 
 local M = {}

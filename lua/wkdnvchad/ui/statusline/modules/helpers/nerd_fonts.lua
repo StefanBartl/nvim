@@ -1,4 +1,4 @@
----@module 'wkdnvchad.ui.statusline.modules.custom.helpers.nerd_fonts'
+---@module 'wkdnvchad.ui.statusline.modules.helpers.nerd_fonts'
 ------------------------------------
 -- NERD FONTS HELPER
 -------------------------------------
