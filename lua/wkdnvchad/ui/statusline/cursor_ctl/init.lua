@@ -1,6 +1,6 @@
 ---@module 'wkdnvchad.ui.statusline.cursor_ctl'
 
----@type WkdNvC.UI.Stl.CursorCtl.module
+---@class wkdnvchad.ui.statusline.cursor_ctl : WkdNvC.UI.Stl.CursorCtl.module
 local cursor_ctl = { mode = "row_progress" }
 
 --- Set mode explicitly (no-op on invalid input).

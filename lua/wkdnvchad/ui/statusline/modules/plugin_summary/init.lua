@@ -15,7 +15,8 @@
 --- (e.g. after `:Lazy install`/`:Lazy clean`), so a normal redraw never walks
 --- the personal plugin spec.
 
----@type integer|nil total plugin count the cached text was last derived from
+--- Total plugin count the cached text was last derived from.
+---@type integer|nil
 local cached_total = nil
 local cached_text = ""
 
