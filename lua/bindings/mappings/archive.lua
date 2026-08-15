@@ -1,4 +1,8 @@
 ---@module 'bindings.mappings.archive'
+--- Parked keymap snippets — deliberately inert, and not part of the running
+--- config: nothing requires this module, and `map` is a local empty table (the
+--- `-- dummy table for lsp` on the next line), so the calls below would fail if
+--- it ever were required. Kept to be read and copied from, not executed.
 local map = {} -- dummy table for lsp
 
 --------------------------

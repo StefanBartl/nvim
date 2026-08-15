@@ -1,4 +1,7 @@
 ---@module 'bindings.mappings.nvchad'
+--- Keymaps against NvChad's own features — theme switcher, formatter, which-key
+--- lookups — plus the `<Esc>`/`<C-c>` handler that clears Copilot NES overlays
+--- before falling back to `nohl`.
 
 local M = {}
 

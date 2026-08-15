@@ -1,4 +1,6 @@
 ---@module 'bindings.mappings.git'
+--- Diffview keymaps: `<leader>dv`/`dc` open and close it, `<leader>dh` file
+--- history, `<leader>dt` diffs the windows in the current tab.
 
 local notify = require("lib.nvim.notify").create("[bindings.mappings.git]")
 local usercmd = require("lib.nvim.usercmd")

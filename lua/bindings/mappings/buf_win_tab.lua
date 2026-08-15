@@ -1,4 +1,7 @@
 ---@module 'bindings.mappings.buf_win_tab'
+--- Buffer, window and tab keymaps: `<leader>b*` for buffers (new, close-and-go-
+--- next), `<leader>q`/`<leader>Q` for quitting, and `<C-h/j/k/l>` for window
+--- navigation.
 
 local M = {}
 

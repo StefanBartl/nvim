@@ -1,4 +1,6 @@
 ---@module 'bindings.mappings.custom'
+--- The two one-off keymaps that fit no other group: `<leader>cp` copies the
+--- current file path, `<leader>cs` saves a casedesk session.
 
 local M = {}
 

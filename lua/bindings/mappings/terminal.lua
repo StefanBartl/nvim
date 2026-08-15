@@ -1,4 +1,6 @@
 ---@module 'bindings.mappings.terminal'
+--- Terminal-mode keymaps: `<Esc>`/`<C-c>` to leave terminal mode, and `<C-h/j/k/l>`
+--- so window navigation keeps working from inside a terminal buffer.
 
 local env = require("lib.nvim.system.env")
 

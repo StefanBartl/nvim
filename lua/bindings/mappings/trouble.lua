@@ -1,4 +1,7 @@
 ---@module 'bindings.mappings.trouble'
+--- trouble.nvim keymaps under `<leader>x*`: the diagnostics views (`xx`/`xw`/`xd`)
+--- and the `<leader>xl*` LSP list family (references, definitions, type
+--- definitions, implementations, symbols).
 
 local notify = require("lib.nvim.notify").create("[bindings.mappings.trouble]")
 

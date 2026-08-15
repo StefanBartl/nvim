@@ -1,4 +1,7 @@
 ---@module 'bindings.mappings.fzf'
+--- fzf-lua pickers, mostly under `<leader>f*` (colorschemes, keymaps, git status,
+--- quickfix, man pages) plus the `<leader>do`/`<leader>wo` diagnostics and
+--- workspace-symbol entries.
 
 local M = {}
 

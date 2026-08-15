@@ -1,4 +1,6 @@
 ---@module 'bindings.mappings.general'
+--- Editor-wide keymaps that belong to no plugin: `<C-a>` select all, `<C-s>` save,
+--- `jk` to leave insert mode, and yank-free `x`/`dw`.
 
 local M = {}
 

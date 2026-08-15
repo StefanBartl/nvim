@@ -1,4 +1,7 @@
 ---@module 'bindings.mappings.lsp'
+--- LSP keymaps: the `ls*` family (definition, references, implementation,
+--- symbols), `grn` rename, and `<leader>lsp` to switch the root scope between
+--- cwd, git root and file path.
 
 local M = {}
 
