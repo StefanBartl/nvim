@@ -16,7 +16,7 @@ function M.enable()
   require("lsp.languages.webdev.astro.autocmds").setup()
 
   -- Auto-tag setup (versuche zuerst nvim-ts-autotag)
-  local autotag = require("lsp.languages.webdev.astro.autotag")
+  local autotag = require("lsp.servers.webdev.astro.autotag")
   local autotag_ok = autotag.setup()
 
   -- FIXED: Don't call vim.lsp.start() - let vim.lsp.enable() handle it

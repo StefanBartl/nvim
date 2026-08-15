@@ -50,7 +50,7 @@ function M.setup()
     end
 
     -- Build a temporary API (and cache it for subsequent uses)
-    local ok, mod = pcall(require, "lsp.formatter.init") -- fixed path
+    local ok, mod = pcall(require, "lsp.formatter")
     if ok and mod and type(mod.build) == "function" then
       vim.g._formatter_api = mod.build({ format_on_save = false, timeout_ms = 1500 })
       vim.g._formatter_api.toggle()
@@ -62,7 +62,7 @@ function M.setup()
       vim.g._formatter_api.format(0)
       return
     end
-    local ok, mod = pcall(require, "lsp.formatter.init") -- fixed path
+    local ok, mod = pcall(require, "lsp.formatter")
     if ok and mod and type(mod.build) == "function" then
       local api = mod.build({ format_on_save = false, timeout_ms = 1500 })
       api.format(0)

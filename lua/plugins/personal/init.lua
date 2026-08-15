@@ -213,6 +213,22 @@ plugins.add({
     -- (lua/<name>, wenn lua/ genau einen Kandidaten enthaelt).
     opts = function(_, opts)
       opts.progress_style = "statusline"
+      -- `require-not-declared` false positives, confirmed 2026-08-16 by
+      -- tracing every hit back to the actual require site (not fixed here,
+      -- not fixable in the checker without a real capability it doesn't
+      -- have): the checker treats "own[first segment]" as sufficient proof a
+      -- require belongs to this tree, which is right except for two cases.
+      -- (1) `nvchad.*` (stl.utils, tabufline, themes, term, utils, nvdash,
+      -- mason, colorify, lsp.signature, winmes, configs.lspconfig, ...)
+      -- resolves to the real NvChad plugins' (`NvChad`/`ui`) own
+      -- `lua/nvchad/*` tree, which happens to share this repo's own
+      -- `lua/nvchad/` top segment -- 24 of the 31 remaining
+      -- `require-not-declared` hits. (2) `config.harpoon.api.lua`'s
+      -- `require("config.harpoon.ui.menu_" .. kind)` is a dynamic require;
+      -- the checker only ever sees the pre-concatenation literal
+      -- `"config.harpoon.ui.menu_"`, never the resolved `menu_telescope`/
+      -- `menu_fzf` it actually loads. `:DocMap check` will keep listing
+      -- these 25 as warnings -- known, not drift.
       -- Experimental (2026-08-10): a "Compiler Explorer" link next to every
       -- module/function in the generated page, real luac -l -l -p bytecode
       -- disassembly, not a workaround for Lua. Off by default upstream;

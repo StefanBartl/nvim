@@ -34,7 +34,7 @@ function M.build(opts)
   workspace_diagnostics.seed(opts.use_workspace_diagnostics == true)
 
   local function on_init(client, _)
-    local ok, nvlsp = pcall(require, "nvchad.config.lspconfig")
+    local ok, nvlsp = pcall(require, "nvchad.configs.lspconfig")
     if ok and type(nvlsp.on_init) == "function" then
       pcall(nvlsp.on_init, client)
     end
@@ -63,7 +63,7 @@ function M.build(opts)
       pcall(require, "lazydev")
     end
 
-    local ok, nvlsp = pcall(require, "nvchad.config.lspconfig")
+    local ok, nvlsp = pcall(require, "nvchad.configs.lspconfig")
     if ok and type(nvlsp.on_attach) == "function" then
       pcall(nvlsp.on_attach, client, bufnr)
     end

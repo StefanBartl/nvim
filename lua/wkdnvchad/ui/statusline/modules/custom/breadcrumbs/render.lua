@@ -3,7 +3,7 @@
 -- RENDER BREADCRUMBS
 -------------------------------------
 
-local nerd_font_helpers = require("wkdnvchad.ui.statusline.custom.helpers.nerd_fonts")
+local nerd_font_helpers = require("wkdnvchad.ui.statusline.modules.helpers.nerd_fonts")
 local devicons = require("wkdnvchad.ui.statusline.modules.file_icons.devicons")
 
 local M = {}

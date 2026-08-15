@@ -35,7 +35,7 @@ function M.setup(user_config)
   user_config = user_config or {}
 
   -- Get base defaults
-  local BASE_CFG = require("wkdnvchad.config.base")
+  local BASE_CFG = require("wkdnvchad.config.base46")
 
   -- Deep merge: user config overrides base defaults
   local config = vim.tbl_deep_extend("force", BASE_CFG, user_config)

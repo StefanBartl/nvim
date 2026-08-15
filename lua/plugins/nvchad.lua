@@ -8,7 +8,7 @@ return {
   "nvzone/menu",
   event = "VeryLazy",
   config = function()
-    local ok_init, menu_init = pcall(require, "config.menu.init")
+    local ok_init, menu_init = pcall(require, "config.menu")
     if ok_init and menu_init and menu_init.setup then
       menu_init.setup({
         enable_format = true,
@@ -22,7 +22,7 @@ return {
         pcall(km.setup)
       end
     else
-      notify.warn("config.menu.init not available; custom menu not registered")
+      notify.warn("config.menu not available; custom menu not registered")
     end
   end,
 }

@@ -11,7 +11,10 @@ local defaults = {
   restore_last_position = false,
   window_debug = false,
   window_open = false,
-  reveal_current_file = true,
+  -- `window/open/keymaps/reveal_current_file.lua` no longer exists in this
+  -- config (see docs/NOTES/.../Keymaps/NeoTree.md) -- true would crash
+  -- M.setup() on the first caller that doesn't override it.
+  reveal_current_file = false,
   only_lhs = false,
 }
 
@@ -38,9 +41,11 @@ function M.setup(opts)
   -- ================
   -- Setup subsystems
 
-  if M.options.reveal_current_file then
-    require("config.neotree.window.open.keymaps.reveal_current_file").attach()
-  end
+  -- `window/open/keymaps/reveal_current_file.lua` no longer exists in this
+  -- config (see docs/NOTES/.../Keymaps/NeoTree.md); `reveal_current_file`
+  -- defaults to false for exactly that reason, so there is nothing to wire
+  -- up here even when a caller sets it -- the option is a documented no-op
+  -- until that module is rebuilt.
   if M.options.only_lhs then
     require("config.neotree.window.open.keymaps.only_lhs").attach()
   end

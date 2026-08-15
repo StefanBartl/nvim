@@ -22,7 +22,7 @@ function M.get()
 
   -- NvChad capabilities FIRST
   do
-    local ok, nvlsp = pcall(require, "nvchad.config.lspconfig")
+    local ok, nvlsp = pcall(require, "nvchad.configs.lspconfig")
     if ok and type(nvlsp.capabilities) == "table" then
       caps = tbl_deep_extend("force", caps, nvlsp.capabilities)
     end

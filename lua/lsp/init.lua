@@ -83,7 +83,7 @@ function M.setup(cfg)
 
   -- Formatter setup
   local formatter = (function()
-    local ok, mod = pcall(require, "lsp.formatter.init")
+    local ok, mod = pcall(require, "lsp.formatter")
     if ok and mod and type(mod.build) == "function" then
       return mod.build({ format_on_save = false, timeout_ms = 1500 })
     end
