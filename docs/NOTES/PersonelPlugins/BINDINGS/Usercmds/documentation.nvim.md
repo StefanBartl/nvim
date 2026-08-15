@@ -122,6 +122,22 @@ are just the annotation cards side by side. Marks live in the URL *and*
 The `+` is a separate control on purpose: clicking the `ⓘ` already pins the
 annotation popup, which is what makes a long `@example` readable.
 
+## `:DocMapAll` fast by default, `:DocMapAllFull` added (2026-08-15)
+
+Checked, per a direct question, whether `:DocMapAll` actually ran every
+project with LuaLS enrichment — it did, unconditionally, every time, since
+`generate_one_headless.lua` hardcoded `luals = true`. That was never a
+config choice on our side; it was the only option the bulk path had. Now
+split the same way single-repo `:DocMap`/`:DocMap full` already are:
+`:DocMapAll` (bare `:DocMap all`) is a fast scan, `:DocMapAllFull` (`:DocMap
+all full`) opts every project into LuaLS enrichment, same as before this
+shipped. `opts.generate_all.autoload` (below) is unaffected — it still
+always enriches, since it is establishing a project's first map, not a
+routine re-run. Nothing in `plugins/personal/init.lua` needed to change;
+this is purely a runtime dispatch flag on the command, not a config option.
+Upstream: `documentation.nvim`'s own `docs/COMMANDS.md`, `:DocMap all
+[full]` section.
+
 ## `opts.generate_all` — `:DocMap all` / `:DocMapAll`, now the plugin's own (2026-08-14)
 
 Cross-repo generation used to be entirely config-internal

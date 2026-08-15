@@ -8,7 +8,7 @@ In `documentation.nvim` && `runtime-analysis.nvim` sind noch offen zu implementi
 Knnst du einen implementierungsplan ausarbeiten, wi es sinnj maccht, dass zu ijmplementieren
 dabei muss t du vor al em in documentaion.nvim ausmisten, denn zb in der desktop_weebapp file, das wurd eschon mit er der app docmaü-desktop (auch unter e:\repos) scho umgestze, aber abklären ob alles umgest wurde, wenn nein,. dann in diee roadmap doprt schireben
 
-
+- nvim performance optimeren: startup modul, runtime analysis, docmap, usw...
 
 
 E:/repos/docmap-desktop/docs/ROADMAP.md abarbeiten + einmal hbrainstomren fpr weeitere features bzw optionen, ui, usw...

@@ -205,7 +205,7 @@ plugins.add({
 
   {
     "StefanBartl/documentation.nvim",
-    cmd = { "DocMap", "DocBrowse", "DocMapAll" },
+    cmd = { "DocMap", "DocBrowse", "DocMapAll", "DocMapAllFull" },
     dependencies = { "StefanBartl/lib.nvim" },
     -- Kein `root`: die Commands mappen bewusst das aktuelle Arbeitsverzeichnis,
     -- weil hier reihenweise Repos nebeneinander liegen und ein fixes Ziel genau
@@ -228,11 +228,21 @@ plugins.add({
       -- hand -- add a plugin to the spec below and both wirings pick it up.
       local export = require("plugins.personal.export")
       local projects = export.projects()
-      if #projects > 0 then
-        local gen_projects = {}
-        for _, p in ipairs(projects) do
-          gen_projects[#gen_projects + 1] = { root = p.dir, title = p.name }
-        end
+      local gen_projects = {}
+      for _, p in ipairs(projects) do
+        gen_projects[#gen_projects + 1] = { root = p.dir, title = p.name }
+      end
+      -- This config itself (2026-08-15) -- not a `plugins.personal` entry
+      -- (it is the config, not an installed plugin `export.projects()` could
+      -- ever resolve), so it is appended here by hand rather than made
+      -- `export.projects()`'s problem: `:MyPlugins`/the statusline badge
+      -- read that same list for "which plugins are installed", a question
+      -- this config is not an answer to. `vim.fn.stdpath("config")` is the
+      -- one thing here that is always right regardless of machine --
+      -- already has `docs/map/` from a prior manual `:DocMap`, so this is
+      -- "join the All sweep", not a first-time map.
+      gen_projects[#gen_projects + 1] = { root = vim.fn.stdpath("config"), title = "nvim-config" }
+      if #gen_projects > 0 then
         opts.generate_all = {
           projects = gen_projects,
           -- Listing a plugin in the spec below is already the active signal

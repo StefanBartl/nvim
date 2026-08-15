@@ -136,7 +136,8 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 | `:RATelemetry snapshot <ns> [name]` | Save a named, device-tagged capture of `ns`'s current aggregate, without resetting the live counters. Always explicit — nothing here ever snapshots on its own. |
 | `:RATelemetry snapshots <ns>` | List `ns`'s saved snapshots, newest first. |
 | `:RATelemetry snapshot-compare <ns> <a> <b>` | Diff two named snapshots' call counts directly — **not** a calendar window like `compare` above. See "Snapshot device tagging + snapshot-compare" below. Shipped 2026-08-14. |
-| `:RATelemetryStartAll` / `:RATelemetryStopAll` | Standalone aliases for bare `start`/`stop` above — see below. Shipped 2026-08-14. |
+| `:RATelemetryStartAll` / `:RATelemetryStopAll` / `:RATelemetryResetAll` | Standalone aliases for bare `start`/`stop`/`reset` above — see below. `StartAll`/`StopAll` shipped 2026-08-14, `ResetAll` 2026-08-15. |
+| `:RATelemetrySetupAll` / `:RATelemetrySetupAllFull` | Backup (prompted once) + reset + re-wrap + restart, across every plugin `lua/config/telemetry.lua` configures that is loaded right now. `Full` forces `profile_args`/`timing` on for everyone. Shipped 2026-08-15 — see below. |
 
 `<Tab>` after `start `/`stop `/`reset `/`open `/`compare `/`snapshot `/
 `snapshots `/`snapshot-compare ` completes namespaces only; `compare`'s
@@ -158,6 +159,51 @@ genuinely does need a caller-supplied repo list. `telemetry.start_all()`
 is new too, symmetric with the pre-existing `stop_all()` — the bare
 `:RATelemetry start` case used to have its "every instance" loop written
 inline in the command dispatcher instead of calling a real function.
+
+### `:RATelemetrySetupAll` / `:RATelemetrySetupAllFull` (2026-08-15)
+
+Answers a question that came up directly: for some plugins, some functions
+never show argument data in a report, even though `lua/config/
+telemetry.lua`'s own `profile_args = true` default is already on for every
+personal plugin. **Root cause was never a settings problem** —
+`wrap_loaded()` walks `package.loaded` exactly once, at catch-up-scan or
+this plugin's own `User LazyLoad` moment. A submodule `require`d *after*
+that (a command handler pulled in on first use, a UI module loaded on
+first keypress) is never retroactively wrapped: not profiled-without-args,
+genuinely never hooked at all, so it shows zero calls and no argument
+fingerprint forever, indistinguishable at a glance from "profiling is off."
+
+`:RATelemetrySetupAll` is the fix: for every plugin `config.telemetry`
+configures that is loaded right now, it re-runs `wrap_loaded()` (a no-op
+for anything already wrapped, but it picks up whatever loaded since) after
+backing up and resetting existing data. Practical habit: use the feature
+whose module you suspect loaded late at least once this session, then run
+`:RATelemetrySetupAll`(`Full`) — the previously-invisible functions join
+the wrap from then on.
+
+**The backup step, concretely:** if any configured, loaded plugin already
+has persisted telemetry data, one `vim.ui.input()` prompt (not one per
+plugin) asks for a directory — defaults to `stdpath("cache")/
+runtime-analysis.nvim/setup-all-backups`, created if it does not exist yet.
+Declining aborts the whole run; nothing is reset without either being
+backed up or genuinely having nothing to lose. Each plugin with data gets
+its own `<namespace>-<timestamp>.json` in that directory.
+
+`SetupAll` restarts each plugin with **its own already-configured**
+`profile_args`/`timing` (for this config, that is already `profile_args =
+true` — see `lua/config/telemetry.lua`). `SetupAllFull` forces both on for
+every plugin regardless of individual policy — a temporary "give me
+everything, once" override, the `setup_all` equivalent of `:DocMap full`'s
+LuaLS enrichment one repo over (see `documentation.nvim.md`). `lib.nvim`'s
+own aggregate is out of scope for both — it wraps through a different
+mechanism (`lib.strategies.telemetry_wrap`), not the generic `wrap_loaded()`
+re-scan this feature is built on.
+
+New module `lua/runtime-analysis/telemetry/setup_all.lua`, and
+`telemetry.lazy.candidates()`/`.configured()` (new) reuse the exact
+`opts.telemetry.plugins` policy `config.telemetry.build()` already produces
+— no new personal-config wiring needed, the same "the list only ever
+arrives as data" posture `:DocMapAll` already established one repo over.
 
 ### Snapshot device tagging + `snapshot-compare` (2026-08-14)
 
@@ -278,9 +324,10 @@ config actually wires `opts.telemetry` into the plugin's own spec
 `lua/runtime-analysis/telemetry/README.md` in the repo for the module's own
 full reference.
 
-## Global-surface collision check (2026-08-14, re-checked after `:RATelemetryStartAll`/`StopAll` were added)
+## Global-surface collision check (2026-08-15, re-checked after `ResetAll`/`SetupAll`/`SetupAllFull` were added)
 
 Checked against every `Usercmds/*.md` in this folder: `RA`, `RARequest`,
-`RASend`, `RATelemetry`, `RATelemetryStartAll` and `RATelemetryStopAll`
-are unique — no other personal plugin registers any of the six, and no
+`RASend`, `RATelemetry`, `RATelemetryStartAll`, `RATelemetryStopAll`,
+`RATelemetryResetAll`, `RATelemetrySetupAll` and `RATelemetrySetupAllFull`
+are unique — no other personal plugin registers any of the nine, and no
 other plugin owns an `RA`-prefixed command.

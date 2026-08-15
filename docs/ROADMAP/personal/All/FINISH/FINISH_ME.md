@@ -66,3 +66,8 @@
 
 ---
 
+## MISC
+
+C:\Users\StefanBartl\AppData\Local\nvim\docs\ROADMAP\TelemetryReport.md neu generieren und dann implementieren
+
+---
