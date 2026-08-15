@@ -1,7 +1,7 @@
 # `bindings.usrcmds.plugin_repos` — `:MyPlugins`
 
 Manages the repo checkouts for `plugins.personal` (the ~28 `StefanBartl/*.nvim`
-plugins declared in [`lua/plugins/personal/init.lua`](../../plugins/personal/init.lua))
+plugins declared in [`lua/plugins/personal/init.lua`](../../../plugins/personal/init.lua))
 and the source-mode switch that decides whether they load from disk or from
 GitHub. Everything lives under one command, built with
 [`lib.nvim.usercmd.composer`](https://github.com/StefanBartl/lib.nvim/tree/main/lua/lib/nvim/usercmd/composer)
@@ -55,7 +55,7 @@ non-plugin checkout `$REPOS_DIR` holds (Notes, WKDBooks, ...). `update`
 
 ### `:MyPlugins clone [dir] [--only=<name>]`
 
-Clones every repo in [`plugins.personal.list`](../../plugins/personal/list.lua)
+Clones every repo in [`plugins.personal.list`](../../../plugins/personal/list.lua)
 that isn't already present in `dir` (default `$REPOS_DIR`). Never overwrites
 an existing clone — cloning is purely additive, no confirmation needed.
 `--only=<name>` narrows it to one plugin (its basename, e.g. `lib.nvim`).
@@ -146,7 +146,7 @@ deleted), then clones, then fetch/pull/update run in sequence. See
 ### `:MyPlugins mode [auto|dir|remote|disabled]`
 
 Reads (bare) or persistently switches the global `OVERRIDE` in
-[`lua/plugins/personal/source.lua`](../../plugins/personal/source.lua) — the
+[`lua/plugins/personal/source.lua`](../../../plugins/personal/source.lua) — the
 same switch you'd otherwise hand-edit. Writing goes straight to that file (a
 targeted single-line replace, comments and formatting untouched); nothing is
 kept in memory as a separate "current mode" — the file is always the one
@@ -233,7 +233,7 @@ uncommitted work permanently. Sticking to the named list is what makes
 
 ## See also
 
-- [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md`](../../../docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md) — the user-facing cheatsheet
-- [`lua/plugins/personal/source.lua`](../../plugins/personal/source.lua) — the `OVERRIDE` switch and per-repo mode table
-- [`lua/plugins/personal/list.lua`](../../plugins/personal/list.lua) — where the repo list actually comes from
+- [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md`](../../../../docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md) — the user-facing cheatsheet
+- [`lua/plugins/personal/source.lua`](../../../plugins/personal/source.lua) — the `OVERRIDE` switch and per-repo mode table
+- [`lua/plugins/personal/list.lua`](../../../plugins/personal/list.lua) — where the repo list actually comes from
 - `lib.nvim`'s [`usercmd/composer/README.md`](https://github.com/StefanBartl/lib.nvim/blob/main/lua/lib/nvim/usercmd/composer/README.md) — the composer API itself

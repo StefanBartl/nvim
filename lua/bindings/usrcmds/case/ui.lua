@@ -299,7 +299,7 @@ end
 
 -- ── file-verbs (summary/research/reply/... generated from blueprint keys) ─
 
----@param short string
+---@param dir string Case directory to look in.
 ---@return string|nil
 local function newest_reply(dir)
   local replies_dir = dir .. "/Replies"
