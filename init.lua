@@ -195,6 +195,12 @@ startup.on("UIReady", "mappings", function()
   require("bindings.mappings").setup()
 end)
 
+-- No startup phase wires this config's own telemetry up: runtime-analysis
+-- .nvim does it itself, from `opts.telemetry.extra` (see config/telemetry
+-- .lua), wrapping at VimEnter for exactly the reason a phase here would have
+-- had to -- wrap_loaded() only sees what is already in package.loaded.
+-- `:RATelemetry setup|full nvim-config` re-wraps on demand.
+
 -- DAP setup (adapters, launch configs, UI, keymaps) lives in
 -- StefanBartl/dap.nvim, loaded via lua/plugins/personal/init.lua (event =
 -- "VeryLazy"). The former lua/wkddap prototype has been extracted there.

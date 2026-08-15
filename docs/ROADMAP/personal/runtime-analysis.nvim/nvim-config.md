@@ -57,3 +57,79 @@ opts.telemetry.extra = {{
 **Offene Fragen, falls das umgesetzt werden soll:** Soll `extra` generisch für beliebige Nicht-lazy.nvim-Ziele bleiben, oder ist "die eigene Config" der einzige Anwendungsfall? Lohnt sich `main: string|string[]` allgemein (auch für reguläre Plugins mit mehreren Root-Modulen)?
 
 Soll ich **Teil A** (Baseline, config-seitig, kein Plugin-Code) jetzt umsetzen? Das ist risikoarm und reversibel — Teil B lasse ich wie gewünscht als Konzept stehen, bis du entscheidest.
+
+## Umsetzung (2026-08-15)
+
+**Teil A und Teil B sind beide umgesetzt** — Teil B im Plugin selbst, weil
+der eigentliche Sinn der Sache war, dass *jeder* nvim-Dev seine Config
+telemetrieren kann, nicht nur diese hier. Ein config-seitiger Shim hätte
+das per Definition nie geleistet.
+
+### Im Plugin (runtime-analysis.nvim) — die eigentliche Funktion
+
+Neues generisches `opts.telemetry.extra`: Targets, die kein Plugin-Manager
+auflösen kann (kein Repo, kein Spec, mehrere unabhängige Root-Prefixe statt
+einem `main`). Die eigene Config ist der Anwendungsfall, das Feature ist
+aber bewusst nicht auf sie zugeschnitten.
+
+```lua
+require("runtime-analysis").setup({
+  telemetry = {
+    extra = {
+      { namespace = "nvim-config",
+        mains = { "config", "bindings", "plugins", "autocmds", "lsp" },
+        profile_args = true },
+    },
+  },
+})
+```
+
+- `telemetry/lazy.lua` — `setup_extra()` + `wrap_extra()`; eine Instanz pro
+  Target (nicht pro Prefix, sonst schreiben N Instanzen in *eine*
+  Cache-Datei), `candidates()` liefert `extra`-Targets mit.
+- **Wrap-Zeitpunkt = VimEnter (default).** Genau der Haken aus dem Konzept
+  oben, jetzt im Plugin gelöst statt in dieser Config: zur `setup()`-Zeit
+  läuft noch `lazy.setup()`, die Config-Module sind fast alle ungeladen.
+  `wrap_at = "setup"|"manual"` überschreibt das pro Target.
+- **Kein lazy.nvim nötig**: `extra` löst nur über `package.loaded` auf, der
+  lazy.nvim-Guard betrifft ausschließlich `plugins`.
+- `deep` defaultet für `extra` auf **true** (ein Config-Prefix hat keine
+  Fassade, die man stattdessen wrappen könnte).
+- `telemetry/setup_all.lua` — läuft über `mains or { main }`; neues
+  `run_opts.namespace` grenzt den Lauf auf ein Target ein.
+- `telemetry/command.lua` — neue Subcommands **`:RATelemetry setup [ns]`**
+  und **`:RATelemetry full [ns]`**; `:RATelemetrySetupAll[Full]` sind jetzt
+  deren bare-Form. Damit funktioniert das vom Nutzer gewünschte
+  **`:RATelemetry full nvim-config`** (und das normale
+  `:RATelemetry setup nvim-config`).
+- `SetupAllCandidate.main` blieb `string` (kein `string|string[]`) — der
+  Shape-Bruch aus dem Konzept wurde vermieden, `mains` kam additiv dazu.
+- Nebenbei gefixt: die Backup-Abfrage vor `SetupAll` prüfte vorhandene Daten
+  im Default-Cache-Dir statt im `dir` des Targets — ein Target mit eigenem
+  `dir` wurde also ohne Backup-Prompt resettet.
+- Docs: `docs/COMMANDS.md`, `docs/BINDINGS.md`,
+  `lua/runtime-analysis/telemetry/README.md`.
+
+### In dieser Config
+
+- [lua/config/telemetry.lua](../../../../lua/config/telemetry.lua) —
+  `SELF_PREFIXES` (die 11 Prefixe) + `extra`-Block in `build()`. Das ist die
+  **einzige** Stelle, an der die Prefix-Liste steht.
+- [init.lua](../../../../init.lua) — **keine** eigene Startup-Phase mehr.
+  Das Plugin wrappt selbst zum richtigen Zeitpunkt.
+- [lua/bindings/usrcmds/telemetry_nvim_config/init.lua](../../../../lua/bindings/usrcmds/telemetry_nvim_config/init.lua)
+  — `:RATelemetryNvimConfig[Full]` sind jetzt nur noch **flache Aliases** auf
+  `:RATelemetry setup|full nvim-config`. Eine frühere Fassung wrappte selbst,
+  was eine zweite Prefix-Liste bedeutet hätte, die stillschweigend
+  auseinanderlaufen kann.
+
+### Verifiziert (headless, echte Module)
+
+Multi-Prefix-Wrap über eine Instanz, Zählen, `candidates()` inkl. `mains`
+und normalisiertem `deep`, VimEnter-Deferral (Instanz entsteht erst nach
+VimEnter, wenn die Config-Module wirklich geladen sind), `:RATelemetry
+full nvim-config` end-to-end inkl. erzwungenem Timing, Backup-Prompt
+(feuert bei vorhandenen Daten, schreibt Backup, resettet dann), sowie:
+Targets ohne geladene Prefixe legen keinen leeren Namespace an,
+`extra`-only ohne lazy.nvim funktioniert, malformte Einträge werfen nicht,
+und `plugins`-only/`lib_nvim`-only verhalten sich unverändert.

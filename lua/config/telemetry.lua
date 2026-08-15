@@ -67,6 +67,36 @@ local defaults = {
   lib_profile_args = false,
 }
 
+---This config's own Lua tree, instrumented as an `opts.telemetry.extra`
+---target -- runtime-analysis.nvim's own generic mechanism for a target no
+---plugin manager can resolve (no repo, no spec, several unrelated root
+---prefixes), not anything specific to this config. See that plugin's
+---`docs/COMMANDS.md` §"Instrumenting your own Neovim config".
+---
+---Wrapped at VimEnter by the plugin itself (`wrap_at` default): when
+---`runtime-analysis.setup()` runs it is still inside `lazy.setup()`, and
+---`startup.now(...)`/`startup.on("UIReady", ...)` have not required most of
+---these yet -- `wrap_loaded()` only ever sees what is already in
+---`package.loaded`, so wrapping any earlier would measure almost nothing.
+---
+---`:RATelemetry setup nvim-config` / `:RATelemetry full nvim-config`
+---re-wrap on demand, which is what picks up a submodule first required
+---after that point (a `bindings/mappings/*` handler pulled in on first
+---keypress).
+local SELF_PREFIXES = {
+  "config",
+  "bindings",
+  "plugins",
+  "autocmds",
+  "lsp",
+  "startup",
+  "themes",
+  "machine",
+  "nvchad",
+  "wkdnvchad",
+  "wkdoptions",
+}
+
 ---`true` / `false` / a list of plugin names -> does it apply?
 ---
 ---A list entry matches either the short name (`"markdown.nvim"`) or the full
@@ -144,7 +174,18 @@ function M.build(opts)
     lib_nvim = { profile_args = opts.lib_profile_args or nil }
   end
 
-  return { plugins = plugins, lib_nvim = lib_nvim }
+  return {
+    plugins = plugins,
+    lib_nvim = lib_nvim,
+    extra = {
+      {
+        namespace = "nvim-config",
+        mains = SELF_PREFIXES,
+        profile_args = true,
+        timing = false,
+      },
+    },
+  }
 end
 
 return M
