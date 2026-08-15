@@ -1,4 +1,6 @@
 ---@module 'lsp.usercmds.formatter'
+--- `:LspFormat` -- `M.attach(formatter)` registers it against whichever
+--- formatter module (conform, LSP native) the caller passes in.
 
 local notify = require("lib.nvim.notify").create("[lsp.usercmds.formatter]")
 

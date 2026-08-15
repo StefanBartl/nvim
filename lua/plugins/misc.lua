@@ -1,4 +1,8 @@
 ---@module 'plugins.misc'
+--- Small plugins with no group of their own: harpoon (+ its optional fzf/
+--- telescope deps), mkdir.nvim, and whatever else lands here rather than
+--- earning its own file. `plugins.control.mode` lets a repo be disabled
+--- centrally instead of `enabled = false` scattered per-spec.
 
 local machine = require("machine")
 local plugins = require("plugins.control.mode").new()

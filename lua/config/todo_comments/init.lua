@@ -1,4 +1,7 @@
 ---@module 'config.todo_comments'
+--- todo-comments.nvim setup, built from `keywords/init.lua`'s keyword table
+--- -- degrades to a no-op `M.setup` if todo-comments itself is not
+--- installed, rather than erroring.
 
 local unique_table = require("lib.lua.tables.unique_table")
 

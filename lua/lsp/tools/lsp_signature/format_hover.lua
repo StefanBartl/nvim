@@ -1,4 +1,6 @@
 ---@module 'lsp.tools.lsp_signature.format_hover'
+--- Formats an LSP `signatureHelp` result into display lines for the hover
+--- window, delegating line-splitting to `split_lines`.
 
 local split_lines = require("lsp.tools.lsp_signature.split_lines")
 

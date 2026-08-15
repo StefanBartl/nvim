@@ -1,4 +1,7 @@
 ---@module 'config.neotest.init.utils'
+--- `build_adapters()`/`build_consumers()`: assembles neotest's `opts.adapters`
+--- from the adapter factory and its consumer table, deferring each
+--- consumer's own initialization to avoid a race at setup time.
 
 local M = {}
 

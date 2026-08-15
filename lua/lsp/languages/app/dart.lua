@@ -1,4 +1,6 @@
 ---@module 'lsp.languages.app.dart'
+--- Dart QoL: 2-space indent on FileType, plus `<leader>fr` to run
+--- `flutter run --hot-reload` in a shell.
 
 local M = {}
 

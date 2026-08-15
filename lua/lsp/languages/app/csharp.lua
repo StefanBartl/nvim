@@ -1,4 +1,6 @@
 ---@module 'lsp.languages.app.csharp'
+--- C# QoL: registers the `cs` FileType group but the callback is a no-op --
+--- the same stub shape as systems/{c,go,zig}.lua below.
 ---@class LangCsQoL
 
 local Autocmd = require("lib.nvim.autocmd")

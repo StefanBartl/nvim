@@ -1,4 +1,8 @@
 ---@module 'config.lazy'
+--- lazy.nvim's own bootstrap options -- `defaults.lazy = true`, plus a long
+--- comment on why remote-managed personal plugins need special handling
+--- (dir-mode plugins are excluded from lazy-lock.json, so nothing flags
+--- them drifting behind origin/main).
 
 local machine = require("machine")
 

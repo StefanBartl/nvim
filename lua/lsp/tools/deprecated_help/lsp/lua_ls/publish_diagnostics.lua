@@ -1,4 +1,7 @@
 ---@module 'lsp.tools.deprecated_help.lsp.lua_ls.publish_diagnostics'
+--- Wraps `vim.lsp.handlers["textDocument/publishDiagnostics"]` to catch
+--- lua_ls's deprecated-symbol diagnostics as they arrive, feeding the rest
+--- of deprecated_help.
 
 local M = {}
 

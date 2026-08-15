@@ -1,4 +1,7 @@
 ---@module 'lsp.core.filter'
+--- Pure diagnostic-list helpers: `filter` drops entries whose message matches
+--- a configured substring pattern, `dedup` collapses exact duplicates --
+--- both operate on a plain list, no LSP client involved.
 
 local M = {}
 

@@ -1,4 +1,7 @@
 ---@module 'lsp.languages.webdev.typescript'
+--- TypeScript/JS QoL: organizes imports synchronously on every BufWritePre
+--- for `*.ts`/`*.tsx`/`*.js`/`*.jsx`, via a direct LSP code-action request
+--- rather than the async `vim.lsp.buf.code_action` path.
 
 local M = {}
 

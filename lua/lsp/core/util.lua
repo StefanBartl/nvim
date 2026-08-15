@@ -1,4 +1,7 @@
 ---@module 'lsp.core.util'
+--- `any_client_can_format(bufnr)`: whether any attached LSP client advertises
+--- document (or range) formatting -- the guard `lsp.usercmds.formatter`
+--- checks before offering `:LspFormat`.
 ---@class LspUtil
 
 local M = {}

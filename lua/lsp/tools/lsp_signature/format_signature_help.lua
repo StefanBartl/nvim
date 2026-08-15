@@ -1,4 +1,7 @@
 ---@module 'lsp.tools.lsp_signature.format_signature_help'
+--- Formats a `signatureHelp` result for the signature-help popup, including
+--- `strip_comment_prefix` -- a heuristic multi-language comment-marker
+--- stripper (`//`, `/* */`, `#`, `--`, `%`) for parameter doc lines.
 local split_lines = require("lsp.tools.lsp_signature.split_lines")
 
 -- Strip common comment prefixes for many languages from a single line.

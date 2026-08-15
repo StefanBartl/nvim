@@ -1,4 +1,8 @@
 ---@module 'lsp.core.registry'
+--- `ACTIVE`: which LSP servers this config actually enables (most
+--- non-web/mobile servers commented out). `setup_all(shared)` resolves
+--- each active name to its `lsp.servers.*` module, trying the plain and
+--- `webdev.`-prefixed path, and returns the ones that loaded.
 
 local notify = require("lib.nvim.notify").create("[lsp.core.registry]")
 

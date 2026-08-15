@@ -1,4 +1,6 @@
 ---@module 'lsp.core.handlers'
+--- Wraps `textDocument/publishDiagnostics` to run every diagnostic list
+--- through `lsp.core.filter`'s dedup before Neovim renders it.
 
 local M = {}
 

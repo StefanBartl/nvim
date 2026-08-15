@@ -1,4 +1,7 @@
 ---@module 'lsp.tools.eslint_prettier.prettier.format'
+--- Runs prettier as a subprocess (`spawn_capture`) and collects its stdout as
+--- non-empty lines -- the actual formatting call `prettier/init.lua`'s
+--- resolved binary is used for.
 local notify = require("lib.nvim.notify").create("[lsp.tools.eslint_prettier.prettier.format]")
 local spawn_capture = require("lib.nvim.cross.uv.spawn_capture")
 

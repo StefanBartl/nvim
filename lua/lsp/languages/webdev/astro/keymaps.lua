@@ -1,4 +1,6 @@
 ---@module 'lsp.languages.webdev.astro.keymaps'
+--- Astro keymaps under `<leader>a*`: component navigation/search/switch,
+--- new component/import scaffolding, and organizing imports.
 
 local notify = require("lib.nvim.notify").create("[lsp.languages.webdev.astro.keymaps]")
 local map = require("lib.nvim.map")

@@ -1,4 +1,7 @@
 ---@module 'plugins.neotree'
+--- neo-tree.nvim's lazy.nvim spec: sources (filesystem/git_status/
+--- diagnostics/tests via neo-tree-tests-source.nvim), and keymaps
+--- assembled from config.neotree.keymaps.* per source.
 
 local KEYMAPS = require("config.neotree.keymaps")
 local NEOTEST = require("config.neotest.neotree")

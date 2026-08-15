@@ -1,4 +1,6 @@
 ---@module 'lsp.languages.app.java'
+--- Java QoL: 4-space indent on FileType, plus organizing imports
+--- (`source.organizeImports` code action) on every BufWritePre.
 
 local M = {}
 

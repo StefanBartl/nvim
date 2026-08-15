@@ -1,4 +1,7 @@
 ---@module 'wkdnvchad.ui.statusline.cursor_ctl.progress_calculators'
+--- Row/column percentage for `cursor_ctl`'s progress modes -- current line vs.
+--- buffer line count, current column vs. line width, both clamped to
+--- 0-100 and nil on an unreadable buffer/window.
 
 local M = {}
 

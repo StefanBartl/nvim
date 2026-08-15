@@ -1,4 +1,7 @@
 ---@module 'plugins.colorscheme.tokyonight'
+--- tokyonight.nvim's lazy.nvim spec: loads eagerly (`lazy = false`,
+--- `priority = 1000`) in the storm style, non-transparent, with terminal
+--- colors on.
 ---@type LazyPluginSpec[]
 
 return {

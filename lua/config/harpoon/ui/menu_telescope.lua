@@ -1,4 +1,7 @@
 ---@module 'config.harpoon.ui.menu_telescope'
+--- A telescope picker over the current harpoon list, in place of harpoon's
+--- own floating-window UI -- a no-op module (`return M` with nothing set)
+--- when telescope is not installed.
 
 local M = {}
 

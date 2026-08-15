@@ -1,4 +1,6 @@
 ---@module 'wkdoptions.italic_keywords'
+--- Per-language keyword lists (return/for/if/... equivalents) that get
+--- italicized -- lua/typescript/go/cpp/rust each with their own set.
 local Autocmd = require("lib.nvim.autocmd")
 
 local M = {}

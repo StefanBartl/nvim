@@ -1,4 +1,7 @@
 ---@module 'wkdnvchad.ui.statusline.modules.lsp.symbols.treesitter'
+--- Breadcrumb of the treesitter node context around the cursor (function/
+--- class/block names), the fallback the statusline's symbol module reaches
+--- for when no LSP is attached to supply the same thing.
 
 local M = {}
 

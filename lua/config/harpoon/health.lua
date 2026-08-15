@@ -1,5 +1,8 @@
 -- config/harpoon/health.lua
 ---@module 'config.harpoon.health'
+--- `:checkhealth` for the harpoon integration: is harpoon itself loadable,
+--- and (implied by the rest of the file) is telescope available for the
+--- custom menu picker in `ui/menu_telescope.lua`.
 local M = {}
 
 local health = vim.health

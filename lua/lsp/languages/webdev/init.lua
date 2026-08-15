@@ -1,4 +1,7 @@
 ---@module 'lsp.languages.webdev'
+--- Alternate webdev entry point -- `M.enable_all()` here is NOT called from
+--- anywhere in this config; `lsp.languages.init`'s own `enable_webdev()`
+--- (a different, overlapping language list) is what actually runs.
 
 local M = {}
 

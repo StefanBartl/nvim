@@ -1,4 +1,7 @@
 ---@module 'config.gp_config.config'
+--- gp.nvim config: API keys/endpoints for openai/anthropic/ollama providers,
+--- and the agent list (ChatGPT3-5, MiniHigh, GPT5, plus two local Ollama
+--- Qwen agents) each pairing a provider/model with chat/command flags.
 
 ---@class config.gp_config.config
 local M = {

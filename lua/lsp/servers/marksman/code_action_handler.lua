@@ -1,4 +1,7 @@
 ---@module 'lsp.servers.marksman.code_action_handler'
+--- Wraps marksman's own `textDocument/codeAction` handler to drop
+--- table-of-contents code actions from the list -- every other client's
+--- code actions pass through the default handler untouched.
 
 ---@return fun(err:any, result:table|nil, ctx:table, config:table)
 local function make_handler()

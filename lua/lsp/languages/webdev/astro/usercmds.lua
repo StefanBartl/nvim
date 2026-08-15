@@ -1,4 +1,7 @@
 ---@module 'lsp.languages.webdev.astro.usercmds'
+--- Astro user commands: `:AstroDevStart`/`Stop`/`Build`/`Preview` (a terminal
+--- running the astro CLI), plus `:AstroNewComponent`/`NewPage` scaffolding
+--- and `:AstroListComponents`/`FindUsage`.
 
 local notify = require("lib.nvim.notify").create("[lsp.languages.webdev.astro.commands]")
 local usercmd = require("lib.nvim.usercmd")

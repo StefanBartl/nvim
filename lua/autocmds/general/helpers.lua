@@ -1,4 +1,7 @@
 ---@module 'autocmds.general.helpers'
+--- Shared helpers for the general autocmds group: Kitty-terminal detection
+--- and padding/margin control, `augroup`/pattern-normalize wrappers, and
+--- `no_name_guard_sweep` (closes stray unnamed empty buffers).
 
 local M = {}
 

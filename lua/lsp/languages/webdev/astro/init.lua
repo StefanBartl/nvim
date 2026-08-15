@@ -1,4 +1,7 @@
 ---@module 'lsp.languages.webdev.astro'
+--- Astro entry point: wires usercmds.lua, autocmds.lua and autotag.lua
+--- together, then attaches keymaps.lua and sets buffer-local Astro
+--- options (commentstring, 2-space indent) on FileType.
 
 local M = {}
 

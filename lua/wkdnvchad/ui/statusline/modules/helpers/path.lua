@@ -1,4 +1,7 @@
 ---@module 'wkdnvchad.ui.statusline.modules.helpers.path'
+--- The current file's path relative to its git root (or `:~:.` when there is
+--- no git root), falling back to just the tail name if the git-relative
+--- form did not actually shorten anything.
 
 local M = {}
 

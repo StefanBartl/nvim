@@ -1,4 +1,7 @@
 ---@module 'lsp.tools.deprecated_help.lsp.lua_ls.diagnostic'
+--- `is_deprecated_warning(diag)`: heuristic check whether an LSP diagnostic
+--- is lua_ls's own "deprecated" warning -- WARN severity plus the message
+--- text containing "deprecated", case-insensitive.
 
 local M = {}
 

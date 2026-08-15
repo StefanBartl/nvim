@@ -1,4 +1,6 @@
 ---@module 'plugins.ui_icons'
+--- Icon-provider plugin specs: nvim-web-devicons as the primary (NvChad's
+--- own default).
 ---@type LazyPluginSpec[]
 
 return {

@@ -1,4 +1,6 @@
 ---@module 'lsp.tools.ts_type_lookup'
+--- Entry point: attaches ts_type_lookup's usercmds and telescope picker, and
+--- loads its noice.nvim integration.
 
 local M = {}
 

@@ -1,4 +1,7 @@
 ---@module 'lsp.debug_adapters.dotnet'
+--- nvim-dap adapter for .NET/C# via netcoredbg -- unreachable, see
+--- `lsp.debug_adapters.init`'s own summary for why. Real StefanBartl/
+--- dap.nvim config lives in `lua/plugins/personal/init.lua` instead.
 
 local dap = require("dap")
 

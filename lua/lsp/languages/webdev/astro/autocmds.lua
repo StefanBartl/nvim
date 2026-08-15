@@ -1,4 +1,7 @@
 ---@module 'lsp.languages.webdev.astro.autocmds'
+--- Astro QoL autocmds: format-on-save (conform, falling back to
+--- `vim.lsp.buf.format`), organize-imports-on-save, 2-space indent plus
+--- `{/* %s */}` commentstring, and frontmatter (`---`) syntax highlighting.
 
 local Autocmd = require("lib.nvim.autocmd")
 

@@ -1,4 +1,7 @@
 ---@module 'wkdnvchad'
+--- Entry point: `M.setup(opts)` turns on wkdnvchad's own submodules
+--- (mappings, ...) selectively per `opts.all`/`opts.<name>` flag rather
+--- than loading everything unconditionally.
 
 local M = {}
 

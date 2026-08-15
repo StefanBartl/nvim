@@ -1,4 +1,6 @@
 ---@module 'config.neotest.init.checks.adapter'
+--- Post-setup adapter check: logs how many adapters neotest initialized with
+--- and, when a neo-tree tests-source consumer is present, wires it up too.
 
 local notify = require("lib.nvim.notify").create("[plugins.neotest]")
 

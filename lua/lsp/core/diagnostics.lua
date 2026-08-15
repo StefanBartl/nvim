@@ -1,4 +1,7 @@
 ---@module 'lsp.core.diagnostics'
+--- Unified `vim.diagnostic.config()`: virtual_lines only on the current line,
+--- virtual_text off, modern sign config on Neovim 0.10+ with a fallback
+--- for older versions.
 ---@class DiagnosticsPolicy
 local M = {}
 

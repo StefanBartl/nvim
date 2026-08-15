@@ -1,4 +1,7 @@
 ---@module 'config.neotest.autocmds.auto_discovery'
+--- Forces neotest to discover tests once on project open (deferred,
+--- `neotest.state.clear` + a discovery pass) instead of waiting for the
+--- first manual test run to trigger it.
 
 local Autocmd = require("lib.nvim.autocmd")
 

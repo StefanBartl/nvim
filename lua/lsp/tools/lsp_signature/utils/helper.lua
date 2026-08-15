@@ -1,4 +1,7 @@
 ---@module 'lsp.tools.lsp_signature.utils.helper'
+--- Two display helpers for lsp_signature: `hexnum_to_hexstr` (numeric color
+--- to `#rrggbb`) and `shorten_display_path` (absolute path to a shorter
+--- form for the popup).
 
 local M = {}
 

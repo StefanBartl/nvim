@@ -1,4 +1,6 @@
 ---@module 'lsp.languages.systems.go'
+--- Go QoL: registers the `go` FileType group but the callback is a no-op --
+--- the same stub shape as c.lua/zig.lua next to it.
 ---@class LangGoQoL
 
 local Autocmd = require("lib.nvim.autocmd")

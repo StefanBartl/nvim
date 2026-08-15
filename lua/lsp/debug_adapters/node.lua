@@ -1,4 +1,6 @@
 ---@module 'lsp.debug_adapters.node'
+--- nvim-dap adapter for JS/TS via the vscode-js-debug Mason package --
+--- unreachable, same reason as `lsp.debug_adapters.dotnet`.
 
 local dap = require("dap")
 

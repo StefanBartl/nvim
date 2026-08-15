@@ -1,4 +1,6 @@
 ---@module 'config.neotest.init.dependencies'
+--- The plugin/consumer/adapter repo lists neotest's lazy.nvim spec declares
+--- as `dependencies` -- plain data, kept apart from the spec itself.
 
 local PLUGINS = {
   "nvim-neotest/nvim-nio",

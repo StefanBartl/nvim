@@ -1,4 +1,6 @@
 ---@module 'lsp.debug_adapters.go'
+--- nvim-dap adapter for Go via delve (`dlv dap`) -- unreachable, same reason
+--- as `lsp.debug_adapters.dotnet`.
 
 local dap = require("dap")
 

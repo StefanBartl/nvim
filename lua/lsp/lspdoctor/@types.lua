@@ -1,5 +1,7 @@
 ---@meta
 ---@module 'lsp.lspdoctor.@types'
+--- Pure LuaCATS type scaffolding for lspdoctor's `Lsp.Doctor.Options` --
+--- no runtime code, `---@meta` only.
 
 ---@class Lsp.Doctor.Options
 ---@field use_notify? boolean Render via vim.notify instead of print (default: false)
