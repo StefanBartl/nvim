@@ -1,9 +1,9 @@
-# nvim — module map
+# lua — module map
 
 > **Generated** by `documentation`. Do not edit by hand — run `:DocMap`
 > (or `nvim --headless -l scripts/gen_map.lua`) to regenerate.
 
-**109 modules** · 358 namespaces · 337 helper files
+**111 modules** · 358 namespaces · 343 helper files
 
 The [interactive map](index.html) has filtering, full descriptions and
 source links; this page is the version the code host renders directly.
@@ -13,7 +13,7 @@ source links; this page is the version the code host renders directly.
 
 ```mermaid
 flowchart LR
-  nlua["nvim"]
+  nlua["lua"]
   nlua_autocmds["autocmdsbr/smallInitialize module for 'autocmds' FIX:…/small"]
   nlua_autocmds_events["events"]
   nlua_autocmds_general["generalbr/smallCentralized, toggleable autocmd suite with…/small"]
@@ -278,7 +278,9 @@ flowchart LR
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`extract` |  |  |  |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`bindings.usrcmds.case.sla` | Public API for casedesk's SLA layer (docs/ROADMAP/casedesk/SLA.md): given a case, which of the three SAP-SLA clocks (Erstreaktion, laufende Rückmeldung,… | 10 | [src](../../lua/bindings/usrcmds/case/sla/init.lua) |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`templates` |  |  |  |
+| &nbsp;&nbsp;&nbsp;&nbsp;`bindings.usrcmds.context_open` | `M-o` / `M-O` / `:ContextOpen` -- one dispatcher unifying "open the thing under the cursor" across gopath.nvim (gF), markdown.nvim (TableView), images.nvim,… | 5 | [README](../../lua/bindings/usrcmds/context_open/README.md) · [src](../../lua/bindings/usrcmds/context_open/init.lua) |
 | &nbsp;&nbsp;&nbsp;&nbsp;`bindings.usrcmds.plugin_repos` | source mode of the personal plugin list — plus an interactive picker. | 18 | [README](../../lua/bindings/usrcmds/plugin_repos/README.md) · [src](../../lua/bindings/usrcmds/plugin_repos/init.lua) |
+| &nbsp;&nbsp;&nbsp;&nbsp;`bindings.usrcmds.telemetry_nvim_config` | aliases for `:RATelemetry setup nvim-config` / `:RATelemetry full nvim-config`. | 1 | [src](../../lua/bindings/usrcmds/telemetry_nvim_config/init.lua) |
 | &nbsp;&nbsp;&nbsp;&nbsp;`bindings.usrcmds.update_repos` | Registers `:MyReposUpdate [path]`. | 7 | [src](../../lua/bindings/usrcmds/update_repos/init.lua) |
 | &nbsp;&nbsp;&nbsp;&nbsp;`bindings.usrcmds.who_locks` | Registers `:WhoLocks [path]`. | 3 | [src](../../lua/bindings/usrcmds/who_locks/init.lua) |
 | `config` |  |  |  |
@@ -727,7 +729,7 @@ flowchart LR
 
 ## Drift
 
-53 errors · 175 warnings · 333 info
+53 errors · 175 warnings · 335 info
 
 | Severity | Check | Message |
 |---|---|---|
@@ -834,7 +836,7 @@ flowchart LR
 | warn | `doc-references-missing` | docs/ROADMAP/RULES/themes/from-nvim-config.md:180 references 'machine.lua', but machine has no 'lua' |
 | warn | `doc-references-missing` | lua/wkdoptions/set_diff_profile/README.md:1 references 'options.lua', but options has no 'lua' |
 | warn | `doc-references-missing` | lua/wkdoptions/set_diff_profile/README.md:7 references 'options.lua', but options has no 'lua' |
-| warn | `doc-references-missing` | docs/ROADMAP/ROADMAP.md:17 references 'options.lua', but options has no 'lua' |
+| warn | `doc-references-missing` | docs/ROADMAP/ROADMAP.md:31 references 'options.lua', but options has no 'lua' |
 | warn | `doc-references-missing` | docs/ROADMAP/IDEAS/NEW_PLUGIN.md:41 references 'options.lua', but options has no 'lua' |
 | warn | `doc-references-missing` | docs/ROADMAP/IDEAS/NEW_PLUGIN.md:153 references 'options.lua', but options has no 'lua' |
 | warn | `doc-references-missing` | docs/ROADMAP/IDEAS/NEW_PLUGIN.md:148 references 'options.lua', but options has no 'lua' |
@@ -918,9 +920,9 @@ flowchart LR
 | warn | `missing-summary` | lua/wkdoptions/qflist/init.lua has no description line |
 | warn | `require-not-declared` | requires "mappings.noice" (line 36), which no file in this tree declares |
 | warn | `require-not-declared` | requires "lsp.languages.systems.c" (line 56), which no file in this tree declares |
-| warn | `require-not-declared` | requires "bindings.mappings.sourrounding" (line 25), which no file in this tree declares |
-| warn | `require-not-declared` | requires "bindings.mappings.smart_del_key" (line 24), which no file in this tree declares |
-| warn | `require-not-declared` | requires "bindings.mappings.ctrl_cycle" (line 14), which no file in this tree declares |
+| warn | `require-not-declared` | requires "bindings.mappings.smart_del_key" (line 25), which no file in this tree declares |
+| warn | `require-not-declared` | requires "bindings.mappings.sourrounding" (line 26), which no file in this tree declares |
+| warn | `require-not-declared` | requires "bindings.mappings.ctrl_cycle" (line 15), which no file in this tree declares |
 | warn | `require-not-declared` | requires "bindings.mappings.utils.window_zoom" (line 90), which no file in this tree declares |
 | warn | `require-not-declared` | requires "config.gp_config.hooks.buffer_new_chat" (line 76), which no file in this tree declares |
 | warn | `require-not-declared` | requires "config.harpoon.ui.menu_" (line 138), which no file in this tree declares |
@@ -943,14 +945,14 @@ flowchart LR
 | warn | `require-not-declared` | requires "wkdoptions.ui.line_numbers" (line 21), which no file in this tree declares |
 | warn | `require-not-declared` | requires "config.inc_rename" (line 160), which no file in this tree declares |
 | warn | `require-not-declared` | requires "config.neotest.whichkey" (line 92), which no file in this tree declares |
-| warn | `require-not-declared` | requires "config.menu.init" (line 11), which no file in this tree declares |
 | warn | `require-not-declared` | requires "config.menu.mappings" (line 20), which no file in this tree declares |
+| warn | `require-not-declared` | requires "config.menu.init" (line 11), which no file in this tree declares |
 | warn | `require-not-declared` | requires "config.snacks.mappings" (line 73), which no file in this tree declares |
 | warn | `require-not-declared` | requires "wkdnvchad.usrcmd" (line 15), which no file in this tree declares |
 | warn | `require-not-declared` | requires "wkdnvchad.config.base" (line 38), which no file in this tree declares |
 | warn | `require-not-declared` | requires "wkdnvchad.ui.statusline.custom.helpers.nerd_fonts" (line 6), which no file in this tree declares |
-| warn | `require-not-declared` | requires "wkdoptions.set_diff_profile.profiles" (line 245), which no file in this tree declares |
 | warn | `require-not-declared` | requires "wkdoptions.set_diff_profile.selector" (line 244), which no file in this tree declares |
+| warn | `require-not-declared` | requires "wkdoptions.set_diff_profile.profiles" (line 245), which no file in this tree declares |
 | warn | `require-not-declared` | requires "wkdoptions.set_diff_profile.profiles" (line 6), which no file in this tree declares |
 | warn | `type-vs-class` | module table annotated ---@type AutoCmds.General.Cfg, but 1 field(s) are assigned to it — LuaLS reports missing-fields/"fields cannot be injected" for this shape; use ---@class instead (---@class autocmds.general.defaults : AutoCmds.General.Cfg, plus @see the type definition, if AutoCmds.General.Cfg should still be checked against it) |
 | warn | `type-vs-class` | module table annotated ---@type AutoCmds.Git.Cfg, but 1 field(s) are assigned to it — LuaLS reports missing-fields/"fields cannot be injected" for this shape; use ---@class instead (---@class autocmds.git.defaults : AutoCmds.Git.Cfg, plus @see the type definition, if AutoCmds.Git.Cfg should still be checked against it) |
@@ -961,7 +963,7 @@ flowchart LR
 | warn | `type-vs-class` | module table annotated ---@type integer\|nil total plugin count the cached text was last derived from, but 1 field(s) are assigned to it — LuaLS reports missing-fields/"fields cannot be injected" for this shape; use ---@class instead (---@class wkdnvchad.ui.statusline.modules.plugin_summary : integer\|nil total plugin count the cached text was last derived from, plus @see the type definition, if integer\|nil total plugin count the cached text was last derived from should still be checked against it) |
 
 <details>
-<summary>333 informational findings</summary>
+<summary>335 informational findings</summary>
 
 
 | Check | Message |
@@ -977,6 +979,7 @@ flowchart LR
 | `missing-readme` | lua/bindings/usrcmds/bindings_explorer has no README.md |
 | `missing-readme` | lua/bindings/usrcmds/case has no README.md |
 | `missing-readme` | lua/bindings/usrcmds/case/sla has no README.md |
+| `missing-readme` | lua/bindings/usrcmds/telemetry_nvim_config has no README.md |
 | `missing-readme` | lua/bindings/usrcmds/update_repos has no README.md |
 | `missing-readme` | lua/bindings/usrcmds/who_locks has no README.md |
 | `missing-readme` | lua/config/ai/anthropic has no README.md |
@@ -1064,92 +1067,93 @@ flowchart LR
 | `missing-readme` | lua/wkdoptions/ui/line_numbers has no README.md |
 | `param-name-mismatch` | newest_reply: @param #1 is documented as 'short' but the signature declares 'dir' at that position |
 | `undocumented-param` | check has 3 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | find_named_buffer has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | is_stray_no_name has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.snorm_pattern has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.no_name_guard_sweep has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | find_named_buffer has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.augroup has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | _wrap_index has 3 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | Apply has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.snorm_pattern has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | _try_cycle has 2 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | _apply_shape has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | Apply has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | _wrap_index has 3 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | _feed_native has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | _is_numeric_like has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | _apply_shape has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | _case_shape has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | _is_numeric_like has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.setup has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.map_default_keys has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.view_scroll_up has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.view_scroll_down has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.map_default_keys has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | effective_count has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.view_scroll_down has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.check has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | doclinks_line has 2 parameter(s) but only 1 @param line(s) |
+| `undocumented-param` | M.strip_signature has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.open_summary has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.open_index has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | has_edits has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | write_uri_buffers has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | collect_uris has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | write_uri_buffers has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.run has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.run has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.enable_dap has 3 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.enable_lsp has 3 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | ensure_tools has 3 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.enable_formatters has 3 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.enable has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.enable_linters has 3 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.enable_formatters has 3 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | ensure_tools has 3 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.enable_lsp has 3 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.enable has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.enable_dap has 3 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.setup has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | merge_table has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.is_test_file has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.is_test_file has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.next_source has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.prev_source has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.next_source has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | safe_call has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | call has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | buf_index has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | set_buf_no_center has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.setup has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.setup has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | build_keyword_list has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.dedup has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.setup has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.filter has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.dedup has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | normalize_for_platform has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | strict_root_from has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.setup has 2 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | contains_any_substring has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | code_to_string has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | matches_any_pattern has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | code_in_list has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | contains_any_substring has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.filter_diagnostics has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | code_to_string has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | lc has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | wrapper has 4 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.has_eslint has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.has_prettier has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | file_contains has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.has_prettier has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.set_eslint_bin has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.set_prettier_bin has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | run_cmd_collect has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.attach has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | try_client_providers has 4 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | get_line_preview has 2 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | format_location_line_for_preview has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.try_providers has 3 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | format_location_line_for_preview has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | get_line_preview has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | flatten_locations has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | try_client_providers has 4 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | request_one_client has 4 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | make_client_request_handler has 4 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.attach has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.set_cursor_progress_mode has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | cursor_ctl.set_mode has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | pct_bar has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.pct_token has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | pct_bar has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | esc_percent has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.stl_escape has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.repo_relative has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.ellipsize_middle has 2 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.stl_escape has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.render_breadcrumbs_inherit_lspfirst has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.hl_open has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.extract_owner has 1 parameter(s) but only 0 @param line(s) |
+| `undocumented-param` | M.detect_literal_field has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.extract_base has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.extract_container has 2 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.detect_literal_field has 1 parameter(s) but only 0 @param line(s) |
-| `undocumented-param` | M.extract_owner has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.extract_base has 1 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.extract_container has 2 parameter(s) but only 0 @param line(s) |
 | `undocumented-param` | M.detect_literal_field has 1 parameter(s) but only 0 @param line(s) |

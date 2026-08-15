@@ -110,10 +110,10 @@ end
 ---@param plugin string|nil
 ---@return nil
 function M.check(plugin)
-  local findings, skipped = drift.check(plugin)
+  local findings, skipped, source_reason = drift.check(plugin)
   require("lib.nvim.ui.kit.viewer").open({
     title = ("Bindings — check (%d)"):format(#findings),
-    lines = drift.describe(findings, skipped),
+    lines = drift.describe(findings, skipped, source_reason),
   })
 end
 

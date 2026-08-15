@@ -327,28 +327,128 @@ function M.check(plugin)
     end
   end
 
+  -- Third axis (source): registered in THIS repository's own Lua, but not
+  -- documented anywhere. This is the direction limitation 1 above rules out
+  -- for the *live* axis, and the reason it is answerable here: the source
+  -- axis contains only our own registrations, never vim's defaults or a
+  -- plugin's own bindings, so it cannot flood.
+  --
+  -- Best-effort by design: the artifact may be absent or stale, and that is
+  -- reported as a reason (second return value of `M.source_check`) rather
+  -- than silently yielding no findings.
+  local source_findings, source_reason = M.source_check(plugin)
+  vim.list_extend(findings, source_findings)
+
   local skipped_list = vim.tbl_keys(skipped)
   table.sort(skipped_list)
-  return findings, skipped_list
+  return findings, skipped_list, source_reason
+end
+
+---The source axis on its own — `M.check` folds this in, exposed separately
+---so a caller can ask only "what is registered but undocumented" without
+---paying for the live probes.
+---
+---**Only ever reports the source -> documented direction.** The reverse
+---("documented but not in the source") is deliberately absent: a documented
+---binding legitimately lives in a plugin's own repository rather than this
+---config, and the existing `keymap-not-live` check already covers the case
+---where a documented binding is genuinely gone.
+---@param plugin string|nil Restrict to one cheatsheet stem, same as `M.check`.
+---@return Bindings.DriftFinding[]
+---@return string|nil reason  # why the source axis could not be consulted
+function M.source_check(plugin)
+  local ok_src, source = pcall(require, "bindings.usrcmds.bindings_explorer.source")
+  if not ok_src then
+    return {}, "source axis unavailable (bindings_explorer.source missing)"
+  end
+
+  local entries, reason = source.load()
+  if not entries then
+    return {}, reason
+  end
+
+  -- Documented across BOTH corpora here, unlike the keymap check above: the
+  -- question is "is this registration written down anywhere at all", and a
+  -- binding this config registers on a plugin's behalf may well be
+  -- documented on that plugin's own sheet.
+  local documented_keys, documented_cmds = {}, {}
+  for _, rec in ipairs(records.list("Keymaps")) do
+    local lhs = extract_lhs(rec)
+    if lhs then documented_keys[lhs] = true end
+  end
+  for _, rec in ipairs(records.list("Usercmds")) do
+    local name = extract_usercmd(rec)
+    if name then documented_cmds[name] = true end
+  end
+
+  local out = {}
+  local seen = {}
+  for _, e in ipairs(entries) do
+    if e.kind == "keymap" and e.lhs then
+      -- Compared through the SAME normalization the documented side goes
+      -- through (`nvim_replace_termcodes`), or `<leader>x` on one side and
+      -- its resolved form on the other would never match.
+      local raw = normalize_lhs(e.lhs)
+      if raw and not documented_keys[raw] and not seen["k" .. raw] then
+        seen["k" .. raw] = true
+        out[#out + 1] = {
+          kind = "keymap-undocumented",
+          plugin = plugin,
+          notation = e.lhs,
+          file = e.path,
+          line = e.line,
+        }
+      end
+    elseif e.kind == "usercmd" and e.name then
+      if not documented_cmds[e.name] and not seen["c" .. e.name] then
+        seen["c" .. e.name] = true
+        out[#out + 1] = {
+          kind = "usercmd-undocumented-source",
+          plugin = plugin,
+          notation = ":" .. e.name,
+          file = e.path,
+          line = e.line,
+        }
+      end
+    end
+  end
+
+  table.sort(out, function(a, b)
+    return a.notation < b.notation
+  end)
+  return out, nil
 end
 
 ---@param findings Bindings.DriftFinding[]
 ---@param skipped string[]|nil `M.check`'s second return value
+---@param source_reason string|nil `M.check`'s third return value — why the
+---source axis could not be consulted, when it could not. Rendered rather
+---than dropped: a report silently missing a whole axis reads exactly like
+---one where that axis found nothing.
 ---@return string[]
-function M.describe(findings, skipped)
+function M.describe(findings, skipped, source_reason)
   local lines = {}
   if #findings == 0 then
-    lines[1] = "No drift found (Keymaps: documented-not-live only; Usercmds: both directions)."
+    lines[1] = "No drift found (Keymaps: documented-not-live + source-not-documented; "
+      .. "Usercmds: both directions)."
   else
     for _, f in ipairs(findings) do
       if f.kind == "keymap-not-live" then
         lines[#lines + 1] = ("[keymap missing]  %-20s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
       elseif f.kind == "usercmd-not-live" then
         lines[#lines + 1] = ("[usercmd missing] %-20s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
+      elseif f.kind == "keymap-undocumented" then
+        lines[#lines + 1] = ("[keymap undoc'd]  %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
+      elseif f.kind == "usercmd-undocumented-source" then
+        lines[#lines + 1] = ("[usercmd undoc'd] %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
       else
         lines[#lines + 1] = ("[undocumented]    %s"):format(f.notation)
       end
     end
+  end
+  if source_reason then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "Source axis not consulted: " .. source_reason
   end
   if skipped and #skipped > 0 then
     lines[#lines + 1] = ""
