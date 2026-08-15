@@ -136,8 +136,11 @@ the repo's own `docs/COMMANDS.md` for the full reasoning.
 | `:RATelemetry snapshot <ns> [name]` | Save a named, device-tagged capture of `ns`'s current aggregate, without resetting the live counters. Always explicit — nothing here ever snapshots on its own. |
 | `:RATelemetry snapshots <ns>` | List `ns`'s saved snapshots, newest first. |
 | `:RATelemetry snapshot-compare <ns> <a> <b>` | Diff two named snapshots' call counts directly — **not** a calendar window like `compare` above. See "Snapshot device tagging + snapshot-compare" below. Shipped 2026-08-14. |
+| `:RATelemetry setup [ns]` | Backup + reset + re-wrap + (re)start — every configured target, or just one. The **only** way to select a non-plugin target such as this config itself (`:RATelemetry setup nvim-config`), which has no repo to name it by. Shipped 2026-08-15. |
+| `:RATelemetry full [ns]` | Same, forcing `profile_args` + `timing` on regardless of the target's own policy. `:RATelemetry full nvim-config`. Shipped 2026-08-15. |
 | `:RATelemetryStartAll` / `:RATelemetryStopAll` / `:RATelemetryResetAll` | Standalone aliases for bare `start`/`stop`/`reset` above — see below. `StartAll`/`StopAll` shipped 2026-08-14, `ResetAll` 2026-08-15. |
-| `:RATelemetrySetupAll` / `:RATelemetrySetupAllFull` | Backup (prompted once) + reset + re-wrap + restart, across every plugin `lua/config/telemetry.lua` configures that is loaded right now. `Full` forces `profile_args`/`timing` on for everyone. Shipped 2026-08-15 — see below. |
+| `:RATelemetrySetupAll` / `:RATelemetrySetupAllFull` | Bare forms of `:RATelemetry setup`/`full`: backup (prompted once) + reset + re-wrap + restart across every target `lua/config/telemetry.lua` configures (plugins **and** `extra`) that is loaded right now. `Full` forces `profile_args`/`timing` on for everyone. Shipped 2026-08-15 — see below. |
+| `:RATelemetryNvimConfig` / `:RATelemetryNvimConfigFull` | **This config's own flat aliases** (`lua/bindings/usrcmds/telemetry_nvim_config/`) for `:RATelemetry setup\|full nvim-config`. No mechanism of their own — see below. Shipped 2026-08-15. |
 
 `<Tab>` after `start `/`stop `/`reset `/`open `/`compare `/`snapshot `/
 `snapshots `/`snapshot-compare ` completes namespaces only; `compare`'s
@@ -204,6 +207,58 @@ New module `lua/runtime-analysis/telemetry/setup_all.lua`, and
 `opts.telemetry.plugins` policy `config.telemetry.build()` already produces
 — no new personal-config wiring needed, the same "the list only ever
 arrives as data" posture `:DocMapAll` already established one repo over.
+
+### Telemetry for THIS config — `opts.telemetry.extra` (2026-08-15)
+
+The namespace **`nvim-config`**: this config's own Lua tree is counted the
+same way every personal plugin already is, and appears in `:RATelemetry`,
+`coverage`, `compare`, `snapshot`, `export` and the HTML dashboard like any
+other namespace.
+
+The mechanism is entirely the plugin's own new `opts.telemetry.extra` —
+generic support for targets no plugin manager can resolve (no repo, no
+spec, several unrelated root prefixes instead of one `main`). Built
+deliberately **in the plugin, not as a config-side shim**, so any Neovim
+user can instrument their own config; a shim here would by definition never
+have done that. This config only supplies data, in `lua/config/telemetry.lua`:
+
+```lua
+extra = {
+  { namespace = "nvim-config",
+    mains = SELF_PREFIXES,   -- the 11 top-level lua/ prefixes
+    profile_args = true, timing = false },
+}
+```
+
+`SELF_PREFIXES` is the **one** place that list lives.
+
+**Wrap timing is the whole subtlety.** When `runtime-analysis.setup()` runs
+it is still inside `lazy.setup()`, before `startup.now(...)`/`startup.on(
+"UIReady", ...)` have required most of this config — and `wrap_loaded()`
+only ever sees what is already in `package.loaded`. So the plugin defers
+the wrap to **VimEnter** by default (`wrap_at`, overridable per target with
+`"setup"`/`"manual"`). An earlier draft solved this config-side with a
+`startup.on("UIReady", "telemetry_self", ...)` phase after `mappings`; that
+phase and its `lua/config/telemetry_self.lua` are **gone** — the plugin
+handles it, and keeping both would have meant two prefix lists that drift.
+
+**Selecting it:** a config has no repo, so `:RATelemetry setup|full
+nvim-config` (the new namespace-taking subcommands) is how it is named.
+
+#### `:RATelemetryNvimConfig` / `:RATelemetryNvimConfigFull`
+
+Flat aliases **local to this config** (`lua/bindings/usrcmds/
+telemetry_nvim_config/init.lua`), for `:RATelemetry setup nvim-config` and
+`:RATelemetry full nvim-config` respectively. They exist only because that
+namespace is reached for often enough here to earn a name that completes in
+one Tab — the same reasoning the plugin's own `:RATelemetryStartAll` flat
+aliases already document. They contain **no mechanism of their own**: an
+earlier version wrapped the prefixes itself, which meant a second prefix
+list beside `config.telemetry`'s that could silently drift apart.
+
+**Note for other configs:** `mains` are top-level `lua/` directory names,
+so any user's list differs. Nothing about the feature is specific to this
+config.
 
 ### Snapshot device tagging + `snapshot-compare` (2026-08-14)
 
