@@ -1,10 +1,21 @@
 # Roadmap
 
-- [ ] spotlight: warum `leader mk`? Und nicht `leader s*`? itte umstelen. sofdern nichts dagegen spricht (andere mappings). update doe docs und auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS  (hier kajnn man auch checken ob eine keymaps schon besetzte ist=)
-- [ ] Ein mappings wie `M-o` (alternate open), mit dem ich so sachen wie `markdown.nvim`'s `:TableView toggle` in md-files toggle, aber auch, je nach kontext, `gopath.nvim`'s `gF` oder `open.nvim`s doppelcklick handler usw... ausfphrt - je nachem, waas gerade halt unter dem cursor ist. wenn mehrere Möglichkeiten bestehen, dann einfach nachfragen. `lib.nvim nvim.ui.ki` hat da  eine passende prompt/selection
+In `documentation.nvim` && `runtime-analysis.nvim` sind noch offen zu implementieren:
+  E:\repos\runtime-analysis.nvim\docs\IDEAS.md
+  E:\repos\documentation.nvim\docs\ROADMAP\IDEAS
+  E:\repos\documentation.nvim\docs\ROADMAP\V1_EXTENSION
+  E:\repos\documentation.nvim\docs\ROADMAP\MULTILANG.md
+Knnst du einen implementierungsplan ausarbeiten, wi es sinnj maccht, dass zu ijmplementieren
+dabei muss t du vor al em in documentaion.nvim ausmisten, denn zb in der desktop_weebapp file, das wurd eschon mit er der app docmaü-desktop (auch unter e:\repos) scho umgestze, aber abklären ob alles umgest wurde, wenn nein,. dann in diee roadmap doprt schireben
+
+
+
+
+E:/repos/docmap-desktop/docs/ROADMAP.md abarbeiten + einmal hbrainstomren fpr weeitere features bzw optionen, ui, usw...
 
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
+- [ ] spotlight: warum `leader mk`? Und nicht `leader s*`? itte umstelen. sofdern nichts dagegen spricht (andere mappings). update doe docs und auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS  (hier kajnn man auch checken ob eine keymaps schon besetzte ist=)
 - spotlight checken und lernen
 - documentation.nvim lernen
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
@@ -52,8 +63,6 @@
 3. `/autcmds`
   1. passt zu `/bindings` ?
   2. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
-4. Checklisten anwenden
-  1. ToDo's duchgehen
 
 ---
 
