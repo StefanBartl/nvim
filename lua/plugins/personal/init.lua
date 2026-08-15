@@ -219,6 +219,34 @@ plugins.add({
       -- turned on here explicitly per request.
       opts.godbolt = true
 
+      -- `:DocMap bindings` (2026-08-15): declare THIS config's own keymap/
+      -- usercmd/autocmd helpers so they are extracted too. The `vim.*` APIs
+      -- need no declaration; these five do, and without them `:DocMap
+      -- bindings` finds ~10 registrations here instead of ~300.
+      --
+      -- Why the plugin cannot just guess these: a bare `map(...)` is also
+      -- the most natural name for a list-mapping helper, so guessing would
+      -- silently report `vim.tbl_map` calls as keymaps. The caller knows its
+      -- own helper names and the scanner cannot — see core/bindings.lua.
+      --
+      -- All five are real shapes in this tree: `map` is `vim.g.__map_helper`
+      -- (same argument order as vim.keymap.set, which is why it can reuse
+      -- that layout), `usercmd.create`/`autocmd.create` are lib.nvim's, and
+      -- the two bare names are `local nvim_create_autocmd =
+      -- api.nvim_create_autocmd`-style aliases (autocmds/terminals/init.lua).
+      -- `composer.verb` is deliberately absent: it registers a whole verb
+      -- tree rather than one command, so its first argument is not a command
+      -- name and no built-in layout describes it.
+      opts.bindings = {
+        wrappers = {
+          ["map"] = "keymap",
+          ["usercmd.create"] = "usercmd",
+          ["autocmd.create"] = "autocmd",
+          ["nvim_create_autocmd"] = "autocmd",
+          ["nvim_create_user_command"] = "usercmd",
+        },
+      }
+
       -- `:DocMap all` / `:DocMapAll` (2026-08-14): documentation.nvim owns
       -- the command, this config supplies only the data -- the same split
       -- runtime-analysis.nvim's own `opts.telemetry` already draws one

@@ -61,6 +61,7 @@ offers action names only, instead of blocking on a full scan.
 | `:DocMap impact [ref]` | Where changed *lines* radiate to: functions → callers → quickfix | no |
 | `:DocMap churn [range]` | Churn × complexity, hottest first → quickfix | no |
 | `:DocMap plugins` | Every recognized lazy.nvim spec in the tree → quickfix, sorted by repo | no |
+| `:DocMap bindings` | Every keymap / user command / autocmd in the tree → quickfix, sorted by lhs so **collisions land adjacent** (`[bound more than once]`). Needs `opts.bindings.wrappers` for this config's own helpers — see below. Shipped 2026-08-15. | no |
 | `:DocMap tools` | This repo's own `lib.nvim.deps` manifest (`docs/install.json`/`docs/INSTALL.md`) → quickfix. Declared only — never a live "is it installed here" probe. Shipped 2026-08-10. | no |
 | `:DocMap serve [stop]` | Local map server on `127.0.0.1`, OS-assigned port. Enables the History tab. | no |
 | `:DocMap helptags` | Regenerate this plugin's own `doc/tags` | writes `doc/tags` |
@@ -269,3 +270,65 @@ what mdview's `ammonia` sanitizer keeps — no Mermaid, no custom classes)
 shipped; Tier B (a real diagram inside mdview's own tab) needs a protocol
 change on mdview.nvim's own side and stays that repo's decision, not
 documentation.nvim's.
+
+## `:DocMap bindings` + `opts.bindings.wrappers` (2026-08-15)
+
+Keymaps, user commands and autocmds extracted **from the source**, into the
+quickfix list. The counterpart to `:DocMap plugins`: between them they cover
+what a Neovim config actually consists of, which is mostly not functions —
+`lua/bindings/mappings/*.lua` has no functions and no symbols and was
+therefore invisible on the map until now.
+
+**The wrapper declaration is mandatory here, not optional.** The `vim.*`
+APIs are recognized with no configuration, but this config barely uses them
+directly — measured across `lua/`: **233×** `map(...)` against **4×**
+`vim.keymap.set`, and **72×** `usercmd.create` against **12×**
+`vim.api.nvim_create_user_command`. Without the declaration `:DocMap
+bindings` finds ~10 registrations instead of ~300 and looks broken. Set in
+`lua/plugins/personal/init.lua`:
+
+```lua
+opts.bindings = {
+  wrappers = {
+    ["map"] = "keymap",
+    ["usercmd.create"] = "usercmd",
+    ["autocmd.create"] = "autocmd",
+    ["nvim_create_autocmd"] = "autocmd",
+    ["nvim_create_user_command"] = "usercmd",
+  },
+}
+```
+
+Three genuinely different aliasing shapes live in this tree, and the third
+was a surprise: `map` (`vim.g.__map_helper`, same argument order as
+`vim.keymap.set`, which is why it can reuse that layout), lib.nvim's
+`usercmd.create`/`autocmd.create`, and `local nvim_create_autocmd =
+api.nvim_create_autocmd` called bare in `lua/autocmds/terminals/init.lua`.
+The plugin never traces an alias back to what it points at — the same line
+it draws for `local M = {...}; return M` — so the *name as called* is what
+gets declared.
+
+`composer.verb` is deliberately **not** declared: it registers a whole verb
+tree rather than one command, so its first argument is not a command name
+and no built-in argument layout describes it. Those commands are therefore
+absent from `:DocMap bindings` — a known, stated gap rather than a silent
+mis-parse.
+
+**Why the plugin does not just guess these names:** a bare `map(...)` is
+also the most natural name for a list-mapping helper, so guessing would
+silently report `vim.tbl_map` calls as keymaps. Reported counts here:
+**228 keymaps, 66 user commands, 10 autocmds**.
+
+**What it is for beyond an inventory:** rows sort by left-hand side so
+collisions land next to each other. The same `<leader>x` bound in two files
+is a real bug — whichever module loads last silently wins, and nothing else
+surfaces it. Buffer-local bindings are excluded from collision counting,
+since shadowing a global mapping in an ftplugin is intended.
+
+**Relationship to `:Bindings check`** (`bindings_explorer`'s drift report,
+see `bindings_explorer.md`): different questions, deliberately. `:DocMap
+bindings` reads the **source** — what is written, including a binding in a
+branch that never runs. `:Bindings check` compares the hand-written
+BINDINGS tables against **live** `nvim_get_keymap`/`nvim_get_commands`.
+Source vs. documented vs. live are three axes; the plan is for the source
+axis to feed `drift.lua` as a third input, which is **not yet wired**.
