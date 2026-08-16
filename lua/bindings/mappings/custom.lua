@@ -4,12 +4,14 @@
 
 local M = {}
 
+local notify = require("lib.nvim.notify").create("[casedesk]")
+
 function M.setup()
   local map = vim.g.__map_helper
 
   map("n", "<leader>cp", function()
     vim.fn.setreg("+", vim.fn.expand("%:p"))
-    print("Copied path to clipboard")
+    notify.info("Copied path to clipboard")
   end, { desc = "[General] Copy file path" })
 
   -- casedesk SESSIONS.md §5: save under the case number when the current
@@ -20,7 +22,7 @@ function M.setup()
   map("n", "<leader>cs", function()
     local ok_sessions, sessions = pcall(require, "sessions")
     if not ok_sessions then
-      vim.notify("[casedesk] sessions.nvim not available", vim.log.levels.WARN)
+      notify.warn("sessions.nvim not available")
       return
     end
     local ok_resolve, resolve = pcall(require, "bindings.usrcmds.case.resolve")

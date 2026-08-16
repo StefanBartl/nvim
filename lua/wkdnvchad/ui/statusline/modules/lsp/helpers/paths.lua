@@ -300,7 +300,7 @@ end
 Autocmd.create("BufDelete", function(args)
   tick_cache[args.buf] = nil
 end, {
-  group = vim.api.nvim_create_augroup("WkdNvChadPathsCache", { clear = true }),
+  group = Autocmd.group("WkdNvChadPathsCache", true),
   desc = "Clear path tick cache on buffer delete"
 })
 

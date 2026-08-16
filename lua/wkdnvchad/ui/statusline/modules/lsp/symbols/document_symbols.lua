@@ -221,7 +221,7 @@ end
 do
   if not rawget(M, "__au_lsp_breadcrumbs") then
     local opts = get_options()
-    local aug = api.nvim_create_augroup("LspBreadcrumbsAsync", { clear = true })
+    local aug = Autocmd.group("LspBreadcrumbsAsync", true)
 
     for _, ev in ipairs(opts.update_events) do
       Autocmd.create(ev, function(args)
@@ -391,7 +391,7 @@ end
 Autocmd.create("BufDelete", function(args)
   M.__lsp_doc_cache[args.buf] = nil
 end, {
-  group = vim.api.nvim_create_augroup("WkdNvChadLspSymbolsCache", { clear = true }),
+  group = Autocmd.group("WkdNvChadLspSymbolsCache", true),
   desc = "Clear LSP symbols cache on buffer delete"
 })
 

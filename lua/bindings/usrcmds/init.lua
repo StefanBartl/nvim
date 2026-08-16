@@ -2,6 +2,7 @@
 -- Initialize module for 'bindings.usrcmds'
 
 local usercmd = require("lib.nvim.usercmd")
+local notify = require("lib.nvim.notify").create("[bindings.usrcmds]")
 
 require("bindings.usrcmds.case").enable()
 require("bindings.usrcmds.bindings_explorer").enable()
@@ -14,7 +15,7 @@ usercmd.create('CopyLocation', function()
 
   -- Falls der Buffer noch nicht auf der Festplatte gespeichert ist
   if path == '' then
-    vim.notify('Keine Datei geladen / kein Pfad vorhanden', vim.log.levels.WARN)
+    notify.warn('Keine Datei geladen / kein Pfad vorhanden')
     return
   end
 
@@ -30,7 +31,7 @@ usercmd.create('CopyLocation', function()
   vim.fn.setreg('+', result)
 
   -- Rückmeldung anzeigen
-  vim.notify('Kopiert: ' .. result, vim.log.levels.INFO)
+  notify.info('Kopiert: ' .. result)
 end, {
   desc = 'Kopiert absoluten Pfad, Zeile und Spalte in die Zwischenablage',
 })
@@ -41,17 +42,17 @@ local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES",
 usercmd.create('BindingsPath', function()
   -- Kopiert den Pfad in das System-Register (+)
   vim.fn.setreg('+', bindings_path)
-  vim.notify('Bindings-Pfad in Zwischenablage kopiert!', vim.log.levels.INFO)
+  notify.info('Bindings-Pfad in Zwischenablage kopiert!')
 end, {
   desc = 'Kopiert den spezifischen Bindings-Pfad in die Zwischenablage',
 })
 
 -- 2. Keymap <leader>BI erstellen
-vim.keymap.set('n', '<leader>BI', '<cmd>BindingsPath<CR>', {
-  noremap = true,
-  silent = true,
-  desc = 'Bindings-Pfad kopieren',
-})
+-- Not vim.g.__map_helper: that global is only valid transiently, while
+-- bindings.mappings' own setup() is running (it gets set to nil at the end
+-- of that function) -- not a stable API for other modules to call into at
+-- arbitrary load order. lib.nvim.map directly, like everywhere else.
+require("lib.nvim.map")('n', '<leader>BI', '<cmd>BindingsPath<CR>', nil, 'Bindings-Pfad kopieren')
 
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.
 usercmd.create("CwdHere", function()
@@ -64,7 +65,7 @@ end, { force = true })
 
 usercmd.create('PowershellProfile', function()
     if vim.fn.executable("powershell") ~= 1 then
-        print("Fehler: powershell ist auf diesem System nicht verfügbar.")
+        notify.error("Fehler: powershell ist auf diesem System nicht verfügbar.")
         return
     end
     -- argv array instead of io.popen with an embedded shell string
@@ -78,5 +79,5 @@ usercmd.create('PowershellProfile', function()
         vim.cmd('edit ' .. vim.fn.fnameescape(profile_path))
         return
     end
-    print("Fehler: Der PowerShell Profil-Pfad konnte nicht ermittelt werden.")
+    notify.error("Fehler: Der PowerShell Profil-Pfad konnte nicht ermittelt werden.")
 end, { desc = 'Öffnet das aktuelle PowerShell-Profil', force = true })

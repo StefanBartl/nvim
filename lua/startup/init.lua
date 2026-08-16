@@ -100,15 +100,14 @@ function M.on(event, label, fn)
     if vim.v.vim_did_enter == 1 then
       vim.schedule(function() run(mark, fn) end)
     else
-      vim.api.nvim_create_autocmd("VimEnter", {
-        once = true,
-        callback = function() vim.schedule(function() run(mark, fn) end) end,
-      })
+      require("lib.nvim.autocmd").create("VimEnter", function()
+        vim.schedule(function() run(mark, fn) end)
+      end, { once = true })
     end
     return
   end
 
-  vim.api.nvim_create_autocmd(event, { once = true, callback = function() run(mark, fn) end })
+  require("lib.nvim.autocmd").create(event, function() run(mark, fn) end, { once = true })
 end
 
 --- Phases that never ran: their event has not fired, or had already fired when

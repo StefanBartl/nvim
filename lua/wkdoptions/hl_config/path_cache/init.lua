@@ -10,9 +10,13 @@ local Autocmd = require("lib.nvim.autocmd")
 local M = {}
 
 -- Namespace augroup for cache refresh
-local AUG_PATHCACHE = vim.api.nvim_create_augroup("myopt_PathCache", { clear = true })
+local AUG_PATHCACHE = Autocmd.group("myopt_PathCache", true)
 
---- Compute the repo root for a given directory by searching for ".git" upwards.
+-- Cached, marker-based root finder (LRU, per-directory) — replaces a
+-- hand-rolled upward ".git" search that duplicated this.
+local root_finder = require("lib.nvim.fs.find_root")({ markers = { ".git" } })
+
+--- Compute the repo root for a given directory.
 --- Returns: absolute root dir (string) or nil when no .git is found.
 ---@param dir string
 ---@return string|nil
@@ -20,12 +24,7 @@ local function compute_repo_root(dir)
   if not dir or dir == "" then
     return nil
   end
-  local gitdir = vim.fs.find(".git", { upward = true, path = dir })[1]
-  if not gitdir then
-    return nil
-  end
-  -- gitdir may be ".../<root>/.git" (file or directory); root is its parent
-  return vim.fn.fnamemodify(gitdir, ":h")
+  return root_finder.find(dir)
 end
 
 --- Compute a repo-relative or "~"-shortened path without touching buffer cache.

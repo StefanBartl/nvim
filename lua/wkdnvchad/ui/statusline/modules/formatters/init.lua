@@ -25,7 +25,7 @@ local ellipsize_cache = require("lib.lua.memo.lru").new(64)
 Autocmd.create("ColorScheme", function()
   escape_cache = require("lib.lua.memo.lru").new(128)
 end, {
-  group = vim.api.nvim_create_augroup("WkdNvChadFormattersCache", { clear = true }),
+  group = Autocmd.group("WkdNvChadFormattersCache", true),
   desc = "Clear formatters cache on colorscheme change",
 })
 

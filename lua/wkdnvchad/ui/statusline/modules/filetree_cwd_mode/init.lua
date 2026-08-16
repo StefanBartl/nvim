@@ -69,10 +69,9 @@ local function ensure_hl(color_key)
   return group
 end
 
-vim.api.nvim_create_autocmd("ColorScheme", {
-  group = vim.api.nvim_create_augroup("WkdNvChadCwdModeBadgeHl", { clear = true }),
+require("lib.nvim.autocmd").create("ColorScheme", function() _hl_built = {} end, {
+  group = require("lib.nvim.autocmd").group("WkdNvChadCwdModeBadgeHl", true),
   desc = "Rebuild the filetree cwd-mode badge highlights for the new theme's palette",
-  callback = function() _hl_built = {} end,
 })
 
 ---@param opts { badge_style?: boolean, colors?: table<string, string> }?

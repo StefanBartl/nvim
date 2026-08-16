@@ -92,58 +92,60 @@ function M.setup(opts)
   opts = opts or {}
   if opts.enabled == false then return end
 
+  local autocmd = require("lib.nvim.autocmd")
+  -- Raw augroup, not autocmd.group(): that caches by name and would stop
+  -- re-clearing on a second M.setup() call (e.g. re-sourcing config),
+  -- stacking a duplicate pair of handlers instead of replacing them.
   local group = vim.api.nvim_create_augroup("WkdExplorerSingleton", { clear = true })
 
-  vim.api.nvim_create_autocmd("WinEnter", {
-    group = group,
-    desc = "Close the other file-explorer UI when one opens",
-    callback = function()
-      -- Deferred one tick, re-reading current win/buf at execution time
-      -- rather than trusting the event args: a newly created window (a
-      -- floating picker in particular) can still briefly report the
-      -- PREVIOUS window's buffer at the exact instant WinEnter fires,
-      -- before Neovim has fully settled which buffer belongs to it. Acting
-      -- on that transient state was observed to misfire — see the module's
-      -- own smoke test for the concrete repro this fixed.
-      vim.schedule(function()
-        pcall(function()
-          local win = vim.api.nvim_get_current_win()
-          local buf = vim.api.nvim_win_get_buf(win)
-          local ft = vim.bo[buf].filetype
+  autocmd.create("WinEnter", function()
+    -- Deferred one tick, re-reading current win/buf at execution time
+    -- rather than trusting the event args: a newly created window (a
+    -- floating picker in particular) can still briefly report the
+    -- PREVIOUS window's buffer at the exact instant WinEnter fires,
+    -- before Neovim has fully settled which buffer belongs to it. Acting
+    -- on that transient state was observed to misfire — see the module's
+    -- own smoke test for the concrete repro this fixed.
+    vim.schedule(function()
+      pcall(function()
+        local win = vim.api.nvim_get_current_win()
+        local buf = vim.api.nvim_win_get_buf(win)
+        local ft = vim.bo[buf].filetype
 
-          if ft == "neo-tree" then
-            if snacks_explorer_active() then
-              close_snacks_explorer()
-              _displaced = "snacks_explorer"
-            end
-          elseif ft == "snacks_picker_list" and snacks_explorer_active() and neotree_win() then
-            close_neotree()
-            _displaced = "neotree"
+        if ft == "neo-tree" then
+          if snacks_explorer_active() then
+            close_snacks_explorer()
+            _displaced = "snacks_explorer"
           end
-        end)
-      end)
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("WinClosed", {
-    group = group,
-    desc = "Reopen the displaced explorer UI once, then forget it",
-    callback = function()
-      if not _displaced then return end
-      -- Deferred: the closing window's own teardown hasn't necessarily
-      -- settled yet (neo-tree's WinClosed fallout, snacks' picker cleanup),
-      -- so re-checking "is the other one really gone" needs to run after
-      -- that settles, not synchronously inside this event.
-      vim.schedule(function()
-        if _displaced == "neotree" and not snacks_explorer_active() then
-          _displaced = nil
-          open_neotree()
-        elseif _displaced == "snacks_explorer" and not neotree_win() then
-          _displaced = nil
-          open_snacks_explorer()
+        elseif ft == "snacks_picker_list" and snacks_explorer_active() and neotree_win() then
+          close_neotree()
+          _displaced = "neotree"
         end
       end)
-    end,
+    end)
+  end, {
+    group = group,
+    desc = "Close the other file-explorer UI when one opens",
+  })
+
+  autocmd.create("WinClosed", function()
+    if not _displaced then return end
+    -- Deferred: the closing window's own teardown hasn't necessarily
+    -- settled yet (neo-tree's WinClosed fallout, snacks' picker cleanup),
+    -- so re-checking "is the other one really gone" needs to run after
+    -- that settles, not synchronously inside this event.
+    vim.schedule(function()
+      if _displaced == "neotree" and not snacks_explorer_active() then
+        _displaced = nil
+        open_neotree()
+      elseif _displaced == "snacks_explorer" and not neotree_win() then
+        _displaced = nil
+        open_snacks_explorer()
+      end
+    end)
+  end, {
+    group = group,
+    desc = "Reopen the displaced explorer UI once, then forget it",
   })
 end
 

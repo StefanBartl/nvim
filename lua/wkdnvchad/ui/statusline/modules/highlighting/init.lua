@@ -86,7 +86,7 @@ Autocmd.create("ModeChanged", function()
   mode_band_cache = nil
   last_mode = nil
 end, {
-  group = vim.api.nvim_create_augroup("WkdNvChadHighlightCache", { clear = true }),
+  group = Autocmd.group("WkdNvChadHighlightCache", true),
   desc = "Clear mode band cache on mode change"
 })
 

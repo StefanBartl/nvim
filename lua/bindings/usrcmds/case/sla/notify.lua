@@ -111,11 +111,11 @@ function M.setup()
     end)
   )
 
-  vim.api.nvim_create_autocmd("FocusGained", {
-    group = vim.api.nvim_create_augroup("CasedeskSlaNotify", { clear = true }),
-    callback = function()
-      pcall(M.check)
-    end,
+  local autocmd = require("lib.nvim.autocmd")
+  autocmd.create("FocusGained", function()
+    pcall(M.check)
+  end, {
+    group = autocmd.group("CasedeskSlaNotify", true),
     desc = "casedesk: re-check SLA clocks on FocusGained (SLA.md §6C)",
   })
 end

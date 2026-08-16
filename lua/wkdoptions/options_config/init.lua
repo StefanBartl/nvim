@@ -12,7 +12,7 @@ local ocfg = lazy.require("wkdoptions.config.data.options")
 local hcfg = lazy.require("wkdoptions.config.data.highlight")
 local Autocmd = lazy.require("lib.nvim.autocmd")
 
-local AUG_OPTS = vim.api.nvim_create_augroup("myopt_Options", { clear = true })
+local AUG_OPTS = Autocmd.group("myopt_Options", true)
 
 ---@return nil
 local function apply_matchparen()

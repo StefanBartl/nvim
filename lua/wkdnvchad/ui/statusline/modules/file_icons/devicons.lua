@@ -232,7 +232,7 @@ Autocmd.create("ColorScheme", function()
   icon_cache = require("lib.lua.memo.lru").new(256)
   hl_cache = { name = "St_FileIcon", fg = nil, bg = nil }
 end, {
-  group = vim.api.nvim_create_augroup("WkdNvChadDeviconsCache", { clear = true }),
+  group = Autocmd.group("WkdNvChadDeviconsCache", true),
   desc = "Clear devicons cache on colorscheme change",
 })
 

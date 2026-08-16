@@ -16,7 +16,7 @@ local H = (C and C.cfg and C.cfg.highlight) or {}
 
 -- Dedicated namespace and autocmd group
 local NS = vim.api.nvim_create_namespace("myopt_CwordOccur")
-local AUG = vim.api.nvim_create_augroup("myopt_CwordOccur", { clear = true })
+local AUG = Autocmd.group("myopt_CwordOccur", true)
 
 -- Internal render-style cache (created highlight groups)
 local HLCACHE = {} ---@type table<string, boolean>

@@ -89,7 +89,12 @@ end
 ---prefix instead of the "Harpoon" group.
 ---@return nil
 local function register_which_key_when_loaded()
-  local grp = vim.api.nvim_create_augroup("HarpoonWhichKey", { clear = true })
+  -- Raw nvim_create_autocmd, not Autocmd.create: this callback signals
+  -- "delete me" by returning true, and lib.nvim.autocmd.create's defensive
+  -- pcall wrapper discards the callback's return value, which would turn
+  -- this from "fires once, on the LazyLoad event that is which-key.nvim's"
+  -- into "never self-deletes, keeps firing on every later LazyLoad too".
+  local grp = require("lib.nvim.autocmd").group("HarpoonWhichKey", true)
   vim.api.nvim_create_autocmd("User", {
     group = grp,
     pattern = "LazyLoad",
