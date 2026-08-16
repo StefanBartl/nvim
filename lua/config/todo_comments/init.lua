@@ -9,6 +9,7 @@ local M = {}
 
 local todo_ok, todo = pcall(require, "todo-comments")
 if not todo_ok then
+  ---@param _ table|nil # Unused
   function M.setup(_) end
   return {}
 end
@@ -62,6 +63,7 @@ local function patch_highlight_endcol()
   hl.__endcol_clamped = true
 end
 
+---@param keywords table<string, { alt: string[]? }>
 local function build_keyword_list(keywords)
   ---@type string[]
   local words = {}
@@ -83,6 +85,7 @@ end
 
 local keyword_or = build_keyword_list(KEYWORDS)
 
+---@param opts table|nil
 function M.setup(opts)
   opts = opts or {}
   if not opts.keywords then

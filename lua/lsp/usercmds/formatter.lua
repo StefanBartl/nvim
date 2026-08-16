@@ -11,6 +11,7 @@ local M = {}
 local desc_tag = "[lsp_conform] "
 
 ---@return nil
+---@param formatter table
 function M.attach(formatter)
   pcall(nvim_create_user_command, "LspFormat", function(_)
     formatter.format(0)

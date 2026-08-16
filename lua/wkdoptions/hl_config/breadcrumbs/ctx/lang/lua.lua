@@ -32,6 +32,7 @@ local DECLARATION_TYPES = {
 -- Literal Detection
 -----------------------------------------------------------
 
+---@param node TSNode|nil
 ---@nodiscard
 function M.detect_literal_field(node)
   if not node then
@@ -136,6 +137,7 @@ local find_variable = memo.fn(function(node)
   return nil
 end, { weak = "k", size = 32 })
 
+---@param node TSNode|nil
 ---@nodiscard
 function M.extract_owner(node)
   if not node then
@@ -172,6 +174,8 @@ end
 -- Container Extraction (from index expressions)
 -----------------------------------------------------------
 
+---@param node TSNode|nil
+---@param max_depth integer|nil
 ---@nodiscard
 function M.extract_container(node, max_depth)
   if not node then
@@ -241,6 +245,7 @@ end
 -- Base Identifier (fallback)
 -----------------------------------------------------------
 
+---@param node TSNode|nil
 ---@nodiscard
 function M.extract_base(node)
   if not node then

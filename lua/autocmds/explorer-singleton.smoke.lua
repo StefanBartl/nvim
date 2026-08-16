@@ -14,6 +14,9 @@ local root = vim.fn.fnamemodify(this, ":p:h:h:h") -- lua/autocmds/… -> repo ro
 vim.opt.rtp:prepend(root)
 
 local passed, failed = 0, 0
+---@param name string
+---@param ok boolean
+---@param detail string|nil
 local function check(name, ok, detail)
   if ok then passed = passed + 1; print("  ok   " .. name)
   else failed = failed + 1; print("  FAIL " .. name .. (detail and ("  — " .. detail) or "")) end

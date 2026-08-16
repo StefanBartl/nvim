@@ -4,6 +4,7 @@
 local M = {}
 
 -- Hilfsfunktion: aktuellen Buffer setzen ohne 'zz'
+---@param bufnr integer
 local function set_buf_no_center(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_set_current_buf(bufnr)
@@ -12,6 +13,7 @@ local function set_buf_no_center(bufnr)
 end
 
 -- Index des aktuellen Buffers
+---@param bufnr integer
 local function buf_index(bufnr)
   for i, b in ipairs(vim.t.bufs or {}) do
     if b == bufnr then

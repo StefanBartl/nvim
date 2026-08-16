@@ -6,6 +6,7 @@
 local M = {}
 
 -- Lowercase helper
+---@param s string|nil
 local function lc(s)
   if not s then
     return ""

@@ -16,7 +16,12 @@ local schedule = vim.schedule
 
 --- Internal single-client handler creator.
 --- Calls the client and invokes `on_result` when result processed (true if preview shown).
-local function make_client_request_handler(_, _, opts, on_result)
+---@param client table # Unused
+---@param params table # Unused
+---@param opts table|nil
+---@param on_result fun(shown: boolean)
+---@diagnostic disable-next-line: unused-local
+local function make_client_request_handler(client, params, opts, on_result)
   opts = opts or {}
   local mode = opts.mode
   local callback = opts.callback
@@ -55,6 +60,10 @@ local function make_client_request_handler(_, _, opts, on_result)
 end
 
 --- send request to a single client (safely)
+---@param client table
+---@param params table
+---@param opts table|nil
+---@param on_result fun(shown: boolean)
 local function request_one_client(client, params, opts, on_result)
   local handler = make_client_request_handler(client, params, opts, on_result)
   -- protect the request call; some clients may disconnect

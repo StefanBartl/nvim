@@ -63,10 +63,10 @@ end
 --- line never appears in the first place, rather than being detected and
 --- manually removed afterward the way `M.clear_emojis` handles emojis —
 --- there's nothing to opt into removing if it was never written.
----@param text string
----@return string
 local SIGNATURE_SCAN_LINES = 5
 
+---@param text string|nil
+---@return string
 function M.strip_signature(text)
   local lines = vim.split((text or ""):gsub("\r", ""), "\n", { plain = true })
 

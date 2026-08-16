@@ -6,11 +6,14 @@
 
 local M = {}
 
+---@param cfg WKDOptionsBreadcrumbsCtx
 ---@nodiscard
 function M.enabled(cfg)
   return cfg.fallback_word_when_empty == true
 end
 
+---@param _node TSNode|nil # Unused
+---@param _cfg WKDOptionsBreadcrumbsCtx # Unused
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
 function M.extract(_node, _cfg)

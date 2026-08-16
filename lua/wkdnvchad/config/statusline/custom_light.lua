@@ -114,6 +114,7 @@ function M.register_statusline_modules(stl_config)
 end
 
 -- Public API for cursor progress control
+---@param mode WkdNvC.UI.Stl.CursorCtl.Progress.Mode
 M.set_cursor_progress_mode = function(mode)
   ensure_modules()
   return cursor_ctl_module.set_mode(mode)

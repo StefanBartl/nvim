@@ -73,6 +73,7 @@ function M.buffer_is_ui_like(matchers, bufnr)
   return false
 end
 
+---@param bufnr integer|nil
 function M.std_skip(bufnr)
   return M.buffer_is_ui_like(M.build_matchers(C.cfg.skip), bufnr)
 end

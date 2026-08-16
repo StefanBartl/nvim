@@ -6,6 +6,7 @@ local custom_menu = require("config.menu.custom_menu")
 local M = {}
 
 -- Setup: registers the built menu under 'menus.custom' so menu.open("custom") works.
+---@param opts table|nil
 function M.setup(opts)
   opts = opts or {}
   local menu_table = custom_menu(opts)

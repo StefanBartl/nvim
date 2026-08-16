@@ -26,6 +26,7 @@ local KEEP_TYPES = {
 }
 
 --- Extract identifier from node
+---@param node TSNode
 ---@nodiscard
 local function extract_identifier(node)
   -- Try name field first
@@ -115,11 +116,14 @@ local collect_chain = memo.fn(function(node)
   return names
 end, { weak = "k", size = 64 })
 
+---@param cfg WKDOptionsBreadcrumbsCtx
 ---@nodiscard
 function M.enabled(cfg)
   return cfg.use_treesitter_symbol == true
 end
 
+---@param node TSNode|nil
+---@param cfg WKDOptionsBreadcrumbsCtx
 ---@nodiscard
 function M.extract(node, cfg)
   if not node then

@@ -21,6 +21,7 @@ function M.get_eslint_bin()
   return M.eslint_bin
 end
 
+---@param path string
 function M.set_eslint_bin(path)
   M.eslint_bin = path
 end

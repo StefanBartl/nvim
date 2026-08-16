@@ -24,6 +24,8 @@ local prettier_patterns = {
 
 local M = {}
 
+---@param path string
+---@param pattern string
 local function file_contains(path, pattern)
   local ok, lines = pcall(fn.readfile, path)
   if not ok or not lines then
@@ -57,9 +59,11 @@ local function has_any_config(root, patterns)
   return false
 end
 
+---@param root string
 function M.has_eslint(root)
   return has_any_config(root, eslint_patterns)
 end
+---@param root string
 function M.has_prettier(root)
   return has_any_config(root, prettier_patterns)
 end

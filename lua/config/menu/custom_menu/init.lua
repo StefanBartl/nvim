@@ -30,6 +30,8 @@ local defaults = {
 }
 
 -- Merge helper
+---@param dst table
+---@param src table|nil
 local function merge_table(dst, src)
   for k, v in pairs(src or {}) do
     dst[k] = v

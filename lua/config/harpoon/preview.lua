@@ -161,6 +161,7 @@ function M.open_preview_for(path, row, col)
   end
 end
 
+---@param entry integer|table
 function M.open_index(entry)
   if type(entry) == "number" then
     -- resolve harpoon item by index and tail-call ourselves

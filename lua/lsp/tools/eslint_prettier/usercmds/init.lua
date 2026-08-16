@@ -11,6 +11,7 @@ local prettier_fmt = require("lsp.tools.eslint_prettier.prettier.format")
 
 local M = {}
 
+---@param ctx table|nil
 function M.attach(ctx)
   ctx = ctx or {}
   usercmd.create("EslintFix", function()

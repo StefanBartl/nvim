@@ -28,6 +28,10 @@ end
 
 -- Internal wrapper that calls original handler first, then server-specific callback (if any).
 -- Signature matches vim.lsp.handlers["textDocument/publishDiagnostics"]
+---@param err lsp.ResponseError|nil
+---@param result table|nil
+---@param ctx lsp.HandlerContext
+---@param config table|nil
 local function wrapper(err, result, ctx, config)
   -- call original handler to preserve existing functionality
   if M._orig_publish then

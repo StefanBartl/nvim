@@ -4,6 +4,7 @@
 
 local M = {}
 
+---@param state table # Unused, neo-tree's command-callback signature
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.next_source(state)
@@ -38,6 +39,7 @@ function M.next_source(state)
   end)
 end
 
+---@param state table # Unused, neo-tree's command-callback signature
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.prev_source(state)

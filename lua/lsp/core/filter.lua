@@ -6,6 +6,8 @@
 local M = {}
 
 ---Filters diagnostics by message substring patterns (pure).
+---@param diags table[]
+---@param opts { patterns: string[] }|nil
 function M.filter(diags, opts)
   if type(diags) ~= "table" or #diags == 0 then
     return diags
@@ -32,6 +34,7 @@ end
 
 ---Deduplicate diagnostics by (lnum,col,message,severity,source).
 ---Keeps the first occurrence; order is preserved.
+---@param diags table[]
 function M.dedup(diags)
   if type(diags) ~= "table" or #diags == 0 then
     return diags

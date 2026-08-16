@@ -6,11 +6,14 @@
 
 local M = {}
 
+---@param cfg WKDOptionsBreadcrumbsCtx
 ---@nodiscard
 function M.enabled(cfg)
   return cfg.use_lang_specific == true
 end
 
+---@param node TSNode|nil
+---@param _cfg WKDOptionsBreadcrumbsCtx # Unused
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
 function M.extract(node, _cfg)

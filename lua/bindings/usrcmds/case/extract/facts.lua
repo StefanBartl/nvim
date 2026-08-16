@@ -118,6 +118,7 @@ local function sla_line(status)
 end
 
 ---@param case_dir string
+---@param m table|nil
 ---@return string
 local function doclinks_line(case_dir, m)
   local all_links = doclinks.all_links(case_dir)

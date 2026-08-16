@@ -9,11 +9,14 @@ local txt = lazy.require("wkdoptions.hl_config.breadcrumbs.ctx.utils.text_utils"
 
 local M = {}
 
+---@param cfg WKDOptionsBreadcrumbsCtx
 ---@nodiscard
 function M.enabled(cfg)
   return cfg.use_container_chain == true
 end
 
+---@param node TSNode|nil
+---@param cfg WKDOptionsBreadcrumbsCtx
 ---@nodiscard
 function M.extract(node, cfg)
   -- Base symbol must be provided via cfg._base_symbol

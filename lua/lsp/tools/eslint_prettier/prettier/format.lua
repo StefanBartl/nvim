@@ -22,6 +22,8 @@ local function non_empty_lines(text)
   return out
 end
 
+---@param argv string[]
+---@param opts { cwd: string?, on_exit: (fun(code: integer, stdout: string[], stderr: string[]))? }|nil
 local function run_cmd_collect(argv, opts)
   opts = opts or {}
   spawn_capture(argv, { cwd = opts.cwd }, function(result)

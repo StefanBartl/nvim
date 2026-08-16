@@ -38,6 +38,7 @@ function M.mode_band_group()
   return hl_module.mode_band_group()
 end
 
+---@param group string
 function M.hl_open(group)
   local hl_module = require("wkdnvchad.ui.statusline.modules.highlighting")
   return hl_module.hl_open(group)
@@ -71,6 +72,7 @@ function M.render_breadcrumbs_lspfirst()
   return icon .. " " .. line .. "%*"
 end
 
+---@param band_group string
 function M.render_breadcrumbs_inherit_lspfirst(band_group)
   ensure_deps()
   local utils = require("nvchad.stl.utils")

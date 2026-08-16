@@ -19,6 +19,7 @@ function M.get_prettier_bin()
   return M.prettier_bin
 end
 
+---@param path string
 function M.set_prettier_bin(path)
   M.prettier_bin = path
 end

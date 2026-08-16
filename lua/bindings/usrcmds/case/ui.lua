@@ -348,6 +348,7 @@ function M.open_node(node, case_arg)
   end)
 end
 
+---@param case_arg string|nil
 function M.open_summary(case_arg)
   M.open_node({ key = "summary", path = "Summary.md" }, case_arg)
 end
