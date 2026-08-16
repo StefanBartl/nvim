@@ -44,8 +44,9 @@ Erkennung riskanter Kommandos (`rm -rf`, `git push --force`, …). Laut README n
   Windows/Unix-Sonderfällen selbst an). Kommentar verweist explizit darauf, dass eine
   plenary-Abhängigkeit hier bewusst entfernt wurde.
 - `lua/cmdlog/bindings/keymaps.lua:20-34` — der Katalog mappbarer Subcommands wird aus
-  `bindings.usrcmds.catalog` abgeleitet statt als zweite, separat gepflegte Liste dupliziert zu
-  werden — verhindert, dass ein neues Subcommand für Keymap-Registrierung "vergessen" wird.
+  `cmdlog.bindings.usrcmds.catalog` (cmdlog.nvim's eigener Baum, nicht dieser Config) abgeleitet
+  statt als zweite, separat gepflegte Liste dupliziert zu werden — verhindert, dass ein neues
+  Subcommand für Keymap-Registrierung "vergessen" wird.
   Ein Tippfehler im Config-Key führt zu einer expliziten `notify.warn` statt eines still toten
   Keymaps (Zeile 52-56).
 
