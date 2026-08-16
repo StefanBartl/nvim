@@ -37,14 +37,22 @@ local function compute_repo_relative(path)
   local dir = vim.fn.fnamemodify(path, ":h")
   local root = compute_repo_root(dir)
   if root then
-    -- Build a relative path to the root (with home/relative fallback kept)
-    local rel = vim.fn.fnamemodify(path, (":~:%s"):format(root))
-    if rel == path then
-      -- Path did not change after substitution (edge case: different device, UNC, etc.)
-      return vim.fn.fnamemodify(path, ":t")
+    -- Strip `root` off `path` directly rather than via fnamemodify's :s
+    -- modifier: :s needs the three-part :s?old?new? form, and a bare
+    -- `(":~:%s"):format(root)` (the previous approach here) produces an
+    -- invalid modifier string that fnamemodify silently leaves the path
+    -- unchanged for — which always took the "did not change" branch below
+    -- and degraded every relative path to just its basename.
+    local norm_path = path:gsub("\\", "/")
+    local norm_root = root:gsub("\\", "/")
+    if norm_root:sub(-1) ~= "/" then
+      norm_root = norm_root .. "/"
     end
-    rel = rel:gsub("^%./", ""):gsub("^/", "")
-    return rel
+    if norm_path:sub(1, #norm_root) == norm_root then
+      return norm_path:sub(#norm_root + 1)
+    end
+    -- Not actually under root (different device, UNC, case mismatch, ...)
+    return vim.fn.fnamemodify(path, ":t")
   else
     return vim.fn.fnamemodify(path, ":~:.")
   end
