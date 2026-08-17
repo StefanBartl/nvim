@@ -13,11 +13,19 @@ return {
   -- Treesitter-based HTML tag closing and renaming
   {
     "windwp/nvim-ts-autotag",
+    -- New setup layout (top-level enable_* flags are deprecated as of the
+    -- plugin's own config/plugin.lua: a top-level enable_rename/enable_close/
+    -- enable_close_on_slash now prints a one-time "legacy setup opts" warning
+    -- and gets wrapped into `opts.opts` internally anyway -- nesting it here
+    -- ourselves just skips that warning. `per_filetype` entries stay flat
+    -- (not nested under their own `opts` key); only the top-level flags moved.
     opts = function()
       return {
-        enable_close = true,
-        enable_rename = true,
-        enable_close_on_slash = false,
+        opts = {
+          enable_close = true,
+          enable_rename = true,
+          enable_close_on_slash = false,
+        },
         per_filetype = {
           html = { enable_close = false },
         },
