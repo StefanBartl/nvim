@@ -5,7 +5,7 @@ typing and validation, Markdown docgen — all from the same route tree). No fla
 `:SpotlightToggle`/`:SpotlightClear` family ever existed.
 
 Source: `lua/spotlight/bindings/usrcmds.lua`
-Docs: `docs/BINDINGS.md`, `README.md`, `doc/spotlight.txt`
+Docs: `docs/BINDINGS.md`, `docs/FEATURES.md`, `README.md`, `doc/spotlight.txt`
 
 `lib.nvim.usercmd.composer` is a **hard** dependency here: without it the command
 layer fails to load. `:checkhealth spotlight` reports it as an error, not a warning.
@@ -18,15 +18,34 @@ layer fails to load. `:checkhealth spotlight` reports it as an error, not a warn
 | `:Spotlight add {text}` | `STRING` | no | Add a spotlight for the literal `text` |
 | `:Spotlight remove {text}` | `STRING` | no | Remove the spotlight matching `text` exactly |
 | `:Spotlight clear` | — | no | Remove every spotlight |
-| `:Spotlight list [jump\|remove]` | enum? | no | Open the list; `remove` makes selection delete instead of jump |
+| `:Spotlight list [jump\|remove\|lock\|line]` | enum? | no | Open the list; `remove` deletes on select, `lock` toggles the palette-slot lock, `line` toggles whole-line rendering |
 | `:Spotlight next` | — | no | Jump to the next occurrence |
 | `:Spotlight prev` | — | no | Jump to the previous occurrence |
-| `:Spotlight qf [text]` | `STRING?` | no | Matching lines → quickfix (all spotlights, or just `text`'s) |
-| `:Spotlight persist [on\|off\|default\|status]` | enum? | no | Per-file persistence override; no arg = `status` |
+| `:Spotlight qf [text]` | `STRING?` | no | Matching lines in the **current buffer** → quickfix (all spotlights, or just `text`'s) |
+| `:Spotlight qf all [text]` | `STRING?` | no | Same, across **every loaded** ordinary file buffer, merged into one list |
+| `:Spotlight yank [text]` | `STRING?` | no | Matching lines → unnamed register, one per line |
+| `:Spotlight line [text]` | `STRING?` | no | Toggle **whole-line rendering** for a spotlight (`text`, or the cursor token) |
+| `:Spotlight lock [text]` | `STRING?` | no | Toggle whether a spotlight keeps its palette slot permanently (`text`, or the cursor token) |
+| `:Spotlight map [text]` | `STRING?` | no | One-shot occurrence density: a sign per matching line in the current buffer, in that spotlight's own color |
+| `:Spotlight map clear` | — | no | Clear the sign-column occurrence map in the current buffer |
+| `:Spotlight sets save {name}` | `STRING` | no | Save the active spotlights as a named set (overwrites an existing one) |
+| `:Spotlight sets switch {name}` | `SPOTLIGHT_SET_NAME` | no | Clear the active spotlights and restore the saved set — destructive, not additive |
+| `:Spotlight sets delete {name}` | `SPOTLIGHT_SET_NAME` | no | Delete a saved set; never touches the active spotlights |
+| `:Spotlight sets list` | — | no | List every saved set and how many spotlights it holds |
+| `:Spotlight winopt [on\|off\|toggle\|status]` | enum? | no | Per-**window** opt-out ("do not spotlight in this window"); no arg = `toggle` |
+| `:Spotlight persist [on\|off\|default\|status]` | enum? | no | Per-**file** persistence override; no arg = `status` |
 | `:Spotlight refresh` | — | no | Redefine the palette + re-apply every match to every window |
 
 No bang on any route: nothing here has a natural inverse that `!` would express
 (unlike cascade's `sort`/`sort!`).
+
+`SPOTLIGHT_SET_NAME` is a **custom composer arg type** registered in `M.setup()`
+(`composer.register_type`), so `:Spotlight sets switch <Tab>` / `delete <Tab>`
+complete from whatever sets currently exist, read fresh on every press. It
+validates everything — a set name is free-form; the type exists for the
+completion source, not for rejection. `sets save` deliberately takes a plain
+`STRING` instead: completing it would only ever suggest the sets you are about
+to overwrite.
 
 ## Range handling
 
@@ -96,12 +115,55 @@ there is no stable identity to hang an override on.
   different occurrence of the same text is a separate spotlight. Session-only:
   never written to the persisted snapshot, and dropped if its buffer is wiped
   or a window switches away from it.
+- **`:Spotlight qf all`** shares one global cap with `qf` (`quickfix.max_entries`,
+  default 10000) rather than giving each buffer its own: every buffer gets
+  whatever budget is left after the earlier ones, and the buffer loop itself
+  stops the moment one buffer's scan reports truncation.
+- **`:Spotlight yank`** is `qf`'s register-shaped sibling — same scan, same cap,
+  result into the unnamed register one line per match instead of into a list.
+- **`:Spotlight lock`** pins a spotlight's palette slot so round-robin never
+  hands that color to a different spotlight, even once all 8 slots are in use.
+  Only bookkeeping: locking does not reassign the current color. Persisted.
+- **`:Spotlight map`** is deliberately **one-shot and explicit** — it scans once,
+  places the signs, and then reacts to nothing. Editing the buffer afterwards
+  leaves the marks where they were; run it again to refresh. A density map that
+  stayed current would need exactly the invalidation `matchadd()` was chosen to
+  avoid. Per-buffer, and it adds **zero autocmds**: Neovim drops a wiped
+  buffer's extmarks with it. This is also why it has no default keymap.
+- **`:Spotlight sets switch`** is destructive by design: the current state is
+  discarded, not merged. The notification says so explicitly rather than leaving
+  it to be discovered — save the current set first if you want it back.
+- **`:Spotlight winopt`** is per *window*, not per buffer: the flag lives on
+  `vim.w[win].spotlight_disabled`, so it survives that window later showing a
+  different file. Turning it off strips the window's matches immediately rather
+  than only gating future fills. Session-only — a window id means nothing after
+  a restart.
+- **`:Spotlight line`** toggles a *rendering* flag on an existing spotlight, not
+  a new kind of spotlight: `item.pattern` stays the token pattern (so counts,
+  quickfix, yank and the occurrence map keep their meaning) and only the string
+  handed to `matchadd()` is widened to the whole line, registered one priority
+  below `match.priority` so it cannot swallow the other spotlights' token
+  colors. The highlight ends where the line's text ends — running it to the
+  window edge would need an extmark, i.e. a stored position, which is exactly
+  what this plugin does not store. Persisted; tagged `(whole line)` in the
+  list. A `:Spotlight here` spotlight has no text identity, so its line mode is
+  reached with `:Spotlight list line` rather than `:Spotlight line {text}`.
 
 Every subcommand has a facade function (`require("spotlight").<action>`) and, for
 the common ones, a preset keymap — see
 [Keymaps/spotlight.nvim.md](../Keymaps/spotlight.nvim.md).
 
 ## Changelog
+
+- 2026-08-17: Added `:Spotlight line [text]` and the `line` action on
+  `:Spotlight list` (the only way to reach a `:Spotlight here` spotlight's line
+  mode — it has no text identity to name it by). Key: `<leader>mW`.
+- 2026-08-17: Caught the route table up with the source. `qf all`, `yank`,
+  `lock`, `map` / `map clear`, `sets save|switch|delete|list` and `winopt` had
+  all shipped since this note was last touched and were missing here, as was
+  the `lock` action on `:Spotlight list`. Added a note on the
+  `SPOTLIGHT_SET_NAME` custom composer arg type (dynamic `<Tab>` completion for
+  `sets switch`/`delete`).
 
 - 2026-08-12: Added `:Spotlight here` (range-aware, mirrors `toggle`) for
   "this occurrence only" spotlights — the `:Spotlight` counterpart of the new

@@ -36,6 +36,13 @@ The consequence is visible in the interface: match counts are computed only when
 the list opens (`lua/spotlight/core/count.lua`), and the quickfix filter is an
 explicit command rather than something continuous.
 
+Two later features held that line rather than bending it: the occurrence map
+(`:Spotlight map`) places extmarks but is one-shot and per-buffer, so a wiped
+buffer takes its marks with it and nothing needs cleaning up; whole-line
+rendering (`<leader>mW`, 2026-08-17) is a flag on the item that only widens the
+pattern handed to `matchadd()`, so it stores no position at all. **Neither
+added an autocmd.** The table above is still the complete set.
+
 ## Details
 
 - **`WinNew`/`BufWinEnter`/`TabNewEntered`** — all three are needed, and each

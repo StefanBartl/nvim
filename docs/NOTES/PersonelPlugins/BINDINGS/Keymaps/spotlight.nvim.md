@@ -22,6 +22,7 @@ setting one to `false` frees that key while keeping the rest of the preset.
 | `<leader>mL` | n | `keymaps.list` | Open the spotlight list: color swatch + token + match count → jump |
 | `<leader>mC` | n | `keymaps.clear` | Remove every spotlight |
 | `<leader>mq` | n | `keymaps.quickfix` | Every line matching any spotlight → quickfix list |
+| `<leader>mW` | n | `keymaps.line` | Toggle **whole-line rendering** for the spotlight the cursor token belongs to (2026-08-17). Refused if that token has no spotlight yet — line mode is a property of one that already exists |
 | `]k` | n | `keymaps.next` | Next occurrence (of the token under the cursor, if on one; else of any). `3]k` jumps 3 occurrences (`vim.v.count1`, since 2026-07-31), stopping early rather than erroring if fewer remain |
 | `[k` | n | `keymaps.prev` | Previous occurrence. Same count support as `]k` |
 
@@ -49,10 +50,14 @@ config's own `<leader>m*` group.
 | `<leader>mnf` / `<leader>mng` / `<leader>mns` | pickers.nvim (notes picker) |
 | `<leader>mlf` / `<leader>mlg` | pickers.nvim |
 | `<leader>mvf` / `<leader>mvg` | pickers.nvim |
+| `<leader>mw` | *free* — deliberately left unclaimed, see below |
 
 `<leader>mL` and `<leader>mC` (both capitalized) are distinct from the
 lowercase `<leader>ml*`/`<leader>mc` claims above — Vim keys are
-case-sensitive, so neither collides nor prefixes the other.
+case-sensitive, so neither collides nor prefixes the other. `<leader>mW` is
+unclaimed in either case; the lowercase `<leader>mw` is left free rather than
+given the inverse meaning, since "token only" is not a separate action but this
+one toggled off.
 
 **Bracket motions** — `]k`/`[k` are unclaimed. Taken elsewhere: `]q`/`]l`/`]d`/`]w`
 (config: trouble, lsp diagnostics), `]m`/`[m` (filetree.nvim, buffer-local),
@@ -125,11 +130,25 @@ reachable only by key.
 
 ## Notes
 
+- `<leader>mW` (whole-line rendering) follows the same lowercase/uppercase rule
+  as `mk`/`mK`: the wider, louder way of showing a spotlight takes the shifted
+  key. It has **no visual-mode counterpart** — the action needs a spotlight
+  that already exists, which a selection cannot resolve to. A buffer-scoped
+  ("this occurrence only") spotlight has no text identity, so its line mode is
+  reached via `:Spotlight list line` instead.
+
 - A "this occurrence only" spotlight (`<leader>mk`) is session-only: excluded
   from the persisted snapshot, and dropped automatically if its buffer is
   wiped or a window switches away from it. See the repo's `docs/FEATURES.md`.
 
 ## Changelog
+
+- 2026-08-17: Added `<leader>mW` (`keymaps.line` → `line_toggle`) for whole-line
+  rendering. Implemented as a rendering flag on the item: `item.pattern` stays
+  the token pattern and only the string handed to `matchadd()` is widened, one
+  priority below `match.priority` so a line highlight does not swallow the other
+  spotlights' token colors. See `docs/FEATURES.md` ("Whole-line highlighting")
+  and `:help spotlight-line` in the repo.
 
 - 2026-08-12: `<leader>mk`/`<leader>mK` swapped roles. `<leader>mk` now toggles
   only the occurrence under the cursor/selection (new `keymaps.toggle_here`,
