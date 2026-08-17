@@ -30,38 +30,96 @@ M.cfg = {
   desc_prefix = "Surround selection with ",
 }
 
---- Safely feed a key sequence with termcode translation in Visual context.
---- Using "x" as the mode flag preserves Visual selection semantics for 'c'.
----@param keys string
----@return nil
-local function feed(keys)
-  -- Translate termcodes like <C-o>, <Esc> into keycodes Neovim understands.
-  local seq = vim.api.nvim_replace_termcodes(keys, true, false, true)
-  -- Feed in Visual context; noremap=false so raw keys execute as intended.
-  vim.api.nvim_feedkeys(seq, "x", false)
+local ESC = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+local CTRL_V = vim.api.nvim_replace_termcodes("<C-v>", true, false, true)
+
+--- Byte-length of the line at 0-based `row`.
+---@param row integer
+---@return integer
+local function line_len(row)
+  local line = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1]
+  return line and #line or 0
 end
 
---- Surround the current Visual selection with the given single-character delimiter.
----@param ch string  -- expected: '"', "'", or "`"
+--- Leave Visual mode and return the selected region together with the mode it
+--- was made in. Must run before the '< / '> marks are read, because those are
+--- only updated once Visual mode ends.
+---@return string mode  -- "v", "V" or "<C-v>"
+---@return integer srow, integer scol, integer erow, integer ecol  -- 0-based, end-exclusive
+local function selection()
+  local mode = vim.fn.mode()
+  vim.api.nvim_feedkeys(ESC, "nx", false)
+
+  local s = vim.api.nvim_buf_get_mark(0, "<")
+  local e = vim.api.nvim_buf_get_mark(0, ">")
+  local srow, scol = s[1] - 1, s[2]
+  local erow, ecol = e[1] - 1, e[2]
+
+  if mode == "V" then
+    -- Linewise: the marks carry no meaningful columns, so span the full lines.
+    scol, ecol = 0, line_len(erow)
+  else
+    -- Charwise/blockwise marks are inclusive and point at the FIRST byte of the
+    -- last character; extend past that character so multibyte text survives.
+    local last = vim.api.nvim_buf_get_lines(0, erow, erow + 1, false)[1] or ""
+    if vim.o.selection == "exclusive" then
+      ecol = math.min(ecol, #last)
+    elseif ecol < #last then
+      ecol = ecol + vim.str_utf_end(last, ecol + 1) + 1
+    else
+      ecol = #last
+    end
+  end
+
+  return mode, srow, scol, erow, ecol
+end
+
+--- Insert `open` / `close` around one region of a single line or across lines.
+--- Applied end-first so the start position stays valid.
+---@param srow integer  -- 0-based start row
+---@param scol integer  -- 0-based start byte column
+---@param erow integer  -- 0-based end row
+---@param ecol integer  -- 0-based end byte column (exclusive)
+---@param open string
+---@param close string
 ---@return nil
-local function surround_with(ch)
-  -- Perform: c {open} <C-o>P {close} <Esc>
-  -- Explanation:
-  --   c           change selection (keeps selection contents in unnamed register)
-  --   {open}      insert opening delimiter
-  --   <C-o>P      temporarily switch to Normal, paste the replaced text BEFORE cursor
-  --   {close}     insert closing delimiter after the pasted text
-  --   <Esc>       leave insert mode
-  feed("c" .. ch .. [[<C-o>P]] .. ch .. [[<Esc>]])
+local function wrap_region(srow, scol, erow, ecol, open, close)
+  vim.api.nvim_buf_set_text(0, erow, ecol, erow, ecol, { close })
+  vim.api.nvim_buf_set_text(0, srow, scol, srow, scol, { open })
 end
 
 --- Surround the current Visual selection with an opening/closing pair.
----@param open string  -- e.g. "(", "[", "{"
----@param close string -- e.g. ")", "]", "}"
+--- Uses the buffer API rather than feedkeys, so neither the selection mode
+--- (charwise vs. linewise) nor insert-mode plugins such as nvim-autopairs can
+--- alter the inserted delimiters.
+---@param open string  -- e.g. "(", "[", "{", "`"
+---@param close string -- e.g. ")", "]", "}", "`"
 ---@return nil
 local function surround_pair(open, close)
-  -- Same approach as surround_with(), but for asymmetric pairs.
-  feed("c" .. open .. [[<C-o>P]] .. close .. [[<Esc>]])
+  local mode, srow, scol, erow, ecol = selection()
+
+  if mode == CTRL_V then
+    -- Blockwise: wrap the same column range on every touched line, skipping
+    -- lines that are too short to contain the block.
+    local lo, hi = math.min(scol, ecol), math.max(scol, ecol)
+    for row = erow, srow, -1 do
+      local len = line_len(row)
+      if len > lo then
+        wrap_region(row, lo, row, math.min(hi, len), open, close)
+      end
+    end
+  else
+    wrap_region(srow, scol, erow, ecol, open, close)
+  end
+
+  vim.api.nvim_win_set_cursor(0, { srow + 1, scol })
+end
+
+--- Surround the current Visual selection with a symmetric delimiter.
+---@param ch string  -- expected: '"', "'", or "`"
+---@return nil
+local function surround_with(ch)
+  surround_pair(ch, ch)
 end
 
 --- Define a Visual-mode mapping with optional project-specific helper.
