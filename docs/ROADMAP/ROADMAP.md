@@ -1,8 +1,5 @@
 # Roadmap
 
-  Info  08:07:49 notify.info [mdview] preview: http://localhost:43219/?key=C%3a%2fUsers%2fbartl%2fAppData%2fLocal%2fnvim%2fdocs%2fROADMAP%2fROADMAP.md&token=1111dfbc87ef59dc22b4b11c7647a3cf4f3dd44e600787b26f02d2ab59ab7ffb&theme=github&hl=hljs&extlinks=new_tab&cursor=caret&nav=1&rscroll=1
-
-solche urls zb in der :messsage notif<y ausgabe solten mit doppleklick oder mit gopaths gF als url im browser geöfnet werdn. wenn ich gopaths gF anewende, wil es aber eine neue datei erstellen,da es diese nicht findet. hier brauchet es ein "open" onzept undichdenke, das ich das eigentlich sconmal imlementiert hate.
 
 ## Misc
 
