@@ -80,7 +80,7 @@ Headline-Fall ab, ohne dass Markdown-Sonderwissen nötig ist.
 - [ ] `cascade.nvim`: `README.md` Feature-Tabelle
 - [ ] nvim-Config: [`docs/NOTES/PersonelPlugins/BINDINGS/Keymaps/cascade.nvim.md`](../../NOTES/PersonelPlugins/BINDINGS/Keymaps/cascade.nvim.md)
 - [ ] nvim-Config: [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/cascade.nvim.md`](../../NOTES/PersonelPlugins/BINDINGS/Usercmds/cascade.nvim.md)
-- [ ] nvim-Config: [`docs/ROADMAP/RULES/plugins/cascade.nvim.md`](../RULES/plugins/cascade.nvim.md) — Audit-Datei, ggf. neuer Eintrag unter „Ideen für andere Plugins"/Keybindings-Audit nach Umsetzung aktualisieren
+- [ ] nvim-Config: `Checklists/belege/plugins/cascade.nvim.md` (E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists) — Audit-Datei, ggf. neuer Eintrag unter „Ideen für andere Plugins"/Keybindings-Audit nach Umsetzung aktualisieren
 
 ### Offen
 
