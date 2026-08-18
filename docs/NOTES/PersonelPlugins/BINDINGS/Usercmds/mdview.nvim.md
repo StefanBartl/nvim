@@ -184,3 +184,57 @@ uses its `spawn`/`resolve_target`. Rationale preserved in
   (`tests/nvim/scroll_sync_routing_spec.lua`, mirrors `buffer_switch_spec.lua`).
   Also added `:MDView cursor toggle` (flips `section` on/off specifically) per
   request.
+- **`:MDView start` "browser doesn't open" on Windows — NOT yet root-caused;
+  my first hypothesis was WRONG.** I first guessed `normalize.path_for_url` left
+  a bare `C:` in the URL that `rundll32 FileProtocolHandler` chokes on, and
+  changed it to `vim.uri_encode(..., "rfc2396")` (commit `3d62ddf`). Then I
+  tested it empirically and **disproved it**: with fresh ports (to avoid a
+  leftover tab reconnecting and faking the result), real `rundll32` opens a
+  working tab with **both** the encoded AND the unencoded URL, and the Lua
+  `fn.jobstart({rundll32...})` path connects fine too. Worse/better: I
+  reproduced the **full real `:MDView start`** flow headless with a local build
+  (`dev.binary_path`/`web_root`, fresh port) and it **works** — `file_log`
+  showed `[client] boot: connecting → websocket connected → first render ok`. So
+  the code path is intact on my machine. The `rfc2396` change is harmless/
+  slightly cleaner (matches the Go side's QueryEscape) but is **not** the fix for
+  whatever the user hit. Real cause is **environmental** — leading suspicion:
+  `standalone` uses the user's local build (`standalone.binary_path`), while
+  `start` may be running the downloaded v0.2.0 assets unless `dev.binary_path`/
+  `dev.web_root` are set; or a `browser.open_mode="isolated"`/`focus="nvim"`
+  config path. **Next step: get `:MDView weblogs` output right after `:MDView
+  start` (does `[client] boot: connecting` appear? → bisects open vs render) and
+  the user's `browser.*` + whether `dev.*` is set.** Diagnostic method note:
+  ALWAYS use a fresh port per rundll32/browser test — a still-open tab from a
+  previous test reconnects to the new relay on the same port and fakes a
+  "connected" result (burned 20 min on exactly that).
+- **Feature: task-list checkbox sync (`sync_checkboxes`, default true).** Tick a
+  `- [ ]` in the preview → written back to the source, so it persists across
+  re-render. comrak already puts `data-sourcepos` on the task `<li>`, so no Rust
+  change (same trick as blanklines). `src/client/render/taskToggle.ts` enables
+  the (comrak-`disabled`) checkbox, reads the source line, POSTs `<line>:<0|1>`
+  to a new `/toggle` relay route. **Standalone** = relay owns the file, flips
+  the marker in place (`native/server/internal/source/toggle.go`), watcher
+  re-broadcasts — self-contained, verified e2e. **`:MDView start`** = buffer may
+  have unsaved edits, so the relay queues (`relay/toggle.go`) and `inbound_poll`
+  drains + edits the buffer (same poller as click-nav; now runs whenever
+  `sync_checkboxes` is on, not just for the experimental flags). `?sync=0`
+  renders checkboxes read-only. Commit `791e29b`. **Needs a v0.3.0 relay+client
+  or the local `dev.*`/`standalone.binary_path` build to actually work.**
+- **Feature: text-field sync (`sync_fields`, default true).** Commit `0ede98a`.
+  Write `<input type="text" name="x">` / `<textarea name="y">` in the source →
+  editable in the preview; commit on **`change`** (blur/Enter, NOT per keystroke
+  — a per-keystroke write-back would re-render and yank the focused field) →
+  value written back. **Key difference from checkboxes:** raw HTML has **no
+  `data-sourcepos`** (verified: comrak only annotates real markdown blocks), so
+  there's no line to target — matched by the **`name` attribute** instead
+  (`source/field.go` / `inbound_poll.handle_field` scan for `name="…"` and
+  rewrite the `value` attr or `<textarea>` body). Value is HTML-escaped both
+  sides (byte-identical Lua/Go) so `</textarea><script>` stays inert. Sanitizer
+  (`lib.rs`) now allows `<textarea>` + `<input>` name/value/placeholder, never
+  `formaction`/`form`/`on*`. `?fields=0` = read-only. `name` must be unique +
+  double-quoted. New `/field` route + `relay/field.go` queue (start mode). Same
+  "needs v0.3.0 or local build" caveat. Verified e2e: input value insert +
+  multi-line textarea rewrite + escape round-trip + XSS-inert, no console errors.
+  - **Deferred:** which other tags? Only `<input>`/`<textarea>` for now.
+    `<select>`, radio groups, etc. would each need their own value-encoding +
+    write-back; not done.

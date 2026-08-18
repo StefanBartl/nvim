@@ -16,6 +16,33 @@ Docs: `docs/COMMANDS.md`, `README.md`, `doc/reposcope.txt`
 
 ## Notes
 
+- **2026-08-18 — `:Reposcope status` dashboard reworked** (no new subcommand,
+  so the count above is unchanged): the "no feedback after pressing p/P/f"
+  complaint turned out to be a *bug*, not a missing feature —
+  `status_view._run_row_action` reported via `notify(..., 2)`, but
+  `utils/debug.lua`'s notify drops anything below WARN unless dev mode is on,
+  so every "push …"/"done" message had always been invisible in normal use and
+  only failures got through. Raised to level 3, plus a spinner on the row and a
+  `utils.progress` handle — reposcope already had `progress_style = "statusline"`
+  in `lua/plugins/personal/init.lua`, so this surfaces in the `plugin_progress`
+  statusline component with no new wiring.
+  Also: AHEAD/BEH (which printed `+0/-0` on nearly every row) replaced by a
+  SYNC column that renders only real divergence and vanishes when nothing
+  differs; new LAST COMMIT column (second, concurrent `git log -1` per repo);
+  extmark highlighting via `ReposcopeStatus*` groups linked to diagnostic
+  colors — deliberately *not* a syntax file, which would also colour a repo
+  literally named "clean"; name/branch columns capped, since one long topic
+  branch stretched the column for all 54 repos; the dashboard now survives
+  opening a README (cached records + `M.reopen()` + buffer-local `q`, bound
+  explicitly rather than via a `BufWinLeave` autocmd, which fires on *any*
+  navigation away); new `S`/`s`/`r`/`R`/`y`/`?` keys. The winbar legend and the
+  `?` cheatsheet are both generated from one `ROW_KEYMAPS` table, so they can't
+  advertise a key that isn't bound (same single-source-of-truth idea as
+  `help_view.lua`). Two LuaJIT gotchas hit here: `//` integer division is Lua
+  5.3+ only (Neovim is LuaJIT/5.1), and `git status --short --branch` always
+  emits a `## branch` line, so raw-output emptiness is not a valid "is it
+  clean" test.
+
 - **2026-08-09 (2) — `favorites`/`queries` added (roadmap item "Favoriten
   für Repositories")**: two new generic-wrapper subcommands (both go
   through the same `build_routes()` machinery as `session`/`providers`, no

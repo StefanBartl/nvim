@@ -1,5 +1,5 @@
 # `cascade.nvim`
-
+kannst du dias feature in C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\cascade.nvim.md umsetzen, docs/vimdoc updaten, auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS, und auf main comitten/pushen und dann pulen
 ## Konzept: Renumbering nur innerhalb einer Selektion
 
 Motiviert durch zwei Fälle, die das heutige `:Cascade renumber` /

@@ -824,6 +824,7 @@ plugins.add({
   {
     "StefanBartl/mdview.nvim",
     dependencies = { "StefanBartl/lib.nvim" },
+    build = "npm ci && npm run build:go && npm run build" ,
     ft = { "markdown" },
     cmd = { "MDView" },
     config = function()
@@ -840,11 +841,13 @@ plugins.add({
         -- unter C:/repos) und auf mdview-server.exe - `npm run build:go` erzeugt
         -- unter Windows aber mdview-server OHNE .exe. Zum Testen eines lokal
         -- gebauten Relays (siehe docs/development.md) wieder einkommentieren:
-        --   dev = {
-        --     binary_path = "C:/repos/mdview.nvim/native/server/mdview-server",
-        --     web_root = "C:/repos/mdview.nvim/dist/client", -- braucht wasm-pack
-        --   },
-        --   standalone = { binary_path = "C:/repos/mdview.nvim/native/server/mdview-server" },
+        -- dev = {
+          -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
+          -- web_root = vim.env.REPOS_DIR .. "/mdview.nvim/dist/client",
+        -- },
+        -- standalone = {
+          -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
+        -- },
         experimental = {
           line_diff = true, -- P?: nur geänderte Zeilen senden -> FUnktnioert -> postives/negatives abwägen ob default
           click_navigate = true, -- P0-3: relativer Link öffnet Datei in nvim -> FUNKTIONERT -> als Default setzen

@@ -58,6 +58,19 @@ its own component whenever it opens/closes.
 | `q` / `<Esc>` | n | `utils/stats.lua` | Closes the stats popup buffer/window |
 | `q` / `<Esc>` | n | `ui/actions/help_view.lua`, via `lib.nvim.ui.kit`'s `nice_quit` | Closes the `?` keymap cheatsheet |
 | `<CR>` / `<2-LeftMouse>` | n | `ui/actions/status_view.lua` (`lib.nvim.map`, buffer-local, every interactive `--out` backend of `:Reposcope status`) | Row under cursor → `lib.nvim.ui.kit.confirm` prompt → on yes, `:edit`s that repository's `README.md`. No readable README.md just notifies, no prompt |
+| `p` / `P` / `f` | n | `ui/actions/status_view.lua` (same backends) | Push / pull (`--ff-only`) / fetch the repo under the cursor, via `utils/repo_actions.lua`. Spinner on the row while running, then that one row is re-read |
+| `S` | n | `ui/actions/status_view.lua` (same backends) | Nested popup with `git status --short --branch` + last 5 commits (`repo_status.status_detail`) |
+| `s` | n | `ui/actions/status_view.lua` (same backends) | Cycles sort: discovery → name → state (worst first) → last-commit age |
+| `r` / `R` | n | `ui/actions/status_view.lua` (same backends) | Re-read the row under cursor / re-scan the whole directory |
+| `y` | n | `ui/actions/status_view.lua` (same backends) | Yanks the repo path into `+` and `"` |
+| `?` | n | `ui/actions/status_view.lua` (same backends) | Lists every status-overview key, generated from `ROW_KEYMAPS` |
+| `q` | n | `ui/actions/status_view.lua` (buffer-local on a README opened from a status row) | Wipes the README buffer and restores the overview on the same row |
+
+All of the `:Reposcope status` row keys above come from a single `ROW_KEYMAPS`
+table in `status_view.lua`, which also generates the winbar legend and the `?`
+cheatsheet — same single-source-of-truth pattern as `help_view.lua`. `r`, `R`
+and `y` carry no `label`, so they're omitted from the legend (which would
+otherwise wrap) but still listed under `?`.
 
 ## which-key
 
@@ -78,6 +91,14 @@ call could label as a group, and nothing does.
 
 ## Changelog
 
+- 2026-08-18: Filled in the `:Reposcope status` row keys that were missing
+  here (`p`/`P`/`f` had landed earlier and were never recorded), and added the
+  new `S`/`s`/`r`/`R`/`y`/`?` plus the README-return `q`. All of them are now
+  declared in one `ROW_KEYMAPS` table that also generates the winbar legend and
+  the `?` cheatsheet, so this table is the only place that can still drift.
+  Worth remembering: the "pressing p does nothing visible" symptom was
+  `utils/debug.lua` swallowing INFO-level notifies outside dev mode, not a
+  missing keymap.
 - 2026-08-09 (3): Added the `status_view.lua` component-local row: `<CR>`/
   `<2-LeftMouse>` on a `:Reposcope status` row opens that repository's
   `README.md`, gated behind a `lib.nvim.ui.kit.confirm` yes/no prompt.

@@ -1,16 +1,12 @@
 # Roadmap
 
-In `documentation.nvim` && `runtime-analysis.nvim` sind noch offen zu implementieren:
-  E:\repos\runtime-analysis.nvim\docs\IDEAS.md
-  E:\repos\documentation.nvim\docs\ROADMAP\IDEAS
-  E:\repos\documentation.nvim\docs\ROADMAP\V1_EXTENSION
-  E:\repos\documentation.nvim\docs\ROADMAP\MULTILANG.md
-Knnst du einen implementierungsplan ausarbeiten, wi es sinnj maccht, dass zu ijmplementieren
-dabei muss t du vor al em in documentaion.nvim ausmisten, denn zb in der desktop_weebapp file, das wurd eschon mit er der app docmaü-desktop (auch unter e:\repos) scho umgestze, aber abklären ob alles umgest wurde, wenn nein,. dann in diee roadmap doprt schireben
+  Info  08:07:49 notify.info [mdview] preview: http://localhost:43219/?key=C%3a%2fUsers%2fbartl%2fAppData%2fLocal%2fnvim%2fdocs%2fROADMAP%2fROADMAP.md&token=1111dfbc87ef59dc22b4b11c7647a3cf4f3dd44e600787b26f02d2ab59ab7ffb&theme=github&hl=hljs&extlinks=new_tab&cursor=caret&nav=1&rscroll=1
+
+solche urls zb in der :messsage notif<y ausgabe solten mit doppleklick oder mit gopaths gF als url im browser geöfnet werdn. wenn ich gopaths gF anewende, wil es aber eine neue datei erstellen,da es diese nicht findet. hier brauchet es ein "open" onzept undichdenke, das ich das eigentlich sconmal imlementiert hate.
+
+## Misc
 
 - nvim performance optimeren: startup modul, runtime analysis, docmap, usw...
-
-
 E:/repos/docmap-desktop/docs/ROADMAP.md abarbeiten + einmal hbrainstomren fpr weeitere features bzw optionen, ui, usw...
 
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
