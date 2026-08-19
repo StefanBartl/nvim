@@ -370,7 +370,7 @@ function M.enable()
       -- With a Visual range (`:'<,'>Case insert ...`), replaces the
       -- selection instead of inserting at the cursor — see ui.insert.
       range = true,
-      desc = "Insert a case token (number/title/company/name/...) at the cursor and copy it",
+      desc = "Insert a case token (number/title/company/name/asset/...) at the cursor and copy it",
       run = function(ctx)
         ui.insert(ctx.args.field, ctx.args.case, ctx.range)
       end,

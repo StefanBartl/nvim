@@ -2,8 +2,6 @@
 
 ## Praxis-Feedback
 
-- Case insert soll auch assets
-
 - Nach anlegen des cases und aufrufen der ai in casedesk, soll diese nicht nur vorschläge / solutions formulieren, sondern diese acuh mit Referenzen zu echten docs / tricentis docs belegen. https://docs.tricentis.com/tosca-2026.1/en-us/content/resources/webhelp/cover_web.htm (korrekte Version wählen für case!)
 - Es solte eine option geben, Case ki logs oder so ähnlich, mitdenn man die logdatein im assets ordner auswhlen kann (selectionlist mit tab oder pickers.nvim) und dan wird eine analyse der logdateien erstellt in /Research abgelegt
 
@@ -66,6 +64,13 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
 ## Erledigt
 
 Chronologisch, neueste zuerst. Details und Erkenntnisse: [HANDOVER.md](HANDOVER.md).
+
+- [x] **`:Case insert` kann Assets** (2026-08-19) — zwei neue Felder in
+      `ui.INSERT_FIELDS`: `asset` (Markdown-Link relativ zum Puffer, in dem
+      geschrieben wird) und `asset-path` (absoluter Pfad für Teams/Explorer/
+      Shell). Beide öffnen einen zweiten Picker über `assets/` — dieselbe
+      Dateiliste wie `:Case attachments`. Außerhalb des Case-Ordners fällt
+      `asset` auf den absoluten Pfad zurück.
 
 - [x] **CLI-Befehls-Index** (2026-08-19) — `:Tricentis commands [topic]`
       und `:Tricentis cheatsheet [topic]`: jeder Shell-Codeblock aus jeder

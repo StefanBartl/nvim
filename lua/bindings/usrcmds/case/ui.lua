@@ -2092,7 +2092,9 @@ end
 --- insert at the cursor AND copy in the same keypress, so whichever one
 --- you actually need (paste target inside vs. outside Neovim) is covered
 --- without picking in advance.
----@type { key: string, label: string }[]
+--- `preview` is set on the fields whose value can't be shown in the picker
+--- because it isn't decided yet (the asset ones need a second pick).
+---@type { key: string, label: string, preview: string|nil }[]
 M.INSERT_FIELDS = {
   { key = "case", label = "Case number" },
   { key = "snow", label = "SNOW ticket id" },
@@ -2103,6 +2105,16 @@ M.INSERT_FIELDS = {
   { key = "priority", label = "Priority" },
   { key = "summary", label = "One-line summary (case — title — company — name)" },
   { key = "mail-subject", label = "Email subject: [case] title" },
+  {
+    key = "asset",
+    label = "Asset as a markdown link (absolute path outside the case)",
+    preview = "(pick a file from " .. config.assets_dirname .. "/)",
+  },
+  {
+    key = "asset-path",
+    label = "Asset as an absolute path (for Teams, Explorer, a shell)",
+    preview = "(pick a file from " .. config.assets_dirname .. "/)",
+  },
 }
 
 ---@param entry Lib.Case.RegistryEntry
@@ -2140,6 +2152,60 @@ local function insert_value(entry, m, key)
     return ("[%s] %s"):format(entry.short, m.title)
   end
   return nil
+end
+
+--- Backslashes out, trailing slash off. Every path comparison and every
+--- path this module WRITES into a markdown file uses forward slashes —
+--- `uv` and `vim.fn` hand out both spellings on Windows, and a `\` in a
+--- markdown link target is an escape character, not a separator.
+---@param path string
+---@return string
+local function norm_path(path)
+  return (path:gsub("\\", "/"):gsub("/+$", ""))
+end
+
+--- Case-insensitively, because this module's cases live on Windows: the
+--- registry stores `C:/Cases/...` while a buffer name may come back as
+--- `c:/cases/...`, and a case-sensitive prefix test would then call an
+--- in-case buffer "outside the case" and silently fall back to absolute
+--- paths.
+---@param dir string  normalized
+---@param path string  normalized
+---@return boolean
+local function is_inside(dir, path)
+  return path:lower():sub(1, #dir + 1) == (dir:lower() .. "/")
+end
+
+--- `to` expressed relative to `from_dir`, both normalized absolute paths.
+---@param from_dir string
+---@param to string
+---@return string
+local function rel_path(from_dir, to)
+  local a = vim.split(from_dir, "/", { trimempty = true })
+  local b = vim.split(to, "/", { trimempty = true })
+  local i = 1
+  while a[i] and b[i] and a[i]:lower() == b[i]:lower() do
+    i = i + 1
+  end
+  local parts = {}
+  for _ = i, #a do
+    parts[#parts + 1] = ".."
+  end
+  for j = i, #b do
+    parts[#parts + 1] = b[j]
+  end
+  return table.concat(parts, "/")
+end
+
+--- Percent-encode the three characters that break a markdown link target.
+--- Attachments arrive named the way a customer named them — `Tosca Server
+--- log (2).txt` is an ordinary filename and an unusable link target.
+---@param path string
+---@return string
+local function md_url(path)
+  return (path:gsub("[ ()]", function(c)
+    return ("%%%02X"):format(c:byte())
+  end))
 end
 
 --- Insert `value` at the cursor (byte-column, so multibyte titles/company
@@ -2180,6 +2246,64 @@ local function replace_range_and_copy(range, value)
   notify.info("replaced selection + copied: " .. value)
 end
 
+--- The text for one chosen asset file. `asset-path` is always the absolute
+--- path; `asset` is a markdown link relative to the buffer being written
+--- into — which only means anything while that buffer sits inside the same
+--- case, so from anywhere else it degrades to the absolute path rather
+--- than writing a link that resolves to nothing.
+---@param entry Lib.Case.RegistryEntry
+---@param key string  `"asset"` | `"asset-path"`
+---@param file string  absolute path of the chosen asset
+---@return string
+local function asset_value(entry, key, file)
+  local abs = norm_path(file)
+  if key == "asset-path" then
+    return abs
+  end
+  local buf = norm_path(vim.api.nvim_buf_get_name(0))
+  if buf == "" or not is_inside(norm_path(entry.dir), buf) then
+    notify.info(("buffer is outside %s — inserting the absolute path"):format(entry.short))
+    return abs
+  end
+  local rel = rel_path(buf:match("^(.*)/[^/]*$") or buf, abs)
+  return ("[%s](%s)"):format(abs:match("[^/]*$"), md_url(rel))
+end
+
+--- Assets are the one insert field whose value isn't already sitting in the
+--- case's metadata — WHICH file is a second decision, so this field runs a
+--- second picker and hands its result back through `on_value` instead of
+--- returning it. Same file list `:Case attachments` shows.
+---@param entry Lib.Case.RegistryEntry
+---@param key string
+---@param on_value fun(value: string)
+local function pick_asset_value(entry, key, on_value)
+  local dir = norm_path(entry.dir .. "/" .. config.assets_dirname)
+  local st = uv.fs_stat(dir)
+  if not (st and st.type == "directory") then
+    notify.warn(("%s has no %s/ folder"):format(entry.short, config.assets_dirname))
+    return
+  end
+  local files = {}
+  for _, f in ipairs(collect_recursive.files(dir)) do
+    files[#files + 1] = norm_path(f)
+  end
+  if #files == 0 then
+    notify.warn(("%s: %s/ is empty"):format(entry.short, config.assets_dirname))
+    return
+  end
+  kit.select({
+    message = ("Insert asset — %s"):format(entry.short),
+    selection = files,
+    format_item = function(f)
+      return f:sub(#dir + 2)
+    end,
+    on_select = function(f)
+      on_value(asset_value(entry, key, f))
+    end,
+    on_cancel = function() end,
+  })
+end
+
 ---@param field_arg string|nil
 ---@param case_arg string|nil
 ---@param range Lib.UserCmd.Composer.RangeInfo|nil  present + `.range > 0` -> replace the Visual selection instead of inserting at the cursor
@@ -2191,7 +2315,19 @@ function M.insert(field_arg, case_arg, range)
     end
     local m = meta.read(entry.dir)
 
+    local function apply(value)
+      if range and (range.range or 0) > 0 then
+        replace_range_and_copy(range, value)
+      else
+        insert_and_copy(value)
+      end
+    end
+
     local function with_field(key)
+      if key == "asset" or key == "asset-path" then
+        pick_asset_value(entry, key, apply)
+        return
+      end
       local value = insert_value(entry, m, key)
       if not value or value == "" then
         notify.warn(("%s has no %s set"):format(entry.short, key))
@@ -2200,11 +2336,7 @@ function M.insert(field_arg, case_arg, range)
       if key == "link" and not config.snow_url_format then
         notify.info("config.snow_url_format not set — inserting the ticket id instead of a URL")
       end
-      if range and (range.range or 0) > 0 then
-        replace_range_and_copy(range, value)
-      else
-        insert_and_copy(value)
-      end
+      apply(value)
     end
 
     if field_arg and field_arg ~= "" then
@@ -2216,7 +2348,7 @@ function M.insert(field_arg, case_arg, range)
       message = ("Insert — %s"):format(entry.short),
       selection = M.INSERT_FIELDS,
       format_item = function(f)
-        return ("%-13s %s"):format(f.key, insert_value(entry, m, f.key) or "—")
+        return ("%-13s %s"):format(f.key, f.preview or insert_value(entry, m, f.key) or "—")
       end,
       on_select = function(f)
         with_field(f.key)

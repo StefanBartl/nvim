@@ -56,7 +56,42 @@ gekürzt (Host + Versionssegment + Seitenname bleiben stehen).
    nach dem Abschneiden der Satzpunkte zu einem nackten Schema und damit zu
    einer leeren Picker-Zeile. `links.lua` verlangt jetzt einen Host.
 
-### 1.4 Testrezept (headless, ohne die laufende Sitzung zu stören)
+### 1.4 `:Case insert` kann Assets (fertig, verifiziert)
+
+Praxis-Feedback „Case insert soll auch assets" umgesetzt. Zwei neue Felder
+in `ui.INSERT_FIELDS`, beide mit einem zweiten Picker über `assets/`
+(dieselbe rekursive Dateiliste, die `:Case attachments` zeigt):
+
+| Feld | Wert |
+|---|---|
+| `asset` | Markdown-Link **relativ zum Puffer**, in dem gerade geschrieben wird — aus `Research/01_Logfiles.md` heraus `[Log.txt](../assets/Log.txt)` |
+| `asset-path` | absoluter Pfad, zum Einfügen in Teams, Explorer oder eine Shell |
+
+Alles andere bleibt wie gehabt: einfügen **und** in die Zwischenablage,
+Visual-Range ersetzt die Selektion.
+
+Drei Entscheidungen, die im Code als Kommentar stehen, hier kurz begründet:
+
+* **Assets sind das einzige Insert-Feld mit einer zweiten Entscheidung.**
+  Alle anderen Werte stehen in der Meta; welche Datei gemeint ist, steht
+  nirgends. Deshalb reicht `pick_asset_value` den Wert über einen Callback
+  zurück, statt ihn wie `insert_value` zu returnen.
+* **Puffer außerhalb des Cases → absoluter Pfad.** Ein relativer Link würde
+  dort ins Leere zeigen. Gleiche Haltung wie beim Feld `link` (fällt ohne
+  `snow_url_format` auf die Ticket-ID zurück), inklusive `notify.info`.
+* **Prozent-Kodierung von Leerzeichen und Klammern.** Anhänge heißen so,
+  wie der Kunde sie benannt hat — `assets/image (28).png` ist ein normaler
+  Dateiname und als Markdown-Ziel unbrauchbar. Ergebnis:
+  `[image (28).png](../assets/image%20%2828%29.png)`.
+
+Pfadvergleiche laufen case-insensitiv (`is_inside`): die Registry hält
+`C:/repos/...`, ein Puffername kommt auch als `c:/repos/...` zurück — ein
+case-sensitiver Präfix-Test hätte einen Puffer im Case für „außerhalb"
+gehalten und still auf absolute Pfade zurückgeschaltet.
+
+Dokumentiert in `docs/NOTES/casedesk/Usercmds.md` (Zeile `:Case insert`).
+
+### 1.5 Testrezept (headless, ohne die laufende Sitzung zu stören)
 
 ```bash
 nvim --headless -c "lua local c=require('bindings.usrcmds.case.commands'); print(#c.dedupe(c.find('mobile')))" -c "qa!"
@@ -70,13 +105,47 @@ wirkt also:
 nvim --headless -c "lua local kit=require('lib.nvim.ui.kit'); kit.select=function(o) for i=1,5 do print(o.format_item(o.selection[i])) end end; require('bindings.usrcmds.case.ui').commands('mobile')" -c "qa!"
 ```
 
+Ein ganzer Flow inklusive Picker-Auswahl lässt sich so fahren — `kit.select`
+überschreiben, den gewünschten Eintrag selbst auswählen, danach die Zeile
+lesen, in die eingefügt wurde (so ist 1.4 verifiziert worden):
+
+```lua
+local kit = require("lib.nvim.ui.kit")
+kit.select = function(o)
+  for _, item in ipairs(o.selection) do
+    if type(item) == "string" and item:find("image (28).png", 1, true) then
+      o.on_select(item)
+      return
+    end
+  end
+end
+vim.cmd("edit " .. vim.fn.fnameescape(buf))
+require("bindings.usrcmds.case.ui").insert("asset", "711373", nil)
+vim.defer_fn(function()
+  print(vim.api.nvim_get_current_line())
+  vim.cmd("qa!")
+end, 300)
+```
+
+Der `defer_fn` ist nötig, nicht kosmetisch: `resolve.pick` und der
+Asset-Picker sind asynchron, ohne Verzögerung liest man die Zeile vor dem
+Einfügen.
+
 Achtung: In `--headless` läuft `M.enable()` nicht automatisch; für Verb-Tests
 vorher `require('bindings.usrcmds.case').enable()` aufrufen.
 
-Formatierung prüfen mit `stylua --check`. Die Dateien liegen auf Platte als
-**CRLF**, `stylua.toml` sagt `Unix` — ein `--check`-Rauschen über die ganze
-Datei ist deshalb normal und kein Zeichen eigener Fehler. Aussagekräftig ist
-nur `git diff`.
+Formatierung prüfen mit `stylua --check`. **Zwei Rauschquellen, beide
+vorbestehend und kein Zeichen eigener Fehler:** manche Dateien liegen auf
+Platte als CRLF, während `.stylua.toml` `Unix` sagt (z. B. `init.lua`); und
+`.stylua.toml` steht auf `column_width = 100`, während `ui.lua` durchgehend
+auf 120 geschrieben ist — `--check` meldet dort dutzende Umbrüche. Brauchbar
+ist deshalb nur: die Ausgabe nach den **eigenen** Bezeichnern greppen, z. B.
+
+```bash
+stylua --check lua/bindings/usrcmds/case/ui.lua 2>&1 | grep -E "rel_path|asset_value"
+```
+
+Aussagekräftig für alles Übrige ist `git diff`.
 
 ---
 
@@ -131,9 +200,13 @@ TestCase-Bauplan je Tosca-Engine.
    Scan + TestCase. Fortschritt in `EngineLab/02_Statusmatrix.md` eintragen.
 2. **Emulator aufsetzen** und die Showcase-App einmal komplett durchklicken
    (`adb logcat *:E` mitlaufen lassen).
-3. **casedesk**: offene Punkte aus [ROADMAP.md](ROADMAP.md). Vom
-   Praxis-Feedback dort ist „Case insert soll auch assets" unabhängig von
-   `ai.nvim` machbar.
+3. **casedesk**: offene Punkte aus [ROADMAP.md](ROADMAP.md). Das
+   Praxis-Feedback „Case insert soll auch assets" ist erledigt (§1.4); was
+   dort übrig bleibt, hängt bis auf die KI-Checklisten an `ai.nvim`. Der
+   nächste Punkt ohne neue Abhängigkeit ist die **Log-Analyse**
+   („Case ki logs": Logdateien aus `assets/` mehrfach auswählen, Analyse
+   nach `Research/`) — der Auswahlteil davon ist mit dem Asset-Picker aus
+   §1.4 jetzt zur Hälfte gebaut, nur die Mehrfachauswahl fehlt.
 
 ---
 

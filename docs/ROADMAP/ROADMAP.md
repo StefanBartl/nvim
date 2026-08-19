@@ -24,6 +24,22 @@ Mir geht es darum für images schlne captions amrkdown zu haben wenn sie gerende
 Jetzt ist es aber so, dass ich mit images.nvimi in coop mit markdown.nvim hinbekommen habe, dass ich endlich in amrkdown dateien die images mvia hover usw.. direkt innvim anzeigen kann. Das verliere ich aebr, wenn ich html captions mache, denn der link darin wird icht als image link markdown aufgelst .
 entweder binden wir das mit ein, dass auch diese html links aufelöst werdne können?=
 
+## casedesk
+
+### Solution(s)
+
+hierzu äwre ein temlate gut, dass ich dann von einer ai ausfpllen lassen kann, wenn der case solved ist. kannst du das erstellen, mit keywords ausfüllen us.w... so das süäter die solutions files von einer ai zw ohne ai nur mit der heuritsik durcsucht werden können.
+:Case solution bzw solve sold ann das gleich auch höandlen zum eingeben der solution
+dazu braucht es ein workflow udn ein konzept. das ollte an auch in C:\users\StefanBartl\AppData\Local\nvim\docs\NOTES\casedesk  stehen...
+
+### update der \nvim\docs
+
+alle neune commands usw..
+use cases ersellen, so dass ich suchen kann " ich will eine xy im case" -> dann so
+
+### ai implemeniterung
+
+endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pro account, aber ich weioß nicht, ob es damit überhauüt geht. gemini nehmen ich bisher üner die web ui das funkt auch ganz gut inhaltlich
 
 ## Misc
 
