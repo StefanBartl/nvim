@@ -339,6 +339,21 @@ function M.enable()
       end,
     },
     {
+      -- Bewusst KEIN generierter file-verb über einen Blueprint-Knoten mit
+      -- `key = "solution"`: der würde bei fehlender Datei nur "does not
+      -- exist yet — run :Case sync" sagen. Genau der Fall ist hier aber der
+      -- interessante ("es gibt noch keine Lösung — willst du eine
+      -- schreiben?"), und die Datei soll erst entstehen, wenn es etwas zu
+      -- schreiben gibt, nicht schon bei `:Case new`.
+      path = { "solution" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      flags = { { name = "edit", short = "e", bool = true } },
+      desc = "Show the case's documented solution (offers to create one if there is none); --edit opens the file straight away",
+      run = function(ctx)
+        ui.solution(ctx.args.case, ctx.flags)
+      end,
+    },
+    {
       path = { "snow" },
       args = { { name = "case", type = "CASE", optional = true } },
       desc = "Open (or copy) the case's ServiceNow ticket id",
@@ -481,8 +496,16 @@ function M.enable()
       end,
     },
     {
+      path = { "solutions" },
+      args = { { name = "pattern", type = "STRING", optional = true } },
+      desc = "Search every documented solution in the bestand (keyword-weighted, no AI); no pattern lists them all",
+      run = function(ctx)
+        ui.solutions(ctx.args.pattern)
+      end,
+    },
+    {
       path = { "pickers" },
-      desc = "Discovery menu: attachments, links, cases without .case.json, terminology",
+      desc = "Discovery menu: attachments, links, cases without .case.json, terminology, CLI commands, solutions",
       run = function()
         ui.pickers()
       end,
@@ -521,6 +544,7 @@ function M.enable()
   -- Folding it into `:Cases` would silently widen what that verb's name
   -- promises; named after the repo it's scoped to, not "work" in general.
   local links = require("bindings.usrcmds.case.links")
+  local commands = require("bindings.usrcmds.case.commands")
   composer.verb("Tricentis", {
     desc = "Cross-repo tools for the whole WKDBook-Tricentis knowledge base (not case-scoped)",
     default = function()
@@ -533,6 +557,29 @@ function M.enable()
         desc = ("Search links across the work repo (scope: %s)"):format(table.concat(links.scopes(), "|")),
         run = function(ctx)
           ui.tricentis_links(ctx.args.scope)
+        end,
+      },
+      -- Same repo-wide scope as `links` above, hence the same verb: a
+      -- command written down in a Mobile-Engine note is exactly as useful
+      -- from an SAP case as from the note itself. `topic` completes against
+      -- `config.command_topics` but is NOT restricted to it — any substring
+      -- of a file's repo-relative path works too (commands.lua's fallback).
+      {
+        path = { "commands" },
+        args = { { name = "topic", type = "STRING", optional = true, enum = commands.topics() } },
+        desc = ("Pick a CLI command from anywhere in the work repo and copy it (topic: %s)"):format(
+          table.concat(commands.topics(), "|")
+        ),
+        run = function(ctx)
+          ui.commands(ctx.args.topic)
+        end,
+      },
+      {
+        path = { "cheatsheet" },
+        args = { { name = "topic", type = "STRING", optional = true, enum = commands.topics() } },
+        desc = "Render every CLI command of a topic into one grouped scratch buffer",
+        run = function(ctx)
+          ui.cheatsheet(ctx.args.topic)
         end,
       },
     },

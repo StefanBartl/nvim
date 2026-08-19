@@ -273,4 +273,13 @@ function M.rank(short, n)
   return out, nil
 end
 
+--- Der Tokenizer, öffentlich — `solution.lua`s Lösungssuche rankt gegen
+--- DIESELBEN Vokabularregeln (Stoppwörter beider Sprachen, Umlautfaltung,
+--- Markdown-/Box-Zeichen-Filter). Eine zweite Kopie dieser Regeln würde
+--- genau dort auseinanderlaufen, wo es weh tut: zwei Suchen über denselben
+--- Bestand, die unterschiedliche Wörter für relevant halten.
+---@param text string
+---@return string[]
+M.tokenize = tokenize
+
 return M

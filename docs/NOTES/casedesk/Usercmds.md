@@ -37,6 +37,7 @@ Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
 | `:Case copy [src]` | source path, prompts if omitted | Copy a file into the case; target folder (`Replies`/`Research`/`assets`/root) via `kit.select` |
 | `:Case doclinks [nr]` | — | Every `docs.tricentis.com/tosca-<version>/` link in the case (Activity Streams + Replies) pointing at a version other than the customer's own. Customer version resolved most-reliable-first: `.case.json` → support-info (`detect.tosca_version`) → newest Activity Stream's Commander version. Also folded into `:Case reply check` (EXTRACTION.md §6) |
 | `:Case sync [nr]` | — | Add whatever blueprint pieces are still missing (never overwrites) |
+| `:Case solution [nr] [--edit|-e]` | — | The case's documented solution (`Solution/Solution.md`). Exists: shown read-only (`e` edit, `y` copies just the `## Lösung` section, `q` close). Doesn't exist: asks whether to create it from the template (`## Status`/`Problem`/`Ursache`/`Lösung`/`Verifikation`/`Schlagworte`/`Referenzen`) and drops you into `## Problem`. `--edit` skips the viewer. Reads legacy layouts too (flat `Solution.md`, `Solutions/`) so a not-yet-normalized case never looks solution-less |
 | `:Case versions [component] [nr] [--all] [--raw]` | `component` — a `config.version_components` name, `server`, or any substring of any filename in the report | No args: curated digest (Testsuite/TBox build/Api Core/Install-Root + the "Auffällig" custom-DLL section) from `assets/ToscaSupportInfo*.txt`. A `component` copies its version to the clipboard (several matches → `kit.select`). `component = server` falls back to the newest Activity Stream's "Tosca Server - v…" prose — the support-info never has it, EXTRACTION.md §4.1 — and works even with no support-info file at all. `--all` lists every entry, grouped by directory. `--raw` opens the file itself |
 | `:Case close [nr]` | — | Pick a destination (`kit.select`): any other state, or "Delete permanently" (types the case number back to confirm — irreversible, not a bare y/n). Moving deletes the case's saved session too, if it had one (SESSIONS.md §6) |
 | `:Case reassign [nr]` | — | Move to `Reassigned/`, delete its saved session if it had one (SESSIONS.md §6) |
@@ -70,8 +71,9 @@ Bare `:Case` (no subcommand) runs `:Case info` with no argument.
 | `:Cases doctor` | — | Bestand-consistency report (read-only) — work-note aliases, `Research`/`Solution` as file vs. folder, known typos, missing `NN_` prefixes, whether each `Summary.md` follows the SNOW template without markdown, a saved session for a case that's no longer open (`stale-session`, SESSIONS.md §6), and an Activity Stream whose block count doesn't match its own declared total (`stream-incomplete`, EXTRACTION.md §4 — the SNOW view wasn't fully expanded before copying) |
 | `:Cases normalize` | — | Fixes exactly what `doctor` found — dry-run plan (`kit.viewer`) + confirm, then applies. Skips (reports separately) anything ambiguous: target already exists, or two findings in the same case would land on the same target. `stale-session` findings delete the session instead of renaming anything |
 | `:Cases linkcheck [nr]` | — | Checks `docs.tricentis.com` links (only that host) for dead pages, async bounded-concurrency HEAD requests |
-| `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`assets/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json`, Terminology |
+| `:Cases pickers` | — | `kit.menu` discovery surface: Attachments (`assets/`, text opens in-buffer, everything else via the system default app), Links (opens externally, falls back to clipboard), Cases without `.case.json`, Terminology, CLI commands, Solutions |
 | `:Cases export [nr]` | — | Bundles `Summary.md`/`Notes.md`/`Research/`/`Replies/` into one PDF at `<case-dir>/Export.pdf` (`pandoc` → HTML, then a headless Chrome/Edge → PDF), opened automatically on success |
+| `:Cases solutions [begriff]` | free text, optional | Search every documented solution in the bestand — the payoff for `:Case solution`'s fixed format. Weighted TF-IDF over the solution files only: a term in `## Schlagworte` counts triple, in the case title double, and the query matching as a literal phrase multiplies the score. No pattern lists every solution. Rows show `matched/wanted` + the terms that hit, never a percentage (see Notes) |
 | `:Cases terminology` | — | Every `## `/`### ` term collected from every `Terminologie.md` across the whole work repo (`terminology.lua`), `kit.select`-picked; selecting one jumps to it in its source file. Same entry point as `:Cases pickers` → Terminology |
 | `:Cases insert [pattern]` | substring over number/title/company/name | Same as `:Case insert` but for a case OTHER than the one you're in — e.g. referencing "see also case 977123" from a different case's reply. 0 matches warns, 1 skips straight to the field picker, several go through a case picker first. Same Visual-range replace as `:Case insert` |
 
@@ -81,7 +83,9 @@ Bare `:Cases` (no subcommand) runs `:Cases list`.
 
 | Command | Args | What |
 | --- | --- | --- |
-| `:Tricentis links [scope]` | `scope`, `<Tab>`-completed: `all\|cases\|notes\|workflow\|terminologie\|tosca\|todo` | Every link found under that area of the work repo, `kit.select`-picked, opened externally (falls back to clipboard). Supersedes hand-maintaining `Notes/Links.md` |
+| `:Tricentis links [scope]` | `scope`, `<Tab>`-completed: `all\|cases\|notes\|workflow\|terminologie\|tosca\|todo` | Every link found under that area of the work repo, `kit.select`-picked, opened externally (falls back to clipboard). Supersedes hand-maintaining `Notes/Links.md`. Rows are one-per-URL-per-area with a `×N` repeat count, sorted by URL; the label drops scheme/`www.`/query string and collapses the MIDDLE of long URLs so host, version segment and page name survive |
+| `:Tricentis commands [topic]` | `topic`, `<Tab>`-completed: `all\|enginelab\|mobile\|api\|excel\|engines\|tosca\|workflow\|notes\|terminologie\|cases\|todo` — any other string works too, matched as a substring of the file's repo-relative path | Every shell command written down anywhere in the work repo (harvested from `bash`/`powershell`/`cmd` code fences), `kit.select`-picked, selection copied to the clipboard. The row carries the nearest heading as context and a `×N` count when the same command is written down in several notes. Blocks that are console OUTPUT rather than input (stack traces, exception lines) are filtered out |
+| `:Tricentis cheatsheet [topic]` | same `topic` as above | The same index rendered into one throwaway markdown buffer in a new tab, grouped by source file and in the order the notes write them — for a walkthrough note that file order IS the run order |
 
 Bare `:Tricentis` (no subcommand) runs `:Tricentis links` with no scope (everything).
 
@@ -147,6 +151,28 @@ Registered once in `init.lua` (`register_case_type`), used by every `[case]`/
   automatically (empty body), no separate "is this a group" check needed.
   Headings written as a markdown link (`## [Term](url)`, throughout the OSV
   glossary) have the link stripped to just the term text.
+- **`:Case solution` writes one place, reads several.** New solutions always
+  land at `Solution/Solution.md` — the convention `:Cases doctor` has been
+  enforcing all along (it renames `Solutions/` and moves a flat
+  `Solution.md` there). Reading also accepts those legacy spots, so a case
+  that hasn't been normalized yet still shows its solution instead of being
+  offered a second, empty one. Deliberately **not** a blueprint node: a
+  solution comes into being when there is one, not when the case is
+  scaffolded — an empty `Solution.md` in every fresh case would flood
+  `:Cases solutions` with contentless hits, which is exactly what would make
+  the search useless. `:Case solved` (and any state in
+  `config.solution_reminder_states`) warns once when a case is filed away
+  without one — a hint, never an automatic file.
+- **`:Cases solutions` reports `matched/wanted`, not a percentage.**
+  `:Case similar` compares two documents of the same kind, so its cosine is
+  a real 0–1 figure; here a three-word query stands against a document, and
+  any normalization of that would be invented precision. The section
+  weighting (`## Schlagworte` ×3, title ×2, literal phrase ×1.5) shares
+  `similar.lua`'s tokenizer — one vocabulary (stopwords, umlaut folding,
+  markdown noise) for both searches, so they can't drift apart on what
+  counts as a word. Same lexical limit as `:Case similar` too: the same
+  problem in entirely different words scores 0 — `## Schlagworte` is the
+  place where you loosen that by hand.
 - **`:Case similar` is lexical, not semantic**: it matches *words*, not
   meaning — two cases describing the same problem in entirely different
   wording score 0. It also skips any case whose `Summary.md` is too thin

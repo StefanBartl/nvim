@@ -1,5 +1,29 @@
 # Roadmap
 
+## docmap-desktop / documentaion.nvim browser
+
+- in der menüleiste eine Möglichkeit feedack auszuwählen, dann kann jemand eines schreiben und absenden, dass oll idealerweiiße in github auf der doksusions thread oder so posted werden
+  - einen dropdown einabuen, bei den man das thema sa´asuwählne kann, dort sol ein optione "Featurewunsch" sein
+- Wäre es denkbar, eine api zu schreiben, damit man erweiterungen für docmap-desktop schreiben könnte?
+
+## markdown.nvim, images.nvim
+
+Beispiel:
+
+```markdown
+![Start Screen](assets/Device_und_TMA_READY-1787133625.png)
+
+<figure>
+  <img src="assets/Device_und_TMA_READY-1787133625.png" alt="Start Screen">
+  <figcaption>Abbildung 1: Start Screen</figcaption>
+</figure>
+```
+
+Mir geht es darum für images schlne captions amrkdown zu haben wenn sie gerendert werdne, diese 2 möglichkeiten beiten sich an neben der `@fig:startscreen` syntax.
+
+Jetzt ist es aber so, dass ich mit images.nvimi in coop mit markdown.nvim hinbekommen habe, dass ich endlich in amrkdown dateien die images mvia hover usw.. direkt innvim anzeigen kann. Das verliere ich aebr, wenn ich html captions mache, denn der link darin wird icht als image link markdown aufgelst .
+entweder binden wir das mit ein, dass auch diese html links aufelöst werdne können?=
+
 
 ## Misc
 

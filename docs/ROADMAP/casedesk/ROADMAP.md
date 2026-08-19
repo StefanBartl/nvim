@@ -63,3 +63,20 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
         semantischen Wert — nur Referenzen aus der offiziellen Tosca-Doku
         und Gleichwertigem zählen als Quelle für Case-Lösungen.
 
+## Erledigt
+
+Chronologisch, neueste zuerst. Details und Erkenntnisse: [HANDOVER.md](HANDOVER.md).
+
+- [x] **CLI-Befehls-Index** (2026-08-19) — `:Tricentis commands [topic]`
+      und `:Tricentis cheatsheet [topic]`: jeder Shell-Codeblock aus jeder
+      `.md` des Arbeits-Repos als durchsuchbarer Index bzw. als gruppierter
+      Puffer. Neu: `commands.lua`; dazu `config.command_topics`,
+      `ui.commands`/`ui.cheatsheet`, zwei Routen in `init.lua`.
+      Dokumentiert in `docs/NOTES/casedesk/Usercmds.md` und
+      `case/docs/FEATURES.md`.
+- [x] **`:Tricentis links` lesbar gemacht** (2026-08-19) — `links.dedupe`
+      (810 → 600 Zeilen, `×N` statt Wiederholungen), Anzeige-URL ohne
+      Schema/Query, Mittel-Kürzung statt Rechts-Kürzung, Filter für
+      Platzhalter-URLs aus Fließtext. Dabei gefunden: `strdisplaywidth`
+      rechnet `'showbreak'` mit und taugt nicht zur Spaltenausrichtung —
+      `strwidth` verwenden.

@@ -30,6 +30,38 @@ local function edit(path)
   vim.cmd("edit " .. vim.fn.fnameescape(path))
 end
 
+--- Truncate to exactly `width` display cells and pad back up to it, so
+--- picker rows line up in columns. `%-Ns` can't do this: it counts BYTES,
+--- and one `—` or `…` in a row is enough to shift the whole column.
+---
+--- `strwidth`, NOT `strdisplaywidth`: the latter simulates how the string
+--- would render in the CURRENT window, so once a row is longer than
+--- `'columns'` it adds this config's `'showbreak'` ("⤷ ") for every wrapped
+--- screen line. A 75-space pad measured as 131 cells that way, and every
+--- padding calculation built on it drifted — visible as picker columns that
+--- lined up on short rows and wandered on long ones.
+---@param s string
+---@param width integer
+---@return string
+local function fit(s, width)
+  s = (s:gsub("[\r\n\t]+", " "))
+  if vim.fn.strwidth(s) > width then
+    s = vim.fn.strcharpart(s, 0, width - 1) .. "…"
+  end
+  return s .. string.rep(" ", math.max(0, width - vim.fn.strwidth(s)))
+end
+
+--- `×3` for a hit seen three times, blanks of the same width otherwise —
+--- blanks rather than nothing so the column after it stays aligned.
+---@param count integer|nil
+---@return string
+local function count_col(count)
+  if not count or count < 2 then
+    return "    "
+  end
+  return fit(("×%d"):format(count), 4)
+end
+
 -- ── :Case new ────────────────────────────────────────────────────────────
 
 ---@param case_arg string|nil
@@ -895,9 +927,49 @@ end
 --- `Notes/Links.md`: this reads what's already written everywhere else
 --- instead of asking you to copy it a second time.
 ---@param scope string|nil
+--- What a link row shows instead of the raw URL. First three cuts, all of
+--- them removing characters that are identical on nearly every row of this
+--- bestand and therefore carry no information: the scheme, a `www.`, and
+--- the query string (`?Highlight=XBrowser` and friends — a search term from
+--- whoever copied the link, never the reason you are picking it).
+---
+--- What is left is still routinely too long, and a plain right-truncation
+--- cuts off exactly the wrong end: `docs.tricentis.com/tosca-2026.1/en-us/
+--- content/engines_3.0/xbrowser/xbrowser_steer_remote_browser.htm` becomes
+--- ".../engines_3.0/xbrow…", losing the page name that identifies it. So
+--- the middle collapses instead, keeping host, version segment and page.
+--- The full URL is still what gets opened.
+---@param url string
+---@param width integer
+---@return string
+local function link_label(url, width)
+  local s = url:gsub("^https?://", ""):gsub("^www%.", "")
+  local base = s:match("^([^?]*)") or s
+  if #base < #s then
+    base = base .. " ?…"
+  end
+  if vim.fn.strwidth(base) <= width then
+    return base
+  end
+
+  local host, path = base:match("^([^/]+)/(.+)$")
+  if not host then
+    return base
+  end
+  -- Keep the first path segment too: on docs.tricentis.com that is the
+  -- product version (`tosca-2026.1`), which is exactly what you check a
+  -- link for when a customer is on a different one.
+  local first = path:match("^([^/]+)")
+  local last = path:match("([^/]+)$")
+  if not first or not last or first == last then
+    return base
+  end
+  return ("%s/%s/…/%s"):format(host, first, last)
+end
+
 function M.tricentis_links(scope)
   local links = require("bindings.usrcmds.case.links")
-  local hits = links.find(scope)
+  local hits = links.dedupe(links.find(scope))
   if #hits == 0 then
     notify.warn(("no links found%s"):format(scope and scope ~= "" and (" in " .. scope) or ""))
     return
@@ -907,8 +979,14 @@ function M.tricentis_links(scope)
     message = ("Links%s (%d)"):format(scope and scope ~= "" and (" — " .. scope) or "", #hits),
     selection = hits,
     format_item = function(h)
-      local rel = h.path:sub(#config.repo_root + 2)
-      return ("[%s] %s:%d  %s"):format(h.area, rel, h.line, h.url)
+      return table.concat({
+        "[" .. fit(h.area, 6) .. "] ",
+        fit(link_label(h.url, 88), 88),
+        "  ",
+        count_col(h.count),
+        "  ",
+        vim.fn.fnamemodify(h.path, ":t") .. ":" .. h.line,
+      })
     end,
     on_select = function(h)
       local ok = require("lib.nvim.cross.open_default")(h.url)
@@ -1032,6 +1110,194 @@ function M.similar(case_arg, n_arg)
       on_cancel = function() end,
     })
   end)
+end
+
+-- ── :Case solution / :Cases solutions ────────────────────────────────────
+
+--- Wie viele Zeilen der Lösungsdatei der Viewer zeigt, bevor er auf "e
+--- öffnet die Datei" verweist. Eine Lösung SOLL kurz sein; wenn sie es
+--- nicht ist, ist der Puffer der richtige Ort dafür, nicht ein Float.
+local SOLUTION_PREVIEW_LINES = 60
+
+--- Cursor auf die erste Zeile UNTER einer Überschrift setzen — nach dem
+--- Anlegen landet man so direkt im leeren `## Problem` statt auf Zeile 1
+--- über der Headline.
+---@param label string  Plain text, keine Pattern-Sonderzeichen.
+local function cursor_below_heading(label)
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  for i, line in ipairs(lines) do
+    if line:lower():match("^##+%s+" .. label:lower()) then
+      vim.api.nvim_win_set_cursor(0, { math.min(i + 1, #lines), 0 })
+      return
+    end
+  end
+end
+
+---@param entry Lib.Case.RegistryEntry
+local function create_solution(entry)
+  local solution = require("bindings.usrcmds.case.solution")
+  local path, err = solution.create(entry)
+  if not path then
+    notify.error("could not create solution: " .. tostring(err))
+    return
+  end
+  edit(path)
+  cursor_below_heading("problem")
+  notify.info(
+    ("%s: %s angelegt — Status, Problem, Ursache, Lösung ausfüllen"):format(entry.short, path:sub(#entry.dir + 2))
+  )
+end
+
+--- `:Case solution [nr] [--edit]` — die Lösung des Cases: vorhanden wird sie
+--- gezeigt, nicht vorhanden nach Rückfrage angelegt.
+---
+--- Zeigen statt direkt öffnen ist Absicht: im Alltag will man wissen "was
+--- war da nochmal die Lösung", nicht in einer Datei landen, in der ein
+--- unbedachtes `x` die Antwort beschädigt. `e` (oder gleich `--edit`) führt
+--- in den Puffer, `y` legt den reinen Lösungsabschnitt in die
+--- Zwischenablage — das ist der Text, der in die Antwort an den Kunden oder
+--- ins `Summary.md` wandert.
+---@param case_arg string|nil
+---@param flags { edit: boolean|nil }|nil
+function M.solution(case_arg, flags)
+  flags = flags or {}
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to show a solution for")
+      return
+    end
+    local solution = require("bindings.usrcmds.case.solution")
+    local doc = solution.read(entry)
+
+    if not doc then
+      kit.confirm({
+        question = ("Case %s hat noch keine Lösung — jetzt anlegen?"):format(entry.short),
+        on_answer = function(yes)
+          if yes then
+            create_solution(entry)
+          end
+        end,
+      })
+      return
+    end
+
+    if flags.edit then
+      edit(doc.path)
+      return
+    end
+
+    local header = { ("%s  ·  %s"):format(entry.short, doc.status or "Status offen") }
+    if doc.title ~= "" then
+      header[#header + 1] = doc.title
+    end
+    if #doc.keywords > 0 then
+      header[#header + 1] = "Schlagworte: " .. table.concat(doc.keywords, ", ")
+    end
+    if not doc.canonical then
+      -- Altlage: gelesen wird sie trotzdem, aber `:Cases normalize` räumt
+      -- sie auf die Konvention um (doctor.lua's naming-variant-Regeln).
+      header[#header + 1] = ("Altlage: %s — :Cases normalize räumt das um"):format(
+        doc.path:sub(#entry.dir + 2)
+      )
+    end
+    header[#header + 1] = ""
+
+    local body = vim.split(doc.text, "\n", { plain = true })
+    if #body > SOLUTION_PREVIEW_LINES then
+      local rest = #body - SOLUTION_PREVIEW_LINES
+      body = vim.list_slice(body, 1, SOLUTION_PREVIEW_LINES)
+      body[#body + 1] = ("… (%d weitere Zeilen — e öffnet die Datei)"):format(rest)
+    end
+
+    local lines = vim.list_extend(header, body)
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "e: bearbeiten · y: Lösungsabschnitt kopieren · q: schließen"
+
+    local surf = kit.viewer({ title = "Solution " .. entry.short, lines = lines })
+    if not surf then
+      return
+    end
+    local map = require("lib.nvim.map")
+    local mo = { buffer = surf.bufnr, nowait = true }
+    map("n", "e", function()
+      surf:close()
+      edit(doc.path)
+    end, mo)
+    map("n", "y", function()
+      surf:close()
+      -- Der Abschnitt, nicht die ganze Datei: Status/Problem/Ursache sind
+      -- interne Einordnung, kopiert werden will die Maßnahme selbst.
+      local text = doc.sections.solution
+      if not text or text == "" then
+        text = doc.text
+        notify.warn("kein '## Lösung'-Abschnitt — ganze Datei kopiert")
+      end
+      require("lib.nvim.cross.copy_to_clipboard")(text)
+      notify.info(("Lösung von %s kopiert"):format(entry.short))
+    end, mo)
+  end)
+end
+
+--- Eine Zeile im Lösungs-Picker. Ohne Suchbegriff sind die Schlagworte die
+--- nützlichste rechte Spalte (sie sagen, worum es ging), mit Suchbegriff die
+--- Trefferbegriffe (sie sagen, WARUM der Eintrag hier steht — dieselbe
+--- Begründung wie bei `:Case similar`).
+---@param hit Lib.Case.SolutionHit
+---@return string
+local function solution_row(hit)
+  local doc = hit.doc
+  local right
+  if hit.wanted > 0 then
+    right = ("%d/%d  %s%s"):format(
+      hit.matched,
+      hit.wanted,
+      table.concat(hit.terms, ", "),
+      hit.phrase and "  [wörtlich]" or ""
+    )
+  else
+    right = table.concat(doc.keywords, ", ")
+  end
+  return ("%-8s %-11s %-32s  %s"):format(
+    doc.entry.short,
+    doc.status or "—",
+    (doc.title ~= "" and doc.title or doc.entry.state):sub(1, 32),
+    right
+  )
+end
+
+--- `:Cases solutions [begriff]` — die Wissensbasis über alle Cases hinweg.
+---
+--- Der Grund, warum `:Case solution` überhaupt ein festes Format schreibt:
+--- ohne Suchbegriff eine Liste aller dokumentierten Lösungen, mit Begriff
+--- eine gewichtete Rangfolge (`solution.search` — Schlagworte zählen
+--- dreifach, Titel doppelt, wörtliche Phrase schlägt verstreute Wörter).
+--- Rein lexikalisch, ohne KI, mit derselben bekannten Grenze wie
+--- `:Case similar`: dasselbe Problem in völlig anderen Worten trifft nicht.
+--- Genau deshalb gibt es `## Schlagworte` — das ist die Stelle, an der man
+--- diese Grenze von Hand aufweicht.
+---@param pattern string|nil
+function M.solutions(pattern)
+  local solution = require("bindings.usrcmds.case.solution")
+  local hits, err = solution.search(pattern)
+  if err then
+    notify.warn(err)
+    return
+  end
+  if #hits == 0 then
+    notify.info(("keine Lösung passt zu %q"):format(pattern or ""))
+    return
+  end
+
+  local label = (pattern and pattern ~= "") and (" — " .. pattern) or ""
+  kit.select({
+    message = ("Lösungen%s (%d)"):format(label, #hits),
+    selection = hits,
+    format_item = solution_row,
+    on_select = function(hit)
+      edit(hit.doc.path)
+    end,
+    on_cancel = function() end,
+  })
 end
 
 -- ── :Case timeline ───────────────────────────────────────────────────────
@@ -1510,6 +1776,17 @@ local function do_move(entry, state)
   notify.info(("case %s moved to %s"):format(entry.short, state))
   if state ~= config.default_state then
     drop_session_if_left_open(entry)
+  end
+  -- Der Moment, in dem eine Lösung verlorengeht: Case ist gelöst, wandert
+  -- weg, und WAS ihn gelöst hat, steht nur zwischen drei Fehlversuchen in
+  -- Notes.md. Nur ein Hinweis (config.solution_reminder_states) — nichts
+  -- wird automatisch angelegt, eine leere Solution.md würde die Suche mit
+  -- inhaltslosen Treffern fluten. `dest`, nicht `entry.dir`: der Ordner ist
+  -- gerade umgezogen.
+  if vim.tbl_contains(config.solution_reminder_states, state) then
+    if not require("bindings.usrcmds.case.solution").exists(dest) then
+      notify.warn(("case %s hat keine dokumentierte Lösung — :Case solution %s"):format(entry.short, entry.short))
+    end
   end
   return true
 end
@@ -2695,6 +2972,120 @@ function M.terminology()
   })
 end
 
+-- ── :Tricentis commands / cheatsheet ─────────────────────────────────────
+
+--- One picker row, in fixed columns:
+--- `[topic ] <command>                  ×3  <heading>`
+---
+--- The heading is what turns a bare `adb shell pm clear <paket>` back into
+--- something you can pick with confidence, so it earns its column. The
+--- source file does NOT get one: at ~40 characters of repo-relative path it
+--- pushed the command itself off the row, and the notify after selecting
+--- names it anyway.
+---@param h Lib.Case.CommandHit
+---@return string
+local function command_row(h)
+  local cmd = h.first_line
+  if h.extra_lines > 0 then
+    cmd = ("%s (+%d)"):format(cmd, h.extra_lines)
+  end
+  return table.concat({
+    "[" .. fit(h.topic, 8) .. "] ",
+    fit(cmd, 62),
+    "  ",
+    count_col(h.count),
+    "  ",
+    h.context,
+  })
+end
+
+--- `:Tricentis commands [topic]` — every shell command written down
+--- anywhere in the work repo, `kit.select`-picked, selection copied to the
+--- clipboard.
+---
+--- Copy rather than jump-to-source (what `:Cases terminology` does): a term
+--- is something you READ in context, a command is something you PASTE — into
+--- a terminal, or into a reply telling the customer what to run. The source
+--- file is still on the row, so opening it stays one `:e` away when the
+--- surrounding note is what you actually wanted.
+---@param topic string|nil
+function M.commands(topic)
+  local commands = require("bindings.usrcmds.case.commands")
+  local hits = commands.dedupe(commands.find(topic))
+  local suffix = (topic and topic ~= "" and topic ~= "all") and (" — " .. topic) or ""
+  if #hits == 0 then
+    notify.warn(("no commands found%s"):format(suffix))
+    return
+  end
+
+  kit.select({
+    message = ("Commands%s (%d)"):format(suffix, #hits),
+    selection = hits,
+    format_item = command_row,
+    on_select = function(h)
+      require("lib.nvim.cross.copy_to_clipboard")(h.command)
+      local rel = h.path:sub(#config.repo_root + 2)
+      notify.info(("copied — %s:%d"):format(rel, h.line))
+    end,
+    on_cancel = function() end,
+  })
+end
+
+--- `:Tricentis cheatsheet [topic]` — the same index, rendered into a
+--- throwaway markdown buffer grouped by source file, in the order the notes
+--- write them. That order is the point: for a walkthrough note like
+--- `Emulator_AVD.md` the file order IS the run order, which a fuzzy picker
+--- necessarily destroys.
+---
+--- Scratch buffer in a new tab, never written to disk — the repo already
+--- holds the source of truth, and a generated file next to it would be a
+--- second copy to keep in sync (the exact thing `commands.lua` exists to
+--- avoid).
+---@param topic string|nil
+function M.cheatsheet(topic)
+  local commands = require("bindings.usrcmds.case.commands")
+  local hits = commands.find(topic)
+  local label = (topic and topic ~= "" and topic ~= "all") and topic or "all"
+  if #hits == 0 then
+    notify.warn(("no commands found — %s"):format(label))
+    return
+  end
+
+  local lines = {
+    ("# CLI-Befehle — %s (%d)"):format(label, #hits),
+    "",
+    "Aus jedem Shell-Codeblock im Wissens-Repo. Quelle bearbeiten, nicht diesen Puffer.",
+    "",
+  }
+  for _, group in ipairs(commands.group_by_file(hits)) do
+    lines[#lines + 1] = "## " .. group.file
+    lines[#lines + 1] = ""
+    local last_context = nil
+    for _, h in ipairs(group.hits) do
+      if h.context ~= "" and h.context ~= last_context then
+        lines[#lines + 1] = "### " .. h.context
+        lines[#lines + 1] = ""
+        last_context = h.context
+      end
+      lines[#lines + 1] = "```bash"
+      vim.list_extend(lines, vim.split(h.command, "\n", { plain = true }))
+      lines[#lines + 1] = "```"
+      lines[#lines + 1] = ""
+    end
+  end
+
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].filetype = "markdown"
+  vim.bo[buf].buftype = "nofile"
+  vim.bo[buf].bufhidden = "wipe"
+  vim.bo[buf].modifiable = false
+  pcall(vim.api.nvim_buf_set_name, buf, "casedesk://commands/" .. label)
+
+  vim.cmd("tabnew")
+  vim.api.nvim_win_set_buf(0, buf)
+end
+
 --- `:Cases pickers` — the discovery menu itself.
 function M.pickers()
   kit.menu({
@@ -2725,6 +3116,18 @@ function M.pickers()
       {
         label = "Terminology",
         action = M.terminology,
+      },
+      {
+        label = "CLI commands (whole repo)",
+        action = function()
+          M.commands(nil)
+        end,
+      },
+      {
+        label = "Solutions (every case)",
+        action = function()
+          M.solutions(nil)
+        end,
       },
     },
   })

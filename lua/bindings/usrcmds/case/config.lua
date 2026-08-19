@@ -77,6 +77,35 @@ M.meta_filename = ".case.json"
 --- arrived with.
 M.assets_dirname = "assets"
 
+--- Wo die Lösung eines Cases steht: `<case>/Solution/Solution.md`
+--- (`solution.lua`, `:Case solution`). Keine neue Konvention — `doctor.lua`
+--- normalisiert `Solutions/` (Plural) und ein flaches `Solution.md` längst
+--- genau dorthin; die Namen stehen hier nur, damit beide Seiten (Prüfung
+--- und Erzeugung) auf dieselbe Zeichenkette zeigen. Bewusst KEIN
+--- Blueprint-Knoten: die Lösung entsteht, wenn es eine gibt, nicht beim
+--- Anlegen des Cases — eine leere Vorlage in jedem frischen Case wäre genau
+--- das Rauschen, das die Suche später wertlos macht.
+M.solution_dirname = "Solution"
+M.solution_filename = "Solution.md"
+
+--- Die Status-Werte, die `## Status` in einer Solution.md annehmen kann —
+--- Auswahlliste in `:Case solution` und Anzeige-Label in `:Cases
+--- solutions`. Reihenfolge zählt beim Parsen: `solution.lua` nimmt den
+--- ERSTEN Eintrag, der als Teilstring in der Statuszeile vorkommt, deshalb
+--- steht das spezifischere "Workaround" vor dem allgemeinen "Offen".
+---@type string[]
+M.solution_statuses = { "Gelöst", "Workaround", "Offen" }
+
+--- Zustände, bei deren Erreichen `:Case <verb>` daran erinnert, dass der
+--- Case keine dokumentierte Lösung hat. Nur ein Hinweis, nie ein Zwang und
+--- nie ein automatisches Anlegen: eine leere Solution.md in jedem
+--- abgelegten Case wäre schlimmer als keine — sie würde die Suche mit
+--- Treffern ohne Inhalt fluten. `Closed` steht bewusst NICHT drin, ein
+--- geschlossener Case ist oft gerade nicht gelöst (Kunde meldet sich nicht,
+--- Duplikat, falsche Queue).
+---@type string[]
+M.solution_reminder_states = { "Solved" }
+
 --- Plausibility range for a short case number (render.is_plausible_case_number).
 --- Deliberately generous rather than pinned to one exact width: seen so far
 --- is 6 digits (977392), but the real thing this guards against isn't "not
@@ -382,6 +411,34 @@ M.stream_stammdaten_labels = {
   "Speedup Request GPS",
   "State",
   "Title",
+}
+
+-- ── CLI-Befehls-Index (`:Tricentis commands` / `cheatsheet`) ────────────
+
+--- Named shortcuts for `:Tricentis commands [topic]` — a topic name maps to
+--- one repo-relative directory, and everything below it is searched for
+--- shell fences (`commands.lua`). Purely a convenience layer: an unknown
+--- topic falls back to "search the whole repo, keep files whose relative
+--- path contains this string", so `:Tricentis commands excel` works the day
+--- someone writes an Excel-Engine note, without an entry here.
+---
+--- Order matters for the label shown in the picker: `topic_of` takes the
+--- FIRST entry whose directory prefixes the file, so the narrow topics have
+--- to come before the wide ones (`mobile` before `engines` before `tosca`),
+--- otherwise every engine note would just be labelled "tosca".
+---@type { name: string, dir: string }[]
+M.command_topics = {
+  { name = "enginelab", dir = "EngineLab" },
+  { name = "mobile", dir = "Tosca/Notes/Tosca_Engines/Mobile_Engine" },
+  { name = "api", dir = "Tosca/Notes/Tosca_Engines/API_Engine" },
+  { name = "excel", dir = "Tosca/Notes/Tosca_Engines/Excel_Engine" },
+  { name = "engines", dir = "Tosca/Notes/Tosca_Engines" },
+  { name = "tosca", dir = "Tosca" },
+  { name = "workflow", dir = "Workflow" },
+  { name = "notes", dir = "Notes" },
+  { name = "terminologie", dir = "Terminologie" },
+  { name = "cases", dir = "Cases" },
+  { name = "todo", dir = "ToDo-Collection" },
 }
 
 M.default_blueprint = "default"
