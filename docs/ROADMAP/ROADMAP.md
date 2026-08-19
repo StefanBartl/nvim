@@ -4,7 +4,6 @@
 ## Misc
 
 - nvim performance optimeren: startup modul, runtime analysis, docmap, usw...
-E:/repos/docmap-desktop/docs/ROADMAP.md abarbeiten + einmal hbrainstomren fpr weeitere features bzw optionen, ui, usw...
 
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
