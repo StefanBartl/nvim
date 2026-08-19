@@ -75,7 +75,17 @@ function M.find(scope)
             lineno = lineno + 1
             for url in line:gmatch(URL_PATTERN) do
               url = url:gsub("[%.,;:%)]+$", "") -- trailing prose punctuation
-              if not seen_in_file[url] then
+              -- Prose writes placeholders that look like URLs: "ändern Sie
+              -- den Wert von `http://...` auf ...". Stripping the trailing
+              -- dots above leaves a bare scheme, i.e. a row with nothing on
+              -- it. A host is the minimum for something to be a link at all
+              -- (deliberately not "a host with a dot in it" — `http://localhost:4723`
+              -- is a real and frequently written one here).
+              local host = url:match("^https?://([^/]*)")
+              if not host or host == "" then
+                url = nil
+              end
+              if url and not seen_in_file[url] then
                 seen_in_file[url] = true
                 out[#out + 1] = { area = area.name, path = path, line = lineno, url = url }
               end
@@ -85,6 +95,42 @@ function M.find(scope)
       end
     end
   end
+  return out
+end
+
+--- Collapse repeats for the picker. `M.find`'s per-file dedup keeps
+--- cross-file duplicates deliberately (see its comment), and for a *report*
+--- that is right — but as a *picker* it produced 810 rows for this bestand,
+--- the same `docs.tricentis.com/.../xscan_window_settings.htm` a dozen times
+--- over, which is unreadable. One row per URL per area, carrying `count`
+--- and the first place it was written down; picking still opens the URL,
+--- which is all the picker ever did with the other occurrences anyway.
+---
+--- Sorted by URL within an area rather than by file: pages of the same
+--- manual section then land next to each other, which is how you actually
+--- scan a link list ("was there something about xscan_window_settings?").
+---@param hits Lib.Case.LinkHit[]
+---@return Lib.Case.LinkHit[]  Each with an added `count` field.
+function M.dedupe(hits)
+  local out, index = {}, {}
+  for _, h in ipairs(hits) do
+    local key = h.area .. "\0" .. h.url
+    local seen = index[key]
+    if seen then
+      seen.count = seen.count + 1
+    else
+      local copy = vim.tbl_extend("force", {}, h)
+      copy.count = 1
+      index[key] = copy
+      out[#out + 1] = copy
+    end
+  end
+  table.sort(out, function(a, b)
+    if a.area ~= b.area then
+      return a.area < b.area
+    end
+    return a.url < b.url
+  end)
   return out
 end
 

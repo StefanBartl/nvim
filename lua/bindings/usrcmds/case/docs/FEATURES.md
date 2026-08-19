@@ -12,6 +12,77 @@ listed here only as a pointer.
 
 Module: `lua/bindings/usrcmds/case/`.
 
+## CLI-Befehls-Index (`:Tricentis commands` / `:Tricentis cheatsheet`)
+
+Kein eigenes ROADMAP-Paket — aus der Arbeit an der Mobile Engine
+entstanden: Ein Mobile-Case heißt `adb devices`, `uiautomator dump`,
+`sdkmanager`, `pm clear` — alles längst notiert, aber über mehrere Notizen
+verstreut und nur auffindbar, wenn man weiß, in WELCHER.
+
+- **`commands.lua`** erntet jeden Shell-Codeblock (`bash`, `powershell`,
+  `cmd`, … — `SHELL_LANGUAGES`) aus jeder `.md` unter `config.repo_root`,
+  zusammen mit der nächstgelegenen Überschrift als Kontext. Gleiche Haltung
+  wie `terminology.lua`/`links.lua`: lesen, was ohnehin geschrieben steht,
+  statt eine kuratierte Zweitliste zu pflegen, die beim nächsten Befehl in
+  einer Notiz sofort veraltet. Einen Befehl ins Cheatsheet aufnehmen heißt
+  also: ihn in der Notiz aufschreiben, wo er hingehört.
+- **`config.command_topics`** — benannte Abkürzungen (`mobile`, `api`,
+  `excel`, `engines`, `tosca`, …) auf je ein repo-relatives Verzeichnis,
+  `<Tab>`-vervollständigt. Reihenfolge zählt: eng vor weit, sonst trägt jede
+  Engine-Notiz nur noch das Label `tosca`. Ein unbekanntes Topic ist kein
+  Fehler, sondern fällt auf „ganzes Repo, Pfad enthält diesen String“ zurück
+  — `:Tricentis commands excel` funktioniert am Tag, an dem die erste
+  Excel-Engine-Notiz entsteht, ohne Config-Zeile.
+- **`ui.commands`** kopiert die Auswahl in die Zwischenablage statt zur
+  Quelle zu springen (umgekehrt als `:Cases terminology`): Ein Begriff wird
+  GELESEN, ein Befehl wird EINGEFÜGT — ins Terminal oder in eine Antwort an
+  den Kunden. Die Quelldatei steht trotzdem in der Meldung.
+- **`ui.cheatsheet`** rendert dieselbe Menge in einen Wegwerf-Puffer (neuer
+  Tab, `nofile`, nie auf Platte), gruppiert nach Quelldatei und in
+  Dateireihenfolge — bei einer Durchlauf-Notiz wie `Emulator_AVD.md` IST die
+  Dateireihenfolge die Ausführungsreihenfolge, die ein Fuzzy-Picker
+  zwangsläufig zerstört.
+- **Nicht jeder Shell-Fence ist ein Befehl**: `Research/01_Logfiles.md`
+  klebt einen .NET-Stacktrace in einen ```sh```-Block — als Markdown
+  korrekt, als Cheatsheet-Zeile wertlos, und wegen `[cases] < [mobile]`
+  sortierte er sich auch noch nach ganz oben. `looks_like_command` wirft
+  Stacktraces und Exception-Zeilen raus; bewusst als Ausschluss- statt
+  Whitelist-Liste, weil der Index gerade Werkzeuge finden soll, an die
+  noch niemand gedacht hat.
+- **`M.dedupe`** faltet Wiederholungen für den Picker zusammen (`×5` statt
+  fünf fast gleicher Zeilen) — pro Topic, nicht global, sonst trüge die
+  überlebende Zeile ein falsches Label. Das Cheatsheet dedupliziert
+  NICHT: dort ist eine Wiederholung Kontext.
+- Stand heute: 106 rohe Treffer, 63 nach Dedup, davon 59 unter `mobile` —
+  das Missverhältnis zu den anderen Themen ist der eigentliche Punkt, der
+  Index wächst mit jeder Notiz mit.
+
+### Mitgenommen: `:Tricentis links` lesbar gemacht
+
+Der Links-Picker warf 810 Zeilen aus, viele davon dieselbe Doku-Seite,
+jede mit vollem repo-relativem Pfad UND voller URL — die Seitennamen
+standen rechts außerhalb des Fensters.
+
+- **`links.M.dedupe`** — eine Zeile pro URL und Area mit `×N`, sortiert
+  nach URL statt nach Datei (Seiten desselben Handbuchabschnitts landen
+  so nebeneinander): 810 → 600.
+- **`link_label`** wirft Schema, `www.` und Query-String weg
+  (`?Highlight=XBrowser` ist der Suchbegriff dessen, der den Link kopiert
+  hat, nie der Grund fürs Auswählen) und kürzt zu lange URLs in der
+  MITTE — `docs.tricentis.com/tosca-2026.1/…/xbrowser_steer_remote_browser.htm`
+  behält Host, Versionssegment und Seitenname, während eine
+  Rechts-Kürzung genau den Seitennamen abgeschnitten hätte.
+- **Platzhalter-URLs raus**: Fließtext schreibt „ändern Sie `http://...`
+  auf ..." — nach dem Abschneiden der Satzpunkte blieb ein nacktes Schema
+  und damit eine leere Zeile im Picker.
+- **`fit`/`count_col`** setzen beide Picker in feste Spalten. Dabei ist
+  `strdisplaywidth` die falsche Funktion: sie simuliert die Darstellung im
+  AKTUELLEN Fenster und rechnet ab `'columns'` das `'showbreak'` dieser
+  Config ("⤷ ") mit — 75 Leerzeichen maßen sich so als 131 Zellen, und
+  jede darauf gebaute Auffüllung driftete. `strwidth` misst die Zeichen
+  selbst. Verifiziert: alle 193 Link-Zeilen beginnen die Quellspalte auf
+  Spalte 105, alle 59 Befehlszeilen auf Spalte 81.
+
 ## KI-Faktenblock + Widerspruchsprüfung (EXTRACTION.md Paket 5 — letztes Paket)
 
 Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
@@ -253,3 +324,60 @@ Ordner, hinterlässt eine Session, die niemand mehr braucht). `:Cases
 normalize` räumt sie weg — der erste Fund-Typ, der `doctor.lua`s neues
 `action`-Feld statt `to` nutzt (ein `fun(): ok, err` für "kein Rename",
 hier `sessions.delete(name)`). Details: CONCEPT.md §10.
+
+## Lösungsspeicher (`:Case solution` / `:Cases solutions`)
+
+Kein ROADMAP-Paket, sondern der fehlende Gegenpol zu allem, was casedesk
+bisher ablegt: `Summary.md` ist das SNOW-Dokument, `Notes.md` das
+Arbeitsprotokoll, `Research/` der Rohstoff — **Verlauf**, alles drei. Was am
+Ende wirklich geholfen hat, steht darin zwischen drei Fehlversuchen, einem
+Coach-Hinweis und "Best Regards", und ist ein halbes Jahr später genau der
+Absatz, den man nicht wiederfindet.
+
+- **`solution.lua`** kennt genau eine Datei pro Case:
+  `Solution/Solution.md`. Der Ort ist nicht neu erfunden — `doctor.lua`
+  erzwingt diese Konvention längst und schiebt `Solutions/` (Plural) und ein
+  flaches `Solution.md` dorthin. Geschrieben wird deshalb ausnahmslos
+  dorthin, **gelesen** (`M.locate`) auch aus den Altlagen: ein noch nicht
+  normalisierter Case soll nicht "keine Lösung" behaupten und daneben eine
+  zweite anlegen.
+- **Struktur statt Freitext** (`templates/Solution.md`): `## Status` /
+  `Problem` / `Ursache` / `Lösung` / `Verifikation` / `Schlagworte` /
+  `Referenzen`. Das ist der ganze Grund für das Feature — es macht die Suche
+  feldweise gewichtbar und gibt einer späteren KI ein Format, das sie nicht
+  raten muss (ROADMAP.md: nur offizielle Doku und Gleichwertiges zählt als
+  Quelle für Case-Lösungen; die eigenen verifizierten Lösungen sind die
+  zweite solche Quelle). Der Parser besteht trotzdem nicht darauf: bekannte
+  Überschriften werden über eine Alias-Tabelle erkannt (deutsch UND
+  englisch — "Root cause", "Solution or workaround", "Keywords" kommen aus
+  SNOW-Vorlage bzw. KI-Antworten), unbekannte landen in `extra`, und eine
+  handgeschriebene Datei ganz ohne bekannte Überschrift bleibt über den
+  Volltext auffindbar. Sie verliert nur die Gewichtung.
+- **`ui.solution`** zeigt statt zu öffnen: im Alltag will man wissen, was
+  die Lösung war, nicht in einer Datei landen, in der ein unbedachtes `x`
+  sie beschädigt. `e` führt in den Puffer, `y` kopiert **nur** den
+  `## Lösung`-Abschnitt (das ist der Text, der in die Kundenantwort oder ins
+  `Summary.md` wandert), `--edit` überspringt den Viewer gleich ganz. Gibt
+  es noch keine Lösung, fragt es genau einmal nach und legt sie an — Cursor
+  direkt im leeren `## Problem`.
+- **`ui.solutions` / `solution.search`** ist die Einlösung des Versprechens:
+  TF-IDF über ausschließlich die Lösungsdateien, `## Schlagworte` zählen
+  dreifach, der Case-Titel doppelt, ein wörtlicher Phrasentreffer
+  multipliziert. Tokenizer ist `similar.lua`s (jetzt öffentliches)
+  `M.tokenize` — zwei Suchen über denselben Bestand dürfen nicht
+  auseinanderlaufen in dem, was sie für ein Wort halten. Angezeigt wird
+  `matched/wanted` plus die Trefferbegriffe, **keine Prozentzahl**: `:Case
+  similar` vergleicht zwei gleichartige Dokumente (Kosinus, 0..1 ist echt),
+  hier steht eine dreiwortige Anfrage gegen ein Dokument — jede Normierung
+  darauf wäre erfundene Genauigkeit.
+- **Kein Blueprint-Knoten, mit Absicht.** Eine leere Solution.md in jedem
+  frischen Case würde `:Cases solutions` mit inhaltslosen Treffern fluten —
+  also genau das kaputtmachen, wofür das Feature existiert. Stattdessen
+  erinnert `do_move` einmalig, wenn ein Case in einen Zustand aus
+  `config.solution_reminder_states` (heute: `Solved`) wandert, ohne dass
+  eine Lösung dokumentiert ist. Ein Hinweis, kein Zwang, kein automatisches
+  Anlegen.
+- **Grenze, klar benannt**: rein lexikalisch, wie `:Case similar`. Dasselbe
+  Problem in völlig anderen Worten trifft nicht. `## Schlagworte` ist die
+  Stelle, an der man das von Hand aufweicht — und zugleich das Feld, das
+  eine spätere KI-Anbindung als erstes befüllen bzw. auswerten kann.

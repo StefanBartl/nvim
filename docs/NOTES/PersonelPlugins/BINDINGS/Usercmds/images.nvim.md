@@ -344,3 +344,11 @@ Der Command-Name folgt der Option `command`.
   `orphans_spec.lua` für Dateisystem-Tests ohne Terminal).
 - 2026-08-07 (5): Changelog in eine eigene Überschrift gezogen, per
   `docs/NOTES/BINDINGS-FORMAT.md`.
+- 2026-08-10: `:Image zen`s Fenster füllte sich nur bis zu einer Kante mit dem
+  Bild, Rest leer — `preserveAspectRatio=1` skaliert das Bild nur INNERHALB
+  der gesendeten Zellbox nach unten, wächst sie aber nie mit. Neues
+  `zen.dimensions_for(file, cfg)` schrumpft die Maximalbox (`display.zen`)
+  auf das Seitenverhältnis des Bildes (`images.scale.fit_cells`, dieselbe
+  Funktion, die `images.redact` schon nutzt) — ohne ImageMagick unverändertes
+  Verhalten (Maximalbox, kein Fit). Test: `zen_dimensions_for` in
+  `TESTS/zen_spec.lua`.

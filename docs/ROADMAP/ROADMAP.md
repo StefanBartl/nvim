@@ -1,5 +1,45 @@
 # Roadmap
 
+## docmap-desktop / documentaion.nvim browser
+
+- in der menüleiste eine Möglichkeit feedack auszuwählen, dann kann jemand eines schreiben und absenden, dass oll idealerweiiße in github auf der doksusions thread oder so posted werden
+  - einen dropdown einabuen, bei den man das thema sa´asuwählne kann, dort sol ein optione "Featurewunsch" sein
+- Wäre es denkbar, eine api zu schreiben, damit man erweiterungen für docmap-desktop schreiben könnte?
+
+## markdown.nvim, images.nvim
+
+Beispiel:
+
+```markdown
+![Start Screen](assets/Device_und_TMA_READY-1787133625.png)
+
+<figure>
+  <img src="assets/Device_und_TMA_READY-1787133625.png" alt="Start Screen">
+  <figcaption>Abbildung 1: Start Screen</figcaption>
+</figure>
+```
+
+Mir geht es darum für images schlne captions amrkdown zu haben wenn sie gerendert werdne, diese 2 möglichkeiten beiten sich an neben der `@fig:startscreen` syntax.
+
+Jetzt ist es aber so, dass ich mit images.nvimi in coop mit markdown.nvim hinbekommen habe, dass ich endlich in amrkdown dateien die images mvia hover usw.. direkt innvim anzeigen kann. Das verliere ich aebr, wenn ich html captions mache, denn der link darin wird icht als image link markdown aufgelst .
+entweder binden wir das mit ein, dass auch diese html links aufelöst werdne können?=
+
+## casedesk
+
+### Solution(s)
+
+hierzu äwre ein temlate gut, dass ich dann von einer ai ausfpllen lassen kann, wenn der case solved ist. kannst du das erstellen, mit keywords ausfüllen us.w... so das süäter die solutions files von einer ai zw ohne ai nur mit der heuritsik durcsucht werden können.
+:Case solution bzw solve sold ann das gleich auch höandlen zum eingeben der solution
+dazu braucht es ein workflow udn ein konzept. das ollte an auch in C:\users\StefanBartl\AppData\Local\nvim\docs\NOTES\casedesk  stehen...
+
+### update der \nvim\docs
+
+alle neune commands usw..
+use cases ersellen, so dass ich suchen kann " ich will eine xy im case" -> dann so
+
+### ai implemeniterung
+
+endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pro account, aber ich weioß nicht, ob es damit überhauüt geht. gemini nehmen ich bisher üner die web ui das funkt auch ganz gut inhaltlich
 
 ## Misc
 
