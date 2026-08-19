@@ -10,12 +10,25 @@ nesting (`filelist files abs`), same configurable name/aliases.
 Source: `lua/filetree/commands.lua`
 Docs: `docs/BINDINGS/USERCOMMANDS.md`, `README.md`, `doc/filetree.txt`
 
-31 top-level groups, ~64 total sub-command paths (`M.command_paths()` still
+32 top-level groups, ~65 total sub-command paths (`M.command_paths()` still
 lists them all, unchanged). See `docs/BINDINGS/USERCOMMANDS.md` for the
 full per-group table.
 
 ## Notes
 
+- **2026-08-19**: new top-level `:Filetree link` (no sub-args) — new
+  `fileops/link_create` feature. Prompts for a target path (`lib.nvim.ui.kit`
+  input), then creates a symlink or hardlink to it inside the tree directory
+  under the cursor, named after the target's basename. A directory target
+  skips the chooser and always gets a symlink (neither Windows nor POSIX
+  allows an unprivileged hard link to a directory); a file target asks
+  Symlink/Hardlink via `kit.confirm`. Refuses to overwrite an existing path.
+  The actual link/hardlink syscalls live in `lib.nvim.cross.fs.mutate`
+  (`M.symlink`/`M.hardlink`, new alongside the existing
+  copy/rename/delete/mkdir_p primitives) — same hard dependency copy_move and
+  smart_rename already have on that module, not a new pattern. No default
+  keymap (`features.link_create.keymap`, off by default) — usercmd-first,
+  like `path_copy`'s format picker.
 - **2026-08-01**: new top-level `:Filetree handles` (no sub-args) — lists
   neo-tree directory-watcher handles the new `handle_guard` feature is
   tracking, flagging any pointing at a path that no longer exists (the

@@ -140,6 +140,10 @@ built custom UI plugin, or `buffer-ctx.nvim` — undecided as of 2026-08-01.
 
 ## Notes
 
+- **2026-08-19**: New `fileops/link_create` feature (`:Filetree link` —
+  see the Usercmds cheatsheet) has **no default keymap**, deliberately —
+  `features.link_create.keymap` exists but is nil/off out of the box, same
+  as `path_copy`'s format-picker key. Not a gap in this table.
 - **2026-08-09**: New `nav/buffer_cycle` feature — `<C-n>`/`<C-p>` cycle the
   adjacent editor window's buffer (next/previous) while the tree keeps focus,
   mirroring what switching buffers would do if you were actually in that
