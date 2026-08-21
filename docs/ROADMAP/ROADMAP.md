@@ -1,30 +1,25 @@
 # Roadmap
 
-## docmap-desktop / documentaion.nvim browser
+![claude](assets/ROADMAP-1787215848.png)
 
-- in der menüleiste eine Möglichkeit feedack auszuwählen, dann kann jemand eines schreiben und absenden, dass oll idealerweiiße in github auf der doksusions thread oder so posted werden
-  - einen dropdown einabuen, bei den man das thema sa´asuwählne kann, dort sol ein optione "Featurewunsch" sein
-- Wäre es denkbar, eine api zu schreiben, damit man erweiterungen für docmap-desktop schreiben könnte?
 
-## markdown.nvim, images.nvim
+eie sache: kannst du mir kurz erklären wenn ichruntime-analysy.nvim :RATelenteryStart bzw enes der varianten verwende, dann weren ja datenpunhkte aufgezeichnet (sinn dhinter) - ich möchte wissen, werden die d aten live geschrieben oder erst dann, wenn ich mit Stop die aufzeichnunjg beende?
+Was ist wenn ich die teemtry starte, dann nvim beeende und neu starte, muss ich dann die telemtry daten neu starten oder lauft die az´fzeichung weiter?
+idealerweiße wäre ews m.M. nach sp, dass bei beenen von nvim die daten mal geschrben werden (um sie zusaven sozusagen) und wenn nvim wieder starten uohhne die telemtry zu beenden, dann lauft die aufzeichung weiter und wrid dann updatet. wenn sie ncht "live" geschireben/saved wird, dann wäre ein usrcmd tol, mit dem man de daten mal schreben kann ohne die telemtry zu ebeenden.
+weiters: es wre tol, wenn mandie telemtry beendet, dann wird manja aufefordert einen pfad z uwählen zum svcen. der pfad passt auch, es wäre aber toll, wenn ein name vorgeschlgen wird. wenn es den dann sch gibt wird im namen eine numerierng raufgezählt oder ebbesser noch, das satum / uhrzeit s im namenm dabei
 
-Beispiel:
 
-```markdown
-![Start Screen](assets/Device_und_TMA_READY-1787133625.png)
+docmap beiude -> features die der user eisntellen lassen kann
+docmap-desktop: mehr einstellungen fpr den user in die einstellugnen geben (eventuell auch all das was in doicumentation.nvim in der user spec als user eingestellt werden knnn)
 
-<figure>
-  <img src="assets/Device_und_TMA_READY-1787133625.png" alt="Start Screen">
-  <figcaption>Abbildung 1: Start Screen</figcaption>
-</figure>
-```
 
-Mir geht es darum für images schlne captions amrkdown zu haben wenn sie gerendert werdne, diese 2 möglichkeiten beiten sich an neben der `@fig:startscreen` syntax.
-
-Jetzt ist es aber so, dass ich mit images.nvimi in coop mit markdown.nvim hinbekommen habe, dass ich endlich in amrkdown dateien die images mvia hover usw.. direkt innvim anzeigen kann. Das verliere ich aebr, wenn ich html captions mache, denn der link darin wird icht als image link markdown aufgelst .
-entweder binden wir das mit ein, dass auch diese html links aufelöst werdne können?=
+- [ ] rechtklick menu durchtestetn und nahc plugins auftilen aubmenus...
+- [ ] markdown: :Markdown list [options?] [scope? default % options cwwdf, path] mit options wie zb healdines, das  alle headlines zeigt auflistst in eine picker und man dan hin spriingen kann
+---
 
 ## casedesk
+
+---
 
 ### Solution(s)
 
@@ -32,18 +27,26 @@ hierzu äwre ein temlate gut, dass ich dann von einer ai ausfpllen lassen kann, 
 :Case solution bzw solve sold ann das gleich auch höandlen zum eingeben der solution
 dazu braucht es ein workflow udn ein konzept. das ollte an auch in C:\users\StefanBartl\AppData\Local\nvim\docs\NOTES\casedesk  stehen...
 
+---
+
 ### update der \nvim\docs
 
 alle neune commands usw..
 use cases ersellen, so dass ich suchen kann " ich will eine xy im case" -> dann so
 
+---
+
 ### ai implemeniterung
 
 endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pro account, aber ich weioß nicht, ob es damit überhauüt geht. gemini nehmen ich bisher üner die web ui das funkt auch ganz gut inhaltlich
 
+---
+
 ## Misc
 
 - nvim performance optimeren: startup modul, runtime analysis, docmap, usw...
+
+---
 
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
