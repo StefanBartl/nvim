@@ -13,9 +13,16 @@ docmap beiude -> features die der user eisntellen lassen kann
 docmap-desktop: mehr einstellungen fpr den user in die einstellugnen geben (eventuell auch all das was in doicumentation.nvim in der user spec als user eingestellt werden knnn)
 
 
+- [ ] gopath, aber anstelle das eis den link öffnet, öffnet es ihn im file explorer. bei usrcmd könnte nman hier einen euen mode hinzufügeen: `| `:Gopath open [mode]` | `edit\|split\|vsplit\|tab` | resolve & open |`
 - [ ] rechtklick menu durchtestetn und nahc plugins auftilen aubmenus...
 - [ ] markdown: :Markdown list [options?] [scope? default % options cwwdf, path] mit options wie zb healdines, das  alle headlines zeigt auflistst in eine picker und man dan hin spriingen kann
 ---
+
+## idden
+
+usrcmd typo helper: wenn man einen usrmcd iengibt und man hat einen falshcen buschatben oder einen zu viel oder so, dann solles nicht fehlschlagen sondern lib.nvim ui.kit prompt ob man vl den commafd XY oder YX gemeint hat und mn ann sch dan den richtigen aussuchen und durchführen.
+wie aufwendig wäre das für ale usrcmds meiner polugins? kann man das als zusätzliches fature, das man enaben/diasbalen kann, üer das lib.nvim usrcmd.´ / usrcmd.composer gleich mitr shippen?
+
 
 ## casedesk
 
