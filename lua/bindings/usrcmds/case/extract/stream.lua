@@ -16,10 +16,21 @@
 --- documented shapes but this one stream doesn't contain any — not
 --- independently re-verified against real data this session, unlike
 --- everything else here.
+---
+--- Three of these functions (`attachments`, `completeness`,
+--- `last_reply_sent_at`) additionally understand SAP Resolve's
+--- Tampermonkey export via `stream_format.detect` (EXTRACTION.md §13,
+--- Paket 6b). The rest split into two groups: `versions_in_text`/`kbas`/
+--- `error_codes`/`doc_links`/`escalations` need no dispatch because they
+--- scan raw text for self-contained patterns and work on either source
+--- unchanged, while `stammdaten` (and with it `case_short`, `sap_component`)
+--- has no counterpart in that export at all and stays empty for it — a
+--- real gap in what SAP Resolve copies out, not a parser shortcoming.
 
 local render = require("bindings.usrcmds.case.render")
 local config = require("bindings.usrcmds.case.config")
 local clock = require("bindings.usrcmds.case.sla.clock")
+local stream_format = require("bindings.usrcmds.case.stream_format")
 
 local M = {}
 
@@ -105,7 +116,7 @@ end
 --- case has no support-info file either, that's worth fetching from SNOW.
 ---@param text string
 ---@return string[]
-function M.attachments(text)
+local function attachments_snow(text)
   local out = {}
   local ls = lines_of(text)
   local i = 1
@@ -130,6 +141,40 @@ function M.attachments(text)
     end
   end
   return out
+end
+
+--- SAP Resolve announces an upload as an entry whose action is bare
+--- `Attachment uploaded` — no filename anywhere (EXTRACTION.md §13). So
+--- this normally returns nothing, on purpose: an empty list is the honest
+--- answer, and inventing a placeholder would poison the one consumer that
+--- reads real meaning into these names (`facts.lua`'s "did the customer
+--- ever attach a ToscaSupportInfo?" check would start claiming they did).
+--- A trailing filename IS picked up if it ever appears — that's the shape
+--- an extended Tampermonkey script would produce, and matching it costs
+--- one pattern.
+---@param text string
+---@return string[]
+local function attachments_saperesolve(text)
+  local out = {}
+  for line in ((text or ""):gsub("\r", "")):gmatch("[^\n]+") do
+    local h = stream_format.saperesolve_header(line)
+    if h then
+      local name = h.action:match("^Attachment uploaded%s*[:%-–—]%s*(.+)$")
+      if name and vim.trim(name) ~= "" then
+        out[#out + 1] = vim.trim(name)
+      end
+    end
+  end
+  return out
+end
+
+---@param text string
+---@return string[]
+function M.attachments(text)
+  if stream_format.detect(text) == "saperesolve" then
+    return attachments_saperesolve(text)
+  end
+  return attachments_snow(text)
 end
 
 --- SCREAMING_SNAKE_CASE tokens — Tricentis error codes
@@ -184,7 +229,9 @@ end
 function M.escalations(text)
   local out = {}
   for task, from, to in
-    text:gmatch("Case Task%s+(SWTASK%d+)%s+state has been updated from%s+([^\r\n]-)%s+to%s+([^\r\n]+)")
+    text:gmatch(
+      "Case Task%s+(SWTASK%d+)%s+state has been updated from%s+([^\r\n]-)%s+to%s+([^\r\n]+)"
+    )
   do
     out[#out + 1] = { task = task, from = vim.trim(from), to = vim.trim(to) }
   end
@@ -244,7 +291,7 @@ end
 ---@param text string
 ---@return integer|nil declared
 ---@return integer actual
-function M.completeness(text)
+local function completeness_snow(text)
   local declared = tonumber(text:match("(%d+)%s*total activities%."))
   local actual = 0
   for line in text:gmatch("[^\r\n]+") do
@@ -254,6 +301,37 @@ function M.completeness(text)
     end
   end
   return declared, actual
+end
+
+--- SAP Resolve carries the same check in a sturdier place: every single
+--- entry header repeats the total (`[3/19]`), so a truncated paste is
+--- detectable even when the very first line got cut off — where SNOW's
+--- one-and-only `<N> total activities.` header would have been lost with
+--- it. The declared total is read from the LAST header seen rather than
+--- the first for exactly that reason.
+---@param text string
+---@return integer|nil declared
+---@return integer actual
+local function completeness_saperesolve(text)
+  local declared, actual = nil, 0
+  for line in ((text or ""):gsub("\r", "")):gmatch("[^\n]+") do
+    local h = stream_format.saperesolve_header(line)
+    if h then
+      actual = actual + 1
+      declared = h.total
+    end
+  end
+  return declared, actual
+end
+
+---@param text string
+---@return integer|nil declared
+---@return integer actual
+function M.completeness(text)
+  if stream_format.detect(text) == "saperesolve" then
+    return completeness_saperesolve(text)
+  end
+  return completeness_snow(text)
 end
 
 --- Latest `Send to Customer, updates that transfer case ownership to the
@@ -269,16 +347,19 @@ end
 --- the customer" — built to EXTRACTION.md §4's own documented wording.
 ---@param text string
 ---@return integer|nil epoch (UTC), the most recent occurrence
-function M.last_reply_sent_at(text)
+local function last_reply_sent_at_snow(text)
   local latest = nil
   local ls = lines_of(text)
   for i, line in ipairs(ls) do
-    if vim.trim(line) == "Send to Customer, updates that transfer case ownership to the customer" then
+    if
+      vim.trim(line) == "Send to Customer, updates that transfer case ownership to the customer"
+    then
       local at_line = ls[i + 1] and vim.trim(ls[i + 1]) or ""
       local gmt = at_line:match("^at:%s*(%d+%-%d+%-%d+ %d+:%d+:%d+)%s*GMT$")
       if gmt then
         local y, mo, d, h, mi, s = gmt:match("(%d+)%-(%d+)%-(%d+) (%d+):(%d+):(%d+)")
-        local epoch = clock.utc(tonumber(y), tonumber(mo), tonumber(d), tonumber(h), tonumber(mi), tonumber(s))
+        local epoch =
+          clock.utc(tonumber(y), tonumber(mo), tonumber(d), tonumber(h), tonumber(mi), tonumber(s))
         if not latest or epoch > latest then
           latest = epoch
         end
@@ -286,6 +367,34 @@ function M.last_reply_sent_at(text)
     end
   end
   return latest
+end
+
+--- `Returned Case to Customer` — SAP Resolve's own name for the exact same
+--- event, and the same string `sla/stream.lua`'s `parse_saperesolve`
+--- already maps to an "Awaiting User Info" transition. Unlike the SNOW
+--- path this one IS validated against a real export (five occurrences in
+--- the 19-entry sample, EXTRACTION.md §13), where SNOW's wording has never
+--- yet turned up in real data.
+---@param text string
+---@return integer|nil epoch, the most recent occurrence
+local function last_reply_sent_at_saperesolve(text)
+  local latest = nil
+  for line in ((text or ""):gsub("\r", "")):gmatch("[^\n]+") do
+    local h = stream_format.saperesolve_header(line)
+    if h and h.action == "Returned Case to Customer" and (not latest or h.at > latest) then
+      latest = h.at
+    end
+  end
+  return latest
+end
+
+---@param text string
+---@return integer|nil epoch, the most recent occurrence
+function M.last_reply_sent_at(text)
+  if stream_format.detect(text) == "saperesolve" then
+    return last_reply_sent_at_saperesolve(text)
+  end
+  return last_reply_sent_at_snow(text)
 end
 
 ---@class Lib.Case.StreamSignals

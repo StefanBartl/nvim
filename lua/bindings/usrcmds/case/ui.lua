@@ -103,7 +103,14 @@ function M.new(case_arg)
         { name = "resolve_link", label = "SAP Resolve Link (optional)" },
       },
       on_submit = function(values)
-        M.create(short, values.title, values.company, values.name, values.snow_link, values.resolve_link)
+        M.create(
+          short,
+          values.title,
+          values.company,
+          values.name,
+          values.snow_link,
+          values.resolve_link
+        )
       end,
     })
   end
@@ -140,7 +147,8 @@ function M.create(short, title, company, name, snow_link, resolve_link)
   -- ROADMAP.md v7: a company can be routed to its own blueprint; unmapped
   -- (the common case today — the table starts empty) falls through to the
   -- same default every case has always used.
-  local blueprint_name = (tokens.company and config.company_blueprints[tokens.company]) or config.default_blueprint
+  local blueprint_name = (tokens.company and config.company_blueprints[tokens.company])
+    or config.default_blueprint
   local nodes = blueprint.get(blueprint_name)
   local actions = plan.build(dir, nodes, tokens)
 
@@ -214,9 +222,17 @@ function M.create(short, title, company, name, snow_link, resolve_link)
               if #paths == 0 then
                 return
               end
-              local result = attachments.ingest({ dir = dir, short = short, state = config.default_state }, paths)
+              local result = attachments.ingest(
+                { dir = dir, short = short, state = config.default_state },
+                paths
+              )
               if result.ok > 0 then
-                notify.info(("%d attachment(s) moved into %s/initial"):format(result.ok, config.assets_dirname))
+                notify.info(
+                  ("%d attachment(s) moved into %s/initial"):format(
+                    result.ok,
+                    config.assets_dirname
+                  )
+                )
               end
               if #result.errors > 0 then
                 notify.error("attachment move failed:\n" .. table.concat(result.errors, "\n"))
@@ -237,7 +253,10 @@ end
 local function infocard_lines(entry, m)
   m = m or {}
   local lines = {
-    ("Case      %s%s"):format(entry.short, m.year and (" (%s)"):format(render.to_snow_display(entry.short, m.year)) or ""),
+    ("Case      %s%s"):format(
+      entry.short,
+      m.year and (" (%s)"):format(render.to_snow_display(entry.short, m.year)) or ""
+    ),
     ("State     %s"):format(entry.state),
     ("Title     %s"):format(m.title or "—"),
     ("Company   %s"):format(m.company or "—"),
@@ -297,7 +316,11 @@ function M.edit_info(entry, m)
       { name = "title", label = "Title", default = m.title or guess.title or "" },
       { name = "company", label = "Company", default = m.company or "" },
       { name = "priority", label = "Priority", default = m.priority or "" },
-      { name = "tosca_version", label = "Tosca-Version", default = m.tosca_version or guess.tosca_version or "" },
+      {
+        name = "tosca_version",
+        label = "Tosca-Version",
+        default = m.tosca_version or guess.tosca_version or "",
+      },
       { name = "name", label = "Name", default = m.name or guess.name or "" },
       { name = "notes", label = "Notes", default = m.notes or "" },
     },
@@ -373,7 +396,9 @@ function M.open_node(node, case_arg)
       path = newest_reply(entry.dir) or path
     end
     if not uv.fs_stat(path) then
-      notify.warn(("%s does not exist yet in case %s — run :Case sync"):format(node.path, entry.short))
+      notify.warn(
+        ("%s does not exist yet in case %s — run :Case sync"):format(node.path, entry.short)
+      )
       return
     end
     edit(path)
@@ -442,14 +467,17 @@ function M.reply_check()
       if report.emoji_count == nil then
         lines[#lines + 1] = "Emojis      (emojis.nvim not installed, skipped)"
       elseif report.emoji_count > 0 then
-        lines[#lines + 1] = ("Emojis      %d found — press 'c' to remove"):format(report.emoji_count)
+        lines[#lines + 1] = ("Emojis      %d found — press 'c' to remove"):format(
+          report.emoji_count
+        )
       else
         lines[#lines + 1] = "Emojis      none"
       end
 
       if #report.headline_lines > 0 then
-        lines[#lines + 1] =
-          ("Headlines   markdown heading on line(s): %s"):format(table.concat(report.headline_lines, ", "))
+        lines[#lines + 1] = ("Headlines   markdown heading on line(s): %s"):format(
+          table.concat(report.headline_lines, ", ")
+        )
       else
         lines[#lines + 1] = "Headlines   none"
       end
@@ -484,12 +512,15 @@ function M.reply_check()
             lines[#lines + 1] = ("  tosca-%s  %s"):format(mm.found_version, mm.file)
           end
         else
-          lines[#lines + 1] = ("Doc links   none on a different version (customer: %s)"):format(doclink_customer_version)
+          lines[#lines + 1] = ("Doc links   none on a different version (customer: %s)"):format(
+            doclink_customer_version
+          )
         end
       end
 
       lines[#lines + 1] = ""
-      lines[#lines + 1] = "s: run spellcheck on this buffer (language.nvim) · m: mark as sent (SLA) · q: close"
+      lines[#lines + 1] =
+        "s: run spellcheck on this buffer (language.nvim) · m: mark as sent (SLA) · q: close"
 
       local surf = kit.viewer({ title = "Reply check", lines = lines })
       if not surf then
@@ -626,6 +657,56 @@ end
 
 -- ── :Case activity ───────────────────────────────────────────────────────
 
+--- EXTRACTION.md §13, Paket 6c — the first of the two signals SAP Resolve's
+--- Conversations export simply doesn't carry (§13 "zwei echte Lücken"): no
+--- Priority field in any form, so there is nothing to parse harder for.
+--- Without it `sla.status` returns nil and every SLA feature goes quiet for
+--- this case, which is the worst outcome — silently no clock at all.
+---
+--- So: ask, once, exactly when it matters. Only for a detected SAP-Resolve
+--- paste (SNOW's own streams carry the field and get it for free), only
+--- when neither the stream nor `.case.json` already knows one, and
+--- cancelling is a real answer — `:Case info`'s edit form still sets it
+--- later, this is a convenience, not a gate.
+---@param entry Lib.Case.RegistryEntry
+---@param content string  the pasted stream
+---@param parsed Lib.Case.SlaStreamData
+---@param known string|nil  the priority .case.json already has, if any
+local function ask_priority_if_unknowable(entry, content, parsed, known)
+  if parsed.priority or known then
+    return
+  end
+  if require("bindings.usrcmds.case.stream_format").detect(content) ~= "saperesolve" then
+    return
+  end
+
+  local digits = vim.tbl_keys(config.sla)
+  table.sort(digits)
+  local choices = vim.tbl_map(function(digit)
+    return { digit = digit, label = config.sla[digit].label }
+  end, digits)
+
+  kit.select({
+    message = "SAP Resolve carries no priority — set it for " .. entry.short .. "?",
+    selection = choices,
+    format_item = function(c)
+      return ("%s - %s"):format(c.digit, c.label)
+    end,
+    on_select = function(c)
+      local value = ("%s - %s"):format(c.digit, c.label)
+      local ok, err = meta.patch(entry.dir, entry.short, { priority = value })
+      if ok then
+        notify.info("priority set: " .. value)
+      else
+        notify.warn("could not save priority: " .. tostring(err))
+      end
+    end,
+    on_cancel = function()
+      notify.info("priority left unset — :Case info 'e' sets it later")
+    end,
+  })
+end
+
 --- Paste the system clipboard — a ServiceNow Activity Stream, typically —
 --- into a new numbered Research/ file. Clipboard rather than a prompt: the
 --- point is copy-in-SNOW, run-the-command, nothing retyped.
@@ -711,6 +792,9 @@ function M.activity(case_arg)
     end
 
     edit(full)
+    -- Last, and only after everything auto-detectable is already filed:
+    -- the one field that CAN'T be, and only for the source that lacks it.
+    ask_priority_if_unknowable(entry, content, parsed, m and m.priority)
   end)
 end
 
@@ -766,7 +850,8 @@ function M.ki(case_arg)
     end
     local ki = require("bindings.usrcmds.case.ki")
     local m = meta.read(entry.dir)
-    local ok_facts, facts_lines = pcall(require("bindings.usrcmds.case.extract.facts").render, entry)
+    local ok_facts, facts_lines =
+      pcall(require("bindings.usrcmds.case.extract.facts").render, entry)
     local prompt = ki.build_prompt({
       case = entry.short,
       title = m and m.title,
@@ -793,7 +878,9 @@ function M.ki(case_arg)
     end
 
     require("lib.nvim.cross.copy_to_clipboard")(prompt)
-    notify.info("prompt copied to clipboard, saved as " .. stem .. ".md — paste it into your AI chat")
+    notify.info(
+      "prompt copied to clipboard, saved as " .. stem .. ".md — paste it into your AI chat"
+    )
     edit(full)
   end)
 end
@@ -867,7 +954,10 @@ function M.ki_import(case_arg)
 
     if sections.notes then
       local append = require("lib.nvim.fs.write.append")
-      local block = ("\n---\n## KI-Analyse — %s\n\n%s\n"):format(os.date("%Y-%m-%d %H:%M"), sections.notes)
+      local block = ("\n---\n## KI-Analyse — %s\n\n%s\n"):format(
+        os.date("%Y-%m-%d %H:%M"),
+        sections.notes
+      )
       local ok, werr = append(entry.dir .. "/Notes.md", block)
       if ok then
         written[#written + 1] = "Notes.md (appended)"
@@ -1144,7 +1234,10 @@ local function create_solution(entry)
   edit(path)
   cursor_below_heading("problem")
   notify.info(
-    ("%s: %s angelegt — Status, Problem, Ursache, Lösung ausfüllen"):format(entry.short, path:sub(#entry.dir + 2))
+    ("%s: %s angelegt — Status, Problem, Ursache, Lösung ausfüllen"):format(
+      entry.short,
+      path:sub(#entry.dir + 2)
+    )
   )
 end
 
@@ -1424,7 +1517,8 @@ function M.sla(case_arg, flags)
     if status.cadence then
       clock_line(status.cadence)
     elseif status.awaiting_customer then
-      lines[#lines + 1] = "  wartet auf Kunden (Awaiting User Info) — keine Frist, bis er antwortet"
+      lines[#lines + 1] =
+        "  wartet auf Kunden (Awaiting User Info) — keine Frist, bis er antwortet"
     else
       lines[#lines + 1] = "  unbekannt"
     end
@@ -1439,7 +1533,9 @@ function M.sla(case_arg, flags)
 
     lines[#lines + 1] = ""
     lines[#lines + 1] = status.last_customer_at
-        and ("Letzte Kundennachricht:   %s"):format(os.date("%d.%m. %H:%M", status.last_customer_at))
+        and ("Letzte Kundennachricht:   %s"):format(
+          os.date("%d.%m. %H:%M", status.last_customer_at)
+        )
       or "Letzte Kundennachricht:   unbekannt"
     lines[#lines + 1] = status.last_reply_sent
         and ("Letzte gesendete Antwort: %s"):format(os.date("%d.%m. %H:%M", status.last_reply_sent))
@@ -1578,9 +1674,16 @@ function M.versions(component_arg, case_arg, flags)
       local server = stream_content and stream_mod.versions_in_text(stream_content).server
       if server then
         require("lib.nvim.cross.copy_to_clipboard")(server)
-        notify.info(("Tosca Server: %s (copied, from %s)"):format(server, vim.fn.fnamemodify(stream_path, ":t")))
+        notify.info(
+          ("Tosca Server: %s (copied, from %s)"):format(
+            server,
+            vim.fn.fnamemodify(stream_path, ":t")
+          )
+        )
       else
-        notify.warn("versions: no server version found (needs an Activity Stream with 'Tosca Server - v...')")
+        notify.warn(
+          "versions: no server version found (needs an Activity Stream with 'Tosca Server - v...')"
+        )
       end
       return
     end
@@ -1588,7 +1691,9 @@ function M.versions(component_arg, case_arg, flags)
     local supportinfo = require("bindings.usrcmds.case.extract.supportinfo")
     local path = supportinfo.find(entry.dir)
     if not path then
-      notify.warn(("%s: no ToscaSupportInfo*.txt found under %s/"):format(entry.short, config.assets_dirname))
+      notify.warn(
+        ("%s: no ToscaSupportInfo*.txt found under %s/"):format(entry.short, config.assets_dirname)
+      )
       return
     end
 
@@ -1614,7 +1719,8 @@ function M.versions(component_arg, case_arg, flags)
           lines[#lines + 1] = e.dir or "(unknown directory)"
           last_dir = e.dir
         end
-        lines[#lines + 1] = e.version and ("  %-50s %s"):format(e.name, e.version) or ("  " .. e.name)
+        lines[#lines + 1] = e.version and ("  %-50s %s"):format(e.name, e.version)
+          or ("  " .. e.name)
       end
       kit.viewer({ title = "Versions (all)", lines = lines })
       return
@@ -1785,7 +1891,12 @@ local function do_move(entry, state)
   -- gerade umgezogen.
   if vim.tbl_contains(config.solution_reminder_states, state) then
     if not require("bindings.usrcmds.case.solution").exists(dest) then
-      notify.warn(("case %s hat keine dokumentierte Lösung — :Case solution %s"):format(entry.short, entry.short))
+      notify.warn(
+        ("case %s hat keine dokumentierte Lösung — :Case solution %s"):format(
+          entry.short,
+          entry.short
+        )
+      )
     end
   end
   return true
@@ -2373,8 +2484,9 @@ function M.cases_insert(pattern, range)
     local needle = pattern:lower()
     for _, e in ipairs(registry.list()) do
       local m = meta.read(e.dir)
-      local haystack =
-        table.concat({ e.short, (m and m.title) or "", (m and m.company) or "", (m and m.name) or "" }, " "):lower()
+      local haystack = table
+        .concat({ e.short, (m and m.title) or "", (m and m.company) or "", (m and m.name) or "" }, " ")
+        :lower()
       if haystack:find(needle, 1, true) then
         candidates[#candidates + 1] = e
       end
@@ -2427,7 +2539,8 @@ local function show_results(results, label)
     format_item = function(e)
       local m = meta.read(e.dir)
       local title = m and m.title
-      return title and ("%s [%s] — %s"):format(e.short, e.state, title) or ("%s [%s]"):format(e.short, e.state)
+      return title and ("%s [%s] — %s"):format(e.short, e.state, title)
+        or ("%s [%s]"):format(e.short, e.state)
     end,
     on_select = function(item)
       M.info(item.short)
@@ -2457,7 +2570,11 @@ end
 ---@param flags { exact: boolean|nil, re: boolean|nil }|nil
 function M.filter(field, pattern, flags)
   local results = query.by_field(field, pattern, flags)
-  local label = ("%s = %s%s"):format(field, (pattern and pattern ~= "") and pattern or "*", flag_suffix(flags))
+  local label = ("%s = %s%s"):format(
+    field,
+    (pattern and pattern ~= "") and pattern or "*",
+    flag_suffix(flags)
+  )
   show_results(results, label)
 end
 
@@ -2497,7 +2614,10 @@ function M.list_all()
     return out
   end
 
-  local surf = kit.viewer({ title = "Cases  (m mark, V+m mark range, c close marked)", lines = render_lines() })
+  local surf = kit.viewer({
+    title = "Cases  (m mark, V+m mark range, c close marked)",
+    lines = render_lines(),
+  })
   if not surf then
     return
   end
@@ -2550,7 +2670,8 @@ function M.filter_many(kv, flags)
     parts[#parts + 1] = ("%s=%s"):format(k, v)
   end
   table.sort(parts)
-  local label = (#parts > 0 and table.concat(parts, " ") or "find (no criteria given)") .. flag_suffix(flags)
+  local label = (#parts > 0 and table.concat(parts, " ") or "find (no criteria given)")
+    .. flag_suffix(flags)
   show_results(query.by_fields(kv, flags), label)
 end
 
@@ -2568,7 +2689,11 @@ function M.recent(n_arg)
     selection = rows,
     format_item = function(row)
       local m = meta.read(row.entry.dir)
-      return ("%s  %-10s %s"):format(os.date("%Y-%m-%d", row.mtime), row.entry.short, (m and m.title) or "")
+      return ("%s  %-10s %s"):format(
+        os.date("%Y-%m-%d", row.mtime),
+        row.entry.short,
+        (m and m.title) or ""
+      )
     end,
     on_select = function(item)
       M.info(item.entry.short)
@@ -2587,15 +2712,24 @@ function M.stale(days_arg)
   local days = tonumber(days_arg)
   local rows = query.stale(days)
   if #rows == 0 then
-    notify.info(days and ("no open case has been idle %d+ days"):format(days) or "no open case is stale for its priority")
+    notify.info(
+      days and ("no open case has been idle %d+ days"):format(days)
+        or "no open case is stale for its priority"
+    )
     return
   end
   kit.select({
-    message = days and ("Stale %d+ days (%d)"):format(days, #rows) or ("Stale (%d, priority-based threshold)"):format(#rows),
+    message = days and ("Stale %d+ days (%d)"):format(days, #rows)
+      or ("Stale (%d, priority-based threshold)"):format(#rows),
     selection = rows,
     format_item = function(row)
       local m = meta.read(row.entry.dir)
-      return ("%3d/%-2d d idle  %-10s %s"):format(row.days_idle, row.threshold_days, row.entry.short, (m and m.title) or "")
+      return ("%3d/%-2d d idle  %-10s %s"):format(
+        row.days_idle,
+        row.threshold_days,
+        row.entry.short,
+        (m and m.title) or ""
+      )
     end,
     on_select = function(item)
       M.info(item.entry.short)
@@ -2624,7 +2758,13 @@ function M.cases_sla()
       local m = meta.read(row.entry.dir)
       local marker = row.worst.remaining < 0 and "!!"
         or (sla.under_threshold(row.worst, config.sla_warn_at) and "! " or "  ")
-      return ("%s P%s %-18s %-10s %s"):format(marker, row.status.digit, row.worst.label, row.entry.short, (m and m.title) or "")
+      return ("%s P%s %-18s %-10s %s"):format(
+        marker,
+        row.status.digit,
+        row.worst.label,
+        row.entry.short,
+        (m and m.title) or ""
+      )
     end,
     on_select = function(item)
       M.sla(item.entry.short)
@@ -2714,8 +2854,12 @@ function M.cases_sla_report(year_arg)
     end)
     lines[#lines + 1] = "Ausreißer (verpasst):"
     for _, r in ipairs(outliers) do
-      lines[#lines + 1] =
-        ("  %-10s P%s %-18s +%s"):format(r.entry.short, r.digit, r.label, sla.format_duration(r.delta))
+      lines[#lines + 1] = ("  %-10s P%s %-18s +%s"):format(
+        r.entry.short,
+        r.digit,
+        r.label,
+        sla.format_duration(r.delta)
+      )
     end
   end
 
@@ -2762,7 +2906,11 @@ function M.company_history(pattern)
   table.sort(companies)
 
   local lines = {
-    ("%s — %d case%s"):format(table.concat(companies, ", "), #matches, #matches == 1 and "" or "s"),
+    ("%s — %d case%s"):format(
+      table.concat(companies, ", "),
+      #matches,
+      #matches == 1 and "" or "s"
+    ),
     "",
   }
 
@@ -2885,7 +3033,11 @@ function M.linkcheck(case_arg)
         lines[#lines + 1] = ("%-10s %-4s %s  (%s)"):format(r.short, marker, r.url, r.detail)
       end
       kit.viewer({
-        title = ("Cases — link check (%d dead, %d uncertain / %d)"):format(dead, uncertain, #results),
+        title = ("Cases — link check (%d dead, %d uncertain / %d)"):format(
+          dead,
+          uncertain,
+          #results
+        ),
         lines = lines,
       })
     end)

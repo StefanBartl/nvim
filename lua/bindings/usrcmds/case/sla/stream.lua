@@ -170,42 +170,6 @@ local function parse_snow(text)
   return out
 end
 
---- `[idx/total] M/D/YY at H:MM AM/PM` — the header's own timestamp, no
---- timezone marker at all (unlike SNOW's separate `at: … GMT` line).
---- Tampermonkey formats these from the browser's own local clock, so —
---- same choice `parse_local` above already makes for SNOW's local-time
---- lines — they're interpreted as LOCAL time via `os.time`, not treated as
---- UTC (SLA.md's own documented DST lesson: getting this wrong silently
---- shifts every timestamp by 1-2h, not something that throws).
----@param date_part string  "8/17/26"
----@param time_part string  "3:52 PM"
----@return integer|nil
-local function parse_saperesolve_datetime(date_part, time_part)
-  local mo, d, yy = date_part:match("^(%d+)/(%d+)/(%d+)$")
-  if not mo then
-    return nil
-  end
-  local h, mi, ampm = time_part:match("^(%d+):(%d+)%s*([AaPp][Mm])$")
-  if not h then
-    return nil
-  end
-  h = tonumber(h)
-  ampm = ampm:upper()
-  if ampm == "PM" and h ~= 12 then
-    h = h + 12
-  elseif ampm == "AM" and h == 12 then
-    h = 0
-  end
-  return os.time({
-    year = 2000 + tonumber(yy),
-    month = tonumber(mo),
-    day = tonumber(d),
-    hour = h,
-    min = tonumber(mi),
-    sec = 0,
-  })
-end
-
 --- SNOW-vocabulary state transitions synthesized from SAP Resolve's action
 --- labels — deliberately the SAME strings `parse_snow`'s own `State`
 --- block produces ("Awaiting User Info"/"Active"), so `sla/init.lua`'s
@@ -252,24 +216,17 @@ local function parse_saperesolve(text)
   end
 
   for line in text:gmatch("[^\n]+") do
-    local idx, date_part, time_part, actor, action = line:match(
-      "^%[(%d+)/%d+%]%s+(%d+/%d+/%d+)%s+at%s+(%d+:%d+%s*[AaPp][Mm])%s*|%s*([^|]-)%s*|%s*(.+)$"
-    )
-    if idx then
-      local at = parse_saperesolve_datetime(date_part, time_part)
-      if at then
-        note_earliest(at)
-        actor = vim.trim(actor)
-        action = vim.trim(action)
+    local h = stream_format.saperesolve_header(line)
+    if h then
+      note_earliest(h.at)
 
-        if SAPERESOLVE_CUSTOMER_ACTIONS[action] then
-          out.customer[#out.customer + 1] = { at = at, actor = actor }
-        end
+      if SAPERESOLVE_CUSTOMER_ACTIONS[h.action] then
+        out.customer[#out.customer + 1] = { at = h.at, actor = h.actor }
+      end
 
-        local transition = SAPERESOLVE_STATE_TRANSITIONS[action]
-        if transition then
-          out.states[#out.states + 1] = { at = at, to = transition.to, from = transition.from }
-        end
+      local transition = SAPERESOLVE_STATE_TRANSITIONS[h.action]
+      if transition then
+        out.states[#out.states + 1] = { at = h.at, to = transition.to, from = transition.from }
       end
     end
   end

@@ -31,17 +31,6 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
-- [ ] **Zweite Activity-Stream-Quelle: SAP Resolve (Rest)** — Konzept +
-      Paket 6a stehen: [EXTRACTION.md §13](EXTRACTION.md#13-zweite-quelle-sap-resolve-analyse-noch-nicht-gebaut).
-      `sla/stream.lua` erkennt SAP Resolves Tampermonkey-Export jetzt
-      selbst (`stream_format.lua`) und leitet `customer`/`states` daraus
-      ab — `:Case activity`/`:Case sla` funktionieren für diese Quelle
-      bereits, ohne jede Änderung an `sla/init.lua`. Offen: Paket 6b
-      (`extract/stream.lua` — Anhänge, `last_reply_sent_at`; `M.kbas`/
-      `M.doc_links` brauchen nichts, funktionieren schon) und Paket 6c
-      (Priorität/SNOW-Nummer fehlen im Export komplett — Tampermonkey-
-      Script erweitern oder `:Case activity` fragt aktiv nach).
-
 - [ ] **KI-Anbindung** — hängt an einem eigenen `ai.nvim`-Plugin (noch
       nicht gebaut; Config-Grundlage existiert bereits:
       `lua/config/ai/`, `lua/plugins/ai/`, Zugang zu Gemini/ChatGPT/Claude
@@ -75,6 +64,19 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
 ## Erledigt
 
 Chronologisch, neueste zuerst. Details und Erkenntnisse: [HANDOVER.md](HANDOVER.md).
+
+- [x] **Zweite Activity-Stream-Quelle: SAP Resolve** (2026-08-21) —
+      Konzept, Analyse und alle drei Pakete:
+      [EXTRACTION.md §13](EXTRACTION.md#13-zweite-quelle-sap-resolve-gebaut-pakete-6a-6c).
+      Neu: `stream_format.lua` (Format-Erkennung an der ersten
+      nicht-leeren Zeile plus die geteilte Kopfzeilen-Zerlegung). Beide
+      Parser dispatchen darüber, ohne Format-Flag für den Nutzer:
+      `sla/stream.lua` leitet `customer`/`states` ab (in SNOWs eigenem
+      Vokabular, deshalb kam `sla/init.lua` ohne jede Änderung aus),
+      `extract/stream.lua` `attachments`/`completeness`/
+      `last_reply_sent_at`. Die einzige verbliebene echte Lücke —
+      Priorität, die im Export schlicht nicht vorkommt — schließt `:Case
+      activity` per Rückfrage, eng begrenzt auf genau diesen Fall.
 
 - [x] **`:Case insert` kann Assets** (2026-08-19) — zwei neue Felder in
       `ui.INSERT_FIELDS`: `asset` (Markdown-Link relativ zum Puffer, in dem

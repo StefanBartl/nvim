@@ -100,7 +100,7 @@ Stream-Parsers (`sla/stream.lua`) steht bereits eigenständig, siehe
 - [10. Risiken](#10-risiken)
 - [11. Offene Fragen](#11-offene-fragen)
 - [12. Reihenfolge](#12-reihenfolge)
-- [13. Zweite Quelle: SAP Resolve (Analyse, noch nicht gebaut)](#13-zweite-quelle-sap-resolve-analyse-noch-nicht-gebaut)
+- [13. Zweite Quelle: SAP Resolve (gebaut, Pakete 6a-6c)](#13-zweite-quelle-sap-resolve-gebaut-pakete-6a-6c)
   - [Format, aus einem echten Export](#format-aus-einem-echten-export)
   - [Was schon funktioniert, ohne dass etwas gebaut wurde](#was-schon-funktioniert-ohne-dass-etwas-gebaut-wurde)
   - [Was fehlt, weil SNOW-strukturell](#was-fehlt-weil-snow-strukturell)
@@ -626,7 +626,7 @@ Paket 1 und 2 sind unabhängig voneinander nützlich. Paket 5 setzte 1–3
 voraus — genau deshalb stand es hinten: der Faktenblock ist nur so gut
 wie die Extraktoren darunter.
 
-## 13. Zweite Quelle: SAP Resolve (Analyse, noch nicht gebaut)
+## 13. Zweite Quelle: SAP Resolve (gebaut, Pakete 6a-6c)
 
 `sla/stream.lua` und `extract/stream.lua` sind komplett auf SNOWs
 Copy-Paste-Format zugeschnitten (§4 oben). Für den SAP-Bereich gibt es
@@ -703,10 +703,10 @@ Daten):
 | ~~`sla/stream.lua` — `customer`~~ | **Gelöst, Paket 6a:** `Information from Customer`/`Business Impact` sind das Signal, Datum aus der `[N/Total]`-Kopfzeile statt `at: … GMT` |
 | `sla/stream.lua` — `assignments` | kein Äquivalent im Export — SAP Resolves Conversations-Ansicht zeigt keine Zuweisungshistorie; bleibt leer |
 | ~~`sla/stream.lua` — `states`~~ | **Gelöst, Paket 6a:** `Returned Case to Customer`/`Information from Customer` inhaltlich fast dasselbe Signal wie SNOWs `State`-Block, nur anders benannt — als dieselben Strings (`"Awaiting User Info"`/`"Active"`) synthetisiert, `sla/init.lua`s `awaiting_customer()` braucht dafür keine Änderung |
-| `extract/stream.lua` — `M.attachments` | braucht `New attachment(s) added` + Dateinamen-Zeilen; dieses Format sagt nur `Attachment uploaded`, **ohne** Dateinamen daneben |
+| ~~`extract/stream.lua` — `M.attachments`~~ | **Bleibt leer, Paket 6b:** dieses Format sagt nur `Attachment uploaded`, **ohne** Dateinamen — eine leere Liste ist die ehrliche Antwort, ein Platzhalter würde `facts.lua`s „hat der Kunde je eine ToscaSupportInfo angehängt?"-Prüfung vergiften. Ein nachgestellter Dateiname (`Attachment uploaded: X.txt`) wird mitgenommen, falls das Tampermonkey-Script je einen liefert |
 | `extract/stream.lua` — `M.stammdaten` (→ `sap_component`, `case_short`) | braucht SNOWs Label-Value-Dump am Streamende (`Account`/`Number`/`SAP Component`/…) — kommt in diesem Export gar nicht vor |
-| `extract/stream.lua` — `M.completeness` | braucht `<N> total activities.`-Kopfzeile; dieses Format zählt anders (`[N/Total]` pro Zeile) — **harmlos**: `doctor.lua`s Aufrufer prüft `if declared and …`, ein `nil` triggert keinen Fehlalarm, nur keinen Check |
-| `extract/stream.lua` — `M.last_reply_sent_at` | braucht den exakten SNOW-Satz „Send to Customer, updates that transfer case ownership…" + `at: … GMT`; `Returned Case to Customer` ist das gleiche Signal, aber anderer Wortlaut und Zeitformat |
+| ~~`extract/stream.lua` — `M.completeness`~~ | **Gelöst, Paket 6b:** und zwar besser als bei SNOW — jede einzelne Kopfzeile wiederholt die Gesamtzahl (`[3/19]`), also fällt auch ein Paste auf, dem die ERSTE Zeile fehlt (SNOWs einziges `<N> total activities.` wäre damit mit verloren) |
+| ~~`extract/stream.lua` — `M.last_reply_sent_at`~~ | **Gelöst, Paket 6b:** `Returned Case to Customer` ist dasselbe Signal, nur anderer Wortlaut — und im Gegensatz zum SNOW-Pfad an echten Daten verifiziert (5 Vorkommen im 19-Einträge-Export; SNOWs eigener Wortlaut ist in echten Daten bisher nie aufgetaucht) |
 
 ### Zwei echte Lücken — nicht durch Parsing lösbar
 
@@ -729,6 +729,14 @@ nicht im kopierten Text:
    werden (Status quo — `render.to_short` akzeptiert schon die volle ID
    oder die kurze Nummer), oder kommt aus einem erweiterten
    Tampermonkey-Export.
+
+> **Nachtrag, Paket 6c (2026-08-21).** Von diesen beiden ist nur die erste
+> in der Praxis eine echte Lücke, und die ist jetzt geschlossen — nicht
+> durch Parsen, sondern durch Fragen (s. u.). Die zweite ist gar keine:
+> `Number` aus dem Stammdaten-Dump war nie die Quelle der Case-Nummer,
+> sondern nur ein Gegencheck — die echte Nummer tippt `:Case new` ohnehin
+> ab, sonst gäbe es den Case-Ordner nicht. Für die SAP-Resolve-Quelle
+> entfällt schlicht der Gegencheck. Deshalb dafür bewusst nichts gebaut.
 
 ### Architektur-Vorschlag: Format-Erkennung + Adapter
 
@@ -802,17 +810,40 @@ format.lua`, `sla/stream.lua`s `parse_saperesolve` (Priorität/Impact
 `Information from Customer`/`Returned Case to Customer` ableitbar, mit
 Datum direkt aus der `[N/Total]`-Kopfzeile statt `at: … GMT`).
 
-**Paket 6b — `extract`-Signale:** `extract/stream.lua` um denselben
-Dispatch erweitern, für `attachments` (falls das Tampermonkey-Script um
-Dateinamen erweitert wird) und `last_reply_sent_at` aus `Returned Case to
-Customer`. `M.kbas`/`M.doc_links` brauchen keine Anpassung (funktionieren
-bereits, s. o.).
+**Paket 6b — `extract`-Signale (steht, 2026-08-21):** `extract/stream.lua`
+dispatcht jetzt genauso, für `attachments`, `completeness` und
+`last_reply_sent_at`. `M.kbas`/`M.doc_links` brauchten keine Anpassung
+(funktionieren bereits, s. o.), `M.versions_in_text`/`M.error_codes`/
+`M.escalations` aus demselben Grund ebenfalls nicht — alle fünf ziehen
+selbsttragende Muster über den Rohtext, unabhängig von Blockstruktur.
+`M.stammdaten` bleibt für diese Quelle leer, und damit auch `case_short`
+und `sap_component`.
 
-**Paket 6c — Die zwei echten Lücken:** entweder Tampermonkey-Script-
-Erweiterung (Case-Kopfdaten: Priorität, SNOW-Nummer) besprechen, oder
-`:Case activity` fragt bei erkanntem SAP-Resolve-Format aktiv nach.
-Reihenfolge bewusst zuletzt — ohne 6b lässt sich noch nicht beurteilen,
-ob die Lücke in der Praxis überhaupt stört.
+Dabei nachgezogen: die Kopfzeilen-Zerlegung (`[Index/Gesamt] Datum at
+Zeit | Akteur | Aktion`, inkl. der AM/PM-Umrechnung) ist von
+`sla/stream.lua` nach `stream_format.lua` gewandert, als
+`M.saperesolve_header`. Beide Parser brauchen exakt dieselbe Zerlegung,
+und `stream_format.lua` war ohnehin schon als gemeinsamer Ort für genau
+das dokumentiert — eine zweite Kopie der 12-Stunden-Uhr-Logik in einem
+zweiten Modul wäre die Sorte Duplikat, die irgendwann auseinanderläuft.
+
+**Paket 6c — Die echte Lücke (steht, 2026-08-21):** Von den zwei oben
+genannten blieb nur die Priorität übrig (s. Nachtrag oben — die
+SNOW-Nummer war nie eine). Umgesetzt ist die zweite der beiden
+vorgeschlagenen Varianten, nicht die Tampermonkey-Erweiterung: `:Case
+activity` fragt aktiv nach, aber eng begrenzt — nur bei erkanntem
+SAP-Resolve-Format, nur wenn weder der Stream noch `.case.json` schon eine
+Priorität kennt, und erst ganz zuletzt, nachdem alles automatisch
+Ableitbare bereits abgelegt ist. Abbrechen ist eine gültige Antwort
+(`:Case info` → `e` setzt sie weiterhin nachträglich); der Grund
+überhaupt zu fragen ist, dass ohne Priorität `sla.status` `nil` liefert
+und damit *sämtliche* SLA-Anzeigen für diesen Case stumm bleiben — das
+schlechteste aller Ergebnisse, weil es wie „keine Frist" aussieht statt
+wie „Frist unbekannt".
+
+Die Tampermonkey-Variante ist damit nicht vom Tisch, nur nicht mehr
+dringend: ein zweiter Export für die Case-Kopfdaten würde die Rückfrage
+überflüssig machen. Erst im Alltag beurteilen, ob sie stört.
 
 ## Literatur und Referenzen
 

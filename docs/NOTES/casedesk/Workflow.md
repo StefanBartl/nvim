@@ -153,7 +153,14 @@ buffer resolves it:
   ServiceNow ticket id, for pasting into SNOW itself.
 - `:Case activity` — copied an Activity Stream out of SNOW? Paste-and-run:
   it lands as a new `Research/NN_ActivityStream.md`, numbered automatically.
-  No retyping, no manual filename.
+  No retyping, no manual filename. Works just as well with a SAP Resolve
+  "Conversations" export (the Tampermonkey-formatted one): the format is
+  recognized from the paste itself, so there is nothing extra to type or
+  toggle. One difference, and it's SAP Resolve's, not casedesk's — that
+  export contains no Priority anywhere, so the command asks you for one
+  the first time. Cancel and `:Case info` → `e` still sets it later; the
+  reason it bothers asking is that without a priority there is no SLA
+  clock at all, and a silent case looks like a case without deadlines.
 - `:Case add reply` — start a new reply draft (`Replies/NN_Reply.md`).
   Working two threads in parallel (e.g. one for a data request, one for the
   actual fix)? Name them: `:Case add reply AskForPDF` and

@@ -225,6 +225,38 @@ value (`HEC_ABAP`) as a false positive.
   computes it live but doesn't persist it), state-history duplication
   (already lives in `sla/stream.lua`, not re-parsed here on purpose).
 
+## Zweite Quelle: SAP Resolve (EXTRACTION.md §13, Pakete 6a-6c)
+
+Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+§13 (steht seit 2026-08-21). Neben SNOW gibt es für den SAP-Bereich **SAP
+Resolve**, dessen "Conversations"-Reiter ein Tampermonkey-Script in die
+Zwischenablage formatiert. `:Case activity` nimmt das jetzt genauso an.
+
+- **`stream_format.lua`** — `M.detect` unterscheidet die beiden Formate an
+  der ersten nicht-leeren Zeile (`Activity` vs. `[N/Gesamt] …`), `M.saperesolve_
+  header` zerlegt eine Kopfzeile (Datum/Zeit inkl. AM/PM, Akteur, Aktion).
+  Bewusst kein Flag, das der Nutzer setzen muss — beide Formate sind an
+  ihrer ersten Zeile eindeutig, und ein falsch gesetztes Flag wäre ein
+  Fehlerfall, den es so gar nicht erst gibt.
+- **`sla/stream.lua`** — `customer` (`Information from Customer`/`Business
+  Impact`) und `states` (`Returned Case to Customer`/`Information from
+  Customer`). Die States werden absichtlich als SNOWs **eigene** Strings
+  synthetisiert (`"Awaiting User Info"`/`"Active"`), weshalb `sla/init.lua`
+  ohne eine einzige Änderung auskam.
+- **`extract/stream.lua`** — `attachments`, `completeness`,
+  `last_reply_sent_at`. `versions_in_text`/`kbas`/`error_codes`/`doc_links`/
+  `escalations` brauchten nichts: sie ziehen selbsttragende Muster über den
+  Rohtext. `stammdaten` (und damit `case_short`/`sap_component`) bleibt für
+  diese Quelle leer — der Export enthält den Block schlicht nicht.
+- **Die eine echte Lücke, per Rückfrage geschlossen**: der Export enthält
+  nirgends eine Priorität. `:Case activity` fragt deshalb einmal nach —
+  nur bei erkanntem SAP-Resolve-Format, nur wenn weder Stream noch
+  `.case.json` schon eine kennt, und erst nachdem alles automatisch
+  Ableitbare abgelegt ist. Abbrechen ist gültig. Ohne Priorität liefert
+  `sla.status` `nil` und *jede* SLA-Anzeige bleibt für den Case stumm —
+  das sieht aus wie „keine Frist" statt wie „Frist unbekannt", und genau
+  das ist der Grund zu fragen statt zu raten.
+
 ## Active SLA notifications + KI-prompt context (SLA.md Paket 4, last one)
 
 Konzept: [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md) §6C, §6E,
