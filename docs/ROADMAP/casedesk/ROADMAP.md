@@ -31,6 +31,19 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
+- [ ] **`:Tricentis pto` — Abwesenheits-Checklisten** — Konzept steht:
+      [PTO.md](PTO.md). Abwesenheitsart auswählen, Zeitraum eingeben,
+      fertig ausgefüllte Checkliste + Textbausteine (Out-of-office,
+      Manager-Mail) als Scratch-Buffer. Checklisten und Templates als
+      Markdown im Arbeits-Repo (`Workflow/PTO/<art>.md`), nicht in Lua —
+      eine neue Art ist eine neue Datei. Pflicht- und optionale Punkte
+      strukturell getrennt (`- [!]` vs. `- [ ]`), weil „Mail an den
+      Manager" und „Slack wäre nett" im Fließtext gleich aussehen.
+      Aufwand klein bis mittel, fast alle Bausteine existieren.
+      Der Punkt, der den Aufwand trägt, ist Paket 3: welche offenen Cases
+      reißen eine Frist, während man weg ist — das kann keine Notiz
+      wissen, `:Cases sla` schon.
+
 - [ ] **KI-Anbindung** — hängt an einem eigenen `ai.nvim`-Plugin (noch
       nicht gebaut; Config-Grundlage existiert bereits:
       `lua/config/ai/`, `lua/plugins/ai/`, Zugang zu Gemini/ChatGPT/Claude
