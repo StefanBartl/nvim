@@ -31,17 +31,16 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
       Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
       `Research/` mit einbeziehen.
 
-- [ ] **Zweite Activity-Stream-Quelle: SAP Resolve** — Analyse steht:
-      [EXTRACTION.md §13](EXTRACTION.md#13-zweite-quelle-sap-resolve-analyse-noch-nicht-gebaut).
-      `:Case activity` soll auch SAP Resolves Tampermonkey-Export
-      annehmen, nicht nur SNOW. Format-Erkennung an der ersten Zeile
-      (`[N/Total] …` vs. `Activity`), zwei generische Signale
-      (`M.kbas`/`M.doc_links`) funktionieren bereits unverändert, der Rest
-      braucht einen eigenen Parser (Paket 6a/6b). Zwei Felder (Priorität,
-      SNOW-Nummer) stehen im Export gar nicht drin — Tampermonkey-Script
-      erweitern oder `:Case activity` fragt aktiv nach (Paket 6c, bewusst
-      zuletzt). Noch offen: reicht der eine vorliegende Export als
-      Testgrundlage, oder erst gegen mehrere Cases prüfen.
+- [ ] **Zweite Activity-Stream-Quelle: SAP Resolve (Rest)** — Konzept +
+      Paket 6a stehen: [EXTRACTION.md §13](EXTRACTION.md#13-zweite-quelle-sap-resolve-analyse-noch-nicht-gebaut).
+      `sla/stream.lua` erkennt SAP Resolves Tampermonkey-Export jetzt
+      selbst (`stream_format.lua`) und leitet `customer`/`states` daraus
+      ab — `:Case activity`/`:Case sla` funktionieren für diese Quelle
+      bereits, ohne jede Änderung an `sla/init.lua`. Offen: Paket 6b
+      (`extract/stream.lua` — Anhänge, `last_reply_sent_at`; `M.kbas`/
+      `M.doc_links` brauchen nichts, funktionieren schon) und Paket 6c
+      (Priorität/SNOW-Nummer fehlen im Export komplett — Tampermonkey-
+      Script erweitern oder `:Case activity` fragt aktiv nach).
 
 - [ ] **KI-Anbindung** — hängt an einem eigenen `ai.nvim`-Plugin (noch
       nicht gebaut; Config-Grundlage existiert bereits:

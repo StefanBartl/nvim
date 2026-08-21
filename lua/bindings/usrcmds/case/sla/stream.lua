@@ -1,19 +1,27 @@
 ---@module 'bindings.usrcmds.case.sla.stream'
---- Extracts the handful of signals the SLA clock needs from a SNOW Activity
+--- Extracts the handful of signals the SLA clock needs from an Activity
 --- Stream (`Research/NN_ActivityStream.md`): Priority/Impact, every
 --- customer message, every assignment, and the earliest timestamped event
 --- on record — a candidate "ticket opened" anchor (SLA.md §9.2: `.case.json`'s
 --- `created` is when the case FOLDER was made, which can trail the real
---- SNOW ticket by days, as it did for case 977392).
+--- ticket by days, as it did for case 977392).
 ---
---- Never raises on unexpected input: a stream copied from a different SNOW
---- view, or garbage, degrades to an empty result — same "say so instead of
+--- Two source formats, dispatched via `stream_format.detect` (EXTRACTION.md
+--- §13): SNOW's own copy-paste (`parse_snow`, the original and still
+--- primary target) and SAP Resolve's Tampermonkey-formatted Conversations
+--- export (`parse_saperesolve`). `priority`/`impact` stay nil for the
+--- latter — EXTRACTION.md §13 documents that as a real gap in the export
+--- itself, not a parser shortcoming.
+---
+--- Never raises on unexpected input: a stream copied from a different view,
+--- or garbage, degrades to an empty result — same "say so instead of
 --- silently filing garbage" posture as ki.lua's M.parse_response, just with
 --- "silently return nothing" instead of an error, since a missing SLA
 --- signal is normal (not every case's stream has been pasted in yet) where
 --- a missing KI-answer section is not.
 
 local clock = require("bindings.usrcmds.case.sla.clock")
+local stream_format = require("bindings.usrcmds.case.stream_format")
 
 local M = {}
 
@@ -66,13 +74,14 @@ end
 
 ---@param text string
 ---@return Lib.Case.SlaStreamData
-function M.parse(text)
+local function parse_snow(text)
   text = (text or ""):gsub("\r", "")
   local lines = vim.split(text, "\n", { plain = true })
   local n = #lines
 
   ---@type Lib.Case.SlaStreamData
-  local out = { priority = nil, impact = nil, earliest = nil, customer = {}, assignments = {}, states = {} }
+  local out =
+    { priority = nil, impact = nil, earliest = nil, customer = {}, assignments = {}, states = {} }
 
   local function note_earliest(epoch)
     if epoch and (not out.earliest or epoch < out.earliest) then
@@ -159,6 +168,129 @@ function M.parse(text)
   end)
 
   return out
+end
+
+--- `[idx/total] M/D/YY at H:MM AM/PM` — the header's own timestamp, no
+--- timezone marker at all (unlike SNOW's separate `at: … GMT` line).
+--- Tampermonkey formats these from the browser's own local clock, so —
+--- same choice `parse_local` above already makes for SNOW's local-time
+--- lines — they're interpreted as LOCAL time via `os.time`, not treated as
+--- UTC (SLA.md's own documented DST lesson: getting this wrong silently
+--- shifts every timestamp by 1-2h, not something that throws).
+---@param date_part string  "8/17/26"
+---@param time_part string  "3:52 PM"
+---@return integer|nil
+local function parse_saperesolve_datetime(date_part, time_part)
+  local mo, d, yy = date_part:match("^(%d+)/(%d+)/(%d+)$")
+  if not mo then
+    return nil
+  end
+  local h, mi, ampm = time_part:match("^(%d+):(%d+)%s*([AaPp][Mm])$")
+  if not h then
+    return nil
+  end
+  h = tonumber(h)
+  ampm = ampm:upper()
+  if ampm == "PM" and h ~= 12 then
+    h = h + 12
+  elseif ampm == "AM" and h == 12 then
+    h = 0
+  end
+  return os.time({
+    year = 2000 + tonumber(yy),
+    month = tonumber(mo),
+    day = tonumber(d),
+    hour = h,
+    min = tonumber(mi),
+    sec = 0,
+  })
+end
+
+--- SNOW-vocabulary state transitions synthesized from SAP Resolve's action
+--- labels — deliberately the SAME strings `parse_snow`'s own `State`
+--- block produces ("Awaiting User Info"/"Active"), so `sla/init.lua`'s
+--- `awaiting_customer()` and every other consumer of `states` works on
+--- either source without a single downstream change.
+---@type table<string, { to: string, from: string }>
+local SAPERESOLVE_STATE_TRANSITIONS = {
+  ["Returned Case to Customer"] = { to = "Awaiting User Info", from = "Active" },
+  ["Information from Customer"] = { to = "Active", from = "Awaiting User Info" },
+}
+
+--- Customer-authored actions, for the `customer` array (SLA.md's
+--- `last_customer_at` cadence anchor). "Described the problem" (case
+--- creation, the last/oldest entry) is deliberately excluded — matches
+--- SNOW, where the initial ticket Description isn't a "Customer added a
+--- memo" event either, only contributes to `earliest`.
+---@type table<string, boolean>
+local SAPERESOLVE_CUSTOMER_ACTIONS = {
+  ["Information from Customer"] = true,
+  ["Business Impact"] = true,
+}
+
+--- EXTRACTION.md §13, Paket 6a. Every entry is fully described by its own
+--- header line — no body text needed for what this parser extracts, so it
+--- works line-by-line rather than block-by-block like `parse_snow`.
+---
+--- `priority`/`impact` stay nil: the Conversations export carries neither
+--- field in any form (EXTRACTION.md §13's "zwei echte Lücken"), not
+--- something this parser could recover by trying harder. `assignments`
+--- stays empty too — no equivalent signal in this export.
+---@param text string
+---@return Lib.Case.SlaStreamData
+local function parse_saperesolve(text)
+  text = (text or ""):gsub("\r", "")
+
+  ---@type Lib.Case.SlaStreamData
+  local out =
+    { priority = nil, impact = nil, earliest = nil, customer = {}, assignments = {}, states = {} }
+
+  local function note_earliest(epoch)
+    if epoch and (not out.earliest or epoch < out.earliest) then
+      out.earliest = epoch
+    end
+  end
+
+  for line in text:gmatch("[^\n]+") do
+    local idx, date_part, time_part, actor, action = line:match(
+      "^%[(%d+)/%d+%]%s+(%d+/%d+/%d+)%s+at%s+(%d+:%d+%s*[AaPp][Mm])%s*|%s*([^|]-)%s*|%s*(.+)$"
+    )
+    if idx then
+      local at = parse_saperesolve_datetime(date_part, time_part)
+      if at then
+        note_earliest(at)
+        actor = vim.trim(actor)
+        action = vim.trim(action)
+
+        if SAPERESOLVE_CUSTOMER_ACTIONS[action] then
+          out.customer[#out.customer + 1] = { at = at, actor = actor }
+        end
+
+        local transition = SAPERESOLVE_STATE_TRANSITIONS[action]
+        if transition then
+          out.states[#out.states + 1] = { at = at, to = transition.to, from = transition.from }
+        end
+      end
+    end
+  end
+
+  table.sort(out.customer, function(a, b)
+    return a.at < b.at
+  end)
+  table.sort(out.states, function(a, b)
+    return a.at < b.at
+  end)
+
+  return out
+end
+
+---@param text string
+---@return Lib.Case.SlaStreamData
+function M.parse(text)
+  if stream_format.detect(text) == "saperesolve" then
+    return parse_saperesolve(text)
+  end
+  return parse_snow(text)
 end
 
 return M
