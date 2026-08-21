@@ -100,6 +100,13 @@ Stream-Parsers (`sla/stream.lua`) steht bereits eigenständig, siehe
 - [10. Risiken](#10-risiken)
 - [11. Offene Fragen](#11-offene-fragen)
 - [12. Reihenfolge](#12-reihenfolge)
+- [13. Zweite Quelle: SAP Resolve (Analyse, noch nicht gebaut)](#13-zweite-quelle-sap-resolve-analyse-noch-nicht-gebaut)
+  - [Format, aus einem echten Export](#format-aus-einem-echten-export)
+  - [Was schon funktioniert, ohne dass etwas gebaut wurde](#was-schon-funktioniert-ohne-dass-etwas-gebaut-wurde)
+  - [Was fehlt, weil SNOW-strukturell](#was-fehlt-weil-snow-strukturell)
+  - [Zwei echte Lücken — nicht durch Parsing lösbar](#zwei-echte-lücken--nicht-durch-parsing-lösbar)
+  - [Architektur-Vorschlag: Format-Erkennung + Adapter](#architektur-vorschlag-format-erkennung--adapter)
+  - [Reihenfolge-Vorschlag](#reihenfolge-vorschlag)
 - [Literatur und Referenzen](#literatur-und-referenzen)
 
 ---
@@ -619,12 +626,186 @@ Paket 1 und 2 sind unabhängig voneinander nützlich. Paket 5 setzte 1–3
 voraus — genau deshalb stand es hinten: der Faktenblock ist nur so gut
 wie die Extraktoren darunter.
 
+## 13. Zweite Quelle: SAP Resolve (Analyse, noch nicht gebaut)
+
+`sla/stream.lua` und `extract/stream.lua` sind komplett auf SNOWs
+Copy-Paste-Format zugeschnitten (§4 oben). Für den SAP-Bereich gibt es
+daneben **SAP Resolve** — ein eigenes Portal mit klarerer UI, in dem der
+Case ebenfalls beschrieben ist, mit einem eigenen "Conversations"-Reiter.
+Ein Tampermonkey-Script formatiert diesen Reiter beim Kopieren in die
+Zwischenablage. `:Case activity` soll auch das annehmen, nicht nur SNOW.
+
+### Format, aus einem echten Export
+
+Ein Eintrag, gekürzt (Original: 19 Einträge, ein reales Case):
+
+```
+[2/19] 8/17/26 at 3:52 PM | Integration API | Returned Case to Customer
+Dear <Name>,
+
+Thank you for your update.
+
+Please note that we conduct our technical investigations directly
+within the ticket [...]
+
+Links:
+- Properties for XModules: https://docs.tricentis.com/tosca-2024.2/…
+- Import and export subsets: https://docs.tricentis.com/tosca-2024.2/…
+
+----------------------------------------
+```
+
+Struktur pro Eintrag: `[Index/Gesamt] M/D/YY at H:MM AM/PM | <Akteur> |
+<Aktionstyp>`-Kopfzeile, Body bis zur nächsten Trennzeile aus 40
+Bindestrichen. Absteigend nummeriert wie SNOW (`[1/N]` = neuester Eintrag,
+`[N/N]` = Case-Erstellung), aber ohne SNOWs zweite Ebene ("Comment"/"Field
+changes"/"Work notes" + separates Memo-Untertyp-Label) — der Aktionstyp
+steht direkt, semantisch klarer, in der Kopfzeile selbst:
+
+| Aktionstyp (real gesehen) | SNOW-Äquivalent |
+| --- | --- |
+| `Added a memo for Everyone` | `Comment` (allgemein) |
+| `Returned Case to Customer` | `Send to Customer, updates that transfer case ownership…` |
+| `Information from Customer` | `Customer added a memo` |
+| `Business Impact` | Teil des Stammdaten-Schlussblocks |
+| `Added a memo for Customer`/`…for Partner` | `SAP adds/added a memo for…` |
+| `Described the problem` | der allererste Eintrag (`N/N`), inkl. `--- Description ---`/`--- Steps to Reproduce ---` |
+
+Akteur ist entweder der echte Kundenname, `SAP`, oder — bei über eine
+Schnittstelle gesendeten Partner-Antworten — `Integration API` statt des
+Namens der Support-Person, die tatsächlich geantwortet hat.
+
+### Was schon funktioniert, ohne dass etwas gebaut wurde
+
+Gegen den echten Export laufen lassen (nicht nur überflogen): zwei der
+sieben `extract/stream.lua`-Funktionen finden etwas, weil sie ohnehin nur
+generische Substring-/Regex-Muster über den Rohtext ziehen, unabhängig von
+SNOWs Block-Struktur:
+
+- **`M.kbas`** — `3193320 - How to collect different logs in Tosca` taucht
+  wortgleich in einer SAP-Memo-Passage auf und matcht `M.kbas`s
+  `<7 Ziffern> <Trenner> <Text>`-Muster wie im SNOW-Fall.
+- **`M.doc_links`** — die `docs.tricentis.com/tosca-<version>/…`-URLs
+  stehen sowohl in Fließtext als auch in expliziten `Links:`-Abschnitten
+  am Ende eines Eintrags (sogar sauberer als SNOW: `- Label: URL` statt
+  freier Prosa) — `M.doc_links`s reiner URL-Scan greift unverändert.
+
+### Was fehlt, weil SNOW-strukturell
+
+Alles andere hängt an exakten SNOW-Textmustern und liefert für diesen
+Export ein leeres/neutrales Ergebnis (kein Absturz — beide Parser sind
+laut eigener Doku darauf ausgelegt, „nie zu werfen"; aber eben auch keine
+Daten):
+
+| Signal | Warum es an SNOWs Form hängt |
+| --- | --- |
+| `sla/stream.lua` — `priority`/`impact` | sucht `Priority`/`Impact` als **alleinstehende** Zeile, gefolgt von der Werte-Zeile — kommt in diesem Format so nicht vor |
+| `sla/stream.lua` — `customer`/`assignments` | braucht SNOWs `at: … GMT`-Zeile + `Customer added a memo`-Label bzw. `Assigned to`/`… was Empty` — dieses Format hat Datum/Zeit direkt in der `[N/Total]`-Kopfzeile, kein `at:` |
+| `sla/stream.lua` — `states` | braucht `State`\n`<neu> was <alt>` — es gibt keine SNOW-artige State-Machine hier; **aber**: `Returned Case to Customer`/`Information from Customer` sind inhaltlich fast dasselbe Signal, nur anders benannt (s. u.) |
+| `extract/stream.lua` — `M.attachments` | braucht `New attachment(s) added` + Dateinamen-Zeilen; dieses Format sagt nur `Attachment uploaded`, **ohne** Dateinamen daneben |
+| `extract/stream.lua` — `M.stammdaten` (→ `sap_component`, `case_short`) | braucht SNOWs Label-Value-Dump am Streamende (`Account`/`Number`/`SAP Component`/…) — kommt in diesem Export gar nicht vor |
+| `extract/stream.lua` — `M.completeness` | braucht `<N> total activities.`-Kopfzeile; dieses Format zählt anders (`[N/Total]` pro Zeile) — **harmlos**: `doctor.lua`s Aufrufer prüft `if declared and …`, ein `nil` triggert keinen Fehlalarm, nur keinen Check |
+| `extract/stream.lua` — `M.last_reply_sent_at` | braucht den exakten SNOW-Satz „Send to Customer, updates that transfer case ownership…" + `at: … GMT`; `Returned Case to Customer` ist das gleiche Signal, aber anderer Wortlaut und Zeitformat |
+
+### Zwei echte Lücken — nicht durch Parsing lösbar
+
+Zwei Felder kommen im Tampermonkey-Export **überhaupt nicht** vor, in
+keiner Form — das ist keine Parser-Schwäche, das Datum steht schlicht
+nicht im kopierten Text:
+
+1. **Priorität/Impact.** SNOW liefert das über den Stammdaten-Dump am
+   Streamende; SAP Resolves Conversations-Reiter enthält das nicht. Die
+   gespeicherte SAP-Resolve-Seite (Screenshot dieser Analyse) zeigt aber
+   Prioritäts-Kacheln auf einer Case-Übersicht — die Information *existiert*
+   im Portal, nur nicht im "Conversations"-Export. Zwei Wege: das
+   Tampermonkey-Script um einen zweiten, kleinen Export für die
+   Kopfdaten der Case-Detailseite erweitern (Priorität/Impact/SAP-Ticket-
+   Nummer stehen dort vermutlich beisammen), oder `:Case activity` fragt
+   bei einem erkannten SAP-Resolve-Format aktiv nach der Priorität nach,
+   statt sie zu erraten.
+2. **SNOW-Ticketnummer / `Number`.** Genau wie oben — kein `SAP0000…`-Feld
+   im Export. Muss entweder weiterhin manuell bei `:Case new` eingetippt
+   werden (Status quo — `render.to_short` akzeptiert schon die volle ID
+   oder die kurze Nummer), oder kommt aus einem erweiterten
+   Tampermonkey-Export.
+
+### Architektur-Vorschlag: Format-Erkennung + Adapter
+
+Kein Format-Flag, das der Nutzer setzen muss — die beiden Formate sind an
+der ersten nicht-leeren Zeile zuverlässig unterscheidbar:
+
+```lua
+-- SNOW:        "Activity" gefolgt von einer Zahl auf eigener Zeile
+-- SAP Resolve: "[<Zahl>/<Zahl>] <Datum> at <Zeit>… | … | …"
+local function detect_stream_format(text)
+  local first = vim.trim((text or ""):match("^%s*(.-)\n") or text or "")
+  if first:match("^%[%d+/%d+%]") then return "saperesolve" end
+  if first == "Activity" then return "snow" end
+  return nil -- unbekannt, kein Absturz — degradiert wie bisher zu leer
+end
+```
+
+Zwei Wege, das auf `sla/stream.lua`/`extract/stream.lua` zu verdrahten:
+
+**A — Getrennte Parser, gleiche Ausgabeform (kleinerer Eingriff).** Ein
+neues `sla/stream_saperesolve.lua` + `extract/stream_saperesolve.lua`
+(oder ein gemeinsames `extract/sources/saperesolve.lua`), das exakt
+dieselben `Lib.Case.SlaStreamData`/`Lib.Case.StreamSignals`-Formen
+zurückgibt wie die bestehenden SNOW-Parser. `:Case activity` (bzw. eine
+kleine gemeinsame Dispatch-Funktion, die beide Aufrufer teilen) wählt
+per `detect_stream_format` den richtigen Parser. Die beiden bestehenden,
+bereits gegen echte Streams verifizierten SNOW-Parser bleiben unangetastet
+— kein Regressionsrisiko für das, was heute funktioniert.
+
+**B — Gemeinsame Zwischenform (sauberer, größerer Eingriff).** Beide
+Formate erst auf eine gemeinsame Liste normalisierter Ereignisse
+(`{ at, actor, kind, body }`) abbilden, dann EINE Auswertungsschicht
+(Priorität-Erkennung, Customer/Assignment/State-Ableitung,
+KBA/Doclink/Attachment-Scan) über dieser Zwischenform statt zweimal über
+Rohtext. Setzt voraus, `sla/stream.lua` und `extract/stream.lua`
+umzubauen — mehr Aufwand, aber ein dritter Quellformat-Adapter (denkbar:
+Jira, eine andere Kundenplattform) würde dann nur noch die
+Normalisierungsfunktion brauchen, keine zweite Kopie der
+Auswertungslogik.
+
+**Empfehlung: A zuerst.** Bei genau zwei Formaten lohnt sich die
+Abstraktion aus B noch nicht (drei Kopien vs. eine Zwischenform ist eine
+Abwägung, die sich erst ab dem dritten Format lohnt — bis dahin bloße
+Vorwegnahme). B bleibt eine saubere Migration, falls ein drittes Format
+kommt.
+
+### Reihenfolge-Vorschlag
+
+**Paket 6a — Format-Erkennung + minimale Abdeckung:** `detect_stream_
+format`, `sla/stream_saperesolve.lua` (Priorität/Impact **nicht**
+lösbar — Lücke 1, s. o. — aber `customer`/`states` aus
+`Information from Customer`/`Returned Case to Customer` ableitbar, mit
+Datum direkt aus der `[N/Total]`-Kopfzeile statt `at: … GMT`).
+
+**Paket 6b — `extract`-Signale:** `extract/stream_saperesolve.lua` für
+`attachments` (falls das Tampermonkey-Script um Dateinamen erweitert
+wird) und `last_reply_sent_at` aus `Returned Case to Customer`.
+`M.kbas`/`M.doc_links` brauchen keine Anpassung (funktionieren bereits,
+s. o.).
+
+**Paket 6c — Die zwei echten Lücken:** entweder Tampermonkey-Script-
+Erweiterung (Case-Kopfdaten: Priorität, SNOW-Nummer) besprechen, oder
+`:Case activity` fragt bei erkanntem SAP-Resolve-Format aktiv nach.
+Reihenfolge bewusst zuletzt — ohne 6a/6b lässt sich noch nicht
+beurteilen, ob die Lücke in der Praxis überhaupt stört.
+
+Noch offen, bevor 6a beginnt: reicht EIN echter Export (19 Einträge, oben
+zitiert) als Testgrundlage, oder sollten — wie bei den vier SNOW-Streams
+in §1 — mehrere unterschiedliche Cases gegengeprüft werden, bevor die
+Muster (Kopfzeilen-Regex, Aktionstyp-Liste) als stabil gelten?
+
 ## Literatur und Referenzen
 
 - Analysierte Artefakte:
   `Cases/SAP_Support/Cases/Open/{859769,996010,1041708}/Ressources/ToscaSupportInfo*.txt`,
   `Cases/NOT_SAP/Assigned/CS0493217/Attachments/ToscaSupportInfo.txt`,
-  vier Activity-Stream-Exporte (Cases 996010, 989508, 940561, 908319)
+  vier Activity-Stream-Exporte (Cases 996010, 989508, 940561, 908319),
+  ein SAP-Resolve-Conversations-Export via Tampermonkey (19 Einträge, §13)
 - [SLA.md](SLA.md) — §2 (Datenlage), §8 (Alarm-Müdigkeit), §9 (offene
   Fachfragen); §5 dieses Dokuments korrigiert dessen Uhr-Modell
 - [CONCEPT.md](CONCEPT.md) §3 (Zustand = Ordner), §7 (`detect.lua`),
