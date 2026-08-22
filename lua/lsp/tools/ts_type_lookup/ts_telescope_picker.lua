@@ -4,21 +4,25 @@
 --- results with filename and kind; selection opens the location in a split.
 local notify = require("lib.nvim.notify").create("[lsp.tools.ts_type_lookup.ts_telescope_picker]")
 
-local has_telescope, _ = pcall(require, "telescope")
-if not has_telescope then
+-- Telescope is required lazily inside M.pick, never at module scope. This
+-- module is pulled in during LSP setup, so a top-level `require("telescope")`
+-- defeated telescope's own `cmd = "Telescope"` lazy-loading and dragged it --
+-- plus telescope-github.nvim and pdfport.nvim -- into every startup, ~117ms
+-- for a picker nobody has invoked yet. See docs/ROADMAP/PERF-Startup-Analyse.md.
+---@return { pickers: table, finders: table, conf: table, previewers: table }|nil
+local function telescope_modules()
+  local ok = pcall(require, "telescope")
+  if not ok then
+    notify.warn("telescope.nvim not found")
+    return nil
+  end
   return {
-    setup = function() end,
-    pick = function()
-      notify.warn("telescope.nvim not found")
-    end,
+    pickers = require("telescope.pickers"),
+    finders = require("telescope.finders"),
+    conf = require("telescope.config").values,
+    previewers = require("telescope.previewers"),
   }
 end
-
-local pickers = require("telescope.pickers")
-local finders = require("telescope.finders")
-local conf = require("telescope.config").values
--- local make_entry = require("telescope.make_entry")
-local previewers = require("telescope.previewers")
 -- local lsp_util = vim.lsp.util
 local lsp = vim.lsp
 local api = vim.api
@@ -56,6 +60,12 @@ end
 --- Launch a telescope picker for the query (defaults to <cword>)
 ---@param query string|nil
 function M.pick(query)
+  local ts = telescope_modules()
+  if not ts then
+    return
+  end
+  local pickers, finders, conf, previewers = ts.pickers, ts.finders, ts.conf, ts.previewers
+
   query = query ~= nil and query ~= "" and query or fn.expand("<cword>")
   local bufnr = api.nvim_get_current_buf()
   -- request workspace/symbol from LSP

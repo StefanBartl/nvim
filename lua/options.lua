@@ -244,4 +244,26 @@ if has_wl_clipboard then
 
     cache_enabled = 1,
   }
+elseif fn.has("win32") == 1 and fn.executable("win32yank") == 1 then
+  -- Setting this explicitly skips Neovim's clipboard-provider probe, which
+  -- spawns a process per candidate tool at startup (~28ms in the startup log,
+  -- see docs/ROADMAP/PERF-Startup-Analyse.md). win32yank ships with the
+  -- Neovim Windows install, so the executable() guard is a formality -- but it
+  -- keeps a machine without it on the probe path rather than with a broken
+  -- clipboard.
+  vim.g.clipboard = {
+    name = "win32yank",
+
+    copy = {
+      ["+"] = "win32yank.exe -i --crlf",
+      ["*"] = "win32yank.exe -i --crlf",
+    },
+
+    paste = {
+      ["+"] = "win32yank.exe -o --lf",
+      ["*"] = "win32yank.exe -o --lf",
+    },
+
+    cache_enabled = 0,
+  }
 end

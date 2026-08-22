@@ -52,11 +52,13 @@ function M.build(opts)
       return
     end
 
+    -- Deferred on purpose. Calling the plugin's populate directly from here
+    -- put a measured 300-420ms stall right after LspAttach -- it shells out
+    -- to git and stats the whole repo synchronously. schedule_populate does
+    -- the same work off the attach path, without subprocesses, and enforces
+    -- a size gate. See lsp.core.workspace_diagnostics' module header.
     if workspace_diagnostics.enabled() then
-      local ok_wd, wd = pcall(require, "workspace-diagnostics")
-      if ok_wd and type(wd.populate_workspace_diagnostics) == "function" then
-        pcall(wd.populate_workspace_diagnostics, client, bufnr)
-      end
+      workspace_diagnostics.schedule_populate(client, bufnr)
     end
 
     if opts.use_lazydev and vim.bo[bufnr].filetype == "lua" then

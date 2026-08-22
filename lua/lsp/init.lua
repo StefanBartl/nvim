@@ -51,15 +51,23 @@ function M.setup(cfg)
   local attach_api = (function()
     local ok, mod = pcall(require, "lsp.core.attach")
     if ok and mod and type(mod.build) == "function" then
-      -- Startup default only — see lsp.core.workspace_diagnostics for why
-      -- (60-90s freeze in a large non-code repo) and for the runtime toggle
-      -- (:LspWorkspaceDiagnostics{Toggle,On,Off,Status,Now}) built on top.
-      -- Off by default on the "workstation" (v.a. Markdown, kein
-      -- projektweites Coden); on elsewhere, toggleable during a research/
-      -- browsing phase without restarting Neovim.
-      local machine = require("machine")
+      -- Startup default only — the runtime toggle
+      -- (:LspWorkspaceDiagnostics{Toggle,On,Off,Status,Now}) lives in
+      -- lsp.core.workspace_diagnostics and overrides this at any time.
+      --
+      -- This used to be `not machine.is("workstation")`: the workstation was
+      -- standing in for "big repo, mostly Markdown, populate would freeze the
+      -- editor" (it once cost 60-90s in a ~600-file non-code repo). The
+      -- machine role was only ever a proxy for repo size, and a bad one — it
+      -- disabled the feature on a small repo on the workstation and left it
+      -- enabled on a huge one elsewhere.
+      --
+      -- lsp.core.workspace_diagnostics now measures the thing directly: it
+      -- walks the workspace asynchronously and refuses to populate above
+      -- `max_files`. So the default can just be "on" and the gate decides per
+      -- repo. Tune it with workspace_diagnostics.configure({ max_files = N }).
       return mod.build({
-        use_workspace_diagnostics = not machine.is("workstation"),
+        use_workspace_diagnostics = true,
         use_lazydev = true,
       })
     end

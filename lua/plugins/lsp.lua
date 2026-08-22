@@ -98,8 +98,13 @@ return {
         hover = {
           enable = false,
         },
+        -- NOTE: the option is `enable`, not `enabled` (lspsaga checks
+        -- `saga.config.lightbulb.enable`). With `enabled` the key was merged
+        -- in as a dead extra field and the lightbulb kept running on every
+        -- cursor move -- ~214ms in the startup stack sample plus permanent
+        -- load while editing. See docs/ROADMAP/PERF-Startup-Analyse.md.
         lightbulb = {
-          enabled = false,
+          enable = false,
         },
         rename = {
           enable = false,

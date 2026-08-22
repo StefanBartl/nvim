@@ -29,10 +29,16 @@ Maschine also **an**.
 > 60–90-s-Freezes in einem ~600-Dateien-Repo. Der Toggle wurde damals dafür
 > gebaut. Hier schlägt derselbe Mechanismus in kleinerer Dosis zu.
 
-**Nächster Schritt:** `:LspWorkspaceDiagnosticsOff`, Neovim neu starten,
-`stall.lua` gegenmessen. Erwartung: der Stall bei +2,4 s verschwindet und
-„Diagnosing workspace" bleibt aus. Wenn ja: den Startup-Default für diese
-Maschine anpassen.
+**Umgesetzt (2026-08-22).** Statt den Toggle umzulegen wurde die Ursache
+behandelt — siehe [Umsetzung](#umsetzung-2026-08-22) unten. Kurz: der Populate
+läuft nicht mehr synchron im Attach, ohne `git`-Subprozesse, auf einer
+gefilterten Dateiliste (522 statt 1729) und hinter einem Größen-Gate.
+
+> **Noch nicht gegengemessen.** Der Nachweis, dass der spürbare Hänger weg ist,
+> steht aus: er braucht einen interaktiven Lauf mit `stall.lua`. Headless ist
+> dafür untauglich — zwei Kontrollläufe (Workspace-Diagnostics an vs. aus)
+> lieferten 3559 ms und 3729 ms Gesamtblockade, also *mehr* Blockade im
+> abgeschalteten Lauf. Das Rauschen übersteigt den Effekt.
 
 ---
 
@@ -224,6 +230,83 @@ Wiederhol-Timer, idempotent.
 - **Der frühe Blockade-Cluster (+0,1…1,4 s, 600–800 ms)** ist in *allen*
   Läufen da, unabhängig von LSP und gopath. Eigener Task:
   [TASK-Startup-Blockaden.md](./TASK-Startup-Blockaden.md).
+
+## Umsetzung (2026-08-22)
+
+### workspace-diagnostics: drei Kostentreiber, nicht einer
+
+Beim Lesen des Plugin-Codes zeigte sich, dass `populate_workspace_diagnostics`
+auf drei getrennten Wegen teuer ist — alle auf dem Main-Loop, alle im
+`on_attach`:
+
+1. zwei synchrone `vim.fn.system`-Aufrufe (`git rev-parse --show-toplevel` und
+   `git ls-files`) — auf Windows mit EDR/AV im Spawn-Pfad allein dreistellig;
+2. `vim.fn.filereadable()` **und** `vim.filetype.match()` für *jeden* der
+   ~2600 Einträge;
+3. pro Treffer ein `vim.defer_fn(.., 0)`, das die Datei per `vim.fn.readfile()
+   ` komplett synchron liest, um daraus ein `didOpen` zu bauen.
+
+Punkt 3 erklärt auch, warum das Stack-Sampling nur 120 der gemessenen 300–420
+ms sah: der Rest liegt in C-Frames und ist über die Timer-Queue verteilt.
+
+Der Umbau in [`lsp/core/workspace_diagnostics.lua`](../../lua/lsp/core/workspace_diagnostics.lua)
+und [`lsp/core/attach.lua`](../../lua/lsp/core/attach.lua):
+
+- Dateiermittlung über `lib.nvim.fs.collect_recursive.files_async` — kein
+  Subprozess, prunt ignorierte Teilbäume über `lib.nvim.fs.ignore.list`,
+  filtert Extensions bereits während des Walks
+- `schedule_populate()` läuft 1,5 s **nach** dem Attach statt darin
+- Größen-Gate `max_files` (Default 800) statt Maschinenrolle. Der
+  Startup-Default in [`lsp/init.lua`](../../lua/lsp/init.lua) ist deshalb jetzt
+  schlicht `true`: `machine.is("workstation")` war immer nur ein Stellvertreter
+  für „großes Repo" und ein schlechter — er schaltete das Feature auf kleinen
+  Repos der workstation ab und ließ es auf großen anderswo an.
+- Die Extensions kommen aus `client.config.filetypes`. Das war nötig: mit einer
+  festen breiten Liste kamen 2963 Dateien zusammen und das Gate kippte, obwohl
+  lua_ls davon nur `.lua` je angefasst hätte. Pro Client sind es für lua_ls
+  **522 statt 1729**.
+
+Bekannte Einschränkung, im Modul dokumentiert: das Plugin memoisiert das
+Ergebnis von `workspace_files` modul-lokal, also gewinnt bei mehreren Clients
+der erste. Hier ist lua_ls beides — erster Attacher und einziger Nutznießer —,
+praktisch also folgenlos. Sauber lösen hieße, den Populate (~20 Zeilen
+didOpen-Notifications) selbst zu implementieren statt über das Plugin zu gehen.
+
+### lspsaga-Lightbulb war nie abgeschaltet
+
+[`plugins/lsp.lua`](../../lua/plugins/lsp.lua) setzte `lightbulb = { enabled =
+false }`. Lspsaga liest aber `enable` (`saga.config.lightbulb.enable`,
+`lspsaga/init.lua:204`); `tbl_deep_extend` legte `enabled` still als toten
+Extra-Key daneben. Die Lightbulb lief also weiter — das sind die ~214 ms im
+Sample **und** Dauerlast bei jeder Cursorbewegung. Ein Zeichen.
+
+### Telescope wurde trotz `cmd = "Telescope"` immer geladen
+
+Ein Top-level-`require` hebelt lazy.nvims Lazy-Loading still aus. Zwei
+Auslöser, per `lazy.core.config.plugins[..]._.loaded` ermittelt — Details in
+[TASK-Startup-Blockaden.md](./TASK-Startup-Blockaden.md) Punkt 6. Beide gefixt
+(einer hier, einer in `pickers.nvim`). Verifiziert: telescope.nvim,
+telescope-github.nvim und pdfport.nvim sind aus dem Start verschwunden, die
+Patches greifen beim späteren Laden weiterhin.
+
+### Zwei Befunde, die stehen bleiben
+
+- **Der Registry-Loop enabled Server unter falschem Namen.**
+  `lsp.core.registry.setup_all` liefert Namen wie `"webdev.astro"` zurück, und
+  [`lsp/init.lua:160`](../../lua/lsp/init.lua) ruft damit
+  `vim.lsp.enable("webdev.astro")` — kein gültiger Servername, der `pcall`
+  schluckt es. Die Server laufen nur, **weil** die Module sich zusätzlich
+  selbst enablen. Das ist auch die Erklärung für den Nebenbefund „`lsp.start
+  lua_ls` wird zweimal aufgerufen". Das Selbst-Enablen zu entfernen hätte alle
+  webdev-Server abgeschaltet.
+- **`on_new_config` ist toter Code.**
+  [`lsp/servers/lua_ls/init.lua`](../../lua/lsp/servers/lua_ls/init.lua)
+  registriert über `vim.lsp.config` (nativ), aber `on_new_config` ist ein
+  lspconfig-Konzept und wird vom nativen API nie aufgerufen. Damit wird
+  `Lua.workspace.library` nie gesetzt und `LUA_LS_PROFILE` ist wirkungslos —
+  was das A/B-Ergebnis „`minimal` ändert nichts" besser erklärt als „die
+  Library-Größe ist irrelevant". Ändert LSP-Verhalten, nicht nur Performance,
+  daher bewusst nicht mitgefixt.
 
 ## Was dabei bereits gefixt wurde
 

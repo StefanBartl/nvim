@@ -28,8 +28,22 @@ return {
   -- when you actually want to see drift. Everywhere else the personal plugins
   -- are local dir-mode (skipped by the checker anyway), so only third-party
   -- remotes get fetched over a fast, EDR-free network — keep it enabled there.
+  --
+  -- Even where it stays enabled, `frequency` matters: at lazy's default of
+  -- 3600s the checker fetches on practically every fresh daily launch, and
+  -- stack sampling put ~1870ms of main-loop time in lazy/manage/git.lua ->
+  -- process.lua on a non-workstation start. Weekly is enough to catch drift
+  -- (`:Lazy check` is always there for an immediate answer).
   checker = {
     enabled = not machine.is("workstation"),
+    notify = false,
+    frequency = 3600 * 24 * 7,
+  },
+
+  -- Nothing here reloads specs at runtime -- a config edit means a restart
+  -- anyway. Off, so lazy stops stat'ing every spec file on the main loop.
+  change_detection = {
+    enabled = false,
     notify = false,
   },
 

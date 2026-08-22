@@ -13,7 +13,7 @@ deaktiviertem LSP und deaktiviertem gopath. Es ist also die Config selbst.
 Messen:
 
 ```powershell
-nvim --cmd "luafile C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/perf-tools/stall.lua" C:/Users/bartl/AppData/Local/nvim/init.lua
+nvim --cmd "luafile C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/perf-tools/stall.lua" C:/Users/StefanBartl/AppData/Local/nvim/init.lua
 ```
 
 ## Benannte Verursacher (Stack-Sampling)
@@ -45,23 +45,64 @@ Aus `nvim --startuptime` (Gesamtzeit bis erstes Screen-Update: ~828 ms):
 
 ## Vorgehen
 
-1. **lazy.nvims Git-Aktivität prüfen** — mit Abstand größter Posten (~1,9 s
-   Prozess-Spawns). Wenn `checker.enabled = true` gesetzt ist: abschalten oder
-   auf ein Intervall legen, statt bei jedem Start zu fetchen.
-2. **`vim.g.clipboard` explizit setzen** — 28 ms, keine Nebenwirkung, Einzeiler.
-3. **which-key `state.lua:158`** (~506 ms) anschauen.
-4. **lspsaga Lightbulb** (~214 ms) — läuft auf Cursor-Bewegung und ist damit
-   auch beim Editieren dauerhaft spürbar. Abschalten oder debouncen.
-5. **Die 120 ms bei `insights.conflicts` eingrenzen** — eigenes Plugin,
+Stand 2026-08-22: 1, 2, 4 und 6 erledigt; 3 als nicht lokal behebbar geklärt.
+5 und 7 offen.
+
+1. ~~**lazy.nvims Git-Aktivität prüfen**~~ — **erledigt.** Der Checker war hier
+   tatsächlich an: `checker.enabled = not machine.is("workstation")` schaltet
+   ihn nur auf der workstation ab, und diese Maschine ist es nicht. Fix in
+   `config/lazy/init.lua`: `frequency = 3600 * 24 * 7` statt Default 1 h, plus
+   `change_detection = { enabled = false }`. Der Checker bleibt damit als
+   Drift-Erkennung erhalten (der Grund dafür steht im Kommentar dort), fetcht
+   aber nicht mehr bei jedem Tagesstart.
+2. ~~**`vim.g.clipboard` explizit setzen**~~ — **erledigt.** Expliziter
+   win32yank-Provider für Windows in `options.lua`. Verifiziert:
+   `provider/clipboard.vim` taucht im `--startuptime`-Log nicht mehr auf.
+3. ~~**which-key `state.lua:158`**~~ — **nicht lokal behebbar.** Die Stelle ist
+   kein Startup-Posten, sondern ein 50-ms-Repeat-Timer
+   (`timer:start(0, 50, ...)`), den which-key als Workaround für ein
+   `ModeChanged`-Problem laufen lässt (folke/which-key.nvim#787). Die ~506 ms
+   sind also permanente Grundlast über die 12 s Sampling, kein Startanteil.
+   Die installierte Version ist mit origin/main identisch (2025-10-28), der
+   Workaround ist unverändert upstream. Nichts zu tun, außer bei einem
+   künftigen Update erneut zu prüfen.
+4. ~~**lspsaga Lightbulb**~~ — **erledigt, war ein Tippfehler.** Der Spec setzte
+   `lightbulb = { enabled = false }`, lspsaga liest aber `enable`
+   (`saga.config.lightbulb.enable`, `lspsaga/init.lua:204`). `tbl_deep_extend`
+   hat `enabled` still als toten Extra-Key danebengelegt, die Lightbulb lief
+   weiter. Ein Zeichen in `plugins/lsp.lua`.
+5. **Die 120 ms bei `insights.conflicts` eingrenzen** — offen. Eigenes Plugin,
    erneut mit `luaprof.lua` und dann gezielt.
-6. **Prüfen, ob telescopes Previewer beim Start geladen werden müssen** — 23 ms
-   für zwei Module, die vor der ersten Suche niemand braucht.
-7. **`filetree` und die VeryLazy-Kette** — 87 ms nach Start des Main-Loops.
+6. ~~**Telescope beim Start**~~ — **erledigt.** Nicht die Previewer sind das
+   Problem, sondern dass Telescope überhaupt geladen wird, obwohl es
+   `cmd = "Telescope"` ist: ein Top-level-`require` hebelt lazy.nvims
+   Lazy-Loading still aus. Zwei Auslöser, per `lazy.core.config.plugins[..]._.loaded`
+   ermittelt:
+   - `lsp/tools/ts_type_lookup/ts_telescope_picker.lua` hatte
+     `require("telescope.pickers")` & Co. auf Modulebene, und das Modul wird
+     beim LSP-Setup geladen. **Gefixt** — die requires liegen jetzt in `M.pick`.
+   - `pickers.nvim` patchte telescopes Mappings (und, weil `history.enabled`
+     hier an ist, auch die History) beim eigenen `setup()` (Kette:
+     `pickers.setup` -> `bindings.setup` -> `keys.patch` -> Adapter ->
+     `require("telescope").setup(..)`). **Gefixt in C:/repos/pickers.nvim.**
+     Beide Stellen waren bereits `vim.schedule`-deferred, mit Kommentaren, die
+     genau dieses Problem beschreiben -- nur hilft `vim.schedule` hier nicht:
+     es verschiebt ans Ende des aktuellen Event-Loop-Durchlaufs, und der ist
+     immer noch der Start. Neu: `pickers.engines.when_loaded` patcht erst, wenn
+     die Engine wirklich geladen wird (lazy.nvims `User LazyLoad`), mit
+     `vim.schedule`-Fallback ohne lazy.nvim.
+
+   Verifiziert: telescope.nvim, telescope-github.nvim und pdfport.nvim tauchen
+   beim Start nicht mehr in `lazy.core.config.plugins[..]._.loaded` auf; nach
+   einem `:Telescope find_files` sind die `<M-Left>`/`<M-Right>`-Mappings und
+   der History-Pfad trotzdem gesetzt.
+7. **`filetree` und die VeryLazy-Kette** — offen. 87 ms nach Start des
+   Main-Loops.
 
 Nach jedem Schritt gegenmessen:
 
 ```powershell
-nvim --cmd "luafile C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/perf-tools/stall.lua" C:/Users/bartl/AppData/Local/nvim/init.lua
+nvim --cmd "luafile C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/perf-tools/stall.lua" C:/Users/StefanBartl/AppData/Local/nvim/init.lua
 ```
 
 ## Fertig, wenn
