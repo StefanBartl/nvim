@@ -84,8 +84,14 @@ return function(opts)
   opts = opts or {}
   local badge_style = opts.badge_style ~= false
 
-  local ok, ft = pcall(require, "filetree")
-  if not ok then return "" end
+  -- `package.loaded` rather than `require`: the statusline is evaluated on the
+  -- very first redraw, so a `require` here PULLS filetree.nvim in before the
+  -- first paint -- measured at ~202ms, for a badge nobody can read yet. The
+  -- plugin loads on VeryLazy by itself moments later; until then this segment
+  -- is simply empty, and cwd_mode fires its own `:redrawstatus` once it has
+  -- something to show (see the module header).
+  local ft = package.loaded["filetree"]
+  if type(ft) ~= "table" or type(ft.feature) ~= "function" then return "" end
 
   local cwd_mode = ft.feature("cwd_mode")
   if not cwd_mode then return "" end

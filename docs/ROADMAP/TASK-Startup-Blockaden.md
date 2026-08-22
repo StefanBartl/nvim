@@ -45,8 +45,10 @@ Aus `nvim --startuptime` (Gesamtzeit bis erstes Screen-Update: ~828 ms):
 
 ## Vorgehen
 
-Stand 2026-08-22: 1, 2, 4, 5, 6, 8 erledigt, 9 teilweise; 3 als nicht lokal
-behebbar geklärt. Nur 7 (filetree) ist noch offen.
+Stand 2026-08-22: 1, 2, 4, 5, 6, 7, 8 erledigt, 9 teilweise; 3 als nicht lokal
+behebbar geklärt. Offen sind nur noch zwei notierte Einzelfragen (neo-tree
+`lazy = false`, der `pwsh`-Lookup) — beide brauchen eine Entscheidung, keine
+Analyse.
 
 1. ~~**lazy.nvims Git-Aktivität prüfen**~~ — **erledigt.** Der Checker war hier
    tatsächlich an: `checker.enabled = not machine.is("workstation")` schaltet
@@ -103,8 +105,30 @@ behebbar geklärt. Nur 7 (filetree) ist noch offen.
    beim Start nicht mehr in `lazy.core.config.plugins[..]._.loaded` auf; nach
    einem `:Telescope find_files` sind die `<M-Left>`/`<M-Right>`-Mappings und
    der History-Pfad trotzdem gesetzt.
-7. **`filetree` und die VeryLazy-Kette** — offen. 87 ms nach Start des
-   Main-Loops.
+7. ~~**`filetree` und die VeryLazy-Kette**~~ — **erledigt, und die Ursache war
+   eine andere als vermutet.** filetree.nvim wurde gar nicht über seinen
+   `event = "VeryLazy"` geladen, sondern durch das Statusline-Modul
+   `wkdnvchad.ui.statusline.modules.filetree_cwd_mode` — gemessen 202 ms
+   (`lazy.core.config.plugins["filetree.nvim"]._.loaded`).
+
+   Der `require` dort stand bereits *innerhalb* der Render-Funktion, war also
+   nicht der übliche Top-level-Fehler. Er greift trotzdem sofort: die
+   Statusline wird beim allerersten Redraw ausgewertet, und damit zieht sie
+   das Plugin **vor den ersten Paint** — für ein Badge, das in dem Moment noch
+   niemand lesen kann. Jetzt liest das Modul `package.loaded["filetree"]`,
+   statt das Laden zu erzwingen: bis VeryLazy das Plugin holt, bleibt das
+   Segment leer, danach rendert cwd_mode es über sein eigenes `:redrawstatus`.
+
+   Der Gewinn ist **Verlagerung, nicht Ersparnis** — die 202 ms fallen weiter
+   an, nur eben nach dem ersten Paint statt davor. Headless sieht das
+   übertrieben positiv (dort feuert mangels UIEnter nie ein VeryLazy, filetree
+   lädt also gar nicht); interaktiv gegenmessen.
+
+   **Dabei aufgefallen, noch offen:** `neo-tree.nvim` steht in
+   `plugins/neotree.lua` auf `lazy = false` und kostet 155–179 ms beim Start.
+   Ob das Absicht ist (netrw ist in `disabled_plugins`, neo-tree übernimmt
+   also das Öffnen von Verzeichnissen), muss jemand entscheiden, der die
+   Absicht kennt — deshalb hier nur notiert.
 8. ~~**Die 70 ms im `LazyDone`-Block**~~ — **erledigt, und es waren 202 ms.**
    Es war `helptags ALL`, registriert von `lib.nvim_usrcmds` auf
    `User LazyDone` — also bei *jedem* Start. Der Befehl läuft über die
