@@ -205,6 +205,14 @@ Stattdessen drei eigene Werkzeuge in [`perf-tools/`](./perf-tools):
 | `stall.lua` | Timer misst seine **eigene Verspätung** | findet *jede* Main-Loop-Blockade, egal woher |
 | `lspprof.lua` | wrappt `vim.lsp.handlers`, `vim.diagnostic.set`, loggt `lsp.start`/`LspAttach`/`LspProgress` | ordnet Stalls LSP-Ereignissen zu |
 | `luaprof.lua` | LuaJIT-Stack-Sampling (`jit.profile`) | benennt die blockierende `datei:zeile` |
+| `events.lua` | wie `stall.lua`, plus Zeitstempel für Plugin-Loads (mit lazys eigener Ladezeit), VimEnter, VeryLazy, LspAttach, LSP-Progress | ordnet **einen bestimmten** Block dem zu, was während seiner Dauer lief |
+
+`events.lua` schließt die Lücke zwischen den beiden anderen: `stall.lua` sagt
+*wann* blockiert wurde, aber nicht wodurch; `luaprof.lua` nennt eine Zeile,
+aggregiert aber über den ganzen Lauf, sodass ein einzelner 470-ms-Ausreißer
+darin untergeht. `events.lua` schreibt beides auf dieselbe Uhr — eine
+STALL-Zeile deckt `[at - blocked, at]` ab, man liest also die Ereignisse direkt
+darüber.
 
 Alle drei wurden gegen künstlich erzeugte Blockaden gegengetestet (600 ms bzw.
 400 ms) und melden diese korrekt.
