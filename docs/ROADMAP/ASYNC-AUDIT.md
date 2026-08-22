@@ -485,3 +485,113 @@ Die Treffer, die die erste Zaehlung dort gemeldet hat, lagen ausnahmslos in
 7. **filetree.nvim `trash/undo.lua` + `infra/safety/backup.lua`**.
 8. **`vim.fn.executable()`-Caching** in der Config (~15 Stellen) - kein
    Async-Thema, sondern ein Memo-Cache.
+
+---
+
+# Aufwandsschaetzung: sandbox.nvim und documentation.nvim
+
+Nachgereicht auf Nachfrage. Beide wurden im Durchgang oben bewusst
+ausgelassen; hier steht, was ein Umbau konkret kostet.
+
+## sandbox.nvim
+
+### Architektur (das ist der Kostentreiber)
+
+Sauber geschichtet, hexagonal:
+
+```
+adapters/{docker,nerdctl,podman,wsl}/**   83 Dateien mit run_blocking_captured
+        v
+core/ports/container_engine.lua            3 Dateien (Interface)
+        v
+core/usecases/**                          56 Dateien (duenne Pass-throughs)
+        v
+ui/ + telescope/ + bindings/              12 Dateien, die Rueckgaben konsumieren
+```
+
+Ein Adapter sieht durchweg so aus:
+
+```lua
+local ok, output = run_argv.run_blocking_captured({ "docker", "ps", "-a", ... })
+if not ok then return nil, output end
+-- parsen ...
+return containers, nil
+```
+
+Ein Usecase ist meist `return engine.list_containers()`, ein Consumer
+`local containers, err = usecase(engine)`. Die **synchrone Rueckgabe steht also
+in allen vier Schichten im Vertrag** - deshalb ist es kein lokaler Patch.
+
+Erschwerend/erleichternd zugleich: docker, nerdctl und podman haben je 25
+nahezu identische Adapter-Dateien. Der Adapter-Anteil ist also extrem
+repetitiv - viel Flaeche, wenig Denkarbeit.
+
+### Was NICHT geht
+
+Der naheliegende Trick - `sandbox.util.run_argv.run_blocking_captured` intern
+auf async umbiegen - funktioniert nicht. Eine synchrone Signatur kann keinen
+asynchronen Aufruf kapseln, ohne zu blockieren. Es gibt keinen Chokepoint.
+
+### Optionen
+
+| Option | Umfang | Nutzen |
+|---|---|---|
+| **A - Vollmigration** | ~150 Dateien, alle vier Schichten, Port-Vertrag bricht | vollstaendig |
+| **B - Hot-Path** | ~30 Dateien | deckt die real spuerbaren Faelle ab |
+| **C - Statusline** | 1 Datei | klein, aber latent wichtig (s. u.) |
+
+**Option B (empfohlen)** beschraenkt sich auf die Operationen, die real dauern:
+`ps -a` (list), `logs`, `inspect`, `stats`, `top` - je 3 Engines, also
+15 Adapter + zugehoerige Usecases + ~5 Consumer. Alles andere
+(`start`, `stop`, `rename`, `tag`, `create network`, ...) ist ein kurzer
+Daemon-Roundtrip, bei dem eine Blockade nicht auffaellt. Die bereits
+existierende `run_async_captured`-Variante in `sandbox/util/run_argv.lua`
+(28 Aufrufer, mit Progress-Handle und `:stop()`) ist dafuer die Vorlage -
+die Infrastruktur ist da, es fehlt nur die Verdrahtung nach oben.
+
+### Eigener Befund: `lua/sandbox/statusline.lua:34`
+
+`M.status()` ist als lualine-Komponente gedacht und ruft
+`engine.list_containers()` - also ein **blockierendes `docker ps`** - hinter
+einem 3-Sekunden-TTL-Cache. Wenn die Komponente in einer Statusline haengt,
+friert Neovim damit alle 3 Sekunden fuer die Dauer eines `docker ps` ein
+(unter Docker Desktop auf Windows real 300ms-1s).
+
+Aktuell **nicht scharf**: die Komponente ist in dieser Config nirgends
+verdrahtet (`plugins/personal/init.lua:193` setzt nur `progress_style`).
+Der Fix ist klein und lohnt trotzdem: stale-while-revalidate - sofort den
+gecachten Wert zurueckgeben und die Aktualisierung im Hintergrund anstossen.
+Das ist genau eine Datei und aendert keine Signatur.
+
+## documentation.nvim
+
+Wichtiger Kontext: das Plugin ist `cmd`-lazy
+(`:DocMap`, `:DocBrowse`, `:DocMapAll`, `:DocMapAllFull`). Es blockiert also
+nur bei bewusst angestossenen Laeufen, nie im Hintergrund.
+
+Die vier Fundstellen sind **nicht gleich teuer**:
+
+| Fundstelle | Aufwand | Anmerkung |
+|---|---|---|
+| `bindings/usrcmds/checklist.lua:49` | **klein** | `commit_dates()` ist ein in sich geschlossener Helper (Z. 33-61), der `(history, err)` liefert. Callback-Parameter dran, Rest von `M.run` (Z. 105-177) in die Continuation. |
+| `bindings/usrcmds/churn.lua:52` | **klein** | `vim.wait` steht inline in `M.run` (Z. 20-155); ca. 100 Zeilen wandern in den Callback. Reine Umformung. |
+| `mcp/tools.lua:395` | **blockiert durch Vertrag** | MCP-Tool-Handler liefern ihr Ergebnis synchron (`return result({...})`). Async geht erst, wenn der MCP-Server asynchrone Handler unterstuetzt - das ist eine Framework-Frage, kein Umbau in dieser Datei. |
+| `core/luals.lua:67` | **gross** | Haengt in `M.scan_full` (`init.lua:189`), und das ist die synchrone Kern-API, auf der `generate()`, `install()`, `rescan()` und `core/cli.lua` aufsetzen. |
+
+### Entschaerfung beim teuren Fall
+
+`opts.luals` ist **per Default aus** (`@types/init.lua:25`: "Off by default - a
+full-tree run costs real seconds"). Getroffen wird also nur `:DocMapAllFull`
+bzw. `--full`. Und `core/cli.lua:188` laeuft headless - dort gibt es keine UI,
+die blockieren koennte.
+
+Die reale Blockade-Flaeche des teuren Falls ist damit **genau ein
+Editor-Kommando**, das ohnehin als "dauert" bekannt ist.
+
+### Empfehlung
+
+`checklist.lua` und `churn.lua` sind zwei kleine, isolierte Umformungen und
+lohnen sofort. `mcp/tools.lua` ist erst nach einer Aenderung am MCP-Vertrag
+angehbar. `luals`/`scan_full` lohnt bei diesem Nutzungsprofil am wenigsten -
+das waere ein API-Redesign fuer ein Kommando, bei dem der Nutzer ohnehin
+wartet.
