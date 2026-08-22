@@ -61,22 +61,54 @@ vim.api.nvim_create_autocmd("User", {
   end,
 })
 
+-- Resolved on first use and then cached. NOT up front: this file is loaded via
+-- `--cmd`, i.e. before lazy.nvim is even on the runtimepath, so a `require`
+-- here would fail and silently cost every plugin line its detail.
+local lazy_cfg = nil
+local function get_lazy_cfg()
+  if lazy_cfg == nil then
+    local ok, cfg = pcall(require, "lazy.core.config")
+    lazy_cfg = ok and cfg or false
+  end
+  return lazy_cfg or nil
+end
+
 vim.api.nvim_create_autocmd("User", {
   pattern = "LazyLoad",
   callback = function(ev)
     local name = tostring(ev.data)
-    -- lazy records its own load time per plugin; report it, since a plugin
-    -- that took 200ms to load is exactly the kind of thing a block is made of.
-    local ok, cfg = pcall(require, "lazy.core.config")
-    local ms = ""
-    if ok then
+    local detail = ""
+
+    local cfg = get_lazy_cfg()
+    if cfg then
       local p = cfg.plugins[name]
-      local t = p and p._ and p._.loaded and p._.loaded.time
-      if type(t) == "number" then
-        ms = (" (%.0f ms)"):format(t / 1e6)
+      local loaded = p and p._ and p._.loaded
+      if loaded then
+        -- lazy's own load time for this plugin: a plugin that took 200ms is
+        -- exactly what a block is made of.
+        if type(loaded.time) == "number" then
+          detail = (" (%.0f ms)"):format(loaded.time / 1e6)
+        end
+        -- WHY it loaded. This is the part that turns "telescope loaded at
+        -- +2.5s" into something actionable: `event`/`cmd` means the spec did
+        -- it, `require` + `source` means some other file pulled it in and the
+        -- lazy spec was bypassed.
+        local why = loaded.event or loaded.cmd or loaded.ft or loaded.keys or loaded.start
+        if loaded.require then
+          why = "require '" .. tostring(loaded.require) .. "'"
+          if loaded.source then
+            why = why .. " from " .. vim.fn.fnamemodify(tostring(loaded.source), ":t")
+          end
+        elseif loaded.plugin then
+          why = "dep of " .. tostring(loaded.plugin)
+        end
+        if why then
+          detail = detail .. "  <- " .. tostring(why)
+        end
       end
     end
-    mark("plugin", name .. ms)
+
+    mark("plugin", name .. detail)
   end,
 })
 
