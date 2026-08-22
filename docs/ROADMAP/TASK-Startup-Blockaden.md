@@ -232,9 +232,47 @@ Das ist die Kaskade, in der sandbox (39–61 ms), gopath (69–78 ms), filetree
 das „Fertig, wenn"-Kriterium (unter ~300 ms vor +1,5 s) in Lauf 3 mit 297 ms
 erreicht und in Lauf 1 mit 334 ms knapp verfehlt.
 
-Auffällig für später: **`dap.nvim` schwankt extrem** — 44 ms, 47 ms und einmal
-**328 ms**. Der 580-ms-Lauf geht praktisch allein darauf zurück. Lohnt einen
-eigenen Blick, bevor man an den kleineren Posten feilt.
+~~Auffällig für später: `dap.nvim` schwankt extrem~~ — **nachgegangen, siehe
+unten.**
+
+### `dap.nvim`: Ursache der Schwankung nicht gefunden, Plugin trotzdem raus
+
+`get_adapter_path()` suchte Adapter-Binaries per `vim.fn.exepath` und tat das
+redundant: `codelldb` ist der Adapter für c, rust **und** zig, wurde also
+dreimal einzeln im `$PATH` gesucht. Auf memoisiertes
+`lib.nvim.cross.executable` umgestellt (der Re-Export lag in dap.nvim bereits
+ungenutzt herum) — gemessen 180 ms → 142 ms, also **~38 ms**.
+
+**Die Schwankung 44 ↔ 328 ms erklärt das nicht.** Meine Messungen liegen
+reproduzierbar bei 142–180 ms; der Ausreißer ließ sich nicht nachstellen. Ein
+Vorab-Benchmark, der ~300 ms allein für die Lookups zeigte, lief per `--cmd`
+vor dem Laden der Config und damit vor Masons PATH-Änderungen — auf den echten
+Ladevorgang nicht übertragbar. Wahrscheinlich Umgebungsvarianz (kalter
+Dateicache, AV-Filtertreiber): im 328-ms-Lauf war *alles* langsamer, neotest
+59 statt 38 ms, neo-tree 65 statt 43 ms.
+
+Der wirksame Schritt war ein anderer: dap.nvim von `event = "VeryLazy"` auf
+`cmd = "Dap"` + `keys` umgestellt. Damit sind das Plugin **und seine sechs
+Dependencies** komplett aus dem Start. Verifiziert: `<leader>dab` lädt das
+Plugin und setzt den Breakpoint, `:Dap` lädt und listet die Subcommands.
+
+Wer das nachmacht: die `keys`-Liste muss die Keymaps des Plugins spiegeln,
+sonst lädt eine Bindung das Plugin nie und **tut still gar nichts**. Deshalb
+speist in `plugins/personal/init.lua` eine gemeinsame `dap_prefix`-Variable
+sowohl `keys` als auch `opts.keymaps.prefix`.
+
+### Stand nach dem dap-Fix
+
+Ein Lauf: 3 Stalls, **434 ms** — gegenüber Median 409 ms davor. `dap.nvim`
+taucht in der Zeitachse nicht mehr auf, der VeryLazy-Block fiel von 334 auf
+209 ms, aber der frühe Cluster war in diesem Lauf 225 ms statt 0.
+
+**Damit ist der Punkt erreicht, an dem einzelne Fixes in der Streuung
+untergehen.** Wer hier weitermacht, sollte pro Zustand drei Läufe fahren und
+den Median vergleichen — sonst misst man Zufall. Verbleibende Posten:
+sandbox (65 ms), filetree (82 ms), gopath (62 ms), runtime-analysis (54 ms,
+`start`), reposcope (40 ms), sowie neo-tree + neotest (52 + 45 ms, bewusst so
+belassen).
 
 ---
 
