@@ -41,3 +41,61 @@ Sag mir, welchen du willst, dann bau ich ihn ein:
 - **Harter Exit-Guard**: ein `VimLeavePre`-Autocmd, der `vim.lsp.stop_client(vim.lsp.get_clients(), true)` macht, kurz auf sauberes Ende wartet und danach übrig gebliebene Kinder per PID abschießt. Wirkt gegen *alle* vier Kandidaten auf einmal, ist aber die Holzhammer-Variante.
 
 Ich würde mit der Messung anfangen — wenn es reproduzierbar `node.exe` ist, reicht Variante 1 und die ist deutlich sauberer.
+
+---
+
+## GELÖST (2026-08-23) — Hypothese 1 war es, gemessen
+
+Reproduziert und Schritt für Schritt belegt.
+
+**Reproduktion:** `nvim --headless <datei>.ts`, LSP anlaufen lassen, beenden.
+Der Prozess hing unbegrenzt (Abbruch nach 2 min).
+
+**Der Prozessbaum im Hänger** (`Get-CimInstance Win32_Process`):
+
+```
+nvim (6096)
+ └─ cmd.exe (39428)      C:\Windows\system32\cmd.exe /c
+                         ...\masonin	ailwindcss-language-server.CMD --stdio
+     └─ node.exe (37868) "node" ...\@tailwindcss\language-serverin                         tailwindcss-language-server --stdio
+```
+
+**Der Beweis:** nur `node.exe` gekillt, nvim und cmd.exe nicht angefasst.
+`cmd.exe` starb mit, und **nvim beendete sich daraufhin von selbst**. Genau der
+im Dokument vorgeschlagene Test — damit ist es keine Theorie mehr.
+
+Es war also nicht `ts_ls` (der crasht auf dieser Maschine ohnehin beim Start,
+eigenes Thema), sondern **tailwindcss-language-server**.
+
+### Der Fix
+
+Umgesetzt wurde Variante 1 (`.cmd`-Shims umgehen), generisch statt pro Server:
+[`lua/lsp/core/mason_node.lua`](../../lua/lsp/core/mason_node.lua) liest den
+Entry-Point aus npms generiertem `.bin/<name>.cmd` und baut daraus ein direktes
+`node <entry>`. Angewandt auf `tailwindcss`, `ts_ls` und `ssp` (html).
+
+Mason schichtet übrigens **zwei** Shims übereinander: `mason/bin/<name>.cmd`
+ruft `mason/packages/<pkg>/node_modules/.bin/<name>.cmd`, und erst der startet
+node. Beide entfallen.
+
+Hardcodierte Pfade wären brüchig (jedes Mason-Update), deshalb das Parsen der
+generierten Datei. Schlägt es fehl, liefert `cmd_or()` unverändert das alte
+Kommando zurück — ein misslungener Parse kostet den Fix, nie den Server.
+
+### Verifiziert
+
+| | vorher | nachher |
+|---|---|---|
+| Prozessbaum | nvim → cmd.exe → node.exe | nvim → node.exe |
+| `cmd.exe`-Ebenen | 2 | **0** |
+| Quit-Serie | hing beim ersten Versuch unbegrenzt | 5/5 sauber, je ~9 s |
+| verwaiste Prozesse danach | 1 node.exe | keine |
+
+### Was das für die anderen Kandidaten heißt
+
+Copilot, mdview-server und der `pwsh`-Terminal-Buffer sind damit **nicht**
+freigesprochen — sie haben dieselbe Bauform (Wrapper startet echten Prozess)
+und lassen sich headless nicht testen, weil sie ohne `VeryLazy` bzw. ohne UI
+gar nicht laden. Sollte der Hänger wiederkehren, ist die Methode oben
+unverändert gültig: Prozessbaum aufnehmen, verdächtiges Kind killen, prüfen ob
+Neovim zurückkommt.
