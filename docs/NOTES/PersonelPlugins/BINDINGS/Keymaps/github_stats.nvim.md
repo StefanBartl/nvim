@@ -26,8 +26,9 @@ fixed/always-on bindings.
 | `refresh_all` (`R`) | Force-fetch every configured repo | "GitHub Stats: refresh all repositories" | disable-able |
 | `force_refresh` (`f`) | Force-fetch only the selected repo | "GitHub Stats: force refresh selected repository" | disable-able |
 | `cycle_sort` (`s`) | Cycle `clones→views→name→trend` | "GitHub Stats: cycle sort criteria" | disable-able |
-| `cycle_time_range` (`t`) | Cycle `7d→30d→90d→all` | "GitHub Stats: cycle time range" | disable-able |
+| `cycle_time_range` (`t`) | Cycle `7d→30d→90d→max` | "GitHub Stats: cycle time range" | disable-able; last step was `all` until 2026-08-23 |
 | `custom_time_range` (`T`) | Prompt (`vim.fn.input`) for a free-form time range (e.g. `3m`, `since:2025-01-01`, a `date_presets` name); rejected with an error notification if unrecognized by `analytics.parse_time_range` | "GitHub Stats: enter custom time range" | disable-able; added 2026-08-09 |
+| `max_time_range` (`m`) | Set the range to `max` — the longest duration the stored data covers — and notify the resolved span (`analytics.get_history_span`) | "GitHub Stats: set maximum time range" | disable-able; added 2026-08-23 |
 | `quit` (`q`) | Close dashboard | "GitHub Stats: quit dashboard" | only if `keybindings.quit ~= ""` |
 | `<Esc>` (fixed) | Close dashboard (fallback, regardless of `quit` config) | "GitHub Stats: quit dashboard" | always |
 | `show_help` (`?`) | `vim.notify` overlay listing every current keybinding | "GitHub Stats: show help" | disable-able |
@@ -61,6 +62,16 @@ fallback (unlike emojis/fileops/filetree/gopath, which support both).
 
 ## Changelog
 
+- 2026-08-23: added `max_time_range` (default `m`) — one keypress to the
+  maximum locally stored duration, alongside the `t` cycle and the `T`
+  prompt. `TIME_RANGE_CYCLE`'s last step changed `all` → `max` (identical
+  filtering, i.e. none; `all` remains accepted from `setup()` and the `T`
+  prompt). The dashboard header grew to `HEADER_LINES = 5` — the extra line
+  carries the key hints, which are now generated from the *effective*
+  keybindings instead of a hardcoded string, so a remap shows up here and a
+  key disabled with `""` disappears from the hint line entirely. The status
+  line appends the window the active range resolved to
+  (`Range:max (2025-03-04 -> 2026-08-22, 172 days)`).
 - 2026-08-09: added `custom_time_range` (default `T`), a free-form time
   range prompt alongside the existing `cycle_time_range` (`t`) 7d/30d/90d/all
   cycle. New `analytics.parse_time_range` accepts `Nd`/`Nw`/`Nm`/`Ny`,
