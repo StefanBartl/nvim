@@ -323,3 +323,165 @@ Aufrufer - betroffen waeren nur programmatische Nutzer der Public API.
 **OFFEN**: `trash/undo.lua` (Restore aus dem Papierkorb, ebenfalls PowerShell)
 und `infra/safety/backup.lua` (`xcopy`/`cp -r`, kann bei grossen Verzeichnissen
 lange laufen). Beide haengen an derselben `run_blocking`-Frage wie oben.
+
+## 13. pdfport.nvim - TEILWEISE ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/pdfport/backends/claude.lua:46` | `vim.fn.system({"base64","-w","0",path})` | ERLEDIGT - Subprozess entfaellt |
+| `lua/pdfport/backends/ollama.lua:61` | `vim.system(pdftoppm):wait()` | ERLEDIGT |
+| `lua/pdfport/backends/ollama.lua:277` | `vim.system(pdftotext):wait()` | ERLEDIGT |
+| `lua/pdfport/health.lua:116` | `vim.fn.system({"curl", ...})` | BEHALTEN (health) |
+| `lua/pdfport/platform/init.lua:74` | `vim.fn.system({python,"-c","import X"})` | OFFEN / UNKLAR |
+
+- **base64**: `read_base64()` rief `base64 -w 0` und blockierte fuer den
+  kompletten Encode einer potenziell mehrere MB grossen PDF. Der Aufruf war
+  ausserdem nie portabel: `-w` ist ein GNU-coreutils-Flag (scheitert unter
+  macOS mit BSD base64), und unter Windows gibt es gar kein `base64`-Binary.
+  Jetzt Datei per `vim.uv` lesen und mit `vim.base64.encode` kodieren -
+  Prozess-Spawn entfaellt vollstaendig. `health.lua` prueft entsprechend
+  `vim.base64.encode` statt des Binaries.
+- **ollama**: `rasterize_sync()` (pdftoppm, 150 DPI) und `pdftotext` liefen
+  einmal pro Seite blockierend. Ein 20-seitiges PDF fror Neovim zwanzigmal
+  ein. Beide jetzt callback-basiert; die umgebende Seitenschleife war mit
+  `process_next()` bereits eine Callback-Kette.
+- **has_python_module** (OFFEN): Python-Start kostet 150-400ms. Das Ergebnis
+  wird gecacht, faellt also nur einmal je Modul an. Der Umbau ist trotzdem
+  unangenehm, weil die Funktion ein `boolean` liefert und in
+  `available()`-Ketten haengt, die alle synchron sind. Entscheidung noetig.
+
+## 14. lib.nvim - API ERGAENZT, Rest bewusst synchron
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/lib/nvim/cross/run_argv/init.lua:29/56` | `vim.fn.system` (Legacy-Fallback) | BEHALTEN - async Gegenstueck ergaenzt |
+| `lua/lib/nvim/deps/health.lua:31` | `vim.fn.system({python,...})` | BEHALTEN (health) |
+| `lua/lib/nvim/ui/kit/sync.lua:67` | `vim.wait(timeout_ms, ...)` | BEHALTEN - genau das ist der Zweck des Moduls |
+| `lua/lib/nvim/buf_win_tab/capture/init.lua:213` | `vim.wait(interval)` | BEHALTEN - dokumentierter Sync-Fallback, Async-Pfad via `cb` existiert |
+| `lua/lib/nvim/cross/fs/mutate/init.lua:95` | `vim.wait(backoff)` | UNKLAR |
+| `lua/lib/nvim/safe_api/init.lua:338` | `vim.wait(10)` | UNKLAR |
+
+**Neu**: `cross.run_argv.run_async_captured(cmd, on_done, input)` - additiv,
+keine bestehende Signatur geaendert. `on_done` laeuft immer auf der Main-Loop
+(`vim.schedule`), liefert `ok`, `stdout` und den Exitcode; Rueckgabe ist ein
+Handle mit `stop()` (SIGTERM). Der `pcall` um `vim.system` spiegelt
+`run_blocking`: `vim.system` wirft synchron, wenn `cmd[1]` gar nicht spawnbar
+ist (ENOENT), statt ein fehlgeschlagenes `SystemCompleted` zu liefern.
+Typdeklaration in `cross/@types/run.lua` ergaenzt.
+
+Das ist die Grundlage fuer die Migration der ~130 `run_blocking*`-Stellen.
+
+**UNKLAR-Faelle**: `mutate.retry()` und `safe_api.with_retry()` sind
+Retry-Schleifen mit Backoff, die synchron `(ok, err)` liefern. Der Backoff in
+`mutate.retry` summiert sich auf 50+100+200 = 350ms bei drei Versuchen. Ein
+Umbau bricht die Kern-API von `cross.fs` bzw. `safe_api`. Sinnvoller waere ein
+zusaetzliches `retry_async()` neben dem bestehenden - Entscheidung noetig.
+
+## 15. documentation.nvim - BEHALTEN / UNKLAR (bewusst blockierend)
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/documentation/bindings/usrcmds/checklist.lua:49` | `vim.wait(120000, ...)` | UNKLAR |
+| `lua/documentation/bindings/usrcmds/churn.lua:52` | `vim.wait(120000, ...)` | UNKLAR |
+| `lua/documentation/core/luals.lua:67` | `vim.wait(timeout_ms + 3000, ...)` | UNKLAR |
+| `lua/documentation/mcp/tools.lua:395` | `vim.wait(120000, ...)` | UNKLAR |
+| `scripts/bundle_manifest.lua:183`, `scripts/package.lua:135/173/297/392/437` | `io.popen` / `os.execute` | BEHALTEN - Build-Skripte, keine UI |
+| `standalone/docmap.lua:353` | `io.popen` | BEHALTEN - Neovim-freier CLI-Einstieg, keine UI |
+
+Alle vier Interaktiv-Faelle sind dasselbe bewusste Muster und im Code
+begruendet: `vim.system` (async) + `vim.wait`-Pumpe, nicht `:wait()`, weil
+`:wait()` keine `vim.schedule`-Callbacks abarbeitet und der Progress-Indikator
+dann gar nicht sichtbar wird (gemessen: 0 sichtbare Samples unter `:wait()`
+gegen 62 unter `vim.wait`).
+
+Das ist die am wenigsten schlimme Form von Blockieren - die Loop laeuft, nur
+Eingaben stehen. Trotzdem: `lua-language-server --doc` ueber einen ganzen Baum
+braucht real Sekunden, `git log` ueber die Vollhistorie ebenso.
+
+Ein echter Umbau bedeutet, dass `scan_full()`, `rescan()`, `generate()` und
+`install()` callback-basiert werden - alles Funktionen, die in
+`@types/init.lua` als synchron zurueckgebende Public API dokumentiert sind.
+Das ist ein API-Redesign, kein Patch. Bewusst nicht angefasst.
+
+## 16. runtime-analysis.nvim - BEHALTEN
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `scripts/telemetry.lua:237` | `vim.wait(60000, ...)` | BEHALTEN |
+
+`nvim --headless -l scripts/telemetry.lua` - es gibt keine UI, die blockieren
+koennte. Der Kommentar an der Stelle sagt genau das.
+
+## 17. replacer.nvim - OFFEN
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/replacer/rg.lua:331/338` | `vim.system(rg):wait()` / `run_blocking_captured` | OFFEN |
+| `lua/replacer/gitfiles.lua:18/24` | `vim.system(git):wait()` / `run_blocking_captured` | OFFEN |
+| `lua/replacer/health.lua:136` | `io.popen` | BEHALTEN (health) |
+
+`collect_ripgrep()` und `git_lines()` liefern ihre Ergebnisse synchron an eine
+synchrone Aufruferkette. Im selben Modul existiert bereits ein Streaming-Pfad
+mit Progress-Throttling (`PROGRESS_THROTTLE_MS`), die async-faehige
+Infrastruktur ist also da - `collect_ripgrep` ist der Nicht-Streaming-Zweig.
+Umbau machbar, braucht aber einen Blick darauf, welcher Pfad wann gewaehlt
+wird. Nicht in diesem Durchgang angefasst.
+
+## 18. pickers.nvim - ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/pickers/sources/drives.lua:31/34` | `vim.system(Get-PSDrive/df):wait()` | ERLEDIGT |
+
+Unter Windows ist das Kommando PowerShell, deren Start allein mehrere hundert
+Millisekunden kostet - der `drives`-Scope fror Neovim ein, bevor der Picker
+ueberhaupt erschien. `run_captured(cmd, cb)`, `windows_roots(cb)`,
+`posix_roots(cb)` und `get_roots(cb)` sind jetzt callback-basiert;
+`wsl_roots()` bleibt inline (probt nur Verzeichnisse, kein Prozess).
+`M.get(_cfg, callback)` war bereits callback-foermig - die oeffentliche
+Signatur des Moduls aendert sich nicht. Session-Cache greift unveraendert.
+
+## 19. reposcope.nvim - ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/reposcope/utils/protection.lua:204` | `run_blocking_captured` (git clone) | ERLEDIGT |
+
+Der laengste blockierende Aufruf im gesamten Bestand: `git clone` ist eine
+Netzwerkoperation - Sekunden, bei grossen Repos oder langsamer Leitung
+Minuten - und Neovim stand die gesamte Zeit.
+
+Neu: `protection.safe_execute_shell_async(argv, on_done)` auf Basis des frisch
+ergaenzten `run_argv.run_async_captured`. Nur die argv-Form, weil genau die der
+Clone-Pfad nutzt. `clone_executor.M.execute()` wertete nie einen Rueckgabewert
+aus (notifiziert und schreibt Metriken), der Umbau aendert also keinen
+Aufrufer. Die Dauermessung umfasst weiterhin die echte Wall-Clock-Zeit.
+
+## 20. Vollstaendig sauber (keine blockierenden Aufrufe ausserhalb von Tests)
+
+`images.nvim`, `markdown.nvim`, `color_my_ascii.nvim`, `diff.nvim`,
+`fileops.nvim`, `buffer-ctx.nvim`, `migrate.nvim`, `recommender.nvim`,
+`language.nvim`, `spotlight.nvim`, `lsp.nvim`, `cascade.nvim`.
+
+Die Treffer, die die erste Zaehlung dort gemeldet hat, lagen ausnahmslos in
+`tests/`, `docs/TESTS/` oder `*_spec.lua`.
+
+---
+
+## Offene Entscheidungen (Zusammenfassung)
+
+1. **`run_blocking*`-Migration** - ~130 Stellen. Die Basis
+   (`run_async_captured`) steht jetzt in lib.nvim. Groesster Brocken:
+   sandbox.nvim (87 Stellen + UI-Schicht).
+2. **documentation.nvim** - API-Redesign noetig (`scan_full`/`rescan`/
+   `generate`/`install` callback-basiert).
+3. **insights.nvim `exec_sync`** - alle Aufrufer muessten callback-basiert
+   werden; die `vim.wait`-Pumpe ist dort messbar begruendet.
+4. **lib.nvim `mutate.retry` / `safe_api.with_retry`** - zusaetzliche
+   `*_async`-Varianten statt Umbau der bestehenden.
+5. **pdfport `has_python_module`** - haengt an synchronen
+   `available()`-Ketten.
+6. **replacer.nvim `collect_ripgrep` / `git_lines`**.
+7. **filetree.nvim `trash/undo.lua` + `infra/safety/backup.lua`**.
+8. **`vim.fn.executable()`-Caching** in der Config (~15 Stellen) - kein
+   Async-Thema, sondern ein Memo-Cache.
