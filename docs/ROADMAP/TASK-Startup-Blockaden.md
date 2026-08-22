@@ -45,8 +45,8 @@ Aus `nvim --startuptime` (Gesamtzeit bis erstes Screen-Update: ~828 ms):
 
 ## Vorgehen
 
-Stand 2026-08-22: 1, 2, 4 und 6 erledigt; 3 als nicht lokal behebbar geklärt.
-5 und 7 offen.
+Stand 2026-08-22: 1, 2, 4, 5, 6, 8 erledigt, 9 teilweise; 3 als nicht lokal
+behebbar geklärt. Nur 7 (filetree) ist noch offen.
 
 1. ~~**lazy.nvims Git-Aktivität prüfen**~~ — **erledigt.** Der Checker war hier
    tatsächlich an: `checker.enabled = not machine.is("workstation")` schaltet
@@ -71,8 +71,15 @@ Stand 2026-08-22: 1, 2, 4 und 6 erledigt; 3 als nicht lokal behebbar geklärt.
    (`saga.config.lightbulb.enable`, `lspsaga/init.lua:204`). `tbl_deep_extend`
    hat `enabled` still als toten Extra-Key danebengelegt, die Lightbulb lief
    weiter. Ein Zeichen in `plugins/lsp.lua`.
-5. **Die 120 ms bei `insights.conflicts` eingrenzen** — offen. Eigenes Plugin,
-   erneut mit `luaprof.lua` und dann gezielt.
+5. ~~**Die 120 ms bei `insights.conflicts` eingrenzen**~~ — **erledigt, und es
+   waren 244 ms.** `conflicts.run()` macht zwei git-Aufrufe mit
+   `vim.system(..):wait()`, also blockierend, und hängt per Default an
+   `VimEnter`. Gefixt in C:/repos/insights.nvim: `run_async()` macht dieselbe
+   Arbeit über die Callback-Form, der Autocmd benutzt sie. Im selben Lauf
+   gemessen: `run()` blockiert 248 ms, `run_async()` kehrt nach 10 ms zurück.
+   `run()` bleibt blockierend für `:Insights conflicts` — dort wartet jemand
+   auf die Antwort. Verifiziert gegen ein Repo mit echtem Merge-Konflikt:
+   beide liefern dieselbe Quickfix-Liste.
 6. ~~**Telescope beim Start**~~ — **erledigt.** Nicht die Previewer sind das
    Problem, sondern dass Telescope überhaupt geladen wird, obwohl es
    `cmd = "Telescope"` ist: ein Top-level-`require` hebelt lazy.nvims
@@ -98,6 +105,28 @@ Stand 2026-08-22: 1, 2, 4 und 6 erledigt; 3 als nicht lokal behebbar geklärt.
    der History-Pfad trotzdem gesetzt.
 7. **`filetree` und die VeryLazy-Kette** — offen. 87 ms nach Start des
    Main-Loops.
+8. ~~**Die 70 ms im `LazyDone`-Block**~~ — **erledigt, und es waren 202 ms.**
+   Es war `helptags ALL`, registriert von `lib.nvim_usrcmds` auf
+   `User LazyDone` — also bei *jedem* Start. Der Befehl läuft über die
+   doc/-Verzeichnisse aller ~116 Plugins und schreibt jede Tags-Datei neu;
+   gemessen 229 ms, und ein zweiter Lauf in derselben Sitzung kostet genauso
+   viel, weil nichts daran inkrementell ist. Hilfedateien ändern sich aber nur
+   bei Install/Update. Gefixt in lib.nvim: der Autocmd hängt jetzt an
+   `LazyInstall`/`LazyUpdate`/`LazySync`; `:Lib helptags` bleibt für den
+   manuellen Fall.
+9. ~~**`require('options')`, 77 ms**~~ — **teilweise erledigt.** Ein
+   `vim.fn.executable()` auf einen Namen, der NICHT auf $PATH liegt, walkt
+   jeden Eintrag und statet Kandidaten, bevor es aufgibt: gemessen ~40 ms,
+   gegenüber ~3 ms wenn der Fund den Walk früh beendet. `options.lua` prüfte
+   auf Windows `wl-copy` — 42 ms garantiert vergeblich, weil es dort kein
+   Wayland gibt. Steht jetzt hinter einem POSIX-Guard, `options` liegt bei
+   ~55 ms.
+
+   **Offen bleibt der `pwsh`-Lookup:** auch der schlägt fehl (40 ms), obwohl
+   `pwsh.exe` unter `WindowsApps` liegt — `vim.fn.executable("pwsh")` sieht
+   den App-Execution-Alias nicht. Wer die Shell ohnehin kennt, kann `o.shell`
+   direkt setzen statt zu proben; das wäre die letzten 40 ms wert, ist aber
+   eine Maschinen-Entscheidung.
 
 Nach jedem Schritt gegenmessen:
 
