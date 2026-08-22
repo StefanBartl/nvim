@@ -811,3 +811,87 @@ Redraw-Reihenfolge-Invarianten hat ("erst flushen, dann im selben Tick
 zeichnen"). Das Ergebnis liegt in einem Cache auf der Platte, der ueber
 Sitzungen hinweg haelt und auf Pfad + mtime schluesselt - der blockierende
 Aufruf faellt also einmal pro SVG-Version an, nicht pro Anzeige.
+
+---
+
+# Die vier strukturellen Posten: zwei erledigt, zwei mit echtem Nachteil
+
+Kriterium: umbauen, wenn kein Nachteil entsteht.
+
+## Erledigt - kein Nachteil
+
+### `diff.nvim/core/git.lua:72` - `git:<rev>`
+
+`resolve_side_async()` mit Callback existierte bereits fuer `http(s)`-Quellen
+und ist der **einzige** Weg, auf dem Seiten aufgeloest werden. `git:<rev>` lag
+nur zufaellig im synchronen `resolve_side()`. Es wandert schlicht dorthin,
+direkt neben den url-Pfad.
+
+`resolve_side` wird ausschliesslich aus `resolve_side_async` aufgerufen,
+`git.resolve` ausschliesslich von dort - die Aenderung ist vollstaendig
+eingeschlossen, keine Signatur nach aussen betroffen. Alles bis zum Spawn
+bleibt synchron, ein ungueltiger Specifier meldet sich also weiterhin im
+selben Tick. Relevant, weil ein Drei-Wege-Diff zwei Seiten aufloest, also
+vorher zweimal hintereinander blockierte.
+
+### `documentation.nvim/editor/browse/init.lua:93` - History-Modus
+
+Der interessante Fund: **`view.lua` kannte die Ladezustaende bereits.** Es
+rendert `"(loading commits…)"` fuer `st.commits == nil` und
+`"(analysing <sha>…)"` fuer `st.impact == nil`. Beide Zweige waren
+unerreichbar, weil die Loader synchron waren - jetzt tun sie genau das, was
+dort schon stand. Das ist kein Kompromiss, sondern die Absicht des Designs.
+
+Umfang war groesser als gedacht: nicht nur `load_commits` (`git log` ueber die
+Vollhistorie beim Betreten des Modus), sondern vor allem `load_impact` mit
+**drei** Subprozessen pro Commit - der Diff plus die Map bei `sha` und bei
+`sha^`. Durch die History zu steppen blockierte also pro Zeile dreifach.
+
+Details: `commits_loading`-Flag, damit `render` nicht bei jedem Frame ein
+zweites `git log` startet. Die drei Impact-Aufrufe verkettet - sie treffen
+dieselbe Objektdatenbank, und `st.impact` darf erst sichtbar werden, wenn alle
+drei gelandet sind. `render` uebergibt ein `again`, das nur neu zeichnet, wenn
+der Browser noch offen und derselbe State aktiv ist: ein spaeter Callback darf
+weder in ein totes Fenster zeichnen noch einen alten State wiederbeleben.
+`st.impact_sha` wird jetzt **vor** dem Laden gesetzt - es ist die Markierung
+"dieser Commit wird bearbeitet", sonst startet jeder Frame dazwischen dieselben
+drei Subprozesse erneut.
+
+## Nicht umgebaut - hier gibt es einen Nachteil
+
+### `documentation.nvim/editor/serve.lua:130`
+
+`opts.git(opts, args) -> stdout, err` ist eine **host-agnostische Naht**, die
+zwei Hosts bedient:
+
+- `editor/serve.lua:166` injiziert die `vim.system`-Variante,
+- `standalone/docmap.lua:365` injiziert `popen_git` - unter blankem
+  `lua`/`luajit`, **ganz ohne Event-Loop**.
+
+`core/api.lua` ruft die Naht an fuenf Stellen in vier Routen auf, und
+`api.answer()` liefert synchron. Ein Umbau auf Callbacks macht jede Route zu
+CPS und zwingt dem Standalone-Host ein Callback-Protokoll auf, von dem er
+nichts hat - er muesste es synchron nachspielen. Das ist der Nachteil: ein
+bewusst editorfreies Modul bekommt Ceremony fuer einen Nutzen, der dort nicht
+existiert.
+
+Nicht ausgeschlossen fuer spaeter, aber dann als Redesign von `core/api.lua`
+mit beiden Hosts im Blick - nicht als Nebenprodukt eines Async-Durchgangs.
+
+### `fileops.nvim/util/git.lua:42/63`
+
+`ops/file.lua` ist die Kern-API einer Datei-Operations-Bibliothek und
+durchgaengig als `(ok, msg)` dokumentiert - `M.rename`, `M.move`,
+`M.delete_current` und die gleichnamigen Wrapper in `init.lua`.
+
+Jede ehrliche Async-Variante bricht entweder diesen Vertrag oder erzeugt einen
+Doppelvertrag ("synchron, ausser wenn `on_done` gesetzt ist"), bei dem der
+Rueckgabewert je nach Aufrufform etwas anderes bedeutet. Dafuer stehen
+zwei Spawns pro Rename/Delete (`ls-files --error-unmatch` plus `mv`/`rm`),
+zusammen etwa 100-150ms auf einem lokalen Repo - bei einem explizit
+angestossenen Kommando mit sichtbarem Ergebnis.
+
+Die async-Zwillinge (`mv_async`, `rm_async`, `is_tracked_async`) existieren in
+`util/git.lua` bereits genau dafuer, dass ein Aufrufer sich einen
+nicht-blockierenden Pfad selbst bauen kann, ohne dass die Bibliothek ihren
+Vertrag aendert. Das ist die saubere Antwort auf diesen Fall.
