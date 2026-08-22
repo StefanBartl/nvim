@@ -222,3 +222,104 @@ Ein echter Async-Umbau wuerde bedeuten, dass **alle** Aufrufer von
 dessen Aufrufer). Das ist machbar, aber ein eigenstaendiger Umbau mit
 deutlich groesserer Reichweite als die uebrigen Punkte hier.
 **Entscheidung noetig, ob das angegangen werden soll.**
+
+---
+
+## WICHTIGER ZUSATZBEFUND: `lib.nvim.cross.run_argv.run_blocking*`
+
+Die erste Suche nach `vim.fn.system` & Co. hat einen ganzen Layer uebersehen:
+`lib.nvim.cross.run_argv.run_blocking()` und `.run_blocking_captured()` sind
+duenne Wrapper um `vim.fn.system()`. **Jeder Aufrufer davon blockiert genauso**,
+nur sieht man es an der Aufrufstelle nicht mehr.
+
+Verteilung der Aufrufstellen (ohne Tests/Docs):
+
+| Repo | Aufrufstellen |
+|---|---|
+| sandbox.nvim | ~110 (87x `run_blocking_captured` + Adapter-Wrapper) |
+| filetree.nvim | 10 (davon 5 erledigt, s. u.) |
+| lib.nvim | 14 (inkl. eigener API-Definition) |
+| replacer.nvim | 3 |
+| pickers.nvim | 2 |
+| sessions.nvim | 2 (nur noch Fallback-Pfad, s. Abschnitt 4) |
+| reposcope.nvim | 1 |
+
+Das ist der mit Abstand groesste Einzelposten im gesamten Bestand.
+
+**Vorschlag (noch nicht umgesetzt, Entscheidung noetig):** `lib.nvim` bekommt ein
+`cross.run_argv.run_async_captured(cmd, on_done)` als offizielles Gegenstueck -
+sandbox.nvim hat in `lua/sandbox/util/run_argv.lua` bereits genau so eine
+Implementierung (inkl. Progress-Handle und `:stop()`), die sich als Vorlage
+anbietet. Danach koennen die Aufrufer schrittweise migriert werden.
+
+Ein Komplettumbau von sandbox.nvim (110 Stellen quer durch alle Adapter plus die
+komplette UI-Schicht, die heute synchrone Rueckgabewerte erwartet) ist ein
+eigenes Projekt, kein Patch. **BEWUSST NICHT in diesem Durchgang angefasst.**
+
+## 11. sandbox.nvim - UNKLAR (bewusste Architektur, aber real blockierend)
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/sandbox/util/run_argv.lua:43` | `vim.fn.system(cmd, input)` (Fallback ohne lib.nvim) | UNKLAR |
+| ~87 Aufrufer von `run_blocking_captured` | | UNKLAR |
+
+Das Plugin unterscheidet bereits sauber: `run_async_captured()` (28 Aufrufer,
+mit Progress-Handle und Abbruch) fuer lange Operationen wie `pull`/`build`/
+`prune`, `run_blocking_captured()` (87 Aufrufer) fuer die kurzen. Die
+Architektur ist also bewusst.
+
+Trotzdem: `docker ps`, `docker inspect`, `docker logs` brauchen real 100-500ms,
+und die blockieren jedes Mal. **Entscheidung noetig**, ob der Adapter-Layer
+(und die davon abhaengige UI) auf Callbacks umgestellt werden soll.
+
+## 12. filetree.nvim - TEILWEISE ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `features/search/grep_in_dir/init.lua:139` | `vim.system(rg):wait()` | ERLEDIGT |
+| `features/search/grep_in_dir/init.lua:145` | `vim.fn.systemlist(grep)` | ERLEDIGT |
+| `features/fileops/trash/platform.lua:31` | `run_blocking(powershell ...)` | ERLEDIGT |
+| `features/fileops/trash/platform.lua:42` | `run_blocking({"trash"})` | ERLEDIGT |
+| `features/fileops/trash/platform.lua:50` | `os.execute(osascript ...)` | ERLEDIGT |
+| `features/fileops/trash/platform.lua:60/65/75` | `run_blocking(gio/trash-put/mv)` | ERLEDIGT |
+| `features/fileops/trash/platform.lua:83` | `vim.fn.system({"wslpath"})` | ERLEDIGT |
+| `features/fileops/trash/init.lua:119` | `vim.wait(20)` | ERLEDIGT |
+| `features/fileops/trash/undo.lua:116/139/145` | `run_blocking(powershell/gio/mv)` | OFFEN |
+| `features/infra/safety/backup.lua:48/50` | `run_blocking(xcopy/cp -r)` | OFFEN |
+
+### grep_in_dir
+
+Suche laeuft als `vim.system()`-Callback; Quickfix-Befuellung nach
+`builtin_search_done()` ausgelagert. Der Progress-Indikator, den die Funktion
+direkt vor der Suche startet, konnte vorher gar nicht zeichnen. Der
+grep-Zweig baute zudem einen Shell-String mit `shellescape` - jetzt dieselbe
+argv-Liste wie rg, damit entfaellt auch das Git-Bash-als-`&shell`-Quoting-Problem
+unter Windows.
+
+### Trash
+
+Der wichtigste Fall auf dieser Workstation: auf Windows startet jedes
+Trash-Kommando PowerShell, allein dessen Start kostet mehrere hundert
+Millisekunden - jedes `d` im Tree fror Neovim ein, bei markierten Nodes
+multipliziert mit deren Anzahl.
+
+- Alle vier Backends laufen ueber einen gemeinsamen `run()`-Helper mit
+  `vim.system()`-Callback. `M.send(path, cb)`.
+- AppleScript-Fallback von `os.execute(Shell-String)` auf argv-Liste - kein
+  Shell-Quoting des Pfads mehr noetig.
+- WSL kettet `wslpath` und PowerShell asynchron.
+- `do_trash(path, cb)`; das `vim.wait(20)` nach `watch.release()` ist jetzt
+  `vim.defer_fn(20)`. Das ist inhaltlich sogar korrekter: der Kommentar
+  begruendet das Warten damit, dass libuv Handles *asynchron* schliesst -
+  genau dafuer muss die Loop laufen, was `vim.wait` ohne Prediate nicht
+  zuverlaessig tut.
+- `run_all()` verkettet statt zu schleifen, bewusst sequentiell.
+
+**BREAKING**: `M.delete(path)` liefert das Ergebnis nicht mehr als
+Rueckgabewert, sondern ueber den neuen optionalen `on_done(ok)`. Ebenso
+`platform.M.send(path, cb)`. Im Plugin selbst gibt es keine weiteren
+Aufrufer - betroffen waeren nur programmatische Nutzer der Public API.
+
+**OFFEN**: `trash/undo.lua` (Restore aus dem Papierkorb, ebenfalls PowerShell)
+und `infra/safety/backup.lua` (`xcopy`/`cp -r`, kann bei grossen Verzeichnissen
+lange laufen). Beide haengen an derselben `run_blocking`-Frage wie oben.
