@@ -461,9 +461,14 @@ Aufrufer. Die Dauermessung umfasst weiterhin die echte Wall-Clock-Zeit.
 
 ## 20. Vollstaendig sauber (keine blockierenden Aufrufe ausserhalb von Tests)
 
-`images.nvim`, `markdown.nvim`, `color_my_ascii.nvim`, `diff.nvim`,
-`fileops.nvim`, `buffer-ctx.nvim`, `migrate.nvim`, `recommender.nvim`,
-`language.nvim`, `spotlight.nvim`, `lsp.nvim`, `cascade.nvim`.
+> **KORREKTUR (nachtraeglich):** Diese Liste war zu kurz gegriffen. Die
+> Suchmuster dieses Durchgangs haben `vim.system(...):wait()` nicht erfasst -
+> siehe den Abschnitt "Zweite Kategorie" unten. Damit fallen `images.nvim`,
+> `markdown.nvim`, `diff.nvim` und `fileops.nvim` aus dieser Liste heraus.
+
+Tatsaechlich sauber: `color_my_ascii.nvim`, `buffer-ctx.nvim`, `migrate.nvim`,
+`recommender.nvim`, `language.nvim`, `spotlight.nvim`, `lsp.nvim`,
+`cascade.nvim`.
 
 Die Treffer, die die erste Zaehlung dort gemeldet hat, lagen ausnahmslos in
 `tests/`, `docs/TESTS/` oder `*_spec.lua`.
@@ -670,3 +675,77 @@ Die restlichen rund 70 `run_blocking_captured`-Stellen (images, volumes,
 networks, registry, compose, wsl). Alle kurz genug, dass sie nicht auffallen -
 und mit dem jetzt etablierten `on_done`-Muster jederzeit einzeln nachziehbar,
 ohne etwas zu brechen.
+
+---
+
+# Zweite Kategorie: `vim.system(...):wait()`
+
+**Luecke in der urspruenglichen Suche.** Gesucht wurde nach `vim.fn.system`,
+`io.popen`, `os.execute`, `vim.wait`, `jobwait` und `run_blocking*`.
+`vim.system(argv, opts):wait()` blockiert genauso, faellt aber durch keines
+dieser Muster. Nachgereicht: 34 Fundstellen ausserhalb von Tests.
+
+Wichtig: `:wait()` ist die **schlechteste** Form des Blockierens. Anders als
+`vim.wait(ms, predicate)` pumpt es die Loop nicht, d. h. `vim.schedule`-
+Callbacks laufen waehrenddessen gar nicht - genau der Effekt, den
+documentation.nvim und insights.nvim in ihren Kommentaren messen
+(0 sichtbare Progress-Samples unter `:wait()`).
+
+## lib.nvim: architektonisch in Ordnung
+
+| Datei:Zeile | Aufruf | Bewertung |
+|---|---|---|
+| `net/curl/init.lua:288/332/383` | `fetch_raw_blocking` / `fetch_json_blocking` / `download_blocking` | BEHALTEN |
+| `cross/run_argv/init.lua:17/48` | `run_blocking` / `run_blocking_captured` | BEHALTEN |
+| `cross/run/env/init.lua:308` | Login-Shell-Probe (`sh -lc env`) | BEHALTEN |
+| `cross/copy_to_clipboard/init.lua:27` | Clipboard-Tool | OFFEN (klein) |
+
+Jede blockierende Funktion heisst dort explizit `*_blocking` **und hat einen
+asynchronen Zwilling** (`fetch_raw`, `fetch_json`, `download`,
+`run_async_captured`). Der Vertrag ist an der Aufrufstelle sichtbar - genau
+das, was bei `run_blocking` in den Consumern gefehlt hat.
+
+Und die Aufrufer greifen bereits richtig zu: die einzige Nutzung von
+`fetch_raw_blocking` ausserhalb von lib.nvim ist
+`runtime-analysis.nvim/runner.lua:115` - und der interaktive Pfad
+(`bindings/usrcmds.lua:342`) nutzt `runner.run_async`, nicht `M.run`.
+
+Der Login-Shell-Probe steigt unter Windows sofort aus (`is_windows()` ->
+`nil`), ist auf 3s begrenzt und wird gecacht. Auf dieser Workstation also
+irrelevant.
+
+=> **In lib.nvim liegt kein grosser Posten mehr.** Was dort blockiert, ist
+benannt, begrenzt, gecacht oder hat eine Alternative daneben.
+
+## Die eigentlichen neuen Posten, nach Schwere
+
+| # | Fundstelle | Schlimmster Fall | Status |
+|---|---|---|---|
+| 1 | `dap.nvim/lua/wkddap/languages/zig.lua:70` | `zig build` - **Minuten** | OFFEN |
+| 2 | `images.nvim/lua/images/convert.lua:71/125/167` | `magick` convert - Sekunden bei grossen Bildern | OFFEN |
+| 3 | `insights.nvim/lua/insights/imports/graph.lua:129` | Graphviz-Layout eines Import-Graphen - Sekunden | OFFEN |
+| 4 | `images.nvim/lua/images/remote.lua:91` | Download - netzabhaengig | OFFEN |
+| 5 | `documentation.nvim/lua/documentation/editor/serve.lua:130` | git je HTTP-Request des Serve-Tiers | OFFEN |
+| 6 | `documentation.nvim/lua/documentation/editor/browse/init.lua:93` | git | OFFEN |
+| 7 | `markdown.nvim/lua/markdown/core/file_refs.lua:147` | `rg` ueber den Baum | OFFEN |
+| 8 | `insights.nvim/lua/insights/devserver/init.lua:73/81` | Devserver-Start / `kill` | OFFEN |
+| 9 | `insights.nvim/lua/insights/conflicts/init.lua:27` | git | OFFEN |
+| 10 | `dap.nvim/lua/wkddap/languages/rust.lua:70` | `rustc --print sysroot` | OFFEN |
+| 11 | `fileops.nvim/lua/fileops/util/git.lua:42/63` | `git mv` / `git rm` | OFFEN |
+| 12 | `diff.nvim/lua/diff/core/git.lua:72` | `git show` | OFFEN |
+| 13 | `filetree.nvim/.../smart_rename/init.lua:335` | git | OFFEN |
+| 14 | `open.nvim/lua/open/keywords.lua:34` | kurz | OFFEN |
+| 15 | `images.nvim/lua/images/info.lua:51` | `magick identify` | OFFEN |
+| 16 | `replacer.nvim/rg.lua:331`, `gitfiles.lua:18` | s. Abschnitt 17 | OFFEN |
+| - | `pickers.nvim/lua/pickers/smart/search.lua:111/132` | im Code begruendet (Engines debouncen, kurzer Timeout) | BEHALTEN |
+| - | `sandbox.nvim/util/run_argv.lua:28` | ist selbst der Blocking-Vertrag | BEHALTEN |
+| - | `replacer.nvim/health.lua:25`, `documentation.nvim/scripts/ci.lua` | health bzw. Build-Skript | BEHALTEN |
+
+### Nr. 1 verdient eine eigene Anmerkung
+
+`zig.lua:70` sitzt in einer DAP-`program`-Resolverfunktion, die ohnehin schon
+mit `coroutine.yield()` arbeitet (fuer den Pfad-Prompt direkt darunter). Der
+Umbau ist damit sogar einfach: `zig build` asynchron starten und die Coroutine
+im Callback fortsetzen - dasselbe Muster, das zwei Zeilen weiter unten schon
+steht. Aktuell friert ein `zig build` bei "Launch (build first)" den Editor
+fuer die komplette Buildzeit ein.
