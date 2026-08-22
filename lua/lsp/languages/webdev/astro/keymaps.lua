@@ -158,8 +158,14 @@ function M.attach()
     end
 
     local url = "http://localhost:4321/" .. url_path
-    vim.fn.system({"xdg-open", url})  -- Linux
-    -- vim.fn.system({"open", url})   -- macOS
+    -- vim.ui.open() picks the platform opener itself (xdg-open / open / start)
+    -- and spawns it detached via vim.system(), so the UI thread is never
+    -- blocked. The previous vim.fn.system({"xdg-open", url}) both blocked until
+    -- the opener returned and only worked on Linux.
+    local ok_open, err = pcall(vim.ui.open, url)
+    if not ok_open then
+      vim.notify("Could not open " .. url .. ": " .. tostring(err), vim.log.levels.WARN)
+    end
   end, { buffer = bufnr, desc = "Preview in browser" })
 
   -- Format Astro file
