@@ -261,6 +261,8 @@ eigenes Projekt, kein Patch. **BEWUSST NICHT in diesem Durchgang angefasst.**
 | Datei:Zeile | Aufruf | Status |
 |---|---|---|
 | `lua/sandbox/util/run_argv.lua:43` | `vim.fn.system(cmd, input)` (Fallback ohne lib.nvim) | UNKLAR |
+| `lua/sandbox/statusline.lua:34` | blockierendes `docker ps` alle 3s | ERLEDIGT |
+| 5 Hot-Path-Ops x 3 Engines | `run_blocking_captured` | ERLEDIGT (optionaler on_done) |
 | ~87 Aufrufer von `run_blocking_captured` | | UNKLAR |
 
 Das Plugin unterscheidet bereits sauber: `run_async_captured()` (28 Aufrufer,
@@ -381,8 +383,8 @@ zusaetzliches `retry_async()` neben dem bestehenden - Entscheidung noetig.
 
 | Datei:Zeile | Aufruf | Status |
 |---|---|---|
-| `lua/documentation/bindings/usrcmds/checklist.lua:49` | `vim.wait(120000, ...)` | UNKLAR |
-| `lua/documentation/bindings/usrcmds/churn.lua:52` | `vim.wait(120000, ...)` | UNKLAR |
+| `lua/documentation/bindings/usrcmds/checklist.lua:49` | `vim.wait(120000, ...)` | ERLEDIGT |
+| `lua/documentation/bindings/usrcmds/churn.lua:52` | `vim.wait(120000, ...)` | ERLEDIGT |
 | `lua/documentation/core/luals.lua:67` | `vim.wait(timeout_ms + 3000, ...)` | UNKLAR |
 | `lua/documentation/mcp/tools.lua:395` | `vim.wait(120000, ...)` | UNKLAR |
 | `scripts/bundle_manifest.lua:183`, `scripts/package.lua:135/173/297/392/437` | `io.popen` / `os.execute` | BEHALTEN - Build-Skripte, keine UI |
@@ -595,3 +597,76 @@ lohnen sofort. `mcp/tools.lua` ist erst nach einer Aenderung am MCP-Vertrag
 angehbar. `luals`/`scan_full` lohnt bei diesem Nutzungsprofil am wenigsten -
 das waere ein API-Redesign fuer ein Kommando, bei dem der Nutzer ohnehin
 wartet.
+
+---
+
+# Nachtrag: umgesetzt aus der Aufwandsschaetzung
+
+## documentation.nvim - die zwei kleinen Faelle: ERLEDIGT
+
+`checklist.lua` und `churn.lua` liefen beide ueber die
+`vim.wait(120000, ...)`-Pumpe. Die haelt zwar die Loop am Laufen (deshalb war
+der Progress-Handle ueberhaupt sichtbar), blockiert aber die Eingabe fuer die
+gesamte Dauer von `git log` ueber die Vollhistorie.
+
+Beide liefern das Ergebnis jetzt ueber `vim.system`s Callback, gehoben in
+`vim.schedule()`. Die 120s-Grenze uebernimmt `vim.system`s eigenes `timeout`.
+Ein Timeout-Kill erscheint dort als Exit ungleich 0 ohne stderr - fuer diesen
+Fall bleibt die alte Formulierung der Meldung erhalten.
+
+Weiterhin OFFEN: `mcp/tools.lua` (MCP-Handler-Vertrag) und `core/luals.lua`
+(`scan_full`-Redesign).
+
+## sandbox.nvim - Statusline + Hot-Path: ERLEDIGT
+
+### Statusline (`lua/sandbox/statusline.lua`)
+
+`M.status()` rief `engine.list_containers()` synchron. Als
+Statusline-Komponente hiess das: alle 3s (TTL) friert Neovim fuer die Dauer
+eines `docker ps` ein.
+
+Jetzt stale-while-revalidate: `M.status()` liefert immer sofort den
+gecachten Text und stoesst bei Ablauf im Hintergrund einen `refresh()` an.
+Ein `refreshing`-Flag verhindert, dass eine mehrmals pro Sekunde neu
+zeichnende Statusline `ps`-Aufrufe stapelt. Erster Redraw nach Ablauf zeigt
+den alten Wert, der naechste den neuen.
+
+Gemessen nach dem Umbau: `status()` erster Aufruf 25ms, zweiter 0.0ms,
+Hintergrundergebnis danach korrekt im Cache. Der Rest von ~10ms ist der
+Spawn selbst - ein Prozessstart ist bis zum fork/exec synchron und laesst
+sich nicht wegoptimieren. Einmal pro TTL statt 100-500ms fuer den vollen
+Roundtrip. Wenn die Komponente je klebrig wirkt, ist die TTL hoch- und nicht
+runterzusetzen.
+
+### Hot-Path (15 Adapter + 5 Usecases + Port + 3 Consumer)
+
+Umgestellt wurden genau die fuenf Operationen, deren Daemon-Roundtrip real
+spuerbar ist: `list_containers`, `get_logs`, `inspect_container`,
+`stats_container`, `top_container` - je docker, nerdctl, podman.
+
+Muster wie beim schon vorhandenen `stop_container`: **optionaler
+`on_done`-Parameter**. Ohne `on_done` laeuft exakt der alte synchrone Pfad,
+mit `on_done` geht es ueber `run_async_captured`. Das Parsen liegt als
+lokales `parse(ok, output)` zwischen beiden Pfaden - keine zweite Kopie der
+Auswertung, keine Signaturaenderung fuer bestehende Aufrufer.
+
+Zusaetzlich nimmt `run_async_captured` jetzt ein optionales
+`opts = { progress = false }`. Bisher bekam jeder Aufrufer zwangsweise einen
+Progress-Indikator - richtig fuer `pull`/`build`, falsch fuer einen ambienten
+Refresh alle paar Sekunden.
+
+Nicht angefasst (bewusst): alle kurzen mutierenden Kommandos (`start`,
+`stop`, `rename`, `tag`, `create network`, ...) - dort faellt eine Blockade
+nicht auf.
+
+**Bewusst synchron geblieben**: die `CONTAINER_ID`-Completion in
+`bindings/usrcmds/init.lua`. Neovims Cmdline-Completion will die
+Kandidatenliste als Rueckgabewert, ein Callback hat dort kein Ziel.
+`cached_names` haelt das bei einem `ps -a` pro TTL statt einem pro `<Tab>`.
+
+### Damit noch offen in sandbox.nvim
+
+Die restlichen rund 70 `run_blocking_captured`-Stellen (images, volumes,
+networks, registry, compose, wsl). Alle kurz genug, dass sie nicht auffallen -
+und mit dem jetzt etablierten `on_done`-Muster jederzeit einzeln nachziehbar,
+ohne etwas zu brechen.
