@@ -158,6 +158,53 @@ Nach jedem Schritt gegenmessen:
 nvim --cmd "luafile C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/perf-tools/stall.lua" C:/Users/StefanBartl/AppData/Local/nvim/init.lua
 ```
 
+## Die VeryLazy-Kaskade (2026-08-22, mit `events.lua` gefunden)
+
+Die Posten oben betreffen alle den frühen Cluster *vor* `VeryLazy`. Eine
+Messung mit [`events.lua`](./perf-tools/events.lua) hat gezeigt, dass die
+größere Hälfte woanders liegt: zwei Blöcke von 496 ms und 409 ms direkt hinter
+`VeryLazy` (+1,21 s), deren Summe fast genau den Ladezeiten der dort geladenen
+Plugins entspricht (~885 ms gegen 905 ms gemessene Blockade).
+
+Der mit Abstand größte Hebel darin war **`resty.nvim`**, und zwar nicht wegen
+seiner eigenen 243 ms:
+
+| Plugin | ms | warum es lud |
+|---|---|---|
+| resty.nvim | 243 | `event = "VeryLazy"` |
+| nvim-cmp | 148 | `after/plugin/resty_http_cmp.lua` beginnt mit `require("cmp")` |
+| LuaSnip | 97 | Dependency von nvim-cmp |
+| telescope.nvim | 74 | `resty/init.lua:62` hat ein top-level `pcall(require, "telescope")` |
+
+Zusammen ~600 ms, für einen HTTP-Client, für den niemand eine Datei geöffnet
+hatte. Beide Plugins waren korrekt lazy deklariert (`cmd = "Telescope"`,
+`event = "InsertEnter"`) — ein fremdes `require` hebelt das aus, und die
+Spec-Deklaration sagt einem das nicht. Aufgespürt mit einem `require`-Hook,
+der beim ersten `require("telescope"|"cmp")` einen Stacktrace ausgibt.
+
+**Die Falle beim Fixen — `ft` macht es schlimmer.** Damit ein `ft`-Plugin sein
+`ftdetect/` ausführen kann, bevor das Plugin selbst geladen ist, legt
+lazy.nvim es früh auf den runtimepath und markiert es `_.rtp_loaded`.
+`loader.get_start_plugins()` wählt aber nach
+
+```lua
+not plugin._.loaded and (plugin._.rtp_loaded or plugin.lazy == false)
+```
+
+aus — ein `rtp_loaded`-Plugin landet also im **Startup-Batch**, unabhängig von
+`lazy = true`. Gemessen: mit `ft = { "http", "resty" }` meldete lazy
+`_.loaded = { start = "start" }`, das Plugin lud bei *jedem* Start; ohne `ft`
+ist `_.loaded = nil` und es liegt nicht einmal im runtimepath.
+
+Die Lösung ist deshalb `cmd` plus ein eigener FileType-Autocmd in `init`, der
+das Plugin per `require` anfordert — siehe `plugins/webdev.lua`. Wer hier
+weitere Plugins entlazyt, sollte das im Kopf behalten: **`ft` ist kein
+Free Lunch.**
+
+Noch offen aus derselben Messung, bewusst nicht angefasst: `neo-tree.nvim`
+steht auf `lazy = false` und zieht `neotest` mit (159 + 147 ms) — das ist eine
+Entscheidung, keine Analyse.
+
 ## Fertig, wenn
 
 Der Blockade-Cluster vor +1,5 s unter **~300 ms** Gesamtblockade liegt,
