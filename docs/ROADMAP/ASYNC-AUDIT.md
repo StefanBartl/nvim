@@ -78,3 +78,147 @@ nicht-blockierend **und** plattformuebergreifend korrekt.
   ausserhalb des Startup-Pfades. BEHALTEN.
 - `lua/autocmds/explorer-singleton.smoke.lua` - Smoke-Test, `vim.wait` ist dort
   korrekt. BEHALTEN.
+
+---
+
+## Querschnitts-Entscheidung: `health.lua` bleibt synchron
+
+Betrifft: `mdview.nvim/lua/mdview/health.lua:160`,
+`github_stats.nvim/lua/github_stats/health.lua:136`,
+`replacer.nvim/lua/replacer/health.lua:136`,
+`pdfport.nvim/lua/pdfport/health.lua:116`,
+`lib.nvim/lua/lib/nvim/deps/health.lua:31`.
+
+Neovims Health-Framework sammelt die Reports synchron ein: `vim.health.ok()`
+& Co. muessen waehrend des Durchlaufs von `check()` aufgerufen werden. Ein
+asynchron nachgereichtes Ergebnis landet nach dem Rendern des Reports und
+taucht dort nie auf. `:checkhealth` ist ausserdem ein bewusst angestossener,
+seltener Vorgang, bei dem eine kurze Blockade erwartbar ist.
+
+=> Alle Subprozess-Aufrufe in `health.lua`-Dateien: **BEHALTEN**.
+
+---
+
+## 2. cmdlog.nvim - ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/cmdlog/core/project_history.lua:36` | `vim.fn.systemlist({"git","rev-parse","--show-toplevel"})` | ERLEDIGT |
+
+`get_git_root()` lief bei jedem Cache-Miss (TTL 3s) beim Tippen von `:` in einen
+Prozess-Spawn. Ersetzt durch `vim.fs.find(".git", { upward = true, limit = 1 })`
+- der Subprozess entfaellt komplett, uebrig bleiben `stat()`-Aufrufe. Gitfiles
+(Worktrees/Submodule) sind mit abgedeckt, da `vim.fs.find` Datei *und*
+Verzeichnis matcht.
+
+## 3. open.nvim - ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/open/context.lua:113` | `vim.fn.system({"git","rev-parse","--show-toplevel"})` | ERLEDIGT |
+
+Identischer Umbau wie bei cmdlog.nvim; lief bei jeder `:Open`-Aufloesung.
+
+## 4. sessions.nvim - ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/sessions/bindings/usercmds/init.lua:246` | `vim.system(...):wait()` (git rev-parse) | ERLEDIGT - Subprozess entfaellt |
+| `lua/sessions/bindings/usercmds/init.lua:255` | `vim.fn.system("git ... rev-parse")` | ERLEDIGT - Subprozess entfaellt |
+| `lua/sessions/bindings/usercmds/init.lua:266/275` | `git ls-files -v` | ERLEDIGT - vim.system-Callback |
+| `lua/sessions/bindings/usercmds/init.lua:286/297` | `git update-index` | ERLEDIGT - vim.system-Callback |
+| `lua/sessions/git.lua:18` | `vim.system({"git","symbolic-ref"}):wait()` | ERLEDIGT - Subprozess entfaellt |
+| `lua/sessions/git.lua:25` | `vim.fn.system("git symbolic-ref --short HEAD")` | ERLEDIGT - Subprozess entfaellt |
+
+- `toggle_track()`: git-Root per `vim.fs.find`. Die zwei verbleibenden echten
+  git-Aufrufe laufen als verkettete `vim.system()`-Callbacks, Notify in
+  `vim.schedule()`. Blockierender Pfad nur noch als Fallback fuer Neovim < 0.10.
+- `current_branch()`: liest den Branch jetzt aus `.git/HEAD`
+  (`ref: refs/heads/<branch>`) inkl. `gitdir:`-Aufloesung fuer Worktrees.
+  Detached HEAD liefert korrekt `nil` (dort gibt es keinen Branchnamen).
+
+## 5. emojis.nvim - ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/emojis/actions.lua:45` | `vim.wait(cfg.duration_ms)` | ERLEDIGT |
+
+`preview_spans()` hielt den Highlight per `vim.wait()` - der Editor stand fuer
+die gesamte Preview-Dauer. Jetzt `vim.defer_fn()`. Damit die Reihenfolge
+(erst hervorheben, dann mutieren) erhalten bleibt, ist die Buffer-Mutation in
+`M.edit()` in ein `apply()`-Callback gewandert.
+
+**Verhaltensaenderung**: waehrend des Preview-Fensters ist der Buffer jetzt
+editierbar. Wird in diesem Moment getippt, mutiert `apply()` auf dem
+inzwischen geaenderten Inhalt. Bei Default-`duration_ms` praktisch irrelevant,
+aber bewusst in Kauf genommen. `docs/TESTS/commands_spec.lua` angepasst (der
+Test haengte sich vorher in `vim.wait` ein).
+
+## 6. dap.nvim - ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/wkddap/utils/validation.lua:20` | `vim.fn.systemlist("ps -eo pid,comm")` | ERLEDIGT |
+
+`pick_process()` holt die Prozessliste jetzt ueber `vim.system()`-Callback, der
+Picker oeffnet in `vim.schedule()`. Fehlerfall liefert eine leere Liste, damit
+`kit.select` weiterhin `on_cancel` feuert und die DAP-Coroutine nicht haengt.
+
+**Separater Befund (nicht Async)**: `ps -eo` ist Unix-only. Unter Windows hat
+diese Auflistung nie funktioniert; noetig waere `tasklist` oder eine
+WMI-Abfrage. Als Code-Kommentar vermerkt, nicht behoben.
+
+## 7. debugging.nvim - ERLEDIGT
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/debugging/tools/startup.lua:72` | `vim.fn.system({nvim --headless --startuptime})` | ERLEDIGT |
+
+Der schlimmste Einzelfall im Bestand: `measure_once()` startete eine zweite
+Neovim-Instanz und blockierte fuer deren komplette Startzeit - multipliziert
+mit `runs` (bis 20). `:Debug performance startup 20` fror den Editor also
+zwanzigmal hintereinander ein.
+
+`measure_once()` nimmt jetzt ein Callback, nutzt `vim.system()`, und
+Log-Lesen/Parsen laeuft in `vim.schedule()`. `M.startup()` verkettet die
+Laeufe rekursiv statt sie zu schleifen. Sequentiell bleibt es bewusst -
+parallele Spawns wuerden genau die gemessenen Zahlen verfaelschen.
+Neu: Info-Notify beim Start, da das Kommando sofort zurueckkehrt.
+
+## 8. mdview.nvim - ERLEDIGT (Health: BEHALTEN)
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/mdview/bindings/usrcmds/standalone.lua:44` | `vim.fn.system({bin, "--mdview-capability-probe"})` | ERLEDIGT |
+| `lua/mdview/health.lua:160` | `vim.fn.system({"curl", ... /health})` | BEHALTEN (s. Querschnitts-Entscheidung) |
+
+`supports_watch()` nutzt jetzt `vim.system()` mit Callback und memoisiert das
+Ergebnis pro Binary-Pfad - der Flag-Satz eines Binaries aendert sich waehrend
+einer Neovim-Sitzung nicht, also probed `:MDView standalone` nur noch einmal.
+stdout und stderr werden zusammengefasst, weil Gos `flag`-Paket die Usage nach
+stderr schreibt. Alles, was von der Probe abhaengt, liegt in einer Continuation.
+
+## 9. github_stats.nvim / replacer.nvim - BEHALTEN
+
+Jeweils genau ein blockierender Aufruf, beide in `health.lua`
+(`io.popen(version_cmd)` bzw. `io.popen("echo test | rg --json -e test")`).
+Siehe Querschnitts-Entscheidung oben.
+
+## 10. insights.nvim - BEHALTEN (bewusst blockierend)
+
+| Datei:Zeile | Aufruf | Status |
+|---|---|---|
+| `lua/insights/scan/rg.lua:70` | `vim.wait(TIMEOUT_MS, ...)` | BEHALTEN |
+
+`M.exec_sync()` ist **absichtlich** so gebaut und im Code ausfuehrlich
+begruendet: `vim.system` + `vim.wait` statt `vim.fn.systemlist`, weil nur die
+`vim.wait`-Pumpe `vim.schedule`-Callbacks durchlaesst. `lib.nvim.progress`
+haengt daran (Delay-Guard ist `vim.schedule_wrap`'d, der Statusline-Style
+`:redrawstatus` ist `vim.schedule`'d). Gemessen am eigenen Tree: 0
+Statusline-Updates mit `systemlist`, 75 mit der `vim.wait`-Pumpe.
+
+Ein echter Async-Umbau wuerde bedeuten, dass **alle** Aufrufer von
+`exec_sync()` callback-basiert werden muessen (`symbols.rg_index` und
+dessen Aufrufer). Das ist machbar, aber ein eigenstaendiger Umbau mit
+deutlich groesserer Reichweite als die uebrigen Punkte hier.
+**Entscheidung noetig, ob das angegangen werden soll.**
