@@ -53,6 +53,26 @@ function M.setup(shared, opts)
         end
       end,
 
+      -- Attach the workspace library before the initialize request goes out.
+      --
+      -- This used to live in `on_new_config` below, which never ran: that is
+      -- an lspconfig hook, and this server is registered through the native
+      -- `vim.lsp.config`, which knows nothing about it. Verified on a running
+      -- client -- `client.config.settings.Lua.workspace.library` was nil, so
+      -- lua_ls had no Neovim runtime types at all, and `LUA_LS_PROFILE` had
+      -- no effect (which is the real reason the `minimal` A/B in
+      -- docs/ROADMAP/PERF-Startup-Analyse.md changed nothing).
+      ---@param _params table
+      ---@param config table
+      before_init = function(_params, config)
+        local library = library_profiles.build_runtime_library()
+
+        config.settings = config.settings or {}
+        config.settings.Lua = config.settings.Lua or {}
+        config.settings.Lua.workspace = config.settings.Lua.workspace or {}
+        config.settings.Lua.workspace.library = library
+      end,
+
       -- Pass through initialization handler
       on_init = shared.on_init,
 
@@ -158,42 +178,11 @@ function M.setup(shared, opts)
         },
       },
 
-      -- Hook called when a new root directory is detected or config changes
-      on_new_config = function(new_config, new_root)
-        if not new_config or not new_config.settings or not new_config.settings.Lua then
-          notify.error("[lua_ls] on_new_config: invalid config structure")
-          return
-        end
-
-        -- Build project-specific library paths
-        -- local build_library = require("lsp.servers.lua_ls.build_library")
-        -- local per_root_lib = build_library(new_root) or {}
-
-        -- -- Get all Neovim runtime paths
-        -- local runtime_lib = vim.api.nvim_get_runtime_file("", true) or {}
-
-        -- -- Merge libraries
-        -- local merged = {}
-
-        -- -- Add Neovim runtime paths
-        -- for _, p in ipairs(runtime_lib) do
-        -- merged[p] = true
-        -- end
-
-        -- -- Add project-specific library paths
-        -- for k, v in pairs(per_root_lib) do
-        -- merged[k] = v
-        -- end
-
-        -- -- Assign merged library to workspace configuration
-        -- new_config.settings.Lua.workspace.library = merged
-
-        -- Verwende Library-Profile
-        local profile = opts.profile or library_profiles.get_active_profile()
-        local library = library_profiles.build_library(new_root, profile)
-
-        new_config.settings.Lua.workspace.library = library
-      end,
+      -- NOTE: there is deliberately no `on_new_config` here any more. It is an
+      -- lspconfig concept; `vim.lsp.config` never calls it, so the version
+      -- that used to sit here (building a per-root library via
+      -- `library_profiles.build_library`) was dead code. The library is set in
+      -- `before_init` above instead.
     })
 
     -- Automatically enable the server unless explicitly disabled

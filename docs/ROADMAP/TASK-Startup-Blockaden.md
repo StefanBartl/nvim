@@ -110,6 +110,21 @@ nvim --cmd "luafile C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/perf-to
 Der Blockade-Cluster vor +1,5 s unter **~300 ms** Gesamtblockade liegt,
 gemessen mit `stall.lua`.
 
+Stand 2026-08-22 nach den Fixes 1/2/4/6, interaktiv gemessen:
+
+```
+at +0.20 s   blocked   85 ms
+at +0.59 s   blocked  105 ms
+at +0.83 s   blocked  140 ms
+at +1.59 s   blocked  192 ms
+at +1.84 s   blocked  225 ms
+---- 5 stall(s), 747 ms blocked in total
+```
+
+Vor +1,5 s sind das 330 ms — knapp über dem Ziel. Der späte Stall (+2,4…2,6 s)
+ist verschwunden, subjektiv bleibt nur noch ein kurzer Ruckler (~0,1 s), der
+beim Start nicht mehr auffällt. Es fehlen also die Posten 5 und 7.
+
 ## Hinweis zur Messmethodik
 
 `nvim --startuptime` endet beim ersten Screen-Update und sieht spätere

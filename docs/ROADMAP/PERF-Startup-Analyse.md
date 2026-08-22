@@ -29,16 +29,28 @@ Maschine also **an**.
 > 60–90-s-Freezes in einem ~600-Dateien-Repo. Der Toggle wurde damals dafür
 > gebaut. Hier schlägt derselbe Mechanismus in kleinerer Dosis zu.
 
-**Umgesetzt (2026-08-22).** Statt den Toggle umzulegen wurde die Ursache
-behandelt — siehe [Umsetzung](#umsetzung-2026-08-22) unten. Kurz: der Populate
-läuft nicht mehr synchron im Attach, ohne `git`-Subprozesse, auf einer
-gefilterten Dateiliste (522 statt 1729) und hinter einem Größen-Gate.
+**Umgesetzt und gegengemessen (2026-08-22).** Statt den Toggle umzulegen wurde
+die Ursache behandelt — siehe [Umsetzung](#umsetzung-2026-08-22) unten. Kurz:
+der Populate läuft nicht mehr synchron im Attach, ohne `git`-Subprozesse, mit
+einem Vorfilter (2999 → 522 geprüfte Einträge) und hinter einem Größen-Gate.
 
-> **Noch nicht gegengemessen.** Der Nachweis, dass der spürbare Hänger weg ist,
-> steht aus: er braucht einen interaktiven Lauf mit `stall.lua`. Headless ist
-> dafür untauglich — zwei Kontrollläufe (Workspace-Diagnostics an vs. aus)
-> lieferten 3559 ms und 3729 ms Gesamtblockade, also *mehr* Blockade im
-> abgeschalteten Lauf. Das Rauschen übersteigt den Effekt.
+Interaktive Gegenmessung mit `stall.lua`:
+
+| Lauf | Stalls | gesamt | letzter Stall |
+|---|---|---|---|
+| Workspace-Diagnostics an | 5 | 747 ms | +1,85 s |
+| Workspace-Diagnostics aus | 5 | 789 ms | +1,85 s |
+
+**Der Stall bei +2,4…2,6 s ist verschwunden** — in beiden Läufen endet alles
+bei +1,85 s. Und die beiden Läufe unterscheiden sich um 42 ms *in der falschen
+Richtung*: Workspace-Diagnostics ist nicht mehr messbar teuer. Genau das war
+das Ziel — nicht abschalten, sondern so billig machen, dass der Schalter egal
+ist. Subjektiv bestätigt: der Freeze ist weg, es bleibt ein kurzer Ruckler im
+frühen Cluster (~0,1 s), der beim Start nicht auffällt.
+
+Headless ist für diese Messung übrigens untauglich: dieselbe Gegenüberstellung
+lieferte dort 3559 ms vs. 3729 ms, das Rauschen übersteigt den Effekt um ein
+Vielfaches.
 
 ---
 
@@ -263,8 +275,21 @@ und [`lsp/core/attach.lua`](../../lua/lsp/core/attach.lua):
   Repos der workstation ab und ließ es auf großen anderswo an.
 - Die Extensions kommen aus `client.config.filetypes`. Das war nötig: mit einer
   festen breiten Liste kamen 2963 Dateien zusammen und das Gate kippte, obwohl
-  lua_ls davon nur `.lua` je angefasst hätte. Pro Client sind es für lua_ls
-  **522 statt 1729**.
+  lua_ls davon nur `.lua` je angefasst hätte.
+
+**Zur Klarstellung, was sich dabei *nicht* ändert:** die Zahl der `didOpen`s
+bleibt gleich. `git ls-files | grep '\.lua$'` liefert 522 — genau das, was der
+neue Walk findet, und genau das, was das Plugin vorher auch bekam. Die 1729 aus
+„Diagnosing workspace 17/1729" ist lua_ls' eigener Zähler und gehört nicht in
+diesen Vergleich; eine frühere Fassung dieses Dokuments hat die beiden Größen
+gegeneinandergestellt. Der Gewinn liegt woanders:
+
+| | vorher | nachher |
+|---|---|---|
+| `git`-Subprozesse im Attach | 2 (`rev-parse`, `ls-files`) | 0 |
+| Einträge durch `filereadable` + `filetype.match` | 2999 (alle getrackten Dateien) | 522 |
+| `didOpen`-Runden | 522 | 522 |
+| Zeitpunkt | synchron im `on_attach` | 1,5 s danach, async |
 
 Bekannte Einschränkung, im Modul dokumentiert: das Plugin memoisiert das
 Ergebnis von `workspace_files` modul-lokal, also gewinnt bei mehreren Clients
@@ -289,24 +314,59 @@ Auslöser, per `lazy.core.config.plugins[..]._.loaded` ermittelt — Details in
 telescope-github.nvim und pdfport.nvim sind aus dem Start verschwunden, die
 Patches greifen beim späteren Laden weiterhin.
 
-### Zwei Befunde, die stehen bleiben
+### lua_ls hatte keine Neovim-Typen (`on_new_config` war toter Code)
 
-- **Der Registry-Loop enabled Server unter falschem Namen.**
-  `lsp.core.registry.setup_all` liefert Namen wie `"webdev.astro"` zurück, und
-  [`lsp/init.lua:160`](../../lua/lsp/init.lua) ruft damit
-  `vim.lsp.enable("webdev.astro")` — kein gültiger Servername, der `pcall`
-  schluckt es. Die Server laufen nur, **weil** die Module sich zusätzlich
-  selbst enablen. Das ist auch die Erklärung für den Nebenbefund „`lsp.start
-  lua_ls` wird zweimal aufgerufen". Das Selbst-Enablen zu entfernen hätte alle
-  webdev-Server abgeschaltet.
-- **`on_new_config` ist toter Code.**
-  [`lsp/servers/lua_ls/init.lua`](../../lua/lsp/servers/lua_ls/init.lua)
-  registriert über `vim.lsp.config` (nativ), aber `on_new_config` ist ein
-  lspconfig-Konzept und wird vom nativen API nie aufgerufen. Damit wird
-  `Lua.workspace.library` nie gesetzt und `LUA_LS_PROFILE` ist wirkungslos —
-  was das A/B-Ergebnis „`minimal` ändert nichts" besser erklärt als „die
-  Library-Größe ist irrelevant". Ändert LSP-Verhalten, nicht nur Performance,
-  daher bewusst nicht mitgefixt.
+[`lsp/servers/lua_ls/init.lua`](../../lua/lsp/servers/lua_ls/init.lua)
+registriert über `vim.lsp.config` (nativ), setzte die `workspace.library` aber
+in `on_new_config` — einem **lspconfig**-Hook, den das native API nie aufruft.
+Am laufenden Client nachgemessen: `client.config.settings.Lua.workspace.library`
+war `nil`. lua_ls hatte also keine `vim.*`-Typen, und `LUA_LS_PROFILE` war
+wirkungslos — was das A/B-Ergebnis „`minimal` ändert nichts" besser erklärt als
+„die Library-Größe ist irrelevant".
+
+Neu: ein `before_init`, das `library_profiles.build_runtime_library()` setzt.
+Zwei Dinge waren dabei wichtig:
+
+- **Nicht die volle `build_library`.** Die kostet 157 ms, davon 197 ms allein
+  `find_type_dirs` (der Rest ist gratis: `nvim_get_runtime_file` misst 0,0 ms).
+  Und `find_type_dirs` sucht *unterhalb des Roots* — alles, was es findet,
+  liegt bereits im Workspace und wird ohnehin indiziert. Der einzige reale
+  Effekt wäre, diese Pfade von Diagnostics auszunehmen; dafür sind 197 ms auf
+  dem Startpfad zu teuer.
+- **Nicht alle Runtimepath-Einträge.** Die erste Fassung übergab alle 52
+  rtp-Pfade — also die komplette Neovim-Runtime *plus jedes geladene Plugin*.
+  Ergebnis: eine Probe-Datei bekam binnen 60 s überhaupt keine Diagnostics
+  mehr, wo vorher `unused-local` kam. Jetzt nur `$VIMRUNTIME/lua` plus die
+  beiden `${3rd}`-Einträge; Plugin-Typen liefert lazydev bedarfsgesteuert.
+
+Zusätzlich musste `workspace.library` aus [`.luarc.json`](../../.luarc.json)
+raus: lua_ls priorisiert die Datei über die Client-Settings, und die dortigen
+Pfade waren tot (`E:/repos/lib.nvim`, `$HOME/.local/share/nvim/lazy/...` — auf
+dieser Windows-Maschine existiert keiner davon). Dynamische Pfadauflösung
+gehört in den Client, nicht in eine statische JSON. **Nebeneffekt:** andere
+lua_ls-Clients auf dieses Repo (VS Code, CLI) bekommen von dort jetzt keine
+Library mehr.
+
+Verifiziert per Hover auf `vim.api.nvim_get_current_buf`: liefert
+`function vim.api.nvim_get_current_buf() -> integer` samt Doku. Einschränkung:
+ein Vorher-Gegentest mit Hover fehlt, es ist also nicht ausgeschlossen, dass
+lazydev diesen konkreten Fall schon vorher abgedeckt hat. Belegt ist, dass die
+Library vorher `nil` war und jetzt gesetzt ist.
+
+### Korrektur: der Registry-Loop ist in Ordnung
+
+Eine frühere Fassung dieses Dokuments behauptete, `lsp/init.lua` enable Server
+unter ungültigen Namen wie `"webdev.astro"`. Das war ein Lesefehler.
+`registry.setup_all` legt den Eintrag aus `ACTIVE` ab (`"astro"`), nicht den
+Modulpfad, unter dem es das Modul gefunden hat (`lsp.servers.webdev.astro`) —
+und `ACTIVE` enthält ausschließlich gültige Servernamen.
+
+Der Loop ist nötig: `gopls`, `ts_ls` und `csharp` enablen sich **nicht** selbst.
+Umgekehrt tun es `bashls`, `lua_ls`, `marksman` und `tailwindcss` schon, die
+werden also doppelt enabled. Das ist der Nebenbefund „`lsp.start lua_ls` wird
+zweimal aufgerufen" — harmlos (der zweite Aufruf ist Reuse, 0 ms), aber eine
+Doppelverantwortung, die bei jedem neuen Servermodul neu entschieden werden
+muss.
 
 ## Was dabei bereits gefixt wurde
 

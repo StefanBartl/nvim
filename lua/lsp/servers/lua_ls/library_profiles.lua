@@ -60,6 +60,41 @@ function M.get_config(profile)
   return PROFILES[profile]
 end
 
+--- Build only the part of the library that is cheap to compute: the `${3rd}`
+--- meta definitions and Neovim's own runtime paths. Measured at 0.0ms, versus
+--- ~157ms for the full `build_library` -- all of that difference is
+--- `find_type_dirs`' filesystem scan.
+---
+--- This is the part that actually matters for editing a Neovim config: the
+--- runtime paths are what give lua_ls the `vim.*` API types. `find_type_dirs`
+--- searches BELOW the project root, so everything it finds is already inside
+--- the workspace and gets indexed anyway -- declaring those paths as `library`
+--- would only exempt them from diagnostics (`diagnostics.libraryFiles` is
+--- "Disable" in .luarc.json), which does not justify a 197ms scan on the
+--- startup path.
+---
+--- Returned as an array, which is what lua_ls' `workspace.library` expects.
+---@return string[]
+function M.build_runtime_library()
+  local library = {
+    "${3rd}/luv/library",
+    "${3rd}/busted/library",
+  }
+
+  -- Only $VIMRUNTIME/lua, deliberately NOT every runtimepath entry. The first
+  -- version of this handed lua_ls all 52 rtp paths -- which is the whole
+  -- Neovim runtime *plus every loaded plugin* -- and lua_ls then sat there
+  -- parsing them: a probe file got no diagnostics at all within 60s, where the
+  -- same file reported `unused-local` before. $VIMRUNTIME/lua is what carries
+  -- the `vim.*` meta definitions, and lazydev (enabled in lsp/core/attach)
+  -- pulls in plugin types on demand, which is the whole point of it.
+  if vim.env.VIMRUNTIME and vim.env.VIMRUNTIME ~= "" then
+    library[#library + 1] = vim.env.VIMRUNTIME .. "/lua"
+  end
+
+  return library
+end
+
 --- Build library with active profile
 ---@param root string
 ---@param profile? LibraryProfile
