@@ -569,34 +569,72 @@ plugins.add({
     end,
   },
 
-  {
-    "StefanBartl/dap.nvim",
-    event = "VeryLazy",
-    dependencies = {
-      "StefanBartl/lib.nvim",
-      "mfussenegger/nvim-dap",
-      "rcarriga/nvim-dap-ui",
-      "nvim-neotest/nvim-nio",
-      "theHamsta/nvim-dap-virtual-text",
-      "jbyuki/one-small-step-for-vimkind",
-      "igorlfs/nvim-dap-view", -- default panel UI (dap.nvim ui.provider = "dap-view")
-    },
-    opts = {
-      -- "<leader>d" alone collides with existing git/fzf mappings
-      -- (dc = DiffviewClose, di = ToggleInlineDiff, do = FzfLua diagnostics)
-      keymaps = { prefix = "<leader>da" },
-      -- dap.nvim wires exactly one panel UI. nvim-dap-view is the default;
-      -- switch to ui = { provider = "dap-ui" } to go back to nvim-dap-ui.
-      ui = { provider = "dap-view" },
-    },
-    -- dap.nvim's own Lua module is "wkddap", not "dap" -- it depends on
-    -- nvim-dap, which itself owns the top-level `dap` module (lua/dap.lua)
-    -- and several submodule names (dap.ui, dap.utils) that would otherwise
-    -- collide with this plugin's files if both used "dap" as their root.
-    config = function(_, opts)
-      require("wkddap").setup(opts)
-    end,
-  },
+  -- Debugging is a mode you enter deliberately, so nothing here belongs in
+  -- startup. On `event = "VeryLazy"` this cost 142-180ms (and once 328ms) on
+  -- every launch, dependencies included, in sessions that never debugged
+  -- anything. `keys`/`cmd` moves all of it to the first keypress: lazy.nvim
+  -- installs stubs for both, so the mappings and `:Dap` behave exactly as
+  -- before -- the first use just also loads the plugin.
+  --
+  -- The keys below MUST mirror wkddap.bindings.keymaps. `dap_prefix` is
+  -- shared with opts so the two cannot drift apart; the suffixes are the ones
+  -- that module maps (see its `map("n", prefix .. …)` calls). A binding
+  -- missing here would simply never load the plugin and silently do nothing.
+  (function()
+    -- "<leader>d" alone collides with existing git/fzf mappings
+    -- (dc = DiffviewClose, di = ToggleInlineDiff, do = FzfLua diagnostics)
+    local dap_prefix = "<leader>da"
+
+    ---@type table[]
+    local dap_keys = {}
+    for _, m in ipairs({
+      { "c", "Continue" },
+      { "s", "Step Over" },
+      { "i", "Step Into" },
+      { "o", "Step Out" },
+      { "t", "Terminate" },
+      { "r", "Restart" },
+      { "b", "Toggle Breakpoint" },
+      { "B", "Conditional Breakpoint" },
+      { "L", "Log Point" },
+      { "l", "List Breakpoints" },
+      { "u", "Toggle UI" },
+      { "e", "Evaluate" },
+      { "R", "Open REPL" },
+    }) do
+      dap_keys[#dap_keys + 1] = { dap_prefix .. m[1], desc = "[DAP] " .. m[2] }
+    end
+    -- `e` is mapped in visual mode too (evaluate the selection).
+    dap_keys[#dap_keys + 1] = { dap_prefix .. "e", mode = "v", desc = "[DAP] Evaluate selection" }
+
+    return {
+      "StefanBartl/dap.nvim",
+      cmd = "Dap",
+      keys = dap_keys,
+      dependencies = {
+        "StefanBartl/lib.nvim",
+        "mfussenegger/nvim-dap",
+        "rcarriga/nvim-dap-ui",
+        "nvim-neotest/nvim-nio",
+        "theHamsta/nvim-dap-virtual-text",
+        "jbyuki/one-small-step-for-vimkind",
+        "igorlfs/nvim-dap-view", -- default panel UI (dap.nvim ui.provider = "dap-view")
+      },
+      opts = {
+        keymaps = { prefix = dap_prefix },
+        -- dap.nvim wires exactly one panel UI. nvim-dap-view is the default;
+        -- switch to ui = { provider = "dap-ui" } to go back to nvim-dap-ui.
+        ui = { provider = "dap-view" },
+      },
+      -- dap.nvim's own Lua module is "wkddap", not "dap" -- it depends on
+      -- nvim-dap, which itself owns the top-level `dap` module (lua/dap.lua)
+      -- and several submodule names (dap.ui, dap.utils) that would otherwise
+      -- collide with this plugin's files if both used "dap" as their root.
+      config = function(_, opts)
+        require("wkddap").setup(opts)
+      end,
+    }
+  end)(),
 
   {
     "StefanBartl/diff.nvim",
