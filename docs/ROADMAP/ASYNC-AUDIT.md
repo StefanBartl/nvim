@@ -749,3 +749,65 @@ Umbau ist damit sogar einfach: `zig build` asynchron starten und die Coroutine
 im Callback fortsetzen - dasselbe Muster, das zwei Zeilen weiter unten schon
 steht. Aktuell friert ein `zig build` bei "Launch (build first)" den Editor
 fuer die komplette Buildzeit ein.
+
+---
+
+# Abarbeitung der zweiten Kategorie
+
+## Erledigt
+
+| Fundstelle | Umbau |
+|---|---|
+| `dap.nvim/.../zig.lua:70` | `zig build` asynchron, Coroutine wird im Completion-Callback fortgesetzt |
+| `dap.nvim/.../rust.lua:70` | Sysroot wird in `M.setup()` vorab geholt und gecacht |
+| `images.nvim/convert.lua` (to_pdf) | magick-Zweig asynchron, `on_done` in beiden Pfaden |
+| `images.nvim/convert.lua` (redact) | neuer `on_done`, Fenster schliesst erst im Callback |
+| `images.nvim/remote.lua:91` | Download asynchron, `M.show` in `display_file` aufgeteilt |
+| `images.nvim/info.lua:51` | `identify`-Ergebnis gecacht (Pfad + mtime + Groesse) |
+| `insights.nvim/imports/graph.lua:129` | Graphviz-Layout asynchron |
+| `filetree.nvim/.../smart_rename/init.lua:335` | rg-Kandidatenscan asynchron |
+| `open.nvim/keywords.lua:34` | `capture()` memoisiert (PowerShell-`$PROFILE`!) |
+| `replacer.nvim/gitfiles.lua:18` | `toplevel()` ohne Prozess, Kind-Abfragen als Callback-Kette |
+
+### Regression und Fix
+
+Der Sysroot-Prefetch warf beim ersten Lauf `E5560: Vimscript function "trim"
+must not be called in a fast event context`. `vim.system`-Callbacks laufen in
+einem Fast-Event-Context, `vim.fn.trim` ist eine Vimscript-Funktion. Ersetzt
+durch `vim.trim` (reines Lua). Ein Scan aller in diesem Durchgang neu
+geschriebenen Callbacks hat keine weitere Stelle dieser Art gefunden - alle
+anderen heben ihren Body vor dem ersten `vim.fn`/`vim.api`-Zugriff in
+`vim.schedule`.
+
+## Behalten - mit Grund, der schon im Code stand
+
+| Fundstelle | Grund |
+|---|---|
+| `insights.nvim/devserver/init.lua:73/81` | Laeuft auf `VimLeavePre` und **muss** vor dem Beenden fertig sein - genau das sagt der Doc-Kommentar dort. Ein Shutdown-Hook laesst sich nicht asynchronisieren. |
+| `insights.nvim/conflicts/init.lua:27` | Der `VimEnter`-Pfad nutzt bereits `run_async` (`bindings/autocmds.lua:50`). `M.run` ist die blockierende Variante fuer `:Insights conflicts`, wo der Nutzer explizit wartet. Beides ist dort dokumentiert. |
+| `markdown.nvim/core/file_refs.lua:147` | `find_references_async` existiert und wird von filetree genutzt, wo es geht. Die synchrone Variante ist bewusst der Pfad fuer filetrees Delete-Confirm: die Refs muessen bekannt sein, *bevor* der Popup erscheint. |
+| `replacer.nvim/rg.lua:331` | `M.collect` (synchron) hat keinen interaktiven Aufrufer - `init.lua` nutzt `collect_streaming`/`collect_async`. Der Abschnitt 17 oben war zu pessimistisch. |
+| `lib.nvim/cross/copy_to_clipboard/init.lua:27` | Primaerpfad ist `vim.fn.setreg("+")`; das externe Tool ist ein selten erreichter Fallback hinter einem `boolean`-Vertrag. |
+| `pickers.nvim/smart/search.lua:111/132` | Im Code begruendet (Engines debouncen, kurzer Timeout). |
+
+## Offen - strukturell, kein Patch
+
+Vier Stellen haengen an synchronen Kern-Vertraegen. Alle vier sind dieselbe
+Sorte Arbeit wie `documentation.nvim`s `scan_full`: ein API-Redesign, keine
+lokale Umformung.
+
+| Fundstelle | Was daran haengt |
+|---|---|
+| `documentation.nvim/editor/serve.lua:130` | `cfg.git` wird in `respond_api` injiziert und von `core/api.lua` an fuenf Stellen als `opts.git(opts, args) -> stdout, err` aufgerufen. `api.answer()` liefert synchron, `respond_api` antwortet synchron. Umbau = die ganze API-Schicht callback-basiert - die auch der Standalone-CLI dient, wo Blockieren voellig in Ordnung ist. |
+| `documentation.nvim/editor/browse/init.lua:93` | `load_commits` cached pro Session ("re-running `git log` on each `5` keypress would make the mode feel slower"). Einmal pro Browse-Modus, in einer Mode-State-Machine. Schlechtes Verhaeltnis. |
+| `fileops.nvim/util/git.lua:42/63` | `ops/file.lua` ist eine synchrone Datei-Operations-API (`rename_file(old,new) -> ok, err`). Die async-Zwillinge (`mv_async`, `rm_async`, `is_tracked_async`) existieren genau dafuer, dass ein Aufrufer sich das selbst bauen kann. Pro Rename/Delete sind es zwei Spawns (`ls-files` + `mv`/`rm`), zusammen ~100-150ms. |
+| `diff.nvim/core/git.lua:72` | `git show` eines Blobs, Rueckgabe sind die Zeilen fuer die Diff-Ansicht. Auf einem lokalen Repo schnell; Umbau kaskadiert in den Aufbau der Diff-Ansicht. |
+
+## Ebenfalls offen, aber gutartig
+
+`images.nvim/convert.lua:71` (`to_png`, SVG nach PNG) bleibt synchron: der
+Aufrufer ist `terminal.draw`s Lesepfad, der dokumentierte
+Redraw-Reihenfolge-Invarianten hat ("erst flushen, dann im selben Tick
+zeichnen"). Das Ergebnis liegt in einem Cache auf der Platte, der ueber
+Sitzungen hinweg haelt und auf Pfad + mtime schluesselt - der blockierende
+Aufruf faellt also einmal pro SVG-Version an, nicht pro Anzeige.
