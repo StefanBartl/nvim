@@ -210,7 +210,35 @@ Entscheidung, keine Analyse.
 Der Blockade-Cluster vor +1,5 s unter **~300 ms** Gesamtblockade liegt,
 gemessen mit `stall.lua`.
 
-Stand 2026-08-22 nach den Fixes 1/2/4/6, interaktiv gemessen:
+### Ergebnis nach allen Fixes (2026-08-23, drei interaktive Läufe)
+
+| Lauf | Stalls | gesamt | frühester Block | VimEnter |
+|---|---|---|---|---|
+| 1 | 1 | **334 ms** | keiner vor VeryLazy | +0,45 s |
+| 2 | 2 | 720 ms | 139 ms bei +0,08 s | +0,42 s |
+| 3 | 3 | **409 ms** | 112 ms bei +0,10 s | +0,43 s |
+
+Median **409 ms**, gegenüber 747 / 939 / 1350 ms in den Läufen davor. „Config
+loaded" fiel von ~1035 ms auf 517 ms im besten Lauf.
+
+**Der frühe Cluster ist weg.** Er war der eigentliche Gegenstand dieses
+Dokuments: 4–5 Blöcke à 80–320 ms zwischen +0,1 s und +1,4 s. Übrig ist ein
+einzelner Block von ~110–140 ms, und in Lauf 1 gar keiner. `VimEnter` liegt
+jetzt bei +0,43 s statt +0,91 s.
+
+Was bleibt, liegt **hinter `VeryLazy`** (+0,57…0,61 s): 334 / 580 / 297 ms.
+Das ist die Kaskade, in der sandbox (39–61 ms), gopath (69–78 ms), filetree
+(68–114 ms), reposcope (18–36 ms) und dap.nvim gleichzeitig laden. Damit ist
+das „Fertig, wenn"-Kriterium (unter ~300 ms vor +1,5 s) in Lauf 3 mit 297 ms
+erreicht und in Lauf 1 mit 334 ms knapp verfehlt.
+
+Auffällig für später: **`dap.nvim` schwankt extrem** — 44 ms, 47 ms und einmal
+**328 ms**. Der 580-ms-Lauf geht praktisch allein darauf zurück. Lohnt einen
+eigenen Blick, bevor man an den kleineren Posten feilt.
+
+---
+
+Zum Vergleich, Stand 2026-08-22 nach den Fixes 1/2/4/6:
 
 ```
 at +0.20 s   blocked   85 ms
