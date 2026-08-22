@@ -1,0 +1,19 @@
+=== lsp timeline + stalls (first 12 s) ===
+  +  0.23 s  STALL          loop blocked 141 ms
+  +  0.49 s  STALL          loop blocked 145 ms
+  +  0.73 s  STALL          loop blocked 152 ms
+  +  0.98 s  lsp.start      lua_ls  (13 ms in start())
+  +  0.98 s  lsp.start      lua_ls  (0 ms in start())
+  +  1.38 s  STALL          loop blocked 321 ms
+  +  1.52 s  LspAttach      lua_ls -> buf 1
+  +  2.57 s  STALL          loop blocked 418 ms
+  +  4.28 s  progress       lua_ls  begin: Initializing...
+  +  4.56 s  progress       lua_ls  end: Initializing...
+  +  6.13 s  progress       lua_ls  begin: Loading workspace — 0/131
+  +  8.81 s  progress       lua_ls  end: Loading workspace
+  + 10.14 s  progress       lua_ls  begin: Processing file symbols...
+  + 10.14 s  progress       lua_ls  begin: Processing file symbols...
+  + 10.31 s  progress       lua_ls  end: Processing file symbols...
+  + 10.31 s  progress       lua_ls  end: Processing file symbols...
+  + 11.14 s  progress       lua_ls  begin: Diagnosing workspace — 24/1729
+  (36 handler wrappers installed)

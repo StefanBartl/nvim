@@ -15,6 +15,7 @@ is `false`/`nil`/`""`. Gated overall by `config.mappings ~= false`.
 | `open_split` / `` g\| `` | n | Resolve + open in horizontal split | "gopath: open in split" |
 | `open_vsplit` / `g\` | n | Resolve + open in vsplit | "gopath: open in vsplit" |
 | `open_tab` / `g}` | n | Resolve + open in new tab | "gopath: open in tab" |
+| `open_explorer` / `gM` | n | Resolve path under cursor, reveal it in the system file manager (Explorer/Finder/…) instead of opening a buffer | "gopath: reveal in file explorer" |
 | `copy_location` / `gY` | n | Copy `path:line:col` | "gopath: copy path:line:col" |
 | `debug` / `g?` | n | Print resolution chain to `:messages` | "gopath: debug under cursor" |
 | `check` / `gC` | n | Report whether path under cursor exists; offer to create if missing | "gopath: check path exists / offer create" |
@@ -26,3 +27,9 @@ is `false`/`nil`/`""`. Gated overall by `config.mappings ~= false`.
 Registers a label **only** for `probe` (both `n` and `v`) — gopath's other
 keys are single `g`-prefixed and don't need a shared group per the module's
 own comment. Supports both v3 `add` and v2 `register` APIs.
+
+## Changelog
+
+- 2026-08-21: added `open_explorer` / `gM` — reveals the resolved path in the
+  system file manager instead of opening it, backed by lib.nvim's
+  `cross.reveal_in_fm` (`lua/gopath/external/helpers/revealer.lua`).

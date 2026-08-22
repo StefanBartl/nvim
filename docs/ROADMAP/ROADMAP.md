@@ -1,21 +1,58 @@
 # Roadmap
 
-![claude](assets/ROADMAP-1787215848.png)
+- [ ] lsp profile (minimal etc): bruingt das eigentlich tatsähclihc spürbar etewas oder kann das weg?
 
+## pdfport.nvim:
 
-eie sache: kannst du mir kurz erklären wenn ichruntime-analysy.nvim :RATelenteryStart bzw enes der varianten verwende, dann weren ja datenpunhkte aufgezeichnet (sinn dhinter) - ich möchte wissen, werden die d aten live geschrieben oder erst dann, wenn ich mit Stop die aufzeichnunjg beende?
-Was ist wenn ich die teemtry starte, dann nvim beeende und neu starte, muss ich dann die telemtry daten neu starten oder lauft die az´fzeichung weiter?
-idealerweiße wäre ews m.M. nach sp, dass bei beenen von nvim die daten mal geschrben werden (um sie zusaven sozusagen) und wenn nvim wieder starten uohhne die telemtry zu beenden, dann lauft die aufzeichung weiter und wrid dann updatet. wenn sie ncht "live" geschireben/saved wird, dann wäre ein usrcmd tol, mit dem man de daten mal schreben kann ohne die telemtry zu ebeenden.
-weiters: es wre tol, wenn mandie telemtry beendet, dann wird manja aufefordert einen pfad z uwählen zum svcen. der pfad passt auch, es wäre aber toll, wenn ein name vorgeschlgen wird. wenn es den dann sch gibt wird im namen eine numerierng raufgezählt oder ebbesser noch, das satum / uhrzeit s im namenm dabei
+- [ ] statt immer system app, dass eine lib.nvim ui.kit selection fragt, ob dystem app oder mit pdfport augfgemacht wird. Alle plugins, de ppdfport einbinden, durchchecken ob das sinn macht!
 
+## filetree.nvim
 
-docmap beiude -> features die der user eisntellen lassen kann
+fs refactor: nochmal checken, eigentlich wäre das ein cooles fesature. zb:
+
+In ./README.md ist eine referenz auf /Test.md, dann verschiede ich Test.md auf /docs/Test.md mirt einen neuen Kexmapo in filetree, vl `M` (großes Move), dann wird ein scan durch alle files im cwd angeregt wo refrenzen sind und die aufgelistet und gefragt opb man diese ufdaten sooll bzuw nur euinzlene (was wrsch am wengisten gebrauct wird) oder gar ncht.
+
+wrsch werden filetypes hier interessant, als erstes alle markdown refreernzen implementieren.
+später dann lua (bedarf import scan), dann andere sprachen wie javascript/typescript (pain in the a... wegen esm/common usw..)
+
+## cdx
+
+free: So., 09:00 X - 21. Juli 2027
+work: Sa., 06:00 o - 20.Sept
+dev:  Sa., 22:00 X - 03.Sep
+
+## docmap
+
+### optionsn für user zum ändern
+
+docmap und documentation.nvim beiude -> features die der user eisntellen kann finden -> es gibt sicher eineige optioen, features unsw.. die der user in der nvim installations spec einstellen köännte. analyse!
 docmap-desktop: mehr einstellungen fpr den user in die einstellugnen geben (eventuell auch all das was in doicumentation.nvim in der user spec als user eingestellt werden knnn)
+.September
 
+---
 
-- [ ] gopath, aber anstelle das eis den link öffnet, öffnet es ihn im file explorer. bei usrcmd könnte nman hier einen euen mode hinzufügeen: `| `:Gopath open [mode]` | `edit\|split\|vsplit\|tab` | resolve & open |`
-- [ ] rechtklick menu durchtestetn und nahc plugins auftilen aubmenus...
+## MISC
+
 - [ ] markdown: :Markdown list [options?] [scope? default % options cwwdf, path] mit options wie zb healdines, das  alle headlines zeigt auflistst in eine picker und man dan hin spriingen kann
+- [ ] rechtklick menu durchtestetn und nahc plugins auftilen aubmenus...
+
+## inline hover img/pdf
+
+- [ ] - [ ] [pdf inline hover](./assets/pdf_inline_hover.png)
+
+  Man ieht hier, dass der hoiver buffer (1. eingezichent)endert wid, dann aber das pdf (2.) verschoben ist und 3. sdiehst ud, dass die statusline um ein drittel angehoben wird; wie bei :messages aber hahalt ohne inhalt- keine ahnun gwarum das gamacht wird
+
+- [ ] ![image inline hover](./assets/image_inline_hover.png)
+
+  Ich hab dann den screenshot weiderum inline hovert, und man sieht auch ier, dass es wieder verschiebnen ist da simage / bufer
+
+* Ich k önnte mir vorstellen, das beide BEobachtungen sogar miteinader verbudnen sind.
+* Kann man den scracth bffer für hpover iwie durcsichtig machen wenn man ihn schon nicht abdrehen kann?
+* wenn beides nicht funkt, dann  - wie knnte man das fixen, dass die beiden nicht verschoiben sind?
+
+Es ist zwar nur ein kosmetisches problem, aber gerade wenn man mit dem feture angeben will "schau mal, ich kann images im terminal anziegen lase, sogar pdf startseiten!" - das ist aber nur halb so beeindruckend, wenn nicht alles schön ist. Am ende wird es wrsch eine abwägung sein wieviel aufwand man in ds debuggen stekcen will.
+Interesant wöäre, ganz gernell das malzu erklären, was hh ier genau püassiert, also warum ein scratch hover buffer.. was wird von welchern tools diesbezüglih übernommen - usw...
+
 ---
 
 ## idden

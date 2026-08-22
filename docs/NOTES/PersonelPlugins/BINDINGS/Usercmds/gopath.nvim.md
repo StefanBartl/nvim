@@ -12,7 +12,7 @@ Docs: `docs/BINDINGS.md`, `docs/installation.md`, `README.md`
 
 | Command | Args | Notes |
 | --- | --- | --- |
-| `:Gopath open [mode]` | `edit\|split\|vsplit\|tab` | resolve & open |
+| `:Gopath open [mode]` | `edit\|split\|vsplit\|tab\|explorer` | resolve & open (`explorer` reveals in the system file manager instead) |
 | `:Gopath copy` | — | copy `path:line:col` |
 | `:Gopath debug` | — | resolution info |
 | `:Gopath check` | — | check existence / offer create |
@@ -73,3 +73,11 @@ Docs: `docs/BINDINGS.md`, `docs/installation.md`, `README.md`
   lib.nvim's `composer.checkhealth`/`ctx.range` work (lib.nvim commit
   `e2f018d`) to be present, though the fix itself doesn't depend on the new
   `ctx.range.mode`/`col1`/`col2` fields — only on `range` being wired at all.
+- **2026-08-21**: `:Gopath open`/`:GopathOpen` gained a fourth-plus mode,
+  `explorer` — reveals the resolved path in the system file manager
+  (Explorer/Finder/…) instead of opening a buffer for it, via
+  `gopath.external.reveal()` / `external/helpers/revealer.lua` (backed by
+  lib.nvim's `cross.reveal_in_fm`, minimal per-OS fallback otherwise).
+  `norm_mode()` in `bindings/usrcmds.lua` now passes `"explorer"` through
+  unchanged instead of defaulting it to `"edit"`. New default keymap `gM`
+  (`mappings.open_explorer`) added alongside, see `Keymaps/gopath.nvim.md`.

@@ -1,5 +1,7 @@
 # TODO & ROADMAP: Refactoring & Plugin-Optimierung
 
+- Wenn möglich soll CDX jedes keymap, usrcmsd / autocmd austesten, in einer nvim intsanz, ob fgehlöer geworfen werden
+
 ## Allgemeines & Medien
 
 ## Dokumentation, Cheatsheets & Benchmarks

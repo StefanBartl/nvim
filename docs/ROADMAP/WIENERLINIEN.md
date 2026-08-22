@@ -1,6 +1,6 @@
 # Wiener Linien WKD APP
 
-WICHITG: Die haltestell für de bim (straßenbahn) ist nicht myrthengasse, sondern strozzigasse - das btte mitbedenken fpr das was folgt!
+WICHTIG: Die haltestell für de bim (straßenbahn) ist nicht myrthengasse, sondern strozzigasse - das btte mitbedenken für das was folgt!
 
 ## Table of content
 
