@@ -32,9 +32,11 @@ Ordinal-Token (`1.`, `a)`, `II.`) in der Selektion neu, egal was davor steht
 | --- | --- | --- |
 | `<leader>cR` | x | Renumbering der Ordinal-Token in der Selektion. **Nur Visual-Mode**, mit Absicht: eine Ex-Range (`:'<,'>`) ist in Vim immer linewise und würde die Spalten einer mitten in der Zeile liegenden charwise-Selektion verwerfen. Abgrenzung zu `<leader>cr` (ganzer Listenblock am Cursor). |
 
-Einzeilig charwise (`v`) wird in-place via `nvim_buf_set_text` geschrieben und
+Charwise (`v`) — einzeilig **und mehrzeilig** — wird in-place geschrieben und
 auf den neuen Grenzen reselektiert (Text kann breiter werden, `9.` → `10.`);
-linewise (`V`) bzw. mehrzeilig charwise wird als Zeilen-Range behandelt.
+Text vor Selektionsstart bzw. nach Selektionsende bleibt auf beiden
+Randzeilen unangetastet. Linewise (`V`) bzw. eine Selektion ganz ohne
+Spalten-Bounds (blockwise) wird als Zeilen-Range behandelt.
 
 ### Indent (`cfg.lists.enable and features.indent`)
 
@@ -104,6 +106,11 @@ installed and preset keymaps are enabled. No-op otherwise.
 
 ## Changelog
 
+- 2026-08-23 (Nachtrag): `<leader>cR` deckt jetzt auch mehrzeilige charwise
+  (`v`)-Selektionen ab, nicht nur einzeilige — `lib.nvim.selection` bekam
+  `chars_multiline()`/`reselect_chars_multiline()`, `sequence/renumber.lua`
+  ein `M.span_multi`. Vorher fiel eine mehrzeilige charwise-Selektion auf den
+  linewise-Zweig zurück (bewusst zurückgestellt, jetzt nachgezogen).
 - 2026-08-23: added `<leader>cR` (`renumber_selection`, x-Mode) — neue
   `sequence`-Domäne (`sequence.enable`/`start`/`types`), plus
   `:Cascade renumber selection` als linewise Ex-Pendant.

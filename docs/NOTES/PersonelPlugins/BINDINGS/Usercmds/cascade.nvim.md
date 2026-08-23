@@ -62,6 +62,11 @@ constraint (bang always binds to the command name itself), not a choice:
   (`sequence.enable`), deshalb vor und getrennt von `lists.enable` gegated.
   Das charwise-Pendant ist bewusst nur die Keymap `<leader>cR` (x-Mode), weil
   Ex-Ranges immer linewise sind.
+- **`<leader>cR` deckt jetzt auch mehrzeilige charwise-Selektionen ab
+  (Nachtrag 2026-08-23)**: `lib.nvim.selection` bekam `chars_multiline()`/
+  `reselect_chars_multiline()`, `sequence/renumber.lua` ein `M.span_multi`.
+  `:Cascade renumber selection` selbst bleibt linewise (Ex-Ranges können
+  keine Spalten tragen) — betrifft nur den Keymap-Pfad.
 - **Previously-noted doc bug now fixed**: `:CascadeRenumber` was referenced in
   README/health.lua/comments/doc but was never a registered command — every
   stale reference has been corrected to `:Cascade renumber`.

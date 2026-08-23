@@ -129,4 +129,43 @@ Umgesetzt wie entworfen, ohne Abweichung vom Konzept:
 Weiterhin offen bleibt bewusst nur die mehrzeilige charwise-Selektion — die
 gehört, falls der Bedarf real wird, als `chars_multiline()` in `lib.nvim`.
 
+### Nachtrag (2026-08-23): mehrzeilige charwise-Selektion nachgezogen
+
+Die als "falls Bedarf real wird" zurückgestellte Lücke ist jetzt geschlossen,
+in `lib.nvim` (nicht cascade-lokal nachgebaut, wie im Konzept vorgesehen):
+
+- `E:\repos\lib.nvim\lua\lib\nvim\selection\init.lua`: `chars_multiline()` /
+  `reselect_chars_multiline()` / `keep_chars_multiline()` — exakt dasselbe
+  0-based, explizite-Bounds-Schema wie `lines()`/`chars()`. `srow`/`scol` ist
+  immer der frühere Punkt im Buffer, unabhängig von der Zugrichtung der
+  Selektion. Neue Spec `docs/TESTS/selection_spec.lua` (dort gab es vorher
+  noch gar keine Spec für dieses Modul).
+- `cascade.nvim`: `sequence/renumber.lua` bekam `M.span_multi` — erste Zeile
+  ab Selektionsstart bis Zeilenende, jede volle Zeile dazwischen komplett,
+  letzte Zeile von Zeilenanfang bis Selektionsende; Text davor/danach auf den
+  Randzeilen bleibt unangetastet, der `state`-Zähler läuft durch. Reine
+  Funktion analog zu `range`/`span`, kein neues Konzept.
+- `cascade.util.lib` bridged `chars_multiline`/`reselect_chars_multiline`
+  **direkt** zu `lib.nvim.selection` (kein Standalone-Fallback wie bei
+  `lines`/`chars`/`keep_lines`/`keep_chars` im selben File) — bewusste
+  Abweichung vom bestehenden Datei-Pattern: `lib.nvim` ist für cascade.nvim
+  bereits eine harte Pflichtabhängigkeit, und die ~40 Zeilen Feedkeys-Logik
+  gerade erst in `lib.nvim` gebaut zu haben nur um sie hier zusätzlich zu
+  duplizieren, widerspräche der Linie "lib.nvim erweitern, nicht forken".
+  Der Kommentar über der alten `M.lines`-Doku in `util/lib.lua` wurde
+  entsprechend präzisiert (die vier alten Funktionen bleiben Standalone, aus
+  Bestandsschutz — kein funktionaler Gewinn durch ein Retrofit).
+- `renumber_selection` probiert jetzt: einzeilig charwise → mehrzeilig
+  charwise → linewise-Fallback (vorher endete es nach dem ersten Fall direkt
+  im linewise-Zweig).
+- Docs aktualisiert: `docs/FEATURES/SEQUENCE.md`, `doc/cascade.txt`
+  (`cascade-sequence`), `docs/ROADMAP/ROADMAP.md` (Punkt von "Deferred" nach
+  "Shipped" verschoben), sowie in `lib.nvim` selbst README + Vimdoc für
+  `lib.nvim.selection`.
+- Beide Repos (`lib.nvim`, `cascade.nvim`) committed, gepusht, gepullt.
+  `nvim-config`-Notizen unter `BINDINGS/Keymaps` und `BINDINGS/Usercmds` für
+  `cascade.nvim.md` ebenfalls nachgezogen (siehe dortige Changelogs).
+
+Damit ist aus dem ursprünglichen Konzept nichts mehr offen.
+
 ---
