@@ -22,6 +22,20 @@ All of the below is gated by the top-level switch `cfg.keymaps.preset`
 | `-` | n | Decrement / cycle word / flip an operator / step an ISO date segment (native line-up otherwise) |
 | `<leader>cp` | n | Pick a cycle-group value via `vim.ui.select` (Telescope-backed if registered) |
 
+### Sequence — Renumbering *innerhalb* der Selektion (`cfg.sequence.enable`)
+
+Eigene Domäne, filetype-unabhängig, kein Listenkontext nötig: nummeriert die
+Ordinal-Token (`1.`, `a)`, `II.`) in der Selektion neu, egal was davor steht
+(Markdown-Headlines mit Nummer, Inline-Zahlen in Prosa).
+
+| lhs | mode | action |
+| --- | --- | --- |
+| `<leader>cR` | x | Renumbering der Ordinal-Token in der Selektion. **Nur Visual-Mode**, mit Absicht: eine Ex-Range (`:'<,'>`) ist in Vim immer linewise und würde die Spalten einer mitten in der Zeile liegenden charwise-Selektion verwerfen. Abgrenzung zu `<leader>cr` (ganzer Listenblock am Cursor). |
+
+Einzeilig charwise (`v`) wird in-place via `nvim_buf_set_text` geschrieben und
+auf den neuen Grenzen reselektiert (Text kann breiter werden, `9.` → `10.`);
+linewise (`V`) bzw. mehrzeilig charwise wird als Zeilen-Range behandelt.
+
 ### Indent (`cfg.lists.enable and features.indent`)
 
 | lhs | mode | action |
@@ -90,6 +104,9 @@ installed and preset keymaps are enabled. No-op otherwise.
 
 ## Changelog
 
+- 2026-08-23: added `<leader>cR` (`renumber_selection`, x-Mode) — neue
+  `sequence`-Domäne (`sequence.enable`/`start`/`types`), plus
+  `:Cascade renumber selection` als linewise Ex-Pendant.
 - 2026-08-09: added `<leader>cp` (`cycle_pick`, interactive `vim.ui.select`
   over a cycle group's entries); `+`/`-` extended to also flip operator
   groups and step ISO date segments.

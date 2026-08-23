@@ -19,7 +19,7 @@ lines.
 | `:Cascade strip` | no | Strip checkboxes |
 | `:Cascade indent [n]` | no | Indent (n levels, default 1) + renumber |
 | `:Cascade dedent [n]` | no | Dedent (n levels) + renumber |
-| `:Cascade renumber [all]` | no | Renumber block at cursor/range; `all` = whole buffer |
+| `:Cascade renumber [all\|selection]` | no | Renumber block at cursor/range; `all` = whole buffer; `selection` = die Ordinal-Token *innerhalb* der Zeilen (sequence-Domäne) |
 
 ## ⚠️ Breaking syntax change: bang position
 
@@ -55,6 +55,13 @@ constraint (bang always binds to the command name itself), not a choice:
   independently. Implemented via `cascade.run_renumber_command` in
   `lua/cascade/init.lua`, mirroring the existing `run_command`/
   `run_indent_command` helpers.
+- **`selection`-Scope ergänzt (2026-08-23)**: `:Cascade renumber selection`
+  routet in die neue `sequence`-Domäne (`lua/cascade/sequence/renumber.lua`)
+  statt in `lists/renumber.lua` — nummeriert also die Ordinal-Token innerhalb
+  der Zeilen neu, egal was davor steht, filetype-unabhängig. Eigener Schalter
+  (`sequence.enable`), deshalb vor und getrennt von `lists.enable` gegated.
+  Das charwise-Pendant ist bewusst nur die Keymap `<leader>cR` (x-Mode), weil
+  Ex-Ranges immer linewise sind.
 - **Previously-noted doc bug now fixed**: `:CascadeRenumber` was referenced in
   README/health.lua/comments/doc but was never a registered command — every
   stale reference has been corrected to `:Cascade renumber`.

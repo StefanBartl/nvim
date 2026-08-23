@@ -1,5 +1,9 @@
 # `cascade.nvim`
 kannst du dias feature in C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\cascade.nvim.md umsetzen, docs/vimdoc updaten, auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS, und auf main comitten/pushen und dann pulen
+> **Status: umgesetzt am 2026-08-23** — cascade.nvim `main`, Commits
+> `0632216` (feat) und `bf6db1b` (docs). Umsetzung folgt dem Konzept unten
+> unverändert; Details siehe „Ergebnis" am Ende.
+
 ## Konzept: Renumbering nur innerhalb einer Selektion
 
 Motiviert durch zwei Fälle, die das heutige `:Cascade renumber` /
@@ -75,20 +79,53 @@ Headline-Fall ab, ohne dass Markdown-Sonderwissen nötig ist.
 
 ### Nicht vergessen bei der Umsetzung
 
-- [ ] `cascade.nvim`: `docs/BINDINGS.md` (Source of Truth im Plugin-Repo)
-- [ ] `cascade.nvim`: `docs/FEATURES/LISTS.md` bzw. neue `docs/FEATURES/SEQUENCE.md`
-- [ ] `cascade.nvim`: `README.md` Feature-Tabelle
-- [ ] nvim-Config: [`docs/NOTES/PersonelPlugins/BINDINGS/Keymaps/cascade.nvim.md`](../../NOTES/PersonelPlugins/BINDINGS/Keymaps/cascade.nvim.md)
-- [ ] nvim-Config: [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/cascade.nvim.md`](../../NOTES/PersonelPlugins/BINDINGS/Usercmds/cascade.nvim.md)
+- [x] `cascade.nvim`: `docs/BINDINGS.md` (Source of Truth im Plugin-Repo)
+- [x] `cascade.nvim`: neue `docs/FEATURES/SEQUENCE.md` (eigene Domäne, daher
+      nicht in `LISTS.md`); `docs/WORKFLOW.md` + `docs/TESTS/README.md`
+      Index-Zeilen, `doc/cascade.txt` neuer Abschnitt `cascade-sequence`
+- [x] `cascade.nvim`: `README.md` Feature-Tabelle
+- [x] nvim-Config: [`docs/NOTES/PersonelPlugins/BINDINGS/Keymaps/cascade.nvim.md`](../../NOTES/PersonelPlugins/BINDINGS/Keymaps/cascade.nvim.md)
+- [x] nvim-Config: [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/cascade.nvim.md`](../../NOTES/PersonelPlugins/BINDINGS/Usercmds/cascade.nvim.md)
 - [ ] nvim-Config: `Checklists/belege/plugins/cascade.nvim.md` (E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists) — Audit-Datei, ggf. neuer Eintrag unter „Ideen für andere Plugins"/Keybindings-Audit nach Umsetzung aktualisieren
+      **(offen: Pfad auf diesem Rechner nicht vorhanden)**
 
 ### Offen
 
-- [ ] Implementierung `lua/cascade/sequence/renumber.lua` (Pattern-Scan,
+- [x] Implementierung `lua/cascade/sequence/renumber.lua` (Pattern-Scan,
       Start-Modus `keep`/`one`, Separator-per-Treffer)
 - [ ] `lib.nvim.selection`: ggf. `chars_multiline()` ergänzen, falls Bedarf
       über die beiden o.g. Fälle hinaus entsteht (bewusst zurückgestellt)
-- [ ] Config-Schema (`sequence = { enable, start = "keep"|"one", types = {...} }`)
-- [ ] Keymap `<leader>cR` (x-Mode) + `:Cascade renumber selection`
+- [x] Config-Schema (`sequence = { enable, start = "keep"|"one", types = {...} }`)
+- [x] Keymap `<leader>cR` (x-Mode) + `:Cascade renumber selection`
+
+### Ergebnis (2026-08-23)
+
+Umgesetzt wie entworfen, ohne Abweichung vom Konzept:
+
+- `lua/cascade/sequence/renumber.lua` — reines `rewrite(text, opts, state)`
+  plus die zwei Buffer-Einstiege `range` (linewise) und `span` (einzeilig
+  charwise, via `nvim_buf_set_text`). Der `state`-Table trägt Zähler *und*
+  festgelegte `kind` über mehrere Zeilen einer Selektion.
+- **Kind-Lock:** der *erste* Treffer legt digit/ascii/roman fest (Reihenfolge
+  aus `sequence.types`); Treffer anderer Arten werden danach übersprungen
+  statt in dieselbe Sequenz gefaltet — ein `a)` mitten in nummerierten Items
+  bleibt unangetastet.
+- **Prosa-Abgrenzung:** der alphanumerische Run wird greedy gematcht (die `1`
+  in `v1.2` wird nie einzeln gesehen), und nach dem Delimiter muss Whitespace
+  oder Zeilenende folgen — damit fallen Dezimalzahlen (`3.14`) und
+  Abkürzungen (`e.g.`) raus.
+- Separator pro Treffer beibehalten, Groß-/Kleinschreibung vom ersetzten
+  Token übernommen (`ii.`→`iii.`, `II.`→`III.`).
+- `<leader>cR` ist bewusst **nur** x-Mode; `:Cascade renumber selection` deckt
+  den linewise-Fall als Ex-Pendant ab.
+- `config/init.lua` normalisiert `sequence` (unbekannter `start` → `keep`,
+  leere `types` → Default), damit ein Tippfehler nicht mitten im Scan knallt.
+- `:checkhealth cascade` meldet die Domäne mit `types` und Start-Modus.
+- Specs: `docs/TESTS/sequence_spec.lua`, im Runner registriert; Suite grün
+  (`nvim --headless -u NONE -c "set rtp+=." -c "set rtp+=C:/repos/lib.nvim"
+  -c "luafile docs/TESTS/run.lua" -c "qa!"` → `CASCADE_TESTS_OK`).
+
+Weiterhin offen bleibt bewusst nur die mehrzeilige charwise-Selektion — die
+gehört, falls der Bedarf real wird, als `chars_multiline()` in `lib.nvim`.
 
 ---
