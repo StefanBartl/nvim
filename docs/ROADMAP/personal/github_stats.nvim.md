@@ -1,4 +1,0 @@
-# `github_stats.ndim`
-
----
-

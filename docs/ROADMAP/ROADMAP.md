@@ -2,24 +2,12 @@
 
 - [ ] lsp profile (minimal etc): bruingt das eigentlich tatsähclihc spürbar etewas oder kann das weg?
 
-## pdfport.nvim:
-
-- [ ] statt immer system app, dass eine lib.nvim ui.kit selection fragt, ob dystem app oder mit pdfport augfgemacht wird. Alle plugins, de ppdfport einbinden, durchchecken ob das sinn macht!
-
-## filetree.nvim
-
-fs refactor: nochmal checken, eigentlich wäre das ein cooles fesature. zb:
-
-In ./README.md ist eine referenz auf /Test.md, dann verschiede ich Test.md auf /docs/Test.md mirt einen neuen Kexmapo in filetree, vl `M` (großes Move), dann wird ein scan durch alle files im cwd angeregt wo refrenzen sind und die aufgelistet und gefragt opb man diese ufdaten sooll bzuw nur euinzlene (was wrsch am wengisten gebrauct wird) oder gar ncht.
-
-wrsch werden filetypes hier interessant, als erstes alle markdown refreernzen implementieren.
-später dann lua (bedarf import scan), dann andere sprachen wie javascript/typescript (pain in the a... wegen esm/common usw..)
-
 ## cdx
 
-free: So., 09:00 X - 21. Juli 2027
+
+free: So., 09:00 x - 21. Juli 2027
 work: Sa., 06:00 o - 20.Sept
-dev:  Sa., 22:00 X - 03.Sep
+dev:  Sa., 22:00 o - 03.Sep
 
 ## docmap
 
