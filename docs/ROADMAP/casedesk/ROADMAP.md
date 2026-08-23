@@ -7,6 +7,28 @@
 
 - KB-Artikel: Als Standard such tool verwenden wir `https://tricentis.atlassian.net/issues?wildcardFlag=true&filter=40563` - das ist eineJira jql search; Es wäre natürkcih super, wenn beim case new auch zumindest eine liste mit passenden jql such strings mit ausgegeben wird für research, idealrweiße würde aber dieses auch mit ai automatisch durcucht werden können
 
+## new
+
+### Solution(s)
+
+hierzu äwre ein temlate gut, dass ich dann von einer ai ausfpllen lassen kann, wenn der case solved ist. kannst du das erstellen, mit keywords ausfüllen us.w... so das süäter die solutions files von einer ai zw ohne ai nur mit der heuritsik durcsucht werden können.
+:Case solution bzw solve sold ann das gleich auch höandlen zum eingeben der solution
+dazu braucht es ein workflow udn ein konzept. das ollte an auch in C:\users\StefanBartl\AppData\Local\nvim\docs\NOTES\casedesk  stehen...
+
+---
+
+### update der \nvim\docs
+
+alle neune commands usw..
+use cases ersellen, so dass ich suchen kann " ich will eine xy im case" -> dann so
+
+---
+
+### ai implemeniterung
+
+endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pro account, aber ich weioß nicht, ob es damit überhauüt geht. gemini nehmen ich bisher üner die web ui das funkt auch ganz gut inhaltlich
+
+
 ## Offen
 
 Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.

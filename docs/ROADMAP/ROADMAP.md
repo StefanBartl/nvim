@@ -1,27 +1,10 @@
 # Roadmap
 
-- [ ] lsp profile (minimal etc): bruingt das eigentlich tatsähclihc spürbar etewas oder kann das weg?
-
 ## cdx
-
 
 free: So., 09:00 x - 21. Juli 2027
 work: Sa., 06:00 o - 20.Sept
 dev:  Sa., 22:00 o - 03.Sep
-
-## docmap
-
-### optionsn für user zum ändern
-
-docmap und documentation.nvim beiude -> features die der user eisntellen kann finden -> es gibt sicher eineige optioen, features unsw.. die der user in der nvim installations spec einstellen köännte. analyse!
-docmap-desktop: mehr einstellungen fpr den user in die einstellugnen geben (eventuell auch all das was in doicumentation.nvim in der user spec als user eingestellt werden knnn)
-.September
-
----
-
-## MISC
-
-- [ ] rechtklick menu durchtestetn und nahc plugins auftilen aubmenus...
 
 ## inline hover img/pdf
 
@@ -40,36 +23,9 @@ docmap-desktop: mehr einstellungen fpr den user in die einstellugnen geben (even
 Es ist zwar nur ein kosmetisches problem, aber gerade wenn man mit dem feture angeben will "schau mal, ich kann images im terminal anziegen lase, sogar pdf startseiten!" - das ist aber nur halb so beeindruckend, wenn nicht alles schön ist. Am ende wird es wrsch eine abwägung sein wieviel aufwand man in ds debuggen stekcen will.
 Interesant wöäre, ganz gernell das malzu erklären, was hh ier genau püassiert, also warum ein scratch hover buffer.. was wird von welchern tools diesbezüglih übernommen - usw...
 
----
+### `images.nvim`  - Roadmap
 
-## idden
-
-usrcmd typo helper: wenn man einen usrmcd iengibt und man hat einen falshcen buschatben oder einen zu viel oder so, dann solles nicht fehlschlagen sondern lib.nvim ui.kit prompt ob man vl den commafd XY oder YX gemeint hat und mn ann sch dan den richtigen aussuchen und durchführen.
-wie aufwendig wäre das für ale usrcmds meiner polugins? kann man das als zusätzliches fature, das man enaben/diasbalen kann, üer das lib.nvim usrcmd.´ / usrcmd.composer gleich mitr shippen?
-
-
-## casedesk
-
----
-
-### Solution(s)
-
-hierzu äwre ein temlate gut, dass ich dann von einer ai ausfpllen lassen kann, wenn der case solved ist. kannst du das erstellen, mit keywords ausfüllen us.w... so das süäter die solutions files von einer ai zw ohne ai nur mit der heuritsik durcsucht werden können.
-:Case solution bzw solve sold ann das gleich auch höandlen zum eingeben der solution
-dazu braucht es ein workflow udn ein konzept. das ollte an auch in C:\users\StefanBartl\AppData\Local\nvim\docs\NOTES\casedesk  stehen...
-
----
-
-### update der \nvim\docs
-
-alle neune commands usw..
-use cases ersellen, so dass ich suchen kann " ich will eine xy im case" -> dann so
-
----
-
-### ai implemeniterung
-
-endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pro account, aber ich weioß nicht, ob es damit überhauüt geht. gemini nehmen ich bisher üner die web ui das funkt auch ganz gut inhaltlich
+- [ ] `snacks.nvim` independent werden - also dass die funktionen , die snacks images anbietet, in `images.nvim` angeboternnn werden (also die die ichj nutze)
 
 ---
 
@@ -85,10 +41,6 @@ endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pr
 - spotlight checken und lernen
 - documentation.nvim lernen
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
-
-- [ ] `learn-cli.nvim` vielleicht doch ?
-- [ ] E:\repos\Notes\ProjectIdeas: Durchgehen und anlysieren lassen
-- [ ] finish & checkists & review in nvim config durchjagen
 
 1. `leader wq`: Alle issues lösen
   1. dass was wq macht in einem `lib.nvim / lib.nvim.ui` ausgeben

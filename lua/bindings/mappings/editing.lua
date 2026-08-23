@@ -8,10 +8,16 @@
 --- already in this file (the visual-`p`/`<C-A-S-p>` mappings below predate
 --- it), not a toggleable subsystem like `autocmds.text`.
 ---
---- Only the outermost lines are touched — internal blank lines/indentation in
---- the pasted content are left exactly as they are. `]p`/`[p`/`gp`/`gP` are
---- deliberately left vanilla as an untrimmed escape hatch for the rare paste
---- where the leading/trailing whitespace was actually meaningful.
+--- The outermost lines are trimmed entirely; interior blank *runs* of
+--- `BLANK_RUN_LIMIT` or more are additionally squeezed down to a single
+--- blank line (see `squeeze_blank_runs`) — copying a bullet list out of a
+--- rich-text editor (e.g. a chat UI) routinely serializes each `<li>` as its
+--- own block, which round-trips through HTML-to-plaintext as 2-3 blank
+--- lines between bullets instead of none. Runs of 1-2 blank lines are left
+--- untouched so conventional double-blank-line spacing (Python/Go top-level
+--- defs) survives a paste. `]p`/`[p`/`gp`/`gP` are deliberately left vanilla
+--- as an untrimmed escape hatch for the rare paste where the blank lines
+--- were actually meaningful.
 ---
 --- `install_paste_trim()` extends the same trimming to terminal paste
 --- (Ctrl+V / Ctrl+Shift+V / middle-click). That route never touches a register
@@ -31,6 +37,42 @@ local function is_blank(line)
   return line:match("^%s*$") ~= nil
 end
 
+---Consecutive interior blank lines at/above this count get squeezed to one
+---(see `squeeze_blank_runs`). 3 is deliberately above the conventional
+---2-blank-line spacing some code styles use between top-level definitions
+---(Python, Go), so pasting such code leaves it untouched.
+local BLANK_RUN_LIMIT = 3
+
+---Collapse every run of `BLANK_RUN_LIMIT`+ consecutive blank lines in
+---`lines` down to a single blank line. Runs shorter than the limit, and
+---non-blank lines, pass through unchanged; relative order is preserved.
+---@param lines string[]
+---@return string[]
+local function squeeze_blank_runs(lines)
+  local out = {}
+  local run = 0
+  for _, line in ipairs(lines) do
+    if is_blank(line) then
+      run = run + 1
+    else
+      if run > 0 then
+        for _ = 1, (run >= BLANK_RUN_LIMIT) and 1 or run do
+          out[#out + 1] = ""
+        end
+        run = 0
+      end
+      out[#out + 1] = line
+    end
+  end
+  -- Trailing run: keep it (possibly squeezed) rather than dropping it here —
+  -- callers that care about trailing blanks (trim_edges, the vim.paste
+  -- wrapper's final-phase trim) already strip them after this runs.
+  for _ = 1, (run >= BLANK_RUN_LIMIT) and 1 or run do
+    out[#out + 1] = ""
+  end
+  return out
+end
+
 ---`nvim_put`'s `type` argument for a `getregtype()` result.
 ---@param regtype string
 ---@return "c"|"l"|"b"
@@ -44,10 +86,10 @@ local function put_type(regtype)
   return "c"
 end
 
----Drop leading/trailing blank lines, then strip leading whitespace off the
----first remaining line and trailing whitespace off the last one — i.e.
----everything before the first real character and after the last one.
----Content in between is returned untouched.
+---Drop leading/trailing blank lines, squeeze interior blank runs (see
+---`squeeze_blank_runs`), then strip leading whitespace off the first
+---remaining line and trailing whitespace off the last one — i.e. everything
+---before the first real character and after the last one.
 ---@param lines string[]
 ---@return string[]
 local function trim_edges(lines)
@@ -66,6 +108,7 @@ local function trim_edges(lines)
   for i = first, last do
     trimmed[#trimmed + 1] = lines[i]
   end
+  trimmed = squeeze_blank_runs(trimmed)
   trimmed[1] = trimmed[1]:gsub("^%s+", "")
   trimmed[#trimmed] = trimmed[#trimmed]:gsub("%s+$", "")
   return trimmed
@@ -105,15 +148,17 @@ local function put_trimmed(regname, after)
   vim.api.nvim_put(trim_edges(lines), put_type(regtype), after, true)
 end
 
----Wrap `vim.paste` so bracketed-paste input gets the same edge trimming as
----`p`/`P` (see module doc for why this cannot be a keymap).
+---Wrap `vim.paste` so bracketed-paste input gets the same edge trimming and
+---interior blank-run squeezing (see `squeeze_blank_runs`) as `p`/`P` (see
+---module doc for why this cannot be a keymap).
 ---
 ---`vim.paste` may be called in one shot (`phase == -1`) or streamed across
 ---several chunks (`1` start, `2` middle, `3` end), so the two edges are handled
 ---separately: leading blank lines are dropped until the first line with real
 ---content has been seen — which can take more than one chunk if the paste
 ---starts with a long blank run — and trailing blank lines only at the final
----chunk. Middle chunks pass through untouched, and a chunk that empties out
+---chunk. Every chunk (including middle ones) is run through
+---`squeeze_blank_runs` before being forwarded, and a chunk that empties out
 ---completely is forwarded as an empty list rather than as `{ "" }`, which would
 ---insert a blank line the original text did not have.
 ---
@@ -123,8 +168,11 @@ end
 ---while still inside the leading blank run, where both halves are blank anyway.
 ---The one accepted gap: if a paste ends with a blank run long enough to start
 ---in an earlier chunk, only the part in the final chunk is removed, since the
----rest is already in the buffer by then. Streaming only kicks in for very large
----pastes, and the browser copies this exists for are one-shot (`phase == -1`).
+---rest is already in the buffer by then — and the same applies to
+---`squeeze_blank_runs`, which only sees one chunk's lines at a time, so a
+---blank run split across a chunk boundary can escape squeezing. Streaming
+---only kicks in for very large pastes, and the browser copies this exists
+---for are one-shot (`phase == -1`).
 ---
 ---Idempotent: `M.setup()` may run more than once, and wrapping the wrapper
 ---would trim already-trimmed chunks (harmless) while growing the call chain.
@@ -157,6 +205,8 @@ local function install_paste_trim()
         out[#out + 1] = (line:gsub("^%s+", ""))
       end
     end
+
+    out = squeeze_blank_runs(out)
 
     if phase == -1 or phase == 3 then
       while #out > 0 and is_blank(out[#out]) do
