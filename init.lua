@@ -165,9 +165,15 @@ startup.now("lsp", function()
   -- a real session, and is not on any require path.
   require("lsp").setup({ mason = { ensure_install = false } })
 
-  local ok_caps, caps = pcall(require, "lsp.core.capabilities")
-  if ok_caps and type(caps.apply_globally) == "function" then
-    local applied, cap_warnings = caps.apply_globally()
+  -- `require("lsp").apply_capabilities()`, not `lsp.core.capabilities`
+  -- directly: the capability contributors (NvChad, cmp, blink) live in the
+  -- plugin's integration layer now, and only the facade can look them up --
+  -- the core deliberately cannot reach into that layer. Calling the core
+  -- function bare would apply the bare protocol capabilities and look like a
+  -- broken completion setup.
+  local ok_caps, lsp_mod = pcall(require, "lsp")
+  if ok_caps and type(lsp_mod.apply_capabilities) == "function" then
+    local applied, cap_warnings = lsp_mod.apply_capabilities()
     local cap_notify = require("lib.nvim.notify").create("[lsp.capabilities]")
     for _, w in ipairs(cap_warnings or {}) do
       -- w.level is "warn"|"error" (LspCaps.Warning); notify()'s own level
