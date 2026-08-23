@@ -35,7 +35,6 @@
 --- @field changes? table<string, LspTextEdit[]>
 --- @field documentChanges? (LspTextDocumentEdit|LspFileOp)[]
 
-local map = require("lib.nvim.map")
 
 -- ============================================================================
 -- Helpers
@@ -169,8 +168,11 @@ require("inc_rename").setup({
 -- Keymaps
 -- ============================================================================
 
--- <leader>rn → Start incremental rename, pre-filled with the word under the cursor.
--- { expr = true } returns a command-line string to execute.
-map("n", "<leader>rn", function()
-  return ":IncRename " .. vim.fn.expand("<cword>")
-end, { expr = true, desc = "[LSP] Incremental rename (workspace, auto-save)" })
+-- <leader>rn moved into lsp.nvim's keymap catalogue, together with `grn`.
+--
+-- The two used to do different things -- `grn` ran vim.lsp.buf.rename, this ran
+-- :IncRename -- which is what made "which rename am I in?" a real question.
+-- Both now go through the catalogue's `rename` action, which picks the backend
+-- from `rename.provider` ("auto" prefers inc-rename when installed). This file
+-- keeps owning inc-rename's *setup* (its post_hook auto-save), just not the
+-- key that starts it.

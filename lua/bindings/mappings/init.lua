@@ -8,6 +8,11 @@ local M = {}
 function M.setup()
   vim.g.__map_helper = require("lib.nvim.map")
 
+  -- The LSP and Trouble mapping modules used to be registered here. They moved
+  -- into lsp.nvim's keymap catalogue (config/KEYMAPS.lua) together with the
+  -- four LSP lines from `fzf.lua` and inc-rename's `<leader>rn`, so that one
+  -- module owns every LSP key instead of five. Same keys, one owner.
+
   require("bindings.mappings.buf_win_tab").setup()
   require("bindings.mappings.buffer_jump").setup()
   require("bindings.mappings.custom").setup()
@@ -18,7 +23,6 @@ function M.setup()
   require("bindings.mappings.general").setup()
   require("bindings.mappings.git").setup()
   require("bindings.mappings.harpoon").setup()
-  require("bindings.mappings.lsp").setup()
   require("bindings.mappings.noice").setup()
   require("bindings.mappings.nvchad").setup()
   require("bindings.mappings.screen_line").setup()
@@ -27,7 +31,6 @@ function M.setup()
   require("bindings.mappings.telescope").setup()
   require("bindings.mappings.terminal").setup()
   require("bindings.mappings.toggle_comment").setup()
-  require("bindings.mappings.trouble").setup()
   require("bindings.mappings.window_orientation").setup()
 
   -- require("bindings.mappings.view_scroll").map_default_keys('<C-d>', '<C-u>')
