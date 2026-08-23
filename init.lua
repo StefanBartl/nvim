@@ -159,7 +159,11 @@ end)
 -- BufReadPost of a startup-argument file.
 vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 startup.now("lsp", function()
-  require("lsp").setup({ ensure_installing = false })
+  -- `require("lsp")` resolves to the lsp.nvim plugin now (lazy = false, so it
+  -- is on the runtimepath by the time this runs). The former lua/lsp/** lives
+  -- there; lua/lsp_legacy/** is the local copy kept until this is confirmed in
+  -- a real session, and is not on any require path.
+  require("lsp").setup({ mason = { ensure_install = false } })
 
   local ok_caps, caps = pcall(require, "lsp.core.capabilities")
   if ok_caps and type(caps.apply_globally) == "function" then

@@ -40,6 +40,23 @@ plugins.add({
   },
 
   {
+    -- The whole LSP subsystem, extracted from this config's former lua/lsp/**
+    -- (see docs/ROADMAP/personal/lsp.nvim.md). Module root is still `lsp`, so
+    -- every existing require("lsp.…") keeps resolving -- which also means this
+    -- plugin and a local lua/lsp/** cannot coexist: the config would shadow it.
+    --
+    -- No `opts`/`config` on purpose. init.lua calls setup() inside
+    -- startup.now("lsp", ...) because capabilities have to be applied globally
+    -- before the first client attaches; a lazy opts-block would hand that
+    -- ordering to the plugin manager. `lazy = false` only guarantees the
+    -- module is on the runtimepath by then.
+    "StefanBartl/lsp.nvim",
+    lazy = false,
+    priority = 900,
+    dependencies = { "StefanBartl/lib.nvim" },
+  },
+
+  {
     "stefanbartl/sessions.nvim",
     lazy = false,
     dependencies = { "stefanbartl/lib.nvim" },
