@@ -37,10 +37,35 @@
 ---
 --- So `schedule_populate()` below replaces the plugin's file discovery with
 --- `lib.nvim.fs.collect_recursive.files_async` (no subprocess, prunes ignored
---- subtrees, filters by extension while walking) and only then hands the
---- finished list to the plugin. It also defers the whole thing off the attach
---- path, and refuses to populate at all above `max_files` -- the size gate
---- that the machine-role default in lsp/init.lua could only approximate.
+--- subtrees, filters by extension while walking). It also defers the whole
+--- thing off the attach path, and refuses to populate at all above
+--- `max_files` -- the size gate that the machine-role default in lsp/init.lua
+--- could only approximate.
+---
+--- ## Why the populate itself is no longer the plugin's
+---
+--- It used to hand that finished list to
+--- `workspace-diagnostics.populate_workspace_diagnostics`. It no longer does,
+--- because that path threw on every LSP attach once any file in the list had
+--- been deleted or renamed:
+---
+---   E484: Can't open file <path>     (from a vim.schedule callback)
+---
+--- Two plugin-internal caches cause it, and neither is reachable from here:
+--- `_workspace_files` memoizes the file list on first use and is never
+--- invalidated, and its per-file `vim.fn.readfile()` is unguarded. So a file
+--- removed mid-session stays in the list forever and raises once per missing
+--- file, per attach, for the rest of the session. Clearing the plugin's
+--- module state (`package.loaded[...] = nil`) would also wipe its
+--- `_loaded_clients` guard and re-send every `didOpen` on each attach, so
+--- that is not a fix either.
+---
+--- What the plugin actually contributed at that point was ~20 lines of
+--- `didOpen` notifications, which `send_did_open()` below now does directly
+--- -- guarded, chunked, and with the list re-checked as it is consumed. That
+--- also resolves the multi-client caveat this module used to carry: each
+--- client now populates from its own list instead of inheriting whichever
+--- one attached first.
 ---
 --- User-facing commands live in lsp.usercmds.workspace_diagnostics.
 
@@ -236,6 +261,109 @@ local function collect_files_async(ext_set, cb)
   end)
 end
 
+--- How many files one `send_did_open` tick reads before yielding. The plugin
+--- used one `vim.defer_fn` per file (~1700 callbacks here); a single
+--- synchronous loop would instead stall proportionally to the workspace.
+--- Chunking bounds both.
+local CHUNK_SIZE = 25
+local CHUNK_DELAY_MS = 10
+
+--- Clients already populated this session. Replaces the plugin's own
+--- `_loaded_clients`, which we no longer go through.
+---@type table<integer, boolean>
+local populated_clients = {}
+
+---@param client vim.lsp.Client
+---@param method string
+---@param params table
+---@return nil
+local function notify_client(client, method, params)
+  -- 0.12 made the method form canonical; keep the function form for older
+  -- Neovim, matching what the plugin did.
+  if vim.fn.has("nvim-0.12") == 1 then
+    client:notify(method, params)
+  else
+    client.notify(client, method, params)
+  end
+end
+
+--- Send `textDocument/didOpen` for every file in `files` the client can
+--- diagnose, in chunks, so the server sees the whole workspace.
+---
+--- `readfile` is `pcall`-guarded on purpose rather than defensively: the file
+--- list is collected once and cached for the session, so a file deleted or
+--- renamed since the walk is an expected state, not an exceptional one. That
+--- unguarded read is exactly what made the plugin's version throw E484 -- see
+--- the module header.
+---@param client vim.lsp.Client
+---@param bufnr integer
+---@param files string[]
+---@param force boolean|nil  # skip the once-per-client guard (`populate_now`)
+---@return nil
+local function send_did_open(client, bufnr, files, force)
+  if not force then
+    if populated_clients[client.id] then
+      return
+    end
+    populated_clients[client.id] = true
+  end
+
+  if not client:supports_method("textDocumentSync/openClose") then
+    return
+  end
+
+  local wanted = {}
+  for _, ft in ipairs(vim.tbl_get(client, "config", "filetypes") or {}) do
+    wanted[ft] = true
+  end
+  if vim.tbl_isempty(wanted) then
+    return
+  end
+
+  local current = vim.api.nvim_buf_get_name(bufnr)
+  local index = 1
+
+  local function send_chunk()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+
+    local budget = CHUNK_SIZE
+    while index <= #files and budget > 0 do
+      local path = files[index]
+      index = index + 1
+      budget = budget - 1
+
+      if path ~= current then
+        -- Filename-only matching, with no buffer-loading fallback: the
+        -- extension pre-filter in collect_files_async already narrowed this
+        -- to the client's own filetypes, and loading a buffer per file is
+        -- precisely the cost this module exists to avoid.
+        local ft = vim.filetype.match({ filename = path })
+        if ft and wanted[ft] then
+          local ok, lines = pcall(vim.fn.readfile, path)
+          if ok then
+            notify_client(client, "textDocument/didOpen", {
+              textDocument = {
+                uri = vim.uri_from_fname(path),
+                version = 0,
+                text = table.concat(lines, "\n"),
+                languageId = ft,
+              },
+            })
+          end
+        end
+      end
+    end
+
+    if index <= #files then
+      vim.defer_fn(send_chunk, CHUNK_DELAY_MS)
+    end
+  end
+
+  send_chunk()
+end
+
 --- Populate workspace diagnostics for `client`/`bufnr` off the attach path.
 ---
 --- Deliberately NOT synchronous: `on_attach` runs while the client is still
@@ -265,30 +393,7 @@ function M.schedule_populate(client, bufnr)
       if #files == 0 then
         return
       end
-
-      local ok_wd, wd = pcall(require, "workspace-diagnostics")
-      if not ok_wd or type(wd.populate_workspace_diagnostics) ~= "function" then
-        return
-      end
-
-      -- Hand the plugin the finished list instead of letting it shell out to
-      -- git and stat the whole repo itself (see the module header).
-      --
-      -- CAVEAT: the plugin memoizes the result of `workspace_files` in a
-      -- module-local on first use, so with several clients attached only the
-      -- FIRST one's list is ever built -- a later client of a different
-      -- language sees that list, filters it against its own filetypes, and
-      -- ends up populating nothing. In this config lua_ls is both the first
-      -- attacher and the only one workspace diagnostics ever mattered for, so
-      -- the practical effect is nil. Lifting it properly means not going
-      -- through the plugin at all (its populate is ~20 lines of didOpen
-      -- notifications) -- worth doing if a second language ever needs this.
-      pcall(wd.setup, {
-        workspace_files = function()
-          return files
-        end,
-      })
-      pcall(wd.populate_workspace_diagnostics, client, bufnr)
+      send_did_open(client, bufnr, files)
     end)
   end, opts.delay_ms)
 end
@@ -296,26 +401,39 @@ end
 --- Force-populate workspace diagnostics for `bufnr`'s attached clients right
 --- now, regardless of the toggle state. Useful after switching it ON without
 --- wanting to restart/reattach the LSP client just to see it take effect.
+---
+--- Schedules rather than completes: the file walk is async and the sending is
+--- chunked, so the count below is how many clients were *started*, not how
+--- many finished. Bypasses the once-per-client guard, so calling it twice
+--- really does re-send.
 ---@param bufnr? integer  # 0 or nil for the current buffer
 ---@return boolean ok
----@return integer|string count_or_err  # number of clients populated, or an error string
+---@return integer|string count_or_err  # number of clients scheduled, or an error string
 function M.populate_now(bufnr)
   bufnr = (bufnr and bufnr ~= 0) and bufnr or vim.api.nvim_get_current_buf()
-
-  local ok_wd, wd = pcall(require, "workspace-diagnostics")
-  if not ok_wd or type(wd.populate_workspace_diagnostics) ~= "function" then
-    return false, "workspace-diagnostics.nvim not available"
-  end
 
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
   if #clients == 0 then
     return false, "no LSP clients attached to this buffer"
   end
 
+  local scheduled = 0
   for _, client in ipairs(clients) do
-    pcall(wd.populate_workspace_diagnostics, client, bufnr)
+    local ext_set = client_extensions(client)
+    if ext_set then
+      scheduled = scheduled + 1
+      collect_files_async(ext_set, function(files)
+        if #files > 0 then
+          send_did_open(client, bufnr, files, true)
+        end
+      end)
+    end
   end
-  return true, #clients
+
+  if scheduled == 0 then
+    return false, "no attached client declares config.filetypes"
+  end
+  return true, scheduled
 end
 
 return M
