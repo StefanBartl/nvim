@@ -1,6 +1,6 @@
 # markdown.nvim — User Commands Cheatsheet
 
-`:Markdown` (global, 12 subcommands) plus 25 buffer-local commands
+`:Markdown` (global, 13 subcommands) plus 25 buffer-local commands
 (`OpenWithSystemApplication`, `MarkdownNvimUnderlineHeadings`,
 `TableViewToggle`, `TableViewMarkdown`,
 `TableViewBox`, `TableViewSelect`, `TableViewClose`, `TableViewOpenBrowser`,
@@ -14,7 +14,7 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 | Command | Scope | Grammar |
 | --- | --- | --- |
-| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|headline_spacing\|image\|export} [args…]` | global | see `commands/*.lua` per-subcommand grammar (list corrected 2026-08-09 — `gaps` no longer exists as a separate top-level subcommand, was stale; `export` is new) |
+| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|list\|headline_spacing\|image\|export} [args…]` | global | see `commands/*.lua` per-subcommand grammar (list corrected 2026-08-09 — `gaps` no longer exists as a separate top-level subcommand, was stale; `export` is new; `list` added 2026-08-23) |
 | `:OpenWithSystemApplication` | buffer-local | open image/url/file under cursor |
 | `:MarkdownNvimUnderlineHeadings` | buffer-local | underline every ATX heading's text with `=` (Setext-style decoration, idempotent) |
 | `:TableViewToggle\|Markdown\|Box [scope]` | buffer-local | toggle table preview (config/markdown/box style) |
@@ -34,6 +34,30 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 ## Notes
 
+- **2026-08-23: added `:Markdown list [headings] [%|cwd|<file>]`** (13th
+  subcommand, `commands/list.lua`, gated by new feature `list`). Collects
+  document items in a picker and jumps to the chosen one — `headings` is
+  the only option so far. Same scope vocabulary as `:Markdown links show`
+  (`%` current buffer default, `cwd` every `*.md` below the cwd, or a file
+  path). New reusable scanner `core/heading_scan.lua`
+  (`from_lines`/`from_buffer`/`from_file`), the heading-side counterpart to
+  `core/link_scan.lua`; skips YAML frontmatter and fenced code blocks so
+  results match what `:Markdown toc` would generate. Picking an entry opens
+  its file first if it isn't the current buffer, then jumps (via `m'`, so
+  undoable with `<C-o>`). New `config.list.picker` option, same backend
+  vocabulary/fallback as `links.picker`. Had to add `list` to
+  `SUBCOMMAND_NAMES` in `bindings/usrcmds.lua` as well as the dispatch table
+  in `commands/init.lua` — same "two places" trap `gaps` hit in 2026-07-21
+  below: `commands/init.lua`'s dispatch table alone doesn't register the
+  live `:Markdown` route.
+  **Known gap found while testing, not fixed here**: `:Markdown list
+  headings <Tab>` doesn't complete the scope argument (`%`/`cwd`) — the
+  `MARKDOWN_SUBARG` composer type reconstructs a synthetic one-argument
+  cmdline instead of passing the real one through, and each route only
+  declares one arg spec. Pre-existing, also affects `:Markdown links show`
+  and `:Markdown table format`'s second argument; not new here. Flagged as
+  a separate background task in the markdown.nvim repo
+  (`task_46386019`, "Fix second-arg completion for :Markdown subcommands").
 - **2026-08-09: added `:Markdown export pdf`** (new subcommand,
   `commands/export.lua`) — thin delegator to pdfport.nvim's `create()`
   (soft dep, `pcall`-guarded), exactly the same pattern as `:Markdown image`
