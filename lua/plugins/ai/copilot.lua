@@ -4,6 +4,26 @@
 
 ---@type LazyPluginSpec[]
 return {
+  -- The cmp side of Copilot: hide the inline suggestion while cmp's menu is
+  -- open, so the two do not draw over each other.
+  --
+  -- It lives here rather than with the LSP specs because it is about Copilot
+  -- and cmp, not about LSP -- and it is a live fragment rather than a comment
+  -- inside the disabled specs below so that it works the moment one of them is
+  -- switched back on. Until then it is a no-op: it sets
+  -- `vim.b.copilot_suggestion_hidden`, which nothing reads while no Copilot
+  -- plugin is installed.
+  --
+  -- Note the `.setup()`. Until 2026-08-23 this read `require("config.copilot.cmp")`
+  -- alone, which loads the module and returns its table without calling
+  -- anything -- so the bridge had never actually run.
+  {
+    "hrsh7th/nvim-cmp",
+    opts = function()
+      require("config.copilot.cmp").setup()
+    end,
+  },
+
   -- required: Copilot LSP installed via Mason or system and on PATH
   -- {
   --   "copilotlsp-nvim/copilot-lsp",
