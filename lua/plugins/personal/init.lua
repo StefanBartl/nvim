@@ -716,6 +716,7 @@ plugins.add({
           "StefanBartl/gopath.nvim",
           "StefanBartl/language.nvim",
           "StefanBartl/lib.nvim",
+          "StefanBartl/lsp.nvim",
           "StefanBartl/markdown.nvim",
           "StefanBartl/mdview.nvim",
           "StefanBartl/migrate.nvim",

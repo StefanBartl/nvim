@@ -21,7 +21,6 @@ docmap-desktop: mehr einstellungen fpr den user in die einstellugnen geben (even
 
 ## MISC
 
-- [ ] markdown: :Markdown list [options?] [scope? default % options cwwdf, path] mit options wie zb healdines, das  alle headlines zeigt auflistst in eine picker und man dan hin spriingen kann
 - [ ] rechtklick menu durchtestetn und nahc plugins auftilen aubmenus...
 
 ## inline hover img/pdf
@@ -86,7 +85,7 @@ endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pr
 - spotlight checken und lernen
 - documentation.nvim lernen
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
-  - [ ] recommender.nvimmus nicht mitggeshipped werdem; vielleicht verwchiedene ausbaustufen bereitstellen: Base mit lib.nvim und wenigen wichtigen, dann eine versoin wo zusätliche oplugins dabei sind. usw.. als idee
+
 - [ ] `learn-cli.nvim` vielleicht doch ?
 - [ ] E:\repos\Notes\ProjectIdeas: Durchgehen und anlysieren lassen
 - [ ] finish & checkists & review in nvim config durchjagen

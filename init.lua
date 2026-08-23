@@ -169,10 +169,10 @@ end)
 -- BufReadPost of a startup-argument file.
 vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 startup.now("lsp", function()
-  -- `require("lsp")` resolves to the lsp.nvim plugin now (lazy = false, so it
-  -- is on the runtimepath by the time this runs). The former lua/lsp/** lives
-  -- there; lua/lsp_legacy/** is the local copy kept until this is confirmed in
-  -- a real session, and is not on any require path.
+  -- `require("lsp")` resolves to the lsp.nvim plugin (lazy = false, so it is on
+  -- the runtimepath by the time this runs). This config's former lua/lsp/**
+  -- lives there; the local lsp_legacy copy it was renamed to during the
+  -- migration is gone, the plugin is the only source now.
   require("lsp").setup({ mason = { ensure_install = false } })
 
   -- `require("lsp").apply_capabilities()`, not `lsp.core.capabilities`
