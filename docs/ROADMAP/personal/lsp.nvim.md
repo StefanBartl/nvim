@@ -1,14 +1,19 @@
 # `lsp.nvim` — Konzept (Dachplugin)
 
 Auslagerung von `nvim/lua/lsp/**` **und des gesamten LSP-Ökosystems der Config**
-in ein eigenständiges Plugin, analog zu `dap.nvim` (`E:\repos\dap.nvim`,
+in ein eigenständiges Plugin, analog zu `dap.nvim` (`C:\repos\dap.nvim`,
 Modulwurzel `wkddap`) und den anderen extrahierten `*.nvim`-Plugins
 (`filetree.nvim`, `sessions.nvim`, `pickers.nvim`, ...).
 
-Das Repo `E:\repos\lsp.nvim` existiert bereits (nur `README.md`, leer,
-1 Commit `init`).
+> **Stand 2026-08-23.** Alle Repos liegen inzwischen unter `C:\repos\` — die
+> `E:\repos\…`-Pfade in diesem Dokument sind entsprechend nachgezogen.
+> `C:\repos\lsp.nvim` (GitHub: `StefanBartl/lsp.nvim`) hat jetzt Branch `main`
+> (aus `master` umbenannt) und dieses Konzept als `docs/ROADMAP.md` gespiegelt;
+> `README.md` ist ein Platzhalter, der die README-Pflichten aus §12 noch nicht
+> erfüllt. **Code gibt es weiterhin keinen** — Phase 1 (§13) ist damit
+> angefangen, nicht abgeschlossen.
 
-Die Grundsatzentscheidung ist in [nvim.md](./nvim.md) (Abschnitt
+Die Grundsatzentscheidung ist in [nvim.nvim.md](./nvim.nvim.md) (Abschnitt
 „`lsp.nvim` vs. `options.nvim`“, 2026-07-17) getroffen: `lua/lsp/` ist
 strukturell dasselbe wie `dap.nvim` — ein **stateful Subsystem** (Registry,
 Capabilities, Attach-Handler, Formatter-Toggle, Workspace-Diagnostics-Toggle),
@@ -66,7 +71,7 @@ LSP-Bezogene zusammenläuft — inklusive der Fremdplugins (`trouble.nvim`,
 Einstiegspunkt `lsp/init.lua` verdrahtet alles synchron in `M.setup(cfg)`,
 inkl. Host-Spezifika (`machine.is("workstation")`,
 `require("config.mason.ensure_install")`, `nvchad.config.lspconfig`).
-Aufruf erfolgt in [init.lua:156](../../../init.lua): `require("lsp").setup({ ensure_installing = false })`.
+Aufruf erfolgt in [init.lua:162](../../../init.lua): `require("lsp").setup({ ensure_installing = false })`.
 
 ### 1.2 LSP-nahe Fremdplugins in `lua/plugins/**`
 
@@ -362,7 +367,7 @@ lsp.nvim/
 ```
 
 Die interne Struktur von Schicht 1 bleibt weitgehend 1:1 — sie ist bereits nach
-[Arch&Coding-Regeln.md](./MATERIALS/Arch&Coding-Regeln.md) organisiert
+[Arch&Coding-Regeln.md](file:///C:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Arch&Coding-Regeln.md) organisiert
 (SRP pro Modul, `@types`-Unterordner, `pcall`-Disziplin). Die Extraktion ist
 überwiegend **Verschieben + Entkopplung von Host-Spezifika**, kein Rewrite.
 Neu gebaut werden im Wesentlichen `config/`, `integrations/`, `pack/`,
@@ -485,7 +490,7 @@ sich nach der Dependency-Härte aus §3: **harte** Dependency fehlt → `error`,
 ### 8.1 Keymaps — ein Preset, vollständig überschreibbar
 
 Alle Keymaps aus §1.3 kommen nach `lua/lsp/bindings/keymaps.lua`. Vorgabe aus
-[NEW_Project.md](./MATERIALS/NEW_Project.md): *„alle Keymaps müssen vom User
+[NEW_PROJECT.md](file:///C:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md): *„alle Keymaps müssen vom User
 einfach modifizierbar / deaktiviert werden können“* und *„eine which-key
 Implementierung haben“*.
 
@@ -661,9 +666,9 @@ Specs in `plugins/lsp.lua` / `plugins/trouble.lua`):
 
 ## 10. lib.nvim-Integration
 
-Pflicht laut [Arch&Coding-Regeln.md §NVIM-Config spezifisch](./MATERIALS/Arch&Coding-Regeln.md)
-und [Checklist.md](./MATERIALS/Checklist.md). Verfügbare Module in
-`E:\repos\lib.nvim`: `autocmd, buf_win_tab, buffer, cache, core, cross,
+Pflicht laut [Arch&Coding-Regeln.md §NVIM-Config spezifisch](file:///C:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Arch&Coding-Regeln.md)
+und [Checklist.md](file:///C:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Checklist.md). Verfügbare Module in
+`C:\repos\lib.nvim`: `autocmd, buf_win_tab, buffer, cache, core, cross,
 debounce, docmap, dotrepeat, fs, git, harvest, logger, lua_ls, map, neotree,
 net, normalize, notify, progress, require, safe_api, selection, store, system,
 terminal, token, treesitter, ui, usercmd, window` sowie `lib.lua.{lazy, memo,
@@ -714,7 +719,7 @@ besitzen“*. Heute existiert nur `:LspDoctor health` — **kein**
 
 ## 12. Dokumentationspflichten
 
-Aus [NEW_Project.md](./MATERIALS/NEW_Project.md):
+Aus [NEW_PROJECT.md](file:///C:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md):
 
 - `README.md` — **englisch**, ASCII-Art + Badges am Anfang, Table of Content
   (nur H2). Direkt nach der ASCII-Art ein `>`-Absatz mit Link auf das am besten
@@ -730,7 +735,7 @@ Aus [NEW_Project.md](./MATERIALS/NEW_Project.md):
   `event`/`cmd`/`ft`; **kein** `dir = vim.env…`, **keine** Lizenzverweise
 - `.luarc.json` + `stylua.toml` im Projektroot
 - Abschließend alle Usercmds/Keymaps/Autocmds in
-  [NEW_Project.md](./MATERIALS/NEW_Project.md) eintragen
+  [NEW_PROJECT.md](file:///C:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md) eintragen
 
 ---
 
@@ -750,9 +755,14 @@ Bewusst in Phasen, damit die Config zwischen den Phasen immer lauffähig bleibt.
 
 ### Phase 1 — Gerüst
 
-4. `E:\repos\lsp.nvim` aufbauen: `lua/lsp/{init,health}.lua`, `config/`,
+4. `C:\repos\lsp.nvim` aufbauen: `lua/lsp/{init,health}.lua`, `config/`,
    `bindings/`, `integrations/`, `@types/`, `doc/`, `docs/`, `.luarc.json`,
    `stylua.toml`, README-Skelett — nach Vorlage von `dap.nvim`/`filetree.nvim`.
+
+   *Angefangen 2026-08-23:* Branch `main` (aus `master` umbenannt, Default auf
+   GitHub umgestellt), `docs/ROADMAP.md` = Spiegel dieses Konzepts,
+   `README.md` = Platzhalter. Offen bleibt der komplette Rest der Liste —
+   `lua/lsp/**`, `doc/lsp.txt`, `.luarc.json`, `stylua.toml`, echte README.
 
 ### Phase 2 — Kern umziehen (Schicht 1)
 
@@ -799,7 +809,8 @@ Bewusst in Phasen, damit die Config zwischen den Phasen immer lauffähig bleibt.
 
 20. `debug_adapters/**` nach `dap.nvim` verschieben (unabhängig terminierbar).
 21. `docs/**`, `doc/lsp.txt`, README, ROADMAP finalisieren; `gh repo edit`
-    (Description, Topics), Branch `main`, committen & pushen.
+    (Description, Topics), committen & pushen.
+    (Branch `main` ist seit 2026-08-23 erledigt — s. Phase 1.)
 22. Diesen Roadmap-Eintrag auf „abgeschlossen“ setzen, Memory-Notiz analog zu
     `lib-nvim-extraction.md` anlegen.
 
@@ -868,7 +879,10 @@ Für `docs/ROADMAP.md` des neuen Plugins — nicht alles sofort umsetzen:
 
 ## Aus `MyPlugin-Notes/LSPDoctor/` (Analyse 2026-08-08)
 
-Quelle: `E:/repos/Notes/MyPlugin-Notes/LSPDoctor/{lspdoctor,lsprelive}.md`.
+Quelle: `MyPlugin-Notes/LSPDoctor/{lspdoctor,lsprelive}.md` — **existiert
+nicht mehr**: unter `C:\repos\Notes\MyPlugin-Notes\` liegen heute nur noch
+`README-TEMPLATES/`, `_archive/`, `cmdlog/` und `nvim_cfg_patches/`. Der für
+`lsp.nvim` relevante Inhalt ist unten festgehalten, das Original ist weg.
 
 **Befund: die Notiz ist überholt.** Sie entwirft eine ~30-zeilige `M.check()`
 (Mason da? LSP attached? Diagnostics vorhanden? trouble geladen?). Der reale
