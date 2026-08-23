@@ -1,64 +1,31 @@
 ---@module 'plugins.lsp'
---- Language Server Protocol integration, formatting, and diagnostics tools.
+--- What this config adds to the LSP setup on top of lsp.nvim's pack.
+---
+--- The specs that used to live here -- lazydev, conform, lspsaga, lensline,
+--- inc-rename, workspace-diagnostics, trouble -- moved into
+--- `lsp.pack.{core,ui}` and are installed through `import = "lsp.pack"` in
+--- init.lua. What is left is the part that is genuinely about *this* config
+--- and would be wrong to ship in a plugin.
+---
+--- lazy merges `opts` across every spec for the same plugin, which is what
+--- makes this split work at all: the pack contributes the lazydev source and
+--- the utility-buffer guard, this file contributes a personal word list and
+--- the Copilot bridge, and nvim-cmp ends up with both.
 
 ---@type LazyPluginSpec[]
 return {
-  -- {
-  --   "antosha417/nvim-lsp-file-operations",
-  --   event = "VeryLazy",
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --     -- Uncomment whichever supported plugin(s) you use
-  --     -- "nvim-tree/nvim-tree.lua",
-  --     "nvim-neo-tree/neo-tree.nvim",
-  --     -- "simonmclean/triptych.nvim"
-  --   },
-  --   config = function()
-  --     require("lsp-file-operations").setup()
-  --   end,
-  -- },
-
-  -- LazyDev: Completion and docs for Lua `require` modules
-  {
-    "folke/lazydev.nvim",
-    ft = "lua",
-    dependencies = {
-      {
-        "DrKJeff16/wezterm-types",
-        lazy = true,
-        version = false, -- Get the latest version
-      },
-    },
-
-    opts = {
-      library = {
-        { path = "${3rd}/luv/library",   words = { "vim%.uv", "uv", "vim%.loop" } },
-        { path = "lazydev.nvim/types" },
-        { path = "luvit-meta/library",   words = { "vim%.uv", "uv", "vim%.loop" } },
-        { path = "plenary.nvim/types",   mods = { "plenary" } },
-        { path = "telescope.nvim/types", mods = { "telescope" } },
-        { "nvim-dap-ui" },
-        { path = "wezterm-types",        mods = { "wezterm" } },
-        { path = "LazyVim",              words = { "LazyVim" } },
-        { path = "nvim-treesitter",      mods = { "vim.treesitter" } },
-      },
-    },
-  },
-
-  -- Completion source for LazyDev
   {
     "hrsh7th/nvim-cmp",
     opts = function(_, opts)
       opts.sources = opts.sources or {}
-      table.insert(opts.sources, {
-        name = "lazydev",
-        group_index = 0,
-      })
 
       -- Completes this config's personal StefanBartl/*.nvim plugin names
       -- ("documentation.nvim", not just "documentation") as one atomic
       -- candidate each, ranked by persisted use frequency. See that module's
       -- doc comment for how it composes with cmp's own default sorting.
+      --
+      -- The plugin list is this config's data, so it is handed over rather
+      -- than reached for: lsp.nvim's completion source takes a reader.
       table.insert(opts.sources, { name = "personal_names", priority = 100 })
       require("lsp.completion.personal_names").setup({
         labels = function()
@@ -66,127 +33,13 @@ return {
         end,
       })
 
-      require("config.copilot.cmp")
-
-      -- Disable completion in any scratch/utility buffer (buftype ~= "" --
-      -- nofile, prompt, terminal, quickfix, ...). Without this, cmp's popup
-      -- also shows over lib.nvim.ui.kit's own floating input/chooser/
-      -- confirm/form surfaces (all buftype=nofile), where <CR> is bound to
-      -- "confirm the visible completion" (see nvchad.configs.cmp's
-      -- `select = true`) -- so submitting e.g. a filename in filetree.nvim's
-      -- create/rename prompt could silently confirm a fuzzy-matched
-      -- completion/snippet instead.
-      local prev_enabled = opts.enabled
-      opts.enabled = function()
-        if vim.bo.buftype ~= "" then
-          return false
-        end
-        return type(prev_enabled) ~= "function" or prev_enabled()
-      end
-    end,
-  },
-
-  {
-    "nvimdev/lspsaga.nvim",
-    event = "LspAttach",
-    config = function()
-      require("lspsaga").setup({
-        beacon = {
-          enable = false,
-        },
-        breadcrumb = {
-          enable = true,
-          show_file = true,
-          folder_level = 1,
-        },
-        hover = {
-          enable = false,
-        },
-        -- NOTE: the option is `enable`, not `enabled` (lspsaga checks
-        -- `saga.config.lightbulb.enable`). With `enabled` the key was merged
-        -- in as a dead extra field and the lightbulb kept running on every
-        -- cursor move -- ~214ms in the startup stack sample plus permanent
-        -- load while editing. See docs/ROADMAP/PERF-Startup-Analyse.md.
-        lightbulb = {
-          enable = false,
-        },
-        rename = {
-          enable = false,
-        },
-        term_toggle = {
-          enable = false,
-        },
-      })
-    end,
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter", -- optional
-      "nvim-tree/nvim-web-devicons",     -- optional
-    },
-  },
-
-  -- Blink-based completion for LazyDev (optional)
-  -- {
-  --   "saghen/blink.cmp",
-  --   version = "1.*", -- pin to the latest v1.x tag so prebuilt binaries match
-  --   opts = {
-  --     sources = {
-  --       default = { "lazydev", "lsp", "path", "snippets", "buffer" },
-  --       providers = {
-  --        lazydev = {
-  --           name = "LazyDev",
-  --           module = "lazydev.integrations.blink",
-  --           score_offset = 100,
-  --         },
-  --       },
-  --     },
-  --     fuzzy = {
-  --       implementation = "prefer_rust",
-  --       prebuilt_binaries = {
-  --         force_version = "v1.4.0",
-  --       },
-  --     },
-  --     signature = { enabled = true },
-  --   },
-  -- },
-
-  -- Conform: LSP-agnostic formatting engine
-  -- No `config` here on purpose: `lsp.formatter.conform.setup()` (called from
-  -- `lsp.init`) is the single authoritative `conform.setup()` call — it runs
-  -- after plugin startup and carries the full formatter/resolve() config. A
-  -- second `conform.setup()` here would just be silently overwritten by it.
-  { "stevearc/conform.nvim" },
-
-  -- Workspace-wide diagnostics (LSP-level)
-  {
-    "artemave/workspace-diagnostics.nvim",
-    event = "LspAttach",
-  },
-
-  {
-    "smjonas/inc-rename.nvim",
-    cmd = "IncRename",
-    config = function()
-      require("config.inc_rename")
-    end,
-  },
-
-  {
-    "oribarilan/lensline.nvim",
-    branch = "release/2.x",
-    event = "LspAttach",
-    config = function()
-      require("lensline").setup({
-        profiles = {
-          {
-            name = "minimal",
-            style = {
-              placement = "inline",
-              prefix = "",
-              render = "focused", -- optionally render lenses only for focused function
-            },
-          },
-        },
-      })
+      -- Hide Copilot's inline suggestion while cmp's menu is open.
+      --
+      -- This used to read `require("config.copilot.cmp")` -- which loads the
+      -- module and returns its table without ever calling `setup()`. The
+      -- bridge had therefore never run: Copilot kept showing its suggestion
+      -- behind the completion menu.
+      require("config.copilot.cmp").setup()
     end,
   },
 
@@ -207,15 +60,9 @@ return {
             enable = true,
             cmd_path = "C:\\tools\\LanguageServerProtocol\\csharp\\omnisharp\\OmniSharp.exe",
           },
-          --[[
-          roslyn = {
-            enable = true,
-            cmd_path = "C:\\tools\\LanguageServerProtocol\\csharp\\roslyn-lsp\\content\\LanguageServer\\win-x64\\Microsoft.CodeAnalysis.LanguageServer.dll",
-          },
         },
       })
     end,
   },
-
-]]
+  ]]
 }

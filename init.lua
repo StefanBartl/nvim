@@ -34,6 +34,10 @@ vim.opt.rtp:prepend(lazypath)
 -- change after it's already on the runtimepath and errors ("changed dir ...
 -- already partially loaded") on every startup.
 local libpath = require("plugins.personal.utils").local_dev("lib.nvim") or (vim.fn.stdpath("data") .. "/lazy/lib.nvim")
+-- No clone fallback like lib.nvim's below: lsp.nvim is not required before
+-- lazy runs, so lazy can fetch it itself if the local checkout is absent.
+local lsppath = require("plugins.personal.utils").local_dev("lsp.nvim")
+  or (vim.fn.stdpath("data") .. "/lazy/lsp.nvim")
 if not vim.uv.fs_stat(libpath) then
   vim.fn.system({
     "git",
@@ -72,6 +76,12 @@ require("lazy").setup({
   -- plugins/personal/init.lua still owns the full spec (lazy=false,
   -- priority, config); this only pins `dir` early enough to avoid the race.
   { "StefanBartl/lib.nvim", dir = libpath },
+  -- Same reason as lib.nvim above, one step further: `import` makes lazy
+  -- `require("lsp.pack")` while it is still collecting specs, so the plugin's
+  -- `dir` has to be known by then. plugins/personal/init.lua still owns the
+  -- full spec (lazy = false, priority); this pins `dir` early enough and adds
+  -- the import that installs the LSP ecosystem.
+  { "StefanBartl/lsp.nvim", dir = lsppath, import = "lsp.pack" },
   { import = "nvchad.plugins" },
   -- { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },
