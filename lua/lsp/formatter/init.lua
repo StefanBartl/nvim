@@ -1,6 +1,14 @@
 ---@module 'lsp.formatter'
 --- Formatter API with on-save toggle, Conform-first strategy, and view preservation.
---- Linux/macOS only; no Windows-specific branches.
+---
+--- Cross-platform. This file carries no OS-specific code because it needs
+--- none: it drives autocommands and view preservation, both platform-neutral.
+--- The parts that do differ per platform -- the Mason bin path, the PATH
+--- separator, the `.cmd` suffix on Windows -- live in
+--- `lsp/formatter/conform.lua` and are branched on there. (The header used to
+--- read "Linux/macOS only; no Windows-specific branches", which read as a
+--- limitation of the module rather than an accurate description of one file,
+--- in a config whose main machine runs Windows.)
 
 local api = vim.api
 local Autocmd = require("lib.nvim.autocmd")

@@ -8,9 +8,11 @@ local M = {}
 function M.setup()
   local map = vim.g.__map_helper
 
-  map("n", "<leader>gtt", function()
-    require("mylsp.nav.lua_root").goto_root_at_cursor({ center = true })
-  end, { desc = "Go to Lua table/function root" })
+  -- `<leader>gtt` was removed: it called `require("mylsp.nav.lua_root")`, a
+  -- module that exists nowhere -- not in this config, not in any installed
+  -- plugin -- so the mapping threw on every press. The feature itself ("jump
+  -- to the enclosing Lua table/function root") is worth having and is recorded
+  -- in the lsp.nvim roadmap instead of being kept alive as a broken key.
 
   map("n", "<leader>lsp", function()
     require("lsp.core.root_scope_picker").open()

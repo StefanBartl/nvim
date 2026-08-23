@@ -221,18 +221,26 @@ function M.setup(cfg)
   end
 
   --- ==== CUSTOM ENABLE LSP TOOLS ====
+  -- One call, not two. This used to be two consecutive setup() calls with
+  -- contradictory `formatter_priority`. They were not "first one dead": the
+  -- doctor's setup() merges key by key into a persistent Opts table, so every
+  -- key from both calls took effect and only `formatter_priority` was actually
+  -- overwritten by the second. The values below are exactly what was in
+  -- effect -- collapsing them changes nothing except that it can now be read
+  -- off the call site instead of inferred from setup()'s merge semantics.
+  --
+  -- `null-ls` in the priority list is inert: it is not installed anywhere in
+  -- this config (conform does the formatting). Left in place rather than
+  -- silently dropped, since which formatter should win a conflict is a
+  -- decision, not a cleanup.
   require("lsp.lspdoctor").setup({
     use_notify = false,
     list_limit = 8,
-    formatter_priority = { "eslint", "null-ls", "lua_ls" },
+    formatter_priority = { "null-ls", "eslint", "lua_ls" },
     semantic_tokens_timeout = 300,
     scratch_filetype = "markdown",
-  })
-  require("lsp.lspdoctor").setup({
-    use_notify = false,
     auto_open_scratch = true,
     scratch_threshold = 20,
-    formatter_priority = { "null-ls", "eslint", "lua_ls" },
   })
   require("lsp.lspdoctor").enable_usercmd()
 
