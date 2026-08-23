@@ -4,6 +4,18 @@
 ---@type LazyPluginSpec[]
 return {
 
+  -- Auto-close (), [], {}, quotes, etc. while typing. Already present in the
+  -- lazy install dir from an earlier version of this config, but with no
+  -- spec left declaring it -- lazy never loaded it, so it never ran.
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    opts = {},
+    config = function(_, opts)
+      require("nvim-autopairs").setup(opts)
+    end,
+  },
+
   -- Auto Template Strings for JS/TS
   {
     "chrisgrieser/nvim-puppeteer",
