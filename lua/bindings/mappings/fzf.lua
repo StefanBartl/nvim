@@ -23,7 +23,6 @@ function M.setup()
   map("n", "<leader>fq", ":FzfLua quickfix<CR>", { desc = "[Quickfix] Quickfix" })
   map("n", "<leader>man", ":FzfLua man_pages<CR>", { desc = "[FzfLua] Man Pages" })
 
-  map("n", "<leader>flg", ":FzfLua live_grep<CR>", { desc = "[FzfLua] Live Grep" })
   map("n", "<leader>fg", ":FzfLua live_grep<CR>", { desc = "[FzfLua] Live Grep" })
   -- <leader>fb moved to fB: pickers.nvim's keymaps.folder_files owns <leader>fb now.
   map("n", "<leader>fB", "<cmd>FzfLua grep_curbuf<CR>", { desc = "[FzfLua] Grep current buffer" })
