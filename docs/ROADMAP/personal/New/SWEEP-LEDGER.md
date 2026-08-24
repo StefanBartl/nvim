@@ -566,13 +566,20 @@ Suite gruen.
       Commit `c1efa82`, Branch `fix/refs-live-through-lib-autocmd`.
       Suite gruen.
 
-### mdview.nvim
+### mdview.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[C]` `[F]` `:MDView zoom <factor>` ohne sichtbares Clamping/Validierung
-      des numerischen Werts auf Route-Ebene.
-- [ ] `[F]` Kein `:MDView start --port <n>` fuer einen festen Port (z. B. fuer
-      Firewall-Regeln) — derzeit nur implizit ueber `config.browser` /
-      `server_args`.
+- [x] `[C]` `[F]` Zoom-Clamping: **war da**, nur nicht auf Route-Ebene — der
+      Audit beschrieb den Ort, nicht das Fehlen. Das echte Problem war
+      leiser: `zoom 500` wandte still 300% an. Jetzt wird gemeldet, was
+      gewuenscht war, welcher Bereich gilt und was verwendet wurde.
+- [x] `[F]` `:MDView start port=N` — Port fuer genau diesen Spawn.
+      `port=` statt `--port`, weil `cwd=` bereits die Konvention dieses
+      Kommandos ist. Auf die Live-Config gesetzt und **nach dem Spawn wieder
+      zurueckgesetzt**, sonst erbt das naechste `:MDView start` ihn still.
+      Ausserhalb 1-65535 abgelehnt; bei laufendem Server ignoriert mit
+      Warnung, genau wie `cwd=`.
+      Commit `a6ad438`, Branch `feat/port-override-and-zoom-report`.
+      Zur Laufzeit verifiziert.
 
 ### pickers.nvim
 
