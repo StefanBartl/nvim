@@ -102,11 +102,6 @@ frozen list baked in at `setup()`:
 - **`mdview.nvim`**: `:MDView zoom <factor>` has no visible clamping/validation
   of the numeric value at the route level — from
   [mdview.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/mdview.nvim.md).
-- **`runtime-analysis.nvim`**: `:RA provenance <path>` is a typed `STRING`
-  with **no** completion — completing against `vim.*`/`package.loaded` fields
-  is noted as non-trivial (dotted path, container+field split) rather than
-  simply omitted — from [runtime-analysis.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/runtime-analysis.nvim.md)
-  (`bindings/usrcmds.lua:766-772`).
 - **`color_my_ascii.nvim`**: unclear/unverified whether `Fence lang <language>`
   / `Fence import <file>` have value/file completion (registration lives in a
   file that wasn't read) — from [color_my_ascii.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/color_my_ascii.nvim.md).

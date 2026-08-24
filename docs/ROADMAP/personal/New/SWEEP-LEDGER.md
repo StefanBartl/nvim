@@ -71,12 +71,20 @@ einem echten `getcompletion()`-Lauf pruefen, nicht nur per Codelesen. Loest
 sich der Punkt auf, bleibt trotzdem Doku-Arbeit uebrig — "unverifiziert" im
 Audit heisst meistens "nirgends aufgeschrieben".
 
-### runtime-analysis.nvim
+### runtime-analysis.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[C]` `:RA provenance <path>` ist typisiert als `STRING` ohne Completion
-      (`bindings/usrcmds.lua:766-772`). Nicht-trivial: dotted path, Trennung
-      Container/Feld. Gegen `vim.*` / `package.loaded` completen.
-      Falls zu teuer: bewusst als "n/a" mit Begruendung abhaken.
+- [x] `[C]` `:RA provenance <path>` — neuer composer-Argtyp
+      `RA_PROVENANCE_PATH`, spiegelt `provenance.resolve_container`s
+      Container/Field-Split. Bietet Funktions- **und** Tabellenfelder an, weil
+      eine Tabelle der Weg zu einer Funktion ist.
+      **Entscheidende Einschraenkung:** die Completion ruft nie `require` auf.
+      Sonst wuerde ein Tab-Druck Module laden (Top-Level-Code, Autocmds) als
+      Nebenwirkung. Gelesen wird nur der `_G`-Walk und `package.loaded`.
+      Im Test abgesichert: `package.loaded` bleibt ueber einen
+      Completion-Durchlauf unveraendert.
+      Validierung bleibt bewusst weich — `inspect` liefert vier praezise
+      Fehlermeldungen, die eine composer-Validierung ersetzen wuerde.
+      Commit `2adf867`, Branch `feat/provenance-completion`.
 
 ### insights.nvim
 
