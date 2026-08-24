@@ -1,7 +1,6 @@
 # Tasks, die wrsch nur ich manuell erledigen kann
 
- [ ] `:Recommender` durch alle Module durchlaufen lassen
-  - [ ] cwd/oath scope implementieren
+ [ ] `:Recommender perf` durch alle Module durchlaufen lassen
 - Einzeln über jedes Plugin gehen und
     1. MyChecklists detailiert durchgehen
     2. Opus-Extra mit der Prompt

@@ -12,9 +12,145 @@ Docs: `docs/commands.md`, `docs/BINDINGS.md`, `doc/recommender.txt` (renamed fro
 
 | Command | Args | Effect |
 | --- | --- | --- |
-| `:Recommender` | `[-r\|--replace] [-c\|--cwd] [regex\|treesitter\|javascript\|python] [threshold]` | Toggle the suggestion float; flags/positionals in any order |
+| `:Recommender` | `[-r\|--replace] [-c\|--cwd] [regex\|treesitter\|javascript\|python\|perf] [threshold] [buffer\|path\|cwd\|cfile\|line]` | Toggle the suggestion float; flags/positionals in any order |
 
 ## Notes
+
+- **2026-08-24: `perf` analyzer added — the plugin's core premise turned out
+  false under LuaJIT.** Ran `:Recommender cwd` across all ~38 personal repos
+  under `C:\repos` and got ~1000 alias suggestions, most of them junk
+  (`local 9 = 0.9`, `local nvim = lib.nvim` — would crash, `lib.nvim` isn't a
+  global — plus the scan silently truncated at `cwd_max_files=500`,
+  covering only 11 of 38 repos alphabetically). Re-ran the *original*
+  benchmark this plugin was built on
+  (`C:\repos\WKDBooks\Development\wkdbook-Lua\Benchmarks\Tests\reference-lookup.lua`)
+  under both a standalone Lua 5.4 interpreter and headless `nvim` (LuaJIT
+  2.1): the benchmarked ~23% aliasing win **only reproduces without a JIT**
+  — under LuaJIT (what Neovim actually runs), direct vs. aliased table
+  lookup measured identically (`0.000ms` either way at 1e6 calls; a
+  hoisting-safe follow-up measured the true per-lookup cost at ~0.02ns,
+  i.e. noise). `vim.fn`/`vim.api` aliasing was already known from the same
+  benchmark set to have no benefit either way (confirmed again: lookup is
+  ~0.1% of a real `vim.api.*()` call's cost).
+  - **User's own conclusion, verified rather than just accepted**: only 4 of
+    the ~10 tracked benchmark results (`table.insert` vs. indexed
+    assignment ~4-5x, `..` accumulator vs. `table.concat` ~4x+ at scale,
+    `ipairs` vs. numeric `for` ~2x, `string.format` vs. `..` ~3x) hold up as
+    *algorithmic* wins the JIT can't do for you — these became the new
+    `analyzers/perf.lua`, everything alias-shaped was left alone (still
+    works, just not recommended going forward per the benchmark evidence).
+  - New analyzer is a **fixed-pattern detector, not a chain counter** — the
+    four patterns above, each gated by a lightweight line-based block
+    tracker (`classify_line` in `perf.lua`: for/while/repeat push a
+    "loop" stack entry, if/function/do push non-loop, single-line blocks
+    like `for i=1,3 do t end` are net-zero-depth special-cased) so a
+    single `table.insert` outside any loop is correctly NOT flagged —
+    confirmed in a dedicated unit test before wiring in.
+  - `ipairs` is flagged on its own `for...in ipairs(...)` line regardless
+    of enclosing loop nesting (the ~2x per-iteration cost doesn't depend on
+    nesting); the other three require being inside a loop.
+  - The `x = x .. y` accumulator check uses a genuine Lua pattern
+    **backreference** (`%1`) — `([%w_%.]+)%s*=%s*%1%s*%.%.` — to require
+    the *same* identifier on both sides, so it only flags the O(n²)
+    self-concat case, not incidental `..` usage like
+    `dir .. "/" .. name` (which is O(1) per call, not a real perf issue).
+  - `Enter`/`A` insert a `-- perf: ...` advisory comment, not an automatic
+    rewrite (per user's own explicit call when asked: new analyzer
+    alongside existing ones, comment-only, not README repositioning, not
+    auto-rewrite — all three were offered, this one chosen).
+  - `config.threshold`'s meaning is genuinely different for `perf` than for
+    the chain analyzers ("how many instances exist", not "worth aliasing
+    at N+ repeats") — documented explicitly rather than silently reused,
+    since e.g. a single `table.insert`-in-loop is still worth flagging.
+  - Spot-checked against ~700 real files across 5 unrelated personal repos
+    (cascade.nvim, documentation.nvim, cmdlog.nvim, lib.nvim,
+    color_my_ascii.nvim) before shipping: every hand-inspected hit was a
+    genuine in-loop occurrence, no crashes, no garbage chain names (unlike
+    the old `:Recommender cwd` alias run above).
+  - `project.supports_cwd(analyzer_name)` gate (added for scope work
+    earlier the same day) already generalized cleanly to a 5th analyzer —
+    just one line in `project.lua`'s `EXTENSIONS` table. The "unsupported"
+    error message was hardcoded to name 3 analyzers though (`"use regex,
+    javascript, or python"`) and had already silently drifted once (the
+    scope work added it, this session immediately needed a 4th name) — now
+    built from `project.supports_cwd()` at module-load time instead, so it
+    can't drift again.
+
+- **2026-08-24: `{scope}` positional added — `buffer` (default) / `path` /
+  `cwd` / `cfile` / `line`**. Requested as "`:Recommender [scope?]` with
+  default buffer scope, plus path/cwd/cfile/line" — `cwd` already existed as
+  the `-c`/`--cwd` boolean flag; this generalizes it into a 5-way scope
+  value and adds three new ones. Third optional positional slot (`a3`) added
+  to the composer route (`a1`/`a2`/`a3`, all `STRING`, `values =
+  COMPLETION_VALUES` — analyzer names ∪ scope names, for `<Tab>` hints in
+  any of the 3 slots).
+  - **Classification is by content, not slot position** — new
+    `classify_pos_args(pos_args)` scans every leftover token once and
+    buckets it as a scope match, else an analyzer match, else `tonumber`
+    (first hit per category wins). This is a deliberate generalization of
+    the pre-existing pos_args handling (which only ever checked
+    `pos_args[1]` for the analyzer and `pos_args[2]`/`pos_args[1]` for the
+    threshold): `:Recommender cwd javascript 5`, `:Recommender javascript
+    cwd 5`, and `:Recommender 5 javascript cwd` all now resolve identically.
+    Verified nothing in the documented pre-existing test matrix (`-r regex
+    5` / `regex -r 5` / `regex 5 -r`, the `:Recommender 5` threshold-only
+    edge case) changed behavior — the loop is a strict superset.
+  - **`-c`/`--cwd` kept as a backward-compatible flag alias** for `scope =
+    "cwd"`; an explicit `{scope}` positional always overrides it
+    (`:Recommender -c path` → `path`, confirmed in headless testing).
+  - **`path` scope**: identical scan to `cwd` (`project.find_files` +
+    `project.read_lines`, same `cwd_ignore`/`cwd_max_files` config keys) but
+    rooted at `vim.fn.fnamemodify(bufname, ":p:h")` — the *current buffer's
+    own* directory — instead of `getcwd()`. Errors on an unnamed buffer
+    (`api.nvim_buf_get_name(bufnr) == ""`).
+  - **`cfile` scope**: new `resolve_cfile(cfile, bufnr)` helper resolves
+    `vim.fn.expand("<cfile>")` to a readable absolute path in three steps —
+    as typed, then relative to the source buffer's directory, then via
+    `vim.fn.findfile(cfile, vim.o.path)` (mirrors `gf`'s resolution order,
+    not reusing Neovim's actual `gf` internals since there's no public API
+    for that). Single-file `project.read_lines({path})` call, isolated from
+    both the buffer and any cwd/path aggregation (verified in testing: a
+    file with its own count of 4 stayed isolated at 4 under `cfile`, not
+    summed with the other file in the same directory's count of 7 under
+    `cwd`/`path`).
+  - **`line` scope**: passes `{ current_line_text }` as the explicit
+    `lines` array. **Important interaction discovered via headless
+    testing**: `analyzers/regex.lua`'s `extract_chains()` dedups matches
+    *per line* before counting, so a 1-line `lines` array caps every
+    chain's count at 1 — `config.threshold` (3 by default) would make
+    `line` scope silently report "No suggestions" on every real invocation.
+    Fixed by defaulting `threshold` to `1` specifically for `scope ==
+    "line"` when the caller didn't pass an explicit `{threshold}` token
+    (`pos_threshold or (scope == "line" and 1) or cfg.threshold`) — an
+    explicit token still overrides it either direction.
+  - **`cfile`/`cursor_line_text` captured at `execute()`-time**, before
+    `vim.schedule(state.refresh)` — not inside `refresh()` itself — so the
+    resolved scope reflects the cursor/file that was actually under it when
+    `:Recommender` was invoked, consistent with how `source_bufnr` was
+    already captured eagerly before scheduling.
+  - **`project.supports_cwd(analyzer_name)` reused unchanged** as the gate
+    for all four non-buffer scopes (renamed in doc comments only, not in
+    code — it's really "does this analyzer accept an explicit `lines` array
+    instead of a live buffer", which is what every non-buffer scope needs;
+    treesitter never does, since it parses a live buffer via
+    `vim.treesitter.get_parser`). Error message generalized from a
+    cwd-specific string to `("%s scope isn't supported for analyzer %q —
+    use regex, javascript, or python"):format(scope, analyzer_name)`.
+  - **Verified end-to-end in a headless `nvim --headless -u NONE`
+    session** (rtp-loaded from both this repo and the sibling `lib.nvim`
+    checkout, `rendering.open`/`is_open`/`close` monkey-patched to capture
+    suggestions without touching the real `kit.select` UI, `lib.nvim.notify`
+    stubbed to capture messages): all 5 scopes, order-independence, `-c`
+    back-compat, explicit-scope-over-flag precedence, the generalized
+    treesitter hard error, and both new error paths (unnamed buffer for
+    `path`, no file-under-cursor for `cfile`) — all behaved exactly as
+    designed. No pre-existing bugs surfaced.
+  - Docs updated: `docs/commands.md` (new "Scopes" section replacing
+    "Project-wide (-c/--cwd) scope"), `docs/BINDINGS.md`, `docs/FEATURES.md`,
+    `docs/configuration.md`, `docs/architecture.md`, `README.md`,
+    `doc/recommender.txt` (section 9 renamed `PROJECT-WIDE SCOPE` →
+    `SCOPES`, split into 9.1–9.4 subsections; old `*recommender-cwd-scope*`
+    tag kept, now titling the `cwd`/`path` subsection specifically).
 
 - **2026-07-24: `-c`/`--cwd` project-wide scope added** (roadmap item —
   new `FlagSpec {name="cwd", short="c", bool=true}` alongside `replace`, same

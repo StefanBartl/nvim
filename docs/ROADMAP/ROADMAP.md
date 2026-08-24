@@ -1,5 +1,9 @@
 # Roadmap
 
+leader fg- - libve rgep, nicht prompt nach wort und dann live grep (das macht keinen sinn) FG
+
+
+
 ## cdx
 
 free: So., 09:00 x - 21. Juli 2027
