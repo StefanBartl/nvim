@@ -19,6 +19,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `doc/migrate.txt`
 | `:[range]MigrateOpt` / `:[range]MigrateNotify` / `:[range]MigrateHl` / `:[range]MigrateLsp` | Migrate the given range, applied immediately (no picker) |
 | `:MigrateOpt %` / `:MigrateNotify %` / `:MigrateHl %` / `:MigrateLsp %` | Scan the whole buffer, open Telescope picker |
 | `:MigrateOpt cwd` / `:MigrateNotify cwd` / `:MigrateHl cwd` / `:MigrateLsp cwd` | Scan cwd via ripgrep, open Telescope picker (`MigrateNotify cwd` auto-writes) |
+| any of the above + `-n` / `--dry-run` | Report what would change, apply nothing. **Added 2026-08-24.** Only meaningful for line/range (`%`/`cwd` already preview via the picker), but accepted in all four modes so a mapping can pass it unconditionally. |
 | `:MigrateNotify [mode] <module_name>` | `module_name` sets the injected `require(...).create("[name]")` label |
 
 ## `:MigrateHl` / `:MigrateLsp` (added later, same session as the registry refactor)
@@ -119,3 +120,13 @@ mode (the first token, `mode`, is parsed but discarded in the range branch).
 So `:'<,'>MigrateNotify my.module` actually leaves `module_name` unset;
 `:'<,'>MigrateNotify x my.module` is what the code actually requires. Doc/code
 mismatch unrelated to this migration.
+
+**Dispatch reads the *parsed* scope positional, not `ctx.raw.args`** (fixed
+2026-08-24 while adding `--dry-run`). The raw argument string still carries
+any flags, so re-parsing it there made `--dry-run` come back as an invalid
+scope: `Invalid argument: --dry-run. Use: [empty], %, or cwd`.
+
+The `[%|cwd]` completion the audit listed as unverified **was already
+present** — `composer.register_type("MIGRATE_SCOPE", ...)` in
+`common/command.lua` offers both literals unfiltered. Verified at runtime;
+nothing to add.

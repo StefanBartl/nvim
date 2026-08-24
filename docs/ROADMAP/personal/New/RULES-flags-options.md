@@ -138,13 +138,6 @@ reading the code, not confirmed feature requests.
   counterpart in the ACTIONS table, unlike the other `Fence` subcommands.
 — from [color_my_ascii.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/color_my_ascii.nvim.md)
 
-## migrate.nvim
-
-- No dry-run/"preview only, no apply" flag for the single-line case.
-- No count-based "migrate the next N lines" support, despite the underlying
-  commands being range-capable.
-— from [migrate.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/migrate.nvim.md)
-
 ## lib.nvim
 
 - No idea gaps flagged directly against lib.nvim's own (nonexistent) keymaps —

@@ -268,13 +268,30 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       Keine Testsuite — zur Laufzeit verifiziert, inkl. Praezedenz
       (`regex 3 --threshold=7` meldet 7).
 
-### migrate.nvim
+### migrate.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[C]` `[?]` `[%|cwd]`-Literale ohne `complete`. Moeglicherweise liefert
-      `lib.nvim.usercmd.composer` das schon — zuerst dort nachsehen.
-- [ ] `[F]` Kein Dry-Run / "nur Preview" fuer den Single-Line-Fall.
-- [ ] `[N]` `[F]` Kein count "die naechsten N Zeilen migrieren", obwohl die
-      zugrundeliegenden Kommandos range-faehig sind.
+- [x] `[C]` `[?]` `[%|cwd]`-Completion: **war schon da.** `MIGRATE_SCOPE`
+      ist in `common/command.lua` registriert und bietet beide Literale.
+      Genau wie der Ledger-Hinweis vermutet hat — zuerst im Composer
+      nachsehen. Zur Laufzeit bestaetigt, nichts zu tun.
+- [x] `[F]` `-n` / `--dry-run`: meldet jede Migration mit echtem
+      Vorher/Nachher, wendet nichts an. Nur Line und Range brauchten es —
+      `%`/`cwd` haben mit dem Picker schon eine Vorschau mit Apply-Schritt.
+      In allen vier Modi akzeptiert statt in zweien abgelehnt, damit ein
+      Mapping es bedingungslos mitgeben kann.
+      **Dabei einen latenten Bug gefunden:** `dispatch` parste den Scope aus
+      `ctx.raw.args`, wo die Flags noch drinstehen — `--dry-run` kam als
+      "Invalid argument" zurueck. Nimmt jetzt `ctx.args.mode`.
+- [x] `[N]` `[F]` Count migriert N Zeilen: `3<leader>mo` deckt Cursorzeile
+      plus zwei ab, auf Pufferende geklemmt, als expliziter
+      `:{line1},{line2}`-Range. Die Kommandos waren die ganze Zeit
+      range-faehig; es hat ihnen nur nie jemand einen Range aus einem
+      Keymap uebergeben. Als Range statt via Vims Count-zu-Adresse, weil
+      `:3MigrateOpt` "Zeile 3" hiesse, nicht "drei Zeilen ab hier".
+      **Achtung:** die Keymap-`desc`-Strings haben sich geaendert.
+      Commit `e2bca87`, Branch `feat/dry-run-and-count`.
+      Suite gruen; sie deckt bewusst nur die reinen Migratoren ab
+      (`migrate.common.*` hardrequired telescope), Rest zur Laufzeit.
 
 ### color_my_ascii.nvim
 
