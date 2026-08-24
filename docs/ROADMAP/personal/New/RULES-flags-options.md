@@ -42,19 +42,6 @@ reading the code, not confirmed feature requests.
   otherwise exposing a lot through `:Cascade`.
 — from [cascade.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/cascade.nvim.md)
 
-## diff.nvim
-
-- No default keymap for "diff against last commit" (`:Diff target=git:HEAD`)
-  or the common merge-conflict case (`base=git:HEAD target=git:MERGE_HEAD`) —
-  consistent with the plugin's deliberate "no imposed leader mappings"
-  philosophy, but flagged as a possible optional, opt-in addition.
-- No keymap equivalent for `:DiffBuffers`/`:DiffOrig`/`:DiffClear` — same
-  philosophy, though `:DiffOrig` (compare with disk version) is common enough
-  to be worth an optional mapping.
-- No `<C-c>`/double-Escape alternative for `scope="global"`, in case
-  `<Esc><Esc>` collides with another plugin.
-— from [diff.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/diff.nvim.md)
-
 ## debugging.nvim
 
 - `<lt>c` (capture messages) can't choose file-only or clipboard-only from the

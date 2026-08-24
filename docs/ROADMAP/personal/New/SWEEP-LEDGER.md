@@ -149,17 +149,26 @@ Audit heisst meistens "nirgends aufgeschrieben".
       zur Laufzeit verifiziert. Die `desc`-Strings sind unveraendert, also
       kein Drift-Risiko.
 
-### diff.nvim
+### diff.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` Kein Default-Keymap fuer "diff gegen letzten Commit"
-      (`:Diff target=git:HEAD`) und den Merge-Conflict-Fall
-      (`base=git:HEAD target=git:MERGE_HEAD`). Nur als **opt-in** anbieten —
-      das Plugin verzichtet bewusst auf aufgezwungene Leader-Mappings.
-- [ ] `[F]` Kein Keymap-Aequivalent fuer `:DiffBuffers` / `:DiffOrig` /
-      `:DiffClear`. Mindestens `:DiffOrig` ist haeufig genug fuer ein
-      optionales Mapping.
-- [ ] `[F]` Keine `<C-c>`-Alternative zu `<Esc><Esc>` bei `scope="global"`,
-      fuer Kollisionsfaelle.
+- [x] `[F]` Opt-in-Shortcuts `cfg.keymaps` fuer `:Diff target=git:HEAD` und
+      den Merge-Conflict-Fall. **Nichts** wird per Default gebunden — die
+      "keine aufgezwungenen Leader-Mappings"-Haltung bleibt, sie war ja der
+      Grund, warum der Audit das als *optionale* Ergaenzung markiert hat.
+- [x] `[F]` Ebenso Shortcuts fuer `:DiffBuffers` / `:DiffOrig` /
+      `:DiffClear`. Die rhs wird aus `cfg.commands.*` gebaut, und jeder
+      Shortcut nennt sein `cfg.features.*`-Gate — ein Shortcut auf ein
+      abgeschaltetes Kommando wird abgelehnt statt gebunden.
+- [x] `[F]` `exit.key` nimmt jetzt eine **Liste**, also `<C-c>` zusaetzlich
+      statt als Ersatz. Dabei ein latenter Bug gefunden und behoben:
+      `native_diffthis` loeschte `cfg.key` direkt und haette mit einer Liste
+      still nichts mehr entfernt — laeuft jetzt ueber `detach_buffer`.
+      Commit `945a9a9`, Branch `feat/optional-shortcuts`.
+      Neuer Spec `keymaps_spec.lua`, gruen.
+      **Vorbestehender Fehlschlag im Repo:** `git_spec.lua` ruft
+      `git.resolve` synchron auf, obwohl die Funktion callback-basiert ist
+      (`core/git.lua:47`). Der Spec ist veraltet, nicht die Implementierung;
+      `:Diff target=git:HEAD` funktioniert. Separat als Task angelegt.
 
 ### cmdlog.nvim
 
