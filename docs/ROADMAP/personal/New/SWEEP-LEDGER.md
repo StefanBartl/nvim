@@ -397,20 +397,33 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       `cycle` sofort gemeldet — Erwartung nachgezogen, Suite gruen.
       Keine `desc`-Strings geaendert.
 
-### emojis.nvim
+### emojis.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` `[F]` `:Emojis next` ohne count (`nav.lua:72-79` springt immer 1).
-- [ ] `[N]` `<leader>et`-Count-Semantik (count > 1 erweitert den Scope auf die
-      naechsten N Zeilen) steht nur im Code-Kommentar, nicht in `BINDINGS.md`.
-      Reine Doku-Luecke.
-- [ ] `[F]` Overlay-Grid ohne type-to-filter (nur der `list`-Modus hat das via
-      Kit-Chooser).
-- [ ] `[F]` `checkbox.toggle` mit `dir = -1` existiert in `core/checkbox.lua`
-      und `actions.checkbox`, ist aber nur ueber die Lua-API erreichbar — kein
-      `:Emojis toggle`-Argument, kein Preset-Keymap.
-- [ ] `[F]` `search.no_ignore` / Extra-Globs nur via
-      `:Emojis <action> cwd <glob>...`; ein `!`-Bang (`:Emojis! clear cwd`)
-      waere idiomatischer.
+- [x] `[N]` `[F]` `:Emojis next [count]` — Positional, kein Kommando-Count:
+      `:3Emojis next` waere eine Adresse (Zeile 3). Schrittweise statt nach
+      dem N-ten Treffer zu suchen, dadurch bleibt der Wrap bei jedem Schritt
+      korrekt.
+- [x] `[N]` `<leader>et`-Count: **reine Doku-Luecke**, wie im Ledger vermutet.
+      Der zentrale Cheatsheet beschrieb ihn bereits vollstaendig — gefehlt
+      hat er in der plugin-eigenen `docs/BINDINGS.md`.
+- [x] `[F]` `/` filtert das Overlay-Grid. Prompt statt Live-Eingabezeile:
+      das Grid ist eine Hotkey-Flaeche mit fester Anordnung (in `grid_keys`
+      ist jede druckbare Taste bereits eine Einfuege-Aktion). Gefiltert wird
+      durch Neu-Oeffnen, weil Zell-Byte-Spans und Hotkeys beide aus der
+      Item-Liste abgeleitet sind. Der ungefilterte Satz bleibt im State, ein
+      zweiter Filter weitet also wieder auf.
+- [x] `[F]` `:Emojis! toggle` — Checkbox rueckwaerts. `checkbox.toggle` nahm
+      immer schon ein `dir`, erreichbar war es nur ueber die Lua-API.
+- [x] `[F]` `:Emojis! <action> cwd` — erzwingt `--no-ignore` fuer diesen
+      Aufruf, auf einer Kopie der Config, damit ein Aufruf nicht still jede
+      spaetere Suche der Session veraendert.
+      **Ein Bang, zwei Aktionen, keine Mehrdeutigkeit** — die beiden sind
+      disjunkt.
+      Commit `a72453e`, Branch `feat/next-count-bang-and-grid-filter`.
+      Nebenbei gefixt: `forward()` stringifiziert Positionals, weil `fargs`
+      Nvims String-Konvention spiegelt und `execute` `fargs[2]` lowercased —
+      das warf, sobald `next` einen INT-Positional hatte.
+      `commands_spec.lua` erweitert, Suite gruen.
 
 ### fileops.nvim
 

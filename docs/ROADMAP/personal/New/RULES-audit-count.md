@@ -102,9 +102,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
 - `learn-cli.nvim`: `next_exercise`/`prev_exercise` never read `vim.v.count`;
   "skip N exercises" (`3<leader>lcn`) is a plausible, unimplemented extension —
   from [learn-cli.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/learn-cli.nvim.md).
-- `emojis.nvim`: `:Emojis next` has no count-driven "jump N emoji forward" —
-  from [emojis.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/emojis.nvim.md).
-
 ## Explicitly justified "n/a" — not a gap
 
 Most single-shot, toggle, or picker-launching actions correctly have no count

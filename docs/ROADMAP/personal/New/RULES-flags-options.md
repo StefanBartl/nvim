@@ -45,19 +45,6 @@ reading the code, not confirmed feature requests.
   buffer, no structured filter by status/name).
 — from [sandbox.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/sandbox.nvim.md)
 
-## emojis.nvim
-
-- `:Emojis next` has no count support (`nav.lua:72-79` always advances by 1).
-- Overlay grid has no type-to-filter mode (only the `list` mode has that via
-  the kit-chooser).
-- `checkbox.toggle` with `dir = -1` (backward) exists in `core/checkbox.lua`
-  and `actions.checkbox`, but is reachable only via the Lua API — no
-  `:Emojis toggle` argument or preset keymap for backward toggle.
-- `search.no_ignore`/extra globs are only reachable via `:Emojis <action> cwd
-  <glob>...`; a `!`-bang suffix (`:Emojis! clear cwd`) for "this time with
-  no_ignore" would follow common Vim idiom but is absent.
-— from [emojis.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/emojis.nvim.md)
-
 ## fileops.nvim
 
 - No keymap for `bulk rename`, `lockinfo`, `info`, `path`, `cd` — only via
