@@ -26,6 +26,10 @@ end
 ---@type { module: string, applies: fun(buf: integer): boolean }[]
 local CONTRIBUTORS = {
   { module = "markdown.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
+  -- open.nvim: genuinely global (acts on whatever is under the cursor, incl.
+  -- tree buffers) — its own items() self-gates per entry, so `applies`
+  -- here is just "always try it".
+  { module = "open.integrations.menu", applies = function() return true end },
   -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
 }
