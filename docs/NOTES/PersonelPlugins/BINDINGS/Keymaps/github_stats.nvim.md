@@ -3,24 +3,30 @@
 Source: `lua/github_stats/bindings/keymaps.lua`, `M.setup_keymaps(buf)`
 Cross-reference: `docs/BINDINGS.md` — verified current and precise.
 
-All buffer-local to the dashboard buffer, mode `n`. Uses a local `map_key()`
-helper that wraps `vim.keymap.set` with an automatic debounced re-render
-after the action runs, plus a few direct `vim.keymap.set` calls for
-fixed/always-on bindings.
+All buffer-local to the dashboard buffer, mode `n` — none of these is ever a
+global keymap. Uses a local `map_key()` helper that wraps `vim.keymap.set`
+with an automatic debounced re-render after the action runs, plus a few
+direct `vim.keymap.set` calls for fixed/always-on bindings.
+
+The tables below are split along that same line — configurable via
+`keybindings` vs. fixed, plus the blockers and the separate detail-view
+float. This is the file's real structure, not a formatting choice: it is
+what the paragraph above already described in prose, and
+`BINDINGS-FORMAT.md` §1 wants it as a heading per table so each row carries
+its own scope label.
+
+## Blocked keys (`<Nop>`, always on)
 
 | lhs (config key / default) | action | desc | condition |
 | --- | --- | --- | --- |
 | `h`,`l`,`<Left>`,`<Right>`,`<PageUp>`,`<PageDown>`,`<Home>`,`<End>` | `<Nop>` | none | Always — blocks native cursor movement that would race with dashboard state |
+
+## Configurable bindings (`map_key()`, disable-able via `keybindings`)
+
+| lhs (config key / default) | action | desc | condition |
+| --- | --- | --- | --- |
 | `navigate_down` (`j`) | Move selection down | "GitHub Stats: navigate down" | disable-able; `5j` moves 5 repos (`vim.v.count1`, since 2026-07-31) |
-| `<Down>` (fixed) | Same as navigate_down | none | always; same count support |
 | `navigate_up` (`k`) | Move selection up | "GitHub Stats: navigate up" | disable-able; same count support |
-| `<Up>` (fixed) | Same as navigate_up | none | always; same count support |
-| `<C-d>` (fixed) | Scroll half page down | "GitHub Stats: scroll half page down" | always; raw `vim.v.count` scrolls exactly that many lines when given (e.g. `1<C-d>`), falls back to the fixed 10-line default when count is 0 (since 2026-07-31) |
-| `<C-u>` (fixed) | Scroll half page up | "GitHub Stats: scroll half page up" | always; same count support |
-| `<C-f>` (fixed) | Full-page scroll down | "GitHub Stats: scroll full page down" | always; `vim.v.count1` scrolls N pages (since 2026-07-31) |
-| `<C-b>` (fixed) | Full-page scroll up | "GitHub Stats: scroll full page up" | always; same count support |
-| `gg` (fixed) | Jump to top | "GitHub Stats: jump to top" | always; raw `vim.v.count` jumps to repo index N when given (Vim's `NgG` convention), else top (since 2026-07-31) |
-| `G` (fixed) | Jump to bottom | "GitHub Stats: jump to bottom" | always; raw `vim.v.count` jumps to repo index N when given, else bottom |
 | `show_details` (`<CR>`) | Show repository details | "GitHub Stats: show repository details" | disable-able |
 | `refresh_selected` (`r`) | Re-render from cached data (no API call) | "GitHub Stats: refresh dashboard" | disable-able |
 | `refresh_all` (`R`) | Force-fetch every configured repo | "GitHub Stats: refresh all repositories" | disable-able |
@@ -30,12 +36,31 @@ fixed/always-on bindings.
 | `custom_time_range` (`T`) | Prompt (`vim.fn.input`) for a free-form time range (e.g. `3m`, `since:2025-01-01`, a `date_presets` name); rejected with an error notification if unrecognized by `analytics.parse_time_range` | "GitHub Stats: enter custom time range" | disable-able; added 2026-08-09 |
 | `max_time_range` (`m`) | Set the range to `max` — the longest duration the stored data covers — and notify the resolved span (`analytics.get_history_span`) | "GitHub Stats: set maximum time range" | disable-able; added 2026-08-23 |
 | `quit` (`q`) | Close dashboard | "GitHub Stats: quit dashboard" | only if `keybindings.quit ~= ""` |
-| `<Esc>` (fixed) | Close dashboard (fallback, regardless of `quit` config) | "GitHub Stats: quit dashboard" | always |
 | `show_help` (`?`) | `vim.notify` overlay listing every current keybinding | "GitHub Stats: show help" | disable-able |
 
-Detail-view float: `<BS>` (n) closes it and reopens the main dashboard after
-a 100ms defer — registered every time `:GithubStats show` produces a
-floating buffer.
+## Fixed bindings (direct `vim.keymap.set`, not configurable)
+
+| lhs (config key / default) | action | desc | condition |
+| --- | --- | --- | --- |
+| `<Down>` (fixed) | Same as navigate_down | none | always; same count support |
+| `<Up>` (fixed) | Same as navigate_up | none | always; same count support |
+| `<C-d>` (fixed) | Scroll half page down | "GitHub Stats: scroll half page down" | always; raw `vim.v.count` scrolls exactly that many lines when given (e.g. `1<C-d>`), falls back to the fixed 10-line default when count is 0 (since 2026-07-31) |
+| `<C-u>` (fixed) | Scroll half page up | "GitHub Stats: scroll half page up" | always; same count support |
+| `<C-f>` (fixed) | Full-page scroll down | "GitHub Stats: scroll full page down" | always; `vim.v.count1` scrolls N pages (since 2026-07-31) |
+| `<C-b>` (fixed) | Full-page scroll up | "GitHub Stats: scroll full page up" | always; same count support |
+| `gg` (fixed) | Jump to top | "GitHub Stats: jump to top" | always; raw `vim.v.count` jumps to repo index N when given (Vim's `NgG` convention), else top (since 2026-07-31) |
+| `G` (fixed) | Jump to bottom | "GitHub Stats: jump to bottom" | always; raw `vim.v.count` jumps to repo index N when given, else bottom |
+| `<Esc>` (fixed) | Close dashboard (fallback, regardless of `quit` config) | "GitHub Stats: quit dashboard" | always |
+
+## Detail-view float
+
+Registered every time `:GithubStats show` produces a floating buffer — a
+different buffer from the dashboard, hence its own table.
+
+| lhs (config key / default) | action | desc | condition |
+| --- | --- | --- | --- |
+| `<BS>` | Closes the float and reopens the main dashboard after a 100ms defer | none | always, while the detail float is open |
+
 
 ## Notes
 
