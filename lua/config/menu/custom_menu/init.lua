@@ -15,7 +15,6 @@ local kit = require("lib.nvim.ui.kit")
 local defaults = {
   enable_format = true,
   enable_code_actions = true,
-  enable_lsp_section = true,
   enable_git_section = true,
   enable_edit_config = true,
   enable_copy_all = true,
@@ -106,10 +105,6 @@ return function(opts)
   end
 
   -- Load nested modules
-  local ok_lsp, lsp_module = pcall(require, "menus.lsp")
-  if not ok_lsp then
-    notify.notify("[nvzone.menu.custom]: lsp_module not loaded. " .. lsp_module, 2)
-  end
   local ok_gs, gitsigns_module = pcall(require, "menus.gitsigns")
   if not ok_gs then
     notify.notify("[nvzone.menu.custom]: gitsigns_module not loaded. " .. gitsigns_module, 2)
@@ -153,16 +148,6 @@ return function(opts)
   end
 
   table.insert(composed, { name = "separator" })
-
-  if opts.enable_lsp_section then
-    table.insert(composed, {
-      name = "  Lsp Actions",
-      hl = "Exblue",
-      items = ok_lsp and "lsp" or "lsp",
-    })
-
-    table.insert(composed, { name = "separator" })
-  end
 
   -- ============================================================================
   -- Copy

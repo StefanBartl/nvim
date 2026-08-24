@@ -50,12 +50,12 @@ local CONTRIBUTORS = {
   -- (plus fence-under-cursor for the :Fence group) internally.
   { module = "color_my_ascii.integrations.menu", applies = function(buf) return vim.bo[buf].ft == "markdown" end },
   -- lsp.nvim: also global — mirrors the resolved keymap catalogue
-  -- (require("lsp").status().keymaps), not tied to a filetype. Deliberately
-  -- alongside the existing hand-written "Lsp Actions" section in
-  -- custom_menu (menus/lsp.lua, part of nvzone/menu itself), not replacing
-  -- it yet: that section also offers "Add/Remove workspace folder", which
-  -- lsp.nvim's own keymap catalogue does not currently have entries for —
-  -- see lsp.nvim's docs/BINDINGS.md#right-click-context-menu.
+  -- (require("lsp").status().keymaps), not tied to a filetype. Replaces
+  -- custom_menu's former hand-written "Lsp Actions" section (menus/lsp.lua,
+  -- part of nvzone/menu itself, since removed from custom_menu/init.lua):
+  -- that section's "Add/Remove workspace folder" entries had no lsp.nvim
+  -- keymap-catalogue equivalent, but were confirmed unused and dropped
+  -- rather than backfilled.
   { module = "lsp.integrations.menu", applies = function() return true end },
   -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
