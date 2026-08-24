@@ -49,6 +49,14 @@ local CONTRIBUTORS = {
   -- color_my_ascii.nvim: markdown-only, and items() re-checks the filetype
   -- (plus fence-under-cursor for the :Fence group) internally.
   { module = "color_my_ascii.integrations.menu", applies = function(buf) return vim.bo[buf].ft == "markdown" end },
+  -- lsp.nvim: also global — mirrors the resolved keymap catalogue
+  -- (require("lsp").status().keymaps), not tied to a filetype. Deliberately
+  -- alongside the existing hand-written "Lsp Actions" section in
+  -- custom_menu (menus/lsp.lua, part of nvzone/menu itself), not replacing
+  -- it yet: that section also offers "Add/Remove workspace folder", which
+  -- lsp.nvim's own keymap catalogue does not currently have entries for —
+  -- see lsp.nvim's docs/BINDINGS.md#right-click-context-menu.
+  { module = "lsp.integrations.menu", applies = function() return true end },
   -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
 }
