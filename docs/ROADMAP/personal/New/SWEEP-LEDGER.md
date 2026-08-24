@@ -246,12 +246,27 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       pruefen, dass die noch *nicht* geladen sind — weiter vorne platziert
       bricht er `producer_spec`. So ist die Abhaengigkeit aufgefallen.
 
-### recommender.nvim
+### recommender.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` Kein Keymap liest count. Vorschlag: `N<leader>lr` setzt den
-      Threshold auf N, statt des hardcodierten `<leader>lrh` (Threshold 5).
-- [ ] `[F]` Kein `--threshold=N`-Flag. Aktuell eine mehrdeutige Fallback-Kette
-      (`tonumber(pos_args[2]) or tonumber(pos_args[1])`).
+- [x] `[N]` `[F]` Beide Punkte sind dieselbe Sache von zwei Seiten:
+      `-t` / `--threshold=N` als Flag, und ein Count auf den Keymaps setzt
+      den Threshold (`3<leader>lrr`).
+      **Die Audit-Beschreibung war veraltet:** `classify_pos_args` ist keine
+      Fallback-Kette, sondern klassifiziert inhaltsbasiert und
+      reihenfolgeunabhaengig. Das echte Problem ist enger — der positionale
+      Threshold wird *erschlossen* (weder Scope noch Analyzer und
+      `tonumber`bar). Beim Tippen in Ordnung, beim Generieren des Kommandos
+      falsch. Das Flag sagt es aus und schlaegt den Positional.
+      `<leader>lrh` (Threshold 5) bleibt fuer die Muskelerinnerung, ist aber
+      jetzt nur noch Kurzform fuer `5<leader>lrr`.
+      Keymaps sind deshalb Lua-Funktionen statt `<cmd>…<cr>`: `<cmd>`
+      verschluckt den Count. `desc`-Strings unveraendert.
+      `v:count` wird **raw** gelesen — 0 muss von einem getippten Count
+      unterscheidbar bleiben ("kein Count" = konfigurierter Threshold, nicht
+      1).
+      Commit `1881616`, Branch `feat/threshold-flag-and-count`.
+      Keine Testsuite — zur Laufzeit verifiziert, inkl. Praezedenz
+      (`regex 3 --threshold=7` meldet 7).
 
 ### migrate.nvim
 

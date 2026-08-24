@@ -58,14 +58,6 @@ reading the code, not confirmed feature requests.
   `opts.keys`.
 — from [documentation.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/documentation.nvim.md)
 
-## recommender.nvim
-
-- No way to set the analyzer threshold directly as a flag (`--threshold=N`)
-  instead of an unnamed second positional argument — currently a fallback
-  chain (`tonumber(pos_args[2]) or tonumber(pos_args[1])`), ambiguous for
-  command-line users who only want to change the threshold.
-— from [recommender.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/recommender.nvim.md)
-
 ## sandbox.nvim
 
 - No keymap/command to switch between the three engines directly from the

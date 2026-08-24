@@ -97,9 +97,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
 - `reposcope.nvim`: `nav_up`/`nav_down` move exactly one list entry per
   keypress; `3<Down>` for "3 entries" is flagged as plausible and absent — from
   [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md).
-- `recommender.nvim`: no keymap reads count; a threshold-setting use
-  (`N<leader>lr` → set threshold N) is suggested versus the current hardcoded
-  `<leader>lrh` (threshold 5) — from [recommender.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/recommender.nvim.md).
 - `github_stats.nvim`: `cycle_sort`/`cycle_time_range` (`s`/`t`) could use
   count as "advance N steps" — not implemented — from
   [github_stats.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/github_stats.nvim.md).

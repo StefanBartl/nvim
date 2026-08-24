@@ -18,6 +18,19 @@ Cross-reference: `docs/BINDINGS.md` — thorough and accurate, matches source ex
 | `<leader>lrh` | n | `:Recommender regex 5` (high threshold) | "Recommender (high threshold)" |
 | `<leader>lrc` | n | `:Recommender -c` (project-wide, cwd scope) | "Recommender (project-wide, cwd)" |
 
+**Count support (since 2026-08-24):** a count sets the threshold —
+`3<leader>lrr` emits `:Recommender regex --threshold=3`, `12<leader>lr`
+emits `:Recommender --threshold=12`. Without a count every mapping behaves
+exactly as before; on `<leader>lrh` a count overrides its built-in 5.
+
+The rhs values above are therefore **Lua functions now, not `<cmd>…<cr>`
+strings** — a `<cmd>` mapping swallows the count prefix with no way to read
+it back. The `desc` strings are unchanged.
+
+`v:count` is read raw, not as `count1`: 0 has to stay distinguishable from a
+typed count, since "no count" means "use the configured threshold" and not
+"use 1".
+
 Added 2026-07-24: `javascript`/`python` regex-based analyzer backends
 (roadmap item "additional analyzer backends for other languages"), each with
 its own quick-access global keymap alongside the existing regex/treesitter
