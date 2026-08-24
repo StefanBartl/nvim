@@ -241,3 +241,19 @@ Same day, further commits (by the point this note was last refreshed,
   vimdoc (`doc/`) exists for this repo." Both landed as part of the
   2026-07-26 push (`.github/workflows/ci.yml` + `tests/` plenary suite;
   `doc/sandbox.txt`) — no longer an open gap as of this refresh.
+
+## `workdir=` on exec (2026-08-24)
+
+`:Sandbox container exec {id} [shell] workdir=<path>` and
+`:Sandbox container exec-once {id} workdir=<path> [command...]` set the
+engine's `-w`.
+
+**A kv, not a positional:** every token after the id is part of the command
+that runs *inside* the container, so a positional could not be told apart
+from the command itself.
+
+The flag is inserted **before** the container id in argv. After it, the
+engine hands `-w` to the inner command instead of consuming it, which fails
+in a way that reads like the command's own error rather than sandbox's.
+All three engines spell it the same;
+`tests/sandbox/adapters/exec_workdir_spec.lua` pins the ordering per engine.

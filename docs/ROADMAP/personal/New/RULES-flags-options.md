@@ -33,18 +33,6 @@ reading the code, not confirmed feature requests.
   `opts.keys`.
 — from [documentation.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/documentation.nvim.md)
 
-## sandbox.nvim
-
-- No keymap/command to switch between the three engines directly from the
-  list-view (only `:Sandbox engine set`).
-- `container exec`/`exec-once` have no flag to set a working directory inside
-  the container (`docker exec -w`).
-- No `--dry-run`/preview for destructive bulk actions before confirming (only
-  "Remove 5 containers?", not which ones).
-- List-views have no search/filter keymap (`/` only searches within the
-  buffer, no structured filter by status/name).
-— from [sandbox.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/sandbox.nvim.md)
-
 ## lib.nvim
 
 - No idea gaps flagged directly against lib.nvim's own (nonexistent) keymaps —

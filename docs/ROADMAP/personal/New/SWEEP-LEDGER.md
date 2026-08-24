@@ -605,19 +605,34 @@ Suite gruen.
       Commit `fb90198`, auf `main` gemerged und gepusht.
       `pickers_spec.lua` erweitert, gruen.
 
-### sandbox.nvim
+### sandbox.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` Kein Keymap/Kommando, um direkt aus der List-View zwischen den drei
-      Engines zu wechseln (nur `:Sandbox engine set`).
-- [ ] `[F]` `container exec` / `exec-once` ohne Flag fuer das Arbeitsverzeichnis
-      im Container (`docker exec -w`).
-- [ ] `[F]` Kein `--dry-run` / Preview vor destruktiven Bulk-Aktionen — die
-      Rueckfrage nennt nur "Remove 5 containers?", nicht welche.
-- [ ] `[F]` List-Views ohne Such-/Filter-Keymap — `/` sucht nur im Buffer, kein
-      strukturierter Filter nach Status/Name.
-- [ ] `[N]` List-View-Aktionen bewusst ohne count (je genau ein Item unter dem
-      Cursor); "N Items" gehoert hier in Visual-Mode-Multiselect. Nur
-      dokumentieren.
+- [x] `[F]` `E` in jeder List-View cycled docker → podman → nerdctl und
+      rendert neu. `:Sandbox engine set podman` hiess vorher: Buffer
+      verlassen, Kommando tippen, Liste neu oeffnen — drei Schritte fuer
+      etwas, das man beim Blick auf genau diese Liste entscheidet.
+      Die Zyklusreihenfolge ist eine deklarierte Liste, nicht `pairs`.
+- [x] `[F]` `workdir=` auf `exec` / `exec-once` → `-w` der Engine.
+      **kv statt Positional:** jeder Token nach der Id gehoert zum Kommando
+      *im* Container, ein Positional waere davon nicht unterscheidbar.
+      Das Flag steht **vor** der Container-Id — danach reicht die Engine es
+      an das innere Kommando durch, was wie dessen eigener Fehler aussieht.
+- [x] `[F]` Bulk-Bestaetigung nennt die Items (max. zehn, dann "… and N
+      more"). "Remove 5 containers?" liess genau die Frage offen, die eine
+      Bulk-Rueckfrage beantworten muss.
+- [x] `[F]` `f` filtert strukturiert. `/` findet eine Zeile und laesst die
+      anderen stehen; `f` engt ein und matcht ueber **alle Felder** —
+      `f redis` findet den Container mit diesem Image, obwohl das Image gar
+      nicht in der Zeile steht. Leere Eingabe stellt alles wieder her,
+      gefiltert wird immer vom ungefilterten Satz aus.
+      Vorerst nur die Container-Liste liefert den Callback; die anderen vier
+      binden die Taste schlicht nicht.
+- [x] `[N]` Bewusst kein Count — unveraendert. Keine der neuen Tasten nimmt
+      einen; Visual-Multiselect bleibt die Antwort auf "N Items".
+      Commit `56fa7bc`, auf `main` gemerged und gepusht.
+      Neuer `exec_workdir_spec.lua` (12 Checks, drei Engines), gruen.
+      **Hinweis:** `:Sandbox` registriert headless nicht (keine Engine-Binary
+      vorhanden); die Kommandoschicht wurde direkt aufgerufen geprueft.
 
 ### spotlight.nvim
 
