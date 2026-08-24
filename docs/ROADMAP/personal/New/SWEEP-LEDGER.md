@@ -221,12 +221,30 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       Hinweis: sessions.nvim hat keine Testsuite — zur Laufzeit verifiziert,
       inklusive der Gegenprobe, dass jedes gemappte Kommando existiert.
 
-### pdfport.nvim
+### pdfport.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` `:PdfPort float` / `terminal` fragen die Page-Range interaktiv ab;
-      ein `pages=`-kv-Flag wuerde Scripting ermoeglichen.
-- [ ] `[F]` `[?]` Batch-Open (`<leader>pb`): Fortschritt/Summary (X von Y
-      geoeffnet, Z Fehler) — unverifiziert, ob `batch.lua` das schon liefert.
+- [x] `[F]` `pages=` als kv auf `:PdfPort float` / `terminal`. Der Prompt
+      machte beide Subkommandos aus Skripten, Mappings oder anderen Plugins
+      unbenutzbar — ein Prompt laesst sich nicht nicht-interaktiv
+      beantworten. `pages=abc` wird gemeldet und oeffnet nichts, statt zum
+      Prompt oder zum ganzen Dokument durchzufallen.
+      Hinweis: Completion bietet `pages=` erst ab einem Teilprefix an
+      (`:PdfPort float p<Tab>`); bei leerem Lead belegt der Pfad-Completer
+      den Slot. Composer-Verhalten, kein Defekt.
+- [x] `[F]` `[?]` Batch-Summary: **war da, aber falsch.** Sie zaehlte die
+      *versuchten* Dateien — bei drei von fuenf Fehlschlaegen meldete sie
+      trotzdem "opened 5 PDF(s)". Jetzt `opened N of M PDF(s), K failed`.
+      Dafuer brauchte es ein Abschluss-Signal, das es nicht gab: der
+      Dispatch ist durchgehend asynchron und Erfolg ist still. `pdfport.open`
+      hat jetzt ein optionales drittes Argument `on_done(ok, err)`, das auf
+      **jedem** Pfad genau einmal feuert — inkl. eines Renderers, der wirft
+      (jetzt pcall-umschlossen, vorher nicht). Zwei-Argument-Aufrufer
+      unveraendert.
+      Commit `6194046`, Branch `feat/pages-kv-and-batch-summary`.
+      Neuer `TESTS/open_done_spec.lua`, Suite gruen. Er laeuft **zuletzt**:
+      er laedt Producer-/Backend-Module, und `registry_spec`/`producer_spec`
+      pruefen, dass die noch *nicht* geladen sind — weiter vorne platziert
+      bricht er `producer_spec`. So ist die Abhaengigkeit aufgefallen.
 
 ### recommender.nvim
 

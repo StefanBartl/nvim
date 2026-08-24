@@ -160,14 +160,6 @@ reading the code, not confirmed feature requests.
   could expose.
 — from [lib.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/lib.nvim.md)
 
-## pdfport.nvim
-
-- `:PdfPort float`/`terminal` prompt interactively for page-range; a `pages=`
-  kv-flag alternative would support scripting/automation of those paths.
-- Batch-open (`<leader>pb`) may lack a progress/summary readout (X of Y
-  opened, Z errors) — unverified whether `batch.lua` already provides it.
-— from [pdfport.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/pdfport.nvim.md)
-
 ## github_stats.nvim
 
 - `cycle_sort`/`cycle_time_range` could accept count as "advance N steps"
