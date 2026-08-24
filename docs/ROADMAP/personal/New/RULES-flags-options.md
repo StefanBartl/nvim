@@ -183,12 +183,6 @@ reading the code, not confirmed feature requests.
   could expose.
 — from [lib.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/lib.nvim.md)
 
-## dap.nvim
-
-- No way to reuse or edit a previous breakpoint condition/log point message —
-  the prompt is always empty.
-— from [dap.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/dap.nvim.md)
-
 ## sessions.nvim
 
 - No keymap for `:Session current` or the picker (`:SessionLoad`) in the

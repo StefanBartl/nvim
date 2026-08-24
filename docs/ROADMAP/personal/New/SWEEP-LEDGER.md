@@ -127,12 +127,27 @@ Audit heisst meistens "nirgends aufgeschrieben".
       Commit `cadad40`, Branch `feat/registry-driven-keymaps`.
       Hinweis: open.nvim hat keine Testsuite — zur Laufzeit verifiziert.
 
-### dap.nvim
+### dap.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` Breakpoint-Condition / Logpoint-Message lassen sich nicht
-      wiederverwenden oder editieren — der Prompt startet immer leer.
-- [ ] `[L]` `counted_step()` nach lib.nvim heben (siehe Phase 1), danach hier
-      auf die Lib-Variante umstellen.
+- [x] `[F]` Breakpoint-Condition / Logpoint-Message: der Prompt oeffnet jetzt
+      vorbefuellt — erst mit dem Wert, der auf dieser Zeile schon liegt
+      (`dap.breakpoints.get`), sonst mit dem zuletzt eingegebenen dieser
+      Session, sonst leer. Condition und Log-Message werden getrennt
+      gemerkt. Leere Eingabe **loescht** den Wert (nvim-dap liest leer als
+      "keine Condition"), `<Esc>` bricht ab.
+      Drei Call-Sites hatten je eine eigene Kopie des leeren Prompts —
+      Keymaps, `:Dap conditional-breakpoint`/`log-point` und die
+      nvzone/menu-Eintraege. Jetzt gemeinsam in `core/breakpoints.lua`.
+- [x] `[L]` `counted_step()` laeuft jetzt auf `lib.nvim.count.chain`.
+      Cap, Teardown, No-Count-Fastpath und die Abort-Sperre sind
+      Lib-Verhalten; im Plugin bleibt nur der DAP-Teil (welche Events
+      "fertig" und "weg" bedeuten).
+      Nebenbei: der veraltete `pcall(require, "lib.nvim.map")`-Fallback samt
+      "ships not yet"-Kommentar ist raus.
+      Commit `0403309`, Branch `feat/breakpoint-prompts-and-lib-count`.
+      Hinweis: dap.nvim hat keine Testsuite — gegen einen gestubbten Adapter
+      zur Laufzeit verifiziert. Die `desc`-Strings sind unveraendert, also
+      kein Drift-Risiko.
 
 ### diff.nvim
 

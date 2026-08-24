@@ -19,7 +19,9 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
   Instead the first step fires immediately, subsequent steps are chained via
   `dap.listeners.after.event_stopped`, with a hard `MAX_CHAINED_STEPS = 1000`
   cap and cleanup listeners on session termination. Zero overhead when
-  count≤1 — from [dap.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/dap.nvim.md)
+  count≤1. **Hoisted into `lib.nvim.count.chain` on 2026-08-24** — use that
+  rather than copying this, and use `lib.nvim.count`'s `get`/`raw`/`clamp`/
+  `times` for the plain cases below — from [dap.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/dap.nvim.md)
   (`bindings/keymaps/init.lua:32-91`, `counted_step`).
 - **`documentation.nvim` browser navigation** — `-`/`<BS>` (up) and `<C-o>`/`<C-i>`
   (history back/forward) use `vim.v.count1` directly; `+`/`_` (depth inc/dec)
