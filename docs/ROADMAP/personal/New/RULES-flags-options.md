@@ -23,15 +23,6 @@ reading the code, not confirmed feature requests.
   explicit `count` argument, once Trouble's API supports it.
 — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md)
 
-## buffer-ctx.nvim
-
-- `:Mark toggle` could get a range mode (visual selection → mark all covered
-  lines).
-- `mark.sign` only allows one global sign/highlight; multiple "categories" of
-  marks (red/green/yellow) are a natural extension, entirely absent.
-- No `:Mark clear` to empty all marks in a buffer without toggling individually.
-— from [buffer-ctx.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/buffer-ctx.nvim.md)
-
 ## cascade.nvim
 
 - No count support on Cycle (`<C-y>`/`<C-x>`), Move (`<A-Up>`/`<A-Down>`), or

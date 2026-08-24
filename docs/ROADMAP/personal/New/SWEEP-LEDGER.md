@@ -347,16 +347,29 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
 
 ## Welle B — Mittlere Plugins
 
-### buffer-ctx.nvim
+### buffer-ctx.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` `<S-m>` (Mark togglen) ignoriert count — "N Zeilen ab Cursor
-      markieren".
-- [ ] `[F]` `:Mark toggle` ohne Range-Modus (visuelle Selektion → alle
-      abgedeckten Zeilen markieren). Ueberschneidet sich mit dem Count-Punkt —
-      gemeinsam entwerfen.
-- [ ] `[F]` `mark.sign` erlaubt nur ein globales Sign/Highlight;
-      Mark-Kategorien (rot/gruen/gelb) fehlen vollstaendig.
-- [ ] `[F]` Kein `:Mark clear`, um alle Marks eines Buffers zu leeren.
+- [x] `[N]` `[F]` Count und Range sind **dieselbe Sache**, einmal gebaut:
+      `3<S-m>` markiert drei Zeilen, `:'<,'>Mark toggle` eine Selektion.
+      Bewusst **kein** Per-Zeilen-Toggle — bei teilweise markiertem Bereich
+      ergaebe das ein Schachbrett. Regel: ist irgendeine Zeile unmarkiert,
+      wird der ganze Bereich markiert; nur ein vollstaendig markierter
+      Bereich wird abgeraeumt. Vertauschte Grenzen werden normalisiert.
+- [x] `[F]` Mark-Kategorien: `mark.categories` gibt benannte Erscheinungen
+      neben `default`. `:Mark toggle todo`, und `yank`/`clear` filtern
+      danach. Neuer Argtyp `MARK_CATEGORY` mit Completion; unbekannter Name
+      wird mit der konfigurierten Liste abgelehnt.
+      Die Kategorie ist jetzt der **Wert** in der Mark-Tabelle (vorher
+      `true`) — dadurch braucht das Filtern keine zweite Tabelle.
+      Eine Zeile in anderer Kategorie neu zu markieren **ersetzt**, statt
+      abzuwaehlen. `mark.sign` konfiguriert weiter `default`, alte Configs
+      bleiben unberuehrt.
+- [x] `[F]` `:Mark clear [category]`. Vorher hiess Abwaehlen: jede Zeile
+      einzeln toggeln — also erst finden. `keymaps.clear` ist per Default
+      **ungesetzt**, es kommt nichts Neues ungefragt dazu.
+      Commit `a6e67c2`, Branch `feat/mark-ranges-categories-clear`.
+      `mark_spec.lua` erweitert, Suite gruen.
+      **Achtung:** der `toggle`-`desc` hat sich geaendert.
 
 ### cascade.nvim
 
