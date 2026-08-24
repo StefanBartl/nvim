@@ -23,16 +23,6 @@ reading the code, not confirmed feature requests.
   explicit `count` argument, once Trouble's API supports it.
 — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md)
 
-## cascade.nvim
-
-- No count support on Cycle (`<C-y>`/`<C-x>`), Move (`<A-Up>`/`<A-Down>`), or
-  quick-toggle in Normal mode — inconsistent with the otherwise deliberate
-  count design on indent/dedent.
-- `cycle.groups`/`per_filetype` are purely static from config; no live
-  add/edit command (e.g. `:Cascade cycle add {a},{b}`) despite the plugin
-  otherwise exposing a lot through `:Cascade`.
-— from [cascade.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/cascade.nvim.md)
-
 ## documentation.nvim
 
 - `:DocMap churn [range]` / `:DocMap diff [ref]` have no completion for
