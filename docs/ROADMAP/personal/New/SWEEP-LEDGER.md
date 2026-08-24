@@ -449,18 +449,33 @@ dass kein Keymap drankam.
 Commit `28eeaa5`, Branch `feat/keymap-options-for-command-only-actions`.
 Suite gruen.
 
-### filetree.nvim
+### filetree.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` Kein Dry-Run-Keymap/-Toggle fuer `copy_move` / `rename_batch` —
-      nur `trash` hat `:Filetree trash dry-run`, und nur als Ex-Command.
-- [ ] `[F]` Kein Keymap, um direkt zu einer bestimmten Mark zu springen; kein
-      Diff zweier markierter Dateien gegeneinander (nur `diff marked` gegen den
-      aktuellen Buffer).
-- [ ] `[F]` Gar keine Visual-Mode-Keymaps — alles ist Single-Node-Normal-Mode
-      oder marks-basiert.
-- [ ] `[N]` Bewusst **kein** count: "N Items" laeuft hier ueber Marks
-      (mark-then-act). Beim Sweep nicht nachruesten, nur in `BINDINGS.md`
-      als bewusste Entscheidung dokumentieren.
+- [x] `[F]` Dry-Run-Toggle: `:Filetree copymove dry-run` und
+      `:Filetree renamebatch dry-run`. `trash` und `safety` hatten laengst
+      einen Runtime-Toggle; ausgerechnet die destruktiven **Bulk**-Operationen
+      hatten `dry_run` nur als Config-Key.
+      **`renamebatch`, nicht `rename`:** `rename` ist bereits ein
+      Leaf-Kommando, eine Tabelle unter demselben Key wird still
+      ueberschrieben — genau das ist im ersten Anlauf passiert.
+- [x] `[F]` Sprung zu Marks: `Ngm`, `]M`, `[M`. Navigation folgt dem Baum
+      **wie gerendert**, nicht der alphabetischen Reihenfolge von
+      `get_marked()` — und eine Mark in einem eingeklappten Verzeichnis hat
+      gar keine Zeile zum Anspringen. Count klemmt wie bei `G`.
+      **Der Diff-Teil brauchte nichts:** `diff_marked()` diffed die zwei
+      markierten Dateien seit jeher **gegeneinander**, nicht gegen den
+      aktuellen Buffer. Audit-Aussage war falsch, vorher geprueft.
+- [x] `[F]` Visual-Mode-Keymaps: `m` markiert die Selektion, `[m` hebt auf.
+      Die einzigen Visual-Keymaps des Plugins. Ein Zeilenbereich ueber einem
+      gerenderten Baum *ist* eine Knotenmenge.
+- [x] `[N]` Bewusst kein Count auf Aktionen — unveraendert. `Ngm` ist ein
+      Count auf *Navigation zwischen* Marks, nicht auf das Ziel einer Aktion.
+      Im Cheatsheet so dokumentiert.
+      Commit `7f5a045`, Branch `feat/mark-nav-visual-and-dry-run`.
+      **Beobachtung:** ein Lauf der refs-Suite meldete 46/8 direkt nachdem
+      stylua vier Dateien umgeschrieben hatte; in sieben Folgelaeufen nicht
+      reproduzierbar, weder mit noch ohne meine Aenderungen. Festgehalten,
+      nicht weggelassen.
 
 ### github_stats.nvim
 

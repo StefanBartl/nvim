@@ -86,3 +86,19 @@ full per-group table.
   previously described lib.nvim as fully soft-fallback-able everywhere;
   fixed to note the command layer specifically requires it.
 - No CI for this repo — pre-existing, not part of this migration's scope.
+
+## Dry-run toggles (2026-08-24)
+
+| command | purpose |
+| --- | --- |
+| `:Filetree copymove dry-run` | Toggle dry-run for copy/move |
+| `:Filetree renamebatch dry-run` | Toggle dry-run for batch rename |
+
+`trash` and `safety` already had a runtime toggle; these two had `dry_run`
+as a config key only, so previewing meant editing the config and reloading.
+
+**`renamebatch`, not `rename`:** `rename` is already a leaf command (it opens
+the batch-rename buffer). A table declared under the same key in the same
+table literal is silently overwritten by it — which is what happened on the
+first attempt, and is worth knowing before adding any further namespace to
+`commands.lua`.

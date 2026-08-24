@@ -71,16 +71,6 @@ reading the code, not confirmed feature requests.
   rules) — only implicit via `config.browser`/`server_args`.
 — from [mdview.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/mdview.nvim.md)
 
-## filetree.nvim
-
-- No dry-run keymap-toggle for `copy_move`/`rename_batch` (only `trash` has
-  `:Filetree trash dry-run`, and only as an Ex-command).
-- No keymap to jump directly to a specific mark, or to diff two marked files
-  against each other (only `diff marked` vs. the current buffer).
-- No Visual-mode keymaps at all — everything is single-node normal-mode or
-  marks-based.
-— from [filetree.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/filetree.nvim.md)
-
 ## lib.nvim
 
 - No idea gaps flagged directly against lib.nvim's own (nonexistent) keymaps —
