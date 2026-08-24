@@ -40,6 +40,10 @@ local CONTRIBUTORS = {
   -- fileops.nvim: also global — acts on "this open file", self-gates
   -- per entry on the buffer actually having a name.
   { module = "fileops.integrations.menu", applies = function() return true end },
+  -- images.nvim: filetype-scoped (config.keymaps.filetypes, default
+  -- markdown/vimwiki/norg/text) and items() re-checks it internally, same
+  -- reasoning as cascade.nvim above — nothing cheaper to pre-check here.
+  { module = "images.integrations.menu", applies = function() return true end },
   -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
 }
