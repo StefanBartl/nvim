@@ -94,9 +94,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
 - `reposcope.nvim`: `nav_up`/`nav_down` move exactly one list entry per
   keypress; `3<Down>` for "3 entries" is flagged as plausible and absent — from
   [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md).
-- `github_stats.nvim`: `cycle_sort`/`cycle_time_range` (`s`/`t`) could use
-  count as "advance N steps" — not implemented — from
-  [github_stats.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/github_stats.nvim.md).
 - `language.nvim`: the thesaurus-replace keymap could plausibly use count for
   direct Nth-suggestion selection (`3<leader>th`, analogous to `z=`) since a
   selection list already exists internally — not implemented — from

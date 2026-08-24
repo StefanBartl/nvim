@@ -31,7 +31,7 @@ its own scope label.
 | `refresh_selected` (`r`) | Re-render from cached data (no API call) | "GitHub Stats: refresh dashboard" | disable-able |
 | `refresh_all` (`R`) | Force-fetch every configured repo | "GitHub Stats: refresh all repositories" | disable-able |
 | `force_refresh` (`f`) | Force-fetch only the selected repo | "GitHub Stats: force refresh selected repository" | disable-able |
-| `cycle_sort` (`s`) | Cycle `clones→views→name→trend` | "GitHub Stats: cycle sort criteria" | disable-able |
+| `cycle_sort` (`s`) | Cycle `clones→views→name→trend`. `Ns` advances N | "GitHub Stats: cycle sort criteria" | disable-able |
 | `cycle_time_range` (`t`) | Cycle `7d→30d→90d→max` | "GitHub Stats: cycle time range" | disable-able; last step was `all` until 2026-08-23 |
 | `custom_time_range` (`T`) | Prompt (`vim.fn.input`) for a free-form time range (e.g. `3m`, `since:2025-01-01`, a `date_presets` name); rejected with an error notification if unrecognized by `analytics.parse_time_range` | "GitHub Stats: enter custom time range" | disable-able; added 2026-08-09 |
 | `max_time_range` (`m`) | Set the range to `max` — the longest duration the stored data covers — and notify the resolved span (`analytics.get_history_span`) | "GitHub Stats: set maximum time range" | disable-able; added 2026-08-23 |
@@ -102,3 +102,22 @@ fallback (unlike emojis/fileops/filetree/gopath, which support both).
   cycle. New `analytics.parse_time_range` accepts `Nd`/`Nw`/`Nm`/`Ny`,
   `since:YYYY-MM-DD`, a bare ISO date, `all`, or any `date_presets` name
   (built-in or user-custom).
+
+## Count on the two cycles (2026-08-24)
+
+`Ns` / `Nt` advance that many positions. Both counts are taken **modulo the
+cycle length**, so `5s` over a four-entry cycle lands one along instead of
+looping four extra times for nothing, and `4s` is a deliberate no-op. A
+count larger than the cycle is a fat-fingered keypress, not a request to
+spin.
+
+This closes the count audit's entry and brings the two cycles in line with
+the rest of this dashboard — `j`/`k`, `<C-d>`/`<C-u>`, `<C-f>`/`<C-b>` and
+`Ngg`/`NgG` already read a count, which is exactly why their absence here
+stood out. No `desc` strings changed.
+
+Also rolled back the last two raw-API autocmds (`BufWipeout` in
+`dashboard/init.lua`, `VimResized` in `dashboard/layout.lua`). Their comment
+said `lib.nvim.autocmd.create` did not forward `buffer`, so the wrapper
+would have turned them into global listeners. It forwards it now — verified
+at runtime that both stay buffer-scoped with no global leak.

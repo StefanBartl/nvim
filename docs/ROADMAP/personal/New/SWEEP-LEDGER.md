@@ -477,13 +477,26 @@ Suite gruen.
       reproduzierbar, weder mit noch ohne meine Aenderungen. Festgehalten,
       nicht weggelassen.
 
-### github_stats.nvim
+### github_stats.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` `[F]` `cycle_sort` / `cycle_time_range` (`s`/`t`) koennten count
-      als "N Schritte weiter" nutzen (`3s`).
-- [ ] `[L]` Buffer-lokaler-Autocmd-Workaround zurueckbauen (nach Phase 1).
-- [ ] `[L]` `[?]` N-Fetch-Hintergrundabruf koennte `chained_action` aus
-      Phase 1 nutzen — pruefen.
+- [x] `[N]` `[F]` `Ns` / `Nt` ruecken N Positionen vor. Count **modulo**
+      Zykluslaenge: `5s` bei vier Eintraegen landet eins weiter statt vier
+      Extrarunden zu drehen, `4s` ist bewusst ein No-Op. Ein Count groesser
+      als der Zyklus ist ein Vertipper, keine Aufforderung zu kreisen.
+      Jede andere Navigationstaste des Dashboards las laengst einen Count —
+      genau deshalb fiel das Fehlen hier auf.
+- [x] `[L]` Die letzten zwei Roh-API-Autocmds laufen jetzt ueber
+      `lib.nvim.autocmd.create`. Ihr Kommentar sagte, der Wrapper reiche
+      `buffer` nicht durch und wuerde sie zu globalen Listenern machen —
+      stimmte damals, heute nicht. Zur Laufzeit geprueft: beide bleiben
+      buffer-scoped, kein globaler Leak.
+- [x] `[L]` `[?]` N-Fetch mit `chained_action`: **n/a**. Der Fetcher holt
+      alle Repos *parallel* mit Completion-Zaehler; `chained_action`
+      serialisiert. Verketten waere hier schlicht langsamer, ohne Gewinn.
+      Commit `c6a0142`, Branch `feat/cycle-count-and-autocmd-rollback`.
+      Keine `desc`-Strings geaendert.
+      **Hinweis:** `PlenaryBustedDirectory` terminiert in dieser Umgebung
+      nicht; einzelne Spec-Dateien laufen normal, so wurde geprueft.
 
 ### images.nvim
 

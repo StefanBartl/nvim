@@ -78,12 +78,6 @@ reading the code, not confirmed feature requests.
   could expose.
 — from [lib.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/lib.nvim.md)
 
-## github_stats.nvim
-
-- `cycle_sort`/`cycle_time_range` could accept count as "advance N steps"
-  (`3s`), not currently supported.
-— from [github_stats.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/github_stats.nvim.md)
-
 ## language.nvim
 
 - The translate operator-pending mapping has no way to pick a target language
