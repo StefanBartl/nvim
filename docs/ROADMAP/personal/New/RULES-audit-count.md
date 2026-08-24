@@ -87,10 +87,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
 - `spotlight.nvim`: none of its 7 mappings read `v:count`; `N]k`/`N[k`
   ("skip N occurrences") would be natural since `nav.lua` already encapsulates
   navigation — from [spotlight.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/spotlight.nvim.md).
-- `images.nvim`: `next`/`prev` (`<leader>in`/`ip`) and the redact-window `u`
-  (undo last box) don't read `vim.v.count1` — `3<leader>in` (3 images forward)
-  and `3u` (remove 3 boxes) would be natural — from
-  [images.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/images.nvim.md).
 - `reposcope.nvim`: `nav_up`/`nav_down` move exactly one list entry per
   keypress; `3<Down>` for "3 entries" is flagged as plausible and absent — from
   [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md).

@@ -113,9 +113,3 @@ reading the code, not confirmed feature requests.
   the relevant file wasn't read).
 — from [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md)
 
-## images.nvim
-
-- `paste`/`screenshot` keymaps don't accept a name argument (only the
-  `:Image paste {name}` Ex-command does) — noted as desirable for power users
-  but impractical as a bare-lhs keymap (no text input path).
-— from [images.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/images.nvim.md)

@@ -98,9 +98,6 @@ frozen list baked in at `setup()`:
   `--context=`) was not fully verified from the read code — flagged as
   "practically indispensable" given how many flags exist — from
   [replacer.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/replacer.nvim.md).
-- **`images.nvim`**: unclear from the read files whether `:Image next`,
-  `:Image pickers [cfile|cwd|path] [dir]`, `:Image compare [...]` complete
-  their fixed-value arguments — from [images.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/images.nvim.md).
 - **`reposcope.nvim`**: `filter [text]`/`prompt [field ...]` are free-text with
   no apparent completion; the clone target-directory prompt's path completion
   is unverified — from [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md).

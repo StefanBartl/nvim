@@ -498,16 +498,28 @@ Suite gruen.
       **Hinweis:** `PlenaryBustedDirectory` terminiert in dieser Umgebung
       nicht; einzelne Spec-Dateien laufen normal, so wurde geprueft.
 
-### images.nvim
+### images.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[C]` `[?]` Completen `:Image next`, `:Image pickers [cfile|cwd|path]
-      [dir]`, `:Image compare [...]` ihre Festwert-Argumente? Unverifiziert.
-- [ ] `[N]` `<leader>in` / `<leader>ip` (next/prev) lesen kein `vim.v.count1` —
-      `3<leader>in` = 3 Bilder weiter.
-- [ ] `[N]` Redact-Window `u` (letzte Box zuruecknehmen) ohne count — `3u`.
-- [ ] `[F]` `paste` / `screenshot` als Keymap ohne Namensargument (nur
-      `:Image paste {name}` kann das). Als bare-lhs-Keymap unpraktisch, da kein
-      Texteingabepfad — ggf. mit Prompt loesen oder als "n/a" abhaken.
+- [x] `[C]` `[?]` **Brauchte nichts.** `:Image pickers` und `:Image compare`
+      completen ihre Festwerte (`cfile cwd path`), `:Image next` nimmt gar
+      kein Argument. Vorher geprueft.
+- [x] `[N]` `<leader>in` / `<leader>ip` mit Count. `step()` wrappt schon
+      modulo Bildanzahl — den Delta zu multiplizieren war alles.
+- [x] `[N]` Redact-`u` mit Count, geklemmt auf das tatsaechlich Vorhandene
+      statt pro fehlender Box zu warnen.
+- [x] `[F]` Count auf `paste`/`screenshot` **fragt nach dem Namen**. Der
+      Audit nannte ein Namensargument "wuenschenswert, aber als bare-lhs
+      unpraktikabel" — als *Argument* ja, als Prompt-Ausloeser nicht.
+      Die Luecke war enger als sie aussah: `M.paste(name)` nahm immer einen
+      Namen, und der Prompt kam bereits bei `paste.ask_filename = true`. Nur
+      bei `false` hatte ein Keymap keinen Weg. Neues `force_ask` durchgereicht.
+      Der **Wert** des Counts wird bewusst ignoriert — "3-mal einfuegen"
+      ergibt keinen Sinn, er liest sich als Flag.
+      Commit `393a847`, Branch `feat/counts-and-name-prompt`.
+      Keine `desc`-Strings geaendert.
+      **Vorbestehend:** `browse_spec`, `convert_spec`, `remote_spec` schlagen
+      in dieser Umgebung fehl (8.3-Pfad, zwei fehlende externe Tools) — per
+      Stash als unveraendert bestaetigt.
 
 ### language.nvim
 

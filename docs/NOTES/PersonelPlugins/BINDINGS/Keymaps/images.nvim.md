@@ -81,3 +81,24 @@ eine Gruppe). Nur mit which-key.nvim installiert, sonst kein Effekt.
 - 2026-08-06 (5): `## which-key`-Abschnitt ergänzt und Changelog in eine
   eigene Überschrift gezogen, per `docs/NOTES/BINDINGS-FORMAT.md` (erste
   Korrektur nach dessen Regeln).
+
+## Counts (2026-08-24)
+
+| key | count means |
+| --- | --- |
+| `<leader>in` / `<leader>ip` | Jump N images. `step()` already wraps modulo the image count, so multiplying the delta is all it needed |
+| `<leader>iv` / `<leader>is` | **Any** count forces the filename prompt — the value is ignored |
+| `u` (redact window) | Remove N boxes, clamped to what is there |
+
+The paste/screenshot case is the odd one and deliberately so: there is no
+meaningful "paste this 3 times", so the count reads as a flag rather than a
+repeat. `M.paste(name)` always accepted a name and the prompt already fired
+when `paste.ask_filename` was on — but with it off, a bare lhs had no way to
+name the file, and `:Image paste {name}` was the only route.
+
+No `desc` strings changed.
+
+Also verified while here: `:Image pickers` and `:Image compare` already
+complete their fixed values (`cfile cwd path`), and `:Image next` takes no
+argument — the autocompletion audit's unverified entry for this plugin
+needed nothing.
