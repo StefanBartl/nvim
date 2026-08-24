@@ -720,16 +720,29 @@ Suite gruen.
       `:MyPlugins clone/remove/… [dir]`, das den `MYPLUGINS_DIR`-Typ nutzt.
       Einzeiler: denselben Typ wiederverwenden
       (`bindings/usrcmds/update_repos/init.lua:156-164`).
-- [ ] `[N]` `<leader>tn` / `<leader>tp` (Tab next/prev) ignorieren `v:count`,
-      obwohl `:tabnext` / `:tabprevious` nativ einen count-Praefix akzeptieren.
-- [ ] `[N]` Window-Resize (`<S-h/l/j/k>`) nutzt fixen Schritt 5 statt
-      `v:count1 * 5`.
-- [ ] `[N]` `[q` / `]q` / `[l` / `]l` (Quickfix/Loclist) und `]w` / `[w`
-      (Trouble Workspace-Diagnostics) ignorieren count, obwohl die
-      zugrundeliegenden Ex-Kommandos ihn unterstuetzen.
+- [x] `[N]` `<leader>tn` / `<leader>tp` nehmen jetzt einen Count, mit
+      Wrapping. Die Praemisse des Eintrags stimmte allerdings **nicht**: jede
+      Count-Form von `:tabnext` ist *absolut* — `:tabnext 2` und `:2tabnext`
+      springen beide auf Tabseite 2 (wie `2gt`), `:tabnext +2` ist in Neovim
+      `E475`. Nur `:tabprevious {count}` ist relativ. Der Offset wird deshalb
+      in Lua gerechnet (`(nr - 1 + offset) % total + 1`), fuer beide Richtungen
+      gleich — eine Richtung nativ und die andere arithmetisch zu schreiben
+      haette ein symmetrisches Tastenpaar unterschiedlich aussehen lassen.
+- [x] `[N]` Window-Resize (`<S-h/l/j/k>`) skaliert jetzt mit `v:count1 * 5`.
+      Dafuer nimmt `lib.nvim.buf_win_tab.resize_guarded.create` jetzt
+      `string|fun(): string`: `v:count1` gilt nur waehrend der
+      Tastenbehandlung und laesst sich beim Mappen nicht in einen festen
+      String backen. Ein Schritt statt N — ein Redraw, und an der
+      Fenstergrenze landet man nicht woanders als bei N Einzeldruecken.
+- [x] `[N]` **Kein Gap mehr — Eintrag veraltet.** `[q` / `]q` / `[l` / `]l` /
+      `]w` / `[w` liegen seit dem LSP-Refactor in **lsp.nvim**, nicht mehr
+      hier, und dessen `steps()` faellt bereits auf `vim.v.count1` zurueck.
+      Zur Laufzeit geprueft: alle sechs Tasten haben genau einen Besitzer, in
+      nvim-config gibt es keine Dublette zu entfernen.
 - [ ] `[N]` `view_scroll.lua` liest `v:count` sauber (`0` → halbe Fensterhoehe)
       — bestes Count-Modell der Config, aber aktuell inaktiv/auskommentiert.
-      Entscheiden: reaktivieren oder entfernen.
+      Entscheiden: reaktivieren oder entfernen. **Kein Count-Gap** — kein
+      aktives Keymap; der Eintrag ist Vorlage, nicht Luecke.
 - [ ] `[F]` `:MyPlugins clone/reclone --dry-run` — Vorschau, was geklont/
       entfernt wuerde. Grundlage existiert in `finish_check`/`finish_reclone`,
       nur nicht als eigener Dry-Run-Pfad exponiert.

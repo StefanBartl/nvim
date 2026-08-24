@@ -5,6 +5,10 @@
 > Fehlen begründet ist. Die daraus abgeleitete **allgemeine Regel** steht in
 > `Checklists/regeln/LUA_NVIM.md` § UI und Bedienbarkeit → Count-Support (`UI-C*`).
 > Hier steht nur die Lückenliste — abarbeiten und streichen.
+>
+> **Status 2026-08-24: geschlossen.** „Missing but plausible“ ist leer; es
+> stehen nur noch der Referenz- und der „n/a“-Teil hier, beide als
+> Nachschlagewerk, nicht als Arbeit.
 
 
 Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
@@ -69,12 +73,28 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
 
 ## Missing but plausible — flagged in the reports
 
-- `nvim-config`: `<leader>tn`/`tp` (tab next/prev) ignore `v:count` even though
-  `:tabnext`/`:tabprevious` natively accept a count prefix; window-resize
-  keymaps (`<S-h/l/j/k>`) use a fixed step of 5 instead of `v:count1 * 5`;
-  `[q`/`]q`/`[l`/`]l` (quickfix/loclist nav) and `]w`/`[w` (Trouble workspace
-  diagnostics) ignore count despite the underlying Ex-commands supporting it
-  — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md).
+**Leer — abgearbeitet 2026-08-24.** Der letzte offene Eintrag war
+`nvim-config`; er ist erledigt, und zwei seiner drei Teile waren nicht das,
+was der Bericht behauptete:
+
+- `<leader>tn`/`tp` nehmen jetzt einen Count, mit Wrapping. Die Begruendung im
+  Bericht („`:tabnext` akzeptiert nativ einen count-Praefix“) ist **falsch**:
+  jede Count-Form von `:tabnext` ist absolut — `:tabnext 2` und `:2tabnext`
+  springen beide auf Tabseite 2 (wie `2gt`), `:tabnext +2` ist in Neovim
+  `E475`. Nur `:tabprevious {count}` ist relativ. Der Offset wird darum in Lua
+  gerechnet, fuer beide Richtungen gleich.
+- Window-Resize skaliert jetzt mit `v:count1 * 5`, in *einem* Schritt statt N.
+  Dafuer nimmt `lib.nvim.buf_win_tab.resize_guarded.create` jetzt
+  `string|fun(): string`, weil `v:count1` nur waehrend der Tastenbehandlung
+  gilt.
+- `[q`/`]q`/`[l`/`]l`/`]w`/`[w` waren **kein Gap**: sie liegen seit dem
+  LSP-Refactor in `lsp.nvim`, dessen `steps()` bereits auf `vim.v.count1`
+  zurueckfaellt. Zur Laufzeit geprueft — jede der sechs Tasten hat genau einen
+  Besitzer, in nvim-config gibt es keine Dublette.
+
+Das ist der dritte veraltete Count-Eintrag nach `markdown.nvim`,
+`spotlight.nvim` und `reposcope.nvim`: der Audit vom 2026-08-08 ist in diesem
+Bereich systematisch ueberholt.
 ## Explicitly justified "n/a" — not a gap
 
 Most single-shot, toggle, or picker-launching actions correctly have no count

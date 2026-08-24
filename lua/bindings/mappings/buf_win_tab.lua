@@ -61,31 +61,60 @@ function M.setup()
   }
   local exclude_names = { ".*lazygit.*" }
 
+  -- One press moves 5 columns/rows; a count scales that step rather than
+  -- repeating the keypress, so `3<S-l>` widens by 15 in one go instead of
+  -- three separate resizes (which redraw three times and, at a boundary,
+  -- stop somewhere different).
+  --
+  -- Built per keypress via the function form of `resize_guarded.create`:
+  -- `vim.v.count1` is only meaningful while the key is being handled, so it
+  -- cannot be baked into a fixed command string at mapping time.
+  local RESIZE_STEP = 5
+
+  ---@param prefix string  e.g. "vertical resize" or "resize"
+  ---@param sign string    "+" or "-"
+  ---@return fun(): string
+  local function resize_cmd(prefix, sign)
+    return function()
+      return ("%s %s%d"):format(prefix, sign, vim.v.count1 * RESIZE_STEP)
+    end
+  end
+
   map(
     { "n", "t" },
     "<S-h>",
-    resize_guarded.create("vertical resize -5", exclude_filetypes, exclude_names, "<S-h>"),
+    resize_guarded.create(
+      resize_cmd("vertical resize", "-"),
+      exclude_filetypes,
+      exclude_names,
+      "<S-h>"
+    ),
     { desc = "[Window] Resize narrower" }
   )
 
   map(
     { "n", "t" },
     "<S-l>",
-    resize_guarded.create("vertical resize +5", exclude_filetypes, exclude_names, "<S-l>"),
+    resize_guarded.create(
+      resize_cmd("vertical resize", "+"),
+      exclude_filetypes,
+      exclude_names,
+      "<S-l>"
+    ),
     { desc = "[Window] Resize wider" }
   )
 
   map(
     { "n", "t" },
     "<S-k>",
-    resize_guarded.create("resize +5", exclude_filetypes, exclude_names, "<S-k>"),
+    resize_guarded.create(resize_cmd("resize", "+"), exclude_filetypes, exclude_names, "<S-k>"),
     { desc = "[Window] Resize taller" }
   )
 
   map(
     { "n", "t" },
     "<S-j>",
-    resize_guarded.create("resize -5", exclude_filetypes, exclude_names, "<S-j>"),
+    resize_guarded.create(resize_cmd("resize", "-"), exclude_filetypes, exclude_names, "<S-j>"),
     { desc = "[Window] Resize shorter" }
   )
 
@@ -96,11 +125,31 @@ function M.setup()
   -- ---------------------------------------------------------------------------
   -- Tabs
   -- ---------------------------------------------------------------------------
-  map("n", "<leader>tn", "<cmd>tabnext<CR>", { desc = "[Tabs] Next tab" })
-  map("n", "<leader>tp", "<cmd>tabprevious<CR>", { desc = "[Tabs] Previous tab" })
+  -- A count moves that many tabs, wrapping -- `3<leader>tn` is three forward.
+  --
+  -- The offset is computed here instead of being handed to the Ex-command,
+  -- because every count form of `:tabnext` is *absolute*: `:tabnext 2` and
+  -- `:2tabnext` both jump to tab page 2 (like `2gt`), and `:tabnext +2` is
+  -- E475 in Neovim. Only bare `:tabnext` moves relatively. `:tabprevious
+  -- {count}` does take a relative count, but spelling one direction as a
+  -- native count and the other as arithmetic would make a symmetric pair of
+  -- keys read as if they worked differently.
+  ---@param offset integer Tab pages to move; negative moves left. Wraps.
+  local function tab_step(offset)
+    local total = vim.fn.tabpagenr("$")
+    -- Lua's `%` is non-negative for a positive divisor, so this wraps in both
+    -- directions without a separate case for going left past the first tab.
+    vim.cmd("tabnext " .. ((vim.fn.tabpagenr() - 1 + offset) % total + 1))
+  end
+
+  map("n", "<leader>tn", function()
+    tab_step(vim.v.count1)
+  end, { desc = "[Tabs] Next tab" })
+  map("n", "<leader>tp", function()
+    tab_step(-vim.v.count1)
+  end, { desc = "[Tabs] Previous tab" })
   map("n", "<leader>tc", "<cmd>tabnew<CR>", { desc = "[Tabs] New tab" })
   map("n", "<leader>tx", "<cmd>tabclose<CR>", { desc = "[Tabs] Close tab" })
-
 end
 
 return M
