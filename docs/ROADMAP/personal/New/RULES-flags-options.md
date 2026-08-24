@@ -196,13 +196,6 @@ reading the code, not confirmed feature requests.
   but are missing.
 — from [open.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/open.nvim.md)
 
-## insights.nvim
-
-- No direct way via the `symbols_telescope`/`symbols_fzf` keymaps to pick
-  symbol type (tables/strings) or scope (buffer) — only reachable via
-  `:Insights symbols`.
-— from [insights.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/insights.nvim.md)
-
 ## sessions.nvim
 
 - No keymap for `:Session current` or the picker (`:SessionLoad`) in the

@@ -14,8 +14,26 @@ if which-key is absent (nothing here depends on it).
 | lhs (config key, default) | mode | action | desc | condition |
 | --- | --- | --- | --- | --- |
 | `cfg.fileinfo.keymap` (`<leader>fi`) | n | Opens the file-info float for the current buffer | "insights: file info float" | `cfg.fileinfo.enable ~= false` and key truthy |
-| `cfg.keymaps.symbols_telescope` (`<leader>ps`) | n | Fetches symbol index, opens `ui.telescope` | "insights: symbols (telescope)" | key truthy |
-| `cfg.keymaps.symbols_fzf` (`<leader>pS`) | n | Same, opens `ui.fzf` | "insights: symbols (fzf)" | key truthy |
+| `cfg.keymaps.symbols_telescope` (`<leader>ps`) | n | Scans and opens `ui.telescope` via `symbols/open.lua` | "insights: symbols (telescope, cwd functions)" | key truthy |
+| `cfg.keymaps.symbols_fzf` (`<leader>pS`) | n | Same, opens `ui.fzf` | "insights: symbols (fzf, cwd functions)" | key truthy |
+
+Since 2026-08-24 both `symbols_*` keys take either a plain lhs string (cwd +
+functions, the historical behavior) or `{ lhs, scope?, type?, rebuild? }`.
+There is deliberately no `ui` field — the UI is which of the two keys this
+is. The `desc` is built from the resolved choice, so which-key shows
+`insights: symbols (telescope, buffer tables)` rather than a fixed label.
+
+**The desc cells above therefore name the *default-config* descs, not a
+template.** `drift.lua`'s `is_live` compares a documented desc to a live one
+by exact string equality, so a `{scope} {type}` placeholder in that column
+would make `:Bindings check` report both mappings as documented-but-not-
+registered on every run. If you configure a non-default scope or type, the
+live desc changes with it and those two rows have to be updated to match —
+that is the cost of the desc carrying real information.
+
+Both mappings now dispatch through `symbols/open.lua`, the same entry point
+`:Insights symbols` uses. Before that they scanned and opened a picker
+themselves and had drifted: no empty-result guard, no `rebuild`.
 
 ## Scratch-buffer keymaps (`ui/scratch.lua`, buffer-local)
 

@@ -86,11 +86,25 @@ Audit heisst meistens "nirgends aufgeschrieben".
       Fehlermeldungen, die eine composer-Validierung ersetzen wuerde.
       Commit `2adf867`, Branch `feat/provenance-completion`.
 
-### insights.nvim
+### insights.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` `symbols_telescope` / `symbols_fzf` Keymaps koennen Symboltyp
-      (tables/strings) und Scope (buffer) nicht waehlen — nur via
-      `:Insights symbols`.
+- [x] `[F]` `symbols_telescope` / `symbols_fzf` nehmen jetzt entweder einen
+      lhs-String (wie bisher) oder `{ lhs, scope?, type?, rebuild? }`.
+      Bewusst **kein** `ui`-Feld — die UI ist, welcher der beiden Keys es ist.
+      Unbekannter scope/type wird gemeldet und der Default genommen.
+      **Der Befund war groesser als der Audit-Eintrag:** die Keymaps haben gar
+      nicht ueber `handle_symbols` dispatcht, sondern selbst gescannt und den
+      Picker geoeffnet — und dabei die Leer-Pruefung und `rebuild` verloren.
+      Dispatch liegt jetzt in `symbols/open.lua`, beide Pfade gehen dort
+      durch. Die Token-Listen (scope/type/ui) sind mit umgezogen, weil sie
+      Completion **und** Keymap-Validierung speisen. `open_symbol_picker` und
+      `default_ui` in `usrcmds.lua` waren danach tot und sind entfernt.
+      Sichtbare Aenderungen: Picker-Titel aus einem Keymap nennt jetzt auch
+      den Typ; `desc` spiegelt die aufgeloeste Wahl — relevant fuer
+      `:Bindings check`, das seit `12611cf6` auf desc matcht.
+      Commit `b352939`, Branch `feat/symbols-keymap-options`.
+      Hinweis: insights.nvim hat keine Testsuite — verifiziert wurde zur
+      Laufzeit (alle normalize_keymap-Formen, beide Mappings, Completion).
 
 ### open.nvim
 
