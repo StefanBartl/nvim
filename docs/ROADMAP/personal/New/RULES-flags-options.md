@@ -42,12 +42,6 @@ reading the code, not confirmed feature requests.
   otherwise exposing a lot through `:Cascade`.
 — from [cascade.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/cascade.nvim.md)
 
-## debugging.nvim
-
-- `<lt>c` (capture messages) can't choose file-only or clipboard-only from the
-  keymap itself — only via `:Debug messages capture` with a Lua API call.
-— from [debugging.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/debugging.nvim.md)
-
 ## documentation.nvim
 
 - `:DocMap churn [range]` / `:DocMap diff [ref]` have no completion for

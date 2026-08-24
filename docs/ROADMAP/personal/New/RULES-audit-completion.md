@@ -84,11 +84,6 @@ frozen list baked in at `setup()`:
   [dir]` which reuses the `MYPLUGINS_DIR` type for the same purpose — the
   fix is a one-line reuse of the existing type — from
   [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md) (`bindings/usrcmds/update_repos/init.lua:156-164`).
-- **`debugging.nvim`**: `:Debug report win <id>` / `:Debug inspect
-  buffer|window <id>` offer no completion for the ID itself (e.g. a list of
-  open window IDs); `:Debug keylogger start [path]` offers no file-path
-  completion — both explicitly left as known, documented gaps — from
-  [debugging.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/debugging.nvim.md) (`bindings/usercmds.lua:78-84`).
 - **`learn-cli.nvim`**: `:LearnCLICreateCycle <name> [path]` has a `complete`
   function that ignores `arg_lead`/context entirely and always returns 3
   static placeholder strings; the second positional (`path`, a directory) has

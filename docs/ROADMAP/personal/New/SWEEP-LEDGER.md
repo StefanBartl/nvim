@@ -319,18 +319,31 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       Commit `6c19242`, Branch `feat/toggle-scope-and-fence-export`.
       Neuer `TESTS/toggle_buffer_spec.lua`, Suite gruen.
 
-### debugging.nvim
+### debugging.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[C]` `:Debug report win <id>` und `:Debug inspect buffer|window <id>`
-      completen die ID nicht (`bindings/usercmds.lua:78-84`) — Liste offener
-      Window-/Buffer-IDs anbieten.
-- [ ] `[C]` `:Debug keylogger start [path]` ohne Pfad-Completion — `PATH`-Typ
-      aus Phase 1.
-- [ ] `[F]` `<lt>c` (Messages capturen) kann file-only / clipboard-only nicht
-      aus dem Keymap heraus waehlen — nur via `:Debug messages capture` mit
-      Lua-API-Aufruf.
+- [x] `[C]` `report win` / `inspect buffer|window` completen ihre Handles
+      jetzt ueber die composer-Argtypen `WINDOW`/`BUFFER`.
+      **Der WINDOW-Typ existierte in lib.nvim bereits** (`eb99db1`) — ich
+      hatte ihn versehentlich ein zweites Mal registriert und wieder
+      zurueckgenommen. Vor lib-Aenderungen kuenftig erst HEAD pruefen.
+- [x] `[C]` `keylogger start [path]` bekommt `PATH`-Completion. Die Datei
+      existiert noch nicht — completet wird der Verzeichnisteil auf dem Weg
+      dorthin.
+      `proc`-Ids und `performance startup` behalten bewusst den generischen
+      Slot: das Plugin zaehlt diese Werte nicht auf, ein Completer haette
+      nichts Wahres anzubieten. Im Spec festgenagelt.
+- [x] `[F]` Capture-Sinks: `<lt>f` nur Datei, `<lt>y` nur Clipboard.
+      `capture_messages` konnte `save_file`/`clipboard` immer schon — nur
+      war ausschliesslich der Default gebunden. Drei getrennte Tasten statt
+      Praefixbaum: `<lt>c` und dann auf ein moegliches `f` warten wuerde den
+      haeufigen Fall zugunsten der zwei seltenen verzoegern. `<lt>c` bleibt
+      unveraendert, Verhalten wie `desc`.
+      Commit `dc879ae`, Branch `feat/handle-completion-and-capture-sinks`.
+      Neuer `docs/TESTS/handle_args_spec.lua`, Suite gruen.
 
 ---
+
+**Welle A abgeschlossen** (13/13) — 2026-08-24.
 
 ## Welle B — Mittlere Plugins
 
