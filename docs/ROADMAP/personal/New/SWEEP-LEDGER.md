@@ -293,16 +293,31 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       Suite gruen; sie deckt bewusst nur die reinen Migratoren ab
       (`migrate.common.*` hardrequired telescope), Rest zur Laufzeit.
 
-### color_my_ascii.nvim
+### color_my_ascii.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[C]` `[?]` `Fence lang <language>` / `Fence import <file>` — haben die
-      Wert-/Datei-Completion? Registrierung liegt in einer beim Audit nicht
-      gelesenen Datei.
-- [ ] `[F]` `:ColorMyAscii toggle` koennte `!`-Bang oder Range akzeptieren, um
-      mehrere Buffer zu togglen — derzeit nur der aktuelle.
-- [ ] `[F]` `fence_export` (`:Fence export [path] [--open] [--replace]`) hat
-      als einziges `Fence`-Subkommando kein Gegenstueck in der ACTIONS-Tabelle.
-- [ ] `[L]` Buffer-lokaler-Autocmd-Workaround zurueckbauen (nach Phase 1).
+- [x] `[C]` `[?]` `Fence lang` / `Fence import`: **Completion war schon da**
+      (`lang_tags()` bzw. Datei-Completion in `commands/fence/init.lua`).
+      Zur Laufzeit bestaetigt.
+- [x] `[F]` Toggle-Scope — **die Audit-Praemisse war verkehrt herum.**
+      `:ColorMyAscii toggle` ist und war immer **global** (ein
+      `state.enabled` ueber alle verwalteten Buffer), nicht
+      current-buffer-only. Was gefehlt hat, ist das Gegenteil: Highlighting
+      in *einem* Buffer abschalten. Jetzt
+      `:ColorMyAscii toggle [global|buffer]`, Default `global`, also
+      unveraendertes Verhalten fuer das nackte Kommando.
+      Zwei bewusste Kanten: einen Buffer einschalten, waehrend das Plugin
+      global aus ist, wird **abgelehnt** (sonst waere er verwaltet und
+      wuerde nichts highlighten — liest sich wie ein Bug). Und der
+      Buffer-Zustand ueberlebt kein Re-Attach; dafuer ist die
+      `filetypes`/`disable`-Config da.
+- [x] `[F]` `fence_export` in die ACTIONS-Tabelle aufgenommen — es war das
+      einzige `Fence`-Subkommando ohne Eintrag.
+- [x] `[L]` Buffer-lokaler-Autocmd-Workaround zurueckgebaut: die zwei
+      Autocmds in `setup_buffer` liefen auf der Roh-API unter einem
+      Kommentar, `lib.nvim.autocmd.create` unterstuetze `opts.buffer` nicht.
+      Tut es. Laufen jetzt ueber den Wrapper.
+      Commit `6c19242`, Branch `feat/toggle-scope-and-fence-export`.
+      Neuer `TESTS/toggle_buffer_spec.lua`, Suite gruen.
 
 ### debugging.nvim
 

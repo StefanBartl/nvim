@@ -97,9 +97,6 @@ frozen list baked in at `setup()`:
 - **`mdview.nvim`**: `:MDView zoom <factor>` has no visible clamping/validation
   of the numeric value at the route level — from
   [mdview.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/mdview.nvim.md).
-- **`color_my_ascii.nvim`**: unclear/unverified whether `Fence lang <language>`
-  / `Fence import <file>` have value/file completion (registration lives in a
-  file that wasn't read) — from [color_my_ascii.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/color_my_ascii.nvim.md).
 - **`replacer.nvim`**: `:ReplacePreset` has explicit name completion, but full
   kv-/flag-completion coverage for the very flag-rich `:Replace` command
   (`--regex`, `--type=`, `--glob=`, `--exclude=`, `--changed=`, `--engine=`,

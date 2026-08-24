@@ -130,14 +130,6 @@ reading the code, not confirmed feature requests.
   marks-based.
 — from [filetree.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/filetree.nvim.md)
 
-## color_my_ascii.nvim
-
-- `:ColorMyAscii toggle` could accept a `!`-bang or range to toggle multiple
-  buffers at once — currently current-buffer only.
-- `fence_export` (`:Fence export [path] [--open] [--replace]`) has no keymap
-  counterpart in the ACTIONS table, unlike the other `Fence` subcommands.
-— from [color_my_ascii.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/color_my_ascii.nvim.md)
-
 ## lib.nvim
 
 - No idea gaps flagged directly against lib.nvim's own (nonexistent) keymaps —
