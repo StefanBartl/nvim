@@ -254,12 +254,6 @@ reading the code, not confirmed feature requests.
   very flag-rich `:Replace` command wasn't fully verified).
 — from [replacer.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/replacer.nvim.md)
 
-## gopath.nvim
-
-- `:Gopath cache add-root <dir>` — unverified whether `<dir>` has path
-  completion; flagged as a potential gap, not confirmed.
-— from [gopath.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/gopath.nvim.md)
-
 ## reposcope.nvim
 
 - Clone target-directory prompt likely lacks path completion (unverified —

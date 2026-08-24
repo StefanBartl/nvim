@@ -102,8 +102,6 @@ frozen list baked in at `setup()`:
 - **`mdview.nvim`**: `:MDView zoom <factor>` has no visible clamping/validation
   of the numeric value at the route level — from
   [mdview.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/mdview.nvim.md).
-- **`gopath.nvim`**: `:Gopath cache add-root <dir>` — undocumented/unverified
-  whether `<dir>` gets file completion — from [gopath.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/gopath.nvim.md).
 - **`runtime-analysis.nvim`**: `:RA provenance <path>` is a typed `STRING`
   with **no** completion — completing against `vim.*`/`package.loaded` fields
   is noted as non-trivial (dotted path, container+field split) rather than
