@@ -38,12 +38,19 @@
 ---        "not verifiable from here" line naming the table, instead of N
 ---        "missing" lines. `M.describe` renders it in its own section,
 ---        below the findings that are worth acting on.
----    Still unsolved, and visible in the corpus: a plugin whose cheatsheet
----    is one unnamed table mixing a global entry point with in-window keys
----    (`github_stats.nvim.md`) gives the verdict nothing to group on — the
----    table has live keys, so its in-window ones stay in the main section.
----    Giving that file per-scope headings (BINDINGS-FORMAT.md §1 already
----    requires them for multi-table files) is the fix, in the docs.
+---    A table needs more than one row for the verdict to apply, so a
+---    genuinely one-row scope (github_stats' detail-view float) still
+---    reports as a single finding. That is the intended floor: one absent
+---    key is no evidence about scope.
+---
+---    Two things had to land together for this to work on the corpus. The
+---    docs half: `github_stats.nvim.md` was one unnamed table mixing four
+---    scopes, giving the verdict nothing to group on — now split per scope,
+---    as BINDINGS-FORMAT.md §1 already required. The code half: splitting
+---    it alone changed nothing, because each resulting table still held one
+---    key that *looked* live. See `is_live` — matching on lhs alone let an
+---    unrelated global map satisfy a documented row, and one such row per
+---    table was enough to suppress the verdict for the whole table.
 --- 4. **Lazy-loaded plugins are handled, not ignored**: a binding whose
 ---    owning plugin hasn't loaded yet in the current session (event/cmd/
 ---    ft-triggered lazy loading) isn't registered yet either — checking
@@ -93,6 +100,11 @@ local M = {}
 local LHS_HEADERS = { lhs = true, key = true, keys = true, ["action key"] = true }
 local MODE_HEADERS = { mode = true, modes = true }
 local USERCMD_HEADERS = { command = true, invocation = true, subcommand = true }
+local DESC_HEADERS = { desc = true, description = true }
+
+--- Cells that fill a `desc` column without naming a description. Checked
+--- lowercased, after `strip_quotes`.
+local EMPTY_DESC = { [""] = true, none = true, ["-"] = true, ["—"] = true, ["n/a"] = true }
 
 local VALID_MODE_CHARS =
   { n = true, i = true, v = true, x = true, s = true, o = true, t = true, c = true, l = true }
@@ -175,6 +187,31 @@ local function extract_modes(rec)
   return #out > 0 and out or { "n" }
 end
 
+--- The corpus writes descs as `"[DAP] Continue"` — the exact string handed
+--- to `vim.keymap.set`'s `desc`, quoted. Backticks appear too.
+---@param s string
+---@return string
+local function strip_quotes(s)
+  s = vim.trim(s or "")
+  s = s:gsub("^[`\"']+", ""):gsub("[`\"']+$", "")
+  return vim.trim(s)
+end
+
+--- The documented `desc` of a row, or nil when the row does not claim one.
+--- Only an explicit `desc`/`description` column counts: other columns hold
+--- free prose about the action, which is not what `vim.keymap.set` was
+--- given and would never compare equal.
+---@param rec Bindings.Record
+---@return string|nil
+local function extract_desc(rec)
+  local idx = column_index(rec, DESC_HEADERS)
+  local cell = idx and rec.cells[idx]
+  if not cell then return nil end
+  local desc = strip_quotes(cell)
+  if EMPTY_DESC[desc:lower()] then return nil end
+  return desc
+end
+
 ---@param rec Bindings.Record
 ---@return string|nil normalized lhs, nil if no usable lhs column/cell
 local function extract_lhs(rec)
@@ -239,32 +276,84 @@ end
 --- partial fix, not a complete one: nothing here can conjure a filetree
 --- buffer that was never opened this session. What the remaining, still
 --- unverifiable ones are worth is decided in `M.check`, not here.
+--- Every live lhs maps to the list of `desc`s registered under it, not to a
+--- bare `true`: `is_live` below needs them to tell a documented binding
+--- apart from an unrelated one that merely shares the key.
 ---@param modes string[]
----@return table<string, table<string, boolean>> mode -> set of live lhsraw
+---@return table<string, table<string, string[]>> mode -> lhsraw -> descs
 local function live_keymaps(modes)
   local out = {}
   local bufs = vim.api.nvim_list_bufs()
   for _, mode in ipairs(modes) do
     local set = {}
-    local ok, maps = pcall(vim.api.nvim_get_keymap, mode)
-    if ok then
+    local function add(maps)
       for _, m in ipairs(maps) do
-        if m.lhsraw then set[m.lhsraw] = true end
+        if m.lhsraw then
+          set[m.lhsraw] = set[m.lhsraw] or {}
+          table.insert(set[m.lhsraw], m.desc or "")
+        end
       end
     end
+    local ok, maps = pcall(vim.api.nvim_get_keymap, mode)
+    if ok then add(maps) end
     for _, buf in ipairs(bufs) do
       if vim.api.nvim_buf_is_loaded(buf) then
         local ok_buf, buf_maps = pcall(vim.api.nvim_buf_get_keymap, buf, mode)
-        if ok_buf then
-          for _, m in ipairs(buf_maps) do
-            if m.lhsraw then set[m.lhsraw] = true end
-          end
-        end
+        if ok_buf then add(buf_maps) end
       end
     end
     out[mode] = set
   end
   return out
+end
+
+--- Whether a documented binding is actually registered.
+---
+--- Matching on lhs alone was wrong in a way that mattered: an unrelated
+--- global map satisfies a documented row just by sharing the key. Confirmed
+--- across the corpus — github_stats' `<CR>`/`<Esc>` were "live" because
+--- this config binds `<CR>` to "Insert blank line" and `<Esc>` to "Clear
+--- copilot NES overlays or nohl"; `language.nvim`'s `]s` matched Snacks'
+--- "Snacks Scope: Next"; reposcope's `<Esc>` matched the same nohl map
+--- twice. Five rows, none of them the binding the cheatsheet describes, and
+--- each one was enough to keep its whole table out of the "not verifiable"
+--- verdict — which is why `github_stats.nvim.md` kept reporting ~20 keys
+--- even after being split into per-scope tables.
+---
+--- So when BOTH sides name a desc, they must agree. Everything else falls
+--- back to lhs-only, which is all the older behaviour ever was:
+---   - the row has no `desc` column, or fills it with `none`/`-`
+---   - nothing registered under that key carries a desc at all
+---
+--- Compared exactly (after `strip_quotes`), deliberately. Measured over
+--- every currently-live documented row: 8 exact matches, 0 that needed
+--- case-insensitive comparison, 0 where the live side had no desc, and 5
+--- mismatches — all five genuine. There was nothing for a looser rule to
+--- rescue, and a substring or fuzzy compare would only start re-admitting
+--- the collisions this exists to catch.
+---@param live_maps table<string, table<string, string[]>>
+---@param modes string[]
+---@param lhs string
+---@param doc_desc string|nil
+---@return boolean
+local function is_live(live_maps, modes, lhs, doc_desc)
+  for _, mode in ipairs(modes) do
+    local descs = live_maps[mode] and live_maps[mode][lhs]
+    if descs then
+      if not doc_desc then return true end
+      local any_desc = false
+      for _, d in ipairs(descs) do
+        if d ~= "" then
+          any_desc = true
+          if strip_quotes(d) == doc_desc then return true end
+        end
+      end
+      if not any_desc then return true end
+    end
+  end
+  -- Either the key is registered nowhere, or every desc under it names a
+  -- different binding. Both are "documented, not registered".
+  return false
 end
 
 ---@class Bindings.DriftFinding
@@ -301,7 +390,7 @@ function M.check(plugin)
         for _, m in ipairs(modes) do
           needed_modes[m] = true
         end
-        checkable[#checkable + 1] = { rec = rec, lhs = lhs, modes = modes }
+        checkable[#checkable + 1] = { rec = rec, lhs = lhs, modes = modes, desc = extract_desc(rec) }
       end
     elseif not plugin or rec.plugin == plugin then
       skipped[rec.plugin] = true
@@ -338,14 +427,7 @@ function M.check(plugin)
   for _, entry in ipairs(checkable) do
     local group = group_of(entry.rec)
     checked_count[group] = (checked_count[group] or 0) + 1
-    local live_anywhere = false
-    for _, m in ipairs(entry.modes) do
-      if live_maps[m] and live_maps[m][entry.lhs] then
-        live_anywhere = true
-        break
-      end
-    end
-    if live_anywhere then
+    if is_live(live_maps, entry.modes, entry.lhs, entry.desc) then
       found_count[group] = (found_count[group] or 0) + 1
     else
       keymap_findings[#keymap_findings + 1] = {
