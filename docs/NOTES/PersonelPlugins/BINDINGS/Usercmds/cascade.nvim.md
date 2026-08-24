@@ -70,3 +70,23 @@ constraint (bang always binds to the command name itself), not a choice:
 - **Previously-noted doc bug now fixed**: `:CascadeRenumber` was referenced in
   README/health.lua/comments/doc but was never a registered command — every
   stale reference has been corrected to `:Cascade renumber`.
+
+## `:Cascade cycle` (2026-08-24)
+
+| command | purpose |
+| --- | --- |
+| `:Cascade cycle add {a},{b}[,{c}]` | Add a cycle group for this session |
+| `:Cascade cycle list` | Show the groups in effect for this buffer |
+| `:Cascade cycle remove {value}` | Drop the group containing `{value}` |
+
+`cycle.groups` used to be config-only. `add` appends to the live table
+`word_cycle.groups_for` reads on every keypress, so it applies immediately,
+and it takes the whole tail rather than one token — values may contain
+spaces (`TODO, IN PROGRESS ,DONE`). Refused: fewer than two distinct values,
+or duplicates, both of which produce a cycle that cannot cycle.
+
+**Not persisted, on purpose** — session-only, with the config file left as
+the source of truth for groups worth keeping.
+
+`list` reports global groups *and* the filetype's, since they are separate
+config keys and either one alone answers the wrong question.

@@ -371,15 +371,31 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       `mark_spec.lua` erweitert, Suite gruen.
       **Achtung:** der `toggle`-`desc` hat sich geaendert.
 
-### cascade.nvim
+### cascade.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` Cycle (`<C-y>`/`<C-x>`), Line-Move (`<A-Up>`/`<A-Down>`) und
-      Quick-Toggle (`<A-->` etc.) im Normal-Mode ohne count — inkonsistent zum
-      sehr bewussten Count-Design bei Indent/Dedent. Besonders lohnend:
-      Date-Cycling (`3<C-y>` = "+3 Tage").
-- [ ] `[F]` `cycle.groups` / `per_filetype` sind rein statisch aus der Config;
-      kein Live-Kommando (z. B. `:Cascade cycle add {a},{b}`), obwohl das
-      Plugin sonst viel ueber `:Cascade` exponiert.
+- [x] `[N]` Count auf Cycle, Move und Quick-Toggle — je die Semantik, die
+      passt:
+      * **Cycle**: N *Schritte*, nicht N Plaetze. Eine Regel deckt alle
+        Gruppentypen ab — 2-State nach Paritaet, 3-State mit Wrap, ISO-Datum
+        mit Monatsuebertrag (`3<C-y>` auf `2026-08-30` → `2026-09-02`).
+        Beide nativen Fallbacks **reichen den Count weiter**, statt ihn zu
+        schlucken.
+      * **Move**: N-mal je eine Zeile, damit Reindent und Renumber bei jedem
+        Schritt stimmen; stoppt am Pufferrand.
+      * **Quick-Toggle**: erweitert den *Scope* auf N Zeilen statt zu
+        wiederholen — Wiederholen waere bei geradem Count ein No-Op.
+      Cycle und Quick-Toggle stashen den Count vor dem Dot-Repeat-Trampolin,
+      wie `swap_right`/`swap_left` es schon taten.
+- [x] `[F]` `:Cascade cycle add|list|remove` — Gruppen zur Laufzeit.
+      Nimmt den ganzen Tail (Werte duerfen Leerzeichen enthalten).
+      Abgelehnt: weniger als zwei verschiedene Werte, und Duplikate — beides
+      ergibt einen Zyklus, der nicht zyklen kann.
+      **Bewusst nicht persistiert**: Session-only, die Config bleibt die
+      Wahrheit fuer Gruppen, die man behalten will.
+      Commit `3895d4a`, Branch `feat/count-and-runtime-cycle-groups`.
+      `commands_spec.lua` prueft die exakte Subkommando-Liste und hat
+      `cycle` sofort gemeldet — Erwartung nachgezogen, Suite gruen.
+      Keine `desc`-Strings geaendert.
 
 ### emojis.nvim
 

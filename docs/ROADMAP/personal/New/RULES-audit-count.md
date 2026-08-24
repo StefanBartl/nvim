@@ -73,11 +73,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
   `[q`/`]q`/`[l`/`]l` (quickfix/loclist nav) and `]w`/`[w` (Trouble workspace
   diagnostics) ignore count despite the underlying Ex-commands supporting it
   — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md).
-- `cascade.nvim`: cycle (`<C-y>`/`<C-x>`), line move (`<A-Up>`/`<A-Down>`), and
-  quick-toggle (`<A-->` etc.) in Normal mode have no count support, an
-  inconsistency against the otherwise very deliberate indent/dedent count
-  design — date-cycling in particular would benefit (`3<C-y>` = "+3 days") —
-  from [cascade.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/cascade.nvim.md).
 - `markdown.nvim`: heading navigation (`<C-p>`/`[[`, `<C-f>`/`]]`, and the
   level variants), fold commands, and table-cell navigation (`]|`/`[|`) all
   read no count, though several (heading jumps, cell nav, level
