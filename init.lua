@@ -183,7 +183,20 @@ startup.now("lsp", function()
   -- the runtimepath by the time this runs). This config's former lua/lsp/**
   -- lives there; the local lsp_legacy copy it was renamed to during the
   -- migration is gone, the plugin is the only source now.
-  require("lsp").setup({ mason = { ensure_install = false } })
+  require("lsp").setup({
+    mason = { ensure_install = false },
+    -- The plugin-name list is this config's data, so it is handed over rather
+    -- than reached for. Passed here and not from a completion engine's spec:
+    -- it used to be wired from nvim-cmp's `opts`, which meant switching to
+    -- blink silently dropped the source.
+    completion = {
+      personal_names = {
+        labels = function()
+          return require("plugins.personal.list").read()
+        end,
+      },
+    },
+  })
 
   -- `require("lsp").apply_capabilities()`, not `lsp.core.capabilities`
   -- directly: the capability contributors (NvChad, cmp, blink) live in the

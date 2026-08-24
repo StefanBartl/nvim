@@ -28,11 +28,6 @@ return {
       -- inversion is the whole reason this fragment can stay here while the
       -- source itself lives in the plugin.
       table.insert(opts.sources, { name = "personal_names", priority = 100 })
-      require("lsp.completion.personal_names").setup({
-        labels = function()
-          return require("plugins.personal.list").read()
-        end,
-      })
     end,
   },
 
