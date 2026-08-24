@@ -189,13 +189,6 @@ reading the code, not confirmed feature requests.
   the prompt is always empty.
 — from [dap.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/dap.nvim.md)
 
-## open.nvim
-
-- Analogous short keymaps for `:Open split`/`:Open terminal` would be a
-  natural addition alongside the existing `browser`/`filemanager` shortcuts,
-  but are missing.
-— from [open.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/open.nvim.md)
-
 ## sessions.nvim
 
 - No keymap for `:Session current` or the picker (`:SessionLoad`) in the

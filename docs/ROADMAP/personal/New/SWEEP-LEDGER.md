@@ -106,10 +106,26 @@ Audit heisst meistens "nirgends aufgeschrieben".
       Hinweis: insights.nvim hat keine Testsuite — verifiziert wurde zur
       Laufzeit (alle normalize_keymap-Formen, beide Mappings, Completion).
 
-### open.nvim
+### open.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` Kurz-Keymaps fuer `:Open split` und `:Open terminal`, analog zu den
-      bestehenden `browser`/`filemanager`-Shortcuts.
+- [x] `[F]` Keymap-Optionen kommen jetzt aus der **Handler-Registry** statt
+      aus einer handgepflegten Dreierliste. `open_<handler key>` funktioniert
+      fuer jeden registrierten Handler, auch fuer einen aus
+      `custom_handlers`.
+      **Der Audit nannte zwei, es waren mehr:** `split`, `vsplit`, `tab`,
+      `terminal`, `image`, `notepad` und die benannten Browser hatten alle
+      keine Option — die Liste war schlicht nicht mit den Handlern
+      mitgewachsen. Zwei Eintraege haetten dieselbe Falle stehen lassen.
+      Ein per `cfg.handlers` abgeschalteter Handler wird jetzt korrekt
+      abgelehnt statt auf ein fehlschlagendes Kommando gemappt.
+      Sonderfaelle: `open_manager` bleibt Alias auf `open_filemanager`;
+      `open_default` bleibt das nackte `:Open` trotz gleichnamigem Handler.
+      Registrierung laeuft jetzt ueber `lib.nvim.map`.
+      **Achtung `desc`:** jetzt `"open.nvim: :Open split"` statt
+      `"open.nvim: open_browser"` — Cheatsheet entsprechend angepasst
+      (exakter Stringvergleich in `drift.lua`).
+      Commit `cadad40`, Branch `feat/registry-driven-keymaps`.
+      Hinweis: open.nvim hat keine Testsuite — zur Laufzeit verifiziert.
 
 ### dap.nvim
 
