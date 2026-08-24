@@ -102,16 +102,6 @@ reading the code, not confirmed feature requests.
   an Ex-command, not as a keymap with a prompt).
 — from [fileops.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/fileops.nvim.md)
 
-## cmdlog.nvim
-
-- No multi-select/batch-delete for history entries (only single-entry
-  deletion via `<C-x>`).
-- `risky_patterns` is a plain Lua-pattern list with no preview of which
-  pattern actually matched — a `:Cmdlog risky test <cmd>` would help tune it.
-- Shell-history parsers for zsh/fish/bash are hardcoded; no escape hatch for
-  exotic history formats (e.g. custom `HISTTIMEFORMAT`).
-— from [cmdlog.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/cmdlog.nvim.md)
-
 ## pickers.nvim
 
 - No `vim.v.count` hook for `dir_pick`, even though the underlying concept

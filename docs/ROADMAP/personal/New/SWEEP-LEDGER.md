@@ -170,14 +170,35 @@ Audit heisst meistens "nirgends aufgeschrieben".
       (`core/git.lua:47`). Der Spec ist veraltet, nicht die Implementierung;
       `:Diff target=git:HEAD` funktioniert. Separat als Task angelegt.
 
-### cmdlog.nvim
+### cmdlog.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` Kein Multi-Select / Batch-Delete fuer History-Eintraege — nur
-      Einzelloeschung via `<C-x>`.
-- [ ] `[F]` `risky_patterns` zeigt nicht, welches Pattern gematcht hat.
-      `:Cmdlog risky test <cmd>` wuerde das Tunen ermoeglichen.
-- [ ] `[F]` Shell-History-Parser (zsh/fish/bash) sind hardcoded — kein
-      Escape-Hatch fuer exotische Formate (z. B. eigenes `HISTTIMEFORMAT`).
+- [x] `[F]` Batch-Delete: `mappings.toggle_selection` (default `<C-Space>`)
+      markiert Eintraege, `<C-x>` loescht dann alle markierten. Telescopes
+      eigener Multi-Select-Key `<Tab>` ist hier `toggle_favorite`, daher ein
+      eigener Key. Ein Batch fragt **einmal** und unterdrueckt danach die
+      Pro-Kommando-Rueckfrage der Shell-Loeschung.
+- [x] `[F]` `:Cmdlog risky test <command>` meldet, welche Patterns greifen.
+      Neues `risky.matching()`; `is_risky` ist jetzt darueber definiert.
+      Ignoriert `highlight_risky` (das steuert Anzeige, nicht Auswertung)
+      und sagt es, wenn der Schalter aus ist. Ein kaputtes Pattern schliesst
+      sich selbst aus, statt zu werfen.
+- [x] `[F]` `shell_history = { parse, matches }` als Escape-Hatch. Beide
+      Haelften gehoeren zusammen: `matches` braucht das Loeschen, um die
+      **Rohzeile** zu finden. `parse` allein laesst das Loeschen verweigern,
+      statt den eingebauten Matcher auf ein unbekanntes Format raten und die
+      falschen Zeilen entfernen zu lassen.
+
+**Zwei echte Bugs dabei gefunden und behoben.** Die Mappings rufen
+`delete_fn(cmd, on_done)`, aber keine der beiden History-Quellen hat diese
+Form: `history.delete_entry` ist `(cmd)` mit Boolean-Rueckgabe — der Callback
+kam nie, der Picker blieb auf einer veralteten Liste offen. Und
+`shell.delete_entry` ist `(cmd, opts, on_done)` — der Callback landete im
+`opts`-Slot, `<C-x>` warf `attempt to call local 'on_done' (a nil value)`.
+Beides zur Laufzeit bestaetigt. Jede Picker-Quelle geht jetzt durch einen
+Adapter, Vertrag ist `(cmd, on_done, opts)`.
+
+Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
+`smoke_spec.lua` um 14 Checks erweitert: 66 passed, 0 failed.
 
 ### sessions.nvim
 
