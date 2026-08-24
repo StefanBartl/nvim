@@ -542,18 +542,29 @@ Suite gruen.
       Commit `0b17b02`, Branch `feat/nth-synonym-and-target-keys`.
       Keine Testsuite — zur Laufzeit verifiziert.
 
-### markdown.nvim
+### markdown.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` Heading-Navigation (`<C-p>`/`[[`, `<C-f>`/`]]` plus die
-      Level-Varianten) liest keinen count.
-- [ ] `[N]` Fold-Kommandos ohne count.
-- [ ] `[N]` Table-Cell-Navigation (`]|` / `[|`) ohne count.
-- [ ] `[F]` `:Markdown toc [level]` ohne count-Aequivalent (`3<leader>toc`
-      → `max_level=3`).
-- [ ] `[F]` `[?]` `<C-Right>` / `<C-Left>` (Heading-Level inc/dec) vermutlich
-      ohne count (`3<C-Right>` = 3 Level hoch).
-- [ ] `[L]` Buffer-lokaler-Autocmd-Workaround zurueckbauen (nach Phase 1).
-- [ ] `[QF]` Link-Diagnosen als Quickfix-Export — **nicht jetzt**, Phase 3.
+- [x] `[N]` **Alle fuenf Count-Eintraege sind veraltet** — das Plugin hat
+      Count-Support nach dem Audit vom 2026-08-08 bekommen. Zur Laufzeit
+      bestaetigt statt nur gelesen:
+      * `]]` / `[[` und die Level-Varianten lesen `vim.v.count1`
+        (`3]]` ab Zeile 1 landet auf der dritten Ueberschrift)
+      * `<C-Right>` / `<C-Left>` verschieben um den Count
+        (`2<C-Right>` macht aus `##` ein `####`)
+      * `]|` / `[|` bewegen N Zellen (`repeat_cell_move`)
+      * `:Markdown toc` liest den Count als `max_level`
+      * `fold_h2_plus` ebenso als Faltungsebene
+      Nichts zu tun.
+- [x] `[L]` `refs.lua`s Live-Tracking-Autocmd laeuft jetzt ueber
+      `lib.nvim.autocmd.create`. Der Kommentar nannte zwei Gruende — kein
+      `buffer`-Durchreichen und die benoetigte Autocmd-Id — beide sind
+      erledigt: der Wrapper reicht `buffer` durch **und** gibt die Id zurueck.
+      Geprueft: buffer-scoped, kein globaler Leak, `live_off()` funktioniert.
+      Die uebrigen Roh-Autocmds (table_mode, hover, tableview) tragen keine
+      solche Behauptung und bleiben unangetastet.
+- [ ] `[QF]` Link-Diagnosen als Quickfix-Export — **Phase 3**, nicht jetzt.
+      Commit `c1efa82`, Branch `fix/refs-live-through-lib-autocmd`.
+      Suite gruen.
 
 ### mdview.nvim
 

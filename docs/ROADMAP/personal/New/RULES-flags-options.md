@@ -56,14 +56,6 @@ reading the code, not confirmed feature requests.
   (`hidden+no_ignore+follow`) — it's all-or-nothing.
 — from [pickers.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/pickers.nvim.md)
 
-## markdown.nvim
-
-- `:Markdown toc [level]` has no count equivalent (`3<leader>toc` for
-  `max_level=3` would be a plausible addition).
-- `<C-Right>`/`<C-Left>` (heading level inc/dec) likely have no count support
-  (`3<C-Right>` = raise 3 levels).
-— from [markdown.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/markdown.nvim.md)
-
 ## mdview.nvim
 
 - `:MDView zoom <factor>` has no visible validation/clamping of the value.

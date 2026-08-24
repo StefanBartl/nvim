@@ -75,11 +75,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
   `[q`/`]q`/`[l`/`]l` (quickfix/loclist nav) and `]w`/`[w` (Trouble workspace
   diagnostics) ignore count despite the underlying Ex-commands supporting it
   — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md).
-- `markdown.nvim`: heading navigation (`<C-p>`/`[[`, `<C-f>`/`]]`, and the
-  level variants), fold commands, and table-cell navigation (`]|`/`[|`) all
-  read no count, though several (heading jumps, cell nav, level
-  inc/dec) are classic count candidates — from
-  [markdown.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/markdown.nvim.md).
 - `pickers.nvim`: `<leader>dp` (dir navigation) has no `vim.v.count1` hook even
   though the equivalent "N levels up" concept already exists via
   `:Pickers dir <number>` — a direct `2<leader>dp` would be a natural, small
