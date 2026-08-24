@@ -18,7 +18,7 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | `:MyPlugins fetch [dir] [--only=<name>]` | `git fetch --all --prune` on every present listed repo |
 | `:MyPlugins pull [dir] [--only=<name>]` | `git pull --ff-only` on every present listed repo |
 | `:MyPlugins update [dir] [--only=<name>]` | `fetch` + `pull` on every present listed repo — the two-machine sync command, see below |
-| `:MyPlugins check [dir] [--only=<name>]` | Read-only git-status overview (branch, ahead/behind, dirty count) of every present listed repo — same idea as `reposcope.nvim`'s `:Reposcope status`, scoped to the listed plugins. `:MyPluginsCheck [dir]` is a flat shorthand for the bare form |
+| `:MyPlugins dashboard [dir]` | Opens `reposcope.nvim`'s own `:Reposcope status [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list). `:MyPluginsDashboard [dir]` is a flat shorthand for the bare form |
 | `:MyPlugins reclone [dir] [--only=<name>]` | Delete-if-clean + fresh clone for present repos (same safety check as `remove`); plain clone for anything missing |
 | `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |
@@ -90,8 +90,8 @@ re-runs a plugin's `config()`, not the spec files, so it will not pick up a
 :MyPlugins clone $REPOS_DIR --only=cascade.nvim
 :MyPlugins remove --only=learn-cli.nvim  " remove one, if clean
 :MyPlugins update                        " bring this machine level with what got pushed elsewhere
-:MyPlugins check                         " git-status overview of every present listed plugin
-:MyPluginsCheck                          " shorthand for the above
+:MyPlugins dashboard                     " open reposcope.nvim's git-status dashboard for $REPOS_DIR
+:MyPluginsDashboard                      " shorthand for the above
 :MyPlugins reclone --only=filetree.nvim  " nuke and re-clone a checkout that's misbehaving
 :MyPlugins picker                        " assign different actions to different plugins, run as one batch
 :MyPlugins mode                          " show current OVERRIDE

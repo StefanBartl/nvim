@@ -6,14 +6,14 @@ free: So., 09:00 x - 21. Juli 2027
 work: Sa., 06:00 o - 20.Sept
 dev:  Sa., 22:00 o - 03.Sep
 
-## inline hover img/pdf
+## `images.nvim`
+
+- [ ] `snacks.nvim` independent werden - also dass die funktionen , die snacks images anbietet, in `images.nvim` angeboternnn werden (also die die ichj nutze)
+
+### inline hover img/pdf
 
 - [ ] [pdf inline hover](./assets/pdf_inline_hover.png)
 - [ ] ![image inline hover](./assets/image_inline_hover.png)
-
-### `images.nvim`  - Roadmap
-
-- [ ] `snacks.nvim` independent werden - also dass die funktionen , die snacks images anbietet, in `images.nvim` angeboternnn werden (also die die ichj nutze)
 
 ---
 
@@ -48,15 +48,7 @@ dev:  Sa., 22:00 o - 03.Sep
   - [ ] Refactoring?
     - [ ] `nvim/lua/autocmds` nach `nvim/lua/Bindings`
   - [ ] Welche automcds gehören in ein projet von  einen in C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\IDEAS?
-
-- wenn man eine ganzeu zeile markiert, also shiift v im nomralmode, und dann diese in backticks umhüllen will, dabn macht man danach `` aber es umhült nicht sonder macht:
-    C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/documentation.nvim.md
-    ```
-  also hängt in der nächsten zeile eiunfach dreio backticks an.
-- [ ] strg+v soll trimmen
-
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
-- [ ] Autocompletion beim schreiben funktiert schon mit zusätzlichen dictionary bvon mir, jetzt wäre es noch toll, wenn oft verwendete höher geranked werden bei den vorschlägen
 
 ## ZIEL
 

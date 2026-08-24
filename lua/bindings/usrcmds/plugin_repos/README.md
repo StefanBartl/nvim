@@ -22,6 +22,7 @@ those names no longer exist.
 :MyPlugins pull [dir] [--only=<name>]
 :MyPlugins update [dir] [--only=<name>]
 :MyPlugins reclone [dir] [--only=<name>]
+:MyPlugins dashboard [dir]
 :MyPlugins mode [auto|dir|remote|disabled]
 :MyPlugins list [dir]
 :MyPlugins picker [dir]
@@ -124,6 +125,23 @@ guaranteed-fresh checkouts". Dirty/unpushed repos are left alone, same as
 ```vim
 :MyPlugins reclone --only=filetree.nvim   " blow away a checkout that got into a weird state
 :MyPlugins reclone                        " reclone everything clean + clone everything missing
+```
+
+### `:MyPlugins dashboard [dir]`
+
+Just opens `reposcope.nvim`'s own `:Reposcope status [dir]` — a read-only
+git-status overview (branch, ahead/behind, dirty) of every repo under
+`dir`/`$REPOS_DIR`. That dashboard is already exactly the "overview of what's
+going on" this needed, so there's no separate `plugins.personal.list`-scoped
+status reader here anymore; unlike `clone`/`remove`/`fetch`/.../`reclone`,
+`dashboard` shows *every* repo in the directory, not just the listed
+plugins — same trade-off as `:Reposcope status`/`:MyReposUpdate` make.
+Flat shorthand: `:MyPluginsDashboard [dir]`.
+
+```vim
+:MyPlugins dashboard
+:MyPlugins dashboard $REPOS_DIR
+:MyPluginsDashboard
 ```
 
 ### `:MyPlugins picker [dir]`
