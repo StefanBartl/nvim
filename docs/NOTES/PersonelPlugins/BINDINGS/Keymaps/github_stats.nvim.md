@@ -28,7 +28,7 @@ its own scope label.
 | `navigate_down` (`j`) | Move selection down | "GitHub Stats: navigate down" | disable-able; `5j` moves 5 repos (`vim.v.count1`, since 2026-07-31) |
 | `navigate_up` (`k`) | Move selection up | "GitHub Stats: navigate up" | disable-able; same count support |
 | `show_details` (`<CR>`) | Show repository details | "GitHub Stats: show repository details" | disable-able |
-| `refresh_selected` (`r`) | Re-render from cached data (no API call) | "GitHub Stats: refresh dashboard" | disable-able |
+| `refresh_selected` (`r`) | Drop the storage read memo, then re-render from disk (no API call) | "GitHub Stats: re-read from disk and refresh" | disable-able; meaning changed 2026-08-25 |
 | `refresh_all` (`R`) | Force-fetch every configured repo | "GitHub Stats: refresh all repositories" | disable-able |
 | `force_refresh` (`f`) | Force-fetch only the selected repo | "GitHub Stats: force refresh selected repository" | disable-able |
 | `cycle_sort` (`s`) | Cycle `clones→views→name→trend`. `Ns` advances N | "GitHub Stats: cycle sort criteria" | disable-able |
@@ -87,6 +87,14 @@ fallback (unlike emojis/fileops/filetree/gopath, which support both).
 
 ## Changelog
 
+- 2026-08-25: `refresh_selected` (`r`) now drops
+  `github_stats.storage`'s read memo before re-rendering, and its which-key
+  description changed to "re-read from disk and refresh". Before the memo
+  existed, `r` re-rendered from whatever was already in memory -- which was
+  the same thing every other keypress did, so the binding had no distinct
+  effect at all. It is now the documented way to pick up a change written by
+  another window or another Neovim instance. No new binding; nothing else in
+  this table moved.
 - 2026-08-23: added `max_time_range` (default `m`) — one keypress to the
   maximum locally stored duration, alongside the `t` cycle and the `T`
   prompt. `TIME_RANGE_CYCLE`'s last step changed `all` → `max` (identical
