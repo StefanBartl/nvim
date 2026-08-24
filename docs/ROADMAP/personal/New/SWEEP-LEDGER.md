@@ -581,18 +581,29 @@ Suite gruen.
       Commit `a6ad438`, Branch `feat/port-override-and-zoom-report`.
       Zur Laufzeit verifiziert.
 
-### pickers.nvim
+### pickers.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` `<leader>dp` (Dir-Navigation) ohne `vim.v.count1`, obwohl "N Ebenen
-      hoch" via `:Pickers dir <number>` schon existiert. `2<leader>dp` waere
-      eine kleine, natuerliche Ergaenzung.
-- [ ] `[F]` `keymaps.explorer` (`<leader>.`) ist nur in einem Code-Kommentar
-      dokumentiert, nicht als eigenes Feld in der Config-Referenz. Doku-Luecke.
-- [ ] `[F]` Die "find all"-Eskalationsflags (`hidden` + `no_ignore` + `follow`)
-      lassen sich nicht selektiv kombinieren — all-or-nothing.
-- [ ] `[L]` Buffer-lokaler-Autocmd-Workaround zurueckbauen
-      (`selected_index/init.lua:184-193`, nach Phase 1).
-- [ ] `[QF]` Quickfix-Export inkl. Marks-Feature — **nicht jetzt**, Phase 3.
+- [x] `[N]` `<leader>dp` liest einen Count als Tiefe: `2<leader>dp` ist
+      `:Pickers dir 2`. Das Konzept gab es am Kommando, es hat ihm nur nie
+      jemand einen aus dem Keymap uebergeben.
+      `vim.v.count` **raw**: 0 muss unterscheidbar bleiben, denn ohne Count
+      oeffnet der interaktive Picker, waehrend `:Pickers dir 0` eine echte
+      Tiefe ist (das cwd selbst).
+- [x] `[F]` **Brauchte nichts:** `keymaps.explorer` ist als eigenes Feld in
+      `CONFIGURATION.md`, `KEYMAPS.md` und `BINDINGS.md` dokumentiert — nicht
+      nur in einem Code-Kommentar.
+- [x] `[F]` Selektive Eskalation: `hidden`, `no_ignore`, `follow` einzeln und
+      per `+` kombinierbar; `all` bleibt die Kurzform. Die drei tun
+      Verschiedenes — Dotfiles, ignorierte Dateien, Symlinks — also hiess
+      all-or-nothing, `node_modules` zu durchlaufen, nur um eine `.env` zu
+      sehen. Unbekanntes Flag wird gemeldet und die Eskalation verworfen,
+      statt sie teilweise anzuwenden.
+- [x] `[L]` **Nichts zurueckzubauen:** das `selected_index`-Modul wurde zu
+      `result_count` umgeschrieben und pollt, statt einen buffer-lokalen
+      Autocmd zu registrieren.
+- [ ] `[QF]` Quickfix-Export inkl. Marks — **Phase 3**, nicht jetzt.
+      Commit `fb90198`, auf `main` gemerged und gepusht.
+      `pickers_spec.lua` erweitert, gruen.
 
 ### sandbox.nvim
 

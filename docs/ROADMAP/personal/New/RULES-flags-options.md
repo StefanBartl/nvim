@@ -45,17 +45,6 @@ reading the code, not confirmed feature requests.
   buffer, no structured filter by status/name).
 — from [sandbox.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/sandbox.nvim.md)
 
-## pickers.nvim
-
-- No `vim.v.count` hook for `dir_pick`, even though the underlying concept
-  ("N levels up") already exists via `:Pickers dir <number>`.
-- `keymaps.explorer` (`<leader>.`) is documented in a code comment but not
-  explicitly listed as its own `keymaps.explorer` field in the config
-  reference — possible doc gap, not fully verified.
-- No way to selectively combine the "find all" escalation flags
-  (`hidden+no_ignore+follow`) — it's all-or-nothing.
-— from [pickers.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/pickers.nvim.md)
-
 ## lib.nvim
 
 - No idea gaps flagged directly against lib.nvim's own (nonexistent) keymaps —
