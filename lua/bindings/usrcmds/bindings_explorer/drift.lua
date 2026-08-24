@@ -22,13 +22,28 @@
 ---    corpus the motivating case (images.nvim.md, see the roadmap's
 ---    opening paragraph) came from. Usercmds' reverse direction (below)
 ---    still consults Extern, just not to decide what's "ours to check".
---- 3. **Buffer-local / filetype-scoped keymaps are a known false-positive
----    source.** `nvim_get_keymap` only sees GLOBAL maps. A documented
----    `<leader>im` that's actually registered per-filetype
----    (`keymaps.filetypes = {"markdown",...}`) reports as
----    "documented-not-live" even though it IS correctly registered —
----    there's no live buffer of every relevant filetype to check against
----    from a single report call.
+--- 3. **Buffer-local / filetype-scoped keymaps — mitigated, not solved.**
+---    `nvim_get_keymap` only sees GLOBAL maps, so a documented `<leader>im`
+---    registered per-filetype (`keymaps.filetypes = {"markdown",...}`), or
+---    a picker key bound to its own prompt buffer, used to report as
+---    "documented-not-live" while being correctly registered. This was the
+---    dominant false-positive class by volume: a real report ran to 682
+---    findings, unreadable and dominated by in-window keys of plugins whose
+---    UI simply wasn't open. Two things address it now, neither of which
+---    drops a finding:
+---      - `live_keymaps` also reads `nvim_buf_get_keymap` for every loaded
+---        buffer, so a UI that IS open is verified properly.
+---      - what remains gets a per-table verdict (see `M.check`): a
+---        documented table where not one key is live is reported as one
+---        "not verifiable from here" line naming the table, instead of N
+---        "missing" lines. `M.describe` renders it in its own section,
+---        below the findings that are worth acting on.
+---    Still unsolved, and visible in the corpus: a plugin whose cheatsheet
+---    is one unnamed table mixing a global entry point with in-window keys
+---    (`github_stats.nvim.md`) gives the verdict nothing to group on — the
+---    table has live keys, so its in-window ones stay in the main section.
+---    Giving that file per-scope headings (BINDINGS-FORMAT.md §1 already
+---    requires them for multi-table files) is the fix, in the docs.
 --- 4. **Lazy-loaded plugins are handled, not ignored**: a binding whose
 ---    owning plugin hasn't loaded yet in the current session (event/cmd/
 ---    ft-triggered lazy loading) isn't registered yet either — checking
@@ -212,16 +227,39 @@ local function live_commands()
   return out
 end
 
+--- Global keymaps PLUS the buffer-local keymaps of every buffer that
+--- happens to be loaded right now.
+---
+--- The buffer-local half directly attacks the module doc's limitation 3.
+--- `nvim_get_keymap` is global-only, so a plugin that registers its
+--- bindings on its own window's buffer (filetree.nvim via
+--- `tree_attach.on_attach`, every picker-style float, ...) had *all* of its
+--- documented keys reported as missing. Scanning loaded buffers recovers
+--- exactly those whose window is open while the report runs — an honest
+--- partial fix, not a complete one: nothing here can conjure a filetree
+--- buffer that was never opened this session. What the remaining, still
+--- unverifiable ones are worth is decided in `M.check`, not here.
 ---@param modes string[]
 ---@return table<string, table<string, boolean>> mode -> set of live lhsraw
 local function live_keymaps(modes)
   local out = {}
+  local bufs = vim.api.nvim_list_bufs()
   for _, mode in ipairs(modes) do
     local set = {}
     local ok, maps = pcall(vim.api.nvim_get_keymap, mode)
     if ok then
       for _, m in ipairs(maps) do
         if m.lhsraw then set[m.lhsraw] = true end
+      end
+    end
+    for _, buf in ipairs(bufs) do
+      if vim.api.nvim_buf_is_loaded(buf) then
+        local ok_buf, buf_maps = pcall(vim.api.nvim_buf_get_keymap, buf, mode)
+        if ok_buf then
+          for _, m in ipairs(buf_maps) do
+            if m.lhsraw then set[m.lhsraw] = true end
+          end
+        end
       end
     end
     out[mode] = set
@@ -232,15 +270,20 @@ end
 ---@class Bindings.DriftFinding
 ---@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-undocumented"
 ---@field plugin string|nil
+---@field heading string|nil  # the record's table heading, keymap axis only
+---@field group string|nil    # plugin + heading, the verdict's grouping key
 ---@field notation string
 ---@field file string|nil
 ---@field line integer|nil
+---@field unverifiable boolean|nil  # see `M.check`'s per-table verdict
 
 --- @param plugin string|nil narrow to one plugin's own files
 ---   (`records.lua`'s `plugin` field, i.e. the filename stem). With a
 ---   plugin given, the usercmd-undocumented direction is skipped — there
 ---   is no reliable way to attribute a live, undocumented command to one
----   specific plugin.
+---   specific plugin, and the per-plugin `unverifiable` verdict below is
+---   not applied — asking about one plugin explicitly is a request to see
+---   its findings, not to have them summarized away.
 --- @return Bindings.DriftFinding[]
 --- @return string[] skipped_plugins plugin names excluded because they
 ---   aren't loaded in this session (module doc point 4), sorted, deduped
@@ -267,7 +310,34 @@ function M.check(plugin)
   local mode_list = vim.tbl_keys(needed_modes)
   local live_maps = live_keymaps(mode_list)
 
+  -- Tallies for the verdict below, keyed per *table* — plugin plus the
+  -- heading above it — not per plugin.
+  --
+  -- Per plugin was tried first and does not work: these plugins document
+  -- one or two global `<leader>` entry points alongside a dozen in-window
+  -- keys, so "not one key of this plugin is live" is never true and the
+  -- verdict would never fire. The table is the right unit, and not by
+  -- accident — `BINDINGS-FORMAT.md` §1 makes a heading above every table
+  -- mandatory precisely so a parser has "das Scope-Label, das der Scraper
+  -- pro Zeile braucht". Empirically the corpus honours that: the groups
+  -- this fires on carry headings like "Prompt-field keymaps
+  -- (`M.set_prompt_keymaps`, buffer-local to every prompt buffer)" and
+  -- "Component-local". Grouping is on the heading itself rather than on
+  -- keywords inside it — the free text says the same thing, but matching
+  -- on "buffer-local" would be a guess about phrasing, while "not one key
+  -- in this whole table is live" is a fact about the data.
+  local checked_count, found_count = {}, {}
+  local keymap_findings = {}
+
+  ---@param rec Bindings.Record
+  ---@return string
+  local function group_of(rec)
+    return rec.plugin .. "\0" .. (rec.heading or "")
+  end
+
   for _, entry in ipairs(checkable) do
+    local group = group_of(entry.rec)
+    checked_count[group] = (checked_count[group] or 0) + 1
     local live_anywhere = false
     for _, m in ipairs(entry.modes) do
       if live_maps[m] and live_maps[m][entry.lhs] then
@@ -275,15 +345,46 @@ function M.check(plugin)
         break
       end
     end
-    if not live_anywhere then
-      findings[#findings + 1] = {
+    if live_anywhere then
+      found_count[group] = (found_count[group] or 0) + 1
+    else
+      keymap_findings[#keymap_findings + 1] = {
         kind = "keymap-not-live",
         plugin = entry.rec.plugin,
+        heading = entry.rec.heading,
+        group = group,
         notation = entry.lhs,
         file = entry.rec.file,
         line = entry.rec.line,
       }
     end
+  end
+
+  -- Per-table verdict: "missing" versus "not verifiable from here".
+  --
+  -- `live_keymaps` now also reads buffer-local maps, so a UI that happens
+  -- to be open is checked properly. What is left is the case the module
+  -- doc's limitation 3 describes: a documented table where NOT ONE of its
+  -- keys is live in any mode, global or buffer-local. Claiming N
+  -- independent regressions there is a claim the data does not support —
+  -- the one explanation consistent with every row at once is that this
+  -- table describes a scope that is not open right now, which is not drift.
+  -- A table where *some* keys are live is the opposite case: registration
+  -- demonstrably happened, so the ones that did not show up are real
+  -- candidates and stay in the main section.
+  --
+  -- The `> 1` guard keeps a one-row table out of it: a single absent key is
+  -- no evidence about scope, and is exactly the shape a real regression has.
+  --
+  -- Deliberately a verdict about *reportability*, not a filter: these
+  -- findings are still returned, still counted, and `M.describe` renders
+  -- them under their own header. Nothing is dropped, and a plugin asked
+  -- about by name (see the `plugin` param doc) is never summarized at all.
+  for _, f in ipairs(keymap_findings) do
+    if not plugin and (found_count[f.group] or 0) == 0 and (checked_count[f.group] or 0) > 1 then
+      f.unverifiable = true
+    end
+    findings[#findings + 1] = f
   end
 
   -- Usercmds: documented (Personal) but not live.
@@ -336,8 +437,23 @@ function M.check(plugin)
   -- Best-effort by design: the artifact may be absent or stale, and that is
   -- reported as a reason (second return value of `M.source_check`) rather
   -- than silently yielding no findings.
-  local source_findings, source_reason = M.source_check(plugin)
-  vim.list_extend(findings, source_findings)
+  --
+  -- Skipped entirely when scoped to one plugin, for the same reason the
+  -- usercmd-undocumented direction above is: the axis cannot be attributed
+  -- to a cheatsheet stem. `M.source_check` only ever *labelled* its
+  -- findings with the given plugin, it never filtered by it, so a scoped
+  -- run used to return the whole config's source axis alongside the one
+  -- plugin's own findings — 218 findings for `:Bindings check
+  -- reposcope.nvim` where 24 were about reposcope. Skipping is the honest
+  -- half of the fix; the reason line says so rather than leaving a silently
+  -- absent axis.
+  local source_findings, source_reason
+  if plugin then
+    source_reason = "not attributable to a single plugin — run :Bindings check without an argument"
+  else
+    source_findings, source_reason = M.source_check(nil)
+    vim.list_extend(findings, source_findings)
+  end
 
   local skipped_list = vim.tbl_keys(skipped)
   table.sort(skipped_list)
@@ -353,7 +469,11 @@ end
 ---binding legitimately lives in a plugin's own repository rather than this
 ---config, and the existing `keymap-not-live` check already covers the case
 ---where a documented binding is genuinely gone.
----@param plugin string|nil Restrict to one cheatsheet stem, same as `M.check`.
+---@param plugin string|nil Label only — stamped onto every finding's
+---`plugin` field. This axis is NOT filterable by cheatsheet stem (a source
+---entry knows its module path, not which cheatsheet ought to cover it),
+---which is why `M.check` skips the axis outright when scoped rather than
+---passing a value through here.
 ---@return Bindings.DriftFinding[]
 ---@return string|nil reason  # why the source axis could not be consulted
 function M.source_check(plugin)
@@ -447,6 +567,51 @@ local function readable(notation)
   return notation
 end
 
+--- One rendered line per finding, without any section context.
+---@param f Bindings.DriftFinding
+---@return string
+local function render(f)
+  if f.kind == "keymap-not-live" then
+    return ("  %-22s %-20s %s:%d"):format(f.plugin, readable(f.notation), f.file, f.line)
+  elseif f.kind == "usercmd-not-live" then
+    return ("  %-22s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
+  elseif f.kind == "keymap-undocumented" then
+    return ("  %-20s %s:%d"):format(readable(f.notation), f.file or "?", f.line or 0)
+  elseif f.kind == "usercmd-undocumented-source" then
+    return ("  %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
+  end
+  return ("  %s"):format(f.notation)
+end
+
+--- The sections, in descending order of how much a finding in them is
+--- worth acting on, each with the `kind`s it collects and a subtitle
+--- naming its known noise. Order matters: a 600-line report is only usable
+--- if the first screen is the part worth reading.
+local SECTIONS = {
+  {
+    kinds = { ["usercmd-not-live"] = true },
+    title = "Usercmds — documented, not registered",
+    note = "highest-signal axis; a documented-lazy command may need its feature exercised first",
+  },
+  {
+    kinds = { ["keymap-not-live"] = true },
+    title = "Keymaps — documented, not registered",
+    -- Accurate for a scoped run too, where the per-table verdict does not
+    -- run at all and this section holds every keymap finding.
+    note = "not found globally, nor in any buffer open right now",
+  },
+  {
+    kinds = { ["keymap-undocumented"] = true, ["usercmd-undocumented-source"] = true },
+    title = "Registered in this config's source, not documented",
+    note = "from docs/map/module_map.json — only as fresh as the last :DocMap",
+  },
+  {
+    kinds = { ["usercmd-undocumented"] = true },
+    title = "Live commands with no cheatsheet",
+    note = "includes plugin-manager and third-party infra this corpus never covered",
+  },
+}
+
 ---@param findings Bindings.DriftFinding[]
 ---@param skipped string[]|nil `M.check`'s second return value
 ---@param source_reason string|nil `M.check`'s third return value — why the
@@ -460,19 +625,58 @@ function M.describe(findings, skipped, source_reason)
     lines[1] = "No drift found (Keymaps: documented-not-live + source-not-documented; "
       .. "Usercmds: both directions)."
   else
+    -- The unverifiable keymap findings (see `M.check`'s verdict) are pulled
+    -- out first: they are reported per plugin, not per key, so they never
+    -- reach the per-kind sections below.
+    local unverifiable, order, rest = {}, {}, {}
     for _, f in ipairs(findings) do
-      if f.kind == "keymap-not-live" then
-        lines[#lines + 1] =
-          ("[keymap missing]  %-20s %-20s %s:%d"):format(f.plugin, readable(f.notation), f.file, f.line)
-      elseif f.kind == "usercmd-not-live" then
-        lines[#lines + 1] = ("[usercmd missing] %-20s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
-      elseif f.kind == "keymap-undocumented" then
-        lines[#lines + 1] =
-          ("[keymap undoc'd]  %-20s %s:%d"):format(readable(f.notation), f.file or "?", f.line or 0)
-      elseif f.kind == "usercmd-undocumented-source" then
-        lines[#lines + 1] = ("[usercmd undoc'd] %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
+      if f.unverifiable then
+        local bucket = unverifiable[f.group]
+        if not bucket then
+          bucket = { n = 0, plugin = f.plugin, heading = f.heading, file = f.file, line = f.line }
+          unverifiable[f.group] = bucket
+          order[#order + 1] = f.group
+        end
+        bucket.n = bucket.n + 1
       else
-        lines[#lines + 1] = ("[undocumented]    %s"):format(f.notation)
+        rest[#rest + 1] = f
+      end
+    end
+
+    for _, section in ipairs(SECTIONS) do
+      local hits = {}
+      for _, f in ipairs(rest) do
+        if section.kinds[f.kind] then hits[#hits + 1] = render(f) end
+      end
+      if #hits > 0 then
+        if #lines > 0 then lines[#lines + 1] = "" end
+        lines[#lines + 1] = ("%s (%d)"):format(section.title, #hits)
+        lines[#lines + 1] = ("  -- %s"):format(section.note)
+        vim.list_extend(lines, hits)
+      end
+    end
+
+    table.sort(order)
+    if #order > 0 then
+      local total = 0
+      for _, key in ipairs(order) do
+        total = total + unverifiable[key].n
+      end
+      if #lines > 0 then lines[#lines + 1] = "" end
+      lines[#lines + 1] =
+        ("Keymaps — not verifiable from here (%d in %d tables)"):format(total, #order)
+      lines[#lines + 1] = "  -- not one key of these tables is live, globally or in any open buffer:"
+      lines[#lines + 1] = "  -- a buffer-local scope whose UI is not open right now, not drift."
+      lines[#lines + 1] = "  -- Open it and re-run, or :Bindings check <plugin> to list them in full."
+      for _, key in ipairs(order) do
+        local b = unverifiable[key]
+        lines[#lines + 1] = ("  %-22s %2d keys   %s   %s:%d"):format(
+          b.plugin,
+          b.n,
+          b.heading and ("## " .. b.heading) or "(table without heading)",
+          b.file or "?",
+          b.line or 0
+        )
       end
     end
   end
