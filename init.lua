@@ -61,15 +61,6 @@ package.path = table.concat({
 -- Setup lazy.nvim with plugins
 local lazy_config = require("config.lazy")
 
--- Probing blink.cmp (2026-08-23): the default stays "cmp" in
--- lsp.nvim itself (lua/lsp/config/pack.lua), this only overrides it
--- for this config. Must be set before `import = "lsp.pack"` below runs,
--- since lazy reads it while still collecting specs.
--- `vim.g.*` round-trips through a copy on every index, so nested field
--- assignment (`vim.g.x.y = z`) mutates a throwaway table and silently
--- never persists. Build the table once, assign it whole.
-vim.g.lsp_nvim = { pack = { completion = "blink" } }
-
 require("lazy").setup({
   {
     "NvChad/NvChad",
