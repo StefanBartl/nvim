@@ -200,10 +200,19 @@ plugins.add({
     cmd = { "Image" },
     ft = { "markdown", "vimwiki", "norg", "text" },
     dependencies = { "StefanBartl/lib.nvim" },
-    -- cell_aspect: gemessenes Breite/Höhe-Verhältnis dieses WezTerm-Setups
-    -- (Default 0.5 aus images.scale lässt einen leeren Rand unter Bildern
-    -- stehen, siehe images.cell). Übergeht die Auto-Abfrage per CSI 16 t.
-    opts = { display = { cell_aspect = 0.46 } },
+    -- cell_aspect: measured width/height ratio of this WezTerm setup (the 0.5
+    -- default in images.scale leaves an empty strip below images).
+    --
+    -- terminal_padding is deliberately NOT set here: it lives in the stored
+    -- calibration written by `:Image calibrate` (stdpath("data")/images.nvim),
+    -- and an explicit option here would silently override it. draw_inset
+    -- catches whatever sub-cell remainder is left after that.
+    opts = {
+      display = {
+        cell_aspect = 0.46,
+        draw_inset = 1,
+      },
+    },
     config = function(_, opts)
       require("images").setup(opts)
     end,

@@ -56,13 +56,6 @@ reading the code, not confirmed feature requests.
   (`hidden+no_ignore+follow`) — it's all-or-nothing.
 — from [pickers.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/pickers.nvim.md)
 
-## mdview.nvim
-
-- `:MDView zoom <factor>` has no visible validation/clamping of the value.
-- No `:MDView start --port <n>` to force a fixed port (e.g. for firewall
-  rules) — only implicit via `config.browser`/`server_args`.
-— from [mdview.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/mdview.nvim.md)
-
 ## lib.nvim
 
 - No idea gaps flagged directly against lib.nvim's own (nonexistent) keymaps —

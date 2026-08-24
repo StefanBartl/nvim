@@ -3,6 +3,8 @@
 - Wenn möglich soll CDX jedes keymap, usrcmsd / autocmd austesten, in einer nvim intsanz, ob fgehlöer geworfen werden
 - wenn alles fertig, dann git release für jedes repo
 - specs durchgehen - sollte out of the box ohne opts funken
+- lib.nvim implementierungen alle korrekt verwendet ? zb notify ist eine factory func mit .create() - kann man oft übersehen - es bricht zwar nicht wenn ich mich nicht täusche, aber zwecks komsistenz
+- source code + kommentater + docs in den repos imemr englisch. also das ganze plugin. nur mit mir sprechen ist deutsch! !
 
 ## Dokumentation, Cheatsheets & Benchmarks
 

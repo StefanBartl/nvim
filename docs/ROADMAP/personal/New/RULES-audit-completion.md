@@ -89,9 +89,6 @@ frozen list baked in at `setup()`:
   static placeholder strings; the second positional (`path`, a directory) has
   no completion at all — a real gap, not a deliberate omission — from
   [learn-cli.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/learn-cli.nvim.md) (`commands.lua:112-161`).
-- **`mdview.nvim`**: `:MDView zoom <factor>` has no visible clamping/validation
-  of the numeric value at the route level — from
-  [mdview.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/mdview.nvim.md).
 - **`replacer.nvim`**: `:ReplacePreset` has explicit name completion, but full
   kv-/flag-completion coverage for the very flag-rich `:Replace` command
   (`--regex`, `--type=`, `--glob=`, `--exclude=`, `--changed=`, `--engine=`,
