@@ -419,6 +419,34 @@ function M.source_check(plugin)
   return out, nil
 end
 
+--- A finding's `notation` back in readable key notation, for display only.
+---
+--- `keymap-not-live` findings carry the RAW byte string `normalize_lhs`
+--- produced (that is the whole point — it is what `.lhsraw` is compared
+--- against), and for anything with a modifier that string is neither
+--- readable nor valid UTF-8: `<M-->` is stored as
+--- `K_SPECIAL KS_MODIFIER 0x08 -`, i.e. the bytes `\128\252\8-`. Rendering
+--- that verbatim was a real bug with two effects — the report showed
+--- `<80><fc>^H-` instead of `<M-->`, and, worse, the invalid UTF-8 made the
+--- whole buffer uncopyable: `win32yank.exe -i` (this config's clipboard
+--- provider on Windows, see `options.lua`) panics with "stream did not
+--- contain valid UTF-8" and aborts the ENTIRE write, so a single such
+--- finding silently broke `y`/`<C-c>` over the report. Verified against
+--- both the real report buffer and win32yank standalone (exit 101).
+---
+--- `keytrans()` is the exact inverse of the `nvim_replace_termcodes` call
+--- in `normalize_lhs`, and is an identity on plain printable text, so it is
+--- safe to apply to the source axis's notations too (those are already
+--- written as `<leader>x`, never raw). Guarded with `pcall` regardless —
+--- display must never take the report down.
+---@param notation string
+---@return string
+local function readable(notation)
+  local ok, out = pcall(vim.fn.keytrans, notation)
+  if ok and type(out) == "string" and out ~= "" then return out end
+  return notation
+end
+
 ---@param findings Bindings.DriftFinding[]
 ---@param skipped string[]|nil `M.check`'s second return value
 ---@param source_reason string|nil `M.check`'s third return value — why the
@@ -434,11 +462,13 @@ function M.describe(findings, skipped, source_reason)
   else
     for _, f in ipairs(findings) do
       if f.kind == "keymap-not-live" then
-        lines[#lines + 1] = ("[keymap missing]  %-20s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
+        lines[#lines + 1] =
+          ("[keymap missing]  %-20s %-20s %s:%d"):format(f.plugin, readable(f.notation), f.file, f.line)
       elseif f.kind == "usercmd-not-live" then
         lines[#lines + 1] = ("[usercmd missing] %-20s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
       elseif f.kind == "keymap-undocumented" then
-        lines[#lines + 1] = ("[keymap undoc'd]  %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
+        lines[#lines + 1] =
+          ("[keymap undoc'd]  %-20s %s:%d"):format(readable(f.notation), f.file or "?", f.line or 0)
       elseif f.kind == "usercmd-undocumented-source" then
         lines[#lines + 1] = ("[usercmd undoc'd] %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
       else
