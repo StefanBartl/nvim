@@ -90,10 +90,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
 - `reposcope.nvim`: `nav_up`/`nav_down` move exactly one list entry per
   keypress; `3<Down>` for "3 entries" is flagged as plausible and absent — from
   [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md).
-- `language.nvim`: the thesaurus-replace keymap could plausibly use count for
-  direct Nth-suggestion selection (`3<leader>th`, analogous to `z=`) since a
-  selection list already exists internally — not implemented — from
-  [language.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/language.nvim.md).
 - `learn-cli.nvim`: `next_exercise`/`prev_exercise` never read `vim.v.count`;
   "skip N exercises" (`3<leader>lcn`) is a plausible, unimplemented extension —
   from [learn-cli.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/learn-cli.nvim.md).

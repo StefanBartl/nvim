@@ -78,15 +78,6 @@ reading the code, not confirmed feature requests.
   could expose.
 — from [lib.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/lib.nvim.md)
 
-## language.nvim
-
-- The translate operator-pending mapping has no way to pick a target language
-  from the mapping itself (always the default) — a per-language mapping or a
-  prompt is suggested.
-- The thesaurus keymap has no count-based direct selection of the Nth
-  suggested synonym.
-— from [language.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/language.nvim.md)
-
 ## learn-cli.nvim
 
 - `next_exercise`/`prev_exercise` have no count support ("skip N exercises").

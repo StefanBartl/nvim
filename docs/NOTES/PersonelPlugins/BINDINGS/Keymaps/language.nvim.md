@@ -14,6 +14,7 @@ a non-empty string.
 | `spell.keymaps.panel` (`<leader>ss`) | n | Toggle spell session (current buffer) | "[language] Toggle spell session (current buffer)" |
 | `translate.keymaps.operator` (default **off**) | n | Translate motion (operator-pending: `<lhs>{motion}`) | "[language] Translate motion" |
 | `translate.keymaps.visual` (default **off**) | x | Translate selection | "[language] Translate selection" |
+| `translate.keymaps.to.<LANG>` (default **off**) | n, x | Translate motion/selection into that language for one run | "[language] Translate motion to {LANG}" / "[language] Translate selection to {LANG}" |
 | `thesaurus.keymap` (default **off**, even though `thesaurus.enable=true`) | n | Synonyms for word under cursor | "[language] Synonyms for word under cursor" |
 
 ## Buffer-local, session-scoped (spell)
@@ -59,3 +60,25 @@ carries them).
 
 - Every `kit.select`/`kit.menu` call (spell review panel, per-issue action menu, retarget/history pickers) opens a `lib.nvim.ui.kit` component, which supplies its own `<CR>`/`<C-n>`/`<C-p>`/`<Up>`/`<Down>`/`<Esc>` keys — see [lib.nvim's cheatsheet](./lib.nvim.md) for those.
 - `docs/BINDINGS.md` matches source exactly for the config-driven table (including default lhs values cross-checked against `config/DEFAULTS.lua`), but doesn't list the translate-window's dynamic keys as their own entries.
+
+## Added 2026-08-24
+
+**Per-language translate keys.** With `default_target` set the operator
+always used it and never asked; without one it always asked. `keymaps.to`
+is one key per language, forcing that target for a **single** run — the
+force is consumed by the next resolution, so it never leaks into the
+following unforced one.
+
+A count could not carry the language: on an operator the count belongs to
+the motion (`3<lhs>w` is three words), which is the whole point of an
+operator. Hence a key per language. Unset by default.
+
+**Nth synonym.** `3<thesaurus.keymap>` replaces the word with the third
+synonym without opening the menu, like `3z=`. `vim.v.count` is read **raw**:
+0 must stay distinguishable from 1, since no count opens the menu while `1`
+takes the first synonym outright. Out of range is reported, not clamped —
+substituting a different word than the one counted would be an edit nobody
+asked for.
+
+The existing `desc` strings are unchanged; the new per-language keys carry
+their own.

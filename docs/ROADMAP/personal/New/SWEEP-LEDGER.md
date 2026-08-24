@@ -521,15 +521,26 @@ Suite gruen.
       in dieser Umgebung fehl (8.3-Pfad, zwei fehlende externe Tools) — per
       Stash als unveraendert bestaetigt.
 
-### language.nvim
+### language.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` Thesaurus-Replace ohne count fuer die direkte Auswahl des N-ten
-      Synonyms (`3<leader>th`, analog zu `z=`) — die Auswahlliste existiert
-      intern bereits.
-- [ ] `[F]` Translate-Operator-Mapping kann die Zielsprache nicht waehlen
-      (immer die Default-Sprache) — pro-Sprache-Mapping oder Prompt.
-- [ ] `[N]` Der Operator-Pending-Mapping erbt den count der Motion bereits
-      nativ (`3<leader>tww`). Nicht anfassen, nur dokumentieren.
+- [x] `[N]` `3<thesaurus.keymap>` nimmt das dritte Synonym direkt, wie `3z=`.
+      Die Liste existiert an der Stelle schon — das Menue war nur der Weg,
+      daraus zu waehlen.
+      `vim.v.count` **raw**: 0 muss von 1 unterscheidbar bleiben (kein Count
+      oeffnet das Menue, `1` nimmt das erste Synonym direkt).
+      Ausserhalb des Bereichs wird **gemeldet, nicht geklemmt** — ein anderes
+      Wort einzusetzen als das gezaehlte waere eine ungefragte Aenderung.
+- [x] `[F]` `translate.keymaps.to` — eine Taste pro Sprache, erzwingt das
+      Ziel fuer **einen** Lauf (one-shot, laeuft nicht in den naechsten).
+      Mit gesetztem `default_target` nahm der Operator immer dieses und
+      fragte nie; ohne fragte er immer. Beides ist nicht "dieses Stueck
+      jetzt auf Spanisch".
+      **Ein Count ging hier nicht:** beim Operator gehoert der Count zur
+      Motion (`3<lhs>w` = drei Woerter), das ist der Sinn eines Operators.
+      Daher eine Taste pro Sprache — die zweite der beiden Optionen, die der
+      Audit selbst vorschlug. Per Default ungesetzt.
+      Commit `0b17b02`, Branch `feat/nth-synonym-and-target-keys`.
+      Keine Testsuite — zur Laufzeit verifiziert.
 
 ### markdown.nvim
 
