@@ -61,8 +61,10 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
 - **`emojis.nvim` `<leader>et` (checkbox toggle)** — an unusual but sensible
   reinterpretation: `count > 1` in Normal mode expands the *scope* to the next
   `count` lines rather than repeating the toggle `count` times ("toggle 3
-  lines" vs `3dd`-style repeat). Flagged as a documentation gap (only in code
-  comments, not `BINDINGS.md`) rather than a design gap — from
+  lines" vs `3dd`-style repeat). Was flagged as a documentation gap (only in
+  code comments, not `BINDINGS.md`) rather than a design gap; **documented
+  2026-08-24**. The reinterpretation itself is the reference — cascade.nvim's
+  quick-toggle count follows it — from
   [emojis.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/emojis.nvim.md) (`init.lua:70-84`).
 
 ## Missing but plausible — flagged in the reports
