@@ -46,6 +46,9 @@ local CONTRIBUTORS = {
   { module = "images.integrations.menu", applies = function() return true end },
   -- spotlight.nvim: also global — works the same in any buffer/filetype.
   { module = "spotlight.integrations.menu", applies = function() return true end },
+  -- color_my_ascii.nvim: markdown-only, and items() re-checks the filetype
+  -- (plus fence-under-cursor for the :Fence group) internally.
+  { module = "color_my_ascii.integrations.menu", applies = function(buf) return vim.bo[buf].ft == "markdown" end },
   -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
 }
