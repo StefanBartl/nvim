@@ -1,10 +1,5 @@
 # Roadmap
 
-leader fg- - libve rgep, nicht prompt nach wort und dann live grep (das macht keinen sinn) FG
-
-`:MyPluginsCheck` && `MyPlugins check` -> soll einfach auf `:Reposcope status` zeigen - das dashboard dort ist genau das was ich will
-`MyPlugins check` auf `MyPlugins dashboard` umbenennen
-
 ## cdx
 
 free: So., 09:00 x - 21. Juli 2027
@@ -31,8 +26,6 @@ dev:  Sa., 22:00 o - 03.Sep
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
 - [ ] spotlight: warum `leader mk`? Und nicht `leader s*`? itte umstelen. sofdern nichts dagegen spricht (andere mappings). update doe docs und auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS  (hier kajnn man auch checken ob eine keymaps schon besetzte ist=)
-- spotlight checken und lernen
-- documentation.nvim lernen
 - [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
 
 1. `leader wq`: Alle issues lösen
