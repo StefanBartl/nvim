@@ -52,9 +52,3 @@ reading the code, not confirmed feature requests.
   very flag-rich `:Replace` command wasn't fully verified).
 — from [replacer.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/replacer.nvim.md)
 
-## reposcope.nvim
-
-- Clone target-directory prompt likely lacks path completion (unverified —
-  the relevant file wasn't read).
-— from [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md)
-

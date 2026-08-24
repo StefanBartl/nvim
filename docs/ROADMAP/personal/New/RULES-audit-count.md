@@ -75,12 +75,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
   `[q`/`]q`/`[l`/`]l` (quickfix/loclist nav) and `]w`/`[w` (Trouble workspace
   diagnostics) ignore count despite the underlying Ex-commands supporting it
   — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md).
-- `reposcope.nvim`: `nav_up`/`nav_down` move exactly one list entry per
-  keypress; `3<Down>` for "3 entries" is flagged as plausible and absent — from
-  [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md).
-- `learn-cli.nvim`: `next_exercise`/`prev_exercise` never read `vim.v.count`;
-  "skip N exercises" (`3<leader>lcn`) is a plausible, unimplemented extension —
-  from [learn-cli.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/learn-cli.nvim.md).
 ## Explicitly justified "n/a" — not a gap
 
 Most single-shot, toggle, or picker-launching actions correctly have no count

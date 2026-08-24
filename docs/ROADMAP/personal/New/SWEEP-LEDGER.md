@@ -661,16 +661,30 @@ Suite gruen.
       von Zeile 1 landen beide Modi auf Zeile 3 — unterscheidend ist erst die
       *letzte* `aaa`.
 
-### reposcope.nvim
+### reposcope.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[C]` `filter [text]` und `prompt [field ...]` sind Freitext ohne
-      erkennbare Completion.
-- [ ] `[C]` `[?]` Clone-Zielverzeichnis-Prompt: Pfad-Completion unverifiziert —
-      `PATH`-Typ aus Phase 1.
-- [ ] `[N]` `nav_up` / `nav_down` bewegen exakt einen Listeneintrag pro
-      Tastendruck; `3<Down>` fehlt.
+- [x] `[C]` `:Reposcope filter` completet jetzt gegen die **angezeigte**
+      Liste — Namen und Owner des aktuellen Ergebnissatzes, praefixgefiltert.
+      Nur die koennen ueberhaupt matchen, weil der Filter ein Substring ueber
+      `owner/name: description` ist.
+      `prompt` hatte bereits einen Completer (die Feldnamen) — diese Haelfte
+      des Eintrags brauchte nichts.
+- [x] `[C]` `[?]` Clone-Prompt: Completion **war da** (`completion = "file"`).
+      Auf `"dir"` verengt — ein Klon-Ziel kann nur ein Verzeichnis sein,
+      Datei-Completion bietet Kandidaten an, die keine Antwort sein koennen.
+- [x] `[N]` **Veraltet — und beinahe eine Regression.** Der Ledger fuehrte
+      `nav_up`/`nav_down` als count-los. Sie lesen `vim.v.count1` seit
+      2026-07-31, **innerhalb** von `navigate_list_in_prompt`. Ich hatte
+      bereits einen Wrapper geschrieben, der zusaetzlich `count1`-mal
+      schleift — `3<Down>` waere auf neun Zeilen gesprungen. Gefangen, indem
+      ich die Cheatsheet-Behauptung gegen den Quelltext geprueft habe;
+      `keymaps.lua` ist byte-identisch zum Ausgangszustand.
+      Commit `d6c2cb4`, auf `main` gemerged und gepusht.
+      Keine Testsuite — zur Laufzeit verifiziert.
 
 ---
+
+**Welle B abgeschlossen** (14/14) — 2026-08-24.
 
 ## Welle C — Schwer / unscharf
 
