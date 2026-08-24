@@ -264,6 +264,73 @@ local function live_commands()
   return out
 end
 
+--- Command name -> the lazy.nvim plugin whose `cmd` spec declares it.
+---
+--- Lazy registers a stub command per `cmd` entry so the plugin can load on
+--- first use, which means the stub's callback points at lazy's own
+--- `handler/cmd.lua`, never at the owner. The spec is the only place that
+--- mapping survives.
+---@return table<string, string>
+local function lazy_cmd_owners()
+  local out = {}
+  local ok, lazy_config = pcall(require, "lazy.core.config")
+  if not ok then return out end
+  for name, spec in pairs(lazy_config.plugins) do
+    local cmd = spec.cmd
+    if type(cmd) == "string" then cmd = { cmd } end
+    if type(cmd) == "table" then
+      for _, entry in ipairs(cmd) do
+        if type(entry) == "string" then out[entry] = name end
+      end
+    end
+  end
+  return out
+end
+
+--- Best-effort answer to "who registered this command", for the live
+--- commands that have no cheatsheet. Not a verdict and never a filter —
+--- the section stays complete either way; this only lets a reader see at a
+--- glance that a run of lines is somebody else's plugin.
+---
+--- Three sources, in descending order of how directly they know:
+---   1. lazy.nvim's `cmd` spec, for lazy-load stubs (see `lazy_cmd_owners`).
+---   2. the callback's defining file, via `debug.getinfo` — reliable for a
+---      plugin that registers its own commands directly.
+---   3. the `script_id`, for anything defined in Vimscript, where there is
+---      no callback to inspect.
+---
+--- One case stays unresolved and is labelled as such rather than guessed
+--- at: commands registered through lib.nvim's usercmd helpers all report
+--- that shared registrar as their origin (64 of them here), and lib.nvim
+--- keeps no owner alongside them — `composer.registry()` hands out handles
+--- with `check`/`document`/`name`/`spec` and no source. Recovering those
+--- would mean lib.nvim recording its caller at registration time, which is
+--- a change in that repository, not something to fake from this side.
+---@param name string
+---@param lazy_owners table<string, string>
+---@param defs table  # `nvim_get_commands({})`, passed in: rebuilding it per
+---                     name would mean one full command-table build per
+---                     finding, 156 of them in a real run
+---@return string
+local function command_owner(name, lazy_owners, defs)
+  if lazy_owners[name] then return lazy_owners[name] .. " (lazy cmd stub)" end
+
+  local def = defs[name]
+  if def and type(def.callback) == "function" then
+    local info = debug.getinfo(def.callback, "S")
+    local src = ((info and info.short_src) or ""):gsub("\\", "/")
+    local lib = src:match("/lib%.nvim/") or src:match("^%a:/repos/lib%.nvim")
+    if lib then return "via lib.nvim usercmd helpers — owner not recorded" end
+    local plugin = src:match("/lazy/([^/]+)/") or src:match("^%a:/repos/([^/]+)")
+    if plugin then return plugin end
+    local runtime = src:match("/runtime/(.+)$") or src:match("^vim/(.+)$")
+    if runtime then return "neovim runtime: " .. runtime end
+    if src ~= "" then return src end
+  end
+  if def and def.script_id then return ("vimscript script_id=%d"):format(def.script_id) end
+  return "unknown"
+end
+
 --- Global keymaps PLUS the buffer-local keymaps of every buffer that
 --- happens to be loaded right now.
 ---
@@ -492,6 +559,17 @@ function M.check(plugin)
     end
   end
 
+  -- Third axis (source) is resolved BEFORE the live-undocumented direction
+  -- below, which consults it to avoid reporting the same command twice —
+  -- see there.
+  local source_findings, source_reason
+  if plugin then
+    source_reason =
+      "not attributable to a single plugin — run :Bindings check without an argument"
+  else
+    source_findings, source_reason = M.source_check(nil)
+  end
+
   -- Usercmds: live but undocumented anywhere (Personal or Extern) — only
   -- meaningful unscoped, see the `plugin` param doc above.
   if not plugin then
@@ -501,11 +579,30 @@ function M.check(plugin)
       if name then documented_anywhere[name] = true end
     end
 
+    -- A command this config's own source registers, live and undocumented,
+    -- is one fact, and the source axis already reported it — with a
+    -- file:line this direction cannot produce. Reporting it here as well
+    -- was pure duplication (42 of the 198 findings in a real run). The
+    -- source axis wins; this direction keeps only what it alone can see.
+    local reported_by_source = {}
+    for _, f in ipairs(source_findings or {}) do
+      if f.kind == "usercmd-undocumented-source" then
+        reported_by_source[f.notation:sub(2)] = true
+      end
+    end
+
+    local lazy_owners = lazy_cmd_owners()
+    local command_defs = vim.api.nvim_get_commands({})
     local names = vim.tbl_keys(live_cmds)
     table.sort(names)
     for _, name in ipairs(names) do
-      if not documented_anywhere[name] then
-        findings[#findings + 1] = { kind = "usercmd-undocumented", plugin = nil, notation = ":" .. name }
+      if not documented_anywhere[name] and not reported_by_source[name] then
+        findings[#findings + 1] = {
+          kind = "usercmd-undocumented",
+          plugin = nil,
+          notation = ":" .. name,
+          owner = command_owner(name, lazy_owners, command_defs),
+        }
       end
     end
   end
@@ -529,13 +626,10 @@ function M.check(plugin)
   -- reposcope.nvim` where 24 were about reposcope. Skipping is the honest
   -- half of the fix; the reason line says so rather than leaving a silently
   -- absent axis.
-  local source_findings, source_reason
-  if plugin then
-    source_reason = "not attributable to a single plugin — run :Bindings check without an argument"
-  else
-    source_findings, source_reason = M.source_check(nil)
-    vim.list_extend(findings, source_findings)
-  end
+  --
+  -- Resolved further up, before the live-undocumented direction that
+  -- dedupes against it; only the folding-in happens here.
+  if source_findings then vim.list_extend(findings, source_findings) end
 
   local skipped_list = vim.tbl_keys(skipped)
   table.sort(skipped_list)
@@ -662,7 +756,7 @@ local function render(f)
   elseif f.kind == "usercmd-undocumented-source" then
     return ("  %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
   end
-  return ("  %s"):format(f.notation)
+  return ("  %-28s %s"):format(f.notation, f.owner or "unknown")
 end
 
 --- The sections, in descending order of how much a finding in them is
@@ -689,8 +783,16 @@ local SECTIONS = {
   },
   {
     kinds = { ["usercmd-undocumented"] = true },
-    title = "Live commands with no cheatsheet",
-    note = "includes plugin-manager and third-party infra this corpus never covered",
+    title = "Live commands with no cheatsheet, by origin",
+    note = "mostly third-party infra this corpus never covered; grouped so it can be skimmed",
+    -- Sorted by owner, not by name: this section is read to find out
+    -- whether anything in it is *yours*, and clustering a plugin's dozen
+    -- commands onto adjacent lines answers that in one glance.
+    sort = function(a, b)
+      local oa, ob = a.owner or "", b.owner or ""
+      if oa ~= ob then return oa < ob end
+      return a.notation < b.notation
+    end,
   },
 }
 
@@ -726,9 +828,14 @@ function M.describe(findings, skipped, source_reason)
     end
 
     for _, section in ipairs(SECTIONS) do
-      local hits = {}
+      local matched = {}
       for _, f in ipairs(rest) do
-        if section.kinds[f.kind] then hits[#hits + 1] = render(f) end
+        if section.kinds[f.kind] then matched[#matched + 1] = f end
+      end
+      if section.sort then table.sort(matched, section.sort) end
+      local hits = {}
+      for _, f in ipairs(matched) do
+        hits[#hits + 1] = render(f)
       end
       if #hits > 0 then
         if #lines > 0 then lines[#lines + 1] = "" end
