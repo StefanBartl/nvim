@@ -17,7 +17,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 
 | Command | Effect |
 | --- | --- |
-| `:MDView start [file] [cwd=...]` | Start the relay + open the preview |
+| `:MDView start [file] [cwd=...] [port=N]` | Start the relay + open the preview. `port=N` **added 2026-08-24** |
 | `:MDView stop` | Stop the relay, detach autocommands |
 | `:MDView toggle [file] [cwd=...]` | Start if stopped, stop if running |
 | `:MDView open` | Re-open a browser tab against the running session |
@@ -31,7 +31,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 | `:MDView theme [name]` | Switch preview theme (tab-completed) |
 | `:MDView cursor [line\|caret\|section\|off\|toggle]` | Cursor marker mode in the preview; `toggle` flips section on/off specifically |
 | `:MDView sync [action]` | Pause/resume nvim→browser scroll sync (paused ⇒ "⏸ paused" pill in the tab) |
-| `:MDView zoom [+\|-\|reset\|<factor>]` | Preview font-size zoom |
+| `:MDView zoom [+\|-\|reset\|<factor>]` | Preview font-size zoom. An out-of-range number is clamped **and reported** since 2026-08-24 |
 | `:MDView reveal [action]` | Reveal/hide ```private blocks |
 | `:MDView blanklines [on\|off\|toggle]` | Toggle rendering ≥2 consecutive blank lines as vertical space (`browser.preserve_blank_lines`); re-renders the tab live |
 | `:MDView overlay [name] [on\|off\|toggle]` | Toggle a preview overlay (floating TOC, …) |
@@ -238,3 +238,23 @@ uses its `spawn`/`resolve_target`. Rationale preserved in
   - **Deferred:** which other tags? Only `<input>`/`<textarea>` for now.
     `<select>`, radio groups, etc. would each need their own value-encoding +
     write-back; not done.
+
+## `port=` and the zoom report (2026-08-24)
+
+**`:MDView start port=N`** overrides `server_port` for that spawn only — for
+a firewall rule or port-forward that has to match exactly on one machine,
+without editing a config everyone else shares. `port=` rather than `--port`,
+because `cwd=` is already this command's convention.
+
+It is set on the live config and **restored right after the spawn**:
+`adapter/server_args` reads `config.defaults.server_port` at spawn time and
+sits several layers down. Restoring is what keeps it a one-run override —
+otherwise the next plain `:MDView start` would silently inherit it. Out of
+range (1–65535) is refused; with a server already running it is ignored with
+a warning, exactly as `cwd=` is.
+
+**Zoom clamping was never missing** — the completion audit's entry described
+where the check sits (in the handler, not the route), not its absence. The
+real gap was that `zoom 500` applied 300% silently, so the value used
+differed from the one asked for with nothing said. It now reports the
+requested value, the allowed range, and what it used.
