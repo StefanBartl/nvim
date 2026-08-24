@@ -33,6 +33,10 @@ local CONTRIBUTORS = {
   -- dap.nvim: also global — debugging actions aren't filetype-scoped, and
   -- items() itself returns empty when nvim-dap isn't installed.
   { module = "wkddap.integrations.menu", applies = function() return true end },
+  -- cascade.nvim: filetype set is config-driven (lists.filetypes, broader
+  -- than just markdown) and items() already re-checks it internally, so
+  -- there is nothing cheaper to pre-check here than "always try it".
+  { module = "cascade.integrations.menu", applies = function() return true end },
   -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
 }
