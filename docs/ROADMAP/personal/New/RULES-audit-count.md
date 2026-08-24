@@ -75,9 +75,6 @@ Synthesis of the per-plugin count-support audits (whether `2<leader>xy`,
   `[q`/`]q`/`[l`/`]l` (quickfix/loclist nav) and `]w`/`[w` (Trouble workspace
   diagnostics) ignore count despite the underlying Ex-commands supporting it
   — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md).
-- `spotlight.nvim`: none of its 7 mappings read `v:count`; `N]k`/`N[k`
-  ("skip N occurrences") would be natural since `nav.lua` already encapsulates
-  navigation — from [spotlight.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/spotlight.nvim.md).
 - `reposcope.nvim`: `nav_up`/`nav_down` move exactly one list entry per
   keypress; `3<Down>` for "3 entries" is flagged as plausible and absent — from
   [reposcope.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/reposcope.nvim.md).

@@ -175,3 +175,30 @@ the common ones, a preset keymap — see
   file's `<leader>*` mentions are updated to current notation. See
   [Keymaps/spotlight.nvim.md](../Keymaps/spotlight.nvim.md) for the collision
   check that motivated it.
+
+## `!` on next/prev, and the list filter (2026-08-24)
+
+| command | change |
+| --- | --- |
+| `:Spotlight[!] next` / `[!] prev` | `!` ignores `nav.scope` and searches every spotlight for that jump |
+| `:Spotlight list [action] [filter]` | `filter` narrows the list before it opens |
+
+**The bang is per call, not a mode.** With `nav.scope = "auto"` the point of
+`]k` is that it follows the token under the cursor — right until you want the
+opposite, and the only way out was editing the config and reloading. The
+override is a parameter threaded to `nav_pattern`, not stored state, so
+there is nothing to reset and nothing that leaks into a later jump.
+
+**The filter is one argument, not `--color`/`--origin`.** The fields never
+collide in practice — a slot is a number, an origin is a path, the text is
+neither — so one token answers both questions the audit asked. It matches
+slot, highlight group, origin path and text.
+
+A **numeric** query is only a slot query, with no substring fallback:
+otherwise `1` would also match slot 10, via the `1` in its own highlight
+group name `Spotlight10`, undoing the exact test it just passed. (That was a
+real bug in the first version, caught by the runtime check.)
+
+The count-support audit's entry for this plugin was **stale** — `]k`/`[k`
+have read `vim.v.count1` since 2026-07-31, as the keymaps sheet already
+recorded. Verified rather than assumed.

@@ -634,15 +634,32 @@ Suite gruen.
       **Hinweis:** `:Sandbox` registriert headless nicht (keine Engine-Binary
       vorhanden); die Kommandoschicht wurde direkt aufgerufen geprueft.
 
-### spotlight.nvim
+### spotlight.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[N]` Keines der 7 Mappings liest `v:count`. `N]k` / `N[k` ("N Treffer
-      ueberspringen") ist naheliegend, da `nav.lua` die Navigation bereits
-      kapselt.
-- [ ] `[F]` `:Spotlight list` hat `jump`/`remove`-Mode-Args, aber kein
-      Filter-Arg (Farbe, Origin) — nuetzlich sobald viele Spotlights aktiv sind.
-- [ ] `[F]` `next`/`prev` ohne `!`-Bang/Flag, um eine session-weite Suche
-      unabhaengig vom konfigurierten `nav.scope` zu erzwingen.
+- [x] `[N]` **Veraltet, brauchte nichts.** `]k`/`[k` lesen `vim.v.count1`
+      seit 2026-07-31 — `nav.jump/next/prev` nahmen laengst einen Count, und
+      der Keymap-`desc` sagt sogar "(×count)". Geprueft statt angenommen.
+- [x] `[F]` `:Spotlight! next` / `! prev` ignorieren `nav.scope`. Bei
+      `scope = "auto"` ist genau das Einengen der Sinn von `]k` — bis zu dem
+      Moment, in dem man das Gegenteil will, und dann half nur Config
+      aendern und neu laden.
+      **Pro Aufruf, kein Modus:** die Ueberschreibung ist ein Parameter bis
+      `nav_pattern`, kein gespeicherter Zustand — nichts zurueckzusetzen,
+      nichts, das in einen spaeteren Sprung leckt.
+- [x] `[F]` `:Spotlight list [action] [filter]` engt vorher ein. Bei mehreren
+      Spotlights ist `remove` ueber zwanzig Eintraege ein Scrollen, keine
+      Auswahl.
+      Ein Filter-Argument statt `--color`/`--origin`: die Felder kollidieren
+      praktisch nie (Slot ist Zahl, Origin ist Pfad, Text ist keins von
+      beidem), ein Token beantwortet beide Fragen.
+      **Numerische Anfrage ist nur Slot-Suche**, ohne Substring-Fallback —
+      sonst haette `1` auch Slot 10 gematcht, ueber die `1` in dessen
+      Highlight-Gruppe `Spotlight10`. War in der ersten Fassung genau so
+      falsch, von der Laufzeitpruefung gefangen.
+      Commit `390aa68`, auf `main` gemerged und gepusht.
+      `nav_spec` erweitert (419 passed). Der erste Testansatz bewies nichts:
+      von Zeile 1 landen beide Modi auf Zeile 3 — unterscheidend ist erst die
+      *letzte* `aaa`.
 
 ### reposcope.nvim
 

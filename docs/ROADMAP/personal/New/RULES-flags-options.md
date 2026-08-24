@@ -45,14 +45,6 @@ reading the code, not confirmed feature requests.
 - `next_exercise`/`prev_exercise` have no count support ("skip N exercises").
 — from [learn-cli.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/learn-cli.nvim.md)
 
-## spotlight.nvim
-
-- `:Spotlight list` supports `jump`/`remove` mode-args but no filter-arg
-  (e.g. by color or origin) — useful once many spotlights are active.
-- `next`/`prev` could use a `!`-bang or flag to force a session-wide search
-  regardless of the configured `nav.scope`.
-— from [spotlight.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/spotlight.nvim.md)
-
 ## replacer.nvim
 
 - No additional gaps beyond the completion-coverage question tracked in
