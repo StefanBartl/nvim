@@ -45,17 +45,6 @@ reading the code, not confirmed feature requests.
   buffer, no structured filter by status/name).
 — from [sandbox.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/sandbox.nvim.md)
 
-## fileops.nvim
-
-- No keymap for `bulk rename`, `lockinfo`, `info`, `path`, `cd` — only via
-  `:File …`; an optional `lhs`-config field for the frequently used ones
-  (`path`, `cd`) is suggested.
-- `attach_delete` has no "force delete" keymap variant for modified buffers —
-  only the Ex-command with `!` covers it.
-- Cycle keymaps have no pattern-filter equivalent (`next *.lua` only exists as
-  an Ex-command, not as a keymap with a prompt).
-— from [fileops.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/fileops.nvim.md)
-
 ## pickers.nvim
 
 - No `vim.v.count` hook for `dir_pick`, even though the underlying concept

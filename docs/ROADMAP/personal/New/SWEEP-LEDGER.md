@@ -425,15 +425,29 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       das warf, sobald `next` einen INT-Positional hatte.
       `commands_spec.lua` erweitert, Suite gruen.
 
-### fileops.nvim
+### fileops.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` Keine Keymaps fuer `bulk rename`, `lockinfo`, `info`, `path`, `cd`
-      — nur `:File …`. Vorschlag: optionales `lhs`-Config-Feld fuer die
-      haeufigen (`path`, `cd`).
-- [ ] `[F]` `attach_delete` ohne "force delete"-Keymap-Variante fuer
-      modifizierte Buffer — nur der Ex-Command mit `!` deckt das ab.
-- [ ] `[F]` Cycle-Keymaps ohne Pattern-Filter-Aequivalent (`next *.lua`
-      existiert nur als Ex-Command, nicht als Keymap mit Prompt).
+- [x] `[F]` `path`, `cd`, `info`, `lockinfo`, `bulk_rename` als `lhs`-Optionen.
+- [x] `[F]` `delete_force` — die `:File! delete`-Form. Der normale
+      `delete`-Key verweigert bei modifiziertem Buffer und verweist aufs
+      Kommando; richtig fuer einen Default-Key, liess die Force-Variante
+      aber nur per Neutippen erreichbar.
+- [x] `[F]` `next_filtered` / `prev_filtered` — fragen einmal nach dem Glob
+      und zykeln dann darin. `cycle.navigate` nahm `opts.pattern` immer
+      schon; es hat ihm nur nie jemand einen aus einem Keymap uebergeben.
+      Der Glob bleibt fuer die Session gemerkt, Count wird respektiert.
+
+**Alle acht sind per Default ungesetzt.** Einen Keymap *moeglich* zu machen
+ist etwas anderes, als eine Taste zu belegen — ohne Konfiguration bindet
+nichts Neues. `config_spec.lua` nagelt das fest, damit ein kuenftiger Default
+eine Entscheidung ist und kein Versehen.
+
+`ops.file` hatte alles Noetige bereits (`copy_path`, `cd_here`, `info`,
+`diagnose_lock`, `delete_current({ force = true })`) — die Luecke war rein,
+dass kein Keymap drankam.
+
+Commit `28eeaa5`, Branch `feat/keymap-options-for-command-only-actions`.
+Suite gruen.
 
 ### filetree.nvim
 
