@@ -2,7 +2,8 @@
 
 leader fg- - libve rgep, nicht prompt nach wort und dann live grep (das macht keinen sinn) FG
 
-
+`:MyPluginsCheck` && `MyPlugins check` -> soll einfach auf `:Reposcope status` zeigen - das dashboard dort ist genau das was ich will
+`MyPlugins check` auf `MyPlugins dashboard` umbenennen
 
 ## cdx
 
@@ -12,20 +13,8 @@ dev:  Sa., 22:00 o - 03.Sep
 
 ## inline hover img/pdf
 
-- [ ] - [ ] [pdf inline hover](./assets/pdf_inline_hover.png)
-
-  Man ieht hier, dass der hoiver buffer (1. eingezichent)endert wid, dann aber das pdf (2.) verschoben ist und 3. sdiehst ud, dass die statusline um ein drittel angehoben wird; wie bei :messages aber hahalt ohne inhalt- keine ahnun gwarum das gamacht wird
-
+- [ ] [pdf inline hover](./assets/pdf_inline_hover.png)
 - [ ] ![image inline hover](./assets/image_inline_hover.png)
-
-  Ich hab dann den screenshot weiderum inline hovert, und man sieht auch ier, dass es wieder verschiebnen ist da simage / bufer
-
-* Ich k önnte mir vorstellen, das beide BEobachtungen sogar miteinader verbudnen sind.
-* Kann man den scracth bffer für hpover iwie durcsichtig machen wenn man ihn schon nicht abdrehen kann?
-* wenn beides nicht funkt, dann  - wie knnte man das fixen, dass die beiden nicht verschoiben sind?
-
-Es ist zwar nur ein kosmetisches problem, aber gerade wenn man mit dem feture angeben will "schau mal, ich kann images im terminal anziegen lase, sogar pdf startseiten!" - das ist aber nur halb so beeindruckend, wenn nicht alles schön ist. Am ende wird es wrsch eine abwägung sein wieviel aufwand man in ds debuggen stekcen will.
-Interesant wöäre, ganz gernell das malzu erklären, was hh ier genau püassiert, also warum ein scratch hover buffer.. was wird von welchern tools diesbezüglih übernommen - usw...
 
 ### `images.nvim`  - Roadmap
 

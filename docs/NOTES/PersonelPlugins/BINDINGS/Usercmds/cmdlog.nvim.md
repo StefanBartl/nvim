@@ -22,6 +22,7 @@ Docs: `docs/BINDINGS.md`, `docs/COMMANDS.md`, `README.md`, `doc/cmdlog.txt`
 | `:Cmdlog project` | History recorded while inside the current Git project (`.git` root) |
 | `:Cmdlog lua` | Lua-mode history only (`:lua`, `:lua=`, `:=`), deduplicated |
 | `:Cmdlog stats` | Commands sorted by usage frequency, annotated with count + last-used date |
+| `:Cmdlog risky test {command}` | Reports which `risky_patterns` match `{command}`. **Added 2026-08-24.** Takes the whole remainder of the line, not a positional — a command to test is a command line (`git reset --hard HEAD~1`), and declaring a positional would eat `git` and leave the rest behind. Ignores `highlight_risky`: that gates display, not evaluation, and the output notes when it is off. |
 | `:Cmdlog export [path]` | Exports favorites to a JSON file (default: favorites path + `.export.json`). **Added 2026-08-09.** |
 | `:Cmdlog import path` | Imports favorites from a JSON file, merged with the current list. **Added 2026-08-09.** |
 

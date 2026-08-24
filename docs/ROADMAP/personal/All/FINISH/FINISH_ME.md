@@ -2,6 +2,7 @@
 
 - Wenn möglich soll CDX jedes keymap, usrcmsd / autocmd austesten, in einer nvim intsanz, ob fgehlöer geworfen werden
 - wenn alles fertig, dann git release für jedes repo
+- specs durchgehen - sollte out of the box ohne opts funken
 
 ## Dokumentation, Cheatsheets & Benchmarks
 
