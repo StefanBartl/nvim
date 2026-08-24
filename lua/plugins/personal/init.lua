@@ -200,7 +200,10 @@ plugins.add({
     cmd = { "Image" },
     ft = { "markdown", "vimwiki", "norg", "text" },
     dependencies = { "StefanBartl/lib.nvim" },
-    opts = {},
+    -- cell_aspect: gemessenes Breite/Höhe-Verhältnis dieses WezTerm-Setups
+    -- (Default 0.5 aus images.scale lässt einen leeren Rand unter Bildern
+    -- stehen, siehe images.cell). Übergeht die Auto-Abfrage per CSI 16 t.
+    opts = { display = { cell_aspect = 0.46 } },
     config = function(_, opts)
       require("images").setup(opts)
     end,
