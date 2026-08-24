@@ -160,14 +160,6 @@ reading the code, not confirmed feature requests.
   could expose.
 — from [lib.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/lib.nvim.md)
 
-## sessions.nvim
-
-- No keymap for `:Session current` or the picker (`:SessionLoad`) in the
-  default bindings — natural addition for frequent picker users.
-- `:Session delete`/`rename` have no keymap option — presumably intentional
-  given they're destructive/rare.
-— from [sessions.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/sessions.nvim.md)
-
 ## pdfport.nvim
 
 - `:PdfPort float`/`terminal` prompt interactively for page-range; a `pages=`

@@ -200,12 +200,26 @@ Adapter, Vertrag ist `(cmd, on_done, opts)`.
 Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
 `smoke_spec.lua` um 14 Checks erweitert: 66 passed, 0 failed.
 
-### sessions.nvim
+### sessions.nvim — ERLEDIGT 2026-08-24
 
-- [ ] `[F]` Kein Keymap fuer `:Session current` und fuer den Picker
-      (`:SessionLoad`).
-- [ ] `[F]` `:Session delete` / `rename` ohne Keymap-Option. Vermutlich
-      Absicht (destruktiv, selten) — pruefen und ggf. als "n/a" abhaken.
+- [x] `[F]` Keymaps fuer `:Session current` und den Picker (`:SessionLoad`).
+      **Es waren mehr als die zwei:** die Keymap-Tabelle war eine
+      hardcodierte Vierer-Liste, waehrend `:Session` auf zwoelf
+      Subkommandos gewachsen war — `toggle-track`, `save-tab`, `load-tab`,
+      `save-layout`, `load-layout` hatten ebenfalls keine Option. Jetzt alle
+      elf mappbaren plus Picker.
+- [x] `[F]` `delete` / `rename`: **kein** Keymap, aber der Grund ist ein
+      anderer als der Audit vermutete. Nicht "destruktiv/selten" — sondern
+      beide haben **Pflichtargumente**, und ein Keymap ist ein nackter
+      Tastendruck ohne etwas zu uebergeben. `:Session save` ueberschreibt
+      genauso bereitwillig und ist mappbar. Wer `keymaps.delete` setzt,
+      bekommt jetzt genau diese Begruendung statt "Unknown key".
+      Als bewusstes n/a dokumentiert, nicht offen gelassen.
+      Nebenbei: der veraltete `pcall(require, "lib.nvim.map")`-Fallback ist
+      raus.
+      Commit `1830a49`, Branch `feat/keymaps-for-every-mappable-subcommand`.
+      Hinweis: sessions.nvim hat keine Testsuite — zur Laufzeit verifiziert,
+      inklusive der Gegenprobe, dass jedes gemappte Kommando existiert.
 
 ### pdfport.nvim
 
