@@ -14,7 +14,7 @@ layer fails to load. `:checkhealth spotlight` reports it as an error, not a warn
 | --- | --- | --- | --- |
 | `:Spotlight` | — | no | **Default route**: toggle every occurrence of the token under the cursor |
 | `:Spotlight toggle [text]` | `STRING?` | yes | Every occurrence: cursor token, a `'<,'>` range selection, or the explicit `text` |
-| `:Spotlight here` | — | yes | Only this occurrence: cursor token, or a `'<,'>` range selection — the `:Spotlight here` counterpart of `<leader>mk` |
+| `:Spotlight here` | — | yes | Only this occurrence: cursor token, or a `'<,'>` range selection — the `:Spotlight here` counterpart of `<leader>sk` |
 | `:Spotlight add {text}` | `STRING` | no | Add a spotlight for the literal `text` |
 | `:Spotlight remove {text}` | `STRING` | no | Remove the spotlight matching `text` exactly |
 | `:Spotlight clear` | — | no | Remove every spotlight |
@@ -157,7 +157,7 @@ the common ones, a preset keymap — see
 
 - 2026-08-17: Added `:Spotlight line [text]` and the `line` action on
   `:Spotlight list` (the only way to reach a `:Spotlight here` spotlight's line
-  mode — it has no text identity to name it by). Key: `<leader>mW`.
+  mode — it has no text identity to name it by). Key: `<leader>sW`.
 - 2026-08-17: Caught the route table up with the source. `qf all`, `yank`,
   `lock`, `map` / `map clear`, `sets save|switch|delete|list` and `winopt` had
   all shipped since this note was last touched and were missing here, as was
@@ -167,5 +167,11 @@ the common ones, a preset keymap — see
 
 - 2026-08-12: Added `:Spotlight here` (range-aware, mirrors `toggle`) for
   "this occurrence only" spotlights — the `:Spotlight` counterpart of the new
-  `<leader>mk` behavior. `toggle`/`:Spotlight` bare default unchanged (still
+  `<leader>sk` behavior. `toggle`/`:Spotlight` bare default unchanged (still
   every occurrence).
+
+- 2026-08: Keymap prefix moved from `<leader>m` to `<leader>s` (letters
+  unchanged). The `:Spotlight` command surface itself is unaffected — this
+  file's `<leader>*` mentions are updated to current notation. See
+  [Keymaps/spotlight.nvim.md](../Keymaps/spotlight.nvim.md) for the collision
+  check that motivated it.

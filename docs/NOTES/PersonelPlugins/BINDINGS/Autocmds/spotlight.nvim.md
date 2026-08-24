@@ -39,7 +39,7 @@ explicit command rather than something continuous.
 Two later features held that line rather than bending it: the occurrence map
 (`:Spotlight map`) places extmarks but is one-shot and per-buffer, so a wiped
 buffer takes its marks with it and nothing needs cleaning up; whole-line
-rendering (`<leader>mW`, 2026-08-17) is a flag on the item that only widens the
+rendering (`<leader>sW`, 2026-08-17) is a flag on the item that only widens the
 pattern handed to `matchadd()`, so it stores no position at all. **Neither
 added an autocmd.** The table above is still the complete set.
 
@@ -113,4 +113,10 @@ added an autocmd.** The table above is still the complete set.
   spotlights pinned to a wiped buffer) and a reconcile pass ahead of the
   existing `WinNew`/`BufWinEnter`/`TabNewEntered` fill sweep (drop a stale
   "this occurrence only" match when a window's buffer changes away from it).
-  Both support the new `<leader>mk` "this occurrence only" spotlight kind.
+  Both support the new `<leader>sk` "this occurrence only" spotlight kind.
+
+- 2026-08: Keymap prefix moved from `<leader>m` to `<leader>s` (letters
+  unchanged). No autocmd/binding logic here changed — the mentions above are
+  updated to current notation. See
+  [Keymaps/spotlight.nvim.md](../Keymaps/spotlight.nvim.md) for the collision
+  check that motivated it.
