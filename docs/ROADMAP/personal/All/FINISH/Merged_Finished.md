@@ -164,6 +164,91 @@ nvim-Config.
 
 ### Dokumentation & Cheatsheets
 
+- [x] **`docs/BINDINGS.md` pro Plugin + die zentralen Cheatsheets, inkl.
+      `lhs`-Dopplungs-Check über alle Plugins.**
+
+      Der größte Teil stand schon: 28 der 31 Repos hatten ihre `BINDINGS.md`,
+      und die Ordner unter `docs/NOTES/PersonelPlugins/BINDINGS/` waren mit
+      31 Keymap-, 36 Usercmd- und 31 Autocmd-Blättern gefüllt. Offen war
+      genau das, was ein einzelnes Repo nicht beantworten kann.
+
+      **Die drei fehlenden `BINDINGS.md`** — `filetree.nvim`, `lib.nvim`,
+      `markdown.nvim`. Alle drei hatten ihre Bindings dokumentiert, nur nicht
+      unter dem Namen, den die anderen 28 benutzen: filetree in
+      `docs/BINDINGS/{KEYMAPS,USERCOMMANDS,AUTOCMDS}.md` plus einem
+      maschinenlesbaren `BINDINGS.lua`, markdown ausschließlich als
+      `BINDINGS.lua` (dessen Kopfzeile sich selbst „docs/BINDINGS.md" nennt),
+      lib.nvim nur mit `docs/BINDINGS/Usercmds.md`. Die neuen Seiten kopieren
+      nichts: filetrees ist ein Einstiegspunkt auf die drei Detailseiten,
+      markdowns rendert den Lua-Katalog, lib.nvims hält fest, dass die
+      Keymap-Fläche **leer ist** — und warum (eine Library, von der andere
+      Plugins abhängen, hat kein Recht, in deren Namen eine Taste zu belegen).
+
+      **Der Dopplungs-Check** (`BINDINGS/Keymaps/Collisions.md`). Beide
+      `All.md`-Indizes endeten auf ein „See also" mit dem Ziel `REF!` — die
+      Analyse war angekündigt und nie geschrieben. Grundlage sind die Quellen,
+      nicht die Blätter: die Defaults kommen aus `keymaps.lua`/`DEFAULTS.lua`,
+      und der **Scope** jedes Mappings wurde an seiner `map(...)`-Aufrufstelle
+      geprüft. Das war nötig: `images.nvim` und `pdfport.nvim` sehen in ihren
+      Docs global aus und sind es nicht (Filetype- bzw. Dateibaum-lokal), und
+      ohne diese Korrektur hätte der Bericht zwei Konflikte gemeldet, die es
+      nicht gibt.
+
+      Ergebnis: **keine einzige exakte Dopplung** in den 100 globalen
+      Mappings von zwölf Plugins. Das ist ein Befund, keine Leerstelle — die
+      Präfixe wurden offensichtlich gegeneinander gewählt. Was es gibt:
+
+      - **Drei Cross-Scope-Überdeckungen**: `<leader>ps` (insights global vs.
+        pdfport im Dateibaum), `gP` (gopath global vs. filetree im Tree),
+        `+`/`-` (cascade vs. filetree). Immer dasselbe Muster — ein
+        Tree-Plugin nimmt eine Taste, die ein Datei-Plugin schon hat; im Tree
+        gibt es keine Datei, also geht nichts verloren.
+      - **Drei überschriebene Builtins**: `<S-m>` (buffer-ctx nimmt `M` —
+        Cursor in die Fenstermitte), `<C-e>` (emojis nimmt das Zeilen-Scroll),
+        `+`/`-` (cascade, aber mit Fallback auf die native Bedeutung).
+      - **Vier Prefix-Waits**, drei davon plugin-intern (`<leader>lr`,
+        `<leader>nf`, `<leader>pf`, `<leader>xl`).
+      - **Ein latenter Cross-Plugin-Konflikt**: `<leader>ss` ist
+        language.nvims Spell-Toggle, und sessions.nvim schlägt in seiner
+        README `<leader>ssa`/`<leader>sst` als Beispielwerte vor. sessions
+        bindet per Default nichts — aber wer die Beispiele übernimmt, wartet
+        ab da eine Sekunde auf jedes `<leader>ss`. Der einzige Konflikt, den
+        man sich durch Befolgen der Doku einhandelt.
+      - **Drei geteilte which-key-Präfixe** (`<leader>s`, `<leader>c`,
+        `<leader>p`), bei denen jeweils ein Plugin das Gruppenlabel setzt und
+        zwei bis drei andere dort ebenfalls Tasten haben.
+
+      **Der Usercmd-Überblick** (`BINDINGS/Usercmds/Overview.md`), zweites
+      `REF!`. 148 Kommandonamen über 31 Plugins, **alle 148 verschieden**.
+      Vier Präfix-Überschneidungen zwischen Plugins (`:File`/`:Filetree`,
+      `:Mark`/`:Markdown`, `:Lib`/`:LibInspect`, `:Open`/`:OpenWith…`) kosten
+      nur Tab-Completion, weil Vim den exakten Namen zuerst auflöst.
+
+      Der Fund, für den sich die Übung gelohnt hat: `lsp.nvim` registriert
+      `:LspInfo`/`:LspLog` — **dieselben Namen wie nvim-lspconfig**, das über
+      NvChad auf `User FilePost` geladen wird, also *später*.
+      `nvim_create_user_command` überschreibt still, lspconfig müsste gewinnen.
+      Es gewinnt nicht: Zeile 6 seiner `plugin/lspconfig.lua` ist
+      `if vim.fn.exists(':lsp') == 2 then return end`, und die Suche ist
+      case-insensitiv — `lsp.nvim`s `:Lsp`-Verb lässt lspconfigs komplette
+      Plugin-Datei aussteigen, bevor sie irgendetwas registriert. Headless
+      verifiziert (`lspconfig loaded: true`, trotzdem lsp.nvims Beschreibungen;
+      `:LspStart`/`:LspStop`/`:LspRestart` existieren gar nicht). **Der
+      Verbname `Lsp` ist damit tragend**: benennt man ihn um, tauchen fünf
+      lspconfig-Kommandos auf und zwei davon überschreiben lsp.nvims eigene.
+
+      **Zwei Tippfehler nebenbei behoben** (`lsp.nvim@329245c`): `desc_tag`
+      stellte jeder Kommandobeschreibung `[lps.usercmds]` voran — sichtbar in
+      `:command` und in which-key. Derselbe Dreher stand in
+      `deprecated_help/doc/InstallationNotes.md`, dort nicht kosmetisch: das
+      Snippet sagte `require("lps.tools.deprecated_help")` und scheitert beim
+      Einfügen.
+
+      **Und die Indizes repariert**: zwei tote Links auf `cmdlog.md` (die
+      Datei heißt `cmdlog.nvim.md`), `lsp.nvim` fehlte in zwei Indizes,
+      `images.nvim` in einem dritten, und der `:Bindings`-Explorer — das
+      Werkzeug, mit dem man genau diese Blätter durchsucht — stand in keinem.
+
 - [x] **`.luarc.json` pro Plugin-Root anlegen.**
       War in allen 31 Repos bereits vorhanden. Bei der Pruefung fiel auf, dass
       `sandbox.nvim/.luarc.json` durch zwei nachgestellte Kommata kein gueltiges
