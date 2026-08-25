@@ -82,6 +82,30 @@ nvim-Config.
 
 ### Dokumentation & Cheatsheets
 
+- [x] **Verweise auf die Quell-Checklisten korrigiert** (die offene Frage aus
+      dem Roadmap-Task, von dir beantwortet: die Checklisten sind in den Regeln
+      unter `WKDBooks/Development/wkdbook-Lua/Checklists/` aufgegangen).
+
+      19 Verweise in 7 Repos zeigten auf `Notes/MyNotes/Checklists/Lua/`, die
+      meisten noch mit dem alten `E:`-Laufwerk. Umgehängt nach der Zuordnung,
+      die das `archiv/README.md` der Regelsammlung selbst festhält:
+      `Arch&Coding-Regeln.md` → `regeln/PRINCIPLES.md` (+ `regeln/LUA_NVIM.md`),
+      `Zentrale-Prinzipien.md` → `regeln/PRINCIPLES.md`, `Checklist.md` →
+      `regeln/` + `gates/`.
+
+      Der Linktext nannte jeweils noch die stillgelegte Datei, obwohl er aufs
+      neue Ziel zeigte — jetzt benennt er das Ziel, plus eine Zeile, dass die
+      Quellen aufgegangen und nicht verloren sind.
+
+      `gopath.nvim` ist der Sonderfall: dort liegt eine 776-Zeilen-Kopie der
+      *alten* Checkliste statt eines gopath-Audits. Sie sagt jetzt selbst, dass
+      sie nicht die kanonischen Regeln ist und wo die stehen. Ob sie ganz weg
+      soll, ist deine Entscheidung — die Regelsammlung sagt „Kopien an anderen
+      Orten verweisen hierher und enthalten selbst keine Regeln".
+
+      Damit sind die Roadmap-Dokumente aller 31 Repos frei von toten Links
+      (vorher 38).
+
 - [x] **`docs/ROADMAP.md` pro Plugin anlegen bzw. durchgehen.**
       Jedes Repo hatte etwas, aber in drei verschiedenen Formen: mal
       `docs/ROADMAP.md`, mal nur ein `docs/ROADMAP/`-Ordner, mal beides ohne
