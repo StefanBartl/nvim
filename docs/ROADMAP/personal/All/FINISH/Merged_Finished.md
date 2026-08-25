@@ -74,6 +74,58 @@ nvim-Config.
 
 ### Sonstiges
 
+- [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
+      Code-/User-Docs-Runde unten: alles Dev-seitige liest sich jetzt in einer
+      Sprache.
+
+      **`lsp.nvim`** — `docs/ROADMAP.md` (1380 Zeilen, das komplette
+      Migrations-Protokoll samt der 19 B-Befunde und der Phasen 0–6) plus elf
+      modulnahe READMEs: `lsp_signature`, `lua_ls`, `markdown_words`,
+      `eslint_prettier` (README + autorun), `deprecated_help` (POC + ROADMAP),
+      Astros `COMMANDS.md`, `diagnostics/ACTIONS.md`, lua_ls-Troubleshooting,
+      `ts_type_lookup`. Die Schätzung von 197 deutschen Zeilen war zu
+      niedrig — die Roadmap war praktisch durchgehend deutsch.
+
+      **`mdview.nvim`** — die beiden `IDEAS/KONZEPT_*`-Entwürfe, das
+      Overlay-Konzept, die archivierten Checkpoints und die
+      WebTransport-Recherche (`Machbarkeit.md`, `Rolluout.md`), `CI/V_1.0.md`,
+      die vier `testdoku`-/`server`-Seiten und `TESTS/CHECK.md`.
+      `docs/ROADMAP/personal/LECTURE.md` bleibt deutsch — die Datei sagt in
+      Zeile 3 selbst, dass sie eine persönliche Notiz und kein Roadmap-Teil
+      ist.
+
+      **`replacer.nvim`** — der UTF-8-Offset-Bericht, der Debug-Guide, die
+      Feature-Matrix, der Richtlinien-Review und die Parser-Notiz.
+
+      Dazu Einzelseiten in `gopath.nvim` (Audit + geplante Features),
+      `documentation.nvim` (drei Banner), `color_my_ascii.nvim`,
+      `debugging.nvim`, `emojis.nvim`, `fileops.nvim`, `markdown.nvim`,
+      `migrate.nvim` und `images.nvim`.
+
+      **Zwei Befunde nebenbei.** `images.nvim/doc/images.txt` zitierte für den
+      Remote-Fall die Fehlermeldung `"Remote-Bilder sind deaktiviert"` — die
+      gibt es im Code nirgends, `remote.lua:67` sagt *„remote images are
+      disabled"*. Wer nach dem Text aus der Doku gesucht hat, fand nichts. Und
+      `lib.nvim/docs/map/overview.md` trug noch deutsche Namespace-Beschreibungen,
+      obwohl die Quell-Docstrings längst englisch sind: eine veraltete
+      generierte Datei, die ohnehin gitignored ist.
+
+      **Zitate bleiben Zitate.** In `documentation.nvim` (`FEATURES.md`,
+      `PIPELINE.md`, `CORE.md`, `ECOSYSTEM.md`, `FEATURES_FORMAT.md`),
+      `lib.nvim/docs/ROADMAP/dependency-installer.md`,
+      `runtime-analysis.nvim/docs/FEATURES/FINISHED.md` und
+      `filetree.nvim`s Neotree-Audit steht wörtlich zitiertes Deutsch in
+      englischem Fließtext — die ursprüngliche Roadmap-Formulierung, die
+      dortige Herleitung. Übersetzt wäre das ein Falschzitat. Ebenso
+      unangetastet: `replacer.nvim`s deutsches i18n-Beispiel in README und
+      vimdoc (es *demonstriert* Übersetzung) und die Test-Fixtures in
+      `cascade.nvim`/`mdview.nvim`.
+
+      **Weiterhin bewusst deutsch:** die `Arch&Coding`/`Checklist`/
+      `Zentral-Prinzipien`-Ableitungen, `lsp.nvim/docs/CHECKLISTS/`, und die
+      absichtlichen deutschen Fassungen mit englischem Gegenstück
+      (`README-de.md`, `QUICKSTART-de.md`, `docs/features/de/**`, `*-DE.md`).
+
 - [x] **Quellcode und Kommentare auf Englisch** — plus die nutzerseitigen Docs.
       (Die internen Roadmap-/Audit-Dokumente bleiben offen, s. MERGED.md.)
 
