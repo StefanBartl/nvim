@@ -16,6 +16,12 @@
 ---
 --- An open buffer is never the cause: Neovim closes a file after reading it
 --- and keeps only its swap file open.
+---
+--- `--json` prints the same three findings as a single `vim.json.encode`d
+--- object instead of the human-readable block, for scripting or a future
+--- pickers.nvim integration — `lib.nvim.cross.fs.lock.report` itself only
+--- ever produces text lines, so the json path calls `probe`/`who` directly
+--- and assembles the structured object here instead.
 
 local notify = require("lib.nvim.notify").create("[usrcmds.who_locks]")
 local usercmd = require("lib.nvim.usercmd")
@@ -29,11 +35,17 @@ local fn = vim.fn
 ---@return table<string, any>|nil
 local function neotree_watchers()
   local ok, fs_watch = pcall(require, "neo-tree.sources.filesystem.lib.fs_watch")
-  if not ok or type(fs_watch.show_watched) ~= "function" then return nil end
+  if not ok or type(fs_watch.show_watched) ~= "function" then
+    return nil
+  end
   for i = 1, math.huge do
     local name, value = debug.getupvalue(fs_watch.show_watched, i)
-    if not name then break end
-    if name == "watchers" and type(value) == "table" then return value end
+    if not name then
+      break
+    end
+    if name == "watchers" and type(value) == "table" then
+      return value
+    end
   end
   return nil
 end
@@ -58,21 +70,78 @@ local function watcher_lines(path)
     local norm = tostring(watched):gsub("\\", "/"):lower():gsub("/$", "")
     if norm == dir then
       matching = matching + 1
-      lines[#lines + 1] = ("  WATCHES THIS FOLDER: %s (references=%s, active=%s, handle=%s)")
-        :format(watched, tostring(w and w.references), tostring(w and w.active),
-          (w and w.handle) and "open" or "nil")
+      lines[#lines + 1] = ("  WATCHES THIS FOLDER: %s (references=%s, active=%s, handle=%s)"):format(
+        watched,
+        tostring(w and w.references),
+        tostring(w and w.active),
+        (w and w.handle) and "open" or "nil"
+      )
     end
   end
-  table.insert(lines, 1, ("  %d watched folder(s) total, %d covering this file's folder")
-    :format(total, matching))
+  table.insert(
+    lines,
+    1,
+    ("  %d watched folder(s) total, %d covering this file's folder"):format(total, matching)
+  )
   return lines
+end
+
+---Structured counterpart of `watcher_lines`, for `--json`.
+---@param path string
+---@return table
+local function watcher_data(path)
+  if not package.loaded["neo-tree"] then
+    return { status = "not_loaded" }
+  end
+  local watchers = neotree_watchers()
+  if not watchers then
+    return { status = "unreachable" }
+  end
+
+  local dir = fn.fnamemodify(path, ":p:h"):gsub("\\", "/"):lower()
+  local entries, total, matching = {}, 0, 0
+  for watched, w in pairs(watchers) do
+    total = total + 1
+    local norm = tostring(watched):gsub("\\", "/"):lower():gsub("/$", "")
+    if norm == dir then
+      matching = matching + 1
+      entries[#entries + 1] = {
+        folder = watched,
+        references = (w and w.references) or vim.NIL,
+        active = (w and w.active) or false,
+        handle_open = (w and w.handle) ~= nil,
+      }
+    end
+  end
+  return { status = "ok", total = total, matching = matching, entries = entries }
+end
+
+---@param arg_lead string
+---@return string[]
+local function complete(arg_lead)
+  local out = {}
+  if arg_lead == "" or arg_lead:sub(1, 1) == "-" then
+    if ("--json"):sub(1, #arg_lead) == arg_lead then
+      out[#out + 1] = "--json"
+    end
+  end
+  vim.list_extend(out, fn.getcompletion(arg_lead, "file"))
+  return out
 end
 
 ---Register :WhoLocks.
 function M.enable()
   usercmd.create("WhoLocks", function(args)
-    local path = args.args ~= "" and fn.fnamemodify(fn.expand(args.args), ":p")
-      or fn.expand("%:p")
+    local as_json = false
+    local path_arg
+    for _, tok in ipairs(args.fargs) do
+      if tok == "--json" then
+        as_json = true
+      else
+        path_arg = tok
+      end
+    end
+    local path = path_arg and fn.fnamemodify(fn.expand(path_arg), ":p") or fn.expand("%:p")
     if path == "" then
       notify.warn("no file: pass a path or run this from a buffer with a file name")
       return
@@ -85,11 +154,43 @@ function M.enable()
     end
 
     local bufnr = fn.bufnr(path)
+
+    if as_json then
+      local probe_ok, probe_err = lock.probe(path)
+      ---@type table
+      local report = {
+        path = path,
+        cwd = fn.getcwd(),
+        exists = fn.filereadable(path) == 1,
+        buffer = bufnr ~= -1 and { open = true, bufnr = bufnr, modified = vim.bo[bufnr].modified }
+          or { open = false },
+        probe = { renameable = probe_ok, error = probe_ok and vim.NIL or probe_err },
+        watchers = watcher_data(path),
+      }
+      if not lock.supported() then
+        report.holders = { supported = false }
+        print(vim.json.encode(report))
+        return
+      end
+      lock.who(path, function(holders, werr)
+        report.holders = werr and { supported = true, error = werr }
+          or { supported = true, list = holders }
+        print(vim.json.encode(report))
+      end)
+      return
+    end
+
     lock.report(path, function(lines)
       table.insert(lines, 2, "cwd:    " .. fn.getcwd())
-      table.insert(lines, 3, "buffer: " .. (bufnr ~= -1
-        and ("#%d, modified=%s"):format(bufnr, tostring(vim.bo[bufnr].modified))
-        or "not open in any buffer"))
+      table.insert(
+        lines,
+        3,
+        "buffer: "
+          .. (
+            bufnr ~= -1 and ("#%d, modified=%s"):format(bufnr, tostring(vim.bo[bufnr].modified))
+            or "not open in any buffer"
+          )
+      )
       lines[#lines + 1] = ""
       lines[#lines + 1] = "neo-tree fs_event watchers:"
       vim.list_extend(lines, watcher_lines(path))
@@ -101,9 +202,9 @@ function M.enable()
       print(text)
     end)
   end, {
-    desc = "[usrcmds.who_locks] Diagnose who is holding a file open (Windows EBUSY/EPERM)",
-    nargs = "?",
-    complete = "file",
+    desc = "[usrcmds.who_locks] Diagnose who is holding a file open (Windows EBUSY/EPERM); --json for structured output",
+    nargs = "*",
+    complete = complete,
   })
 end
 

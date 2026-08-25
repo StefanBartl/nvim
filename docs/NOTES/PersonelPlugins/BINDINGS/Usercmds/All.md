@@ -5,6 +5,8 @@ All plugin user-command cheatsheets in this folder.
 **Config-internal** (not a plugin's own command — manages the list below):
 
 - [MyPlugins](./MyPlugins.md) — clone/remove/list the personal plugin checkouts, switch their dir/remote/auto source mode
+- [MyReposUpdate](./MyReposUpdate.md) — fetch + ff-only pull every git repo in a directory (not just the listed plugins)
+- [WhoLocks](./WhoLocks.md) — diagnose a Windows file lock: live probe, holding processes, neo-tree watchers
 - [Case / Cases / Tricentis (casedesk)](./Case.md) — SAP-Support case scaffolding: new/info/similar/timeline/ki/close/... per case, list/find/grep/stale/... across cases
 
 **Per plugin:**
