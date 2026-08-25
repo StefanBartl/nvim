@@ -52,7 +52,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 ### Healthchecks, Config & Defaults
 - [ ] Möglichst viele Features user-konfigurierbar machen, inkl. LuaLS-Typen/Aliases für jeden Config-Key.
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
-- [ ] Sinnvolle Features default aktivieren, Init-Spec so schlank wie möglich halten.
 
 ### Cross-Plattform
 - [ ] Code auf Cross-Plattform-Kompatibilität durchsehen und fixen (Windows/Linux/Mac Pfade, Shell-Aufrufe etc.).

@@ -184,6 +184,55 @@ nvim-Config.
 
 ### Healthchecks, Config & Defaults
 
+- [x] **Sinnvolle Features default aktivieren, Init-Spec so schlank wie möglich
+      halten.**
+      Zielbild war eine Spec, die nur noch aus Repo, Lazy-Trigger und `opts`
+      besteht. **746 Spec-Zeilen → 639**, und danach ist in `opts` nichts mehr
+      übrig, was nicht bewusst gesetzt ist.
+
+      Zwei Sorten Ballast, beide mechanisch gefunden:
+
+      *Optionen, die den Default des Plugins bloß wiederholten.* Jede
+      `opts`-Tabelle gegen die `config/DEFAULTS.lua` des Plugins verglichen —
+      sieben Specs erzählten dem Plugin seine eigenen Defaults zurück. `cascade`
+      listete alle sechzehn Feature-Schalter (nur `keymaps.preset` weicht ab),
+      `fileops` dreizehn (nur `cycle.open_target`), dazu buffer-ctx komplett,
+      `diff.features.*`, `emojis.default_scope`, `debugging.features.neotree`,
+      `images.display.draw_inset`, `cmdlog.picker`, `replacer.default_scope`.
+      Eine wiederholte Default-Zeile ist schlechter als gar keine: sie sieht aus
+      wie eine Entscheidung und hört still auf, dem Plugin zu folgen, wenn sich
+      der Default bewegt.
+
+      *`config`-Blöcke, die taten, was `opts` von selbst tut.*
+      `config = function(_, opts) require(X).setup(opts) end` ist exakt
+      lazy.nvims eigenes Verhalten für eine Spec mit `opts`. Von 16 solchen
+      Blöcken sind 5 übrig — die, die wirklich etwas berechnen (pickers'
+      collections, filetrees Feature-Tabelle, documentations
+      bindings/generate_all-Builder).
+
+      Verifiziert, nicht angenommen: jedes umgestellte Plugin headless geladen
+      und geprüft, dass sein Modul auflöst und sein Command registriert ist.
+
+      **Zur ersten Hälfte des Tasks:** die Defaults *sind* schon sinnvoll. Der
+      Beweis ist genau das obige Ergebnis — nachdem alles Redundante raus ist,
+      bleiben über 31 Plugins sechs echte Einstellungen übrig (Engine-Wahl,
+      `progress_style = "statusline"`, cascades Keymap-Preset, fileops'
+      `open_target`, images' gemessenes `cell_aspect`, pickers' collections).
+      Kein Feature gefunden, das per Default an sein sollte und es nicht ist.
+
+      **READMEs nachgezogen** (16 Repos), weil User die Spec von dort kopieren.
+      Dabei drei echte Fehler in den Install-Anleitungen:
+      - `cmdlog.nvim` bot drei Lazy-Load-Rezepte gleichrangig an; **zwei davon
+        leeren genau die History, die das Plugin zeigen soll** — der
+        `CmdlineLeave`-Tracker startet dann erst beim ersten `:Cmdlog`. Steht
+        jetzt als Warnung unter beiden.
+      - `replacer.nvim`s Snippets sagten `StefanBartl/replacer` mit
+        `name`/`as`-Override daneben. Das Repo heißt `replacer.nvim`; die
+        Kurzform funktioniert nur über GitHubs Redirect vom alten Namen, und der
+        Override existierte nur, um das zu kaschieren.
+      - `color_my_ascii.nvim` zeigte unter der Spec noch ein separates
+        `require(...).setup()` — las sich wie ein zweiter Pflichtschritt.
+
 - [x] **`config/init.lua` + `config/DEFAULTS.lua` pro Plugin anlegen,
       pluginseitige Defaults dorthin.**
       Die Struktur stand bereits in **allen 31 Repos**. Geprüft wurde deshalb
