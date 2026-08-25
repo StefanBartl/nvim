@@ -92,6 +92,16 @@ nvim-Config.
       Key-Sortierung dafür da ist, dass die Ausgabe nicht von `pairs`-Reihenfolge
       abhängt.
 
+      **Dev-seitige Docs, erste Runde:** `filetree.nvim/TESTS/MANUAL.md` (die
+      manuelle Testanleitung, die ein anderer Entwickler abarbeitet — 14
+      Checklisten-Abschnitte, Bekannte-Grenzen-Liste, Fehlerbild-Tabelle) und
+      `lsp.nvim`s rootresolver-Vergleich. Letzterer endete auf eine Frage an
+      einen Assistenten („Willst du, dass ich so eine vereinheitlichte Version
+      skizziere?") — ein Rest aus dem Chat, aus dem er stammt. Die Version gibt
+      es längst: beide Resolver laufen über
+      `lib.nvim.fs.polymorphic_rootresolver`. Das Dokument sagt das jetzt,
+      statt zu fragen.
+
       **Nutzerseitige Docs: 287 Zeilen → 0 echte.** 181 davon waren
       **absichtliche** deutsche Fassungen mit englischem Gegenstück
       (`README-de.md`, `docs/features/de/**`, `*-DE.md`) — die bleiben, das ist

@@ -78,8 +78,9 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Git-Release pro Repo, sobald fertig.
 
 ### Sonstiges
-- [ ] Docs auf Englisch: **Quellcode und Kommentare sind fertig** (s. Merged_Finished), ebenso die nutzerseitigen Docs. Offen sind ~1145 Zeilen in **internen** Dokumenten — `docs/ROADMAP/**` (die Checklisten-Audits, KONZEPT-/IDEEN-Papiere), `DONE.md`-Entscheidungslogs, `DEBUG-GUIDE`/`TODO`-Dateien, `docs/CI/`-Historie. Größte Brocken: `mdview.nvim` (357), `lsp.nvim/docs/ROADMAP.md` (201), `gopath.nvim` (134), `github_stats.nvim` (110).
-  - Entscheidung nötig: Die Audit-Dokumente (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) sind Ableitungen deiner **deutschen** Regelsammlung in `wkdbook-Lua/Checklists/`. Sie zu übersetzen entkoppelt sie von ihrer Quelle. Lohnt das, oder bleiben interne Arbeitsdokumente deutsch?
+- [ ] Docs auf Englisch — **offen: ~961 Zeilen in 68 dev-seitigen Dokumenten.** Nach deiner Abgrenzung: an User/Devs gerichtet → Englisch; deine persönlichen Checklisten und die `Arch&Coding`/`Checklist`/`Zentral-Prinzipien`-Ableitungen bleiben deutsch und werden ohnehin bald abgeräumt.
+  - Die großen Brocken: `lsp.nvim/docs/ROADMAP.md` (197 dt. Zeilen von 1380 — überwiegend ein abgeschlossenes Migrations-Protokoll), `mdview.nvim` (~240 über `DONE.md`, `IDEAS/KONZEPT_*`, `CI/`, `history/`), `github_stats.nvim/docs/ROADMAP/KONZEPT.md` (52), `filetree.nvim/docs/ROADMAP/IDEAS/Refs_Engine.md` (44), `pdfport.nvim/docs/ROADMAP/PDF_CREATE.md` (34).
+  - Erledigt sind: Quellcode + Kommentare (alle Repos), die nutzerseitigen Docs, `filetree.nvim/TESTS/MANUAL.md` und `lsp.nvim`s rootresolver-Vergleich.
   - Nicht anzufassen: die **absichtlichen** deutschen Fassungen mit englischem Gegenstück — `color_my_ascii.nvim/docs/README-de.md`, `docs/features/de/**`, `gopath.nvim/docs/*-DE.md` (181 Zeilen).
 
 ---
