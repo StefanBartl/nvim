@@ -80,7 +80,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Alle Features eines Plugins den zugehörigen Usrcmds/Keymaps/Autocmds zuordnen, Analyse in `docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES` pro Plugin ablegen (Sortierung nach Wichtigkeit erst nach Klärung der Priorisierungsfrage aus Liste A).
 
 ### Git & Repo-Hygiene
-- [ ] `gh repo edit` (Description, Topics) pro Repo.
 - [ ] Alle Claude-Branches in allen Plugins entfernen.
 - [ ] Alle Features/Bugfixes committen & pushen (Commit-Message ausgeben, falls Push nicht möglich).
 - [ ] Git-Release pro Repo, sobald fertig.

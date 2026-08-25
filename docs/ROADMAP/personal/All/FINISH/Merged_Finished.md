@@ -10,6 +10,22 @@ nvim-Config.
 
 ### Git & Repo-Hygiene
 
+- [x] **`gh repo edit` (Description, Topics) pro Repo.**
+      Description und Topics waren in allen 31 Repos schon gesetzt; offen war
+      die Konsistenz. Basis-Set `neovim` / `neovim-plugin` / `lua` -- die drei
+      Topics, über die auf GitHub tatsächlich gesucht wird -- fehlte in sechs
+      Repos: `color_my_ascii.nvim`, `dap.nvim`, `language.nvim`,
+      `replacer.nvim`, `sessions.nvim` (jeweils `nvim-plugin` statt
+      `neovim-plugin`) und `mdview.nvim`. `mdview.nvim` stand bereits auf dem
+      GitHub-Maximum von 20 Topics, deshalb ist `local` (als Topic
+      bedeutungslos) für `lua` gewichen.
+
+      Nebenbei die Homepage-URLs: `lib.nvim` hat eine Pages-Site
+      (stefanbartl.github.io/lib.nvim), war aber nicht verlinkt -- jetzt schon.
+      `fileops.nvim` und `spotlight.nvim` zeigten als "Homepage" auf ihre
+      eigene GitHub-Seite, was GitHub ohnehin schon tut -- geleert.
+
+
 - [x] **Branch auf `main` umstellen, wo noch nicht geschehen.**
       Einziges Repo abseits von `main` war `lsp.nvim`
       (`feat/diag-severity-completion-and-autocmd-groups`, ein unveroeffentlichter
