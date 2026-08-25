@@ -11,9 +11,10 @@ Arbeitsliste fuer den Plugin-Sweep. Erzeugt 2026-08-24 aus
 C sind zu, lsp.nvim ist auditiert und abgearbeitet. Offen ist nur noch, was
 per Entscheidung offen bleibt:
 
-- `[QF]` Quickfix-Audit — **Phase 3**, bewusst nicht Teil dieses Sweeps.
-  Kandidaten stehen markiert bei markdown.nvim, pickers.nvim und
-  documentation.nvim; replacer.nvim dient als Referenzimplementierung.
+- `[QF]` Quickfix-Audit (Phase 3) — **inzwischen ebenfalls erledigt,
+  2026-08-25.** Ein echter Fund von vier Kandidaten (markdown.nvim,
+  Commit `0cf146f`); documentation.nvim hatte bereits 13 Exporte,
+  pickers.nvim ist n/a. Zusammenfassung in [README.md](README.md).
 - `RULES-plugin-ideas.md` — von Anfang an nicht eingeflossen.
 - `learn-cli.nvim` — per Entscheidung ausgelassen.
 - Zwei Pre-existing-Failures, als eigene Tasks abgelegt statt im Vorbeigehen
@@ -582,7 +583,9 @@ Suite gruen.
       Geprueft: buffer-scoped, kein globaler Leak, `live_off()` funktioniert.
       Die uebrigen Roh-Autocmds (table_mode, hover, tableview) tragen keine
       solche Behauptung und bleiben unangetastet.
-- [ ] `[QF]` Link-Diagnosen als Quickfix-Export — **Phase 3**, nicht jetzt.
+- [x] `[QF]` Link-Diagnosen als Quickfix-Export — **Phase 3, erledigt
+      2026-08-25.** Echter Fund, und schlimmer als "fehlt": die Meldung riet zu
+      `:lopen`, was `E776` warf. Commit `0cf146f`. S. [README](README.md).
       Commit `c1efa82`, Branch `fix/refs-live-through-lib-autocmd`.
       Suite gruen.
 
@@ -621,7 +624,9 @@ Suite gruen.
 - [x] `[L]` **Nichts zurueckzubauen:** das `selected_index`-Modul wurde zu
       `result_count` umgeschrieben und pollt, statt einen buffer-lokalen
       Autocmd zu registrieren.
-- [ ] `[QF]` Quickfix-Export inkl. Marks — **Phase 3**, nicht jetzt.
+- [x] `[QF]` Quickfix-Export inkl. Marks — **Phase 3, n/a.** Die Engines
+      besitzen das; `<M-q>` ist in telescope genau der Marks-Fall.
+      S. [README](README.md).
       Commit `fb90198`, auf `main` gemerged und gepusht.
       `pickers_spec.lua` erweitert, gruen.
 
@@ -718,8 +723,8 @@ Suite gruen.
       Pfade), `--context=` laeuft bereits als `INT`-Argtyp
       (`command.lua:587`). Zusaetzlich der bare-`--changed`-Regressionsbug
       gefixt.
-- [ ] `[QF]` Hat als einziges Plugin bereits Quickfix-Export (`export.lua`) —
-      dient in Phase 3 als Referenz. Nichts zu tun.
+- [x] `[QF]` Referenz fuer Phase 3, bestaetigt. **Aber "als einziges Plugin"
+      stimmt nicht** — documentation.nvim hat 13 Exporte. Nichts zu tun.
 
 ### documentation.nvim
 
@@ -729,7 +734,8 @@ Suite gruen.
 - [ ] `[F]` Keine `<Plug>`-Mappings fuer einzelne `DocBrowse`-Actions (z. B.
       `goto_source`), nutzbar ausserhalb einer offenen Browser-Instanz —
       derzeit nur ueber `opts.keys` erreichbar.
-- [ ] `[QF]` Quickfix-Export-Kandidat — **nicht jetzt**, Phase 3.
+- [x] `[QF]` **Kein Kandidat — Praemisse falsch.** Das Plugin hat bereits 13
+      Quickfix-Exporte, mehr als jedes andere. S. [README](README.md).
 - [ ] `[N]` Referenzimplementierung fuer count (`browse/init.lua:1018-1176`,
       geclamptes `v:count1`; `j`/`k` bewusst nicht reimplementiert). Nichts zu
       tun — beim Nachruesten anderswo als Vorlage nehmen.
