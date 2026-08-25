@@ -182,6 +182,37 @@ nvim-Config.
         ~229 ms pro Lauf bei 116 Plugins, und nicht inkrementell. Jetzt
         idempotent.
 
+### Healthchecks, Config & Defaults
+
+- [x] **Prüfen: sind wirklich alle Plugins lazy geladen?**
+      Nein — und das ist überwiegend richtig so. Von 31 Specs in
+      `lua/plugins/personal/init.lua` laden 7 eager (`lazy = false`):
+
+      | Plugin | Eager, weil | War begründet? |
+      | --- | --- | --- |
+      | `lib.nvim` | Library + registriert `:Lib`/`:CwdHere` beim Start (Priority 1000) | ja |
+      | `lsp.nvim` | Capabilities müssen global stehen, bevor der erste Client attached (Priority 900) | ja |
+      | `runtime-analysis.nvim` | Telemetrie muss die anderen Plugins umschließen, bevor die laden | ja |
+      | `insights.nvim` | conflicts/unimported/devserver sind Autocmds aus `setup()` | ja |
+      | `sessions.nvim` | `VimEnter`-Autoload und `VimLeavePre`-Autosave | **nein, jetzt** |
+      | `pickers.nvim` | `setup()` leitet ~20 Keymaps aus der `collections`-Tabelle ab | **nein, jetzt** |
+      | `cmdlog.nvim` | `setup()` startet den `CmdlineLeave`-Tracker | **nein, jetzt** |
+
+      `learn-cli.nvim` steht ebenfalls auf `lazy = false`, ist in `source.lua`
+      aber `"disabled"` — lädt also ohnehin nie.
+
+      **Der eine echte Fund:** `cmdlog.nvim` hatte `lazy = false` **und**
+      `cmd = { "Cmdlog" }`. lazy.nvim ignoriert das `cmd` dann, aber die Zeile
+      las sich, als wäre das Plugin kommando-lazy — und wer sie „aufräumt",
+      indem er `lazy = false` entfernt, bricht das Plugin auf eine Art, die
+      niemand als Fehler sieht: der Tracker startete dann erst in dem Moment,
+      in dem man die History zum ersten Mal öffnet, die also immer leer wäre.
+      Das tote `cmd` ist weg, der Grund steht jetzt dort.
+
+      Die drei unbegründeten Fälle haben jetzt ihre Begründung im Spec. Kein
+      Plugin wurde umgestellt: bei allen sieben ist eager nach Prüfung die
+      richtige Antwort.
+
 ### Security, Tests & CI/CD
 
 - [x] **`ci`/`stylua`/Tests über alle Plugins grün ziehen.**

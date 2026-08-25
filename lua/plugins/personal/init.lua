@@ -57,6 +57,10 @@ plugins.add({
   },
 
   {
+    -- Eager: setup() registers the VimEnter autoload and the VimLeavePre
+    -- autosave. Both are startup/shutdown events, so a lazy trigger would have
+    -- to fire before VimEnter to be of any use -- which is what `lazy = false`
+    -- means.
     "stefanbartl/sessions.nvim",
     lazy = false,
     dependencies = { "stefanbartl/lib.nvim" },
@@ -68,6 +72,11 @@ plugins.add({
   },
 
   {
+    -- Eager: setup() derives roughly twenty keymaps from the `collections`
+    -- table below (`<leader>mnf`, `<leader>wkg`, ...). Lazy-loading on `keys`
+    -- would mean listing every one of those lhs in the spec as well, kept in
+    -- step with the table by hand -- two sources for the same bindings, and
+    -- the drift only shows up as a key that silently does nothing.
     "StefanBartl/pickers.nvim",
     lazy = false,
     dependencies = { "StefanBartl/lib.nvim" },
@@ -681,9 +690,15 @@ plugins.add({
   },
 
   {
+    -- Eager on purpose, and `cmd = { "Cmdlog" }` is gone rather than kept
+    -- alongside `lazy = false` (where lazy.nvim ignores it anyway, so it only
+    -- read as if this were command-lazy). setup() starts the CmdlineLeave
+    -- tracker that records every `:` command -- that recording *is* the
+    -- plugin. Loading on `:Cmdlog` would start the tracker at the moment you
+    -- first ask for the history, so the history would always be empty.
+    -- Opt out with `track_commands = false`.
     "StefanBartl/cmdlog.nvim",
     lazy = false,
-    cmd = { "Cmdlog" },
     config = function()
       require("cmdlog").setup({
         picker = "telescope",
