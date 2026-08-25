@@ -18,10 +18,11 @@ All plugin keymap cheatsheets in this folder.
 - [insights.nvim](./insights.nvim.md)
 - [language.nvim](./language.nvim.md)
 - [lib.nvim](./lib.nvim.md)
+- [lsp.nvim](./lsp.nvim.md)
 - [markdown.nvim](./markdown.nvim.md)
 - [mdview.nvim](./mdview.nvim.md)
 - [migrate.nvim](./migrate.nvim.md)
-- [cmdlog](./cmdlog.md)
+- [cmdlog.nvim](./cmdlog.nvim.md)
 - [sandbox.nvim](./sandbox.nvim.md)
 - [open.nvim](./open.nvim.md)
 - [pdfport.nvim](./pdfport.nvim.md)
@@ -33,4 +34,4 @@ All plugin keymap cheatsheets in this folder.
 - [sessions.nvim](./sessions.nvim.md)
 - [spotlight.nvim](./spotlight.nvim.md)
 
-See also: [keymap collision & prefix-wait analysis](REF!).
+See also: [collision & prefix-wait analysis across all plugins](./Collisions.md).

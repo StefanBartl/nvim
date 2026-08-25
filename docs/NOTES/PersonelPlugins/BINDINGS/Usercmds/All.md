@@ -8,6 +8,7 @@ All plugin user-command cheatsheets in this folder.
 - [MyReposUpdate](./MyReposUpdate.md) — fetch + ff-only pull every git repo in a directory (not just the listed plugins)
 - [WhoLocks](./WhoLocks.md) — diagnose a Windows file lock: live probe, holding processes, neo-tree watchers
 - [Case / Cases / Tricentis (casedesk)](./Case.md) — SAP-Support case scaffolding: new/info/similar/timeline/ki/close/... per case, list/find/grep/stale/... across cases
+- [Bindings (bindings-explorer)](./bindings_explorer.md) — search/list the two BINDINGS trees from inside nvim; `:Bindings` alone is `:Bindings search`
 
 **Per plugin:**
 
@@ -27,10 +28,11 @@ All plugin user-command cheatsheets in this folder.
 - [insights.nvim](./insights.nvim.md)
 - [language.nvim](./language.nvim.md)
 - [lib.nvim](./lib.nvim.md)
+- [lsp.nvim](./lsp.nvim.md)
 - [markdown.nvim](./markdown.nvim.md)
 - [mdview.nvim](./mdview.nvim.md)
 - [migrate.nvim](./migrate.nvim.md)
-- [cmdlog](./cmdlog.md)
+- [cmdlog.nvim](./cmdlog.nvim.md)
 - [sandbox.nvim](./sandbox.nvim.md)
 - [open.nvim](./open.nvim.md)
 - [pdfport.nvim](./pdfport.nvim.md)
@@ -42,4 +44,4 @@ All plugin user-command cheatsheets in this folder.
 - [sessions.nvim](./sessions.nvim.md)
 - [spotlight.nvim](./spotlight.nvim.md)
 
-See also: [overview & collision check across all plugins](REF!).
+See also: [overview & collision check across all plugins](./Overview.md).

@@ -14,6 +14,7 @@ All plugin autocmd cheatsheets in this folder.
 - [filetree.nvim](./filetree.nvim.md)
 - [github_stats.nvim](./github_stats.nvim.md)
 - [gopath.nvim](./gopath.nvim.md)
+- [images.nvim](./images.nvim.md)
 - [insights.nvim](./insights.nvim.md)
 - [language.nvim](./language.nvim.md)
 - [lib.nvim](./lib.nvim.md)
