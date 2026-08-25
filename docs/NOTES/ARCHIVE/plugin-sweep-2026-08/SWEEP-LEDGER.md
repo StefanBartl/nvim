@@ -20,6 +20,9 @@ per Entscheidung offen bleibt:
 - Zwei Pre-existing-Failures, als eigene Tasks abgelegt statt im Vorbeigehen
   gepatcht: `documentation.nvim`s vier rote Specs (davon `diagnostics` mit
   Bug-Verdacht) und der bekannte 8.3-Pfad-Fall in `images.nvim`/`mdview`.
+  **Beide inzwischen erledigt, 2026-08-25** — der `diagnostics`-Verdacht war
+  ein echter Produktbug (`93f9367`), images.nvim waren zwei veraltete Tests
+  (`6a20489`). Zusammenfassung in [README.md](README.md).
 
 **Die wichtigste Erkenntnis des Sweeps**, in jeder Welle neu bestaetigt: der
 Audit vom 2026-08-08 ist systematisch ueberholt. Mindestens zwoelf Eintraege
