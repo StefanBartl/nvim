@@ -31,18 +31,21 @@ return {
     end,
   },
 
-  -- blink.cmp keymap: a personal preference, so it lives here rather than in
-  -- lsp.nvim's pack, exactly like the nvim-cmp source above. None of blink's
-  -- four built-in presets bind Tab to "next item" -- `default` only uses it
-  -- for snippet-jump/fallback, `super-tab` uses it to accept immediately --
-  -- so this overrides just those two keys on top of `default` rather than
-  -- replacing the whole keymap (an unnamed `keymap` table with no `preset`
-  -- assigns nothing else at all).
+  -- blink.cmp keymap: only the two keys this config has an opinion about.
+  -- None of blink's four presets binds Tab to "next item" -- `default` uses it
+  -- for snippet-jump/fallback, `super-tab` uses it to accept immediately -- so
+  -- these two are overridden on top of whichever preset is active.
+  --
+  -- The preset itself is deliberately *not* set here any more. It carries the
+  -- accept key, and that is now `vim.g.lsp_nvim.pack.completion_accept` in
+  -- lsp.nvim (default "cr"). Forcing `preset = "default"` here silently pinned
+  -- accept back to <C-y> and made the option look broken. A `keymap` table
+  -- without a `preset` assigns nothing else at all, which is fine precisely
+  -- because lsp.nvim's spec always contributes one for lazy to merge under.
   {
     "saghen/blink.cmp",
     opts = function(_, opts)
       opts.keymap = vim.tbl_deep_extend("force", opts.keymap or {}, {
-        preset = "default",
         ["<Tab>"] = { "select_next", "snippet_forward", "fallback" },
         ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
       })
