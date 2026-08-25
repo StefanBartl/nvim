@@ -1,8 +1,0 @@
-=== main-loop stalls >= 80 ms (first 12 s) ===
-  at +  0.16 s   blocked      81 ms
-  at +  0.46 s   blocked     135 ms
-  at +  0.71 s   blocked     175 ms
-  at +  1.10 s   blocked     126 ms
-  at +  1.26 s   blocked     137 ms
-  at +  2.23 s   blocked     318 ms
-  ---- 6 stall(s), 972 ms blocked in total

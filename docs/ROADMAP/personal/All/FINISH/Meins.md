@@ -29,6 +29,7 @@
 5. `/autcmds`
   1. passt zu `/bindings` ?
   2. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt. (dispatch lib modul)
+- alle features eines plugins chekcne, also sprich feature xy wird mit usrcmd y und keymap y un dautocmd z verwendet, -> erst analyse  und eintrag in C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\TO_CHECK_FEATURES für jees plugin eine file, dannd iese abarbeiten. gut wöäre, wenn sienach wichtigkeit soritert sin, denn ds werden tasuende kleine einzeltasks sein bzw nicht alle von ai prüfbar, nur manuell, daher wäre es sinnvoll, die wichtigsten zuerst zu checken. trotzdem ist ir das wichitg. wie entschiedne wir was wichtig ist und wsa weniger ? 1) einschätzung 2) datenpunkte: wir haben :RATelemtry daten für alle
 
 ---
 
