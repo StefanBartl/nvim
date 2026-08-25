@@ -334,6 +334,50 @@ nvim-Config.
 
 ### Security, Tests & CI/CD
 
+- [x] **Testdateien unter `TESTS/**` schreiben** — die zweite Hälfte des
+      Test-Tasks. **Alle 31 Repos haben jetzt eine Suite und einen Test-Job in
+      CI**, vorher waren es 25.
+
+      Fünf Repos hatten überhaupt keine Tests. Jedes hat jetzt vier bis sechs
+      Specs im Haus-Stil (`TESTS/run.lua` + `harness.lua`, headless, keine
+      Netzwerk-/UI-Abhängigkeit), ein `TESTS/README.md` und einen dritten
+      CI-Job mit lib.nvim als Sibling-Checkout.
+
+      Was dabei zutage kam — in allen fünf Fällen habe ich das **tatsächliche**
+      Verhalten festgeschrieben und den Kommentar dazugeschrieben, statt zu
+      „reparieren", was eine Entscheidung von dir wäre:
+
+      - **`reposcope.nvim`**: `setup()` merged in die *aktuelle* Optionstabelle
+        (`vim.tbl_deep_extend("force", M.options, opts)`), nicht in eine Kopie
+        von DEFAULTS wie in allen Geschwister-Plugins. Es akkumuliert also:
+        ein zweites `setup({})` setzt nichts zurück, und eine einmal gesetzte
+        Option lässt sich später nicht mehr abwählen. Für den normalen
+        Einmal-`setup()`-Pfad egal, für Runtime-Rekonfiguration überraschend.
+      - **`insights.nvim`**: `require("a." .. kind)` wird als Modul `a.`
+        gemeldet — der Scanner sieht nur das Literal vor der Konkatenation. Das
+        ist genau die False-Positive-Klasse, die die `:DocMap`-Notizen der
+        nvim-Config beschreiben. Zu unterdrücken bräuchte eine Entscheidung,
+        was ein dynamisches require beitragen soll: nichts, oder das Präfix als
+        Hinweis.
+      - **`recommender.nvim`**: eine Dreiteil-Kette liefert bei Threshold 1
+        *zwei* Vorschläge, weil auch ihr Zweiteil-Präfix ein Kandidat ist —
+        genau deshalb ist der Default über 1. Und die Blacklist matcht
+        Strings, nicht Segmente: `vim.a` blockt `vim.api`.
+      - **`sessions.nvim`**: die sicherheitsrelevante Stelle ist
+        `git.sanitize` — ein Session-Name wird zu einem Dateipfad, und die
+        Namen kommen aus Branch und Verzeichnis. `feature/login`, `..`, ein
+        Backslash und eine ANSI-Farbsequenz müssen alle zu etwas werden, das
+        das Sessions-Verzeichnis nicht verlassen kann.
+      - **`language.nvim`**: `is_compound` darf nie „nein" sagen, wo `split`
+        Arbeit gehabt hätte — dieser Vorab-Check ist das Einzige, was still
+        einen echten Fund kosten kann.
+
+      **Und ein sechstes Repo:** `color_my_ascii.nvim` *hatte* eine Suite mit
+      16 Spec-Dateien — CI hat sie nie aufgerufen, der Workflow hieß „Lint" und
+      tat genau das. Jetzt läuft sie. Beim ersten Lauf über `TESTS/` kam
+      heraus, dass das Verzeichnis noch nie geprüft worden war (falscher
+      Quote-Stil, eine tote Zuweisung).
+
 - [x] **Bestehende Tests nach `TESTS/**` verschieben (Root statt `docs`)** —
       die Verschiebe-Hälfte des Test-Tasks. Vorher lagen sie an vier
       verschiedenen Orten, jetzt an einem: **25 von 31 Repos haben `TESTS/` im
