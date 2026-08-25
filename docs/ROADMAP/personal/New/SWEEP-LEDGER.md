@@ -846,9 +846,18 @@ kein Duplikat), `:Trouble`-Count (`v:count1` funktioniert laengst),
 
 ### Pre-existing Failures, dokumentiert statt versteckt
 
-- `replacer.nvim`: `tests/feature_smoke.lua:267` — `gitfiles.list` liefert nil.
-  Auch auf HEAD. Ausserdem laesst das Makefile `nvim -l` ohne lib.nvim auf dem
-  rtp laufen, wodurch alle drei Suites sofort sterben.
+- `replacer.nvim` — **gefixt 2026-08-25.** Ursache war nicht `gitfiles.list`,
+  sondern der Test: `7296c1f` (`--changed` async) hat die Signatur von
+  `(start_dir, kinds)` auf `(start_dir, kinds, on_done)` umgestellt, der Test
+  rief weiter die alte synchrone Form auf und indizierte das zurueckgegebene
+  nil. `list` wirft jetzt am falschen Call-Site statt still nil zu liefern.
+  Der rtp-Teil ist ebenfalls erledigt (`tests/resolve_lib_nvim.lua` nach
+  lib.nvims Template-Pattern A), `nvim -l tests/<suite>.lua` laeuft standalone.
+  Beim Verifizieren fiel ein *zweiter*, unabhaengiger Defekt auf: die
+  End-to-End-`--changed`-Assertion schlief pauschal `vim.wait(200)` nach einem
+  inzwischen asynchronen Lauf — gemessen 2 Fehlschlaege auf 12 Laeufen. Jetzt
+  wird auf das Ergebnis gewartet statt auf die Uhr: 12/12.
+  Stand: 155 + 26 + 7 Tests, alle gruen, ohne `$LIB_NVIM_PATH`.
 - `documentation.nvim`: 4 Spec-Dateien rot (`docmap`, `callhierarchy`,
   `diagnostics`, `mdview`) — identisch auf HEAD. `mdview` ist der bekannte
   8.3-Pfad-Fall, `diagnostics` (0 von 4 Findings) sieht nach echtem Bug aus.
