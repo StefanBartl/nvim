@@ -187,7 +187,8 @@ will not pick this up.
 
 Read-only. Renders every entry in `plugins.personal.list` plus a `+`/`-`
 marker for whether it's present in `dir` (default `$REPOS_DIR`) into a
-scratch buffer (`myplugins://list`, reused on repeat invocations) — useful
+scratch buffer (`myplugins://list`, reused on repeat invocations), sorted
+alphabetically by plugin name — useful
 before running `clone`/`remove` to see what they would actually touch.
 
 ```vim
@@ -207,7 +208,7 @@ verbs the entire interface:
 | | |
 | --- | --- |
 | `:%y` | yank the whole list |
-| `:sort` | by presence marker, then name |
+| `:sort` | by presence marker, then name (the default order is by name alone) |
 | `:sort /^.\{3\}/` | by name, ignoring the marker |
 | `:sort /.*\s/` | by `owner/repo` |
 | `/`, `:g`, `:v` | search / filter |

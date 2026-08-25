@@ -744,8 +744,8 @@ end
 ---A buffer rather than `vim.notify`: the list runs to dozens of entries, which
 ---a notification truncates and cannot scroll. The buffer is deliberately plain
 ---*text* and stays `modifiable`, so the usual editor verbs are the whole
----interface — `:%y` yanks the list, `:sort` (or `:sort /^.\{3\}/`) puts it in
----whatever order is wanted, `/` searches it. That is why this has no sort or
+---interface — `:%y` yanks the list, `:sort` (or `:sort /^.\{3\}/`) re-orders
+---the alphabetical default, `/` searches it. That is why this has no sort or
 ---filter command of its own, and why no git action is bound to a row:
 ---`:MyPlugins dashboard` is the view that talks to git.
 ---@param path string|nil
@@ -755,6 +755,15 @@ local function list_all(path)
     notify.error(tostring(err))
     return
   end
+
+  -- Alphabetical by name is the only ordering worth shipping as the default:
+  -- `plugins.personal`'s declaration order is an artifact of how the spec grew,
+  -- and looking a specific plugin up is what this view is for. Case-insensitive
+  -- so a capitalised entry doesn't sort into its own block. Every other order
+  -- is one `:sort` away.
+  table.sort(entries, function(a, b)
+    return a.name:lower() < b.name:lower()
+  end)
 
   local base_dir = resolve_base_dir(path)
   local lines = {}
