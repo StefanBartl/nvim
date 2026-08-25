@@ -61,9 +61,9 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Cross-Plattform
 - [ ] Code auf Cross-Plattform-Kompatibilität durchsehen und fixen (Windows/Linux/Mac Pfade, Shell-Aufrufe etc.).
+  - Konkreter Befund (2026-08-25): `filetree.nvim`s Suites laufen auf Linux grün, unter Windows fallen 45 Fälle (`test/units.lua` 4, `test/cwd_mode.lua` 41) — durchweg 8.3-Kurzpfad gegen Langpfad (`C:/Users/STEFAN~1/...` vs. `C:/Users/StefanBartl/...`) beim Vergleich von Temp-Verzeichnissen. Erwartungswert-Problem in den Tests, kein CI-Blocker, aber genau die Klasse Fehler, die dieser Task meint.
 
 ### Security, Tests & CI/CD
-- [ ] `ci`/`stylua`/Tests über alle Plugins grün ziehen.
 - [ ] Testdateien unter `TESTS/**` schreiben; bestehende `docs/TESTS/**` nach `TESTS/**` verschieben (Root statt `docs`).
 - [ ] Plugins auf sicherheitsrelevante Aspekte prüfen und härten.
 
