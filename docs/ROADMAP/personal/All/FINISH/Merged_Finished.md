@@ -72,6 +72,155 @@ nvim-Config.
       Commit). Fast-forward nach `main` gemergt, gepusht, Feature-Branch geloescht.
       Alle 31 Plugin-Repos stehen jetzt auf `main`.
 
+### Cross-Plattform
+
+- [x] **Erste Runde: die 45 Windows-Testfälle in `filetree.nvim` — 45 → 0.**
+      Der Task bleibt offen (siehe MERGED.md), aber der eingetragene Befund
+      ist erledigt, und er war anders begründet als notiert.
+
+      **Die Diagnose im Roadmap-Eintrag war falsch.** Dort stand
+      „Erwartungswert-Problem in den Tests". Es war ein Bug in `lib.nvim`:
+      `normkey` — der *kanonische* Cache-/Dedup-Schlüssel für einen Pfad —
+      gab für denselben Pfad **vor und nach `mkdir` zwei verschiedene
+      Schlüssel** zurück. `uv.fs_realpath` scheitert an einem Pfad, den es
+      noch nicht gibt, und der Fallback lieferte die Eingabe unverändert.
+      Unter Windows ist `$TEMP` die 8.3-Kurzform (`C:/Users/STEFAN~1/…`) für
+      jeden Profilnamen über acht Zeichen — also keyte dasselbe Verzeichnis
+      vorher kurz und nachher lang. Ein Schlüssel, der sich ändert, sobald
+      das Verzeichnis entsteht, ist kein Schlüssel: was vorher darunter
+      gecacht wurde, ist danach unauffindbar.
+
+      Gefixt, indem der **nächste existierende Vorfahre** aufgelöst und der
+      unauflösbare Rest wieder angehängt wird. Der Lauf stoppt an einer
+      echten Wurzel (`//server/share`, `C:/`, `/`), damit ein UNC-Pfad nicht
+      zerlegt wird, und ein abschließender Separator wird nicht mehr von
+      einem nackten Laufwerk gestrippt (`C:` ist unter Windows *das cwd auf
+      Laufwerk C*, nicht die Wurzel — das war eine Regression, die der
+      eigene Test gefangen hat). Neue `TESTS/normkey_spec.lua`, 20 Fälle.
+
+      **Allein das brachte `filetree.nvim` von 45 auf 4 Fehler.** Keine
+      Testdatei angefasst — die Tests hatten recht.
+
+      **Die restlichen 4 waren zwei verschiedene Dinge.** Zwei echte:
+      `find_files`' builtin-Backend fand in einem Verzeichnis voller Dateien
+      nichts. Grund: `vim.fn.glob`/`globpath` lesen ihr Argument als
+      **Pattern**, und ein `~` darin ist eine Home-Verzeichnis-Referenz.
+      Unter `C:/Users/STEFAN~1/…` versucht glob, `~1` als Benutzer
+      aufzulösen, findet keinen — und gibt eine **leere Liste** zurück, ohne
+      Fehler und ohne Warnung. Direkt nachgemessen: derselbe Baum globt
+      unter dem Langpfad zu 2 Einträgen, unter dem Kurzpfad zu 0. Der Nutzer
+      sah „No files found in: …", was schlicht nicht stimmte. Die anderen
+      zwei waren tatsächlich Erwartungswerte (`TMP_ROOT` aus dem rohen
+      `$TEMP` zusammengebaut, gegen ein aufgelöstes `getcwd()` verglichen) —
+      kanonisiert.
+
+      **Dieselbe Bug-Klasse noch zweimal gefunden**, beide unabhängig von
+      filetree:
+
+      - `pdfport.nvim/backends/marker.lua`: `tempname()`-Verzeichnis, zwei
+        `glob`-Aufrufe. Der Recovery-Suchlauf nach der erzeugten `.md` fand
+        sie nie, wenn sie nicht am geratenen Pfad lag — und die
+        Fehlermeldung listete den Verzeichnisinhalt durch denselben glob,
+        sagte also „Present:" und nichts, für ein nicht-leeres Verzeichnis.
+      - `sessions.nvim/config`: die %TEMP%-Blacklist ist ein reiner
+        Präfix-Vergleich gegen den Buffernamen und kannte nur die
+        `$TEMP`-Schreibweise. Ein Buffer, der über einen aufgelösten Pfad
+        geöffnet wurde — was `fs_realpath`, ein LSP oder ein Picker liefert
+        — trug die Langform und wurde **nicht** geblacklistet: Scratch-Files
+        unter %TEMP% landeten in der Session-Datei. Headless verifiziert
+        (`:edit` auf den Langpfad → nicht geblacklistet). Beide
+        Schreibweisen registriert, je mit eigener Separator-Form; dazu ein
+        Default-Eintrag repariert, der Vorwärts- und Rückwärts-Slash mischte
+        (`C:/Users/…/Temp\`) und damit auf gar nichts passen konnte.
+
+      Alle vier Suites von `filetree.nvim` sind unter Windows grün, `lib.nvim`
+      (inkl. der neuen Spec), `sessions.nvim` und `pdfport.nvim` ebenfalls.
+
+      **Nebenbefund, nicht cross-platform und daher nicht hier gefixt:**
+      `filetree.nvim/TESTS/refs/` hat 2 von 54 Fällen rot
+      (`nested/deep/c.lua` wird beim Rename nicht mitgezogen, `nested/b.lua`
+      schon). Reproduziert vor und nach dieser Änderung identisch, und auch
+      ohne ripgrep — also weder eine Regression noch ein Pfad-Problem. In
+      `filetree.nvim`s eigener Roadmap eingetragen.
+
+- [x] **Zweite Runde: die konditionalen `glob`-Aufrufstellen und die
+      Shell-Aufrufe — beides abgearbeitet.** Damit ist der Task zu.
+
+      **Zehn Aufrufstellen, aber kein elftes Helferlein.** Der Eintrag in
+      MERGED.md sagte „Fix ist jeweils zweizeilig". Stimmt — nur wären das
+      dann fünf bis sechs private Kopien derselben vier Zeilen gewesen,
+      `filetree` und `pdfport` hatten schon je eine. Stattdessen neu:
+      **`lib.nvim.fs.globbable`** (Modul + README + `@types` + Spec, im
+      Hausstil ein Verzeichnis pro Funktion), und jede der Stellen
+      verbraucht es. `filetree`s private Kopie ist migriert und gelöscht.
+      Die Spec-Zusicherung, die zählt, prüft nicht den Rückgabewert: sie
+      globt einen echten Baum und vergleicht die Trefferzahl — das ist die
+      Behauptung, die den Originalbug gefangen hätte.
+
+      Verbraucher: `insights.nvim` (5 — Import-Glob-Fallback ohne ripgrep,
+      Metrics-Datei-Lister, die drei Treesitter-Symbol-Scanner),
+      `markdown.nvim` (4 — beide `links`-cwd-Scopes, `file_refs`'
+      Pure-Lua-Fallback, `md_files.collect`), `recommender.nvim` (1),
+      `buffer-ctx.nvim` (1).
+
+      **Eine Stelle war nicht zweizeilig.** `insights`'
+      `analyzer.list_files` schneidet `#dir` Bytes von jedem Treffer ab, um
+      den Relativpfad für die Ignore-Prüfung zu bekommen. Nur den
+      glob-Aufruf zu tauschen hätte jeden Relativpfad um die Differenz
+      zwischen Kurz- und Langform verschoben — also einen neuen Bug
+      eingebaut. `dir` wird jetzt einmal umgebunden.
+
+      **Die Shell-Runde brachte einen Befund, den ich nicht erwartet
+      hatte.** Unter Windows startet `lib.nvim.cross.run` `powershell
+      -Command`, und dort ist `>` ein Alias für `Out-File` — dessen Default
+      **UTF-16LE mit BOM** ist. Nachgemessen, nicht vermutet:
+
+          powershell -Command "'hello' > f.txt"  ->  ff fe 68 00 65 00 …
+
+      `:Insights tree` schrieb seine Dateiliste also als Wide Chars, und
+      `compress`' `file-list.txt` ebenso — während dieselbe Ausgabe über die
+      Unix-Engines (`sh`) sauberes UTF-8 wurde. Beide holen die Liste jetzt
+      aus stdout und schreiben sie aus Lua: eine Kodierung auf jeder
+      Plattform, kein Quoting pro Shell. `-Encoding utf8` wäre die kleinere
+      Änderung gewesen, tauscht aber nur das UTF-16-BOM gegen ein UTF-8-BOM.
+      `write_tree` verliert dabei noch ein `shellescape`, das für `cmd.exe`
+      quotete, während das Kommando drumherum für PowerShell quotete.
+
+      **Und dahinter lag ein zweiter, älterer Bug:** `platform.run_shell`
+      reichte den Callback direkt aus `vim.system` durch, also im *fast
+      event context*, wo `vim.fn.*` und `vim.notify` mit „must not be called
+      in a fast event context" abbrechen. Jeder Verbraucher endet in einem
+      Notify. Jetzt wird einmal zentral gescheduled, statt dass sich jeder
+      Aufrufer daran erinnern muss.
+
+      **Zwei `io.popen`-Shell-Strings auf argv umgestellt.**
+      `github_stats`' Curl-Versionsprüfung trug deswegen einen
+      Plattform-Zweig (`2>nul` gegen `2>&1`), um stderr zu unterdrücken, das
+      `curl --version` gar nicht schreibt — argv braucht den Zweig nicht.
+      `replacer`s rg-Smoke-Test hatte als Pre-`vim.system`-Fallback eine
+      POSIX-Pipeline (`echo test | rg … 2>&1`), die unter `cmd.exe` ein
+      anderes Kommando ist: `echo test |` speist dort „test " mitsamt dem
+      Leerzeichen vor der Pipe.
+
+      **Als korrekt bestätigt und bewusst nicht angefasst:**
+      `lib.nvim/system/info.lua` und `gopath/truncated/cache.lua` (bewusst
+      POSIX, sauber verzweigt), `cmdlog`s fzf-Previewer (gibt unter Windows
+      `nil` zurück, statt ein kaputtes Kommando zu emittieren — inklusive
+      Begründung im Modulkopf), `insights compress`' Engine-Auswahl
+      (tar/zip gegen `Compress-Archive`), `pickers`' fzf-Kommandostrings
+      (`fd`/`rg` sind plattformübergreifend, `shellescape` quotet für
+      dieselbe `&shell`, die fzf-lua benutzt), `pdfport`s Terminal-Renderer.
+
+      Suites grün: `lib.nvim` (inkl. neuer Spec), `insights.nvim`,
+      `markdown.nvim`, `recommender.nvim`, `buffer-ctx.nvim`,
+      `filetree.nvim` (alle drei), `replacer.nvim`. `tree` und
+      `file-list.txt` unter Windows end-to-end nachgemessen: beide kommen
+      als reines UTF-8 mit den richtigen Zeilenzahlen zurück.
+
+      **Nebenbefund:** `markdown`s `md_files` rief `globbable` in einem
+      Zwischenstand ohne `require` auf — luacheck hat es gefangen, die Tests
+      nicht, weil keiner davon `M.collect` erreicht.
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
