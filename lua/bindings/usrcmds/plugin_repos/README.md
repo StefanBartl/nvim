@@ -185,14 +185,36 @@ will not pick this up.
 
 ### `:MyPlugins list [dir]`
 
-Read-only. Prints every entry in `plugins.personal.list` plus a `+`/`-`
-marker for whether it's present in `dir` (default `$REPOS_DIR`) — useful
+Read-only. Renders every entry in `plugins.personal.list` plus a `+`/`-`
+marker for whether it's present in `dir` (default `$REPOS_DIR`) into a
+scratch buffer (`myplugins://list`, reused on repeat invocations) — useful
 before running `clone`/`remove` to see what they would actually touch.
 
 ```vim
 :MyPlugins list
 :MyPlugins list ~/projects
 ```
+
+A buffer rather than a notification: the list runs to dozens of entries,
+which `vim.notify` truncates and cannot scroll. Unlike `dashboard` it never
+talks to git — one `fs_stat` per entry is the whole "did this get cloned"
+check, so it opens instantly.
+
+The buffer holds nothing but plugin rows (the `N plugin(s) — ... ` summary
+sits in the `winbar`) and stays `modifiable`, which makes the normal editor
+verbs the entire interface:
+
+| | |
+| --- | --- |
+| `:%y` | yank the whole list |
+| `:sort` | by presence marker, then name |
+| `:sort /^.\{3\}/` | by name, ignoring the marker |
+| `:sort /.*\s/` | by `owner/repo` |
+| `/`, `:g`, `:v` | search / filter |
+| `q` | close the window |
+
+That is why there is deliberately no sort, filter or refresh command of its
+own, and no git action bound to a row.
 
 ## Safety model — why this never scans a directory
 

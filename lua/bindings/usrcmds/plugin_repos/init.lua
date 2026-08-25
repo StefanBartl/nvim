@@ -53,8 +53,11 @@
 --- truth for the setting and `require()` caches it anyway. A restart is
 --- needed for a change to take effect (see `mode_cmd` below).
 ---
---- `:MyPlugins list [dir]` is read-only: prints every listed plugin plus
---- whether it's present in `dir`, for a quick overview before clone/remove.
+--- `:MyPlugins list [dir]` is read-only: renders every listed plugin plus
+--- whether it's present in `dir` into a scratch buffer, for a quick overview
+--- before clone/remove. Unlike `dashboard` it never talks to git — it is
+--- plain, `modifiable` text on purpose, so `:%y`, `:sort` and `/` are the
+--- entire interface and it needs no sort/filter commands of its own.
 ---
 --- `:MyPlugins picker [dir]` opens an interactive `Snacks.picker` (see
 --- `picker.lua`): `<Tab>` cycles the highlighted plugin through
@@ -68,6 +71,7 @@ local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos]")
 local composer = require("lib.nvim.usercmd.composer")
 local is_dir = require("lib.nvim.fs.is_dir")
 local expand_path = require("lib.nvim.cross.fs.expand_path")
+local open_named_scratch = require("lib.nvim.window.open_named_scratch")
 local plugin_list = require("plugins.personal.list")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
 
@@ -703,11 +707,47 @@ finish_reclone = function(safe, unsafe, missing, base_dir, dry_run)
 end
 
 -- =============================================================================
--- List (read-only overview)
+-- List (read-only overview in a scratch buffer)
 -- =============================================================================
 
----Prints every listed plugin plus whether it's present in `base_dir` — a
----read-only companion to `clone`/`remove` for "what would this even touch".
+local LIST_SCRATCH_NAME = "myplugins://list"
+
+-- Content-matched syntax rather than extmark highlights: the whole point of
+-- this buffer is that it stays modifiable so `:sort` works in it, and an
+-- extmark placed by row index would sit on the wrong plugin the moment the
+-- rows are reordered. A syntax match follows the text instead.
+local LIST_SYNTAX = {
+  [[syntax match MyPluginsListPresent "^+"]],
+  [[syntax match MyPluginsListMissing "^-"]],
+  [[syntax match MyPluginsListUnknown "^?"]],
+  [[syntax match MyPluginsListName "\%4c\S\+"]],
+  [[syntax match MyPluginsListRepo "\S\+/\S\+$"]],
+}
+
+do
+  local links = {
+    MyPluginsListPresent = "DiagnosticOk",
+    MyPluginsListMissing = "DiagnosticWarn",
+    MyPluginsListUnknown = "Comment",
+    MyPluginsListName = "Directory",
+    MyPluginsListRepo = "Comment",
+  }
+  for group, target in pairs(links) do
+    vim.api.nvim_set_hl(0, group, { link = target, default = true })
+  end
+end
+
+---Renders every listed plugin plus whether it's present in `base_dir` into a
+---scratch buffer — a read-only companion to `clone`/`remove` for "what would
+---this even touch".
+---
+---A buffer rather than `vim.notify`: the list runs to dozens of entries, which
+---a notification truncates and cannot scroll. The buffer is deliberately plain
+---*text* and stays `modifiable`, so the usual editor verbs are the whole
+---interface — `:%y` yanks the list, `:sort` (or `:sort /^.\{3\}/`) puts it in
+---whatever order is wanted, `/` searches it. That is why this has no sort or
+---filter command of its own, and why no git action is bound to a row:
+---`:MyPlugins dashboard` is the view that talks to git.
 ---@param path string|nil
 local function list_all(path)
   local entries, err = plugin_list.read()
@@ -726,12 +766,34 @@ local function list_all(path)
     lines[#lines + 1] = ("%s  %-24s  %s"):format(marker, entry.name, entry.repo)
   end
 
+  local bufnr, winid = open_named_scratch(LIST_SCRATCH_NAME, lines, {
+    filetype = "myplugins-list",
+    split = "below",
+    modifiable = true,
+  })
+
+  vim.api.nvim_buf_call(bufnr, function()
+    vim.cmd("syntax clear")
+    for _, cmd in ipairs(LIST_SYNTAX) do
+      vim.cmd(cmd)
+    end
+  end)
+
+  -- The summary lives in the winbar, not in a header line, so that `:%y` and a
+  -- bare `:sort` operate on nothing but plugin rows — an in-buffer header would
+  -- have to be excluded by hand on every such command.
   local header = base_dir
       and ("%d plugin(s) — '+' present / '-' missing in %s"):format(#entries, base_dir)
     or ("%d plugin(s) — presence unknown (no directory resolved; set $REPOS_DIR or pass one)"):format(
       #entries
     )
-  notify.info(header .. "\n\n" .. table.concat(lines, "\n"))
+  vim.wo[winid].winbar = header:gsub("%%", "%%%%")
+
+  vim.keymap.set("n", "q", function()
+    if vim.api.nvim_win_is_valid(winid) then
+      vim.api.nvim_win_close(winid, false)
+    end
+  end, { buffer = bufnr, nowait = true, desc = "Close the :MyPlugins list" })
 end
 
 -- =============================================================================
@@ -988,7 +1050,7 @@ function M.enable()
       {
         path = { "list" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        desc = "List every plugin in plugins.personal.list and whether it's present in dir/$REPOS_DIR",
+        desc = "Render every plugin in plugins.personal.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)",
         run = function(ctx)
           list_all(ctx.args.dir)
         end,
