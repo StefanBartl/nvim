@@ -221,6 +221,91 @@ nvim-Config.
       Zwischenstand ohne `require` auf — luacheck hat es gefangen, die Tests
       nicht, weil keiner davon `M.collect` erreicht.
 
+### Security
+
+- [x] **Erste Runde: drei Klassen, jede mit reproduziertem Befund.** Der Task
+      bleibt offen (siehe MERGED.md) — was hier steht, ist abgeschlossen.
+
+      **1. Ausführung beim *Preview* (`cmdlog.nvim`).** Beide Previewer
+      führten den Eintrag unter dem Cursor aus. Mit dem Cursor an
+      `:!rm -rf build` vorbeizugehen hat es ausgeführt; an
+      `:lua vim.fn.delete(x)` hat es ausgewertet; an `:term <cmd>` hat es
+      gespawnt. Nachgestellt, nicht vermutet: ein
+      `:lua vim.fn.writefile(…)`-Eintrag hat seine Datei allein durch das
+      Preview geschrieben.
+
+      Das ist für sich schon falsch — Previewen ist Blättern —, aber die
+      Einträge sind nicht mal zwingend die eigenen: `extra_files` faltet
+      beliebige Textdateien als History-Quelle ein, Shell-History ebenso.
+      „Ist ja nur, was du selbst mal ausgeführt hast" hält also nicht.
+
+      Der `:help`-Zweig war zusätzlich eine **Vim-Command-Injection**: das
+      Topic ging ungeprüft in einen `-c`-String, wo `|` einen neuen Befehl
+      beginnt — `:help x | call writefile(…)` hat das `writefile`
+      ausgeführt, ebenso nachgestellt. Auf der fzf-Seite gingen Topic *und*
+      der ganze `:lua`-Ausdruck ungeescaped zusätzlich in einen **Shell**-String.
+
+      Neu: `cmdlog.ui.preview_policy` hält die Entscheidung, die beide
+      Previewer inline getroffen und beide gleich falsch beantwortet haben —
+      ein Preview liest, es führt nicht aus. `:edit <file>` braucht kein
+      Gate. Alles Ausführende braucht `preview_execute = true` (neu, default
+      false) und wird selbst dann für einen Eintrag aus `risky_patterns`
+      verweigert. Zwei Argument-Prüfungen statt einer: ein Filter, der streng
+      genug für ein Shell-Wort ist, verwirft `vim.fn.getcwd()` wegen der
+      Klammern — das schaltet das Feature ab, statt es abzusichern. 11 Tests,
+      beide Repros darunter.
+
+      **2. Credentials in `argv` (`lib.nvim.net.curl`, `reposcope.nvim`).**
+      `bearer_token` wurde zu `-H "Authorization: Bearer …"` in der
+      Kommandozeile, `auth` zu `-u user:pass`. Die Kommandozeile eines
+      Prozesses ist für jeden anderen Prozess lesbar. Nachgemessen, während
+      der Request lief:
+
+          curl.EXE -sS -H "Authorization: Bearer SECRET_IN_ARGV_123" …
+
+      Beides geht jetzt in eine curl-Config über stdin (`-K -`) — curls
+      eigene Antwort auf genau das. Jeder `headers`-Eintrag namens
+      `Authorization`, `Proxy-Authorization` oder `Cookie` ebenso. Dieselbe
+      Messung danach zeigt nur noch `curl.EXE -K - -sS -X GET -i <url>`.
+      `spawn_capture` hat dafür `stdin` bekommen (das war der Blocker für
+      reposcope, das eine eigene Request-Tool-Schicht hat). Im
+      `curl_spec.lua` gegen den vorhandenen mitschneidenden Server
+      abgesichert: Header kommt auf der Leitung an, Plain-Header unberührt.
+
+      **Nicht abgedeckt und so dokumentiert:** `body` steht weiterhin als
+      `-d <body>` in argv. Ein Body lässt sich nicht als Config-Wert
+      ausdrücken (ein echter Zeilenumbruch beendet die Option), und stdin ist
+      jetzt belegt.
+
+      **3. Credentials in Log, `:messages` und auf Platte (`reposcope`).**
+      Die Debug-Zeile des curl-Tools druckte das komplette Kommando samt
+      Authorization-Header — und `:messages` ist das Erste, was in einen
+      Bugreport kopiert wird. Schlimmer das gh-Tool: es hängte den vollen
+      argv bei **jedem** Request an
+      `stdpath("cache")/reposcope/logs/gh-debug.txt` an, nicht nur im
+      Debug-Modus, womit die Datei auch unbegrenzt wuchs. gh authentifiziert
+      normalerweise über `GITHUB_TOKEN` in der Umgebung, aber `headers` ist
+      aufrufer-geliefert. Beides redigiert, das Datei-Log zusätzlich hinter
+      `debug` gehängt.
+
+      **Dazu, als Härtung ohne belegten Exploit:** `owner`/`repo_name` aus
+      der API-Antwort wurden in `readme_cache` direkt zu einem Dateipfad
+      verkettet. Kein echter GitHub-Name enthält einen Separator — aber „das
+      schickt der Server schon nicht" ist die falsche Annahme für ein
+      Cache-Verzeichnis, und der Provider-Host ist konfigurierbar.
+      Segment-Sanitisierung; gewöhnliche Namen bleiben unverändert, damit
+      bestehende Cache-Einträge ihre Dateinamen behalten.
+
+      **Als korrekt bestätigt:** `runtime-analysis`' `-k`/`--insecure` steht
+      in einer Liste von Flags, die aus *nutzergelieferten* curl-Argumenten
+      **entfernt** werden — genau andersherum als es aussieht. `cmdlog`s
+      `redact_patterns` (kein Token in History/Stats/Error-Log) und
+      `sessions`' %TEMP%-Blacklist sind bereits richtig. `github_stats`'
+      Debug-Ausgabe nennt nur die Token-Länge, nie den Wert.
+
+      CI grün: `cmdlog.nvim`, `lib.nvim`, `reposcope.nvim`.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
