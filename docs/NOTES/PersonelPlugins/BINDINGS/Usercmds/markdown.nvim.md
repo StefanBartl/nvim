@@ -157,12 +157,11 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
   (header_align/entry_align/col_overrides) now supplies `:Markdown table
   format` defaults; `blockquote_hl.marker_fg`/`text_fg` are unset by default
   and derived from the active colorscheme instead of a hard-coded hex.
-- **2026-07-23: added `:Markdown links sanitize [%|cwd|<file>]`** (branch
-  `claude/markdown-links-sanitize-4a5e72`, off `main` — does **not** include
-  the `gaps` subcommand noted below, which lives on the separate
-  `claude/leader-toc-gap-checker-357f5b` branch; the two haven't been merged
-  together yet, so `:Markdown` here still has its original 10 subcommands,
-  not 11). Normalizes inline-link targets: backslashes -> forward slashes,
+- **2026-07-23: added `:Markdown links sanitize [%|cwd|<file>]`**
+  (**on `main` since 2026-08-25**; it sat on `claude/markdown-links-sanitize-4a5e72`
+  for a month, alongside the `gaps` subcommand noted below on its own branch —
+  both landed together in that pass, so `:Markdown` now carries all 14
+  subcommands, `links sanitize` and `gaps` included). Normalizes inline-link targets: backslashes -> forward slashes,
   bare relative paths get a `./` prefix (`[t](doc.md)` ->
   `[t](./doc.md)`; `[t](.\doc\file.md)` -> `[t](./doc/file.md)`). Leaves
   URLs, `mailto:`/drive-letter scheme targets, `#anchor`-only links,
@@ -180,7 +179,8 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
   augroup in `bindings/autocmds.lua`, see the Autocmds cheatsheet), gated by
   the new `config.links.sanitize_on_save` option (default `true`) — same
   independent-opt-in-by-default pattern as `config.refs.mode = "save"`.
-- **2026-07-21: added `gaps` subcommand** (heading-level gap checker).
+- **2026-07-21: added `gaps` subcommand** (heading-level gap checker; **on
+  `main` since 2026-08-25**).
   `<leader>toc` / `:Markdown toc` now also detect skipped heading levels
   (e.g. `#` -> `###` with no `##` in between) after each refresh, notify,
   and offer (`vim.fn.confirm`) to renumber the offending headings on the
