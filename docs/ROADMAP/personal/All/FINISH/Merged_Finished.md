@@ -10,6 +10,46 @@ nvim-Config.
 
 ### Git & Repo-Hygiene
 
+- [x] **Claude-Branches aufräumen — 26 von 28** (Rest: die zwei jüngeren als
+      3 Tage, siehe MERGED.md).
+
+      18 waren vollständig in `main` — ersatzlos gelöscht, lokal wie remote,
+      plus vier verwaiste `.claude/worktrees/`-Checkouts.
+
+      Die 8 älteren mit unveröffentlichten Commits wurden nicht weggeworfen,
+      sondern eingebaut. `main` war überall 24–52 Commits weiter, also war kein
+      einziger ein glatter Cherry-Pick:
+
+      - `replacer.nvim` — vier `*tag*`-Definitionen statt `|tag|`-Referenzen in
+        `doc/replacer.txt`. Doppelte Tag-Definitionen brechen `:helptags` und
+        damit `:Lazy sync`.
+      - `buffer-ctx.nvim` — `:Insert/:Copy date` bekommt dieselbe
+        `[format] [--utc]`-Grammatik wie `timestamp`, plus 5 neue Formate.
+      - `filetree.nvim` — zwei Commits: `no_name_guard` aus sechs
+        Test-Setups heraus (es löschte die Scratch-Buffer, bevor der Test ihre
+        Keymaps lesen konnte), und `lua_require_copy` auf
+        `lib.nvim.lua_ls.get_module_path` konsolidiert. Die zweite Hälfte des
+        ersten Commits wurde verworfen: `main` hatte denselben Bug inzwischen
+        präziser gefixt.
+      - `markdown.nvim` — zwei Features: `:Markdown links sanitize` +
+        Sanitize-on-save, und der Heading-Gap-Checker (`:Markdown gaps`,
+        `check_heading_gaps`, `--check-gaps`). Beide Branches hatten ältere
+        Fassungen von Config-Block, Subcommand-Tabelle und vimdoc-Kapitel-
+        nummerierung, die durch die aktuellen ersetzt wurden.
+      - `pickers.nvim` — von 9 Commits war genau einer noch nicht auf `main`:
+        die Systemscope suchte unter Windows in `"/"`, also im Root des
+        *aktuellen* Laufwerks statt überall, und `pick_dir` in den
+        telescope-/snacks-Engines kannte `fdfind` nicht (Debian/Ubuntu). Gegen
+        `main`s inzwischen asynchrone `drives.lua` neu implementiert.
+      - `mdview.nvim` — vollständig überholt: `main` hat `:MDView blanklines`
+        eigenständig gelöst, client-seitig in TypeScript statt in Rust/WASM.
+        Übrig blieb eine echte Doku-Lücke: `doc/mdview.txt` kannte das Feature
+        als einziges nicht.
+
+      Aufgefallen und mitgenommen: `docs/NOTES/PersonelPlugins/BINDINGS`
+      beschrieb drei dieser Features bereits, aber mit Verweis auf Branches, die
+      es jetzt nicht mehr gibt — auf "seit 2026-08-25 auf `main`" umgestellt.
+
 - [x] **`gh repo edit` (Description, Topics) pro Repo.**
       Description und Topics waren in allen 31 Repos schon gesetzt; offen war
       die Konsistenz. Basis-Set `neovim` / `neovim-plugin` / `lua` -- die drei
