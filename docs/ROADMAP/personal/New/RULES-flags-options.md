@@ -10,17 +10,34 @@ Collected "Fehlende Flags/Optionen" ideas from each per-plugin report's
 Keybindings-Audit section. These are things the report's author noticed while
 reading the code, not confirmed feature requests.
 
-## nvim-config
+## nvim-config — erledigt 2026-08-24
 
-- `:MyPlugins clone/reclone --dry-run` — a preview of what would be
-  cloned/removed; the groundwork already exists in `finish_check`/
-  `finish_reclone`, just not exposed as an isolated dry-run path.
-- `:MyReposUpdate --only=<name>` — analogous to `:MyPlugins fetch/pull/update
-  --only=<name>`; currently always all repos in the directory.
-- `:WhoLocks --json` — for a future pickers.nvim integration (currently plain
-  text notify + `print`).
-- `:Trouble` mappings (`[w`/`]w`): add a `<leader>x`-prefixed variant taking an
-  explicit `count` argument, once Trouble's API supports it.
+- [x] `:MyPlugins clone/reclone --dry-run` — the groundwork really was
+  already there: the safe/unsafe/missing split `finish_check`/`finish_reclone`
+  compute is exactly the preview, it just always went on to confirm and act.
+  `dry_run` now short-circuits both after reporting that split. `clone`'s
+  dry-run doesn't even need the check phase — it reuses `ops.clone_one`'s own
+  "exists" predicate (`loop.fs_stat`, no git call) directly.
+- [x] `:MyReposUpdate --only=<name>` — done, but the mechanism differs from
+  `:MyPlugins`'s: this command scans an arbitrary directory for *any* git repo
+  rather than iterating a named list, so `--only` filters that scan's result
+  by directory basename instead of validating against
+  `plugins.personal.list`. Completion still works — it scans the resolved
+  base dir the same way the real run would (cheap: no git subprocess) and
+  offers basenames. Needed migrating `nargs` from `"?"` to `"*"` and a manual
+  `--only=` token parse, since the command wasn't composer-based.
+- [x] `:WhoLocks --json` — done. `lib.nvim.cross.fs.lock.report` only ever
+  produces human text lines, so the json path calls `probe`/`who` directly and
+  assembles a `vim.json.encode`-able table itself instead of routing through
+  `report`.
+- [x] `:Trouble` mappings (`[w`/`]w`) — **turned out to be no gap.**
+  `lsp.nvim`'s `trouble_diag_next`/`prev` (where these keys now live, see the
+  count audit) already loop `trouble.next()`/`trouble.prev()` `v:count1`
+  times client-side — `5]w` already works. The premise ("once Trouble's API
+  supports it") no longer applies: the workaround doesn't need a native count
+  parameter from Trouble at all, so an explicit `<leader>x`-prefixed count
+  variant would just duplicate what `v:count1` on the existing key already
+  does.
 — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md)
 
 ## documentation.nvim

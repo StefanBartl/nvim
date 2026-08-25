@@ -79,11 +79,18 @@ frozen list baked in at `setup()`:
 
 ## Missing or partial — flagged gaps
 
-- **`nvim-config`**: `:MyReposUpdate [path]` is registered with `nargs = "?"`
-  but **no `complete`**, unlike its sibling `:MyPlugins clone/remove/...
-  [dir]` which reuses the `MYPLUGINS_DIR` type for the same purpose — the
-  fix is a one-line reuse of the existing type — from
-  [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md) (`bindings/usrcmds/update_repos/init.lua:156-164`).
+- **`nvim-config`** — **erledigt 2026-08-24.** `:MyReposUpdate [path]` hat
+  jetzt Completion: `$REPOS_DIR` (wenn aufloesbar) plus echte
+  Verzeichnis-Completion, gleiche Logik wie `MYPLUGINS_DIR`. Keine
+  Eins-Zeiler-Wiederverwendung des Typs selbst, weil `resolve_base_dir` hier
+  — anders als `MYPLUGINS_DIR`s `validate` — kein `$VAR`-Expansion machte;
+  `fnamemodify` allein laesst `"$REPOS_DIR"` woertlich stehen. Ohne
+  `lib.nvim.cross.fs.expand_path` davor waere `$REPOS_DIR` als Completion-
+  Kandidat ein Koeder gewesen, der beim Ausfuehren gebrochen waere — jetzt
+  eingebaut und geprueft. Nebenbei bekam der Befehl auch `--only=<name>`
+  (siehe `RULES-flags-options.md`), was `nargs` von `"?"` auf `"*"` und die
+  Completion auf eine Funktion umgestellt hat —
+  [bindings/usrcmds/update_repos/init.lua](../../../../lua/bindings/usrcmds/update_repos/init.lua).
 - **`learn-cli.nvim`**: `:LearnCLICreateCycle <name> [path]` has a `complete`
   function that ignores `arg_lead`/context entirely and always returns 3
   static placeholder strings; the second positional (`path`, a directory) has
