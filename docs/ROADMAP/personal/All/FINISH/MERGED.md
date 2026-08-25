@@ -52,7 +52,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Healthchecks, Config & Defaults
 - [ ] `config/init.lua` + `config/DEFAULTS.lua` pro Plugin anlegen, pluginseitige Defaults dorthin.
-- [ ] `:checkhealth`-Unterstützung pro Plugin implementieren.
 - [ ] `/bindings`-Ordner (usrcmds/keymaps/autocmds) anlegen.
 - [ ] Prüfen: sind wirklich alle Plugins lazy geladen?
 - [ ] Möglichst viele Features user-konfigurierbar machen, inkl. LuaLS-Typen/Aliases für jeden Config-Key.

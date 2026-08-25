@@ -5,6 +5,64 @@ sheets: background surfaces, persisted state, servers, generated artifacts.
 
 ---
 
+## Alle Plugins — der `:checkhealth`-Name
+
+Ergänzt 2026-08-25.
+
+Jedes der 31 Repos hat einen Healthcheck, und alle laufen (headless verifiziert:
+`:checkhealth <name>` findet in jedem Repo ein Modul und wirft keine Exception).
+
+Der Name, den `:checkhealth` will, ist **der Lua-Modulname, nicht der
+Repo-Name** — Neovim sucht `lua/<name>/health.lua` und durchsucht keine
+Unter-Namespaces. Bei drei Repos weicht das voneinander ab, und `dap.nvim` ist
+nicht zu erraten:
+
+| Repo | Aufruf |
+| --- | --- |
+| `buffer-ctx.nvim` | `:checkhealth buffer_ctx` |
+| `cascade.nvim` | `:checkhealth cascade` |
+| `cmdlog.nvim` | `:checkhealth cmdlog` |
+| `color_my_ascii.nvim` | `:checkhealth color_my_ascii` |
+| `dap.nvim` | `:checkhealth wkddap` |
+| `debugging.nvim` | `:checkhealth debugging` |
+| `diff.nvim` | `:checkhealth diff` |
+| `documentation.nvim` | `:checkhealth documentation` |
+| `emojis.nvim` | `:checkhealth emojis` |
+| `fileops.nvim` | `:checkhealth fileops` |
+| `filetree.nvim` | `:checkhealth filetree` |
+| `github_stats.nvim` | `:checkhealth github_stats` |
+| `gopath.nvim` | `:checkhealth gopath` |
+| `images.nvim` | `:checkhealth images` |
+| `insights.nvim` | `:checkhealth insights` |
+| `language.nvim` | `:checkhealth language` |
+| `lib.nvim` | `:checkhealth lib` |
+| `lsp.nvim` | `:checkhealth lsp` |
+| `markdown.nvim` | `:checkhealth markdown` |
+| `mdview.nvim` | `:checkhealth mdview` |
+| `migrate.nvim` | `:checkhealth migrate` |
+| `open.nvim` | `:checkhealth open` |
+| `pdfport.nvim` | `:checkhealth pdfport` |
+| `pickers.nvim` | `:checkhealth pickers` |
+| `recommender.nvim` | `:checkhealth recommender` |
+| `replacer.nvim` | `:checkhealth replacer` |
+| `reposcope.nvim` | `:checkhealth reposcope` |
+| `runtime-analysis.nvim` | `:checkhealth runtime-analysis` |
+| `sandbox.nvim` | `:checkhealth sandbox` |
+| `sessions.nvim` | `:checkhealth sessions` |
+| `spotlight.nvim` | `:checkhealth spotlight` |
+
+Zwei Fallstricke, die genau daraus entstanden sind:
+
+- `dap.nvim` heißt intern `wkddap` (um nicht mit `nvim-dap` zu kollidieren) —
+  `:checkhealth dap` findet nvim-daps Healthcheck, nicht diesen hier.
+- `documentation.nvim` hatte seinen Healthcheck nach dem core/editor-Split
+  unter `documentation.editor.health` liegen. `:checkhealth documentation` —
+  die Schreibweise, die README, vimdoc und drei weitere Docs nennen — lief
+  damit ins Leere. Seit 2026-08-25 gibt es `lua/documentation/health.lua` als
+  Weiterleitung.
+
+---
+
 ## documentation.nvim
 
 Added 2026-07-28.

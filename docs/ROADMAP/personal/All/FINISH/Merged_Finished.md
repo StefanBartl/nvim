@@ -40,6 +40,25 @@ nvim-Config.
       JSON war (LuaLS' eigener Parser toleriert das, jeder andere Consumer nicht) --
       korrigiert. Alle 31 Dateien parsen jetzt als striktes JSON.
 
+### Healthchecks, Config & Defaults
+
+- [x] **`:checkhealth`-Unterstützung pro Plugin implementieren.**
+      War in 30 von 31 Repos vorhanden. Headless über alle 31 verifiziert:
+      `:checkhealth <name>` findet überall ein Modul und wirft keine Exception.
+
+      Die eine Lücke war `documentation.nvim`: nach dem core/editor-Split lag
+      der Healthcheck unter `documentation.editor.health`. Neovim löst
+      `:checkhealth documentation` aber ausschließlich nach
+      `lua/documentation/health.lua` auf und durchsucht keine
+      Unter-Namespaces -- der Aufruf, den README, vimdoc und drei weitere Docs
+      nennen, lief also ins Leere. Weiterleitungs-Modul angelegt.
+
+      Aufgefallen dabei: der Name, den `:checkhealth` erwartet, ist der
+      Lua-Modulname, nicht der Repo-Name -- und bei `dap.nvim` (intern
+      `wkddap`, damit es nicht mit `nvim-dap` kollidiert) ist der nicht zu
+      erraten. Die vollständige Zuordnung steht jetzt in
+      `docs/NOTES/PersonelPlugins/Misc.md`.
+
 ### Security, Tests & CI/CD
 
 - [x] **`ci`/`stylua`/Tests über alle Plugins grün ziehen.**
