@@ -334,6 +334,40 @@ nvim-Config.
 
 ### Security, Tests & CI/CD
 
+- [x] **Bestehende Tests nach `TESTS/**` verschieben (Root statt `docs`)** —
+      die Verschiebe-Hälfte des Test-Tasks. Vorher lagen sie an vier
+      verschiedenen Orten, jetzt an einem: **25 von 31 Repos haben `TESTS/` im
+      Root**, keines mehr `docs/TESTS/`, `tests/` oder `test/`.
+
+      - 12 Repos: `docs/TESTS/` → `TESTS/`.
+      - 5 Repos: `tests/` → `TESTS/` (als zwei git-moves, weil eine reine
+        Groß-/Kleinschreibungs-Umbenennung auf einem case-insensitiven
+        Dateisystem ein No-op ist).
+      - `filetree.nvim` hatte beides: `test/` mit den vier Headless-Suites und
+        `TESTS/` mit den Fixture-Tests. Zusammengelegt; `test/README.md` war
+        keine Dublette, sondern eine manuelle Integrations-Checkliste — liegt
+        jetzt als `TESTS/MANUAL.md` daneben.
+      - `github_stats.nvim` hatte seine Specs unter `lua/github_stats/tests/`,
+        also **im Runtime-Tree** — sie wurden mit ausgeliefert und lagen auf dem
+        runtimepath. Jetzt im Root.
+
+      **Der teure Fund dabei:** luacheck bringt eingebaute busted-Defaults mit,
+      die auf `**/spec/**`, `**/test/**` und `**/tests/**` matchen — alles
+      klein. Solange die Suite in `tests/` lag, bekam sie den busted-std
+      geschenkt; `TESTS/` matcht keines davon, und `assert.has_no.errors` &
+      Co. wurden zu 465 Warnungen in `lsp.nvim`, von denen keine einzige den
+      Code betraf. Jetzt explizit deklariert — was ohnehin besser ist, weil
+      vorher nirgends stand, woher die busted-Globals kamen.
+
+      Zwei weitere Fallen, die nur auf Linux sichtbar wurden:
+      - `sandbox.nvim` hatte drei `require("tests.sandbox.helpers.…")` —
+        Modulpfade, keine Dateipfade, also für eine `tests/`-Suche unsichtbar.
+        Unter Windows löste das weiter auf (case-insensitiv), auf CI nicht: jede
+        Spec meldete Erfolg und der Prozess ging trotzdem mit 1 raus.
+      - `runtime-analysis.nvim`s `parse_spec.lua` lud `ftdetect/` über
+        `TESTS/../../` — zwei Ebenen hoch, weil die Suite unter `docs/` lag.
+
+
 - [x] **`ci`/`stylua`/Tests über alle Plugins grün ziehen.**
       Ausgangslage: 21 Repos rot, 4 ohne jeden Workflow, 7 grün.
       Endstand: **alle 31 Repos grün, in jedem Workflow** -- und ohne
