@@ -72,6 +72,34 @@ nvim-Config.
       Commit). Fast-forward nach `main` gemergt, gepusht, Feature-Branch geloescht.
       Alle 31 Plugin-Repos stehen jetzt auf `main`.
 
+### Sonstiges
+
+- [x] **Quellcode und Kommentare auf Englisch** — plus die nutzerseitigen Docs.
+      (Die internen Roadmap-/Audit-Dokumente bleiben offen, s. MERGED.md.)
+
+      **Code: 55 deutsche Kommentarzeilen in 8 Repos → 0.** Übersetzt in
+      `lib.nvim` (16), `lsp.nvim` (16), `images.nvim` (11), `gopath.nvim` (5),
+      `dap.nvim` (2), `migrate.nvim` (1). Nicht angefasst: sechs Stellen, an
+      denen *zitiertes* Deutsch in englischem Text steht — ein deutscher
+      Abschnittsname aus der Regelsammlung, eine deutsche Commit-Message im
+      Test, ein deutscher Ausgabestring. Zitate bleiben Zitate.
+
+      Wo die deutsche Fassung weniger sagte als sie konnte, sagt die englische
+      jetzt das Ganze statt der wörtlichen Hälfte:
+      `lib.nvim`s `get_alternate` benennt jetzt, *warum* ein Buffer mit Namen
+      trotzdem unbrauchbar sein kann (Terminal, Help, Quickfix haben einen
+      Namen, aber keinen Pfad), und der JSON-`@types`-Block sagt, dass die
+      Key-Sortierung dafür da ist, dass die Ausgabe nicht von `pairs`-Reihenfolge
+      abhängt.
+
+      **Nutzerseitige Docs: 287 Zeilen → 0 echte.** 181 davon waren
+      **absichtliche** deutsche Fassungen mit englischem Gegenstück
+      (`README-de.md`, `docs/features/de/**`, `*-DE.md`) — die bleiben, das ist
+      kein Versehen, sondern eine Übersetzung. Der Rest war `mdview.nvim`s
+      `docs/FEATURES/FEATURES.md`, der Katalog, auf den README und jede andere
+      FEATURES-Seite zeigen: 222 Zeilen, übersetzt statt paraphrasiert — der
+      Entwickler-Teil behält jedes „warum", das er trug.
+
 ### Dokumentation & Cheatsheets
 
 - [x] **`.luarc.json` pro Plugin-Root anlegen.**

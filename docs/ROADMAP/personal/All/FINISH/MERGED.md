@@ -78,7 +78,9 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Git-Release pro Repo, sobald fertig.
 
 ### Sonstiges
-- [ ] Source Code, Kommentare und Docs konsequent auf Englisch halten (nur der Chat mit dir bleibt Deutsch).
+- [ ] Docs auf Englisch: **Quellcode und Kommentare sind fertig** (s. Merged_Finished), ebenso die nutzerseitigen Docs. Offen sind ~1145 Zeilen in **internen** Dokumenten — `docs/ROADMAP/**` (die Checklisten-Audits, KONZEPT-/IDEEN-Papiere), `DONE.md`-Entscheidungslogs, `DEBUG-GUIDE`/`TODO`-Dateien, `docs/CI/`-Historie. Größte Brocken: `mdview.nvim` (357), `lsp.nvim/docs/ROADMAP.md` (201), `gopath.nvim` (134), `github_stats.nvim` (110).
+  - Entscheidung nötig: Die Audit-Dokumente (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) sind Ableitungen deiner **deutschen** Regelsammlung in `wkdbook-Lua/Checklists/`. Sie zu übersetzen entkoppelt sie von ihrer Quelle. Lohnt das, oder bleiben interne Arbeitsdokumente deutsch?
+  - Nicht anzufassen: die **absichtlichen** deutschen Fassungen mit englischem Gegenstück — `color_my_ascii.nvim/docs/README-de.md`, `docs/features/de/**`, `gopath.nvim/docs/*-DE.md` (181 Zeilen).
 
 ---
 
