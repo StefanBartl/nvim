@@ -36,7 +36,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Dokumentation & Cheatsheets
 - [ ] Pro Plugin `docs/BINDINGS.md` (alle Keymaps, Usrcmds, Autocmds) generieren; zusätzlich zentrale Cheatsheets unter `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds,Misc}.md` — inkl. Dopplungs-Check der `lhs` über alle Plugins hinweg.
-- [ ] `docs/ROADMAP.md` pro Plugin anlegen bzw. durchgehen.
+- [ ] Die Audit-Dokumente (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) verweisen auf Quell-Checklisten unter `Notes/MyNotes/Checklists/Lua/`, die es dort nicht gibt: 6 Repos (`markdown.nvim` mit `C:`-Pfad, `debugging`/`github_stats`/`migrate`/`open`/`pdfport` noch mit dem alten `E:/repos/…`, 19 Vorkommen). Entscheidung nötig: liegen die Checklisten woanders, sollen sie ins `Notes`-Repo, oder sollen die Verweise zu reinen Dateinamen werden? Ohne die Antwort wäre jedes Umschreiben geraten.
 - [ ] README.md pro Plugin an Spec anpassen: Installation für verschiedene Package-Manager, `lazy=false`/`VeryLazy` explizit setzen, `dir = vim.env...` entfernen, Lizenzverweise löschen, auf Englisch, Badges/ASCII-Art, kurzer Cross-Link-Absatz zu verwandtem Plugin.
 - [ ] `doc/{NAME}.txt` (vimdoc) pro Plugin erstellen.
 - [ ] `docs/FEATURES.md` bzw. `docs/FEATURES/`-Ordner pro Plugin nach Format von `documentation.nvim/docs/FEATURES_FORMAT.md` befüllen.

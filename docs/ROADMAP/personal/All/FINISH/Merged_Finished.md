@@ -80,6 +80,44 @@ nvim-Config.
       JSON war (LuaLS' eigener Parser toleriert das, jeder andere Consumer nicht) --
       korrigiert. Alle 31 Dateien parsen jetzt als striktes JSON.
 
+### Dokumentation & Cheatsheets
+
+- [x] **`docs/ROADMAP.md` pro Plugin anlegen bzw. durchgehen.**
+      Jedes Repo hatte etwas, aber in drei verschiedenen Formen: mal
+      `docs/ROADMAP.md`, mal nur ein `docs/ROADMAP/`-Ordner, mal beides ohne
+      Verbindung.
+
+      *Angelegt:* `filetree.nvim` war das einzige Repo mit Ordner und ohne
+      Einstiegspunkt — vier Dokumente, keine Aussage darüber, welche noch offen
+      sind. Der README verwies auf den Ordner und zählte geplante Arbeit auf,
+      die davon abgewichen war.
+
+      *Durchgegangen:* neun Repos hatten `docs/ROADMAP.md` **und**
+      `docs/ROADMAP/` nebeneinander, und die Datei erwähnte den Ordner nie —
+      die Audits und Konzeptpapiere darin waren nur zu finden, wenn man das
+      Verzeichnis bemerkte. Jede dieser Dateien indexiert ihren Ordner jetzt und
+      sagt, dass nichts davon offene Arbeit ist, sofern es nicht dasteht. Wo die
+      Roadmap nur aus Überschrift und Trennlinie bestand, steht jetzt, dass
+      nichts offen ist, statt den Leser raten zu lassen.
+
+      *Dabei gefunden:*
+      - `filetree.nvim`s Neotree-Audit führte zwei der vier Lücken noch als
+        „konkrete Arbeitspakete", obwohl beide gebaut sind
+        (`paths.markdown_links`, `system.pdf_open`/`pdf_create`). Auch die
+        Feature-Zahl war veraltet (62 → 56).
+      - **38 tote Links** in den Roadmap-Dokumenten, jetzt 14 — und die
+        verbleibenden sind alle dieselbe offene Frage (s. MERGED.md). Darunter
+        drei, die `gen_map` in `images.nvim` bei *jedem* Lauf gemeldet hat, und
+        neun in `filetree.nvim`s `Refs_Engine.md`, die als repo-root-relativ
+        geschrieben waren, obwohl das Dokument drei Ebenen tief liegt.
+      - `filetree.nvim` schloss Fixtures unter `TESTS/smart_rename_refs/` aus —
+        in `.luacheckrc` **und** in der `.styluaignore`. Die Suite ist längst
+        `TESTS/refs/`; beide Ausschlüsse liefen also ins Leere und die Fixtures
+        wurden wie Plugin-Quellcode gelintet.
+      - `gopath.nvim`s `Checklist.md` ist eine wörtliche Kopie der geteilten
+        Checkliste, kein gopath-Audit wie in allen Geschwister-Repos — inklusive
+        elf Querverweise auf Dateien des Quell-Repos.
+
 ### Healthchecks, Config & Defaults
 
 - [x] **`:checkhealth`-Unterstützung pro Plugin implementieren.**
