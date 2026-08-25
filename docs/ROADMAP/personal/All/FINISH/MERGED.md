@@ -52,7 +52,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Healthchecks, Config & Defaults
 - [ ] `config/init.lua` + `config/DEFAULTS.lua` pro Plugin anlegen, pluginseitige Defaults dorthin.
-- [ ] `/bindings`-Ordner (usrcmds/keymaps/autocmds) anlegen.
 - [ ] Prüfen: sind wirklich alle Plugins lazy geladen?
 - [ ] Möglichst viele Features user-konfigurierbar machen, inkl. LuaLS-Typen/Aliases für jeden Config-Key.
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.

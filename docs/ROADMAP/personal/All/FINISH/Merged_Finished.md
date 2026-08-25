@@ -99,6 +99,27 @@ nvim-Config.
       erraten. Die vollständige Zuordnung steht jetzt in
       `docs/NOTES/PersonelPlugins/Misc.md`.
 
+- [x] **`/bindings`-Ordner (usrcmds/keymaps/autocmds) anlegen.**
+      29 von 31 Repos hatten ihn. Die beiden Lücken sind geschlossen, und beide
+      haben beim Aufräumen je einen echten Fehler hergegeben:
+
+      - `replacer.nvim`: die Usercmds wurden von einer handgepflegten
+        `pcall`-Leiter in `plugin/replacer.lua` registriert, die neun Module
+        nannte und keines der Kommandos, die sie anlegen; der eine Autocmd und
+        die zwei Panel-Keymaps standen inline in `regex.lua`.
+        `lua/replacer/bindings/` hält jetzt alle drei. Der Autocmd bekam dabei
+        eine benannte Gruppe (`ReplacerTestPanel`) — stapeln konnte er nicht,
+        aber ein namenloser Autocmd ist für jeden unsichtbar, der prüfen will,
+        was ein Plugin installiert.
+      - `lib.nvim`: die ganze Bindings-Fläche lag in einer 168-Zeilen-
+        `init.lua`. Aufgeteilt in `actions`/`usrcmds`/`autocmds` (kein
+        Keymaps-Modul — eine Library, von der andere Plugins abhängen, hat
+        keine Taste zu belegen). **Dabei gefunden:** der Helptags-Autocmd hatte
+        keine Augroup, und `setup()` läuft bei jedem Config-Reload erneut. Nach
+        zwei Reloads lief `helptags ALL` bei einem `:Lazy sync` also dreimal —
+        ~229 ms pro Lauf bei 116 Plugins, und nicht inkrementell. Jetzt
+        idempotent.
+
 ### Security, Tests & CI/CD
 
 - [x] **`ci`/`stylua`/Tests über alle Plugins grün ziehen.**
