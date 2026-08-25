@@ -184,6 +184,42 @@ nvim-Config.
 
 ### Healthchecks, Config & Defaults
 
+- [x] **`config/init.lua` + `config/DEFAULTS.lua` pro Plugin anlegen,
+      pluginseitige Defaults dorthin.**
+      Die Struktur stand bereits in **allen 31 Repos**. Geprüft wurde deshalb
+      die zweite Hälfte: liegen die Defaults auch wirklich dort?
+
+      Gesucht nach Default-Tabellen außerhalb von `config/DEFAULTS.lua` — 6
+      Repos, 10 Stellen. Nach Durchsicht sind acht davon korrekt am Platz:
+      Funktionsargument-Defaults (`sessions.nvim`s Statusline-Komponente),
+      interne Transport-Konstanten (`mdview.nvim`s Websocket-Backoff),
+      Highlight-Konstanten (`lsp.nvim`) und drei filetree-Features, deren
+      Defaults laut der dokumentierten Architektur beim Feature bleiben
+      („Per-feature defaults that are not listed here live in the feature
+      module itself").
+
+      Zwei waren echte Befunde:
+
+      - **`filetree.nvim`, `cwd_mode`:** `config/DEFAULTS.lua` führte eine
+        von Hand gepflegte **Teilkopie** der Feature-Tabelle — und war schon
+        abgedriftet. Der ganze `nearest`-Block (zehn Package-Marker, die
+        komplette Konfigurationsfläche eines der sechs Modi) stand nur im
+        Feature; wer die zentralen Defaults las, konnte nicht erkennen, dass es
+        überhaupt konfigurierbar ist. Dasselbe bei `indicator.labels` und
+        `align`. Nach `features/nav/cwd_mode/DEFAULTS.lua` ausgelagert und von
+        beiden Seiten `require`d — genau die Anordnung, die
+        `filetree.refs.DEFAULTS` in derselben Datei schon benutzt. Gemerged
+        wurde vorher wie nachher gleich (die kopierten Keys stimmten zufällig
+        überein, und der Merge ist tief); es geht um den nächsten Edit, nicht
+        um diesen.
+      - **`runtime-analysis.nvim`:** `setup()` akzeptiert vier Optionen —
+        `KNOWN_OPTS` validiert genau dagegen — aber `DEFAULTS.lua` beschrieb
+        drei. `telemetry` existierte nur in der `@param`-Annotation. Steht
+        jetzt dort, bewusst **ohne Default-Wert**: Auto-Instrumentierung ist
+        opt-in, und gerade die *Abwesenheit* des Keys bedeutet „nicht
+        instrumentieren" — eine Default-Tabelle hätte sie für alle
+        eingeschaltet, die nie danach gefragt haben.
+
 - [x] **Prüfen: sind wirklich alle Plugins lazy geladen?**
       Nein — und das ist überwiegend richtig so. Von 31 Specs in
       `lua/plugins/personal/init.lua` laden 7 eager (`lazy = false`):
