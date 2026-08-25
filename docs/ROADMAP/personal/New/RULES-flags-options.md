@@ -4,6 +4,10 @@
 > 2026-08-08, nach Plugin gruppiert. Abarbeiten und streichen.
 > Belege: `Checklists/belege/` (siehe `Checklists/README.md`).
 > Regeln zu Konfigurierbarkeit: `Checklists/regeln/LUA_NVIM.md` § Konfigurierbarkeit.
+>
+> **Status 2026-08-25: geschlossen.** Alle Eintraege sind erledigt, als n/a
+> begruendet oder (learn-cli.nvim) per Entscheidung ausgenommen. Was hier
+> stehen bleibt, ist der Nachweis *warum* — kein offener Task mehr.
 
 
 Collected "Fehlende Flags/Optionen" ideas from each per-plugin report's
@@ -40,14 +44,33 @@ reading the code, not confirmed feature requests.
   does.
 — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md)
 
-## documentation.nvim
+## documentation.nvim — erledigt 2026-08-25
 
-- `:DocMap churn [range]` / `:DocMap diff [ref]` have no completion for
-  git refs/ranges (unlike module names); `git branch`/`git tag`-based
-  suggestions would be possible.
-- No `<Plug>`-style mappings for individual `DocBrowse` actions (e.g.
-  `goto_source`) usable outside an open browser instance — only reachable via
-  `opts.keys`.
+- [x] `:DocMap churn [range]` / `:DocMap diff [ref]` completen jetzt Refs.
+  Der Vorzustand war schlechter als „keine Completion": beide fielen auf die
+  *Aktions*-Liste durch, `:DocMap diff <Tab>` bot also
+  `bindings`/`plugins`/… an — jeder Kandidat falsch. `churn` setzt zusaetzlich
+  ein `A..`/`A...` fort und liefert das ganze `A..B`-Token zurueck.
+  Die Ref-Auflistung ging als `lib.nvim.git.refs(dir, opts)` in die Lib, nicht
+  in den Completion-Callback: „welche Revision?" ist keine
+  documentation.nvim-Frage. Zwei Details dort tragen: `for-each-ref` sortiert
+  per Default nach *refname* und begraebt damit den Branch, auf dem man
+  gerade war (`-committerdate`), und Remote-Branches muessen ihr Praefix
+  behalten — so nimmt git sie als Revision an, und ohne kollidieren sie mit
+  dem gleichnamigen lokalen Branch.
+- [x] `<Plug>`-Mappings fuer `DocBrowse`-Aktionen — **n/a, Praemisse falsch.**
+  „ausserhalb einer offenen Browser-Instanz nutzbar" geht nicht: jeder Eintrag
+  in `KEYS` hat die Signatur `run(st)` und liest Live-Browser-State.
+  `goto_source` braucht `selected(st)`, und `search` — die einzige Aktion, die
+  eigenstaendig aussieht — bricht explizit bei `not M.is_open()` ab und
+  navigiert danach via `go(st, …)` *im* Browser.
+  Der zweite Halbsatz („nur ueber `opts.keys` erreichbar") liest sich als
+  Einschraenkung, ist aber das Gegenteil: `opts.keys` rebindet vollstaendig
+  (String oder Liste pro Action-Id, `false` zum Abschalten, Warnung mit den
+  bekannten Ids bei Tippfehler, und der Eintrag bleibt als „disabled" im
+  Cheatsheet stehen statt zu verschwinden). Eine `<Plug>`-Ebene waere ein
+  zweiter, schwaecherer Weg zum selben Ziel — ausserhalb von Cheatsheet und
+  `resolve_keys`-Validierung.
 — from [documentation.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/documentation.nvim.md)
 
 ## lib.nvim
@@ -57,15 +80,18 @@ reading the code, not confirmed feature requests.
   could expose.
 — from [lib.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/lib.nvim.md)
 
-## learn-cli.nvim
+## learn-cli.nvim — ausgenommen
 
-- `next_exercise`/`prev_exercise` have no count support ("skip N exercises").
-— from [learn-cli.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/learn-cli.nvim.md)
+- Per Entscheidung vom 2026-08-24 aus diesem Sweep ausgenommen; steht hier
+  nur, damit der Eintrag nicht als uebersehen gelesen wird.
+  (`next_exercise`/`prev_exercise` ohne Count-Support.)
 
-## replacer.nvim
+## replacer.nvim — erledigt 2026-08-25
 
-- No additional gaps beyond the completion-coverage question tracked in
-  [autocompletion.md](autocompletion.md) (full flag/kv-completion for the
-  very flag-rich `:Replace` command wasn't fully verified).
-— from [replacer.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/replacer.nvim.md)
+- [x] Die Completion-Frage ist in `RULES-audit-completion.md` beantwortet und
+  abgehakt. Darueber hinaus keine Flag-/Options-Luecken: `:Replace` hat 41
+  Flags, und die einzige echte Fehlfunktion war nicht ein fehlendes Flag,
+  sondern ein kaputtes — bare `--changed` (dokumentiert als „alle Kinds")
+  wurde seit der composer-Migration vor `apply_tokens` abgewiesen. Gefixt
+  ueber neues `FlagSpec.optional_value` in lib.nvim.
 

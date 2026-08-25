@@ -46,6 +46,49 @@ Handles are cached per root, so bouncing between repos scans each once.
 Completion deliberately never installs one — `<Tab>` in an unscanned repo
 offers action names only, instead of blocking on a full scan.
 
+### Revision completion for `diff`/`churn` (2026-08-25)
+
+Closes the `RULES-flags-options.md` entry. Both take a revision, and both
+used to fall through to the *action* list — so `:DocMap diff <Tab>` offered
+`bindings`/`plugins`/…, which is worse than offering nothing: every
+candidate was wrong. They now complete against the repo's own refs (local
+branches, remote branches with their prefix, tags; newest commit first), and
+`churn`, taking a range, continues an `A..`/`A...` lead and hands back the
+whole `A..B` token.
+
+The listing itself went into lib.nvim as `git.refs(dir, opts)` rather than
+into this plugin's completion callback — "which revision?" is not a
+documentation.nvim question. Two things there are load-bearing and easy to
+get wrong: `for-each-ref` sorts by *refname* by default, which buries the
+branch you were on ten seconds ago behind anything starting with `a`
+(`-committerdate` fixes it), and remote branches must keep their prefix,
+both because that is how git accepts them as a revision and because
+stripping it collides with the identically named local branch.
+
+Cached ~5s, not per session: branches appear and vanish while an editor is
+open, so a session cache would be stale in the normal case; the TTL exists
+only so a held `<Tab>` does not spawn one `git for-each-ref` per keystroke.
+
+### `<Plug>` mappings for `DocBrowse` actions — geprueft, n/a (2026-08-25)
+
+The other half of that entry asked for `<Plug>`-style mappings for
+individual browser actions ("e.g. `goto_source`") **usable outside an open
+browser instance**. Checked at the source: that is not possible, and not
+because of how the actions are wired. Every entry in `browse`'s `KEYS`
+table has the signature `run(st)` and reads live browser state —
+`goto_source` needs `selected(st)` (there is no selection without a
+browser), and `search`, the one action that looks standalone-capable
+("fuzzy jump across modules and functions"), explicitly bails on
+`not M.is_open()` and then navigates *within* the browser via `go(st, …)`.
+
+The entry's second premise — "only reachable via `opts.keys`" — reads as a
+limitation but is the opposite. `opts.keys` is a complete rebinding
+mechanism: a string or a list of lhs per action id, `false` to disable,
+a warning naming the known ids on a typo, and the entry stays in the
+cheatsheet marked disabled rather than silently vanishing. A parallel
+`<Plug>` layer would be a second, weaker way to do the same thing, outside
+the cheatsheet and outside `resolve_keys`' validation. Closed as n/a.
+
 ## `:DocMap`
 
 | Invocation | Does | Writes? |

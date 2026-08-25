@@ -4,6 +4,10 @@
 > dem Code-Audit vom 2026-08-08. Die daraus abgeleitete **allgemeine Regel** steht in
 > `Checklists/regeln/LUA_NVIM.md` § Picker- und Kommando-UX (`UI-K*`).
 > Hier steht nur die Lückenliste — abarbeiten und streichen.
+>
+> **Status 2026-08-25: geschlossen.** Die Lueckenliste ist leer: nvim-config
+> und replacer.nvim sind erledigt, learn-cli.nvim ist ausgenommen. Der
+> „Exists — and done well"-Teil bleibt als Nachschlagewerk stehen.
 
 
 Synthesis of the per-plugin autocompletion audits (Ex-command / picker-input
@@ -91,14 +95,28 @@ frozen list baked in at `setup()`:
   (siehe `RULES-flags-options.md`), was `nargs` von `"?"` auf `"*"` und die
   Completion auf eine Funktion umgestellt hat —
   [bindings/usrcmds/update_repos/init.lua](../../../../lua/bindings/usrcmds/update_repos/init.lua).
-- **`learn-cli.nvim`**: `:LearnCLICreateCycle <name> [path]` has a `complete`
+- **`learn-cli.nvim`** — **ausgenommen** (Entscheidung 2026-08-24), steht hier
+  nur, damit der Eintrag nicht als uebersehen gelesen wird:
+  `:LearnCLICreateCycle <name> [path]` has a `complete`
   function that ignores `arg_lead`/context entirely and always returns 3
   static placeholder strings; the second positional (`path`, a directory) has
   no completion at all — a real gap, not a deliberate omission — from
   [learn-cli.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/learn-cli.nvim.md) (`commands.lua:112-161`).
-- **`replacer.nvim`**: `:ReplacePreset` has explicit name completion, but full
-  kv-/flag-completion coverage for the very flag-rich `:Replace` command
-  (`--regex`, `--type=`, `--glob=`, `--exclude=`, `--changed=`, `--engine=`,
-  `--context=`) was not fully verified from the read code — flagged as
-  "practically indispensable" given how many flags exist — from
-  [replacer.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/replacer.nvim.md).
+- **`replacer.nvim`** — **erledigt 2026-08-25.** Nachgemessen statt geraten.
+  Flag-*Namen* completeten laengst — ausser bei bare `--`, und das war ein
+  Guard-Bug in lib.nvim (`sub(1,2) == "--" and arg_lead ~= "--"`), der
+  composers eigenem README widersprach; gefixt, damit listet `--<Tab>` alle
+  41 Flags (43 bei `:Surround`). Das war der groesste Teil der Luecke.
+  Von den *Werten* completete nur `--engine=`. Neu in
+  `lua/replacer/argtypes.lua`: `--type=` (rg-Typnamen live aus
+  `rg --type-list`, pro Session gecacht), `--changed=` (komma-verkettbar,
+  bereits genannte Kinds fallen raus) und `--export=` (`PATH`, bewusst nicht
+  `FILE` — dessen Validator verlangt eine *lesbare* Datei, `--export` nennt
+  aber eine noch nicht existierende Ausgabedatei).
+  `--glob=`/`--exclude=` bleiben absichtlich ohne Completion: sie nehmen
+  *Muster*; ein existierender Pfad als Kandidat waere angenommen worden,
+  haette genau eine Datei getroffen und die Ersetzung still verengt.
+  Nebenbei gefunden und gefixt, vom Audit nicht erwaehnt: bare
+  `:Replace a b --changed` war seit der composer-Migration kaputt
+  (`flag '--changed' requires a value`, bevor `apply_tokens` ueberhaupt
+  lief). Dafuer gibt es jetzt `FlagSpec.optional_value` in lib.nvim.

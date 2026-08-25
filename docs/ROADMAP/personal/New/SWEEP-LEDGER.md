@@ -782,6 +782,78 @@ anderen schon vorliegen — und weil das Rezept bis dahin eingespielt ist.
 - [ ] Ergebnis als eigenen Block hier im Ledger festhalten, damit der Umfang
       dokumentiert ist statt nur abgearbeitet.
 
+## Welle C — 2026-08-25 — ERLEDIGT
+
+Die drei RULES-Dateien sind damit alle geschlossen.
+
+### nvim-config (Flags + Completion) — ERLEDIGT
+
+Code war (aus einer Parallel-Session) uncommitted, waehrend die Doku ihn schon
+als erledigt fuehrte. Zur Laufzeit geprueft, dokumentiert, committed:
+`:MyPlugins clone/reclone --dry-run`, `:MyReposUpdate --only=<name>` + `[path]`-
+Completion, `:WhoLocks --json`.
+
+Nebenbefund: `:MyReposUpdate` und `:WhoLocks` hatten im zentralen
+Bindings-Baum **gar keine Seite**. Beide angelegt, inkl. der Erklaerung, wie
+sich `:MyReposUpdate` vom taeuschend aehnlichen `:MyPlugins update`
+unterscheidet (Scan vs. Liste — genau deshalb funktioniert `--only` anders).
+
+### lib.nvim composer — zwei echte Bugs, beide beim Messen gefunden
+
+- **`--<Tab>` gab nichts zurueck.** Der Guard las
+  `sub(1,2) == "--" and arg_lead ~= "--"`; `--d<Tab>` ging, `--<Tab>` nicht —
+  im Widerspruch zu composers eigenem README, das genau das seit jeher
+  verspricht. `flags.candidates` konnte den leeren Prefix laengst, und der
+  Unit-Test deckte ihn ab; die Luecke sass nur im Integrations-Guard, was
+  erklaert, warum sie so lange lief. Auf `:Replace` (41 Flags) war das die
+  groesste Completion-Luecke ueberhaupt.
+- **Kein optionaler Flag-Wert.** Composer kannte nur „presence-only" und
+  „Wert Pflicht". `FlagSpec.optional_value` neu: `--name` bindet `true`,
+  `--name=v` den Wert, und die bare Form greift *nie* nach dem naechsten
+  Token — genau deshalb braucht replacer sie
+  (`:Replace a b --changed cwd`, wo `cwd` der Scope ist).
+
+### replacer.nvim — ERLEDIGT
+
+Erst gemessen: Flag-*Namen* completeten laengst (ausser bei bare `--`, s.o.),
+von den *Werten* nur `--engine=`. Neu `lua/replacer/argtypes.lua` mit
+`RP_RG_TYPE` (rg-Typnamen live aus `rg --type-list`) und `RP_CHANGED_KINDS`
+(komma-verkettbar, bereits genannte Kinds fallen raus); `--export=` wurde
+`PATH`, bewusst nicht `FILE` — dessen Validator verlangt eine *lesbare*
+Datei, `--export` nennt aber eine noch nicht existierende Ausgabedatei.
+`--glob=`/`--exclude=` bleiben absichtlich leer (Muster, keine Pfade).
+
+Vom Audit nicht erwaehnt und dabei gefunden: bare `:Replace a b --changed`
+war seit der composer-Migration kaputt. `:Surround`/`:Wrap` erben alles, sie
+deepcopyen `command.FLAGS`.
+
+### documentation.nvim — ERLEDIGT
+
+`:DocMap diff [ref]` / `churn [range]` completen jetzt Refs; vorher fielen
+beide auf die Aktionsliste durch — schlechter als nichts, weil jeder Kandidat
+falsch war. Dafuer neu in der Lib: `lib.nvim.git.refs(dir, opts)`.
+
+Der `<Plug>`-Teil ist **n/a, Praemisse falsch**: jede `KEYS`-Aktion liest
+Live-Browser-State (`run(st)`), und `opts.keys` rebindet bereits
+vollstaendiger, als eine `<Plug>`-Ebene es koennte.
+
+### Wieder bestaetigt
+
+Der Audit vom 2026-08-08 ist systematisch ueberholt. Vierter, fuenfter und
+sechster veralteter Eintrag in dieser Welle: `[q`-Familie (liegt in lsp.nvim,
+kein Duplikat), `:Trouble`-Count (`v:count1` funktioniert laengst),
+`<Plug>`-Mappings (unmoeglich). **Regel bestaetigt: vor dem Bauen messen.**
+
+### Pre-existing Failures, dokumentiert statt versteckt
+
+- `replacer.nvim`: `tests/feature_smoke.lua:267` — `gitfiles.list` liefert nil.
+  Auch auf HEAD. Ausserdem laesst das Makefile `nvim -l` ohne lib.nvim auf dem
+  rtp laufen, wodurch alle drei Suites sofort sterben.
+- `documentation.nvim`: 4 Spec-Dateien rot (`docmap`, `callhierarchy`,
+  `diagnostics`, `mdview`) — identisch auf HEAD. `mdview` ist der bekannte
+  8.3-Pfad-Fall, `diagnostics` (0 von 4 Findings) sieht nach echtem Bug aus.
+- Beides als eigene Tasks abgelegt, nicht im Vorbeigehen gepatcht.
+
 ## Anhang: Wo liegt die FEATURES-Doku?
 
 Verzeichnis (`docs/FEATURES/`): buffer-ctx, cascade, cmdlog, dap, debugging,
