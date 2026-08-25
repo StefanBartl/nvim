@@ -36,7 +36,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Dokumentation & Cheatsheets
 - [ ] Pro Plugin `docs/BINDINGS.md` (alle Keymaps, Usrcmds, Autocmds) generieren; zusätzlich zentrale Cheatsheets unter `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds,Misc}.md` — inkl. Dopplungs-Check der `lhs` über alle Plugins hinweg.
-- [ ] `.luarc.json` pro Plugin-Root anlegen.
 - [ ] `docs/ROADMAP.md` pro Plugin anlegen bzw. durchgehen.
 - [ ] README.md pro Plugin an Spec anpassen: Installation für verschiedene Package-Manager, `lazy=false`/`VeryLazy` explizit setzen, `dir = vim.env...` entfernen, Lizenzverweise löschen, auf Englisch, Badges/ASCII-Art, kurzer Cross-Link-Absatz zu verwandtem Plugin.
 - [ ] `doc/{NAME}.txt` (vimdoc) pro Plugin erstellen.
@@ -65,7 +64,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Security, Tests & CI/CD
 - [ ] `ci`/`stylua`/Tests über alle Plugins grün ziehen.
-- [ ] GitHub Actions einrichten (z. B. `luacheck`).
 - [ ] Testdateien unter `TESTS/**` schreiben; bestehende `docs/TESTS/**` nach `TESTS/**` verschieben (Root statt `docs`).
 - [ ] Plugins auf sicherheitsrelevante Aspekte prüfen und härten.
 
@@ -82,7 +80,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Alle Features eines Plugins den zugehörigen Usrcmds/Keymaps/Autocmds zuordnen, Analyse in `docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES` pro Plugin ablegen (Sortierung nach Wichtigkeit erst nach Klärung der Priorisierungsfrage aus Liste A).
 
 ### Git & Repo-Hygiene
-- [ ] Branch auf `main` umstellen, wo noch nicht geschehen.
 - [ ] `gh repo edit` (Description, Topics) pro Repo.
 - [ ] Alle Claude-Branches in allen Plugins entfernen.
 - [ ] Alle Features/Bugfixes committen & pushen (Commit-Message ausgeben, falls Push nicht möglich).
