@@ -7,13 +7,25 @@ Arbeitsliste fuer den Plugin-Sweep. Erzeugt 2026-08-24 aus
 `RULES-plugin-ideas.md` ist **nicht** eingeflossen und bleibt liegen.
 `learn-cli.nvim` ist per Entscheidung ausgelassen.
 
-**Status 2026-08-25:** Wellen A, B, C abgeschlossen. Offen bleiben nur drei
-Punkte, alle im nvim-config-Block unter Welle C:
-- `:Trouble`-Mappings mit explizitem Count — blockiert auf der Trouble-API,
-  zurueckgestellt.
-- `view_scroll.lua` — Entscheidung reaktivieren/entfernen steht aus.
-- `lsp.nvim` — noch nicht auditiert, eigener Block "Zuletzt — lsp.nvim" unten.
-Solange diese drei offen sind, bleibt der Ordner unter `personal/New`.
+**Status 2026-08-25 — SWEEP ABGESCHLOSSEN.** Wellen A (13/13), B (14/14) und
+C sind zu, lsp.nvim ist auditiert und abgearbeitet. Offen ist nur noch, was
+per Entscheidung offen bleibt:
+
+- `[QF]` Quickfix-Audit — **Phase 3**, bewusst nicht Teil dieses Sweeps.
+  Kandidaten stehen markiert bei markdown.nvim, pickers.nvim und
+  documentation.nvim; replacer.nvim dient als Referenzimplementierung.
+- `RULES-plugin-ideas.md` — von Anfang an nicht eingeflossen.
+- `learn-cli.nvim` — per Entscheidung ausgelassen.
+- Zwei Pre-existing-Failures, als eigene Tasks abgelegt statt im Vorbeigehen
+  gepatcht: `documentation.nvim`s vier rote Specs (davon `diagnostics` mit
+  Bug-Verdacht) und der bekannte 8.3-Pfad-Fall in `images.nvim`/`mdview`.
+
+**Die wichtigste Erkenntnis des Sweeps**, in jeder Welle neu bestaetigt: der
+Audit vom 2026-08-08 ist systematisch ueberholt. Mindestens zwoelf Eintraege
+waren bereits erledigt, n/a oder in der Praemisse falsch — teils so falsch,
+dass blindes Umsetzen eine **Regression** gewesen waere (reposcope
+`nav_up/down`, wo ein zweiter Count-Wrapper `3<Down>` auf neun Zeilen
+geschickt haette). **Regel: vor dem Bauen messen.**
 
 **Benutzung:** eine Session pro Plugin. Nur den eigenen Block lesen, nicht die
 `RULES-*.md`. Vorgehen, Doku-Pflichten und Definition of Done stehen in
@@ -793,25 +805,91 @@ Erstellt am 2026-08-23, war im Audit vom 2026-08-08 nicht enthalten. Bewusst
 als **letztes** Plugin, weil hier erst die Scans laufen muessen, die fuer alle
 anderen schon vorliegen — und weil das Rezept bis dahin eingespielt ist.
 
-- [ ] Scan: Keymaps, Usercmds und Autocmds erfassen. Registrierungen liegen
-      unter `lua/lsp/bindings/`, `lua/lsp/usercmds/`, plus die Integrationen
-      (`integrations/{mason,trouble,inc_rename}`) und `lua/lsp/lspdoctor/`.
-- [ ] `[C]` Completion aller `:Lsp…`-Routen pruefen — nutzt es
-      `lib.nvim.usercmd.composer`? Falls ja, faellt Completion aus dem
-      Route-Tree; falls nein, ist die Umstellung der eigentliche Task.
-- [ ] `[N]` Count-Kandidaten pruefen: Diagnostics-Navigation ist der
-      naheliegendste Fall (`3]d`). Ueber `lib.nvim.count`.
-- [ ] `[F]` Flag-/Options-Luecken sammeln — das Aequivalent zu dem, was der
-      Audit fuer die anderen 30 Plugins geliefert hat.
-- [ ] Doku anlegen: `docs/FEATURES` fehlt komplett (vorhanden ist nur
-      `docs/features.md` in Kleinschreibung — klaeren, ob umbenennen oder
-      Verzeichnis anlegen). `docs/BINDINGS.md` existiert bereits.
-- [ ] Zentralen Bindings-Baum anlegen — fuer lsp.nvim fehlen alle drei
-      Dateien unter `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,
-      Autocmds}/`, plus Eintraege in den `All.md`- und
-      `autocmds-by-*.md`-Indizes.
-- [ ] Ergebnis als eigenen Block hier im Ledger festhalten, damit der Umfang
-      dokumentiert ist statt nur abgearbeitet.
+- [x] Scan: Keymaps, Usercmds und Autocmds erfasst. **Ergebnis: 42 Keymaps
+      (Default-Preset), ~50 Usercmds, 25 Autocmds ueber 20 Augroups.**
+      Der Autocmd-Teil war der Ueberraschungsposten, s. unten.
+- [x] `[C]` **Ja, composer** — fuer `:Lsp`, `:LspDoctor` und `:LspMdHints`.
+      Completion faellt also aus dem Route-Tree, keine Umstellung noetig; die
+      Suite pruefte das laengst (`usrcmds_spec.lua`, sieben Completion-Faelle).
+      **Die echte Luecke lag woanders**, bei den nicht-composer-Kommandos:
+      `:DiagLoc` / `:DiagQF` / `:DiagNextLoc` / `:DiagPrevLoc` nehmen ein
+      `[severity]`-Argument voellig ohne Completion. Behoben, s. unten.
+- [x] `[N]` **Veraltet, war schon erledigt.** Count-Support kam mit Commit
+      `c58be81` ("count support on the motion keys"). Alle Motion-Keys
+      (`]d`/`[d`, `]q`/`[q`, `]l`/`[l`, `]w`/`[w`) lesen ihn ueber ein
+      lokales `steps()`. Das ist **kein** blosses Duplikat von
+      `lib.nvim.count.get`: `steps(count)` erlaubt zusaetzlich ein explizites
+      Argument, das `v:count1` schlaegt — noetig, weil die `:Lsp diag`-Routen
+      bewusst `1` uebergeben. Bewusst **ohne** Clamp, wie Vims eigene
+      Motions (`100j` klemmt auch nicht).
+- [x] `[F]` Flag-/Options-Luecken gesammelt. Ergebnis duenner als bei den
+      anderen 30 Plugins, weil das Plugin jung ist und den composer von
+      Anfang an nutzt. Einzige echte Luecke war das `[severity]`-Argument
+      (oben). Bewusst **kein** Gap: die `TypeDef*`-Kommandos nehmen ein
+      Symbol mit `<cword>`-Default — dafuer gibt es keine wahre
+      Kandidatenliste.
+- [x] Doku: `docs/features.md` → **`docs/FEATURES.md`** umbenannt, kein
+      Verzeichnis. 138 Zeilen in 12 Abschnitten ist genau die Groesse, bei der
+      die anderen neun Plugins bei der Einzeldatei bleiben; ein Verzeichnis
+      waere Struktur ohne Inhalt. Nur eine Referenz (README) musste mit.
+- [x] Zentraler Bindings-Baum: **zwei der drei Dateien gab es bereits**
+      (`Keymaps/lsp.nvim.md`, `Usercmds/lsp.nvim.md`) — der Ledger-Eintrag war
+      an dieser Stelle zu pessimistisch. Neu angelegt: `Autocmds/lsp.nvim.md`,
+      plus Eintrag in `Autocmds/All.md`. Nebenbei dort einen toten Link
+      gefixt (`cmdlog.md` → `cmdlog.nvim.md`).
+- [x] Ergebnis als eigener Block festgehalten — s. unten.
+
+### lsp.nvim — Befunde 2026-08-25
+
+Commit `48037e8`, Branch `feat/diag-severity-completion-and-autocmd-groups`.
+Suite: **165 passed, 0 failed**, neuer `diagnostics_severity_spec.lua` (12).
+
+**1. `[severity]` ohne Completion — und ohne Validierung.** Der schwerere Teil
+war der zweite. `to_severity` bildet alles Unbekannte auf `nil` ab, und `nil`
+heisst flussabwaerts "kein Filter": `:DiagLoc eror` listete damit **jede**
+Diagnose und sah dabei aus, als haette es funktioniert. Genau das Muster, das
+der Sweep schon mehrfach gefunden hat (pdfports "opened 5 PDFs", mdviews
+`zoom 500`). Completion bietet jetzt die kanonischen Woerter, die elf
+akzeptierten Schreibweisen bleiben tippbar; `parse_severity` trennt "keine
+Severity" von "keine gueltige Severity". `to_severity` bleibt bewusst
+nachsichtig — `to_loc`/`to_qf` nehmen `severity` von Lua-Aufrufern als String,
+Integer oder nil, und dort ist die Nachsicht richtig.
+Alle sechs `Diag*`-Kommandos hatten ausserdem **gar keinen `desc`**.
+
+**2. Zwei Autocmds ohne Augroup, beide stapelnd.** Beim Scan fuer die
+Cheatsheet-Seite gefunden, nicht im Audit vorhergesehen. Beide `setup()`/
+`enable()` haben keinen Idempotenz-Guard; die Usercmds daneben ueberleben das
+nur, weil `usercmd.create` auf `force = true` steht — ein gruppenloser
+Autocmd hat kein solches Ueberschreiben. Gemessen 1 → 2 → 3 ueber drei Laeufe,
+danach konstant 1; Vorzustand per `git stash` gegengeprueft.
+* `servers/lua_ls/reload.lua` → `LspLuaLsRootScope`: N × `recompute_root()`
+  pro Scope-Wechsel.
+* `languages/webdev/astro/init.lua` → `LangAstro`: N × Keymap-Attach plus
+  Buffer-Optionen pro Astro-Buffer. Die Entstehung steht im Quelltext — die
+  Zeile `local grp = …LangAstro…` war **auskommentiert**, der Autocmd blieb
+  und verlor still seine Gruppe. Deshalb tauchte der Name in einer
+  Namenssuche auf, ohne dass die Gruppe je existierte.
+
+**3. Der eigene Docstring untertreibt um Faktor 20.**
+`bindings/autocmds.lua` sagt "One group, `lsp_nvim`" und nennt zwei Ausnahmen.
+Tatsaechlich sind es 20 Augroups. Eine der zwei genannten Ausnahmen existiert
+nicht einmal (der "diagnostics refresh in `core/`" registriert nichts,
+`core/root_scope.lua` *feuert* nur ein `nvim_exec_autocmds`). Der erste Grep
+fand nur 1 von 25 Autocmds, weil die Module `Autocmd.create` mit grossem A
+ueber lokale Aliase aufrufen — **Lehre: eine Registrierungsart zu greppen
+beweist nichts ueber die Gesamtzahl.**
+
+**4. Fuenf No-op-Autocmds, und das ist Absicht.** `LangCs`, `LangLua`,
+`LangC`, `LangGo`, `LangZig` registrieren je ein `FileType` mit leerem
+Callback. `go.lua` sagt es selbst ("the same stub shape as c.lua/zig.lua next
+to it") — Platzhalter, kein Defekt. In der Cheatsheet-Seite als solche
+markiert, damit niemand nach Verhalten sucht, das es nicht gibt.
+
+**Nicht angefasst:** die gemischte Augroup-Registrierung (acht Module ueber
+`Autocmd.group`, sieben ueber die Roh-API `nvim_create_augroup`). Funktional
+identisch, rein kosmetisch — aber in genau dieser Grauzone sind die zwei
+gruppenlosen Autocmds so lange unbemerkt geblieben. Als Beobachtung
+festgehalten statt im Vorbeigehen umgeschrieben.
 
 ## Welle C — 2026-08-25 — ERLEDIGT
 
