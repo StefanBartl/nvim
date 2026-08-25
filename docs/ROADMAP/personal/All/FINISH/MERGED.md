@@ -51,11 +51,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Möglichst viele Features user-konfigurierbar machen, inkl. LuaLS-Typen/Aliases für jeden Config-Key.
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
 
-### Security, Tests & CI/CD
-- [ ] Plugins auf sicherheitsrelevante Aspekte prüfen und härten.
-  - **Erste Runde erledigt (2026-08-25), siehe `Merged_Finished.md`.** Drei Klassen abgearbeitet, alle mit reproduziertem Befund: Ausführung beim *Preview* (cmdlog — beide Previewer führten den Eintrag unter dem Cursor aus, plus eine Vim-Command-Injection über `:help x | …`), Credentials in `argv` (`lib.nvim.net.curl`, reposcope — Token im Prozess-Listing nachgewiesen) und Credentials in Log/`:messages`/auf Platte (reposcope, `gh-debug.txt` schrieb bei *jedem* Request). Dazu Pfad-Sanitisierung für API-Felder, die zu Dateinamen werden (reposcope readme_cache).
-  - **Offen: die übrigen Klassen.** Nicht systematisch durchgesehen: Pfad-Traversal in den Datei-Operationen (filetree trash/link/copy_move, pdfport), vorhersagbare Temp-Dateien (Symlink-Race), `expand()`/`glob()` mit Backticks auf Werten aus Datei-/Bufferinhalt, mdviews Relay-Oberfläche (laut eigener `SECURITY.md` gehärtet, aber nicht von mir gegengeprüft), und die Frage, ob persistierte Stores (github_stats, cmdlog, reposcope) je Secrets aufnehmen können, die die `redact_patterns` nicht fangen.
-
 ### Performance
 - [ ] `nvim/init.lua` durchgehen und optimieren.
 - [ ] Ergebnisse aus `:Recommender perf` (nachdem du sie erzeugt hast) in konkrete Fixes umsetzen.

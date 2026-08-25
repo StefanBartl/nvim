@@ -306,6 +306,97 @@ nvim-Config.
       CI grün: `cmdlog.nvim`, `lib.nvim`, `reposcope.nvim`.
 
 
+- [x] **Zweite Runde: die restlichen Klassen — Task damit zu.** Drei weitere
+      echte Befunde, jeder vor dem Fix reproduziert und danach gegengeprüft.
+
+      **1. Backtick-Expansion: Command Execution aus einem Markdown-Link.**
+      Der schwerste der ganzen Runde. `vim.fn.expand()` ist Vims
+      *Dateinamen*-Expansion, und ein Backtick-Span in ihrem Argument ist eine
+      **Kommando-Substitution** über `&shell`. Zuerst am Mechanismus selbst
+      belegt: `vim.fn.expand("`echo X`")` gibt `"X "` zurück — die Shell lief.
+
+      Und genau dort landete Link-Text aus dem Buffer:
+      `markdown.util.path`s vier Resolver und `images.resolve.to_path`. Mit
+      echtem Payload nachgestellt —
+
+          ![x](`mkdir -p /tmp/pwned; echo a.png#`)
+
+      — und das Verzeichnis entstand. Das `#` am Ende ist der Trick: `is_image`
+      matcht in seiner zweiten Alternative eine Endung *irgendwo* vor `?`/`#`,
+      also darf das `.png` **innerhalb** der Backticks stehen, während der
+      String als Ganzes für Vim ein einziger Span bleibt — und nur diese Form
+      expandiert Vim (ein Suffix nach dem schließenden Backtick unterdrückt es,
+      was ich beim ersten Versuch erst falsch hatte).
+
+      Gewollt war hier nur `~` und Umgebungsvariablen, also
+      `lib.nvim.cross.fs.expand_path`: kein Shell, kein Globbing, keine
+      `%`/`#`/`<cfile>`-Specials. Beide Repos gefixt — markdown ist der
+      Resolver, an den images zuerst delegiert, also hätten beide gemusst. Der
+      Test sichert beide Hälften: dass der Payload weiterhin an `is_image`
+      vorbeikommt (das Gate ist *nicht* der Fix) und dass beim Auflösen nichts
+      läuft.
+
+      **2. AppleScript-Quoting in `filetree`s Trash.** Der macOS-Fallback
+      bettet den Pfad in ein AppleScript-String-Literal und escapte nur `"`.
+      AppleScript escapt aber mit `\` wie C — ein Pfad, der auf einen
+      Backslash endet, kam als `\\"` heraus: ein literaler Backslash und
+      dann ein Quote, das den String vorzeitig schließt. Alles danach ist
+      AppleScript-Quelltext, und `do shell script` ist ein Wort entfernt:
+
+          /tmp/a\" & (do shell script "id") & "
+
+      Beide Zeichen sind in einem macOS-Dateinamen erlaubt — ein präparierter
+      Name in einem geklonten Repo plus ein `d` im Tree reicht. Backslash
+      zuerst escapen fixt es. Ehrlich gesagt: durchdacht und unit-getestet,
+      nicht gegen einen echten Finder gelaufen, weil diese Maschine Windows
+      ist. Der Windows-Zweig war schon korrekt (PowerShell verdoppelt `'`).
+
+      **3. Symlink-Escape aus mdviews Relay.** `/asset` und `/preview`
+      begrenzten den Request per `filepath.Clean` plus Prefix-Check auf das
+      Dokumentverzeichnis. Das ist rein lexikalisch, und `ServeFile`/`os.Open`
+      folgen Symlinks ungefragt — ein Symlink *im* Verzeichnis liegt
+      lexikalisch drin und zeigt wohin er will. Ein geklontes Repo mit
+      `logo.png -> ~/.ssh/id_rsa` bekam das ausgeliefert, vorbei am
+      Token-Check und vorbei an der Endungs-Allowlist, die nur den
+      *angefragten* Namen ansieht.
+
+      Beide Richtungen bewiesen, in WSL (Symlinks brauchen unter Windows ein
+      Privileg, das eine normale Shell nicht hat): vor dem Fix
+      `got 200: SECRET-CONTENTS`, danach 403. Der lexikalische Check bleibt —
+      er stoppt `../..` —, dazu ein aufgelöster. Das Verzeichnis wird
+      mitaufgelöst, sonst würde ein macOS-Temp-Dir unter dem symlinkten `/var`
+      völlig normale Pfade ablehnen. Ein nicht auflösbarer Pfad bleibt beim
+      lexikalischen Check allein: die Datei existiert nicht, es wird nichts
+      gelesen, und 404 ist die richtige Antwort — ein Test hält das fest,
+      sonst wäre jeder vertippte Bildpfad zu „path escapes document
+      directory" geworden.
+
+      **Zwei Klassen geprüft und sauber:**
+
+      - **Vorhersagbare Temp-Dateien.** Kein `os.tmpname()`, kein Schreiben
+        nach `/tmp` irgendwo. Alles geht über `vim.fn.tempname()` (Neovim legt
+        pro Prozess ein eigenes Verzeichnis an) oder `stdpath("cache")`.
+        `pdfport`s soffice-Producer baut `stdpath("cache")/…/soffice-<hrtime>` —
+        im eigenen Cache, also kein Symlink-Race über Nutzergrenzen.
+      - **Secrets in persistierten Stores.** Kein Token erreicht Storage,
+        Export, Cache oder State-Layer; `reposcope`s Metrics halten URL und
+        Status, nie Header. `cmdlog`s `redact_patterns` greifen in `tracker.lua`
+        und decken damit genau die drei *automatischen* Senken ab (Project
+        History, Stats, Error-Log). Favorites/Tags/Notes sind bewusst nicht
+        redigiert — das ist eine explizite Nutzerhandlung an genau einem
+        Befehl, kein stilles Mitschreiben; die DEFAULTS-Doku sagt es auch so.
+
+      CI grün: `images.nvim`, `markdown.nvim`, `filetree.nvim`, `mdview.nvim`.
+
+      **Was eine dritte Runde ansehen würde** (nicht offen im Sinne von
+      bekannt-kaputt, sondern schlicht nicht angefasst): der Rust/WASM-Renderer
+      und die ammonia-Allowlist, die WebTransport-Zertifikats-Pinning-Pfade,
+      und die Frage, was der Client-Bundle im Browser-Tab an externen Requests
+      auslösen kann (ein feindliches README kann externe Bilder referenzieren —
+      das leakt „wurde angesehen", keine Inhalte, aber ich habe es nicht
+      systematisch durchgespielt).
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
