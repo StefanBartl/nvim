@@ -69,25 +69,12 @@ Cached ~5s, not per session: branches appear and vanish while an editor is
 open, so a session cache would be stale in the normal case; the TTL exists
 only so a held `<Tab>` does not spawn one `git for-each-ref` per keystroke.
 
-### `<Plug>` mappings for `DocBrowse` actions — geprueft, n/a (2026-08-25)
+### `<Plug>` mappings for `DocBrowse` actions — n/a (2026-08-25)
 
-The other half of that entry asked for `<Plug>`-style mappings for
-individual browser actions ("e.g. `goto_source`") **usable outside an open
-browser instance**. Checked at the source: that is not possible, and not
-because of how the actions are wired. Every entry in `browse`'s `KEYS`
-table has the signature `run(st)` and reads live browser state —
-`goto_source` needs `selected(st)` (there is no selection without a
-browser), and `search`, the one action that looks standalone-capable
-("fuzzy jump across modules and functions"), explicitly bails on
-`not M.is_open()` and then navigates *within* the browser via `go(st, …)`.
-
-The entry's second premise — "only reachable via `opts.keys`" — reads as a
-limitation but is the opposite. `opts.keys` is a complete rebinding
-mechanism: a string or a list of lhs per action id, `false` to disable,
-a warning naming the known ids on a typo, and the entry stays in the
-cheatsheet marked disabled rather than silently vanishing. A parallel
-`<Plug>` layer would be a second, weaker way to do the same thing, outside
-the cheatsheet and outside `resolve_keys`' validation. Closed as n/a.
+Not a gap: `<Plug>` mappings are not this ecosystem's convention. `opts.keys`
+(a string or list of lhs per action id, `false` to disable, typo-checked
+against the known ids) plus `lib.nvim.map` already cover rebinding
+completely; which-key labels are the only mandatory piece on top.
 
 ## `:DocMap`
 

@@ -58,19 +58,10 @@ reading the code, not confirmed feature requests.
   gerade war (`-committerdate`), und Remote-Branches muessen ihr Praefix
   behalten — so nimmt git sie als Revision an, und ohne kollidieren sie mit
   dem gleichnamigen lokalen Branch.
-- [x] `<Plug>`-Mappings fuer `DocBrowse`-Aktionen — **n/a, Praemisse falsch.**
-  „ausserhalb einer offenen Browser-Instanz nutzbar" geht nicht: jeder Eintrag
-  in `KEYS` hat die Signatur `run(st)` und liest Live-Browser-State.
-  `goto_source` braucht `selected(st)`, und `search` — die einzige Aktion, die
-  eigenstaendig aussieht — bricht explizit bei `not M.is_open()` ab und
-  navigiert danach via `go(st, …)` *im* Browser.
-  Der zweite Halbsatz („nur ueber `opts.keys` erreichbar") liest sich als
-  Einschraenkung, ist aber das Gegenteil: `opts.keys` rebindet vollstaendig
-  (String oder Liste pro Action-Id, `false` zum Abschalten, Warnung mit den
-  bekannten Ids bei Tippfehler, und der Eintrag bleibt als „disabled" im
-  Cheatsheet stehen statt zu verschwinden). Eine `<Plug>`-Ebene waere ein
-  zweiter, schwaecherer Weg zum selben Ziel — ausserhalb von Cheatsheet und
-  `resolve_keys`-Validierung.
+- [x] `<Plug>`-Mappings fuer `DocBrowse`-Aktionen — **n/a.** `<Plug>`-Mappings
+  sind in diesem Ecosystem kein Ziel: `opts.keys` (Rebinding pro Action-Id)
+  plus `lib.nvim.map` deckt das vollstaendig ab, which-key-Labels bleiben die
+  einzige Pflicht.
 — from [documentation.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/documentation.nvim.md)
 
 ## lib.nvim
