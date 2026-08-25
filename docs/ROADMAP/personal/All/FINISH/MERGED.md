@@ -36,7 +36,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Dokumentation & Cheatsheets
 - [ ] Pro Plugin `docs/BINDINGS.md` (alle Keymaps, Usrcmds, Autocmds) generieren; zusätzlich zentrale Cheatsheets unter `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds,Misc}.md` — inkl. Dopplungs-Check der `lhs` über alle Plugins hinweg.
-- [ ] README.md pro Plugin an Spec anpassen: Installation für verschiedene Package-Manager, `lazy=false`/`VeryLazy` explizit setzen, `dir = vim.env...` entfernen, Lizenzverweise löschen, auf Englisch, Badges/ASCII-Art, kurzer Cross-Link-Absatz zu verwandtem Plugin.
 - [ ] `doc/{NAME}.txt` (vimdoc) pro Plugin erstellen.
 - [ ] `docs/FEATURES.md` bzw. `docs/FEATURES/`-Ordner pro Plugin nach Format von `documentation.nvim/docs/FEATURES_FORMAT.md` befüllen.
 - [ ] UseCases/Workflow-Datei pro Plugin (typischer Workflow + Edge Cases); vorhandene auf Aktualität prüfen.

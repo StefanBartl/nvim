@@ -142,6 +142,40 @@ nvim-Config.
         Checkliste, kein gopath-Audit wie in allen Geschwister-Repos — inklusive
         elf Querverweise auf Dateien des Quell-Repos.
 
+- [x] **README.md pro Plugin an Spec anpassen.**
+      Punkt für Punkt gegen alle 31 READMEs geprüft. Das meiste war schon da:
+
+      | Spec-Punkt | Stand |
+      | --- | --- |
+      | Badges / ASCII-Art | 31/31 ✅ |
+      | Auf Englisch | 31/31 ✅ (kein deutscher README-Text gefunden) |
+      | Lizenzverweise löschen | 31/31 ✅ — kein README hat einen Lizenz-Abschnitt |
+      | `dir = vim.env…` entfernen | 31/31 ✅ — kein lazy-`dir`-Feld irgendwo (der eine Treffer war `repos_dir = vim.env.REPOS_DIR`, eine echte Plugin-Option) |
+      | `lazy=false`/`VeryLazy` explizit | 31/31 ✅ — die vier Treffer ohne Trigger waren `mini.deps`/`vim.pack`-Snippets, die keinen kennen |
+      | Cross-Link zu verwandtem Plugin | war 30/31 |
+      | Installation für mehrere Package-Manager | war 27/31 |
+
+      Geschlossen wurden also zwei Lücken:
+
+      - **`sandbox.nvim`** war das einzige README, dessen Kopf auf kein
+        Schwester-Plugin zeigte. `reposcope.nvim` ist die ehrliche Paarung:
+        reposcope klont ein Repo in ein Verzeichnis, und sandbox liest die
+        `compose.yml` / `.devcontainer/`, die dieses Repo mitbringt, aus dem cwd
+        oder einem Vorfahren — die beiden treffen sich, ohne dass eines von
+        beiden einen Pfad konfiguriert bekommt.
+      - **`images.nvim`, `language.nvim`, `sandbox.nvim`** zeigten nur ein
+        lazy-Snippet. Alle drei haben jetzt `docs/installation.md` im Format der
+        übrigen Repos (Prerequisites getrennt nach „required" und „schaltet
+        genau eine Sache frei", dazu packer.nvim und vim-plug). Dabei kam jeweils
+        etwas heraus, das im README nirgends stand: images braucht ein Terminal
+        mit OSC 1337 (und warum die Spec `cmd` **und** `ft` trägt), sandbox
+        braucht überhaupt eine Container-Engine auf dem `PATH`.
+
+      Anmerkung: die bestehenden Cross-Link-Absätze beginnen mit einem
+      Emoji (`> 💡 Pairs well with …`). Der neue in `sandbox.nvim` nicht — nach
+      deiner stehenden Regel „keine Emojis in generiertem Inhalt". Sag Bescheid,
+      wenn er der Optik zuliebe doch eines bekommen soll.
+
 ### Healthchecks, Config & Defaults
 
 - [x] **`:checkhealth`-Unterstützung pro Plugin implementieren.**
