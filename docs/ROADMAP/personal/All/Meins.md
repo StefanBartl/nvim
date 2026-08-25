@@ -2,7 +2,6 @@
 
 ## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
-- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\IDEAS
 - [ ] README.md mit viedeo demo oder gif ausstatten
 - [ ] Was fehlt um ein gesamtes nvchad zu ersetzen?
 - [ ] `:Recommender perf` durch alle Module durchlaufen lassen

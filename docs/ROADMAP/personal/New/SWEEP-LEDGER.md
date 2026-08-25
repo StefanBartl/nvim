@@ -7,6 +7,14 @@ Arbeitsliste fuer den Plugin-Sweep. Erzeugt 2026-08-24 aus
 `RULES-plugin-ideas.md` ist **nicht** eingeflossen und bleibt liegen.
 `learn-cli.nvim` ist per Entscheidung ausgelassen.
 
+**Status 2026-08-25:** Wellen A, B, C abgeschlossen. Offen bleiben nur drei
+Punkte, alle im nvim-config-Block unter Welle C:
+- `:Trouble`-Mappings mit explizitem Count — blockiert auf der Trouble-API,
+  zurueckgestellt.
+- `view_scroll.lua` — Entscheidung reaktivieren/entfernen steht aus.
+- `lsp.nvim` — noch nicht auditiert, eigener Block "Zuletzt — lsp.nvim" unten.
+Solange diese drei offen sind, bleibt der Ordner unter `personal/New`.
+
 **Benutzung:** eine Session pro Plugin. Nur den eigenen Block lesen, nicht die
 `RULES-*.md`. Vorgehen, Doku-Pflichten und Definition of Done stehen in
 [SWEEP-PLAN.md](SWEEP-PLAN.md).
@@ -690,13 +698,14 @@ Suite gruen.
 
 ### replacer.nvim
 
-- [ ] `[C]` Volle Flag-/kv-Completion fuer das sehr flag-reiche `:Replace`:
+- [x] `[C]` Volle Flag-/kv-Completion fuer das sehr flag-reiche `:Replace`:
       `--regex`, `--type=`, `--glob=`, `--exclude=`, `--changed=`, `--engine=`,
-      `--context=`. Im Audit als "praktisch unverzichtbar" markiert, aber aus
-      dem gelesenen Code nicht verifiziert — **zuerst pruefen, was schon da
-      ist**. `:ReplacePreset` hat bereits explizite Namens-Completion.
-      Groesster Einzelbrocken des Sweeps; ggf. neuer composer-Mechanismus, dann
-      `[L]`.
+      `--context=`. **ERLEDIGT** — siehe Block "replacer.nvim — ERLEDIGT" unter
+      Welle C 2026-08-25: `RP_RG_TYPE`/`RP_CHANGED_KINDS` neu, `--export=` als
+      `PATH`, `--glob=`/`--exclude=` bewusst ohne Completion (Muster, keine
+      Pfade), `--context=` laeuft bereits als `INT`-Argtyp
+      (`command.lua:587`). Zusaetzlich der bare-`--changed`-Regressionsbug
+      gefixt.
 - [ ] `[QF]` Hat als einziges Plugin bereits Quickfix-Export (`export.lua`) —
       dient in Phase 3 als Referenz. Nichts zu tun.
 
@@ -715,11 +724,13 @@ Suite gruen.
 
 ### nvim-config (dieses Repo)
 
-- [ ] `[C]` `:MyReposUpdate [path]` ist mit `nargs = "?"` registriert, aber
+- [x] `[C]` `:MyReposUpdate [path]` ist mit `nargs = "?"` registriert, aber
       **ohne** `complete` — im Gegensatz zum Geschwister
       `:MyPlugins clone/remove/… [dir]`, das den `MYPLUGINS_DIR`-Typ nutzt.
       Einzeiler: denselben Typ wiederverwenden
       (`bindings/usrcmds/update_repos/init.lua:156-164`).
+      **ERLEDIGT** zusammen mit `--only=`, s. Block "nvim-config (Flags +
+      Completion)" unter Welle C 2026-08-25, Commit `6a437967`.
 - [x] `[N]` `<leader>tn` / `<leader>tp` nehmen jetzt einen Count, mit
       Wrapping. Die Praemisse des Eintrags stimmte allerdings **nicht**: jede
       Count-Form von `:tabnext` ist *absolut* — `:tabnext 2` und `:2tabnext`
@@ -739,20 +750,40 @@ Suite gruen.
       hier, und dessen `steps()` faellt bereits auf `vim.v.count1` zurueck.
       Zur Laufzeit geprueft: alle sechs Tasten haben genau einen Besitzer, in
       nvim-config gibt es keine Dublette zu entfernen.
-- [ ] `[N]` `view_scroll.lua` liest `v:count` sauber (`0` → halbe Fensterhoehe)
-      — bestes Count-Modell der Config, aber aktuell inaktiv/auskommentiert.
-      Entscheiden: reaktivieren oder entfernen. **Kein Count-Gap** — kein
-      aktives Keymap; der Eintrag ist Vorlage, nicht Luecke.
-- [ ] `[F]` `:MyPlugins clone/reclone --dry-run` — Vorschau, was geklont/
+- [x] `[N]` `view_scroll.lua` — **Entscheidung war schon gefallen, Eintrag
+      veraltet.** Die Datei wurde am 2026-08-16 in Commit `b5ef411f` geloescht,
+      also acht Tage *vor* der Erstellung dieses Ledgers. Sie fiel in der
+      Unreferenced-Module-Triage als einer von zwei echten Orphans durch: 61
+      Zeilen, nirgends referenziert, nicht einmal auskommentiert, und ohne die
+      "kept to copy from"-Notiz, die die uebrigen Orphans jener Triage
+      geschuetzt hat. Damit ist "reaktivieren oder entfernen" mit *entfernen*
+      beantwortet; das Count-Modell lebt nur noch in der Git-History
+      (`git show b5ef411f^:lua/bindings/mappings/view_scroll.lua`), falls es je
+      als Vorlage gebraucht wird.
+- [x] `[F]` `:MyPlugins clone/reclone --dry-run` — Vorschau, was geklont/
       entfernt wuerde. Grundlage existiert in `finish_check`/`finish_reclone`,
       nur nicht als eigener Dry-Run-Pfad exponiert.
-- [ ] `[F]` `:MyReposUpdate --only=<name>`, analog zu
+      **ERLEDIGT**, Commit `6a437967`.
+- [x] `[F]` `:MyReposUpdate --only=<name>`, analog zu
       `:MyPlugins fetch/pull/update --only=<name>` — derzeit immer alle Repos.
-- [ ] `[F]` `:WhoLocks --json` fuer eine kuenftige pickers.nvim-Integration
+      **ERLEDIGT**, Commit `6a437967`.
+- [x] `[F]` `:WhoLocks --json` fuer eine kuenftige pickers.nvim-Integration
       (aktuell nur Plaintext-Notify + `print`).
-- [ ] `[F]` `[?]` `:Trouble`-Mappings (`[w`/`]w`): `<leader>x`-Variante mit
-      explizitem count-Argument — blockiert, bis Troubles API das unterstuetzt.
-      Zuerst pruefen, sonst zurueckstellen.
+      **ERLEDIGT**, Commit `6a437967`.
+- [x] `[F]` `[?]` `:Trouble`-Mappings (`[w`/`]w`): **kein Gap, und die Praemisse
+      ist doppelt ueberholt.** Erstens liegen die Keys nicht mehr hier, sondern
+      in lsp.nvims `bindings/actions.lua` (`trouble_diag_next`/`prev`).
+      Zweitens war "blockiert, bis Troubles API Counts unterstuetzt" nie der
+      richtige Rahmen: die Loesung braucht gar keinen nativen Count-Parameter,
+      sie umgeht Troubles Action-Ebene und ruft `view:move({ down = n })`
+      direkt — `3]w` funktioniert.
+      **Achtung, die Beschreibung in `RULES-flags-options.md:37-44` ist an
+      dieser Stelle selbst veraltet:** sie sagt, die Implementierung "loope
+      `trouble.next()` `v:count1`-mal". Genau diese Form *war* ein Bug und ist
+      weg — Troubles Wrapper liest `v:count1` selbst, also multiplizierte das
+      Schleifen: `3]w` sprang 3 × 3 = 9 Eintraege. Der Kommentar auf
+      `actions.lua:229-237` haelt das fest. Eine `<leader>x`-Count-Variante
+      waere reine Dublette zu `v:count1` auf der bestehenden Taste.
 
 ---
 
