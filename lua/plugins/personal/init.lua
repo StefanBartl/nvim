@@ -166,9 +166,6 @@ plugins.add({
       "CopyFilepathRelative",
     },
     keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>", "<C-p>" },
-    -- `main` because lazy.nvim infers "buffer-ctx" from the repo name and the
-    -- module is `buffer_ctx`.
-    main = "buffer_ctx",
     opts = {},
   },
 
