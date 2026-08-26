@@ -676,6 +676,40 @@ nvim-Config.
       gearbeitet — es gibt keine Selektion zu behalten.
 
 
+- [x] **Autocmds auf Optimierungspotential geprüft — nichts zu holen, und die
+      Methode ist der interessantere Teil.**
+
+      Über alle 31 Repos nach Event gezählt. Nur drei Klassen sind interaktiv
+      teuer, weil sie pro Tastendruck bzw. Cursorbewegung feuern:
+      `CursorMoved(I)` (5), `TextChanged(I)` (10), `WinScrolled` (1). Alles
+      andere (`FileType`, `VimLeavePre`, `BufWritePost`, …) feuert selten genug,
+      dass ein Handler dort kosten darf, was er will.
+
+      **Erste Messung war das falsche Maß.** „Hat die Datei einen
+      Throttle/Timer?" ergab sieben ungeschützte Kandidaten — davon waren
+      **fünf Fehlalarme**:
+
+      - `debugging/autocmds/sources.lua` und `images/config/DEFAULTS.lua`:
+        *Listen* bekannter Event-Namen, keine Handler.
+      - `filetree/bindings/autocmds.lua`: ein **Katalog**
+        (`{ event, feature, desc }`); die echten Handler liegen in den Features,
+        und `preview`/`git_status` sind dort throttled.
+      - `insights/imports/definition.lua`: `CursorMoved` steht in den
+        `close_events` eines Floats, ist also gar keine Registrierung.
+      - `lib.nvim/cache/memory.lua`: vergleicht `changedtick` — ein
+        Integer-Vergleich ist der billigste denkbare Guard.
+
+      Die richtige Frage ist nicht „gibt es einen Timer", sondern **„verlässt
+      der Handler den häufigen Fall billig?"**. `filetree`s Breadcrumbs sind das
+      Musterbeispiel: `CursorMoved` auf `*`, aber die erste Zeile ist
+      `if ft ~= "neo-tree" and ft ~= "NvimTree" then return end` — im normalen
+      Editor-Buffer, wo man die ganze Zeit ist, kostet das ein
+      Filetype-Lesen. Throttling wäre dort überflüssige Komplexität.
+
+      **Ergebnis: kein ungeschützter Handler auf einem heißen Event im gesamten
+      Ökosystem.** Entweder Guard oder Throttle, überall.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
