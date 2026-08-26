@@ -397,6 +397,61 @@ nvim-Config.
       systematisch durchgespielt).
 
 
+### Performance
+
+- [x] **Startup: ~1300ms → ~990ms (−24%), eager geladene Plugins 44 → 29.**
+      Der Task bleibt offen (siehe MERGED.md), aber diese Runde ist fertig —
+      und sie ist gemessen, nicht geraten.
+
+      **Erst messen.** `--startuptime` über fünf Läufe: Median ~1300ms. Die
+      Config bringt ihr eigenes Phasen-System mit, also `:StartupReport` bzw.
+      `require("startup").slowest()` — das sagte: die erste Phase startet erst
+      bei **694ms**. Alles davor ist lazy.nvim. `require("lazy").stats()`
+      dazu: **114 Plugins, 44 davon beim Start geladen**, `LazyDone` bei
+      660ms.
+
+      Wer davon, und warum — `lazy.core.config.plugins[..]._.loaded` trägt
+      den Grund mit. Nach Zeit sortiert standen ganz oben:
+      **neo-tree 243ms** (`lazy = false`) und **neotest 227ms**, letzteres
+      mit dem Grund `{ plugin = "neo-tree.nvim" }` — also nur geladen, weil es
+      Dependency des Ersten ist. Dahinter dessen acht Adapter, treesitter,
+      devicons, nui, plenary, vim-test und FixCursorHold.
+
+      **Der erste Versuch war falsch, und das ist der interessante Teil.**
+      Naheliegend war, `"nvim-neotest/neotest"` aus neo-trees `dependencies`
+      zu streichen — neotest hat ja eine eigene, korrekt lazy Spec mit `cmd`.
+      Gemessen: 1300 → 1130ms, 44 → 33 Plugins. Nur ist es eine Regression:
+      `:Neotree tests` stirbt danach an einem nil-Consumer, weil die
+      tests-Source ihre Items über einen **neotest-Consumer** baut, der bei
+      neotests `setup()` registriert werden muss. Gegenprobe auf dem
+      Originalstand — dort geht es. Also zurückgenommen. Die Dependency ist
+      nicht überflüssig, sie ist die Reihenfolge-Garantie.
+
+      **Der richtige Hebel war neo-tree selbst.** `cmd = "Neotree"` plus ein
+      `init`, das genau den Fall abfängt, für den `lazy = false` eigentlich da
+      war: ein Verzeichnis-Argument (`nvim <dir>`) soll den Tree öffnen statt
+      netrw. Die Dependency bleibt — lazy lädt Dependencies gemeinsam mit dem
+      Parent, die Reihenfolge stimmt also weiterhin, nur eben später.
+
+      Vier Verhaltensproben, alle grün: neo-tree beim Start **nicht** geladen,
+      `:Neotree` lädt es nach, `:Neotree tests` baut seinen Buffer, und
+      `nvim <dir>` öffnet den filesystem-Tree mit filetype `neo-tree`.
+
+      **Was die Messung sonst noch ergeben hat** (offen, steht mit Zahlen in
+      MERGED.md): die `lsp`-Phase ist mit ~288ms jetzt der mit Abstand größte
+      Einzelposten — davon `build_capabilities` **84ms**, das `blink.cmp` beim
+      Start hochzieht, nur um dessen Capability-Tabelle zu lesen, und
+      `languages` **66ms**. Dafür habe ich `lsp.nvim`s `step()`-Helfer
+      temporär mit Zeitmessung versehen und danach sauber zurückgesetzt.
+
+      `trouble.nvim` (79ms) plus das von ihm gezogene `nvim-web-devicons`
+      (71ms) wären der nächste Brocken, aber dessen `lazy = false` steht in
+      `lsp.nvim` **mit Begründung** (`]w`/`[w` auf eine bereits offene Liste).
+      Die wirkt zu vorsichtig — `cmd` plus Require-Hook dürfte beides
+      abdecken —, aber eine dokumentierte fremde Entscheidung stoße ich nicht
+      im Vorbeigehen um.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der

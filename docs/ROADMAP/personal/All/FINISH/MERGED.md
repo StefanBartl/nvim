@@ -53,6 +53,13 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Performance
 - [ ] `nvim/init.lua` durchgehen und optimieren.
+  - **Erste Runde erledigt (2026-08-26), siehe `Merged_Finished.md`.** Startup gemessen statt geraten: ~1300ms → ~990ms (−24%), eager geladene Plugins 44 → 29. Ursache war neo-tree mit `lazy = false`, das neotest samt acht Adaptern, treesitter, devicons, nui, plenary, vim-test und FixCursorHold mitzog.
+  - **Offen, mit Messwerten statt Vermutungen.** Was jetzt noch teuer ist, in Reihenfolge:
+    - **`lsp.setup()` ~288ms**, die eine synchrone Phase, die alles andere überragt. Aufgeschlüsselt: `build_capabilities` **84ms** (zieht `blink.cmp` beim Start hoch, nur um dessen Capability-Tabelle zu lesen), `languages` **66ms**, der Rest verteilt. Die Frage ist, ob die Capabilities wirklich vor dem ersten Attach global stehen müssen oder ob LspAttach reicht — die Begründung in `init.lua` sagt Ersteres, geprüft habe ich es nicht.
+    - **`trouble.nvim` 79ms + `nvim-web-devicons` 71ms**, beide eager. `lazy = false` steht in `lsp.nvim/lua/lsp/pack/ui.lua` **mit Begründung** (`]w`/`[w` auf eine bereits offene Liste). Die Begründung wirkt zu vorsichtig — `cmd = "Trouble"` plus lazys Require-Hook dürfte beides abdecken —, aber das ist eine dokumentierte fremde Entscheidung, die ich nicht im Vorbeigehen umgestoßen habe.
+    - **`require("options")` 63ms** — eigener Code, noch nicht angesehen.
+    - **`runtime-analysis.nvim` 59ms**, eager. Eigenes Plugin.
+  - **Werkzeug:** `:StartupReport` bzw. `require("startup").slowest()` gibt die Phasen-Timeline; `require("lazy").stats()` und `lazy.core.config.plugins[..]._.loaded` sagen, was warum beim Start lädt. Beides hat diese Runde getragen.
 - [ ] Ergebnisse aus `:Recommender perf` (nachdem du sie erzeugt hast) in konkrete Fixes umsetzen.
 - [ ] Module/Funktionen identifizieren, die von FFI/C profitieren würden (Startup, Runtime-Analysis, Docmap), und Umsetzung vorschlagen/implementieren.
 
