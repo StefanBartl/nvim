@@ -82,5 +82,52 @@ in einem Plugin.
 
 - [ ] wie filetre.nvim bereitws ewin modul für das /menu plugin bietet, sammeln weiterer möglichen entries,aus alen meien plugins. idee: ein ktesxteintrag "MyPlugns" -> Jedes Plgin ien entry -> aktion
 
+### Was bei einem UI-Plugin mitwandern würde (2026-08-26)
+
+Stand der Dinge, damit die Entscheidung „eigenes Plugin oder nicht" auf
+Fakten steht statt auf Erinnerung.
+
+**Das Menü-Modul: `lib.nvim.ui.kit.menu` existiert und ist getestet**
+(`TESTS/ui_kit_spec.lua`). nvzone/menu ist damit **heute** ablösbar — die
+Soft-Dependency oben ist keine Notwendigkeit mehr, sondern eine offene
+Entscheidung.
+
+Wo es hingehört, hängt an genau dieser Frage:
+
+- **Kommt das UI-Plugin** → `ui.kit.menu` wandert dorthin. Ein Popup-Menü ist
+  UI-Domäne, nicht Bibliotheks-Domäne, und lib.nvim wäre den Brocken los.
+- **Kommt es nicht** → das Modul bleibt, wo es ist, und ist damit ein
+  reguläres lib.nvim-Feature. Kein Zwischenzustand nötig: es funktioniert
+  jetzt schon dort.
+
+Bis dahin nichts tun. Ein Modul zu verschieben, dessen Ziel-Repo es nicht
+gibt, ist der teuerste Weg zum selben Ergebnis.
+
+**lualine — und warum das weniger dranhängt als es klingt.** Ein
+lualine-Nachbau passt fachlich ins UI-Plugin. Er hängt aber an *keinem* der
+eigenen Plugins:
+
+| Plugin | Was es tut | Kopplung an lualine |
+|---|---|---|
+| `sandbox.nvim` | `statusline.status()` gibt „engine (running/total)" als Klartext zurück; `M.lualine_component = M.status` ist ein **Alias auf dieselbe Funktion** | keine |
+| `filetree.nvim` | `cwd_mode.component()` gibt den cwd-Badge als Klartext zurück | keine |
+
+Beide dokumentieren drei Konsumenten — native `%{v:lua…}`, heirline, lualine —
+und liefern einen reinen String ohne Highlight-Escapes. Es gibt also nichts zu
+analysieren, „was die beiden von lualine brauchen": **nichts.** Ein UI-Plugin
+würde lualine als *deine* Statusline ersetzen, nicht als Abhängigkeit dieser
+zwei — das ist eine reine Config-Entscheidung und blockiert hier niemanden.
+
+Nicht verwechseln: `lib.nvim.ui.statusline` gibt es zwar, ist aber eine andere
+Domäne — ein an *ein Fenster* geheftetes Badge, das unter `laststatus = 3` auf
+ein Float ausweicht. Kein Statusline-Framework, ersetzt lualine nicht.
+
+- [ ] Beim Bau des UI-Plugins: welche NvChad-Teile werden dort neu gebaut?
+      (Eigener Punkt, gehört zu „Was fehlt, um nvchad komplett zu ersetzen?"
+      in `FINISH/MERGED.md` Liste A.)
+- [ ] `filetree.nvim`s `cwd_mode` optimieren — der Badge ist die Stelle, an der
+      die Statusline-Frage praktisch wird. Als Task in
+      `filetree.nvim/docs/ROADMAP.md` eingetragen, hier nur der Verweis.
+
 ---
 
