@@ -48,7 +48,7 @@ flag them:
 
 - **`:Replace`** appears in recommender.nvim's and runtime-analysis.nvim's
   sheets. Both are cross-references to replacer.nvim, which owns it.
-- **`:Replace`** also appears in `lib.nvim/lua/lib/nvim/usercmd/composer/`, and
+- **`:Replace`** also appears in `lib.nvim/lua/lib/nvim/bindings/usercmd/composer/`, and
   **`:Foo`** in documentation.nvim — both are docstring examples of how to call
   the composer, not registrations. A naive `grep nvim_create_user_command`
   reports them; reading the line does not.
@@ -143,7 +143,7 @@ Two patterns, both deliberate:
   `:File`, `:Reposcope`, `:Dap`, `:Debug`, `:Spotlight`, `:Emojis`,
   `:GithubStats`, `:Cmdlog`, `:PdfPort`, `:Recommender`, `:Image`,
   `:ColorMyAscii`. Sub-command dispatch with `<Tab>` completion at every level,
-  built on `lib.nvim.usercmd.composer`.
+  built on `lib.nvim.bindings.usercmd.composer`.
 - **Flat aliases kept next to it** — `:LspFormat`, `:DiagQF`, `:Gopath*`,
   `:DirPicker`, `:LiveGrep`, `:MarkLineToggle`, `:CwdHere`, … Muscle memory
   beats tidiness, and an alias costs one line. Both surfaces dispatch into the

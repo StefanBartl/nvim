@@ -1,7 +1,7 @@
 # spotlight.nvim — Keymaps Cheatsheet
 
 Source: `lua/spotlight/bindings/keymaps.lua`, `lua/spotlight/bindings/which_key.lua`
-Bridge: `lua/spotlight/util/lib.lua`'s `lib.map()` — prefers `lib.nvim.map`, falls
+Bridge: `lua/spotlight/util/lib.lua`'s `lib.map()` — prefers `lib.nvim.bindings.keymap`, falls
 back to `vim.keymap.set`. Every mapping sets `silent = true` and a `desc`.
 
 Cross-reference: `docs/BINDINGS.md` in the repo is the plugin-side source of

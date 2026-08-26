@@ -1,7 +1,7 @@
 # fileops.nvim — Keymaps Cheatsheet
 
 Source: `lua/fileops/bindings/keymaps.lua`
-Bridge: local `map()` helper — prefers `lib.nvim.map`, falls back to `vim.keymap.set` (mode always `n`).
+Bridge: local `map()` helper — prefers `lib.nvim.bindings.keymap`, falls back to `vim.keymap.set` (mode always `n`).
 Cross-reference: `docs/BINDINGS.md`, `docs/keymaps.md` — both current and complete.
 
 ## Cycle (`cfg.keymaps.cycle ~= false`, each lhs individually remappable/disable-able via `config.keymaps.lhs.<key>`)

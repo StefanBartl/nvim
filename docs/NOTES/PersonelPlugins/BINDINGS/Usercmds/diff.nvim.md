@@ -1,7 +1,7 @@
 # diff.nvim — User Commands Cheatsheet
 
 `:Diff`/`:DiffClear`/`:DiffBuffers`/`:DiffOrig`/`:DiffExit` rebuilt via
-`lib.nvim.usercmd.composer` (migrated 2026-07-19) — the plugin that
+`lib.nvim.bindings.usercmd.composer` (migrated 2026-07-19) — the plugin that
 originally motivated Phase 7's `Route.kv` bare `key=value` grammar. **No
 syntax change**: same 5 independently name-configurable top-level commands
 (NOT a subcommand tree — each is its own composer verb, since each has a

@@ -18,7 +18,7 @@
 --- `:RATelemetry` the plugin registers, so backup prompts, reset semantics
 --- and reporting stay identical to every other target.
 
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

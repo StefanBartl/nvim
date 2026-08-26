@@ -69,8 +69,8 @@ local function ensure_hl(color_key)
   return group
 end
 
-require("lib.nvim.autocmd").create("ColorScheme", function() _hl_built = {} end, {
-  group = require("lib.nvim.autocmd").group("WkdNvChadCwdModeBadgeHl", true),
+require("lib.nvim.bindings.autocmd").create("ColorScheme", function() _hl_built = {} end, {
+  group = require("lib.nvim.bindings.autocmd").group("WkdNvChadCwdModeBadgeHl", true),
   desc = "Rebuild the filetree cwd-mode badge highlights for the new theme's palette",
 })
 

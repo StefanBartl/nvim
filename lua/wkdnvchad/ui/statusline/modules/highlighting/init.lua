@@ -10,7 +10,7 @@
 -- (z. B. Normal-, Insert-, Visual-Mode).
 -- =========================================================
 
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 local M = {}
 

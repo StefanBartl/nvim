@@ -43,7 +43,7 @@ Auslagerungs-Thema bestehende Inkonsistenzen im heutigen Code aufgedeckt
 | Core | `core/init.lua` | Auto-Attach an Testdateien per Dateinamen-Pattern, Auto-Open des Output-Fensters bei Fehlschlag — per `Autocmd`, optional aufgerufen (`pcall(require, "config.neotest.core")`) |
 | Actions | `actions/init.lua` | Zentrale, saubere Fassade (`run_nearest`, `run_file`, `run_all`, `debug_nearest`, `toggle_summary`, `open_output`, `toggle_output_panel`, `stop`, `toggle_watch`) — von Keymaps, Commands, Telescope und Which-Key gleichermaßen konsumiert |
 | Commands | `commands/init.lua` | 10 `:Neotest*`-Usercmds, direkt auf `actions` gemappt |
-| Keymaps | `keymaps/init.lua` | `<leader>nt*`-Mappings über `lib.nvim.map`; **zusätzlich** zwei Mappings (`<leader>ntr`/`<leader>ntD`) bereits beim `require()` selbst gesetzt (Modul-Top-Level-Code, nicht in `setup()`) |
+| Keymaps | `keymaps/init.lua` | `<leader>nt*`-Mappings über `lib.nvim.bindings.keymap`; **zusätzlich** zwei Mappings (`<leader>ntr`/`<leader>ntD`) bereits beim `require()` selbst gesetzt (Modul-Top-Level-Code, nicht in `setup()`) |
 | Which-Key | `whichkey/init.lua` | Dieselben 9 `<leader>nt*`-Mappings noch einmal, über `which-key`s `wk.add()` |
 | Debug | `debug/init.lua` | Fünf `:NeotestDebug*`-Usercmds (Adapter-Status, State, File, Root, Framework) **plus** eine dritte Definition von `<leader>ntr`/`<leader>ntD` |
 | Highlights | `highlights/init.lua` | 8 statische `NeotestPassed/Failed/Running/...`-Highlight-Gruppen |
@@ -105,7 +105,7 @@ bestehende Bugs bzw. totes Gewicht im Host — analog zum in
 
 4. **Doppelte Registrierung der übrigen neun `<leader>nt*`-Keymaps:**
    `plugins/neotest.lua` ruft sowohl `require("config.neotest.keymaps").setup()`
-   (bindet über `lib.nvim.map`/`vim.keymap.set`) als auch
+   (bindet über `lib.nvim.bindings.keymap`/`vim.keymap.set`) als auch
    `require("config.neotest.whichkey").setup()` (bindet dieselben LHS über
    `which-key`s `wk.add()`) auf. Funktional vermutlich unschädlich (letzter
    Bind gewinnt, which-key registriert vermutlich nach dem nativen Mapping),
@@ -198,10 +198,10 @@ gezielt die Adapter- und Keymap-Redundanzen aus §2, nicht die Gesamtarchitektur
 | Aktuell | Status |
 |---|---|
 | `lib.nvim.notify` (`actions`, `debug`, `consumers/neotree_wrapper`, `utils/validate_consumer`) | bereits verwendet ✅ |
-| `lib.nvim.map` (`keymaps/init.lua`, `debug/init.lua`) | bereits verwendet ✅ — aber s. §2 Punkt 3/4 zur Redundanz |
-| `lib.nvim.usercmd` (`debug/init.lua`, `utils/validate_consumer.lua`) | bereits verwendet ✅ |
-| `lib.nvim.autocmd` (`core/init.lua`, `autocmds/auto_discovery.lua`) | bereits verwendet ✅ |
-| `vim.api.nvim_create_user_command` direkt statt `lib.nvim.usercmd` (`commands/init.lua`) | uneinheitlich — `commands/init.lua` nutzt die native API, `debug/init.lua` im selben Plugin nutzt `lib.nvim.usercmd`. Beim Umzug vereinheitlichen |
+| `lib.nvim.bindings.keymap` (`keymaps/init.lua`, `debug/init.lua`) | bereits verwendet ✅ — aber s. §2 Punkt 3/4 zur Redundanz |
+| `lib.nvim.bindings.usercmd` (`debug/init.lua`, `utils/validate_consumer.lua`) | bereits verwendet ✅ |
+| `lib.nvim.bindings.autocmd` (`core/init.lua`, `autocmds/auto_discovery.lua`) | bereits verwendet ✅ |
+| `vim.api.nvim_create_user_command` direkt statt `lib.nvim.bindings.usercmd` (`commands/init.lua`) | uneinheitlich — `commands/init.lua` nutzt die native API, `debug/init.lua` im selben Plugin nutzt `lib.nvim.bindings.usercmd`. Beim Umzug vereinheitlichen |
 | Adapter-Singleton-Cache (`adapters/factory.lua`, `_G._neotest_adapter_cache`) | globaler State über `_G` statt `lib.lua.memo` — sollte bei der Konsolidierung aus §4 durch `lib.lua.memo`/`lib.lua.memo.lru` ersetzt werden, kein `_G`-Zugriff nötig |
 | Framework-Detection-Caching (`adapters/typescript.lua` liest bei jedem Aufruf `package.json` neu) | Kandidat für `lib.lua.memo` (pro Root-Pfad einmalig cachen) |
 

@@ -6,7 +6,7 @@ local notify = require("lib.nvim.notify").create("[wkdnvchad.mappings]")
 local M = {}
 
 -- Use lib for all mappings
-local map = require("lib.nvim.map")
+local map = require("lib.nvim.bindings.keymap")
 local lazy = require("lib.lua.lazy")
 
 -- Lazy-load heavy modules

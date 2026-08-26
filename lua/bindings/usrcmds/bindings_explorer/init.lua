@@ -27,7 +27,7 @@
 --- gegen `nvim_get_keymap`/`nvim_get_commands`, siehe `drift.lua`s
 --- Moduldoc für den genauen (bewusst eingeschränkten) Scope.
 
-local composer = require("lib.nvim.usercmd.composer")
+local composer = require("lib.nvim.bindings.usercmd.composer")
 local config = require("bindings.usrcmds.bindings_explorer.config")
 local search = require("bindings.usrcmds.bindings_explorer.search")
 local live = require("bindings.usrcmds.bindings_explorer.live")

@@ -1,7 +1,7 @@
 ---@module 'wkdnvchad.ui.statusline.modules.lsp.symbols.document_symbols'
 --- Fully async LSP document symbols with debouncing and proper error handling
 
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 local debounce_buffer = require("lib.nvim.debounce.buffer")
 
 local M = {}

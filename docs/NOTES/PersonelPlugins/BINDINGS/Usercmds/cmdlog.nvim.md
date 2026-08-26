@@ -1,6 +1,6 @@
 # cmdlog — User Commands Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (migrated 2026-07-19).
+One command, built via `lib.nvim.bindings.usercmd.composer` (migrated 2026-07-19).
 Replaces 7 independent flat commands — breaking change, no compat aliases.
 The only repo in the migration series with **zero prior lib.nvim
 dependency** — added as part of this migration, per the roadmap plan.

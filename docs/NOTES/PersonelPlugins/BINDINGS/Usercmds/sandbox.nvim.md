@@ -1,6 +1,6 @@
 # sandbox.nvim — User Commands Cheatsheet
 
-One command tree, built via `lib.nvim.usercmd.composer` (migrated
+One command tree, built via `lib.nvim.bindings.usercmd.composer` (migrated
 2026-07-19, restructured 2026-07-21). Originally three separate verbs
 (`:Container`/`:Image`/`:Wsl`) replacing 25 independent flat commands
 (`Container*` ×10, `Container*Buffer`/`Image*Buffer` ×7, `Image*` ×4,

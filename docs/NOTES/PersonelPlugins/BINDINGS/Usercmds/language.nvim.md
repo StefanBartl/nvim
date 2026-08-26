@@ -2,7 +2,7 @@
 
 Three independent top-level commands (not a flat family under one verb —
 they're already distinct, well-known entry points), each its own
-`lib.nvim.usercmd.composer` verb built on the `path = {}` root-route trick.
+`lib.nvim.bindings.usercmd.composer` verb built on the `path = {}` root-route trick.
 
 Source: `lua/language/bindings/usrcmds/init.lua`
 Docs: `docs/BINDINGS.md`, `doc/language.txt`
@@ -89,5 +89,5 @@ Docs: `docs/BINDINGS.md`, `doc/language.txt`
   completion (`--n<Tab>` → `--nocode`), `--output=`/`--files=` enum
   completion, `Spellcheck clear`/`refresh` dispatch, `Translate!` interactive
   window dispatch, unknown-flag hard error with usage text, and
-  `:checkhealth language` reporting the new `lib.nvim.usercmd.composer` line
+  `:checkhealth language` reporting the new `lib.nvim.bindings.usercmd.composer` line
   — all pass.

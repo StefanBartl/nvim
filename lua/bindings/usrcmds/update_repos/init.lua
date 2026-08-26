@@ -9,7 +9,7 @@
 --- others. Progress is shown via lib.nvim.progress (soft dependency).
 
 local notify = require("lib.nvim.notify").create("[usrcmds.update_repos]")
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 local expand_path = require("lib.nvim.cross.fs.expand_path")
 
 local M = {}

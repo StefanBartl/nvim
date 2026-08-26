@@ -13,7 +13,7 @@ mit. Der Plugin-Spec
 (`<leader>xx`, `<leader>xX`, `<leader>cs`, `<leader>cl`, `<leader>xL`,
 `<leader>xQ`) ist nur eine **Empfehlung für die eigene Lazy-Spec** — hier
 nicht übernommen. Alle Maps unten sind daher **[custom]**, gesetzt per
-`lib.nvim.map` (`vim.g.__map_helper`) direkt in `bindings/mappings/trouble.lua`.
+`lib.nvim.bindings.keymap` (`vim.g.__map_helper`) direkt in `bindings/mappings/trouble.lua`.
 
 ---
 

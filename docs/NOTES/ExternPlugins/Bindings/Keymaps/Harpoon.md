@@ -14,7 +14,7 @@ Zwei Regeln gelten hier **by construction**, nicht per Disziplin:
 
 Zwei Details zur which-key-Anbindung:
 
-- Die Keymaps werden **immer selbst** gesetzt (`lib.nvim.map`) und nie which-key
+- Die Keymaps werden **immer selbst** gesetzt (`lib.nvim.bindings.keymap`) und nie which-key
   überlassen: `wk.add` legt in der gepinnten Version nur einen Eintrag in
   which-keys eigenem Baum an, es passiert **kein** `vim.keymap.set`. Wer sich
   darauf verlässt, hat ohne which-key gar keine Mappings.

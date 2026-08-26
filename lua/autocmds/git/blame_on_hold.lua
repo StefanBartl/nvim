@@ -4,7 +4,7 @@
 ---@class AutoCmds.Git.BlameOnHold
 local M = {}
 
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 ---@param cfg AutoCmds.Git.BlameOnHoldCfg
 ---@param shared table

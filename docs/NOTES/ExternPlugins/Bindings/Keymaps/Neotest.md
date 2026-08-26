@@ -14,7 +14,7 @@ Registriert im `config`-Block des `nvim-neotest/neotest`-Specs
 ## Gruppe `<leader>nt` — "Tests"
 
 Aus [lua/config/neotest/keymaps/init.lua](../../../../../lua/config/neotest/keymaps/init.lua)
-(`M.keymaps`-Tabelle, per `lib.nvim.map` gesetzt):
+(`M.keymaps`-Tabelle, per `lib.nvim.bindings.keymap` gesetzt):
 
 | Mapping | Aktion | Action-Funktion |
 |---|---|---|

@@ -15,12 +15,12 @@ local nvim_create_autocmd = api.nvim_create_autocmd
 --------------------------------------------------------------------------------
 
 local lazy = require("lib.lua.lazy")
-local augroup_lib = lazy.require("lib.nvim.autocmd.augroup")
+local augroup_lib = lazy.require("lib.nvim.bindings.autocmd.augroup")
 local augroup = augroup_lib.create.clear
-local autocmd_lib = lazy.require("lib.nvim.autocmd")
+local autocmd_lib = lazy.require("lib.nvim.bindings.autocmd")
 local norm_events = autocmd_lib.norm_events
 local is_kitty = lazy.require("lib.nvim.terminal").is_kitty
-local Autocmd = lazy.require("lib.nvim.autocmd")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 --------------------------------------------------------------------------------
 -- Defaults --------------------------------------------------------------------

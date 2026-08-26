@@ -5,7 +5,7 @@
 local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Winhl = lazy.require("wkdoptions.hl_config.utils.winhighlight")
-local Autocmd = lazy.require("lib.nvim.autocmd")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 local M = {}
 

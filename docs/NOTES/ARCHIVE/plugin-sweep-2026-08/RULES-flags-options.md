@@ -60,7 +60,7 @@ reading the code, not confirmed feature requests.
   dem gleichnamigen lokalen Branch.
 - [x] `<Plug>`-Mappings fuer `DocBrowse`-Aktionen — **n/a.** `<Plug>`-Mappings
   sind in diesem Ecosystem kein Ziel: `opts.keys` (Rebinding pro Action-Id)
-  plus `lib.nvim.map` deckt das vollstaendig ab, which-key-Labels bleiben die
+  plus `lib.nvim.bindings.keymap` deckt das vollstaendig ab, which-key-Labels bleiben die
   einzige Pflicht.
 — from [documentation.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/documentation.nvim.md)
 

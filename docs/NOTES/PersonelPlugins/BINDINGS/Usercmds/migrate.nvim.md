@@ -1,6 +1,6 @@
 # migrate.nvim — `:MigrateOpt` / `:MigrateNotify` / `:MigrateHl` / `:MigrateLsp` Cheatsheet
 
-Four independent top-level commands, each its own `lib.nvim.usercmd.composer`
+Four independent top-level commands, each its own `lib.nvim.bindings.usercmd.composer`
 verb on a `path = {}` root route. This was the roadmap's "needs a real
 design decision" repo — its grammar dispatches on **argument shape**
 (empty / `%` / `cwd` / range), not a subcommand string.
@@ -109,7 +109,7 @@ increment do the job.
   error text — "Invalid argument: bogus. Use: [empty], %, or cwd" — not
   composer's own generic enum-rejection message, confirming the bypass
   preserved exact original error wording). `:checkhealth migrate` reports
-  the new `lib.nvim.usercmd.composer` line.
+  the new `lib.nvim.bindings.usercmd.composer` line.
 
 ## Pre-existing bug found (flagged separately, not fixed here)
 

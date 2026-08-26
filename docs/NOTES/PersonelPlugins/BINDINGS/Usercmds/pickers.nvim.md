@@ -1,6 +1,6 @@
 # pickers.nvim — User Commands Cheatsheet
 
-One command tree, built via `lib.nvim.usercmd.composer` (migrated
+One command tree, built via `lib.nvim.bindings.usercmd.composer` (migrated
 2026-07-19). Kept the compat aliases **alongside** `:Pickers` rather than
 replacing them — this repo already had an explicit, documented compat-layer
 convention (unlike other repos' default of removing flat commands post-port).
@@ -176,7 +176,7 @@ exposed has a `:Pickers builtin <name>` equivalent first.
   parallel reimplementation of it.
 - **No CI changes needed**: `.github/workflows/ci.yml`'s `test` job already
   checked out `lib.nvim` as a sibling (needed pre-migration for
-  `command.complete`'s `lib.nvim.notify` dependency), so `lib.nvim.usercmd.composer`
+  `command.complete`'s `lib.nvim.notify` dependency), so `lib.nvim.bindings.usercmd.composer`
   was already reachable. `:Pickers` losing its raw-`nvim_create_user_command`
   fallback (lib.nvim is now hard-required for the command layer, same as
   every other migrated repo) needed no test-gating changes as a result.

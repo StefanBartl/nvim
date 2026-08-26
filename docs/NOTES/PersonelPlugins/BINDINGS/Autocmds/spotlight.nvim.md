@@ -2,7 +2,7 @@
 
 Source: `lua/spotlight/bindings/autocmds.lua`, `M.setup(cfg)`
 Bridge: `lua/spotlight/util/lib.lua`'s `lib.autocmd()` / `lib.augroup()` — prefers
-`lib.nvim.autocmd` (which wraps every callback in a `pcall` and reports failures),
+`lib.nvim.bindings.autocmd` (which wraps every callback in a `pcall` and reports failures),
 falls back to `nvim_create_autocmd` with its own `pcall`.
 
 Cross-reference: `docs/BINDINGS.md` in the repo — verified current and accurate.

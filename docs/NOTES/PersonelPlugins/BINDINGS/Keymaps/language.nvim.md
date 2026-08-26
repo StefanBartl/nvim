@@ -5,7 +5,7 @@ Cross-reference: `docs/BINDINGS.md` — current for the config-driven table belo
 
 ## Global, config-driven
 
-Local `map()` helper — tries `lib.nvim.map`, falls back to `vim.keymap.set`
+Local `map()` helper — tries `lib.nvim.bindings.keymap`, falls back to `vim.keymap.set`
 (`desc`, `silent=true`, `noremap=true`). Each skipped if its config key isn't
 a non-empty string.
 

@@ -2,7 +2,7 @@
 --- `:NeoTreeCheckHealth` -- runs `config.neotree.checkhealth` as a real
 --- command instead of only through `:checkhealth`.
 
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

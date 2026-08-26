@@ -16,7 +16,7 @@ Zwei Quellen: die Upstream-Plugin-Commands aus (der lokal überschriebenen)
 ## [custom] `:UI` — Runtime-UI-Kontrolle
 
 Registriert in [lua/wkdnvchad/usrcmd/init.lua](../../../../../lua/wkdnvchad/usrcmd/init.lua)
-via `lib.nvim.usercmd.create` (dieselbe Composer-Basis wie z. B. `:Harpoon`).
+via `lib.nvim.bindings.usercmd.create` (dieselbe Composer-Basis wie z. B. `:Harpoon`).
 Hier war kürzlich der E174-Bug ("command already exists") in `usercmd.create`
 betroffen — der Fix dort erzwingt jetzt `force = true` als Default, damit ein
 Reload (z. B. durch den `ReloadNvChad`-Autocmd, s. o.) das Command nicht mehr

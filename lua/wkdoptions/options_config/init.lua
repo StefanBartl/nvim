@@ -10,7 +10,7 @@ local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
 local ocfg = lazy.require("wkdoptions.config.data.options")
 local hcfg = lazy.require("wkdoptions.config.data.highlight")
-local Autocmd = lazy.require("lib.nvim.autocmd")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 local AUG_OPTS = Autocmd.group("myopt_Options", true)
 

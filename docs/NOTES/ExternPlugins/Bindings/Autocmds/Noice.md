@@ -10,7 +10,7 @@ dem Plugin heraus, aber das Verknüpfen von Keymaps daran ist reine
 Config-Ergänzung dieses Repos.
 
 Die Gruppe wird über `Autocmd.group("NoiceBufferMaps", true)`
-([lib.nvim.autocmd](../../../../../lua/lib/nvim/autocmd.lua)) angelegt, das
+([lib.nvim.bindings.autocmd](../../../../../lua/lib/nvim/bindings/autocmd.lua)) angelegt, das
 zweite Argument (`clear = true`) verhindert doppelte Registrierung bei einem
 Config-Reload.
 

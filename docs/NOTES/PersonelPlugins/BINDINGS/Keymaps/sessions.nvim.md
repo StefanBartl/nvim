@@ -3,7 +3,7 @@
 Source: `lua/sessions/bindings/keymaps/init.lua`, `lua/sessions/bindings/which_key/init.lua`
 Cross-reference: `docs/BINDINGS.md` — accurate and current, no discrepancies.
 
-Routed through a local `set()` closure that tries `require("lib.nvim.map")`,
+Routed through a local `set()` closure that tries `require("lib.nvim.bindings.keymap")`,
 falls back to `vim.keymap.set` (`noremap=true, silent=true`). **Entirely
 opt-in** — `config/DEFAULTS.lua` sets `keymaps = false` by default; there are
 no baked-in default lhs strings (the "suggested" values below only appear in
@@ -32,8 +32,8 @@ subcommand) because renaming would break existing configs silently.
 `delete` and `rename` are deliberately absent: both require a name argument,
 and a keymap is a bare keypress with nothing to pass. Setting `km.delete`
 reports exactly that rather than "unknown key" — it is a real subcommand, not
-a typo. The stale `pcall(require, "lib.nvim.map")` fallback is gone;
-registration goes through `lib.nvim.map`.
+a typo. The stale `pcall(require, "lib.nvim.bindings.keymap")` fallback is gone;
+registration goes through `lib.nvim.bindings.keymap`.
 
 ## which-key
 

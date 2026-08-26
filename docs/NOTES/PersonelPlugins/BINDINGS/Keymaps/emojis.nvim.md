@@ -1,7 +1,7 @@
 # emojis.nvim — Keymaps Cheatsheet
 
 Source: `lua/emojis/bindings/keymaps.lua`, `M.bind_preset()`
-Bridge: `lua/emojis/util/lib.lua`'s `lib.map()` — prefers `lib.nvim.map`, falls back to `vim.keymap.set`.
+Bridge: `lua/emojis/util/lib.lua`'s `lib.map()` — prefers `lib.nvim.bindings.keymap`, falls back to `vim.keymap.set`.
 Cross-reference: `docs/BINDINGS.md`, `docs/keymaps.md` — both current and accurate.
 
 Gated by `cfg.keymaps.preset == true` (checked in `bindings/init.lua`).

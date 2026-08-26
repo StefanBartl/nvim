@@ -1,7 +1,7 @@
 ---@module 'config.neotree.keymaps.global'
 ---@brief Global Neo-tree keymaps (outside Neo-tree windows)
 
-local map = require("lib.nvim.map")
+local map = require("lib.nvim.bindings.keymap")
 
 local M = {}
 

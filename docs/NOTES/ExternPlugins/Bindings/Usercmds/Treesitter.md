@@ -3,7 +3,7 @@
 `nvim-treesitter` selbst hat keine eigenen Usercmds mehr (moderner
 `main`-Branch, deprecated `:TSInstall`/`:TSUpdate`-Style-Commands entfallen
 bis auf `:TSUpdate` als `build`-Hook in der Plugin-Spec). Der folgende Befehl
-ist **[custom]** — gebaut mit `lib.nvim.usercmd.create` im `config`-Block von
+ist **[custom]** — gebaut mit `lib.nvim.bindings.usercmd.create` im `config`-Block von
 [lua/plugins/treesitter.lua](../../../../../lua/plugins/treesitter.lua),
 Backend `lib.nvim.treesitter.parser_policy` (`lib.nvim`-Repo,
 `E:\repos\lib.nvim\lua\lib\nvim\treesitter\parser_policy\`).

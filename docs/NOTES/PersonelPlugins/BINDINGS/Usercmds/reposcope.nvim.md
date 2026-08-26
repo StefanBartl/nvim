@@ -1,6 +1,6 @@
 # reposcope.nvim — User Commands Cheatsheet
 
-`:Reposcope` rebuilt via `lib.nvim.usercmd.composer` (migrated 2026-07-19).
+`:Reposcope` rebuilt via `lib.nvim.bindings.usercmd.composer` (migrated 2026-07-19).
 **No syntax change**: same `:Reposcope <subcommand> [args]` grammar, now
 17 subcommands (was 14 — `session` added 2026-07-25; `favorites`/`queries`
 added 2026-08-09).

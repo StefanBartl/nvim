@@ -1,6 +1,6 @@
 # bindings-explorer — `:Bindings [subcommand]` Cheatsheet
 
-Ein Verb über `lib.nvim.usercmd.composer`, wie `:Case`/`:Image`. Bare
+Ein Verb über `lib.nvim.bindings.usercmd.composer`, wie `:Case`/`:Image`. Bare
 `:Bindings` ohne Subcommand ist gleichbedeutend mit `:Bindings search`.
 
 Source: `lua/bindings/usrcmds/bindings_explorer/`

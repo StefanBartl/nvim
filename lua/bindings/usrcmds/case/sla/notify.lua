@@ -111,7 +111,7 @@ function M.setup()
     end)
   )
 
-  local autocmd = require("lib.nvim.autocmd")
+  local autocmd = require("lib.nvim.bindings.autocmd")
   autocmd.create("FocusGained", function()
     pcall(M.check)
   end, {

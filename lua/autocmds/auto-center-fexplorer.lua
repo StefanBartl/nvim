@@ -27,7 +27,7 @@
 
 
 local notify = require("lib.nvim.notify").create("[autocmds.auto-center-fexplorer]")
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 local M = {}
 

@@ -15,7 +15,7 @@
 --- whole buffer (`context_open.scan.buffer_targets`), picked from one list;
 --- selecting an entry jumps the cursor to it and runs its action.
 
-local composer = require("lib.nvim.usercmd.composer")
+local composer = require("lib.nvim.bindings.usercmd.composer")
 local providers = require("bindings.usrcmds.context_open.providers")
 local scan = require("bindings.usrcmds.context_open.scan")
 

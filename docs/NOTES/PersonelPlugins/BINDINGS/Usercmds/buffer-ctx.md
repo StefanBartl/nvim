@@ -1,9 +1,9 @@
 # buffer-ctx.nvim — User Commands Cheatsheet
 
-Four command trees, built via `lib.nvim.usercmd.composer` (migrated
+Four command trees, built via `lib.nvim.bindings.usercmd.composer` (migrated
 2026-07-19). `lib.nvim` is now a **required** dependency (was previously
 optional, only for `notify`/`map` cosmetics) — the whole command layer
-`require`s `lib.nvim.usercmd.composer` unconditionally at module load.
+`require`s `lib.nvim.bindings.usercmd.composer` unconditionally at module load.
 
 Source: `lua/buffer_ctx/commands.lua` (`:Insert`/`:Copy`), `lua/buffer_ctx/format/init.lua` (`:Format`), `lua/buffer_ctx/mark/init.lua` (`:Mark`)
 Docs: `docs/BINDINGS.md`, `docs/commands.md`, `doc/buffer-ctx.txt`
@@ -92,7 +92,7 @@ Args not given on the command line are prompted via `vim.fn.input`.
 - **CI gap found and fixed**: `.github/workflows/ci.yml`'s `test`/`health`
   jobs ran deliberately *without* lib.nvim ("soft dependency" comment) to
   exercise the standalone fallback path. That's no longer valid — the
-  default `setup()` path now hard-requires `lib.nvim.usercmd.composer` (no
+  default `setup()` path now hard-requires `lib.nvim.bindings.usercmd.composer` (no
   pcall, matching every other migrated repo). Fixed by checking out
   `StefanBartl/lib.nvim` as a sibling in both jobs, matching cascade.nvim's
   precedent. `docs/TESTS/run.lua` already auto-detects a sibling checkout.
@@ -142,9 +142,9 @@ Args not given on the command line are prompted via `vim.fn.input`.
   `MarkLineToggle`/`MarkLinesYank` — untouched by composer, dispatched
   through the existing `M._dispatch("filepath", …, "clip")`.
 - **`:checkhealth buffer_ctx` no longer crashes without lib.nvim (2026-08-06)**:
-  `health.lua` called `lib.nvim.usercmd.composer.checkhealth(...)` at four
+  `health.lua` called `lib.nvim.bindings.usercmd.composer.checkhealth(...)` at four
   spots with no guard, even though it separately `pcall`-checks for
-  `lib.nvim.usercmd.composer` two lines above and warns gracefully if absent.
+  `lib.nvim.bindings.usercmd.composer` two lines above and warns gracefully if absent.
   Without lib.nvim installed, `:checkhealth buffer_ctx` raised an uncaught
   error partway through and never reached the Format/Mark sections — now
   gated behind the same `pcall` result; verified both with and without

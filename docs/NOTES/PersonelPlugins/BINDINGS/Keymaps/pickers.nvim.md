@@ -16,7 +16,7 @@ authoritative if it disagrees.
 
 ## 1. Base default keymaps
 
-Registered via `bindings/util.lua`'s `map()` (prefers `lib.nvim.map`, else
+Registered via `bindings/util.lua`'s `map()` (prefers `lib.nvim.bindings.keymap`, else
 `vim.keymap.set`). Condition: `cfg.keymaps.enable == true` (default on).
 Registered from `setup()`, or — if the user never calls `setup()` — from a
 `VimEnter` fallback (see [Autocmds cheatsheet](../Autocmds/pickers.nvim.md)).

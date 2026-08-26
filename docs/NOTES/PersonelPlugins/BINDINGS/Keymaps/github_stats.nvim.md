@@ -126,6 +126,6 @@ stood out. No `desc` strings changed.
 
 Also rolled back the last two raw-API autocmds (`BufWipeout` in
 `dashboard/init.lua`, `VimResized` in `dashboard/layout.lua`). Their comment
-said `lib.nvim.autocmd.create` did not forward `buffer`, so the wrapper
+said `lib.nvim.bindings.autocmd.create` did not forward `buffer`, so the wrapper
 would have turned them into global listeners. It forwards it now — verified
 at runtime that both stay buffer-scoped with no global leak.

@@ -1,6 +1,6 @@
 ---@module 'config.harpoon.usrcmds'
 ---@brief User command registration: one unified `:Harpoon` verb (built with
---- lib.nvim.usercmd.composer) plus the flat convenience aliases.
+--- lib.nvim.bindings.usercmd.composer) plus the flat convenience aliases.
 ---
 --- Unified command:
 ---   :Harpoon                              open the quick menu (bare form)
@@ -27,8 +27,8 @@
 
 local M = {}
 
-local composer = require("lib.nvim.usercmd.composer")
-local usercmd = require("lib.nvim.usercmd")
+local composer = require("lib.nvim.bindings.usercmd.composer")
+local usercmd = require("lib.nvim.bindings.usercmd")
 local api = require("config.harpoon.api")
 
 local MENU_KINDS = { "default", "telescope", "fzf" }

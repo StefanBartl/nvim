@@ -191,7 +191,7 @@ end
 function M.setup()
   local map = vim.g.__map_helper
   if type(map) ~= "function" then
-    map = require("lib.nvim.map")
+    map = require("lib.nvim.bindings.keymap")
   end
 
   for i = 1, 9 do

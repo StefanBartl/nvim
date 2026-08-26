@@ -288,7 +288,7 @@ function M.info(case_arg)
       return
     end
 
-    local map = require("lib.nvim.map")
+    local map = require("lib.nvim.bindings.keymap")
     local mo = { buffer = surf.bufnr, nowait = true }
     map("n", "e", function()
       surf:close()
@@ -527,7 +527,7 @@ function M.reply_check()
         return
       end
 
-      local map = require("lib.nvim.map")
+      local map = require("lib.nvim.bindings.keymap")
       local mo = { buffer = surf.bufnr, nowait = true }
       if report.emoji_count and report.emoji_count > 0 then
         map("n", "c", function()
@@ -1310,7 +1310,7 @@ function M.solution(case_arg, flags)
     if not surf then
       return
     end
-    local map = require("lib.nvim.map")
+    local map = require("lib.nvim.bindings.keymap")
     local mo = { buffer = surf.bufnr, nowait = true }
     map("n", "e", function()
       surf:close()
@@ -2630,7 +2630,7 @@ function M.list_all()
     end
   end
 
-  local map = require("lib.nvim.map")
+  local map = require("lib.nvim.bindings.keymap")
   local mo = { buffer = surf.bufnr, nowait = true }
 
   map("n", "m", function()

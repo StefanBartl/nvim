@@ -5,7 +5,7 @@
 --- Buffer-local cache for repo root and repo-relative path. Reduces repeated
 --- upward searches on every CursorMoved/WinScrolled event when the winbar updates.
 
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 local M = {}
 

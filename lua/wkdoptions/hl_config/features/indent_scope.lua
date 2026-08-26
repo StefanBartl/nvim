@@ -7,7 +7,7 @@ local State = lazy.require("wkdoptions.hl_config.core.state")
 local LargeFile = lazy.require("wkdoptions.hl_config.utils.large_file")
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
 local Debounce = lazy.require("lib.nvim.debounce")
-local Autocmd = lazy.require("lib.nvim.autocmd")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 local M = {}
 

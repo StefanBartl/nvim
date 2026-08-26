@@ -45,7 +45,7 @@ Marker: `[C]` Completion — `[N]` Count — `[F]` Flags/Optionen
 
 Commit `eb99db1` auf Branch `feat/count-helpers` in `C:/repos/lib.nvim`.
 
-- [x] `[L]` `lib.nvim.autocmd.create` reicht `buffer` durch — **war schon
+- [x] `[L]` `lib.nvim.bindings.autocmd.create` reicht `buffer` durch — **war schon
       gefixt** (Commit `53050ff`, 2026-07-26). Der Audit vom 2026-08-08 ist an
       dieser Stelle veraltet. pickers.nvim' Workaround ist beim Umbau auf
       `result_count` (Polling statt Autocmd) ebenfalls verschwunden. Offen
@@ -144,7 +144,7 @@ Audit heisst meistens "nirgends aufgeschrieben".
       abgelehnt statt auf ein fehlschlagendes Kommando gemappt.
       Sonderfaelle: `open_manager` bleibt Alias auf `open_filemanager`;
       `open_default` bleibt das nackte `:Open` trotz gleichnamigem Handler.
-      Registrierung laeuft jetzt ueber `lib.nvim.map`.
+      Registrierung laeuft jetzt ueber `lib.nvim.bindings.keymap`.
       **Achtung `desc`:** jetzt `"open.nvim: :Open split"` statt
       `"open.nvim: open_browser"` — Cheatsheet entsprechend angepasst
       (exakter Stringvergleich in `drift.lua`).
@@ -166,7 +166,7 @@ Audit heisst meistens "nirgends aufgeschrieben".
       Cap, Teardown, No-Count-Fastpath und die Abort-Sperre sind
       Lib-Verhalten; im Plugin bleibt nur der DAP-Teil (welche Events
       "fertig" und "weg" bedeuten).
-      Nebenbei: der veraltete `pcall(require, "lib.nvim.map")`-Fallback samt
+      Nebenbei: der veraltete `pcall(require, "lib.nvim.bindings.keymap")`-Fallback samt
       "ships not yet"-Kommentar ist raus.
       Commit `0403309`, Branch `feat/breakpoint-prompts-and-lib-count`.
       Hinweis: dap.nvim hat keine Testsuite — gegen einen gestubbten Adapter
@@ -239,7 +239,7 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       genauso bereitwillig und ist mappbar. Wer `keymaps.delete` setzt,
       bekommt jetzt genau diese Begruendung statt "Unknown key".
       Als bewusstes n/a dokumentiert, nicht offen gelassen.
-      Nebenbei: der veraltete `pcall(require, "lib.nvim.map")`-Fallback ist
+      Nebenbei: der veraltete `pcall(require, "lib.nvim.bindings.keymap")`-Fallback ist
       raus.
       Commit `1830a49`, Branch `feat/keymaps-for-every-mappable-subcommand`.
       Hinweis: sessions.nvim hat keine Testsuite — zur Laufzeit verifiziert,
@@ -338,7 +338,7 @@ Commit `afaba76`, Branch `feat/batch-delete-risky-test-parser`.
       einzige `Fence`-Subkommando ohne Eintrag.
 - [x] `[L]` Buffer-lokaler-Autocmd-Workaround zurueckgebaut: die zwei
       Autocmds in `setup_buffer` liefen auf der Roh-API unter einem
-      Kommentar, `lib.nvim.autocmd.create` unterstuetze `opts.buffer` nicht.
+      Kommentar, `lib.nvim.bindings.autocmd.create` unterstuetze `opts.buffer` nicht.
       Tut es. Laufen jetzt ueber den Wrapper.
       Commit `6c19242`, Branch `feat/toggle-scope-and-fence-export`.
       Neuer `TESTS/toggle_buffer_spec.lua`, Suite gruen.
@@ -510,7 +510,7 @@ Suite gruen.
       Jede andere Navigationstaste des Dashboards las laengst einen Count —
       genau deshalb fiel das Fehlen hier auf.
 - [x] `[L]` Die letzten zwei Roh-API-Autocmds laufen jetzt ueber
-      `lib.nvim.autocmd.create`. Ihr Kommentar sagte, der Wrapper reiche
+      `lib.nvim.bindings.autocmd.create`. Ihr Kommentar sagte, der Wrapper reiche
       `buffer` nicht durch und wuerde sie zu globalen Listenern machen —
       stimmte damals, heute nicht. Zur Laufzeit geprueft: beide bleiben
       buffer-scoped, kein globaler Leak.
@@ -580,7 +580,7 @@ Suite gruen.
       * `fold_h2_plus` ebenso als Faltungsebene
       Nichts zu tun.
 - [x] `[L]` `refs.lua`s Live-Tracking-Autocmd laeuft jetzt ueber
-      `lib.nvim.autocmd.create`. Der Kommentar nannte zwei Gruende — kein
+      `lib.nvim.bindings.autocmd.create`. Der Kommentar nannte zwei Gruende — kein
       `buffer`-Durchreichen und die benoetigte Autocmd-Id — beide sind
       erledigt: der Wrapper reicht `buffer` durch **und** gibt die Id zurueck.
       Geprueft: buffer-scoped, kein globaler Leak, `live_off()` funktioniert.

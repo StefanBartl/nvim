@@ -1,6 +1,6 @@
 # lsp.nvim — `:Lsp <subcommand>` Cheatsheet
 
-Ein Command, gebaut über `lib.nvim.usercmd.composer` (`<Tab>`-Completion).
+Ein Command, gebaut über `lib.nvim.bindings.usercmd.composer` (`<Tab>`-Completion).
 
 Source: `C:\repos\lsp.nvim\lua\lsp\bindings\usrcmds.lua`
 Docs: `docs/BINDINGS.md`, `README.md`, `doc/lsp.nvim.txt`

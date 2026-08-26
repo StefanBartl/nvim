@@ -5,7 +5,7 @@ Cross-reference: `docs/BINDINGS.md` — verified accurate and current, no discre
 
 Optional, **off by default** (`config.keymaps = false`). If the user sets
 `keymaps = { opt = "<lhs>", notify = "<lhs>", hl = "<lhs>", lsp = "<lhs>" }`
-(registered via `require("lib.nvim.map")`, now looped generically over
+(registered via `require("lib.nvim.bindings.keymap")`, now looped generically over
 `migrate.registry`'s entries instead of two hardcoded fields):
 
 | lhs (user-chosen) | mode | action | desc |

@@ -4,7 +4,7 @@ Manages the repo checkouts for `plugins.personal` (the ~28 `StefanBartl/*.nvim`
 plugins declared in [`lua/plugins/personal/init.lua`](../../../plugins/personal/init.lua))
 and the source-mode switch that decides whether they load from disk or from
 GitHub. Everything lives under one command, built with
-[`lib.nvim.usercmd.composer`](https://github.com/StefanBartl/lib.nvim/tree/main/lua/lib/nvim/usercmd/composer)
+[`lib.nvim.bindings.usercmd.composer`](https://github.com/StefanBartl/lib.nvim/tree/main/lua/lib/nvim/bindings/usercmd/composer)
 — the same composer every other personal plugin here uses for its own
 `:Verb <subcommand>` (see `reposcope.nvim`, `replacer.nvim`, `lib.nvim`'s own
 `:Lib`, ...). Registered eagerly at startup, see `init.lua` in this config's
@@ -277,4 +277,4 @@ uncommitted work permanently. Sticking to the named list is what makes
 - [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md`](../../../../docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md) — the user-facing cheatsheet
 - [`lua/plugins/personal/source.lua`](../../../plugins/personal/source.lua) — the `OVERRIDE` switch and per-repo mode table
 - [`lua/plugins/personal/list.lua`](../../../plugins/personal/list.lua) — where the repo list actually comes from
-- `lib.nvim`'s [`usercmd/composer/README.md`](https://github.com/StefanBartl/lib.nvim/blob/main/lua/lib/nvim/usercmd/composer/README.md) — the composer API itself
+- `lib.nvim`'s [`usercmd/composer/README.md`](https://github.com/StefanBartl/lib.nvim/blob/main/lua/lib/nvim/bindings/usercmd/composer/README.md) — the composer API itself

@@ -6,7 +6,7 @@ local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")
 local notify = lazy.require("lib.nvim.notify").create("[Commands]")
 local trim = lazy.require("lib.lua.strings.core").trim
-local usercmd = lazy.require("lib.nvim.usercmd")
+local usercmd = lazy.require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

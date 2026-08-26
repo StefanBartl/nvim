@@ -7,7 +7,7 @@ local M = {}
 local api = vim.api
 local helpers = require("autocmds.general.helpers")
 local DEFAULTS = require("autocmds.general.defaults").get_defaults()
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 --------------------------------------------------------------------------------
 -- Public API

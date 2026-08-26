@@ -7,7 +7,7 @@ local notify = require("lib.nvim.notify").create("[neotest.debug]")
 
 local M = {}
 
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 ----------------------------------------------------------------------
 -- User Commands
@@ -237,7 +237,7 @@ end
 ----------------------------------------------------------------------
 
 function M.keymaps()
-  local map = require("lib.nvim.map")
+  local map = require("lib.nvim.bindings.keymap")
 
   map("n", "<leader>ntr", function()
     local ok, neotest = pcall(require, "neotest")

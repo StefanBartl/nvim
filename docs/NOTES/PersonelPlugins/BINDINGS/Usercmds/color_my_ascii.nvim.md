@@ -1,6 +1,6 @@
 # color_my_ascii.nvim — `:ColorMyAscii <subcommand>` Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion).
+One command, built via `lib.nvim.bindings.usercmd.composer` (`<Tab>` completion).
 Replaces the old 14 flat `:ColorMyAsciiX` commands (fully removed, no
 alongside period). **Distinct from the separate `:Fence` toolkit**
 (buffer-local, `nvim_buf_create_user_command`, already had good subcommand
@@ -75,9 +75,9 @@ Each of the argument-less ones above also has an opt-in default keymap action
   runtime, instead of self-registering separately as before.
 - **lib.nvim policy flip**: same as cascade.nvim — was "optional", is now a
   **required** dependency (the command itself needs
-  `lib.nvim.usercmd.composer`). `lib.nvim.map` stays soft-guarded for keymaps.
+  `lib.nvim.bindings.usercmd.composer`). `lib.nvim.bindings.keymap` stays soft-guarded for keymaps.
   Also fixed a pre-existing health-check bug: it probed the wrong path
-  (`lib.map` instead of `lib.nvim.map`), so it always reported "not found"
+  (`lib.map` instead of `lib.nvim.bindings.keymap`), so it always reported "not found"
   even when lib.nvim was installed.
 - No CI test job exists for this repo (lint/format only), so no CI checkout
   fix was needed (unlike cascade.nvim).

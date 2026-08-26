@@ -92,7 +92,7 @@ function M.setup(opts)
   opts = opts or {}
   if opts.enabled == false then return end
 
-  local autocmd = require("lib.nvim.autocmd")
+  local autocmd = require("lib.nvim.bindings.autocmd")
   -- Raw augroup, not autocmd.group(): that caches by name and would stop
   -- re-clearing on a second M.setup() call (e.g. re-sourcing config),
   -- stacking a duplicate pair of handlers instead of replacing them.

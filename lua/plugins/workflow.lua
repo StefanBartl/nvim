@@ -100,7 +100,7 @@ return {
     -- config = function()
       -- require("autolist").setup()
 
-      -- local map = require("lib.nvim.map")
+      -- local map = require("lib.nvim.bindings.keymap")
       -- -- map("i", "<tab>", "<cmd>AutolistTab<cr>", { desc = "[Autolist] Indent list item" })
       -- -- map("i", "<s-tab>", "<cmd>AutolistShiftTab<cr>", { desc = "[Autolist] Unindent list item" })
       -- map(

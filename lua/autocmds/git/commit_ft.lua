@@ -5,7 +5,7 @@
 local M = {}
 
 local api = vim.api
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 ---@param cfg AutoCmds.Git.CommitFtCfg
 ---@param _shared table

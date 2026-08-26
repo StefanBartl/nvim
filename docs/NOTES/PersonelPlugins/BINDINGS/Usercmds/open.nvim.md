@@ -1,6 +1,6 @@
 # open.nvim — `:Open [target] [scope]` / `:Open viewer` Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion via two
+One command, built via `lib.nvim.bindings.usercmd.composer` (`<Tab>` completion via two
 custom types — `OPEN_TARGET` for the live handler-registry keys, `OPEN_SCOPE`
 for `%`/`cfile`/`path=`/named-keyword/file completion). No flat-command
 family existed to remove — this was already a single `:Open` command, so the
@@ -66,7 +66,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `CHEATSHEET.md`, `README.md`, `doc
   byte-identical to the pre-migration list), `path=<Tab>` file completion,
   keyword-prefix filtering, bare `:Open`, explicit dispatch, unknown-target
   handling (no crash), and `:checkhealth open_nvim` reporting the new
-  `lib.nvim.usercmd.composer` line — all pass.
+  `lib.nvim.bindings.usercmd.composer` line — all pass.
 
 ## `:Open viewer` / `:UrlView` / `:MDLinksView` (added later)
 

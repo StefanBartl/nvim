@@ -40,7 +40,7 @@ Registriert in
 [lua/config/neotree/usercmds/init.lua](../../../../../lua/config/neotree/usercmds/init.lua)
 (`M.enable()`), aufgerufen aus
 [lua/config/neotree/init.lua](../../../../../lua/config/neotree/init.lua)s
-`M.setup()`. Gebaut mit `lib.nvim.usercmd.create` (kein Composer/Verb wie bei
+`M.setup()`. Gebaut mit `lib.nvim.bindings.usercmd.create` (kein Composer/Verb wie bei
 Harpoon — einfache 1:1-Commands).
 
 | Command | Wirkung | Status |

@@ -4,7 +4,7 @@
 local M = {}
 
 local api = vim.api
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 -- Lazy-load dependencies
 local hl_module

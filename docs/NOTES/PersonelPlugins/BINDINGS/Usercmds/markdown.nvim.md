@@ -5,7 +5,7 @@
 `TableViewToggle`, `TableViewMarkdown`,
 `TableViewBox`, `TableViewSelect`, `TableViewClose`, `TableViewOpenBrowser`,
 `TableViewOpenBrowserNice`, plus 16 `:MDTable*` width-limited-wrapping
-commands — see below) rebuilt via `lib.nvim.usercmd.composer` (migrated
+commands — see below) rebuilt via `lib.nvim.bindings.usercmd.composer` (migrated
 2026-07-19) — the plugin that originally motivated Phase 7's
 `spec.buffer = true|bufnr` buffer-local support. **No syntax change**.
 

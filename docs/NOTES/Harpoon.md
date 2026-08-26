@@ -96,7 +96,7 @@ Harpoon selbst persistiert nach `stdpath("data")/harpoon/<sha256(key)>.json`
 ## 3. User-Commands
 
 Ein einziges Verb `:Harpoon <subcommand>` (gebaut mit
-`lib.nvim.usercmd.composer`, registriert in
+`lib.nvim.bindings.usercmd.composer`, registriert in
 [lua/config/harpoon/usrcmds.lua](../../lua/config/harpoon/usrcmds.lua)) plus
 flache Aliase. Vollständige Referenz:
 [ExternPlugins/Bindings/Usercmds/Harpoon.md](ExternPlugins/Bindings/Usercmds/Harpoon.md).

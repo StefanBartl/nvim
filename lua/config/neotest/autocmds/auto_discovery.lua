@@ -3,7 +3,7 @@
 --- `neotest.state.clear` + a discovery pass) instead of waiting for the
 --- first manual test run to trigger it.
 
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 local M = {}
 

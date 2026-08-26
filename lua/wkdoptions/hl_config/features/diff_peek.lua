@@ -5,7 +5,7 @@
 local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local notify = lazy.require("lib.nvim.notify").create("[DiffPeek]")
-local map = require("lib.nvim.map")
+local map = require("lib.nvim.bindings.keymap")
 
 local M = {}
 

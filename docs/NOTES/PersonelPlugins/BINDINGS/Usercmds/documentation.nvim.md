@@ -73,7 +73,7 @@ only so a held `<Tab>` does not spawn one `git for-each-ref` per keystroke.
 
 Not a gap: `<Plug>` mappings are not this ecosystem's convention. `opts.keys`
 (a string or list of lhs per action id, `false` to disable, typo-checked
-against the known ids) plus `lib.nvim.map` already cover rebinding
+against the known ids) plus `lib.nvim.bindings.keymap` already cover rebinding
 completely; which-key labels are the only mandatory piece on top.
 
 ## `:DocMap`

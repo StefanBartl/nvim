@@ -13,11 +13,11 @@ local tbl_contains = vim.tbl_contains
 --------------------------------------------------------------------------------
 
 local lazy = require("lib.lua.lazy")
-local augroup_lib = lazy.require("lib.nvim.autocmd.augroup")
+local augroup_lib = lazy.require("lib.nvim.bindings.autocmd.augroup")
 local augroup = augroup_lib.create.clear
-local autocmd_lib = lazy.require("lib.nvim.autocmd")
+local autocmd_lib = lazy.require("lib.nvim.bindings.autocmd")
 local norm_pattern = autocmd_lib.norm_pattern
-local Autocmd = lazy.require("lib.nvim.autocmd")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 --- Check whether the current buffer should be processed given the config gates.
 ---@param buf integer

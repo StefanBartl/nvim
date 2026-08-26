@@ -1,9 +1,9 @@
 # mdview.nvim — `:MDView <subcommand>` Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion).
+One command, built via `lib.nvim.bindings.usercmd.composer` (`<Tab>` completion).
 Replaces the old 10 flat `:MDViewX` commands (fully removed, no alongside
 period). This was the **first** composer migration — the pilot for the whole
-`lib.nvim.usercmd.composer` module.
+`lib.nvim.bindings.usercmd.composer` module.
 
 Source: `lua/mdview/bindings/usrcmds/init.lua` + one action module per
 subcommand (`start/`, `stop.lua`, `open.lua`, `toggle.lua`,
