@@ -287,14 +287,132 @@ elseif is_windows and fn.executable("win32yank") == 1 then
   -- Neovim Windows install, so the executable() guard is a formality -- but it
   -- keeps a machine without it on the probe path rather than with a broken
   -- clipboard.
+
+  --- Every byte that is not part of a well-formed UTF-8 sequence, replaced
+  --- with "?".
+  ---
+  --- `win32yank.exe -i` reads its stdin with `read_to_string().unwrap()`, so a
+  --- single stray byte does not corrupt one character -- it panics the process
+  --- ("stream did not contain valid UTF-8", exit 101) and aborts the ENTIRE
+  --- write, leaving the clipboard on its previous contents while `y` looks
+  --- like it worked. Neovim registers are byte strings and happily hold such
+  --- content: raw termcodes (`<M-->` is stored as the bytes
+  --- K_SPECIAL KS_MODIFIER 0x08 `-`, which is exactly how `:BindingsDrift`
+  --- reports used to become uncopyable, see bindings_explorer/drift.lua),
+  --- anything read with a latin-1 'fileencoding', `:r !cmd` output from a
+  --- program using the OEM codepage, a stretch of a binary file. Scrubbing
+  --- here means such a yank copies mangled text rather than nothing at all --
+  --- and says so.
+  ---
+  --- Hand-rolled rather than via `vim.str_utfindex()` because this has to
+  --- report HOW MANY bytes were bad, not just that the string is invalid, and
+  --- it must never throw: it sits directly under `y`.
+  ---@param str string
+  ---@return string scrubbed, integer replaced
+  local function scrub_utf8(str)
+    -- Pure ASCII is the overwhelmingly common case and is always valid.
+    if not str:find("[\128-\255]") then return str, 0 end
+
+    local byte, sub = string.byte, string.sub
+    local out, i, n, replaced = {}, 1, #str, 0
+
+    while i <= n do
+      local c = byte(str, i)
+      local len ---@type integer|nil
+      if c < 0x80 then
+        len = 1
+      elseif c >= 0xC2 and c <= 0xDF then
+        len = 2
+      elseif c >= 0xE0 and c <= 0xEF then
+        len = 3
+      elseif c >= 0xF0 and c <= 0xF4 then
+        len = 4
+      end
+      -- 0x80-0xBF (a stray continuation byte) and 0xC0/0xC1/0xF5-0xFF
+      -- (overlong or out of range by definition) leave `len` nil and fall
+      -- through as bad.
+
+      local ok = len ~= nil and i + len - 1 <= n
+      if ok and len > 1 then
+        for k = 1, len - 1 do
+          local cont = byte(str, i + k)
+          if cont < 0x80 or cont > 0xBF then
+            ok = false
+            break
+          end
+        end
+        -- Reject what is well-formed byte-wise but still not a valid scalar:
+        -- overlongs, UTF-16 surrogates, and anything past U+10FFFF.
+        if ok then
+          local c2 = byte(str, i + 1)
+          if len == 3 and ((c == 0xE0 and c2 < 0xA0) or (c == 0xED and c2 > 0x9F)) then
+            ok = false
+          elseif len == 4 and ((c == 0xF0 and c2 < 0x90) or (c == 0xF4 and c2 > 0x8F)) then
+            ok = false
+          end
+        end
+      end
+
+      if ok then
+        out[#out + 1] = sub(str, i, i + len - 1)
+        i = i + len
+      else
+        out[#out + 1] = "?"
+        replaced = replaced + 1
+        i = i + 1
+      end
+    end
+
+    return table.concat(out), replaced
+  end
+
+  --- Feed win32yank the same bytes the string form would have, minus the ones
+  --- that would kill it.
+  ---
+  --- The provider passes a funcref straight through `s:split_cmd()` and calls
+  --- it as `copy[reg](lines, regtype)`
+  --- (runtime/autoload/provider/clipboard.vim), so this stands in for the
+  --- `"win32yank.exe -i --crlf"` string exactly: synchronous, lines joined
+  --- with NL and no trailing NL, which is what `systemlist(cmd, lines, 1)`
+  --- (keepempty) did. LF -> CRLF stays win32yank's job via `--crlf`.
+  ---@param lines string[]
+  ---@return nil
+  local function win32yank_copy(lines)
+    local replaced = 0
+    local scrubbed = {}
+    for idx, line in ipairs(lines) do
+      local clean, count = scrub_utf8(line)
+      scrubbed[idx] = clean
+      replaced = replaced + count
+    end
+
+    fn.system({ "win32yank.exe", "-i", "--crlf" }, table.concat(scrubbed, "\n"))
+
+    if vim.v.shell_error ~= 0 then
+      vim.notify(
+        "clipboard: win32yank -i failed (exit " .. vim.v.shell_error .. ")",
+        vim.log.levels.ERROR
+      )
+    elseif replaced > 0 then
+      vim.notify(
+        ("clipboard: %d byte(s) were not valid UTF-8 and were copied as '?'"):format(replaced),
+        vim.log.levels.WARN
+      )
+    end
+  end
+
   vim.g.clipboard = {
     name = "win32yank",
 
+    -- Functions rather than the `"win32yank.exe -i --crlf"` string, only so
+    -- the payload can be scrubbed first -- see win32yank_copy above.
     copy = {
-      ["+"] = "win32yank.exe -i --crlf",
-      ["*"] = "win32yank.exe -i --crlf",
+      ["+"] = win32yank_copy,
+      ["*"] = win32yank_copy,
     },
 
+    -- Paste stays a plain command: `-o` reads the Windows clipboard as UTF-16
+    -- and converts, so it has no invalid-input path to fall over on.
     paste = {
       ["+"] = "win32yank.exe -o --lf",
       ["*"] = "win32yank.exe -o --lf",
