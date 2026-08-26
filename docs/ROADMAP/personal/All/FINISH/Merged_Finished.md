@@ -451,6 +451,52 @@ nvim-Config.
       abdecken —, aber eine dokumentierte fremde Entscheidung stoße ich nicht
       im Vorbeigehen um.
 
+- [x] **Zweite Runde: options und trouble. Zusammen ~1050ms → ~942ms.**
+
+      **`options.lua`: 63ms → 17ms, und der Befund ist allgemeiner als die
+      Datei.** Zwei Drittel der Zeit steckten in genau einem Aufruf:
+      `vim.fn.executable("pwsh")` auf einer Maschine ohne PowerShell 7.
+
+      Ein *fehlschlagendes* `executable()` läuft unter Windows jeden
+      PATH-Eintrag gegen jede PATHEXT-Endung ab — hier 67 × 11 = **737 Stats,
+      ~44ms** — und `vim.fn` cacht das Ergebnis **nicht**, zweimal probieren
+      kostet zweimal. Ein *erfolgreiches* stoppt beim ersten Treffer (~0.2ms),
+      weshalb `powershell` im Profil gar nicht auftauchte. Das gilt config-weit
+      für jede Probe auf ein nicht installiertes Tool im Startpfad.
+
+      Beide PowerShell-Zweige wollten byte-identische Optionen bis auf den
+      Binary-Namen, also fallen sie in eine Funktion zusammen: das immer
+      vorhandene Windows PowerShell 5.1 wird synchron gesetzt, die
+      pwsh-Bevorzugung passiert auf dem nächsten Event-Loop-Tick. Genau *weil*
+      der Unterschied eine Option ist, ist das sicher — die Shell ist fertig
+      konfiguriert, bevor die Probe läuft, und wer vorher shellt, bekommt 5.1:
+      eine ältere Version, kein anderes Verhalten. Beide Richtungen verifiziert
+      (ohne pwsh bleibt `powershell.exe` und ein echter `system()`-Roundtrip
+      geht durch; mit einem auf den PATH geschobenen pwsh-Shim greift das
+      Upgrade und `o.shell` wird `pwsh.exe`).
+
+      **`trouble.nvim`: die dokumentierte Begründung hatte recht in der
+      Prämisse und unrecht im Schluss.** `]w`/`[w` bewegen sich in einer
+      *bereits offenen* Liste, lösen also kein `cmd` aus — stimmt. Nur
+      brauchten sie das Plugin nie geladen, um korrekt zu antworten:
+      `trouble_move` fragt jetzt zuerst `package.loaded["trouble"]`, und wenn
+      Trouble nie geladen wurde, kann keine seiner Listen offen sein. Dieselbe
+      Notify, ohne das Plugin dafür hochzuziehen. Das ist für sich schon
+      besser und macht `cmd = "Trouble"` erst richtig.
+
+      Vier Proben: beim Start nicht geladen; `]w` ohne Liste notified und lässt
+      es ungeladen; `:Trouble diagnostics open` lädt und funktioniert; `]w`
+      gegen eine Liste mit echten Diagnostics bewegt statt zu notifien — für
+      Letzteres mussten erst Diagnostics gesetzt werden, weil eine leere
+      Session nichts zu öffnen hat und der Test sonst aus dem falschen Grund
+      durchgeht.
+
+      **Nebenbefund, bewusst nicht angefasst:** der WORKSTATION-FREEZE-FIX in
+      `options.lua` (PSModulePath von OneDrive-Pfaden befreien) ist
+      auskommentiert. Der Kommentar dort beschreibt einen 60-90s-Freeze, an dem
+      er hing. Entweder nicht mehr nötig oder versehentlich deaktiviert — das
+      ist eine Entscheidung für den Autor, nicht für mich.
+
 
 ### Sonstiges
 

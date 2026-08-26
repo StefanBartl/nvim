@@ -52,14 +52,12 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
 
 ### Performance
-- [ ] `nvim/init.lua` durchgehen und optimieren.
-  - **Erste Runde erledigt (2026-08-26), siehe `Merged_Finished.md`.** Startup gemessen statt geraten: ~1300ms → ~990ms (−24%), eager geladene Plugins 44 → 29. Ursache war neo-tree mit `lazy = false`, das neotest samt acht Adaptern, treesitter, devicons, nui, plenary, vim-test und FixCursorHold mitzog.
-  - **Offen, mit Messwerten statt Vermutungen.** Was jetzt noch teuer ist, in Reihenfolge:
-    - **`lsp.setup()` ~288ms**, die eine synchrone Phase, die alles andere überragt. Aufgeschlüsselt: `build_capabilities` **84ms** (zieht `blink.cmp` beim Start hoch, nur um dessen Capability-Tabelle zu lesen), `languages` **66ms**, der Rest verteilt. Die Frage ist, ob die Capabilities wirklich vor dem ersten Attach global stehen müssen oder ob LspAttach reicht — die Begründung in `init.lua` sagt Ersteres, geprüft habe ich es nicht.
-    - **`trouble.nvim` 79ms + `nvim-web-devicons` 71ms**, beide eager. `lazy = false` steht in `lsp.nvim/lua/lsp/pack/ui.lua` **mit Begründung** (`]w`/`[w` auf eine bereits offene Liste). Die Begründung wirkt zu vorsichtig — `cmd = "Trouble"` plus lazys Require-Hook dürfte beides abdecken —, aber das ist eine dokumentierte fremde Entscheidung, die ich nicht im Vorbeigehen umgestoßen habe.
-    - **`require("options")` 63ms** — eigener Code, noch nicht angesehen.
-    - **`runtime-analysis.nvim` 59ms**, eager. Eigenes Plugin.
-  - **Werkzeug:** `:StartupReport` bzw. `require("startup").slowest()` gibt die Phasen-Timeline; `require("lazy").stats()` und `lazy.core.config.plugins[..]._.loaded` sagen, was warum beim Start lädt. Beides hat diese Runde getragen.
+- [ ] **Startup optimieren — erledigt bis auf `lsp.setup()`, siehe `Merged_Finished.md`.** ~1300ms → ~942ms (−27%), eager geladene Plugins 44 → 28. Drei Ursachen, alle gemessen: neo-tree `lazy = false` (zog neotest samt acht Adaptern mit), ein fehlschlagendes `vim.fn.executable("pwsh")` in `options.lua` (~44ms, jede Startup), und `trouble.nvim` `lazy = false` (~79ms + 71ms devicons).
+  - **Offen und bewusst separat: `lsp.setup()` ~288ms.** Der mit Abstand größte verbleibende Posten, aber korrektheitskritisch — die Capabilities müssen global stehen, bevor der erste Client attached, und bei `nvim datei.lua` passiert das *während* des Startups. Das Fehlerbild bei einem Fehler ist „Completion ist manchmal kaputt", also subtil und teuer.
+    - Aufgeschlüsselt (`lsp.nvim`s `step()` temporär mit Zeitmessung versehen): `build_capabilities` **84ms** — zieht `blink.cmp` beim Start hoch, nur um dessen Capability-Tabelle zu lesen; `languages` **66ms**; Rest verteilt.
+    - Ansatz wäre, die blink-Capabilities auf `LspAttach` zu verschieben statt sie beim Start zu holen. Braucht einen Test, der beweist, dass ein Client, der während des Startups attached, die vollen Capabilities bekommt.
+  - **Nebenbefund, nicht angefasst:** der WORKSTATION-FREEZE-FIX in `lua/options.lua` (PSModulePath von OneDrive-Pfaden befreien) ist **auskommentiert**. Laut dem Kommentar dort hing daran ein 60-90s-Freeze. Entweder ist er nicht mehr nötig oder er ist versehentlich deaktiviert — das ist deine Entscheidung, nicht meine.
+  - **Generelle Erkenntnis, gilt config-weit:** ein *fehlschlagendes* `vim.fn.executable()` läuft unter Windows jeden PATH-Eintrag gegen jede PATHEXT-Endung ab — hier 67 × 11 = 737 Stats, ~44ms — und wird **nicht** gecacht. Ein *erfolgreiches* stoppt beim ersten Treffer (~0.2ms). Jede Probe auf ein nicht installiertes Tool im Startpfad kostet also 44ms. `lib.nvim.core.has_exec` memoisiert, aber nur pro Session, hilft dem ersten Aufruf also nicht.
 - [ ] Ergebnisse aus `:Recommender perf` (nachdem du sie erzeugt hast) in konkrete Fixes umsetzen.
 - [ ] Module/Funktionen identifizieren, die von FFI/C profitieren würden (Startup, Runtime-Analysis, Docmap), und Umsetzung vorschlagen/implementieren.
 
