@@ -498,6 +498,43 @@ nvim-Config.
       ist eine Entscheidung für den Autor, nicht für mich.
 
 
+- [x] **`:Recommender perf` ausgewertet — und das Ergebnis war ein Fix am
+      Analyzer, nicht an der Config.**
+
+      Über alle 353 Lua-Dateien der Config: **398 Funde**, verteilt als
+      353× `ipairs`, 28× `table.insert`, 14× `string.format` — und **3×
+      Concat-Akkumulator**, die einzige Kategorie mit *algorithmischem*
+      Gewicht (O(n²)) statt eines konstanten Faktors.
+
+      **Alle drei waren False Positives**, in zwei Formen:
+
+      - Zweimal ein `local`, das *innerhalb* der Schleife neu deklariert wird:
+        `local ident = ts_identifier_of(u)` … `ident = ident .. "()"`. `ident`
+        startet jede Iteration frisch, das ist ein 2-Zeichen-Suffix auf einem
+        neuen String, kein Akkumulator.
+      - Einmal ein Tabellenfeld, das eine gleichnamige *äußere* Variable liest:
+        `{ short = short, dir = dir .. "/" .. short }`. Die ungeankerte
+        Rückreferenz las den Schlüssel als Zuweisungsziel.
+
+      Also in `recommender.nvim` gefixt: der Block-Tracker führt jetzt die pro
+      Frame deklarierten `local`-Namen mit, und der Match ist an den
+      Zeilenanfang geankert. Vier Regressionsfälle, beide Richtungen — ein
+      außerhalb deklarierter Akkumulator wird weiterhin gefunden, auch aus
+      einer verschachtelten Schleife heraus. Danach: 395 Funde, die
+      O(n²)-Kategorie leer. Das ist die nützliche Antwort, weil es die
+      Kategorie ist, auf die man zuerst reagieren würde.
+
+      **Die restlichen 395 bewusst nicht angefasst.** Das sind konstante
+      Faktoren (`ipairs` ~2x, `table.insert` ~4-5x, `string.format` ~3x — laut
+      den Benchmarks des Analyzers selbst), und 2x von Nanosekunden lohnt nur
+      in einer Schleife, die oft genug läuft. Der einzige wirklich heiße Pfad
+      der Config ist die Statusline, also gemessen statt vermutet:
+      `nvim_eval_statusline` 200×, **6,70 ms → 0,033 ms pro Redraw**. Selbst
+      bei 100 Redraws/Sekunde sind das 0,3 % eines Kerns. Dort ist nichts zu
+      holen, und 353 `ipairs`-Schleifen in numerische umzuschreiben würde
+      Lesbarkeit gegen Unmessbares tauschen.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
