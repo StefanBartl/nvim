@@ -6,6 +6,132 @@ nvim-Config.
 
 ---
 
+## 2026-08-26
+
+### Git & Repo-Hygiene
+
+- [x] **Claude-Branches entfernen — jetzt wirklich alle.** Der Eintrag vom
+      25.08. ("26 von 28") zählte nur die *Remote*-Branches; die beiden dort
+      genannten sind tatsächlich weg. Lokal lagen aber noch **107**: 59 in
+      16 Plugin-Repos und 48 in dieser Config, dazu **33 verwaiste Worktrees**
+      unter `.claude/worktrees/`, von denen einige Branches ausgecheckt hielten
+      und damit deren Löschung blockierten.
+
+      Endstand: 0 Claude-Branches, lokal wie remote, in allen Plugin-Repos und
+      in der Config — bis auf die zwei, die in noch offenen Config-Worktrees
+      ausgecheckt sind. 33 Worktrees entfernt, 7 Remote-Branches gelöscht.
+
+      **Nichts davon wurde blind gelöscht.** 10 Branches trugen je einen
+      Commit, der nicht auf `main` war, und 3 Worktrees hatten unversionierte
+      Änderungen. Jeder einzelne wurde gegen den heutigen Stand geprüft, statt
+      nach Alter zu entscheiden. Sieben waren überholt — die Arbeit war auf
+      anderem Weg gelandet, was jeweils belegt und nicht angenommen wurde:
+      `get_module_path` wird benutzt, `check_heading_gaps` und
+      `sanitize_on_save` existieren, `spotlight.winopt` existiert, die
+      `pcall`-Regel und die Deprecated-API-Tabelle stehen als `ERR-62` bzw.
+      `DEP-01`…`DEP-07` in den WKDBooks-Checklists, die Windows-Foreground-Lock-
+      Analyse wortgleich in `lib.nvim/…/reveal_in_fm/init.lua`, und
+      `wkdoptions/commands/{highlight,options}.lua` sind längst weg.
+
+      Drei waren es nicht und wurden gerettet.
+
+- [x] **Drei verwaiste Arbeitsstände aus Worktrees nach `main` geholt.**
+      - `spotlight.nvim`, Duplicate-Helptag: `*that*` in einer `.txt`-Helpdatei
+        ist keine Hervorhebung, sondern eine **Tag-Definition** — und das Wort
+        kam zweimal vor. `:helptags doc` brach deshalb nicht mit einer Warnung
+        ab, sondern mit `E154: Duplicate tag "that"`: die Help-Tags des Plugins
+        liessen sich überhaupt nicht erzeugen.
+      - `spotlight.nvim`, buffer-scoped Spotlights: eigener Eintrag unten.
+      - Config, casedesk: ein Datenschutz-Vermerk zum anstehenden KI-Ausbau
+        (Anhänge vor der Übergabe an eine KI schwärzen). Beide darin genannten
+        Referenzen gegen den heutigen Baum nachgeprüft statt kopiert: `:Image
+        redact` gibt es noch, die Beschreibung ist aber von
+        `docs/ROADMAP/REDACT.md` nach `docs/FEATURES/CAPTURE.md` gewandert.
+
+### Fehlerbilder aus dem laufenden Betrieb
+
+- [x] **blink.cmp: "Failed to create frecency database directory … (os error
+      183)" bei jeder Completion.** Kein Mapping-Problem, sondern ein
+      Versions-Mismatch in `lsp.nvim`s Spec: `version = "1.*"` zog die Lua-Seite
+      auf 1.10.2, `prebuilt_binaries.force_version = "v1.4.0"` nagelte die
+      Rust-DLL auf 1.4.0 fest. Die alte Binary erwartet als Frecency-Pfad noch
+      das LMDB-*Verzeichnis*, blink >= 1.5 übergibt die *Datei* `frecency.dat` —
+      `create_dir_all()` läuft damit gegen eine existierende reguläre Datei.
+      Weil `init_db()` vor `has_init_db = true` abbricht, kam der Fehler bei
+      jeder Completion neu. Pin entfernt; der Downloader holt jetzt die Binary
+      zum tatsächlich aufgelösten Tag.
+
+- [x] **`[gopath] no match: no-match` direkt nach dem Start.** Installations-Spec:
+      `open_here = { "gF", "<2-LeftMouse>" }`. gopath registriert jedes
+      `open_here`-lhs als *globales* Normal-Mode-Mapping ohne Fallback — jeder
+      Doppelklick in jedem Buffer löste einen Pfad-Resolve aus statt das Wort zu
+      selektieren, und jeder Fehlschlag warnte. Auf `gF` reduziert.
+
+- [x] **`clipboard: … "stream did not contain valid UTF-8"`.** `win32yank.exe -i`
+      liest stdin mit `read_to_string().unwrap()`: ein einziges ungültiges Byte
+      lässt den Prozess panicken und bricht den **gesamten** Write ab — die
+      Zwischenablage behält ihren alten Inhalt, während `y` so aussieht, als
+      hätte es funktioniert. Neovim-Register sind Byte-Strings, das trifft rohe
+      Termcodes, latin-1-`fileencoding`, OEM-Codepage-Output. `copy` ist jetzt
+      eine Lua-Funktion, die ungültige Bytes durch `?` ersetzt und danach
+      dasselbe Kommando fährt; gültiges UTF-8 läuft byte-identisch durch.
+
+### CI
+
+- [x] **Zwei rote map-Gates grün.** `runtime-analysis.nvim`: der Rename
+      `docs/FEATURES/FINISHED.md` → `docs/FEATURE_LOG.md` hat 22 Links
+      zerrissen — drei Verweise darauf und, weil die Datei eine Ebene höher
+      landete, sämtliche `../../`-Links *in* ihr. Wichtig dabei: die Karte wird
+      aus einem Drift-Scan erzeugt, der tote Links meldet. Sie einfach neu zu
+      generieren hätte den kaputten Zustand als neuen Sollzustand einbetoniert.
+      Erst Links repariert, dann Karte — zurück auf 0 Warnungen.
+      `documentation.nvim`: Karte schlicht nicht nach Quelländerungen erneuert.
+
+      **Offen, nicht unser Fehler:** GitHub Actions legt seit ca. 12:35 UTC für
+      neue Pushes keine Workflow-Läufe mehr an (passend zu "Our services aren't
+      available right now" in den älteren Logs). Alle Gates wurden lokal mit
+      denselben Kommandos gefahren und sind grün.
+
+### Bugfixes in Plugins
+
+- [x] **`spotlight.nvim`: buffer-scoped Spotlights waren für jeden Scan
+      unsichtbar.** Ein "this occurrence only"-Spotlight trägt `\%l\%c`-
+      Positionsatome im Pattern. Die werden von Vims eigener Such- und
+      Render-Maschinerie ausgewertet — und von sonst nichts:
+      `vim.regex:match_str` liefert auf **jeder** Zeile `nil`, auch auf der
+      richtigen. Direkt nachgemessen, nicht gefolgert.
+
+      Jeder Scan in `core/count.lua` fährt über `vim.regex`, das Ergebnis war
+      also leise und widersprüchlich: das Spotlight ist sichtbar auf dem
+      Schirm, weil `matchadd()` das Pattern sehr wohl versteht, aber die Liste
+      zählt 0, `:Spotlight qf` antwortet "no matching lines in this buffer",
+      und die Map hat kein Sign dafür.
+
+      So ein Item lässt sich nicht suchen, nur nachschlagen — sein Treffer ist
+      ein bereits gespeicherter Punkt. `M.count` liest ihn direkt; der
+      Quickfix-Pfad läuft über ein neues `matching_lines_for`. Das ebenfalls
+      betroffene `matching_lines_by_item` (die Map, später dazugekommen und dem
+      alten Fund noch unbekannt) bekam dieselbe Behandlung.
+
+      Die Doku behauptete genau das Gegenteil — "needs no special handling at
+      all … a position-anchored pattern is still just a valid Vim regex to
+      them" — und war damit die Annahme, die den Bug erzeugt hat. Beide Stellen
+      nennen jetzt die Engine, von der die Aussage abhängt.
+      `TESTS/qf_buffer_scope_spec.lua` pinnt alles: 6 Fehlschläge ohne den Fix,
+      449 grün mit ihm.
+
+### Beantwortet, kein Code nötig
+
+- [x] **`docmap-desktop`: `workspace.json` ist ein Objekt, `workspaces/*.json`
+      eine Liste — Formatbruch?** Nein, Absicht und im Code begründet.
+      `workspace.json` sind Maschinen-Settings plus der aktive Workspace; sein
+      `projects: []` wird von `write_workspace` bewusst leer geschrieben ("it
+      would be a stale second copy the moment anything is added to the real
+      one"). Das Feld bleibt nur im Struct, weil `read_workspace` es als
+      Migrationspfad für Dateien aus der Zeit vor den Workspaces braucht.
+
+---
+
 ## 2026-08-25
 
 ### Git & Repo-Hygiene
