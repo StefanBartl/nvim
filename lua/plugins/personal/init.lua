@@ -371,7 +371,12 @@ plugins.add({
         enable = true,
       },
       mappings = {
-        open_here = { "gF", "<2-LeftMouse>" },
+        -- `gF` only. `<2-LeftMouse>` used to be listed here as well, but
+        -- gopath maps its lhs globally in normal mode: every double-click in
+        -- any buffer then ran a path resolve instead of selecting the word
+        -- under the cursor, and each miss logged `[gopath] no match: no-match`
+        -- -- including the one right after startup on the dashboard.
+        open_here = "gF",
         open_split = "g|",
         open_vsplit = "g\\",
         open_tab = "g}",
