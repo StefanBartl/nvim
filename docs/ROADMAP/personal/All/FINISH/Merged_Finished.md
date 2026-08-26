@@ -535,6 +535,40 @@ nvim-Config.
       Lesbarkeit gegen Unmessbares tauschen.
 
 
+- [x] **FFI/C-Kandidaten: keiner, der es rechtfertigt** — mit Messwerten statt
+      Bauchgefühl. Ausführlich in `docs/NOTES/ffi-c-candidates.md`.
+
+      Der Punkt, der die halbe Frage beantwortet: **`ffi` macht Lua-Code nicht
+      schneller.** Es erlaubt Lua, C zu rufen. Ein Gewinn entsteht nur, wenn man
+      einen Algorithmus nach C verschiebt und ein kompiliertes Artefakt
+      ausliefert — mit Build-Schritt, Artefakten pro Plattform und
+      Release-Pipeline. `mdview.nvim` zahlt diesen Preis (Go + Rust/WASM), der
+      Preis ist also bekannt; die Frage ist nur, ob ihn sonst irgendwo eine
+      vergleichbare Rechenlast rechtfertigt.
+
+      - **Startup: nein.** Gemessen: die Zeit geht an Plugin-Laden (Datei-I/O +
+        Lua-Parsing, beides Neovims eigenes C) und Prozess-Spawns. Die drei
+        Fixes dieser Runde bestätigen es von der anderen Seite — alle drei
+        *vermeiden* Arbeit, keiner musste schneller rechnen.
+      - **Runtime-Analysis: nein, und FFI wäre kontraproduktiv.** Die Telemetrie
+        erhöht pro Aufruf einen Zähler in einer Lua-Tabelle. Ein Übergang über
+        die Lua/C-Grenze kostet mehr als ein Increment, das LuaJIT wegoptimiert.
+      - **Docmap: der einzige Ort mit echter CPU-Last — und trotzdem nein.**
+        Gemessen an `documentation.nvim` selbst (135 Dateien, 2,0 MB): Lesen
+        **17,8 ms**, Lesen + volles Treesitter-Parsing **193 ms**, kompletter
+        `gen_map` **4133 ms**. Also ~0,2 s I/O und Parsing, **~3,9 s
+        Lua-Arbeit**. Aber: es ist eine CI-/manuelle Operation, „FFI
+        hinzufügen" gibt es dort nicht (der IR-Builder *ist* der Kern), und vor
+        einem C-Port kommt ein Profil — 2 ms/KB kann nah am Möglichen liegen
+        oder ein O(n²) verstecken, und das ist nicht gemessen.
+
+      Die Notiz hält außerdem fest, **wann man die Antwort neu stellen sollte**
+      (interaktiv + gemessen CPU-gebunden + abgeschlossen genug für eine
+      C-Signatur) und die sechs Zwischenschritte, die vor FFI kommen — mit dem
+      häufigsten Fehler an Position drei: vorhandenes C nachbauen, statt
+      `vim.treesitter`/`vim.diff`/`vim.json`/`vim.uv` zu benutzen.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
