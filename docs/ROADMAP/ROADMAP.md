@@ -1,58 +1,81 @@
 # Roadmap
+
 - [ ] Anticheat knacken
+- [ ] nvim config branches: checken ob alles in main imploementiert ist bzw wenn es um foxces ging alles n main ist, dann alles entfernen die älter als 2 tage sind
+
 ## true check
 
 Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
 Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass doll es nä,lich auh nicht sein, leider ist mir klar ds das konterkariert meine wüsnche. ckch denke, du must da einen goldenen Zwischenweg finden.
 
-Hier die liste:
-+  buffer-ctx.nvim           StefanBartl/buffer-ctx.nvim
-+  cascade.nvim              StefanBartl/cascade.nvim
-+  cmdlog.nvim               StefanBartl/cmdlog.nvim
-+  color_my_ascii.nvim       StefanBartl/color_my_ascii.nvim
-+  dap.nvim                  StefanBartl/dap.nvim
-+  debugging.nvim            StefanBartl/debugging.nvim
-+  diff.nvim                 StefanBartl/diff.nvim
-+  documentation.nvim        StefanBartl/documentation.nvim
-+  emojis.nvim               StefanBartl/emojis.nvim
-+  fileops.nvim              StefanBartl/fileops.nvim
-+  filetree.nvim             StefanBartl/filetree.nvim
-+  github_stats.nvim         StefanBartl/github_stats.nvim
-+  gopath.nvim               StefanBartl/gopath.nvim
-+  images.nvim               StefanBartl/images.nvim
-+  insights.nvim             StefanBartl/insights.nvim
-+  language.nvim             StefanBartl/language.nvim
-+  lib.nvim                  StefanBartl/lib.nvim
-+  lsp.nvim                  StefanBartl/lsp.nvim
-+  markdown.nvim             StefanBartl/markdown.nvim
-+  mdview.nvim               StefanBartl/mdview.nvim
-+  migrate.nvim              StefanBartl/migrate.nvim
-+  open.nvim                 StefanBartl/open.nvim
-+  pdfport.nvim              StefanBartl/pdfport.nvim
-+  pickers.nvim              StefanBartl/pickers.nvim
-+  recommender.nvim          StefanBartl/recommender.nvim
-+  replacer.nvim             StefanBartl/replacer.nvim
-+  reposcope.nvim            StefanBartl/reposcope.nvim
-+  runtime-analysis.nvim     StefanBartl/runtime-analysis.nvim
-+  sandbox.nvim              StefanBartl/sandbox.nvim
-+  sessions.nvim             stefanbartl/sessions.nvim
-+  spotlight.nvim            StefanBartl/spotlight.nvim
+### Plugin-Liste
 
-und das native:
+Hier die Liste meiner Plugins - du findest sie unter `c:\repos` - und du hast Zugriff darauf:
 
-+  docmap-desktop        StefanBartl/docmap-desktop
+buffer-ctx.nvim
+cascade.nvim
+cmdlog.nvim
+color_my_ascii.nvim
+dap.nvim
+debugging.nvim
+diff.nvim
+documentation.nvim
+emojis.nvim
+fileops.nvim
+filetree.nvim
+github_stats.nvim
+gopath.nvim
+images.nvim
+insights.nvim
+language.nvim
+lib.nvim
+lsp.nvim
+markdown.nvim
+mdview.nvim
+migrate.nvim
+open.nvim
+pdfport.nvim
+pickers.nvim
+recommender.nvim
+replacer.nvim
+reposcope.nvim
+runtime-analysis.nvim
+sandbox.nvim
+sessions.nvim
+spotlight.nvim
+
+und das native: docmap-desktop
 
 ---
 
 ## cdx
 
-free: So., 09:00 x - 21. Juli 2027
-work: Sa., 06:00 _ - 20.Sept
-dev:  Sa., 22:00 zu - 03.Sep
+free: So., 09:00 x - Subscription bis 21. Juli 2027
+work: Sa., 06:00 98% - Subscription bis 20.Sept
+dev:  Sa., 22:00 99% - Subscription bis 03.Sep
 
 ---
 
-nvim, lib.nvim, repos:
+## wezterm padded nvim - bottom padding ist unverhältniossmäßig groß
+
+wezterm macht ein pasdding rund um nvim. mögloichewerweiße ahben wir das bei image.nvim bei den letzten commites der letzten 4 tage bverändert damit images inline hover angezegit werden korrekt, oder als ich das Configs  repo uopdatet habe, da habe ich auch die wezterm config umgeschrieben.
+vorallem das padding unteneren rand ist ziemlich viel und störend, screenshot:  docs/ROADMAP/assets/wezterm_padding.png
+vor allme, weil her ja 2 statuslines aufeinenader kommen, das von wezetm und dass von nvim....
+
+---
+
+## images.nvim erweiterung
+
+image/pdf/file hover nicht nur in markdown links, sondern auch bei ganz normalen pfaden wie:
+
+docs/ROADMAP/assets/wezterm_padding.png
+
+das dieses feature auh toll zu gopath.nvim passen würde, wäre das ein feines feature - ich würd darauf plädieren, dass gopath.nvim images.nvim als soft cedep einbindent. wenn es nicht installiert ist, weil der user es nicht möchte, dann würde gopath.vim das einfach nicht anbieten, denn doppelte implementierung ist nicth mein wuindsch  und das hocer preview von files ist ach nicht gopaths ern feature. es soll dennochj opt-out sein, als  der user soll auch wenn images.nvim installiert ist die wahl haben, es nicht zu vewrendem
+
+---
+
+## workflow + usecases in allen plugins
+
 
 Checked the stray German lines in the two English docs
 MENUBARs Deutsch sind die lokalisierten Menü-Labels — bleiben. WORKPLAN hat zwei Stellen. Los mit ROADMAP.
@@ -132,3 +155,6 @@ grep -rn 'opts.notes\|notes_picker\|per-command note' docs/*.md README.md 2>/dev
 Session limit reached
 Auto-resuming at 5:31 PM
 Auto-continue when limits reset
+
+---
+
