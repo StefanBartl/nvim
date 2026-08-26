@@ -646,6 +646,36 @@ nvim-Config.
       Datei ist gitignored und wird von lazy.nvim beim Install/Update erzeugt.
 
 
+- [x] **`lib.nvim.selection` bei Visual-Mode-Mappings — bereits erfüllt.**
+      Geprüft über alle 31 Repos, und die Antwort ist enger, als der Task
+      vermuten lässt.
+
+      Das Modul löst genau einen Fall: ein Mapping, das **den Buffer verändert**
+      und danach die Selektion behalten soll (Neovim wirft sie weg, sobald die
+      gemappte Funktion zurückkehrt). Ein Mapping, das die Selektion nur
+      *liest*, braucht es nicht.
+
+      **`cascade.nvim` ist das einzige Plugin mit buffer-verändernden
+      Visual-Mappings** — 13 davon (Bullets/Checkboxen togglen, sortieren,
+      umkehren, ein-/ausrücken, Zeilen verschieben) — und es nutzt
+      `lib.nvim.selection` bereits: `cascade.util.lib` ist eine
+      `pcall`-geschützte Brücke mit eigenständigem Fallback, und `init.lua`
+      ruft `keep_lines`, `reselect_chars` und `reselect_chars_multiline`.
+
+      Alle anderen Visual-Mappings im Ökosystem (dap, emojis, filetree, gopath,
+      images, language, lsp, pdfport, sandbox, documentation) **schreiben
+      nicht** in den Buffer — `nvim_buf_set_lines`/`set_text` kommt in keiner
+      der Dateien vor. Sie werten die Selektion aus (DAP-Ausdruck, Pfad öffnen,
+      Snippet ausführen). Dort wäre das Modul nicht „noch nicht benutzt",
+      sondern unzutreffend.
+
+      Ein Fehlalarm auf dem Weg, der Erwähnung wert: `buffer-ctx`s
+      `format/enum_lines` sieht wie ein Kandidat aus (verändert eine
+      Visual-Selektion zeilenweise), wird aber über einen **Usercmd** gerufen.
+      Beim `:` ist Visual-Mode schon verlassen, es wird über `'<`/`'>`
+      gearbeitet — es gibt keine Selektion zu behalten.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der

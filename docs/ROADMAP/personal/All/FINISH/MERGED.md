@@ -44,7 +44,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 ### Bindings, Keymaps & UI
 - [ ] Alle Keymaps/Features zusätzlich via Usrcmd ausführbar machen.
 - [ ] Keymaps user-seitig modifizierbar/deaktivierbar machen. (via installations spec)
-- [ ] `lib.nvim.selection` (`reselect_lines`/`keep_lines`/`reselect_chars`/`keep_chars`) bei jedem Visual-Mode-Mapping anwenden, das die Selektion verliert.
 - [ ] Autocmds pro Plugin und global (`nvim/lua/autocmds`) durchgehen und auf Optimierungspotential prüfen.
 - [ ] Autocmds aller Ordner in einem `/autcmd`-Ordner zusammenführen, nach Events sortiert (Dispatch-Lib-Modul), Abgleich mit `/bindings`.
 
