@@ -595,6 +595,42 @@ nvim-Config.
       gehören zum Rendering des Adapters.
 
 
+- [x] **Ersetzbare Fremd-Dependencies analysiert** —
+      `docs/NOTES/replaceable-dependencies.md`. Ermittelt aus den echten
+      `require("<fremd>…")`-Stellen in allen Repos, nicht aus den
+      Spec-Deklarationen: eine deklarierte Dependency, die nie gerufen wird,
+      ist ein anderes Problem.
+
+      **Das Beispiel aus dem Task hat eine klare Antwort: `nvzone/menu` ist
+      ersetzbar, heute.** `lib.nvim.ui.kit.menu` existiert bereits — eine
+      cursor-verankerte Aktionsliste auf `ui.kit.chooser`, mit derselben
+      Navigation wie nvzone und zusätzlich `ui.kit`s Theme-Engine, getestet in
+      `ui_kit_spec.lua`. Was fehlt, ist nicht das Rendern, sondern die Brücke:
+      `lib.nvim.contextmenu` baut die Einträge und bindet den Maus-Trigger,
+      rendert aber weiter über nvzone — dieses eine `require("menu")` ist die
+      letzte Stelle. Vorschlag: ein Renderer-Schalter mit Default `"auto"`;
+      die beiden Konsumenten (filetree, github_stats) ändern sich **gar
+      nicht**, weil sie nur `contextmenu.entry`/`group` benutzen. Vorher zu
+      klären: kann `ui.kit.menu` verschachtelte Submenüs? 47 Zeilen, die an
+      den Chooser delegieren, sehen nach *flach* aus — das wäre der einzige
+      echte Implementierungsaufwand.
+
+      **Zweiter Fund: `nvim-treesitter` in `debugging.nvim`/`gopath.nvim`** ist
+      zur Laufzeit vermutlich verzichtbar. Parsen und Queries sind seit 0.9/0.10
+      im Core (`vim.treesitter`); das Plugin ist im Wesentlichen noch
+      Parser-Installer.
+
+      **Grenzfall `lualine`** (filetree, sandbox): diese Config hat eine eigene
+      Statusline *und* `lib.nvim` bringt ein `ui/statusline` mit — zwei Systeme,
+      die niemand gewählt hat. Vor einem Urteil ist zu klären, was die beiden
+      Plugins von lualine überhaupt wollen. Als nächster Schritt notiert.
+
+      **Bewusst nein:** `telescope`/`fzf-lua`/`snacks` (ein Fuzzy-Picker ist ein
+      Teilsystem, und `pickers.nvim` *ist* bereits die Abstraktion, die sie
+      austauschbar macht), `cmp`/`blink`, `noice`. `trouble` ist optional und
+      `pcall`-geschützt, kostet also nichts, wenn es fehlt.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
