@@ -37,7 +37,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 ## Liste B — An Claude Code delegierbar
 
 ### Dokumentation & Cheatsheets
-- [ ] `doc/{NAME}.txt` (vimdoc) pro Plugin erstellen.
 - [ ] `docs/FEATURES.md` bzw. `docs/FEATURES/`-Ordner pro Plugin nach Format von `documentation.nvim/docs/FEATURES_FORMAT.md` befüllen.
 - [ ] UseCases/Workflow-Datei pro Plugin (typischer Workflow + Edge Cases); vorhandene auf Aktualität prüfen.
 

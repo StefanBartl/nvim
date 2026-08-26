@@ -631,6 +631,21 @@ nvim-Config.
       `pcall`-geschützt, kostet also nichts, wenn es fehlt.
 
 
+- [x] **vimdoc pro Plugin — war bereits erledigt, mit einem Defekt.** Alle 31
+      Repos haben `doc/*.txt`, und zwar substanziell: 189 bis 1536 Zeilen, 13
+      bis 101 Tags. `lib.nvim` ist auf 17 Dateien nach Themen aufgeteilt
+      (`lib.nvim-fs.txt`, `-kit`, `-composer`, …).
+
+      Gefunden und behoben: **`cmdlog.nvim` fehlte die
+      `vim:tw=78:ts=8:ft=help:norl:`-Modeline** als einziges Repo. `:help`
+      funktionierte trotzdem — deshalb fiel es nicht auf —, aber `doc/cmdlog.txt`
+      direkt zu öffnen gab einen Plaintext-Buffer statt eines Help-Buffers: keine
+      versteckten Tags, kein `<C-]>` auf eine Tag-Referenz.
+
+      Kein Defekt, obwohl es so aussieht: 18 Repos haben kein `doc/tags`. Die
+      Datei ist gitignored und wird von lazy.nvim beim Install/Update erzeugt.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
