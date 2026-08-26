@@ -129,7 +129,6 @@ opt.swapfile = false
 opt.undofile = true
 opt.undodir = fn.stdpath("cache") .. "/undo"
 
-
 -----------------------------------------------------------
 -- Diff profile selector
 -----------------------------------------------------------
@@ -152,7 +151,8 @@ set_diff_profile("review")
       - (set diffopt =... in Lua, error-prone)
       - inline strings without validation
       - profile switching without a reset
-]]--
+]]
+--
 
 require("lib.nvim.autocmd").create("OptionSet", function()
   if vim.wo.diff then
@@ -183,30 +183,50 @@ if fn.has("win32") == 1 then
 
   -- local psmp = vim.env.PSModulePath
   -- if psmp and psmp:find("OneDrive", 1, true) then
-    -- local kept = {}
-    -- for entry in psmp:gmatch("[^;]+") do
-      -- if not entry:find("OneDrive", 1, true) then
-        -- kept[#kept + 1] = entry
-      -- end
-    -- end
-    -- vim.env.PSModulePath = table.concat(kept, ";")
+  -- local kept = {}
+  -- for entry in psmp:gmatch("[^;]+") do
+  -- if not entry:find("OneDrive", 1, true) then
+  -- kept[#kept + 1] = entry
+  -- end
+  -- end
+  -- vim.env.PSModulePath = table.concat(kept, ";")
   -- end
 
-  if fn.executable("pwsh") == 1 then
-    o.shell = "pwsh.exe"
-    o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
-    o.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    o.shellquote = ""
-    o.shellxquote = ""
-  elseif fn.executable("powershell") == 1 then
-    o.shell = "powershell.exe"
+  -- The two PowerShell generations want byte-identical options apart from the
+  -- binary, so this is one function called with a different name rather than
+  -- two branches that have to be kept in sync.
+  local function use_powershell(binary)
+    o.shell = binary
     o.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
     o.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
     o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
     o.shellquote = ""
     o.shellxquote = ""
   end
+
+  -- Windows PowerShell 5.1 is a system component, so this lookup *succeeds*,
+  -- and a succeeding `executable()` stops at the first hit: ~0.2-3ms.
+  if fn.executable("powershell") == 1 then
+    use_powershell("powershell.exe")
+  end
+
+  -- pwsh (PowerShell 7) is preferred when present, but the probe for it is
+  -- deferred, because a *failing* `executable()` is the expensive one: it
+  -- walks every PATH entry against every PATHEXT extension and finds nothing.
+  -- Measured here, 67 PATH entries x 11 extensions: ~44ms, and vim.fn does not
+  -- cache the result, so it was paid on every single start by everyone who
+  -- does not have pwsh installed. That was two thirds of this module's 63ms.
+  --
+  -- Deferring is safe precisely because the two differ only in `o.shell`: the
+  -- shell is already fully configured and working when this runs, and the
+  -- upgrade is a one-option swap. Anything that shells out before the first
+  -- event-loop tick gets 5.1, which is not a downgrade in behaviour, only in
+  -- version.
+  vim.schedule(function()
+    if fn.executable("pwsh") == 1 then
+      use_powershell("pwsh.exe")
+    end
+  end)
 else
   o.shell = fn.executable("zsh") == 1 and "zsh" or "bash"
   o.shellcmdflag = "-c"
@@ -237,15 +257,11 @@ if has_wl_clipboard then
 
     paste = {
       ["+"] = function()
-        return vim.fn.systemlist(
-          [[wl-paste --no-newline | tr -d '\r']]
-        )
+        return vim.fn.systemlist([[wl-paste --no-newline | tr -d '\r']])
       end,
 
       ["*"] = function()
-        return vim.fn.systemlist(
-          [[wl-paste --no-newline | tr -d '\r']]
-        )
+        return vim.fn.systemlist([[wl-paste --no-newline | tr -d '\r']])
       end,
     },
 
