@@ -16,7 +16,31 @@ return {
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
-    lazy = false,
+    -- Loaded on demand, not at startup, and that is worth more than it looks:
+    -- neo-tree's own load cost is ~27ms, but `dependencies` drags neotest and
+    -- its eight adapters, nvim-treesitter, nvim-web-devicons, nui, plenary,
+    -- vim-test and FixCursorHold in with it. Eager, that chain was the single
+    -- largest item in startup -- 44 plugins loaded and ~1300ms; lazy it is 29
+    -- and ~1050ms, measured over seven runs each.
+    --
+    -- The dependency on neotest stays. Dropping it instead was tried first and
+    -- is a regression: the tests source builds its items through a neotest
+    -- *consumer* that has to be registered before the source runs, so without
+    -- it `:Neotree tests` dies on a nil consumer. Deferring the whole group
+    -- keeps the ordering intact -- lazy loads dependencies with the parent.
+    cmd = "Neotree",
+    -- `lazy = false` is the usual way to keep `nvim <dir>` opening the tree
+    -- instead of netrw. This does the same thing without paying for it on
+    -- every other startup: the only case that needs neo-tree before a command
+    -- or a keymap is a directory argument, so check for exactly that.
+    init = function()
+      if vim.fn.argc(-1) == 1 then
+        local stat = (vim.uv or vim.loop).fs_stat(vim.fn.argv(0))
+        if stat and stat.type == "directory" then
+          require("neo-tree")
+        end
+      end
+    end,
     dependencies = {
       "MunifTanjim/nui.nvim",
       "TimCreasman/neo-tree-tests-source.nvim",
@@ -256,9 +280,9 @@ return {
           follow_cursor = true,
           window = {
             -- mappings = vim.tbl_extend(
-              -- "force",
-              -- require("config.neotree.keymaps.tests"),
-              -- NEOTEST.keymaps()
+            -- "force",
+            -- require("config.neotree.keymaps.tests"),
+            -- NEOTEST.keymaps()
             -- ),
             mappings = NEOTEST.keymaps(),
             position = require("config.neotree").get_default_position(),
@@ -282,4 +306,3 @@ return {
     end,
   },
 }
-
