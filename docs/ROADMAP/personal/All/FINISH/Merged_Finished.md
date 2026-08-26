@@ -72,6 +72,84 @@ nvim-Config.
       Commit). Fast-forward nach `main` gemergt, gepusht, Feature-Branch geloescht.
       Alle 31 Plugin-Repos stehen jetzt auf `main`.
 
+### Dokumentation & Cheatsheets
+
+- [x] **`docs/FEATURES/` über alle 31 Repos vereinheitlicht — 0 Features ohne
+      Metadaten, 0 Repos unsichtbar.**
+
+      Ausgangslage laut Roadmap: „27 von 31 sind Katalog + Bullets, drei ohne
+      Bullets, einer ein Changelog". Gemessen mit
+      `documentation.core.features.resolve` selbst stimmte davon fast nichts.
+
+      **Neun Repos waren für den Features-Tab komplett unsichtbar.**
+      `CANDIDATE_FOLDERS` suchte nur nach einem *Ordner*; `diff`, `emojis`,
+      `fileops`, `github_stats`, `lsp`, `migrate`, `recommender`, `sessions`
+      und `spotlight` haben je eine einzelne `docs/FEATURES.md` — zusammen 147
+      sauber geschriebene Features, alle schon mit Bullets, und `resolve()`
+      gab für jedes `nil` zurück. Der Parser liest sie jetzt; der Ordner
+      gewinnt weiterhin, wenn beides da ist. `FEATURES_FORMAT.md` sagte selbst
+      „one `FEATURES.md` for a small plugin" neben einem Codeblock, der einen
+      Ordner zeigt — genau die Mehrdeutigkeit, nach der sich die neun
+      gerichtet hatten. Jetzt eindeutig, plus Reihenfolge-Regel: `core.md`
+      zuerst, `FEATURES.md` zweitens, Rest alphabetisch (vorher stand
+      `ARCHITECTURE.md` über `CORE.md`). Vier neue Spec-Blöcke.
+
+      **Derselbe Befund in sieben Repos: ein Dokument, das `##` für die eigene
+      Gliederung benutzt, lag im Features-Ordner** — und jede Überschrift
+      darin wurde als Feature gezählt. Das war der Löwenanteil aller
+      gemeldeten „fehlenden Bullets", nicht fehlende Bullets:
+
+      | Repo | Was dort lag | Phantom-Features |
+      |---|---|---:|
+      | `color_my_ascii` | sieben Feature-Handbücher (2649 Zeilen) | 102 |
+      | `documentation` | Decision Record, Ecosystem-Essay, Naming-Survey | 72 |
+      | `lib` | zwei Problem/Lösung-Essays | 11 |
+      | `mdview` | der Überblicksteil der `FEATURES.md` | 5 |
+      | `filetree` | Implementierungs-Status `CWD_MODES.md` | 3 |
+      | `runtime-analysis` | `FINISHED.md`, das Decision Record | 3 |
+      | `language` | `TEMP.md`, eine Phasen-Checkliste | 1 |
+
+      Nichts gelöscht: jedes Dokument behielt seinen Inhalt, bekam einen Kopf,
+      der sagt woher es kommt und warum, und alle Verweise darauf sind
+      nachgezogen (allein in `documentation.nvim` 24 Stellen in 13 Dateien,
+      eine davon in `standalone/vim_shim.lua`; in `lib.nvim` acht, zwei davon
+      in Lua-Doc-Kommentaren). Neue Heimat je nach Sorte: `docs/guides/` für
+      Langfassungen, `docs/FEATURE_LOG.md` für Decision Records (der Name, den
+      `color_my_ascii` schon hatte), `docs/ROADMAP/` für Status- und
+      Build-Notizen. In `mdview` ein Split statt eines Umzugs: der Überblick
+      wurde zum `README.md` des Ordners — das ist laut Format das Intro und
+      wird nie als Thema gelesen —, die elf echten Features blieben in
+      `FEATURES.md`.
+
+      **`pickers.nvim` hatte als einziges gar keinen Katalog**, sondern einen
+      Feature-Changelog unter `docs/FEATURES.md`. Sieben Themen, 26 Features
+      neu geschrieben — aus der Quelle, nicht aus dem Changelog paraphrasiert:
+      drei Behauptungen, die der Changelog produziert hätte, haben die
+      Quellprüfung nicht überlebt. Der Changelog liegt als `docs/CHANGELOG.md`
+      daneben, nach deiner Logik: Rohmaterial behalten, aus dem Weg räumen.
+
+      **Erst danach kam die eigentliche Fleißarbeit**: 16 echte Bullet-Sets in
+      neun Repos. Modulpfade aus dem Baum gelesen statt aus der Prosa
+      abgeleitet — zwei lagen nicht dort, wo der Text es nahelegte
+      (`sandbox`s `.sandboxrc` in `util/project_config.lua` statt in einem
+      `engine/`, `runtime-analysis`' bench als `bench.lua` statt `bench/`).
+
+      **Zwei Nebenfunde:** `color_my_ascii`s Features-Ordner war als einziger
+      der 31 kleingeschrieben (`docs/features/`) — auf einem case-sensitiven
+      Dateisystem unsichtbar für jeden Link, der ihn anders schreibt; und
+      dessen `docs/FEATURES.md` war ein Commit-Log ein Zeichen neben dem
+      Ordner, der etwas anderes meint.
+
+      **Stand jetzt:** 31 von 31 Repos sichtbar, 771 Features, keines ohne
+      Metadaten.
+
+      **Später, wenn du willst:** Sub-Tabs im Features-Reiter, jede Themendatei
+      ein Untermenü. Die Reihenfolge dafür (`core` → `FEATURES` → Rest) ist
+      schon gebaut, weil sie zehn Zeilen war. Der Rest ist eine Funktion in
+      `html.lua` und kein Parser-Eingriff — Kostenschätzung und die eine offene
+      Designfrage (Verhältnis zu `- **Tab:** true`) in
+      `documentation.nvim/docs/ROADMAP/IDEAS/FeaturesSubTabs.md`.
+
 ### Cross-Plattform
 
 - [x] **Erste Runde: die 45 Windows-Testfälle in `filetree.nvim` — 45 → 0.**

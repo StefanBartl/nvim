@@ -37,11 +37,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 ## Liste B — An Claude Code delegierbar
 
 ### Dokumentation & Cheatsheets
-- [ ] **FEATURES-Doku vereinheitlichen — Rest ist reine Fleißarbeit.**
-  - **Alle 31 Repos sind jetzt für den Features-Tab sichtbar** (war: 22). Der Parser liest seit 2026-08-26 auch eine einzelne `docs/FEATURES.md`, nicht nur einen Ordner — das schaltete neun Repos frei (`diff`, `emojis`, `fileops`, `github_stats`, `lsp`, `migrate`, `recommender`, `sessions`, `spotlight`, zusammen 147 Features, alle schon mit Bullets). Dazu neu: `core.md` zuerst, `FEATURES.md` zweitens, Rest alphabetisch; `FEATURES_FORMAT.md` an der mehrdeutigen Stelle eindeutig gemacht. Specs dafür in `TESTS/features_spec.lua`.
-  - **Dreimal derselbe Befund, dreimal behoben:** ein Dokument, das `##` für die eigene Gliederung benutzt, lag im Features-Ordner und wurde als Dutzende Features gelesen. `pickers.nvim` (Changelog → `docs/CHANGELOG.md`), `color_my_ascii.nvim` (sieben Feature-Handbücher → `docs/guides/`, plus Ordner-Umbenennung und `FEATURES.md` → `FEATURE_LOG.md`), `documentation.nvim` (Decision Record + Ecosystem-Essay + Naming-Survey → `docs/FEATURE_LOG.md`, `docs/ECOSYSTEM.md`, `docs/ROADMAP/O2_NAMING_RESEARCH.md`; **72 Phantom-Features**). Die Regel steht jetzt im Ordner-README von `documentation.nvim`.
-  - **Offen: 39 Features ohne Metadaten-Bullets in 11 Repos** — `lib.nvim` 11 (davon vermutlich wieder Phantom: zwei Kleinbuchstaben-Dateien `async-directory-walk.md`/`subprocess-env.md` mit je allen Einträgen bar), `mdview` 6, `runtime-analysis` 5, `buffer-ctx`/`cascade`/`filetree`/`images` je 3, `sandbox` 2, `language`/`markdown`/`pdfport` je 1. Zuerst bei `lib.nvim` prüfen, ob es wieder der Phantom-Fall ist — dann sind es real eher 28.
-  - **Später, wenn du willst:** Sub-Tabs im Features-Reiter (jede Themendatei ein Untermenü). Kostenschätzung und die eine offene Designfrage — Verhältnis zu `- **Tab:** true` — in `documentation.nvim/docs/ROADMAP/IDEAS/FeaturesSubTabs.md`. Eine Funktion, kein Parser-Eingriff.
 - [ ] UseCases/Workflow-Datei pro Plugin (typischer Workflow + Edge Cases); vorhandene auf Aktualität prüfen.
 
 ### Bindings, Keymaps & UI
