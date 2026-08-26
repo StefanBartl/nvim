@@ -10,6 +10,12 @@
   Zusatz feature wäre: wenn das modiufierer mappings bei einen mappings ausgeöst wurde und der cursor nicht in einen beschreibbaren bffer steht, dass eine prompt komt ob mnan das resultsat im fokkusierten buffer oder eiunen anderen offenen buffer ieinfgpen will und in welcher eilennumer.
 `[` fügt immer `[]` ein, auch wenn ihc nur die öffnende benötige. bisher war das nie so, erst seit ein paar stunden (sorrounding commit). ich will schoin da sautoclose haben, aber vl gibt es da eine möghlichkeit
 
+## color_my_ascii.nvim
+
+Ein eingerücter fence hl trotzdem die ganze breiote, also zb wenn ich mit dme gesamten ence um 4 rowas einrücke, dann asollten in jeder zeile des fendces die ersten 4 rows nicht hl sein, am rechten rand ist es so, dass nvim generell ein klienes padding hat, als nicht ganz nach rechts schreibt,. auch dass sollte das oppadding eingehalten werden. am screenshot erkennt man was ich meine, ich habe das mit rot angezevhnet. das soll eine option sein, die der user auch opt-out ausschalten kann
+
+Screenshot: nvim\docs\ROADMAP\assets\fence_left_right.png
+
 ## true check
 
 Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
@@ -17,6 +23,7 @@ Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega auf
 ## runtime-analysis.nvim
 
 `:RATelemetry export` hat auch repos "exportiert" bzw eine file angelegt, die gar kein lua plugin sind: WKDBook-Tricentis zb. aber nicht für WKDBooks. Hängt das miot $REPOS_DIR zusammen oder ?
+Es gibt von insights.nvim eine markdown file in den telemetry daten. Was hat es damit auf sich?
 
 ---
 

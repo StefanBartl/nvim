@@ -47,9 +47,46 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] UseCases/Workflow-Datei pro Plugin (typischer Workflow + Edge Cases); vorhandene auf Aktualität prüfen.
 
 ### Bindings, Keymaps & UI
-- [ ] Alle Keymaps/Features zusätzlich via Usrcmd ausführbar machen.
-- [ ] Keymaps user-seitig modifizierbar/deaktivierbar machen. (via installations spec)
-- [ ] Autocmds aller Ordner in einem `/autcmd`-Ordner zusammenführen, nach Events sortiert (Dispatch-Lib-Modul), Abgleich mit `/bindings`.
+- [ ] Alle Keymaps/Features zusätzlich via Usrcmd ausführbar machen. Es kann natürlich sein, dass bei iningen dass nicht möglich oder sinnvoll ist. das ist nicht als MUSS gemeint, sondern einfach als qualitätsmerkaml der plugins - als solches soll es behandlet werden. also nicht zwingend, aber einen grund wenn nicht.
+
+#### Neues lib.nvim Modul für Keymaps + umbennenug
+
+1. Wie für autocmds und usrcmds wil ich auch eine lib.nvim modul für keymaps haben. Aber wekchen Zweck hätte das? Nur ein wrapper über nvim_create_keymap?
+
+  Für usrcmds und autocmds gibt es eine lib.nvim modul um deren umsetzung einfacher zu machen und zu standardisieren, zb autocompletion bei usrcmds oder dispatcher bei den autocmds. Für keymaps könnte es sein:
+  - Keymaps user-seitig modifizierbar (anderes mapping ermöglchen)/deaktivierbar machen. (via installations spec).
+  also, ein Modul, dass automatisch eine tabel oder ähnliches hinterlegt und via key in der user spec modifizierbar macht, die der user via spec ansteuern kann, zb.:
+
+    ```lua
+    {
+      keymaps = {
+        "[a": "]u", -- das mapping des plugins, dass `[a` ist soll auf `]u` umgeschrieben werden
+      }
+    }
+    ```
+
+das schaut zwar schräh aus mit diesen key, aber ich hab keine gute idee für eine alternative. man müsste mit dieser schreibwei´ße abe sicherstellen, dass nur das [a mapüpjg aus diesem einen repo geändert werden würde, wenn [a nicht gemppt ist opder von einen anderen feature eines anderen plugins, dann dürfte es nicht überschierben. abe vl fält dir noch ein besseres optionm. ein. Natülch könnte man auch Bezeichnungen nemmen, wie "copy_absolute_path" -was wsrch sinnvoller ist, aber danmn muss jedes mappng einen sionnvolen namen erhalten ka wie aufwendig da swöre
+
+- Der Pfad soll sein: E:\repos\lib.nvim\lua\lib\nvim\bindings\keymap
+- Docs mpüssen geschreiben werden
+- Brainstorming nach weoiteren Feature ideen für diese modul: Was könnten wir anbeiten, dwo user sich denken "Dieses fetaure ist toll und bringt mir mehrwert"
+- Alle meine .nvim Plugins auf dieses Modul umstellen
+
+#### Umbennenung + Pfad Update
+
+Die bisherigen Module:
+  E:\repos\lib.nvim\lua\lib\nvim\autocmd
+  E:\repos\lib.nvim\lua\lib\nvim\usercmd
+auf
+  E:\repos\lib.nvim\lua\lib\nvim\bindings\autocmd
+  E:\repos\lib.nvim\lua\lib\nvim\bindings\usercmd
+umbennen
+
+- Alle meine .nvim Plugins updaten, die eines der beiden Module implementieren
+
+#### autocmds
+
+- [ ] Autocmds aller Ordner in einem `bindings/autcmd`-Ordner zusammenführen, nach Events sortiert (Dispatch-Lib-Modul), Abgleich mit `/bindings`.
 
 ### Healthchecks, Config & Defaults
 - [ ] Möglichst viele Features user-konfigurierbar machen, inkl. LuaLS-Typen/Aliases für jeden Config-Key.
