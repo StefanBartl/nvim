@@ -48,8 +48,87 @@ und das native:
 
 free: So., 09:00 x - 21. Juli 2027
 work: Sa., 06:00 _ - 20.Sept
-dev:  Sa., 22:00 x - 03.Sep
+dev:  Sa., 22:00 zu - 03.Sep
 
 ---
 
+nvim, lib.nvim, repos:
 
+Checked the stray German lines in the two English docs
+MENUBARs Deutsch sind die lokalisierten Menü-Labels — bleiben. WORKPLAN hat zwei Stellen. Los mit ROADMAP.
+
+
+Ran 7 commands, created 2 files
++204
+-209
+
+Ran 3 commands, created head.md
++156
+-0
+Now the tail section.
+
+
+Created 6 files, ran 17 commands
++1096
+-0
+docmap-desktop ist erledigt und gepusht. Jetzt zum nächsten Task in der Liste.
+
+
+Ran 21 commands
+Jetzt schreibe ich die fehlende WORKFLOW.md für lsp.nvim.
+
+
+Created WORKFLOW.md, ran 20 commands
++153
+-0
+Jetzt aktualisiere ich documentation.nvim's WORKFLOW.md um die Lücke seit dem 15.08.
+
+
+Ran 20 commands, created 2 files
++150
+-0
+Ich ergänze die fehlenden Zeilen in KEYMAPS.md und füge dann die WORKFLOW-Abschnitte ein.
+
+
+Ran 4 commands
+Jetzt die WORKFLOW-Abschnitte einfügen und den gp-Abschnitt um den Picker-Modus ergänzen.
+
+
+Ran 25 commands, created 2 files
++124
+-0
+DASHBOARD.md und BINDINGS.md sind aktuell — nur WORKFLOW.md hinkt hinterher.
+
+
+Ran 18 commands, created mv.md
++54
+-0
+Jetzt die WORKFLOW-Abschnitte für runtime-analysis.nvim.
+
+
+Created ra.md, ran 35 commands
++75
+-0
+Der Tabellen-Form braucht ein benanntes lhs, nicht positional — ich korrigiere mein Beispiel.
+
+
+Ran 14 commands
+Fixed the keymap example
+Verified fzf key name and committed
+sessions WORKFLOW + commit tail
+Updated and committed sessions WORKFLOW
+recommender WORKFLOW + commits
+Read the -c and analyzer sections
+Updated recommender WORKFLOW
+Committed recommender WORKFLOW
+pdfport WORKFLOW + commits
+Read batch summary part
+Updated and committed pdfport WORKFLOW
+cmdlog WORKFLOW + commits
+Read the notes section and risky test
+Checked for stale notes references
+grep -rn 'opts.notes\|notes_picker\|per-command note' docs/*.md README.md 2>/dev/null | head -5
+(Bash completed with no output)
+Session limit reached
+Auto-resuming at 5:31 PM
+Auto-continue when limits reset
