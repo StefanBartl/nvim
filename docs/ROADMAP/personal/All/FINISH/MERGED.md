@@ -37,7 +37,8 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 ## Liste B — An Claude Code delegierbar
 
 ### Dokumentation & Cheatsheets
-- [ ] `docs/FEATURES.md` bzw. `docs/FEATURES/`-Ordner pro Plugin nach Format von `documentation.nvim/docs/FEATURES_FORMAT.md` befüllen.
+- [ ] **FEATURES-Doku: vorhanden, aber vier Repos weichen ab.** 27 von 31 sind Katalog + Metadaten-Bullets. Drei sind korrekte Kataloge **ohne** `- **Label:** value`-Bullets (color_my_ascii, replacer, reposcope) — laut Format gültig, aber documentation.nvims Features-Tab rendert sie dann ohne Metadaten. Einer, `pickers.nvim`, hat unter `docs/FEATURES.md` einen **Feature-Changelog** (`# feature Log`, `[x]`-Zeilen) statt eines Katalogs.
+  - **Frage an dich:** bei `pickers.nvim` den Changelog behalten (dann nach `docs/CHANGELOG.md` o. ä. verschieben und einen echten Katalog schreiben) oder ihn in Katalogform überführen? Bei den anderen drei ist es reine Fleißarbeit — Bullets nachtragen —, die ich auf dein Wort hin machen kann.
 - [ ] UseCases/Workflow-Datei pro Plugin (typischer Workflow + Edge Cases); vorhandene auf Aktualität prüfen.
 
 ### Bindings, Keymaps & UI
