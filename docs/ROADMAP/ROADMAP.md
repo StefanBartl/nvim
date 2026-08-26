@@ -1,6 +1,14 @@
 # Roadmap
 
 - [ ] Anticheat knacken
+- [ ] Merge_Finished
+- [ ] in filetree.nvim super keymaps, dass resultate vonactions wie `[a`, `]f` usw... - also alles was einen string zurückgibt..
+  - in die zwischenablage kopiert
+  - in die zwischenablage kopiert + beim cursor einfügt
+  mit "super keymap" meine ich sowas wie zb: vor `[a` das super keymap und es löst das gewümnschte verhalten aus, also es modifiziert das keymap resultatt, also zb.: `\[a` statt `[a` im filetre.nvim -> der absoilute pfad der node wrd nciht nur ausgegeben und die zwischenablaghe kopiert, sondern auch in die zwsichenablage kopiert (blödes beispiel weil bei dem sowieseo in die zwischenablge kopiert wird avber ichdneke du weißt was ich meine) und mit `ß[a` oder wenn ß nicht gut geht dann zb `?[q` und es wird der abolsute pfas ausgsgeb, in die zwischenablage kopiert und am curso eingeseetzt (auc wieder ein blödes beispiel, denn in diesem fall wäre der cursor ja im filetree, nicht in einen buffer...). aber ich dneke, es ict klar was ich miene. wenne s bessere super/modifizierte keympas gitb, gerne vorscvhläöge bringen
+  Wie bereits gesgat, ist das filetree.nvim beispiel nicht das beste, wei der curso fja im filetree sein muss dazu und daher das insert unssinig ist + viele meappaings beretrits das resultat in die zwischen ablage kopieren. aer wenn es möglich wäöre,. dass generel für alle mapopings in allen plugins zu setzen, wäre das coool.ichkönnte mir einen wrapper vorstellen der in der lib.nvim implementiert ist, der ausgelöst wird um das resultat alwenn ess ein string ist zu cathcen, das mapping ausgführt. aber vl gbt e sauch hier eine naheliegendere lösung.
+  Zusatz feature wäre: wenn das modiufierer mappings bei einen mappings ausgeöst wurde und der cursor nicht in einen beschreibbaren bffer steht, dass eine prompt komt ob mnan das resultsat im fokkusierten buffer oder eiunen anderen offenen buffer ieinfgpen will und in welcher eilennumer.
+`[` fügt immer `[]` ein, auch wenn ihc nur die öffnende benötige. bisher war das nie so, erst seit ein paar stunden (sorrounding commit). ich will schoin da sautoclose haben, aber vl gibt es da eine möghlichkeit
 
 ## true check
 
