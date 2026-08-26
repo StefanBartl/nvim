@@ -99,3 +99,23 @@ Command name is configurable (`setup({ command = "Emo" })`) — `composer.verb(c
   by this; `.luarc.json` was also added at the repo root (was missing) and
   `README.md` gained ASCII art/badges/ToC/a sister-plugin paragraph per the
   RELEASE.md gate.
+
+## `:Emojis` grew a bang and a count (2026-08-24)
+
+**`:Emojis next [count]`** jumps N emoji forward, wrapping past the last.
+A positional, not a command count — `:3Emojis next` would be an address
+(line 3). Applied by stepping, not by scanning for the Nth match, which is
+what keeps the wrap correct at every step.
+
+**`:Emojis!`** means "the alternate form of this action". The two it applies
+to are disjoint, so one bang carries both without ambiguity:
+
+| invocation | effect |
+| --- | --- |
+| `:Emojis! toggle` | Steps the checkbox **backward**. `checkbox.toggle` always took a direction; only the Lua API could reach it. |
+| `:Emojis! {action} cwd` | Forces `--no-ignore` for that call only, without mutating `search.no_ignore`. |
+
+Note `forward()` now stringifies positionals before handing them to
+`execute`: `fargs` mirrors nvim's own callback table, which is always
+strings, and `execute` lowercases `fargs[2]` to read it as a scope — which
+raised once `next` had an INT-typed positional.

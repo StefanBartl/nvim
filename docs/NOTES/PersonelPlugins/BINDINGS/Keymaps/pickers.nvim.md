@@ -23,7 +23,7 @@ Registered from `setup()`, or — if the user never calls `setup()` — from a
 
 | lhs (default) | action | desc |
 | --- | --- | --- |
-| `<leader>dp` | Dir-nav picker | "[pickers] Dir: navigate (alias / depth / path)" |
+| `<leader>dp` | Dir-nav picker; **a count is the depth** (`2<leader>dp` = two levels up) | "[pickers] Dir: navigate (alias / depth / path)" |
 | `<leader>fb` | Find files in interactively picked folder | "[pickers] Find files in interactively picked folder" |
 | `<leader>fc` | Find files in nvim config | "[pickers] Find files in nvim config" |
 | `<leader>gc` | Grep in nvim config | "[pickers] Grep in nvim config" |
@@ -245,3 +245,22 @@ plugins' which-key modules).
   `bindings/mappings/snacks.lua`, a file that's dead code — never required
   from `bindings/mappings/init.lua` — so the keys silently fell through to
   native `U`/`N` instead of opening a picker).
+
+## Count on `<leader>dp` (2026-08-24)
+
+`2<leader>dp` issues `:Pickers dir 2` — "two levels up", which is what a
+numeric nav argument has always meant on the command. The concept existed;
+nothing was passing it from the keymap.
+
+`vim.v.count` is read **raw**, not `count1`: 0 has to stay distinguishable,
+since no count opens the interactive picker while `:Pickers dir 0` is a real
+depth (the cwd itself). The `desc` is unchanged.
+
+Two other entries for this plugin needed no work:
+
+- **`keymaps.explorer` was already documented** as its own field — in
+  `docs/CONFIGURATION.md`, `docs/KEYMAPS.md` and `docs/BINDINGS.md`, not
+  only in a code comment.
+- **The `selected_index` autocmd workaround is gone**: that module was
+  rewritten as `result_count` and polls instead of registering a
+  buffer-local autocmd, so there was nothing left to roll back.

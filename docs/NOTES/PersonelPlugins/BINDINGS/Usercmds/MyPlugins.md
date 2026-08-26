@@ -13,21 +13,37 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 
 | Command | Effect |
 | --- | --- |
-| `:MyPlugins clone [dir] [--only=<name>]` | Clone every repo in `plugins.personal.list` not yet present in `dir` (default `$REPOS_DIR`); `--only` limits to one |
+| `:MyPlugins clone [dir] [--only=<name>] [--dry-run]` | Clone every repo in `plugins.personal.list` not yet present in `dir` (default `$REPOS_DIR`); `--only` limits to one, `--dry-run` only reports what would be cloned |
 | `:MyPlugins remove [dir] [--only=<name>]` | Remove clean (no uncommitted/unpushed work) listed repos from `dir`, after a confirmation naming exactly what will be deleted |
 | `:MyPlugins fetch [dir] [--only=<name>]` | `git fetch --all --prune` on every present listed repo |
 | `:MyPlugins pull [dir] [--only=<name>]` | `git pull --ff-only` on every present listed repo |
 | `:MyPlugins update [dir] [--only=<name>]` | `fetch` + `pull` on every present listed repo — the two-machine sync command, see below |
-| `:MyPlugins check [dir] [--only=<name>]` | Read-only git-status overview (branch, ahead/behind, dirty count) of every present listed repo — same idea as `reposcope.nvim`'s `:Reposcope status`, scoped to the listed plugins. `:MyPluginsCheck [dir]` is a flat shorthand for the bare form |
-| `:MyPlugins reclone [dir] [--only=<name>]` | Delete-if-clean + fresh clone for present repos (same safety check as `remove`); plain clone for anything missing |
+| `:MyPlugins dashboard [dir]` | Opens `reposcope.nvim`'s own `:Reposcope status [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list). `:MyPluginsDashboard [dir]` is a flat shorthand for the bare form |
+| `:MyPlugins reclone [dir] [--only=<name>] [--dry-run]` | Delete-if-clean + fresh clone for present repos (same safety check as `remove`); plain clone for anything missing. `--dry-run` prints the safe/unsafe/missing split and stops there |
 | `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |
 | `:MyPlugins picker [dir]` | Interactive: `<Tab>` assigns clone/update/pull/fetch/remove/reclone per plugin, `<CR>` runs the whole batch |
 
 `<Tab>` completes the subcommand, `dir` (real directories, plus a
 `$REPOS_DIR` keyword when that env var is set), `--only`'s value (every name
-in the live personal-plugin list), and `mode`'s value. Bare `:MyPlugins`
-prints this subcommand list.
+in the live personal-plugin list), and `mode`'s value. A bare `--<Tab>`
+lists the flags the current subcommand accepts. Bare `:MyPlugins` prints
+this subcommand list.
+
+## `--dry-run` — what it previews, and why it is free
+
+`--dry-run` is not a second code path that could drift out of sync with the
+real one: for `reclone`, the safe / unsafe / missing split *is* the preview,
+and it was always computed before the confirmation prompt. `--dry-run` only
+decides whether the command stops after reporting that split instead of going
+on to confirm and act. For `clone`, it does not even need the check phase — it
+reuses `ops.clone_one`'s own "already exists" predicate (a `loop.fs_stat`, no
+git subprocess), so a dry run touches neither disk nor network beyond a stat.
+
+```vim
+:MyPlugins clone --dry-run     " what would be cloned
+:MyPlugins reclone --dry-run   " which checkouts are clean enough to be replaced
+```
 
 ## Keeping two machines in sync (`dir`-mode checkouts)
 
@@ -90,8 +106,8 @@ re-runs a plugin's `config()`, not the spec files, so it will not pick up a
 :MyPlugins clone $REPOS_DIR --only=cascade.nvim
 :MyPlugins remove --only=learn-cli.nvim  " remove one, if clean
 :MyPlugins update                        " bring this machine level with what got pushed elsewhere
-:MyPlugins check                         " git-status overview of every present listed plugin
-:MyPluginsCheck                          " shorthand for the above
+:MyPlugins dashboard                     " open reposcope.nvim's git-status dashboard for $REPOS_DIR
+:MyPluginsDashboard                      " shorthand for the above
 :MyPlugins reclone --only=filetree.nvim  " nuke and re-clone a checkout that's misbehaving
 :MyPlugins picker                        " assign different actions to different plugins, run as one batch
 :MyPlugins mode                          " show current OVERRIDE

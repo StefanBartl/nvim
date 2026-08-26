@@ -61,3 +61,15 @@ Docs: `docs/commands.md`, `doc/debugging.txt`
   changes needed.
 - CI (`.github/workflows/ci.yml`, stylua/luacheck/headless test suite) was
   added on 2026-07-30, after this migration — stale "no CI" note superseded.
+
+## Handle completion (2026-08-24)
+
+`report win`, `inspect buffer` and `inspect window` now complete their handle
+argument via composer's `WINDOW`/`BUFFER` argtypes, and
+`keylogger start [file]` gets `PATH` completion. They previously shared the
+generic `STRING` slot, which offered nothing — and a window or buffer id is
+*unguessable*, so the only way to supply one was `:echo win_getid()` first.
+
+`proc` ids and `performance startup` deliberately keep the generic slot:
+this plugin does not enumerate those values, so a completer would have
+nothing true to offer. Pinned in `docs/TESTS/handle_args_spec.lua`.

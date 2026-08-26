@@ -46,6 +46,36 @@ Handles are cached per root, so bouncing between repos scans each once.
 Completion deliberately never installs one — `<Tab>` in an unscanned repo
 offers action names only, instead of blocking on a full scan.
 
+### Revision completion for `diff`/`churn` (2026-08-25)
+
+Closes the `RULES-flags-options.md` entry. Both take a revision, and both
+used to fall through to the *action* list — so `:DocMap diff <Tab>` offered
+`bindings`/`plugins`/…, which is worse than offering nothing: every
+candidate was wrong. They now complete against the repo's own refs (local
+branches, remote branches with their prefix, tags; newest commit first), and
+`churn`, taking a range, continues an `A..`/`A...` lead and hands back the
+whole `A..B` token.
+
+The listing itself went into lib.nvim as `git.refs(dir, opts)` rather than
+into this plugin's completion callback — "which revision?" is not a
+documentation.nvim question. Two things there are load-bearing and easy to
+get wrong: `for-each-ref` sorts by *refname* by default, which buries the
+branch you were on ten seconds ago behind anything starting with `a`
+(`-committerdate` fixes it), and remote branches must keep their prefix,
+both because that is how git accepts them as a revision and because
+stripping it collides with the identically named local branch.
+
+Cached ~5s, not per session: branches appear and vanish while an editor is
+open, so a session cache would be stale in the normal case; the TTL exists
+only so a held `<Tab>` does not spawn one `git for-each-ref` per keystroke.
+
+### `<Plug>` mappings for `DocBrowse` actions — n/a (2026-08-25)
+
+Not a gap: `<Plug>` mappings are not this ecosystem's convention. `opts.keys`
+(a string or list of lhs per action id, `false` to disable, typo-checked
+against the known ids) plus `lib.nvim.map` already cover rebinding
+completely; which-key labels are the only mandatory piece on top.
+
 ## `:DocMap`
 
 | Invocation | Does | Writes? |

@@ -78,6 +78,8 @@ Model: opt-out — every feature in `FEATURES` runs by default **except**
 | lhs | action |
 | --- | --- |
 | `m`/`]m`/`[m`/`<C-m>`/`<leader>ms` | Toggle mark / mark all visible / unmark all visible / clear all / show floating list of marked paths |
+| `gm` / `]M` / `[M` | Jump to the Nth marked node (`Ngm`) / next / previous marked node, wrapping. **Added 2026-08-24** |
+| `m` / `[m` (Visual) | Mark / unmark every node in the selection. **The only Visual-mode keymaps filetree binds**, added 2026-08-24 |
 | `q`/`<Esc>` | Close marked-nodes popup |
 
 `org/session` has no keymaps (autocmd + `:Filetree` subcommands only).
@@ -172,5 +174,32 @@ built custom UI plugin, or `buffer-ctx.nvim` — undecided as of 2026-08-01.
   first few names. See `filetree.util.pdf.create()`/`guess_kind()`/
   `can_create()` and `docs/ROADMAP/PDFPORT_INTEGRATION.md`'s 2026-08-09
   addendum.
-- **2026-08-01**: `create_from_template`'s default keymap changed `t` → `A`; the picker now prompts for the filename before the template (previously the other way round) so ${module} resolves against the real destination, and templates can be reordered in-picker with `<M-j>`/`<M-k>`. `${module}` itself now defers to `lib.nvim.lua_ls.get_module_path` (the same canonical resolver `lua_require_copy`/`rq` conceptually reimplements by hand — not migrated to it in this pass, flagged separately) rather than a locally-reinvented version.
+- **2026-08-01**: `create_from_template`'s default keymap changed `t` → `A`; the picker now prompts for the filename before the template (previously the other way round) so ${module} resolves against the real destination, and templates can be reordered in-picker with `<M-j>`/`<M-k>`. `${module}` itself now defers to `lib.nvim.lua_ls.get_module_path` (the same canonical resolver `lua_require_copy`/`rq` conceptually reimplemented by hand) rather than a locally-reinvented version.
+- **2026-08-25**: the flag above is closed — `lua_require_copy` (`rq`) now
+  defers to `lib.nvim.lua_ls.get_module_path` too. Behaviour change worth
+  knowing: the old hand-rolled `find_lua_root()` walked the filesystem upward
+  and fell back to `stdpath("config")/lua`, so it could **never** fail — a node
+  outside any `lua/` directory silently yielded a module path guessed from
+  whatever ancestor happened to contain a `lua/` folder, and the
+  "Could not find lua/ root" warning it guarded never fired once. `rq` on such
+  a node now reports that there is nothing to copy. `rQ`
+  (`copy_require_relative`) is unchanged: it deliberately roots at the working
+  directory, not at the file's own `lua/`.
 - `bindings/keymaps.lua` itself has no live registration calls — it's a static catalog table consumed by `bindings/init.lua`'s `catalog()`, the cheatsheet feature, and the generated docs. It's missing a `pdf_open` entry (see above). **Caught drifting again 2026-08-01**: its `create_from_template` row still said `lhs = "t"` after the feature's own default moved to `"A"` — this catalog is hand-maintained, not derived from each feature's actual `_cfg.keymap`, so a code-level default change never propagates here automatically. Fixed upstream; worth remembering next time a default keymap changes.
+
+## Mark navigation and Visual marking (2026-08-24)
+
+Navigation follows the tree **as rendered**, not `get_marked()`'s
+alphabetical order — that is the right answer for "what is marked" and the
+wrong one for moving around, and a marked node inside a collapsed directory
+has no line to jump to at all. An out-of-range count clamps to the last mark
+rather than erroring, the way `G` treats one.
+
+Visual mode was previously unused by this plugin entirely. A line range over
+a rendered tree is exactly a set of nodes, which is the one thing a tree
+buffer's Visual mode is good for; marking a run of files no longer means
+pressing `m` once per line.
+
+The count audit's "no keymap supports count meaningfully — N items is handled
+via marks" verdict still holds: `Ngm` is a count on *navigation between*
+marks, not a count that widens an action's target.

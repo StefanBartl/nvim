@@ -34,6 +34,10 @@ vim.opt.rtp:prepend(lazypath)
 -- change after it's already on the runtimepath and errors ("changed dir ...
 -- already partially loaded") on every startup.
 local libpath = require("plugins.personal.utils").local_dev("lib.nvim") or (vim.fn.stdpath("data") .. "/lazy/lib.nvim")
+-- No clone fallback like lib.nvim's below: lsp.nvim is not required before
+-- lazy runs, so lazy can fetch it itself if the local checkout is absent.
+local lsppath = require("plugins.personal.utils").local_dev("lsp.nvim")
+  or (vim.fn.stdpath("data") .. "/lazy/lsp.nvim")
 if not vim.uv.fs_stat(libpath) then
   vim.fn.system({
     "git",
@@ -56,6 +60,7 @@ package.path = table.concat({
 
 -- Setup lazy.nvim with plugins
 local lazy_config = require("config.lazy")
+
 require("lazy").setup({
   {
     "NvChad/NvChad",
@@ -72,6 +77,12 @@ require("lazy").setup({
   -- plugins/personal/init.lua still owns the full spec (lazy=false,
   -- priority, config); this only pins `dir` early enough to avoid the race.
   { "StefanBartl/lib.nvim", dir = libpath },
+  -- Same reason as lib.nvim above, one step further: `import` makes lazy
+  -- `require("lsp.pack")` while it is still collecting specs, so the plugin's
+  -- `dir` has to be known by then. plugins/personal/init.lua still owns the
+  -- full spec (lazy = false, priority); this pins `dir` early enough and adds
+  -- the import that installs the LSP ecosystem.
+  { "StefanBartl/lsp.nvim", dir = lsppath, import = "lsp.pack" },
   { import = "nvchad.plugins" },
   -- { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },
@@ -159,11 +170,34 @@ end)
 -- BufReadPost of a startup-argument file.
 vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 startup.now("lsp", function()
-  require("lsp").setup({ ensure_installing = false })
+  -- `require("lsp")` resolves to the lsp.nvim plugin (lazy = false, so it is on
+  -- the runtimepath by the time this runs). This config's former lua/lsp/**
+  -- lives there; the local lsp_legacy copy it was renamed to during the
+  -- migration is gone, the plugin is the only source now.
+  require("lsp").setup({
+    mason = { ensure_install = false },
+    -- The plugin-name list is this config's data, so it is handed over rather
+    -- than reached for. Passed here and not from a completion engine's spec:
+    -- it used to be wired from nvim-cmp's `opts`, which meant switching to
+    -- blink silently dropped the source.
+    completion = {
+      personal_names = {
+        labels = function()
+          return require("plugins.personal.list").read()
+        end,
+      },
+    },
+  })
 
-  local ok_caps, caps = pcall(require, "lsp.core.capabilities")
-  if ok_caps and type(caps.apply_globally) == "function" then
-    local applied, cap_warnings = caps.apply_globally()
+  -- `require("lsp").apply_capabilities()`, not `lsp.core.capabilities`
+  -- directly: the capability contributors (NvChad, cmp, blink) live in the
+  -- plugin's integration layer now, and only the facade can look them up --
+  -- the core deliberately cannot reach into that layer. Calling the core
+  -- function bare would apply the bare protocol capabilities and look like a
+  -- broken completion setup.
+  local ok_caps, lsp_mod = pcall(require, "lsp")
+  if ok_caps and type(lsp_mod.apply_capabilities) == "function" then
+    local applied, cap_warnings = lsp_mod.apply_capabilities()
     local cap_notify = require("lib.nvim.notify").create("[lsp.capabilities]")
     for _, w in ipairs(cap_warnings or {}) do
       -- w.level is "warn"|"error" (LspCaps.Warning); notify()'s own level

@@ -4,13 +4,15 @@
 ---   []  -> surround with [ ... ]
 ---   ()  -> surround with ( ... )
 ---   {}  -> surround with { ... }
+---   `   -> surround with ` ... `   (one tap, see `define_mappings`)
 --- The legacy double-tap triggers [[, ((, {{ are no longer used to avoid conflicts
 --- (e.g., markdown section jumps on [[).
 
 ---@class SurroundConfig
 ---@field single_quote  boolean|nil  -- enable '' for quotes
 ---@field double_quotes boolean|nil  -- enable "" for quotes
----@field backticks     boolean|nil  -- enable `` for backticks
+---@field backticks     boolean|nil  -- enable ` for backticks
+---@field backtick_lhs  string|nil   -- trigger for the backtick surround (default "`")
 ---@field parens        boolean|nil  -- enable () for parentheses
 ---@field brackets      boolean|nil  -- enable [] for brackets
 ---@field braces        boolean|nil  -- enable {} for braces
@@ -24,6 +26,9 @@ M.cfg = {
   single_quote = true,
   double_quotes = true,
   backticks = true,
+  -- Single tap, not the `` double tap the other pairs use — see the note in
+  -- `define_mappings`. Set to "``" to get the old double-tap trigger back.
+  backtick_lhs = "`",
   parens = true,
   brackets = true,
   braces = true,
@@ -162,8 +167,19 @@ local function define_mappings()
     end, pfx .. "single quotes (')")
   end
 
+  -- Backticks trigger on a *single* tap, unlike the pairs above. A `` double
+  -- tap can't work here: the first ` is already a complete built-in operator
+  -- (goto-mark, waiting for its mark argument), so Neovim only holds the
+  -- mapping open for 'timeoutlen'. Type the two backticks a second apart —
+  -- i.e. at normal speed — and the timeout fires the built-in instead: the
+  -- second ` is eaten as the mark name, `` resolves to "jump to previous
+  -- position", and the selection is left completely untouched. That silent
+  -- no-op is the bug this fixes (and the stray ``` that shows up afterwards
+  -- is nvim-autopairs' markdown fence rule, from retrying in insert mode).
+  -- The cost is `{mark} as a Visual-mode motion, which this map already
+  -- shadowed anyway and which ' covers.
   if M.cfg.backticks ~= false then
-    xmap("``", function()
+    xmap(M.cfg.backtick_lhs or "`", function()
       surround_with("`")
     end, pfx .. "backticks (`)")
   end

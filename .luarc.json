@@ -40,16 +40,6 @@
         "vim"
     ],
     "workspace.useGitIgnore": true,
-    "workspace.library": [
-        "${3rd}/luv/library",
-        "${3rd}/busted/library",
-        "${3rd}/luassert/library",
-        "$HOME/.local/share/nvim/lazy/plenary.nvim",
-        "$HOME/.local/share/nvim/lazy/nui.nvim",
-        "$HOME/.local/share/nvim/lazy/nvim-web-devicons",
-        "$HOME/.local/share/nvim/lazy/snacks.nvim",
-        "E:/repos/lib.nvim"
-    ],
     "workspace.checkThirdParty": false,
     "workspace.ignoreDir": [
         ".dependencies",
@@ -60,6 +50,7 @@
         "build",
         "dist",
         "docs",
+        "github-stats",
         "node_modules",
         "vendor"
     ],
@@ -68,7 +59,8 @@
         "**/node_modules/**",
         "**/dist/**",
         "**/build/**",
-        "**/docs/**"
+        "**/docs/**",
+        "**/plugins/github-stats/**"
     ]
 }
 

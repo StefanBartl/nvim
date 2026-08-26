@@ -16,17 +16,14 @@ function M.setup()
 
   map("n", "<leader>fgs", ":FzfLua git_status<CR>", { desc = "[FzfLua] Git Status" })
 
-  map("n", "<leader>dos", ":FzfLua lsp_document_symbols<CR>", { desc = "[FzfLua] LSP document symbols" })
-  map("n", "<leader>wos", ":FzfLua lsp_live_workspace_symbols<CR>", { desc = "[FzfLua] LSP live workspace symbols" })
-
-  map("n", "<leader>do", ":FzfLua diagnostics_document<CR>", { desc = "[FzfLua] Document Diagnostics" })
-  map("n", "<leader>wo", ":FzfLua diagnostics_workspace<CR>", { desc = "[FzfLua] Workspace Diagnostics" })
+  -- <leader>dos, <leader>wos, <leader>do and <leader>wo moved into lsp.nvim's
+  -- keymap catalogue: they are LSP pickers, and having them here meant the LSP
+  -- keys lived in five files. <leader>fq stays -- a quickfix picker is not LSP.
 
   map("n", "<leader>fq", ":FzfLua quickfix<CR>", { desc = "[Quickfix] Quickfix" })
   map("n", "<leader>man", ":FzfLua man_pages<CR>", { desc = "[FzfLua] Man Pages" })
 
-  map("n", "<leader>flg", ":FzfLua live_grep<CR>", { desc = "[FzfLua] Live Grep" })
-  map("n", "<leader>fg", ":FzfLua grep<CR>", { desc = "[FzfLua] Grep" })
+  map("n", "<leader>fg", ":FzfLua live_grep<CR>", { desc = "[FzfLua] Live Grep" })
   -- <leader>fb moved to fB: pickers.nvim's keymaps.folder_files owns <leader>fb now.
   map("n", "<leader>fB", "<cmd>FzfLua grep_curbuf<CR>", { desc = "[FzfLua] Grep current buffer" })
 

@@ -100,6 +100,7 @@ local plugins = control.new({ resolve = resolve })
 plugins.modes({
   -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
   ["lib.nvim"] = "dir",
+  ["lsp.nvim"] = "dir",
   ["sessions.nvim"] = "dir",
   ["pickers.nvim"] = "dir",
   ["buffer-ctx.nvim"] = "dir",

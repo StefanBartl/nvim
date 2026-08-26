@@ -21,8 +21,21 @@ Set `keymaps = false` / `mark = { keymaps = false }` to disable a whole group.
 
 | lhs | mode | opt key | action |
 | --- | --- | --- | --- |
-| `<S-m>` | n | `toggle` | Toggle mark on current line |
+| `<S-m>` | n | `toggle` | Toggle mark on current line, or N lines with a count |
 | `<C-p>` | n | `yank` | Yank all marked lines to clipboard |
+| *(unset)* | n | `clear` | Remove every mark in the buffer |
+
+**Count support (since 2026-08-24):** `3<S-m>` covers the cursor line and the
+two below it, clamped to the end of the buffer. Without a count it is the
+single-line toggle it always was.
+
+Over a range this is deliberately **not** a per-line toggle — a partially
+marked selection would come out as a checkerboard. If any line in the range
+is unmarked (or marked in another category), the whole range gets marked;
+only when every line already carries that category does it unmark.
+
+**The `desc` changed** for `toggle`: now "[buffer-ctx] Mark: toggle line (or
+N with a count)".
 
 ## which-key
 
@@ -36,6 +49,7 @@ controls the label, not whether the keymaps themselves are bound.
   equivalent — `column`/`enum`/etc. have no default keymap, only commands.
   Bind your own if wanted: `:Format column <N>` needs a visual selection
   first regardless of how it's invoked.
-- `<S-m>` and `<C-p>` are the only two mark keymaps; there is no keymap for
-  clearing all marks in a buffer (only per-line `toggle`) or for the
-  `BufferCtxMarkCleanup` autocmd, see [Autocmds cheatsheet](../Autocmds/buffer-ctx.md).
+- `keymaps.clear` was added 2026-08-24 and is **unset by default**, so
+  `<S-m>` and `<C-p>` remain the only two bound out of the box. There is
+  still no keymap for the `BufferCtxMarkCleanup` autocmd, see
+  [Autocmds cheatsheet](../Autocmds/buffer-ctx.md).

@@ -22,13 +22,35 @@
 ---    corpus the motivating case (images.nvim.md, see the roadmap's
 ---    opening paragraph) came from. Usercmds' reverse direction (below)
 ---    still consults Extern, just not to decide what's "ours to check".
---- 3. **Buffer-local / filetype-scoped keymaps are a known false-positive
----    source.** `nvim_get_keymap` only sees GLOBAL maps. A documented
----    `<leader>im` that's actually registered per-filetype
----    (`keymaps.filetypes = {"markdown",...}`) reports as
----    "documented-not-live" even though it IS correctly registered —
----    there's no live buffer of every relevant filetype to check against
----    from a single report call.
+--- 3. **Buffer-local / filetype-scoped keymaps — mitigated, not solved.**
+---    `nvim_get_keymap` only sees GLOBAL maps, so a documented `<leader>im`
+---    registered per-filetype (`keymaps.filetypes = {"markdown",...}`), or
+---    a picker key bound to its own prompt buffer, used to report as
+---    "documented-not-live" while being correctly registered. This was the
+---    dominant false-positive class by volume: a real report ran to 682
+---    findings, unreadable and dominated by in-window keys of plugins whose
+---    UI simply wasn't open. Two things address it now, neither of which
+---    drops a finding:
+---      - `live_keymaps` also reads `nvim_buf_get_keymap` for every loaded
+---        buffer, so a UI that IS open is verified properly.
+---      - what remains gets a per-table verdict (see `M.check`): a
+---        documented table where not one key is live is reported as one
+---        "not verifiable from here" line naming the table, instead of N
+---        "missing" lines. `M.describe` renders it in its own section,
+---        below the findings that are worth acting on.
+---    A table needs more than one row for the verdict to apply, so a
+---    genuinely one-row scope (github_stats' detail-view float) still
+---    reports as a single finding. That is the intended floor: one absent
+---    key is no evidence about scope.
+---
+---    Two things had to land together for this to work on the corpus. The
+---    docs half: `github_stats.nvim.md` was one unnamed table mixing four
+---    scopes, giving the verdict nothing to group on — now split per scope,
+---    as BINDINGS-FORMAT.md §1 already required. The code half: splitting
+---    it alone changed nothing, because each resulting table still held one
+---    key that *looked* live. See `is_live` — matching on lhs alone let an
+---    unrelated global map satisfy a documented row, and one such row per
+---    table was enough to suppress the verdict for the whole table.
 --- 4. **Lazy-loaded plugins are handled, not ignored**: a binding whose
 ---    owning plugin hasn't loaded yet in the current session (event/cmd/
 ---    ft-triggered lazy loading) isn't registered yet either — checking
@@ -78,6 +100,11 @@ local M = {}
 local LHS_HEADERS = { lhs = true, key = true, keys = true, ["action key"] = true }
 local MODE_HEADERS = { mode = true, modes = true }
 local USERCMD_HEADERS = { command = true, invocation = true, subcommand = true }
+local DESC_HEADERS = { desc = true, description = true }
+
+--- Cells that fill a `desc` column without naming a description. Checked
+--- lowercased, after `strip_quotes`.
+local EMPTY_DESC = { [""] = true, none = true, ["-"] = true, ["—"] = true, ["n/a"] = true }
 
 local VALID_MODE_CHARS =
   { n = true, i = true, v = true, x = true, s = true, o = true, t = true, c = true, l = true }
@@ -160,6 +187,31 @@ local function extract_modes(rec)
   return #out > 0 and out or { "n" }
 end
 
+--- The corpus writes descs as `"[DAP] Continue"` — the exact string handed
+--- to `vim.keymap.set`'s `desc`, quoted. Backticks appear too.
+---@param s string
+---@return string
+local function strip_quotes(s)
+  s = vim.trim(s or "")
+  s = s:gsub("^[`\"']+", ""):gsub("[`\"']+$", "")
+  return vim.trim(s)
+end
+
+--- The documented `desc` of a row, or nil when the row does not claim one.
+--- Only an explicit `desc`/`description` column counts: other columns hold
+--- free prose about the action, which is not what `vim.keymap.set` was
+--- given and would never compare equal.
+---@param rec Bindings.Record
+---@return string|nil
+local function extract_desc(rec)
+  local idx = column_index(rec, DESC_HEADERS)
+  local cell = idx and rec.cells[idx]
+  if not cell then return nil end
+  local desc = strip_quotes(cell)
+  if EMPTY_DESC[desc:lower()] then return nil end
+  return desc
+end
+
 ---@param rec Bindings.Record
 ---@return string|nil normalized lhs, nil if no usable lhs column/cell
 local function extract_lhs(rec)
@@ -212,16 +264,109 @@ local function live_commands()
   return out
 end
 
+--- Command name -> the lazy.nvim plugin whose `cmd` spec declares it.
+---
+--- Lazy registers a stub command per `cmd` entry so the plugin can load on
+--- first use, which means the stub's callback points at lazy's own
+--- `handler/cmd.lua`, never at the owner. The spec is the only place that
+--- mapping survives.
+---@return table<string, string>
+local function lazy_cmd_owners()
+  local out = {}
+  local ok, lazy_config = pcall(require, "lazy.core.config")
+  if not ok then return out end
+  for name, spec in pairs(lazy_config.plugins) do
+    local cmd = spec.cmd
+    if type(cmd) == "string" then cmd = { cmd } end
+    if type(cmd) == "table" then
+      for _, entry in ipairs(cmd) do
+        if type(entry) == "string" then out[entry] = name end
+      end
+    end
+  end
+  return out
+end
+
+--- Best-effort answer to "who registered this command", for the live
+--- commands that have no cheatsheet. Not a verdict and never a filter —
+--- the section stays complete either way; this only lets a reader see at a
+--- glance that a run of lines is somebody else's plugin.
+---
+--- Three sources, in descending order of how directly they know:
+---   1. lazy.nvim's `cmd` spec, for lazy-load stubs (see `lazy_cmd_owners`).
+---   2. the callback's defining file, via `debug.getinfo` — reliable for a
+---      plugin that registers its own commands directly.
+---   3. the `script_id`, for anything defined in Vimscript, where there is
+---      no callback to inspect.
+---
+--- One case stays unresolved and is labelled as such rather than guessed
+--- at: commands registered through lib.nvim's usercmd helpers all report
+--- that shared registrar as their origin (64 of them here), and lib.nvim
+--- keeps no owner alongside them — `composer.registry()` hands out handles
+--- with `check`/`document`/`name`/`spec` and no source. Recovering those
+--- would mean lib.nvim recording its caller at registration time, which is
+--- a change in that repository, not something to fake from this side.
+---@param name string
+---@param lazy_owners table<string, string>
+---@param defs table  # `nvim_get_commands({})`, passed in: rebuilding it per
+---                     name would mean one full command-table build per
+---                     finding, 156 of them in a real run
+---@return string
+local function command_owner(name, lazy_owners, defs)
+  if lazy_owners[name] then return lazy_owners[name] .. " (lazy cmd stub)" end
+
+  local def = defs[name]
+  if def and type(def.callback) == "function" then
+    local info = debug.getinfo(def.callback, "S")
+    local src = ((info and info.short_src) or ""):gsub("\\", "/")
+    local lib = src:match("/lib%.nvim/") or src:match("^%a:/repos/lib%.nvim")
+    if lib then return "via lib.nvim usercmd helpers — owner not recorded" end
+    local plugin = src:match("/lazy/([^/]+)/") or src:match("^%a:/repos/([^/]+)")
+    if plugin then return plugin end
+    local runtime = src:match("/runtime/(.+)$") or src:match("^vim/(.+)$")
+    if runtime then return "neovim runtime: " .. runtime end
+    if src ~= "" then return src end
+  end
+  if def and def.script_id then return ("vimscript script_id=%d"):format(def.script_id) end
+  return "unknown"
+end
+
+--- Global keymaps PLUS the buffer-local keymaps of every buffer that
+--- happens to be loaded right now.
+---
+--- The buffer-local half directly attacks the module doc's limitation 3.
+--- `nvim_get_keymap` is global-only, so a plugin that registers its
+--- bindings on its own window's buffer (filetree.nvim via
+--- `tree_attach.on_attach`, every picker-style float, ...) had *all* of its
+--- documented keys reported as missing. Scanning loaded buffers recovers
+--- exactly those whose window is open while the report runs — an honest
+--- partial fix, not a complete one: nothing here can conjure a filetree
+--- buffer that was never opened this session. What the remaining, still
+--- unverifiable ones are worth is decided in `M.check`, not here.
+--- Every live lhs maps to the list of `desc`s registered under it, not to a
+--- bare `true`: `is_live` below needs them to tell a documented binding
+--- apart from an unrelated one that merely shares the key.
 ---@param modes string[]
----@return table<string, table<string, boolean>> mode -> set of live lhsraw
+---@return table<string, table<string, string[]>> mode -> lhsraw -> descs
 local function live_keymaps(modes)
   local out = {}
+  local bufs = vim.api.nvim_list_bufs()
   for _, mode in ipairs(modes) do
     local set = {}
-    local ok, maps = pcall(vim.api.nvim_get_keymap, mode)
-    if ok then
+    local function add(maps)
       for _, m in ipairs(maps) do
-        if m.lhsraw then set[m.lhsraw] = true end
+        if m.lhsraw then
+          set[m.lhsraw] = set[m.lhsraw] or {}
+          table.insert(set[m.lhsraw], m.desc or "")
+        end
+      end
+    end
+    local ok, maps = pcall(vim.api.nvim_get_keymap, mode)
+    if ok then add(maps) end
+    for _, buf in ipairs(bufs) do
+      if vim.api.nvim_buf_is_loaded(buf) then
+        local ok_buf, buf_maps = pcall(vim.api.nvim_buf_get_keymap, buf, mode)
+        if ok_buf then add(buf_maps) end
       end
     end
     out[mode] = set
@@ -229,18 +374,72 @@ local function live_keymaps(modes)
   return out
 end
 
+--- Whether a documented binding is actually registered.
+---
+--- Matching on lhs alone was wrong in a way that mattered: an unrelated
+--- global map satisfies a documented row just by sharing the key. Confirmed
+--- across the corpus — github_stats' `<CR>`/`<Esc>` were "live" because
+--- this config binds `<CR>` to "Insert blank line" and `<Esc>` to "Clear
+--- copilot NES overlays or nohl"; `language.nvim`'s `]s` matched Snacks'
+--- "Snacks Scope: Next"; reposcope's `<Esc>` matched the same nohl map
+--- twice. Five rows, none of them the binding the cheatsheet describes, and
+--- each one was enough to keep its whole table out of the "not verifiable"
+--- verdict — which is why `github_stats.nvim.md` kept reporting ~20 keys
+--- even after being split into per-scope tables.
+---
+--- So when BOTH sides name a desc, they must agree. Everything else falls
+--- back to lhs-only, which is all the older behaviour ever was:
+---   - the row has no `desc` column, or fills it with `none`/`-`
+---   - nothing registered under that key carries a desc at all
+---
+--- Compared exactly (after `strip_quotes`), deliberately. Measured over
+--- every currently-live documented row: 8 exact matches, 0 that needed
+--- case-insensitive comparison, 0 where the live side had no desc, and 5
+--- mismatches — all five genuine. There was nothing for a looser rule to
+--- rescue, and a substring or fuzzy compare would only start re-admitting
+--- the collisions this exists to catch.
+---@param live_maps table<string, table<string, string[]>>
+---@param modes string[]
+---@param lhs string
+---@param doc_desc string|nil
+---@return boolean
+local function is_live(live_maps, modes, lhs, doc_desc)
+  for _, mode in ipairs(modes) do
+    local descs = live_maps[mode] and live_maps[mode][lhs]
+    if descs then
+      if not doc_desc then return true end
+      local any_desc = false
+      for _, d in ipairs(descs) do
+        if d ~= "" then
+          any_desc = true
+          if strip_quotes(d) == doc_desc then return true end
+        end
+      end
+      if not any_desc then return true end
+    end
+  end
+  -- Either the key is registered nowhere, or every desc under it names a
+  -- different binding. Both are "documented, not registered".
+  return false
+end
+
 ---@class Bindings.DriftFinding
 ---@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-undocumented"
 ---@field plugin string|nil
+---@field heading string|nil  # the record's table heading, keymap axis only
+---@field group string|nil    # plugin + heading, the verdict's grouping key
 ---@field notation string
 ---@field file string|nil
 ---@field line integer|nil
+---@field unverifiable boolean|nil  # see `M.check`'s per-table verdict
 
 --- @param plugin string|nil narrow to one plugin's own files
 ---   (`records.lua`'s `plugin` field, i.e. the filename stem). With a
 ---   plugin given, the usercmd-undocumented direction is skipped — there
 ---   is no reliable way to attribute a live, undocumented command to one
----   specific plugin.
+---   specific plugin, and the per-plugin `unverifiable` verdict below is
+---   not applied — asking about one plugin explicitly is a request to see
+---   its findings, not to have them summarized away.
 --- @return Bindings.DriftFinding[]
 --- @return string[] skipped_plugins plugin names excluded because they
 ---   aren't loaded in this session (module doc point 4), sorted, deduped
@@ -258,7 +457,7 @@ function M.check(plugin)
         for _, m in ipairs(modes) do
           needed_modes[m] = true
         end
-        checkable[#checkable + 1] = { rec = rec, lhs = lhs, modes = modes }
+        checkable[#checkable + 1] = { rec = rec, lhs = lhs, modes = modes, desc = extract_desc(rec) }
       end
     elseif not plugin or rec.plugin == plugin then
       skipped[rec.plugin] = true
@@ -267,23 +466,74 @@ function M.check(plugin)
   local mode_list = vim.tbl_keys(needed_modes)
   local live_maps = live_keymaps(mode_list)
 
+  -- Tallies for the verdict below, keyed per *table* — plugin plus the
+  -- heading above it — not per plugin.
+  --
+  -- Per plugin was tried first and does not work: these plugins document
+  -- one or two global `<leader>` entry points alongside a dozen in-window
+  -- keys, so "not one key of this plugin is live" is never true and the
+  -- verdict would never fire. The table is the right unit, and not by
+  -- accident — `BINDINGS-FORMAT.md` §1 makes a heading above every table
+  -- mandatory precisely so a parser has "das Scope-Label, das der Scraper
+  -- pro Zeile braucht". Empirically the corpus honours that: the groups
+  -- this fires on carry headings like "Prompt-field keymaps
+  -- (`M.set_prompt_keymaps`, buffer-local to every prompt buffer)" and
+  -- "Component-local". Grouping is on the heading itself rather than on
+  -- keywords inside it — the free text says the same thing, but matching
+  -- on "buffer-local" would be a guess about phrasing, while "not one key
+  -- in this whole table is live" is a fact about the data.
+  local checked_count, found_count = {}, {}
+  local keymap_findings = {}
+
+  ---@param rec Bindings.Record
+  ---@return string
+  local function group_of(rec)
+    return rec.plugin .. "\0" .. (rec.heading or "")
+  end
+
   for _, entry in ipairs(checkable) do
-    local live_anywhere = false
-    for _, m in ipairs(entry.modes) do
-      if live_maps[m] and live_maps[m][entry.lhs] then
-        live_anywhere = true
-        break
-      end
-    end
-    if not live_anywhere then
-      findings[#findings + 1] = {
+    local group = group_of(entry.rec)
+    checked_count[group] = (checked_count[group] or 0) + 1
+    if is_live(live_maps, entry.modes, entry.lhs, entry.desc) then
+      found_count[group] = (found_count[group] or 0) + 1
+    else
+      keymap_findings[#keymap_findings + 1] = {
         kind = "keymap-not-live",
         plugin = entry.rec.plugin,
+        heading = entry.rec.heading,
+        group = group,
         notation = entry.lhs,
         file = entry.rec.file,
         line = entry.rec.line,
       }
     end
+  end
+
+  -- Per-table verdict: "missing" versus "not verifiable from here".
+  --
+  -- `live_keymaps` now also reads buffer-local maps, so a UI that happens
+  -- to be open is checked properly. What is left is the case the module
+  -- doc's limitation 3 describes: a documented table where NOT ONE of its
+  -- keys is live in any mode, global or buffer-local. Claiming N
+  -- independent regressions there is a claim the data does not support —
+  -- the one explanation consistent with every row at once is that this
+  -- table describes a scope that is not open right now, which is not drift.
+  -- A table where *some* keys are live is the opposite case: registration
+  -- demonstrably happened, so the ones that did not show up are real
+  -- candidates and stay in the main section.
+  --
+  -- The `> 1` guard keeps a one-row table out of it: a single absent key is
+  -- no evidence about scope, and is exactly the shape a real regression has.
+  --
+  -- Deliberately a verdict about *reportability*, not a filter: these
+  -- findings are still returned, still counted, and `M.describe` renders
+  -- them under their own header. Nothing is dropped, and a plugin asked
+  -- about by name (see the `plugin` param doc) is never summarized at all.
+  for _, f in ipairs(keymap_findings) do
+    if not plugin and (found_count[f.group] or 0) == 0 and (checked_count[f.group] or 0) > 1 then
+      f.unverifiable = true
+    end
+    findings[#findings + 1] = f
   end
 
   -- Usercmds: documented (Personal) but not live.
@@ -309,6 +559,17 @@ function M.check(plugin)
     end
   end
 
+  -- Third axis (source) is resolved BEFORE the live-undocumented direction
+  -- below, which consults it to avoid reporting the same command twice —
+  -- see there.
+  local source_findings, source_reason
+  if plugin then
+    source_reason =
+      "not attributable to a single plugin — run :Bindings check without an argument"
+  else
+    source_findings, source_reason = M.source_check(nil)
+  end
+
   -- Usercmds: live but undocumented anywhere (Personal or Extern) — only
   -- meaningful unscoped, see the `plugin` param doc above.
   if not plugin then
@@ -318,11 +579,30 @@ function M.check(plugin)
       if name then documented_anywhere[name] = true end
     end
 
+    -- A command this config's own source registers, live and undocumented,
+    -- is one fact, and the source axis already reported it — with a
+    -- file:line this direction cannot produce. Reporting it here as well
+    -- was pure duplication (42 of the 198 findings in a real run). The
+    -- source axis wins; this direction keeps only what it alone can see.
+    local reported_by_source = {}
+    for _, f in ipairs(source_findings or {}) do
+      if f.kind == "usercmd-undocumented-source" then
+        reported_by_source[f.notation:sub(2)] = true
+      end
+    end
+
+    local lazy_owners = lazy_cmd_owners()
+    local command_defs = vim.api.nvim_get_commands({})
     local names = vim.tbl_keys(live_cmds)
     table.sort(names)
     for _, name in ipairs(names) do
-      if not documented_anywhere[name] then
-        findings[#findings + 1] = { kind = "usercmd-undocumented", plugin = nil, notation = ":" .. name }
+      if not documented_anywhere[name] and not reported_by_source[name] then
+        findings[#findings + 1] = {
+          kind = "usercmd-undocumented",
+          plugin = nil,
+          notation = ":" .. name,
+          owner = command_owner(name, lazy_owners, command_defs),
+        }
       end
     end
   end
@@ -336,8 +616,20 @@ function M.check(plugin)
   -- Best-effort by design: the artifact may be absent or stale, and that is
   -- reported as a reason (second return value of `M.source_check`) rather
   -- than silently yielding no findings.
-  local source_findings, source_reason = M.source_check(plugin)
-  vim.list_extend(findings, source_findings)
+  --
+  -- Skipped entirely when scoped to one plugin, for the same reason the
+  -- usercmd-undocumented direction above is: the axis cannot be attributed
+  -- to a cheatsheet stem. `M.source_check` only ever *labelled* its
+  -- findings with the given plugin, it never filtered by it, so a scoped
+  -- run used to return the whole config's source axis alongside the one
+  -- plugin's own findings — 218 findings for `:Bindings check
+  -- reposcope.nvim` where 24 were about reposcope. Skipping is the honest
+  -- half of the fix; the reason line says so rather than leaving a silently
+  -- absent axis.
+  --
+  -- Resolved further up, before the live-undocumented direction that
+  -- dedupes against it; only the folding-in happens here.
+  if source_findings then vim.list_extend(findings, source_findings) end
 
   local skipped_list = vim.tbl_keys(skipped)
   table.sort(skipped_list)
@@ -353,7 +645,11 @@ end
 ---binding legitimately lives in a plugin's own repository rather than this
 ---config, and the existing `keymap-not-live` check already covers the case
 ---where a documented binding is genuinely gone.
----@param plugin string|nil Restrict to one cheatsheet stem, same as `M.check`.
+---@param plugin string|nil Label only — stamped onto every finding's
+---`plugin` field. This axis is NOT filterable by cheatsheet stem (a source
+---entry knows its module path, not which cheatsheet ought to cover it),
+---which is why `M.check` skips the axis outright when scoped rather than
+---passing a value through here.
 ---@return Bindings.DriftFinding[]
 ---@return string|nil reason  # why the source axis could not be consulted
 function M.source_check(plugin)
@@ -419,6 +715,87 @@ function M.source_check(plugin)
   return out, nil
 end
 
+--- A finding's `notation` back in readable key notation, for display only.
+---
+--- `keymap-not-live` findings carry the RAW byte string `normalize_lhs`
+--- produced (that is the whole point — it is what `.lhsraw` is compared
+--- against), and for anything with a modifier that string is neither
+--- readable nor valid UTF-8: `<M-->` is stored as
+--- `K_SPECIAL KS_MODIFIER 0x08 -`, i.e. the bytes `\128\252\8-`. Rendering
+--- that verbatim was a real bug with two effects — the report showed
+--- `<80><fc>^H-` instead of `<M-->`, and, worse, the invalid UTF-8 made the
+--- whole buffer uncopyable: `win32yank.exe -i` (this config's clipboard
+--- provider on Windows, see `options.lua`) panics with "stream did not
+--- contain valid UTF-8" and aborts the ENTIRE write, so a single such
+--- finding silently broke `y`/`<C-c>` over the report. Verified against
+--- both the real report buffer and win32yank standalone (exit 101).
+---
+--- `keytrans()` is the exact inverse of the `nvim_replace_termcodes` call
+--- in `normalize_lhs`, and is an identity on plain printable text, so it is
+--- safe to apply to the source axis's notations too (those are already
+--- written as `<leader>x`, never raw). Guarded with `pcall` regardless —
+--- display must never take the report down.
+---@param notation string
+---@return string
+local function readable(notation)
+  local ok, out = pcall(vim.fn.keytrans, notation)
+  if ok and type(out) == "string" and out ~= "" then return out end
+  return notation
+end
+
+--- One rendered line per finding, without any section context.
+---@param f Bindings.DriftFinding
+---@return string
+local function render(f)
+  if f.kind == "keymap-not-live" then
+    return ("  %-22s %-20s %s:%d"):format(f.plugin, readable(f.notation), f.file, f.line)
+  elseif f.kind == "usercmd-not-live" then
+    return ("  %-22s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
+  elseif f.kind == "keymap-undocumented" then
+    return ("  %-20s %s:%d"):format(readable(f.notation), f.file or "?", f.line or 0)
+  elseif f.kind == "usercmd-undocumented-source" then
+    return ("  %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
+  end
+  return ("  %-28s %s"):format(f.notation, f.owner or "unknown")
+end
+
+--- The sections, in descending order of how much a finding in them is
+--- worth acting on, each with the `kind`s it collects and a subtitle
+--- naming its known noise. Order matters: a 600-line report is only usable
+--- if the first screen is the part worth reading.
+local SECTIONS = {
+  {
+    kinds = { ["usercmd-not-live"] = true },
+    title = "Usercmds — documented, not registered",
+    note = "highest-signal axis; a documented-lazy command may need its feature exercised first",
+  },
+  {
+    kinds = { ["keymap-not-live"] = true },
+    title = "Keymaps — documented, not registered",
+    -- Accurate for a scoped run too, where the per-table verdict does not
+    -- run at all and this section holds every keymap finding.
+    note = "not found globally, nor in any buffer open right now",
+  },
+  {
+    kinds = { ["keymap-undocumented"] = true, ["usercmd-undocumented-source"] = true },
+    title = "Registered in this config's source, not documented",
+    note = "from docs/map/module_map.json — only as fresh as the last :DocMap",
+  },
+  {
+    kinds = { ["usercmd-undocumented"] = true },
+    title = "Live commands with no cheatsheet, by origin",
+    note = "mostly third-party infra this corpus never covered; grouped so it can be skimmed",
+    -- Sorted by owner, not by name: this section is read to find out
+    -- whether anything in it is *yours*, and clustering a plugin's dozen
+    -- commands onto adjacent lines answers that in one glance.
+    sort = function(a, b)
+      local oa, ob = a.owner or "", b.owner or ""
+      if oa ~= ob then return oa < ob end
+      return a.notation < b.notation
+    end,
+  },
+}
+
 ---@param findings Bindings.DriftFinding[]
 ---@param skipped string[]|nil `M.check`'s second return value
 ---@param source_reason string|nil `M.check`'s third return value — why the
@@ -432,17 +809,63 @@ function M.describe(findings, skipped, source_reason)
     lines[1] = "No drift found (Keymaps: documented-not-live + source-not-documented; "
       .. "Usercmds: both directions)."
   else
+    -- The unverifiable keymap findings (see `M.check`'s verdict) are pulled
+    -- out first: they are reported per plugin, not per key, so they never
+    -- reach the per-kind sections below.
+    local unverifiable, order, rest = {}, {}, {}
     for _, f in ipairs(findings) do
-      if f.kind == "keymap-not-live" then
-        lines[#lines + 1] = ("[keymap missing]  %-20s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
-      elseif f.kind == "usercmd-not-live" then
-        lines[#lines + 1] = ("[usercmd missing] %-20s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
-      elseif f.kind == "keymap-undocumented" then
-        lines[#lines + 1] = ("[keymap undoc'd]  %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
-      elseif f.kind == "usercmd-undocumented-source" then
-        lines[#lines + 1] = ("[usercmd undoc'd] %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
+      if f.unverifiable then
+        local bucket = unverifiable[f.group]
+        if not bucket then
+          bucket = { n = 0, plugin = f.plugin, heading = f.heading, file = f.file, line = f.line }
+          unverifiable[f.group] = bucket
+          order[#order + 1] = f.group
+        end
+        bucket.n = bucket.n + 1
       else
-        lines[#lines + 1] = ("[undocumented]    %s"):format(f.notation)
+        rest[#rest + 1] = f
+      end
+    end
+
+    for _, section in ipairs(SECTIONS) do
+      local matched = {}
+      for _, f in ipairs(rest) do
+        if section.kinds[f.kind] then matched[#matched + 1] = f end
+      end
+      if section.sort then table.sort(matched, section.sort) end
+      local hits = {}
+      for _, f in ipairs(matched) do
+        hits[#hits + 1] = render(f)
+      end
+      if #hits > 0 then
+        if #lines > 0 then lines[#lines + 1] = "" end
+        lines[#lines + 1] = ("%s (%d)"):format(section.title, #hits)
+        lines[#lines + 1] = ("  -- %s"):format(section.note)
+        vim.list_extend(lines, hits)
+      end
+    end
+
+    table.sort(order)
+    if #order > 0 then
+      local total = 0
+      for _, key in ipairs(order) do
+        total = total + unverifiable[key].n
+      end
+      if #lines > 0 then lines[#lines + 1] = "" end
+      lines[#lines + 1] =
+        ("Keymaps — not verifiable from here (%d in %d tables)"):format(total, #order)
+      lines[#lines + 1] = "  -- not one key of these tables is live, globally or in any open buffer:"
+      lines[#lines + 1] = "  -- a buffer-local scope whose UI is not open right now, not drift."
+      lines[#lines + 1] = "  -- Open it and re-run, or :Bindings check <plugin> to list them in full."
+      for _, key in ipairs(order) do
+        local b = unverifiable[key]
+        lines[#lines + 1] = ("  %-22s %2d keys   %s   %s:%d"):format(
+          b.plugin,
+          b.n,
+          b.heading and ("## " .. b.heading) or "(table without heading)",
+          b.file or "?",
+          b.line or 0
+        )
       end
     end
   end

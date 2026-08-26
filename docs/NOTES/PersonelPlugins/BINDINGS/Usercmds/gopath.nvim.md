@@ -17,10 +17,17 @@ Docs: `docs/BINDINGS.md`, `docs/installation.md`, `README.md`
 | `:Gopath debug` | — | resolution info |
 | `:Gopath check` | — | check existence / offer create |
 | `:[range]Gopath probe [mode]` | `edit\|split\|vsplit` | suffix/visual probe |
-| `:Gopath cache build\|info\|add-root <dir>` | — | only registered if `truncated.enable = true` |
+| `:Gopath cache build\|info\|add-root <dir>` | `<dir>` completes directories (`type = "DIR"`) | only registered if `truncated.enable = true` |
 | `:GopathResolve` `:GopathOpen` `:GopathCopy` `:GopathDebug` `:GopathCheck` `:[range]GopathProbe[!]` `:GopathCacheBuild` `:GopathCacheInfo` `:GopathCacheAddRoot` | — | compat aliases, unchanged, individually toggleable via `config.commands.*` |
 
 ## Notes
+
+- **`add-root`'s `<dir>` completion (verified 2026-08-24)**: flagged as
+  unverified in the 2026-08-08 audit, checked at runtime since. The composer
+  route declares `type = "DIR"`, so completion and validation both fall out of
+  that one declaration; the `:GopathCacheAddRoot` alias sets `complete = "dir"`
+  independently. Both offer directories. No gap — nothing was changed in the
+  code, only written down here and in the plugin's own docs.
 
 - **Cache subcommand bodies extracted, not duplicated**: the original
   unified `:Gopath cache build/info/add-root` logic was inline inside one

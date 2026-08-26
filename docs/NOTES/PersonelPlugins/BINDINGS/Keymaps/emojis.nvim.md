@@ -23,3 +23,21 @@ key labels needed — each mapping already carries its own `desc`.
 ## Notes
 
 - These are opt-in preset keymaps binding directly onto the public API, no `<Plug>` indirection.
+
+## Overlay grid: `/` filters (2026-08-24)
+
+Buffer-local in both grid modes, alongside `h/j/k/l`, `<CR>`, `<Esc>`, `q`
+and (in `grid_keys`) the per-cell hotkeys. `/` prompts for a filter and
+re-renders with only the matching emojis; an empty query widens back. It
+matches the shortcode and the glyph itself.
+
+A prompt rather than a live input line, because the grid is a fixed-layout
+hotkey surface — in `grid_keys` every printable key is already an insert
+action, so an input line would make it a different widget. `/` is not a
+hotkey.
+
+Filtering re-opens the float instead of patching the buffer: the cell
+byte-spans and the hotkey bindings are both derived from the item list.
+
+The `<leader>et` count row above was already accurate here — the gap the
+count audit flagged was in the plugin's own `docs/BINDINGS.md`, now fixed.

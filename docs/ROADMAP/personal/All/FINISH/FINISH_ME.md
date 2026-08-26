@@ -1,8 +1,10 @@
 # TODO & ROADMAP: Refactoring & Plugin-Optimierung
 
 - Wenn möglich soll CDX jedes keymap, usrcmsd / autocmd austesten, in einer nvim intsanz, ob fgehlöer geworfen werden
-
-## Allgemeines & Medien
+- wenn alles fertig, dann git release für jedes repo
+- specs durchgehen - sollte out of the box ohne opts funken
+- lib.nvim implementierungen alle korrekt verwendet ? zb notify ist eine factory func mit .create() - kann man oft übersehen - es bricht zwar nicht wenn ich mich nicht täusche, aber zwecks komsistenz
+- source code + kommentater + docs in den repos imemr englisch. also das ganze plugin. nur mit mir sprechen ist deutsch! !
 
 ## Dokumentation, Cheatsheets & Benchmarks
 
@@ -58,11 +60,8 @@
 ## Strategie & Schlachtplan-Erstellung
 
 * [ ] Einen dedizierten Schlachtplan für jeden dieser Punkte erstellen:
-* [ ] **Checklisten einzeln und nacheinander anwenden:** Gehe dafür jede Liste separat durch und erstelle für jede eine `/docs/ROADMAP/**.md` Datei (wobei `**` dem jeweiligen Namen der Liste entspricht):
-  * [Architekur&Coding-Regeln](https://www.google.com/search?q=E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/Arch%26Coding-Regeln.md) `/docs/ROADMAP/Arch&Coding.md`
-  * [Zentrale Prinzipien](https://www.google.com/search?q=E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/Zentrale-Prinzipien.md) `/docs/ROADMAP/Zentral-Prinzipien.md`
-  * [Checklist.md](https://www.google.com/search?q=E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/Checklist.md) `/docs/ROADMAP/Checklist.md`
-* [ ] Die vorhandene `/docs/ROADMAP.md` komplett durchgehen und einen konkreten Plan zur Implementierung ausarbeiten.
+* [ ] **Checklisten einzeln und nacheinander anwenden:** !!!!!!!!!LISZEN PFADE !!!!
+* [ ] Wenn vorhanden `/docs/ROADMAP.md` komplett durchgehen und einen konkreten Plan zur Implementierung ausarbeiten.
 * [ ] Den Ordner `doss/NEOTREE_FEATURES`, wenn vorhanden, durchgehen und strukturiert bewerten, was mit den darin enthaltenen Elementen gemacht wird.
 * [ ] Kurze Bewertung ausgeben, ob sich inm Plugin etwas lohnt bzw sinnvoll machbar ist, um es als `Source` für Neotree zu verwenden. (Wie Tabliste im filebrowser)
 

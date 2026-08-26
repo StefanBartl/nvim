@@ -13,9 +13,9 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `doc/pdfport.txt`
 | --- | --- |
 | `:PdfPort [path]` | Open PDF with interactive mode/backend picker |
 | `:PdfPort text [path]` | Extract to buffer (auto backend chain) |
-| `:PdfPort float [path]` | Extract to floating window (prompts for a page range) |
+| `:PdfPort float [path] [pages=…]` | Extract to floating window. Prompts for a page range **unless** `pages=` is given (`pages=1-3,5`). **kv added 2026-08-24.** |
 | `:PdfPort system [path]` | Open with system application |
-| `:PdfPort terminal [path]` | Render as terminal image (prompts for a page range) |
+| `:PdfPort terminal [path] [pages=…]` | Render as terminal image. Same `pages=` kv as `float`. **Added 2026-08-24.** |
 | `:PdfPort backends` | List all registered backends with live availability (float) |
 | `:PdfPort create [path]` | Create a PDF from an image/markdown/text/html/office file (path arg, `<cfile>`, or current buffer) |
 | `:PdfPort merge {output} {input1} {input2} ...` | Merge two or more existing PDFs into one |
@@ -32,6 +32,13 @@ name when `[path]` is omitted — unchanged from the original.
   the composer migration below. Reuses `registry.diagnostics()` (previously dead code,
   never called anywhere), shown via `lib.nvim.window.make_scratch` (falls back to
   `notify.info` if that module can't be required).
+- **`pages=` skips the prompt (2026-08-24)** — a composer kv on the `float`/`terminal`
+  routes. The prompt is fine for a human but leaves the two subcommands unusable from a
+  script or another plugin, since there is no way to answer it non-interactively. A
+  `pages=` that parses to no page number (`pages=`, `pages=abc`) is reported and nothing
+  opens, rather than falling through to the prompt or to the whole document. Note the
+  completion only offers `pages=` once a partial lead is typed (`:PdfPort float p<Tab>`);
+  with an empty lead the PDF-path completer takes the slot.
 - **`float`/`terminal` now prompt for a page range** (`lua/pdfport/util/page_range.lua`,
   `vim.ui.input`) before opening — `<Esc>` cancels the whole open, not just the prompt.
 - **Backends are now lazy-registered** (`pdfport.backends.load_all(cfg)`) — `:PdfPort`

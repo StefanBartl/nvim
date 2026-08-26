@@ -34,13 +34,28 @@ Used by every picker except `favorites_picker`.
 | `<CR>` | i | Closes picker, feeds the selected entry back into the command-line for editing (does **not** execute it) |
 | `<Tab>` | i | Toggles favorite for the selected entry, closes + refreshes the picker |
 | `<C-r>` | i | Closes + manually refreshes the picker |
-| `<C-x>` | i | Deletes the selected entry from its underlying history (Neovim `:` history via `histdel()`, or the shell history file with a confirmation prompt). Only bound where the caller passes a `delete_fn` — not in `favorites_picker` (`<Tab>` already removes a favorite there) |
+| `<C-x>` | i | Deletes the selected entry — or, when entries are marked, every marked one — from its underlying history (Neovim `:` history via `histdel()`, or the shell history file with a confirmation prompt). Only bound where the caller passes a `delete_fn` — not in `favorites_picker` (`<Tab>` already removes a favorite there) |
+| `<C-Space>` | i | Marks/unmarks the entry for a batch delete and moves down (`actions.toggle_selection` + `move_selection_worse`). Telescope's own multi-select key is `<Tab>`, which is `toggle_favorite` here, hence a separate key |
 | `<C-s>` | i | Rotates to the next picker (nvim → shell → favorites → project → …), keeping the current prompt text. Implemented in `lua/cmdlog/ui/cycle.lua`, bound in `nvim`/`shell`/`favorites`/`project` pickers only. Telescope only. **Added 2026-08-09.** |
 | `<C-z>` | i | Undoes the most recent favorite toggle (single-level, session-local). Bound wherever `<Tab>` is (any picker with `toggle_favorite`). **Added 2026-08-09.** |
 | `<C-Up>` | i | Moves the selected favorite up one slot in the persisted order. Favorites picker only (`opts.reorder = true`). **Added 2026-08-09.** |
 | `<C-Down>` | i | Moves the selected favorite down one slot in the persisted order. Favorites picker only. **Added 2026-08-09.** |
 
 All eight are configurable/disableable via `setup({ mappings = { ... } })`
+**Batch delete (since 2026-08-24):** a batch asks once ("Delete N selected
+entries...") and then suppresses the per-command shell confirmation — five
+marked entries would otherwise raise five separate prompts. With nothing
+marked, `<C-x>` behaves exactly as before, single confirmation included.
+
+The mappings call `delete_fn(cmd, on_done, opts)`. Neither history source has
+that shape natively, and passing them through raw was a real bug fixed at the
+same time: `history.delete_entry` is synchronous and returns a boolean, so the
+callback never fired and the picker stayed open on a stale list;
+`shell.delete_entry` is `(cmd, opts, on_done)`, so the callback landed in the
+`opts` slot and `<C-x>` in the shell picker raised
+`attempt to call local 'on_done' (a nil value)`. Each picker now wraps its
+source in an adapter.
+
 (`select`/`toggle_favorite`/`refresh`/`delete`/`cycle_source`/
 `undo_favorite`/`move_favorite_up`/`move_favorite_down`, each
 `string|false`), see `docs/OPTIONS.md`. A legend of the active ones is

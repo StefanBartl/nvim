@@ -317,3 +317,11 @@ UI, aber jeder Teil einzeln klein und an Bestehendem verankert)
 **Gesamtnutzen:** hoch — behebt zwei aktive Bugs sofort (via Migration von
 `pdfport.nvim`), macht jedes künftige AI-Feature in jedem `*.nvim`-Plugin zu
 einem `require("ai")`-Aufruf statt einer Neuimplementierung.
+
+## neue idee
+
+Ein hotkey/usrcmd mit dem man den aktuellen kontext sofort an ieine ai überigbt, beipiel: Troubl diagnositv´c worspace ausgeführt, es zeiigt 5 errors an in der quickfoxliste - der cursor ist n der qf-list und man gibt dann den hotkey/usrcmd ein - ein prompt öffnet sich eine ürompt in der man die task fomruleiren kann zb " fixe die qucikfixliste" - dann noch optional das modell auswhlen, wnn icht dann defult, und mit enter schickt man sofort das task der prompt an die ai und die beginnt in einen neuen thread zu arbeiten und einenbuffer als ausgabe verendet. das gleiche prinzip würde bei tausenden anderen aktioen funltniernen.
+
+
+
+

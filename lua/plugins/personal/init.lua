@@ -40,6 +40,27 @@ plugins.add({
   },
 
   {
+    -- The whole LSP subsystem, extracted from this config's former lua/lsp/**
+    -- (see docs/ROADMAP/personal/lsp.nvim.md). Module root is still `lsp`, so
+    -- every existing require("lsp.…") keeps resolving -- which also means this
+    -- plugin and a local lua/lsp/** cannot coexist: the config would shadow it.
+    --
+    -- No `opts`/`config` on purpose. init.lua calls setup() inside
+    -- startup.now("lsp", ...) because capabilities have to be applied globally
+    -- before the first client attaches; a lazy opts-block would hand that
+    -- ordering to the plugin manager. `lazy = false` only guarantees the
+    -- module is on the runtimepath by then.
+    "StefanBartl/lsp.nvim",
+    lazy = false,
+    priority = 900,
+    dependencies = { "StefanBartl/lib.nvim" },
+  },
+
+  {
+    -- Eager: setup() registers the VimEnter autoload and the VimLeavePre
+    -- autosave. Both are startup/shutdown events, so a lazy trigger would have
+    -- to fire before VimEnter to be of any use -- which is what `lazy = false`
+    -- means.
     "stefanbartl/sessions.nvim",
     lazy = false,
     dependencies = { "stefanbartl/lib.nvim" },
@@ -51,6 +72,11 @@ plugins.add({
   },
 
   {
+    -- Eager: setup() derives roughly twenty keymaps from the `collections`
+    -- table below (`<leader>mnf`, `<leader>wkg`, ...). Lazy-loading on `keys`
+    -- would mean listing every one of those lhs in the spec as well, kept in
+    -- step with the table by hand -- two sources for the same bindings, and
+    -- the drift only shows up as a key that silently does nothing.
     "StefanBartl/pickers.nvim",
     lazy = false,
     dependencies = { "StefanBartl/lib.nvim" },
@@ -140,21 +166,7 @@ plugins.add({
       "CopyFilepathRelative",
     },
     keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>", "<C-p>" },
-    opts = {
-      commands = true,
-      keymaps = {
-        location_copy = "<leader>cnl",
-        module_copy = "<leader>cnm",
-        filepath_copy = "<leader>cnf",
-      },
-      mark = {
-        enable = true,
-        keymaps = { toggle = "<S-m>", yank = "<C-p>" },
-      },
-    },
-    config = function(_, opts)
-      require("buffer_ctx").setup(opts)
-    end,
+    opts = {},
   },
 
   {
@@ -166,9 +178,6 @@ plugins.add({
     cmd = { "Open", "UrlView", "MDLinksView" },
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {},
-    config = function(_, opts)
-      require("open").setup(opts)
-    end,
   },
 
   {
@@ -183,24 +192,28 @@ plugins.add({
     cmd = { "Image" },
     ft = { "markdown", "vimwiki", "norg", "text" },
     dependencies = { "StefanBartl/lib.nvim" },
-    opts = {},
-    config = function(_, opts)
-      require("images").setup(opts)
-    end,
+    -- cell_aspect: measured width/height ratio of this WezTerm setup (the 0.5
+    -- default in images.scale leaves an empty strip below images).
+    --
+    -- terminal_padding is deliberately NOT set here: it lives in the stored
+    -- calibration written by `:Image calibrate` (stdpath("data")/images.nvim),
+    -- and an explicit option here would silently override it. draw_inset
+    -- catches whatever sub-cell remainder is left after that.
+    opts = {
+      display = { cell_aspect = 0.46 },
+    },
   },
 
   {
     "StefanBartl/sandbox.nvim",
     event = "VeryLazy",
     dependencies = { "StefanBartl/lib.nvim" },
-    config = function()
-      require("sandbox").setup({
-        -- `image pull`/`push` and the devcontainer build report into the shared
-        -- lib.nvim.progress registry, rendered by the statusline's
-        -- "plugin_progress" module.
-        progress_style = "statusline",
-      })
-    end,
+    opts = {
+      -- `image pull`/`push` and the devcontainer build report into the shared
+      -- lib.nvim.progress registry, rendered by the statusline's
+      -- "plugin_progress" module.
+      progress_style = "statusline",
+    },
   },
 
   {
@@ -299,9 +312,6 @@ plugins.add({
 
       return opts
     end,
-    config = function(_, opts)
-      require("documentation").setup(opts)
-    end,
   },
 
   {
@@ -317,18 +327,13 @@ plugins.add({
       opts.telemetry = require("config.telemetry").build()
       return opts
     end,
-    config = function(_, opts)
-      require("runtime-analysis").setup(opts)
-    end,
   },
 
   {
     "StefanBartl/spotlight.nvim",
     dependencies = { "StefanBartl/lib.nvim" },
     event = "VeryLazy",
-    config = function()
-      require("spotlight").setup()
-    end,
+    opts = {},
   },
 
   -- ==========================================================================
@@ -338,22 +343,11 @@ plugins.add({
   {
     "StefanBartl/fileops.nvim",
     event = "VeryLazy",
+    -- auto_mkdir, conflict_marks and the cycle keymaps used to live in this
+    -- config's own autocmds/ and were moved into the plugin; they are on by
+    -- default there, so nothing has to be repeated here.
     opts = {
-      cycle = {
-        open_target = "current",
-        keep_focus = true,
-        include_hidden = false,
-        wrap = true,
-        follow_symlinks = true,
-        root = "buffer_dir",
-        confirm_on_modified = true,
-        case_insensitive = true,
-      },
-      keymaps = { cycle = true, delete = true },
-      commands = true,
-      auto_mkdir = { enable = true }, -- Creates missing parent dirs on BufWritePre (moved here from autocmds.general)
-      on_hold = { enable = false }, -- moved here from autocmds.git.line_diff_on_hold
-      conflict_marks = { enable = true }, -- moved here from autocmds.git.conflict_marks
+      cycle = { open_target = "current" }, -- default is a split
     },
   },
 
@@ -395,13 +389,10 @@ plugins.add({
       "StefanBartl/lib.nvim",
       -- "j-hui/fidget.nvim"
     },
-    config = function()
-      require("replacer").setup({
-        engine = "telescope",
-        default_scope = "%",
-        progress_style = "statusline", -- "auto" | "notify" | "statusline" | "fidget" | "float" (needs lib.nvim)
-      })
-    end,
+    opts = {
+      engine = "telescope", -- plugin default is "auto" (fzf-lua first)
+      progress_style = "statusline", -- "auto" | "notify" | "statusline" | "fidget" | "float" (needs lib.nvim)
+    },
   },
 
   {
@@ -411,13 +402,11 @@ plugins.add({
     -- mean they never fire. Set their `enable = false` to opt out instead.
     lazy = false,
     dependencies = { "StefanBartl/lib.nvim" },
-    config = function()
-      require("insights").setup({
-        -- Building the cwd symbol index runs one rg pass per language pattern;
-        -- reports into the shared lib.nvim.progress registry.
-        symbols = { progress_style = "statusline" },
-      })
-    end,
+    opts = {
+      -- Building the cwd symbol index runs one rg pass per language pattern;
+      -- reports into the shared lib.nvim.progress registry.
+      symbols = { progress_style = "statusline" },
+    },
   },
 
   -- {
@@ -532,13 +521,11 @@ plugins.add({
     name = "reposcope",
     event = "VeryLazy",
     dependencies = { "StefanBartl/lib.nvim" },
-    config = function()
-      require("reposcope.init").setup({
-        -- `:Reposcope update`/`status` walk a whole directory of clones; both
-        -- report into the shared lib.nvim.progress registry.
-        progress_style = "statusline",
-      })
-    end,
+    opts = {
+      -- `:Reposcope update`/`status` walk a whole directory of clones; both
+      -- report into the shared lib.nvim.progress registry.
+      progress_style = "statusline",
+    },
   },
 
   -- {
@@ -561,78 +548,99 @@ plugins.add({
     -- cmd = "Debug",
     event = "VeryLazy",
     dependencies = { "StefanBartl/lib.nvim" },
-    opts = {
-      features = { neotree = false },
-    },
-    config = function(_, opts)
-      require("debugging").setup(opts)
-    end,
+    opts = {}, -- features.neotree is off in the plugin's own defaults
   },
 
-  {
-    "StefanBartl/dap.nvim",
-    event = "VeryLazy",
-    dependencies = {
-      "StefanBartl/lib.nvim",
-      "mfussenegger/nvim-dap",
-      "rcarriga/nvim-dap-ui",
-      "nvim-neotest/nvim-nio",
-      "theHamsta/nvim-dap-virtual-text",
-      "jbyuki/one-small-step-for-vimkind",
-      "igorlfs/nvim-dap-view", -- default panel UI (dap.nvim ui.provider = "dap-view")
-    },
-    opts = {
-      -- "<leader>d" alone collides with existing git/fzf mappings
-      -- (dc = DiffviewClose, di = ToggleInlineDiff, do = FzfLua diagnostics)
-      keymaps = { prefix = "<leader>da" },
-      -- dap.nvim wires exactly one panel UI. nvim-dap-view is the default;
-      -- switch to ui = { provider = "dap-ui" } to go back to nvim-dap-ui.
-      ui = { provider = "dap-view" },
-    },
-    -- dap.nvim's own Lua module is "wkddap", not "dap" -- it depends on
-    -- nvim-dap, which itself owns the top-level `dap` module (lua/dap.lua)
-    -- and several submodule names (dap.ui, dap.utils) that would otherwise
-    -- collide with this plugin's files if both used "dap" as their root.
-    config = function(_, opts)
-      require("wkddap").setup(opts)
-    end,
-  },
+  -- Debugging is a mode you enter deliberately, so nothing here belongs in
+  -- startup. On `event = "VeryLazy"` this cost 142-180ms (and once 328ms) on
+  -- every launch, dependencies included, in sessions that never debugged
+  -- anything. `keys`/`cmd` moves all of it to the first keypress: lazy.nvim
+  -- installs stubs for both, so the mappings and `:Dap` behave exactly as
+  -- before -- the first use just also loads the plugin.
+  --
+  -- The keys below MUST mirror wkddap.bindings.keymaps. `dap_prefix` is
+  -- shared with opts so the two cannot drift apart; the suffixes are the ones
+  -- that module maps (see its `map("n", prefix .. …)` calls). A binding
+  -- missing here would simply never load the plugin and silently do nothing.
+  (function()
+    -- "<leader>d" alone collides with existing git/fzf mappings
+    -- (dc = DiffviewClose, di = ToggleInlineDiff, do = FzfLua diagnostics)
+    local dap_prefix = "<leader>da"
+
+    ---@type table[]
+    local dap_keys = {}
+    for _, m in ipairs({
+      { "c", "Continue" },
+      { "s", "Step Over" },
+      { "i", "Step Into" },
+      { "o", "Step Out" },
+      { "t", "Terminate" },
+      { "r", "Restart" },
+      { "b", "Toggle Breakpoint" },
+      { "B", "Conditional Breakpoint" },
+      { "L", "Log Point" },
+      { "l", "List Breakpoints" },
+      { "u", "Toggle UI" },
+      { "e", "Evaluate" },
+      { "R", "Open REPL" },
+    }) do
+      dap_keys[#dap_keys + 1] = { dap_prefix .. m[1], desc = "[DAP] " .. m[2] }
+    end
+    -- `e` is mapped in visual mode too (evaluate the selection).
+    dap_keys[#dap_keys + 1] = { dap_prefix .. "e", mode = "v", desc = "[DAP] Evaluate selection" }
+
+    return {
+      "StefanBartl/dap.nvim",
+      cmd = "Dap",
+      keys = dap_keys,
+      dependencies = {
+        "StefanBartl/lib.nvim",
+        "mfussenegger/nvim-dap",
+        "rcarriga/nvim-dap-ui",
+        "nvim-neotest/nvim-nio",
+        "theHamsta/nvim-dap-virtual-text",
+        "jbyuki/one-small-step-for-vimkind",
+        "igorlfs/nvim-dap-view", -- default panel UI (dap.nvim ui.provider = "dap-view")
+      },
+      opts = {
+        keymaps = { prefix = dap_prefix },
+        -- dap.nvim wires exactly one panel UI. nvim-dap-view is the default;
+        -- switch to ui = { provider = "dap-ui" } to go back to nvim-dap-ui.
+        ui = { provider = "dap-view" },
+      },
+      -- dap.nvim's own Lua module is "wkddap", not "dap" -- it depends on
+      -- nvim-dap, which itself owns the top-level `dap` module (lua/dap.lua)
+      -- and several submodule names (dap.ui, dap.utils) that would otherwise
+      -- collide with this plugin's files if both used "dap" as their root.
+      config = function(_, opts)
+        require("wkddap").setup(opts)
+      end,
+    }
+  end)(),
 
   {
     "StefanBartl/diff.nvim",
     cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" },
-    opts = {
-      features = {
-        diff = true,
-        diff_origin = true,
-        diff_exit = true,
-      },
-    },
-    config = function(_, opts)
-      require("diff").setup(opts)
-    end,
+    opts = {}, -- all three features are on by default
   },
 
   {
+    -- Eager on purpose, and `cmd = { "Cmdlog" }` is gone rather than kept
+    -- alongside `lazy = false` (where lazy.nvim ignores it anyway, so it only
+    -- read as if this were command-lazy). setup() starts the CmdlineLeave
+    -- tracker that records every `:` command -- that recording *is* the
+    -- plugin. Loading on `:Cmdlog` would start the tracker at the moment you
+    -- first ask for the history, so the history would always be empty.
+    -- Opt out with `track_commands = false`.
     "StefanBartl/cmdlog.nvim",
     lazy = false,
-    cmd = { "Cmdlog" },
-    config = function()
-      require("cmdlog").setup({
-        picker = "telescope",
-      })
-    end,
+    opts = {}, -- picker already defaults to telescope
   },
 
   {
     "StefanBartl/emojis.nvim",
     cmd = "Emojis",
-    opts = {
-      default_scope = "%",
-    },
-    config = function(_, opts)
-      require("emojis").setup(opts)
-    end,
+    opts = {}, -- default_scope is already "%"
   },
 
   {
@@ -661,6 +669,7 @@ plugins.add({
           "StefanBartl/gopath.nvim",
           "StefanBartl/language.nvim",
           "StefanBartl/lib.nvim",
+          "StefanBartl/lsp.nvim",
           "StefanBartl/markdown.nvim",
           "StefanBartl/mdview.nvim",
           "StefanBartl/migrate.nvim",
@@ -713,43 +722,11 @@ plugins.add({
     "StefanBartl/cascade.nvim",
     ft = { "markdown", "markdown.mdx", "text", "tex", "norg" },
     event = "VeryLazy",
+    -- Every other option in this domain is already the plugin's default; only
+    -- the keymap preset has to be asked for (cascade ships `preset = false`,
+    -- so the opinionated keys are opt-in). The per-feature switches and what
+    -- they bind are documented in cascade's own config/DEFAULTS.lua.
     opts = {
-      -- LIST DOMAIN (filetype-scoped) ------------------------------------------
-      lists = {
-        enable = true, -- master switch for the whole list domain
-        -- Per-feature on/off. Disabling one stops its keymap action and the
-        -- preset stops binding its keys (native keys stay native).
-        features = {
-          continue = true, -- <CR>/o/O continuation + empty-bullet deletion
-          checkbox = true, -- toggle/cycle checkbox  (<leader>tc)
-          cycle_type = true, -- cycle a single item's marker shape (<leader>tt/tT)
-          rotate = true, -- block/visual form rotation (<leader>tf/tF)
-          sort = true, -- block/visual A-Z sort (<leader>ts)
-          reverse = true, -- block/visual reverse order (<leader>tv)
-          strip = true, -- block/visual remove checkboxes (<leader>tx)
-          indent = true, -- indent/outdent + level-aware renumber (<A-Right>/<A-Left>)
-          move = true, -- move line/selection up/down + renumber (<A-Up>/<A-Down>)
-        },
-        -- WHEN ordered lists are auto-renumbered:
-        renumber = {
-          enable = true,
-          -- "edit" = sofort bei Indent/Move/Continue, "save" = bei :w als
-          -- Sicherheitsnetz fuer von Hand getippte/eingefuegte Listen (z.B.
-          -- "1./1./1."), die nie ein Edit-Event ausloesen.
-          on = { "edit", "save" },
-        },
-      },
-
-      -- CYCLE DOMAIN (global) --------------------------------------------------
-      cycle = {
-        enable = true, -- master switch for word/number cycling
-        features = {
-          word = true, -- cycle the word/boolean under the cursor (<C-a>/<C-x>)
-        },
-        number_fallback = true, -- native <C-a>/<C-x> on numeric tokens
-      },
-
-      -- KEYMAPS ----------------------------------------------------------------
       keymaps = { preset = true }, -- bind the opinionated default keys
     },
   },
@@ -799,9 +776,7 @@ plugins.add({
     -- color_my_ascii's fence API when present (falls back to a built-in scanner
     -- otherwise). Listing it here just guarantees load order in this config.
     dependencies = { "StefanBartl/color_my_ascii.nvim" },
-    config = function()
-      require("markdown").setup()
-    end,
+    opts = {},
   },
 
   {
@@ -861,9 +836,7 @@ plugins.add({
     "StefanBartl/recommender.nvim",
     ft = { "lua" },
     cmd = { "Recommender" },
-    config = function()
-      require("recommender").setup()
-    end,
+    opts = {},
   },
 
   {

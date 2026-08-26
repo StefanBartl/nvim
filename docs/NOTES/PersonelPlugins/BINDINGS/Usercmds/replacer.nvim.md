@@ -76,12 +76,38 @@ Still in progress — more roadmap items to follow in later commits on
   keywords (`%`/`cwd`/`.`) at the actual scope position, delimiter aliases
   at the actual delim position, and flag names after a partial `--`
   prefix — `{old}`/`{new}`/`{pattern}` (genuinely free text) get no
-  completion, which is correct. One accepted regression: composer treats
-  a **bare** `--` (exactly two dashes, nothing after) as the
-  stop-flag-parsing sentinel and deliberately does not offer flag-name
-  completion for it (a documented composer behavior, not specific to this
-  repo) — typing one more character (`--d`, `--l`, ...) completes
-  normally.
+  completion, which is correct. ~~One accepted regression: a **bare** `--`
+  offered no flag-name completion~~ — **fixed in lib.nvim 2026-08-25**: the
+  guard read `sub(1,2) == "--" and arg_lead ~= "--"`, so `--d<Tab>` worked
+  and `--<Tab>` returned nothing, contradicting composer's own README. A
+  *committed* `--` is still the stop-flag-parsing sentinel; that costs
+  nothing, being reached with a space rather than a `<Tab>`. `--<Tab>` now
+  lists all 41 flags (43 on `:Surround`), which on a command this
+  flag-rich was the single biggest completion gap.
+- **Flag *values* now complete too (2026-08-25)**, closing the
+  `RULES-audit-completion.md` / `RULES-flags-options.md` entry that flagged
+  `:Replace`'s flag richness as "practically indispensable" to complete.
+  `lua/replacer/argtypes.lua` registers two composer types:
+  `RP_RG_TYPE` for `--type=` (names read live from `rg --type-list`, cached
+  per session, so a user's own `--type-add` is offered too) and
+  `RP_CHANGED_KINDS` for `--changed=` (comma-joinable, carrying the already
+  committed kinds back into each candidate and dropping the ones already
+  named, so a second `<Tab>` cannot produce `staged,staged`). `--export=`
+  became `PATH` — deliberately not `FILE`, whose validator demands a
+  *readable* file, while `--export` names an output file that normally does
+  not exist yet. `--glob=`/`--exclude=` stay uncompleted on purpose: they
+  take patterns, and offering an existing path would be a candidate that is
+  accepted, matches one file, and silently narrows the replacement.
+- **Bare `:Replace ... --changed` was broken by the composer migration and
+  is fixed (2026-08-25)**. `--changed` is documented as meaning "all kinds"
+  on its own, and `apply_tokens` has always implemented that — but composer
+  had no notion of an optional flag value, so it rejected the bare form with
+  "flag '--changed' requires a value" before `apply_tokens` ever ran. Fixed
+  in lib.nvim with a new `FlagSpec.optional_value`: `--name` binds `true`,
+  `--name=v` binds the value, and — unlike a plain value flag — the bare
+  form never reaches for the next token, which is precisely why replacer
+  needs it (`:Replace a b --changed cwd`, where `cwd` is the scope, not the
+  flag's value). Docgen renders it `[--changed[=<value>]]`.
 - **Dependency docs were already inconsistent before this migration**:
   `lib.nvim.ui.kit.confirm` was already a hard, unconditional `require` in
   `init.lua` (no pcall) — but README.md's packer example and

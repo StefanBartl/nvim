@@ -33,11 +33,28 @@ adapter confirms the thread actually stopped again. `event_terminated`/
 `event_exited` clean up the listener if the session ends mid-chain, and a
 1000-step cap bounds a fat-fingered count. With no count (the common case)
 this is unchanged — `step_fn()` is called directly, no listener registered.
+
+**Since 2026-08-24 the chaining lives in `lib.nvim.count.chain`**, hoisted out
+of this plugin: the cap, the teardown, the no-count fast path and the refusal
+to advance after an abort are the library's behavior now. `counted_step()`
+keeps only the DAP-specific half — which events mean "finished" and "gone".
+Behavior is unchanged; verified against a stubbed adapter (one step per
+`event_stopped`, a stale stop after the count is satisfied ignored, the
+listener removed both on completion and on `event_terminated`).
+
+**Pre-filled prompts (since 2026-08-24):** `B` and `L` no longer open empty.
+They pre-fill with this line's existing condition/log message if it has one
+(`dap.breakpoints.get`), else the last value submitted this session, tracked
+separately per kind — see `core/breakpoints.lua`. Submitting an empty line
+clears the value rather than cancelling; `<Esc>` cancels. The same module now
+backs `:Dap conditional-breakpoint`/`log-point` and the nvzone/menu entries,
+which each used to carry their own copy of the empty prompt. The `desc`
+strings are unchanged.
 | `t` | n | `dap.terminate` | "[DAP] Terminate" |
 | `r` | n | `dap.restart` | "[DAP] Restart" |
 | `b` | n | `dap.toggle_breakpoint` | "[DAP] Toggle Breakpoint" |
-| `B` | n | Prompt for a condition string, set a conditional breakpoint | "[DAP] Conditional Breakpoint" |
-| `L` | n | Prompt for a log message, set a log point | "[DAP] Log Point" |
+| `B` | n | Prompt (pre-filled) for a condition string, set a conditional breakpoint | "[DAP] Conditional Breakpoint" |
+| `L` | n | Prompt (pre-filled) for a log message, set a log point | "[DAP] Log Point" |
 | `l` | n | `dap.list_breakpoints` | "[DAP] List Breakpoints" |
 | `u` | n | Toggle the active panel UI (dap-view or dap-ui) | "[DAP] Toggle UI" |
 | `e` | n | Evaluate expression under cursor | "[DAP] Evaluate Expression" |

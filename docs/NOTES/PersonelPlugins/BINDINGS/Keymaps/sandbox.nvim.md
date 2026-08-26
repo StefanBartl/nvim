@@ -74,3 +74,31 @@ as a folded, indented `vim.inspect`-style Lua table (`foldmethod=indent`,
 Cross-reference: `docs/BINDINGS.md` "## Keymaps" section and
 `doc/sandbox.txt` (native `:help sandbox`, added 2026-07-26) carry the
 same tables — kept in sync with this file.
+
+## `E` and `f` in every list view (2026-08-24)
+
+Both wired centrally in `list_actions.set_keymaps`, so every list buffer
+gets them; both appear in the `?` overlay.
+
+| lhs | action | desc |
+| --- | --- | --- |
+| `E` | Cycle docker → podman → nerdctl for the session, then re-render | "sandbox: cycle container engine" |
+| `f` | Filter the list (only where the view supplies a `filter` callback) | "sandbox: filter this list" |
+
+`f` is **not** `/`: Vim's search finds a line and leaves the rest on screen.
+`f` narrows the buffer and matches across every *field* of an entry — for a
+container that is name, id, status and image — so `f redis` finds the
+container running that image even though the image is not in the rendered
+line. Empty query restores everything; filtering starts from the unfiltered
+set, so a second filter widens instead of compounding.
+
+`E` re-renders because a list belongs to the engine that produced it —
+leaving stale rows after a switch would be worse than not offering the key.
+
+**Bulk confirmations now name their items** (capped at ten). "Remove 5
+containers?" left open the one question a bulk confirmation must answer,
+given a Visual selection is easy to get a line wrong and the action is
+irreversible.
+
+The count audit's "no count, use Visual multi-select" verdict is unchanged —
+neither key takes one.

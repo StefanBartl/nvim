@@ -1,10 +1,16 @@
 ---@module 'bindings.usrcmds.plugin_repos'
 ---@brief Clone, remove, fetch, pull, update, reclone, list or switch the
----source mode of the personal plugin list — plus an interactive picker.
+---source mode of the personal plugin list — plus an interactive picker and
+---a dashboard.
 ---@description
 --- Registers a single `:MyPlugins {clone|remove|fetch|pull|update|reclone|
---- mode|list|picker} [args]` command via `lib.nvim.usercmd.composer`
+--- dashboard|mode|list|picker} [args]` command via `lib.nvim.usercmd.composer`
 --- (replaces the former flat `:MyPluginsClone` / `:MyPluginsRemove`).
+---
+--- `:MyPlugins dashboard [dir]` (flat shorthand: `:MyPluginsDashboard`) just
+--- opens reposcope.nvim's own `:Reposcope status [dir]` — that dashboard
+--- already does the job, so this doesn't keep its own scoped-to-the-list
+--- status reader around.
 --- `clone`/`remove`/`fetch`/`pull`/`update`/`reclone`/`list` all operate on
 --- the repos `plugins.personal` actually declares (see
 --- `plugins.personal.list`) against `dir` (or `vim.env.REPOS_DIR` when no
@@ -47,8 +53,11 @@
 --- truth for the setting and `require()` caches it anyway. A restart is
 --- needed for a change to take effect (see `mode_cmd` below).
 ---
---- `:MyPlugins list [dir]` is read-only: prints every listed plugin plus
---- whether it's present in `dir`, for a quick overview before clone/remove.
+--- `:MyPlugins list [dir]` is read-only: renders every listed plugin plus
+--- whether it's present in `dir` into a scratch buffer, for a quick overview
+--- before clone/remove. Unlike `dashboard` it never talks to git — it is
+--- plain, `modifiable` text on purpose, so `:%y`, `:sort` and `/` are the
+--- entire interface and it needs no sort/filter commands of its own.
 ---
 --- `:MyPlugins picker [dir]` opens an interactive `Snacks.picker` (see
 --- `picker.lua`): `<Tab>` cycles the highlighted plugin through
@@ -62,6 +71,7 @@ local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos]")
 local composer = require("lib.nvim.usercmd.composer")
 local is_dir = require("lib.nvim.fs.is_dir")
 local expand_path = require("lib.nvim.cross.fs.expand_path")
+local open_named_scratch = require("lib.nvim.window.open_named_scratch")
 local plugin_list = require("plugins.personal.list")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
 
@@ -96,7 +106,8 @@ end
 
 ---@param path string|nil
 ---@param only_name string|nil Restrict to this one entry's name, if given
-local function clone_all(path, only_name)
+---@param dry_run boolean|nil Report what would be cloned, touch nothing
+local function clone_all(path, only_name, dry_run)
   local base_dir = resolve_base_dir(path)
   if not base_dir then
     notify.error("No repository directory provided and REPOS_DIR is not set")
@@ -125,6 +136,27 @@ local function clone_all(path, only_name)
     entries = filtered
   end
 
+  -- `ops.clone_one`'s own "exists" branch is exactly `loop.fs_stat(target)`
+  -- with no git call in between — so dry-run can reuse that same predicate
+  -- synchronously here instead of running clone_one and discarding the
+  -- would-be clone, which is the only bit of work a preview needs.
+  if dry_run then
+    local would_clone, existing = {}, {}
+    for _, entry in ipairs(entries) do
+      if loop.fs_stat(base_dir .. "/" .. entry.name) then
+        existing[#existing + 1] = entry.name
+      else
+        would_clone[#would_clone + 1] = entry.name
+      end
+    end
+    local lines = { ("Would clone %d, skip %d already present"):format(#would_clone, #existing) }
+    if #would_clone > 0 then
+      lines[#lines + 1] = "Would clone:\n" .. table.concat(would_clone, "\n")
+    end
+    notify.info(table.concat(lines, "\n\n"))
+    return
+  end
+
   local prog = new_progress("[usrcmds.plugin_repos] clone")
   local cloned, existing, failed = {}, {}, {}
   local index = 1
@@ -135,7 +167,9 @@ local function clone_all(path, only_name)
     if not entry then
       vim.schedule(function()
         if prog then
-          prog:finish(("%d cloned, %d already present, %d failed"):format(#cloned, #existing, #failed))
+          prog:finish(
+            ("%d cloned, %d already present, %d failed"):format(#cloned, #existing, #failed)
+          )
         end
         local lines = { ("Cloned %d, skipped %d already present"):format(#cloned, #existing) }
         if #failed > 0 then
@@ -211,7 +245,12 @@ local function remove_all(path, only_name)
       if is_git_repo(target) then
         present[#present + 1] = entry.name
       else
-        notify.warn(("%s exists at %s but is not a git repository — left untouched"):format(entry.name, target))
+        notify.warn(
+          ("%s exists at %s but is not a git repository — left untouched"):format(
+            entry.name,
+            target
+          )
+        )
       end
     end
   end
@@ -271,7 +310,11 @@ finish_check = function(safe, unsafe, base_dir)
   end
 
   local msg = ("Permanently delete %d repositor%s from %s?\n\n%s"):format(
-    #safe, #safe == 1 and "y" or "ies", base_dir, table.concat(safe, "\n"))
+    #safe,
+    #safe == 1 and "y" or "ies",
+    base_dir,
+    table.concat(safe, "\n")
+  )
   local choice = fn.confirm(msg, "&Yes, delete\n&No", 2)
   if choice ~= 1 then
     notify.info("Cancelled — nothing deleted.")
@@ -290,7 +333,9 @@ finish_check = function(safe, unsafe, base_dir)
   end
 
   if #remove_failed > 0 then
-    notify.error(("Removed %d, failed to remove: %s"):format(#removed, table.concat(remove_failed, ", ")))
+    notify.error(
+      ("Removed %d, failed to remove: %s"):format(#removed, table.concat(remove_failed, ", "))
+    )
   else
     notify.info(("Removed %d repositor%s"):format(#removed, #removed == 1 and "y" or "ies"))
   end
@@ -339,7 +384,9 @@ local function present_listed_names(path, only_name)
       if is_git_repo(target) then
         present[#present + 1] = entry.name
       else
-        notify.warn(("%s exists at %s but is not a git repository — skipped"):format(entry.name, target))
+        notify.warn(
+          ("%s exists at %s but is not a git repository — skipped"):format(entry.name, target)
+        )
       end
     end
   end
@@ -377,43 +424,43 @@ local function run_listed_op(gerund, past, op_fn, path, only_name)
 
   local changed_count, unchanged_count = 0, 0
 
-  ops.run_sequential(
-    present,
-    function(name, on_done)
-      op_fn(base_dir .. "/" .. name, function(ok, err, changed)
-        if ok and changed ~= nil then
-          if changed then
-            changed_count = changed_count + 1
-          else
-            unchanged_count = unchanged_count + 1
-          end
+  ops.run_sequential(present, function(name, on_done)
+    op_fn(base_dir .. "/" .. name, function(ok, err, changed)
+      if ok and changed ~= nil then
+        if changed then
+          changed_count = changed_count + 1
+        else
+          unchanged_count = unchanged_count + 1
         end
-        on_done(ok, err)
-      end)
-    end,
-    function(name) return name end,
-    function(ok_items, failed)
-      if prog then
-        prog:finish(("%d %s, %d failed"):format(#ok_items, past, #failed))
       end
-      -- Only op_fns that report `changed` (fetch/pull/update) populate these
-      -- counters; clone/remove/reclone go through their own reporting.
-      local detail = ""
-      if changed_count + unchanged_count > 0 then
-        detail = (" (%d changed, %d already up to date)"):format(changed_count, unchanged_count)
+      on_done(ok, err)
+    end)
+  end, function(name)
+    return name
+  end, function(ok_items, failed)
+    if prog then
+      prog:finish(("%d %s, %d failed"):format(#ok_items, past, #failed))
+    end
+    -- Only op_fns that report `changed` (fetch/pull/update) populate these
+    -- counters; clone/remove/reclone go through their own reporting.
+    local detail = ""
+    if changed_count + unchanged_count > 0 then
+      detail = (" (%d changed, %d already up to date)"):format(changed_count, unchanged_count)
+    end
+    if #failed > 0 then
+      local lines = {}
+      for _, f in ipairs(failed) do
+        lines[#lines + 1] = f.item .. ": " .. f.err
       end
-      if #failed > 0 then
-        local lines = {}
-        for _, f in ipairs(failed) do
-          lines[#lines + 1] = f.item .. ": " .. f.err
-        end
-        notify.warn(("%d %s%s, failed:\n%s"):format(#ok_items, past, detail, table.concat(lines, "\n")))
-      else
-        notify.info(("%d repositor%s %s%s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past, detail))
-      end
-    end,
-    prog
-  )
+      notify.warn(
+        ("%d %s%s, failed:\n%s"):format(#ok_items, past, detail, table.concat(lines, "\n"))
+      )
+    else
+      notify.info(
+        ("%d repositor%s %s%s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past, detail)
+      )
+    end
+  end, prog)
 end
 
 ---@param path string|nil
@@ -439,92 +486,17 @@ local function update_all(path, only_name)
 end
 
 -- =============================================================================
--- Check (read-only git-status overview, scoped to the listed plugins)
+-- Dashboard (delegates to reposcope.nvim's own git-status overview)
 -- =============================================================================
 
----Same job as `reposcope.nvim`'s `:Reposcope status $REPOS_DIR`, but scoped
----to `plugins.personal.list` like every other `:MyPlugins` subcommand —
----never a directory scan (see the module-level note on why that distinction
----matters for `$REPOS_DIR`). Runs `git status` on every present listed repo
----in parallel (read-only, so unlike fetch/pull/clone there's no shared
----network/disk budget worth serializing for) and shows the aligned overview
----in a `kit.viewer` popup.
+---`reposcope.nvim` already has exactly this dashboard (`:Reposcope status`),
+---so there's no reason to keep maintaining a parallel implementation here —
+---this used to be its own scoped-to-`plugins.personal.list` status reader,
+---but that scoping isn't worth the duplication; `:Reposcope status` shows
+---every repo under `dir`/`$REPOS_DIR` instead.
 ---@param path string|nil
----@param only_name string|nil
-local function check_all(path, only_name)
-  local present, base_dir = present_listed_names(path, only_name)
-  if not present then
-    return
-  end
-  if #present == 0 then
-    notify.info("None of the listed plugins are present in " .. tostring(base_dir))
-    return
-  end
-
-  local prog = new_progress("[usrcmds.plugin_repos] checking status")
-  notify.info(("Reading status of %d plugin(s) in %s..."):format(#present, base_dir))
-
-  ---@type table<integer, PluginRepoStatusRecord>
-  local indexed = {}
-  ---@type string[]
-  local errors = {}
-  local total = #present
-  local remaining = total
-
-  local function finish()
-    remaining = remaining - 1
-    if prog then
-      prog:update({ text = ("%d of %d read"):format(total - remaining, total), current = total - remaining, total = total })
-    end
-    if remaining > 0 then
-      return
-    end
-
-    -- Every `status_one` callback fires straight out of its `vim.system`
-    -- completion handler — a fast-event/libuv context where API calls like
-    -- `nvim_create_buf`/`nvim_open_win` (which `kit.viewer` needs) aren't
-    -- allowed. `vim.schedule` defers the rest of this onto the main loop,
-    -- same as `run_sequential`'s own `on_finish` dispatch does for
-    -- fetch/pull/update.
-    vim.schedule(function()
-      if prog then
-        prog:finish(("read %d of %d repositories"):format(total - #errors, total))
-      end
-
-      ---@type PluginRepoStatusRecord[]
-      local records = {}
-      for i = 1, total do
-        if indexed[i] then
-          records[#records + 1] = indexed[i]
-        end
-      end
-
-      if #records == 0 then
-        notify.error("Failed to read status of every plugin:\n" .. table.concat(errors, "\n"))
-        return
-      end
-
-      local lines = ops.render_status(records)
-      if #errors > 0 then
-        lines[#lines + 1] = ""
-        lines[#lines + 1] = "Failed:"
-        vim.list_extend(lines, errors)
-      end
-
-      require("lib.nvim.ui.kit").viewer({ title = "MyPlugins check", lines = lines })
-    end)
-  end
-
-  for i, name in ipairs(present) do
-    ops.status_one(base_dir .. "/" .. name, name, function(record, err)
-      if record then
-        indexed[i] = record
-      else
-        errors[#errors + 1] = name .. ": " .. (err or "unknown error")
-      end
-      finish()
-    end)
-  end
+local function open_dashboard(path)
+  vim.cmd("Reposcope status" .. (path and (" " .. fn.fnameescape(path)) or ""))
 end
 
 -- =============================================================================
@@ -536,7 +508,8 @@ local finish_reclone
 
 ---@param path string|nil
 ---@param only_name string|nil
-local function reclone_all(path, only_name)
+---@param dry_run boolean|nil Report the safe/unsafe/missing split, touch nothing
+local function reclone_all(path, only_name, dry_run)
   local base_dir = resolve_base_dir(path)
   if not base_dir then
     notify.error("No repository directory provided and REPOS_DIR is not set")
@@ -567,7 +540,12 @@ local function reclone_all(path, only_name)
       if is_git_repo(target) then
         present_entries[#present_entries + 1] = entry
       else
-        notify.warn(("%s exists at %s but is not a git repository — left untouched"):format(entry.name, target))
+        notify.warn(
+          ("%s exists at %s but is not a git repository — left untouched"):format(
+            entry.name,
+            target
+          )
+        )
       end
     else
       missing_entries[#missing_entries + 1] = entry
@@ -580,44 +558,51 @@ local function reclone_all(path, only_name)
   end
 
   if #present_entries == 0 then
-    finish_reclone({}, {}, missing_entries, base_dir)
+    finish_reclone({}, {}, missing_entries, base_dir, dry_run)
     return
   end
 
   local prog = new_progress("[usrcmds.plugin_repos] reclone: checking")
-  notify.info(("Checking %d present plugin(s) for uncommitted/unpushed work before reclone..."):format(#present_entries))
-
-  ops.run_sequential(
-    present_entries,
-    function(entry, on_done)
-      check_removable(base_dir .. "/" .. entry.name, function(is_safe, reason)
-        on_done(is_safe, reason)
-      end)
-    end,
-    function(entry) return entry.name end,
-    function(safe, failed)
-      if prog then
-        prog:finish(("%d clean, %d left alone"):format(#safe, #failed))
-      end
-      local unsafe = {}
-      for _, f in ipairs(failed) do
-        unsafe[#unsafe + 1] = f.item.name .. " (" .. f.err .. ")"
-      end
-      finish_reclone(safe, unsafe, missing_entries, base_dir)
-    end,
-    prog
+  notify.info(
+    ("Checking %d present plugin(s) for uncommitted/unpushed work before reclone..."):format(
+      #present_entries
+    )
   )
+
+  ops.run_sequential(present_entries, function(entry, on_done)
+    check_removable(base_dir .. "/" .. entry.name, function(is_safe, reason)
+      on_done(is_safe, reason)
+    end)
+  end, function(entry)
+    return entry.name
+  end, function(safe, failed)
+    if prog then
+      prog:finish(("%d clean, %d left alone"):format(#safe, #failed))
+    end
+    local unsafe = {}
+    for _, f in ipairs(failed) do
+      unsafe[#unsafe + 1] = f.item.name .. " (" .. f.err .. ")"
+    end
+    finish_reclone(safe, unsafe, missing_entries, base_dir, dry_run)
+  end, prog)
 end
 
 ---Reports what was left alone, confirms deletion of the clean present set,
 ---deletes it, then clones that set plus everything that was missing —
 ---mirrors `finish_check`'s confirm shape for the deletion half, and
 ---`clone_all`'s run loop for the clone half.
+---
+---The safe/unsafe/missing split IS the dry-run preview: it's computed either
+---way (the "checking" pass in `reclone_all` runs unconditionally, since a
+---preview needs to know what's dirty exactly as much as a real reclone
+---does). `dry_run` only decides whether this function stops after reporting
+---that split or goes on to confirm + delete + clone it.
 ---@param safe Plugins.Personal.Entry[]
 ---@param unsafe string[]
 ---@param missing Plugins.Personal.Entry[]
 ---@param base_dir string
-finish_reclone = function(safe, unsafe, missing, base_dir)
+---@param dry_run boolean|nil
+finish_reclone = function(safe, unsafe, missing, base_dir, dry_run)
   if #unsafe > 0 then
     notify.warn("Left alone (not clean, not recloned):\n" .. table.concat(unsafe, "\n"))
   end
@@ -627,16 +612,49 @@ finish_reclone = function(safe, unsafe, missing, base_dir)
     return
   end
 
+  if dry_run then
+    local lines = {}
+    if #safe > 0 then
+      local names = {}
+      for _, entry in ipairs(safe) do
+        names[#names + 1] = entry.name
+      end
+      lines[#lines + 1] = ("Would delete and re-clone %d:\n%s"):format(
+        #safe,
+        table.concat(names, "\n")
+      )
+    end
+    if #missing > 0 then
+      local names = {}
+      for _, entry in ipairs(missing) do
+        names[#names + 1] = entry.name
+      end
+      lines[#lines + 1] = ("Would clone fresh (currently missing) %d:\n%s"):format(
+        #missing,
+        table.concat(names, "\n")
+      )
+    end
+    notify.info(table.concat(lines, "\n\n"))
+    return
+  end
+
   if #safe > 0 then
     local names = {}
     for _, entry in ipairs(safe) do
       names[#names + 1] = entry.name
     end
     local msg = ("Delete and re-clone %d repositor%s from %s?\n\n%s"):format(
-      #safe, #safe == 1 and "y" or "ies", base_dir, table.concat(names, "\n"))
+      #safe,
+      #safe == 1 and "y" or "ies",
+      base_dir,
+      table.concat(names, "\n")
+    )
     local choice = fn.confirm(msg, "&Yes, reclone\n&No", 2)
     if choice ~= 1 then
-      notify.info(#missing > 0 and "Reclone of the clean set cancelled — cloning only the missing ones." or "Cancelled — nothing recloned.")
+      notify.info(
+        #missing > 0 and "Reclone of the clean set cancelled — cloning only the missing ones."
+          or "Cancelled — nothing recloned."
+      )
       safe = {}
     end
   end
@@ -666,38 +684,70 @@ finish_reclone = function(safe, unsafe, missing, base_dir)
   local prog = new_progress("[usrcmds.plugin_repos] reclone: cloning")
   notify.info(("Cloning %d plugin(s) fresh..."):format(#to_clone))
 
-  ops.run_sequential(
-    to_clone,
-    function(entry, on_done)
-      clone_one(entry, base_dir, function(status, clone_err)
-        on_done(status ~= "failed", clone_err)
-      end)
-    end,
-    function(entry) return entry.name end,
-    function(cloned, failed)
-      if prog then
-        prog:finish(("%d cloned fresh, %d failed"):format(#cloned, #failed))
+  ops.run_sequential(to_clone, function(entry, on_done)
+    clone_one(entry, base_dir, function(status, clone_err)
+      on_done(status ~= "failed", clone_err)
+    end)
+  end, function(entry)
+    return entry.name
+  end, function(cloned, failed)
+    if prog then
+      prog:finish(("%d cloned fresh, %d failed"):format(#cloned, #failed))
+    end
+    if #failed > 0 then
+      local lines = {}
+      for _, f in ipairs(failed) do
+        lines[#lines + 1] = f.item.name .. ": " .. f.err
       end
-      if #failed > 0 then
-        local lines = {}
-        for _, f in ipairs(failed) do
-          lines[#lines + 1] = f.item.name .. ": " .. f.err
-        end
-        notify.warn(("%d cloned, failed:\n%s"):format(#cloned, table.concat(lines, "\n")))
-      else
-        notify.info(("%d repositor%s cloned fresh"):format(#cloned, #cloned == 1 and "y" or "ies"))
-      end
-    end,
-    prog
-  )
+      notify.warn(("%d cloned, failed:\n%s"):format(#cloned, table.concat(lines, "\n")))
+    else
+      notify.info(("%d repositor%s cloned fresh"):format(#cloned, #cloned == 1 and "y" or "ies"))
+    end
+  end, prog)
 end
 
 -- =============================================================================
--- List (read-only overview)
+-- List (read-only overview in a scratch buffer)
 -- =============================================================================
 
----Prints every listed plugin plus whether it's present in `base_dir` — a
----read-only companion to `clone`/`remove` for "what would this even touch".
+local LIST_SCRATCH_NAME = "myplugins://list"
+
+-- Content-matched syntax rather than extmark highlights: the whole point of
+-- this buffer is that it stays modifiable so `:sort` works in it, and an
+-- extmark placed by row index would sit on the wrong plugin the moment the
+-- rows are reordered. A syntax match follows the text instead.
+local LIST_SYNTAX = {
+  [[syntax match MyPluginsListPresent "^+"]],
+  [[syntax match MyPluginsListMissing "^-"]],
+  [[syntax match MyPluginsListUnknown "^?"]],
+  [[syntax match MyPluginsListName "\%4c\S\+"]],
+  [[syntax match MyPluginsListRepo "\S\+/\S\+$"]],
+}
+
+do
+  local links = {
+    MyPluginsListPresent = "DiagnosticOk",
+    MyPluginsListMissing = "DiagnosticWarn",
+    MyPluginsListUnknown = "Comment",
+    MyPluginsListName = "Directory",
+    MyPluginsListRepo = "Comment",
+  }
+  for group, target in pairs(links) do
+    vim.api.nvim_set_hl(0, group, { link = target, default = true })
+  end
+end
+
+---Renders every listed plugin plus whether it's present in `base_dir` into a
+---scratch buffer — a read-only companion to `clone`/`remove` for "what would
+---this even touch".
+---
+---A buffer rather than `vim.notify`: the list runs to dozens of entries, which
+---a notification truncates and cannot scroll. The buffer is deliberately plain
+---*text* and stays `modifiable`, so the usual editor verbs are the whole
+---interface — `:%y` yanks the list, `:sort` (or `:sort /^.\{3\}/`) re-orders
+---the alphabetical default, `/` searches it. That is why this has no sort or
+---filter command of its own, and why no git action is bound to a row:
+---`:MyPlugins dashboard` is the view that talks to git.
 ---@param path string|nil
 local function list_all(path)
   local entries, err = plugin_list.read()
@@ -705,6 +755,15 @@ local function list_all(path)
     notify.error(tostring(err))
     return
   end
+
+  -- Alphabetical by name is the only ordering worth shipping as the default:
+  -- `plugins.personal`'s declaration order is an artifact of how the spec grew,
+  -- and looking a specific plugin up is what this view is for. Case-insensitive
+  -- so a capitalised entry doesn't sort into its own block. Every other order
+  -- is one `:sort` away.
+  table.sort(entries, function(a, b)
+    return a.name:lower() < b.name:lower()
+  end)
 
   local base_dir = resolve_base_dir(path)
   local lines = {}
@@ -716,10 +775,34 @@ local function list_all(path)
     lines[#lines + 1] = ("%s  %-24s  %s"):format(marker, entry.name, entry.repo)
   end
 
+  local bufnr, winid = open_named_scratch(LIST_SCRATCH_NAME, lines, {
+    filetype = "myplugins-list",
+    split = "below",
+    modifiable = true,
+  })
+
+  vim.api.nvim_buf_call(bufnr, function()
+    vim.cmd("syntax clear")
+    for _, cmd in ipairs(LIST_SYNTAX) do
+      vim.cmd(cmd)
+    end
+  end)
+
+  -- The summary lives in the winbar, not in a header line, so that `:%y` and a
+  -- bare `:sort` operate on nothing but plugin rows — an in-buffer header would
+  -- have to be excluded by hand on every such command.
   local header = base_dir
       and ("%d plugin(s) — '+' present / '-' missing in %s"):format(#entries, base_dir)
-    or ("%d plugin(s) — presence unknown (no directory resolved; set $REPOS_DIR or pass one)"):format(#entries)
-  notify.info(header .. "\n\n" .. table.concat(lines, "\n"))
+    or ("%d plugin(s) — presence unknown (no directory resolved; set $REPOS_DIR or pass one)"):format(
+      #entries
+    )
+  vim.wo[winid].winbar = header:gsub("%%", "%%%%")
+
+  vim.keymap.set("n", "q", function()
+    if vim.api.nvim_win_is_valid(winid) then
+      vim.api.nvim_win_close(winid, false)
+    end
+  end, { buffer = bufnr, nowait = true, desc = "Close the :MyPlugins list" })
 end
 
 -- =============================================================================
@@ -787,7 +870,11 @@ local function mode_cmd(new_mode)
   end
 
   if not new_mode then
-    notify.info(("Current OVERRIDE: %q (restart Neovim after changing it for the change to take effect)"):format(current))
+    notify.info(
+      ("Current OVERRIDE: %q (restart Neovim after changing it for the change to take effect)"):format(
+        current
+      )
+    )
     return
   end
 
@@ -802,8 +889,10 @@ local function mode_cmd(new_mode)
     return
   end
   notify.warn(
-    ("OVERRIDE changed %q -> %q. Restart Neovim for plugins.personal.source to re-resolve — :Lazy reload will NOT pick this up (require() is cached).")
-      :format(current, new_mode)
+    ("OVERRIDE changed %q -> %q. Restart Neovim for plugins.personal.source to re-resolve — :Lazy reload will NOT pick this up (require() is cached)."):format(
+      current,
+      new_mode
+    )
   )
 end
 
@@ -867,70 +956,121 @@ function M.enable()
   composer.verb("MyPlugins", {
     desc = "Manage the personal plugin checkouts and their source mode",
     routes = {
-      { path = { "clone" },
+      {
+        path = { "clone" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = { { name = "only", type = "MYPLUGINS_NAME" } },
-        desc = "Clone every listed plugin not yet present (or just --only=<name>) into dir/$REPOS_DIR",
-        run = function(ctx) clone_all(ctx.args.dir, ctx.flags.only) end },
+        flags = {
+          { name = "only", type = "MYPLUGINS_NAME" },
+          { name = "dry-run", bool = true },
+        },
+        desc = "Clone every listed plugin not yet present (or just --only=<name>) into dir/$REPOS_DIR; --dry-run previews without cloning",
+        run = function(ctx)
+          clone_all(ctx.args.dir, ctx.flags.only, ctx.flags["dry-run"])
+        end,
+      },
 
-      { path = { "remove" },
+      {
+        path = { "remove" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
         flags = { { name = "only", type = "MYPLUGINS_NAME" } },
         desc = "Remove clean (no uncommitted/unpushed work) listed plugins (or just --only=<name>), after confirmation",
-        run = function(ctx) remove_all(ctx.args.dir, ctx.flags.only) end },
+        run = function(ctx)
+          remove_all(ctx.args.dir, ctx.flags.only)
+        end,
+      },
 
-      { path = { "fetch" },
+      {
+        path = { "fetch" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
         flags = { { name = "only", type = "MYPLUGINS_NAME" } },
         desc = "git fetch --all --prune on every present listed plugin (or just --only=<name>)",
-        run = function(ctx) fetch_all(ctx.args.dir, ctx.flags.only) end },
+        run = function(ctx)
+          fetch_all(ctx.args.dir, ctx.flags.only)
+        end,
+      },
 
-      { path = { "pull" },
+      {
+        path = { "pull" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
         flags = { { name = "only", type = "MYPLUGINS_NAME" } },
         desc = "git pull --ff-only on every present listed plugin (or just --only=<name>)",
-        run = function(ctx) pull_all(ctx.args.dir, ctx.flags.only) end },
+        run = function(ctx)
+          pull_all(ctx.args.dir, ctx.flags.only)
+        end,
+      },
 
-      { path = { "update" },
+      {
+        path = { "update" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
         flags = { { name = "only", type = "MYPLUGINS_NAME" } },
         desc = "Fetch + fast-forward pull every present listed plugin (or just --only=<name>) — brings this machine level with another machine's pushed commits",
-        run = function(ctx) update_all(ctx.args.dir, ctx.flags.only) end },
+        run = function(ctx)
+          update_all(ctx.args.dir, ctx.flags.only)
+        end,
+      },
 
-      { path = { "check" },
+      {
+        path = { "dashboard" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = { { name = "only", type = "MYPLUGINS_NAME" } },
-        desc = "Show a read-only git-status overview (branch, ahead/behind, dirty) of every present listed plugin (or just --only=<name>) — same idea as reposcope.nvim's :Reposcope status, scoped to the listed plugins",
-        run = function(ctx) check_all(ctx.args.dir, ctx.flags.only) end },
+        desc = "Open reposcope.nvim's git-status dashboard (:Reposcope status) for dir/$REPOS_DIR",
+        run = function(ctx)
+          open_dashboard(ctx.args.dir)
+        end,
+      },
 
-      { path = { "reclone" },
+      {
+        path = { "reclone" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = { { name = "only", type = "MYPLUGINS_NAME" } },
-        desc = "Delete (if clean) and re-clone present listed plugins, or clone missing ones fresh, after confirmation",
-        run = function(ctx) reclone_all(ctx.args.dir, ctx.flags.only) end },
+        flags = {
+          { name = "only", type = "MYPLUGINS_NAME" },
+          { name = "dry-run", bool = true },
+        },
+        desc = "Delete (if clean) and re-clone present listed plugins, or clone missing ones fresh, after confirmation; --dry-run previews the safe/unsafe/missing split without touching anything",
+        run = function(ctx)
+          reclone_all(ctx.args.dir, ctx.flags.only, ctx.flags["dry-run"])
+        end,
+      },
 
-      { path = { "picker" },
+      {
+        path = { "picker" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
         desc = "Interactive multi-select: assign clone/update/pull/fetch/remove/reclone per plugin, then run them all at once",
-        run = function(ctx) require("bindings.usrcmds.plugin_repos.picker").open(ctx.args.dir) end },
+        run = function(ctx)
+          require("bindings.usrcmds.plugin_repos.picker").open(ctx.args.dir)
+        end,
+      },
 
-      { path = { "mode" },
-        args = { { name = "mode", type = "STRING", enum = { "auto", "dir", "remote", "disabled" }, optional = true } },
+      {
+        path = { "mode" },
+        args = {
+          {
+            name = "mode",
+            type = "STRING",
+            enum = { "auto", "dir", "remote", "disabled" },
+            optional = true,
+          },
+        },
         desc = "Show, or persistently switch, plugins.personal.source's OVERRIDE (restart required to apply)",
-        run = function(ctx) mode_cmd(ctx.args.mode) end },
+        run = function(ctx)
+          mode_cmd(ctx.args.mode)
+        end,
+      },
 
-      { path = { "list" },
+      {
+        path = { "list" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        desc = "List every plugin in plugins.personal.list and whether it's present in dir/$REPOS_DIR",
-        run = function(ctx) list_all(ctx.args.dir) end },
+        desc = "Render every plugin in plugins.personal.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)",
+        run = function(ctx)
+          list_all(ctx.args.dir)
+        end,
+      },
     },
   })
 
   -- Flat shorthand for the subcommand used often enough to want a single
-  -- word: `:MyPluginsCheck [dir]` is exactly `:MyPlugins check [dir]`, same
-  -- as `:Reposcope status $REPOS_DIR` but scoped to the listed plugins.
-  vim.api.nvim_create_user_command("MyPluginsCheck", function(cmd_opts)
-    check_all(cmd_opts.args ~= "" and expand_path(cmd_opts.args) or nil, nil)
+  -- word: `:MyPluginsDashboard [dir]` is exactly `:MyPlugins dashboard [dir]`.
+  vim.api.nvim_create_user_command("MyPluginsDashboard", function(cmd_opts)
+    open_dashboard(cmd_opts.args ~= "" and expand_path(cmd_opts.args) or nil)
   end, {
     nargs = "?",
     complete = function(arg_lead)
@@ -941,7 +1081,7 @@ function M.enable()
       vim.list_extend(candidates, fn.getcompletion(arg_lead, "dir"))
       return candidates
     end,
-    desc = "Shorthand for :MyPlugins check [dir] — git-status overview of the listed plugins",
+    desc = "Shorthand for :MyPlugins dashboard [dir] — opens reposcope.nvim's git-status dashboard",
   })
 end
 

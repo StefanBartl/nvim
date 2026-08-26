@@ -158,3 +158,16 @@ Args not given on the command line are prompted via `vim.fn.input`.
   `keymaps.lua`, `mark.yank`) now decides itself whether/how to report. No
   user-visible change in the success/failure messages themselves, just where
   they're issued from.
+
+## `:Mark` grew three things (2026-08-24)
+
+- **`:Mark clear [category]`** — new subcommand. Before it, unmarking meant
+  toggling each line individually.
+- **`:Mark toggle` is range-capable** — `:'<,'>Mark toggle` marks a
+  selection. Not a per-line toggle: a partially marked range gets fully
+  marked, and only a fully marked one unmarks.
+- **`toggle`/`clear`/`yank` take an optional category** — named appearances
+  configured via `mark.categories`, tab-completed through the
+  `MARK_CATEGORY` argtype. An unknown name is refused with the configured
+  list. `mark.sign` still configures the `default` category, so older
+  configs are unaffected.

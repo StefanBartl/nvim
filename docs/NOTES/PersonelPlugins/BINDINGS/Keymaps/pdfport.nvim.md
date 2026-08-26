@@ -15,6 +15,16 @@ own keymaps against `M.DEFAULTS` (any action disable-able via `false`):
 | `open_terminal` | `<leader>pi` | n | "pdfport: terminal image preview" |
 | `open_batch` | `<leader>pb` | v | "pdfport: batch-open selected PDFs" |
 
+**Batch summary corrected 2026-08-24:** the action now reports `opened N of M
+PDF(s), K failed` once every open has settled (plain `opened N PDF(s)` when
+none failed), with individual failures still notified as they happen. It
+previously counted the files it *attempted*, so a selection where three of
+five failed still claimed all five had opened. Counting real outcomes needed
+a completion signal that did not exist — opening is asynchronous throughout
+and success is silent — so `pdfport.open` gained an optional third argument
+`on_done(ok, err)`, settling exactly once on every path. Two-argument callers
+are unaffected.
+
 `M.VISUAL_ACTIONS = { open_batch = true }` marks which actions are Visual-mode; everything
 else is assumed Normal-mode by `M.register_which_key()` (2026-07 addition, for the
 ROADMAP's "batch-opening multiple selected files" item).

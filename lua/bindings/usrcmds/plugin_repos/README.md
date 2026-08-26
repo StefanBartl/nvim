@@ -22,6 +22,7 @@ those names no longer exist.
 :MyPlugins pull [dir] [--only=<name>]
 :MyPlugins update [dir] [--only=<name>]
 :MyPlugins reclone [dir] [--only=<name>]
+:MyPlugins dashboard [dir]
 :MyPlugins mode [auto|dir|remote|disabled]
 :MyPlugins list [dir]
 :MyPlugins picker [dir]
@@ -126,6 +127,23 @@ guaranteed-fresh checkouts". Dirty/unpushed repos are left alone, same as
 :MyPlugins reclone                        " reclone everything clean + clone everything missing
 ```
 
+### `:MyPlugins dashboard [dir]`
+
+Just opens `reposcope.nvim`'s own `:Reposcope status [dir]` — a read-only
+git-status overview (branch, ahead/behind, dirty) of every repo under
+`dir`/`$REPOS_DIR`. That dashboard is already exactly the "overview of what's
+going on" this needed, so there's no separate `plugins.personal.list`-scoped
+status reader here anymore; unlike `clone`/`remove`/`fetch`/.../`reclone`,
+`dashboard` shows *every* repo in the directory, not just the listed
+plugins — same trade-off as `:Reposcope status`/`:MyReposUpdate` make.
+Flat shorthand: `:MyPluginsDashboard [dir]`.
+
+```vim
+:MyPlugins dashboard
+:MyPlugins dashboard $REPOS_DIR
+:MyPluginsDashboard
+```
+
 ### `:MyPlugins picker [dir]`
 
 Opens a `Snacks.picker` listing every entry in `plugins.personal.list`.
@@ -167,14 +185,37 @@ will not pick this up.
 
 ### `:MyPlugins list [dir]`
 
-Read-only. Prints every entry in `plugins.personal.list` plus a `+`/`-`
-marker for whether it's present in `dir` (default `$REPOS_DIR`) — useful
+Read-only. Renders every entry in `plugins.personal.list` plus a `+`/`-`
+marker for whether it's present in `dir` (default `$REPOS_DIR`) into a
+scratch buffer (`myplugins://list`, reused on repeat invocations), sorted
+alphabetically by plugin name — useful
 before running `clone`/`remove` to see what they would actually touch.
 
 ```vim
 :MyPlugins list
 :MyPlugins list ~/projects
 ```
+
+A buffer rather than a notification: the list runs to dozens of entries,
+which `vim.notify` truncates and cannot scroll. Unlike `dashboard` it never
+talks to git — one `fs_stat` per entry is the whole "did this get cloned"
+check, so it opens instantly.
+
+The buffer holds nothing but plugin rows (the `N plugin(s) — ... ` summary
+sits in the `winbar`) and stays `modifiable`, which makes the normal editor
+verbs the entire interface:
+
+| | |
+| --- | --- |
+| `:%y` | yank the whole list |
+| `:sort` | by presence marker, then name (the default order is by name alone) |
+| `:sort /^.\{3\}/` | by name, ignoring the marker |
+| `:sort /.*\s/` | by `owner/repo` |
+| `/`, `:g`, `:v` | search / filter |
+| `q` | close the window |
+
+That is why there is deliberately no sort, filter or refresh command of its
+own, and no git action bound to a row.
 
 ## Safety model — why this never scans a directory
 

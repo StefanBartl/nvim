@@ -14,23 +14,81 @@ local function is_markdown(ft)
   return ft == "markdown" or ft == "md" or ft == "mdx" or ft:match("^markdown%.") ~= nil
 end
 
---- Build a composed menu source for a markdown buffer: markdown.nvim's own
---- context-aware entries (fold on a heading, TOC, refs — the plugin owns them)
---- followed by the general custom menu. Returns nil when the buffer is not
---- markdown, the plugin/integration is absent, or it yields no entries.
+--- Pattern-B plugins (see lib.nvim.contextmenu / RightClick_Contextmenu.md):
+--- each ships only `<plugin>.integrations.menu` (`items`/`submenu`, no
+--- trigger, no nvzone/menu dependency) and relies on THIS dispatcher to
+--- compose it. Every contributor lands as its OWN top-level fly-out entry
+--- (`submenu()`) — no shared "MyPlugins" wrapper — so ordering here is
+--- just menu-display order, not nesting.
+--- `applies(buf)` is a cheap pre-check (usually filetype) that skips the
+--- plugin's `require()` entirely when it obviously doesn't qualify, before
+--- paying for the plugin's own (possibly pricier) internal gating.
+---@type { module: string, applies: fun(buf: integer): boolean }[]
+local CONTRIBUTORS = {
+  { module = "markdown.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
+  -- open.nvim: genuinely global (acts on whatever is under the cursor, incl.
+  -- tree buffers) — its own items() self-gates per entry, so `applies`
+  -- here is just "always try it".
+  { module = "open.integrations.menu", applies = function() return true end },
+  -- dap.nvim: also global — debugging actions aren't filetype-scoped, and
+  -- items() itself returns empty when nvim-dap isn't installed.
+  { module = "wkddap.integrations.menu", applies = function() return true end },
+  -- cascade.nvim: filetype set is config-driven (lists.filetypes, broader
+  -- than just markdown) and items() already re-checks it internally, so
+  -- there is nothing cheaper to pre-check here than "always try it".
+  { module = "cascade.integrations.menu", applies = function() return true end },
+  -- fileops.nvim: also global — acts on "this open file", self-gates
+  -- per entry on the buffer actually having a name.
+  { module = "fileops.integrations.menu", applies = function() return true end },
+  -- images.nvim: filetype-scoped (config.keymaps.filetypes, default
+  -- markdown/vimwiki/norg/text) and items() re-checks it internally, same
+  -- reasoning as cascade.nvim above — nothing cheaper to pre-check here.
+  { module = "images.integrations.menu", applies = function() return true end },
+  -- spotlight.nvim: also global — works the same in any buffer/filetype.
+  { module = "spotlight.integrations.menu", applies = function() return true end },
+  -- color_my_ascii.nvim: markdown-only, and items() re-checks the filetype
+  -- (plus fence-under-cursor for the :Fence group) internally.
+  { module = "color_my_ascii.integrations.menu", applies = function(buf) return vim.bo[buf].ft == "markdown" end },
+  -- lsp.nvim: also global — mirrors the resolved keymap catalogue
+  -- (require("lsp").status().keymaps), not tied to a filetype. Replaces
+  -- custom_menu's former hand-written "Lsp Actions" section (menus/lsp.lua,
+  -- part of nvzone/menu itself, since removed from custom_menu/init.lua):
+  -- that section's "Add/Remove workspace folder" entries had no lsp.nvim
+  -- keymap-catalogue equivalent, but were confirmed unused and dropped
+  -- rather than backfilled.
+  { module = "lsp.integrations.menu", applies = function() return true end },
+  -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
+  -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
+}
+
+--- Collect one fly-out `submenu()` entry per applicable contributor.
+---@param buf integer
+---@return table[]
+local function contributed_submenus(buf)
+  local out = {}
+  for _, c in ipairs(CONTRIBUTORS) do
+    if c.applies(buf) then
+      local ok, mod = pcall(require, c.module)
+      if ok and type(mod.submenu) == "function" then
+        local sub = mod.submenu()
+        if sub then out[#out + 1] = sub end
+      end
+    end
+  end
+  return out
+end
+
+--- Build a composed menu source for `buf`: one fly-out entry per applicable
+--- Pattern-B plugin (see CONTRIBUTORS), followed by the general custom menu.
+--- Returns nil when nothing contributes for this buffer.
 ---@param buf integer
 ---@return table|nil  an nvzone/menu entry table, or nil
-local function markdown_menu_source(buf)
-  if not is_markdown(vim.bo[buf].ft) then return nil end
-
-  local ok, mdmenu = pcall(require, "markdown.integrations.menu")
-  if not ok then return nil end
-
-  local items = mdmenu.items()
-  if type(items) ~= "table" or #items == 0 then return nil end
+local function plugin_menu_source(buf)
+  local subs = contributed_submenus(buf)
+  if #subs == 0 then return nil end
 
   local composed = {}
-  vim.list_extend(composed, items)
+  vim.list_extend(composed, subs)
 
   -- Append the general custom menu (format/copy/delete/… ) beneath a divider.
   local ok_custom, custom = pcall(require, "menus.custom")
@@ -48,16 +106,16 @@ function M.setup()
   end
 
   -- Alt-b opens top-level custom menu if present, otherwise default.
-  -- Markdown buffers get the plugin's entries composed on top.
+  -- Applicable plugins (CONTRIBUTORS) get their entries composed on top.
   map("n", "<A-b>", function()
     local ok_menu, menu = pcall(require, "menu")
     if not ok_menu then
       notify.warn("menu module not found")
       return
     end
-    local md = markdown_menu_source(vim.api.nvim_get_current_buf())
-    if md then
-      menu.open(md)
+    local plugins_menu = plugin_menu_source(vim.api.nvim_get_current_buf())
+    if plugins_menu then
+      menu.open(plugins_menu)
     elseif vim.g._menu_custom_registered then
       menu.open("custom")
     else
@@ -94,12 +152,13 @@ function M.setup()
     local ok_menu, menu = pcall(require, "menu")
     if not ok_menu then return end
 
-    -- Markdown buffers: plugin-owned context menu (fold on heading, TOC, refs)
-    -- composed with the general custom menu. Checked before the ft routing so
-    -- it wins for markdown without a dedicated menu name.
-    local md = markdown_menu_source(buf)
-    if md then
-      menu.open(md, { mouse = true })
+    -- Applicable plugins (CONTRIBUTORS): each contributes its own top-level
+    -- fly-out entry, composed with the general custom menu. Checked before
+    -- the ft routing below so it wins whenever at least one plugin applies,
+    -- without needing a dedicated named menu per plugin.
+    local plugins_menu = plugin_menu_source(buf)
+    if plugins_menu then
+      menu.open(plugins_menu, { mouse = true })
       return
     end
 

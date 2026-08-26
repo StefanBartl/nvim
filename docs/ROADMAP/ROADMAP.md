@@ -1,147 +1,134 @@
 # Roadmap
+- [ ] Anticheat knacken
+## true check
 
-- [ ] lsp profile (minimal etc): bruingt das eigentlich tatsähclihc spürbar etewas oder kann das weg?
+Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
+Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass doll es nä,lich auh nicht sein, leider ist mir klar ds das konterkariert meine wüsnche. ckch denke, du must da einen goldenen Zwischenweg finden.
 
-## pdfport.nvim:
+Hier die liste:
++  buffer-ctx.nvim           StefanBartl/buffer-ctx.nvim
++  cascade.nvim              StefanBartl/cascade.nvim
++  cmdlog.nvim               StefanBartl/cmdlog.nvim
++  color_my_ascii.nvim       StefanBartl/color_my_ascii.nvim
++  dap.nvim                  StefanBartl/dap.nvim
++  debugging.nvim            StefanBartl/debugging.nvim
++  diff.nvim                 StefanBartl/diff.nvim
++  documentation.nvim        StefanBartl/documentation.nvim
++  emojis.nvim               StefanBartl/emojis.nvim
++  fileops.nvim              StefanBartl/fileops.nvim
++  filetree.nvim             StefanBartl/filetree.nvim
++  github_stats.nvim         StefanBartl/github_stats.nvim
++  gopath.nvim               StefanBartl/gopath.nvim
++  images.nvim               StefanBartl/images.nvim
++  insights.nvim             StefanBartl/insights.nvim
++  language.nvim             StefanBartl/language.nvim
++  lib.nvim                  StefanBartl/lib.nvim
++  lsp.nvim                  StefanBartl/lsp.nvim
++  markdown.nvim             StefanBartl/markdown.nvim
++  mdview.nvim               StefanBartl/mdview.nvim
++  migrate.nvim              StefanBartl/migrate.nvim
++  open.nvim                 StefanBartl/open.nvim
++  pdfport.nvim              StefanBartl/pdfport.nvim
++  pickers.nvim              StefanBartl/pickers.nvim
++  recommender.nvim          StefanBartl/recommender.nvim
++  replacer.nvim             StefanBartl/replacer.nvim
++  reposcope.nvim            StefanBartl/reposcope.nvim
++  runtime-analysis.nvim     StefanBartl/runtime-analysis.nvim
++  sandbox.nvim              StefanBartl/sandbox.nvim
++  sessions.nvim             stefanbartl/sessions.nvim
++  spotlight.nvim            StefanBartl/spotlight.nvim
 
-- [ ] statt immer system app, dass eine lib.nvim ui.kit selection fragt, ob dystem app oder mit pdfport augfgemacht wird. Alle plugins, de ppdfport einbinden, durchchecken ob das sinn macht!
+und das native:
 
-## filetree.nvim
++  docmap-desktop        StefanBartl/docmap-desktop
 
-fs refactor: nochmal checken, eigentlich wäre das ein cooles fesature. zb:
-
-In ./README.md ist eine referenz auf /Test.md, dann verschiede ich Test.md auf /docs/Test.md mirt einen neuen Kexmapo in filetree, vl `M` (großes Move), dann wird ein scan durch alle files im cwd angeregt wo refrenzen sind und die aufgelistet und gefragt opb man diese ufdaten sooll bzuw nur euinzlene (was wrsch am wengisten gebrauct wird) oder gar ncht.
-
-wrsch werden filetypes hier interessant, als erstes alle markdown refreernzen implementieren.
-später dann lua (bedarf import scan), dann andere sprachen wie javascript/typescript (pain in the a... wegen esm/common usw..)
+---
 
 ## cdx
 
-free: So., 09:00 X - 21. Juli 2027
-work: Sa., 06:00 o - 20.Sept
-dev:  Sa., 22:00 X - 03.Sep
-
-## docmap
-
-### optionsn für user zum ändern
-
-docmap und documentation.nvim beiude -> features die der user eisntellen kann finden -> es gibt sicher eineige optioen, features unsw.. die der user in der nvim installations spec einstellen köännte. analyse!
-docmap-desktop: mehr einstellungen fpr den user in die einstellugnen geben (eventuell auch all das was in doicumentation.nvim in der user spec als user eingestellt werden knnn)
-.September
+free: So., 09:00 x - 21. Juli 2027
+work: Sa., 06:00 _ - 20.Sept
+dev:  Sa., 22:00 zu - 03.Sep
 
 ---
 
-## MISC
+nvim, lib.nvim, repos:
 
-- [ ] markdown: :Markdown list [options?] [scope? default % options cwwdf, path] mit options wie zb healdines, das  alle headlines zeigt auflistst in eine picker und man dan hin spriingen kann
-- [ ] rechtklick menu durchtestetn und nahc plugins auftilen aubmenus...
-
-## inline hover img/pdf
-
-- [ ] - [ ] [pdf inline hover](./assets/pdf_inline_hover.png)
-
-  Man ieht hier, dass der hoiver buffer (1. eingezichent)endert wid, dann aber das pdf (2.) verschoben ist und 3. sdiehst ud, dass die statusline um ein drittel angehoben wird; wie bei :messages aber hahalt ohne inhalt- keine ahnun gwarum das gamacht wird
-
-- [ ] ![image inline hover](./assets/image_inline_hover.png)
-
-  Ich hab dann den screenshot weiderum inline hovert, und man sieht auch ier, dass es wieder verschiebnen ist da simage / bufer
-
-* Ich k önnte mir vorstellen, das beide BEobachtungen sogar miteinader verbudnen sind.
-* Kann man den scracth bffer für hpover iwie durcsichtig machen wenn man ihn schon nicht abdrehen kann?
-* wenn beides nicht funkt, dann  - wie knnte man das fixen, dass die beiden nicht verschoiben sind?
-
-Es ist zwar nur ein kosmetisches problem, aber gerade wenn man mit dem feture angeben will "schau mal, ich kann images im terminal anziegen lase, sogar pdf startseiten!" - das ist aber nur halb so beeindruckend, wenn nicht alles schön ist. Am ende wird es wrsch eine abwägung sein wieviel aufwand man in ds debuggen stekcen will.
-Interesant wöäre, ganz gernell das malzu erklären, was hh ier genau püassiert, also warum ein scratch hover buffer.. was wird von welchern tools diesbezüglih übernommen - usw...
-
----
-
-## idden
-
-usrcmd typo helper: wenn man einen usrmcd iengibt und man hat einen falshcen buschatben oder einen zu viel oder so, dann solles nicht fehlschlagen sondern lib.nvim ui.kit prompt ob man vl den commafd XY oder YX gemeint hat und mn ann sch dan den richtigen aussuchen und durchführen.
-wie aufwendig wäre das für ale usrcmds meiner polugins? kann man das als zusätzliches fature, das man enaben/diasbalen kann, üer das lib.nvim usrcmd.´ / usrcmd.composer gleich mitr shippen?
+Checked the stray German lines in the two English docs
+MENUBARs Deutsch sind die lokalisierten Menü-Labels — bleiben. WORKPLAN hat zwei Stellen. Los mit ROADMAP.
 
 
-## casedesk
+Ran 7 commands, created 2 files
++204
+-209
 
----
+Ran 3 commands, created head.md
++156
+-0
+Now the tail section.
 
-### Solution(s)
 
-hierzu äwre ein temlate gut, dass ich dann von einer ai ausfpllen lassen kann, wenn der case solved ist. kannst du das erstellen, mit keywords ausfüllen us.w... so das süäter die solutions files von einer ai zw ohne ai nur mit der heuritsik durcsucht werden können.
-:Case solution bzw solve sold ann das gleich auch höandlen zum eingeben der solution
-dazu braucht es ein workflow udn ein konzept. das ollte an auch in C:\users\StefanBartl\AppData\Local\nvim\docs\NOTES\casedesk  stehen...
+Created 6 files, ran 17 commands
++1096
+-0
+docmap-desktop ist erledigt und gepusht. Jetzt zum nächsten Task in der Liste.
 
----
 
-### update der \nvim\docs
+Ran 21 commands
+Jetzt schreibe ich die fehlende WORKFLOW.md für lsp.nvim.
 
-alle neune commands usw..
-use cases ersellen, so dass ich suchen kann " ich will eine xy im case" -> dann so
 
----
+Created WORKFLOW.md, ran 20 commands
++153
+-0
+Jetzt aktualisiere ich documentation.nvim's WORKFLOW.md um die Lücke seit dem 15.08.
 
-### ai implemeniterung
 
-endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pro account, aber ich weioß nicht, ob es damit überhauüt geht. gemini nehmen ich bisher üner die web ui das funkt auch ganz gut inhaltlich
+Ran 20 commands, created 2 files
++150
+-0
+Ich ergänze die fehlenden Zeilen in KEYMAPS.md und füge dann die WORKFLOW-Abschnitte ein.
 
----
 
-## Misc
+Ran 4 commands
+Jetzt die WORKFLOW-Abschnitte einfügen und den gp-Abschnitt um den Picker-Modus ergänzen.
 
-- nvim performance optimeren: startup modul, runtime analysis, docmap, usw...
 
----
+Ran 25 commands, created 2 files
++124
+-0
+DASHBOARD.md und BINDINGS.md sind aktuell — nur WORKFLOW.md hinkt hinterher.
 
-## (AN CLAUDE: NOCH NIHCT IMPLEMENTIEREN: EINFACH IGNORIEREN!)
 
-- [ ] spotlight: warum `leader mk`? Und nicht `leader s*`? itte umstelen. sofdern nichts dagegen spricht (andere mappings). update doe docs und auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS  (hier kajnn man auch checken ob eine keymaps schon besetzte ist=)
-- spotlight checken und lernen
-- documentation.nvim lernen
-- [ ]  Könnte es nicht eine "neue art" software sein, alle meine nvim plugins entweder mit oder ohne einer nvim instanz gemeinesam bündeln und als bnary ausgheben, so das s man es wieder wie normales nvim aber halt mit + verewnden kann.
-  - [ ] recommender.nvimmus nicht mitggeshipped werdem; vielleicht verwchiedene ausbaustufen bereitstellen: Base mit lib.nvim und wenigen wichtigen, dann eine versoin wo zusätliche oplugins dabei sind. usw.. als idee
-- [ ] `learn-cli.nvim` vielleicht doch ?
-- [ ] E:\repos\Notes\ProjectIdeas: Durchgehen und anlysieren lassen
-- [ ] finish & checkists & review in nvim config durchjagen
+Ran 18 commands, created mv.md
++54
+-0
+Jetzt die WORKFLOW-Abschnitte für runtime-analysis.nvim.
 
-1. `leader wq`: Alle issues lösen
-  1. dass was wq macht in einem `lib.nvim / lib.nvim.ui` ausgeben
-2. `/wkdoptions`
-  1. UI Linemarker gehört README
-  2. `wkdoptions` mit `options.lua` verheiraten (vielleicht als default_options)
-3. `nvim/init.lua` durchgehen
-4. [ ] Funktionen/Module identifizieren, die man mit FFI/C performanter machen könnte
-  - [ ] `/nvim/lua/` – alle Module durchgehen und checken, ob sie irgendwo hineinpassen
 
-- `z` - zoxide soll $REPOS_DIR auflösen können; Powershell soll alle meine repo ordner auflösen können. also wkdbooks -> cd $REPOS_DIR/wkdbooks usw..
-- Alle claud ebranches in allen plugins entfernen
+Created ra.md, ran 35 commands
++75
+-0
+Der Tabellen-Form braucht ein benanntes lhs, nicht positional — ich korrigiere mein Beispiel.
 
----
 
-## Implementieren
-
-- [ ] `nvim/lua/autocmds` analysieren:
-  - [ ] Refactoring?
-    - [ ] `nvim/lua/autocmds` nach `nvim/lua/Bindings`
-  - [ ] Welche automcds gehören in ein projet von  einen in C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\IDEAS?
-
-- wenn man eine ganzeu zeile markiert, also shiift v im nomralmode, und dann diese in backticks umhüllen will, dabn macht man danach `` aber es umhült nicht sonder macht:
-    C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/documentation.nvim.md
-    ```
-  also hängt in der nächsten zeile eiunfach dreio backticks an.
-- [ ] strg+v soll trimmen
-
-- [ ] `lua/config/menu` nach `lua/wkdnvchad`?
-- [ ] Autocompletion beim schreiben funktiert schon mit zusätzlichen dictionary bvon mir, jetzt wäre es noch toll, wenn oft verwendete höher geranked werden bei den vorschlägen
-
-## ZIEL
-
-1. Alle plugin fähigen Module augliedern
-2. Funktionen/Module/ganze Custom Plugins, die man mit ffi über vc performanter machen könnte?
-  1.  Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufen lassen, die mit nvim gemeinsam gestartet wir Eventuell wie eine zweite runtime alle sinnvollen plugins darin laufe n lassen, die mit nvim gemeinsam gestartet wirdd
--2. `BINDINGS.lua`: In der Descrtiptionder Keymaps und Usrcmds: Das plugin selbst nicht nennen,, wie zb.: "[iletree]:" in fileteree.nvim keymap descreiption
-3. `/autcmds`
-  1. passt zu `/bindings` ?
-  2. autocmds aller folder zusammen in einer /autcmd und dort dann korrekte anordnung, also nach events usw,... sodass die performance steigt.
-
----
-
+Ran 14 commands
+Fixed the keymap example
+Verified fzf key name and committed
+sessions WORKFLOW + commit tail
+Updated and committed sessions WORKFLOW
+recommender WORKFLOW + commits
+Read the -c and analyzer sections
+Updated recommender WORKFLOW
+Committed recommender WORKFLOW
+pdfport WORKFLOW + commits
+Read batch summary part
+Updated and committed pdfport WORKFLOW
+cmdlog WORKFLOW + commits
+Read the notes section and risky test
+Checked for stale notes references
+grep -rn 'opts.notes\|notes_picker\|per-command note' docs/*.md README.md 2>/dev/null | head -5
+(Bash completed with no output)
+Session limit reached
+Auto-resuming at 5:31 PM
+Auto-continue when limits reset

@@ -16,7 +16,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `README.md`, `docs/README-de.md`,
 | Command | Effect |
 | --- | --- |
 | `:ColorMyAscii` | Manually highlight the current buffer (bare form) |
-| `:ColorMyAscii toggle` | Enable/disable plugin |
+| `:ColorMyAscii toggle [global\|buffer]` | Enable/disable the plugin (`global`, the default — unchanged behaviour) or just the current buffer (`buffer`, **added 2026-08-24**). `toggle` was always global; the audit recorded it as current-buffer-only, which was backwards. |
 | `:ColorMyAscii debug` | Show basic debug information |
 | `:ColorMyAscii show-config` | Show detailed configuration |
 | `:ColorMyAscii check-fences` | Check for unmatched fenced code blocks |

@@ -322,7 +322,7 @@ Nur bei `--isolated` relevant; in-process bleibt einprozessig und schnell.
 
 ### F4 — Native Sidecar: ehrliche Analyse
 
-In [RULES.md](./RULES.md) steht die Frage schon: bringt ein
+In [RULES.md](RULES.md) steht die Frage schon: bringt ein
 Rust/Go/Zig-Binary etwas? Nüchtern:
 
 | Aufgabe | Sidecar sinnvoll? |
