@@ -1,7 +1,6 @@
 # Roadmap
 
 - [ ] Anticheat knacken
-- [ ] nvim config branches: checken ob alles in main imploementiert ist bzw wenn es um foxces ging alles n main ist, dann alles entfernen die älter als 2 tage sind
 
 ## true check
 

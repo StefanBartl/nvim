@@ -55,6 +55,7 @@ und das native: docmap-desktop
 ## notes
 
 1. Die Installations-Specs meiner Pluigns findest du in: C:/Users/bartl/AppData/Local/nvim/lua/plugins/personal/init.lua
+2. Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
 
 Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofrt im main branch landet
 
