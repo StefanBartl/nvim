@@ -61,7 +61,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Architektur & Strategie (Umsetzung, keine Grundsatzentscheidung)
 - [ ] Analyse: welche Plugin-Dependencies (z. B. nvzone menu) durch eigene `lib.nvim`-Module ersetzbar wären.
-- [ ] Feature-Liste für `filetree.nvim` aus anderen Filetree-Plugins (Neotree/NvimTree/Netrw) ableiten, `docs/ROADMAP/NEOTREE_FEATURES.md` anlegen.
 - [ ] Featureliste: welche bereits implementierten Features sind noch nicht user-seitig konfigurierbar? Auflisten, strittige Fälle markieren für Rückfrage.
 - [ ] Pro offenem ROADMAP-Punkt einen konkreten Umsetzungsplan ausarbeiten.
 - [ ] Alle Features eines Plugins den zugehörigen Usrcmds/Keymaps/Autocmds zuordnen, Analyse in `docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES` pro Plugin ablegen (Sortierung nach Wichtigkeit erst nach Klärung der Priorisierungsfrage aus Liste A).

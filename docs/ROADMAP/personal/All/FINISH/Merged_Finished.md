@@ -569,6 +569,32 @@ nvim-Config.
       `vim.treesitter`/`vim.diff`/`vim.json`/`vim.uv` zu benutzen.
 
 
+- [x] **Feature-Liste für `filetree.nvim` — die zwei fehlenden Quellen
+      nachgeholt.** `filetree.nvim/docs/ROADMAP/NEOTREE_FEATURES.md` gab es
+      schon (192 Zeilen, zwei Durchgänge), aber der Task nennt **drei** Quellen:
+      Neo-tree, NvimTree, Netrw. Die letzten beiden kamen dort nur als
+      *Adapter-Ziele* vor, nie als Feature-Quelle. Pass 3 liest sie als Quelle.
+
+      Nicht aus dem Gedächtnis: gegen nvim-trees echte Action-Oberfläche
+      (`lua/nvim-tree/actions/*/`, also genau die Menge dessen, worum man es
+      bitten kann) und Netrws Kommandosatz, gemappt auf
+      `lua/filetree/features/*/`. Das Meiste ist bereits abgedeckt — die
+      Mapping-Tabelle hält das fest, damit der nächste Leser den Vergleich
+      nicht wiederholt.
+
+      **Drei Lücken**, jede am Baum belegt statt vermutet: Sibling-Navigation
+      (`tree_traverse`s `up()`/`down()` wechseln die *Wurzel*, es gibt keinen
+      Zug auf derselben Ebene; `grep -ri sibling` ist leer), Collapse-All, und
+      Sort-Cycling nach Name/Größe/mtime. Die letzten beiden sind vermutlich
+      Adapter-Methoden statt Features — jedes Backend kann das nativ.
+
+      **Drei bewusst keine Lücke**, mit Begründung: der Hidden-Toggle ist in
+      `infra/ignore_list` absichtlich an den Adapter delegiert und dort
+      dokumentiert (zwei Schalter für ein Verhalten wäre schlechter), Netrws
+      Remote-Editing ist Transport statt Verwaltung, und dessen Listing-Styles
+      gehören zum Rendering des Adapters.
+
+
 ### Sonstiges
 
 - [x] **Docs auf Englisch — abgeschlossen.** Die zweite Runde nach der
