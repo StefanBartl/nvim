@@ -67,7 +67,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 ### Git & Repo-Hygiene
 - [ ] Alle Claude-Branches in allen Plugins entfernen.
   - Stand 2026-08-25: 26 von 28 weg. Offen bleiben nur die zwei jüngeren als 3 Tage — `markdown.nvim/claude/busy-ardinghelli-d059d7` (+1) und `open.nvim/claude/cool-benz-a3f6a1` (+2), letzterer hat noch einen Worktree unter `.claude/worktrees/`. Sobald sie alt genug sind: gleiche Behandlung — Commits nach `main`, dann löschen.
-- [ ] Alle Features/Bugfixes committen & pushen (Commit-Message ausgeben, falls Push nicht möglich).
+- [ ] Alle Features/Bugfixes committen & pushen (Commit-Message ausgeben, falls Push nicht möglich). — **Zuletzt geprüft 2026-08-26: alle 31 Repos + Config sauber und gepusht.** Wiederkehrend, bleibt daher stehen.
 - [ ] Git-Release pro Repo, sobald fertig.
 
 ---
