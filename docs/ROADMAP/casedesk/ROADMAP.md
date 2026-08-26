@@ -96,6 +96,21 @@ Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
         semantischen Wert — nur Referenzen aus der offiziellen Tosca-Doku
         und Gleichwertigem zählen als Quelle für Case-Lösungen.
 
+- [ ] **KI-Ausbau von `ki.lua` steht an — Use Case "Anhänge vor KI-Übergabe
+      schwärzen" dabei mitdenken.** Heute baut `ki.lua` nur Prompts aus
+      Zwischenablage-Text und verschickt keine Dateien (CONCEPT.md §8i);
+      sobald der KI-Ausbau tatsächlich beginnt und Anhänge aus
+      `Ressources/` (Screenshots, Logs mit Kundendaten) mit in eine Analyse
+      sollen, braucht es **vorher** eine Möglichkeit, Kundendaten in diesen
+      Anhängen unkenntlich zu machen — nicht optional, echtes
+      Datenschutz-Erfordernis, kein Nice-to-have. **Werkzeug ist bereits
+      fertig** (nicht casedesk-Code): `:Image redact` in `images.nvim`
+      (separates Repo, `$REPOS_DIR/images.nvim`, dokumentiert in dessen
+      `docs/FEATURES/CAPTURE.md`) — Boxen markieren, schwärzen, Original
+      bleibt. Der casedesk-seitige Teil kommt erst mit dem KI-Ausbau selbst:
+      eine Gate-Regel in `ki.lua`, die einen Anhang ohne geschwärzte
+      `*.redacted.*`-Version nicht an eine KI weitergibt.
+
 ## Erledigt
 
 Chronologisch, neueste zuerst. Details und Erkenntnisse: [HANDOVER.md](HANDOVER.md).
