@@ -140,8 +140,8 @@ nvim-Config.
       dessen `docs/FEATURES.md` war ein Commit-Log ein Zeichen neben dem
       Ordner, der etwas anderes meint.
 
-      **Stand jetzt:** 31 von 31 Repos sichtbar, 771 Features, keines ohne
-      Metadaten.
+      **Stand jetzt:** 31 von 31 Repos sichtbar, 842 Features mit 1845
+      Metadaten-Bullets, keines ohne.
 
       **Später, wenn du willst:** Sub-Tabs im Features-Reiter, jede Themendatei
       ein Untermenü. Die Reihenfolge dafür (`core` → `FEATURES` → Rest) ist
