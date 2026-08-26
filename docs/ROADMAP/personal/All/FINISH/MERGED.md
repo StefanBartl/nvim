@@ -39,6 +39,16 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Alle Features/Bugfixes committen & pushen (Commit-Message ausgeben, falls Push nicht möglich). — **Zuletzt geprüft 2026-08-26: alle 31 Repos + Config sauber und gepusht; Claude-Branches und `.claude/worktrees/` überall abgeräumt (siehe `Merged_Finished.md`).** Wiederkehrend, bleibt daher stehen.
 - [ ] Git-Release pro Repo, sobald fertig.
 
+### lib.nvim shim zu bindings\
+
+Dene ausgabe:
+
+```text
+Wichtige Entscheidung, die ich getroffen habe: die alten Pfade funktionieren weiter. Es sind 809 Aufrufstellen in 30 Repos — ohne Shim wäre der Umzug ein Flag Day: wer lib.nvim aktualisiert, bevor die Plugins nachgezogen sind, hat alles kaputt, und die Reihenfolge bestimmt der Plugin-Manager. Jetzt leiten die alten Pfade weiter und melden einmalig vim.deprecate. Verifiziert für alle sechs tatsächlich benutzten Einstiegspunkte: alt und neu liefern dasselbe Modul-Table. Die Shims fliegen raus, sobald die Repos migriert sind.
+```
+
+Eigentlch nicht notwednig, wenn alle 809 aufrustlelne der require pfad angepast weird, waws mti grep bzw cli tols zum rena ing eigentlich kein großer aufewand sein dürft. Da lalle meine repos, auch die lib.nvim  - npoch im development mode ist und auch in der ersten zeile der dere nreadme steht, das breaking changes sehr wahrscheinlich sind an diesen pujnkt der entwicklung, halte ich einen shim für nicht notwenidig. siehst du das anders?
+
 ---
 
 ## Liste B — An Claude Code delegierbar
