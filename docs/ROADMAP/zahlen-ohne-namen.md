@@ -71,7 +71,7 @@ Aufräumen. Betroffen: reposcope (11), pdfport (4), language (4), learn-cli
 
 | Plugin | Stelle | Wert | Einschätzung |
 | --- | --- | --- | --- |
-| cmdlog | `note_popup.lua:62` | 4000 | Wie lange das Notiz-Popup steht. Reine Präferenz — der offensichtlichste Kandidat der Gruppe. |
+| cmdlog | ~~`note_popup.lua:62`~~ | ~~4000~~ | **Hinfällig (2026-08-27):** das Favorite-Notes-Feature ist entfernt — es öffnete einen normalen Buffer, der mit reposcope kollidierte, und eine Notiz an einem CLI-Favoriten lohnt den Debug-Aufwand nicht. Damit ist auch das Popup weg. |
 | github_stats | `background.lua:75` | 1000 | Verzögerung vor dem Hintergrundzyklus. Unkritisch. |
 | language | `item_menu.lua:81` | 500 | UI-Timing. |
 | pickers | `result_count/init.lua:37` | 150 | Tick der Trefferzählung. |

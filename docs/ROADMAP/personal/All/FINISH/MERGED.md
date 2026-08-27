@@ -71,7 +71,8 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
           `cache_manager.lua` + `init.lua`), pickers (3000, `DEFAULTS.lua` +
           `smart/init.lua`).
     - [ ] Die restlichen Punkte aus `docs/ROADMAP/zahlen-ohne-namen.md`
-          (documentation's 120s-Timeouts, cmdlogs Popup-Standzeit).
+          (documentation's 120s-Timeouts). Cmdlogs Popup-Standzeit ist
+          hinfällig — das Favorite-Notes-Feature ist entfernt.
 
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
 
