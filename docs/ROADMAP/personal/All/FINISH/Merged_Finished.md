@@ -10,6 +10,86 @@ nvim-Config.
 
 ### Bindings, Keymaps & UI
 
+- [x] **Autocmd-Dispatcher gemessen, statt darueber zu spekulieren.**
+
+      Du wolltest vor der Umstellung eine Zahl. Sie steht jetzt in
+      `lib.nvim/lua/lib/nvim/bindings/autocmd/dispatcher/README.md`, das
+      Skript in `docs/ROADMAP/tools/autocmd_dispatch_bench.lua`.
+
+      Interessant ist nicht die Dispatcher-Zeile, sondern die **Kontrolle**:
+
+      | | pro Event |
+      | --- | ---: |
+      | kein Autocmd registriert | 0.23 us |
+      | 1 Autocmd, Pattern passt nicht (C-Filter) | 0.96 us |
+      | 1 Autocmd, **leerer** Lua-Callback laeuft | **29.0 us** |
+
+      Der Sprung nach Lua kostet ~29 us. Das ist der gesamte Unterschied. Die
+      Eigenleistung des Dispatchers — ein `key(ev)`-Aufruf, ein gecachter
+      Table-Lookup, ein Early Return — sind die 0.9 us zwischen 29.0 und 30.9.
+      Die ehrliche Aussage ist also nicht "der Dispatcher ist langsam",
+      sondern: **ein nativer Autocmd, dessen Pattern nicht passt, betritt Lua
+      nie, und dieser hier immer.**
+
+      Bei Treffern ist es bis ~20 Handlern ein Gleichstand und darueber ein
+      Gewinn (nativ laeuft jeden registrierten Autocmd durch und prueft dessen
+      Pattern; der Dispatcher zahlt den Lua-Eintritt einmal). Bei Fehlschlaegen
+      kosten flache ~30 us, unabhaengig von der Handler-Zahl — die beiden
+      treffen sich bei rund 100 Autocmds auf einem Event.
+
+      **Erster Anlauf hat nichts gemessen** und ist es wert, festgehalten zu
+      werden: mit `FileType` als Event laeuft `nvim_exec_autocmds` auch
+      Neovims eigene ftplugin- und Syntax-Maschinerie mit (~1.8 ms pro Fire),
+      die den Unterschied vollstaendig begraben hat — der "miss"-Fall kam
+      sogar langsamer heraus als der "hit"-Fall. Mit `User`, das keine
+      eingebauten Listener hat, bleibt das Dispatching selbst uebrig.
+
+      Vorbehalt steht so auch in der README: eine Maschine, ein synthetischer
+      Benchmark, Median aus 5 Laeufen a 2000 Events. Die *Form* ist der Befund,
+      die absoluten Mikrosekunden sind Anhaltspunkte.
+
+- [x] **`bindings/autocmd`-Ordner wird generiert, nicht gepflegt.**
+
+      Deine Idee, dass ein lib-Feature den `bindings/autocmd`-Ordner selbst
+      anlegt, ist kein Schmarrn — sie ist der Grund, warum das Register
+      ueberhaupt existiert. Umgesetzt als
+      `lib.nvim.bindings.autocmd.docs`: rendert das Register als Markdown, je
+      Event-Familie eine Datei (buffer / window / cursor / filetype /
+      lifecycle / other), mit Event, Gruppe, Scope, desc und `Datei:Zeile` als
+      Quellenangabe.
+
+      Markdown und nicht Lua, genau aus deinem Grund: eine Lua-Datei in
+      `bindings/` waere unehrlich, weil dort nichts *registriert* wuerde. Was
+      dort steht, ist eine Ableitung.
+
+      Der Aufruf kommt ohne Argumente aus —
+      `require("lib.nvim.bindings.autocmd").docs.write()`. `root` kommt aus
+      dem Quellpfad des Aufrufers (nicht aus `cwd`, damit die Antwort auch
+      stimmt, wenn man das Kommando aus einem Plugin heraus in einem fremden
+      Projekt ausloest), `dir` daraus als
+      `<root>/lua/<plugin>/bindings/autocmd`.
+
+      Die interessante Inferenz ist der **Filter**. Von Hand schreibt man ihn
+      als Gruppennamen-Praefix (`r.group:match("^myplugin")`) — und der ist
+      *still* falsch fuer jede Gruppe, die der Konvention nicht folgt: die
+      Zeilen fehlen einfach, und nichts sagt es einem. "Wurde dieser Autocmd
+      aus einer Datei in diesem Repo erzeugt" ist die eigentliche Frage und
+      interessiert sich nicht dafuer, wie die Gruppen heissen. Genau danach
+      filtert es.
+
+      **Zu deiner Aggregator-Idee (`write = true` beim Registrieren):** dagegen,
+      und zwar nicht aus Stilgruenden. Ein Autocmd wird beim *Laden des
+      Plugins* registriert — also in jeder fremden nvim-Instanz, in der das
+      Plugin installiert ist. `write = true` hiesse, dass lib dort in das
+      Installationsverzeichnis schreibt: bei einem Lazy-Clone in einen
+      Git-Checkout, den der User nicht besitzt, unter Umstaenden
+      read-only, und in jedem Fall waere die generierte Datei die Momentaufnahme
+      *dieser fremden Config* und nicht deiner. Dasselbe Beduerfnis loest
+      `docs.create_usercmd()` in **deiner eigenen** Config: eine Zeile, danach
+      `:LibAutocmdDocs` in jedem Repo, in dem du gerade sitzt. `docs.check()`
+      ist das CI-Gegenstueck, damit eine generierte Datei nicht veraltet.
+
+
 - [x] **Neues `lib.nvim`-Keymap-Modul + alle Plugins darauf umgestellt.**
 
       Pfad wie gewuenscht: `lua/lib/nvim/bindings/keymap`. Das Modul ist mehr

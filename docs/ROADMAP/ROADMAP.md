@@ -1,4 +1,21 @@
 # Roadmap
+Echte Funde, absteigend nach Wert:
+
+buffer-ctx ↔ markdown: gen_separator, format_row, render_table — ein kompletter Markdown-Tabellen-Renderer, byte-identisch in beiden. Das ist der klare Fall für lib.
+
+cascade ↔ spotlight: deep_merge + config.get (12 und 11 Zeilen) — Config-Maschinerie doppelt.
+
+Kleinkram: health.check_require (dap ↔ debugging), version_ok (documentation ↔ runtime-analysis), HTML-esc, spawn_env.array.
+
+config.M.get in 6 Plugins — 4 Zeilen Boilerplate. Extrahieren kostet mehr als es spart.
+
+try_require in 4 Plugins — hier spricht etwas dagegen: das ist der Soft-Dependency-Helfer, er muss funktionieren ohne lib. Nach lib zu ziehen wäre zirkulär.
+
+Also zu deinem „was spricht dagegen?": bei der Tabellen-Renderer-Sache nichts, das gehört zusammengelegt. Bei try_require gibt es einen echten Grund. Bei 4-Zeilen-Boilerplate lohnt es nicht.
+
+Soll ich den Tabellen-Renderer nach lib ziehen?
+
+JA, nicht auf die dosc updaten vergesssen n der lib-
 
 ## Table of content
 
