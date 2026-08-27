@@ -6,6 +6,48 @@ nvim-Config.
 
 ---
 
+## 2026-08-28
+
+### Architektur & Strategie
+
+- [x] **`TO_CHECK_FEATURES` fuer alle 31 Plugins angelegt.** Vorher nur
+      `documentation.nvim` (3 Teile), `docmap-desktop` und
+      `runtime-analysis.nvim`. Die restlichen 19 fehlten komplett (auch nach
+      Abzug der 10, die schon vor dem Session-Abbruch fertig waren:
+      `buffer-ctx`, `dap`, `debugging`, `diff`, `images`, `insights`, `lib`,
+      `recommender`, `replacer`, `sessions`). Priorisierung nach der am
+      2026-08-27 vereinbarten Hybrid-Methodik: Telemetrie-Einstiegspunkte
+      (`bindings.*`/`commands.*`/`handler.*`) als Signal, wo genug Daten da
+      sind; sonst Lesen des Codes, nie "0 Aufrufe = unwichtig".
+
+      In 2 Runden zu je maximal 3 parallelen Agenten erledigt (Regel dazu neu
+      in Memory: nie mehr als 3 gleichzeitig, sonst reißt ein Session-Limit
+      alle auf einmal weg — genau das ist beim ersten Versuch mit 8
+      parallelen Agenten passiert, 10 von 29 Dateien waren zu dem Zeitpunkt
+      schon geschrieben und blieben erhalten).
+
+      **Zwei echte Bugs beim Schreiben gefunden, in den jeweiligen Dateien
+      dokumentiert:**
+      - `migrate.md`: `docs/commands.md`/`docs/features.md` behaupten,
+        `-n`/`--dry-run` funktioniere bei allen vier `:Migrate*`-Befehlen.
+        Stimmt nicht — `:MigrateNotify` registriert sich in
+        `lua/migrate/notify/init.lua` komplett eigenhaendig ueber
+        `composer.verb`, ganz ohne `flags`-Tabelle, und `dispatch()` liest nie
+        ein Dry-Run-Flag.
+      - `pdfport.md`: Die lazy.nvim-Spec dieser Config listet
+        `PdfPortText`/`Float`/`System`/`Terminal`/`Health` als
+        `cmd`-Trigger. Das Plugin registriert aber nie diese fuenf Befehle —
+        nur `:PdfPort` mit Subcommands (`:PdfPort text`, ...). Die fuenf
+        Trigger-Befehle existieren schlicht nicht.
+      - Nebenbei: `learn-cli.nvim`s Spec uebergibt `exercises_dir`,
+        `config/init.lua` liest nur `exercises_path` — die Option wird still
+        verworfen (in `learn-cli.md` dokumentiert, deckt sich mit dem Plugin
+        ohnehin als `"disabled"` in `source.lua` und 0 Telemetrie).
+
+      Auch eine Namenskorrektur nachgezogen: `fileops.nvim.md` hieß
+      versehentlich mit `.nvim`-Suffix (abweichend von der Konvention aller
+      anderen Dateien in diesem Ordner), umbenannt nach `fileops.md`.
+
 ## 2026-08-27
 
 ### Healthchecks, Config & Defaults

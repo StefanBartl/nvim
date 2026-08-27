@@ -55,8 +55,5 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
   - **Nebenbefund, nicht angefasst:** der WORKSTATION-FREEZE-FIX in `lua/options.lua` (PSModulePath von OneDrive-Pfaden befreien) ist **auskommentiert**. Laut dem Kommentar dort hing daran ein 60-90s-Freeze. Entweder ist er nicht mehr nötig oder er ist versehentlich deaktiviert — das ist deine Entscheidung, nicht meine.
   - **Generelle Erkenntnis, gilt config-weit:** ein *fehlschlagendes* `vim.fn.executable()` läuft unter Windows jeden PATH-Eintrag gegen jede PATHEXT-Endung ab — hier 67 × 11 = 737 Stats, ~44ms — und wird **nicht** gecacht. Ein *erfolgreiches* stoppt beim ersten Treffer (~0.2ms). Jede Probe auf ein nicht installiertes Tool im Startpfad kostet also 44ms. `lib.nvim.core.has_exec` memoisiert, aber nur pro Session, hilft dem ersten Aufruf also nicht.
 
-### Architektur & Strategie (Umsetzung, keine Grundsatzentscheidung)
-- [ ] Alle Features eines Plugins den zugehörigen Usrcmds/Keymaps/Autocmds zuordnen, Analyse in `docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES` pro Plugin ablegen. Priorisierungsmethodik jetzt geklärt (siehe `Merged_Finished.md`, 2026-08-27): Telemetrie-Einstiegspunkte (`bindings.*`/`commands.*`/`handler.*` aus `docs/ROADMAP/TelemetryReport.md`) als Signal, wo genug Daten da sind; sonst Einschätzung, nicht "0 Aufrufe = unwichtig". Bislang nur für `documentation.nvim` (3 Teile), `docmap-desktop` und `runtime-analysis.nvim` angelegt — der Rest der ~31 Plugins steht noch aus.
-
 ---
 
