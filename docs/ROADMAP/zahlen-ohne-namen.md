@@ -26,7 +26,7 @@ Betriebssystem**, keine Präferenzen — dafür steckte in ihnen ein echter Bug.
 
 ---
 
-## A — Float-Größen (26 von 43) — **gelöst, aber nicht mit Config-Keys**
+## A — Float-Größen (26 von 43) — **erledigt 2026-08-27**
 
 Neun Plugins, 26 Stellen, überall dieselbe Rechnung von Hand:
 
@@ -37,8 +37,9 @@ local height = math.floor(vim.o.lines * 0.8)
 
 26 Config-Keys wären die falsche Antwort gewesen. Die richtige stand schon in
 der Bibliothek: `lib.nvim.ui.kit.layout` kennt seit jeher die Konvention
-„Wert ≤ 1 ist ein Bruchteil, größer ist Zellen" — nur `make_scratch`, durch
-das jeder dieser 26 Aufrufe am Ende geht, kannte sie nicht.
+„Wert ≤ 1 ist ein Bruchteil, größer ist Zellen" — nur `make_scratch` kannte sie
+nicht — und, wie sich beim Abarbeiten zeigte, geht längst nicht jeder dieser
+26 Aufrufe überhaupt dort hindurch (siehe Nachtrag unten).
 
 **`make_scratch` nimmt jetzt Bruchteile.** `width = 0.8` genügt. Damit kann
 jedes Plugin, das ohnehin eine Config-Tabelle hat, seinen Wert direkt
@@ -52,10 +53,45 @@ Progress-Styles und die Statusline übergeben `height = 1` und meinen es so.
 Als 100 % gelesen hätte das jeden Prompt auf volle Höhe aufgerissen. Bruchteil
 ist deshalb *strikt* zwischen 0 und 1.
 
-**Offen (mechanisch):** die 26 Aufrufstellen auf die kurze Form umstellen.
-Nichts davon ist dringend — sie funktionieren unverändert weiter, es ist
-Aufräumen. Betroffen: reposcope (11), pdfport (4), language (4), learn-cli
-(3), lsp (2), markdown (2), filetree (2), images (1).
+### Nachtrag 2026-08-27: „26 mechanisch umstellbar" war falsch
+
+Beim Abarbeiten habe ich alle 26 Stellen angesehen, statt sie zu ersetzen.
+**Genau drei** sind reine Durchreichungen, bei denen der Wert unverändert in
+`make_scratch` geht — die sind umgestellt (pdfport ×2, learn-cli ×1). Die
+übrigen 23 zerfallen in zwei Gruppen, die die Konvention *nicht* ausdrücken
+kann:
+
+**Kappung gegen Inhaltsgröße** (`math.min(content_w + 2, 80%)`). Der Anteil
+ist hier eine Obergrenze, nicht die Größe: das Fenster ist so breit wie sein
+Inhalt, höchstens aber so breit wie der Anteil. `width = 0.8` würde daraus
+„immer 80 %" machen — eine Verhaltensänderung, kein Refactoring. Betrifft
+language (`translate/output`), filetree (Cheatsheet), lsp (beide) und
+reposcope (favorites/help/status view).
+
+**Der Wert speist eigene Geometrie.** `col = (columns - width) / 2` oder
+`col = columns - width` braucht die Zahl in Zellen, nicht als Anteil, und das
+Fenster wird per `nvim_open_win` geöffnet, nicht über `make_scratch`.
+Betrifft language (`translate/window`), markdown (`image_preview`), learn-cli
+(`exercise_view`), images (Gallery-Layout).
+
+Die Lehre für die Liste selbst: „dieselbe Zahl an 26 Stellen" hat *nicht*
+bedeutet „dieselbe Entscheidung an 26 Stellen". Das Muster war echt, die
+daraus abgeleitete Aufgabe war es nicht.
+
+### Und ein Bug, der genau dabei auffiel
+
+reposcopes Layout-Module — `ui/config`, `list_config`, `preview_config`,
+`prompt_config`, `background_config` — berechneten ihre Geometrie **auf
+Modulebene**, also einmal, beim ersten `require`. Wer danach das Terminal
+vergrößerte, bekam die Picker für den Rest der Session in der alten Größe.
+`update_layout()` hätte das geheilt, wurde aber von nichts aufgerufen, und
+einen `VimResized`-Handler gibt es in dem Plugin nirgends.
+
+Jede der fünf hat jetzt ein `recompute()`, das `open_ui()` in
+Abhängigkeitsreihenfolge aufruft. Beim Öffnen statt bei `VimResized`, weil
+die Werte ohnehin nur beim Öffnen gelesen werden. `update_layout(width)`
+pinnt seinen Wert seither: er überlebt spätere Recomputes, alles
+Nicht-Gepinnte fällt weiter aus der Editorgröße.
 
 ## B — Timeouts auf externe Prozesse (7)
 
