@@ -44,6 +44,14 @@ nvim-Config.
         verworfen (in `learn-cli.md` dokumentiert, deckt sich mit dem Plugin
         ohnehin als `"disabled"` in `source.lua` und 0 Telemetrie).
 
+      **Alle drei noch am selben Tag gefixt** (auf Wunsch): `:MigrateNotify`
+      hat jetzt dasselbe `-n`/`--dry-run`-Flag wie die anderen drei
+      `:Migrate*`-Befehle (`migrate.nvim`, eigener Commit); die
+      lazy.nvim-Spec fuer `pdfport.nvim` ist auf `cmd = "PdfPort"` gekuerzt;
+      `learn-cli.nvim`s Spec-Key heisst jetzt `exercises_path`. Die drei
+      TO_CHECK_FEATURES-Dateien wurden auf Regressions-Checks umgeschrieben
+      statt offene Fragen zu bleiben.
+
       Auch eine Namenskorrektur nachgezogen: `fileops.nvim.md` hieß
       versehentlich mit `.nvim`-Suffix (abweichend von der Konvention aller
       anderen Dateien in diesem Ordner), umbenannt nach `fileops.md`.
