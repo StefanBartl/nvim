@@ -258,9 +258,10 @@ plugins.add({
       -- silently report `vim.tbl_map` calls as keymaps. The caller knows its
       -- own helper names and the scanner cannot — see core/bindings.lua.
       --
-      -- All five are real shapes in this tree: `map` is `vim.g.__map_helper`
-      -- (same argument order as vim.keymap.set, which is why it can reuse
-      -- that layout), `usercmd.create`/`autocmd.create` are lib.nvim's, and
+      -- All five are real shapes in this tree: `map` is
+      -- `lib.nvim.bindings.keymap` (same argument order as vim.keymap.set,
+      -- which is why it can reuse that layout), `usercmd.create` and
+      -- `autocmd.create` are lib.nvim's, and
       -- the two bare names are `local nvim_create_autocmd =
       -- api.nvim_create_autocmd`-style aliases (autocmds/terminals/init.lua).
       -- `composer.verb` is deliberately absent: it registers a whole verb

@@ -101,10 +101,6 @@ local function plugin_menu_source(buf)
 end
 
 function M.setup()
-  local map = vim.g.__map_helper or function(mode, lhs, rhs, opts)
-    map(mode, lhs, rhs, opts or {})
-  end
-
   -- Alt-b opens top-level custom menu if present, otherwise default.
   -- Applicable plugins (CONTRIBUTORS) get their entries composed on top.
   map("n", "<A-b>", function()

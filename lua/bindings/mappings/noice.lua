@@ -7,7 +7,7 @@ local Autocmd = require("lib.nvim.bindings.autocmd")
 
 ---@return nil
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   -- noice is required inside the callbacks, not here. Requiring at setup() time
   -- force-loaded the plugin on every startup despite its lazy spec, purely to

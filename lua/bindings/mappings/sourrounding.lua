@@ -134,7 +134,7 @@ end
 ---@return nil
 local function xmap(lhs, cb, desc)
   -- Optional project-specific helper:
-  local map = M.cfg.mapfun or vim.g.__map_helper or vim.keymap.set
+  local map = M.cfg.mapfun or require("lib.nvim.bindings.keymap")
   map("x", lhs, cb, { desc = desc, silent = true, noremap = true })
 end
 

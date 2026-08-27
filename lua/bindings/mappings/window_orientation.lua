@@ -41,7 +41,7 @@ end
 
 --- Set up keymaps and user commands.
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   -- vertical
   map("n", "<leader>wl", M.to_vertical_left, { desc = "Move window to vertical split (left)" })

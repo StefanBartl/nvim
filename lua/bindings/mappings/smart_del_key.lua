@@ -53,7 +53,7 @@ function M.setup(opts)
   if opts.map_cr == nil then
     opts.map_cr = true
   end
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   -- Normal-mode <Del>: smart delete (global)
   map("n", "<Del>", M.smart_del, { desc = "Smart delete (<Del>)" })

@@ -7,7 +7,7 @@ local M = {}
 local notify = require("lib.nvim.notify").create("[casedesk]")
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   map("n", "<leader>cp", function()
     vim.fn.setreg("+", vim.fn.expand("%:p"))

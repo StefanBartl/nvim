@@ -189,7 +189,7 @@ local function goto_buffer_by_pos(pos)
 end
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
   if type(map) ~= "function" then
     map = require("lib.nvim.bindings.keymap")
   end

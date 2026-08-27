@@ -5,7 +5,7 @@
 local M = {}
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   map("n", "<C-a>", "gg<S-v>G", { desc = "[General] Select all" })
 

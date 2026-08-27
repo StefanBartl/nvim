@@ -232,7 +232,7 @@ local function Apply(dir, fallback_key)
 end
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   -- use 1 (not +1) because Lua has no unary plus
   map("n", "<C-y>", function()

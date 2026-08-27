@@ -9,7 +9,7 @@ local M = {}
 --- Register Telescope-related key mappings.
 --- Assumes a global keymap helper is available.
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   map("n", "<leader>ts", ":Telescope<CR>", { desc = "[Telescope] UI" })
   map("n", "<leader>tg", function()

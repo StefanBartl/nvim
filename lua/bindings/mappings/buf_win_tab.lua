@@ -10,7 +10,7 @@ local is_terminal_buf, delete_terminal_buf = lib.is_terminal_buf, lib.delete_ter
 
 ---@return nil
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   -- ---------------------------------------------------------------------------
   --  Buffers

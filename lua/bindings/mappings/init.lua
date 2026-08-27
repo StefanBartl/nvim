@@ -6,8 +6,6 @@ local M = {}
 ---Setup all mapping modules
 ---@return nil
 function M.setup()
-  vim.g.__map_helper = require("lib.nvim.bindings.keymap")
-
   -- The LSP and Trouble mapping modules used to be registered here. They moved
   -- into lsp.nvim's keymap catalogue (config/KEYMAPS.lua) together with the
   -- four LSP lines from `fzf.lua` and inc-rename's `<leader>rn`, so that one
@@ -35,7 +33,6 @@ function M.setup()
 
   -- require("bindings.mappings.view_scroll").map_default_keys('<C-d>', '<C-u>')
 
-  vim.g.__map_helper = nil
 end
 
 return M

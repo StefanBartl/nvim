@@ -222,7 +222,7 @@ local function install_paste_trim()
 end
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   install_paste_trim()
 

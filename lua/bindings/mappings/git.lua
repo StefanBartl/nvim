@@ -71,7 +71,7 @@ function M.toggle_inline_diff(bufnr)
 end
 
 local function ToggleInlineDiffSetup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
   map("n", defaults.key, M.toggle_inline_diff, { desc = "Toggle inline diff (gitsigns)" })
 
   usercmd.create(defaults.cmd, function()
@@ -82,7 +82,7 @@ end
 function M.setup()
   ToggleInlineDiffSetup()
 
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   map("n", "<leader>dv", ":DiffviewOpen<CR>", { desc = "[Diffview] Open" })
   map("n", "<leader>dc", ":DiffviewClose<CR>", { desc = "[Diffview] Close" })

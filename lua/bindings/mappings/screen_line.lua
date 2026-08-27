@@ -16,7 +16,7 @@
 local M = {}
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   map({ "n", "v" }, "<C-S-k>", "gk", { desc = "Move up by screen line (through wrapped text)" })
   map({ "n", "v" }, "<C-S-j>", "gj", { desc = "Move down by screen line (through wrapped text)" })

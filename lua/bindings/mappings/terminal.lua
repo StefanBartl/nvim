@@ -7,7 +7,7 @@ local env = require("lib.nvim.system.env")
 local M = {}
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
   map("t", "<Esc>", "<C-\\><C-n>", { desc = "[Terminal] Exit terminal mode" })
   map("t", "<C-c>", "<C-\\><C-n>", { desc = "[Terminal] Exit terminal mode" })
 

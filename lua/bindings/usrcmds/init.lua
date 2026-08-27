@@ -49,10 +49,11 @@ end, {
 })
 
 -- 2. Keymap <leader>BI erstellen
--- Not vim.g.__map_helper: that global is only valid transiently, while
--- bindings.mappings' own setup() is running (it gets set to nil at the end
--- of that function) -- not a stable API for other modules to call into at
--- arbitrary load order. lib.nvim.bindings.keymap directly, like everywhere else.
+-- lib.nvim.bindings.keymap directly, like everywhere else. There used to be a
+-- `vim.g.__map_helper` handle to reach for here; it is gone, and it never
+-- worked -- `vim.g` strips a table's metatable on the way through, so the
+-- callable module came back as a plain table and the first `map(...)` raised
+-- "attempt to call a table value".
 require("lib.nvim.bindings.keymap")('n', '<leader>BI', '<cmd>BindingsPath<CR>', nil, 'Bindings-Pfad kopieren')
 
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.

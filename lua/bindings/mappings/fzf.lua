@@ -6,7 +6,7 @@
 local M = {}
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   map("n", "<leader>fth", ":FzfLua colorschemes<CR>", { desc = "[FzfLua] Colorschemes" })
   -- Was <leader>ffk: collided as a prefix of <leader>ff (pickers.nvim's

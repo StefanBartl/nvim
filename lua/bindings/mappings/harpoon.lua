@@ -110,7 +110,7 @@ local function register_which_key_when_loaded()
 end
 
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
   local ok_hp, harpoon = pcall(require, "harpoon")
   if not ok_hp or not harpoon then
     notify.warn("[harpoon] not installed")

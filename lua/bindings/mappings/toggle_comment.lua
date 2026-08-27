@@ -163,7 +163,7 @@ end
 --- Setup function to register keymaps
 ---@return nil
 function M.setup()
-  local map = vim.g.__map_helper
+  local map = require("lib.nvim.bindings.keymap")
 
   map("n", "<leader>/", toggle_comment_with_annotations, { desc = "[Text] Toggle comment" })
   map("v", "<leader>/", toggle_comment_visual, { desc = "[Text] Toggle comment" })
