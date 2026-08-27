@@ -93,15 +93,19 @@ die Werte ohnehin nur beim Öffnen gelesen werden. `update_layout(width)`
 pinnt seinen Wert seither: er überlebt spätere Recomputes, alles
 Nicht-Gepinnte fällt weiter aus der Editorgröße.
 
-## B — Timeouts auf externe Prozesse (7)
+## B — Timeouts auf externe Prozesse (7) — **erledigt 2026-08-27**
 
-| Plugin | Stelle | Wert | Einschätzung |
+| Plugin | Stelle | Wert | Ergebnis |
 | --- | --- | --- | --- |
-| documentation | `checklist.lua:50`, `churn.lua:52` | 120000 | Zwei Minuten für einen Git-Walk. Auf einem großen Repo knapp — derselbe Fall wie insights' rg-Timeout, den Durchgang eins konfigurierbar gemacht hat. **Kandidat.** |
-| documentation | `mcp/tools.lua:395` | 120000 | Dito. |
-| color_my_ascii | `cache_manager.lua:22`, `init.lua:47` | 5000 | Zwei Stellen, derselbe Wert, ohne gemeinsame Quelle — die driften. **Mindestens zusammenführen.** |
-| pickers | `DEFAULTS.lua:177`, `smart/init.lua:17` | 3000 | Einer steht schon in DEFAULTS; der zweite ist eine Kopie daneben. **Zusammenführen.** |
-| debugging | `views/display.lua:61` | 500 | UI-Timing, klein, unkritisch. |
+| documentation | `checklist.lua`, `churn.lua`, `mcp/tools.lua` | 120000 | **`git_log_timeout_ms`** — ein Key statt drei ausgeschriebener Kopien, samt drei Fehlermeldungen, die „within 120s" als Text führten. Die formatieren die Zahl jetzt aus dem echten Wert. |
+| color_my_ascii | `cache_manager.lua`, `init.lua` | 5000 | **Kopie entfernt.** `init.lua` reichte eine Fallback-Tabelle durch, die die Modul-Defaults Wort für Wort wiederholte (cache: 3 Werte, debounce: 5). Beide `configure` mergen ohnehin feldweise — jetzt `or {}`. |
+| pickers | `DEFAULTS.lua`, `smart/init.lua` | 3000 | **Kopie entfernt.** `smart.defaults()` führte dieselben sechs Werte ein zweites Mal und wäre bei Drift die Verliererin gewesen (`M.config()` merged die Config darüber). Liest jetzt `config.DEFAULTS`. |
+| debugging | `views/display.lua` | 500 | **`timings.capture_timeout_ms`** — der Subsystem hat einen `timings`-Block, in dem jedes andere Zeitmaß schon stand. |
+
+**Dabei aufgefallen und mitbehoben:** `commit_dates` in documentation bekam
+die aufgelöste Config gar nicht, konnte den User-Wert also nicht sehen; und
+`Documentation.Handle` hatte kein `cfg`, obwohl die Registry `entry.opts`
+direkt daneben hält — das MCP-Tool hätte den Default raten müssen.
 
 ## C — Defer- und Poll-Intervalle (5)
 
@@ -112,6 +116,30 @@ Nicht-Gepinnte fällt weiter aus der Editorgröße.
 | language | `item_menu.lua:81` | 500 | UI-Timing. |
 | pickers | `result_count/init.lua:37` | 150 | Tick der Trefferzählung. |
 | reposcope | `prompt_reload.lua:32` | 80 | Grenzfall, faktisch ein Tick. |
+
+## Zwei Bugs, die beim Abarbeiten von B auffielen
+
+Nicht gesucht, sondern gestolpert — beide still, beide alt.
+
+**spotlight: `expand("<cword>")` wirft E348, statt `""` zurückzugeben.** Beide
+Fallback-Pfade in `cursor.lua` prüfen `cword ~= ""`, als käme bei fehlendem
+Wort unter dem Cursor ein leerer String. Der Fehler entkam also aus
+`cursor.token()` in die aufrufende Keymap und meldete sich als
+`Vim:E348: No string under cursor` — ohne dass irgendetwas auf spotlight
+zeigte. Erreichbar auf ganz gewöhnlichem Weg: Cursor auf leerer Zeile oder
+Whitespace, kein Pattern trifft. Der Spec crashte daran seit langem und riss
+den Rest der Datei mit: 436 Tests liefen, danach sind es 453.
+
+**Und warum es so lange keiner sah:** ich hatte während der Keymap-Migration
+`TESTS/run.lua` aufgerufen, in einem Repo, dessen Runner
+`TESTS/pickers_spec.lua` heißt. Der Aufruf endete mit „cannot open", und ich
+habe die fehlende Ausgabe für Erfolg gehalten. Ein zweiter, stale Spec blieb
+dadurch stundenlang rot.
+
+Konsequenz: `tools/run_all_tests.sh` sucht den Runner, statt einen zu
+unterstellen, und sagt **KEIN RUNNER GEFUNDEN**, wo es keinen findet — der
+Zustand, der vorher wie ein Erfolg aussah. Ein Durchlauf über alle 33
+`*.nvim`-Repos ist damit eine Zeile.
 
 ## D — Plattform-Verzweigungen (47) — fast alle Tatsachen
 
