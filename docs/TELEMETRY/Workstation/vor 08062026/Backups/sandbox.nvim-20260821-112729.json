@@ -1,0 +1,1 @@
+{"backed_up_at":1787304449,"data":{"days":{"2026-08-02":{"logger.flush":1},"2026-08-04":{"logger.flush":1}},"functions":{"logger.flush":{"args":{"distinct":1,"n":1,"other":0,"values":{"()":2}},"calls":2}},"info":[],"modules":[],"reminded":[],"sessions":5,"started_at":1785688473,"version":1},"namespace":"sandbox.nvim"}

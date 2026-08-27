@@ -28,9 +28,9 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
       `:RATelemetry export C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/TelemetryReport.md` (`.md` wählt Markdown, sonst JSON). Für mehrere Namespaces: `:RATelemetry export-all <dir>`. Danach kann ich das „und dann implementieren" übernehmen.
 
   Datensätze:
-    1) Aus der workstation: C:\Users\bartl\AppData\Local\nvim\docs\Telemetry
-    2) TelemetryReport von früheren Stadium: C:\Users\bartl\AppData\Local\nvim\docs\Telemetry\Reports
-    3) Neuer Export:
+    1) Aus der workstation: C:\Users\bartl\AppData\Local\nvim\docs\TELEMETRY\Workstation
+    2) TelemetryReport von früheren Stadium: C:\Users\bartl\AppData\Local\nvim\docs\TELEMETRY\Reports
+    3) Neuer Export: C:\Users\bartl\AppData\Local\nvim\docs\TELEMETRY\PC
 
 - [ ] `<leader>wq`: alle damit auffindbaren Issues live durchgehen und beobachten. (Das Refactoring der `wq`-Logik nach `lib.nvim.ui` selbst ist delegierbar, siehe Liste B.)
 

@@ -3,12 +3,11 @@
 ## Table of content
 
   - [Misc](#misc)
-  - [filetree.nvim](#filetreenvim)
-  - [color_my_ascii.nvim](#color_my_asciinvim)
-  - [wezterm padded nvim - bottom padding ist unverhältniossmäßig groß](#wezterm-padded-nvim-bottom-padding-ist-unverhltniossmig-gro)
-  - [images.nvim erweiterung](#imagesnvim-erweiterung)
+  - [DASHBOARD check](#dashboard-check)
+    - [language.nvim](#languagenvim)
+  - [images.nvim](#imagesnvim)
+    - [erweiterung](#erweiterung)
   - [workflow + usecases in allen plugins](#workflow-usecases-in-allen-plugins)
-  - [runtime-analysis.nvim](#runtime-analysisnvim)
   - [true check](#true-check)
     - [Plugin-Liste](#plugin-liste)
   - [cdx](#cdx)
@@ -34,29 +33,25 @@
 
 ---
 
-## filetree.nvim
+## DASHBOARD check
 
-Ich atte einen rfolder docs/Telemetry unfd wolte ihn auf docs/TELEMTRY mit `r` umenbenenen,. ich bekam eine prompt das es den ordner TELEMTRY bereits gibt, obewohl ich sah dass das nicht der fall ar. ich habe auf Trotzdem umbenenen geklickt, dann hat es einfach den ordner kopeirt und ich hatte einemal docs/Telemetry und docs/TELEMTRY mit dne gleichen inhalt. Für mich sieht das nach einen bug aus.
-
----
-
-## color_my_ascii.nvim
-
-Ein eingerücter fence hl trotzdem die ganze breiote, also zb wenn ich mit dme gesamten ence um 4 rowas einrücke, dann asollten in jeder zeile des fendces die ersten 4 rows nicht hl sein, am rechten rand ist es so, dass nvim generell ein klienes padding hat, als nicht ganz nach rechts schreibt,. auch dass sollte das oppadding eingehalten werden. am screenshot erkennt man was ich meine, ich habe das mit rot angezevhnet. das soll eine option sein, die der user auch opt-out ausschalten kann
-
-Screenshot: nvim\docs\ROADMAP\assets\fence_left_right.png
+Dasboards in den repos auflisten, welches hat eines usw...idealerweiße, wenn möglich wei nicht extrem individdualisert, dann lib.nvim ui.kit dashboard vewrenden. `?` cheetsheet implementieren. wenn das daschbaoard bisher keine buffer loaklen  keymaps hat, brainstomrmen obn welche siunnvoll sind
 
 ---
 
-## wezterm padded nvim - bottom padding ist unverhältniossmäßig groß
+### language.nvim
 
-wezterm macht ein pasdding rund um nvim. mögloichewerweiße ahben wir das bei image.nvim bei den letzten commites der letzten 4 tage bverändert damit images inline hover angezegit werden korrekt, oder als ich das Configs  repo uopdatet habe, da habe ich auch die wezterm config umgeschrieben.
-vorallem das padding unteneren rand ist ziemlich viel und störend, screenshot:  docs/ROADMAP/assets/wezterm_padding.png
-vor allme, weil her ja 2 statuslines aufeinenader kommen, das von wezetm und dass von nvim....
+:Spellcheck öffnet ein popu it den reusltaten. dort sollte auch ein `?` cheathseet für keymaps die buffer lokal dort wirken, dazu keymaps fpr add_to_ignore, dictionary, usw... einbauen. Ich  wei0, dass momenan CR zu den optionen führt, was auh ok ist, aber man kan es doppelt ermöglichen bzw vl können wir dann auch eines einführen, miot dem man zum wort springt mit dem cursor.
 
 ---
 
-## images.nvim erweiterung
+## images.nvim
+
+Obwohl ich image calibarte ausgeführt habe, ist das hover image wieder nicht im rahmen. der einzge unterscheid: ich bin nu auf mienen pc, nicht auf der workstation ich tedniere daher daizu dass wir erstmal verschen hier alles wieder korrekt eionzurichten, dann sschaeun wur uns an, was sich zur den korrekten einstellungen der workstation veräbndert hat. vl können iwr etwas davon ableiten
+
+---
+
+### erweiterung
 
 image/pdf/file hover nicht nur in markdown links, sondern auch bei ganz normalen pfaden wie:
 
@@ -149,14 +144,6 @@ Auto-continue when limits reset
 
 ---
 
-## runtime-analysis.nvim
-
-`:RATelemetry export-all` hat auch repos "exportiert" bzw eine file angelegt, die gar kein lua plugin sind: WKDBook-Tricentis zb. aber nicht für WKDBooks. Hängt das miot $REPOS_DIR zusammen oder ? Ich dneke mir das desewegen, weil im e:\repos als $REPOS_DIR auf der Workstation WKDBooks und WKDBook-Tricentis benfals im repoo ordner waren. auf dieser maschien hier sind viele anderen ordner mehr darin aber da habe ich es nicht getestet.
-
-  Kannst duz das checken? Beide WKDBooks und WKDBook-Tricentis repos sidn beides repos mit .git folder, ansosnten nmur markdonw files oder assets, ich versthe auch nicht warum nur einer
-
----
-
 ## true check
 
 Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
@@ -206,10 +193,10 @@ und das native: docmap-desktop
 
 ## cdx
 
-free: So., 09:00 98% - Subscription bis   21. Juli 2027
-work: Sa., 06:00 98% - Subscription bis   20. Sept
-dev:  Sa., 22:00 99% - Subscription bis   03. Sep
-main: Fr., 11:00 10% - Subscription bis ~ 27. Sep
+free: So., 09:00  98% - Subscription bis   21. Juli 2027  |
+work: Sa., 06:00  98% - Subscription bis   20. Sept       |
+dev:  Sa., 22:00 100% - Subscription bis   03. Sep        |
+main: Fr., 11:00  10% - Subscription bis ~ 27. Sep        | 17:31
 
 ---
 
