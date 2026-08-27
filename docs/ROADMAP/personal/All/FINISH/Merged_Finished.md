@@ -98,6 +98,53 @@ nvim-Config.
       greifen. Gehoert damit in dieselbe Kategorie wie `config.M.get` und
       `try_require` oben, aus demselben Grund.
 
+### Telemetrie & Priorisierung
+
+- [x] **`TelemetryReport.md` neu generiert — aus echter Nutzung, nicht meiner.**
+      Der Export war Aufgabe des Users (`:RATelemetry export`/`export-all`,
+      Telemetrie-Zaehler leben pro Session im Speicher, headless erzeugt nur
+      "nichts lief"). Drei Datensaetze standen bereit: `Workstation/08262026`
+      (akkumuliert, 2 bis 554 Sessions je Plugin), `Reports/00_TelemetryReport.md`
+      (aeltere Auswertung, 05.-12.08.) und `PC/27082026_2` (frischer
+      Ein-Tages-Export). Neu geschrieben nach `docs/ROADMAP/TelemetryReport.md`:
+      `Workstation` als primaere, weil repraesentative Quelle pro Plugin (Top-18
+      Funktionen je Plugin), `PC` als Ein-Tages-Gegenprobe daneben vermerkt.
+      Per Skript aus den Markdown-Tabellen aggregiert statt Datei fuer Datei
+      abgetippt — 29 Plugins, ~4800 Zeilen Rohdaten waeren fehleranfaellig von
+      Hand gewesen.
+
+      **Drei Befunde direkt aus den Zahlen:**
+      - Rohe Aufrufzahlen sind kein Wichtigkeits-Proxy: die Top-Ausreisser sind
+        fast alle Render-/Parse-Hotpaths (`markdown.nvim`s `highlight_line`
+        macht 85 % aller Aufrufe des Plugins aus, laeuft aber bei jedem
+        Redraw, nicht bei bewusster Nutzung). Echte Feature-Einstiegspunkte
+        (`bindings.*`/`commands.*`/`handler.*`) liegen um Groessenordnungen
+        niedriger.
+      - `diff.nvim`, `learn-cli.nvim`, `migrate.nvim` haben ueber den *gesamten*
+        Erfassungszeitraum (bis zu 554 Sessions bei anderen Plugins) keine
+        Telemetriedatei — nie geladen. Starkes Signal.
+      - Der Ein-Tages-Export haette allein in die Irre gefuehrt:
+        `emojis.nvim`/`replacer.nvim` fehlten dort komplett, hatten auf der
+        Workstation aber reale Zahlen (77k bzw. 1.5k Aufrufe).
+
+- [x] **Priorisierungsfrage geklaert (Grundsatzentscheidung, User bestaetigt
+      2026-08-27): Hybrid aus Telemetrie-Einstiegspunkten und Einschaetzung.**
+      Empfehlung war, gefiltert auf echte Einstiegspunkte
+      (`bindings.*`/`commands.*`/`handler.*`, nicht Plugin-Gesamtsumme) zu
+      messen und das nur dort als Signal zu nehmen, wo genug Daten da sind —
+      bei duennen/fehlenden Daten bleibt Einschaetzung die Grundlage, nicht
+      "0 Aufrufe = unwichtig" (die 5-Zeilen-Begruendung dafuer steht im
+      TelemetryReport-Eintrag oben). User hat diese Variante bestaetigt statt
+      der beiden Alternativen (rein mechanisch nach Telemetrie sortieren; oder
+      Telemetrie ganz ignorieren). Damit ist die Sortierung von
+      `docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES` pro Plugin jetzt
+      unblockiert — der eigentliche Aufbau fuer die ~28 Plugins ohne
+      TO_CHECK_FEATURES-Datei steht noch aus, bleibt vorerst in `MERGED.md`.
+
+      Separat besprochen und **aufgeschoben**: `lua/config/menu` nach
+      `lua/wkdnvchad`? — reine Namensfrage, telemetrie liefert dazu keine
+      Hinweise, bleibt offen in `MERGED.md`.
+
 ### Bindings, Keymaps & UI
 
 - [x] **Register fuer keymaps und usrcmds — und der `vim.g.__map_helper`-Bug.**
