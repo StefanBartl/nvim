@@ -100,9 +100,12 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
       `github_stats.setup()` **jede** Option außer `repos` still verwarf,
       sobald eine config.json existierte (die das Plugin selbst schreibt) —
       ohne diesen Fix wären die neuen Keys dort unerreichbar geblieben.
-      Offen bleiben die 6 strittigen Fälle (siehe Report, warten auf deine
-      Antwort) und der zweite Scan-Durchgang nach Zahlen ohne Namen
-      (`vim.defer_fn(fn, 60)`) und Plattform-Verzweigungen ohne Opt-out.
+      Die 4 strittigen Fälle, die dir vorlagen, sind entschieden und
+      umgesetzt (Sparklines über `nerd_font.chars`, reposcope bleibt,
+      sandbox bekommt `max_error_length`, der Logger nimmt die Kappungen
+      pro Aufruf). Offen bleibt nur der zweite Scan-Durchgang nach Zahlen
+      ohne Namen (`vim.defer_fn(fn, 60)`) und Plattform-Verzweigungen ohne
+      Opt-out.
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
 
 ### Performance

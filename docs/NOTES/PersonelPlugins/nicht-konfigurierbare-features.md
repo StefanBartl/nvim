@@ -67,43 +67,36 @@ nennt, wie er jetzt heißt.
 | markdown | `MAX_SUBARGS` | Parser-Grenze der Subcommand-Grammatik, keine Verhaltenseinstellung. |
 | runtime-analysis | `MAX_STRING`, `MAX_ARGS` | Fingerprint-Normalisierung. Ändert man sie, sind alte und neue Telemetrie nicht mehr vergleichbar — das ist ein Datenformat, kein Regler. |
 
-## C — Strittig, Rückfrage
+## C — Strittig — **entschieden 2026-08-27**
 
-Hier ist die Antwort eine Geschmacks- oder Zielgruppenfrage, keine technische.
+Vier davon lagen dir vor; deine Antworten sind umgesetzt.
 
-1. **`github_stats.SPARKLINE_CHARS`** (`▁▂▃▄▅▆▇█`) — konfigurierbar machen?
-   *Dafür:* in einem Terminal ohne die Blockzeichen ist die Sparkline Müll,
-   und ein ASCII-Fallback (`.:-=+*#`) wäre ein Einzeiler. *Dagegen:* es ist
-   das einzige Feature, dessen Aussehen dann von zwei Stellen abhängt, und
-   wir haben mit `lib.nvim.ui.nerd_font` bereits einen Mechanismus für
-   "Zeichen nur, wenn der Font sie kann" — vielleicht gehört es dorthin statt
-   in die Plugin-Config.
+1. **`github_stats.SPARKLINE_CHARS`** → **über `lib.nvim.ui.nerd_font`**,
+   kein eigener Config-Key. Neu in der lib: `nerd_font.chars(rich, plain)`,
+   das einen *Satz* als Ganzes wählt statt pro Zeichen — eine Reihe, die `█`
+   mit `#` mischt, liest schlechter als jede der beiden Rampen allein. Fällt
+   auch zurück, wenn ein Zeichen breiter als eine Zelle rendert, weil das in
+   einer Rampe jede folgende Zeile mitverschiebt. ASCII-Rampe:
+   `.,-=+*#@`.
 
-2. **`reposcope.MAX_NAME_W` / `MAX_BRANCH_W`** (28 / 22) — Spaltenbreiten der
-   Status-View. Konfigurierbar, oder besser **automatisch** aus der
-   Fensterbreite? Zwei Config-Keys sind billig, aber die richtige Lösung ist
-   vermutlich, gar nicht zu fragen und zu rechnen.
+2. **`reposcope.MAX_NAME_W` / `MAX_BRANCH_W`** → **bleibt wie es ist.** 28/22
+   fest verdrahtet, stört in der Praxis nicht.
 
-3. **`sandbox.MAX_LEN = 200`** — Kürzung von Fehlermeldungen. Konfigurierbar
-   wirkt übertrieben; andererseits ist eine abgeschnittene Docker-Fehlermeldung
-   genau dann ärgerlich, wenn man sie braucht. Alternative: nicht kürzen,
-   sondern die volle Meldung in `:messages` und die gekürzte in die
-   Notification.
+3. **`sandbox.MAX_LEN`** → **Config-Key `max_error_length`.** Der volle Text
+   ging ohnehin immer an `sandbox.logger`; gekappt wird nur die Notification.
 
-4. **`lib.nvim.logger.MAX_ITEMS = 200`** — wie viele Items beim Serialisieren
-   eines Tables mitgehen. Das ist eine Bibliothek: gehört es in die
-   Logger-Options (per Aufruf), in eine `lib.setup()`-Konfiguration (die es
-   bisher nicht gibt), oder bleibt es Konstante?
+4. **`lib.nvim.logger.MAX_ITEMS`** → **Option pro Aufruf**, zusammen mit
+   `max_depth`, über `Lib.Logger.CallOpts`. Keine lib-weite Konfiguration:
+   die richtige Breite für eine Logzeile ist eine Eigenschaft dessen, was
+   geloggt wird, nicht des Prozesses, der loggt — dieselbe Form, die
+   `lib.lua.dump.to_lines` für `max_depth` schon hat.
 
-5. **`documentation.TELEMETRY_TTL_MS = 2000`** — Cache-Dauer der
-   Call-Hierarchy-Telemetrie. Konfigurierbar nur sinnvoll, wenn jemand die
-   Zahl je bemerkt; ich sehe kein Szenario, in dem sie stört. Erwähnt, weil
-   sie technisch in Kategorie A gehört und ich sie trotzdem nicht anfassen
-   würde.
+5. **`documentation.TELEMETRY_TTL_MS = 2000`** — nicht angefasst. Technisch
+   Kategorie A, praktisch sehe ich kein Szenario, in dem die Zahl auffällt.
+   Sag Bescheid, wenn du es anders siehst.
 
-6. **`markdown.PLACEHOLDER_GRACE_MS = 250`** — wie lange der Hover-Platzhalter
-   steht, bevor das Bild da ist. Gleiche Klasse: technisch ein Regler,
-   praktisch ein Detail, das nur auffällt, wenn es falsch ist.
+6. **`markdown.PLACEHOLDER_GRACE_MS = 250`** — dito: ein Detail, das nur
+   auffällt, wenn es falsch ist.
 
 ## Nicht erfasst, aber bekannt
 
