@@ -63,23 +63,30 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 ### Bindings, Keymaps & UI
 #### autocmds
 
-- [~] **Autocmds zusammenführen / Dispatch-Lib-Modul** — der Überblick ist da,
-      das Verschieben bewusst nicht. Details in `Merged_Finished.md`; kurz:
-      `lib.nvim.bindings.autocmd` führt jetzt ein **Register** dessen, was
-      wirklich registriert wurde (Event, Gruppe, Pattern, desc, Datei:Zeile),
-      abrufbar über `registered()`/`by_event()`. Das beantwortet „was feuert
-      wann" aus dem, was existiert — und erfasst auch jede künftige
-      Registrierung an beliebiger Stelle, was reines Verschieben nicht
-      leisten würde.
+- [~] **Autocmds zusammenführen / Dispatch-Lib-Modul** — Register, Doku-Generator
+      und Messung stehen; offen ist nur noch das Umstellen selbst.
 
-      Offen und für dich zu entscheiden: der **Dispatcher** (`lib.nvim.
-      bindings.autocmd.dispatcher`, existiert bereits) bündelt N Handler
-      hinter einem Autocmd. Seine eigene README ist ehrlich, dass er *kein*
-      Performance-Gewinn ist — er macht pro Event mehr Arbeit als natives
-      Dispatch, nicht weniger. Was er bringt: deterministische Reihenfolge,
-      einheitliches Lazy-Loading, `once` pro Buffer. Bei filetree hätte
-      `BufEnter` (10 Handler) den plausibelsten Fall. Ob dir das die
-      Umstellung wert ist, ist eine Abwägung, keine Rechnung.
+      `lib.nvim.bindings.autocmd` führt ein **Register** dessen, was wirklich
+      registriert wurde (Event, Gruppe, Pattern, desc, Datei:Zeile), abrufbar
+      über `registered()`/`by_event()`. Das beantwortet „was feuert wann" aus
+      dem, was existiert — und erfasst auch jede künftige Registrierung an
+      beliebiger Stelle, was reines Verschieben nicht leisten würde.
+
+      Darauf setzt `docs.write()` auf: legt `bindings/autocmd/` als Markdown an,
+      je Event-Familie eine Datei, **ohne Argumente** aufrufbar.
+      `docs.create_usercmd()` gibt dir `:LibAutocmdDocs` /
+      `:LibAutocmdDocsCheck` — Details und die Begründung gegen die
+      `write = true`-Aggregator-Variante in `Merged_Finished.md`.
+
+      Die Messung ist gelaufen: der Dispatcher kostet flache **~30 µs pro
+      Fehlschlag**, und davon sind ~29 µs allein der Sprung nach Lua, den jeder
+      Lua-Callback zahlt. Bei Treffern Gleichstand bis ~20 Handler, darüber
+      Gewinn. Tabelle in der Dispatcher-README und in `Merged_Finished.md`.
+
+      **Offen:** Migration von filetree (`BufEnter`, 10 Handler) auf den
+      Dispatcher plus die dort fehlenden `desc`-Angaben — bei den Zahlen
+      spricht nichts dagegen, und alle Autocmds bekommen damit die
+      lib-Features.
 
 ### Healthchecks, Config & Defaults
 - [~] **`lib.nvim` konsequent als Dependency nutzen** — die Konsistenz-Hälfte
@@ -88,9 +95,15 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
       Stilproblem, sondern ein Absturz, und einer im Erfolgspfad. Ein Sweep
       über alle lib-Factories in allen 33 Repos fand sonst nichts.
 
-      Offen: **Funktionen migrieren/deduplizieren** — welche Helfer in
-      mehreren Plugins doppelt liegen und nach lib gehören. Das ist eine
-      eigene Analyse, vergleichbar mit den Konfigurierbarkeits-Durchgängen.
+      Offen: **Funktionen migrieren/deduplizieren.** Gemeint ist damit: es
+      gibt Helfer, die in mehreren Plugins unabhängig voneinander nochmal
+      geschrieben wurden statt aus lib zu kommen — dieselbe Arbeit an zwei
+      Stellen, die getrennt voneinander veraltet. Der Weg dorthin ist ein
+      Vergleich *identischer Funktionskörper* über alle Repos
+      (`docs/ROADMAP/tools/duplicate_functions.py`), nicht ein Vergleich von
+      Namen: gleich heißende Funktionen tun oft Verschiedenes, und die echten
+      Duplikate heißen oft verschieden. Erst was mehrfach *identisch* dasteht,
+      ist ein Kandidat für lib.
 
 ### Performance
 - [ ] **Startup optimieren — erledigt bis auf `lsp.setup()`, siehe `Merged_Finished.md`.** ~1300ms → ~942ms (−27%), eager geladene Plugins 44 → 28. Drei Ursachen, alle gemessen: neo-tree `lazy = false` (zog neotest samt acht Adaptern mit), ein fehlschlagendes `vim.fn.executable("pwsh")` in `options.lua` (~44ms, jede Startup), und `trouble.nvim` `lazy = false` (~79ms + 71ms devicons).
