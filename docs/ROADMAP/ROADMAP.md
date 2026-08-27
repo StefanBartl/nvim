@@ -8,8 +8,8 @@
   - [wezterm padded nvim - bottom padding ist unverhältniossmäßig groß](#wezterm-padded-nvim-bottom-padding-ist-unverhltniossmig-gro)
   - [images.nvim erweiterung](#imagesnvim-erweiterung)
   - [workflow + usecases in allen plugins](#workflow-usecases-in-allen-plugins)
-  - [true check](#true-check)
   - [runtime-analysis.nvim](#runtime-analysisnvim)
+  - [true check](#true-check)
     - [Plugin-Liste](#plugin-liste)
   - [cdx](#cdx)
 
@@ -149,17 +149,18 @@ Auto-continue when limits reset
 
 ---
 
+## runtime-analysis.nvim
+
+`:RATelemetry export-all` hat auch repos "exportiert" bzw eine file angelegt, die gar kein lua plugin sind: WKDBook-Tricentis zb. aber nicht für WKDBooks. Hängt das miot $REPOS_DIR zusammen oder ? Ich dneke mir das desewegen, weil im e:\repos als $REPOS_DIR auf der Workstation WKDBooks und WKDBook-Tricentis benfals im repoo ordner waren. auf dieser maschien hier sind viele anderen ordner mehr darin aber da habe ich es nicht getestet.
+
+  Kannst duz das checken? Beide WKDBooks und WKDBook-Tricentis repos sidn beides repos mit .git folder, ansosnten nmur markdonw files oder assets, ich versthe auch nicht warum nur einer
+
+---
+
 ## true check
 
 Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
 Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass doll es nä,lich auh nicht sein, leider ist mir klar ds das konterkariert meine wüsnche. ckch denke, du must da einen goldenen Zwischenweg finden.
-
----
-
-## runtime-analysis.nvim
-
-`:RATelemetry export` hat auch repos "exportiert" bzw eine file angelegt, die gar kein lua plugin sind: WKDBook-Tricentis zb. aber nicht für WKDBooks. Hängt das miot $REPOS_DIR zusammen oder ? Ich dneke mir das desewegen, weil im e:\repos als $REPOS_DIR auf der Workstation WKDBooks und WKDBook-Tricentis benfals im repoo ordner waren. auf dieser maschien hier sind viele anderen ordner mehr darin aber da habe ich es nicht getestet.
-Es gibt von insights.nvim eine markdown file in den telemetry daten. Was hat es damit auf sich?
 
 ---
 
@@ -208,7 +209,7 @@ und das native: docmap-desktop
 free: So., 09:00 98% - Subscription bis   21. Juli 2027
 work: Sa., 06:00 98% - Subscription bis   20. Sept
 dev:  Sa., 22:00 99% - Subscription bis   03. Sep
-main: Fr., 11:00     - Subscription bis ~ 27. Sep
+main: Fr., 11:00 10% - Subscription bis ~ 27. Sep
 
 ---
 
