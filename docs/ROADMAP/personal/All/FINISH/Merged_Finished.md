@@ -22,8 +22,9 @@ nvim-Config.
       Ein Sweep ueber alle lib-Factories in allen 33 Repos fand sonst nichts
       Vergleichbares.
 
-- [x] **Duplikat-Analyse ueber alle Repos gelaufen** (die Umsetzung steht noch
-      aus und bleibt in `MERGED.md`).
+- [x] **Duplikat-Analyse ueber alle Repos gelaufen, Umsetzung jetzt auch
+      abgeschlossen** (siehe der ausfuehrliche Eintrag weiter unten fuer die
+      Details der Umsetzung).
 
       Verglichen wurden *identische Funktionskoerper*, nicht Namen
       (`docs/ROADMAP/tools/duplicate_functions.py`, normalisiert um
@@ -37,6 +38,55 @@ nvim-Config.
       und Kopplung mehr kosten als sie sparen — und `try_require` (4 Plugins)
       ist der Soft-Dependency-Helfer, der funktionieren muss, *ohne* dass lib
       da ist. Ihn nach lib zu ziehen waere zirkulaer.
+
+- [x] **Dedup-Umsetzung: alle drei "Zu tun"-Punkte aus dem Handover
+      abgeschlossen, `lib.nvim` konsequent als Dependency nutzen ist damit
+      komplett.** Details standen in
+      `docs/ROADMAP/personal/All/HANDOVER_dedup.md`, das jetzt nur noch den
+      Status vermerkt.
+
+      **1. Markdown-Tabellen-Renderer.** `markdown.nvim`s `core/table_fmt.lua`
+      und `buffer-ctx.nvim`s `format/table_fmt.lua` sind auf
+      `lib.nvim.markdown.table` umgestellt — beide Dateien sind jetzt duenne
+      Wrapper (Config lesen -> lib -> notify), keine zweite Parse-Engine mehr.
+      `markdown.nvim`s `core/table_wrap.lua` haengt an mehr internen Helfern
+      (`trim`, `gen_separator`, `format_row`, ...) als das Handover
+      vorausgesehen hatte — die lib bekam dafuer drei zusaetzliche
+      Exporte (`trim`, `gen_separator`, `format_row`), statt eine dritte Kopie
+      liegenzulassen. Modul-README und Eintrag in der lib-Uebersicht ergaenzt,
+      Test fuer die drei neuen Exporte ergaenzt.
+
+      **2. `deep_merge` + `config.get` in cascade.nvim <-> spotlight.nvim.**
+      Neues Modul `lib.lua.config` (`deep_merge`, `get`) — bewusst *nicht*
+      `lib.lua.tables.core.deep_merge`: das mutiert in place und rekursiert
+      auch in Listen-artige Tabellen, ein Array-Override wuerde also
+      Index-fuer-Index gemischt statt komplett ersetzt. Beide Plugins
+      delegieren jetzt an die lib.
+
+      **3. Kleinkram.**
+      - `health.check_require` (dap.nvim <-> debugging.nvim) und `version_ok`
+        (documentation.nvim <-> runtime-analysis.nvim, *und* `lib.health.lua`
+        selbst hatte eine dritte Kopie) -> neues Modul `lib.nvim.health`.
+        `lib.health.lua` dogfoodet jetzt seine eigene lib.
+      - HTML-Escaping (documentation.nvim <-> runtime-analysis.nvim) ->
+        `lib.lua.strings.encoding.html_escape`. Wichtig dabei: beide Dateien
+        haben zusaetzlich eine *client-seitige* JavaScript-`esc()`-Funktion
+        eingebettet in einem Lua-Langstring (das HTML/JS-Template) — die ist
+        etwas komplett anderes und wurde nicht angefasst, nur die
+        Lua-Funktion und ihre echten Lua-Aufrufstellen wurden umgestellt.
+      - `spawn_env.array` (pdfport.nvim <-> reposcope.nvim) -> neue Funktion
+        `lib.nvim.cross.run.env.array`, direkt neben `build()`/`apply()` im
+        Modul, das beide Plugins ohnehin schon nutzten.
+
+      Alle betroffenen Test-Suiten liefen danach durch (lib.nvim,
+      markdown.nvim, buffer-ctx.nvim, cascade.nvim, spotlight.nvim, dap.nvim,
+      debugging.nvim, documentation.nvim, runtime-analysis.nvim, pdfport.nvim,
+      reposcope.nvim), `duplicate_functions.py` findet keine der behandelten
+      Duplikate mehr — was uebrig bleibt, ist ausschliesslich die "bewusst
+      nicht zu tun"-Liste (`config.M.get`, `try_require`) plus zwei neue,
+      nie in der Roadmap gestandene Funde (`buffer_ctx`/`fileops`s
+      `notify.resolve`, `cascade`/`spotlight`s `M.augroup`) — beide nicht
+      Teil dieses Auftrags, nicht angefasst.
 
 ### Bindings, Keymaps & UI
 
