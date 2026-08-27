@@ -40,6 +40,51 @@ nvim-Config.
 
 ### Bindings, Keymaps & UI
 
+- [x] **Dispatcher abschaltbar gemacht: `dispatch = false`.**
+
+      Deine Idee, und sie war richtig: ein Dispatcher haengt N Features an ein
+      Objekt, und es gab keinen Weg zurueck ausser N Aufrufstellen zu aendern.
+      Jetzt baut `dispatch = false` (pro Dispatcher) bzw.
+      `vim.g.lib_nvim_autocmd_dispatch = false` plus `reattach_all()`
+      (sessionweit) wieder **einen einfachen Autocmd pro Handler**. Alles
+      andere bleibt: dieselbe `key`-Funktion, Globs, `once` pro Buffer,
+      `unregister(owner)`, derselbe `ctx`.
+
+      **Rein additiv** — der Default ist unveraendert, also musste kein
+      einziger Aufruf in irgendeinem Repo angefasst werden.
+
+      Zwei Zwecke, und der Notausstieg ist der staerkere: wenn der Dispatcher
+      zickt, ist es ein Flag statt einer Refaktorierung. Der Benchmark-Zweck
+      kommt dazu — die Kostentabelle in der Dispatcher-README ist eine Maschine
+      und ein synthetischer Benchmark, und ein Argument, das man in der eigenen
+      Config nicht nachmessen kann, muss man glauben.
+
+      Der Modus wird bei `attach()` aufgeloest, nicht bei `new()` — detach →
+      umschalten → attach schaltet also einen laufenden Dispatcher um.
+      `stats()`/`registry()` melden ihn, und die generierte Seite schreibt ihn
+      in die Ueberschrift (im Bypass-Modus steht jeder Handler ohnehin schon
+      als eigene Zeile in der Record-Tabelle — ohne den Hinweis liest sich das
+      wie ein Duplikat-Bug).
+
+      **Es ist bewusst kein sauberes A/B**, und die README tabelliert die vier
+      Unterschiede: ein werfender Handler bricht im Dispatch-Modus den Rest des
+      Events ab und im Bypass nicht; `opts.context` wird einmal pro Event
+      gebaut statt einmal pro treffendem Handler; `priority` gilt im Bypass nur
+      fuer das, was vor `attach()` registriert wurde; und jeder Handler haengt
+      im Bypass an der *ganzen* Event-Liste des Dispatchers, nicht nur an
+      seinen eigenen Events — eine Bypass-Messung ist also eine leichte
+      Ueberschaetzung des Vorher-Zustands.
+
+      Alles, worauf sich Aufrufer verlassen, wird aus **einer** Suite in
+      **beiden** Modi geprueft. Ein zweiter Codepfad, den niemand ausfuehrt,
+      rottet.
+
+      **Dabei gefunden:** `detach()` rief `nvim_del_autocmd` direkt auf, und das
+      laesst lib's Record stehen. Zweimal umschalten hiess: sechzehn Records
+      fuer vierzehn echte Autocmds — die generierte Tabelle listet also
+      Autocmds, die nicht mehr feuern. `create()` hat jetzt ein Gegenstueck,
+      `delete(id)`, das beides wegnimmt; der Dispatcher benutzt es ueberall.
+
 - [x] **Autocmds zusammenfuehren / Dispatch-Lib-Modul — abgeschlossen.**
 
       Register, Doku-Generator und Messung standen schon (Eintraege weiter
