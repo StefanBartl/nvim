@@ -65,7 +65,17 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] UseCases/Workflow-Datei pro Plugin (typischer Workflow + Edge Cases); vorhandene auf Aktualität prüfen.
 
 ### Bindings, Keymaps & UI
-- [ ] Alle Keymaps/Features zusätzlich via Usrcmd ausführbar machen. Es kann natürlich sein, dass bei iningen dass nicht möglich oder sinnvoll ist. das ist nicht als MUSS gemeint, sondern einfach als qualitätsmerkaml der plugins - als solches soll es behandlet werden. also nicht zwingend, aber einen grund wenn nicht.
+- [x] **Alle Keymaps/Features zusätzlich via Usrcmd ausführbar machen —
+      geprüft 2026-08-27, keine Lücke.** Über alle 29 Plugins ist jede
+      deklarierte Keymap-Action über ein Kommando erreichbar; es gibt keinen
+      Fall, für den ein "Grund, warum nicht" nötig wäre. Nachgemessen statt
+      geschätzt: die Keymap-Registry kennt seit der Umstellung jede Action,
+      der Composer jede Route. Kandidaten aus dem automatischen Abgleich
+      waren alle falsch positiv, weil eine Route mit typisiertem Argument
+      viele Actions abdeckt, ohne eine davon beim Namen zu nennen
+      (`:Open firefox`, `:File next vsplit`, `:File! delete`). Report +
+      wiederverwendbares Audit-Skript:
+      `docs/NOTES/PersonelPlugins/BINDINGS/keymap-command-parity.md`.
 
 #### Neues lib.nvim Modul für Keymaps + umbennenug
 
