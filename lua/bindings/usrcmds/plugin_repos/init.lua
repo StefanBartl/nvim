@@ -4,7 +4,7 @@
 ---a dashboard.
 ---@description
 --- Registers a single `:MyPlugins {clone|remove|fetch|pull|update|reclone|
---- dashboard|mode|list|picker} [args]` command via `lib.nvim.usercmd.composer`
+--- dashboard|mode|list|picker} [args]` command via `lib.nvim.bindings.usercmd.composer`
 --- (replaces the former flat `:MyPluginsClone` / `:MyPluginsRemove`).
 ---
 --- `:MyPlugins dashboard [dir]` (flat shorthand: `:MyPluginsDashboard`) just
@@ -68,7 +68,7 @@
 --- prompts apply.
 
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos]")
-local composer = require("lib.nvim.usercmd.composer")
+local composer = require("lib.nvim.bindings.usercmd.composer")
 local is_dir = require("lib.nvim.fs.is_dir")
 local expand_path = require("lib.nvim.cross.fs.expand_path")
 local open_named_scratch = require("lib.nvim.window.open_named_scratch")
@@ -901,7 +901,7 @@ end
 -- =============================================================================
 
 ---Register `:MyPlugins {clone|remove|mode|list} [args]` via
----lib.nvim.usercmd.composer — replaces the former flat `:MyPluginsClone` /
+---lib.nvim.bindings.usercmd.composer — replaces the former flat `:MyPluginsClone` /
 ---`:MyPluginsRemove`.
 function M.enable()
   -- Directory arg: real directory completion plus `$REPOS_DIR` offered up

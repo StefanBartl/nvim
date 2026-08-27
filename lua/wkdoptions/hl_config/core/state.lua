@@ -16,7 +16,7 @@ local features = {}
 ---@type table<string, integer>
 local namespaces = {}
 
-local lib_autocmd = require("lib.nvim.autocmd")
+local lib_autocmd = require("lib.nvim.bindings.autocmd")
 
 ---@nodiscard
 ---@param win integer

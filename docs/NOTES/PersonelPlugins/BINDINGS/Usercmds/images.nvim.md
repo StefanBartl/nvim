@@ -1,6 +1,6 @@
 # images.nvim — `:Image [subcommand]` Cheatsheet
 
-Ein Verb über `lib.nvim.usercmd.composer`. Bare `:Image` ohne Subcommand zeigt
+Ein Verb über `lib.nvim.bindings.usercmd.composer`. Bare `:Image` ohne Subcommand zeigt
 das Bild unter dem Cursor — der häufigste Fall braucht kein Schlüsselwort.
 
 Source: `lua/images/bindings/usrcmds.lua`

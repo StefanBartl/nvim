@@ -1,6 +1,6 @@
 # dap.nvim — `:Dap <subcommand>` Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion on every
+One command, built via `lib.nvim.bindings.usercmd.composer` (`<Tab>` completion on every
 subcommand). Replaces the old flat `:DapContinue`/`:DapStepOver`/… commands
 (fully removed, no alongside period).
 

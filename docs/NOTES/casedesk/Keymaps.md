@@ -64,7 +64,7 @@ act on.
 | `c` | n | Only if emojis were found. Close the report, call `replygate.clear_emojis` on the buffer that was checked (not the report itself) |
 | `s` | n | Always present. Close the report, switch to the checked buffer, run `language.spellcheck(nil, "buffer")` |
 
-Registered via `lib.nvim.map` with `{ buffer = surf.bufnr, nowait = true }` —
+Registered via `lib.nvim.bindings.keymap` with `{ buffer = surf.bufnr, nowait = true }` —
 gone as soon as its surface closes, never leak into any other buffer.
 
 ## Not casedesk's own

@@ -1,6 +1,6 @@
 # casedesk — User Commands Cheatsheet
 
-Three composer verbs, built via `lib.nvim.usercmd.composer` — `:Case` acts
+Three composer verbs, built via `lib.nvim.bindings.usercmd.composer` — `:Case` acts
 on **one** case (always resolves to exactly one: explicit arg → buffer →
 `kit.select`), `:Cases` acts on a **set**, both scoped to `config.root`
 (`Cases/SAP_Support`). `:Tricentis` is the odd one out: it reaches across the

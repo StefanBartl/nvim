@@ -1,7 +1,7 @@
 ---@module 'config.neotest.core'
 ---@brief Core configuration and utilities for neotest integration
 
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 local M = {}
 

@@ -1,7 +1,7 @@
 # color_my_ascii.nvim — Keymaps Cheatsheet
 
 Source: `lua/color_my_ascii/bindings/keymaps.lua`
-Bridge: local `set()` helper — prefers `lib.nvim.map`, falls back to
+Bridge: local `set()` helper — prefers `lib.nvim.bindings.keymap`, falls back to
 `vim.keymap.set` (`noremap=true, silent=true`).
 
 **Off by default** (`config.keymaps = false` — deliberately, per a comment in

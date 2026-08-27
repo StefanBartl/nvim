@@ -1,6 +1,6 @@
 # sessions.nvim — `:Session <subcommand>` Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion,
+One command, built via `lib.nvim.bindings.usercmd.composer` (`<Tab>` completion,
 session-name args complete **dynamically** via a custom `SESSION` type
 registered with `composer.register_type` — the first real external use of
 that extension point). Replaces the old 8 flat `:SessionX` commands (fully
@@ -51,7 +51,7 @@ loads) requires quoting going forward — documented, not silently broken.
   reconfigured to something other than `"last"`.
 - **lib.nvim policy flip**: same as cascade.nvim/color_my_ascii.nvim — was
   "optional", is now **required** (`:Session`/`:LastSession` need
-  `lib.nvim.usercmd.composer`). `lib.nvim.notify`/`lib.nvim.map`/`lib.nvim.git`
+  `lib.nvim.bindings.usercmd.composer`). `lib.nvim.notify`/`lib.nvim.bindings.keymap`/`lib.nvim.git`
   stay soft-guarded.
 - No CI exists for this repo, so no CI checkout fix was needed.
 - Keymaps (`bindings/keymaps/init.lua`) referenced commands as `<cmd>...<cr>`

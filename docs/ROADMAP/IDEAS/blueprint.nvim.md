@@ -81,7 +81,7 @@ Zweite Einschränkung: die Grenze zu LuaSnip ist real, aber sauber ziehbar
 | --- | --- |
 | Verzeichnis-Scan, mtime | `vim.uv.fs_scandir` / `lib.nvim.cross.fs` |
 | Index-Cache auf Platte | `lib.nvim.nvim.cache.disk` + `lib.nvim.lua.json` |
-| Compound-Usercmd + Completion | `lib.nvim.usercmd.composer` |
+| Compound-Usercmd + Completion | `lib.nvim.bindings.usercmd.composer` |
 | Picker (telescope/fzf/snacks) | `pickers.nvim` → `pickers.engines` |
 | Fallback-Auswahl | `lib.nvim.ui.kit.select` (hover_select) |
 | Tabstops beim Einfügen | `vim.snippet.expand` (nvim ≥ 0.10), sonst Plain-Insert |
@@ -142,7 +142,7 @@ Einfüge-Backend genutzt, damit Tabstops funktionieren.
 ### Usercommand
 
 Ein Compound-Command nach der Hausregel, gebaut mit
-`lib.nvim.usercmd.composer` (Completion auf allen Ebenen):
+`lib.nvim.bindings.usercmd.composer` (Completion auf allen Ebenen):
 
 ```
 :Blueprint [lang] [category] [action]
@@ -423,7 +423,7 @@ Float-Preview aus `lib.nvim.nvim.ui.kit`.
 | --- | --- |
 | Meldungen | `lib.nvim.nvim.notify` (nie `vim.notify`/`print`) |
 | Keymaps/Usercmds/Autocmds | `lib.nvim.nvim.map` · `.usercmd` · `.autocmd` · `.augroup` |
-| Compound-Command + Completion | `lib.nvim.usercmd.composer` |
+| Compound-Command + Completion | `lib.nvim.bindings.usercmd.composer` |
 | Pfade, Trennzeichen, Öffnen | `lib.nvim.nvim.cross` · `.fs` |
 | Auswahl-UI ohne Picker-Engine | `lib.nvim.ui.kit.select` (hover_select) |
 | Lazy-Require | `lib.nvim.nvim.require` · `lib.nvim.lua.lazy` |
@@ -569,7 +569,7 @@ Komposition · Export/PDF · Kontext-Vorschlag.
 - [ ] `README.md` (en, ASCII-Art, Badges, TOC) + `>`-Absatz auf `pickers.nvim` als Schwesterplugin
 - [ ] `doc/blueprint.txt`, `docs/ROADMAP.md`, `docs/BINDINGS.md`
 - [ ] `lib.nvim` als Dependency, `documentation.nvim` als Dev-Dependency, `scripts/gen_map.lua` + `--check` in CI
-- [ ] Compound-Usercmd via `lib.nvim.usercmd.composer`, Range `v`/`V`/`<C-v>` implementiert **und getestet**
+- [ ] Compound-Usercmd via `lib.nvim.bindings.usercmd.composer`, Range `v`/`V`/`<C-v>` implementiert **und getestet**
 - [ ] Keymaps modifizier- und deaktivierbar, which-key-fähig
 - [ ] Cross-Plattform von Anfang an (`lib.nvim.cross` für Pfade — Windows-Backslashes in `sources`!)
 - [ ] Bindings in die zentrale `docs/NOTES/PersonelPlugins/BINDINGS`-Sammlung eintragen

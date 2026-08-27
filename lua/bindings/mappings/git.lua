@@ -3,7 +3,7 @@
 --- history, `<leader>dt` diffs the windows in the current tab.
 
 local notify = require("lib.nvim.notify").create("[bindings.mappings.git]")
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

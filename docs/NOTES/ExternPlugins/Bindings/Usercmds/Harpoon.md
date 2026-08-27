@@ -17,7 +17,7 @@ Plugin-Default, gegen den "custom" hier kontrastieren würde.
 
 ## 1. Unified Verb `:Harpoon`
 
-Gebaut mit `lib.nvim.usercmd.composer` (`composer.verb`), d.h. mit `<Tab>`-
+Gebaut mit `lib.nvim.bindings.usercmd.composer` (`composer.verb`), d.h. mit `<Tab>`-
 Completion pro Subcommand/Argument und Usage-Ausgabe statt rohem Vim-Fehler.
 
 | Aufruf | Wirkung |

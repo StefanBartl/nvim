@@ -1,293 +1,54 @@
 # Roadmap
+
+## Table of content
+
+  - [Misc](#misc)
+  - [color_my_ascii.nvim](#color_my_asciinvim)
+  - [wezterm padded nvim - bottom padding ist unverhältniossmäßig groß](#wezterm-padded-nvim-bottom-padding-ist-unverhltniossmig-gro)
+  - [images.nvim erweiterung](#imagesnvim-erweiterung)
+  - [workflow + usecases in allen plugins](#workflow-usecases-in-allen-plugins)
+  - [true check](#true-check)
+  - [runtime-analysis.nvim](#runtime-analysisnvim)
+    - [Plugin-Liste](#plugin-liste)
+  - [cdx](#cdx)
+
+---
+
+## Misc
+
 - [ ] Anticheat knacken
-
-
-  Warn  15:13:25 notify.warn [gopath] no match: no-match
-   Error  15:13:52 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:15:36 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:15:36 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 139L, 5116B written
-15:15:38 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:15:38 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 139L, 5116B written
-
-16:08:37 msg_show.echomsg clipboard: error: thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error { kind: InvalidData, message: "stream did not contain valid UTF-8" }', src\main.rs:83:44
-16:08:55 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md"
-16:08:55 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md" [unix] 352L, 23908B written
-16:10:58 msg_show 66 fewer lines
-16:11:02 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md"
-16:11:02 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md" 99L, 3780B written
-16:07:40 msg_showcmd i
-   Error  16:11:19 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-
-   Error  15:15:51 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-   Info  15:16:17 notify.info [filetree.open_in_fm] Opening in file manager: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\assets
-   Info  15:17:30 notify.info [filetree.path_copy] [dirname] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\assets
-   Info  15:17:34 notify.info [filetree.copy_file_list] Copied 1 path(s):
-  docs/ROADMAP/assets/wezterm_padding.png
-15:17:41 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:17:41 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 139L, 5157B written
-   Error  15:17:58 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:19:52 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:19:52 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 145L, 5297B written
-15:20:23 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:20:23 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 143L, 5273B written
-   Error  15:21:07 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:21:09 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:21:09 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 143L, 5275B written
-15:24:35 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:24:35 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 143L, 5276B written
-   Error  15:24:43 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:25:27 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:25:27 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 143L, 5327B written
-   Info  15:26:22 notify.info [filetree.smart_create] Created file: docs/ROADMAP/handovers/docmap-desktop.md
-   Error  15:26:31 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:27:19 msg_show.undo 65 fewer lines; before #3  6 seconds ago
-   Error  15:27:30 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:27:47 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md"
-15:27:47 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md" [New] 69L, 2922B written
-   Error  15:27:51 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:27:55 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md"
-15:27:55 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md" 70L, 2940B written
-16:03:45 msg_show 66 lines yanked
-   Info  16:05:35 notify.info [filetree.path_copy] [absolute] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\MERGED.md
-15:13:38 msg_showcmd :
-   Error  16:06:44 msg_show.lua_error   ;y vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-
-  Warn  15:13:25 notify.warn [gopath] no match: no-match
-   Error  15:13:52 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:15:36 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:15:36 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 139L, 5116B written
-15:15:38 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:15:38 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 139L, 5116B written
-   Error  15:15:51 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-   Info  15:16:17 notify.info [filetree.open_in_fm] Opening in file manager: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\assets
-   Info  15:17:30 notify.info [filetree.path_copy] [dirname] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\assets
-   Info  15:17:34 notify.info [filetree.copy_file_list] Copied 1 path(s):
-  docs/ROADMAP/assets/wezterm_padding.png
-15:17:41 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:17:41 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 139L, 5157B written
-   Error  15:17:58 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:19:52 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:19:52 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 145L, 5297B written
-15:20:23 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:20:23 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 143L, 5273B written
-   Error  15:21:07 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:21:09 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:21:09 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 143L, 5275B written
-15:24:35 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:24:35 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 143L, 5276B written
-   Error  15:24:43 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:25:27 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md"
-15:25:27 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\ROADMAP.md" [unix] 143L, 5327B written
-   Info  15:26:22 notify.info [filetree.smart_create] Created file: docs/ROADMAP/handovers/docmap-desktop.md
-   Error  15:26:31 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:27:19 msg_show.undo 65 fewer lines; before #3  6 seconds ago
-   Error  15:27:30 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:27:47 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md"
-15:27:47 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md" [New] 69L, 2922B written
-   Error  15:27:51 msg_show.lua_error vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-15:27:55 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md"
-15:27:55 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/handovers/docmap-desktop.md" 70L, 2940B written
-16:03:45 msg_show 66 lines yanked
-   Info  16:05:35 notify.info [filetree.path_copy] [absolute] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\MERGED.md
-15:13:38 msg_showcmd :
-   Error  16:06:44 msg_show.lua_error   ;y vim.schedule callback: runtime error: Failed to create frecency database directory: Eine Datei kann nicht erstellt werden, wenn sie bereits vorhanden ist. (os error 183)
-stack traceback:
-	[C]: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:24: in function 'init_db'
-	...al/nvim-data/lazy/blink.cmp/lua/blink/cmp/fuzzy/init.lua:90: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:141: in function 'fuzzy'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/list.lua:112: in function 'show'
-	...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:58: in function <...im-data/lazy/blink.cmp/lua/blink/cmp/completion/init.lua:34>
-
-
-## true check
-
-Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
-Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass doll es nä,lich auh nicht sein, leider ist mir klar ds das konterkariert meine wüsnche. ckch denke, du must da einen goldenen Zwischenweg finden.
-
-Hier die liste:
-+  buffer-ctx.nvim           StefanBartl/buffer-ctx.nvim
-+  cascade.nvim              StefanBartl/cascade.nvim
-+  cmdlog.nvim               StefanBartl/cmdlog.nvim
-+  color_my_ascii.nvim       StefanBartl/color_my_ascii.nvim
-+  dap.nvim                  StefanBartl/dap.nvim
-+  debugging.nvim            StefanBartl/debugging.nvim
-+  diff.nvim                 StefanBartl/diff.nvim
-+  documentation.nvim        StefanBartl/documentation.nvim
-+  emojis.nvim               StefanBartl/emojis.nvim
-+  fileops.nvim              StefanBartl/fileops.nvim
-+  filetree.nvim             StefanBartl/filetree.nvim
-+  github_stats.nvim         StefanBartl/github_stats.nvim
-+  gopath.nvim               StefanBartl/gopath.nvim
-+  images.nvim               StefanBartl/images.nvim
-+  insights.nvim             StefanBartl/insights.nvim
-+  language.nvim             StefanBartl/language.nvim
-+  lib.nvim                  StefanBartl/lib.nvim
-+  lsp.nvim                  StefanBartl/lsp.nvim
-+  markdown.nvim             StefanBartl/markdown.nvim
-+  mdview.nvim               StefanBartl/mdview.nvim
-+  migrate.nvim              StefanBartl/migrate.nvim
-+  open.nvim                 StefanBartl/open.nvim
-+  pdfport.nvim              StefanBartl/pdfport.nvim
-+  pickers.nvim              StefanBartl/pickers.nvim
-+  recommender.nvim          StefanBartl/recommender.nvim
-+  replacer.nvim             StefanBartl/replacer.nvim
-+  reposcope.nvim            StefanBartl/reposcope.nvim
-+  runtime-analysis.nvim     StefanBartl/runtime-analysis.nvim
-+  sandbox.nvim              StefanBartl/sandbox.nvim
-+  sessions.nvim             stefanbartl/sessions.nvim
-+  spotlight.nvim            StefanBartl/spotlight.nvim
-
-und das native:
-
-+  docmap-desktop        StefanBartl/docmap-desktop
+- [ ] Merge_Finished
+- [ ] stylua nvim-config
 
 ---
 
-## cdx
+## color_my_ascii.nvim
 
-free: So., 09:00 x - Subscription bis 21. Juli 2027
-work: Sa., 06:00 98% - Subscription bis 20.Sept
-dev:  Sa., 22:00 99% - Subscription bis 03.Sep
+Ein eingerücter fence hl trotzdem die ganze breiote, also zb wenn ich mit dme gesamten ence um 4 rowas einrücke, dann asollten in jeder zeile des fendces die ersten 4 rows nicht hl sein, am rechten rand ist es so, dass nvim generell ein klienes padding hat, als nicht ganz nach rechts schreibt,. auch dass sollte das oppadding eingehalten werden. am screenshot erkennt man was ich meine, ich habe das mit rot angezevhnet. das soll eine option sein, die der user auch opt-out ausschalten kann
+
+Screenshot: nvim\docs\ROADMAP\assets\fence_left_right.png
 
 ---
+
+## wezterm padded nvim - bottom padding ist unverhältniossmäßig groß
 
 wezterm macht ein pasdding rund um nvim. mögloichewerweiße ahben wir das bei image.nvim bei den letzten commites der letzten 4 tage bverändert damit images inline hover angezegit werden korrekt, oder als ich das Configs  repo uopdatet habe, da habe ich auch die wezterm config umgeschrieben.
 vorallem das padding unteneren rand ist ziemlich viel und störend, screenshot:  docs/ROADMAP/assets/wezterm_padding.png
+vor allme, weil her ja 2 statuslines aufeinenader kommen, das von wezetm und dass von nvim....
 
 ---
+
+## images.nvim erweiterung
 
 image/pdf/file hover nicht nur in markdown links, sondern auch bei ganz normalen pfaden wie:
 
 docs/ROADMAP/assets/wezterm_padding.png
 
+das dieses feature auh toll zu gopath.nvim passen würde, wäre das ein feines feature - ich würd darauf plädieren, dass gopath.nvim images.nvim als soft cedep einbindent. wenn es nicht installiert ist, weil der user es nicht möchte, dann würde gopath.vim das einfach nicht anbieten, denn doppelte implementierung ist nicth mein wuindsch  und das hocer preview von files ist ach nicht gopaths ern feature. es soll dennochj opt-out sein, als  der user soll auch wenn images.nvim installiert ist die wahl haben, es nicht zu vewrendem
+
 ---
+
+## workflow + usecases in allen plugins
 
 Checked the stray German lines in the two English docs
 MENUBARs Deutsch sind die lokalisierten Menü-Labels — bleiben. WORKPLAN hat zwei Stellen. Los mit ROADMAP.
@@ -367,3 +128,68 @@ grep -rn 'opts.notes\|notes_picker\|per-command note' docs/*.md README.md 2>/dev
 Session limit reached
 Auto-resuming at 5:31 PM
 Auto-continue when limits reset
+
+---
+
+## true check
+
+Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
+Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass doll es nä,lich auh nicht sein, leider ist mir klar ds das konterkariert meine wüsnche. ckch denke, du must da einen goldenen Zwischenweg finden.
+
+---
+
+## runtime-analysis.nvim
+
+`:RATelemetry export` hat auch repos "exportiert" bzw eine file angelegt, die gar kein lua plugin sind: WKDBook-Tricentis zb. aber nicht für WKDBooks. Hängt das miot $REPOS_DIR zusammen oder ?
+Es gibt von insights.nvim eine markdown file in den telemetry daten. Was hat es damit auf sich?
+
+---
+
+### Plugin-Liste
+
+Hier die Liste meiner Plugins - du findest sie unter `c:\repos` - und du hast Zugriff darauf:
+
+buffer-ctx.nvim
+cascade.nvim
+cmdlog.nvim
+color_my_ascii.nvim
+dap.nvim
+debugging.nvim
+diff.nvim
+documentation.nvim
+emojis.nvim
+fileops.nvim
+filetree.nvim
+github_stats.nvim
+gopath.nvim
+images.nvim
+insights.nvim
+language.nvim
+lib.nvim
+lsp.nvim
+markdown.nvim
+mdview.nvim
+migrate.nvim
+open.nvim
+pdfport.nvim
+pickers.nvim
+recommender.nvim
+replacer.nvim
+reposcope.nvim
+runtime-analysis.nvim
+sandbox.nvim
+sessions.nvim
+spotlight.nvim
+
+und das native: docmap-desktop
+
+---
+
+## cdx
+
+free: So., 09:00 x - Subscription bis 21. Juli 2027
+work: Sa., 06:00 98% - Subscription bis 20.Sept
+dev:  Sa., 22:00 99% - Subscription bis 03.Sep
+
+---
+

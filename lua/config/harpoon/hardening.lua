@@ -11,7 +11,7 @@
 ---   })
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.hardening]")
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 local debounce = require("lib.nvim.debounce")
 
 local M = {}

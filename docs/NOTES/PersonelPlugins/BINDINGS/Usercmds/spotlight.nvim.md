@@ -1,13 +1,13 @@
 # spotlight.nvim — `:Spotlight <subcommand>` Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion, argument
+One command, built via `lib.nvim.bindings.usercmd.composer` (`<Tab>` completion, argument
 typing and validation, Markdown docgen — all from the same route tree). No flat
 `:SpotlightToggle`/`:SpotlightClear` family ever existed.
 
 Source: `lua/spotlight/bindings/usrcmds.lua`
 Docs: `docs/BINDINGS.md`, `docs/FEATURES.md`, `README.md`, `doc/spotlight.txt`
 
-`lib.nvim.usercmd.composer` is a **hard** dependency here: without it the command
+`lib.nvim.bindings.usercmd.composer` is a **hard** dependency here: without it the command
 layer fails to load. `:checkhealth spotlight` reports it as an error, not a warning.
 
 | Command | Args | Range | Effect |

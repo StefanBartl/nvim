@@ -17,7 +17,7 @@ local M = {}
 -- Lazy-loaded module references using lib.lazy
 local get_config = lazy.require("wkdoptions.config")
 local get_hl_config = lazy.require("wkdoptions.hl_config")
-local Autocmd = lazy.require("lib.nvim.autocmd")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 local function normalize_inactice_win_hl()
   Autocmd.create("ColorScheme", function()

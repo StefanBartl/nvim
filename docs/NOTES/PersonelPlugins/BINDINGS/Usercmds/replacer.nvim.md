@@ -1,6 +1,6 @@
 # replacer.nvim — User Commands Cheatsheet
 
-`:Replace`/`:Replacer`/`:Surround`/`:Wrap` rebuilt via `lib.nvim.usercmd.composer`
+`:Replace`/`:Replacer`/`:Surround`/`:Wrap` rebuilt via `lib.nvim.bindings.usercmd.composer`
 (migrated 2026-07-19) — the plugin that originally motivated Phase 6's flag
 grammar. **No syntax change at all**: unlike every other migration in this
 series, the command names and full grammar stay byte-for-byte identical.

@@ -39,7 +39,7 @@ return {
       -- Guard module
       -----------------------------------------------------------------------
       local guards = require("lib.nvim.treesitter.guard")
-      local Autocmd = require("lib.nvim.autocmd")
+      local Autocmd = require("lib.nvim.bindings.autocmd")
 
       -----------------------------------------------------------------------
       -- Ensure injection-only parsers (see INJECTION_PARSERS above)
@@ -71,7 +71,7 @@ return {
       local parser_policy = require("lib.nvim.treesitter.parser_policy")
       parser_policy.setup({ mode = "prompt" })
 
-      require("lib.nvim.usercmd").create("TSParserPolicy", function(cmd_args)
+      require("lib.nvim.bindings.usercmd").create("TSParserPolicy", function(cmd_args)
         local mode = cmd_args.args
         if mode == "" then
           notify.info(

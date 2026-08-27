@@ -20,7 +20,7 @@ vim.api.nvim_create_autocmd("VimEnter", { once = true, callback = callback })
 called `require("pickers").setup()`, registers default keymaps/usercmds
 using default config — covers the case where the user's config has no
 `config = function() ... end` block, or the plugin loaded after `VimEnter`.
-When `lib.nvim.autocmd` is available, the augroup is named `"pickers.nvim"`;
+When `lib.nvim.bindings.autocmd` is available, the augroup is named `"pickers.nvim"`;
 the raw-API fallback path doesn't set an explicit group.
 
 ## `selected_index` overlay — Telescope-only, per-picker-instance

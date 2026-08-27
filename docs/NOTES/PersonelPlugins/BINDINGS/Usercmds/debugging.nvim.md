@@ -1,6 +1,6 @@
 # debugging.nvim — User Commands Cheatsheet
 
-`:Debug` rebuilt via `lib.nvim.usercmd.composer` (migrated 2026-07-19).
+`:Debug` rebuilt via `lib.nvim.bindings.usercmd.composer` (migrated 2026-07-19).
 **No syntax change**: same `:Debug {category} {action} [args]` grammar,
 same ~15 categories / ~50 actions, same feature-flag gating.
 
@@ -50,9 +50,9 @@ Docs: `docs/commands.md`, `doc/debugging.txt`
 - **`indent treesitter`** gets a `values = {"true","false"}` hint on its
   arg for parity with the original's bespoke bool completion.
 - Already a hard `lib.nvim` dependency before this migration (`bindings/
-  usercmds.lua` previously used `lib.nvim.usercmd.create` directly, no
+  usercmds.lua` previously used `lib.nvim.bindings.usercmd.create` directly, no
   pcall) — README/installation docs were already accurately described as
-  "Requires lib.nvim", nothing to fix there. Added a `lib.nvim.usercmd.
+  "Requires lib.nvim", nothing to fix there. Added a `lib.nvim.bindings.usercmd.
   composer` line to the existing `health.lua` lib.nvim section (which
   already checked several other `lib.nvim.*` submodules the same way).
 - `docs/TESTS/run.lua` already explicitly documents lib.nvim as a hard

@@ -7,7 +7,7 @@ sind **[custom]** — der moderne `nvim-treesitter`-Branch installiert selbst
 keine Autocmds mehr, das Aktivieren von Highlight/Fold/Indent ist explizit
 Aufgabe der Config (siehe Plugin-README, Abschnitt "Quickstart").
 
-Alle drei Autocmds sind ungruppierte `FileType`-Autocmds (`lib.nvim.autocmd`,
+Alle drei Autocmds sind ungruppierte `FileType`-Autocmds (`lib.nvim.bindings.autocmd`,
 kein eigener Augroup) und teilen sich dieselbe Guard-Bedingung
 `guards.is_enabled(args.buf)` aus `lib.nvim.treesitter.guard`
 (`lua/lib/nvim/treesitter/guard/init.lua` im `lib.nvim`-Repo, `E:\repos\lib.nvim`)

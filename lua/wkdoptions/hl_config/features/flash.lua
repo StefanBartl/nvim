@@ -3,8 +3,8 @@
 
 local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
-local Autocmd = lazy.require("lib.nvim.autocmd")
-local map = require("lib.nvim.map")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
+local map = require("lib.nvim.bindings.keymap")
 
 local M = {}
 

@@ -17,7 +17,7 @@ Ergänzt die commandbasierte Steuerung `:UI theme`/`:Theme` (siehe
 
 Registriert in [lua/wkdnvchad/mappings/init.lua](../../../../../lua/wkdnvchad/mappings/init.lua),
 aufgerufen aus `wkdnvchad.setup({ all = true })` in
-[lua/chadrc.lua](../../../../../lua/chadrc.lua). Nutzt `lib.nvim.map` sowie
+[lua/chadrc.lua](../../../../../lua/chadrc.lua). Nutzt `lib.nvim.bindings.keymap` sowie
 lazy-geladene Helper aus [lua/wkdnvchad/mappings/tabufline/init.lua](../../../../../lua/wkdnvchad/mappings/tabufline/init.lua).
 
 ### Buffer

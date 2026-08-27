@@ -16,7 +16,7 @@ vollstaendige Liste.
 `LspSignaturePopup_<winid>`, dessen Name zur Laufzeit gebaut wird. `grep` auf
 Stringliterale findet die letzten zwei nicht.)
 
-Alle 25 laufen ueber `lib.nvim.autocmd.create` — kein einziger auf der Roh-API.
+Alle 25 laufen ueber `lib.nvim.bindings.autocmd.create` — kein einziger auf der Roh-API.
 Die *Augroups* sind gemischt: teils `Autocmd.group(name, true)`, teils
 `vim.api.nvim_create_augroup`. Funktional identisch, siehe "Offene Punkte".
 

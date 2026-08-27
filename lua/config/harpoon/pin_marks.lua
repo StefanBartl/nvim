@@ -13,7 +13,7 @@
 local M = {}
 
 local normkey = require("lib.nvim.fs.normkey")
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 local NS = vim.api.nvim_create_namespace("HarpoonPinMarks")
 local HL = "HarpoonPinMark"
@@ -64,7 +64,7 @@ function M.setup()
     local bufnr = ev.buf
     mark(bufnr)
     -- Keep markers aligned with live reordering / deletions inside the menu.
-    -- Buffer-local (lib.nvim.autocmd.create does not forward `buffer`, so use
+    -- Buffer-local (lib.nvim.bindings.autocmd.create does not forward `buffer`, so use
     -- the native API here); auto-cleaned when the scratch buffer is wiped.
     vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
       group = grp,

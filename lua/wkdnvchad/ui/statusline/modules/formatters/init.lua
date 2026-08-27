@@ -5,7 +5,7 @@ local M = {}
 
 -- Use lib.strings for all string operations
 local lib_strings = require("lib.lua.strings")
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 -- Lazy-load config
 local config_module

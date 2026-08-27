@@ -100,14 +100,14 @@ function M.on(event, label, fn)
     if vim.v.vim_did_enter == 1 then
       vim.schedule(function() run(mark, fn) end)
     else
-      require("lib.nvim.autocmd").create("VimEnter", function()
+      require("lib.nvim.bindings.autocmd").create("VimEnter", function()
         vim.schedule(function() run(mark, fn) end)
       end, { once = true })
     end
     return
   end
 
-  require("lib.nvim.autocmd").create(event, function() run(mark, fn) end, { once = true })
+  require("lib.nvim.bindings.autocmd").create(event, function() run(mark, fn) end, { once = true })
 end
 
 --- Phases that never ran: their event has not fired, or had already fired when
@@ -144,7 +144,7 @@ end
 
 --- Register :StartupReport and :StartupCheck.
 function M.setup_usercmds()
-  local usercmd = require("lib.nvim.usercmd")
+  local usercmd = require("lib.nvim.bindings.usercmd")
 
   usercmd.create("StartupReport", function()
     require("startup.report").open()

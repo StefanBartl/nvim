@@ -29,7 +29,7 @@ Registriert in [lua/config/neotest/commands/init.lua](../../../../../lua/config/
 ## Debug-Commands
 
 Registriert in [lua/config/neotest/debug/init.lua](../../../../../lua/config/neotest/debug/init.lua)
-(`M.usercommands`, via `lib.nvim.usercmd.create`), Teil desselben `M.setup_all()`-
+(`M.usercommands`, via `lib.nvim.bindings.usercmd.create`), Teil desselben `M.setup_all()`-
 Aufrufs, der auch die überschreibenden Keymaps setzt (siehe
 [Keymaps/Neotest.md](../Keymaps/Neotest.md)).
 

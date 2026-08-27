@@ -1,7 +1,7 @@
 # buffer-ctx.nvim — Keymaps Cheatsheet
 
 Source: `lua/buffer_ctx/bindings/keymaps.lua` (core), `lua/buffer_ctx/mark/init.lua` (mark)
-Bridge: `lua/buffer_ctx/util/map.lua` — upgrades to `lib.nvim.map` when
+Bridge: `lua/buffer_ctx/util/map.lua` — upgrades to `lib.nvim.bindings.keymap` when
 lib.nvim is installed, falls back to plain `vim.keymap.set` otherwise; both
 paths register identical `lhs`/`desc`/`silent`/`noremap`.
 

@@ -1,6 +1,6 @@
 # github_stats.nvim — User Commands Cheatsheet
 
-One command tree, built via `lib.nvim.usercmd.composer` (migrated 2026-07-19).
+One command tree, built via `lib.nvim.bindings.usercmd.composer` (migrated 2026-07-19).
 Replaces 10 independent flat `:GithubStatsX` commands — breaking change, no
 compat aliases.
 

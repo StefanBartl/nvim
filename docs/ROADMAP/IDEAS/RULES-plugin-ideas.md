@@ -73,7 +73,7 @@ suggests hoisting it into `lib.nvim` so future plugins don't reinvent it.
   [mdview.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/mdview.nvim.md) as something that should be
   consistently used/promoted across all plugins, not just documented once.
 - **Buffer-local-autocmd-with-full-options fix**: a real, repeatedly-hit
-  `lib.nvim.autocmd.create` gap (it doesn't pass through a `buffer` field) —
+  `lib.nvim.bindings.autocmd.create` gap (it doesn't pass through a `buffer` field) —
   independently documented as a workaround in at least four plugins:
   [pickers.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/pickers.nvim.md) (`selected_index/init.lua:184-193`),
   [github_stats.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/github_stats.nvim.md),
@@ -97,7 +97,7 @@ suggests hoisting it into `lib.nvim` so future plugins don't reinvent it.
   `open.nvim`'s per-invocation cursor/selection/cfile cache — from
   [open.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/open.nvim.md).
 - **Disambiguating-positional-argument helper** for
-  `lib.nvim.usercmd.composer` (match a free-text arg against known enum
+  `lib.nvim.bindings.usercmd.composer` (match a free-text arg against known enum
   values, warn on uncertainty instead of guessing) — from
   [open.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/open.nvim.md), noting
   [replacer.nvim](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/plugins/replacer.nvim.md) has a similar ad hoc pattern.

@@ -1,6 +1,6 @@
 # emojis.nvim — User Commands Cheatsheet
 
-One command tree, built via `lib.nvim.usercmd.composer` (migrated
+One command tree, built via `lib.nvim.bindings.usercmd.composer` (migrated
 2026-07-20). **First hard `lib.nvim` dependency this repo has ever had** —
 previously fully standalone (`util/lib.lua`'s own module doc used to say "no
 hard dependency is ever introduced"); now `:Emojis` fails to register without
@@ -27,9 +27,9 @@ Command name is configurable (`setup({ command = "Emo" })`) — `composer.verb(c
 - **First-ever `lib.nvim` dependency, not previously present at all**: unlike
   every other repo migrated so far (which already had *some* lib.nvim
   submodule usage, hard or soft), emojis.nvim had genuinely zero — `util/lib.lua`
-  probed `lib.nvim.notify`/`lib.nvim.map` via `pcall` purely as an optional
+  probed `lib.nvim.notify`/`lib.nvim.bindings.keymap` via `pcall` purely as an optional
   nicety. That soft-dependency pattern is untouched; only the `:Emojis`
-  command's *registration* now hard-requires `lib.nvim.usercmd.composer`.
+  command's *registration* now hard-requires `lib.nvim.bindings.usercmd.composer`.
   Updated the "standalone plugin, no hard dependency" claims in README.md,
   `docs/installation.md`, `doc/emojis.txt`, and `util/lib.lua`'s own module
   doc to scope that claim correctly (soft helpers stay soft; the command

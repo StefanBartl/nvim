@@ -28,7 +28,7 @@ own `default` handler.
 **desc:** the command the mapping runs, e.g. `"open.nvim: :Open split"`,
 `"open.nvim: :Open"` for the bare one. Previously it was the config key name
 (`"open.nvim: open_browser"`) — anything matching on the old form needs
-updating. Registration goes through `lib.nvim.map` now, not
+updating. Registration goes through `lib.nvim.bindings.keymap` now, not
 `vim.keymap.set`.
 
 An unrecognized `keymaps.*` key warns, names the accepted keys, and registers

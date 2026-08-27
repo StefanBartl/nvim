@@ -1,6 +1,6 @@
 # cascade.nvim — `:Cascade <subcommand>` Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion).
+One command, built via `lib.nvim.bindings.usercmd.composer` (`<Tab>` completion).
 Replaces the old flat `:CascadeRotate`/`:CascadeSort`/… commands (fully
 removed, no alongside period).
 
@@ -40,7 +40,7 @@ constraint (bang always binds to the command name itself), not a choice:
   on lib.nvim, works fully standalone" architecture rule (`util/lib.lua`,
   `Arch&Coding.md`). Per the new global policy, lib.nvim is now a **required**
   dependency (the `:Cascade` command itself needs
-  `lib.nvim.usercmd.composer`). `lib.map`/`lib.notify` stay soft-guarded.
+  `lib.nvim.bindings.usercmd.composer`). `lib.map`/`lib.notify` stay soft-guarded.
 - **CI fix**: `.github/workflows/ci.yml`'s `tests` job didn't check out
   lib.nvim at all — would have broken on the new hard dependency. Fixed with
   a sibling checkout (`path: lib.nvim`) + `rtp+=.,../lib.nvim`.

@@ -3,7 +3,7 @@
 Source: `lua/gopath/bindings/keymaps.lua`, `M.setup(config)`
 Cross-reference: `docs/BINDINGS.md` — verified current and precise, cleanest of the audited repos.
 
-Now routed through `lib.nvim.map` (was direct `vim.keymap.set`, unlike most
+Now routed through `lib.nvim.bindings.keymap` (was direct `vim.keymap.set`, unlike most
 sibling plugins, before the 2026-07 "route autocmds/keymaps/usercmds through
 lib.nvim" refactor), wrapped by a local `map_many()` helper supporting a
 single lhs or a list of lhs strings; skips registration if the config value

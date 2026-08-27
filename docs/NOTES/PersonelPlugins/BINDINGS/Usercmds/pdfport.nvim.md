@@ -1,6 +1,6 @@
 # pdfport.nvim — `:PdfPort [subcommand] [path]` Cheatsheet
 
-One command, built via `lib.nvim.usercmd.composer` (`<Tab>` completion via a
+One command, built via `lib.nvim.bindings.usercmd.composer` (`<Tab>` completion via a
 custom `PDF_PATH` type — `.pdf` files prioritized, `<cfile>` suggested when
 completing with no input yet, reusing the plugin's own existing completion
 logic verbatim). Replaces the old 6 flat `:PdfPortX` commands (fully removed,
@@ -58,7 +58,7 @@ name when `[path]` is omitted — unchanged from the original.
   called lib.nvim "optional-by-design, deliberate standalone-first choice" —
   left as a historical snapshot (not rewritten, matches the "skip ROADMAP
   docs" policy), but README/installation.md/vimdoc/health.lua all updated
-  to reflect the new reality (`:PdfPort` needs `lib.nvim.usercmd.composer`).
+  to reflect the new reality (`:PdfPort` needs `lib.nvim.bindings.usercmd.composer`).
   `lib.nvim.ui.kit` (the picker enhancement) stays legitimately soft.
 - Keymaps are per-file-tree-integration and call `pdfport.open()` directly as
   a Lua function (like dap.nvim) — no command-string coupling, unaffected.

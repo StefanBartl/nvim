@@ -125,7 +125,7 @@ deshalb nicht auf dem synchronen Pfad landen. `report.lua` wird erst durch
 
 Alles Plattform- und Infrastrukturseitige kommt aus lib.nvim statt handgerollt:
 `lib.nvim.ui.kit` (Float), `lib.nvim.ui.hl` (Namespace + Gruppen, die auf
-Standardgruppen linken und so dem Colorscheme folgen), `lib.nvim.usercmd`
+Standardgruppen linken und so dem Colorscheme folgen), `lib.nvim.bindings.usercmd`
 (Kommandos mit pcall-Wrapper), `lib.nvim.notify` (präfixierte Meldungen) und
 `lib.nvim.system.env` für die Host-Zeile — letzteres delegiert an
 `lib.nvim.cross.platform`, weshalb WSL korrekt als WSL und nicht als Linux

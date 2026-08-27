@@ -6,7 +6,7 @@
 local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config") ---@module 'wkdoptions.config'
 local Debounce = lazy.require("lib.nvim.debounce")
-local Autocmd = lazy.require("lib.nvim.autocmd")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 local M = {}
 

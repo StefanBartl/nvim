@@ -2,7 +2,7 @@
 -- Sets keymaps for <A-b> and RightMouse. Replaces mappings/contextmenu.lua usage.
 
 local notify = require("lib.nvim.notify").create("[config.menu.mappings]")
-local map = require("lib.nvim.map")
+local map = require("lib.nvim.bindings.keymap")
 
 local M = {}
 

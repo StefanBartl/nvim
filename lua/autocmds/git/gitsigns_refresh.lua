@@ -4,7 +4,7 @@
 ---@class AutoCmds.Git.GitsignsRefresh
 local M = {}
 
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 ---@param cfg AutoCmds.Git.GitsignsRefreshCfg
 ---@param shared table

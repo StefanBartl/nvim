@@ -11,7 +11,7 @@
 ---   actions/replace.lua  focus-safe replace action
 
 local notify = require("lib.nvim.notify").create("[cfg.lazygit]")
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

@@ -1,6 +1,6 @@
 # filetree.nvim — User Commands Cheatsheet
 
-`:Filetree`/`:Ft` rebuilt via `lib.nvim.usercmd.composer` (migrated
+`:Filetree`/`:Ft` rebuilt via `lib.nvim.bindings.usercmd.composer` (migrated
 2026-07-19) — the best existing prior art in the whole migration series
 (the hand-rolled `TREE` table + dispatch + completion + `command_paths()`
 doc-walker was literally the design composer generalized). **No syntax
@@ -81,7 +81,7 @@ full per-group table.
   directly instead. Left in place (still exports `M.del`, which IS used for
   teardown, and removing a small, harmless soft-fallback helper wasn't
   worth the churn) rather than flagged as a cleanup task.
-- Added a `lib.nvim.usercmd.composer` health check — the command layer is
+- Added a `lib.nvim.bindings.usercmd.composer` health check — the command layer is
   now a hard dependency (no pcall), whereas the plugin's README/vimdoc
   previously described lib.nvim as fully soft-fallback-able everywhere;
   fixed to note the command layer specifically requires it.

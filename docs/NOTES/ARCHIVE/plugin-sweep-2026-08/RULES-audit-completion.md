@@ -16,7 +16,7 @@ file:line detail.
 
 ## The shared mechanism
 
-Nearly every plugin in this ecosystem uses `lib.nvim.usercmd.composer` for its
+Nearly every plugin in this ecosystem uses `lib.nvim.bindings.usercmd.composer` for its
 `:Verb <subcommand>` command tree. Composer derives Tab-completion directly
 from a declared route tree (subcommand literals, then positional-arg
 completers) — a plugin author doesn't need to hand-write a `complete`

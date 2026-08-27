@@ -1,7 +1,7 @@
 ---@module 'bindings.usrcmds'
 -- Initialize module for 'bindings.usrcmds'
 
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 local notify = require("lib.nvim.notify").create("[bindings.usrcmds]")
 
 require("bindings.usrcmds.case").enable()
@@ -51,8 +51,8 @@ end, {
 -- Not vim.g.__map_helper: that global is only valid transiently, while
 -- bindings.mappings' own setup() is running (it gets set to nil at the end
 -- of that function) -- not a stable API for other modules to call into at
--- arbitrary load order. lib.nvim.map directly, like everywhere else.
-require("lib.nvim.map")('n', '<leader>BI', '<cmd>BindingsPath<CR>', nil, 'Bindings-Pfad kopieren')
+-- arbitrary load order. lib.nvim.bindings.keymap directly, like everywhere else.
+require("lib.nvim.bindings.keymap")('n', '<leader>BI', '<cmd>BindingsPath<CR>', nil, 'Bindings-Pfad kopieren')
 
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.
 usercmd.create("CwdHere", function()

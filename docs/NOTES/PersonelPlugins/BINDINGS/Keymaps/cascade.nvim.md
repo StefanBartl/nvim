@@ -1,7 +1,7 @@
 # cascade.nvim — Keymaps Cheatsheet
 
 Source: `lua/cascade/bindings/keymaps.lua`, `lua/cascade/bindings/which_key.lua`
-Bridge: `lua/cascade/util/lib.lua`'s `lib.map()` — prefers `lib.nvim.map`, falls
+Bridge: `lua/cascade/util/lib.lua`'s `lib.map()` — prefers `lib.nvim.bindings.keymap`, falls
 back to `vim.keymap.set`. Every mapping sets `silent = true` and a `desc`.
 
 Cross-reference: `docs/BINDINGS.md` in this repo is kept in sync with source

@@ -22,7 +22,7 @@
 ---   - Testability: pure functions where possible, state accessible for inspection
 
 local lazy = require("lib.lua.lazy")
-local Autocmd = lazy.require("lib.nvim.autocmd")
+local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 local C = lazy.require("wkdoptions.config")
 
 ---@type WKDOptions.HL_CFG

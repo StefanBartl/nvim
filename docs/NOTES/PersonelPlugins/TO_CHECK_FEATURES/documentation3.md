@@ -333,7 +333,7 @@ nvim
 **Expect**: a markdown buffer reporting roughly **107** modules required by
 at least one consumer, **108** required only by lib.nvim itself, **33** by
 nobody, read from ~29 sibling maps — then the per-module list, most-used
-first (`lib.nvim.usercmd.composer` at 28 consumers, `lib.nvim.notify` at 27).
+first (`lib.nvim.bindings.usercmd.composer` at 28 consumers, `lib.nvim.notify` at 27).
 
 **Read the caveat in the output and check it is there**: `unreferenced` does
 not mean dead. It means no consumer among the maps supplied.

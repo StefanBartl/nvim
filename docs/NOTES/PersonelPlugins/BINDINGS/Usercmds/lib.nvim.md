@@ -1,7 +1,7 @@
 # lib.nvim — `:Lib <subcommand>` Cheatsheet
 
 lib.nvim is the library itself — this is its **own dogfooding** use of
-`lib.nvim.usercmd.composer` (`lua/lib/nvim_usrcmds/init.lua`), registered
+`lib.nvim.bindings.usercmd.composer` (`lua/lib/nvim_usrcmds/init.lua`), registered
 **alongside** the pre-existing flat commands (kept for muscle memory — this
 repo, unlike published standalone plugins, opted for alongside not replace).
 
@@ -248,18 +248,18 @@ the runtime-analysis.nvim repo.
 
 ## The composer module itself
 
-`lua/lib/nvim/usercmd/composer/` — the actual reusable module every other
+`lua/lib/nvim/bindings/usercmd/composer/` — the actual reusable module every other
 plugin's cheatsheet in this directory is built on.
 
 - Design doc: `docs/ROADMAP/usrcmd_builder.md` (in the lib.nvim repo)
-- API docs: `lua/lib/nvim/usercmd/composer/README.md`, `:h lib.nvim-composer`
-- Access: `require("lib.nvim.usercmd.composer")`, `require("lib").composer`,
+- API docs: `lua/lib/nvim/bindings/usercmd/composer/README.md`, `:h lib.nvim-composer`
+- Access: `require("lib.nvim.bindings.usercmd.composer")`, `require("lib").composer`,
   or `require("lib").usercmd.composer`
 
 ### Route spec shape (quick reference)
 
 ```lua
-local composer = require("lib.nvim.usercmd.composer")
+local composer = require("lib.nvim.bindings.usercmd.composer")
 
 composer.verb("Verb", {
   desc    = "…",

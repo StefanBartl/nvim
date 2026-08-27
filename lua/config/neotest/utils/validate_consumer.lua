@@ -2,7 +2,7 @@
 ---@brief Validiert die korrekte Initialisierung des Neo-tree Tests Consumers
 
 local notify = require("lib.nvim.notify").create("[neotest.validate]")
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

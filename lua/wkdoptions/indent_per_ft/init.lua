@@ -18,7 +18,7 @@ local INDENT_BY_FT = {
 }
 local DEFAULT_INDENT = 2
 
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 Autocmd.create("FileType", function()
   local w = INDENT_BY_FT[vim.bo.filetype] or DEFAULT_INDENT

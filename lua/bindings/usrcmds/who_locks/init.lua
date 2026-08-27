@@ -24,7 +24,7 @@
 --- and assembles the structured object here instead.
 
 local notify = require("lib.nvim.notify").create("[usrcmds.who_locks]")
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

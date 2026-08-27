@@ -1,6 +1,6 @@
 # recommender.nvim — User Commands Cheatsheet
 
-One command tree, built via `lib.nvim.usercmd.composer` (migrated
+One command tree, built via `lib.nvim.bindings.usercmd.composer` (migrated
 2026-07-20). **The last plugin in the rollout — `usrcmd_composer.md` is now
 26/26.** Second (after emojis.nvim) repo that had genuinely zero prior
 `lib.nvim` dependency; now `:Recommender` fails to register without it.

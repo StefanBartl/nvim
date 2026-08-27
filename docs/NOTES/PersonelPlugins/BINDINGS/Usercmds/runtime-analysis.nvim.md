@@ -1,7 +1,7 @@
 # runtime-analysis.nvim — Usercmds Cheatsheet
 
 Source: `lua/runtime-analysis/bindings/usrcmds.lua` (`:RA`, built via
-`lib.nvim.usercmd.composer`, plus flat aliases `:RARequest`/`:RASend`)
+`lib.nvim.bindings.usercmd.composer`, plus flat aliases `:RARequest`/`:RASend`)
 + `lua/runtime-analysis/telemetry/command.lua` (`:RATelemetry`). All four
 command *names* are registered unconditionally by
 `require("runtime-analysis").setup()`. Cross-reference: the repo's own
@@ -18,7 +18,7 @@ opposed to this file's `:RATelemetry` command surface).
 
 ## `:RA {subcommand}` — request/send/yank/cancel/history/env/import/export/provenance/inspect/usage/loaded
 
-Built via `lib.nvim.usercmd.composer` — same verb-first shape `:DocMap`/
+Built via `lib.nvim.bindings.usercmd.composer` — same verb-first shape `:DocMap`/
 `:MDView` use, `<Tab>`-completed (`:RA <Tab>` →
 `request | send | yank | cancel | history | env | import | export |
 provenance | inspect | usage | loaded`).

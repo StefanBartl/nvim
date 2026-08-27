@@ -2,7 +2,7 @@
 ---Provides :UI usercommand for runtime UI configuration (Base46, editor UI).
 
 local notify = require("lib.nvim.notify").create("[wkdnvchad.usrcmd]")
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

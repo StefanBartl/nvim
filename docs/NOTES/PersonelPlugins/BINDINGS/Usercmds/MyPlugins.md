@@ -5,7 +5,7 @@ Not a plugin's own command — `:MyPlugins` lives in this config itself
 `lua/bindings/usrcmds/`), managing the checkouts of the ~28 personal `.nvim` plugins
 listed on this page. Listed here rather than under a per-plugin file because
 it's about the personal-plugin *list itself*, not any one plugin. Built with
-[`lib.nvim.usercmd.composer`](https://github.com/StefanBartl/lib.nvim/blob/main/lua/lib/nvim/usercmd/composer/README.md)
+[`lib.nvim.bindings.usercmd.composer`](https://github.com/StefanBartl/lib.nvim/blob/main/lua/lib/nvim/bindings/usercmd/composer/README.md)
 — full implementation notes and safety rationale:
 [`lua/bindings/usrcmds/plugin_repos/README.md`](../../../../../lua/bindings/usrcmds/plugin_repos/README.md).
 

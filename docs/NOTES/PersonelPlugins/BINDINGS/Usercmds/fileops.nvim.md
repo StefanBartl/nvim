@@ -1,6 +1,6 @@
 # fileops.nvim — User Commands Cheatsheet
 
-`:File` built via `lib.nvim.usercmd.composer`. Grammar:
+`:File` built via `lib.nvim.bindings.usercmd.composer`. Grammar:
 `:[count]File[!] {subcommand} [args…]`
 
 Source: `lua/fileops/bindings/usrcmds.lua`

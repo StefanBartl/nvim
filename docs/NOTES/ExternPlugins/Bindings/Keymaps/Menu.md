@@ -24,7 +24,7 @@ Registriert in
 | `<RightMouse>` | `n`, `v` | Kontextabhängiges Menü an Mausposition. Repliziert zuerst das native `<RightMouse>` (Cursor/Fenster setzen), dann Routing nach Filetype: Markdown → wie `<A-b>`; `neo-tree`/`neo_tree` → `filetree.nvim`-Menü (falls vorhanden) sonst Legacy-Neo-tree-Menü (siehe unten); `NvimTree*` → `"nvimtree"`; sonst `custom` oder `"default"`. | [custom] |
 
 Beide Maps nutzen `vim.g.__map_helper` (Fallback auf lokales `map`), nicht
-`lib.nvim.map` direkt.
+`lib.nvim.bindings.keymap` direkt.
 
 ---
 

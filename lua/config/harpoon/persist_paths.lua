@@ -27,7 +27,7 @@ local json = require("lib.nvim.fs.json")
 local uv = vim.uv or vim.loop
 local ok_path, Path = pcall(require, "plenary.path")
 local sani = require("config.harpoon.utils.sanitize")
-local Autocmd = require("lib.nvim.autocmd")
+local Autocmd = require("lib.nvim.bindings.autocmd")
 
 --------------------------------------------------------------------------------
 -- Path normalization

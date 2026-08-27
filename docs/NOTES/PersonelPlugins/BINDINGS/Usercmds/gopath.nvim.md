@@ -1,6 +1,6 @@
 # gopath.nvim — User Commands Cheatsheet
 
-`:Gopath` rebuilt via `lib.nvim.usercmd.composer` (migrated 2026-07-19).
+`:Gopath` rebuilt via `lib.nvim.bindings.usercmd.composer` (migrated 2026-07-19).
 **No syntax change** to `:Gopath`. The 9 individual legacy alias commands
 are **kept alongside**, unchanged — same "keep alongside" call as
 pickers.nvim's compat flat aliases (both are explicit, individually
@@ -51,14 +51,14 @@ Docs: `docs/BINDINGS.md`, `docs/installation.md`, `README.md`
   other repos in this series where it was already a hidden hard dependency
   — gopath's `health.lua`/`util.log`/create-on-missing dialog all had real
   pcall-guarded fallbacks). `bindings/usrcmds.lua`'s unconditional
-  `require("lib.nvim.usercmd.composer")` was the first hard lib.nvim
+  `require("lib.nvim.bindings.usercmd.composer")` was the first hard lib.nvim
   dependency in the repo. Fixed README/installation.md's "optional" framing
   (renamed the installation.md section from "Optional dependencies" to
   "Dependencies") and added a required-check to `health.lua` alongside its
   existing informational lib.nvim check.
 - **Update (2026-07)**: `bindings/keymaps.lua` and `bindings/autocmds.lua`
-  were folded into the same migration (`require("lib.nvim.map")` /
-  `require("lib.nvim.autocmd")`, both unconditional) — lib.nvim is no longer
+  were folded into the same migration (`require("lib.nvim.bindings.keymap")` /
+  `require("lib.nvim.bindings.autocmd")`, both unconditional) — lib.nvim is no longer
   a single-file dependency, it's required across the whole bindings layer.
   `lua/gopath/util/cross.lua`'s `lib.nvim.cross` usage remains the one
   genuinely soft (pcall-guarded, falls back to built-ins) usage in the repo.

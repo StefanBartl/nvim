@@ -5,7 +5,7 @@
 ---   - Mappings (normal mode)
 ---   - User commands :WinVertical and :WinHorizontal
 
-local usercmd = require("lib.nvim.usercmd")
+local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 

@@ -4,7 +4,7 @@ Registriert als `keys`-Tabelle direkt im Lazy-Spec in
 [lua/plugins/workflow.lua](../../../../../lua/plugins/workflow.lua) — kein
 eigenes `bindings.mappings.*`-Modul, keine which-key-Spec-Umleitung wie bei
 Harpoon. Lazy.nvim setzt die Maps selbst (native `keys`-Lazy-Loading), nicht
-`lib.nvim.map`.
+`lib.nvim.bindings.keymap`.
 
 `todo-comments.nvim` liefert laut README **keine** Default-Keymaps aus — nur
 die Commands `:TodoQuickFix`, `:TodoTrouble`, `:TodoTelescope` und die API

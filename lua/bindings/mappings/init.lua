@@ -6,7 +6,7 @@ local M = {}
 ---Setup all mapping modules
 ---@return nil
 function M.setup()
-  vim.g.__map_helper = require("lib.nvim.map")
+  vim.g.__map_helper = require("lib.nvim.bindings.keymap")
 
   -- The LSP and Trouble mapping modules used to be registered here. They moved
   -- into lsp.nvim's keymap catalogue (config/KEYMAPS.lua) together with the

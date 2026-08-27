@@ -27,7 +27,7 @@
 ---@field is_enabled fun(name: FeatureName): boolean # Check if feature is enabled (fast lookup from cached flags)
 ---@field set_enabled fun(name: FeatureName, enabled: boolean): nil # Set feature enabled state (called by after_set on config changes)
 ---@field get_namespace fun(name: string): integer # Get or create namespace handle (cached, idempotent, prefixed with "myopt_")
----@field get_augroup fun(name: string, clear: boolean|nil): integer # Get or create augroup handle via lib.nvim.autocmd (cached, idempotent, prefixed with "myopt.", clear defaults to true)
+---@field get_augroup fun(name: string, clear: boolean|nil): integer # Get or create augroup handle via lib.nvim.bindings.autocmd (cached, idempotent, prefixed with "myopt.", clear defaults to true)
 ---@field init_from_config fun(cfg: WKDOptions.HL_CFG): nil # Initialize feature flags from config (call once during enable())
 ---@field reset fun(): nil # Reset all state (useful for tests/reload, clears mode cache + feature flags)
 

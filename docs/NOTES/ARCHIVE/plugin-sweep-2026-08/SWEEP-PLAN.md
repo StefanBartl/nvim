@@ -96,7 +96,7 @@ Ende gestrichen, gesammelt.
 Nur die Bausteine, die der Sweep selbst mehrfach braucht - abgeleitet aus den
 Pro-Plugin-Listen, nicht aus der ausgeklammerten Ideen-Datei.
 
-- [ ] `lib.nvim.autocmd.create`: `buffer`-Feld durchreichen. In pickers.nvim,
+- [ ] `lib.nvim.bindings.autocmd.create`: `buffer`-Feld durchreichen. In pickers.nvim,
       github_stats.nvim, color_my_ascii.nvim, markdown.nvim existieren dafuer
       vier unabhaengige Workarounds. Ein Upstream-Fix, danach vier Rueckbauten.
 - [ ] `composer.register_type`: generischer `PATH`/`DIR`-Completion-Typ.

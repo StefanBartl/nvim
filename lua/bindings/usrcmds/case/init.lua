@@ -7,7 +7,7 @@
 --- generated file-verb (:Case summary/research/reply [case]) per blueprint
 --- node that declares a `key`.
 
-local composer = require("lib.nvim.usercmd.composer")
+local composer = require("lib.nvim.bindings.usercmd.composer")
 local render = require("bindings.usrcmds.case.render")
 local registry = require("bindings.usrcmds.case.registry")
 local config = require("bindings.usrcmds.case.config")

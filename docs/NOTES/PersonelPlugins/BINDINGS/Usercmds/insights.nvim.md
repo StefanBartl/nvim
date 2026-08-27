@@ -1,6 +1,6 @@
 # insights.nvim — User Commands Cheatsheet
 
-One command tree, built via `lib.nvim.usercmd.composer` (migrated
+One command tree, built via `lib.nvim.bindings.usercmd.composer` (migrated
 2026-07-20). Replaced the hand-rolled `nvim_create_user_command` + custom
 `complete()` pair — the 12 handler functions in `bindings/usrcmds.lua` are
 byte-for-byte unchanged, only their registration changed.

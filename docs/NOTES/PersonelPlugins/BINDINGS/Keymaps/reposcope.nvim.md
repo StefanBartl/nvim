@@ -57,7 +57,7 @@ its own component whenever it opens/closes.
 | `q` | n | `ui/actions/readme_viewer.lua` (`nvim_buf_set_keymap`) | Closes the README viewer, restores prompt autocmds + prompt keymaps |
 | `q` / `<Esc>` | n | `utils/stats.lua` | Closes the stats popup buffer/window |
 | `q` / `<Esc>` | n | `ui/actions/help_view.lua`, via `lib.nvim.ui.kit`'s `nice_quit` | Closes the `?` keymap cheatsheet |
-| `<CR>` / `<2-LeftMouse>` | n | `ui/actions/status_view.lua` (`lib.nvim.map`, buffer-local, every interactive `--out` backend of `:Reposcope status`) | Row under cursor → `lib.nvim.ui.kit.confirm` prompt → on yes, `:edit`s that repository's `README.md`. No readable README.md just notifies, no prompt |
+| `<CR>` / `<2-LeftMouse>` | n | `ui/actions/status_view.lua` (`lib.nvim.bindings.keymap`, buffer-local, every interactive `--out` backend of `:Reposcope status`) | Row under cursor → `lib.nvim.ui.kit.confirm` prompt → on yes, `:edit`s that repository's `README.md`. No readable README.md just notifies, no prompt |
 | `p` / `P` / `f` | n | `ui/actions/status_view.lua` (same backends) | Push / pull (`--ff-only`) / fetch the repo under the cursor, via `utils/repo_actions.lua`. Spinner on the row while running, then that one row is re-read |
 | `S` | n | `ui/actions/status_view.lua` (same backends) | Nested popup with `git status --short --branch` + last 5 commits (`repo_status.status_detail`) |
 | `s` | n | `ui/actions/status_view.lua` (same backends) | Cycles sort: discovery → name → state (worst first) → last-commit age |

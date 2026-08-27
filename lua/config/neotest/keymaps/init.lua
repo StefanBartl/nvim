@@ -1,7 +1,7 @@
 ---@module 'config.neotest.keymaps'
 --- Neotest keymaps using centralized actions.
 
-local map = require("lib.nvim.map")
+local map = require("lib.nvim.bindings.keymap")
 local actions = require("config.neotest.actions")
 
 local M = {}

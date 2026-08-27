@@ -74,7 +74,7 @@ opt.foldlevelstart = 99
 -- CHECK: PHASE1A
 -- Markdown-specific folding via utils.markdown.foldexpr only for markdown buffers
 do
-  local autocmd = require("lib.nvim.autocmd")
+  local autocmd = require("lib.nvim.bindings.autocmd")
   autocmd.create("FileType", function()
     opt_local.foldmethod = "expr"
     opt_local.foldexpr = "v:lua.require'markdown.core.fold'.foldexpr(v:lnum)"
@@ -154,7 +154,7 @@ set_diff_profile("review")
 ]]
 --
 
-require("lib.nvim.autocmd").create("OptionSet", function()
+require("lib.nvim.bindings.autocmd").create("OptionSet", function()
   if vim.wo.diff then
     vim.wo.wrap = false
     vim.wo.cursorbind = false
