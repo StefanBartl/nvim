@@ -3,6 +3,7 @@
 ## Table of content
 
   - [Misc](#misc)
+  - [filetree.nvim](#filetreenvim)
   - [color_my_ascii.nvim](#color_my_asciinvim)
   - [wezterm padded nvim - bottom padding ist unverhältniossmäßig groß](#wezterm-padded-nvim-bottom-padding-ist-unverhltniossmig-gro)
   - [images.nvim erweiterung](#imagesnvim-erweiterung)
@@ -26,6 +27,12 @@
   Abseits davon gib mir bit te auch ncoh aus, ob es ähnlixhes beretis default in nvim gibt bzw obn es einen weg gibt, das default nachustellen.
 
 - [ ] `M-CR` soll ein normales enter  sein im insert mode, also `cascade.nvim`s next bullet generieren überspringen - oder gbtes dazu schon einen anderen?
+
+---
+
+## filetree.nvim
+
+Ich atte einen rfolder docs/Telemetry unfd wolte ihn auf docs/TELEMTRY mit `r` umenbenenen,. ich bekam eine prompt das es den ordner TELEMTRY bereits gibt, obewohl ich sah dass das nicht der fall ar. ich habe auf Trotzdem umbenenen geklickt, dann hat es einfach den ordner kopeirt und ich hatte einemal docs/Telemetry und docs/TELEMTRY mit dne gleichen inhalt. Für mich sieht das nach einen bug aus.
 
 ---
 
