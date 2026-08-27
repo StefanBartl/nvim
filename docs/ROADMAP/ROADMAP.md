@@ -194,7 +194,7 @@ und das native: docmap-desktop
 ## cdx
 
 free: So., 09:00  98% - Subscription bis   21. Juli 2027  |
-work: Sa., 06:00  98% - Subscription bis   20. Sept       |
+work: Sa., 06:00 100% - Subscription bis   20. Sept       |
 dev:  Sa., 22:00 100% - Subscription bis   03. Sep        |
 main: Fr., 11:00  10% - Subscription bis ~ 27. Sep        | 17:31
 
