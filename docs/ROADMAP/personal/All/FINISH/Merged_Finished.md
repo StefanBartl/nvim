@@ -135,6 +135,66 @@ nvim-Config.
       Kompatibilitaetsschicht, die ihre Migration ueberlebt, wird nie wieder
       geloescht.
 
+- [x] **Keymap ↔ Usrcmd-Parität nachgemessen — keine Lücke.** Über alle 29
+      Plugins ist jede deklarierte Keymap-Action auch über ein Kommando
+      erreichbar; es gibt keinen Fall, für den ein "Grund, warum nicht" nötig
+      wäre. Nachgemessen statt geschätzt: seit der Registry kennt
+      `keymap.registered()` jede Action, `composer.registry()` jede Route.
+
+      Alle Kandidaten aus dem automatischen Abgleich waren falsch positiv,
+      weil eine Route mit typisiertem Argument viele Actions abdeckt, ohne
+      eine davon beim Namen zu nennen — `:Open firefox` deckt alle 18
+      `open_*`-Actions, `:File next vsplit` die ganze Cycle-Familie,
+      `:File! delete` die Force-Variante. Report + Skript:
+      `docs/ROADMAP/keymap-command-parity.md`.
+
+- [x] **Featureliste "implementiert, aber nicht konfigurierbar"** — 45
+      Kandidaten in 15 Repos, sortiert in *konfigurierbar machen* (21),
+      *bleibt Konstante mit Grund* (9, u. a. Base64-Alphabet, `MIN_NVIM`,
+      Telemetrie-Fingerprint) und *strittig* (6, davon 4 mit Rückfrage
+      geklärt). Report: `docs/ROADMAP/nicht-konfigurierbare-features.md`.
+
+- [x] **Konfigurierbarkeit, Durchgang eins: 21 Konstanten umgesetzt** in 12
+      Plugins, jeder Key mit unverändertem Default und LuaLS-Typ, jeder
+      einzeln getestet.
+
+      Nebenbefund, der die Runde überhaupt erst nutzbar machte:
+      `github_stats.setup()` verwarf **jede** Option außer `repos` still,
+      sobald eine `config.json` existierte — und die schreibt das Plugin beim
+      ersten Lauf selbst. `setup({ dashboard = { … } })` tat also nichts,
+      ohne dass irgendwo stand warum. Reihenfolge jetzt: Datei (oder Default)
+      als Basis, `setup()` gewinnt darüber.
+
+      Die vier strittigen Fälle sind entschieden: Sparklines fallen über
+      `lib.nvim.ui.nerd_font` auf eine ASCII-Rampe zurück (dafür neu:
+      `nerd_font.chars`, das einen Zeichensatz als *Ganzes* wählt — eine
+      Reihe, die `█` mit `#` mischt, liest schlechter als jede der beiden
+      allein); reposcopes Spaltenbreiten bleiben fest, dafür werden
+      Branch-Namen **mittig** gekürzt, weil bei `claude/…-47a46e` der Hash am
+      Ende der unterscheidende Teil ist; sandbox bekommt `max_error_length`
+      **plus** einen Hinweis, wo der volle Text steht; der Logger nimmt
+      `max_depth`/`max_items` als Instanz-Default *und* pro Aufruf.
+
+- [x] **Konfigurierbarkeit, Durchgang zwei: Zahlen ohne Namen.** 43 Zahlen,
+      47 Plattform-Verzweigungen. Das Ergebnis war ausdrücklich *nicht* "43
+      neue Keys": 26 der 43 sind Float-Größen (`vim.o.columns * 0.8`) in neun
+      Plugins, also **eine** Entscheidung. Gelöst, indem `lib.nvim`s
+      `make_scratch` jetzt Bruchteile nimmt — die Konvention stand längst in
+      `kit.layout`, nur nicht dort, wo alle 26 Aufrufe landen.
+
+      Beinahe ein stiller Regressionsbug dabei: `kit.layout` liest `1` als
+      "das Ganze", `make_scratch` muss es als *eine Zelle* lesen — `kit.input`,
+      `kit.live_input`, beide Progress-Styles und die Statusline übergeben
+      `height = 1` und meinen es so. Bruchteil ist deshalb strikt zwischen 0
+      und 1, gegen HEAD gegengeprüft.
+
+      Die Plattform-Verzweigungen brauchen fast durchweg kein Opt-out, weil
+      sie Tatsachen über das OS sind. Der einzige echte Fund dort war ein
+      **Bug**: filetrees Größenanzeige rief `du -sb` auf, und `-b` ist
+      GNU-only — auf macOS/BSD endete der Prozess mit Exit ≠ 0 und die Spalte
+      blieb dauerhaft leer, ohne Fehlermeldung. Jetzt `du -sk` mal 1024.
+      Report: `docs/ROADMAP/zahlen-ohne-namen.md`.
+
 ---
 
 ## 2026-08-26

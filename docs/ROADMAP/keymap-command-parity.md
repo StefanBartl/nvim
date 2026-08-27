@@ -75,7 +75,7 @@ netrw-Adapter greift.
 ## Wiederholen
 
 ```bash
-nvim --clean -l docs/NOTES/PersonelPlugins/BINDINGS/tools/keymap_command_audit.lua E:/repos/<plugin>.nvim <modul>
+nvim --clean -l docs/ROADMAP/tools/keymap_command_audit.lua E:/repos/<plugin>.nvim <modul>
 ```
 
 Ausgabe ist TSV auf stdout, damit `grep`/`cut` reichen. Der Vergleich selbst

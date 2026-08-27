@@ -47,16 +47,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Alle Features/Bugfixes committen & pushen (Commit-Message ausgeben, falls Push nicht möglich). — **Zuletzt geprüft 2026-08-26: alle 31 Repos + Config sauber und gepusht; Claude-Branches und `.claude/worktrees/` überall abgeräumt (siehe `Merged_Finished.md`).** Wiederkehrend, bleibt daher stehen.
 - [ ] Git-Release pro Repo, sobald fertig.
 
-### lib.nvim shim zu bindings\
-
-- [x] **Erledigt 2026-08-27, und ja: du hattest recht.** Die Shims sind weg,
-      alle 30 Repos sind migriert, alle 29 Plugins laden ohne sie. Der Shim
-      war als *Zwischen*stufe richtig -- die Reihenfolge des Nachziehens
-      bestimmt der Plugin-Manager, nicht du -- aber seine eine Aufgabe ist
-      erledigt, und pre-1.0 mit Breaking-Changes-Hinweis in Zeile 1 der README
-      braucht keine Kompatibilitaetsschicht, die ihre eigene Migration
-      ueberlebt. Details in `Merged_Finished.md`.
-
 ---
 
 ## Liste B — An Claude Code delegierbar
@@ -65,60 +55,24 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] UseCases/Workflow-Datei pro Plugin (typischer Workflow + Edge Cases); vorhandene auf Aktualität prüfen.
 
 ### Bindings, Keymaps & UI
-- [x] **Alle Keymaps/Features zusätzlich via Usrcmd ausführbar machen —
-      geprüft 2026-08-27, keine Lücke.** Über alle 29 Plugins ist jede
-      deklarierte Keymap-Action über ein Kommando erreichbar; es gibt keinen
-      Fall, für den ein "Grund, warum nicht" nötig wäre. Nachgemessen statt
-      geschätzt: die Keymap-Registry kennt seit der Umstellung jede Action,
-      der Composer jede Route. Kandidaten aus dem automatischen Abgleich
-      waren alle falsch positiv, weil eine Route mit typisiertem Argument
-      viele Actions abdeckt, ohne eine davon beim Namen zu nennen
-      (`:Open firefox`, `:File next vsplit`, `:File! delete`). Report +
-      wiederverwendbares Audit-Skript:
-      `docs/NOTES/PersonelPlugins/BINDINGS/keymap-command-parity.md`.
-
-#### Neues lib.nvim Modul für Keymaps + umbennenug
-
-- [x] **Erledigt 2026-08-27.** `lua/lib/nvim/bindings/keymap` steht, ist eine
-      Registry statt eines Wrappers, und 26 Plugins sind umgestellt; drei sind
-      es bewusst nicht (gopath, runtime-analysis, documentation -- jeweils mit
-      Grund). Deine Frage zur Schreibweise ist zugunsten von *Aktionsnamen*
-      entschieden, weil `"[a": "]u"` nicht sagen kann, wessen `[a` gemeint ist.
-      Umbenennung `autocmd`/`usercmd` nach `bindings/` inklusive.
-      Vollstaendige Aufstellung -- Features, gefundene Bugs, was neu
-      konfigurierbar wurde -- in `Merged_Finished.md`.
-
 #### autocmds
 
 - [ ] Autocmds aller Ordner in einem `bindings/autcmd`-Ordner zusammenführen, nach Events sortiert (Dispatch-Lib-Modul), Abgleich mit `/bindings`.
 
 ### Healthchecks, Config & Defaults
-- [~] **Möglichst viele Features user-konfigurierbar machen, inkl.
-      LuaLS-Typen — erster Durchgang erledigt 2026-08-27.** Alle 21 klaren
-      Fälle aus der Featureliste sind umgesetzt: 12 Plugins, jeder neue Key
-      mit unverändertem Default und LuaLS-Typ. Dabei fiel auf, dass
-      `github_stats.setup()` **jede** Option außer `repos` still verwarf,
-      sobald eine config.json existierte (die das Plugin selbst schreibt) —
-      ohne diesen Fix wären die neuen Keys dort unerreichbar geblieben.
-      Die 4 strittigen Fälle, die dir vorlagen, sind entschieden und
-      umgesetzt (Sparklines über `nerd_font.chars`, reposcope bleibt,
-      sandbox bekommt `max_error_length`, der Logger nimmt die Kappungen
-      pro Aufruf).
+- [ ] **Aufräumen aus der Konfigurierbarkeits-Runde** (rein mechanisch, nichts
+      davon dringend — alles funktioniert unverändert weiter):
+    - [ ] Die 26 Float-Aufrufstellen auf die kurze Form umstellen, jetzt wo
+          `make_scratch` Bruchteile nimmt: reposcope (11), pdfport (4),
+          language (4), learn-cli (3), lsp (2), markdown (2), filetree (2),
+          images (1).
+    - [ ] Zwei Timeout-Paare zusammenführen, die denselben Wert doppelt
+          führen und daher auseinanderdriften werden: color_my_ascii (5000,
+          `cache_manager.lua` + `init.lua`), pickers (3000, `DEFAULTS.lua` +
+          `smart/init.lua`).
+    - [ ] Die restlichen Punkte aus `docs/ROADMAP/zahlen-ohne-namen.md`
+          (documentation's 120s-Timeouts, cmdlogs Popup-Standzeit).
 
-      **Durchgang zwei ist ebenfalls durch** (2026-08-27): 43 Zahlen ohne
-      Namen, 47 Plattform-Verzweigungen. Ergebnis war nicht "43 neue Keys" —
-      26 der 43 sind Float-Größen (`vim.o.columns * 0.8`) in neun Plugins,
-      also *eine* Entscheidung. Gelöst in `lib.nvim`s `make_scratch`, das
-      jetzt Bruchteile nimmt (`width = 0.8`); die Konvention stand bereits in
-      `kit.layout`. Die Plattform-Verzweigungen sind fast durchweg Tatsachen
-      über das OS, keine Präferenzen — dafür steckte in ihnen ein echter Bug
-      (`du -sb` ist GNU-only, auf macOS/BSD blieb die Größenspalte still
-      leer). Report: `docs/NOTES/PersonelPlugins/zahlen-ohne-namen.md`.
-
-      Offen und bewusst niedrig priorisiert: die 26 Aufrufstellen auf die
-      kurze Form umstellen (rein mechanisch, funktionieren unverändert
-      weiter) und zwei Timeout-Paare zusammenführen, die denselben Wert
-      doppelt führen.
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
 
 ### Performance
@@ -130,16 +84,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
   - **Generelle Erkenntnis, gilt config-weit:** ein *fehlschlagendes* `vim.fn.executable()` läuft unter Windows jeden PATH-Eintrag gegen jede PATHEXT-Endung ab — hier 67 × 11 = 737 Stats, ~44ms — und wird **nicht** gecacht. Ein *erfolgreiches* stoppt beim ersten Treffer (~0.2ms). Jede Probe auf ein nicht installiertes Tool im Startpfad kostet also 44ms. `lib.nvim.core.has_exec` memoisiert, aber nur pro Session, hilft dem ersten Aufruf also nicht.
 
 ### Architektur & Strategie (Umsetzung, keine Grundsatzentscheidung)
-- [x] **Featureliste "implementiert, aber nicht konfigurierbar" — erstellt
-      2026-08-27.** 45 Kandidaten in 15 Repos, sortiert in *klar
-      konfigurierbar machen* (21), *bleibt Konstante, mit Grund* (9, u. a.
-      Base64-Alphabet, `MIN_NVIM`, Telemetrie-Fingerprint) und **strittig,
-      Rückfrage (6)**. Die sechs stehen im Report und warten auf deine
-      Antwort — es sind Geschmacks-/Zielgruppenfragen, keine technischen.
-      Report + Skript:
-      `docs/NOTES/PersonelPlugins/nicht-konfigurierbare-features.md`.
-      Ehrlich dazugesagt, was der Scan *nicht* sieht: Zahlen ohne Namen
-      (`vim.defer_fn(fn, 60)`) und Plattform-Verzweigungen ohne Opt-out.
 - [ ] Alle Features eines Plugins den zugehörigen Usrcmds/Keymaps/Autocmds zuordnen, Analyse in `docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES` pro Plugin ablegen (Sortierung nach Wichtigkeit erst nach Klärung der Priorisierungsfrage aus Liste A).
 
 ---
