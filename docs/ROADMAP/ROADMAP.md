@@ -147,7 +147,7 @@ Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega auf
 
 ## runtime-analysis.nvim
 
-`:RATelemetry export` hat auch repos "exportiert" bzw eine file angelegt, die gar kein lua plugin sind: WKDBook-Tricentis zb. aber nicht für WKDBooks. Hängt das miot $REPOS_DIR zusammen oder ?
+`:RATelemetry export` hat auch repos "exportiert" bzw eine file angelegt, die gar kein lua plugin sind: WKDBook-Tricentis zb. aber nicht für WKDBooks. Hängt das miot $REPOS_DIR zusammen oder ? Ich dneke mir das desewegen, weil im e:\repos als $REPOS_DIR auf der Workstation WKDBooks und WKDBook-Tricentis benfals im repoo ordner waren. auf dieser maschien hier sind viele anderen ordner mehr darin aber da habe ich es nicht getestet.
 Es gibt von insights.nvim eine markdown file in den telemetry daten. Was hat es damit auf sich?
 
 ---

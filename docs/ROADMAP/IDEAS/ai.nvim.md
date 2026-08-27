@@ -321,7 +321,8 @@ einem `require("ai")`-Aufruf statt einer Neuimplementierung.
 ## neue idee
 
 Ein hotkey/usrcmd mit dem man den aktuellen kontext sofort an ieine ai überigbt, beipiel: Troubl diagnositv´c worspace ausgeführt, es zeiigt 5 errors an in der quickfoxliste - der cursor ist n der qf-list und man gibt dann den hotkey/usrcmd ein - ein prompt öffnet sich eine ürompt in der man die task fomruleiren kann zb " fixe die qucikfixliste" - dann noch optional das modell auswhlen, wnn icht dann defult, und mit enter schickt man sofort das task der prompt an die ai und die beginnt in einen neuen thread zu arbeiten und einenbuffer als ausgabe verendet. das gleiche prinzip würde bei tausenden anderen aktioen funltniernen.
+Das gleiche Prinzip, aber mirt einen anderen keymap, würde nicht die meldung an eine ai übergeben um sie zu lösen, sondern nur, wie im `noice`-Plugin, auf der rechten seite untetn/oben ein umrahmtes, farbiges badge/notiz rechteck (wie ein post it aber digital) aufpoppt, das mit ai die fehermelödung/irgendeinen kontext (versucht) zu erklären
 
 
-
+---
 
