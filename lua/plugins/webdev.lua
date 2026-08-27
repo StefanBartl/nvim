@@ -37,13 +37,13 @@ return {
     init = function()
       vim.filetype.add({ extension = { resty = "resty" } })
 
-      vim.api.nvim_create_autocmd("FileType", {
+      require("lib.nvim.bindings.autocmd").create("FileType", function()
+        pcall(require, "resty")
+      end, {
+        group = "WebdevRestyLoader",
         pattern = { "http", "resty" },
         once = true,
         desc = "Load resty.nvim on its own filetypes (see plugins/webdev.lua)",
-        callback = function()
-          pcall(require, "resty")
-        end,
       })
     end,
   },

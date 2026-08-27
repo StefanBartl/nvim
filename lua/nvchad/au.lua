@@ -12,8 +12,8 @@
 -- lazily via a callback filter instead of precomputing the full path list,
 -- so the cost only applies once you actually save a file, not on startup.
 
-local autocmd = vim.api.nvim_create_autocmd
-local config = require "nvconfig"
+local autocmd = require("lib.nvim.bindings.autocmd")
+local config = require("nvconfig")
 
 -- load nvdash only on empty file
 if config.nvdash.load_on_startup then
@@ -29,42 +29,42 @@ if config.nvdash.load_on_startup then
 end
 
 if config.lsp.signature then
-  autocmd("LspAttach", {
-    callback = function(args)
-      vim.schedule(function()
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
+  autocmd.create("LspAttach", function(args)
+    vim.schedule(function()
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
 
-        if client then
-          local signatureProvider = client.server_capabilities.signatureHelpProvider
-          if signatureProvider and signatureProvider.triggerCharacters then
-            require("nvchad.lsp.signature").setup(client, args.buf)
-          end
+      if client then
+        local signatureProvider = client.server_capabilities.signatureHelpProvider
+        if signatureProvider and signatureProvider.triggerCharacters then
+          require("nvchad.lsp.signature").setup(client, args.buf)
         end
-      end)
-    end,
+      end
+    end)
+  end, {
+    group = "NvChadLspSignature",
+    desc = "NvChad: attach the signature-help handler to a new LSP client",
   })
 end
 
 -- reload the plugin! (lazy match: no startup-time glob/realpath scan)
-local config_lua_dir = vim.fs.normalize(vim.fn.stdpath "config" .. "/lua") .. "/"
+local config_lua_dir = vim.fs.normalize(vim.fn.stdpath("config") .. "/lua") .. "/"
 
-autocmd("BufWritePost", {
+autocmd.create("BufWritePost", function(opts)
+  local abs = vim.fs.normalize(vim.api.nvim_buf_get_name(opts.buf))
+  if abs:sub(1, #config_lua_dir) ~= config_lua_dir then
+    return
+  end
+
+  local fp = vim.fn.fnamemodify(abs, ":r") --[[@as string]]
+  local app_name = vim.env.NVIM_APPNAME and vim.env.NVIM_APPNAME or "nvim"
+  local module = string.gsub(fp, "^.*/" .. app_name .. "/lua/", ""):gsub("/", ".")
+
+  require("nvchad.utils").reload(module)
+  -- vim.cmd("redraw!")
+end, {
+  group = "ReloadNvChad",
   pattern = "*.lua",
-  group = vim.api.nvim_create_augroup("ReloadNvChad", {}),
-
-  callback = function(opts)
-    local abs = vim.fs.normalize(vim.api.nvim_buf_get_name(opts.buf))
-    if abs:sub(1, #config_lua_dir) ~= config_lua_dir then
-      return
-    end
-
-    local fp = vim.fn.fnamemodify(abs, ":r") --[[@as string]]
-    local app_name = vim.env.NVIM_APPNAME and vim.env.NVIM_APPNAME or "nvim"
-    local module = string.gsub(fp, "^.*/" .. app_name .. "/lua/", ""):gsub("/", ".")
-
-    require("nvchad.utils").reload(module)
-    -- vim.cmd("redraw!")
-  end,
+  desc = "NvChad: reload a config module after saving it",
 })
 
 vim.api.nvim_create_user_command("MasonInstallAll", function()
@@ -75,15 +75,15 @@ if config.colorify.enabled then
   require("nvchad.colorify").run()
 end
 
-local dir = vim.fn.stdpath "data" .. "/nvnotify1"
+local dir = vim.fn.stdpath("data") .. "/nvnotify1"
 
 if not vim.uv.fs_stat(dir) then
   vim.fn.mkdir(dir, "p")
-  require "nvchad.winmes" {
+  require("nvchad.winmes")({
     { "* Blink.cmp plugin integration has been added, will be tested for 2 months" },
     { " " },
     { '* { import = "nvchad.blink.lazyspec" } in your plugins file' },
     { " " },
     { "* Discuss at https://github.com/NvChad/NvChad/discussions/3244" },
-  }
+  })
 end

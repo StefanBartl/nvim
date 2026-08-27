@@ -64,14 +64,13 @@ function M.setup()
     local bufnr = ev.buf
     mark(bufnr)
     -- Keep markers aligned with live reordering / deletions inside the menu.
-    -- Buffer-local (lib.nvim.bindings.autocmd.create does not forward `buffer`, so use
-    -- the native API here); auto-cleaned when the scratch buffer is wiped.
-    vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+    -- Buffer-local, and auto-cleaned when the scratch buffer is wiped.
+    Autocmd.create({ "TextChanged", "TextChangedI" }, function()
+      mark(bufnr)
+    end, {
       group = grp,
       buffer = bufnr,
-      callback = function()
-        mark(bufnr)
-      end,
+      desc = "Harpoon: re-draw pin markers after an edit in the quick menu",
     })
   end, {
     group = grp,

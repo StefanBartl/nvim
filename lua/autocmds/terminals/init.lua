@@ -8,19 +8,27 @@
 local M = {}
 
 local api = vim.api
-local nvim_create_autocmd = api.nvim_create_autocmd
 
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
 
 local lazy = require("lib.lua.lazy")
-local augroup_lib = lazy.require("lib.nvim.bindings.autocmd.augroup")
-local augroup = augroup_lib.create.clear
 local autocmd_lib = lazy.require("lib.nvim.bindings.autocmd")
 local norm_events = autocmd_lib.norm_events
 local is_kitty = lazy.require("lib.nvim.terminal").is_kitty
 local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
+
+--- Clear and return a feature's augroup.
+---
+--- Through `Autocmd.group`, not `augroup.create.clear`: clearing this way also
+--- drops the feature's previous *records*, so calling `enable()` twice replaces
+--- its rows in the generated bindings table instead of doubling them.
+---@param name string
+---@return integer
+local function augroup(name)
+  return Autocmd.group(name, true)
+end
 
 --------------------------------------------------------------------------------
 -- Defaults --------------------------------------------------------------------
@@ -60,14 +68,20 @@ function M.enable(cfg)
     local function kitty_cmd(padding, margin)
       return string.format(":silent !kitty @ set-spacing padding=%d margin=%d", padding, margin)
     end
-    nvim_create_autocmd("VimEnter", {
+    -- `Autocmd.create` takes a callback, not a `command` string, so the two
+    -- `:silent !kitty @ …` invocations run through `vim.cmd` instead.
+    local enter_cmd = kitty_cmd(cfg.kitty.enter_padding, cfg.kitty.enter_margin)
+    local leave_cmd = kitty_cmd(cfg.kitty.leave_padding, cfg.kitty.leave_margin)
+    Autocmd.create("VimEnter", function()
+      vim.cmd(enter_cmd)
+    end, {
       group = augroup("kitty_enter"),
-      command = kitty_cmd(cfg.kitty.enter_padding, cfg.kitty.enter_margin),
       desc = "Kitty: reduce padding/margin for a snug editor frame on startup",
     })
-    nvim_create_autocmd("VimLeavePre", {
+    Autocmd.create("VimLeavePre", function()
+      vim.cmd(leave_cmd)
+    end, {
       group = augroup("kitty_leave"),
-      command = kitty_cmd(cfg.kitty.leave_padding, cfg.kitty.leave_margin),
       desc = "Kitty: restore padding/margin when leaving Neovim",
     })
   end
@@ -95,7 +109,6 @@ function M.enable(cfg)
     })
   end
 end
-
 
 ---@type AutoCmds.Terminals
 return M
