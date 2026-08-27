@@ -20,9 +20,15 @@
       - [ ] allen Keymaps
       - [ ] allen Usrcmds
       - [ ] allen Autocmds
-- [ ] alle Keymaps müssen
-  - [ ] vom user einfach modifizierbar / deaktiviert werden können
-  - [ ] eine which-key implementierung haben
+- [x] alle Keymaps müssen ✅ **2026-08-27** — siehe `Merged_Finished.md`.
+  - [x] vom user einfach modifizierbar / deaktiviert werden können — 26
+        Plugins deklarieren ihre Keymaps über `lib.nvim.bindings.keymap`;
+        drei bewusst nicht (gopath, runtime-analysis, documentation), mit
+        Grund im jeweiligen Modulkopf.
+  - [x] eine which-key implementierung haben — und zwar *nur* das, was
+        which-key nicht selbst herausfindet. Es liest Mappings und deren
+        `desc` von sich aus; vier Plugins hatten genau das doppelt
+        registriert, teils mit abweichendem Wortlaut.
 - [ ] Die meisten Features (sinnvoll) default aktiv stellen: So das maximale Nutzererfahrung bei minimaler initialer config Notwendigkeit ensteht. Im Idealfall sieht die Initialisierung-Spec so aus:
 
     ```lua
@@ -103,7 +109,9 @@
 ## 6. User-seitige Konfigurierbarkeit
 
 - [ ] `config/init.lua` & `config/DEFAULTS.lua` für pluginseitige Defaults anlegen
-- [ ] Möglichst viele Features sollen vom User aus einstellbar sein z. B.:
+- [x] Möglichst viele Features sollen vom User aus einstellbar sein ✅ **2026-08-27** — siehe `Merged_Finished.md`.
+      Zwei Durchgänge: benannte Modul-Konstanten (45 Kandidaten, 21
+      umgesetzt) und Zahlen ohne Namen (43 gefunden). Beispiel unverändert:
 
   ```lua
   {
@@ -126,19 +134,25 @@
 
   → Hier kann der User z. B. die Keys **Output dir** und **Compress Engine** explizit setzen und damit die pluginseitigen Defaults aus `config.lua` überschreiben.
 
-- [ ] Für ein gutes LSP-Erlebnis: jeder Key braucht einen Typ, z. B.:
+- [x] Für ein gutes LSP-Erlebnis: jeder Key braucht einen Typ ✅ **2026-08-27** — siehe `Merged_Finished.md`.
+      Gilt für jeden neu angelegten Key; Altbestand ist nicht systematisch
+      nachgeprüft. Beispiel:
 
   ```lua
   ---@alias Insights.CompressEngine "auto"|"tar"|"zip"|"powershell"
   ```
 
-- [ ] Abklopfen: Gibt es sinnvolle Optionen, die noch nicht User-seitig gesetzt werden können?
+- [x] Abklopfen: Gibt es sinnvolle Optionen, die noch nicht User-seitig gesetzt werden können? ✅ **2026-08-27** — siehe `Merged_Finished.md`.
+      Report + wiederverwendbare Skripte:
+      `docs/ROADMAP/nicht-konfigurierbare-features.md` und
+      `docs/ROADMAP/zahlen-ohne-namen.md`. Was der Scan **nicht** sieht,
+      steht in beiden dabei — Reihenfolgen und Schwellwerte in Bedingungen.
 
 ---
 
 ## 8. Which-Key
 
-- [ ] Mappings sollen `which-key` unterstützen
+- [x] Mappings sollen `which-key` unterstützen ✅ **2026-08-27** — siehe `Merged_Finished.md`.
 
 ---
 
@@ -148,7 +162,8 @@
   - [ ] Kurzinfo für Repo schreiben: `gh repo edit --description "Mein cooles Neovim Listen-Plugin" --homepage "https://deine-seite.de"`
   - [ ] Korrekte, passende Keywords für Repo eingeben: `gh repo edit --add-topic "neovim,lua,plugin"`
   - [ ] usw.
-- [ ] Branch auf `main` umstellen wenn noch nicht geschehen
+- [x] Branch auf `main` umstellen wenn noch nicht geschehen — alle 54 Repos
+      unter `E:\repos` liegen auf `main` (Ausnahme `Notes`, dort `master`).
 - [ ] Alle features/bugfixes committen und pushen (wenn nicht möglich: commit message ausgeben)
 
 ---

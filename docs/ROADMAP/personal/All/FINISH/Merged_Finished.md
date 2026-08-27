@@ -195,6 +195,98 @@ nvim-Config.
       blieb dauerhaft leer, ohne Fehlermeldung. Jetzt `du -sk` mal 1024.
       Report: `docs/ROADMAP/zahlen-ohne-namen.md`.
 
+- [x] **Die drei Reports abgearbeitet** (`docs/ROADMAP/`). Was dabei
+      herauskam, war mehrfach *nicht*, was die Liste behauptet hatte:
+
+      **Float-Größen.** Der Report sagte „26 Stellen mechanisch umstellbar".
+      Beim Ansehen aller 26: genau **drei** sind reine Durchreichungen und
+      umgestellt. Die übrigen 23 kappen entweder Inhaltsgröße gegen einen
+      Anteil (`math.min(content, 80%)` — der Anteil ist Obergrenze, nicht
+      Größe) oder speisen eigene Geometrie (`col = (columns - width)/2`
+      braucht Zellen und öffnet per `nvim_open_win`). „Dieselbe Zahl an 26
+      Stellen" hieß also nicht „dieselbe Entscheidung an 26 Stellen".
+
+      **Timeouts.** documentation bekommt `git_log_timeout_ms` statt drei
+      ausgeschriebener 120000 (samt drei Meldungen, die „within 120s" als
+      Text führten); color_my_ascii und pickers verlieren je eine
+      Default-Tabelle, die die Modul-Defaults Wort für Wort wiederholte;
+      debuggings 500ms wandern in den `timings`-Block, in dem jedes andere
+      Zeitmaß schon stand.
+
+      **Intervalle.** Drei konfigurierbar, zwei bewusst nicht. Die Trennlinie
+      ergab sich beim Durchsehen: schätzt die Zahl die Latenz von etwas
+      Fremdem (Startup, LSP-Server), gehört sie dem User; kommt sie nur vom
+      aktuellen Tick weg, bleibt sie ein Literal — und bekommt einen
+      Kommentar, der das sagt.
+
+      **Plattform-Verzweigungen.** 47 gefunden, fast alle Tatsachen über das
+      OS (Pfadtrenner, „sourcekit will Darwin"), also kein Opt-out nötig.
+
+- [x] **Vier Bugs, die beim Abarbeiten auffielen — keiner davon gesucht.**
+
+      **reposcope: Layout fror beim ersten `require` ein.** Fünf
+      Layout-Module berechneten ihre Geometrie auf Modulebene. Terminal
+      danach vergrößert → die Picker öffneten für den Rest der Session in der
+      alten Größe. `update_layout()` hätte das geheilt, wurde von nichts
+      aufgerufen; einen `VimResized`-Handler gab es nirgends. Jede hat jetzt
+      ein `recompute()`, das `open_ui()` in Abhängigkeitsreihenfolge aufruft.
+
+      **spotlight: `expand("<cword>")` wirft E348, statt `""` zu liefern.**
+      Beide Fallback-Pfade prüften `cword ~= ""`. Der Fehler entkam aus
+      `cursor.token()` in die aufrufende Keymap und meldete sich als
+      `Vim:E348: No string under cursor` — ohne dass etwas auf spotlight
+      zeigte. Erreichbar völlig gewöhnlich: Cursor auf leerer oder
+      Whitespace-Zeile, kein Pattern trifft. Der Spec crashte seit Langem
+      daran und riss den Rest der Datei mit: **436 → 453 Tests.**
+
+      **filetree: `du -sb` ist GNU-only.** Auf macOS/BSD lehnt `du` das Flag
+      ab, Exit ≠ 0, und die Größenspalte blieb dauerhaft leer — ohne
+      Fehlermeldung. Jetzt `du -sk` mal 1024.
+
+      **github_stats: `setup()` verwarf jede Option außer `repos`,** sobald
+      eine `config.json` existierte — die das Plugin beim ersten Lauf selbst
+      schreibt.
+
+- [x] **Mein eigener Fehler, und die Konsequenz daraus.** Der spotlight-Spec
+      war rot, weil ich während der Keymap-Migration `TESTS/run.lua`
+      aufgerufen hatte — in einem Repo, dessen Runner
+      `TESTS/pickers_spec.lua` heißt. Der Aufruf endete mit „cannot open",
+      und ich habe die fehlende Ausgabe für Erfolg gehalten. Ein zweiter,
+      veralteter Spec blieb dadurch stundenlang rot.
+
+      `docs/ROADMAP/tools/run_all_tests.sh` **sucht** den Runner jetzt statt
+      ihn zu unterstellen und meldet ausdrücklich `KEIN RUNNER GEFUNDEN` —
+      genau der Zustand, der vorher wie Erfolg aussah. Ein Durchlauf über
+      alle 33 Plugins ist eine Zeile.
+
+- [x] **cmdlogs Favorite-Notes entfernt.** Das Feature öffnete zum Anlegen
+      einer Notiz einen normalen Buffer, der mit reposcope kollidierte.
+      Notizen zu CLI-Favoriten lohnen den Debug-Aufwand nicht. Weg sind:
+      beide Module, die Mappings `<C-e>`/`<C-g>`, `favorite_notes_path`, der
+      📝-Marker, der `favorite_note`-Schalter, Typen, Katalogeinträge,
+      Legendenzeilen, Tests und fünf Doku-Abschnitte. Eine bestehende Config
+      mit `mappings.note` bricht nicht (stiller No-op), vorhandene
+      `favorite_notes.json` bleibt unangetastet.
+
+- [x] **Aufräumen aus der Konfigurierbarkeits-Runde — vollständig.** Die drei
+      Restposten sind erledigt und die Liste selbst dabei korrigiert:
+
+      Die **26 Float-Aufrufstellen** waren nicht 26. Drei sind reine
+      Durchreichungen (pdfport ×2, learn-cli) und umgestellt; die anderen 23
+      können die Bruchteil-Konvention gar nicht ausdrücken.
+
+      Die **zwei Timeout-Paare** sind zusammengeführt: color_my_ascii reichte
+      eine Fallback-Tabelle durch, die die Modul-Defaults Wort für Wort
+      wiederholte, pickers' `smart.defaults()` führte dieselben sechs Werte
+      ein zweites Mal — und wäre bei Drift die Verliererin gewesen, weil
+      `M.config()` die Config darüber merged.
+
+      **documentations 120s** sind ein Key (`git_log_timeout_ms`), und die
+      beiden Fälle, die ich in Kategorie C bewusst offen gelassen hatte
+      (`telemetry_ttl_ms`, `placeholder_grace_ms`), sind auf Nachfrage
+      ebenfalls umgesetzt. Cmdlogs Popup-Standzeit ist mit dem Feature
+      weggefallen.
+
 ---
 
 ## 2026-08-26

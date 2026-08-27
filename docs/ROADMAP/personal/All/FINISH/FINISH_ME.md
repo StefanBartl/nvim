@@ -29,7 +29,7 @@
 
 ### Anforderungen an Keymaps & Features
 
-* [ ] Alle Keymaps und Features müssen zwingend auch via **User Command (usrcmd)** ausführbar sein.
+* [x] Alle Keymaps und Features müssen zwingend auch via **User Command (usrcmd)** ausführbar sein. ✅ **2026-08-27** — nachgemessen, keine Lücke: über alle 29 Plugins ist jede deklarierte Keymap-Action über ein Kommando erreichbar. Report + Audit-Skript: `docs/ROADMAP/keymap-command-parity.md`.
 * [ ] Verwendung von `lib.nvim.selection` durchsetzen:
 * Ein wiederverwendbares Modul (`lines/reselect_lines/keep_lines` für Zeilenbereiche, `chars/reselect_chars/keep_chars` für Byte-Spaltenbereiche in derselben Zeile), das eine visuelle Auswahl wiederherstellt, nachdem ein Mapping den Buffer verändert hat (da `gv` hier nicht funktioniert, weil dessen Marks erst gesetzt werden, wenn der Visual-Mode tatsächlich endet). Inklusive vollständiger README.
 * **Vorgehen:**

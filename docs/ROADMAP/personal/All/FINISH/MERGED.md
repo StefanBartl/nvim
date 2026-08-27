@@ -60,20 +60,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Autocmds aller Ordner in einem `bindings/autcmd`-Ordner zusammenführen, nach Events sortiert (Dispatch-Lib-Modul), Abgleich mit `/bindings`.
 
 ### Healthchecks, Config & Defaults
-- [ ] **Aufräumen aus der Konfigurierbarkeits-Runde** (rein mechanisch, nichts
-      davon dringend — alles funktioniert unverändert weiter):
-    - [ ] Die 26 Float-Aufrufstellen auf die kurze Form umstellen, jetzt wo
-          `make_scratch` Bruchteile nimmt: reposcope (11), pdfport (4),
-          language (4), learn-cli (3), lsp (2), markdown (2), filetree (2),
-          images (1).
-    - [ ] Zwei Timeout-Paare zusammenführen, die denselben Wert doppelt
-          führen und daher auseinanderdriften werden: color_my_ascii (5000,
-          `cache_manager.lua` + `init.lua`), pickers (3000, `DEFAULTS.lua` +
-          `smart/init.lua`).
-    - [ ] Die restlichen Punkte aus `docs/ROADMAP/zahlen-ohne-namen.md`
-          (documentation's 120s-Timeouts). Cmdlogs Popup-Standzeit ist
-          hinfällig — das Favorite-Notes-Feature ist entfernt.
-
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
 
 ### Performance
