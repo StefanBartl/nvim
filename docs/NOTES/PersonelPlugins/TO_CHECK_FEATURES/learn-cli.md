@@ -5,7 +5,8 @@ setup, then one section per feature: prerequisites, steps, what to expect.
 Checkbox syntax (`- [ ]`) throughout.
 
 Repo: `E:\repos\learn-cli.nvim`. Spec: `plugins/personal/init.lua` (`lazy =
-false`, `config()` calls `require("learn_cli").setup({ exercises_dir = ... })`)
+false`, `config()` calls `require("learn_cli").setup({ exercises_path = ... })`
+— fixed 2026-08-28, was `exercises_dir`, see §1)
 — **but** `plugins/personal/source.lua` lists this repo as `["learn-cli.nvim"]
 = "disabled"`, which sets `spec.enabled = false` unconditionally (a repo-level
 `"disabled"` wins over everything, per that file's own `resolve()`). Net
@@ -33,10 +34,10 @@ first thing to check.
 
 ---
 
-## 1. The config key this config's own spec passes is silently ignored
+## 1. Config key mismatch — fixed 2026-08-28, confirm the real path is now used
 
-**The concrete, code-grounded bug to check first.** `plugins/personal/init.lua`
-calls:
+**Was a real bug, now fixed — this section is a regression check, not an
+open question.** `plugins/personal/init.lua` used to call:
 
 ```lua
 require("learn_cli").setup({
@@ -45,11 +46,15 @@ require("learn_cli").setup({
 ```
 
 But `lua/learn_cli/config/init.lua`'s `M.setup()` only ever reads
-`user_config.exercises_path` — `exercises_dir` is never checked, so this
-option is silently dropped and `M.exercises_path` stays at its hardcoded
-default, `stdpath("config") .. "/exercises"`. Neither path exists on this
-machine (`lua/plugins/learn-cli.nvim/exercises` and a bare `exercises/` under
-config root are both absent).
+`user_config.exercises_path` — `exercises_dir` was never checked, so the
+option was silently dropped and `M.exercises_path` stayed at its hardcoded
+default, `stdpath("config") .. "/exercises"`. Fixed by renaming the spec's
+key to `exercises_path`.
+
+**Note**: this plugin is still `["learn-cli.nvim"] = "disabled"` in
+`source.lua` (see intro above) — that's a deliberate, separate choice, left
+untouched. The `exercises_path` fix only matters once/if the plugin is
+re-enabled.
 
 **Steps** (after enabling the plugin per Setup above, using the real spec —
 i.e. actually go through `plugins/personal/init.lua`, not the manual
@@ -59,17 +64,13 @@ i.e. actually go through `plugins/personal/init.lua`, not the manual
 :lua print(require("learn_cli.config").exercises_path)
 ```
 
-**Expect**: prints `<config>/exercises`, **not**
-`<config>/lua/plugins/learn-cli.nvim/exercises` — confirming the spec's own
-`exercises_dir` key had zero effect. Then `:LearnCLIDashboard` — expect the
-"No exercise loaded" state (§3) and a `WARN` notify on setup ("Exercises path
-does not exist: ...") pointing at the wrong (default) path, since nothing was
-ever scaffolded there.
-
-**Also note** for anyone fixing this later: renaming the spec's key to
-`exercises_path` (matching what `config/init.lua` actually reads) is the whole
-fix — worth confirming that once it's renamed, `:lua print(...)` above shows
-the intended `lua/plugins/learn-cli.nvim/exercises` path instead.
+**Expect**: prints `<config>/lua/plugins/learn-cli.nvim/exercises` — the path
+the spec actually intends, not the hardcoded `<config>/exercises` default.
+Then `:LearnCLIDashboard` — since that directory doesn't exist yet either,
+still expect the "No exercise loaded" state (§3) and a `WARN` notify on
+setup ("Exercises path does not exist: ...") — but now pointing at the
+*intended* path, which is the correct failure mode to scaffold from, not a
+silently wrong one.
 
 ---
 

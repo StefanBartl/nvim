@@ -9,8 +9,10 @@ gotchas already spelled out precisely enough to lift directly into test
 steps below), and the source.
 
 Repo: `E:\repos\pdfport.nvim`. Spec: `lua/plugins/personal/init.lua`
-(`cmd = { "PdfPort", "PdfPortText", "PdfPortFloat", "PdfPortSystem",
-"PdfPortTerminal", "PdfPortHealth" }`, no `dependencies` entry despite
+(`cmd = "PdfPort"` — fixed 2026-08-28, was `{ "PdfPort", "PdfPortText",
+"PdfPortFloat", "PdfPortSystem", "PdfPortTerminal", "PdfPortHealth" }`, five
+of which named commands the plugin never registers, see §1 below. No
+`dependencies` entry despite
 `lib.nvim` being a hard requirement per the README — `lib.nvim` still loads
 because it's `lazy = false` itself, so nothing breaks in practice, but the
 spec doesn't declare the dependency the way most other personal-plugin
@@ -40,12 +42,12 @@ paths, a scanned/image-only one.
 
 ---
 
-## 1. Five of the six lazy-load command triggers name commands the plugin never registers — check this first
+## 1. Five dead lazy-load command triggers — fixed 2026-08-28, confirm the real command still lazy-loads
 
-**This is the one concrete thing worth verifying against the code, not
-just clicking through.** The spec's `cmd` list is `{ "PdfPort",
-"PdfPortText", "PdfPortFloat", "PdfPortSystem", "PdfPortTerminal",
-"PdfPortHealth" }`. Reading `lua/pdfport/bindings/usrcmds.lua`'s
+**Was a real bug in this config's spec, now fixed — this section is a
+regression check, not an open question.** The spec's `cmd` list used to be
+`{ "PdfPort", "PdfPortText", "PdfPortFloat", "PdfPortSystem",
+"PdfPortTerminal", "PdfPortHealth" }`. Reading `lua/pdfport/bindings/usrcmds.lua`'s
 `M.register()`, the plugin registers **exactly one** user command,
 `:PdfPort`, built as a single `composer.verb("PdfPort", { routes = {...} })`
 with subcommands `text`/`float`/`system`/`terminal`/`health`/`backends`/
@@ -54,23 +56,22 @@ etc. There is no `nvim_create_user_command`/`composer.verb` call anywhere
 in this plugin's source for the literal names `PdfPortText`, `PdfPortFloat`,
 `PdfPortSystem`, `PdfPortTerminal`, or `PdfPortHealth` — confirmed by
 grepping the whole `lua/`/`plugin/` tree for those strings, no hits outside
-the spec itself.
+the old spec itself. Fixed by trimming the spec to `cmd = "PdfPort"`.
 
 **Steps**
 
 ```vim
-:PdfPortText
+:PdfPort
 ```
+on a fresh start (plugin not yet loaded).
 
-- [ ] Does this load the plugin (lazy.nvim's stub fires, `setup()` runs —
-  watch for the `deps_popup` notification if this is the first run) and
-  then fail with `E492: Not an editor command: PdfPortText` on lazy.nvim's
-  retry? Or does something else register that name after all (re-check
-  `:command PdfPort*` after loading to be sure)? Either way this settles
-  whether the five extra `cmd` entries are dead weight in the spec — bare
-  `:PdfPort` (already in the list) is the only one that actually works, and
-  `:PdfPort text`/`:PdfPort float`/etc. are the real equivalents.
-- [ ] Repeat for `:PdfPortHealth` — same expected failure shape.
+- [ ] Confirm lazy.nvim's stub still fires on bare `:PdfPort` (watch for the
+  `deps_popup` notification if this is the first run) and the command runs
+  normally afterwards — the trimmed `cmd` list didn't accidentally break
+  lazy-loading itself.
+- [ ] `:command PdfPort<Tab>` after loading should show only `:PdfPort` (no
+  `PdfPortText`/`PdfPortFloat`/etc. ever existed as separate commands, so
+  there's nothing to lose by their removal from `cmd`).
 
 ---
 

@@ -709,7 +709,11 @@ plugins.add({
     lazy = false,
     config = function()
       require("learn_cli").setup({
-        exercises_dir = vim.fs.joinpath(
+        -- The plugin's own config key is exercises_path (see
+        -- lua/learn_cli/config/init.lua); exercises_dir was silently
+        -- ignored and the plugin fell back to its stdpath("config")/exercises
+        -- default.
+        exercises_path = vim.fs.joinpath(
           vim.fn.stdpath("config"),
           "lua",
           "plugins",
@@ -739,15 +743,10 @@ plugins.add({
 
   {
     "StefanBartl/pdfport.nvim",
-    cmd = {
-
-      "PdfPort",
-      "PdfPortText",
-      "PdfPortFloat",
-      "PdfPortSystem",
-      "PdfPortTerminal",
-      "PdfPortHealth",
-    },
+    -- Only ":PdfPort <sub>" is ever registered (composer.verb, see
+    -- lua/pdfport/bindings/usrcmds.lua); the plugin has no separate
+    -- PdfPortText/Float/System/Terminal/Health commands.
+    cmd = "PdfPort",
     opts = {
       default_backend = "auto",
       fallback_chain = { "pdftotext", "pdfplumber", "marker", "docling", "ollama", "claude" },
@@ -805,7 +804,7 @@ plugins.add({
   {
     "StefanBartl/mdview.nvim",
     dependencies = { "StefanBartl/lib.nvim" },
-    build = "npm ci && npm run build:go && npm run build" ,
+    build = "npm ci && npm run build:go && npm run build",
     ft = { "markdown" },
     cmd = { "MDView" },
     config = function()
@@ -823,11 +822,11 @@ plugins.add({
         -- unter Windows aber mdview-server OHNE .exe. Zum Testen eines lokal
         -- gebauten Relays (siehe docs/development.md) wieder einkommentieren:
         -- dev = {
-          -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
-          -- web_root = vim.env.REPOS_DIR .. "/mdview.nvim/dist/client",
+        -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
+        -- web_root = vim.env.REPOS_DIR .. "/mdview.nvim/dist/client",
         -- },
         -- standalone = {
-          -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
+        -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
         -- },
         experimental = {
           line_diff = true, -- P?: nur geänderte Zeilen senden -> FUnktnioert -> postives/negatives abwägen ob default

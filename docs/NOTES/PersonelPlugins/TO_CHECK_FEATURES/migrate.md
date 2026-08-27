@@ -28,22 +28,22 @@ call sites, or use a scratch copy so a botched migration costs nothing.
 
 ---
 
-## 1. `docs/commands.md` claims `-n`/`--dry-run` works on `:MigrateNotify` too — check whether it actually does
+## 1. `-n`/`--dry-run` on `:MigrateNotify` — fixed 2026-08-28, confirm it actually works now
 
-**This is the one concrete thing worth verifying against the code, not just clicking through.**
-`docs/commands.md`'s own table states *"any of the above | `-n` / `--dry-run` |
-Report what would change; apply nothing"* directly under a row listing all
-four commands, and `docs/features.md`'s Dry run section says the flag is
-"accepted in all four modes". Reading the source tells a different story:
-`:MigrateOpt`/`:MigrateHl`/`:MigrateLsp` are registered through
-`migrate.common.command`'s shared `M.register()`
-(`lua/migrate/common/command.lua`), whose route declares a real
-`{ name = "dry-run", short = "n", bool = true }` flag and whose `dispatch()`
-takes a `dry_run` parameter it actually checks. `:MigrateNotify` is
-**not** built on that shared factory — `lua/migrate/notify/init.lua` hand-rolls
-its own `composer.verb("MigrateNotify", ...)` registration with **no `flags`
-table at all**, and its own `dispatch(cmd_opts)` (same file) never reads or
-checks any dry-run flag — it goes straight to `apply_matches`/`show_picker_impl`.
+**Was a real bug, now fixed — this section is a regression check, not an open question.**
+`docs/commands.md` and `docs/features.md` claimed `-n`/`--dry-run` worked on
+all four `:Migrate*` commands. It didn't: `:MigrateOpt`/`:MigrateHl`/
+`:MigrateLsp` go through `migrate.common.command`'s shared `M.register()`
+(`lua/migrate/common/command.lua`), which declares the flag and checks it;
+`:MigrateNotify` hand-rolled its own `composer.verb` registration in
+`lua/migrate/notify/init.lua` with no `flags` table and a `dispatch()` that
+never read a dry-run flag at all.
+
+Fixed by adding the same `{ name = "dry-run", short = "n", bool = true }`
+flag to `:MigrateNotify`'s route, plus its own `report_dry_run()` (mirroring
+`common/command.lua`'s, since `:MigrateNotify` isn't built on that shared
+factory) threaded through `dispatch()`'s line and range branches. Docs now
+match the code.
 
 **Steps**
 
@@ -58,13 +58,12 @@ genuinely reports without applying (matches the docs).
 ```
 on a line with a real `vim.notify(...)` call.
 
-- [ ] Does `:MigrateNotify -n` report-only like the docs claim, or does it
-  either (a) apply the migration for real despite `-n` (the flag silently
-  ignored), or (b) error/misbehave because `-n`/`--dry-run` isn't a declared
-  flag on this command's route and ends up being parsed as `cmd_opts.args`
-  (i.e. mistaken for the `mode` positional, which would print `Invalid
-  argument: -n. Use: [empty], %, or cwd`)? Any of these outcomes is a real
-  finding — the docs and the code disagree, and this settles which one is wrong.
+- [ ] `:MigrateNotify -n` reports the before/after and applies nothing — same
+  shape as `:MigrateOpt -n`'s output.
+- [ ] `:'<,'>MigrateNotify -n` (range mode) also reports instead of applying.
+- [ ] `:MigrateNotify % -n` and `:MigrateNotify cwd -n` still open their
+  normal picker (the flag is accepted but has no effect there, same as the
+  other three commands — `%`/`cwd` already preview through the picker).
 
 ---
 
