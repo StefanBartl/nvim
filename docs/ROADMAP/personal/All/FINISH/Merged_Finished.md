@@ -40,6 +40,82 @@ nvim-Config.
 
 ### Bindings, Keymaps & UI
 
+- [x] **Alle direkten `nvim_create_autocmd`-Aufrufe auf
+      `lib.nvim.bindings.autocmd` umgestellt.**
+
+      Autocmds, die direkt ueber `vim.api` entstehen, feuern zwar, hinterlassen
+      aber keinen Record und koennen in keiner generierten Tabelle stehen. Eine
+      Doku, die das verschweigt, ist nicht unvollstaendig sondern falsch: der
+      Leser haelt die Tabelle fuer die ganze Liste. Deshalb war das ueberhaupt
+      eine Aufgabe.
+
+      **Die 74 waren ein naiver Substring-Count.** Ein string- und
+      kommentar-bewusster Scan ergab **45** echte Aufrufstellen, davon 2
+      legitime Soft-Dependency-Fallbacks. Zwei Repos standen auf der alten
+      Liste, die dort nie hingehoerten -- und ausgerechnet als die zwei
+      schlimmsten: `debugging.nvim` (13 Nennungen, **kein einziger** erzeugter
+      Autocmd -- es ist ein Modul, das nach Autocmds *sucht*, alle Vorkommen
+      sind String-Literale) und `buffer-ctx.nvim` (die eine Stelle steht in
+      einem Boilerplate-*Template*). `documentation.nvim` kam beim zweiten
+      Durchgang genauso heraus: sein einziger Treffer ist ein Tabellen-Key.
+
+      Umgestellt, ein Commit und Push je Repo: `runtime-analysis.nvim` (5, der
+      Alias `local au = ...`), `fileops.nvim` (2 + 3 Augroups),
+      `color_my_ascii.nvim` (3), `language.nvim` (4), `pickers.nvim` (1 + 3
+      Fallback-Marker), `markdown.nvim` (10), `mdview.nvim` (13),
+      `sandbox.nvim` (2), `filetree.nvim` (2 Fallback-Marker) -- plus diese
+      Config (7) und **lib selbst** (8).
+
+      **lib war die peinlichste davon.** Die kit-Surfaces, Picker, Input, Live
+      Input, Compare und Preview, das Buffer-Debounce-Cleanup und
+      `close_on_focus_lost` lagen alle auf der rohen API: lib war das einzige
+      Plugin, dessen generierte Tabelle lib nicht beschreiben konnte. Schwer,
+      elf anderen Repos eine Regel zu erklaeren, auf der man selbst sitzt.
+
+      **Fast jede Stelle hatte eine Begruendung im Kommentar stehen, und fast
+      keine davon galt noch:**
+
+      - *"`create()` reicht `buffer` nicht durch"* -- tut es, und eine
+        buffer-lokale Anforderung gewinnt dort sogar gegen `pattern`. Stand so
+        in `fileops`, `color_my_ascii`, `markdown` und in `pin_marks.lua`.
+      - *"`group()` cached die Augroup-ID und ueberspringt den Clear"* --
+        `group(name, true)` clearet erneut, und ueber lib zu clearen verwirft
+        auch die alten *Records*. Wer weiter nativ clearte, liess veraltete
+        Zeilen in der Doku stehen. Stand so in `fileops` (3×) und `mdview`.
+      - *"lib cached eine geloeschte Augroup-ID und bricht den naechsten
+        `:MDViewStart` mit `Invalid 'group': N` ab"* -- war einmal wahr, ist
+        seit der Cache-Verifikation gefixt. `mdview`: attach -> teardown ->
+        attach haelt jetzt bei sieben Records.
+      - *"`command = "…"` gibt es bei lib nicht"* -- stimmt; die beiden
+        Kitty-Padding-Hooks rufen den String jetzt ueber `vim.cmd`.
+
+      **Zwei Begruendungen galten wirklich, und dafuer hat lib jetzt
+      `raw = true`** (`create()`-Option, Test in `TESTS/autocmd_spec.lua`,
+      README ergaenzt). Der pcall-Wrapper zerstoert zwei native Verhalten: ein
+      Callback, der `true` zurueckgibt, loescht seinen eigenen Autocmd, und ein
+      *fehlschlagender* `BufWritePre`-Callback **bricht das Schreiben ab**.
+      Wer eines davon brauchte, hatte genau eine Option -- an lib vorbei, und
+      damit ohne Record. `raw` behaelt den Record und gibt nur den Wrapper auf.
+      Nutzer: `language.nvim`s Schreib-Guard und der Harpoon-which-key-Hook
+      dieser Config. `pickers.nvim`s LazyLoad-Patch loescht sich stattdessen
+      per ID -- das funktioniert auch mit einer aelteren lib.
+
+      **Der Zaehler ist string-, kommentar- und fallback-bewusst.** Legitime
+      Soft-Dependency-Pfade (`filetree`s Wrapper, `pickers`' drei Fallbacks,
+      `sessions`, `spotlight`) tragen den Marker `-- lib-docs: fallback`; lib's
+      eigener `nvim_create_autocmd` ebenfalls, denn *das* ist der
+      registrierende Aufruf. Der Marker muss in der Zeile selbst oder direkt
+      darueber stehen.
+
+      **Nebenbefunde:** `mdview`s dormante `bufwrite`/`on_text_change`-Module
+      griffen auf ein `M._autocmd_ids`, das es dort nicht gibt -- Attach haette
+      geworfen. In `markdown.nvim` fehlten sechs von zehn Stellen die `desc`,
+      in `mdview` fuenf von dreizehn; das ist die Spalte "What" der Tabelle.
+
+      Kontrolle: `write_all({ dry_run = true })` meldet fuer jedes geladene
+      Repo `unregistered=0`, der statische Scan ueber alle 33 Repos plus Config
+      ebenfalls 0.
+
 - [x] **Autocmd-Dispatcher gemessen, statt darueber zu spekulieren.**
 
       Du wolltest vor der Umstellung eine Zahl. Sie steht jetzt in

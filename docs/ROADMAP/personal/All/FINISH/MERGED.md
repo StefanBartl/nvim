@@ -40,6 +40,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ## Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
+- [ ] lib.nvim - alle module durcgehen und checken, ob docs, @types, als auch aggregatoren noch korrekt sind
 - [ ] Merged_Finished.md in die Rules einbauen: Dsa sind alles Dinge, die wr gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen
 
 ### Git & Repo-Hygiene
@@ -52,8 +53,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Dokumentation & Cheatsheets
 - [~] **UseCases/Workflow-Datei pro Plugin** — 32 von 33 Plugins haben eine
-      `docs/WORKFLOW.md`; es fehlt nur `neotree-fs-refactor.nvim`, ein
-      Experimentier-Repo. Die Aktualitätsprüfung ist gelaufen und hat die
+      `docs/WORKFLOW.md`; Die Aktualitätsprüfung ist gelaufen und hat die
       Drift woanders gefunden (16 von 18 neuen Config-Keys fehlten in der
       User-Doku, jetzt ergänzt — siehe `Merged_Finished.md`). Offen bleibt
       nur der *inhaltliche* Durchgang: liest sich jeder Workflow noch wie der
@@ -88,6 +88,11 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
       spricht nichts dagegen, und alle Autocmds bekommen damit die
       lib-Features.
 
+      Das Umstellen der direkten `nvim_create_autocmd`-Aufrufe ist erledigt
+      und nach `Merged_Finished.md` gewandert (2026-08-27): alle Repos, die
+      Config und lib selbst melden jetzt `unregistered=0`. Damit ist der
+      Dispatcher der einzige offene Punkt dieses Items.
+
 ### Healthchecks, Config & Defaults
 - [~] **`lib.nvim` konsequent als Dependency nutzen** — die Konsistenz-Hälfte
       ist erledigt und nach `Merged_Finished.md` gewandert. Offen ist nur noch
@@ -120,21 +125,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
       - `try_require` in 4 Plugins — hier spricht ein echter Grund dagegen:
         das ist der Soft-Dependency-Helfer. Er muss funktionieren, *ohne* dass
         lib da ist. Ihn nach lib zu ziehen wäre zirkulär.
-
-#### autocmds, zweiter Teil
-- [ ] **74 direkte `nvim_create_autocmd`-Aufrufe auf lib umstellen.** Beim Bau
-      von `docs.write_all()` aufgefallen: 16 der 29 Plugins mit Autocmds
-      erzeugen zusammen 74 davon direkt über `vim.api`. Die feuern, hinterlassen
-      aber keinen Record und können in keiner generierten Tabelle stehen —
-      eine Doku, die das verschweigt, ist nicht unvollständig sondern falsch.
-      lib zählt die Aufrufstellen deshalb statisch und schreibt eine
-      `> **Incomplete.**`-Warnung in den Header; der `:LibAutocmdDocsAll`-Report
-      wiederholt die Zahl pro Repo. Mit der Umstellung verschwindet die
-      Warnung von selbst.
-
-      Verteilung: mdview 16, debugging 13, markdown 10, filetree 6,
-      documentation 5, language 4, pickers 4, color_my_ascii 3, buffer-ctx 2,
-      fileops 2, sandbox 2, open/cmdlog/runtime-analysis/sessions/spotlight je 1.
 
 ### Performance
 - [ ] **Startup optimieren — erledigt bis auf `lsp.setup()`, siehe `Merged_Finished.md`.** ~1300ms → ~942ms (−27%), eager geladene Plugins 44 → 28. Drei Ursachen, alle gemessen: neo-tree `lazy = false` (zog neotest samt acht Adaptern mit), ein fehlschlagendes `vim.fn.executable("pwsh")` in `options.lua` (~44ms, jede Startup), und `trouble.nvim` `lazy = false` (~79ms + 71ms devicons).
