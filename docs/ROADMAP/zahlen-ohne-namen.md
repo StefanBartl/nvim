@@ -107,39 +107,18 @@ die aufgelöste Config gar nicht, konnte den User-Wert also nicht sehen; und
 `Documentation.Handle` hatte kein `cfg`, obwohl die Registry `entry.opts`
 direkt daneben hält — das MCP-Tool hätte den Default raten müssen.
 
-## C — Defer- und Poll-Intervalle (5)
+## C — Defer- und Poll-Intervalle (5) — **erledigt 2026-08-27**
 
-| Plugin | Stelle | Wert | Einschätzung |
+Drei konfigurierbar, zwei bewusst nicht — die Trennlinie ist, *wessen*
+Latenz die Zahl schätzt.
+
+| Plugin | Stelle | Wert | Ergebnis |
 | --- | --- | --- | --- |
-| cmdlog | ~~`note_popup.lua:62`~~ | ~~4000~~ | **Hinfällig (2026-08-27):** das Favorite-Notes-Feature ist entfernt — es öffnete einen normalen Buffer, der mit reposcope kollidierte, und eine Notiz an einem CLI-Favoriten lohnt den Debug-Aufwand nicht. Damit ist auch das Popup weg. |
-| github_stats | `background.lua:75` | 1000 | Verzögerung vor dem Hintergrundzyklus. Unkritisch. |
-| language | `item_menu.lua:81` | 500 | UI-Timing. |
-| pickers | `result_count/init.lua:37` | 150 | Tick der Trefferzählung. |
-| reposcope | `prompt_reload.lua:32` | 80 | Grenzfall, faktisch ein Tick. |
-
-## Zwei Bugs, die beim Abarbeiten von B auffielen
-
-Nicht gesucht, sondern gestolpert — beide still, beide alt.
-
-**spotlight: `expand("<cword>")` wirft E348, statt `""` zurückzugeben.** Beide
-Fallback-Pfade in `cursor.lua` prüfen `cword ~= ""`, als käme bei fehlendem
-Wort unter dem Cursor ein leerer String. Der Fehler entkam also aus
-`cursor.token()` in die aufrufende Keymap und meldete sich als
-`Vim:E348: No string under cursor` — ohne dass irgendetwas auf spotlight
-zeigte. Erreichbar auf ganz gewöhnlichem Weg: Cursor auf leerer Zeile oder
-Whitespace, kein Pattern trifft. Der Spec crashte daran seit langem und riss
-den Rest der Datei mit: 436 Tests liefen, danach sind es 453.
-
-**Und warum es so lange keiner sah:** ich hatte während der Keymap-Migration
-`TESTS/run.lua` aufgerufen, in einem Repo, dessen Runner
-`TESTS/pickers_spec.lua` heißt. Der Aufruf endete mit „cannot open", und ich
-habe die fehlende Ausgabe für Erfolg gehalten. Ein zweiter, stale Spec blieb
-dadurch stundenlang rot.
-
-Konsequenz: `tools/run_all_tests.sh` sucht den Runner, statt einen zu
-unterstellen, und sagt **KEIN RUNNER GEFUNDEN**, wo es keinen findet — der
-Zustand, der vorher wie ein Erfolg aussah. Ein Durchlauf über alle 33
-`*.nvim`-Repos ist damit eine Zeile.
+| github_stats | `background.lua` | 1000 | **`background.initial_delay_ms`.** Der wiederkehrende Zyklus leitete sein Intervall längst aus `fetch_interval_hours` ab — die Verzögerung vor dem *ersten* stand daneben als Literal. Dieselbe Entscheidung, eine Hälfte konfigurierbar, die andere nicht. Und ihr Zweck ist „nicht mit dem Startup konkurrieren", was von der Config des Users abhängt, nicht vom Plugin. |
+| language | `spell/ui/item_menu.lua` | 500 | **`spell.ui.lsp_refresh_delay_ms`.** Nach einer LSP-Code-Action gibt es kein Fertig-Signal; der Refresh wartet eine plausible Weile und sieht nach. Die Zahl schätzt also die Latenz *eines fremden Servers* — genau das, was pro Setup variiert. |
+| pickers | `result_count/init.lua` | 150 | **`result_count.interval_ms`.** Der Feature-Block existierte schon (das Feature ist opt-in), also kostet ein Intervall daneben nichts. Wird einmal beim Schleifenstart gelesen, nicht pro Tick. |
+| cmdlog | `note_popup.lua` | 4000 | **Hinfällig** — Favorite-Notes sind entfernt. |
+| reposcope | `prompt_reload.lua` | 80 | **Bleibt Literal, jetzt mit Begründung im Code.** Die 80ms lassen `close_ui`s Teardown vor dem Reopen fertig werden — sie kommen vom aktuellen Tick weg, sie werden nicht justiert. Ein Key lädt dazu ein, sie auf 0 zu setzen und einen Reopen zu bekommen, der mit dem Close rennt, auf den er wartet. |
 
 ## D — Plattform-Verzweigungen (47) — fast alle Tatsachen
 
