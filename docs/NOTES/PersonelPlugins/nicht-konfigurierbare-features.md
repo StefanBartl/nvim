@@ -79,17 +79,37 @@ Vier davon lagen dir vor; deine Antworten sind umgesetzt.
    einer Rampe jede folgende Zeile mitverschiebt. ASCII-Rampe:
    `.,-=+*#@`.
 
-2. **`reposcope.MAX_NAME_W` / `MAX_BRANCH_W`** → **bleibt wie es ist.** 28/22
-   fest verdrahtet, stört in der Praxis nicht.
+2. **`reposcope.MAX_NAME_W` / `MAX_BRANCH_W`** → **bleibt wie es ist**, und
+   die ursprüngliche Frage war falsch gestellt: die Spalten sind längst
+   dynamisch (`name_w` wächst auf die breiteste tatsächliche Zelle), die
+   Konstanten sind *nur* Elisions-Obergrenzen gegen einen einzelnen langen
+   Branch. Auf einem breiten Monitor wird nichts verschenkt, auf einem
+   schmalen bricht nichts (`wrap = false`). „Aus Fensterbreite rechnen" wäre
+   ohnehin nicht sauber gegangen: `render()` läuft, bevor ein Fenster
+   existiert, und die Modi `clipboard`/`path` bekommen nie eines.
 
-3. **`sandbox.MAX_LEN`** → **Config-Key `max_error_length`.** Der volle Text
-   ging ohnehin immer an `sandbox.logger`; gekappt wird nur die Notification.
+   **Stattdessen behoben, was dabei auffiel:** gekürzt wurde am Ende, und bei
+   Branches aus einem Workflow ist das Ende der unterscheidende Teil —
+   `claude/nvim-plugin-debugging-47a46e` und
+   `claude/nvim-rules-checklists-merge-6656cc` stimmen zwölf Zeichen lang
+   überein. Branch-Namen werden jetzt **mittig** gekürzt (zwei Drittel Kopf,
+   ein Drittel Schwanz), Repo-Namen weiter am Ende — dort ist der Anfang das
+   Unterscheidende.
 
-4. **`lib.nvim.logger.MAX_ITEMS`** → **Option pro Aufruf**, zusammen mit
-   `max_depth`, über `Lib.Logger.CallOpts`. Keine lib-weite Konfiguration:
-   die richtige Breite für eine Logzeile ist eine Eigenschaft dessen, was
-   geloggt wird, nicht des Prozesses, der loggt — dieselbe Form, die
-   `lib.lua.dump.to_lines` für `max_depth` schon hat.
+3. **`sandbox.MAX_LEN`** → **Config-Key `max_error_length` plus Hinweis.** Der
+   volle Text ging ohnehin immer an `sandbox.logger` — aber die Notification
+   endete nur mit „...", also hatte niemand einen Grund zu vermuten, dass es
+   ein Log gibt. Sie endet jetzt mit `(full text: :LibLogger show)`, und ohne
+   installiertes lib.nvim (Soft-Dependency, der Logger ist dann ein No-op)
+   mit `(full text: raise max_error_length)` — der Hinweis muss in beiden
+   Welten wahr sein.
+
+4. **`lib.nvim.logger.MAX_ITEMS`** → **Instanz-Default plus Aufruf-Override**,
+   zusammen mit `max_depth`. Keine lib-weite Konfiguration; aber pro Aufruf
+   *allein* hätte geheißen, dass ein Plugin wie sandbox die Angabe an ~40
+   Aufrufstellen wiederholt. `logger.new()` nimmt sie jetzt in derselben
+   Reihe wie `history`, `redact` und `level`, der einzelne Aufruf gewinnt
+   darüber.
 
 5. **`documentation.TELEMETRY_TTL_MS = 2000`** — nicht angefasst. Technisch
    Kategorie A, praktisch sehe ich kein Szenario, in dem die Zahl auffällt.
