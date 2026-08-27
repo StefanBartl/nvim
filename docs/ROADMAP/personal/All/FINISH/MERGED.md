@@ -56,15 +56,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ## Liste B — An Claude Code delegierbar
 
-### Dokumentation & Cheatsheets
-- [~] **UseCases/Workflow-Datei pro Plugin** — 32 von 33 Plugins haben eine
-      `docs/WORKFLOW.md`; Die Aktualitätsprüfung ist gelaufen und hat die
-      Drift woanders gefunden (16 von 18 neuen Config-Keys fehlten in der
-      User-Doku, jetzt ergänzt — siehe `Merged_Finished.md`). Offen bleibt
-      nur der *inhaltliche* Durchgang: liest sich jeder Workflow noch wie der
-      Weg, den man heute tatsächlich geht? Das ist Lesearbeit, keine
-      Messung.
-
 ### Performance
 - [ ] **Startup optimieren — erledigt bis auf `lsp.setup()`, siehe `Merged_Finished.md`.** ~1300ms → ~942ms (−27%), eager geladene Plugins 44 → 28. Drei Ursachen, alle gemessen: neo-tree `lazy = false` (zog neotest samt acht Adaptern mit), ein fehlschlagendes `vim.fn.executable("pwsh")` in `options.lua` (~44ms, jede Startup), und `trouble.nvim` `lazy = false` (~79ms + 71ms devicons).
   - **Offen und bewusst separat: `lsp.setup()` ~288ms.** Der mit Abstand größte verbleibende Posten, aber korrektheitskritisch — die Capabilities müssen global stehen, bevor der erste Client attached, und bei `nvim datei.lua` passiert das *während* des Startups. Das Fehlerbild bei einem Fehler ist „Completion ist manchmal kaputt", also subtil und teuer.

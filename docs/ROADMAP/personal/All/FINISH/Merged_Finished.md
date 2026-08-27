@@ -793,6 +793,34 @@ nvim-Config.
       `DEFAULTS.lua` und den LuaLS-Typen. Alle 21 sind jetzt dort, wo der
       jeweilige Block ohnehin die DEFAULTS spiegelt.
 
+- [x] **Der inhaltliche Durchgang aller 32 `docs/WORKFLOW.md` — der Rest von
+      "UseCases/Workflow-Datei pro Plugin".** Nicht automatisiert (der Versuch
+      oben schied genau deshalb aus): jede Datei gelesen und gegen die
+      tatsächlich registrierten Commands/Keymaps/Defaults des jeweiligen
+      Plugins gehalten (`bindings/usrcmds*.lua`, `bindings/keymaps*.lua`,
+      `config/DEFAULTS.lua`, README als Zweitquelle). In vier parallelen
+      Batches zu je acht Plugins.
+
+      **27 von 32 lasen sich noch exakt wie der Weg, den man heute geht** —
+      inklusive einiger sehr dichter Dokus (filetree.nvim: Adapter-Reihenfolge,
+      `cwd_mode`/`cwd_sync`-Zusammenspiel, `gp`-Tastenkollision zwischen
+      `pdf_open` und `cwd_mode`; replacer.nvim: alle 41 dokumentierten Flags
+      geprüft, jedes existiert wortwörtlich).
+
+      **Fünf echte Funde, alle direkt gefixt:**
+
+      | Repo | Was die Doku sagte | Was tatsächlich ist |
+      | --- | --- | --- |
+      | `debugging.nvim` | fünf Default-Keymaps (`<m/n/e/c/x`) | sieben — Capture ist seit einer Weile in file+clipboard/file-only/clipboard-only aufgeteilt |
+      | `migrate.nvim` | `-n`/`--dry-run` gar nicht erwähnt | Flag existiert seit 2026-08-24 für Line/Range-Scope, stand nur in anderen Docs |
+      | `sandbox.nvim` | nur Docker/Podman | `nerdctl` ist ein dritter unterstützter Engine (`docker → podman → nerdctl`) |
+      | `spotlight.nvim` | `:Spotlight sets save/switch/delete/list` gar nicht erwähnt | reales, in `FEATURES.md` dokumentiertes Feature zum Wechseln zwischen benannten Spotlight-Snapshots |
+      | `images.nvim` | Paste fragt immer nach einem Namen | fragt nur mit Count-Präfix (`1<leader>iv`, `force_ask`); ohne Count benennt das Template still |
+
+      Jede Änderung gegen den Quellcode verifiziert, bevor committet wurde
+      (nicht blind vom Agenten-Fix übernommen). Alle fünf Repos einzeln
+      committet und gepusht.
+
 ---
 
 ## 2026-08-26
