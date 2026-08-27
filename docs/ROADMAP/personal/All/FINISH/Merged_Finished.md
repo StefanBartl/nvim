@@ -83,10 +83,20 @@ nvim-Config.
       debugging.nvim, documentation.nvim, runtime-analysis.nvim, pdfport.nvim,
       reposcope.nvim), `duplicate_functions.py` findet keine der behandelten
       Duplikate mehr — was uebrig bleibt, ist ausschliesslich die "bewusst
-      nicht zu tun"-Liste (`config.M.get`, `try_require`) plus zwei neue,
-      nie in der Roadmap gestandene Funde (`buffer_ctx`/`fileops`s
-      `notify.resolve`, `cascade`/`spotlight`s `M.augroup`) — beide nicht
-      Teil dieses Auftrags, nicht angefasst.
+      nicht zu tun"-Liste.
+
+      **Nachtrag, zwei weitere Funde geprueft und bewusst nicht gedupt:**
+      `buffer-ctx.nvim`/`fileops.nvim`s `notify.resolve` (der `pcall(require,
+      "lib.nvim.notify"))`-Soft-Load in ihrem jeweiligen `util/notify.lua`)
+      und `cascade.nvim`/`spotlight.nvim`s `M.augroup` (liegt direkt neben
+      `try_require` in `util/lib.lua`, ruft
+      `try_require("lib.nvim.bindings.autocmd.augroup")` auf). Beide sind
+      strukturell dasselbe wie `try_require`: Soft-Dependency-Bruecken, deren
+      ganzer Sinn ist, *ohne* lib.nvim zu funktionieren. Nach lib.nvim
+      verschoben wuerden die Plugins lib.nvim zwingend brauchen, um ueberhaupt
+      an den Fallback-Code zu kommen — der Fallback-Pfad koennte dann nie mehr
+      greifen. Gehoert damit in dieselbe Kategorie wie `config.M.get` und
+      `try_require` oben, aus demselben Grund.
 
 ### Bindings, Keymaps & UI
 

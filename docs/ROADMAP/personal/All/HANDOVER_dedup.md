@@ -22,10 +22,11 @@ Alle Repos einzeln committet und auf `main` gepusht (lib.nvim, markdown.nvim,
 buffer-ctx.nvim, cascade.nvim, spotlight.nvim, dap.nvim, debugging.nvim,
 documentation.nvim, runtime-analysis.nvim, pdfport.nvim, reposcope.nvim).
 `duplicate_functions.py` bestätigt: keine der behandelten Duplikate mehr da.
-Übrig sind nur die zwei bewusst nicht angefassten Kandidaten
-(`config.M.get`, `try_require`) plus zwei neue Funde außerhalb dieses
-Auftrags (`notify.resolve` in buffer-ctx/fileops, `M.augroup` in
-cascade/spotlight) — keiner davon war Teil dieser Aufgabe.
+Übrig sind nur bewusst nicht angefasste Kandidaten: `config.M.get`,
+`try_require`, und (Nachtrag) `notify.resolve` (buffer-ctx/fileops) sowie
+`M.augroup` (cascade/spotlight) — beide strukturell dasselbe wie
+`try_require`, Soft-Dependency-Brücken, die genau ohne lib.nvim funktionieren
+müssen. Details in `Merged_Finished.md`.
 
 ---
 
