@@ -40,6 +40,85 @@ nvim-Config.
 
 ### Bindings, Keymaps & UI
 
+- [x] **Autocmds zusammenfuehren / Dispatch-Lib-Modul — abgeschlossen.**
+
+      Register, Doku-Generator und Messung standen schon (Eintraege weiter
+      unten). Offen war die filetree-Migration: zehn Features mit je einem
+      eigenen `BufEnter`-Autocmd, die meisten zusaetzlich mit `WinEnter`,
+      `BufWritePost` oder `TextChanged`, in zehn Augroups. Sie haengen jetzt
+      alle an `filetree.util.bufevents`, einem Dispatcher mit dem Schluessel
+      `"<event>:<scope>"`, scope = `tree` oder `editor`.
+
+      **Was das bringt, und nur der dritte Punkt ist Geschwindigkeit:**
+
+      - *Die Reihenfolge war zufaellig.* Native Autocmds feuern in
+        Registrierungsreihenfolge, und die Features werden mit `pairs()` ueber
+        eine Tabelle aufgesetzt — ob `cwd_sync` sein chdir vor `auto_reveal`
+        macht, stand also nirgends. Jetzt ist es eine Zahl: cwd 10, reveal 20,
+        render 30.
+      - *„Was passiert beim Buffer-Wechsel" hatte keine eine Antwort.* Es waren
+        zehn Dateien; jetzt ist es ein Register, und `bindings.autocmds.lines()`
+        druckt die Handler unter die Zeile ihres Dispatchers.
+      - *`is_tree_buffer()` lief einmal pro Feature.* Vier Handler fangen damit
+        an, und es ist ein `require` plus ein Adapter-Aufruf. Der Dispatch-Key
+        rechnet es einmal pro Event.
+
+      `TextChanged` ist mit drin, obwohl `ignore_list` es auf
+      `pattern = "neo-tree://*"` gefiltert hatte, also in C. Der Punkt war in
+      der Dispatcher-README laengst mit Messungen entschieden: ~30 us erreicht
+      man nicht oft genug, um es zu merken — man muesste eine Taste gedrueckt
+      halten, und selbst dann ist es unter einem Prozent einer Sekunde. Das
+      Modul waehlt man fuer Reihenfolge und ein Register, nicht dagegen wegen
+      einer Zahl, die niemand spuert.
+
+      **Zwei Luecken in lib mussten davor zu.** Beide waren Blocker, keine
+      Politur:
+
+      - *Kein `unregister`.* `filetree.setup()` ist absichtlich idempotent: es
+        reisst jedes Feature ab und baut es neu auf. Ein einzelner Autocmd
+        ueberlebt das, weil seine Augroup mit `clear = true` neu entsteht. Ein
+        *geteilter* Dispatcher hatte nur `detach()`, und das nimmt allen
+        anderen ihre Handler weg — ein zweites Setup haette also jeden Handler
+        doppelt laufen lassen, ohne Weg zurueck. Handler tragen jetzt einen
+        `owner`, `unregister(owner)` nimmt sie wieder heraus, samt ihrer
+        `once`-pro-Buffer-Buchfuehrung.
+      - *Der Dispatcher haette die Doku verschlechtert.* Er faltet N Handler in
+        **einen** Autocmd, also konnte die generierte Tabelle nur noch eine
+        Zeile zeigen. Eine Seite, die „ein Listener auf BufEnter" behauptet, wo
+        zehn Features lauschen, ist genau das Fehlerbild, gegen das der
+        Generator gebaut wurde, eine Ebene tiefer. Handler haben jetzt ein
+        `desc`, `registry()`/`handlers()` geben sie heraus, und `docs` rendert
+        eine **Dispatched handlers**-Tabelle mit Key, desc, Prioritaet und der
+        `register()`-Aufrufstelle.
+
+      **Drei Fehler nebenbei gefunden, alle vom Typ „schreibt still ein
+      falsches Dokument":**
+
+      - `docs.write()` normalisierte `r.src` auf Forward-Slashes, aber nicht das
+        uebergebene `root`. Wer weiterreicht, was `vim.fn.fnamemodify()` unter
+        Windows liefert, traf keinen einzigen Record und bekam ein leeres
+        Dokument — ohne Fehler.
+      - Die Autocmds des Dispatchers wurden **lib** zugeschrieben, weil
+        `create()` die Aufrufstelle vom Stack liest und `attach()` in lib
+        laeuft. filetrees Seite liess damit den eigenen Dispatcher weg, und ein
+        Plugin, das alles ueber einen Dispatcher macht, haette gar keine Seite
+        bekommen („nothing registered"). `create()` nimmt jetzt `opts.src`.
+      - `filetree.util.bufevents.register` war kein Tail Call, also landeten
+        alle Handler-Quellangaben auf der Wrapper-Zeile statt beim Feature.
+
+      **`desc` ueberall.** 17 filetree-Autocmds hatten gar keins, sieben
+      weitere fielen erst auf, als die Seite gegen die echte Config statt gegen
+      den Stub-Adapter generiert wurde. Jetzt hat jeder einen.
+      `FiletreeBufferCache` heisst `filetree_buffer_cache` — `bindings.autocmds`
+      sucht die eigenen Records per `^filetree` und die CamelCase-Gruppe fiel
+      glatt durch.
+
+      Abgesichert in `TESTS/smoke.lua` (zehn Features registrieren, jeder
+      Handler hat ein desc, Prioritaetsreihenfolge, drei `setup()`-Aufrufe
+      haeufen nichts an, zwei Autocmds fuer alle) und in lib in
+      `TESTS/autocmd_dispatcher_spec.lua` und dem neuen
+      `TESTS/autocmd_docs_spec.lua`.
+
 - [x] **Alle direkten `nvim_create_autocmd`-Aufrufe auf
       `lib.nvim.bindings.autocmd` umgestellt.**
 

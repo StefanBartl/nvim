@@ -40,7 +40,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ## Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
-- [ ] lib.nvim - alle module durcgehen und checken, ob docs, @types, als auch aggregatoren noch korrekt sind
+- [ ] lib.nvim - alle module durcgehen und checken, ob docs, @types, als auch aggregatoren noch korrekt sind. Die lib.nvim ist für mich umso mehr wert, umso besser die docs sind. Dabei auch gleich feature ideen einbringenh, sprich bei jedem modul am ende auch checken "fehlt etwass sinnvolles?"
 - [ ] Merged_Finished.md in die Rules einbauen: Dsa sind alles Dinge, die wr gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen
 
 ### Git & Repo-Hygiene
@@ -59,39 +59,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
       nur der *inhaltliche* Durchgang: liest sich jeder Workflow noch wie der
       Weg, den man heute tatsächlich geht? Das ist Lesearbeit, keine
       Messung.
-
-### Bindings, Keymaps & UI
-#### autocmds
-
-- [~] **Autocmds zusammenführen / Dispatch-Lib-Modul** — Register, Doku-Generator
-      und Messung stehen; offen ist nur noch das Umstellen selbst.
-
-      `lib.nvim.bindings.autocmd` führt ein **Register** dessen, was wirklich
-      registriert wurde (Event, Gruppe, Pattern, desc, Datei:Zeile), abrufbar
-      über `registered()`/`by_event()`. Das beantwortet „was feuert wann" aus
-      dem, was existiert — und erfasst auch jede künftige Registrierung an
-      beliebiger Stelle, was reines Verschieben nicht leisten würde.
-
-      Darauf setzt `docs.write()` auf: legt `bindings/autocmd/` als Markdown an,
-      je Event-Familie eine Datei, **ohne Argumente** aufrufbar.
-      `docs.create_usercmd()` gibt dir `:LibAutocmdDocs` /
-      `:LibAutocmdDocsCheck` — Details und die Begründung gegen die
-      `write = true`-Aggregator-Variante in `Merged_Finished.md`.
-
-      Die Messung ist gelaufen: der Dispatcher kostet flache **~30 µs pro
-      Fehlschlag**, und davon sind ~29 µs allein der Sprung nach Lua, den jeder
-      Lua-Callback zahlt. Bei Treffern Gleichstand bis ~20 Handler, darüber
-      Gewinn. Tabelle in der Dispatcher-README und in `Merged_Finished.md`.
-
-      **Offen:** Migration von filetree (`BufEnter`, 10 Handler) auf den
-      Dispatcher plus die dort fehlenden `desc`-Angaben — bei den Zahlen
-      spricht nichts dagegen, und alle Autocmds bekommen damit die
-      lib-Features.
-
-      Das Umstellen der direkten `nvim_create_autocmd`-Aufrufe ist erledigt
-      und nach `Merged_Finished.md` gewandert (2026-08-27): alle Repos, die
-      Config und lib selbst melden jetzt `unregistered=0`. Damit ist der
-      Dispatcher der einzige offene Punkt dieses Items.
 
 ### Healthchecks, Config & Defaults
 - [~] **`lib.nvim` konsequent als Dependency nutzen** — die Konsistenz-Hälfte
