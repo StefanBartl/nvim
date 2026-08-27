@@ -6,6 +6,137 @@ nvim-Config.
 
 ---
 
+## 2026-08-27
+
+### Bindings, Keymaps & UI
+
+- [x] **Neues `lib.nvim`-Keymap-Modul + alle Plugins darauf umgestellt.**
+
+      Pfad wie gewuenscht: `lua/lib/nvim/bindings/keymap`. Das Modul ist mehr
+      als ein Wrapper um `vim.keymap.set` — es ist eine **Registry**: ein
+      Plugin *deklariert* seine Keymaps als benannte Actions, der User
+      ueberschreibt sie ueber die Install-Spec.
+
+      **Zur Frage aus MERGED.md, `"[a": "]u"` vs. Aktionsnamen:** Aktionsnamen
+      gewonnen, und zwar aus dem Grund, den du selbst geahnt hast. Die
+      lhs-als-Key-Variante kann nicht sagen, *wessen* `[a` gemeint ist — zwei
+      Plugins mit demselben Default-Key waeren nicht unterscheidbar, und ein
+      Tippfehler im lhs waere von "diese Taste ist eben nicht gemappt" nicht zu
+      trennen. Mit Namen ist beides geloest:
+
+      ```lua
+      {
+        keymaps = {
+          copy_absolute = "<leader>yp",          -- verschieben
+          jump_anchor   = { "mj", "gj" },        -- mehrere Tasten
+          open_image    = false,                 -- abschalten
+          preset        = false,                 -- gar nichts binden
+        },
+      }
+      ```
+
+      Der Aufwand fuer "jedes Mapping braucht einen sinnvollen Namen" war
+      klein: die Namen kommen aus den `desc`-Strings, die ohnehin ueberall
+      standen ("logs (follow)" -> `logs_follow`).
+
+      **Was das Modul kann** (ueber das Umbiegen hinaus):
+
+      - **Tippfehler werden gemeldet, mit Levenshtein-Vorschlag.** `oepn` sagt
+        `no such keymap action: oepn (did you mean open?)`. Vorher war ein
+        vertippter Override komplett stumm — die Map erschien nicht, und
+        nirgends stand warum. Das ist der Fehler, der einen Nachmittag kostet.
+      - **Eine Action, mehrere Tasten** (`{ "<CR>", "i" }`) und **eine Action,
+        mehrere Modes** (spotlights `toggle_here`: Cursor in Normal, Selektion
+        in Visual — ein Name, ein Key, ein Override).
+      - **Deklariert != gebunden.** Eine abgeschaltete Action bleibt
+        registriert, damit `:checkhealth` und generierte Docs beantworten
+        koennen, was es *gibt*, nicht nur was gerade gebunden ist.
+      - **`keymap.registered()` / `keymap.conflicts()`** — die zentrale Liste
+        aller Actions aller Plugins, inklusive Kollisionserkennung ueber
+        Plugin-Grenzen.
+      - **which-key**: nur das, was which-key *nicht* selbst herausfindet.
+        which-key liest Mappings und deren `desc` naemlich selber (siehe
+        `which-key/buf.lua`) — ein `which_key = true`-Schalter pro Key waere
+        ein No-op gewesen. Bleiben: Gruppenlabels, Icons und Verstecken
+        (`which_key_ignore`). **Nebenbefund:** vier Plugins haben genau das
+        doppelt registriert, teils mit abweichendem Wortlaut, also mit zwei
+        Orten zum Auseinanderdriften. Die `bindings/which_key.lua`-Dateien
+        sind entsprechend geloescht (documentation.nvim behaelt seine, die
+        macht mehr).
+      - **Icons nur mit Nerd Font.** Neues `lib.nvim.ui.nerd_font` mit
+        `available()` / `glyph(hex, fallback)`. Detektion ist nachweislich
+        unmoeglich (`strdisplaywidth` liefert fuer *jeden* Codepoint 1, auch
+        fuer `U+10FFFD`), also entscheidet `vim.g.have_nerd_font` — deklariert
+        statt geraten, damit ohne Font keine Kasterl erscheinen.
+
+      **Umgestellt** (29 Repos): spotlight, emojis, insights, fileops, open,
+      diff, buffer-ctx, images, cmdlog, dap, pickers, reposcope, cascade,
+      learn-cli, lsp, migrate, color_my_ascii, github_stats, debugging,
+      pdfport, recommender, sandbox, sessions, language, markdown, filetree.
+
+      **Bewusst nicht umgestellt, mit Grund:**
+
+      - `gopath.nvim` — die Keys muessen auf `g*` bleiben, das ist der Witz
+        daran (deine Vorgabe). Kein Gruppenlabel, weil ein Label auf `g` die
+        19 eingebauten Vim-`g`-Mappings mitbeschriften wuerde (nachgemessen).
+      - `runtime-analysis.nvim` — hat per Design null Keymaps, jeder
+        Einstiegspunkt ist ein `:RA`-Subcommand.
+      - `documentation.nvim` — `:DocBrowse` hat die Registry-Semantik bereits
+        selbst (Namen, Listen, `false`, Tippfehler-Report) *plus* drei Dinge,
+        fuer die die Registry keine Form hat: `where` (Liste- vs. Detail-Pane),
+        `only` (Mode-Scope) und Closures ueber *eine* Browser-Instanz, von
+        denen zwei gleichzeitig offen sein koennen. Steht als Begruendung im
+        Modulkopf.
+
+      **Was dabei an echten Bugs herausfiel:**
+
+      - `lib.nvim`s `set()` schrieb `desc`/`noremap`/`silent`/`buffer` in die
+        *uebergebene* Options-Tabelle zurueck. Wer eine Tabelle fuer mehrere
+        Bindings wiederverwendet, schleppte den `desc` des vorigen Keys mit —
+        documentation.nvim hatte deshalb in which-key jede Taste als "close"
+        beschriftet und baute zur Umgehung pro Binding eine frische Tabelle.
+        Kopiert jetzt; Regressionstest pinnt beide Haelften.
+      - `which_key.add_group` war lokal, also gar nicht aufrufbar, und `apply`
+        ignorierte ein `prefix` in der Gruppenspec — Plugins ohne gemeinsamen
+        `spec.prefix` registrierten still gar keine Gruppe.
+      - `language.nvim`: `clear()` loeste die Session ueber den *aktuellen*
+        Buffer auf, aber `list.open` laesst den Cursor im Quickfix-Fenster —
+        die Session vom dort aus abschalten fand nichts und liess die echte
+        weiterlaufen, samt Keymaps. Faellt jetzt auf die einzige aktive
+        Session zurueck.
+      - `filetree.nvim`: der `?`-Cheatsheet baute aus dem Default-Katalog, hat
+        also nach einem Remap selbstbewusst eine Taste genannt, die es nicht
+        mehr gab. Liest jetzt die Registry.
+
+      **Nebeneffekt, groesser als erwartet:** `filetree.nvim` hatte denselben
+      Bindungsblock 36-mal, in vier bis fuenf Varianten, mit dem `desc`-Praefix
+      in zwei Schreibweisen. Das ist jetzt ein `util/bind.lua`. `pdfport.nvim`
+      hatte dieselben fuenf Actions dreimal (netrw/oil/nvim-tree), die sich in
+      genau einer Sache unterschieden — wie der Pfad unterm Cursor gefunden
+      wird; jetzt einmal, parametrisiert.
+
+      **Neu konfigurierbar, was es vorher nicht war:** sandbox' saemtliche
+      List-View-Keys (vorher gar keine Konfiguration), markdowns
+      `<leader>tv*`-TableView-Keys, recommenders Float-Keys (`y`/`A`/`<BS>`/
+      `U`/`?`) inkl. `?`-Hilfe, die liest was gebunden *ist*, filetrees
+      `<Nop>`-Prefix-Unblocking in copy_move.
+
+- [x] **`lib.nvim.autocmd` / `lib.nvim.usercmd` -> `bindings/`** und alle
+      Plugins darauf umgestellt (809 Aufrufstellen in 30 Repos).
+
+- [x] **Shims geloescht — du hattest recht.** Deine Frage in MERGED.md
+      ("halte ich einen Shim fuer nicht notwendig, siehst du das anders?"):
+      nein, sehe ich nicht anders. Der Shim war die richtige *Zwischen*stufe,
+      weil die Reihenfolge des Nachziehens beim Plugin-Manager liegt und nicht
+      bei dir — aber er hatte genau eine Aufgabe, und die ist erledigt. Alle
+      30 Repos sind migriert (per grep verifiziert), alle 29 Plugins laden
+      gegen ein lib.nvim ohne Shims. Dazu steht in Zeile 1 der lib.nvim-README,
+      dass Breaking Changes wahrscheinlich sind. Weg damit; eine
+      Kompatibilitaetsschicht, die ihre Migration ueberlebt, wird nie wieder
+      geloescht.
+
+---
+
 ## 2026-08-26
 
 ### Git & Repo-Hygiene

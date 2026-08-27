@@ -49,13 +49,13 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### lib.nvim shim zu bindings\
 
-Dene ausgabe:
-
-```text
-Wichtige Entscheidung, die ich getroffen habe: die alten Pfade funktionieren weiter. Es sind 809 Aufrufstellen in 30 Repos — ohne Shim wäre der Umzug ein Flag Day: wer lib.nvim aktualisiert, bevor die Plugins nachgezogen sind, hat alles kaputt, und die Reihenfolge bestimmt der Plugin-Manager. Jetzt leiten die alten Pfade weiter und melden einmalig vim.deprecate. Verifiziert für alle sechs tatsächlich benutzten Einstiegspunkte: alt und neu liefern dasselbe Modul-Table. Die Shims fliegen raus, sobald die Repos migriert sind.
-```
-
-Eigentlch nicht notwednig, wenn alle 809 aufrustlelne der require pfad angepast weird, waws mti grep bzw cli tols zum rena ing eigentlich kein großer aufewand sein dürft. Da lalle meine repos, auch die lib.nvim  - npoch im development mode ist und auch in der ersten zeile der dere nreadme steht, das breaking changes sehr wahrscheinlich sind an diesen pujnkt der entwicklung, halte ich einen shim für nicht notwenidig. siehst du das anders?
+- [x] **Erledigt 2026-08-27, und ja: du hattest recht.** Die Shims sind weg,
+      alle 30 Repos sind migriert, alle 29 Plugins laden ohne sie. Der Shim
+      war als *Zwischen*stufe richtig -- die Reihenfolge des Nachziehens
+      bestimmt der Plugin-Manager, nicht du -- aber seine eine Aufgabe ist
+      erledigt, und pre-1.0 mit Breaking-Changes-Hinweis in Zeile 1 der README
+      braucht keine Kompatibilitaetsschicht, die ihre eigene Migration
+      ueberlebt. Details in `Merged_Finished.md`.
 
 ---
 
@@ -69,38 +69,14 @@ Eigentlch nicht notwednig, wenn alle 809 aufrustlelne der require pfad angepast 
 
 #### Neues lib.nvim Modul für Keymaps + umbennenug
 
-1. Wie für autocmds und usrcmds wil ich auch eine lib.nvim modul für keymaps haben. Aber wekchen Zweck hätte das? Nur ein wrapper über nvim_create_keymap?
-
-  Für usrcmds und autocmds gibt es eine lib.nvim modul um deren umsetzung einfacher zu machen und zu standardisieren, zb autocompletion bei usrcmds oder dispatcher bei den autocmds. Für keymaps könnte es sein:
-  - Keymaps user-seitig modifizierbar (anderes mapping ermöglchen)/deaktivierbar machen. (via installations spec).
-  also, ein Modul, dass automatisch eine tabel oder ähnliches hinterlegt und via key in der user spec modifizierbar macht, die der user via spec ansteuern kann, zb.:
-
-    ```lua
-    {
-      keymaps = {
-        "[a": "]u", -- das mapping des plugins, dass `[a` ist soll auf `]u` umgeschrieben werden
-      }
-    }
-    ```
-
-das schaut zwar schräh aus mit diesen key, aber ich hab keine gute idee für eine alternative. man müsste mit dieser schreibwei´ße abe sicherstellen, dass nur das [a mapüpjg aus diesem einen repo geändert werden würde, wenn [a nicht gemppt ist opder von einen anderen feature eines anderen plugins, dann dürfte es nicht überschierben. abe vl fält dir noch ein besseres optionm. ein. Natülch könnte man auch Bezeichnungen nemmen, wie "copy_absolute_path" -was wsrch sinnvoller ist, aber danmn muss jedes mappng einen sionnvolen namen erhalten ka wie aufwendig da swöre
-
-- Der Pfad soll sein: E:\repos\lib.nvim\lua\lib\nvim\bindings\keymap
-- Docs mpüssen geschreiben werden
-- Brainstorming nach weoiteren Feature ideen für diese modul: Was könnten wir anbeiten, dwo user sich denken "Dieses fetaure ist toll und bringt mir mehrwert"
-- Alle meine .nvim Plugins auf dieses Modul umstellen
-
-#### Umbennenung + Pfad Update
-
-Die bisherigen Module:
-  E:\repos\lib.nvim\lua\lib\nvim\autocmd
-  E:\repos\lib.nvim\lua\lib\nvim\usercmd
-auf
-  E:\repos\lib.nvim\lua\lib\nvim\bindings\autocmd
-  E:\repos\lib.nvim\lua\lib\nvim\bindings\usercmd
-umbennen
-
-- Alle meine .nvim Plugins updaten, die eines der beiden Module implementieren
+- [x] **Erledigt 2026-08-27.** `lua/lib/nvim/bindings/keymap` steht, ist eine
+      Registry statt eines Wrappers, und 26 Plugins sind umgestellt; drei sind
+      es bewusst nicht (gopath, runtime-analysis, documentation -- jeweils mit
+      Grund). Deine Frage zur Schreibweise ist zugunsten von *Aktionsnamen*
+      entschieden, weil `"[a": "]u"` nicht sagen kann, wessen `[a` gemeint ist.
+      Umbenennung `autocmd`/`usercmd` nach `bindings/` inklusive.
+      Vollstaendige Aufstellung -- Features, gefundene Bugs, was neu
+      konfigurierbar wurde -- in `Merged_Finished.md`.
 
 #### autocmds
 
