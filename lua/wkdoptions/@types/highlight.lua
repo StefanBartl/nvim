@@ -212,11 +212,6 @@
 --- Side-effects: prevents visual conflicts with plugin UIs and ephemeral buffers.
 ---@field indent_scope_skip table
 
-
-
-
-
-
 ---@class WKDOptionsBreadcrumbsCtx
 ---@field lua_table_root lua_table_root_opt
 ---@field prefer_owner_in_literals boolean # Prefer owner in object/table literals
@@ -235,7 +230,5 @@
 ---@class lua_table_root_opt
 ---@field enable boolean
 ---@field mode string
-
-
 
 return {}

@@ -39,5 +39,4 @@ function M.render_breadcrumbs()
   return line .. "%*"
 end
 
-
 return M

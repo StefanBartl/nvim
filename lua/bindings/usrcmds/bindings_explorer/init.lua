@@ -50,7 +50,9 @@ end
 ---@param prompt string
 ---@return nil
 local function search_scoped(roots, query, prompt)
-  if live.open(roots, { query = query, prompt = prompt }) then return end
+  if live.open(roots, { query = query, prompt = prompt }) then
+    return
+  end
 
   if query and query ~= "" then
     ui.pick(search.search(query, roots))
@@ -60,7 +62,9 @@ local function search_scoped(roots, query, prompt)
   require("lib.nvim.ui.kit.input").open({
     title = prompt,
     on_submit = function(line)
-      if line == "" then return end
+      if line == "" then
+        return
+      end
       ui.pick(search.search(line, roots))
     end,
   })
@@ -159,7 +163,9 @@ function M.enable()
       },
       {
         path = { "path" },
-        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        args = {
+          { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true },
+        },
         desc = "BINDINGS-Wurzel(n) in die Zwischenablage kopieren",
         run = function(ctx)
           M.path(ctx.args.scope)
@@ -167,7 +173,9 @@ function M.enable()
       },
       {
         path = { "browse" },
-        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        args = {
+          { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true },
+        },
         desc = "Picker über alle Tabellenzeilen (Keymaps+Usercmds+Autocmds)",
         run = function(ctx)
           M.browse(nil, ctx.args.scope)
@@ -175,7 +183,9 @@ function M.enable()
       },
       {
         path = { "browse", "keymaps" },
-        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        args = {
+          { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true },
+        },
         desc = "Picker über Keymaps-Tabellenzeilen",
         run = function(ctx)
           M.browse("Keymaps", ctx.args.scope)
@@ -183,7 +193,9 @@ function M.enable()
       },
       {
         path = { "browse", "usercmds" },
-        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        args = {
+          { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true },
+        },
         desc = "Picker über Usercmds-Tabellenzeilen",
         run = function(ctx)
           M.browse("Usercmds", ctx.args.scope)
@@ -191,7 +203,9 @@ function M.enable()
       },
       {
         path = { "browse", "autocmds" },
-        args = { { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true } },
+        args = {
+          { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true },
+        },
         desc = "Picker über Autocmds-Tabellenzeilen",
         run = function(ctx)
           M.browse("Autocmds", ctx.args.scope)

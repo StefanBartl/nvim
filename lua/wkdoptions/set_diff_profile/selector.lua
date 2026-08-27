@@ -6,7 +6,7 @@ local lazy = require("lib.lua.lazy")
 local diff_profiles = lazy.require("wkdoptions.set_diff_profile.profiles")
 
 ---@param profile DiffProfile
-local function set (profile)
+local function set(profile)
   local opts = diff_profiles[profile]
 
   if not opts then

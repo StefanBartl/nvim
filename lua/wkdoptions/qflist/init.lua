@@ -15,5 +15,4 @@ vim.diagnostic.config({
   severity_sort = true,
 })
 
-
 return QFLIST_MODULE

@@ -19,7 +19,9 @@ local M = {}
 --- be called from the LazyGit plugin `config` hook.
 function M.setup()
   if vim.fn.executable("nvr") == 0 then
-    notify.warn("nvr not found in PATH — LazyGit O/<C-o> need neovim-remote (pip install neovim-remote)")
+    notify.warn(
+      "nvr not found in PATH — LazyGit O/<C-o> need neovim-remote (pip install neovim-remote)"
+    )
   end
 
   usercmd.create("LazygitBadd", function(opts)

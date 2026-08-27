@@ -128,7 +128,6 @@ M.ResultStatus = {
 
 ---@alias NeoTest.Consumers fun(client: NeoTest.Client): table
 
-
 ---@class NeoTest.ConsumerListeners
 ---@field discover_positions fun(adapter_id: string, tree: NeoTest.Tree)
 ---@field run fun(adapter_id: string, root_id: string, position_ids: string[])

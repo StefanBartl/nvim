@@ -9,7 +9,7 @@ return {
   ["l"] = "jump_to_symbol",
   ["o"] = "jump_to_symbol",
 
-  ["<CR>"]          = "jump_to_symbol",
+  ["<CR>"] = "jump_to_symbol",
   ["<2-LeftMouse>"] = "jump_to_symbol",
 
   --====================== Filter ====================================
@@ -76,5 +76,5 @@ return {
 
   -- named special keys
   ["<PageDown>"] = "noop",
-  ["<PageUp>"]   = "noop",
+  ["<PageUp>"] = "noop",
 }

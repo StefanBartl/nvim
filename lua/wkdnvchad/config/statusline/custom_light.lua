@@ -56,7 +56,19 @@ function M.register_statusline_modules(stl_config)
   ensure_modules()
 
   stl_config.modules = stl_config.modules or {}
-  stl_config.order = stl_config.order or { "mode", "git", "%=", "breadcrumbs", "%=", "diagnostics", "lsp", "cursor", "progress", "cwd" }
+  stl_config.order = stl_config.order
+    or {
+      "mode",
+      "git",
+      "%=",
+      "breadcrumbs",
+      "%=",
+      "diagnostics",
+      "lsp",
+      "cursor",
+      "progress",
+      "cwd",
+    }
 
   -- Breadcrumbs module (LSP-aware)
   stl_config.modules.breadcrumbs = function()

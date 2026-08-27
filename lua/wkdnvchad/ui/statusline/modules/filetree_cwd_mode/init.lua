@@ -23,10 +23,10 @@ local get_separators = require("wkdnvchad.ui.statusline.utils.get_separators")
 --- config can never silently lose this module's color.
 ---@type table<string, string>
 local DEFAULT_COLOR_BY_MODE = {
-  project    = "purple",
-  nearest    = "pink",
-  lock       = "red",
-  manual     = "light_grey",
+  project = "purple",
+  nearest = "pink",
+  lock = "red",
+  manual = "light_grey",
   tree_leads = "vibrant_green",
 }
 local FALLBACK_COLOR = "light_grey"
@@ -47,7 +47,9 @@ local _hl_built = {}
 ---@return string? hex
 local function empty_space_fg()
   local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = "ST_EmptySpace", link = false })
-  if ok and hl.fg then return string.format("#%06x", hl.fg) end
+  if ok and hl.fg then
+    return string.format("#%06x", hl.fg)
+  end
   return nil
 end
 
@@ -55,13 +57,19 @@ end
 ---@return string? group   nil if the active theme doesn't expose base46 (e.g. between colorschemes).
 local function ensure_hl(color_key)
   local group = "St_Cwd_" .. color_key
-  if _hl_built[group] then return group end
+  if _hl_built[group] then
+    return group
+  end
 
   local ok, base46 = pcall(require, "base46")
-  if not ok then return nil end
+  if not ok then
+    return nil
+  end
   local colors = base46.get_theme_tb("base_30")
   local col = colors and colors[color_key]
-  if not col then return nil end
+  if not col then
+    return nil
+  end
 
   vim.api.nvim_set_hl(0, group, { fg = colors.black, bg = col, bold = true })
   vim.api.nvim_set_hl(0, group .. "Sep", { fg = col, bg = empty_space_fg() or colors.grey })
@@ -69,7 +77,9 @@ local function ensure_hl(color_key)
   return group
 end
 
-require("lib.nvim.bindings.autocmd").create("ColorScheme", function() _hl_built = {} end, {
+require("lib.nvim.bindings.autocmd").create("ColorScheme", function()
+  _hl_built = {}
+end, {
   group = require("lib.nvim.bindings.autocmd").group("WkdNvChadCwdModeBadgeHl", true),
   desc = "Rebuild the filetree cwd-mode badge highlights for the new theme's palette",
 })
@@ -91,13 +101,19 @@ return function(opts)
   -- is simply empty, and cwd_mode fires its own `:redrawstatus` once it has
   -- something to show (see the module header).
   local ft = package.loaded["filetree"]
-  if type(ft) ~= "table" or type(ft.feature) ~= "function" then return "" end
+  if type(ft) ~= "table" or type(ft.feature) ~= "function" then
+    return ""
+  end
 
   local cwd_mode = ft.feature("cwd_mode")
-  if not cwd_mode then return "" end
+  if not cwd_mode then
+    return ""
+  end
 
   local badge = cwd_mode.badge()
-  if badge.text == "" then return "" end
+  if badge.text == "" then
+    return ""
+  end
 
   -- badge.hl is a real, always-defined Neovim group (DiagnosticWarn/Info/…),
   -- picked per mode by cwd_mode itself — no local St_* group to keep in sync.
@@ -109,7 +125,9 @@ return function(opts)
     return " %#" .. hl .. "#" .. badge.text .. " "
   end
 
-  local color_key = (opts.colors and opts.colors[badge.mode]) or DEFAULT_COLOR_BY_MODE[badge.mode] or FALLBACK_COLOR
+  local color_key = (opts.colors and opts.colors[badge.mode])
+    or DEFAULT_COLOR_BY_MODE[badge.mode]
+    or FALLBACK_COLOR
   local group = ensure_hl(color_key)
   if not group then
     -- Between colorschemes, or a base46-less setup: fall back rather than
@@ -119,7 +137,15 @@ return function(opts)
 
   local sep = get_separators()
 
-  return "%#" .. group .. "# " .. badge.text .. " "
-    .. "%#" .. group .. "Sep#" .. sep.right
-    .. "%#ST_EmptySpace#" .. sep.right
+  return "%#"
+    .. group
+    .. "# "
+    .. badge.text
+    .. " "
+    .. "%#"
+    .. group
+    .. "Sep#"
+    .. sep.right
+    .. "%#ST_EmptySpace#"
+    .. sep.right
 end

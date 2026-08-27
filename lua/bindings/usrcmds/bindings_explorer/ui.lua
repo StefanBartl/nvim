@@ -19,7 +19,9 @@ end
 ---@return string
 local function display_path(path)
   local cfg = vim.fn.stdpath("config")
-  if path:sub(1, #cfg) == cfg then return path:sub(#cfg + 2) end
+  if path:sub(1, #cfg) == cfg then
+    return path:sub(#cfg + 2)
+  end
   return path
 end
 

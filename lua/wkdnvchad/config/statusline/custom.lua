@@ -112,9 +112,7 @@ return {
 
           local sep = get_separators()
 
-          return hl_module.hl_open(band)
-            .. content
-            .. "%#" .. band .. "Sep#" .. sep.right .. " "
+          return hl_module.hl_open(band) .. content .. "%#" .. band .. "Sep#" .. sep.right .. " "
         end,
 
         --- @return string
@@ -170,11 +168,7 @@ return {
           local sep = get_separators()
 
           -- Cursor wie im default theme: linker + rechter Separator
-          return "%#St_pos_sep#"
-            .. sep.left
-            .. "%#St_pos_icon# %#St_pos_text# "
-            .. content
-            .. " "
+          return "%#St_pos_sep#" .. sep.left .. "%#St_pos_icon# %#St_pos_text# " .. content .. " "
         end,
       },
     },

@@ -18,9 +18,7 @@ local function create_consumer(client)
   -- Load real consumer lazily
   local ok, neotree_consumer = pcall(require, "neotest.consumers.neotree")
   if not ok then
-    notify.error(
-      "[neotest.consumers.neotree_wrapper] Failed to load neo-tree consumer"
-    )
+    notify.error("[neotest.consumers.neotree_wrapper] Failed to load neo-tree consumer")
     return {}
   end
 

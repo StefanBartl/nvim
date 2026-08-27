@@ -190,7 +190,7 @@ function M.unquote(s)
 
   -- Remove surrounding quotes (single or double)
   -- gsub returns (result, count), wir brauchen nur result
-  local result = s:gsub('^["\']', ""):gsub('["\']$', "")
+  local result = s:gsub("^[\"']", ""):gsub("[\"']$", "")
   return result
 end
 

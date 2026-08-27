@@ -22,31 +22,31 @@
 
 ---@type table<string, string>
 local ICONS_DEFAULT = {
-  passed   = "✓",
-  running  = "●",
-  failed   = "✗",
-  skipped  = "○",
-  unknown  = "?",
+  passed = "✓",
+  running = "●",
+  failed = "✗",
+  skipped = "○",
+  unknown = "?",
   watching = "o",
 }
 
 ---@type table<string, string>
 local ICONS_NERDFONTS = {
-  passed   = "", -- nf-fa-check_circle
-  running  = "", -- nf-fa-spinner
-  failed   = "", -- nf-fa-times_circle
-  skipped  = "", -- nf-fa-circle_o
-  unknown  = "", -- nf-fa-question_circle
+  passed = "", -- nf-fa-check_circle
+  running = "", -- nf-fa-spinner
+  failed = "", -- nf-fa-times_circle
+  skipped = "", -- nf-fa-circle_o
+  unknown = "", -- nf-fa-question_circle
   watching = "󰛐", -- nf-md-eye_outline
 }
 
 ---@type table<string, string>
 local ICONS_ALT = {
-  passed   = "+",
-  running  = "~",
-  failed   = "x",
-  skipped  = "-",
-  unknown  = "?",
+  passed = "+",
+  running = "~",
+  failed = "x",
+  skipped = "-",
+  unknown = "?",
   watching = "*",
 }
 
@@ -64,11 +64,11 @@ local function build_devicons()
   end
 
   return {
-    passed   = devicons.get_icon("ok")     or ICONS_NERDFONTS.passed,
-    running  = devicons.get_icon("load")   or ICONS_NERDFONTS.running,
-    failed   = devicons.get_icon("error")  or ICONS_NERDFONTS.failed,
-    skipped  = devicons.get_icon("circle") or ICONS_NERDFONTS.skipped,
-    unknown  = devicons.get_icon("help")   or ICONS_NERDFONTS.unknown,
+    passed = devicons.get_icon("ok") or ICONS_NERDFONTS.passed,
+    running = devicons.get_icon("load") or ICONS_NERDFONTS.running,
+    failed = devicons.get_icon("error") or ICONS_NERDFONTS.failed,
+    skipped = devicons.get_icon("circle") or ICONS_NERDFONTS.skipped,
+    unknown = devicons.get_icon("help") or ICONS_NERDFONTS.unknown,
     watching = ICONS_NERDFONTS.watching,
   }
 end
@@ -97,4 +97,3 @@ local function icons_factory(variant)
 end
 
 return icons_factory
-

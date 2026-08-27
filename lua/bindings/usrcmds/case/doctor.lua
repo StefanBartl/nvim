@@ -157,7 +157,7 @@ local function stream_completeness_findings(e)
           out[#out + 1] = {
             short = e.short,
             kind = "stream-incomplete",
-            detail = ("%s: declared %d activities, found %d — re-expand \"Show more\" in SNOW before copying"):format(
+            detail = ('%s: declared %d activities, found %d — re-expand "Show more" in SNOW before copying'):format(
               name,
               declared,
               actual
@@ -282,7 +282,9 @@ function M.check()
           findings[#findings + 1] = {
             short = e.short,
             kind = "summary-markdown",
-            detail = ("Summary.md uses markdown SNOW won't render: %s"):format(table.concat(md_hits, ", ")),
+            detail = ("Summary.md uses markdown SNOW won't render: %s"):format(
+              table.concat(md_hits, ", ")
+            ),
             from = summary_path,
             to = nil,
           }

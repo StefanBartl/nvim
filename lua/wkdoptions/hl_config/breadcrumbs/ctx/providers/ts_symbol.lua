@@ -139,10 +139,7 @@ function M.extract(node, cfg)
   -- Check literal preference
   if cfg.prefer_owner_in_literals then
     local ft = vim.bo.filetype
-    local ok_lang, lang = pcall(
-      require,
-      "wkdoptions.hl_config.breadcrumbs.ctx.lang." .. ft
-    )
+    local ok_lang, lang = pcall(require, "wkdoptions.hl_config.breadcrumbs.ctx.lang." .. ft)
 
     if ok_lang and type(lang.detect_literal_field) == "function" then
       if lang.detect_literal_field(node) then

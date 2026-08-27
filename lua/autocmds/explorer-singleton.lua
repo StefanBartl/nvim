@@ -46,7 +46,9 @@ local _displaced = nil
 local function neotree_win()
   for _, w in ipairs(vim.api.nvim_list_wins()) do
     local buf = vim.api.nvim_win_get_buf(w)
-    if vim.bo[buf].filetype == "neo-tree" then return w end
+    if vim.bo[buf].filetype == "neo-tree" then
+      return w
+    end
   end
   return nil
 end
@@ -54,7 +56,9 @@ end
 ---@return boolean
 local function snacks_explorer_active()
   local ok, Snacks = pcall(require, "snacks")
-  if not ok or not Snacks.picker then return false end
+  if not ok or not Snacks.picker then
+    return false
+  end
   local ok2, pickers = pcall(Snacks.picker.get, { source = "explorer" })
   return ok2 and pickers ~= nil and #pickers > 0
 end
@@ -68,29 +72,42 @@ end
 local function open_neotree()
   pcall(function()
     require("neo-tree.command").execute({
-      action = "show", position = "left", reveal = true, reveal_force_cwd = true,
+      action = "show",
+      position = "left",
+      reveal = true,
+      reveal_force_cwd = true,
     })
   end)
 end
 
 local function close_snacks_explorer()
   local ok, Snacks = pcall(require, "snacks")
-  if not ok or not Snacks.picker then return end
+  if not ok or not Snacks.picker then
+    return
+  end
   local ok2, pickers = pcall(Snacks.picker.get, { source = "explorer" })
-  if not ok2 then return end
+  if not ok2 then
+    return
+  end
   for _, picker in ipairs(pickers) do
-    pcall(function() picker:close() end)
+    pcall(function()
+      picker:close()
+    end)
   end
 end
 
 local function open_snacks_explorer()
-  pcall(function() require("snacks").explorer() end)
+  pcall(function()
+    require("snacks").explorer()
+  end)
 end
 
 ---@param opts { enabled?: boolean }?
 function M.setup(opts)
   opts = opts or {}
-  if opts.enabled == false then return end
+  if opts.enabled == false then
+    return
+  end
 
   local autocmd = require("lib.nvim.bindings.autocmd")
   -- Raw augroup, not autocmd.group(): that caches by name and would stop
@@ -129,7 +146,9 @@ function M.setup(opts)
   })
 
   autocmd.create("WinClosed", function()
-    if not _displaced then return end
+    if not _displaced then
+      return
+    end
     -- Deferred: the closing window's own teardown hasn't necessarily
     -- settled yet (neo-tree's WinClosed fallout, snacks' picker cleanup),
     -- so re-checking "is the other one really gone" needs to run after

@@ -311,7 +311,9 @@ elseif is_windows and fn.executable("win32yank") == 1 then
   ---@return string scrubbed, integer replaced
   local function scrub_utf8(str)
     -- Pure ASCII is the overwhelmingly common case and is always valid.
-    if not str:find("[\128-\255]") then return str, 0 end
+    if not str:find("[\128-\255]") then
+      return str, 0
+    end
 
     local byte, sub = string.byte, string.sub
     local out, i, n, replaced = {}, 1, #str, 0

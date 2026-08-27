@@ -44,13 +44,13 @@ end
 
 require("autocmds.terminals").enable({
   numbers = {
-    enable = true,              -- On terminal open, turns off local 'number' and 'relativenumber' to declutter terminal panes.
+    enable = true, -- On terminal open, turns off local 'number' and 'relativenumber' to declutter terminal panes.
   },
   kitty = {
-    enable = true,              -- In Kitty, applies compact padding/margin on VimEnter and restores defaults on VimLeavePre.
+    enable = true, -- In Kitty, applies compact padding/margin on VimEnter and restores defaults on VimLeavePre.
   },
   auto_insert = {
-    enable = false,             -- Automatically enters Insert mode in terminal buffers; add "TermEnter" to events if desired.
+    enable = false, -- Automatically enters Insert mode in terminal buffers; add "TermEnter" to events if desired.
   },
 })
 

@@ -18,10 +18,8 @@ function M.check_consumer()
 
   -- 2. Prüfe Typ
   if type(consumer) ~= "function" then
-    return false, string.format(
-      "Consumer has unexpected type: %s (expected: function)",
-      type(consumer)
-    )
+    return false,
+      string.format("Consumer has unexpected type: %s (expected: function)", type(consumer))
   end
 
   -- 3. Prüfe ob Neotest setup ausgeführt wurde
@@ -46,10 +44,11 @@ function M.check_consumer()
   end
 
   if type(consumer_instance) ~= "table" then
-    return false, string.format(
-      "Consumer has invalid type: %s (expected: table after initialization)",
-      type(consumer_instance)
-    )
+    return false,
+      string.format(
+        "Consumer has invalid type: %s (expected: table after initialization)",
+        type(consumer_instance)
+      )
   end
 
   -- 6. Prüfe ob Neo-tree Source existiert
@@ -79,10 +78,8 @@ function M.diagnose()
 
   -- Schritt 1: Consumer-Modul
   local consumer_ok, consumer = pcall(require, "neotest.consumers.neotree")
-  lines[#lines + 1] = string.format(
-    "1. Consumer Module: %s",
-    consumer_ok and "✓ LOADED" or "✗ NOT FOUND"
-  )
+  lines[#lines + 1] =
+    string.format("1. Consumer Module: %s", consumer_ok and "✓ LOADED" or "✗ NOT FOUND")
   if consumer_ok then
     lines[#lines + 1] = string.format("   Type: %s", type(consumer))
   end
@@ -90,31 +87,22 @@ function M.diagnose()
 
   -- Schritt 2: Neotest Config
   local neotest_ok, neotest = pcall(require, "neotest")
-  lines[#lines + 1] = string.format(
-    "2. Neotest: %s",
-    neotest_ok and "✓ LOADED" or "✗ NOT FOUND"
-  )
+  lines[#lines + 1] =
+    string.format("2. Neotest: %s", neotest_ok and "✓ LOADED" or "✗ NOT FOUND")
 
   if neotest_ok then
     local has_consumers = neotest.config and neotest.config.consumers
-    lines[#lines + 1] = string.format(
-      "   Config.consumers: %s",
-      has_consumers and "✓ EXISTS" or "✗ MISSING"
-    )
+    lines[#lines + 1] =
+      string.format("   Config.consumers: %s", has_consumers and "✓ EXISTS" or "✗ MISSING")
 
     if has_consumers then
       local has_neotree = neotest.config.consumers.neotree ~= nil
-      lines[#lines + 1] = string.format(
-        "   Neotree registered: %s",
-        has_neotree and "✓ YES" or "✗ NO"
-      )
+      lines[#lines + 1] =
+        string.format("   Neotree registered: %s", has_neotree and "✓ YES" or "✗ NO")
 
       if has_neotree then
         local consumer_type = type(neotest.config.consumers.neotree)
-        lines[#lines + 1] = string.format(
-          "   Consumer type: %s",
-          consumer_type
-        )
+        lines[#lines + 1] = string.format("   Consumer type: %s", consumer_type)
 
         if consumer_type == "function" then
           lines[#lines + 1] = "   Status: ✗ NOT INITIALIZED (still factory)"

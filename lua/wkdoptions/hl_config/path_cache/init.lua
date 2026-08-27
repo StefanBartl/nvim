@@ -91,7 +91,11 @@ function M.repo_relative_cached(path, bufnr)
   bufnr = bufnr or 0
   local b = vim.b[bufnr]
   -- Recompute if path changed, cwd changed (rare but relevant), or cache missing.
-  if b.myopt_repo_rel and b.myopt_repo_rel_path == path and b.myopt_repo_rel_cwd == vim.uv.cwd() then
+  if
+    b.myopt_repo_rel
+    and b.myopt_repo_rel_path == path
+    and b.myopt_repo_rel_cwd == vim.uv.cwd()
+  then
     return b.myopt_repo_rel
   end
   M.refresh_buffer_cache(bufnr)

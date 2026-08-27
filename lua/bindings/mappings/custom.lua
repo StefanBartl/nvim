@@ -29,7 +29,6 @@ function M.setup()
     local entry = ok_resolve and resolve.sync(nil) or nil
     sessions.save(entry and entry.short or nil)
   end, { desc = "[casedesk] Save session (case-aware)" })
-
 end
 
 return M

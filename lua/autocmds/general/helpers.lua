@@ -31,7 +31,6 @@ function M.kitty_set_spacing(padding, margin)
   end)
 end
 
-
 --- Create/clear a namespaced augroup.
 --- @param name string
 --- @return integer
@@ -62,12 +61,24 @@ end
 --- @param buf integer
 --- @return boolean
 local function is_stray_no_name(buf)
-  if not api.nvim_buf_is_valid(buf) then return false end
-  if vim.bo[buf].buftype ~= "" then return false end
-  if not vim.bo[buf].buflisted then return false end
-  if vim.bo[buf].modified then return false end
-  if api.nvim_buf_get_name(buf) ~= "" then return false end
-  if api.nvim_buf_line_count(buf) > 1 then return false end
+  if not api.nvim_buf_is_valid(buf) then
+    return false
+  end
+  if vim.bo[buf].buftype ~= "" then
+    return false
+  end
+  if not vim.bo[buf].buflisted then
+    return false
+  end
+  if vim.bo[buf].modified then
+    return false
+  end
+  if api.nvim_buf_get_name(buf) ~= "" then
+    return false
+  end
+  if api.nvim_buf_line_count(buf) > 1 then
+    return false
+  end
   return (api.nvim_buf_get_lines(buf, 0, 1, false)[1] or "") == ""
 end
 
@@ -80,7 +91,8 @@ end
 --- @return integer?
 local function find_named_buffer(exclude)
   local function usable(b)
-    return b and b > 0
+    return b
+      and b > 0
       and not exclude[b]
       and api.nvim_buf_is_valid(b)
       and api.nvim_buf_is_loaded(b)
@@ -89,9 +101,13 @@ local function find_named_buffer(exclude)
       and api.nvim_buf_get_name(b) ~= ""
   end
   local alt = vim.fn.bufnr("#")
-  if usable(alt) then return alt end
+  if usable(alt) then
+    return alt
+  end
   for _, b in ipairs(api.nvim_list_bufs()) do
-    if usable(b) then return b end
+    if usable(b) then
+      return b
+    end
   end
   return nil
 end

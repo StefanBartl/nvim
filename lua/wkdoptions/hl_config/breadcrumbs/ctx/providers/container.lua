@@ -35,10 +35,7 @@ function M.extract(node, cfg)
   local max_depth = tonumber(cfg.container_max_depth or 2) or 2
 
   -- Try to load language module
-  local ok, lang = pcall(
-    require,
-    "wkdoptions.hl_config.breadcrumbs.ctx.lang." .. ft
-  )
+  local ok, lang = pcall(require, "wkdoptions.hl_config.breadcrumbs.ctx.lang." .. ft)
 
   if not ok or type(lang.extract_container) ~= "function" then
     return base_symbol

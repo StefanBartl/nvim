@@ -74,10 +74,12 @@ function M.render(block, tokens)
     return nil, err
   end
   content = content:gsub("\r", "")
-  content = (content:gsub("%{(%w+)%}", function(key)
-    local v = (tokens or {})[key]
-    return v ~= nil and tostring(v) or ("{" .. key .. "}")
-  end))
+  content = (
+    content:gsub("%{(%w+)%}", function(key)
+      local v = (tokens or {})[key]
+      return v ~= nil and tostring(v) or ("{" .. key .. "}")
+    end)
+  )
   content = replygate.strip_signature(content)
 
   local lines = vim.split(content, "\n", { plain = true })

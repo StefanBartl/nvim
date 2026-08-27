@@ -210,7 +210,9 @@ function M.lookup(parsed, key)
   local spec = config.version_components[key:lower()]
   if spec then
     if spec.header == "Tosca Testsuite Version" then
-      return { { label = "Tosca Testsuite Version", value = parsed.header.testsuite_version or "unknown" } }, {}
+      return {
+        { label = "Tosca Testsuite Version", value = parsed.header.testsuite_version or "unknown" },
+      }, {}
     elseif spec.file then
       local hits, preferred = {}, nil
       for _, e in ipairs(parsed.entries) do

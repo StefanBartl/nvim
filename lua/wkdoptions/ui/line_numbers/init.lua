@@ -28,13 +28,15 @@ function M.render()
     return ""
   end
 
-  if vim.v.virtnum ~= 0 then return "" end
+  if vim.v.virtnum ~= 0 then
+    return ""
+  end
 
-  local cursor_line     = vim.fn.line(".")
-  local line_number     = vim.v.lnum
+  local cursor_line = vim.fn.line(".")
+  local line_number = vim.v.lnum
   local last_buffer_line = vim.fn.line("$")
-  local first_visible    = vim.fn.line("w0")
-  local last_visible     = vim.fn.line("w$")
+  local first_visible = vim.fn.line("w0")
+  local last_visible = vim.fn.line("w$")
 
   if line_number == first_visible then
     return "%#DiagnosticWarn#" .. tostring(cursor_line - 1) .. "%*"

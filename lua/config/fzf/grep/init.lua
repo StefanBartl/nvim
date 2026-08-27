@@ -20,4 +20,3 @@ function M.get(actions)
 end
 
 return M
-

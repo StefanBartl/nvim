@@ -52,4 +52,3 @@ return {
   ["<M-s>"] = "noop",
   ["<S-CR>"] = "noop",
 }
-

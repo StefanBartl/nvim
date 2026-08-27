@@ -29,7 +29,12 @@ local function format_record(rec)
       parts[#parts + 1] = ("%s: %s"):format(col, cell)
     end
   end
-  return ("[%s/%s] %s — %s"):format(rec.scope, rec.plugin, rec.heading or rec.category, table.concat(parts, "  "))
+  return ("[%s/%s] %s — %s"):format(
+    rec.scope,
+    rec.plugin,
+    rec.heading or rec.category,
+    table.concat(parts, "  ")
+  )
 end
 
 ---@param recs Bindings.Record[]

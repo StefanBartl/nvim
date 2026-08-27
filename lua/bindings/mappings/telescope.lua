@@ -20,7 +20,9 @@ function M.setup()
 
     require("lib.nvim.ui.kit").input({
       title = "Grep > ",
-      on_submit = function(query) tb.grep_string({ search = query }) end,
+      on_submit = function(query)
+        tb.grep_string({ search = query })
+      end,
     })
   end, { desc = "[Telescope] Grep" })
   -- map("n", "<leader><leader>", "<cmd>Telescope live_grep<CR>", { desc = "[Telescope] Live Grep" })

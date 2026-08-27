@@ -9,15 +9,17 @@ local collect_recursive = require("lib.nvim.fs.collect_recursive")
 
 local M = {}
 
-local MAX_FILES = 40   -- a case folder has a handful of files, this is a safety cap
-local MAX_LINES = 400  -- per file, while scanning for the H1/greeting
+local MAX_FILES = 40 -- a case folder has a handful of files, this is a safety cap
+local MAX_LINES = 400 -- per file, while scanning for the H1/greeting
 
 ---@param case_dir string
 ---@return string[] paths markdown/text files under case_dir, most-recently-modified first
 local function case_files(case_dir)
   local uv = vim.uv or vim.loop
   local files = collect_recursive.files(case_dir, {
-    ignore = function(p) return p:match("%.json$") ~= nil end,
+    ignore = function(p)
+      return p:match("%.json$") ~= nil
+    end,
   })
 
   table.sort(files, function(a, b)

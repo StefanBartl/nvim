@@ -28,9 +28,25 @@ local function flash_region(group, ms, bufnr, srow, scol, erow, ecol)
 
   -- Try modern API first
   if vim.hl and type(vim.hl.range) == "function" then
-    pcall(vim.hl.range, bufnr, ns, group, { srow, scol }, { erow, ecol }, { inclusive = true, priority = 90 })
+    pcall(
+      vim.hl.range,
+      bufnr,
+      ns,
+      group,
+      { srow, scol },
+      { erow, ecol },
+      { inclusive = true, priority = 90 }
+    )
   elseif vim.highlight and type(vim.highlight.range) == "function" then
-    pcall(vim.highlight.range, bufnr, ns, group, { srow, scol }, { erow, ecol }, { inclusive = true, priority = 90 })
+    pcall(
+      vim.highlight.range,
+      bufnr,
+      ns,
+      group,
+      { srow, scol },
+      { erow, ecol },
+      { inclusive = true, priority = 90 }
+    )
   else
     -- Fallback to extmark
     pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, srow, scol, {

@@ -26,7 +26,11 @@ local notify = require("lib.nvim.notify").create("[telescope.cfg]")
 ---@param default integer fallback maximum length
 ---@return integer
 local function adapt_max_len(picker_opts, default)
-  if type(picker_opts) == "table" and picker_opts.winwidth and type(picker_opts.winwidth) == "number" then
+  if
+    type(picker_opts) == "table"
+    and picker_opts.winwidth
+    and type(picker_opts.winwidth) == "number"
+  then
     return math.max(10, picker_opts.winwidth - 10)
   end
   return default or 60

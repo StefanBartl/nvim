@@ -7,7 +7,6 @@
 ---@class Cfg.Snacks
 ---@field mappings Cfg.Snacks.Mappings.Module
 
-
 ---@class snacks.Picker
 ---@field close fun(self: snacks.Picker): nil
 

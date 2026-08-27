@@ -53,4 +53,3 @@
 ---@field skip WKDOptions.HL_CFG.Utils.Skip
 
 return {}
-

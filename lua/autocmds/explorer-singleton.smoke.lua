@@ -18,8 +18,13 @@ local passed, failed = 0, 0
 ---@param ok boolean
 ---@param detail string|nil
 local function check(name, ok, detail)
-  if ok then passed = passed + 1; print("  ok   " .. name)
-  else failed = failed + 1; print("  FAIL " .. name .. (detail and ("  — " .. detail) or "")) end
+  if ok then
+    passed = passed + 1
+    print("  ok   " .. name)
+  else
+    failed = failed + 1
+    print("  FAIL " .. name .. (detail and ("  — " .. detail) or ""))
+  end
 end
 
 -- ── stub neo-tree.command ────────────────────────────────────────────────────
@@ -90,7 +95,11 @@ package.loaded["snacks"] = {
     local buf = vim.api.nvim_create_buf(false, true)
     vim.bo[buf].filetype = "snacks_picker_list"
     snacks_win_handle = vim.api.nvim_open_win(buf, true, {
-      relative = "editor", width = 40, height = 10, row = 1, col = 1,
+      relative = "editor",
+      width = 40,
+      height = 10,
+      row = 1,
+      col = 1,
     })
   end,
 }
@@ -107,24 +116,31 @@ check("setup: neo-tree window exists", neotree_win_handle ~= nil)
 -- 2. Open the snacks explorer -- should close neo-tree.
 package.loaded["snacks"].explorer()
 vim.wait(20)
-check("opening snacks explorer closed neo-tree",
-  neotree_win_handle == nil or not vim.api.nvim_win_is_valid(neotree_win_handle))
-check("snacks explorer window exists",
-  snacks_win_handle ~= nil and vim.api.nvim_win_is_valid(snacks_win_handle))
+check(
+  "opening snacks explorer closed neo-tree",
+  neotree_win_handle == nil or not vim.api.nvim_win_is_valid(neotree_win_handle)
+)
+check(
+  "snacks explorer window exists",
+  snacks_win_handle ~= nil and vim.api.nvim_win_is_valid(snacks_win_handle)
+)
 
 -- 3. Close the snacks explorer -- should reopen neo-tree exactly once.
 fake_picker:close()
 vim.wait(50)
-check("closing snacks explorer reopened neo-tree",
-  neotree_win_handle ~= nil and vim.api.nvim_win_is_valid(neotree_win_handle))
+check(
+  "closing snacks explorer reopened neo-tree",
+  neotree_win_handle ~= nil and vim.api.nvim_win_is_valid(neotree_win_handle)
+)
 check("snacks explorer window is gone", snacks_win_handle == nil)
 
 -- 4. Close that reopened neo-tree -- nothing should come back.
 pcall(vim.api.nvim_win_close, neotree_win_handle, true)
 neotree_win_handle = nil
 vim.wait(50)
-check("closing the reopened neo-tree leaves nothing open (no cascade)",
-  snacks_win_handle == nil)
+check("closing the reopened neo-tree leaves nothing open (no cascade)", snacks_win_handle == nil)
 
 print(("\nexplorer-singleton smoke test: %d passed, %d failed"):format(passed, failed))
-if failed > 0 then os.exit(1) end
+if failed > 0 then
+  os.exit(1)
+end

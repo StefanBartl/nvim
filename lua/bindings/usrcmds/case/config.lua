@@ -463,12 +463,24 @@ M.blueprints = {
     -- `headline = false`: the real template starts straight at
     -- "╓ Problem statement", and prepending casedesk's own H1 would mean
     -- deleting it again before every paste into SNOW.
-    { type = "file", path = "Summary.md", key = "summary", headline = false, template = templates.SUMMARY },
+    {
+      type = "file",
+      path = "Summary.md",
+      key = "summary",
+      headline = false,
+      template = templates.SUMMARY,
+    },
     -- Notes.md is the private counterpart: what was tried, what a coach
     -- said, tasks out of a meeting. Keeps Summary.md free of anything that
     -- isn't meant for the customer-facing ticket (CONCEPT.md §8a).
     { type = "file", path = "Notes.md", key = "notes", template = templates.NOTES },
-    { type = "file", path = "Research/00_Research.md", key = "research", open = true, template = templates.RESEARCH },
+    {
+      type = "file",
+      path = "Research/00_Research.md",
+      key = "research",
+      open = true,
+      template = templates.RESEARCH,
+    },
     { type = "file", path = "Replies/00_PSO.md", key = "reply", template = templates.REPLY },
   },
 }

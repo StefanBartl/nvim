@@ -20,14 +20,14 @@ function M.setup()
     if config.enabled then
       Autocmd.create("FileType", function()
         -- Doppelte Backslashes für Vim-Regex!
-        local pattern = '\\<\\(' .. table.concat(config.keywords, '\\|') .. '\\)\\>'
-        vim.fn.matchadd('ItalicKeywords_' .. lang, pattern)
+        local pattern = "\\<\\(" .. table.concat(config.keywords, "\\|") .. "\\)\\>"
+        vim.fn.matchadd("ItalicKeywords_" .. lang, pattern)
       end, {
         pattern = lang,
       })
 
       -- Highlight-Gruppe pro Sprache
-      vim.api.nvim_set_hl(0, 'ItalicKeywords_' .. lang, { italic = true })
+      vim.api.nvim_set_hl(0, "ItalicKeywords_" .. lang, { italic = true })
     end
   end
 end

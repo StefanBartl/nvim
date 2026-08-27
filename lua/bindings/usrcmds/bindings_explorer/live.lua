@@ -25,10 +25,14 @@ function M.open(roots, opts)
   opts = opts or {}
 
   local ok, engines = pcall(require, "pickers.engines")
-  if not ok then return false end
+  if not ok then
+    return false
+  end
 
   local engine = engines.load()
-  if not engine or type(engine.live_grep) ~= "function" then return false end
+  if not engine or type(engine.live_grep) ~= "function" then
+    return false
+  end
 
   engine.live_grep({
     roots = roots,

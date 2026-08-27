@@ -18,17 +18,57 @@ local M = {}
 
 ---Fallback theme list if Base46 themes can't be loaded
 local FALLBACK_THEMES = {
-  "ashes", "ayu_dark", "ayu_light", "bearded_arc", "catppuccin",
-  "chadracula", "chocolate", "dark_horizon", "decay", "doomchad",
-  "everblush", "everforest", "falcon", "flex_light", "gruvbox",
-  "gruvbox_light", "gruvchad", "gatekeeper", "javacafe", "jellybeans",
-  "kanagawa", "melange", "mito_laser", "monekai", "mountain",
-  "monochrome", "nightfox", "nightlamp", "nord", "oceanic_next",
-  "one_light", "onedark", "onenord", "onenord_light", "pastelDark",
-  "pastelbeans", "penumbra_dark", "penumbra_light", "poimandres",
-  "radium", "rosepine", "rxyhn", "solarized_dark", "solarized_osaka",
-  "sweetpastel", "tokyodark", "tokyonight", "tundra", "vscode_dark",
-  "wombat", "yoru",
+  "ashes",
+  "ayu_dark",
+  "ayu_light",
+  "bearded_arc",
+  "catppuccin",
+  "chadracula",
+  "chocolate",
+  "dark_horizon",
+  "decay",
+  "doomchad",
+  "everblush",
+  "everforest",
+  "falcon",
+  "flex_light",
+  "gruvbox",
+  "gruvbox_light",
+  "gruvchad",
+  "gatekeeper",
+  "javacafe",
+  "jellybeans",
+  "kanagawa",
+  "melange",
+  "mito_laser",
+  "monekai",
+  "mountain",
+  "monochrome",
+  "nightfox",
+  "nightlamp",
+  "nord",
+  "oceanic_next",
+  "one_light",
+  "onedark",
+  "onenord",
+  "onenord_light",
+  "pastelDark",
+  "pastelbeans",
+  "penumbra_dark",
+  "penumbra_light",
+  "poimandres",
+  "radium",
+  "rosepine",
+  "rxyhn",
+  "solarized_dark",
+  "solarized_osaka",
+  "sweetpastel",
+  "tokyodark",
+  "tokyonight",
+  "tundra",
+  "vscode_dark",
+  "wombat",
+  "yoru",
 }
 
 -----------------------------------------------------------------------
@@ -162,10 +202,7 @@ local function persist_theme(theme)
     -- Match: theme = "something"
     if line:match('%s*theme%s*=%s*"[^"]*"') then
       local old_theme = line:match('theme%s*=%s*"([^"]*)"')
-      content[i] = line:gsub(
-        'theme%s*=%s*"' .. old_theme .. '"',
-        'theme = "' .. theme .. '"'
-      )
+      content[i] = line:gsub('theme%s*=%s*"' .. old_theme .. '"', 'theme = "' .. theme .. '"')
       modified = true
       break
     end

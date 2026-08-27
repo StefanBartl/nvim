@@ -49,7 +49,12 @@ function M.setup()
 
   -- horizontal
   map("n", "<leader>wh", M.to_horizontal_top, { desc = "Move window to horizontal split (top)" })
-  map("n", "<leader>wj", M.to_horizontal_bottom, { desc = "Move window to horizontal split (bottom)" })
+  map(
+    "n",
+    "<leader>wj",
+    M.to_horizontal_bottom,
+    { desc = "Move window to horizontal split (bottom)" }
+  )
 
   -- Rotate entire layout. `<leader>wR`, not `<leader>wr`: that one is the
   -- vertical-split-right move four lines up. It used to be `<leader>wo`,

@@ -6,8 +6,8 @@
 local AUTOCMDS_GENERAL_DEFAULTS = {
   group_name = "autocmds_general",
 
-  kitty = {                                     -- Sets Kitty padding/margin to compact values on VimEnter and restores them on VimLeavePre.
-    enable = true,                              -- Disabled by default; only meaningful inside Kitty
+  kitty = { -- Sets Kitty padding/margin to compact values on VimEnter and restores them on VimLeavePre.
+    enable = true, -- Disabled by default; only meaningful inside Kitty
     enter_padding = 0,
     enter_margin = 0,
     leave_padding = 20,
@@ -29,7 +29,6 @@ local AUTOCMDS_GENERAL_DEFAULTS = {
   no_name_guard = {
     enable = true,
   },
-
 }
 
 local M = {}

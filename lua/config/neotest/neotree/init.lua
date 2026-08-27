@@ -15,7 +15,8 @@
  })
 
 ACHTUNG: Merge mit Neotree filesysten mappings und commands notwendig!
-]]--
+]]
+--
 ---@module 'config.neotest.neotree'
 --- Neo-tree integration for Neotest actions.
 

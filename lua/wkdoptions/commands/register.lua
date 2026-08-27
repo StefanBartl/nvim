@@ -372,9 +372,7 @@ function M.register_debug(opts)
     end)(vim.api.nvim_buf_get_name(0))
 
     local sep = get_sep()
-    local line = (chosen ~= "<unavailable>" and chosen ~= "<nil>")
-        and (rel .. sep .. chosen)
-      or rel
+    local line = (chosen ~= "<unavailable>" and chosen ~= "<nil>") and (rel .. sep .. chosen) or rel
 
     local lines = {
       "Breadcrumbs Debug",
@@ -389,7 +387,9 @@ function M.register_debug(opts)
       ("  fallback_object_when_empty     = %s"):format(tostring(bctx.fallback_object_when_empty)),
       ("  fallback_word_when_empty       = %s"):format(tostring(bctx.fallback_word_when_empty)),
       ("  prefer_owner_in_literals       = %s"):format(tostring(bctx.prefer_owner_in_literals)),
-      ("  prefer_owner_on_member_access  = %s"):format(tostring(bctx.prefer_owner_on_member_access)),
+      ("  prefer_owner_on_member_access  = %s"):format(
+        tostring(bctx.prefer_owner_on_member_access)
+      ),
       ("  dedupe_containers              = %s"):format(tostring(bctx.dedupe_containers)),
       ("  container_join                 = %s"):format(tostring(bctx.container_join)),
       ("  container_max_depth            = %s"):format(tostring(bctx.container_max_depth)),

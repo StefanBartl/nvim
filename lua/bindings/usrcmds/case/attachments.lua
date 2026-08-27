@@ -51,23 +51,27 @@ function M.pick_from_downloads(on_done)
   }, "\n")
 
   local spawn_capture = require("lib.nvim.cross.uv.spawn_capture")
-  spawn_capture(
-    { "powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", script },
-    {},
-    function(result)
-      if not result.ok or not result.stdout or vim.trim(result.stdout) == "" then
-        on_done({})
-        return
-      end
-      local paths = {}
-      for _, line in ipairs(vim.split(result.stdout, "\r?\n", { trimempty = true })) do
-        if vim.trim(line) ~= "" then
-          paths[#paths + 1] = vim.trim(line)
-        end
-      end
-      on_done(paths)
+  spawn_capture({
+    "powershell.exe",
+    "-NoProfile",
+    "-NonInteractive",
+    "-WindowStyle",
+    "Hidden",
+    "-Command",
+    script,
+  }, {}, function(result)
+    if not result.ok or not result.stdout or vim.trim(result.stdout) == "" then
+      on_done({})
+      return
     end
-  )
+    local paths = {}
+    for _, line in ipairs(vim.split(result.stdout, "\r?\n", { trimempty = true })) do
+      if vim.trim(line) ~= "" then
+        paths[#paths + 1] = vim.trim(line)
+      end
+    end
+    on_done(paths)
+  end)
 end
 
 ---@class Lib.Case.AttachmentsIngestResult

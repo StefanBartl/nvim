@@ -52,7 +52,7 @@ local function set_diagnostic_signs()
         [vim.diagnostic.severity.HINT] = "DiagnosticSignHint",
         [vim.diagnostic.severity.INFO] = "DiagnosticSignInfo",
       },
-    } or true,  -- For older versions: just enable signs
+    } or true, -- For older versions: just enable signs
     underline = true,
     update_in_insert = false,
     severity_sort = true,

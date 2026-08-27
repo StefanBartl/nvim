@@ -63,7 +63,10 @@ function M.toggle_inline_diff(bufnr)
     -- If preview_hunk_inline not available, fall back to preview_hunk (popup).
     if type(gs.preview_hunk) == "function" then
       pcall(gs.preview_hunk)
-      notify.notify("preview_hunk_inline not available; used preview_hunk popup", defaults.notify_level)
+      notify.notify(
+        "preview_hunk_inline not available; used preview_hunk popup",
+        defaults.notify_level
+      )
     end
   end
 

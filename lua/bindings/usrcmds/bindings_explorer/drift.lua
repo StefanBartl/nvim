@@ -122,7 +122,9 @@ end
 ---@return integer|nil
 local function column_index(rec, headers)
   for i, col in ipairs(rec.columns) do
-    if headers[normalize_header(col)] then return i end
+    if headers[normalize_header(col)] then
+      return i
+    end
   end
   return nil
 end
@@ -144,7 +146,9 @@ end
 ---@return string
 local function first_token(cell)
   local default_key = cell:match("%(`([^`]+)`%)")
-  if default_key then return vim.trim(default_key) end
+  if default_key then
+    return vim.trim(default_key)
+  end
   local inner = cell:match("`([^`]+)`")
   return vim.trim(inner or cell)
 end
@@ -169,9 +173,13 @@ local function normalize_lhs(doc_lhs)
   -- contains either, but a Lua config-path/identifier leaking through as
   -- the "lhs" (`cfg.adapter_keymaps`, `keymap_global`) always does. Empirically
   -- the single highest-precision guard found against this corpus.
-  if doc_lhs == "" or doc_lhs:find("[%s/,._]") then return nil end
+  if doc_lhs == "" or doc_lhs:find("[%s/,._]") then
+    return nil
+  end
   local ok, raw = pcall(vim.api.nvim_replace_termcodes, doc_lhs, true, true, true)
-  if not ok then return nil end
+  if not ok then
+    return nil
+  end
   return raw
 end
 
@@ -179,10 +187,14 @@ end
 ---@return string[]
 local function extract_modes(rec)
   local idx = column_index(rec, MODE_HEADERS)
-  if not idx or not rec.cells[idx] then return { "n" } end
+  if not idx or not rec.cells[idx] then
+    return { "n" }
+  end
   local out = {}
   for m in rec.cells[idx]:lower():gmatch("%a") do
-    if VALID_MODE_CHARS[m] then out[#out + 1] = m end
+    if VALID_MODE_CHARS[m] then
+      out[#out + 1] = m
+    end
   end
   return #out > 0 and out or { "n" }
 end
@@ -206,9 +218,13 @@ end
 local function extract_desc(rec)
   local idx = column_index(rec, DESC_HEADERS)
   local cell = idx and rec.cells[idx]
-  if not cell then return nil end
+  if not cell then
+    return nil
+  end
   local desc = strip_quotes(cell)
-  if EMPTY_DESC[desc:lower()] then return nil end
+  if EMPTY_DESC[desc:lower()] then
+    return nil
+  end
   return desc
 end
 
@@ -217,7 +233,9 @@ end
 local function extract_lhs(rec)
   local idx = column_index(rec, LHS_HEADERS)
   local cell = idx and rec.cells[idx]
-  if not cell or cell == "" then return nil end
+  if not cell or cell == "" then
+    return nil
+  end
   return normalize_lhs(first_token(cell))
 end
 
@@ -228,14 +246,18 @@ local function extract_usercmd(rec)
   local cell = idx and rec.cells[idx]
   if cell then
     local name = cell:match(":(%u[%w_]*)")
-    if name then return name end
+    if name then
+      return name
+    end
   end
   -- Header didn't match a known column, but the command notation might
   -- still be in one of the other cells (e.g. a table this scraper's
   -- header allow-list doesn't recognize).
   for _, c in ipairs(rec.cells) do
     local name = c:match(":(%u[%w_]*)")
-    if name then return name end
+    if name then
+      return name
+    end
   end
   return nil
 end
@@ -249,9 +271,13 @@ end
 ---@return boolean
 local function is_plugin_loaded(plugin)
   local ok, lazy_config = pcall(require, "lazy.core.config")
-  if not ok then return true end
+  if not ok then
+    return true
+  end
   local spec = lazy_config.plugins[plugin]
-  if not spec then return true end
+  if not spec then
+    return true
+  end
   return spec._ ~= nil and spec._.loaded ~= nil
 end
 
@@ -274,13 +300,19 @@ end
 local function lazy_cmd_owners()
   local out = {}
   local ok, lazy_config = pcall(require, "lazy.core.config")
-  if not ok then return out end
+  if not ok then
+    return out
+  end
   for name, spec in pairs(lazy_config.plugins) do
     local cmd = spec.cmd
-    if type(cmd) == "string" then cmd = { cmd } end
+    if type(cmd) == "string" then
+      cmd = { cmd }
+    end
     if type(cmd) == "table" then
       for _, entry in ipairs(cmd) do
-        if type(entry) == "string" then out[entry] = name end
+        if type(entry) == "string" then
+          out[entry] = name
+        end
       end
     end
   end
@@ -313,21 +345,33 @@ end
 ---                     finding, 156 of them in a real run
 ---@return string
 local function command_owner(name, lazy_owners, defs)
-  if lazy_owners[name] then return lazy_owners[name] .. " (lazy cmd stub)" end
+  if lazy_owners[name] then
+    return lazy_owners[name] .. " (lazy cmd stub)"
+  end
 
   local def = defs[name]
   if def and type(def.callback) == "function" then
     local info = debug.getinfo(def.callback, "S")
     local src = ((info and info.short_src) or ""):gsub("\\", "/")
     local lib = src:match("/lib%.nvim/") or src:match("^%a:/repos/lib%.nvim")
-    if lib then return "via lib.nvim usercmd helpers — owner not recorded" end
+    if lib then
+      return "via lib.nvim usercmd helpers — owner not recorded"
+    end
     local plugin = src:match("/lazy/([^/]+)/") or src:match("^%a:/repos/([^/]+)")
-    if plugin then return plugin end
+    if plugin then
+      return plugin
+    end
     local runtime = src:match("/runtime/(.+)$") or src:match("^vim/(.+)$")
-    if runtime then return "neovim runtime: " .. runtime end
-    if src ~= "" then return src end
+    if runtime then
+      return "neovim runtime: " .. runtime
+    end
+    if src ~= "" then
+      return src
+    end
   end
-  if def and def.script_id then return ("vimscript script_id=%d"):format(def.script_id) end
+  if def and def.script_id then
+    return ("vimscript script_id=%d"):format(def.script_id)
+  end
   return "unknown"
 end
 
@@ -362,11 +406,15 @@ local function live_keymaps(modes)
       end
     end
     local ok, maps = pcall(vim.api.nvim_get_keymap, mode)
-    if ok then add(maps) end
+    if ok then
+      add(maps)
+    end
     for _, buf in ipairs(bufs) do
       if vim.api.nvim_buf_is_loaded(buf) then
         local ok_buf, buf_maps = pcall(vim.api.nvim_buf_get_keymap, buf, mode)
-        if ok_buf then add(buf_maps) end
+        if ok_buf then
+          add(buf_maps)
+        end
       end
     end
     out[mode] = set
@@ -407,15 +455,21 @@ local function is_live(live_maps, modes, lhs, doc_desc)
   for _, mode in ipairs(modes) do
     local descs = live_maps[mode] and live_maps[mode][lhs]
     if descs then
-      if not doc_desc then return true end
+      if not doc_desc then
+        return true
+      end
       local any_desc = false
       for _, d in ipairs(descs) do
         if d ~= "" then
           any_desc = true
-          if strip_quotes(d) == doc_desc then return true end
+          if strip_quotes(d) == doc_desc then
+            return true
+          end
         end
       end
-      if not any_desc then return true end
+      if not any_desc then
+        return true
+      end
     end
   end
   -- Either the key is registered nowhere, or every desc under it names a
@@ -457,7 +511,8 @@ function M.check(plugin)
         for _, m in ipairs(modes) do
           needed_modes[m] = true
         end
-        checkable[#checkable + 1] = { rec = rec, lhs = lhs, modes = modes, desc = extract_desc(rec) }
+        checkable[#checkable + 1] =
+          { rec = rec, lhs = lhs, modes = modes, desc = extract_desc(rec) }
       end
     elseif not plugin or rec.plugin == plugin then
       skipped[rec.plugin] = true
@@ -576,7 +631,9 @@ function M.check(plugin)
     local documented_anywhere = {}
     for _, rec in ipairs(records.list("Usercmds")) do
       local name = extract_usercmd(rec)
-      if name then documented_anywhere[name] = true end
+      if name then
+        documented_anywhere[name] = true
+      end
     end
 
     -- A command this config's own source registers, live and undocumented,
@@ -629,7 +686,9 @@ function M.check(plugin)
   --
   -- Resolved further up, before the live-undocumented direction that
   -- dedupes against it; only the folding-in happens here.
-  if source_findings then vim.list_extend(findings, source_findings) end
+  if source_findings then
+    vim.list_extend(findings, source_findings)
+  end
 
   local skipped_list = vim.tbl_keys(skipped)
   table.sort(skipped_list)
@@ -670,11 +729,15 @@ function M.source_check(plugin)
   local documented_keys, documented_cmds = {}, {}
   for _, rec in ipairs(records.list("Keymaps")) do
     local lhs = extract_lhs(rec)
-    if lhs then documented_keys[lhs] = true end
+    if lhs then
+      documented_keys[lhs] = true
+    end
   end
   for _, rec in ipairs(records.list("Usercmds")) do
     local name = extract_usercmd(rec)
-    if name then documented_cmds[name] = true end
+    if name then
+      documented_cmds[name] = true
+    end
   end
 
   local out = {}
@@ -739,7 +802,9 @@ end
 ---@return string
 local function readable(notation)
   local ok, out = pcall(vim.fn.keytrans, notation)
-  if ok and type(out) == "string" and out ~= "" then return out end
+  if ok and type(out) == "string" and out ~= "" then
+    return out
+  end
   return notation
 end
 
@@ -790,7 +855,9 @@ local SECTIONS = {
     -- commands onto adjacent lines answers that in one glance.
     sort = function(a, b)
       local oa, ob = a.owner or "", b.owner or ""
-      if oa ~= ob then return oa < ob end
+      if oa ~= ob then
+        return oa < ob
+      end
       return a.notation < b.notation
     end,
   },
@@ -830,15 +897,21 @@ function M.describe(findings, skipped, source_reason)
     for _, section in ipairs(SECTIONS) do
       local matched = {}
       for _, f in ipairs(rest) do
-        if section.kinds[f.kind] then matched[#matched + 1] = f end
+        if section.kinds[f.kind] then
+          matched[#matched + 1] = f
+        end
       end
-      if section.sort then table.sort(matched, section.sort) end
+      if section.sort then
+        table.sort(matched, section.sort)
+      end
       local hits = {}
       for _, f in ipairs(matched) do
         hits[#hits + 1] = render(f)
       end
       if #hits > 0 then
-        if #lines > 0 then lines[#lines + 1] = "" end
+        if #lines > 0 then
+          lines[#lines + 1] = ""
+        end
         lines[#lines + 1] = ("%s (%d)"):format(section.title, #hits)
         lines[#lines + 1] = ("  -- %s"):format(section.note)
         vim.list_extend(lines, hits)
@@ -851,12 +924,18 @@ function M.describe(findings, skipped, source_reason)
       for _, key in ipairs(order) do
         total = total + unverifiable[key].n
       end
-      if #lines > 0 then lines[#lines + 1] = "" end
+      if #lines > 0 then
+        lines[#lines + 1] = ""
+      end
+      lines[#lines + 1] = ("Keymaps — not verifiable from here (%d in %d tables)"):format(
+        total,
+        #order
+      )
       lines[#lines + 1] =
-        ("Keymaps — not verifiable from here (%d in %d tables)"):format(total, #order)
-      lines[#lines + 1] = "  -- not one key of these tables is live, globally or in any open buffer:"
+        "  -- not one key of these tables is live, globally or in any open buffer:"
       lines[#lines + 1] = "  -- a buffer-local scope whose UI is not open right now, not drift."
-      lines[#lines + 1] = "  -- Open it and re-run, or :Bindings check <plugin> to list them in full."
+      lines[#lines + 1] =
+        "  -- Open it and re-run, or :Bindings check <plugin> to list them in full."
       for _, key in ipairs(order) do
         local b = unverifiable[key]
         lines[#lines + 1] = ("  %-22s %2d keys   %s   %s:%d"):format(
@@ -875,7 +954,10 @@ function M.describe(findings, skipped, source_reason)
   end
   if skipped and #skipped > 0 then
     lines[#lines + 1] = ""
-    lines[#lines + 1] = ("Not loaded this session, skipped (%d): %s"):format(#skipped, table.concat(skipped, ", "))
+    lines[#lines + 1] = ("Not loaded this session, skipped (%d): %s"):format(
+      #skipped,
+      table.concat(skipped, ", ")
+    )
   end
   return lines
 end

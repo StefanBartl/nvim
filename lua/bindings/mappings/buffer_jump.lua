@@ -170,7 +170,9 @@ local function goto_buffer_by_pos(pos)
 
   local buflist = robust_tabpage_buflist()
   if #buflist == 0 then
-    notify.warn("No buffers available to jump to (buflist empty). Ensure tabufline or buffers exist.")
+    notify.warn(
+      "No buffers available to jump to (buflist empty). Ensure tabufline or buffers exist."
+    )
     return
   end
 

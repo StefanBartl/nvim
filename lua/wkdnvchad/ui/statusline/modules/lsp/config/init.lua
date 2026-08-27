@@ -74,7 +74,13 @@ function M.update(patch)
       elseif current_type == value_type then
         cfg[key] = value
       else
-        notify.warn(("LSP config update rejected: field '%s' expects %s, got %s") :format(key, current_type, value_type))
+        notify.warn(
+          ("LSP config update rejected: field '%s' expects %s, got %s"):format(
+            key,
+            current_type,
+            value_type
+          )
+        )
         return
       end
     end
@@ -83,4 +89,3 @@ end
 
 ---@type WkdNvC.UI.Stl.Modules.LSP.Cfg.Module
 return M
-

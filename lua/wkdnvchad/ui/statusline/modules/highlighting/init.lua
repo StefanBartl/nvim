@@ -87,7 +87,7 @@ Autocmd.create("ModeChanged", function()
   last_mode = nil
 end, {
   group = Autocmd.group("WkdNvChadHighlightCache", true),
-  desc = "Clear mode band cache on mode change"
+  desc = "Clear mode band cache on mode change",
 })
 
 return M

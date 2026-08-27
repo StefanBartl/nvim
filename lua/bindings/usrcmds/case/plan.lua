@@ -48,7 +48,8 @@ function M.build(case_dir, nodes, tokens)
       else
         local lines = {}
         if node.headline ~= false then
-          lines[#lines + 1] = render.headline(tokens.case, tokens.title, render.filename_token(node.path))
+          lines[#lines + 1] =
+            render.headline(tokens.case, tokens.title, render.filename_token(node.path))
           lines[#lines + 1] = ""
         end
         if node.template then

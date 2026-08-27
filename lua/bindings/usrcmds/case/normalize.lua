@@ -52,7 +52,8 @@ function M.plan()
     if f.to and target_count[f.to] > 1 then
       skipped[#skipped + 1] = f
     else
-      steps[#steps + 1] = { short = f.short, kind = f.kind, from = f.from, to = f.to, action = f.action }
+      steps[#steps + 1] =
+        { short = f.short, kind = f.kind, from = f.from, to = f.to, action = f.action }
     end
   end
 

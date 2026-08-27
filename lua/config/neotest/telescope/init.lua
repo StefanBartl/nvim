@@ -25,31 +25,32 @@ local ACTIONS = {
 }
 
 function M.open()
-  pickers.new({}, {
-    prompt_title = "Neotest Actions",
-    finder = finders.new_table({
-      results = ACTIONS,
-      entry_maker = function(entry)
-        return {
-          value = entry,
-          display = entry.name,
-          ordinal = entry.name,
-        }
+  pickers
+    .new({}, {
+      prompt_title = "Neotest Actions",
+      finder = finders.new_table({
+        results = ACTIONS,
+        entry_maker = function(entry)
+          return {
+            value = entry,
+            display = entry.name,
+            ordinal = entry.name,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      attach_mappings = function(_, map)
+        map("i", "<CR>", function(bufnr)
+          local selection = action_state.get_selected_entry()
+          actions_telescope.close(bufnr)
+          if selection and selection.value and selection.value.fn then
+            selection.value.fn()
+          end
+        end)
+        return true
       end,
-    }),
-    sorter = conf.generic_sorter({}),
-    attach_mappings = function(_, map)
-      map("i", "<CR>", function(bufnr)
-        local selection = action_state.get_selected_entry()
-        actions_telescope.close(bufnr)
-        if selection and selection.value and selection.value.fn then
-          selection.value.fn()
-        end
-      end)
-      return true
-    end,
-  }):find()
+    })
+    :find()
 end
 
 return M
-

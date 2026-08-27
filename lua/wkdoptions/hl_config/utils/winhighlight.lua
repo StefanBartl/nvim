@@ -134,7 +134,8 @@ function M.apply_to_window(win, wh)
     return false
   end
 
-  local ok = pcall(vim.api.nvim_set_option_value, "winhighlight", wh, { scope = "local", win = win })
+  local ok =
+    pcall(vim.api.nvim_set_option_value, "winhighlight", wh, { scope = "local", win = win })
   return ok
 end
 

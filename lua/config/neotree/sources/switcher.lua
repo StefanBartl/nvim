@@ -173,7 +173,6 @@ local function get_current_source()
   return nil
 end
 
-
 ---Switch to a different Neo-tree source
 ---@param source_name string Target source name
 ---@return nil
@@ -187,8 +186,7 @@ local function switch_to_source(source_name)
   -- Close existing Neo-tree window first
   NeoCmd.execute({ action = "close" })
 
-  local position = get_current_position()
-    or require("config.neotree").get_default_position()
+  local position = get_current_position() or require("config.neotree").get_default_position()
 
   NeoCmd.execute({
     source = source_name,

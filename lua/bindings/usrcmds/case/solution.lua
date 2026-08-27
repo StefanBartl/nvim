@@ -454,7 +454,8 @@ function M.search(query)
     local hits = {}
     for _, doc in ipairs(docs) do
       if doc.text:lower():find(needle, 1, true) then
-        hits[#hits + 1] = { doc = doc, score = 1, terms = { query }, matched = 1, wanted = 1, phrase = true }
+        hits[#hits + 1] =
+          { doc = doc, score = 1, terms = { query }, matched = 1, wanted = 1, phrase = true }
       end
     end
     return hits, nil

@@ -38,9 +38,7 @@ do
     if ROLES[normalized] then
       role = normalized
     else
-      notify.warn(
-        ("Unknown NVIM_MACHINE_ROLE '%s', falling back to 'default'"):format(env_value)
-      )
+      notify.warn(("Unknown NVIM_MACHINE_ROLE '%s', falling back to 'default'"):format(env_value))
     end
   end
 end

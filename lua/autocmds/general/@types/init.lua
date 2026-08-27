@@ -23,13 +23,13 @@
 
 ---@class AutoCmds.General.NoNameGuard.Cfg
 ---@field enable boolean  -- After a buffer is deleted/wiped or a window closes, redirect any window
-                           -- left showing a spurious empty [No Name] buffer to a real, named buffer
-                           -- instead — but only when one actually exists. Never touches a [No Name]
-                           -- buffer that wasn't just left behind by a close (e.g. a deliberate `:enew`,
-                           -- or a plugin's own scratch buffer), and never fabricates a replacement —
-                           -- if no other named buffer is open, the [No Name] buffer is left alone
-                           -- (e.g. the last file buffer closes, or a tree plugin is the only window
-                           -- left with `close_if_last_window = false`).
+-- left showing a spurious empty [No Name] buffer to a real, named buffer
+-- instead — but only when one actually exists. Never touches a [No Name]
+-- buffer that wasn't just left behind by a close (e.g. a deliberate `:enew`,
+-- or a plugin's own scratch buffer), and never fabricates a replacement —
+-- if no other named buffer is open, the [No Name] buffer is left alone
+-- (e.g. the last file buffer closes, or a tree plugin is the only window
+-- left with `close_if_last_window = false`).
 
 ---@class AutoCmds.General.MD.GotoFile.Cfg
 ---@field enable boolean                             -- Enable Markdown-aware "gf" override for links/URLs.

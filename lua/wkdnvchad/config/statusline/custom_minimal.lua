@@ -31,7 +31,15 @@ local function get_gen_block()
   ---@param txt_hl_group string
   ---@return string
   return function(icon, txt, sep_l_hlgroup, iconHl_group, txt_hl_group)
-    return sep_l_hlgroup .. sep_l .. iconHl_group .. icon .. " " .. txt_hl_group .. " " .. txt .. sep_r
+    return sep_l_hlgroup
+      .. sep_l
+      .. iconHl_group
+      .. icon
+      .. " "
+      .. txt_hl_group
+      .. " "
+      .. txt
+      .. sep_r
   end
 end
 
@@ -125,23 +133,21 @@ return {
           local pieces = { "%l/%v" }
 
           if mode == "row_progress" then
-            pieces[#pieces + 1] = " " .. render_module.pct_token(progr_calc_module.compute_row_pct(), "R")
+            pieces[#pieces + 1] = " "
+              .. render_module.pct_token(progr_calc_module.compute_row_pct(), "R")
           elseif mode == "col_progress" then
-            pieces[#pieces + 1] = " " .. render_module.pct_token(progr_calc_module.compute_col_pct(), "C")
+            pieces[#pieces + 1] = " "
+              .. render_module.pct_token(progr_calc_module.compute_col_pct(), "C")
           elseif mode == "rows_cols_progress" then
-            pieces[#pieces + 1] = " " .. render_module.pct_token(progr_calc_module.compute_row_pct(), "R")
-            pieces[#pieces + 1] = " " .. render_module.pct_token(progr_calc_module.compute_col_pct(), "C")
+            pieces[#pieces + 1] = " "
+              .. render_module.pct_token(progr_calc_module.compute_row_pct(), "R")
+            pieces[#pieces + 1] = " "
+              .. render_module.pct_token(progr_calc_module.compute_col_pct(), "C")
           end
 
           local content = table.concat(pieces, "")
 
-          return gen_block(
-            "",
-            content,
-            "%#St_Pos_sep#",
-            "%#St_Pos_bg#",
-            "%#St_Pos_txt#"
-          )
+          return gen_block("", content, "%#St_Pos_sep#", "%#St_Pos_bg#", "%#St_Pos_txt#")
         end,
       },
     },

@@ -136,7 +136,8 @@ function M.check(case_dir, meta_tosca_version)
   for _, link in ipairs(M.all_links(case_dir)) do
     local norm = M.normalize_version(link.version)
     if norm and norm ~= customer_version then
-      mismatches[#mismatches + 1] = { url = link.url, found_version = link.version, file = link.file }
+      mismatches[#mismatches + 1] =
+        { url = link.url, found_version = link.version, file = link.file }
     end
   end
 

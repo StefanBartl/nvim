@@ -155,8 +155,11 @@ end
 ---@return nil
 function M.setup(opts)
   opts = opts or {}
-  local debounce_ms = (type(opts.debounce_ms) == "number" and opts.debounce_ms > 0) and opts.debounce_ms or 200
-  local events = (type(opts.autocmd_events) == "table" and #opts.autocmd_events > 0) and opts.autocmd_events
+  local debounce_ms = (type(opts.debounce_ms) == "number" and opts.debounce_ms > 0)
+      and opts.debounce_ms
+    or 200
+  local events = (type(opts.autocmd_events) == "table" and #opts.autocmd_events > 0)
+      and opts.autocmd_events
     or { "BufLeave", "FocusLost" }
 
   -- If harpoon is not installed, still register autocmds;

@@ -10,7 +10,9 @@ local M = {}
 ---@param ft string|nil
 ---@return boolean
 local function is_markdown(ft)
-  if not ft or ft == "" then return false end
+  if not ft or ft == "" then
+    return false
+  end
   return ft == "markdown" or ft == "md" or ft == "mdx" or ft:match("^markdown%.") ~= nil
 end
 
@@ -25,30 +27,70 @@ end
 --- paying for the plugin's own (possibly pricier) internal gating.
 ---@type { module: string, applies: fun(buf: integer): boolean }[]
 local CONTRIBUTORS = {
-  { module = "markdown.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
+  {
+    module = "markdown.integrations.menu",
+    applies = function(buf)
+      return is_markdown(vim.bo[buf].ft)
+    end,
+  },
   -- open.nvim: genuinely global (acts on whatever is under the cursor, incl.
   -- tree buffers) — its own items() self-gates per entry, so `applies`
   -- here is just "always try it".
-  { module = "open.integrations.menu", applies = function() return true end },
+  {
+    module = "open.integrations.menu",
+    applies = function()
+      return true
+    end,
+  },
   -- dap.nvim: also global — debugging actions aren't filetype-scoped, and
   -- items() itself returns empty when nvim-dap isn't installed.
-  { module = "wkddap.integrations.menu", applies = function() return true end },
+  {
+    module = "wkddap.integrations.menu",
+    applies = function()
+      return true
+    end,
+  },
   -- cascade.nvim: filetype set is config-driven (lists.filetypes, broader
   -- than just markdown) and items() already re-checks it internally, so
   -- there is nothing cheaper to pre-check here than "always try it".
-  { module = "cascade.integrations.menu", applies = function() return true end },
+  {
+    module = "cascade.integrations.menu",
+    applies = function()
+      return true
+    end,
+  },
   -- fileops.nvim: also global — acts on "this open file", self-gates
   -- per entry on the buffer actually having a name.
-  { module = "fileops.integrations.menu", applies = function() return true end },
+  {
+    module = "fileops.integrations.menu",
+    applies = function()
+      return true
+    end,
+  },
   -- images.nvim: filetype-scoped (config.keymaps.filetypes, default
   -- markdown/vimwiki/norg/text) and items() re-checks it internally, same
   -- reasoning as cascade.nvim above — nothing cheaper to pre-check here.
-  { module = "images.integrations.menu", applies = function() return true end },
+  {
+    module = "images.integrations.menu",
+    applies = function()
+      return true
+    end,
+  },
   -- spotlight.nvim: also global — works the same in any buffer/filetype.
-  { module = "spotlight.integrations.menu", applies = function() return true end },
+  {
+    module = "spotlight.integrations.menu",
+    applies = function()
+      return true
+    end,
+  },
   -- color_my_ascii.nvim: markdown-only, and items() re-checks the filetype
   -- (plus fence-under-cursor for the :Fence group) internally.
-  { module = "color_my_ascii.integrations.menu", applies = function(buf) return vim.bo[buf].ft == "markdown" end },
+  {
+    module = "color_my_ascii.integrations.menu",
+    applies = function(buf)
+      return vim.bo[buf].ft == "markdown"
+    end,
+  },
   -- lsp.nvim: also global — mirrors the resolved keymap catalogue
   -- (require("lsp").status().keymaps), not tied to a filetype. Replaces
   -- custom_menu's former hand-written "Lsp Actions" section (menus/lsp.lua,
@@ -56,7 +98,12 @@ local CONTRIBUTORS = {
   -- that section's "Add/Remove workspace folder" entries had no lsp.nvim
   -- keymap-catalogue equivalent, but were confirmed unused and dropped
   -- rather than backfilled.
-  { module = "lsp.integrations.menu", applies = function() return true end },
+  {
+    module = "lsp.integrations.menu",
+    applies = function()
+      return true
+    end,
+  },
   -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
 }
@@ -71,7 +118,9 @@ local function contributed_submenus(buf)
       local ok, mod = pcall(require, c.module)
       if ok and type(mod.submenu) == "function" then
         local sub = mod.submenu()
-        if sub then out[#out + 1] = sub end
+        if sub then
+          out[#out + 1] = sub
+        end
       end
     end
   end
@@ -85,7 +134,9 @@ end
 ---@return table|nil  an nvzone/menu entry table, or nil
 local function plugin_menu_source(buf)
   local subs = contributed_submenus(buf)
-  if #subs == 0 then return nil end
+  if #subs == 0 then
+    return nil
+  end
 
   local composed = {}
   vim.list_extend(composed, subs)
@@ -146,7 +197,9 @@ function M.setup()
     local ft = vim.bo[buf].ft or ""
 
     local ok_menu, menu = pcall(require, "menu")
-    if not ok_menu then return end
+    if not ok_menu then
+      return
+    end
 
     -- Applicable plugins (CONTRIBUTORS): each contributes its own top-level
     -- fly-out entry, composed with the general custom menu. Checked before

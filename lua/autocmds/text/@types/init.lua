@@ -33,4 +33,3 @@
 ---@field last_loc? AutoCmds.Text.LastLoc.Cfg
 
 return {}
-

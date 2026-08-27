@@ -10,13 +10,13 @@ require("bindings.usrcmds.context_open").enable()
 require("bindings.usrcmds.telemetry_nvim_config").enable()
 require("bindings.usrcmds.autocmd_docs").enable()
 
-usercmd.create('CopyLocation', function()
+usercmd.create("CopyLocation", function()
   -- Absoluter Pfad der aktuellen Datei
-  local path = vim.fn.expand('%:p')
+  local path = vim.fn.expand("%:p")
 
   -- Falls der Buffer noch nicht auf der Festplatte gespeichert ist
-  if path == '' then
-    notify.warn('Keine Datei geladen / kein Pfad vorhanden')
+  if path == "" then
+    notify.warn("Keine Datei geladen / kein Pfad vorhanden")
     return
   end
 
@@ -26,26 +26,25 @@ usercmd.create('CopyLocation', function()
   local col = cursor[2] + 1 -- 1-basiert machen
 
   -- Text formatieren (Pfad:Zeile:Spalte)
-  local result = string.format('%s:%d:%d', path, line, col)
+  local result = string.format("%s:%d:%d", path, line, col)
 
   -- In das "+ Register (System-Zwischenablage) kopieren
-  vim.fn.setreg('+', result)
+  vim.fn.setreg("+", result)
 
   -- Rückmeldung anzeigen
-  notify.info('Kopiert: ' .. result)
+  notify.info("Kopiert: " .. result)
 end, {
-  desc = 'Kopiert absoluten Pfad, Zeile und Spalte in die Zwischenablage',
+  desc = "Kopiert absoluten Pfad, Zeile und Spalte in die Zwischenablage",
 })
-
 
 --TEMP: nur temporär (wahrscheinlich
 local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "BINDINGS")
-usercmd.create('BindingsPath', function()
+usercmd.create("BindingsPath", function()
   -- Kopiert den Pfad in das System-Register (+)
-  vim.fn.setreg('+', bindings_path)
-  notify.info('Bindings-Pfad in Zwischenablage kopiert!')
+  vim.fn.setreg("+", bindings_path)
+  notify.info("Bindings-Pfad in Zwischenablage kopiert!")
 end, {
-  desc = 'Kopiert den spezifischen Bindings-Pfad in die Zwischenablage',
+  desc = "Kopiert den spezifischen Bindings-Pfad in die Zwischenablage",
 })
 
 -- 2. Keymap <leader>BI erstellen
@@ -54,7 +53,13 @@ end, {
 -- worked -- `vim.g` strips a table's metatable on the way through, so the
 -- callable module came back as a plain table and the first `map(...)` raised
 -- "attempt to call a table value".
-require("lib.nvim.bindings.keymap")('n', '<leader>BI', '<cmd>BindingsPath<CR>', nil, 'Bindings-Pfad kopieren')
+require("lib.nvim.bindings.keymap")(
+  "n",
+  "<leader>BI",
+  "<cmd>BindingsPath<CR>",
+  nil,
+  "Bindings-Pfad kopieren"
+)
 
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.
 usercmd.create("CwdHere", function()
@@ -65,21 +70,20 @@ usercmd.create("CwdHere", function()
   end
 end, { force = true })
 
-usercmd.create('PowershellProfile', function()
-    if vim.fn.executable("powershell") ~= 1 then
-        notify.error("Fehler: powershell ist auf diesem System nicht verfügbar.")
-        return
-    end
-    -- argv array instead of io.popen with an embedded shell string
-    local res = vim.system(
-        { "powershell", "-NoProfile", "-Command", "[Console]::Write($PROFILE)" },
-        { text = true }
-    ):wait()
-    local profile_path = res.code == 0 and res.stdout or nil
+usercmd.create("PowershellProfile", function()
+  if vim.fn.executable("powershell") ~= 1 then
+    notify.error("Fehler: powershell ist auf diesem System nicht verfügbar.")
+    return
+  end
+  -- argv array instead of io.popen with an embedded shell string
+  local res = vim
+    .system({ "powershell", "-NoProfile", "-Command", "[Console]::Write($PROFILE)" }, { text = true })
+    :wait()
+  local profile_path = res.code == 0 and res.stdout or nil
 
-    if profile_path and profile_path ~= "" then
-        vim.cmd('edit ' .. vim.fn.fnameescape(profile_path))
-        return
-    end
-    notify.error("Fehler: Der PowerShell Profil-Pfad konnte nicht ermittelt werden.")
-end, { desc = 'Öffnet das aktuelle PowerShell-Profil', force = true })
+  if profile_path and profile_path ~= "" then
+    vim.cmd("edit " .. vim.fn.fnameescape(profile_path))
+    return
+  end
+  notify.error("Fehler: Der PowerShell Profil-Pfad konnte nicht ermittelt werden.")
+end, { desc = "Öffnet das aktuelle PowerShell-Profil", force = true })

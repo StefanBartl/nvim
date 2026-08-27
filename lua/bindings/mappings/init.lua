@@ -32,7 +32,6 @@ function M.setup()
   require("bindings.mappings.window_orientation").setup()
 
   -- require("bindings.mappings.view_scroll").map_default_keys('<C-d>', '<C-u>')
-
 end
 
 return M

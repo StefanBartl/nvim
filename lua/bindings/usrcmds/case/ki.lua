@@ -104,7 +104,8 @@ function M.parse_response(text)
     end
   end
   if #headings == 0 then
-    return nil, "no numbered '## N. ...' sections found — paste the AI's full answer, in the requested format"
+    return nil,
+      "no numbered '## N. ...' sections found — paste the AI's full answer, in the requested format"
   end
 
   local sections = {}
@@ -145,7 +146,8 @@ function M.parse_response(text)
   if not has_body then
     for _, marker in ipairs(PROMPT_MARKERS) do
       if text:find(marker, 1, true) then
-        return nil, "that's the prompt, not the answer — paste it into your AI chat first, then copy the reply"
+        return nil,
+          "that's the prompt, not the answer — paste it into your AI chat first, then copy the reply"
       end
     end
     return nil, "sections 1-3 are empty — paste the AI's full answer, in the requested format"

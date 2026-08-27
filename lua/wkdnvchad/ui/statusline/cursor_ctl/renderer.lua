@@ -1,7 +1,7 @@
 ---@module 'wkdnvchad.ui.statusline.cursor_ctl.renderer'
 -- Renderers for progress text ----------------------------------------------
 
-local M =  {}
+local M = {}
 
 --- Escape "%" for statusline so it is treated as a literal percent sign.
 --- @param s string

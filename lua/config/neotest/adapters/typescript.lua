@@ -94,16 +94,20 @@ end
 ---@return "vitest"|"jest"|nil
 local function detect_framework(root)
   -- Check config files first
-  if vim.fn.filereadable(root .. "/vitest.config.ts") == 1
-      or vim.fn.filereadable(root .. "/vitest.config.js") == 1
-      or vim.fn.filereadable(root .. "/vitest.config.mjs") == 1
-      or vim.fn.filereadable(root .. "/vitest.config.json") == 1 then
+  if
+    vim.fn.filereadable(root .. "/vitest.config.ts") == 1
+    or vim.fn.filereadable(root .. "/vitest.config.js") == 1
+    or vim.fn.filereadable(root .. "/vitest.config.mjs") == 1
+    or vim.fn.filereadable(root .. "/vitest.config.json") == 1
+  then
     return "vitest"
   end
 
-  if vim.fn.filereadable(root .. "/jest.config.ts") == 1
-      or vim.fn.filereadable(root .. "/jest.config.js") == 1
-      or vim.fn.filereadable(root .. "/jest.config.json") == 1 then
+  if
+    vim.fn.filereadable(root .. "/jest.config.ts") == 1
+    or vim.fn.filereadable(root .. "/jest.config.js") == 1
+    or vim.fn.filereadable(root .. "/jest.config.json") == 1
+  then
     return "jest"
   end
 
@@ -150,8 +154,8 @@ local function is_test_file(file_path)
 
   -- Pattern check
   return file_path:match("%.test%.[jt]sx?$") ~= nil
-      or file_path:match("%.spec%.[jt]sx?$") ~= nil
-      or file_path:match("%.test%.m[jt]s$") ~= nil
+    or file_path:match("%.spec%.[jt]sx?$") ~= nil
+    or file_path:match("%.test%.m[jt]s$") ~= nil
 end
 
 ----------------------------------------------------------------------
@@ -212,7 +216,7 @@ end
 ---@return table|nil
 function M.create()
   local root = find_root(_locked_cwd)
-   notify.info("locked cwd for neotest: " .. _locked_cwd)
+  notify.info("locked cwd for neotest: " .. _locked_cwd)
 
   if not root then
     notify.info("no root found for neotest")

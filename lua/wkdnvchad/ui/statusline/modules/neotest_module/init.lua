@@ -4,7 +4,9 @@
 
 return function()
   local ok, neotest = pcall(require, "neotest")
-  if not ok then return "" end
+  if not ok then
+    return ""
+  end
 
   local status = neotest.run.get_status()
 

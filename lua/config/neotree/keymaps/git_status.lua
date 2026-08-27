@@ -49,7 +49,7 @@ return {
   ["]t"] = "noop",
 
   -- control / modifier keys (grouped)
-  ["<CR>"]   = "noop",
+  ["<CR>"] = "noop",
   ["<S-CR>"] = "noop",
   ["<C-s>"] = "noop",
   ["<M-s>"] = "noop",

@@ -33,7 +33,8 @@ vim.opt.rtp:prepend(lazypath)
 -- present, else lazy's managed dir). Otherwise lazy sees the plugin's `dir`
 -- change after it's already on the runtimepath and errors ("changed dir ...
 -- already partially loaded") on every startup.
-local libpath = require("plugins.personal.utils").local_dev("lib.nvim") or (vim.fn.stdpath("data") .. "/lazy/lib.nvim")
+local libpath = require("plugins.personal.utils").local_dev("lib.nvim")
+  or (vim.fn.stdpath("data") .. "/lazy/lib.nvim")
 -- No clone fallback like lib.nvim's below: lsp.nvim is not required before
 -- lazy runs, so lazy can fetch it itself if the local checkout is absent.
 local lsppath = require("plugins.personal.utils").local_dev("lsp.nvim")

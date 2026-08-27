@@ -10,7 +10,13 @@ local cursor_ctl = { mode = "row_progress" }
 --- @param m WkdNvC.UI.Stl.CursorCtl.Progress.Mode
 --- @return nil
 function cursor_ctl.set_mode(m)
-  if m == "classic" or m == "row_progress" or m == "col_progress" or m == "rows_cols_progress" or m == "off" then
+  if
+    m == "classic"
+    or m == "row_progress"
+    or m == "col_progress"
+    or m == "rows_cols_progress"
+    or m == "off"
+  then
     cursor_ctl.mode = m
   end
 end

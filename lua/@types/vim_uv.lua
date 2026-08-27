@@ -622,8 +622,7 @@ function uv.fs_statfs(path) end
 
 --- Creates a new filesystem event handle.
 ---@return uv.uv_fs_event_t fs_event
-function uv
-.new_fs_event() end
+function uv.new_fs_event() end
 
 -- ============================================================================
 -- Filesystem polling (portable file change detection)
@@ -938,7 +937,7 @@ function uv.walk(callback) end
 
 ---@param timer uv.uv_timer_t
 ---@return integer|nil
-function uv.timer_stop(timer)end
+function uv.timer_stop(timer) end
 
 ---@return string|nil
 function uv.os_homedir() end

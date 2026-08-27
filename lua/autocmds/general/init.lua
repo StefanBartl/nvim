@@ -102,7 +102,6 @@ function M.enable(cfg)
       desc = "After a window closes, redirect any window left showing a spurious [No Name] buffer to a real one",
     })
   end
-
 end
 
 ---@type AutoCmds.General

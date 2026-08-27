@@ -35,7 +35,20 @@ local M = {}
 --
 -- If NvChad ever changes its own default order, update this list to match
 -- (see nvchad/stl/utils.lua).
-local order = { "mode", "file", "git", "filetree_cwd_mode", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "plugin_progress", "cwd", "cursor" }
+local order = {
+  "mode",
+  "file",
+  "git",
+  "filetree_cwd_mode",
+  "%=",
+  "lsp_msg",
+  "%=",
+  "diagnostics",
+  "lsp",
+  "plugin_progress",
+  "cwd",
+  "cursor",
+}
 
 M.ui = {
   statusline = {

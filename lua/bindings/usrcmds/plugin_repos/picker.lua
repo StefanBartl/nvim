@@ -89,42 +89,42 @@ local function run_git_phase(gerund, past, op_fn, planned, base_dir, on_done)
 
   local changed_count, unchanged_count = 0, 0
 
-  ops.run_sequential(
-    planned,
-    function(p, cb)
-      op_fn(base_dir .. "/" .. p.name, function(ok, err, changed)
-        if ok and changed ~= nil then
-          if changed then
-            changed_count = changed_count + 1
-          else
-            unchanged_count = unchanged_count + 1
-          end
+  ops.run_sequential(planned, function(p, cb)
+    op_fn(base_dir .. "/" .. p.name, function(ok, err, changed)
+      if ok and changed ~= nil then
+        if changed then
+          changed_count = changed_count + 1
+        else
+          unchanged_count = unchanged_count + 1
         end
-        cb(ok, err)
-      end)
-    end,
-    function(p) return p.name end,
-    function(ok_items, failed)
-      if prog then
-        prog:finish(("%d %s, %d failed"):format(#ok_items, past, #failed))
       end
-      local detail = ""
-      if changed_count + unchanged_count > 0 then
-        detail = (" (%d changed, %d already up to date)"):format(changed_count, unchanged_count)
+      cb(ok, err)
+    end)
+  end, function(p)
+    return p.name
+  end, function(ok_items, failed)
+    if prog then
+      prog:finish(("%d %s, %d failed"):format(#ok_items, past, #failed))
+    end
+    local detail = ""
+    if changed_count + unchanged_count > 0 then
+      detail = (" (%d changed, %d already up to date)"):format(changed_count, unchanged_count)
+    end
+    if #failed > 0 then
+      local lines = {}
+      for _, f in ipairs(failed) do
+        lines[#lines + 1] = f.item.name .. ": " .. f.err
       end
-      if #failed > 0 then
-        local lines = {}
-        for _, f in ipairs(failed) do
-          lines[#lines + 1] = f.item.name .. ": " .. f.err
-        end
-        notify.warn(("%d %s%s, failed:\n%s"):format(#ok_items, past, detail, table.concat(lines, "\n")))
-      else
-        notify.info(("%d repositor%s %s%s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past, detail))
-      end
-      on_done()
-    end,
-    prog
-  )
+      notify.warn(
+        ("%d %s%s, failed:\n%s"):format(#ok_items, past, detail, table.concat(lines, "\n"))
+      )
+    else
+      notify.info(
+        ("%d repositor%s %s%s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past, detail)
+      )
+    end
+    on_done()
+  end, prog)
 end
 
 ---Clones every planned entry (already filtered to "should be cloned"),
@@ -139,29 +139,27 @@ local function run_clone_phase(planned, base_dir, on_done)
   end
   local prog = new_progress("[usrcmds.plugin_repos.picker] cloning")
   notify.info(("Cloning %d plugin(s)..."):format(#planned))
-  ops.run_sequential(
-    planned,
-    function(p, cb)
-      ops.clone_one(p, base_dir, function(status, err) cb(status ~= "failed", err) end)
-    end,
-    function(p) return p.name end,
-    function(ok_items, failed)
-      if prog then
-        prog:finish(("%d cloned, %d failed"):format(#ok_items, #failed))
+  ops.run_sequential(planned, function(p, cb)
+    ops.clone_one(p, base_dir, function(status, err)
+      cb(status ~= "failed", err)
+    end)
+  end, function(p)
+    return p.name
+  end, function(ok_items, failed)
+    if prog then
+      prog:finish(("%d cloned, %d failed"):format(#ok_items, #failed))
+    end
+    if #failed > 0 then
+      local lines = {}
+      for _, f in ipairs(failed) do
+        lines[#lines + 1] = f.item.name .. ": " .. f.err
       end
-      if #failed > 0 then
-        local lines = {}
-        for _, f in ipairs(failed) do
-          lines[#lines + 1] = f.item.name .. ": " .. f.err
-        end
-        notify.warn(("%d cloned, failed:\n%s"):format(#ok_items, table.concat(lines, "\n")))
-      else
-        notify.info(("%d repositor%s cloned"):format(#ok_items, #ok_items == 1 and "y" or "ies"))
-      end
-      on_done()
-    end,
-    prog
-  )
+      notify.warn(("%d cloned, failed:\n%s"):format(#ok_items, table.concat(lines, "\n")))
+    else
+      notify.info(("%d repositor%s cloned"):format(#ok_items, #ok_items == 1 and "y" or "ies"))
+    end
+    on_done()
+  end, prog)
 end
 
 ---Safety-checks, confirms and deletes the "remove"/"reclone" set, then hands
@@ -195,56 +193,58 @@ local function run_batch(removal, direct_clone, fetch_items, pull_items, update_
 
   local prog = new_progress("[usrcmds.plugin_repos.picker] checking")
   notify.info(("Checking %d plugin(s) for uncommitted/unpushed work..."):format(#removal))
-  ops.run_sequential(
-    removal,
-    function(p, cb) ops.check_removable(base_dir .. "/" .. p.name, cb) end,
-    function(p) return p.name end,
-    function(safe, failed)
-      if prog then
-        prog:finish(("%d clean, %d left alone"):format(#safe, #failed))
+  ops.run_sequential(removal, function(p, cb)
+    ops.check_removable(base_dir .. "/" .. p.name, cb)
+  end, function(p)
+    return p.name
+  end, function(safe, failed)
+    if prog then
+      prog:finish(("%d clean, %d left alone"):format(#safe, #failed))
+    end
+    if #failed > 0 then
+      local lines = {}
+      for _, f in ipairs(failed) do
+        lines[#lines + 1] = f.item.name .. " (" .. f.err .. ")"
       end
-      if #failed > 0 then
-        local lines = {}
-        for _, f in ipairs(failed) do
-          lines[#lines + 1] = f.item.name .. " (" .. f.err .. ")"
-        end
-        notify.warn("Left alone (not clean, not touched):\n" .. table.concat(lines, "\n"))
-      end
-      if #safe == 0 then
-        after_removal({})
-        return
-      end
+      notify.warn("Left alone (not clean, not touched):\n" .. table.concat(lines, "\n"))
+    end
+    if #safe == 0 then
+      after_removal({})
+      return
+    end
 
-      local names = {}
-      for _, p in ipairs(safe) do
-        names[#names + 1] = ("%s (%s)"):format(p.name, p.action)
-      end
-      local msg = ("Delete %d repositor%s from %s?\n\n%s"):format(
-        #safe, #safe == 1 and "y" or "ies", base_dir, table.concat(names, "\n"))
-      local choice = fn.confirm(msg, "&Yes, delete\n&No", 2)
-      if choice ~= 1 then
-        notify.info("Deletion cancelled — remove/reclone skipped for this batch.")
-        after_removal({})
-        return
-      end
+    local names = {}
+    for _, p in ipairs(safe) do
+      names[#names + 1] = ("%s (%s)"):format(p.name, p.action)
+    end
+    local msg = ("Delete %d repositor%s from %s?\n\n%s"):format(
+      #safe,
+      #safe == 1 and "y" or "ies",
+      base_dir,
+      table.concat(names, "\n")
+    )
+    local choice = fn.confirm(msg, "&Yes, delete\n&No", 2)
+    if choice ~= 1 then
+      notify.info("Deletion cancelled — remove/reclone skipped for this batch.")
+      after_removal({})
+      return
+    end
 
-      local to_clone, delete_failed = {}, {}
-      for _, p in ipairs(safe) do
-        if ops.delete_one(base_dir .. "/" .. p.name) then
-          if p.action == "reclone" then
-            to_clone[#to_clone + 1] = p
-          end
-        else
-          delete_failed[#delete_failed + 1] = p.name
+    local to_clone, delete_failed = {}, {}
+    for _, p in ipairs(safe) do
+      if ops.delete_one(base_dir .. "/" .. p.name) then
+        if p.action == "reclone" then
+          to_clone[#to_clone + 1] = p
         end
+      else
+        delete_failed[#delete_failed + 1] = p.name
       end
-      if #delete_failed > 0 then
-        notify.error("Failed to remove: " .. table.concat(delete_failed, ", "))
-      end
-      after_removal(to_clone)
-    end,
-    prog
-  )
+    end
+    if #delete_failed > 0 then
+      notify.error("Failed to remove: " .. table.concat(delete_failed, ", "))
+    end
+    after_removal(to_clone)
+  end, prog)
 end
 
 ---@param path string|nil

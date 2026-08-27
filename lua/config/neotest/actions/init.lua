@@ -98,4 +98,3 @@ function M.toggle_watch()
 end
 
 return M
-

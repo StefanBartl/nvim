@@ -50,9 +50,30 @@ plugins.add({
       if machine.is("workstation") then
         target_specs = {
           { "$REPOS_DIR", "WKDBook-Tricentis", "Cases", "Workflow", "Workflow.md" },
-          { "$REPOS_DIR", "WKDBook-Tricentis", "Cases", "Workflow", "Templates", "FirstResponse_Rick.md" },
-          { "$REPOS_DIR", "WKDBook-Tricentis", "Cases", "Workflow", "Templates", "SAP_TBox_RequestInfos.md" },
-          { "$REPOS_DIR", "WKDBook-Tricentis", "Cases", "Workflow", "Templates", "RequestMoreInfo.md" },
+          {
+            "$REPOS_DIR",
+            "WKDBook-Tricentis",
+            "Cases",
+            "Workflow",
+            "Templates",
+            "FirstResponse_Rick.md",
+          },
+          {
+            "$REPOS_DIR",
+            "WKDBook-Tricentis",
+            "Cases",
+            "Workflow",
+            "Templates",
+            "SAP_TBox_RequestInfos.md",
+          },
+          {
+            "$REPOS_DIR",
+            "WKDBook-Tricentis",
+            "Cases",
+            "Workflow",
+            "Templates",
+            "RequestMoreInfo.md",
+          },
           { "$REPOS_DIR", "WKDBook-Tricentis", "ToDo-Collection", "SAP_Support_ToDo.md" },
           target_specs[1],
           target_specs[2],

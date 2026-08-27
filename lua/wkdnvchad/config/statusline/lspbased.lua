@@ -33,7 +33,7 @@ M.ui = {
       "lsp",
       "cursor",
       "progress",
-      "cwd"
+      "cwd",
     },
 
     -- Modules will be registered by setup() function above

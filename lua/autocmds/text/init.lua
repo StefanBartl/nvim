@@ -26,7 +26,13 @@ local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 ---@param only_modifiable boolean|nil
 ---@param only_normal_bufs boolean|nil
 ---@return boolean
-local function should_process(buf, ignore_filetypes, ignore_buftypes, only_modifiable, only_normal_bufs)
+local function should_process(
+  buf,
+  ignore_filetypes,
+  ignore_buftypes,
+  only_modifiable,
+  only_normal_bufs
+)
   local bt = bo[buf].buftype or ""
   local ft = bo[buf].filetype or ""
   if only_normal_bufs ~= false and bt ~= "" then

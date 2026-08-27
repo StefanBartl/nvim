@@ -70,11 +70,11 @@ local function build_keyword_list(keywords)
 
   for k, v in pairs(keywords) do
     --AUDIT::  REMOVED vim.pesc - keywords should not be escaped for Vim regex
-    words[#words + 1] = k  -- Changed from: vim.pesc(k)
+    words[#words + 1] = k -- Changed from: vim.pesc(k)
 
     if type(v.alt) == "table" then
       for _, a in ipairs(v.alt) do
-        words[#words + 1] = a  -- Changed from: vim.pesc(a)
+        words[#words + 1] = a -- Changed from: vim.pesc(a)
       end
     end
   end

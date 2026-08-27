@@ -82,7 +82,12 @@ local function load_user_pins()
   end
   local decoded, err = json.read(USER_PINS_FILE)
   if type(decoded) ~= "table" then
-    notify.warn(("[harpoon] user pins file is corrupt, ignoring: %s (%s)"):format(USER_PINS_FILE, tostring(err)))
+    notify.warn(
+      ("[harpoon] user pins file is corrupt, ignoring: %s (%s)"):format(
+        USER_PINS_FILE,
+        tostring(err)
+      )
+    )
     return {}
   end
   local out = {} ---@type string[]
@@ -99,7 +104,9 @@ end
 local function save_user_pins(pins)
   local ok, err = json.write(USER_PINS_FILE, pins)
   if not ok then
-    notify.error(("[harpoon] could not write user pins file: %s (%s)"):format(USER_PINS_FILE, tostring(err)))
+    notify.error(
+      ("[harpoon] could not write user pins file: %s (%s)"):format(USER_PINS_FILE, tostring(err))
+    )
     return false
   end
   return true
@@ -540,7 +547,8 @@ function M.unpin(path)
   if not abs then
     -- Allow unpinning a path that no longer exists on disk: fall back to the
     -- raw argument so a stale pin can still be cleared.
-    abs = (type(path) == "string" and path ~= "") and canon(vim.fs.normalize(vim.fn.fnamemodify(path, ":p")))
+    abs = (type(path) == "string" and path ~= "")
+        and canon(vim.fs.normalize(vim.fn.fnamemodify(path, ":p")))
       or nil
     if not abs then
       notify.warn("[harpoon] unpin: " .. tostring(err))

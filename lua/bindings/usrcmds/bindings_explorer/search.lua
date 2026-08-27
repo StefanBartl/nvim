@@ -31,7 +31,9 @@ end
 ---@return Bindings.Hit[]
 function M.search(pattern, roots)
   local hits = {}
-  if not pattern or pattern == "" then return hits end
+  if not pattern or pattern == "" then
+    return hits
+  end
 
   for _, root in ipairs(roots or config.roots()) do
     if vim.fn.isdirectory(root) == 1 then

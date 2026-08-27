@@ -74,25 +74,41 @@ function M.lines()
   -- Host context, cross-platform via lib.nvim (which delegates to
   -- lib.nvim.cross.platform, so WSL is not misreported as Linux).
   local env = require("lib.nvim.system.env").get()
-  local host = env.is_windows and "Windows" or env.is_wsl and "WSL" or env.is_macos and "macOS" or "Linux"
+  local host = env.is_windows and "Windows"
+    or env.is_wsl and "WSL"
+    or env.is_macos and "macOS"
+    or "Linux"
 
-  add(("%s  ·  nvim %s  ·  %.0f ms since start"):format(host, tostring(vim.version()), startup.elapsed()), "StartupMuted")
+  add(
+    ("%s  ·  nvim %s  ·  %.0f ms since start"):format(
+      host,
+      tostring(vim.version()),
+      startup.elapsed()
+    ),
+    "StartupMuted"
+  )
   add("")
 
   for _, m in ipairs(marks) do
     if m.at then
       local dur = m.dur or 0
       local slow = total > 0 and (dur / total) >= SLOW_SHARE
-      add(("  %-20s %-10s %8.1f ms  %s %7.1f ms%s"):format(
-        m.label,
-        "[" .. m.trigger .. "]",
-        m.at,
-        bar(dur, max_dur),
-        dur,
-        m.err and "  ERROR" or ""
-      ), m.err and "StartupPending" or slow and "StartupSlow" or "StartupLabel")
+      add(
+        ("  %-20s %-10s %8.1f ms  %s %7.1f ms%s"):format(
+          m.label,
+          "[" .. m.trigger .. "]",
+          m.at,
+          bar(dur, max_dur),
+          dur,
+          m.err and "  ERROR" or ""
+        ),
+        m.err and "StartupPending" or slow and "StartupSlow" or "StartupLabel"
+      )
     else
-      add(("  %-20s %-10s PENDING — never ran"):format(m.label, "[" .. m.trigger .. "]"), "StartupPending")
+      add(
+        ("  %-20s %-10s PENDING — never ran"):format(m.label, "[" .. m.trigger .. "]"),
+        "StartupPending"
+      )
     end
     if m.err then
       add("      " .. m.err:gsub("\n", " "), "StartupPending")
@@ -105,7 +121,13 @@ function M.lines()
   if #pending > 0 or #failed > 0 then
     add("")
     for _, m in ipairs(pending) do
-      add(("  ! '%s' registered for '%s', which never fired — the phase does not run."):format(m.label, m.trigger), "StartupPending")
+      add(
+        ("  ! '%s' registered for '%s', which never fired — the phase does not run."):format(
+          m.label,
+          m.trigger
+        ),
+        "StartupPending"
+      )
     end
     for _, m in ipairs(failed) do
       add(("  ! '%s' threw; phases after it still ran."):format(m.label), "StartupPending")
@@ -122,7 +144,9 @@ end
 --- Plain string lines, for headless use and :StartupCheck.
 ---@return string[]
 function M.text_lines()
-  return vim.tbl_map(function(l) return l.text end, M.lines())
+  return vim.tbl_map(function(l)
+    return l.text
+  end, M.lines())
 end
 
 --- Open the report as a themed float.
@@ -139,13 +163,15 @@ function M.open()
   end
 
   local surf = kit.surface.open({
-    lines = vim.tbl_map(function(l) return l.text end, lines),
+    lines = vim.tbl_map(function(l)
+      return l.text
+    end, lines),
     title = " Startup phases ",
     width = math.min(width + 2, vim.o.columns - 4),
     height = math.min(#lines, math.floor(vim.o.lines * 0.8)),
     relative = "editor",
-    enter = true,       -- the report is meant to be scrolled
-    nice_quit = true,   -- q / <Esc>
+    enter = true, -- the report is meant to be scrolled
+    nice_quit = true, -- q / <Esc>
     filetype = "startup-report",
   })
 
@@ -178,7 +204,12 @@ function M.check()
   local pending, failed = startup.pending(), startup.failed()
 
   if #pending == 0 and #failed == 0 then
-    notify.info(("Startup policy OK — %d phases, %.0f ms in bodies."):format(#startup.marks, startup.total()))
+    notify.info(
+      ("Startup policy OK — %d phases, %.0f ms in bodies."):format(
+        #startup.marks,
+        startup.total()
+      )
+    )
     return true
   end
 

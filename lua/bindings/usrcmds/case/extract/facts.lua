@@ -106,7 +106,9 @@ local function sla_line(status)
     parts[#parts + 1] = ("Erstreaktion %s"):format(state)
   end
   if status.cadence then
-    parts[#parts + 1] = ("Rückmeldung fällig %s"):format(os.date("%d.%m. %H:%M", status.cadence.deadline))
+    parts[#parts + 1] = ("Rückmeldung fällig %s"):format(
+      os.date("%d.%m. %H:%M", status.cadence.deadline)
+    )
   elseif status.awaiting_customer then
     parts[#parts + 1] = "Rückmeldung wartet auf Kunden"
   end
@@ -159,18 +161,30 @@ function M.render(entry)
 
   local priority = (m and m.priority) or "unbekannt"
   local impact, current_state, since, awaiting_count = stream_facts(entry)
-  lines[#lines + 1] = ("- Case: %s · Priorität %s · Impact %s"):format(entry.short, priority, impact or "unbekannt")
+  lines[#lines + 1] = ("- Case: %s · Priorität %s · Impact %s"):format(
+    entry.short,
+    priority,
+    impact or "unbekannt"
+  )
 
   local sap_component = (m and m.sap_component) or "unbekannt"
   lines[#lines + 1] = ("- SAP Component: %s"):format(sap_component)
 
-  local commander = (m and m.versions and m.versions.commander) or (m and m.tosca_version) or guess.tosca_version
+  local commander = (m and m.versions and m.versions.commander)
+    or (m and m.tosca_version)
+    or guess.tosca_version
   local server = m and m.versions and m.versions.server
-  lines[#lines + 1] = ("- Tosca Commander: %s · Tosca Server: %s"):format(commander or "unbekannt", server or "unbekannt")
+  lines[#lines + 1] = ("- Tosca Commander: %s · Tosca Server: %s"):format(
+    commander or "unbekannt",
+    server or "unbekannt"
+  )
 
   local tbox_build, api_core, custom_controls = supportinfo_facts(entry)
   if tbox_build or api_core then
-    lines[#lines + 1] = ("- TBox-Build: %s · Api Core: %s"):format(tbox_build or "unbekannt", api_core or "unbekannt")
+    lines[#lines + 1] = ("- TBox-Build: %s · Api Core: %s"):format(
+      tbox_build or "unbekannt",
+      api_core or "unbekannt"
+    )
   end
   if custom_controls then
     lines[#lines + 1] = ("- Custom Controls: %s"):format(custom_controls)
@@ -178,7 +192,9 @@ function M.render(entry)
 
   if current_state then
     local since_str = since and os.date("%Y-%m-%d", since) or "unbekannt"
-    local awaiting_str = awaiting_count > 0 and (", %d× Awaiting User Info in der Historie"):format(awaiting_count) or ""
+    local awaiting_str = awaiting_count > 0
+        and (", %d× Awaiting User Info in der Historie"):format(awaiting_count)
+      or ""
     lines[#lines + 1] = ("- Zustand: %s (seit %s)%s"):format(current_state, since_str, awaiting_str)
   end
 

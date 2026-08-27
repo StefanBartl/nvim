@@ -186,7 +186,8 @@ function M.status(entry)
 
   local opened_created = parse_iso(m and m.created)
   local opened_stream = data.earliest
-  local assigned_at = data.assignments[#data.assignments] and data.assignments[#data.assignments].at or nil
+  local assigned_at = data.assignments[#data.assignments] and data.assignments[#data.assignments].at
+    or nil
   local last_customer_at = data.customer[#data.customer] and data.customer[#data.customer].at or nil
   local last_reply_sent = parse_iso(m and m.last_reply_sent)
 
@@ -222,7 +223,10 @@ function M.status(entry)
   ---@type Lib.Case.SlaClockStatus|nil
   local cadence = nil
   if not is_awaiting then
-    local cadence_since = latest_of(last_reply_sent, last_customer_at) or assigned_at or opened_stream or opened_created
+    local cadence_since = latest_of(last_reply_sent, last_customer_at)
+      or assigned_at
+      or opened_stream
+      or opened_created
     local cadence_budget = level.cadence[1]
     if cadence_since and cadence_budget then
       local dl = clock.deadline(cadence_since, cadence_budget, level.window)

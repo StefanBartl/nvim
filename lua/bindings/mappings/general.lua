@@ -22,11 +22,10 @@ function M.setup()
     -- Verhindert Fehler, falls die Datei nach dem Speichern/Formatieren kürzer ist
     local last_line = vim.api.nvim_buf_line_count(0)
     if pos[1] > last_line then
-        pos[1] = last_line
+      pos[1] = last_line
     end
     -- vim.api.nvim_win_set_cursor(0, pos)
     pcall(vim.api.nvim_win_set_cursor, 0, pos)
-
   end, { desc = "[General] Save file" })
   map("i", "<C-s>", function() --- explicit because of vim.lsp.buf.signature_help()
     local pos = vim.api.nvim_win_get_cursor(0)
@@ -34,7 +33,7 @@ function M.setup()
 
     local last_line = vim.api.nvim_buf_line_count(0)
     if pos[1] > last_line then
-        pos[1] = last_line
+      pos[1] = last_line
     end
     -- vim.api.nvim_win_set_cursor(0, pos)
     pcall(vim.api.nvim_win_set_cursor, 0, pos)

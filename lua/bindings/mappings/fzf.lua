@@ -29,7 +29,12 @@ function M.setup()
 
   map("n", "<leader>fzf", ":FzfLua files<CR>", { desc = "[FzfLua] Files" })
 
-  map("n", "<leader>ftf", ":FzfLua treesitter<CR>", { desc = "[FzfLua] Search Tree-sitter symbols" })
+  map(
+    "n",
+    "<leader>ftf",
+    ":FzfLua treesitter<CR>",
+    { desc = "[FzfLua] Search Tree-sitter symbols" }
+  )
 
   map("n", "<leader>fws", function()
     require("fzf-lua").lsp_workspace_symbols()

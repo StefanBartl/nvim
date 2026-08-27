@@ -84,7 +84,13 @@ local function ui_theme(args)
   if not theme.theme_exists(theme_name) then
     local available = theme.list_themes()
     local available_str = table.concat(available, ", ")
-    notify.error(string.format( "Theme '%s' nicht gefunden.\n\nVerfügbare Themes:\n%s", theme_name, available_str ))
+    notify.error(
+      string.format(
+        "Theme '%s' nicht gefunden.\n\nVerfügbare Themes:\n%s",
+        theme_name,
+        available_str
+      )
+    )
     return
   end
 
@@ -156,7 +162,10 @@ local function ui_toggle(args)
   if next_theme then
     notify.info(string.format("🎨 Theme geändert zu: %s", next_theme))
   else
-    notify.warn("Kein theme_toggle in chadrc konfiguriert.\n" .. "Füge mindestens 2 Themes zu theme_toggle hinzu.")
+    notify.warn(
+      "Kein theme_toggle in chadrc konfiguriert.\n"
+        .. "Füge mindestens 2 Themes zu theme_toggle hinzu."
+    )
   end
 end
 

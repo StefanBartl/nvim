@@ -22,10 +22,14 @@ local SEPARATOR = " · "
 
 return function()
   local ok, sl = pcall(require, "lib.nvim.progress.styles.statusline")
-  if not ok then return "" end
+  if not ok then
+    return ""
+  end
 
   local active = sl.active() -- string[], oldest first
-  if #active == 0 then return "" end
+  if #active == 0 then
+    return ""
+  end
 
   -- Same highlight convention as neotest_module: blue while running.
   return " %#St_LspProgress#󰥩 " .. table.concat(active, SEPARATOR) .. " "

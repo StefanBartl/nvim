@@ -37,4 +37,3 @@ function M.get_defaults()
 end
 
 return M
-

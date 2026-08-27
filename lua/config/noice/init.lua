@@ -156,7 +156,10 @@ M.routes = {
 
   -- Hide specific generic texts (no explicit event → matches across sources where applicable).
   { filter = { find = "No signature help" }, opts = { skip = true } },
-  { filter = { find = "Error detected while processing BufReadPost Autocommands for" }, opts = { skip = true } },
+  {
+    filter = { find = "Error detected while processing BufReadPost Autocommands for" },
+    opts = { skip = true },
+  },
 
   -- Keep LSP hover minimal (avoid empty popups)
   { filter = { event = "lsp", kind = "hover" }, opts = { skip_empty = true } },

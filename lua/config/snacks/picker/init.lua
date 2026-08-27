@@ -25,9 +25,15 @@ local M = {}
 ---@return { get_keys: fun(): table, get_input_keys: fun(): table, get_actions: fun(): table }
 local function empty_entry_actions()
   return {
-    get_keys = function() return {} end,
-    get_input_keys = function() return {} end,
-    get_actions = function() return {} end,
+    get_keys = function()
+      return {}
+    end,
+    get_input_keys = function()
+      return {}
+    end,
+    get_actions = function()
+      return {}
+    end,
   }
 end
 

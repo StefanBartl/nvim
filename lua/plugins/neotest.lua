@@ -17,9 +17,9 @@ return {
       -- CRITICAL: Use wrapped consumer to prevent initialization race
       local opts = {
         adapters = {
-      require("neotest-plenary"),
-      require("neotest-vitest"),
-      require("neotest-go"),
+          require("neotest-plenary"),
+          require("neotest-vitest"),
+          require("neotest-go"),
         },
         consumers = neotest_init_utils.build_consumers(),
 
@@ -106,12 +106,12 @@ return {
 
       -- Verify consumer initialization
       -- vim.defer_fn(function()
-        -- local ok_validate = pcall(require("config.neotest.utils.validate_consumer").check_consumer)
-        -- if ok_validate then
-          -- notify.info("Neo-tree consumer verified")
-        -- else
-          -- notify.warn("Neo-tree consumer validation failed")
-        -- end
+      -- local ok_validate = pcall(require("config.neotest.utils.validate_consumer").check_consumer)
+      -- if ok_validate then
+      -- notify.info("Neo-tree consumer verified")
+      -- else
+      -- notify.warn("Neo-tree consumer validation failed")
+      -- end
       -- end, 1000)
     end,
   },

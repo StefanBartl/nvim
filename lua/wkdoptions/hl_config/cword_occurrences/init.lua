@@ -247,7 +247,9 @@ local function place_occurrences(pat, srow, erow)
       while true do
         ---@diagnostic disable-next-line: deprecated
         local ok, res = pcall(vim.fn.matchstrpos, line, pat, start)
-        if not ok then break end
+        if not ok then
+          break
+        end
         local _, s, e = unpack(res)
         if s == -1 then
           break

@@ -24,7 +24,8 @@ M.REPLY = "$Reply"
 M.KI_PROMPT = "$KiPrompt"
 M.SOLUTION = "$Solution"
 
-local TEMPLATE_DIR = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "bindings", "usrcmds", "case", "templates")
+local TEMPLATE_DIR =
+  vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "bindings", "usrcmds", "case", "templates")
 
 ---@type table<string, string>
 local FILES = {
@@ -61,10 +62,12 @@ end
 ---@param tokens table
 ---@return string
 local function substitute(text, tokens)
-  return (text:gsub("%{(%w+)%}", function(key)
-    local v = tokens[key]
-    return v ~= nil and tostring(v) or ""
-  end))
+  return (
+    text:gsub("%{(%w+)%}", function(key)
+      local v = tokens[key]
+      return v ~= nil and tostring(v) or ""
+    end)
+  )
 end
 
 --- Render a tag's file against `tokens` (`{name}`, `{case}`, `{title}`, ...

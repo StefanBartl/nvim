@@ -11,8 +11,9 @@ function M.check()
   -- (see keymaps/filesystem/init.lua's header comment and plugins/personal/
   -- init.lua's filetree.nvim setup). Their health is checked via `:checkhealth
   -- filetree` instead.
-  vim.health.info("Trash / current_hl / watcher_quarantine: owned by filetree.nvim, see :checkhealth filetree")
+  vim.health.info(
+    "Trash / current_hl / watcher_quarantine: owned by filetree.nvim, see :checkhealth filetree"
+  )
 end
 
 return M
-

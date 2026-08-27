@@ -55,9 +55,9 @@ local function run(mark, fn)
   if not ok then
     mark.err = tostring(err)
     vim.schedule(function()
-      require("lib.nvim.notify").create("[startup] ").error(
-        string.format("phase '%s' failed: %s", mark.label, mark.err)
-      )
+      require("lib.nvim.notify")
+        .create("[startup] ")
+        .error(string.format("phase '%s' failed: %s", mark.label, mark.err))
     end)
   end
 end
@@ -98,29 +98,39 @@ function M.on(event, label, fn)
 
   if event == M.UI_READY then
     if vim.v.vim_did_enter == 1 then
-      vim.schedule(function() run(mark, fn) end)
+      vim.schedule(function()
+        run(mark, fn)
+      end)
     else
       require("lib.nvim.bindings.autocmd").create("VimEnter", function()
-        vim.schedule(function() run(mark, fn) end)
+        vim.schedule(function()
+          run(mark, fn)
+        end)
       end, { once = true })
     end
     return
   end
 
-  require("lib.nvim.bindings.autocmd").create(event, function() run(mark, fn) end, { once = true })
+  require("lib.nvim.bindings.autocmd").create(event, function()
+    run(mark, fn)
+  end, { once = true })
 end
 
 --- Phases that never ran: their event has not fired, or had already fired when
 --- the phase registered. Both are bugs — see docs/ARCHITECTURE/startup.md.
 ---@return Startup.Mark[]
 function M.pending()
-  return vim.tbl_filter(function(m) return m.at == nil end, M.marks)
+  return vim.tbl_filter(function(m)
+    return m.at == nil
+  end, M.marks)
 end
 
 --- Phases whose body threw.
 ---@return Startup.Mark[]
 function M.failed()
-  return vim.tbl_filter(function(m) return m.err ~= nil end, M.marks)
+  return vim.tbl_filter(function(m)
+    return m.err ~= nil
+  end, M.marks)
 end
 
 --- Total time spent inside phase bodies (not wall-clock startup time — the bulk
@@ -138,7 +148,9 @@ end
 ---@return Startup.Mark[]
 function M.slowest()
   local sorted = vim.deepcopy(M.marks)
-  table.sort(sorted, function(a, b) return (a.dur or 0) > (b.dur or 0) end)
+  table.sort(sorted, function(a, b)
+    return (a.dur or 0) > (b.dur or 0)
+  end)
   return sorted
 end
 

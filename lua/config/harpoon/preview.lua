@@ -91,7 +91,12 @@ end
 --- Ensure a single reusable scratch buffer and window.
 ---@return integer buf, integer win
 local function ensure_preview_window()
-  if STATE.win and vim.api.nvim_win_is_valid(STATE.win) and STATE.buf and vim.api.nvim_buf_is_valid(STATE.buf) then
+  if
+    STATE.win
+    and vim.api.nvim_win_is_valid(STATE.win)
+    and STATE.buf
+    and vim.api.nvim_buf_is_valid(STATE.buf)
+  then
     return STATE.buf, STATE.win
   end
 

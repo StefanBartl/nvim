@@ -71,7 +71,7 @@ function M.path_absolute(path_or_buf)
     -- Update tick cache
     tick_cache[bufnr] = {
       tick = current_tick,
-      abs_path = result
+      abs_path = result,
     }
 
     return result
@@ -301,7 +301,7 @@ Autocmd.create("BufDelete", function(args)
   tick_cache[args.buf] = nil
 end, {
   group = Autocmd.group("WkdNvChadPathsCache", true),
-  desc = "Clear path tick cache on buffer delete"
+  desc = "Clear path tick cache on buffer delete",
 })
 
 return M

@@ -260,11 +260,15 @@ function M.setup()
   -- Paste after/before cursor, trimmed of leading/trailing blank lines and
   -- edge whitespace (see module doc). A count prefix (e.g. "3p") is not
   -- specially handled and just performs a single trimmed paste.
-  map("n", "p", function() put_trimmed('"', true) end, {
+  map("n", "p", function()
+    put_trimmed('"', true)
+  end, {
     silent = true,
     desc = "Paste after cursor (leading/trailing blank lines trimmed)",
   })
-  map("n", "P", function() put_trimmed('"', false) end, {
+  map("n", "P", function()
+    put_trimmed('"', false)
+  end, {
     silent = true,
     desc = "Paste before cursor (leading/trailing blank lines trimmed)",
   })
@@ -289,7 +293,6 @@ function M.setup()
     silent = true,
     desc = "Aus System-Zwischenablage im Insert-Modus einfügen",
   })
-
 end
 
 return M

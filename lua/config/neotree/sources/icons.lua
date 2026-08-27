@@ -8,68 +8,68 @@ local M = {}
 ---@type table<string, Cfg.NeoTree.Sources.IconSet>
 local ICONS = {
 
-    common = {
-        v1 = {
-            filesystem       = { icon = "[DIR]", long = "File System",      short = "DIR" },
-            buffers          = { icon = "[BUF]", long = "Buffers",          short = "BUF" },
-            git_status       = { icon = "[GIT]", long = "Git Status",       short = "GIT" },
-            document_symbols = { icon = "[SYM]", long = "Document Symbols", short = "SYM" },
-            netman           = { icon = "[NET]", long = "Network",          short = "NET" },
-            tests            = { icon = "[TST]", long = "Test Cases",       short = "TST" },
-            diagnostics      = { icon = "[DIAG]", long = "Diagnostics",      short = "DIAG" },
-        },
-        v2 = {
-            filesystem       = { icon = "[F]", long = "File System",      short = "F" },
-            buffers          = { icon = "[B]", long = "Buffers",          short = "B" },
-            git_status       = { icon = "[G]", long = "Git Status",       short = "G" },
-            document_symbols = { icon = "[D]", long = "Document Symbols", short = "D" },
-            netman           = { icon = "[N]", long = "Network",          short = "N" },
-            tests            = { icon = "[T]", long = "Test Cases",       short = "T" },
-            diagnostics      = { icon = "[Dx]", long = "Diagnostics",      short = "Dx" },
-        },
+  common = {
+    v1 = {
+      filesystem = { icon = "[DIR]", long = "File System", short = "DIR" },
+      buffers = { icon = "[BUF]", long = "Buffers", short = "BUF" },
+      git_status = { icon = "[GIT]", long = "Git Status", short = "GIT" },
+      document_symbols = { icon = "[SYM]", long = "Document Symbols", short = "SYM" },
+      netman = { icon = "[NET]", long = "Network", short = "NET" },
+      tests = { icon = "[TST]", long = "Test Cases", short = "TST" },
+      diagnostics = { icon = "[DIAG]", long = "Diagnostics", short = "DIAG" },
     },
+    v2 = {
+      filesystem = { icon = "[F]", long = "File System", short = "F" },
+      buffers = { icon = "[B]", long = "Buffers", short = "B" },
+      git_status = { icon = "[G]", long = "Git Status", short = "G" },
+      document_symbols = { icon = "[D]", long = "Document Symbols", short = "D" },
+      netman = { icon = "[N]", long = "Network", short = "N" },
+      tests = { icon = "[T]", long = "Test Cases", short = "T" },
+      diagnostics = { icon = "[Dx]", long = "Diagnostics", short = "Dx" },
+    },
+  },
 
-    nerd = {
-        v1 = {
-            filesystem       = { icon = "", long = "File System",      short = "FS" },
-            buffers          = { icon = "", long = "Buffers",          short = "Buf" },
-            git_status       = { icon = "", long = "Git Status",       short = "Git" },
-            document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
-            netman           = { icon = "", long = "Network",          short = "Net" },
-            tests            = { icon = "⏱", long = "Test Cases",       short = "Tst" },
-            diagnostics      = { icon = "", long = "Diagnostics",      short = "Diag" },
-        },
-        v2 = {
-            filesystem       = { icon = "", long = "File System",      short = "FS" },
-            buffers          = { icon = "", long = "Buffers",          short = "Buf" },
-            git_status       = { icon = "", long = "Git Status",       short = "Git" },
-            document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
-            netman           = { icon = "", long = "Network",          short = "Net" },
-            tests            = { icon = "", long = "Test Cases",       short = "Tst" },
-            diagnostics      = { icon = "", long = "Diagnostics",      short = "Diag" },
-        },
+  nerd = {
+    v1 = {
+      filesystem = { icon = "", long = "File System", short = "FS" },
+      buffers = { icon = "", long = "Buffers", short = "Buf" },
+      git_status = { icon = "", long = "Git Status", short = "Git" },
+      document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
+      netman = { icon = "", long = "Network", short = "Net" },
+      tests = { icon = "⏱", long = "Test Cases", short = "Tst" },
+      diagnostics = { icon = "", long = "Diagnostics", short = "Diag" },
     },
+    v2 = {
+      filesystem = { icon = "", long = "File System", short = "FS" },
+      buffers = { icon = "", long = "Buffers", short = "Buf" },
+      git_status = { icon = "", long = "Git Status", short = "Git" },
+      document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
+      netman = { icon = "", long = "Network", short = "Net" },
+      tests = { icon = "", long = "Test Cases", short = "Tst" },
+      diagnostics = { icon = "", long = "Diagnostics", short = "Diag" },
+    },
+  },
 
-    codicons = {
-        v1 = {
-            filesystem       = { icon = "", long = "File System",      short = "FS" },
-            buffers          = { icon = "", long = "Buffers",          short = "Buf" },
-            git_status       = { icon = "", long = "Git Status",       short = "Git" },
-            document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
-            netman           = { icon = "", long = "Network",          short = "Net" },
-            tests            = { icon = "", long = "Test Cases",       short = "Tst" },
-            diagnostics      = { icon = "", long = "Diagnostics",      short = "Diag" },
-        },
-        v2 = {
-            filesystem       = { icon = "", long = "File System",      short = "FS" },
-            buffers          = { icon = "", long = "Buffers",          short = "Buf" },
-            git_status       = { icon = "", long = "Git Status",       short = "Git" },
-            document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
-            netman           = { icon = "", long = "Network",          short = "Net" },
-            tests            = { icon = "", long = "Test Cases",       short = "Tst" },
-            diagnostics      = { icon = "", long = "Diagnostics",      short = "Diag" },
-        },
+  codicons = {
+    v1 = {
+      filesystem = { icon = "", long = "File System", short = "FS" },
+      buffers = { icon = "", long = "Buffers", short = "Buf" },
+      git_status = { icon = "", long = "Git Status", short = "Git" },
+      document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
+      netman = { icon = "", long = "Network", short = "Net" },
+      tests = { icon = "", long = "Test Cases", short = "Tst" },
+      diagnostics = { icon = "", long = "Diagnostics", short = "Diag" },
     },
+    v2 = {
+      filesystem = { icon = "", long = "File System", short = "FS" },
+      buffers = { icon = "", long = "Buffers", short = "Buf" },
+      git_status = { icon = "", long = "Git Status", short = "Git" },
+      document_symbols = { icon = "", long = "Document Symbols", short = "Sym" },
+      netman = { icon = "", long = "Network", short = "Net" },
+      tests = { icon = "", long = "Test Cases", short = "Tst" },
+      diagnostics = { icon = "", long = "Diagnostics", short = "Diag" },
+    },
+  },
 }
 
 ---Formats a display name for neo-tree source selector
@@ -108,4 +108,3 @@ function M.get_icon(source_name, family, variant)
 end
 
 return M
-

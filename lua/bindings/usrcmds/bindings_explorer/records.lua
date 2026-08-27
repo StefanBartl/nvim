@@ -62,7 +62,9 @@ end
 ---@return Bindings.Record[]
 local function parse_file(path, scope, category)
   local content = read(path)
-  if not content then return {} end
+  if not content then
+    return {}
+  end
 
   local plugin = vim.fn.fnamemodify(path, ":t:r")
   local records = {}

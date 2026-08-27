@@ -68,7 +68,7 @@ function M.setup()
     neotest.run.stop()
     neotest.output.close()
     neotest.summary.close()
-end, { desc = "Stop tests and close all windows" })
+  end, { desc = "Stop tests and close all windows" })
 end
 
 return M

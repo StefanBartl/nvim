@@ -554,7 +554,9 @@ function M.enable()
       {
         path = { "links" },
         args = { { name = "scope", type = "STRING", optional = true, enum = links.scopes() } },
-        desc = ("Search links across the work repo (scope: %s)"):format(table.concat(links.scopes(), "|")),
+        desc = ("Search links across the work repo (scope: %s)"):format(
+          table.concat(links.scopes(), "|")
+        ),
         run = function(ctx)
           ui.tricentis_links(ctx.args.scope)
         end,

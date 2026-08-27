@@ -66,9 +66,7 @@ function M.load()
   local path = map_path()
   local stat = vim.uv.fs_stat(path)
   if not stat then
-    return nil,
-      ("no map artifact at %s — run :DocMap in this config first"):format(path),
-      nil
+    return nil, ("no map artifact at %s — run :DocMap in this config first"):format(path), nil
   end
 
   local fd = io.open(path, "rb")

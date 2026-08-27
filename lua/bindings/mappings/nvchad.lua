@@ -46,7 +46,9 @@ function M.setup()
   map("n", "<leader>wk", function()
     require("lib.nvim.ui.kit").input({
       title = "WhichKey: ",
-      on_submit = function(query) vim.cmd("WhichKey " .. query) end,
+      on_submit = function(query)
+        vim.cmd("WhichKey " .. query)
+      end,
     })
   end, { desc = "[General] WhichKey query" })
 

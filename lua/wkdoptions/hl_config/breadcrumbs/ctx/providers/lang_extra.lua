@@ -24,10 +24,7 @@ function M.extract(node, _cfg)
   local ft = vim.bo.filetype
 
   -- Try to load language module
-  local ok, lang = pcall(
-    require,
-    "wkdoptions.hl_config.breadcrumbs.ctx.lang." .. ft
-  )
+  local ok, lang = pcall(require, "wkdoptions.hl_config.breadcrumbs.ctx.lang." .. ft)
 
   if not ok or type(lang.extract_owner) ~= "function" then
     return nil

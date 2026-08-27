@@ -19,19 +19,48 @@ end
 
 ---@enum WkdNvC.UI.Status.Modules.Lsp.Symbols.Kind
 local LspKind = {
-  File = 1, Module = 2, Namespace = 3, Package = 4, Class = 5,
-  Method = 6, Property = 7, Field = 8, Constructor = 9, Enum = 10,
-  Interface = 11, Function = 12, Variable = 13, Constant = 14,
-  String = 15, Number = 16, Boolean = 17, Array = 18, Object = 19,
-  Key = 20, Null = 21, EnumMember = 22, Struct = 23, Event = 24,
-  Operator = 25, TypeParameter = 26,
+  File = 1,
+  Module = 2,
+  Namespace = 3,
+  Package = 4,
+  Class = 5,
+  Method = 6,
+  Property = 7,
+  Field = 8,
+  Constructor = 9,
+  Enum = 10,
+  Interface = 11,
+  Function = 12,
+  Variable = 13,
+  Constant = 14,
+  String = 15,
+  Number = 16,
+  Boolean = 17,
+  Array = 18,
+  Object = 19,
+  Key = 20,
+  Null = 21,
+  EnumMember = 22,
+  Struct = 23,
+  Event = 24,
+  Operator = 25,
+  TypeParameter = 26,
 }
 
 ---@type integer[]
 local DEFAULT_KEEP_KINDS = {
-  LspKind.Namespace, LspKind.Module, LspKind.Class, LspKind.Struct,
-  LspKind.Interface, LspKind.Enum, LspKind.Function, LspKind.Method,
-  LspKind.Constructor, LspKind.Property, LspKind.Field, LspKind.EnumMember,
+  LspKind.Namespace,
+  LspKind.Module,
+  LspKind.Class,
+  LspKind.Struct,
+  LspKind.Interface,
+  LspKind.Enum,
+  LspKind.Function,
+  LspKind.Method,
+  LspKind.Constructor,
+  LspKind.Property,
+  LspKind.Field,
+  LspKind.EnumMember,
 }
 
 ---@type table<integer, WkdNvC.UI.Status.Modules.Lsp.Symbols.Doc.SymCache>
@@ -105,7 +134,14 @@ local function request_doc_symbols_async(bufnr)
   end
 
   local cache = M.__lsp_doc_cache[bufnr]
-    or { version = -1, items = nil, hierarchical = false, client_id = nil, last_req = 0, pending = false }
+    or {
+      version = -1,
+      items = nil,
+      hierarchical = false,
+      client_id = nil,
+      last_req = 0,
+      pending = false,
+    }
 
   -- Skip if already pending
   if cache.pending then
@@ -392,7 +428,7 @@ Autocmd.create("BufDelete", function(args)
   M.__lsp_doc_cache[args.buf] = nil
 end, {
   group = Autocmd.group("WkdNvChadLspSymbolsCache", true),
-  desc = "Clear LSP symbols cache on buffer delete"
+  desc = "Clear LSP symbols cache on buffer delete",
 })
 
 return M

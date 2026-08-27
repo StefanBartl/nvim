@@ -20,10 +20,18 @@ return {
   NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
   TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
   EXP = { icon = "🔬", color = "test", alt = { "EXPERIMENT", "EXPERIMENTAL" } },
-  REF = { icon = "󰁨 ", color = "hint", alt = { "REFACTOR", "REWRITE", "CLEANUP", "IMPROVE", "RESTRUCTURE" } },
+  REF = {
+    icon = "󰁨 ",
+    color = "hint",
+    alt = { "REFACTOR", "REWRITE", "CLEANUP", "IMPROVE", "RESTRUCTURE" },
+  },
   ADD = { icon = " ", color = "info", alt = { "EXT", "NEXT", "FUTURE", "ENHANCE", "HOOK" } },
   FEAT = { icon = " ", color = "info", alt = { "FEATURE" } },
-  WATCH = { icon = " ", color = "warning", alt = { "MONITOR", "OBSERVE", "TRACK", "INSPECT", "SURVEILLANCE" } },
+  WATCH = {
+    icon = " ",
+    color = "warning",
+    alt = { "MONITOR", "OBSERVE", "TRACK", "INSPECT", "SURVEILLANCE" },
+  },
   REMOVE = { icon = " ", color = "warning", alt = { "DELETE", "DEL", "UNUSED" } },
   DEVONLY = { icon = "", color = "hint", alt = { "TEMP", "EXPERIMENTAL", "DEV", "WIP" } },
 }

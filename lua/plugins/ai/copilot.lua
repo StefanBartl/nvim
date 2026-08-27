@@ -48,54 +48,54 @@ return {
   -- },
 
   -- {
-    -- "zbirenbaum/copilot.lua",
-    -- enabled = false,
-    -- dependencies = {
-      -- "copilotlsp-nvim/copilot-lsp", -- (optional) for NES functionality
-    -- },
-    -- cmd = "Copilot",
-    -- event = "InsertEnter",
-    -- config = function()
-      -- local copilot = require("copilot")
+  -- "zbirenbaum/copilot.lua",
+  -- enabled = false,
+  -- dependencies = {
+  -- "copilotlsp-nvim/copilot-lsp", -- (optional) for NES functionality
+  -- },
+  -- cmd = "Copilot",
+  -- event = "InsertEnter",
+  -- config = function()
+  -- local copilot = require("copilot")
 
-      -- copilot.setup({
-        -- panel = { enabled = true },
-        -- suggestion = {
-          -- enabled = true,
-          -- auto_trigger = true,
-          -- hide_during_completion = true,
-          -- debounce = 75,
-          -- trigger_on_accept = true,
-          -- keymap = {
-            -- accept = "<M-a>",
-            -- accept_word = false,
-            -- accept_line = false,
-            -- next = "<M-]>",
-            -- prev = "<M-[>",
-            -- dismiss = "<M-d>",
-          -- },
-        -- },
-      -- })
+  -- copilot.setup({
+  -- panel = { enabled = true },
+  -- suggestion = {
+  -- enabled = true,
+  -- auto_trigger = true,
+  -- hide_during_completion = true,
+  -- debounce = 75,
+  -- trigger_on_accept = true,
+  -- keymap = {
+  -- accept = "<M-a>",
+  -- accept_word = false,
+  -- accept_line = false,
+  -- next = "<M-]>",
+  -- prev = "<M-[>",
+  -- dismiss = "<M-d>",
+  -- },
+  -- },
+  -- })
 
-      -- -- Keymap to navigate suggestions
-      -- vim.keymap.set(
-        -- { "i", "n" },
-        -- "<M-x>",
-        -- [[<Cmd>lua require("copilot.suggestion").next()<CR>]],
-        -- { noremap = true, silent = true }
-      -- )
+  -- -- Keymap to navigate suggestions
+  -- vim.keymap.set(
+  -- { "i", "n" },
+  -- "<M-x>",
+  -- [[<Cmd>lua require("copilot.suggestion").next()<CR>]],
+  -- { noremap = true, silent = true }
+  -- )
 
-      -- -- Keymap to toggle Copilot enable/disable
-      -- vim.keymap.set("n", "<leader>ct", function()
-        -- if copilot.is_enabled() then
-          -- copilot.disable()
-          -- notify.info("Copilot disabled")
-        -- else
-          -- copilot.enable()
-          -- notify.info("Copilot enabled")
-        -- end
-      -- end, { noremap = true, silent = true, desc = "Toggle Copilot" })
-    -- end,
+  -- -- Keymap to toggle Copilot enable/disable
+  -- vim.keymap.set("n", "<leader>ct", function()
+  -- if copilot.is_enabled() then
+  -- copilot.disable()
+  -- notify.info("Copilot disabled")
+  -- else
+  -- copilot.enable()
+  -- notify.info("Copilot enabled")
+  -- end
+  -- end, { noremap = true, silent = true, desc = "Toggle Copilot" })
+  -- end,
   -- },
 
   -- Copilot.vim legacy plugin

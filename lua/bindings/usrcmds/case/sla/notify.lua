@@ -45,7 +45,14 @@ local function maybe_warn(entry, status, label, c)
   local title = (m and m.title and m.title ~= "") and (" " .. m.title) or ""
   local urgency = c.remaining < 0 and "overdue" or "warning"
   notify.warn(
-    ("SLA %s: %s P%s%s — %s %s"):format(urgency, entry.short, status.digit, title, label, sla.format_duration(c.remaining))
+    ("SLA %s: %s P%s%s — %s %s"):format(
+      urgency,
+      entry.short,
+      status.digit,
+      title,
+      label,
+      sla.format_duration(c.remaining)
+    )
   )
 end
 

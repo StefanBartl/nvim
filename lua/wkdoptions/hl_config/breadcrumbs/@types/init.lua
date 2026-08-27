@@ -23,7 +23,6 @@
 ---@field refresh fun(): nil # Refresh using global config (wrapper for after_set integration)
 ---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install BufEnter/CursorMoved/WinScrolled autocmds
 
-
 ---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx
 ---
 ---@field lua_table_root lua_table_root_opt
@@ -137,7 +136,6 @@
 --- Diese Reihenfolge wird nach und nach abgearbeitet, bis ein Kontext gefunden ist;
 --- „container“ modifiziert/ergänzt i. d. R. das Symbol aus ts_symbol.
 ---@field providers_order string[]
-
 
 ---@class ModeChangedEvent
 ---@field match string  -- "<old>:<new>"
