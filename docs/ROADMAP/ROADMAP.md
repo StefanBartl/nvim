@@ -19,6 +19,13 @@
 - [ ] Anticheat knacken
 - [ ] Merge_Finished
 - [ ] stylua nvim-config
+- [ ] Keymap, mit der sich das letzte echte cmd/vimmotioon/keymap/usw.. nochmals ausführen lässt. Dabei müssen die hjkl/UpDownLefRight-Arrow sinnvoll weggelassen werden. Beispiel: j,j,k,`3 M-Right` (indente die aktuelle Zeile * 3 count = indente die näxhsten 3 Zeilen) - dann gehe ich 5 zeilen runter, also j,j,j,j,j oder 5j - wenn ich jetzt das neuen Keymap ausführe soll es nochmal `3 M-Right` ausführen, die 5j asl reine bewegung wegfilterm (das ist auch der unterschied zu nvims default `.` wenn ich es richtg verstanden habe).
+  Es soll immer den letzen echten command nehmen, also wenn man: j,j,k,`3 M-Right`,  dann 5 zeilen runter, also j,j,j,j,j oder 5j, dann zb.: `M-c` (neues bulletpopint cascade.nvim), dann j,j,j dann das Super Keymap, dann ereugt es eiwieder einen Bullet Point, weil das der letzte cmd war, nicht das `3 M-Right` indent.
+
+  Dies könnte ebenfalls ein neues `Super-Keymap` sein so wie wir in der lib.nvim bereits zwei haben
+  Abseits davon gib mir bit te auch ncoh aus, ob es ähnlixhes beretis default in nvim gibt bzw obn es einen weg gibt, das default nachustellen.
+
+- [ ] `M-CR` soll ein normales enter  sein im insert mode, also `cascade.nvim`s next bullet generieren überspringen - oder gbtes dazu schon einen anderen?
 
 ---
 
