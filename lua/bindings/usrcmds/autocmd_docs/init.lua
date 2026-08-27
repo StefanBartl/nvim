@@ -1,5 +1,6 @@
 ---@module 'bindings.usrcmds.autocmd_docs'
----@brief `:LibAutocmdDocs[Check|All]` — generate `bindings/autocmd/` markdown
+---@brief `:LibAutocmdDocs[Check|All]` and `:LibUsercmdDocs[Check]` — generate
+---`bindings/autocmd/` and `bindings/usercmd/` markdown
 ---from what `lib.nvim.bindings.autocmd` actually registered this session.
 ---@description
 --- `lib.nvim.bindings.autocmd` keeps a record of every autocmd created
@@ -83,10 +84,23 @@ local function report(results, dry_run)
   end
 end
 
----Register `:LibAutocmdDocs`, `:LibAutocmdDocsCheck` and `:LibAutocmdDocsAll`.
+---Register `:LibAutocmdDocs`, `:LibAutocmdDocsCheck` and `:LibAutocmdDocsAll`,
+---plus the user-command equivalents.
 ---@return nil
 function M.enable()
   docs.create_usercmd()
+
+  -- `:LibUsercmdDocs` / `:LibUsercmdDocsCheck`, the same pair for the user
+  -- commands this config defines. They live here rather than in their own
+  -- module for the reason the header gives about the autocmd ones: this is
+  -- tooling for whoever edits the repos, and the two generators are the same
+  -- tool pointed at two registries.
+  --
+  -- No `…All` counterpart: lib has no `write_all` for user commands, and the
+  -- autocmd one derives its repository set from records that carry a source
+  -- path -- which these now do, so it is a small addition if it is ever
+  -- wanted, not a missing capability.
+  require("lib.nvim.bindings.usercmd").docs.create_usercmd()
 
   usercmd.create("LibAutocmdDocsAll", function(opts)
     local args = vim.split(opts.args or "", "%s+", { trimempty = true })
