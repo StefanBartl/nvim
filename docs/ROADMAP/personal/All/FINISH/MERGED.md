@@ -103,9 +103,22 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
       Die 4 strittigen Fälle, die dir vorlagen, sind entschieden und
       umgesetzt (Sparklines über `nerd_font.chars`, reposcope bleibt,
       sandbox bekommt `max_error_length`, der Logger nimmt die Kappungen
-      pro Aufruf). Offen bleibt nur der zweite Scan-Durchgang nach Zahlen
-      ohne Namen (`vim.defer_fn(fn, 60)`) und Plattform-Verzweigungen ohne
-      Opt-out.
+      pro Aufruf).
+
+      **Durchgang zwei ist ebenfalls durch** (2026-08-27): 43 Zahlen ohne
+      Namen, 47 Plattform-Verzweigungen. Ergebnis war nicht "43 neue Keys" —
+      26 der 43 sind Float-Größen (`vim.o.columns * 0.8`) in neun Plugins,
+      also *eine* Entscheidung. Gelöst in `lib.nvim`s `make_scratch`, das
+      jetzt Bruchteile nimmt (`width = 0.8`); die Konvention stand bereits in
+      `kit.layout`. Die Plattform-Verzweigungen sind fast durchweg Tatsachen
+      über das OS, keine Präferenzen — dafür steckte in ihnen ein echter Bug
+      (`du -sb` ist GNU-only, auf macOS/BSD blieb die Größenspalte still
+      leer). Report: `docs/NOTES/PersonelPlugins/zahlen-ohne-namen.md`.
+
+      Offen und bewusst niedrig priorisiert: die 26 Aufrufstellen auf die
+      kurze Form umstellen (rein mechanisch, funktionieren unverändert
+      weiter) und zwei Timeout-Paare zusammenführen, die denselben Wert
+      doppelt führen.
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
 
 ### Performance
