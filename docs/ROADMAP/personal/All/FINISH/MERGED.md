@@ -51,15 +51,46 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 ## Liste B — An Claude Code delegierbar
 
 ### Dokumentation & Cheatsheets
-- [ ] UseCases/Workflow-Datei pro Plugin (typischer Workflow + Edge Cases); vorhandene auf Aktualität prüfen.
+- [~] **UseCases/Workflow-Datei pro Plugin** — 32 von 33 Plugins haben eine
+      `docs/WORKFLOW.md`; es fehlt nur `neotree-fs-refactor.nvim`, ein
+      Experimentier-Repo. Die Aktualitätsprüfung ist gelaufen und hat die
+      Drift woanders gefunden (16 von 18 neuen Config-Keys fehlten in der
+      User-Doku, jetzt ergänzt — siehe `Merged_Finished.md`). Offen bleibt
+      nur der *inhaltliche* Durchgang: liest sich jeder Workflow noch wie der
+      Weg, den man heute tatsächlich geht? Das ist Lesearbeit, keine
+      Messung.
 
 ### Bindings, Keymaps & UI
 #### autocmds
 
-- [ ] Autocmds aller Ordner in einem `bindings/autcmd`-Ordner zusammenführen, nach Events sortiert (Dispatch-Lib-Modul), Abgleich mit `/bindings`.
+- [~] **Autocmds zusammenführen / Dispatch-Lib-Modul** — der Überblick ist da,
+      das Verschieben bewusst nicht. Details in `Merged_Finished.md`; kurz:
+      `lib.nvim.bindings.autocmd` führt jetzt ein **Register** dessen, was
+      wirklich registriert wurde (Event, Gruppe, Pattern, desc, Datei:Zeile),
+      abrufbar über `registered()`/`by_event()`. Das beantwortet „was feuert
+      wann" aus dem, was existiert — und erfasst auch jede künftige
+      Registrierung an beliebiger Stelle, was reines Verschieben nicht
+      leisten würde.
+
+      Offen und für dich zu entscheiden: der **Dispatcher** (`lib.nvim.
+      bindings.autocmd.dispatcher`, existiert bereits) bündelt N Handler
+      hinter einem Autocmd. Seine eigene README ist ehrlich, dass er *kein*
+      Performance-Gewinn ist — er macht pro Event mehr Arbeit als natives
+      Dispatch, nicht weniger. Was er bringt: deterministische Reihenfolge,
+      einheitliches Lazy-Loading, `once` pro Buffer. Bei filetree hätte
+      `BufEnter` (10 Handler) den plausibelsten Fall. Ob dir das die
+      Umstellung wert ist, ist eine Abwägung, keine Rechnung.
 
 ### Healthchecks, Config & Defaults
-- [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
+- [~] **`lib.nvim` konsequent als Dependency nutzen** — die Konsistenz-Hälfte
+      ist erledigt, die Dedup-Hälfte nicht. `notify` als Factory: drei Stellen
+      in migrate.nvim riefen den Notifier auf, ohne einen zu erzeugen — kein
+      Stilproblem, sondern ein Absturz, und einer im Erfolgspfad. Ein Sweep
+      über alle lib-Factories in allen 33 Repos fand sonst nichts.
+
+      Offen: **Funktionen migrieren/deduplizieren** — welche Helfer in
+      mehreren Plugins doppelt liegen und nach lib gehören. Das ist eine
+      eigene Analyse, vergleichbar mit den Konfigurierbarkeits-Durchgängen.
 
 ### Performance
 - [ ] **Startup optimieren — erledigt bis auf `lsp.setup()`, siehe `Merged_Finished.md`.** ~1300ms → ~942ms (−27%), eager geladene Plugins 44 → 28. Drei Ursachen, alle gemessen: neo-tree `lazy = false` (zog neotest samt acht Adaptern mit), ein fehlschlagendes `vim.fn.executable("pwsh")` in `options.lua` (~44ms, jede Startup), und `trouble.nvim` `lazy = false` (~79ms + 71ms devicons).

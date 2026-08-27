@@ -287,6 +287,65 @@ nvim-Config.
       ebenfalls umgesetzt. Cmdlogs Popup-Standzeit ist mit dem Feature
       weggefallen.
 
+- [x] **Autocmds: ein Register statt eines handgeführten Katalogs.**
+      `lib.nvim.bindings.autocmd.create` zeichnet jetzt auf, was es erzeugt —
+      Events, Gruppe, Pattern/Buffer, `desc`, `once` und die **Aufrufstelle
+      als `file:line`**. Abrufbar über `registered()` (nach Event oder Gruppe
+      filterbar) und `by_event()`.
+
+      Der Anlass war Drift, nicht Bequemlichkeit: filetrees handgeschriebener
+      Katalog nannte **vierzehn** Einträge gegen **sechsundvierzig** echte
+      Registrierungen, verteilt über 23 Feature-Module — er lag bei zwei
+      Dritteln daneben, und nichts sagte das irgendwo. Ein Register kann
+      darüber nicht falsch liegen, weil es *ist*, was existiert. Wird eine
+      Augroup geleert, verschwinden ihre Einträge mit.
+
+      Dabei behoben: das Register merkte sich den Gruppennamen anfangs nur
+      bei String-Gruppen. Die meisten Aufrufer reichen die *id* durch (die
+      dokumentierte Form) — bei filetree hatte damit kein einziger der 46
+      Records eine Gruppe. `group()` führt jetzt zusätzlich id → name.
+
+      Bewusst **nicht** gemacht: die Autocmds physisch in einen Ordner
+      verschieben. Das hätte jede Autocmd von ihrer Feature-Logik getrennt
+      und künftige Registrierungen anderswo trotzdem nicht erfasst — das
+      Register tut beides nicht nötig haben.
+
+- [x] **filetree: Tree-Buffer-Erkennung über den Adapter** — beim Durchsehen
+      der Autocmds gefunden. Acht Features prüften inline `ft == "neo-tree"
+      or ft == "NvimTree"`, zehn Kopien derselben Zeile. filetree unterstützt
+      aber auch netrw, oil und mini_files, und jeder Adapter deklariert seine
+      `filetypes` selbst — unter jedem anderen Adapter taten diese acht
+      Features in ihren Handlern **schlicht nichts**, ohne Fehler und ohne
+      Hinweis. Betroffen: copy_move, lsp_diagnostics, auto_reveal, session,
+      preview, size_info (zweimal) und der Reveal-Sweep. Verifiziert mit
+      netrw: vorher `false`, jetzt `true`.
+
+      Nebenbei: `util/autocmd.group()` delegiert wieder an lib. Der
+      Kommentar, der das verbot, beschrieb einen Cache-Bug, den lib längst
+      behoben hat.
+
+- [x] **`notify` als Factory — es bricht doch.** `require("lib.nvim.notify")`
+      exportiert nur `create` und `safe`; `notify.info` ist `nil`. Drei
+      Dateien in migrate.nvim (`hl`, `lsp`, `opt`) riefen es trotzdem direkt
+      auf, und `notify.info` steht dort im **Erfolgspfad** (`on_apply`) — es
+      feuerte bei jedem gelungenen Lauf. Ein Sweep über alle lib-Factories in
+      allen 33 Repos fand sonst keinen weiteren Fall.
+
+- [x] **Doku-Aktualität nachgemessen — und ein Werkzeug wieder verworfen.**
+      Ich habe versucht, die in der Prosa versprochenen Tasten automatisch
+      gegen die registrierten zu halten. 102 Treffer, **jeder geprüfte ein
+      Fehlalarm**: which-key-Gruppenpräfixe, Spalten mit der Überschrift
+      „example lhs", buffer-lokale Keys, und in spotlights Fall zwei Tasten,
+      die die Doku ausdrücklich *nicht* verwendet. Dazu war der Extraktor zu
+      eng — cmdlogs entferntes `<C-e>` hätte er gar nicht gefunden. Ein
+      Werkzeug, das alles meldet und das Eigentliche verpasst, habe ich
+      gelöscht statt abgelegt.
+
+      Die echte Drift lag woanders und war messbar: **16 von 18** heute
+      eingeführten Config-Keys standen nicht in der User-Doku, nur in
+      `DEFAULTS.lua` und den LuaLS-Typen. Alle 21 sind jetzt dort, wo der
+      jeweilige Block ohnehin die DEFAULTS spiegelt.
+
 ---
 
 ## 2026-08-26
