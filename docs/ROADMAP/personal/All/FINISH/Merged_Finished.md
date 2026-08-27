@@ -8,6 +8,36 @@ nvim-Config.
 
 ## 2026-08-27
 
+### Healthchecks, Config & Defaults
+
+- [x] **`notify` als Factory — die Konsistenz-Haelfte von "lib.nvim konsequent
+      als Dependency nutzen".**
+
+      `lib.nvim.notify` ist eine Factory: es gibt `create(prefix)` und `safe`,
+      sonst nichts. `require("lib.nvim.notify").info` ist `nil`. Drei Stellen
+      in migrate.nvim riefen genau das auf — kein Stilproblem, sondern ein
+      Absturz, und einer davon im *Erfolgspfad*, also genau dort, wo niemand
+      hinschaut. Behoben.
+
+      Ein Sweep ueber alle lib-Factories in allen 33 Repos fand sonst nichts
+      Vergleichbares.
+
+- [x] **Duplikat-Analyse ueber alle Repos gelaufen** (die Umsetzung steht noch
+      aus und bleibt in `MERGED.md`).
+
+      Verglichen wurden *identische Funktionskoerper*, nicht Namen
+      (`docs/ROADMAP/tools/duplicate_functions.py`, normalisiert um
+      Einrueckung und Kommentare, ab 4 Zeilen). Der Grund fuer diesen Zuschnitt
+      ist der Befund selbst: gleich heissende Funktionen tun oft
+      Verschiedenes, und die echten Duplikate heissen oft verschieden.
+
+      Was dabei herauskam, ist auch deshalb festgehalten, weil zwei der
+      Kandidaten *nicht* nach lib gehoeren und der Grund sonst verloren geht:
+      `config.M.get` (6 Plugins) sind vier Zeilen Boilerplate, deren Import
+      und Kopplung mehr kosten als sie sparen — und `try_require` (4 Plugins)
+      ist der Soft-Dependency-Helfer, der funktionieren muss, *ohne* dass lib
+      da ist. Ihn nach lib zu ziehen waere zirkulaer.
+
 ### Bindings, Keymaps & UI
 
 - [x] **Autocmd-Dispatcher gemessen, statt darueber zu spekulieren.**

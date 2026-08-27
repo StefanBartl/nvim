@@ -90,20 +90,51 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Healthchecks, Config & Defaults
 - [~] **`lib.nvim` konsequent als Dependency nutzen** — die Konsistenz-Hälfte
-      ist erledigt, die Dedup-Hälfte nicht. `notify` als Factory: drei Stellen
-      in migrate.nvim riefen den Notifier auf, ohne einen zu erzeugen — kein
-      Stilproblem, sondern ein Absturz, und einer im Erfolgspfad. Ein Sweep
-      über alle lib-Factories in allen 33 Repos fand sonst nichts.
+      ist erledigt und nach `Merged_Finished.md` gewandert. Offen ist nur noch
+      das **Deduplizieren**; die Analyse ist gelaufen, die Umsetzung nicht.
 
-      Offen: **Funktionen migrieren/deduplizieren.** Gemeint ist damit: es
-      gibt Helfer, die in mehreren Plugins unabhängig voneinander nochmal
-      geschrieben wurden statt aus lib zu kommen — dieselbe Arbeit an zwei
-      Stellen, die getrennt voneinander veraltet. Der Weg dorthin ist ein
-      Vergleich *identischer Funktionskörper* über alle Repos
-      (`docs/ROADMAP/tools/duplicate_functions.py`), nicht ein Vergleich von
-      Namen: gleich heißende Funktionen tun oft Verschiedenes, und die echten
-      Duplikate heißen oft verschieden. Erst was mehrfach *identisch* dasteht,
-      ist ein Kandidat für lib.
+      Gesucht wurden *identische Funktionskörper* über alle Repos
+      (`docs/ROADMAP/tools/duplicate_functions.py`), nicht gleiche Namen:
+      gleich heißende Funktionen tun oft Verschiedenes, und die echten
+      Duplikate heißen oft verschieden.
+
+      **Zu tun, absteigend nach Wert:**
+
+      - [ ] **Markdown-Tabellen-Renderer nach lib** — `gen_separator`,
+            `format_row`, `render_table`, byte-identisch in **buffer-ctx.nvim**
+            und **markdown.nvim**. Der klare Fall: ein kompletter Renderer,
+            zweimal gepflegt. Neues lib-Modul, beide Plugins umstellen,
+            **lib-Doku nicht vergessen** (Modul-README + Eintrag in der
+            lib-Übersicht).
+      - [ ] **`deep_merge` + `config.get` in cascade.nvim ↔ spotlight.nvim**
+            (12 bzw. 11 Zeilen) — Config-Maschinerie doppelt.
+      - [ ] **Kleinkram, wenn ohnehin dort:** `health.check_require`
+            (dap ↔ debugging), `version_ok` (documentation ↔
+            runtime-analysis), HTML-Escaping, `spawn_env.array`.
+
+      **Bewusst *nicht* zu tun, beides mit Begründung:**
+
+      - `config.M.get` in 6 Plugins — 4 Zeilen Boilerplate. Der Import, die
+        Indirektion und die zusätzliche Kopplung kosten mehr, als die vier
+        Zeilen sparen.
+      - `try_require` in 4 Plugins — hier spricht ein echter Grund dagegen:
+        das ist der Soft-Dependency-Helfer. Er muss funktionieren, *ohne* dass
+        lib da ist. Ihn nach lib zu ziehen wäre zirkulär.
+
+#### autocmds, zweiter Teil
+- [ ] **74 direkte `nvim_create_autocmd`-Aufrufe auf lib umstellen.** Beim Bau
+      von `docs.write_all()` aufgefallen: 16 der 29 Plugins mit Autocmds
+      erzeugen zusammen 74 davon direkt über `vim.api`. Die feuern, hinterlassen
+      aber keinen Record und können in keiner generierten Tabelle stehen —
+      eine Doku, die das verschweigt, ist nicht unvollständig sondern falsch.
+      lib zählt die Aufrufstellen deshalb statisch und schreibt eine
+      `> **Incomplete.**`-Warnung in den Header; der `:LibAutocmdDocsAll`-Report
+      wiederholt die Zahl pro Repo. Mit der Umstellung verschwindet die
+      Warnung von selbst.
+
+      Verteilung: mdview 16, debugging 13, markdown 10, filetree 6,
+      documentation 5, language 4, pickers 4, color_my_ascii 3, buffer-ctx 2,
+      fileops 2, sandbox 2, open/cmdlog/runtime-analysis/sessions/spotlight je 1.
 
 ### Performance
 - [ ] **Startup optimieren — erledigt bis auf `lsp.setup()`, siehe `Merged_Finished.md`.** ~1300ms → ~942ms (−27%), eager geladene Plugins 44 → 28. Drei Ursachen, alle gemessen: neo-tree `lazy = false` (zog neotest samt acht Adaptern mit), ein fehlschlagendes `vim.fn.executable("pwsh")` in `options.lua` (~44ms, jede Startup), und `trouble.nvim` `lazy = false` (~79ms + 71ms devicons).
