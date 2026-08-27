@@ -4,7 +4,6 @@
 
   - [Misc](#misc)
   - [DASHBOARD check](#dashboard-check)
-    - [language.nvim](#languagenvim)
   - [images.nvim](#imagesnvim)
     - [erweiterung](#erweiterung)
   - [workflow + usecases in allen plugins](#workflow-usecases-in-allen-plugins)
@@ -17,31 +16,19 @@
 ## Misc
 
 - [ ] Anticheat knacken
-- [ ] Merge_Finished
-- [ ] stylua nvim-config
+- [ ] nvim-config: stylua kompatibel machen bzw begründen, warum das nicht so sein sollte.
 - [ ] Keymap, mit der sich das letzte echte cmd/vimmotioon/keymap/usw.. nochmals ausführen lässt. Dabei müssen die hjkl/UpDownLefRight-Arrow sinnvoll weggelassen werden. Beispiel: j,j,k,`3 M-Right` (indente die aktuelle Zeile * 3 count = indente die näxhsten 3 Zeilen) - dann gehe ich 5 zeilen runter, also j,j,j,j,j oder 5j - wenn ich jetzt das neuen Keymap ausführe soll es nochmal `3 M-Right` ausführen, die 5j asl reine bewegung wegfilterm (das ist auch der unterschied zu nvims default `.` wenn ich es richtg verstanden habe).
   Es soll immer den letzen echten command nehmen, also wenn man: j,j,k,`3 M-Right`,  dann 5 zeilen runter, also j,j,j,j,j oder 5j, dann zb.: `M-c` (neues bulletpopint cascade.nvim), dann j,j,j dann das Super Keymap, dann ereugt es eiwieder einen Bullet Point, weil das der letzte cmd war, nicht das `3 M-Right` indent.
-
   Dies könnte ebenfalls ein neues `Super-Keymap` sein so wie wir in der lib.nvim bereits zwei haben
   Abseits davon gib mir bit te auch ncoh aus, ob es ähnlixhes beretis default in nvim gibt bzw obn es einen weg gibt, das default nachustellen.
-
-- [ ] `M-CR` soll ein normales enter  sein im insert mode, also `cascade.nvim`s next bullet generieren überspringen - oder gbtes dazu schon einen anderen?
-- [ ] **All usrcmds wie :DocMap**All, RATelemetryAll oder :LibAutocmdDocsAll -> grundsätzlkich sollten die jeseileigen ursprünglichen usrcmds für single repos zumindest eine option haben, mit der durch ein dir iterriert werden und daraug angewendet werden kann, sodasds man das *All dort surchführen kann.
-- [ ] lib.nvim menu: wir haben einen einziges icon - delete files - drinnen. entweder haben alle bzw der überweältigende mehrehit ein icon oder gar keines
 - [ ]alle keymaps der nvim config durcsheen ob die wirlich gebraucht werden
-- [ ] `O` sollte ein bulletin ereugen, wenn darüber eines bullet ist (`cascade.nvim`)
+- [ ]  C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\tools -> könnten daraus echte Module für die nvim-config/lib.mvim entstehen?
 
 ---
 
 ## DASHBOARD check
 
 Dasboards in den repos auflisten, welches hat eines usw...idealerweiße, wenn möglich wei nicht extrem individdualisert, dann lib.nvim ui.kit dashboard vewrenden. `?` cheetsheet implementieren. wenn das daschbaoard bisher keine buffer loaklen  keymaps hat, brainstomrmen obn welche siunnvoll sind
-
----
-
-### language.nvim
-
-:Spellcheck öffnet ein popu it den reusltaten. dort sollte auch ein `?` cheathseet für keymaps die buffer lokal dort wirken, dazu keymaps fpr add_to_ignore, dictionary, usw... einbauen. Ich  wei0, dass momenan CR zu den optionen führt, was auh ok ist, aber man kan es doppelt ermöglichen bzw vl können wir dann auch eines einführen, miot dem man zum wort springt mit dem cursor.
 
 ---
 
@@ -193,10 +180,13 @@ und das native: docmap-desktop
 
 ## cdx
 
-free: So., 09:00  98% - Subscription bis   21. Juli 2027  |
+free: So., 09:00 100% - Subscription bis   21. Juli 2027  |
 work: Sa., 06:00 100% - Subscription bis   20. Sept       |
 dev:  Sa., 22:00 100% - Subscription bis   03. Sep        |
-main: Fr., 11:00  10% - Subscription bis ~ 27. Sep        | 17:31
+main: Fr., 11:00  10% - Subscription bis ~ 27. Sep        | 23:31
+
+never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
+antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
 
 ---
 

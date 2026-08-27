@@ -1,9 +1,8 @@
-logs/
-lazy-lock.json
-pack/github/start/copilot.vim
-.vscode/
-noice.log
-lua/sessions/storage/last.vim
-CLAUDE.md
-.claude/
 .agents/
+.claude/
+.vscode/
+logs/
+lua/sessions/storage/last.vim
+pack/github/start/copilot.vim
+lazy-lock.json
+noice.log

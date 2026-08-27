@@ -248,4 +248,5 @@ vim.defer_fn(function()
 end, 0)
 
 -- Für einen harten Kontrast: Weißer Hintergrund, schwarzer Text
+-- TODO: gehört in meine options/
 vim.api.nvim_set_hl(0, "Visual", { bg = "#FFFFFF", fg = "#000000", bold = true })
