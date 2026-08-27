@@ -34,7 +34,7 @@ function M.setup()
   -- ---------------------------------------------------------------------------
   map("n", "<leader>Q", function()
     vim.cmd("qa!")
-  end, { desc = "[Wimdows] Force quit all" })
+  end, { desc = "[Windows] Force quit all" })
 
   -- Window closing
   map({ "n", "v" }, "<leader>q", "<Cmd>close!<CR>", { desc = "[Windows] Close window" })

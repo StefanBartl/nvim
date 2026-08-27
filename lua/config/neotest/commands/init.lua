@@ -20,7 +20,7 @@ local actions = require("config.neotest.actions")
 
 local M = {}
 
-local create = vim.api.nvim_create_user_command
+local create = require("lib.nvim.bindings.usercmd").create
 
 function M.setup()
   create("NeotestActions", function()

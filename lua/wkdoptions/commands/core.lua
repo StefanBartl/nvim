@@ -6,19 +6,19 @@ local trim = require("lib.lua.strings.core").trim
 
 local M = {}
 
---- Safely (re)define a user command by removing any previous definition.
+--- (Re)define a user command.
+---
+--- Through `lib.nvim.bindings.usercmd`, which already does everything the
+--- hand-rolled version here did and one thing it did not: it defaults to
+--- `force = true`, so a redefinition needs no `nvim_del_user_command` dance
+--- first, and it pcall-wraps the callback so a throwing command reports
+--- through `lib.nvim.notify` instead of a raw stack trace.
 ---@param name string
 ---@param rhs fun(opts: {fargs: string[], bang: boolean}): nil
 ---@param opts table|nil
 ---@return nil
 function M.define_cmd(name, rhs, opts)
-  pcall(vim.api.nvim_del_user_command, name)
-
-  local ok, err = pcall(vim.api.nvim_create_user_command, name, rhs, opts or {})
-  if not ok then
-    local notify = require("lib.nvim.notify").create("[Commands]")
-    notify.error(("Failed to create command '%s': %s"):format(name, tostring(err)))
-  end
+  require("lib.nvim.bindings.usercmd").create(name, rhs, opts or {})
 end
 
 --- Resolve a dot-path on a table (read-only).

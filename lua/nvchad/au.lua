@@ -67,9 +67,9 @@ end, {
   desc = "NvChad: reload a config module after saving it",
 })
 
-vim.api.nvim_create_user_command("MasonInstallAll", function()
+require("lib.nvim.bindings.usercmd").create("MasonInstallAll", function()
   require("nvchad.mason").install_all()
-end, {})
+end, { desc = "NvChad: install every configured Mason package" })
 
 if config.colorify.enabled then
   require("nvchad.colorify").run()

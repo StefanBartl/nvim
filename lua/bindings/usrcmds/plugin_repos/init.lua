@@ -798,7 +798,7 @@ local function list_all(path)
     )
   vim.wo[winid].winbar = header:gsub("%%", "%%%%")
 
-  vim.keymap.set("n", "q", function()
+  require("lib.nvim.bindings.keymap")("n", "q", function()
     if vim.api.nvim_win_is_valid(winid) then
       vim.api.nvim_win_close(winid, false)
     end
@@ -1069,7 +1069,7 @@ function M.enable()
 
   -- Flat shorthand for the subcommand used often enough to want a single
   -- word: `:MyPluginsDashboard [dir]` is exactly `:MyPlugins dashboard [dir]`.
-  vim.api.nvim_create_user_command("MyPluginsDashboard", function(cmd_opts)
+  require("lib.nvim.bindings.usercmd").create("MyPluginsDashboard", function(cmd_opts)
     open_dashboard(cmd_opts.args ~= "" and expand_path(cmd_opts.args) or nil)
   end, {
     nargs = "?",
