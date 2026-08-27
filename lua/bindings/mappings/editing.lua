@@ -135,6 +135,29 @@ local function resolve_unnamed(regname)
   return regname
 end
 
+---Flash the region a put just wrote, if wkdoptions' put flash is enabled.
+---
+---That feature used to own `p`/`P` itself (`wkdoptions.hl_config.features
+---.flash`), which put it in a fight with this module over the same two keys —
+---and it lost, because these mappings are registered on `UIReady` and
+---therefore later. So the flash was switched on in the config and did nothing
+---at all.
+---
+---The two were never in conflict about behaviour, only about the key: one
+---decides *what* is pasted, the other adds feedback afterwards. Calling it
+---from here gets both on one keypress. `nvim_put` sets the `[`/`]` marks the
+---flash reads, so no replay of the native `p` is needed.
+---
+---Soft: wkdoptions is part of this config, but a paste must not fail because
+---its highlight layer is absent or errored.
+---@return nil
+local function flash_put()
+  local ok, flash = pcall(require, "wkdoptions.hl_config.features.flash")
+  if ok and type(flash.flash_put) == "function" then
+    pcall(flash.flash_put)
+  end
+end
+
 ---Read register `regname`, trim it (see `trim_edges`), and put it via
 ---`nvim_put` — never through the register system, so the register itself
 ---(and, with unnamedplus, the real system clipboard) is left untouched and
@@ -146,6 +169,7 @@ local function put_trimmed(regname, after)
   local lines = vim.fn.getreg(regname, 1, true) --[[@as string[] ]]
   local regtype = vim.fn.getregtype(regname)
   vim.api.nvim_put(trim_edges(lines), put_type(regtype), after, true)
+  flash_put()
 end
 
 ---Wrap `vim.paste` so bracketed-paste input gets the same edge trimming and

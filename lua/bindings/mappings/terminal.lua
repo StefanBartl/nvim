@@ -1,8 +1,11 @@
 ---@module 'bindings.mappings.terminal'
 --- Terminal-mode keymaps: `<Esc>`/`<C-c>` to leave terminal mode, and `<C-h/j/k/l>`
 --- so window navigation keeps working from inside a terminal buffer.
-
-local env = require("lib.nvim.system.env")
+---
+--- `<C-l>` was mapped twice here, eleven lines apart: once to move to the
+--- window on the right, and once to send `clear`/`cls` to the terminal job.
+--- The second silently won. Only the window movement is left -- the shell's
+--- own `clear` command does that job without spending a key.
 
 local M = {}
 
@@ -23,14 +26,6 @@ function M.setup()
       nt.toggle({ pos = "float", id = "floatTerm" })
     end
   end, { desc = "[Term] Toggle floating" })
-
-  map("t", "<C-l>", function()
-    local term_id = vim.b.terminal_job_id
-    if term_id then
-      local cmd = env.get().is_windows and "cls" or "clear"
-      vim.fn.chansend(term_id, { cmd, "" } )
-    end
-  end, { desc = "[term] terminal-insert-mode ctrl-l (clear) mapping" })
 
   --- Toggle NvChad UI terminal in a vertical split with ~1/3 screen width.
   --- Works from normal & terminal mode; robustly enforces width after opening.

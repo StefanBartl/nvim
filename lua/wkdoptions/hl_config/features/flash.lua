@@ -4,7 +4,6 @@
 local lazy = require("lib.lua.lazy")
 local State = lazy.require("wkdoptions.hl_config.core.state")
 local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
-local map = require("lib.nvim.bindings.keymap")
 
 local M = {}
 
@@ -106,24 +105,39 @@ function M.enable_yank()
   })
 end
 
---- Install put flash mappings
+--- Whether the put flash is switched on.
+---
+--- Set by `enable()`, so it is false until wkdoptions has been set up at all.
+---@type boolean
+local put_flash_on = false
+
+--- Whether a paste should flash the region it wrote.
+---
+--- Asked by whoever owns `p`/`P` -- see `M.flash_put`.
+---@return boolean
+function M.put_flash_enabled()
+  return put_flash_on
+end
+
+--- Flash the region a put just wrote.
+---
+--- This used to install its own `p`/`P` mappings, which put it in a fight with
+--- `bindings.mappings.editing`'s trimming paste over the same two keys. It
+--- lost that fight: the trimming paste is registered on `UIReady` and
+--- therefore later, so the flash was configured on and did **nothing**.
+---
+--- The two were never in conflict about behaviour, only about the key. One
+--- decides *what* gets pasted, the other adds feedback *afterwards*. So the
+--- paste owner calls this and both happen on one keypress.
+---
+--- No `feedkeys` replay is needed: `nvim_put` sets the `[` and `]` marks this
+--- reads, exactly as a native `p` does.
 ---@return nil
-function M.enable_put()
-  -- Clear old mappings
-  pcall(vim.keymap.del, "n", "p")
-  pcall(vim.keymap.del, "n", "P")
-
-  local function paste_and_flash(which)
-    return function()
-      vim.api.nvim_feedkeys(which, "n", false)
-      vim.schedule(function()
-        M.flash_changed("PutFlash", 160)
-      end)
-    end
+function M.flash_put()
+  if not put_flash_on then
+    return
   end
-
-  map("n", "p", paste_and_flash("p"), { noremap = true, silent = true, desc = "Paste (flash)" })
-  map("n", "P", paste_and_flash("P"), { noremap = true, silent = true, desc = "Paste before (flash)" })
+  M.flash_changed("PutFlash", 160)
 end
 
 --- Main entry point
@@ -134,9 +148,11 @@ function M.enable(cfg)
     M.enable_yank()
   end
 
-  if State.is_enabled("put_flash") and cfg.map_put_flash then
-    M.enable_put()
-  end
+  -- `map_put_flash` no longer installs anything -- nothing here maps `p`/`P`
+  -- any more. It is still honoured as the switch it effectively was: someone
+  -- who set it to `false` did so to stop the put flash, and that is what it
+  -- still means.
+  put_flash_on = State.is_enabled("put_flash") and cfg.map_put_flash ~= false
 end
 
 return M

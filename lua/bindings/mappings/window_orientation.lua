@@ -51,8 +51,10 @@ function M.setup()
   map("n", "<leader>wh", M.to_horizontal_top, { desc = "Move window to horizontal split (top)" })
   map("n", "<leader>wj", M.to_horizontal_bottom, { desc = "Move window to horizontal split (bottom)" })
 
-  -- rotate entire layout
-  map("n", "<leader>wo", M.rotate, { desc = "Rotate window layout" })
+  -- Rotate entire layout. `<leader>wR`, not `<leader>wr`: that one is the
+  -- vertical-split-right move four lines up. It used to be `<leader>wo`,
+  -- which lsp.nvim also claims for its workspace-diagnostics picker.
+  map("n", "<leader>wR", M.rotate, { desc = "Rotate window layout" })
 
   -- user commands
   usercmd.create("WinVertical", function()
