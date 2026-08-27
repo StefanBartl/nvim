@@ -27,6 +27,8 @@
   Abseits davon gib mir bit te auch ncoh aus, ob es ähnlixhes beretis default in nvim gibt bzw obn es einen weg gibt, das default nachustellen.
 
 - [ ] `M-CR` soll ein normales enter  sein im insert mode, also `cascade.nvim`s next bullet generieren überspringen - oder gbtes dazu schon einen anderen?
+- [ ] **All usrcmds wie :DocMap**All, RATelemetryAll oder :LibAutocmdDocsAll -> grundsätzlkich sollten die jeseileigen ursprünglichen usrcmds für single repos zumindest eine option haben, mit der durch ein dir iterriert werden und daraug angewendet werden kann, sodasds man das *All dort surchführen kann.
+- [ ] lib.nvim menu: wir haben einen einziges icon - delete files - drinnen. entweder haben alle bzw der überweältigende mehrehit ein icon oder gar keines
 
 ---
 
