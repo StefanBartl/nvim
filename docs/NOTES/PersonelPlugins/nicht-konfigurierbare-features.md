@@ -26,33 +26,35 @@ Scan zieht `DEFAULT_`-Präfixe ab, bevor er in der Config nachsieht.
 
 ---
 
-## A — Klar: sollte konfigurierbar werden
+## A — Klar: sollte konfigurierbar werden — **erledigt 2026-08-27**
 
 Verhalten, das ein User plausibel anders will, und wo "anders" nicht heißt,
-dass das Plugin kaputtgeht.
+dass das Plugin kaputtgeht. **Alle Einträge dieser Tabelle sind umgesetzt**,
+mit unverändertem Default und LuaLS-Typ pro Key; die Spalte "Config-Key"
+nennt, wie er jetzt heißt.
 
-| Plugin | Konstante | Wert | Warum konfigurierbar |
-| --- | --- | --- | --- |
-| insights | `TIMEOUT_MS` | 120000 | rg-Timeout. Auf einem Monorepo zu knapp, auf einem kleinen Repo unnötig lang. |
-| filetree | `MAX_HISTORY` | 50 | Wie viele Trash-Vorgänge rückgängig gemacht werden können — reine Präferenz. |
-| filetree | `UNDO_DEPTH` | 10 | Dasselbe für `refs undo`. |
-| filetree | `MAX_VISIBLE` | 5000 | Ab wann neo-tree nicht mehr alles rendert. Hängt an der Maschine. |
-| filetree | `MAX_CACHE_ENTRIES` | 1000 | Project-Root-Cache. Speicher vs. Trefferquote. |
-| images | `MAX_ENTRIES` | 20000 | Obergrenze beim Browsen. Gleiche Klasse. |
-| github_stats | `MAX_USER_REPO_PAGES` | 30 | **Kappt Daten.** Bei >3000 Repos fehlen welche, ohne dass es jemand merkt. |
-| github_stats | `RENDER_DEBOUNCE_MS` | 50 | Dashboard-Redraw. |
-| github_stats | `HEADER_CONTENT_WIDTH` | 72 | Layoutbreite — auf einem breiten Monitor Verschenkung. |
-| github_stats | `SPARKLINE_WIDTH` | 24 | Dito. |
-| gopath | `RTP_INDEX_TTL_MS` | 30000 | Wie lange der rtp-Index gilt. Wer viel installiert, will kürzer. |
-| lsp | `CHUNK_SIZE` / `CHUNK_DELAY_MS` | 25 / 10 | Durchsatz vs. Editor-Reaktivität beim Workspace-Diagnostics-Lauf. Genau der Regler, den man auf schwacher Hardware braucht. |
-| sandbox | `STATUS_CACHE_TTL_MS` | 3000 | Wie frisch die Statusline ist vs. wie oft docker/podman befragt wird. |
-| sandbox | `CACHE_TTL_MS` | 4000 | Dito für die Completion. |
-| replacer | `MAX_ENTRIES` | 50 | Länge der Suchhistorie. |
-| replacer | `PROGRESS_THROTTLE_MS` | 100 | Fortschrittsanzeige. |
-| runtime-analysis | `MAX_ENTRIES` | 200 | Länge der History. |
-| documentation | `CONTEXT_MAX` | 120 | Wie viel Kontext um einen Treffer gezeigt wird. |
-| documentation | `WRITE_MS` | 400 | Debounce beim Persistieren des Browser-Trails. |
-| mdview | `INTERVAL_MS`, `HEALTH_POLL_MS`, `HEALTH_TIMEOUT_MS`, `MAX_RETRIES`, `BASE_RETRY_MS` | 250 / 200 / 10000 / 5 / 150 | Netzwerk-Timing gegen einen externen Prozess. Auf einer langsamen Maschine oder über eine langsame Verbindung sind alle fünf zu knapp. Gehören als ein `reconnect = {}`-Block zusammen, nicht als fünf Einzelkeys. |
+| Plugin | Konstante | Wert | Config-Key | Warum konfigurierbar |
+| --- | --- | --- | --- | --- |
+| insights | `TIMEOUT_MS` | 120000 | `symbols.indexing.timeout_ms` | rg-Timeout. Auf einem Monorepo zu knapp, auf einem kleinen Repo unnötig lang. |
+| filetree | `MAX_HISTORY` | 50 | `features.trash.max_history` (0 = unbegrenzt) | Wie viele Trash-Vorgänge rückgängig gemacht werden können — reine Präferenz. |
+| filetree | `UNDO_DEPTH` | 10 | `refs.undo_depth` | Dasselbe für `refs undo`. |
+| filetree | `MAX_VISIBLE` | 5000 | `max_visible_nodes` | Ab wann neo-tree nicht mehr alles rendert. Hängt an der Maschine. |
+| filetree | `MAX_CACHE_ENTRIES` | 1000 | `features.project_root.max_cache_entries` | Project-Root-Cache. Speicher vs. Trefferquote. |
+| images | `MAX_ENTRIES` | 20000 | `display.browse_max_entries` | Obergrenze beim Browsen. Gleiche Klasse. |
+| github_stats | `MAX_USER_REPO_PAGES` | 30 | `max_user_repo_pages` | **Kappt Daten.** Bei >3000 Repos fehlen welche, ohne dass es jemand merkt. |
+| github_stats | `RENDER_DEBOUNCE_MS` | 50 | `dashboard.render_debounce_ms` | Dashboard-Redraw. |
+| github_stats | `HEADER_CONTENT_WIDTH` | 72 | `dashboard.header_width` | Layoutbreite — auf einem breiten Monitor Verschenkung. |
+| github_stats | `SPARKLINE_WIDTH` | 24 | `dashboard.sparkline_width` | Dito. |
+| gopath | `RTP_INDEX_TTL_MS` | 30000 | `truncated.rtp_index_ttl_ms` | Wie lange der rtp-Index gilt. Wer viel installiert, will kürzer. |
+| lsp | `CHUNK_SIZE` / `CHUNK_DELAY_MS` | 25 / 10 | `workspace_diagnostics.configure{ chunk_size, chunk_delay_ms }` | Durchsatz vs. Editor-Reaktivität beim Workspace-Diagnostics-Lauf. Genau der Regler, den man auf schwacher Hardware braucht. |
+| sandbox | `STATUS_CACHE_TTL_MS` | 3000 | `status_cache_ttl_ms` | Wie frisch die Statusline ist vs. wie oft docker/podman befragt wird. |
+| sandbox | `CACHE_TTL_MS` | 4000 | `completion_cache_ttl_ms` | Dito für die Completion. |
+| replacer | `MAX_ENTRIES` | 50 | `history_max_entries` | Länge der Suchhistorie. |
+| replacer | `PROGRESS_THROTTLE_MS` | 100 | `progress_throttle_ms` (0 = gar nicht drosseln) | Fortschrittsanzeige. |
+| runtime-analysis | `MAX_ENTRIES` | 200 | `history_max_entries` | Länge der History. |
+| documentation | `CONTEXT_MAX` | 120 | `context_max`, `refs_per_entity` | Wie viel Kontext um einen Treffer gezeigt wird. |
+| documentation | `WRITE_MS` | 400 | `browse.trail_write_ms` | Debounce beim Persistieren des Browser-Trails. |
+| mdview | `INTERVAL_MS`, `HEALTH_POLL_MS`, `HEALTH_TIMEOUT_MS`, `MAX_RETRIES`, `BASE_RETRY_MS` | 250 / 200 / 10000 / 5 / 150 | `transport = {}` | Netzwerk-Timing gegen einen externen Prozess. Auf einer langsamen Maschine oder über eine langsame Verbindung sind alle fünf zu knapp. Als **ein** Block umgesetzt, nicht als fünf Keys: die Retry-Zahl ohne das Timeout hochzudrehen heißt nur, innerhalb eines abgelaufenen Fensters zu wiederholen. |
 
 ## B — Klar: sollte Konstante bleiben
 
@@ -113,3 +115,19 @@ Hier ist die Antwort eine Geschmacks- oder Zielgruppenfrage, keine technische.
 - **Reihenfolgen**: Fallback-Ketten wie translates `engine`-Kette sind
   konfigurierbar, andere (z. B. welche Picker-Engine zuerst probiert wird)
   nicht überall.
+
+---
+
+## Was beim Umsetzen noch auffiel
+
+`github_stats.setup()` verwarf **jede** Option außer `repos` still, sobald
+eine `config.json` existierte — und die schreibt das Plugin beim ersten Lauf
+selbst. `setup({ dashboard = { … } })` tat also nichts, ohne dass irgendwo
+stand warum. Die Reihenfolge ist jetzt: Datei (oder Default) als Basis,
+`setup()` gewinnt darüber. Ohne diesen Fix wären die vier neuen Keys dort
+unerreichbar geblieben.
+
+`runtime-analysis.history.MAX_ENTRIES` war exportiert und wurde von Spec und
+zwei Doc-Stellen gelesen. Aus der Konstante wurde `history.max_entries()` —
+zwei Namen für dieselbe Zahl wären genau die Drift, gegen die die Konstante
+ursprünglich exportiert wurde.

@@ -93,7 +93,16 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Autocmds aller Ordner in einem `bindings/autcmd`-Ordner zusammenführen, nach Events sortiert (Dispatch-Lib-Modul), Abgleich mit `/bindings`.
 
 ### Healthchecks, Config & Defaults
-- [ ] Möglichst viele Features user-konfigurierbar machen, inkl. LuaLS-Typen/Aliases für jeden Config-Key.
+- [~] **Möglichst viele Features user-konfigurierbar machen, inkl.
+      LuaLS-Typen — erster Durchgang erledigt 2026-08-27.** Alle 21 klaren
+      Fälle aus der Featureliste sind umgesetzt: 12 Plugins, jeder neue Key
+      mit unverändertem Default und LuaLS-Typ. Dabei fiel auf, dass
+      `github_stats.setup()` **jede** Option außer `repos` still verwarf,
+      sobald eine config.json existierte (die das Plugin selbst schreibt) —
+      ohne diesen Fix wären die neuen Keys dort unerreichbar geblieben.
+      Offen bleiben die 6 strittigen Fälle (siehe Report, warten auf deine
+      Antwort) und der zweite Scan-Durchgang nach Zahlen ohne Namen
+      (`vim.defer_fn(fn, 60)`) und Plattform-Verzweigungen ohne Opt-out.
 - [ ] `lib.nvim` konsequent als Dependency nutzen: Funktionen migrieren/deduplizieren, inkl. Konsistenz-Fixes wie `notify` als Factory (`.create()`) korrekt verwenden.
 
 ### Performance
