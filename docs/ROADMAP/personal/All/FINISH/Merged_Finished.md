@@ -40,6 +40,83 @@ nvim-Config.
 
 ### Bindings, Keymaps & UI
 
+- [x] **Register fuer keymaps und usrcmds — und der `vim.g.__map_helper`-Bug.**
+
+      **Der Bug zuerst, weil er live war.** `bindings.mappings.setup()` reichte
+      das Keymap-Modul ueber `vim.g.__map_helper` an seine zwanzig Sub-Module.
+      Das kann nicht funktionieren: `lib.nvim.bindings.keymap` ist ueber
+      `__call` aufrufbar, und `vim.g` streift beim Round-Trip die Metatabelle
+      ab. Zurueck kam eine nackte Tabelle, der erste `map(...)` warf "attempt
+      to call a table value" — in `buf_win_tab.lua:18`, der ersten Zeile des
+      ersten Moduls. Die Phase bricht dort ab, also lief **keines** der zwanzig
+      Module danach. Gemessen: **210 -> 305** Normal-Mode-Keymaps.
+      `config/menu/mappings.lua` hatte denselben Bug doppelt — sein Fallback
+      rief `map` rekursiv auf, haette also gehangen statt geworfen.
+
+      **Die Config haengt jetzt vollstaendig an lib**: Autocmds, Keymaps und
+      Usrcmds melden alle 0 direkte Aufrufe. Der interessanteste Rest war
+      `wkdoptions.commands.core.define_cmd`, das handgestrickt hat, was lib
+      kann — es loeschte das Kommando vorher, weil es `force = true` nicht
+      kannte, und pcall'te die *Erzeugung* statt des Callbacks.
+
+      **1. `keymap.set()` schreibt jetzt ins Register.** `register()` hat
+      aufgezeichnet, was es bindet; ein schlichtes `set(...)` — der Aufruf, den
+      fast jeder macht — hinterliess **nichts**. In dieser Config: 59
+      Registry-Eintraege gegen 305 echte Keymaps. Eine daraus generierte Seite
+      waere ueber 80 % blind gewesen, und `conflicts()` konnte eine Kollision
+      zwischen zwei `set()`-Keymaps **prinzipiell** nicht sehen — das ist die
+      Mehrheit. Jetzt 210 Eintraege, davon 151 direkt.
+
+      Direkte Records liegen in einem eigenen Modul (`keymap.records`):
+      `register()` ersetzt das Array eines Plugins komplett und wuerde sie
+      sonst ueberschreiben, und `set` -> `registry` waere ein Require-Zyklus.
+      Sie werden beim Lesen zusammengefuehrt. Jeder traegt `file:line` und
+      landet im Bucket des Plugins, zu dem der Pfad gehoert.
+
+      `conflicts()` ist jetzt **buffer-bewusst** — eine buffer-lokale Bindung,
+      die eine globale ueberdeckt, ist deren Zweck, kein Konflikt; sonst haette
+      jedes buffer-lokale Preset gemeldet, und ein Report, der Wolf ruft, wird
+      nicht gelesen.
+
+      **Vier echte Konflikte sofort gefunden**, alle global, alle vorher
+      unsichtbar:
+
+      | | |
+      | --- | --- |
+      | `t <C-l>` | `mappings/terminal.lua:16` gegen `:27` — **dieselbe Datei, elf Zeilen auseinander** |
+      | `n <leader>wo` | "Rotate window layout" gegen lsp.nvims "workspace diagnostics" |
+      | `n p` / `n P` | `mappings/editing.lua` (trimmendes Paste) gegen `wkdoptions/.../flash.lua` |
+
+      Welche Seite jeweils gewinnen soll, ist deine Entscheidung, nicht meine —
+      offen.
+
+      **2. `usercmd` hatte gar kein Register.** `nvim_get_commands()` sagt
+      schon, *was* existiert, also ist der Wert die Haelfte, die es nicht
+      beantwortet: **wo** ein Kommando erzeugt wurde. Records tragen das plus
+      die Form des Aufrufs (`nargs`, `bang`, `range`, Completion), und
+      `usercmd.docs.write()/check()/create_usercmd()` rendern sie wie der
+      Autocmd-Generator. 156 Records in dieser Config. Verb-Trees behalten den
+      eigenen Generator des Composers; ein Verb steht auf der Seite als das
+      eine Kommando, das es wirklich ist, und zeigt dorthin.
+
+      `delete(name)` nimmt Kommando und Record zusammen weg, aus demselben
+      Grund wie `autocmd.delete`. `opts.src` ueberschreibt die Aufrufstelle
+      fuer Wrapper — und musste vor nvim abgestreift werden, das einen
+      unbekannten Key rundheraus ablehnt.
+
+      Die vier Pfad-Helfer, die beide Generatoren voneinander abgeschrieben
+      hatten, liegen jetzt in `lib.nvim.bindings.docs_util`. `is_under` war
+      vorher nur in **einer** der beiden Kopien fuer Windows-Trenner gefixt.
+
+      In der Config neu: `:LibUsercmdDocs` / `:LibUsercmdDocsCheck`.
+
+      **Bewusst nicht gebaut: ein Bypass-Schalter fuer diese beiden.** Beim
+      Dispatcher war er sinnvoll, weil er *Struktur* aendert — N Features an
+      einem Objekt. `keymap.set` und `usercmd.create` sind duenne Wrapper um
+      genau einen nativen Aufruf; "bypass" hiesse dort nur, den pcall-Wrapper
+      und den `desc`-Default wegzulassen. Das ist kein A/B, sondern ein
+      Schalter fuer nichts.
+
 - [x] **Dispatcher abschaltbar gemacht: `dispatch = false`.**
 
       Deine Idee, und sie war richtig: ein Dispatcher haengt N Features an ein

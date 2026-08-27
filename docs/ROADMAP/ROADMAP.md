@@ -29,6 +29,8 @@
 - [ ] `M-CR` soll ein normales enter  sein im insert mode, also `cascade.nvim`s next bullet generieren überspringen - oder gbtes dazu schon einen anderen?
 - [ ] **All usrcmds wie :DocMap**All, RATelemetryAll oder :LibAutocmdDocsAll -> grundsätzlkich sollten die jeseileigen ursprünglichen usrcmds für single repos zumindest eine option haben, mit der durch ein dir iterriert werden und daraug angewendet werden kann, sodasds man das *All dort surchführen kann.
 - [ ] lib.nvim menu: wir haben einen einziges icon - delete files - drinnen. entweder haben alle bzw der überweältigende mehrehit ein icon oder gar keines
+- [ ]alle keymaps der nvim config durcsheen ob die wirlich gebraucht werden
+- [ ] `O` sollte ein bulletin ereugen, wenn darüber eines bullet ist (`cascade.nvim`)
 
 ---
 
