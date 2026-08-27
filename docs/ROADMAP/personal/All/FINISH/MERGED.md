@@ -73,12 +73,36 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
       **Zu tun, absteigend nach Wert:**
 
-      - [ ] **Markdown-Tabellen-Renderer nach lib** — `gen_separator`,
-            `format_row`, `render_table`, byte-identisch in **buffer-ctx.nvim**
-            und **markdown.nvim**. Der klare Fall: ein kompletter Renderer,
-            zweimal gepflegt. Neues lib-Modul, beide Plugins umstellen,
-            **lib-Doku nicht vergessen** (Modul-README + Eintrag in der
-            lib-Übersicht).
+      - [~] **Markdown-Tabellen-Renderer nach lib** — *lib-Modul steht, die
+            beiden Plugins sind noch nicht umgestellt.*
+
+            Es waren nicht drei Funktionen, sondern **siebzehn geteilte**:
+            vier byte-identisch, neun weitere nur in Zeilenumbrüchen
+            verschieden. Das ist die komplette Parse-und-Render-Engine,
+            zweimal.
+
+            Und die vier, die *wirklich* abwichen, sind das eigentliche
+            Argument — jede Kopie trug einen Fix, den die andere nicht hatte:
+
+            | | wer war voraus |
+            | --- | --- |
+            | `parse_row` | buffer-ctx: `gmatch` statt Zeichen-für-Zeichen-`..`, das O(n²) in der Zeilenlänge ist |
+            | `trim` | markdown: delegiert an `lib.lua.strings.core` |
+            | `resolve_overrides` | buffer-ctx: sammelt Warnungen statt sie zu verschlucken |
+            | `format_file` | markdown: beachtet `col_overrides` |
+
+            `lib.nvim.markdown.table` nimmt je die bessere Hälfte, hat Typen
+            und einen Spec (`TESTS/markdown_table_spec.lua`), meldet Warnungen
+            zurück statt zu notifien und liest keine Config — deshalb konnten
+            die Buffer- und File-Ebene mitkommen statt als dritte und vierte
+            Kopie liegenzubleiben. Breite bleibt bewusst auf
+            `vim.fn.strdisplaywidth`: `lib.lua.strings.width` misst
+            ambivalente Zeichen anders, und diese Tabellen landen in echten
+            Dateien.
+
+            **Offen:** beide Plugins auf das Modul umstellen, plus
+            Modul-README und Eintrag in der lib-Übersicht. Details im
+            Handover (`docs/ROADMAP/personal/All/HANDOVER_dedup.md`).
       - [ ] **`deep_merge` + `config.get` in cascade.nvim ↔ spotlight.nvim**
             (12 bzw. 11 Zeilen) — Config-Maschinerie doppelt.
       - [ ] **Kleinkram, wenn ohnehin dort:** `health.check_require`
