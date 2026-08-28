@@ -14,10 +14,10 @@ native `docmap-desktop`), not just the two named in the original wording.
 | `keymap_command_gaps.py` | **Yes** — folded into the above | lib.nvim, same command | ✅ integrated — `:LibBindingsAuditGaps` |
 | `autocmd_dispatch_bench.lua` | **Yes** | lib.nvim, dev script | ✅ integrated — `scripts/bench_dispatcher.lua` |
 | `duplicate_functions.py` | **Yes** — corrected below | lib.nvim, real usercmd | ✅ integrated — `dev/duplicates.lua`, `:LibDuplicateScan` |
-| `magic_numbers.py` | Partial — good fit | insights.nvim, new analysis mode | not started |
+| `magic_numbers.py` | **Yes** | insights.nvim, new analysis mode | ✅ integrated — `:Insights smells` |
 | `platform_branches.py` | **Dropped** — no repo gets it | none | n/a |
-| `hardcoded_constants.py` | Partial — good fit | insights.nvim, new analysis mode | not started |
-| `run_all_tests.sh` | No natural plugin home | stays a personal script | not started |
+| `hardcoded_constants.py` | **Yes** | insights.nvim, same command | ✅ integrated — `:Insights smells` |
+| `run_all_tests.sh` | No natural plugin home | stays a personal script | no action needed |
 
 **Correction (after first pass):** `duplicate_functions.py` was originally
 filed under insights.nvim below, reasoned as "static analysis over a
@@ -90,27 +90,46 @@ itself — pointing it at a single plugin's own root, with no siblings
 underneath, correctly finds nothing. lib.nvim's own directory is always
 excluded from the repo set, for the obvious reason.
 
-## Partial — good conceptual fit, not yet built
+## Integrated into insights.nvim
 
-`magic_numbers.py` and `hardcoded_constants.py` are the same shape: walk
-every `*.nvim` repo under `E:\repos`, regex over `.lua` files, report
-candidates — but, unlike the four above, they touch no specific plugin's
-API, they're pure text scans, one repo at a time (the `for repo in repos:`
-loop is just the CLI's own batching, not cross-referencing). In principle any
-plugin could host that code; **insights.nvim** already is, specifically, in
-the business of static analysis over a project's Lua source (`:Insights
-metrics` — per-file/per-folder line, word, and ratio analysis; `:Insights
-symbols` — a real Lua symbol index; `:Insights imports` — reference/
-definition tracking). Same category of work (read source, report patterns),
-a different axis than `metrics`'s line-counting today — magic numbers and
-hardcoded config candidates are "code smell scanning", metrics is "size/
-ratio scanning". Porting these two as new `:Insights` analysis modes needs no
-new architecture (insights.nvim's existing `cwd`/directory/`--current`
-scoping already fits — neither needs `duplicate_functions.py`'s cross-repo
-comparison), only new detection logic written in Lua. Not started yet —
-`platform_branches.py`, the third member of this original group, was
-dropped outright rather than queued here: no repo in this ecosystem is
-getting a platform-branch scanner.
+### `magic_numbers.py` + `hardcoded_constants.py` → `:Insights smells`
+
+Same shape as each other: walk every `*.nvim` repo under `E:\repos`, regex
+over `.lua` files, report candidates — but, unlike the four lib.nvim items
+above, they touched no specific plugin's API, they were pure text scans, one
+repo at a time (the `for repo in repos:` loop was just the CLI's own
+batching, not cross-referencing). In principle any plugin could have hosted
+that code; **insights.nvim** already was, specifically, in the business of
+static analysis over a project's Lua source (`:Insights metrics` — per-file/
+per-folder line, word, and ratio analysis; `:Insights symbols` — a real Lua
+symbol index; `:Insights imports` — reference/definition tracking). Same
+category of work (read source, report patterns), a different axis than
+`metrics`'s line-counting — magic numbers and hardcoded config candidates
+are "code smell scanning", metrics is "size/ratio scanning". Needed no new
+architecture: insights.nvim's existing `cwd`/directory/`--current` scoping
+already fit, neither needed `duplicate_functions.py`'s cross-repo comparison
+(that one's actual point — lib.nvim extraction candidates — correctly lives
+in lib.nvim instead, see above).
+
+Now [`insights/smells/init.lua`](https://github.com/StefanBartl/insights.nvim/blob/main/lua/insights/smells/init.lua),
+one command covering both scans:
+`:Insights smells [--magic-numbers-only|--constants-only] [dir]` — see
+[`docs/commands.md#code-smells`](https://github.com/StefanBartl/insights.nvim/blob/main/docs/commands.md#code-smells).
+Reuses `insights.metrics.analyzer.get_lua_files` for the file walk instead of
+reimplementing one. `platform_branches.py`, the third member of this
+original Python group, was dropped outright rather than ported here: no repo
+in this ecosystem is getting a platform-branch scanner.
+
+**A real bug caught before shipping, worth remembering for any future port
+of a Python regex-alternation into a Lua pattern:** the original script's
+`BEHAVIOUR` regex was `(timeout|delay|...|budget)` — Lua patterns have no
+`|` alternation at all, so a first-draft direct translation compiled but
+silently matched almost nothing (the `|` characters are literal in a Lua
+pattern, and `find()` against a huge fixed string is the correct outcome for
+that pattern, just not the intended one — no error, no warning, just wrong).
+Caught by running a real fixture through it and checking the actual hit
+count, not by reading the port back against the original. Rewritten as a
+substring-list loop instead.
 
 ## No natural plugin home
 
