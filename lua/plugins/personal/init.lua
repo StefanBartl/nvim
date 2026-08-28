@@ -36,6 +36,16 @@ plugins.add({
         cwd_here = true,
         powershell_profile = true,
       })
+
+      -- Path/link hover in JEDEM Filetype. Bewusst hier und nicht in
+      -- markdown.nvim: das Plugin ist ft-lazy auf Markdown, also wuerde eine
+      -- Session, die nie eine .md oeffnet, gar keinen Hover bekommen -- und
+      -- genau das ist der Fall, den dieses Feature abdecken soll (Pfade in
+      -- .txt, in Code-Kommentaren, in :messages). markdown.nvim ergaenzt beim
+      -- Laden seine Link-Erkennung und die #anchor-Previews; images.nvim
+      -- zeichnet Bilder, pdfport rastert PDF-Seiten, gopath.nvim loest
+      -- truncated Pfade auf -- alle optional.
+      require("lib.nvim.hover").enable()
     end,
   },
 
