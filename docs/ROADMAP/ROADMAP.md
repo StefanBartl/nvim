@@ -4,7 +4,6 @@
 
   - [cdx](#cdx)
   - [Misc](#misc)
-    - [lib.nvim hover](#libnvim-hover)
   - [true check](#true-check)
     - [Plugin-Liste](#plugin-liste)
 
@@ -12,10 +11,12 @@
 
 ## cdx
 
-free: So., 09:00 100% - Subscription bis   21. Juli 2027  |
-work: Sa., 06:00 100% - Subscription bis   20. Sept       |
-dev:  Sa., 22:00 100% - Subscription bis   03. Sep        |
-main: Fr., 11:00  10% - Subscription bis ~ 27. Sep        | 23:31
+| Account  | Week Reset Date | Actual/Insgesamt |    Sub Bis    | Next 5h Reset |
+| -------- | --------------- | ---------------- | ------------- | ------------- |
+| **main** |   Fr., 11:00    |     79% / 5%     |   ~ 27. Sep   |       -       |
+| **dev**  |   Sa., 22:00    |    100% / %      |    03. Sep    |       –       |
+| **free** |   So., 09:00    |    100% / %      | 21. Juli 2027 |       –       |
+| **work** |   Sa., 06:00    |    100% / %      |   20. Sept    |       –       |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
@@ -24,15 +25,13 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ## Misc
 
+- [ ] Cascade: C-y / C-x soll auchdurch buchstaben iterieren -> a -> C-y == b usw... Gros/Kleinschreibung beachten. Große Buchstaben bleiben groß kleine bleiben klein
 - [ ] Anticheat knacken
 - [ ] alle keymaps der nvim config durcsheen ob die wirlich gebraucht werden
-
----
-
-### lib.nvim hover
-Ein feature wäre noch super, aber ich weß nicht obe es machbar ist: pdf und ft hover außer images - mit einen keymap scrollbar machen, zb M-PageUp/Down
-
-Wenn wir das auich noch hinringen, wäre das cool. was wir nicht brauchen logischewrweße, ist dass er fkusierbar ist im hover oder das man den inhalt veröndernkönnte, markieren und yanken oder so... das hat dnn nihts mehr mit einen preview zu tun
+- [ ] Github Stats auswerten / backupen
+- [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
+    Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
+- [ ] TAKT
 
 ---
 
@@ -40,8 +39,6 @@ Wenn wir das auich noch hinringen, wäre das cool. was wir nicht brauchen logisc
 
 Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
 Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass doll es nä,lich auh nicht sein, leider ist mir klar ds das konterkariert meine wüsnche. ckch denke, du must da einen goldenen Zwischenweg finden.
-
-+--
 
 ---
 
