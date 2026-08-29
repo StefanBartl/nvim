@@ -11,17 +11,89 @@ kein einziger `Error`**. Etwa die Hälfte davon (1770) liegt in `TESTS/`, nicht
 im ausgelieferten Code. Der große Rest zerfällt in sechs Ursachen-Cluster, von
 denen vier musterhaft und nicht einzeln zu beheben sind.
 
+Dieses Dokument ist zugleich **Befund und Übergabe**: Abschnitt 0 sagt, was
+erledigt ist, was gerade läuft, was offen ist und in welcher Reihenfolge
+gearbeitet wird. Wer hier neu einsteigt, liest Abschnitt 0 und kann weiter
+machen -- eine separate Handover-Datei gibt es bewusst nicht.
+
+---
+
+## 0. Stand, Arbeitsmodus, nächster Schritt
+
+**Stand: 2026-08-29.** Alles unten Genannte ist in den jeweiligen Repos
+committet und auf `main` gepusht.
+
+### Gerade in Arbeit
+
+*Nichts.* Cluster C ist abgeschlossen; die Umstellung auf den vertikalen
+Arbeitsmodus (siehe unten) wartet auf ein Go.
+
+### Erledigt
+
+| # | Punkt | Ergebnis |
+|---|---|---|
+| C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md) |
+| 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
+| 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
+| 9 | **`lib.nvim.ui.list`** | gebaut, 20 Aufrufstellen in 12 Repos umgestellt |
+
+### Offen
+
+Reihenfolge wie in Abschnitt 8. Kurz:
+
+1. **`assert`-Meta** (A) -- 366 Warnungen, vier Zeilen, **horizontal zuerst**
+2. **`need-check-nil` in Tests** (B, 925) -- Entscheidung nötig, **horizontal zuerst**
+3. **`TSNode` statt `userdata`** (D, 210) -- nur documentation.nvim
+4. **`inject-field`** (F, 119 + die 21 `missing-fields`-Reste) -- fast nur lib.nvim
+5. **`pcall(vim.cmd, ...)`** (E, 60) -- mechanisch, über mehrere Repos
+6. **Die ~90 Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil
+7. Der Rest der Verteilung aus Abschnitt 3 (`param-type-mismatch`,
+   `undefined-field`, Annotationsfehler)
+
+### Arbeitsmodus
+
+**Vertikal, ein Repo nach dem anderen** -- nicht mehr ein Punkt quer über alle
+Repos. Begründung: der Denkanteil pro Cluster fällt nur einmal an (bei C waren
+das die Werkzeuge und die Entscheidung, wann welches Muster gilt), der
+Overhead pro Repo dagegen -- Scan davor, Scan danach, Testsuite, Commit --
+fällt horizontal **pro Punkt** an, vertikal nur **einmal für alle Punkte**. Bei
+sechs offenen Clustern ist das grob Faktor 4 bis 5.
+
+**Zwei Ausnahmen laufen vorher horizontal**, weil sie die Zahlen aller anderen
+Repos verändern: das `assert`-Meta (A) und die Entscheidung zu
+`need-check-nil` in Tests (B). Solange die drin sind, geht man in jedem Repo
+dieselbe Phantomliste durch.
+
+Regeln, die sich in Cluster C bewährt haben und weiter gelten:
+
+- **Messen statt schätzen.** Pro Repo ein Scan vor und nach der Änderung, und
+  der Vergleich zeigt *alle* Regeln, nicht nur die bearbeitete. Bei C hat genau
+  das sechs Repos davor bewahrt, Warnungen gegen neue einzutauschen.
+- **Kein Fix, der eine Warnung nur verschiebt.** Wenn eine Änderung anderswo
+  neue Befunde erzeugt, ist sie unfertig -- entweder das Muster wechseln oder
+  die Folgestelle mitreparieren.
+- **Testsuite pro Repo laufen lassen**, bevor committet wird.
+- **Ein Commit pro Repo und Thema**, direkt gepusht, damit die Repos
+  durchgehend benutzbar bleiben.
+- **Unterdrückung braucht eine Begründung im Code.** `---@diagnostic disable`
+  nur, wo der Befund sachlich falsch ist (Upstream-Meta) oder das Verhalten
+  Absicht ist (Test-Doubles, absichtlich ungültige Eingaben) -- und dann mit
+  einem Satz, der sagt warum.
+- **Erledigtes wandert nach `Diagnostics_FINISHED.md`**, mit dem, was dabei
+  interessant war. Dieses Dokument bleibt der Stand des Offenen.
+
 ---
 
 ## Table of content
 
+  - [0. Stand, Arbeitsmodus, nächster Schritt](#0-stand-arbeitsmodus-nchster-schritt)
   - [1. Methode](#1-methode)
   - [2. Gesamtbild pro Repo](#2-gesamtbild-pro-repo)
   - [3. Verteilung nach Regel](#3-verteilung-nach-regel)
   - [4. Die Ursachen-Cluster](#4-die-ursachen-cluster)
     - [A. Fehlender `assert`-Typ in den Tests -- gemessen, nicht geschätzt](#a-fehlender-assert-typ-in-den-tests-gemessen-nicht-geschtzt)
     - [B. `need-check-nil` in Tests -- 925 Stück, mechanisch](#b-need-check-nil-in-tests-925-stck-mechanisch)
-    - [C. `missing-fields` (441) -- Modellierungsfehler, kein Aufruffehler](#c-missing-fields-441-modellierungsfehler-kein-aufruffehler)
+    - [C. `missing-fields` -- ERLEDIGT 2026-08-29](#c-missing-fields-erledigt-2026-08-29)
     - [D. `userdata` statt `TSNode` in documentation.nvim -- 210 Stück](#d-userdata-statt-tsnode-in-documentationnvim-210-stck)
     - [E. `pcall(vim.cmd, ...)` -- 60 Stück über alle Repos](#e-pcallvimcmd-60-stck-ber-alle-repos)
     - [F. `inject-field` (119) -- fast vollständig lib.nvim](#f-inject-field-119-fast-vollstndig-libnvim)
@@ -125,6 +197,20 @@ und `.git/` bleiben also außen vor (im Scan-Log verifiziert).
 Die vier größten Repos stellen 52 Prozent aller Befunde. Sieben Repos liegen im
 einstelligen bis niedrigen zweistelligen Bereich und sind praktisch fertig.
 
+> **Diese Tabelle ist der Ausgangsstand vom 2026-08-29 vor den Fixes.** Sie
+> wird bewusst nicht fortgeschrieben -- sie ist der Referenzpunkt, gegen den
+> gemessen wird. Was seither gefallen ist, steht in Abschnitt 0 und in
+> `Diagnostics_FINISHED.md`, jeweils mit eigener Vorher/Nachher-Messung.
+>
+> **Zur Vergleichbarkeit:** die Messungen der Folgearbeiten laufen mit einer
+> etwas anderen Prüf-Config als dieser Erstscan -- sie setzt
+> `runtime.path = lua/?.lua` und löst damit `require("<repo>")` innerhalb des
+> Repos auf, was 11 `.luarc.json` mit `runtime.pathStrict` nicht tun. Dadurch
+> sieht sie in Testdateien mehr als der Erstscan (bei pickers.nvim etwa 121
+> statt 39 Befunde) und ist näher an dem, was der Editor zeigt, wo das Plugin
+> auf dem `runtimepath` liegt. Vorher/Nachher-Zahlen sind deshalb immer
+> innerhalb einer Messreihe zu lesen, nie gegen diese Tabelle.
+
 ---
 
 ## 3. Verteilung nach Regel
@@ -155,6 +241,9 @@ einstelligen bis niedrigen zweistelligen Bereich und sind praktisch fertig.
 | `duplicate-doc-alias` | 5 | 5 |
 | `invisible` | 2 | 1 |
 | `unbalanced-assignments` | 1 | 1 |
+
+Ebenfalls Ausgangsstand. `missing-fields` steht seit dem 2026-08-29 bei 21
+statt 441, alle verbliebenen in lib.nvim (Cluster F).
 
 ---
 
@@ -211,24 +300,27 @@ sind Stellen, an denen ein `string|nil` ungeprüft weitergereicht wird.
 
 ---
 
-### C. `missing-fields` (441) -- Modellierungsfehler, kein Aufruffehler
+### C. `missing-fields` -- ERLEDIGT 2026-08-29
 
 `Missing required fields in type 'Pickers.Config': depth_aliases, find, ...`
 
-Die `@class *.Config`-Klassen deklarieren ihre Felder als Pflicht. Jedes
-partielle `setup({...})` verletzt sie damit -- obwohl genau das die vorgesehene
-Nutzung ist. `lua/plugins/personal/init.lua` sammelt allein 15 solcher
-Warnungen ein, ohne dass am Aufruf irgendetwas falsch wäre.
+Die `@class *.Config`-Klassen deklarierten ihre Felder als Pflicht. Jedes
+partielle `setup({...})` verletzte sie damit -- obwohl genau das die vorgesehene
+Nutzung ist.
 
-Betroffen sind unter anderem `Pickers.Config`, `Documentation.Opts`,
-`FiletreeConfig`, `OpenNvim.Config`, `PdfPort.Config`, `Dbg.Config`,
-`DiffNvim.Config`, `Emojis.Config`, `Spotlight.Config`, `LspNvim.Config`,
-`GHStats.SetupOptions`, `LanguageConfig`, `ImagesNvim.Config`.
+**Über alle 31 Plugins plus Config von 518 auf 21 gebracht.** Die 21 Reste
+liegen sämtlich in lib.nvim und sind die Namespace-Aggregatoren
+(`---@type Lib` auf einer Tabelle, die per `LIB.x = ...` gefüllt wird) --
+dieselbe Ursache wie Cluster F, und dort aufgeräumt, nicht hier.
 
-Der Fix ist überall derselbe und gehört in die Plugins, nicht in die Aufrufer:
-die **Opts**-Klasse (was der Nutzer übergibt) von der **Config**-Klasse (was
-nach `vim.tbl_deep_extend` herauskommt) trennen, und in der Opts-Variante jedes
-Feld als `---@field name? type` führen.
+Der Fix war **nicht** überall derselbe, und welcher der richtige ist, ließ sich
+nur messen: bei 15 Repos genügte es, die Felder optional zu stellen; bei sechs
+hätte genau das die Warnungen gegen neue `need-check-nil` eingetauscht, weil
+der Code die aufgelöste Config direkt liest -- dort wurde die **Opts**-Klasse
+(Eingabe) von der **Config**-Klasse (nach `vim.tbl_deep_extend`) getrennt.
+
+Vollständige Aufstellung, samt der Nebenbefunde, die dabei sichtbar wurden:
+[`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md).
 
 ---
 
@@ -401,21 +493,18 @@ delegierbar.
 
 ## 6. stylua
 
-`stylua --check` über alle 31 Repos: **28 sauber**, ursprünglich 4 Dateien in
-3 Repos abweichend. Alle vier sind derselbe Fall -- ein einzeiliges
-`function() ... end`, das stylua aufklappen will:
+**ERLEDIGT 2026-08-29.** `stylua --check` über alle 31 Repos ist sauber.
 
-- `emojis.nvim/plugin/emojis.lua`, `emojis.nvim/plugin/emojis_autodoc.lua`
-- `gopath.nvim/scripts/ci/headless_tests.lua`
-- ~~`mdview.nvim/docs/templates/usercmds.lua`~~ -- **erledigt 2026-08-29**
+Ursprünglich wichen vier Dateien in drei Repos ab, alle derselbe Fall -- ein
+einzeiliges `function() ... end`, das stylua aufklappen will:
+`emojis.nvim/plugin/{emojis,emojis_autodoc}.lua`,
+`gopath.nvim/scripts/ci/headless_tests.lua`,
+`mdview.nvim/docs/templates/usercmds.lua`. Alle formatiert.
 
-**Erledigt:** `mdview.nvim` formatierte als einziges der 31 Repos mit Tabs
-(`indent_type = "Tabs"`, `indent_width = 4`). Auf die Repo-Konvention
-`Spaces` / `2` umgestellt und einmal durchformatiert; damit ist auch die
-Templatedatei oben abgehakt. Siehe
+Dazu die Ausreißer-Entscheidung: `mdview.nvim` formatierte als einziges der 31
+Repos mit Tabs (`indent_type = "Tabs"`, `indent_width = 4`) und steht jetzt auf
+der Repo-Konvention `Spaces` / `2`. Siehe
 [`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md).
-
-Offen bleiben die drei Dateien in emojis.nvim und gopath.nvim.
 
 ---
 
@@ -445,28 +534,31 @@ Offen bleiben die drei Dateien in emojis.nvim und gopath.nvim.
 
 ## 8. Was daraus folgt
 
-Nach Aufwand-zu-Wirkung geordnet:
+Nach Aufwand-zu-Wirkung geordnet. Punkt 1 und 5 laufen **horizontal** (sie
+verändern die Zahlen aller Repos), alles danach **vertikal pro Repo** -- siehe
+Arbeitsmodus in Abschnitt 0.
 
 1. **`assert`-Meta einbauen** -- vier Zeilen, gemessene 366 Warnungen weniger,
    und es macht die Testdateien überhaupt erst typgeprüft. Sinnvollerweise in
-   lib.nvim, damit alle Repos denselben Pfad einhängen.
+   lib.nvim, damit alle Repos denselben Pfad einhängen. **Horizontal, zuerst.**
 2. **`TSNode` statt `userdata` in documentation.nvim** -- eine Annotation pro
    Sprachmodul, ~210 Warnungen.
-3. **Opts/Config trennen** (Cluster C) -- ~440 Warnungen, aber echte API-Arbeit
-   pro Plugin, kein Suchen-und-Ersetzen.
+3. ~~**Opts/Config trennen** (Cluster C)~~ -- **erledigt 2026-08-29**, 518 -> 21.
 4. **Die ~90 kleinen Befunde aus Abschnitt 5** -- der Teil, bei dem Durchgehen
    tatsächlich Fehler findet statt Rauschen. Hier liegen die einzigen
    Kandidaten für echte Laufzeitfehler (`missing-parameter`,
    `unbalanced-assignments`, `luadoc-miss-symbol`).
 5. **`need-check-nil` in Tests** (925) -- Entscheidung nötig: unterdrücken oder
-   auszementieren. Nicht beides.
-6. **`inject-field` in lib.nvim** (119) und der `pcall(vim.cmd, ...)`-Fix (60)
-   -- beides mechanisch.
-7. ~~**stylua**~~ -- die Tabs-Entscheidung für mdview ist gefallen (angeglichen,
-   2026-08-29), es bleiben drei Dateien in emojis.nvim und gopath.nvim.
+   auszementieren. Nicht beides. **Horizontal, zuerst.**
+6. **`inject-field` in lib.nvim** (119, plus die 21 `missing-fields`-Reste
+   derselben Ursache) und der `pcall(vim.cmd, ...)`-Fix (60) -- beides
+   mechanisch.
+7. ~~**stylua**~~ -- **erledigt 2026-08-29**: alle vier abweichenden Dateien
+   formatiert, mdview.nvim auf `Spaces`/`2` umgestellt. `stylua --check` ist
+   über alle 31 Repos sauber.
 
-Punkt 1, 2, 6 und 7 sind zusammen ~750 Warnungen und rein mechanisch. Punkt 4
-ist der inhaltlich interessante Teil.
+Punkt 1, 2 und 6 sind zusammen ~700 Warnungen und rein mechanisch. Punkt 4 ist
+der inhaltlich interessante Teil.
 
 ---
 
