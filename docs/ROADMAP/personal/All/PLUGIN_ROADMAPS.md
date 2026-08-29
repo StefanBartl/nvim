@@ -26,6 +26,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 ## Table of content
 
   - [Arbeitsmodus](#arbeitsmodus)
+  - [Naechster Schritt](#naechster-schritt)
   - [Legende](#legende)
   - [Kurzfassung](#kurzfassung)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
@@ -97,6 +98,63 @@ Sitzung neu verhandelt werden.
   `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/<plugin>.md`
   geprueft — das ist der Baum, aus dem `:Bindings browse`/`:Bindings check`
   liest, und der driftet still.
+
+---
+
+## Naechster Schritt
+
+Stand 2026-08-29, Ende der Sitzung. Wer hier wieder einsteigt, faengt am
+besten hiermit an — Begruendung darunter.
+
+**1. Empfohlen: die Audit-Dokumente von `lsp.nvim`, dann Teil 3.1 insgesamt.**
+
+Diese Sitzung hat vier Roadmap-Punkte gebaut und dabei *sieben* Fehler in
+Dokumenten und Reports gefunden, die keiner davon war:
+
+| Fund | Art |
+| --- | --- |
+| `filter.dedup` verglich LSP-Payloads auf Position (0,0) | echter Defekt, verwarf Diagnostics |
+| `:LspDoctor` nannte `lua_ls` als Formatter, waehrend `stylua` lief | falsche Aussage im Diagnosewerkzeug |
+| `:LspStart` als Handlungsanweisung — Command existiert nicht | Anweisung fuehrt zu E492 |
+| `M.all` rief `inspect.deep` nach der Umbenennung | `:LspDoctor` ohne Argument war kaputt |
+| `Keymaps/lsp.nvim.md`: „keine Keymaps" bei 44 gebundenen | 5 Monate Drift |
+| `Usercmds/lsp.nvim.md`: 5 von 17 Routen, „nicht installiert" | 5 Monate Drift |
+| `lspdoctor/README.md`: dokumentierte eine API von vor der Migration | komplett veraltet |
+
+Das ist keine Pechstraehne, das ist der Querschnittsbefund aus **Teil 3.1**
+(„Die Audit-Dokumente sind veraltet — und zwar systematisch", fuenf von fuenf
+Stichproben veraltet) in Aktion. Die Trefferquote beim gezielten Nachsehen war
+in dieser Sitzung hoeher als der Nutzen der gebauten Features. Wer als
+naechstes `Arch&Coding.md`, `Checklist.md` und `Zentral-Prinzipien.md` von
+`lsp.nvim` gegen die Quelle prueft, findet mit hoher Wahrscheinlichkeit mehr —
+und danach lohnt derselbe Durchgang fuer die restlichen sieben Repos.
+
+**Das Werkzeug dafuer steht bereits und wird zu wenig benutzt.**
+`:Bindings check <plugin>` hat in dieser Sitzung zwei der sieben Funde
+gefunden, davon einen transitiv (den `:LspStart`-Verweis, der aus dem Plugin
+in den Zettel gewandert war). Es laesst sich auch headless aufrufen —
+`drift.check(plugin)` gibt die Befunde als Lua-Werte zurueck, `drift.describe`
+rendert sie. Ein Lauf **ohne** Argument prueft zusaetzlich die Source-Achse,
+die pro Plugin nicht konsultiert wird; der ist noch nie gelaufen.
+
+**2. Falls stattdessen Feature-Arbeit: QW8 vor QW5.**
+
+Beide sind die letzten offenen `lsp.nvim`-Quick-Wins. QW8
+(Multi-Root-Switcher) zuerst, weil M7 (`.nvim-lsp.json` im Repo-Root) spaeter
+dessen Root-Begriff erbt — landet M7 zuerst, verdrahtet es einen Root-Begriff
+fest, den QW8 danach ersetzen will. QW5 (Hover-Cache) spart 10–50 ms bei
+`lua_ls`/`gopls`, also unterhalb der Wahrnehmungsschwelle; spuerbar waere er
+nur bei `jdtls`/`omnisharp`, die beide nicht aktiv sind.
+
+**3. Nicht als naechstes: M6 und M7 einzeln.**
+
+Sie gehoeren mit QW8 zusammen gebaut. `config/init.lua` hat heute *eine*
+Merge-Ebene (User-Opts ueber DEFAULTS). M6 schiebt eine Preset-Ebene darunter,
+M7 eine Projekt-Ebene darueber. Einzeln gebaut heisst: Normalisierung *und*
+Warnungssammlung zweimal umschreiben, weil eine Warnung dann sagen muss, aus
+welcher Ebene der schlechte Wert kam. Das ist derselbe Fall, den §3.4 fuer
+Sixel/Detection und mdview/color_my_ascii bereits benennt — fuer diese drei
+aber noch nicht.
 
 ---
 
