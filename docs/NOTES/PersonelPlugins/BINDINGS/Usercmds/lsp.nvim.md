@@ -23,7 +23,7 @@ sie abschneiden.
 | `:Lsp servers` | — | Eingerichtete Server, plus die aktuell attachten Clients mit Root und Buffer-Anzahl |
 | `:Lsp info` | — | Detaillierte LSP-Information zum aktuellen Buffer |
 | `:Lsp health` | — | `:checkhealth lsp` |
-| `:Lsp doctor [mode]` | — | Per-Buffer-Diagnose; `mode` ∈ `health` (Default), `debug`, `quick`, `deep`, `all` |
+| `:Lsp doctor [report]` | — | Per-Buffer-Diagnose; siehe die Report-Tabelle unter „Zwei Ausnahmen" |
 
 ## Lebenszyklus
 
@@ -116,12 +116,35 @@ Beide bleiben registriert, auch mit `legacy_aliases = false`.
 
 | Command | Warum eigenstaendig |
 | --- | --- |
-| `:LspDoctor [mode]` | Ein Diagnosewerkzeug mit eigenem Renderer und fuenf Modi, kein LSP-Steuerbefehl — dieselbe Ausnahme, die `replacer.nvim` fuer `:Surround` macht. Als `:Lsp doctor` trotzdem erreichbar. |
+| `:LspDoctor [report]` | Ein Diagnosewerkzeug mit eigenem Renderer und fuenf Reports, kein LSP-Steuerbefehl — dieselbe Ausnahme, die `replacer.nvim` fuer `:Surround` macht. Als `:Lsp doctor` trotzdem erreichbar. `!` oeffnet einen Scratch-Buffer und waehlt **keinen** Report. |
 | `:LspMdHints [mode]` | Marksman-spezifisch. Server-Commands gehoeren nicht in ein globales Verb. `mode` ∈ `on`, `off`, `toggle` (Default), `status`. |
 
 Aus demselben Grund sind `:TypeDef*`, `:EslintFix`, `:AstroDevStart`,
 `:MdFormat` und `:LuaLsReloadLibrary` unangetastet: filetype-gebunden, und sie
 gehoeren dem Modul, das sie besitzt.
+
+### Die fuenf Reports
+
+Der Name nennt die Frage, nicht die Ausgabemenge.
+
+| Report | Beantwortet |
+| --- | --- |
+| `startup` | Laeuft der Server, und wenn nein, warum? Executable gefunden, Startversuche, letzter Fehler, was als naechstes zu tun waere |
+| `resolve` | Wo bricht die Kette Filetype → Server? Fuenf Stufen, von „welche Server sollte dieses Filetype bekommen" bis zu dem, was `:Lsp start` anboete |
+| `buffer` | Was ist gerade in diesem Buffer los? Clients, Diagnostics-Zaehlung, Provider-Konflikte, Offset-Encodings, Formatter. Listen bei `list_limit` gekappt |
+| `capabilities` | Was koennen die Server hier genau? `buffer` ungekappt, plus `root_dir`/Workspace-Folders und die vollen Capabilities pro Client |
+| `all` | Alle vier. Default von `:LspDoctor` ohne Argument |
+
+Default von `:Lsp doctor` ohne Argument ist `startup`, nicht `all`: die Route
+oeffnet einen Scratch-Split, und die Frage, mit der man ankommt, ist fast immer
+„warum laeuft mein Server nicht".
+
+Bis 2026-08-29 hiessen sie `health`, `debug`, `quick`, `deep`. **Die alten
+Namen funktionieren weiter**, als Command-Argument und als Funktion; sie werden
+nur nicht mehr in der Completion angeboten. Realisiert ueber den Argumenttyp
+`LSP_DOCTOR_MODE` statt einer `enum` — der Composer weist einen Wert ausserhalb
+der enum ab, *bevor* `run` laeuft, „akzeptiert aber nicht angeboten" laesst sich
+mit einer enum also gar nicht ausdruecken.
 
 ## Notes
 
@@ -147,6 +170,16 @@ gehoeren dem Modul, das sie besitzt.
   gibt 17 Routen plus rund 25 Legacy-Aliase. Fuenf Monate Drift in dem Baum,
   aus dem `:Bindings check` seine Vergleichsbasis zieht.
 - 2026-08-29 (2): `:Lsp hints` aus Roadmap-QW3 aufgenommen.
+- 2026-08-29 (5): `:Bindings check` hat beim Nachziehen von (4) einen
+  Verweis auf `:LspStart` gemeldet — den Command gibt es nicht, er heisst
+  `:LspStartHere` bzw. `:Lsp start`. Der Text stammte aus dem Plugin selbst,
+  das ihn an fuenf Stellen fuehrte, davon eine als Handlungsanweisung im
+  `startup`-Report ("Action: Not started - use `:LspStart lua_ls`"). Wer dem
+  folgte, bekam E492. Im Plugin und hier korrigiert.
+- 2026-08-29 (4): `:LspDoctor`/`:Lsp doctor`-Modi umbenannt:
+  `health`->`startup`, `debug`->`resolve`, `quick`->`buffer`,
+  `deep`->`capabilities`. Alte Namen bleiben gueltig, werden aber nicht mehr
+  angeboten.
 - 2026-08-29 (3): Klammer-Kurzschreibweise (`:LspFormat{,On,Off,…}`) durch
   ausgeschriebene Namen ersetzt. `:Bindings check lsp.nvim` hatte
   `:LspWorkspaceDiagnostics` als "dokumentiert, nicht registriert" gemeldet —
