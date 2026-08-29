@@ -7,15 +7,21 @@ local config = require("bindings.usrcmds.case.config")
 
 local M = {}
 
----@class Lib.Case.BlueprintNode
----@field type "dir"|"file"|"copy"
+--- Enough of a node to locate one file inside a case: what `ui.open_node`
+--- reads, and all it reads. A full blueprint node is one of these; so is the
+--- ad-hoc `{ key = "summary", path = "Summary.md" }` that `open_summary`
+--- passes, which is not a blueprint entry and has no `type` to give.
+---@class Lib.Case.NodeRef
 ---@field path string  Relative to the case dir.
 ---@field key string|nil  Registers ":Case <key> [case]" to open this node.
+
+---@class Lib.Case.BlueprintNode : Lib.Case.NodeRef
+---@field type "dir"|"file"|"copy"
 ---@field open boolean|nil  Open this file after :Case new applies it.
 ---@field headline boolean|nil  Default true for type="file"; false suppresses the H1.
 ---@field overwrite boolean|nil  Default false: never clobber an existing file.
 ---@field template string|nil  A templates.lua tag (e.g. templates.SUMMARY) — checked before `body`.
----@field body fun(tokens: table): string[]|nil  Inline body lines, used only when `template` is absent.
+---@field body? fun(tokens: table): string[]|nil  Inline body lines, used only when `template` is absent — a `dir` node has neither.
 ---@field from string|nil  Source path, for type="copy".
 
 ---@param name string|nil

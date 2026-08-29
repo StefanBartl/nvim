@@ -383,7 +383,7 @@ local function newest_reply(dir)
   return newest
 end
 
----@param node Lib.Case.BlueprintNode
+---@param node Lib.Case.NodeRef
 ---@param case_arg string|nil
 function M.open_node(node, case_arg)
   resolve.pick(case_arg, function(entry)
