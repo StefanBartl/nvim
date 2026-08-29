@@ -1,22 +1,24 @@
 # lsp.nvim — Autocmds Cheatsheet
 
-Sources: `lua/lsp/bindings/autocmds.lua`, `formatter/init.lua`,
-`servers/lua_ls/reload.lua`, `languages/**`, `tools/**`
+Sources: `lua/lsp/bindings/autocmds.lua`, `core/inlay_hints.lua`,
+`formatter/init.lua`, `servers/lua_ls/reload.lua`, `languages/**`, `tools/**`
 
 Erstellt 2026-08-25 im Zuge des Plugin-Sweeps. lsp.nvim war das einzige
 Personal-Plugin ohne Autocmds-Seite in diesem Baum.
 
 **Achtung — der eigene Docstring untertreibt.** `bindings/autocmds.lua` sagt
 "One group, `lsp_nvim`". Das gilt nur fuer *Keymap*-Autocmds. Tatsaechlich
-registriert das Plugin **25 Autocmds ueber 20 Augroups**, verteilt ueber
-`languages/`, `tools/`, `formatter/` und `servers/`. Diese Datei ist die
-vollstaendige Liste.
+registriert das Plugin **26 Autocmds ueber 21 Augroups**, verteilt ueber
+`languages/`, `tools/`, `formatter/`, `servers/` und `core/`. Diese Datei ist
+die vollstaendige Liste.
 
-(20 = 18 benannte Literale + `lsp_nvim` aus der `M.GROUP`-Konstante +
-`LspSignaturePopup_<winid>`, dessen Name zur Laufzeit gebaut wird. `grep` auf
-Stringliterale findet die letzten zwei nicht.)
+(21 = 19 benannte Literale + `lsp_nvim` und `lsp_nvim_inlay_hints` aus
+`M.GROUP`-Konstanten + `LspSignaturePopup_<winid>`, dessen Name zur Laufzeit
+gebaut wird. `grep` auf Stringliterale findet die letzten drei nicht.)
 
-Alle 25 laufen ueber `lib.nvim.bindings.autocmd.create` — kein einziger auf der Roh-API.
+Alle 26 laufen ueber `lib.nvim.bindings.autocmd.create` — kein einziger auf der
+Roh-API. Der Inlay-Hints-Autocmd von 2026-08-29 war beim ersten Wurf die
+Ausnahme; nachgezogen, bevor er committet wurde, genau wegen dieser Zeile.
 Die *Augroups* sind gemischt: teils `Autocmd.group(name, true)`, teils
 `vim.api.nvim_create_augroup`. Funktional identisch, siehe "Offene Punkte".
 
@@ -31,6 +33,22 @@ Die *Augroups* sind gemischt: teils `Autocmd.group(name, true)`, teils
 global. Ein Katalogeintrag auf so einem lhs waere genau in den Buffern still
 verschattet, fuer die er gedacht ist. `LspAttach` ist die einzige Stelle, die
 danach laeuft. `M.setup()` gibt die Anzahl registrierter Autocmds zurueck (1).
+
+## Inlay Hints — `core/inlay_hints.lua`
+
+| Augroup (clear=true) | Event | Pattern | Bedingung | Aktion |
+| --- | --- | --- | --- | --- |
+| `lsp_nvim_inlay_hints` | `LspAttach` | — | `vim.lsp.inlay_hint` vorhanden | Setzt den aufgeloesten Hint-Zustand (global + Filetype-Override) auf den frisch attachten Buffer |
+
+**Warum eine eigene Augroup und nicht `lsp_nvim`:** die wird geleert, sobald
+`keymaps.enable = false` gesetzt ist (`bindings/autocmds.lua` ruft `M.clear()`
+und registriert dann nichts). Inlay Hints sind keine Keymap-Sache und duerfen
+nicht mit den Keymaps verschwinden.
+
+Der Callback ist `vim.schedule`d: `server_capabilities` steht zum
+`LspAttach`-Zeitpunkt, das *Filetype* des Buffers beim allerersten Attach einer
+Sitzung nicht zuverlaessig — und das Filetype ist es, was den Override
+aufloest. `M.detach()` raeumt die Gruppe wieder ab.
 
 ## Formatter
 
