@@ -1,5 +1,43 @@
 # Diagnostics -- LSP-Befund über alle Plugins
 
+## Table of content
+
+  - [Intro](#intro)
+  - [0. Stand, Arbeitsmodus, nächster Schritt](#0-stand-arbeitsmodus-nchster-schritt)
+    - [Gerade in Arbeit](#gerade-in-arbeit)
+    - [Vorschlag nächster Schritt](#vorschlag-nchster-schritt)
+    - [Erledigt](#erledigt)
+    - [Offen](#offen)
+    - [Arbeitsmodus](#arbeitsmodus)
+  - [1. Methode](#1-methode)
+  - [2. Gesamtbild pro Repo](#2-gesamtbild-pro-repo)
+  - [3. Verteilung nach Regel](#3-verteilung-nach-regel)
+  - [4. Die Ursachen-Cluster](#4-die-ursachen-cluster)
+    - [A. Fehlender `assert`-Typ in den Tests -- gemessen, nicht geschätzt](#a-fehlender-assert-typ-in-den-tests-gemessen-nicht-geschtzt)
+    - [B. `need-check-nil` in Tests -- 925 Stück, mechanisch](#b-need-check-nil-in-tests-925-stck-mechanisch)
+    - [C. `missing-fields` -- ERLEDIGT 2026-08-29](#c-missing-fields-erledigt-2026-08-29)
+    - [D. `userdata` statt `TSNode` in documentation.nvim -- 210 Stück](#d-userdata-statt-tsnode-in-documentationnvim-210-stck)
+    - [E. `pcall(vim.cmd, ...)` -- 60 Stück über alle Repos](#e-pcallvimcmd-60-stck-ber-alle-repos)
+    - [F. `inject-field` (119) -- fast vollständig lib.nvim](#f-inject-field-119-fast-vollstndig-libnvim)
+  - [5. Die kleinen, echten Befunde](#5-die-kleinen-echten-befunde)
+    - [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
+    - [`missing-parameter` (6) -- Aufruf mit zu wenig Argumenten](#missing-parameter-6-aufruf-mit-zu-wenig-argumenten)
+    - [`luadoc-miss-symbol` (7) -- kaputte Annotation, Klammer fehlt](#luadoc-miss-symbol-7-kaputte-annotation-klammer-fehlt)
+    - [`duplicate-set-field` (8 in `lua/`)](#duplicate-set-field-8-in-lua)
+    - [`duplicate-doc-alias` (5) -- derselbe Typname zweimal definiert](#duplicate-doc-alias-5-derselbe-typname-zweimal-definiert)
+    - [`unbalanced-assignments` (1)](#unbalanced-assignments-1)
+    - [`invisible` (1)](#invisible-1)
+    - [`different-requires` (41) -- ausschließlich nvim-Config](#different-requires-41-ausschlielich-nvim-config)
+    - [Weitere Annotationsfehler (144)](#weitere-annotationsfehler-144)
+  - [6. stylua](#6-stylua)
+  - [7. Nebenbefunde](#7-nebenbefunde)
+  - [8. Was daraus folgt](#8-was-daraus-folgt)
+  - [9. Anhang: der delegierbare Teil des Roadmap-Punkts](#9-anhang-der-delegierbare-teil-des-roadmap-punkts)
+
+---
+
+## Intro
+
 Ergebnis des Roadmap-Punkts *"`<leader>wq`: alle damit auffindbaren Issues live
 durchgehen"* (aus `FINISH/MERGED.md`, Liste A / Live-Testing).
 
@@ -23,19 +61,31 @@ machen -- eine separate Handover-Datei gibt es bewusst nicht.
 **Stand: 2026-08-29.** Alles unten Genannte ist in den jeweiligen Repos
 committet und auf `main` gepusht.
 
+---
+
 ### Gerade in Arbeit
 
 *Nichts.* Cluster C ist abgeschlossen; die Umstellung auf den vertikalen
 Arbeitsmodus (siehe unten) wartet auf ein Go.
 
+---
+
+### Vorschlag nächster Schritt
+
+Zuerst horizontal das assert-Meta (vier Zeilen in lib.nvim, gemessene 366 Warnungen, und es macht die Testdateien überhaupt erst typgeprüft), dann die Entscheidung zu need-check-nil in Tests — die brauche ich von dir, sie ist keine Arbeit, sondern eine Wahl: unterdrücken oder auszementieren. Danach vertikal, Repo für Repo, nach Befundzahl sortiert\
+
+---
+
 ### Erledigt
 
 | # | Punkt | Ergebnis |
 |---|---|---|
-| C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md) |
+| C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](../Diagnostics_FINISHED.md) |
 | 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
 | 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
 | 9 | **`lib.nvim.ui.list`** | gebaut, 20 Aufrufstellen in 12 Repos umgestellt |
+
+---
 
 ### Offen
 
@@ -49,6 +99,8 @@ Reihenfolge wie in Abschnitt 8. Kurz:
 6. **Die ~90 Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil
 7. Der Rest der Verteilung aus Abschnitt 3 (`param-type-mismatch`,
    `undefined-field`, Annotationsfehler)
+
+---
 
 ### Arbeitsmodus
 
@@ -81,36 +133,6 @@ Regeln, die sich in Cluster C bewährt haben und weiter gelten:
   einem Satz, der sagt warum.
 - **Erledigtes wandert nach `Diagnostics_FINISHED.md`**, mit dem, was dabei
   interessant war. Dieses Dokument bleibt der Stand des Offenen.
-
----
-
-## Table of content
-
-  - [0. Stand, Arbeitsmodus, nächster Schritt](#0-stand-arbeitsmodus-nchster-schritt)
-  - [1. Methode](#1-methode)
-  - [2. Gesamtbild pro Repo](#2-gesamtbild-pro-repo)
-  - [3. Verteilung nach Regel](#3-verteilung-nach-regel)
-  - [4. Die Ursachen-Cluster](#4-die-ursachen-cluster)
-    - [A. Fehlender `assert`-Typ in den Tests -- gemessen, nicht geschätzt](#a-fehlender-assert-typ-in-den-tests-gemessen-nicht-geschtzt)
-    - [B. `need-check-nil` in Tests -- 925 Stück, mechanisch](#b-need-check-nil-in-tests-925-stck-mechanisch)
-    - [C. `missing-fields` -- ERLEDIGT 2026-08-29](#c-missing-fields-erledigt-2026-08-29)
-    - [D. `userdata` statt `TSNode` in documentation.nvim -- 210 Stück](#d-userdata-statt-tsnode-in-documentationnvim-210-stck)
-    - [E. `pcall(vim.cmd, ...)` -- 60 Stück über alle Repos](#e-pcallvimcmd-60-stck-ber-alle-repos)
-    - [F. `inject-field` (119) -- fast vollständig lib.nvim](#f-inject-field-119-fast-vollstndig-libnvim)
-  - [5. Die kleinen, echten Befunde](#5-die-kleinen-echten-befunde)
-    - [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
-    - [`missing-parameter` (6) -- Aufruf mit zu wenig Argumenten](#missing-parameter-6-aufruf-mit-zu-wenig-argumenten)
-    - [`luadoc-miss-symbol` (7) -- kaputte Annotation, Klammer fehlt](#luadoc-miss-symbol-7-kaputte-annotation-klammer-fehlt)
-    - [`duplicate-set-field` (8 in `lua/`)](#duplicate-set-field-8-in-lua)
-    - [`duplicate-doc-alias` (5) -- derselbe Typname zweimal definiert](#duplicate-doc-alias-5-derselbe-typname-zweimal-definiert)
-    - [`unbalanced-assignments` (1)](#unbalanced-assignments-1)
-    - [`invisible` (1)](#invisible-1)
-    - [`different-requires` (41) -- ausschließlich nvim-Config](#different-requires-41-ausschlielich-nvim-config)
-    - [Weitere Annotationsfehler (144)](#weitere-annotationsfehler-144)
-  - [6. stylua](#6-stylua)
-  - [7. Nebenbefunde](#7-nebenbefunde)
-  - [8. Was daraus folgt](#8-was-daraus-folgt)
-  - [9. Anhang: der delegierbare Teil des Roadmap-Punkts](#9-anhang-der-delegierbare-teil-des-roadmap-punkts)
 
 ---
 

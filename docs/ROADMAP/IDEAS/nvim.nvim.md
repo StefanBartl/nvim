@@ -76,11 +76,10 @@ in einem Plugin.
       API bekannt — siehe filetree.nvim's `context_menu`-Feature und
       `docs/menu.md` als Referenzimplementierung für den Aufbau: Soft-
       Dependency-Pattern, `{name,cmd,rtxt}`-Item-Shape, `mouse=true`).
+      NEU:  nvzone\menu wird volsltöändig nachgebaut und ersetzt.
 - [ ] `markdown.integrations.menu` (bereits vorhanden, liefert `items()`)
       bliebe die Quelle für Markdown-Einträge — nur der Trigger/Dispatch
       wandert, nicht die Entries selbst.
-
-- [ ] wie filetre.nvim bereitws ewin modul für das /menu plugin bietet, sammeln weiterer möglichen entries,aus alen meien plugins. idee: ein ktesxteintrag "MyPlugns" -> Jedes Plgin ien entry -> aktion
 
 ### Was bei einem UI-Plugin mitwandern würde (2026-08-26)
 

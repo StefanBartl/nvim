@@ -12,12 +12,12 @@ leader np / leader pf sind vertauscht  fileops.nvim
 
 ## cdx
 
-| Account  | Week Reset Date | Actual/Insgesamt  |    Sub Bis    | Next 5h Reset |
-| -------- | --------------- | ----------------- | ------------- | ------------- |
-| **main** |   Fr., 11:00    |    60% /  27%     |   ~ 27. Sep   |       -       |
-| **dev**  |   Sa., 22:00    |     0% /  0%      |    03. Sep    |       –       |
-| **free** |   So., 09:00    |     0% /  0%      | 21. Juli 2027 |       –       |
-| **work** |   Sa., 06:00    |     0% /  0%      |   20. Sept    |       –       |
+| Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
+| -------- | ------------- | --------------- | --------------- | ---------------- |
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:30       |    60% / 27%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     --:--       |    --% / --%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     02:50       |    --% / --%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     --:--       |    --% / --%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
@@ -26,7 +26,18 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ## Misc
 
+- [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
 
+- [ ] `:Bindings search` verbessern, andere optionen durchgehen
+- hover: wenn man zb `sortiert/` schreibt, kommt ein hover wenn man mit dem cursor darauf ist. Dies ist ein false positive, auch wenn es `broken link` anzeig anzeigt. Screesnhot: ![sortiert/ hover](./assets/ROADMAP-1788030000.png)
+hier noch ein beispiel: `/--%` - hovert auch: ![/--](./assets/ROADMAP-1788035345.png)
+- [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md der Punkt:
+    [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
+  -> das zeigt an, was in `migrate.nvim` implementiert werden soll.
+  Zusatz Feature: Alle im `h deprecated` implementieren
+    - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
+    - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
+    - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
 - [ ] Anticheat knacken
 - [ ] alle keymaps der nvim config durcsheen ob die wirlich gebraucht werden
 - [ ] Github Stats auswerten / backupen
