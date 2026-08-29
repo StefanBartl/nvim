@@ -79,6 +79,10 @@ Sitzung neu verhandelt werden.
 - **Ein Punkt nach dem anderen.** Vor der Umsetzung wird der naechste Punkt so
   erklaert, dass die Entscheidung — machen, ueberspringen, anders zuschneiden —
   nachvollziehbar getroffen werden kann. Erst danach wird gebaut.
+- **Immer mit Empfehlung.** Zur Auswahl gehoert, welche Option empfohlen wird
+  und warum. Eine Liste gleichwertig praesentierter Moeglichkeiten schiebt die
+  Arbeit nur weiter, statt sie zu leisten — wer den Code gelesen hat, hat auch
+  eine Meinung dazu und schuldet sie.
 - **Erledigtes wandert nach
   [`PLUGIN_ROADMAPS_FINISHED.md`](PLUGIN_ROADMAPS_FINISHED.md)**, samt der
   Notizen, die beim Bauen angefallen sind. Diese Datei bleibt damit eine Liste
