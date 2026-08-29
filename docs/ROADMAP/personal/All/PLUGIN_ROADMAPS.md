@@ -83,6 +83,12 @@ Sitzung neu verhandelt werden.
   und warum. Eine Liste gleichwertig praesentierter Moeglichkeiten schiebt die
   Arbeit nur weiter, statt sie zu leisten — wer den Code gelesen hat, hat auch
   eine Meinung dazu und schuldet sie.
+- **Immer mit konkreter Auswirkung.** Zu jeder Option gehoert, was sich damit
+  im taeglichen Gebrauch aendert: welche Taste, welche Ausgabe, welches
+  Verhalten — und ausdruecklich auch dann, wenn die Antwort "gar nichts, nur
+  die Beschreibung stimmt danach" lautet. Begriffe wie "report-only" oder
+  "verkabeln" beschreiben die Arbeit, nicht die Folge; die Folge ist das, was
+  die Entscheidung traegt.
 - **Erledigtes wandert nach
   [`PLUGIN_ROADMAPS_FINISHED.md`](PLUGIN_ROADMAPS_FINISHED.md)**, samt der
   Notizen, die beim Bauen angefallen sind. Diese Datei bleibt damit eine Liste
