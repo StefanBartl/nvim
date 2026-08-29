@@ -8,6 +8,70 @@ alles, was noch offen ist.
 
 ## 2026-08-29
 
+### `lib.nvim.ui.list` -- eine Listen-Senke statt vierzehn
+
+*(war: Diagnostics-Report Abschnitt 9, der delegierbare Teil des
+`<leader>wq`-Roadmap-Punkts)*
+
+Neues Modul `lib.nvim/lua/lib/nvim/ui/list/` (`set`, `qf`, `loc`), plus
+Spec, README und API-Doku. Alle 20 Aufrufstellen in 12 Repos sind
+umgestellt. Gegenprobe danach: in ganz `C:/repos` gibt es unter `lua/` noch
+**genau eine** `setqflist`-Zeile, und die steht im Modul selbst.
+
+**Der Report hat die falsche Vorlage benannt.** Er schlug vor, die
+`wq`-Logik aus `lsp.nvim/lua/lsp/diagnostics/{quickfix,loclist}.lua` zu
+heben. Beim Hinsehen war das die einzige Stelle, die *nicht* passt: die
+arbeitet auf `vim.diagnostic.setqflist` -- andere API, eigene
+Severity-Behandlung, und eine Signatur, die sich zwischen Neovim 0.10 und
+0.11 geaendert hat (lsp.nvim traegt dafuer einen eigenen Arity-Sniffer).
+Die anderen 20 Stellen bauen `vim.fn.setqflist`-Items aus eigenen Daten.
+Gemeinsam ist ihnen nur der letzte Schritt -- und genau der ist gewandert.
+lsp.nvim blieb unangetastet.
+
+**Was die 20 Stellen unterschiedlich machten, ohne dass es jemand
+entschieden haette:**
+
+- **Stack-Semantik.** `setqflist(items, "r")` ersetzt die Liste, die der
+  Nutzer gerade offen hat; `setqflist({}, " ", {...})` legt eine neue an und
+  laesst `:colder` einen Weg zurueck. Fuenf Repos machten das eine, sieben
+  das andere, und an keiner Aufrufstelle liest sich das wie eine
+  Entscheidung. Jetzt ist `" "` der Default und `"r"` etwas, das ein Aufrufer
+  anfordert -- richtig genau dann, wenn er *seine eigene* Liste aktualisiert
+  (language.nvims Spell-Refresh, insights' Konflikt-Rescan).
+- **Der Titel als zweiter Aufruf.** Die `"r"`-Form kann keinen Titel tragen.
+  Deshalb steht in fuenf Repos direkt dahinter ein
+  `setqflist({}, "a", { title = ... })` -- ein Append von nichts, nur um
+  einen String anzuhaengen. Ein Aufruf macht jetzt beides.
+- **Fokus.** `:copen` zieht den Cursor in die Liste. Nur spotlight.nvim gibt
+  ihn bewusst zurueck (die gefilterten Zeilen will man *neben* dem Log
+  lesen). Der Default bleibt deshalb `"list"` -- ein gemeinsames Modul, das
+  elf Plugins still den Cursor woanders hinsetzt, waere schlimmer als die
+  Uneinheitlichkeit.
+- **Der leere Fall.** `open = "auto"` setzt die Liste trotzdem, oeffnet aber
+  kein Fenster auf nichts. Das ist wichtig, weil "keine Treffer" sonst die
+  Treffer von gestern stehen laesst, als waeren sie aktuell.
+- **Der qf/loc-Zweig.** diff.nvim und replacer.nvim schrieben denselben
+  if/else zweimal, obwohl es ein Flag ist. `loclist = <bool|winid>` macht
+  daraus einen Wert.
+
+**Nicht mitgewandert, bewusst:** spotlights `max_entries`-Trunkierung (der
+Cap greift *waehrend* des Scans, nicht danach -- das muss im Scanner
+bleiben) und Filtern/Formatieren/Navigieren.
+
+**Aufwandsehrlichkeit:** Der Gewinn ist Konsistenz, nicht Zeilenzahl. Pro
+Aufrufstelle fallen 2-5 Zeilen weg; documentation.nvim war mit 12 Stellen
+das groesste Einzelstueck (58 rein, 67 raus). Der eigentliche Wert liegt
+darin, dass Stack, Fokus und Leerfall jetzt an einer Stelle entschieden
+werden.
+
+Commits: lib.nvim `2fdfcb7`, dann je ein `refactor(qf)`-Commit in
+insights, language, emojis, filetree, markdown, replacer, diff, debugging,
+runtime-analysis, spotlight, documentation. Alle Test-Suites der
+betroffenen Repos laufen gruen (filetree 394, spotlight 453, replacer 188,
+lib.nvim vollstaendig).
+
+---
+
 ### mdview.nvim formatiert jetzt wie die anderen 30 Repos
 
 *(war: Diagnostics-Report Abschnitt 6, "Zwei Auffaelligkeiten am Rand", Punkt 1

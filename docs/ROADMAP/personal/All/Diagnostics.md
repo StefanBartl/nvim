@@ -486,11 +486,19 @@ Der ursprüngliche Eintrag trug den Zusatz *"Das Refactoring der `wq`-Logik nach
 `debugging/autocmds/sources.lua`, `runtime-analysis/bindings/usrcmds.lua` --
 und, am ausgereiftesten, `lsp.nvim/lua/lsp/diagnostics/{quickfix,loclist}.lua`.
 
-Der delegierbare Teil ist also: die Listen-Senke aus `lsp.nvim` nach
-`lib.nvim.ui` heben (Kandidat `lib.nvim.ui.qf`), damit es eine gemeinsame
-Implementierung gibt statt 14 Eigenbauten -- und die vorhandenen Aufrufer
-darauf umstellen. Das ist unabhängig von diesem Diagnostics-Befund und noch
-offen.
+Der delegierbare Teil war also: die Listen-Senke nach `lib.nvim.ui` heben,
+damit es eine gemeinsame Implementierung gibt statt 14 Eigenbauten -- und die
+vorhandenen Aufrufer darauf umstellen.
+
+**Erledigt 2026-08-29** als `lib.nvim.ui.list` (`set`/`qf`/`loc`), alle 20
+Aufrufstellen in 12 Repos umgestellt; in ganz `C:/repos` liegt unter `lua/`
+noch genau eine `setqflist`-Zeile, und die steht im Modul selbst. Eine
+Korrektur zur Vermutung oben: `lsp.nvim/lua/lsp/diagnostics/*` war gerade
+**nicht** die Vorlage -- das ist `vim.diagnostic.setqflist`, eine andere API
+mit eigener Severity-Behandlung und einer zwischen Neovim 0.10 und 0.11
+geänderten Signatur, und blieb unangetastet. Details, inklusive der vier
+Unterschiede, die die Eigenbauten stillschweigend hatten, in
+[`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md).
 
 ---
 
