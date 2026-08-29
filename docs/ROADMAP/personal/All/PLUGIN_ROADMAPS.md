@@ -648,17 +648,37 @@ entfernt, nicht abgehakt" — genau das ist bei diesen fünf nicht passiert.
 **nicht** als offene Arbeit gezählt. Wer sie als Aufgabenliste liest, arbeitet
 Dinge nach, die längst erledigt sind.
 
-**Aufwand für die Bereinigung: S je Repo** (jede `❌`-Zeile einmal gegen den
-Code prüfen und entfernen oder stehenlassen), **Nutzen hoch** — solange sie
-drinstehen, ist jedes dieser Dokumente beim Lesen wertlos, weil man jede Zeile
-selbst nachprüfen muss.
+**Erledigt am 2026-08-29** (WKDBooks `205f152`): jede `❌`-Zeile in allen
+Audit-Dateien wurde einzeln gegen den Code geprüft. Der erste Durchgang hatte
+nur einen **VERALTET**-Block vorangestellt und die falschen Zeilen
+stehengelassen — also genau das getan, was die Konvention dieser Dokumente
+verbietet. Jetzt sind die überholten Befunde korrigiert, und der Block sagt
+nur noch, was nachgezogen wurde, plus den Satz, dass ein verbliebenes `❌`
+geprüft und weiterhin offen ist.
 
-**Teilweise erledigt am 2026-08-29**: die neun Dateien, in denen eine Lücke
-nachweislich veraltet ist (`open.nvim` ×3, `pdfport.nvim` ×3, `markdown.nvim`
-×2, `github_stats.nvim` ×1), tragen jetzt am Dateianfang einen
-**VERALTET**-Block, der benennt, welcher Befund konkret überholt ist. Was
-offen bleibt: die verbleibenden `🟡`-Zeilen derselben Dateien und die Audits
-der übrigen Repos wurden nicht Zeile für Zeile nachgeprüft.
+*Korrigiert*: `open.nvim` und `pdfport.nvim` §6 Testbarkeit (beide führen
+"kein `test/`-Verzeichnis" als größte Lücke, beide haben `TESTS/` mit sechs
+Specs und CI); `open.nvim` §7 Tooling plus drei Folgestellen im selben
+Dokument, die auf "kein Test-Suite geplant" aufbauten; `open.nvim`
+`lib.usercmd`/`lib.cross`; `pdfport.nvim` `lib.notify`/`lib.map`/
+`lib.usercmd`/`lib.autocmd` plus zwei Folgestellen; `markdown.nvim` A3 und A7;
+`github_stats.nvim` `@see` und der Test-Entry.
+
+*Zwei Nebenbefunde*: die alten Blöcke behaupteten, `.stylua.toml` fehle
+weiterhin — die Konfiguration liegt in allen vier Repos als `stylua.toml` ohne
+Punkt, was stylua genauso liest. Und der Vorwurf, `github_stats`-Specs
+referenzierten nicht-existente Module, war ein Lesefehler:
+`dashboard.renderer`/`dashboard.navigator` sind keine `require`s, sondern die
+`describe`-Überschrift in `TESTS/dashboard_spec.lua:250`.
+
+*Geprüft und bewusst stehengelassen*: `github_stats`' `safe_call`,
+strukturierte Fehlertypen, `@error`/`@raises`, Snapshot/Restore und
+Tabellen-Vorreservierung (alle fünf zutreffend, drei mit eigener Begründung im
+Dokument), sowie `pdfport`s `cleanup_all`.
+
+*Was offen bleibt*: die `🟡`-Zeilen wurden nur dort mitgezogen, wo eine
+korrigierte `❌`-Zeile sie direkt widerlegt — systematisch durchgeprüft sind
+sie nicht.
 
 ---
 
@@ -722,15 +742,13 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 
 1. **QW1** (`mdview` any_file testen, XS) — entscheidet über ein bereits
    gebautes Feature.
-2. **3.1** (veraltete `❌`-Zeilen bereinigen, S je Repo) — sonst führt jede
-   spätere Runde durch dieselben Falschbefunde.
-3. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
+2. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
    der ganzen Liste, der etwas anderes aufhält.
-4. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
+3. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
    End-to-End-Check der LSP-Kette.
-5. **QW3–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
+4. **QW3–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
    alle im selben Modulumfeld.
-6. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
+5. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
    (`images` Sixel-Paket), **M9** (Frecency über drei Repos).
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
