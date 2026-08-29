@@ -30,12 +30,12 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [1.0 Erledigt](#10-erledigt)
     - [QW3 · `lsp.nvim` — Inlay-Hints-Toggle](#qw3-lspnvim-inlay-hints-toggle)
     - [QW4 · `lsp.nvim` — Diagnostics-Debounce auf `publishDiagnostics`](#qw4-lspnvim-diagnostics-debounce-auf-publishdiagnostics)
+    - [QW7 · `lsp.nvim` — "installed vs. attached"-Zeile in `:checkhealth lsp`](#qw7-lspnvim-installed-vs-attached-zeile-in-checkhealth-lsp)
     - [QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung](#qw9-imagesnvim-trial-run-fr-die-reposcopenvim-kreuzung)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
     - [QW1 · `mdview.nvim` — `experimental.any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-experimentalany_file-in-echtem-neovim-durchtesten)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
     - [QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben](#qw6-lspnvim-formatter_priority-verkabeln-oder-als-report-only-festschreiben)
-    - [QW7 · `lsp.nvim` — "installed vs. attached"-Zeile in `:checkhealth lsp`](#qw7-lspnvim-installed-vs-attached-zeile-in-checkhealth-lsp)
     - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
   - [1.2 Mittel (M)](#12-mittel-m)
     - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-deep)
@@ -104,9 +104,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 39 offene Punkte**, davon 5 Quick Wins (XS/S mit Nutzen
-  mittel bis hoch) und 4, die dich brauchen. Drei weitere Quick Wins (QW3,
-  QW4, QW9) sind erledigt und stehen unter 1.0.
+- **Insgesamt 38 offene Punkte**, davon 4 Quick Wins (XS/S mit Nutzen
+  mittel bis hoch) und 4, die dich brauchen. Vier weitere Quick Wins (QW3,
+  QW4, QW7, QW9) sind erledigt und stehen unter 1.0.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führen noch Lücken (`❌`), die längst geschlossen sind — stichprobenhaft
@@ -202,6 +202,53 @@ Neovim sie gelöscht hat, und nichts entfernt sie mehr.
 
 ---
 
+### QW7 · `lsp.nvim` — "installed vs. attached"-Zeile in `:checkhealth lsp`
+
+**Erledigt am 2026-08-29. `lua/lsp/health.lua`, 11 neue Specs.**
+
+Ursprünglich: die attached-Seite steht (*configured: N*, *set up N von M*, pro
+Client eine Zeile mit `%d buffer(s)`); es fehlten die **installed**-Seite, das
+„davon in diesem Buffer: K", und die Warnung bei schwerem Server über vielen
+Buffern.
+
+*Alle drei gebaut.* Die Sektion läuft jetzt über vier Zahlen: installed →
+configured → set up → attached, plus welche der laufenden Clients den Buffer
+bedienen.
+
+*Der Punkt, an dem es beinahe falsch geworden wäre*: „in diesem Buffer" kann
+nicht `nvim_get_current_buf()` sein. Neovim legt den `health://`-Buffer an und
+macht ihn zum aktuellen, **bevor** ein einziger Check läuft
+(`runtime/lua/vim/health.lua`) — der Report hätte über sich selbst berichtet.
+Am Filetype ist es auch nicht erkennbar, das wird erst *nach* den Checks
+gesetzt. Der Buffer von vorher ist der Alternate (`#`); empirisch geprüft, nicht
+angenommen. Gibt es keinen echten Datei-Buffer, sagt die Zeile das, statt eine
+Null zu drucken, die wie ein Defekt aussieht.
+
+*Die installed-Seite mit einer Einschränkung, die dokumentiert ist*:
+Mason-Paketnamen sind keine lspconfig-Servernamen (`lua-language-server` gegen
+`lua_ls`), und die Übersetzung liegt in `mason-lspconfig`, von dem das Plugin
+bewusst nicht abhängt. Also werden Masons Namen berichtet und das dazugesagt —
+eine falsche „installiert aber nicht eingerichtet"-Liste wäre schlechter als
+keine. Zusatzfall, der sonst gelogen hätte: sind Pakete da, aber keins
+kategorisiert, ist Masons Registry noch nicht geladen; die Zeile meldet dann
+„unbekannt", nicht „0 LSP-Pakete" neben 73 vorhandenen.
+
+*Die Warnung* springt nur bei der Kombination an: `ts_ls`, `pyright`, `jdtls`,
+`omnisharp` über mindestens 20 Buffern, mit Buffer- und Zeilenzahl im Text.
+Nie über eine Zahl allein — fünf Buffer auf `ts_ls` sind ein Arbeitsset, und
+eine Warnung darüber erzieht dazu, die Sektion zu überspringen.
+
+*Nebenbefund*: `vim.health.info()` nimmt keine Advice-Zeilen, nur `warn` und
+`error` tun das. Ein zweites Argument wird stillschweigend verworfen. Der
+Hinweis zur Namensgebung steht deshalb im Meldungstext.
+
+*Verifiziert*: 228 Specs grün (11 davon neu), Smoke-Test grün, `stylua` und
+`gen_bindings --check` sauber, und `:checkhealth lsp` mit geladenem Mason in
+einem echten headless Neovim durchgespielt — 38 installierte LSP-Pakete gegen
+8 konfigurierte.
+
+---
+
 ### QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung
 
 **Erledigt am 2026-08-29. Die Messung hat eine Frage in zwei geteilt.**
@@ -291,24 +338,6 @@ tatsächlich läuft.
 Zwei Wege: entweder conform.lua liest die Liste und ordnet
 `formatters_by_ft` danach, oder der Key wird als reine Report-Option
 dokumentiert. Der zweite ist eine Zeile, der erste die ehrlichere Semantik.
-
----
-
-### QW7 · `lsp.nvim` — "installed vs. attached"-Zeile in `:checkhealth lsp`
-
-**Aufwand XS–S · Nutzen mittel**
-
-Aus der geretteten LSPDoctor-Analyse: ein installierter Server kostet nichts,
-solange er an keinen Buffer attached ist. Teuer wird erst "viele große
-Buffer × schwerer Server" (tsserver, pyright).
-
-*Was schon steht* (`health.lua`, `check_servers`): *configured: N*, *set up N
-von M* und pro Client eine Zeile mit `%d buffer(s)` plus Root. Die
-attached-Seite ist damit da.
-
-*Was fehlt*: die **installed**-Seite (was Mason installiert hat, unabhängig
-von `setup()`), das "davon in diesem Buffer: K", und die Warnung, die nur
-dann anspringt, wenn ein bekannt schwerer Server über vielen Buffern hängt.
 
 ---
 
@@ -840,9 +869,9 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
    der ganzen Liste, der etwas anderes aufhält.
 3. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
    End-to-End-Check der LSP-Kette.
-4. **QW5–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
-   alle im selben Modulumfeld. QW3 und QW4 sind daraus schon erledigt
-   (siehe 1.0).
+4. **QW5, QW6, QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie
+   liegen alle im selben Modulumfeld. QW3, QW4 und QW7 sind daraus schon
+   erledigt (siehe 1.0).
 5. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
    (`images` Sixel-Paket), **M9** (Frecency über drei Repos).
 
