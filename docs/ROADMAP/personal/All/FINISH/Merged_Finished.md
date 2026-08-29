@@ -8,6 +8,71 @@ nvim-Config.
 
 ## 2026-08-29
 
+### Diagnostik über alle Repos
+
+- [x] **`<leader>wq`: alle damit auffindbaren Issues durchgegangen — als
+      einmaliger Scan über alle 31 Plugins plus diese Config statt live pro
+      Buffer.** Vollständiger Befund in
+      `docs/ROADMAP/personal/All/Diagnostics.md`.
+
+      **Der Trick war, den Keybind headless nachzubauen.** `<leader>wq` ist
+      `vim.diagnostic.setqflist()` über alle geladenen Buffer; das Äquivalent
+      ohne Session ist `lua-language-server --check` pro Repo. Naiv aufgerufen
+      lügt das aber: die `.luarc.json` der Repos ist nicht, was lua_ls im
+      Editor sieht. `lsp.nvim` injiziert `$VIMRUNTIME/lua` und die
+      `${3rd}`-Metas erst in `before_init` (11 der 31 `.luarc.json` führen
+      `$VIMRUNTIME/lua` selbst nicht), und lazydev zieht die Cross-Repo-Typen
+      erst beim `require` nach. Die Prüf-Config wurde deshalb pro Repo aus
+      allen drei Quellen zusammengesetzt, inklusive transitiver
+      Repo-Abhängigkeiten. Gegenprobe: ohne diese Angleichung meldet der Lauf
+      4139 Warnungen, mit ihr 3781 — die Differenz waren Phantom-Befunde auf
+      `Lib.*`- und `RA.*`-Typen, die es im Editor nie gibt.
+
+      **Ergebnis: 3600 Diagnosen in 742 Dateien, alle `Warning`, kein einziger
+      `Error`.** Die Hälfte (1770) liegt in `TESTS/`, nicht im ausgelieferten
+      Code. Vier der größten Repos stellen 52 Prozent; sieben Repos sind
+      einstellig und praktisch fertig.
+
+      **Vier der sechs Ursachen sind musterhaft, nicht einzeln zu beheben.**
+      Der lohnendste Einzelbefund ist ein fehlender `assert`-Typ: LuaLS kennt
+      den globalen `assert` nur als Lua-Standardfunktion, und
+      `${3rd}/busted/library` — was `lsp.nvim` heute anhängt — deckt luassert
+      nicht ab. Vier Zeilen `---@meta` / `---@type luassert` senken **lsp.nvim
+      von 465 auf 233 Warnungen**, gemessen, nicht hochgerechnet; über alle
+      Repos 3966 → 3600. Dazu: `---@param node userdata` statt `TSNode` in
+      documentation.nvims Sprachmodulen (210 Stück), `@class *.Config` mit
+      lauter Pflichtfeldern, an denen jedes partielle `setup({…})` scheitert
+      (441), und `pcall(vim.cmd, …)`, das an Neovims aufrufbarer Tabelle
+      hängenbleibt (60).
+
+      **Die ~90 echten Einzelbefunde** stehen in Abschnitt 5 des Reports mit
+      `file:line`: 23 deprecated APIs (`vim.lsp.stop_client`, `vim.diff`,
+      `vim.fn.termopen`, …), sechs Aufrufe mit zu wenig Argumenten, sieben
+      Annotationen, deren Klammer fehlt und die deshalb gar nicht geparst
+      werden, ein `unbalanced-assignments` in lib.nvim. Sechs der deprecated
+      Treffer sind bewusste Alt-API-Fallbacks und sollen bleiben — das ist im
+      Report markiert, damit sie niemand "repariert".
+
+      **`stylua --check` gleich mitgelaufen:** 28 von 31 Repos sauber, vier
+      Dateien abweichend, alle derselbe Fall (einzeiliges `function() … end`).
+      Zwei Randbefunde: `mdview.nvim` formatiert als einziges Repo mit Tabs
+      (`stylua.toml`, konsistent durchgezogen — Entscheidung, kein Fehler),
+      und in `open.nvim` liegt noch ein Claude-Worktree
+      (`.claude/worktrees/cool-benz-a3f6a1` plus Branch), obwohl der
+      2026-08-26-Eintrag alle als abgeräumt meldet. Ohne LSP-Effekt: LuaLS
+      indiziert Punkt-Verzeichnisse nicht, im Scan-Log verifiziert.
+
+      **Beide Randbefunde noch am selben Tag erledigt:** mdview.nvim steht
+      jetzt auf `Spaces` / `2` wie die anderen 30 Repos, und der Worktree in
+      open.nvim ist weg — nachdem geprüft war, dass seine zwei Commits
+      inhaltlich schon auf `main` liegen. Details in
+      `docs/ROADMAP/Diagnostics_FINISHED.md`.
+
+      **Nicht erledigt, weiterhin offen:** das Beheben selbst, und das
+      Refactoring der `wq`-Logik nach `lib.nvim.ui` — `lib.nvim/ui/` hat kein
+      Quickfix-Modul, während 20 Dateien in 14 Repos ihre `setqflist`-Senke
+      selbst bauen. Beides in Abschnitt 8 und 9 des Reports aufbereitet.
+
 ### Bugfixes in Plugins
 
 - [x] **Astro konfiguriert `nvim-ts-autotag` nicht mehr — und die Annahme, es
