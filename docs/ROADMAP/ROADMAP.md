@@ -1,4 +1,5 @@
 # Roadmap
+leader np / leader pf sind vertauscht  fileops.nvim
 
 ## Table of content
 
@@ -11,12 +12,12 @@
 
 ## cdx
 
-| Account  | Week Reset Date | Actual/Insgesamt |    Sub Bis    | Next 5h Reset |
-| -------- | --------------- | ---------------- | ------------- | ------------- |
-| **main** |   Fr., 11:00    |     79% / 5%     |   ~ 27. Sep   |       -       |
-| **dev**  |   Sa., 22:00    |    100% / %      |    03. Sep    |       –       |
-| **free** |   So., 09:00    |    100% / %      | 21. Juli 2027 |       –       |
-| **work** |   Sa., 06:00    |    100% / %      |   20. Sept    |       –       |
+| Account  | Week Reset Date | Actual/Insgesamt  |    Sub Bis    | Next 5h Reset |
+| -------- | --------------- | ----------------- | ------------- | ------------- |
+| **main** |   Fr., 11:00    |    60% /  27%     |   ~ 27. Sep   |       -       |
+| **dev**  |   Sa., 22:00    |     0% /  0%      |    03. Sep    |       –       |
+| **free** |   So., 09:00    |     0% /  0%      | 21. Juli 2027 |       –       |
+| **work** |   Sa., 06:00    |     0% /  0%      |   20. Sept    |       –       |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
@@ -25,13 +26,23 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ## Misc
 
-- [ ] Cascade: C-y / C-x soll auchdurch buchstaben iterieren -> a -> C-y == b usw... Gros/Kleinschreibung beachten. Große Buchstaben bleiben groß kleine bleiben klein
+
 - [ ] Anticheat knacken
 - [ ] alle keymaps der nvim config durcsheen ob die wirlich gebraucht werden
 - [ ] Github Stats auswerten / backupen
 - [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
 - [ ] TAKT
+- [ ] **mdview: live ansehen, wie Nicht-Markdown-Dateien aussehen.** `experimental.any_file = true`
+  weitet die Vorschau von Markdown auf jede normale Textdatei aus; `.lua`/`.py`/`.sh` landen
+  dann als hervorgehobene Code-Ansicht im Browser statt im Markdown-Renderer. Gebaut am
+  2026-08-24, aber nie durch ein echtes Neovim gelaufen — nur Lua-Harness, Client-vitest und
+  Standalone-Relay, und keiner der drei geht durch die Autocmd-Kette, die das Flag verändert.
+  Checkliste mit den fünf Fällen (Rendern, proportionaler Scroll-Sync, Breadcrumbs auf
+  `#`-Kommentarsprachen, Ausschluss von Terminal/Help/Quickfix/Log-Buffer, Regression mit Flag
+  aus) plus vier Fixtures liegt in `C:/repos/mdview.nvim/TESTS/CHECK.md` unter
+  *„`experimental.any_file` — release check"*. Ergebnis entscheidet, ob das Flag `experimental`
+  verlieren kann.
 
 ---
 
@@ -44,7 +55,7 @@ Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega auf
 
 ### Plugin-Liste
 
-Hier die Liste meiner Plugins - du findest sie unter `c:\repos` - und du hast Zugriff darauf:
+Hier die Liste meiner Plugins - du findest sie unter `c:\repos` bzw `e:\repos` - und du hast Zugriff darauf:
 
 buffer-ctx.nvim
 cascade.nvim
