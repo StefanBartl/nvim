@@ -18,6 +18,7 @@ Querverweis von aussen weiter aufgeht.
 
   - [QW3 · `lsp.nvim` — Inlay-Hints-Toggle](#qw3-lspnvim-inlay-hints-toggle)
   - [QW4 · `lsp.nvim` — Diagnostics-Debounce auf `publishDiagnostics`](#qw4-lspnvim-diagnostics-debounce-auf-publishdiagnostics)
+  - [QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben](#qw6-lspnvim-formatter_priority-verkabeln-oder-als-report-only-festschreiben)
   - [QW7 · `lsp.nvim` — "installed vs. attached"-Zeile in `:checkhealth lsp`](#qw7-lspnvim-installed-vs-attached-zeile-in-checkhealth-lsp)
   - [QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung](#qw9-imagesnvim-trial-run-fr-die-reposcopenvim-kreuzung)
 
@@ -96,6 +97,68 @@ Neovim sie gelöscht hat, und nichts entfernt sie mehr.
 
 *Verifiziert*: 217 Specs grün (18 davon neu), Smoke-Test grün, `stylua` und
 `gen_bindings --check` sauber.
+
+---
+
+### QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben
+
+**Erledigt am 2026-08-29 als report-only. Der Punkt war anders gelagert, als die
+Beschreibung annahm — in beide Richtungen.**
+
+Urspruenglich: `formatter_priority` wird nur von `lspdoctor/inspect.lua:161`
+gelesen, also nur berichtet; zwei Wege, entweder conform ordnet
+`formatters_by_ft` danach, oder der Key wird als reine Report-Option
+dokumentiert. „Der zweite ist eine Zeile, der erste die ehrlichere Semantik."
+
+**Der erste Weg geht nicht.** `formatters_by_ft` enthaelt Werkzeugnamen
+(`stylua`, `prettier`, `shfmt`), `formatter_priority` enthaelt
+**LSP-Client-Namen** (`lua_ls`, `eslint`, `null-ls`). Die zwei Namensraeume
+beruehren sich nicht — der Vorschlag ist ein Kategorienfehler, keine
+Verkabelung.
+
+**Und der Key liegt bereits richtig.** Er heisst `lspdoctor.formatter_priority`,
+sitzt also schon im Report-Namensraum. Report-only war damit kein Rueckzug,
+sondern das, was sein Pfad ohnehin sagt; *Durchsetzen* waere die Aenderung
+gewesen, die ihn nach `formatter.*` zwingt — ein Config-Bruch.
+
+**Der eigentliche Defekt war die Report-Ausgabe, nicht die Semantik.** Auf
+einer Lua-Datei stand dort:
+
+```
+Candidates: lua_ls
+Winner: **lua_ls**
+Policy: priority list
+```
+
+Formatiert wird die Datei von **stylua**. Auf `.ts` haette es `eslint` genannt,
+waehrend `prettierd` laeuft. Grund: `lsp.formatter` laesst conforms Kette
+laufen und faellt nur auf LSP zurueck, wenn conform fuer das Filetype nichts
+hat — und conform deckt `lua`, `ts`, `js`, `json`, `css`, `html`, `cs`,
+`markdown`, `sh` ab. Genau dort, wo zwei LSP-Clients streiten koennten,
+gewinnt conform vorher. Uebrig bleibt `go` (nur gopls) und die
+auskommentierten `c`/`cpp`/`zig`. Der Filter, den die „ehrliche Semantik"
+gebaut haette, laeuft also praktisch nie.
+
+*Gebaut*: der Report fragt jetzt **conform selbst**
+(`list_formatters_to_run`, das `stop_after_first` und die Fallback-Logik
+beruecksichtigt) statt ein zweites Mal zu entscheiden — eine zweite Meinung,
+die der Realitaet widerspricht, ist schlimmer als keine. `Runs:` steht zuerst,
+das Ranking der LSP-Clients darunter, ausdruecklich als report-only markiert.
+Dazu DEFAULTS-Kommentar, `@types.lua`, Helpdoc, `configuration.md`,
+`FEATURES.md`.
+
+*Verifiziert*: in der echten Config gerendert, `lua` und `markdown`:
+
+```
+### Formatter
+Runs: **stylua** (conform)
+
+LSP clients able to format: lua_ls
+Preferred among them: **lua_ls** (priority list)
+*Report only.* ...
+```
+
+228 Specs gruen, Smoke-Test gruen, `stylua` und `gen_bindings --check` sauber.
 
 ---
 

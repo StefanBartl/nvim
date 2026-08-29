@@ -31,7 +31,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
     - [QW1 · `mdview.nvim` — `experimental.any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-experimentalany_file-in-echtem-neovim-durchtesten)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
-    - [QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben](#qw6-lspnvim-formatter_priority-verkabeln-oder-als-report-only-festschreiben)
     - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
   - [1.2 Mittel (M)](#12-mittel-m)
     - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-deep)
@@ -132,9 +131,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 38 offene Punkte**, davon 4 Quick Wins (XS/S mit Nutzen
-  mittel bis hoch) und 4, die dich brauchen. Vier weitere Quick Wins (QW3,
-  QW4, QW7, QW9) sind erledigt und stehen unter 1.0.
+- **Insgesamt 37 offene Punkte**, davon 3 Quick Wins (XS/S mit Nutzen
+  mittel bis hoch) und 4, die dich brauchen. Fuenf weitere Quick Wins (QW3,
+  QW4, QW6, QW7, QW9) sind erledigt und stehen unter 1.0.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führen noch Lücken (`❌`), die längst geschlossen sind — stichprobenhaft
@@ -150,8 +149,8 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
-die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW7** (alle
-`lsp.nvim`) und **QW9** (`images.nvim`).
+die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW6**, **QW7**
+(alle `lsp.nvim`) und **QW9** (`images.nvim`).
 
 ---
 
@@ -188,22 +187,6 @@ gebautes Feature ausgeliefert werden kann oder Nacharbeit braucht.
 
 Wiederholter Hover auf derselben Position bei gleicher Buffer-Version spart
 einen Roundtrip. Schlüssel: `(bufnr, changedtick, row, col)`.
-
----
-
-### QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben
-
-**Aufwand XS (Doku) bis S (Verkabelung) · Nutzen mittel**
-
-`formatter_priority` wird ausschließlich von `lspdoctor/inspect.lua:161`
-gelesen, also nur *berichtet*; `formatter/conform.lua` erwähnt den Key mit
-keinem Wort. Er wird damit nicht durchgesetzt — wer ihn setzt, ändert nur,
-was `:LspDoctor` als bevorzugte Reihenfolge anzeigt, nicht welcher Formatter
-tatsächlich läuft.
-
-Zwei Wege: entweder conform.lua liest die Liste und ordnet
-`formatters_by_ft` danach, oder der Key wird als reine Report-Option
-dokumentiert. Der zweite ist eine Zeile, der erste die ehrlichere Semantik.
 
 ---
 
@@ -735,9 +718,8 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
    der ganzen Liste, der etwas anderes aufhält.
 3. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
    End-to-End-Check der LSP-Kette.
-4. **QW5, QW6, QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie
-   liegen alle im selben Modulumfeld. QW3, QW4 und QW7 sind daraus schon
-   erledigt (siehe 1.0).
+4. **QW5 und QW8** (`lsp.nvim`-Quick-Wins, je S) — die letzten zwei aus dem
+   Block. QW3, QW4, QW6 und QW7 sind daraus erledigt (siehe 1.0).
 5. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
    (`images` Sixel-Paket), **M9** (Frecency über drei Repos).
 
