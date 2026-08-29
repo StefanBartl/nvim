@@ -32,7 +32,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [QW3 · `lsp.nvim` — Inlay-Hints-Toggle](#qw3-lspnvim-inlay-hints-toggle)
     - [QW4 · `lsp.nvim` — Diagnostics-Debounce auf `publishDiagnostics`](#qw4-lspnvim-diagnostics-debounce-auf-publishdiagnostics)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
-    - [QW6 · `lsp.nvim` — Formatter-Priority-Audit](#qw6-lspnvim-formatter-priority-audit)
+    - [QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben](#qw6-lspnvim-formatter_priority-verkabeln-oder-als-report-only-festschreiben)
     - [QW7 · `lsp.nvim` — "installed vs. attached"-Zeile in `:checkhealth lsp`](#qw7-lspnvim-installed-vs-attached-zeile-in-checkhealth-lsp)
     - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
     - [QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung](#qw9-imagesnvim-trial-run-fr-die-reposcopenvim-kreuzung)
@@ -44,24 +44,20 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [M5 · `lsp.nvim` — Sprung zur Lua-Tabellen-/Funktionswurzel (ehemals `<leader>gtt`)](#m5-lspnvim-sprung-zur-lua-tabellen-funktionswurzel-ehemals-leadergtt)
     - [M6 · `lsp.nvim` — Profile-Presets (`preset = "lean"|"default"|"full"`)](#m6-lspnvim-profile-presets-preset-leandefaultfull)
     - [M7 · `lsp.nvim` — Per-Projekt-Override (`.nvim-lsp.json` im Repo-Root)](#m7-lspnvim-per-projekt-override-nvim-lspjson-im-repo-root)
-    - [M8 · `mdview.nvim` — kooperatives Tab-Schließen im `default`-Browser-Mode](#m8-mdviewnvim-kooperatives-tab-schlieen-im-default-browser-mode)
     - [M9 · `gopath.nvim` — Frecency-Lernen für Alternate-Vorschläge](#m9-gopathnvim-frecency-lernen-fr-alternate-vorschlge)
     - [M10 · `images.nvim` — Sixel-Backend](#m10-imagesnvim-sixel-backend)
     - [M11 · `images.nvim` — OCR-Kreuzung mit `language.nvim`](#m11-imagesnvim-ocr-kreuzung-mit-languagenvim)
     - [M12 · `images.nvim` — Flamegraphs als Bild (`runtime-analysis.nvim`)](#m12-imagesnvim-flamegraphs-als-bild-runtime-analysisnvim)
     - [M13 · `images.nvim` — Bildoperationen als Dateioperationen (`fileops.nvim`)](#m13-imagesnvim-bildoperationen-als-dateioperationen-fileopsnvim)
     - [M14 · `filetree.nvim` — `cwd_mode`-Badge optimieren](#m14-filetreenvim-cwd_mode-badge-optimieren)
-    - [M15 · `lib.nvim` — den Dependency-Installer mit einem echten Konsumenten versehen](#m15-libnvim-den-dependency-installer-mit-einem-echten-konsumenten-versehen)
     - [M16 · `lib.nvim` — `deps.health`-Migrationen](#m16-libnvim-depshealth-migrationen)
     - [M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M7 bis M13](#m17-documentationnvim-runtime-analysisnvim-docmap-desktop-m7-bis-m13)
   - [1.3 Groß (L)](#13-gro-l)
     - [L1 · `images.nvim` — Kitty-APC-Backend](#l1-imagesnvim-kitty-apc-backend)
-    - [L2 · `gopath.nvim` — Treesitter statt Zeilen-Patterns in `symbol_locator`/`table_locator`](#l2-gopathnvim-treesitter-statt-zeilen-patterns-in-symbol_locatortable_locator)
     - [L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen](#l3-lspnvim-das-signature-help-modul-schrumpfen)
     - [L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln](#l4-mdviewnvim-das-nvim-highlighting-im-browser-spiegeln)
     - [L5 · `documentation.nvim`-Verbund — L1 bis L9 aus `PLAN.md`](#l5-documentationnvim-verbund-l1-bis-l9-aus-planmd)
   - [1.4 Braucht dich](#14-braucht-dich)
-    - [BD1 · `open.nvim` — Windows: das Dateimanager-Fenster öffnet ohne Fokus](#bd1-opennvim-windows-das-dateimanager-fenster-ffnet-ohne-fokus)
     - [BD2 · `open.nvim` — die Nicht-Windows-Reveal-Pfade auf echter Hardware prüfen](#bd2-opennvim-die-nicht-windows-reveal-pfade-auf-echter-hardware-prfen)
     - [BD3 · `lib.nvim` — Windows-Elevation im Dependency-Installer](#bd3-libnvim-windows-elevation-im-dependency-installer)
     - [BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)](#bd4-mdviewnvim-externe-renderer-website-opt-in)
@@ -107,8 +103,8 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 46 offene Punkte**, davon 8 Quick Wins (XS/S mit Nutzen
-  mittel bis hoch) und 5, die dich brauchen.
+- **Insgesamt 42 offene Punkte**, davon 8 Quick Wins (XS/S mit Nutzen
+  mittel bis hoch) und 4, die dich brauchen.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führen noch Lücken (`❌`), die längst geschlossen sind — stichprobenhaft
@@ -176,14 +172,19 @@ einen Roundtrip. Schlüssel: `(bufnr, changedtick, row, col)`.
 
 ---
 
-### QW6 · `lsp.nvim` — Formatter-Priority-Audit
+### QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben
 
-**Aufwand S (reines Audit) · Nutzen mittel**
+**Aufwand XS (Doku) bis S (Verkabelung) · Nutzen mittel**
 
-`lspdoctor` kennt `formatter_priority` und `show_conflicts`; ob
-`formatter/conform.lua` das tatsächlich durchsetzt, ist unklar. Erst
-feststellen, dann entscheiden — es kann sein, dass hier nur eine Zeile Doku
-fehlt.
+`formatter_priority` wird ausschließlich von `lspdoctor/inspect.lua:161`
+gelesen, also nur *berichtet*; `formatter/conform.lua` erwähnt den Key mit
+keinem Wort. Er wird damit nicht durchgesetzt — wer ihn setzt, ändert nur,
+was `:LspDoctor` als bevorzugte Reihenfolge anzeigt, nicht welcher Formatter
+tatsächlich läuft.
+
+Zwei Wege: entweder conform.lua liest die Liste und ordnet
+`formatters_by_ft` danach, oder der Key wird als reine Report-Option
+dokumentiert. Der zweite ist eine Zeile, der erste die ehrlichere Semantik.
 
 ---
 
@@ -193,9 +194,15 @@ fehlt.
 
 Aus der geretteten LSPDoctor-Analyse: ein installierter Server kostet nichts,
 solange er an keinen Buffer attached ist. Teuer wird erst "viele große
-Buffer × schwerer Server" (tsserver, pyright). Ausgabe: *installed: N,
-aktuell attached: M, davon in diesem Buffer: K* — plus Warnung nur dann, wenn
-ein bekannt schwerer Server über vielen Buffern hängt.
+Buffer × schwerer Server" (tsserver, pyright).
+
+*Was schon steht* (`health.lua`, `check_servers`): *configured: N*, *set up N
+von M* und pro Client eine Zeile mit `%d buffer(s)` plus Root. Die
+attached-Seite ist damit da.
+
+*Was fehlt*: die **installed**-Seite (was Mason installiert hat, unabhängig
+von `setup()`), das "davon in diesem Buffer: K", und die Warnung, die nur
+dann anspringt, wenn ein bekannt schwerer Server über vielen Buffern hängt.
 
 ---
 
@@ -290,23 +297,6 @@ Server X in Projekt Y abschalten, ohne die globale Config anzufassen.
 
 ---
 
-### M8 · `mdview.nvim` — kooperatives Tab-Schließen im `default`-Browser-Mode
-
-**Aufwand M · Nutzen mittel**
-
-In `browser.mode = "default"` öffnet mdview den Standardbrowser des Nutzers
-(eigene Extensions, eigenes Profil). Preis: der Tab lässt sich nicht
-programmatisch schließen, `browser_autoclose` und `stop_on_browser_exit` sind
-dort No-ops. Lösung: der Client reagiert auf ein WebSocket-`close`-Event mit
-`window.close()`. Damit funktioniert Auto-Close auch im Default-Mode, ohne
-ein isoliertes Profil zu erzwingen.
-
-*Herkunft, wichtig für die Bewertung*: stand in `DONE.md` (BUGS #2) als "in
-`TASKS.md` vermerkt" — diese Datei wurde nie angelegt, die Aufgabe war also
-nirgends erfasst. Der Punkt ist real, nur lange unsichtbar gewesen.
-
----
-
 ### M9 · `gopath.nvim` — Frecency-Lernen für Alternate-Vorschläge
 
 **Aufwand M (repo-übergreifend) · Nutzen mittel**
@@ -383,32 +373,15 @@ wechselt — bis dahin billig und korrekt zu machen lohnt.
 
 ---
 
-### M15 · `lib.nvim` — den Dependency-Installer mit einem echten Konsumenten versehen
-
-**Aufwand S je Plugin · Nutzen hoch**
-
-Die vier Schichten sind gebaut (`deps.health`, `deps.spec`, `deps.pm`,
-`deps.install` + `deps.view` + `:Lib deps show|install`), aber **kein Plugin
-liefert bisher eine Spec**. Damit ist es Infrastruktur ohne
-Produktionsverbraucher, und die Ergonomie des Formats ist von niemandem außer
-der eigenen Spec-Suite getestet.
-
-*Reihenfolge steht in der Analyse und ist begründet*: `pdfport.nvim` zuerst
-(die meisten Backends, die meisten bereits geschriebenen manuellen Hinweise,
-die dadurch ersetzt werden), `images.nvim` zweitens. Danach — und wirklich
-erst danach — der `Deps`-Tab in `documentation.nvim` (**M**), der in dessen
-Roadmap aufgemacht werden muss.
-
----
-
 ### M16 · `lib.nvim` — `deps.health`-Migrationen
 
-**Aufwand S je Repo · Nutzen mittel · mechanisch**
+**Aufwand S · Nutzen mittel · mechanisch · nur noch ein Repo**
 
-`pdfport.nvim`, `images.nvim`, `language.nvim` rollen `check_exe` noch selbst.
-Der geteilte Ersatz existiert (`report`, plus `from_tools`, das eine geparste
-Spec direkt in `:checkhealth` brückt). Jede Migration ist eine Änderung in
-einem anderen Repo, deshalb einzeln.
+`images.nvim` (`health.lua:128`) und `language.nvim` (`health.lua:184`) rufen
+bereits `deps.health.report_for`. Offen ist allein `pdfport.nvim`, das
+`check_exe` noch selbst rollt — acht Aufrufstellen in einer Datei
+(`lua/pdfport/health.lua`). Der geteilte Ersatz existiert (`report`, plus
+`from_tools`, das eine geparste Spec direkt in `:checkhealth` brückt).
 
 ---
 
@@ -456,22 +429,6 @@ und entsprechend teuer.
 
 ---
 
-### L2 · `gopath.nvim` — Treesitter statt Zeilen-Patterns in `symbol_locator`/`table_locator`
-
-**Aufwand L (~1 Woche) · Nutzen mittel**
-
-Trotz des Namens "Treesitter-Provider" lokalisieren beide über
-zeilenorientierte Lua-Patterns. Das war eine bewusste Entscheidung (Toleranz
-gegenüber Zeilenumbrüchen nach `=`, Klammer-Keys, Tabellen in
-Funktionsaufrufen), keine Nachlässigkeit. Eine vollständige Migration muss
-alle 8 Fallback-Strategien in `table_locator.locate` erhalten — daher der
-Preis.
-
-*Empfehlung*: nicht angehen. Konkrete Bugs in der Pattern-Logik im Einzelfall
-fixen, wie beim `find_child_table`-Fix geschehen.
-
----
-
 ### L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen
 
 **Aufwand L · Nutzen niedrig**
@@ -483,17 +440,26 @@ LOC). Die Roadmap sagt selbst: "vorerst nur beobachten". Bleibt so.
 
 ### L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln
 
-**Aufwand L · Nutzen mittel**
+**Aufwand M (war L) · Nutzen mittel — die Hälfte des Wegs steht schon**
 
-Aus dem `SCHLACHTPLAN.md`. Der Weg ist durchdacht und würde die
-JS-Abhängigkeiten (hljs/shiki) ersetzen: (1) `color_my_ascii.nvim` um eine
-Export-Funktion erweitern — `tokenize_block(lines, lang) -> { {row,
-col_start, col_end, hl_group}, … }`; die Logik existiert, sie muss nur
-*zurückgeben* statt `set_extmark` zu rufen — **oder** direkt Treesitter in
-mdview verwenden (allgemeiner, keine Fremdabhängigkeit). (2) mdview löst
-`hl_group -> #hex` über `nvim_get_hl` auf. (3) Transport der Spans pro
-Codeblock an den Client, gebunden an die `data-sourcepos` des `<pre>`. (4)
-Der Client legt die Spans um den Code.
+Aus dem `SCHLACHTPLAN.md`. Vier Schritte, würde die JS-Abhängigkeiten
+(hljs/shiki) ersetzen:
+
+1. **gebaut** — `color_my_ascii.highlight_export.runs_for_block(bufnr, block)`
+   liefert die Spans eines Fence als row/col/hl_group, gelesen aus den
+   `ColorMyAscii`-Extmarks. Genau die Export-Funktion, die der Plan als
+   `tokenize_block` beschreibt.
+2. **gebaut** — dieselbe Datei löst `hl_group -> #hex` über `nvim_get_hl`
+   auf (`resolve_attrs`/`int_to_hex`), heute für `:Fence export --html`.
+3. offen — Transport der Spans pro Codeblock an den Client, gebunden an die
+   `data-sourcepos` des `<pre>`.
+4. offen — der Client legt die Spans um den Code.
+
+*Die eine Einschränkung*: `runs_for_block` liest die Extmarks, die
+color_my_ascii selbst gemalt hat — es liefert also nur dort etwas, wo
+color_my_ascii den Block schon eingefärbt hat. Die Alternative aus dem Plan
+(Treesitter direkt in mdview, allgemeiner, keine Fremdabhängigkeit) bleibt
+davon unberührt.
 
 ---
 
@@ -515,30 +481,6 @@ weil dieses Dokument sonst zur zweiten Wahrheit wird — genau das Problem, das
 ---
 
 ## 1.4 Braucht dich
-
----
-
-### BD1 · `open.nvim` — Windows: das Dateimanager-Fenster öffnet ohne Fokus
-
-**Aufwand S–M · Nutzen hoch · braucht eine Windows-Sitzung zum Verifizieren**
-
-`:Open filemanager` meldet `Opening in file manager: <path>`, und ein Fenster
-entsteht auch wirklich (verifiziert durch Aufzählen von
-`Shell.Application.Windows()` direkt nach dem Aufruf) — es bleibt nur hinter
-Neovim und liest sich damit als "nichts passiert". Kein Spawn-Fehler: ein
-direktes `jobstart({ "explorer.exe", "/select,<file>" }, { detach = true })`
-liefert eine gültige Job-ID und erzeugt ebenfalls ein Fenster (dass
-explorer.exe mit 1 endet, ist normal). Vermutete Ursache: Windows'
-Foreground-Lock.
-
-*Kandidaten in dieser Reihenfolge*: `AllowSetForegroundWindow` vor dem Spawn;
-ein `SetForegroundWindow`-Nachfassen auf dem neuen Fenster (filetree.nvims
-`open_in_fm/reuse_win.lua` hat diesen Aufruf bereits); oder der Start über
-`Shell.Application.Explore(path)`.
-
-*Wichtig für die Einordnung*: **der Fix gehört in
-`lib.nvim.cross.reveal_in_fm`**, damit filetree.nvims `<leader>fm` ihn
-mitbekommt. Ein Fix an zwei Stellen wäre hier der falsche.
 
 ---
 
@@ -614,11 +556,11 @@ Schreibzugriff neben dem Dokument (Cache-Verzeichnis, Aufräumen,
 |---|---|---|
 | `lsp.nvim` | 13 | Feature-Tabelle §14 plus 2 Punkte aus der geretteten LSPDoctor-Analyse |
 | `images.nvim` | 8 | Backends (Sixel, Kitty APC), Detection, 5 Cross-Plugin-Kreuzungen |
-| `mdview.nvim` | 4 + 1 | 1 Testfreigabe, 1 Bug, 2 Grundsatzfragen, plus L4 aus dem SCHLACHTPLAN |
-| `lib.nvim` | 4 | Dependency-Installer ohne Konsumenten, `deps.health`-Migrationen, Windows-Elevation |
-| `open.nvim` | 2 | beide plattformabhängig, beide brauchen dich |
+| `mdview.nvim` | 3 + 1 | 1 Testfreigabe, 2 Grundsatzfragen, plus L4 aus dem SCHLACHTPLAN |
+| `lib.nvim` | 2 | eine `deps.health`-Migration, Windows-Elevation |
+| `open.nvim` | 1 | plattformabhängig, braucht dich |
 | `filetree.nvim` | 1 | Badge-Optimierung |
-| `gopath.nvim` | 2 | Frecency (repo-übergreifend), Treesitter-Migration (nicht empfohlen) |
+| `gopath.nvim` | 1 | Frecency (repo-übergreifend) |
 | `documentation.nvim`-Verbund | 8 + 9 | zentral in `docmap-desktop/docs/PLAN.md` |
 | `color_my_ascii.nvim` | 2 Konzepte | siehe unten |
 
@@ -640,10 +582,12 @@ unter `docs/ROADMAP/` beschreiben je einen ungebauten Weg:
 - **`lsp_integration_fence.md`** — zwei Wege zu vollem LSP (Completion, Hover,
   Diagnostics) innerhalb eines Fence.
 
-Beide hängen an L4 (`mdview.nvim`): die dort gebrauchte
-`tokenize_block`-Exportfunktion ist praktisch der kleinste sinnvolle erste
-Schritt der Fence-Highlighter-API. Wenn L4 gebaut wird, sollte es als Teil
-dieser API gebaut werden, nicht als mdview-Sonderweg.
+Beide hängen an L4 (`mdview.nvim`) — und dessen erster Schritt ist
+inzwischen gebaut: `color_my_ascii.highlight_export.runs_for_block` gibt die
+Spans eines Fence zurück, statt sie nur zu malen, und `to_html` löst die
+Highlight-Gruppen nach `#hex` auf. Damit existiert der kleinste sinnvolle
+Baustein der Fence-Highlighter-API bereits; offen ist, ihn als *öffentliche*
+Schnittstelle zu deklarieren statt als Interna von `:Fence export`.
 
 ---
 
@@ -763,9 +707,11 @@ Die anderen beiden sind gewachsen.
 
 - **Sixel (M10) und XTVERSION-Detection**: Erkennung lohnt erst mit einem
   zweiten Backend, das zweite Backend braucht Erkennung. Ein Paket.
-- **mdview L4 und die `color_my_ascii`-Fence-API**: die
-  `tokenize_block`-Exportfunktion, die L4 braucht, ist der erste sinnvolle
-  Schritt der Fence-Highlighter-API. Zweimal gebaut wäre es zweimal falsch.
+- **mdview L4 und die `color_my_ascii`-Fence-API**: die Exportfunktion, die
+  L4 braucht, ist der erste sinnvolle Schritt der Fence-Highlighter-API — und
+  sie steht schon (`highlight_export.runs_for_block`). Was fehlt, ist die
+  Entscheidung, sie als öffentliche API zu führen, bevor mdview sie
+  konsumiert. Zweimal gebaut wäre es zweimal falsch.
 
 ---
 
@@ -778,21 +724,16 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
    gebautes Feature.
 2. **3.1** (veraltete `❌`-Zeilen bereinigen, S je Repo) — sonst führt jede
    spätere Runde durch dieselben Falschbefunde.
-3. **BD1** (`open.nvim`/`lib.nvim` Foreground-Lock, S–M) — behebt gleichzeitig
-   ein Verhalten, das in zwei Plugins als "kaputt" wahrgenommen wird.
-4. **M15** (`pdfport` als erster `deps`-Spec-Autor, S) — macht gebaute
-   Infrastruktur produktiv und testet ihr Format erstmals an einem echten Fall.
-5. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
+3. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
    der ganzen Liste, der etwas anderes aufhält.
-6. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
+4. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
    End-to-End-Check der LSP-Kette.
-7. **QW3–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
+5. **QW3–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
    alle im selben Modulumfeld.
-8. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
+6. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
    (`images` Sixel-Paket), **M9** (Frecency über drei Repos).
 
-**Nicht angehen, mit Begründung**: L2 (`gopath` Treesitter — eine Woche für
-eine bewusst getroffene Entscheidung), L3 (`lsp` Signature-Help — die Roadmap
+**Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
 sagt selbst "vorerst nur beobachten"), BD4/BD5 (`mdview` externe Website und
 PDF-Hover — beide teuer, beide klein im Nutzen, beide besser als "explizit
 nicht geplant" festgeschrieben als offen gelassen).
