@@ -27,15 +27,16 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 
   - [Legende](#legende)
   - [Kurzfassung](#kurzfassung)
+  - [1.0 Erledigt](#10-erledigt)
+    - [QW3 · `lsp.nvim` — Inlay-Hints-Toggle](#qw3-lspnvim-inlay-hints-toggle)
+    - [QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung](#qw9-imagesnvim-trial-run-fr-die-reposcopenvim-kreuzung)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
     - [QW1 · `mdview.nvim` — `experimental.any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-experimentalany_file-in-echtem-neovim-durchtesten)
-    - [QW3 · `lsp.nvim` — Inlay-Hints-Toggle](#qw3-lspnvim-inlay-hints-toggle)
     - [QW4 · `lsp.nvim` — Diagnostics-Debounce auf `publishDiagnostics`](#qw4-lspnvim-diagnostics-debounce-auf-publishdiagnostics)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
     - [QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben](#qw6-lspnvim-formatter_priority-verkabeln-oder-als-report-only-festschreiben)
     - [QW7 · `lsp.nvim` — "installed vs. attached"-Zeile in `:checkhealth lsp`](#qw7-lspnvim-installed-vs-attached-zeile-in-checkhealth-lsp)
     - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
-    - [QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung](#qw9-imagesnvim-trial-run-fr-die-reposcopenvim-kreuzung)
   - [1.2 Mittel (M)](#12-mittel-m)
     - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-deep)
     - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
@@ -103,8 +104,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 42 offene Punkte**, davon 8 Quick Wins (XS/S mit Nutzen
-  mittel bis hoch) und 4, die dich brauchen.
+- **Insgesamt 40 offene Punkte**, davon 6 Quick Wins (XS/S mit Nutzen
+  mittel bis hoch) und 4, die dich brauchen. Zwei weitere Quick Wins (QW3,
+  QW9) sind erledigt und stehen unter 1.0.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führen noch Lücken (`❌`), die längst geschlossen sind — stichprobenhaft
@@ -113,6 +115,90 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 ---
 
 # Teil 1 — Die offene Arbeit, nach Verhältnis sortiert
+
+---
+
+## 1.0 Erledigt
+
+Fertige Punkte wandern hierher statt an Ort und Stelle abgehakt zu werden — so
+bleibt 1.1 bis 1.4 eine Liste offener Arbeit und nicht eine Mischung aus
+beidem.
+
+---
+
+### QW3 · `lsp.nvim` — Inlay-Hints-Toggle
+
+**Erledigt am 2026-08-29. `lua/lsp/core/inlay_hints.lua`, 14 neue Specs.**
+
+Ursprünglich: `vim.lsp.inlay_hint` ist seit Neovim 0.10 nativ und war in
+`lua/lsp/` nirgends referenziert; global plus pro Filetype schaltbar, an den
+`:Lsp`-Composer und den Keymap-Katalog angehängt.
+
+Gebaut wurde genau das, mit einer Entscheidung, die im Auftrag nicht stand:
+**die Filetype-Ebene ist eine Map, keine Liste.** Zwei Ebenen funktionieren
+nur, wenn "keine Meinung" und "hier ausdrücklich aus" verschiedene Zustände
+sind — `filetypes = { lua = false }` gegen ein globales `enable = true` heißt
+"überall außer Lua", ein fehlender Schlüssel erbt. Eine Liste
+(`filetypes = { "lua" }`) type-checkt als Tabelle, löst jeden Lookup zu `nil`
+auf und würde schweigend gar nichts überschreiben; `config/init.lua` weist sie
+deshalb mit einer Warnung zurück, statt sie anzunehmen.
+
+*Oberfläche*: `inlay_hints = { enable, filetypes }` in den DEFAULTS,
+`:Lsp hints [toggle|on|off|status|clear] [filetype]` mit Tab-Completion über
+beide Argumente, `<leader>th` (global) und `<leader>tH` (dieser Filetype) im
+Katalog — damit auch in `docs/BINDINGS.md`, das aus dem Katalog generiert wird.
+`clear` gibt einen Filetype an den globalen Default zurück; das ist die eine
+Aktion ohne globale Bedeutung und verlangt deshalb ein Argument.
+
+*Zwei Details, die Zeit kosten würden*: der `LspAttach`-Handler liegt in einem
+**eigenen** Augroup (`lsp_nvim_inlay_hints`), nicht in `lsp_nvim` — der wird
+bei `keymaps.enable = false` geleert, und Hints sind keine Keymap-Sache.
+Und gefragt werden nur Clients mit `inlayHintProvider`: sonst meldet `status`
+"an" für Buffer, die nie einen Hint zeigen werden.
+
+*Verifiziert*: 199 Specs grün (14 davon neu), Smoke-Test grün, `stylua` und
+der `gen_bindings --check` sauber, und `:Lsp hints` in einem echten headless
+Neovim durchgespielt — Routing, Override, `clear`, Completion.
+
+---
+
+### QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung
+
+**Erledigt am 2026-08-29. Die Messung hat eine Frage in zwei geteilt.**
+
+Ursprünglich: Social-Preview-Card bzw. README-Bilder in der Repo-Vorschau,
+mit dem Auftrag, vor dem Bauen zu messen, wie stark `:Reposcope`s
+Reaktionszeit leidet. Gemessen wurde über 25 Repos (20 verbreitete
+nvim-Plugins, 5 eigene). Vollständiges Protokoll:
+`wkdbook-myplugins/images.nvim/ROADMAP/CROSS-PLUGIN.md`.
+
+**Card: endgültig abgelehnt** — und nicht wegen der Reaktionszeit.
+`opengraph.githubassets.com` limitiert hart und unauthentifiziert pro IP:
+`X-RateLimit-Limit: 100`, danach `Retry-After: 900`. Vier von zwölf Cards
+kamen in einem einzigen sequentiellen Lauf als 429 zurück. In dieses Budget
+passt ein Repo-Browser nicht: `readme_precache_count` allein verbraucht 5 pro
+Suche. Ein Cache rettet es auch nicht — reposcope existiert, um *unbekannte*
+Repos zu finden, der Cache hilft beim zweiten Blick, und genau da ist die
+Card am wenigsten wert. Nebenzahlen: 49–130 kB gegen 3–31 kB README, Mittel
+617 ms gegen 220–514 ms.
+
+**README-Bild: offen, und billiger als es aussieht.** 8 von 25 Repos haben
+ein echtes Bild (Badges herausgerechnet), 17 keins — darunter alle fünf
+eigenen. Mittlere Ladezeit 883 ms, mittlere Größe 232 kB. Entscheidend ist
+aber die Zahl, die nicht in der Tabelle steht: **die Erkennung ist gratis.**
+reposcope hat den README-Text ohnehin im eigenen Cache, also kostet
+„hat dieses Repo überhaupt ein Bild?" einen Pattern-Match im RAM — kein
+Request. Der häufige Fall (zwei Drittel) kostet damit *nichts* und bietet
+korrekt gar keinen Hover statt eines leeren.
+
+**Vier Bedingungen, falls gebaut wird** (Aufwand: S–M, die Arbeit liegt in
+reposcope, nicht in images.nvim): auf Anforderung statt automatisch; kein
+Bild → kein Hover und kein Platzhalter; **Negativ-Cache** neben dem
+Positiv-Cache, sonst leitet der Zwei-Drittel-Fall seine eigene Leere bei
+jedem Neustart neu her; und ein Größenlimit weit unter `images.remote`s
+20-MB-Default. Alles Nötige existiert bereits —
+`images.browse.draw_in_window()` zeichnet in ein fremdes Fenster,
+`images.remote` lädt asynchron in einen SHA256-Cache.
 
 ---
 
@@ -140,16 +226,6 @@ wie vorher.
 
 *Warum zuerst*: kostet eine halbe Stunde und entscheidet, ob ein bereits
 gebautes Feature ausgeliefert werden kann oder Nacharbeit braucht.
-
----
-
-### QW3 · `lsp.nvim` — Inlay-Hints-Toggle
-
-**Aufwand XS–S · Nutzen mittel**
-
-`vim.lsp.inlay_hint` ist seit Neovim 0.10 nativ und in `lua/lsp/` nirgends
-referenziert. Global plus pro Filetype schaltbar, an den bestehenden
-`:Lsp`-Composer und den Keymap-Katalog anhängen.
 
 ---
 
@@ -212,18 +288,6 @@ dann anspringt, wenn ein bekannt schwerer Server über vielen Buffern hängt.
 
 Formalisiert, was in `root_scope_picker` halb existiert. Kein neues Konzept,
 nur ein sauberer Einstiegspunkt.
-
----
-
-### QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung
-
-**Aufwand S · Nutzen niedrig, aber es beendet eine offene Frage**
-
-Social-Preview-Card bzw. README-Bilder in der Repo-Vorschau. Der Nutzen ist
-klein gegen die Netzwerkkosten, und es braucht Remote-Bilder. Die Roadmap
-fordert ausdrücklich einen Messlauf vor der Entscheidung: wie stark leidet
-`:Reposcope`s Reaktionszeit? Danach ist der Punkt entweder gebaut oder
-endgültig abgelehnt — beides besser als offen.
 
 ---
 
@@ -746,8 +810,8 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
    der ganzen Liste, der etwas anderes aufhält.
 3. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
    End-to-End-Check der LSP-Kette.
-4. **QW3–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
-   alle im selben Modulumfeld.
+4. **QW4–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
+   alle im selben Modulumfeld. QW3 ist daraus schon erledigt (siehe 1.0).
 5. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
    (`images` Sixel-Paket), **M9** (Frecency über drei Repos).
 
