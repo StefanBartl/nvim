@@ -1,8 +1,14 @@
 # Modifier-Keymaps — Konzept
 
-Stand: 2026-08-29. Status: **Konzept, nichts implementiert.**
-Zielort der Implementierung: `lib.nvim` (`lua/lib/nvim/bindings/keymap/modifier/`),
-ausdrücklich **nicht** filetree.nvim.
+Stand: 2026-08-29. Status: **umgesetzt** in
+`lib.nvim/lua/lib/nvim/bindings/keymap/modifier/` — ausdrücklich **nicht** in
+filetree.nvim. Aktivierung:
+
+```lua
+require("lib.nvim.bindings.keymap.modifier").setup({ experimental = true })
+```
+
+Was gegenüber diesem Konzept anders kam, steht in §7.
 
 Ursprung: ROADMAP.md-Bullet aus Commit `4388c640` (2026-08-26, inzwischen aus
 ROADMAP.md entfernt). Dort noch am filetree-Beispiel formuliert, mit dem
@@ -19,7 +25,7 @@ dessen *Ergebnis* abgreifen, statt es nur laufen zu lassen:
 | Modifier | Wirkung |
 | --- | --- |
 | `\` | Mapping ausführen, Ergebnis-String **in die Zwischenablage** |
-| `?` | Mapping ausführen, Ergebnis-String **in die Zwischenablage + am Cursor einfügen** |
+| `\\` | Mapping ausführen, Ergebnis-String **in die Zwischenablage + am Cursor einfügen** |
 
 Beispiel aus der ursprünglichen Notiz: `\[a` statt `[a` in filetree.nvim →
 der absolute Pfad der Node landet in der Zwischenablage. `?[a` → zusätzlich
@@ -115,7 +121,7 @@ kopieren gab. Verifiziert: der Buffer wurde im Test korrekt mutiert.
 
 ---
 
-## 4. Offene Entscheidung: `?` schattet die Rückwärtssuche
+## 4. Entschieden: `\\` statt `?` — `?` schattet die Rückwärtssuche
 
 `\` ist frei — `mapleader` ist in dieser Config `" "`, der Vim-Default `\` als
 Leader also ungenutzt. Global unbelegt, geprüft.
@@ -138,7 +144,8 @@ Präfix, nichts Eingebautes geht verloren, und ein dritter Modifier später
 (`\i` = nur einfügen, `\y` = in ein benanntes Register) kostet keine weitere
 Taste. Der `timeoutlen`-Nachteil trifft nur `\\`, nicht `\`.
 
-**Zu entscheiden von dir.**
+**Entschieden am 2026-08-29: `\` + `\\`.** Beide Keys sind konfigurierbar
+(`opts.copy` / `opts.insert`), die Entscheidung legt nur den Default fest.
 
 ---
 
@@ -172,7 +179,37 @@ Kein neuer UI-Code nötig.
   wiederholt den zuletzt gelaufenen Befehl, `modifier` greift das *Ergebnis*
   des nächsten Befehls ab.
 
-## 7. Offene Punkte
+## 7. Was bei der Umsetzung anders kam
+
+Entschieden und gebaut am 2026-08-29:
+
+- **`\\` statt `?`** (deine Entscheidung, Variante aus §4). Rückwärtssuche
+  bleibt erhalten, die ganze Familie liegt unter einem Präfix.
+- **Tier 3 greift auch bei String-rhs-Mappings.** Im Konzept implizit auf
+  Lua-Callbacks bezogen — tatsächlich funktioniert es auch für Mappings ohne
+  jeden Callback, weil die Ausführung dann über `feedkeys(..., "mx")` läuft und
+  die Register-Beobachtung davon unabhängig ist. Deckt also auch alte
+  Vimscript-Mappings ab.
+- **`expr`-Mappings brauchten einen Sonderfall.** Deren Rückgabewert ist eine
+  *Tastenfolge*, kein Ergebnis. Würde man sie wie einen normalen Callback
+  aufrufen, käme `ix<Esc>` als vermeintliches "Ergebnis" in der
+  Zwischenablage an. Sie werden deshalb gefüttert statt aufgerufen.
+- **Tier 1 als eigenes `declare(mode, lhs, fn)`** statt über
+  `keymap.register()`. Entkoppelt: fremde Plugins lassen sich deklarieren,
+  ohne deren Registrierung anzufassen. Die Anbindung an `register()` bleibt
+  möglich, war aber nicht nötig.
+- **Nur Normal-Mode.** Die Visual-Frage aus §8 ist damit bewusst offen und
+  nicht halb beantwortet.
+- **Kein Count.** `\3[a` reicht die 3 nicht an das Ziel durch.
+
+Ein Testfehler ist dabei aufgefallen und behoben: die Tier-3-Assertions prüften
+zuerst das `+`-Register, das aber das *Ziel-Mapping selbst* schreibt — der Test
+wäre auch ohne jede Capture-Logik grün gewesen. Die Testziele schreiben jetzt
+das unbenannte Register, geprüft wird `+`; damit kann nur der Modifier den Wert
+dorthin gebracht haben. Gegenprobe: mit deaktiviertem Tier 3 schlägt der Spec
+präzise fehl.
+
+## 8. Offene Punkte
 
 - Visual-Mode: soll `\` dort dieselbe Bedeutung haben? (Selektion als
   Ergebnis-String?)
