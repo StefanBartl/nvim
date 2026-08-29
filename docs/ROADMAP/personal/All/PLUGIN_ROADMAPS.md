@@ -29,10 +29,10 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [Kurzfassung](#kurzfassung)
   - [1.0 Erledigt](#10-erledigt)
     - [QW3 · `lsp.nvim` — Inlay-Hints-Toggle](#qw3-lspnvim-inlay-hints-toggle)
+    - [QW4 · `lsp.nvim` — Diagnostics-Debounce auf `publishDiagnostics`](#qw4-lspnvim-diagnostics-debounce-auf-publishdiagnostics)
     - [QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung](#qw9-imagesnvim-trial-run-fr-die-reposcopenvim-kreuzung)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
     - [QW1 · `mdview.nvim` — `experimental.any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-experimentalany_file-in-echtem-neovim-durchtesten)
-    - [QW4 · `lsp.nvim` — Diagnostics-Debounce auf `publishDiagnostics`](#qw4-lspnvim-diagnostics-debounce-auf-publishdiagnostics)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
     - [QW6 · `lsp.nvim` — `formatter_priority` verkabeln oder als report-only festschreiben](#qw6-lspnvim-formatter_priority-verkabeln-oder-als-report-only-festschreiben)
     - [QW7 · `lsp.nvim` — "installed vs. attached"-Zeile in `:checkhealth lsp`](#qw7-lspnvim-installed-vs-attached-zeile-in-checkhealth-lsp)
@@ -104,9 +104,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 40 offene Punkte**, davon 6 Quick Wins (XS/S mit Nutzen
-  mittel bis hoch) und 4, die dich brauchen. Zwei weitere Quick Wins (QW3,
-  QW9) sind erledigt und stehen unter 1.0.
+- **Insgesamt 39 offene Punkte**, davon 5 Quick Wins (XS/S mit Nutzen
+  mittel bis hoch) und 4, die dich brauchen. Drei weitere Quick Wins (QW3,
+  QW4, QW9) sind erledigt und stehen unter 1.0.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führen noch Lücken (`❌`), die längst geschlossen sind — stichprobenhaft
@@ -159,6 +159,46 @@ Und gefragt werden nur Clients mit `inlayHintProvider`: sonst meldet `status`
 *Verifiziert*: 199 Specs grün (14 davon neu), Smoke-Test grün, `stylua` und
 der `gen_bindings --check` sauber, und `:Lsp hints` in einem echten headless
 Neovim durchgespielt — Routing, Override, `clear`, Completion.
+
+---
+
+### QW4 · `lsp.nvim` — Diagnostics-Debounce auf `publishDiagnostics`
+
+**Erledigt am 2026-08-29. `lua/lsp/core/handlers.lua`, 18 neue Specs — und
+ein Defekt im Dedup darunter, der dabei aufgefallen ist.**
+
+Ursprünglich: `core/handlers.lua` dedupliziert, debounct aber nicht; ein Timer
+pro `(client, bufnr)`, Intervall konfigurierbar.
+
+*Gebaut*: `diagnostics.debounce_ms`, Default 150ms, `0` schaltet ab. Das
+Fenster ist **leading-edge**, und das ist die eigentliche Entscheidung: ein
+reines trailing debounce würde ausgerechnet den Push verzögern, auf den man
+wartet — den direkt nach dem Aufhören zu tippen. Der erste Push eines Bursts
+geht sofort durch, nur was innerhalb des Fensters ankommt wird zusammengelegt.
+Zusammenlegen heißt *neuester gewinnt*, nie Merge: eine Diagnostics-Liste
+ersetzt die Datei komplett, ein Merge würde gerade gelöschte Einträge
+wiederbeleben. Fenster pro `(Client, Datei)` — pro Client allein würde ein
+lauter Buffer einen ruhigen mitdrosseln, pro Datei allein würden sich zwei
+Server auf derselben Datei gegenseitig ausbremsen.
+
+*Der Nebenbefund, der wichtiger ist als der Punkt selbst*: `filter.dedup` lief
+auf dem **rohen** LSP-Payload, und der trägt `range`, nicht `lnum`/`col`. Die
+Funktion las nur das zweite Paar, verglich also jeden Eintrag auf Position
+`(0,0)` — und warf von zwei echten Diagnostics mit gleichem Text ("unused
+variable" zweimal in einer Datei) die zweite weg. Sie wurde nie gerendert, hat
+nie geloggt und sah aus wie "der Server hat sie nicht geschickt". Behoben:
+`dedup` liest die Position jetzt aus beiden Formen. Das saß in genau der
+Funktion, die QW4 anfasst — eine Drosselung obendrauf hätte den Fehler nur
+schwerer auffindbar gemacht.
+
+*Zwei Härtungen dazu*: `setup()` weigert sich, den Handler ein zweites Mal zu
+umwickeln (sonst sieht der zweite Wrapper die Ausgabe des ersten statt die des
+Servers), und ein Nachzügler wird verworfen, wenn sein Client inzwischen weg
+ist — sonst kommen Diagnostics eines beendeten Servers zurück, *nachdem*
+Neovim sie gelöscht hat, und nichts entfernt sie mehr.
+
+*Verifiziert*: 217 Specs grün (18 davon neu), Smoke-Test grün, `stylua` und
+`gen_bindings --check` sauber.
 
 ---
 
@@ -226,16 +266,6 @@ wie vorher.
 
 *Warum zuerst*: kostet eine halbe Stunde und entscheidet, ob ein bereits
 gebautes Feature ausgeliefert werden kann oder Nacharbeit braucht.
-
----
-
-### QW4 · `lsp.nvim` — Diagnostics-Debounce auf `publishDiagnostics`
-
-**Aufwand S · Nutzen mittel**
-
-`core/handlers.lua` dedupliziert, debounct aber nicht. Bei geschwätzigen
-Servern (`ts_ls`) ist das der spürbare Unterschied. Ein Timer pro
-`(client, bufnr)` im vorhandenen Handler, Intervall konfigurierbar.
 
 ---
 
@@ -810,8 +840,9 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
    der ganzen Liste, der etwas anderes aufhält.
 3. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
    End-to-End-Check der LSP-Kette.
-4. **QW4–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
-   alle im selben Modulumfeld. QW3 ist daraus schon erledigt (siehe 1.0).
+4. **QW5–QW8** (`lsp.nvim`-Quick-Wins, je XS–S) — in einem Rutsch, sie liegen
+   alle im selben Modulumfeld. QW3 und QW4 sind daraus schon erledigt
+   (siehe 1.0).
 5. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
    (`images` Sixel-Paket), **M9** (Frecency über drei Repos).
 
