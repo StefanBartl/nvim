@@ -15,7 +15,14 @@ function M.setup()
   require("bindings.mappings.buffer_jump").setup()
   require("bindings.mappings.custom").setup()
   require("bindings.mappings.context_open").setup()
-  require("bindings.mappings.ctrl_cycle").setup()
+  -- ctrl_cycle is the ancestor cascade.nvim's cycle domain was ported from,
+  -- and cascade now supersedes it: it covers all 24 of ctrl_cycle's active
+  -- groups plus operator flips, ISO dates, single-letter stepping, counts,
+  -- dot-repeat and a picker. Binding both was a silent regression -- this
+  -- phase runs at UIReady, i.e. AFTER cascade's VeryLazy setup, so
+  -- ctrl_cycle's <C-y>/<C-x> overwrote cascade's, and everything cascade
+  -- adds beyond plain word groups fell through to a native <C-a>/<C-x> that
+  -- does nothing on a letter, date or operator.
   require("bindings.mappings.editing").setup()
   require("bindings.mappings.fzf").setup()
   require("bindings.mappings.general").setup()

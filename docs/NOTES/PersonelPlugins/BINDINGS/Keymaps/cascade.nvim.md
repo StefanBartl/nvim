@@ -16,11 +16,21 @@ All of the below is gated by the top-level switch `cfg.keymaps.preset`
 
 | lhs | mode | action |
 | --- | --- | --- |
-| `<C-y>` | n | Cycle word/token under cursor forward through configured groups. `N` = N steps |
+| `<C-y>` | n | Cycle word/token under cursor forward through configured groups + enabled packs. `N` = N steps |
 | `<C-x>` | n | Cycle word/token backward |
-| `+` | n | Increment / cycle word / flip an operator (`==`/`&&`/`<`/...) / step an ISO date segment (native line-down otherwise) |
-| `-` | n | Decrement / cycle word / flip an operator / step an ISO date segment (native line-up otherwise) |
+| `+` | n | Increment / cycle word / flip an operator (`==`/`&&`/`<`/...) / step an ISO date segment / step a single letter (native line-down otherwise) |
+| `-` | n | Decrement / cycle word / flip an operator / step an ISO date segment / step a single letter (native line-up otherwise) |
 | `<leader>cp` | n | Pick a cycle-group value via `vim.ui.select` (Telescope-backed if registered) |
+
+**Fallback-Kette** von `<C-y>`/`<C-x>`/`+`/`-`, in dieser Reihenfolge: ISO-Datum
+→ Wortgruppe (`cycle.groups`, dann `per_filetype`, dann `cycle.packs`) →
+einzelner Buchstabe (`a`→`b`, `Z`→`A`, Groß/Klein bleibt) → natives
+`<C-a>`/`<C-x>` auf Zahlen → native Bedeutung der Taste selbst.
+
+**Sprachpakete** (`cycle.packs`, Default `{ "en", "de", "dev" }`): `en`, `de`,
+`es`, `fr`, `it`, `pt`, `nl`, `ru`, `dev`. Reihenfolge = Vorrang; ein Wort
+gehört immer nur zur *ersten* Gruppe, die es enthält. `:checkhealth cascade`
+meldet Kollisionen. Details: `README.md` → „Cycle packs".
 
 ### Sequence — Renumbering *innerhalb* der Selektion (`cfg.sequence.enable`)
 
@@ -106,6 +116,15 @@ installed and preset keymaps are enabled. No-op otherwise.
 
 ## Changelog
 
+- 2026-08-29: **`ctrl_cycle` aus dieser Config entfernt** (der Vorgänger, aus
+  dem cascades cycle-Domäne portiert wurde). Er band `<C-y>`/`<C-x>` bei
+  `UIReady`, also *nach* cascades `VeryLazy`-Setup, und überschrieb sie damit.
+  Weil er nur Wortgruppen kennt, fielen Buchstaben, Daten und Operatoren auf
+  ein natives `<C-a>` zurück, das darauf nichts tut — Symptom: "passiert
+  nichts". cascade deckt alle 24 aktiven Gruppen der alten Datei ab.
+  Aufrufstelle: `lua/bindings/mappings/init.lua`.
+- 2026-08-29: Einzelbuchstaben-Cycling (`a`→`b`, `Z`→`A`, wrap, Case bleibt)
+  und **Sprachpakete** (`cycle.packs`) in cascade.nvim ergänzt.
 - 2026-08-23 (Nachtrag): `<leader>cR` deckt jetzt auch mehrzeilige charwise
   (`v`)-Selektionen ab, nicht nur einzeilige — `lib.nvim.selection` bekam
   `chars_multiline()`/`reselect_chars_multiline()`, `sequence/renumber.lua`
