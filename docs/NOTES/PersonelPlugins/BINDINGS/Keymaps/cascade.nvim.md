@@ -22,6 +22,27 @@ All of the below is gated by the top-level switch `cfg.keymaps.preset`
 | `-` | n | Decrement / cycle word / flip an operator / step an ISO date segment / step a single letter (native line-up otherwise) |
 | `<leader>cp` | n | Pick a cycle-group value via `vim.ui.select` (Telescope-backed if registered) |
 
+### In-Word-Char-Cycle (`cfg.cycle.enable and features.char`)
+
+| lhs | mode | action |
+| --- | --- | --- |
+| `<C-M-y>` | n | Step the single char under the cursor through the alphabet — auch **mitten im Wort**. `N` = N Stellen |
+| `<C-M-x>` | n | Dasselbe rückwärts |
+
+Bewusst eine eigene Taste, kein weiteres Glied der `<C-y>`-Kette: `<C-y>` liest
+das ganze Keyword unter dem Cursor und schlägt es in den Gruppen nach — steht
+das Wort in keiner, fällt die Taste auf ihre native Bedeutung zurück. Ein
+einzelnes `a` cycled deshalb, das `a` in `cat` nicht. Ein finales „nichts
+gematcht, also Zeichen hochzählen" würde bei **jedem** unbekannten Wort Text
+umschreiben, genau da, wo ein No-Op erwartet wird. Zwei Absichten, zwei Tasten.
+
+Ohne a-z/A-Z-Byte unter dem Cursor (Ziffer, Satzzeichen, Zeilenende,
+Multibyte-Zeichen) passiert nichts — diese Tasten haben keine native Bedeutung
+zum Zurückfallen. Groß/Klein bleibt, `z`→`a` wrapped, dot-repeatable.
+
+Nicht jedes Terminal kodiert Ctrl+Alt. Kommt die Taste nie an:
+`keymaps = { globals = { cycle_char_next = "<leader>cy" } }`.
+
 **Fallback-Kette** von `<C-y>`/`<C-x>`/`+`/`-`, in dieser Reihenfolge: ISO-Datum
 → Wortgruppe (`cycle.groups`, dann `per_filetype`, dann `cycle.packs`) →
 einzelner Buchstabe (`a`→`b`, `Z`→`A`, Groß/Klein bleibt) → natives
@@ -116,6 +137,10 @@ installed and preset keymaps are enabled. No-op otherwise.
 
 ## Changelog
 
+- 2026-08-30: **In-Word-Char-Cycle** (`<C-M-y>`/`<C-M-x>`, `cycle.features.char`)
+  in cascade.nvim ergänzt — die Lücke, die die dictionary-getriebene
+  `<C-y>`-Kette per Design offenlässt: ein einzelner Buchstabe cycled, derselbe
+  Buchstabe in einem Wort ohne Gruppeneintrag nicht.
 - 2026-08-29: **`ctrl_cycle` aus dieser Config entfernt** (der Vorgänger, aus
   dem cascades cycle-Domäne portiert wurde). Er band `<C-y>`/`<C-x>` bei
   `UIReady`, also *nach* cascades `VeryLazy`-Setup, und überschrieb sie damit.

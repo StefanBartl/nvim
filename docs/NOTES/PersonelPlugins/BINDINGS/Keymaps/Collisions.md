@@ -56,7 +56,7 @@ Everything that is live in an ordinary buffer, by owner:
 | recommender.nvim | `<leader>lr` `<leader>lR` `<leader>lrr` `<leader>lrt` `<leader>lrj` `<leader>lrp` `<leader>lrh` `<leader>lrc` |
 | reposcope.nvim | `<leader>rs` `<leader>rc` |
 | spotlight.nvim | `<leader>sk` (n,x) `<leader>sK` (n,x) `<leader>sL` `<leader>sC` `<leader>sq` `<leader>sW` `]k` `[k` |
-| cascade.nvim *(only with `keymaps.preset = true`, default `false`)* | `<C-y>` `<C-x>` `+` `-` `<leader>cp` `<leader>cR` (x) `<A-Right>` `<A-Left>` `<A-Up>` `<A-Down>` `<leader><A-Right>` `<leader><A-Left>` `<leader><Right>` `<leader><Left>` `<leader><C-Right>` `<leader><C-Left>` |
+| cascade.nvim *(only with `keymaps.preset = true`, default `false`)* | `<C-y>` `<C-x>` `+` `-` `<C-M-y>` `<C-M-x>` `<leader>cp` `<leader>cR` (x) `<A-Right>` `<A-Left>` `<A-Up>` `<A-Down>` `<leader><A-Right>` `<leader><A-Left>` `<leader><Right>` `<leader><Left>` `<leader><C-Right>` `<leader><C-Left>` |
 
 **sessions.nvim binds nothing.** `keymaps = false` is the default; its README
 suggests `<leader>ssa` / `<leader>slo` / `<leader>sli` as example values, which
