@@ -43,6 +43,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
   - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
   - [M4a · `lsp.nvim` — ein Picker-Backend statt zwei](#m4a-lspnvim-ein-picker-backend-statt-zwei)
+  - [M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)](#m5-nvim-config-sprung-zur-umschliessenden-struktur-ehemals-leadergtt)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
 
@@ -1427,3 +1428,90 @@ herausgeholt gehoert, nicht neu erfunden:
 
 Bis dahin ist die ehrliche Antwort auf „welchen Picker benutzt lsp.nvim" ein
 Name und keine Schnittstelle.
+
+
+---
+
+### M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)
+
+**Erledigt am 2026-08-30. `after/queries/{lua,json,python,rust,toml,yaml}/
+textobjects.scm` und `lua/bindings/mappings/treesitter_structure.lua` — im
+Config-Repo, nicht in `lsp.nvim`.**
+
+Der Punkt stand unter `lsp.nvim` und ist dort nicht gelandet. Die Frage, die
+ich vor dem Bauen gestellt hatte — „ist das ueberhaupt ein LSP-Feature?" — hat
+der Auftraggeber beantwortet: solche Bewegungen laufen hier ueber Treesitter
+und sollen dort bleiben. Damit aendert sich nicht nur der Ort, sondern die
+Bauform: **es ist kein Feature-Modul geworden, sondern eine Konfiguration.**
+
+*Was es tut*: `[b` setzt den Cursor auf den Kopf der Struktur, in der er
+steht; nochmal gedrueckt eine Ebene weiter raus, bis zur aeussersten. `]b`
+dasselbe abwaerts, zum schliessenden Ende. In einer Funktion klettert es
+`for` → `if` → `function`, in einer Konfigurationstabelle Tabellenkopf um
+Tabellenkopf.
+
+**Der Kern ist eine Beobachtung, kein Code**: `goto_previous_start` von
+`nvim-treesitter-textobjects` geht zur naechsten Uebereinstimmung *vor* dem
+Cursor — und der Kopf des umschliessenden Knotens ist genau das. „Previous
+start" und „eine Ebene raus" sind dieselbe Bewegung, und Wiederholung
+klettert. Es war nichts zu implementieren.
+
+**`nvim-treesitter-textobjects` war seit jeher installiert und nirgends
+benutzt.** `plugins/treesitter.lua` fuehrt es mit `lazy = false` und ruft nie
+hinein; im ganzen `lua/`-Baum gab es keine einzige Referenz. Die vier Tasten
+sind der erste Nutzer.
+
+**Was tatsaechlich zu schreiben war: eine Query-Zeile pro Sprache.** Das
+mitgelieferte `@block.outer` ist `(_ (block)) @block.outer` — Funktionsrumpf,
+`if`, `for`, `while`. Eine Lua-Tabelle ist kein `block`, und JSON hat gar
+keine Bloecke (seine mitgelieferte textobjects-Query ist *eine* Zeile, fuer
+Kommentare). Der Fall, fuer den die Bewegung gedacht war — die tief
+verschachtelte Konfigurationstabelle — war also der einzige, den sie nicht
+erreichte. Sechs Dateien unter `after/queries/`, jede mit `;; extends`, jede
+drei bis sechs Zeilen.
+
+*Eine Entscheidung, die im Zuschnitt gewandert ist*: ich hatte zuerst eine
+eigene Capture `@structure.outer` gebaut, um die mitgelieferte nicht zu
+ueberladen. Auf Nachfrage („kann man nicht die korrespondierende erweitern")
+auf `@block.outer` umgestellt — in dieser Config benutzt nichts sonst die
+Capture, „das, worin ich stehe" ist **ein** Begriff, und eine Capture haelt
+die Bewegung bei einem Argument. Der Preis steht in den Query-Dateien:
+`@block.outer` bedeutet hier etwas mehr als upstream dokumentiert, und wer
+spaeter „ausfuehrbarer Block" streng braucht, trennt es wieder.
+
+*Die Sorgfaltsregel dabei*: jeder Node-Name wurde an der **echten Grammatik
+abgelesen** (Ahnenkette am Cursor ausgegeben), nicht geraten. Grund: ein
+unbekannter Node-Name degradiert nicht, er laesst die ganze
+`textobjects`-Query dieser Sprache nicht mehr parsen — ein Tippfehler haette
+also `@function.outer` fuer die Sprache gleich mit erledigt. Deshalb sind nur
+Sprachen dabei, deren Parser hier installiert ist und deren Query
+nachweislich parst; `go`/`typescript` fehlen bewusst, funktionieren aber fuer
+ihre *Bloecke* schon ohne eigene Datei.
+
+*Verifiziert in der echten Config*, jeweils mit gedrueckter Taste, nicht ueber
+die API:
+
+| Sprache | von | `[b`-Kette |
+| --- | --- | --- |
+| lua (Konfigurationstabelle) | 9 | 9 → 8 → 7 → 6 → 5 → 4 → 3 |
+| lua (Funktion mit `if`/`for`) | 6 | 6 → 5 → 4 → 3 → 1 |
+| json | 5 | 5 → 4 → 3 → 2 → 1 |
+| python | 4 | 4 → 3 → 2 → 1 |
+| toml | 6 | 6 → 5 → 4 → 1 |
+| yaml | 4 | 4 → 3 → 2 → 1 |
+| rust | 4 | 4 → 3 → 2 → 1 |
+
+`]b` ebenso abwaerts (in der Tabelle `9:6 → 9:30 → 10 → 11 → 12 → 13 → 14` —
+der erste Schritt bleibt in derselben Zeile, weil dort die innerste Tabelle
+endet; eine Zeilen-nur-Messung sieht darin faelschlich „keine Bewegung").
+Alle sechs Query-Dateien parsen gegen die echte Grammatik, und die
+`after/`-Datei laedt nachweislich *neben* der mitgelieferten.
+
+*Bindings-Zettel*: `Keymaps/nvim-config.md` — neuer Abschnitt „Structure
+movement", Changelog-Eintrag. Kein Plugin-Zettel betroffen, weil kein Plugin
+betroffen ist.
+
+**Nicht gebaut, und das ist der Punkt**: kein Modul in `lsp.nvim`, keine
+Lua-Implementierung einer Baumsuche, kein `<leader>gtt`. Der Punkt stand
+jahrelang als „Feature, das gewollt, aber nie gebaut wurde" auf der Liste —
+die Antwort war, dass das Werkzeug dafuer schon im Ladenregal stand.

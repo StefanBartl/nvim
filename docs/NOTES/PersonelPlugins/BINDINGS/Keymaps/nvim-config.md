@@ -124,6 +124,36 @@ keyboard protocol or CSI-u). Where it does not, the terminal sends the plain
 `<C-k>`/`<C-j>` keycode and the window-jump mapping above wins — this one
 simply never fires. `<M-k>`/`<M-j>` is free and is the portable fallback.
 
+## Structure movement (`treesitter_structure.lua`)
+
+| Key | Mode | Effect | desc | Source |
+| --- | --- | --- | --- | --- |
+| `[b` | n, x, o | Jump to the head of the structure the cursor is inside; repeat to climb a level further out | `Jump to the head of the enclosing structure (repeatable)` | `treesitter_structure.lua` |
+| `]b` | n, x, o | The same downward, to the closing end | `Jump to the end of the enclosing structure (repeatable)` | `treesitter_structure.lua` |
+
+Roadmap-M5, gebaut als Treesitter-Bewegung statt als Feature-Modul.
+`nvim-treesitter-textobjects`' `move.goto_previous_start` geht zur naechsten
+Uebereinstimmung *vor* dem Cursor — und der Kopf des umschliessenden Knotens
+ist genau das, also sind „previous start" und „eine Ebene raus" dieselbe
+Bewegung. Das Plugin war installiert (`plugins/treesitter.lua`, `lazy = false`)
+und wurde nirgends benutzt; das hier ist die erste Verwendung.
+
+Geschrieben werden musste nur **eine Query-Zeile pro Sprache**, in
+`after/queries/<lang>/textobjects.scm`. Das mitgelieferte `@block.outer` ist
+`(_ (block)) @block.outer` — Funktionsrumpf, `if`, `for`, `while`. Eine
+Lua-Tabelle ist kein `block`, und JSON hat gar keine, also war der Fall, fuer
+den die Bewegung existiert, der einzige, den sie nicht erreichte. Die Dateien
+erweitern dieselbe Capture, statt eine neue einzufuehren.
+
+Abgedeckt: lua, json, python, rust, toml, yaml — jeder Node-Name an der echten
+Grammatik abgelesen, nicht geraten: ein unbekannter Node-Name degradiert nicht,
+er laesst die ganze `textobjects`-Query dieser Sprache nicht mehr parsen.
+Block-Sprachen (go, c, typescript, …) funktionieren fuer ihre Bloecke ohne
+eigene Datei.
+
+`[b`/`]b` waren frei; die anderen Klammerpaare in Gebrauch sind
+`[f [F [p [r [s [t` hier und `[d [l [q [w` aus lsp.nvim.
+
 ## Smart Del (`smart_del_key.lua`)
 
 | Key | Mode | Effect | desc | Source |
@@ -225,6 +255,9 @@ prefixes therefore comes from whichever plugin registered it, not from here.
 
 ## Changelog
 
+- 2026-08-30 (3): `[b`/`]b` aus `treesitter_structure.lua` aufgenommen
+  (Roadmap-M5). Erster Nutzer von `nvim-treesitter-textobjects`, das seit
+  jeher installiert und nirgends konfiguriert war.
 - 2026-08-30 (2): `terminal.lua`'s `<C-j>` desc lost its closing bracket
   (`[Terminal Down`); fixed at the source, and this sheet follows it.
 - 2026-08-30: created. Closes the `keymap-undocumented` findings that

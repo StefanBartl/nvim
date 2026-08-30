@@ -33,7 +33,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [1.0 Erledigt](#10-erledigt)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
   - [1.2 Mittel (M)](#12-mittel-m)
-    - [M5 · `lsp.nvim` — Sprung zur Lua-Tabellen-/Funktionswurzel (ehemals `<leader>gtt`)](#m5-lspnvim-sprung-zur-lua-tabellen-funktionswurzel-ehemals-leadergtt)
     - [M9 · `gopath.nvim` — Frecency-Lernen für Alternate-Vorschläge](#m9-gopathnvim-frecency-lernen-fr-alternate-vorschlge)
     - [M10 · `images.nvim` — Sixel-Backend](#m10-imagesnvim-sixel-backend)
     - [M11 · `images.nvim` — OCR-Kreuzung mit `language.nvim`](#m11-imagesnvim-ocr-kreuzung-mit-languagenvim)
@@ -104,75 +103,64 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30 (6). Zuletzt erledigt: **M4a** — `:TypeDefPick` benutzt jetzt
-dieselbe Oberflaeche wie `<leader>wos`, 171 Zeilen handgeschriebenes Telescope
-sind weg. **M4b** (der Picker-Adapter) ist zurueckgestellt und steht mit
-Begruendung unter
-[Zurueckgestellt](./PLUGIN_ROADMAPS_FINISHED.md#zurueckgestellt): M4a hat das
-Problem, das M4b loesen wollte, nicht geloest, sondern entfernt — nach dem
-Umbau benutzt das Plugin genau ein Picker-Backend, und eine Abstraktion ueber
-eines ist eine Indirektion ohne Gegenwert. Davor am selben Tag **M3**, **M2**,
-**M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**,
-**A** und **B**. Notizen zu allen in
+Stand 2026-08-30 (7). Zuletzt erledigt: **M5** — und er ist nicht dort gelandet,
+wo er stand. Der Punkt lag unter `lsp.nvim`, weil die Taste jahrelang in der
+LSP-Keymap-Datei stand; der Kopf einer umschliessenden Struktur ist aber eine
+Treesitter-Frage. Auf Entscheid des Auftraggebers als **Konfiguration** gebaut
+statt als Feature: sechs `after/queries/*/textobjects.scm`-Dateien und zwei
+Tasten (`[b`/`]b`) im Config-Repo, kein Modul in `lsp.nvim`. Davor am selben Tag
+**M4a**, **M3**, **M2**, **M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**,
+**QW8**, **QW10**, **QW1**, **A** und **B**; **M4b** ist zurueckgestellt.
+Notizen zu allen in
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Was der Tag ueber diese Liste gelehrt hat, in drei Klassen**: eine
-Beschreibung kann *veraltet* sein (M16, M1), sie kann *stimmen und trotzdem die
-Entscheidung nicht enthalten*, an der das Feature haengt (M2), und sie kann
-sich auf etwas berufen, das *es nicht gibt* (M4 und sein „Adapter"). Dazu vier
-Bugs, die keine Beschreibung je erwaehnt hat, weil sie **still** fehlschlugen:
-`:Lsp restart`, `:Lsp force-restart` und `:Lsp start` haben ihre Server nie
-zurueckgebracht, und `:LspDoctor startup` meldete immer „Attempts: 0". Alle
-vier gefunden, weil ein Punkt sie im Vorbeigehen beruehrte — nicht, weil sie
-irgendwo standen.
+**Der Fund, der ueber M5 hinausgeht**: `nvim-treesitter-textobjects` war seit
+jeher installiert (`plugins/treesitter.lua`, `lazy = false`) und im ganzen
+`lua/`-Baum **nirgends** referenziert. M5 ist sein erster Nutzer. Was sonst
+noch brachliegt, hat niemand gezaehlt — das waere eine eigene Aufgabe und
+steht auf keiner Liste.
 
-**Empfohlen: M5 — Sprung zur Lua-Tabellen-/Funktionswurzel** (`lsp.nvim`,
-Aufwand M, Nutzen mittel, siehe [1.2](#12-mittel-m)).
+**`lsp.nvim` ist damit leer**, ausser den L-Punkten (L3 ist als „nicht
+angehen" markiert). Elf Punkte aus diesem Repo an einem Tag, plus vier Bugs,
+die keiner von ihnen erwaehnt hat.
 
-*Was*: aus einer tief verschachtelten Lua-Tabelle an den Kopf der umschliessenden
-Struktur springen, optional zentriert.
+**Empfohlen: M17/M12 — Runtime-Tab** (`documentation.nvim`-Verbund, Aufwand M,
+drei Repos, siehe [1.2](#12-mittel-m)).
 
-*Warum jetzt*: derselbe Grund wie bei M2, M3 und M4a — ein Repo, headless
-verifizierbar (ein Lua-Buffer, ein Cursor, eine erwartete Zeile), und der
-Nutzen faellt beim naechsten Tastendruck an statt erst, wenn etwas anderes
-darauf gebaut wird. Es ist der letzte `lsp.nvim`-Punkt ausser den L-Punkten.
+*Warum jetzt*: nicht, weil er stark waere, sondern weil er als einziger
+verbliebener M-Punkt etwas freigibt. M8 bis M11 koennen ohne diese Oberflaeche
+gar nichts zeigen; wer einen von ihnen zuerst baut, baut die Oberflaeche
+viermal an der falschen Stelle. Die Alternativen sind M9 (Frecency, drei
+Repos, Nutzen niedrig), M10 bis M13 (`images.nvim`, alle mit einer
+Vorbedingung) und M14 (`filetree.nvim`, Nutzen niedrig).
 
-*Konkrete Auswirkung*: in einer 400-Zeilen-Konfigurationstabelle bringt eine
-Taste den Cursor an den Kopf der Struktur, in der er gerade steht, statt
-`[[`/`{` zu raten oder zu scrollen. Heute gibt es dafuer nichts — `<leader>gtt`
-war jahrelang auf ein Modul gemappt, das nie existierte.
+*Konkrete Auswirkung*: die generierte Doku-Seite bekommt einen Reiter, den es
+heute gar nicht gibt. Ohne laufenden Dienst steht dort, **warum** er leer ist,
+statt dass er fehlt — der Unterschied zwischen „nichts da" und „weiss nicht,
+ob etwas da waere". Nie eingebacken, was eine der vier „Never"-Zeilen aus
+`ECOSYSTEM.md` §7 ist.
 
-*Was vorher nachzusehen ist*: **geprueft am 2026-08-30 — im Repo existiert
-nichts davon** (kein `gtt`, kein Tabellen-Sprung, kein `enclosing`-Helfer).
-Zwei Fragen sind vor dem Bauen zu klaeren, und beide veraendern den Zuschnitt:
+*Ehrlich zum Nutzen*: er faellt erst an, wenn M8 bis M11 kommen. Heute ist es
+eine Oberflaeche fuer Inhalte, die niemand liefert. Das ist der Grund, aus dem
+er seit fuenf Runden hinten steht — er steht jetzt vorne, weil nichts Besseres
+mehr da ist, nicht weil er besser geworden waere.
 
-1. **Ist das ueberhaupt ein LSP-Feature?** Der Kopf der umschliessenden
-   Struktur ist eine Treesitter-Frage, keine LSP-Frage. Der Punkt liegt in
-   `lsp.nvim`, weil die Taste in der LSP-Keymap-Datei stand. Dafuer spricht,
-   dass `lsp.nvim` schon Treesitter-Code enthaelt (`servers/webdev/astro/
-   autotag`); dagegen, dass das Plugin damit eine zweite Zustaendigkeit
-   bekommt. Die Alternative — es dort bauen, wo Navigation hingehoert —
-   braucht erst eine Antwort auf „wo".
-2. **Nur Lua, oder generisch?** „Tabellen-/Funktionswurzel" ist Lua-Sprache;
-   dieselbe Bewegung in Go, TypeScript oder JSON ist dieselbe Treesitter-Frage
-   mit anderen Node-Typen. Generisch gebaut ist es kaum teurer und deutlich
-   nuetzlicher; Lua-only ist das, was dasteht.
+*Was vorher nachzusehen ist*: `docmap-desktop/docs/PLAN.md` ist die einzige
+Warteschlange, die nie umgezogen ist, und liegt noch dort. Zu pruefen: was von
+M17/M12s Beschreibung nach M17/M7 (Phase-0-IR) noch stimmt, und welches der
+drei Repos den Tab tatsaechlich rendert. Nach der Trefferquote dieses Tages —
+drei von sechs Beschreibungen waren in irgendeiner Form falsch — ist das keine
+Formalie.
 
 **Danach, in dieser Reihenfolge:**
 
-**M17/M12 — Runtime-Tab** (Aufwand M, drei Repos).
-`docmap-desktop/docs/PLAN.md` nennt ihn *dort* als naechsten, und innerhalb des
-Verbunds ist das richtig: M8 bis M11 brauchen diese Oberflaeche, bevor sie
-ueberhaupt etwas zeigen koennen. Dass er hier hinter M5 steht, ist kein
-Widerspruch: M8 bis M11 sind nicht angesetzt, also zahlt sich die Oberflaeche
-noch nicht aus. *Konkrete Auswirkung*: ein Runtime-Tab in der generierten
-Seite, leer und mit Begruendung, wenn nichts serviert; zur Laufzeit gefuellt,
-wenn doch.
-
 **Call Hierarchy als XS-Punkt** (`lsp.nvim`), falls gewuenscht: fzf-lua bringt
-`lsp_incoming_calls` und `lsp_outgoing_calls` mit, und die vier vorhandenen
-Picker-Keymaps sind das Muster. Zwei Katalogeintraege, kein Geruest — das ist
-die Haelfte von M4, die nach M4a uebrig ist und nichts mit M4b zu tun hat.
+`lsp_incoming_calls` und `lsp_outgoing_calls` mit, die vier vorhandenen
+Picker-Keymaps sind das Muster. Zwei Katalogeintraege, kein Geruest. Das ist
+die Haelfte von M4, die nach M4a uebrig ist, und sie haengt nicht an M4b.
+
+**M10 + Detection** (`images.nvim` Sixel-Paket) und **M9** (Frecency ueber
+drei Repos), je nach Bedarf.
 
 ---
 
@@ -221,12 +209,14 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 27 offene Punkte**, davon **kein** Quick Win mehr und 4, die
-  dich brauchen. Alle neun Quick Wins (QW1, QW3,
+- **Insgesamt 26 offene Punkte**, davon **kein** Quick Win mehr und 4, die
+  dich brauchen. `lsp.nvim` hat ausser den L-Punkten **keinen offenen Punkt
+  mehr**. Alle neun Quick Wins (QW1, QW3,
   QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M3**, **M4a** und
   **M6 + M7** (`lsp.nvim`), **M16** (`lib.nvim` + `pdfport.nvim`) und
-  **M17/M7** sind erledigt und stehen unter 1.0. **M4b** ist zurueckgestellt
-  und steht mit Begruendung im selben Dokument. Die Summe ist um drei statt um vier gefallen:
+  **M17/M7** sind erledigt und stehen unter 1.0, ebenso **M5** — der ist als
+  Treesitter-Konfiguration im Config-Repo gelandet statt als Plugin-Feature.
+  **M4b** ist zurueckgestellt und steht mit Begruendung im selben Dokument. Die Summe ist um drei statt um vier gefallen:
   M17/M7 hat seine offen gebliebene Haelfte als eigenen Punkt **M17/M7b**
   hinterlassen, statt sie stillschweigend mitzuerledigen.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
@@ -253,7 +243,8 @@ Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
 die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW5**, **QW6**,
 **QW7**, **QW8**, **M1**, **M2**, **M3**, **M4a** und **M6 + M7** (alle
-`lsp.nvim`), **QW9**
+`lsp.nvim`), **M5** (nvim-config, als Treesitter-Konfiguration statt als
+Plugin-Feature), **QW9**
 (`images.nvim`), **QW1** und **QW10** (beide `mdview.nvim`; QW10 fiel beim
 Durchtesten von QW1 an), **M16** (`lib.nvim` + `pdfport.nvim`), **M17/M7**
 (Phase-0-IR im documentation-Verbund) sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B** (die
@@ -270,17 +261,6 @@ wandert und ein Querverweis von außen weiter aufgeht.
 ---
 
 ## 1.2 Mittel (M)
-
----
-
-### M5 · `lsp.nvim` — Sprung zur Lua-Tabellen-/Funktionswurzel (ehemals `<leader>gtt`)
-
-**Aufwand M · Nutzen mittel**
-
-Aus B2 gerettet: aus einer tief verschachtelten Lua-Tabelle an den Kopf der
-umschließenden Struktur springen, optional zentriert. Die Taste war jahrelang
-auf ein Modul gemappt, das nie existierte — das Feature war also gewollt, nur
-nie gebaut.
 
 ---
 
@@ -765,16 +745,15 @@ offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
    brauchen, bevor sie überhaupt etwas zeigen können. Rückt vor, weil
    `lsp.nvim` keinen sauber zugeschnittenen Punkt mehr übrig hat. Siehe
    „Naechster Schritt".
-2. **M5** (`lsp.nvim` Sprung zur Tabellen-/Funktionswurzel, M) — der letzte
-   `lsp.nvim`-Punkt außer den L-Punkten; ein Repo, headless verifizierbar.
-   Siehe „Naechster Schritt" für die zwei Fragen, die seinen Zuschnitt noch
-   ändern können.
+2. **Call Hierarchy** (`lsp.nvim`, XS) — zwei Katalogeinträge auf fzf-luas
+   `lsp_incoming_calls`/`lsp_outgoing_calls`, im Muster der vier vorhandenen
+   Picker-Keymaps. Die Hälfte von M4, die nach M4a übrig ist.
 3. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
    (Frecency über drei Repos).
 
 QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M4a, M6 und M7
-(`lsp.nvim`), M16 (`lib.nvim` + `pdfport.nvim`) sowie M17/M7 sind erledigt
-(siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
+(`lsp.nvim`), M5 (nvim-config), M16 (`lib.nvim` + `pdfport.nvim`) sowie
+M17/M7 sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
 S-Punkt, der sich delegieren ließ.
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap

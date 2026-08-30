@@ -37,6 +37,7 @@ function M.setup()
   require("bindings.mappings.telescope").setup()
   require("bindings.mappings.terminal").setup()
   require("bindings.mappings.toggle_comment").setup()
+  require("bindings.mappings.treesitter_structure").setup()
   require("bindings.mappings.window_orientation").setup()
 
   -- require("bindings.mappings.view_scroll").map_default_keys('<C-d>', '<C-u>')
