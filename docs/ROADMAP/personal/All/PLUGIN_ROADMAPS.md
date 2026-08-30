@@ -68,7 +68,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 
 In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md: lese dir die ersten punkte durch, arbeitsmodi, nächster empfohlener schritt usw. Erkläre mir den Task dann im sinne von Was? Warum? Was bringt es Usern? Aufwand/Nutzen? Empfehlung von dir: Implementieren oder nicht, anders,... Ich netscheide dann, ob wir den punkt imlementieren, ersatzlos streichen oder markiert und begründet zurückstellen. dann gehe den nächsten schritt an oder wenn abgelehnt, such den nächsten von der liste und das geliche nochmal von vorne.
 
-comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig, update C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md - die erledigt task nach C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md und den nächsten empfohlenen schritt analysieren - dab ei brauchst du aber nicht begrpnden, welche task du nicht machen würdest (momentan in der Empfehlung enthalten).
+comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig, update C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md - die erledigt task nach C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md und den nächsten empfohlenen schritt analysieren - dab ei brauchst du aber nicht begrpnden, welche task du nicht machen würdest.
 
 ---
 

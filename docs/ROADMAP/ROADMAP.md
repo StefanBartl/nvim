@@ -15,7 +15,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     13:30       |    19% / 49%     |
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:30       |    69% / 56%     |
 | **dev**  |    03. Sep    |   Sa., 22:00    |     22:40       |    83% / 24%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     23:50       |    55% / 34%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     21:10       |    59% / 11%     |
@@ -36,6 +36,17 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ## Misc
 
+- [ ] Unter der Tableiste ist nich im buffer / file kontext infios: Parent folder > Fileaname > 1. Markdown Headline > 2. MD Healdline (TOC) -> TOC Entrys
+Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlines + toc einträge ist zu viel. ichj hab nachegesehn, es ist nur markdown fies so, bei zb lua ist nor der folder + filename anegegebn. Von wpo kommt das überhaupt her? plugin das mit nvchad mitkam? ![unter tableiste screenshot mit marks](./assets/ROADMAP-1788114014.png)
+
+- [ ] Wenn man in einer md file eine Referenz aus einen markdown link entfernt, dann soll es euinen keymap dafür eben, zb `DD` (statt `dd`), dass die Referenz file auch gleidh entfernt. Es soll aber einen lib.nvim ui.kit prompt geben, ob die file gefunden wurde und man sie wriklcijh löschen will.
+
+```markdown
+- [ ] Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlines + toc einträge ist zu viel. ichj hab nachegesehn, es ist nur markdown fies so, bei zb lua ist nor der folder + filename anegegebn. Von wpo kommt das überhaupt her? plugin das mit nvchad mitkam? ![unter tableiste screenshot mit marks](./assets/ROADMAP-1788114014.png)
+```
+
+
+- [ ] lspdoctor legacy names nicht mehr callbar machen/entfernen
 - [ ] :checkhealth filetree zeigt zusätzlich, wie viele stale IDs geheilt wurden — steht da nach einer Weile eine Zahl > 0, hat die Session den Bug getroffen und überlebt.
 - [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md:
      [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
