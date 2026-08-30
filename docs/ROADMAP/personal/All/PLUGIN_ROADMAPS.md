@@ -24,6 +24,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 
 ## Table of content
 
+  - [TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)](#task-an-claude-delegieren-claude-soll-diesen-punkt-nicht-bearbeiten)
   - [Arbeitsmodus](#arbeitsmodus)
   - [Naechster Schritt](#naechster-schritt)
     - [Offen: die Live-Achse braucht eine echte Sitzung](#offen-die-live-achse-braucht-eine-echte-sitzung)
@@ -68,6 +69,14 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [3.2 `ROADMAP.md` heißt in diesen Repos vier verschiedene Dinge](#32-roadmapmd-heit-in-diesen-repos-vier-verschiedene-dinge)
   - [3.3 Die Warteschlangen liegen zu dritt außerhalb der Roadmaps](#33-die-warteschlangen-liegen-zu-dritt-auerhalb-der-roadmaps)
   - [3.4 Zwei Punkte hängen aneinander und sollten zusammen gebaut werden](#34-zwei-punkte-hngen-aneinander-und-sollten-zusammen-gebaut-werden)
+
+---
+
+## TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)
+
+In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md: lese dir die ersten punkte durch, arbeitsmodi, nächster empfohlener schritt usw. dann gehe den nächsten schrtt an.
+
+comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig, update C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md - die erledigt task nach C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md und den nächsten empfohlenen schritt analysieren.
 
 ---
 
