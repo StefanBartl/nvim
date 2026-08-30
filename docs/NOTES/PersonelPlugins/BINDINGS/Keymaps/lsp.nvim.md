@@ -26,7 +26,7 @@ driften. Diese Datei kann es, und hat es: sie stand von 2026-08-23 bis
 | Config | Wirkung |
 | --- | --- |
 | `keymaps.enable = false` | Gar nichts binden |
-| `keymaps.preset` | `"default"` (alle 44) / `"minimal"` (28) / `"none"` (keine) |
+| `keymaps.preset` | `"default"` (alle 47) / `"minimal"` (31) / `"none"` (keine) |
 | `keymaps.map.<action> = "<lhs>"` | Aktion auf eine andere Taste legen |
 | `keymaps.map.<action> = false` | Diese Map weglassen |
 
@@ -78,6 +78,24 @@ Die geshiftete Taste ist die engere Reichweite derselben Aktion. `<leader>tH`
 schreibt einen expliziten Override, auch wenn das Ergebnis dem globalen Default
 entspricht — sonst wuerde eine spaetere globale Aenderung den gerade gemachten
 Toggle still zurueckdrehen. `:Lsp hints clear <ft>` nimmt den Override zurueck.
+
+## Code-Action-Indikator
+
+| Key | Mode | Effect | Option/Source |
+| --- | --- | --- | --- |
+| `<leader>tl` | n | Code-Action-Indikator global umschalten | `lightbulb_toggle` |
+| `<leader>tL` | n | Code-Action-Indikator fuer dieses Filetype umschalten | `lightbulb_toggle_filetype` |
+
+Dieselbe Global/Shift-Paarung wie bei den Inlay Hints, und aus demselben Grund:
+es ist derselbe Schaltertyp. Der Indikator markiert die Zeile, sobald
+`textDocument/codeAction` an der Cursorposition etwas zurueckgibt — `lsa` ist
+damit kein Blindgriff mehr.
+
+Entscheidend ist `lightbulb.kinds` (Default `quickfix`, `source`): ungefiltert
+leuchtet die Lampe unter `ts_ls` und `gopls` permanent, weil beide fast ueberall
+Refactorings anbieten, und eine Lampe, die immer leuchtet, sagt nichts. Mit dem
+Default heisst sie „hier ist etwas kaputt und behebbar". `:Lsp lightbulb status`
+sagt, welche Clients im Buffer `codeActionProvider` melden.
 
 ## Diagnostics — Listen und Navigation
 
@@ -201,3 +219,7 @@ ganz diesem Plugin gehoert.
   Katalog erzeugt und in CI geprueft wird.
 - 2026-08-29 (2): `hints_toggle` / `hints_toggle_filetype` (`<leader>th`,
   `<leader>tH`) aus Roadmap-QW3 aufgenommen.
+- 2026-08-30: `lightbulb_toggle` / `lightbulb_toggle_filetype` (`<leader>tl`,
+  `<leader>tL`) aus Roadmap-M2 aufgenommen. Bei der Gelegenheit die
+  Preset-Zeile korrigiert: sie stand noch auf 44/28 und war seit QW3 (45/29)
+  falsch; jetzt 47/31.

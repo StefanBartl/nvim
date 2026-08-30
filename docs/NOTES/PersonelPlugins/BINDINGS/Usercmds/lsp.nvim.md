@@ -94,6 +94,22 @@ Buffern plus allem, was bereits einen Override traegt. Neovims eigenes
 `getcompletion(_, "filetype")` waere mehrere hundert Eintraege, von denen fast
 keiner zu einem gerade offenen Buffer gehoert.
 
+## Code-Action-Indikator
+
+| Command | Range | Effect |
+| --- | --- | --- |
+| `:Lsp lightbulb [action] [filetype]` | — | `action` ∈ `toggle` (Default), `on`, `off`, `status`, `clear` |
+
+Gleiche Grammatik wie `:Lsp hints`, gleiche Bedeutung — `clear` verlangt aus
+demselben Grund ein Filetype. `LSP_FILETYPE` completet seit 2026-08-30 aus
+*beiden* Override-Quellen, Inlay Hints und Lightbulb: ein Override fuer ein
+Filetype, das gerade in keinem Buffer offen ist, waere sonst nicht
+completebar — und genau den wieder loszuwerden ist `clear`s Aufgabe.
+
+`status` beantwortet die Frage, an der haengt, ob der Indikator hier ueberhaupt
+etwas taugt: welche Clients im Buffer `codeActionProvider` melden, welche
+CodeActionKinds auf der Allowlist stehen, und ob gerade eine Markierung steht.
+
 ## Log
 
 | Command | Range | Effect |
@@ -220,6 +236,7 @@ mit einer enum also gar nicht ausdruecken.
   gibt 17 Routen plus rund 25 Legacy-Aliase. Fuenf Monate Drift in dem Baum,
   aus dem `:Bindings check` seine Vergleichsbasis zieht.
 - 2026-08-29 (2): `:Lsp hints` aus Roadmap-QW3 aufgenommen.
+- 2026-08-30: `:Lsp lightbulb` aus Roadmap-M2 aufgenommen.
 - 2026-08-29 (5): `:Bindings check` hat beim Nachziehen von (4) einen
   Verweis auf `:LspStart` gemeldet — den Command gibt es nicht, er heisst
   `:LspStartHere` bzw. `:Lsp start`. Der Text stammte aus dem Plugin selbst,

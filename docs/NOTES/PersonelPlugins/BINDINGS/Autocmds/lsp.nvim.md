@@ -1,22 +1,28 @@
 # lsp.nvim — Autocmds Cheatsheet
 
 Sources: `lua/lsp/bindings/autocmds.lua`, `core/inlay_hints.lua`,
-`formatter/init.lua`, `servers/lua_ls/reload.lua`, `languages/**`, `tools/**`
+`core/lightbulb.lua`, `formatter/init.lua`, `servers/lua_ls/reload.lua`,
+`languages/**`, `tools/**`
 
 Erstellt 2026-08-25 im Zuge des Plugin-Sweeps. lsp.nvim war das einzige
 Personal-Plugin ohne Autocmds-Seite in diesem Baum.
 
 **Achtung — der eigene Docstring untertreibt.** `bindings/autocmds.lua` sagt
 "One group, `lsp_nvim`". Das gilt nur fuer *Keymap*-Autocmds. Tatsaechlich
-registriert das Plugin **26 Autocmds ueber 21 Augroups**, verteilt ueber
+registriert das Plugin **29 Autocmds ueber 23 Augroups**, verteilt ueber
 `languages/`, `tools/`, `formatter/`, `servers/` und `core/`. Diese Datei ist
 die vollstaendige Liste.
 
-(21 = 19 benannte Literale + `lsp_nvim` und `lsp_nvim_inlay_hints` aus
-`M.GROUP`-Konstanten + `LspSignaturePopup_<winid>`, dessen Name zur Laufzeit
-gebaut wird. `grep` auf Stringliterale findet die letzten drei nicht.)
+(23 = 19 benannte Literale + `lsp_nvim`, `lsp_nvim_inlay_hints` und
+`lsp_nvim_lightbulb` aus `M.GROUP`-Konstanten + `LspSignaturePopup_<winid>`,
+dessen Name zur Laufzeit gebaut wird. `grep` auf Stringliterale findet die
+letzten vier nicht.)
 
-Alle 26 laufen ueber `lib.nvim.bindings.autocmd.create` — kein einziger auf der
+Gezaehlt werden Aufrufstellen, nicht Event-Registrierungen: der
+Lightbulb-Aufruf horcht auf vier Events, `nvim_get_autocmds` zaehlt ihn also
+vierfach. Die 29 sind, wie oft `autocmd.create` aufgerufen wird.
+
+Alle 29 laufen ueber `lib.nvim.bindings.autocmd.create` — kein einziger auf der
 Roh-API. Der Inlay-Hints-Autocmd von 2026-08-29 war beim ersten Wurf die
 Ausnahme; nachgezogen, bevor er committet wurde, genau wegen dieser Zeile.
 Die *Augroups* sind gemischt: teils `Autocmd.group(name, true)`, teils
@@ -49,6 +55,30 @@ Der Callback ist `vim.schedule`d: `server_capabilities` steht zum
 `LspAttach`-Zeitpunkt, das *Filetype* des Buffers beim allerersten Attach einer
 Sitzung nicht zuverlaessig — und das Filetype ist es, was den Override
 aufloest. `M.detach()` raeumt die Gruppe wieder ab.
+
+## Code-Action-Indikator — `core/lightbulb.lua`
+
+| Augroup (clear=true) | Event | Pattern | Bedingung | Aktion |
+| --- | --- | --- | --- | --- |
+| `lsp_nvim_lightbulb` | `CursorMoved`, `BufEnter`, `InsertLeave`, `DiagnosticChanged` | — | — | Fragt `textDocument/codeAction` fuer die Cursorposition, debounced (`lightbulb.debounce_ms`, Default 150ms), und markiert die Zeile bei einem Treffer |
+| `lsp_nvim_lightbulb` | `InsertEnter` | — | — | Loescht die Markierung, **ohne** Debounce |
+| `lsp_nvim_lightbulb` | `LspAttach` | — | — | Fragt einmal nach, sobald ein Client da ist |
+
+Drei `autocmd.create`-Aufrufe, sechs Event-Registrierungen — dieselbe Augroup.
+
+**`DiagnosticChanged` ist kein Beiwerk:** die `quickfix`-Actions, um die der
+Default-Allowlist herumgebaut ist, haengen an Diagnostics. Kommt die Diagnostic
+eine Sekunde nach dem Cursorstopp an, bewegt sich die Position nie wieder und
+nichts sonst wuerde nachfragen.
+
+**`InsertEnter` bewusst ohne Debounce:** Verstecken ist nie das, was
+Rate-Limiting braucht, und eine Lampe, die den Moduswechsel um 150ms
+ueberlebt, ist genau das Flackern, gegen das der Debounce existiert.
+
+Eigene Augroup aus demselben Grund wie bei den Inlay Hints. `M.detach()`
+raeumt sie ab und macht einen von `setup()` eingeplanten Refresh unwirksam —
+sonst zeichnet ein Callback, der den Zustand ueberlebt hat, eine Markierung,
+die danach niemand mehr wegnimmt.
 
 ## Formatter
 
@@ -166,3 +196,12 @@ dass es die Gruppe zur Laufzeit je gab.
   nur ein `nvim_exec_autocmds`, registriert keines), und die zwoelf
   `languages/`- und `tools/`-Gruppen fehlen komplett. Diese Seite ist
   massgeblich.
+
+## Changelog
+
+- 2026-08-30: `lsp_nvim_lightbulb` aus Roadmap-M2 aufgenommen (drei
+  Aufrufstellen, sechs Events). Bei der Gelegenheit die Kopfzahl korrigiert:
+  sie stand auf "26 Autocmds ueber 21 Augroups", waehrend die eigene
+  Aufschluesselung daneben 22 ergab (19 Literale + 2 `M.GROUP` + 1
+  Laufzeitname). Jetzt 29 ueber 23, und dass Aufrufstellen gezaehlt werden und
+  nicht Event-Registrierungen, steht jetzt dabei.

@@ -31,6 +31,7 @@ Querverweis von aussen weiter aufgeht.
   - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
   - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor probe`)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-probe)
   - [M16 · `lib.nvim` — `deps.health`-Migrationen](#m16-libnvim-depshealth-migrationen)
+  - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
 
 ---
 
@@ -1105,3 +1106,106 @@ Dateien, `stylua` in beiden Repos sauber.
 *Bindings-Zettel*: nicht berührt. Der Punkt fügt weder Keymap noch Usercmd noch
 Autocmd hinzu; `:checkhealth pdfport` und `:Lib deps show pdfport.nvim` sagen
 dasselbe wie vorher, nur ohne sich zu widersprechen.
+
+
+---
+
+### M2 · `lsp.nvim` — Code-Action-Indikator
+
+**Erledigt am 2026-08-30. `lua/lsp/core/lightbulb.lua`, 29 neue Specs.**
+
+Ursprünglich: „Sign oder Virtual Text, wenn `textDocument/codeAction` etwas
+zurückgibt. Sichtbarkeit statt blindem `lsa`." Die Beschreibung stimmte —
+zum ersten Mal seit drei Punkten hat das Nachsehen im Quelltext nichts
+widerlegt. `code_action` kam in `lua/lsp/` nur dreimal vor: als Keymap `lsa`,
+als marksman-Handler-Wrapper und im TypeScript-Organize-Imports-Pfad. Nichts
+davon war ein Indikator.
+
+**Die Entscheidung, die im Auftrag nicht stand, ist die Kind-Allowlist — und
+sie ist nicht eine Verfeinerung des Punktes, sie ist der Punkt.** Ungefiltert
+leuchtet eine Code-Action-Lampe unter genau den Servern, die dieses Plugin
+konfiguriert, permanent: `ts_ls` bietet „Move to a new file" auf fast jeder
+Top-Level-Zeile an, `gopls` ist mit Refactorings ähnlich freigiebig. Eine
+Lampe, die immer leuchtet, trägt keine Information — das ist der Grund, aus
+dem die naive Umsetzung dieses Features in der Praxis wieder abgeschaltet
+wird. `lightbulb.kinds` ist deshalb eine Allowlist von CodeActionKind-Präfixen
+und steht per Default auf `quickfix` und `source`: die Markierung heißt
+**„hier ist etwas kaputt und behebbar"**, nicht „hier wäre ein Refactoring
+denkbar". Erst damit ist `enable = true` als Default vertretbar.
+
+Zwei Regeln, die daran hängen und beide falsch sein könnten, ohne dass es
+auffiele:
+
+- **Ein Präfix matcht exakt oder als gepunktetes Kind.** `source` deckt
+  `source.organizeImports` ab, `quickfix` deckt `quickfixed` nicht ab. Reines
+  String-Prefixing hätte das zweite durchgelassen.
+- **Eine Action *ohne* `kind` zählt immer.** `kind` ist im Protokoll optional
+  und ein blankes `Command` hat nie eines. Hätte man die weggeworfen, wäre
+  jede Action jedes Servers unsichtbar geworden, der nicht klassifiziert — und
+  zwar als Lampe, die nie leuchtet, also ununterscheidbar von einer, die
+  funktioniert.
+
+**Was der Punkt nicht erwähnte und die eigentliche Designfrage war: es gibt
+keinen freien Platz.** Die Signspalte trägt bereits die Diagnostic-Signs, und
+`virtual_text` steht am Zeilenende — beide naheliegenden Orte sind besetzt.
+`render = "sign"` leiht sich deshalb die Signspalte **nur auf der
+Cursorzeile** und mit einer Priorität *über* den Diagnostic-Signs (20 gegen
+`vim.diagnostic`s 10): auf der einen Zeile, die man gerade ansieht, ist die
+handlungsrelevante Markierung die wichtigere. `render = "virtual_text"`
+zeichnet stattdessen `right_align` am Fensterrand, wo die Diagnostic-Meldung
+am `eol` nicht kollidieren kann.
+
+*Kosten*: ein `textDocument/codeAction` pro Cursorposition, debounced
+(`debounce_ms`, Default 150), nur an Clients mit `codeActionProvider`, mit
+`triggerKind = 2` (Automatic) — Server, die das unterscheiden (gopls,
+rust-analyzer), beantworten eine automatische Anfrage billiger als die hinter
+einem Tastendruck. Im Insert-Modus wird gar nicht gefragt, und eine
+überholte Anfrage wird storniert statt nur ignoriert. `preset = "lean"`
+schaltet das Ganze ab, `preset = "full"` schaltet die Allowlist ab.
+
+*Oberfläche*: `lightbulb = { enable, filetypes, kinds, render, text,
+debounce_ms, priority }` in den DEFAULTS und in der Projekt-Allowlist,
+`:Lsp lightbulb [toggle|on|off|status|clear] [filetype]`, `<leader>tl`
+(global) und `<leader>tL` (dieses Filetype) im Katalog — damit auch im
+generierten `docs/BINDINGS.md`. Die Filetype-Ebene ist dieselbe Map-statt-Liste
+wie bei QW3, weil es derselbe Schaltertyp ist.
+
+**Drei Nebenbefunde, alle beim Bauen aufgefallen:**
+
+1. **Ein von `setup()` eingeplanter Refresh konnte sein eigenes `detach()`
+   überleben.** `vim.schedule` lässt sich nicht zurücknehmen; lief der
+   Callback nach einem `detach()` oder einem zweiten `setup()`, zeichnete er
+   eine Markierung, die danach kein Refresh mehr kannte und also niemand mehr
+   wegnahm. Gefunden hat ihn die Spec-Suite, nicht die Theorie: drei
+   Modulinstanzen aus früheren Testfällen zeichneten gleichzeitig.
+2. **Eine synchrone Antwort löschte die gerade gesetzte Markierung wieder.**
+   Der Zweig „alle Requests wurden abgelehnt" feuerte auch dann, wenn der
+   Handler synchron schon gelaufen war. Mit einem echten Server fällt das nie
+   auf — mit einem gecachten Ergebnis oder einem Stub sofort.
+3. **Der Autocmds-Zettel rechnete nicht auf.** Er stand auf „26 Autocmds über
+   21 Augroups", während seine eigene Aufschlüsselung daneben 22 ergab.
+   Nachgezählt: 29 über 23. Dass er Aufrufstellen zählt und nicht
+   Event-Registrierungen — der Lightbulb-Aufruf horcht auf vier Events —
+   steht jetzt dabei.
+
+*Aufgeräumt*: die Filetype-Map-Normalisierung liegt jetzt einmal statt zweimal
+in `config/init.lua` (`normalize_filetype_map`, geteilt mit `inlay_hints`) —
+die beiden lösen ihre Overrides nach derselben Regel auf, also müssen sie
+dieselben Fehler zurückweisen. Und die `LSP_FILETYPE`-Completion liest jetzt
+die Overrides *beider* Features: ein Override für ein Filetype, das gerade in
+keinem Buffer offen ist, war sonst nicht completebar, und genau den wieder
+loszuwerden ist `clear`s Aufgabe.
+
+*Verifiziert an einem echten `lua_ls`* auf einer Datei mit zwei Diagnostics
+(unused local, undefined global): Zeile 4 und 5 tragen den Indikator, Zeile 1
+(`local M = {}`) und Zeile 9 (`return M`) nicht — also genau der Zuschnitt, den
+die Allowlist verspricht. Dazu: lsp.nvim-Suite grün über 19 Spec-Dateien
+(darunter 29 neue, davon fünf für den Zeichenpfad mit gestubbtem Client),
+Smoke-Test grün, `luacheck` 0/0 über 197 Dateien, `stylua` sauber,
+`gen_bindings.lua --check` sagt „current".
+
+*Bindings-Zettel*: alle drei berührt. `Keymaps/lsp.nvim.md` (neuer Abschnitt,
+plus Korrektur der Preset-Zeile, die noch auf 44/28 stand und seit QW3 falsch
+war — jetzt 47/31), `Usercmds/lsp.nvim.md` (neuer Abschnitt) und
+`Autocmds/lsp.nvim.md` (neue Augroup `lsp_nvim_lightbulb` plus die Kopfzahl
+oben).

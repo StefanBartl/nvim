@@ -33,7 +33,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [1.0 Erledigt](#10-erledigt)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
   - [1.2 Mittel (M)](#12-mittel-m)
-    - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
     - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
     - [M4 · `lsp.nvim` — Workspace-Symbol-/Call-Hierarchy-Picker über den `picker`-Adapter](#m4-lspnvim-workspace-symbol-call-hierarchy-picker-ber-den-picker-adapter)
     - [M5 · `lsp.nvim` — Sprung zur Lua-Tabellen-/Funktionswurzel (ehemals `<leader>gtt`)](#m5-lspnvim-sprung-zur-lua-tabellen-funktionswurzel-ehemals-leadergtt)
@@ -107,57 +106,53 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30 (3). Zuletzt erledigt: **M16** — und der Ertrag war zur
-Haelfte die Feststellung, dass der Punkt so, wie er dastand, nicht mehr
-existierte. `pdfport.nvim` rief `deps.health.report_for` laengst, sein
-`check_exe` rollte keine eigene Erkennung (es delegierte an
-`lib.nvim.core.has_exec`), und die Doppelmeldung, die der Punkt beseitigen
-wollte, ist Absicht: die Deps-Sektion ist ein Inventar **neben** den
-Faehigkeitspruefungen. Offen waren stattdessen drei Stellen, an denen ein
-einziger `:checkhealth pdfport`-Lauf sich selbst widersprach — `curl` als
-"required" und "optional" zugleich, Ghostscript unter seinem Windows-Namen
-gefunden *und* als fehlend gemeldet, und zwei gepruefte Tools ohne Eintrag und
-ohne Begruendung. Alle drei geschlossen; `lib.nvim` hat dafuer
-`bin_alternatives` bekommen (ein Tool, mehrere Schreibweisen). Davor am selben
-Tag **QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**, **A**
-und **B**. Notizen zu allen in
+Stand 2026-08-30 (4). Zuletzt erledigt: **M2** — der Code-Action-Indikator, und
+diesmal stimmte die Beschreibung. Der Ertrag liegt woanders: der Punkt, so wie
+er dastand, waere als naive Gluehbirne gebaut worden und nach einer Woche
+wieder abgeschaltet, weil `ts_ls` und `gopls` auf fast jeder Zeile Refactorings
+anbieten und eine Lampe, die immer leuchtet, nichts sagt. Die Kind-Allowlist
+(`quickfix`, `source`) ist deshalb nicht eine Verfeinerung des Punktes, sie ist
+der Punkt — erst mit ihr ist „an" als Default vertretbar. Davor am selben Tag
+**M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**,
+**A** und **B**. Notizen zu allen in
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Was das ueber diese Liste sagt, und es ist der zweite Fund dieser Art an
-einem Tag**: M16s Beschreibung war zwei Repos zu alt, M1s Titel nannte einen
-Command, den es seit dem 2026-08-29 nicht mehr gibt. Beide Male hat erst das
-Nachsehen im Quelltext den Punkt richtig zugeschnitten. Fuer die naechsten
-Punkte heisst das: der Beschreibung glauben, aber vorher nachsehen.
+**Was das ueber diese Liste sagt**: nach M16 und M1, deren Beschreibungen
+schlicht veraltet waren, ist M2 der andere Fall — die Beschreibung war
+richtig und trotzdem nicht baubar, weil sie die Entscheidung nicht enthielt,
+an der das Feature haengt. Beide Male hat erst das Nachsehen im Quelltext den
+Punkt richtig zugeschnitten. Fuer die naechsten Punkte bleibt es dabei: der
+Beschreibung glauben, aber vorher nachsehen.
 
-**Die Quick-Win-Klasse ist leer, und M16 war der letzte reine S-Punkt, der
-sich delegieren laesst.** Was an Kleinem bleibt, ist entweder S–M mit Nutzen
-niedrig (**M14**, `filetree.nvim`) oder braucht dich (**BD2** und **BD3**,
-beide S, beide auf fremder Hardware). Das erste Sortierkriterium — "was haelt
-etwas anderes auf" — ist seit dem 2026-08-30 leer; es entscheidet
-ausschliesslich Nutzen pro Aufwand.
+**Empfohlen: M3 — Auto-Restart mit Backoff bei Client-Crash** (`lsp.nvim`,
+Aufwand M, Nutzen mittel, siehe [1.2](#12-mittel-m)).
 
-**Empfohlen: M2 — Code-Action-Indikator** (`lsp.nvim`, Aufwand M, Nutzen
-mittel, siehe [1.2](#12-mittel-m)).
+*Was*: stirbt ein Language Server mitten in der Arbeit, kommt er von selbst
+zurueck — mit wachsendem Abstand zwischen den Versuchen und einer Obergrenze,
+damit ein Server, der beim Start zuverlaessig abstuerzt, nicht in einer
+Endlosschleife neu gestartet wird.
 
-*Was*: ein Sign oder Virtual Text in der Zeile, sobald
-`textDocument/codeAction` fuer die Cursorposition etwas zurueckgibt.
+*Warum jetzt*: derselbe Grund, der M2 vor M17/M12 gebracht hat — ein Repo,
+headless verifizierbar, und der Nutzen faellt sofort an statt erst, wenn etwas
+anderes darauf gebaut wird. Es ist der letzte verbliebene Punkt in `lsp.nvim`,
+der einen echten Ausfall schliesst statt eine vorhandene Faehigkeit zu
+verbessern.
 
-*Warum jetzt*: der staerkste verbliebene Punkt, der etwas **Sichtbares** an
-etwas taeglich Benutztem aendert, und er liegt in einem Repo. Er rueckt damit
-aus demselben Grund vor M17/M12 wie zuvor M1: ein Repo, headless
-verifizierbar, und er zahlt sich sofort aus statt erst, wenn etwas anderes
-darauf gebaut wird.
+*Konkrete Auswirkung*: heute merkt man einen abgestuerzten Server daran, dass
+Hover nichts mehr tut, Completion leer bleibt und Diagnostics einfrieren — man
+haelt es erst fuer Langsamkeit und tippt irgendwann `:Lsp restart`. Danach ist
+der Server in der Regel wieder da, bevor der naechste Tastendruck ihn braucht,
+und wenn nicht, sagt eine Meldung warum und dass aufgegeben wurde.
 
-*Konkrete Auswirkung*: `lsa` (`vim.lsp.buf.code_action`, gebunden in
-`config/KEYMAPS.lua:80`) ist heute ein Blindgriff — man drueckt und sieht, ob
-eine leere Liste kommt. Danach steht vorher in der Zeile, ob es etwas zu holen
-gibt.
-
-*Was vorher nachzusehen ist*: `textDocument/codeAction` pro Cursorbewegung zu
-fragen ist ein Request pro Zeile — der Punkt steht und faellt mit Debounce und
-damit, ob nur Clients mit `codeActionProvider` gefragt werden. Beides gibt es
-in diesem Repo schon als Muster (`diagnostics.debounce_ms` aus QW4, die
-Capability-Gates in `core/`).
+*Was vorher nachzusehen ist*: `core/attach.lua` hat 79 Zeilen und **keinerlei**
+Crash-Behandlung — das stimmt, geprueft am 2026-08-30. Was der Punkt nicht
+sagt: `usercmds/recovery.lua` fuehrt bereits einen Versuchszaehler pro Server
+(`RecoveryState.attempts`), `retry_start` mit `max_attempts` und
+`force_restart` mit Aufraeumen. Der Backoff sollte darauf aufsetzen, nicht
+danebengebaut werden — sonst zaehlen zwei Stellen unabhaengig voneinander mit
+und widersprechen sich im Report. Zweitens ist die Aufhaengung zu klaeren:
+`vim.lsp.start` nimmt ein `on_exit`, das sagt, *ob* der Prozess sauber endete;
+ein gewolltes `:Lsp stop` darf keinen Restart ausloesen.
 
 **Danach, in dieser Reihenfolge:**
 
@@ -165,17 +160,18 @@ Capability-Gates in `core/`).
 `docmap-desktop/docs/PLAN.md` nennt ihn *dort* als naechsten, und innerhalb des
 Verbunds ist das richtig: M8 bis M11 brauchen diese Oberflaeche, bevor sie
 ueberhaupt etwas zeigen koennen — wer einen von ihnen zuerst baut, baut die
-Oberflaeche viermal an der falschen Stelle. Dass er hier hinter M2 steht, ist
+Oberflaeche viermal an der falschen Stelle. Dass er hier hinter M3 steht, ist
 kein Widerspruch dazu: M8 bis M11 sind heute nicht angesetzt, also zahlt sich
 die Oberflaeche noch nicht aus. *Konkrete Auswirkung*: ein Runtime-Tab in der
 generierten Seite, leer und mit Begruendung, wenn nichts serviert; zur Laufzeit
 gefuellt, wenn doch — nie eingebacken, was eine der vier „Never"-Zeilen aus
 `ECOSYSTEM.md` §7 ist.
 
-**M3 — Auto-Restart mit Backoff bei Client-Crash** (`lsp.nvim`, Aufwand M).
-*Konkrete Auswirkung*: stirbt ein Server mitten in der Arbeit, kommt er von
-selbst zurueck, statt dass man es erst am ausbleibenden Hover merkt und
-`:Lsp restart` tippt. `core/attach.lua` hat heute keine Crash-Behandlung.
+**M4 — Workspace-Symbol-/Call-Hierarchy-Picker** (`lsp.nvim`, Aufwand M).
+*Konkrete Auswirkung*: `ts_type_lookup` oeffnet heute ein eigenes
+ad-hoc-Telescope; danach benutzt es dieselbe Picker-Oberflaeche wie alles
+andere im Plugin, und wer statt Telescope fzf-lua oder snacks fuehrt, bekommt
+seine.
 
 ---
 
@@ -224,13 +220,13 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 30 offene Punkte**, davon **kein** Quick Win mehr und 4, die
+- **Insgesamt 29 offene Punkte**, davon **kein** Quick Win mehr und 4, die
   dich brauchen. Alle neun Quick Wins (QW1, QW3,
-  QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M6 + M7** (`lsp.nvim`),
-  **M16** (`lib.nvim` + `pdfport.nvim`) und **M17/M7** sind erledigt und stehen
-  unter 1.0. Die Summe ist um drei statt um vier gefallen: M17/M7 hat seine
-  offen gebliebene Haelfte als eigenen Punkt **M17/M7b** hinterlassen, statt
-  sie stillschweigend mitzuerledigen.
+  QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M6 + M7**
+  (`lsp.nvim`), **M16** (`lib.nvim` + `pdfport.nvim`) und **M17/M7** sind
+  erledigt und stehen unter 1.0. Die Summe ist um drei statt um vier gefallen:
+  M17/M7 hat seine offen gebliebene Haelfte als eigenen Punkt **M17/M7b**
+  hinterlassen, statt sie stillschweigend mitzuerledigen.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führten noch Lücken (`❌`), die längst geschlossen waren — stichprobenhaft
@@ -254,7 +250,7 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
 die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW5**, **QW6**,
-**QW7**, **QW8**, **M1** und **M6 + M7** (alle `lsp.nvim`), **QW9**
+**QW7**, **QW8**, **M1**, **M2** und **M6 + M7** (alle `lsp.nvim`), **QW9**
 (`images.nvim`), **QW1** und **QW10** (beide `mdview.nvim`; QW10 fiel beim
 Durchtesten von QW1 an), **M16** (`lib.nvim` + `pdfport.nvim`), **M17/M7**
 (Phase-0-IR im documentation-Verbund) sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B** (die
@@ -271,15 +267,6 @@ wandert und ein Querverweis von außen weiter aufgeht.
 ---
 
 ## 1.2 Mittel (M)
-
----
-
-### M2 · `lsp.nvim` — Code-Action-Indikator
-
-**Aufwand M · Nutzen mittel**
-
-Sign oder Virtual Text, wenn `textDocument/codeAction` etwas zurückgibt.
-Sichtbarkeit statt blindem `lsa`.
 
 ---
 
@@ -788,20 +775,22 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 **Das erste Kriterium ist seit dem 2026-08-30 leer**: mit M17/M7 haelt kein
 offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
 
-1. **M2** (`lsp.nvim` Code-Action-Indikator, M) — der stärkste verbliebene
-   Punkt, der etwas Sichtbares an etwas täglich Benutztem ändert: ein Zeichen
-   in der Zeile, statt `lsa` blind zu drücken. Ein Repo, headless
-   verifizierbar. Siehe „Naechster Schritt".
+1. **M3** (`lsp.nvim` Auto-Restart mit Backoff, M) — ein gestorbener Server
+   kommt von selbst zurück, statt am ausbleibenden Hover aufzufallen. Der
+   letzte verbliebene `lsp.nvim`-Punkt, der einen echten Ausfall schließt statt
+   eine vorhandene Fähigkeit zu verbessern; ein Repo, headless verifizierbar.
+   Siehe „Naechster Schritt".
 2. **M17/M12** (Runtime-Tab, drei Repos) — die Oberfläche, die M8 bis M11
-   brauchen, bevor sie überhaupt etwas zeigen können. Steht hier hinter M2,
+   brauchen, bevor sie überhaupt etwas zeigen können. Steht hier hinter M3,
    weil M8 bis M11 nicht angesetzt sind.
-3. **M3** (`lsp.nvim` Auto-Restart mit Backoff, M) — ein gestorbener Server
-   kommt von selbst zurück, statt am ausbleibenden Hover aufzufallen.
+3. **M4** (`lsp.nvim` Workspace-Symbol-/Call-Hierarchy-Picker, M) — ersetzt das
+   ad-hoc-Telescope in `ts_type_lookup` durch die Picker-Oberfläche, die der
+   Adapter schon bereitstellt.
 4. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
-   (Frecency über drei Repos), der Rest von `lsp.nvim` (M4, M5).
+   (Frecency über drei Repos), der Rest von `lsp.nvim` (M5).
 
-QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M6 und M7 (`lsp.nvim`), M16
-(`lib.nvim` + `pdfport.nvim`) sowie M17/M7 sind erledigt (siehe 1.0). Die
+QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M6 und M7 (`lsp.nvim`),
+M16 (`lib.nvim` + `pdfport.nvim`) sowie M17/M7 sind erledigt (siehe 1.0). Die
 Quick-Win-Klasse ist damit leer, und M16 war der letzte reine S-Punkt, der
 sich delegieren ließ.
 
