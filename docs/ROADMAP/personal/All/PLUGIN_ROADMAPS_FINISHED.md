@@ -46,6 +46,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)](#m5-nvim-config-sprung-zur-umschliessenden-struktur-ehemals-leadergtt)
   - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
   - [M17/M13 · `documentation.nvim`-Verbund — ein `ECOSYSTEM.md`, fünf Repos erreichen es](#m17m13-documentationnvim-verbund-ein-ecosystemmd-fnf-repos-erreichen-es)
+  - [M17/M8 · `documentation.nvim` — `:DocMap impact`, gewichtet nach Runtime-Reichweite](#m17m8-documentationnvim-docmap-impact-gewichtet-nach-runtime-reichweite)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -1437,6 +1438,77 @@ prüfen keine Karte und brauchten keine.
 *Bewusst nicht gemacht*: `mdview.nvim` bekam den Zeiger, aber keinen
 Inhaltsdurchgang. `ECOSYSTEM.md` erwähnt es in einer Zeile („presentation:
 Markdown to a browser"), und die stimmt noch.
+
+---
+
+### M17/M8 · `documentation.nvim` — `:DocMap impact`, gewichtet nach Runtime-Reichweite
+
+**Erledigt am 2026-08-30. `documentation.nvim` `bd081b2`, auf `main` gepusht.
+Dazu `f5ca3d5` fuer `PLAN.md`/`PLAN-DONE.md`.**
+
+Ursprünglich: *„`impact` beantwortet ‚welche Funktionen berühren meine
+geänderten Zeilen, und wer ruft sie'. Mit Telemetrie daneben wird daraus
+‚… und wie oft ist das tatsächlich passiert' — eine Rangfolge statt einer
+Liste."* Aufwand M.
+
+**Kleiner als die Klasse sagte, und der Grund ist merkenswert**: beide Hälften
+schlüsselten ihre Antworten längst gleich. `history.analyze` schlüsselt seine
+Treffer `"<node>#<fn>"`; `telemetry_join.by_key` liefert Zeilen unter `ir_key`,
+dessen eigene Annotation lautet *„the same key shape `check.used_keys`
+returns"*. Es war eine Kreuzung über einen gemeinsamen Schlüssel, kein Bau —
+zwei Funktionen und ein optionaler Parameter.
+
+*Konkrete Auswirkung*: `:DocMap impact` antwortete als **Menge** — dreissig
+berührte Funktionen, dreissig gleichrangige Zeilen, „womit fange ich an"
+unbeantwortet. Jetzt als **Warteschlange**:
+
+```
+changed: runtime_reach(cfg, ir)   (1 caller)  · 4000 calls, 340 this week (yours)
+  ← M.run calls it   (documentation.bindings.usrcmds.impact)
+changed: M.run(ctx, arg)   (0 callers)  · 12 calls, none in the last week (yours)
+```
+
+**Die Entscheidung, die argumentiert werden musste statt kopiert.** `churn`
+rangiert dieselbe Art Liste aus denselben Daten und **weigert sich
+ausdrücklich**, Telemetrie eine Zeile bewegen zu lassen — `COMMANDS.md` sagt
+warum: eine Rangfolge über den Code darf nicht davon abhängen, auf wessen
+Maschine sie entstand, sonst bekommen zwei Entwickler zwei Ordnungen und keiner
+hat unrecht. Hier das Gegenteil zu tun brauchte einen besseren Grund als
+Bequemlichkeit, und es gibt einen: `churn` ist ein dauerhaftes, teilbares
+Urteil **über den Code**; `impact` ist eine private Einmalantwort über **deine
+eigene, uncommittete Arbeit** — einmal vor dem Commit gelesen, nie mit jemandem
+verglichen. „Welche der Dinge, die ich gerade geändert habe, benutze ich
+eigentlich" ist von Bauart her eine Frage über diese Maschine. Beide Header
+tragen das Argument jetzt und zitieren einander, weil der nächste Leser sie
+sonst zu **einer** Regel harmonisiert und dabei die falsche kaputt macht.
+
+**Aktualität statt Gesamtzahl** — und das ist wiederum die Gegenentscheidung zu
+`untested_hot` im selben Modul, aus derselben Art Grund. Jene Liste rangiert auf
+Lebenszeit-Zahlen, weil ihre Frage („lief das je, ohne dass ein Test zusah")
+keine über diese Woche ist. Diese fragt, ob ein Pfad lebt, und das beantwortet
+nur Aktualität.
+
+*Ein Refactor fiel dabei an*: die Formulierungsregel — nie „unused", immer „in
+your sessions", und Abwesenheit ist nie eine Null — war eine Datei-lokale
+Funktion in `churn.lua`, mit `IDEAS.md` §1.1 zitiert als *Anforderung an den
+Render*. Es gibt jetzt zwei Renders. Sie ist nach
+`telemetry_join.session_note` gewandert, neben die Daten, deren Bedeutung sie
+ist, damit die drei Zustände nicht zweierlei heissen können.
+
+*Der Basisfall ist als Identität abgesichert, nicht per Augenschein*: ohne
+Telemetrie ist die Liste byte-gleich mit vorher — Reihenfolge eingeschlossen —
+und zwar stillschweigend. `impact` ist kein Telemetrie-Kommando, also bleiben
+die drei Ursachen von „keine Daten" hier ungenannt, statt eine Frage zu
+beantworten, die niemand gestellt hat. `usrcmds/untested.lua` nennt sie, weil
+dort danach gefragt wurde.
+
+*Verifiziert*: alle vier Gates gruen (`stylua`, `luacheck`, Specs,
+`map --check`), sechs neue Assertions in `runtime_joins_spec.lua` — dem Spec,
+in dem die anderen beiden Kreuzungen schon liegen — plus ein Durchlauf gegen
+den echten Arbeits-Diff dieses Repos, nicht nur gegen die Fixtures.
+
+*Bindings-Zettel*: nicht berührt. Kein neuer Usercmd, keine neue Taste;
+`:DocMap impact` gibt dieselbe Quickfix-Liste in anderer Reihenfolge aus.
 
 ---
 
