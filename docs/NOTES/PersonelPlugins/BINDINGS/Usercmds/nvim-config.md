@@ -51,24 +51,40 @@ here.
 
 | Command | Range | Effect |
 | --- | --- | --- |
-| `:WKDDiffProfile {profile}` | — | **Not registered — see below.** Would switch the diff profile via `wkdoptions.set_diff_profile.selector`; takes exactly one argument and completes the profile names, and called bare would list them instead of erroring |
+| `:WKDDiffProfile {profile}` | — | Set `diffopt` from a named profile — `minimal`, `context`, `review` or `strict` (`wkdoptions/set_diff_profile/profiles.lua`). `nargs = 1` with completion over the four names |
 
-**`:WKDDiffProfile` does not exist in a running session**, and this is a
-finding rather than a caveat. `wkdoptions/commands/register.lua` defines it,
-but only from `M.register_all()`, and nothing calls `register_all()` — the
-three entry points that do run are `register_highlight_commands` and
-`register_highlight_debug_command` (from `wkdoptions/hl_config/init.lua`) and
-`register_options_commands` (from `wkdoptions/options_config/init.lua`).
+**Registered since 2026-08-30, and it was not before.**
+`wkdoptions/commands/register.lua` had always defined the command, but only
+from `M.register_all()` — and nothing called `register_all()`. The other
+three registrars in that module are each reached directly
+(`register_highlight_commands` and `register_highlight_debug_command` from
+`hl_config/init.lua`, `register_options_commands` from
+`options_config/init.lua`), so `register_diff_profile` was the one with no
+caller at all and the command existed in no running session.
 
-`M.register_debug()` sits in the same `register_all()` body but is *not*
-affected: `hl_config/init.lua` reaches it separately through the facade's
-`register_highlight_debug_command`, so `:WKDHighlightDebugCtx` does exist.
-`register_diff_profile` is the only one of the four with no caller at all.
+`wkdoptions/init.lua`'s `setup()` now calls it, alongside the other
+standalone features (`qflist`, `indent_per_ft`) rather than from one of the
+two subsystems, because a diff profile is neither a highlight nor an option.
 
 Found by `:Bindings check` reporting it on both axes at once: present in the
-source map, absent from `nvim_get_commands`. Documented as it stands rather
-than quietly wired up, since registering a new command is a change to the
-editor's behaviour, not a documentation fix.
+source map, absent from `nvim_get_commands`. Neither axis could have found it
+alone.
+
+Verified after wiring: all four profiles rewrite `diffopt` as their table
+says, `<Tab>` completion offers `context`/`minimal`/`review`/`strict`, and an
+unknown name leaves `diffopt` untouched and reports through `notify.error`.
+
+Two things that look like defects and are not. This config's default
+`diffopt` is byte-for-byte the `review` profile, so `:WKDDiffProfile review`
+on a fresh session changes nothing visible — that is the profile already
+being active, not a no-op command. And an unknown name surfaces as a Vim
+error when the command is driven from `vim.cmd`, because that is how
+`nvim_exec2` reports an error-level message; typed interactively it is just
+the notification.
+
+One rough edge left as it is: the handler has a branch that lists the
+profiles when called with no argument, but `nargs = 1` means Neovim rejects
+the bare call with E471 first, so that branch is unreachable.
 
 ## Aliases for plugin commands
 
@@ -105,6 +121,7 @@ small addition if it is ever wanted — not a missing capability.
 
 - 2026-08-30: created. Closes the `usercmd-undocumented-source` findings of
   `:Bindings check` for this config's own Lua. Writing it turned up one
-  defect: `:WKDDiffProfile` is defined but never registered, because
-  `wkdoptions.commands.register`'s `register_diff_profile()` has no caller —
+  defect: `:WKDDiffProfile` was defined but never registered, because
+  `wkdoptions.commands.register`'s `register_diff_profile()` had no caller —
   the other three registrars in that module are each reached directly.
+  `wkdoptions/init.lua` calls it now.
