@@ -131,16 +131,17 @@ Beide bleiben registriert, auch mit `legacy_aliases = false`.
 
 | Command | Warum eigenstaendig |
 | --- | --- |
-| `:LspDoctor [report]` | Ein Diagnosewerkzeug mit eigenem Renderer und fuenf Reports, kein LSP-Steuerbefehl — dieselbe Ausnahme, die `replacer.nvim` fuer `:Surround` macht. Als `:Lsp doctor` trotzdem erreichbar. `!` oeffnet einen Scratch-Buffer und waehlt **keinen** Report. |
+| `:LspDoctor [report]` | Ein Diagnosewerkzeug mit eigenem Renderer und sechs Reports, kein LSP-Steuerbefehl — dieselbe Ausnahme, die `replacer.nvim` fuer `:Surround` macht. Als `:Lsp doctor` trotzdem erreichbar. `!` oeffnet einen Scratch-Buffer und waehlt **keinen** Report. |
 | `:LspMdHints [mode]` | Marksman-spezifisch. Server-Commands gehoeren nicht in ein globales Verb. `mode` ∈ `on`, `off`, `toggle` (Default), `status`. |
 
 Aus demselben Grund sind `:TypeDef*`, `:EslintFix`, `:AstroDevStart`,
 `:MdFormat` und `:LuaLsReloadLibrary` unangetastet: filetype-gebunden, und sie
 gehoeren dem Modul, das sie besitzt.
 
-### Die fuenf Reports
+### Die sechs Reports
 
-Der Name nennt die Frage, nicht die Ausgabemenge.
+Der Name nennt die Frage, nicht die Ausgabemenge. Fuenf lesen Zustand, einer
+provoziert.
 
 | Report | Beantwortet |
 | --- | --- |
@@ -148,11 +149,45 @@ Der Name nennt die Frage, nicht die Ausgabemenge.
 | `resolve` | Wo bricht die Kette Filetype → Server? Fuenf Stufen, von „welche Server sollte dieses Filetype bekommen" bis zu dem, was `:Lsp start` anboete |
 | `buffer` | Was ist gerade in diesem Buffer los? Clients, Diagnostics-Zaehlung, Provider-Konflikte, Offset-Encodings, Formatter. Listen bei `list_limit` gekappt |
 | `capabilities` | Was koennen die Server hier genau? `buffer` ungekappt, plus `root_dir`/Workspace-Folders und die vollen Capabilities pro Client |
-| `all` | Alle vier. Default von `:LspDoctor` ohne Argument |
+| `probe` | Kommen Diagnostics ueberhaupt an? Legt einen Buffer mit garantiert kaputtem Inhalt an und wartet — der einzige Report, der provoziert statt abzufragen |
+| `all` | Die vier lesenden Reports. Default von `:LspDoctor` ohne Argument. **Nicht** `probe` |
 
 Default von `:Lsp doctor` ohne Argument ist `startup`, nicht `all`: die Route
 oeffnet einen Scratch-Split, und die Frage, mit der man ankommt, ist fast immer
 „warum laeuft mein Server nicht".
+
+#### `probe` im Besonderen
+
+Eine saubere Datei und eine tote Diagnostics-Kette sehen identisch aus: leerer
+Buffer, keine Zeichen in der Gutter — und jeder zustandslesende Check sagt ueber
+beide dasselbe. `probe` ist der einzige Weg, sie zu trennen: er garantiert, dass
+es etwas zu melden gibt, und schaut, ob es gemeldet wird.
+
+- Er baut einen Buffer mit Inhalt, den der Server dieses Filetypes nicht
+  akzeptieren kann (`local x =`, `const x =`, ein offenes `func main()`),
+  benannt nach einer Datei, die es **nicht** gibt, im Verzeichnis des aktuellen
+  Buffers — damit `root_dir` so aufloest wie bei echter Arbeit.
+- Er haengt die Clients an, die ohnehin schon auf diesem Buffer sitzen. Er
+  **startet keine** Server: die Frage ist, ob *diese* Clients liefern.
+- Er wartet `lspdoctor.probe_timeout` (Default 5000 ms) und loescht den Buffer
+  wieder, bevor der Report gerendert wird.
+- **Es wird nie etwas auf die Platte geschrieben**, zu keinem Zeitpunkt.
+
+Er ist bewusst **nicht** Teil von `all`: die anderen fuenf sind sofort da und
+ohne Nebenwirkung, dieser legt einen Buffer an, redet mit den Servern und
+blockiert. `:LspDoctor` ohne Argument soll billig bleiben.
+
+Snippets gibt es fuer `c`, `cpp`, `cs`, `css`, `go`, `java`, `javascript`,
+`javascriptreact`, `json`, `jsonc`, `lua`, `python`, `rust`, `sh`, `bash`,
+`toml`, `typescript`, `typescriptreact`, `yaml`, `zig` — jedes ein *Syntax*-
+und kein Typ- oder Lint-Fehler, weil Syntax das ist, was ein Server prueft,
+bevor er irgendetwas aufloest. Bei jedem anderen Filetype sagt der Report das
+und nennt die abgedeckten; Raten wuerde riskieren, eine tote Kette zu melden,
+wo die Datei nur akzeptabel war.
+
+Was er nicht kann, steht im Report selbst: ein Server, der synthetische Dateien
+ausserhalb seines Projekts ablehnt (gopls ohne Modul, tsserver ohne tsconfig),
+sieht von hier aus genauso aus wie ein kaputter.
 
 Bis 2026-08-29 hiessen sie `health`, `debug`, `quick`, `deep`. **Die alten
 Namen funktionieren weiter**, als Command-Argument und als Funktion; sie werden
@@ -191,6 +226,12 @@ mit einer enum also gar nicht ausdruecken.
   das ihn an fuenf Stellen fuehrte, davon eine als Handlungsanweisung im
   `startup`-Report ("Action: Not started - use `:LspStart lua_ls`"). Wer dem
   folgte, bekam E492. Im Plugin und hier korrigiert.
+- 2026-08-30: `:LspDoctor probe` dazugekommen (Roadmap-M1). Sechster Report,
+  in Completion und in `:Lsp doctor probe` angeboten, aber nicht in `all`. Die
+  Roadmap nannte ihn `:LspDoctor deep` — das war der Name von vor der
+  Umbenennung am 2026-08-29, `deep` ist heute `capabilities`; er ist ein
+  eigener Report geworden und kein Modus eines bestehenden. Neue Option
+  `lspdoctor.probe_timeout` (5000 ms).
 - 2026-08-29 (4): `:LspDoctor`/`:Lsp doctor`-Modi umbenannt:
   `health`->`startup`, `debug`->`resolve`, `quick`->`buffer`,
   `deep`->`capabilities`. Alte Namen bleiben gueltig, werden aber nicht mehr

@@ -28,6 +28,8 @@ Querverweis von aussen weiter aufgeht.
   - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
   - [M6 + M7 · `lsp.nvim` — Profile-Presets und Per-Projekt-Override](#m6--m7-lspnvim-profile-presets-und-per-projekt-override)
   - [M17/M7 · `documentation.nvim` — Phase-0-IR: der besitzende Scope](#m17m7-documentationnvim-phase-0-ir-der-besitzende-scope)
+  - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
+  - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor probe`)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-probe)
 
 ---
 
@@ -842,3 +844,148 @@ der Bedingung, unter der es aufhört, kosmetisch zu sein.
 *Bindings-Zettel*: nicht berührt. Der Punkt fügt weder Keymap noch Usercmd noch
 Autocmd hinzu; `:DocMap` gibt eine Zeile mehr aus, wenn der Baum überhaupt
 Scopes hat.
+
+
+---
+
+### QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`
+
+**Erledigt am 2026-08-30. `lua/lsp/tools/lsp_signature/show_hover.lua`,
+6 neue Specs in `TESTS/lsp/hover_cache_spec.lua`.**
+
+Ursprünglich: wiederholter Hover auf derselben Position bei gleicher
+Buffer-Version spart einen Roundtrip, Schlüssel `(bufnr, changedtick, row,
+col)`.
+
+*Gebaut*: genau das, mit einer LRU (Kapazität 32) aus `lib.lua.memo`.
+Gecacht werden die **anzeigefertigen Zeilen**, also hinter dem Request *und*
+hinter `format_hover` — die Formatierung ist deterministisch aus demselben
+Ergebnis, und sie zweimal zu rechnen, um dann dasselbe anzuzeigen, wäre die
+halbe Ersparnis weggeworfen.
+
+**Der Schlüssel hat ein fünftes Feld bekommen, und das ist die Entscheidung,
+die im Auftrag nicht stand: die Client-IDs.** Die ersten vier Felder sagen,
+was die Antwort *ist*; die IDs sagen, wann sie *falsch* wird. Ein
+`:Lsp restart` lässt den Buffer unberührt — `changedtick` stimmt danach
+weiterhin, der Cache würde also die Antwort des toten Servers weiterreichen.
+Ein neu gestarteter Client trägt eine neue ID, damit wandert der Schlüssel von
+selbst und der alte Eintrag wird schlicht nie wieder gefragt. Das ist billiger
+als ein Invalidierungs-Autocmd und kann nicht gegenüber einem aus dem Tritt
+geraten.
+
+Zweite Entscheidung: ein Request **ohne** Position wird gar nicht gecacht,
+statt auf einen geratenen Schlüssel gelegt zu werden. Zwei verschiedene Fragen
+auf eine Antwort zu falten wäre ein Hover-Popup, das die falsche Stelle
+erklärt — schlimmer als der Roundtrip, den es spart.
+
+*Konkrete Auswirkung*: `<C-b>` ist ein Toggle, „nochmal draufschauen" heißt
+also zu, auf, warten. Beim zweiten Mal auf unverändertem Buffer erscheint das
+Popup jetzt sofort und ohne Anfrage an den Server. Bei `lua_ls`/`gopls` sind
+das die im Report genannten 10–50 ms, bei `jdtls`/`omnisharp` spürbar mehr —
+und genau deshalb stand der Punkt in der Empfehlung an letzter Stelle. Er ist
+gebaut worden, weil er erledigt sein sollte, nicht weil er dringend war.
+
+*Die Specs prüfen überwiegend die Fehlschläge*, nicht den Treffer: Edit,
+andere Position, ersetzter Client und geleerter Cache müssen jeweils wieder an
+die Leitung gehen. Ein Cache, der zu oft trifft, ist der Fehlermodus, der
+Schaden anrichtet; einer, der zu selten trifft, kostet nur, was vorher auch
+gekostet hat.
+
+*Verifiziert*: 298 Specs grün (6 davon neu), Smoke-Test grün, `stylua` sauber.
+
+*Bindings-Zettel*: nicht berührt — der Punkt ändert weder Keymap noch Usercmd
+noch Autocmd. `<C-b>` bleibt, was es war, nur schneller beim zweiten Mal.
+
+---
+
+### M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor probe`)
+
+**Erledigt am 2026-08-30. Neu: `lua/lsp/lspdoctor/probe.lua`, 7 neue Specs,
+neue Option `lspdoctor.probe_timeout`.**
+
+Ursprünglich unter dem Namen `:LspDoctor deep` geführt. **Den gibt es so nicht
+mehr**: die Report-Namen wurden am 2026-08-29 umbenannt, `deep` heißt heute
+`capabilities` und beantwortet eine ganz andere Frage (was können die Server
+hier). Der Punkt ist deshalb ein **sechster Report** geworden und kein Modus
+eines bestehenden. Er heißt `probe`, weil er als einziger etwas *tut*, statt
+Zustand zu lesen — die anderen fünf tragen den Namen ihrer Frage, dieser den
+seiner Methode, und der Unterschied ist genau das, was man vorher wissen will.
+
+*Gebaut*: `:LspDoctor probe` legt einen Buffer mit Inhalt an, den der Server
+dieses Filetypes nicht akzeptieren kann (`local x =`, `const x =`, ein offenes
+`func main()`), benennt ihn nach einer Datei, die es **nicht gibt**, im
+Verzeichnis des aktuellen Buffers, hängt die dort ohnehin schon attachten
+Clients an und wartet `probe_timeout` (Default 5000 ms) auf Diagnostics — pro
+Client, mit Dauer und erster Meldung.
+
+**Nie wird etwas auf die Platte geschrieben.** Das Dokument existiert nur als
+der Inhalt, den der Client über die Leitung geschickt hat; der Buffer wird
+gelöscht, bevor der Report gerendert wird, damit die Diagnostics des Probes
+nicht in globalen Listen liegen bleiben. Der Pfad zeigt trotzdem ins
+Projektverzeichnis, weil `root_dir` sonst anders auflöst als bei echter Arbeit
+— und „gopls hat eine Datei ignoriert, die nicht in deinem Modul liegt" wäre
+die Antwort auf eine Frage, die niemand gestellt hat.
+
+**Drei Entscheidungen, die im Auftrag nicht standen.**
+
+*Erstens: keine Server werden gestartet.* Gefragt sind die Clients, die hier
+schon hängen. Einen zu starten würde eine andere Frage beantworten, und zwar
+langsam.
+
+*Zweitens: `probe` ist nicht Teil von `all`.* Die anderen fünf lesen Zustand
+und sind sofort da; dieser legt einen Buffer an, redet mit Servern und
+blockiert bis zu fünf Sekunden. Ihn in den Default zu falten hieße, den
+Report, den man zuerst aufruft, langsam und nebenwirkungsbehaftet zu machen
+für eine Frage, die man gar nicht gestellt hat.
+
+*Drittens: pro Filetype ein Snippet statt eines Generators.* Zwanzig Stück
+(`c`, `cpp`, `cs`, `css`, `go`, `java`, `javascript`, `javascriptreact`,
+`json`, `jsonc`, `lua`, `python`, `rust`, `sh`, `bash`, `toml`, `typescript`,
+`typescriptreact`, `yaml`, `zig`), jedes ein *Syntax*-Fehler und kein Typ-
+oder Lint-Fehler: Syntax ist, was ein Server prüft, bevor er irgendetwas
+auflöst, also bleibt der Probe auch in einem Verzeichnis ehrlich, das der
+Server noch nicht durchindiziert hat. Bei jedem anderen Filetype sagt der
+Report das und nennt die abgedeckten — geraten würde riskieren, eine tote
+Kette zu melden, wo die Datei nur akzeptabel war.
+
+**Was der Report nicht kann, steht im Report.** Ein Server, der synthetische
+Dateien außerhalb seines Projekts ablehnt (gopls ohne Modul, tsserver ohne
+tsconfig), sieht von hier aus genauso aus wie ein kaputter. Beide Fälle werden
+als Hinweis ausgegeben, statt den einen als den anderen zu verkaufen — ein
+Diagnosewerkzeug, das den falschen Schuldigen nennt, ist das eine, was ein
+Diagnosewerkzeug nicht tun darf.
+
+*Konkrete Auswirkung, und sie ist die versprochene*: `:LspDoctor probe` auf
+einer Lua-Datei sagt jetzt
+
+```
+Summary: 1/1 client(s) delivered diagnostics within 5000ms
+**lua_ls**
+  Diagnostics: ✅ 1 after 21ms
+  First: `<exp> expected.` (ERROR)
+```
+
+und bei einer toten Kette `❌ none within 5000ms` samt zwei Hinweisen, wo man
+nachsieht. Vorher waren „diese Datei ist sauber" und „hier kommt nichts mehr
+an" auf dem Bildschirm nicht zu unterscheiden, und jeder zustandslesende Check
+sagte über beide dasselbe.
+
+*Verifiziert an einem echten `lua_ls`*, zweimal in derselben Sitzung: eine
+Diagnostic in ~20 ms, keine Datei auf der Platte, kein Buffer übrig, und
+nichts vom Probe mehr in `vim.diagnostic.get()`. Dazu 299 Specs grün (7 davon
+neu), Smoke-Test grün, `stylua` sauber, und die Completion von `:LspDoctor`
+bietet `probe` an (`startup, resolve, buffer, capabilities, probe, all`),
+während `:LspDoctor deep` weiterhin auf `capabilities` zeigt.
+
+*Nebenbefund, nicht mitgemacht*: `lua/lsp/lspdoctor/doc/help.txt` und
+`doc/lspdoctor.txt` beschreiben beide noch das Modul von **vor** der Migration
+(`:LspDoctor export`, `run()`, `quick`/`deep`) und beanspruchen beide denselben
+Helptag `*lspdoctor.txt*` — dabei liegen sie unter `lua/`, wo Neovim
+Hilfedateien gar nicht indiziert. Das ist zwei tote Dateien, kein veralteter
+Absatz; sie im Vorbeigehen um eine Report-Zeile zu ergänzen hätte den Rest
+falsch gelassen. Als eigener Aufräumpunkt vermerkt, nicht hier miterledigt.
+
+*Bindings-Zettel*: `docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/lsp.nvim.md`
+nachgezogen — sechs statt fünf Reports, ein eigener Abschnitt zu `probe`
+inklusive der Grenze, die er nicht sehen kann, und ein Changelog-Eintrag mit
+der Notiz, dass die Roadmap ihn unter dem alten Namen `deep` führte.

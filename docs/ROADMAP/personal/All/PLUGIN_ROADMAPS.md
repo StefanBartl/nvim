@@ -32,9 +32,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [Kurzfassung](#kurzfassung)
   - [1.0 Erledigt](#10-erledigt)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
-    - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
   - [1.2 Mittel (M)](#12-mittel-m)
-    - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`) (LSPDoctor paramter options, glaub capabilitiesr deep wurde umbenannt, glaub capabilities)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-deep-lspdoctor-paramter-options-glaub-capabilitiesr-deep-wurde-umbenannt-glaub-capabilities)
     - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
     - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
     - [M4 · `lsp.nvim` — Workspace-Symbol-/Call-Hierarchy-Picker über den `picker`-Adapter](#m4-lspnvim-workspace-symbol-call-hierarchy-picker-ber-den-picker-adapter)
@@ -110,63 +108,63 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30. Zuletzt erledigt: **M17/M7** — `Documentation.FunctionInfo`
-kennt jetzt den besitzenden Scope (`owner` + `owner_kind`, Schema 6), und die
-Karte zeigt eine Klasse mit ihren Methoden darunter statt zwoelf gleichrangige
-Zeilen neben einem Klassennamen, der nichts besitzt. Davor am selben Tag
-**M6 + M7** (`lsp.nvim`), **QW8**, **QW10**, **QW1**, **A** und **B**. Notizen
-zu allen in [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
+Stand 2026-08-30 (2). Zuletzt erledigt: **QW5** und **M1**, beide `lsp.nvim`.
+QW5 ist der Hover-Cache — der zweite Blick auf dieselbe Stelle kommt jetzt ohne
+Roundtrip. M1 ist `:LspDoctor probe`, der Report, der einen Fehler provoziert
+und nachsieht, ob er zurueckkommt; er hiess in dieser Liste noch
+`:LspDoctor deep`, und dieser Name ist seit dem 2026-08-29 vergeben —
+`deep` heisst heute `capabilities`. Der Punkt ist deshalb ein **sechster
+Report** geworden und kein Modus eines bestehenden. Davor am selben Tag
+**M17/M7**, **M6 + M7** (`lsp.nvim`), **QW8**, **QW10**, **QW1**, **A** und
+**B**. Notizen zu allen in
+[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Damit haelt kein offener Punkt dieser Liste mehr einen anderen auf.** Das war
-seit dem 2026-08-29 das erste Sortierkriterium; es ist ab jetzt leer. Die
-Reihenfolge entscheidet sich von hier an ausschliesslich ueber Nutzen pro
-Aufwand — und das aendert die Empfehlung, nicht nur ihren Platz.
+**Die Quick-Win-Klasse ist damit leer.** 1.1 fuehrt keinen offenen Punkt mehr;
+was bleibt, faengt bei M an. Auch das erste Sortierkriterium — "was haelt etwas
+anderes auf" — ist seit dem 2026-08-30 leer. Die Reihenfolge entscheidet sich
+ausschliesslich ueber Nutzen pro Aufwand.
 
-**Empfohlen: M1 — `:LspDoctor deep`** (Aufwand M, Nutzen hoch, siehe
-[1.2](#12-mittel-m)). Der einzige Check in `lsp.nvim`, der die Kette
-**End-to-End** prueft, statt Zustaende abzufragen.
+**Empfohlen: M16 — `lib.nvim`-`deps.health` in `pdfport.nvim` fertig
+migrieren** (Aufwand S, Nutzen mittel, siehe [1.2](#12-mittel-m)).
 
-*Konkrete Auswirkung*: `:LspDoctor deep` legt einen Scratch-Buffer mit
-garantiert fehlerhaftem Inhalt an (Go: fehlende Klammer, JS: `const x =`) und
-wartet auf Diagnostics. Kommt innerhalb des Timeouts keine, sagt der Report
-„Diagnostics kommen ueberhaupt nicht an" statt „keine Fehler". Das ist genau
-der Unterschied, der sonst Stunden kostet, weil beide Zustaende auf dem
-Bildschirm identisch aussehen — eine saubere Datei und ein toter Server sind
-beide leer.
+*Was*: `pdfport.nvim` ruft `deps.health.report_for` bereits, rollt daneben aber
+weiterhin ein eigenes `check_exe` mit fuenfzehn Aufrufstellen in derselben
+Datei. Die handgerollte Haelfte faellt weg, die geteilte bleibt.
 
-*Warum jetzt und nicht spaeter*: er liegt in **einem** Repo, laesst sich
-headless verifizieren, und er betrifft etwas, das taeglich benutzt wird. Er
-gibt seinen Nutzen sofort her und nicht erst, wenn etwas anderes darauf
-gebaut wird.
+*Warum jetzt*: der einzige verbliebene S-Punkt, ein Repo, und der einzige, der
+etwas **abschliesst** statt etwas hinzuzufuegen — der letzte Nachzuegler der
+Duplikat-Beseitigung, die sonst durch ist.
 
-**Die Alternative aus dem documentation-Verbund: M17/M12 — Runtime-Tab**
-(Aufwand M, drei Repos). `docmap-desktop/docs/PLAN.md` nennt ihn *dort* als
-naechsten, und innerhalb des Verbunds ist das richtig: M8 bis M11 brauchen
-diese Oberflaeche, bevor sie ueberhaupt etwas zeigen koennen — wer einen von
-ihnen zuerst baut, baut die Oberflaeche viermal an der falschen Stelle.
+*Konkrete Auswirkung*: `:checkhealth pdfport` liest sich danach wie
+`:checkhealth images` und `:checkhealth language` — dieselbe Formulierung,
+dieselbe Struktur, dieselbe Reihenfolge, weil dieselbe Funktion sie schreibt.
+Heute sagt der Report dort zweimal dasselbe in zwei Sprachen. Fuer den
+taeglichen Gebrauch aendert sich sonst nichts; genau das ist die Antwort, und
+sie ist der Grund, warum der Punkt klein ist und nicht wichtig.
 
-*Warum er hier trotzdem an zweiter Stelle steht, und das ist kein Widerspruch
-zu jenem Dokument*: M8 bis M11 sind heute **nicht angesetzt**. Eine
-Oberflaeche, deren vier Nutzer noch nicht existieren, zahlt sich erst aus,
-wenn jemand mit ihnen anfaengt — sie waere zunaechst ein Tab, der korrekt
-sagt, dass ihn niemand fuellt. *Konkrete Auswirkung*: ein Runtime-Tab in der
-generierten Seite, leer und mit Begruendung, wenn nichts serviert; zur
-Laufzeit gefuellt, wenn doch — nie eingebacken, was eine der vier
-„Never"-Zeilen aus `ECOSYSTEM.md` §7 ist.
+*Zwei Korrekturen am Punkttext selbst*, beide beim Nachsehen im Quelltext
+aufgefallen: es sind **fuenfzehn** Aufrufstellen, nicht acht, und
+`report_for` wird laengst gerufen. Der Punkt ist damit kleiner als beschrieben
+und hat einen anderen Endzustand als "den geteilten Reporter uebernehmen".
 
-**Nicht als naechstes: QW5** (Hover-Cache, der letzte Quick Win). Er spart
-10–50 ms bei `lua_ls`/`gopls`, also unterhalb der Wahrnehmungsschwelle;
-spuerbar waere er nur bei `jdtls`/`omnisharp`, die beide nicht aktiv sind.
-Ihn zu nehmen, *weil* er klein ist, hiesse Aufwand vor Nutzen zu stellen.
+**Danach, in dieser Reihenfolge:**
 
-**Ebenfalls nicht als naechstes, obwohl neu und billig: M17/M7b** (eine Datei
-/ viele Module, die offen gebliebene Haelfte von M7). Ein Rust-`mod x { … }`
-und jedes zweite `defmodule` einer Elixir-Datei haben weiterhin keine eigene
-Knoten-Identitaet. Das ist eine falsche Identitaet, keine fehlenden Daten, und
-es faellt erst auf, wenn jemand eine Frage stellt, die auf Modulidentitaet
-schluesselt („was requiret dieses Modul", „wie dokumentiert ist es"). Solange
-das niemand tut, waere es Umbau auf Vorrat — genau der Fehler, den die
-Phase-0-Notiz selbst zwei Mal angemahnt hat.
+**M17/M12 — Runtime-Tab** (Aufwand M, drei Repos).
+`docmap-desktop/docs/PLAN.md` nennt ihn *dort* als naechsten, und innerhalb des
+Verbunds ist das richtig: M8 bis M11 brauchen diese Oberflaeche, bevor sie
+ueberhaupt etwas zeigen koennen — wer einen von ihnen zuerst baut, baut die
+Oberflaeche viermal an der falschen Stelle. Dass er hier hinter M16 steht, ist
+kein Widerspruch dazu: M8 bis M11 sind heute nicht angesetzt, also zahlt sich
+die Oberflaeche noch nicht aus. *Konkrete Auswirkung*: ein Runtime-Tab in der
+generierten Seite, leer und mit Begruendung, wenn nichts serviert; zur Laufzeit
+gefuellt, wenn doch — nie eingebacken, was eine der vier „Never"-Zeilen aus
+`ECOSYSTEM.md` §7 ist.
+
+**M2 — Code-Action-Indikator** (`lsp.nvim`, Aufwand M, Nutzen mittel). Der
+staerkste verbliebene Punkt, der etwas Sichtbares aendert. *Konkrete
+Auswirkung*: ein Sign oder Virtual Text in der Zeile, sobald
+`textDocument/codeAction` etwas zurueckgibt, statt `lsa` blind zu druecken und
+zu sehen, ob eine leere Liste kommt.
 
 ---
 
@@ -215,12 +213,12 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 33 offene Punkte**, davon **ein** Quick Win (QW5, `lsp.nvim`) und
-  4, die dich brauchen. Acht Quick Wins (QW1, QW3, QW4, QW6, QW7, QW8, QW9,
-  QW10) sowie **M6 + M7** (`lsp.nvim`) und **M17/M7** sind erledigt und stehen
-  unter 1.0. Die Summe bleibt trotzdem 33: M17/M7 hat seine offen gebliebene
-  Haelfte als eigenen Punkt **M17/M7b** hinterlassen, statt sie stillschweigend
-  mitzuerledigen.
+- **Insgesamt 31 offene Punkte**, davon **kein einziger** Quick Win mehr und
+  4, die dich brauchen. Alle neun Quick Wins (QW1, QW3, QW4, QW5, QW6, QW7,
+  QW8, QW9, QW10) sowie **M1**, **M6 + M7** (`lsp.nvim`) und **M17/M7** sind
+  erledigt und stehen unter 1.0. Die Summe ist deshalb um zwei gefallen und
+  nicht um drei: M17/M7 hat seine offen gebliebene Haelfte als eigenen Punkt
+  **M17/M7b** hinterlassen, statt sie stillschweigend mitzuerledigen.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führten noch Lücken (`❌`), die längst geschlossen waren — stichprobenhaft
@@ -243,41 +241,24 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
-die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW6**, **QW7**,
-**QW8** und **M6 + M7** (alle `lsp.nvim`), **QW9** (`images.nvim`), **QW1** und
-**QW10** (beide `mdview.nvim`; QW10 fiel beim Durchtesten von QW1 an),
-**M17/M7** (Phase-0-IR im documentation-Verbund) sowie **A** (Source-Achse von
-`:Bindings check`, nvim-config) und **B** (die verbliebenen Audit-Zeilen).
+die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW5**, **QW6**,
+**QW7**, **QW8**, **M1** und **M6 + M7** (alle `lsp.nvim`), **QW9**
+(`images.nvim`), **QW1** und **QW10** (beide `mdview.nvim`; QW10 fiel beim
+Durchtesten von QW1 an), **M17/M7** (Phase-0-IR im documentation-Verbund)
+sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B** (die
+verbliebenen Audit-Zeilen).
 
 ---
 
 ## 1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)
 
----
-
-### QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`
-
-**Aufwand S · Nutzen mittel**
-
-Wiederholter Hover auf derselben Position bei gleicher Buffer-Version spart
-einen Roundtrip. Schlüssel: `(bufnr, changedtick, row, col)`.
+**Leer seit 2026-08-30.** Alle neun sind gebaut; QW5 war der letzte. Der
+Abschnitt bleibt stehen, damit die Nummerierung der anderen Abschnitte nicht
+wandert und ein Querverweis von außen weiter aufgeht.
 
 ---
 
 ## 1.2 Mittel (M)
-
----
-
-### M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`) (LSPDoctor paramter options, glaub capabilitiesr deep wurde umbenannt, glaub capabilities)
-
-**Aufwand M · Nutzen hoch**
-
-Der stärkste offene Punkt in `lsp.nvim`: ein Scratch-Buffer mit garantiert
-fehlerhaftem Inhalt (Go: fehlende Klammer, JS: `const x =`) und die Prüfung,
-ob innerhalb eines Timeouts Diagnostics ankommen. Das unterscheidet "keine
-Fehler" von "Diagnostics kommen überhaupt nicht an" — der Fall, der sonst
-Stunden kostet. Es ist der einzige Check, der die Kette End-to-End prüft
-statt Zustände abzufragen.
 
 ---
 
@@ -399,10 +380,16 @@ wechselt — bis dahin billig und korrekt zu machen lohnt.
 **Aufwand S · Nutzen mittel · mechanisch · nur noch ein Repo**
 
 `images.nvim` (`health.lua:128`) und `language.nvim` (`health.lua:184`) rufen
-bereits `deps.health.report_for`. Offen ist allein `pdfport.nvim`, das
-`check_exe` noch selbst rollt — acht Aufrufstellen in einer Datei
-(`lua/pdfport/health.lua`). Der geteilte Ersatz existiert (`report`, plus
-`from_tools`, das eine geparste Spec direkt in `:checkhealth` brückt).
+bereits `deps.health.report_for`. Offen ist allein `pdfport.nvim` — und der
+Zustand dort ist ein anderer als hier lange stand: es ruft `report_for`
+**auch schon** (`lua/pdfport/health.lua:373`), rollt daneben aber weiterhin ein
+eigenes `check_exe` mit **fünfzehn** Aufrufstellen in derselben Datei (nicht
+acht). Der Punkt heißt also nicht "den geteilten Reporter übernehmen", sondern
+"die handgerollte Hälfte danebenräumen", damit `:checkhealth pdfport` nicht
+zweimal dasselbe in zwei Formulierungen sagt. Der geteilte Ersatz existiert
+(`report`, plus `from_tools`, das eine geparste Spec direkt in `:checkhealth`
+brückt). *Nachgesehen am 2026-08-30 im Quelltext, nicht aus diesem Report
+übernommen.*
 
 ---
 
@@ -807,22 +794,20 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 **Das erste Kriterium ist seit dem 2026-08-30 leer**: mit M17/M7 haelt kein
 offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
 
-1. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
-   End-to-End-Check der LSP-Kette, in einem Repo, headless verifizierbar, und
-   er betrifft etwas, das täglich benutzt wird. Siehe „Naechster Schritt".
+1. **M16** (`lib.nvim`-`deps.health` in `pdfport.nvim`, S) — der einzige
+   verbliebene S-Punkt, ein Repo, und der einzige, der etwas *abschließt*
+   statt etwas hinzuzufügen. Siehe „Naechster Schritt".
 2. **M17/M12** (Runtime-Tab, drei Repos) — die Oberfläche, die M8 bis M11
-   brauchen, bevor sie überhaupt etwas zeigen können. Steht hier hinter M1,
+   brauchen, bevor sie überhaupt etwas zeigen können. Steht hier hinter M16,
    weil M8 bis M11 nicht angesetzt sind.
-3. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
-   (Frecency über drei Repos), der Rest von `lsp.nvim` (M2 bis M5).
+3. **M2** (`lsp.nvim` Code-Action-Indikator, M) — der stärkste verbliebene
+   Punkt, der etwas Sichtbares ändert: ein Zeichen in der Zeile, statt `lsa`
+   blind zu drücken.
+4. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
+   (Frecency über drei Repos), der Rest von `lsp.nvim` (M3 bis M5).
 
-**QW5** (Hover-Cache, S) ist der letzte offene Quick Win und steht bewusst
-*nicht* in dieser Reihenfolge: der Gewinn liegt unterhalb der
-Wahrnehmungsschwelle. **M17/M7b** (eine Datei / viele Module) steht aus dem
-umgekehrten Grund nicht darin — er fällt erst auf, wenn jemand eine Frage
-stellt, die auf Modulidentität schlüsselt, und vorher wäre er Umbau auf
-Vorrat. QW1, QW3, QW4, QW6, QW7, QW8, QW9, QW10, M6 und M7 (`lsp.nvim`) sowie
-M17/M7 sind erledigt (siehe 1.0).
+QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M6 und M7 (`lsp.nvim`) sowie
+M17/M7 sind erledigt (siehe 1.0); die Quick-Win-Klasse ist damit leer.
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
 sagt selbst "vorerst nur beobachten"), BD4/BD5 (`mdview` externe Website und
