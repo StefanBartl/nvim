@@ -33,7 +33,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [Kurzfassung](#kurzfassung)
   - [1.0 Erledigt](#10-erledigt)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
-    - [QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay](#qw10-mdviewnvim-auf-windows-startet-kein-lokal-gebauter-relay)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
     - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
   - [1.2 Mittel (M)](#12-mittel-m)
@@ -115,39 +114,48 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30. Zuletzt erledigt: **QW1** — `any_file` in `mdview.nvim` ist
-in echtem Neovim durchgetestet, hat alle fuenf Faelle bestanden und heisst
-seither `any_file` statt `experimental.any_file`. Notizen samt der beiden
-Nebenbefunde in [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
-Davor: die **Source-Achse** von `:Bindings check` und die **verbliebenen
-Audit-Zeilen** (dort unter `A` und `B`), womit Teil 3.1 abgeschlossen ist.
+Stand 2026-08-30. Zuletzt erledigt: **QW10** — `npm run build:go` schreibt in
+`mdview.nvim` jetzt die plattformrichtige Endung, und ein lokal gebauter Relay
+startet damit auf Windows ueberhaupt erst. Davor am selben Tag **QW1**
+(`any_file` in echtem Neovim durchgetestet, alle fuenf Faelle bestanden, der
+Schluessel heisst seither `any_file`) sowie **A** und **B** (Source-Achse von
+`:Bindings check`, verbliebene Audit-Zeilen), womit Teil 3.1 abgeschlossen ist.
+Notizen zu allen vieren in
+[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Empfohlen: QW10 — `mdview.nvim`s lokal gebauter Relay startet auf Windows
-nicht.** Aufwand XS, Nutzen hoch (siehe [1.1](#11-quick-wins-xss-nutzen-mittel-bis-hoch)).
+Damit ist der Quick-Win-Block bis auf zwei `lsp.nvim`-Punkte (QW5, QW8) leer.
 
-*Warum dieser*: er ist die kleinste offene Position auf der Liste und der
-einzige Punkt, der die Werkzeuge betrifft, mit denen die anderen gebaut
-werden. `npm run build:go` schreibt auf Windows eine Datei ohne `.exe`,
-`uv.spawn()` startet die nicht, und `:MDView start` sagt dazu nur „failed to
-start server process". Wer mdview gegen lokale Aenderungen testen will,
-laeuft zuerst dagegen — QW1 hat genau das getan und musste sich mit einer
-Kopie behelfen. Eine halbe Stunde, und die naechste mdview-Sitzung faengt bei
-der Arbeit an statt beim Werkzeug.
+**Empfohlen: M17/M7 — Phase-0-IR im documentation-Verbund.** Aufwand M, Nutzen
+hoch, delegierbar (siehe [1.2](#12-mittel-m) und `docmap-desktop/docs/PLAN.md`).
 
-*Konkrete Auswirkung*: nach `npm run build:go` startet `:MDView start` im
-Checkout gegen den frisch gebauten Relay, ohne dass man die Datei von Hand
-nach `.exe` kopiert. Und eine alte endungslose Datei fuehrt danach zu einer
-Warnung, die den Neubau nennt, statt zu einem `ENOENT` im Log-Ring.
+*Warum dieser*: er ist der einzige offene Punkt der ganzen Liste, der etwas
+**anderes** aufhaelt. `Documentation.FunctionInfo` kennt heute keinen
+besitzenden Scope — es gibt `line`, `name`, `signature`, aber keinen Ort, an
+den eine Methode gehoert. Python behilft sich in `core/lang/python.lua` mit
+einem `owner`-Argument nur fuer den Anzeigenamen; Rusts `mod x {}` und
+`impl`-Bloecke haben gar keinen. Solange das so ist, kann kein Backend tiefer
+gehen als „Funktionen einer Datei", und M8 bis M13 haengen daran, weil sie alle
+auf dieser Struktur aufbauen.
 
-**Danach der eigentliche Block: M17/M7** (Phase-0-IR im documentation-Verbund,
-M). Der einzige offene Punkt, der etwas *anderes* aufhaelt: ohne besitzenden
-Scope haben Klassen und `impl`-Bloecke keinen Ort, und M8 bis M13 haengen
-daran. Das ist der Punkt, an dem sich delegieren lohnt — QW10 ist dafuer zu
-klein.
+*Warum er trotzdem M ist und nicht L*: das Konzept ist im Repo schon
+vorgedacht. `Documentation.LangSpec` fuehrt bereits ein `call_scope`
+(`"file"|"package"`) mit einer ausformulierten Begruendung, warum Go anders
+aufloest als Lua — dieselbe Denkweise, eine Ebene tiefer. Der Aufwand steckt in
+der Breite, nicht in der Idee: 24 Sprach-Backends, ~52 Stellen, die
+`FunctionInfo` anfassen.
 
-*Falls stattdessen `lsp.nvim` dran sein soll*: **M1** (Diagnostics provozieren,
-`:LspDoctor deep`) vor QW8 und QW5, weil es als einziger Check die LSP-Kette
-End-to-End prueft statt Zustaende abzufragen.
+*Konkrete Auswirkung*: eine Python-Klasse und ein Rust-`impl`-Block erscheinen
+in der Karte als das, was sie sind — mit ihren Methoden darunter statt als
+flache Liste danebenliegender Funktionen. Und `:DocMap`-Ausgaben, die heute
+Methoden gleichnamiger Klassen zusammenwerfen, koennen sie auseinanderhalten.
+
+**Die Alternative, falls `lsp.nvim` naeher liegt: M1** (Diagnostics provozieren,
+`:LspDoctor deep`, M). Der einzige Check, der die LSP-Kette End-to-End prueft
+statt Zustaende abzufragen — er unterscheidet „keine Fehler" von „Diagnostics
+kommen ueberhaupt nicht an". Kleiner im Umfeld, aber er gibt nichts anderes
+frei. QW8 und QW5 sind die kleinsten verbliebenen Punkte, aber QW5 spart 10-50
+ms unterhalb der Wahrnehmungsschwelle; danach zu greifen hiesse, Aufwand vor
+Nutzen zu stellen.
 
 ---
 
@@ -215,10 +223,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 37 offene Punkte**, davon 3 Quick Wins (XS/S mit Nutzen
-  mittel bis hoch) und 4, die dich brauchen. Sechs weitere Quick Wins (QW1,
-  QW3, QW4, QW6, QW7, QW9) sind erledigt und stehen unter 1.0; QW10 ist neu
-  und stammt aus dem QW1-Durchlauf.
+- **Insgesamt 36 offene Punkte**, davon 2 Quick Wins (QW5 und QW8, beide
+  `lsp.nvim`) und 4, die dich brauchen. Sieben Quick Wins (QW1, QW3, QW4, QW6,
+  QW7, QW9, QW10) sind erledigt und stehen unter 1.0.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führten noch Lücken (`❌`), die längst geschlossen waren — stichprobenhaft
@@ -242,49 +249,14 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
 die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW6**, **QW7**
-(alle `lsp.nvim`), **QW9** (`images.nvim`), **QW1** (`mdview.nvim`, dabei fiel
-QW10 an) sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und
-**B** (die verbliebenen Audit-Zeilen).
+(alle `lsp.nvim`), **QW9** (`images.nvim`), **QW1** und **QW10** (beide
+`mdview.nvim`; QW10 fiel beim Durchtesten von QW1 an) sowie **A**
+(Source-Achse von `:Bindings check`, nvim-config) und **B** (die verbliebenen
+Audit-Zeilen).
 
 ---
 
 ## 1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)
-
----
-
-### QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay
-
-**Aufwand XS · Nutzen hoch**
-
-Gefunden am 2026-08-30 beim Durchtesten von QW1 (siehe
-[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md)), dort umgangen
-statt behoben, weil es ein anderes Thema ist.
-
-*Der Defekt*: `npm run build:go` ist `go build -o mdview-server .` — Go nimmt
-den `-o`-Namen woertlich, auf Windows entsteht also eine Datei **ohne `.exe`**.
-`server_args.local_built_binary()` findet sie (`vim.fn.executable()` liefert
-dafuer `1`, der Kommentar dort haelt das ausdruecklich fuer in Ordnung), und
-`uv.spawn()` scheitert dann mit `ENOENT`. Sichtbar ist davon nur „[mdview]
-failed to start server process"; der eigentliche Grund steht im Log-Ring, den
-in dieser Lage niemand mehr oeffnet, weil keine Sitzung laeuft.
-
-*Betroffen ist der Dev-Pfad, nicht der Alltag*: der ausgelieferte Relay kommt
-ueber `install` und ist ein sauberes `.exe`. Es trifft genau die Situation, in
-der man mdview gegen lokale Aenderungen testen will — also jede kuenftige
-mdview-Sitzung auf dieser Maschine. Einmal Zeit gekostet hat es schon: die
-Notiz dazu steht seit laengerem in `lua/plugins/personal/init.lua` neben dem
-auskommentierten `dev.binary_path`.
-
-*Umsetzung*: `build:go` die plattformrichtige Endung schreiben lassen (`go env
-GOEXE` liefert sie, ein `scripts/build-go.mjs` ist der portable Weg — npm
-startet Skripte auf Windows in `cmd.exe`, `$(...)` gaebe es dort nicht). Dazu
-`local_built_binary()` einen endungslosen Fund auf Windows ueberspringen
-lassen, mit einer Warnung, die den Neubau nennt — sonst bleibt eine alte Datei
-liegen und der `ENOENT` kommt wieder.
-
-*Konkrete Auswirkung*: `npm run build:go` und danach `:MDView start` in einem
-Checkout funktionieren auf Windows ohne Handgriff. Heute muss man die Datei
-selbst nach `.exe` kopieren, und man erfaehrt das nur, wenn man den Log liest.
 
 ---
 
@@ -635,7 +607,7 @@ Schreibzugriff neben dem Dokument (Cache-Verzeichnis, Aufräumen,
 |---|---|---|
 | `lsp.nvim` | 13 | Feature-Tabelle §14 plus 2 Punkte aus der geretteten LSPDoctor-Analyse |
 | `images.nvim` | 8 | Backends (Sixel, Kitty APC), Detection, 5 Cross-Plugin-Kreuzungen |
-| `mdview.nvim` | 3 + 1 | 1 Windows-Defekt im Dev-Pfad, 2 Grundsatzfragen, plus L4 aus dem SCHLACHTPLAN |
+| `mdview.nvim` | 2 + 1 | 2 Grundsatzfragen (BD4, BD5), plus L4 aus dem SCHLACHTPLAN |
 | `lib.nvim` | 2 | eine `deps.health`-Migration, Windows-Elevation |
 | `open.nvim` | 1 | plattformabhängig, braucht dich |
 | `filetree.nvim` | 1 | Badge-Optimierung |
@@ -849,16 +821,14 @@ Die anderen beiden sind gewachsen.
 Nicht als Plan, sondern als Vorschlag mit Begründung. Erst das, was etwas
 abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 
-1. **QW10** (`mdview` Relay-Start auf Windows, XS) — repariert das Werkzeug,
-   mit dem an diesem Repo gearbeitet wird. QW1 stand hier bis 2026-08-30 und
-   ist erledigt; QW10 ist der Nebenbefund daraus.
-2. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
-   der ganzen Liste, der etwas anderes aufhält.
-3. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
+1. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
+   der ganzen Liste, der etwas anderes aufhält. QW1 und QW10 standen hier bis
+   2026-08-30 und sind beide erledigt.
+2. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
    End-to-End-Check der LSP-Kette.
-4. **QW5 und QW8** (`lsp.nvim`-Quick-Wins, je S) — die letzten zwei aus dem
+3. **QW5 und QW8** (`lsp.nvim`-Quick-Wins, je S) — die letzten zwei aus dem
    Block. QW3, QW4, QW6 und QW7 sind daraus erledigt (siehe 1.0).
-5. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
+4. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
    (`images` Sixel-Paket), **M9** (Frecency über drei Repos).
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap

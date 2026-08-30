@@ -24,6 +24,7 @@ Querverweis von aussen weiter aufgeht.
   - [A · `nvim-config` — die Source-Achse von `:Bindings check` abarbeiten](#a-nvim-config-die-source-achse-von-bindings-check-abarbeiten)
   - [B · Die verbliebenen Audit-Zeilen prüfen](#b-die-verbliebenen-audit-zeilen-prfen)
   - [QW1 · `mdview.nvim` — `any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-any_file-in-echtem-neovim-durchtesten)
+  - [QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay](#qw10-mdviewnvim-auf-windows-startet-kein-lokal-gebauter-relay)
 
 ---
 
@@ -481,3 +482,60 @@ trägt.
 nennt in jeder Zeile `defaults.ft_pattern` symbolisch, driftete durch den Fix
 also nicht — hat aber nirgends gesagt, was dahinter steht. Steht jetzt dort,
 samt der Rolle von `any_file` und dem Glob-Fehler.
+
+---
+
+### QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay
+
+**Erledigt am 2026-08-30. `mdview.nvim` `7a92aeb`, auf `main` gepusht.**
+
+Ursprünglich: aus dem QW1-Durchlauf mitgenommen, dort umgangen statt behoben.
+`npm run build:go` war `go build -o mdview-server .`, Go nimmt den Namen
+wörtlich, auf Windows entstand eine Datei ohne `.exe`.
+
+*Warum das überhaupt scheitert* — der Teil, der beim Aufschreiben noch fehlte:
+libuv löst ein Kommando **ohne** Endung auf, indem es jeden `PATHEXT`-Eintrag
+anhängt, und probiert den nackten Namen nie. `vim.fn.executable()` sagt zu der
+Datei trotzdem `1`. Die beiden Fragen sind also verschieden, und der Code hat
+sie als dieselbe behandelt — deshalb `ENOENT` auf eine Datei, die genau dort
+liegt, wo hingezeigt wurde.
+
+*Getroffen hat es mehr als gedacht*: nicht nur die Zero-Config-Erkennung eines
+lokalen Builds, sondern auch jedes `dev.binary_path`, jedes
+`$MDVIEW_DEV_BINARY` und jedes `standalone.binary_path`, das auf den Namen
+zeigte, den `build:go` selbst geschrieben hatte. Wer den Relay unter Windows
+aus dem Quelltext baute, konnte ihn mit dem Plugin nicht starten — auf keinem
+der vier Wege.
+
+*Gebaut wurde*:
+
+- `scripts/build-go.mjs` fragt `go env GOEXE` und baut unter diesem Namen.
+  Ein Skript, weil npm auf Windows über `cmd.exe` startet, wo `$(...)` nichts
+  bedeutet. Es löscht außerdem einen übrig gebliebenen endungslosen Build —
+  genau die Datei, über die der Resolver stolperte.
+- `server_args.spawnable()` ersetzt die nackten `executable()`-Prüfungen: auf
+  Windows löst ein endungsloser Pfad auf das `.exe` daneben auf, sonst auf
+  nichts. Benutzt von der Local-Build-Suche, von `dev.binary_path` und von
+  `standalone.binary_path` — ein Override, der gegen den alten Namen
+  geschrieben wurde, funktioniert also weiter. Das war die Entscheidung, die
+  im Auftrag nicht stand: eine Fehlermeldung hätte auch gereicht, aber der
+  alte Name steht in der eigenen Doku und in fremden Configs.
+- Ein Checkout, der vor dem Fix gebaut wurde, hält die alte Datei noch. Die
+  Local-Build-Suche nennt sie jetzt beim Namen und verweist auf
+  `npm run build:go`, statt in den `ENOENT` zu laufen.
+
+*Verifiziert auf Windows, beide Richtungen*: `npm run build:go`, dann
+`:MDView start` in echtem headless Neovim **ohne jede Env-Variable und ohne
+Dev-Override** — genau der Pfad, der vorher scheiterte, jetzt grün. Danach nur
+die endungslose Datei hingelegt: die Warnung nennt den Neubau, die
+Local-Build-Suche liefert `nil` und faellt damit sauber auf den Release
+zurueck, statt zu scheitern; der Neubau raeumt die Datei weg. Dazu 67
+Lua-Specs (5 neu in `TESTS/nvim/server_args_spec.lua`), 95 vitest,
+`go test ./...`, `tsc --noEmit`, `stylua` und `eslint` gruen.
+
+*Was an der Doku falsch war*: `development.md`, `installation.md`, die
+DEFAULTS-Kommentare und `minimal_init.lua` führten die fehlende Endung als
+Eigenschaft der Welt („no `.exe` suffix, also on Windows — the `-o` name is
+literal"), nicht als Fehler. `docs/server/Testanweisugen.md` trug die
+Handarbeit-Umgehung `go build -o mdview-server.exe .` als Anleitung. Alles
+korrigiert; die Stellen sagen jetzt, was gilt und was bis 2026-08-30 galt.
