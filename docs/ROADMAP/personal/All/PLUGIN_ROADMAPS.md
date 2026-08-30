@@ -39,7 +39,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [M12 · `images.nvim` — Flamegraphs als Bild (`runtime-analysis.nvim`)](#m12-imagesnvim-flamegraphs-als-bild-runtime-analysisnvim)
     - [M13 · `images.nvim` — Bildoperationen als Dateioperationen (`fileops.nvim`)](#m13-imagesnvim-bildoperationen-als-dateioperationen-fileopsnvim)
     - [M14 · `filetree.nvim` — `cwd_mode`-Badge optimieren](#m14-filetreenvim-cwd_mode-badge-optimieren)
-    - [M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M7b bis M13](#m17-documentationnvim-runtime-analysisnvim-docmap-desktop-m7b-bis-m13)
+    - [M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M7b bis M14](#m17-documentationnvim-runtime-analysisnvim-docmap-desktop-m7b-bis-m14)
   - [1.3 Groß (L)](#13-gro-l)
     - [L1 · `images.nvim` — Kitty-APC-Backend](#l1-imagesnvim-kitty-apc-backend)
     - [L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen](#l3-lspnvim-das-signature-help-modul-schrumpfen)
@@ -103,66 +103,56 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30 (8). Zuletzt erledigt: **Call Hierarchy** (`lsc`/`lsC`, die
-Resthaelfte von M4 — zwei Katalogeintraege auf fzf-luas Provider, kein
-Geruest) und die zwei Abschalter fuer M5s `[u`/`]u`: die `modes`-Tabelle in
-`plugins/treesitter.lua` fuer das Plugin, ein `opts`-Argument am
-`setup()`-Aufruf fuer nur die Tasten. Ohne verfuegbares Plugin bindet das
-Modul jetzt gar nichts — eine belegte Taste, die nur klagt, steht einem
-anderen Mapping im Weg und sieht wie ein Defekt aus.
-
-Davor **M5** — und er ist nicht dort gelandet,
-wo er stand. Der Punkt lag unter `lsp.nvim`, weil die Taste jahrelang in der
-LSP-Keymap-Datei stand; der Kopf einer umschliessenden Struktur ist aber eine
-Treesitter-Frage. Auf Entscheid des Auftraggebers als **Konfiguration** gebaut
-statt als Feature: sechs `after/queries/*/textobjects.scm`-Dateien und zwei
-Tasten (`[u`/`]u`) im Config-Repo, kein Modul in `lsp.nvim`. Davor am selben Tag
+Stand 2026-08-30 (9). Zuletzt erledigt: **M17/M13** — ein `ECOSYSTEM.md`,
+fuenf Repos erreichen es. Am selben Tag wurde **M17/M12** zurueckgestellt,
+nachdem er gegen den Quelltext geprueft war. Davor **Call Hierarchy**, **M5**,
 **M4a**, **M3**, **M2**, **M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**,
-**QW8**, **QW10**, **QW1**, **A** und **B**; **M4b** ist zurueckgestellt.
-Notizen zu allen in
+**QW8**, **QW10**, **QW1**, **A** und **B**; **M4b** ist ebenfalls
+zurueckgestellt. Notizen zu allen in
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Der Fund, der ueber M5 hinausgeht**: `nvim-treesitter-textobjects` war seit
-jeher installiert (`plugins/treesitter.lua`, `lazy = false`) und im ganzen
-`lua/`-Baum **nirgends** referenziert. M5 ist sein erster Nutzer. Was sonst
-noch brachliegt, hat niemand gezaehlt — das waere eine eigene Aufgabe und
-steht auf keiner Liste.
+**Zwei Funde aus dem M13-Durchgang**, beide groesser als der Punkt selbst:
 
-**`lsp.nvim` ist damit leer**, ausser den L-Punkten (L3 ist als „nicht
-angehen" markiert). Elf Punkte aus diesem Repo an einem Tag, plus vier Bugs,
-die keiner von ihnen erwaehnt hat.
+1. **M17/M12 war schon gebaut.** `Telemetry` und `Loaded` liegen als
+   `plugin-gated` Analysis-Werkzeuge auf der Seite, holen ihre Daten zur
+   Ansichtszeit und sagen unter `file://`, warum sie leer sind. Beide Hosts
+   antworten. Offen war nur die Gruppierung — XS–S statt M. Damit haelt
+   **kein** Punkt mehr M8 bis M11 auf.
+2. **Neun tote Doku-Verweise, die niemand melden konnte.**
+   `runtime-analysis.nvim` zitierte `docs/ECOSYSTEM.md` als repo-relativen
+   Pfad, den es dort nicht gibt. Beide vorhandenen Checks lehnen den Fall aus
+   genannten und richtigen Gruenden ab. Daraus ist ein neuer Punkt geworden:
+   **M17/M14**.
 
-**Empfohlen: M17/M12 — Runtime-Tab** (`documentation.nvim`-Verbund, Aufwand M,
-drei Repos, siehe [1.2](#12-mittel-m)).
+**Empfohlen: M17/M8 — `:DocMap impact`, gewichtet nach Runtime-Reichweite**
+(`documentation.nvim`-Verbund, Aufwand M, siehe [1.2](#12-mittel-m) und
+`docmap-desktop/docs/PLAN.md`).
 
-*Warum jetzt*: nicht, weil er stark waere, sondern weil er als einziger
-verbliebener M-Punkt etwas freigibt. M8 bis M11 koennen ohne diese Oberflaeche
-gar nichts zeigen; wer einen von ihnen zuerst baut, baut die Oberflaeche
-viermal an der falschen Stelle. Die Alternativen sind M9 (Frecency, drei
-Repos, Nutzen niedrig), M10 bis M13 (`images.nvim`, alle mit einer
-Vorbedingung) und M14 (`filetree.nvim`, Nutzen niedrig).
+*Warum jetzt*: von den vier Runtime-Kreuzungen (M8 bis M11) ist er der
+einzige, dessen Antwort **fuer sich allein** nuetzlich ist. M9 und M11 sind
+zweite Sichten auf bereits beantwortete Fragen, M10 ist eine Unterdrueckungs-
+regel. M8 ist der, den man vor einem Commit tatsaechlich aufruft.
 
-*Konkrete Auswirkung*: die generierte Doku-Seite bekommt einen Reiter, den es
-heute gar nicht gibt. Ohne laufenden Dienst steht dort, **warum** er leer ist,
-statt dass er fehlt — der Unterschied zwischen „nichts da" und „weiss nicht,
-ob etwas da waere". Nie eingebacken, was eine der vier „Never"-Zeilen aus
-`ECOSYSTEM.md` §7 ist.
+*Die Teile liegen bereit, geprueft*: `:DocMap impact` existiert
+(`bindings/usrcmds/impact.lua`) und beantwortet heute „welche Funktionen
+beruehren meine geaenderten Zeilen, und wer ruft sie". `telemetry_join.by_node`
+existiert ebenfalls und liefert genau die fehlende Haelfte. Der Punkt ist eine
+Kreuzung zweier vorhandener Antworten, kein neues Subsystem.
 
-*Ehrlich zum Nutzen*: er faellt erst an, wenn M8 bis M11 kommen. Heute ist es
-eine Oberflaeche fuer Inhalte, die niemand liefert. Das ist der Grund, aus dem
-er seit fuenf Runden hinten steht — er steht jetzt vorne, weil nichts Besseres
-mehr da ist, nicht weil er besser geworden waere.
+*Konkrete Auswirkung*: `:DocMap impact` sagt heute „diese 30 Funktionen
+beruehrt deine Aenderung" — eine ungeordnete Menge. Danach sagt er „diese 30,
+und diese 6 davon sind in dieser Woche tatsaechlich gelaufen": eine
+Warteschlange statt einer Liste. Ohne `runtime-analysis.nvim` oder ohne
+gesammelte Daten bleibt die heutige Ausgabe unveraendert — die Gewichtung ist
+eine Anreicherung, keine Vorbedingung.
 
-*Was vorher nachzusehen ist*: `docmap-desktop/docs/PLAN.md` ist die einzige
-Warteschlange, die nie umgezogen ist, und liegt noch dort. Zu pruefen: was von
-M17/M12s Beschreibung nach M17/M7 (Phase-0-IR) noch stimmt, und welches der
-drei Repos den Tab tatsaechlich rendert. Nach der Trefferquote dieses Tages —
-drei von sechs Beschreibungen waren in irgendeiner Form falsch — ist das keine
-Formalie.
-
-**Danach:** **M10 + Detection** (`images.nvim` Sixel-Paket) und **M9**
-(Frecency ueber drei Repos), je nach Bedarf. Beide sind repo-uebergreifend,
-beide haben eine Vorbedingung — es gibt keinen Ein-Repo-Punkt mehr.
+**Die Alternative, falls die Sitzung kurz ist: M17/M14 — Cross-Repo-Doku-
+Verweise pruefen** (Aufwand M, siehe [1.2](#12-mittel-m)). Er hat seinen
+Nutzen gerade selbst bewiesen: neun tote Verweise lagen wochenlang da, und
+nichts konnte sie melden. `external_repos` traegt die noetige Zuordnung
+bereits, also ist es eine Erweiterung und kein neues Subsystem. *Konkrete
+Auswirkung*: `scripts/ci.sh map` faellt auf einem toten Geschwister-Pfad um,
+statt dass ein Leser ihn Jahre spaeter findet.
 
 ---
 
@@ -211,16 +201,18 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 26 offene Punkte**, davon **kein** Quick Win mehr und 4, die
+- **Insgesamt 25 offene Punkte**, davon **kein** Quick Win mehr und 4, die
   dich brauchen. `lsp.nvim` hat ausser den L-Punkten **keinen offenen Punkt
   mehr**. Alle neun Quick Wins (QW1, QW3,
   QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M3**, **M4a** und
   **M6 + M7** (`lsp.nvim`), **M16** (`lib.nvim` + `pdfport.nvim`) und
-  **M17/M7** sind erledigt und stehen unter 1.0, ebenso **M5** — der ist als
-  Treesitter-Konfiguration im Config-Repo gelandet statt als Plugin-Feature.
-  **M4b** ist zurueckgestellt und steht mit Begruendung im selben Dokument. Die Summe ist um drei statt um vier gefallen:
+  **M17/M7** und **M17/M13** sind erledigt und stehen unter 1.0, ebenso **M5** —
+  der ist als Treesitter-Konfiguration im Config-Repo gelandet statt als
+  Plugin-Feature. **M4b** und **M17/M12** sind zurueckgestellt und stehen mit
+  Begruendung im selben Dokument. Die Summe faellt trotzdem nur um eins:
   M17/M7 hat seine offen gebliebene Haelfte als eigenen Punkt **M17/M7b**
-  hinterlassen, statt sie stillschweigend mitzuerledigen.
+  hinterlassen und M17/M13 die seine als **M17/M14** — beide statt sie
+  stillschweigend mitzuerledigen.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führten noch Lücken (`❌`), die längst geschlossen waren — stichprobenhaft
@@ -249,8 +241,10 @@ die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW5**, **QW6**,
 Plugin-Feature), **QW9**
 (`images.nvim`), **QW1** und **QW10** (beide `mdview.nvim`; QW10 fiel beim
 Durchtesten von QW1 an), **M16** (`lib.nvim` + `pdfport.nvim`), **M17/M7**
-(Phase-0-IR im documentation-Verbund) sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B** (die
-verbliebenen Audit-Zeilen).
+(Phase-0-IR im documentation-Verbund), **M17/M13** (ein `ECOSYSTEM.md`, fuenf
+Repos erreichen es) sowie **A** (Source-Achse von `:Bindings check`,
+nvim-config) und **B** (die verbliebenen Audit-Zeilen). **Zurueckgestellt**,
+mit Begruendung im selben Dokument: **M4b** und **M17/M12**.
 
 ---
 
@@ -342,7 +336,7 @@ wechselt — bis dahin billig und korrekt zu machen lohnt.
 
 ---
 
-### M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M7b bis M13
+### M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M7b bis M14
 
 **Aufwand je M · Nutzen mittel bis hoch**
 
@@ -359,8 +353,9 @@ Offen sind dort:
 | **M9** | `:DocMap why` × Call-Trees | M |
 | **M10** | Runtime-Evidenz als Check-*Input* (nur als Unterdrückung) | M |
 | **M11** | Endpoint-Inventar × Request-History × Response-Shape | M |
-| **M12** | Runtime-Tab im ausgelieferten Artefakt | M |
-| **M13** | Ein `ECOSYSTEM.md`, vier Repos lesen es | S–M |
+| ~~**M12**~~ | ~~Runtime-Tab im ausgelieferten Artefakt~~ — **zurueckgestellt 2026-08-30**, die Substanz war gebaut | — |
+| ~~**M13**~~ | ~~Ein `ECOSYSTEM.md`, vier Repos lesen es~~ — **erledigt 2026-08-30** | — |
+| **M14** | Cross-Repo-Doku-Verweise, per CI geprueft — die zweite Haelfte von M13 | M |
 | **QW6** | Fenced Blocks auf der generierten Seite (war mal ein Quick Win, ist heute M) | M |
 
 **M7 ist am 2026-08-30 gebaut** — `owner`/`owner_kind` auf
@@ -370,10 +365,25 @@ ein Scope ist kein Knoten, also hat ein Rust-`mod x { … }` weiterhin keine
 eigene Identität. Falsche Identität, keine fehlenden Daten — deshalb ein
 eigener Punkt und keine Fußnote.
 
-**Die dortige Empfehlung lautet jetzt M12**, weil M8 bis M11 diese Oberfläche
-brauchen, bevor sie überhaupt etwas zeigen können. In *dieser* Liste steht er
-an zweiter Stelle, und der Grund steht unter „Naechster Schritt": M8 bis M11
-sind nicht angesetzt, also zahlt sich die Oberfläche noch nicht aus.
+**M12 ist am 2026-08-30 zurueckgestellt worden**, und der Grund raeumt die
+ganze Reihenfolge auf: die Oberfläche, auf die M8 bis M11 angeblich warten,
+existiert bereits — `Telemetry` und `Loaded` liegen als Analysis-Werkzeuge auf
+der Seite, holen ihre Daten zur Ansichtszeit und antworten auf beiden Hosts.
+Offen war nur eine Gruppierungsfrage (eigener Top-Level-Reiter statt zwei
+Einträge unter siebzehn), und die trägt sich erst mit dem dritten Bewohner.
+
+**Damit hält nichts mehr etwas anderes auf**, und die dortige Empfehlung ist
+**M8** — von den vier Runtime-Kreuzungen die einzige, deren Antwort für sich
+allein nützlich ist. `:DocMap impact` und `telemetry_join.by_node` existieren
+beide; der Punkt kreuzt zwei vorhandene Antworten.
+
+**M13 ist erledigt** und hat einen neuen Punkt hinterlassen: **M14**, die
+Hälfte, die kein Zeiger war — Cross-Repo-Doku-Verweise, per CI geprüft.
+`doc-references-missing` löst Code-Bezeichner gegen die eigene Modulkarte auf,
+`dead-readme-link` löst Markdown-Links innerhalb *eines* Repos auf und streift
+vorher Code-Spans ab. Beide sind korrekt; die dritte Form —
+`<repo>/<pfad>` gegen deklarierte Geschwister — fehlt, und `external_repos`
+trägt die Zuordnung dafür schon.
 
 ---
 
@@ -743,17 +753,19 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 **Das erste Kriterium ist seit dem 2026-08-30 leer**: mit M17/M7 haelt kein
 offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
 
-1. **M17/M12** (Runtime-Tab, drei Repos) — die Oberfläche, die M8 bis M11
-   brauchen, bevor sie überhaupt etwas zeigen können. Rückt vor, weil
-   `lsp.nvim` keinen sauber zugeschnittenen Punkt mehr übrig hat. Siehe
-   „Naechster Schritt".
-2. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
+1. **M17/M8** (`:DocMap impact` nach Runtime-Reichweite gewichtet) — von den
+   vier Runtime-Kreuzungen die einzige, deren Antwort für sich allein nützlich
+   ist, und beide Hälften liegen als geprüfter Code bereit. Siehe „Naechster
+   Schritt".
+2. **M17/M14** (Cross-Repo-Doku-Verweise, per CI geprüft) — die zweite Hälfte
+   von M13, und sie hat ihren Nutzen gerade selbst bewiesen.
+3. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
    (Frecency über drei Repos). Beide repo-übergreifend — ein Ein-Repo-Punkt
    ist keiner mehr übrig.
 
 QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M4a, M6, M7 und die
 Call-Hierarchy-Resthälfte von M4 (`lsp.nvim`), M5 (nvim-config), M16
-(`lib.nvim` + `pdfport.nvim`) sowie M17/M7 sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
+(`lib.nvim` + `pdfport.nvim`) sowie M17/M7 und M17/M13 sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
 S-Punkt, der sich delegieren ließ.
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
@@ -762,9 +774,11 @@ PDF-Hover — beide teuer, beide klein im Nutzen, beide besser als "explizit
 nicht geplant" festgeschrieben als offen gelassen).
 
 **Zurückgestellt, mit Begründung und Wiedervorlage-Bedingung**: M4b (der
-Picker-Adapter). Steht seit dem 2026-08-30 unter
+Picker-Adapter) und M17/M12 (der Runtime-Reiter). Beide stehen seit dem
+2026-08-30 unter
 [Zurueckgestellt](./PLUGIN_ROADMAPS_FINISHED.md#zurueckgestellt) statt hier —
-er ist keine offene Arbeit mehr, aber auch nicht gelöscht.
+sie sind keine offene Arbeit mehr, aber auch nicht gelöscht. M17/M12 kommt mit
+dem ersten von M8 bis M11 zurück, M4b mit einem zweiten benutzten Picker.
 
 ---
 

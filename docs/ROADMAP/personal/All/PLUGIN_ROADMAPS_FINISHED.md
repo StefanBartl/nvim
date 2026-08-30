@@ -45,8 +45,10 @@ und **was ihn wieder aufmachen wuerde**.
   - [M4a · `lsp.nvim` — ein Picker-Backend statt zwei](#m4a-lspnvim-ein-picker-backend-statt-zwei)
   - [M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)](#m5-nvim-config-sprung-zur-umschliessenden-struktur-ehemals-leadergtt)
   - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
+  - [M17/M13 · `documentation.nvim`-Verbund — ein `ECOSYSTEM.md`, fünf Repos erreichen es](#m17m13-documentationnvim-verbund-ein-ecosystemmd-fnf-repos-erreichen-es)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
+    - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
 
 ---
 
@@ -1382,6 +1384,62 @@ nachher, mit derselben Grammatik; keine Keymap, kein Autocmd geaendert.
 
 ---
 
+### M17/M13 · `documentation.nvim`-Verbund — ein `ECOSYSTEM.md`, fünf Repos erreichen es
+
+**Erledigt am 2026-08-30. Fünf Repos, ein Commit je Repo:
+`documentation.nvim` `0d09b50`, `runtime-analysis.nvim` `0d92977`,
+`lib.nvim` `9240596`, `mdview.nvim` `1803e67`, `docmap-desktop` `309c7d0`,
+dazu `a473f99` für `PLAN.md`/`PLAN-DONE.md`.**
+
+Ursprünglich (`PLAN.md` M13): *„Das Architekturdokument liegt in einem Repo
+und beschreibt vier. Wer in den anderen dreien danach sucht, findet nichts.
+Dasselbe Muster wie dieser Plan — eine Quelle, drei Zeiger."* Aufwand S–M.
+
+**Die Beschreibung untertrieb, und das ist die Notiz.** Es fehlte nicht bloss
+ein Zeiger. `runtime-analysis.nvim` zitierte `docs/ECOSYSTEM.md` als
+**repo-relativen Pfad an neun Stellen** — zweimal in `README.md`, sechsmal in
+`lua/**`-Modulköpfen, einmal in `FEATURE_LOG.md` — und diesen Pfad gibt es
+dort nicht. Jede einzelne war tot in dem Moment, in dem sie geschrieben wurde.
+`lib.nvim` hatte eine zehnte, in Prosa korrekt zugeordnet, aber ohne Link —
+also weiterhin nur auffindbar für jemanden, der schon weiss, wo er suchen muss.
+
+**Und warum das nie jemand gemeldet hat**: beide vorhandenen Checks lehnen den
+Fall ab, jeder aus einem genannten und richtigen Grund.
+`doc-references-missing` löst *Code-Bezeichner* gegen die Modulkarte des
+gescannten Repos auf; `dead-readme-link` löst *Markdown-Links* innerhalb **eines**
+Repos auf und ruft vorher `strip_code` — ein blankes `` `docs/ECOSYSTEM.md` ``
+ist für ihn absichtlich unsichtbar. Keiner von beiden ist defekt. Was fehlt,
+ist eine dritte Form: `<repo>/<pfad>`, aufgelöst gegen deklarierte
+Geschwister-Checkouts.
+
+**Das ist die zweite Hälfte, die IDEAS.md §3.3 eigentlich wollte** — *„cross-repository
+links checked by CI … die am meisten auf-These liegende Housekeeping-Idee, die
+verfügbar ist"* — und sie ist nicht mitgebaut worden, sondern steht jetzt als
+eigener Punkt **M17/M14** in `PLAN.md`. `external_repos` trägt die nötige
+Zuordnung (`repo` plus optionales `local_path`, per `uv.fs_stat` geprüft, ohne
+Netz) bereits, also ist es eine Erweiterung und kein neues Subsystem.
+
+*Was ausgeliefert wurde*: zwei Kopfblöcke auf `ECOSYSTEM.md` selbst — einer
+sagt, dass dies die Quelle ist und in welcher Form man sie von aussen zitiert,
+einer hält fest, dass `docmap-desktop` **nach** der letzten Revision
+(2026-08-11) dazukam und deshalb dort fehlt. Das ist kein Versäumnis: die App
+ist ein zweiter *Host* für die Artefakt-und-Serve-Ebene, die Seam B schon
+beschreibt — eine Notiz, keine Überarbeitung. Dazu je ein echter Link im
+Doku-Index der vier Geschwister und alle neun toten Pfade mit dem besitzenden
+Repo qualifiziert.
+
+*Ein Detail, das sonst Zeit gekostet hätte*: Markdown zu ändern macht in
+`documentation.nvim` und `runtime-analysis.nvim` die eingecheckte Karte
+**stale** — der Markdown-Korpus ist Teil der IR. In beiden musste `docs/map/`
+neu erzeugt werden, bevor das Map-Gate durchging. `lib.nvim` und `mdview.nvim`
+prüfen keine Karte und brauchten keine.
+
+*Bewusst nicht gemacht*: `mdview.nvim` bekam den Zeiger, aber keinen
+Inhaltsdurchgang. `ECOSYSTEM.md` erwähnt es in einer Zeile („presentation:
+Markdown to a browser"), und die stimmt noch.
+
+---
+
 ## Zurueckgestellt
 
 Punkte, die aus `PLUGIN_ROADMAPS.md` heraus sind, ohne gebaut worden zu sein.
@@ -1430,6 +1488,39 @@ herausgeholt gehoert, nicht neu erfunden:
 Bis dahin ist die ehrliche Antwort auf „welchen Picker benutzt lsp.nvim" ein
 Name und keine Schnittstelle.
 
+
+---
+
+### M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt
+
+**Zurueckgestellt am 2026-08-30. Nicht gebaut — weil die Substanz schon
+gebaut ist.**
+
+*Was er waere*: „`ECOSYSTEM.md` §7 surface 2 — ein Runtime-Reiter, **immer**
+zur Laufzeit gefuellt, nie eingebacken." Aufwand M, drei Repos.
+
+**Gegen den Quelltext geprueft, und die Beschreibung stimmt nicht mehr:**
+
+1. **Die Oberflaeche existiert.** `core/render/html.lua` liefert `Telemetry`
+   und `Loaded` als `plugin-gated` Analysis-Werkzeuge, die ihre Daten zur
+   **Ansichtszeit** per `fetch("/api/telemetry")`, `/api/loaded` und deren
+   `…/snapshots`-Geschwistern holen. Nichts eingebacken, das
+   Byte-Vergleichs-Gate bleibt unberuehrt.
+2. **Der ehrliche Leerzustand ist sogar Prinzip.** `core/api.lua` schreibt ihn
+   als Regel fest: *„Absence answers `{ available = false, reason = … }` … A
+   panel that says why it is empty beats one that is silently blank."*
+3. **Beide Hosts antworten.** `editor/serve.lua` in Neovim,
+   `docmap-desktop/src-tauri/src/server.rs` ausserhalb.
+4. **Auch §7s Surface 1 ist da**, die das Dokument als „start here" markiert:
+   `:DocBrowse` hat die Modi `telemetry` (8) und `loaded` (9).
+
+*Was tatsaechlich offen bleibt*, ist keine Oberflaeche, sondern eine
+**Gruppierung**: die zwei Panels liegen unter siebzehn Analysis-Werkzeugen
+statt unter einem eigenen Top-Level-Reiter. Das ist XS–S, nicht M.
+
+**Was ihn wieder aufmacht**: der erste von M8 bis M11. Dann bekommt der Reiter
+einen dritten Bewohner, und die Umgruppierung traegt sich selbst. Vorher ist
+sie ein beschrifteter Rahmen um zwei Panels — Aufwand vor Nutzen.
 
 ---
 
