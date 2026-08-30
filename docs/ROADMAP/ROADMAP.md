@@ -4,6 +4,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 ## Table of content
 
   - [cdx](#cdx)
+  - [Lists](#lists)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
@@ -17,27 +18,34 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     13:30       |    19% / 49%     |
 | **dev**  |    03. Sep    |   Sa., 22:00    |     14:00       |    53% / 15%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     02:50       |    91% / 27%     |
-| **free** | 21. Juli 2027 |   So., 09:00    |     --:--       |    --% / --%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     --:--       |    --% / -5%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
 
 ---
 
-## Misc
+## Lists
 
-- [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
-
-- [ ] `:Bindings search` verbessern, andere optionen durchgehen
-
-- [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md der Punkt:
-    [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
-
--> das zeigt an, was in `migrate.nvim` implementiert werden soll.
-  Zusatz Feature: Alle im `h deprecated` implementieren
+- [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/MERGED.md
+- [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md
+- [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md
+  - [ ]  [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
+  -> das zeigt gut an, was in `migrate.nvim` implementiert werden soll.
+    Zusatz Feature: Alle im `h deprecated` implementieren
     - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
     - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
     - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
+- [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/WQ.md
+
+---
+
+## Misc
+
+- [ ] `lib.nvim`-`hover` Modul braucht einen `quit` keymap. Manchmal möchte ich kein hover sehen, muss aber auf dem Pfad bleiben... da wäre es gut einen qiut, oder eigentich besser einen toggle zu haben, mit dem ich das hover für den spzifischen pfad zu image/pdf/textfile/usw.. ausschalten kann und wenn ich ihn wieder haben wilk an schalten kann. bzw.: Eigentlich gar nicht für "das eine", sondern auch ein genereeller toggle könnte reichen oder sinnvoll sein, weil: wenn ich sage "ich will gerade kein over sehen" dreh ich ab (für alle), dann wenn wich wieder haben will auf - da ja immer nur ein hover zur selben zeit sein kann, kann es auch nicht sein "ah ichhab hove rabgedreht und will aber dort einen haben" - denn da nn muss ich dorthin hin mit dem cursor und einfach wieder ienschalten. siehst dudas auch so?
+- [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
+- [ ] `:Bindings search` verbessern, andere optionen durchgehen
+
 - [ ] Anticheat knacken
 - [ ] alle keymaps der nvim config durcsheen ob die wirlich gebraucht werden
 - [ ] Github Stats auswerten / backupen
@@ -59,8 +67,9 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ## true check
 
-Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codeualität ist, inahltlich ist mir aklles klar, also was die plugins machen, aber ich will keinen schlechten codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gu t als auch schlecht) was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand
-Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass doll es nä,lich auh nicht sein, leider ist mir klar ds das konterkariert meine wüsnche. ckch denke, du must da einen goldenen Zwischenweg finden.
+Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codequalität ist, inahltlich ist mir alles klar, also was die plugins machen, aber ich will keine schlechte codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gut als auch schlecht), was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand, usw...
+  Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass soll es nämlich auch nicht sein, leider ist mir klar das dass ein wenig meine wünsche konterkariert. Ich denke, du must da einen goldenen Zwischenweg finden.
+  Wenn dir Logikfehler, offensichtliche Bugs oder docs Probleme auffallen in einen Plugin, dann notiere diese gleich.
 
 ---
 
@@ -103,3 +112,4 @@ spotlight.nvim
 und das native: docmap-desktop
 
 ---
+
