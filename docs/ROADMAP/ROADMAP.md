@@ -6,7 +6,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
   - [cdx](#cdx)
   - [Misc](#misc)
   - [true check](#true-check)
-    - [Plugin-Liste](#plugin-liste)
+  - [Plugin-Liste](#plugin-liste)
 
 ---
 
@@ -15,8 +15,8 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:30       |    60% / 27%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     --:--       |    --% / --%     |
-| **work** |   20. Sept    |   Sa., 06:00    |     02:50       |    --% / --%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     --:--       |    91% / -9%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     02:50       |    91% / 27%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     --:--       |    --% / --%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
@@ -29,8 +29,7 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
 
 - [ ] `:Bindings search` verbessern, andere optionen durchgehen
-- hover: wenn man zb `sortiert/` schreibt, kommt ein hover wenn man mit dem cursor darauf ist. Dies ist ein false positive, auch wenn es `broken link` anzeig anzeigt. Screesnhot: ![sortiert/ hover](./assets/ROADMAP-1788030000.png)
-hier noch ein beispiel: `/--%` - hovert auch: ![/--](./assets/ROADMAP-1788035345.png)
+
 - [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md der Punkt:
     [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
   -> das zeigt an, was in `migrate.nvim` implementiert werden soll.
@@ -64,7 +63,7 @@ Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega auf
 
 ---
 
-### Plugin-Liste
+## Plugin-Liste
 
 Hier die Liste meiner Plugins - du findest sie unter `c:\repos` bzw `e:\repos` - und du hast Zugriff darauf:
 
